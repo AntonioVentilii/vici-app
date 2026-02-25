@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onAuthStateChange } from '@junobuild/core';
 	import { onDestroy, onMount, type Snippet } from 'svelte';
-	import Login from '$lib/components/auth/Login.svelte';
 	import Logout from '$lib/components/auth/Logout.svelte';
+	import SignIn from '$lib/components/auth/SignIn.svelte';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { userStore } from '$lib/stores/user.store';
 
@@ -32,6 +32,6 @@
 	</div>
 {:else}
 	<div class="gap flex flex-col">
-		<Login />
+		<SignIn />
 	</div>
 {/if}

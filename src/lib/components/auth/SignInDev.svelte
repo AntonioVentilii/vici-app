@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { signIn } from '@junobuild/core';
+	import IconRobot from '$lib/components/icons/IconRobot.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
 	const signInWithDev = async () => {
@@ -10,4 +11,7 @@
 	};
 </script>
 
-<Button onclick={signInWithDev}>Sign in for dev</Button>
+<Button onclick={signInWithDev}>
+	<IconRobot size="20px" />
+	Sign in for Dev
+</Button>
