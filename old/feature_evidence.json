@@ -1,0 +1,73 @@
+{
+	"kind": "feature_evidence_report",
+	"features": [
+		{
+			"featureId": "feature-add-an-admin-management-section-to-the-adminpage-displaying-the-current-list-of-admins-with-their-principal-ids",
+			"featureTitle": "Add an Admin Management section to the AdminPage displaying the current list of admins with their Principal IDs",
+			"files": ["frontend/src/pages/AdminPage.tsx"],
+			"components": [
+				"authorization@3.0.0",
+				"core-infrastructure@1.0.2",
+				"shadcn-ui@1.0.0",
+				"build-template-react@1.0.0",
+				"initial-app@1.0.0",
+				"github-export-icp-cli@1.0.0",
+				"qr-code@1.0.0",
+				"camera@1.0.0"
+			],
+			"testIds": ["REQ-37"],
+			"confidence": "high"
+		},
+		{
+			"featureId": "feature-add-a-form-in-the-admin-management-section-allowing-the-owner-to-add-a-new-admin-by-entering-a-principal-id",
+			"featureTitle": "Add a form in the Admin Management section allowing the owner to add a new admin by entering a Principal ID",
+			"files": ["frontend/src/pages/AdminPage.tsx"],
+			"components": [
+				"authorization@3.0.0",
+				"core-infrastructure@1.0.2",
+				"shadcn-ui@1.0.0",
+				"build-template-react@1.0.0",
+				"initial-app@1.0.0",
+				"github-export-icp-cli@1.0.0",
+				"qr-code@1.0.0",
+				"camera@1.0.0"
+			],
+			"testIds": ["REQ-38"],
+			"confidence": "high"
+		},
+		{
+			"featureId": "feature-add-remove-buttons-next-to-each-admin-entry-in-the-admin-management-section-allowing-the-owner-to-revoke-admin-access",
+			"featureTitle": "Add remove buttons next to each admin entry in the Admin Management section allowing the owner to revoke admin access",
+			"files": ["frontend/src/pages/AdminPage.tsx"],
+			"components": [
+				"authorization@3.0.0",
+				"core-infrastructure@1.0.2",
+				"shadcn-ui@1.0.0",
+				"build-template-react@1.0.0",
+				"initial-app@1.0.0",
+				"github-export-icp-cli@1.0.0",
+				"qr-code@1.0.0",
+				"camera@1.0.0"
+			],
+			"testIds": ["REQ-39"],
+			"confidence": "high"
+		},
+		{
+			"featureId": "feature-add-react-query-hooks-in-usequeries-ts-for-admin-management-operations-useadminlist-query-hook-useaddadmin-and-useremoveadmin-mutation-hooks-with-appropriate-cache-invalidation",
+			"featureTitle": "Add React Query hooks in useQueries.ts for admin management operations: useAdminList query hook, useAddAdmin and useRemoveAdmin mutation hooks with appropriate cache invalidation",
+			"files": ["frontend/src/hooks/useQueries.ts"],
+			"components": [
+				"authorization@3.0.0",
+				"core-infrastructure@1.0.2",
+				"shadcn-ui@1.0.0",
+				"build-template-react@1.0.0",
+				"initial-app@1.0.0",
+				"github-export-icp-cli@1.0.0",
+				"qr-code@1.0.0",
+				"camera@1.0.0"
+			],
+			"testIds": ["REQ-40"],
+			"confidence": "high"
+		}
+	]
+}

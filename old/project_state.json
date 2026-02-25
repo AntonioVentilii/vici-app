@@ -1,0 +1,312 @@
+{
+	"schemaVersion": "1.0.0",
+	"projectStateVersion": 17,
+	"summary": "Prediction/betting app planning: add friends system and friends-only/private markets with invite-based participation, plus a rush (swipe) betting mode. Now adding IC wallet functionality with ICP and ckUSDC support (balances, send/receive, transaction history).",
+	"architectural_notes": [
+		"Friends model decision: persistent friend list (add/remove) plus per-market invitation lists; private markets restrict betting to invitees while allowing viewing of global markets for context.",
+		"Next planned implementation focus: Rush betting mode (swipe Yes/No/Skip through a sequence of markets).",
+		"IC Wallet integration: backend canister will call ICP Ledger and ckUSDC Ledger canisters via inter-canister calls; frontend displays balances, transaction history, and provides send/receive UI using existing Internet Identity authentication.",
+		"Authentication UX: markets and read-only content should be viewable without login; login prompt appears only when user initiates an action requiring authentication.",
+		"Admin role management: canister has one owner Principal (set at init/upgrade); owner can manage a list of admin Principals; admin operations check caller against owner + admin list."
+	],
+	"known_issues": [
+		"Market depth view is missing forecasts display that should be present",
+		"Markets not appearing in UI after Version 12 deployment - data intact but display/query issue"
+	],
+	"isFixRequest": false,
+	"existing_features": [
+		{
+			"id": "feature-implement-a-persistent-friends-system-so-authenticated-users-can-add-and-remove-friends-and-view-their-current-friend-list",
+			"title": "Implement a persistent friends system so authenticated users can add and remove friends and view their current friend list.",
+			"reqIds": ["REQ-1"],
+			"version": 1
+		},
+		{
+			"id": "feature-extend-markets-to-support-invite-only-participation-a-market-can-be-marked-as-invite-only-and-maintain-a-per-market-invite-list-and-only-invited-users-can-place-bets-in-that-market",
+			"title": "Extend markets to support invite-only participation: a market can be marked as invite-only and maintain a per-market invite list, and only invited users can place bets in that market.",
+			"reqIds": ["REQ-2"],
+			"version": 1
+		},
+		{
+			"id": "feature-expose-and-display-market-participant-visibility-invited-users-can-see-who-else-is-invited-to-the-same-market",
+			"title": "Expose and display market participant visibility: invited users can see who else is invited to the same market.",
+			"reqIds": ["REQ-3"],
+			"version": 1
+		},
+		{
+			"id": "feature-allow-inviting-friends-as-a-quick-select-flow-while-still-supporting-inviting-any-principal-directly-to-a-specific-market",
+			"title": "Allow inviting friends as a quick-select flow while still supporting inviting any Principal directly to a specific market.",
+			"reqIds": ["REQ-4"],
+			"version": 1
+		},
+		{
+			"id": "feature-provide-a-way-to-create-or-configure-invite-only-markets-from-the-existing-admin-market-creation-flow",
+			"title": "Provide a way to create or configure invite-only markets from the existing admin market creation flow.",
+			"reqIds": ["REQ-5"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-a-new-rush-betting-mode-that-presents-approximately-10-open-markets-sequentially-and-lets-an-authenticated-user-act-with-swipe-gestures-swipe-right-to-place-a-yes-trade-swipe-left-to-place-a-no-trade-and-swipe-up-to-skip-the-market",
+			"title": "Add a new Rush Betting mode that presents approximately 10 open markets sequentially and lets an authenticated user act with swipe gestures: swipe right to place a YES trade, swipe left to place a NO trade, and swipe up to skip the market.",
+			"reqIds": ["REQ-6"],
+			"version": 1
+		},
+		{
+			"id": "feature-integrate-rush-mode-with-the-existing-react-query-data-layer-by-adding-a-dedicated-query-hook-for-fetching-the-rush-queue-and-ensuring-caches-invalidate-appropriately-after-placing-a-rush-trade-balance-positions-transactions-and-any-market-specific-analytics-depth-already-invalidated-by-the-existing-trade-flow",
+			"title": "Integrate Rush mode with the existing React Query data layer by adding a dedicated query hook for fetching the Rush queue and ensuring caches invalidate appropriately after placing a Rush trade (balance, positions, transactions, and any market-specific analytics/depth already invalidated by the existing trade flow).",
+			"reqIds": ["REQ-8"],
+			"version": 1
+		},
+		{
+			"id": "feature-display-forecasts-current-yes-and-no-probabilities-prominently-in-the-market-depth-panel-showing-the-market-s-current-odds-alongside-the-volume-breakdown-and-position-table",
+			"title": "Display forecasts (current YES and NO probabilities) prominently in the Market Depth panel, showing the market's current odds alongside the volume breakdown and position table",
+			"reqIds": ["REQ-9"],
+			"version": 1
+		},
+		{
+			"id": "feature-create-a-walletpage-component-that-displays-icp-and-ckusdc-balances-prominently-shows-transaction-history-in-a-table-and-provides-tabs-for-send-and-receive-operations",
+			"title": "Create a WalletPage component that displays ICP and ckUSDC balances prominently, shows transaction history in a table, and provides tabs for send and receive operations",
+			"reqIds": ["REQ-12"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-a-send-form-in-the-wallet-interface-allowing-authenticated-users-to-input-recipient-principal-id-select-token-type-icp-or-ckusdc-enter-amount-and-submit-the-transaction-with-validation-and-error-handling",
+			"title": "Add a Send form in the wallet interface allowing authenticated users to input recipient Principal ID, select token type (ICP or ckUSDC), enter amount, and submit the transaction with validation and error handling",
+			"reqIds": ["REQ-13"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-a-receive-section-in-the-wallet-interface-that-displays-the-user-s-principal-id-and-generates-a-qr-code-for-easy-sharing-with-copy-to-clipboard-functionality",
+			"title": "Add a Receive section in the wallet interface that displays the user's Principal ID and generates a QR code for easy sharing, with copy-to-clipboard functionality",
+			"reqIds": ["REQ-14"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-a-wallet-navigation-item-in-the-header-component-positioned-between-existing-menu-items-visible-only-to-authenticated-users-linking-to-the-new-walletpage",
+			"title": "Add a Wallet navigation item in the Header component positioned between existing menu items, visible only to authenticated users, linking to the new WalletPage",
+			"reqIds": ["REQ-15"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-react-query-hooks-in-usequeries-ts-for-wallet-operations-usewalletbalances-query-hook-usesendicp-and-usesendckusdc-mutation-hooks-and-usewallettransactions-query-hook-with-appropriate-cache-invalidation",
+			"title": "Add React Query hooks in useQueries.ts for wallet operations: useWalletBalances query hook, useSendICP and useSendCkUSDC mutation hooks, and useWalletTransactions query hook with appropriate cache invalidation",
+			"reqIds": ["REQ-16"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-wallet-route-to-app-tsx-routing-configuration-as-a-protected-route-requiring-authentication-rendering-the-walletpage-component",
+			"title": "Add /wallet route to App.tsx routing configuration as a protected route requiring authentication, rendering the WalletPage component",
+			"reqIds": ["REQ-17"],
+			"version": 1
+		},
+		{
+			"id": "feature-update-marketdetailpage-trading-interface-to-show-a-login-prompt-button-when-unauthenticated-users-attempt-to-place-a-bet-instead-of-hiding-the-trading-controls-entirely",
+			"title": "Update MarketDetailPage trading interface to show a login prompt button when unauthenticated users attempt to place a bet, instead of hiding the trading controls entirely",
+			"reqIds": ["REQ-23"],
+			"version": 1
+		},
+		{
+			"id": "feature-update-marketdiscussion-component-to-allow-unauthenticated-users-to-read-comments-while-showing-a-login-prompt-when-they-attempt-to-post-a-comment",
+			"title": "Update MarketDiscussion component to allow unauthenticated users to read comments while showing a login prompt when they attempt to post a comment",
+			"reqIds": ["REQ-24"],
+			"version": 1
+		},
+		{
+			"id": "feature-refactor-homepage-to-remove-the-hero-banner-stats-section-trending-markets-carousel-and-feature-highlights-replace-the-entire-content-with-a-full-markets-list-display-similar-to-marketspage-showing-all-markets-with-search-and-filter-tabs-all-trending-expiring-resolved",
+			"title": "Refactor HomePage to remove the hero banner, stats section, trending markets carousel, and feature highlights; replace the entire content with a full markets list display similar to MarketsPage, showing all markets with search and filter tabs (all/trending/expiring/resolved)",
+			"reqIds": ["REQ-27"],
+			"version": 1
+		},
+		{
+			"id": "feature-move-the-existing-homepage-informative-content-hero-banner-with-predict-trade-win-stats-section-showing-active-markets-starting-coins-trading-hours-and-feature-highlights-explaining-prediction-markets-to-the-learnpage-integrating-it-above-or-alongside-the-existing-educational-sections",
+			"title": "Move the existing HomePage informative content (hero banner with 'Predict. Trade. Win.', stats section showing active markets/starting coins/trading hours, and feature highlights explaining prediction markets) to the LearnPage, integrating it above or alongside the existing educational sections",
+			"reqIds": ["REQ-28"],
+			"version": 1
+		},
+		{
+			"id": "feature-create-a-dedicated-market-resolution-section-on-the-adminpage-displaying-all-markets-in-a-sortable-list-with-expiry-date-status-title-and-current-outcome-if-resolved",
+			"title": "Create a dedicated Market Resolution section on the AdminPage displaying all markets in a sortable list with expiry date, status, title, and current outcome (if resolved)",
+			"reqIds": ["REQ-29"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-inline-outcome-resolution-controls-in-the-market-resolution-list-allowing-admins-to-select-yes-no-or-canceled-for-each-market-and-submit-the-resolution",
+			"title": "Add inline outcome resolution controls in the Market Resolution list allowing admins to select YES, NO, or CANCELED for each market and submit the resolution",
+			"reqIds": ["REQ-30"],
+			"version": 1
+		},
+		{
+			"id": "feature-sort-markets-in-the-market-resolution-list-by-expiry-date-with-expired-markets-at-the-top-and-apply-urgent-visual-styling-to-expired-unresolved-markets",
+			"title": "Sort markets in the Market Resolution list by expiry date with expired markets at the top, and apply urgent visual styling to expired unresolved markets",
+			"reqIds": ["REQ-31"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-an-admin-management-section-to-the-adminpage-displaying-the-current-list-of-admins-with-their-principal-ids",
+			"title": "Add an Admin Management section to the AdminPage displaying the current list of admins with their Principal IDs",
+			"reqIds": ["REQ-37"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-a-form-in-the-admin-management-section-allowing-the-owner-to-add-a-new-admin-by-entering-a-principal-id",
+			"title": "Add a form in the Admin Management section allowing the owner to add a new admin by entering a Principal ID",
+			"reqIds": ["REQ-38"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-remove-buttons-next-to-each-admin-entry-in-the-admin-management-section-allowing-the-owner-to-revoke-admin-access",
+			"title": "Add remove buttons next to each admin entry in the Admin Management section allowing the owner to revoke admin access",
+			"reqIds": ["REQ-39"],
+			"version": 1
+		},
+		{
+			"id": "feature-add-react-query-hooks-in-usequeries-ts-for-admin-management-operations-useadminlist-query-hook-useaddadmin-and-useremoveadmin-mutation-hooks-with-appropriate-cache-invalidation",
+			"title": "Add React Query hooks in useQueries.ts for admin management operations: useAdminList query hook, useAddAdmin and useRemoveAdmin mutation hooks with appropriate cache invalidation",
+			"reqIds": ["REQ-40"],
+			"version": 1
+		}
+	],
+	"new_feature_requests": [
+		{
+			"id": "AR-1",
+			"summary": "Friends system: users can add/remove friends (follow/friend list) to support social betting circles",
+			"reqIds": [],
+			"status": "pending"
+		},
+		{
+			"id": "AR-2",
+			"summary": "Friends-only/private markets: allow creating markets where participation is limited to invited friends and/or per-market invitees; invitees can see who else is in the market; optional roles like market makers/admins",
+			"reqIds": [],
+			"status": "pending"
+		},
+		{
+			"id": "AR-3",
+			"summary": "Rush betting mode: present ~10 markets in sequence with swipe controls (right=Yes, left=No, up=Skip)",
+			"reqIds": [],
+			"status": "pending"
+		},
+		{
+			"id": "AR-5",
+			"summary": "Add backend support for Rush mode by exposing a query that returns a caller-eligible list of open market snapshots with a limit parameter, so the frontend can fetch a Rush queue without downloading all markets.",
+			"reqIds": ["REQ-7"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-6",
+			"summary": "Add IC wallet feature supporting ICP and ckUSDC: display balances, send/receive functionality, transaction history, and QR code generation for receiving",
+			"reqIds": [],
+			"status": "pending"
+		},
+		{
+			"id": "AR-7",
+			"summary": "Add backend wallet state management to track ICP and ckUSDC balances per user Principal, storing balance snapshots and transaction history in stable storage",
+			"reqIds": ["REQ-10"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-8",
+			"summary": "Implement backend functions to interact with ICP Ledger and ckUSDC Ledger canisters via inter-canister calls for balance queries, send operations, and transaction history retrieval",
+			"reqIds": ["REQ-11"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-9",
+			"summary": "Allow unauthenticated users to view markets and all non-interactive content; prompt login only when user attempts an action requiring authentication (e.g., placing bets, sending wallet transactions)",
+			"reqIds": [],
+			"status": "pending"
+		},
+		{
+			"id": "AR-10",
+			"summary": "Remove authentication requirement from the HomePage route in App.tsx so unauthenticated users can access the landing page without being blocked",
+			"reqIds": ["REQ-18"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-11",
+			"summary": "Remove authentication requirement from the MarketsPage route in App.tsx so unauthenticated users can browse all markets, search, and filter by tabs",
+			"reqIds": ["REQ-19"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-12",
+			"summary": "Remove authentication requirement from the MarketDetailPage route in App.tsx so unauthenticated users can view market details, analytics, depth panel, and discussions without logging in",
+			"reqIds": ["REQ-20"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-13",
+			"summary": "Remove authentication requirement from the LeaderboardPage route in App.tsx so unauthenticated users can view the leaderboard rankings",
+			"reqIds": ["REQ-21"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-14",
+			"summary": "Remove authentication requirement from the LearnPage route in App.tsx so unauthenticated users can access educational content about how Vici works",
+			"reqIds": ["REQ-22"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-17",
+			"summary": "Keep Portfolio, Wallet, Rush, Profile, and Admin pages as authenticated-only routes with access control unchanged",
+			"reqIds": ["REQ-25"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-18",
+			"summary": "Keep the Header component unchanged with its current authentication controls, user profile dropdown, and balance display logic",
+			"reqIds": ["REQ-26"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-19",
+			"summary": "Refactor HomePage to display markets directly instead of welcome/instructions content; move informative/educational content to a separate accessible location",
+			"reqIds": [],
+			"status": "pending"
+		},
+		{
+			"id": "AR-20",
+			"summary": "Create an Admin dashboard for market resolution management: display all markets (especially upcoming/expired), allow admins to define market outcomes, prioritize by expiry date (expired markets at top with urgency styling)",
+			"reqIds": [],
+			"status": "pending"
+		},
+		{
+			"id": "AR-21",
+			"summary": "Add admin role management: define a canister owner (single Principal), allow owner to add/remove admin Principals, implement access control checks for admin-only operations (e.g., market resolution)",
+			"reqIds": [],
+			"status": "pending"
+		},
+		{
+			"id": "AR-22",
+			"summary": "Add a single canister owner Principal to the backend that is set at initialization and cannot be changed afterwards",
+			"reqIds": ["REQ-32"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-23",
+			"summary": "Maintain a set of admin Principals in the backend that can be managed by the owner",
+			"reqIds": ["REQ-33"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-24",
+			"summary": "Add backend functions for the owner to add and remove admin Principals",
+			"reqIds": ["REQ-34"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-25",
+			"summary": "Add a backend query function that returns the list of current admin Principals",
+			"reqIds": ["REQ-35"],
+			"status": "pending"
+		},
+		{
+			"id": "AR-26",
+			"summary": "Update all existing admin-only backend functions to check if the caller is in the admin set or is the owner",
+			"reqIds": ["REQ-36"],
+			"status": "pending"
+		}
+	],
+	"projectName": "Vici Social Markets",
+	"clarification_mode": "instant",
+	"clarification_rounds": 0
+}

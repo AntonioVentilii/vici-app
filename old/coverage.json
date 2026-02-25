@@ -1,0 +1,99 @@
+{
+	"kind": "coverage_report",
+	"version": "1.0",
+	"generatedAt": "2026-02-20T22:54:37.662Z",
+	"sources": {
+		"buildRequest": true,
+		"implementationPlan": true
+	},
+	"requirements": {
+		"total": 9,
+		"implemented": 4,
+		"items": [
+			{
+				"id": "REQ-32",
+				"summary": "Add a single canister owner Principal to the backend that is set at initialization and cannot be changed afterwards",
+				"status": "unknown",
+				"plannedFiles": [],
+				"matchedFiles": []
+			},
+			{
+				"id": "REQ-33",
+				"summary": "Maintain a set of admin Principals in the backend that can be managed by the owner",
+				"status": "unknown",
+				"plannedFiles": [],
+				"matchedFiles": []
+			},
+			{
+				"id": "REQ-34",
+				"summary": "Add backend functions for the owner to add and remove admin Principals",
+				"status": "unknown",
+				"plannedFiles": [],
+				"matchedFiles": []
+			},
+			{
+				"id": "REQ-35",
+				"summary": "Add a backend query function that returns the list of current admin Principals",
+				"status": "unknown",
+				"plannedFiles": [],
+				"matchedFiles": []
+			},
+			{
+				"id": "REQ-36",
+				"summary": "Update all existing admin-only backend functions to check if the caller is in the admin set or is the owner",
+				"status": "unknown",
+				"plannedFiles": [],
+				"matchedFiles": []
+			},
+			{
+				"id": "REQ-37",
+				"summary": "Add an Admin Management section to the AdminPage displaying the current list of admins with their Principal IDs",
+				"status": "implemented",
+				"plannedFiles": ["frontend/src/pages/AdminPage.tsx"],
+				"matchedFiles": ["frontend/src/pages/AdminPage.tsx"]
+			},
+			{
+				"id": "REQ-38",
+				"summary": "Add a form in the Admin Management section allowing the owner to add a new admin by entering a Principal ID",
+				"status": "implemented",
+				"plannedFiles": ["frontend/src/pages/AdminPage.tsx"],
+				"matchedFiles": ["frontend/src/pages/AdminPage.tsx"]
+			},
+			{
+				"id": "REQ-39",
+				"summary": "Add remove buttons next to each admin entry in the Admin Management section allowing the owner to revoke admin access",
+				"status": "implemented",
+				"plannedFiles": ["frontend/src/pages/AdminPage.tsx"],
+				"matchedFiles": ["frontend/src/pages/AdminPage.tsx"]
+			},
+			{
+				"id": "REQ-40",
+				"summary": "Add React Query hooks in useQueries.ts for admin management operations: useAdminList query hook, useAddAdmin and useRemoveAdmin mutation hooks with appropriate cache invalidation",
+				"status": "implemented",
+				"plannedFiles": ["frontend/src/hooks/useQueries.ts", "frontend/src/backend.d.ts"],
+				"matchedFiles": ["frontend/src/hooks/useQueries.ts", "frontend/src/backend.d.ts"]
+			}
+		]
+	},
+	"changedFiles": [
+		"backend/main.mo",
+		"backend/migration.mo",
+		"build-request.json",
+		"feature_evidence.json",
+		"frontend-file-summaries.txt",
+		"frontend-implementation-plan.json",
+		"frontend/src/backend.d.ts",
+		"frontend/src/backend.ts",
+		"frontend/src/components/MarketDiscussion.tsx",
+		"frontend/src/components/SendTokenForm.tsx",
+		"frontend/src/declarations/backend.did.d.ts",
+		"frontend/src/declarations/backend.did.js",
+		"frontend/src/hooks/useQueries.ts",
+		"frontend/src/pages/AdminPage.tsx",
+		"frontend/src/pages/WalletPage.tsx",
+		"project_state.json",
+		"scratch/component-selection.json",
+		"spec.md",
+		"spec_vs_diff_report.json"
+	]
+}

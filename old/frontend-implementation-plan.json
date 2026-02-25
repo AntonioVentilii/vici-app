@@ -1,0 +1,82 @@
+{
+	"kind": "implementation_plan",
+	"version": "1.0",
+	"title": "Add admin role management with owner and configurable admins",
+	"requirements": [
+		{
+			"id": "REQ-37",
+			"summary": "Add an Admin Management section to the AdminPage displaying the current list of admins with their Principal IDs",
+			"acceptanceCriteria": [
+				"Admin list shows all current admin Principals",
+				"Each admin entry displays the full Principal ID",
+				"The owner Principal is visibly marked or indicated",
+				"The section is displayed alongside existing admin tabs"
+			],
+			"file_operations": [
+				{
+					"path": "frontend/src/pages/AdminPage.tsx",
+					"operation": "modify",
+					"description": "Add a new 'Admin Management' tab to the existing tabs interface. Import and use the useAdminList query hook to fetch and display current admin Principals. Display the full Principal ID for each admin entry. Add visual indicator (badge or icon) to mark the owner Principal. Ensure proper loading and error states are handled. Verify the authorization component's usage instructions before implementing."
+				}
+			]
+		},
+		{
+			"id": "REQ-38",
+			"summary": "Add a form in the Admin Management section allowing the owner to add a new admin by entering a Principal ID",
+			"acceptanceCriteria": [
+				"Form includes an input field for Principal ID",
+				"Form includes an 'Add Admin' submit button",
+				"Form validates Principal ID format before submission",
+				"Form is only visible to the owner",
+				"Success and error feedback is displayed via toast notifications"
+			],
+			"file_operations": [
+				{
+					"path": "frontend/src/pages/AdminPage.tsx",
+					"operation": "modify",
+					"description": "Within the Admin Management tab, add a form with Principal ID text input field and 'Add Admin' submit button. Implement client-side validation to check Principal ID format before submission. Use useAddAdmin mutation hook to handle form submission. Check if current user is the owner (compare with owner Principal from admin list) and conditionally render the form only for owners. Display success/error feedback using toast notifications consistent with existing patterns in the file."
+				}
+			]
+		},
+		{
+			"id": "REQ-39",
+			"summary": "Add remove buttons next to each admin entry in the Admin Management section allowing the owner to revoke admin access",
+			"acceptanceCriteria": [
+				"Each admin (except the owner) has a remove button",
+				"Remove button is only visible to the owner",
+				"Clicking remove button triggers confirmation",
+				"Success and error feedback is displayed via toast notifications",
+				"Admin list updates immediately after removal"
+			],
+			"file_operations": [
+				{
+					"path": "frontend/src/pages/AdminPage.tsx",
+					"operation": "modify",
+					"description": "Add a remove/delete button next to each admin entry in the admin list table/display, excluding the owner entry. Conditionally render remove buttons only when current user is the owner. Implement confirmation dialog (using existing UI patterns) before executing removal. Use useRemoveAdmin mutation hook to handle admin removal. Display success/error feedback using toast notifications. The admin list will automatically refresh due to cache invalidation in the mutation hook."
+				}
+			]
+		},
+		{
+			"id": "REQ-40",
+			"summary": "Add React Query hooks in useQueries.ts for admin management operations: useAdminList query hook, useAddAdmin and useRemoveAdmin mutation hooks with appropriate cache invalidation",
+			"acceptanceCriteria": [
+				"useAdminList fetches current admin list from backend",
+				"useAddAdmin mutation invalidates admin list cache on success",
+				"useRemoveAdmin mutation invalidates admin list cache on success",
+				"All hooks handle loading and error states appropriately"
+			],
+			"file_operations": [
+				{
+					"path": "frontend/src/hooks/useQueries.ts",
+					"operation": "modify",
+					"description": "Add useAdminList query hook that calls backend getAdminList() method with query key ['adminList']. Add useAddAdmin mutation hook that calls backend addAdmin(principal) method and invalidates ['adminList'] cache on success. Add useRemoveAdmin mutation hook that calls backend removeAdmin(principal) method and invalidates ['adminList'] cache on success. Follow existing patterns in the file for error handling, loading states, and actor dependency. Ensure mutations handle toast notifications for success and error cases."
+				},
+				{
+					"path": "frontend/src/backend.d.ts",
+					"operation": "modify",
+					"description": "Add type declarations for the new backend admin management methods: getAdminList(): Promise<Array<Principal>>, addAdmin(principal: Principal): Promise<void>, and removeAdmin(principal: Principal): Promise<void>. Follow existing interface patterns in the backendInterface."
+				}
+			]
+		}
+	]
+}

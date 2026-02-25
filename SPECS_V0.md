@@ -12,26 +12,25 @@ A prediction/betting platform on the Internet Computer where users trade on bina
 
 ### Backend
 
-* Motoko on Internet Computer
-* Stable storage for all data persistence
-* Inter-canister calls to:
-
-  * ICP Ledger
-  * ckUSDC Ledger
+- Motoko on Internet Computer
+- Stable storage for all data persistence
+- Inter-canister calls to:
+  - ICP Ledger
+  - ckUSDC Ledger
 
 ### Frontend
 
-* React with TypeScript
-* Vite bundler
-* pnpm package manager
-* Tailwind CSS for styling
-* React Query for state management and caching
-* React Router for navigation
-* QR code generation library
+- React with TypeScript
+- Vite bundler
+- pnpm package manager
+- Tailwind CSS for styling
+- React Query for state management and caching
+- React Router for navigation
+- QR code generation library
 
 ### Authentication
 
-* Internet Identity (passkeys, Google, Apple, Microsoft)
+- Internet Identity (passkeys, Google, Apple, Microsoft)
 
 ---
 
@@ -39,32 +38,32 @@ A prediction/betting platform on the Internet Computer where users trade on bina
 
 ### Owner (single Principal)
 
-* Set at canister initialization
-* Cannot be changed
-* Can add/remove admins
-* Has all admin privileges
+- Set at canister initialization
+- Cannot be changed
+- Can add/remove admins
+- Has all admin privileges
 
 ### Admins (managed set of Principals)
 
-* Can create/resolve markets
-* Can manage market outcomes
-* Added/removed by owner only
+- Can create/resolve markets
+- Can manage market outcomes
+- Added/removed by owner only
 
 ### Authenticated Users
 
-* Can place bets
-* Can send/receive ICP and ckUSDC
-* Can add/remove friends
-* Can create private markets (if enabled)
-* Can view portfolio, wallet, rush mode
+- Can place bets
+- Can send/receive ICP and ckUSDC
+- Can add/remove friends
+- Can create private markets (if enabled)
+- Can view portfolio, wallet, rush mode
 
 ### Unauthenticated Users
 
-* Can view all markets
-* Can view market details, analytics, depth
-* Can view leaderboard
-* Can view educational content
-* Prompted to login only when attempting actions
+- Can view all markets
+- Can view market details, analytics, depth
+- Can view leaderboard
+- Can view educational content
+- Prompted to login only when attempting actions
 
 ---
 
@@ -76,47 +75,46 @@ A prediction/betting platform on the Internet Computer where users trade on bina
 
 ### Market Types
 
-* Public Markets: Anyone can bet
-* Private/Invite-Only Markets: Only invited users can bet (future feature)
+- Public Markets: Anyone can bet
+- Private/Invite-Only Markets: Only invited users can bet (future feature)
 
 ### Market Properties
 
-* Title and description
-* Binary outcomes (YES/NO)
-* Expiry date/time
-* Status: Open, Expired, Resolved
-* Outcome (after resolution): YES, NO, CANCELED
-* Volume breakdown (total, YES, NO)
-* Current probabilities/odds
-* Creator Principal
-* Invite list (for private markets)
+- Title and description
+- Binary outcomes (YES/NO)
+- Expiry date/time
+- Status: Open, Expired, Resolved
+- Outcome (after resolution): YES, NO, CANCELED
+- Volume breakdown (total, YES, NO)
+- Current probabilities/odds
+- Creator Principal
+- Invite list (for private markets)
 
 ### Market States
 
-* Open: Active betting, before expiry
-* Expired: Past expiry date, awaiting resolution
-* Resolved: Outcome determined by admin
+- Open: Active betting, before expiry
+- Expired: Past expiry date, awaiting resolution
+- Resolved: Outcome determined by admin
 
 ### Market Creation
 
-* Admin-only operation
-* Form inputs:
+- Admin-only operation
+- Form inputs:
+  - Title
+  - Description
+  - Expiry date
 
-  * Title
-  * Description
-  * Expiry date
-* Option to make invite-only (future)
+- Option to make invite-only (future)
 
 ### Market Resolution
 
-* Admin-only operation via dedicated dashboard
-* Sorted by expiry date (expired first)
-* Expired unresolved markets have urgent styling
-* Inline controls to select outcome:
-
-  * YES
-  * NO
-  * CANCELED
+- Admin-only operation via dedicated dashboard
+- Sorted by expiry date (expired first)
+- Expired unresolved markets have urgent styling
+- Inline controls to select outcome:
+  - YES
+  - NO
+  - CANCELED
 
 ---
 
@@ -124,17 +122,17 @@ A prediction/betting platform on the Internet Computer where users trade on bina
 
 ### Trading Mechanics
 
-* Users place bets using their balance
-* Binary outcomes: YES or NO
-* Amount input with validation
-* Real-time odds display
-* Position tracking per user per market
+- Users place bets using their balance
+- Binary outcomes: YES or NO
+- Amount input with validation
+- Real-time odds display
+- Position tracking per user per market
 
 ### User Positions
 
-* Track YES and NO holdings per market
-* Show current value and unrealized P&L
-* Aggregate across all markets in portfolio
+- Track YES and NO holdings per market
+- Show current value and unrealized P&L
+- Aggregate across all markets in portfolio
 
 ### Trading Flow
 
@@ -148,8 +146,8 @@ A prediction/betting platform on the Internet Computer where users trade on bina
 
 ### Unauthenticated Trading
 
-* Trading interface visible
-* Login prompt appears when user attempts to place bet
+- Trading interface visible
+- Login prompt appears when user attempts to place bet
 
 ---
 
@@ -157,16 +155,16 @@ A prediction/betting platform on the Internet Computer where users trade on bina
 
 ### Supported Tokens
 
-* ICP (Internet Computer Protocol token)
-* ckUSDC (chain-key USDC)
+- ICP (Internet Computer Protocol token)
+- ckUSDC (chain-key USDC)
 
 ### Wallet Features
 
-* Balance display for both tokens
-* Transaction history table
-* Send functionality
-* Receive functionality with QR code
-* Copy Principal ID to clipboard
+- Balance display for both tokens
+- Transaction history table
+- Send functionality
+- Receive functionality with QR code
+- Copy Principal ID to clipboard
 
 ### Send Flow
 
@@ -180,18 +178,18 @@ A prediction/betting platform on the Internet Computer where users trade on bina
 
 ### Receive Flow
 
-* Display user's Principal ID
-* Generate QR code of Principal
-* Copy button for easy sharing
+- Display user's Principal ID
+- Generate QR code of Principal
+- Copy button for easy sharing
 
 ### Transaction History
 
-* Timestamp
-* Token type
-* Amount
-* Recipient/Sender
-* Transaction type (send/receive)
-* Status
+- Timestamp
+- Token type
+- Amount
+- Recipient/Sender
+- Transaction type (send/receive)
+- Status
 
 ---
 
@@ -199,16 +197,16 @@ A prediction/betting platform on the Internet Computer where users trade on bina
 
 ### Features
 
-* Add/remove friends by Principal ID
-* View friends list
-* Quick-select friends when inviting to markets
-* Support for friend-based private markets
+- Add/remove friends by Principal ID
+- View friends list
+- Quick-select friends when inviting to markets
+- Support for friend-based private markets
 
 ### Use Cases
 
-* Social betting circles
-* Private group predictions
-* Friends-only market creation
+- Social betting circles
+- Private group predictions
+- Friends-only market creation
 
 ---
 
@@ -218,9 +216,9 @@ Concept: Swipe-based rapid betting through a queue of ~10 markets.
 
 ### Controls
 
-* Swipe Right: Place YES bet
-* Swipe Left: Place NO bet
-* Swipe Up: Skip market
+- Swipe Right: Place YES bet
+- Swipe Left: Place NO bet
+- Swipe Up: Skip market
 
 ### Flow
 
@@ -234,9 +232,9 @@ Concept: Swipe-based rapid betting through a queue of ~10 markets.
 
 ### Data Integration
 
-* Dedicated React Query hook
-* Cache invalidation after each trade
-* Balance/positions/transactions update
+- Dedicated React Query hook
+- Cache invalidation after each trade
+- Balance/positions/transactions update
 
 ---
 
@@ -248,17 +246,17 @@ Concept: Swipe-based rapid betting through a queue of ~10 markets.
 
 ### Header (always visible)
 
-* Logo/Brand (links to Home)
-* Markets
-* Leaderboard
-* Learn
-* Portfolio (auth required)
-* Wallet (auth required)
-* Rush (auth required)
-* Admin (admin/owner only)
-* User Profile Dropdown (when authenticated)
-* Balance Display (when authenticated)
-* Login/Logout
+- Logo/Brand (links to Home)
+- Markets
+- Leaderboard
+- Learn
+- Portfolio (auth required)
+- Wallet (auth required)
+- Rush (auth required)
+- Admin (admin/owner only)
+- User Profile Dropdown (when authenticated)
+- Balance Display (when authenticated)
+- Login/Logout
 
 ---
 
@@ -268,16 +266,15 @@ Concept: Swipe-based rapid betting through a queue of ~10 markets.
 
 ### Layout
 
-* Full markets list (replaces previous hero/stats content)
-* Search bar
-* Filter tabs: All | Trending | Expiring | Resolved
-* Market cards grid with:
-
-  * Title
-  * Current probabilities
-  * Volume
-  * Expiry countdown
-  * Quick bet buttons (prompts login if needed)
+- Full markets list (replaces previous hero/stats content)
+- Search bar
+- Filter tabs: All | Trending | Expiring | Resolved
+- Market cards grid with:
+  - Title
+  - Current probabilities
+  - Volume
+  - Expiry countdown
+  - Quick bet buttons (prompts login if needed)
 
 **Access:** Public (no authentication required)
 
@@ -289,10 +286,10 @@ Concept: Swipe-based rapid betting through a queue of ~10 markets.
 
 ### Layout
 
-* Search bar (filter by title/description)
-* Filter tabs: All | Trending | Expiring | Resolved
-* Market cards grid
-* Sorting options (by volume, expiry, trending)
+- Search bar (filter by title/description)
+- Filter tabs: All | Trending | Expiring | Resolved
+- Market cards grid
+- Sorting options (by volume, expiry, trending)
 
 **Access:** Public
 
@@ -304,37 +301,37 @@ Concept: Swipe-based rapid betting through a queue of ~10 markets.
 
 ### A. Market Header
 
-* Title and description
-* Status badge (Open/Expired/Resolved)
-* Expiry countdown or date
-* Creator information
+- Title and description
+- Status badge (Open/Expired/Resolved)
+- Expiry countdown or date
+- Creator information
 
 ### B. Trading Interface
 
-* Current probabilities/odds (YES/NO)
-* Bet amount input
-* YES/NO action buttons
-* Login prompt for unauthenticated users
+- Current probabilities/odds (YES/NO)
+- Bet amount input
+- YES/NO action buttons
+- Login prompt for unauthenticated users
 
 ### C. Market Analytics
 
-* Charts showing probability over time
-* Volume trends
-* Historical data
+- Charts showing probability over time
+- Volume trends
+- Historical data
 
 ### D. Market Depth Panel
 
-* Forecasts: Current YES and NO probabilities prominently displayed
-* Total volume
-* YES volume
-* NO volume
-* Position breakdown table
+- Forecasts: Current YES and NO probabilities prominently displayed
+- Total volume
+- YES volume
+- NO volume
+- Position breakdown table
 
 ### E. Market Discussion
 
-* Comment thread
-* Timestamp and author for each comment
-* Post comment form (prompts login if unauthenticated)
+- Comment thread
+- Timestamp and author for each comment
+- Post comment form (prompts login if unauthenticated)
 
 **Access:** Public for viewing; authentication required for betting/commenting
 
@@ -346,22 +343,22 @@ Concept: Swipe-based rapid betting through a queue of ~10 markets.
 
 ### A. Summary Stats
 
-* Total portfolio value
-* Unrealized P&L
-* Active positions count
+- Total portfolio value
+- Unrealized P&L
+- Active positions count
 
 ### B. Active Positions Table
 
-* Market title
-* Position (YES/NO and amount)
-* Current value
-* Unrealized P&L
-* Link to market detail
+- Market title
+- Position (YES/NO and amount)
+- Current value
+- Unrealized P&L
+- Link to market detail
 
 ### C. Resolved Positions
 
-* Historical completed positions
-* Final outcome and payout
+- Historical completed positions
+- Final outcome and payout
 
 **Access:** Authenticated users only
 
@@ -373,35 +370,35 @@ Concept: Swipe-based rapid betting through a queue of ~10 markets.
 
 ### A. Balance Display
 
-* ICP balance (prominent, large font)
-* ckUSDC balance (prominent, large font)
+- ICP balance (prominent, large font)
+- ckUSDC balance (prominent, large font)
 
 ### B. Tabs: Send | Receive | History
 
 #### Send Tab
 
-* Token selector (ICP or ckUSDC)
-* Recipient Principal input
-* Amount input
-* Submit button
-* Validation messages
+- Token selector (ICP or ckUSDC)
+- Recipient Principal input
+- Amount input
+- Submit button
+- Validation messages
 
 #### Receive Tab
 
-* User's Principal ID display
-* Copy to clipboard button
-* QR code image of Principal
+- User's Principal ID display
+- Copy to clipboard button
+- QR code image of Principal
 
 #### History Tab
 
 Transaction table:
 
-* Date/Time
-* Type (Send/Receive)
-* Token
-* Amount
-* Counterparty
-* Status
+- Date/Time
+- Type (Send/Receive)
+- Token
+- Amount
+- Counterparty
+- Status
 
 **Access:** Authenticated users only
 
@@ -413,11 +410,11 @@ Transaction table:
 
 ### Layout
 
-* Full-screen market card
-* Swipe gesture area
-* Visual cues for swipe directions
-* Progress indicator (e.g., "3/10 markets")
-* Skip/exit controls
+- Full-screen market card
+- Swipe gesture area
+- Visual cues for swipe directions
+- Progress indicator (e.g., "3/10 markets")
+- Skip/exit controls
 
 **Access:** Authenticated users only
 
@@ -431,17 +428,17 @@ Transaction table:
 
 Ranking table:
 
-* Rank
-* User (anonymized or Principal)
-* Total P&L
-* Win rate
-* Active positions
+- Rank
+- User (anonymized or Principal)
+- Total P&L
+- Win rate
+- Active positions
 
 Time period filters:
 
-* All-time
-* Monthly
-* Weekly
+- All-time
+- Monthly
+- Weekly
 
 **Access:** Public
 
@@ -459,23 +456,23 @@ Hero banner:
 
 Stats section:
 
-* Active markets count
-* Starting coins/balance info
-* Trading hours/availability
+- Active markets count
+- Starting coins/balance info
+- Trading hours/availability
 
 Feature highlights:
 
-* What are prediction markets
-* How betting works
-* Probability mechanics
+- What are prediction markets
+- How betting works
+- Probability mechanics
 
 ### B. Educational Articles
 
-* How to place a bet
-* Understanding probabilities
-* Market resolution process
-* Wallet and token management
-* Best practices and strategies
+- How to place a bet
+- Understanding probabilities
+- Market resolution process
+- Wallet and token management
+- Best practices and strategies
 
 **Access:** Public
 
@@ -491,11 +488,11 @@ Feature highlights:
 
 Form to create new markets:
 
-* Title
-* Description
-* Expiry date/time
-* Privacy option (public/invite-only, future)
-* Submit button
+- Title
+- Description
+- Expiry date/time
+- Privacy option (public/invite-only, future)
+- Submit button
 
 ### B. Market Resolution Dashboard
 
@@ -503,33 +500,33 @@ Sorted list of all markets (expired first)
 
 Each row shows:
 
-* Market title
-* Status
-* Expiry date
-* Current outcome (if resolved)
+- Market title
+- Status
+- Expiry date
+- Current outcome (if resolved)
 
 Inline resolution controls:
 
-* Outcome selector (YES/NO/CANCELED)
-* Resolve button
+- Outcome selector (YES/NO/CANCELED)
+- Resolve button
 
 Urgent styling for expired unresolved markets:
 
-* Red/orange background or border
-* Bold text
-* "EXPIRED - NEEDS RESOLUTION" badge
+- Red/orange background or border
+- Bold text
+- "EXPIRED - NEEDS RESOLUTION" badge
 
 ### C. Admin Management (owner only)
 
 Current Admins List:
 
-* Principal ID
-* Remove button (next to each)
+- Principal ID
+- Remove button (next to each)
 
 Add Admin Form:
 
-* Principal ID input
-* Add button
+- Principal ID input
+- Add button
 
 ---
 
@@ -545,42 +542,42 @@ Add Admin Form:
 
 ## Framework
 
-* Tailwind CSS
+- Tailwind CSS
 
 ## Theme
 
-* Modern, clean interface
-* Dark/light mode support (optional)
-* Responsive design (mobile-first)
+- Modern, clean interface
+- Dark/light mode support (optional)
+- Responsive design (mobile-first)
 
 ## Colour Scheme
 
-* Primary: Brand colour (customizable)
-* Success: Green (YES, positive P&L)
-* Danger: Red (NO, negative P&L)
-* Warning: Orange/Yellow (urgent actions)
-* Neutral: Grays for backgrounds/borders
+- Primary: Brand colour (customizable)
+- Success: Green (YES, positive P&L)
+- Danger: Red (NO, negative P&L)
+- Warning: Orange/Yellow (urgent actions)
+- Neutral: Grays for backgrounds/borders
 
 ## Typography
 
-* Clear, readable fonts
-* Hierarchy: large titles, medium body, small metadata
+- Clear, readable fonts
+- Hierarchy: large titles, medium body, small metadata
 
 ## Components
 
-* Consistent button styles (primary, secondary, danger)
-* Form inputs with validation states
-* Cards for markets and content blocks
-* Tables for positions, transactions, leaderboard
-* Badges for status indicators
-* Modals/dialogs for confirmations
+- Consistent button styles (primary, secondary, danger)
+- Form inputs with validation states
+- Cards for markets and content blocks
+- Tables for positions, transactions, leaderboard
+- Badges for status indicators
+- Modals/dialogs for confirmations
 
 ## Urgent Styling (for expired markets)
 
-* Red or orange background
-* Bold borders
-* Large "EXPIRED" or "NEEDS RESOLUTION" badge
-* Positioned at top of resolution list
+- Red or orange background
+- Bold borders
+- Large "EXPIRED" or "NEEDS RESOLUTION" badge
+- Positioned at top of resolution list
 
 ---
 
@@ -613,10 +610,10 @@ Add Admin Form:
 
 ```ts
 {
-  marketId: Text;
-  user: Principal;
-  yesAmount: Nat;
-  noAmount: Nat;
+	marketId: Text;
+	user: Principal;
+	yesAmount: Nat;
+	noAmount: Nat;
 }
 ```
 
@@ -639,9 +636,9 @@ Add Admin Form:
 
 ```ts
 {
-  principal: Principal;
-  icpBalance: Nat;
-  ckusdcBalance: Nat;
+	principal: Principal;
+	icpBalance: Nat;
+	ckusdcBalance: Nat;
 }
 ```
 
@@ -649,8 +646,8 @@ Add Admin Form:
 
 ```ts
 {
-  owner: Principal; // immutable
-  admins: Set<Principal>;
+	owner: Principal; // immutable
+	admins: Set<Principal>;
 }
 ```
 
@@ -658,8 +655,8 @@ Add Admin Form:
 
 ```ts
 {
-  user: Principal;
-  friends: [Principal];
+	user: Principal;
+	friends: [Principal];
 }
 ```
 
@@ -669,35 +666,35 @@ Add Admin Form:
 
 ### Markets
 
-* `createMarket` (admin)
-* `getMarkets` (public query)
-* `getMarket` (public query)
-* `resolveMarket` (admin)
-* `placeBet` (authenticated)
+- `createMarket` (admin)
+- `getMarkets` (public query)
+- `getMarket` (public query)
+- `resolveMarket` (admin)
+- `placeBet` (authenticated)
 
 ### Wallet
 
-* `getBalances` (query, authenticated)
-* `sendICP` (authenticated)
-* `sendCkUSDC` (authenticated)
-* `getTransactions` (query, authenticated)
+- `getBalances` (query, authenticated)
+- `sendICP` (authenticated)
+- `sendCkUSDC` (authenticated)
+- `getTransactions` (query, authenticated)
 
 ### Admin Management
 
-* `getAdmins` (query, owner)
-* `addAdmin` (owner)
-* `removeAdmin` (owner)
-* `isAdmin` (query, public)
+- `getAdmins` (query, owner)
+- `addAdmin` (owner)
+- `removeAdmin` (owner)
+- `isAdmin` (query, public)
 
 ### Friends (Planned)
 
-* `addFriend` (authenticated)
-* `removeFriend` (authenticated)
-* `getFriends` (query, authenticated)
+- `addFriend` (authenticated)
+- `removeFriend` (authenticated)
+- `getFriends` (query, authenticated)
 
 ### Rush Mode (Planned)
 
-* `getRushQueue` (query, authenticated) — returns ~10 markets
+- `getRushQueue` (query, authenticated) — returns ~10 markets
 
 ---
 
@@ -705,15 +702,15 @@ Add Admin Form:
 
 ### ICP Ledger
 
-* Query balance
-* Transfer tokens
-* Get transaction history
+- Query balance
+- Transfer tokens
+- Get transaction history
 
 ### ckUSDC Ledger
 
-* Query balance
-* Transfer tokens
-* Get transaction history
+- Query balance
+- Transfer tokens
+- Get transaction history
 
 ---
 
@@ -723,40 +720,40 @@ Add Admin Form:
 
 #### Markets
 
-* `useMarkets` — fetch all markets
-* `useMarket(id)` — fetch single market
-* `useCreateMarket` — mutation
-* `useResolveMarket` — mutation
-* `usePlaceBet` — mutation
+- `useMarkets` — fetch all markets
+- `useMarket(id)` — fetch single market
+- `useCreateMarket` — mutation
+- `useResolveMarket` — mutation
+- `usePlaceBet` — mutation
 
 #### Wallet
 
-* `useWalletBalances` — query
-* `useSendICP` — mutation
-* `useSendCkUSDC` — mutation
-* `useWalletTransactions` — query
+- `useWalletBalances` — query
+- `useSendICP` — mutation
+- `useSendCkUSDC` — mutation
+- `useWalletTransactions` — query
 
 #### Portfolio
 
-* `usePositions` — query
-* `usePortfolioStats` — query
+- `usePositions` — query
+- `usePortfolioStats` — query
 
 #### Admin
 
-* `useAdminList` — query
-* `useAddAdmin` — mutation
-* `useRemoveAdmin` — mutation
+- `useAdminList` — query
+- `useAddAdmin` — mutation
+- `useRemoveAdmin` — mutation
 
 #### Friends (Planned)
 
-* `useFriends` — query
-* `useAddFriend` — mutation
-* `useRemoveFriend` — mutation
+- `useFriends` — query
+- `useAddFriend` — mutation
+- `useRemoveFriend` — mutation
 
 #### Rush (Planned)
 
-* `useRushQueue` — query
-* `useRushBet` — mutation
+- `useRushQueue` — query
+- `useRushBet` — mutation
 
 ---
 
@@ -764,24 +761,24 @@ Add Admin Form:
 
 After trade:
 
-* Invalidate balances
-* Invalidate positions
-* Invalidate market detail
-* Invalidate transactions
+- Invalidate balances
+- Invalidate positions
+- Invalidate market detail
+- Invalidate transactions
 
 After resolution:
 
-* Invalidate markets list
-* Invalidate market detail
+- Invalidate markets list
+- Invalidate market detail
 
 After send/receive:
 
-* Invalidate balances
-* Invalidate transactions
+- Invalidate balances
+- Invalidate transactions
 
 After admin change:
 
-* Invalidate admin list
+- Invalidate admin list
 
 ---
 
@@ -855,62 +852,60 @@ OR
 
 ### Authentication UX
 
-* No login wall for browsing
-* Login prompt appears contextually
-* Clear messaging:
-
-  * "Sign in to place this bet"
-  * "Sign in to send tokens"
+- No login wall for browsing
+- Login prompt appears contextually
+- Clear messaging:
+  - "Sign in to place this bet"
+  - "Sign in to send tokens"
 
 ### Market Resolution Urgency
 
-* Expired markets sorted to top
-* Visual hierarchy:
+- Expired markets sorted to top
+- Visual hierarchy:
+  - Expired
+  - Expiring soon
+  - Far future
 
-  * Expired
-  * Expiring soon
-  * Far future
-* Colour coding:
-
-  * Red → expired
-  * Orange → expiring within 24h
-  * Neutral → others
+- Colour coding:
+  - Red → expired
+  - Orange → expiring within 24h
+  - Neutral → others
 
 ### Admin vs Owner
 
-* Owner cannot be removed
-* Owner can add/remove admins
-* Admins can create/resolve markets
-* Both pass `isAdmin` checks
+- Owner cannot be removed
+- Owner can add/remove admins
+- Admins can create/resolve markets
+- Both pass `isAdmin` checks
 
 ### Private Markets Logic (Planned)
 
-* Only invitees can place bets
-* All users can view market
-* Invitees can see invite list
+- Only invitees can place bets
+- All users can view market
+- Invitees can see invite list
 
 ### Rush Mode Logic (Planned)
 
-* Backend filters to open markets user can bet on
-* Returns limited set (~10)
-* Frontend handles swipe gestures
-* Each swipe triggers immediate trade
-* Next market loads automatically
+- Backend filters to open markets user can bet on
+- Returns limited set (~10)
+- Frontend handles swipe gestures
+- Each swipe triggers immediate trade
+- Next market loads automatically
 
 ---
 
 ## Future Enhancements
 
-* Friends system fully implemented
-* Private/invite-only markets operational
-* Rush betting mode with swipe UI
-* Profile page with user settings
-* Mobile app
-* Advanced analytics and charts
-* Market maker roles
-* Liquidity pools
-* Multi-outcome markets
-* API for third-party integrations
+- Friends system fully implemented
+- Private/invite-only markets operational
+- Rush betting mode with swipe UI
+- Profile page with user settings
+- Mobile app
+- Advanced analytics and charts
+- Market maker roles
+- Liquidity pools
+- Multi-outcome markets
+- API for third-party integrations
 
 ---
 
