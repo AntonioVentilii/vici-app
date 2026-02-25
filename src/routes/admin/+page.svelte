@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import OutcomeBadge from '$lib/components/OutcomeBadge.svelte';
+	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import { mockBackend, type Market, type Outcome } from '$lib/services/mockBackend';
 
 	let markets = $state<Market[]>([]);
@@ -50,8 +50,10 @@
 
 <div class="space-y-12">
 	<div class="space-y-4">
-		<h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">Admin Dashboard</h1>
-		<p class="max-w-2xl text-lg text-gray-400">
+		<h1 class="text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl">
+			Admin Dashboard
+		</h1>
+		<p class="max-w-2xl text-lg text-slate-600">
 			Manage markets, create new opportunities, and resolve expired predictions.
 		</p>
 	</div>
@@ -59,15 +61,19 @@
 	<div class="grid grid-cols-1 gap-12 lg:grid-cols-2">
 		<!-- Create Market Section -->
 		<section class="space-y-8">
-			<div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-				<h2 class="mb-6 text-2xl font-bold text-white">Create New Market</h2>
+			<div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+				<h2 class="mb-6 text-2xl font-bold text-slate-950">Create New Market</h2>
 				<div class="space-y-6">
 					<div class="space-y-2">
-						<label class="text-xs font-bold tracking-widest text-gray-500 uppercase">
+						<label
+							class="text-xs font-bold tracking-widest text-gray-500 uppercase"
+							for="market-title"
+						>
 							Market Title
 						</label>
 						<input
-							class="w-full rounded-2xl border-none bg-white/5 px-6 py-4 text-white ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
+							id="market-title"
+							class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-500"
 							placeholder="e.g., Will Bitcoin hit $100k by 2027?"
 							type="text"
 							bind:value={title}
@@ -75,11 +81,15 @@
 					</div>
 
 					<div class="space-y-2">
-						<label class="text-xs font-bold tracking-widest text-gray-500 uppercase">
+						<label
+							class="text-xs font-bold tracking-widest text-gray-500 uppercase"
+							for="market-description"
+						>
 							Description
 						</label>
 						<textarea
-							class="w-full rounded-2xl border-none bg-white/5 px-6 py-4 text-white ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
+							id="market-description"
+							class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-500"
 							placeholder="Provide detailed criteria for resolution..."
 							rows="4"
 							bind:value={description}
@@ -87,11 +97,13 @@
 					</div>
 
 					<div class="space-y-2">
-						<label class="text-xs font-bold tracking-widest text-gray-500 uppercase"
-							>Expiry Date</label
+						<label
+							class="text-xs font-bold tracking-widest text-gray-500 uppercase"
+							for="expiry-date">Expiry Date</label
 						>
 						<input
-							class="w-full rounded-2xl border-none bg-white/5 px-6 py-4 text-white [color-scheme:dark] ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
+							id="expiry-date"
+							class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-500"
 							type="datetime-local"
 							bind:value={expiryDate}
 						/>
@@ -109,8 +121,8 @@
 
 		<!-- Resolve Markets Section -->
 		<section class="space-y-8">
-			<div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-				<h2 class="mb-6 text-2xl font-bold text-white">Resolve Active Markets</h2>
+			<div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+				<h2 class="mb-6 text-2xl font-bold text-slate-950">Resolve Active Markets</h2>
 
 				{#if loading}
 					<div class="flex justify-center py-12">
@@ -125,10 +137,10 @@
 				{:else}
 					<div class="space-y-6">
 						{#each unresolvedMarkets as market (market.id)}
-							<div class="space-y-4 rounded-2xl border border-white/5 bg-black/40 p-6">
+							<div class="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-6">
 								<div class="flex items-start justify-between">
-									<h3 class="line-clamp-1 font-bold text-white">{market.title}</h3>
-									<span class="font-mono text-[10px] text-gray-500">ID: {market.id}</span>
+									<h3 class="line-clamp-1 font-bold text-slate-950">{market.title}</h3>
+									<span class="font-mono text-[10px] text-slate-500">ID: {market.id}</span>
 								</div>
 
 								<div class="flex gap-2">
@@ -158,14 +170,14 @@
 			</div>
 
 			<!-- Resolved History -->
-			<div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-				<h2 class="mb-6 text-2xl font-bold text-white">Recent Resolutions</h2>
+			<div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+				<h2 class="mb-6 text-2xl font-bold text-slate-950">Recent Resolutions</h2>
 				<div class="space-y-4">
 					{#each resolvedMarkets.slice(0, 5) as market (market.id)}
 						<div
-							class="flex items-center justify-between border-b border-white/5 pb-4 last:border-0 last:pb-0"
+							class="flex items-center justify-between border-b border-slate-100 pb-4 last:border-0 last:pb-0"
 						>
-							<span class="line-clamp-1 text-sm text-gray-300">{market.title}</span>
+							<span class="line-clamp-1 text-sm text-slate-600">{market.title}</span>
 							<OutcomeBadge outcome={market.outcome} />
 						</div>
 					{/each}

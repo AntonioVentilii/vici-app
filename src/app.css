@@ -17,35 +17,14 @@
 @theme {
 	--font-display: 'JetBrains Mono', sans-serif;
 
-	--color-*: initial;
-	--color-inherit: inherit;
-	--color-transparent: transparent;
-	--color-current: currentColor;
-	--color-black: rgb(0 0 0);
-	--color-white: rgb(255 255 255);
+	--color-background: var(--color-slate-50);
+	--color-foreground: var(--color-slate-950);
 
-	--color-lavender-blue-50: #f2f3ff;
-	--color-lavender-blue-100: #e4e7ff;
-	--color-lavender-blue-200: #c9cfff;
-	--color-lavender-blue-300: #aeb8ff;
-	--color-lavender-blue-400: #93a0ff;
-	--color-lavender-blue-500: #7888ff;
-	--color-lavender-blue-600: #606dcc;
-	--color-lavender-blue-700: #485299;
-	--color-lavender-blue-800: #303666;
-	--color-lavender-blue-900: #181b33;
+	--color-card: var(--color-white);
+	--color-card-border: var(--color-slate-200);
 
-	--color-screamin-green-50: #eaffe5;
-	--color-screamin-green-100: #d0ffc8;
-	--color-screamin-green-200: #88ff78;
-	--color-screamin-green-300: #6bfb5b;
-	--color-screamin-green-400: #3bf229;
-	--color-screamin-green-500: #18d80a;
-	--color-screamin-green-600: #0cad03;
-	--color-screamin-green-700: #0c8308;
-	--color-screamin-green-800: #10670d;
-	--color-screamin-green-900: #105710;
-	--color-screamin-green-950: #023103;
+	--color-primary: var(--color-indigo-600);
+	--color-primary-foreground: var(--color-white);
 }
 
 @theme {
@@ -55,6 +34,7 @@
 		from {
 			opacity: 0;
 		}
+
 		to {
 			opacity: 1;
 		}
@@ -67,7 +47,7 @@ html {
 }
 
 body {
-	@apply bg-black text-gray-100;
+	@apply bg-background text-foreground antialiased;
 }
 
 /* Custom Scrollbar */
@@ -81,14 +61,14 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-	background: rgba(255, 255, 255, 0.1);
+	background: rgba(0, 0, 0, 0.1);
 	border-radius: 10px;
 	border: 2px solid transparent;
 	background-clip: content-box;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: rgba(255, 255, 255, 0.2);
+	background: rgba(0, 0, 0, 0.2);
 	background-clip: content-box;
 }
 

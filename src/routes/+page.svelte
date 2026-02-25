@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import MarketCard from '$lib/components/MarketCard.svelte';
+	import MarketCard from '$lib/components/market/MarketCard.svelte';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { mockBackend, type Market } from '$lib/services/mockBackend';
 
 	let markets: Market[] = $state([]);
@@ -39,19 +41,11 @@
 </svelte:head>
 
 <section class="space-y-12">
-	<!-- Hero Header -->
-	<div class="space-y-4">
-		<h1 class="max-w-3xl text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-			The World's First <span
-				class="bg-gradient-to-r from-indigo-400 to-purple-500 bg-clip-text text-transparent"
-				>Social Prediction</span
-			> Market
-		</h1>
-		<p class="max-w-2xl text-lg text-gray-400">
-			Predict outcomes, trade positions, and compete with friends. Built on the Internet Computer
-			for speed, security, and true decentralization.
-		</p>
-	</div>
+	<SectionHeader
+		description="Predict outcomes, trade positions, and compete with friends. Built on the Internet Computer for speed, security, and true decentralization."
+		highlight="Social Prediction Market"
+		title="The World's First"
+	/>
 
 	<!-- Controls & Filters -->
 	<div class="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
@@ -106,23 +100,6 @@
 			{/each}
 		</div>
 	{:else}
-		<div
-			class="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 py-20 text-center"
-		>
-			<div
-				class="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-white/5 text-gray-500"
-			>
-				<svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						d="M9.172 9.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-					/>
-				</svg>
-			</div>
-			<h3 class="text-xl font-bold text-white">No markets found</h3>
-			<p class="mt-2 text-gray-400">Try adjusting your filters or search term.</p>
-		</div>
+		<EmptyState message="No markets found. Try adjusting your filters or search term." />
 	{/if}
 </section>

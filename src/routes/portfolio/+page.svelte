@@ -1,5 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Card from '$lib/components/ui/Card.svelte';
+	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
+	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { mockBackend, type Market, type Position } from '$lib/services/mockBackend';
 
@@ -45,76 +50,43 @@
 </script>
 
 <div class="space-y-12">
-	<!-- Page Header -->
-	<div class="space-y-4">
-		<h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-			My <span class="text-indigo-400">Portfolio</span>
-		</h1>
-		<p class="max-w-2xl text-lg text-gray-400">
-			Track your active predictions and see how your trades are performing in real-time.
-		</p>
-	</div>
+	<SectionHeader
+		description="Track your active predictions and see how your trades are performing in real-time."
+		highlight="Portfolio"
+		title="My"
+	/>
 
 	{#if loading}
-		<div class="flex justify-center py-24">
-			<div
-				class="h-10 w-10 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"
-			></div>
-		</div>
+		<LoadingSpinner />
 	{:else}
 		<!-- Stats Summary -->
 		<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-			<div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-				<div class="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase">Total Holdings</div>
-				<div class="mt-2 flex items-baseline gap-2">
-					<span class="text-4xl font-black text-white">{formatAmount(totalPortfolioValue)}</span>
-					<span class="text-sm font-bold text-gray-500 uppercase">ICP</span>
-				</div>
-			</div>
+			<StatCard label="Total Holdings" unit="ICP" value={formatAmount(totalPortfolioValue)} />
 
-			<div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-				<div class="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase">Unrealized P&L</div>
-				<div class="mt-2 flex items-baseline gap-2">
-					<span class="text-4xl font-black {totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}">
-						{totalPnL >= 0 ? '+' : ''}{totalPnL.toFixed(2)}
-					</span>
-					<span class="text-sm font-bold text-gray-500 uppercase">ICP</span>
-				</div>
-			</div>
+			<StatCard
+				label="Unrealized P&L"
+				unit="ICP"
+				value={(totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(2)}
+				valueClass={totalPnL >= 0 ? 'text-green-400' : 'text-red-400'}
+			/>
 
-			<div class="rounded-3xl border border-white/10 bg-white/5 p-8 backdrop-blur-xl">
-				<div class="text-xs font-bold tracking-[0.2em] text-gray-500 uppercase">Active Markets</div>
-				<div class="mt-2 text-4xl font-black text-white">{positions.length}</div>
-			</div>
+			<StatCard label="Active Markets" value={positions.length} />
 		</div>
 
 		<!-- Positions Table -->
 		<div class="space-y-6">
 			<h2 class="text-2xl font-bold tracking-wider text-white uppercase">Active Positions</h2>
 
-			<div class="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl">
+			<Card class="overflow-hidden">
 				{#if positions.length === 0}
-					<div class="space-y-4 py-20 text-center">
-						<div
-							class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/5 text-gray-500"
-						>
-							<svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path
-									d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-								/>
-							</svg>
-						</div>
-						<p class="font-medium text-gray-400">You haven't placed any bets yet.</p>
+					<EmptyState message="You haven't placed any bets yet.">
 						<a
 							class="inline-block rounded-xl bg-indigo-600 px-8 py-3 text-sm font-bold text-white transition-all hover:bg-indigo-500"
 							href="/"
 						>
 							Explore Markets
 						</a>
-					</div>
+					</EmptyState>
 				{:else}
 					<table class="w-full text-left">
 						<thead>
@@ -179,7 +151,7 @@
 						</tbody>
 					</table>
 				{/if}
-			</div>
+			</Card>
 		</div>
 	{/if}
 </div>

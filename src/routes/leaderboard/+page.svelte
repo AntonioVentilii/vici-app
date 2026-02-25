@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { mockBackend, type LeaderboardEntry } from '$lib/services/mockBackend';
 
 	let leaderboard = $state<LeaderboardEntry[]>([]);
@@ -15,16 +17,11 @@
 </script>
 
 <div class="space-y-12">
-	<!-- Page Header -->
-	<div class="space-y-4">
-		<h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
-			Global <span class="text-indigo-400">Leaderboard</span>
-		</h1>
-		<p class="max-w-2xl text-lg text-gray-400">
-			Compete with the best predictors in the community. Rankings are updated in real-time based on
-			total P&L and win rate.
-		</p>
-	</div>
+	<SectionHeader
+		description="Compete with the best predictors in the community. Rankings are updated in real-time based on total P&L and win rate."
+		highlight="Leaderboard"
+		title="Global"
+	/>
 
 	<!-- Timeframe Filters -->
 	<div class="flex gap-2">
@@ -44,11 +41,7 @@
 	<!-- Leaderboard Table -->
 	<div class="overflow-hidden rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl">
 		{#if loading}
-			<div class="flex justify-center py-20">
-				<div
-					class="h-10 w-10 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"
-				></div>
-			</div>
+			<LoadingSpinner />
 		{:else}
 			<table class="w-full text-left">
 				<thead>

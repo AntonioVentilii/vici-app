@@ -3,11 +3,11 @@
 	import type { Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { page } from '$app/state';
-	import Auth from '$lib/components/Auth.svelte';
-	import Background from '$lib/components/Background.svelte';
-	import Banner from '$lib/components/Banner.svelte';
-	import Footer from '$lib/components/Footer.svelte';
-	import Header from '$lib/components/Header.svelte';
+	import Auth from '$lib/components/auth/Auth.svelte';
+	import Background from '$lib/components/layout/Background.svelte';
+	import Footer from '$lib/components/layout/Footer.svelte';
+	import Header from '$lib/components/layout/Header.svelte';
+	import Banner from '$lib/components/ui/Banner.svelte';
 	// eslint-disable-next-line import/no-relative-parent-imports
 	import '../app.css';
 
@@ -30,7 +30,7 @@
 	});
 </script>
 
-<div class="relative isolate min-h-dvh bg-black text-gray-100">
+<div class="relative isolate min-h-dvh">
 	<Banner />
 
 	<Header />

@@ -1,11 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { mockBackend, type Transaction, type WalletBalance } from '$lib/services/mockBackend';
 
 	let balances = $state<WalletBalance>({ icp: ZERO, ckUSDC: ZERO });
 	let transactions = $state<Transaction[]>([]);
-	let loading = $state(true);
 	let activeTab = $state('Send');
 
 	const tabs = ['Send', 'Receive', 'History'];
@@ -13,7 +13,6 @@
 	onMount(async () => {
 		balances = await mockBackend.getBalances();
 		transactions = await mockBackend.getTransactions();
-		loading = false;
 	});
 
 	const formatBalance = (b: bigint) => (Number(b) / 100_000_000).toFixed(4);
@@ -46,14 +45,11 @@
 </script>
 
 <div class="space-y-12">
-	<!-- Page Header -->
-	<div class="space-y-4">
-		<h1 class="text-4xl font-extrabold tracking-tight text-white sm:text-5xl">Your Wallet</h1>
-		<p class="max-w-2xl text-lg text-gray-400">
-			Manage your ICP and ckUSDC balances. Securely send and receive tokens on the Internet
-			Computer.
-		</p>
-	</div>
+	<SectionHeader
+		description="Manage your ICP and ckUSDC balances. Securely send and receive tokens on the Internet Computer."
+		highlight="Wallet"
+		title="Your"
+	/>
 
 	<!-- Balances Cards -->
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
