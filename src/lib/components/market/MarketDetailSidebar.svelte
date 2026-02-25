@@ -1,19 +1,19 @@
 <script lang="ts">
-	import BettingInterface from '$lib/components/market/BettingInterface.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
+	import PredictionInterface from '$lib/components/market/PredictionInterface.svelte';
 	import type { Market } from '$lib/services/mockBackend';
 
 	interface Props {
 		market: Market;
-		onBetPlaced: () => void;
+		onPredictionPlaced: () => void;
 	}
 
-	const { market, onBetPlaced }: Props = $props();
+	const { market, onPredictionPlaced }: Props = $props();
 </script>
 
 <aside class="space-y-8">
 	{#if market.status === 'Open'}
-		<BettingInterface {market} on:betPlaced={onBetPlaced} />
+		<PredictionInterface {market} on:predictionPlaced={onPredictionPlaced} />
 	{:else}
 		<div class="space-y-4 rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
 			<div class="flex justify-center">

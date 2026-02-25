@@ -14,7 +14,7 @@
 	let loading = $state(false);
 	let error = $state('');
 
-	const handlePlaceBet = async () => {
+	const handlePlacePrediction = async () => {
 		if (!amount || parseFloat(amount) <= 0) {
 			error = 'Please enter a valid amount';
 			return;
@@ -25,12 +25,12 @@
 
 		try {
 			const amt = BigInt(Math.floor(parseFloat(amount) * 100_000_000));
-			await mockBackend.placeBet(market.id, selectedType, amt, 'ICP');
+			await mockBackend.placePrediction(market.id, selectedType, amt, 'ICP');
 			amount = '';
-			dispatch('betPlaced');
-			alert(`Successfully placed ${selectedType} bet!`);
+			dispatch('predictionPlaced');
+			alert(`Successfully placed ${selectedType} prediction!`);
 		} catch (e: unknown) {
-			error = (e as Error).message ?? 'Failed to place bet';
+			error = (e as Error).message ?? 'Failed to place prediction';
 		} finally {
 			loading = false;
 		}
@@ -50,8 +50,10 @@
 </script>
 
 <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-	<h3 class="text-xl font-bold text-slate-950">Place a Bet</h3>
-	<p class="mt-2 text-sm text-slate-600">Select an outcome and enter your bet amount in ICP.</p>
+	<h3 class="text-xl font-bold text-slate-950">Place a Prediction</h3>
+	<p class="mt-2 text-sm text-slate-600">
+		Select an outcome and enter your prediction amount in ICP.
+	</p>
 
 	<div class="mt-8 space-y-6">
 		<!-- Outcome Selector -->
@@ -141,7 +143,7 @@
 		<button
 			class="group relative w-full overflow-hidden rounded-2xl bg-indigo-600 py-5 text-lg font-black text-white shadow-2xl shadow-indigo-500/40 transition-all hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
 			disabled={loading || !amount}
-			onclick={handlePlaceBet}
+			onclick={handlePlacePrediction}
 		>
 			{#if loading}
 				<div class="flex items-center justify-center gap-2">
@@ -151,7 +153,7 @@
 					Processing...
 				</div>
 			{:else}
-				Confirm {selectedType} Bet
+				Confirm {selectedType} Prediction
 			{/if}
 			<div
 				class="absolute inset-x-0 bottom-0 h-1 bg-white/20 transition-all group-hover:bg-white/40"

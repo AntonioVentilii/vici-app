@@ -56,7 +56,7 @@
 	/>
 
 	<!-- Balances Cards -->
-	<WalletStats {balances} {formatBalance} />
+	<WalletStats {balances} onFormatBalance={formatBalance} />
 
 	<!-- Operations Tabs -->
 	<div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
@@ -87,7 +87,7 @@
 			{:else if activeTab === 'Receive'}
 				<WalletReceive />
 			{:else}
-				<WalletHistory {formatBalance} {transactions} />
+				<WalletHistory onFormatBalance={formatBalance} {transactions} />
 			{/if}
 		</div>
 	</div>

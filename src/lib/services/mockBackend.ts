@@ -90,9 +90,9 @@ export interface BackendInterface {
 	resolveMarket(marketId: string, outcome: Outcome): Promise<void>;
 
 	/**
-	 * Places a bet on a market outcome.
+	 * Places a prediction on a market outcome.
 	 */
-	placeBet(
+	placePrediction(
 		marketId: string,
 		type: PositionType,
 		amount: bigint,
@@ -183,7 +183,7 @@ class MockBackend implements BackendInterface {
 			id: '2',
 			title: 'Will Svelte 6 be released in 2026?',
 			description:
-				'Bet on whether the next major version of Svelte will be officially released this year.',
+				'Predict on whether the next major version of Svelte will be officially released this year.',
 			creator: 'aaaaa-aa',
 			expiryDate: new Date('2026-12-31').getTime(),
 			status: 'Open',
@@ -257,13 +257,14 @@ class MockBackend implements BackendInterface {
 	}
 
 	/**
-	 * Places a bet on a market outcome.
+	 * Places a prediction on a market outcome.
 	 * Updates local balances, market volumes, and user positions.
+	 * @param marketId The ID of the market.
 	 * @param type YES or NO
 	 * @param amount Amount in e8s (multiplied by 10^8)
-	 * @param token The currency used for the bet.
+	 * @param token The currency used for the prediction.
 	 */
-	async placeBet(
+	async placePrediction(
 		marketId: string,
 		type: PositionType,
 		amount: bigint,

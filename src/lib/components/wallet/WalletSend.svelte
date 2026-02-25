@@ -22,7 +22,7 @@
 
 <div class="max-w-xl space-y-6">
 	<div class="space-y-2">
-		<label class="text-xs font-bold tracking-wider text-slate-500 uppercase">Token</label>
+		<span class="text-xs font-bold tracking-wider text-slate-500 uppercase">Token</span>
 		<div class="grid grid-cols-2 gap-4">
 			<button
 				class="rounded-xl border-2 px-4 py-3 font-bold transition-all {selectedToken === 'ICP'

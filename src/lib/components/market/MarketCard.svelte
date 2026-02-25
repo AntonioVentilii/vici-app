@@ -101,7 +101,7 @@
 			<button
 				class="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-xl shadow-indigo-500/20 transition-all hover:scale-110 hover:bg-indigo-500 active:scale-95"
 			>
-				Bet YES
+				Predict YES
 			</button>
 			<button
 				class="rounded-xl bg-white/10 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white/20 active:scale-95"

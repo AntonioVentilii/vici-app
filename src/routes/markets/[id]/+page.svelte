@@ -72,21 +72,21 @@
 
 				<MarketDetailStats
 					expiryDate={market.expiryDate}
-					{formatVolume}
+					onFormatVolume={formatVolume}
 					timeRemaining={getTimeRemaining(market.expiryDate)}
 					totalVolume={market.totalVolume}
 				/>
 
 				<MarketDetailForecast
-					{formatVolume}
 					noProbability={market.noProbability}
 					noVolume={market.noVolume}
+					onFormatVolume={formatVolume}
 					yesProbability={market.yesProbability}
 					yesVolume={market.yesVolume}
 				/>
 			</div>
 
-			<MarketDetailSidebar {market} onBetPlaced={() => fetchMarket(market?.id ?? '')} />
+			<MarketDetailSidebar {market} onPredictionPlaced={() => fetchMarket(market?.id ?? '')} />
 		</div>
 	{:else}
 		<div class="flex flex-col items-center justify-center py-24 text-center">

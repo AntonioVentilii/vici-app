@@ -35,7 +35,7 @@
 						<td class="py-4 font-bold text-slate-950">{onFormatBalance(tx.amount)}</td>
 						<td class="py-4 text-slate-500">
 							{#if tx.marketId}
-								Market Bet ID: {tx.marketId}
+								Market Prediction ID: {tx.marketId}
 							{:else if tx.counterparty}
 								To/From: {tx.counterparty.substring(0, 10)}...
 							{:else}

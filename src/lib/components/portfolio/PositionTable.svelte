@@ -22,7 +22,7 @@
 
 	<Card class="overflow-hidden">
 		{#if positions.length === 0}
-			<EmptyState message="You haven't placed any bets yet.">
+			<EmptyState message="You haven't placed any predictions yet.">
 				<a
 					class="inline-block rounded-xl bg-indigo-600 px-8 py-3 text-sm font-bold text-white transition-all hover:bg-indigo-500"
 					href="/"

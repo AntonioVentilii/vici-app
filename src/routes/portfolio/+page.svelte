@@ -66,6 +66,12 @@
 		/>
 
 		<!-- Positions Table -->
-		<PositionTable {calculatePnL} {calculateValue} {formatAmount} {markets} {positions} />
+		<PositionTable
+			{markets}
+			onCalculatePnL={calculatePnL}
+			onCalculateValue={calculateValue}
+			onFormatAmount={formatAmount}
+			{positions}
+		/>
 	{/if}
 </div>
