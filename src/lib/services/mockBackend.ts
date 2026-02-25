@@ -49,6 +49,14 @@ export interface Transaction {
 	counterparty?: string;
 }
 
+export interface LeaderboardEntry {
+	rank: number;
+	user: string;
+	pnl: number;
+	winRate: number;
+	activePositions: number;
+}
+
 /**
  * Backend Interface defining all methods needed for the frontend.
  * These methods are mocked for now and will be connected to the canister later.
@@ -123,6 +131,11 @@ export interface BackendInterface {
 	 * Removes a friend.
 	 */
 	removeFriend(friendId: string): Promise<void>;
+
+	/**
+	 * Fetches the leaderboard rankings.
+	 */
+	getLeaderboard(): Promise<LeaderboardEntry[]>;
 
 	/**
 	 * Fetches the user's friends list.
@@ -234,6 +247,18 @@ class MockBackend implements BackendInterface {
 			market.noVolume += amount;
 		}
 
+		// Update positions
+		let pos = this.positions.find((p) => p.marketId === marketId);
+		if (!pos) {
+			pos = { marketId, user: 'current-user', yesAmount: 0n, noAmount: 0n };
+			this.positions.push(pos);
+		}
+		if (type === 'YES') {
+			pos.yesAmount += amount;
+		} else {
+			pos.noAmount += amount;
+		}
+
 		// Update probabilities (naive calculation)
 		const total = Number(market.yesVolume + market.noVolume);
 		market.yesProbability = Number(market.yesVolume) / total;
@@ -288,6 +313,16 @@ class MockBackend implements BackendInterface {
 
 	async getPositions(): Promise<Position[]> {
 		return this.positions;
+	}
+
+	async getLeaderboard(): Promise<LeaderboardEntry[]> {
+		return [
+			{ rank: 1, user: 'princ-1234-abcd', pnl: 1450.5, winRate: 68, activePositions: 12 },
+			{ rank: 2, user: 'princ-5678-efgh', pnl: 920.2, winRate: 55, activePositions: 8 },
+			{ rank: 3, user: 'princ-9012-ijkl', pnl: 810.0, winRate: 62, activePositions: 5 },
+			{ rank: 4, user: 'princ-3456-mnop', pnl: 450.7, winRate: 45, activePositions: 15 },
+			{ rank: 5, user: 'princ-7890-qrst', pnl: 120.3, winRate: 48, activePositions: 3 }
+		];
 	}
 
 	async isAdmin(): Promise<boolean> {
