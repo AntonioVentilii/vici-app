@@ -6,6 +6,8 @@
 	import Banner from '$lib/components/Banner.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Header from '$lib/components/Header.svelte';
+	import { fade } from 'svelte/transition';
+	import { page } from '$app/state';
 	// eslint-disable-next-line import/no-relative-parent-imports
 	import '../app.css';
 
@@ -35,7 +37,11 @@
 
 	<main class="mx-auto max-w-7xl px-4 pt-24 pb-16 sm:px-6 lg:px-8">
 		<Auth>
-			{@render children()}
+			{#key page.url.pathname}
+				<div in:fade={{ duration: 300, delay: 300 }} out:fade={{ duration: 300 }}>
+					{@render children()}
+				</div>
+			{/key}
 		</Auth>
 	</main>
 

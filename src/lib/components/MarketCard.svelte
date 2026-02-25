@@ -28,10 +28,10 @@
 
 <a
 	href="/markets/{market.id}"
-	class="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all hover:bg-white/10 hover:shadow-2xl hover:shadow-indigo-500/10"
+	class="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all duration-500 hover:border-indigo-500/50 hover:bg-white/[0.07] hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.2)]"
 >
 	<!-- Status Badge -->
-	<div class="absolute top-4 right-4 z-10">
+	<div class="absolute top-4 right-4 z-20">
 		<span
 			class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium backdrop-blur-md {market.status ===
 			'Open'
@@ -62,7 +62,7 @@
 			</div>
 			<div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/5">
 				<div
-					class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-500"
+					class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-1000 ease-out"
 					style="width: {market.yesProbability * 100}%"
 				></div>
 			</div>
@@ -85,16 +85,18 @@
 
 	<!-- Quick Action Overlay (Hidden until hover) -->
 	<div
-		class="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 backdrop-blur-[2px] transition-all duration-300 group-hover:opacity-100"
+		class="absolute inset-0 z-10 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-sm transition-all duration-500 group-hover:opacity-100"
 	>
-		<div class="flex gap-3">
+		<div
+			class="flex translate-y-4 gap-3 transition-transform duration-500 group-hover:translate-y-0"
+		>
 			<button
-				class="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95"
+				class="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-xl shadow-indigo-500/20 transition-all hover:scale-110 hover:bg-indigo-500 active:scale-95"
 			>
 				Bet YES
 			</button>
 			<button
-				class="rounded-xl bg-white/10 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-md transition-transform hover:scale-105 active:scale-95"
+				class="rounded-xl bg-white/10 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white/20 active:scale-95"
 			>
 				Details
 			</button>

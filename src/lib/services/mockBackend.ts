@@ -152,6 +152,9 @@ export interface BackendInterface {
  * Mock implementation of the BackendInterface.
  */
 class MockBackend implements BackendInterface {
+	/**
+	 * Local in-memory storage for markets, simulating a canister's stable memory.
+	 */
 	private markets: Market[] = [
 		{
 			id: '1',
@@ -190,6 +193,14 @@ class MockBackend implements BackendInterface {
 	private balance: WalletBalance = { icp: 1000000000n, ckUSDC: 5000000000n };
 	private friends: string[] = [];
 
+	/**
+	 * Creates a new prediction market.
+	 * @param title Short, catchy title for the market.
+	 * @param description Detailed resolution criteria.
+	 * @param expiryDate Timestamp (ms) when trading ceases.
+	 * @param isInviteOnly Whether the market is restricted to the invite list.
+	 * @returns The unique ID of the created market.
+	 */
 	async createMarket(title: string, description: string, expiryDate: number, isInviteOnly = false): Promise<string> {
 		const id = (this.markets.length + 1).toString();
 		const newMarket: Market = {
@@ -219,6 +230,10 @@ class MockBackend implements BackendInterface {
 		return this.markets.find((m) => m.id === marketId) || null;
 	}
 
+	/**
+	 * Resolves a market with a specific outcome (YES/NO/CANCELED).
+	 * Only admins can call this. In this mock, anyone is an admin.
+	 */
 	async resolveMarket(marketId: string, outcome: Outcome): Promise<void> {
 		const market = this.markets.find((m) => m.id === marketId);
 		if (market) {
@@ -227,6 +242,13 @@ class MockBackend implements BackendInterface {
 		}
 	}
 
+	/**
+	 * Places a bet on a market outcome.
+	 * Updates local balances, market volumes, and user positions.
+	 * @param type YES or NO
+	 * @param amount Amount in e8s (multiplied by 10^8)
+	 * @param token The currency used for the bet.
+	 */
 	async placeBet(marketId: string, type: PositionType, amount: bigint, token: 'ICP' | 'ckUSDC'): Promise<void> {
 		const market = this.markets.find((m) => m.id === marketId);
 		if (!market) throw new Error('Market not found');

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { page } from '$app/state';
 	import { mockBackend } from '$lib/services/mockBackend';
 	import { onMount } from 'svelte';
 	import Login from './Login.svelte';
@@ -13,6 +14,11 @@
 	});
 
 	const formatBalance = (b: bigint) => Number(b) / 100_000_000;
+
+	const isActive = (path: string) => {
+		if (path === '/') return page.url.pathname === '/';
+		return page.url.pathname.startsWith(path);
+	};
 </script>
 
 <header
@@ -21,49 +27,59 @@
 	<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 		<!-- Logo -->
 		<div class="flex items-center gap-8">
-			<a href="/" class="flex items-center gap-2 group">
+			<a href="/" class="group flex items-center gap-2">
 				<div
 					class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white shadow-lg transition-transform group-hover:scale-110"
 				>
 					V
 				</div>
 				<span
-					class="text-xl font-extrabold tracking-tight text-white drop-shadow-sm sm:block hidden"
+					class="hidden text-xl font-extrabold tracking-tight text-white drop-shadow-sm sm:block"
 				>
 					VICI <span class="text-indigo-400">SOCIAL</span>
 				</span>
 			</a>
 
 			<!-- Desktop Nav -->
-			<nav class="hidden md:flex items-center gap-1">
+			<nav class="hidden items-center gap-1 md:flex">
 				<a
 					href="/"
-					class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/')
+						? 'bg-white/10 text-white'
+						: 'text-gray-400 hover:bg-white/5 hover:text-white'}"
 				>
 					Markets
 				</a>
 				<a
 					href="/leaderboard"
-					class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/leaderboard')
+						? 'bg-white/10 text-white'
+						: 'text-gray-400 hover:bg-white/5 hover:text-white'}"
 				>
 					Leaderboard
 				</a>
 				<a
 					href="/portfolio"
-					class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/portfolio')
+						? 'bg-white/10 text-white'
+						: 'text-gray-400 hover:bg-white/5 hover:text-white'}"
 				>
 					Portfolio
 				</a>
 				<a
 					href="/wallet"
-					class="px-4 py-2 text-sm font-medium text-gray-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/wallet')
+						? 'bg-white/10 text-white'
+						: 'text-gray-400 hover:bg-white/5 hover:text-white'}"
 				>
 					Wallet
 				</a>
 				{#if isAdmin}
 					<a
 						href="/admin"
-						class="px-4 py-2 text-sm font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-colors"
+						class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/admin')
+							? 'bg-indigo-500/10 text-indigo-400'
+							: 'text-indigo-400/60 hover:bg-indigo-500/5 hover:text-indigo-400'}"
 					>
 						Admin
 					</a>
@@ -73,23 +89,27 @@
 
 		<!-- Right side -->
 		<div class="flex items-center gap-4">
-			<div class="hidden sm:flex flex-col items-end gap-0.5">
-				<div class="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-gray-400">
-					<span class="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse"></span>
+			<div class="hidden flex-col items-end gap-0.5 sm:flex">
+				<div
+					class="flex items-center gap-2 text-xs font-semibold tracking-wider text-gray-400 uppercase"
+				>
+					<span class="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500"></span>
 					Live Balances
 				</div>
 				<div class="flex items-center gap-3">
 					<span class="text-sm font-bold text-white"
-						>{formatBalance(balances.icp).toFixed(2)} <span class="text-[10px] text-gray-400">ICP</span></span
+						>{formatBalance(balances.icp).toFixed(2)}
+						<span class="text-[10px] text-gray-400">ICP</span></span
 					>
 					<span class="h-3 w-[1px] bg-white/10"></span>
 					<span class="text-sm font-bold text-white"
-						>{formatBalance(balances.ckUSDC).toFixed(2)} <span class="text-[10px] text-gray-400">ckUSDC</span></span
+						>{formatBalance(balances.ckUSDC).toFixed(2)}
+						<span class="text-[10px] text-gray-400">ckUSDC</span></span
 					>
 				</div>
 			</div>
 
-			<div class="h-8 w-[1px] bg-white/10 sm:block hidden"></div>
+			<div class="hidden h-8 w-[1px] bg-white/10 sm:block"></div>
 
 			<div class="flex items-center gap-2">
 				<Login />
