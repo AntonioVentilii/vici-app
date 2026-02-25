@@ -1,10 +1,10 @@
-import { useState } from 'react';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Copy, CheckCircle2, QrCode } from 'lucide-react';
+import { CheckCircle2, Copy, QrCode } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 
 export default function ReceiveTokenPanel() {
 	const { identity } = useInternetIdentity();

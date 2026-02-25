@@ -10,10 +10,10 @@
 		<p class="text-center font-medium">
 			<span>Your project needs a Satellite for local dev.</span>
 			<a
-				href="http://localhost:5866"
-				target="_blank"
 				class="ml-2 inline-block font-bold underline"
 				aria-label="Open the Juno Console to create a new Satellite for testing"
+				href="http://localhost:5866"
+				target="_blank"
 			>
 				Create one now!
 			</a>

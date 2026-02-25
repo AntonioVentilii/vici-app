@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { ShieldAlert } from 'lucide-react';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
 
 export default function AccessDeniedScreen() {
 	const { login, loginStatus } = useInternetIdentity();

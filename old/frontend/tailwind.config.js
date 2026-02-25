@@ -1,5 +1,5 @@
-import typography from '@tailwindcss/typography';
 import containerQueries from '@tailwindcss/container-queries';
+import typography from '@tailwindcss/typography';
 import animate from 'tailwindcss-animate';
 
 /** @type {import('tailwindcss').Config} */

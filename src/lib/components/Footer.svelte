@@ -3,18 +3,18 @@
 >
 	<span class="flex items-baseline gap-2">
 		<a
-			href="https://juno.build"
-			aria-label="Go to Juno website and documentation"
 			class="group hover:text-lavender-blue-500 active:text-lavender-blue-400"
-			target="_blank"
+			aria-label="Go to Juno website and documentation"
+			href="https://juno.build"
 			rel="noopener noreferrer"
+			target="_blank"
 		>
 			<svg
 				id="Layer_2"
-				xmlns="http://www.w3.org/2000/svg"
+				fill="currentColor"
 				viewBox="0 0 1000 220.39"
 				width="135"
-				fill="currentColor"
+				xmlns="http://www.w3.org/2000/svg"
 			>
 				<g>
 					<path
@@ -23,7 +23,7 @@
 					<path
 						d="m487.36,214.99h220.39v-104.8c0-60.86-49.34-110.19-110.19-110.19h-110.19s0,214.99,0,214.99Z"
 					></path>
-					<rect x="725.65" y="0" width="220.39" height="220.39" rx="110.19" ry="110.19"></rect>
+					<rect height="220.39" rx="110.19" ry="110.19" width="220.39" x="725.65" y="0"></rect>
 					<path
 						d="m101.31,0c0,55.96-45.36,101.32-101.31,101.32v119.07C121.72,220.39,220.39,121.72,220.39,0h0s-119.07,0-119.07,0Z"
 					></path>
@@ -40,14 +40,14 @@
 
 	<div class="flex gap-2">
 		<a
-			href="https://github.com/junobuild/juno"
-			aria-label="Juno is open source on GitHub"
 			class="hover:text-lavender-blue-500 active:text-lavender-blue-400"
-			target="_blank"
+			aria-label="Juno is open source on GitHub"
+			href="https://github.com/junobuild/juno"
 			rel="noopener noreferrer"
+			target="_blank"
 		>
-			<svg width="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49 49" fill="currentColor">
-				<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49 47.47">
+			<svg fill="currentColor" viewBox="0 0 49 49" width="32" xmlns="http://www.w3.org/2000/svg">
+				<svg viewBox="0 0 49 47.47" xmlns="http://www.w3.org/2000/svg">
 					<g>
 						<g>
 							<g>
@@ -62,13 +62,13 @@
 		</a>
 
 		<a
-			href="https://discord.gg/wHZ57Z2RAG"
-			aria-label="Join our channel on Discord to chat or ask questions"
 			class="hover:text-lavender-blue-500 active:text-lavender-blue-400"
-			target="_blank"
+			aria-label="Join our channel on Discord to chat or ask questions"
+			href="https://discord.gg/wHZ57Z2RAG"
 			rel="noopener noreferrer"
+			target="_blank"
 		>
-			<svg width="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49 49" fill="currentColor">
+			<svg fill="currentColor" viewBox="0 0 49 49" width="32" xmlns="http://www.w3.org/2000/svg">
 				<g>
 					<g>
 						<g>
@@ -88,13 +88,13 @@
 		</a>
 
 		<a
-			href="https://twitter.com/junobuild"
-			aria-label="Follow Juno on X/Twitter"
 			class="hover:text-lavender-blue-500 active:text-lavender-blue-400"
-			target="_blank"
+			aria-label="Follow Juno on X/Twitter"
+			href="https://twitter.com/junobuild"
 			rel="noopener noreferrer"
+			target="_blank"
 		>
-			<svg width="32" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 49 49" fill="currentColor">
+			<svg fill="currentColor" viewBox="0 0 49 49" width="32" xmlns="http://www.w3.org/2000/svg">
 				<g>
 					<path
 						d="M24.5,0C10.97,0,0,10.97,0,24.5s10.97,24.5,24.5,24.5,24.5-10.97,24.5-24.5S38.03,0,24.5,0ZM28.56,37.35l-6.35-8.87-8.29,8.87h-3.77l10.42-11.15-10.42-14.56h10.29l5.96,8.32,7.78-8.32h3.76l-9.91,10.6,10.82,15.1h-10.29Z"

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import Button from '$lib/components/Button.svelte';
 	import { signIn } from '@junobuild/core';
+	import Button from '$lib/components/Button.svelte';
 
 	const signInWithDev = async () => {
 		// Sign in for local development and E2E only

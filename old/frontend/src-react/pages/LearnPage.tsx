@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
 	Accordion,
 	AccordionContent,
@@ -6,19 +5,20 @@ import {
 	AccordionTrigger
 } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-	Coins,
-	TrendingUp,
+	ArrowRight,
 	Award,
-	Shield,
-	Clock,
-	Users,
 	BarChart3,
-	ArrowRight
+	Clock,
+	Coins,
+	Shield,
+	TrendingUp,
+	Users
 } from 'lucide-react';
-import { useGetAllMarkets } from '../hooks/useQueries';
-import { MarketStatus } from '../backend';
 import type { Page } from '../App';
+import { MarketStatus } from '../backend';
+import { useGetAllMarkets } from '../hooks/useQueries';
 
 interface LearnPageProps {
 	onNavigate: (page: Page) => void;

@@ -1,7 +1,7 @@
-import { writable, get } from 'svelte/store';
-import { identity } from './auth';
+import { get, writable } from 'svelte/store';
 import type { backendInterface } from '../backend';
 import { createActorWithConfig } from '../config';
+import { identity } from './auth';
 
 function createActorStore() {
 	const { subscribe, set } = writable<{

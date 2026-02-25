@@ -1,6 +1,6 @@
-import { writable, get } from 'svelte/store';
-import { backend } from './actor';
+import { get, writable } from 'svelte/store';
 import type { MarketSnapshot } from '../backend';
+import { backend } from './actor';
 
 function createMarketsStore() {
 	const { subscribe, set, update } = writable<{

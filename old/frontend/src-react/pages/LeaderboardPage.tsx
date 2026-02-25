@@ -1,8 +1,8 @@
-import { useGetLeaderboard } from '../hooks/useQueries';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Trophy, Medal, Award } from 'lucide-react';
+import { Award, Medal, Trophy } from 'lucide-react';
+import { useGetLeaderboard } from '../hooks/useQueries';
 
 export default function LeaderboardPage() {
 	const { data: leaderboard = [], isLoading } = useGetLeaderboard(50);

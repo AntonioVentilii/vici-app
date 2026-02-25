@@ -1,22 +1,22 @@
-import { useEffect, useState } from 'react';
+import { Toaster } from '@/components/ui/sonner';
+import { ThemeProvider } from 'next-themes';
+import { useState } from 'react';
+import AccessDeniedScreen from './components/AccessDeniedScreen';
+import Footer from './components/Footer';
+import Header from './components/Header';
+import ProfileSetupModal from './components/ProfileSetupModal';
 import { useInternetIdentity } from './hooks/useInternetIdentity';
 import { useGetCallerUserProfile, useIsCallerAdmin } from './hooks/useQueries';
-import { ThemeProvider } from 'next-themes';
-import { Toaster } from '@/components/ui/sonner';
-import Header from './components/Header';
-import Footer from './components/Footer';
+import AdminPage from './pages/AdminPage';
 import HomePage from './pages/HomePage';
-import MarketsPage from './pages/MarketsPage';
-import MarketDetailPage from './pages/MarketDetailPage';
-import PortfolioPage from './pages/PortfolioPage';
 import LeaderboardPage from './pages/LeaderboardPage';
 import LearnPage from './pages/LearnPage';
+import MarketDetailPage from './pages/MarketDetailPage';
+import MarketsPage from './pages/MarketsPage';
+import PortfolioPage from './pages/PortfolioPage';
 import ProfilePage from './pages/ProfilePage';
-import AdminPage from './pages/AdminPage';
 import RushPage from './pages/RushPage';
 import WalletPage from './pages/WalletPage';
-import ProfileSetupModal from './components/ProfileSetupModal';
-import AccessDeniedScreen from './components/AccessDeniedScreen';
 
 export type Page =
 	| 'home'

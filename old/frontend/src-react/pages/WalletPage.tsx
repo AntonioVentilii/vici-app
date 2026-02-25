@@ -1,12 +1,10 @@
-import { useState } from 'react';
-import { useGetWalletBalance } from '../hooks/useQueries';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Wallet, TrendingUp, TrendingDown, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import SendTokenForm from '../components/SendTokenForm';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowDownLeft, ArrowUpRight, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import ReceiveTokenPanel from '../components/ReceiveTokenPanel';
-import type { WalletBalance } from '../backend';
+import SendTokenForm from '../components/SendTokenForm';
+import { useGetWalletBalance } from '../hooks/useQueries';
 
 export default function WalletPage() {
 	const { data: walletBalance, isLoading, error } = useGetWalletBalance();

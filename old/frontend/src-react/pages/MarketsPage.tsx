@@ -1,11 +1,11 @@
-import { useState } from 'react';
-import { useGetAllMarkets } from '../hooks/useQueries';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import MarketCard from '../components/MarketCard';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Search } from 'lucide-react';
+import { useState } from 'react';
 import { MarketStatus } from '../backend';
+import MarketCard from '../components/MarketCard';
+import { useGetAllMarkets } from '../hooks/useQueries';
 
 interface MarketsPageProps {
 	onViewMarket: (marketId: bigint) => void;

@@ -3,7 +3,7 @@
 		spinner?: boolean;
 	}
 
-	let { spinner = false }: Props = $props();
+	const { spinner = false }: Props = $props();
 </script>
 
 <div

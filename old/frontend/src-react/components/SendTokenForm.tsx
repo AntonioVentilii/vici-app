@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { useDepositFunds, useWithdrawFunds } from '../hooks/useQueries';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -10,11 +9,12 @@ import {
 	SelectTrigger,
 	SelectValue
 } from '@/components/ui/select';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Loader2, Send, AlertCircle, CheckCircle2, Info } from 'lucide-react';
 import { Principal } from '@icp-sdk/core/principal';
+import { AlertCircle, Info, Send } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import type { WalletBalance } from '../backend';
+import { useWithdrawFunds } from '../hooks/useQueries';
 
 interface SendTokenFormProps {
 	currentBalance: WalletBalance | undefined;

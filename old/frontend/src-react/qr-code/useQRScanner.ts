@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useCamera, CameraConfig } from '../camera/useCamera';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { CameraConfig, useCamera } from '../camera/useCamera';
 
 declare global {
 	interface Window {

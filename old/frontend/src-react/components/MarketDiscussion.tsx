@@ -1,20 +1,20 @@
-import { useState } from 'react';
-import {
-	useGetMarketComments,
-	useCreateComment,
-	useModerateComment,
-	useIsCallerAdmin
-} from '../hooks/useQueries';
-import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
-import { MessageSquare, Eye, EyeOff, Send, LogIn } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Textarea } from '@/components/ui/textarea';
+import { EyeOff, LogIn, MessageSquare, Send } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile } from '../hooks/useQueries';
+import {
+	useCreateComment,
+	useGetCallerUserProfile,
+	useGetMarketComments,
+	useIsCallerAdmin,
+	useModerateComment
+} from '../hooks/useQueries';
 
 interface MarketDiscussionProps {
 	marketId: bigint;

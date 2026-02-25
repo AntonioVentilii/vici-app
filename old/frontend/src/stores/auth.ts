@@ -1,4 +1,3 @@
-import { writable, derived } from 'svelte/store';
 import {
 	AuthClient,
 	type AuthClientCreateOptions,
@@ -6,6 +5,7 @@ import {
 } from '@dfinity/auth-client';
 import type { Identity } from '@icp-sdk/core/agent';
 import { DelegationIdentity, isDelegationValid } from '@icp-sdk/core/identity';
+import { derived, writable } from 'svelte/store';
 import { loadConfig } from '../config';
 
 export type Status = 'initializing' | 'idle' | 'logging-in' | 'success' | 'loginError';

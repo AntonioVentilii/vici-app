@@ -1,17 +1,17 @@
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile, useIsCallerAdmin } from '../hooks/useQueries';
-import { useQueryClient } from '@tanstack/react-query';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
 import {
 	DropdownMenu,
 	DropdownMenuContent,
 	DropdownMenuItem,
 	DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu';
-import { Menu, X, User, LogOut, Shield, Zap, Wallet } from 'lucide-react';
+import { useQueryClient } from '@tanstack/react-query';
+import { LogOut, Menu, Shield, User, Wallet, X, Zap } from 'lucide-react';
 import { useState } from 'react';
 import type { Page } from '../App';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import { useGetCallerUserProfile, useIsCallerAdmin } from '../hooks/useQueries';
 
 interface HeaderProps {
 	currentPage: Page;

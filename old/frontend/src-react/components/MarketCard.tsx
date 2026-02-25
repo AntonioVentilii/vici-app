@@ -1,8 +1,7 @@
-import { MarketSnapshot, MarketStatus } from '../backend';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { TrendingUp, Clock, Users, Lock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Clock, Lock } from 'lucide-react';
+import { MarketSnapshot, MarketStatus } from '../backend';
 
 interface MarketCardProps {
 	market: MarketSnapshot;

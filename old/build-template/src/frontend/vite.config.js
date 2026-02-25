@@ -1,5 +1,5 @@
-import { fileURLToPath, URL } from 'url';
 import { svelte } from '@sveltejs/vite-plugin-svelte';
+import { fileURLToPath, URL } from 'url';
 import { defineConfig } from 'vite';
 import environment from 'vite-plugin-environment';
 

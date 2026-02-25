@@ -14,7 +14,7 @@
 		"postinstall:copy-auth": "node -e \"require('fs').cpSync('node_modules/@junobuild/core/dist/workers/', './static/workers', {recursive: true});\"",
 		"postinstall": "npm run postinstall:copy-auth"
 	},
-		"devDependencies": {
+	"devDependencies": {
 		"@dfinity/eslint-config-oisy-wallet": "^0.2.3",
 		"@junobuild/config": "^2.11.0",
 		"@junobuild/vite-plugin": "^4.7.0",

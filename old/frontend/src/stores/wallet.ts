@@ -1,6 +1,6 @@
-import { writable, get } from 'svelte/store';
-import { backend } from './actor';
+import { get, writable } from 'svelte/store';
 import type { WalletBalance } from '../backend';
+import { backend } from './actor';
 
 function createWalletStore() {
 	const { subscribe, set, update } = writable<{

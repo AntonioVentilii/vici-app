@@ -1,6 +1,6 @@
-import { writable, get } from 'svelte/store';
-import { backend } from './actor';
 import type { Principal } from '@icp-sdk/core/principal';
+import { get, writable } from 'svelte/store';
+import { backend } from './actor';
 
 function createLeaderboardStore() {
 	const { subscribe, set, update } = writable<{

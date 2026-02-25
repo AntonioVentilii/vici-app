@@ -1,11 +1,11 @@
+import pluginRouter from '@tanstack/eslint-plugin-router';
 import typescript from '@typescript-eslint/eslint-plugin';
 import typescriptParser from '@typescript-eslint/parser';
 import reactHooks from 'eslint-plugin-react-hooks';
+import pluginTailwindcss from 'eslint-plugin-tailwindcss';
 import globals from 'globals';
-import pluginRouter from '@tanstack/eslint-plugin-router';
 import noBigIntInQueryKeys from './eslint-rules/no-bigint-in-query-keys.js';
 import requireInternetIdentityProvider from './eslint-rules/require-internet-identity-provider.js';
-import pluginTailwindcss from 'eslint-plugin-tailwindcss';
 
 const customRules = {
 	rules: {

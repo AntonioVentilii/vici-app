@@ -1,17 +1,18 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
 	import { initSatellite } from '@junobuild/core';
-	import Footer from '$lib/components/Footer.svelte';
-	import Background from '$lib/components/Background.svelte';
-	import '../app.css';
+	import type { Snippet } from 'svelte';
 	import Auth from '$lib/components/Auth.svelte';
+	import Background from '$lib/components/Background.svelte';
 	import Banner from '$lib/components/Banner.svelte';
+	import Footer from '$lib/components/Footer.svelte';
+	// eslint-disable-next-line import/no-relative-parent-imports
+	import '../app.css';
 
 	interface Props {
 		children: Snippet;
 	}
 
-	let { children }: Props = $props();
+	const { children }: Props = $props();
 
 	const init = async () => {
 		await initSatellite({
@@ -26,7 +27,7 @@
 	});
 </script>
 
-<div class="relative isolate min-h-[100dvh]">
+<div class="relative isolate min-h-dvh">
 	<Banner />
 
 	<main
@@ -37,7 +38,7 @@
 		</h1>
 		<p class="py-4 md:max-w-lg dark:text-white">
 			Try out this demo app to discover
-			<a href="https://juno.build" rel="noopener noreferrer" target="_blank" class="underline">
+			<a class="underline" href="https://juno.build" rel="noopener noreferrer" target="_blank">
 				Juno</a
 			>.
 		</p>

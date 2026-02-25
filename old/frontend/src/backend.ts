@@ -9,13 +9,25 @@
 import {
 	Actor,
 	HttpAgent,
-	type HttpAgentOptions,
 	type ActorConfig,
+	type ActorSubclass,
 	type Agent,
-	type ActorSubclass
+	type HttpAgentOptions
 } from '@icp-sdk/core/agent';
 import type { Principal } from '@icp-sdk/core/principal';
 import { idlFactory, type _SERVICE } from './declarations/backend.did';
+import type {
+	MarketDepthPosition as _MarketDepthPosition,
+	MarketSnapshot as _MarketSnapshot,
+	MarketStatus as _MarketStatus,
+	Position as _Position,
+	PositionType as _PositionType,
+	Time as _Time,
+	Transaction as _Transaction,
+	UserProfile as _UserProfile,
+	UserRole as _UserRole,
+	WalletBalance as _WalletBalance
+} from './declarations/backend.did.d.ts';
 export interface Some<T> {
 	__kind__: 'Some';
 	value: T;
@@ -217,18 +229,6 @@ export interface backendInterface {
 	updateMarketAnalytics(marketId: bigint): Promise<void>;
 	withdrawFunds(amount: bigint): Promise<void>;
 }
-import type {
-	MarketDepthPosition as _MarketDepthPosition,
-	MarketSnapshot as _MarketSnapshot,
-	MarketStatus as _MarketStatus,
-	Position as _Position,
-	PositionType as _PositionType,
-	Time as _Time,
-	Transaction as _Transaction,
-	UserProfile as _UserProfile,
-	UserRole as _UserRole,
-	WalletBalance as _WalletBalance
-} from './declarations/backend.did.d.ts';
 export class Backend implements backendInterface {
 	constructor(
 		private actor: ActorSubclass<_SERVICE>,

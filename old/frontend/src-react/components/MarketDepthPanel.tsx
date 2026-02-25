@@ -1,4 +1,4 @@
-import { useGetMarketDepth, useGetMarket } from '../hooks/useQueries';
+import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
 	Table,
@@ -8,9 +8,9 @@ import {
 	TableHeader,
 	TableRow
 } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown } from 'lucide-react';
+import { TrendingDown, TrendingUp } from 'lucide-react';
 import { PositionType } from '../backend';
+import { useGetMarket, useGetMarketDepth } from '../hooks/useQueries';
 
 interface MarketDepthPanelProps {
 	marketId: bigint;

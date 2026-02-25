@@ -1,13 +1,6 @@
-import {
-	useGetCallerUserProfile,
-	useGetCallerPositions,
-	useGetCallerTransactions,
-	useGetAllMarkets
-} from '../hooks/useQueries';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
 	Table,
 	TableBody,
@@ -16,8 +9,15 @@ import {
 	TableHeader,
 	TableRow
 } from '@/components/ui/table';
-import { TrendingUp, TrendingDown, Wallet, Activity } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Activity, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { PositionType, Variant_trade_deposit_payout } from '../backend';
+import {
+	useGetAllMarkets,
+	useGetCallerPositions,
+	useGetCallerTransactions,
+	useGetCallerUserProfile
+} from '../hooks/useQueries';
 
 interface PortfolioPageProps {
 	onViewMarket: (marketId: bigint) => void;

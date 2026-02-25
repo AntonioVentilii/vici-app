@@ -1,18 +1,18 @@
-import { useGetMarketAnalytics } from '../hooks/useQueries';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-	LineChart,
-	Line,
-	BarChart,
 	Bar,
-	XAxis,
-	YAxis,
+	BarChart,
 	CartesianGrid,
-	Tooltip,
 	Legend,
-	ResponsiveContainer
+	Line,
+	LineChart,
+	ResponsiveContainer,
+	Tooltip,
+	XAxis,
+	YAxis
 } from 'recharts';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useGetMarketAnalytics } from '../hooks/useQueries';
 
 interface MarketAnalyticsChartProps {
 	marketId: bigint;

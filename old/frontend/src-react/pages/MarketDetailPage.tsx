@@ -1,28 +1,9 @@
-import { useState } from 'react';
-import {
-	useGetMarket,
-	usePlaceTrade,
-	useGetCallerUserProfile,
-	useGetMarketDepth,
-	useGetMarketAnalytics,
-	useGetMarketComments,
-	useCreateComment,
-	useModerateComment,
-	useIsCallerAdmin,
-	useGetInvitedUsers,
-	useInviteUsers,
-	useGetFriendsList,
-	useGetUserProfile
-} from '../hooks/useQueries';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
 	Select,
 	SelectContent,
@@ -30,27 +11,40 @@ import {
 	SelectTrigger,
 	SelectValue
 } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Principal } from '@icp-sdk/core/principal';
 import {
 	ArrowLeft,
-	TrendingUp,
-	TrendingDown,
+	BarChart2,
 	Clock,
 	Info,
-	Users,
-	MessageSquare,
-	BarChart2,
 	Lock,
+	LogIn,
+	MessageSquare,
+	TrendingDown,
+	TrendingUp,
 	UserPlus,
-	X,
-	LogIn
+	Users
 } from 'lucide-react';
+import { useState } from 'react';
 import { toast } from 'sonner';
 import { MarketStatus, PositionType } from '../backend';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Principal } from '@icp-sdk/core/principal';
-import MarketDepthPanel from '../components/MarketDepthPanel';
 import MarketAnalyticsChart from '../components/MarketAnalyticsChart';
+import MarketDepthPanel from '../components/MarketDepthPanel';
 import MarketDiscussion from '../components/MarketDiscussion';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import {
+	useGetCallerUserProfile,
+	useGetFriendsList,
+	useGetInvitedUsers,
+	useGetMarket,
+	useGetUserProfile,
+	useInviteUsers,
+	useIsCallerAdmin,
+	usePlaceTrade
+} from '../hooks/useQueries';
 
 interface MarketDetailPageProps {
 	marketId: bigint;

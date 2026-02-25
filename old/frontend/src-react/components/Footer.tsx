@@ -1,5 +1,5 @@
-import { SiGithub, SiX } from 'react-icons/si';
 import { Heart } from 'lucide-react';
+import { SiGithub, SiX } from 'react-icons/si';
 
 export default function Footer() {
 	return (

@@ -1,14 +1,8 @@
 <script lang="ts">
-    import { cn } from "@/lib/utils";
-    export let className: string = "";
+	import { cn } from '@/lib/utils';
+	export let className: string = '';
 </script>
 
-<div
-    class={cn(
-        "rounded-xl border bg-card text-card-foreground shadow-sm",
-        className,
-    )}
-    on:click
->
-    <slot />
+<div class={cn('bg-card text-card-foreground rounded-xl border shadow-sm', className)} on:click>
+	<slot />
 </div>

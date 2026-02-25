@@ -1,7 +1,7 @@
-import { writable, get } from 'svelte/store';
-import { backend } from './actor';
-import type { UserProfile } from '../backend';
 import type { Principal } from '@icp-sdk/core/principal';
+import { get, writable } from 'svelte/store';
+import type { UserProfile } from '../backend';
+import { backend } from './actor';
 
 function createFriendsStore() {
 	const { subscribe, set, update } = writable<{

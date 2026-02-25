@@ -1,23 +1,4 @@
-import { useState } from 'react';
-import {
-	useCreateMarket,
-	useResolveMarket,
-	useGrantViciCoins,
-	useGetAllMarkets,
-	useAdminList,
-	useAddAdmin,
-	useRemoveAdmin
-} from '../hooks/useQueries';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
 	AlertDialog,
 	AlertDialogAction,
@@ -29,23 +10,41 @@ import {
 	AlertDialogTitle,
 	AlertDialogTrigger
 } from '@/components/ui/alert-dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from 'sonner';
-import {
-	Plus,
-	CheckCircle,
-	XCircle,
-	Coins,
-	Lock,
-	AlertTriangle,
-	Clock,
-	Shield,
-	UserMinus,
-	Crown,
-	Info
-} from 'lucide-react';
-import { MarketStatus, MarketSnapshot } from '../backend';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { Principal } from '@icp-sdk/core/principal';
+import {
+	AlertTriangle,
+	CheckCircle,
+	Clock,
+	Coins,
+	Crown,
+	Info,
+	Lock,
+	Plus,
+	Shield,
+	UserMinus
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { MarketSnapshot, MarketStatus } from '../backend';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import {
+	useAddAdmin,
+	useAdminList,
+	useCreateMarket,
+	useGetAllMarkets,
+	useGrantViciCoins,
+	useRemoveAdmin,
+	useResolveMarket
+} from '../hooks/useQueries';
 
 export default function AdminPage() {
 	const createMarket = useCreateMarket();

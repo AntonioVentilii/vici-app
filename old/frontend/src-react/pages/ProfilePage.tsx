@@ -1,22 +1,22 @@
-import { useState } from 'react';
-import {
-	useGetCallerUserProfile,
-	useSaveCallerUserProfile,
-	useGetFriendsList,
-	useAddFriend,
-	useRemoveFriend,
-	useGetUserProfile
-} from '../hooks/useQueries';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
-import { toast } from 'sonner';
-import { User, Save, UserPlus, UserMinus, Users } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Principal } from '@icp-sdk/core/principal';
+import { Save, User, UserMinus, UserPlus, Users } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import {
+	useAddFriend,
+	useGetCallerUserProfile,
+	useGetFriendsList,
+	useGetUserProfile,
+	useRemoveFriend,
+	useSaveCallerUserProfile
+} from '../hooks/useQueries';
 
 export default function ProfilePage() {
 	const { data: userProfile, isLoading } = useGetCallerUserProfile();

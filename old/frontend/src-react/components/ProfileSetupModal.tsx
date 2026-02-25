@@ -1,16 +1,16 @@
-import { useState } from 'react';
-import { useInitializeUser } from '../hooks/useQueries';
+import { Button } from '@/components/ui/button';
 import {
 	Dialog,
 	DialogContent,
+	DialogDescription,
 	DialogHeader,
-	DialogTitle,
-	DialogDescription
+	DialogTitle
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useState } from 'react';
 import { toast } from 'sonner';
+import { useInitializeUser } from '../hooks/useQueries';
 
 export default function ProfileSetupModal() {
 	const [nickname, setNickname] = useState('');

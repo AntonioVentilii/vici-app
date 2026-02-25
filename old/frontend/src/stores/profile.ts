@@ -1,6 +1,6 @@
-import { writable, derived, get } from 'svelte/store';
-import { backend } from './actor';
+import { derived, get, writable } from 'svelte/store';
 import type { UserProfile } from '../backend';
+import { backend } from './actor';
 
 function createProfileStore() {
 	const { subscribe, set, update } = writable<{

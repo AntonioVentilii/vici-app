@@ -1,20 +1,19 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useActor } from './useActor';
-import { useInternetIdentity } from './useInternetIdentity';
+import { Principal } from '@icp-sdk/core/principal';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'sonner';
 import type {
-	MarketSnapshot,
-	Position,
-	Transaction,
-	UserProfile,
-	PositionType,
-	UserRole,
-	MarketDepthPosition,
 	AnalyticsDataPoint,
 	Comment,
+	MarketDepthPosition,
+	MarketSnapshot,
+	Position,
+	PositionType,
+	Transaction,
+	UserProfile,
 	WalletBalance
 } from '../backend';
-import { Principal } from '@icp-sdk/core/principal';
-import { toast } from 'sonner';
+import { useActor } from './useActor';
+import { useInternetIdentity } from './useInternetIdentity';
 
 // User Profile Queries
 export function useGetCallerUserProfile() {
