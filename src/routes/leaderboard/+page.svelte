@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { mockBackend, type LeaderboardEntry } from '$lib/services/mockBackend';
 	import { onMount } from 'svelte';
+	import { mockBackend, type LeaderboardEntry } from '$lib/services/mockBackend';
 
 	let leaderboard = $state<LeaderboardEntry[]>([]);
 	let loading = $state(true);
@@ -28,13 +28,13 @@
 
 	<!-- Timeframe Filters -->
 	<div class="flex gap-2">
-		{#each timeframes as timeframe}
+		{#each timeframes as timeframe (timeframe)}
 			<button
-				onclick={() => (activeTimeframe = timeframe)}
 				class="rounded-xl px-6 py-2.5 text-sm font-bold transition-all {activeTimeframe ===
 				timeframe
 					? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
 					: 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}"
+				onclick={() => (activeTimeframe = timeframe)}
 			>
 				{timeframe}
 			</button>
@@ -63,7 +63,7 @@
 					</tr>
 				</thead>
 				<tbody class="divide-y divide-white/5">
-					{#each leaderboard as entry}
+					{#each leaderboard as entry, index (index)}
 						<tr class="group transition-colors hover:bg-white/5">
 							<td class="px-8 py-6">
 								<div

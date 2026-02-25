@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { mockBackend, type Transaction, type WalletBalance } from '$lib/services/mockBackend';
 	import { onMount } from 'svelte';
+	import { ZERO } from '$lib/constants/app.constants';
+	import { mockBackend, type Transaction, type WalletBalance } from '$lib/services/mockBackend';
 
-	let balances = $state<WalletBalance>({ icp: 0n, ckUSDC: 0n });
+	let balances = $state<WalletBalance>({ icp: ZERO, ckUSDC: ZERO });
 	let transactions = $state<Transaction[]>([]);
 	let loading = $state(true);
 	let activeTab = $state('Send');
@@ -22,7 +23,9 @@
 	let selectedToken = $state<'ICP' | 'ckUSDC'>('ICP');
 
 	const handleSend = async () => {
-		if (!recipient || !amount) return;
+		if (!recipient || !amount) {
+			return;
+		}
 		try {
 			const amt = BigInt(parseFloat(amount) * 100_000_000);
 			if (selectedToken === 'ICP') {
@@ -36,8 +39,8 @@
 			amount = '';
 			recipient = '';
 			alert('Transaction successful!');
-		} catch (e: any) {
-			alert(e.message);
+		} catch (e: unknown) {
+			alert((e as Error).message);
 		}
 	};
 </script>
@@ -98,12 +101,12 @@
 	<!-- Operations Tabs -->
 	<div class="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
 		<div class="flex border-b border-white/10">
-			{#each tabs as tab}
+			{#each tabs as tab (tab)}
 				<button
-					onclick={() => (activeTab = tab)}
 					class="flex-1 py-4 text-sm font-bold transition-all {activeTab === tab
 						? 'border-b-2 border-indigo-500 bg-white/5 text-white'
 						: 'text-gray-500 hover:bg-white/5 hover:text-white'}"
+					onclick={() => (activeTab = tab)}
 				>
 					{tab}
 				</button>
@@ -117,18 +120,18 @@
 						<label class="text-xs font-bold tracking-wider text-gray-500 uppercase">Token</label>
 						<div class="grid grid-cols-2 gap-4">
 							<button
-								onclick={() => (selectedToken = 'ICP')}
 								class="rounded-xl border-2 px-4 py-3 transition-all {selectedToken === 'ICP'
 									? 'border-indigo-500 bg-indigo-500/10 text-white'
 									: 'border-white/5 bg-white/5 text-gray-400 hover:border-white/10'}"
+								onclick={() => (selectedToken = 'ICP')}
 							>
 								ICP
 							</button>
 							<button
-								onclick={() => (selectedToken = 'ckUSDC')}
 								class="rounded-xl border-2 px-4 py-3 transition-all {selectedToken === 'ckUSDC'
 									? 'border-green-500 bg-green-500/10 text-white'
 									: 'border-white/5 bg-white/5 text-gray-400 hover:border-white/10'}"
+								onclick={() => (selectedToken = 'ckUSDC')}
 							>
 								ckUSDC
 							</button>
@@ -140,26 +143,26 @@
 							>Recipient Principal</label
 						>
 						<input
+							class="w-full rounded-xl border-none bg-white/5 px-4 py-3 text-white ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
+							placeholder="aaaaa-aa..."
 							type="text"
 							bind:value={recipient}
-							placeholder="aaaaa-aa..."
-							class="w-full rounded-xl border-none bg-white/5 px-4 py-3 text-white ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
 						/>
 					</div>
 
 					<div class="space-y-2">
 						<label class="text-xs font-bold tracking-wider text-gray-500 uppercase">Amount</label>
 						<input
+							class="w-full rounded-xl border-none bg-white/5 px-4 py-3 text-white ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
+							placeholder="0.00"
 							type="number"
 							bind:value={amount}
-							placeholder="0.00"
-							class="w-full rounded-xl border-none bg-white/5 px-4 py-3 text-white ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
 						/>
 					</div>
 
 					<button
-						onclick={handleSend}
 						class="w-full rounded-xl bg-indigo-600 py-4 text-sm font-bold text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-500 active:scale-[0.98]"
+						onclick={handleSend}
 					>
 						Send Tokens
 					</button>
@@ -184,12 +187,12 @@
 								class="text-gray-400 transition-colors hover:text-white"
 								onclick={() => navigator.clipboard.writeText('current-user-principal-xxxx-xxxx')}
 							>
-								<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
+										d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
 										stroke-linecap="round"
 										stroke-linejoin="round"
 										stroke-width="2"
-										d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
 									/>
 								</svg>
 							</button>
@@ -214,7 +217,7 @@
 								</tr>
 							</thead>
 							<tbody class="divide-y divide-white/5">
-								{#each transactions as tx}
+								{#each transactions as tx (tx.id)}
 									<tr class="text-sm">
 										<td class="py-4 text-white">{new Date(tx.timestamp).toLocaleString()}</td>
 										<td

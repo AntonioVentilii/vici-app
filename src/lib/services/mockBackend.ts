@@ -1,4 +1,6 @@
-import type { Principal } from '@dfinity/principal';
+/* eslint-disable require-await,local-rules/prefer-object-params */
+
+import { ZERO } from '$lib/constants/app.constants';
 
 /**
  * Common types based on the Vici Social Markets specification.
@@ -90,7 +92,12 @@ export interface BackendInterface {
 	/**
 	 * Places a bet on a market outcome.
 	 */
-	placeBet(marketId: string, type: PositionType, amount: bigint, token: 'ICP' | 'ckUSDC'): Promise<void>;
+	placeBet(
+		marketId: string,
+		type: PositionType,
+		amount: bigint,
+		token: 'ICP' | 'ckUSDC'
+	): Promise<void>;
 
 	/**
 	 * Returns the user's balances for ICP and ckUSDC.
@@ -159,7 +166,8 @@ class MockBackend implements BackendInterface {
 		{
 			id: '1',
 			title: 'Will ICP reach $50 by the end of 2026?',
-			description: 'This market predicts if the price of ICP will be at least $50 USD on Dec 31, 2026.',
+			description:
+				'This market predicts if the price of ICP will be at least $50 USD on Dec 31, 2026.',
 			creator: 'aaaaa-aa',
 			expiryDate: new Date('2026-12-31').getTime(),
 			status: 'Open',
@@ -174,7 +182,8 @@ class MockBackend implements BackendInterface {
 		{
 			id: '2',
 			title: 'Will Svelte 6 be released in 2026?',
-			description: 'Bet on whether the next major version of Svelte will be officially released this year.',
+			description:
+				'Bet on whether the next major version of Svelte will be officially released this year.',
 			creator: 'aaaaa-aa',
 			expiryDate: new Date('2026-12-31').getTime(),
 			status: 'Open',
@@ -201,7 +210,12 @@ class MockBackend implements BackendInterface {
 	 * @param isInviteOnly Whether the market is restricted to the invite list.
 	 * @returns The unique ID of the created market.
 	 */
-	async createMarket(title: string, description: string, expiryDate: number, isInviteOnly = false): Promise<string> {
+	async createMarket(
+		title: string,
+		description: string,
+		expiryDate: number,
+		isInviteOnly = false
+	): Promise<string> {
 		const id = (this.markets.length + 1).toString();
 		const newMarket: Market = {
 			id,
@@ -212,9 +226,9 @@ class MockBackend implements BackendInterface {
 			status: 'Open',
 			isInviteOnly,
 			inviteList: [],
-			totalVolume: 0n,
-			yesVolume: 0n,
-			noVolume: 0n,
+			totalVolume: ZERO,
+			yesVolume: ZERO,
+			noVolume: ZERO,
 			yesProbability: 0.5,
 			noProbability: 0.5
 		};
@@ -227,7 +241,7 @@ class MockBackend implements BackendInterface {
 	}
 
 	async getMarket(marketId: string): Promise<Market | null> {
-		return this.markets.find((m) => m.id === marketId) || null;
+		return this.markets.find((m) => m.id === marketId) ?? null;
 	}
 
 	/**
@@ -249,16 +263,27 @@ class MockBackend implements BackendInterface {
 	 * @param amount Amount in e8s (multiplied by 10^8)
 	 * @param token The currency used for the bet.
 	 */
-	async placeBet(marketId: string, type: PositionType, amount: bigint, token: 'ICP' | 'ckUSDC'): Promise<void> {
+	async placeBet(
+		marketId: string,
+		type: PositionType,
+		amount: bigint,
+		token: 'ICP' | 'ckUSDC'
+	): Promise<void> {
 		const market = this.markets.find((m) => m.id === marketId);
-		if (!market) throw new Error('Market not found');
+		if (!market) {
+			throw new Error('Market not found');
+		}
 
 		// Simple mock logic: update volumes and balance
 		if (token === 'ICP') {
-			if (this.balance.icp < amount) throw new Error('Insufficient ICP');
+			if (this.balance.icp < amount) {
+				throw new Error('Insufficient ICP');
+			}
 			this.balance.icp -= amount;
 		} else {
-			if (this.balance.ckUSDC < amount) throw new Error('Insufficient ckUSDC');
+			if (this.balance.ckUSDC < amount) {
+				throw new Error('Insufficient ckUSDC');
+			}
 			this.balance.ckUSDC -= amount;
 		}
 
@@ -272,7 +297,7 @@ class MockBackend implements BackendInterface {
 		// Update positions
 		let pos = this.positions.find((p) => p.marketId === marketId);
 		if (!pos) {
-			pos = { marketId, user: 'current-user', yesAmount: 0n, noAmount: 0n };
+			pos = { marketId, user: 'current-user', yesAmount: ZERO, noAmount: ZERO };
 			this.positions.push(pos);
 		}
 		if (type === 'YES') {
@@ -302,7 +327,9 @@ class MockBackend implements BackendInterface {
 	}
 
 	async sendICP(recipient: string, amount: bigint): Promise<void> {
-		if (this.balance.icp < amount) throw new Error('Insufficient ICP');
+		if (this.balance.icp < amount) {
+			throw new Error('Insufficient ICP');
+		}
 		this.balance.icp -= amount;
 		this.transactions.push({
 			id: Math.random().toString(36).substring(7),
@@ -316,7 +343,9 @@ class MockBackend implements BackendInterface {
 	}
 
 	async sendCkUSDC(recipient: string, amount: bigint): Promise<void> {
-		if (this.balance.ckUSDC < amount) throw new Error('Insufficient ckUSDC');
+		if (this.balance.ckUSDC < amount) {
+			throw new Error('Insufficient ckUSDC');
+		}
 		this.balance.ckUSDC -= amount;
 		this.transactions.push({
 			id: Math.random().toString(36).substring(7),

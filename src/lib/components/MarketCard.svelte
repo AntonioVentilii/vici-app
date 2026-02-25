@@ -9,26 +9,32 @@
 
 	const formatVolume = (v: bigint) => {
 		const val = Number(v) / 100_000_000;
-		if (val >= 1000) return (val / 1000).toFixed(1) + 'k';
+		if (val >= 1000) {
+			return `${(val / 1000).toFixed(1)}k`;
+		}
 		return val.toFixed(0);
 	};
 
 	const getTimeRemaining = (expiry: number) => {
 		const now = Date.now();
 		const diff = expiry - now;
-		if (diff <= 0) return 'Expired';
+		if (diff <= 0) {
+			return 'Expired';
+		}
 
 		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 
-		if (days > 0) return `${days}d ${hours}h`;
+		if (days > 0) {
+			return `${days}d ${hours}h`;
+		}
 		return `${hours}h remaining`;
 	};
 </script>
 
 <a
-	href="/markets/{market.id}"
 	class="group relative flex flex-col overflow-hidden rounded-2xl border border-white/10 bg-white/5 transition-all duration-500 hover:border-indigo-500/50 hover:bg-white/[0.07] hover:shadow-[0_0_40px_-10px_rgba(99,102,241,0.2)]"
+	href="/markets/{market.id}"
 >
 	<!-- Status Badge -->
 	<div class="absolute top-4 right-4 z-20">
@@ -62,8 +68,8 @@
 			</div>
 			<div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-white/5">
 				<div
-					class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-1000 ease-out"
 					style="width: {market.yesProbability * 100}%"
+					class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-1000 ease-out"
 				></div>
 			</div>
 		</div>

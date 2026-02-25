@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { initSatellite } from '@junobuild/core';
 	import type { Snippet } from 'svelte';
+	import { fade } from 'svelte/transition';
+	import { page } from '$app/state';
 	import Auth from '$lib/components/Auth.svelte';
 	import Background from '$lib/components/Background.svelte';
 	import Banner from '$lib/components/Banner.svelte';
 	import Footer from '$lib/components/Footer.svelte';
 	import Header from '$lib/components/Header.svelte';
-	import { fade } from 'svelte/transition';
-	import { page } from '$app/state';
 	// eslint-disable-next-line import/no-relative-parent-imports
 	import '../app.css';
 

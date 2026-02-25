@@ -1,11 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import BettingInterface from '$lib/components/BettingInterface.svelte';
 	import OutcomeBadge from '$lib/components/OutcomeBadge.svelte';
 	import { mockBackend, type Market } from '$lib/services/mockBackend';
-	import { onMount } from 'svelte';
 
-	let marketId = $derived(page.params.id);
+	const marketId = $derived(page.params.id);
 	let market = $state<Market | null>(null);
 	let loading = $state(true);
 
@@ -19,13 +19,17 @@
 	const getTimeRemaining = (expiry: number) => {
 		const now = Date.now();
 		const diff = expiry - now;
-		if (diff <= 0) return 'Expired';
+		if (diff <= 0) {
+			return 'Expired';
+		}
 
 		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
 		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
-		if (days > 0) return `${days}d ${hours}h ${minutes}m`;
+		if (days > 0) {
+			return `${days}d ${hours}h ${minutes}m`;
+		}
 		return `${hours}h ${minutes}m remaining`;
 	};
 
@@ -111,12 +115,12 @@
 						</div>
 						<div class="flex h-4 w-full overflow-hidden rounded-full bg-white/10">
 							<div
-								class="h-full bg-gradient-to-r from-green-500 to-emerald-400 shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all duration-700"
 								style="width: {market.yesProbability * 100}%"
+								class="h-full bg-gradient-to-r from-green-500 to-emerald-400 shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all duration-700"
 							></div>
 							<div
-								class="h-full bg-gradient-to-l from-red-500 to-rose-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-700"
 								style="width: {market.noProbability * 100}%"
+								class="h-full bg-gradient-to-l from-red-500 to-rose-400 shadow-[0_0_20px_rgba(239,68,68,0.3)] transition-all duration-700"
 							></div>
 						</div>
 					</div>
@@ -146,14 +150,14 @@
 						<svg
 							class="mx-auto h-10 w-10 text-indigo-400 opacity-50"
 							fill="none"
-							viewBox="0 0 24 24"
 							stroke="currentColor"
+							viewBox="0 0 24 24"
 						>
 							<path
+								d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
 								stroke-linecap="round"
 								stroke-linejoin="round"
 								stroke-width="1.5"
-								d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"
 							/>
 						</svg>
 						<p class="text-sm font-bold tracking-widest text-gray-400 uppercase">
@@ -187,12 +191,12 @@
 							<div
 								class="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-400"
 							>
-								<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+								<svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 									<path
+										d="M12 15v2m0 0v3m0-3h3m-3 0H9m12-3a9 9 0 11-18 0 9 9 0 0118 0z"
 										stroke-linecap="round"
 										stroke-linejoin="round"
 										stroke-width="2"
-										d="M12 15v2m0 0v3m0-3h3m-3 0H9m12-3a9 9 0 11-18 0 9 9 0 0118 0z"
 									/>
 								</svg>
 							</div>
@@ -240,14 +244,14 @@
 					<svg
 						class="h-4 w-4 text-gray-400 transition-colors group-hover:text-indigo-400"
 						fill="none"
-						viewBox="0 0 24 24"
 						stroke="currentColor"
+						viewBox="0 0 24 24"
 					>
 						<path
+							d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
 							stroke-linecap="round"
 							stroke-linejoin="round"
 							stroke-width="2"
-							d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"
 						/>
 					</svg>
 					Share this Market
@@ -261,8 +265,8 @@
 				The market you are seeking is either hidden or does not exist.
 			</p>
 			<a
-				href="/"
 				class="mt-8 rounded-xl bg-indigo-600 px-8 py-3 font-bold text-white transition-all hover:bg-indigo-500"
+				href="/"
 			>
 				Return to Markets
 			</a>

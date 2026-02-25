@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { mockBackend, type Market, type PositionType } from '$lib/services/mockBackend';
 	import { createEventDispatcher } from 'svelte';
+	import { mockBackend, type Market, type PositionType } from '$lib/services/mockBackend';
 
 	interface Props {
 		market: Market;
@@ -29,18 +29,22 @@
 			amount = '';
 			dispatch('betPlaced');
 			alert(`Successfully placed ${selectedType} bet!`);
-		} catch (e: any) {
-			error = e.message || 'Failed to place bet';
+		} catch (e: unknown) {
+			error = (e as Error).message ?? 'Failed to place bet';
 		} finally {
 			loading = false;
 		}
 	};
 
 	const estimatedPayout = $derived(() => {
-		if (!amount) return 0;
+		if (!amount) {
+			return 0;
+		}
 		const amt = parseFloat(amount);
 		const prob = selectedType === 'YES' ? market.yesProbability : market.noProbability;
-		if (prob === 0) return 0;
+		if (prob === 0) {
+			return 0;
+		}
 		return (amt / prob).toFixed(2);
 	});
 </script>
@@ -53,11 +57,11 @@
 		<!-- Outcome Selector -->
 		<div class="grid grid-cols-2 gap-4">
 			<button
-				onclick={() => (selectedType = 'YES')}
 				class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 transition-all {selectedType ===
 				'YES'
 					? 'border-green-500 bg-green-500/10 text-white'
 					: 'border-white/5 bg-white/5 text-gray-500 hover:border-white/10'}"
+				onclick={() => (selectedType = 'YES')}
 			>
 				<div class="relative z-10 flex flex-col items-center gap-1">
 					<span class="text-xs font-bold tracking-widest uppercase">Predict</span>
@@ -69,11 +73,11 @@
 			</button>
 
 			<button
-				onclick={() => (selectedType = 'NO')}
 				class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 transition-all {selectedType ===
 				'NO'
 					? 'border-red-500 bg-red-500/10 text-white'
 					: 'border-white/5 bg-white/5 text-gray-500 hover:border-white/10'}"
+				onclick={() => (selectedType = 'NO')}
 			>
 				<div class="relative z-10 flex flex-col items-center gap-1">
 					<span class="text-xs font-bold tracking-widest uppercase">Predict</span>
@@ -88,7 +92,7 @@
 		<!-- Amount Input -->
 		<div class="space-y-2">
 			<div class="flex justify-between">
-				<label for="amount" class="text-xs font-bold tracking-widest text-gray-500 uppercase"
+				<label class="text-xs font-bold tracking-widest text-gray-500 uppercase" for="amount"
 					>Amount (ICP)</label
 				>
 				<span class="text-xs text-gray-400">Balance: Wallet mocked</span>
@@ -96,10 +100,10 @@
 			<div class="relative">
 				<input
 					id="amount"
+					class="w-full rounded-2xl border-none bg-white/5 px-6 py-4 text-xl font-bold text-white ring-1 ring-white/10 transition-all ring-inset focus:bg-white/10 focus:ring-2 focus:ring-indigo-500"
+					placeholder="0.00"
 					type="number"
 					bind:value={amount}
-					placeholder="0.00"
-					class="w-full rounded-2xl border-none bg-white/5 px-6 py-4 text-xl font-bold text-white ring-1 ring-white/10 transition-all ring-inset focus:bg-white/10 focus:ring-2 focus:ring-indigo-500"
 				/>
 				<div class="absolute top-1/2 right-4 -translate-y-1/2 text-sm font-bold text-gray-500">
 					ICP
@@ -135,9 +139,9 @@
 
 		<!-- Action Button -->
 		<button
+			class="group relative w-full overflow-hidden rounded-2xl bg-indigo-600 py-5 text-lg font-black text-white shadow-2xl shadow-indigo-500/40 transition-all hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
 			disabled={loading || !amount}
 			onclick={handlePlaceBet}
-			class="group relative w-full overflow-hidden rounded-2xl bg-indigo-600 py-5 text-lg font-black text-white shadow-2xl shadow-indigo-500/40 transition-all hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
 		>
 			{#if loading}
 				<div class="flex items-center justify-center gap-2">

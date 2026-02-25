@@ -1,11 +1,12 @@
 <script lang="ts">
-	import { page } from '$app/state';
-	import { mockBackend } from '$lib/services/mockBackend';
 	import { onMount } from 'svelte';
-	import Login from './Login.svelte';
-	import Logout from './Logout.svelte';
+	import { page } from '$app/state';
+	import Login from '$lib/components/Login.svelte';
+	import Logout from '$lib/components/Logout.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
+	import { mockBackend } from '$lib/services/mockBackend';
 
-	let balances = $state({ icp: 0n, ckUSDC: 0n });
+	let balances = $state({ icp: ZERO, ckUSDC: ZERO });
 	let isAdmin = $state(false);
 
 	onMount(async () => {
@@ -16,7 +17,9 @@
 	const formatBalance = (b: bigint) => Number(b) / 100_000_000;
 
 	const isActive = (path: string) => {
-		if (path === '/') return page.url.pathname === '/';
+		if (path === '/') {
+			return page.url.pathname === '/';
+		}
 		return page.url.pathname.startsWith(path);
 	};
 </script>
@@ -27,9 +30,9 @@
 	<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 		<!-- Logo -->
 		<div class="flex items-center gap-8">
-			<a href="/" class="group flex items-center gap-2">
+			<a class="group flex items-center gap-2" href="/">
 				<div
-					class="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 font-bold text-white shadow-lg transition-transform group-hover:scale-110"
+					class="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 font-bold text-white shadow-lg transition-transform group-hover:scale-110"
 				>
 					V
 				</div>
@@ -43,43 +46,43 @@
 			<!-- Desktop Nav -->
 			<nav class="hidden items-center gap-1 md:flex">
 				<a
-					href="/"
 					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/')
 						? 'bg-white/10 text-white'
 						: 'text-gray-400 hover:bg-white/5 hover:text-white'}"
+					href="/"
 				>
 					Markets
 				</a>
 				<a
-					href="/leaderboard"
 					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/leaderboard')
 						? 'bg-white/10 text-white'
 						: 'text-gray-400 hover:bg-white/5 hover:text-white'}"
+					href="/leaderboard"
 				>
 					Leaderboard
 				</a>
 				<a
-					href="/portfolio"
 					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/portfolio')
 						? 'bg-white/10 text-white'
 						: 'text-gray-400 hover:bg-white/5 hover:text-white'}"
+					href="/portfolio"
 				>
 					Portfolio
 				</a>
 				<a
-					href="/wallet"
 					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/wallet')
 						? 'bg-white/10 text-white'
 						: 'text-gray-400 hover:bg-white/5 hover:text-white'}"
+					href="/wallet"
 				>
 					Wallet
 				</a>
 				{#if isAdmin}
 					<a
-						href="/admin"
 						class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/admin')
 							? 'bg-indigo-500/10 text-indigo-400'
 							: 'text-indigo-400/60 hover:bg-indigo-500/5 hover:text-indigo-400'}"
+						href="/admin"
 					>
 						Admin
 					</a>
@@ -101,7 +104,7 @@
 						>{formatBalance(balances.icp).toFixed(2)}
 						<span class="text-[10px] text-gray-400">ICP</span></span
 					>
-					<span class="h-3 w-[1px] bg-white/10"></span>
+					<span class="h-3 w-px bg-white/10"></span>
 					<span class="text-sm font-bold text-white"
 						>{formatBalance(balances.ckUSDC).toFixed(2)}
 						<span class="text-[10px] text-gray-400">ckUSDC</span></span
@@ -109,7 +112,7 @@
 				</div>
 			</div>
 
-			<div class="hidden h-8 w-[1px] bg-white/10 sm:block"></div>
+			<div class="hidden h-8 w-px bg-white/10 sm:block"></div>
 
 			<div class="flex items-center gap-2">
 				<Login />

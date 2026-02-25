@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { mockBackend, type Market, type Position } from '$lib/services/mockBackend';
 	import { onMount } from 'svelte';
+	import { ZERO } from '$lib/constants/app.constants';
+	import { mockBackend, type Market, type Position } from '$lib/services/mockBackend';
 
 	let positions = $state<Position[]>([]);
 	let markets = $state<Market[]>([]);
@@ -18,7 +19,9 @@
 
 	const calculateValue = (pos: Position) => {
 		const market = getMarketById(pos.marketId);
-		if (!market) return 0n;
+		if (!market) {
+			return ZERO;
+		}
 
 		// Simple value projection: amount * current probability
 		const yesVal = Number(pos.yesAmount) * market.yesProbability;
@@ -34,9 +37,11 @@
 
 	const formatAmount = (v: bigint) => (Number(v) / 100_000_000).toFixed(2);
 
-	let totalPortfolioValue = $derived(positions.reduce((acc, pos) => acc + calculateValue(pos), 0n));
+	const totalPortfolioValue = $derived(
+		positions.reduce((acc, pos) => acc + calculateValue(pos), ZERO)
+	);
 
-	let totalPnL = $derived(positions.reduce((acc, pos) => acc + calculatePnL(pos), 0));
+	const totalPnL = $derived(positions.reduce((acc, pos) => acc + calculatePnL(pos), 0));
 </script>
 
 <div class="space-y-12">
@@ -93,19 +98,19 @@
 						<div
 							class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-white/5 text-gray-500"
 						>
-							<svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
+									d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
 									stroke-linecap="round"
 									stroke-linejoin="round"
 									stroke-width="2"
-									d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
 								/>
 							</svg>
 						</div>
 						<p class="font-medium text-gray-400">You haven't placed any bets yet.</p>
 						<a
-							href="/"
 							class="inline-block rounded-xl bg-indigo-600 px-8 py-3 text-sm font-bold text-white transition-all hover:bg-indigo-500"
+							href="/"
 						>
 							Explore Markets
 						</a>
@@ -124,16 +129,16 @@
 							</tr>
 						</thead>
 						<tbody class="divide-y divide-white/5">
-							{#each positions as pos}
+							{#each positions as pos, index (index)}
 								{@const market = getMarketById(pos.marketId)}
 								{@const pnl = calculatePnL(pos)}
 								<tr class="group transition-colors hover:bg-white/5">
 									<td class="px-8 py-6">
-										<a href="/markets/{pos.marketId}" class="group block max-w-xs">
+										<a class="group block max-w-xs" href="/markets/{pos.marketId}">
 											<span
 												class="line-clamp-1 text-sm font-bold text-white transition-colors group-hover:text-indigo-400"
 											>
-												{market?.title || 'Unknown Market'}
+												{market?.title ?? 'Unknown Market'}
 											</span>
 											<span class="text-[10px] leading-none tracking-widest text-gray-500 uppercase"
 												>ID: {pos.marketId}</span
@@ -142,13 +147,13 @@
 									</td>
 									<td class="px-8 py-6">
 										<div class="flex gap-2">
-											{#if pos.yesAmount > 0n}
+											{#if pos.yesAmount > ZERO}
 												<span
 													class="rounded-lg border border-green-500/20 bg-green-500/10 px-2 py-1 text-[10px] font-black tracking-tighter text-green-400 uppercase"
 													>YES</span
 												>
 											{/if}
-											{#if pos.noAmount > 0n}
+											{#if pos.noAmount > ZERO}
 												<span
 													class="rounded-lg border border-red-500/20 bg-red-500/10 px-2 py-1 text-[10px] font-black tracking-tighter text-red-400 uppercase"
 													>NO</span

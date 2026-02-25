@@ -1,7 +1,7 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import OutcomeBadge from '$lib/components/OutcomeBadge.svelte';
 	import { mockBackend, type Market, type Outcome } from '$lib/services/mockBackend';
-	import { onMount } from 'svelte';
 
 	let markets = $state<Market[]>([]);
 	let loading = $state(true);
@@ -19,7 +19,9 @@
 	onMount(fetchMarkets);
 
 	const handleCreateMarket = async () => {
-		if (!title || !description || !expiryDate) return;
+		if (!title || !description || !expiryDate) {
+			return;
+		}
 		try {
 			await mockBackend.createMarket(title, description, new Date(expiryDate).getTime());
 			title = '';
@@ -27,23 +29,23 @@
 			expiryDate = '';
 			await fetchMarkets();
 			alert('Market created successfully!');
-		} catch (e: any) {
-			alert(e.message);
+		} catch (e: unknown) {
+			alert((e as Error).message);
 		}
 	};
 
-	const handleResolve = async (id: string, outcome: Outcome) => {
+	const handleResolve = async ({ id, outcome }: { id: string; outcome: Outcome }) => {
 		try {
 			await mockBackend.resolveMarket(id, outcome);
 			await fetchMarkets();
 			alert(`Market ${id} resolved as ${outcome}`);
-		} catch (e: any) {
-			alert(e.message);
+		} catch (e: unknown) {
+			alert((e as Error).message);
 		}
 	};
 
-	let unresolvedMarkets = $derived(markets.filter((m) => m.status !== 'Resolved'));
-	let resolvedMarkets = $derived(markets.filter((m) => m.status === 'Resolved'));
+	const unresolvedMarkets = $derived(markets.filter((m) => m.status !== 'Resolved'));
+	const resolvedMarkets = $derived(markets.filter((m) => m.status === 'Resolved'));
 </script>
 
 <div class="space-y-12">
@@ -61,26 +63,26 @@
 				<h2 class="mb-6 text-2xl font-bold text-white">Create New Market</h2>
 				<div class="space-y-6">
 					<div class="space-y-2">
-						<label class="text-xs font-bold tracking-widest text-gray-500 uppercase"
-							>Market Title</label
-						>
+						<label class="text-xs font-bold tracking-widest text-gray-500 uppercase">
+							Market Title
+						</label>
 						<input
+							class="w-full rounded-2xl border-none bg-white/5 px-6 py-4 text-white ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
+							placeholder="e.g., Will Bitcoin hit $100k by 2027?"
 							type="text"
 							bind:value={title}
-							placeholder="e.g., Will Bitcoin hit $100k by 2027?"
-							class="w-full rounded-2xl border-none bg-white/5 px-6 py-4 text-white ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
 						/>
 					</div>
 
 					<div class="space-y-2">
-						<label class="text-xs font-bold tracking-widest text-gray-500 uppercase"
-							>Description</label
-						>
+						<label class="text-xs font-bold tracking-widest text-gray-500 uppercase">
+							Description
+						</label>
 						<textarea
-							bind:value={description}
-							rows="4"
-							placeholder="Provide detailed criteria for resolution..."
 							class="w-full rounded-2xl border-none bg-white/5 px-6 py-4 text-white ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
+							placeholder="Provide detailed criteria for resolution..."
+							rows="4"
+							bind:value={description}
 						></textarea>
 					</div>
 
@@ -89,15 +91,15 @@
 							>Expiry Date</label
 						>
 						<input
+							class="w-full rounded-2xl border-none bg-white/5 px-6 py-4 text-white [color-scheme:dark] ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
 							type="datetime-local"
 							bind:value={expiryDate}
-							class="w-full rounded-2xl border-none bg-white/5 px-6 py-4 text-white [color-scheme:dark] ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
 						/>
 					</div>
 
 					<button
-						onclick={handleCreateMarket}
 						class="w-full rounded-2xl bg-indigo-600 py-4 text-sm font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-500 active:scale-[0.98]"
+						onclick={handleCreateMarket}
 					>
 						Deploy Market
 					</button>
@@ -131,20 +133,20 @@
 
 								<div class="flex gap-2">
 									<button
-										onclick={() => handleResolve(market.id, 'YES')}
 										class="flex-1 rounded-xl border border-green-500/20 bg-green-500/10 py-2 text-xs font-bold text-green-400 transition-all hover:bg-green-500/20"
+										onclick={() => handleResolve(market.id, 'YES')}
 									>
 										Resolve YES
 									</button>
 									<button
-										onclick={() => handleResolve(market.id, 'NO')}
 										class="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-xs font-bold text-red-400 transition-all hover:bg-red-500/20"
+										onclick={() => handleResolve(market.id, 'NO')}
 									>
 										Resolve NO
 									</button>
 									<button
-										onclick={() => handleResolve(market.id, 'CANCELED')}
 										class="flex-1 rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-bold text-gray-400 transition-all hover:bg-white/10"
+										onclick={() => handleResolve(market.id, 'CANCELED')}
 									>
 										Cancel
 									</button>
