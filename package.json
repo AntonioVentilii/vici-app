@@ -14,7 +14,8 @@
 		"postinstall:copy-auth": "node -e \"require('fs').cpSync('node_modules/@junobuild/core/dist/workers/', './static/workers', {recursive: true});\"",
 		"postinstall": "npm run postinstall:copy-auth"
 	},
-	"devDependencies": {
+		"devDependencies": {
+		"@dfinity/eslint-config-oisy-wallet": "^0.2.3",
 		"@junobuild/config": "^2.11.0",
 		"@junobuild/vite-plugin": "^4.7.0",
 		"@sveltejs/adapter-static": "^3.0.9",
@@ -23,14 +24,16 @@
 		"@tailwindcss/postcss": "^4.1.13",
 		"@tailwindcss/vite": "^4.1.13",
 		"@types/eslint": "^9.6.1",
+		"@types/node": "^25.3.0",
 		"eslint": "^9.34.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.12.1",
-		"globals": "^16.3.0",
+		"globals": "^16.5.0",
 		"postcss": "^8.5.6",
 		"prettier": "^3.6.2",
+		"prettier-plugin-organize-imports": "^4.3.0",
 		"prettier-plugin-svelte": "^3.4.0",
-		"prettier-plugin-tailwindcss": "^0.6.14",
+		"prettier-plugin-tailwindcss": "^0.7.2",
 		"svelte": "^5.38.7",
 		"svelte-check": "^4.3.1",
 		"tailwindcss": "^4.1.13",
@@ -41,6 +44,8 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@dfinity/utils": "^4.1.0",
+		"@icp-sdk/canisters": "^3.5.0",
 		"@junobuild/core": "^5.2.0",
 		"@junobuild/functions": "^0.5.6",
 		"nanoid": "^5.1.5"

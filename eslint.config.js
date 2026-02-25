@@ -1,38 +1,43 @@
-import prettier from 'eslint-config-prettier';
-import js from '@eslint/js';
-import svelte from 'eslint-plugin-svelte';
-import globals from 'globals';
+import { default as svelteConfig } from '@dfinity/eslint-config-oisy-wallet/svelte';
+import { default as vitestConfig } from '@dfinity/eslint-config-oisy-wallet/vitest';
 import ts from 'typescript-eslint';
 
 export default ts.config(
-	js.configs.recommended,
-	...ts.configs.recommended,
-	...svelte.configs['flat/recommended'],
-	prettier,
-	...svelte.configs['flat/prettier'],
-	{
-		languageOptions: {
-			globals: {
-				...globals.browser,
-				...globals.node
-			}
-		}
-	},
-	{
-		files: ['**/*.svelte'],
+	...vitestConfig,
+	...svelteConfig,
 
-		languageOptions: {
-			parserOptions: {
-				parser: ts.parser
-			}
-		}
-	},
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/', 'static/']
+		ignores: ['build/', '.svelte-kit/', 'dist/', 'static/', 'src/declarations/']
 	},
+
 	{
 		rules: {
 			'svelte/no-navigation-without-resolve': 'off'
+		}
+	},
+
+	{
+		files: ['src/**/*'],
+		rules: {
+			'local-rules/no-relative-imports': 'error'
+		}
+	},
+
+	{
+		rules: {
+			'no-restricted-syntax': [
+				'error',
+				{
+					selector: "Literal[raw='0n']",
+					message: 'Use the shared constant `ZERO` instead of `0n`.'
+				}
+			],
+			'svelte/prefer-const': [
+				'error',
+				{
+					excludedRunes: []
+				}
+			]
 		}
 	}
 );

@@ -1,0 +1,15 @@
+{
+	"extends": "./tsconfig.json",
+	"include": [
+		"ambient.d.ts",
+		"non-ambient.d.ts",
+		"./scripts/",
+		"./src/",
+		"./eslint.config.js",
+		"./eslint-local-rules.cjs",
+		"./juno.config.ts",
+		"./svelte.config.js",
+		"./vite.config.ts"
+	],
+	"exclude": ["./node_modules/**"]
+}
