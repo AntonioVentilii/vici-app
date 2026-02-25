@@ -146,19 +146,19 @@
 								<div class="flex gap-2">
 									<button
 										class="flex-1 rounded-xl border border-green-500/20 bg-green-500/10 py-2 text-xs font-bold text-green-400 transition-all hover:bg-green-500/20"
-										onclick={() => handleResolve(market.id, 'YES')}
+										onclick={() => handleResolve({ id: market.id, outcome: 'YES' })}
 									>
 										Resolve YES
 									</button>
 									<button
 										class="flex-1 rounded-xl border border-red-500/20 bg-red-500/10 py-2 text-xs font-bold text-red-400 transition-all hover:bg-red-500/20"
-										onclick={() => handleResolve(market.id, 'NO')}
+										onclick={() => handleResolve({ id: market.id, outcome: 'NO' })}
 									>
 										Resolve NO
 									</button>
 									<button
 										class="flex-1 rounded-xl border border-white/10 bg-white/5 py-2 text-xs font-bold text-gray-400 transition-all hover:bg-white/10"
-										onclick={() => handleResolve(market.id, 'CANCELED')}
+										onclick={() => handleResolve({ id: market.id, outcome: 'CANCELED' })}
 									>
 										Cancel
 									</button>

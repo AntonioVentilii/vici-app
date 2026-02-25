@@ -54,7 +54,7 @@
 	<!-- Balances Cards -->
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
 		<div
-			class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-indigo-500/20 to-purple-600/20 p-8 backdrop-blur-xl"
+			class="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-indigo-500/20 to-purple-600/20 p-8 backdrop-blur-xl"
 		>
 			<div class="flex items-center justify-between">
 				<div class="text-sm font-bold tracking-widest text-indigo-400 uppercase">ICP Balance</div>
@@ -74,7 +74,7 @@
 		</div>
 
 		<div
-			class="relative overflow-hidden rounded-3xl border border-white/10 bg-gradient-to-br from-green-500/20 to-emerald-600/20 p-8 backdrop-blur-xl"
+			class="relative overflow-hidden rounded-3xl border border-white/10 bg-linear-to-br from-green-500/20 to-emerald-600/20 p-8 backdrop-blur-xl"
 		>
 			<div class="flex items-center justify-between">
 				<div class="text-sm font-bold tracking-widest text-green-400 uppercase">ckUSDC Balance</div>
@@ -135,9 +135,9 @@
 					</div>
 
 					<div class="space-y-2">
-						<label class="text-xs font-bold tracking-wider text-gray-500 uppercase"
-							>Recipient Principal</label
-						>
+						<label class="text-xs font-bold tracking-wider text-gray-500 uppercase">
+							Recipient Principal
+						</label>
 						<input
 							class="w-full rounded-xl border-none bg-white/5 px-4 py-3 text-white ring-1 ring-white/10 ring-inset focus:ring-2 focus:ring-indigo-500"
 							placeholder="aaaaa-aa..."
@@ -181,6 +181,7 @@
 							<code class="font-mono text-indigo-400">current-user-principal-xxxx-xxxx</code>
 							<button
 								class="text-gray-400 transition-colors hover:text-white"
+								aria-label="Copy Principal ID"
 								onclick={() => navigator.clipboard.writeText('current-user-principal-xxxx-xxxx')}
 							>
 								<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

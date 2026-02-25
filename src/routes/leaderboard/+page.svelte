@@ -75,7 +75,7 @@
 							<td class="px-8 py-6">
 								<div class="flex items-center gap-3">
 									<div
-										class="h-10 w-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 p-[1px]"
+										class="h-10 w-10 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 p-px"
 									>
 										<div
 											class="flex h-full w-full items-center justify-center rounded-full bg-black text-[10px] font-bold text-white"
@@ -106,7 +106,7 @@
 
 	<!-- Info Card -->
 	<div
-		class="flex flex-col items-center justify-between gap-6 rounded-3xl border border-white/10 bg-gradient-to-r from-indigo-500/10 to-purple-600/10 p-8 md:flex-row"
+		class="flex flex-col items-center justify-between gap-6 rounded-3xl border border-white/10 bg-linear-to-r from-indigo-500/10 to-purple-600/10 p-8 md:flex-row"
 	>
 		<div class="space-y-2">
 			<h3 class="text-center text-xl font-bold text-white md:text-left">How is P&L calculated?</h3>
