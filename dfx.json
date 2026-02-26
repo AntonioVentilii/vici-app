@@ -1,0 +1,48 @@
+{
+	"dfx": "0.26.1",
+	"canisters": {
+		"clearing": {
+			"type": "custom",
+			"build": "scripts/build.icdc.clearing.sh",
+			"candid": "target/icdc/clearing.did",
+			"wasm": "target/icdc/clearing.wasm",
+			"specified_id": "g2or7-caaaa-aaaaj-qqhoa-cai",
+			"init_arg_file": "target/icdc/clearing.args.did",
+			"remote": {
+				"id": {
+					"staging": "g2or7-caaaa-aaaaj-qqhoa-cai"
+				}
+			}
+		},
+		"registry": {
+			"type": "custom",
+			"build": "scripts/build.icdc.registry.sh",
+			"candid": "target/icdc/registry.did",
+			"wasm": "target/icdc/registry.wasm",
+			"specified_id": "g5pxl-pyaaa-aaaaj-qqhoq-cai",
+			"init_arg_file": "target/icdc/registry.args.did",
+			"remote": {
+				"id": {
+					"staging": "g5pxl-pyaaa-aaaaj-qqhoq-cai"
+				}
+			}
+		}
+	},
+	"defaults": {
+		"build": {
+			"args": "",
+			"packtool": ""
+		}
+	},
+	"version": 1,
+	"networks": {
+		"staging": {
+			"providers": ["https://icp0.io"],
+			"type": "persistent"
+		},
+		"local": {
+			"bind": "127.0.0.1:5987",
+			"type": "ephemeral"
+		}
+	}
+}
