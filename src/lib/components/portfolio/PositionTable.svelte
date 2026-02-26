@@ -2,7 +2,8 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import type { Market, Position } from '$lib/services/mockBackend';
+	import type { Market } from '$lib/types/market';
+	import type { Position } from '$lib/types/position';
 
 	interface Props {
 		positions: Position[];

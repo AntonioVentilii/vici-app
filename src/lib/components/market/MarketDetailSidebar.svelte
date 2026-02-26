@@ -1,7 +1,7 @@
 <script lang="ts">
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import PredictionInterface from '$lib/components/market/PredictionInterface.svelte';
-	import type { Market } from '$lib/services/mockBackend';
+	import type { Market } from '$lib/types/market';
 
 	interface Props {
 		market: Market;
@@ -13,7 +13,7 @@
 
 <aside class="space-y-8">
 	{#if market.status === 'Open'}
-		<PredictionInterface {market} on:predictionPlaced={onPredictionPlaced} />
+		<PredictionInterface {market} {onPredictionPlaced} />
 	{:else}
 		<div class="space-y-4 rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
 			<div class="flex justify-center">
@@ -51,7 +51,8 @@
 		<div class="space-y-3">
 			<div class="flex justify-between text-sm">
 				<span class="text-slate-500">Creator</span>
-				<span class="font-medium text-slate-950">{market.creator.substring(0, 10)}...</span>
+				<span class="font-medium text-slate-950">{market.creator.toText().substring(0, 10)}...</span
+				>
 			</div>
 			<div class="flex justify-between text-sm">
 				<span class="text-slate-500">Invite Only</span>

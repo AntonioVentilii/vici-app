@@ -5,17 +5,17 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { mockBackend, type Market, type Position } from '$lib/services/mockBackend';
+	import { getMarkets } from '$lib/services/market.service';
+	import { getPositions } from '$lib/services/position.service';
+	import type { Market } from '$lib/types/market';
+	import type { Position } from '$lib/types/position';
 
 	let positions = $state<Position[]>([]);
 	let markets = $state<Market[]>([]);
 	let loading = $state(true);
 
 	onMount(async () => {
-		[positions, markets] = await Promise.all([
-			mockBackend.getPositions(),
-			mockBackend.getMarkets()
-		]);
+		[positions, markets] = await Promise.all([getPositions(), getMarkets()]);
 		loading = false;
 	});
 

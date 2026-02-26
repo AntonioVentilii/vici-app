@@ -1,6 +1,6 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import type { LeaderboardEntry } from '$lib/services/mockBackend';
+	import type { LeaderboardEntry } from '$lib/types/social';
 
 	interface Props {
 		leaderboard: LeaderboardEntry[];

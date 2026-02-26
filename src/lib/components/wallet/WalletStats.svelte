@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { WalletBalance } from '$lib/services/mockBackend';
+	import type { WalletBalance } from '$lib/types/wallet';
 
 	interface Props {
 		balances: WalletBalance;
@@ -38,7 +38,7 @@
 			</div>
 		</div>
 		<div class="mt-4 flex items-baseline gap-2">
-			<span class="text-5xl font-black text-slate-950">{onFormatBalance(balances.ckUSDC)}</span>
+			<span class="text-5xl font-black text-slate-950">{onFormatBalance(balances.ckUsdc)}</span>
 			<span class="text-xl font-bold text-slate-400 uppercase">ckUSDC</span>
 		</div>
 		<div class="mt-6 flex gap-3 text-xs font-medium text-slate-500">

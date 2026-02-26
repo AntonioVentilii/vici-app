@@ -1,30 +1,32 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
-	import { page } from '$app/state';
 	import MarketDetailForecast from '$lib/components/market/MarketDetailForecast.svelte';
 	import MarketDetailHeader from '$lib/components/market/MarketDetailHeader.svelte';
 	import MarketDetailSidebar from '$lib/components/market/MarketDetailSidebar.svelte';
 	import MarketDetailStats from '$lib/components/market/MarketDetailStats.svelte';
-	import { mockBackend, type Market } from '$lib/services/mockBackend';
+	import { pageMarketId } from '$lib/derived/page-market.derived';
+	import { getMarket } from '$lib/services/market.service';
+	import type { Market, MarketId } from '$lib/types/market';
 
-	let market = $state<Market | null>(null);
+	let market = $state<Market | undefined>();
 	let loading = $state(true);
 
-	const fetchMarket = async (id: string) => {
+	const fetchMarket = async (id: MarketId) => {
 		loading = true;
-		market = await mockBackend.getMarket(id);
+		market = await getMarket(id);
 		loading = false;
 	};
 
 	onMount(() => {
-		if (page.params.id) {
-			fetchMarket(page.params.id);
+		if (nonNullish($pageMarketId)) {
+			fetchMarket($pageMarketId);
 		}
 	});
 
 	$effect(() => {
-		if (page.params.id && (!market || market.id !== page.params.id)) {
-			fetchMarket(page.params.id);
+		if (nonNullish($pageMarketId) && (isNullish(market) || market.id !== $pageMarketId)) {
+			fetchMarket($pageMarketId);
 		}
 	});
 
@@ -46,6 +48,12 @@
 	};
 
 	const formatVolume = (v: bigint) => (Number(v) / 100_000_000).toFixed(2);
+
+	const onPredictionPlaced = () => {
+		if (nonNullish(market)) {
+			fetchMarket(market.id);
+		}
+	};
 </script>
 
 <svelte:head>
@@ -86,7 +94,7 @@
 				/>
 			</div>
 
-			<MarketDetailSidebar {market} onPredictionPlaced={() => fetchMarket(market?.id ?? '')} />
+			<MarketDetailSidebar {market} {onPredictionPlaced} />
 		</div>
 	{:else}
 		<div class="flex flex-col items-center justify-center py-24 text-center">

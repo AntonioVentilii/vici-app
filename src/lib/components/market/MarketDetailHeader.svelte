@@ -1,6 +1,6 @@
 <script lang="ts">
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
-	import type { MarketStatus } from '$lib/services/mockBackend';
+	import type { MarketStatus } from '$lib/types/market';
 
 	interface Props {
 		title: string;

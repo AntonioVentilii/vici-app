@@ -1,17 +1,19 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import Login from '$lib/components/auth/Login.svelte';
 	import Logout from '$lib/components/auth/Logout.svelte';
+	import SignIn from '$lib/components/auth/SignIn.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { mockBackend } from '$lib/services/mockBackend';
+	import { isAdmin as isAdminService } from '$lib/services/auth.service';
+	import { getBalances } from '$lib/services/wallet.service';
+	import type { WalletBalance } from '$lib/types/wallet';
 
-	let balances = $state({ icp: ZERO, ckUSDC: ZERO });
+	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO });
 	let isAdmin = $state(false);
 
 	onMount(async () => {
-		balances = await mockBackend.getBalances();
-		isAdmin = await mockBackend.isAdmin();
+		balances = await getBalances();
+		isAdmin = await isAdminService();
 	});
 
 	const formatBalance = (b: bigint) => Number(b) / 100_000_000;
@@ -106,7 +108,7 @@
 					>
 					<span class="h-3 w-px bg-slate-200"></span>
 					<span class="text-sm font-bold text-slate-950"
-						>{formatBalance(balances.ckUSDC).toFixed(2)}
+						>{formatBalance(balances.ckUsdc).toFixed(2)}
 						<span class="text-[10px] text-slate-500">ckUSDC</span></span
 					>
 				</div>
@@ -115,7 +117,7 @@
 			<div class="hidden h-8 w-px bg-white/10 sm:block"></div>
 
 			<div class="flex items-center gap-2">
-				<Login />
+				<SignIn />
 				<Logout />
 			</div>
 		</div>

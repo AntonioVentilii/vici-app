@@ -20,6 +20,10 @@ const config = {
 		adapter: adapter(),
 		version: {
 			name: version
+		},
+		alias: {
+			$declarations: './src/declarations',
+			$routes: './src/lib/routes'
 		}
 	}
 };

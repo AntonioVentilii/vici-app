@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Outcome } from '$lib/services/mockBackend';
+	import type { Outcome } from '$lib/types/market';
 
 	interface Props {
 		outcome?: Outcome | string;

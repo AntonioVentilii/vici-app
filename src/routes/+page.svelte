@@ -3,7 +3,8 @@
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import MarketGrid from '$lib/components/market/MarketGrid.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { mockBackend, type Market } from '$lib/services/mockBackend';
+	import { getMarkets } from '$lib/services/market.service';
+	import type { Market } from '$lib/types/market';
 
 	let markets: Market[] = $state([]);
 	let loading = $state(true);
@@ -13,14 +14,14 @@
 	const tabs = ['All', 'Trending', 'Expiring', 'Resolved'];
 
 	onMount(async () => {
-		markets = await mockBackend.getMarkets();
+		markets = await getMarkets();
 		loading = false;
 	});
 
 	const filteredMarkets = $derived(
 		markets.filter((m) => {
 			const matchesSearch =
-				m.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+				m.title.toLowerCase().includes(searchTerm.toLowerCase()) ??
 				m.description.toLowerCase().includes(searchTerm.toLowerCase());
 			const matchesTab =
 				activeTab === 'All' ||

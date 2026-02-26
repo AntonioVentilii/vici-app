@@ -3,7 +3,9 @@
 	import AdminMarketForm from '$lib/components/admin/AdminMarketForm.svelte';
 	import AdminResolutionHistory from '$lib/components/admin/AdminResolutionHistory.svelte';
 	import AdminResolutionList from '$lib/components/admin/AdminResolutionList.svelte';
-	import { mockBackend, type Market, type Outcome } from '$lib/services/mockBackend';
+	import { resolveMarket } from '$lib/services/auth.service';
+	import { createMarket, getMarkets } from '$lib/services/market.service';
+	import type { Market, MarketId, Outcome } from '$lib/types/market';
 
 	let markets = $state<Market[]>([]);
 	let loading = $state(true);
@@ -14,7 +16,7 @@
 	let expiryDate = $state('');
 
 	const fetchMarkets = async () => {
-		markets = await mockBackend.getMarkets();
+		markets = await getMarkets();
 		loading = false;
 	};
 
@@ -25,7 +27,7 @@
 			return;
 		}
 		try {
-			await mockBackend.createMarket(title, description, new Date(expiryDate).getTime());
+			await createMarket({ title, description, expiryDate: new Date(expiryDate).getTime() });
 			title = '';
 			description = '';
 			expiryDate = '';
@@ -36,11 +38,11 @@
 		}
 	};
 
-	const handleResolve = async ({ id, outcome }: { id: string; outcome: Outcome }) => {
+	const handleResolve = async ({ marketId, outcome }: { marketId: MarketId; outcome: Outcome }) => {
 		try {
-			await mockBackend.resolveMarket(id, outcome);
+			await resolveMarket({ marketId, outcome });
 			await fetchMarkets();
-			alert(`Market ${id} resolved as ${outcome}`);
+			alert(`Market ${marketId} resolved as ${outcome}`);
 		} catch (e: unknown) {
 			alert((e as Error).message);
 		}

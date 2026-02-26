@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Market } from '$lib/services/mockBackend';
+	import type { Market } from '$lib/types/market';
 
 	interface Props {
 		market: Market;
@@ -69,7 +69,7 @@
 			<div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
 				<div
 					style="width: {market.yesProbability * 100}%"
-					class="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-1000 ease-out"
+					class="h-full bg-linear-to-r from-indigo-500 to-purple-600 transition-all duration-1000 ease-out"
 				></div>
 			</div>
 		</div>

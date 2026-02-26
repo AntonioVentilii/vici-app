@@ -3,7 +3,8 @@
 	import LeaderboardTable from '$lib/components/leaderboard/LeaderboardTable.svelte';
 	import LeaderboardTimeframes from '$lib/components/leaderboard/LeaderboardTimeframes.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { mockBackend, type LeaderboardEntry } from '$lib/services/mockBackend';
+	import { getLeaderboard } from '$lib/services/leaderboard.service';
+	import type { LeaderboardEntry } from '$lib/types/social';
 
 	let leaderboard = $state<LeaderboardEntry[]>([]);
 	let loading = $state(true);
@@ -12,7 +13,7 @@
 	const timeframes = ['Weekly', 'Monthly', 'All-time'];
 
 	onMount(async () => {
-		leaderboard = await mockBackend.getLeaderboard();
+		leaderboard = await getLeaderboard();
 		loading = false;
 	});
 </script>

@@ -6,17 +6,18 @@
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
 	import WalletStats from '$lib/components/wallet/WalletStats.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { mockBackend, type Transaction, type WalletBalance } from '$lib/services/mockBackend';
+	import { getBalances, getTransactions, sendCkUSDC, sendICP } from '$lib/services/wallet.service';
+	import type { Transaction, WalletBalance } from '$lib/types/wallet';
 
-	let balances = $state<WalletBalance>({ icp: ZERO, ckUSDC: ZERO });
+	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO });
 	let transactions = $state<Transaction[]>([]);
 	let activeTab = $state('Send');
 
 	const tabs = ['Send', 'Receive', 'History'];
 
 	onMount(async () => {
-		balances = await mockBackend.getBalances();
-		transactions = await mockBackend.getTransactions();
+		balances = await getBalances();
+		transactions = await getTransactions();
 	});
 
 	const formatBalance = (b: bigint) => (Number(b) / 100_000_000).toFixed(4);
@@ -30,15 +31,15 @@
 			return;
 		}
 		try {
-			const amt = BigInt(parseFloat(amount) * 100_000_000);
+			const _amt = BigInt(parseFloat(amount) * 100_000_000);
 			if (selectedToken === 'ICP') {
-				await mockBackend.sendICP(recipient, amt);
+				await sendICP();
 			} else {
-				await mockBackend.sendCkUSDC(recipient, amt);
+				await sendCkUSDC();
 			}
 			// Refresh
-			balances = await mockBackend.getBalances();
-			transactions = await mockBackend.getTransactions();
+			balances = await getBalances();
+			transactions = await getTransactions();
 			amount = '';
 			recipient = '';
 			alert('Transaction successful!');

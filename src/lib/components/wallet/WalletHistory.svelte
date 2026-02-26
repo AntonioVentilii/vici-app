@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Transaction } from '$lib/services/mockBackend';
+	import type { Transaction } from '$lib/types/wallet';
 
 	interface Props {
 		transactions: Transaction[];
@@ -37,7 +37,7 @@
 							{#if tx.marketId}
 								Market Prediction ID: {tx.marketId}
 							{:else if tx.counterparty}
-								To/From: {tx.counterparty.substring(0, 10)}...
+								To/From: {tx.counterparty.toText().substring(0, 10)}...
 							{:else}
 								-
 							{/if}

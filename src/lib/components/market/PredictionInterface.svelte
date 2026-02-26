@@ -1,13 +1,16 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
-	import { mockBackend, type Market, type PositionType } from '$lib/services/mockBackend';
+	import { placePrediction } from '$lib/services/position.service';
+	import type { Market } from '$lib/types/market';
+	import type { PositionType } from '$lib/types/position';
 
 	interface Props {
 		market: Market;
+		onPredictionPlaced: () => void;
 	}
 
-	const { market }: Props = $props();
-	const dispatch = createEventDispatcher();
+	const { market, onPredictionPlaced }: Props = $props();
+
+	const { id: marketId, yesProbability, noProbability } = $derived(market);
 
 	let amount = $state('');
 	let selectedType = $state<PositionType>('YES');
@@ -25,9 +28,9 @@
 
 		try {
 			const amt = BigInt(Math.floor(parseFloat(amount) * 100_000_000));
-			await mockBackend.placePrediction(market.id, selectedType, amt, 'ICP');
+			await placePrediction({ marketId, type: selectedType, amount: amt });
 			amount = '';
-			dispatch('predictionPlaced');
+			onPredictionPlaced();
 			alert(`Successfully placed ${selectedType} prediction!`);
 		} catch (e: unknown) {
 			error = (e as Error).message ?? 'Failed to place prediction';
@@ -41,7 +44,7 @@
 			return 0;
 		}
 		const amt = parseFloat(amount);
-		const prob = selectedType === 'YES' ? market.yesProbability : market.noProbability;
+		const prob = selectedType === 'YES' ? yesProbability : noProbability;
 		if (prob === 0) {
 			return 0;
 		}

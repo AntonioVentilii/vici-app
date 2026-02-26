@@ -1,7 +1,7 @@
 <script lang="ts">
 	import MarketCard from '$lib/components/market/MarketCard.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import type { Market } from '$lib/services/mockBackend';
+	import type { Market } from '$lib/types/market';
 
 	interface Props {
 		markets: Market[];
