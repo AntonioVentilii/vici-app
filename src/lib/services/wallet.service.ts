@@ -6,12 +6,16 @@ import {
 	CKUSDC_LEDGER_CANISTER_ID,
 	ICP_LEDGER_CANISTER_ID
 } from '$lib/constants/canisters.constants';
-import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getIdentity } from '$lib/services/identity.services';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
-import { toNullable } from '@dfinity/utils';
+import { isNullish, toNullable } from '@dfinity/utils';
 
 export const getBalances = async (): Promise<WalletBalance> => {
-	const identity = await safeGetIdentityOnce();
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return { icp: ZERO, ckUsdc: ZERO };
+	}
 
 	try {
 		const account = await getMarginAccount({

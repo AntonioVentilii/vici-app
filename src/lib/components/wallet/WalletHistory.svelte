@@ -26,7 +26,7 @@
 			<tbody class="divide-y divide-slate-50">
 				{#each transactions as tx (tx.id)}
 					<tr class="text-sm">
-						<td class="py-4 text-slate-600">{new Date(tx.timestamp).toLocaleString()}</td>
+						<td class="py-4 text-slate-600">{new Date(Number(tx.timestamp)).toLocaleString()}</td>
 						<td
 							class="py-4 font-bold {tx.type === 'Receive' ? 'text-green-600' : 'text-indigo-600'}"
 							>{tx.type}</td

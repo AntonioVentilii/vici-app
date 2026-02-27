@@ -15,9 +15,11 @@
 		return val.toFixed(0);
 	};
 
-	const getTimeRemaining = (expiry: number) => {
-		const now = Date.now();
-		const diff = expiry - now;
+	const getTimeRemaining = (expiry: bigint) => {
+		const now = BigInt(Date.now());
+
+		const diff = Number(expiry - now);
+
 		if (diff <= 0) {
 			return 'Expired';
 		}

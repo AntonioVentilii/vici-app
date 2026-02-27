@@ -2,7 +2,7 @@
 
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import { PAYOFF_TYPE, STRIKE, VICI_ORACLE_V1 } from '$lib/constants/app.constants';
-import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { Market, MarketId } from '$lib/types/market';
 import { mapMarketData } from '$lib/utils/market.utils';
 import { isNullish } from '@dfinity/utils';
@@ -24,7 +24,10 @@ export const createMarket = async ({
 	const seriesId = await addSeries({
 		identity,
 		params: {
+			// TODO: parse it as underlying,
 			underlying: title,
+			title,
+			description,
 			expiry: expiryDate,
 			// TODO: support different settlement assets, for now we can default to ICP
 			settlement_asset: { Icp: null },
@@ -40,7 +43,7 @@ export const createMarket = async ({
 };
 
 export const getMarkets = async (): Promise<Market[]> => {
-	const identity = await safeGetIdentityOnce();
+	const identity = await getIdentityOrAnonymous();
 
 	const seriesList = await listSeries({ identity });
 
@@ -48,7 +51,7 @@ export const getMarkets = async (): Promise<Market[]> => {
 };
 
 export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {
-	const identity = await safeGetIdentityOnce();
+	const identity = await getIdentityOrAnonymous();
 
 	const s = await getSeries({ identity, seriesId: marketId });
 

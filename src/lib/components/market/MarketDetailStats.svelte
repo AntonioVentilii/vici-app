@@ -1,7 +1,7 @@
 <script lang="ts">
 	interface Props {
 		totalVolume: bigint;
-		expiryDate: number;
+		expiryDate: bigint;
 		timeRemaining: string;
 		onFormatVolume: (v: bigint) => string;
 	}
@@ -19,7 +19,7 @@
 	<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
 		<div class="text-xs font-bold tracking-widest text-slate-500 uppercase">Expiry Date</div>
 		<div class="mt-2 text-2xl font-black text-slate-950">
-			{new Date(expiryDate).toLocaleDateString()}
+			{new Date(Number(expiryDate)).toLocaleDateString()}
 		</div>
 	</div>
 	<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

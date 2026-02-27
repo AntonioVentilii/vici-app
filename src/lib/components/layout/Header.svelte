@@ -4,6 +4,7 @@
 	import Logout from '$lib/components/auth/Logout.svelte';
 	import SignIn from '$lib/components/auth/SignIn.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { userSignedIn } from '$lib/derived/user.derived';
 	import { isAdmin as isAdminService } from '$lib/services/auth.service';
 	import { getBalances } from '$lib/services/wallet.service';
 	import type { WalletBalance } from '$lib/types/wallet';
@@ -94,27 +95,29 @@
 
 		<!-- Right side -->
 		<div class="flex items-center gap-4">
-			<div class="hidden flex-col items-end gap-0.5 sm:flex">
-				<div
-					class="flex items-center gap-2 text-xs font-semibold tracking-wider text-gray-400 uppercase"
-				>
-					<span class="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500"></span>
-					Live Balances
-				</div>
-				<div class="flex items-center gap-3">
-					<span class="text-sm font-bold text-slate-950"
-						>{formatBalance(balances.icp).toFixed(2)}
-						<span class="text-[10px] text-slate-500">ICP</span></span
+			{#if $userSignedIn}
+				<div class="hidden flex-col items-end gap-0.5 sm:flex">
+					<div
+						class="flex items-center gap-2 text-xs font-semibold tracking-wider text-gray-400 uppercase"
 					>
-					<span class="h-3 w-px bg-slate-200"></span>
-					<span class="text-sm font-bold text-slate-950"
-						>{formatBalance(balances.ckUsdc).toFixed(2)}
-						<span class="text-[10px] text-slate-500">ckUSDC</span></span
-					>
+						<span class="h-1.5 w-1.5 animate-pulse rounded-full bg-green-500"></span>
+						Live Balances
+					</div>
+					<div class="flex items-center gap-3">
+						<span class="text-sm font-bold text-slate-950"
+							>{formatBalance(balances.icp).toFixed(2)}
+							<span class="text-[10px] text-slate-500">ICP</span></span
+						>
+						<span class="h-3 w-px bg-slate-200"></span>
+						<span class="text-sm font-bold text-slate-950"
+							>{formatBalance(balances.ckUsdc).toFixed(2)}
+							<span class="text-[10px] text-slate-500">ckUSDC</span></span
+						>
+					</div>
 				</div>
-			</div>
 
-			<div class="hidden h-8 w-px bg-white/10 sm:block"></div>
+				<div class="hidden h-8 w-px bg-white/10 sm:block"></div>
+			{/if}
 
 			<div class="flex items-center gap-2">
 				<SignIn />

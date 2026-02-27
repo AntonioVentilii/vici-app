@@ -1,9 +1,6 @@
 <script lang="ts">
 	import { onAuthStateChange } from '@junobuild/core';
 	import { onDestroy, onMount, type Snippet } from 'svelte';
-	import Logout from '$lib/components/auth/Logout.svelte';
-	import SignIn from '$lib/components/auth/SignIn.svelte';
-	import { userSignedIn } from '$lib/derived/user.derived';
 	import { userStore } from '$lib/stores/user.store';
 
 	interface Props {
@@ -24,14 +21,6 @@
 
 <svelte:window onjunoSignOutAuthTimer={automaticSignOut} />
 
-{#if $userSignedIn}
-	<div>
-		{@render children()}
-
-		<Logout />
-	</div>
-{:else}
-	<div class="gap flex flex-col">
-		<SignIn />
-	</div>
-{/if}
+<div>
+	{@render children()}
+</div>

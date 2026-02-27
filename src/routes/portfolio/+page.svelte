@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Protected from '$lib/components/auth/Protected.svelte';
 	import PortfolioStats from '$lib/components/portfolio/PortfolioStats.svelte';
 	import PositionTable from '$lib/components/portfolio/PositionTable.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -48,30 +49,35 @@
 	const totalPnL = $derived(positions.reduce((acc, pos) => acc + calculatePnL(pos), 0));
 </script>
 
-<div class="space-y-12">
-	<SectionHeader
-		description="Track your active predictions and see how your trades are performing in real-time."
-		highlight="Portfolio"
-		title="My"
-	/>
-
-	{#if loading}
-		<LoadingSpinner />
-	{:else}
-		<!-- Stats Summary -->
-		<PortfolioStats
-			activeMarketsCount={positions.length}
-			{totalPnL}
-			totalPortfolioValue={formatAmount(totalPortfolioValue)}
+<Protected
+	description="Sign in to view your active predictions and track your portfolio performance."
+	title="Your Portfolio"
+>
+	<div class="space-y-12">
+		<SectionHeader
+			description="Track your active predictions and see how your trades are performing in real-time."
+			highlight="Portfolio"
+			title="My"
 		/>
 
-		<!-- Positions Table -->
-		<PositionTable
-			{markets}
-			onCalculatePnL={calculatePnL}
-			onCalculateValue={calculateValue}
-			onFormatAmount={formatAmount}
-			{positions}
-		/>
-	{/if}
-</div>
+		{#if loading}
+			<LoadingSpinner />
+		{:else}
+			<!-- Stats Summary -->
+			<PortfolioStats
+				activeMarketsCount={positions.length}
+				{totalPnL}
+				totalPortfolioValue={formatAmount(totalPortfolioValue)}
+			/>
+
+			<!-- Positions Table -->
+			<PositionTable
+				{markets}
+				onCalculatePnL={calculatePnL}
+				onCalculateValue={calculateValue}
+				onFormatAmount={formatAmount}
+				{positions}
+			/>
+		{/if}
+	</div>
+</Protected>

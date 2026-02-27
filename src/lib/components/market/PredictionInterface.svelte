@@ -1,4 +1,6 @@
 <script lang="ts">
+	import SignInActions from '$lib/components/auth/SignInActions.svelte';
+	import { userSignedIn } from '$lib/derived/user.derived';
 	import { placePrediction } from '$lib/services/position.service';
 	import type { Market } from '$lib/types/market';
 	import type { PositionType } from '$lib/types/position';
@@ -143,24 +145,31 @@
 		</div>
 
 		<!-- Action Button -->
-		<button
-			class="group relative w-full overflow-hidden rounded-2xl bg-indigo-600 py-5 text-lg font-black text-white shadow-2xl shadow-indigo-500/40 transition-all hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-			disabled={loading || !amount}
-			onclick={handlePlacePrediction}
-		>
-			{#if loading}
-				<div class="flex items-center justify-center gap-2">
-					<div
-						class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
-					></div>
-					Processing...
-				</div>
-			{:else}
-				Confirm {selectedType} Prediction
-			{/if}
-			<div
-				class="absolute inset-x-0 bottom-0 h-1 bg-white/20 transition-all group-hover:bg-white/40"
-			></div>
-		</button>
+		{#if $userSignedIn}
+			<button
+				class="group relative w-full overflow-hidden rounded-2xl bg-indigo-600 py-5 text-lg font-black text-white shadow-2xl shadow-indigo-500/40 transition-all hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+				disabled={loading || !amount}
+				onclick={handlePlacePrediction}
+			>
+				{#if loading}
+					<div class="flex items-center justify-center gap-2">
+						<div
+							class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
+						></div>
+						Processing...
+					</div>
+				{:else}
+					Confirm {selectedType} Prediction
+				{/if}
+				<div
+					class="absolute inset-x-0 bottom-0 h-1 bg-white/20 transition-all group-hover:bg-white/40"
+				></div>
+			</button>
+		{:else}
+			<div class="flex flex-col items-center gap-4 rounded-2xl bg-indigo-50 p-6 text-center">
+				<p class="text-sm font-medium text-slate-600">Sign in to place your prediction</p>
+				<SignInActions />
+			</div>
+		{/if}
 	</div>
 </div>

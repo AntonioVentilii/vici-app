@@ -3,7 +3,7 @@
 	import LeaderboardTable from '$lib/components/leaderboard/LeaderboardTable.svelte';
 	import LeaderboardTimeframes from '$lib/components/leaderboard/LeaderboardTimeframes.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { getLeaderboard } from '$lib/services/leaderboard.service';
+	import { socialService } from '$lib/services/social.service';
 	import type { LeaderboardEntry } from '$lib/types/social';
 
 	let leaderboard = $state<LeaderboardEntry[]>([]);
@@ -13,7 +13,7 @@
 	const timeframes = ['Weekly', 'Monthly', 'All-time'];
 
 	onMount(async () => {
-		leaderboard = await getLeaderboard();
+		leaderboard = await socialService.getLeaderboard();
 		loading = false;
 	});
 </script>

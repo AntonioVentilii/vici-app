@@ -1,8 +1,9 @@
 import { getPositions as getPositionsApi, submitMatchedTrade } from '$lib/api/clearing.api';
-import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId } from '$lib/types/market';
 import type { Position, PositionType } from '$lib/types/position';
 import { mapPositionData } from '$lib/utils/position.utils';
+import { isNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 
 export const placePrediction = async ({
@@ -48,7 +49,11 @@ export const placePrediction = async ({
 };
 
 export const getPositions = async (): Promise<Position[]> => {
-	const identity = await safeGetIdentityOnce();
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return [];
+	}
 
 	const positions = await getPositionsApi({ identity });
 
