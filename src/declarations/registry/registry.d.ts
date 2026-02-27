@@ -8,24 +8,33 @@
 
 import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
+import type { Principal } from '@icp-sdk/core/principal';
 
 export interface AddSeriesParams {
+	title: string;
 	strike: [] | [bigint];
 	payoff_type: PayoffType;
 	settlement_asset: SettlementAsset;
 	underlying: string;
+	description: string;
 	expiry: bigint;
 	oracle_source: string;
 }
 export type AddSeriesResult = { Ok: string } | { Err: RegistryError };
 export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
-export type RegistryError = { SeriesAlreadyExists: null };
+export type RegistryError =
+	| { DescriptionTooLong: null }
+	| { TitleTooLong: null }
+	| { SeriesAlreadyExists: null };
 export interface Series {
+	title: string;
 	strike: [] | [bigint];
+	creator: Principal;
 	payoff_type: PayoffType;
 	series_id: string;
 	settlement_asset: SettlementAsset;
 	underlying: string;
+	description: string;
 	expiry: bigint;
 	oracle_source: string;
 }

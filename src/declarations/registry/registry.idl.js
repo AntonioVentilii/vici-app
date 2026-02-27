@@ -18,24 +18,33 @@ export const SettlementAsset = IDL.Variant({
 	CkUsdc: IDL.Null
 });
 export const AddSeriesParams = IDL.Record({
+	title: IDL.Text,
 	strike: IDL.Opt(IDL.Nat64),
 	payoff_type: PayoffType,
 	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
+	description: IDL.Text,
 	expiry: IDL.Nat64,
 	oracle_source: IDL.Text
 });
-export const RegistryError = IDL.Variant({ SeriesAlreadyExists: IDL.Null });
+export const RegistryError = IDL.Variant({
+	DescriptionTooLong: IDL.Null,
+	TitleTooLong: IDL.Null,
+	SeriesAlreadyExists: IDL.Null
+});
 export const AddSeriesResult = IDL.Variant({
 	Ok: IDL.Text,
 	Err: RegistryError
 });
 export const Series = IDL.Record({
+	title: IDL.Text,
 	strike: IDL.Opt(IDL.Nat64),
+	creator: IDL.Principal,
 	payoff_type: PayoffType,
 	series_id: IDL.Text,
 	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
+	description: IDL.Text,
 	expiry: IDL.Nat64,
 	oracle_source: IDL.Text
 });
@@ -59,24 +68,33 @@ export const idlFactory = ({ IDL }) => {
 		CkUsdc: IDL.Null
 	});
 	const AddSeriesParams = IDL.Record({
+		title: IDL.Text,
 		strike: IDL.Opt(IDL.Nat64),
 		payoff_type: PayoffType,
 		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
+		description: IDL.Text,
 		expiry: IDL.Nat64,
 		oracle_source: IDL.Text
 	});
-	const RegistryError = IDL.Variant({ SeriesAlreadyExists: IDL.Null });
+	const RegistryError = IDL.Variant({
+		DescriptionTooLong: IDL.Null,
+		TitleTooLong: IDL.Null,
+		SeriesAlreadyExists: IDL.Null
+	});
 	const AddSeriesResult = IDL.Variant({
 		Ok: IDL.Text,
 		Err: RegistryError
 	});
 	const Series = IDL.Record({
+		title: IDL.Text,
 		strike: IDL.Opt(IDL.Nat64),
+		creator: IDL.Principal,
 		payoff_type: PayoffType,
 		series_id: IDL.Text,
 		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
+		description: IDL.Text,
 		expiry: IDL.Nat64,
 		oracle_source: IDL.Text
 	});

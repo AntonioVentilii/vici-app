@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 30a2f6d8fc0c63f2724660ded601d5b64e18c647 for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit 50f29d2210c898dccc17b2c7e61d6d669195db82 for file 'src/clearing/clearing.did'
 
 type AcceptPositionTransferResult = variant { Ok : bool; Err : TradeError };
 type Asset = variant { Icrc : principal };
@@ -59,11 +59,14 @@ type PositionProof = record {
 	clearing_id : principal
 };
 type Series = record {
+	title : text;
 	strike : opt nat64;
+	creator : principal;
 	payoff_type : PayoffType;
 	series_id : text;
 	settlement_asset : SettlementAsset;
 	underlying : text;
+	description : text;
 	expiry : nat64;
 	oracle_source : text
 };

@@ -103,11 +103,14 @@ export const SettlementAsset = IDL.Variant({
 	CkUsdc: IDL.Null
 });
 export const Series = IDL.Record({
+	title: IDL.Text,
 	strike: IDL.Opt(IDL.Nat64),
+	creator: IDL.Principal,
 	payoff_type: PayoffType,
 	series_id: IDL.Text,
 	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
+	description: IDL.Text,
 	expiry: IDL.Nat64,
 	oracle_source: IDL.Text
 });
@@ -270,11 +273,14 @@ export const idlFactory = ({ IDL }) => {
 		CkUsdc: IDL.Null
 	});
 	const Series = IDL.Record({
+		title: IDL.Text,
 		strike: IDL.Opt(IDL.Nat64),
+		creator: IDL.Principal,
 		payoff_type: PayoffType,
 		series_id: IDL.Text,
 		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
+		description: IDL.Text,
 		expiry: IDL.Nat64,
 		oracle_source: IDL.Text
 	});

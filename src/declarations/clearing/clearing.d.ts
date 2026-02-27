@@ -67,11 +67,14 @@ export interface PositionProof {
 	clearing_id: Principal;
 }
 export interface Series {
+	title: string;
 	strike: [] | [bigint];
+	creator: Principal;
 	payoff_type: PayoffType;
 	series_id: string;
 	settlement_asset: SettlementAsset;
 	underlying: string;
+	description: string;
 	expiry: bigint;
 	oracle_source: string;
 }

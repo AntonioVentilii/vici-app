@@ -1,22 +1,31 @@
-// Generated from AntonioVentilii/icdc-core commit 30a2f6d8fc0c63f2724660ded601d5b64e18c647 for file 'src/registry/registry.did'
+// Generated from AntonioVentilii/icdc-core commit 50f29d2210c898dccc17b2c7e61d6d669195db82 for file 'src/registry/registry.did'
 
 type AddSeriesParams = record {
+	title : text;
 	strike : opt nat64;
 	payoff_type : PayoffType;
 	settlement_asset : SettlementAsset;
 	underlying : text;
+	description : text;
 	expiry : nat64;
 	oracle_source : text
 };
 type AddSeriesResult = variant { Ok : text; Err : RegistryError };
 type PayoffType = variant { Put; Binary; Call };
-type RegistryError = variant { SeriesAlreadyExists };
+type RegistryError = variant {
+	DescriptionTooLong;
+	TitleTooLong;
+	SeriesAlreadyExists
+};
 type Series = record {
+	title : text;
 	strike : opt nat64;
+	creator : principal;
 	payoff_type : PayoffType;
 	series_id : text;
 	settlement_asset : SettlementAsset;
 	underlying : text;
+	description : text;
 	expiry : nat64;
 	oracle_source : text
 };
