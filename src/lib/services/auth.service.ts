@@ -6,9 +6,7 @@ import type { MarketId, Outcome } from '$lib/types/market';
 import { binaryPayoff } from '$lib/utils/payoff.utils';
 import { isNullish } from '@dfinity/utils';
 
-export const isAdmin = async (): Promise<boolean> => {
-	throw new Error('isAdmin - Not implemented');
-};
+export const isAdmin = async (): Promise<boolean> => true;
 
 export const resolveMarket = async ({
 	marketId,

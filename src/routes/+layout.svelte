@@ -4,7 +4,6 @@
 	import { fade } from 'svelte/transition';
 	import { page } from '$app/state';
 	import Auth from '$lib/components/auth/Auth.svelte';
-	import Background from '$lib/components/layout/Background.svelte';
 	import Footer from '$lib/components/layout/Footer.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
 	import Banner from '$lib/components/ui/Banner.svelte';
@@ -46,6 +45,4 @@
 	</main>
 
 	<Footer />
-
-	<Background />
 </div>
