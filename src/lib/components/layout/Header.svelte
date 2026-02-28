@@ -2,15 +2,18 @@
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
 	import Logout from '$lib/components/auth/Logout.svelte';
-	import SignIn from '$lib/components/auth/SignIn.svelte';
+	import SignInModal from '$lib/components/auth/SignInModal.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { isAdmin as isAdminService } from '$lib/services/auth.service';
 	import { getBalances } from '$lib/services/wallet.service';
+	import { navStore, navigateTo, type Page } from '$lib/stores/nav.store';
 	import type { WalletBalance } from '$lib/types/wallet';
 
 	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO });
 	let isAdmin = $state(false);
+	let showSignInModal = $state(false);
 
 	onMount(async () => {
 		balances = await getBalances();
@@ -19,11 +22,15 @@
 
 	const formatBalance = (b: bigint) => Number(b) / 100_000_000;
 
-	const isActive = (path: string) => {
-		if (path === '/') {
-			return page.url.pathname === '/';
-		}
-		return page.url.pathname.startsWith(path);
+	const isActive = (path: Page) => $navStore === path && page.url.pathname === '/';
+
+	const handleNav = (p: Page) => {
+		navigateTo(p);
+	};
+
+	// eslint-disable-next-line require-await
+	const openSignInModal = async () => {
+		showSignInModal = true;
 	};
 </script>
 
@@ -33,7 +40,7 @@
 	<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
 		<!-- Logo -->
 		<div class="flex items-center gap-8">
-			<a class="group flex items-center gap-2" href="/">
+			<button class="group flex items-center gap-2" onclick={() => handleNav('markets')}>
 				<div
 					class="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 font-bold text-white shadow-lg transition-transform group-hover:scale-110"
 				>
@@ -44,51 +51,51 @@
 				>
 					VICI <span class="text-indigo-600">SOCIAL</span>
 				</span>
-			</a>
+			</button>
 
 			<!-- Desktop Nav -->
 			<nav class="hidden items-center gap-1 md:flex">
-				<a
-					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/')
+				<button
+					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('markets')
 						? 'bg-slate-100 text-slate-950'
 						: 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'}"
-					href="/"
+					onclick={() => handleNav('markets')}
 				>
 					Markets
-				</a>
-				<a
-					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/leaderboard')
+				</button>
+				<button
+					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('leaderboard')
 						? 'bg-slate-100 text-slate-950'
 						: 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'}"
-					href="/leaderboard"
+					onclick={() => handleNav('leaderboard')}
 				>
 					Leaderboard
-				</a>
-				<a
-					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/portfolio')
+				</button>
+				<button
+					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('portfolio')
 						? 'bg-slate-100 text-slate-950'
 						: 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'}"
-					href="/portfolio"
+					onclick={() => handleNav('portfolio')}
 				>
 					Portfolio
-				</a>
-				<a
-					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/wallet')
+				</button>
+				<button
+					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('wallet')
 						? 'bg-slate-100 text-slate-950'
 						: 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'}"
-					href="/wallet"
+					onclick={() => handleNav('wallet')}
 				>
 					Wallet
-				</a>
+				</button>
 				{#if isAdmin}
-					<a
-						class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('/admin')
+					<button
+						class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('admin')
 							? 'bg-indigo-500/10 text-indigo-400'
 							: 'text-indigo-400/60 hover:bg-indigo-500/5 hover:text-indigo-400'}"
-						href="/admin"
+						onclick={() => handleNav('admin')}
 					>
 						Admin
-					</a>
+					</button>
 				{/if}
 			</nav>
 		</div>
@@ -117,9 +124,11 @@
 				</div>
 			{:else}
 				<div class="flex items-center gap-2">
-					<SignIn />
+					<Button onclick={openSignInModal}>Sign in</Button>
 				</div>
 			{/if}
 		</div>
 	</div>
 </header>
+
+<SignInModal bind:show={showSignInModal} />

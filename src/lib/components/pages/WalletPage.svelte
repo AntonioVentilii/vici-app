@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Protected from '$lib/components/auth/Protected.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import WalletHistory from '$lib/components/wallet/WalletHistory.svelte';
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
@@ -32,7 +31,8 @@
 			return;
 		}
 		try {
-			const _amt = BigInt(parseFloat(amount) * 100_000_000);
+			// In a real app we'd parse the amount properly
+			// const _amt = BigInt(parseFloat(amount) * 100_000_000);
 			if (selectedToken === 'ICP') {
 				await sendICP();
 			} else {
@@ -50,52 +50,47 @@
 	};
 </script>
 
-<Protected
-	description="Sign in to manage your ICP and ckUSDC balances and track your transactions."
-	title="Your Wallet"
->
-	<div class="space-y-12">
-		<SectionHeader
-			description="Manage your ICP and ckUSDC balances. Securely send and receive tokens on the Internet Computer."
-			highlight="Wallet"
-			title="Your"
-		/>
+<div class="space-y-12">
+	<SectionHeader
+		description="Manage your ICP and ckUSDC balances. Securely send and receive tokens on the Internet Computer."
+		highlight="Wallet"
+		title="Your"
+	/>
 
-		<!-- Balances Cards -->
-		<WalletStats {balances} onFormatBalance={formatBalance} />
+	<!-- Balances Cards -->
+	<WalletStats {balances} onFormatBalance={formatBalance} />
 
-		<!-- Operations Tabs -->
-		<div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-			<div class="flex border-b border-slate-100">
-				{#each tabs as tab (tab)}
-					<button
-						class="flex-1 py-4 text-sm font-bold transition-all {activeTab === tab
-							? 'border-b-2 border-indigo-600 bg-slate-50 text-indigo-600'
-							: 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'}"
-						onclick={() => (activeTab = tab)}
-					>
-						{tab}
-					</button>
-				{/each}
-			</div>
+	<!-- Operations Tabs -->
+	<div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+		<div class="flex border-b border-slate-100">
+			{#each tabs as tab (tab)}
+				<button
+					class="flex-1 py-4 text-sm font-bold transition-all {activeTab === tab
+						? 'border-b-2 border-indigo-600 bg-slate-50 text-indigo-600'
+						: 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'}"
+					onclick={() => (activeTab = tab)}
+				>
+					{tab}
+				</button>
+			{/each}
+		</div>
 
-			<div class="p-8">
-				{#if activeTab === 'Send'}
-					<WalletSend
-						{amount}
-						onAmountChange={(v) => (amount = v)}
-						onRecipientChange={(v) => (recipient = v)}
-						onSend={handleSend}
-						onTokenChange={(v) => (selectedToken = v)}
-						{recipient}
-						{selectedToken}
-					/>
-				{:else if activeTab === 'Receive'}
-					<WalletReceive />
-				{:else}
-					<WalletHistory onFormatBalance={formatBalance} {transactions} />
-				{/if}
-			</div>
+		<div class="p-8">
+			{#if activeTab === 'Send'}
+				<WalletSend
+					{amount}
+					onAmountChange={(v) => (amount = v)}
+					onRecipientChange={(v) => (recipient = v)}
+					onSend={handleSend}
+					onTokenChange={(v) => (selectedToken = v)}
+					{recipient}
+					{selectedToken}
+				/>
+			{:else if activeTab === 'Receive'}
+				<WalletReceive />
+			{:else}
+				<WalletHistory onFormatBalance={formatBalance} {transactions} />
+			{/if}
 		</div>
 	</div>
-</Protected>
+</div>
