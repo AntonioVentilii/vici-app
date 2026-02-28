@@ -40,8 +40,12 @@
 			"providers": ["https://icp0.io"],
 			"type": "persistent"
 		},
-		"local": {
+		"juno": {
 			"bind": "127.0.0.1:5987",
+			"type": "ephemeral"
+		},
+		"local": {
+			"bind": "127.0.0.1:4943",
 			"type": "ephemeral"
 		}
 	}

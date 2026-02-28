@@ -12,6 +12,8 @@
 		"lint": "prettier --check . && eslint .",
 		"format": "prettier --write . && eslint . --fix",
 		"did": "./scripts/did.sh && npm run format && npm run lint",
+		"deploy": "dfx deploy --upgrade-unchanged",
+		"deploy:juno": "dfx deploy --network juno --upgrade-unchanged",
 		"postinstall:copy-auth": "node -e \"require('fs').cpSync('node_modules/@junobuild/core/dist/workers/', './static/workers', {recursive: true});\"",
 		"postinstall": "npm run postinstall:copy-auth"
 	},

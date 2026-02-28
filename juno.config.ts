@@ -3,8 +3,8 @@ import { defineConfig } from '@junobuild/config';
 export default defineConfig({
 	satellite: {
 		ids: {
-			development: '<DEV_SATELLITE_ID>',
-			production: '<PROD_SATELLITE_ID>'
+			development: 'auamu-4x777-77775-aaaaa-cai',
+			production: 'auamu-4x777-77775-aaaaa-cai'
 		},
 		source: 'build',
 		predeploy: ['npm run build']
