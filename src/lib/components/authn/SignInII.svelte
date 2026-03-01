@@ -3,10 +3,18 @@
 	import IconIc from '$lib/components/icons/IconIC.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
+	interface Props {
+		onSuccess?: () => void;
+	}
+
+	const { onSuccess }: Props = $props();
+
 	const signInWithII = async () => {
 		await signIn({
 			internet_identity: {}
 		});
+
+		onSuccess?.();
 	};
 </script>
 

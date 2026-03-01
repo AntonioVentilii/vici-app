@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Protected from '$lib/components/auth/Protected.svelte';
+	import Protected from '$lib/components/authn/Protected.svelte';
 	import AdminPage from '$lib/components/pages/AdminPage.svelte';
 	import LeaderboardPage from '$lib/components/pages/LeaderboardPage.svelte';
 	import MarketsPage from '$lib/components/pages/MarketsPage.svelte';

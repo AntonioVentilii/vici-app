@@ -1,5 +1,5 @@
 <script lang="ts">
-	import SignInActions from '$lib/components/auth/SignInActions.svelte';
+	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { placePrediction } from '$lib/services/position.service';
 	import type { Market } from '$lib/types/market';

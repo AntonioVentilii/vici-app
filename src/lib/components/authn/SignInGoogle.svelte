@@ -4,12 +4,20 @@
 	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
+	interface Props {
+		onSuccess?: () => void;
+	}
+
+	const { onSuccess }: Props = $props();
+
 	const GOOGLE_CLIENT_ID = undefined;
 
 	const signInWithGoogle = async () => {
 		await signIn({
 			google: {}
 		});
+
+		onSuccess?.();
 	};
 </script>
 

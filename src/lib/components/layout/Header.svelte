@@ -1,12 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { page } from '$app/state';
-	import Logout from '$lib/components/auth/Logout.svelte';
-	import SignInModal from '$lib/components/auth/SignInModal.svelte';
+	import Logout from '$lib/components/authn/Logout.svelte';
+	import SignInModal from '$lib/components/authn/SignInModal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
-	import { isAdmin as isAdminService } from '$lib/services/auth.service';
+	import { isAdmin as isAdminService } from '$lib/services/authn.service';
 	import { getBalances } from '$lib/services/wallet.service';
 	import { navStore, navigateTo, type Page } from '$lib/stores/nav.store';
 	import type { WalletBalance } from '$lib/types/wallet';

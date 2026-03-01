@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import SignInModal from '$lib/components/auth/SignInModal.svelte';
+	import SignInModal from '$lib/components/authn/SignInModal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { userSignedIn } from '$lib/derived/user.derived';
 

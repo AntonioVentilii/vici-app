@@ -3,10 +3,18 @@
 	import IconPasskey from '$lib/components/icons/IconPasskey.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 
+	interface Props {
+		onSuccess?: () => void;
+	}
+
+	const { onSuccess }: Props = $props();
+
 	const signInWithPassKey = async () => {
 		await signIn({
 			webauthn: {}
 		});
+
+		onSuccess?.();
 	};
 </script>
 
