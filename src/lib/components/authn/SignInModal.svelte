@@ -10,7 +10,7 @@
 
 	const onSuccess = () => {
 		show = false;
-	}
+	};
 </script>
 
 <Dialog bind:show>

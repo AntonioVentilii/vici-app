@@ -6,6 +6,14 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
 	plugins: [sveltekit(), juno(), tailwindcss()],
+	server: {
+		proxy: {
+			'/api': {
+				target: 'http://localhost:5987',
+				changeOrigin: true
+			}
+		}
+	},
 	resolve: {
 		alias: {
 			$declarations: resolve('./src/declarations')

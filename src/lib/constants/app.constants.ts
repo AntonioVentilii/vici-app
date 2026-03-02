@@ -2,7 +2,7 @@ import type { RegistryDid } from '$declarations';
 import { isDev } from '$lib/env/app.env';
 import { toNullable, type Nullable } from '@dfinity/utils';
 
-export const REPLICA_HOST = isDev() ? 'http://localhost:5987/' : 'https://icp-api.io';
+export const REPLICA_HOST = isDev() ? window.location.origin : 'https://icp-api.io';
 
 // eslint-disable-next-line no-restricted-syntax -- This is the definition
 export const ZERO = 0n;
