@@ -34,6 +34,11 @@
 			"packtool": ""
 		}
 	},
+	"metadata": [
+		{
+			"name": "candid:service"
+		}
+	],
 	"version": 1,
 	"networks": {
 		"staging": {
