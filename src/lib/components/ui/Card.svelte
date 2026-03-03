@@ -9,6 +9,6 @@
 	const { children, class: className = '' }: Props = $props();
 </script>
 
-<div class="rounded-3xl border border-slate-200 bg-white shadow-sm {className}">
+<div class="border-border bg-card text-card-foreground rounded-lg border shadow-sm {className}">
 	{@render children()}
 </div>

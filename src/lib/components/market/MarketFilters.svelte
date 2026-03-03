@@ -14,9 +14,9 @@
 	<div class="flex flex-wrap gap-2">
 		{#each tabs as tab (tab)}
 			<button
-				class="rounded-xl px-5 py-2.5 text-sm font-bold transition-all {activeTab === tab
-					? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-					: 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}"
+				class="rounded-lg px-5 py-2.5 text-sm font-bold transition-all {activeTab === tab
+					? 'bg-primary text-primary-foreground shadow-lg'
+					: 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'}"
 				onclick={() => onTabChange(tab)}
 			>
 				{tab}
@@ -35,7 +35,7 @@
 			</svg>
 		</div>
 		<input
-			class="block w-full rounded-xl border-none bg-white/5 py-3 pr-4 pl-10 text-sm text-white placeholder-gray-500 ring-1 ring-white/10 transition-all ring-inset focus:bg-white/10 focus:ring-2 focus:ring-indigo-500"
+			class="bg-muted text-foreground placeholder-muted-foreground ring-border focus:bg-muted/80 focus:ring-primary block w-full rounded-lg border-none py-3 pr-4 pl-10 text-sm ring-1 transition-all ring-inset focus:ring-2"
 			oninput={(e) => onSearchChange(e.currentTarget.value)}
 			placeholder="Search markets..."
 			type="text"

@@ -35,7 +35,7 @@
 </script>
 
 <a
-	class="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-500 hover:border-indigo-500/50 hover:shadow-lg"
+	class="group border-border bg-card hover:border-primary/50 relative flex flex-col overflow-hidden rounded-lg border transition-all duration-500 hover:shadow-lg"
 	href="/markets/{market.id}"
 >
 	<!-- Status Badge -->
@@ -52,11 +52,11 @@
 
 	<div class="p-6">
 		<h3
-			class="line-clamp-2 text-xl font-bold text-slate-950 transition-colors group-hover:text-indigo-600"
+			class="text-foreground group-hover:text-primary line-clamp-2 text-xl font-bold transition-colors"
 		>
 			{market.title}
 		</h3>
-		<p class="mt-2 line-clamp-2 text-sm text-slate-600">
+		<p class="text-muted-foreground mt-2 line-clamp-2 text-sm">
 			{market.description}
 		</p>
 
@@ -68,10 +68,10 @@
 				<span>YES Probability</span>
 				<span>{Math.round(market.yesProbability * 100)}%</span>
 			</div>
-			<div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
+			<div class="bg-muted mt-2 h-2 w-full overflow-hidden rounded-full">
 				<div
 					style="width: {market.yesProbability * 100}%"
-					class="h-full bg-linear-to-r from-indigo-500 to-purple-600 transition-all duration-1000 ease-out"
+					class="bg-primary h-full transition-all duration-1000 ease-out"
 				></div>
 			</div>
 		</div>
@@ -80,13 +80,13 @@
 		<div class="mt-8 grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
 			<div>
 				<div class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Volume</div>
-				<div class="mt-1 text-sm font-bold text-slate-950 uppercase">
+				<div class="text-foreground mt-1 text-sm font-bold uppercase">
 					{formatVolume(market.totalVolume)} ICP
 				</div>
 			</div>
 			<div class="text-right">
 				<div class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Ends In</div>
-				<div class="mt-1 text-sm font-bold text-slate-950">
+				<div class="text-foreground mt-1 text-sm font-bold">
 					{getTimeRemaining(market.expiryDate)}
 				</div>
 			</div>
@@ -101,7 +101,7 @@
 			class="flex translate-y-4 gap-3 transition-transform duration-500 group-hover:translate-y-0"
 		>
 			<button
-				class="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-xl shadow-indigo-500/20 transition-all hover:scale-110 hover:bg-indigo-500 active:scale-95"
+				class="bg-primary text-primary-foreground rounded-lg px-6 py-2.5 text-sm font-bold shadow-xl transition-all hover:scale-110 hover:opacity-90 active:scale-95"
 			>
 				Predict YES
 			</button>
