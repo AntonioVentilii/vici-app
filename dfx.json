@@ -40,14 +40,6 @@
 			"providers": ["https://icp0.io"],
 			"type": "persistent"
 		},
-		"juno": {
-			"bind": "127.0.0.1:5987",
-			"type": "ephemeral"
-		},
-		"dfx": {
-			"bind": "127.0.0.1:4943",
-			"type": "ephemeral"
-		},
 		"local": {
 			"providers": ["http://127.0.0.1:5987"],
 			"type": "ephemeral"
