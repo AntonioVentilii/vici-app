@@ -15,6 +15,8 @@ import {
 	type OnSetManyDocs,
 	type OnUploadAsset
 } from '@junobuild/functions';
+import { Collection } from '../lib/constants/collections.constants';
+import { assertSetRole } from './services/roles.services';
 
 // All the available hooks and assertions for your Datastore and Storage are scaffolded by default in this module.
 // However, if you don’t have to implement all of them, for example to improve readability or reduce unnecessary logic,
@@ -75,9 +77,8 @@ export const onDeleteFilteredAssets = defineHook<OnDeleteFilteredAssets>({
 });
 
 export const assertSetDoc = defineAssert<AssertSetDoc>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	assert: (context) => {}
+	collections: [Collection.ROLES],
+	assert: assertSetRole
 });
 
 export const assertDeleteDoc = defineAssert<AssertDeleteDoc>({

@@ -5,19 +5,19 @@
 	import SignInModal from '$lib/components/authn/SignInModal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { userSignedIn } from '$lib/derived/user.derived';
-	import { isAdmin as isAdminService } from '$lib/services/authn.service';
+	import { userRole, userSignedIn } from '$lib/derived/user.derived';
 	import { getBalances } from '$lib/services/wallet.service';
 	import { navStore, navigateTo, type Page } from '$lib/stores/nav.store';
+	import { UserRole } from '$lib/types/user';
 	import type { WalletBalance } from '$lib/types/wallet';
 
 	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO });
-	let isAdmin = $state(false);
 	let showSignInModal = $state(false);
+
+	const isAdmin = $derived($userRole === UserRole.ADMIN);
 
 	onMount(async () => {
 		balances = await getBalances();
-		isAdmin = await isAdminService();
 	});
 
 	const formatBalance = (b: bigint) => Number(b) / 100_000_000;

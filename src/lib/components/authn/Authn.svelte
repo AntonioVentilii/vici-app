@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { onAuthStateChange } from '@junobuild/core';
-	import { onDestroy, onMount, type Snippet } from 'svelte';
+	import { nonNullish } from '@dfinity/utils';
+	import { onAuthStateChange, type User } from '@junobuild/core';
+	import { onMount, type Snippet } from 'svelte';
+	import { getProfile } from '$lib/services/profile.services';
 	import { userStore } from '$lib/stores/user.store';
 
 	interface Props {
@@ -9,14 +11,28 @@
 
 	const { children }: Props = $props();
 
-	let unsubscribe: (() => void) | undefined = undefined;
+	const updateUserStore = async (user: User | null) => {
+		if (nonNullish(user)) {
+			const profile = await getProfile(user);
 
-	onMount(() => (unsubscribe = onAuthStateChange((user) => userStore.set(user))));
+			userStore.set({ user, profile });
+
+			return;
+		}
+
+		userStore.set({ user: null, profile: undefined });
+	};
+
+	onMount(() => {
+		const unsubscribe = onAuthStateChange(updateUserStore);
+
+		return () => {
+			unsubscribe();
+		};
+	});
 
 	// eslint-disable-next-line no-console
 	const automaticSignOut = () => console.log('Automatically signed out because session expired');
-
-	onDestroy(() => unsubscribe?.());
 </script>
 
 <svelte:window onjunoSignOutAuthTimer={automaticSignOut} />

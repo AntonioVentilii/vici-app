@@ -1,12 +1,8 @@
-/* eslint-disable require-await */
-
 import { settleSeries } from '$lib/api/clearing.api';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import { binaryPayoff } from '$lib/utils/payoff.utils';
 import { isNullish } from '@dfinity/utils';
-
-export const isAdmin = async (): Promise<boolean> => true;
 
 export const resolveMarket = async ({
 	marketId,

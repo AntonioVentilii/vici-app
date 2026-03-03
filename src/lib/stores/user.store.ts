@@ -1,4 +1,12 @@
-import type { UserOption } from '$lib/types/user';
+import type { UserOption, UserProfile } from '$lib/types/user';
 import { writable } from 'svelte/store';
 
-export const userStore = writable<UserOption>(undefined);
+export interface UserStoreData {
+	user: UserOption;
+	profile: UserProfile | undefined;
+}
+
+export const userStore = writable<UserStoreData>({
+	user: undefined,
+	profile: undefined
+});

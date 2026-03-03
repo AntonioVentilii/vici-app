@@ -1,11 +1,13 @@
 <script lang="ts">
 	import Protected from '$lib/components/authn/Protected.svelte';
+	import PermissionGuard from '$lib/components/authz/PermissionGuard.svelte';
 	import AdminPage from '$lib/components/pages/AdminPage.svelte';
 	import LeaderboardPage from '$lib/components/pages/LeaderboardPage.svelte';
 	import MarketsPage from '$lib/components/pages/MarketsPage.svelte';
 	import PortfolioPage from '$lib/components/pages/PortfolioPage.svelte';
 	import WalletPage from '$lib/components/pages/WalletPage.svelte';
 	import { navStore } from '$lib/stores/nav.store';
+	import { Permission } from '$lib/types/permission';
 </script>
 
 <svelte:head>
@@ -29,6 +31,8 @@
 		description="Sign in with an admin account to manage markets and resolve predictions."
 		title="Admin Access"
 	>
-		<AdminPage />
+		<PermissionGuard permission={Permission.VIEW_ADMIN_PANEL}>
+			<AdminPage />
+		</PermissionGuard>
 	</Protected>
 {/if}

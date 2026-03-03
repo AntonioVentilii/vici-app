@@ -1,0 +1,58 @@
+<script lang="ts">
+	import type { Snippet } from 'svelte';
+	import Button from '$lib/components/ui/Button.svelte';
+	import { userPermissions } from '$lib/derived/user.derived';
+	import type { Permission } from '$lib/types/permission';
+
+	interface Props {
+		children: Snippet;
+		permission: Permission;
+		showWarning?: boolean;
+		title?: string;
+		description?: string;
+	}
+
+	const {
+		children,
+		permission,
+		showWarning = false,
+		title = 'Access Denied',
+		description = 'You do not have the required permissions to access this area.'
+	}: Props = $props();
+
+	const isAuthorized = $derived($userPermissions.includes(permission));
+
+	// eslint-disable-next-line require-await
+	const handleRefresh = async () => {
+		window.location.reload();
+	};
+</script>
+
+{#if isAuthorized}
+	{@render children()}
+{:else if showWarning}
+	<div class="flex flex-col items-center justify-center py-20 text-center">
+		<div class="mb-12 max-w-md">
+			<h2 class="text-4xl font-black text-slate-950">{title}</h2>
+			<p class="mt-4 text-lg text-slate-600">
+				{description}
+			</p>
+			<p class="mt-2 text-sm text-slate-500">
+				Required permission: <span class="font-bold text-indigo-600 capitalize"
+					>{permission.replace(/_/g, ' ')}</span
+				>.
+			</p>
+		</div>
+
+		<div class="rounded-3xl border border-slate-100 bg-white p-12 shadow-2xl">
+			<div class="flex flex-col items-center gap-6">
+				<div
+					class="flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-red-500 to-orange-600 text-2xl font-bold text-white shadow-xl"
+				>
+					!
+				</div>
+				<Button onclick={handleRefresh}>Refresh Session</Button>
+			</div>
+		</div>
+	</div>
+{/if}
