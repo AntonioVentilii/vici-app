@@ -1,4 +1,5 @@
 import type { AssertSetDocContext } from '@junobuild/functions';
+import { Principal } from '@icp-sdk/core/principal';
 import { decodeDocData, getControllers, getDocStore, isController } from '@junobuild/functions/sdk';
 import { Collection } from '../../lib/constants/collections.constants';
 import { UserRole } from '../../lib/types/user';
@@ -6,7 +7,6 @@ import { UserRole } from '../../lib/types/user';
 export const assertSetRole = ({
 	caller,
 	data: {
-		key,
 		collection,
 		data: { proposed }
 	}
@@ -22,9 +22,10 @@ export const assertSetRole = ({
 	}
 
 	// 2. Check if caller is an admin by querying their own role in the 'roles' collection
+	const callerPrincipal = Principal.fromUint8Array(caller).toText();
 	const callerDoc = getDocStore({
 		collection: Collection.ROLES,
-		key,
+		key: callerPrincipal,
 		caller
 	});
 
