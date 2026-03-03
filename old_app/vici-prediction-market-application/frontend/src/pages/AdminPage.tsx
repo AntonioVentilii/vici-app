@@ -1,706 +1,747 @@
-import { useState } from 'react';
-import { useCreateMarket, useResolveMarket, useGrantViciCoins, useGetAllMarkets, useAdminList, useAddAdmin, useRemoveAdmin } from '../hooks/useQueries';
-import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger
+} from '@/components/ui/alert-dialog';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from 'sonner';
-import { Plus, CheckCircle, XCircle, Coins, Lock, AlertTriangle, Clock, Shield, UserMinus, Crown, Info } from 'lucide-react';
-import { MarketStatus, MarketSnapshot } from '../backend';
+import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Textarea } from '@/components/ui/textarea';
 import { Principal } from '@icp-sdk/core/principal';
+import {
+	AlertTriangle,
+	CheckCircle,
+	Clock,
+	Coins,
+	Crown,
+	Info,
+	Lock,
+	Plus,
+	Shield,
+	UserMinus
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
+import { MarketSnapshot, MarketStatus } from '../backend';
+import { useInternetIdentity } from '../hooks/useInternetIdentity';
+import {
+	useAddAdmin,
+	useAdminList,
+	useCreateMarket,
+	useGetAllMarkets,
+	useGrantViciCoins,
+	useRemoveAdmin,
+	useResolveMarket
+} from '../hooks/useQueries';
 
 export default function AdminPage() {
-  const createMarket = useCreateMarket();
-  const resolveMarket = useResolveMarket();
-  const grantCoins = useGrantViciCoins();
-  const { data: markets = [] } = useGetAllMarkets();
-  const { data: adminList = [], isLoading: adminListLoading } = useAdminList();
-  const addAdmin = useAddAdmin();
-  const removeAdmin = useRemoveAdmin();
-  const { identity } = useInternetIdentity();
+	const createMarket = useCreateMarket();
+	const resolveMarket = useResolveMarket();
+	const grantCoins = useGrantViciCoins();
+	const { data: markets = [] } = useGetAllMarkets();
+	const { data: adminList = [], isLoading: adminListLoading } = useAdminList();
+	const addAdmin = useAddAdmin();
+	const removeAdmin = useRemoveAdmin();
+	const { identity } = useInternetIdentity();
 
-  // Create Market Form
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [categories, setCategories] = useState('');
-  const [expirationDate, setExpirationDate] = useState('');
-  const [inviteOnly, setInviteOnly] = useState(false);
-  const [initialInvites, setInitialInvites] = useState('');
+	// Create Market Form
+	const [title, setTitle] = useState('');
+	const [description, setDescription] = useState('');
+	const [categories, setCategories] = useState('');
+	const [expirationDate, setExpirationDate] = useState('');
+	const [inviteOnly, setInviteOnly] = useState(false);
+	const [initialInvites, setInitialInvites] = useState('');
 
-  // Grant Coins Form
-  const [userPrincipal, setUserPrincipal] = useState('');
-  const [coinAmount, setCoinAmount] = useState('');
+	// Grant Coins Form
+	const [userPrincipal, setUserPrincipal] = useState('');
+	const [coinAmount, setCoinAmount] = useState('');
 
-  // Admin Management Form
-  const [newAdminPrincipal, setNewAdminPrincipal] = useState('');
+	// Admin Management Form
+	const [newAdminPrincipal, setNewAdminPrincipal] = useState('');
 
-  // Market Resolution State
-  const [selectedOutcomes, setSelectedOutcomes] = useState<Record<string, 'yes' | 'no' | 'canceled'>>({});
+	// Market Resolution State
+	const [selectedOutcomes, setSelectedOutcomes] = useState<
+		Record<string, 'yes' | 'no' | 'canceled'>
+	>({});
 
-  // Determine if current user is the owner (first admin in the list)
-  const currentUserPrincipal = identity?.getPrincipal().toString();
-  const ownerPrincipal = adminList.length > 0 ? adminList[0].toString() : null;
-  const isOwner = currentUserPrincipal === ownerPrincipal;
+	// Determine if current user is the owner (first admin in the list)
+	const currentUserPrincipal = identity?.getPrincipal().toString();
+	const ownerPrincipal = adminList.length > 0 ? adminList[0].toString() : null;
+	const isOwner = currentUserPrincipal === ownerPrincipal;
 
-  const handleCreateMarket = async (e: React.FormEvent) => {
-    e.preventDefault();
+	const handleCreateMarket = async (e: React.FormEvent) => {
+		e.preventDefault();
 
-    if (!title || !description || !expirationDate) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
+		if (!title || !description || !expirationDate) {
+			toast.error('Please fill in all required fields');
+			return;
+		}
 
-    try {
-      const expiration = BigInt(new Date(expirationDate).getTime() * 1000000);
-      const categoryArray = categories.split(',').map((c) => c.trim()).filter(Boolean);
+		try {
+			const expiration = BigInt(new Date(expirationDate).getTime() * 1000000);
+			const categoryArray = categories
+				.split(',')
+				.map((c) => c.trim())
+				.filter(Boolean);
 
-      let invitedUsersList: Principal[] = [];
-      if (inviteOnly && initialInvites.trim()) {
-        const invitePrincipals = initialInvites
-          .split(',')
-          .map(p => p.trim())
-          .filter(Boolean);
+			let invitedUsersList: Principal[] = [];
+			if (inviteOnly && initialInvites.trim()) {
+				const invitePrincipals = initialInvites
+					.split(',')
+					.map((p) => p.trim())
+					.filter(Boolean);
 
-        try {
-          invitedUsersList = invitePrincipals.map(p => Principal.fromText(p));
-        } catch (error) {
-          toast.error('Invalid Principal ID in invites list');
-          return;
-        }
-      }
+				try {
+					invitedUsersList = invitePrincipals.map((p) => Principal.fromText(p));
+				} catch (error) {
+					toast.error('Invalid Principal ID in invites list');
+					return;
+				}
+			}
 
-      await createMarket.mutateAsync({
-        title,
-        description,
-        categories: categoryArray,
-        expiration,
-        inviteOnly,
-        invitedUsers: invitedUsersList,
-      });
+			await createMarket.mutateAsync({
+				title,
+				description,
+				categories: categoryArray,
+				expiration,
+				inviteOnly,
+				invitedUsers: invitedUsersList
+			});
 
-      toast.success('Market created successfully');
-      setTitle('');
-      setDescription('');
-      setCategories('');
-      setExpirationDate('');
-      setInviteOnly(false);
-      setInitialInvites('');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to create market');
-    }
-  };
+			toast.success('Market created successfully');
+			setTitle('');
+			setDescription('');
+			setCategories('');
+			setExpirationDate('');
+			setInviteOnly(false);
+			setInitialInvites('');
+		} catch (error: any) {
+			toast.error(error.message || 'Failed to create market');
+		}
+	};
 
-  const handleResolveMarket = async (marketId: bigint, outcome: 'yes' | 'no' | 'canceled') => {
-    try {
-      // Backend only supports YES (true) or NO (false)
-      // CANCELED is not yet supported in the backend
-      if (outcome === 'canceled') {
-        toast.error('CANCELED outcome is not yet supported');
-        return;
-      }
+	const handleResolveMarket = async (marketId: bigint, outcome: 'yes' | 'no' | 'canceled') => {
+		try {
+			// Backend only supports YES (true) or NO (false)
+			// CANCELED is not yet supported in the backend
+			if (outcome === 'canceled') {
+				toast.error('CANCELED outcome is not yet supported');
+				return;
+			}
 
-      const booleanOutcome = outcome === 'yes';
-      await resolveMarket.mutateAsync({ marketId, outcome: booleanOutcome });
-      toast.success(`Market resolved as ${outcome.toUpperCase()}`);
-      
-      // Clear the selected outcome for this market
-      setSelectedOutcomes(prev => {
-        const updated = { ...prev };
-        delete updated[marketId.toString()];
-        return updated;
-      });
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to resolve market');
-    }
-  };
+			const booleanOutcome = outcome === 'yes';
+			await resolveMarket.mutateAsync({ marketId, outcome: booleanOutcome });
+			toast.success(`Market resolved as ${outcome.toUpperCase()}`);
 
-  const handleGrantCoins = async (e: React.FormEvent) => {
-    e.preventDefault();
+			// Clear the selected outcome for this market
+			setSelectedOutcomes((prev) => {
+				const updated = { ...prev };
+				delete updated[marketId.toString()];
+				return updated;
+			});
+		} catch (error: any) {
+			toast.error(error.message || 'Failed to resolve market');
+		}
+	};
 
-    if (!userPrincipal || !coinAmount) {
-      toast.error('Please fill in all fields');
-      return;
-    }
+	const handleGrantCoins = async (e: React.FormEvent) => {
+		e.preventDefault();
 
-    try {
-      const principal = Principal.fromText(userPrincipal);
-      const amount = BigInt(parseInt(coinAmount));
+		if (!userPrincipal || !coinAmount) {
+			toast.error('Please fill in all fields');
+			return;
+		}
 
-      await grantCoins.mutateAsync({ user: principal, amount });
-      toast.success(`Granted Ꝟ ${coinAmount} successfully`);
-      setUserPrincipal('');
-      setCoinAmount('');
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to grant coins');
-    }
-  };
+		try {
+			const principal = Principal.fromText(userPrincipal);
+			const amount = BigInt(parseInt(coinAmount));
 
-  const handleAddAdmin = async (e: React.FormEvent) => {
-    e.preventDefault();
+			await grantCoins.mutateAsync({ user: principal, amount });
+			toast.success(`Granted Ꝟ ${coinAmount} successfully`);
+			setUserPrincipal('');
+			setCoinAmount('');
+		} catch (error: any) {
+			toast.error(error.message || 'Failed to grant coins');
+		}
+	};
 
-    if (!newAdminPrincipal.trim()) {
-      toast.error('Please enter a Principal ID');
-      return;
-    }
+	const handleAddAdmin = async (e: React.FormEvent) => {
+		e.preventDefault();
 
-    try {
-      const principal = Principal.fromText(newAdminPrincipal.trim());
-      
-      // Check if already an admin
-      if (adminList.some(admin => admin.toString() === principal.toString())) {
-        toast.error('This user is already an admin');
-        return;
-      }
+		if (!newAdminPrincipal.trim()) {
+			toast.error('Please enter a Principal ID');
+			return;
+		}
 
-      await addAdmin.mutateAsync(principal);
-      setNewAdminPrincipal('');
-    } catch (error: any) {
-      if (error.message.includes('Invalid principal')) {
-        toast.error('Invalid Principal ID format');
-      } else {
-        toast.error(error.message || 'Failed to add admin');
-      }
-    }
-  };
+		try {
+			const principal = Principal.fromText(newAdminPrincipal.trim());
 
-  const handleRemoveAdmin = async (principal: Principal) => {
-    try {
-      await removeAdmin.mutateAsync(principal);
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to remove admin');
-    }
-  };
+			// Check if already an admin
+			if (adminList.some((admin) => admin.toString() === principal.toString())) {
+				toast.error('This user is already an admin');
+				return;
+			}
 
-  // Sort markets: expired unresolved first, then by expiry date
-  const sortedMarkets = [...markets].sort((a, b) => {
-    const now = Date.now() * 1000000; // Convert to nanoseconds
-    const aExpired = Number(a.expiration) < now;
-    const bExpired = Number(b.expiration) < now;
-    const aResolved = a.status === MarketStatus.resolved;
-    const bResolved = b.status === MarketStatus.resolved;
+			await addAdmin.mutateAsync(principal);
+			setNewAdminPrincipal('');
+		} catch (error: any) {
+			if (error.message.includes('Invalid principal')) {
+				toast.error('Invalid Principal ID format');
+			} else {
+				toast.error(error.message || 'Failed to add admin');
+			}
+		}
+	};
 
-    // Expired unresolved markets first
-    if (aExpired && !aResolved && (!bExpired || bResolved)) return -1;
-    if (bExpired && !bResolved && (!aExpired || aResolved)) return 1;
+	const handleRemoveAdmin = async (principal: Principal) => {
+		try {
+			await removeAdmin.mutateAsync(principal);
+		} catch (error: any) {
+			toast.error(error.message || 'Failed to remove admin');
+		}
+	};
 
-    // Then sort by expiration date (closest first)
-    return Number(a.expiration) - Number(b.expiration);
-  });
+	// Sort markets: expired unresolved first, then by expiry date
+	const sortedMarkets = [...markets].sort((a, b) => {
+		const now = Date.now() * 1000000; // Convert to nanoseconds
+		const aExpired = Number(a.expiration) < now;
+		const bExpired = Number(b.expiration) < now;
+		const aResolved = a.status === MarketStatus.resolved;
+		const bResolved = b.status === MarketStatus.resolved;
 
-  const isMarketExpired = (expiration: bigint): boolean => {
-    const now = Date.now() * 1000000; // Convert to nanoseconds
-    return Number(expiration) < now;
-  };
+		// Expired unresolved markets first
+		if (aExpired && !aResolved && (!bExpired || bResolved)) return -1;
+		if (bExpired && !bResolved && (!aExpired || aResolved)) return 1;
 
-  const formatExpirationDate = (expiration: bigint): string => {
-    const date = new Date(Number(expiration) / 1000000);
-    return date.toLocaleString();
-  };
+		// Then sort by expiration date (closest first)
+		return Number(a.expiration) - Number(b.expiration);
+	});
 
-  const getOutcomeDisplay = (market: MarketSnapshot): string => {
-    if (market.resolvedOutcome === undefined) return 'Not resolved';
-    return market.resolvedOutcome ? 'YES' : 'NO';
-  };
+	const isMarketExpired = (expiration: bigint): boolean => {
+		const now = Date.now() * 1000000; // Convert to nanoseconds
+		return Number(expiration) < now;
+	};
 
-  return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="space-y-8">
-        {/* Header */}
-        <div>
-          <h1 className="text-4xl font-bold text-foreground">Admin Panel</h1>
-          <p className="text-muted-foreground mt-2">Manage markets, users, and admins</p>
-        </div>
+	const formatExpirationDate = (expiration: bigint): string => {
+		const date = new Date(Number(expiration) / 1000000);
+		return date.toLocaleString();
+	};
 
-        <Tabs defaultValue="resolve">
-          <TabsList>
-            <TabsTrigger value="resolve">Market Resolution</TabsTrigger>
-            <TabsTrigger value="create">Create Market</TabsTrigger>
-            <TabsTrigger value="grant">Grant Coins</TabsTrigger>
-            <TabsTrigger value="admins">Admin Management</TabsTrigger>
-          </TabsList>
+	const getOutcomeDisplay = (market: MarketSnapshot): string => {
+		if (market.resolvedOutcome === undefined) return 'Not resolved';
+		return market.resolvedOutcome ? 'YES' : 'NO';
+	};
 
-          {/* Market Resolution Dashboard */}
-          <TabsContent value="resolve" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CheckCircle className="h-5 w-5" />
-                  Market Resolution Dashboard
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  Resolve market outcomes. Expired markets requiring urgent attention are highlighted.
-                </p>
-              </CardHeader>
-              <CardContent>
-                {sortedMarkets.length > 0 ? (
-                  <div className="space-y-3">
-                    {sortedMarkets.map((market) => {
-                      const expired = isMarketExpired(market.expiration);
-                      const resolved = market.status === MarketStatus.resolved;
-                      const urgent = expired && !resolved;
-                      const marketIdStr = market.id.toString();
-                      const selectedOutcome = selectedOutcomes[marketIdStr];
+	return (
+		<div className="container mx-auto px-4 py-8">
+			<div className="space-y-8">
+				{/* Header */}
+				<div>
+					<h1 className="text-4xl font-bold text-foreground">Admin Panel</h1>
+					<p className="text-muted-foreground mt-2">Manage markets, users, and admins</p>
+				</div>
 
-                      return (
-                        <div
-                          key={marketIdStr}
-                          className={`p-4 rounded-lg border-2 transition-all ${
-                            urgent
-                              ? 'border-destructive bg-destructive/5 shadow-md'
-                              : 'border-border bg-card'
-                          }`}
-                        >
-                          {/* Urgency Badge */}
-                          {urgent && (
-                            <div className="flex items-center gap-2 mb-3 text-destructive">
-                              <AlertTriangle className="h-5 w-5" />
-                              <span className="font-semibold text-sm uppercase tracking-wide">
-                                Urgent: Expired & Unresolved
-                              </span>
-                            </div>
-                          )}
+				<Tabs defaultValue="resolve">
+					<TabsList>
+						<TabsTrigger value="resolve">Market Resolution</TabsTrigger>
+						<TabsTrigger value="create">Create Market</TabsTrigger>
+						<TabsTrigger value="grant">Grant Coins</TabsTrigger>
+						<TabsTrigger value="admins">Admin Management</TabsTrigger>
+					</TabsList>
 
-                          <div className="space-y-3">
-                            {/* Market Info */}
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-foreground text-lg">
-                                  {market.title}
-                                </h3>
-                                <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                                  {market.description}
-                                </p>
-                              </div>
-                            </div>
+					{/* Market Resolution Dashboard */}
+					<TabsContent value="resolve" className="mt-6">
+						<Card>
+							<CardHeader>
+								<CardTitle className="flex items-center gap-2">
+									<CheckCircle className="h-5 w-5" />
+									Market Resolution Dashboard
+								</CardTitle>
+								<p className="text-sm text-muted-foreground">
+									Resolve market outcomes. Expired markets requiring urgent attention are
+									highlighted.
+								</p>
+							</CardHeader>
+							<CardContent>
+								{sortedMarkets.length > 0 ? (
+									<div className="space-y-3">
+										{sortedMarkets.map((market) => {
+											const expired = isMarketExpired(market.expiration);
+											const resolved = market.status === MarketStatus.resolved;
+											const urgent = expired && !resolved;
+											const marketIdStr = market.id.toString();
+											const selectedOutcome = selectedOutcomes[marketIdStr];
 
-                            {/* Status and Metadata */}
-                            <div className="flex flex-wrap gap-2 items-center">
-                              {/* Status Badge */}
-                              {market.status === MarketStatus.open && (
-                                <Badge className="bg-chart-2">Open</Badge>
-                              )}
-                              {market.status === MarketStatus.closed && (
-                                <Badge variant="secondary">Closed</Badge>
-                              )}
-                              {market.status === MarketStatus.resolved && (
-                                <Badge className="bg-chart-1">Resolved</Badge>
-                              )}
+											return (
+												<div
+													key={marketIdStr}
+													className={`p-4 rounded-lg border-2 transition-all ${
+														urgent
+															? 'border-destructive bg-destructive/5 shadow-md'
+															: 'border-border bg-card'
+													}`}
+												>
+													{/* Urgency Badge */}
+													{urgent && (
+														<div className="flex items-center gap-2 mb-3 text-destructive">
+															<AlertTriangle className="h-5 w-5" />
+															<span className="font-semibold text-sm uppercase tracking-wide">
+																Urgent: Expired & Unresolved
+															</span>
+														</div>
+													)}
 
-                              {/* Invite-only Badge */}
-                              {market.inviteOnly && (
-                                <Badge variant="outline" className="gap-1">
-                                  <Lock className="h-3 w-3" />
-                                  Invite-only
-                                </Badge>
-                              )}
+													<div className="space-y-3">
+														{/* Market Info */}
+														<div className="flex items-start justify-between gap-4">
+															<div className="flex-1 min-w-0">
+																<h3 className="font-semibold text-foreground text-lg">
+																	{market.title}
+																</h3>
+																<p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+																	{market.description}
+																</p>
+															</div>
+														</div>
 
-                              {/* Expiration Badge */}
-                              <Badge variant={expired ? 'destructive' : 'outline'} className="gap-1">
-                                <Clock className="h-3 w-3" />
-                                {expired ? 'Expired' : 'Active'}
-                              </Badge>
+														{/* Status and Metadata */}
+														<div className="flex flex-wrap gap-2 items-center">
+															{/* Status Badge */}
+															{market.status === MarketStatus.open && (
+																<Badge className="bg-chart-2">Open</Badge>
+															)}
+															{market.status === MarketStatus.closed && (
+																<Badge variant="secondary">Closed</Badge>
+															)}
+															{market.status === MarketStatus.resolved && (
+																<Badge className="bg-chart-1">Resolved</Badge>
+															)}
 
-                              {/* Expiration Date */}
-                              <span className="text-xs text-muted-foreground">
-                                Expires: {formatExpirationDate(market.expiration)}
-                              </span>
-                            </div>
+															{/* Invite-only Badge */}
+															{market.inviteOnly && (
+																<Badge variant="outline" className="gap-1">
+																	<Lock className="h-3 w-3" />
+																	Invite-only
+																</Badge>
+															)}
 
-                            {/* Resolution Section */}
-                            {resolved ? (
-                              <div className="pt-3 border-t border-border">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-muted-foreground">
-                                    Resolved Outcome:
-                                  </span>
-                                  <Badge
-                                    className={
-                                      market.resolvedOutcome
-                                        ? 'bg-chart-2'
-                                        : 'bg-destructive'
-                                    }
-                                  >
-                                    {getOutcomeDisplay(market)}
-                                  </Badge>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="pt-3 border-t border-border space-y-3">
-                                <Label className="text-sm font-medium">Select Outcome:</Label>
-                                <RadioGroup
-                                  value={selectedOutcome || ''}
-                                  onValueChange={(value) => {
-                                    setSelectedOutcomes(prev => ({
-                                      ...prev,
-                                      [marketIdStr]: value as 'yes' | 'no' | 'canceled'
-                                    }));
-                                  }}
-                                  className="flex gap-4"
-                                >
-                                  <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="yes" id={`yes-${marketIdStr}`} />
-                                    <Label
-                                      htmlFor={`yes-${marketIdStr}`}
-                                      className="cursor-pointer font-normal"
-                                    >
-                                      YES
-                                    </Label>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="no" id={`no-${marketIdStr}`} />
-                                    <Label
-                                      htmlFor={`no-${marketIdStr}`}
-                                      className="cursor-pointer font-normal"
-                                    >
-                                      NO
-                                    </Label>
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="canceled" id={`canceled-${marketIdStr}`} />
-                                    <Label
-                                      htmlFor={`canceled-${marketIdStr}`}
-                                      className="cursor-pointer font-normal text-muted-foreground"
-                                    >
-                                      CANCELED
-                                    </Label>
-                                  </div>
-                                </RadioGroup>
+															{/* Expiration Badge */}
+															<Badge
+																variant={expired ? 'destructive' : 'outline'}
+																className="gap-1"
+															>
+																<Clock className="h-3 w-3" />
+																{expired ? 'Expired' : 'Active'}
+															</Badge>
 
-                                <Button
-                                  size="sm"
-                                  onClick={() => handleResolveMarket(market.id, selectedOutcome)}
-                                  disabled={!selectedOutcome || resolveMarket.isPending}
-                                  className={urgent ? 'bg-destructive hover:bg-destructive/90' : ''}
-                                >
-                                  {resolveMarket.isPending ? (
-                                    'Resolving...'
-                                  ) : (
-                                    <>
-                                      <CheckCircle className="mr-2 h-4 w-4" />
-                                      Resolve Market
-                                    </>
-                                  )}
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <p>No markets available</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
+															{/* Expiration Date */}
+															<span className="text-xs text-muted-foreground">
+																Expires: {formatExpirationDate(market.expiration)}
+															</span>
+														</div>
 
-          {/* Create Market */}
-          <TabsContent value="create" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Create New Market
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handleCreateMarket} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="title">Title *</Label>
-                    <Input
-                      id="title"
-                      value={title}
-                      onChange={(e) => setTitle(e.target.value)}
-                      placeholder="Will Bitcoin reach $100k by end of 2025?"
-                      required
-                    />
-                  </div>
+														{/* Resolution Section */}
+														{resolved ? (
+															<div className="pt-3 border-t border-border">
+																<div className="flex items-center gap-2">
+																	<span className="text-sm font-medium text-muted-foreground">
+																		Resolved Outcome:
+																	</span>
+																	<Badge
+																		className={
+																			market.resolvedOutcome ? 'bg-chart-2' : 'bg-destructive'
+																		}
+																	>
+																		{getOutcomeDisplay(market)}
+																	</Badge>
+																</div>
+															</div>
+														) : (
+															<div className="pt-3 border-t border-border space-y-3">
+																<Label className="text-sm font-medium">Select Outcome:</Label>
+																<RadioGroup
+																	value={selectedOutcome || ''}
+																	onValueChange={(value) => {
+																		setSelectedOutcomes((prev) => ({
+																			...prev,
+																			[marketIdStr]: value as 'yes' | 'no' | 'canceled'
+																		}));
+																	}}
+																	className="flex gap-4"
+																>
+																	<div className="flex items-center space-x-2">
+																		<RadioGroupItem value="yes" id={`yes-${marketIdStr}`} />
+																		<Label
+																			htmlFor={`yes-${marketIdStr}`}
+																			className="cursor-pointer font-normal"
+																		>
+																			YES
+																		</Label>
+																	</div>
+																	<div className="flex items-center space-x-2">
+																		<RadioGroupItem value="no" id={`no-${marketIdStr}`} />
+																		<Label
+																			htmlFor={`no-${marketIdStr}`}
+																			className="cursor-pointer font-normal"
+																		>
+																			NO
+																		</Label>
+																	</div>
+																	<div className="flex items-center space-x-2">
+																		<RadioGroupItem
+																			value="canceled"
+																			id={`canceled-${marketIdStr}`}
+																		/>
+																		<Label
+																			htmlFor={`canceled-${marketIdStr}`}
+																			className="cursor-pointer font-normal text-muted-foreground"
+																		>
+																			CANCELED
+																		</Label>
+																	</div>
+																</RadioGroup>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="description">Description *</Label>
-                    <Textarea
-                      id="description"
-                      value={description}
-                      onChange={(e) => setDescription(e.target.value)}
-                      placeholder="Detailed description of the market and resolution criteria..."
-                      rows={4}
-                      required
-                    />
-                  </div>
+																<Button
+																	size="sm"
+																	onClick={() => handleResolveMarket(market.id, selectedOutcome)}
+																	disabled={!selectedOutcome || resolveMarket.isPending}
+																	className={urgent ? 'bg-destructive hover:bg-destructive/90' : ''}
+																>
+																	{resolveMarket.isPending ? (
+																		'Resolving...'
+																	) : (
+																		<>
+																			<CheckCircle className="mr-2 h-4 w-4" />
+																			Resolve Market
+																		</>
+																	)}
+																</Button>
+															</div>
+														)}
+													</div>
+												</div>
+											);
+										})}
+									</div>
+								) : (
+									<div className="text-center py-12 text-muted-foreground">
+										<p>No markets available</p>
+									</div>
+								)}
+							</CardContent>
+						</Card>
+					</TabsContent>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="categories">Categories (comma-separated)</Label>
-                    <Input
-                      id="categories"
-                      value={categories}
-                      onChange={(e) => setCategories(e.target.value)}
-                      placeholder="Crypto, Finance, Technology"
-                    />
-                  </div>
+					{/* Create Market */}
+					<TabsContent value="create" className="mt-6">
+						<Card>
+							<CardHeader>
+								<CardTitle className="flex items-center gap-2">
+									<Plus className="h-5 w-5" />
+									Create New Market
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<form onSubmit={handleCreateMarket} className="space-y-4">
+									<div className="space-y-2">
+										<Label htmlFor="title">Title *</Label>
+										<Input
+											id="title"
+											value={title}
+											onChange={(e) => setTitle(e.target.value)}
+											placeholder="Will Bitcoin reach $100k by end of 2025?"
+											required
+										/>
+									</div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="expiration">Expiration Date *</Label>
-                    <Input
-                      id="expiration"
-                      type="datetime-local"
-                      value={expirationDate}
-                      onChange={(e) => setExpirationDate(e.target.value)}
-                      required
-                    />
-                  </div>
+									<div className="space-y-2">
+										<Label htmlFor="description">Description *</Label>
+										<Textarea
+											id="description"
+											value={description}
+											onChange={(e) => setDescription(e.target.value)}
+											placeholder="Detailed description of the market and resolution criteria..."
+											rows={4}
+											required
+										/>
+									</div>
 
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2">
-                      <Switch
-                        id="inviteOnly"
-                        checked={inviteOnly}
-                        onCheckedChange={setInviteOnly}
-                      />
-                      <Label htmlFor="inviteOnly" className="cursor-pointer">
-                        Invite-only Market
-                      </Label>
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Only invited users can participate in this market
-                    </p>
-                  </div>
+									<div className="space-y-2">
+										<Label htmlFor="categories">Categories (comma-separated)</Label>
+										<Input
+											id="categories"
+											value={categories}
+											onChange={(e) => setCategories(e.target.value)}
+											placeholder="Crypto, Finance, Technology"
+										/>
+									</div>
 
-                  {inviteOnly && (
-                    <div className="space-y-2">
-                      <Label htmlFor="initialInvites">Initial Invites (comma-separated Principal IDs)</Label>
-                      <Textarea
-                        id="initialInvites"
-                        value={initialInvites}
-                        onChange={(e) => setInitialInvites(e.target.value)}
-                        placeholder="principal1, principal2, principal3..."
-                        rows={3}
-                      />
-                    </div>
-                  )}
+									<div className="space-y-2">
+										<Label htmlFor="expiration">Expiration Date *</Label>
+										<Input
+											id="expiration"
+											type="datetime-local"
+											value={expirationDate}
+											onChange={(e) => setExpirationDate(e.target.value)}
+											required
+										/>
+									</div>
 
-                  <Button type="submit" disabled={createMarket.isPending} className="w-full">
-                    {createMarket.isPending ? (
-                      'Creating...'
-                    ) : (
-                      <>
-                        <Plus className="mr-2 h-4 w-4" />
-                        Create Market
-                      </>
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+									<div className="space-y-2">
+										<div className="flex items-center gap-2">
+											<Switch
+												id="inviteOnly"
+												checked={inviteOnly}
+												onCheckedChange={setInviteOnly}
+											/>
+											<Label htmlFor="inviteOnly" className="cursor-pointer">
+												Invite-only Market
+											</Label>
+										</div>
+										<p className="text-xs text-muted-foreground">
+											Only invited users can participate in this market
+										</p>
+									</div>
 
-          {/* Grant Coins */}
-          <TabsContent value="grant" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Coins className="h-5 w-5" />
-                  Grant Vici Coins
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <Alert className="mb-4">
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    This feature is not yet implemented in the backend. It will be available in a future update.
-                  </AlertDescription>
-                </Alert>
-                <form onSubmit={handleGrantCoins} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="userPrincipal">User Principal ID *</Label>
-                    <Input
-                      id="userPrincipal"
-                      value={userPrincipal}
-                      onChange={(e) => setUserPrincipal(e.target.value)}
-                      placeholder="Enter user's Principal ID"
-                      required
-                      disabled
-                    />
-                  </div>
+									{inviteOnly && (
+										<div className="space-y-2">
+											<Label htmlFor="initialInvites">
+												Initial Invites (comma-separated Principal IDs)
+											</Label>
+											<Textarea
+												id="initialInvites"
+												value={initialInvites}
+												onChange={(e) => setInitialInvites(e.target.value)}
+												placeholder="principal1, principal2, principal3..."
+												rows={3}
+											/>
+										</div>
+									)}
 
-                  <div className="space-y-2">
-                    <Label htmlFor="coinAmount">Amount (Ꝟ) *</Label>
-                    <Input
-                      id="coinAmount"
-                      type="number"
-                      min="1"
-                      value={coinAmount}
-                      onChange={(e) => setCoinAmount(e.target.value)}
-                      placeholder="1000"
-                      required
-                      disabled
-                    />
-                  </div>
+									<Button type="submit" disabled={createMarket.isPending} className="w-full">
+										{createMarket.isPending ? (
+											'Creating...'
+										) : (
+											<>
+												<Plus className="mr-2 h-4 w-4" />
+												Create Market
+											</>
+										)}
+									</Button>
+								</form>
+							</CardContent>
+						</Card>
+					</TabsContent>
 
-                  <Button type="submit" disabled className="w-full">
-                    <Coins className="mr-2 h-4 w-4" />
-                    Grant Coins (Coming Soon)
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </TabsContent>
+					{/* Grant Coins */}
+					<TabsContent value="grant" className="mt-6">
+						<Card>
+							<CardHeader>
+								<CardTitle className="flex items-center gap-2">
+									<Coins className="h-5 w-5" />
+									Grant Vici Coins
+								</CardTitle>
+							</CardHeader>
+							<CardContent>
+								<Alert className="mb-4">
+									<Info className="h-4 w-4" />
+									<AlertDescription>
+										This feature is not yet implemented in the backend. It will be available in a
+										future update.
+									</AlertDescription>
+								</Alert>
+								<form onSubmit={handleGrantCoins} className="space-y-4">
+									<div className="space-y-2">
+										<Label htmlFor="userPrincipal">User Principal ID *</Label>
+										<Input
+											id="userPrincipal"
+											value={userPrincipal}
+											onChange={(e) => setUserPrincipal(e.target.value)}
+											placeholder="Enter user's Principal ID"
+											required
+											disabled
+										/>
+									</div>
 
-          {/* Admin Management */}
-          <TabsContent value="admins" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5" />
-                  Admin Management
-                </CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  View and manage platform administrators
-                </p>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <Alert>
-                  <Info className="h-4 w-4" />
-                  <AlertDescription>
-                    Admin management features are not yet fully implemented in the backend. This interface will be functional in a future update.
-                  </AlertDescription>
-                </Alert>
+									<div className="space-y-2">
+										<Label htmlFor="coinAmount">Amount (Ꝟ) *</Label>
+										<Input
+											id="coinAmount"
+											type="number"
+											min="1"
+											value={coinAmount}
+											onChange={(e) => setCoinAmount(e.target.value)}
+											placeholder="1000"
+											required
+											disabled
+										/>
+									</div>
 
-                {/* Admin List */}
-                <div className="space-y-3">
-                  <h3 className="text-sm font-semibold text-foreground">Current Admins</h3>
-                  {adminListLoading ? (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>Loading admin list...</p>
-                    </div>
-                  ) : adminList.length > 0 ? (
-                    <div className="space-y-2">
-                      {adminList.map((admin, index) => {
-                        const adminStr = admin.toString();
-                        const isAdminOwner = index === 0;
-                        const isCurrentUser = adminStr === currentUserPrincipal;
+									<Button type="submit" disabled className="w-full">
+										<Coins className="mr-2 h-4 w-4" />
+										Grant Coins (Coming Soon)
+									</Button>
+								</form>
+							</CardContent>
+						</Card>
+					</TabsContent>
 
-                        return (
-                          <div
-                            key={adminStr}
-                            className="flex items-center justify-between p-3 rounded-lg border bg-card"
-                          >
-                            <div className="flex items-center gap-3 flex-1 min-w-0">
-                              {isAdminOwner && (
-                                <Crown className="h-5 w-5 text-yellow-500 flex-shrink-0" />
-                              )}
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <code className="text-xs font-mono bg-muted px-2 py-1 rounded break-all">
-                                    {adminStr}
-                                  </code>
-                                  {isAdminOwner && (
-                                    <Badge variant="outline" className="text-yellow-600 border-yellow-600">
-                                      Owner
-                                    </Badge>
-                                  )}
-                                  {isCurrentUser && (
-                                    <Badge variant="secondary">You</Badge>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            {isOwner && !isAdminOwner && (
-                              <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
-                                    disabled
-                                  >
-                                    <UserMinus className="h-4 w-4" />
-                                  </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                  <AlertDialogHeader>
-                                    <AlertDialogTitle>Remove Admin</AlertDialogTitle>
-                                    <AlertDialogDescription>
-                                      Are you sure you want to remove this admin? They will lose all admin privileges.
-                                    </AlertDialogDescription>
-                                  </AlertDialogHeader>
-                                  <AlertDialogFooter>
-                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                    <AlertDialogAction
-                                      onClick={() => handleRemoveAdmin(admin)}
-                                      className="bg-destructive hover:bg-destructive/90"
-                                    >
-                                      Remove
-                                    </AlertDialogAction>
-                                  </AlertDialogFooter>
-                                </AlertDialogContent>
-                              </AlertDialog>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="text-center py-8 text-muted-foreground">
-                      <p>No admins found (feature not yet implemented)</p>
-                    </div>
-                  )}
-                </div>
+					{/* Admin Management */}
+					<TabsContent value="admins" className="mt-6">
+						<Card>
+							<CardHeader>
+								<CardTitle className="flex items-center gap-2">
+									<Shield className="h-5 w-5" />
+									Admin Management
+								</CardTitle>
+								<p className="text-sm text-muted-foreground">
+									View and manage platform administrators
+								</p>
+							</CardHeader>
+							<CardContent className="space-y-6">
+								<Alert>
+									<Info className="h-4 w-4" />
+									<AlertDescription>
+										Admin management features are not yet fully implemented in the backend. This
+										interface will be functional in a future update.
+									</AlertDescription>
+								</Alert>
 
-                {/* Add Admin Form - Only visible to owner */}
-                {isOwner && (
-                  <div className="pt-6 border-t border-border">
-                    <h3 className="text-sm font-semibold text-foreground mb-3">Add New Admin</h3>
-                    <form onSubmit={handleAddAdmin} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="newAdminPrincipal">Principal ID *</Label>
-                        <Input
-                          id="newAdminPrincipal"
-                          value={newAdminPrincipal}
-                          onChange={(e) => setNewAdminPrincipal(e.target.value)}
-                          placeholder="Enter Principal ID to grant admin access"
-                          required
-                          disabled
-                        />
-                        <p className="text-xs text-muted-foreground">
-                          The user will be able to resolve markets, create markets, and grant coins
-                        </p>
-                      </div>
+								{/* Admin List */}
+								<div className="space-y-3">
+									<h3 className="text-sm font-semibold text-foreground">Current Admins</h3>
+									{adminListLoading ? (
+										<div className="text-center py-8 text-muted-foreground">
+											<p>Loading admin list...</p>
+										</div>
+									) : adminList.length > 0 ? (
+										<div className="space-y-2">
+											{adminList.map((admin, index) => {
+												const adminStr = admin.toString();
+												const isAdminOwner = index === 0;
+												const isCurrentUser = adminStr === currentUserPrincipal;
 
-                      <Button
-                        type="submit"
-                        disabled
-                        className="w-full"
-                      >
-                        <Shield className="mr-2 h-4 w-4" />
-                        Add Admin (Coming Soon)
-                      </Button>
-                    </form>
-                  </div>
-                )}
+												return (
+													<div
+														key={adminStr}
+														className="flex items-center justify-between p-3 rounded-lg border bg-card"
+													>
+														<div className="flex items-center gap-3 flex-1 min-w-0">
+															{isAdminOwner && (
+																<Crown className="h-5 w-5 text-yellow-500 flex-shrink-0" />
+															)}
+															<div className="flex-1 min-w-0">
+																<div className="flex items-center gap-2 flex-wrap">
+																	<code className="text-xs font-mono bg-muted px-2 py-1 rounded break-all">
+																		{adminStr}
+																	</code>
+																	{isAdminOwner && (
+																		<Badge
+																			variant="outline"
+																			className="text-yellow-600 border-yellow-600"
+																		>
+																			Owner
+																		</Badge>
+																	)}
+																	{isCurrentUser && <Badge variant="secondary">You</Badge>}
+																</div>
+															</div>
+														</div>
+														{isOwner && !isAdminOwner && (
+															<AlertDialog>
+																<AlertDialogTrigger asChild>
+																	<Button
+																		variant="ghost"
+																		size="sm"
+																		className="text-destructive hover:text-destructive hover:bg-destructive/10"
+																		disabled
+																	>
+																		<UserMinus className="h-4 w-4" />
+																	</Button>
+																</AlertDialogTrigger>
+																<AlertDialogContent>
+																	<AlertDialogHeader>
+																		<AlertDialogTitle>Remove Admin</AlertDialogTitle>
+																		<AlertDialogDescription>
+																			Are you sure you want to remove this admin? They will lose all
+																			admin privileges.
+																		</AlertDialogDescription>
+																	</AlertDialogHeader>
+																	<AlertDialogFooter>
+																		<AlertDialogCancel>Cancel</AlertDialogCancel>
+																		<AlertDialogAction
+																			onClick={() => handleRemoveAdmin(admin)}
+																			className="bg-destructive hover:bg-destructive/90"
+																		>
+																			Remove
+																		</AlertDialogAction>
+																	</AlertDialogFooter>
+																</AlertDialogContent>
+															</AlertDialog>
+														)}
+													</div>
+												);
+											})}
+										</div>
+									) : (
+										<div className="text-center py-8 text-muted-foreground">
+											<p>No admins found (feature not yet implemented)</p>
+										</div>
+									)}
+								</div>
 
-                {!isOwner && adminList.length > 0 && (
-                  <div className="pt-6 border-t border-border">
-                    <div className="text-center py-4 text-muted-foreground text-sm">
-                      <p>Only the owner can add or remove admins</p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </div>
-    </div>
-  );
+								{/* Add Admin Form - Only visible to owner */}
+								{isOwner && (
+									<div className="pt-6 border-t border-border">
+										<h3 className="text-sm font-semibold text-foreground mb-3">Add New Admin</h3>
+										<form onSubmit={handleAddAdmin} className="space-y-4">
+											<div className="space-y-2">
+												<Label htmlFor="newAdminPrincipal">Principal ID *</Label>
+												<Input
+													id="newAdminPrincipal"
+													value={newAdminPrincipal}
+													onChange={(e) => setNewAdminPrincipal(e.target.value)}
+													placeholder="Enter Principal ID to grant admin access"
+													required
+													disabled
+												/>
+												<p className="text-xs text-muted-foreground">
+													The user will be able to resolve markets, create markets, and grant coins
+												</p>
+											</div>
+
+											<Button type="submit" disabled className="w-full">
+												<Shield className="mr-2 h-4 w-4" />
+												Add Admin (Coming Soon)
+											</Button>
+										</form>
+									</div>
+								)}
+
+								{!isOwner && adminList.length > 0 && (
+									<div className="pt-6 border-t border-border">
+										<div className="text-center py-4 text-muted-foreground text-sm">
+											<p>Only the owner can add or remove admins</p>
+										</div>
+									</div>
+								)}
+							</CardContent>
+						</Card>
+					</TabsContent>
+				</Tabs>
+			</div>
+		</div>
+	);
 }

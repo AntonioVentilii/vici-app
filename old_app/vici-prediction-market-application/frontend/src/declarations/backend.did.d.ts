@@ -11,111 +11,107 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export interface AnalyticsDataPoint {
-  'oddsNo' : number,
-  'volume' : bigint,
-  'timestamp' : Time,
-  'oddsYes' : number,
+	oddsNo: number;
+	volume: bigint;
+	timestamp: Time;
+	oddsYes: number;
 }
 export interface Comment {
-  'id' : bigint,
-  'content' : string,
-  'createdAt' : Time,
-  'user' : Principal,
-  'marketId' : bigint,
-  'isHidden' : boolean,
+	id: bigint;
+	content: string;
+	createdAt: Time;
+	user: Principal;
+	marketId: bigint;
+	isHidden: boolean;
 }
 export interface MarketDepthPosition {
-  'nickname' : string,
-  'odds' : number,
-  'user' : Principal,
-  'positionType' : PositionType,
-  'amount' : bigint,
+	nickname: string;
+	odds: number;
+	user: Principal;
+	positionType: PositionType;
+	amount: bigint;
 }
 export interface MarketSnapshot {
-  'id' : bigint,
-  'categories' : Array<string>,
-  'status' : MarketStatus,
-  'invitedUsers' : Array<Principal>,
-  'title' : string,
-  'oddsNo' : number,
-  'resolvedOutcome' : [] | [boolean],
-  'createdAt' : Time,
-  'createdBy' : Principal,
-  'description' : string,
-  'expiration' : Time,
-  'inviteOnly' : boolean,
-  'oddsYes' : number,
+	id: bigint;
+	categories: Array<string>;
+	status: MarketStatus;
+	invitedUsers: Array<Principal>;
+	title: string;
+	oddsNo: number;
+	resolvedOutcome: [] | [boolean];
+	createdAt: Time;
+	createdBy: Principal;
+	description: string;
+	expiration: Time;
+	inviteOnly: boolean;
+	oddsYes: number;
 }
-export type MarketStatus = { 'resolved' : null } |
-  { 'closed' : null } |
-  { 'open' : null };
+export type MarketStatus = { resolved: null } | { closed: null } | { open: null };
 export interface Position {
-  'odds' : number,
-  'createdAt' : Time,
-  'positionType' : PositionType,
-  'marketId' : bigint,
-  'amount' : bigint,
+	odds: number;
+	createdAt: Time;
+	positionType: PositionType;
+	marketId: bigint;
+	amount: bigint;
 }
-export type PositionType = { 'no' : null } |
-  { 'yes' : null };
+export type PositionType = { no: null } | { yes: null };
 export type Time = bigint;
 export interface Transaction {
-  'id' : bigint,
-  'transactionType' : { 'trade' : null } |
-    { 'deposit' : null } |
-    { 'payout' : null },
-  'odds' : [] | [number],
-  'createdAt' : Time,
-  'user' : Principal,
-  'positionType' : [] | [PositionType],
-  'marketId' : [] | [bigint],
-  'amount' : bigint,
+	id: bigint;
+	transactionType: { trade: null } | { deposit: null } | { payout: null };
+	odds: [] | [number];
+	createdAt: Time;
+	user: Principal;
+	positionType: [] | [PositionType];
+	marketId: [] | [bigint];
+	amount: bigint;
 }
 export interface UserProfile {
-  'nickname' : string,
-  'balance' : bigint,
-  'createdAt' : Time,
-  'lastLogin' : Time,
-  'avatar' : string,
+	nickname: string;
+	balance: bigint;
+	createdAt: Time;
+	lastLogin: Time;
+	avatar: string;
 }
-export type UserRole = { 'admin' : null } |
-  { 'user' : null } |
-  { 'guest' : null };
-export interface WalletBalance { 'icp' : bigint, 'ckUSDC' : bigint }
+export type UserRole = { admin: null } | { user: null } | { guest: null };
+export interface WalletBalance {
+	icp: bigint;
+	ckUSDC: bigint;
+}
 export interface _SERVICE {
-  'addComment' : ActorMethod<[bigint, string], bigint>,
-  'addFriend' : ActorMethod<[Principal], undefined>,
-  'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
-  'createMarket' : ActorMethod<
-    [string, string, Array<string>, Time, boolean, Array<Principal>],
-    bigint
-  >,
-  'createUserProfile' : ActorMethod<[string, string], undefined>,
-  'depositFunds' : ActorMethod<[bigint], undefined>,
-  'getAllMarkets' : ActorMethod<[], Array<MarketSnapshot>>,
-  'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
-  'getCallerUserRole' : ActorMethod<[], UserRole>,
-  'getFriends' : ActorMethod<[], Array<Principal>>,
-  'getFriendsPositions' : ActorMethod<[], Array<[Principal, Array<Position>]>>,
-  'getMarket' : ActorMethod<[bigint], [] | [MarketSnapshot]>,
-  'getMarketAnalytics' : ActorMethod<[bigint], Array<AnalyticsDataPoint>>,
-  'getMarketComments' : ActorMethod<[bigint], Array<Comment>>,
-  'getMarketDepth' : ActorMethod<[bigint], Array<MarketDepthPosition>>,
-  'getMarketsByCategory' : ActorMethod<[string], Array<MarketSnapshot>>,
-  'getUserPositions' : ActorMethod<[], Array<Position>>,
-  'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
-  'getUserTransactions' : ActorMethod<[], Array<Transaction>>,
-  'getWalletBalance' : ActorMethod<[], [] | [WalletBalance]>,
-  'hideComment' : ActorMethod<[bigint, bigint], undefined>,
-  'initializeAccessControl' : ActorMethod<[], undefined>,
-  'isCallerAdmin' : ActorMethod<[], boolean>,
-  'placePosition' : ActorMethod<[bigint, PositionType, bigint], undefined>,
-  'removeFriend' : ActorMethod<[Principal], undefined>,
-  'resolveMarket' : ActorMethod<[bigint, boolean], undefined>,
-  'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
-  'updateLastLogin' : ActorMethod<[], undefined>,
-  'updateMarketAnalytics' : ActorMethod<[bigint], undefined>,
-  'withdrawFunds' : ActorMethod<[bigint], undefined>,
+	addComment: ActorMethod<[bigint, string], bigint>;
+	addFriend: ActorMethod<[Principal], undefined>;
+	assignCallerUserRole: ActorMethod<[Principal, UserRole], undefined>;
+	createMarket: ActorMethod<
+		[string, string, Array<string>, Time, boolean, Array<Principal>],
+		bigint
+	>;
+	createUserProfile: ActorMethod<[string, string], undefined>;
+	depositFunds: ActorMethod<[bigint], undefined>;
+	getAllMarkets: ActorMethod<[], Array<MarketSnapshot>>;
+	getCallerUserProfile: ActorMethod<[], [] | [UserProfile]>;
+	getCallerUserRole: ActorMethod<[], UserRole>;
+	getFriends: ActorMethod<[], Array<Principal>>;
+	getFriendsPositions: ActorMethod<[], Array<[Principal, Array<Position>]>>;
+	getMarket: ActorMethod<[bigint], [] | [MarketSnapshot]>;
+	getMarketAnalytics: ActorMethod<[bigint], Array<AnalyticsDataPoint>>;
+	getMarketComments: ActorMethod<[bigint], Array<Comment>>;
+	getMarketDepth: ActorMethod<[bigint], Array<MarketDepthPosition>>;
+	getMarketsByCategory: ActorMethod<[string], Array<MarketSnapshot>>;
+	getUserPositions: ActorMethod<[], Array<Position>>;
+	getUserProfile: ActorMethod<[Principal], [] | [UserProfile]>;
+	getUserTransactions: ActorMethod<[], Array<Transaction>>;
+	getWalletBalance: ActorMethod<[], [] | [WalletBalance]>;
+	hideComment: ActorMethod<[bigint, bigint], undefined>;
+	initializeAccessControl: ActorMethod<[], undefined>;
+	isCallerAdmin: ActorMethod<[], boolean>;
+	placePosition: ActorMethod<[bigint, PositionType, bigint], undefined>;
+	removeFriend: ActorMethod<[Principal], undefined>;
+	resolveMarket: ActorMethod<[bigint, boolean], undefined>;
+	saveCallerUserProfile: ActorMethod<[UserProfile], undefined>;
+	updateLastLogin: ActorMethod<[], undefined>;
+	updateMarketAnalytics: ActorMethod<[bigint], undefined>;
+	withdrawFunds: ActorMethod<[bigint], undefined>;
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

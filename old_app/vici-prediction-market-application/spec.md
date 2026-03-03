@@ -1,9 +1,11 @@
 # Specification
 
 ## Summary
+
 **Goal:** Implement owner-based admin role management with configurable admin access control.
 
 **Planned changes:**
+
 - Add single immutable owner Principal set at canister initialization
 - Maintain a set of admin Principals in stable backend state
 - Add backend functions for owner to add and remove admins
