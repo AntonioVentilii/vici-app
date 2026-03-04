@@ -1,0 +1,70 @@
+import type { ClearingDid } from '$declarations';
+import {
+	depositCollateral as depositCollateralApi,
+	getMarginAccount as getMarginAccountApi,
+	withdrawCollateral as withdrawCollateralApi
+} from '$lib/api/clearing.api';
+import { approve } from '$lib/api/icrc-ledger.api';
+import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
+import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { Principal } from '@icp-sdk/core/principal';
+
+export const depositCollateral = async ({
+	assetPrincipal,
+	amount
+}: {
+	assetPrincipal: string;
+	amount: bigint;
+}): Promise<void> => {
+	const identity = await safeGetIdentityOnce();
+
+	// 1. Approve clearing canister to spend tokens
+	await approve({
+		identity,
+		ledgerCanisterId: assetPrincipal,
+		amount,
+		spender: {
+			owner: CLEARING_CANISTER_ID,
+			subaccount: undefined
+		},
+		expiresAt: BigInt(Date.now() + 60_000) * 1_000_000n // 1 minute expiry in nanoseconds
+	});
+
+	// 2. Deposit collateral
+	await depositCollateralApi({
+		identity,
+		params: {
+			deposit_id: `DEPOSIT_${Date.now()}`,
+			asset: { Icrc: Principal.fromText(assetPrincipal) },
+			amount
+		}
+	});
+};
+
+export const withdrawCollateral = async ({
+	assetPrincipal,
+	amount
+}: {
+	assetPrincipal: string;
+	amount: bigint;
+}): Promise<void> => {
+	const identity = await safeGetIdentityOnce();
+
+	await withdrawCollateralApi({
+		identity,
+		params: {
+			withdrawal_id: `WITHDRAW_${Date.now()}`,
+			asset: { Icrc: Principal.fromText(assetPrincipal) },
+			amount
+		}
+	});
+};
+
+export const getMarginAccount = async (): Promise<ClearingDid.MarginAccount> => {
+	const identity = await safeGetIdentityOnce();
+
+	return await getMarginAccountApi({
+		identity,
+		params: { refresh: [true] }
+	});
+};

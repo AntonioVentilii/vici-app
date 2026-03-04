@@ -1,7 +1,9 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { placePrediction } from '$lib/services/position.services';
+	import { getBalances } from '$lib/services/wallet.service';
 	import type { Market } from '$lib/types/market';
 	import type { PositionType } from '$lib/types/position';
 
@@ -17,7 +19,14 @@
 	let amount = $state('');
 	let selectedType = $state<PositionType>('YES');
 	let loading = $state(false);
+	let collateral = $state<bigint | undefined>();
 	let error = $state('');
+
+	onMount(async () => {
+		const balances = await getBalances();
+
+		({ collateral } = balances);
+	});
 
 	const handlePlacePrediction = async () => {
 		if (!amount || parseFloat(amount) <= 0) {
@@ -30,7 +39,7 @@
 
 		try {
 			const amt = BigInt(Math.floor(parseFloat(amount) * 100_000_000));
-			await placePrediction({ marketId, type: selectedType, amount: amt });
+			await placePrediction({ market, type: selectedType, amount: amt });
 			amount = '';
 			onPredictionPlaced();
 			alert(`Successfully placed ${selectedType} prediction!`);
@@ -102,7 +111,11 @@
 				<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="amount"
 					>Amount (ICP)</label
 				>
-				<span class="text-xs text-slate-400">Balance: Wallet mocked</span>
+				<span class="text-xs text-slate-400">
+					Collateral: {collateral !== undefined
+						? (Number(collateral) / 100_000_000).toFixed(2)
+						: '...'} ICP
+				</span>
 			</div>
 			<div class="relative">
 				<input

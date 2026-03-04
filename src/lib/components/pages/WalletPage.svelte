@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
+	import CollateralModal from '$lib/components/wallet/CollateralModal.svelte';
+	import CollateralStats from '$lib/components/wallet/CollateralStats.svelte';
 	import WalletHistory from '$lib/components/wallet/WalletHistory.svelte';
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
@@ -9,9 +11,10 @@
 	import { getBalances, getTransactions, sendCkUSDC, sendICP } from '$lib/services/wallet.service';
 	import type { Transaction, WalletBalance } from '$lib/types/wallet';
 
-	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO });
+	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO, collateral: ZERO });
 	let transactions = $state<Transaction[]>([]);
 	let activeTab = $state('Send');
+	let isCollateralModalOpen = $state(false);
 
 	const tabs = ['Send', 'Receive', 'History'];
 
@@ -58,7 +61,26 @@
 	/>
 
 	<!-- Balances Cards -->
-	<WalletStats {balances} onFormatBalance={formatBalance} />
+	<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
+		<div class="lg:col-span-1">
+			<WalletStats {balances} onFormatBalance={formatBalance} />
+		</div>
+		<div class="lg:col-span-2">
+			<CollateralStats
+				collateral={balances.collateral}
+				onFormatBalance={formatBalance}
+				onManage={() => (isCollateralModalOpen = true)}
+			/>
+		</div>
+	</div>
+
+	<CollateralModal
+		isOpen={isCollateralModalOpen}
+		onClose={() => (isCollateralModalOpen = false)}
+		onSuccess={async () => {
+			balances = await getBalances();
+		}}
+	/>
 
 	<!-- Operations Tabs -->
 	<div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">

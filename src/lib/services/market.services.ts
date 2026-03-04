@@ -3,7 +3,9 @@
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import { PAYOFF_TYPE, STRIKE, VICI_ORACLE_V1 } from '$lib/constants/app.constants';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getProfile } from '$lib/services/profile.services';
 import type { Market, MarketId } from '$lib/types/market';
+import { UserRole } from '$lib/types/user';
 import { mapMarketData } from '$lib/utils/market.utils';
 import { isNullish } from '@dfinity/utils';
 
@@ -20,6 +22,13 @@ export const createMarket = async ({
 	isInviteOnly?: boolean;
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
+
+	const profile = await getProfile(identity.getPrincipal().toText());
+	const role = profile?.role;
+
+	if (role !== UserRole.ADMIN && role !== UserRole.CREATOR) {
+		throw new Error('Unauthorized: only admins or creators can create markets');
+	}
 
 	const seriesId = await addSeries({
 		identity,

@@ -76,10 +76,7 @@
 				{/each}
 			</div>
 
-			<Button
-				disabled={!selectedCategoryId || saving}
-				onclick={handleAssociate}
-			>
+			<Button disabled={!selectedCategoryId || saving} onclick={handleAssociate}>
 				{saving ? 'Associating...' : 'Set Category'}
 			</Button>
 		{/if}

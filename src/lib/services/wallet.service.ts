@@ -10,44 +10,48 @@ import { getIdentity } from '$lib/services/identity.services';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
 import { isNullish, toNullable } from '@dfinity/utils';
 
+import { balance as getLedgerBalance } from '$lib/api/icrc-ledger.api';
+
 export const getBalances = async (): Promise<WalletBalance> => {
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
-		return { icp: ZERO, ckUsdc: ZERO };
+		return { icp: ZERO, ckUsdc: ZERO, collateral: ZERO };
 	}
 
+	const principal = identity.getPrincipal();
+
 	try {
+		// 1. Fetch Ledger Balances
+		const [icpLedger, ckUsdcLedger] = await Promise.all([
+			getLedgerBalance({
+				identity,
+				ledgerCanisterId: ICP_LEDGER_CANISTER_ID,
+				account: { owner: principal }
+			}),
+			getLedgerBalance({
+				identity,
+				ledgerCanisterId: CKUSDC_LEDGER_CANISTER_ID,
+				account: { owner: principal }
+			}).catch(() => ZERO) // Optional: handle missing/unsupported ledger
+		]);
+
+		// 2. Fetch Collateral Balances
 		const account = await getMarginAccount({
 			identity,
-			// TODO: revisit
 			params: { refresh: toNullable(true) }
 		});
 
-		const { icp, ckUsdc } = account.balances.reduce(
-			(acc, [asset, balance]) => {
-				if ('Icrc' in asset) {
-					const principalText = asset.Icrc.toText();
+		const collateral = account.balances.reduce((acc, [_, balance]) => acc + balance, ZERO);
 
-					if (principalText === ICP_LEDGER_CANISTER_ID) {
-						return { ...acc, icp: balance };
-					}
-
-					if (principalText === CKUSDC_LEDGER_CANISTER_ID) {
-						return { ...acc, ckUsdc: balance };
-					}
-				}
-
-				return acc;
-			},
-			{ icp: ZERO, ckUsdc: ZERO }
-		);
-
-		return { icp, ckUsdc };
+		return {
+			icp: icpLedger,
+			ckUsdc: ckUsdcLedger,
+			collateral
+		};
 	} catch (e: unknown) {
-		console.error('Failed to get balances from canister', e);
-
-		return { icp: ZERO, ckUsdc: ZERO };
+		console.error('Failed to get balances', e);
+		return { icp: ZERO, ckUsdc: ZERO, collateral: ZERO };
 	}
 };
 

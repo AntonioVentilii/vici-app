@@ -9,7 +9,7 @@
 	const { balances, onFormatBalance }: Props = $props();
 </script>
 
-<div class="grid grid-cols-1 gap-6 md:grid-cols-2">
+<div class="grid grid-cols-1 gap-6">
 	<div
 		class="relative overflow-hidden rounded-3xl border border-indigo-100 bg-linear-to-br from-indigo-50 to-white p-8 shadow-sm"
 	>

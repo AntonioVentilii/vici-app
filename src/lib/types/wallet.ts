@@ -6,6 +6,7 @@ export type TransactionType = 'Trade' | 'Send' | 'Receive';
 export interface WalletBalance {
 	icp: bigint;
 	ckUsdc: bigint;
+	collateral: bigint;
 }
 
 export interface Transaction {

@@ -1,57 +1,70 @@
 # Project Status & TODO List
 
-Based on the comparison between the current codebase and `SPECS_V0.md`.
+Current state of the **Vici Social Markets** application.
 
-## ✅ Completed (Implemented or Mocked)
+## ✅ Completed (Implemented)
 
-### Core Systems
+### Core Systems & Infrastructure
 
-- [x] **Framework Setup**: SvelteKit project with Tailwind CSS and Juno integration.
+- [x] **Framework Setup**: SvelteKit project with Svelte 5 (Runes), Tailwind CSS, and Juno.
 - [x] **Authentication**: Internet Identity integration via Juno.
-- [x] **Mock Backend**: `mockBackend.ts` implementing the `BackendInterface` for all core data needs.
+- [x] **Real Canister Integration**: Primary trading logic migrated from mocks to `clearing` and `registry` canisters.
+- [x] **RBAC (Role Based Access Control)**: Permissioned market creation and resolution (Admin/Creator roles).
 
-### Markets
+### Trading & Markets
 
-- [x] **Market Discovery**: Home page (`/`) and Markets page (`/markets`) lists.
-- [x] **Market Details**: Deep-dive view for individual markets (`/markets/[id]`).
-- [x] **Market Resolution**: Admin-only resolution flow for YES/NO/CANCELED outcomes.
-- [x] **Market Creation**: Admin-only form to create new binary markets.
+- [x] **Market Discovery**: Dynamic listings with categories and status filters.
+- [x] **On-Chain Trading**: Fully functional "Matched Trade" system using the Clearing canister.
+- [x] **Position Tracking**: Real-time "Your Position" card in the market sidebar.
+- [x] **Collateral Management**: Deposit/Withdraw ICP/USDC into the clearing margin account.
+- [x] **Market Resolution**: Admin settlement dashboard with "Urgent" markers for expired markets.
 
-### Features
+### UI/UX
 
-- [x] **Trading UI**: YES/NO prediction interface with volume and probability updates.
-- [x] **Portfolio Tracking**: View active positions, current value, and unrealized P&L.
-- [x] **Leaderboard**: Global ranking system based on P&L and win rate.
-- [x] **Wallet Foundation**: Balance display, transaction history, and send/receive tabs.
-
----
-
-## 🚀 TODO / Remaining Features
-
-### 🔧 Core Infrastructure
-
-- [ ] **Real Backend Integration**: Migrate from `mockBackend.ts` to real Motoko canisters on the Internet Computer.
-- [ ] **Ledger Connectivity**: Connect the Wallet to the actual ICP and ckUSDC ledger canisters.
-- [ ] **Real State Management**: Potentially migrate from custom stores/mocks to Juno collections or real inter-canister calls.
-
-### 🍱 Missing Pages
-
-- [ ] **Rush Mode**: Swipe-based rapid betting interface (Swipe Right = YES, Left = NO).
-- [ ] **Learn Page**: Educational content and tutorials about prediction markets.
-- [ ] **User Profile**: Dedicated settings and profile management page.
-
-### 📈 Feature Enhancements
-
-- [ ] **QR Code Generator**: Replace "QR CODE PLACEHOLDER" in the Receive tab with a functional generator.
-- [ ] **Market Charts**: Implement probability-over-time charts using a charting library (e.g., Chart.js or D3).
-- [ ] **Market Discussion**: Community comment threads per market.
-- [ ] **Friends System UI**: User interface to add, remove, and view social connections.
-- [ ] **Detailed Market Depth**: Position breakdown table and deeper liquidity insights.
-- [ ] **Advanced Filtering**: Sort markets by trending status, volume, or "urgent" expired status in Admin.
+- [x] **Modern Aesthetics**: Premium glassmorphic design, vibrant gradients, and smooth transitions.
+- [x] **Enhanced Market View**: Tabbed interface for Description, Activity, and Analytics placeholders.
+- [x] **Responsive Sidebar**: Integrated trading interface and user position feedback.
 
 ---
 
-## 📝 Technical Debt / Discrepancies
+## 🚀 Future Roadmap
 
-- [ ] **SPEC Sync**: Update `SPECS_V0.md` to reflect that the project uses **SvelteKit** instead of React.
-- [ ] **Types & Interfaces**: Ensure all mock types align 1:1 with future Motoko actor definitions.
+### 🔧 Core Enhancements
+
+- [ ] **Global Order Book**: Transition from matched trades to a public order book (if supported by backend).
+- [ ] **Real-time Price Feeds**: Integration with decentralized oracles for automated settlements.
+- [ ] **Multi-Asset Support**: Collateral support for ckBTC, ckETH, and other ICRC-1 tokens.
+
+### 📈 Analytics & Depth
+
+- [ ] **Historical Charts**: Price and volume history charts (Integration with `old_app` analytics logic).
+- [ ] **Market Depth Visualization**: Real-time depth charts and liquidity heatmaps.
+- [ ] **Trading View Integration**: Professional analytics dashboard for advanced traders.
+
+### 💬 Social & Community (Inspired by `old_app`)
+
+- [ ] **Market Discussion**: Integrated comment threads and real-time chat per market (Juno-based).
+- [ ] **Profiles & Social Graph**: User profiles with trading history, "Follow" system, and notifications.
+- [ ] **Activity Feed**: Global and friend-specific feed of trades and settlements.
+- [ ] **Leaderboards**: Dynamic ranking based on realized P&L, win rate, and streak.
+
+### 🎮 Gamification & Retention (New Suggestions)
+
+- [ ] **Rush Mode**: Swipe-based rapid trading UI for mobile-first users (as seen in `old_app`).
+- [ ] **Achievements & Badges**: Unlockable NFT or on-chain badges for trading milestones.
+- [ ] **Referral System**: Incentive program for inviting new traders.
+- [ ] **Daily Quests**: Minor rewards for community participation and market discovery.
+
+### 📱 Mobile & Polish
+
+- [ ] **PWA Support**: Installable progressive web app with push notifications.
+- [ ] **Svelte 5 Polish**: Final optimization of all runes and derived states for performance.
+- [ ] **QR Code System**: Functional QR generator for wallet addresses and market sharing.
+
+---
+
+## 📝 Technical Debt
+
+- [ ] **Canister Error Handling**: More granular error messaging for clearing canister rejections.
+- [ ] **Syncing Specs**: Update `SPECS_V0.md` to reflect current architectural decisions (Svelte 5, Real Canisters).
+- [ ] **Testing**: Implement E2E browser tests for the trade/settlement flow.

@@ -5,16 +5,25 @@
 	import MarketDetailHeader from '$lib/components/market/MarketDetailHeader.svelte';
 	import MarketDetailSidebar from '$lib/components/market/MarketDetailSidebar.svelte';
 	import MarketDetailStats from '$lib/components/market/MarketDetailStats.svelte';
+	import MarketDetailTabs from '$lib/components/market/MarketDetailTabs.svelte';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
 	import { getMarket } from '$lib/services/market.services';
+	import { getPositionForMarket } from '$lib/services/position.services';
 	import type { Market, MarketId } from '$lib/types/market';
+	import type { Position } from '$lib/types/position';
 
 	let market = $state<Market | undefined>();
+	let position = $state<Position | undefined>();
 	let loading = $state(true);
 
 	const fetchMarket = async (id: MarketId) => {
 		loading = true;
-		market = await getMarket(id);
+
+		const [marketRes, positionRes] = await Promise.all([getMarket(id), getPositionForMarket(id)]);
+
+		market = marketRes;
+		position = positionRes;
+
 		loading = false;
 	};
 
@@ -73,12 +82,7 @@
 		<!-- Market Header -->
 		<div class="grid grid-cols-1 gap-12 lg:grid-cols-3">
 			<div class="space-y-8 lg:col-span-2">
-				<MarketDetailHeader
-					id={market.id}
-					description={market.description}
-					status={market.status}
-					title={market.title}
-				/>
+				<MarketDetailHeader id={market.id} status={market.status} title={market.title} />
 
 				<MarketDetailStats
 					expiryDate={market.expiryDate}
@@ -94,9 +98,20 @@
 					yesProbability={market.yesProbability}
 					yesVolume={market.yesVolume}
 				/>
+
+				<MarketDetailTabs {market} {position} />
 			</div>
 
-			<MarketDetailSidebar {market} {onPredictionPlaced} />
+			<MarketDetailSidebar
+				{market}
+				onMarketSettled={() => {
+					if (nonNullish(market)) {
+						fetchMarket(market.id);
+					}
+				}}
+				{onPredictionPlaced}
+				{position}
+			/>
 		</div>
 	{:else}
 		<div class="flex flex-col items-center justify-center py-24 text-center">

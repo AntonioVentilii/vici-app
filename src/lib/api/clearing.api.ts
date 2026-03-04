@@ -75,6 +75,18 @@ export const settleSeries = async ({
 	return await settleSeries({ params, ...queryParams });
 };
 
+export const getPosition = async ({
+	identity,
+	params,
+	...queryParams
+}: {
+	identity: Identity;
+	params: ClearingDid.GetPositionParams;
+} & QueryParams): Promise<ClearingDid.Position | undefined> => {
+	const { getPosition } = await clearingCanister({ identity });
+	return await getPosition({ params, ...queryParams });
+};
+
 const clearingCanister = async ({
 	identity
 }: {

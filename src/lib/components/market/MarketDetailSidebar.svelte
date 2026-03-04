@@ -1,19 +1,39 @@
 <script lang="ts">
+	import MarketResolutionInterface from '$lib/components/market/MarketResolutionInterface.svelte';
+	import MarketUserPosition from '$lib/components/market/MarketUserPosition.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import PredictionInterface from '$lib/components/market/PredictionInterface.svelte';
+	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
+	import type { Position } from '$lib/types/position';
+	import { UserRole } from '$lib/types/user';
 
 	interface Props {
 		market: Market;
+		position: Position | undefined;
 		onPredictionPlaced: () => void;
+		onMarketSettled: () => void;
 	}
 
-	const { market, onPredictionPlaced }: Props = $props();
+	const { market, position, onPredictionPlaced, onMarketSettled }: Props = $props();
+
+	const isAdminOrResolver = $derived(() => {
+		const role = $userStore.profile?.role;
+		return role === UserRole.ADMIN || role === UserRole.RESOLVER;
+	});
 </script>
 
 <aside class="space-y-8">
+	<MarketUserPosition onFormatBalance={(b) => (Number(b) / 100_000_000).toFixed(4)} {position} />
+
 	{#if market.status === 'Open'}
 		<PredictionInterface {market} {onPredictionPlaced} />
+
+		{#if isAdminOrResolver()}
+			<div class="mt-8">
+				<MarketResolutionInterface {market} onSettled={onMarketSettled} />
+			</div>
+		{/if}
 	{:else}
 		<div class="space-y-4 rounded-3xl border border-slate-200 bg-white p-8 text-center shadow-sm">
 			<div class="flex justify-center">
@@ -51,8 +71,7 @@
 		<div class="space-y-3">
 			<div class="flex justify-between text-sm">
 				<span class="text-slate-500">Creator</span>
-				<span class="font-medium text-slate-950">{market.creator.substring(0, 10)}...</span
-				>
+				<span class="font-medium text-slate-950">{market.creator.substring(0, 10)}...</span>
 			</div>
 			<div class="flex justify-between text-sm">
 				<span class="text-slate-500">Invite Only</span>

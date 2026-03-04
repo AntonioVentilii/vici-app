@@ -8,4 +8,5 @@ export interface Position {
 	user: Principal;
 	yesAmount: bigint;
 	noAmount: bigint;
+	lockedCollateral: bigint;
 }
