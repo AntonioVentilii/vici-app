@@ -5,8 +5,8 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { getMarkets } from '$lib/services/market.service';
-	import { getPositions } from '$lib/services/position.service';
+	import { getMarkets } from '$lib/services/market.services';
+	import { getPositions } from '$lib/services/position.services';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 

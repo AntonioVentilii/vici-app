@@ -51,7 +51,7 @@
 		<div class="space-y-3">
 			<div class="flex justify-between text-sm">
 				<span class="text-slate-500">Creator</span>
-				<span class="font-medium text-slate-950">{market.creator.toText().substring(0, 10)}...</span
+				<span class="font-medium text-slate-950">{market.creator.substring(0, 10)}...</span
 				>
 			</div>
 			<div class="flex justify-between text-sm">

@@ -6,8 +6,4 @@ export enum UserRole {
 	CREATOR = 'creator'
 }
 
-export interface UserProfile {
-	role: UserRole;
-}
-
 export type UserOption = User | undefined | null;

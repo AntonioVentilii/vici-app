@@ -13,7 +13,7 @@ export const mapMarketData = ({
 	id: parseMarketId(id),
 	title,
 	description,
-	creator,
+	creator: creator.toText(),
 	expiryDate,
 	status: 'Open',
 	outcome: undefined,

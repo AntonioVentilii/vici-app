@@ -6,7 +6,7 @@
 	import MarketDetailSidebar from '$lib/components/market/MarketDetailSidebar.svelte';
 	import MarketDetailStats from '$lib/components/market/MarketDetailStats.svelte';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
-	import { getMarket } from '$lib/services/market.service';
+	import { getMarket } from '$lib/services/market.services';
 	import type { Market, MarketId } from '$lib/types/market';
 
 	let market = $state<Market | undefined>();

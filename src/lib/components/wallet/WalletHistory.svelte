@@ -37,7 +37,7 @@
 							{#if tx.marketId}
 								Market Prediction ID: {tx.marketId}
 							{:else if tx.counterparty}
-								To/From: {tx.counterparty.toText().substring(0, 10)}...
+								To/From: {tx.counterparty.substring(0, 10)}...
 							{:else}
 								-
 							{/if}

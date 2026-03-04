@@ -1,7 +1,7 @@
 <script lang="ts">
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import { userSignedIn } from '$lib/derived/user.derived';
-	import { placePrediction } from '$lib/services/position.service';
+	import { placePrediction } from '$lib/services/position.services';
 	import type { Market } from '$lib/types/market';
 	import type { PositionType } from '$lib/types/position';
 

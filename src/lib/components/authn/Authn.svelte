@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
+	import { isNullish } from '@dfinity/utils';
 	import { onAuthStateChange, type User } from '@junobuild/core';
 	import { onMount, type Snippet } from 'svelte';
 	import { getProfile } from '$lib/services/profile.services';
@@ -12,15 +12,23 @@
 	const { children }: Props = $props();
 
 	const updateUserStore = async (user: User | null) => {
-		if (nonNullish(user)) {
-			const profile = await getProfile(user);
-
-			userStore.set({ user, profile });
+		if (isNullish(user)) {
+			userStore.set({ user: null, profile: undefined });
 
 			return;
 		}
 
-		userStore.set({ user: null, profile: undefined });
+		const { key: userText } = user;
+
+		if (isNullish(userText)) {
+			userStore.set({ user: null, profile: undefined });
+
+			return;
+		}
+
+		const profile = await getProfile(userText);
+
+		userStore.set({ user, profile });
 	};
 
 	onMount(() => {

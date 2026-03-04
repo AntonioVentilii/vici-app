@@ -1,4 +1,4 @@
-import { defineConfig, type Rule } from '@junobuild/config';
+import { defineConfig } from '@junobuild/config';
 import { Collection } from './src/lib/constants/collections.constants';
 
 export default defineConfig({
@@ -13,10 +13,47 @@ export default defineConfig({
 			datastore: [
 				{
 					collection: Collection.ROLES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: Collection.PROFILES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: Collection.RELATIONS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: Collection.CHATS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: Collection.COMMENTS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: Collection.CATEGORIES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: Collection.SERIES_CATEGORIES,
+					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				}
-			] as Rule[]
+			]
 		}
 	}
 });

@@ -3,7 +3,7 @@
 	import LeaderboardTable from '$lib/components/leaderboard/LeaderboardTable.svelte';
 	import LeaderboardTimeframes from '$lib/components/leaderboard/LeaderboardTimeframes.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { socialService } from '$lib/services/social.service';
+	import { socialService } from '$lib/services/social.services';
 	import type { LeaderboardEntry } from '$lib/types/social';
 
 	let leaderboard = $state<LeaderboardEntry[]>([]);

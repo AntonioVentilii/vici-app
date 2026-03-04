@@ -1,3 +1,9 @@
 export enum Collection {
-	ROLES = 'roles'
+	ROLES = 'roles',
+	PROFILES = 'profiles',
+	RELATIONS = 'relations',
+	CHATS = 'chats',
+	COMMENTS = 'comments',
+	CATEGORIES = 'categories',
+	SERIES_CATEGORIES = 'series_categories'
 }

@@ -1,30 +1,55 @@
 import { Collection } from '$lib/constants/collections.constants';
-import type { UserProfile, UserRole } from '$lib/types/user';
-import { getDoc, setDoc, type User } from '@junobuild/core';
+import type { UserProfile } from '$lib/types/profile';
+import type { UserRole } from '$lib/types/user';
+import { isNullish } from '@dfinity/utils';
+import type { PrincipalText } from '@dfinity/zod-schemas';
+import { getDoc, listDocs, setDoc } from '@junobuild/core';
 
-export const getProfile = async ({ key }: User): Promise<UserProfile | undefined> => {
-	const doc = await getDoc<UserProfile>({
-		collection: Collection.ROLES,
-		key
+export const getProfile = async (principal: PrincipalText): Promise<UserProfile | undefined> => {
+	const profileDoc = await getDoc<UserProfile>({
+		collection: Collection.PROFILES,
+		key: principal
 	});
 
-	return doc?.data;
+	if (isNullish(profileDoc)) {
+		return;
+	}
+
+	const roleDoc = await getDoc<{ role: UserRole }>({
+		collection: Collection.ROLES,
+		key: principal
+	});
+
+	return {
+		...profileDoc.data,
+		role: roleDoc?.data.role
+	};
 };
 
-export const setRole = async ({
-	user: { key },
-	role
-}: {
-	user: User;
-	role: UserRole;
-}): Promise<void> => {
-	await setDoc<UserProfile>({
-		collection: Collection.ROLES,
+export const upsertProfile = async (profile: UserProfile): Promise<void> => {
+	await setDoc({
+		collection: Collection.PROFILES,
 		doc: {
-			key,
+			key: profile.owner,
 			data: {
-				role
+				...profile,
+				updatedAt: Date.now()
 			}
 		}
 	});
+};
+
+export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
+	const { items } = await listDocs<UserProfile>({
+		collection: Collection.PROFILES
+	});
+
+	const lowerQuery = query.toLowerCase();
+
+	return items
+		.map((doc) => doc.data)
+		.filter(
+			(p) =>
+				p.nickname.toLowerCase().includes(lowerQuery) || p.owner.toLowerCase().includes(lowerQuery)
+		);
 };

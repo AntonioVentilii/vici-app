@@ -3,7 +3,7 @@
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import MarketGrid from '$lib/components/market/MarketGrid.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { getMarkets } from '$lib/services/market.service';
+	import { getMarkets } from '$lib/services/market.services';
 	import type { Market } from '$lib/types/market';
 
 	let markets: Market[] = $state([]);

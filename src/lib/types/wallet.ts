@@ -1,5 +1,5 @@
 import type { MarketId } from '$lib/types/market';
-import type { Principal } from '@icp-sdk/core/principal';
+import type { PrincipalText } from '@dfinity/zod-schemas';
 
 export type TransactionType = 'Trade' | 'Send' | 'Receive';
 
@@ -11,12 +11,12 @@ export interface WalletBalance {
 export interface Transaction {
 	// TODO: define transaction ID type
 	id: string;
-	user: Principal;
+	user: PrincipalText;
 	timestamp: bigint;
 	type: TransactionType;
 	marketId?: MarketId;
 	amount: bigint;
 	// TODO: defined type
 	token: 'ICP' | 'ckUSDC';
-	counterparty?: Principal;
+	counterparty?: PrincipalText;
 }
