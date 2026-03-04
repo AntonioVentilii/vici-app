@@ -2,9 +2,12 @@
 	import { onMount } from 'svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import MarketGrid from '$lib/components/market/MarketGrid.svelte';
+	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
+	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getMarkets } from '$lib/services/market.services';
 	import type { Market } from '$lib/types/market';
+	import { REFRESH_MARKETS } from '$lib/utils/refresh.utils';
 
 	let markets: Market[] = $state([]);
 	let loading = $state(true);
@@ -13,9 +16,19 @@
 
 	const tabs = ['All', 'Trending', 'Expiring', 'Resolved'];
 
-	onMount(async () => {
-		markets = await getMarkets();
-		loading = false;
+	const loadMarkets = async () => {
+		loading = true;
+		try {
+			markets = await getMarkets();
+		} finally {
+			loading = false;
+		}
+	};
+
+	onMount(() => {
+		loadMarkets();
+		window.addEventListener(REFRESH_MARKETS, loadMarkets);
+		return () => window.removeEventListener(REFRESH_MARKETS, loadMarkets);
 	});
 
 	const filteredMarkets = $derived(
@@ -40,15 +53,24 @@
 		title="The World's First"
 	/>
 
-	<!-- Controls & Filters -->
-	<MarketFilters
-		{activeTab}
-		onSearchChange={(term) => (searchTerm = term)}
-		onTabChange={(tab) => (activeTab = tab)}
-		{searchTerm}
-		{tabs}
-	/>
+	<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-4">
+		<div class="space-y-8 lg:col-span-3">
+			<!-- Controls & Filters -->
+			<MarketFilters
+				{activeTab}
+				onSearchChange={(term) => (searchTerm = term)}
+				onTabChange={(tab) => (activeTab = tab)}
+				{searchTerm}
+				{tabs}
+			/>
 
-	<!-- Markets Grid -->
-	<MarketGrid {loading} markets={filteredMarkets} />
+			<!-- Markets Grid -->
+			<MarketGrid {loading} markets={filteredMarkets} />
+		</div>
+
+		<!-- Community Sidebar -->
+		<aside class="sticky top-24 space-y-6">
+			<ActivityFeed mode="global" userPrincipal={$authPrincipal ?? ''} />
+		</aside>
+	</div>
 </section>

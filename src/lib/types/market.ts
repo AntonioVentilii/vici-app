@@ -24,16 +24,3 @@ export interface Market {
 	yesProbability: number;
 	noProbability: number;
 }
-
-// TODO: do we need this???
-export interface MarketMetadata {
-	id: MarketId;
-	creator: PrincipalText;
-	totalVolume: bigint;
-	yesVolume: bigint;
-	noVolume: bigint;
-	yesProbability: number;
-	noProbability: number;
-	status: MarketStatus;
-	outcome?: Outcome;
-}

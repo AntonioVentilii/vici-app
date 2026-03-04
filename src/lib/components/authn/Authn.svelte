@@ -1,8 +1,9 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onAuthStateChange, type User } from '@junobuild/core';
 	import { onMount, type Snippet } from 'svelte';
-	import { getProfile } from '$lib/services/profile.services';
+	import { safeGetIdentityOnce } from '$lib/services/identity.services';
+	import { getProfile, calculateAndSyncStats } from '$lib/services/profile.services';
 	import { userStore } from '$lib/stores/user.store';
 
 	interface Props {
@@ -29,6 +30,16 @@
 		const profile = await getProfile(userText);
 
 		userStore.set({ user, profile });
+
+		// Sync stats if user is authenticated
+		if (nonNullish(user)) {
+			try {
+				const identity = await safeGetIdentityOnce();
+				await calculateAndSyncStats(identity);
+			} catch (e) {
+				console.error('Failed to sync stats on login', e);
+			}
+		}
 	};
 
 	onMount(() => {

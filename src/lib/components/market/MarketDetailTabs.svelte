@@ -1,6 +1,8 @@
 <script lang="ts">
 	import MarketDepthPanel from '$lib/components/market/MarketDepthPanel.svelte';
+	import MarketDiscussion from '$lib/components/social/MarketDiscussion.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { authPrincipal } from '$lib/derived/user.derived';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 
@@ -16,7 +18,8 @@
 	const tabs = [
 		{ id: 'description', label: 'Description' },
 		{ id: 'depth', label: 'Depth & Analytics' },
-		{ id: 'activity', label: 'Activity' }
+		{ id: 'discussion', label: 'Discussion' },
+		{ id: 'activity', label: 'Your Activity' }
 	];
 </script>
 
@@ -49,6 +52,8 @@
 			</div>
 		{:else if activeTab === 'depth'}
 			<MarketDepthPanel {market} />
+		{:else if activeTab === 'discussion'}
+			<MarketDiscussion marketId={market.id} userPrincipal={$authPrincipal ?? ''} />
 		{:else if activeTab === 'activity'}
 			<div class="space-y-6">
 				{#if position && (position.yesAmount > ZERO || position.noAmount > ZERO)}

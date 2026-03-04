@@ -9,4 +9,7 @@ export interface UserProfile {
 	role?: UserRole;
 	createdAt: number;
 	updatedAt: number;
+	totalTrades?: number;
+	winRate?: number;
+	pnl?: number;
 }

@@ -9,15 +9,15 @@ export interface WalletBalance {
 	collateral: bigint;
 }
 
+export type TransactionId = string;
+
 export interface Transaction {
-	// TODO: define transaction ID type
-	id: string;
+	id: TransactionId;
 	user: PrincipalText;
 	timestamp: bigint;
 	type: TransactionType;
 	marketId?: MarketId;
 	amount: bigint;
-	// TODO: defined type
-	token: 'ICP' | 'ckUSDC';
+	token: 'ICP' | 'ckUSDC' | 'USDC';
 	counterparty?: PrincipalText;
 }

@@ -2,14 +2,20 @@
 
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import { PAYOFF_TYPE, STRIKE, VICI_ORACLE_V1 } from '$lib/constants/app.constants';
+import { activityService } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
 import type { Market, MarketId } from '$lib/types/market';
+import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
 import { mapMarketData } from '$lib/utils/market.utils';
+import { emitRefreshMarkets } from '$lib/utils/refresh.utils';
 import { isNullish } from '@dfinity/utils';
 
-// TODO: revisit
+/**
+ * Creates a new prediction market.
+ * Only Admins and Creators are authorized.
+ */
 export const createMarket = async ({
 	title,
 	description,
@@ -33,12 +39,11 @@ export const createMarket = async ({
 	const seriesId = await addSeries({
 		identity,
 		params: {
-			// TODO: parse it as underlying,
-			underlying: title,
+			underlying: title, // Using title as underlying for now
 			title,
 			description,
 			expiry: expiryDate,
-			// TODO: support different settlement assets, for now we can default to ICP
+			// Defaulting to ICP for settlement
 			settlement_asset: { Icp: null },
 			strike: STRIKE,
 			payoff_type: PAYOFF_TYPE,
@@ -46,7 +51,15 @@ export const createMarket = async ({
 		}
 	});
 
-	// TODO: re-trigger the market loading to show the newly created market in the UI
+	await activityService.logActivity({
+		type: ActivityType.TRADE, // Or add a specific "MARKET_CREATED" if needed
+		user: identity.getPrincipal().toText(),
+		marketId: seriesId,
+		title: `Market created: ${title}`,
+		details: description
+	});
+
+	emitRefreshMarkets();
 
 	return seriesId;
 };

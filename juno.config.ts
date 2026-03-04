@@ -52,6 +52,12 @@ export default defineConfig({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				{
+					collection: Collection.ACTIVITIES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
 				}
 			]
 		}

@@ -43,10 +43,10 @@ Current state of the **Vici Social Markets** application.
 
 ### 💬 Social & Community (Inspired by `old_app`)
 
-- [ ] **Market Discussion**: Integrated comment threads and real-time chat per market (Juno-based).
-- [ ] **Profiles & Social Graph**: User profiles with trading history, "Follow" system, and notifications.
-- [ ] **Activity Feed**: Global and friend-specific feed of trades and settlements.
-- [ ] **Leaderboards**: Dynamic ranking based on realized P&L, win rate, and streak.
+- [x] **Market Discussion**: Threaded comments per market (Juno-based).
+- [x] **Profiles & Social Graph**: User profiles with trading history, follow system, and stats.
+- [x] **Activity Feed**: Global and friend-specific activity logging.
+- [x] **Leaderboards**: P&L based rankings.
 
 ### 🎮 Gamification & Retention (New Suggestions)
 

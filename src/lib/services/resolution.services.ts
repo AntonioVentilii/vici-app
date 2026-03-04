@@ -1,6 +1,8 @@
 import { settleSeries as settleSeriesApi } from '$lib/api/clearing.api';
+import { activityService } from '$lib/services/activity.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
+import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
 
 export const settleMarket = async ({
@@ -24,5 +26,13 @@ export const settleMarket = async ({
 			series_id: seriesId,
 			settlement_price: settlementPrice
 		}
+	});
+
+	await activityService.logActivity({
+		type: ActivityType.SETTLEMENT,
+		user: identity.getPrincipal().toText(),
+		marketId: seriesId,
+		title: `Market settled`,
+		details: `Settled at ${settlementPrice}`
 	});
 };

@@ -2,6 +2,7 @@ import { settleSeries } from '$lib/api/clearing.api';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import { binaryPayoff } from '$lib/utils/payoff.utils';
+import { emitRefreshMarkets } from '$lib/utils/refresh.utils';
 import { isNullish } from '@dfinity/utils';
 
 export const resolveMarket = async ({
@@ -32,5 +33,6 @@ export const resolveMarket = async ({
 		console.error('Failed to settle series on-chain', e);
 	}
 
-	// TODO: retrigger the loading of markets to refresh the UI
+	// Trigger UI refresh
+	emitRefreshMarkets();
 };

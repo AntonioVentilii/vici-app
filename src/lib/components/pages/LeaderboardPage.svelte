@@ -1,21 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import LeaderboardTable from '$lib/components/leaderboard/LeaderboardTable.svelte';
-	import LeaderboardTimeframes from '$lib/components/leaderboard/LeaderboardTimeframes.svelte';
+	import Leaderboard from '$lib/components/social/Leaderboard.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { socialService } from '$lib/services/social.services';
-	import type { LeaderboardEntry } from '$lib/types/social';
-
-	let leaderboard = $state<LeaderboardEntry[]>([]);
-	let loading = $state(true);
-	let activeTimeframe = $state('All-time');
-
-	const timeframes = ['Weekly', 'Monthly', 'All-time'];
-
-	onMount(async () => {
-		leaderboard = await socialService.getLeaderboard();
-		loading = false;
-	});
+	// Leaderboard component handles fetching logic now
 </script>
 
 <div class="space-y-12">
@@ -25,15 +11,8 @@
 		title="Global"
 	/>
 
-	<!-- Timeframe Filters -->
-	<LeaderboardTimeframes
-		{activeTimeframe}
-		onTimeframeChange={(timeframe) => (activeTimeframe = timeframe)}
-		{timeframes}
-	/>
-
-	<!-- Leaderboard Table -->
-	<LeaderboardTable {leaderboard} {loading} />
+	<!-- Global Leaderboard -->
+	<Leaderboard />
 
 	<!-- Info Card -->
 	<div

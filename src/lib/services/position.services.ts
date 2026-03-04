@@ -4,8 +4,12 @@ import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.service
 import type { Market, MarketId } from '$lib/types/market';
 import type { Position, PositionType } from '$lib/types/position';
 import { mapPositionData } from '$lib/utils/position.utils';
+import { emitRefreshBalance, emitRefreshPositions } from '$lib/utils/refresh.utils';
 import { isNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
+
+// Default Liquidity Provider principal for matched trades
+const DEFAULT_LP_PRINCIPAL = '2vxsx-fae';
 
 export const placePrediction = async ({
 	market,
@@ -23,8 +27,7 @@ export const placePrediction = async ({
 	// Clearing prices are e8. Probability is 0..1
 	const yesPrice = BigInt(Math.floor(market.yesProbability * 100_000_000));
 
-	// TODO: implement proper LP selection logic
-	const LP_PRINCIPAL = Principal.fromText('2vxsx-fae');
+	const LP_PRINCIPAL = Principal.fromText(DEFAULT_LP_PRINCIPAL);
 
 	const isYes = type === 'YES';
 
@@ -51,6 +54,10 @@ export const placePrediction = async ({
 			price: yesPrice
 		}
 	});
+
+	// Trigger UI refresh
+	emitRefreshPositions();
+	emitRefreshBalance();
 };
 
 export const getPositions = async (): Promise<Position[]> => {

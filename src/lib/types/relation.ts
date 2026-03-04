@@ -2,6 +2,7 @@ import type { PrincipalText } from '@dfinity/zod-schemas';
 
 export enum RelationCategory {
 	FRIEND = 'FRIEND',
+	FOLLOW = 'follow',
 	GROUP = 'GROUP'
 }
 

@@ -3,7 +3,9 @@ import {
 	getPosition as getPositionApi,
 	submitMatchedTrade as submitMatchedTradeApi
 } from '$lib/api/clearing.api';
+import { activityService } from '$lib/services/activity.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { ActivityType } from '$lib/types/social';
 import { Principal } from '@icp-sdk/core/principal';
 
 export const submitTrade = async ({
@@ -21,7 +23,7 @@ export const submitTrade = async ({
 }): Promise<boolean> => {
 	const identity = await safeGetIdentityOnce();
 
-	return await submitMatchedTradeApi({
+	const success = await submitMatchedTradeApi({
 		identity,
 		params: {
 			trade_id: `TRADE_${Date.now()}`,
@@ -32,6 +34,18 @@ export const submitTrade = async ({
 			price
 		}
 	});
+
+	if (success) {
+		await activityService.logActivity({
+			type: ActivityType.TRADE,
+			user: identity.getPrincipal().toText(),
+			marketId: seriesId,
+			title: `New trade executed`,
+			details: `Traded ${qty} at ${price}`
+		});
+	}
+
+	return success;
 };
 
 export const getPosition = async (seriesId: string): Promise<ClearingDid.Position | undefined> => {
