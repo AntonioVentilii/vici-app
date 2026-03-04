@@ -1,8 +1,8 @@
-import type { AssertSetDocContext } from '@junobuild/functions';
+import { Collection } from '$lib/constants/collections.constants';
+import { UserRole } from '$lib/types/user';
 import { Principal } from '@icp-sdk/core/principal';
+import type { AssertSetDocContext } from '@junobuild/functions';
 import { decodeDocData, getControllers, getDocStore, isController } from '@junobuild/functions/sdk';
-import { Collection } from '../../lib/constants/collections.constants';
-import { UserRole } from '../../lib/types/user';
 
 export const assertSetRole = ({
 	caller,
