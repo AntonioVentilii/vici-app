@@ -31,7 +31,13 @@ export const activityService = {
 			.slice(0, limit);
 	},
 
-	getFriendActivities: async (friends: PrincipalText[], limit = 50): Promise<Activity[]> => {
+	getFriendActivities: async ({
+		friends,
+		limit = 50
+	}: {
+		friends: PrincipalText[];
+		limit: number;
+	}): Promise<Activity[]> => {
 		const { items } = await listDocs<Activity>({
 			collection: Collection.ACTIVITIES
 		});

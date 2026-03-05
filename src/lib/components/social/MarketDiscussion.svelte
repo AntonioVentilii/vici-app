@@ -28,7 +28,7 @@
 	const loadComments = async () => {
 		loading = true;
 		try {
-			comments = (await discussionService.getMarketComments(marketId)) ;
+			comments = await discussionService.getMarketComments(marketId);
 
 			for (const comment of comments) {
 				if (!profiles.has(comment.user)) {

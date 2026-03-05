@@ -17,7 +17,7 @@ export interface Relation {
 	category: RelationCategory;
 	state: RelationState;
 	participants: PrincipalText[];
-	metadata?: Record<string, any>;
+	metadata?: Record<string, string | number | boolean>;
 	createdAt: number;
 	updatedAt: number;
 }

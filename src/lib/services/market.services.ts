@@ -1,5 +1,3 @@
-/* eslint-disable require-await,require-await */
-
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import { PAYOFF_TYPE, STRIKE, VICI_ORACLE_V1 } from '$lib/constants/app.constants';
 import { activityService } from '$lib/services/activity.services';
@@ -19,13 +17,11 @@ import { isNullish } from '@dfinity/utils';
 export const createMarket = async ({
 	title,
 	description,
-	expiryDate,
-	isInviteOnly = false
+	expiryDate
 }: {
 	title: string;
 	description: string;
 	expiryDate: bigint;
-	isInviteOnly?: boolean;
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -85,5 +81,7 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 };
 
 export const getRushQueue = async (): Promise<Market[]> => {
-	throw Error('Rush queue not implemented yet');
+	const markets = await getMarkets();
+	// For now, all open markets are eligible for Rush Mode
+	return markets.sort((a, b) => Number(b.id) - Number(a.id));
 };

@@ -24,6 +24,7 @@ Current state of the **Vici Social Markets** application.
 - [x] **Modern Aesthetics**: Premium glassmorphic design, vibrant gradients, and smooth transitions.
 - [x] **Enhanced Market View**: Tabbed interface for Description, Activity, and Analytics placeholders.
 - [x] **Responsive Sidebar**: Integrated trading interface and user position feedback.
+- [x] **Rush Mode**: Swipe-based rapid trading UI for mobile-first users (as seen in `old_app`).
 
 ---
 
@@ -50,7 +51,6 @@ Current state of the **Vici Social Markets** application.
 
 ### 🎮 Gamification & Retention (New Suggestions)
 
-- [ ] **Rush Mode**: Swipe-based rapid trading UI for mobile-first users (as seen in `old_app`).
 - [ ] **Achievements & Badges**: Unlockable NFT or on-chain badges for trading milestones.
 - [ ] **Referral System**: Incentive program for inviting new traders.
 - [ ] **Daily Quests**: Minor rewards for community participation and market discovery.

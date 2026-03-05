@@ -11,7 +11,7 @@
 	import { UserRole } from '$lib/types/user';
 	import type { WalletBalance } from '$lib/types/wallet';
 
-	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO });
+	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO, collateral: ZERO });
 	let showSignInModal = $state(false);
 
 	const isAdmin = $derived($userRole === UserRole.ADMIN);
@@ -62,6 +62,14 @@
 					onclick={() => handleNav('markets')}
 				>
 					Markets
+				</button>
+				<button
+					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('rush')
+						? 'bg-muted text-foreground'
+						: 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'}"
+					onclick={() => handleNav('rush')}
+				>
+					Rush
 				</button>
 				<button
 					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('leaderboard')

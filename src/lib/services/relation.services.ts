@@ -29,10 +29,8 @@ export const sendFriendRequest = async ({
 };
 
 export const acceptFriendRequest = async ({
-	relationId,
 	currentRelation
 }: {
-	relationId: string;
 	currentRelation: Doc<Relation>;
 }): Promise<void> => {
 	await setDoc({

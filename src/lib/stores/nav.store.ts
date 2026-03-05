@@ -1,6 +1,6 @@
 import { writable } from 'svelte/store';
 
-export type Page = 'markets' | 'portfolio' | 'leaderboard' | 'wallet' | 'admin';
+export type Page = 'markets' | 'portfolio' | 'leaderboard' | 'wallet' | 'admin' | 'rush';
 
 export const navStore = writable<Page>('markets');
 

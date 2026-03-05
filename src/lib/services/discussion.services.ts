@@ -44,6 +44,6 @@ export const discussionService = {
 			doc: {
 				key
 			}
-		} as any);
+		});
 	}
 };
