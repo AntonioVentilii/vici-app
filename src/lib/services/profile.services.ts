@@ -4,7 +4,7 @@ import type { UserProfile } from '$lib/types/profile';
 import type { UserRole } from '$lib/types/user';
 import { isNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@dfinity/zod-schemas';
-import type { Identity } from '@icp-sdk/core';
+import type { Identity } from '@icp-sdk/core/agent';
 import { getDoc, listDocs, setDoc } from '@junobuild/core';
 
 export const getProfile = async (principal: PrincipalText): Promise<UserProfile | undefined> => {

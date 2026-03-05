@@ -16,7 +16,9 @@
 	const { userPrincipal, mode = 'global' }: Props = $props();
 
 	let activities: Activity[] = $state([]);
+
 	const profiles: Map<string, UserProfile> = $state(new Map());
+
 	let loading = $state(true);
 
 	onMount(async () => {
@@ -28,7 +30,8 @@
 		try {
 			if (mode === 'friends' && userPrincipal) {
 				const following = await getFollowing(userPrincipal);
-				activities = await activityService.getFriendActivities(following);
+
+				activities = await activityService.getFriendActivities({ friends: following });
 			} else {
 				activities = await activityService.getGlobalActivities();
 			}
@@ -65,7 +68,7 @@
 	};
 </script>
 
-<Card class="glassmorphism flex flex-col gap-4 p-6">
+<Card class="flex flex-col gap-4 p-6" glassStyle>
 	<div class="flex items-center justify-between">
 		<h3
 			class="from-primary to-secondary bg-linear-to-r bg-clip-text text-xl font-bold text-transparent"
@@ -122,11 +125,6 @@
 </Card>
 
 <style lang="postcss">
-	.glassmorphism {
-		background: rgba(255, 255, 255, 0.03);
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(255, 255, 255, 0.05);
-	}
 	.custom-scrollbar::-webkit-scrollbar {
 		width: 4px;
 	}

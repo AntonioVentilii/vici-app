@@ -1,9 +1,9 @@
 import type { UserProfile } from '$lib/types/profile';
-import type { UserOption } from '$lib/types/user';
+import type { User } from '@junobuild/core';
 import { writable } from 'svelte/store';
 
 export interface UserStoreData {
-	user: UserOption;
+	user: User | undefined;
 	profile: UserProfile | undefined;
 }
 

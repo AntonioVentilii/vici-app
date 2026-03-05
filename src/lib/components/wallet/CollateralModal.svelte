@@ -43,11 +43,16 @@
 
 {#if isOpen}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-		<div class="fixed inset-0 bg-slate-950/40" onclick={onClose}></div>
+		<button class="fixed inset-0 bg-slate-950/40" aria-label="Close modal" onclick={onClose}>
+		</button>
 		<div
 			class="animate-in fade-in zoom-in relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl duration-200"
 		>
-			<button class="absolute top-6 right-6 text-slate-400 hover:text-slate-600" onclick={onClose}>
+			<button
+				class="absolute top-6 right-6 text-slate-400 hover:text-slate-600"
+				aria-label="Close modal"
+				onclick={onClose}
+			>
 				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
 						d="M6 18L18 6M6 6l12 12"

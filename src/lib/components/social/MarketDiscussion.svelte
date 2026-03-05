@@ -16,9 +16,13 @@
 	const { marketId, userPrincipal }: Props = $props();
 
 	let comments: (Comment & { key: string })[] = $state([]);
+
 	const profiles: Map<string, UserProfile> = $state(new Map());
+
 	let newComment = $state('');
+
 	let loading = $state(true);
+
 	let posting = $state(false);
 
 	onMount(async () => {
@@ -33,6 +37,7 @@
 			for (const comment of comments) {
 				if (!profiles.has(comment.user)) {
 					const profile = await getProfile(comment.user);
+
 					if (profile) {
 						profiles.set(comment.user, profile);
 					}

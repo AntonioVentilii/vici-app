@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -39,19 +40,23 @@
 	};
 
 	const handleFollowToggle = async () => {
-		if (!viewerPrincipal) {
+		if (isNullish(viewerPrincipal)) {
 			return;
 		}
+
+		const params = { sender: viewerPrincipal, target: profile.owner };
+
 		if (isFollowing) {
-			await unfollowUser(viewerPrincipal, profile.owner);
+			await unfollowUser(params);
 		} else {
-			await followUser({ sender: viewerPrincipal, target: profile.owner });
+			await followUser(params);
 		}
+
 		await loadSocialGraph();
 	};
 </script>
 
-<Card class="glassmorphism flex flex-col items-center gap-4 p-6 text-center">
+<Card class="flex flex-col items-center gap-4 p-6 text-center" glassStyle>
 	<div class="relative">
 		<div class="border-primary/20 h-24 w-24 rounded-full border-4 p-1">
 			<div class="bg-muted h-full w-full overflow-hidden rounded-full">
@@ -105,20 +110,8 @@
 	</div>
 
 	{#if viewerPrincipal && viewerPrincipal !== profile.owner}
-		<Button
-			class="w-full"
-			onclick={handleFollowToggle}
-			variant={isFollowing ? 'secondary' : 'primary'}
-		>
+		<Button onclick={handleFollowToggle}>
 			{isFollowing ? 'Unfollow' : 'Follow'}
 		</Button>
 	{/if}
 </Card>
-
-<style lang="postcss">
-	.glassmorphism {
-		background: rgba(255, 255, 255, 0.03);
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(255, 255, 255, 0.05);
-	}
-</style>

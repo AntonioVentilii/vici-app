@@ -18,6 +18,7 @@ export const userPermissions: Readable<Permission[]> = derived(userRole, ($role)
 	$role ? ROLE_PERMISSIONS[$role] : []
 );
 
-export const authPrincipal: Readable<string | undefined> = derived(userStore, ({ user }) =>
-	typeof user?.owner === 'string' ? user.owner : user?.owner?.toText()
+export const authPrincipal: Readable<string | undefined> = derived(
+	userStore,
+	({ user }) => user?.owner
 );

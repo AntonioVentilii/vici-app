@@ -14,7 +14,7 @@
 
 	const updateUserStore = async (user: User | null) => {
 		if (isNullish(user)) {
-			userStore.set({ user: null, profile: undefined });
+			userStore.set({ user: undefined, profile: undefined });
 
 			return;
 		}
@@ -22,7 +22,7 @@
 		const { key: userText } = user;
 
 		if (isNullish(userText)) {
-			userStore.set({ user: null, profile: undefined });
+			userStore.set({ user: undefined, profile: undefined });
 
 			return;
 		}

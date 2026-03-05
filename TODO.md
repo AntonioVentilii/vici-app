@@ -22,9 +22,16 @@ Current state of the **Vici Social Markets** application.
 ### UI/UX
 
 - [x] **Modern Aesthetics**: Premium glassmorphic design, vibrant gradients, and smooth transitions.
-- [x] **Enhanced Market View**: Tabbed interface for Description, Activity, and Analytics placeholders.
+- [x] **Enhanced Market View**: Tabbed interface for Description, Activity, and Analytics.
 - [x] **Responsive Sidebar**: Integrated trading interface and user position feedback.
-- [x] **Rush Mode**: Swipe-based rapid trading UI for mobile-first users (as seen in `old_app`).
+- [x] **Rush Mode**: Swipe-based rapid trading UI for mobile-first users.
+
+### Social & Community
+
+- [x] **Market Discussion**: Threaded comments per market (Juno-based).
+- [x] **Profiles & Social Graph**: User profiles with trading history, follow system, and stats.
+- [x] **Activity Feed**: Global and friend-specific activity logging.
+- [x] **Leaderboards**: P&L based rankings.
 
 ---
 
@@ -35,6 +42,7 @@ Current state of the **Vici Social Markets** application.
 - [ ] **Global Order Book**: Transition from matched trades to a public order book (if supported by backend).
 - [ ] **Real-time Price Feeds**: Integration with decentralized oracles for automated settlements.
 - [ ] **Multi-Asset Support**: Collateral support for ckBTC, ckETH, and other ICRC-1 tokens.
+- [ ] **Private Markets**: Invite-only binary outcome markets (Planned in `SPECS_V0`).
 
 ### 📈 Analytics & Depth
 
@@ -42,14 +50,13 @@ Current state of the **Vici Social Markets** application.
 - [ ] **Market Depth Visualization**: Real-time depth charts and liquidity heatmaps.
 - [ ] **Trading View Integration**: Professional analytics dashboard for advanced traders.
 
-### 💬 Social & Community (Inspired by `old_app`)
+### 💰 Wallet & Transfers
 
-- [x] **Market Discussion**: Threaded comments per market (Juno-based).
-- [x] **Profiles & Social Graph**: User profiles with trading history, follow system, and stats.
-- [x] **Activity Feed**: Global and friend-specific activity logging.
-- [x] **Leaderboards**: P&L based rankings.
+- [ ] **Standard IC Transfers**: Full implementation of `sendICP` and `sendCkUSDC` services.
+- [ ] **Transaction History**: Comprehensive ledger-based history for all wallet actions.
+- [ ] **QR Code System**: Functional QR generator for wallet addresses and market sharing.
 
-### 🎮 Gamification & Retention (New Suggestions)
+### 🎮 Gamification & Retention
 
 - [ ] **Achievements & Badges**: Unlockable NFT or on-chain badges for trading milestones.
 - [ ] **Referral System**: Incentive program for inviting new traders.
@@ -59,12 +66,11 @@ Current state of the **Vici Social Markets** application.
 
 - [ ] **PWA Support**: Installable progressive web app with push notifications.
 - [ ] **Svelte 5 Polish**: Final optimization of all runes and derived states for performance.
-- [ ] **QR Code System**: Functional QR generator for wallet addresses and market sharing.
 
 ---
 
 ## 📝 Technical Debt
 
 - [ ] **Canister Error Handling**: More granular error messaging for clearing canister rejections.
-- [ ] **Syncing Specs**: Update `SPECS_V0.md` to reflect current architectural decisions (Svelte 5, Real Canisters).
 - [ ] **Testing**: Implement E2E browser tests for the trade/settlement flow.
+- [ ] **Documentation**: Maintain `README.md`, `TODO.md`, and `CLAUDE.md` as the primary sources of truth.

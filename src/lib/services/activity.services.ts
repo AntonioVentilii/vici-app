@@ -36,7 +36,7 @@ export const activityService = {
 		limit = 50
 	}: {
 		friends: PrincipalText[];
-		limit: number;
+		limit?: number;
 	}): Promise<Activity[]> => {
 		const { items } = await listDocs<Activity>({
 			collection: Collection.ACTIVITIES
