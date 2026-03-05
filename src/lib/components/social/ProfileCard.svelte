@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -19,8 +19,13 @@
 	const { profile, viewerPrincipal }: Props = $props();
 
 	let following = $state<string[]>([]);
+
 	let followers = $state<string[]>([]);
-	const isFollowing = $derived(viewerPrincipal ? followers.includes(viewerPrincipal) : false);
+
+	const isFollowing = $derived(
+		nonNullish(viewerPrincipal) ? followers.includes(viewerPrincipal) : false
+	);
+
 	let loading = $state(true);
 
 	onMount(async () => {
@@ -29,6 +34,7 @@
 
 	const loadSocialGraph = async () => {
 		loading = true;
+
 		try {
 			[following, followers] = await Promise.all([
 				getFollowing(profile.owner),
@@ -109,7 +115,7 @@
 		</div>
 	</div>
 
-	{#if viewerPrincipal && viewerPrincipal !== profile.owner}
+	{#if nonNullish(viewerPrincipal) && viewerPrincipal !== profile.owner}
 		<Button onclick={handleFollowToggle}>
 			{isFollowing ? 'Unfollow' : 'Follow'}
 		</Button>

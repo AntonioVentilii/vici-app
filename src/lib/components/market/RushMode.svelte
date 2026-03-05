@@ -10,10 +10,15 @@
 	import type { Market } from '$lib/types/market';
 
 	let markets = $state<Market[]>([]);
+
 	let currentIndex = $state(0);
+
 	let loading = $state(true);
+
 	let processing = $state(false);
+
 	let tradeAmount = $state('0.1');
+
 	let completed = $state(false);
 
 	onMount(async () => {
@@ -97,6 +102,7 @@
 			<p class="mb-8 text-slate-600">
 				You've reviewed all available markets. Great job keeping up with the pulse!
 			</p>
+
 			<Button onclick={async () => navigateTo('markets')}>Back to Markets</Button>
 		</div>
 	{:else}

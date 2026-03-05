@@ -14,10 +14,14 @@
 
 	const { userPrincipal }: Props = $props();
 
-	let friends: Relation[] = $state([]);
-	const friendProfiles: Map<string, UserProfile> = $state(new Map());
+	let friends = $state<Relation[]>([]);
+
+	const friendProfiles = $state<Map<string, UserProfile>>(new Map());
+
 	let loading = $state(true);
+
 	let newFriendPrincipal = $state('');
+
 	let adding = $state(false);
 
 	onMount(async () => {
@@ -28,6 +32,7 @@
 		loading = true;
 		try {
 			const activeFriends = await getFriends(userPrincipal);
+
 			friends = activeFriends;
 
 			for (const relation of activeFriends) {

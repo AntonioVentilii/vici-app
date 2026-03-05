@@ -4,7 +4,7 @@
 	import { userNotSignedIn } from '$lib/derived/user.derived';
 	import type { Note } from '$lib/types/note';
 
-	let items: Doc<Note>[] = $state([]);
+	let items = $state<Doc<Note>[]>([]);
 
 	const list = async (userNotSignedIn: boolean) => {
 		if (userNotSignedIn) {

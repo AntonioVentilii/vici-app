@@ -1,6 +1,6 @@
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import { PAYOFF_TYPE, STRIKE, VICI_ORACLE_V1 } from '$lib/constants/app.constants';
-import { activityService } from '$lib/services/activity.services';
+import { logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
 import type { Market, MarketId } from '$lib/types/market';
@@ -47,7 +47,7 @@ export const createMarket = async ({
 		}
 	});
 
-	await activityService.logActivity({
+	await logActivity({
 		type: ActivityType.TRADE, // Or add a specific "MARKET_CREATED" if needed
 		user: identity.getPrincipal().toText(),
 		marketId: seriesId,

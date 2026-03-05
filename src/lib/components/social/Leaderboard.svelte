@@ -2,16 +2,17 @@
 	import { onMount } from 'svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import { socialService } from '$lib/services/social.services';
+	import { getLeaderboard } from '$lib/services/social.services';
 	import type { LeaderboardEntry } from '$lib/types/social';
 
-	let leaderboard: LeaderboardEntry[] = $state([]);
+	let leaderboard = $state<LeaderboardEntry[]>([]);
+
 	let loading = $state(true);
 
 	onMount(async () => {
 		loading = true;
 		try {
-			leaderboard = await socialService.getLeaderboard();
+			leaderboard = await getLeaderboard();
 		} finally {
 			loading = false;
 		}

@@ -13,9 +13,12 @@
 
 	const { seriesId, adminPrincipal }: Props = $props();
 
-	let categories: Category[] = $state([]);
+	let categories = $state<Category[]>([]);
+
 	let loading = $state(true);
+
 	let saving = $state(false);
+
 	let selectedCategoryId = $state('');
 
 	onMount(async () => {

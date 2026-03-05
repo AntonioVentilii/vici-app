@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import { activityService } from '$lib/services/activity.services';
+	import { getFriendActivities, getGlobalActivities } from '$lib/services/activity.services';
 	import { getProfile } from '$lib/services/profile.services';
 	import { getFollowing } from '$lib/services/relation.services';
 	import type { UserProfile } from '$lib/types/profile';
@@ -15,9 +15,9 @@
 
 	const { userPrincipal, mode = 'global' }: Props = $props();
 
-	let activities: Activity[] = $state([]);
+	let activities = $state<Activity[]>([]);
 
-	const profiles: Map<string, UserProfile> = $state(new Map());
+	const profiles = $state<Map<string, UserProfile>>(new Map());
 
 	let loading = $state(true);
 
@@ -31,9 +31,9 @@
 			if (mode === 'friends' && userPrincipal) {
 				const following = await getFollowing(userPrincipal);
 
-				activities = await activityService.getFriendActivities({ friends: following });
+				activities = await getFriendActivities({ friends: following });
 			} else {
-				activities = await activityService.getGlobalActivities();
+				activities = await getGlobalActivities();
 			}
 
 			for (const activity of activities) {

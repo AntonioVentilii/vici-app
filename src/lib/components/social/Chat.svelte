@@ -13,12 +13,17 @@
 
 	const { marketId, userPrincipal }: Props = $props();
 
-	let messages: ChatMessage[] = $state([]);
-	const profiles: Map<string, UserProfile> = $state(new Map());
+	let messages = $state<ChatMessage[]>([]);
+
+	const profiles = $state<Map<string, UserProfile>>(new Map());
+
 	let newMessage = $state('');
+
 	let loading = $state(true);
+
 	let sending = $state(false);
-	let chatContainer: HTMLElement | undefined = $state();
+
+	let chatContainer = $state<HTMLElement | undefined>();
 
 	onMount(() => {
 		loadMessages();

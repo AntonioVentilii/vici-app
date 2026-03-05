@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { spring } from 'svelte/motion';
+	import { Spring } from 'svelte/motion';
 	import type { Market } from '$lib/types/market';
 
 	interface Props {
@@ -13,7 +13,7 @@
 	let startY = 0;
 	let dragging = false;
 
-	const coords = spring(
+	const coords = new Spring(
 		{ x: 0, y: 0 },
 		{
 			stiffness: 0.2,
@@ -51,6 +51,7 @@
 		});
 	};
 
+	// eslint-disable-next-line require-await
 	const handleEnd = async () => {
 		if (!dragging) {
 			return;

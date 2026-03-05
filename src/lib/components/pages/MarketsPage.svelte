@@ -9,9 +9,12 @@
 	import type { Market } from '$lib/types/market';
 	import { REFRESH_MARKETS } from '$lib/utils/refresh.utils';
 
-	let markets: Market[] = $state([]);
+	let markets = $state<Market[]>([]);
+
 	let loading = $state(true);
+
 	let searchTerm = $state('');
+
 	let activeTab = $state('All');
 
 	const tabs = ['All', 'Trending', 'Expiring', 'Resolved'];

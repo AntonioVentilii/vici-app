@@ -14,12 +14,16 @@
 
 	const { market, onPredictionPlaced }: Props = $props();
 
-	const { id: marketId, yesProbability, noProbability } = $derived(market);
+	const { yesProbability, noProbability } = $derived(market);
 
 	let amount = $state('');
+
 	let selectedType = $state<PositionType>('YES');
+
 	let loading = $state(false);
+
 	let collateral = $state<bigint | undefined>();
+
 	let error = $state('');
 
 	onMount(async () => {

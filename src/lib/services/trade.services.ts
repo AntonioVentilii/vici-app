@@ -3,7 +3,7 @@ import {
 	getPosition as getPositionApi,
 	submitMatchedTrade as submitMatchedTradeApi
 } from '$lib/api/clearing.api';
-import { activityService } from '$lib/services/activity.services';
+import { logActivity } from '$lib/services/activity.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { ActivityType } from '$lib/types/social';
 import { Principal } from '@icp-sdk/core/principal';
@@ -36,7 +36,7 @@ export const submitTrade = async ({
 	});
 
 	if (success) {
-		await activityService.logActivity({
+		await logActivity({
 			type: ActivityType.TRADE,
 			user: identity.getPrincipal().toText(),
 			marketId: seriesId,

@@ -2,9 +2,10 @@
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import { activityService } from '$lib/services/activity.services';
-	import { discussionService, type Comment } from '$lib/services/discussion.services';
+	import { logActivity } from '$lib/services/activity.services';
+	import { addComment, getMarketComments } from '$lib/services/discussion.services';
 	import { getProfile } from '$lib/services/profile.services';
+	import type { Comment } from '$lib/types/comment';
 	import type { UserProfile } from '$lib/types/profile';
 	import { ActivityType } from '$lib/types/social';
 
@@ -15,9 +16,9 @@
 
 	const { marketId, userPrincipal }: Props = $props();
 
-	let comments: (Comment & { key: string })[] = $state([]);
+	let comments = $state<Comment[]>([]);
 
-	const profiles: Map<string, UserProfile> = $state(new Map());
+	const profiles = $state<Map<string, UserProfile>>(new Map());
 
 	let newComment = $state('');
 
@@ -32,7 +33,7 @@
 	const loadComments = async () => {
 		loading = true;
 		try {
-			comments = await discussionService.getMarketComments(marketId);
+			comments = await getMarketComments(marketId);
 
 			for (const comment of comments) {
 				if (!profiles.has(comment.user)) {
@@ -54,13 +55,13 @@
 		}
 		posting = true;
 		try {
-			await discussionService.addComment({
+			await addComment({
 				marketId,
 				user: userPrincipal,
 				content: newComment.trim()
 			});
 
-			await activityService.logActivity({
+			await logActivity({
 				type: ActivityType.COMMENT,
 				user: userPrincipal,
 				marketId,
@@ -103,7 +104,7 @@
 				<p class="text-sm italic">No comments yet. Be the first to start the discussion!</p>
 			</div>
 		{:else}
-			{#each comments as comment (comment.key)}
+			{#each comments as comment (comment.timestamp)}
 				{@const profile = profiles.get(comment.user)}
 				<div
 					class="bg-card/20 border-border/50 animate-in fade-in slide-in-from-bottom-2 flex gap-4 rounded-2xl border p-4 duration-300"
