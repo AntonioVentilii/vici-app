@@ -93,6 +93,17 @@ export const Position = IDL.Record({
 	user: IDL.Principal,
 	locked_collateral: IDL.Nat
 });
+export const HttpRequest = IDL.Record({
+	url: IDL.Text,
+	method: IDL.Text,
+	body: IDL.Vec(IDL.Nat8),
+	headers: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))
+});
+export const HttpResponse = IDL.Record({
+	body: IDL.Vec(IDL.Nat8),
+	headers: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
+	status_code: IDL.Nat16
+});
 export const PayoffType = IDL.Variant({
 	Put: IDL.Null,
 	Binary: IDL.Null,
@@ -107,11 +118,12 @@ export const Series = IDL.Record({
 	strike: IDL.Opt(IDL.Nat64),
 	creator: IDL.Principal,
 	payoff_type: PayoffType,
+	expiry_ns: IDL.Nat64,
 	series_id: IDL.Text,
 	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
 	description: IDL.Text,
-	expiry: IDL.Nat64,
+	created_at_ns: IDL.Nat64,
 	oracle_source: IDL.Text
 });
 export const SettleSeriesParams = IDL.Record({
@@ -127,6 +139,15 @@ export const SettlementError = IDL.Variant({
 export const SettleSeriesResult = IDL.Variant({
 	Ok: IDL.Null,
 	Err: SettlementError
+});
+export const Stats = IDL.Record({
+	total_users: IDL.Nat64,
+	margin_balances: IDL.Vec(IDL.Tuple(Asset, IDL.Nat)),
+	total_collateral_locked: IDL.Nat,
+	total_trades: IDL.Nat64,
+	total_series: IDL.Nat64,
+	open_interest: IDL.Nat,
+	event_counts: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat64))
 });
 export const SubmitMatchedTradeParams = IDL.Record({
 	qty: IDL.Int,
@@ -170,9 +191,12 @@ export const idlService = IDL.Service({
 	get_margin_account_query: IDL.Func([], [GetMarginAccountResult], []),
 	get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], []),
 	get_positions: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, Position))], []),
+	http_request: IDL.Func([HttpRequest], [HttpResponse], []),
 	list_series: IDL.Func([], [IDL.Vec(Series)], []),
+	metrics: IDL.Func([], [IDL.Text], []),
 	set_registry_canister: IDL.Func([IDL.Principal], [], []),
 	settle_series: IDL.Func([SettleSeriesParams], [SettleSeriesResult], []),
+	stats: IDL.Func([], [Stats], []),
 	submit_matched_trade: IDL.Func([SubmitMatchedTradeParams], [SubmitMatchedTradeResult], []),
 	withdraw_collateral: IDL.Func([WithdrawCollateralParams], [WithdrawCollateralResult], [])
 });
@@ -263,6 +287,17 @@ export const idlFactory = ({ IDL }) => {
 		user: IDL.Principal,
 		locked_collateral: IDL.Nat
 	});
+	const HttpRequest = IDL.Record({
+		url: IDL.Text,
+		method: IDL.Text,
+		body: IDL.Vec(IDL.Nat8),
+		headers: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text))
+	});
+	const HttpResponse = IDL.Record({
+		body: IDL.Vec(IDL.Nat8),
+		headers: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
+		status_code: IDL.Nat16
+	});
 	const PayoffType = IDL.Variant({
 		Put: IDL.Null,
 		Binary: IDL.Null,
@@ -277,11 +312,12 @@ export const idlFactory = ({ IDL }) => {
 		strike: IDL.Opt(IDL.Nat64),
 		creator: IDL.Principal,
 		payoff_type: PayoffType,
+		expiry_ns: IDL.Nat64,
 		series_id: IDL.Text,
 		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
 		description: IDL.Text,
-		expiry: IDL.Nat64,
+		created_at_ns: IDL.Nat64,
 		oracle_source: IDL.Text
 	});
 	const SettleSeriesParams = IDL.Record({
@@ -297,6 +333,15 @@ export const idlFactory = ({ IDL }) => {
 	const SettleSeriesResult = IDL.Variant({
 		Ok: IDL.Null,
 		Err: SettlementError
+	});
+	const Stats = IDL.Record({
+		total_users: IDL.Nat64,
+		margin_balances: IDL.Vec(IDL.Tuple(Asset, IDL.Nat)),
+		total_collateral_locked: IDL.Nat,
+		total_trades: IDL.Nat64,
+		total_series: IDL.Nat64,
+		open_interest: IDL.Nat,
+		event_counts: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat64))
 	});
 	const SubmitMatchedTradeParams = IDL.Record({
 		qty: IDL.Int,
@@ -340,9 +385,12 @@ export const idlFactory = ({ IDL }) => {
 		get_margin_account_query: IDL.Func([], [GetMarginAccountResult], []),
 		get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], []),
 		get_positions: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, Position))], []),
+		http_request: IDL.Func([HttpRequest], [HttpResponse], []),
 		list_series: IDL.Func([], [IDL.Vec(Series)], []),
+		metrics: IDL.Func([], [IDL.Text], []),
 		set_registry_canister: IDL.Func([IDL.Principal], [], []),
 		settle_series: IDL.Func([SettleSeriesParams], [SettleSeriesResult], []),
+		stats: IDL.Func([], [Stats], []),
 		submit_matched_trade: IDL.Func([SubmitMatchedTradeParams], [SubmitMatchedTradeResult], []),
 		withdraw_collateral: IDL.Func([WithdrawCollateralParams], [WithdrawCollateralResult], [])
 	});

@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 50f29d2210c898dccc17b2c7e61d6d669195db82 for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit d26b94c157a2f82ac7e53d3380cba8c19526a8ef for file 'src/clearing/clearing.did'
 
 type AcceptPositionTransferResult = variant { Ok : bool; Err : TradeError };
 type Asset = variant { Icrc : principal };
@@ -26,6 +26,17 @@ type GetMarginAccountResult = variant {
 	Err : MarginAccountError
 };
 type GetPositionParams = record { series_id : text };
+type HttpRequest = record {
+	url : text;
+	method : text;
+	body : blob;
+	headers : vec record { text; text }
+};
+type HttpResponse = record {
+	body : blob;
+	headers : vec record { text; text };
+	status_code : nat16
+};
 type LedgerError = variant {
 	TransferError : text;
 	InsufficientBalance : record { balance : nat; required : nat };
@@ -63,11 +74,12 @@ type Series = record {
 	strike : opt nat64;
 	creator : principal;
 	payoff_type : PayoffType;
+	expiry_ns : nat64;
 	series_id : text;
 	settlement_asset : SettlementAsset;
 	underlying : text;
 	description : text;
-	expiry : nat64;
+	created_at_ns : nat64;
 	oracle_source : text
 };
 type SettleSeriesParams = record { series_id : text; settlement_price : nat64 };
@@ -78,6 +90,15 @@ type SettlementError = variant {
 	MathOverflow;
 	Ledger : LedgerError;
 	Common : CommonError
+};
+type Stats = record {
+	total_users : nat64;
+	margin_balances : vec record { Asset; nat };
+	total_collateral_locked : nat;
+	total_trades : nat64;
+	total_series : nat64;
+	open_interest : nat;
+	event_counts : vec record { text; nat64 }
 };
 type SubmitMatchedTradeParams = record {
 	qty : int;
@@ -149,8 +170,13 @@ service : {
 	get_position : (GetPositionParams) -> (opt Position) query;
 	// Retrieves all open positions for the caller.
 	get_positions : () -> (vec record { text; Position }) query;
+	http_request : (HttpRequest) -> (HttpResponse) query;
 	// Returns a list of all derivative series currently cached in the clearing canister.
 	list_series : () -> (vec Series) query;
+	// Exports internal state as Prometheus metrics.
+	//
+	// This method is gated to canister controllers.
+	metrics : () -> (text) query;
 	// Sets the principal of the Series Registry canister.
 	//
 	// This principal is used to discover and validate derivative series.
@@ -164,9 +190,13 @@ service : {
 	// 3. Paying out collateral to users with net profits.
 	// 4. Finalising internal margin account balances and releasing locked collateral.
 	//
-	// This method is gated to canister controllers and is intended to be called by an off-chain oracle
-	// or automation.
+	// This method is gated to canister controllers or the designated [`oracle_principal`] for the
+	// series. It is intended to be called by an off-chain oracle or automation.
 	settle_series : (SettleSeriesParams) -> (SettleSeriesResult);
+	// Exports internal state as a structured `Stats` object.
+	//
+	// This method is gated to canister controllers.
+	stats : () -> (Stats) query;
 	// Submits a matched trade from an exchange for clearing.
 	//
 	// This method validates the series registration, calculates margin requirements,

@@ -36,6 +36,17 @@ export type GetMarginAccountResult = { Ok: MarginAccount } | { Err: MarginAccoun
 export interface GetPositionParams {
 	series_id: string;
 }
+export interface HttpRequest {
+	url: string;
+	method: string;
+	body: Uint8Array;
+	headers: Array<[string, string]>;
+}
+export interface HttpResponse {
+	body: Uint8Array;
+	headers: Array<[string, string]>;
+	status_code: number;
+}
 export type LedgerError =
 	| { TransferError: string }
 	| { InsufficientBalance: { balance: bigint; required: bigint } }
@@ -71,11 +82,12 @@ export interface Series {
 	strike: [] | [bigint];
 	creator: Principal;
 	payoff_type: PayoffType;
+	expiry_ns: bigint;
 	series_id: string;
 	settlement_asset: SettlementAsset;
 	underlying: string;
 	description: string;
-	expiry: bigint;
+	created_at_ns: bigint;
 	oracle_source: string;
 }
 export interface SettleSeriesParams {
@@ -89,6 +101,15 @@ export type SettlementError =
 	| { MathOverflow: null }
 	| { Ledger: LedgerError }
 	| { Common: CommonError };
+export interface Stats {
+	total_users: bigint;
+	margin_balances: Array<[Asset, bigint]>;
+	total_collateral_locked: bigint;
+	total_trades: bigint;
+	total_series: bigint;
+	open_interest: bigint;
+	event_counts: Array<[string, bigint]>;
+}
 export interface SubmitMatchedTradeParams {
 	qty: bigint;
 	trade_id: string;
@@ -176,10 +197,17 @@ export interface _SERVICE {
 	 * Retrieves all open positions for the caller.
 	 */
 	get_positions: ActorMethod<[], Array<[string, Position]>>;
+	http_request: ActorMethod<[HttpRequest], HttpResponse>;
 	/**
 	 * Returns a list of all derivative series currently cached in the clearing canister.
 	 */
 	list_series: ActorMethod<[], Array<Series>>;
+	/**
+	 * Exports internal state as Prometheus metrics.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	metrics: ActorMethod<[], string>;
 	/**
 	 * Sets the principal of the Series Registry canister.
 	 *
@@ -196,10 +224,16 @@ export interface _SERVICE {
 	 * 3. Paying out collateral to users with net profits.
 	 * 4. Finalising internal margin account balances and releasing locked collateral.
 	 *
-	 * This method is gated to canister controllers and is intended to be called by an off-chain oracle
-	 * or automation.
+	 * This method is gated to canister controllers or the designated [`oracle_principal`] for the
+	 * series. It is intended to be called by an off-chain oracle or automation.
 	 */
 	settle_series: ActorMethod<[SettleSeriesParams], SettleSeriesResult>;
+	/**
+	 * Exports internal state as a structured `Stats` object.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	stats: ActorMethod<[], Stats>;
 	/**
 	 * Submits a matched trade from an exchange for clearing.
 	 *

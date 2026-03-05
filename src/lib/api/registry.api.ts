@@ -14,6 +14,7 @@ export const addSeries = async ({
 	params: RegistryDid.AddSeriesParams;
 } & QueryParams): Promise<string> => {
 	const { addSeries } = await registryCanister({ identity });
+
 	return await addSeries({ params, ...queryParams });
 };
 
@@ -26,6 +27,7 @@ export const getSeries = async ({
 	seriesId: string;
 } & QueryParams): Promise<RegistryDid.Series | undefined> => {
 	const { getSeries } = await registryCanister({ identity });
+
 	return await getSeries({ seriesId, ...queryParams });
 };
 
@@ -36,6 +38,7 @@ export const listSeries = async ({
 	identity: Identity;
 } & QueryParams): Promise<RegistryDid.Series[]> => {
 	const { listSeries } = await registryCanister({ identity });
+
 	return await listSeries(queryParams);
 };
 

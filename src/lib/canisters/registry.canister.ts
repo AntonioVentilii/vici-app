@@ -5,7 +5,7 @@ import {
 	type RegistryService
 } from '$declarations';
 import type { CreateCanisterOptions } from '$lib/types/canister';
-import { Canister, createServices, type QueryParams } from '@dfinity/utils';
+import { Canister, createServices, type QueryParams, toNullable } from '@dfinity/utils';
 
 export class RegistryCanister extends Canister<RegistryService> {
 	static create(options: CreateCanisterOptions<RegistryService>) {
@@ -48,6 +48,14 @@ export class RegistryCanister extends Canister<RegistryService> {
 
 	listSeries = async (queryParams: QueryParams): Promise<RegistryDid.Series[]> => {
 		const { list_series } = this.caller(queryParams);
-		return await list_series();
+
+		const page = await list_series({
+			cursor: toNullable(),
+			limit: toNullable()
+		} as RegistryDid.PaginationParams);
+
+		const { items: series } = page;
+
+		return series;
 	};
 }

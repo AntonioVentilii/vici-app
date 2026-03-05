@@ -48,14 +48,14 @@ for (( i=0; i<$length; i++ )); do
     # Convert ISO expiration to milliseconds
     # macOS date command (BSD)
     expiration_seconds=$(date -j -f "%Y-%m-%dT%H:%M:%S.000Z" "$expiration_iso" "+%s" 2>/dev/null || date -d "$expiration_iso" "+%s")
-    expiration_ms=$((expiration_seconds * 1000))
+    expiration_ns=$((expiration_seconds * 1000000000))
     
     echo "Adding market: $title ($underlying)"
     
     dfx canister call --network local registry add_series "(record {
         title = \"$title\";
         description = \"$description\";
-        expiry = $expiration_ms;
+        expiry_ns = $expiration_ns;
         underlying = \"$underlying\";
         strike = null;
         payoff_type = variant { Binary };

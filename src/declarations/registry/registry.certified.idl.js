@@ -8,6 +8,25 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const OracleMetadata = IDL.Record({
+	name: IDL.Text,
+	description: IDL.Opt(IDL.Text),
+	website: IDL.Opt(IDL.Text)
+});
+export const AddOracleParams = IDL.Record({
+	metadata: OracleMetadata,
+	authorized_principals: IDL.Vec(IDL.Principal),
+	oracle_id: IDL.Text
+});
+export const OracleError = IDL.Variant({
+	UnauthorizedOracleManager: IDL.Null,
+	OracleAlreadyExists: IDL.Null,
+	OracleNotFound: IDL.Null
+});
+export const OracleResult = IDL.Variant({
+	Ok: IDL.Null,
+	Err: OracleError
+});
 export const PayoffType = IDL.Variant({
 	Put: IDL.Null,
 	Binary: IDL.Null,
@@ -21,43 +40,100 @@ export const AddSeriesParams = IDL.Record({
 	title: IDL.Text,
 	strike: IDL.Opt(IDL.Nat64),
 	payoff_type: PayoffType,
+	expiry_ns: IDL.Nat64,
 	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
 	description: IDL.Text,
-	expiry: IDL.Nat64,
 	oracle_source: IDL.Text
 });
-export const RegistryError = IDL.Variant({
+export const SeriesError = IDL.Variant({
 	DescriptionTooLong: IDL.Null,
 	TitleTooLong: IDL.Null,
 	SeriesAlreadyExists: IDL.Null
 });
 export const AddSeriesResult = IDL.Variant({
 	Ok: IDL.Text,
-	Err: RegistryError
+	Err: SeriesError
+});
+export const Oracle = IDL.Record({
+	manager: IDL.Principal,
+	registered_at_ns: IDL.Nat64,
+	metadata: OracleMetadata,
+	authorized_principals: IDL.Vec(IDL.Principal),
+	oracle_id: IDL.Text
 });
 export const Series = IDL.Record({
 	title: IDL.Text,
 	strike: IDL.Opt(IDL.Nat64),
 	creator: IDL.Principal,
 	payoff_type: PayoffType,
+	expiry_ns: IDL.Nat64,
 	series_id: IDL.Text,
 	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
 	description: IDL.Text,
-	expiry: IDL.Nat64,
+	created_at_ns: IDL.Nat64,
 	oracle_source: IDL.Text
+});
+export const PaginationParams = IDL.Record({
+	cursor: IDL.Opt(IDL.Text),
+	limit: IDL.Opt(IDL.Nat64)
+});
+export const SeriesPage = IDL.Record({
+	next_cursor: IDL.Opt(IDL.Text),
+	items: IDL.Vec(Series)
+});
+export const ListSeriesParams = IDL.Record({
+	strike: IDL.Opt(IDL.Nat64),
+	creator: IDL.Opt(IDL.Principal),
+	payoff_type: IDL.Opt(PayoffType),
+	pagination: IDL.Opt(PaginationParams),
+	settlement_asset: IDL.Opt(SettlementAsset),
+	underlying: IDL.Opt(IDL.Text),
+	search_term: IDL.Opt(IDL.Text),
+	oracle_source: IDL.Opt(IDL.Text)
+});
+export const ManageOraclePrincipalsParams = IDL.Record({
+	add_principals: IDL.Vec(IDL.Principal),
+	remove_principals: IDL.Vec(IDL.Principal),
+	oracle_id: IDL.Text
+});
+export const UpdateOracleMetadataParams = IDL.Record({
+	metadata: OracleMetadata,
+	oracle_id: IDL.Text
 });
 
 export const idlService = IDL.Service({
+	add_oracle: IDL.Func([AddOracleParams], [OracleResult], []),
 	add_series: IDL.Func([AddSeriesParams], [AddSeriesResult], []),
+	get_oracle: IDL.Func([IDL.Text], [IDL.Opt(Oracle)], []),
 	get_series: IDL.Func([IDL.Text], [IDL.Opt(Series)], []),
-	list_series: IDL.Func([], [IDL.Vec(Series)], ['query'])
+	is_oracle_authorized: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], []),
+	list_series: IDL.Func([PaginationParams], [SeriesPage], []),
+	list_series_with: IDL.Func([ListSeriesParams], [SeriesPage], []),
+	manage_oracle_principals: IDL.Func([ManageOraclePrincipalsParams], [OracleResult], []),
+	update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], [])
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+	const OracleMetadata = IDL.Record({
+		name: IDL.Text,
+		description: IDL.Opt(IDL.Text),
+		website: IDL.Opt(IDL.Text)
+	});
+	const AddOracleParams = IDL.Record({
+		metadata: OracleMetadata,
+		authorized_principals: IDL.Vec(IDL.Principal),
+		oracle_id: IDL.Text
+	});
+	const OracleError = IDL.Variant({
+		UnauthorizedOracleManager: IDL.Null,
+		OracleAlreadyExists: IDL.Null,
+		OracleNotFound: IDL.Null
+	});
+	const OracleResult = IDL.Variant({ Ok: IDL.Null, Err: OracleError });
 	const PayoffType = IDL.Variant({
 		Put: IDL.Null,
 		Binary: IDL.Null,
@@ -71,38 +147,76 @@ export const idlFactory = ({ IDL }) => {
 		title: IDL.Text,
 		strike: IDL.Opt(IDL.Nat64),
 		payoff_type: PayoffType,
+		expiry_ns: IDL.Nat64,
 		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
 		description: IDL.Text,
-		expiry: IDL.Nat64,
 		oracle_source: IDL.Text
 	});
-	const RegistryError = IDL.Variant({
+	const SeriesError = IDL.Variant({
 		DescriptionTooLong: IDL.Null,
 		TitleTooLong: IDL.Null,
 		SeriesAlreadyExists: IDL.Null
 	});
-	const AddSeriesResult = IDL.Variant({
-		Ok: IDL.Text,
-		Err: RegistryError
+	const AddSeriesResult = IDL.Variant({ Ok: IDL.Text, Err: SeriesError });
+	const Oracle = IDL.Record({
+		manager: IDL.Principal,
+		registered_at_ns: IDL.Nat64,
+		metadata: OracleMetadata,
+		authorized_principals: IDL.Vec(IDL.Principal),
+		oracle_id: IDL.Text
 	});
 	const Series = IDL.Record({
 		title: IDL.Text,
 		strike: IDL.Opt(IDL.Nat64),
 		creator: IDL.Principal,
 		payoff_type: PayoffType,
+		expiry_ns: IDL.Nat64,
 		series_id: IDL.Text,
 		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
 		description: IDL.Text,
-		expiry: IDL.Nat64,
+		created_at_ns: IDL.Nat64,
 		oracle_source: IDL.Text
+	});
+	const PaginationParams = IDL.Record({
+		cursor: IDL.Opt(IDL.Text),
+		limit: IDL.Opt(IDL.Nat64)
+	});
+	const SeriesPage = IDL.Record({
+		next_cursor: IDL.Opt(IDL.Text),
+		items: IDL.Vec(Series)
+	});
+	const ListSeriesParams = IDL.Record({
+		strike: IDL.Opt(IDL.Nat64),
+		creator: IDL.Opt(IDL.Principal),
+		payoff_type: IDL.Opt(PayoffType),
+		pagination: IDL.Opt(PaginationParams),
+		settlement_asset: IDL.Opt(SettlementAsset),
+		underlying: IDL.Opt(IDL.Text),
+		search_term: IDL.Opt(IDL.Text),
+		oracle_source: IDL.Opt(IDL.Text)
+	});
+	const ManageOraclePrincipalsParams = IDL.Record({
+		add_principals: IDL.Vec(IDL.Principal),
+		remove_principals: IDL.Vec(IDL.Principal),
+		oracle_id: IDL.Text
+	});
+	const UpdateOracleMetadataParams = IDL.Record({
+		metadata: OracleMetadata,
+		oracle_id: IDL.Text
 	});
 
 	return IDL.Service({
+		add_oracle: IDL.Func([AddOracleParams], [OracleResult], []),
 		add_series: IDL.Func([AddSeriesParams], [AddSeriesResult], []),
+		get_oracle: IDL.Func([IDL.Text], [IDL.Opt(Oracle)], []),
 		get_series: IDL.Func([IDL.Text], [IDL.Opt(Series)], []),
-		list_series: IDL.Func([], [IDL.Vec(Series)], ['query'])
+		is_oracle_authorized: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], []),
+		list_series: IDL.Func([PaginationParams], [SeriesPage], []),
+		list_series_with: IDL.Func([ListSeriesParams], [SeriesPage], []),
+		manage_oracle_principals: IDL.Func([ManageOraclePrincipalsParams], [OracleResult], []),
+		update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], [])
 	});
 };
 

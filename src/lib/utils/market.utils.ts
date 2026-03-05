@@ -1,11 +1,11 @@
 import type { Series } from '$declarations/registry/registry';
-import { ZERO } from '$lib/constants/app.constants';
+import { NANO_SECONDS_IN_MILLISECOND, ZERO } from '$lib/constants/app.constants';
 import type { Market } from '$lib/types/market';
 import { parseMarketId } from '$lib/validation/market.validation';
 
 export const mapMarketData = ({
 	series_id: id,
-	expiry: expiryDate,
+	expiry_ns: expiryDate,
 	creator,
 	title,
 	description
@@ -14,7 +14,7 @@ export const mapMarketData = ({
 	title,
 	description,
 	creator: creator.toText(),
-	expiryDate,
+	expiryDate: expiryDate / NANO_SECONDS_IN_MILLISECOND,
 	status: 'Open',
 	outcome: undefined,
 	isInviteOnly: false,

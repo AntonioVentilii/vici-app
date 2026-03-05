@@ -1,5 +1,10 @@
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
-import { PAYOFF_TYPE, STRIKE, VICI_ORACLE_V1 } from '$lib/constants/app.constants';
+import {
+	NANO_SECONDS_IN_MILLISECOND,
+	PAYOFF_TYPE,
+	STRIKE,
+	VICI_ORACLE_V1
+} from '$lib/constants/app.constants';
 import { logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
@@ -38,7 +43,7 @@ export const createMarket = async ({
 			underlying: title, // Using title as underlying for now
 			title,
 			description,
-			expiry: expiryDate,
+			expiry_ns: expiryDate * NANO_SECONDS_IN_MILLISECOND,
 			// Defaulting to ICP for settlement
 			settlement_asset: { Icp: null },
 			strike: STRIKE,
@@ -82,6 +87,7 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 
 export const getRushQueue = async (): Promise<Market[]> => {
 	const markets = await getMarkets();
+
 	// For now, all open markets are eligible for Rush Mode
 	return markets.sort((a, b) => Number(b.id) - Number(a.id));
 };
