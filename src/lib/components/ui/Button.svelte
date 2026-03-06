@@ -4,7 +4,7 @@
 	interface Props {
 		disabled?: boolean | undefined;
 		children: Snippet;
-		onclick: () => Promise<void>;
+		onclick: () => void;
 	}
 
 	const { disabled = undefined, children, onclick }: Props = $props();

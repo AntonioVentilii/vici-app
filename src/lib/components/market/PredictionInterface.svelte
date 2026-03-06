@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { onMount, untrack } from 'svelte';
+	import { onMount } from 'svelte';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { placeOrder } from '$lib/services/order.services';
 	import { getBalances } from '$lib/services/wallet.service';
@@ -72,7 +73,7 @@
 
 			const priceE8 = BigInt(Math.floor(currentPrice * 100_000_000));
 
-			if (priceE8 === 0n) {
+			if (priceE8 === ZERO) {
 				throw new Error('Invalid price: outcome probability is 0');
 			}
 

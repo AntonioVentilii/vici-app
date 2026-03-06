@@ -51,8 +51,7 @@
 		});
 	};
 
-	// eslint-disable-next-line require-await
-	const handleEnd = async () => {
+	const handleEnd = () => {
 		if (!dragging) {
 			return;
 		}

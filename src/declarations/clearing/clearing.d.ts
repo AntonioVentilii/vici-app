@@ -297,6 +297,8 @@ export interface _SERVICE {
 	submit_market_order: ActorMethod<[SubmitMarketOrderParams], SubmitMatchedTradeResult>;
 	/**
 	 * Submits a matched trade from an exchange for clearing.
+	 *
+	 * TODO: until we implement an allowed list of exchange canisters, this is gated to controllers
 	 */
 	submit_matched_trade: ActorMethod<[SubmitMatchedTradeParams], SubmitMatchedTradeResult>;
 	/**

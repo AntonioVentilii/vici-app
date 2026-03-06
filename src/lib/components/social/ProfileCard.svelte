@@ -50,15 +50,21 @@
 			return;
 		}
 
-		const params = { sender: viewerPrincipal, target: profile.owner };
+		loading = true;
 
-		if (isFollowing) {
-			await unfollowUser(params);
-		} else {
-			await followUser(params);
+		try {
+			const params = { sender: viewerPrincipal, target: profile.owner };
+
+			if (isFollowing) {
+				await unfollowUser(params);
+			} else {
+				await followUser(params);
+			}
+
+			await loadSocialGraph();
+		} finally {
+			loading = false;
 		}
-
-		await loadSocialGraph();
 	};
 </script>
 
@@ -89,20 +95,24 @@
 		<p class="text-muted-foreground w-48 truncate text-xs opacity-50">{profile.owner}</p>
 	</div>
 
-	<div class="grid w-full grid-cols-3 gap-2 border-y border-white/5 py-4">
-		<div>
-			<p class="text-lg font-bold">{followers.length}</p>
-			<p class="text-muted-foreground text-[10px] uppercase">Followers</p>
+	{#if loading}
+		<div class="py-6 text-xs opacity-60">Loading social graph...</div>
+	{:else}
+		<div class="grid w-full grid-cols-3 gap-2 border-y border-white/5 py-4">
+			<div>
+				<p class="text-lg font-bold">{followers.length}</p>
+				<p class="text-muted-foreground text-[10px] uppercase">Followers</p>
+			</div>
+			<div>
+				<p class="text-lg font-bold">{following.length}</p>
+				<p class="text-muted-foreground text-[10px] uppercase">Following</p>
+			</div>
+			<div>
+				<p class="text-lg font-bold">{profile.totalTrades ?? 0}</p>
+				<p class="text-muted-foreground text-[10px] uppercase">Trades</p>
+			</div>
 		</div>
-		<div>
-			<p class="text-lg font-bold">{following.length}</p>
-			<p class="text-muted-foreground text-[10px] uppercase">Following</p>
-		</div>
-		<div>
-			<p class="text-lg font-bold">{profile.totalTrades ?? 0}</p>
-			<p class="text-muted-foreground text-[10px] uppercase">Trades</p>
-		</div>
-	</div>
+	{/if}
 
 	<div class="flex w-full gap-4">
 		<div class="flex-1 rounded-xl bg-white/5 p-3">
@@ -116,7 +126,7 @@
 	</div>
 
 	{#if nonNullish(viewerPrincipal) && viewerPrincipal !== profile.owner}
-		<Button onclick={handleFollowToggle}>
+		<Button disabled={loading} onclick={handleFollowToggle}>
 			{isFollowing ? 'Unfollow' : 'Follow'}
 		</Button>
 	{/if}

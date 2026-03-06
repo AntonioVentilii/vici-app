@@ -78,6 +78,10 @@
 			completed = true;
 		}
 	};
+
+	const backToMarkets = () => {
+		navigateTo('markets');
+	};
 </script>
 
 <div class="flex min-h-[calc(100vh-10rem)] flex-col items-center justify-center px-4">
@@ -111,7 +115,7 @@
 				You've reviewed all available markets. Great job keeping up with the pulse!
 			</p>
 
-			<Button onclick={async () => navigateTo('markets')}>Back to Markets</Button>
+			<Button onclick={backToMarkets}>Back to Markets</Button>
 		</div>
 	{:else}
 		<!-- Header Info -->

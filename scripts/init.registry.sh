@@ -14,7 +14,9 @@ fi
 
 # Function to slugify title
 slugify() {
-    echo "$1" | iconv -t ascii//TRANSLIT | sed -E 's/[^a-zA-Z0-9]+/-/g' | sed -E 's/^-+|-+$//g' | tr '[:upper:]' '[:lower:]'
+    printf '%s' "$1" \
+        | tr '[:upper:]' '[:lower:]' \
+        | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'
 }
 
 # Iterate over each market in the JSON file
@@ -38,8 +40,9 @@ length=$(jq '. | length' "$DATA_FILE")
 for (( i=0; i<$length; i++ )); do
     market=$(jq -c ".[$i]" "$DATA_FILE")
     
-    title=$(echo "$market" | jq -r '.title')
-    description=$(echo "$market" | jq -r '.description')
+    title=$(jq -r '.title' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
+    description=$(jq -r '.description' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
     expiration_iso=$(echo "$market" | jq -r '.expiration')
     
     # Create a verbose underlying ID (slug)

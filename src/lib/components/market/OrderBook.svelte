@@ -32,7 +32,7 @@
 		return () => clearInterval(interval);
 	});
 
-	const calculateDepthPercentage = (qty: bigint, maxQty: bigint) => {
+	const calculateDepthPercentage = ({ qty, maxQty }: { qty: bigint; maxQty: bigint }) => {
 		if (maxQty === ZERO) {
 			return 0;
 		}
@@ -104,7 +104,7 @@
 					>
 						<!-- Depth Bar -->
 						<div
-							style="width: {calculateDepthPercentage(ask.totalQty, maxQty())}%"
+							style="width: {calculateDepthPercentage({ qty: ask.totalQty, maxQty: maxQty() })}%"
 							class="absolute inset-y-0 right-0 bg-red-500/5 transition-all group-hover:bg-red-500/10"
 						></div>
 
@@ -135,7 +135,7 @@
 					>
 						<!-- Depth Bar -->
 						<div
-							style="width: {calculateDepthPercentage(bid.totalQty, maxQty())}%"
+							style="width: {calculateDepthPercentage({ qty: bid.totalQty, maxQty: maxQty() })}%"
 							class="absolute inset-y-0 right-0 bg-green-500/5 transition-all group-hover:bg-green-500/10"
 						></div>
 

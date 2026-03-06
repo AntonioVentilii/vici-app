@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 3b310f088883fa7bd3b891fd1de83b68c2d1c894 for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit d24a6d43b501d386e876c3d742e8f1f985beedb2 for file 'src/clearing/clearing.did'
 
 type AcceptPositionTransferResult = variant { Ok : bool; Err : TradeError };
 type Asset = variant { Icrc : principal };
@@ -237,6 +237,8 @@ service : {
 	// The caller is the taker.
 	submit_market_order : (SubmitMarketOrderParams) -> (SubmitMatchedTradeResult);
 	// Submits a matched trade from an exchange for clearing.
+	//
+	// TODO: until we implement an allowed list of exchange canisters, this is gated to controllers
 	submit_matched_trade : (SubmitMatchedTradeParams) -> (
 		SubmitMatchedTradeResult
 	);

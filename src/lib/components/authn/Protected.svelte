@@ -18,8 +18,7 @@
 
 	let showSignInModal = $state(false);
 
-	// eslint-disable-next-line require-await
-	const openSignInModal = async () => {
+	const openSignInModal = () => {
 		showSignInModal = true;
 	};
 </script>

@@ -14,8 +14,7 @@
 
 	const isAuthorized = $derived($userRole === requiredRole);
 
-	// eslint-disable-next-line require-await
-	const handleRefresh = async () => {
+	const handleRefresh = () => {
 		window.location.reload();
 	};
 </script>

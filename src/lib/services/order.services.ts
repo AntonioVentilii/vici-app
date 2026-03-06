@@ -116,10 +116,10 @@ export const placeOrder = async ({
 			collection: Collection.ORDERS
 		});
 
-		const bestMatch = counterDocs
+		const [bestMatch] = counterDocs
 			.map((doc) => ({ ...doc.data, key: doc.key }))
 			.filter((o) => o.marketId === marketId && o.side === counterSide && o.status === 'OPEN')
-			.sort((a, b) => (normalizedSide === 'BUY' ? a.price - b.price : b.price - a.price))[0];
+			.sort((a, b) => (normalizedSide === 'BUY' ? a.price - b.price : b.price - a.price));
 
 		if (!bestMatch) {
 			throw new Error('No matching liquidity found for market order');

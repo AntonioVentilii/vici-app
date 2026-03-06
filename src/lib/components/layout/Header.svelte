@@ -12,6 +12,7 @@
 	import type { WalletBalance } from '$lib/types/wallet';
 
 	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO, collateral: ZERO });
+
 	let showSignInModal = $state(false);
 
 	const isAdmin = $derived($userRole === UserRole.ADMIN);
@@ -28,8 +29,7 @@
 		navigateTo(p);
 	};
 
-	// eslint-disable-next-line require-await
-	const openSignInModal = async () => {
+	const openSignInModal = () => {
 		showSignInModal = true;
 	};
 </script>
