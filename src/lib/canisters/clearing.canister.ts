@@ -5,7 +5,7 @@ import {
 	type ClearingService
 } from '$declarations';
 import type { CreateCanisterOptions } from '$lib/types/canister';
-import { Canister, createServices, type QueryParams } from '@dfinity/utils';
+import { Canister, createServices, jsonReplacer, type QueryParams } from '@dfinity/utils';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export class ClearingCanister extends Canister<ClearingService> {
@@ -32,7 +32,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return;
 		}
 
-		throw new Error(`Failed to deposit collateral: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to deposit collateral: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	withdrawCollateral = async ({
@@ -48,7 +48,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return;
 		}
 
-		throw new Error(`Failed to withdraw collateral: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to withdraw collateral: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	submitMatchedTrade = async ({
@@ -64,7 +64,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to submit matched trade: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to submit matched trade: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	getMarginAccount = async ({
@@ -80,7 +80,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to get margin account: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to get margin account: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	getMarginAccountQuery = async (queryParams: QueryParams): Promise<ClearingDid.MarginAccount> => {
@@ -91,7 +91,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to query margin account: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to query margin account: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	getPosition = async ({
@@ -139,7 +139,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return;
 		}
 
-		throw new Error(`Failed to settle series: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to settle series: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	acceptPositionTransfer = async ({
@@ -155,7 +155,9 @@ export class ClearingCanister extends Canister<ClearingService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to accept position transfer: ${JSON.stringify(result.Err)}`);
+		throw new Error(
+			`Failed to accept position transfer: ${JSON.stringify(result.Err, jsonReplacer)}`
+		);
 	};
 
 	freezePositionForTransfer = async ({
@@ -171,50 +173,47 @@ export class ClearingCanister extends Canister<ClearingService> {
 	};
 
 	submitLimitOrder = async ({
-		params,
-		...queryParams
+		params
 	}: {
 		params: ClearingDid.SubmitLimitOrderParams;
-	} & QueryParams): Promise<boolean> => {
-		const { submit_limit_order } = this.caller(queryParams);
+	}): Promise<boolean> => {
+		const { submit_limit_order } = this.caller({ certified: true });
 		const result = await submit_limit_order(params);
 
 		if ('Ok' in result) {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to submit limit order: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to submit limit order: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	submitMarketOrder = async ({
-		params,
-		...queryParams
+		params
 	}: {
 		params: ClearingDid.SubmitMarketOrderParams;
-	} & QueryParams): Promise<boolean> => {
-		const { submit_market_order } = this.caller(queryParams);
+	}): Promise<boolean> => {
+		const { submit_market_order } = this.caller({ certified: true });
 		const result = await submit_market_order(params);
 
 		if ('Ok' in result) {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to submit market order: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to submit market order: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	cancelLimitOrder = async ({
-		params,
-		...queryParams
+		params
 	}: {
 		params: ClearingDid.CancelLimitOrderParams;
-	} & QueryParams): Promise<boolean> => {
-		const { cancel_limit_order } = this.caller(queryParams);
+	}): Promise<boolean> => {
+		const { cancel_limit_order } = this.caller({ certified: true });
 		const result = await cancel_limit_order(params);
 
 		if ('Ok' in result) {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to cancel limit order: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to cancel limit order: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 }

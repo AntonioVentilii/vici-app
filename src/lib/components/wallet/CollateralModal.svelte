@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { ICP_LEDGER_CANISTER_ID } from '$lib/constants/canisters.constants';
+	import { ICP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { depositCollateral, withdrawCollateral } from '$lib/services/collateral.services';
+	import { parseToken } from '$lib/utils/parse.utils';
 
 	interface Props {
 		isOpen: boolean;
@@ -42,7 +44,7 @@
 		error = '';
 
 		try {
-			const amt = BigInt(Math.floor(parseFloat(amount) * 100_000_000));
+			const amt = parseToken({ value: `${amount}`, unitName: ICP_TOKEN.decimals });
 
 			if (mode === 'Deposit') {
 				await depositCollateral({ assetPrincipal: ICP_LEDGER_CANISTER_ID, amount: amt });

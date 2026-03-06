@@ -39,22 +39,22 @@ length=$(jq '. | length' "$DATA_FILE")
 
 for (( i=0; i<$length; i++ )); do
     market=$(jq -c ".[$i]" "$DATA_FILE")
-    
+
     title=$(jq -r '.title' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
     description=$(jq -r '.description' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
     expiration_iso=$(echo "$market" | jq -r '.expiration')
-    
+
     # Create a verbose underlying ID (slug)
     underlying=$(slugify "$title")
-    
+
     # Convert ISO expiration to milliseconds
     # macOS date command (BSD)
     expiration_seconds=$(date -j -f "%Y-%m-%dT%H:%M:%S.000Z" "$expiration_iso" "+%s" 2>/dev/null || date -d "$expiration_iso" "+%s")
     expiration_ns=$((expiration_seconds * 1000000000))
-    
+
     echo "Adding market: $title ($underlying)"
-    
+
     dfx canister call --network local registry add_series "(record {
         title = \"$title\";
         description = \"$description\";
@@ -62,7 +62,7 @@ for (( i=0; i<$length; i++ )); do
         underlying = \"$underlying\";
         strike = null;
         payoff_type = variant { Binary };
-        settlement_asset = variant { CkUsdc };
+        settlement_asset = variant { Icp };
         oracle_source = \"Manual\";
     })"
 done

@@ -13,7 +13,9 @@
 		"format": "prettier --write . && eslint . --fix",
 		"did": "./scripts/did.sh && npm run format && npm run lint",
 		"deploy": "./scripts/deploy.sh",
+		"init:clearing": "./scripts/init.clearing.sh",
 		"init:registry": "./scripts/init.registry.sh",
+		"init:icdc": "npm run init:clearing && npm run init:registry",
 		"postinstall:copy-auth": "node -e \"require('fs').cpSync('node_modules/@junobuild/core/dist/workers/', './static/workers', {recursive: true});\"",
 		"postinstall": "npm run postinstall:copy-auth"
 	},

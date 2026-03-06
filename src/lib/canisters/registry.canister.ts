@@ -5,7 +5,13 @@ import {
 	type RegistryService
 } from '$declarations';
 import type { CreateCanisterOptions } from '$lib/types/canister';
-import { Canister, createServices, type QueryParams, toNullable } from '@dfinity/utils';
+import {
+	Canister,
+	createServices,
+	jsonReplacer,
+	type QueryParams,
+	toNullable
+} from '@dfinity/utils';
 
 export class RegistryCanister extends Canister<RegistryService> {
 	static create(options: CreateCanisterOptions<RegistryService>) {
@@ -31,7 +37,7 @@ export class RegistryCanister extends Canister<RegistryService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to add series: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to add series: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	getSeries = async ({

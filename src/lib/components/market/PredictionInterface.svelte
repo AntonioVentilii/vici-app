@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { placeOrder } from '$lib/services/order.services';
@@ -59,6 +58,7 @@
 	const handlePlacePrediction = async () => {
 		if (!amount || parseFloat(amount) <= 0) {
 			error = 'Please enter a valid amount';
+
 			return;
 		}
 
@@ -69,11 +69,10 @@
 		}
 
 		loading = true;
+
 		error = '';
 
 		try {
-			const amtE8 = BigInt(Math.floor(parseFloat(amount) * 100_000_000));
-
 			const currentPrice =
 				orderType === 'LIMIT'
 					? parseFloat(price)
@@ -81,21 +80,18 @@
 						? yesProbability
 						: noProbability;
 
-			const priceE8 = BigInt(Math.floor(currentPrice * 100_000_000));
-
-			if (priceE8 === ZERO) {
-				throw new Error('Invalid price: outcome probability is 0');
+			if (currentPrice === 0 || currentPrice === 1 || isNaN(currentPrice)) {
+				throw new Error(`Invalid price: outcome probability is ${currentPrice}`);
 			}
 
-			// qty = (collateral * 1e8) / price_per_unit
-			const qty = (amtE8 * 100_000_000n) / priceE8;
+			const parsedAmount = BigInt(amount);
 
 			await placeOrder({
 				marketId: market.id,
-				side: 'BUY', // In this simple UI, we are always "Buying" an outcome
+				side: 'BUY', // We are always "Buying" an outcome
 				type: orderType,
 				price: currentPrice,
-				qty,
+				qty: parsedAmount,
 				outcome: selectedType as Outcome
 			});
 
@@ -104,8 +100,8 @@
 			onPredictionPlaced();
 
 			alert(`Successfully placed ${orderType} ${selectedType} order!`);
-		} catch (e: unknown) {
-			error = (e as Error).message ?? 'Failed to place prediction';
+		} catch (err: unknown) {
+			error = (err as Error).message ?? 'Failed to place prediction';
 		} finally {
 			loading = false;
 		}

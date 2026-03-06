@@ -31,7 +31,7 @@
 
 <div
 	class="group border-border bg-card hover:border-primary/50 flex cursor-pointer flex-col items-start justify-between gap-2 rounded-xl border px-6 py-6 transition-all duration-500 hover:shadow-lg"
-	onclick={() => goto(`${AppPath.Markets}}/${market.id}`)}
+	onclick={() => goto(`${AppPath.Markets}/${market.id}`)}
 	onkeydown={(e) => e.key === 'Enter' && goto(`/markets/${market.id}`)}
 	role="link"
 	tabindex="0"

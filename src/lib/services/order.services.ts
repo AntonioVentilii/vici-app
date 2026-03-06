@@ -9,6 +9,7 @@ import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { Order, OrderBook, OrderBookLevel, OrderSide, OrderType } from '$lib/types/order';
 import { emitRefreshBalance, emitRefreshPositions } from '$lib/utils/refresh.utils';
+import { nonNullish } from '@dfinity/utils';
 import { deleteDoc, listDocs, setDoc } from '@junobuild/core';
 import { nanoid } from 'nanoid';
 
@@ -26,10 +27,13 @@ export const getOrderBook = async (marketId: MarketId): Promise<OrderBook> => {
 
 	marketOrders.forEach((o) => {
 		const target = o.side === 'BUY' ? bids : asks;
+
 		const existing = target.find((l) => l.price === o.price);
-		if (existing) {
-			existing.totalQty += o.qty - o.filledQty;
-			existing.orderCount += 1;
+
+		if (nonNullish(existing)) {
+			existing.totalQty = o.qty - o.filledQty;
+
+			existing.orderCount = 1;
 		} else {
 			target.push({
 				price: o.price,
