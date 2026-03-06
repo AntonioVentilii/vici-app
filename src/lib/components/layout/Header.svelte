@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import SignInModal from '$lib/components/authn/SignInModal.svelte';
@@ -8,16 +7,10 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
-	import { getBalances } from '$lib/services/wallet.service';
-	import type { WalletBalance } from '$lib/types/wallet';
-
-	let balances = $state<WalletBalance>({ balances: {}, collateral: {} });
+	import { balancesStore } from '$lib/stores/balances.store';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
 
 	let showSignInModal = $state(false);
-
-	onMount(async () => {
-		balances = await getBalances();
-	});
 
 	const isActive = (path: AppPath) => page.url.pathname === path;
 
@@ -90,7 +83,7 @@
 		<div class="flex items-center gap-4">
 			{#if $userSignedIn}
 				<div class="flex items-center gap-3">
-					<WalletDropdown {balances} />
+					<WalletDropdown balances={{ balances: $balancesStore, collateral: $collateralsStore }} />
 					<UserDropdown />
 				</div>
 			{:else}

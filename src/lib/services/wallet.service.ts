@@ -12,7 +12,9 @@ import {
 	SUPPORTED_TOKENS
 } from '$lib/constants/tokens/tokens.ic.constants';
 import { getIdentity } from '$lib/services/identity.services';
+import type { TokenId } from '$lib/types/token';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
+import { findTokenByLedgerId } from '$lib/utils/tokens.utils';
 import {
 	getIcrcAccount,
 	mapIcpTransaction,
@@ -20,13 +22,13 @@ import {
 	mapTransactionIcpToSelf,
 	mapTransactionIcrcToSelf
 } from '$lib/utils/transactions.utils';
-import { assertNever, isNullish, toNullable } from '@dfinity/utils';
+import { assertNever, isNullish, nonNullish, toNullable } from '@dfinity/utils';
 
-export const getBalances = async (): Promise<WalletBalance> => {
+export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
-		return { balances: {}, collateral: {} };
+		return {};
 	}
 
 	const principal = identity.getPrincipal();
@@ -45,22 +47,44 @@ export const getBalances = async (): Promise<WalletBalance> => {
 
 		const balanceResults = await Promise.all(balancePromises);
 
-		const balances: Record<string, bigint> = {};
+		const balances: Record<TokenId, bigint> = {};
+
 		SUPPORTED_TOKENS.forEach((token, index) => {
-			balances[token.ledgerCanisterId] = balanceResults[index];
+			balances[token.id] = balanceResults[index];
 		});
 
+		return balances;
+	} catch (e: unknown) {
+		console.error('Failed to get ledger balances', e);
+
+		return {};
+	}
+};
+
+export const getCollateralBalances = async (): Promise<Record<TokenId, bigint>> => {
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return {};
+	}
+
+	try {
 		// 2. Fetch Collateral Balances
 		const margin = await getMarginAccount({
 			identity,
 			params: { refresh: toNullable(true) }
 		});
 
-		const collateral: Record<string, bigint> = {};
+		const collateral: Record<TokenId, bigint> = {};
 
 		margin.balances.forEach(([asset, balance]) => {
 			if ('Icrc' in asset) {
-				collateral[asset.Icrc.toText()] = balance;
+				const assetPrincipal = asset.Icrc.toText();
+				const token = findTokenByLedgerId(assetPrincipal);
+
+				if (nonNullish(token)) {
+					collateral[token.id] = balance;
+				}
 
 				return;
 			}
@@ -68,15 +92,21 @@ export const getBalances = async (): Promise<WalletBalance> => {
 			assertNever(asset, `Unknown asset type: ${asset}`);
 		});
 
-		return {
-			balances,
-			collateral
-		};
+		return collateral;
 	} catch (e: unknown) {
-		console.error('Failed to get balances', e);
+		console.error('Failed to get collateral balances', e);
 
-		return { balances: {}, collateral: {} };
+		return {};
 	}
+};
+
+export const getBalances = async (): Promise<WalletBalance> => {
+	const [balances, collateral] = await Promise.all([getLedgerBalances(), getCollateralBalances()]);
+
+	return {
+		balances,
+		collateral
+	};
 };
 
 export const getTransactions = async (): Promise<Transaction[]> => {

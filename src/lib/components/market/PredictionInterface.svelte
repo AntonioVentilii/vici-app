@@ -1,11 +1,10 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { placeOrder } from '$lib/services/order.services';
-	import { getBalances } from '$lib/services/wallet.service';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { tradeStore } from '$lib/stores/trade.store';
 	import type { Market, Outcome } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
@@ -31,15 +30,9 @@
 
 	let loading = $state(false);
 
-	let collateral = $state<bigint | undefined>();
-
 	let error = $state('');
 
-	onMount(async () => {
-		const balances = await getBalances();
-
-		collateral = balances.collateral[market.token.ledgerCanisterId] ?? ZERO;
-	});
+	let collateral = $derived($collateralsStore[market.token.id] ?? ZERO);
 
 	$effect(() => {
 		if ($tradeStore.selectedPrice !== undefined) {

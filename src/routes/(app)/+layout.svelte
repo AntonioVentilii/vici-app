@@ -5,6 +5,7 @@
 	import Authn from '$lib/components/authn/Authn.svelte';
 	import Footer from '$lib/components/layout/Footer.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
+	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import Banner from '$lib/components/ui/Banner.svelte';
 
 	interface Props {
@@ -30,6 +31,8 @@
 					{@render children()}
 				</div>
 			{/key}
+
+			<Loaders />
 		</Authn>
 	</main>
 

@@ -1,22 +1,14 @@
 <script lang="ts">
+	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 	import { formatToken } from '$lib/utils/format.utils';
-	import { findTokenByLedgerId } from '$lib/utils/tokens.utils';
+	import type { TokenId } from '$lib/types/token';
 
 	interface Props {
-		collateral: Record<string, bigint>;
+		collateral: Record<TokenId, bigint>;
 		onManage: () => void;
 	}
 
 	const { collateral, onManage }: Props = $props();
-
-	const getTokenData = (assetId: string) => {
-		const token = findTokenByLedgerId(assetId);
-
-		return {
-			symbol: token?.symbol ?? 'Unknown',
-			decimals: token?.decimals ?? 8
-		};
-	};
 </script>
 
 <div
@@ -37,23 +29,25 @@
 		</button>
 	</div>
 	<div class="mt-4 flex flex-col gap-2">
-		{#each Object.entries(collateral) as [assetId, balance] (assetId)}
-			{@const { symbol, decimals } = getTokenData(assetId)}
+		{#each SUPPORTED_TOKENS as token (token.id)}
+			{@const balance = collateral[token.id] ?? 0n}
 
-			<div class="flex items-baseline gap-2">
-				<span class="text-2xl font-black text-slate-950">
-					{formatToken({
-						value: balance,
-						unitName: decimals
-					})}
-				</span>
-				<span class="text-sm font-bold text-slate-400 uppercase">
-					{symbol}
-				</span>
-			</div>
+			{#if balance > 0n}
+				<div class="flex items-baseline gap-2">
+					<span class="text-2xl font-black text-slate-950">
+						{formatToken({
+							value: balance,
+							unitName: token.decimals
+						})}
+					</span>
+					<span class="text-sm font-bold text-slate-400 uppercase">
+						{token.symbol}
+					</span>
+				</div>
+			{/if}
 		{/each}
 
-		{#if Object.keys(collateral).length === 0}
+		{#if Object.getOwnPropertySymbols(collateral).length === 0}
 			<span class="text-2xl font-black text-slate-300">0.00</span>
 		{/if}
 	</div>

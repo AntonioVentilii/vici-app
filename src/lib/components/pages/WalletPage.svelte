@@ -10,12 +10,14 @@
 	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { sendIc } from '$lib/services/send.services';
-	import { getBalances, getTransactions } from '$lib/services/wallet.service';
+	import { getTransactions } from '$lib/services/wallet.service';
+	import { balancesStore } from '$lib/stores/balances.store';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import type { Token } from '$lib/types/token';
-	import type { Transaction, WalletBalance } from '$lib/types/wallet';
+	import type { Transaction } from '$lib/types/wallet';
+	import { emit } from '$lib/utils/events.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
-
-	let balances = $state<WalletBalance>({ balances: {}, collateral: {} });
+	import { emitRefreshBalance } from '$lib/utils/refresh.utils';
 
 	let transactions = $state<Transaction[]>([]);
 
@@ -26,8 +28,6 @@
 	const tabs = ['Send', 'Receive', 'History'];
 
 	onMount(async () => {
-		balances = await getBalances();
-
 		transactions = await getTransactions();
 	});
 
@@ -54,7 +54,7 @@
 				ledgerCanisterId: selectedToken.ledgerCanisterId
 			});
 
-			balances = await getBalances();
+			emit({ message: 'viciRefreshBalances' });
 
 			transactions = await getTransactions();
 
@@ -79,11 +79,11 @@
 	<!-- Balances Cards -->
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 		<div class="lg:col-span-1">
-			<WalletStats {balances} />
+			<WalletStats balances={{ balances: $balancesStore, collateral: $collateralsStore }} />
 		</div>
 		<div class="lg:col-span-2">
 			<CollateralStats
-				collateral={balances.collateral}
+				collateral={$collateralsStore}
 				onManage={() => (isCollateralModalOpen = true)}
 			/>
 		</div>
@@ -92,9 +92,7 @@
 	<CollateralModal
 		isOpen={isCollateralModalOpen}
 		onClose={() => (isCollateralModalOpen = false)}
-		onSuccess={async () => {
-			balances = await getBalances();
-		}}
+		onSuccess={emitRefreshBalance}
 	/>
 
 	<!-- Operations Tabs -->

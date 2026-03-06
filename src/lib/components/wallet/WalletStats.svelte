@@ -25,7 +25,6 @@
 <div class="grid grid-cols-1 gap-4">
 	{#each SUPPORTED_TOKENS as token (token.ledgerCanisterId)}
 		{@const color = getTokenColor(token.symbol)}
-		{@const balance = balances.balances[token.ledgerCanisterId] ?? ZERO}
 
 		<div
 			class="relative overflow-hidden rounded-2xl border border-{color}-100 bg-linear-to-br from-{color}-50 to-white p-6 shadow-sm"
@@ -42,13 +41,18 @@
 			</div>
 			<div class="mt-2 flex items-baseline gap-2">
 				<span class="text-3xl font-black text-slate-950">
-					{formatToken({ value: balance, unitName: token.decimals })}
+					{formatToken({ value: balances.balances[token.id] ?? ZERO, unitName: token.decimals })}
 				</span>
 				<span class="text-lg font-bold text-slate-400 uppercase">{token.symbol}</span>
 			</div>
 			<div class="mt-4 flex gap-3 text-[10px] font-medium text-slate-500">
 				{#if token.symbol === 'ICP'}
-					<span>≈ ${((Number(balance) / 10 ** token.decimals) * 12.5).toFixed(2)} USD</span>
+					<span
+						>≈ ${(
+							(Number(balances.balances[token.id] ?? ZERO) / 10 ** token.decimals) *
+							12.5
+						).toFixed(2)} USD</span
+					>
 				{:else if token.symbol === 'ckUSDC'}
 					<span>1.00 ckUSDC = $1.00 USD</span>
 				{/if}
