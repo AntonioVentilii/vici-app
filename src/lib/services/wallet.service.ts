@@ -10,7 +10,7 @@ import {
 } from '$lib/constants/canisters.constants';
 import { getIdentity } from '$lib/services/identity.services';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
-import { mapIcpTransaction } from '$lib/utils/transactions.utils';
+import { mapIcpTransaction, mapTransactionIcpToSelf } from '$lib/utils/transactions.utils';
 import { isNullish, toNullable } from '@dfinity/utils';
 
 export const getBalances = async (): Promise<WalletBalance> => {
@@ -81,9 +81,9 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 			})
 		]);
 
-		const icpNormalized: Transaction[] = icpTransactions.transactions.map((transaction) =>
-			mapIcpTransaction({ transaction, token: 'ICP', identity })
-		);
+		const icpNormalized: Transaction[] = icpTransactions.transactions
+			.flatMap(mapTransactionIcpToSelf)
+			.map((transaction) => mapIcpTransaction({ transaction, token: 'ICP', identity }));
 
 		// const ckUsdcNormalized: Transaction[] = ckUsdcTransactions.transactions.map((transaction) =>
 		// 	mapIcrcTransaction({ transaction, token: 'ckUSDC', identity })

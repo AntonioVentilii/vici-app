@@ -24,22 +24,26 @@
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-slate-50">
-				{#each transactions as tx (tx.id)}
+				{#each transactions as { id, timestamp, type, token, amount, marketId, counterparty } (id)}
 					<tr class="text-sm">
-						<td class="py-4 text-slate-600"
-							>{formatNanosecondsToDate({ nanoseconds: tx.timestamp })}</td
-						>
+						<td class="py-4 text-slate-600">
+							{formatNanosecondsToDate({ nanoseconds: timestamp })}
+						</td>
 						<td
-							class="py-4 font-bold {tx.type === 'Receive' ? 'text-green-600' : 'text-indigo-600'}"
-							>{tx.type}</td
+							class="py-4 font-bold"
+							class:text-green-600={type === 'Receive'}
+							class:text-indigo-600={type !== 'Receive' && type !== 'Send'}
+							class:text-red-600={type === 'Send'}
 						>
-						<td class="py-4 text-slate-950 uppercase">{tx.token}</td>
-						<td class="py-4 font-bold text-slate-950">{formatBalance(tx.amount)}</td>
+							{type}
+						</td>
+						<td class="py-4 text-slate-950 uppercase">{token}</td>
+						<td class="py-4 font-bold text-slate-950">{formatBalance(amount)}</td>
 						<td class="py-4 text-slate-500">
-							{#if tx.marketId}
-								Market Prediction ID: {tx.marketId}
-							{:else if tx.counterparty}
-								To/From: {tx.counterparty.substring(0, 10)}...
+							{#if marketId}
+								Market Prediction ID: {marketId}
+							{:else if counterparty}
+								To/From: {counterparty.substring(0, 10)}...
 							{:else}
 								-
 							{/if}
