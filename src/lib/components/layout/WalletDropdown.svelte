@@ -2,7 +2,9 @@
 	import { goto } from '$app/navigation';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { CKUSDC_TOKEN, ICP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import type { WalletBalance } from '$lib/types/wallet';
+	import { formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		balances: WalletBalance;
@@ -11,8 +13,6 @@
 	let { balances }: Props = $props();
 
 	let open = $state(false);
-
-	const formatBalance = (b: bigint) => (Number(b) / 100_000_000).toFixed(2);
 
 	const goToWallet = () => {
 		open = false;
@@ -52,11 +52,15 @@
 				<div class="mt-2 space-y-1">
 					<div class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors">
 						<span class="text-sm font-medium text-slate-600">ICP</span>
-						<span class="text-sm font-bold text-slate-900">{formatBalance(balances.icp)}</span>
+						<span class="text-sm font-bold text-slate-900">
+							{formatToken({ value: balances.icp, unitName: ICP_TOKEN.decimals })}
+						</span>
 					</div>
 					<div class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors">
 						<span class="text-sm font-medium text-slate-600">ckUSDC</span>
-						<span class="text-sm font-bold text-slate-900">{formatBalance(balances.ckUsdc)}</span>
+						<span class="text-sm font-bold text-slate-900">
+							{formatToken({ value: balances.ckUsdc, unitName: CKUSDC_TOKEN.decimals })}
+						</span>
 					</div>
 				</div>
 			</div>

@@ -1,4 +1,5 @@
 import type { MarketId } from '$lib/types/market';
+import type { Token } from '$lib/types/token';
 import type { PrincipalText } from '@dfinity/zod-schemas';
 
 export type TransactionType = 'Trade' | 'Send' | 'Receive' | 'Burn' | 'Mint' | 'Approve';
@@ -18,7 +19,7 @@ export interface Transaction {
 	type: TransactionType;
 	marketId?: MarketId;
 	amount: bigint;
-	token: 'ICP' | 'ckUSDC' | 'USDC';
+	token: Token;
 	counterparty?: PrincipalText;
 	approveSpender?: PrincipalText;
 }

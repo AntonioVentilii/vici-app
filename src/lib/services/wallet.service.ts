@@ -9,6 +9,7 @@ import {
 	ICP_INDEX_CANISTER_ID,
 	ICP_LEDGER_CANISTER_ID
 } from '$lib/constants/canisters.constants';
+import { CKUSDC_TOKEN, ICP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import { getIdentity } from '$lib/services/identity.services';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
 import {
@@ -92,11 +93,11 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
 		const icpNormalized: Transaction[] = icpTransactions.transactions
 			.flatMap(mapTransactionIcpToSelf)
-			.map((transaction) => mapIcpTransaction({ transaction, token: 'ICP', identity }));
+			.map((transaction) => mapIcpTransaction({ transaction, token: ICP_TOKEN, identity }));
 
 		const ckUsdcNormalized: Transaction[] = ckUsdcTransactions.transactions
 			.flatMap(mapTransactionIcrcToSelf)
-			.map((transaction) => mapIcrcTransaction({ transaction, token: 'ckUSDC', identity }));
+			.map((transaction) => mapIcrcTransaction({ transaction, token: CKUSDC_TOKEN, identity }));
 
 		return [...icpNormalized, ...ckUsdcNormalized].sort(
 			(a, b) => Number(b.timestamp) - Number(a.timestamp)

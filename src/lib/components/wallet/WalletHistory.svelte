@@ -37,9 +37,9 @@
 						>
 							{type}
 						</td>
-						<td class="py-4 text-slate-950 uppercase">{token}</td>
+						<td class="py-4 text-slate-950 uppercase">{token.symbol}</td>
 						<td class="py-4 font-bold text-slate-950">
-							{formatToken({ value: amount, unitName: token === 'ICP' ? 8 : 6 })}
+							{formatToken({ value: amount, unitName: token.decimals })}
 						</td>
 						<td class="py-4 text-slate-500">
 							{#if marketId}

@@ -8,13 +8,11 @@
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
 	import WalletStats from '$lib/components/wallet/WalletStats.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import {
-		CKUSDC_LEDGER_CANISTER_ID,
-		ICP_LEDGER_CANISTER_ID
-	} from '$lib/constants/canisters.constants';
+	import { ICP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { sendIc } from '$lib/services/send.services';
 	import { getBalances, getTransactions } from '$lib/services/wallet.service';
+	import type { Token } from '$lib/types/token';
 	import type { Transaction, WalletBalance } from '$lib/types/wallet';
 	import { parseToken } from '$lib/utils/parse.utils';
 
@@ -38,7 +36,7 @@
 
 	let amount = $state('');
 
-	let selectedToken = $state<'ICP' | 'ckUSDC'>('ICP');
+	let selectedToken = $state<Token>(ICP_TOKEN);
 
 	const handleSend = async () => {
 		if (!recipient || !amount) {
@@ -52,10 +50,9 @@
 				to: recipient,
 				amount: parseToken({
 					value: `${amount}`,
-					unitName: selectedToken === 'ICP' ? 8 : 6
+					unitName: selectedToken.decimals
 				}),
-				ledgerCanisterId:
-					selectedToken === 'ICP' ? ICP_LEDGER_CANISTER_ID : CKUSDC_LEDGER_CANISTER_ID
+				ledgerCanisterId: selectedToken.ledgerCanisterId
 			});
 
 			balances = await getBalances();
