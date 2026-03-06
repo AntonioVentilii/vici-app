@@ -1,6 +1,7 @@
 <footer
 	class="mx-auto flex h-24 max-w-7xl items-center justify-between px-8 py-16 text-slate-600 md:justify-start md:gap-24 md:px-24"
 >
+	Built on
 	<span class="flex items-baseline gap-2">
 		<a
 			class="group hover:text-lavender-blue-500 active:text-lavender-blue-400"

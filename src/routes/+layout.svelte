@@ -34,10 +34,14 @@
 
 	<Header />
 
-	<main class="mx-auto max-w-7xl px-4 pt-24 pb-16 sm:px-6 lg:px-8">
+	<main class="flex-1">
 		<Authn>
 			{#key page.url.pathname}
-				<div in:fade={{ duration: 300, delay: 300 }} out:fade={{ duration: 300 }}>
+				<div
+					class="container mx-auto px-4 py-8"
+					in:fade={{ duration: 300, delay: 300 }}
+					out:fade={{ duration: 300 }}
+				>
 					{@render children()}
 				</div>
 			{/key}

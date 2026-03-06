@@ -1,7 +1,7 @@
 import { ROLE_PERMISSIONS } from '$lib/constants/authz.constants';
 import { userStore } from '$lib/stores/user.store';
 import type { Permission } from '$lib/types/permission';
-import type { UserRole } from '$lib/types/user';
+import { UserRole } from '$lib/types/user';
 import { nonNullish } from '@dfinity/utils';
 import { derived, type Readable } from 'svelte/store';
 
@@ -12,6 +12,16 @@ export const userNotSignedIn: Readable<boolean> = derived(userSignedIn, (signedI
 export const userRole: Readable<UserRole | undefined> = derived(
 	userStore,
 	({ profile }) => profile?.role
+);
+
+export const userIsAdmin: Readable<boolean> = derived(
+	userRole,
+	($userRole) => $userRole === UserRole.ADMIN
+);
+
+export const userIsAdminOrResolver: Readable<boolean> = derived(
+	userRole,
+	($userRole) => $userRole === UserRole.ADMIN || $userRole === UserRole.RESOLVER
 );
 
 export const userPermissions: Readable<Permission[]> = derived(userRole, ($role) =>

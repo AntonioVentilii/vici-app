@@ -56,6 +56,4 @@
 
 <svelte:window onjunoSignOutAuthTimer={automaticSignOut} />
 
-<div>
-	{@render children()}
-</div>
+{@render children()}

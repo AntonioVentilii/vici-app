@@ -3,10 +3,9 @@
 	import MarketUserPosition from '$lib/components/market/MarketUserPosition.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import PredictionInterface from '$lib/components/market/PredictionInterface.svelte';
-	import { userStore } from '$lib/stores/user.store';
+	import { userIsAdminOrResolver } from '$lib/derived/user.derived';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
-	import { UserRole } from '$lib/types/user';
 
 	interface Props {
 		market: Market;
@@ -16,11 +15,6 @@
 	}
 
 	const { market, position, onPredictionPlaced, onMarketSettled }: Props = $props();
-
-	const isAdminOrResolver = $derived(() => {
-		const role = $userStore.profile?.role;
-		return role === UserRole.ADMIN || role === UserRole.RESOLVER;
-	});
 </script>
 
 <aside class="space-y-8">
@@ -29,7 +23,7 @@
 	{#if market.status === 'Open'}
 		<PredictionInterface {market} {onPredictionPlaced} />
 
-		{#if isAdminOrResolver()}
+		{#if $userIsAdminOrResolver}
 			<div class="mt-8">
 				<MarketResolutionInterface {market} onSettled={onMarketSettled} />
 			</div>

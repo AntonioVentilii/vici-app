@@ -2,9 +2,7 @@
 	import { onMount } from 'svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import MarketGrid from '$lib/components/market/MarketGrid.svelte';
-	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getMarkets } from '$lib/services/market.services';
 	import type { Market } from '$lib/types/market';
 	import { REFRESH_MARKETS } from '$lib/utils/refresh.utils';
@@ -15,9 +13,9 @@
 
 	let searchTerm = $state('');
 
-	let activeTab = $state('All');
+	let activeTab = $state('Active');
 
-	const tabs = ['All', 'Trending', 'Expiring', 'Resolved'];
+	const tabs = ['Active', 'Trending', 'Expiring', 'Resolved'];
 
 	const loadMarkets = async () => {
 		loading = true;
@@ -40,7 +38,7 @@
 				m.title.toLowerCase().includes(searchTerm.toLowerCase()) ??
 				m.description.toLowerCase().includes(searchTerm.toLowerCase());
 			const matchesTab =
-				activeTab === 'All' ||
+				activeTab === 'Active' ||
 				(activeTab === 'Resolved' && m.status === 'Resolved') ||
 				(activeTab === 'Expiring' && m.status === 'Expired') ||
 				activeTab === 'Trending'; // Mock trending as all open for now
@@ -51,12 +49,12 @@
 
 <section class="space-y-8">
 	<SectionHeader
-		description="Predict outcomes, trade positions, and compete with friends on the Internet Computer."
-		highlight="Prediction Market"
-		title="Social"
+		description="Explore and predict markets."
+		highlight="Markets"
+		title="Prediction"
 	/>
 
-	<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-4">
+	<div class="grid grid-cols-1 items-start gap-6 space-y-8 lg:col-span-3 lg:grid-cols-3">
 		<div class="space-y-8 lg:col-span-3">
 			<!-- Controls & Filters -->
 			<MarketFilters
@@ -70,10 +68,5 @@
 			<!-- Markets Grid -->
 			<MarketGrid {loading} markets={filteredMarkets} />
 		</div>
-
-		<!-- Community Sidebar -->
-		<aside class="sticky top-24 space-y-6">
-			<ActivityFeed mode="global" userPrincipal={$authPrincipal ?? ''} />
-		</aside>
 	</div>
 </section>

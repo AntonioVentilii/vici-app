@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount, tick } from 'svelte';
+	import { onMount } from 'svelte';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { routeSide } from '$lib/derived/nav.derived';

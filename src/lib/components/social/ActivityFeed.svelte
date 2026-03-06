@@ -10,7 +10,7 @@
 
 	interface Props {
 		userPrincipal?: string;
-		mode?: 'global' | 'friends';
+		mode?: 'global' | 'friends' | 'user';
 	}
 
 	const { userPrincipal, mode = 'global' }: Props = $props();
@@ -30,8 +30,11 @@
 		try {
 			if (mode === 'friends' && userPrincipal) {
 				const following = await getFollowing(userPrincipal);
-
 				activities = await getFriendActivities({ friends: following });
+			} else if (mode === 'user' && userPrincipal) {
+				// For now, we reuse global and filter, but ideally we'd have a specific API
+				const all = await getGlobalActivities();
+				activities = all.filter((a) => a.user === userPrincipal);
 			} else {
 				activities = await getGlobalActivities();
 			}

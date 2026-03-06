@@ -71,7 +71,7 @@
 
 <div class="space-y-8">
 	<SectionHeader
-		description="Manage your ICP and ckUSDC balances securely on the Internet Computer."
+		description="Manage your assets securely on the Internet Computer."
 		highlight="Wallet"
 		title="Your"
 	/>
