@@ -32,18 +32,71 @@
 		return () => window.removeEventListener(REFRESH_MARKETS, loadMarkets);
 	});
 
+	const normalise = (value: string): string =>
+		value
+			.toLowerCase()
+			.normalize('NFKD')
+			.replace(/[^\p{L}\p{N}\s]/gu, ' ')
+			.replace(/\s+/g, ' ')
+			.trim();
+
+	const getSearchScore = ({
+		market,
+		searchTerm
+	}: {
+		market: { title: string; description: string };
+		searchTerm: string;
+	}): number => {
+		const query = normalise(searchTerm);
+
+		if (query === '') {
+			return 1;
+		}
+
+		const title = normalise(market.title);
+		const description = normalise(market.description);
+		const terms = query.split(/\s+/).filter(Boolean);
+
+		let score = 0;
+
+		if (title.includes(query)) {
+			score += 10;
+		}
+
+		if (description.includes(query)) {
+			score += 5;
+		}
+
+		for (const term of terms) {
+			if (title.includes(term)) {
+				score += 3;
+			}
+
+			if (description.includes(term)) {
+				score += 1;
+			}
+		}
+
+		return score;
+	};
+
 	const filteredMarkets = $derived(
-		markets.filter((m) => {
-			const matchesSearch =
-				m.title.toLowerCase().includes(searchTerm.toLowerCase()) ??
-				m.description.toLowerCase().includes(searchTerm.toLowerCase());
-			const matchesTab =
-				activeTab === 'Active' ||
-				(activeTab === 'Resolved' && m.status === 'Resolved') ||
-				(activeTab === 'Expiring' && m.status === 'Expired') ||
-				activeTab === 'Trending'; // Mock trending as all open for now
-			return matchesSearch && matchesTab;
-		})
+		markets
+			.map((market) => ({
+				market,
+				score: getSearchScore({ market, searchTerm })
+			}))
+			.filter(({ market, score }) => {
+				const matchesTab =
+					activeTab === 'Active' ||
+					(activeTab === 'Resolved' && market.status === 'Resolved') ||
+					(activeTab === 'Expiring' && market.status === 'Expired') ||
+					activeTab === 'Trending';
+
+				return matchesTab && score > 0;
+			})
+			.sort((a, b) => b.score - a.score)
+			.map(({ market }) => market)
 	);
 </script>
 

@@ -38,7 +38,7 @@
 	<div class="flex items-start gap-1.5">
 		<div class="flex items-start justify-between gap-2">
 			<h3
-				class="text-foreground group-hover:text-primary text-lg leading-tight font-bold transition-colors"
+				class="text-foreground group-hover:text-primary text-lg leading-tight font-bold text-wrap wrap-break-word transition-colors"
 			>
 				{market.title}
 			</h3>
@@ -60,7 +60,7 @@
 	</div>
 
 	<div class="flex flex-col gap-4">
-		<p class="text-muted-foreground text-sm">
+		<p class="text-muted-foreground text-sm text-wrap wrap-break-word">
 			{market.description}
 		</p>
 
