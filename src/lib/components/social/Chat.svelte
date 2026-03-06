@@ -107,6 +107,7 @@
 			{#each messages as msg (msg.timestamp)}
 				{@const isMe = msg.sender === userPrincipal}
 				{@const profile = profiles.get(msg.sender)}
+
 				<div
 					class="flex flex-col gap-1 {isMe
 						? 'items-end'

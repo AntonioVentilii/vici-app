@@ -5,6 +5,7 @@
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
+	import { formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -86,7 +87,8 @@
 						<div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
 							<span class="text-xs font-medium text-slate-500">Locked Collateral</span>
 							<span class="text-sm font-bold text-slate-950">
-								{(Number(position.lockedCollateral) / 100_000_000).toFixed(8)} ICP
+								{formatToken({ value: position.lockedCollateral, unitName: market.token.decimals })}
+								{market.token.symbol}
 							</span>
 						</div>
 					</div>

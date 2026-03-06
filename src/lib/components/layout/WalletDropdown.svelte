@@ -1,8 +1,9 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { CKUSDC_TOKEN, ICP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 	import type { WalletBalance } from '$lib/types/wallet';
 	import { formatToken } from '$lib/utils/format.utils';
 
@@ -50,18 +51,16 @@
 			<div class="mb-4">
 				<h3 class="px-2 text-xs font-semibold tracking-wider text-slate-400 uppercase">Balances</h3>
 				<div class="mt-2 space-y-1">
-					<div class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors">
-						<span class="text-sm font-medium text-slate-600">ICP</span>
-						<span class="text-sm font-bold text-slate-900">
-							{formatToken({ value: balances.icp, unitName: ICP_TOKEN.decimals })}
-						</span>
-					</div>
-					<div class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors">
-						<span class="text-sm font-medium text-slate-600">ckUSDC</span>
-						<span class="text-sm font-bold text-slate-900">
-							{formatToken({ value: balances.ckUsdc, unitName: CKUSDC_TOKEN.decimals })}
-						</span>
-					</div>
+					{#each SUPPORTED_TOKENS as token (token.ledgerCanisterId)}
+						{@const balance = balances.balances[token.ledgerCanisterId] ?? ZERO}
+
+						<div class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors">
+							<span class="text-sm font-medium text-slate-600">{token.symbol}</span>
+							<span class="text-sm font-bold text-slate-900">
+								{formatToken({ value: balance, unitName: token.decimals })}
+							</span>
+						</div>
+					{/each}
 				</div>
 			</div>
 

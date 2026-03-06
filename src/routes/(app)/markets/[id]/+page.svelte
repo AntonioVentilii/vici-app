@@ -85,6 +85,7 @@
 				<MarketDetailStats
 					expiryDate={market.expiryDate}
 					timeRemaining={getTimeRemaining(market.expiryDate)}
+					tokenSymbol={market.token.symbol}
 					totalVolume={market.totalVolume}
 				/>
 

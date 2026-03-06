@@ -5,16 +5,18 @@
 		totalVolume: bigint;
 		expiryDate: bigint;
 		timeRemaining: string;
+		tokenSymbol: string;
 	}
 
-	const { totalVolume, expiryDate, timeRemaining }: Props = $props();
+	const { totalVolume, expiryDate, timeRemaining, tokenSymbol }: Props = $props();
 </script>
 
 <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
 	<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
 		<div class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Total Volume</div>
 		<div class="mt-1 text-xl font-black text-slate-950">
-			{formatVolume(totalVolume)} ICP
+			{formatVolume(totalVolume)}
+			{tokenSymbol}
 		</div>
 	</div>
 	<div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">

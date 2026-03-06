@@ -5,9 +5,8 @@ import type { PrincipalText } from '@dfinity/zod-schemas';
 export type TransactionType = 'Trade' | 'Send' | 'Receive' | 'Burn' | 'Mint' | 'Approve';
 
 export interface WalletBalance {
-	icp: bigint;
-	ckUsdc: bigint;
-	collateral: bigint;
+	balances: Record<string, bigint>; // ledgerCanisterId -> balance
+	collateral: Record<string, bigint>; // ledgerCanisterId -> balance
 }
 
 export type TransactionId = string;

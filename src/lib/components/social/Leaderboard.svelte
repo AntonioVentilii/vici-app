@@ -42,6 +42,7 @@
 		<div class="flex items-end justify-center gap-3 pt-8">
 			{#each [2, 1, 3] as rank (rank)}
 				{@const entry = leaderboard.find((e) => e.rank === rank)}
+
 				{#if entry}
 					<div class="flex flex-col items-center gap-1.5">
 						<div class="relative">

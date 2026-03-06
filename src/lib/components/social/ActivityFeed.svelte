@@ -98,6 +98,7 @@
 		{:else}
 			{#each activities as activity (activity.timestamp + activity.user)}
 				{@const profile = profiles.get(activity.user)}
+
 				<div
 					class="group relative flex gap-3 rounded-2xl bg-white/5 p-3 transition-all hover:bg-white/10"
 				>

@@ -1,7 +1,7 @@
 <script lang="ts">
-	import { ICP_LEDGER_CANISTER_ID } from '$lib/constants/canisters.constants';
-	import { ICP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 	import { depositCollateral, withdrawCollateral } from '$lib/services/collateral.services';
+	import type { Token } from '$lib/types/token';
 	import { parseToken } from '$lib/utils/parse.utils';
 
 	interface Props {
@@ -16,6 +16,8 @@
 
 	let mode = $state<'Deposit' | 'Withdraw'>('Deposit');
 
+	let selectedToken = $state<Token>(SUPPORTED_TOKENS[0]);
+
 	let loading = $state(false);
 
 	let error = $state('');
@@ -23,6 +25,7 @@
 	const reset = () => {
 		amount = '';
 		mode = 'Deposit';
+		[selectedToken] = SUPPORTED_TOKENS;
 		loading = false;
 		error = '';
 	};
@@ -44,12 +47,18 @@
 		error = '';
 
 		try {
-			const amt = parseToken({ value: `${amount}`, unitName: ICP_TOKEN.decimals });
+			const amt = parseToken({ value: `${amount}`, unitName: selectedToken.decimals });
 
 			if (mode === 'Deposit') {
-				await depositCollateral({ assetPrincipal: ICP_LEDGER_CANISTER_ID, amount: amt });
+				await depositCollateral({
+					assetPrincipal: selectedToken.ledgerCanisterId,
+					amount: amt
+				});
 			} else {
-				await withdrawCollateral({ assetPrincipal: ICP_LEDGER_CANISTER_ID, amount: amt });
+				await withdrawCollateral({
+					assetPrincipal: selectedToken.ledgerCanisterId,
+					amount: amt
+				});
 			}
 
 			onSuccess();
@@ -109,8 +118,25 @@
 
 			<div class="mt-8 space-y-6">
 				<div class="space-y-2">
+					<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">Token</span>
+					<div class="grid grid-cols-2 gap-4">
+						{#each SUPPORTED_TOKENS as token (token.ledgerCanisterId)}
+							<button
+								class="rounded-xl border-2 px-4 py-3 font-bold transition-all {selectedToken.ledgerCanisterId ===
+								token.ledgerCanisterId
+									? 'border-indigo-600 bg-indigo-50 text-indigo-600'
+									: 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'}"
+								onclick={() => (selectedToken = token)}
+							>
+								{token.symbol}
+							</button>
+						{/each}
+					</div>
+				</div>
+
+				<div class="space-y-2">
 					<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="amount"
-						>Amount (ICP)</label
+						>Amount ({selectedToken.symbol})</label
 					>
 					<div class="relative">
 						<input
@@ -121,7 +147,7 @@
 							bind:value={amount}
 						/>
 						<span class="absolute top-1/2 right-4 -translate-y-1/2 font-bold text-slate-400"
-							>ICP</span
+							>{selectedToken.symbol}</span
 						>
 					</div>
 				</div>

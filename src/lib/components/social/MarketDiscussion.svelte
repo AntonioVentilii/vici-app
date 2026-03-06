@@ -106,6 +106,7 @@
 		{:else}
 			{#each comments as comment (comment.timestamp)}
 				{@const profile = profiles.get(comment.user)}
+
 				<div
 					class="bg-card/20 border-border/50 animate-in fade-in slide-in-from-bottom-2 flex gap-4 rounded-2xl border p-4 duration-300"
 				>

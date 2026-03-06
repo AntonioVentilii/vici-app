@@ -24,7 +24,7 @@
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-slate-50">
-				{#each transactions as { id, timestamp, type, token, amount, marketId, counterparty } (`${id}-${token}`)}
+				{#each transactions as { id, timestamp, type, token, amount, marketId, counterparty } (`${id}-${token.symbol}`)}
 					<tr class="text-sm">
 						<td class="py-4 text-slate-600">
 							{formatNanosecondsToDate({ nanoseconds: timestamp })}

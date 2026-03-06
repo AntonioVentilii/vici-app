@@ -48,6 +48,7 @@
 						{#each positions as pos, index (index)}
 							{@const market = getMarketById(pos.marketId)}
 							{@const pnl = onCalculatePnL(pos)}
+
 							<tr class="group transition-colors hover:bg-slate-50">
 								<td class="px-6 py-4">
 									<a class="group block max-w-xs" href="/(app)/markets/{pos.marketId}">

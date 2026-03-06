@@ -1,4 +1,5 @@
 import type { MarketIdSchema } from '$lib/schema/market.schema';
+import type { Token } from '$lib/types/token';
 import type { PrincipalText } from '@dfinity/zod-schemas';
 import type * as z from 'zod';
 
@@ -23,4 +24,5 @@ export interface Market {
 	noVolume: bigint;
 	yesProbability: number;
 	noProbability: number;
+	token: Token;
 }

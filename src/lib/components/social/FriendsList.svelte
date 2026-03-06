@@ -99,6 +99,7 @@
 			{#each friends as relation (relation.createdAt)}
 				{@const friendId = relation.participants.find((p) => p !== userPrincipal)}
 				{@const profile = friendId ? friendProfiles.get(friendId) : null}
+
 				<div
 					class="bg-accent/20 hover:bg-accent/40 group flex items-center gap-3 rounded-xl p-3 transition-all"
 				>

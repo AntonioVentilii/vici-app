@@ -6,13 +6,12 @@
 	import UserDropdown from '$lib/components/layout/UserDropdown.svelte';
 	import WalletDropdown from '$lib/components/layout/WalletDropdown.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
 	import { getBalances } from '$lib/services/wallet.service';
 	import type { WalletBalance } from '$lib/types/wallet';
 
-	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO, collateral: ZERO });
+	let balances = $state<WalletBalance>({ balances: {}, collateral: {} });
 
 	let showSignInModal = $state(false);
 

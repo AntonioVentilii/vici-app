@@ -1,3 +1,4 @@
+import type { ClearingDid } from '$declarations';
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
 	NANO_SECONDS_IN_MILLISECOND,
@@ -13,7 +14,7 @@ import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
 import { mapMarketData } from '$lib/utils/market.utils';
 import { emitRefreshMarkets } from '$lib/utils/refresh.utils';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 
 /**
  * Creates a new prediction market.
@@ -22,11 +23,13 @@ import { isNullish } from '@dfinity/utils';
 export const createMarket = async ({
 	title,
 	description,
-	expiryDate
+	expiryDate,
+	settlementAsset = { Icp: null }
 }: {
 	title: string;
 	description: string;
 	expiryDate: bigint;
+	settlementAsset?: ClearingDid.SettlementAsset;
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -44,8 +47,7 @@ export const createMarket = async ({
 			title,
 			description,
 			expiry_ns: expiryDate * NANO_SECONDS_IN_MILLISECOND,
-			// Defaulting to ICP for settlement
-			settlement_asset: { Icp: null },
+			settlement_asset: settlementAsset,
 			strike: STRIKE,
 			payoff_type: PAYOFF_TYPE,
 			oracle_source: VICI_ORACLE_V1
@@ -70,7 +72,7 @@ export const getMarkets = async (): Promise<Market[]> => {
 
 	const seriesList = await listSeries({ identity });
 
-	return seriesList.map(mapMarketData);
+	return seriesList.map(mapMarketData).filter(nonNullish);
 };
 
 export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {

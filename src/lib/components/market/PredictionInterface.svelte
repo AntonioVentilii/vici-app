@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { placeOrder } from '$lib/services/order.services';
@@ -9,6 +10,7 @@
 	import type { Market, Outcome } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
+	import { parseToken } from '$lib/utils/parse.utils';
 
 	interface Props {
 		market: Market;
@@ -36,7 +38,7 @@
 	onMount(async () => {
 		const balances = await getBalances();
 
-		({ collateral } = balances);
+		collateral = balances.collateral[market.token.ledgerCanisterId] ?? ZERO;
 	});
 
 	$effect(() => {
@@ -84,7 +86,7 @@
 				throw new Error(`Invalid price: outcome probability is ${currentPrice}`);
 			}
 
-			const parsedAmount = BigInt(amount);
+			const parsedAmount = parseToken({ value: `${amount}`, unitName: market.token.decimals });
 
 			await placeOrder({
 				marketId: market.id,
@@ -221,7 +223,7 @@
 							bind:value={price}
 						/>
 						<div class="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-bold text-slate-400">
-							ICP
+							{market.token.symbol}
 						</div>
 					</div>
 				</div>
@@ -234,8 +236,9 @@
 					>
 					<span class="text-[10px] font-bold text-slate-400 uppercase">
 						Available: {collateral !== undefined
-							? (Number(collateral) / 100_000_000).toFixed(2)
-							: '...'} ICP
+							? (Number(collateral) / 10 ** market.token.decimals).toFixed(2)
+							: '...'}
+						{market.token.symbol}
 					</span>
 				</div>
 				<div class="relative">
@@ -247,7 +250,7 @@
 						bind:value={amount}
 					/>
 					<div class="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-bold text-slate-400">
-						ICP
+						{market.token.symbol}
 					</div>
 				</div>
 			</div>

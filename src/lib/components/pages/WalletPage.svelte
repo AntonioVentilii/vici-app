@@ -7,8 +7,7 @@
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
 	import WalletStats from '$lib/components/wallet/WalletStats.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
-	import { ICP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { sendIc } from '$lib/services/send.services';
 	import { getBalances, getTransactions } from '$lib/services/wallet.service';
@@ -16,7 +15,7 @@
 	import type { Transaction, WalletBalance } from '$lib/types/wallet';
 	import { parseToken } from '$lib/utils/parse.utils';
 
-	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO, collateral: ZERO });
+	let balances = $state<WalletBalance>({ balances: {}, collateral: {} });
 
 	let transactions = $state<Transaction[]>([]);
 
@@ -36,7 +35,7 @@
 
 	let amount = $state('');
 
-	let selectedToken = $state<Token>(ICP_TOKEN);
+	let selectedToken = $state<Token>(SUPPORTED_TOKENS[0]);
 
 	const handleSend = async () => {
 		if (!recipient || !amount) {

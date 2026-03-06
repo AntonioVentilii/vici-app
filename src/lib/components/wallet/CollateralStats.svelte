@@ -1,12 +1,22 @@
 <script lang="ts">
 	import { formatToken } from '$lib/utils/format.utils';
+	import { findTokenByLedgerId } from '$lib/utils/tokens.utils';
 
 	interface Props {
-		collateral: bigint;
+		collateral: Record<string, bigint>;
 		onManage: () => void;
 	}
 
 	const { collateral, onManage }: Props = $props();
+
+	const getTokenData = (assetId: string) => {
+		const token = findTokenByLedgerId(assetId);
+
+		return {
+			symbol: token?.symbol ?? 'Unknown',
+			decimals: token?.decimals ?? 8
+		};
+	};
 </script>
 
 <div
@@ -26,10 +36,25 @@
 			Manage Collateral
 		</button>
 	</div>
-	<div class="mt-4 flex items-baseline gap-2">
-		<span class="text-3xl font-black text-slate-950"
-			>{formatToken({ value: collateral, unitName: 8 })}</span
-		>
-		<span class="text-lg font-bold text-slate-400 uppercase">ICP</span>
+	<div class="mt-4 flex flex-col gap-2">
+		{#each Object.entries(collateral) as [assetId, balance] (assetId)}
+			{@const { symbol, decimals } = getTokenData(assetId)}
+
+			<div class="flex items-baseline gap-2">
+				<span class="text-2xl font-black text-slate-950">
+					{formatToken({
+						value: balance,
+						unitName: decimals
+					})}
+				</span>
+				<span class="text-sm font-bold text-slate-400 uppercase">
+					{symbol}
+				</span>
+			</div>
+		{/each}
+
+		{#if Object.keys(collateral).length === 0}
+			<span class="text-2xl font-black text-slate-300">0.00</span>
+		{/if}
 	</div>
 </div>
