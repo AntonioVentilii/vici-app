@@ -79,6 +79,7 @@ export interface Series {
 export type SeriesError =
 	| { DescriptionTooLong: null }
 	| { TitleTooLong: null }
+	| { Unauthorized: null }
 	| { SeriesAlreadyExists: null };
 export interface SeriesPage {
 	next_cursor: [] | [string];
@@ -90,6 +91,12 @@ export interface UpdateOracleMetadataParams {
 	oracle_id: string;
 }
 export interface _SERVICE {
+	/**
+	 * Authorizes a list of principals to create new derivative series.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	add_authorized_creators: ActorMethod<[Array<Principal>], undefined>;
 	/**
 	 * Registers a new price oracle in the registry.
 	 */
@@ -125,9 +132,19 @@ export interface _SERVICE {
 	 */
 	get_series: ActorMethod<[string], [] | [Series]>;
 	/**
+	 * Checks if a principal is authorized to create derivative series.
+	 */
+	is_authorized_creator: ActorMethod<[Principal], boolean>;
+	/**
 	 * Checks if a principal is authorized to push settlement data for a given oracle.
 	 */
 	is_oracle_authorized: ActorMethod<[string, Principal], boolean>;
+	/**
+	 * Returns a list of all principals currently authorized to create series.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	list_authorized_creators: ActorMethod<[], Array<Principal>>;
 	/**
 	 * Returns a paginated page of all registered derivative series.
 	 */
@@ -140,6 +157,12 @@ export interface _SERVICE {
 	 * Adds or removes authorised principals for an oracle.
 	 */
 	manage_oracle_principals: ActorMethod<[ManageOraclePrincipalsParams], OracleResult>;
+	/**
+	 * Removes authorization from a list of principals, preventing them from creating new series.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	remove_authorized_creators: ActorMethod<[Array<Principal>], undefined>;
 	/**
 	 * Updates the metadata of an existing oracle.
 	 */

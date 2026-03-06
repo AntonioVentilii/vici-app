@@ -23,12 +23,14 @@ export const CommonError = IDL.Variant({
 	RegistryNotSet: IDL.Null
 });
 export const TradeError = IDL.Variant({
+	OrderNotFound: IDL.Text,
 	RegistryError: IDL.Text,
 	InsufficientMargin: IDL.Record({
 		balance: IDL.Nat,
 		user: IDL.Principal,
 		required: IDL.Nat
 	}),
+	NotOrderCreator: IDL.Null,
 	SeriesNotFound: IDL.Text,
 	Common: CommonError
 });
@@ -37,6 +39,30 @@ export const AcceptPositionTransferResult = IDL.Variant({
 	Err: TradeError
 });
 export const Asset = IDL.Variant({ Icrc: IDL.Principal });
+export const BlockCollateralParams = IDL.Record({
+	asset: Asset,
+	amount: IDL.Nat
+});
+export const BlockingError = IDL.Variant({
+	InsufficientAvailableBalance: IDL.Record({
+		requested: IDL.Nat,
+		available: IDL.Nat
+	}),
+	MathOverflow: IDL.Null,
+	InsufficientReservedBalance: IDL.Record({
+		requested: IDL.Nat,
+		reserved: IDL.Nat
+	})
+});
+export const BlockCollateralResult = IDL.Variant({
+	Ok: IDL.Null,
+	Err: BlockingError
+});
+export const CancelLimitOrderParams = IDL.Record({ order_id: IDL.Text });
+export const SubmitMatchedTradeResult = IDL.Variant({
+	Ok: IDL.Bool,
+	Err: TradeError
+});
 export const DepositCollateralParams = IDL.Record({
 	deposit_id: IDL.Text,
 	asset: Asset,
@@ -74,6 +100,7 @@ export const GetMarginAccountParams = IDL.Record({
 });
 export const MarginAccount = IDL.Record({
 	required_margin: IDL.Nat,
+	reserved_balances: IDL.Vec(IDL.Tuple(Asset, IDL.Nat)),
 	user: IDL.Principal,
 	balances: IDL.Vec(IDL.Tuple(Asset, IDL.Nat))
 });
@@ -149,17 +176,27 @@ export const Stats = IDL.Record({
 	open_interest: IDL.Nat,
 	event_counts: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat64))
 });
+export const Side = IDL.Variant({ Buy: IDL.Null, Sell: IDL.Null });
+export const SubmitLimitOrderParams = IDL.Record({
+	qty: IDL.Int,
+	series_id: IDL.Text,
+	side: Side,
+	order_id: IDL.Text,
+	price: IDL.Nat64
+});
+export const SubmitMarketOrderParams = IDL.Record({
+	trade_id: IDL.Text,
+	matching_order_id: IDL.Text
+});
 export const SubmitMatchedTradeParams = IDL.Record({
 	qty: IDL.Int,
 	trade_id: IDL.Text,
 	series_id: IDL.Text,
 	seller: IDL.Principal,
+	buyer_unblock_amount: IDL.Opt(IDL.Nat),
 	buyer: IDL.Principal,
-	price: IDL.Nat64
-});
-export const SubmitMatchedTradeResult = IDL.Variant({
-	Ok: IDL.Bool,
-	Err: TradeError
+	price: IDL.Nat64,
+	seller_unblock_amount: IDL.Opt(IDL.Nat)
 });
 export const WithdrawCollateralParams = IDL.Record({
 	asset: Asset,
@@ -169,7 +206,7 @@ export const WithdrawCollateralParams = IDL.Record({
 export const WithdrawCollateralError = IDL.Variant({
 	InsufficientExcessMargin: IDL.Record({
 		requested: IDL.Nat,
-		current: IDL.Nat
+		available: IDL.Nat
 	}),
 	MathOverflow: IDL.Null,
 	Ledger: LedgerError
@@ -181,6 +218,8 @@ export const WithdrawCollateralResult = IDL.Variant({
 
 export const idlService = IDL.Service({
 	accept_position_transfer: IDL.Func([PositionProof], [AcceptPositionTransferResult], []),
+	block_collateral: IDL.Func([BlockCollateralParams], [BlockCollateralResult], []),
+	cancel_limit_order: IDL.Func([CancelLimitOrderParams], [SubmitMatchedTradeResult], []),
 	deposit_collateral: IDL.Func([DepositCollateralParams], [DepositCollateralResult], []),
 	freeze_position_for_transfer: IDL.Func(
 		[FreezePositionForTransferParams],
@@ -197,7 +236,10 @@ export const idlService = IDL.Service({
 	set_registry_canister: IDL.Func([IDL.Principal], [], []),
 	settle_series: IDL.Func([SettleSeriesParams], [SettleSeriesResult], []),
 	stats: IDL.Func([], [Stats], ['query']),
+	submit_limit_order: IDL.Func([SubmitLimitOrderParams], [SubmitMatchedTradeResult], []),
+	submit_market_order: IDL.Func([SubmitMarketOrderParams], [SubmitMatchedTradeResult], []),
 	submit_matched_trade: IDL.Func([SubmitMatchedTradeParams], [SubmitMatchedTradeResult], []),
+	unblock_collateral: IDL.Func([BlockCollateralParams], [BlockCollateralResult], []),
 	withdraw_collateral: IDL.Func([WithdrawCollateralParams], [WithdrawCollateralResult], [])
 });
 
@@ -219,12 +261,14 @@ export const idlFactory = ({ IDL }) => {
 		RegistryNotSet: IDL.Null
 	});
 	const TradeError = IDL.Variant({
+		OrderNotFound: IDL.Text,
 		RegistryError: IDL.Text,
 		InsufficientMargin: IDL.Record({
 			balance: IDL.Nat,
 			user: IDL.Principal,
 			required: IDL.Nat
 		}),
+		NotOrderCreator: IDL.Null,
 		SeriesNotFound: IDL.Text,
 		Common: CommonError
 	});
@@ -233,6 +277,30 @@ export const idlFactory = ({ IDL }) => {
 		Err: TradeError
 	});
 	const Asset = IDL.Variant({ Icrc: IDL.Principal });
+	const BlockCollateralParams = IDL.Record({
+		asset: Asset,
+		amount: IDL.Nat
+	});
+	const BlockingError = IDL.Variant({
+		InsufficientAvailableBalance: IDL.Record({
+			requested: IDL.Nat,
+			available: IDL.Nat
+		}),
+		MathOverflow: IDL.Null,
+		InsufficientReservedBalance: IDL.Record({
+			requested: IDL.Nat,
+			reserved: IDL.Nat
+		})
+	});
+	const BlockCollateralResult = IDL.Variant({
+		Ok: IDL.Null,
+		Err: BlockingError
+	});
+	const CancelLimitOrderParams = IDL.Record({ order_id: IDL.Text });
+	const SubmitMatchedTradeResult = IDL.Variant({
+		Ok: IDL.Bool,
+		Err: TradeError
+	});
 	const DepositCollateralParams = IDL.Record({
 		deposit_id: IDL.Text,
 		asset: Asset,
@@ -268,6 +336,7 @@ export const idlFactory = ({ IDL }) => {
 	const GetMarginAccountParams = IDL.Record({ refresh: IDL.Opt(IDL.Bool) });
 	const MarginAccount = IDL.Record({
 		required_margin: IDL.Nat,
+		reserved_balances: IDL.Vec(IDL.Tuple(Asset, IDL.Nat)),
 		user: IDL.Principal,
 		balances: IDL.Vec(IDL.Tuple(Asset, IDL.Nat))
 	});
@@ -343,17 +412,27 @@ export const idlFactory = ({ IDL }) => {
 		open_interest: IDL.Nat,
 		event_counts: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat64))
 	});
+	const Side = IDL.Variant({ Buy: IDL.Null, Sell: IDL.Null });
+	const SubmitLimitOrderParams = IDL.Record({
+		qty: IDL.Int,
+		series_id: IDL.Text,
+		side: Side,
+		order_id: IDL.Text,
+		price: IDL.Nat64
+	});
+	const SubmitMarketOrderParams = IDL.Record({
+		trade_id: IDL.Text,
+		matching_order_id: IDL.Text
+	});
 	const SubmitMatchedTradeParams = IDL.Record({
 		qty: IDL.Int,
 		trade_id: IDL.Text,
 		series_id: IDL.Text,
 		seller: IDL.Principal,
+		buyer_unblock_amount: IDL.Opt(IDL.Nat),
 		buyer: IDL.Principal,
-		price: IDL.Nat64
-	});
-	const SubmitMatchedTradeResult = IDL.Variant({
-		Ok: IDL.Bool,
-		Err: TradeError
+		price: IDL.Nat64,
+		seller_unblock_amount: IDL.Opt(IDL.Nat)
 	});
 	const WithdrawCollateralParams = IDL.Record({
 		asset: Asset,
@@ -363,7 +442,7 @@ export const idlFactory = ({ IDL }) => {
 	const WithdrawCollateralError = IDL.Variant({
 		InsufficientExcessMargin: IDL.Record({
 			requested: IDL.Nat,
-			current: IDL.Nat
+			available: IDL.Nat
 		}),
 		MathOverflow: IDL.Null,
 		Ledger: LedgerError
@@ -375,6 +454,8 @@ export const idlFactory = ({ IDL }) => {
 
 	return IDL.Service({
 		accept_position_transfer: IDL.Func([PositionProof], [AcceptPositionTransferResult], []),
+		block_collateral: IDL.Func([BlockCollateralParams], [BlockCollateralResult], []),
+		cancel_limit_order: IDL.Func([CancelLimitOrderParams], [SubmitMatchedTradeResult], []),
 		deposit_collateral: IDL.Func([DepositCollateralParams], [DepositCollateralResult], []),
 		freeze_position_for_transfer: IDL.Func(
 			[FreezePositionForTransferParams],
@@ -391,7 +472,10 @@ export const idlFactory = ({ IDL }) => {
 		set_registry_canister: IDL.Func([IDL.Principal], [], []),
 		settle_series: IDL.Func([SettleSeriesParams], [SettleSeriesResult], []),
 		stats: IDL.Func([], [Stats], ['query']),
+		submit_limit_order: IDL.Func([SubmitLimitOrderParams], [SubmitMatchedTradeResult], []),
+		submit_market_order: IDL.Func([SubmitMarketOrderParams], [SubmitMatchedTradeResult], []),
 		submit_matched_trade: IDL.Func([SubmitMatchedTradeParams], [SubmitMatchedTradeResult], []),
+		unblock_collateral: IDL.Func([BlockCollateralParams], [BlockCollateralResult], []),
 		withdraw_collateral: IDL.Func([WithdrawCollateralParams], [WithdrawCollateralResult], [])
 	});
 };

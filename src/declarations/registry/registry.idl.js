@@ -49,6 +49,7 @@ export const AddSeriesParams = IDL.Record({
 export const SeriesError = IDL.Variant({
 	DescriptionTooLong: IDL.Null,
 	TitleTooLong: IDL.Null,
+	Unauthorized: IDL.Null,
 	SeriesAlreadyExists: IDL.Null
 });
 export const AddSeriesResult = IDL.Variant({
@@ -104,14 +105,18 @@ export const UpdateOracleMetadataParams = IDL.Record({
 });
 
 export const idlService = IDL.Service({
+	add_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
 	add_oracle: IDL.Func([AddOracleParams], [OracleResult], []),
 	add_series: IDL.Func([AddSeriesParams], [AddSeriesResult], []),
 	get_oracle: IDL.Func([IDL.Text], [IDL.Opt(Oracle)], ['query']),
 	get_series: IDL.Func([IDL.Text], [IDL.Opt(Series)], ['query']),
+	is_authorized_creator: IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
 	is_oracle_authorized: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], ['query']),
+	list_authorized_creators: IDL.Func([], [IDL.Vec(IDL.Principal)], ['query']),
 	list_series: IDL.Func([PaginationParams], [SeriesPage], ['query']),
 	list_series_with: IDL.Func([ListSeriesParams], [SeriesPage], ['query']),
 	manage_oracle_principals: IDL.Func([ManageOraclePrincipalsParams], [OracleResult], []),
+	remove_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
 	update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], [])
 });
 
@@ -156,6 +161,7 @@ export const idlFactory = ({ IDL }) => {
 	const SeriesError = IDL.Variant({
 		DescriptionTooLong: IDL.Null,
 		TitleTooLong: IDL.Null,
+		Unauthorized: IDL.Null,
 		SeriesAlreadyExists: IDL.Null
 	});
 	const AddSeriesResult = IDL.Variant({ Ok: IDL.Text, Err: SeriesError });
@@ -208,14 +214,18 @@ export const idlFactory = ({ IDL }) => {
 	});
 
 	return IDL.Service({
+		add_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
 		add_oracle: IDL.Func([AddOracleParams], [OracleResult], []),
 		add_series: IDL.Func([AddSeriesParams], [AddSeriesResult], []),
 		get_oracle: IDL.Func([IDL.Text], [IDL.Opt(Oracle)], ['query']),
 		get_series: IDL.Func([IDL.Text], [IDL.Opt(Series)], ['query']),
+		is_authorized_creator: IDL.Func([IDL.Principal], [IDL.Bool], ['query']),
 		is_oracle_authorized: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], ['query']),
+		list_authorized_creators: IDL.Func([], [IDL.Vec(IDL.Principal)], ['query']),
 		list_series: IDL.Func([PaginationParams], [SeriesPage], ['query']),
 		list_series_with: IDL.Func([ListSeriesParams], [SeriesPage], ['query']),
 		manage_oracle_principals: IDL.Func([ManageOraclePrincipalsParams], [OracleResult], []),
+		remove_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
 		update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], [])
 	});
 };

@@ -12,6 +12,28 @@ import type { Principal } from '@icp-sdk/core/principal';
 
 export type AcceptPositionTransferResult = { Ok: boolean } | { Err: TradeError };
 export type Asset = { Icrc: Principal };
+export interface BlockCollateralParams {
+	asset: Asset;
+	amount: bigint;
+}
+export type BlockCollateralResult = { Ok: null } | { Err: BlockingError };
+export type BlockingError =
+	| {
+			InsufficientAvailableBalance: {
+				requested: bigint;
+				available: bigint;
+			};
+	  }
+	| { MathOverflow: null }
+	| {
+			InsufficientReservedBalance: {
+				requested: bigint;
+				reserved: bigint;
+			};
+	  };
+export interface CancelLimitOrderParams {
+	order_id: string;
+}
 export type CommonError =
 	| { Internal: string }
 	| { MathOverflow: null }
@@ -55,6 +77,7 @@ export type LedgerError =
 	| { UnsupportedLedger: null };
 export interface MarginAccount {
 	required_margin: bigint;
+	reserved_balances: Array<[Asset, bigint]>;
 	user: Principal;
 	balances: Array<[Asset, bigint]>;
 }
@@ -101,6 +124,7 @@ export type SettlementError =
 	| { MathOverflow: null }
 	| { Ledger: LedgerError }
 	| { Common: CommonError };
+export type Side = { Buy: null } | { Sell: null };
 export interface Stats {
 	total_users: bigint;
 	margin_balances: Array<[Asset, bigint]>;
@@ -110,16 +134,30 @@ export interface Stats {
 	open_interest: bigint;
 	event_counts: Array<[string, bigint]>;
 }
+export interface SubmitLimitOrderParams {
+	qty: bigint;
+	series_id: string;
+	side: Side;
+	order_id: string;
+	price: bigint;
+}
+export interface SubmitMarketOrderParams {
+	trade_id: string;
+	matching_order_id: string;
+}
 export interface SubmitMatchedTradeParams {
 	qty: bigint;
 	trade_id: string;
 	series_id: string;
 	seller: Principal;
+	buyer_unblock_amount: [] | [bigint];
 	buyer: Principal;
 	price: bigint;
+	seller_unblock_amount: [] | [bigint];
 }
 export type SubmitMatchedTradeResult = { Ok: boolean } | { Err: TradeError };
 export type TradeError =
+	| { OrderNotFound: string }
 	| { RegistryError: string }
 	| {
 			InsufficientMargin: {
@@ -128,11 +166,12 @@ export type TradeError =
 				required: bigint;
 			};
 	  }
+	| { NotOrderCreator: null }
 	| { SeriesNotFound: string }
 	| { Common: CommonError };
 export type WithdrawCollateralError =
 	| {
-			InsufficientExcessMargin: { requested: bigint; current: bigint };
+			InsufficientExcessMargin: { requested: bigint; available: bigint };
 	  }
 	| { MathOverflow: null }
 	| { Ledger: LedgerError };
@@ -150,6 +189,16 @@ export interface _SERVICE {
 	 * proof. This method is gated to canister controllers.
 	 */
 	accept_position_transfer: ActorMethod<[PositionProof], AcceptPositionTransferResult>;
+	/**
+	 * Blocks (reserves) collateral in the user's margin account.
+	 */
+	block_collateral: ActorMethod<[BlockCollateralParams], BlockCollateralResult>;
+	/**
+	 * Cancels an existing limit order and releases the reserved collateral.
+	 *
+	 * Only the creator of the order can cancel it.
+	 */
+	cancel_limit_order: ActorMethod<[CancelLimitOrderParams], SubmitMatchedTradeResult>;
 	/**
 	 * Deposits collateral into the user's margin account.
 	 *
@@ -235,20 +284,25 @@ export interface _SERVICE {
 	 */
 	stats: ActorMethod<[], Stats>;
 	/**
+	 * Submits a limit order for the caller.
+	 *
+	 * This atomically blocks the required collateral for the order.
+	 */
+	submit_limit_order: ActorMethod<[SubmitLimitOrderParams], SubmitMatchedTradeResult>;
+	/**
+	 * Submits a market order to match an existing limit order.
+	 *
+	 * The caller is the taker.
+	 */
+	submit_market_order: ActorMethod<[SubmitMarketOrderParams], SubmitMatchedTradeResult>;
+	/**
 	 * Submits a matched trade from an exchange for clearing.
-	 *
-	 * This method validates the series registration, calculates margin requirements,
-	 * checks for sufficient collateral, and updates the positions of both buyer and seller.
-	 *
-	 * # Arguments
-	 * * `params` - The trade details including ID, series, buyer, seller, quantity, and price.
-	 *
-	 * # Returns
-	 * * [`SubmitMatchedTradeResult::Ok(true)`] if the trade was successfully processed or was a
-	 * duplicate.
-	 * * [`SubmitMatchedTradeResult::Err`] if margin is insufficient or another error occurs.
 	 */
 	submit_matched_trade: ActorMethod<[SubmitMatchedTradeParams], SubmitMatchedTradeResult>;
+	/**
+	 * Unblocks (releases) collateral in the user's margin account.
+	 */
+	unblock_collateral: ActorMethod<[BlockCollateralParams], BlockCollateralResult>;
 	/**
 	 * Withdraws collateral from the user's margin account to an external address.
 	 *
