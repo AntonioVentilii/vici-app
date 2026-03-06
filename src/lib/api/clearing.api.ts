@@ -87,6 +87,42 @@ export const getPosition = async ({
 	return await getPosition({ params, ...queryParams });
 };
 
+export const submitLimitOrder = async ({
+	identity,
+	params,
+	...queryParams
+}: {
+	identity: Identity;
+	params: ClearingDid.SubmitLimitOrderParams;
+} & QueryParams): Promise<boolean> => {
+	const { submitLimitOrder } = await clearingCanister({ identity });
+	return await submitLimitOrder({ params, ...queryParams });
+};
+
+export const submitMarketOrder = async ({
+	identity,
+	params,
+	...queryParams
+}: {
+	identity: Identity;
+	params: ClearingDid.SubmitMarketOrderParams;
+} & QueryParams): Promise<boolean> => {
+	const { submitMarketOrder } = await clearingCanister({ identity });
+	return await submitMarketOrder({ params, ...queryParams });
+};
+
+export const cancelLimitOrder = async ({
+	identity,
+	params,
+	...queryParams
+}: {
+	identity: Identity;
+	params: ClearingDid.CancelLimitOrderParams;
+} & QueryParams): Promise<boolean> => {
+	const { cancelLimitOrder } = await clearingCanister({ identity });
+	return await cancelLimitOrder({ params, ...queryParams });
+};
+
 const clearingCanister = async ({
 	identity
 }: {

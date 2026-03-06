@@ -25,6 +25,8 @@ Current state of the **Vici Social Markets** application.
 - [x] **Enhanced Market View**: Tabbed interface for Description, Activity, and Analytics.
 - [x] **Responsive Sidebar**: Integrated trading interface and user position feedback.
 - [x] **Rush Mode**: Swipe-based rapid trading UI for mobile-first users.
+- [x] **Global Order Book (UI)**: Advanced Limit/Market order interface with `OrderBook` visualization.
+- [x] **Market Depth Visualization**: Real-time bid/ask depth bars and liquidity visualization.
 
 ### Social & Community
 
@@ -39,7 +41,6 @@ Current state of the **Vici Social Markets** application.
 
 ### 🔧 Core Enhancements
 
-- [ ] **Global Order Book**: Transition from matched trades to a public order book (if supported by backend).
 - [ ] **Real-time Price Feeds**: Integration with decentralized oracles for automated settlements.
 - [ ] **Multi-Asset Support**: Collateral support for ckBTC, ckETH, and other ICRC-1 tokens.
 - [ ] **Private Markets**: Invite-only binary outcome markets (Planned in `SPECS_V0`).
@@ -47,7 +48,6 @@ Current state of the **Vici Social Markets** application.
 ### 📈 Analytics & Depth
 
 - [ ] **Historical Charts**: Price and volume history charts (Integration with `old_app` analytics logic).
-- [ ] **Market Depth Visualization**: Real-time depth charts and liquidity heatmaps.
 - [ ] **Trading View Integration**: Professional analytics dashboard for advanced traders.
 
 ### 💰 Wallet & Transfers

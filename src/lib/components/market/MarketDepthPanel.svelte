@@ -1,11 +1,14 @@
 <script lang="ts">
-	import type { Market } from '$lib/types/market';
+	import OrderBook from '$lib/components/market/OrderBook.svelte';
+	import type { Market, Outcome } from '$lib/types/market';
 
 	interface Props {
 		market: Market;
 	}
 
 	const { market }: Props = $props();
+
+	let selectedOutcome = $state<Outcome>('YES');
 
 	const formatProbability = (p: number) => Math.round(p * 100);
 </script>
@@ -52,57 +55,29 @@
 		</div>
 	</div>
 
-	<!-- Depth Table Placeholder -->
-	<div class="overflow-hidden rounded-3xl border border-slate-200 bg-white p-8">
-		<div class="mb-6 flex items-center justify-between">
-			<h4 class="text-sm font-bold tracking-widest text-slate-950 uppercase">Market Depth</h4>
-			<span
-				class="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-500 uppercase"
+	<div class="mt-8 flex items-center justify-between">
+		<h4 class="text-sm font-bold tracking-widest text-slate-400 uppercase">Live Liquidity</h4>
+		<div class="flex rounded-xl bg-slate-100 p-1">
+			<button
+				class="rounded-lg px-4 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all {selectedOutcome ===
+				'YES'
+					? 'bg-white text-indigo-600 shadow-sm'
+					: 'text-slate-500 hover:text-slate-700'}"
+				onclick={() => (selectedOutcome = 'YES')}
 			>
-				Coming Soon
-			</span>
-		</div>
-
-		<div class="relative">
-			<table class="w-full text-left opacity-30 blur-[1px] select-none">
-				<thead>
-					<tr
-						class="border-b border-slate-100 text-[10px] font-bold tracking-wider text-slate-400 uppercase"
-					>
-						<th class="pb-4">Trader</th>
-						<th class="pb-4">Position</th>
-						<th class="pb-4">Price</th>
-						<th class="pb-4 text-right">Amount</th>
-					</tr>
-				</thead>
-				<tbody class="divide-y divide-slate-50">
-					{#each [1, 2, 3] as i (i)}
-						<tr class="text-sm">
-							<td class="py-4 font-mono text-xs">P...{i}xyz</td>
-							<td class="py-4">
-								<span
-									class="rounded-lg bg-emerald-50 px-2 py-1 text-[10px] font-bold text-emerald-600"
-									>YES</span
-								>
-							</td>
-							<td class="py-4 font-bold">0.65 ICP</td>
-							<td class="py-4 text-right font-black">150.00</td>
-						</tr>
-					{/each}
-				</tbody>
-			</table>
-
-			<div class="absolute inset-0 flex items-center justify-center text-center">
-				<div class="max-w-xs px-4">
-					<p class="text-sm font-bold tracking-widest text-slate-950 uppercase">
-						Live Order Book coming
-					</p>
-					<p class="mt-1 text-xs text-slate-500">
-						Global market liquidity and real-time depth will be available in the next Clearing
-						update.
-					</p>
-				</div>
-			</div>
+				Show YES
+			</button>
+			<button
+				class="rounded-lg px-4 py-1.5 text-[10px] font-black tracking-widest uppercase transition-all {selectedOutcome ===
+				'NO'
+					? 'bg-white text-indigo-600 shadow-sm'
+					: 'text-slate-500 hover:text-slate-700'}"
+				onclick={() => (selectedOutcome = 'NO')}
+			>
+				Show NO
+			</button>
 		</div>
 	</div>
+
+	<OrderBook marketId={market.id} outcome={selectedOutcome} />
 </div>

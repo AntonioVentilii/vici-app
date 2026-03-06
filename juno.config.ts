@@ -58,6 +58,18 @@ export default defineConfig({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				{
+					collection: Collection.ORDERS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: Collection.TRADES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
 				}
 			]
 		}

@@ -5,7 +5,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { getRushQueue } from '$lib/services/market.services';
-	import { placePrediction } from '$lib/services/position.services';
+	import { placeOrder } from '$lib/services/order.services';
 	import { navigateTo } from '$lib/stores/nav.store';
 	import type { Market } from '$lib/types/market';
 
@@ -49,10 +49,18 @@
 		processing = true;
 		try {
 			const amountE8 = BigInt(Math.floor(parseFloat(tradeAmount) * 100_000_000));
-			await placePrediction({
-				market: currentMarket,
-				type: action,
-				amount: amountE8
+			const price = action === 'YES' ? currentMarket.yesProbability : currentMarket.noProbability;
+
+			// qty = amount / price (normalized to e8)
+			const qty = (amountE8 * 100_000_000n) / BigInt(Math.floor(price * 100_000_000));
+
+			await placeOrder({
+				marketId: currentMarket.id,
+				side: 'BUY',
+				type: 'MARKET',
+				price,
+				qty,
+				outcome: action
 			});
 			advance();
 		} catch (e) {

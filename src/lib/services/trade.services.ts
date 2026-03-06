@@ -6,6 +6,7 @@ import {
 import { logActivity } from '$lib/services/activity.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { ActivityType } from '$lib/types/social';
+import { toNullable } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 
 export const submitTrade = async ({
@@ -31,7 +32,9 @@ export const submitTrade = async ({
 			buyer: Principal.fromText(buyer),
 			seller: Principal.fromText(seller),
 			qty,
-			price
+			price,
+			buyer_unblock_amount: toNullable(),
+			seller_unblock_amount: toNullable()
 		}
 	});
 

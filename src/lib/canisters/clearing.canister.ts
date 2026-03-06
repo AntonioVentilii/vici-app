@@ -169,4 +169,52 @@ export class ClearingCanister extends Canister<ClearingService> {
 
 		return result[0];
 	};
+
+	submitLimitOrder = async ({
+		params,
+		...queryParams
+	}: {
+		params: ClearingDid.SubmitLimitOrderParams;
+	} & QueryParams): Promise<boolean> => {
+		const { submit_limit_order } = this.caller(queryParams);
+		const result = await submit_limit_order(params);
+
+		if ('Ok' in result) {
+			return result.Ok;
+		}
+
+		throw new Error(`Failed to submit limit order: ${JSON.stringify(result.Err)}`);
+	};
+
+	submitMarketOrder = async ({
+		params,
+		...queryParams
+	}: {
+		params: ClearingDid.SubmitMarketOrderParams;
+	} & QueryParams): Promise<boolean> => {
+		const { submit_market_order } = this.caller(queryParams);
+		const result = await submit_market_order(params);
+
+		if ('Ok' in result) {
+			return result.Ok;
+		}
+
+		throw new Error(`Failed to submit market order: ${JSON.stringify(result.Err)}`);
+	};
+
+	cancelLimitOrder = async ({
+		params,
+		...queryParams
+	}: {
+		params: ClearingDid.CancelLimitOrderParams;
+	} & QueryParams): Promise<boolean> => {
+		const { cancel_limit_order } = this.caller(queryParams);
+		const result = await cancel_limit_order(params);
+
+		if ('Ok' in result) {
+			return result.Ok;
+		}
+
+		throw new Error(`Failed to cancel limit order: ${JSON.stringify(result.Err)}`);
+	};
 }
