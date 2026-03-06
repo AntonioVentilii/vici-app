@@ -4,16 +4,16 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
+	import { formatAmount } from '$lib/utils/format.utils';
 
 	interface Props {
 		positions: Position[];
 		markets: Market[];
 		onCalculateValue: (pos: Position) => bigint;
 		onCalculatePnL: (pos: Position) => number;
-		onFormatAmount: (v: bigint) => string;
 	}
 
-	const { positions, markets, onCalculateValue, onCalculatePnL, onFormatAmount }: Props = $props();
+	const { positions, markets, onCalculateValue, onCalculatePnL }: Props = $props();
 
 	const getMarketById = (id: string) => markets.find((m) => m.id === id);
 </script>
@@ -79,11 +79,11 @@
 									</div>
 								</td>
 								<td class="px-8 py-6 text-right font-bold text-slate-950">
-									{onFormatAmount(pos.yesAmount + pos.noAmount)}
+									{formatAmount(pos.yesAmount + pos.noAmount)}
 									<span class="text-[10px] text-slate-500">ICP</span>
 								</td>
 								<td class="px-8 py-6 text-right font-bold text-slate-950">
-									{onFormatAmount(onCalculateValue(pos))}
+									{formatAmount(onCalculateValue(pos))}
 									<span class="text-[10px] text-slate-500">ICP</span>
 								</td>
 								<td class="px-8 py-6 text-right">

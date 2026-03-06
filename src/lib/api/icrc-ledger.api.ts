@@ -10,6 +10,28 @@ import {
 import type { Identity } from '@icp-sdk/core/agent';
 import { Principal } from '@icp-sdk/core/principal';
 
+export const transfer = async ({
+	identity,
+	to,
+	amount,
+	createdAt,
+	ledgerCanisterId
+}: {
+	identity: Identity;
+	to: IcrcAccount;
+	amount: bigint;
+	createdAt?: bigint;
+	ledgerCanisterId: CanisterIdText;
+}): Promise<IcrcLedgerDid.BlockIndex> => {
+	const { transfer } = await ledgerCanister({ identity, ledgerCanisterId });
+
+	return transfer({
+		to: toCandidAccount(to),
+		amount,
+		...(nonNullish(createdAt) ? { created_at_time: createdAt } : {})
+	});
+};
+
 export const approve = async ({
 	identity,
 	ledgerCanisterId,
@@ -35,6 +57,20 @@ export const approve = async ({
 		expires_at,
 		...(nonNullish(createdAt) ? { created_at_time: createdAt } : {})
 	});
+};
+
+export const balance = async ({
+	identity,
+	ledgerCanisterId,
+	account
+}: {
+	identity: Identity;
+	ledgerCanisterId: CanisterIdText;
+	account: IcrcAccount;
+}): Promise<bigint> => {
+	const { balance } = await ledgerCanister({ identity, ledgerCanisterId });
+
+	return balance(account);
 };
 
 const ledgerCanister = async ({

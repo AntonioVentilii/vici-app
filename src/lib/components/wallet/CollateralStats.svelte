@@ -1,11 +1,12 @@
 <script lang="ts">
+	import { formatBalance } from '$lib/utils/format.utils';
+
 	interface Props {
 		collateral: bigint;
-		onFormatBalance: (b: bigint) => string;
 		onManage: () => void;
 	}
 
-	const { collateral, onFormatBalance, onManage }: Props = $props();
+	const { collateral, onManage }: Props = $props();
 </script>
 
 <div
@@ -26,7 +27,7 @@
 		</button>
 	</div>
 	<div class="mt-6 flex items-baseline gap-2">
-		<span class="text-5xl font-black text-slate-950">{onFormatBalance(collateral)}</span>
+		<span class="text-5xl font-black text-slate-950">{formatBalance(collateral)}</span>
 		<span class="text-xl font-bold text-slate-400 uppercase">ICP</span>
 	</div>
 </div>

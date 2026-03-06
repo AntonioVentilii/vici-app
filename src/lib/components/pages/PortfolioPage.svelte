@@ -13,6 +13,7 @@
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
+	import { formatAmount } from '$lib/utils/format.utils';
 	import { REFRESH_BALANCE, REFRESH_POSITIONS } from '$lib/utils/refresh.utils';
 
 	let positions = $state<Position[]>([]);
@@ -62,8 +63,6 @@
 		return Number(currentValue - totalCost) / 100_000_000;
 	};
 
-	const formatAmount = (v: bigint) => (Number(v) / 100_000_000).toFixed(2);
-
 	const totalPortfolioValue = $derived(
 		positions.reduce((acc, pos) => acc + calculateValue(pos), ZERO)
 	);
@@ -93,7 +92,6 @@
 			{markets}
 			onCalculatePnL={calculatePnL}
 			onCalculateValue={calculateValue}
-			onFormatAmount={formatAmount}
 			{positions}
 		/>
 

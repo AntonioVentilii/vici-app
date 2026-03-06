@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { Transaction } from '$lib/types/wallet';
+	import { formatBalance, formatNanosecondsToDate } from '$lib/utils/format.utils';
 
 	interface Props {
 		transactions: Transaction[];
-		onFormatBalance: (b: bigint) => string;
 	}
 
-	const { transactions, onFormatBalance }: Props = $props();
+	const { transactions }: Props = $props();
 </script>
 
 <div class="overflow-x-auto">
@@ -26,13 +26,15 @@
 			<tbody class="divide-y divide-slate-50">
 				{#each transactions as tx (tx.id)}
 					<tr class="text-sm">
-						<td class="py-4 text-slate-600">{new Date(Number(tx.timestamp)).toLocaleString()}</td>
+						<td class="py-4 text-slate-600"
+							>{formatNanosecondsToDate({ nanoseconds: tx.timestamp })}</td
+						>
 						<td
 							class="py-4 font-bold {tx.type === 'Receive' ? 'text-green-600' : 'text-indigo-600'}"
 							>{tx.type}</td
 						>
 						<td class="py-4 text-slate-950 uppercase">{tx.token}</td>
-						<td class="py-4 font-bold text-slate-950">{onFormatBalance(tx.amount)}</td>
+						<td class="py-4 font-bold text-slate-950">{formatBalance(tx.amount)}</td>
 						<td class="py-4 text-slate-500">
 							{#if tx.marketId}
 								Market Prediction ID: {tx.marketId}

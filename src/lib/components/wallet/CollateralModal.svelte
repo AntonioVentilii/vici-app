@@ -11,9 +11,25 @@
 	const { isOpen, onClose, onSuccess }: Props = $props();
 
 	let amount = $state('');
+
 	let mode = $state<'Deposit' | 'Withdraw'>('Deposit');
+
 	let loading = $state(false);
+
 	let error = $state('');
+
+	const reset = () => {
+		amount = '';
+		mode = 'Deposit';
+		loading = false;
+		error = '';
+	};
+
+	const close = () => {
+		reset();
+
+		onClose();
+	};
 
 	const handleSubmit = async () => {
 		if (!amount || parseFloat(amount) <= 0) {
@@ -22,17 +38,21 @@
 		}
 
 		loading = true;
+
 		error = '';
 
 		try {
 			const amt = BigInt(Math.floor(parseFloat(amount) * 100_000_000));
+
 			if (mode === 'Deposit') {
 				await depositCollateral({ assetPrincipal: ICP_LEDGER_CANISTER_ID, amount: amt });
 			} else {
 				await withdrawCollateral({ assetPrincipal: ICP_LEDGER_CANISTER_ID, amount: amt });
 			}
+
 			onSuccess();
-			onClose();
+
+			close();
 		} catch (e: unknown) {
 			error = (e as Error).message ?? 'Operation failed';
 		} finally {
@@ -43,7 +63,7 @@
 
 {#if isOpen}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-		<button class="fixed inset-0 bg-slate-950/40" aria-label="Close modal" onclick={onClose}>
+		<button class="fixed inset-0 bg-slate-950/40" aria-label="Close modal" onclick={close}>
 		</button>
 		<div
 			class="animate-in fade-in zoom-in relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl duration-200"
@@ -51,7 +71,7 @@
 			<button
 				class="absolute top-6 right-6 text-slate-400 hover:text-slate-600"
 				aria-label="Close modal"
-				onclick={onClose}
+				onclick={close}
 			>
 				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path

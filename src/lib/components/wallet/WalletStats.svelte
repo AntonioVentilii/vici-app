@@ -1,12 +1,12 @@
 <script lang="ts">
 	import type { WalletBalance } from '$lib/types/wallet';
+	import { formatBalance } from '$lib/utils/format.utils';
 
 	interface Props {
 		balances: WalletBalance;
-		onFormatBalance: (b: bigint) => string;
 	}
 
-	const { balances, onFormatBalance }: Props = $props();
+	const { balances }: Props = $props();
 </script>
 
 <div class="grid grid-cols-1 gap-6">
@@ -20,7 +20,7 @@
 			</div>
 		</div>
 		<div class="mt-4 flex items-baseline gap-2">
-			<span class="text-5xl font-black text-slate-950">{onFormatBalance(balances.icp)}</span>
+			<span class="text-5xl font-black text-slate-950">{formatBalance(balances.icp)}</span>
 			<span class="text-xl font-bold text-slate-400 uppercase">ICP</span>
 		</div>
 		<div class="mt-6 flex gap-3 text-xs font-medium text-slate-500">
@@ -38,7 +38,7 @@
 			</div>
 		</div>
 		<div class="mt-4 flex items-baseline gap-2">
-			<span class="text-5xl font-black text-slate-950">{onFormatBalance(balances.ckUsdc)}</span>
+			<span class="text-5xl font-black text-slate-950">{formatBalance(balances.ckUsdc)}</span>
 			<span class="text-xl font-bold text-slate-400 uppercase">ckUSDC</span>
 		</div>
 		<div class="mt-6 flex gap-3 text-xs font-medium text-slate-500">

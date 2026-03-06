@@ -1,16 +1,17 @@
-/* eslint-disable require-await */
-
 import { getMarginAccount } from '$lib/api/clearing.api';
+import { getTransactions as getIcpTransactionsApi } from '$lib/api/icp-index.api';
+import { balance as getLedgerBalance } from '$lib/api/icrc-ledger.api';
 import { ZERO } from '$lib/constants/app.constants';
 import {
+	CKUSDC_INDEX_CANISTER_ID,
 	CKUSDC_LEDGER_CANISTER_ID,
+	ICP_INDEX_CANISTER_ID,
 	ICP_LEDGER_CANISTER_ID
 } from '$lib/constants/canisters.constants';
 import { getIdentity } from '$lib/services/identity.services';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
+import { mapIcpTransaction } from '$lib/utils/transactions.utils';
 import { isNullish, toNullable } from '@dfinity/utils';
-
-import { balance as getLedgerBalance } from '$lib/api/icrc-ledger.api';
 
 export const getBalances = async (): Promise<WalletBalance> => {
 	const identity = await getIdentity();
@@ -33,7 +34,7 @@ export const getBalances = async (): Promise<WalletBalance> => {
 				identity,
 				ledgerCanisterId: CKUSDC_LEDGER_CANISTER_ID,
 				account: { owner: principal }
-			}).catch(() => ZERO) // Optional: handle missing/unsupported ledger
+			})
 		]);
 
 		// 2. Fetch Collateral Balances
@@ -51,18 +52,47 @@ export const getBalances = async (): Promise<WalletBalance> => {
 		};
 	} catch (e: unknown) {
 		console.error('Failed to get balances', e);
+
 		return { icp: ZERO, ckUsdc: ZERO, collateral: ZERO };
 	}
 };
 
-export const sendICP = (): Promise<void> => {
-	throw Error('sendICP: Standard IC Transfer not implemented yet');
-};
-
-export const sendCkUSDC = async (): Promise<void> => {
-	throw Error('sendCkUSDC: Standard IC Transfer not implemented yet');
-};
-
 export const getTransactions = async (): Promise<Transaction[]> => {
-	throw Error('getTransactions: Transaction history not implemented yet');
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return [];
+	}
+
+	const principal = identity.getPrincipal();
+
+	try {
+		// 1. Fetch Index Transactions
+		const [icpTransactions] = await Promise.all([
+			await getIcpTransactionsApi({
+				identity,
+				principal,
+				indexCanisterId: ICP_INDEX_CANISTER_ID
+			}),
+			await getIcpTransactionsApi({
+				identity,
+				principal,
+				indexCanisterId: CKUSDC_INDEX_CANISTER_ID
+			})
+		]);
+
+		const icpNormalized: Transaction[] = icpTransactions.transactions.map((transaction) =>
+			mapIcpTransaction({ transaction, token: 'ICP', identity })
+		);
+
+		// const ckUsdcNormalized: Transaction[] = ckUsdcTransactions.transactions.map((transaction) =>
+		// 	mapIcrcTransaction({ transaction, token: 'ckUSDC', identity })
+		// );
+
+		return [...icpNormalized].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+	} catch (e: unknown) {
+		console.error('Failed to get transactions', e);
+
+		return [];
+	}
 };

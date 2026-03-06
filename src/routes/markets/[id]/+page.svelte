@@ -58,8 +58,6 @@
 		return `${hours}h ${minutes}m remaining`;
 	};
 
-	const formatVolume = (v: bigint) => (Number(v) / 100_000_000).toFixed(2);
-
 	const onPredictionPlaced = () => {
 		if (nonNullish(market)) {
 			fetchMarket(market.id);
@@ -86,7 +84,6 @@
 
 				<MarketDetailStats
 					expiryDate={market.expiryDate}
-					onFormatVolume={formatVolume}
 					timeRemaining={getTimeRemaining(market.expiryDate)}
 					totalVolume={market.totalVolume}
 				/>
@@ -94,7 +91,6 @@
 				<MarketDetailForecast
 					noProbability={market.noProbability}
 					noVolume={market.noVolume}
-					onFormatVolume={formatVolume}
 					yesProbability={market.yesProbability}
 					yesVolume={market.yesVolume}
 				/>

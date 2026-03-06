@@ -1,13 +1,14 @@
 <script lang="ts">
+	import { formatVolume } from '$lib/utils/format.utils';
+
 	interface Props {
 		yesProbability: number;
 		noProbability: number;
 		yesVolume: bigint;
 		noVolume: bigint;
-		onFormatVolume: (v: bigint) => string;
 	}
 
-	const { yesProbability, noProbability, yesVolume, noVolume, onFormatVolume }: Props = $props();
+	const { yesProbability, noProbability, yesVolume, noVolume }: Props = $props();
 </script>
 
 <div class="space-y-4 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -39,11 +40,11 @@
 	<div class="mt-12 grid grid-cols-2 gap-8 border-t border-slate-100 pt-8">
 		<div>
 			<div class="mb-1 text-xs font-bold tracking-widest text-slate-500 uppercase">YES Volume</div>
-			<div class="text-xl font-bold text-slate-950">{onFormatVolume(yesVolume)} ICP</div>
+			<div class="text-xl font-bold text-slate-950">{formatVolume(yesVolume)} ICP</div>
 		</div>
 		<div class="text-right">
 			<div class="mb-1 text-xs font-bold tracking-widest text-slate-500 uppercase">NO Volume</div>
-			<div class="text-xl font-bold text-slate-950">{onFormatVolume(noVolume)} ICP</div>
+			<div class="text-xl font-bold text-slate-950">{formatVolume(noVolume)} ICP</div>
 		</div>
 	</div>
 </div>

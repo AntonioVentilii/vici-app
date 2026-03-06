@@ -14,4 +14,8 @@ export const STRIKE: Nullable<bigint> = toNullable();
 // Oracles
 export const VICI_ORACLE_V1 = 'VICI_ORACLE_V1';
 
+// Time
 export const NANO_SECONDS_IN_MILLISECOND = 1_000_000n;
+
+// Wallets
+export const WALLET_PAGINATION = 10n;

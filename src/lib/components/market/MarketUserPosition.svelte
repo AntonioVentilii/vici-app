@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { ZERO } from '$lib/constants/app.constants';
 	import type { Position } from '$lib/types/position';
+	import { formatBalance } from '$lib/utils/format.utils';
 
 	interface Props {
 		position: Position | undefined;
-		onFormatBalance: (b: bigint) => string;
 	}
 
-	const { position, onFormatBalance }: Props = $props();
+	const { position }: Props = $props();
 
 	const isYes = $derived(position ? position.yesAmount > ZERO : false);
 	const absQty = $derived(position ? (isYes ? position.yesAmount : position.noAmount) : ZERO);
@@ -22,7 +22,7 @@
 		<div class="mt-4 flex items-center justify-between">
 			<div class="flex flex-col">
 				<span class="text-2xl font-black text-slate-950">
-					{onFormatBalance(absQty)} Shares
+					{formatBalance(absQty)} Shares
 				</span>
 				<div class="flex items-center gap-2">
 					<span class="text-xs font-bold {isYes ? 'text-green-600' : 'text-red-600'} uppercase">
@@ -30,7 +30,7 @@
 					</span>
 					<span class="text-[10px] text-slate-400">•</span>
 					<span class="text-[10px] font-medium text-slate-500">
-						Locked: {onFormatBalance(position.lockedCollateral)} ICP
+						Locked: {formatBalance(position.lockedCollateral)} ICP
 					</span>
 				</div>
 			</div>

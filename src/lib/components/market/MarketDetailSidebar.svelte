@@ -24,7 +24,7 @@
 </script>
 
 <aside class="space-y-8">
-	<MarketUserPosition onFormatBalance={(b) => (Number(b) / 100_000_000).toFixed(4)} {position} />
+	<MarketUserPosition {position} />
 
 	{#if market.status === 'Open'}
 		<PredictionInterface {market} {onPredictionPlaced} />

@@ -8,25 +8,35 @@
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
 	import WalletStats from '$lib/components/wallet/WalletStats.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { getBalances, getTransactions, sendCkUSDC, sendICP } from '$lib/services/wallet.service';
+	import {
+		CKUSDC_LEDGER_CANISTER_ID,
+		ICP_LEDGER_CANISTER_ID
+	} from '$lib/constants/canisters.constants';
+	import { safeGetIdentityOnce } from '$lib/services/identity.services';
+	import { sendIc } from '$lib/services/send.services';
+	import { getBalances, getTransactions } from '$lib/services/wallet.service';
 	import type { Transaction, WalletBalance } from '$lib/types/wallet';
 
 	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO, collateral: ZERO });
+
 	let transactions = $state<Transaction[]>([]);
+
 	let activeTab = $state('Send');
+
 	let isCollateralModalOpen = $state(false);
 
 	const tabs = ['Send', 'Receive', 'History'];
 
 	onMount(async () => {
 		balances = await getBalances();
+
 		transactions = await getTransactions();
 	});
 
-	const formatBalance = (b: bigint) => (Number(b) / 100_000_000).toFixed(4);
-
 	let recipient = $state('');
+
 	let amount = $state('');
+
 	let selectedToken = $state<'ICP' | 'ckUSDC'>('ICP');
 
 	const handleSend = async () => {
@@ -34,18 +44,24 @@
 			return;
 		}
 		try {
-			// In a real app we'd parse the amount properly
-			// const _amt = BigInt(parseFloat(amount) * 100_000_000);
-			if (selectedToken === 'ICP') {
-				await sendICP();
-			} else {
-				await sendCkUSDC();
-			}
-			// Refresh
+			const identity = await safeGetIdentityOnce();
+
+			await sendIc({
+				identity,
+				to: recipient,
+				amount: BigInt(parseFloat(amount) * 100_000_000),
+				ledgerCanisterId:
+					selectedToken === 'ICP' ? ICP_LEDGER_CANISTER_ID : CKUSDC_LEDGER_CANISTER_ID
+			});
+
 			balances = await getBalances();
+
 			transactions = await getTransactions();
+
 			amount = '';
+
 			recipient = '';
+
 			alert('Transaction successful!');
 		} catch (e: unknown) {
 			alert((e as Error).message);
@@ -63,12 +79,11 @@
 	<!-- Balances Cards -->
 	<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
 		<div class="lg:col-span-1">
-			<WalletStats {balances} onFormatBalance={formatBalance} />
+			<WalletStats {balances} />
 		</div>
 		<div class="lg:col-span-2">
 			<CollateralStats
 				collateral={balances.collateral}
-				onFormatBalance={formatBalance}
 				onManage={() => (isCollateralModalOpen = true)}
 			/>
 		</div>
@@ -111,7 +126,7 @@
 			{:else if activeTab === 'Receive'}
 				<WalletReceive />
 			{:else}
-				<WalletHistory onFormatBalance={formatBalance} {transactions} />
+				<WalletHistory {transactions} />
 			{/if}
 		</div>
 	</div>

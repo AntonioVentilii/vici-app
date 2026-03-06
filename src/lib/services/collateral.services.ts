@@ -8,6 +8,7 @@ import { approve } from '$lib/api/icrc-ledger.api';
 import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { emitRefreshBalance } from '$lib/utils/refresh.utils';
+import { nowInBigIntNanoSeconds } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 
 export const depositCollateral = async ({
@@ -23,12 +24,12 @@ export const depositCollateral = async ({
 	await approve({
 		identity,
 		ledgerCanisterId: assetPrincipal,
-		amount,
+		amount: amount + 10_000n, // Plus fee
 		spender: {
 			owner: CLEARING_CANISTER_ID,
 			subaccount: undefined
 		},
-		expiresAt: BigInt(Date.now() + 60_000) * 1_000_000n // 1 minute expiry in nanoseconds
+		expiresAt: nowInBigIntNanoSeconds() + 60n * 1_000_000_000n // 1 minute
 	});
 
 	// 2. Deposit collateral
