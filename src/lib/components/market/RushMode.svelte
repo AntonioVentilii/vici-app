@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
+	import { goto } from '$app/navigation';
 	import RushCard from '$lib/components/market/RushCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { getRushQueue } from '$lib/services/market.services';
 	import { placeOrder } from '$lib/services/order.services';
-	import { navigateTo } from '$lib/stores/nav.store';
 	import type { Market } from '$lib/types/market';
 
 	let markets = $state<Market[]>([]);
@@ -80,7 +81,7 @@
 	};
 
 	const backToMarkets = () => {
-		navigateTo('markets');
+		goto(AppPath.Home);
 	};
 </script>
 

@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
-	import { navigateTo } from '$lib/stores/nav.store';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import type { WalletBalance } from '$lib/types/wallet';
 
 	interface Props {
@@ -15,7 +16,8 @@
 
 	const goToWallet = () => {
 		open = false;
-		navigateTo('wallet');
+
+		goto(AppPath.Wallet);
 	};
 </script>
 

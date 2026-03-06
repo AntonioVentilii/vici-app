@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
+	import { goto } from '$app/navigation';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
-	import { navigateTo } from '$lib/stores/nav.store';
+	import { AppPath } from '$lib/constants/routes.constants';
 
 	let open = $state(false);
 
 	const goToProfile = () => {
 		open = false;
-		navigateTo('profile');
+
+		goto(AppPath.Profile);
 	};
 
 	const doSignOut = async () => {
 		open = false;
+
 		await signOut();
 	};
 </script>

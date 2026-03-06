@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Clock } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import type { Market } from '$lib/types/market';
 
 	interface Props {
@@ -30,7 +31,7 @@
 
 <div
 	class="group border-border bg-card hover:border-primary/50 flex cursor-pointer flex-col items-start justify-between gap-2 rounded-xl border px-6 py-6 transition-all duration-500 hover:shadow-lg"
-	onclick={() => goto(`/markets/${market.id}`)}
+	onclick={() => goto(`${AppPath.Markets}}/${market.id}`)}
 	onkeydown={(e) => e.key === 'Enter' && goto(`/markets/${market.id}`)}
 	role="link"
 	tabindex="0"
@@ -68,7 +69,7 @@
 		<div class="grid grid-cols-2 gap-4 lg:gap-6">
 			<a
 				class="rounded-lg bg-green-50 p-2 text-center transition-all hover:bg-green-100 hover:shadow-sm"
-				href="/markets/{market.id}?side=yes"
+				href="/(app)/markets/{market.id}?side=yes"
 				onclick={(e) => e.stopPropagation()}
 			>
 				<div class="text-[10px] font-bold text-green-600 uppercase">Yes</div>
@@ -79,7 +80,7 @@
 
 			<a
 				class="rounded-lg bg-red-50 p-2 text-center transition-all hover:bg-red-100 hover:shadow-sm"
-				href="/markets/{market.id}?side=no"
+				href="/(app)/markets/{market.id}?side=no"
 				onclick={(e) => e.stopPropagation()}
 			>
 				<div class="text-[10px] font-bold text-red-600 uppercase">No</div>

@@ -50,7 +50,7 @@
 							{@const pnl = onCalculatePnL(pos)}
 							<tr class="group transition-colors hover:bg-slate-50">
 								<td class="px-6 py-4">
-									<a class="group block max-w-xs" href="/markets/{pos.marketId}">
+									<a class="group block max-w-xs" href="/(app)/markets/{pos.marketId}">
 										<span
 											class="line-clamp-1 text-sm font-bold text-slate-950 transition-colors group-hover:text-indigo-600"
 										>

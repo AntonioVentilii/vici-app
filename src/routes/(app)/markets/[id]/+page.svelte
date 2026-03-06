@@ -117,7 +117,7 @@
 			</p>
 			<a
 				class="mt-8 rounded-xl bg-indigo-600 px-8 py-3 font-bold text-white transition-all hover:bg-indigo-700"
-				href="/"
+				href="/static"
 			>
 				Return to Markets
 			</a>

@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import SignInModal from '$lib/components/authn/SignInModal.svelte';
 	import UserDropdown from '$lib/components/layout/UserDropdown.svelte';
 	import WalletDropdown from '$lib/components/layout/WalletDropdown.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
 	import { getBalances } from '$lib/services/wallet.service';
-	import { navStore, navigateTo, type Page } from '$lib/stores/nav.store';
 	import type { WalletBalance } from '$lib/types/wallet';
 
 	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO, collateral: ZERO });
@@ -19,10 +20,10 @@
 		balances = await getBalances();
 	});
 
-	const isActive = (path: Page) => $navStore === path && page.url.pathname === '/';
+	const isActive = (path: AppPath) => page.url.pathname === path;
 
-	const handleNav = (p: Page) => {
-		navigateTo(p);
+	const handleNav = (path: AppPath) => {
+		goto(path);
 	};
 
 	const openSignInModal = () => {
@@ -31,31 +32,31 @@
 
 	interface NavItem {
 		label: string;
-		page: Page;
+		path: AppPath;
 		adminOnly?: boolean;
 	}
 
 	const navItems: NavItem[] = [
-		{ label: 'Markets', page: 'markets' },
-		{ label: 'Rush', page: 'rush' },
-		{ label: 'Leaderboard', page: 'leaderboard' },
-		{ label: 'Portfolio', page: 'portfolio' },
-		{ label: 'Admin', page: 'admin', adminOnly: true }
+		{ label: 'Markets', path: AppPath.Home },
+		{ label: 'Rush', path: AppPath.Rush },
+		{ label: 'Leaderboard', path: AppPath.Leaderboard },
+		{ label: 'Portfolio', path: AppPath.Portfolio },
+		{ label: 'Admin', path: AppPath.Admin, adminOnly: true }
 	];
 
 	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
 </script>
 
-{#snippet navButton({ label, page: navPage, adminOnly = false }: NavItem)}
+{#snippet navButton({ label, path, adminOnly = false }: NavItem)}
 	<button
-		class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive(navPage)
+		class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive(path)
 			? adminOnly
 				? 'bg-primary/10 text-primary'
 				: 'bg-primary text-primary-foreground'
 			: adminOnly
 				? 'text-primary/60 hover:bg-primary/5 hover:text-primary'
 				: 'hover:bg-muted/50 hover:text-foreground'}"
-		onclick={() => handleNav(navPage)}
+		onclick={() => handleNav(path)}
 	>
 		{label}
 	</button>
@@ -66,7 +67,7 @@
 >
 	<div class="container mx-auto flex h-16 items-center justify-between px-4">
 		<!-- Logo -->
-		<button class="group flex items-center gap-2" onclick={() => handleNav('markets')}>
+		<button class="group flex items-center gap-2" onclick={() => handleNav(AppPath.Home)}>
 			<div
 				class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg font-bold shadow-lg transition-transform group-hover:scale-110"
 			>
@@ -81,7 +82,7 @@
 
 		<!-- Desktop Nav -->
 		<nav class="hidden items-center gap-1 md:flex">
-			{#each visibleNavItems as item (item.page)}
+			{#each visibleNavItems as item (item.path)}
 				{@render navButton(item)}
 			{/each}
 		</nav>
