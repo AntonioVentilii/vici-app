@@ -1,6 +1,7 @@
 import { getAgent } from '$lib/actors/agents.ic';
 import { WALLET_PAGINATION } from '$lib/constants/app.constants';
 import type { CanisterIdText } from '$lib/types/canister';
+import { getIcrcAccount } from '$lib/utils/transactions.utils';
 import { IcrcIndexCanister, type IcrcIndexDid } from '@icp-sdk/canisters/ledger/icrc';
 import type { Identity } from '@icp-sdk/core/agent';
 import { Principal } from '@icp-sdk/core/principal';
@@ -23,7 +24,7 @@ export const getTransactions = async ({
 	return getTransactions({
 		start,
 		max_results: maxResults,
-		account: { owner: principal }
+		account: getIcrcAccount(principal)
 	});
 };
 

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { WalletBalance } from '$lib/types/wallet';
-	import { formatBalance } from '$lib/utils/format.utils';
+	import { formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		balances: WalletBalance;
@@ -20,7 +20,9 @@
 			</div>
 		</div>
 		<div class="mt-2 flex items-baseline gap-2">
-			<span class="text-3xl font-black text-slate-950">{formatBalance(balances.icp)}</span>
+			<span class="text-3xl font-black text-slate-950">
+				{formatToken({ value: balances.icp, unitName: 8 })}
+			</span>
 			<span class="text-lg font-bold text-slate-400 uppercase">ICP</span>
 		</div>
 		<div class="mt-4 flex gap-3 text-[10px] font-medium text-slate-500">
@@ -38,7 +40,9 @@
 			</div>
 		</div>
 		<div class="mt-2 flex items-baseline gap-2">
-			<span class="text-3xl font-black text-slate-950">{formatBalance(balances.ckUsdc)}</span>
+			<span class="text-3xl font-black text-slate-950">
+				{formatToken({ value: balances.ckUsdc, unitName: 6 })}
+			</span>
 			<span class="text-lg font-bold text-slate-400 uppercase">ckUSDC</span>
 		</div>
 		<div class="mt-4 flex gap-3 text-[10px] font-medium text-slate-500">

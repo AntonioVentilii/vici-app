@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Transaction } from '$lib/types/wallet';
-	import { formatBalance, formatNanosecondsToDate } from '$lib/utils/format.utils';
+	import { formatNanosecondsToDate, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		transactions: Transaction[];
@@ -24,7 +24,7 @@
 				</tr>
 			</thead>
 			<tbody class="divide-y divide-slate-50">
-				{#each transactions as { id, timestamp, type, token, amount, marketId, counterparty } (id)}
+				{#each transactions as { id, timestamp, type, token, amount, marketId, counterparty } (`${id}-${token}`)}
 					<tr class="text-sm">
 						<td class="py-4 text-slate-600">
 							{formatNanosecondsToDate({ nanoseconds: timestamp })}
@@ -38,7 +38,9 @@
 							{type}
 						</td>
 						<td class="py-4 text-slate-950 uppercase">{token}</td>
-						<td class="py-4 font-bold text-slate-950">{formatBalance(amount)}</td>
+						<td class="py-4 font-bold text-slate-950">
+							{formatToken({ value: amount, unitName: token === 'ICP' ? 8 : 6 })}
+						</td>
 						<td class="py-4 text-slate-500">
 							{#if marketId}
 								Market Prediction ID: {marketId}

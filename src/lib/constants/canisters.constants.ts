@@ -7,8 +7,5 @@ export const REGISTRY_CANISTER_ID = Principal.fromText('g5pxl-pyaaa-aaaaj-qqhoq-
 export const ICP_LEDGER_CANISTER_ID = 'ryjl3-tyaaa-aaaaa-aaaba-cai';
 export const ICP_INDEX_CANISTER_ID = 'qhbym-qaaaa-aaaaa-aaafq-cai';
 
-// TODO: Adjust with real canister IDs once deployed locally too
-// export const CKUSDC_LEDGER_CANISTER_ID = 'xevnm-gaaaa-aaaar-qafnq-cai';
-// export const CKUSDC_INDEX_CANISTER_ID = 'xrs4b-hiaaa-aaaar-qafoa-cai';
-export const CKUSDC_LEDGER_CANISTER_ID = 'ryjl3-tyaaa-aaaaa-aaaba-cai';
-export const CKUSDC_INDEX_CANISTER_ID = 'qhbym-qaaaa-aaaaa-aaafq-cai';
+export const CKUSDC_LEDGER_CANISTER_ID = 'xevnm-gaaaa-aaaar-qafnq-cai';
+export const CKUSDC_INDEX_CANISTER_ID = 'xrs4b-hiaaa-aaaar-qafoa-cai';

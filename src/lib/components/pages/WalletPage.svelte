@@ -16,6 +16,7 @@
 	import { sendIc } from '$lib/services/send.services';
 	import { getBalances, getTransactions } from '$lib/services/wallet.service';
 	import type { Transaction, WalletBalance } from '$lib/types/wallet';
+	import { parseToken } from '$lib/utils/parse.utils';
 
 	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO, collateral: ZERO });
 
@@ -49,7 +50,10 @@
 			await sendIc({
 				identity,
 				to: recipient,
-				amount: BigInt(parseFloat(amount) * 100_000_000),
+				amount: parseToken({
+					value: `${amount}`,
+					unitName: selectedToken === 'ICP' ? 8 : 6
+				}),
 				ledgerCanisterId:
 					selectedToken === 'ICP' ? ICP_LEDGER_CANISTER_ID : CKUSDC_LEDGER_CANISTER_ID
 			});

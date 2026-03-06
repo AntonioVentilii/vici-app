@@ -26,6 +26,65 @@
 					"staging": "g5pxl-pyaaa-aaaaj-qqhoq-cai"
 				}
 			}
+		},
+		"cketh_minter": {
+			"type": "custom",
+			"build": "scripts/build.cketh_minter.sh",
+			"candid": "target/ic/cketh_minter.did",
+			"wasm": "target/ic/cketh_minter.wasm",
+			"init_arg_file": "target/ic/cketh_minter.args.did",
+			"specified_id": "jzenf-aiaaa-aaaar-qaa7q-cai",
+			"remote": {
+				"id": {
+					"ic": "sv3dd-oaaaa-aaaar-qacoa-cai",
+					"staging": "jzenf-aiaaa-aaaar-qaa7q-cai"
+				}
+			}
+		},
+		"cketh_ledger": {
+			"dependencies": ["cketh_minter"],
+			"type": "custom",
+			"candid": "target/ic/cketh_ledger.did",
+			"build": "scripts/build.cketh_ledger.sh",
+			"wasm": "target/ic/cketh_ledger.wasm",
+			"init_arg_file": "target/ic/cketh_ledger.args.did",
+			"specified_id": "apia6-jaaaa-aaaar-qabma-cai",
+			"remote": {
+				"id": {
+					"ic": "ss2fx-dyaaa-aaaar-qacoq-cai",
+					"staging": "apia6-jaaaa-aaaar-qabma-cai"
+				}
+			}
+		},
+		"ckusdc_ledger": {
+			"dependencies": ["cketh_minter"],
+			"type": "custom",
+			"build": "scripts/build.ckusdc_ledger.sh",
+			"candid": "target/ic/cketh_ledger.did",
+			"wasm": "target/ic/cketh_ledger.wasm",
+			"init_arg_file": "target/ic/ckusdc_ledger.args.did",
+			"specified_id": "xevnm-gaaaa-aaaar-qafnq-cai",
+			"remote": {
+				"id": {
+					"ic": "xevnm-gaaaa-aaaar-qafnq-cai",
+					"staging": "xevnm-gaaaa-aaaar-qafnq-cai"
+				}
+			}
+		},
+		"ckusdc_index": {
+			"dependencies": ["ckusdc_ledger"],
+			"type": "custom",
+			"build": "scripts/build.ckusdc_index.sh",
+			"candid": "target/ic/cketh_index.did",
+			"wasm": "target/ic/cketh_index.wasm",
+			"init_arg_file": "target/ic/ckusdc_index.args.did",
+			"specified_id": "xrs4b-hiaaa-aaaar-qafoa-cai",
+			"remote": {
+				"id": {
+					"ic": "xrs4b-hiaaa-aaaar-qafoa-cai",
+					"staging": "xrs4b-hiaaa-aaaar-qafoa-cai"
+				}
+			}
 		}
 	},
 	"defaults": {

@@ -1,9 +1,14 @@
 import { ZERO } from '$lib/constants/app.constants';
-import type { IcpTransaction, IcTransactionAddOnsInfo } from '$lib/types/ic-transaction';
+import type {
+	IcpTransaction,
+	IcrcTransaction,
+	IcTransactionAddOnsInfo
+} from '$lib/types/ic-transaction';
 import type { Transaction } from '$lib/types/wallet';
 import { fromNullable, isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
 import { type IcpIndexDid, AccountIdentifier } from '@icp-sdk/canisters/ledger/icp';
 import {
+	type IcrcAccount,
 	type IcrcIndexDid,
 	encodeIcrcAccount,
 	fromCandidAccount
@@ -13,6 +18,8 @@ import type { Principal } from '@icp-sdk/core/principal';
 
 export const getAccountIdentifier = (principal: Principal): AccountIdentifier =>
 	AccountIdentifier.fromPrincipal({ principal, subAccount: undefined });
+
+export const getIcrcAccount = (principal: Principal): IcrcAccount => ({ owner: principal });
 
 export const mapTransactionIcpToSelf = (
 	tx: IcpIndexDid.TransactionWithId
@@ -120,13 +127,56 @@ export const mapIcpTransaction = ({
 
 		return {
 			...tx,
-			type: incoming === false ? 'Send' : 'Receive',
+			type: incoming ? 'Receive' : 'Send',
 			amount: operation.Transfer.amount.e8s,
-			counterparty: incoming === false ? operation.Transfer.to : operation.Transfer.from
+			counterparty: incoming ? operation.Transfer.from : operation.Transfer.to
 		};
 	}
 
 	throw new Error(`Unknown transaction type ${JSON.stringify(transaction, jsonReplacer)}`);
+};
+
+export const mapTransactionIcrcToSelf = (tx: IcrcIndexDid.TransactionWithId): IcrcTransaction[] => {
+	const { transaction, id } = tx;
+	const { transfer: t } = transaction;
+
+	const transfer = fromNullable(t);
+
+	if (isNullish(transfer)) {
+		return [
+			{
+				id,
+				transaction
+			}
+		];
+	}
+
+	const { from, to } = transfer;
+
+	const isSelfTransaction =
+		encodeIcrcAccount(fromCandidAccount(from)).toLowerCase() ===
+		encodeIcrcAccount(fromCandidAccount(to)).toLowerCase();
+
+	return [
+		{
+			id,
+			transaction: {
+				...transaction,
+				transferToSelf: 'send'
+			}
+		},
+		...(isSelfTransaction
+			? [
+					{
+						id,
+						transaction: {
+							...transaction,
+							transferToSelf: 'receive' as const
+						}
+					}
+				]
+			: [])
+	];
 };
 
 export const mapIcrcTransaction = ({
@@ -134,43 +184,62 @@ export const mapIcrcTransaction = ({
 	token,
 	identity
 }: {
-	transaction: IcrcIndexDid.TransactionWithId;
+	transaction: IcrcTransaction;
 	token: Transaction['token'];
 	identity: Identity;
 }): Transaction => {
-	const { timestamp, transfer } = transaction;
+	const { timestamp, approve, burn, mint, transfer, transferToSelf } = transaction;
 
-	const data = fromNullable(transfer);
+	const principal = identity.getPrincipal();
+
+	const data =
+		fromNullable(approve) ?? fromNullable(burn) ?? fromNullable(mint) ?? fromNullable(transfer);
 
 	if (isNullish(data)) {
 		throw new Error(`Unknown transaction type ${JSON.stringify(transaction, jsonReplacer)}`);
 	}
 
-	const principal = identity.getPrincipal();
-
 	const accountIdentifier = nonNullish(identity)
-		? encodeIcrcAccount({ owner: principal })
+		? encodeIcrcAccount(getIcrcAccount(identity.getPrincipal()))
 		: undefined;
 
-	const mapFrom = (from: string) => ({
-		from,
-		incoming: from?.toLowerCase() !== accountIdentifier?.toLowerCase()
-	});
+	const from = 'from' in data ? encodeIcrcAccount(fromCandidAccount(data.from)) : undefined;
+	const to = 'to' in data ? encodeIcrcAccount(fromCandidAccount(data.to)) : undefined;
 
-	const source = {
-		...('from' in data ? mapFrom(encodeIcrcAccount(fromCandidAccount(data.from))) : {})
-	};
+	const incoming =
+		from?.toLowerCase() !== accountIdentifier?.toLowerCase() || transferToSelf === 'receive';
 
-	const type = source.incoming === false ? 'Send' : 'Receive';
+	const isApprove = nonNullish(fromNullable(approve));
+	const isBurn = nonNullish(fromNullable(burn));
+	const isMint = nonNullish(fromNullable(mint));
 
-	const value = data.amount;
+	const type = isApprove
+		? 'Approve'
+		: isBurn
+			? 'Burn'
+			: isMint
+				? 'Mint'
+				: incoming
+					? 'Receive'
+					: 'Send';
+
+	const value = data?.amount;
+
+	const approveData = fromNullable(approve);
+	const approveSpender = nonNullish(approveData)
+		? encodeIcrcAccount(fromCandidAccount(approveData.spender))
+		: undefined;
+
+	const counterparty = isApprove ? approveSpender : isBurn ? from : isMint || incoming ? from : to;
 
 	return {
-		id: id.toString(),
+		id: `${id.toString()}${transferToSelf === 'receive' ? '-self' : ''}`,
 		user: principal.toText(),
 		timestamp,
 		type,
 		amount: value,
-		token
+		token,
+		counterparty,
+		approveSpender
 	};
 };

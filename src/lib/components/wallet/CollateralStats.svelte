@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { formatBalance } from '$lib/utils/format.utils';
+	import { formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		collateral: bigint;
@@ -27,7 +27,9 @@
 		</button>
 	</div>
 	<div class="mt-4 flex items-baseline gap-2">
-		<span class="text-3xl font-black text-slate-950">{formatBalance(collateral)}</span>
+		<span class="text-3xl font-black text-slate-950"
+			>{formatToken({ value: collateral, unitName: 8 })}</span
+		>
 		<span class="text-lg font-bold text-slate-400 uppercase">ICP</span>
 	</div>
 </div>

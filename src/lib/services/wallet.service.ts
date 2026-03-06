@@ -1,5 +1,6 @@
 import { getMarginAccount } from '$lib/api/clearing.api';
 import { getTransactions as getIcpTransactionsApi } from '$lib/api/icp-index.api';
+import { getTransactions as getIcrcTransactionsApi } from '$lib/api/icrc-index-ng.api';
 import { balance as getLedgerBalance } from '$lib/api/icrc-ledger.api';
 import { ZERO } from '$lib/constants/app.constants';
 import {
@@ -10,7 +11,13 @@ import {
 } from '$lib/constants/canisters.constants';
 import { getIdentity } from '$lib/services/identity.services';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
-import { mapIcpTransaction, mapTransactionIcpToSelf } from '$lib/utils/transactions.utils';
+import {
+	getIcrcAccount,
+	mapIcpTransaction,
+	mapIcrcTransaction,
+	mapTransactionIcpToSelf,
+	mapTransactionIcrcToSelf
+} from '$lib/utils/transactions.utils';
 import { isNullish, toNullable } from '@dfinity/utils';
 
 export const getBalances = async (): Promise<WalletBalance> => {
@@ -23,27 +30,29 @@ export const getBalances = async (): Promise<WalletBalance> => {
 	const principal = identity.getPrincipal();
 
 	try {
+		const account = getIcrcAccount(principal);
+
 		// 1. Fetch Ledger Balances
 		const [icpLedger, ckUsdcLedger] = await Promise.all([
 			getLedgerBalance({
 				identity,
 				ledgerCanisterId: ICP_LEDGER_CANISTER_ID,
-				account: { owner: principal }
+				account
 			}),
 			getLedgerBalance({
 				identity,
 				ledgerCanisterId: CKUSDC_LEDGER_CANISTER_ID,
-				account: { owner: principal }
+				account
 			})
 		]);
 
 		// 2. Fetch Collateral Balances
-		const account = await getMarginAccount({
+		const margin = await getMarginAccount({
 			identity,
 			params: { refresh: toNullable(true) }
 		});
 
-		const collateral = account.balances.reduce((acc, [_, balance]) => acc + balance, ZERO);
+		const collateral = margin.balances.reduce((acc, [_, balance]) => acc + balance, ZERO);
 
 		return {
 			icp: icpLedger,
@@ -68,13 +77,13 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 
 	try {
 		// 1. Fetch Index Transactions
-		const [icpTransactions] = await Promise.all([
+		const [icpTransactions, ckUsdcTransactions] = await Promise.all([
 			await getIcpTransactionsApi({
 				identity,
 				principal,
 				indexCanisterId: ICP_INDEX_CANISTER_ID
 			}),
-			await getIcpTransactionsApi({
+			await getIcrcTransactionsApi({
 				identity,
 				principal,
 				indexCanisterId: CKUSDC_INDEX_CANISTER_ID
@@ -85,11 +94,13 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 			.flatMap(mapTransactionIcpToSelf)
 			.map((transaction) => mapIcpTransaction({ transaction, token: 'ICP', identity }));
 
-		// const ckUsdcNormalized: Transaction[] = ckUsdcTransactions.transactions.map((transaction) =>
-		// 	mapIcrcTransaction({ transaction, token: 'ckUSDC', identity })
-		// );
+		const ckUsdcNormalized: Transaction[] = ckUsdcTransactions.transactions
+			.flatMap(mapTransactionIcrcToSelf)
+			.map((transaction) => mapIcrcTransaction({ transaction, token: 'ckUSDC', identity }));
 
-		return [...icpNormalized].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+		return [...icpNormalized, ...ckUsdcNormalized].sort(
+			(a, b) => Number(b.timestamp) - Number(a.timestamp)
+		);
 	} catch (e: unknown) {
 		console.error('Failed to get transactions', e);
 
