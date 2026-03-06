@@ -49,11 +49,11 @@
 	);
 </script>
 
-<section class="space-y-12">
+<section class="space-y-8">
 	<SectionHeader
-		description="Predict outcomes, trade positions, and compete with friends. Built on the Internet Computer for speed, security, and true decentralization."
-		highlight="Social Prediction Market"
-		title="The World's First"
+		description="Predict outcomes, trade positions, and compete with friends on the Internet Computer."
+		highlight="Prediction Market"
+		title="Social"
 	/>
 
 	<div class="grid grid-cols-1 items-start gap-8 lg:grid-cols-4">

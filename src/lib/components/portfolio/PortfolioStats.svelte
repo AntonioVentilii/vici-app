@@ -10,7 +10,7 @@
 	const { totalPortfolioValue, totalPnL, activeMarketsCount }: Props = $props();
 </script>
 
-<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+<div class="grid grid-cols-1 gap-4 md:grid-cols-3">
 	<StatCard label="Total Holdings" unit="ICP" value={totalPortfolioValue} />
 
 	<StatCard

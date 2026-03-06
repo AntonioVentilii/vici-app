@@ -9,3 +9,12 @@ export const routeMarketId: Readable<string | undefined> = derived(
 		}
 	]) => id
 );
+
+export const routeSide: Readable<string | undefined> = derived(
+	[page],
+	([
+		{
+			url: { searchParams }
+		}
+	]) => searchParams.get('side') ?? undefined
+);

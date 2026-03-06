@@ -1,7 +1,8 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { routeSide } from '$lib/derived/nav.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { placeOrder } from '$lib/services/order.services';
 	import { getBalances } from '$lib/services/wallet.service';
@@ -43,6 +44,15 @@
 		if ($tradeStore.selectedPrice !== undefined) {
 			price = $tradeStore.selectedPrice.toString();
 			orderType = 'LIMIT';
+		}
+	});
+
+	$effect(() => {
+		if ($routeSide === 'yes' || $routeSide === 'no') {
+			selectedType = $routeSide.toUpperCase() as PositionType;
+			if (orderType === 'MARKET') {
+				price = (selectedType === 'YES' ? yesProbability : noProbability).toString();
+			}
 		}
 	});
 

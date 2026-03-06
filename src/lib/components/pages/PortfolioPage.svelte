@@ -70,9 +70,9 @@
 	const totalPnL = $derived(positions.reduce((acc, pos) => acc + calculatePnL(pos), 0));
 </script>
 
-<div class="space-y-12">
+<div class="space-y-8">
 	<SectionHeader
-		description="Track your active predictions and see how your trades are performing in real-time."
+		description="Track your active predictions and performance in real-time."
 		highlight="Portfolio"
 		title="My"
 	/>

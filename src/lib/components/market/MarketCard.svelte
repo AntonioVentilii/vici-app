@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { goto } from '$app/navigation';
 	import type { Market } from '$lib/types/market';
 
 	interface Props {
@@ -34,9 +35,12 @@
 	};
 </script>
 
-<a
-	class="group border-border bg-card hover:border-primary/50 relative flex flex-col overflow-hidden rounded-lg border transition-all duration-500 hover:shadow-lg"
-	href="/markets/{market.id}"
+<div
+	class="group border-border bg-card hover:border-primary/50 relative flex cursor-pointer flex-col overflow-hidden rounded-lg border transition-all duration-500 hover:shadow-lg"
+	onclick={() => goto(`/markets/${market.id}`)}
+	onkeydown={(e) => e.key === 'Enter' && goto(`/markets/${market.id}`)}
+	role="link"
+	tabindex="0"
 >
 	<!-- Status Badge -->
 	<div class="absolute top-4 right-4 z-20">
@@ -50,66 +54,52 @@
 		</span>
 	</div>
 
-	<div class="p-6">
+	<div class="p-4">
 		<h3
-			class="text-foreground group-hover:text-primary line-clamp-2 text-xl font-bold transition-colors"
+			class="text-foreground group-hover:text-primary line-clamp-2 text-lg font-bold transition-colors"
 		>
 			{market.title}
 		</h3>
-		<p class="text-muted-foreground mt-2 line-clamp-2 text-sm">
+		<p class="text-muted-foreground mt-1 line-clamp-2 text-xs">
 			{market.description}
 		</p>
 
 		<!-- Probabilities Area -->
-		<div class="mt-6">
-			<div
-				class="flex items-center justify-between text-xs font-bold tracking-wider text-slate-500 uppercase"
+		<div class="mt-4 grid grid-cols-2 gap-2">
+			<a
+				class="rounded-lg bg-green-50 p-2 text-center transition-all hover:bg-green-100 hover:shadow-sm"
+				href="/markets/{market.id}?side=yes"
+				onclick={(e) => e.stopPropagation()}
 			>
-				<span>YES Probability</span>
-				<span>{Math.round(market.yesProbability * 100)}%</span>
-			</div>
-			<div class="bg-muted mt-2 h-2 w-full overflow-hidden rounded-full">
-				<div
-					style="width: {market.yesProbability * 100}%"
-					class="bg-primary h-full transition-all duration-1000 ease-out"
-				></div>
-			</div>
+				<div class="text-[10px] font-bold text-green-600 uppercase">Yes</div>
+				<div class="text-xl font-black text-green-700">
+					{Math.round(market.yesProbability * 100)}¢
+				</div>
+			</a>
+			<a
+				class="rounded-lg bg-red-50 p-2 text-center transition-all hover:bg-red-100 hover:shadow-sm"
+				href="/markets/{market.id}?side=no"
+				onclick={(e) => e.stopPropagation()}
+			>
+				<div class="text-[10px] font-bold text-red-600 uppercase">No</div>
+				<div class="text-xl font-black text-red-700">{Math.round(market.noProbability * 100)}¢</div>
+			</a>
 		</div>
 
 		<!-- Stats Grid -->
-		<div class="mt-8 grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
-			<div>
-				<div class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Volume</div>
-				<div class="text-foreground mt-1 text-sm font-bold uppercase">
+		<div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+			<div class="flex items-center gap-2">
+				<div class="text-[10px] font-bold text-slate-400 uppercase">Vol:</div>
+				<div class="text-xs font-bold text-slate-600">
 					{formatVolume(market.totalVolume)} ICP
 				</div>
 			</div>
 			<div class="text-right">
-				<div class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Ends In</div>
-				<div class="text-foreground mt-1 text-sm font-bold">
+				<div class="mr-1 inline text-[10px] font-bold text-slate-400 uppercase">Ends:</div>
+				<div class="inline text-xs font-bold text-slate-600">
 					{getTimeRemaining(market.expiryDate)}
 				</div>
 			</div>
 		</div>
 	</div>
-
-	<!-- Quick Action Overlay (Hidden until hover) -->
-	<div
-		class="absolute inset-0 z-10 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-sm transition-all duration-500 group-hover:opacity-100"
-	>
-		<div
-			class="flex translate-y-4 gap-3 transition-transform duration-500 group-hover:translate-y-0"
-		>
-			<button
-				class="bg-primary text-primary-foreground rounded-lg px-6 py-2.5 text-sm font-bold shadow-xl transition-all hover:scale-110 hover:opacity-90 active:scale-95"
-			>
-				Predict YES
-			</button>
-			<button
-				class="rounded-xl bg-white/10 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white/20 active:scale-95"
-			>
-				Details
-			</button>
-		</div>
-	</div>
-</a>
+</div>

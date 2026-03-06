@@ -69,7 +69,7 @@
 	<title>{market ? market.title : 'Market'} | Vici Social Markets</title>
 </svelte:head>
 
-<div class="space-y-12">
+<div class="space-y-8">
 	{#if loading}
 		<div class="flex h-96 items-center justify-center">
 			<div
@@ -78,8 +78,8 @@
 		</div>
 	{:else if market}
 		<!-- Market Header -->
-		<div class="grid grid-cols-1 gap-12 lg:grid-cols-3">
-			<div class="space-y-8 lg:col-span-2">
+		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
+			<div class="space-y-6 lg:col-span-2">
 				<MarketDetailHeader id={market.id} status={market.status} title={market.title} />
 
 				<MarketDetailStats

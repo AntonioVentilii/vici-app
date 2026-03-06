@@ -11,14 +11,14 @@
 	const { title, id, status }: Props = $props();
 </script>
 
-<div class="space-y-4">
-	<div class="flex flex-wrap items-center gap-4">
+<div class="space-y-2">
+	<div class="flex flex-wrap items-center gap-3">
 		<OutcomeBadge {status} />
-		<span class="text-sm font-medium text-slate-500">
-			Market ID: <span class="font-mono text-slate-400">{id}</span>
+		<span class="text-xs font-medium text-slate-500">
+			ID: <span class="font-mono text-slate-400">{id}</span>
 		</span>
 	</div>
-	<h1 class="text-4xl font-black text-slate-950 sm:text-5xl lg:text-7xl">
+	<h1 class="text-3xl font-black text-slate-950 sm:text-4xl lg:text-5xl">
 		{title}
 	</h1>
 </div>

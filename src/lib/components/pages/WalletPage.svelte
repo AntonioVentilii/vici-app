@@ -69,9 +69,9 @@
 	};
 </script>
 
-<div class="space-y-12">
+<div class="space-y-8">
 	<SectionHeader
-		description="Manage your ICP and ckUSDC balances. Securely send and receive tokens on the Internet Computer."
+		description="Manage your ICP and ckUSDC balances securely on the Internet Computer."
 		highlight="Wallet"
 		title="Your"
 	/>
