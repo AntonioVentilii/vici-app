@@ -1,13 +1,14 @@
 <script lang="ts">
 	import { ZERO } from '$lib/constants/app.constants';
 	import type { Position } from '$lib/types/position';
-	import { formatBalance } from '$lib/utils/format.utils';
+	import { formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		position: Position | undefined;
+		tokenDecimals: number;
 	}
 
-	const { position }: Props = $props();
+	const { position, tokenDecimals }: Props = $props();
 
 	const isYes = $derived(position ? position.yesAmount > ZERO : false);
 	const absQty = $derived(position ? (isYes ? position.yesAmount : position.noAmount) : ZERO);
@@ -22,7 +23,7 @@
 		<div class="mt-4 flex items-center justify-between">
 			<div class="flex flex-col">
 				<span class="text-2xl font-black text-slate-950">
-					{formatBalance(absQty)} Shares
+					{formatToken({ value: absQty, unitName: tokenDecimals })} Shares
 				</span>
 				<div class="flex items-center gap-2">
 					<span class="text-xs font-bold {isYes ? 'text-green-600' : 'text-red-600'} uppercase">
@@ -30,7 +31,7 @@
 					</span>
 					<span class="text-[10px] text-slate-400">•</span>
 					<span class="text-[10px] font-medium text-slate-500">
-						Locked: {formatBalance(position.lockedCollateral)} ICP
+						Locked: {formatToken({ value: position.lockedCollateral, unitName: tokenDecimals })} ICP
 					</span>
 				</div>
 			</div>

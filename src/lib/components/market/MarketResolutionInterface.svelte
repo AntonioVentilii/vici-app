@@ -26,8 +26,8 @@
 		error = '';
 
 		try {
-			// Clearing uses e8 format for prices
-			const price = BigInt(Math.floor(parseFloat(settlementPrice) * 100_000_000));
+			// Clearing uses token decimals format for prices
+			const price = BigInt(Math.floor(parseFloat(settlementPrice) * 10 ** market.token.decimals));
 			await settleMarket({ seriesId: market.id, settlementPrice: price });
 			onSettled();
 			alert('Market successfully settled!');

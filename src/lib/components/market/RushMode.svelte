@@ -49,11 +49,13 @@
 
 		processing = true;
 		try {
-			const amountE8 = BigInt(Math.floor(parseFloat(tradeAmount) * 100_000_000));
+			const decimals = BigInt(currentMarket.token.decimals);
+			const amountE8 = BigInt(Math.floor(parseFloat(tradeAmount) * Number(10n ** decimals)));
 			const price = action === 'YES' ? currentMarket.yesProbability : currentMarket.noProbability;
 
-			// qty = amount / price (normalized to e8)
-			const qty = (amountE8 * 100_000_000n) / BigInt(Math.floor(price * 100_000_000));
+			// qty = amount / price (normalized to token decimals)
+			const qty =
+				(amountE8 * 10n ** decimals) / BigInt(Math.floor(price * Number(10n ** decimals)));
 
 			await placeOrder({
 				marketId: currentMarket.id,
@@ -61,7 +63,8 @@
 				type: 'MARKET',
 				price,
 				qty,
-				outcome: action
+				outcome: action,
+				pricePrecision: currentMarket.pricePrecision
 			});
 			advance();
 		} catch (e) {

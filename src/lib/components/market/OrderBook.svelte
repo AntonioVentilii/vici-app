@@ -3,16 +3,22 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import { getOrderBook } from '$lib/services/order.services';
 	import { selectPrice } from '$lib/stores/trade.store';
-	import type { MarketId, Outcome } from '$lib/types/market';
+	import type { Market, Outcome } from '$lib/types/market';
 	import type { OrderBook } from '$lib/types/order';
-	import { formatBalance } from '$lib/utils/format.utils';
+	import { formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
-		marketId: MarketId;
+		market: Market;
 		outcome?: Outcome;
 	}
 
-	const { marketId, outcome = 'YES' }: Props = $props();
+	const { market, outcome = 'YES' }: Props = $props();
+
+	const {
+		id: marketId,
+		pricePrecision,
+		token: { decimals: tokenDecimals }
+	} = $derived(market);
 
 	let orderBook = $state<OrderBook | undefined>();
 	let loading = $state(true);
@@ -108,9 +114,11 @@
 							class="absolute inset-y-0 right-0 bg-red-500/5 transition-all group-hover:bg-red-500/10"
 						></div>
 
-						<span class="relative z-10 text-sm font-bold text-red-500">{ask.price.toFixed(2)}</span>
+						<span class="relative z-10 text-sm font-bold text-red-500"
+							>{ask.price.toFixed(pricePrecision)}
+						</span>
 						<span class="relative z-10 text-xs font-medium text-slate-500">
-							{formatBalance(ask.totalQty)}
+							{formatToken({ value: ask.totalQty, unitName: tokenDecimals })}
 						</span>
 					</button>
 				{/each}
@@ -121,7 +129,7 @@
 				<span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Spread</span>
 				{#if displayAsks().length > 0 && displayBids().length > 0}
 					<span class="text-xs font-bold text-slate-600">
-						{Math.abs(displayAsks()[0].price - displayBids()[0].price).toFixed(3)}
+						{Math.abs(displayAsks()[0].price - displayBids()[0].price).toFixed(pricePrecision + 1)}
 					</span>
 				{/if}
 			</div>
@@ -139,11 +147,11 @@
 							class="absolute inset-y-0 right-0 bg-green-500/5 transition-all group-hover:bg-green-500/10"
 						></div>
 
-						<span class="relative z-10 text-sm font-bold text-green-500"
-							>{bid.price.toFixed(2)}</span
-						>
+						<span class="relative z-10 text-sm font-bold text-green-500">
+							{bid.price.toFixed(pricePrecision)}
+						</span>
 						<span class="relative z-10 text-xs font-medium text-slate-500">
-							{formatBalance(bid.totalQty)}
+							{formatToken({ value: bid.totalQty, unitName: tokenDecimals })}
 						</span>
 					</button>
 				{/each}

@@ -17,7 +17,6 @@
 	import type { Transaction } from '$lib/types/wallet';
 	import { emit } from '$lib/utils/events.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
-	import { emitRefreshBalance } from '$lib/utils/refresh.utils';
 
 	let transactions = $state<Transaction[]>([]);
 
@@ -89,11 +88,7 @@
 		</div>
 	</div>
 
-	<CollateralModal
-		isOpen={isCollateralModalOpen}
-		onClose={() => (isCollateralModalOpen = false)}
-		onSuccess={emitRefreshBalance}
-	/>
+	<CollateralModal isOpen={isCollateralModalOpen} onClose={() => (isCollateralModalOpen = false)} />
 
 	<!-- Operations Tabs -->
 	<div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">

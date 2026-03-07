@@ -79,5 +79,5 @@
 		</div>
 	</div>
 
-	<OrderBook marketId={market.id} outcome={selectedOutcome} />
+	<OrderBook {market} outcome={selectedOutcome} />
 </div>

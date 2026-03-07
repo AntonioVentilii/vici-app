@@ -7,50 +7,46 @@ import type { Identity } from '@icp-sdk/core/agent';
 
 export const depositCollateral = async ({
 	identity,
-	params,
-	...queryParams
+	...rest
 }: {
 	identity: Identity;
 	params: ClearingDid.DepositCollateralParams;
 } & QueryParams): Promise<void> => {
 	const { depositCollateral } = await clearingCanister({ identity });
-	return await depositCollateral({ params, ...queryParams });
+	return await depositCollateral(rest);
 };
 
 export const withdrawCollateral = async ({
 	identity,
-	params,
-	...queryParams
+	...rest
 }: {
 	identity: Identity;
 	params: ClearingDid.WithdrawCollateralParams;
 } & QueryParams): Promise<void> => {
 	const { withdrawCollateral } = await clearingCanister({ identity });
-	return await withdrawCollateral({ params, ...queryParams });
+	return await withdrawCollateral(rest);
 };
 
 export const submitMatchedTrade = async ({
 	identity,
-	params,
-	...queryParams
+	...rest
 }: {
 	identity: Identity;
 	params: ClearingDid.SubmitMatchedTradeParams;
 } & QueryParams): Promise<boolean> => {
 	const { submitMatchedTrade } = await clearingCanister({ identity });
-	return await submitMatchedTrade({ params, ...queryParams });
+	return await submitMatchedTrade(rest);
 };
 
 export const getMarginAccount = async ({
 	identity,
-	params,
-	...queryParams
+	...rest
 }: {
 	identity: Identity;
 	params: ClearingDid.GetMarginAccountParams;
 } & QueryParams): Promise<ClearingDid.MarginAccount> => {
 	const { getMarginAccount } = await clearingCanister({ identity });
-	return await getMarginAccount({ params, ...queryParams });
+	return await getMarginAccount(rest);
 };
 
 export const getPositions = async ({
@@ -65,26 +61,24 @@ export const getPositions = async ({
 
 export const settleSeries = async ({
 	identity,
-	params,
-	...queryParams
+	...rest
 }: {
 	identity: Identity;
 	params: ClearingDid.SettleSeriesParams;
 } & QueryParams): Promise<void> => {
 	const { settleSeries } = await clearingCanister({ identity });
-	return await settleSeries({ params, ...queryParams });
+	return await settleSeries(rest);
 };
 
 export const getPosition = async ({
 	identity,
-	params,
-	...queryParams
+	...rest
 }: {
 	identity: Identity;
 	params: ClearingDid.GetPositionParams;
 } & QueryParams): Promise<ClearingDid.Position | undefined> => {
 	const { getPosition } = await clearingCanister({ identity });
-	return await getPosition({ params, ...queryParams });
+	return await getPosition(rest);
 };
 
 export const submitLimitOrder = async ({
@@ -118,6 +112,37 @@ export const cancelLimitOrder = async ({
 }): Promise<boolean> => {
 	const { cancelLimitOrder } = await clearingCanister({ identity });
 	return await cancelLimitOrder({ params });
+};
+
+export const getOrders = async ({
+	identity,
+	...queryParams
+}: {
+	identity: Identity;
+} & QueryParams): Promise<ClearingDid.LimitOrder[]> => {
+	const { getOrders } = await clearingCanister({ identity });
+	return await getOrders(queryParams);
+};
+
+export const getTradeHistory = async ({
+	identity,
+	...queryParams
+}: {
+	identity: Identity;
+} & QueryParams): Promise<ClearingDid.Event[]> => {
+	const { getTradeHistory } = await clearingCanister({ identity });
+	return await getTradeHistory(queryParams);
+};
+
+export const listOrders = async ({
+	identity,
+	...rest
+}: {
+	identity: Identity;
+	params: ClearingDid.ListOrdersParams;
+} & QueryParams): Promise<ClearingDid.LimitOrder[]> => {
+	const { listOrders } = await clearingCanister({ identity });
+	return await listOrders(rest);
 };
 
 const clearingCanister = async ({

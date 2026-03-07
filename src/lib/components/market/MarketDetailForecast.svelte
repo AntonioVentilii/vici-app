@@ -1,14 +1,20 @@
 <script lang="ts">
-	import { formatVolume } from '$lib/utils/format.utils';
+	import type { Market } from '$lib/types/market';
+	import { formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
-		yesProbability: number;
-		noProbability: number;
-		yesVolume: bigint;
-		noVolume: bigint;
+		market: Market;
 	}
 
-	const { yesProbability, noProbability, yesVolume, noVolume }: Props = $props();
+	const { market }: Props = $props();
+
+	const {
+		yesProbability,
+		noProbability,
+		yesVolume,
+		noVolume,
+		token: { decimals: tokenDecimals }
+	} = $derived(market);
 </script>
 
 <div class="space-y-3 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -42,13 +48,17 @@
 			<div class="mb-0.5 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
 				YES Vol
 			</div>
-			<div class="text-lg font-bold text-slate-950">{formatVolume(yesVolume)} ICP</div>
+			<div class="text-lg font-bold text-slate-950">
+				{formatToken({ value: yesVolume, unitName: tokenDecimals })} ICP
+			</div>
 		</div>
 		<div class="text-right">
 			<div class="mb-0.5 text-[10px] font-bold tracking-widest text-slate-500 uppercase">
 				NO Vol
 			</div>
-			<div class="text-lg font-bold text-slate-950">{formatVolume(noVolume)} ICP</div>
+			<div class="text-lg font-bold text-slate-950">
+				{formatToken({ value: noVolume, unitName: tokenDecimals })} ICP
+			</div>
 		</div>
 	</div>
 </div>

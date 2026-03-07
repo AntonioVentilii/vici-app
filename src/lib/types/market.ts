@@ -25,4 +25,5 @@ export interface Market {
 	yesProbability: number;
 	noProbability: number;
 	token: Token;
+	pricePrecision: number;
 }

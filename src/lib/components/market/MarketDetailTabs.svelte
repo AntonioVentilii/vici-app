@@ -68,7 +68,7 @@
 									<div>
 										<span class="text-xs font-bold text-emerald-600 uppercase">YES</span>
 										<div class="mt-1 text-lg font-black text-emerald-950">
-											{(Number(position.yesAmount) / 100_000_000).toFixed(2)} Units
+											{formatToken({ value: position.yesAmount, unitName: market.token.decimals })} Units
 										</div>
 									</div>
 								</div>
@@ -78,7 +78,7 @@
 									<div>
 										<span class="text-xs font-bold text-rose-600 uppercase">NO</span>
 										<div class="mt-1 text-lg font-black text-rose-950">
-											{(Number(position.noAmount) / 100_000_000).toFixed(2)} Units
+											{formatToken({ value: position.noAmount, unitName: market.token.decimals })} Units
 										</div>
 									</div>
 								</div>

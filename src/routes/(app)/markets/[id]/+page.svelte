@@ -13,7 +13,9 @@
 	import type { Position } from '$lib/types/position';
 
 	let market = $state<Market | undefined>();
+
 	let position = $state<Position | undefined>();
+
 	let loading = $state(true);
 
 	const fetchMarket = async (id: MarketId) => {
@@ -39,25 +41,6 @@
 		}
 	});
 
-	const getTimeRemaining = (expiry: bigint) => {
-		const now = BigInt(Date.now());
-
-		const diff = Number(expiry - now);
-
-		if (diff <= 0) {
-			return 'Expired';
-		}
-
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-		const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-		if (days > 0) {
-			return `${days}d ${hours}h ${minutes}m`;
-		}
-		return `${hours}h ${minutes}m remaining`;
-	};
-
 	const onPredictionPlaced = () => {
 		if (nonNullish(market)) {
 			fetchMarket(market.id);
@@ -80,21 +63,11 @@
 		<!-- Market Header -->
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<div class="space-y-6 lg:col-span-2">
-				<MarketDetailHeader id={market.id} status={market.status} title={market.title} />
+				<MarketDetailHeader {market} />
 
-				<MarketDetailStats
-					expiryDate={market.expiryDate}
-					timeRemaining={getTimeRemaining(market.expiryDate)}
-					tokenSymbol={market.token.symbol}
-					totalVolume={market.totalVolume}
-				/>
+				<MarketDetailStats {market} />
 
-				<MarketDetailForecast
-					noProbability={market.noProbability}
-					noVolume={market.noVolume}
-					yesProbability={market.yesProbability}
-					yesVolume={market.yesVolume}
-				/>
+				<MarketDetailForecast {market} />
 
 				<MarketDetailTabs {market} {position} />
 			</div>

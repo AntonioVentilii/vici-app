@@ -19,22 +19,8 @@ slugify() {
         | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'
 }
 
-# Iterate over each market in the JSON file
-# Using jq to extract fields.
-# dfx call registry add_series '(record {
-#   title = "title";
-#   description = "desc";
-#   expiry = 123456789;
-#   underlying = "underlying";
-#   strike = null;
-#   payoff_type = variant { Binary };
-#   settlement_asset = variant { CkUsdc };
-#   oracle_source = "Internal";
-# })'
-
 echo "Starting registry initialization..."
 
-# Get the number of markets
 length=$(jq '. | length' "$DATA_FILE")
 
 for (( i=0; i<$length; i++ )); do
@@ -45,11 +31,8 @@ for (( i=0; i<$length; i++ )); do
 
     expiration_iso=$(echo "$market" | jq -r '.expiration')
 
-    # Create a verbose underlying ID (slug)
     underlying=$(slugify "$title")
 
-    # Convert ISO expiration to milliseconds
-    # macOS date command (BSD)
     expiration_seconds=$(date -j -f "%Y-%m-%dT%H:%M:%S.000Z" "$expiration_iso" "+%s" 2>/dev/null || date -d "$expiration_iso" "+%s")
     expiration_ns=$((expiration_seconds * 1000000000))
 
@@ -61,6 +44,7 @@ for (( i=0; i<$length; i++ )); do
         expiry_ns = $expiration_ns;
         underlying = \"$underlying\";
         strike = null;
+        price_precision = 8 : nat8;
         payoff_type = variant { Binary };
         settlement_asset = variant { Icp };
         oracle_source = \"Manual\";

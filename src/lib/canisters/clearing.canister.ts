@@ -216,4 +216,24 @@ export class ClearingCanister extends Canister<ClearingService> {
 
 		throw new Error(`Failed to cancel limit order: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
+
+	getOrders = async (queryParams: QueryParams): Promise<ClearingDid.LimitOrder[]> => {
+		const { get_orders } = this.caller(queryParams);
+		return await get_orders();
+	};
+
+	listOrders = async ({
+		params,
+		...queryParams
+	}: {
+		params: ClearingDid.ListOrdersParams;
+	} & QueryParams): Promise<ClearingDid.LimitOrder[]> => {
+		const { list_orders } = this.caller(queryParams);
+		return await list_orders(params);
+	};
+
+	getTradeHistory = async (queryParams: QueryParams): Promise<ClearingDid.Event[]> => {
+		const { get_trade_history } = this.caller(queryParams);
+		return await get_trade_history();
+	};
 }

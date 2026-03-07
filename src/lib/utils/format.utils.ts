@@ -68,16 +68,3 @@ export const formatNanosecondsToDate = ({ nanoseconds }: { nanoseconds: bigint }
 	const date = new Date(Number(nanoseconds / NANO_SECONDS_IN_MILLISECOND));
 	return date.toLocaleDateString('en', DATE_TIME_FORMAT_OPTIONS);
 };
-
-// TODO: improve this function to generalize per token
-export const formatBalance = (b: bigint) =>
-	formatToken({
-		value: b,
-		unitName: 8
-	});
-
-// TODO: improve this function to generalize
-export const formatVolume = (v: bigint) => (Number(v) / 100_000_000).toFixed(2);
-
-// TODO: improve this function to generalize
-export const formatAmount = (v: bigint) => (Number(v) / 100_000_000).toFixed(2);

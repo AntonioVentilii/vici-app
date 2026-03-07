@@ -6,6 +6,5 @@ export enum Collection {
 	COMMENTS = 'comments',
 	CATEGORIES = 'categories',
 	SERIES_CATEGORIES = 'series_categories',
-	ACTIVITIES = 'activities',
-	ORDERS = 'orders'
+	ACTIVITIES = 'activities'
 }

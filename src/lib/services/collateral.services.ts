@@ -7,7 +7,7 @@ import {
 import { approve } from '$lib/api/icrc-ledger.api';
 import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
-import { emitRefreshBalance } from '$lib/utils/refresh.utils';
+import { refreshAllBalances } from '$lib/utils/refresh.utils';
 import { getIcrcAccount } from '$lib/utils/transactions.utils';
 import { nowInBigIntNanoSeconds } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
@@ -40,7 +40,7 @@ export const depositCollateral = async ({
 		}
 	});
 
-	emitRefreshBalance();
+	refreshAllBalances();
 };
 
 export const withdrawCollateral = async ({
@@ -61,7 +61,7 @@ export const withdrawCollateral = async ({
 		}
 	});
 
-	emitRefreshBalance();
+	refreshAllBalances();
 };
 
 export const getMarginAccount = async (): Promise<ClearingDid.MarginAccount> => {

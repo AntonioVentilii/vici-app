@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import type { ClearingDid } from '$declarations';
+	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioStats from '$lib/components/portfolio/PortfolioStats.svelte';
 	import PositionTable from '$lib/components/portfolio/PositionTable.svelte';
+	import TradeHistoryTable from '$lib/components/portfolio/TradeHistoryTable.svelte';
 	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
 	import ProfileCard from '$lib/components/social/ProfileCard.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -9,21 +12,35 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getMarkets } from '$lib/services/market.services';
+	import { getUserOrders } from '$lib/services/order.services';
 	import { getPositions } from '$lib/services/position.services';
+	import { getUserTradeHistory } from '$lib/services/trade.services';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
-	import { formatAmount } from '$lib/utils/format.utils';
-	import { REFRESH_BALANCE, REFRESH_POSITIONS } from '$lib/utils/refresh.utils';
+	import { formatToken } from '$lib/utils/format.utils';
+	import { REFRESH_POSITIONS } from '$lib/utils/refresh.utils';
 
 	let positions = $state<Position[]>([]);
+	let openOrders = $state<ClearingDid.LimitOrder[]>([]);
+	let tradeHistory = $state<ClearingDid.Event[]>([]);
 	let markets = $state<Market[]>([]);
 	let loading = $state(true);
 
 	const loadData = async () => {
 		loading = true;
 		try {
-			[positions, markets] = await Promise.all([getPositions(), getMarkets()]);
+			const [posRes, ordersRes, historyRes, marketsRes] = await Promise.all([
+				getPositions(),
+				getUserOrders(),
+				getUserTradeHistory(),
+				getMarkets()
+			]);
+
+			positions = posRes;
+			openOrders = ordersRes;
+			tradeHistory = historyRes;
+			markets = marketsRes;
 		} finally {
 			loading = false;
 		}
@@ -35,11 +52,9 @@
 		const handleRefresh = () => loadData();
 
 		window.addEventListener(REFRESH_POSITIONS, handleRefresh);
-		window.addEventListener(REFRESH_BALANCE, handleRefresh);
 
 		return () => {
 			window.removeEventListener(REFRESH_POSITIONS, handleRefresh);
-			window.removeEventListener(REFRESH_BALANCE, handleRefresh);
 		};
 	});
 
@@ -60,7 +75,7 @@
 	const calculatePnL = (pos: Position) => {
 		const totalCost = pos.yesAmount + pos.noAmount;
 		const currentValue = calculateValue(pos);
-		return Number(currentValue - totalCost) / 100_000_000;
+		return Number(currentValue - totalCost) / 10 ** 8; // Portfolio aggregate in ICP
 	};
 
 	const totalPortfolioValue = $derived(
@@ -84,7 +99,7 @@
 		<PortfolioStats
 			activeMarketsCount={positions.length}
 			{totalPnL}
-			totalPortfolioValue={formatAmount(totalPortfolioValue)}
+			totalPortfolioValue={formatToken({ value: totalPortfolioValue, unitName: 8 })}
 		/>
 
 		<!-- Positions Table -->
@@ -94,6 +109,12 @@
 			onCalculateValue={calculateValue}
 			{positions}
 		/>
+
+		<div class="grid grid-cols-1 gap-8 xl:grid-cols-2">
+			<OpenOrdersTable {markets} onRefresh={loadData} orders={openOrders} />
+
+			<TradeHistoryTable events={tradeHistory} {markets} />
+		</div>
 
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<div class="lg:col-span-1">

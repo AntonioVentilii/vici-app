@@ -5,14 +5,16 @@ import { assetToToken } from '$lib/utils/asset.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish } from '@dfinity/utils';
 
-export const mapMarketData = ({
-	series_id: id,
-	expiry_ns: expiryDate,
-	creator,
-	title,
-	description,
-	settlement_asset: settlementAsset
-}: Series): Market | undefined => {
+export const mapMarketData = (series: Series): Market | undefined => {
+	const {
+		series_id: id,
+		expiry_ns: expiryDate,
+		creator,
+		title,
+		description,
+		settlement_asset: settlementAsset
+	} = series;
+
 	const token = assetToToken(settlementAsset);
 
 	if (isNullish(token)) {
@@ -34,6 +36,7 @@ export const mapMarketData = ({
 		noVolume: ZERO,
 		yesProbability: 0,
 		noProbability: 0,
-		token
+		token,
+		pricePrecision: Number(series.price_precision)
 	};
 };

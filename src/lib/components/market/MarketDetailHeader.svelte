@@ -1,14 +1,14 @@
 <script lang="ts">
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
-	import type { MarketStatus } from '$lib/types/market';
+	import type { Market } from '$lib/types/market';
 
 	interface Props {
-		title: string;
-		id: string;
-		status: MarketStatus;
+		market: Market;
 	}
 
-	const { title, id, status }: Props = $props();
+	const { market }: Props = $props();
+
+	const { title, id, status } = $derived(market);
 </script>
 
 <div class="space-y-2">

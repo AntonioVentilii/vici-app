@@ -87,7 +87,8 @@
 				type: orderType,
 				price: currentPrice,
 				qty: parsedAmount,
-				outcome: selectedType as Outcome
+				outcome: selectedType as Outcome,
+				pricePrecision: market.pricePrecision
 			});
 
 			amount = '';
@@ -211,7 +212,7 @@
 							max="1"
 							min="0"
 							placeholder="0.50"
-							step="0.01"
+							step={1 / 10 ** market.pricePrecision}
 							type="number"
 							bind:value={price}
 						/>

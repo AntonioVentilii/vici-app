@@ -7,10 +7,9 @@
 	interface Props {
 		isOpen: boolean;
 		onClose: () => void;
-		onSuccess: () => void;
 	}
 
-	const { isOpen, onClose, onSuccess }: Props = $props();
+	const { isOpen, onClose }: Props = $props();
 
 	let amount = $state('');
 
@@ -60,8 +59,6 @@
 					amount: amt
 				});
 			}
-
-			onSuccess();
 
 			close();
 		} catch (e: unknown) {

@@ -18,7 +18,7 @@
 </script>
 
 <aside class="space-y-8">
-	<MarketUserPosition {position} />
+	<MarketUserPosition {position} tokenDecimals={market.token.decimals} />
 
 	{#if market.status === 'Open'}
 		<PredictionInterface {market} {onPredictionPlaced} />
