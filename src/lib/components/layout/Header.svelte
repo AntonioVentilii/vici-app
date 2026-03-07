@@ -1,16 +1,17 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
-	import { Zap, Shield } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import SignInModal from '$lib/components/authn/SignInModal.svelte';
 	import UserDropdown from '$lib/components/layout/UserDropdown.svelte';
 	import WalletDropdown from '$lib/components/layout/WalletDropdown.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { navItems } from '$lib/constants/nav.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import type { NavItem } from '$lib/types/nav';
 
 	let showSignInModal = $state(false);
 
@@ -23,23 +24,6 @@
 	const openSignInModal = () => {
 		showSignInModal = true;
 	};
-
-	type IconComponent = typeof Zap | typeof Shield;
-
-	interface NavItem {
-		label: string;
-		path: AppPath;
-		icon?: IconComponent;
-		adminOnly?: boolean;
-	}
-
-	const navItems: NavItem[] = [
-		{ label: 'Markets', path: AppPath.Home },
-		{ label: 'Rush', path: AppPath.Rush, icon: Zap },
-		{ label: 'Leaderboard', path: AppPath.Leaderboard },
-		{ label: 'Portfolio', path: AppPath.Portfolio },
-		{ label: 'Admin', path: AppPath.Admin, icon: Shield, adminOnly: true }
-	];
 
 	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
 </script>

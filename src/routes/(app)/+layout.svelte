@@ -5,6 +5,7 @@
 	import Authn from '$lib/components/authn/Authn.svelte';
 	import Footer from '$lib/components/layout/Footer.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
+	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import Banner from '$lib/components/ui/Banner.svelte';
 
@@ -20,7 +21,7 @@
 
 	<Header />
 
-	<main class="flex-1">
+	<main class="flex-1 pb-20 md:pb-0">
 		<Authn>
 			{#key page.url.pathname}
 				<div
@@ -37,4 +38,6 @@
 	</main>
 
 	<Footer />
+
+	<MobileNav />
 </div>

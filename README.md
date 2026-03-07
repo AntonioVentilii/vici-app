@@ -9,7 +9,7 @@ Vici Social Markets is a modern prediction platform built on the **Internet Comp
 - **Rush Mode**: A swipe-based rapid trading interface designed for mobile-first engagement.
 - **On-Chain Settlement**: Fully functional trading and settlement using the `clearing` and `registry` canisters.
 - **Wallet & Portfolio**: Integrated collateral management for ICP and ckUSDC with real-time position tracking.
-- **Leaderboards**: Track top performers based on P&L and trading volume.
+- **Leaders**: Track top performers based on P&L and trading volume.
 
 ## ⚙️ Backend Canisters (ICDC-Core)
 
