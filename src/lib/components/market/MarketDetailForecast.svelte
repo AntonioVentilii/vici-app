@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Market } from '$lib/types/market';
-	import { formatToken } from '$lib/utils/format.utils';
+	import { formatProbability, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -23,11 +23,11 @@
 	<div class="relative mt-4">
 		<div class="mb-1.5 flex justify-between">
 			<div class="flex flex-col">
-				<span class="text-2xl font-black text-slate-950">{Math.round(yesProbability * 100)}%</span>
+				<span class="text-2xl font-black text-slate-950">{formatProbability(yesProbability)}</span>
 				<span class="text-[10px] font-bold text-green-600 uppercase">YES Probability</span>
 			</div>
 			<div class="flex flex-col items-end">
-				<span class="text-2xl font-black text-slate-950">{Math.round(noProbability * 100)}%</span>
+				<span class="text-2xl font-black text-slate-950">{formatProbability(noProbability)}</span>
 				<span class="text-[10px] font-bold text-red-600 uppercase">NO Probability</span>
 			</div>
 		</div>

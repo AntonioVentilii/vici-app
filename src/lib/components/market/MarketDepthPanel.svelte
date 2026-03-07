@@ -1,6 +1,7 @@
 <script lang="ts">
 	import OrderBook from '$lib/components/market/OrderBook.svelte';
 	import type { Market, Outcome } from '$lib/types/market';
+	import { formatProbability } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -9,8 +10,6 @@
 	const { market }: Props = $props();
 
 	let selectedOutcome = $state<Outcome>('YES');
-
-	const formatProbability = (p: number) => Math.round(p * 100);
 </script>
 
 <div class="space-y-8">
@@ -22,9 +21,9 @@
 				<div class="h-2 w-2 animate-pulse rounded-full bg-emerald-500"></div>
 			</div>
 			<div class="mt-4 flex items-baseline gap-2">
-				<span class="text-4xl font-black text-emerald-950"
-					>{formatProbability(market.yesProbability)}%</span
-				>
+				<span class="text-4xl font-black text-emerald-950">
+					{formatProbability(market.yesProbability)}
+				</span>
 				<span class="text-xs font-medium text-emerald-600">probability</span>
 			</div>
 			<div class="mt-4 h-1.5 w-full rounded-full bg-emerald-100">
@@ -41,9 +40,9 @@
 				<div class="h-2 w-2 animate-pulse rounded-full bg-rose-500"></div>
 			</div>
 			<div class="mt-4 flex items-baseline gap-2">
-				<span class="text-4xl font-black text-rose-950"
-					>{formatProbability(market.noProbability)}%</span
-				>
+				<span class="text-4xl font-black text-rose-950">
+					{formatProbability(market.noProbability)}
+				</span>
 				<span class="text-xs font-medium text-rose-600">probability</span>
 			</div>
 			<div class="mt-4 h-1.5 w-full rounded-full bg-rose-100">

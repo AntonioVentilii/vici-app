@@ -1,3 +1,4 @@
+import type { ClearingDid } from '$declarations';
 import { NANO_SECONDS_IN_MILLISECOND } from '$lib/constants/app.constants';
 import { isNullish } from '@dfinity/utils';
 import Decimal from 'decimal.js';
@@ -68,6 +69,9 @@ export const formatNanosecondsToDate = ({ nanoseconds }: { nanoseconds: bigint }
 	const date = new Date(Number(nanoseconds / NANO_SECONDS_IN_MILLISECOND));
 	return date.toLocaleDateString('en', DATE_TIME_FORMAT_OPTIONS);
 };
+
+export const formatPrice = (price: ClearingDid.Price): string =>
+	`${Math.round((Number(price.decimal.value) / 10 ** price.decimal.decimals) * 100)}%`;
 
 export const formatProbability = (prob: number): string => `${Math.round(prob * 100)}%`;
 

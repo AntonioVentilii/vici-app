@@ -41,17 +41,6 @@
 		<!-- Probabilities Area -->
 		<div class="grid grid-cols-2 gap-4">
 			<a
-				class="rounded-xl bg-emerald-500/10 p-3 text-center transition-all hover:bg-emerald-500/20"
-				href="{AppPath.Markets}/{market.id}?side=yes"
-				onclick={(e) => e.stopPropagation()}
-			>
-				<div class="text-[10px] font-bold text-emerald-600 uppercase">Yes</div>
-				<div class="text-xl font-black text-emerald-700">
-					{formatProbability(market.yesProbability)}
-				</div>
-			</a>
-
-			<a
 				class="bg-destructive/10 hover:bg-destructive/20 rounded-xl p-3 text-center transition-all"
 				href="{AppPath.Markets}/{market.id}?side=no"
 				onclick={(e) => e.stopPropagation()}
@@ -59,6 +48,17 @@
 				<div class="text-destructive text-[10px] font-bold uppercase">No</div>
 				<div class="text-destructive text-xl font-black">
 					{formatProbability(market.noProbability)}
+				</div>
+			</a>
+
+			<a
+				class="rounded-xl bg-emerald-500/10 p-3 text-center transition-all hover:bg-emerald-500/20"
+				href="{AppPath.Markets}/{market.id}?side=yes"
+				onclick={(e) => e.stopPropagation()}
+			>
+				<div class="text-[10px] font-bold text-emerald-600 uppercase">Yes</div>
+				<div class="text-xl font-black text-emerald-700">
+					{formatProbability(market.yesProbability)}
 				</div>
 			</a>
 		</div>

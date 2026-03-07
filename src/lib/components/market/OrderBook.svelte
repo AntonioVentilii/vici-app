@@ -4,7 +4,7 @@
 	import { orderBookStore } from '$lib/stores/order-book.store';
 	import { selectPrice } from '$lib/stores/trade.store';
 	import type { Market, Outcome } from '$lib/types/market';
-	import { formatToken } from '$lib/utils/format.utils';
+	import { formatProbability, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -15,7 +15,6 @@
 
 	const {
 		id: marketId,
-		pricePrecision,
 		token: { decimals: tokenDecimals }
 	} = $derived(market);
 
@@ -99,8 +98,8 @@
 							class="absolute inset-y-0 right-0 bg-red-500/5 transition-all group-hover:bg-red-500/10"
 						></div>
 
-						<span class="relative z-10 text-sm font-bold text-red-500"
-							>{ask.price.toFixed(pricePrecision)}
+						<span class="relative z-10 text-sm font-bold text-red-500">
+							{formatProbability(ask.price)}
 						</span>
 						<span class="relative z-10 text-xs font-medium text-slate-500">
 							{formatToken({ value: ask.totalQty, unitName: tokenDecimals })}
@@ -114,7 +113,7 @@
 				<span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Spread</span>
 				{#if displayAsks().length > 0 && displayBids().length > 0}
 					<span class="text-xs font-bold text-slate-600">
-						{Math.abs(displayAsks()[0].price - displayBids()[0].price).toFixed(pricePrecision + 1)}
+						{formatProbability(Math.abs(displayAsks()[0].price - displayBids()[0].price))}
 					</span>
 				{/if}
 			</div>
@@ -133,7 +132,7 @@
 						></div>
 
 						<span class="relative z-10 text-sm font-bold text-green-500">
-							{bid.price.toFixed(pricePrecision)}
+							{formatProbability(bid.price)}
 						</span>
 						<span class="relative z-10 text-xs font-medium text-slate-500">
 							{formatToken({ value: bid.totalQty, unitName: tokenDecimals })}

@@ -6,10 +6,10 @@ import {
 	submitLimitOrder,
 	submitMarketOrder
 } from '$lib/api/clearing.api';
+import { PRICE_DECIMALS } from '$lib/constants/app.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderBook, OrderBookLevel, OrderSide, OrderType } from '$lib/types/order';
-import { parseToken } from '$lib/utils/parse.utils';
 import { emitRefreshPositions, refreshAllBalances } from '$lib/utils/refresh.utils';
 import { nonNullish, toNullable } from '@dfinity/utils';
 import { nanoid } from 'nanoid';
@@ -58,8 +58,7 @@ export const placeOrder = async ({
 	type,
 	price,
 	qty,
-	outcome,
-	pricePrecision
+	outcome
 }: {
 	marketId: MarketId;
 	side: OrderSide;
@@ -67,7 +66,6 @@ export const placeOrder = async ({
 	price: number;
 	qty: bigint;
 	outcome: Outcome;
-	pricePrecision: number;
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -78,8 +76,6 @@ export const placeOrder = async ({
 	if (type === 'LIMIT') {
 		const orderId = `ORD_${nanoid(8)}`;
 
-		const priceValue = parseToken({ value: `${normalizedPrice}`, unitName: pricePrecision });
-
 		await submitLimitOrder({
 			identity,
 			params: {
@@ -88,8 +84,8 @@ export const placeOrder = async ({
 				side: normalizedSide === 'BUY' ? { Buy: null } : { Sell: null },
 				price: {
 					decimal: {
-						value: priceValue,
-						decimals: pricePrecision
+						value: BigInt(normalizedPrice),
+						decimals: PRICE_DECIMALS
 					},
 					timestamp: toNullable(),
 					oracle_id: toNullable()

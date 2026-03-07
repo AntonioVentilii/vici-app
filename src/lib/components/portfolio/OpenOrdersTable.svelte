@@ -4,7 +4,7 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { cancelLimitOrder } from '$lib/services/order.services';
 	import type { Market } from '$lib/types/market';
-	import { formatToken } from '$lib/utils/format.utils';
+	import { formatToken, formatPrice } from '$lib/utils/format.utils';
 
 	interface Props {
 		orders: ClearingDid.LimitOrder[];
@@ -29,11 +29,6 @@
 			cancellingId = null;
 		}
 	};
-
-	const formatPrice = (price: ClearingDid.Price) =>
-		(Number(price.decimal.value) / 10 ** price.decimal.decimals).toFixed(
-			price.decimal.decimals > 2 ? 4 : 2
-		);
 </script>
 
 <div class="space-y-4">

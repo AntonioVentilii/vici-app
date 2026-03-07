@@ -25,7 +25,7 @@
 
 	let amount = $state('');
 
-	let price = $state('');
+	let price = $state(''); // This will now hold percentage (e.g., "35")
 
 	let selectedType = $state<PositionType>('YES');
 
@@ -60,7 +60,8 @@
 
 	$effect(() => {
 		if (nonNullish($tradeStore.selectedPrice)) {
-			price = $tradeStore.selectedPrice.toString();
+			// Convert decimal (0.35) to percentage (35)
+			price = Math.round($tradeStore.selectedPrice * 100).toString();
 
 			orderType = 'LIMIT';
 		}
@@ -92,7 +93,10 @@
 		if ($routeSide === 'yes' || $routeSide === 'no') {
 			selectedType = $routeSide.toUpperCase() as PositionType;
 			if (orderType === 'MARKET') {
-				price = (selectedType === 'YES' ? yesProbability : noProbability).toString();
+				// Convert decimal (0.35) to percentage (35)
+				price = Math.round(
+					(selectedType === 'YES' ? yesProbability : noProbability) * 100
+				).toString();
 			}
 		}
 	});
@@ -104,8 +108,8 @@
 			return;
 		}
 
-		if (orderType === 'LIMIT' && (!price || parseFloat(price) <= 0 || parseFloat(price) > 1)) {
-			error = 'Please enter a valid price between 0 and 1';
+		if (orderType === 'LIMIT' && (!price || parseFloat(price) <= 0 || parseFloat(price) >= 100)) {
+			error = 'Please enter a valid price between 1 and 99';
 
 			return;
 		}
@@ -126,7 +130,7 @@
 				throw new Error(`Invalid price: outcome probability is ${currentPrice}`);
 			}
 
-			const parsedAmount = parseToken({ value: `${amount}`, unitName: market.token.decimals });
+			const parsedAmount = parseToken({ value: `${amount}`, unitName: 0 });
 
 			await placeOrder({
 				marketId: market.id,
@@ -134,8 +138,7 @@
 				type: orderType,
 				price: currentPrice,
 				qty: parsedAmount,
-				outcome: selectedType as Outcome,
-				pricePrecision: market.pricePrecision
+				outcome: selectedType as Outcome
 			});
 
 			amount = '';
@@ -150,25 +153,46 @@
 		}
 	};
 
-	const estimatedPayout = $derived(() => {
+	const estimatedCost = $derived.by(() => {
 		if (!amount) {
-			return 0;
+			return '-';
 		}
 
 		const amt = parseFloat(amount);
 
 		const prob =
 			orderType === 'LIMIT'
-				? parseFloat(price)
+				? parseFloat(price) / 100 // Convert percentage (35) to decimal (0.35) for payout calculation
 				: selectedType === 'YES'
 					? yesProbability
 					: noProbability;
 
 		if (!prob || prob === 0) {
-			return 0;
+			return '0';
 		}
 
-		return (amt / prob).toFixed(2);
+		return (amt * prob).toFixed(2);
+	});
+
+	const estimatedPayout = $derived.by(() => {
+		if (!amount) {
+			return '-';
+		}
+
+		const amt = parseFloat(amount);
+
+		const prob =
+			orderType === 'LIMIT'
+				? parseFloat(price) / 100 // Convert percentage (35) to decimal (0.35) for payout calculation
+				: selectedType === 'YES'
+					? yesProbability
+					: noProbability;
+
+		if (!prob || prob === 0) {
+			return '0';
+		}
+
+		return (amt * (1 - prob)).toFixed(2);
 	});
 </script>
 
@@ -187,6 +211,7 @@
 		>
 			Market
 		</button>
+
 		<button
 			class="flex-1 rounded-lg py-2 text-xs font-bold transition-all {orderType === 'LIMIT'
 				? 'bg-white text-indigo-600 shadow-sm'
@@ -208,7 +233,7 @@
 				onclick={() => {
 					selectedType = 'YES';
 					if (orderType === 'MARKET') {
-						price = yesProbability.toString();
+						price = Math.round(yesProbability * 100).toString();
 					}
 				}}
 			>
@@ -216,9 +241,9 @@
 					<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
 					<span class="text-xl font-black">YES</span>
 					{#if orderType === 'MARKET'}
-						<span class="text-[10px] font-medium opacity-60"
-							>{(yesProbability * 100).toFixed(1)}%</span
-						>
+						<span class="text-[10px] font-medium opacity-60">
+							{(yesProbability * 100).toFixed(1)}%
+						</span>
 					{/if}
 				</div>
 			</button>
@@ -231,7 +256,7 @@
 				onclick={() => {
 					selectedType = 'NO';
 					if (orderType === 'MARKET') {
-						price = noProbability.toString();
+						price = Math.round(noProbability * 100).toString();
 					}
 				}}
 			>
@@ -239,9 +264,9 @@
 					<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
 					<span class="text-xl font-black">NO</span>
 					{#if orderType === 'MARKET'}
-						<span class="text-[10px] font-medium opacity-60"
-							>{(noProbability * 100).toFixed(1)}%</span
-						>
+						<span class="text-[10px] font-medium opacity-60">
+							{(noProbability * 100).toFixed(1)}%
+						</span>
 					{/if}
 				</div>
 			</button>
@@ -251,22 +276,23 @@
 		<div class="space-y-4">
 			{#if orderType === 'LIMIT'}
 				<div class="space-y-2">
-					<label class="text-[10px] font-bold tracking-widest text-slate-400 uppercase" for="price"
-						>Limit Price</label
-					>
+					<label class="text-[10px] font-bold tracking-widest text-slate-400 uppercase" for="price">
+						Limit Price
+					</label>
+
 					<div class="relative">
 						<input
 							id="price"
 							class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-xl font-bold text-slate-950 ring-1 ring-slate-200 transition-all ring-inset focus:bg-white focus:ring-2 focus:ring-indigo-500"
-							max="1"
-							min="0"
-							placeholder="0.50"
-							step={1 / 10 ** market.pricePrecision}
+							max={99}
+							min={1}
+							placeholder="50"
+							step={1}
 							type="number"
 							bind:value={price}
 						/>
 						<div class="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-bold text-slate-400">
-							{market.token.symbol}
+							%
 						</div>
 					</div>
 				</div>
@@ -274,9 +300,13 @@
 
 			<div class="space-y-2">
 				<div class="flex justify-between">
-					<label class="text-[10px] font-bold tracking-widest text-slate-400 uppercase" for="amount"
-						>Order Size</label
+					<label
+						class="text-[10px] font-bold tracking-widest text-slate-400 uppercase"
+						for="amount"
 					>
+						Order Size
+					</label>
+
 					<span class="text-[10px] font-bold text-slate-400 uppercase">
 						Available: {collateral !== undefined
 							? (Number(collateral) / 10 ** market.token.decimals).toFixed(2)
@@ -284,6 +314,7 @@
 						{market.token.symbol}
 					</span>
 				</div>
+
 				<div class="relative">
 					<input
 						id="amount"
@@ -310,17 +341,17 @@
 		<!-- Payout Summary -->
 		<div class="space-y-3 rounded-2xl bg-slate-50 p-5">
 			<div class="flex justify-between text-xs">
-				<span class="font-medium text-slate-500">Estimated Shares</span>
-				<span class="font-bold text-slate-950">{estimatedPayout()} Units</span>
+				<span class="font-medium text-slate-500">Estimated Cost</span>
+
+				<span class="font-bold text-slate-950">{estimatedCost}</span>
 			</div>
+
 			<div class="flex justify-between text-xs">
 				<span class="font-medium text-slate-500">Potential Return</span>
+
 				<span class="font-bold text-green-500">
 					{amount
-						? (
-								(parseFloat(estimatedPayout().toString()) / parseFloat(amount || '1') - 1) *
-								100
-							).toFixed(1)
+						? ((parseFloat(estimatedPayout) / parseFloat(estimatedCost)) * 100).toFixed(1)
 						: 0}%
 				</span>
 			</div>

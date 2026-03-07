@@ -63,8 +63,7 @@
 				type: 'MARKET',
 				price,
 				qty,
-				outcome: action,
-				pricePrecision: currentMarket.pricePrecision
+				outcome: action
 			});
 			advance();
 		} catch (e) {

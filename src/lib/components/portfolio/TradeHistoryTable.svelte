@@ -3,7 +3,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import type { Market } from '$lib/types/market';
-	import { formatToken } from '$lib/utils/format.utils';
+	import { formatToken, formatPrice } from '$lib/utils/format.utils';
 
 	interface Props {
 		events: ClearingDid.Event[];
@@ -13,11 +13,6 @@
 	const { events, markets }: Props = $props();
 
 	const getMarketById = (id: string) => markets.find((m) => m.id === id);
-
-	const formatPrice = (price: ClearingDid.Price) =>
-		(Number(price.decimal.value) / 10 ** price.decimal.decimals).toFixed(
-			price.decimal.decimals > 2 ? 4 : 2
-		);
 
 	const formatDate = (ns: bigint) =>
 		new Date(Number(ns / 1_000_000n)).toLocaleString([], {
