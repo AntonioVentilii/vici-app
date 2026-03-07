@@ -1,10 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { isNullish } from '@dfinity/utils';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { getOrderBook } from '$lib/services/order.services';
+	import { orderBookStore } from '$lib/stores/order-book.store';
 	import { selectPrice } from '$lib/stores/trade.store';
 	import type { Market, Outcome } from '$lib/types/market';
-	import type { OrderBook } from '$lib/types/order';
 	import { formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
@@ -20,23 +19,9 @@
 		token: { decimals: tokenDecimals }
 	} = $derived(market);
 
-	let orderBook = $state<OrderBook | undefined>();
-	let loading = $state(true);
+	let orderBook = $derived($orderBookStore?.[marketId]);
 
-	const fetchOrderBook = async () => {
-		orderBook = await getOrderBook(marketId);
-		loading = false;
-	};
-
-	onMount(() => {
-		fetchOrderBook();
-
-		// Fallback to polling every 5 seconds since watchDatastore/subscribe
-		// exports might differ in this environment version.
-		const interval = setInterval(fetchOrderBook, 5000);
-
-		return () => clearInterval(interval);
-	});
+	let loading = $derived(isNullish(orderBook));
 
 	const calculateDepthPercentage = ({ qty, maxQty }: { qty: bigint; maxQty: bigint }) => {
 		if (maxQty === ZERO) {

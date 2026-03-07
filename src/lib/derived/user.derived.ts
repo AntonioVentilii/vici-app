@@ -1,4 +1,5 @@
 import { ROLE_PERMISSIONS } from '$lib/constants/authz.constants';
+import { SATELLITE_CONTROLLERS } from '$lib/constants/controllers.constants';
 import { userStore } from '$lib/stores/user.store';
 import type { Permission } from '$lib/types/permission';
 import { UserRole } from '$lib/types/user';
@@ -19,14 +20,19 @@ export const authPrincipal: Readable<string | undefined> = derived(
 	({ user }) => user?.owner
 );
 
+const userIsController: Readable<boolean> = derived(
+	[authPrincipal],
+	([$authPrincipal]) => nonNullish($authPrincipal) && SATELLITE_CONTROLLERS.includes($authPrincipal)
+);
+
 export const userIsAdmin: Readable<boolean> = derived(
-	userRole,
-	($userRole) => $userRole === UserRole.ADMIN
+	[userIsController, userRole],
+	([$userIsController, $userRole]) => $userIsController || $userRole === UserRole.ADMIN
 );
 
 export const userIsAdminOrResolver: Readable<boolean> = derived(
-	userRole,
-	($userRole) => $userRole === UserRole.ADMIN || $userRole === UserRole.RESOLVER
+	[userIsAdmin, userRole],
+	([$userIsAdmin, $userRole]) => $userIsAdmin || $userRole === UserRole.RESOLVER
 );
 
 export const userPermissions: Readable<Permission[]> = derived(userRole, ($role) =>

@@ -1,10 +1,13 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
+	import { onMount } from 'svelte';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
-	import { placeOrder } from '$lib/services/order.services';
+	import { getOrderBook, placeOrder } from '$lib/services/order.services';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import { orderBookStore } from '$lib/stores/order-book.store';
 	import { tradeStore } from '$lib/stores/trade.store';
 	import type { Market, Outcome } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
@@ -34,9 +37,53 @@
 
 	let collateral = $derived($collateralsStore[market.token.id] ?? ZERO);
 
+	const fetchOrderBook = async () => {
+		try {
+			const orderBook = await getOrderBook(market.id);
+
+			orderBookStore.update((state) => ({
+				...state,
+				[market.id]: orderBook
+			}));
+		} catch (err) {
+			console.error('Failed to fetch order book', err);
+		}
+	};
+
+	onMount(() => {
+		fetchOrderBook();
+
+		const interval = setInterval(fetchOrderBook, 5_000);
+
+		return () => clearInterval(interval);
+	});
+
 	$effect(() => {
-		if ($tradeStore.selectedPrice !== undefined) {
+		if (nonNullish($tradeStore.selectedPrice)) {
 			price = $tradeStore.selectedPrice.toString();
+
+			orderType = 'LIMIT';
+		}
+	});
+
+	let marketDepth = $derived($orderBookStore?.[market.id]);
+
+	let hasMarketDepth = $derived.by(() => {
+		if (!marketDepth) {
+			return false;
+		}
+
+		// To buy YES, we need ASKS (Sell YES orders)
+		if (selectedType === 'YES') {
+			return marketDepth.asks.length > 0;
+		}
+
+		// To buy NO, we need BIDS (Buy YES orders)
+		return marketDepth.bids.length > 0;
+	});
+
+	$effect(() => {
+		if (!hasMarketDepth && orderType === 'MARKET') {
 			orderType = 'LIMIT';
 		}
 	});
@@ -133,8 +180,10 @@
 		<button
 			class="flex-1 rounded-lg py-2 text-xs font-bold transition-all {orderType === 'MARKET'
 				? 'bg-white text-indigo-600 shadow-sm'
-				: 'text-slate-500 hover:text-slate-700'}"
+				: 'text-slate-500 hover:text-slate-700'} disabled:cursor-not-allowed disabled:opacity-30"
+			disabled={!hasMarketDepth}
 			onclick={() => (orderType = 'MARKET')}
+			title={!hasMarketDepth ? 'No liquidity for market order' : ''}
 		>
 			Market
 		</button>

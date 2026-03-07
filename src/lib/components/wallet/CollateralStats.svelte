@@ -34,7 +34,6 @@
 		{#each SUPPORTED_TOKENS as token (token.id)}
 			{@const balance = collateral[token.id] ?? ZERO}
 
-			{#if balance > ZERO}
 				<div class="flex items-baseline gap-2">
 					<span class="text-3xl font-black text-slate-950">
 						{formatToken({
@@ -46,7 +45,6 @@
 						{token.symbol}
 					</span>
 				</div>
-			{/if}
 		{/each}
 
 		{#if !hasCollateral}
