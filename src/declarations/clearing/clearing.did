@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit d24a6d43b501d386e876c3d742e8f1f985beedb2 for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit 9e1980e753d6daf512778688ceaec9f0f6583ad7 for file 'src/clearing/clearing.did'
 
 type AcceptPositionTransferResult = variant { Ok : bool; Err : TradeError };
 type Asset = variant { Icrc : principal };
@@ -16,6 +16,7 @@ type CommonError = variant {
 	Unauthorized;
 	RegistryNotSet
 };
+type DecimalValue = record { decimals : nat8; value : nat };
 type DepositCollateralError = variant { MathOverflow; Ledger : LedgerError };
 type DepositCollateralParams = record {
 	deposit_id : text;
@@ -23,6 +24,17 @@ type DepositCollateralParams = record {
 	amount : nat
 };
 type DepositCollateralResult = variant { Ok; Err : DepositCollateralError };
+type Event = record {
+	qty : int;
+	series_id : text;
+	user : principal;
+	timestamp : nat64;
+	event_id : nat64;
+	price : Price;
+	event_type : EventType;
+	clearing_id : principal
+};
+type EventType = variant { OrderPlaced; Executed; Liquidated; Settled };
 type FreezePositionForTransferParams = record {
 	series_id : text;
 	user : principal;
@@ -52,6 +64,15 @@ type LedgerError = variant {
 	CallError : record { method : text; code : int32; message : text };
 	UnsupportedLedger
 };
+type LimitOrder = record {
+	qty : int;
+	creator : principal;
+	block_index : nat;
+	series_id : text;
+	side : Side;
+	order_id : text;
+	price : Price
+};
 type MarginAccount = record {
 	required_margin : nat;
 	reserved_balances : vec record { Asset; nat };
@@ -78,9 +99,14 @@ type PositionProof = record {
 	transfer_id : text;
 	clearing_id : principal
 };
+type Price = record {
+	timestamp : opt nat64;
+	oracle_id : opt text;
+	decimal : DecimalValue
+};
 type Series = record {
 	title : text;
-	strike : opt nat64;
+	strike : opt Price;
 	creator : principal;
 	payoff_type : PayoffType;
 	expiry_ns : nat64;
@@ -89,9 +115,10 @@ type Series = record {
 	underlying : text;
 	description : text;
 	created_at_ns : nat64;
+	price_precision : nat8;
 	oracle_source : text
 };
-type SettleSeriesParams = record { series_id : text; settlement_price : nat64 };
+type SettleSeriesParams = record { series_id : text; settlement_price : Price };
 type SettleSeriesResult = variant { Ok; Err : SettlementError };
 type SettlementAsset = variant { Icp; CkUsdc };
 type SettlementError = variant {
@@ -115,7 +142,7 @@ type SubmitLimitOrderParams = record {
 	series_id : text;
 	side : Side;
 	order_id : text;
-	price : nat64
+	price : Price
 };
 type SubmitMarketOrderParams = record {
 	trade_id : text;
@@ -128,7 +155,7 @@ type SubmitMatchedTradeParams = record {
 	seller : principal;
 	buyer_unblock_amount : opt nat;
 	buyer : principal;
-	price : nat64;
+	price : Price;
 	seller_unblock_amount : opt nat
 };
 type SubmitMatchedTradeResult = variant { Ok : bool; Err : TradeError };
@@ -197,10 +224,14 @@ service : {
 	//
 	// This does not refresh balances from external ledgers.
 	get_margin_account_query : () -> (GetMarginAccountResult) query;
+	// Retrieves all active limit orders for the caller.
+	get_orders : () -> (vec LimitOrder) query;
 	// Retrieves a specific position for the caller.
 	get_position : (GetPositionParams) -> (opt Position) query;
 	// Retrieves all open positions for the caller.
 	get_positions : () -> (vec record { text; Position }) query;
+	// Retrieves the trade history (executed trades) for the caller.
+	get_trade_history : () -> (vec Event) query;
 	http_request : (HttpRequest) -> (HttpResponse) query;
 	// Returns a list of all derivative series currently cached in the clearing canister.
 	list_series : () -> (vec Series) query;

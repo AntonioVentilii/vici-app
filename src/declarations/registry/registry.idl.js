@@ -27,6 +27,15 @@ export const OracleResult = IDL.Variant({
 	Ok: IDL.Null,
 	Err: OracleError
 });
+export const DecimalValue = IDL.Record({
+	decimals: IDL.Nat8,
+	value: IDL.Nat
+});
+export const Price = IDL.Record({
+	timestamp: IDL.Opt(IDL.Nat64),
+	oracle_id: IDL.Opt(IDL.Text),
+	decimal: DecimalValue
+});
 export const PayoffType = IDL.Variant({
 	Put: IDL.Null,
 	Binary: IDL.Null,
@@ -38,12 +47,13 @@ export const SettlementAsset = IDL.Variant({
 });
 export const AddSeriesParams = IDL.Record({
 	title: IDL.Text,
-	strike: IDL.Opt(IDL.Nat64),
+	strike: IDL.Opt(Price),
 	payoff_type: PayoffType,
 	expiry_ns: IDL.Nat64,
 	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
 	description: IDL.Text,
+	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
 });
 export const SeriesError = IDL.Variant({
@@ -65,7 +75,7 @@ export const Oracle = IDL.Record({
 });
 export const Series = IDL.Record({
 	title: IDL.Text,
-	strike: IDL.Opt(IDL.Nat64),
+	strike: IDL.Opt(Price),
 	creator: IDL.Principal,
 	payoff_type: PayoffType,
 	expiry_ns: IDL.Nat64,
@@ -74,6 +84,7 @@ export const Series = IDL.Record({
 	underlying: IDL.Text,
 	description: IDL.Text,
 	created_at_ns: IDL.Nat64,
+	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
 });
 export const PaginationParams = IDL.Record({
@@ -85,7 +96,7 @@ export const SeriesPage = IDL.Record({
 	items: IDL.Vec(Series)
 });
 export const ListSeriesParams = IDL.Record({
-	strike: IDL.Opt(IDL.Nat64),
+	strike: IDL.Opt(Price),
 	creator: IDL.Opt(IDL.Principal),
 	payoff_type: IDL.Opt(PayoffType),
 	pagination: IDL.Opt(PaginationParams),
@@ -139,6 +150,12 @@ export const idlFactory = ({ IDL }) => {
 		OracleNotFound: IDL.Null
 	});
 	const OracleResult = IDL.Variant({ Ok: IDL.Null, Err: OracleError });
+	const DecimalValue = IDL.Record({ decimals: IDL.Nat8, value: IDL.Nat });
+	const Price = IDL.Record({
+		timestamp: IDL.Opt(IDL.Nat64),
+		oracle_id: IDL.Opt(IDL.Text),
+		decimal: DecimalValue
+	});
 	const PayoffType = IDL.Variant({
 		Put: IDL.Null,
 		Binary: IDL.Null,
@@ -150,12 +167,13 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AddSeriesParams = IDL.Record({
 		title: IDL.Text,
-		strike: IDL.Opt(IDL.Nat64),
+		strike: IDL.Opt(Price),
 		payoff_type: PayoffType,
 		expiry_ns: IDL.Nat64,
 		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
 		description: IDL.Text,
+		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text
 	});
 	const SeriesError = IDL.Variant({
@@ -174,7 +192,7 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const Series = IDL.Record({
 		title: IDL.Text,
-		strike: IDL.Opt(IDL.Nat64),
+		strike: IDL.Opt(Price),
 		creator: IDL.Principal,
 		payoff_type: PayoffType,
 		expiry_ns: IDL.Nat64,
@@ -183,6 +201,7 @@ export const idlFactory = ({ IDL }) => {
 		underlying: IDL.Text,
 		description: IDL.Text,
 		created_at_ns: IDL.Nat64,
+		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text
 	});
 	const PaginationParams = IDL.Record({
@@ -194,7 +213,7 @@ export const idlFactory = ({ IDL }) => {
 		items: IDL.Vec(Series)
 	});
 	const ListSeriesParams = IDL.Record({
-		strike: IDL.Opt(IDL.Nat64),
+		strike: IDL.Opt(Price),
 		creator: IDL.Opt(IDL.Principal),
 		payoff_type: IDL.Opt(PayoffType),
 		pagination: IDL.Opt(PaginationParams),

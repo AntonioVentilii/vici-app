@@ -1,8 +1,9 @@
-import type { ClearingDid } from '$declarations';
+import type { ClearingDid, RegistryDid } from '$declarations';
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
 	NANO_SECONDS_IN_MILLISECOND,
 	PAYOFF_TYPE,
+	PRICE_DECIMALS,
 	STRIKE,
 	VICI_ORACLE_V1
 } from '$lib/constants/app.constants';
@@ -40,18 +41,21 @@ export const createMarket = async ({
 		throw new Error('Unauthorized: only admins or creators can create markets');
 	}
 
+	const params: RegistryDid.AddSeriesParams = {
+		underlying: title, // Using title as underlying for now
+		title,
+		description,
+		expiry_ns: expiryDate * NANO_SECONDS_IN_MILLISECOND,
+		settlement_asset: settlementAsset,
+		strike: STRIKE,
+		price_precision: PRICE_DECIMALS,
+		payoff_type: PAYOFF_TYPE,
+		oracle_source: VICI_ORACLE_V1
+	};
+
 	const seriesId = await addSeries({
 		identity,
-		params: {
-			underlying: title, // Using title as underlying for now
-			title,
-			description,
-			expiry_ns: expiryDate * NANO_SECONDS_IN_MILLISECOND,
-			settlement_asset: settlementAsset,
-			strike: STRIKE,
-			payoff_type: PAYOFF_TYPE,
-			oracle_source: VICI_ORACLE_V1
-		}
+		params
 	});
 
 	await logActivity({

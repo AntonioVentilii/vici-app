@@ -17,17 +17,22 @@ export interface AddOracleParams {
 }
 export interface AddSeriesParams {
 	title: string;
-	strike: [] | [bigint];
+	strike: [] | [Price];
 	payoff_type: PayoffType;
 	expiry_ns: bigint;
 	settlement_asset: SettlementAsset;
 	underlying: string;
 	description: string;
+	price_precision: number;
 	oracle_source: string;
 }
 export type AddSeriesResult = { Ok: string } | { Err: SeriesError };
+export interface DecimalValue {
+	decimals: number;
+	value: bigint;
+}
 export interface ListSeriesParams {
-	strike: [] | [bigint];
+	strike: [] | [Price];
 	creator: [] | [Principal];
 	payoff_type: [] | [PayoffType];
 	pagination: [] | [PaginationParams];
@@ -63,9 +68,14 @@ export interface PaginationParams {
 	limit: [] | [bigint];
 }
 export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
+export interface Price {
+	timestamp: [] | [bigint];
+	oracle_id: [] | [string];
+	decimal: DecimalValue;
+}
 export interface Series {
 	title: string;
-	strike: [] | [bigint];
+	strike: [] | [Price];
 	creator: Principal;
 	payoff_type: PayoffType;
 	expiry_ns: bigint;
@@ -74,6 +84,7 @@ export interface Series {
 	underlying: string;
 	description: string;
 	created_at_ns: bigint;
+	price_precision: number;
 	oracle_source: string;
 }
 export type SeriesError =

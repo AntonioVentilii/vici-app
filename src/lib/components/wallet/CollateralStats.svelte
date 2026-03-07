@@ -1,7 +1,8 @@
 <script lang="ts">
+	import { ZERO } from '$lib/constants/app.constants';
 	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
-	import { formatToken } from '$lib/utils/format.utils';
 	import type { TokenId } from '$lib/types/token';
+	import { formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		collateral: Record<TokenId, bigint>;
@@ -30,9 +31,9 @@
 	</div>
 	<div class="mt-4 flex flex-col gap-2">
 		{#each SUPPORTED_TOKENS as token (token.id)}
-			{@const balance = collateral[token.id] ?? 0n}
+			{@const balance = collateral[token.id] ?? ZERO}
 
-			{#if balance > 0n}
+			{#if balance > ZERO}
 				<div class="flex items-baseline gap-2">
 					<span class="text-2xl font-black text-slate-950">
 						{formatToken({
