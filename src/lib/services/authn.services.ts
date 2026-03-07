@@ -1,9 +1,11 @@
+import type { ClearingDid } from '$declarations';
 import { settleSeries } from '$lib/api/clearing.api';
+import { PRICE_DECIMALS, VICI_ORACLE_V1 } from '$lib/constants/app.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import { binaryPayoff } from '$lib/utils/payoff.utils';
 import { emitRefreshMarkets } from '$lib/utils/refresh.utils';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 
 export const resolveMarket = async ({
 	marketId,
@@ -20,14 +22,23 @@ export const resolveMarket = async ({
 		throw new Error('Market cancellation not implemented yet');
 	}
 
+	const params: ClearingDid.SettleSeriesParams = {
+		series_id: marketId,
+		settlement_price: {
+			decimal: {
+				value: settlementPrice,
+				decimals: PRICE_DECIMALS
+			},
+			timestamp: toNullable(nowInBigIntNanoSeconds()),
+			oracle_id: toNullable(VICI_ORACLE_V1)
+		}
+	};
+
 	try {
 		// Trigger on-chain settlement
 		await settleSeries({
 			identity,
-			params: {
-				series_id: marketId,
-				settlement_price: settlementPrice
-			}
+			params
 		});
 	} catch (e: unknown) {
 		console.error('Failed to settle series on-chain', e);

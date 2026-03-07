@@ -113,12 +113,47 @@ export const GetMarginAccountResult = IDL.Variant({
 	Ok: MarginAccount,
 	Err: MarginAccountError
 });
+export const Side = IDL.Variant({ Buy: IDL.Null, Sell: IDL.Null });
+export const DecimalValue = IDL.Record({
+	decimals: IDL.Nat8,
+	value: IDL.Nat
+});
+export const Price = IDL.Record({
+	timestamp: IDL.Opt(IDL.Nat64),
+	oracle_id: IDL.Opt(IDL.Text),
+	decimal: DecimalValue
+});
+export const LimitOrder = IDL.Record({
+	qty: IDL.Int,
+	creator: IDL.Principal,
+	block_index: IDL.Nat,
+	series_id: IDL.Text,
+	side: Side,
+	order_id: IDL.Text,
+	price: Price
+});
 export const GetPositionParams = IDL.Record({ series_id: IDL.Text });
 export const Position = IDL.Record({
 	series_id: IDL.Text,
 	net_qty: IDL.Int,
 	user: IDL.Principal,
 	locked_collateral: IDL.Nat
+});
+export const EventType = IDL.Variant({
+	OrderPlaced: IDL.Null,
+	Executed: IDL.Null,
+	Liquidated: IDL.Null,
+	Settled: IDL.Null
+});
+export const Event = IDL.Record({
+	qty: IDL.Int,
+	series_id: IDL.Text,
+	user: IDL.Principal,
+	timestamp: IDL.Nat64,
+	event_id: IDL.Nat64,
+	price: Price,
+	event_type: EventType,
+	clearing_id: IDL.Principal
 });
 export const HttpRequest = IDL.Record({
 	url: IDL.Text,
@@ -131,6 +166,7 @@ export const HttpResponse = IDL.Record({
 	headers: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
 	status_code: IDL.Nat16
 });
+export const ListOrdersParams = IDL.Record({ series_id: IDL.Opt(IDL.Text) });
 export const PayoffType = IDL.Variant({
 	Put: IDL.Null,
 	Binary: IDL.Null,
@@ -142,7 +178,7 @@ export const SettlementAsset = IDL.Variant({
 });
 export const Series = IDL.Record({
 	title: IDL.Text,
-	strike: IDL.Opt(IDL.Nat64),
+	strike: IDL.Opt(Price),
 	creator: IDL.Principal,
 	payoff_type: PayoffType,
 	expiry_ns: IDL.Nat64,
@@ -151,11 +187,12 @@ export const Series = IDL.Record({
 	underlying: IDL.Text,
 	description: IDL.Text,
 	created_at_ns: IDL.Nat64,
+	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
 });
 export const SettleSeriesParams = IDL.Record({
 	series_id: IDL.Text,
-	settlement_price: IDL.Nat64
+	settlement_price: Price
 });
 export const SettlementError = IDL.Variant({
 	UnsupportedSettlementAsset: IDL.Null,
@@ -176,13 +213,12 @@ export const Stats = IDL.Record({
 	open_interest: IDL.Nat,
 	event_counts: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat64))
 });
-export const Side = IDL.Variant({ Buy: IDL.Null, Sell: IDL.Null });
 export const SubmitLimitOrderParams = IDL.Record({
 	qty: IDL.Int,
 	series_id: IDL.Text,
 	side: Side,
 	order_id: IDL.Text,
-	price: IDL.Nat64
+	price: Price
 });
 export const SubmitMarketOrderParams = IDL.Record({
 	trade_id: IDL.Text,
@@ -195,7 +231,7 @@ export const SubmitMatchedTradeParams = IDL.Record({
 	seller: IDL.Principal,
 	buyer_unblock_amount: IDL.Opt(IDL.Nat),
 	buyer: IDL.Principal,
-	price: IDL.Nat64,
+	price: Price,
 	seller_unblock_amount: IDL.Opt(IDL.Nat)
 });
 export const WithdrawCollateralParams = IDL.Record({
@@ -228,9 +264,12 @@ export const idlService = IDL.Service({
 	),
 	get_margin_account: IDL.Func([GetMarginAccountParams], [GetMarginAccountResult], []),
 	get_margin_account_query: IDL.Func([], [GetMarginAccountResult], ['query']),
+	get_orders: IDL.Func([], [IDL.Vec(LimitOrder)], ['query']),
 	get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], ['query']),
 	get_positions: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, Position))], ['query']),
+	get_trade_history: IDL.Func([], [IDL.Vec(Event)], ['query']),
 	http_request: IDL.Func([HttpRequest], [HttpResponse], ['query']),
+	list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], ['query']),
 	list_series: IDL.Func([], [IDL.Vec(Series)], ['query']),
 	metrics: IDL.Func([], [IDL.Text], ['query']),
 	set_registry_canister: IDL.Func([IDL.Principal], [], []),
@@ -349,12 +388,44 @@ export const idlFactory = ({ IDL }) => {
 		Ok: MarginAccount,
 		Err: MarginAccountError
 	});
+	const Side = IDL.Variant({ Buy: IDL.Null, Sell: IDL.Null });
+	const DecimalValue = IDL.Record({ decimals: IDL.Nat8, value: IDL.Nat });
+	const Price = IDL.Record({
+		timestamp: IDL.Opt(IDL.Nat64),
+		oracle_id: IDL.Opt(IDL.Text),
+		decimal: DecimalValue
+	});
+	const LimitOrder = IDL.Record({
+		qty: IDL.Int,
+		creator: IDL.Principal,
+		block_index: IDL.Nat,
+		series_id: IDL.Text,
+		side: Side,
+		order_id: IDL.Text,
+		price: Price
+	});
 	const GetPositionParams = IDL.Record({ series_id: IDL.Text });
 	const Position = IDL.Record({
 		series_id: IDL.Text,
 		net_qty: IDL.Int,
 		user: IDL.Principal,
 		locked_collateral: IDL.Nat
+	});
+	const EventType = IDL.Variant({
+		OrderPlaced: IDL.Null,
+		Executed: IDL.Null,
+		Liquidated: IDL.Null,
+		Settled: IDL.Null
+	});
+	const Event = IDL.Record({
+		qty: IDL.Int,
+		series_id: IDL.Text,
+		user: IDL.Principal,
+		timestamp: IDL.Nat64,
+		event_id: IDL.Nat64,
+		price: Price,
+		event_type: EventType,
+		clearing_id: IDL.Principal
 	});
 	const HttpRequest = IDL.Record({
 		url: IDL.Text,
@@ -367,6 +438,7 @@ export const idlFactory = ({ IDL }) => {
 		headers: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
 		status_code: IDL.Nat16
 	});
+	const ListOrdersParams = IDL.Record({ series_id: IDL.Opt(IDL.Text) });
 	const PayoffType = IDL.Variant({
 		Put: IDL.Null,
 		Binary: IDL.Null,
@@ -378,7 +450,7 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const Series = IDL.Record({
 		title: IDL.Text,
-		strike: IDL.Opt(IDL.Nat64),
+		strike: IDL.Opt(Price),
 		creator: IDL.Principal,
 		payoff_type: PayoffType,
 		expiry_ns: IDL.Nat64,
@@ -387,11 +459,12 @@ export const idlFactory = ({ IDL }) => {
 		underlying: IDL.Text,
 		description: IDL.Text,
 		created_at_ns: IDL.Nat64,
+		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text
 	});
 	const SettleSeriesParams = IDL.Record({
 		series_id: IDL.Text,
-		settlement_price: IDL.Nat64
+		settlement_price: Price
 	});
 	const SettlementError = IDL.Variant({
 		UnsupportedSettlementAsset: IDL.Null,
@@ -412,13 +485,12 @@ export const idlFactory = ({ IDL }) => {
 		open_interest: IDL.Nat,
 		event_counts: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat64))
 	});
-	const Side = IDL.Variant({ Buy: IDL.Null, Sell: IDL.Null });
 	const SubmitLimitOrderParams = IDL.Record({
 		qty: IDL.Int,
 		series_id: IDL.Text,
 		side: Side,
 		order_id: IDL.Text,
-		price: IDL.Nat64
+		price: Price
 	});
 	const SubmitMarketOrderParams = IDL.Record({
 		trade_id: IDL.Text,
@@ -431,7 +503,7 @@ export const idlFactory = ({ IDL }) => {
 		seller: IDL.Principal,
 		buyer_unblock_amount: IDL.Opt(IDL.Nat),
 		buyer: IDL.Principal,
-		price: IDL.Nat64,
+		price: Price,
 		seller_unblock_amount: IDL.Opt(IDL.Nat)
 	});
 	const WithdrawCollateralParams = IDL.Record({
@@ -464,9 +536,12 @@ export const idlFactory = ({ IDL }) => {
 		),
 		get_margin_account: IDL.Func([GetMarginAccountParams], [GetMarginAccountResult], []),
 		get_margin_account_query: IDL.Func([], [GetMarginAccountResult], ['query']),
+		get_orders: IDL.Func([], [IDL.Vec(LimitOrder)], ['query']),
 		get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], ['query']),
 		get_positions: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, Position))], ['query']),
+		get_trade_history: IDL.Func([], [IDL.Vec(Event)], ['query']),
 		http_request: IDL.Func([HttpRequest], [HttpResponse], ['query']),
+		list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], ['query']),
 		list_series: IDL.Func([], [IDL.Vec(Series)], ['query']),
 		metrics: IDL.Func([], [IDL.Text], ['query']),
 		set_registry_canister: IDL.Func([IDL.Principal], [], []),

@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 585ab3818fe254a0c00b4c0e4693607254b7cea5 for file 'src/registry/registry.did'
+// Generated from AntonioVentilii/icdc-core commit 9e1980e753d6daf512778688ceaec9f0f6583ad7 for file 'src/registry/registry.did'
 
 type AddOracleParams = record {
 	metadata : OracleMetadata;
@@ -7,17 +7,19 @@ type AddOracleParams = record {
 };
 type AddSeriesParams = record {
 	title : text;
-	strike : opt nat64;
+	strike : opt Price;
 	payoff_type : PayoffType;
 	expiry_ns : nat64;
 	settlement_asset : SettlementAsset;
 	underlying : text;
 	description : text;
+	price_precision : nat8;
 	oracle_source : text
 };
 type AddSeriesResult = variant { Ok : text; Err : SeriesError };
+type DecimalValue = record { decimals : nat8; value : nat };
 type ListSeriesParams = record {
-	strike : opt nat64;
+	strike : opt Price;
 	creator : opt principal;
 	payoff_type : opt PayoffType;
 	pagination : opt PaginationParams;
@@ -51,9 +53,14 @@ type OracleMetadata = record {
 type OracleResult = variant { Ok; Err : OracleError };
 type PaginationParams = record { cursor : opt text; limit : opt nat64 };
 type PayoffType = variant { Put; Binary; Call };
+type Price = record {
+	timestamp : opt nat64;
+	oracle_id : opt text;
+	decimal : DecimalValue
+};
 type Series = record {
 	title : text;
-	strike : opt nat64;
+	strike : opt Price;
 	creator : principal;
 	payoff_type : PayoffType;
 	expiry_ns : nat64;
@@ -62,6 +69,7 @@ type Series = record {
 	underlying : text;
 	description : text;
 	created_at_ns : nat64;
+	price_precision : nat8;
 	oracle_source : text
 };
 type SeriesError = variant {

@@ -39,6 +39,10 @@ export type CommonError =
 	| { MathOverflow: null }
 	| { Unauthorized: null }
 	| { RegistryNotSet: null };
+export interface DecimalValue {
+	decimals: number;
+	value: bigint;
+}
 export type DepositCollateralError = { MathOverflow: null } | { Ledger: LedgerError };
 export interface DepositCollateralParams {
 	deposit_id: string;
@@ -46,6 +50,21 @@ export interface DepositCollateralParams {
 	amount: bigint;
 }
 export type DepositCollateralResult = { Ok: null } | { Err: DepositCollateralError };
+export interface Event {
+	qty: bigint;
+	series_id: string;
+	user: Principal;
+	timestamp: bigint;
+	event_id: bigint;
+	price: Price;
+	event_type: EventType;
+	clearing_id: Principal;
+}
+export type EventType =
+	| { OrderPlaced: null }
+	| { Executed: null }
+	| { Liquidated: null }
+	| { Settled: null };
 export interface FreezePositionForTransferParams {
 	series_id: string;
 	user: Principal;
@@ -75,6 +94,18 @@ export type LedgerError =
 	| { MathOverflow: null }
 	| { CallError: { method: string; code: number; message: string } }
 	| { UnsupportedLedger: null };
+export interface LimitOrder {
+	qty: bigint;
+	creator: Principal;
+	block_index: bigint;
+	series_id: string;
+	side: Side;
+	order_id: string;
+	price: Price;
+}
+export interface ListOrdersParams {
+	series_id: [] | [string];
+}
 export interface MarginAccount {
 	required_margin: bigint;
 	reserved_balances: Array<[Asset, bigint]>;
@@ -100,9 +131,14 @@ export interface PositionProof {
 	transfer_id: string;
 	clearing_id: Principal;
 }
+export interface Price {
+	timestamp: [] | [bigint];
+	oracle_id: [] | [string];
+	decimal: DecimalValue;
+}
 export interface Series {
 	title: string;
-	strike: [] | [bigint];
+	strike: [] | [Price];
 	creator: Principal;
 	payoff_type: PayoffType;
 	expiry_ns: bigint;
@@ -111,11 +147,12 @@ export interface Series {
 	underlying: string;
 	description: string;
 	created_at_ns: bigint;
+	price_precision: number;
 	oracle_source: string;
 }
 export interface SettleSeriesParams {
 	series_id: string;
-	settlement_price: bigint;
+	settlement_price: Price;
 }
 export type SettleSeriesResult = { Ok: null } | { Err: SettlementError };
 export type SettlementAsset = { Icp: null } | { CkUsdc: null };
@@ -139,7 +176,7 @@ export interface SubmitLimitOrderParams {
 	series_id: string;
 	side: Side;
 	order_id: string;
-	price: bigint;
+	price: Price;
 }
 export interface SubmitMarketOrderParams {
 	trade_id: string;
@@ -152,7 +189,7 @@ export interface SubmitMatchedTradeParams {
 	seller: Principal;
 	buyer_unblock_amount: [] | [bigint];
 	buyer: Principal;
-	price: bigint;
+	price: Price;
 	seller_unblock_amount: [] | [bigint];
 }
 export type SubmitMatchedTradeResult = { Ok: boolean } | { Err: TradeError };
@@ -239,6 +276,10 @@ export interface _SERVICE {
 	 */
 	get_margin_account_query: ActorMethod<[], GetMarginAccountResult>;
 	/**
+	 * Retrieves all active limit orders for the caller.
+	 */
+	get_orders: ActorMethod<[], Array<LimitOrder>>;
+	/**
 	 * Retrieves a specific position for the caller.
 	 */
 	get_position: ActorMethod<[GetPositionParams], [] | [Position]>;
@@ -246,7 +287,15 @@ export interface _SERVICE {
 	 * Retrieves all open positions for the caller.
 	 */
 	get_positions: ActorMethod<[], Array<[string, Position]>>;
+	/**
+	 * Retrieves the trade history (executed trades) for the caller.
+	 */
+	get_trade_history: ActorMethod<[], Array<Event>>;
 	http_request: ActorMethod<[HttpRequest], HttpResponse>;
+	/**
+	 * Returns a list of all active limit orders, potentially filtered by series.
+	 */
+	list_orders: ActorMethod<[ListOrdersParams], Array<LimitOrder>>;
 	/**
 	 * Returns a list of all derivative series currently cached in the clearing canister.
 	 */

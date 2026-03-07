@@ -1,15 +1,17 @@
+import type { ClearingDid } from '$declarations';
 import {
 	cancelLimitOrder as cancelLimitOrderApi,
 	submitLimitOrder,
 	submitMarketOrder
 } from '$lib/api/clearing.api';
-import { ZERO } from '$lib/constants/app.constants';
+import { PRICE_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { Order, OrderBook, OrderBookLevel, OrderSide, OrderType } from '$lib/types/order';
+import { parseToken } from '$lib/utils/parse.utils';
 import { emitRefreshBalance, emitRefreshPositions } from '$lib/utils/refresh.utils';
-import { nonNullish } from '@dfinity/utils';
+import { nonNullish, toNullable } from '@dfinity/utils';
 import { deleteDoc, listDocs, setDoc } from '@junobuild/core';
 import { nanoid } from 'nanoid';
 
@@ -78,16 +80,27 @@ export const placeOrder = async ({
 	if (type === 'LIMIT') {
 		const orderId = `ORD_${nanoid(8)}`;
 
+		const price = parseToken({ value: `${normalizedPrice}`, unitName: PRICE_DECIMALS });
+
+		const params: ClearingDid.SubmitLimitOrderParams = {
+			order_id: orderId,
+			series_id: marketId,
+			side: normalizedSide === 'BUY' ? { Buy: null } : { Sell: null },
+			price: {
+				decimal: {
+					value: price,
+					decimals: PRICE_DECIMALS
+				},
+				timestamp: toNullable(),
+				oracle_id: toNullable()
+			},
+			qty
+		};
+
 		// 1. Submit to Canister (Blocks Collateral)
 		await submitLimitOrder({
 			identity,
-			params: {
-				order_id: orderId,
-				series_id: marketId,
-				side: normalizedSide === 'BUY' ? { Buy: null } : { Sell: null },
-				price: BigInt(Math.floor(normalizedPrice * 100_000_000)),
-				qty
-			}
+			params
 		});
 
 		// 2. Save to Juno for Discovery

@@ -51,8 +51,8 @@
 			<div class="mb-4">
 				<h3 class="px-2 text-xs font-semibold tracking-wider text-slate-400 uppercase">Balances</h3>
 				<div class="mt-2 space-y-1">
-					{#each SUPPORTED_TOKENS as token (token.ledgerCanisterId)}
-						{@const balance = balances.balances[token.ledgerCanisterId] ?? ZERO}
+					{#each SUPPORTED_TOKENS as token (token.id)}
+						{@const balance = balances.balances[token.id] ?? ZERO}
 
 						<div class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors">
 							<span class="text-sm font-medium text-slate-600">{token.symbol}</span>
