@@ -10,11 +10,6 @@ export const userSignedIn: Readable<boolean> = derived(userStore, ({ user }) => 
 
 export const userNotSignedIn: Readable<boolean> = derived(userSignedIn, (signedIn) => !signedIn);
 
-export const userRole: Readable<UserRole | undefined> = derived(
-	userStore,
-	({ profile }) => profile?.role
-);
-
 export const authPrincipal: Readable<string | undefined> = derived(
 	userStore,
 	({ user }) => user?.owner
@@ -25,6 +20,15 @@ const userIsController: Readable<boolean> = derived(
 	([$authPrincipal]) => nonNullish($authPrincipal) && SATELLITE_CONTROLLERS.includes($authPrincipal)
 );
 
+export const userRole: Readable<UserRole | undefined> = derived(
+	[userIsController, userStore],
+	([$userIsController, { profile }]) => ($userIsController ? UserRole.CONTROLLER : profile?.role)
+);
+
+export const userPermissions: Readable<Permission[]> = derived(userRole, ($role) =>
+	$role ? ROLE_PERMISSIONS[$role] : []
+);
+
 export const userIsAdmin: Readable<boolean> = derived(
 	[userIsController, userRole],
 	([$userIsController, $userRole]) => $userIsController || $userRole === UserRole.ADMIN
@@ -33,8 +37,4 @@ export const userIsAdmin: Readable<boolean> = derived(
 export const userIsAdminOrResolver: Readable<boolean> = derived(
 	[userIsAdmin, userRole],
 	([$userIsAdmin, $userRole]) => $userIsAdmin || $userRole === UserRole.RESOLVER
-);
-
-export const userPermissions: Readable<Permission[]> = derived(userRole, ($role) =>
-	$role ? ROLE_PERMISSIONS[$role] : []
 );
