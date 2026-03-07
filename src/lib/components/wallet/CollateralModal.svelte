@@ -1,5 +1,7 @@
 <script lang="ts">
+	import Badge from '$lib/components/ui/Badge.svelte';
 	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
+	import { isDev } from '$lib/env/app.env';
 	import { depositCollateral, withdrawCollateral } from '$lib/services/collateral.services';
 	import type { Token } from '$lib/types/token';
 	import { parseToken } from '$lib/utils/parse.utils';
@@ -31,7 +33,6 @@
 
 	const close = () => {
 		reset();
-
 		onClose();
 	};
 
@@ -42,7 +43,6 @@
 		}
 
 		loading = true;
-
 		error = '';
 
 		try {
@@ -71,8 +71,14 @@
 
 {#if isOpen}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-		<button class="fixed inset-0 bg-slate-950/40" aria-label="Close modal" onclick={close}>
+		<button
+			class="fixed inset-0 bg-slate-950/40"
+			aria-label="Close modal"
+			onclick={close}
+			type="button"
+		>
 		</button>
+
 		<div
 			class="animate-in fade-in zoom-in relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl duration-200"
 		>
@@ -80,6 +86,7 @@
 				class="absolute top-6 right-6 text-slate-400 hover:text-slate-600"
 				aria-label="Close modal"
 				onclick={close}
+				type="button"
 			>
 				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
@@ -100,14 +107,17 @@
 						? 'bg-white text-slate-950 shadow-sm'
 						: 'text-slate-500 hover:text-slate-700'}"
 					onclick={() => (mode = 'Deposit')}
+					type="button"
 				>
 					Deposit
 				</button>
+
 				<button
 					class="flex-1 rounded-xl py-2 text-sm font-bold transition-all {mode === 'Withdraw'
 						? 'bg-white text-slate-950 shadow-sm'
 						: 'text-slate-500 hover:text-slate-700'}"
 					onclick={() => (mode = 'Withdraw')}
+					type="button"
 				>
 					Withdraw
 				</button>
@@ -116,16 +126,20 @@
 			<div class="mt-8 space-y-6">
 				<div class="space-y-2">
 					<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">Token</span>
-					<div class="grid grid-cols-2 gap-4">
+					<div class="grid grid-cols-2 gap-3">
 						{#each SUPPORTED_TOKENS as token (token.ledgerCanisterId)}
 							<button
-								class="rounded-xl border-2 px-4 py-3 font-bold transition-all {selectedToken.ledgerCanisterId ===
+								class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 font-bold transition-all {selectedToken.ledgerCanisterId ===
 								token.ledgerCanisterId
 									? 'border-indigo-600 bg-indigo-50 text-indigo-600'
 									: 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'}"
 								onclick={() => (selectedToken = token)}
+								type="button"
 							>
 								{token.symbol}
+								{#if isDev() && token.isDevEnabled}
+									<Badge size="sm" variant="warning">DEV</Badge>
+								{/if}
 							</button>
 						{/each}
 					</div>
@@ -159,6 +173,7 @@
 					class="w-full rounded-2xl bg-indigo-600 py-4 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-50"
 					disabled={loading || !amount}
 					onclick={handleSubmit}
+					type="button"
 				>
 					{#if loading}
 						<div class="flex items-center justify-center gap-2">

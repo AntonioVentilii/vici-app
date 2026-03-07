@@ -1,6 +1,10 @@
 <script lang="ts">
+	import Badge from '$lib/components/ui/Badge.svelte';
+	import Card from '$lib/components/ui/Card.svelte';
+	import Switch from '$lib/components/ui/Switch.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
+	import { isDev } from '$lib/env/app.env';
 	import type { WalletBalance } from '$lib/types/wallet';
 	import { formatToken } from '$lib/utils/format.utils';
 
@@ -10,53 +14,80 @@
 
 	const { balances }: Props = $props();
 
+	let hideZeroBalances = $state(true);
+
+	const displayedTokens = $derived(
+		SUPPORTED_TOKENS.filter((token) => {
+			if (!hideZeroBalances) {
+				return true;
+			}
+			return (balances.balances[token.id] ?? ZERO) > ZERO;
+		})
+	);
+
 	const getTokenColor = (symbol: string) => {
 		if (symbol === 'ICP') {
 			return 'indigo';
 		}
-		if (symbol === 'ckUSDC') {
+		if (symbol.startsWith('ck')) {
 			return 'green';
 		}
-
 		return 'slate';
 	};
 </script>
 
-<div class="grid grid-cols-1 gap-4">
-	{#each SUPPORTED_TOKENS as token (token.ledgerCanisterId)}
-		{@const color = getTokenColor(token.symbol)}
+<Card padding="none" variant="default">
+	<div class="flex w-full items-center justify-between border-b border-slate-100 p-4">
+		<h3 class="text-sm font-bold text-slate-900">Assets</h3>
 
-		<div
-			class="relative overflow-hidden rounded-2xl border border-{color}-100 bg-linear-to-br from-{color}-50 to-white p-6 shadow-sm"
-		>
-			<div class="flex items-center justify-between">
-				<div class="text-xs font-bold tracking-widest text-{color}-600 uppercase">
-					{token.symbol} Balance
-				</div>
-				<div class="h-7 w-7 rounded-full bg-{color}-100 p-1.5 text-{color}-600">
-					<svg fill="currentColor" viewBox="0 0 24 24"
-						><path d="M12 2L2 12l10 10 10-10L12 2z" /></svg
-					>
-				</div>
-			</div>
-			<div class="mt-2 flex items-baseline gap-2">
-				<span class="text-3xl font-black text-slate-950">
-					{formatToken({ value: balances.balances[token.id] ?? ZERO, unitName: token.decimals })}
-				</span>
-				<span class="text-lg font-bold text-slate-400 uppercase">{token.symbol}</span>
-			</div>
-			<div class="mt-4 flex gap-3 text-[10px] font-medium text-slate-500">
-				{#if token.symbol === 'ICP'}
-					<span
-						>≈ ${(
-							(Number(balances.balances[token.id] ?? ZERO) / 10 ** token.decimals) *
-							12.5
-						).toFixed(2)} USD</span
-					>
-				{:else if token.symbol === 'ckUSDC'}
-					<span>1.00 ckUSDC = $1.00 USD</span>
-				{/if}
-			</div>
+		<div class="flex items-center gap-2">
+			<span class="text-xs text-slate-500">Hide zero balances</span>
+
+			<Switch bind:checked={hideZeroBalances} />
 		</div>
-	{/each}
-</div>
+	</div>
+
+	<div class="flex w-full flex-col divide-y divide-slate-50">
+		{#each displayedTokens as token (token.ledgerCanisterId)}
+			{@const color = getTokenColor(token.symbol)}
+			{@const balance = balances.balances[token.id] ?? ZERO}
+
+			<div class="flex items-center justify-between p-4 transition-colors hover:bg-slate-50/50">
+				<div class="flex items-center gap-3">
+					<div
+						class="flex h-8 w-8 items-center justify-center rounded-full bg-{color}-100 text-{color}-600"
+					>
+						<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+							<path d="M12 2L2 12l10 10 10-10L12 2z" />
+						</svg>
+					</div>
+					<div class="flex items-center gap-2">
+						<div class="text-sm font-bold text-slate-900">{token.symbol}</div>
+						{#if isDev() && token.isDevEnabled}
+							<Badge size="sm" variant="warning">DEV</Badge>
+						{/if}
+					</div>
+				</div>
+
+				<div class="text-right">
+					<div class="text-sm font-black text-slate-950">
+						{formatToken({ value: balance, unitName: token.decimals })}
+					</div>
+					<div class="text-[10px] font-medium text-slate-400">
+						{#if token.symbol === 'ICP'}
+							≈ ${((Number(balance) / 10 ** token.decimals) * 12.5).toFixed(2)} USD
+						{:else if token.symbol === 'ckUSDC'}
+							≈ ${formatToken({ value: balance, unitName: token.decimals })} USD
+						{:else}
+							--
+						{/if}
+					</div>
+				</div>
+			</div>
+		{/each}
+
+		{#if displayedTokens.length === 0}
+			<div class="p-8 text-center text-sm text-slate-400 italic">No assets to display</div>
+		{/if}
+	</div>
+</Card>

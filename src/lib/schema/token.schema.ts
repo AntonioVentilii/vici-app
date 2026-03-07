@@ -10,5 +10,6 @@ const TokenMetadataSchema = z.object({
 export const TokenSchema = z.object({
 	id: TokenIdSchema,
 	...TokenMetadataSchema.shape,
-	ledgerCanisterId: z.string()
+	ledgerCanisterId: z.string(),
+	isDevEnabled: z.boolean().optional()
 });

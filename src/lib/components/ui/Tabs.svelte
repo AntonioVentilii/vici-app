@@ -13,7 +13,7 @@
 	};
 </script>
 
-<div class="border-border flex border-b">
+<div class="border-border flex w-full border-b">
 	{#each tabs as tab (tab)}
 		<button
 			class="flex-1 py-4 text-sm font-bold transition-all {activeTab === tab

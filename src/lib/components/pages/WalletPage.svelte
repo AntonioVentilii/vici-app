@@ -78,11 +78,12 @@
 	/>
 
 	<!-- Balances Cards -->
-	<div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
-		<div class="lg:col-span-1">
+	<div class="flex w-full flex-col gap-6 lg:flex-row">
+		<div class="grow">
 			<WalletStats balances={{ balances: $balancesStore, collateral: $collateralsStore }} />
 		</div>
-		<div class="lg:col-span-2">
+
+		<div class="grow-2">
 			<CollateralStats
 				collateral={$collateralsStore}
 				onManage={() => (isCollateralModalOpen = true)}
@@ -96,7 +97,7 @@
 	<Card padding="none">
 		<Tabs {tabs} bind:activeTab />
 
-		<div class="p-8">
+		<div class="w-full p-8">
 			{#if activeTab === 'Send'}
 				<WalletSend
 					{amount}
