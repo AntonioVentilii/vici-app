@@ -1,5 +1,5 @@
 <script lang="ts">
-	import WalletPage from '$lib/components/pages/WalletPage.svelte';
+	import LeaderboardPage from '$lib/components/pages/LeaderboardPage.svelte';
 </script>
 
-<WalletPage />
+<LeaderboardPage />
