@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Card from '$lib/components/ui/Card.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
+	import Tabs from '$lib/components/ui/Tabs.svelte';
 	import CollateralModal from '$lib/components/wallet/CollateralModal.svelte';
 	import CollateralStats from '$lib/components/wallet/CollateralStats.svelte';
 	import WalletHistory from '$lib/components/wallet/WalletHistory.svelte';
@@ -91,19 +93,8 @@
 	<CollateralModal isOpen={isCollateralModalOpen} onClose={() => (isCollateralModalOpen = false)} />
 
 	<!-- Operations Tabs -->
-	<div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-		<div class="flex border-b border-slate-100">
-			{#each tabs as tab (tab)}
-				<button
-					class="flex-1 py-4 text-sm font-bold transition-all {activeTab === tab
-						? 'border-b-2 border-indigo-600 bg-slate-50 text-indigo-600'
-						: 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'}"
-					onclick={() => (activeTab = tab)}
-				>
-					{tab}
-				</button>
-			{/each}
-		</div>
+	<Card padding="none">
+		<Tabs {tabs} bind:activeTab />
 
 		<div class="p-8">
 			{#if activeTab === 'Send'}
@@ -122,5 +113,5 @@
 				<WalletHistory {transactions} />
 			{/if}
 		</div>
-	</div>
+	</Card>
 </div>

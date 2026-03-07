@@ -78,7 +78,7 @@
 		</div>
 
 		<!-- List -->
-		<Card class="glassmorphism overflow-hidden rounded-2xl">
+		<Card padding="none" variant="glass">
 			<div class="flex flex-col">
 				{#each leaderboard.slice(3) as entry (entry.rank)}
 					<div
@@ -99,11 +99,3 @@
 		</Card>
 	{/if}
 </div>
-
-<style lang="postcss">
-	.glassmorphism {
-		background: rgba(255, 255, 255, 0.03);
-		backdrop-filter: blur(10px);
-		border: 1px solid rgba(255, 255, 255, 0.05);
-	}
-</style>

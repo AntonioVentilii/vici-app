@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Spring } from 'svelte/motion';
 	import type { Market } from '$lib/types/market';
+	import { formatProbability } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -138,20 +139,20 @@
 
 					<div class="grid grid-cols-2 gap-4">
 						<div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
-							<span class="block text-[10px] font-bold tracking-wider text-emerald-600 uppercase"
-								>YES Odds</span
-							>
-							<span class="text-2xl font-black text-emerald-700"
-								>{(market.yesProbability * 100).toFixed(0)}%</span
-							>
+							<span class="block text-[10px] font-bold tracking-wider text-emerald-600 uppercase">
+								YES Odds
+							</span>
+							<span class="text-2xl font-black text-emerald-700">
+								{formatProbability(market.yesProbability)}
+							</span>
 						</div>
 						<div class="rounded-2xl border border-rose-100 bg-rose-50 p-4">
-							<span class="block text-[10px] font-bold tracking-wider text-rose-600 uppercase"
-								>NO Odds</span
-							>
-							<span class="text-2xl font-black text-rose-700"
-								>{(market.noProbability * 100).toFixed(0)}%</span
-							>
+							<span class="block text-[10px] font-bold tracking-wider text-rose-600 uppercase">
+								NO Odds
+							</span>
+							<span class="text-2xl font-black text-rose-700">
+								{formatProbability(market.noProbability)}
+							</span>
 						</div>
 					</div>
 				</div>

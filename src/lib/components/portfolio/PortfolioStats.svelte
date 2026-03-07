@@ -17,7 +17,7 @@
 		label="Unrealized P&L"
 		unit="ICP"
 		value={(totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(2)}
-		valueClass={totalPnL >= 0 ? 'text-green-600' : 'text-red-600'}
+		variant={totalPnL >= 0 ? 'success' : 'warning'}
 	/>
 
 	<StatCard label="Active Markets" value={activeMarketsCount} />

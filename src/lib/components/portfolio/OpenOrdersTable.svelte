@@ -38,7 +38,7 @@
 
 <div class="space-y-4">
 	<h2 class="text-xl font-bold tracking-wider text-slate-950 uppercase">Open Orders</h2>
-	<Card class="overflow-hidden rounded-2xl">
+	<Card padding="none">
 		{#if orders.length === 0}
 			<EmptyState message="No open orders found." />
 		{:else}

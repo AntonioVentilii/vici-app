@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MarketDepthPanel from '$lib/components/market/MarketDepthPanel.svelte';
 	import MarketDiscussion from '$lib/components/social/MarketDiscussion.svelte';
+	import Tabs from '$lib/components/ui/Tabs.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import type { Market } from '$lib/types/market';
@@ -14,48 +15,35 @@
 
 	const { market, position }: Props = $props();
 
-	let activeTab = $state('description');
-
-	const tabs = [
+	const tabOptions = [
 		{ id: 'description', label: 'Description' },
 		{ id: 'depth', label: 'Depth & Analytics' },
 		{ id: 'discussion', label: 'Discussion' },
 		{ id: 'activity', label: 'Your Activity' }
 	];
+
+	let activeTabLabel = $state(tabOptions[0].label);
+
+	let activeTabId = $derived(
+		tabOptions.find((t) => t.label === activeTabLabel)?.id ?? 'description'
+	);
 </script>
 
 <div class="mt-8">
-	<div class="flex border-b border-slate-200">
-		{#each tabs as tab (tab.id)}
-			<button
-				class="relative px-6 py-4 text-sm font-bold tracking-widest uppercase transition-all {activeTab ===
-				tab.id
-					? 'text-indigo-600'
-					: 'text-slate-400 hover:text-slate-600'}"
-				onclick={() => {
-					activeTab = tab.id;
-				}}
-			>
-				{tab.label}
-				{#if activeTab === tab.id}
-					<div class="absolute bottom-0 left-0 h-1 w-full rounded-t-full bg-indigo-600"></div>
-				{/if}
-			</button>
-		{/each}
-	</div>
+	<Tabs tabs={tabOptions.map((t) => t.label)} bind:activeTab={activeTabLabel} />
 
 	<div class="mt-8 min-h-75">
-		{#if activeTab === 'description'}
+		{#if activeTabId === 'description'}
 			<div class="prose prose-slate max-w-none">
 				<p class="text-lg leading-relaxed text-slate-600">
 					{market.description}
 				</p>
 			</div>
-		{:else if activeTab === 'depth'}
+		{:else if activeTabId === 'depth'}
 			<MarketDepthPanel {market} />
-		{:else if activeTab === 'discussion'}
+		{:else if activeTabId === 'discussion'}
 			<MarketDiscussion marketId={market.id} userPrincipal={$authPrincipal ?? ''} />
-		{:else if activeTab === 'activity'}
+		{:else if activeTabId === 'activity'}
 			<div class="space-y-6">
 				{#if position && (position.yesAmount > ZERO || position.noAmount > ZERO)}
 					<div class="rounded-2xl border border-slate-200 bg-white p-6">

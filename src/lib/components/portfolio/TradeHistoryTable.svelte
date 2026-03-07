@@ -30,7 +30,7 @@
 
 <div class="space-y-4">
 	<h2 class="text-xl font-bold tracking-wider text-slate-950 uppercase">Trade History</h2>
-	<Card class="overflow-hidden rounded-2xl">
+	<Card padding="none">
 		{#if events.length === 0}
 			<EmptyState message="No trade history found." />
 		{:else}

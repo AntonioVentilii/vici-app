@@ -44,7 +44,7 @@
 	};
 </script>
 
-<Card class="border-primary/20 bg-primary/5 border-dashed p-6">
+<Card padding="lg" variant="outline">
 	<div class="flex flex-col gap-4">
 		<div>
 			<h4 class="text-lg font-bold">Predictive Category</h4>

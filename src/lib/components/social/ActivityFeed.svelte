@@ -71,60 +71,64 @@
 	};
 </script>
 
-<Card class="flex flex-col gap-4 p-6" glassStyle>
-	<div class="flex items-center justify-between">
-		<h3
-			class="from-primary to-secondary bg-linear-to-r bg-clip-text text-xl font-bold text-transparent"
-		>
-			{mode === 'friends' ? 'Friend Activity' : 'Recent Activity'}
-		</h3>
-		<button
-			class="text-primary hover:text-primary/80 text-xs font-medium transition-colors"
-			onclick={loadActivities}
-		>
-			Refresh
-		</button>
-	</div>
+<Card padding="lg" variant="glass">
+	<div class="flex flex-col gap-4">
+		<div class="flex items-center justify-between">
+			<h3
+				class="from-primary to-secondary bg-linear-to-r bg-clip-text text-xl font-bold text-transparent"
+			>
+				{mode === 'friends' ? 'Friend Activity' : 'Recent Activity'}
+			</h3>
+			<button
+				class="text-primary hover:text-primary/80 text-xs font-medium transition-colors"
+				onclick={loadActivities}
+			>
+				Refresh
+			</button>
+		</div>
 
-	<div class="custom-scrollbar flex max-h-120 flex-col gap-4 overflow-y-auto pr-2">
-		{#if loading}
-			<div class="flex justify-center py-8">
-				<LoadingSpinner />
-			</div>
-		{:else if activities.length === 0}
-			<p class="text-muted-foreground py-12 text-center text-sm italic opacity-50">
-				No activity found.
-			</p>
-		{:else}
-			{#each activities as activity (activity.timestamp + activity.user)}
-				{@const profile = profiles.get(activity.user)}
-
-				<div
-					class="group relative flex gap-3 rounded-2xl bg-white/5 p-3 transition-all hover:bg-white/10"
-				>
-					<div class="text-xl">{getActivityIcon(activity.type)}</div>
-					<div class="flex-1 overflow-hidden">
-						<div class="flex items-center justify-between gap-2">
-							<p class="group-hover:text-primary truncate text-sm font-semibold transition-colors">
-								{profile?.nickname ?? 'Anonymous'}
-							</p>
-							<span class="text-muted-foreground shrink-0 text-[10px] opacity-50">
-								{new Date(activity.timestamp).toLocaleTimeString([], {
-									hour: '2-digit',
-									minute: '2-digit'
-								})}
-							</span>
-						</div>
-						<p class="text-foreground/80 mb-1 text-xs font-medium">{activity.title}</p>
-						{#if activity.details}
-							<p class="text-muted-foreground line-clamp-2 text-[11px] italic opacity-70">
-								"{activity.details}"
-							</p>
-						{/if}
-					</div>
+		<div class="custom-scrollbar flex max-h-120 flex-col gap-4 overflow-y-auto pr-2">
+			{#if loading}
+				<div class="flex justify-center py-8">
+					<LoadingSpinner />
 				</div>
-			{/each}
-		{/if}
+			{:else if activities.length === 0}
+				<p class="text-muted-foreground py-12 text-center text-sm italic opacity-50">
+					No activity found.
+				</p>
+			{:else}
+				{#each activities as activity (activity.timestamp + activity.user)}
+					{@const profile = profiles.get(activity.user)}
+
+					<div
+						class="group relative flex gap-3 rounded-2xl bg-white/5 p-3 transition-all hover:bg-white/10"
+					>
+						<div class="text-xl">{getActivityIcon(activity.type)}</div>
+						<div class="flex-1 overflow-hidden">
+							<div class="flex items-center justify-between gap-2">
+								<p
+									class="group-hover:text-primary truncate text-sm font-semibold transition-colors"
+								>
+									{profile?.nickname ?? 'Anonymous'}
+								</p>
+								<span class="text-muted-foreground shrink-0 text-[10px] opacity-50">
+									{new Date(activity.timestamp).toLocaleTimeString([], {
+										hour: '2-digit',
+										minute: '2-digit'
+									})}
+								</span>
+							</div>
+							<p class="text-foreground/80 mb-1 text-xs font-medium">{activity.title}</p>
+							{#if activity.details}
+								<p class="text-muted-foreground line-clamp-2 text-[11px] italic opacity-70">
+									"{activity.details}"
+								</p>
+							{/if}
+						</div>
+					</div>
+				{/each}
+			{/if}
+		</div>
 	</div>
 </Card>
 

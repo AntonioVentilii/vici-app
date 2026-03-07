@@ -1,7 +1,7 @@
 import { NANO_SECONDS_IN_MILLISECOND } from '$lib/constants/app.constants';
 import { isNullish } from '@dfinity/utils';
 import Decimal from 'decimal.js';
-import { formatUnits, type BigNumberish } from 'ethers/utils';
+import { type BigNumberish, formatUnits } from 'ethers/utils';
 
 interface FormatTokenParams {
 	value: bigint;
@@ -68,3 +68,18 @@ export const formatNanosecondsToDate = ({ nanoseconds }: { nanoseconds: bigint }
 	const date = new Date(Number(nanoseconds / NANO_SECONDS_IN_MILLISECOND));
 	return date.toLocaleDateString('en', DATE_TIME_FORMAT_OPTIONS);
 };
+
+export const formatProbability = (prob: number): string => `${Math.round(prob * 100)}%`;
+
+export const formatDate = (date: bigint | number): string =>
+	new Date(Number(date)).toLocaleDateString();
+
+export const formatVolume = ({
+	volume,
+	decimals,
+	symbol
+}: {
+	volume: bigint;
+	decimals: number;
+	symbol: string;
+}): string => `${formatToken({ value: volume, unitName: decimals })} ${symbol}`;
