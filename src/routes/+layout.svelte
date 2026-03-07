@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { initSatellite } from '@junobuild/core';
 	import type { Snippet } from 'svelte';
+	import Banner from '$lib/components/layout/Banner.svelte';
 	// eslint-disable-next-line import/no-relative-parent-imports
 	import '../app.css';
 
@@ -24,3 +25,5 @@
 </script>
 
 {@render children()}
+
+<Banner />

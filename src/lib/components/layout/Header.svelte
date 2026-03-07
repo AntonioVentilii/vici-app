@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
+	import { Zap, Shield } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import SignInModal from '$lib/components/authn/SignInModal.svelte';
@@ -22,26 +24,31 @@
 		showSignInModal = true;
 	};
 
+	type IconComponent = typeof Zap | typeof Shield;
+
 	interface NavItem {
 		label: string;
 		path: AppPath;
+		icon?: IconComponent;
 		adminOnly?: boolean;
 	}
 
 	const navItems: NavItem[] = [
 		{ label: 'Markets', path: AppPath.Home },
-		{ label: 'Rush', path: AppPath.Rush },
+		{ label: 'Rush', path: AppPath.Rush, icon: Zap },
 		{ label: 'Leaderboard', path: AppPath.Leaderboard },
 		{ label: 'Portfolio', path: AppPath.Portfolio },
-		{ label: 'Admin', path: AppPath.Admin, adminOnly: true }
+		{ label: 'Admin', path: AppPath.Admin, icon: Shield, adminOnly: true }
 	];
 
 	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
 </script>
 
-{#snippet navButton({ label, path, adminOnly = false }: NavItem)}
+{#snippet navButton({ label, path, icon: Icon, adminOnly = false }: NavItem)}
 	<button
-		class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive(path)
+		class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm leading-none font-medium transition-all {isActive(
+			path
+		)
 			? adminOnly
 				? 'bg-primary/10 text-primary'
 				: 'bg-primary text-primary-foreground'
@@ -50,7 +57,12 @@
 				: 'hover:bg-muted/50 hover:text-foreground'}"
 		onclick={() => handleNav(path)}
 	>
-		{label}
+		<span class="inline-flex items-center gap-1 whitespace-nowrap">
+			{#if nonNullish(Icon)}
+				<Icon size="16" />
+			{/if}
+			<span class="whitespace-nowrap">{label}</span>
+		</span>
 	</button>
 {/snippet}
 
