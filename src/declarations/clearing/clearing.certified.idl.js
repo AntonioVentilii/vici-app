@@ -176,6 +176,11 @@ export const SettlementAsset = IDL.Variant({
 	Icp: IDL.Null,
 	CkUsdc: IDL.Null
 });
+export const Description = IDL.Record({
+	html: IDL.Opt(IDL.Text),
+	markdown: IDL.Opt(IDL.Text),
+	plain: IDL.Text
+});
 export const Series = IDL.Record({
 	title: IDL.Text,
 	strike: IDL.Opt(Price),
@@ -185,7 +190,7 @@ export const Series = IDL.Record({
 	series_id: IDL.Text,
 	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
-	description: IDL.Text,
+	description: Description,
 	created_at_ns: IDL.Nat64,
 	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
@@ -195,8 +200,17 @@ export const SettleSeriesParams = IDL.Record({
 	settlement_price: Price
 });
 export const SettlementError = IDL.Variant({
+	InsufficientInternalBalance: IDL.Record({
+		balance: IDL.Nat,
+		user: IDL.Principal,
+		required: IDL.Nat
+	}),
 	UnsupportedSettlementAsset: IDL.Null,
 	MathOverflow: IDL.Null,
+	SolvencyViolation: IDL.Record({
+		total_payoff: IDL.Nat,
+		total_collateral: IDL.Nat
+	}),
 	Ledger: LedgerError,
 	Common: CommonError
 });
@@ -448,6 +462,11 @@ export const idlFactory = ({ IDL }) => {
 		Icp: IDL.Null,
 		CkUsdc: IDL.Null
 	});
+	const Description = IDL.Record({
+		html: IDL.Opt(IDL.Text),
+		markdown: IDL.Opt(IDL.Text),
+		plain: IDL.Text
+	});
 	const Series = IDL.Record({
 		title: IDL.Text,
 		strike: IDL.Opt(Price),
@@ -457,7 +476,7 @@ export const idlFactory = ({ IDL }) => {
 		series_id: IDL.Text,
 		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
-		description: IDL.Text,
+		description: Description,
 		created_at_ns: IDL.Nat64,
 		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text
@@ -467,8 +486,17 @@ export const idlFactory = ({ IDL }) => {
 		settlement_price: Price
 	});
 	const SettlementError = IDL.Variant({
+		InsufficientInternalBalance: IDL.Record({
+			balance: IDL.Nat,
+			user: IDL.Principal,
+			required: IDL.Nat
+		}),
 		UnsupportedSettlementAsset: IDL.Null,
 		MathOverflow: IDL.Null,
+		SolvencyViolation: IDL.Record({
+			total_payoff: IDL.Nat,
+			total_collateral: IDL.Nat
+		}),
 		Ledger: LedgerError,
 		Common: CommonError
 	});

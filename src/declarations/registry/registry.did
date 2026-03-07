@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 9e1980e753d6daf512778688ceaec9f0f6583ad7 for file 'src/registry/registry.did'
+// Generated from AntonioVentilii/icdc-core commit eb9f42b4375f8848facc99996bfd38e6f69129ed for file 'src/registry/registry.did'
 
 type AddOracleParams = record {
 	metadata : OracleMetadata;
@@ -12,12 +12,17 @@ type AddSeriesParams = record {
 	expiry_ns : nat64;
 	settlement_asset : SettlementAsset;
 	underlying : text;
-	description : text;
+	description : Description;
 	price_precision : nat8;
 	oracle_source : text
 };
 type AddSeriesResult = variant { Ok : text; Err : SeriesError };
 type DecimalValue = record { decimals : nat8; value : nat };
+type Description = record {
+	html : opt text;
+	markdown : opt text;
+	plain : text
+};
 type ListSeriesParams = record {
 	strike : opt Price;
 	creator : opt principal;
@@ -47,7 +52,7 @@ type OracleError = variant {
 };
 type OracleMetadata = record {
 	name : text;
-	description : opt text;
+	description : opt Description;
 	website : opt text
 };
 type OracleResult = variant { Ok; Err : OracleError };
@@ -67,7 +72,7 @@ type Series = record {
 	series_id : text;
 	settlement_asset : SettlementAsset;
 	underlying : text;
-	description : text;
+	description : Description;
 	created_at_ns : nat64;
 	price_precision : nat8;
 	oracle_source : text

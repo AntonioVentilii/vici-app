@@ -22,7 +22,7 @@ export interface AddSeriesParams {
 	expiry_ns: bigint;
 	settlement_asset: SettlementAsset;
 	underlying: string;
-	description: string;
+	description: Description;
 	price_precision: number;
 	oracle_source: string;
 }
@@ -30,6 +30,11 @@ export type AddSeriesResult = { Ok: string } | { Err: SeriesError };
 export interface DecimalValue {
 	decimals: number;
 	value: bigint;
+}
+export interface Description {
+	html: [] | [string];
+	markdown: [] | [string];
+	plain: string;
 }
 export interface ListSeriesParams {
 	strike: [] | [Price];
@@ -59,7 +64,7 @@ export type OracleError =
 	| { OracleNotFound: null };
 export interface OracleMetadata {
 	name: string;
-	description: [] | [string];
+	description: [] | [Description];
 	website: [] | [string];
 }
 export type OracleResult = { Ok: null } | { Err: OracleError };
@@ -82,7 +87,7 @@ export interface Series {
 	series_id: string;
 	settlement_asset: SettlementAsset;
 	underlying: string;
-	description: string;
+	description: Description;
 	created_at_ns: bigint;
 	price_precision: number;
 	oracle_source: string;

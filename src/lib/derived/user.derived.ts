@@ -14,6 +14,11 @@ export const userRole: Readable<UserRole | undefined> = derived(
 	({ profile }) => profile?.role
 );
 
+export const authPrincipal: Readable<string | undefined> = derived(
+	userStore,
+	({ user }) => user?.owner
+);
+
 export const userIsAdmin: Readable<boolean> = derived(
 	userRole,
 	($userRole) => $userRole === UserRole.ADMIN
@@ -26,9 +31,4 @@ export const userIsAdminOrResolver: Readable<boolean> = derived(
 
 export const userPermissions: Readable<Permission[]> = derived(userRole, ($role) =>
 	$role ? ROLE_PERMISSIONS[$role] : []
-);
-
-export const authPrincipal: Readable<string | undefined> = derived(
-	userStore,
-	({ user }) => user?.owner
 );

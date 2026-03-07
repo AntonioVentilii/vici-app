@@ -11,7 +11,7 @@ export const mapMarketData = (series: RegistryDid.Series): Market | undefined =>
 		expiry_ns: expiryDate,
 		creator,
 		title,
-		description,
+		description: { plain: description },
 		settlement_asset: settlementAsset
 	} = series;
 

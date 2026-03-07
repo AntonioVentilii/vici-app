@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 31ed068de443677354076fa5fcba0d9ce620d56e for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit eb9f42b4375f8848facc99996bfd38e6f69129ed for file 'src/clearing/clearing.did'
 
 type AcceptPositionTransferResult = variant { Ok : bool; Err : TradeError };
 type Asset = variant { Icrc : principal };
@@ -24,6 +24,11 @@ type DepositCollateralParams = record {
 	amount : nat
 };
 type DepositCollateralResult = variant { Ok; Err : DepositCollateralError };
+type Description = record {
+	html : opt text;
+	markdown : opt text;
+	plain : text
+};
 type Event = record {
 	qty : int;
 	series_id : text;
@@ -114,7 +119,7 @@ type Series = record {
 	series_id : text;
 	settlement_asset : SettlementAsset;
 	underlying : text;
-	description : text;
+	description : Description;
 	created_at_ns : nat64;
 	price_precision : nat8;
 	oracle_source : text
@@ -123,8 +128,14 @@ type SettleSeriesParams = record { series_id : text; settlement_price : Price };
 type SettleSeriesResult = variant { Ok; Err : SettlementError };
 type SettlementAsset = variant { Icp; CkUsdc };
 type SettlementError = variant {
+	InsufficientInternalBalance : record {
+		balance : nat;
+		user : principal;
+		required : nat
+	};
 	UnsupportedSettlementAsset;
 	MathOverflow;
+	SolvencyViolation : record { total_payoff : nat; total_collateral : nat };
 	Ledger : LedgerError;
 	Common : CommonError
 };

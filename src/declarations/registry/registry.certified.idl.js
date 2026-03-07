@@ -8,9 +8,14 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const Description = IDL.Record({
+	html: IDL.Opt(IDL.Text),
+	markdown: IDL.Opt(IDL.Text),
+	plain: IDL.Text
+});
 export const OracleMetadata = IDL.Record({
 	name: IDL.Text,
-	description: IDL.Opt(IDL.Text),
+	description: IDL.Opt(Description),
 	website: IDL.Opt(IDL.Text)
 });
 export const AddOracleParams = IDL.Record({
@@ -52,7 +57,7 @@ export const AddSeriesParams = IDL.Record({
 	expiry_ns: IDL.Nat64,
 	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
-	description: IDL.Text,
+	description: Description,
 	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
 });
@@ -82,7 +87,7 @@ export const Series = IDL.Record({
 	series_id: IDL.Text,
 	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
-	description: IDL.Text,
+	description: Description,
 	created_at_ns: IDL.Nat64,
 	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
@@ -134,9 +139,14 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+	const Description = IDL.Record({
+		html: IDL.Opt(IDL.Text),
+		markdown: IDL.Opt(IDL.Text),
+		plain: IDL.Text
+	});
 	const OracleMetadata = IDL.Record({
 		name: IDL.Text,
-		description: IDL.Opt(IDL.Text),
+		description: IDL.Opt(Description),
 		website: IDL.Opt(IDL.Text)
 	});
 	const AddOracleParams = IDL.Record({
@@ -172,7 +182,7 @@ export const idlFactory = ({ IDL }) => {
 		expiry_ns: IDL.Nat64,
 		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
-		description: IDL.Text,
+		description: Description,
 		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text
 	});
@@ -199,7 +209,7 @@ export const idlFactory = ({ IDL }) => {
 		series_id: IDL.Text,
 		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
-		description: IDL.Text,
+		description: Description,
 		created_at_ns: IDL.Nat64,
 		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text

@@ -50,6 +50,11 @@ export interface DepositCollateralParams {
 	amount: bigint;
 }
 export type DepositCollateralResult = { Ok: null } | { Err: DepositCollateralError };
+export interface Description {
+	html: [] | [string];
+	markdown: [] | [string];
+	plain: string;
+}
 export interface Event {
 	qty: bigint;
 	series_id: string;
@@ -145,7 +150,7 @@ export interface Series {
 	series_id: string;
 	settlement_asset: SettlementAsset;
 	underlying: string;
-	description: string;
+	description: Description;
 	created_at_ns: bigint;
 	price_precision: number;
 	oracle_source: string;
@@ -157,8 +162,21 @@ export interface SettleSeriesParams {
 export type SettleSeriesResult = { Ok: null } | { Err: SettlementError };
 export type SettlementAsset = { Icp: null } | { CkUsdc: null };
 export type SettlementError =
+	| {
+			InsufficientInternalBalance: {
+				balance: bigint;
+				user: Principal;
+				required: bigint;
+			};
+	  }
 	| { UnsupportedSettlementAsset: null }
 	| { MathOverflow: null }
+	| {
+			SolvencyViolation: {
+				total_payoff: bigint;
+				total_collateral: bigint;
+			};
+	  }
 	| { Ledger: LedgerError }
 	| { Common: CommonError };
 export type Side = { Buy: null } | { Sell: null };

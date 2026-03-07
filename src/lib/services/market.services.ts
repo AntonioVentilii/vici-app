@@ -15,7 +15,7 @@ import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
 import { mapMarketData } from '$lib/utils/market.utils';
 import { emitRefreshMarkets } from '$lib/utils/refresh.utils';
-import { isNullish, nonNullish } from '@dfinity/utils';
+import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
 
 /**
  * Creates a new prediction market.
@@ -44,7 +44,11 @@ export const createMarket = async ({
 	const params: RegistryDid.AddSeriesParams = {
 		underlying: title, // Using title as underlying for now
 		title,
-		description,
+		description: {
+			plain: description,
+			markdown: toNullable(),
+			html: toNullable()
+		},
 		expiry_ns: expiryDate * NANO_SECONDS_IN_MILLISECOND,
 		settlement_asset: settlementAsset,
 		strike: STRIKE,

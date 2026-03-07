@@ -17,6 +17,7 @@ export const assertSetRole = ({
 
 	// 1. Check if caller is a controller
 	const controllers = getControllers();
+
 	if (isController({ caller, controllers })) {
 		return;
 	}

@@ -40,7 +40,7 @@ for (( i=0; i<$length; i++ )); do
 
     dfx canister call --network local registry add_series "(record {
         title = \"$title\";
-        description = \"$description\";
+        description = record { plain = \"$description\"; html = null; markdown = null };
         expiry_ns = $expiration_ns;
         underlying = \"$underlying\";
         strike = null;
