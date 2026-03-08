@@ -30,28 +30,32 @@ export const CKBTC_TOKEN: Token = {
 	id: parseTokenId('ckBTC'),
 	symbol: 'ckBTC',
 	decimals: 8,
-	ledgerCanisterId: CKBTC_LEDGER_CANISTER_ID
+	ledgerCanisterId: CKBTC_LEDGER_CANISTER_ID,
+	disabled: true
 };
 
 export const CKETH_TOKEN: Token = {
 	id: parseTokenId('ckETH'),
 	symbol: 'ckETH',
 	decimals: 18,
-	ledgerCanisterId: CKETH_LEDGER_CANISTER_ID
+	ledgerCanisterId: CKETH_LEDGER_CANISTER_ID,
+	disabled: true
 };
 
 export const CHAT_TOKEN: Token = {
 	id: parseTokenId('CHAT'),
 	symbol: 'CHAT',
 	decimals: 8,
-	ledgerCanisterId: CHAT_LEDGER_CANISTER_ID
+	ledgerCanisterId: CHAT_LEDGER_CANISTER_ID,
+	disabled: true
 };
 
 export const GHOST_TOKEN: Token = {
 	id: parseTokenId('GHOST'),
 	symbol: 'GHOST',
 	decimals: 8,
-	ledgerCanisterId: GHOST_LEDGER_CANISTER_ID
+	ledgerCanisterId: GHOST_LEDGER_CANISTER_ID,
+	disabled: true
 };
 
 export const SUPPORTED_TOKENS: Token[] = [
@@ -61,4 +65,4 @@ export const SUPPORTED_TOKENS: Token[] = [
 	CKETH_TOKEN,
 	CHAT_TOKEN,
 	GHOST_TOKEN
-].filter(({ isDevEnabled }) => !isDev() || (isDevEnabled ?? false));
+].filter(({ disabled, isDevEnabled }) => !disabled && (!isDev() || (isDevEnabled ?? false)));

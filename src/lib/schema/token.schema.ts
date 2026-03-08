@@ -7,9 +7,14 @@ const TokenMetadataSchema = z.object({
 	decimals: z.number()
 });
 
+const TokenFeatureFlagsSchema = z.object({
+	disabled: z.boolean().optional(),
+	isDevEnabled: z.boolean().optional()
+});
+
 export const TokenSchema = z.object({
 	id: TokenIdSchema,
-	...TokenMetadataSchema.shape,
 	ledgerCanisterId: z.string(),
-	isDevEnabled: z.boolean().optional()
+	...TokenMetadataSchema.shape,
+	...TokenFeatureFlagsSchema.shape
 });
