@@ -1,115 +1,82 @@
 <script lang="ts">
+	import { Clock } from 'lucide-svelte/icons';
+	import { goto } from '$app/navigation';
+	import Badge from '$lib/components/ui/Badge.svelte';
+	import Card from '$lib/components/ui/Card.svelte';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import type { Market } from '$lib/types/market';
+	import { formatProbability } from '$lib/utils/format.utils';
+	import { getTimeRemaining, getOutcomeVariant } from '$lib/utils/market.utils';
 
 	interface Props {
 		market: Market;
 	}
 
 	const { market }: Props = $props();
-
-	const formatVolume = (v: bigint) => {
-		const val = Number(v) / 100_000_000;
-		if (val >= 1000) {
-			return `${(val / 1000).toFixed(1)}k`;
-		}
-		return val.toFixed(0);
-	};
-
-	const getTimeRemaining = (expiry: bigint) => {
-		const now = BigInt(Date.now());
-
-		const diff = Number(expiry - now);
-
-		if (diff <= 0) {
-			return 'Expired';
-		}
-
-		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-		const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-
-		if (days > 0) {
-			return `${days}d ${hours}h`;
-		}
-		return `${hours}h remaining`;
-	};
 </script>
 
-<a
-	class="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white transition-all duration-500 hover:border-indigo-500/50 hover:shadow-lg"
-	href="/markets/{market.id}"
+<Card
+	onclick={() => goto(`${AppPath.Markets}/${market.id}`)}
+	onkeydown={(e) => e.key === 'Enter' && goto(`${AppPath.Markets}/${market.id}`)}
+	padding="lg"
+	role="button"
+	variant="default"
 >
-	<!-- Status Badge -->
-	<div class="absolute top-4 right-4 z-20">
-		<span
-			class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {market.status ===
-			'Open'
-				? 'border border-green-200 bg-green-100 text-green-700'
-				: 'border border-red-200 bg-red-100 text-red-700'}"
-		>
-			{market.status}
-		</span>
-	</div>
+	<div class="flex h-full flex-col gap-4 text-left">
+		<div class="flex h-full items-start justify-between gap-4">
+			<h3
+				class="group-hover:text-primary text-lg leading-tight font-bold text-wrap wrap-break-word transition-colors"
+			>
+				{market.title}
+			</h3>
+			<Badge variant={getOutcomeVariant(market.status)}>
+				{market.status}
+			</Badge>
+		</div>
 
-	<div class="p-6">
-		<h3
-			class="line-clamp-2 text-xl font-bold text-slate-950 transition-colors group-hover:text-indigo-600"
-		>
-			{market.title}
-		</h3>
-		<p class="mt-2 line-clamp-2 text-sm text-slate-600">
+		<p class="text-muted-foreground text-sm text-wrap wrap-break-word">
 			{market.description}
 		</p>
 
 		<!-- Probabilities Area -->
-		<div class="mt-6">
-			<div
-				class="flex items-center justify-between text-xs font-bold tracking-wider text-slate-500 uppercase"
+		<div class="grid grid-cols-2 gap-4">
+			<a
+				class="bg-destructive/10 hover:bg-destructive/20 rounded-xl p-3 text-center transition-all"
+				href="{AppPath.Markets}/{market.id}?side=no"
+				onclick={(e) => e.stopPropagation()}
 			>
-				<span>YES Probability</span>
-				<span>{Math.round(market.yesProbability * 100)}%</span>
-			</div>
-			<div class="mt-2 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-				<div
-					style="width: {market.yesProbability * 100}%"
-					class="h-full bg-linear-to-r from-indigo-500 to-purple-600 transition-all duration-1000 ease-out"
-				></div>
-			</div>
+				<div class="text-destructive text-[10px] font-bold uppercase">No</div>
+				<div class="text-destructive text-xl font-black">
+					{formatProbability(market.noProbability)}
+				</div>
+			</a>
+
+			<a
+				class="rounded-xl bg-emerald-500/10 p-3 text-center transition-all hover:bg-emerald-500/20"
+				href="{AppPath.Markets}/{market.id}?side=yes"
+				onclick={(e) => e.stopPropagation()}
+			>
+				<div class="text-[10px] font-bold text-emerald-600 uppercase">Yes</div>
+				<div class="text-xl font-black text-emerald-700">
+					{formatProbability(market.yesProbability)}
+				</div>
+			</a>
 		</div>
 
-		<!-- Stats Grid -->
-		<div class="mt-8 grid grid-cols-2 gap-4 border-t border-white/5 pt-4">
-			<div>
-				<div class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Volume</div>
-				<div class="mt-1 text-sm font-bold text-slate-950 uppercase">
-					{formatVolume(market.totalVolume)} ICP
-				</div>
-			</div>
-			<div class="text-right">
-				<div class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Ends In</div>
-				<div class="mt-1 text-sm font-bold text-slate-950">
+		<!-- Footer Stats -->
+		<div class="border-border flex items-center justify-between border-t pt-3">
+			<div class="text-muted-foreground flex items-center gap-1.5">
+				<Clock size={14} />
+				<span class="inline text-xs font-bold">
 					{getTimeRemaining(market.expiryDate)}
-				</div>
+				</span>
 			</div>
 		</div>
 	</div>
+</Card>
 
-	<!-- Quick Action Overlay (Hidden until hover) -->
-	<div
-		class="absolute inset-0 z-10 flex items-center justify-center bg-black/40 opacity-0 backdrop-blur-sm transition-all duration-500 group-hover:opacity-100"
-	>
-		<div
-			class="flex translate-y-4 gap-3 transition-transform duration-500 group-hover:translate-y-0"
-		>
-			<button
-				class="rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white shadow-xl shadow-indigo-500/20 transition-all hover:scale-110 hover:bg-indigo-500 active:scale-95"
-			>
-				Predict YES
-			</button>
-			<button
-				class="rounded-xl bg-white/10 px-6 py-2.5 text-sm font-bold text-white backdrop-blur-md transition-all hover:scale-110 hover:bg-white/20 active:scale-95"
-			>
-				Details
-			</button>
-		</div>
-	</div>
-</a>
+<style lang="postcss">
+	:global(.group:hover) h3 {
+		color: var(--color-primary);
+	}
+</style>

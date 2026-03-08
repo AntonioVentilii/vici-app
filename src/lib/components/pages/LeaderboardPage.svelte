@@ -1,55 +1,34 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
-	import LeaderboardTable from '$lib/components/leaderboard/LeaderboardTable.svelte';
-	import LeaderboardTimeframes from '$lib/components/leaderboard/LeaderboardTimeframes.svelte';
+	import Leaderboard from '$lib/components/social/Leaderboard.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { socialService } from '$lib/services/social.service';
-	import type { LeaderboardEntry } from '$lib/types/social';
-
-	let leaderboard = $state<LeaderboardEntry[]>([]);
-	let loading = $state(true);
-	let activeTimeframe = $state('All-time');
-
-	const timeframes = ['Weekly', 'Monthly', 'All-time'];
-
-	onMount(async () => {
-		leaderboard = await socialService.getLeaderboard();
-		loading = false;
-	});
+	// Leaderboard component handles fetching logic now
 </script>
 
-<div class="space-y-12">
+<div class="space-y-8">
 	<SectionHeader
-		description="Compete with the best predictors in the community. Rankings are updated in real-time based on total P&L and win rate."
+		description="Compete with the best predictors. Rankings updated in real-time."
 		highlight="Leaderboard"
 		title="Global"
 	/>
 
-	<!-- Timeframe Filters -->
-	<LeaderboardTimeframes
-		{activeTimeframe}
-		onTimeframeChange={(timeframe) => (activeTimeframe = timeframe)}
-		{timeframes}
-	/>
-
-	<!-- Leaderboard Table -->
-	<LeaderboardTable {leaderboard} {loading} />
+	<!-- Global Leaderboard -->
+	<Leaderboard />
 
 	<!-- Info Card -->
 	<div
-		class="flex flex-col items-center justify-between gap-6 rounded-3xl border border-slate-200 bg-white p-8 shadow-sm md:flex-row"
+		class="flex flex-col items-center justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:flex-row"
 	>
-		<div class="space-y-2">
-			<h3 class="text-center text-xl font-bold text-slate-950 md:text-left">
+		<div class="space-y-1">
+			<h3 class="text-center text-lg font-bold text-slate-950 md:text-left">
 				How is P&L calculated?
 			</h3>
-			<p class="text-center text-sm text-slate-600 md:text-left">
-				Profit and Loss is calculated based on the difference between your entry odds and the
-				current market probability (unrealized) or the final resolution (realized).
+			<p class="text-center text-xs text-slate-600 md:text-left">
+				Profit and Loss is based on the difference between entry odds and the current probability or
+				final resolution.
 			</p>
 		</div>
 		<button
-			class="rounded-xl bg-indigo-600 px-8 py-3 text-sm font-bold whitespace-nowrap text-white shadow-lg shadow-indigo-500/20 transition-transform hover:scale-105 active:scale-95"
+			class="rounded-lg bg-indigo-600 px-6 py-2.5 text-xs font-bold whitespace-nowrap text-white shadow-lg shadow-indigo-500/20 transition-transform hover:scale-105 active:scale-95"
 		>
 			View My Stats
 		</button>

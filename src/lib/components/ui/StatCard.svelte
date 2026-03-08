@@ -1,21 +1,43 @@
 <script lang="ts">
+	import Card from '$lib/components/ui/Card.svelte';
+	import type { CardPadding } from '$lib/types/components';
+
 	interface Props {
 		label: string;
 		value: string | number;
 		unit?: string;
-		class?: string;
-		valueClass?: string;
+		variant?: 'default' | 'primary' | 'success' | 'danger' | 'warning';
+		size?: 'sm' | 'md' | 'lg';
 	}
 
-	const { label, value, unit, class: className = '', valueClass = '' }: Props = $props();
+	const { label, value, unit, variant = 'default', size = 'md' }: Props = $props();
+
+	const variantStyles: Record<NonNullable<Props['variant']>, string> = {
+		default: 'text-slate-950',
+		primary: 'text-indigo-600',
+		success: 'text-emerald-600',
+		danger: 'text-rose-600',
+		warning: 'text-amber-600'
+	};
+
+	const sizes: Record<
+		NonNullable<Props['size']>,
+		{ label: string; value: string; padding: CardPadding }
+	> = {
+		sm: { label: 'text-[10px]', value: 'text-xl', padding: 'sm' },
+		md: { label: 'text-[10px]', value: 'text-2xl', padding: 'md' },
+		lg: { label: 'text-xs', value: 'text-3xl', padding: 'lg' }
+	};
+
+	const sizeStyles = $derived(sizes[size]);
 </script>
 
-<div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm {className}">
-	<div class="text-xs font-bold tracking-[0.2em] text-slate-500 uppercase">{label}</div>
-	<div class="mt-2 flex items-baseline gap-2">
-		<span class="text-4xl font-black text-slate-950 {valueClass}">{value}</span>
+<Card padding={sizeStyles.padding}>
+	<div class="{sizeStyles.label} font-bold tracking-widest text-slate-500 uppercase">{label}</div>
+	<div class="mt-1 flex items-baseline gap-2">
+		<span class="{sizeStyles.value} font-black {variantStyles[variant]}">{value}</span>
 		{#if unit}
-			<span class="text-sm font-bold text-slate-500 uppercase">{unit}</span>
+			<span class="text-xs font-bold text-slate-500 uppercase">{unit}</span>
 		{/if}
 	</div>
-</div>
+</Card>

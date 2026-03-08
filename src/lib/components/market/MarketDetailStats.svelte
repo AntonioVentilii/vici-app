@@ -1,31 +1,30 @@
 <script lang="ts">
+	import StatCard from '$lib/components/ui/StatCard.svelte';
+	import type { Market } from '$lib/types/market';
+	import { formatDate, formatVolume } from '$lib/utils/format.utils';
+	import { getTimeRemaining } from '$lib/utils/market.utils';
+
 	interface Props {
-		totalVolume: bigint;
-		expiryDate: bigint;
-		timeRemaining: string;
-		onFormatVolume: (v: bigint) => string;
+		market: Market;
 	}
 
-	const { totalVolume, expiryDate, timeRemaining, onFormatVolume }: Props = $props();
+	const { market }: Props = $props();
+
+	const {
+		totalVolume,
+		expiryDate,
+		token: { symbol: tokenSymbol, decimals: tokenDecimals }
+	} = $derived(market);
+
+	const timeRemaining = $derived(getTimeRemaining(market.expiryDate));
 </script>
 
-<div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
-	<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-		<div class="text-xs font-bold tracking-widest text-slate-500 uppercase">Total Volume</div>
-		<div class="mt-2 text-2xl font-black text-slate-950">
-			{onFormatVolume(totalVolume)} ICP
-		</div>
-	</div>
-	<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-		<div class="text-xs font-bold tracking-widest text-slate-500 uppercase">Expiry Date</div>
-		<div class="mt-2 text-2xl font-black text-slate-950">
-			{new Date(Number(expiryDate)).toLocaleDateString()}
-		</div>
-	</div>
-	<div class="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-		<div class="text-xs font-bold tracking-widest text-slate-500 uppercase">Time Remaining</div>
-		<div class="mt-2 text-2xl font-black text-indigo-600">
-			{timeRemaining}
-		</div>
-	</div>
+<div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+	<StatCard
+		label="Total Volume"
+		unit={tokenSymbol}
+		value={formatVolume({ volume: totalVolume, decimals: tokenDecimals, symbol: '' })}
+	/>
+	<StatCard label="Expiry Date" value={formatDate(expiryDate)} />
+	<StatCard label="Time Remaining" value={timeRemaining} variant="primary" />
 </div>

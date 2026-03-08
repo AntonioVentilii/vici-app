@@ -1,22 +1,24 @@
 import type { MarketId } from '$lib/types/market';
-import type { Principal } from '@icp-sdk/core/principal';
+import type { Token, TokenId } from '$lib/types/token';
+import type { PrincipalText } from '@dfinity/zod-schemas';
 
-export type TransactionType = 'Trade' | 'Send' | 'Receive';
+export type TransactionType = 'Trade' | 'Send' | 'Receive' | 'Burn' | 'Mint' | 'Approve';
 
 export interface WalletBalance {
-	icp: bigint;
-	ckUsdc: bigint;
+	balances: Record<TokenId, bigint>;
+	collateral: Record<TokenId, bigint>;
 }
 
+export type TransactionId = string;
+
 export interface Transaction {
-	// TODO: define transaction ID type
-	id: string;
-	user: Principal;
+	id: TransactionId;
+	user: PrincipalText;
 	timestamp: bigint;
 	type: TransactionType;
 	marketId?: MarketId;
 	amount: bigint;
-	// TODO: defined type
-	token: 'ICP' | 'ckUSDC';
-	counterparty?: Principal;
+	token: Token;
+	counterparty?: PrincipalText;
+	approveSpender?: PrincipalText;
 }

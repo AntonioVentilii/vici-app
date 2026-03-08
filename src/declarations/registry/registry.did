@@ -1,36 +1,108 @@
-// Generated from AntonioVentilii/icdc-core commit 50f29d2210c898dccc17b2c7e61d6d669195db82 for file 'src/registry/registry.did'
+// Generated from AntonioVentilii/icdc-core commit efcf619efd7bc505bdf2ac6201d1d9c647e056a4 for file 'src/registry/registry.did'
 
+type AddOracleParams = record {
+	metadata : OracleMetadata;
+	authorized_principals : vec principal;
+	oracle_id : text
+};
 type AddSeriesParams = record {
 	title : text;
-	strike : opt nat64;
+	strike : opt Price;
 	payoff_type : PayoffType;
+	expiry_ns : nat64;
 	settlement_asset : SettlementAsset;
 	underlying : text;
-	description : text;
-	expiry : nat64;
+	description : Description;
+	price_precision : nat8;
 	oracle_source : text
 };
-type AddSeriesResult = variant { Ok : text; Err : RegistryError };
+type AddSeriesResult = variant { Ok : text; Err : SeriesError };
+type Chain = variant { Bsc; Base; Ethereum; Polygon };
+type DecimalValue = record { decimals : nat8; value : nat };
+type Description = record {
+	html : opt text;
+	markdown : opt text;
+	plain : text
+};
+type ListSeriesParams = record {
+	strike : opt Price;
+	creator : opt principal;
+	payoff_type : opt PayoffType;
+	pagination : opt PaginationParams;
+	settlement_asset : opt SettlementAsset;
+	underlying : opt text;
+	search_term : opt text;
+	oracle_source : opt text
+};
+type ManageOraclePrincipalsParams = record {
+	add_principals : vec principal;
+	remove_principals : vec principal;
+	oracle_id : text
+};
+type Oracle = record {
+	manager : principal;
+	registered_at_ns : nat64;
+	metadata : OracleMetadata;
+	authorized_principals : vec principal;
+	oracle_id : text
+};
+type OracleError = variant {
+	UnauthorizedOracleManager;
+	OracleAlreadyExists;
+	OracleNotFound
+};
+type OracleMetadata = record {
+	name : text;
+	description : opt Description;
+	website : opt text
+};
+type OracleResult = variant { Ok; Err : OracleError };
+type PaginationParams = record { cursor : opt text; limit : opt nat64 };
 type PayoffType = variant { Put; Binary; Call };
-type RegistryError = variant {
-	DescriptionTooLong;
-	TitleTooLong;
-	SeriesAlreadyExists
+type Price = record {
+	timestamp : opt nat64;
+	oracle_id : opt text;
+	decimal : DecimalValue
 };
 type Series = record {
 	title : text;
-	strike : opt nat64;
+	strike : opt Price;
 	creator : principal;
 	payoff_type : PayoffType;
+	expiry_ns : nat64;
 	series_id : text;
 	settlement_asset : SettlementAsset;
 	underlying : text;
-	description : text;
-	expiry : nat64;
+	description : Description;
+	created_at_ns : nat64;
+	price_precision : nat8;
 	oracle_source : text
 };
-type SettlementAsset = variant { Icp; CkUsdc };
+type SeriesError = variant {
+	DescriptionTooLong;
+	TitleTooLong;
+	Unauthorized;
+	SeriesAlreadyExists
+};
+type SeriesPage = record { next_cursor : opt text; items : vec Series };
+type SettlementAsset = variant {
+	Icp;
+	Usdc : Chain;
+	Usdt : Chain;
+	Native : Chain;
+	CkUsdc
+};
+type UpdateOracleMetadataParams = record {
+	metadata : OracleMetadata;
+	oracle_id : text
+};
 service : {
+	// Authorizes a list of principals to create new derivative series.
+	//
+	// This method is gated to canister controllers.
+	add_authorized_creators : (vec principal) -> ();
+	// Registers a new price oracle in the registry.
+	add_oracle : (AddOracleParams) -> (OracleResult);
 	// Adds a new derivative series to the registry.
 	//
 	// This method generates a canonical [`SeriesId`] for the provided parameters.
@@ -41,9 +113,11 @@ service : {
 	//
 	// # Returns
 	// * [`AddSeriesResult::Ok`] containing the new [`SeriesId`] on success.
-	// * [`AddSeriesResult::Err`] with [`RegistryError::SeriesAlreadyExists`] if the series is already
+	// * [`AddSeriesResult::Err`] with [`SeriesError::SeriesAlreadyExists`] if the series is already
 	// registered.
 	add_series : (AddSeriesParams) -> (AddSeriesResult);
+	// Retrieves the details of a specific oracle by its ID.
+	get_oracle : (text) -> (opt Oracle) query;
 	// Retrieves a specific [`Series`] by its [`SeriesId`].
 	//
 	// # Arguments
@@ -53,6 +127,24 @@ service : {
 	// * `Some(Series)` if the series exists in the registry.
 	// * `None` otherwise.
 	get_series : (text) -> (opt Series) query;
-	// Returns a list of all registered derivative series.
-	list_series : () -> (vec Series) query
+	// Checks if a principal is authorized to create derivative series.
+	is_authorized_creator : (principal) -> (bool) query;
+	// Checks if a principal is authorized to push settlement data for a given oracle.
+	is_oracle_authorized : (text, principal) -> (bool) query;
+	// Returns a list of all principals currently authorized to create series.
+	//
+	// This method is gated to canister controllers.
+	list_authorized_creators : () -> (vec principal) query;
+	// Returns a paginated page of all registered derivative series.
+	list_series : (PaginationParams) -> (SeriesPage) query;
+	// Returns a paginated page of registered derivative series, optionally filtered.
+	list_series_with : (ListSeriesParams) -> (SeriesPage) query;
+	// Adds or removes authorised principals for an oracle.
+	manage_oracle_principals : (ManageOraclePrincipalsParams) -> (OracleResult);
+	// Removes authorization from a list of principals, preventing them from creating new series.
+	//
+	// This method is gated to canister controllers.
+	remove_authorized_creators : (vec principal) -> ();
+	// Updates the metadata of an existing oracle.
+	update_oracle_metadata : (UpdateOracleMetadataParams) -> (OracleResult)
 }

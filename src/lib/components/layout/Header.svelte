@@ -1,126 +1,86 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { nonNullish } from '@dfinity/utils';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import Logout from '$lib/components/authn/Logout.svelte';
 	import SignInModal from '$lib/components/authn/SignInModal.svelte';
+	import UserDropdown from '$lib/components/layout/UserDropdown.svelte';
+	import WalletDropdown from '$lib/components/layout/WalletDropdown.svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
-	import { userSignedIn } from '$lib/derived/user.derived';
-	import { isAdmin as isAdminService } from '$lib/services/authn.service';
-	import { getBalances } from '$lib/services/wallet.service';
-	import { navStore, navigateTo, type Page } from '$lib/stores/nav.store';
-	import type { WalletBalance } from '$lib/types/wallet';
+	import { navItems } from '$lib/constants/nav.constants';
+	import { AppPath } from '$lib/constants/routes.constants';
+	import { userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
+	import { balancesStore } from '$lib/stores/balances.store';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import type { NavItem } from '$lib/types/nav';
 
-	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO });
-	let isAdmin = $state(false);
 	let showSignInModal = $state(false);
 
-	onMount(async () => {
-		balances = await getBalances();
-		isAdmin = await isAdminService();
-	});
+	const isActive = (path: AppPath) => page.url.pathname === path;
 
-	const formatBalance = (b: bigint) => Number(b) / 100_000_000;
-
-	const isActive = (path: Page) => $navStore === path && page.url.pathname === '/';
-
-	const handleNav = (p: Page) => {
-		navigateTo(p);
+	const handleNav = (path: AppPath) => {
+		goto(path);
 	};
 
-	// eslint-disable-next-line require-await
-	const openSignInModal = async () => {
+	const openSignInModal = () => {
 		showSignInModal = true;
 	};
+
+	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
 </script>
 
-<header
-	class="fixed top-0 z-50 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md transition-all duration-300"
->
-	<div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-		<!-- Logo -->
-		<div class="flex items-center gap-8">
-			<button class="group flex items-center gap-2" onclick={() => handleNav('markets')}>
-				<div
-					class="flex h-10 w-10 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 to-purple-600 font-bold text-white shadow-lg transition-transform group-hover:scale-110"
-				>
-					V
-				</div>
-				<span
-					class="hidden text-xl font-extrabold tracking-tight text-slate-950 drop-shadow-sm sm:block"
-				>
-					VICI <span class="text-indigo-600">SOCIAL</span>
-				</span>
-			</button>
+{#snippet navButton({ label, path, icon: Icon, adminOnly = false }: NavItem)}
+	<BaseButton
+		class="rounded-lg px-4 py-2 text-sm leading-none font-medium {isActive(path)
+			? adminOnly
+				? 'bg-primary/10 text-primary'
+				: 'bg-primary text-primary-foreground'
+			: adminOnly
+				? 'text-primary/60 hover:bg-primary/5 hover:text-primary'
+				: 'hover:bg-muted/50 hover:text-foreground'}"
+		onclick={() => handleNav(path)}
+	>
+		<span class="inline-flex items-center gap-1 whitespace-nowrap">
+			{#if nonNullish(Icon)}
+				<Icon size="16" />
+			{/if}
+			<span class="whitespace-nowrap">{label}</span>
+		</span>
+	</BaseButton>
+{/snippet}
 
-			<!-- Desktop Nav -->
-			<nav class="hidden items-center gap-1 md:flex">
-				<button
-					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('markets')
-						? 'bg-slate-100 text-slate-950'
-						: 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'}"
-					onclick={() => handleNav('markets')}
-				>
-					Markets
-				</button>
-				<button
-					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('leaderboard')
-						? 'bg-slate-100 text-slate-950'
-						: 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'}"
-					onclick={() => handleNav('leaderboard')}
-				>
-					Leaderboard
-				</button>
-				<button
-					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('portfolio')
-						? 'bg-slate-100 text-slate-950'
-						: 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'}"
-					onclick={() => handleNav('portfolio')}
-				>
-					Portfolio
-				</button>
-				<button
-					class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('wallet')
-						? 'bg-slate-100 text-slate-950'
-						: 'text-slate-600 hover:bg-slate-50 hover:text-slate-950'}"
-					onclick={() => handleNav('wallet')}
-				>
-					Wallet
-				</button>
-				{#if isAdmin}
-					<button
-						class="rounded-lg px-4 py-2 text-sm font-medium transition-all {isActive('admin')
-							? 'bg-indigo-500/10 text-indigo-400'
-							: 'text-indigo-400/60 hover:bg-indigo-500/5 hover:text-indigo-400'}"
-						onclick={() => handleNav('admin')}
-					>
-						Admin
-					</button>
-				{/if}
-			</nav>
-		</div>
+<header
+	class="border-border bg-background/95 sticky top-0 z-50 w-full border-b backdrop-blur-md transition-all duration-300"
+>
+	<div class="container mx-auto flex h-16 items-center justify-between px-4">
+		<!-- Logo -->
+		<BaseButton class="group flex items-center gap-2" onclick={() => handleNav(AppPath.Home)}>
+			<div
+				class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg font-bold shadow-lg transition-transform group-hover:scale-110"
+			>
+				V
+			</div>
+			<span
+				class="hidden text-xl font-extrabold tracking-tight text-slate-950 drop-shadow-sm sm:block"
+			>
+				Veni. Vidi. <span class="text-primary">VICI</span>.
+			</span>
+		</BaseButton>
+
+		<!-- Desktop Nav -->
+		<nav class="hidden items-center gap-1 md:flex">
+			{#each visibleNavItems as item (item.path)}
+				{@render navButton(item)}
+			{/each}
+		</nav>
 
 		<!-- Right side -->
 		<div class="flex items-center gap-4">
 			{#if $userSignedIn}
-				<div class="hidden flex-col items-end gap-0.5 sm:flex">
-					<div class="flex items-center gap-3">
-						<span class="text-sm font-bold text-slate-950">
-							{formatBalance(balances.icp).toFixed(2)}
-							<span class="text-[10px] text-slate-500">ICP</span>
-						</span>
+				<div class="flex items-center gap-3">
+					<WalletDropdown balances={{ balances: $balancesStore, collateral: $collateralsStore }} />
 
-						<span class="h-3 w-px bg-slate-200"></span>
-
-						<span class="text-sm font-bold text-slate-950">
-							{formatBalance(balances.ckUsdc).toFixed(2)}
-							<span class="text-[10px] text-slate-500">ckUSDC</span>
-						</span>
-					</div>
-				</div>
-
-				<div class="flex items-center gap-2">
-					<Logout />
+					<UserDropdown />
 				</div>
 			{:else}
 				<div class="flex items-center gap-2">

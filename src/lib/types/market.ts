@@ -1,5 +1,6 @@
 import type { MarketIdSchema } from '$lib/schema/market.schema';
-import type { Principal } from '@icp-sdk/core/principal';
+import type { Token } from '$lib/types/token';
+import type { PrincipalText } from '@dfinity/zod-schemas';
 import type * as z from 'zod';
 
 export type MarketId = z.infer<typeof MarketIdSchema>;
@@ -12,28 +13,17 @@ export interface Market {
 	id: MarketId;
 	title: string;
 	description: string;
-	creator: Principal;
+	creator: PrincipalText;
 	expiryDate: bigint; // timestamp in ms
 	status: MarketStatus;
 	outcome?: Outcome;
 	isInviteOnly: boolean;
-	inviteList: Principal[];
+	inviteList: PrincipalText[];
 	totalVolume: bigint;
 	yesVolume: bigint;
 	noVolume: bigint;
 	yesProbability: number;
 	noProbability: number;
-}
-
-// TODO: do we need this???
-export interface MarketMetadata {
-	id: MarketId;
-	creator: Principal;
-	totalVolume: bigint;
-	yesVolume: bigint;
-	noVolume: bigint;
-	yesProbability: number;
-	noProbability: number;
-	status: MarketStatus;
-	outcome?: Outcome;
+	token: Token;
+	pricePrecision: number;
 }

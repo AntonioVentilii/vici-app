@@ -1,3 +1,5 @@
+import { Collection } from '$lib/constants/collections.constants';
+import { assertSetRole } from '$satellite/services/roles.services';
 import {
 	type AssertDeleteAsset,
 	type AssertDeleteDoc,
@@ -75,9 +77,8 @@ export const onDeleteFilteredAssets = defineHook<OnDeleteFilteredAssets>({
 });
 
 export const assertSetDoc = defineAssert<AssertSetDoc>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	assert: (context) => {}
+	collections: [Collection.ROLES],
+	assert: assertSetRole
 });
 
 export const assertDeleteDoc = defineAssert<AssertDeleteDoc>({

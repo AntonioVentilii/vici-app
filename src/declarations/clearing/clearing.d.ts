@@ -11,23 +11,97 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export type AcceptPositionTransferResult = { Ok: boolean } | { Err: TradeError };
-export type Asset = { Icrc: Principal };
+export type AdminError =
+	| { TransferFailed: string }
+	| { InsufficientFunds: null }
+	| { Common: CommonError };
+export type AdminResult = { Ok: bigint } | { Err: AdminError };
+export type Asset = { Erc20: ErcToken } | { Icrc: Principal } | { NativeEvm: NativeEvmAsset };
+export type AssetError =
+	| { TransferError: string }
+	| { InsufficientBalance: { balance: bigint; required: bigint } }
+	| { MathOverflow: null }
+	| { CallError: { method: string; code: number; message: string } }
+	| { InvalidAssetForHandler: null }
+	| { UnsupportedAsset: null };
+export interface BlockCollateralParams {
+	asset: Asset;
+	amount: bigint;
+}
+export type BlockCollateralResult = { Ok: null } | { Err: BlockingError };
+export type BlockingError =
+	| {
+			InsufficientAvailableBalance: {
+				requested: bigint;
+				available: bigint;
+			};
+	  }
+	| { MathOverflow: null }
+	| {
+			InsufficientReservedBalance: {
+				requested: bigint;
+				reserved: bigint;
+			};
+	  };
+export interface CancelLimitOrderParams {
+	order_id: string;
+}
+export type Chain = { Bsc: null } | { Base: null } | { Ethereum: null } | { Polygon: null };
+export interface ClearingConfig {
+	insurance_fund_fee_ratio: number;
+	signer_canister: Principal;
+	evm_rpc: Principal;
+}
 export type CommonError =
 	| { Internal: string }
 	| { MathOverflow: null }
 	| { Unauthorized: null }
 	| { RegistryNotSet: null };
-export type DepositCollateralError = { MathOverflow: null } | { Ledger: LedgerError };
+export interface DecimalValue {
+	decimals: number;
+	value: bigint;
+}
+export type DepositCollateralError = { MathOverflow: null } | { Asset: AssetError };
 export interface DepositCollateralParams {
 	deposit_id: string;
 	asset: Asset;
 	amount: bigint;
 }
 export type DepositCollateralResult = { Ok: null } | { Err: DepositCollateralError };
+export interface Description {
+	html: [] | [string];
+	markdown: [] | [string];
+	plain: string;
+}
+export interface ErcToken {
+	decimals: number;
+	token_address: string;
+	chain_id: bigint;
+}
+export interface Event {
+	qty: bigint;
+	series_id: string;
+	user: Principal;
+	timestamp: bigint;
+	event_id: bigint;
+	price: Price;
+	event_type: EventType;
+	clearing_id: Principal;
+}
+export type EventType =
+	| { OrderPlaced: null }
+	| { Executed: null }
+	| { Liquidated: null }
+	| { Settled: null };
 export interface FreezePositionForTransferParams {
 	series_id: string;
 	user: Principal;
 	transfer_id: string;
+}
+export type FundType = { Insurance: null } | { Treasury: null };
+export interface GetFundsResult {
+	insurance_fund: Array<[Asset, bigint]>;
+	treasury: Array<[Asset, bigint]>;
 }
 export interface GetMarginAccountParams {
 	refresh: [] | [boolean];
@@ -36,21 +110,43 @@ export type GetMarginAccountResult = { Ok: MarginAccount } | { Err: MarginAccoun
 export interface GetPositionParams {
 	series_id: string;
 }
-export type LedgerError =
-	| { TransferError: string }
-	| { InsufficientBalance: { balance: bigint; required: bigint } }
-	| { MathOverflow: null }
-	| { CallError: { method: string; code: number; message: string } }
-	| { UnsupportedLedger: null };
+export interface HttpRequest {
+	url: string;
+	method: string;
+	body: Uint8Array;
+	headers: Array<[string, string]>;
+}
+export interface HttpResponse {
+	body: Uint8Array;
+	headers: Array<[string, string]>;
+	status_code: number;
+}
+export interface LimitOrder {
+	qty: bigint;
+	creator: Principal;
+	block_index: bigint;
+	series_id: string;
+	side: Side;
+	order_id: string;
+	price: Price;
+}
+export interface ListOrdersParams {
+	series_id: [] | [string];
+}
 export interface MarginAccount {
 	required_margin: bigint;
+	reserved_balances: Array<[Asset, bigint]>;
 	user: Principal;
 	balances: Array<[Asset, bigint]>;
 }
 export type MarginAccountError =
 	| { NoMarginAccountFound: null }
 	| { MathOverflow: null }
-	| { Ledger: LedgerError };
+	| { Asset: AssetError };
+export interface NativeEvmAsset {
+	decimals: number;
+	chain_id: bigint;
+}
 export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
 export interface Position {
 	series_id: string;
@@ -66,39 +162,88 @@ export interface PositionProof {
 	transfer_id: string;
 	clearing_id: Principal;
 }
+export interface Price {
+	timestamp: [] | [bigint];
+	oracle_id: [] | [string];
+	decimal: DecimalValue;
+}
 export interface Series {
 	title: string;
-	strike: [] | [bigint];
+	strike: [] | [Price];
 	creator: Principal;
 	payoff_type: PayoffType;
+	expiry_ns: bigint;
 	series_id: string;
 	settlement_asset: SettlementAsset;
 	underlying: string;
-	description: string;
-	expiry: bigint;
+	description: Description;
+	created_at_ns: bigint;
+	price_precision: number;
 	oracle_source: string;
 }
 export interface SettleSeriesParams {
 	series_id: string;
-	settlement_price: bigint;
+	settlement_price: Price;
 }
 export type SettleSeriesResult = { Ok: null } | { Err: SettlementError };
-export type SettlementAsset = { Icp: null } | { CkUsdc: null };
+export type SettlementAsset =
+	| { Icp: null }
+	| { Usdc: Chain }
+	| { Usdt: Chain }
+	| { Native: Chain }
+	| { CkUsdc: null };
 export type SettlementError =
+	| {
+			InsufficientInternalBalance: {
+				balance: bigint;
+				user: Principal;
+				required: bigint;
+			};
+	  }
 	| { UnsupportedSettlementAsset: null }
 	| { MathOverflow: null }
-	| { Ledger: LedgerError }
+	| {
+			SolvencyViolation: {
+				total_payoff: bigint;
+				total_collateral: bigint;
+			};
+	  }
+	| { Asset: AssetError }
 	| { Common: CommonError };
+export type Side = { Buy: null } | { Sell: null };
+export interface Stats {
+	total_users: bigint;
+	margin_balances: Array<[Asset, bigint]>;
+	total_collateral_locked: bigint;
+	total_trades: bigint;
+	total_series: bigint;
+	open_interest: bigint;
+	event_counts: Array<[string, bigint]>;
+}
+export interface SubmitLimitOrderParams {
+	qty: bigint;
+	series_id: string;
+	side: Side;
+	order_id: string;
+	price: Price;
+}
+export interface SubmitMarketOrderParams {
+	trade_id: string;
+	matching_order_id: string;
+}
 export interface SubmitMatchedTradeParams {
 	qty: bigint;
 	trade_id: string;
 	series_id: string;
 	seller: Principal;
+	buyer_unblock_amount: [] | [bigint];
 	buyer: Principal;
-	price: bigint;
+	price: Price;
+	seller_unblock_amount: [] | [bigint];
 }
 export type SubmitMatchedTradeResult = { Ok: boolean } | { Err: TradeError };
 export type TradeError =
+	| { OrderNotFound: string }
 	| { RegistryError: string }
 	| {
 			InsufficientMargin: {
@@ -107,20 +252,27 @@ export type TradeError =
 				required: bigint;
 			};
 	  }
+	| { NotOrderCreator: null }
 	| { SeriesNotFound: string }
 	| { Common: CommonError };
 export type WithdrawCollateralError =
 	| {
-			InsufficientExcessMargin: { requested: bigint; current: bigint };
+			InsufficientExcessMargin: { requested: bigint; available: bigint };
 	  }
 	| { MathOverflow: null }
-	| { Ledger: LedgerError };
+	| { Asset: AssetError };
 export interface WithdrawCollateralParams {
 	asset: Asset;
 	withdrawal_id: string;
 	amount: bigint;
 }
 export type WithdrawCollateralResult = { Ok: null } | { Err: WithdrawCollateralError };
+export interface WithdrawFundParams {
+	to: Principal;
+	fund_type: FundType;
+	asset: Asset;
+	amount: bigint;
+}
 export interface _SERVICE {
 	/**
 	 * Accepts a position transfer from another clearing canister.
@@ -129,6 +281,16 @@ export interface _SERVICE {
 	 * proof. This method is gated to canister controllers.
 	 */
 	accept_position_transfer: ActorMethod<[PositionProof], AcceptPositionTransferResult>;
+	/**
+	 * Blocks (reserves) collateral in the user's margin account.
+	 */
+	block_collateral: ActorMethod<[BlockCollateralParams], BlockCollateralResult>;
+	/**
+	 * Cancels an existing limit order and releases the reserved collateral.
+	 *
+	 * Only the creator of the order can cancel it.
+	 */
+	cancel_limit_order: ActorMethod<[CancelLimitOrderParams], SubmitMatchedTradeResult>;
 	/**
 	 * Deposits collateral into the user's margin account.
 	 *
@@ -156,6 +318,12 @@ export interface _SERVICE {
 		[] | [PositionProof]
 	>;
 	/**
+	 * Returns the current balances of the Insurance Fund and Treasury.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	get_funds: ActorMethod<[], GetFundsResult>;
+	/**
 	 * Retrieves the current user's margin account details, optionally refreshing balances.
 	 *
 	 * # Arguments
@@ -169,6 +337,10 @@ export interface _SERVICE {
 	 */
 	get_margin_account_query: ActorMethod<[], GetMarginAccountResult>;
 	/**
+	 * Retrieves all active limit orders for the caller.
+	 */
+	get_orders: ActorMethod<[], Array<LimitOrder>>;
+	/**
 	 * Retrieves a specific position for the caller.
 	 */
 	get_position: ActorMethod<[GetPositionParams], [] | [Position]>;
@@ -177,9 +349,24 @@ export interface _SERVICE {
 	 */
 	get_positions: ActorMethod<[], Array<[string, Position]>>;
 	/**
+	 * Retrieves the trade history (executed trades) for the caller.
+	 */
+	get_trade_history: ActorMethod<[], Array<Event>>;
+	http_request: ActorMethod<[HttpRequest], HttpResponse>;
+	/**
+	 * Returns a list of all active limit orders, potentially filtered by series.
+	 */
+	list_orders: ActorMethod<[ListOrdersParams], Array<LimitOrder>>;
+	/**
 	 * Returns a list of all derivative series currently cached in the clearing canister.
 	 */
 	list_series: ActorMethod<[], Array<Series>>;
+	/**
+	 * Exports internal state as Prometheus metrics.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	metrics: ActorMethod<[], string>;
 	/**
 	 * Sets the principal of the Series Registry canister.
 	 *
@@ -196,25 +383,44 @@ export interface _SERVICE {
 	 * 3. Paying out collateral to users with net profits.
 	 * 4. Finalising internal margin account balances and releasing locked collateral.
 	 *
-	 * This method is gated to canister controllers and is intended to be called by an off-chain oracle
-	 * or automation.
+	 * This method is gated to canister controllers or the designated [`oracle_principal`] for the
+	 * series. It is intended to be called by an off-chain oracle or automation.
 	 */
 	settle_series: ActorMethod<[SettleSeriesParams], SettleSeriesResult>;
 	/**
+	 * Exports internal state as a structured `Stats` object.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	stats: ActorMethod<[], Stats>;
+	/**
+	 * Submits a limit order for the caller.
+	 *
+	 * This atomically blocks the required collateral for the order.
+	 */
+	submit_limit_order: ActorMethod<[SubmitLimitOrderParams], SubmitMatchedTradeResult>;
+	/**
+	 * Submits a market order to match an existing limit order.
+	 *
+	 * The caller is the taker.
+	 */
+	submit_market_order: ActorMethod<[SubmitMarketOrderParams], SubmitMatchedTradeResult>;
+	/**
 	 * Submits a matched trade from an exchange for clearing.
 	 *
-	 * This method validates the series registration, calculates margin requirements,
-	 * checks for sufficient collateral, and updates the positions of both buyer and seller.
-	 *
-	 * # Arguments
-	 * * `params` - The trade details including ID, series, buyer, seller, quantity, and price.
-	 *
-	 * # Returns
-	 * * [`SubmitMatchedTradeResult::Ok(true)`] if the trade was successfully processed or was a
-	 * duplicate.
-	 * * [`SubmitMatchedTradeResult::Err`] if margin is insufficient or another error occurs.
+	 * TODO: until we implement an allowed list of exchange canisters, this is gated to controllers
 	 */
 	submit_matched_trade: ActorMethod<[SubmitMatchedTradeParams], SubmitMatchedTradeResult>;
+	/**
+	 * Unblocks (releases) collateral in the user's margin account.
+	 */
+	unblock_collateral: ActorMethod<[BlockCollateralParams], BlockCollateralResult>;
+	/**
+	 * Updates the global configuration for the Clearing canister.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	update_config: ActorMethod<[ClearingConfig], undefined>;
 	/**
 	 * Withdraws collateral from the user's margin account to an external address.
 	 *
@@ -232,6 +438,12 @@ export interface _SERVICE {
 	 * * [`WithdrawalCollateralResult::Err`] if margin is insufficient or a transfer error occurs.
 	 */
 	withdraw_collateral: ActorMethod<[WithdrawCollateralParams], WithdrawCollateralResult>;
+	/**
+	 * Withdraws assets from the Insurance Fund or Treasury to an external wallet.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	withdraw_fund: ActorMethod<[WithdrawFundParams], AdminResult>;
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

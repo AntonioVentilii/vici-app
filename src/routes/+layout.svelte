@@ -1,12 +1,7 @@
 <script lang="ts">
 	import { initSatellite } from '@junobuild/core';
 	import type { Snippet } from 'svelte';
-	import { fade } from 'svelte/transition';
-	import { page } from '$app/state';
-	import Authn from '$lib/components/authn/Authn.svelte';
-	import Footer from '$lib/components/layout/Footer.svelte';
-	import Header from '$lib/components/layout/Header.svelte';
-	import Banner from '$lib/components/ui/Banner.svelte';
+	import Banner from '$lib/components/layout/Banner.svelte';
 	// eslint-disable-next-line import/no-relative-parent-imports
 	import '../app.css';
 
@@ -29,20 +24,6 @@
 	});
 </script>
 
-<div class="relative isolate min-h-dvh">
-	<Banner />
+{@render children()}
 
-	<Header />
-
-	<main class="mx-auto max-w-7xl px-4 pt-24 pb-16 sm:px-6 lg:px-8">
-		<Authn>
-			{#key page.url.pathname}
-				<div in:fade={{ duration: 300, delay: 300 }} out:fade={{ duration: 300 }}>
-					{@render children()}
-				</div>
-			{/key}
-		</Authn>
-	</main>
-
-	<Footer />
-</div>
+<Banner />

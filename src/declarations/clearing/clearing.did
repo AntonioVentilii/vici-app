@@ -1,24 +1,83 @@
-// Generated from AntonioVentilii/icdc-core commit 50f29d2210c898dccc17b2c7e61d6d669195db82 for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit efcf619efd7bc505bdf2ac6201d1d9c647e056a4 for file 'src/clearing/clearing.did'
 
 type AcceptPositionTransferResult = variant { Ok : bool; Err : TradeError };
-type Asset = variant { Icrc : principal };
+type AdminError = variant {
+	TransferFailed : text;
+	InsufficientFunds;
+	Common : CommonError
+};
+type AdminResult = variant { Ok : nat; Err : AdminError };
+type Asset = variant {
+	Erc20 : ErcToken;
+	Icrc : principal;
+	NativeEvm : NativeEvmAsset
+};
+type AssetError = variant {
+	TransferError : text;
+	InsufficientBalance : record { balance : nat; required : nat };
+	MathOverflow;
+	CallError : record { method : text; code : int32; message : text };
+	InvalidAssetForHandler;
+	UnsupportedAsset
+};
+type BlockCollateralParams = record { asset : Asset; amount : nat };
+type BlockCollateralResult = variant { Ok; Err : BlockingError };
+type BlockingError = variant {
+	InsufficientAvailableBalance : record { requested : nat; available : nat };
+	MathOverflow;
+	InsufficientReservedBalance : record { requested : nat; "reserved" : nat }
+};
+type CancelLimitOrderParams = record { order_id : text };
+type Chain = variant { Bsc; Base; Ethereum; Polygon };
+type ClearingConfig = record {
+	insurance_fund_fee_ratio : nat16;
+	signer_canister : principal;
+	evm_rpc : principal
+};
 type CommonError = variant {
 	Internal : text;
 	MathOverflow;
 	Unauthorized;
 	RegistryNotSet
 };
-type DepositCollateralError = variant { MathOverflow; Ledger : LedgerError };
+type DecimalValue = record { decimals : nat8; value : nat };
+type DepositCollateralError = variant { MathOverflow; Asset : AssetError };
 type DepositCollateralParams = record {
 	deposit_id : text;
 	asset : Asset;
 	amount : nat
 };
 type DepositCollateralResult = variant { Ok; Err : DepositCollateralError };
+type Description = record {
+	html : opt text;
+	markdown : opt text;
+	plain : text
+};
+type ErcToken = record {
+	decimals : nat8;
+	token_address : text;
+	chain_id : nat64
+};
+type Event = record {
+	qty : int;
+	series_id : text;
+	user : principal;
+	timestamp : nat64;
+	event_id : nat64;
+	price : Price;
+	event_type : EventType;
+	clearing_id : principal
+};
+type EventType = variant { OrderPlaced; Executed; Liquidated; Settled };
 type FreezePositionForTransferParams = record {
 	series_id : text;
 	user : principal;
 	transfer_id : text
+};
+type FundType = variant { Insurance; Treasury };
+type GetFundsResult = record {
+	insurance_fund : vec record { Asset; nat };
+	treasury : vec record { Asset; nat }
 };
 type GetMarginAccountParams = record { refresh : opt bool };
 type GetMarginAccountResult = variant {
@@ -26,23 +85,39 @@ type GetMarginAccountResult = variant {
 	Err : MarginAccountError
 };
 type GetPositionParams = record { series_id : text };
-type LedgerError = variant {
-	TransferError : text;
-	InsufficientBalance : record { balance : nat; required : nat };
-	MathOverflow;
-	CallError : record { method : text; code : int32; message : text };
-	UnsupportedLedger
+type HttpRequest = record {
+	url : text;
+	method : text;
+	body : blob;
+	headers : vec record { text; text }
 };
+type HttpResponse = record {
+	body : blob;
+	headers : vec record { text; text };
+	status_code : nat16
+};
+type LimitOrder = record {
+	qty : int;
+	creator : principal;
+	block_index : nat;
+	series_id : text;
+	side : Side;
+	order_id : text;
+	price : Price
+};
+type ListOrdersParams = record { series_id : opt text };
 type MarginAccount = record {
 	required_margin : nat;
+	reserved_balances : vec record { Asset; nat };
 	user : principal;
 	balances : vec record { Asset; nat }
 };
 type MarginAccountError = variant {
 	NoMarginAccountFound;
 	MathOverflow;
-	Ledger : LedgerError
+	Asset : AssetError
 };
+type NativeEvmAsset = record { decimals : nat8; chain_id : nat64 };
 type PayoffType = variant { Put; Binary; Call };
 type Position = record {
 	series_id : text;
@@ -58,50 +133,94 @@ type PositionProof = record {
 	transfer_id : text;
 	clearing_id : principal
 };
+type Price = record {
+	timestamp : opt nat64;
+	oracle_id : opt text;
+	decimal : DecimalValue
+};
 type Series = record {
 	title : text;
-	strike : opt nat64;
+	strike : opt Price;
 	creator : principal;
 	payoff_type : PayoffType;
+	expiry_ns : nat64;
 	series_id : text;
 	settlement_asset : SettlementAsset;
 	underlying : text;
-	description : text;
-	expiry : nat64;
+	description : Description;
+	created_at_ns : nat64;
+	price_precision : nat8;
 	oracle_source : text
 };
-type SettleSeriesParams = record { series_id : text; settlement_price : nat64 };
+type SettleSeriesParams = record { series_id : text; settlement_price : Price };
 type SettleSeriesResult = variant { Ok; Err : SettlementError };
-type SettlementAsset = variant { Icp; CkUsdc };
+type SettlementAsset = variant {
+	Icp;
+	Usdc : Chain;
+	Usdt : Chain;
+	Native : Chain;
+	CkUsdc
+};
 type SettlementError = variant {
+	InsufficientInternalBalance : record {
+		balance : nat;
+		user : principal;
+		required : nat
+	};
 	UnsupportedSettlementAsset;
 	MathOverflow;
-	Ledger : LedgerError;
+	SolvencyViolation : record { total_payoff : nat; total_collateral : nat };
+	Asset : AssetError;
 	Common : CommonError
+};
+type Side = variant { Buy; Sell };
+type Stats = record {
+	total_users : nat64;
+	margin_balances : vec record { Asset; nat };
+	total_collateral_locked : nat;
+	total_trades : nat64;
+	total_series : nat64;
+	open_interest : nat;
+	event_counts : vec record { text; nat64 }
+};
+type SubmitLimitOrderParams = record {
+	qty : int;
+	series_id : text;
+	side : Side;
+	order_id : text;
+	price : Price
+};
+type SubmitMarketOrderParams = record {
+	trade_id : text;
+	matching_order_id : text
 };
 type SubmitMatchedTradeParams = record {
 	qty : int;
 	trade_id : text;
 	series_id : text;
 	seller : principal;
+	buyer_unblock_amount : opt nat;
 	buyer : principal;
-	price : nat64
+	price : Price;
+	seller_unblock_amount : opt nat
 };
 type SubmitMatchedTradeResult = variant { Ok : bool; Err : TradeError };
 type TradeError = variant {
+	OrderNotFound : text;
 	RegistryError : text;
 	InsufficientMargin : record {
 		balance : nat;
 		user : principal;
 		required : nat
 	};
+	NotOrderCreator;
 	SeriesNotFound : text;
 	Common : CommonError
 };
 type WithdrawCollateralError = variant {
-	InsufficientExcessMargin : record { requested : nat; current : nat };
+	InsufficientExcessMargin : record { requested : nat; available : nat };
 	MathOverflow;
-	Ledger : LedgerError
+	Asset : AssetError
 };
 type WithdrawCollateralParams = record {
 	asset : Asset;
@@ -109,12 +228,24 @@ type WithdrawCollateralParams = record {
 	amount : nat
 };
 type WithdrawCollateralResult = variant { Ok; Err : WithdrawCollateralError };
+type WithdrawFundParams = record {
+	to : principal;
+	fund_type : FundType;
+	asset : Asset;
+	amount : nat
+};
 service : {
 	// Accepts a position transfer from another clearing canister.
 	//
 	// This method validates the series and increases the target user's position based on the provided
 	// proof. This method is gated to canister controllers.
 	accept_position_transfer : (PositionProof) -> (AcceptPositionTransferResult);
+	// Blocks (reserves) collateral in the user's margin account.
+	block_collateral : (BlockCollateralParams) -> (BlockCollateralResult);
+	// Cancels an existing limit order and releases the reserved collateral.
+	//
+	// Only the creator of the order can cancel it.
+	cancel_limit_order : (CancelLimitOrderParams) -> (SubmitMatchedTradeResult);
 	// Deposits collateral into the user's margin account.
 	//
 	// This is a multi-phase operation:
@@ -136,6 +267,10 @@ service : {
 	freeze_position_for_transfer : (FreezePositionForTransferParams) -> (
 		opt PositionProof
 	);
+	// Returns the current balances of the Insurance Fund and Treasury.
+	//
+	// This method is gated to canister controllers.
+	get_funds : () -> (GetFundsResult) query;
 	// Retrieves the current user's margin account details, optionally refreshing balances.
 	//
 	// # Arguments
@@ -145,12 +280,23 @@ service : {
 	//
 	// This does not refresh balances from external ledgers.
 	get_margin_account_query : () -> (GetMarginAccountResult) query;
+	// Retrieves all active limit orders for the caller.
+	get_orders : () -> (vec LimitOrder) query;
 	// Retrieves a specific position for the caller.
 	get_position : (GetPositionParams) -> (opt Position) query;
 	// Retrieves all open positions for the caller.
 	get_positions : () -> (vec record { text; Position }) query;
+	// Retrieves the trade history (executed trades) for the caller.
+	get_trade_history : () -> (vec Event) query;
+	http_request : (HttpRequest) -> (HttpResponse) query;
+	// Returns a list of all active limit orders, potentially filtered by series.
+	list_orders : (ListOrdersParams) -> (vec LimitOrder) query;
 	// Returns a list of all derivative series currently cached in the clearing canister.
 	list_series : () -> (vec Series) query;
+	// Exports internal state as Prometheus metrics.
+	//
+	// This method is gated to canister controllers.
+	metrics : () -> (text) query;
 	// Sets the principal of the Series Registry canister.
 	//
 	// This principal is used to discover and validate derivative series.
@@ -164,24 +310,33 @@ service : {
 	// 3. Paying out collateral to users with net profits.
 	// 4. Finalising internal margin account balances and releasing locked collateral.
 	//
-	// This method is gated to canister controllers and is intended to be called by an off-chain oracle
-	// or automation.
+	// This method is gated to canister controllers or the designated [`oracle_principal`] for the
+	// series. It is intended to be called by an off-chain oracle or automation.
 	settle_series : (SettleSeriesParams) -> (SettleSeriesResult);
+	// Exports internal state as a structured `Stats` object.
+	//
+	// This method is gated to canister controllers.
+	stats : () -> (Stats) query;
+	// Submits a limit order for the caller.
+	//
+	// This atomically blocks the required collateral for the order.
+	submit_limit_order : (SubmitLimitOrderParams) -> (SubmitMatchedTradeResult);
+	// Submits a market order to match an existing limit order.
+	//
+	// The caller is the taker.
+	submit_market_order : (SubmitMarketOrderParams) -> (SubmitMatchedTradeResult);
 	// Submits a matched trade from an exchange for clearing.
 	//
-	// This method validates the series registration, calculates margin requirements,
-	// checks for sufficient collateral, and updates the positions of both buyer and seller.
-	//
-	// # Arguments
-	// * `params` - The trade details including ID, series, buyer, seller, quantity, and price.
-	//
-	// # Returns
-	// * [`SubmitMatchedTradeResult::Ok(true)`] if the trade was successfully processed or was a
-	// duplicate.
-	// * [`SubmitMatchedTradeResult::Err`] if margin is insufficient or another error occurs.
+	// TODO: until we implement an allowed list of exchange canisters, this is gated to controllers
 	submit_matched_trade : (SubmitMatchedTradeParams) -> (
 		SubmitMatchedTradeResult
 	);
+	// Unblocks (releases) collateral in the user's margin account.
+	unblock_collateral : (BlockCollateralParams) -> (BlockCollateralResult);
+	// Updates the global configuration for the Clearing canister.
+	//
+	// This method is gated to canister controllers.
+	update_config : (ClearingConfig) -> ();
 	// Withdraws collateral from the user's margin account to an external address.
 	//
 	// This is a multi-phase operation:
@@ -198,5 +353,9 @@ service : {
 	// * [`WithdrawalCollateralResult::Err`] if margin is insufficient or a transfer error occurs.
 	withdraw_collateral : (WithdrawCollateralParams) -> (
 		WithdrawCollateralResult
-	)
+	);
+	// Withdraws assets from the Insurance Fund or Treasury to an external wallet.
+	//
+	// This method is gated to canister controllers.
+	withdraw_fund : (WithdrawFundParams) -> (AdminResult)
 }

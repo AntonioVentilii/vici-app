@@ -1,33 +1,29 @@
-# Local Deployment Workflow
+---
+description: local deployment workflow using Juno emulator
+---
 
-To use both Juno (for auth/datastore) and DFX (for Registry/Clearing canisters) together, follow these steps:
+This workflow ensures that custom canisters and the Juno satellite share the same port and environment, avoiding 404 and CORS errors.
 
-### 1. Start Juno Emulator (Single Replica)
-
-Juno runs on port **5987** and acts as the replica for all canisters.
-
-> [!IMPORTANT]
-> You **must** have Juno running before running the deploy command.
+1. Stop any running replicas or emulators.
+   // turbo
+2. Start the Juno emulator:
 
 ```bash
 juno emulator start
 ```
 
-### 2. Deploy Custom Canisters to Juno
-
-We use the `--network local` flag to target port **5987**.
+3. In a new terminal, deploy the custom canisters targeting the Juno port:
+   // turbo
 
 ```bash
-dfx deploy --network local
+npm run deploy
 ```
 
-### 4. Run Frontend
+4. Start the SvelteKit development server:
 
 ```bash
 npm run dev
 ```
 
----
-
-- **Juno & Custom Canisters**: All run on port **5987** (Juno Emulator).
-- **CORS Handling**: Requests to `/api` are proxied by Vite to `localhost:5987`.
+> [!IMPORTANT]
+> Do NOT run `dfx start`. The Juno emulator acts as the only local replica.

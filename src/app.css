@@ -15,16 +15,43 @@
 }
 
 @theme {
-	--font-display: 'JetBrains Mono', sans-serif;
+	--font-display: 'Inter', 'JetBrains Mono', sans-serif;
 
-	--color-background: var(--color-slate-50);
-	--color-foreground: var(--color-slate-950);
+	--radius: 0.625rem;
 
-	--color-card: var(--color-white);
-	--color-card-border: var(--color-slate-200);
+	--color-background: oklch(0.99 0 0);
+	--color-foreground: oklch(0.15 0 0);
 
-	--color-primary: var(--color-indigo-600);
-	--color-primary-foreground: var(--color-white);
+	--color-card: oklch(1 0 0);
+	--color-card-foreground: oklch(0.15 0 0);
+
+	--color-popover: oklch(1 0 0);
+	--color-popover-foreground: oklch(0.15 0 0);
+
+	--color-primary: oklch(0.45 0.18 264);
+	--color-primary-foreground: oklch(0.99 0 0);
+
+	--color-secondary: oklch(0.96 0 0);
+	--color-secondary-foreground: oklch(0.15 0 0);
+
+	--color-muted: oklch(0.96 0 0);
+	--color-muted-foreground: oklch(0.5 0 0);
+
+	--color-accent: oklch(0.96 0 0);
+	--color-accent-foreground: oklch(0.15 0 0);
+
+	--color-destructive: oklch(0.58 0.22 25);
+	--color-destructive-foreground: oklch(0.99 0 0);
+
+	--color-border: oklch(0.9 0 0);
+	--color-input: oklch(0.9 0 0);
+	--color-ring: oklch(0.45 0.18 264);
+
+	--color-chart-1: oklch(0.65 0.2 142);
+	--color-chart-2: oklch(0.55 0.2 264);
+	--color-chart-3: oklch(0.7 0.18 35);
+	--color-chart-4: oklch(0.6 0.22 305);
+	--color-chart-5: oklch(0.75 0.16 85);
 }
 
 @theme {

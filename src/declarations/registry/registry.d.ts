@@ -10,36 +10,119 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+export interface AddOracleParams {
+	metadata: OracleMetadata;
+	authorized_principals: Array<Principal>;
+	oracle_id: string;
+}
 export interface AddSeriesParams {
 	title: string;
-	strike: [] | [bigint];
+	strike: [] | [Price];
 	payoff_type: PayoffType;
+	expiry_ns: bigint;
 	settlement_asset: SettlementAsset;
 	underlying: string;
-	description: string;
-	expiry: bigint;
+	description: Description;
+	price_precision: number;
 	oracle_source: string;
 }
-export type AddSeriesResult = { Ok: string } | { Err: RegistryError };
+export type AddSeriesResult = { Ok: string } | { Err: SeriesError };
+export type Chain = { Bsc: null } | { Base: null } | { Ethereum: null } | { Polygon: null };
+export interface DecimalValue {
+	decimals: number;
+	value: bigint;
+}
+export interface Description {
+	html: [] | [string];
+	markdown: [] | [string];
+	plain: string;
+}
+export interface ListSeriesParams {
+	strike: [] | [Price];
+	creator: [] | [Principal];
+	payoff_type: [] | [PayoffType];
+	pagination: [] | [PaginationParams];
+	settlement_asset: [] | [SettlementAsset];
+	underlying: [] | [string];
+	search_term: [] | [string];
+	oracle_source: [] | [string];
+}
+export interface ManageOraclePrincipalsParams {
+	add_principals: Array<Principal>;
+	remove_principals: Array<Principal>;
+	oracle_id: string;
+}
+export interface Oracle {
+	manager: Principal;
+	registered_at_ns: bigint;
+	metadata: OracleMetadata;
+	authorized_principals: Array<Principal>;
+	oracle_id: string;
+}
+export type OracleError =
+	| { UnauthorizedOracleManager: null }
+	| { OracleAlreadyExists: null }
+	| { OracleNotFound: null };
+export interface OracleMetadata {
+	name: string;
+	description: [] | [Description];
+	website: [] | [string];
+}
+export type OracleResult = { Ok: null } | { Err: OracleError };
+export interface PaginationParams {
+	cursor: [] | [string];
+	limit: [] | [bigint];
+}
 export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
-export type RegistryError =
-	| { DescriptionTooLong: null }
-	| { TitleTooLong: null }
-	| { SeriesAlreadyExists: null };
+export interface Price {
+	timestamp: [] | [bigint];
+	oracle_id: [] | [string];
+	decimal: DecimalValue;
+}
 export interface Series {
 	title: string;
-	strike: [] | [bigint];
+	strike: [] | [Price];
 	creator: Principal;
 	payoff_type: PayoffType;
+	expiry_ns: bigint;
 	series_id: string;
 	settlement_asset: SettlementAsset;
 	underlying: string;
-	description: string;
-	expiry: bigint;
+	description: Description;
+	created_at_ns: bigint;
+	price_precision: number;
 	oracle_source: string;
 }
-export type SettlementAsset = { Icp: null } | { CkUsdc: null };
+export type SeriesError =
+	| { DescriptionTooLong: null }
+	| { TitleTooLong: null }
+	| { Unauthorized: null }
+	| { SeriesAlreadyExists: null };
+export interface SeriesPage {
+	next_cursor: [] | [string];
+	items: Array<Series>;
+}
+export type SettlementAsset =
+	| { Icp: null }
+	| { Usdc: Chain }
+	| { Usdt: Chain }
+	| { Native: Chain }
+	| { CkUsdc: null };
+export interface UpdateOracleMetadataParams {
+	metadata: OracleMetadata;
+	oracle_id: string;
+}
 export interface _SERVICE {
+	/**
+	 * Authorizes a list of principals to create new derivative series.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	add_authorized_creators: ActorMethod<[Array<Principal>], undefined>;
+	/**
+	 * Registers a new price oracle in the registry.
+	 */
+	add_oracle: ActorMethod<[AddOracleParams], OracleResult>;
 	/**
 	 * Adds a new derivative series to the registry.
 	 *
@@ -51,10 +134,14 @@ export interface _SERVICE {
 	 *
 	 * # Returns
 	 * * [`AddSeriesResult::Ok`] containing the new [`SeriesId`] on success.
-	 * * [`AddSeriesResult::Err`] with [`RegistryError::SeriesAlreadyExists`] if the series is already
+	 * * [`AddSeriesResult::Err`] with [`SeriesError::SeriesAlreadyExists`] if the series is already
 	 * registered.
 	 */
 	add_series: ActorMethod<[AddSeriesParams], AddSeriesResult>;
+	/**
+	 * Retrieves the details of a specific oracle by its ID.
+	 */
+	get_oracle: ActorMethod<[string], [] | [Oracle]>;
 	/**
 	 * Retrieves a specific [`Series`] by its [`SeriesId`].
 	 *
@@ -67,9 +154,41 @@ export interface _SERVICE {
 	 */
 	get_series: ActorMethod<[string], [] | [Series]>;
 	/**
-	 * Returns a list of all registered derivative series.
+	 * Checks if a principal is authorized to create derivative series.
 	 */
-	list_series: ActorMethod<[], Array<Series>>;
+	is_authorized_creator: ActorMethod<[Principal], boolean>;
+	/**
+	 * Checks if a principal is authorized to push settlement data for a given oracle.
+	 */
+	is_oracle_authorized: ActorMethod<[string, Principal], boolean>;
+	/**
+	 * Returns a list of all principals currently authorized to create series.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	list_authorized_creators: ActorMethod<[], Array<Principal>>;
+	/**
+	 * Returns a paginated page of all registered derivative series.
+	 */
+	list_series: ActorMethod<[PaginationParams], SeriesPage>;
+	/**
+	 * Returns a paginated page of registered derivative series, optionally filtered.
+	 */
+	list_series_with: ActorMethod<[ListSeriesParams], SeriesPage>;
+	/**
+	 * Adds or removes authorised principals for an oracle.
+	 */
+	manage_oracle_principals: ActorMethod<[ManageOraclePrincipalsParams], OracleResult>;
+	/**
+	 * Removes authorization from a list of principals, preventing them from creating new series.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	remove_authorized_creators: ActorMethod<[Array<Principal>], undefined>;
+	/**
+	 * Updates the metadata of an existing oracle.
+	 */
+	update_oracle_metadata: ActorMethod<[UpdateOracleMetadataParams], OracleResult>;
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

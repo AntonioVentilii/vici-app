@@ -16,7 +16,10 @@ export default defineConfig({
 	},
 	resolve: {
 		alias: {
-			$declarations: resolve('./src/declarations')
+			$declarations: resolve('./src/declarations'),
+			$routes: resolve('./src/lib/routes'),
+			$lib: resolve('./src/lib'),
+			$satellite: resolve('./src/satellite')
 		}
 	},
 	worker: {

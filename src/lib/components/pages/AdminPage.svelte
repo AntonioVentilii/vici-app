@@ -3,8 +3,8 @@
 	import AdminMarketForm from '$lib/components/admin/AdminMarketForm.svelte';
 	import AdminResolutionHistory from '$lib/components/admin/AdminResolutionHistory.svelte';
 	import AdminResolutionList from '$lib/components/admin/AdminResolutionList.svelte';
-	import { resolveMarket } from '$lib/services/authn.service';
-	import { createMarket, getMarkets } from '$lib/services/market.service';
+	import { resolveMarket } from '$lib/services/authn.services';
+	import { createMarket, getMarkets } from '$lib/services/market.services';
 	import type { Market, MarketId, Outcome } from '$lib/types/market';
 
 	let markets = $state<Market[]>([]);

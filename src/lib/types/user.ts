@@ -1,3 +1,6 @@
-import type { User } from '@junobuild/core';
-
-export type UserOption = User | undefined | null;
+export enum UserRole {
+	CONTROLLER = 'controller',
+	ADMIN = 'admin',
+	RESOLVER = 'resolver',
+	CREATOR = 'creator'
+}

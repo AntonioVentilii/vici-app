@@ -1,0 +1,118 @@
+name: Checks
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
+  merge_group:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  format:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Check if commits can be added
+        id: check_can_add_commit
+        run: |
+          echo "can_add_commit=$CAN_ADD_COMMIT" >> $GITHUB_OUTPUT
+        env:
+          CAN_ADD_COMMIT: ${{ steps.app-token.outputs.token != '' && github.event_name == 'pull_request' }}
+
+      - name: Checkout for pull request
+        if: steps.check_can_add_commit.outputs.can_add_commit == 'true'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: false
+
+      - name: Checkout
+        if: steps.check_can_add_commit.outputs.can_add_commit == 'false'
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Prepare
+        uses: ./.github/actions/prepare
+
+      - name: Format
+        run: npm run format
+
+      - name: Check for Changes
+        id: check_changes
+        run: |
+          if [[ -n "$(git status --porcelain)" ]]; then
+            echo "changes_detected=true" >> $GITHUB_OUTPUT
+          else
+            echo "changes_detected=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit format
+        if: steps.check_changes.outputs.changes_detected == 'true'
+        uses: ./.github/actions/add-and-commit
+        with:
+          message: '🤖 Apply formatting changes'
+          token: ${{ steps.app-token.outputs.token }}
+
+      - name: Fail for formatting issues without personal access token
+        if: steps.check_can_add_commit.outputs.can_add_commit == 'false' && steps.check_changes.outputs.changes_detected == 'true'
+        run: |
+          echo "Formatting changes are needed but couldn't be committed because the personal access token isn't available or this isn't a pull request."
+          exit 1
+
+  lint:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Prepare
+        uses: ./.github/actions/prepare
+
+      - name: Lint
+        run: npm run lint
+
+  check:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Prepare
+        uses: ./.github/actions/prepare
+
+      - name: Check
+        run: npm run check
+
+  checks-pass:
+    if: always()
+    needs: ['format', 'lint', 'check']
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/needs_success
+        with:
+          needs: '${{ toJson(needs) }}'

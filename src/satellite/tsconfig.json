@@ -9,7 +9,13 @@
 		"esModuleInterop": true,
 		"isolatedModules": true,
 		"moduleResolution": "bundler",
-		"outDir": "../../target/deploy"
+		"outDir": "../../target/deploy",
+		"paths": {
+			"$lib": ["../lib"],
+			"$lib/*": ["../lib/*"],
+			"$satellite": ["."],
+			"$satellite/*": ["./*"]
+		}
 	},
 	"include": ["**/*.ts"]
 }

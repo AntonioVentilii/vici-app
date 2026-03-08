@@ -1,48 +1,68 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Card from '$lib/components/ui/Card.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
+	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import CollateralModal from '$lib/components/wallet/CollateralModal.svelte';
+	import CollateralStats from '$lib/components/wallet/CollateralStats.svelte';
 	import WalletHistory from '$lib/components/wallet/WalletHistory.svelte';
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
 	import WalletStats from '$lib/components/wallet/WalletStats.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
-	import { getBalances, getTransactions, sendCkUSDC, sendICP } from '$lib/services/wallet.service';
-	import type { Transaction, WalletBalance } from '$lib/types/wallet';
+	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
+	import { safeGetIdentityOnce } from '$lib/services/identity.services';
+	import { sendIc } from '$lib/services/send.services';
+	import { getTransactions } from '$lib/services/wallet.service';
+	import { balancesStore } from '$lib/stores/balances.store';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import type { Token } from '$lib/types/token';
+	import type { Transaction } from '$lib/types/wallet';
+	import { emit } from '$lib/utils/events.utils';
+	import { parseToken } from '$lib/utils/parse.utils';
 
-	let balances = $state<WalletBalance>({ icp: ZERO, ckUsdc: ZERO });
 	let transactions = $state<Transaction[]>([]);
+
 	let activeTab = $state('Send');
+
+	let isCollateralModalOpen = $state(false);
 
 	const tabs = ['Send', 'Receive', 'History'];
 
 	onMount(async () => {
-		balances = await getBalances();
 		transactions = await getTransactions();
 	});
 
-	const formatBalance = (b: bigint) => (Number(b) / 100_000_000).toFixed(4);
-
 	let recipient = $state('');
+
 	let amount = $state('');
-	let selectedToken = $state<'ICP' | 'ckUSDC'>('ICP');
+
+	let selectedToken = $state<Token>(SUPPORTED_TOKENS[0]);
 
 	const handleSend = async () => {
 		if (!recipient || !amount) {
 			return;
 		}
 		try {
-			// In a real app we'd parse the amount properly
-			// const _amt = BigInt(parseFloat(amount) * 100_000_000);
-			if (selectedToken === 'ICP') {
-				await sendICP();
-			} else {
-				await sendCkUSDC();
-			}
-			// Refresh
-			balances = await getBalances();
+			const identity = await safeGetIdentityOnce();
+
+			await sendIc({
+				identity,
+				to: recipient,
+				amount: parseToken({
+					value: `${amount}`,
+					unitName: selectedToken.decimals
+				}),
+				ledgerCanisterId: selectedToken.ledgerCanisterId
+			});
+
+			emit({ message: 'viciRefreshBalances' });
+
 			transactions = await getTransactions();
+
 			amount = '';
+
 			recipient = '';
+
 			alert('Transaction successful!');
 		} catch (e: unknown) {
 			alert((e as Error).message);
@@ -50,32 +70,34 @@
 	};
 </script>
 
-<div class="space-y-12">
+<div class="space-y-8">
 	<SectionHeader
-		description="Manage your ICP and ckUSDC balances. Securely send and receive tokens on the Internet Computer."
+		description="Manage your assets securely on the Internet Computer."
 		highlight="Wallet"
 		title="Your"
 	/>
 
 	<!-- Balances Cards -->
-	<WalletStats {balances} onFormatBalance={formatBalance} />
-
-	<!-- Operations Tabs -->
-	<div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-		<div class="flex border-b border-slate-100">
-			{#each tabs as tab (tab)}
-				<button
-					class="flex-1 py-4 text-sm font-bold transition-all {activeTab === tab
-						? 'border-b-2 border-indigo-600 bg-slate-50 text-indigo-600'
-						: 'text-slate-500 hover:bg-slate-50 hover:text-slate-950'}"
-					onclick={() => (activeTab = tab)}
-				>
-					{tab}
-				</button>
-			{/each}
+	<div class="flex w-full flex-col gap-6 lg:flex-row">
+		<div class="grow">
+			<WalletStats balances={{ balances: $balancesStore, collateral: $collateralsStore }} />
 		</div>
 
-		<div class="p-8">
+		<div class="grow-2">
+			<CollateralStats
+				collateral={$collateralsStore}
+				onManage={() => (isCollateralModalOpen = true)}
+			/>
+		</div>
+	</div>
+
+	<CollateralModal isOpen={isCollateralModalOpen} onClose={() => (isCollateralModalOpen = false)} />
+
+	<!-- Operations Tabs -->
+	<Card padding="none">
+		<Tabs {tabs} bind:activeTab />
+
+		<div class="w-full p-8">
 			{#if activeTab === 'Send'}
 				<WalletSend
 					{amount}
@@ -89,8 +111,8 @@
 			{:else if activeTab === 'Receive'}
 				<WalletReceive />
 			{:else}
-				<WalletHistory onFormatBalance={formatBalance} {transactions} />
+				<WalletHistory {transactions} />
 			{/if}
 		</div>
-	</div>
+	</Card>
 </div>

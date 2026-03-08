@@ -9,7 +9,14 @@ export const ZERO = 0n;
 
 // Vici uses Binary outcomes (no strike needed)
 export const PAYOFF_TYPE: RegistryDid.PayoffType = { Binary: null };
-export const STRIKE: Nullable<bigint> = toNullable();
+export const STRIKE: Nullable<RegistryDid.Price> = toNullable();
+export const PRICE_DECIMALS = 2;
 
 // Oracles
 export const VICI_ORACLE_V1 = 'VICI_ORACLE_V1';
+
+// Time
+export const NANO_SECONDS_IN_MILLISECOND = 1_000_000n;
+
+// Wallets
+export const WALLET_PAGINATION = 10n;

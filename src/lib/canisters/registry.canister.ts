@@ -5,7 +5,13 @@ import {
 	type RegistryService
 } from '$declarations';
 import type { CreateCanisterOptions } from '$lib/types/canister';
-import { Canister, createServices, type QueryParams } from '@dfinity/utils';
+import {
+	Canister,
+	createServices,
+	jsonReplacer,
+	type QueryParams,
+	toNullable
+} from '@dfinity/utils';
 
 export class RegistryCanister extends Canister<RegistryService> {
 	static create(options: CreateCanisterOptions<RegistryService>) {
@@ -31,7 +37,7 @@ export class RegistryCanister extends Canister<RegistryService> {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to add series: ${JSON.stringify(result.Err)}`);
+		throw new Error(`Failed to add series: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	getSeries = async ({
@@ -48,6 +54,14 @@ export class RegistryCanister extends Canister<RegistryService> {
 
 	listSeries = async (queryParams: QueryParams): Promise<RegistryDid.Series[]> => {
 		const { list_series } = this.caller(queryParams);
-		return await list_series();
+
+		const page = await list_series({
+			cursor: toNullable(),
+			limit: toNullable()
+		} as RegistryDid.PaginationParams);
+
+		const { items: series } = page;
+
+		return series;
 	};
 }

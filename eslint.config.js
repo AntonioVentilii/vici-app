@@ -31,12 +31,6 @@ export default ts.config(
 					selector: "Literal[raw='0n']",
 					message: 'Use the shared constant `ZERO` instead of `0n`.'
 				}
-			],
-			'svelte/prefer-const': [
-				'error',
-				{
-					excludedRunes: []
-				}
 			]
 		}
 	}

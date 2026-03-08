@@ -6,5 +6,5 @@ const MarketIdStringSchema = z.string();
 
 export const parseMarketId = (marketIdString: z.infer<typeof MarketIdStringSchema>): MarketId => {
 	const validString = MarketIdStringSchema.parse(marketIdString);
-	return MarketIdSchema.parse(Symbol(validString));
+	return MarketIdSchema.parse(validString);
 };
