@@ -24,3 +24,13 @@ updates:
     allow:
       - dependency-type: all
     open-pull-requests-limit: 10
+    groups:
+      lint-kit:
+        patterns:
+          - '@dfinity/eslint-config-oisy-wallet'
+          - '@types/eslint'
+          - 'eslint'
+          - 'eslint-config-prettier'
+          - 'eslint-plugin-svelte'
+          - 'typescript-eslint'
+          - 'globals'
