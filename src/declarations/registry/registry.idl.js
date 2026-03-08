@@ -46,8 +46,17 @@ export const PayoffType = IDL.Variant({
 	Binary: IDL.Null,
 	Call: IDL.Null
 });
+export const Chain = IDL.Variant({
+	Bsc: IDL.Null,
+	Base: IDL.Null,
+	Ethereum: IDL.Null,
+	Polygon: IDL.Null
+});
 export const SettlementAsset = IDL.Variant({
 	Icp: IDL.Null,
+	Usdc: Chain,
+	Usdt: Chain,
+	Native: Chain,
 	CkUsdc: IDL.Null
 });
 export const AddSeriesParams = IDL.Record({
@@ -171,8 +180,17 @@ export const idlFactory = ({ IDL }) => {
 		Binary: IDL.Null,
 		Call: IDL.Null
 	});
+	const Chain = IDL.Variant({
+		Bsc: IDL.Null,
+		Base: IDL.Null,
+		Ethereum: IDL.Null,
+		Polygon: IDL.Null
+	});
 	const SettlementAsset = IDL.Variant({
 		Icp: IDL.Null,
+		Usdc: Chain,
+		Usdt: Chain,
+		Native: Chain,
 		CkUsdc: IDL.Null
 	});
 	const AddSeriesParams = IDL.Record({

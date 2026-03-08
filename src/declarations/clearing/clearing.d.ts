@@ -11,7 +11,19 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export type AcceptPositionTransferResult = { Ok: boolean } | { Err: TradeError };
-export type Asset = { Icrc: Principal };
+export type AdminError =
+	| { TransferFailed: string }
+	| { InsufficientFunds: null }
+	| { Common: CommonError };
+export type AdminResult = { Ok: bigint } | { Err: AdminError };
+export type Asset = { Erc20: ErcToken } | { Icrc: Principal } | { NativeEvm: NativeEvmAsset };
+export type AssetError =
+	| { TransferError: string }
+	| { InsufficientBalance: { balance: bigint; required: bigint } }
+	| { MathOverflow: null }
+	| { CallError: { method: string; code: number; message: string } }
+	| { InvalidAssetForHandler: null }
+	| { UnsupportedAsset: null };
 export interface BlockCollateralParams {
 	asset: Asset;
 	amount: bigint;
@@ -34,6 +46,12 @@ export type BlockingError =
 export interface CancelLimitOrderParams {
 	order_id: string;
 }
+export type Chain = { Bsc: null } | { Base: null } | { Ethereum: null } | { Polygon: null };
+export interface ClearingConfig {
+	insurance_fund_fee_ratio: number;
+	signer_canister: Principal;
+	evm_rpc: Principal;
+}
 export type CommonError =
 	| { Internal: string }
 	| { MathOverflow: null }
@@ -43,7 +61,7 @@ export interface DecimalValue {
 	decimals: number;
 	value: bigint;
 }
-export type DepositCollateralError = { MathOverflow: null } | { Ledger: LedgerError };
+export type DepositCollateralError = { MathOverflow: null } | { Asset: AssetError };
 export interface DepositCollateralParams {
 	deposit_id: string;
 	asset: Asset;
@@ -54,6 +72,11 @@ export interface Description {
 	html: [] | [string];
 	markdown: [] | [string];
 	plain: string;
+}
+export interface ErcToken {
+	decimals: number;
+	token_address: string;
+	chain_id: bigint;
 }
 export interface Event {
 	qty: bigint;
@@ -75,6 +98,11 @@ export interface FreezePositionForTransferParams {
 	user: Principal;
 	transfer_id: string;
 }
+export type FundType = { Insurance: null } | { Treasury: null };
+export interface GetFundsResult {
+	insurance_fund: Array<[Asset, bigint]>;
+	treasury: Array<[Asset, bigint]>;
+}
 export interface GetMarginAccountParams {
 	refresh: [] | [boolean];
 }
@@ -93,12 +121,6 @@ export interface HttpResponse {
 	headers: Array<[string, string]>;
 	status_code: number;
 }
-export type LedgerError =
-	| { TransferError: string }
-	| { InsufficientBalance: { balance: bigint; required: bigint } }
-	| { MathOverflow: null }
-	| { CallError: { method: string; code: number; message: string } }
-	| { UnsupportedLedger: null };
 export interface LimitOrder {
 	qty: bigint;
 	creator: Principal;
@@ -120,7 +142,11 @@ export interface MarginAccount {
 export type MarginAccountError =
 	| { NoMarginAccountFound: null }
 	| { MathOverflow: null }
-	| { Ledger: LedgerError };
+	| { Asset: AssetError };
+export interface NativeEvmAsset {
+	decimals: number;
+	chain_id: bigint;
+}
 export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
 export interface Position {
 	series_id: string;
@@ -160,7 +186,12 @@ export interface SettleSeriesParams {
 	settlement_price: Price;
 }
 export type SettleSeriesResult = { Ok: null } | { Err: SettlementError };
-export type SettlementAsset = { Icp: null } | { CkUsdc: null };
+export type SettlementAsset =
+	| { Icp: null }
+	| { Usdc: Chain }
+	| { Usdt: Chain }
+	| { Native: Chain }
+	| { CkUsdc: null };
 export type SettlementError =
 	| {
 			InsufficientInternalBalance: {
@@ -177,7 +208,7 @@ export type SettlementError =
 				total_collateral: bigint;
 			};
 	  }
-	| { Ledger: LedgerError }
+	| { Asset: AssetError }
 	| { Common: CommonError };
 export type Side = { Buy: null } | { Sell: null };
 export interface Stats {
@@ -229,13 +260,19 @@ export type WithdrawCollateralError =
 			InsufficientExcessMargin: { requested: bigint; available: bigint };
 	  }
 	| { MathOverflow: null }
-	| { Ledger: LedgerError };
+	| { Asset: AssetError };
 export interface WithdrawCollateralParams {
 	asset: Asset;
 	withdrawal_id: string;
 	amount: bigint;
 }
 export type WithdrawCollateralResult = { Ok: null } | { Err: WithdrawCollateralError };
+export interface WithdrawFundParams {
+	to: Principal;
+	fund_type: FundType;
+	asset: Asset;
+	amount: bigint;
+}
 export interface _SERVICE {
 	/**
 	 * Accepts a position transfer from another clearing canister.
@@ -280,6 +317,12 @@ export interface _SERVICE {
 		[FreezePositionForTransferParams],
 		[] | [PositionProof]
 	>;
+	/**
+	 * Returns the current balances of the Insurance Fund and Treasury.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	get_funds: ActorMethod<[], GetFundsResult>;
 	/**
 	 * Retrieves the current user's margin account details, optionally refreshing balances.
 	 *
@@ -373,6 +416,12 @@ export interface _SERVICE {
 	 */
 	unblock_collateral: ActorMethod<[BlockCollateralParams], BlockCollateralResult>;
 	/**
+	 * Updates the global configuration for the Clearing canister.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	update_config: ActorMethod<[ClearingConfig], undefined>;
+	/**
 	 * Withdraws collateral from the user's margin account to an external address.
 	 *
 	 * This is a multi-phase operation:
@@ -389,6 +438,12 @@ export interface _SERVICE {
 	 * * [`WithdrawalCollateralResult::Err`] if margin is insufficient or a transfer error occurs.
 	 */
 	withdraw_collateral: ActorMethod<[WithdrawCollateralParams], WithdrawCollateralResult>;
+	/**
+	 * Withdraws assets from the Insurance Fund or Treasury to an external wallet.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	withdraw_fund: ActorMethod<[WithdrawFundParams], AdminResult>;
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

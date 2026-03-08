@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit eb9f42b4375f8848facc99996bfd38e6f69129ed for file 'src/registry/registry.did'
+// Generated from AntonioVentilii/icdc-core commit efcf619efd7bc505bdf2ac6201d1d9c647e056a4 for file 'src/registry/registry.did'
 
 type AddOracleParams = record {
 	metadata : OracleMetadata;
@@ -17,6 +17,7 @@ type AddSeriesParams = record {
 	oracle_source : text
 };
 type AddSeriesResult = variant { Ok : text; Err : SeriesError };
+type Chain = variant { Bsc; Base; Ethereum; Polygon };
 type DecimalValue = record { decimals : nat8; value : nat };
 type Description = record {
 	html : opt text;
@@ -84,7 +85,13 @@ type SeriesError = variant {
 	SeriesAlreadyExists
 };
 type SeriesPage = record { next_cursor : opt text; items : vec Series };
-type SettlementAsset = variant { Icp; CkUsdc };
+type SettlementAsset = variant {
+	Icp;
+	Usdc : Chain;
+	Usdt : Chain;
+	Native : Chain;
+	CkUsdc
+};
 type UpdateOracleMetadataParams = record {
 	metadata : OracleMetadata;
 	oracle_id : text

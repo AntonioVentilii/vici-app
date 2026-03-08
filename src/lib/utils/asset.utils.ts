@@ -12,5 +12,17 @@ export const assetToToken = (asset: ClearingDid.SettlementAsset): Token | undefi
 		return CKUSDC_TOKEN;
 	}
 
+	if ('Native' in asset) {
+		return CKUSDC_TOKEN;
+	}
+
+	if ('Usdc' in asset) {
+		return CKUSDC_TOKEN;
+	}
+
+	if ('Usdt' in asset) {
+		return CKUSDC_TOKEN;
+	}
+
 	assertNever(asset, `Unknown asset type: ${asset}`);
 };

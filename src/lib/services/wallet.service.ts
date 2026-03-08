@@ -89,6 +89,14 @@ export const getCollateralBalances = async (): Promise<Record<TokenId, bigint>> 
 				return;
 			}
 
+			if ('NativeEvm' in asset) {
+				return;
+			}
+
+			if ('Erc20' in asset) {
+				return;
+			}
+
 			assertNever(asset, `Unknown asset type: ${asset}`);
 		});
 

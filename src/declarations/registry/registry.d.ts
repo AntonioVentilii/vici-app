@@ -27,6 +27,7 @@ export interface AddSeriesParams {
 	oracle_source: string;
 }
 export type AddSeriesResult = { Ok: string } | { Err: SeriesError };
+export type Chain = { Bsc: null } | { Base: null } | { Ethereum: null } | { Polygon: null };
 export interface DecimalValue {
 	decimals: number;
 	value: bigint;
@@ -101,7 +102,12 @@ export interface SeriesPage {
 	next_cursor: [] | [string];
 	items: Array<Series>;
 }
-export type SettlementAsset = { Icp: null } | { CkUsdc: null };
+export type SettlementAsset =
+	| { Icp: null }
+	| { Usdc: Chain }
+	| { Usdt: Chain }
+	| { Native: Chain }
+	| { CkUsdc: null };
 export interface UpdateOracleMetadataParams {
 	metadata: OracleMetadata;
 	oracle_id: string;
