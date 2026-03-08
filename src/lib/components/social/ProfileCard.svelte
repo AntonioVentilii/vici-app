@@ -28,6 +28,8 @@
 
 	let loading = $state(true);
 
+	let pending = $state(false);
+
 	onMount(async () => {
 		await loadSocialGraph();
 	});
@@ -50,7 +52,7 @@
 			return;
 		}
 
-		loading = true;
+		pending = true;
 
 		try {
 			const params = { sender: viewerPrincipal, target: profile.owner };
@@ -63,7 +65,7 @@
 
 			await loadSocialGraph();
 		} finally {
-			loading = false;
+			pending = false;
 		}
 	};
 </script>
@@ -127,7 +129,10 @@
 		</div>
 
 		{#if nonNullish(viewerPrincipal) && viewerPrincipal !== profile.owner}
-			<Button disabled={loading} onclick={handleFollowToggle}>
+			<Button
+				onclick={handleFollowToggle}
+				state={loading ? 'loading' : pending ? 'pending' : 'enabled'}
+			>
 				{isFollowing ? 'Unfollow' : 'Follow'}
 			</Button>
 		{/if}

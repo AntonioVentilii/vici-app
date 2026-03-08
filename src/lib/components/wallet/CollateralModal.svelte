@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 	import { isDev } from '$lib/env/app.env';
 	import { depositCollateral, withdrawCollateral } from '$lib/services/collateral.services';
@@ -71,22 +74,21 @@
 
 {#if isOpen}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
-		<button
-			class="fixed inset-0 bg-slate-950/40"
+		<BaseButton
+			class="fixed inset-0 !bg-slate-950/40 !opacity-100"
 			aria-label="Close modal"
 			onclick={close}
-			type="button"
 		>
-		</button>
+			<span class="sr-only">Close</span>
+		</BaseButton>
 
 		<div
 			class="animate-in fade-in zoom-in relative w-full max-w-md rounded-3xl border border-slate-200 bg-white p-8 shadow-2xl duration-200"
 		>
-			<button
+			<BaseButton
 				class="absolute top-6 right-6 text-slate-400 hover:text-slate-600"
 				aria-label="Close modal"
 				onclick={close}
-				type="button"
 			>
 				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
@@ -96,31 +98,29 @@
 						stroke-width="2"
 					/>
 				</svg>
-			</button>
+			</BaseButton>
 
 			<h3 class="text-2xl font-black text-slate-950 uppercase">{mode} Collateral</h3>
 			<p class="mt-2 text-sm text-slate-500">Manage your market margin account collateral.</p>
 
 			<div class="mt-8 flex rounded-2xl bg-slate-100 p-1">
-				<button
-					class="flex-1 rounded-xl py-2 text-sm font-bold transition-all {mode === 'Deposit'
+				<BaseButton
+					class="flex-1 rounded-xl py-2 text-sm font-bold {mode === 'Deposit'
 						? 'bg-white text-slate-950 shadow-sm'
 						: 'text-slate-500 hover:text-slate-700'}"
 					onclick={() => (mode = 'Deposit')}
-					type="button"
 				>
 					Deposit
-				</button>
+				</BaseButton>
 
-				<button
-					class="flex-1 rounded-xl py-2 text-sm font-bold transition-all {mode === 'Withdraw'
+				<BaseButton
+					class="flex-1 rounded-xl py-2 text-sm font-bold {mode === 'Withdraw'
 						? 'bg-white text-slate-950 shadow-sm'
 						: 'text-slate-500 hover:text-slate-700'}"
 					onclick={() => (mode = 'Withdraw')}
-					type="button"
 				>
 					Withdraw
-				</button>
+				</BaseButton>
 			</div>
 
 			<div class="mt-8 space-y-6">
@@ -128,19 +128,18 @@
 					<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">Token</span>
 					<div class="grid grid-cols-2 gap-3">
 						{#each SUPPORTED_TOKENS as token (token.ledgerCanisterId)}
-							<button
-								class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 font-bold transition-all {selectedToken.ledgerCanisterId ===
+							<BaseButton
+								class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 font-bold {selectedToken.ledgerCanisterId ===
 								token.ledgerCanisterId
 									? 'border-indigo-600 bg-indigo-50 text-indigo-600'
 									: 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'}"
 								onclick={() => (selectedToken = token)}
-								type="button"
 							>
 								{token.symbol}
 								{#if isDev() && token.isDevEnabled}
 									<Badge size="sm" variant="warning">DEV</Badge>
 								{/if}
-							</button>
+							</BaseButton>
 						{/each}
 					</div>
 				</div>
@@ -169,23 +168,13 @@
 					</div>
 				{/if}
 
-				<button
-					class="w-full rounded-2xl bg-indigo-600 py-4 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-[0.98] disabled:opacity-50"
-					disabled={loading || !amount}
+				<Button
+					class="w-full py-4 text-lg font-black"
 					onclick={handleSubmit}
-					type="button"
+					state={loading ? 'pending' : nonNullish(amount) ? 'enabled' : 'disabled'}
 				>
-					{#if loading}
-						<div class="flex items-center justify-center gap-2">
-							<div
-								class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
-							></div>
-							Processing...
-						</div>
-					{:else}
-						Confirm {mode}
-					{/if}
-				</button>
+					Confirm {mode}
+				</Button>
 			</div>
 		</div>
 	</div>

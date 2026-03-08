@@ -87,7 +87,10 @@
 			bind:value={newComment}
 		></textarea>
 		<div class="mt-3 flex justify-end">
-			<Button disabled={!newComment.trim() || posting} onclick={handlePostComment}>
+			<Button
+				onclick={handlePostComment}
+				state={!newComment.trim() || posting ? 'disabled' : 'enabled'}
+			>
 				{posting ? 'Posting...' : 'Post Comment'}
 			</Button>
 		</div>

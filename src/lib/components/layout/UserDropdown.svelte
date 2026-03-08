@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
 	import { goto } from '$app/navigation';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 
@@ -21,8 +22,8 @@
 
 <PopOver bind:open>
 	{#snippet trigger()}
-		<button
-			class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95"
+		<BaseButton
+			class="h-10 w-10 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 active:scale-95"
 			aria-label="User profile"
 		>
 			<svg
@@ -39,13 +40,13 @@
 				<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
 				<circle cx="12" cy="7" r="4" />
 			</svg>
-		</button>
+		</BaseButton>
 	{/snippet}
 
 	{#snippet content()}
 		<div class="w-48 py-1">
-			<button
-				class="flex w-full cursor-pointer items-center gap-3 px-4 py-2 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-indigo-600"
+			<BaseButton
+				class="flex w-full items-center gap-3 px-4 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-indigo-600"
 				onclick={goToProfile}
 			>
 				<svg
@@ -63,12 +64,12 @@
 					<circle cx="12" cy="7" r="4" />
 				</svg>
 				Profile
-			</button>
+			</BaseButton>
 
 			<div class="my-1 border-t border-slate-100"></div>
 
-			<button
-				class="flex w-full cursor-pointer items-center gap-3 px-4 py-2 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+			<BaseButton
+				class="w-full gap-3 px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"
 				onclick={doSignOut}
 			>
 				<svg
@@ -87,7 +88,7 @@
 					<line x1="21" x2="9" y1="12" y2="12" />
 				</svg>
 				Log out
-			</button>
+			</BaseButton>
 		</div>
 	{/snippet}
 </PopOver>

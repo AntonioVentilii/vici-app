@@ -1,23 +1,24 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
-	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
+	import type { ButtonState } from '$lib/types/components';
 
 	interface Props {
-		disabled?: boolean;
-		loading?: boolean;
+		state?: ButtonState;
 		variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 		size?: 'sm' | 'md' | 'lg';
 		children: Snippet;
 		onclick?: () => void;
+		class?: string;
 	}
 
 	const {
-		disabled = false,
-		loading = false,
+		state,
 		variant = 'primary',
 		size = 'md',
 		children,
-		onclick = undefined
+		onclick = undefined,
+		class: className = ''
 	}: Props = $props();
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
@@ -35,17 +36,10 @@
 	};
 </script>
 
-<button
-	class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg font-bold transition-all active:scale-95 disabled:opacity-50 {variants[
-		variant
-	]} {sizes[size]}"
-	class:disabled:cursor-not-allowed={disabled}
-	class:disabled:cursor-progress={loading}
-	disabled={disabled || loading}
+<BaseButton
+	class="gap-2 rounded-lg font-bold active:scale-95 {variants[variant]} {sizes[size]} {className}"
 	{onclick}
+	{state}
 >
-	{#if loading}
-		<LoadingSpinner />
-	{/if}
 	{@render children()}
-</button>
+</BaseButton>

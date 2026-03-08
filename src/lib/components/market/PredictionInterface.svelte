@@ -2,6 +2,8 @@
 	import { nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
@@ -201,35 +203,32 @@
 
 	<!-- Order Type Toggle -->
 	<div class="mt-4 flex rounded-xl bg-slate-100 p-1">
-		<button
-			class="flex-1 cursor-pointer rounded-lg py-2 text-xs font-bold transition-all {orderType ===
-			'MARKET'
+		<BaseButton
+			class="flex-1 rounded-lg py-2 text-xs font-bold {orderType === 'MARKET'
 				? 'bg-white text-indigo-600 shadow-sm'
-				: 'text-slate-500 hover:text-slate-700'} disabled:cursor-not-allowed disabled:opacity-30"
-			disabled={!hasMarketDepth}
+				: 'text-slate-500 hover:text-slate-700'}"
 			onclick={() => (orderType = 'MARKET')}
+			state={hasMarketDepth ? 'enabled' : 'disabled'}
 			title={!hasMarketDepth ? 'No liquidity for market order' : ''}
 		>
 			Market
-		</button>
+		</BaseButton>
 
-		<button
-			class="flex-1 cursor-pointer rounded-lg py-2 text-xs font-bold transition-all {orderType ===
-			'LIMIT'
+		<BaseButton
+			class="flex-1 rounded-lg py-2 text-xs font-bold {orderType === 'LIMIT'
 				? 'bg-white text-indigo-600 shadow-sm'
 				: 'text-slate-500 hover:text-slate-700'}"
 			onclick={() => (orderType = 'LIMIT')}
 		>
 			Limit
-		</button>
+		</BaseButton>
 	</div>
 
 	<div class="mt-6 space-y-6">
 		<!-- Outcome Selector -->
 		<div class="grid grid-cols-2 gap-4">
-			<button
-				class="group relative cursor-pointer overflow-hidden rounded-2xl border-2 px-6 py-4 transition-all {selectedType ===
-				'YES'
+			<BaseButton
+				class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType === 'YES'
 					? 'border-green-500 bg-green-50 text-green-700'
 					: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
 				onclick={() => {
@@ -248,11 +247,10 @@
 						</span>
 					{/if}
 				</div>
-			</button>
+			</BaseButton>
 
-			<button
-				class="group relative cursor-pointer overflow-hidden rounded-2xl border-2 px-6 py-4 transition-all {selectedType ===
-				'NO'
+			<BaseButton
+				class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType === 'NO'
 					? 'border-red-500 bg-red-50 text-red-700'
 					: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
 				onclick={() => {
@@ -271,7 +269,7 @@
 						</span>
 					{/if}
 				</div>
-			</button>
+			</BaseButton>
 		</div>
 
 		<!-- Inputs -->
@@ -360,22 +358,13 @@
 		</div>
 
 		{#if $userSignedIn}
-			<button
-				class="group relative w-full cursor-pointer overflow-hidden rounded-2xl bg-indigo-600 py-5 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
-				disabled={loading || !amount}
+			<Button
+				class="w-full py-5 text-lg font-black"
 				onclick={handlePlacePrediction}
+				state={loading ? 'pending' : nonNullish(amount) ? 'enabled' : 'disabled'}
 			>
-				{#if loading}
-					<div class="flex items-center justify-center gap-2">
-						<div
-							class="h-5 w-5 animate-spin rounded-full border-2 border-white border-t-transparent"
-						></div>
-						Processing...
-					</div>
-				{:else}
-					Place {orderType} Order
-				{/if}
-			</button>
+				Place {orderType} Order
+			</Button>
 		{:else}
 			<div class="flex flex-col items-center gap-4 rounded-2xl bg-indigo-50 p-6 text-center">
 				<p class="text-sm font-medium text-indigo-900">Sign in to trade</p>

@@ -5,6 +5,7 @@
 	import SignInModal from '$lib/components/authn/SignInModal.svelte';
 	import UserDropdown from '$lib/components/layout/UserDropdown.svelte';
 	import WalletDropdown from '$lib/components/layout/WalletDropdown.svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { navItems } from '$lib/constants/nav.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -29,10 +30,8 @@
 </script>
 
 {#snippet navButton({ label, path, icon: Icon, adminOnly = false }: NavItem)}
-	<button
-		class="inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm leading-none font-medium transition-all {isActive(
-			path
-		)
+	<BaseButton
+		class="rounded-lg px-4 py-2 text-sm leading-none font-medium {isActive(path)
 			? adminOnly
 				? 'bg-primary/10 text-primary'
 				: 'bg-primary text-primary-foreground'
@@ -47,7 +46,7 @@
 			{/if}
 			<span class="whitespace-nowrap">{label}</span>
 		</span>
-	</button>
+	</BaseButton>
 {/snippet}
 
 <header
@@ -55,10 +54,7 @@
 >
 	<div class="container mx-auto flex h-16 items-center justify-between px-4">
 		<!-- Logo -->
-		<button
-			class="group flex cursor-pointer items-center gap-2"
-			onclick={() => handleNav(AppPath.Home)}
-		>
+		<BaseButton class="group flex items-center gap-2" onclick={() => handleNav(AppPath.Home)}>
 			<div
 				class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg font-bold shadow-lg transition-transform group-hover:scale-110"
 			>
@@ -69,7 +65,7 @@
 			>
 				Veni. Vidi. <span class="text-primary">VICI</span>.
 			</span>
-		</button>
+		</BaseButton>
 
 		<!-- Desktop Nav -->
 		<nav class="hidden items-center gap-1 md:flex">

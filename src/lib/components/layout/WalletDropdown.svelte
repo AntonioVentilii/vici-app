@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -24,8 +25,8 @@
 
 <PopOver bind:open>
 	{#snippet trigger()}
-		<button
-			class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95"
+		<BaseButton
+			class="h-10 w-10 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 active:scale-95"
 			aria-label="Wallet"
 		>
 			<svg
@@ -43,7 +44,7 @@
 				<path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
 				<path d="M18 12a2 2 0 0 0 0 4h4v-4Z" />
 			</svg>
-		</button>
+		</BaseButton>
 	{/snippet}
 
 	{#snippet content()}
@@ -65,12 +66,12 @@
 			</div>
 
 			<div class="border-t border-slate-100 pt-2">
-				<button
-					class="w-full cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-center text-sm font-semibold text-white transition-all hover:bg-indigo-700 active:scale-95"
+				<BaseButton
+					class="w-full rounded-lg bg-indigo-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-indigo-700 active:scale-95"
 					onclick={goToWallet}
 				>
 					Go to Wallet
-				</button>
+				</BaseButton>
 			</div>
 		</div>
 	{/snippet}

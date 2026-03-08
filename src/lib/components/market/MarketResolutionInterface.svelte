@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -84,10 +85,9 @@
 			{/if}
 
 			<Button
-				disabled={!settlementPrice}
-				{loading}
 				onclick={handleSettle}
 				size="lg"
+				state={loading ? 'pending' : nonNullish(settlementPrice) ? 'enabled' : 'disabled'}
 				variant={isUrgent ? 'danger' : 'primary'}
 			>
 				Resolve & Settle

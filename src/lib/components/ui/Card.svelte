@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
 	import type { Snippet } from 'svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import type { CardPadding } from '$lib/types/components';
 
 	interface Props {
@@ -41,14 +42,9 @@
 </script>
 
 {#if isInteractive}
-	<button
-		class="cursor-pointer {commonClasses} {variants[variant]} {paddings[padding]}"
-		{onclick}
-		{onkeydown}
-		type="button"
-	>
+	<BaseButton class="{commonClasses} {variants[variant]} {paddings[padding]}" {onclick} {onkeydown}>
 		{@render children()}
-	</button>
+	</BaseButton>
 {:else}
 	<div class="{commonClasses} {variants[variant]} {paddings[padding]}">
 		{@render children()}

@@ -82,7 +82,10 @@
 				type="text"
 				bind:value={newFriendPrincipal}
 			/>
-			<Button disabled={adding || !newFriendPrincipal} onclick={handleAddFriend}>
+			<Button
+				onclick={handleAddFriend}
+				state={adding || !newFriendPrincipal ? 'disabled' : 'enabled'}
+			>
 				{adding ? 'Adding...' : 'Add'}
 			</Button>
 		</div>

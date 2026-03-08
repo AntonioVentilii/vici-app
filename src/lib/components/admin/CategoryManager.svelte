@@ -79,7 +79,10 @@
 				{/each}
 			</div>
 
-			<Button disabled={!selectedCategoryId || saving} onclick={handleAssociate}>
+			<Button
+				onclick={handleAssociate}
+				state={!selectedCategoryId || saving ? 'disabled' : 'enabled'}
+			>
 				{saving ? 'Associating...' : 'Set Category'}
 			</Button>
 		{/if}
