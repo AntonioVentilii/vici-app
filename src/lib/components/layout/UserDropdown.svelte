@@ -22,7 +22,7 @@
 <PopOver bind:open>
 	{#snippet trigger()}
 		<button
-			class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95"
+			class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95"
 			aria-label="User profile"
 		>
 			<svg
@@ -45,7 +45,7 @@
 	{#snippet content()}
 		<div class="w-48 py-1">
 			<button
-				class="flex w-full items-center gap-3 px-4 py-2 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-indigo-600"
+				class="flex w-full cursor-pointer items-center gap-3 px-4 py-2 text-left text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 hover:text-indigo-600"
 				onclick={goToProfile}
 			>
 				<svg
@@ -68,7 +68,7 @@
 			<div class="my-1 border-t border-slate-100"></div>
 
 			<button
-				class="flex w-full items-center gap-3 px-4 py-2 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+				class="flex w-full cursor-pointer items-center gap-3 px-4 py-2 text-left text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
 				onclick={doSignOut}
 			>
 				<svg

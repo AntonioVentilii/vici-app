@@ -30,7 +30,7 @@
 
 {#snippet navButton({ label, path, icon: Icon, adminOnly = false }: NavItem)}
 	<button
-		class="inline-flex items-center justify-center rounded-lg px-4 py-2 text-sm leading-none font-medium transition-all {isActive(
+		class="inline-flex cursor-pointer items-center justify-center rounded-lg px-4 py-2 text-sm leading-none font-medium transition-all {isActive(
 			path
 		)
 			? adminOnly
@@ -55,7 +55,10 @@
 >
 	<div class="container mx-auto flex h-16 items-center justify-between px-4">
 		<!-- Logo -->
-		<button class="group flex items-center gap-2" onclick={() => handleNav(AppPath.Home)}>
+		<button
+			class="group flex cursor-pointer items-center gap-2"
+			onclick={() => handleNav(AppPath.Home)}
+		>
 			<div
 				class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg font-bold shadow-lg transition-transform group-hover:scale-110"
 			>
@@ -80,6 +83,7 @@
 			{#if $userSignedIn}
 				<div class="flex items-center gap-3">
 					<WalletDropdown balances={{ balances: $balancesStore, collateral: $collateralsStore }} />
+
 					<UserDropdown />
 				</div>
 			{:else}

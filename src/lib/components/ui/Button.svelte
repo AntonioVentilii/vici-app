@@ -36,9 +36,11 @@
 </script>
 
 <button
-	class="inline-flex items-center justify-center gap-2 rounded-lg font-bold transition-all active:scale-95 disabled:pointer-events-none disabled:opacity-50 {variants[
+	class="inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg font-bold transition-all active:scale-95 disabled:opacity-50 {variants[
 		variant
 	]} {sizes[size]}"
+	class:disabled:cursor-not-allowed={disabled}
+	class:disabled:cursor-progress={loading}
 	disabled={disabled || loading}
 	{onclick}
 >

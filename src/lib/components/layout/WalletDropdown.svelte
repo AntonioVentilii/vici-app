@@ -25,7 +25,7 @@
 <PopOver bind:open>
 	{#snippet trigger()}
 		<button
-			class="flex h-10 w-10 items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95"
+			class="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full bg-slate-100 text-slate-600 transition-all hover:bg-slate-200 hover:text-slate-900 active:scale-95"
 			aria-label="Wallet"
 		>
 			<svg
@@ -66,7 +66,7 @@
 
 			<div class="border-t border-slate-100 pt-2">
 				<button
-					class="w-full rounded-lg bg-indigo-600 px-4 py-2 text-center text-sm font-semibold text-white transition-all hover:bg-indigo-700 active:scale-95"
+					class="w-full cursor-pointer rounded-lg bg-indigo-600 px-4 py-2 text-center text-sm font-semibold text-white transition-all hover:bg-indigo-700 active:scale-95"
 					onclick={goToWallet}
 				>
 					Go to Wallet

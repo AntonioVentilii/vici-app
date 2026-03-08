@@ -202,7 +202,8 @@
 	<!-- Order Type Toggle -->
 	<div class="mt-4 flex rounded-xl bg-slate-100 p-1">
 		<button
-			class="flex-1 rounded-lg py-2 text-xs font-bold transition-all {orderType === 'MARKET'
+			class="flex-1 cursor-pointer rounded-lg py-2 text-xs font-bold transition-all {orderType ===
+			'MARKET'
 				? 'bg-white text-indigo-600 shadow-sm'
 				: 'text-slate-500 hover:text-slate-700'} disabled:cursor-not-allowed disabled:opacity-30"
 			disabled={!hasMarketDepth}
@@ -213,7 +214,8 @@
 		</button>
 
 		<button
-			class="flex-1 rounded-lg py-2 text-xs font-bold transition-all {orderType === 'LIMIT'
+			class="flex-1 cursor-pointer rounded-lg py-2 text-xs font-bold transition-all {orderType ===
+			'LIMIT'
 				? 'bg-white text-indigo-600 shadow-sm'
 				: 'text-slate-500 hover:text-slate-700'}"
 			onclick={() => (orderType = 'LIMIT')}
@@ -226,7 +228,7 @@
 		<!-- Outcome Selector -->
 		<div class="grid grid-cols-2 gap-4">
 			<button
-				class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 transition-all {selectedType ===
+				class="group relative cursor-pointer overflow-hidden rounded-2xl border-2 px-6 py-4 transition-all {selectedType ===
 				'YES'
 					? 'border-green-500 bg-green-50 text-green-700'
 					: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
@@ -249,7 +251,7 @@
 			</button>
 
 			<button
-				class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 transition-all {selectedType ===
+				class="group relative cursor-pointer overflow-hidden rounded-2xl border-2 px-6 py-4 transition-all {selectedType ===
 				'NO'
 					? 'border-red-500 bg-red-50 text-red-700'
 					: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
@@ -359,7 +361,7 @@
 
 		{#if $userSignedIn}
 			<button
-				class="group relative w-full overflow-hidden rounded-2xl bg-indigo-600 py-5 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
+				class="group relative w-full cursor-pointer overflow-hidden rounded-2xl bg-indigo-600 py-5 text-lg font-black text-white shadow-xl shadow-indigo-500/20 transition-all hover:bg-indigo-500 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
 				disabled={loading || !amount}
 				onclick={handlePlacePrediction}
 			>
