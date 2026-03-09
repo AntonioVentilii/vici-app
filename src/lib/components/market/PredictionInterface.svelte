@@ -37,7 +37,7 @@
 
 	let error = $state('');
 
-	let collateral = $derived($collateralsStore[market.token.id] ?? ZERO);
+	let availableEquity = $derived($collateralsStore.accountState?.available_equity_usd ?? ZERO);
 
 	const fetchOrderBook = async () => {
 		try {
@@ -308,10 +308,9 @@
 					</label>
 
 					<span class="text-[10px] font-bold text-slate-400 uppercase">
-						Available: {collateral !== undefined
-							? (Number(collateral) / 10 ** market.token.decimals).toFixed(2)
+						Available: {availableEquity !== undefined
+							? `$${(Number(availableEquity) / 10 ** 8).toFixed(2)}`
 							: '...'}
-						{market.token.symbol}
 					</span>
 				</div>
 

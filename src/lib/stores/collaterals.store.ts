@@ -1,6 +1,15 @@
+import type { ClearingDid } from '$declarations';
 import type { TokenId } from '$lib/types/token';
 import { writable } from 'svelte/store';
 
-export type CollateralStoreData = Record<TokenId, bigint>;
+export interface CollateralStoreData {
+	balances: Record<TokenId, bigint>;
+	accountState: ClearingDid.AccountStateResponse | undefined;
+	assetsConfig: Record<string, ClearingDid.CollateralAssetInfo>;
+}
 
-export const collateralsStore = writable<CollateralStoreData>({});
+export const collateralsStore = writable<CollateralStoreData>({
+	balances: {},
+	accountState: undefined,
+	assetsConfig: {}
+});

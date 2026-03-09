@@ -1,12 +1,27 @@
 <script lang="ts">
+	import type { ClearingDid } from '$declarations';
 	import IdentityAwareLoader from '$lib/components/loaders/IdentityAwareLoader.svelte';
-	import { getCollateralBalances } from '$lib/services/wallet.service';
+	import { getCollateralAssets } from '$lib/services/collateral.services';
+	import { getBalances } from '$lib/services/wallet.service';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 
 	const refresh = async () => {
-		const collateral = await getCollateralBalances();
+		const [{ collateral, accountState }, assets] = await Promise.all([
+			getBalances(),
+			getCollateralAssets()
+		]);
 
-		collateralsStore.set(collateral);
+		const assetsConfig: Record<string, ClearingDid.CollateralAssetInfo> = {};
+
+		assets.forEach((asset) => {
+			assetsConfig[asset.config.asset_id] = asset;
+		});
+
+		collateralsStore.set({
+			balances: collateral,
+			accountState,
+			assetsConfig
+		});
 	};
 </script>
 

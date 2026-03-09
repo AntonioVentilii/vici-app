@@ -2,6 +2,7 @@ import type { ClearingDid } from '$declarations';
 import {
 	depositCollateral as depositCollateralApi,
 	getAccountState as getAccountStateApi,
+	getCollateralAssets as getCollateralAssetsApi,
 	withdrawCollateral as withdrawCollateralApi
 } from '$lib/api/clearing.api';
 import { approve } from '$lib/api/icrc-ledger.api';
@@ -68,11 +69,17 @@ export const withdrawCollateral = async ({
 	refreshAllBalances();
 };
 
-export const getAccountState = async (): Promise<ClearingDid.AccountState> => {
+export const getAccountState = async (): Promise<ClearingDid.AccountStateResponse> => {
 	const identity = await safeGetIdentityOnce();
 
 	return await getAccountStateApi({
 		identity,
 		params: { refresh: [true] }
 	});
+};
+
+export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAssetInfo[]> => {
+	const identity = await safeGetIdentityOnce();
+
+	return await getCollateralAssetsApi({ identity });
 };

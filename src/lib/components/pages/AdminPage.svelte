@@ -74,7 +74,7 @@
 		loading = true;
 
 		const settledResults = await Promise.allSettled(
-			bulkMarkets.map(({ title,description,expiryDate }) =>
+			bulkMarkets.map(({ title, description, expiryDate }) =>
 				createMarket({
 					title,
 					description,

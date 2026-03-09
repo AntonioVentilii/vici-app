@@ -24,16 +24,14 @@ export const TESTICP_TOKEN: Token = {
 	id: parseTokenId('TESTICP'),
 	symbol: 'TESTICP',
 	decimals: 8,
-	ledgerCanisterId: TESTICP_LEDGER_CANISTER_ID,
-	isDevEnabled: true
+	ledgerCanisterId: TESTICP_LEDGER_CANISTER_ID
 };
 
 export const TICRC1_TOKEN: Token = {
 	id: parseTokenId('TICRC1'),
 	symbol: 'TICRC1',
 	decimals: 8,
-	ledgerCanisterId: TICRC1_LEDGER_CANISTER_ID,
-	isDevEnabled: true
+	ledgerCanisterId: TICRC1_LEDGER_CANISTER_ID
 };
 
 export const CKUSDC_TOKEN: Token = {

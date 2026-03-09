@@ -27,12 +27,7 @@ export interface AddSeriesParams {
 	oracle_source: string;
 }
 export type AddSeriesResult = { Ok: string } | { Err: SeriesError };
-export type CanonicalCryptoUnit =
-	| { Btc: null }
-	| { Eth: null }
-	| { Icp: null }
-	| { Usdc: null }
-	| { Usdt: null };
+export type Asset = { Erc20: ErcToken } | { Icrc: Principal } | { NativeEvm: NativeEvmAsset };
 export interface DecimalValue {
 	decimals: number;
 	value: bigint;
@@ -41,6 +36,11 @@ export interface Description {
 	html: [] | [string];
 	markdown: [] | [string];
 	plain: string;
+}
+export interface ErcToken {
+	decimals: number;
+	token_address: string;
+	chain_id: bigint;
 }
 export type FiatUnit = { Chf: null } | { Eur: null } | { Gbp: null } | { Usd: null };
 export interface ListSeriesParams {
@@ -57,6 +57,10 @@ export interface ManageOraclePrincipalsParams {
 	add_principals: Array<Principal>;
 	remove_principals: Array<Principal>;
 	oracle_id: string;
+}
+export interface NativeEvmAsset {
+	decimals: number;
+	chain_id: bigint;
 }
 export type NonMonetaryUnit = { Points: null };
 export interface Oracle {
@@ -81,10 +85,7 @@ export interface PaginationParams {
 	limit: [] | [bigint];
 }
 export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
-export type PayoutUnit =
-	| { Fiat: FiatUnit }
-	| { Crypto: CanonicalCryptoUnit }
-	| { NonMonetary: NonMonetaryUnit };
+export type PayoutUnit = { Fiat: FiatUnit } | { Asset: Asset } | { NonMonetary: NonMonetaryUnit };
 export interface Price {
 	timestamp: [] | [bigint];
 	oracle_id: [] | [string];

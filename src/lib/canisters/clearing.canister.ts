@@ -78,7 +78,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 		...queryParams
 	}: {
 		params: ClearingDid.GetAccountStateParams;
-	} & QueryParams): Promise<ClearingDid.AccountState> => {
+	} & QueryParams): Promise<ClearingDid.AccountStateResponse> => {
 		const { get_account_state } = this.caller(queryParams);
 		const result = await get_account_state(params);
 
@@ -89,7 +89,9 @@ export class ClearingCanister extends Canister<ClearingService> {
 		throw new Error(`Failed to get account state: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
-	getAccountStateQuery = async (queryParams: QueryParams): Promise<ClearingDid.AccountState> => {
+	getAccountStateQuery = async (
+		queryParams: QueryParams
+	): Promise<ClearingDid.AccountStateResponse> => {
 		const { get_account_state_query } = this.caller(queryParams);
 		const result = await get_account_state_query();
 
@@ -98,6 +100,13 @@ export class ClearingCanister extends Canister<ClearingService> {
 		}
 
 		throw new Error(`Failed to query account state: ${JSON.stringify(result.Err, jsonReplacer)}`);
+	};
+
+	getCollateralAssets = async (
+		queryParams: QueryParams
+	): Promise<ClearingDid.CollateralAssetInfo[]> => {
+		const { get_collateral_assets } = this.caller(queryParams);
+		return await get_collateral_assets();
 	};
 
 	getPosition = async ({

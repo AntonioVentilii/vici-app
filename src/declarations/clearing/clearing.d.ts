@@ -21,6 +21,12 @@ export type AccountStateError =
 	| { MathOverflow: null }
 	| { Asset: AssetError }
 	| { NoAccountStateFound: null };
+export interface AccountStateResponse {
+	assets: Array<AssetWorth>;
+	available_equity_usd: bigint;
+	state: AccountState;
+	total_equity_usd: bigint;
+}
 export type Asset = { Erc20: ErcToken } | { Icrc: Principal } | { NativeEvm: NativeEvmAsset };
 export type AssetError =
 	| { TransferError: string }
@@ -38,6 +44,13 @@ export interface AssetMetrics {
 	protocol_fee_ratio: [] | [number];
 	price_usd: DecimalValue;
 }
+export interface AssetWorth {
+	pre_haircut_value_usd: bigint;
+	haircut_bps: number;
+	balance: bigint;
+	value_usd: bigint;
+	asset_id: string;
+}
 export type CancelFundWithdrawalError =
 	| { PlanNotFound: null }
 	| { InvalidPlanStatus: null }
@@ -49,12 +62,6 @@ export type CancelFundWithdrawalResult = { Ok: null } | { Err: CancelFundWithdra
 export interface CancelLimitOrderParams {
 	order_id: string;
 }
-export type CanonicalCryptoUnit =
-	| { Btc: null }
-	| { Eth: null }
-	| { Icp: null }
-	| { Usdc: null }
-	| { Usdt: null };
 export interface CollateralAssetConfig {
 	decimals: number;
 	asset: Asset;
@@ -62,6 +69,10 @@ export interface CollateralAssetConfig {
 	oracle_id: [] | [string];
 	asset_id: string;
 	symbol: string;
+}
+export interface CollateralAssetInfo {
+	metrics: [] | [AssetMetrics];
+	config: CollateralAssetConfig;
 }
 export type CommonError =
 	| { Internal: string }
@@ -121,7 +132,7 @@ export type FundType = { Insurance: null } | { Treasury: null };
 export interface GetAccountStateParams {
 	refresh: [] | [boolean];
 }
-export type GetAccountStateResult = { Ok: AccountState } | { Err: AccountStateError };
+export type GetAccountStateResult = { Ok: AccountStateResponse } | { Err: AccountStateError };
 export interface GetFundsResult {
 	insurance_fund: Array<[string, bigint]>;
 	treasury: Array<[string, bigint]>;
@@ -159,10 +170,7 @@ export interface NativeEvmAsset {
 export type NonMonetaryUnit = { Points: null };
 export type PaymentIdempotency = { IcrcCreatedAtTimeNs: bigint };
 export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
-export type PayoutUnit =
-	| { Fiat: FiatUnit }
-	| { Crypto: CanonicalCryptoUnit }
-	| { NonMonetary: NonMonetaryUnit };
+export type PayoutUnit = { Fiat: FiatUnit } | { Asset: Asset } | { NonMonetary: NonMonetaryUnit };
 export type PlanStatus = { Finalised: null } | { Planned: null } | { Executing: null };
 export interface Position {
 	series_id: string;
@@ -387,6 +395,10 @@ export interface _SERVICE {
 	 * This does not refresh balances from external ledgers.
 	 */
 	get_account_state_query: ActorMethod<[], GetAccountStateResult>;
+	/**
+	 * Returns a list of all supported collateral assets with their metrics.
+	 */
+	get_collateral_assets: ActorMethod<[], Array<CollateralAssetInfo>>;
 	/**
 	 * Returns the current balances of the Insurance Fund and Treasury.
 	 *

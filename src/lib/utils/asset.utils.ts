@@ -1,18 +1,15 @@
 import type { RegistryDid } from '$declarations';
-import { CKUSDC_TOKEN, ICP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+import { USD_ASSET } from '$lib/constants/tokens/assets.fiat.constants';
 import type { Token } from '$lib/types/token';
+import { findTokenByLedgerId } from '$lib/utils/tokens.utils';
 import { assertNever } from '@dfinity/utils';
 
 export const assetToToken = (payoutUnit: RegistryDid.PayoutUnit): Token | undefined => {
-	if ('Crypto' in payoutUnit) {
-		const crypto = payoutUnit.Crypto;
+	if ('Asset' in payoutUnit) {
+		const crypto = payoutUnit.Asset;
 
-		if ('Icp' in crypto) {
-			return ICP_TOKEN;
-		}
-
-		if ('Usdc' in crypto) {
-			return CKUSDC_TOKEN;
+		if ('Icrc' in crypto) {
+			return findTokenByLedgerId(crypto.Icrc.toText());
 		}
 
 		throw new Error(`Unsupported crypto payout unit: ${crypto}`);
@@ -20,6 +17,10 @@ export const assetToToken = (payoutUnit: RegistryDid.PayoutUnit): Token | undefi
 
 	if ('Fiat' in payoutUnit) {
 		const fiat = payoutUnit.Fiat;
+
+		if ('Usd' in fiat) {
+			return USD_ASSET;
+		}
 
 		throw new Error(`Unsupported fiat payout unit: ${fiat}`);
 	}

@@ -46,7 +46,9 @@ for ((i = 0; i < $length; i++)); do
         strike = null;
         price_precision = 8 : nat8;
         payoff_type = variant { Binary };
-        payout_unit = variant { Crypto = variant { Icp } };
+        payout_unit = variant {
+          Fiat = variant { Usd }
+        };
         oracle_source = \"Manual\";
     })"
 done

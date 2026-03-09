@@ -1,3 +1,4 @@
+import type { ClearingDid } from '$declarations';
 import { getAccountState } from '$lib/api/clearing.api';
 import { getTransactions as getIcpTransactionsApi } from '$lib/api/icp-index.api';
 import { getTransactions as getIcrcTransactionsApi } from '$lib/api/icrc-index-ng.api';
@@ -60,44 +61,48 @@ export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	}
 };
 
-export const getCollateralBalances = async (): Promise<Record<TokenId, bigint>> => {
+export const getCollateralBalances = async (): Promise<
+	ClearingDid.AccountStateResponse | undefined
+> => {
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
-		return {};
+		return;
 	}
 
 	try {
 		// 2. Fetch Collateral Balances
-		const accountState = await getAccountState({
+		return await getAccountState({
 			identity,
 			params: { refresh: toNullable(true) }
 		});
+	} catch (e: unknown) {
+		console.error('Failed to get collateral balances', e);
+	}
+};
 
-		const collateral: Record<TokenId, bigint> = {};
+export const getBalances = async (): Promise<WalletBalance> => {
+	const [balances, accountState] = await Promise.all([
+		getLedgerBalances(),
+		getCollateralBalances()
+	]);
 
-		accountState.collateral_balances.forEach(([assetId, balance]) => {
+	const collateral: Record<TokenId, bigint> = {};
+
+	if (nonNullish(accountState)) {
+		accountState.state.collateral_balances.forEach(([assetId, balance]) => {
 			const token = SUPPORTED_TOKENS.find((t) => t.symbol.toLowerCase() === assetId);
 
 			if (nonNullish(token)) {
 				collateral[token.id] = balance;
 			}
 		});
-
-		return collateral;
-	} catch (e: unknown) {
-		console.error('Failed to get collateral balances', e);
-
-		return {};
 	}
-};
-
-export const getBalances = async (): Promise<WalletBalance> => {
-	const [balances, collateral] = await Promise.all([getLedgerBalances(), getCollateralBalances()]);
 
 	return {
 		balances,
-		collateral
+		collateral,
+		accountState
 	};
 };
 

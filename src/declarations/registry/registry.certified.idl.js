@@ -52,17 +52,24 @@ export const FiatUnit = IDL.Variant({
 	Gbp: IDL.Null,
 	Usd: IDL.Null
 });
-export const CanonicalCryptoUnit = IDL.Variant({
-	Btc: IDL.Null,
-	Eth: IDL.Null,
-	Icp: IDL.Null,
-	Usdc: IDL.Null,
-	Usdt: IDL.Null
+export const ErcToken = IDL.Record({
+	decimals: IDL.Nat8,
+	token_address: IDL.Text,
+	chain_id: IDL.Nat64
+});
+export const NativeEvmAsset = IDL.Record({
+	decimals: IDL.Nat8,
+	chain_id: IDL.Nat64
+});
+export const Asset = IDL.Variant({
+	Erc20: ErcToken,
+	Icrc: IDL.Principal,
+	NativeEvm: NativeEvmAsset
 });
 export const NonMonetaryUnit = IDL.Variant({ Points: IDL.Null });
 export const PayoutUnit = IDL.Variant({
 	Fiat: FiatUnit,
-	Crypto: CanonicalCryptoUnit,
+	Asset: Asset,
 	NonMonetary: NonMonetaryUnit
 });
 export const AddSeriesParams = IDL.Record({
@@ -192,17 +199,24 @@ export const idlFactory = ({ IDL }) => {
 		Gbp: IDL.Null,
 		Usd: IDL.Null
 	});
-	const CanonicalCryptoUnit = IDL.Variant({
-		Btc: IDL.Null,
-		Eth: IDL.Null,
-		Icp: IDL.Null,
-		Usdc: IDL.Null,
-		Usdt: IDL.Null
+	const ErcToken = IDL.Record({
+		decimals: IDL.Nat8,
+		token_address: IDL.Text,
+		chain_id: IDL.Nat64
+	});
+	const NativeEvmAsset = IDL.Record({
+		decimals: IDL.Nat8,
+		chain_id: IDL.Nat64
+	});
+	const Asset = IDL.Variant({
+		Erc20: ErcToken,
+		Icrc: IDL.Principal,
+		NativeEvm: NativeEvmAsset
 	});
 	const NonMonetaryUnit = IDL.Variant({ Points: IDL.Null });
 	const PayoutUnit = IDL.Variant({
 		Fiat: FiatUnit,
-		Crypto: CanonicalCryptoUnit,
+		Asset: Asset,
 		NonMonetary: NonMonetaryUnit
 	});
 	const AddSeriesParams = IDL.Record({

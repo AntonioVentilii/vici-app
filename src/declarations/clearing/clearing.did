@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit ea1de14f1bfae2bb7a490a60aeaaac66d7aa1d03 for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit dd14b051769639ef83f4676965004d2ad264c3b8 for file 'src/clearing/clearing.did'
 
 type AcceptPositionTransferResult = variant { Ok : bool; Err : TradeError };
 type AccountState = record {
@@ -11,6 +11,12 @@ type AccountStateError = variant {
 	MathOverflow;
 	Asset : AssetError;
 	NoAccountStateFound
+};
+type AccountStateResponse = record {
+	assets : vec AssetWorth;
+	available_equity_usd : int;
+	state : AccountState;
+	total_equity_usd : nat
 };
 type Asset = variant {
 	Erc20 : ErcToken;
@@ -34,6 +40,13 @@ type AssetMetrics = record {
 	protocol_fee_ratio : opt nat16;
 	price_usd : DecimalValue
 };
+type AssetWorth = record {
+	pre_haircut_value_usd : nat;
+	haircut_bps : nat16;
+	balance : nat;
+	value_usd : nat;
+	asset_id : text
+};
 type CancelFundWithdrawalError = variant {
 	PlanNotFound;
 	InvalidPlanStatus;
@@ -45,7 +58,6 @@ type CancelFundWithdrawalResult = variant {
 	Err : CancelFundWithdrawalError
 };
 type CancelLimitOrderParams = record { order_id : text };
-type CanonicalCryptoUnit = variant { Btc; Eth; Icp; Usdc; Usdt };
 type CollateralAssetConfig = record {
 	decimals : nat8;
 	asset : Asset;
@@ -53,6 +65,10 @@ type CollateralAssetConfig = record {
 	oracle_id : opt text;
 	asset_id : text;
 	symbol : text
+};
+type CollateralAssetInfo = record {
+	metrics : opt AssetMetrics;
+	config : CollateralAssetConfig
 };
 type CommonError = variant {
 	Internal : text;
@@ -105,7 +121,7 @@ type FreezePositionForTransferParams = record {
 type FundType = variant { Insurance; Treasury };
 type GetAccountStateParams = record { refresh : opt bool };
 type GetAccountStateResult = variant {
-	Ok : AccountState;
+	Ok : AccountStateResponse;
 	Err : AccountStateError
 };
 type GetFundsResult = record {
@@ -140,7 +156,7 @@ type PaymentIdempotency = variant { IcrcCreatedAtTimeNs : nat64 };
 type PayoffType = variant { Put; Binary; Call };
 type PayoutUnit = variant {
 	Fiat : FiatUnit;
-	Crypto : CanonicalCryptoUnit;
+	Asset : Asset;
 	NonMonetary : NonMonetaryUnit
 };
 type PlanStatus = variant { Finalised; Planned; Executing };
@@ -341,6 +357,8 @@ service : {
 	//
 	// This does not refresh balances from external ledgers.
 	get_account_state_query : () -> (GetAccountStateResult) query;
+	// Returns a list of all supported collateral assets with their metrics.
+	get_collateral_assets : () -> (vec CollateralAssetInfo) query;
 	// Returns the current balances of the Insurance Fund and Treasury.
 	//
 	// This method is gated to canister controllers.

@@ -51,6 +51,9 @@
 		{#each displayedTokens as token (token.ledgerCanisterId)}
 			{@const color = getTokenColor(token.symbol)}
 			{@const balance = balances.balances[token.id] ?? ZERO}
+			{@const assetWorth = balances.accountState?.assets.find(
+				(a) => a.asset_id === token.symbol.toLowerCase()
+			)}
 
 			<div class="flex items-center justify-between p-4 transition-colors hover:bg-slate-50/50">
 				<div class="flex items-center gap-3">
@@ -74,7 +77,11 @@
 						{formatToken({ value: balance, unitName: token.decimals })}
 					</div>
 					<div class="text-[10px] font-medium text-slate-400">
-						{#if token.symbol === 'ICP'}
+						{#if assetWorth}
+							≈ ${(
+								Number(assetWorth.value_usd) / (Number(assetWorth.balance) || 1) / 10 ** 8 || 0
+							).toFixed(2)} USD
+						{:else if token.symbol === 'ICP'}
 							≈ ${((Number(balance) / 10 ** token.decimals) * 12.5).toFixed(2)} USD
 						{:else if token.symbol === 'ckUSDC'}
 							≈ ${formatToken({ value: balance, unitName: token.decimals })} USD

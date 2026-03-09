@@ -6,11 +6,11 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 	import { isDev } from '$lib/env/app.env';
-	import type { TokenId } from '$lib/types/token';
+	import type { CollateralStoreData } from '$lib/stores/collaterals.store';
 	import { formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
-		collateral: Record<TokenId, bigint>;
+		collateral: CollateralStoreData;
 		onManage: () => void;
 	}
 
@@ -23,7 +23,7 @@
 			if (!hideZeroBalances) {
 				return true;
 			}
-			return (collateral[token.id] ?? ZERO) > ZERO;
+			return (collateral.balances[token.id] ?? ZERO) > ZERO;
 		})
 	);
 
@@ -36,6 +36,9 @@
 		}
 		return 'slate';
 	};
+
+	// TODO: How did we arrive at this decimals??? It refers to USD_DECIMALS of Clearing canister, but should we be using token decimals instead?
+	const formatValue = (value: string | number | bigint) => (Number(value) / 10 ** 6).toFixed(2);
 </script>
 
 <Card padding="none" variant="default">
@@ -43,10 +46,25 @@
 		class="flex w-full flex-col justify-between gap-4 border-b border-slate-100 p-6 sm:flex-row sm:items-center"
 	>
 		<div>
-			<div class="text-xs font-bold tracking-widest text-indigo-600 uppercase">
-				Clearing Collateral
+			<div class="flex items-center gap-3">
+				<div class="text-xs font-bold tracking-widest text-indigo-600 uppercase">
+					Clearing Collateral
+				</div>
+				{#if collateral.accountState}
+					<Badge variant="success">
+						${formatValue(collateral.accountState.total_equity_usd)} Total
+					</Badge>
+				{/if}
 			</div>
-			<p class="mt-1 text-sm text-slate-500">Locked and available margin for trading</p>
+			<p class="mt-1 text-sm text-slate-500">
+				{#if collateral.accountState}
+					Available Equity: <span class="font-bold text-slate-900"
+						>${formatValue(collateral.accountState.available_equity_usd)}</span
+					>
+				{:else}
+					Locked and available margin for trading
+				{/if}
+			</p>
 		</div>
 
 		<div class="flex items-center gap-4">
@@ -61,8 +79,11 @@
 
 	<div class="flex w-full flex-col divide-y divide-slate-50">
 		{#each displayedTokens as token (token.id)}
-			{@const balance = collateral[token.id] ?? ZERO}
+			{@const balance = collateral.balances[token.id] ?? ZERO}
 			{@const color = getTokenColor(token.symbol)}
+			{@const assetWorth = collateral.accountState?.assets.find(
+				(a) => a.asset_id === token.symbol.toLowerCase()
+			)}
 
 			<div
 				class="flex items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50/50"
@@ -75,10 +96,17 @@
 							<path d="M12 2L2 12l10 10 10-10L12 2z" />
 						</svg>
 					</div>
-					<div class="flex items-center gap-2">
-						<span class="text-sm font-bold text-slate-900">{token.symbol}</span>
-						{#if isDev() && token.isDevEnabled}
-							<Badge size="sm" variant="warning">DEV</Badge>
+					<div class="flex flex-col">
+						<div class="flex items-center gap-2">
+							<span class="text-sm font-bold text-slate-900">{token.symbol}</span>
+							{#if isDev() && token.isDevEnabled}
+								<Badge size="sm" variant="warning">DEV</Badge>
+							{/if}
+						</div>
+						{#if assetWorth && assetWorth.haircut_bps > 0}
+							<span class="text-[10px] font-medium text-orange-500">
+								{assetWorth.haircut_bps / 100}% Haircut
+							</span>
 						{/if}
 					</div>
 				</div>
@@ -88,7 +116,16 @@
 						{formatToken({ value: balance, unitName: token.decimals })}
 					</div>
 					<div class="text-[10px] font-medium text-slate-400 uppercase">
-						{token.symbol}
+						{#if assetWorth}
+							Value: ${formatValue(assetWorth.value_usd)}
+							{#if assetWorth.haircut_bps > 0}
+								<span class="line-through opacity-50"
+									>(${formatValue(assetWorth.pre_haircut_value_usd)})</span
+								>
+							{/if}
+						{:else}
+							{token.symbol}
+						{/if}
 					</div>
 				</div>
 			</div>
