@@ -3,7 +3,7 @@
 	import { onAuthStateChange, type User } from '@junobuild/core';
 	import { onMount, type Snippet } from 'svelte';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
-	import { getProfile, calculateAndSyncStats } from '$lib/services/profile.services';
+	import { ensureProfile, calculateAndSyncStats } from '$lib/services/profile.services';
 	import { userStore } from '$lib/stores/user.store';
 
 	interface Props {
@@ -27,7 +27,7 @@
 			return;
 		}
 
-		const profile = await getProfile(userText);
+		const profile = await ensureProfile(userText);
 
 		userStore.set({ user, profile });
 

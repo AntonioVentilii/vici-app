@@ -2,7 +2,7 @@ import { getPositions } from '$lib/api/clearing.api';
 import { Collection } from '$lib/constants/collections.constants';
 import type { UserProfile } from '$lib/types/profile';
 import type { UserRole } from '$lib/types/user';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@dfinity/zod-schemas';
 import type { Identity } from '@icp-sdk/core/agent';
 import { getDoc, listDocs, setDoc } from '@junobuild/core';
@@ -56,6 +56,25 @@ export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
 		);
 };
 
+export const ensureProfile = async (principal: PrincipalText): Promise<UserProfile> => {
+	const profile = await getProfile(principal);
+
+	if (nonNullish(profile)) {
+		return profile;
+	}
+
+	const newProfile: UserProfile = {
+		owner: principal,
+		nickname: `${principal.slice(0, 5)}...${principal.slice(-3)}`,
+		createdAt: Date.now(),
+		updatedAt: Date.now()
+	};
+
+	await upsertProfile(newProfile);
+
+	return newProfile;
+};
+
 export const calculateAndSyncStats = async (identity: Identity): Promise<void> => {
 	const principal = identity.getPrincipal().toText();
 	const positions = await getPositions({ identity });
@@ -77,7 +96,8 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 			...profile,
 			totalTrades,
 			winRate: totalTrades > 0 ? (wins / totalTrades) * 100 : 0,
-			pnl
+			pnl,
+			updatedAt: Date.now()
 		});
 	}
 };
