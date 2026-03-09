@@ -1,5 +1,5 @@
 <script lang="ts">
-	import LeaderboardPage from '$lib/components/pages/LeaderboardPage.svelte';
+	import ProfilePage from '$lib/components/pages/ProfilePage.svelte';
 </script>
 
-<LeaderboardPage />
+<ProfilePage />
