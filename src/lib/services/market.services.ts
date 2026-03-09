@@ -1,4 +1,5 @@
-import type { RegistryDid } from '$declarations';
+import type { ClearingDid, RegistryDid } from '$declarations';
+import { listOrders as listOrdersApi } from '$lib/api/clearing.api';
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
 	NANO_SECONDS_IN_MILLISECOND,
@@ -96,8 +97,36 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 };
 
 export const getRushQueue = async (): Promise<Market[]> => {
-	const markets = await getMarkets();
+	const identity = await getIdentityOrAnonymous();
 
-	// For now, all open markets are eligible for Rush Mode
-	return markets.sort((a, b) => Number(b.id) - Number(a.id));
+	const [markets, allOpenOrders] = await Promise.all([
+		getMarkets(),
+		listOrdersApi({
+			identity,
+			params: { series_id: [] }
+		})
+	]);
+
+	// Group orders to see which markets have both bids and asks
+	const marketLiquidity = allOpenOrders.reduce<Record<string, { bids: boolean; asks: boolean }>>(
+		(acc: Record<string, { bids: boolean; asks: boolean }>, order: ClearingDid.LimitOrder) => {
+			const side = 'Buy' in order.side ? 'bids' : 'asks';
+			if (!acc[order.series_id]) {
+				acc[order.series_id] = { bids: false, asks: false };
+			}
+			acc[order.series_id][side] = true;
+			return acc;
+		},
+		{}
+	);
+
+	// Filter markets to only those that have both sides of liquidity
+	const rushMarkets = markets.filter(
+		(market: Market) =>
+			marketLiquidity[market.id] &&
+			marketLiquidity[market.id].bids &&
+			marketLiquidity[market.id].asks
+	);
+
+	return rushMarkets.sort((a: Market, b: Market) => Number(b.id) - Number(a.id));
 };
