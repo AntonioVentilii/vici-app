@@ -2,6 +2,7 @@
 	import type { PrincipalText } from '@dfinity/zod-schemas';
 	import { onMount } from 'svelte';
 	import AdminAddForm from '$lib/components/admin/AdminAddForm.svelte';
+	import AdminBulkMarketForm from '$lib/components/admin/AdminBulkMarketForm.svelte';
 	import AdminList from '$lib/components/admin/AdminList.svelte';
 	import AdminMarketForm from '$lib/components/admin/AdminMarketForm.svelte';
 	import AdminResolutionHistory from '$lib/components/admin/AdminResolutionHistory.svelte';
@@ -63,6 +64,46 @@
 		} catch (e: unknown) {
 			alert((e as Error).message);
 		}
+	};
+
+	const handleBulkCreate = async (
+		bulkMarkets: { title: string; description: string; expiryDate: string }[]
+	) => {
+		const results = { success: 0, failed: 0 };
+
+		loading = true;
+
+		const settledResults = await Promise.allSettled(
+			bulkMarkets.map(({ title,description,expiryDate }) =>
+				createMarket({
+					title,
+					description,
+					expiryDate: BigInt(new Date(expiryDate).getTime())
+				})
+			)
+		);
+
+		settledResults.forEach((result, index) => {
+			if (result.status === 'fulfilled') {
+				results.success++;
+			} else {
+				const market = bulkMarkets[index];
+
+				console.error(`Failed to create market "${market.title}":`, result.reason);
+
+				results.failed++;
+			}
+		});
+
+		await fetchMarkets();
+
+		loading = false;
+
+		alert(
+			`Bulk creation complete!\nSuccess: ${results.success}\nFailed: ${results.failed}${
+				results.failed > 0 ? '\nCheck console for errors.' : ''
+			}`
+		);
 	};
 
 	const handleResolve = async ({ marketId, outcome }: { marketId: MarketId; outcome: Outcome }) => {
@@ -140,6 +181,9 @@
 				onTitleChange={(v) => (title = v)}
 				{title}
 			/>
+
+			<!-- Bulk Create -->
+			<AdminBulkMarketForm onBulkCreate={handleBulkCreate} />
 		</section>
 
 		<!-- Lists Stack -->
