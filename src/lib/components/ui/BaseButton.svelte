@@ -46,21 +46,15 @@
 	{type}
 	{...rest}
 >
-	{@render children()}
-
-	<span class="inline-grid grid-cols-[auto_1fr] items-center gap-2">
+	{#if isBusy}
 		<span class="flex h-4 w-4 items-center justify-center">
-			{#if isBusy}
-				<LoadingSpinner />
-			{/if}
+			<LoadingSpinner />
 		</span>
 
-		<span>
-			{#if isBusy && nonNullish(busyLabel)}
-				{@render busyLabel()}
-			{:else}
-				{@render children()}
-			{/if}
-		</span>
-	</span>
+		{#if nonNullish(busyLabel)}
+			{@render busyLabel()}
+		{/if}
+	{:else}
+		{@render children()}
+	{/if}
 </button>
