@@ -46,25 +46,31 @@ export const PayoffType = IDL.Variant({
 	Binary: IDL.Null,
 	Call: IDL.Null
 });
-export const Chain = IDL.Variant({
-	Bsc: IDL.Null,
-	Base: IDL.Null,
-	Ethereum: IDL.Null,
-	Polygon: IDL.Null
+export const FiatUnit = IDL.Variant({
+	Chf: IDL.Null,
+	Eur: IDL.Null,
+	Gbp: IDL.Null,
+	Usd: IDL.Null
 });
-export const SettlementAsset = IDL.Variant({
+export const CanonicalCryptoUnit = IDL.Variant({
+	Btc: IDL.Null,
+	Eth: IDL.Null,
 	Icp: IDL.Null,
-	Usdc: Chain,
-	Usdt: Chain,
-	Native: Chain,
-	CkUsdc: IDL.Null
+	Usdc: IDL.Null,
+	Usdt: IDL.Null
+});
+export const NonMonetaryUnit = IDL.Variant({ Points: IDL.Null });
+export const PayoutUnit = IDL.Variant({
+	Fiat: FiatUnit,
+	Crypto: CanonicalCryptoUnit,
+	NonMonetary: NonMonetaryUnit
 });
 export const AddSeriesParams = IDL.Record({
 	title: IDL.Text,
 	strike: IDL.Opt(Price),
 	payoff_type: PayoffType,
+	payout_unit: PayoutUnit,
 	expiry_ns: IDL.Nat64,
-	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
 	description: Description,
 	price_precision: IDL.Nat8,
@@ -92,9 +98,9 @@ export const Series = IDL.Record({
 	strike: IDL.Opt(Price),
 	creator: IDL.Principal,
 	payoff_type: PayoffType,
+	payout_unit: PayoutUnit,
 	expiry_ns: IDL.Nat64,
 	series_id: IDL.Text,
-	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
 	description: Description,
 	created_at_ns: IDL.Nat64,
@@ -113,8 +119,8 @@ export const ListSeriesParams = IDL.Record({
 	strike: IDL.Opt(Price),
 	creator: IDL.Opt(IDL.Principal),
 	payoff_type: IDL.Opt(PayoffType),
+	payout_unit: IDL.Opt(PayoutUnit),
 	pagination: IDL.Opt(PaginationParams),
-	settlement_asset: IDL.Opt(SettlementAsset),
 	underlying: IDL.Opt(IDL.Text),
 	search_term: IDL.Opt(IDL.Text),
 	oracle_source: IDL.Opt(IDL.Text)
@@ -180,25 +186,31 @@ export const idlFactory = ({ IDL }) => {
 		Binary: IDL.Null,
 		Call: IDL.Null
 	});
-	const Chain = IDL.Variant({
-		Bsc: IDL.Null,
-		Base: IDL.Null,
-		Ethereum: IDL.Null,
-		Polygon: IDL.Null
+	const FiatUnit = IDL.Variant({
+		Chf: IDL.Null,
+		Eur: IDL.Null,
+		Gbp: IDL.Null,
+		Usd: IDL.Null
 	});
-	const SettlementAsset = IDL.Variant({
+	const CanonicalCryptoUnit = IDL.Variant({
+		Btc: IDL.Null,
+		Eth: IDL.Null,
 		Icp: IDL.Null,
-		Usdc: Chain,
-		Usdt: Chain,
-		Native: Chain,
-		CkUsdc: IDL.Null
+		Usdc: IDL.Null,
+		Usdt: IDL.Null
+	});
+	const NonMonetaryUnit = IDL.Variant({ Points: IDL.Null });
+	const PayoutUnit = IDL.Variant({
+		Fiat: FiatUnit,
+		Crypto: CanonicalCryptoUnit,
+		NonMonetary: NonMonetaryUnit
 	});
 	const AddSeriesParams = IDL.Record({
 		title: IDL.Text,
 		strike: IDL.Opt(Price),
 		payoff_type: PayoffType,
+		payout_unit: PayoutUnit,
 		expiry_ns: IDL.Nat64,
-		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
 		description: Description,
 		price_precision: IDL.Nat8,
@@ -223,9 +235,9 @@ export const idlFactory = ({ IDL }) => {
 		strike: IDL.Opt(Price),
 		creator: IDL.Principal,
 		payoff_type: PayoffType,
+		payout_unit: PayoutUnit,
 		expiry_ns: IDL.Nat64,
 		series_id: IDL.Text,
-		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
 		description: Description,
 		created_at_ns: IDL.Nat64,
@@ -244,8 +256,8 @@ export const idlFactory = ({ IDL }) => {
 		strike: IDL.Opt(Price),
 		creator: IDL.Opt(IDL.Principal),
 		payoff_type: IDL.Opt(PayoffType),
+		payout_unit: IDL.Opt(PayoutUnit),
 		pagination: IDL.Opt(PaginationParams),
-		settlement_asset: IDL.Opt(SettlementAsset),
 		underlying: IDL.Opt(IDL.Text),
 		search_term: IDL.Opt(IDL.Text),
 		oracle_source: IDL.Opt(IDL.Text)

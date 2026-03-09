@@ -27,6 +27,46 @@
 				}
 			}
 		},
+		"minter": {
+			"type": "custom",
+			"build": "scripts/build.icdc.minter.sh",
+			"candid": "target/icdc/minter.did",
+			"wasm": "target/icdc/minter.wasm",
+			"init_arg_file": "target/icdc/minter.args.did",
+			"specified_id": "5tgiv-oaaaa-aaaaj-qqwwq-cai",
+			"remote": {
+				"id": {
+					"staging": "5tgiv-oaaaa-aaaaj-qqwwq-cai"
+				}
+			}
+		},
+		"ledger": {
+			"type": "custom",
+			"build": "scripts/build.icdc.ledger.sh",
+			"candid": "target/icdc/ledger.did",
+			"wasm": "target/icdc/ledger.wasm",
+			"init_arg_file": "target/icdc/ledger.args.did",
+			"specified_id": "5uhob-dyaaa-aaaaj-qqwwa-cai",
+			"remote": {
+				"id": {
+					"staging": "5uhob-dyaaa-aaaaj-qqwwa-cai"
+				}
+			}
+		},
+		"index": {
+			"dependencies": ["ledger"],
+			"type": "custom",
+			"build": "scripts/build.icdc.index.sh",
+			"candid": "target/icdc/index.did",
+			"wasm": "target/icdc/index.wasm",
+			"init_arg_file": "target/icdc/index.args.did",
+			"specified_id": "5ba7m-cqaaa-aaaaj-qqwvq-cai",
+			"remote": {
+				"id": {
+					"staging": "5ba7m-cqaaa-aaaaj-qqwvq-cai"
+				}
+			}
+		},
 		"cketh_minter": {
 			"type": "custom",
 			"build": "scripts/build.cketh_minter.sh",

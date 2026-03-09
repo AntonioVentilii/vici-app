@@ -8,6 +8,7 @@ import type { CreateCanisterOptions } from '$lib/types/canister';
 import {
 	Canister,
 	createServices,
+	fromNullable,
 	jsonReplacer,
 	type QueryParams,
 	toNullable
@@ -49,7 +50,7 @@ export class RegistryCanister extends Canister<RegistryService> {
 		const { get_series } = this.caller(queryParams);
 		const result = await get_series(seriesId);
 
-		return result[0];
+		return fromNullable(result);
 	};
 
 	listSeries = async (queryParams: QueryParams): Promise<RegistryDid.Series[]> => {

@@ -8,37 +8,37 @@ set -euo pipefail
 DATA_FILE="scripts/data/markets.json"
 
 if [ ! -f "$DATA_FILE" ]; then
-    echo "Error: $DATA_FILE not found."
-    exit 1
+  echo "Error: $DATA_FILE not found."
+  exit 1
 fi
 
 # Function to slugify title
 slugify() {
-    printf '%s' "$1" \
-        | tr '[:upper:]' '[:lower:]' \
-        | sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'
+  printf '%s' "$1" |
+    tr '[:upper:]' '[:lower:]' |
+    sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'
 }
 
 echo "Starting registry initialization..."
 
 length=$(jq '. | length' "$DATA_FILE")
 
-for (( i=0; i<$length; i++ )); do
-    market=$(jq -c ".[$i]" "$DATA_FILE")
+for ((i = 0; i < $length; i++)); do
+  market=$(jq -c ".[$i]" "$DATA_FILE")
 
-    title=$(jq -r '.title' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
-    description=$(jq -r '.description' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  title=$(jq -r '.title' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
+  description=$(jq -r '.description' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
-    expiration_iso=$(echo "$market" | jq -r '.expiration')
+  expiration_iso=$(echo "$market" | jq -r '.expiration')
 
-    underlying=$(slugify "$title")
+  underlying=$(slugify "$title")
 
-    expiration_seconds=$(date -j -f "%Y-%m-%dT%H:%M:%S.000Z" "$expiration_iso" "+%s" 2>/dev/null || date -d "$expiration_iso" "+%s")
-    expiration_ns=$((expiration_seconds * 1000000000))
+  expiration_seconds=$(date -j -f "%Y-%m-%dT%H:%M:%S.000Z" "$expiration_iso" "+%s" 2>/dev/null || date -d "$expiration_iso" "+%s")
+  expiration_ns=$((expiration_seconds * 1000000000))
 
-    echo "Adding market: $title ($underlying)"
+  echo "Adding market: $title ($underlying)"
 
-    dfx canister call --network local registry add_series "(record {
+  dfx canister call --network local registry add_series "(record {
         title = \"$title\";
         description = record { plain = \"$description\"; html = null; markdown = null };
         expiry_ns = $expiration_ns;
@@ -46,7 +46,7 @@ for (( i=0; i<$length; i++ )); do
         strike = null;
         price_precision = 8 : nat8;
         payoff_type = variant { Binary };
-        settlement_asset = variant { Icp };
+        payout_unit = variant { Crypto = variant { Icp } };
         oracle_source = \"Manual\";
     })"
 done

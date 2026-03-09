@@ -68,7 +68,7 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 	// In a real app, we'd fetch trade history and settlement results.
 	// For now, we derive some "stats" from open positions and mock history.
 	totalTrades = positions.length;
-	pnl = positions.reduce((acc, [_, pos]) => acc + Number(pos.locked_collateral), 0) / 1e8;
+	pnl = positions.reduce((acc, [_, pos]) => acc + Number(pos.reserved_margin_usd), 0) / 1e8;
 	wins = Math.floor(totalTrades * 0.6); // Mock 60% win rate
 
 	const profile = await getProfile(principal);

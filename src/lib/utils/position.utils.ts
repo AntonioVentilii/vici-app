@@ -4,7 +4,7 @@ import type { Position } from '$lib/types/position';
 import { parseMarketId } from '$lib/validation/market.validation';
 
 export const mapPositionData = ([id, position]: [string, ClearingDid.Position]): Position => {
-	const { user, net_qty: qty, locked_collateral: locked } = position;
+	const { user, net_qty: qty, reserved_margin_usd: locked } = position;
 
 	return {
 		marketId: parseMarketId(id),

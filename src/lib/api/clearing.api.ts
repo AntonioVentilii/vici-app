@@ -38,15 +38,15 @@ export const submitMatchedTrade = async ({
 	return await submitMatchedTrade(rest);
 };
 
-export const getMarginAccount = async ({
+export const getAccountState = async ({
 	identity,
 	...rest
 }: {
 	identity: Identity;
-	params: ClearingDid.GetMarginAccountParams;
-} & QueryParams): Promise<ClearingDid.MarginAccount> => {
-	const { getMarginAccount } = await clearingCanister({ identity });
-	return await getMarginAccount(rest);
+	params: ClearingDid.GetAccountStateParams;
+} & QueryParams): Promise<ClearingDid.AccountState> => {
+	const { getAccountState } = await clearingCanister({ identity });
+	return await getAccountState(rest);
 };
 
 export const getPositions = async ({

@@ -5,7 +5,13 @@ import {
 	type ClearingService
 } from '$declarations';
 import type { CreateCanisterOptions } from '$lib/types/canister';
-import { Canister, createServices, jsonReplacer, type QueryParams } from '@dfinity/utils';
+import {
+	Canister,
+	createServices,
+	fromNullable,
+	jsonReplacer,
+	type QueryParams
+} from '@dfinity/utils';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export class ClearingCanister extends Canister<ClearingService> {
@@ -67,31 +73,31 @@ export class ClearingCanister extends Canister<ClearingService> {
 		throw new Error(`Failed to submit matched trade: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
-	getMarginAccount = async ({
+	getAccountState = async ({
 		params,
 		...queryParams
 	}: {
-		params: ClearingDid.GetMarginAccountParams;
-	} & QueryParams): Promise<ClearingDid.MarginAccount> => {
-		const { get_margin_account } = this.caller(queryParams);
-		const result = await get_margin_account(params);
+		params: ClearingDid.GetAccountStateParams;
+	} & QueryParams): Promise<ClearingDid.AccountState> => {
+		const { get_account_state } = this.caller(queryParams);
+		const result = await get_account_state(params);
 
 		if ('Ok' in result) {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to get margin account: ${JSON.stringify(result.Err, jsonReplacer)}`);
+		throw new Error(`Failed to get account state: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
-	getMarginAccountQuery = async (queryParams: QueryParams): Promise<ClearingDid.MarginAccount> => {
-		const { get_margin_account_query } = this.caller(queryParams);
-		const result = await get_margin_account_query();
+	getAccountStateQuery = async (queryParams: QueryParams): Promise<ClearingDid.AccountState> => {
+		const { get_account_state_query } = this.caller(queryParams);
+		const result = await get_account_state_query();
 
 		if ('Ok' in result) {
 			return result.Ok;
 		}
 
-		throw new Error(`Failed to query margin account: ${JSON.stringify(result.Err, jsonReplacer)}`);
+		throw new Error(`Failed to query account state: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
 	getPosition = async ({
@@ -103,7 +109,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 		const { get_position } = this.caller(queryParams);
 		const result = await get_position(params);
 
-		return result[0];
+		return fromNullable(result);
 	};
 
 	getPositions = async (queryParams: QueryParams): Promise<[string, ClearingDid.Position][]> => {
@@ -133,7 +139,12 @@ export class ClearingCanister extends Canister<ClearingService> {
 		params: ClearingDid.SettleSeriesParams;
 	} & QueryParams): Promise<void> => {
 		const { settle_series } = this.caller(queryParams);
-		const result = await settle_series(params);
+
+		let result = await settle_series(params);
+
+		while ('Processing' in result) {
+			result = await settle_series(params);
+		}
 
 		if ('Ok' in result) {
 			return;
@@ -169,7 +180,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 		const { freeze_position_for_transfer } = this.caller(queryParams);
 		const result = await freeze_position_for_transfer(params);
 
-		return result[0];
+		return fromNullable(result);
 	};
 
 	submitLimitOrder = async ({

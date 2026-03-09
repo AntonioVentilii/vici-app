@@ -8,12 +8,22 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const DecimalValue = IDL.Record({
+	decimals: IDL.Nat8,
+	value: IDL.Nat
+});
+export const Price = IDL.Record({
+	timestamp: IDL.Opt(IDL.Nat64),
+	oracle_id: IDL.Opt(IDL.Text),
+	decimal: DecimalValue
+});
 export const PositionProof = IDL.Record({
 	qty: IDL.Int,
 	signature: IDL.Vec(IDL.Nat8),
 	series_id: IDL.Text,
 	user: IDL.Principal,
 	transfer_id: IDL.Text,
+	valuation_price: IDL.Opt(Price),
 	clearing_id: IDL.Principal
 });
 export const CommonError = IDL.Variant({
@@ -38,38 +48,17 @@ export const AcceptPositionTransferResult = IDL.Variant({
 	Ok: IDL.Bool,
 	Err: TradeError
 });
-export const ErcToken = IDL.Record({
-	decimals: IDL.Nat8,
-	token_address: IDL.Text,
-	chain_id: IDL.Nat64
+export const CancelFundWithdrawalParams = IDL.Record({
+	request_id: IDL.Text
 });
-export const NativeEvmAsset = IDL.Record({
-	decimals: IDL.Nat8,
-	chain_id: IDL.Nat64
+export const CancelFundWithdrawalError = IDL.Variant({
+	PlanNotFound: IDL.Null,
+	InvalidPlanStatus: IDL.Null,
+	Common: CommonError
 });
-export const Asset = IDL.Variant({
-	Erc20: ErcToken,
-	Icrc: IDL.Principal,
-	NativeEvm: NativeEvmAsset
-});
-export const BlockCollateralParams = IDL.Record({
-	asset: Asset,
-	amount: IDL.Nat
-});
-export const BlockingError = IDL.Variant({
-	InsufficientAvailableBalance: IDL.Record({
-		requested: IDL.Nat,
-		available: IDL.Nat
-	}),
-	MathOverflow: IDL.Null,
-	InsufficientReservedBalance: IDL.Record({
-		requested: IDL.Nat,
-		reserved: IDL.Nat
-	})
-});
-export const BlockCollateralResult = IDL.Variant({
+export const CancelFundWithdrawalResult = IDL.Variant({
 	Ok: IDL.Null,
-	Err: BlockingError
+	Err: CancelFundWithdrawalError
 });
 export const CancelLimitOrderParams = IDL.Record({ order_id: IDL.Text });
 export const SubmitMatchedTradeResult = IDL.Variant({
@@ -78,7 +67,7 @@ export const SubmitMatchedTradeResult = IDL.Variant({
 });
 export const DepositCollateralParams = IDL.Record({
 	deposit_id: IDL.Text,
-	asset: Asset,
+	asset_id: IDL.Text,
 	amount: IDL.Nat
 });
 export const AssetError = IDL.Variant({
@@ -88,6 +77,7 @@ export const AssetError = IDL.Variant({
 		required: IDL.Nat
 	}),
 	MathOverflow: IDL.Null,
+	InvalidAssetId: IDL.Text,
 	CallError: IDL.Record({
 		method: IDL.Text,
 		code: IDL.Int32,
@@ -107,44 +97,36 @@ export const DepositCollateralResult = IDL.Variant({
 export const FreezePositionForTransferParams = IDL.Record({
 	series_id: IDL.Text,
 	user: IDL.Principal,
-	transfer_id: IDL.Text
+	transfer_id: IDL.Text,
+	valuation_price: IDL.Opt(Price)
 });
-export const GetFundsResult = IDL.Record({
-	insurance_fund: IDL.Vec(IDL.Tuple(Asset, IDL.Nat)),
-	treasury: IDL.Vec(IDL.Tuple(Asset, IDL.Nat))
-});
-export const GetMarginAccountParams = IDL.Record({
+export const GetAccountStateParams = IDL.Record({
 	refresh: IDL.Opt(IDL.Bool)
 });
-export const MarginAccount = IDL.Record({
-	required_margin: IDL.Nat,
-	reserved_balances: IDL.Vec(IDL.Tuple(Asset, IDL.Nat)),
+export const AccountState = IDL.Record({
 	user: IDL.Principal,
-	balances: IDL.Vec(IDL.Tuple(Asset, IDL.Nat))
+	cash_balance_usd: IDL.Int,
+	reserved_margin_usd: IDL.Nat,
+	collateral_balances: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))
 });
-export const MarginAccountError = IDL.Variant({
-	NoMarginAccountFound: IDL.Null,
+export const AccountStateError = IDL.Variant({
 	MathOverflow: IDL.Null,
-	Asset: AssetError
+	Asset: AssetError,
+	NoAccountStateFound: IDL.Null
 });
-export const GetMarginAccountResult = IDL.Variant({
-	Ok: MarginAccount,
-	Err: MarginAccountError
+export const GetAccountStateResult = IDL.Variant({
+	Ok: AccountState,
+	Err: AccountStateError
+});
+export const GetFundsResult = IDL.Record({
+	insurance_fund: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)),
+	treasury: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))
 });
 export const Side = IDL.Variant({ Buy: IDL.Null, Sell: IDL.Null });
-export const DecimalValue = IDL.Record({
-	decimals: IDL.Nat8,
-	value: IDL.Nat
-});
-export const Price = IDL.Record({
-	timestamp: IDL.Opt(IDL.Nat64),
-	oracle_id: IDL.Opt(IDL.Text),
-	decimal: DecimalValue
-});
 export const LimitOrder = IDL.Record({
 	qty: IDL.Int,
 	creator: IDL.Principal,
-	block_index: IDL.Nat,
+	blocked_margin_usd: IDL.Nat,
 	series_id: IDL.Text,
 	side: Side,
 	order_id: IDL.Text,
@@ -155,7 +137,44 @@ export const Position = IDL.Record({
 	series_id: IDL.Text,
 	net_qty: IDL.Int,
 	user: IDL.Principal,
-	locked_collateral: IDL.Nat
+	reserved_margin_usd: IDL.Nat
+});
+export const PlanStatus = IDL.Variant({
+	Finalised: IDL.Null,
+	Planned: IDL.Null,
+	Executing: IDL.Null
+});
+export const PaymentIdempotency = IDL.Variant({
+	IcrcCreatedAtTimeNs: IDL.Nat64
+});
+export const SettlementPosition = IDL.Record({
+	net_qty: IDL.Int,
+	user: IDL.Principal,
+	reserved_margin_usd: IDL.Nat,
+	cashflow_usd: IDL.Int
+});
+export const SettlementPlan = IDL.Record({
+	status: PlanStatus,
+	idempotency_ns: PaymentIdempotency,
+	series_id: IDL.Text,
+	fee_usd: IDL.Nat,
+	accounting_cursor: IDL.Nat64,
+	insurance_fee_usd: IDL.Nat,
+	positions: IDL.Vec(SettlementPosition),
+	accounting_applied: IDL.Bool,
+	oracle_source: IDL.Text,
+	settlement_price: Price
+});
+export const SettlementStatusView = IDL.Record({
+	status: PlanStatus,
+	series_id: IDL.Text,
+	fee_usd: IDL.Nat,
+	accounting_cursor: IDL.Nat64,
+	insurance_fee_usd: IDL.Nat,
+	accounting_applied: IDL.Bool,
+	oracle_source: IDL.Text,
+	settlement_price: Price,
+	total_positions: IDL.Nat64
 });
 export const EventType = IDL.Variant({
 	OrderPlaced: IDL.Null,
@@ -184,24 +203,52 @@ export const HttpResponse = IDL.Record({
 	headers: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
 	status_code: IDL.Nat16
 });
+export const ErcToken = IDL.Record({
+	decimals: IDL.Nat8,
+	token_address: IDL.Text,
+	chain_id: IDL.Nat64
+});
+export const NativeEvmAsset = IDL.Record({
+	decimals: IDL.Nat8,
+	chain_id: IDL.Nat64
+});
+export const Asset = IDL.Variant({
+	Erc20: ErcToken,
+	Icrc: IDL.Principal,
+	NativeEvm: NativeEvmAsset
+});
+export const CollateralAssetConfig = IDL.Record({
+	decimals: IDL.Nat8,
+	asset: Asset,
+	is_enabled: IDL.Bool,
+	oracle_id: IDL.Opt(IDL.Text),
+	asset_id: IDL.Text,
+	symbol: IDL.Text
+});
 export const ListOrdersParams = IDL.Record({ series_id: IDL.Opt(IDL.Text) });
 export const PayoffType = IDL.Variant({
 	Put: IDL.Null,
 	Binary: IDL.Null,
 	Call: IDL.Null
 });
-export const Chain = IDL.Variant({
-	Bsc: IDL.Null,
-	Base: IDL.Null,
-	Ethereum: IDL.Null,
-	Polygon: IDL.Null
+export const FiatUnit = IDL.Variant({
+	Chf: IDL.Null,
+	Eur: IDL.Null,
+	Gbp: IDL.Null,
+	Usd: IDL.Null
 });
-export const SettlementAsset = IDL.Variant({
+export const CanonicalCryptoUnit = IDL.Variant({
+	Btc: IDL.Null,
+	Eth: IDL.Null,
 	Icp: IDL.Null,
-	Usdc: Chain,
-	Usdt: Chain,
-	Native: Chain,
-	CkUsdc: IDL.Null
+	Usdc: IDL.Null,
+	Usdt: IDL.Null
+});
+export const NonMonetaryUnit = IDL.Variant({ Points: IDL.Null });
+export const PayoutUnit = IDL.Variant({
+	Fiat: FiatUnit,
+	Crypto: CanonicalCryptoUnit,
+	NonMonetary: NonMonetaryUnit
 });
 export const Description = IDL.Record({
 	html: IDL.Opt(IDL.Text),
@@ -213,37 +260,36 @@ export const Series = IDL.Record({
 	strike: IDL.Opt(Price),
 	creator: IDL.Principal,
 	payoff_type: PayoffType,
+	payout_unit: PayoutUnit,
 	expiry_ns: IDL.Nat64,
 	series_id: IDL.Text,
-	settlement_asset: SettlementAsset,
 	underlying: IDL.Text,
 	description: Description,
 	created_at_ns: IDL.Nat64,
 	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
 });
-export const SettleSeriesParams = IDL.Record({
-	series_id: IDL.Text,
-	settlement_price: Price
-});
 export const SettlementError = IDL.Variant({
-	InsufficientInternalBalance: IDL.Record({
-		balance: IDL.Nat,
-		user: IDL.Principal,
-		required: IDL.Nat
+	InconsistentSettlementPrice: IDL.Record({
+		requested: Price,
+		existing: Price
 	}),
-	UnsupportedSettlementAsset: IDL.Null,
 	MathOverflow: IDL.Null,
 	SolvencyViolation: IDL.Record({
-		total_payoff: IDL.Nat,
-		total_collateral: IDL.Nat
+		total_net_payoff: IDL.Nat,
+		total_collateral_usd: IDL.Nat
 	}),
 	Asset: AssetError,
 	Common: CommonError
 });
 export const SettleSeriesResult = IDL.Variant({
 	Ok: IDL.Null,
-	Err: SettlementError
+	Err: SettlementError,
+	Processing: IDL.Null
+});
+export const SettleSeriesParams = IDL.Record({
+	series_id: IDL.Text,
+	settlement_price: Price
 });
 export const Stats = IDL.Record({
 	total_users: IDL.Nat64,
@@ -275,14 +321,44 @@ export const SubmitMatchedTradeParams = IDL.Record({
 	price: Price,
 	seller_unblock_amount: IDL.Opt(IDL.Nat)
 });
-export const ClearingConfig = IDL.Record({
+export const AssetMetrics = IDL.Record({
+	haircut_bps: IDL.Nat16,
+	latest_transfer_fee: IDL.Opt(IDL.Nat),
+	insurance_fee_ratio: IDL.Opt(IDL.Nat16),
+	last_updated_ns: IDL.Opt(IDL.Nat64),
+	protocol_fee_ratio: IDL.Opt(IDL.Nat16),
+	price_usd: DecimalValue
+});
+export const UpdateAssetMetricsParams = IDL.Record({
+	metrics: AssetMetrics,
+	asset_id: IDL.Text
+});
+export const UpdateAssetPriceParams = IDL.Record({
+	price: Price,
+	asset_id: IDL.Text
+});
+export const UpdateAssetPriceError = IDL.Variant({
+	AssetNotFound: IDL.Null,
+	AssetMetricsNotInitialized: IDL.Null,
+	OracleNotConfigured: IDL.Null,
+	Common: CommonError
+});
+export const UpdateAssetPriceResult = IDL.Variant({
+	Ok: IDL.Null,
+	Err: UpdateAssetPriceError
+});
+export const UpdateCollateralAssetParams = IDL.Record({
+	config: CollateralAssetConfig
+});
+export const Config = IDL.Record({
 	insurance_fund_fee_ratio: IDL.Nat16,
 	signer_canister: IDL.Principal,
-	evm_rpc: IDL.Principal
+	evm_rpc: IDL.Principal,
+	protocol_fee_ratio: IDL.Nat16
 });
 export const WithdrawCollateralParams = IDL.Record({
-	asset: Asset,
 	withdrawal_id: IDL.Text,
+	asset_id: IDL.Text,
 	amount: IDL.Nat
 });
 export const WithdrawCollateralError = IDL.Variant({
@@ -303,59 +379,77 @@ export const FundType = IDL.Variant({
 });
 export const WithdrawFundParams = IDL.Record({
 	to: IDL.Principal,
+	request_id: IDL.Text,
 	fund_type: FundType,
-	asset: Asset,
+	asset_id: IDL.Text,
 	amount: IDL.Nat
 });
-export const AdminError = IDL.Variant({
+export const WithdrawFundError = IDL.Variant({
 	TransferFailed: IDL.Text,
 	InsufficientFunds: IDL.Null,
 	Common: CommonError
 });
-export const AdminResult = IDL.Variant({ Ok: IDL.Nat, Err: AdminError });
+export const WithdrawFundResult = IDL.Variant({
+	Ok: IDL.Nat,
+	Err: WithdrawFundError
+});
 
 export const idlService = IDL.Service({
 	accept_position_transfer: IDL.Func([PositionProof], [AcceptPositionTransferResult], []),
-	block_collateral: IDL.Func([BlockCollateralParams], [BlockCollateralResult], []),
+	cancel_fund_withdrawal: IDL.Func([CancelFundWithdrawalParams], [CancelFundWithdrawalResult], []),
 	cancel_limit_order: IDL.Func([CancelLimitOrderParams], [SubmitMatchedTradeResult], []),
+	debug_get_registry_canister: IDL.Func([], [IDL.Principal], []),
 	deposit_collateral: IDL.Func([DepositCollateralParams], [DepositCollateralResult], []),
 	freeze_position_for_transfer: IDL.Func(
 		[FreezePositionForTransferParams],
 		[IDL.Opt(PositionProof)],
 		[]
 	),
+	get_account_state: IDL.Func([GetAccountStateParams], [GetAccountStateResult], []),
+	get_account_state_query: IDL.Func([], [GetAccountStateResult], []),
 	get_funds: IDL.Func([], [GetFundsResult], []),
-	get_margin_account: IDL.Func([GetMarginAccountParams], [GetMarginAccountResult], []),
-	get_margin_account_query: IDL.Func([], [GetMarginAccountResult], []),
 	get_orders: IDL.Func([], [IDL.Vec(LimitOrder)], []),
 	get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], []),
 	get_positions: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, Position))], []),
+	get_settlement_plan: IDL.Func([IDL.Text], [IDL.Opt(SettlementPlan)], []),
+	get_settlement_status: IDL.Func([IDL.Text], [IDL.Opt(SettlementStatusView)], []),
 	get_trade_history: IDL.Func([], [IDL.Vec(Event)], []),
 	http_request: IDL.Func([HttpRequest], [HttpResponse], []),
+	list_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetConfig)], []),
 	list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], []),
 	list_series: IDL.Func([], [IDL.Vec(Series)], []),
 	metrics: IDL.Func([], [IDL.Text], []),
+	resume_settlement: IDL.Func([IDL.Text], [SettleSeriesResult], []),
 	set_registry_canister: IDL.Func([IDL.Principal], [], []),
 	settle_series: IDL.Func([SettleSeriesParams], [SettleSeriesResult], []),
 	stats: IDL.Func([], [Stats], []),
 	submit_limit_order: IDL.Func([SubmitLimitOrderParams], [SubmitMatchedTradeResult], []),
 	submit_market_order: IDL.Func([SubmitMarketOrderParams], [SubmitMatchedTradeResult], []),
 	submit_matched_trade: IDL.Func([SubmitMatchedTradeParams], [SubmitMatchedTradeResult], []),
-	unblock_collateral: IDL.Func([BlockCollateralParams], [BlockCollateralResult], []),
-	update_config: IDL.Func([ClearingConfig], [], []),
+	update_asset_metrics: IDL.Func([UpdateAssetMetricsParams], [], []),
+	update_asset_price: IDL.Func([UpdateAssetPriceParams], [UpdateAssetPriceResult], []),
+	update_collateral_asset: IDL.Func([UpdateCollateralAssetParams], [], []),
+	update_config: IDL.Func([Config], [], []),
 	withdraw_collateral: IDL.Func([WithdrawCollateralParams], [WithdrawCollateralResult], []),
-	withdraw_fund: IDL.Func([WithdrawFundParams], [AdminResult], [])
+	withdraw_fund: IDL.Func([WithdrawFundParams], [WithdrawFundResult], [])
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+	const DecimalValue = IDL.Record({ decimals: IDL.Nat8, value: IDL.Nat });
+	const Price = IDL.Record({
+		timestamp: IDL.Opt(IDL.Nat64),
+		oracle_id: IDL.Opt(IDL.Text),
+		decimal: DecimalValue
+	});
 	const PositionProof = IDL.Record({
 		qty: IDL.Int,
 		signature: IDL.Vec(IDL.Nat8),
 		series_id: IDL.Text,
 		user: IDL.Principal,
 		transfer_id: IDL.Text,
+		valuation_price: IDL.Opt(Price),
 		clearing_id: IDL.Principal
 	});
 	const CommonError = IDL.Variant({
@@ -380,38 +474,15 @@ export const idlFactory = ({ IDL }) => {
 		Ok: IDL.Bool,
 		Err: TradeError
 	});
-	const ErcToken = IDL.Record({
-		decimals: IDL.Nat8,
-		token_address: IDL.Text,
-		chain_id: IDL.Nat64
+	const CancelFundWithdrawalParams = IDL.Record({ request_id: IDL.Text });
+	const CancelFundWithdrawalError = IDL.Variant({
+		PlanNotFound: IDL.Null,
+		InvalidPlanStatus: IDL.Null,
+		Common: CommonError
 	});
-	const NativeEvmAsset = IDL.Record({
-		decimals: IDL.Nat8,
-		chain_id: IDL.Nat64
-	});
-	const Asset = IDL.Variant({
-		Erc20: ErcToken,
-		Icrc: IDL.Principal,
-		NativeEvm: NativeEvmAsset
-	});
-	const BlockCollateralParams = IDL.Record({
-		asset: Asset,
-		amount: IDL.Nat
-	});
-	const BlockingError = IDL.Variant({
-		InsufficientAvailableBalance: IDL.Record({
-			requested: IDL.Nat,
-			available: IDL.Nat
-		}),
-		MathOverflow: IDL.Null,
-		InsufficientReservedBalance: IDL.Record({
-			requested: IDL.Nat,
-			reserved: IDL.Nat
-		})
-	});
-	const BlockCollateralResult = IDL.Variant({
+	const CancelFundWithdrawalResult = IDL.Variant({
 		Ok: IDL.Null,
-		Err: BlockingError
+		Err: CancelFundWithdrawalError
 	});
 	const CancelLimitOrderParams = IDL.Record({ order_id: IDL.Text });
 	const SubmitMatchedTradeResult = IDL.Variant({
@@ -420,7 +491,7 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const DepositCollateralParams = IDL.Record({
 		deposit_id: IDL.Text,
-		asset: Asset,
+		asset_id: IDL.Text,
 		amount: IDL.Nat
 	});
 	const AssetError = IDL.Variant({
@@ -430,6 +501,7 @@ export const idlFactory = ({ IDL }) => {
 			required: IDL.Nat
 		}),
 		MathOverflow: IDL.Null,
+		InvalidAssetId: IDL.Text,
 		CallError: IDL.Record({
 			method: IDL.Text,
 			code: IDL.Int32,
@@ -449,39 +521,34 @@ export const idlFactory = ({ IDL }) => {
 	const FreezePositionForTransferParams = IDL.Record({
 		series_id: IDL.Text,
 		user: IDL.Principal,
-		transfer_id: IDL.Text
+		transfer_id: IDL.Text,
+		valuation_price: IDL.Opt(Price)
+	});
+	const GetAccountStateParams = IDL.Record({ refresh: IDL.Opt(IDL.Bool) });
+	const AccountState = IDL.Record({
+		user: IDL.Principal,
+		cash_balance_usd: IDL.Int,
+		reserved_margin_usd: IDL.Nat,
+		collateral_balances: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))
+	});
+	const AccountStateError = IDL.Variant({
+		MathOverflow: IDL.Null,
+		Asset: AssetError,
+		NoAccountStateFound: IDL.Null
+	});
+	const GetAccountStateResult = IDL.Variant({
+		Ok: AccountState,
+		Err: AccountStateError
 	});
 	const GetFundsResult = IDL.Record({
-		insurance_fund: IDL.Vec(IDL.Tuple(Asset, IDL.Nat)),
-		treasury: IDL.Vec(IDL.Tuple(Asset, IDL.Nat))
-	});
-	const GetMarginAccountParams = IDL.Record({ refresh: IDL.Opt(IDL.Bool) });
-	const MarginAccount = IDL.Record({
-		required_margin: IDL.Nat,
-		reserved_balances: IDL.Vec(IDL.Tuple(Asset, IDL.Nat)),
-		user: IDL.Principal,
-		balances: IDL.Vec(IDL.Tuple(Asset, IDL.Nat))
-	});
-	const MarginAccountError = IDL.Variant({
-		NoMarginAccountFound: IDL.Null,
-		MathOverflow: IDL.Null,
-		Asset: AssetError
-	});
-	const GetMarginAccountResult = IDL.Variant({
-		Ok: MarginAccount,
-		Err: MarginAccountError
+		insurance_fund: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)),
+		treasury: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))
 	});
 	const Side = IDL.Variant({ Buy: IDL.Null, Sell: IDL.Null });
-	const DecimalValue = IDL.Record({ decimals: IDL.Nat8, value: IDL.Nat });
-	const Price = IDL.Record({
-		timestamp: IDL.Opt(IDL.Nat64),
-		oracle_id: IDL.Opt(IDL.Text),
-		decimal: DecimalValue
-	});
 	const LimitOrder = IDL.Record({
 		qty: IDL.Int,
 		creator: IDL.Principal,
-		block_index: IDL.Nat,
+		blocked_margin_usd: IDL.Nat,
 		series_id: IDL.Text,
 		side: Side,
 		order_id: IDL.Text,
@@ -492,7 +559,42 @@ export const idlFactory = ({ IDL }) => {
 		series_id: IDL.Text,
 		net_qty: IDL.Int,
 		user: IDL.Principal,
-		locked_collateral: IDL.Nat
+		reserved_margin_usd: IDL.Nat
+	});
+	const PlanStatus = IDL.Variant({
+		Finalised: IDL.Null,
+		Planned: IDL.Null,
+		Executing: IDL.Null
+	});
+	const PaymentIdempotency = IDL.Variant({ IcrcCreatedAtTimeNs: IDL.Nat64 });
+	const SettlementPosition = IDL.Record({
+		net_qty: IDL.Int,
+		user: IDL.Principal,
+		reserved_margin_usd: IDL.Nat,
+		cashflow_usd: IDL.Int
+	});
+	const SettlementPlan = IDL.Record({
+		status: PlanStatus,
+		idempotency_ns: PaymentIdempotency,
+		series_id: IDL.Text,
+		fee_usd: IDL.Nat,
+		accounting_cursor: IDL.Nat64,
+		insurance_fee_usd: IDL.Nat,
+		positions: IDL.Vec(SettlementPosition),
+		accounting_applied: IDL.Bool,
+		oracle_source: IDL.Text,
+		settlement_price: Price
+	});
+	const SettlementStatusView = IDL.Record({
+		status: PlanStatus,
+		series_id: IDL.Text,
+		fee_usd: IDL.Nat,
+		accounting_cursor: IDL.Nat64,
+		insurance_fee_usd: IDL.Nat,
+		accounting_applied: IDL.Bool,
+		oracle_source: IDL.Text,
+		settlement_price: Price,
+		total_positions: IDL.Nat64
 	});
 	const EventType = IDL.Variant({
 		OrderPlaced: IDL.Null,
@@ -521,24 +623,52 @@ export const idlFactory = ({ IDL }) => {
 		headers: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
 		status_code: IDL.Nat16
 	});
+	const ErcToken = IDL.Record({
+		decimals: IDL.Nat8,
+		token_address: IDL.Text,
+		chain_id: IDL.Nat64
+	});
+	const NativeEvmAsset = IDL.Record({
+		decimals: IDL.Nat8,
+		chain_id: IDL.Nat64
+	});
+	const Asset = IDL.Variant({
+		Erc20: ErcToken,
+		Icrc: IDL.Principal,
+		NativeEvm: NativeEvmAsset
+	});
+	const CollateralAssetConfig = IDL.Record({
+		decimals: IDL.Nat8,
+		asset: Asset,
+		is_enabled: IDL.Bool,
+		oracle_id: IDL.Opt(IDL.Text),
+		asset_id: IDL.Text,
+		symbol: IDL.Text
+	});
 	const ListOrdersParams = IDL.Record({ series_id: IDL.Opt(IDL.Text) });
 	const PayoffType = IDL.Variant({
 		Put: IDL.Null,
 		Binary: IDL.Null,
 		Call: IDL.Null
 	});
-	const Chain = IDL.Variant({
-		Bsc: IDL.Null,
-		Base: IDL.Null,
-		Ethereum: IDL.Null,
-		Polygon: IDL.Null
+	const FiatUnit = IDL.Variant({
+		Chf: IDL.Null,
+		Eur: IDL.Null,
+		Gbp: IDL.Null,
+		Usd: IDL.Null
 	});
-	const SettlementAsset = IDL.Variant({
+	const CanonicalCryptoUnit = IDL.Variant({
+		Btc: IDL.Null,
+		Eth: IDL.Null,
 		Icp: IDL.Null,
-		Usdc: Chain,
-		Usdt: Chain,
-		Native: Chain,
-		CkUsdc: IDL.Null
+		Usdc: IDL.Null,
+		Usdt: IDL.Null
+	});
+	const NonMonetaryUnit = IDL.Variant({ Points: IDL.Null });
+	const PayoutUnit = IDL.Variant({
+		Fiat: FiatUnit,
+		Crypto: CanonicalCryptoUnit,
+		NonMonetary: NonMonetaryUnit
 	});
 	const Description = IDL.Record({
 		html: IDL.Opt(IDL.Text),
@@ -550,37 +680,36 @@ export const idlFactory = ({ IDL }) => {
 		strike: IDL.Opt(Price),
 		creator: IDL.Principal,
 		payoff_type: PayoffType,
+		payout_unit: PayoutUnit,
 		expiry_ns: IDL.Nat64,
 		series_id: IDL.Text,
-		settlement_asset: SettlementAsset,
 		underlying: IDL.Text,
 		description: Description,
 		created_at_ns: IDL.Nat64,
 		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text
 	});
-	const SettleSeriesParams = IDL.Record({
-		series_id: IDL.Text,
-		settlement_price: Price
-	});
 	const SettlementError = IDL.Variant({
-		InsufficientInternalBalance: IDL.Record({
-			balance: IDL.Nat,
-			user: IDL.Principal,
-			required: IDL.Nat
+		InconsistentSettlementPrice: IDL.Record({
+			requested: Price,
+			existing: Price
 		}),
-		UnsupportedSettlementAsset: IDL.Null,
 		MathOverflow: IDL.Null,
 		SolvencyViolation: IDL.Record({
-			total_payoff: IDL.Nat,
-			total_collateral: IDL.Nat
+			total_net_payoff: IDL.Nat,
+			total_collateral_usd: IDL.Nat
 		}),
 		Asset: AssetError,
 		Common: CommonError
 	});
 	const SettleSeriesResult = IDL.Variant({
 		Ok: IDL.Null,
-		Err: SettlementError
+		Err: SettlementError,
+		Processing: IDL.Null
+	});
+	const SettleSeriesParams = IDL.Record({
+		series_id: IDL.Text,
+		settlement_price: Price
 	});
 	const Stats = IDL.Record({
 		total_users: IDL.Nat64,
@@ -612,14 +741,44 @@ export const idlFactory = ({ IDL }) => {
 		price: Price,
 		seller_unblock_amount: IDL.Opt(IDL.Nat)
 	});
-	const ClearingConfig = IDL.Record({
+	const AssetMetrics = IDL.Record({
+		haircut_bps: IDL.Nat16,
+		latest_transfer_fee: IDL.Opt(IDL.Nat),
+		insurance_fee_ratio: IDL.Opt(IDL.Nat16),
+		last_updated_ns: IDL.Opt(IDL.Nat64),
+		protocol_fee_ratio: IDL.Opt(IDL.Nat16),
+		price_usd: DecimalValue
+	});
+	const UpdateAssetMetricsParams = IDL.Record({
+		metrics: AssetMetrics,
+		asset_id: IDL.Text
+	});
+	const UpdateAssetPriceParams = IDL.Record({
+		price: Price,
+		asset_id: IDL.Text
+	});
+	const UpdateAssetPriceError = IDL.Variant({
+		AssetNotFound: IDL.Null,
+		AssetMetricsNotInitialized: IDL.Null,
+		OracleNotConfigured: IDL.Null,
+		Common: CommonError
+	});
+	const UpdateAssetPriceResult = IDL.Variant({
+		Ok: IDL.Null,
+		Err: UpdateAssetPriceError
+	});
+	const UpdateCollateralAssetParams = IDL.Record({
+		config: CollateralAssetConfig
+	});
+	const Config = IDL.Record({
 		insurance_fund_fee_ratio: IDL.Nat16,
 		signer_canister: IDL.Principal,
-		evm_rpc: IDL.Principal
+		evm_rpc: IDL.Principal,
+		protocol_fee_ratio: IDL.Nat16
 	});
 	const WithdrawCollateralParams = IDL.Record({
-		asset: Asset,
 		withdrawal_id: IDL.Text,
+		asset_id: IDL.Text,
 		amount: IDL.Nat
 	});
 	const WithdrawCollateralError = IDL.Variant({
@@ -640,48 +799,63 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const WithdrawFundParams = IDL.Record({
 		to: IDL.Principal,
+		request_id: IDL.Text,
 		fund_type: FundType,
-		asset: Asset,
+		asset_id: IDL.Text,
 		amount: IDL.Nat
 	});
-	const AdminError = IDL.Variant({
+	const WithdrawFundError = IDL.Variant({
 		TransferFailed: IDL.Text,
 		InsufficientFunds: IDL.Null,
 		Common: CommonError
 	});
-	const AdminResult = IDL.Variant({ Ok: IDL.Nat, Err: AdminError });
+	const WithdrawFundResult = IDL.Variant({
+		Ok: IDL.Nat,
+		Err: WithdrawFundError
+	});
 
 	return IDL.Service({
 		accept_position_transfer: IDL.Func([PositionProof], [AcceptPositionTransferResult], []),
-		block_collateral: IDL.Func([BlockCollateralParams], [BlockCollateralResult], []),
+		cancel_fund_withdrawal: IDL.Func(
+			[CancelFundWithdrawalParams],
+			[CancelFundWithdrawalResult],
+			[]
+		),
 		cancel_limit_order: IDL.Func([CancelLimitOrderParams], [SubmitMatchedTradeResult], []),
+		debug_get_registry_canister: IDL.Func([], [IDL.Principal], []),
 		deposit_collateral: IDL.Func([DepositCollateralParams], [DepositCollateralResult], []),
 		freeze_position_for_transfer: IDL.Func(
 			[FreezePositionForTransferParams],
 			[IDL.Opt(PositionProof)],
 			[]
 		),
+		get_account_state: IDL.Func([GetAccountStateParams], [GetAccountStateResult], []),
+		get_account_state_query: IDL.Func([], [GetAccountStateResult], []),
 		get_funds: IDL.Func([], [GetFundsResult], []),
-		get_margin_account: IDL.Func([GetMarginAccountParams], [GetMarginAccountResult], []),
-		get_margin_account_query: IDL.Func([], [GetMarginAccountResult], []),
 		get_orders: IDL.Func([], [IDL.Vec(LimitOrder)], []),
 		get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], []),
 		get_positions: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, Position))], []),
+		get_settlement_plan: IDL.Func([IDL.Text], [IDL.Opt(SettlementPlan)], []),
+		get_settlement_status: IDL.Func([IDL.Text], [IDL.Opt(SettlementStatusView)], []),
 		get_trade_history: IDL.Func([], [IDL.Vec(Event)], []),
 		http_request: IDL.Func([HttpRequest], [HttpResponse], []),
+		list_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetConfig)], []),
 		list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], []),
 		list_series: IDL.Func([], [IDL.Vec(Series)], []),
 		metrics: IDL.Func([], [IDL.Text], []),
+		resume_settlement: IDL.Func([IDL.Text], [SettleSeriesResult], []),
 		set_registry_canister: IDL.Func([IDL.Principal], [], []),
 		settle_series: IDL.Func([SettleSeriesParams], [SettleSeriesResult], []),
 		stats: IDL.Func([], [Stats], []),
 		submit_limit_order: IDL.Func([SubmitLimitOrderParams], [SubmitMatchedTradeResult], []),
 		submit_market_order: IDL.Func([SubmitMarketOrderParams], [SubmitMatchedTradeResult], []),
 		submit_matched_trade: IDL.Func([SubmitMatchedTradeParams], [SubmitMatchedTradeResult], []),
-		unblock_collateral: IDL.Func([BlockCollateralParams], [BlockCollateralResult], []),
-		update_config: IDL.Func([ClearingConfig], [], []),
+		update_asset_metrics: IDL.Func([UpdateAssetMetricsParams], [], []),
+		update_asset_price: IDL.Func([UpdateAssetPriceParams], [UpdateAssetPriceResult], []),
+		update_collateral_asset: IDL.Func([UpdateCollateralAssetParams], [], []),
+		update_config: IDL.Func([Config], [], []),
 		withdraw_collateral: IDL.Func([WithdrawCollateralParams], [WithdrawCollateralResult], []),
-		withdraw_fund: IDL.Func([WithdrawFundParams], [AdminResult], [])
+		withdraw_fund: IDL.Func([WithdrawFundParams], [WithdrawFundResult], [])
 	});
 };
 

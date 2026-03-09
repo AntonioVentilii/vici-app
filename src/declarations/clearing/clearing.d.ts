@@ -11,52 +11,69 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export type AcceptPositionTransferResult = { Ok: boolean } | { Err: TradeError };
-export type AdminError =
-	| { TransferFailed: string }
-	| { InsufficientFunds: null }
-	| { Common: CommonError };
-export type AdminResult = { Ok: bigint } | { Err: AdminError };
+export interface AccountState {
+	user: Principal;
+	cash_balance_usd: bigint;
+	reserved_margin_usd: bigint;
+	collateral_balances: Array<[string, bigint]>;
+}
+export type AccountStateError =
+	| { MathOverflow: null }
+	| { Asset: AssetError }
+	| { NoAccountStateFound: null };
 export type Asset = { Erc20: ErcToken } | { Icrc: Principal } | { NativeEvm: NativeEvmAsset };
 export type AssetError =
 	| { TransferError: string }
 	| { InsufficientBalance: { balance: bigint; required: bigint } }
 	| { MathOverflow: null }
+	| { InvalidAssetId: string }
 	| { CallError: { method: string; code: number; message: string } }
 	| { InvalidAssetForHandler: null }
 	| { UnsupportedAsset: null };
-export interface BlockCollateralParams {
-	asset: Asset;
-	amount: bigint;
+export interface AssetMetrics {
+	haircut_bps: number;
+	latest_transfer_fee: [] | [bigint];
+	insurance_fee_ratio: [] | [number];
+	last_updated_ns: [] | [bigint];
+	protocol_fee_ratio: [] | [number];
+	price_usd: DecimalValue;
 }
-export type BlockCollateralResult = { Ok: null } | { Err: BlockingError };
-export type BlockingError =
-	| {
-			InsufficientAvailableBalance: {
-				requested: bigint;
-				available: bigint;
-			};
-	  }
-	| { MathOverflow: null }
-	| {
-			InsufficientReservedBalance: {
-				requested: bigint;
-				reserved: bigint;
-			};
-	  };
+export type CancelFundWithdrawalError =
+	| { PlanNotFound: null }
+	| { InvalidPlanStatus: null }
+	| { Common: CommonError };
+export interface CancelFundWithdrawalParams {
+	request_id: string;
+}
+export type CancelFundWithdrawalResult = { Ok: null } | { Err: CancelFundWithdrawalError };
 export interface CancelLimitOrderParams {
 	order_id: string;
 }
-export type Chain = { Bsc: null } | { Base: null } | { Ethereum: null } | { Polygon: null };
-export interface ClearingConfig {
-	insurance_fund_fee_ratio: number;
-	signer_canister: Principal;
-	evm_rpc: Principal;
+export type CanonicalCryptoUnit =
+	| { Btc: null }
+	| { Eth: null }
+	| { Icp: null }
+	| { Usdc: null }
+	| { Usdt: null };
+export interface CollateralAssetConfig {
+	decimals: number;
+	asset: Asset;
+	is_enabled: boolean;
+	oracle_id: [] | [string];
+	asset_id: string;
+	symbol: string;
 }
 export type CommonError =
 	| { Internal: string }
 	| { MathOverflow: null }
 	| { Unauthorized: null }
 	| { RegistryNotSet: null };
+export interface Config {
+	insurance_fund_fee_ratio: number;
+	signer_canister: Principal;
+	evm_rpc: Principal;
+	protocol_fee_ratio: number;
+}
 export interface DecimalValue {
 	decimals: number;
 	value: bigint;
@@ -64,7 +81,7 @@ export interface DecimalValue {
 export type DepositCollateralError = { MathOverflow: null } | { Asset: AssetError };
 export interface DepositCollateralParams {
 	deposit_id: string;
-	asset: Asset;
+	asset_id: string;
 	amount: bigint;
 }
 export type DepositCollateralResult = { Ok: null } | { Err: DepositCollateralError };
@@ -93,20 +110,22 @@ export type EventType =
 	| { Executed: null }
 	| { Liquidated: null }
 	| { Settled: null };
+export type FiatUnit = { Chf: null } | { Eur: null } | { Gbp: null } | { Usd: null };
 export interface FreezePositionForTransferParams {
 	series_id: string;
 	user: Principal;
 	transfer_id: string;
+	valuation_price: [] | [Price];
 }
 export type FundType = { Insurance: null } | { Treasury: null };
-export interface GetFundsResult {
-	insurance_fund: Array<[Asset, bigint]>;
-	treasury: Array<[Asset, bigint]>;
-}
-export interface GetMarginAccountParams {
+export interface GetAccountStateParams {
 	refresh: [] | [boolean];
 }
-export type GetMarginAccountResult = { Ok: MarginAccount } | { Err: MarginAccountError };
+export type GetAccountStateResult = { Ok: AccountState } | { Err: AccountStateError };
+export interface GetFundsResult {
+	insurance_fund: Array<[string, bigint]>;
+	treasury: Array<[string, bigint]>;
+}
 export interface GetPositionParams {
 	series_id: string;
 }
@@ -124,7 +143,7 @@ export interface HttpResponse {
 export interface LimitOrder {
 	qty: bigint;
 	creator: Principal;
-	block_index: bigint;
+	blocked_margin_usd: bigint;
 	series_id: string;
 	side: Side;
 	order_id: string;
@@ -133,26 +152,23 @@ export interface LimitOrder {
 export interface ListOrdersParams {
 	series_id: [] | [string];
 }
-export interface MarginAccount {
-	required_margin: bigint;
-	reserved_balances: Array<[Asset, bigint]>;
-	user: Principal;
-	balances: Array<[Asset, bigint]>;
-}
-export type MarginAccountError =
-	| { NoMarginAccountFound: null }
-	| { MathOverflow: null }
-	| { Asset: AssetError };
 export interface NativeEvmAsset {
 	decimals: number;
 	chain_id: bigint;
 }
+export type NonMonetaryUnit = { Points: null };
+export type PaymentIdempotency = { IcrcCreatedAtTimeNs: bigint };
 export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
+export type PayoutUnit =
+	| { Fiat: FiatUnit }
+	| { Crypto: CanonicalCryptoUnit }
+	| { NonMonetary: NonMonetaryUnit };
+export type PlanStatus = { Finalised: null } | { Planned: null } | { Executing: null };
 export interface Position {
 	series_id: string;
 	net_qty: bigint;
 	user: Principal;
-	locked_collateral: bigint;
+	reserved_margin_usd: bigint;
 }
 export interface PositionProof {
 	qty: bigint;
@@ -160,6 +176,7 @@ export interface PositionProof {
 	series_id: string;
 	user: Principal;
 	transfer_id: string;
+	valuation_price: [] | [Price];
 	clearing_id: Principal;
 }
 export interface Price {
@@ -172,9 +189,9 @@ export interface Series {
 	strike: [] | [Price];
 	creator: Principal;
 	payoff_type: PayoffType;
+	payout_unit: PayoutUnit;
 	expiry_ns: bigint;
 	series_id: string;
-	settlement_asset: SettlementAsset;
 	underlying: string;
 	description: Description;
 	created_at_ns: bigint;
@@ -185,31 +202,49 @@ export interface SettleSeriesParams {
 	series_id: string;
 	settlement_price: Price;
 }
-export type SettleSeriesResult = { Ok: null } | { Err: SettlementError };
-export type SettlementAsset =
-	| { Icp: null }
-	| { Usdc: Chain }
-	| { Usdt: Chain }
-	| { Native: Chain }
-	| { CkUsdc: null };
+export type SettleSeriesResult = { Ok: null } | { Err: SettlementError } | { Processing: null };
 export type SettlementError =
 	| {
-			InsufficientInternalBalance: {
-				balance: bigint;
-				user: Principal;
-				required: bigint;
-			};
+			InconsistentSettlementPrice: { requested: Price; existing: Price };
 	  }
-	| { UnsupportedSettlementAsset: null }
 	| { MathOverflow: null }
 	| {
 			SolvencyViolation: {
-				total_payoff: bigint;
-				total_collateral: bigint;
+				total_net_payoff: bigint;
+				total_collateral_usd: bigint;
 			};
 	  }
 	| { Asset: AssetError }
 	| { Common: CommonError };
+export interface SettlementPlan {
+	status: PlanStatus;
+	idempotency_ns: PaymentIdempotency;
+	series_id: string;
+	fee_usd: bigint;
+	accounting_cursor: bigint;
+	insurance_fee_usd: bigint;
+	positions: Array<SettlementPosition>;
+	accounting_applied: boolean;
+	oracle_source: string;
+	settlement_price: Price;
+}
+export interface SettlementPosition {
+	net_qty: bigint;
+	user: Principal;
+	reserved_margin_usd: bigint;
+	cashflow_usd: bigint;
+}
+export interface SettlementStatusView {
+	status: PlanStatus;
+	series_id: string;
+	fee_usd: bigint;
+	accounting_cursor: bigint;
+	insurance_fee_usd: bigint;
+	accounting_applied: boolean;
+	oracle_source: string;
+	settlement_price: Price;
+	total_positions: bigint;
+}
 export type Side = { Buy: null } | { Sell: null };
 export interface Stats {
 	total_users: bigint;
@@ -255,6 +290,23 @@ export type TradeError =
 	| { NotOrderCreator: null }
 	| { SeriesNotFound: string }
 	| { Common: CommonError };
+export interface UpdateAssetMetricsParams {
+	metrics: AssetMetrics;
+	asset_id: string;
+}
+export type UpdateAssetPriceError =
+	| { AssetNotFound: null }
+	| { AssetMetricsNotInitialized: null }
+	| { OracleNotConfigured: null }
+	| { Common: CommonError };
+export interface UpdateAssetPriceParams {
+	price: Price;
+	asset_id: string;
+}
+export type UpdateAssetPriceResult = { Ok: null } | { Err: UpdateAssetPriceError };
+export interface UpdateCollateralAssetParams {
+	config: CollateralAssetConfig;
+}
 export type WithdrawCollateralError =
 	| {
 			InsufficientExcessMargin: { requested: bigint; available: bigint };
@@ -262,17 +314,23 @@ export type WithdrawCollateralError =
 	| { MathOverflow: null }
 	| { Asset: AssetError };
 export interface WithdrawCollateralParams {
-	asset: Asset;
 	withdrawal_id: string;
+	asset_id: string;
 	amount: bigint;
 }
 export type WithdrawCollateralResult = { Ok: null } | { Err: WithdrawCollateralError };
+export type WithdrawFundError =
+	| { TransferFailed: string }
+	| { InsufficientFunds: null }
+	| { Common: CommonError };
 export interface WithdrawFundParams {
 	to: Principal;
+	request_id: string;
 	fund_type: FundType;
-	asset: Asset;
+	asset_id: string;
 	amount: bigint;
 }
+export type WithdrawFundResult = { Ok: bigint } | { Err: WithdrawFundError };
 export interface _SERVICE {
 	/**
 	 * Accepts a position transfer from another clearing canister.
@@ -282,9 +340,11 @@ export interface _SERVICE {
 	 */
 	accept_position_transfer: ActorMethod<[PositionProof], AcceptPositionTransferResult>;
 	/**
-	 * Blocks (reserves) collateral in the user's margin account.
+	 * Cancels a stuck fund withdrawal and refunds the internal ledger balance.
+	 *
+	 * This method is gated to canister controllers.
 	 */
-	block_collateral: ActorMethod<[BlockCollateralParams], BlockCollateralResult>;
+	cancel_fund_withdrawal: ActorMethod<[CancelFundWithdrawalParams], CancelFundWithdrawalResult>;
 	/**
 	 * Cancels an existing limit order and releases the reserved collateral.
 	 *
@@ -292,19 +352,16 @@ export interface _SERVICE {
 	 */
 	cancel_limit_order: ActorMethod<[CancelLimitOrderParams], SubmitMatchedTradeResult>;
 	/**
-	 * Deposits collateral into the user's margin account.
+	 * Debug: returns the principal of the registry canister.
+	 */
+	debug_get_registry_canister: ActorMethod<[], Principal>;
+	/**
+	 * Deposits collateral into the user's account state.
 	 *
 	 * This is a multi-phase operation:
 	 * 1. Building a [`DepositPlan`] for idempotency.
 	 * 2. Executing the asynchronous ledger transfer (`transfer_from`).
-	 * 3. Finalising the internal margin account balances.
-	 *
-	 * # Arguments
-	 * * `params` - The deposit details including amount, asset, and a unique deposit ID.
-	 *
-	 * # Returns
-	 * * [`DepositCollateralResult::Ok`] if the deposit was successfully planned or executed.
-	 * * [`DepositCollateralResult::Err`] if the asset is unsupported or a transfer error occurs.
+	 * 3. Finalising the internal collateral balances.
 	 */
 	deposit_collateral: ActorMethod<[DepositCollateralParams], DepositCollateralResult>;
 	/**
@@ -318,24 +375,24 @@ export interface _SERVICE {
 		[] | [PositionProof]
 	>;
 	/**
+	 * Retrieves the current user's account state, optionally refreshing balances.
+	 *
+	 * # Arguments
+	 * * `params` - Includes an optional `refresh` flag to trigger external ledger checks.
+	 */
+	get_account_state: ActorMethod<[GetAccountStateParams], GetAccountStateResult>;
+	/**
+	 * Retrieves the current user's account state (query only).
+	 *
+	 * This does not refresh balances from external ledgers.
+	 */
+	get_account_state_query: ActorMethod<[], GetAccountStateResult>;
+	/**
 	 * Returns the current balances of the Insurance Fund and Treasury.
 	 *
 	 * This method is gated to canister controllers.
 	 */
 	get_funds: ActorMethod<[], GetFundsResult>;
-	/**
-	 * Retrieves the current user's margin account details, optionally refreshing balances.
-	 *
-	 * # Arguments
-	 * * `params` - Includes an optional `refresh` flag to trigger external ledger checks.
-	 */
-	get_margin_account: ActorMethod<[GetMarginAccountParams], GetMarginAccountResult>;
-	/**
-	 * Retrieves the current user's margin account details (query only).
-	 *
-	 * This does not refresh balances from external ledgers.
-	 */
-	get_margin_account_query: ActorMethod<[], GetMarginAccountResult>;
 	/**
 	 * Retrieves all active limit orders for the caller.
 	 */
@@ -349,10 +406,24 @@ export interface _SERVICE {
 	 */
 	get_positions: ActorMethod<[], Array<[string, Position]>>;
 	/**
+	 * Returns the full settlement plan including per-position accounting details (admin only).
+	 */
+	get_settlement_plan: ActorMethod<[string], [] | [SettlementPlan]>;
+	/**
+	 * Returns the public settlement progress for a derivative series without exposing user positions.
+	 */
+	get_settlement_status: ActorMethod<[string], [] | [SettlementStatusView]>;
+	/**
 	 * Retrieves the trade history (executed trades) for the caller.
 	 */
 	get_trade_history: ActorMethod<[], Array<Event>>;
 	http_request: ActorMethod<[HttpRequest], HttpResponse>;
+	/**
+	 * Returns a list of all supported collateral assets.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	list_collateral_assets: ActorMethod<[], Array<CollateralAssetConfig>>;
 	/**
 	 * Returns a list of all active limit orders, potentially filtered by series.
 	 */
@@ -368,6 +439,11 @@ export interface _SERVICE {
 	 */
 	metrics: ActorMethod<[], string>;
 	/**
+	 * Admin function to manually resume a stuck settlement plan, e.g., if the timer was dropped during
+	 * upgrade.
+	 */
+	resume_settlement: ActorMethod<[string], SettleSeriesResult>;
+	/**
 	 * Sets the principal of the Series Registry canister.
 	 *
 	 * This principal is used to discover and validate derivative series.
@@ -377,14 +453,19 @@ export interface _SERVICE {
 	/**
 	 * Settles a derivative series at a specific price.
 	 *
-	 * This is a complex background operation consisting of:
+	 * This is a background operation consisting of:
 	 * 1. Creating or resuming a [`SettlementPlan`].
-	 * 2. Collecting collateral from users with net losses.
-	 * 3. Paying out collateral to users with net profits.
-	 * 4. Finalising internal margin account balances and releasing locked collateral.
+	 * 2. Updating internal USD cash balances for all participants based on payoffs.
+	 * 3. Releasing margin requirements for the settled positions.
+	 * 4. Finalising the plan and removing the series data.
 	 *
-	 * This method is gated to canister controllers or the designated [`oracle_principal`] for the
-	 * series. It is intended to be called by an off-chain oracle or automation.
+	 * **Note on Chunking:** To avoid instruction limits, this method processes positions in batches
+	 * of 100 per call. If there are many positions, the method will return
+	 * [`SettleSeriesResult::Processing`]. The caller must repeatedly call `settle_series` with the
+	 * same parameters until it returns [`SettleSeriesResult::Ok`].
+	 *
+	 * **Authorization:** Every call is gated to canister controllers or the designated oracle for
+	 * the series. Unauthorized callers are rejected even if a plan already exists.
 	 */
 	settle_series: ActorMethod<[SettleSeriesParams], SettleSeriesResult>;
 	/**
@@ -408,34 +489,41 @@ export interface _SERVICE {
 	/**
 	 * Submits a matched trade from an exchange for clearing.
 	 *
-	 * TODO: until we implement an allowed list of exchange canisters, this is gated to controllers
+	 * NOTE: Access is currently restricted to authorized exchange intermediaries
+	 * (represented by canister controllers in this version).
 	 */
 	submit_matched_trade: ActorMethod<[SubmitMatchedTradeParams], SubmitMatchedTradeResult>;
 	/**
-	 * Unblocks (releases) collateral in the user's margin account.
+	 * Adds or updates dynamic metrics for a collateral asset.
+	 *
+	 * This method is gated to canister controllers.
 	 */
-	unblock_collateral: ActorMethod<[BlockCollateralParams], BlockCollateralResult>;
+	update_asset_metrics: ActorMethod<[UpdateAssetMetricsParams], undefined>;
+	/**
+	 * Updates the price of an asset.
+	 *
+	 * This method can be called by canister controllers or authorized oracles.
+	 */
+	update_asset_price: ActorMethod<[UpdateAssetPriceParams], UpdateAssetPriceResult>;
+	/**
+	 * Adds or updates a collateral asset configuration.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	update_collateral_asset: ActorMethod<[UpdateCollateralAssetParams], undefined>;
 	/**
 	 * Updates the global configuration for the Clearing canister.
 	 *
 	 * This method is gated to canister controllers.
 	 */
-	update_config: ActorMethod<[ClearingConfig], undefined>;
+	update_config: ActorMethod<[Config], undefined>;
 	/**
-	 * Withdraws collateral from the user's margin account to an external address.
+	 * Withdraws collateral from the user's account state to an external address.
 	 *
-	 * This is a multi-phase operation:
-	 * 1. Building a [`WithdrawalPlan`] for idempotency.
-	 * 2. Reserving the internal balance to prevent double-spending or risk violations.
-	 * 3. Executing the asynchronous ledger transfer (`transfer`).
-	 * 4. Finalising the plan status.
-	 *
-	 * # Arguments
-	 * * `params` - The withdrawal details including amount, asset, and a unique withdrawal ID.
-	 *
-	 * # Returns
-	 * * [`WithdrawalCollateralResult::Ok`] if the withdrawal was successfully planned or executed.
-	 * * [`WithdrawalCollateralResult::Err`] if margin is insufficient or a transfer error occurs.
+	 * This implements the "Deterministic Withdrawal Policy":
+	 * 1. Calculate current account equity in USD.
+	 * 2. Verify equity >= reserved_margin_usd (risk check).
+	 * 3. If ok, proceed with asynchronous ledger transfer.
 	 */
 	withdraw_collateral: ActorMethod<[WithdrawCollateralParams], WithdrawCollateralResult>;
 	/**
@@ -443,7 +531,7 @@ export interface _SERVICE {
 	 *
 	 * This method is gated to canister controllers.
 	 */
-	withdraw_fund: ActorMethod<[WithdrawFundParams], AdminResult>;
+	withdraw_fund: ActorMethod<[WithdrawFundParams], WithdrawFundResult>;
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

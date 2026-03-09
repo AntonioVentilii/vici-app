@@ -1,28 +1,34 @@
-import type { ClearingDid } from '$declarations';
+import type { RegistryDid } from '$declarations';
 import { CKUSDC_TOKEN, ICP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type { Token } from '$lib/types/token';
 import { assertNever } from '@dfinity/utils';
 
-export const assetToToken = (asset: ClearingDid.SettlementAsset): Token | undefined => {
-	if ('Icp' in asset) {
-		return ICP_TOKEN;
+export const assetToToken = (payoutUnit: RegistryDid.PayoutUnit): Token | undefined => {
+	if ('Crypto' in payoutUnit) {
+		const crypto = payoutUnit.Crypto;
+
+		if ('Icp' in crypto) {
+			return ICP_TOKEN;
+		}
+
+		if ('Usdc' in crypto) {
+			return CKUSDC_TOKEN;
+		}
+
+		throw new Error(`Unsupported crypto payout unit: ${crypto}`);
 	}
 
-	if ('CkUsdc' in asset) {
-		return CKUSDC_TOKEN;
+	if ('Fiat' in payoutUnit) {
+		const fiat = payoutUnit.Fiat;
+
+		throw new Error(`Unsupported fiat payout unit: ${fiat}`);
 	}
 
-	if ('Native' in asset) {
-		return CKUSDC_TOKEN;
+	if ('NonMonetary' in payoutUnit) {
+		const nonMonetary = payoutUnit.NonMonetary;
+
+		throw new Error(`Unsupported non-monetary payout unit: ${nonMonetary}`);
 	}
 
-	if ('Usdc' in asset) {
-		return CKUSDC_TOKEN;
-	}
-
-	if ('Usdt' in asset) {
-		return CKUSDC_TOKEN;
-	}
-
-	assertNever(asset, `Unknown asset type: ${asset}`);
+	assertNever(payoutUnit, `Unknown payoutUnit type: ${payoutUnit}`);
 };

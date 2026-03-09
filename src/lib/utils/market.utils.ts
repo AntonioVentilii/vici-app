@@ -12,10 +12,10 @@ export const mapMarketData = (series: RegistryDid.Series): Market | undefined =>
 		creator,
 		title,
 		description: { plain: description },
-		settlement_asset: settlementAsset
+		payout_unit: payoutUnit
 	} = series;
 
-	const token = assetToToken(settlementAsset);
+	const token = assetToToken(payoutUnit);
 
 	if (isNullish(token)) {
 		return;

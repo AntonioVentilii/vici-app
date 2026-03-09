@@ -19,15 +19,20 @@ export interface AddSeriesParams {
 	title: string;
 	strike: [] | [Price];
 	payoff_type: PayoffType;
+	payout_unit: PayoutUnit;
 	expiry_ns: bigint;
-	settlement_asset: SettlementAsset;
 	underlying: string;
 	description: Description;
 	price_precision: number;
 	oracle_source: string;
 }
 export type AddSeriesResult = { Ok: string } | { Err: SeriesError };
-export type Chain = { Bsc: null } | { Base: null } | { Ethereum: null } | { Polygon: null };
+export type CanonicalCryptoUnit =
+	| { Btc: null }
+	| { Eth: null }
+	| { Icp: null }
+	| { Usdc: null }
+	| { Usdt: null };
 export interface DecimalValue {
 	decimals: number;
 	value: bigint;
@@ -37,12 +42,13 @@ export interface Description {
 	markdown: [] | [string];
 	plain: string;
 }
+export type FiatUnit = { Chf: null } | { Eur: null } | { Gbp: null } | { Usd: null };
 export interface ListSeriesParams {
 	strike: [] | [Price];
 	creator: [] | [Principal];
 	payoff_type: [] | [PayoffType];
+	payout_unit: [] | [PayoutUnit];
 	pagination: [] | [PaginationParams];
-	settlement_asset: [] | [SettlementAsset];
 	underlying: [] | [string];
 	search_term: [] | [string];
 	oracle_source: [] | [string];
@@ -52,6 +58,7 @@ export interface ManageOraclePrincipalsParams {
 	remove_principals: Array<Principal>;
 	oracle_id: string;
 }
+export type NonMonetaryUnit = { Points: null };
 export interface Oracle {
 	manager: Principal;
 	registered_at_ns: bigint;
@@ -74,6 +81,10 @@ export interface PaginationParams {
 	limit: [] | [bigint];
 }
 export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
+export type PayoutUnit =
+	| { Fiat: FiatUnit }
+	| { Crypto: CanonicalCryptoUnit }
+	| { NonMonetary: NonMonetaryUnit };
 export interface Price {
 	timestamp: [] | [bigint];
 	oracle_id: [] | [string];
@@ -84,9 +95,9 @@ export interface Series {
 	strike: [] | [Price];
 	creator: Principal;
 	payoff_type: PayoffType;
+	payout_unit: PayoutUnit;
 	expiry_ns: bigint;
 	series_id: string;
-	settlement_asset: SettlementAsset;
 	underlying: string;
 	description: Description;
 	created_at_ns: bigint;
@@ -102,12 +113,6 @@ export interface SeriesPage {
 	next_cursor: [] | [string];
 	items: Array<Series>;
 }
-export type SettlementAsset =
-	| { Icp: null }
-	| { Usdc: Chain }
-	| { Usdt: Chain }
-	| { Native: Chain }
-	| { CkUsdc: null };
 export interface UpdateOracleMetadataParams {
 	metadata: OracleMetadata;
 	oracle_id: string;

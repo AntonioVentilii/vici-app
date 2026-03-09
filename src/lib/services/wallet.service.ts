@@ -1,4 +1,4 @@
-import { getMarginAccount } from '$lib/api/clearing.api';
+import { getAccountState } from '$lib/api/clearing.api';
 import { getTransactions as getIcpTransactionsApi } from '$lib/api/icp-index.api';
 import { getTransactions as getIcrcTransactionsApi } from '$lib/api/icrc-index-ng.api';
 import { balance as getLedgerBalance } from '$lib/api/icrc-ledger.api';
@@ -14,7 +14,6 @@ import {
 import { getIdentity } from '$lib/services/identity.services';
 import type { TokenId } from '$lib/types/token';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
-import { findTokenByLedgerId } from '$lib/utils/tokens.utils';
 import {
 	getIcrcAccount,
 	mapIcpTransaction,
@@ -22,7 +21,7 @@ import {
 	mapTransactionIcpToSelf,
 	mapTransactionIcrcToSelf
 } from '$lib/utils/transactions.utils';
-import { assertNever, isNullish, nonNullish, toNullable } from '@dfinity/utils';
+import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
 
 export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	const identity = await getIdentity();
@@ -70,34 +69,19 @@ export const getCollateralBalances = async (): Promise<Record<TokenId, bigint>> 
 
 	try {
 		// 2. Fetch Collateral Balances
-		const margin = await getMarginAccount({
+		const accountState = await getAccountState({
 			identity,
 			params: { refresh: toNullable(true) }
 		});
 
 		const collateral: Record<TokenId, bigint> = {};
 
-		margin.balances.forEach(([asset, balance]) => {
-			if ('Icrc' in asset) {
-				const assetPrincipal = asset.Icrc.toText();
-				const token = findTokenByLedgerId(assetPrincipal);
+		accountState.collateral_balances.forEach(([assetId, balance]) => {
+			const token = SUPPORTED_TOKENS.find((t) => t.symbol.toLowerCase() === assetId);
 
-				if (nonNullish(token)) {
-					collateral[token.id] = balance;
-				}
-
-				return;
+			if (nonNullish(token)) {
+				collateral[token.id] = balance;
 			}
-
-			if ('NativeEvm' in asset) {
-				return;
-			}
-
-			if ('Erc20' in asset) {
-				return;
-			}
-
-			assertNever(asset, `Unknown asset type: ${asset}`);
 		});
 
 		return collateral;

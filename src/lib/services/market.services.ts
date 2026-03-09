@@ -1,4 +1,4 @@
-import type { ClearingDid, RegistryDid } from '$declarations';
+import type { RegistryDid } from '$declarations';
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
 	NANO_SECONDS_IN_MILLISECOND,
@@ -25,12 +25,12 @@ export const createMarket = async ({
 	title,
 	description,
 	expiryDate,
-	settlementAsset = { Icp: null }
+	payoutUnit = { Fiat: { Usd: null } }
 }: {
 	title: string;
 	description: string;
 	expiryDate: bigint;
-	settlementAsset?: ClearingDid.SettlementAsset;
+	payoutUnit?: RegistryDid.PayoutUnit;
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -50,7 +50,7 @@ export const createMarket = async ({
 			html: toNullable()
 		},
 		expiry_ns: expiryDate * NANO_SECONDS_IN_MILLISECOND,
-		settlement_asset: settlementAsset,
+		payout_unit: payoutUnit,
 		strike: STRIKE,
 		price_precision: PRICE_DECIMALS,
 		payoff_type: PAYOFF_TYPE,
