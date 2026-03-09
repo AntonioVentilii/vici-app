@@ -29,8 +29,9 @@
 				{@const { id: marketId, title } = market}
 
 				<div class="space-y-4 rounded-2xl border border-slate-100 bg-slate-50 p-6">
-					<div class="flex items-start justify-between">
-						<h3 class="line-clamp-1 font-bold text-slate-950">{title}</h3>
+					<div class="flex flex-col items-start justify-between gap-2">
+						<h3 class="font-bold text-slate-950">{title}</h3>
+
 						<span class="font-mono text-[10px] text-slate-500">ID: {marketId}</span>
 					</div>
 

@@ -14,3 +14,9 @@ export const CKBTC_LEDGER_CANISTER_ID = 'mxz4u-wiaaa-aaaar-qaada-cai';
 export const CKETH_LEDGER_CANISTER_ID = 'ss2fx-dyaaa-aaaar-qacoa-cai';
 export const CHAT_LEDGER_CANISTER_ID = '2ouvw-qaaaa-aaaag-qacaa-cai';
 export const GHOST_LEDGER_CANISTER_ID = '4c4fd-caaaa-aaaaq-aaaqa-cai';
+
+export const TESTICP_LEDGER_CANISTER_ID = 'xafvr-biaaa-aaaai-aql5q-cai';
+export const TESTICP_INDEX_CANISTER_ID = 'qcuy6-bqaaa-aaaai-aqmqq-cai';
+
+export const TICRC1_LEDGER_CANISTER_ID = '3jkp5-oyaaa-aaaaj-azwqa-cai';
+export const TICRC1_INDEX_CANISTER_ID = 'qzre3-3iaaa-aaaai-aqmsa-cai';
