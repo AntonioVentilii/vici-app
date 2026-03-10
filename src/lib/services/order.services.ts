@@ -8,16 +8,17 @@ import {
 } from '$lib/api/clearing.api';
 import { PRICE_DECIMALS } from '$lib/constants/app.constants';
 import { logActivity } from '$lib/services/activity.services';
-import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderBook, OrderBookLevel, OrderSide, OrderType } from '$lib/types/order';
 import { ActivityType } from '$lib/types/social';
+import { calculateProbability } from '$lib/utils/market.utils';
 import { emitRefreshPositions, refreshAllBalances } from '$lib/utils/refresh.utils';
 import { nonNullish, toNullable } from '@dfinity/utils';
 import { nanoid } from 'nanoid';
 
 export const getOrderBook = async (marketId: MarketId): Promise<OrderBook> => {
-	const identity = await safeGetIdentityOnce();
+	const identity = await getIdentityOrAnonymous();
 
 	const orders = await listOrdersApi({
 		identity,
@@ -46,11 +47,21 @@ export const getOrderBook = async (marketId: MarketId): Promise<OrderBook> => {
 		}
 	});
 
+	const sortedBids = bids.sort((a, b) => b.price - a.price);
+	const sortedAsks = asks.sort((a, b) => a.price - b.price);
+
+	const { yesProbability, noProbability } = calculateProbability({
+		bids: sortedBids,
+		asks: sortedAsks
+	});
+
 	return {
 		marketId,
 		outcome: 'YES',
-		bids: bids.sort((a, b) => b.price - a.price),
-		asks: asks.sort((a, b) => a.price - b.price)
+		bids: sortedBids,
+		asks: sortedAsks,
+		yesProbability,
+		noProbability
 	};
 };
 

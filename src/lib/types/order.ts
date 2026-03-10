@@ -30,4 +30,6 @@ export interface OrderBook {
 	outcome: Outcome;
 	bids: OrderBookLevel[]; // Buy YES
 	asks: OrderBookLevel[]; // Sell YES
+	yesProbability: number;
+	noProbability: number;
 }

@@ -1,11 +1,20 @@
 import type { RegistryDid } from '$declarations';
 import { NANO_SECONDS_IN_MILLISECOND, ZERO } from '$lib/constants/app.constants';
 import type { Market } from '$lib/types/market';
+import type { OrderBookLevel } from '$lib/types/order';
 import { assetToToken } from '$lib/utils/asset.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish } from '@dfinity/utils';
 
-export const mapMarketData = (series: RegistryDid.Series): Market | undefined => {
+export const mapMarketData = ({
+	series,
+	yesProbability = 0,
+	noProbability = 0
+}: {
+	series: RegistryDid.Series;
+	yesProbability?: number;
+	noProbability?: number;
+}): Market | undefined => {
 	const {
 		series_id: id,
 		expiry_ns: expiryDate,
@@ -34,11 +43,40 @@ export const mapMarketData = (series: RegistryDid.Series): Market | undefined =>
 		totalVolume: ZERO,
 		yesVolume: ZERO,
 		noVolume: ZERO,
-		yesProbability: 0,
-		noProbability: 0,
+		yesProbability,
+		noProbability,
 		token,
 		pricePrecision: Number(series.price_precision)
 	};
+};
+
+export const calculateProbability = ({
+	bids,
+	asks
+}: {
+	bids: OrderBookLevel[];
+	asks: OrderBookLevel[];
+}): { yesProbability: number; noProbability: number } => {
+	if (bids.length === 0 && asks.length === 0) {
+		return { yesProbability: 0.5, noProbability: 0.5 };
+	}
+
+	const sortedBids = bids.sort((a, b) => b.price - a.price);
+	const sortedAsks = asks.sort((a, b) => a.price - b.price);
+
+	if (bids.length > 0 && asks.length > 0) {
+		const bestBid = sortedBids[0].price;
+		const bestAsk = sortedAsks[0].price;
+		const mid = (bestBid + bestAsk) / 2;
+		return { yesProbability: mid, noProbability: 1 - mid };
+	}
+
+	if (bids.length > 0) {
+		return { yesProbability: sortedBids[0].price, noProbability: 1 - sortedBids[0].price };
+	}
+
+	// asks.length > 0
+	return { yesProbability: sortedAsks[0].price, noProbability: 1 - sortedAsks[0].price };
 };
 
 export const getTimeRemaining = (expiry: bigint): string => {

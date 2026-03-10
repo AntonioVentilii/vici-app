@@ -10,12 +10,14 @@ import {
 } from '$lib/constants/app.constants';
 import { logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
 import type { Market, MarketId } from '$lib/types/market';
 import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
 import { mapMarketData } from '$lib/utils/market.utils';
 import { emitRefreshMarkets } from '$lib/utils/refresh.utils';
+import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
 
 /**
@@ -88,19 +90,32 @@ export const getMarkets = async (): Promise<Market[]> => {
 
 	const seriesList = await listSeries({ identity });
 
-	return seriesList.map(mapMarketData).filter(nonNullish);
+	const markets = await Promise.all(
+		seriesList.map(async (s) => {
+			const mid = parseMarketId(s.series_id);
+
+			const { yesProbability, noProbability } = await getOrderBook(mid);
+
+			return mapMarketData({ series: s, yesProbability, noProbability });
+		})
+	);
+
+	return markets.filter(nonNullish);
 };
 
 export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {
 	const identity = await getIdentityOrAnonymous();
 
-	const s = await getSeries({ identity, seriesId: marketId });
+	const [s, { yesProbability, noProbability }] = await Promise.all([
+		getSeries({ identity, seriesId: marketId }),
+		getOrderBook(marketId)
+	]);
 
 	if (isNullish(s)) {
 		return;
 	}
 
-	return mapMarketData(s);
+	return mapMarketData({ series: s, yesProbability, noProbability });
 };
 
 export const getRushQueue = async (): Promise<Market[]> => {

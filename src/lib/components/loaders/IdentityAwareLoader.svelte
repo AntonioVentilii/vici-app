@@ -22,6 +22,20 @@
 
 		return nonNullish(identity);
 	};
+
+	const safeOnLoad = async () => {
+		const identity = await getIdentity();
+
+		if (nonNullish(identity)) {
+			await onLoad();
+		}
+	};
 </script>
 
-<AtomicLoader {fastInterval} {onLoad} {onShouldUseSlowInterval} {runImmediately} {slowInterval} />
+<AtomicLoader
+	{fastInterval}
+	onLoad={safeOnLoad}
+	{onShouldUseSlowInterval}
+	{runImmediately}
+	{slowInterval}
+/>
