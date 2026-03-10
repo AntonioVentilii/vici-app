@@ -75,7 +75,7 @@
 {#if isOpen}
 	<div class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm">
 		<BaseButton
-			class="fixed inset-0 !bg-slate-950/40 !opacity-100"
+			class="fixed inset-0 bg-slate-950/40! opacity-100!"
 			aria-label="Close modal"
 			onclick={close}
 		>
@@ -171,7 +171,7 @@
 				<Button
 					class="w-full py-4 text-lg font-black"
 					onclick={handleSubmit}
-					state={loading ? 'pending' : nonNullish(amount) ? 'enabled' : 'disabled'}
+					status={loading ? 'pending' : nonNullish(amount) ? 'enabled' : 'disabled'}
 				>
 					Confirm {mode}
 				</Button>

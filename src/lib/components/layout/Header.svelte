@@ -78,7 +78,9 @@
 		<div class="flex items-center gap-4">
 			{#if $userSignedIn}
 				<div class="flex items-center gap-3">
-					<WalletDropdown balances={{ balances: $balancesStore, collateral: $collateralsStore }} />
+					<WalletDropdown
+						balances={{ balances: $balancesStore, collateral: $collateralsStore.balances }}
+					/>
 
 					<UserDropdown />
 				</div>

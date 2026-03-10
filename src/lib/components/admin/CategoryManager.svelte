@@ -81,7 +81,7 @@
 
 			<Button
 				onclick={handleAssociate}
-				state={!selectedCategoryId || saving ? 'disabled' : 'enabled'}
+				status={!selectedCategoryId || saving ? 'disabled' : 'enabled'}
 			>
 				{saving ? 'Associating...' : 'Set Category'}
 			</Button>

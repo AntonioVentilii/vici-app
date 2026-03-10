@@ -1,10 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
-	import type { ButtonState } from '$lib/types/components';
+	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props {
-		state?: ButtonState;
+		status?: ButtonStatus;
 		variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 		size?: 'sm' | 'md' | 'lg';
 		children: Snippet;
@@ -13,7 +13,7 @@
 	}
 
 	const {
-		state,
+		status,
 		variant = 'primary',
 		size = 'md',
 		children,
@@ -39,7 +39,7 @@
 <BaseButton
 	class="gap-2 rounded-lg font-bold active:scale-95 {variants[variant]} {sizes[size]} {className}"
 	{onclick}
-	{state}
+	{status}
 >
 	{@render children()}
 </BaseButton>

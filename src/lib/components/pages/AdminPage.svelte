@@ -16,11 +16,6 @@
 	let markets = $state<Market[]>([]);
 	let loading = $state(true);
 
-	// Create Market Form State
-	let title = $state('');
-	let description = $state('');
-	let expiryDate = $state('');
-
 	// Admin Management State
 	let roleEntries = $state<UserRoleEntry[]>([]);
 
@@ -45,26 +40,6 @@
 
 		fetchRoles();
 	});
-
-	const handleCreateMarket = async () => {
-		if (!title || !description || !expiryDate) {
-			return;
-		}
-		try {
-			await createMarket({
-				title,
-				description,
-				expiryDate: BigInt(new Date(expiryDate).getTime())
-			});
-			title = '';
-			description = '';
-			expiryDate = '';
-			await fetchMarkets();
-			alert('Market created successfully!');
-		} catch (e: unknown) {
-			alert((e as Error).message);
-		}
-	};
 
 	const handleBulkCreate = async (
 		bulkMarkets: { title: string; description: string; expiryDate: string }[]
@@ -172,15 +147,7 @@
 			/>
 
 			<!-- Create Market -->
-			<AdminMarketForm
-				{description}
-				{expiryDate}
-				onCreate={handleCreateMarket}
-				onDescriptionChange={(v) => (description = v)}
-				onExpiryChange={(v) => (expiryDate = v)}
-				onTitleChange={(v) => (title = v)}
-				{title}
-			/>
+			<AdminMarketForm onAddMarketSuccess={fetchMarkets} />
 
 			<!-- Bulk Create -->
 			<AdminBulkMarketForm onBulkCreate={handleBulkCreate} />

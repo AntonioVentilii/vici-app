@@ -3,16 +3,16 @@
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import type { ButtonState } from '$lib/types/components';
+	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props extends Omit<HTMLButtonAttributes, 'disabled' | 'aria-busy'> {
-		state?: ButtonState;
+		status?: ButtonStatus;
 		busyLabel?: Snippet;
 		children: Snippet;
 	}
 
 	const {
-		state = 'enabled',
+		status = 'enabled',
 		busyLabel,
 		class: className = '',
 		children,
@@ -22,10 +22,10 @@
 		...rest
 	}: Props = $props();
 
-	const isEnabled = $derived(state === 'enabled');
-	const isDisabled = $derived(state === 'disabled');
-	const isLoading = $derived(state === 'loading');
-	const isPending = $derived(state === 'pending');
+	const isEnabled = $derived(status === 'enabled');
+	const isDisabled = $derived(status === 'disabled');
+	const isLoading = $derived(status === 'loading');
+	const isPending = $derived(status === 'pending');
 
 	const isBusy = $derived(isLoading || isPending);
 

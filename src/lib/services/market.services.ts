@@ -42,8 +42,14 @@ export const createMarket = async ({
 		throw new Error('Unauthorized: only admins or creators can create markets');
 	}
 
+	const underlying = title
+		.trim()
+		.toUpperCase()
+		.replace(/\s+/g, '_')
+		.replace(/[^A-Z0-9_-]/g, '');
+
 	const params: RegistryDid.AddSeriesParams = {
-		underlying: title, // Using title as underlying for now
+		underlying,
 		title,
 		description: {
 			plain: description,

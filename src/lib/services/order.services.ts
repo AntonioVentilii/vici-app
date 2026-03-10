@@ -70,6 +70,7 @@ export const placeOrder = async ({
 	const identity = await safeGetIdentityOnce();
 
 	// Normalize Binary Outcome to "YES" asset
+	// price is expected as probability (0-1)
 	const normalizedSide = outcome === 'NO' ? (side === 'BUY' ? 'SELL' : 'BUY') : side;
 	const normalizedPrice = outcome === 'NO' ? 1 - price : price;
 
@@ -84,7 +85,7 @@ export const placeOrder = async ({
 				side: normalizedSide === 'BUY' ? { Buy: null } : { Sell: null },
 				price: {
 					decimal: {
-						value: BigInt(normalizedPrice),
+						value: BigInt(Math.round(normalizedPrice * 10 ** PRICE_DECIMALS)),
 						decimals: PRICE_DECIMALS
 					},
 					timestamp: toNullable(),

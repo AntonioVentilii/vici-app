@@ -89,7 +89,7 @@
 		<div class="mt-3 flex justify-end">
 			<Button
 				onclick={handlePostComment}
-				state={!newComment.trim() || posting ? 'disabled' : 'enabled'}
+				status={!newComment.trim() || posting ? 'disabled' : 'enabled'}
 			>
 				{posting ? 'Posting...' : 'Post Comment'}
 			</Button>

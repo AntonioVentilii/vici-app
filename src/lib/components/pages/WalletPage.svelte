@@ -80,7 +80,9 @@
 	<!-- Balances Cards -->
 	<div class="flex w-full flex-col gap-6 lg:flex-row">
 		<div class="grow">
-			<WalletStats balances={{ balances: $balancesStore, collateral: $collateralsStore }} />
+			<WalletStats
+				balances={{ balances: $balancesStore, collateral: $collateralsStore.balances }}
+			/>
 		</div>
 
 		<div class="grow-2">

@@ -87,7 +87,7 @@
 			<Button
 				onclick={handleSettle}
 				size="lg"
-				state={loading ? 'pending' : nonNullish(settlementPrice) ? 'enabled' : 'disabled'}
+				status={loading ? 'pending' : nonNullish(settlementPrice) ? 'enabled' : 'disabled'}
 				variant={isUrgent ? 'danger' : 'primary'}
 			>
 				Resolve & Settle

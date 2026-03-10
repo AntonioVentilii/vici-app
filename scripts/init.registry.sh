@@ -29,7 +29,7 @@ for ((i = 0; i < $length; i++)); do
   title=$(jq -r '.title' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
   description=$(jq -r '.description' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
-  expiration_iso=$(echo "$market" | jq -r '.expiration')
+  expiration_iso=$(echo "$market" | jq -r '.expiryDate')
 
   underlying=$(slugify "$title")
 

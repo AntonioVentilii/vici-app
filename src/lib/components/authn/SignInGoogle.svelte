@@ -2,14 +2,14 @@
 	import { signIn } from '@junobuild/core';
 	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import type { ButtonState } from '$lib/types/components';
+	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props {
-		state?: ButtonState;
+		status?: ButtonStatus;
 		onSuccess?: () => void;
 	}
 
-	const { state = $bindable('enabled'), onSuccess }: Props = $props();
+	const { status = $bindable('enabled'), onSuccess }: Props = $props();
 
 	const signInWithGoogle = async () => {
 		await signIn({
@@ -21,7 +21,7 @@
 </script>
 
 <div class="relative w-full">
-	<Button class="w-full opacity-70 grayscale" onclick={signInWithGoogle} {state}>
+	<Button class="w-full opacity-70 grayscale" onclick={signInWithGoogle} {status}>
 		<IconGoogle size="20px" />
 		<span>Sign in with Google</span>
 	</Button>

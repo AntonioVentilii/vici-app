@@ -123,13 +123,13 @@
 		try {
 			const currentPrice =
 				orderType === 'LIMIT'
-					? parseFloat(price)
+					? parseFloat(price) / 100
 					: selectedType === 'YES'
 						? yesProbability
 						: noProbability;
 
-			if (currentPrice === 0 || currentPrice === 1 || isNaN(currentPrice)) {
-				throw new Error(`Invalid price: outcome probability is ${currentPrice}`);
+			if (currentPrice <= 0 || currentPrice >= 1 || isNaN(currentPrice)) {
+				throw new Error(`Invalid price: ${currentPrice}`);
 			}
 
 			const parsedAmount = parseToken({ value: `${amount}`, unitName: 0 });
@@ -138,7 +138,7 @@
 				marketId: market.id,
 				side: 'BUY', // We are always "Buying" an outcome
 				type: orderType,
-				price: currentPrice,
+				price: selectedType === 'YES' ? currentPrice : 1 - currentPrice, // For YES orders, price is as is. For NO orders, price is 1 - currentPrice
 				qty: parsedAmount,
 				outcome: selectedType as Outcome
 			});
@@ -208,7 +208,7 @@
 				? 'bg-white text-indigo-600 shadow-sm'
 				: 'text-slate-500 hover:text-slate-700'}"
 			onclick={() => (orderType = 'MARKET')}
-			state={hasMarketDepth ? 'enabled' : 'disabled'}
+			status={hasMarketDepth ? 'enabled' : 'disabled'}
 			title={!hasMarketDepth ? 'No liquidity for market order' : ''}
 		>
 			Market
@@ -360,7 +360,7 @@
 			<Button
 				class="w-full py-5 text-lg font-black"
 				onclick={handlePlacePrediction}
-				state={loading ? 'pending' : nonNullish(amount) ? 'enabled' : 'disabled'}
+				status={loading ? 'pending' : nonNullish(amount) ? 'enabled' : 'disabled'}
 			>
 				Place {orderType} Order
 			</Button>

@@ -1,23 +1,48 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
+	import Button from '$lib/components/ui/Button.svelte';
+	import { createMarket } from '$lib/services/market.services';
+	import type { ButtonStatus } from '$lib/types/components';
+
 	interface Props {
-		title: string;
-		description: string;
-		expiryDate: string;
-		onTitleChange: (v: string) => void;
-		onDescriptionChange: (v: string) => void;
-		onExpiryChange: (v: string) => void;
-		onCreate: () => void;
+		onAddMarketSuccess: () => Promise<void>;
 	}
 
-	const {
-		title,
-		description,
-		expiryDate,
-		onTitleChange,
-		onDescriptionChange,
-		onExpiryChange,
-		onCreate
-	}: Props = $props();
+	const { onAddMarketSuccess }: Props = $props();
+
+	let status = $state<ButtonStatus>('enabled');
+
+	let title = $state('');
+	let description = $state('');
+	let expiryDate = $state('');
+
+	const onCreate = async () => {
+		if (isNullish(title) || isNullish(description) || isNullish(expiryDate)) {
+			return;
+		}
+
+		status = 'pending';
+
+		try {
+			await createMarket({
+				title,
+				description,
+				expiryDate: BigInt(new Date(expiryDate).getTime())
+			});
+
+			title = '';
+			description = '';
+			expiryDate = '';
+
+			await onAddMarketSuccess();
+
+			alert('Market created successfully!');
+		} catch (e: unknown) {
+			alert((e as Error).message);
+		} finally {
+			status = 'enabled';
+		}
+	};
 </script>
 
 <div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
@@ -30,7 +55,7 @@
 			<input
 				id="market-title"
 				class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600"
-				oninput={(e) => onTitleChange(e.currentTarget.value)}
+				oninput={(e) => (title = e.currentTarget.value)}
 				placeholder="e.g., Will Bitcoin hit $100k by 2027?"
 				type="text"
 				value={title}
@@ -47,7 +72,7 @@
 			<textarea
 				id="market-description"
 				class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600"
-				oninput={(e) => onDescriptionChange(e.currentTarget.value)}
+				oninput={(e) => (description = e.currentTarget.value)}
 				placeholder="Provide detailed criteria for resolution..."
 				rows="4"
 				value={description}
@@ -61,17 +86,12 @@
 			<input
 				id="expiry-date"
 				class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600"
-				oninput={(e) => onExpiryChange(e.currentTarget.value)}
+				oninput={(e) => (expiryDate = e.currentTarget.value)}
 				type="datetime-local"
 				value={expiryDate}
 			/>
 		</div>
 
-		<button
-			class="w-full rounded-2xl bg-indigo-600 py-4 text-sm font-black text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-[0.98]"
-			onclick={onCreate}
-		>
-			Deploy Market
-		</button>
+		<Button class="w-full" onclick={onCreate} size="lg" {status}>Deploy Market</Button>
 	</div>
 </div>

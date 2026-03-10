@@ -84,7 +84,7 @@
 			/>
 			<Button
 				onclick={handleAddFriend}
-				state={adding || !newFriendPrincipal ? 'disabled' : 'enabled'}
+				status={adding || !newFriendPrincipal ? 'disabled' : 'enabled'}
 			>
 				{adding ? 'Adding...' : 'Add'}
 			</Button>

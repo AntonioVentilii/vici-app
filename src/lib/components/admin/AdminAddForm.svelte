@@ -67,6 +67,6 @@
 			<p class="mt-2 text-sm text-slate-500">Select the permission level for this user.</p>
 		</div>
 
-		<Button onclick={onAddRole} state={!principal ? 'disabled' : 'enabled'}>Assign Role</Button>
+		<Button onclick={onAddRole} status={!principal ? 'disabled' : 'enabled'}>Assign Role</Button>
 	</form>
 </div>

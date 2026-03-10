@@ -131,7 +131,7 @@
 		{#if nonNullish(viewerPrincipal) && viewerPrincipal !== profile.owner}
 			<Button
 				onclick={handleFollowToggle}
-				state={loading ? 'loading' : pending ? 'pending' : 'enabled'}
+				status={loading ? 'loading' : pending ? 'pending' : 'enabled'}
 			>
 				{isFollowing ? 'Unfollow' : 'Follow'}
 			</Button>

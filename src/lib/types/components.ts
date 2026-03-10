@@ -1,7 +1,7 @@
 export type CardPadding = 'none' | 'sm' | 'md' | 'lg';
 
 /**
- * Represents the interactive state of a button.
+ * Represents the interactive status of a button.
  *
  * enabled  – The button is clickable and ready for user interaction.
  * disabled – The action is not allowed; the button cannot be clicked.
@@ -9,4 +9,4 @@ export type CardPadding = 'none' | 'sm' | 'md' | 'lg';
  *            (e.g. fetching permissions, balances, or other prerequisites).
  * pending  – The user triggered the action and it is currently being processed.
  */
-export type ButtonState = 'enabled' | 'disabled' | 'loading' | 'pending';
+export type ButtonStatus = 'enabled' | 'disabled' | 'loading' | 'pending';
