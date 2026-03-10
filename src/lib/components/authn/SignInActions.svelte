@@ -4,12 +4,15 @@
 	import SignInII from '$lib/components/authn/SignInII.svelte';
 	import SignInPasskey from '$lib/components/authn/SignInPasskey.svelte';
 	import { isDev, isNotSkylab, isProd } from '$lib/env/app.env';
+	import type { ButtonState } from '$lib/types/components';
 
 	interface Props {
 		onSuccess?: () => void;
 	}
 
 	const { onSuccess }: Props = $props();
+
+	const prodState = $derived<ButtonState>(isProd() && isNotSkylab() ? 'enabled' : 'disabled');
 </script>
 
 <div class="flex w-fit flex-col gap-2">
@@ -17,11 +20,9 @@
 		<SignInDev {onSuccess} />
 	{/if}
 
-	{#if isProd() && isNotSkylab()}
-		<SignInGoogle {onSuccess} />
+	<SignInGoogle {onSuccess} state="disabled" />
 
-		<SignInII {onSuccess} />
+	<SignInII {onSuccess} state={prodState} />
 
-		<SignInPasskey {onSuccess} />
-	{/if}
+	<SignInPasskey {onSuccess} state={prodState} />
 </div>

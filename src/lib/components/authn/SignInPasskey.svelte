@@ -2,23 +2,33 @@
 	import { signIn } from '@junobuild/core';
 	import IconPasskey from '$lib/components/icons/IconPasskey.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import type { ButtonState } from '$lib/types/components';
 
 	interface Props {
+		state?: ButtonState;
 		onSuccess?: () => void;
 	}
 
-	const { onSuccess }: Props = $props();
+	let { state = $bindable('enabled'), onSuccess }: Props = $props();
 
 	const signInWithPassKey = async () => {
-		await signIn({
-			webauthn: {}
-		});
+		state = 'pending';
 
-		onSuccess?.();
+		try {
+			await signIn({
+				webauthn: {}
+			});
+
+			onSuccess?.();
+		} catch (e: unknown) {
+			console.error('Passkey sign-in failed', e);
+		} finally {
+			state = 'enabled';
+		}
 	};
 </script>
 
-<Button onclick={signInWithPassKey}>
+<Button onclick={signInWithPassKey} {state}>
 	<IconPasskey size="20px" />
 	<span>Sign in with Passkey</span>
 </Button>
