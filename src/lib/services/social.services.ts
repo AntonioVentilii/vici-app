@@ -1,13 +1,23 @@
+import { Collection } from '$lib/constants/collections.constants';
+import type { UserProfile } from '$lib/types/profile';
 import type { LeaderboardEntry } from '$lib/types/social';
+import { listDocs } from '@junobuild/core';
 
-// eslint-disable-next-line require-await
-export const getLeaderboard = async (): Promise<LeaderboardEntry[]> =>
-	// Mock data for now as Juno doesn't store P&L/WinRate yet
-	// This should eventually fetch from a derived collection or be calculated
-	[
-		{ rank: 1, user: 'CryptoKing', pnl: 4520.5, winRate: 88, activePositions: 12 },
-		{ rank: 2, user: 'MoonWalker', pnl: 3100.2, winRate: 75, activePositions: 8 },
-		{ rank: 3, user: 'ViciMaster', pnl: 2850.0, winRate: 92, activePositions: 5 },
-		{ rank: 4, user: 'BullRider', pnl: 2100.3, winRate: 64, activePositions: 15 },
-		{ rank: 5, user: 'PaperHands', pnl: 1850.7, winRate: 52, activePositions: 3 }
-	];
+export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
+	const { items } = await listDocs<UserProfile>({
+		collection: Collection.PROFILES
+	});
+
+	return items
+		.map((doc) => doc.data)
+		.filter((p) => (p.totalTrades ?? 0) > 0) // Only show active traders
+		.sort((a, b) => (b.pnl ?? 0) - (a.pnl ?? 0))
+		.map((p, index) => ({
+			rank: index + 1,
+			user: p.owner,
+			pnl: p.pnl ?? 0,
+			winRate: p.winRate ?? 0,
+			activePositions: p.totalTrades ?? 0 // Using totalTrades as a proxy for activity
+		}))
+		.slice(0, 50); // Limit to top 50
+};

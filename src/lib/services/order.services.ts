@@ -7,9 +7,11 @@ import {
 	submitMarketOrder
 } from '$lib/api/clearing.api';
 import { PRICE_DECIMALS } from '$lib/constants/app.constants';
+import { logActivity } from '$lib/services/activity.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderBook, OrderBookLevel, OrderSide, OrderType } from '$lib/types/order';
+import { ActivityType } from '$lib/types/social';
 import { emitRefreshPositions, refreshAllBalances } from '$lib/utils/refresh.utils';
 import { nonNullish, toNullable } from '@dfinity/utils';
 import { nanoid } from 'nanoid';
@@ -129,6 +131,20 @@ export const placeOrder = async ({
 	emitRefreshPositions();
 
 	refreshAllBalances();
+
+	// Log Social Activity (Vici Social Features)
+	try {
+		const userText = identity.getPrincipal().toText();
+		await logActivity({
+			type: ActivityType.TRADE,
+			user: userText,
+			marketId,
+			title: `Placed ${side} ${type} order`,
+			details: `${side} ${qty} on ${outcome} @ ${price}`
+		});
+	} catch (e) {
+		console.error('Failed to log trade activity', e);
+	}
 };
 
 export const cancelLimitOrder = async (orderId: string): Promise<void> => {
