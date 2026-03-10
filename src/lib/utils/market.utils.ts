@@ -1,6 +1,6 @@
 import type { RegistryDid } from '$declarations';
 import { NANO_SECONDS_IN_MILLISECOND, ZERO } from '$lib/constants/app.constants';
-import type { Market } from '$lib/types/market';
+import type { Market, MarketStatus, Outcome } from '$lib/types/market';
 import type { OrderBookLevel } from '$lib/types/order';
 import { assetToToken } from '$lib/utils/asset.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
@@ -9,11 +9,19 @@ import { isNullish } from '@dfinity/utils';
 export const mapMarketData = ({
 	series,
 	yesProbability = 0,
-	noProbability = 0
+	noProbability = 0,
+	bestBid = undefined,
+	bestAsk = undefined,
+	status = 'Open',
+	outcome = undefined
 }: {
 	series: RegistryDid.Series;
 	yesProbability?: number;
 	noProbability?: number;
+	bestBid?: number;
+	bestAsk?: number;
+	status?: MarketStatus;
+	outcome?: Outcome;
 }): Market | undefined => {
 	const {
 		series_id: id,
@@ -36,8 +44,8 @@ export const mapMarketData = ({
 		description,
 		creator: creator.toText(),
 		expiryDate: expiryDate / NANO_SECONDS_IN_MILLISECOND,
-		status: 'Open',
-		outcome: undefined,
+		status,
+		outcome,
 		isInviteOnly: false,
 		inviteList: [],
 		totalVolume: ZERO,
@@ -45,6 +53,8 @@ export const mapMarketData = ({
 		noVolume: ZERO,
 		yesProbability,
 		noProbability,
+		bestBid,
+		bestAsk,
 		token,
 		pricePrecision: Number(series.price_precision)
 	};

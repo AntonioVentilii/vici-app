@@ -1,8 +1,10 @@
 import type { ClearingDid } from '$declarations';
 import { settleSeries } from '$lib/api/clearing.api';
 import { PRICE_DECIMALS, VICI_ORACLE_V1 } from '$lib/constants/app.constants';
+import { logActivity } from '$lib/services/activity.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
+import { ActivityType } from '$lib/types/social';
 import { binaryPayoff } from '$lib/utils/payoff.utils';
 import { emitRefreshMarkets } from '$lib/utils/refresh.utils';
 import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
@@ -39,6 +41,16 @@ export const resolveMarket = async ({
 		await settleSeries({
 			identity,
 			params
+		});
+
+		// Record resolution in Juno for UI persistence
+		await logActivity({
+			type: ActivityType.SETTLEMENT,
+			user: identity.getPrincipal().toText(),
+			marketId,
+			title: `Market Resolved: ${outcome}`,
+			// TODO: parse with built-in bigint instead of string
+			details: JSON.stringify({ outcome, price: settlementPrice.toString() })
 		});
 	} catch (e: unknown) {
 		console.error('Failed to settle series on-chain', e);

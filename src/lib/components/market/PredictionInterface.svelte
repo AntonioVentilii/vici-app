@@ -318,8 +318,11 @@
 				<div class="relative">
 					<input
 						id="amount"
-						class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-xl font-bold text-slate-950 ring-1 ring-slate-200 transition-all ring-inset focus:bg-white focus:ring-2 focus:ring-indigo-500"
-						placeholder="0.00"
+						class="w-full rounded-2xl border-none bg-slate-50 py-4 pr-16 pl-6 text-xl font-bold text-slate-950 ring-1 ring-slate-200 transition-all ring-inset focus:bg-white focus:ring-2 focus:ring-indigo-500"
+						max="100"
+						min="0"
+						placeholder="0"
+						step="1"
 						type="number"
 						bind:value={amount}
 					/>

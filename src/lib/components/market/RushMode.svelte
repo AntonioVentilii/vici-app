@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
@@ -10,6 +11,9 @@
 	import { placeOrder } from '$lib/services/order.services';
 	import type { Market } from '$lib/types/market';
 
+	const MAX_BETS = 10;
+	const MAX_MARKETS = 20;
+
 	let markets = $state<Market[]>([]);
 
 	let currentIndex = $state(0);
@@ -20,11 +24,15 @@
 
 	let tradeAmount = $state('0.1');
 
+	let betsCount = $state(0);
+
 	let completed = $state(false);
 
 	onMount(async () => {
 		try {
-			markets = await getRushQueue();
+			const queue = await getRushQueue();
+
+			markets = queue.slice(0, MAX_MARKETS);
 		} catch (e) {
 			console.error('Failed to load Rush queue', e);
 		} finally {
@@ -51,20 +59,37 @@
 		try {
 			const decimals = BigInt(currentMarket.token.decimals);
 			const amountE8 = BigInt(Math.floor(parseFloat(tradeAmount) * Number(10n ** decimals)));
-			const price = action === 'YES' ? currentMarket.yesProbability : currentMarket.noProbability;
+
+			// Use best execution price if available, otherwise fallback to probability
+			let price: number;
+			if (action === 'YES') {
+				price = currentMarket.bestAsk ?? currentMarket.yesProbability;
+			} else {
+				// For NO, we want to Buy the "NO" side, which is equivalent to Selling "YES" at bestBid
+				// bestBid is the price for YES, so 1 - bestBid is the price for NO.
+				price =
+					currentMarket.bestBid !== undefined
+						? 1 - currentMarket.bestBid
+						: currentMarket.noProbability;
+			}
 
 			// qty = amount / price (normalized to token decimals)
+			// Safety: Ensure price is not zero to avoid division by zero
+			const executionPrice = Math.max(price, 0.01);
 			const qty =
-				(amountE8 * 10n ** decimals) / BigInt(Math.floor(price * Number(10n ** decimals)));
+				(amountE8 * 10n ** decimals) / BigInt(Math.floor(executionPrice * Number(10n ** decimals)));
 
 			await placeOrder({
 				marketId: currentMarket.id,
 				side: 'BUY',
-				type: 'MARKET',
-				price,
+				type: 'LIMIT',
+				price: executionPrice,
 				qty,
 				outcome: action
 			});
+
+			betsCount += 1;
+
 			advance();
 		} catch (e) {
 			console.error('Trade failed', e);
@@ -75,7 +100,7 @@
 	};
 
 	const advance = () => {
-		if (currentIndex < markets.length - 1) {
+		if (currentIndex < markets.length - 1 && betsCount < MAX_BETS) {
 			currentIndex += 1;
 		} else {
 			completed = true;
@@ -130,9 +155,16 @@
 				</span>
 			</div>
 			<div class="flex flex-col items-end">
-				<span class="mb-1 text-[10px] font-bold tracking-widest text-slate-400 uppercase"
-					>Set Amount</span
-				>
+				<div class="mb-2 flex items-center gap-3">
+					<div class="flex flex-col items-end">
+						<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Bets</span>
+						<span class="text-xs font-black text-slate-900">{betsCount}/{MAX_BETS}</span>
+					</div>
+					<div class="flex flex-col items-end border-l border-slate-200 pl-3">
+						<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Seen</span>
+						<span class="text-xs font-black text-slate-900">{currentIndex + 1}/{MAX_MARKETS}</span>
+					</div>
+				</div>
 				<div
 					class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 ring-1 ring-slate-200 transition-all focus-within:ring-2 focus-within:ring-indigo-500"
 				>
@@ -153,10 +185,15 @@
 			{#each [markets[currentIndex]] as market (market.id)}
 				<div
 					class="absolute inset-0"
-					in:fly={{ x: 300, duration: 400 }}
+					in:fly={{ y: 300, duration: 400 }}
 					out:fade={{ duration: 200 }}
 				>
-					<RushCard {market} onAction={handleAction} />
+					<RushCard
+						isLimitOrderNo={isNullish(market.bestBid)}
+						isLimitOrderYes={isNullish(market.bestAsk)}
+						{market}
+						onAction={handleAction}
+					/>
 				</div>
 			{/each}
 		</div>

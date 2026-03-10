@@ -1,5 +1,4 @@
-import type { ClearingDid, RegistryDid } from '$declarations';
-import { listOrders as listOrdersApi } from '$lib/api/clearing.api';
+import type { RegistryDid } from '$declarations';
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
 	NANO_SECONDS_IN_MILLISECOND,
@@ -8,11 +7,11 @@ import {
 	STRIKE,
 	VICI_ORACLE_V1
 } from '$lib/constants/app.constants';
-import { logActivity } from '$lib/services/activity.services';
+import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
-import type { Market, MarketId } from '$lib/types/market';
+import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
 import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
 import { mapMarketData } from '$lib/utils/market.utils';
@@ -88,67 +87,118 @@ export const createMarket = async ({
 export const getMarkets = async (): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 
-	const seriesList = await listSeries({ identity });
+	const [seriesList, activities] = await Promise.all([
+		listSeries({ identity }),
+		getGlobalActivities()
+	]);
+
+	const resolutionMap = activities
+		.filter((a) => a.type === ActivityType.SETTLEMENT && nonNullish(a.marketId))
+		.reduce<Record<string, { outcome: Outcome }>>((acc, a) => {
+			const { marketId, details } = a;
+			try {
+				const { outcome } = JSON.parse(details ?? '{}');
+				if (nonNullish(marketId)) {
+					acc[marketId] = { outcome };
+				}
+			} catch (e) {
+				console.error('Failed to parse settlement details', e);
+			}
+			return acc;
+		}, {});
 
 	const markets = await Promise.all(
 		seriesList.map(async (s) => {
 			const mid = parseMarketId(s.series_id);
+			const { yesProbability, noProbability, bids, asks } = await getOrderBook(mid);
+			const bestBid = bids[0]?.price;
+			const bestAsk = asks[0]?.price;
 
-			const { yesProbability, noProbability } = await getOrderBook(mid);
+			const isExpired = s.expiry_ns / NANO_SECONDS_IN_MILLISECOND <= BigInt(Date.now());
 
-			return mapMarketData({ series: s, yesProbability, noProbability });
+			return mapMarketData({
+				series: s,
+				yesProbability,
+				noProbability,
+				bestBid,
+				bestAsk,
+				status: isExpired ? 'Expired' : 'Open'
+			});
 		})
 	);
 
-	return markets.filter(nonNullish);
+	// Add resolved markets that are no longer in the registry
+	const resolvedSeriesIds = Object.keys(resolutionMap);
+	const activeSeriesIds = new Set(seriesList.map((s) => s.series_id));
+
+	const resolvedMarkets = await Promise.all(
+		resolvedSeriesIds
+			.filter((id) => !activeSeriesIds.has(id))
+			.map(async (id) => {
+				const series = await getSeries({ identity, seriesId: id });
+				if (isNullish(series)) {
+					return undefined;
+				}
+
+				return mapMarketData({
+					series,
+					status: 'Resolved',
+					outcome: resolutionMap[id].outcome
+				});
+			})
+	);
+
+	return [...markets, ...resolvedMarkets].filter(nonNullish);
 };
 
 export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {
 	const identity = await getIdentityOrAnonymous();
 
-	const [s, { yesProbability, noProbability }] = await Promise.all([
+	const [s, { yesProbability, noProbability, bids, asks }, activities] = await Promise.all([
 		getSeries({ identity, seriesId: marketId }),
-		getOrderBook(marketId)
+		getOrderBook(marketId),
+		getGlobalActivities()
 	]);
+
+	const bestBid = bids[0]?.price;
+	const bestAsk = asks[0]?.price;
 
 	if (isNullish(s)) {
 		return;
 	}
 
-	return mapMarketData({ series: s, yesProbability, noProbability });
+	const resolution = activities.find(
+		(a) => a.type === ActivityType.SETTLEMENT && a.marketId === marketId
+	);
+
+	let status: MarketStatus = 'Open';
+	let outcome: Outcome | undefined;
+
+	if (nonNullish(resolution)) {
+		status = 'Resolved';
+		try {
+			const { outcome: settlementOutcome } = JSON.parse(resolution.details ?? '{}');
+			outcome = settlementOutcome;
+		} catch (e) {
+			console.error('Failed to parse outcome from activity', e);
+		}
+	} else if (s.expiry_ns / NANO_SECONDS_IN_MILLISECOND <= BigInt(Date.now())) {
+		status = 'Expired';
+	}
+
+	return mapMarketData({
+		series: s,
+		yesProbability,
+		noProbability,
+		bestBid,
+		bestAsk,
+		status,
+		outcome
+	});
 };
 
 export const getRushQueue = async (): Promise<Market[]> => {
-	const identity = await getIdentityOrAnonymous();
+	const markets = await getMarkets();
 
-	const [markets, allOpenOrders] = await Promise.all([
-		getMarkets(),
-		listOrdersApi({
-			identity,
-			params: { series_id: [] }
-		})
-	]);
-
-	// Group orders to see which markets have both bids and asks
-	const marketLiquidity = allOpenOrders.reduce<Record<string, { bids: boolean; asks: boolean }>>(
-		(acc: Record<string, { bids: boolean; asks: boolean }>, order: ClearingDid.LimitOrder) => {
-			const side = 'Buy' in order.side ? 'bids' : 'asks';
-			if (!acc[order.series_id]) {
-				acc[order.series_id] = { bids: false, asks: false };
-			}
-			acc[order.series_id][side] = true;
-			return acc;
-		},
-		{}
-	);
-
-	// Filter markets to only those that have both sides of liquidity
-	const rushMarkets = markets.filter(
-		(market: Market) =>
-			marketLiquidity[market.id] &&
-			marketLiquidity[market.id].bids &&
-			marketLiquidity[market.id].asks
-	);
-
-	return rushMarkets.sort((a: Market, b: Market) => Number(b.id) - Number(a.id));
+	return markets.filter((m) => m.status === 'Open').sort((a, b) => Number(b.id) - Number(a.id));
 };

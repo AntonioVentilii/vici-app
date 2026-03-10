@@ -6,9 +6,11 @@
 	interface Props {
 		market: Market;
 		onAction: (action: 'YES' | 'NO' | 'SKIP') => void;
+		isLimitOrderYes: boolean;
+		isLimitOrderNo: boolean;
 	}
 
-	const { market, onAction }: Props = $props();
+	const { market, onAction, isLimitOrderYes, isLimitOrderNo }: Props = $props();
 
 	let startX = 0;
 	let startY = 0;
@@ -97,17 +99,31 @@
 		<!-- YES Indicator -->
 		<div
 			style="opacity: {yesOpacity}; transform: rotate(-15deg)"
-			class="absolute top-10 left-6 z-20 rounded border-4 border-emerald-500 px-4 py-2 text-3xl font-black text-emerald-500"
+			class="absolute top-10 left-6 z-20 flex flex-col items-center rounded border-4 border-emerald-500 px-4 py-2 text-3xl font-black text-emerald-500"
 		>
-			YES
+			<span>YES</span>
+			{#if isLimitOrderYes}
+				<span
+					class="mt-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] tracking-widest text-white uppercase"
+				>
+					Limit Order
+				</span>
+			{/if}
 		</div>
 
 		<!-- NO Indicator -->
 		<div
 			style="opacity: {noOpacity}; transform: rotate(15deg)"
-			class="absolute top-10 right-6 z-20 rounded border-4 border-rose-500 px-4 py-2 text-3xl font-black text-rose-500"
+			class="absolute top-10 right-6 z-20 flex flex-col items-center rounded border-4 border-rose-500 px-4 py-2 text-3xl font-black text-rose-500"
 		>
-			NO
+			<span>NO</span>
+			{#if isLimitOrderNo}
+				<span
+					class="mt-1 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] tracking-widest text-white uppercase"
+				>
+					Limit Order
+				</span>
+			{/if}
 		</div>
 
 		<!-- SKIP Indicator -->
@@ -146,6 +162,14 @@
 							<span class="text-2xl font-black text-rose-700">
 								{formatProbability(market.noProbability)}
 							</span>
+
+							{#if isLimitOrderNo}
+								<div
+									class="mt-1 inline-block rounded-full bg-rose-200 px-2 py-0.5 text-[8px] font-bold tracking-tighter text-rose-700 uppercase"
+								>
+									Limit
+								</div>
+							{/if}
 						</div>
 
 						<div class="rounded-2xl border border-emerald-100 bg-emerald-50 p-4">
@@ -156,6 +180,14 @@
 							<span class="text-2xl font-black text-emerald-700">
 								{formatProbability(market.yesProbability)}
 							</span>
+
+							{#if isLimitOrderYes}
+								<div
+									class="mt-1 inline-block rounded-full bg-emerald-200 px-2 py-0.5 text-[8px] font-bold tracking-tighter text-emerald-700 uppercase"
+								>
+									Limit
+								</div>
+							{/if}
 						</div>
 					</div>
 				</div>
