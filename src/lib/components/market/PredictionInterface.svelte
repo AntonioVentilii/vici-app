@@ -14,6 +14,7 @@
 	import type { Market, Outcome } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
+	import { formatAvilableUsd } from '$lib/utils/format.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 
 	interface Props {
@@ -309,7 +310,7 @@
 
 					<span class="text-[10px] font-bold text-slate-400 uppercase">
 						Available: {availableEquity !== undefined
-							? `$${(Number(availableEquity) / 10 ** 8).toFixed(2)}`
+							? `$${formatAvilableUsd(availableEquity)}`
 							: '...'}
 					</span>
 				</div>

@@ -38,9 +38,9 @@
 			for (const relation of activeFriends) {
 				const friendId = relation.participants.find((p) => p !== userPrincipal);
 				if (friendId && !friendProfiles.has(friendId)) {
-					const profile = await getProfile(friendId);
-					if (profile) {
-						friendProfiles.set(friendId, profile);
+					const profileDoc = await getProfile(friendId);
+					if (profileDoc) {
+						friendProfiles.set(friendId, profileDoc.data);
 					}
 				}
 			}

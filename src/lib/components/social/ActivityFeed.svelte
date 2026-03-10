@@ -43,9 +43,9 @@
 				const usersToFetch = [activity.user, activity.targetUser].filter(Boolean) as string[];
 				for (const u of usersToFetch) {
 					if (!profiles.has(u)) {
-						const profile = await getProfile(u);
-						if (profile) {
-							profiles.set(u, profile);
+						const profileDoc = await getProfile(u);
+						if (profileDoc) {
+							profiles.set(u, profileDoc.data);
 						}
 					}
 				}

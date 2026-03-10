@@ -37,10 +37,10 @@
 
 			for (const comment of comments) {
 				if (!profiles.has(comment.user)) {
-					const profile = await getProfile(comment.user);
+					const profileDoc = await getProfile(comment.user);
 
-					if (profile) {
-						profiles.set(comment.user, profile);
+					if (profileDoc) {
+						profiles.set(comment.user, profileDoc.data);
 					}
 				}
 			}

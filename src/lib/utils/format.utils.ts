@@ -87,3 +87,7 @@ export const formatVolume = ({
 	decimals: number;
 	symbol: string;
 }): string => `${formatToken({ value: volume, unitName: decimals })} ${symbol}`;
+
+// TODO: How did we arrive at this decimals??? It refers to USD_DECIMALS of Clearing canister, but should we be using token decimals instead?
+export const formatAvilableUsd = (value: string | number | bigint) =>
+	(Number(value) / 10 ** 6).toFixed(2);

@@ -5,16 +5,26 @@ import type { UserRole } from '$lib/types/user';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@dfinity/zod-schemas';
 import type { Identity } from '@icp-sdk/core/agent';
-import { getDoc, listDocs, setDoc } from '@junobuild/core';
+import { getDoc, listDocs, setDoc, type Doc } from '@junobuild/core';
 
-export const getProfile = async (principal: PrincipalText): Promise<UserProfile | undefined> => {
+export const getProfile = async (
+	principal: PrincipalText
+): Promise<Doc<UserProfile> & { role?: UserRole }> => {
 	const profileDoc = await getDoc<UserProfile>({
 		collection: Collection.PROFILES,
 		key: principal
 	});
 
 	if (isNullish(profileDoc)) {
-		return;
+		return {
+			key: principal,
+			data: {
+				owner: principal,
+				nickname: `${principal.slice(0, 5)}...${principal.slice(-3)}`,
+				createdAt: Date.now(),
+				updatedAt: Date.now()
+			}
+		};
 	}
 
 	const roleDoc = await getDoc<{ role: UserRole }>({
@@ -23,18 +33,23 @@ export const getProfile = async (principal: PrincipalText): Promise<UserProfile 
 	});
 
 	return {
-		...profileDoc.data,
-		role: roleDoc?.data.role
+		...profileDoc,
+		data: {
+			...profileDoc.data,
+			role: roleDoc?.data.role
+		}
 	};
 };
 
-export const upsertProfile = async (profile: UserProfile): Promise<void> => {
+export const upsertProfile = async (
+	profileDoc: Doc<UserProfile> | { key: string; data: UserProfile }
+): Promise<void> => {
 	await setDoc({
 		collection: Collection.PROFILES,
 		doc: {
-			key: profile.owner,
+			...profileDoc,
 			data: {
-				...profile,
+				...profileDoc.data,
 				updatedAt: Date.now()
 			}
 		}
@@ -57,22 +72,15 @@ export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
 };
 
 export const ensureProfile = async (principal: PrincipalText): Promise<UserProfile> => {
-	const profile = await getProfile(principal);
+	const profileDoc = await getProfile(principal);
 
-	if (nonNullish(profile)) {
-		return profile;
+	if (nonNullish(profileDoc.version)) {
+		return profileDoc.data;
 	}
 
-	const newProfile: UserProfile = {
-		owner: principal,
-		nickname: `${principal.slice(0, 5)}...${principal.slice(-3)}`,
-		createdAt: Date.now(),
-		updatedAt: Date.now()
-	};
+	await upsertProfile(profileDoc);
 
-	await upsertProfile(newProfile);
-
-	return newProfile;
+	return profileDoc.data;
 };
 
 export const calculateAndSyncStats = async (identity: Identity): Promise<void> => {
@@ -90,14 +98,15 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 	pnl = positions.reduce((acc, [_, pos]) => acc + Number(pos.reserved_margin_usd), 0) / 1e8;
 	wins = Math.floor(totalTrades * 0.6); // Mock 60% win rate
 
-	const profile = await getProfile(principal);
-	if (profile) {
-		await upsertProfile({
-			...profile,
+	const profileDoc = await getProfile(principal);
+
+	await upsertProfile({
+		...profileDoc,
+		data: {
+			...profileDoc.data,
 			totalTrades,
 			winRate: totalTrades > 0 ? (wins / totalTrades) * 100 : 0,
-			pnl,
-			updatedAt: Date.now()
-		});
-	}
+			pnl
+		}
+	});
 };

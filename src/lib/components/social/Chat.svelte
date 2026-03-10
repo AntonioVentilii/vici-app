@@ -39,9 +39,9 @@
 
 		for (const msg of messages) {
 			if (!profiles.has(msg.sender)) {
-				const profile = await getProfile(msg.sender);
-				if (profile) {
-					profiles.set(msg.sender, profile);
+				const profileDoc = await getProfile(msg.sender);
+				if (profileDoc) {
+					profiles.set(msg.sender, profileDoc.data);
 				}
 			}
 		}
