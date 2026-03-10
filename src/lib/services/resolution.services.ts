@@ -18,8 +18,9 @@ export const settleMarket = async ({
 	const identity = await safeGetIdentityOnce();
 
 	// RBAC check: only ADMIN or RESOLVER can settle
-	const profile = await getProfile(identity.getPrincipal().toText());
-	if (profile?.role !== UserRole.ADMIN && profile?.role !== UserRole.RESOLVER) {
+	const profileDoc = await getProfile(identity.getPrincipal().toText());
+
+	if (profileDoc.data.role !== UserRole.ADMIN && profileDoc.data.role !== UserRole.RESOLVER) {
 		throw new Error('Unauthorized: only admins or resolvers can settle markets');
 	}
 

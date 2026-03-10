@@ -35,8 +35,9 @@ export const createMarket = async ({
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 
-	const profile = await getProfile(identity.getPrincipal().toText());
-	const role = profile?.role;
+	const profileDoc = await getProfile(identity.getPrincipal().toText());
+
+	const { role } = profileDoc.data;
 
 	if (role !== UserRole.ADMIN && role !== UserRole.CREATOR) {
 		throw new Error('Unauthorized: only admins or creators can create markets');
