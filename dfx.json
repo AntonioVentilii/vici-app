@@ -140,13 +140,13 @@
 	],
 	"version": 1,
 	"networks": {
-		"staging": {
-			"providers": ["https://icp0.io"],
-			"type": "persistent"
-		},
 		"local": {
 			"providers": ["http://127.0.0.1:5987"],
 			"type": "ephemeral"
+		},
+		"staging": {
+			"providers": ["https://icp0.io"],
+			"type": "persistent"
 		}
 	}
 }

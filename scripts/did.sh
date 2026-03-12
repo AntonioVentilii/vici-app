@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
-./scripts/import-candid.sh
+source "$(dirname "$0")/utils.sh" "$@"
 
-./scripts/compile-idl-js.sh
+./scripts/import-candid.sh --"$NETWORK"
+
+./scripts/compile-idl-js.sh --"$NETWORK"

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
+source "$(dirname "$0")/utils.sh" "$@"
+
 # This script initializes the registry canister with a list of markets from scripts/data/markets.json
 # It uses dfx to call the add_series method for each market.
-
-set -euo pipefail
 
 DATA_FILE="scripts/data/markets.json"
 
@@ -19,7 +19,7 @@ slugify() {
     sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'
 }
 
-echo "Starting registry initialization..."
+echo "Starting registry initialization on $NETWORK..."
 
 length=$(jq '. | length' "$DATA_FILE")
 
@@ -47,7 +47,7 @@ for ((i = 0; i < $length; i++)); do
     payoff_type="variant { Binary }"
   fi
 
-  dfx canister call --network local registry add_series "(record {
+  dfx canister call --network "$NETWORK" registry add_series "(record {
         title = \"$title\";
         description = record { plain = \"$description\"; html = null; markdown = null };
         expiry_ns = $expiration_ns;

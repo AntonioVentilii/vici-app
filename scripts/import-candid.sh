@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-set -ueo pipefail
+
+source "$(dirname "$0")/utils.sh" "$@"
 
 download_did() {
   local raw_url="$1"
