@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Compiles candid .did files to .idl.js and .d.ts
+source "$(dirname "$0")/utils.sh" "$@"
 
-set -euo pipefail
+# Compiles candid .did files to .idl.js and .d.ts
 
 did_files_to_compile() {
   find src/declarations -type f -name '*.did' \

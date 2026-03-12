@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
-set -euo pipefail
+source "$(dirname "$0")/utils.sh" "$@"
 
-echo "Starting clearing initialization..."
+echo "Starting clearing initialization on $NETWORK..."
 
-REGISTRY=$(dfx canister id registry)
+REGISTRY=$(dfx canister id registry --network "$NETWORK")
 
-LEDGER=$(dfx canister id ledger)
+LEDGER=$(dfx canister id ledger --network "$NETWORK")
 
 ICP_LEDGER="ryjl3-tyaaa-aaaaa-aaaba-cai"
 
 echo "Setting registry canister ID $REGISTRY in clearing canister..."
-dfx canister call --network local clearing set_registry_canister "(principal \"$REGISTRY\")"
+dfx canister call --network "$NETWORK" clearing set_registry_canister "(principal \"$REGISTRY\")"
 
 echo "Adding ICDC ledger $LEDGER as collateral asset in clearing canister..."
-dfx canister call --network local clearing update_collateral_asset "(record {
+dfx canister call --network "$NETWORK" clearing update_collateral_asset "(record {
     config = record {
         asset_id = \"vusd\";
         symbol = \"vUSD\";
@@ -26,7 +26,7 @@ dfx canister call --network local clearing update_collateral_asset "(record {
 })"
 
 echo "Adding ICP ledger $ICP_LEDGER as collateral asset in clearing canister..."
-dfx canister call --network local clearing update_collateral_asset "(record {
+dfx canister call --network "$NETWORK" clearing update_collateral_asset "(record {
     config = record {
         asset_id = \"icp\";
         symbol = \"ICP\";
@@ -38,7 +38,7 @@ dfx canister call --network local clearing update_collateral_asset "(record {
 })"
 
 echo "Setting asset metrics for ICP ledger $ICP_LEDGER in clearing canister..."
-dfx canister call --network local clearing update_asset_metrics "(record {
+dfx canister call --network "$NETWORK" clearing update_asset_metrics "(record {
     asset_id = \"icp\";
     metrics = record {
       haircut_bps = 1_000 : nat16;
