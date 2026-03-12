@@ -44,7 +44,8 @@ export const Price = IDL.Record({
 export const PayoffType = IDL.Variant({
 	Put: IDL.Null,
 	Binary: IDL.Null,
-	Call: IDL.Null
+	Call: IDL.Null,
+	Categorical: IDL.Null
 });
 export const FiatUnit = IDL.Variant({
 	Chf: IDL.Null,
@@ -80,6 +81,7 @@ export const AddSeriesParams = IDL.Record({
 	expiry_ns: IDL.Nat64,
 	underlying: IDL.Text,
 	description: Description,
+	outcomes: IDL.Opt(IDL.Vec(IDL.Text)),
 	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
 });
@@ -110,6 +112,7 @@ export const Series = IDL.Record({
 	series_id: IDL.Text,
 	underlying: IDL.Text,
 	description: Description,
+	outcomes: IDL.Opt(IDL.Vec(IDL.Text)),
 	created_at_ns: IDL.Nat64,
 	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
@@ -191,7 +194,8 @@ export const idlFactory = ({ IDL }) => {
 	const PayoffType = IDL.Variant({
 		Put: IDL.Null,
 		Binary: IDL.Null,
-		Call: IDL.Null
+		Call: IDL.Null,
+		Categorical: IDL.Null
 	});
 	const FiatUnit = IDL.Variant({
 		Chf: IDL.Null,
@@ -227,6 +231,7 @@ export const idlFactory = ({ IDL }) => {
 		expiry_ns: IDL.Nat64,
 		underlying: IDL.Text,
 		description: Description,
+		outcomes: IDL.Opt(IDL.Vec(IDL.Text)),
 		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text
 	});
@@ -254,6 +259,7 @@ export const idlFactory = ({ IDL }) => {
 		series_id: IDL.Text,
 		underlying: IDL.Text,
 		description: Description,
+		outcomes: IDL.Opt(IDL.Vec(IDL.Text)),
 		created_at_ns: IDL.Nat64,
 		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text

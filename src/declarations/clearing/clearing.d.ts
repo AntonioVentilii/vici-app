@@ -76,6 +76,7 @@ export interface CollateralAssetInfo {
 }
 export type CommonError =
 	| { Internal: string }
+	| { InvalidInput: string }
 	| { MathOverflow: null }
 	| { Unauthorized: null }
 	| { RegistryNotSet: null };
@@ -123,6 +124,7 @@ export type EventType =
 	| { Settled: null };
 export type FiatUnit = { Chf: null } | { Eur: null } | { Gbp: null } | { Usd: null };
 export interface FreezePositionForTransferParams {
+	outcome_id: [] | [string];
 	series_id: string;
 	user: Principal;
 	transfer_id: string;
@@ -138,6 +140,7 @@ export interface GetFundsResult {
 	treasury: Array<[string, bigint]>;
 }
 export interface GetPositionParams {
+	outcome_id: [] | [string];
 	series_id: string;
 }
 export interface HttpRequest {
@@ -154,6 +157,7 @@ export interface HttpResponse {
 export interface LimitOrder {
 	qty: bigint;
 	creator: Principal;
+	outcome_id: [] | [string];
 	blocked_margin_usd: bigint;
 	series_id: string;
 	side: Side;
@@ -169,10 +173,11 @@ export interface NativeEvmAsset {
 }
 export type NonMonetaryUnit = { Points: null };
 export type PaymentIdempotency = { IcrcCreatedAtTimeNs: bigint };
-export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
+export type PayoffType = { Put: null } | { Binary: null } | { Call: null } | { Categorical: null };
 export type PayoutUnit = { Fiat: FiatUnit } | { Asset: Asset } | { NonMonetary: NonMonetaryUnit };
 export type PlanStatus = { Finalised: null } | { Planned: null } | { Executing: null };
 export interface Position {
+	outcome_id: [] | [string];
 	series_id: string;
 	net_qty: bigint;
 	user: Principal;
@@ -181,6 +186,7 @@ export interface Position {
 export interface PositionProof {
 	qty: bigint;
 	signature: Uint8Array;
+	outcome_id: [] | [string];
 	series_id: string;
 	user: Principal;
 	transfer_id: string;
@@ -202,13 +208,14 @@ export interface Series {
 	series_id: string;
 	underlying: string;
 	description: Description;
+	outcomes: [] | [Array<string>];
 	created_at_ns: bigint;
 	price_precision: number;
 	oracle_source: string;
 }
 export interface SettleSeriesParams {
 	series_id: string;
-	settlement_price: Price;
+	settlement: SettlementInput;
 }
 export type SettleSeriesResult = { Ok: null } | { Err: SettlementError } | { Processing: null };
 export type SettlementError =
@@ -224,6 +231,7 @@ export type SettlementError =
 	  }
 	| { Asset: AssetError }
 	| { Common: CommonError };
+export type SettlementInput = { Price: Price } | { Outcome: string };
 export interface SettlementPlan {
 	status: PlanStatus;
 	idempotency_ns: PaymentIdempotency;
@@ -234,9 +242,10 @@ export interface SettlementPlan {
 	positions: Array<SettlementPosition>;
 	accounting_applied: boolean;
 	oracle_source: string;
-	settlement_price: Price;
+	settlement: SettlementInput;
 }
 export interface SettlementPosition {
+	outcome_id: [] | [string];
 	net_qty: bigint;
 	user: Principal;
 	reserved_margin_usd: bigint;
@@ -250,8 +259,8 @@ export interface SettlementStatusView {
 	insurance_fee_usd: bigint;
 	accounting_applied: boolean;
 	oracle_source: string;
-	settlement_price: Price;
 	total_positions: bigint;
+	settlement: SettlementInput;
 }
 export type Side = { Buy: null } | { Sell: null };
 export interface Stats {
@@ -265,6 +274,7 @@ export interface Stats {
 }
 export interface SubmitLimitOrderParams {
 	qty: bigint;
+	outcome_id: [] | [string];
 	series_id: string;
 	side: Side;
 	order_id: string;
@@ -277,6 +287,7 @@ export interface SubmitMarketOrderParams {
 export interface SubmitMatchedTradeParams {
 	qty: bigint;
 	trade_id: string;
+	outcome_id: [] | [string];
 	series_id: string;
 	seller: Principal;
 	buyer_unblock_amount: [] | [bigint];
@@ -416,7 +427,7 @@ export interface _SERVICE {
 	/**
 	 * Retrieves all open positions for the caller.
 	 */
-	get_positions: ActorMethod<[], Array<[string, Position]>>;
+	get_positions: ActorMethod<[], Array<Position>>;
 	/**
 	 * Returns the full settlement plan including per-position accounting details (admin only).
 	 */
@@ -450,6 +461,8 @@ export interface _SERVICE {
 	 * This method is gated to canister controllers.
 	 */
 	metrics: ActorMethod<[], string>;
+	mint_complete_set: ActorMethod<[string, bigint], SubmitMatchedTradeResult>;
+	redeem_complete_set: ActorMethod<[string, bigint], SubmitMatchedTradeResult>;
 	/**
 	 * Admin function to manually resume a stuck settlement plan, e.g., if the timer was dropped during
 	 * upgrade.

@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit aa743e7b67489aea1bacac410a3308bcf2481baa for file 'src/registry/registry.did'
+// Generated from AntonioVentilii/icdc-core commit 03bc8e04d5e3479902940adbc22c38e433e0b34f for file 'src/registry/registry.did'
 
 type AddOracleParams = record {
 	metadata : OracleMetadata;
@@ -13,6 +13,7 @@ type AddSeriesParams = record {
 	expiry_ns : nat64;
 	underlying : text;
 	description : Description;
+	outcomes : opt vec text;
 	price_precision : nat8;
 	oracle_source : text
 };
@@ -70,7 +71,7 @@ type OracleMetadata = record {
 };
 type OracleResult = variant { Ok; Err : OracleError };
 type PaginationParams = record { cursor : opt text; limit : opt nat64 };
-type PayoffType = variant { Put; Binary; Call };
+type PayoffType = variant { Put; Binary; Call; Categorical };
 type PayoutUnit = variant {
 	Fiat : FiatUnit;
 	Asset : Asset;
@@ -91,6 +92,7 @@ type Series = record {
 	series_id : text;
 	underlying : text;
 	description : Description;
+	outcomes : opt vec text;
 	created_at_ns : nat64;
 	price_precision : nat8;
 	oracle_source : text

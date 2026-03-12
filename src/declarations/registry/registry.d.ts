@@ -23,6 +23,7 @@ export interface AddSeriesParams {
 	expiry_ns: bigint;
 	underlying: string;
 	description: Description;
+	outcomes: [] | [Array<string>];
 	price_precision: number;
 	oracle_source: string;
 }
@@ -84,7 +85,7 @@ export interface PaginationParams {
 	cursor: [] | [string];
 	limit: [] | [bigint];
 }
-export type PayoffType = { Put: null } | { Binary: null } | { Call: null };
+export type PayoffType = { Put: null } | { Binary: null } | { Call: null } | { Categorical: null };
 export type PayoutUnit = { Fiat: FiatUnit } | { Asset: Asset } | { NonMonetary: NonMonetaryUnit };
 export interface Price {
 	timestamp: [] | [bigint];
@@ -101,6 +102,7 @@ export interface Series {
 	series_id: string;
 	underlying: string;
 	description: Description;
+	outcomes: [] | [Array<string>];
 	created_at_ns: bigint;
 	price_precision: number;
 	oracle_source: string;
