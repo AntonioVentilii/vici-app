@@ -14,7 +14,7 @@
 	import type { Market } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
-	import { formatAvilableUsd } from '$lib/utils/format.utils';
+	import { formatAvailableUsd, formatCurrency } from '$lib/utils/format.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 
 	interface Props {
@@ -181,7 +181,8 @@
 			return '0';
 		}
 
-		return (amt * prob).toFixed(2);
+		const cost = BigInt(Math.floor(amt * prob * 10 ** 6));
+		return formatCurrency({ value: cost, decimals: 6 });
 	});
 
 	const estimatedPayout = $derived.by(() => {
@@ -204,7 +205,8 @@
 			return '0';
 		}
 
-		return (amt * (1 - prob)).toFixed(2);
+		const payout = BigInt(Math.floor(amt * (1 - prob) * 10 ** 6));
+		return formatCurrency({ value: payout, decimals: 6 });
 	});
 </script>
 
@@ -338,12 +340,12 @@
 						class="text-[10px] font-bold tracking-widest text-slate-400 uppercase"
 						for="amount"
 					>
-						Order Size
+						Order Size (Qty)
 					</label>
 
 					<span class="text-[10px] font-bold text-slate-400 uppercase">
 						Available: {availableEquity !== undefined
-							? `$${formatAvilableUsd(availableEquity)}`
+							? formatAvailableUsd({ value: availableEquity })
 							: '...'}
 					</span>
 				</div>

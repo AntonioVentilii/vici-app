@@ -4,7 +4,7 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { cancelLimitOrder } from '$lib/services/order.services';
 	import type { Market } from '$lib/types/market';
-	import { formatToken, formatPrice } from '$lib/utils/format.utils';
+	import { formatPrice, formatQuantity } from '$lib/utils/format.utils';
 
 	interface Props {
 		orders: ClearingDid.LimitOrder[];
@@ -77,7 +77,7 @@
 									{formatPrice(order.price)}
 								</td>
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
-									{formatToken({ value: order.qty, unitName: market?.token.decimals ?? 8 })}
+									{formatQuantity({ value: order.qty, decimals: market?.token.decimals ?? 8 })}
 								</td>
 								<td class="px-6 py-4 text-right">
 									<button

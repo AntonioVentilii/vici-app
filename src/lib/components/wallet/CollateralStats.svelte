@@ -7,7 +7,7 @@
 	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 	import { isDev } from '$lib/env/app.env';
 	import type { CollateralStoreData } from '$lib/stores/collaterals.store';
-	import { formatAvilableUsd, formatToken } from '$lib/utils/format.utils';
+	import { formatAvailableUsd, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		collateral: CollateralStoreData;
@@ -49,14 +49,14 @@
 				</div>
 				{#if collateral.accountState}
 					<Badge variant="success">
-						${formatAvilableUsd(collateral.accountState.total_equity_usd)} Total
+						{formatAvailableUsd({ value: collateral.accountState.total_equity_usd })} Total
 					</Badge>
 				{/if}
 			</div>
 			<p class="mt-1 text-sm text-slate-500">
 				{#if collateral.accountState}
 					Available Equity: <span class="font-bold text-slate-900"
-						>${formatAvilableUsd(collateral.accountState.available_equity_usd)}</span
+						>{formatAvailableUsd({ value: collateral.accountState.available_equity_usd })}</span
 					>
 				{:else}
 					Locked and available margin for trading
@@ -114,10 +114,10 @@
 					</div>
 					<div class="text-[10px] font-medium text-slate-400 uppercase">
 						{#if assetWorth}
-							Value: ${formatAvilableUsd(assetWorth.value_usd)}
+							Value: {formatAvailableUsd({ value: assetWorth.value_usd })}
 							{#if assetWorth.haircut_bps > 0}
 								<span class="line-through opacity-50"
-									>(${formatAvilableUsd(assetWorth.pre_haircut_value_usd)})</span
+									>({formatAvailableUsd({ value: assetWorth.pre_haircut_value_usd })})</span
 								>
 							{/if}
 						{:else}

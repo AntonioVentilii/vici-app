@@ -3,7 +3,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import type { Market } from '$lib/types/market';
-	import { formatToken, formatPrice } from '$lib/utils/format.utils';
+	import { formatPrice, formatQuantity, formatNanosecondsToDate } from '$lib/utils/format.utils';
 
 	interface Props {
 		events: ClearingDid.Event[];
@@ -13,14 +13,6 @@
 	const { events, markets }: Props = $props();
 
 	const getMarketById = (id: string) => markets.find((m) => m.id === id);
-
-	const formatDate = (ns: bigint) =>
-		new Date(Number(ns / 1_000_000n)).toLocaleString([], {
-			month: 'short',
-			day: 'numeric',
-			hour: '2-digit',
-			minute: '2-digit'
-		});
 </script>
 
 <div class="space-y-4">
@@ -48,7 +40,7 @@
 
 							<tr class="group transition-colors hover:bg-slate-50">
 								<td class="px-6 py-4 text-[10px] text-slate-500">
-									{formatDate(event.timestamp)}
+									{formatNanosecondsToDate({ nanoseconds: event.timestamp })}
 								</td>
 								<td class="px-6 py-4">
 									<div class="flex flex-col">
@@ -66,7 +58,7 @@
 									{formatPrice(event.price)}
 								</td>
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
-									{formatToken({ value: event.qty, unitName: market?.token.decimals ?? 8 })}
+									{formatQuantity({ value: event.qty, decimals: market?.token.decimals ?? 8 })}
 								</td>
 							</tr>
 						{/each}

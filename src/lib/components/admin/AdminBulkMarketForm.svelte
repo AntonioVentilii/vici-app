@@ -1,6 +1,8 @@
 <script lang="ts">
 	interface Props {
-		onBulkCreate: (markets: { title: string; description: string; expiryDate: string }[]) => void;
+		onBulkCreate: (
+			markets: { title: string; description: string; expiryDate: string; outcomes?: string[] }[]
+		) => void;
 	}
 
 	const { onBulkCreate }: Props = $props();
@@ -17,10 +19,10 @@
 			expiryDate: '2027-01-01T00:00:00Z'
 		},
 		{
-			title: 'Will the first human land on Mars by 2030?',
-			description:
-				'Resolves to YES if a human successfully lands on Mars and returns or survives at least 24 hours.',
-			expiryDate: '2030-12-31T23:59:59Z'
+			title: 'Who will win the 2026 FIFA World Cup?',
+			description: 'Prediction on the champion of the 2026 FIFA World Cup.',
+			expiryDate: '2026-07-20T21:59:59.000Z',
+			outcomes: ['Italy', 'Brazil', 'France', 'Argentina', 'England', 'Spain', 'Germany', 'Other']
 		}
 	];
 
@@ -49,6 +51,20 @@
 				if (isNaN(Date.parse(item.expiryDate))) {
 					error = `Invalid date format: ${item.expiryDate}`;
 					return;
+				}
+				if (item.outcomes) {
+					if (!Array.isArray(item.outcomes)) {
+						error = `Outcomes must be an array for market: ${item.title}`;
+						return;
+					}
+					if (item.outcomes.some((o: unknown) => typeof o !== 'string')) {
+						error = `Each outcome must be a string for market: ${item.title}`;
+						return;
+					}
+					if (item.outcomes.length < 2) {
+						error = `Categorical markets must have at least 2 outcomes: ${item.title}`;
+						return;
+					}
 				}
 			}
 

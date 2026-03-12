@@ -4,7 +4,7 @@
 	import { orderBookStore } from '$lib/stores/order-book.store';
 	import { selectPrice } from '$lib/stores/trade.store';
 	import type { Market, Outcome } from '$lib/types/market';
-	import { formatProbability, formatToken } from '$lib/utils/format.utils';
+	import { formatProbability, formatQuantity } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -81,7 +81,7 @@
 							{formatProbability(ask.price)}
 						</span>
 						<span class="relative z-10 text-xs font-medium text-slate-500">
-							{formatToken({ value: ask.totalQty, unitName: tokenDecimals })}
+							{formatQuantity({ value: ask.totalQty, decimals: tokenDecimals })}
 						</span>
 					</button>
 				{/each}
@@ -114,7 +114,7 @@
 							{formatProbability(bid.price)}
 						</span>
 						<span class="relative z-10 text-xs font-medium text-slate-500">
-							{formatToken({ value: bid.totalQty, unitName: tokenDecimals })}
+							{formatQuantity({ value: bid.totalQty, decimals: tokenDecimals })}
 						</span>
 					</button>
 				{/each}
@@ -125,7 +125,7 @@
 			class="mt-6 grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase"
 		>
 			<div>Price</div>
-			<div class="text-right">Size</div>
+			<div class="text-right">Qty</div>
 		</div>
 	{/if}
 </div>

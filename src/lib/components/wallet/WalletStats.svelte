@@ -6,7 +6,7 @@
 	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 	import { isDev } from '$lib/env/app.env';
 	import type { WalletBalance } from '$lib/types/wallet';
-	import { formatToken } from '$lib/utils/format.utils';
+	import { formatCurrency, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		balances: WalletBalance;
@@ -78,13 +78,9 @@
 					</div>
 					<div class="text-[10px] font-medium text-slate-400">
 						{#if assetWorth}
-							≈ ${(
-								Number(assetWorth.value_usd) / (Number(assetWorth.balance) || 1) / 10 ** 8 || 0
-							).toFixed(2)} USD
-						{:else if token.symbol === 'ICP'}
-							≈ ${((Number(balance) / 10 ** token.decimals) * 12.5).toFixed(2)} USD
+							≈ {formatCurrency({ value: assetWorth.value_usd })}
 						{:else if token.symbol === 'ckUSDC'}
-							≈ ${formatToken({ value: balance, unitName: token.decimals })} USD
+							≈ {formatCurrency({ value: balance, decimals: token.decimals })}
 						{:else}
 							--
 						{/if}

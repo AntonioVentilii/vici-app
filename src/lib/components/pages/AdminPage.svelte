@@ -22,6 +22,10 @@
 	let newRolePrincipal = $state('');
 	let newRoleSelected = $state<UserRole>(UserRole.ADMIN);
 
+	// Bulk Creation Progress
+	let bulkProgress = $state(0);
+	let bulkTotal = $state(0);
+
 	const fetchMarkets = async () => {
 		markets = await getMarkets();
 		loading = false;
@@ -42,20 +46,29 @@
 	});
 
 	const handleBulkCreate = async (
-		bulkMarkets: { title: string; description: string; expiryDate: string }[]
+		bulkMarkets: { title: string; description: string; expiryDate: string; outcomes?: string[] }[]
 	) => {
 		const results = { success: 0, failed: 0 };
 
 		loading = true;
+		bulkProgress = 0;
+		bulkTotal = bulkMarkets.length;
 
 		const settledResults = await Promise.allSettled(
-			bulkMarkets.map(({ title, description, expiryDate }) =>
-				createMarket({
-					title,
-					description,
-					expiryDate: BigInt(new Date(expiryDate).getTime())
-				})
-			)
+			bulkMarkets.map(async ({ title, description, expiryDate, outcomes }) => {
+				try {
+					const result = await createMarket({
+						title,
+						description,
+						expiryDate: BigInt(new Date(expiryDate).getTime()),
+						outcomes
+					});
+
+					return result;
+				} finally {
+					bulkProgress++;
+				}
+			})
 		);
 
 		settledResults.forEach((result, index) => {
@@ -166,3 +179,46 @@
 		</section>
 	</div>
 </div>
+
+{#if loading && bulkTotal > 0}
+	<div
+		class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm"
+	>
+		<div class="w-full max-w-md scale-up rounded-3xl bg-white p-8 shadow-2xl">
+			<div class="mb-6 flex items-center justify-between">
+				<h3 class="text-xl font-bold text-slate-950">Creating Markets</h3>
+				<span class="text-sm font-medium text-slate-500">
+					{bulkProgress} of {bulkTotal}
+				</span>
+			</div>
+
+			<div class="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-100">
+				<div
+					class="h-full bg-indigo-600 transition-all duration-300 ease-out"
+					style="width: {(bulkProgress / bulkTotal) * 100}%"
+				></div>
+			</div>
+
+			<p class="text-center text-sm text-slate-600">
+				Please wait while we set up your prediction markets on the blockchain...
+			</p>
+		</div>
+	</div>
+{/if}
+
+<style>
+	.scale-up {
+		animation: scale-up 0.3s ease-out;
+	}
+
+	@keyframes scale-up {
+		from {
+			opacity: 0;
+			transform: scale(0.95);
+		}
+		to {
+			opacity: 1;
+			transform: scale(1);
+		}
+	}
+</style>

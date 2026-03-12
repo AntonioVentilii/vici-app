@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { ZERO } from '$lib/constants/app.constants';
 	import type { Position } from '$lib/types/position';
-	import { formatToken } from '$lib/utils/format.utils';
+	import { formatCurrency, formatQuantity } from '$lib/utils/format.utils';
 
 	interface Props {
 		position: Position | undefined;
@@ -29,7 +29,7 @@
 		<div class="mt-4 flex items-center justify-between">
 			<div class="flex flex-col">
 				<span class="text-2xl font-black text-slate-950">
-					{formatToken({ value: absQty, unitName: tokenDecimals })} Shares
+					{formatQuantity({ value: absQty, decimals: tokenDecimals })} Qty
 				</span>
 				<div class="flex items-center gap-2">
 					<span
@@ -43,7 +43,7 @@
 					</span>
 					<span class="text-[10px] text-slate-400">•</span>
 					<span class="text-[10px] font-medium text-slate-500">
-						Locked: {formatToken({ value: position.lockedCollateral, unitName: tokenDecimals })} ICP
+						Locked: {formatCurrency({ value: position.lockedCollateral, decimals: 6 })}
 					</span>
 				</div>
 			</div>

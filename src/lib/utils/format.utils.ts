@@ -49,11 +49,42 @@ export const formatToken = ({
 
 	const formatted = decDP.toFixed(minDigits) as `${number}`;
 
+	const prefix = showPlusSign && +res > 0 ? '+' : '';
+
 	if (trailingZeros) {
-		return formatted;
+		return `${prefix}${formatted}`;
 	}
 
-	return `${showPlusSign && +res > 0 ? '+' : ''}${formatted}`;
+	// Remove trailing zeros if not explicitly requested
+	const finalFormatted = formatted.replace(/\.?0+$/, '');
+
+	return `${prefix}${finalFormatted || '0'}`;
+};
+
+export const formatQuantity = ({
+	value,
+	decimals = 0
+}: {
+	value: bigint;
+	decimals?: number;
+}): string => formatToken({ value, unitName: decimals, displayDecimals: 2 });
+
+export const formatCurrency = ({
+	value,
+	decimals = 6,
+	symbol = 'USD'
+}: {
+	value: bigint;
+	decimals?: number;
+	symbol?: string;
+}): string => {
+	const formatted = formatToken({ value, unitName: decimals, displayDecimals: 2 });
+
+	if (symbol === 'USD') {
+		return `$${formatted}`;
+	}
+
+	return `${formatted} ${symbol}`;
 };
 
 const DATE_TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
@@ -88,6 +119,13 @@ export const formatVolume = ({
 	symbol: string;
 }): string => `${formatToken({ value: volume, unitName: decimals })} ${symbol}`;
 
-// TODO: How did we arrive at this decimals??? It refers to USD_DECIMALS of Clearing canister, but should we be using token decimals instead?
-export const formatAvilableUsd = (value: string | number | bigint) =>
-	(Number(value) / 10 ** 6).toFixed(2);
+export const formatAvailableUsd = ({
+	value,
+	decimals = 6
+}: {
+	value: string | number | bigint;
+	decimals?: number;
+}) => {
+	const val = typeof value === 'bigint' ? value : BigInt(Math.floor(Number(value)));
+	return formatCurrency({ value: val, decimals });
+};

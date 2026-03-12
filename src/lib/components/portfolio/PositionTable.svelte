@@ -4,7 +4,7 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
-	import { formatToken } from '$lib/utils/format.utils';
+	import { formatCurrency, formatQuantity } from '$lib/utils/format.utils';
 
 	interface Props {
 		positions: Position[];
@@ -78,18 +78,18 @@
 									</div>
 								</td>
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
-									{formatToken({
+									{formatQuantity({
 										value: pos.netQty < ZERO ? -pos.netQty : pos.netQty,
-										unitName: market?.token.decimals ?? 8
+										decimals: market?.token.decimals ?? 8
 									})}
-									<span class="text-[10px] text-slate-400">UNITS</span>
+									<span class="text-[10px] text-slate-400">QTY</span>
 								</td>
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
-									{formatToken({
+									{formatCurrency({
 										value: onCalculateValue(pos),
-										unitName: market?.token.decimals ?? 8
+										decimals: market?.token.decimals ?? 8,
+										symbol: market?.token.symbol ?? 'ICP'
 									})}
-									<span class="text-[10px] text-slate-400">ICP</span>
 								</td>
 								<td class="px-6 py-4 text-right">
 									<span class="text-sm font-black {pnl >= 0 ? 'text-green-600' : 'text-red-600'}">

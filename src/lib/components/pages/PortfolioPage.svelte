@@ -18,7 +18,7 @@
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
-	import { formatToken } from '$lib/utils/format.utils';
+	import { formatCurrency } from '$lib/utils/format.utils';
 	import { REFRESH_POSITIONS } from '$lib/utils/refresh.utils';
 
 	let positions = $state<Position[]>([]);
@@ -77,9 +77,18 @@
 	};
 
 	const calculatePnL = (pos: Position) => {
-		const totalUnits = pos.netQty < ZERO ? -pos.netQty : pos.netQty;
+		const market = getMarketById(pos.marketId);
+		if (!market) {
+			return 0;
+		}
+
 		const currentValue = calculateValue(pos);
-		return Number(currentValue - totalUnits) / 10 ** 8;
+		// lockedCollateral is USD (6 decimals). currentValue has token decimals.
+		// Normalize both to number for P&L display
+		const valNum = Number(currentValue) / 10 ** (market.token.decimals ?? 8);
+		const costNum = Number(pos.lockedCollateral) / 10 ** 6;
+
+		return valNum - costNum;
 	};
 
 	const totalPortfolioValue = $derived(
@@ -102,8 +111,9 @@
 		<!-- Stats Summary -->
 		<PortfolioStats
 			activeMarketsCount={positions.length}
-			{totalPnL}
-			totalPortfolioValue={formatToken({ value: totalPortfolioValue, unitName: 8 })}
+			pnlVariant={totalPnL >= 0 ? 'success' : 'default'}
+			totalHoldings={formatCurrency({ value: totalPortfolioValue, decimals: 8, symbol: 'ICP' })}
+			totalPnL={(totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(2)}
 		/>
 
 		<!-- Positions Table -->
