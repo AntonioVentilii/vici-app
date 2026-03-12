@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { Clock } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -40,27 +41,52 @@
 
 		<!-- Probabilities Area -->
 		<div class="grid grid-cols-2 gap-4">
-			<a
-				class="bg-destructive/10 hover:bg-destructive/20 rounded-xl p-3 text-center transition-all"
-				href="{AppPath.Markets}/{market.id}?side=no"
-				onclick={(e) => e.stopPropagation()}
-			>
-				<div class="text-destructive text-[10px] font-bold uppercase">No</div>
-				<div class="text-destructive text-xl font-black">
-					{formatProbability(market.noProbability)}
-				</div>
-			</a>
+			{#if market.payoffType === 'Binary'}
+				<a
+					class="bg-destructive/10 hover:bg-destructive/20 rounded-xl p-3 text-center transition-all"
+					href="{AppPath.Markets}/{market.id}?side=no"
+					onclick={(e) => e.stopPropagation()}
+				>
+					<div class="text-destructive text-[10px] font-bold uppercase">No</div>
+					<div class="text-destructive text-xl font-black">
+						{formatProbability(market.noProbability)}
+					</div>
+				</a>
 
-			<a
-				class="rounded-xl bg-emerald-500/10 p-3 text-center transition-all hover:bg-emerald-500/20"
-				href="{AppPath.Markets}/{market.id}?side=yes"
-				onclick={(e) => e.stopPropagation()}
-			>
-				<div class="text-[10px] font-bold text-emerald-600 uppercase">Yes</div>
-				<div class="text-xl font-black text-emerald-700">
-					{formatProbability(market.yesProbability)}
+				<a
+					class="rounded-xl bg-emerald-500/10 p-3 text-center transition-all hover:bg-emerald-500/20"
+					href="{AppPath.Markets}/{market.id}?side=yes"
+					onclick={(e) => e.stopPropagation()}
+				>
+					<div class="text-[10px] font-bold text-emerald-600 uppercase">Yes</div>
+					<div class="text-xl font-black text-emerald-700">
+						{formatProbability(market.yesProbability)}
+					</div>
+				</a>
+			{:else}
+				<div
+					class="col-span-2 flex flex-col justify-center rounded-2xl bg-indigo-50 p-4 text-center ring-1 ring-indigo-100 ring-inset"
+				>
+					<div class="text-[10px] font-bold text-indigo-500 uppercase">Categorical Market</div>
+					<div class="mt-1 text-sm font-black text-indigo-900">
+						{market.outcomes?.length ?? 0} Outcomes
+					</div>
+					<div class="mt-2 flex flex-wrap justify-center gap-1.5">
+						{#each market.outcomes?.slice(0, 3) ?? [] as outcome (outcome.id)}
+							<span
+								class="rounded-full bg-indigo-100 px-2.5 py-1 text-[10px] font-bold text-indigo-700"
+							>
+								{outcome.title}
+							</span>
+						{/each}
+						{#if nonNullish(market.outcomes?.length) && market.outcomes.length > 3}
+							<span class="text-[10px] font-bold text-indigo-400">
+								+{market.outcomes.length - 3} more
+							</span>
+						{/if}
+					</div>
 				</div>
-			</a>
+			{/if}
 		</div>
 
 		<!-- Footer Stats -->

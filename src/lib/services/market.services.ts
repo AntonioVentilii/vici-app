@@ -27,11 +27,13 @@ export const createMarket = async ({
 	title,
 	description,
 	expiryDate,
+	outcomes = [],
 	payoutUnit = { Fiat: { Usd: null } }
 }: {
 	title: string;
 	description: string;
 	expiryDate: bigint;
+	outcomes?: string[];
 	payoutUnit?: RegistryDid.PayoutUnit;
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
@@ -61,8 +63,20 @@ export const createMarket = async ({
 		expiry_ns: expiryDate * NANO_SECONDS_IN_MILLISECOND,
 		payout_unit: payoutUnit,
 		strike: STRIKE,
+		icon_url: toNullable(),
+		banner_url: toNullable(),
 		price_precision: PRICE_DECIMALS,
-		payoff_type: PAYOFF_TYPE,
+		payoff_type: outcomes.length > 0 ? { Categorical: null } : PAYOFF_TYPE,
+		outcomes: toNullable(
+			outcomes.length > 0
+				? outcomes.map((o) => ({
+						id: o.trim().toLowerCase().replace(/\s+/g, '-'),
+						title: o,
+						description: toNullable(),
+						icon_url: toNullable()
+					}))
+				: undefined
+		),
 		oracle_source: VICI_ORACLE_V1
 	};
 
@@ -110,16 +124,19 @@ export const getMarkets = async (): Promise<Market[]> => {
 	const markets = await Promise.all(
 		seriesList.map(async (s) => {
 			const mid = parseMarketId(s.series_id);
-			const { yesProbability, noProbability, bids, asks } = await getOrderBook(mid);
+			const { midPrice, bids, asks } = await getOrderBook({ marketId: mid, outcomeId: 'YES' });
 			const bestBid = bids[0]?.price;
 			const bestAsk = asks[0]?.price;
+
+			const yesProb = midPrice ?? 0.5;
+			const noProb = 1 - yesProb;
 
 			const isExpired = s.expiry_ns / NANO_SECONDS_IN_MILLISECOND <= BigInt(Date.now());
 
 			return mapMarketData({
 				series: s,
-				yesProbability,
-				noProbability,
+				yesProbability: yesProb,
+				noProbability: noProb,
 				bestBid,
 				bestAsk,
 				status: isExpired ? 'Expired' : 'Open'
@@ -154,11 +171,14 @@ export const getMarkets = async (): Promise<Market[]> => {
 export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {
 	const identity = await getIdentityOrAnonymous();
 
-	const [s, { yesProbability, noProbability, bids, asks }, activities] = await Promise.all([
+	const [s, { midPrice, bids, asks }, activities] = await Promise.all([
 		getSeries({ identity, seriesId: marketId }),
-		getOrderBook(marketId),
+		getOrderBook({ marketId, outcomeId: 'YES' }),
 		getGlobalActivities()
 	]);
+
+	const yesProb = midPrice ?? 0.5;
+	const noProb = 1 - yesProb;
 
 	const bestBid = bids[0]?.price;
 	const bestAsk = asks[0]?.price;
@@ -188,8 +208,8 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 
 	return mapMarketData({
 		series: s,
-		yesProbability,
-		noProbability,
+		yesProbability: yesProb,
+		noProbability: noProb,
 		bestBid,
 		bestAsk,
 		status,

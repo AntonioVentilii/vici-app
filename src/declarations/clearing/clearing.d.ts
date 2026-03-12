@@ -172,6 +172,12 @@ export interface NativeEvmAsset {
 	chain_id: bigint;
 }
 export type NonMonetaryUnit = { Points: null };
+export interface Outcome {
+	id: string;
+	title: string;
+	description: [] | [Description];
+	icon_url: [] | [string];
+}
 export type PaymentIdempotency = { IcrcCreatedAtTimeNs: bigint };
 export type PayoffType = { Put: null } | { Binary: null } | { Call: null } | { Categorical: null };
 export type PayoutUnit = { Fiat: FiatUnit } | { Asset: Asset } | { NonMonetary: NonMonetaryUnit };
@@ -205,11 +211,13 @@ export interface Series {
 	payoff_type: PayoffType;
 	payout_unit: PayoutUnit;
 	expiry_ns: bigint;
+	banner_url: [] | [string];
 	series_id: string;
 	underlying: string;
 	description: Description;
-	outcomes: [] | [Array<string>];
+	outcomes: [] | [Array<Outcome>];
 	created_at_ns: bigint;
+	icon_url: [] | [string];
 	price_precision: number;
 	oracle_source: string;
 }
@@ -461,7 +469,18 @@ export interface _SERVICE {
 	 * This method is gated to canister controllers.
 	 */
 	metrics: ActorMethod<[], string>;
+	/**
+	 * Mints a complete set of categorical outcome positions.
+	 *
+	 * Returns 1 unit of every outcome position in the series in exchange for the
+	 * full collateral requirement (1.0 USD vUSD).
+	 */
 	mint_complete_set: ActorMethod<[string, bigint], SubmitMatchedTradeResult>;
+	/**
+	 * Redeems a complete set of categorical outcome positions for collateral.
+	 *
+	 * Returns 1.0 USD (vUSD) for every full set of N outcome positions provided.
+	 */
 	redeem_complete_set: ActorMethod<[string, bigint], SubmitMatchedTradeResult>;
 	/**
 	 * Admin function to manually resume a stuck settlement plan, e.g., if the timer was dropped during

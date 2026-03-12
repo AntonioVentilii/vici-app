@@ -10,8 +10,14 @@
 
 	const { position, tokenDecimals }: Props = $props();
 
-	const isYes = $derived(position ? position.yesAmount > ZERO : false);
-	const absQty = $derived(position ? (isYes ? position.yesAmount : position.noAmount) : ZERO);
+	const isYes = $derived(position?.outcomeId === 'YES');
+	const isNo = $derived(position?.outcomeId === 'NO');
+
+	const displayOutcome = $derived(position?.outcomeId ?? 'Unknown');
+
+	const absQty = $derived(
+		position ? (position.netQty < ZERO ? -position.netQty : position.netQty) : ZERO
+	);
 </script>
 
 {#if position && absQty > ZERO}
@@ -26,8 +32,14 @@
 					{formatToken({ value: absQty, unitName: tokenDecimals })} Shares
 				</span>
 				<div class="flex items-center gap-2">
-					<span class="text-xs font-bold {isYes ? 'text-green-600' : 'text-red-600'} uppercase">
-						{isYes ? 'YES' : 'NO'}
+					<span
+						class="text-xs font-bold {isYes
+							? 'text-green-600'
+							: isNo
+								? 'text-red-600'
+								: 'text-indigo-600'} uppercase"
+					>
+						{displayOutcome}
 					</span>
 					<span class="text-[10px] text-slate-400">•</span>
 					<span class="text-[10px] font-medium text-slate-500">
@@ -46,10 +58,24 @@
 							stroke-width="3"
 						/>
 					</svg>
-				{:else}
+				{:else if isNo}
 					<svg class="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
 							d="M6 18L18 6M6 6l12 12"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="3"
+						/>
+					</svg>
+				{:else}
+					<svg
+						class="h-6 w-6 text-indigo-500"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
+						<path
+							d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
 							stroke-linecap="round"
 							stroke-linejoin="round"
 							stroke-width="3"

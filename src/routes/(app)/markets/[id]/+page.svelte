@@ -8,23 +8,23 @@
 	import MarketDetailTabs from '$lib/components/market/MarketDetailTabs.svelte';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
 	import { getMarket } from '$lib/services/market.services';
-	import { getPositionForMarket } from '$lib/services/position.services';
+	import { getPositionsForMarket } from '$lib/services/position.services';
 	import type { Market, MarketId } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 
 	let market = $state<Market | undefined>();
 
-	let position = $state<Position | undefined>();
+	let positions = $state<Position[]>([]);
 
 	let loading = $state(true);
 
 	const fetchMarket = async (id: MarketId) => {
 		loading = true;
 
-		const [marketRes, positionRes] = await Promise.all([getMarket(id), getPositionForMarket(id)]);
+		const [marketRes, positionsRes] = await Promise.all([getMarket(id), getPositionsForMarket(id)]);
 
 		market = marketRes;
-		position = positionRes;
+		positions = positionsRes;
 
 		loading = false;
 	};
@@ -69,7 +69,7 @@
 
 				<MarketDetailForecast {market} />
 
-				<MarketDetailTabs {market} {position} />
+				<MarketDetailTabs {market} {positions} />
 			</div>
 
 			<MarketDetailSidebar
@@ -80,7 +80,7 @@
 					}
 				}}
 				{onPredictionPlaced}
-				{position}
+				position={positions[0]}
 			/>
 		</div>
 	{:else}

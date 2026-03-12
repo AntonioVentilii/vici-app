@@ -11,7 +11,7 @@
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { orderBookStore } from '$lib/stores/order-book.store';
 	import { tradeStore } from '$lib/stores/trade.store';
-	import type { Market, Outcome } from '$lib/types/market';
+	import type { Market } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
 	import { formatAvilableUsd } from '$lib/utils/format.utils';
@@ -42,7 +42,7 @@
 
 	const fetchOrderBook = async () => {
 		try {
-			const orderBook = await getOrderBook(market.id);
+			const orderBook = await getOrderBook({ marketId: market.id, outcomeId: selectedType });
 
 			orderBookStore.update((state) => ({
 				...state,
@@ -94,7 +94,7 @@
 
 	$effect(() => {
 		if ($routeSide === 'yes' || $routeSide === 'no') {
-			selectedType = $routeSide.toUpperCase() as PositionType;
+			selectedType = $routeSide.toUpperCase();
 			if (orderType === 'MARKET') {
 				// Convert decimal (0.35) to percentage (35)
 				price = Math.round(
@@ -122,12 +122,15 @@
 		error = '';
 
 		try {
+			const isBinary = market.payoffType === 'Binary';
 			const currentPrice =
 				orderType === 'LIMIT'
 					? parseFloat(price) / 100
 					: selectedType === 'YES'
 						? yesProbability
-						: noProbability;
+						: selectedType === 'NO'
+							? noProbability
+							: 0.5; // Default for categorical for now if no prob
 
 			if (currentPrice <= 0 || currentPrice >= 1 || isNaN(currentPrice)) {
 				throw new Error(`Invalid price: ${currentPrice}`);
@@ -139,9 +142,11 @@
 				marketId: market.id,
 				side: 'BUY', // We are always "Buying" an outcome
 				type: orderType,
-				price: selectedType === 'YES' ? currentPrice : 1 - currentPrice, // For YES orders, price is as is. For NO orders, price is 1 - currentPrice
+				// For categorical markets, normalization (YES/NO flipping) is handled inside placeOrder
+				// We just pass the displayed price (probability of this outcome)
+				price: isBinary && selectedType === 'NO' ? 1 - currentPrice : currentPrice,
 				qty: parsedAmount,
-				outcome: selectedType as Outcome
+				outcome: selectedType
 			});
 
 			amount = '';
@@ -165,10 +170,12 @@
 
 		const prob =
 			orderType === 'LIMIT'
-				? parseFloat(price) / 100 // Convert percentage (35) to decimal (0.35) for payout calculation
+				? parseFloat(price) / 100
 				: selectedType === 'YES'
 					? yesProbability
-					: noProbability;
+					: selectedType === 'NO'
+						? noProbability
+						: (marketDepth?.midPrice ?? 0.5);
 
 		if (!prob || prob === 0) {
 			return '0';
@@ -186,10 +193,12 @@
 
 		const prob =
 			orderType === 'LIMIT'
-				? parseFloat(price) / 100 // Convert percentage (35) to decimal (0.35) for payout calculation
+				? parseFloat(price) / 100
 				: selectedType === 'YES'
 					? yesProbability
-					: noProbability;
+					: selectedType === 'NO'
+						? noProbability
+						: (marketDepth?.midPrice ?? 0.5);
 
 		if (!prob || prob === 0) {
 			return '0';
@@ -228,49 +237,73 @@
 	<div class="mt-6 space-y-6">
 		<!-- Outcome Selector -->
 		<div class="grid grid-cols-2 gap-4">
-			<BaseButton
-				class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType === 'YES'
-					? 'border-green-500 bg-green-50 text-green-700'
-					: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
-				onclick={() => {
-					selectedType = 'YES';
-					if (orderType === 'MARKET') {
-						price = Math.round(yesProbability * 100).toString();
-					}
-				}}
-			>
-				<div class="relative z-10 flex flex-col items-center gap-1">
-					<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
-					<span class="text-xl font-black">YES</span>
-					{#if orderType === 'MARKET'}
-						<span class="text-[10px] font-medium opacity-60">
-							{(yesProbability * 100).toFixed(1)}%
-						</span>
-					{/if}
-				</div>
-			</BaseButton>
+			{#if market.payoffType === 'Binary'}
+				<BaseButton
+					class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
+					'YES'
+						? 'border-green-500 bg-green-50 text-green-700'
+						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+					onclick={() => {
+						selectedType = 'YES';
+						if (orderType === 'MARKET') {
+							price = Math.round(yesProbability * 100).toString();
+						}
+					}}
+				>
+					<div class="relative z-10 flex flex-col items-center gap-1">
+						<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
+						<span class="text-xl font-black">YES</span>
+						{#if orderType === 'MARKET'}
+							<span class="text-[10px] font-medium opacity-60">
+								{(yesProbability * 100).toFixed(1)}%
+							</span>
+						{/if}
+					</div>
+				</BaseButton>
 
-			<BaseButton
-				class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType === 'NO'
-					? 'border-red-500 bg-red-50 text-red-700'
-					: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
-				onclick={() => {
-					selectedType = 'NO';
-					if (orderType === 'MARKET') {
-						price = Math.round(noProbability * 100).toString();
-					}
-				}}
-			>
-				<div class="relative z-10 flex flex-col items-center gap-1">
-					<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
-					<span class="text-xl font-black">NO</span>
-					{#if orderType === 'MARKET'}
-						<span class="text-[10px] font-medium opacity-60">
-							{(noProbability * 100).toFixed(1)}%
-						</span>
-					{/if}
+				<BaseButton
+					class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
+					'NO'
+						? 'border-red-500 bg-red-50 text-red-700'
+						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+					onclick={() => {
+						selectedType = 'NO';
+						if (orderType === 'MARKET') {
+							price = Math.round(noProbability * 100).toString();
+						}
+					}}
+				>
+					<div class="relative z-10 flex flex-col items-center gap-1">
+						<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
+						<span class="text-xl font-black">NO</span>
+						{#if orderType === 'MARKET'}
+							<span class="text-[10px] font-medium opacity-60">
+								{(noProbability * 100).toFixed(1)}%
+							</span>
+						{/if}
+					</div>
+				</BaseButton>
+			{:else}
+				<div class="col-span-2 grid grid-cols-2 gap-3">
+					{#each market.outcomes ?? [] as outcome (outcome.id)}
+						<BaseButton
+							class="group relative overflow-hidden rounded-2xl border-2 px-4 py-4 {selectedType ===
+							outcome.id
+								? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+								: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+							onclick={() => {
+								selectedType = outcome.id;
+								price = ''; // Reset price on outcome change for now
+							}}
+						>
+							<div class="relative z-10 flex flex-col items-center gap-0.5">
+								<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
+								<span class="text-center text-sm font-black">{outcome.title}</span>
+							</div>
+						</BaseButton>
+					{/each}
 				</div>
-			</BaseButton>
+			{/if}
 		</div>
 
 		<!-- Inputs -->

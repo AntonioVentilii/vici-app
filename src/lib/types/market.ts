@@ -7,7 +7,7 @@ export type MarketId = z.infer<typeof MarketIdSchema>;
 
 export type MarketStatus = 'Open' | 'Expired' | 'Resolved';
 
-export type Outcome = 'YES' | 'NO' | 'CANCELED';
+export type Outcome = 'YES' | 'NO' | 'CANCELED' | string;
 
 export interface Market {
 	id: MarketId;
@@ -17,6 +17,8 @@ export interface Market {
 	expiryDate: bigint; // timestamp in ms
 	status: MarketStatus;
 	outcome?: Outcome;
+	outcomes?: { id: string; title: string }[];
+	payoffType: 'Binary' | 'Categorical' | 'Call' | 'Put';
 	isInviteOnly: boolean;
 	inviteList: PrincipalText[];
 	totalVolume: bigint;

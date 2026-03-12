@@ -12,7 +12,7 @@ export const getPosition = async (seriesId: string): Promise<ClearingDid.Positio
 		identity
 	});
 
-	return positions.find(([id]) => id === seriesId)?.[1];
+	return positions.find((p) => p.series_id === seriesId);
 };
 
 export const getUserTradeHistory = async (): Promise<ClearingDid.Event[]> => {

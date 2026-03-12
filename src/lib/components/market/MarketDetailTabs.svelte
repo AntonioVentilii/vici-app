@@ -10,10 +10,10 @@
 
 	interface Props {
 		market: Market;
-		position: Position | undefined;
+		positions: Position[];
 	}
 
-	const { market, position }: Props = $props();
+	const { market, positions }: Props = $props();
 
 	const tabOptions = [
 		{ id: 'description', label: 'Description' },
@@ -45,37 +45,51 @@
 			<MarketDiscussion marketId={market.id} userPrincipal={$authPrincipal ?? ''} />
 		{:else if activeTabId === 'activity'}
 			<div class="space-y-6">
-				{#if position && (position.yesAmount > ZERO || position.noAmount > ZERO)}
+				{#if positions.length > 0}
 					<div class="rounded-2xl border border-slate-200 bg-white p-6">
 						<h5 class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-							Your Active Stake
+							Your Active Positions
 						</h5>
-						<div class="mt-4 grid grid-cols-2 gap-4">
-							{#if position.yesAmount > ZERO}
-								<div class="flex items-center justify-between rounded-xl bg-emerald-50 p-4">
-									<div>
-										<span class="text-xs font-bold text-emerald-600 uppercase">YES</span>
-										<div class="mt-1 text-lg font-black text-emerald-950">
-											{formatToken({ value: position.yesAmount, unitName: market.token.decimals })} Units
+						<div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+							{#each positions as pos (pos.marketId)}
+								{#if pos.netQty !== ZERO}
+									<div
+										class="flex flex-col gap-2 rounded-xl p-4 {pos.outcomeId === 'YES'
+											? 'bg-emerald-50'
+											: pos.outcomeId === 'NO'
+												? 'bg-rose-50'
+												: 'bg-indigo-50'}"
+									>
+										<span
+											class="text-[10px] font-bold tracking-widest uppercase {pos.outcomeId ===
+											'YES'
+												? 'text-emerald-600'
+												: pos.outcomeId === 'NO'
+													? 'text-rose-600'
+													: 'text-indigo-600'}"
+										>
+											{market.outcomes?.find((o) => o.id === pos.outcomeId)?.title ?? pos.outcomeId}
+										</span>
+										<div
+											class="text-lg font-black {pos.outcomeId === 'YES'
+												? 'text-emerald-950'
+												: pos.outcomeId === 'NO'
+													? 'text-rose-950'
+													: 'text-indigo-950'}"
+										>
+											{formatToken({ value: pos.netQty, unitName: market.token.decimals })} Units
 										</div>
 									</div>
-								</div>
-							{/if}
-							{#if position.noAmount > ZERO}
-								<div class="flex items-center justify-between rounded-xl bg-rose-50 p-4">
-									<div>
-										<span class="text-xs font-bold text-rose-600 uppercase">NO</span>
-										<div class="mt-1 text-lg font-black text-rose-950">
-											{formatToken({ value: position.noAmount, unitName: market.token.decimals })} Units
-										</div>
-									</div>
-								</div>
-							{/if}
+								{/if}
+							{/each}
 						</div>
 						<div class="mt-4 flex items-center justify-between border-t border-slate-100 pt-4">
 							<span class="text-xs font-medium text-slate-500">Locked Collateral</span>
 							<span class="text-sm font-bold text-slate-950">
-								{formatToken({ value: position.lockedCollateral, unitName: market.token.decimals })}
+								{formatToken({
+									value: positions.reduce((acc, p) => acc + p.lockedCollateral, ZERO),
+									unitName: market.token.decimals
+								})}
 								{market.token.symbol}
 							</span>
 						</div>

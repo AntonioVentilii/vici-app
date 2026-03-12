@@ -27,9 +27,8 @@ export interface OrderBookLevel {
 
 export interface OrderBook {
 	marketId: MarketId;
-	outcome: Outcome;
-	bids: OrderBookLevel[]; // Buy YES
-	asks: OrderBookLevel[]; // Sell YES
-	yesProbability: number;
-	noProbability: number;
+	outcomeId: string;
+	bids: OrderBookLevel[];
+	asks: OrderBookLevel[];
+	midPrice?: number;
 }

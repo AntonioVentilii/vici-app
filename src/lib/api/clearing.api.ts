@@ -64,7 +64,7 @@ export const getPositions = async ({
 	...queryParams
 }: {
 	identity: Identity;
-} & QueryParams): Promise<[string, ClearingDid.Position][]> => {
+} & QueryParams): Promise<ClearingDid.Position[]> => {
 	const { getPositions } = await clearingCanister({ identity });
 	return await getPositions(queryParams);
 };

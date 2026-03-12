@@ -38,17 +38,29 @@ for ((i = 0; i < $length; i++)); do
 
   echo "Adding market: $title ($underlying)"
 
+  outcomes_list=$(jq -r '.outcomes[]?' <<<"$market" | sed 's/"/\\"/g' | awk '{id=tolower($0); gsub(/[^a-z0-9]+/, "-", id); gsub(/^-+|-+$/, "", id); printf "record { id=\"%s\"; title=\"%s\"; description=null; icon_url=null }; ", id, $0}')
+  if [ -n "$outcomes_list" ]; then
+    outcomes_candid="opt vec { $outcomes_list }"
+    payoff_type="variant { Categorical }"
+  else
+    outcomes_candid="null"
+    payoff_type="variant { Binary }"
+  fi
+
   dfx canister call --network local registry add_series "(record {
         title = \"$title\";
         description = record { plain = \"$description\"; html = null; markdown = null };
         expiry_ns = $expiration_ns;
         underlying = \"$underlying\";
         strike = null;
+        banner_url = null;
         price_precision = 8 : nat8;
-        payoff_type = variant { Binary };
+        payoff_type = $payoff_type;
         payout_unit = variant {
           Fiat = variant { Usd }
         };
+        outcomes = $outcomes_candid;
+        icon_url = null;
         oracle_source = \"Manual\";
     })"
 done

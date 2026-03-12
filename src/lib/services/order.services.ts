@@ -12,12 +12,17 @@ import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/ident
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderBook, OrderBookLevel, OrderSide, OrderType } from '$lib/types/order';
 import { ActivityType } from '$lib/types/social';
-import { calculateProbability } from '$lib/utils/market.utils';
 import { emitRefreshPositions, refreshAllBalances } from '$lib/utils/refresh.utils';
 import { nonNullish, toNullable } from '@dfinity/utils';
 import { nanoid } from 'nanoid';
 
-export const getOrderBook = async (marketId: MarketId): Promise<OrderBook> => {
+export const getOrderBook = async ({
+	marketId,
+	outcomeId = 'YES'
+}: {
+	marketId: MarketId;
+	outcomeId: string;
+}): Promise<OrderBook> => {
 	const identity = await getIdentityOrAnonymous();
 
 	const orders = await listOrdersApi({
@@ -30,6 +35,16 @@ export const getOrderBook = async (marketId: MarketId): Promise<OrderBook> => {
 
 	orders.forEach((o: ClearingDid.LimitOrder) => {
 		const side = 'Buy' in o.side ? 'BUY' : 'SELL';
+		const oOutcomeId = o.outcome_id[0] ?? 'YES';
+
+		// Filtering logic:
+		// 1. If requesting YES, we take orders with outcome_id null/undefined (binary) or 'YES'
+		// 2. If requesting NO, (binary only), we take 'YES' orders and flip them? No, NO has its own book maybe?
+		// Actually, let's follow the standard: one book per outcome.
+		if (oOutcomeId !== outcomeId) {
+			return;
+		}
+
 		const target = side === 'BUY' ? bids : asks;
 		const price = Number(o.price.decimal.value) / 10 ** o.price.decimal.decimals;
 
@@ -50,18 +65,16 @@ export const getOrderBook = async (marketId: MarketId): Promise<OrderBook> => {
 	const sortedBids = bids.sort((a, b) => b.price - a.price);
 	const sortedAsks = asks.sort((a, b) => a.price - b.price);
 
-	const { yesProbability, noProbability } = calculateProbability({
-		bids: sortedBids,
-		asks: sortedAsks
-	});
+	const bestBid = sortedBids[0]?.price;
+	const bestAsk = sortedAsks[0]?.price;
+	const midPrice = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : undefined;
 
 	return {
 		marketId,
-		outcome: 'YES',
+		outcomeId,
 		bids: sortedBids,
 		asks: sortedAsks,
-		yesProbability,
-		noProbability
+		midPrice
 	};
 };
 
@@ -84,8 +97,20 @@ export const placeOrder = async ({
 
 	// Normalize Binary Outcome to "YES" asset
 	// price is expected as probability (0-1)
-	const normalizedSide = outcome === 'NO' ? (side === 'BUY' ? 'SELL' : 'BUY') : side;
-	const normalizedPrice = outcome === 'NO' ? 1 - price : price;
+	let normalizedSide = side;
+	let normalizedPrice = price;
+	let outcomeId: [] | [string] = toNullable();
+
+	// Check if it's a binary market (YES/NO) vs Categorical
+	// For now we assume YES/NO are special strings for Binary
+	if (outcome === 'YES' || outcome === 'NO') {
+		normalizedSide = outcome === 'NO' ? (side === 'BUY' ? 'SELL' : 'BUY') : side;
+		normalizedPrice = outcome === 'NO' ? 1 - price : price;
+		outcomeId = toNullable(); // Use default (usually first outcome) for binary
+	} else {
+		// Categorical: use outcome directly as outcome_id
+		outcomeId = toNullable(outcome);
+	}
 
 	if (type === 'LIMIT') {
 		const orderId = `ORD_${nanoid(8)}`;
@@ -96,6 +121,7 @@ export const placeOrder = async ({
 				order_id: orderId,
 				series_id: marketId,
 				side: normalizedSide === 'BUY' ? { Buy: null } : { Sell: null },
+				outcome_id: outcomeId,
 				price: {
 					decimal: {
 						value: BigInt(Math.round(normalizedPrice * 10 ** PRICE_DECIMALS)),
@@ -116,8 +142,15 @@ export const placeOrder = async ({
 
 		const counterSide = normalizedSide === 'BUY' ? 'Sell' : 'Buy';
 
+		// Identify the target outcome for binary vs categorical
+		const targetOutcomeId = outcome === 'YES' || outcome === 'NO' ? undefined : outcome;
+
 		const matchingOrders = orders
-			.filter((o: ClearingDid.LimitOrder) => counterSide in o.side)
+			.filter((o: ClearingDid.LimitOrder) => {
+				const isCorrectSide = counterSide in o.side;
+				const isCorrectOutcome = o.outcome_id[0] === targetOutcomeId;
+				return isCorrectSide && isCorrectOutcome;
+			})
 			.sort((a: ClearingDid.LimitOrder, b: ClearingDid.LimitOrder) => {
 				const priceA = Number(a.price.decimal.value);
 				const priceB = Number(b.price.decimal.value);

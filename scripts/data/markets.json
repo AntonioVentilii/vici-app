@@ -124,5 +124,38 @@
 		"expiryDate": "2026-03-31T21:59:59.000Z",
 		"categories": ["Space", "Technology"],
 		"inviteOnly": false
+	},
+	{
+		"title": "Who will win the 2026 FIFA World Cup?",
+		"description": "Prediction on the champion of the 2026 FIFA World Cup.",
+		"expiryDate": "2026-07-20T21:59:59.000Z",
+		"categories": ["Sports", "Football", "World Cup"],
+		"inviteOnly": false,
+		"outcomes": [
+			"Italy",
+			"Brazil",
+			"France",
+			"Argentina",
+			"England",
+			"Spain",
+			"Germany",
+			"Japan",
+			"Other"
+		]
+	},
+	{
+		"title": "Who will be cast as the next James Bond?",
+		"description": "Speculation on the actor officially announced to lead the next 007 film.",
+		"expiryDate": "2026-12-31T22:59:59.000Z",
+		"categories": ["Entertainment", "Film"],
+		"inviteOnly": false,
+		"outcomes": [
+			"Aaron Taylor-Johnson",
+			"Henry Cavill",
+			"Damson Idris",
+			"James Norton",
+			"Rege-Jean Page",
+			"Other"
+		]
 	}
 ]

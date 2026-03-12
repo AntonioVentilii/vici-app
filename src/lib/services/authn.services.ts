@@ -26,13 +26,15 @@ export const resolveMarket = async ({
 
 	const params: ClearingDid.SettleSeriesParams = {
 		series_id: marketId,
-		settlement_price: {
-			decimal: {
-				value: settlementPrice,
-				decimals: PRICE_DECIMALS
-			},
-			timestamp: toNullable(nowInBigIntNanoSeconds()),
-			oracle_id: toNullable(VICI_ORACLE_V1)
+		settlement: {
+			Price: {
+				decimal: {
+					value: settlementPrice,
+					decimals: PRICE_DECIMALS
+				},
+				timestamp: toNullable(nowInBigIntNanoSeconds()),
+				oracle_id: toNullable(VICI_ORACLE_V1)
+			}
 		}
 	};
 

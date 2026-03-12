@@ -29,13 +29,26 @@ export const mapMarketData = ({
 		creator,
 		title,
 		description: { plain: description },
-		payout_unit: payoutUnit
+		payout_unit: payoutUnit,
+		payoff_type: payoffType,
+		outcomes
 	} = series;
 
 	const token = assetToToken(payoutUnit);
 
 	if (isNullish(token)) {
 		return;
+	}
+
+	let payoffTypeMapped: Market['payoffType'] = 'Binary';
+	if ('Categorical' in payoffType) {
+		payoffTypeMapped = 'Categorical';
+	}
+	if ('Call' in payoffType) {
+		payoffTypeMapped = 'Call';
+	}
+	if ('Put' in payoffType) {
+		payoffTypeMapped = 'Put';
 	}
 
 	return {
@@ -46,6 +59,8 @@ export const mapMarketData = ({
 		expiryDate: expiryDate / NANO_SECONDS_IN_MILLISECOND,
 		status,
 		outcome,
+		outcomes: outcomes?.[0]?.map((o) => ({ id: o.id, title: o.title })),
+		payoffType: payoffTypeMapped,
 		isInviteOnly: false,
 		inviteList: [],
 		totalVolume: ZERO,
@@ -66,9 +81,9 @@ export const calculateProbability = ({
 }: {
 	bids: OrderBookLevel[];
 	asks: OrderBookLevel[];
-}): { yesProbability: number; noProbability: number } => {
+}): number => {
 	if (bids.length === 0 && asks.length === 0) {
-		return { yesProbability: 0.5, noProbability: 0.5 };
+		return 0.5;
 	}
 
 	const sortedBids = bids.sort((a, b) => b.price - a.price);
@@ -77,16 +92,15 @@ export const calculateProbability = ({
 	if (bids.length > 0 && asks.length > 0) {
 		const bestBid = sortedBids[0].price;
 		const bestAsk = sortedAsks[0].price;
-		const mid = (bestBid + bestAsk) / 2;
-		return { yesProbability: mid, noProbability: 1 - mid };
+		return (bestBid + bestAsk) / 2;
 	}
 
 	if (bids.length > 0) {
-		return { yesProbability: sortedBids[0].price, noProbability: 1 - sortedBids[0].price };
+		return sortedBids[0].price;
 	}
 
 	// asks.length > 0
-	return { yesProbability: sortedAsks[0].price, noProbability: 1 - sortedAsks[0].price };
+	return sortedAsks[0].price;
 };
 
 export const getTimeRemaining = (expiry: bigint): string => {

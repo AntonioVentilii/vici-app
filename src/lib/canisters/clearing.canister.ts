@@ -121,7 +121,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 		return fromNullable(result);
 	};
 
-	getPositions = async (queryParams: QueryParams): Promise<[string, ClearingDid.Position][]> => {
+	getPositions = async (queryParams: QueryParams): Promise<ClearingDid.Position[]> => {
 		const { get_positions } = this.caller(queryParams);
 		return await get_positions();
 	};

@@ -21,9 +21,11 @@ export interface AddSeriesParams {
 	payoff_type: PayoffType;
 	payout_unit: PayoutUnit;
 	expiry_ns: bigint;
+	banner_url: [] | [string];
 	underlying: string;
 	description: Description;
-	outcomes: [] | [Array<string>];
+	outcomes: [] | [Array<Outcome>];
+	icon_url: [] | [string];
 	price_precision: number;
 	oracle_source: string;
 }
@@ -81,6 +83,12 @@ export interface OracleMetadata {
 	website: [] | [string];
 }
 export type OracleResult = { Ok: null } | { Err: OracleError };
+export interface Outcome {
+	id: string;
+	title: string;
+	description: [] | [Description];
+	icon_url: [] | [string];
+}
 export interface PaginationParams {
 	cursor: [] | [string];
 	limit: [] | [bigint];
@@ -99,11 +107,13 @@ export interface Series {
 	payoff_type: PayoffType;
 	payout_unit: PayoutUnit;
 	expiry_ns: bigint;
+	banner_url: [] | [string];
 	series_id: string;
 	underlying: string;
 	description: Description;
-	outcomes: [] | [Array<string>];
+	outcomes: [] | [Array<Outcome>];
 	created_at_ns: bigint;
+	icon_url: [] | [string];
 	price_precision: number;
 	oracle_source: string;
 }

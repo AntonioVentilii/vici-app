@@ -66,16 +66,20 @@
 			return ZERO;
 		}
 
-		// Simple value projection: amount * current probability
-		const yesVal = Number(pos.yesAmount) * market.yesProbability;
-		const noVal = Number(pos.noAmount) * market.noProbability;
-		return BigInt(Math.floor(yesVal + noVal));
+		let prob = 0.5;
+		if (market.payoffType === 'Binary') {
+			prob = pos.outcomeId === 'YES' ? market.yesProbability : market.noProbability;
+		} else {
+			prob = 1 / (market.outcomes?.length ?? 1);
+		}
+
+		return BigInt(Math.floor(Number(pos.netQty) * prob));
 	};
 
 	const calculatePnL = (pos: Position) => {
-		const totalCost = pos.yesAmount + pos.noAmount;
+		const totalUnits = pos.netQty < ZERO ? -pos.netQty : pos.netQty;
 		const currentValue = calculateValue(pos);
-		return Number(currentValue - totalCost) / 10 ** 8; // Portfolio aggregate in ICP
+		return Number(currentValue - totalUnits) / 10 ** 8;
 	};
 
 	const totalPortfolioValue = $derived(

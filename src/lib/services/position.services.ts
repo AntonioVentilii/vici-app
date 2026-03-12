@@ -17,18 +17,14 @@ export const getPositions = async (): Promise<Position[]> => {
 	return positions.map(mapPositionData);
 };
 
-export const getPositionForMarket = async (
-	targetSeriesId: MarketId
-): Promise<Position | undefined> => {
+export const getPositionsForMarket = async (targetSeriesId: MarketId): Promise<Position[]> => {
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
-		return;
+		return [];
 	}
 
 	const positions = await getPositionsApi({ identity });
 
-	const marketTuple = positions.find(([seriesId]) => seriesId === targetSeriesId);
-
-	return marketTuple ? mapPositionData(marketTuple) : undefined;
+	return positions.filter((p) => p.series_id === targetSeriesId).map(mapPositionData);
 };

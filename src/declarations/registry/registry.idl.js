@@ -73,15 +73,23 @@ export const PayoutUnit = IDL.Variant({
 	Asset: Asset,
 	NonMonetary: NonMonetaryUnit
 });
+export const Outcome = IDL.Record({
+	id: IDL.Text,
+	title: IDL.Text,
+	description: IDL.Opt(Description),
+	icon_url: IDL.Opt(IDL.Text)
+});
 export const AddSeriesParams = IDL.Record({
 	title: IDL.Text,
 	strike: IDL.Opt(Price),
 	payoff_type: PayoffType,
 	payout_unit: PayoutUnit,
 	expiry_ns: IDL.Nat64,
+	banner_url: IDL.Opt(IDL.Text),
 	underlying: IDL.Text,
 	description: Description,
-	outcomes: IDL.Opt(IDL.Vec(IDL.Text)),
+	outcomes: IDL.Opt(IDL.Vec(Outcome)),
+	icon_url: IDL.Opt(IDL.Text),
 	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
 });
@@ -109,11 +117,13 @@ export const Series = IDL.Record({
 	payoff_type: PayoffType,
 	payout_unit: PayoutUnit,
 	expiry_ns: IDL.Nat64,
+	banner_url: IDL.Opt(IDL.Text),
 	series_id: IDL.Text,
 	underlying: IDL.Text,
 	description: Description,
-	outcomes: IDL.Opt(IDL.Vec(IDL.Text)),
+	outcomes: IDL.Opt(IDL.Vec(Outcome)),
 	created_at_ns: IDL.Nat64,
+	icon_url: IDL.Opt(IDL.Text),
 	price_precision: IDL.Nat8,
 	oracle_source: IDL.Text
 });
@@ -223,15 +233,23 @@ export const idlFactory = ({ IDL }) => {
 		Asset: Asset,
 		NonMonetary: NonMonetaryUnit
 	});
+	const Outcome = IDL.Record({
+		id: IDL.Text,
+		title: IDL.Text,
+		description: IDL.Opt(Description),
+		icon_url: IDL.Opt(IDL.Text)
+	});
 	const AddSeriesParams = IDL.Record({
 		title: IDL.Text,
 		strike: IDL.Opt(Price),
 		payoff_type: PayoffType,
 		payout_unit: PayoutUnit,
 		expiry_ns: IDL.Nat64,
+		banner_url: IDL.Opt(IDL.Text),
 		underlying: IDL.Text,
 		description: Description,
-		outcomes: IDL.Opt(IDL.Vec(IDL.Text)),
+		outcomes: IDL.Opt(IDL.Vec(Outcome)),
+		icon_url: IDL.Opt(IDL.Text),
 		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text
 	});
@@ -256,11 +274,13 @@ export const idlFactory = ({ IDL }) => {
 		payoff_type: PayoffType,
 		payout_unit: PayoutUnit,
 		expiry_ns: IDL.Nat64,
+		banner_url: IDL.Opt(IDL.Text),
 		series_id: IDL.Text,
 		underlying: IDL.Text,
 		description: Description,
-		outcomes: IDL.Opt(IDL.Vec(IDL.Text)),
+		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		created_at_ns: IDL.Nat64,
+		icon_url: IDL.Opt(IDL.Text),
 		price_precision: IDL.Nat8,
 		oracle_source: IDL.Text
 	});

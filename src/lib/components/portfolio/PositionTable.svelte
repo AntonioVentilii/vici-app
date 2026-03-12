@@ -64,26 +64,25 @@
 								</td>
 								<td class="px-6 py-4">
 									<div class="flex gap-1.5">
-										{#if pos.yesAmount > ZERO}
-											<span
-												class="rounded-md border border-green-200 bg-green-50 px-1.5 py-0.5 text-[10px] font-black tracking-tight text-green-700 uppercase"
-												>YES</span
-											>
-										{/if}
-										{#if pos.noAmount > ZERO}
-											<span
-												class="rounded-md border border-red-200 bg-red-50 px-1.5 py-0.5 text-[10px] font-black tracking-tight text-red-700 uppercase"
-												>NO</span
-											>
-										{/if}
+										<span
+											class="rounded-md border px-1.5 py-0.5 text-[10px] font-black tracking-tight uppercase {pos.outcomeId ===
+											'YES'
+												? 'border-green-200 bg-green-50 text-green-700'
+												: pos.outcomeId === 'NO'
+													? 'border-red-200 bg-red-50 text-red-700'
+													: 'border-indigo-200 bg-indigo-50 text-indigo-700'}"
+										>
+											{market?.outcomes?.find((o) => o.id === pos.outcomeId)?.title ??
+												pos.outcomeId}
+										</span>
 									</div>
 								</td>
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
 									{formatToken({
-										value: pos.yesAmount + pos.noAmount,
+										value: pos.netQty < ZERO ? -pos.netQty : pos.netQty,
 										unitName: market?.token.decimals ?? 8
 									})}
-									<span class="text-[10px] text-slate-400">ICP</span>
+									<span class="text-[10px] text-slate-400">UNITS</span>
 								</td>
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
 									{formatToken({

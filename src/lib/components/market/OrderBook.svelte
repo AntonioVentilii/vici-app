@@ -29,29 +29,8 @@
 		return (Number(qty) / Number(maxQty)) * 100;
 	};
 
-	const displayBids = $derived(() => {
-		if (!orderBook) {
-			return [];
-		}
-		if (outcome === 'YES') {
-			return orderBook.bids;
-		}
-		return orderBook.asks
-			.map((a) => ({ ...a, price: 1 - a.price }))
-			.sort((a, b) => b.price - a.price);
-	});
-
-	const displayAsks = $derived(() => {
-		if (!orderBook) {
-			return [];
-		}
-		if (outcome === 'YES') {
-			return orderBook.asks;
-		}
-		return orderBook.bids
-			.map((b) => ({ ...b, price: 1 - b.price }))
-			.sort((a, b) => a.price - b.price);
-	});
+	const displayBids = $derived(orderBook?.bids ?? []);
+	const displayAsks = $derived(orderBook?.asks ?? []);
 
 	const maxQty = $derived(() => {
 		if (!orderBook) {
@@ -87,7 +66,7 @@
 		<div class="space-y-1">
 			<!-- Asks (Sells) -->
 			<div class="flex flex-col-reverse">
-				{#each displayAsks() as ask (ask.price)}
+				{#each displayAsks as ask (ask.price)}
 					<button
 						class="group relative flex items-center justify-between overflow-hidden rounded-lg px-2 py-2 transition-colors hover:bg-slate-50"
 						onclick={() => handlePriceSelect(ask.price)}
@@ -111,16 +90,16 @@
 			<!-- Spread -->
 			<div class="flex items-center justify-between border-y border-slate-100 px-2 py-4">
 				<span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Spread</span>
-				{#if displayAsks().length > 0 && displayBids().length > 0}
+				{#if displayAsks.length > 0 && displayBids.length > 0}
 					<span class="text-xs font-bold text-slate-600">
-						{formatProbability(Math.abs(displayAsks()[0].price - displayBids()[0].price))}
+						{formatProbability(Math.abs(displayAsks[0].price - displayBids[0].price))}
 					</span>
 				{/if}
 			</div>
 
 			<!-- Bids (Buys) -->
 			<div class="flex flex-col">
-				{#each displayBids() as bid (bid.price)}
+				{#each displayBids as bid (bid.price)}
 					<button
 						class="group relative flex items-center justify-between overflow-hidden rounded-lg px-2 py-2 transition-colors hover:bg-slate-50"
 						onclick={() => handlePriceSelect(bid.price)}

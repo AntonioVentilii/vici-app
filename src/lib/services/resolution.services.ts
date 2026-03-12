@@ -1,6 +1,6 @@
 import type { ClearingDid } from '$declarations';
 import { settleSeries as settleSeriesApi } from '$lib/api/clearing.api';
-import { VICI_ORACLE_V1 } from '$lib/constants/app.constants';
+import { VICI_ORACLE_V1, ZERO } from '$lib/constants/app.constants';
 import { logActivity } from '$lib/services/activity.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
@@ -10,10 +10,12 @@ import { nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 
 export const settleMarket = async ({
 	seriesId,
-	settlementPrice
+	settlementPrice,
+	outcomeId
 }: {
 	seriesId: string;
-	settlementPrice: bigint;
+	settlementPrice?: bigint;
+	outcomeId?: string;
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -26,14 +28,18 @@ export const settleMarket = async ({
 
 	const params: ClearingDid.SettleSeriesParams = {
 		series_id: seriesId,
-		settlement_price: {
-			decimal: {
-				value: settlementPrice,
-				decimals: 8
-			},
-			timestamp: toNullable(nowInBigIntNanoSeconds()),
-			oracle_id: toNullable(VICI_ORACLE_V1)
-		}
+		settlement: outcomeId
+			? { Outcome: outcomeId }
+			: {
+					Price: {
+						decimal: {
+							value: settlementPrice ?? ZERO,
+							decimals: 8
+						},
+						timestamp: toNullable(nowInBigIntNanoSeconds()),
+						oracle_id: toNullable(VICI_ORACLE_V1)
+					}
+				}
 	};
 
 	await settleSeriesApi({
@@ -46,6 +52,6 @@ export const settleMarket = async ({
 		user: identity.getPrincipal().toText(),
 		marketId: seriesId,
 		title: `Market settled`,
-		details: `Settled at ${settlementPrice}`
+		details: outcomeId ? `Settled on outcome: ${outcomeId}` : `Settled at ${settlementPrice}`
 	});
 };
