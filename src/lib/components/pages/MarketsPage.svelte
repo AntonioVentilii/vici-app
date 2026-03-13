@@ -1,36 +1,16 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import MarketGrid from '$lib/components/market/MarketGrid.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { getMarkets } from '$lib/services/market.services';
-	import type { Market } from '$lib/types/market';
-	import { REFRESH_MARKETS } from '$lib/utils/refresh.utils';
+	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 
-	let markets = $state<Market[]>([]);
-
-	let loading = $state(true);
+	let loading = $derived($marketsNotInitialized);
 
 	let searchTerm = $state('');
 
 	let activeTab = $state('Active');
 
 	const tabs = ['Active', 'Trending', 'Expiring', 'Resolved'];
-
-	const loadMarkets = async () => {
-		loading = true;
-		try {
-			markets = await getMarkets();
-		} finally {
-			loading = false;
-		}
-	};
-
-	onMount(() => {
-		loadMarkets();
-		window.addEventListener(REFRESH_MARKETS, loadMarkets);
-		return () => window.removeEventListener(REFRESH_MARKETS, loadMarkets);
-	});
 
 	const normalise = (value: string): string =>
 		value
@@ -81,7 +61,7 @@
 	};
 
 	const filteredMarkets = $derived(
-		markets
+		$markets
 			.map((market) => ({
 				market,
 				score: getSearchScore({ market, searchTerm })

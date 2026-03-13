@@ -6,7 +6,7 @@ import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import { ActivityType } from '$lib/types/social';
 import { binaryPayoff } from '$lib/utils/payoff.utils';
-import { emitRefreshMarkets } from '$lib/utils/refresh.utils';
+import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 
 export const resolveMarket = async ({
@@ -59,5 +59,5 @@ export const resolveMarket = async ({
 	}
 
 	// Trigger UI refresh
-	emitRefreshMarkets();
+	refreshMarkets();
 };

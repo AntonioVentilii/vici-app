@@ -12,7 +12,7 @@ import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/ident
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderBook, OrderBookLevel, OrderSide, OrderType } from '$lib/types/order';
 import { ActivityType } from '$lib/types/social';
-import { emitRefreshPositions, refreshAllBalances } from '$lib/utils/refresh.utils';
+import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 import { nonNullish, toNullable } from '@dfinity/utils';
 import { nanoid } from 'nanoid';
 
@@ -172,7 +172,8 @@ export const placeOrder = async ({
 		});
 	}
 
-	emitRefreshPositions();
+	refreshPositions();
+	refreshOrders();
 
 	refreshAllBalances();
 
@@ -201,7 +202,9 @@ export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 		}
 	});
 
-	emitRefreshPositions();
+	refreshPositions();
+
+	refreshOrders();
 
 	refreshAllBalances();
 };

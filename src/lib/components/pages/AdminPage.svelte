@@ -7,13 +7,13 @@
 	import AdminMarketForm from '$lib/components/admin/AdminMarketForm.svelte';
 	import AdminResolutionHistory from '$lib/components/admin/AdminResolutionHistory.svelte';
 	import AdminResolutionList from '$lib/components/admin/AdminResolutionList.svelte';
+	import { markets } from '$lib/derived/markets.derived';
 	import { resolveMarket } from '$lib/services/authn.services';
-	import { createMarket, getMarkets } from '$lib/services/market.services';
+	import { createMarket } from '$lib/services/market.services';
 	import { listRoles, removeRole, setRole, type UserRoleEntry } from '$lib/services/roles.services';
-	import type { Market, MarketId, Outcome } from '$lib/types/market';
+	import type { MarketId, Outcome } from '$lib/types/market';
 	import { UserRole } from '$lib/types/user';
 
-	let markets = $state<Market[]>([]);
 	let loading = $state(true);
 
 	// Admin Management State
@@ -28,8 +28,8 @@
 	let bulkSuccess = $state(0);
 	let bulkFailed = $state(0);
 
+	// eslint-disable-next-line require-await
 	const fetchMarkets = async () => {
-		markets = await getMarkets();
 		loading = false;
 	};
 
@@ -137,8 +137,8 @@
 		}
 	};
 
-	const unresolvedMarkets = $derived(markets.filter((m) => m.status !== 'Resolved'));
-	const resolvedMarkets = $derived(markets.filter((m) => m.status === 'Resolved'));
+	const unresolvedMarkets = $derived($markets.filter((m) => m.status !== 'Resolved'));
+	const resolvedMarkets = $derived($markets.filter((m) => m.status === 'Resolved'));
 </script>
 
 <div class="space-y-12">

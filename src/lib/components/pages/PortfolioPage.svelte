@@ -10,37 +10,29 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
+	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import { getMarkets } from '$lib/services/market.services';
-	import { getUserOrders } from '$lib/services/order.services';
 	import { getPositions } from '$lib/services/position.services';
 	import { getUserTradeHistory } from '$lib/services/trade.services';
 	import { userStore } from '$lib/stores/user.store';
-	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { formatCurrency } from '$lib/utils/format.utils';
-	import { REFRESH_POSITIONS } from '$lib/utils/refresh.utils';
 
 	let positions = $state<Position[]>([]);
-	let openOrders = $state<ClearingDid.LimitOrder[]>([]);
 	let tradeHistory = $state<ClearingDid.Event[]>([]);
-	let markets = $state<Market[]>([]);
+
 	let loading = $state(true);
+
+	let refreshing = $derived(loading || $marketsNotInitialized || $ordersNotInitialized);
 
 	const loadData = async () => {
 		loading = true;
 		try {
-			const [posRes, ordersRes, historyRes, marketsRes] = await Promise.all([
-				getPositions(),
-				getUserOrders(),
-				getUserTradeHistory(),
-				getMarkets()
-			]);
+			const [posRes, historyRes] = await Promise.all([getPositions(), getUserTradeHistory()]);
 
 			positions = posRes;
-			openOrders = ordersRes;
 			tradeHistory = historyRes;
-			markets = marketsRes;
 		} finally {
 			loading = false;
 		}
@@ -48,17 +40,9 @@
 
 	onMount(() => {
 		loadData();
-
-		const handleRefresh = () => loadData();
-
-		window.addEventListener(REFRESH_POSITIONS, handleRefresh);
-
-		return () => {
-			window.removeEventListener(REFRESH_POSITIONS, handleRefresh);
-		};
 	});
 
-	const getMarketById = (id: string) => markets.find((m) => m.id === id);
+	const getMarketById = (id: string) => $markets.find((m) => m.id === id);
 
 	const calculateValue = (pos: Position) => {
 		const market = getMarketById(pos.marketId);
@@ -98,6 +82,8 @@
 	const totalPnL = $derived(positions.reduce((acc, pos) => acc + calculatePnL(pos), 0));
 </script>
 
+<svelte:document onviciRefreshPositions={loadData} />
+
 <div class="space-y-8">
 	<SectionHeader
 		description="Track your active predictions and performance in real-time."
@@ -105,7 +91,7 @@
 		title="My"
 	/>
 
-	{#if loading}
+	{#if refreshing}
 		<LoadingSpinner />
 	{:else}
 		<!-- Stats Summary -->
@@ -118,16 +104,16 @@
 
 		<!-- Positions Table -->
 		<PositionTable
-			{markets}
+			markets={$markets}
 			onCalculatePnL={calculatePnL}
 			onCalculateValue={calculateValue}
 			{positions}
 		/>
 
 		<div class="grid grid-cols-1 gap-8 xl:grid-cols-2">
-			<OpenOrdersTable {markets} onRefresh={loadData} orders={openOrders} />
+			<OpenOrdersTable markets={$markets} onRefresh={loadData} orders={$orders} />
 
-			<TradeHistoryTable events={tradeHistory} {markets} />
+			<TradeHistoryTable events={tradeHistory} markets={$markets} />
 		</div>
 
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">

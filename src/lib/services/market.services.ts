@@ -16,7 +16,7 @@ import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market'
 import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
 import { calculateCategoricalProbabilities, mapMarketData } from '$lib/utils/market.utils';
-import { emitRefreshMarkets } from '$lib/utils/refresh.utils';
+import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
 
@@ -95,7 +95,7 @@ export const createMarket = async ({
 		details: description
 	});
 
-	emitRefreshMarkets();
+	refreshMarkets();
 
 	return seriesId;
 };

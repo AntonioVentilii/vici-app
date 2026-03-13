@@ -7,6 +7,9 @@ declare module 'svelte/elements' {
 
 		onviciRefreshBalances?: (event: CustomEvent<any>) => void;
 		onviciRefreshCollaterals?: (event: CustomEvent<any>) => void;
+		onviciRefreshMarkets?: (event: CustomEvent<any>) => void;
+		onviciRefreshOrders?: (event: CustomEvent<any>) => void;
+		onviciRefreshPositions?: (event: CustomEvent<any>) => void;
 	}
 
 	/* eslint-enable */
