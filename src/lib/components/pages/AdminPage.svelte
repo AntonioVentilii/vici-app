@@ -25,6 +25,8 @@
 	// Bulk Creation Progress
 	let bulkProgress = $state(0);
 	let bulkTotal = $state(0);
+	let bulkSuccess = $state(0);
+	let bulkFailed = $state(0);
 
 	const fetchMarkets = async () => {
 		markets = await getMarkets();
@@ -46,15 +48,23 @@
 	});
 
 	const handleBulkCreate = async (
-		bulkMarkets: { title: string; description: string; expiryDate: string; outcomes?: string[] }[]
+		bulkMarkets: {
+			title: string;
+			description: string;
+			expiryDate: string;
+			balanceDomain?: string;
+			outcomes?: string[];
+		}[]
 	) => {
 		const results = { success: 0, failed: 0 };
 
 		loading = true;
 		bulkProgress = 0;
 		bulkTotal = bulkMarkets.length;
+		bulkSuccess = 0;
+		bulkFailed = 0;
 
-		const settledResults = await Promise.allSettled(
+		await Promise.allSettled(
 			bulkMarkets.map(async ({ title, description, expiryDate, outcomes }) => {
 				try {
 					const result = await createMarket({
@@ -64,24 +74,19 @@
 						outcomes
 					});
 
+					bulkSuccess++;
 					return result;
+				} catch (e) {
+					bulkFailed++;
+					throw e;
 				} finally {
 					bulkProgress++;
 				}
 			})
 		);
 
-		settledResults.forEach((result, index) => {
-			if (result.status === 'fulfilled') {
-				results.success++;
-			} else {
-				const market = bulkMarkets[index];
-
-				console.error(`Failed to create market "${market.title}":`, result.reason);
-
-				results.failed++;
-			}
-		});
+		results.success = bulkSuccess;
+		results.failed = bulkFailed;
 
 		await fetchMarkets();
 
@@ -181,10 +186,8 @@
 </div>
 
 {#if loading && bulkTotal > 0}
-	<div
-		class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm"
-	>
-		<div class="w-full max-w-md scale-up rounded-3xl bg-white p-8 shadow-2xl">
+	<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm">
+		<div class="scale-up w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
 			<div class="mb-6 flex items-center justify-between">
 				<h3 class="text-xl font-bold text-slate-950">Creating Markets</h3>
 				<span class="text-sm font-medium text-slate-500">
@@ -194,19 +197,34 @@
 
 			<div class="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-100">
 				<div
-					class="h-full bg-indigo-600 transition-all duration-300 ease-out"
 					style="width: {(bulkProgress / bulkTotal) * 100}%"
+					class="h-full bg-indigo-600 transition-all duration-300 ease-out"
 				></div>
 			</div>
 
-			<p class="text-center text-sm text-slate-600">
+			<div class="mb-6 flex justify-between gap-4">
+				<div
+					class="flex grow flex-col items-center justify-center rounded-2xl bg-emerald-50 p-3 text-center"
+				>
+					<span class="text-xs font-bold text-emerald-600 uppercase">Success</span>
+					<span class="text-xl font-bold text-emerald-950">{bulkSuccess}</span>
+				</div>
+				<div
+					class="flex grow flex-col items-center justify-center rounded-2xl bg-rose-50 p-3 text-center"
+				>
+					<span class="text-xs font-bold text-rose-600 uppercase">Failed</span>
+					<span class="text-xl font-bold text-rose-950">{bulkFailed}</span>
+				</div>
+			</div>
+
+			<p class="text-center text-sm text-slate-600 italic">
 				Please wait while we set up your prediction markets on the blockchain...
 			</p>
 		</div>
 	</div>
 {/if}
 
-<style>
+<style lang="postcss">
 	.scale-up {
 		animation: scale-up 0.3s ease-out;
 	}

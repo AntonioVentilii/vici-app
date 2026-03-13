@@ -6,6 +6,11 @@
 			"build": "scripts/build.icdc.clearing.sh",
 			"candid": "target/icdc/clearing.did",
 			"wasm": "target/icdc/clearing.wasm",
+			"metadata": [
+				{
+					"name": "candid:service"
+				}
+			],
 			"specified_id": "g2or7-caaaa-aaaaj-qqhoa-cai",
 			"init_arg_file": "target/icdc/clearing.args.did",
 			"remote": {
@@ -19,6 +24,11 @@
 			"build": "scripts/build.icdc.registry.sh",
 			"candid": "target/icdc/registry.did",
 			"wasm": "target/icdc/registry.wasm",
+			"metadata": [
+				{
+					"name": "candid:service"
+				}
+			],
 			"specified_id": "g5pxl-pyaaa-aaaaj-qqhoq-cai",
 			"init_arg_file": "target/icdc/registry.args.did",
 			"remote": {
@@ -32,6 +42,11 @@
 			"build": "scripts/build.icdc.minter.sh",
 			"candid": "target/icdc/minter.did",
 			"wasm": "target/icdc/minter.wasm",
+			"metadata": [
+				{
+					"name": "candid:service"
+				}
+			],
 			"init_arg_file": "target/icdc/minter.args.did",
 			"specified_id": "5tgiv-oaaaa-aaaaj-qqwwq-cai",
 			"remote": {
@@ -45,6 +60,11 @@
 			"build": "scripts/build.icdc.ledger.sh",
 			"candid": "target/icdc/ledger.did",
 			"wasm": "target/icdc/ledger.wasm",
+			"metadata": [
+				{
+					"name": "candid:service"
+				}
+			],
 			"init_arg_file": "target/icdc/ledger.args.did",
 			"specified_id": "5uhob-dyaaa-aaaaj-qqwwa-cai",
 			"remote": {
@@ -59,6 +79,11 @@
 			"build": "scripts/build.icdc.index.sh",
 			"candid": "target/icdc/index.did",
 			"wasm": "target/icdc/index.wasm",
+			"metadata": [
+				{
+					"name": "candid:service"
+				}
+			],
 			"init_arg_file": "target/icdc/index.args.did",
 			"specified_id": "5ba7m-cqaaa-aaaaj-qqwvq-cai",
 			"remote": {
@@ -133,11 +158,6 @@
 			"packtool": ""
 		}
 	},
-	"metadata": [
-		{
-			"name": "candid:service"
-		}
-	],
 	"version": 1,
 	"networks": {
 		"local": {

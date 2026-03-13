@@ -61,6 +61,7 @@ for ((i = 0; i < $length; i++)); do
         };
         outcomes = $outcomes_candid;
         icon_url = null;
+        balance_domain = variant { Settlement };
         oracle_source = \"Manual\";
     })"
 done

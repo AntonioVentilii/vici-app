@@ -1,11 +1,11 @@
-// Generated from AntonioVentilii/icdc-core commit 5104300166f34eebc2ca9e4dd41ddca4ab3db147 for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit 6ba4bc8b23c1649dc2758cdd1fd6286ed261160b for file 'src/clearing/clearing.did'
 
 type AcceptPositionTransferResult = variant { Ok : bool; Err : TradeError };
 type AccountState = record {
 	user : principal;
-	cash_balance_usd : int;
-	reserved_margin_usd : nat;
-	collateral_balances : vec record { text; nat }
+	reserved_margins_usd : vec record { BalanceDomain; nat };
+	cash_balances_usd : vec record { BalanceDomain; int };
+	balances : vec record { BalanceDomain; vec record { text; nat } }
 };
 type AccountStateError = variant {
 	MathOverflow;
@@ -47,6 +47,7 @@ type AssetWorth = record {
 	value_usd : nat;
 	asset_id : text
 };
+type BalanceDomain = variant { Playground; Settlement };
 type CancelFundWithdrawalError = variant {
 	PlanNotFound;
 	InvalidPlanStatus;
@@ -121,7 +122,10 @@ type FreezePositionForTransferParams = record {
 	valuation_price : opt Price
 };
 type FundType = variant { Insurance; Treasury };
-type GetAccountStateParams = record { refresh : opt bool };
+type GetAccountStateParams = record {
+	domain : opt BalanceDomain;
+	refresh : opt bool
+};
 type GetAccountStateResult = variant {
 	Ok : AccountStateResponse;
 	Err : AccountStateError
@@ -150,7 +154,8 @@ type LimitOrder = record {
 	series_id : text;
 	side : Side;
 	order_id : text;
-	price : Price
+	price : Price;
+	balance_domain : BalanceDomain
 };
 type ListOrdersParams = record { series_id : opt text };
 type NativeEvmAsset = record { decimals : nat8; chain_id : nat64 };
@@ -206,6 +211,7 @@ type Series = record {
 	created_at_ns : nat64;
 	icon_url : opt text;
 	price_precision : nat8;
+	balance_domain : BalanceDomain;
 	oracle_source : text
 };
 type SettleSeriesParams = record {
@@ -233,6 +239,7 @@ type SettlementPlan = record {
 	insurance_fee_usd : nat;
 	positions : vec SettlementPosition;
 	accounting_applied : bool;
+	balance_domain : BalanceDomain;
 	oracle_source : text;
 	settlement : SettlementInput
 };
@@ -250,6 +257,7 @@ type SettlementStatusView = record {
 	accounting_cursor : nat64;
 	insurance_fee_usd : nat;
 	accounting_applied : bool;
+	balance_domain : BalanceDomain;
 	oracle_source : text;
 	total_positions : nat64;
 	settlement : SettlementInput

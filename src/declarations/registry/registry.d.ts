@@ -27,10 +27,12 @@ export interface AddSeriesParams {
 	outcomes: [] | [Array<Outcome>];
 	icon_url: [] | [string];
 	price_precision: number;
+	balance_domain: BalanceDomain;
 	oracle_source: string;
 }
 export type AddSeriesResult = { Ok: string } | { Err: SeriesError };
 export type Asset = { Erc20: ErcToken } | { Icrc: Principal } | { NativeEvm: NativeEvmAsset };
+export type BalanceDomain = { Playground: null } | { Settlement: null };
 export interface DecimalValue {
 	decimals: number;
 	value: bigint;
@@ -54,6 +56,7 @@ export interface ListSeriesParams {
 	pagination: [] | [PaginationParams];
 	underlying: [] | [string];
 	search_term: [] | [string];
+	balance_domain: [] | [BalanceDomain];
 	oracle_source: [] | [string];
 }
 export interface ManageOraclePrincipalsParams {
@@ -115,6 +118,7 @@ export interface Series {
 	created_at_ns: bigint;
 	icon_url: [] | [string];
 	price_precision: number;
+	balance_domain: BalanceDomain;
 	oracle_source: string;
 }
 export type SeriesError =

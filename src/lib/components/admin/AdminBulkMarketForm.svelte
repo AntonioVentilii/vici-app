@@ -1,7 +1,13 @@
 <script lang="ts">
 	interface Props {
 		onBulkCreate: (
-			markets: { title: string; description: string; expiryDate: string; outcomes?: string[] }[]
+			markets: {
+				title: string;
+				description: string;
+				expiryDate: string;
+				balanceDomain?: string;
+				outcomes?: string[];
+			}[]
 		) => void;
 	}
 
@@ -16,12 +22,14 @@
 			title: 'Will Bitcoin hit $100k by 2027?',
 			description:
 				'This market resolves to YES if the Bitcoin price reaches $100,000 USD on any major exchange before Jan 1, 2027.',
-			expiryDate: '2027-01-01T00:00:00Z'
+			expiryDate: '2027-01-01T00:00:00Z',
+			balanceDomain: 'Settlement'
 		},
 		{
 			title: 'Who will win the 2026 FIFA World Cup?',
 			description: 'Prediction on the champion of the 2026 FIFA World Cup.',
 			expiryDate: '2026-07-20T21:59:59.000Z',
+			balanceDomain: 'Settlement',
 			outcomes: ['Italy', 'Brazil', 'France', 'Argentina', 'England', 'Spain', 'Germany', 'Other']
 		}
 	];

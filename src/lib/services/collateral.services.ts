@@ -74,7 +74,7 @@ export const getAccountState = async (): Promise<ClearingDid.AccountStateRespons
 
 	return await getAccountStateApi({
 		identity,
-		params: { refresh: [true] }
+		params: { refresh: [true], domain: [{ Settlement: null }] }
 	});
 };
 

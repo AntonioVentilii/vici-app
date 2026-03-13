@@ -3,6 +3,7 @@ import { getAccountState } from '$lib/api/clearing.api';
 import { getTransactions as getIcpTransactionsApi } from '$lib/api/icp-index.api';
 import { getTransactions as getIcrcTransactionsApi } from '$lib/api/icrc-index-ng.api';
 import { balance as getLedgerBalance } from '$lib/api/icrc-ledger.api';
+import { ZERO } from '$lib/constants/app.constants';
 import {
 	CKUSDC_INDEX_CANISTER_ID,
 	ICP_INDEX_CANISTER_ID
@@ -74,7 +75,7 @@ export const getCollateralBalances = async (): Promise<
 		// 2. Fetch Collateral Balances
 		return await getAccountState({
 			identity,
-			params: { refresh: toNullable(true) }
+			params: { refresh: toNullable(true), domain: toNullable({ Settlement: null }) }
 		});
 	} catch (e: unknown) {
 		console.error('Failed to get collateral balances', e);
@@ -90,12 +91,15 @@ export const getBalances = async (): Promise<WalletBalance> => {
 	const collateral: Record<TokenId, bigint> = {};
 
 	if (nonNullish(accountState)) {
-		accountState.state.collateral_balances.forEach(([assetId, balance]) => {
-			const token = SUPPORTED_TOKENS.find((t) => t.symbol.toLowerCase() === assetId);
+		// Aggregate balances across all domains
+		accountState.state.balances.forEach(([, domainBalances]) => {
+			domainBalances.forEach(([assetId, balance]) => {
+				const token = SUPPORTED_TOKENS.find((t) => t.symbol.toLowerCase() === assetId);
 
-			if (nonNullish(token)) {
-				collateral[token.id] = balance;
-			}
+				if (nonNullish(token)) {
+					collateral[token.id] = (collateral[token.id] ?? ZERO) + balance;
+				}
+			});
 		});
 	}
 

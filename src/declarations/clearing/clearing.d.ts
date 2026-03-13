@@ -13,9 +13,9 @@ import type { Principal } from '@icp-sdk/core/principal';
 export type AcceptPositionTransferResult = { Ok: boolean } | { Err: TradeError };
 export interface AccountState {
 	user: Principal;
-	cash_balance_usd: bigint;
-	reserved_margin_usd: bigint;
-	collateral_balances: Array<[string, bigint]>;
+	reserved_margins_usd: Array<[BalanceDomain, bigint]>;
+	cash_balances_usd: Array<[BalanceDomain, bigint]>;
+	balances: Array<[BalanceDomain, Array<[string, bigint]>]>;
 }
 export type AccountStateError =
 	| { MathOverflow: null }
@@ -51,6 +51,7 @@ export interface AssetWorth {
 	value_usd: bigint;
 	asset_id: string;
 }
+export type BalanceDomain = { Playground: null } | { Settlement: null };
 export type CancelFundWithdrawalError =
 	| { PlanNotFound: null }
 	| { InvalidPlanStatus: null }
@@ -132,6 +133,7 @@ export interface FreezePositionForTransferParams {
 }
 export type FundType = { Insurance: null } | { Treasury: null };
 export interface GetAccountStateParams {
+	domain: [] | [BalanceDomain];
 	refresh: [] | [boolean];
 }
 export type GetAccountStateResult = { Ok: AccountStateResponse } | { Err: AccountStateError };
@@ -163,6 +165,7 @@ export interface LimitOrder {
 	side: Side;
 	order_id: string;
 	price: Price;
+	balance_domain: BalanceDomain;
 }
 export interface ListOrdersParams {
 	series_id: [] | [string];
@@ -219,6 +222,7 @@ export interface Series {
 	created_at_ns: bigint;
 	icon_url: [] | [string];
 	price_precision: number;
+	balance_domain: BalanceDomain;
 	oracle_source: string;
 }
 export interface SettleSeriesParams {
@@ -249,6 +253,7 @@ export interface SettlementPlan {
 	insurance_fee_usd: bigint;
 	positions: Array<SettlementPosition>;
 	accounting_applied: boolean;
+	balance_domain: BalanceDomain;
 	oracle_source: string;
 	settlement: SettlementInput;
 }
@@ -266,6 +271,7 @@ export interface SettlementStatusView {
 	accounting_cursor: bigint;
 	insurance_fee_usd: bigint;
 	accounting_applied: boolean;
+	balance_domain: BalanceDomain;
 	oracle_source: string;
 	total_positions: bigint;
 	settlement: SettlementInput;

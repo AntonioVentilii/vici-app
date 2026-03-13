@@ -79,6 +79,10 @@ export const Outcome = IDL.Record({
 	description: IDL.Opt(Description),
 	icon_url: IDL.Opt(IDL.Text)
 });
+export const BalanceDomain = IDL.Variant({
+	Playground: IDL.Null,
+	Settlement: IDL.Null
+});
 export const AddSeriesParams = IDL.Record({
 	title: IDL.Text,
 	strike: IDL.Opt(Price),
@@ -91,6 +95,7 @@ export const AddSeriesParams = IDL.Record({
 	outcomes: IDL.Opt(IDL.Vec(Outcome)),
 	icon_url: IDL.Opt(IDL.Text),
 	price_precision: IDL.Nat8,
+	balance_domain: BalanceDomain,
 	oracle_source: IDL.Text
 });
 export const SeriesError = IDL.Variant({
@@ -125,6 +130,7 @@ export const Series = IDL.Record({
 	created_at_ns: IDL.Nat64,
 	icon_url: IDL.Opt(IDL.Text),
 	price_precision: IDL.Nat8,
+	balance_domain: BalanceDomain,
 	oracle_source: IDL.Text
 });
 export const PaginationParams = IDL.Record({
@@ -143,6 +149,7 @@ export const ListSeriesParams = IDL.Record({
 	pagination: IDL.Opt(PaginationParams),
 	underlying: IDL.Opt(IDL.Text),
 	search_term: IDL.Opt(IDL.Text),
+	balance_domain: IDL.Opt(BalanceDomain),
 	oracle_source: IDL.Opt(IDL.Text)
 });
 export const ManageOraclePrincipalsParams = IDL.Record({
@@ -239,6 +246,10 @@ export const idlFactory = ({ IDL }) => {
 		description: IDL.Opt(Description),
 		icon_url: IDL.Opt(IDL.Text)
 	});
+	const BalanceDomain = IDL.Variant({
+		Playground: IDL.Null,
+		Settlement: IDL.Null
+	});
 	const AddSeriesParams = IDL.Record({
 		title: IDL.Text,
 		strike: IDL.Opt(Price),
@@ -251,6 +262,7 @@ export const idlFactory = ({ IDL }) => {
 		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		icon_url: IDL.Opt(IDL.Text),
 		price_precision: IDL.Nat8,
+		balance_domain: BalanceDomain,
 		oracle_source: IDL.Text
 	});
 	const SeriesError = IDL.Variant({
@@ -282,6 +294,7 @@ export const idlFactory = ({ IDL }) => {
 		created_at_ns: IDL.Nat64,
 		icon_url: IDL.Opt(IDL.Text),
 		price_precision: IDL.Nat8,
+		balance_domain: BalanceDomain,
 		oracle_source: IDL.Text
 	});
 	const PaginationParams = IDL.Record({
@@ -300,6 +313,7 @@ export const idlFactory = ({ IDL }) => {
 		pagination: IDL.Opt(PaginationParams),
 		underlying: IDL.Opt(IDL.Text),
 		search_term: IDL.Opt(IDL.Text),
+		balance_domain: IDL.Opt(BalanceDomain),
 		oracle_source: IDL.Opt(IDL.Text)
 	});
 	const ManageOraclePrincipalsParams = IDL.Record({

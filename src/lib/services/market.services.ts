@@ -77,6 +77,7 @@ export const createMarket = async ({
 					}))
 				: undefined
 		),
+		balance_domain: { Settlement: null },
 		oracle_source: VICI_ORACLE_V1
 	};
 

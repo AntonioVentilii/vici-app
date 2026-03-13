@@ -103,7 +103,12 @@ export const FreezePositionForTransferParams = IDL.Record({
 	transfer_id: IDL.Text,
 	valuation_price: IDL.Opt(Price)
 });
+export const BalanceDomain = IDL.Variant({
+	Playground: IDL.Null,
+	Settlement: IDL.Null
+});
 export const GetAccountStateParams = IDL.Record({
+	domain: IDL.Opt(BalanceDomain),
 	refresh: IDL.Opt(IDL.Bool)
 });
 export const AssetWorth = IDL.Record({
@@ -115,9 +120,9 @@ export const AssetWorth = IDL.Record({
 });
 export const AccountState = IDL.Record({
 	user: IDL.Principal,
-	cash_balance_usd: IDL.Int,
-	reserved_margin_usd: IDL.Nat,
-	collateral_balances: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))
+	reserved_margins_usd: IDL.Vec(IDL.Tuple(BalanceDomain, IDL.Nat)),
+	cash_balances_usd: IDL.Vec(IDL.Tuple(BalanceDomain, IDL.Int)),
+	balances: IDL.Vec(IDL.Tuple(BalanceDomain, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))))
 });
 export const AccountStateResponse = IDL.Record({
 	assets: IDL.Vec(AssetWorth),
@@ -181,7 +186,8 @@ export const LimitOrder = IDL.Record({
 	series_id: IDL.Text,
 	side: Side,
 	order_id: IDL.Text,
-	price: Price
+	price: Price,
+	balance_domain: BalanceDomain
 });
 export const GetPositionParams = IDL.Record({
 	outcome_id: IDL.Opt(IDL.Text),
@@ -222,6 +228,7 @@ export const SettlementPlan = IDL.Record({
 	insurance_fee_usd: IDL.Nat,
 	positions: IDL.Vec(SettlementPosition),
 	accounting_applied: IDL.Bool,
+	balance_domain: BalanceDomain,
 	oracle_source: IDL.Text,
 	settlement: SettlementInput
 });
@@ -232,6 +239,7 @@ export const SettlementStatusView = IDL.Record({
 	accounting_cursor: IDL.Nat64,
 	insurance_fee_usd: IDL.Nat,
 	accounting_applied: IDL.Bool,
+	balance_domain: BalanceDomain,
 	oracle_source: IDL.Text,
 	total_positions: IDL.Nat64,
 	settlement: SettlementInput
@@ -308,6 +316,7 @@ export const Series = IDL.Record({
 	created_at_ns: IDL.Nat64,
 	icon_url: IDL.Opt(IDL.Text),
 	price_precision: IDL.Nat8,
+	balance_domain: BalanceDomain,
 	oracle_source: IDL.Text
 });
 export const SettlementError = IDL.Variant({
@@ -565,7 +574,14 @@ export const idlFactory = ({ IDL }) => {
 		transfer_id: IDL.Text,
 		valuation_price: IDL.Opt(Price)
 	});
-	const GetAccountStateParams = IDL.Record({ refresh: IDL.Opt(IDL.Bool) });
+	const BalanceDomain = IDL.Variant({
+		Playground: IDL.Null,
+		Settlement: IDL.Null
+	});
+	const GetAccountStateParams = IDL.Record({
+		domain: IDL.Opt(BalanceDomain),
+		refresh: IDL.Opt(IDL.Bool)
+	});
 	const AssetWorth = IDL.Record({
 		pre_haircut_value_usd: IDL.Nat,
 		haircut_bps: IDL.Nat16,
@@ -575,9 +591,9 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AccountState = IDL.Record({
 		user: IDL.Principal,
-		cash_balance_usd: IDL.Int,
-		reserved_margin_usd: IDL.Nat,
-		collateral_balances: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))
+		reserved_margins_usd: IDL.Vec(IDL.Tuple(BalanceDomain, IDL.Nat)),
+		cash_balances_usd: IDL.Vec(IDL.Tuple(BalanceDomain, IDL.Int)),
+		balances: IDL.Vec(IDL.Tuple(BalanceDomain, IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat))))
 	});
 	const AccountStateResponse = IDL.Record({
 		assets: IDL.Vec(AssetWorth),
@@ -641,7 +657,8 @@ export const idlFactory = ({ IDL }) => {
 		series_id: IDL.Text,
 		side: Side,
 		order_id: IDL.Text,
-		price: Price
+		price: Price,
+		balance_domain: BalanceDomain
 	});
 	const GetPositionParams = IDL.Record({
 		outcome_id: IDL.Opt(IDL.Text),
@@ -680,6 +697,7 @@ export const idlFactory = ({ IDL }) => {
 		insurance_fee_usd: IDL.Nat,
 		positions: IDL.Vec(SettlementPosition),
 		accounting_applied: IDL.Bool,
+		balance_domain: BalanceDomain,
 		oracle_source: IDL.Text,
 		settlement: SettlementInput
 	});
@@ -690,6 +708,7 @@ export const idlFactory = ({ IDL }) => {
 		accounting_cursor: IDL.Nat64,
 		insurance_fee_usd: IDL.Nat,
 		accounting_applied: IDL.Bool,
+		balance_domain: BalanceDomain,
 		oracle_source: IDL.Text,
 		total_positions: IDL.Nat64,
 		settlement: SettlementInput
@@ -766,6 +785,7 @@ export const idlFactory = ({ IDL }) => {
 		created_at_ns: IDL.Nat64,
 		icon_url: IDL.Opt(IDL.Text),
 		price_precision: IDL.Nat8,
+		balance_domain: BalanceDomain,
 		oracle_source: IDL.Text
 	});
 	const SettlementError = IDL.Variant({
