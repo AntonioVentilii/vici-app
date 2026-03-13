@@ -256,5 +256,7 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 export const getRushQueue = async (): Promise<Market[]> => {
 	const markets = await getMarkets();
 
-	return markets.filter((m) => m.status === 'Open').sort((a, b) => Number(b.id) - Number(a.id));
+	return markets
+		.filter((m) => m.status === 'Open' && m.payoffType === 'Binary')
+		.sort((a, b) => Number(b.id) - Number(a.id));
 };

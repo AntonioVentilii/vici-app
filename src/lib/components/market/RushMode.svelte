@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
-	import { onMount } from 'svelte';
+	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { onMount, onDestroy } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import RushCard from '$lib/components/market/RushCard.svelte';
@@ -10,6 +10,7 @@
 	import { getRushQueue } from '$lib/services/market.services';
 	import { placeOrder } from '$lib/services/order.services';
 	import type { Market } from '$lib/types/market';
+	import type { OrderType } from '$lib/types/order';
 
 	const MAX_BETS = 10;
 	const MAX_MARKETS = 20;
@@ -29,6 +30,9 @@
 	let completed = $state(false);
 
 	onMount(async () => {
+		// Prevent scrolling on mobile while in Rush Mode
+		document.body.classList.add('overflow-hidden');
+
 		try {
 			const queue = await getRushQueue();
 
@@ -38,6 +42,11 @@
 		} finally {
 			loading = false;
 		}
+	});
+
+	onDestroy(() => {
+		// Re-enable scrolling when leaving Rush Mode
+		document.body.classList.remove('overflow-hidden');
 	});
 
 	const handleAction = async (action: 'YES' | 'NO' | 'SKIP') => {
@@ -62,15 +71,28 @@
 
 			// Use best execution price if available, otherwise fallback to probability
 			let price: number;
+			let type: OrderType = 'LIMIT';
+
 			if (action === 'YES') {
-				price = currentMarket.bestAsk ?? currentMarket.yesProbability;
+				const { bestAsk } = currentMarket;
+				if (nonNullish(bestAsk)) {
+					price = bestAsk;
+					type = 'MARKET';
+				} else {
+					price = currentMarket.yesProbability;
+					type = 'LIMIT';
+				}
 			} else {
 				// For NO, we want to Buy the "NO" side, which is equivalent to Selling "YES" at bestBid
 				// bestBid is the price for YES, so 1 - bestBid is the price for NO.
-				price =
-					currentMarket.bestBid !== undefined
-						? 1 - currentMarket.bestBid
-						: currentMarket.noProbability;
+				const { bestBid } = currentMarket;
+				if (nonNullish(bestBid)) {
+					price = 1 - bestBid;
+					type = 'MARKET';
+				} else {
+					price = currentMarket.noProbability;
+					type = 'LIMIT';
+				}
 			}
 
 			// qty = amount / price (normalized to token decimals)
@@ -82,7 +104,7 @@
 			await placeOrder({
 				marketId: currentMarket.id,
 				side: 'BUY',
-				type: 'LIMIT',
+				type,
 				price: executionPrice,
 				qty,
 				outcome: action
