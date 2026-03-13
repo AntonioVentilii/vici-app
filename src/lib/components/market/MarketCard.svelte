@@ -65,24 +65,50 @@
 				</a>
 			{:else}
 				<div
-					class="col-span-2 flex flex-col justify-center rounded-2xl bg-indigo-50 p-4 text-center ring-1 ring-indigo-100 ring-inset"
+					class="col-span-2 flex flex-col gap-2 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-100 ring-inset"
 				>
-					<div class="text-[10px] font-bold text-indigo-500 uppercase">Categorical Market</div>
-					<div class="mt-1 text-sm font-black text-indigo-900">
-						{market.outcomes?.length ?? 0} Outcomes
+					<div class="flex items-center justify-between">
+						<div class="text-[10px] font-bold text-slate-400 uppercase">Top Outcomes</div>
+						<div class="text-[10px] font-bold text-indigo-500 uppercase">
+							{market.outcomes?.length ?? 0} total
+						</div>
 					</div>
-					<div class="mt-2 flex flex-wrap justify-center gap-1.5">
-						{#each market.outcomes?.slice(0, 3) ?? [] as outcome (outcome.id)}
-							<span
-								class="rounded-full bg-indigo-100 px-2.5 py-1 text-[10px] font-bold text-indigo-700"
+
+					<div class="flex flex-col gap-2">
+						{#each (market.outcomes ?? [])
+							// eslint-disable-next-line local-rules/prefer-object-params
+							.toSorted((a, b) => (b.probability ?? 0) - (a.probability ?? 0) || a.title.localeCompare(b.title))
+							.slice(0, 3) as outcome (outcome.id)}
+							<a
+								class="group/outcome flex items-center justify-between rounded-xl bg-white p-2.5 ring-1 ring-slate-100 transition-all hover:ring-indigo-200"
+								href="{AppPath.Markets}/{market.id}?side={outcome.id}"
+								onclick={(e) => e.stopPropagation()}
 							>
-								{outcome.title}
-							</span>
+								<div class="flex flex-1 items-center gap-3 overflow-hidden">
+									<div class="relative h-1.5 flex-1 overflow-hidden rounded-full bg-slate-100">
+										<div
+											style="width: {(outcome.probability ?? 0) * 100}%"
+											class="absolute inset-y-0 left-0 bg-indigo-500 transition-all duration-500"
+										></div>
+									</div>
+									<span
+										class="truncate text-xs font-bold text-slate-700 transition-colors group-hover/outcome:text-indigo-600"
+									>
+										{outcome.title}
+									</span>
+								</div>
+								<span class="ml-4 text-xs font-black text-slate-900">
+									{formatProbability(outcome.probability ?? 0)}
+								</span>
+							</a>
 						{/each}
+
 						{#if nonNullish(market.outcomes?.length) && market.outcomes.length > 3}
-							<span class="text-[10px] font-bold text-indigo-400">
-								+{market.outcomes.length - 3} more
-							</span>
+							<div class="mt-1 text-center">
+								<span class="text-[10px] font-bold text-slate-400 italic">
+									+ {market.outcomes.length - 3} others
+								</span>
+							</div>
 						{/if}
 					</div>
 				</div>

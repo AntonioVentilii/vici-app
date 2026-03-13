@@ -1,4 +1,5 @@
 import type { RegistryDid } from '$declarations';
+import { listOrders as listOrdersApi } from '$lib/api/clearing.api';
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
 	NANO_SECONDS_IN_MILLISECOND,
@@ -14,7 +15,7 @@ import { getProfile } from '$lib/services/profile.services';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
 import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
-import { mapMarketData } from '$lib/utils/market.utils';
+import { calculateCategoricalProbabilities, mapMarketData } from '$lib/utils/market.utils';
 import { emitRefreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
@@ -125,12 +126,30 @@ export const getMarkets = async (): Promise<Market[]> => {
 	const markets = await Promise.all(
 		seriesList.map(async (s) => {
 			const mid = parseMarketId(s.series_id);
-			const { midPrice, bids, asks } = await getOrderBook({ marketId: mid, outcomeId: 'YES' });
-			const bestBid = bids[0]?.price;
-			const bestAsk = asks[0]?.price;
+			const isCategorical = 'Categorical' in s.payoff_type;
 
-			const yesProb = midPrice ?? 0.5;
-			const noProb = 1 - yesProb;
+			let yesProb = 0.5;
+			let noProb = 0.5;
+			let bestBid: number | undefined;
+			let bestAsk: number | undefined;
+			let categoricalProbabilities: Record<string, number> | undefined;
+
+			if (isCategorical && nonNullish(s.outcomes?.[0])) {
+				const orders = await listOrdersApi({
+					identity,
+					params: { series_id: toNullable(mid) }
+				});
+				categoricalProbabilities = calculateCategoricalProbabilities({
+					outcomes: s.outcomes[0],
+					orders
+				});
+			} else {
+				const { midPrice, bids, asks } = await getOrderBook({ marketId: mid, outcomeId: 'YES' });
+				bestBid = bids[0]?.price;
+				bestAsk = asks[0]?.price;
+				yesProb = midPrice ?? 0.5;
+				noProb = 1 - yesProb;
+			}
 
 			const isExpired = s.expiry_ns / NANO_SECONDS_IN_MILLISECOND <= BigInt(Date.now());
 
@@ -140,7 +159,8 @@ export const getMarkets = async (): Promise<Market[]> => {
 				noProbability: noProb,
 				bestBid,
 				bestAsk,
-				status: isExpired ? 'Expired' : 'Open'
+				status: isExpired ? 'Expired' : 'Open',
+				categoricalProbabilities
 			});
 		})
 	);
@@ -188,6 +208,20 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 		return;
 	}
 
+	const isCategorical = 'Categorical' in s.payoff_type;
+	let categoricalProbabilities: Record<string, number> | undefined;
+
+	if (isCategorical && nonNullish(s.outcomes?.[0])) {
+		const orders = await listOrdersApi({
+			identity,
+			params: { series_id: toNullable(marketId) }
+		});
+		categoricalProbabilities = calculateCategoricalProbabilities({
+			outcomes: s.outcomes[0],
+			orders
+		});
+	}
+
 	const resolution = activities.find(
 		(a) => a.type === ActivityType.SETTLEMENT && a.marketId === marketId
 	);
@@ -214,7 +248,8 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 		bestBid,
 		bestAsk,
 		status,
-		outcome
+		outcome,
+		categoricalProbabilities
 	});
 };
 

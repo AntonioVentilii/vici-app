@@ -17,7 +17,7 @@ export interface Market {
 	expiryDate: bigint; // timestamp in ms
 	status: MarketStatus;
 	outcome?: Outcome;
-	outcomes?: { id: string; title: string }[];
+	outcomes?: { id: string; title: string; probability?: number }[];
 	payoffType: 'Binary' | 'Categorical' | 'Call' | 'Put';
 	isInviteOnly: boolean;
 	inviteList: PrincipalText[];

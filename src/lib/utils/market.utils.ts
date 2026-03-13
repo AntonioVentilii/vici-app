@@ -1,10 +1,10 @@
-import type { RegistryDid } from '$declarations';
+import type { ClearingDid, RegistryDid } from '$declarations';
 import { NANO_SECONDS_IN_MILLISECOND, ZERO } from '$lib/constants/app.constants';
 import type { Market, MarketStatus, Outcome } from '$lib/types/market';
 import type { OrderBookLevel } from '$lib/types/order';
 import { assetToToken } from '$lib/utils/asset.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 
 export const mapMarketData = ({
 	series,
@@ -13,7 +13,8 @@ export const mapMarketData = ({
 	bestBid = undefined,
 	bestAsk = undefined,
 	status = 'Open',
-	outcome = undefined
+	outcome = undefined,
+	categoricalProbabilities = undefined
 }: {
 	series: RegistryDid.Series;
 	yesProbability?: number;
@@ -22,6 +23,7 @@ export const mapMarketData = ({
 	bestAsk?: number;
 	status?: MarketStatus;
 	outcome?: Outcome;
+	categoricalProbabilities?: Record<string, number>;
 }): Market | undefined => {
 	const {
 		series_id: id,
@@ -59,7 +61,11 @@ export const mapMarketData = ({
 		expiryDate: expiryDate / NANO_SECONDS_IN_MILLISECOND,
 		status,
 		outcome,
-		outcomes: outcomes?.[0]?.map((o) => ({ id: o.id, title: o.title })),
+		outcomes: outcomes?.[0]?.map((o) => ({
+			id: o.id,
+			title: o.title,
+			probability: payoffTypeMapped === 'Categorical' ? categoricalProbabilities?.[o.id] : undefined
+		})),
 		payoffType: payoffTypeMapped,
 		isInviteOnly: false,
 		inviteList: [],
@@ -124,6 +130,61 @@ export const getTimeRemaining = (expiry: bigint): string => {
 	}
 
 	return `${minutes}m remaining`;
+};
+
+export const calculateCategoricalProbabilities = ({
+	outcomes,
+	orders
+}: {
+	outcomes: { id: string; title: string }[];
+	orders: ClearingDid.LimitOrder[];
+}): Record<string, number> => {
+	const outcomeBook: Record<string, { bestBid?: number; bestAsk?: number }> = {};
+
+	outcomes.forEach((o) => {
+		const outcomeOrders = orders.filter((order) => order.outcome_id[0] === o.id);
+		const bids = outcomeOrders
+			.filter((order) => 'Buy' in order.side)
+			.map((order) => Number(order.price.decimal.value) / 10 ** order.price.decimal.decimals)
+			.sort((a, b) => b - a);
+		const asks = outcomeOrders
+			.filter((order) => 'Sell' in order.side)
+			.map((order) => Number(order.price.decimal.value) / 10 ** order.price.decimal.decimals)
+			.sort((a, b) => a - b);
+
+		outcomeBook[o.id] = {
+			bestBid: bids[0],
+			bestAsk: asks[0]
+		};
+	});
+
+	const probs: Record<string, number> = {};
+	let totalWeight = 0;
+
+	outcomes.forEach((o) => {
+		const { bestBid, bestAsk } = outcomeBook[o.id];
+		let p = 0;
+		if (nonNullish(bestBid) && nonNullish(bestAsk)) {
+			p = (bestBid + bestAsk) / 2;
+		} else if (nonNullish(bestBid)) {
+			p = bestBid;
+		} else if (nonNullish(bestAsk)) {
+			p = bestAsk;
+		} else {
+			p = 1 / outcomes.length; // Default to uniform
+		}
+		probs[o.id] = p;
+		totalWeight += p;
+	});
+
+	// Normalize
+	if (totalWeight > 0) {
+		Object.keys(probs).forEach((id) => {
+			probs[id] = probs[id] / totalWeight;
+		});
+	}
+
+	return probs;
 };
 
 export const getOutcomeVariant = (

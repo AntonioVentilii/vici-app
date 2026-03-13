@@ -93,13 +93,23 @@
 	});
 
 	$effect(() => {
-		if ($routeSide === 'yes' || $routeSide === 'no') {
-			selectedType = $routeSide.toUpperCase();
+		if ($routeSide) {
+			const sideParam = $routeSide;
+			const isBinarySide = sideParam.toUpperCase() === 'YES' || sideParam.toUpperCase() === 'NO';
+			selectedType = isBinarySide ? sideParam.toUpperCase() : sideParam;
+
 			if (orderType === 'MARKET') {
-				// Convert decimal (0.35) to percentage (35)
-				price = Math.round(
-					(selectedType === 'YES' ? yesProbability : noProbability) * 100
-				).toString();
+				// For binary, we have yes/noProb. For categorical, we might need to find it in market.outcomes
+				if (isBinarySide) {
+					price = Math.round(
+						(selectedType === 'YES' ? yesProbability : noProbability) * 100
+					).toString();
+				} else {
+					const outcome = market.outcomes?.find((o) => o.id === selectedType);
+					if (outcome?.probability) {
+						price = Math.round(outcome.probability * 100).toString();
+					}
+				}
 			}
 		}
 	});
