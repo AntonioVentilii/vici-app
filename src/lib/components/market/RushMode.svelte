@@ -208,15 +208,15 @@
 		</div>
 	{:else}
 		<!-- Header Info -->
-		<div class="mb-8 flex w-full max-w-90 items-center justify-between" in:fade>
+		<div class="mb-4 sm:mb-8 flex w-full max-w-90 items-center justify-between" in:fade>
 			<div class="flex flex-col">
-				<h1 class="text-2xl font-black text-slate-950">Rush Mode</h1>
+				<h1 class="text-xl sm:text-2xl font-black text-slate-950">Rush Mode</h1>
 				<span class="text-xs font-bold tracking-widest text-slate-400 uppercase">
 					Market {currentIndex + 1} of {markets.length}
 				</span>
 			</div>
 			<div class="flex flex-col items-end">
-				<div class="mb-2 flex items-center gap-3">
+				<div class="mb-1 sm:mb-2 flex items-center gap-1 sm:gap-3">
 					<div class="flex flex-col items-end">
 						<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Bets</span>
 						<span class="text-xs font-black text-slate-900">{betsCount}/{MAX_BETS}</span>
