@@ -9,6 +9,6 @@
 
 <LoaderCollaterals />
 
-<LoaderMarkets />
-
 <LoaderOrders />
+
+<LoaderMarkets />

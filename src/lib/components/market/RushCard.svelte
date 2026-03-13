@@ -8,9 +8,10 @@
 		onAction: (action: 'YES' | 'NO' | 'SKIP') => void;
 		isLimitOrderYes: boolean;
 		isLimitOrderNo: boolean;
+		signedIn: boolean;
 	}
 
-	const { market, onAction, isLimitOrderYes, isLimitOrderNo }: Props = $props();
+	const { market, onAction, isLimitOrderYes, isLimitOrderNo, signedIn }: Props = $props();
 
 	let startX = 0;
 	let startY = 0;
@@ -98,7 +99,7 @@
 	>
 		<!-- YES Indicator -->
 		<div
-			style="opacity: {yesOpacity}; transform: rotate(-15deg)"
+			style="opacity: {signedIn ? yesOpacity : yesOpacity * 0.5}; transform: rotate(-15deg)"
 			class="absolute top-10 left-6 z-20 flex flex-col items-center rounded border-4 border-emerald-500 px-4 py-2 text-3xl font-black text-emerald-500"
 		>
 			<span>YES</span>
@@ -113,7 +114,7 @@
 
 		<!-- NO Indicator -->
 		<div
-			style="opacity: {noOpacity}; transform: rotate(15deg)"
+			style="opacity: {signedIn ? noOpacity : noOpacity * 0.5}; transform: rotate(15deg)"
 			class="absolute top-10 right-6 z-20 flex flex-col items-center rounded border-4 border-rose-500 px-4 py-2 text-3xl font-black text-rose-500"
 		>
 			<span>NO</span>
@@ -190,6 +191,22 @@
 							{/if}
 						</div>
 					</div>
+
+					{#if !signedIn}
+						<div
+							class="mt-2 flex items-center justify-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase"
+						>
+							<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path
+									d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="2"
+								/>
+							</svg>
+							Sign in to play
+						</div>
+					{/if}
 				</div>
 
 				<div class="flex items-center justify-between border-t border-slate-100">

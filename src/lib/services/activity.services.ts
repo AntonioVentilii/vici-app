@@ -20,14 +20,20 @@ export const logActivity = async (activity: Omit<Activity, 'timestamp'>): Promis
 };
 
 export const getGlobalActivities = async (limit = 50): Promise<Activity[]> => {
-	const { items } = await listDocs<Activity>({
-		collection: Collection.ACTIVITIES
-	});
+	try {
+		const { items } = await listDocs<Activity>({
+			collection: Collection.ACTIVITIES
+		});
 
-	return items
-		.map((doc) => doc.data)
-		.sort((a, b) => b.timestamp - a.timestamp)
-		.slice(0, limit);
+		return items
+			.map((doc) => doc.data)
+			.sort((a, b) => b.timestamp - a.timestamp)
+			.slice(0, limit);
+	} catch (e) {
+		console.error('Failed to fetch global activities', e);
+
+		return [];
+	}
 };
 
 export const getFriendActivities = async ({
@@ -37,13 +43,19 @@ export const getFriendActivities = async ({
 	friends: PrincipalText[];
 	limit?: number;
 }): Promise<Activity[]> => {
-	const { items } = await listDocs<Activity>({
-		collection: Collection.ACTIVITIES
-	});
+	try {
+		const { items } = await listDocs<Activity>({
+			collection: Collection.ACTIVITIES
+		});
 
-	return items
-		.map((doc) => doc.data)
-		.filter((a) => friends.includes(a.user))
-		.sort((a, b) => b.timestamp - a.timestamp)
-		.slice(0, limit);
+		return items
+			.map((doc) => doc.data)
+			.filter((a) => friends.includes(a.user))
+			.sort((a, b) => b.timestamp - a.timestamp)
+			.slice(0, limit);
+	} catch (e) {
+		console.error('Failed to fetch friend activities', e);
+
+		return [];
+	}
 };
