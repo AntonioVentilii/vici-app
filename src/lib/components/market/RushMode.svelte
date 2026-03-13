@@ -9,9 +9,11 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { getRushQueue } from '$lib/services/market.services';
 	import { placeOrder } from '$lib/services/order.services';
+	import { getPositions } from '$lib/services/position.services';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
+	import type { Position } from '$lib/types/position';
 
 	const MAX_BETS = 10;
 	const MAX_MARKETS = 20;
@@ -22,11 +24,13 @@
 
 	let loading = $state(true);
 
-	let tradeAmount = $state('0.1');
+	let tradeAmount = $state('1.0');
 
 	let betsCount = $state(0);
 
 	let completed = $state(false);
+
+	let positions = $state<Position[]>([]);
 
 	let notifications = $state<
 		{ id: string; title: string; message: string; type: 'error' | 'success' }[]
@@ -55,9 +59,13 @@
 		document.body.classList.add('overflow-hidden');
 
 		try {
-			const queue = await getRushQueue();
+			const [queue, userPositions] = await Promise.all([
+				getRushQueue(),
+				nonNullish($userStore.user) ? getPositions() : Promise.resolve([])
+			]);
 
 			markets = queue.slice(0, MAX_MARKETS);
+			positions = userPositions;
 		} catch (e) {
 			console.error('Failed to load Rush queue', e);
 		} finally {
@@ -157,6 +165,9 @@
 		// Immediately update UI
 		betsCount += 1;
 
+		// Optimistically update positions for the badge if needed,
+		// but since we advance it's mainly for history if we were to go back (which we don't yet)
+
 		advance();
 	};
 
@@ -208,15 +219,15 @@
 		</div>
 	{:else}
 		<!-- Header Info -->
-		<div class="mb-4 sm:mb-8 flex w-full max-w-90 items-center justify-between" in:fade>
+		<div class="mb-4 flex w-full max-w-90 items-center justify-between sm:mb-8" in:fade>
 			<div class="flex flex-col">
-				<h1 class="text-xl sm:text-2xl font-black text-slate-950">Rush Mode</h1>
+				<h1 class="text-xl font-black text-slate-950 sm:text-2xl">Rush Mode</h1>
 				<span class="text-xs font-bold tracking-widest text-slate-400 uppercase">
 					Market {currentIndex + 1} of {markets.length}
 				</span>
 			</div>
 			<div class="flex flex-col items-end">
-				<div class="mb-1 sm:mb-2 flex items-center gap-1 sm:gap-3">
+				<div class="mb-1 flex items-center gap-1 sm:mb-2 sm:gap-3">
 					<div class="flex flex-col items-end">
 						<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Bets</span>
 						<span class="text-xs font-black text-slate-900">{betsCount}/{MAX_BETS}</span>
@@ -231,12 +242,12 @@
 				>
 					<input
 						class="w-12 bg-transparent text-center text-sm font-black text-slate-950 outline-none"
-						min="0.1"
+						min="1"
 						step="0.1"
 						type="number"
 						bind:value={tradeAmount}
 					/>
-					<span class="text-[10px] font-bold text-slate-500">ICP</span>
+					<span class="text-[10px] font-bold text-slate-500">USD</span>
 				</div>
 			</div>
 		</div>
@@ -254,6 +265,7 @@
 						isLimitOrderYes={isNullish(market.bestAsk)}
 						{market}
 						onAction={handleAction}
+						position={positions.find((p) => p.marketId === market.id)}
 						signedIn={nonNullish($userStore.user)}
 					/>
 				</div>

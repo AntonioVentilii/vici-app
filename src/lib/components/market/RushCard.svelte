@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { Spring } from 'svelte/motion';
 	import type { Market } from '$lib/types/market';
-	import { formatProbability } from '$lib/utils/format.utils';
+	import type { Position } from '$lib/types/position';
+	import { formatCurrency, formatProbability } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -9,9 +10,10 @@
 		isLimitOrderYes: boolean;
 		isLimitOrderNo: boolean;
 		signedIn: boolean;
+		position?: Position;
 	}
 
-	const { market, onAction, isLimitOrderYes, isLimitOrderNo, signedIn }: Props = $props();
+	const { market, onAction, isLimitOrderYes, isLimitOrderNo, signedIn, position }: Props = $props();
 
 	let startX = 0;
 	let startY = 0;
@@ -191,6 +193,26 @@
 							{/if}
 						</div>
 					</div>
+
+					{#if position}
+						<div
+							class="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50/50 p-3"
+						>
+							<div class="flex items-center gap-2">
+								<div class="h-2 w-2 animate-pulse rounded-full bg-indigo-500"></div>
+								<span class="text-[10px] font-bold tracking-widest text-indigo-700 uppercase">
+									Existing Position
+								</span>
+							</div>
+							<span class="text-xs font-black text-indigo-900">
+								{formatCurrency({
+									value: position.netQty,
+									decimals: Number(market.token.decimals)
+								})}
+								{market.token.symbol}
+							</span>
+						</div>
+					{/if}
 
 					{#if !signedIn}
 						<div

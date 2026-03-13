@@ -28,6 +28,8 @@ export interface Market {
 	noProbability: number;
 	bestBid?: number;
 	bestAsk?: number;
+	bestBidQty?: bigint;
+	bestAskQty?: bigint;
 	token: Token;
 	pricePrecision: number;
 }

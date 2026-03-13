@@ -132,6 +132,8 @@ export const getMarkets = async (): Promise<Market[]> => {
 			let noProb = 0.5;
 			let bestBid: number | undefined;
 			let bestAsk: number | undefined;
+			let bestBidQty: bigint | undefined;
+			let bestAskQty: bigint | undefined;
 			let categoricalProbabilities: Record<string, number> | undefined;
 
 			if (isCategorical && nonNullish(s.outcomes?.[0])) {
@@ -147,6 +149,8 @@ export const getMarkets = async (): Promise<Market[]> => {
 				const { midPrice, bids, asks } = await getOrderBook({ marketId: mid, outcomeId: 'YES' });
 				bestBid = bids[0]?.price;
 				bestAsk = asks[0]?.price;
+				bestBidQty = bids[0]?.totalQty;
+				bestAskQty = asks[0]?.totalQty;
 				yesProb = midPrice ?? 0.5;
 				noProb = 1 - yesProb;
 			}
@@ -159,6 +163,8 @@ export const getMarkets = async (): Promise<Market[]> => {
 				noProbability: noProb,
 				bestBid,
 				bestAsk,
+				bestBidQty,
+				bestAskQty,
 				status: isExpired ? 'Expired' : 'Open',
 				categoricalProbabilities
 			});
@@ -203,6 +209,8 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 
 	const bestBid = bids[0]?.price;
 	const bestAsk = asks[0]?.price;
+	const bestBidQty = bids[0]?.totalQty;
+	const bestAskQty = asks[0]?.totalQty;
 
 	if (isNullish(s)) {
 		return;
@@ -247,6 +255,8 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 		noProbability: noProb,
 		bestBid,
 		bestAsk,
+		bestBidQty,
+		bestAskQty,
 		status,
 		outcome,
 		categoricalProbabilities

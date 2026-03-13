@@ -12,6 +12,8 @@ export const mapMarketData = ({
 	noProbability = 0,
 	bestBid = undefined,
 	bestAsk = undefined,
+	bestBidQty = undefined,
+	bestAskQty = undefined,
 	status = 'Open',
 	outcome = undefined,
 	categoricalProbabilities = undefined
@@ -21,6 +23,8 @@ export const mapMarketData = ({
 	noProbability?: number;
 	bestBid?: number;
 	bestAsk?: number;
+	bestBidQty?: bigint;
+	bestAskQty?: bigint;
 	status?: MarketStatus;
 	outcome?: Outcome;
 	categoricalProbabilities?: Record<string, number>;
@@ -76,6 +80,8 @@ export const mapMarketData = ({
 		noProbability,
 		bestBid,
 		bestAsk,
+		bestBidQty,
+		bestAskQty,
 		token,
 		pricePrecision: Number(series.price_precision)
 	};
