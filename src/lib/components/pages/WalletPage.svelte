@@ -15,6 +15,7 @@
 	import { getTransactions } from '$lib/services/wallet.service';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Token } from '$lib/types/token';
 	import type { Transaction } from '$lib/types/wallet';
 	import { emit } from '$lib/utils/events.utils';
@@ -63,9 +64,17 @@
 
 			recipient = '';
 
-			alert('Transaction successful!');
+			notificationsStore.add({
+				title: 'Success',
+				message: 'Transaction successful!',
+				type: 'success'
+			});
 		} catch (e: unknown) {
-			alert((e as Error).message);
+			notificationsStore.add({
+				title: 'Error',
+				message: (e as Error).message,
+				type: 'error'
+			});
 		}
 	};
 </script>

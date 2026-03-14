@@ -8,13 +8,14 @@ export const getMarketComments = async (marketId: string): Promise<Comment[]> =>
 	});
 
 	return items
-		.map((doc) => ({ ...doc.data, key: doc.key }))
+		.map(({ data }) => data)
 		.filter((c) => c.marketId === marketId)
 		.sort((a, b) => a.timestamp - b.timestamp);
 };
 
 export const addComment = async (comment: Omit<Comment, 'timestamp'>): Promise<void> => {
 	const timestamp = Date.now();
+
 	const key = `${comment.marketId}#${timestamp}#${comment.user.slice(0, 5)}`;
 
 	await setDoc({
@@ -28,12 +29,3 @@ export const addComment = async (comment: Omit<Comment, 'timestamp'>): Promise<v
 		}
 	});
 };
-
-// export const deleteComment = async (key: string): Promise<void> => {
-// 	await deleteDoc({
-// 		collection: Collection.COMMENTS,
-// 		doc: {
-// 			key
-// 		}
-// 	});
-// };

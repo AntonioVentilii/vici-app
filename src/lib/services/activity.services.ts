@@ -5,6 +5,7 @@ import { listDocs, setDoc } from '@junobuild/core';
 
 export const logActivity = async (activity: Omit<Activity, 'timestamp'>): Promise<void> => {
 	const timestamp = Date.now();
+
 	const key = `${activity.user}#${timestamp}#${activity.type}`;
 
 	await setDoc({
@@ -19,21 +20,22 @@ export const logActivity = async (activity: Omit<Activity, 'timestamp'>): Promis
 	});
 };
 
+const listActivities = async (): Promise<Activity[]> => {
+	const { items } = await listDocs<Activity>({
+		collection: Collection.ACTIVITIES
+	});
+
+	return items.map(({ data }) => data);
+};
+
 export const getGlobalActivities = async (limit = 50): Promise<Activity[]> => {
-	try {
-		const { items } = await listDocs<Activity>({
-			collection: Collection.ACTIVITIES
-		});
-
-		return items
-			.map((doc) => doc.data)
-			.sort((a, b) => b.timestamp - a.timestamp)
-			.slice(0, limit);
-	} catch (e) {
-		console.error('Failed to fetch global activities', e);
-
+	if (limit <= 0) {
 		return [];
 	}
+
+	const items = await listActivities();
+
+	return items.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
 };
 
 export const getFriendActivities = async ({
@@ -43,19 +45,14 @@ export const getFriendActivities = async ({
 	friends: PrincipalText[];
 	limit?: number;
 }): Promise<Activity[]> => {
-	try {
-		const { items } = await listDocs<Activity>({
-			collection: Collection.ACTIVITIES
-		});
-
-		return items
-			.map((doc) => doc.data)
-			.filter((a) => friends.includes(a.user))
-			.sort((a, b) => b.timestamp - a.timestamp)
-			.slice(0, limit);
-	} catch (e) {
-		console.error('Failed to fetch friend activities', e);
-
+	if (friends.length === 0) {
 		return [];
 	}
+
+	const items = await listActivities();
+
+	return items
+		.filter((a) => friends.includes(a.user))
+		.sort((a, b) => (b.timestamp ?? 0) - (a.timestamp ?? 0))
+		.slice(0, limit);
 };

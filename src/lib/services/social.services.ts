@@ -8,16 +8,16 @@ export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
 		collection: Collection.PROFILES
 	});
 
-	return items
-		.map((doc) => doc.data)
-		.filter((p) => (p.totalTrades ?? 0) > 0) // Only show active traders
+	const profiles = items.map(({ data }) => data);
+
+	return profiles
 		.sort((a, b) => (b.pnl ?? 0) - (a.pnl ?? 0))
+		.slice(0, 50)
 		.map((p, index) => ({
 			rank: index + 1,
 			user: p.owner,
 			pnl: p.pnl ?? 0,
 			winRate: p.winRate ?? 0,
-			activePositions: p.totalTrades ?? 0 // Using totalTrades as a proxy for activity
-		}))
-		.slice(0, 50); // Limit to top 50
+			activePositions: p.totalTrades ?? 0
+		}));
 };

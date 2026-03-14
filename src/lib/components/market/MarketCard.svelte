@@ -126,9 +126,3 @@
 		</div>
 	</div>
 </Card>
-
-<style lang="postcss">
-	:global(.group:hover) h3 {
-		color: var(--color-primary);
-	}
-</style>

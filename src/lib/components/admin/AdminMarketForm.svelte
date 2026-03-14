@@ -2,6 +2,7 @@
 	import { isNullish } from '@dfinity/utils';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { createMarket } from '$lib/services/market.services';
+	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props {
@@ -52,9 +53,17 @@
 
 			await onAddMarketSuccess();
 
-			alert('Market created successfully!');
+			notificationsStore.add({
+				title: 'Success',
+				message: 'Market created successfully!',
+				type: 'success'
+			});
 		} catch (e: unknown) {
-			alert((e as Error).message);
+			notificationsStore.add({
+				title: 'Error',
+				message: (e as Error).message,
+				type: 'error'
+			});
 		} finally {
 			status = 'enabled';
 		}

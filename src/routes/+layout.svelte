@@ -2,6 +2,7 @@
 	import { initSatellite } from '@junobuild/core';
 	import type { Snippet } from 'svelte';
 	import Banner from '$lib/components/layout/Banner.svelte';
+	import Notifications from '$lib/components/ui/Notifications.svelte';
 	// eslint-disable-next-line import/no-relative-parent-imports
 	import '../app.css';
 
@@ -27,3 +28,5 @@
 {@render children()}
 
 <Banner />
+
+<Notifications />

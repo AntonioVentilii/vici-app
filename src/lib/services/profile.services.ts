@@ -59,17 +59,22 @@ export const upsertProfile = async (
 };
 
 export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
+	const lowerQuery = query.toLowerCase();
+
 	const { items } = await listDocs<UserProfile>({
 		collection: Collection.PROFILES
 	});
 
-	const lowerQuery = query.toLowerCase();
-
 	return items
-		.map((doc) => doc.data)
+		.map((doc) => ({
+			...doc.data,
+			key: doc.key
+		}))
 		.filter(
 			(p) =>
-				p.nickname.toLowerCase().includes(lowerQuery) || p.owner.toLowerCase().includes(lowerQuery)
+				p.nickname.toLowerCase().includes(lowerQuery) ||
+				p.owner.toLowerCase().includes(lowerQuery) ||
+				p.key.toLowerCase().includes(lowerQuery)
 		);
 };
 

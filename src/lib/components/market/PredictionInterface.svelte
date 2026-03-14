@@ -7,15 +7,16 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
-	import { getOrderBook, placeOrder } from '$lib/services/order.services';
+	import { getOrderBook } from '$lib/services/order.services';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import { notificationsStore } from '$lib/stores/notification.store';
 	import { orderBookStore } from '$lib/stores/order-book.store';
 	import { tradeStore } from '$lib/stores/trade.store';
 	import type { Market } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
 	import { formatAvailableUsd, formatCurrency } from '$lib/utils/format.utils';
-	import { parseToken } from '$lib/utils/parse.utils';
+	import { executeOutcomeTrade } from '$lib/utils/trade.utils';
 
 	interface Props {
 		market: Market;
@@ -132,38 +133,25 @@
 		error = '';
 
 		try {
-			const isBinary = market.payoffType === 'Binary';
-			const currentPrice =
-				orderType === 'LIMIT'
-					? parseFloat(price) / 100
-					: selectedType === 'YES'
-						? yesProbability
-						: selectedType === 'NO'
-							? noProbability
-							: 0.5; // Default for categorical for now if no prob
+			const limitPrice = orderType === 'LIMIT' ? parseFloat(price) / 100 : undefined;
 
-			if (currentPrice <= 0 || currentPrice >= 1 || isNaN(currentPrice)) {
-				throw new Error(`Invalid price: ${currentPrice}`);
-			}
-
-			const parsedAmount = parseToken({ value: `${amount}`, unitName: 0 });
-
-			await placeOrder({
-				marketId: market.id,
-				side: 'BUY', // We are always "Buying" an outcome
-				type: orderType,
-				// For categorical markets, normalization (YES/NO flipping) is handled inside placeOrder
-				// We just pass the displayed price (probability of this outcome)
-				price: isBinary && selectedType === 'NO' ? 1 - currentPrice : currentPrice,
-				qty: parsedAmount,
-				outcome: selectedType
+			await executeOutcomeTrade({
+				market,
+				action: selectedType,
+				amount,
+				orderType,
+				limitPrice
 			});
 
 			amount = '';
 
 			onPredictionPlaced();
 
-			alert(`Successfully placed ${orderType} ${selectedType} order!`);
+			notificationsStore.add({
+				title: 'Order Placed',
+				message: `Successfully placed ${orderType} ${selectedType} order!`,
+				type: 'success'
+			});
 		} catch (err: unknown) {
 			error = (err as Error).message ?? 'Failed to place prediction';
 		} finally {

@@ -27,14 +27,14 @@
 		})
 	);
 
-	const getTokenColor = (symbol: string) => {
+	const getTokenColorClasses = (symbol: string) => {
 		if (symbol === 'ICP') {
-			return 'indigo';
+			return 'bg-indigo-100 text-indigo-600';
 		}
 		if (symbol.startsWith('ck')) {
-			return 'green';
+			return 'bg-green-100 text-green-600';
 		}
-		return 'slate';
+		return 'bg-slate-100 text-slate-600';
 	};
 </script>
 
@@ -77,7 +77,7 @@
 	<div class="flex w-full flex-col divide-y divide-slate-50">
 		{#each displayedTokens as token (token.id)}
 			{@const balance = collateral.balances[token.id] ?? ZERO}
-			{@const color = getTokenColor(token.symbol)}
+			{@const colorClasses = getTokenColorClasses(token.symbol)}
 			{@const assetWorth = collateral.accountState?.assets.find(
 				(a) => a.asset_id === token.symbol.toLowerCase()
 			)}
@@ -86,9 +86,7 @@
 				class="flex items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50/50"
 			>
 				<div class="flex items-center gap-3">
-					<div
-						class="flex h-8 w-8 items-center justify-center rounded-full bg-{color}-100 text-{color}-600"
-					>
+					<div class="flex h-8 w-8 items-center justify-center rounded-full {colorClasses}">
 						<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
 							<path d="M12 2L2 12l10 10 10-10L12 2z" />
 						</svg>

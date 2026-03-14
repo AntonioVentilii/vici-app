@@ -8,12 +8,12 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { getRushQueue } from '$lib/services/market.services';
-	import { placeOrder } from '$lib/services/order.services';
 	import { getPositions } from '$lib/services/position.services';
+	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
-	import type { OrderType } from '$lib/types/order';
 	import type { Position } from '$lib/types/position';
+	import { executeOutcomeTrade } from '$lib/utils/trade.utils';
 
 	const MAX_BETS = 10;
 	const MAX_MARKETS = 20;
@@ -31,28 +31,6 @@
 	let completed = $state(false);
 
 	let positions = $state<Position[]>([]);
-
-	let notifications = $state<
-		{ id: string; title: string; message: string; type: 'error' | 'success' }[]
-	>([]);
-
-	const addNotification = ({
-		title,
-		message,
-		type
-	}: {
-		title: string;
-		message: string;
-		type: 'error' | 'success';
-	}) => {
-		const id = Math.random().toString(36).substring(2, 9);
-
-		notifications = [...notifications, { id, title, message, type }];
-
-		setTimeout(() => {
-			notifications = notifications.filter((n) => n.id !== id);
-		}, 5000);
-	};
 
 	onMount(async () => {
 		// Prevent scrolling on mobile while in Rush Mode
@@ -95,7 +73,11 @@
 
 		// AUTH CHECK: Guests cannot trade
 		if (isNullish($userStore.user)) {
-			alert('Please sign in to place trades in Rush Mode.');
+			notificationsStore.add({
+				title: 'Sign In Required',
+				message: 'Please sign in to place trades in Rush Mode.',
+				type: 'warning'
+			});
 
 			return;
 		}
@@ -104,54 +86,15 @@
 		// We prepare the data and fire the trade in the background
 		const executeTrade = async () => {
 			try {
-				const decimals = BigInt(currentMarket.token.decimals);
-				const amountE8 = BigInt(Math.floor(parseFloat(tradeAmount) * Number(10n ** decimals)));
-
-				// Use best execution price if available, otherwise fallback to probability
-				let price: number;
-				let type: OrderType = 'LIMIT';
-
-				if (action === 'YES') {
-					const { bestAsk } = currentMarket;
-					if (nonNullish(bestAsk)) {
-						price = bestAsk;
-						type = 'MARKET';
-					} else {
-						price = currentMarket.yesProbability;
-						type = 'LIMIT';
-					}
-				} else {
-					// For NO, we want to Buy the "NO" side, which is equivalent to Selling "YES" at bestBid
-					// bestBid is the price for YES, so 1 - bestBid is the price for NO.
-					const { bestBid } = currentMarket;
-					if (nonNullish(bestBid)) {
-						price = 1 - bestBid;
-						type = 'MARKET';
-					} else {
-						price = currentMarket.noProbability;
-						type = 'LIMIT';
-					}
-				}
-
-				// qty = amount / price (normalized to token decimals)
-				// Safety: Ensure price is not zero to avoid division by zero
-				const executionPrice = Math.max(price, 0.01);
-				const qty =
-					(amountE8 * 10n ** decimals) /
-					BigInt(Math.floor(executionPrice * Number(10n ** decimals)));
-
-				await placeOrder({
-					marketId: currentMarket.id,
-					side: 'BUY',
-					type,
-					price: executionPrice,
-					qty,
-					outcome: action
+				await executeOutcomeTrade({
+					market: currentMarket,
+					action,
+					amount: tradeAmount
 				});
 			} catch (e) {
 				console.error('Background trade failed', e);
 
-				addNotification({
+				notificationsStore.add({
 					title: 'Trade Failed',
 					message: `Order for "${currentMarket.title.slice(0, 30)}..." failed: ${(e as Error).message}`,
 					type: 'error'
@@ -304,51 +247,6 @@
 			</div>
 		</div>
 	{/if}
-
-	<!-- Notifications -->
-	<div
-		class="pointer-events-none fixed bottom-8 left-1/2 z-50 flex w-full max-w-md -translate-x-1/2 flex-col gap-2 px-4"
-	>
-		{#each notifications as notification (notification.id)}
-			<div
-				class="pointer-events-auto flex w-full items-start gap-3 rounded-2xl bg-white p-4 shadow-2xl ring-1 ring-slate-200"
-				in:fly={{ y: 20, duration: 300 }}
-				out:fade={{ duration: 200 }}
-			>
-				{#if notification.type === 'error'}
-					<div
-						class="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600"
-					>
-						<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								d="M6 18L18 6M6 6l12 12"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="3"
-							/>
-						</svg>
-					</div>
-				{:else}
-					<div
-						class="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"
-					>
-						<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								d="M5 13l4 4L19 7"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="3"
-							/>
-						</svg>
-					</div>
-				{/if}
-				<div class="flex flex-col">
-					<span class="text-sm font-black text-slate-900">{notification.title}</span>
-					<p class="text-xs text-slate-500">{notification.message}</p>
-				</div>
-			</div>
-		{/each}
-	</div>
 </div>
 
 <svelte:window

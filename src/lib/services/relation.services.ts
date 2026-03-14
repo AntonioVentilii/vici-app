@@ -56,17 +56,15 @@ export const getFriends = async (userPrincipal: PrincipalText): Promise<Relation
 		collection: Collection.RELATIONS
 	});
 
-	return items.reduce<Relation[]>((acc, { data }) => {
-		if (
-			data.category === RelationCategory.FRIEND &&
-			data.state === RelationState.ACTIVE &&
-			data.participants.includes(userPrincipal)
-		) {
-			acc.push(data);
-		}
-
-		return acc;
-	}, []);
+	return items
+		.map(({ data }) => data)
+		.filter(
+			(data) =>
+				data.category === RelationCategory.FRIEND &&
+				data.state === RelationState.ACTIVE &&
+				data.participants.includes(userPrincipal)
+		)
+		.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 };
 
 export const followUser = async ({
@@ -123,30 +121,32 @@ export const unfollowUser = async (params: {
 	}
 };
 
-export const getFollowing = async (userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
+const listRelations = async (): Promise<Relation[]> => {
 	const { items } = await listDocs<Relation>({
 		collection: Collection.RELATIONS
 	});
 
-	return items.reduce<PrincipalText[]>((acc, { data }) => {
-		if (data.category === RelationCategory.FOLLOW && data.participants[0] === userPrincipal) {
-			acc.push(data.participants[1]);
-		}
+	return items.map(({ data }) => data);
+};
 
-		return acc;
-	}, []);
+export const getFollowing = async (userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
+	// Relations for following are stored in the same collection.
+	// We use matcher to filter for relations involving the user principal.
+	const items = await listRelations();
+
+	return items
+		.filter(
+			(data) => data.category === RelationCategory.FOLLOW && data.participants[0] === userPrincipal
+		)
+		.map((r) => r.participants[1]);
 };
 
 export const getFollowers = async (userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
-	const { items } = await listDocs<Relation>({
-		collection: Collection.RELATIONS
-	});
+	const items = await listRelations();
 
-	return items.reduce<PrincipalText[]>((acc, { data }) => {
-		if (data.category === RelationCategory.FOLLOW && data.participants[1] === userPrincipal) {
-			acc.push(data.participants[0]);
-		}
-
-		return acc;
-	}, []);
+	return items
+		.filter(
+			(data) => data.category === RelationCategory.FOLLOW && data.participants[1] === userPrincipal
+		)
+		.map((r) => r.participants[0]);
 };

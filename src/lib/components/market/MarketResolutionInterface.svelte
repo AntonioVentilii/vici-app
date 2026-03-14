@@ -3,6 +3,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import { settleMarket } from '$lib/services/resolution.services';
+	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Market } from '$lib/types/market';
 
 	interface Props {
@@ -46,7 +47,11 @@
 				await settleMarket({ seriesId: market.id, settlementPrice: price });
 			}
 			onSettled();
-			alert('Market successfully settled!');
+			notificationsStore.add({
+				title: 'Success',
+				message: 'Market successfully settled!',
+				type: 'success'
+			});
 		} catch (e: unknown) {
 			error = (e as Error).message ?? 'Settlement failed';
 		} finally {

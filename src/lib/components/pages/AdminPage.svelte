@@ -11,6 +11,7 @@
 	import { resolveMarket } from '$lib/services/authn.services';
 	import { createMarket } from '$lib/services/market.services';
 	import { listRoles, removeRole, setRole, type UserRoleEntry } from '$lib/services/roles.services';
+	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { MarketId, Outcome } from '$lib/types/market';
 	import { UserRole } from '$lib/types/user';
 
@@ -92,20 +93,30 @@
 
 		loading = false;
 
-		alert(
-			`Bulk creation complete!\nSuccess: ${results.success}\nFailed: ${results.failed}${
+		notificationsStore.add({
+			title: 'Bulk Creation Complete',
+			message: `Success: ${results.success}\nFailed: ${results.failed}${
 				results.failed > 0 ? '\nCheck console for errors.' : ''
-			}`
-		);
+			}`,
+			type: results.failed > 0 ? 'warning' : 'success'
+		});
 	};
 
 	const handleResolve = async ({ marketId, outcome }: { marketId: MarketId; outcome: Outcome }) => {
 		try {
 			await resolveMarket({ marketId, outcome });
 			await fetchMarkets();
-			alert(`Market ${marketId} resolved as ${outcome}`);
+			notificationsStore.add({
+				title: 'Market Resolved',
+				message: `Market ${marketId} resolved as ${outcome}`,
+				type: 'success'
+			});
 		} catch (e: unknown) {
-			alert((e as Error).message);
+			notificationsStore.add({
+				title: 'Resolution Failed',
+				message: (e as Error).message,
+				type: 'error'
+			});
 		}
 	};
 
@@ -116,24 +127,40 @@
 		try {
 			await setRole({ principal: newRolePrincipal, role: newRoleSelected });
 
-			alert('Role granted successfully!');
+			notificationsStore.add({
+				title: 'Role Granted',
+				message: 'Role granted successfully!',
+				type: 'success'
+			});
 
 			newRolePrincipal = '';
 			newRoleSelected = UserRole.ADMIN;
 
 			await fetchRoles();
 		} catch (e: unknown) {
-			alert((e as Error).message);
+			notificationsStore.add({
+				title: 'Grant Failed',
+				message: (e as Error).message,
+				type: 'error'
+			});
 		}
 	};
 
 	const handleRemoveRole = async (principal: PrincipalText) => {
 		try {
 			await removeRole(principal);
-			alert('Role removed successfully!');
+			notificationsStore.add({
+				title: 'Role Removed',
+				message: 'Role removed successfully!',
+				type: 'success'
+			});
 			await fetchRoles();
 		} catch (e: unknown) {
-			alert((e as Error).message);
+			notificationsStore.add({
+				title: 'Removal Failed',
+				message: (e as Error).message,
+				type: 'error'
+			});
 		}
 	};
 

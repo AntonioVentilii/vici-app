@@ -33,12 +33,10 @@ export const sendMessage = async ({
 export const getMarketMessages = async (marketId: string): Promise<ChatMessage[]> => {
 	const { items } = await listDocs<ChatMessage>({
 		collection: Collection.CHATS
-		// In a real scenario, we'd use a filter or a range query if Juno supports it efficiently
-		// For now, we fetch and filter
 	});
 
 	return items
-		.map((doc) => doc.data)
+		.map(({ data }) => data)
 		.filter((m) => m.marketId === marketId)
 		.sort((a, b) => a.timestamp - b.timestamp);
 };

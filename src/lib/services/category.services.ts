@@ -40,5 +40,6 @@ export const listCategories = async (): Promise<Category[]> => {
 	const { items } = await listDocs<Category>({
 		collection: Collection.CATEGORIES
 	});
-	return items.map((doc) => doc.data);
+
+	return items.map(({ data }) => data);
 };

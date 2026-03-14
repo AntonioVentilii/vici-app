@@ -8,17 +8,29 @@
 
 	const { market }: Props = $props();
 
-	const { title, id, status } = $derived(market);
+	const { title, status } = $derived(market);
 </script>
 
-<div class="space-y-2">
-	<div class="flex flex-wrap items-center gap-3">
+<div class="flex flex-col items-center space-y-6 text-center">
+	<div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 p-4 shadow-sm">
 		<OutcomeBadge {status} />
-		<span class="text-xs font-medium text-slate-500">
-			ID: <span class="font-mono text-slate-400">{id}</span>
-		</span>
 	</div>
-	<h1 class="text-3xl font-black text-slate-950 sm:text-4xl lg:text-5xl">
-		{title}
-	</h1>
+
+	<div class="space-y-4">
+		<h1 class="max-w-3xl text-4xl font-black text-slate-950 sm:text-5xl lg:text-6xl">
+			{title}
+		</h1>
+
+		<div class="flex items-center justify-center gap-2">
+			<span
+				class="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-500 uppercase"
+				>Memes</span
+			>
+			<span class="text-[10px] font-bold text-slate-400"
+				>Created by {market.creator.substring(0, 5)}...{market.creator.substring(
+					market.creator.length - 3
+				)}</span
+			>
+		</div>
+	</div>
 </div>
