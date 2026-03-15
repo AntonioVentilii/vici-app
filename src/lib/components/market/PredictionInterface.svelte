@@ -21,9 +21,11 @@
 	interface Props {
 		market: Market;
 		onPredictionPlaced: () => void;
+		initialType?: PositionType;
+		hideSelector?: boolean;
 	}
 
-	const { market, onPredictionPlaced }: Props = $props();
+	const { market, onPredictionPlaced, initialType, hideSelector = false }: Props = $props();
 
 	const { yesProbability, noProbability } = $derived(market);
 
@@ -32,6 +34,12 @@
 	let price = $state(''); // This will now hold percentage (e.g., "35")
 
 	let selectedType = $state<PositionType>('YES');
+
+	$effect(() => {
+		if (initialType) {
+			selectedType = initialType;
+		}
+	});
 
 	let orderType = $state<OrderType>('MARKET');
 
@@ -209,10 +217,8 @@
 </script>
 
 <div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
-	<h3 class="text-xl font-bold text-slate-950">Trade</h3>
-
 	<!-- Order Type Toggle -->
-	<div class="mt-4 flex rounded-xl bg-slate-100 p-1">
+	<div class="flex rounded-xl bg-slate-100 p-1">
 		<BaseButton
 			class="flex-1 rounded-lg py-2 text-xs font-bold {orderType === 'MARKET'
 				? 'bg-white text-indigo-600 shadow-sm'
@@ -235,76 +241,78 @@
 	</div>
 
 	<div class="mt-6 space-y-6">
-		<!-- Outcome Selector -->
-		<div class="grid grid-cols-2 gap-4">
-			{#if market.payoffType === 'Binary'}
-				<BaseButton
-					class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
-					'YES'
-						? 'border-green-500 bg-green-50 text-green-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
-					onclick={() => {
-						selectedType = 'YES';
-						if (orderType === 'MARKET') {
-							price = Math.round(yesProbability * 100).toString();
-						}
-					}}
-				>
-					<div class="relative z-10 flex flex-col items-center gap-1">
-						<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
-						<span class="text-xl font-black">YES</span>
-						{#if orderType === 'MARKET'}
-							<span class="text-[10px] font-medium opacity-60">
-								{(yesProbability * 100).toFixed(1)}%
-							</span>
-						{/if}
-					</div>
-				</BaseButton>
+		{#if !hideSelector}
+			<!-- Outcome Selector -->
+			<div class="grid grid-cols-2 gap-4">
+				{#if market.payoffType === 'Binary'}
+					<BaseButton
+						class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
+						'YES'
+							? 'border-green-500 bg-green-50 text-green-700'
+							: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						onclick={() => {
+							selectedType = 'YES';
+							if (orderType === 'MARKET') {
+								price = Math.round(yesProbability * 100).toString();
+							}
+						}}
+					>
+						<div class="relative z-10 flex flex-col items-center gap-1">
+							<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
+							<span class="text-xl font-black">YES</span>
+							{#if orderType === 'MARKET'}
+								<span class="text-[10px] font-medium opacity-60">
+									{(yesProbability * 100).toFixed(1)}%
+								</span>
+							{/if}
+						</div>
+					</BaseButton>
 
-				<BaseButton
-					class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
-					'NO'
-						? 'border-red-500 bg-red-50 text-red-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
-					onclick={() => {
-						selectedType = 'NO';
-						if (orderType === 'MARKET') {
-							price = Math.round(noProbability * 100).toString();
-						}
-					}}
-				>
-					<div class="relative z-10 flex flex-col items-center gap-1">
-						<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
-						<span class="text-xl font-black">NO</span>
-						{#if orderType === 'MARKET'}
-							<span class="text-[10px] font-medium opacity-60">
-								{(noProbability * 100).toFixed(1)}%
-							</span>
-						{/if}
+					<BaseButton
+						class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
+						'NO'
+							? 'border-red-500 bg-red-50 text-red-700'
+							: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						onclick={() => {
+							selectedType = 'NO';
+							if (orderType === 'MARKET') {
+								price = Math.round(noProbability * 100).toString();
+							}
+						}}
+					>
+						<div class="relative z-10 flex flex-col items-center gap-1">
+							<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
+							<span class="text-xl font-black">NO</span>
+							{#if orderType === 'MARKET'}
+								<span class="text-[10px] font-medium opacity-60">
+									{(noProbability * 100).toFixed(1)}%
+								</span>
+							{/if}
+						</div>
+					</BaseButton>
+				{:else}
+					<div class="col-span-2 grid grid-cols-2 gap-3">
+						{#each market.outcomes ?? [] as outcome (outcome.id)}
+							<BaseButton
+								class="group relative overflow-hidden rounded-2xl border-2 px-4 py-4 {selectedType ===
+								outcome.id
+									? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+									: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+								onclick={() => {
+									selectedType = outcome.id;
+									price = ''; // Reset price on outcome change for now
+								}}
+							>
+								<div class="relative z-10 flex flex-col items-center gap-0.5">
+									<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
+									<span class="text-center text-sm font-black">{outcome.title}</span>
+								</div>
+							</BaseButton>
+						{/each}
 					</div>
-				</BaseButton>
-			{:else}
-				<div class="col-span-2 grid grid-cols-2 gap-3">
-					{#each market.outcomes ?? [] as outcome (outcome.id)}
-						<BaseButton
-							class="group relative overflow-hidden rounded-2xl border-2 px-4 py-4 {selectedType ===
-							outcome.id
-								? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-								: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
-							onclick={() => {
-								selectedType = outcome.id;
-								price = ''; // Reset price on outcome change for now
-							}}
-						>
-							<div class="relative z-10 flex flex-col items-center gap-0.5">
-								<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
-								<span class="text-center text-sm font-black">{outcome.title}</span>
-							</div>
-						</BaseButton>
-					{/each}
-				</div>
-			{/if}
-		</div>
+				{/if}
+			</div>
+		{/if}
 
 		<!-- Inputs -->
 		<div class="space-y-4">

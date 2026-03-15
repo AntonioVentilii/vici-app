@@ -44,29 +44,31 @@
 			role="dialog"
 			tabindex="-1"
 		>
-			<div class="header flex justify-end p-4 pb-0">
-				<button
-					class="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100"
-					aria-label="Close"
-					onclick={close}
-					type="button"
-				>
-					<svg
-						class="lucide lucide-x"
-						fill="none"
-						height="24"
-						stroke="currentColor"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2"
-						viewBox="0 0 24 24"
-						width="24"
-						xmlns="http://www.w3.org/2000/svg"
+			<div class="header relative flex items-center justify-between gap-4 p-4 pb-0">
+				<div class="flex flex-1 items-center justify-end gap-2">
+					<button
+						class="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100"
+						aria-label="Close"
+						onclick={close}
+						type="button"
 					>
-						<path d="M18 6 6 18" />
-						<path d="m6 6 12 12" />
-					</svg>
-				</button>
+						<svg
+							class="lucide lucide-x"
+							fill="none"
+							height="24"
+							stroke="currentColor"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="2"
+							viewBox="0 0 24 24"
+							width="24"
+							xmlns="http://www.w3.org/2000/svg"
+						>
+							<path d="M18 6 6 18" />
+							<path d="m6 6 12 12" />
+						</svg>
+					</button>
+				</div>
 			</div>
 
 			<div class="content flex-1 overflow-y-auto p-8 pt-4">
