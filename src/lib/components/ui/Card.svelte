@@ -11,6 +11,7 @@
 		onclick?: (e: MouseEvent) => void;
 		onkeydown?: (e: KeyboardEvent) => void;
 		role?: 'button' | 'presentation' | 'none';
+		class?: string;
 	}
 
 	const {
@@ -19,7 +20,8 @@
 		padding = 'md',
 		onclick,
 		onkeydown,
-		role
+		role,
+		class: className
 	}: Props = $props();
 
 	const commonClasses =
@@ -42,11 +44,15 @@
 </script>
 
 {#if isInteractive}
-	<BaseButton class="{commonClasses} {variants[variant]} {paddings[padding]}" {onclick} {onkeydown}>
+	<BaseButton
+		class="{commonClasses} {variants[variant]} {paddings[padding]} {className}"
+		{onclick}
+		{onkeydown}
+	>
 		{@render children()}
 	</BaseButton>
 {:else}
-	<div class="{commonClasses} {variants[variant]} {paddings[padding]}">
+	<div class="{commonClasses} {variants[variant]} {paddings[padding]} {className}">
 		{@render children()}
 	</div>
 {/if}

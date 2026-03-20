@@ -73,7 +73,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.2 Feed UI (Frontend)
+## 4.1.2 Feed UI (Frontend) [x]
 
 **Objective:** Mobile-first scrollable feed
 
@@ -87,7 +87,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.3 Flow Mode (Swipe Interface)
+## 4.1.3 Flow Mode (ex-Rush mode) (Swipe Interface)
 
 **Objective:** Fast intuitive interactions
 
@@ -101,7 +101,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.4 Flow Mode Execution Logic
+## 4.1.4 Flow Mode (ex-Rush mode) Execution Logic
 
 **Objective:** Execute predictions via swipe
 
@@ -138,6 +138,7 @@ The Beta version is structured around **five core systems**:
 - Clear probability display
 - Return visualisation
 - One-click confirmation
+- Layman terms (limit/market are too trading-savy)
 
 ---
 

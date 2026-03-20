@@ -1,6 +1,6 @@
 <script lang="ts">
+	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
-	import MarketGrid from '$lib/components/market/MarketGrid.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 
@@ -98,8 +98,8 @@
 				{tabs}
 			/>
 
-			<!-- Markets Grid -->
-			<MarketGrid {loading} markets={filteredMarkets} />
+			<!-- Markets Feed -->
+			<MarketFeed {loading} markets={filteredMarkets} />
 		</div>
 	</div>
 </section>
