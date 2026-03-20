@@ -23,9 +23,9 @@ export type AccountStateError =
 	| { NoAccountStateFound: null };
 export interface AccountStateResponse {
 	assets: Array<AssetWorth>;
-	available_equity_usd: bigint;
 	state: AccountState;
 	total_equity_usd: bigint;
+	available_margin_usd: bigint;
 }
 export type Asset = { Erc20: ErcToken } | { Icrc: Principal } | { NativeEvm: NativeEvmAsset };
 export type AssetError =
@@ -94,6 +94,7 @@ export interface DecimalValue {
 export type DepositCollateralError = { MathOverflow: null } | { Asset: AssetError };
 export interface DepositCollateralParams {
 	deposit_id: string;
+	domain: [] | [BalanceDomain];
 	asset_id: string;
 	amount: bigint;
 }
@@ -207,6 +208,15 @@ export interface Price {
 	oracle_id: [] | [string];
 	decimal: DecimalValue;
 }
+export type RegisterIcrcAssetError = { AssetAlreadyExists: null } | { Common: CommonError };
+export interface RegisterIcrcAssetParams {
+	haircut_bps: number;
+	is_enabled: boolean;
+	ledger_id: Principal;
+	oracle_id: [] | [string];
+	asset_id: string;
+}
+export type RegisterIcrcAssetResult = { Ok: null } | { Err: RegisterIcrcAssetError };
 export interface Series {
 	title: string;
 	strike: [] | [Price];
@@ -311,7 +321,9 @@ export interface SubmitMatchedTradeParams {
 }
 export type SubmitMatchedTradeResult = { Ok: boolean } | { Err: TradeError };
 export type TradeError =
+	| { SelfTradingNotAllowed: null }
 	| { OrderNotFound: string }
+	| { ArbitrageLimitExceeded: { limit_usd: bigint; sum_usd: bigint } }
 	| { RegistryError: string }
 	| {
 			InsufficientMargin: {
@@ -347,6 +359,7 @@ export type WithdrawCollateralError =
 	| { MathOverflow: null }
 	| { Asset: AssetError };
 export interface WithdrawCollateralParams {
+	domain: [] | [BalanceDomain];
 	withdrawal_id: string;
 	asset_id: string;
 	amount: bigint;
@@ -384,10 +397,7 @@ export interface _SERVICE {
 	 * Only the creator of the order can cancel it.
 	 */
 	cancel_limit_order: ActorMethod<[CancelLimitOrderParams], SubmitMatchedTradeResult>;
-	/**
-	 * Debug: returns the principal of the registry canister.
-	 */
-	debug_get_registry_canister: ActorMethod<[], Principal>;
+	config: ActorMethod<[], Config>;
 	/**
 	 * Deposits collateral into the user's account state.
 	 *
@@ -420,6 +430,7 @@ export interface _SERVICE {
 	 * This does not refresh balances from external ledgers.
 	 */
 	get_account_state_query: ActorMethod<[], GetAccountStateResult>;
+	get_asset_metrics: ActorMethod<[], Array<[string, AssetMetrics]>>;
 	/**
 	 * Returns a list of all supported collateral assets with their metrics.
 	 */
@@ -442,6 +453,7 @@ export interface _SERVICE {
 	 * Retrieves all open positions for the caller.
 	 */
 	get_positions: ActorMethod<[], Array<Position>>;
+	get_registry_canister: ActorMethod<[], Principal>;
 	/**
 	 * Returns the full settlement plan including per-position accounting details (admin only).
 	 */
@@ -488,6 +500,12 @@ export interface _SERVICE {
 	 * Returns 1.0 USD (vUSD) for every full set of N outcome positions provided.
 	 */
 	redeem_complete_set: ActorMethod<[string, bigint], SubmitMatchedTradeResult>;
+	/**
+	 * Automatically registers an ICRC asset by fetching its metadata from the ledger.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	register_icrc_asset: ActorMethod<[RegisterIcrcAssetParams], RegisterIcrcAssetResult>;
 	/**
 	 * Admin function to manually resume a stuck settlement plan, e.g., if the timer was dropped during
 	 * upgrade.
@@ -572,7 +590,7 @@ export interface _SERVICE {
 	 *
 	 * This implements the "Deterministic Withdrawal Policy":
 	 * 1. Calculate current account equity in USD.
-	 * 2. Verify equity >= reserved_margin_usd (risk check).
+	 * 2. Verify equity >= `reserved_margin_usd` (risk check).
 	 * 3. If ok, proceed with asynchronous ledger transfer.
 	 */
 	withdraw_collateral: ActorMethod<[WithdrawCollateralParams], WithdrawCollateralResult>;

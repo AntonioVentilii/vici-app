@@ -3,15 +3,17 @@ import {
 	depositCollateral as depositCollateralApi,
 	getAccountState as getAccountStateApi,
 	getCollateralAssets as getCollateralAssetsApi,
+	registerIcrcAsset as registerIcrcAssetApi,
 	withdrawCollateral as withdrawCollateralApi
 } from '$lib/api/clearing.api';
 import { approve } from '$lib/api/icrc-ledger.api';
 import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
+import { DEFAULT_BALANCE_DOMAIN } from '$lib/constants/app.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { refreshAllBalances } from '$lib/utils/refresh.utils';
 import { getAssetIdByLedgerId } from '$lib/utils/tokens.utils';
 import { getIcrcAccount } from '$lib/utils/transactions.utils';
-import { nowInBigIntNanoSeconds } from '@dfinity/utils';
+import { nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 
 export const depositCollateral = async ({
 	assetPrincipal,
@@ -38,6 +40,7 @@ export const depositCollateral = async ({
 		identity,
 		params: {
 			deposit_id: `DEPOSIT_${Date.now()}`,
+			domain: toNullable(DEFAULT_BALANCE_DOMAIN),
 			asset_id,
 			amount
 		}
@@ -61,6 +64,7 @@ export const withdrawCollateral = async ({
 		identity,
 		params: {
 			withdrawal_id: `WITHDRAW_${Date.now()}`,
+			domain: toNullable(DEFAULT_BALANCE_DOMAIN),
 			asset_id,
 			amount
 		}
@@ -74,7 +78,7 @@ export const getAccountState = async (): Promise<ClearingDid.AccountStateRespons
 
 	return await getAccountStateApi({
 		identity,
-		params: { refresh: [true], domain: [{ Settlement: null }] }
+		params: { refresh: toNullable(true), domain: toNullable(DEFAULT_BALANCE_DOMAIN) }
 	});
 };
 
@@ -82,4 +86,17 @@ export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAsset
 	const identity = await safeGetIdentityOnce();
 
 	return await getCollateralAssetsApi({ identity });
+};
+
+export const registerIcrcAsset = async (
+	params: ClearingDid.RegisterIcrcAssetParams
+): Promise<void> => {
+	const identity = await safeGetIdentityOnce();
+
+	await registerIcrcAssetApi({
+		identity,
+		params
+	});
+
+	refreshAllBalances();
 };

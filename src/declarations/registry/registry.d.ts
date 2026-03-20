@@ -125,6 +125,7 @@ export type SeriesError =
 	| { DescriptionTooLong: null }
 	| { TitleTooLong: null }
 	| { Unauthorized: null }
+	| { UnsupportedPayoutUnit: null }
 	| { SeriesAlreadyExists: null };
 export interface SeriesPage {
 	next_cursor: [] | [string];

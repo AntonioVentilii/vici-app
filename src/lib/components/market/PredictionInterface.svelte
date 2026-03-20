@@ -47,7 +47,7 @@
 
 	let error = $state('');
 
-	let availableEquity = $derived($collateralsStore.accountState?.available_equity_usd ?? ZERO);
+	let availableEquity = $derived($collateralsStore.accountState?.available_margin_usd ?? ZERO);
 
 	const fetchOrderBook = async () => {
 		try {

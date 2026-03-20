@@ -256,4 +256,56 @@ export class ClearingCanister extends Canister<ClearingService> {
 		const { get_trade_history } = this.caller(queryParams);
 		return await get_trade_history();
 	};
+
+	mintCompleteSet = async ({
+		seriesId,
+		qty,
+		...queryParams
+	}: {
+		seriesId: string;
+		qty: bigint;
+	} & QueryParams): Promise<boolean> => {
+		const { mint_complete_set } = this.caller(queryParams);
+		const result = await mint_complete_set(seriesId, qty);
+
+		if ('Ok' in result) {
+			return result.Ok;
+		}
+
+		throw new Error(`Failed to mint complete set: ${JSON.stringify(result.Err, jsonReplacer)}`);
+	};
+
+	redeemCompleteSet = async ({
+		seriesId,
+		qty,
+		...queryParams
+	}: {
+		seriesId: string;
+		qty: bigint;
+	} & QueryParams): Promise<boolean> => {
+		const { redeem_complete_set } = this.caller(queryParams);
+		const result = await redeem_complete_set(seriesId, qty);
+
+		if ('Ok' in result) {
+			return result.Ok;
+		}
+
+		throw new Error(`Failed to redeem complete set: ${JSON.stringify(result.Err, jsonReplacer)}`);
+	};
+
+	registerIcrcAsset = async ({
+		params,
+		...queryParams
+	}: {
+		params: ClearingDid.RegisterIcrcAssetParams;
+	} & QueryParams): Promise<void> => {
+		const { register_icrc_asset } = this.caller(queryParams);
+		const result = await register_icrc_asset(params);
+
+		if ('Ok' in result) {
+			return;
+		}
+
+		throw new Error(`Failed to register ICRC asset: ${JSON.stringify(result.Err, jsonReplacer)}`);
+	};
 }

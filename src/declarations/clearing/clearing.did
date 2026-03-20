@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 6ba4bc8b23c1649dc2758cdd1fd6286ed261160b for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit 14e9e04ba8795dd733eb3df04b8f3868a568e790 for file 'src/clearing/clearing.did'
 
 type AcceptPositionTransferResult = variant { Ok : bool; Err : TradeError };
 type AccountState = record {
@@ -14,9 +14,9 @@ type AccountStateError = variant {
 };
 type AccountStateResponse = record {
 	assets : vec AssetWorth;
-	available_equity_usd : int;
 	state : AccountState;
-	total_equity_usd : nat
+	total_equity_usd : nat;
+	available_margin_usd : int
 };
 type Asset = variant {
 	Erc20 : ErcToken;
@@ -88,6 +88,7 @@ type DecimalValue = record { decimals : nat8; value : nat };
 type DepositCollateralError = variant { MathOverflow; Asset : AssetError };
 type DepositCollateralParams = record {
 	deposit_id : text;
+	domain : opt BalanceDomain;
 	asset_id : text;
 	amount : nat
 };
@@ -196,6 +197,18 @@ type Price = record {
 	oracle_id : opt text;
 	decimal : DecimalValue
 };
+type RegisterIcrcAssetError = variant {
+	AssetAlreadyExists;
+	Common : CommonError
+};
+type RegisterIcrcAssetParams = record {
+	haircut_bps : nat16;
+	is_enabled : bool;
+	ledger_id : principal;
+	oracle_id : opt text;
+	asset_id : text
+};
+type RegisterIcrcAssetResult = variant { Ok; Err : RegisterIcrcAssetError };
 type Series = record {
 	title : text;
 	strike : opt Price;
@@ -297,7 +310,9 @@ type SubmitMatchedTradeParams = record {
 };
 type SubmitMatchedTradeResult = variant { Ok : bool; Err : TradeError };
 type TradeError = variant {
+	SelfTradingNotAllowed;
 	OrderNotFound : text;
+	ArbitrageLimitExceeded : record { limit_usd : nat; sum_usd : nat };
 	RegistryError : text;
 	InsufficientMargin : record {
 		balance : nat;
@@ -327,6 +342,7 @@ type WithdrawCollateralError = variant {
 	Asset : AssetError
 };
 type WithdrawCollateralParams = record {
+	domain : opt BalanceDomain;
 	withdrawal_id : text;
 	asset_id : text;
 	amount : nat
@@ -361,8 +377,7 @@ service : {
 	//
 	// Only the creator of the order can cancel it.
 	cancel_limit_order : (CancelLimitOrderParams) -> (SubmitMatchedTradeResult);
-	// Debug: returns the principal of the registry canister.
-	debug_get_registry_canister : () -> (principal) query;
+	config : () -> (Config) query;
 	// Deposits collateral into the user's account state.
 	//
 	// This is a multi-phase operation:
@@ -386,6 +401,7 @@ service : {
 	//
 	// This does not refresh balances from external ledgers.
 	get_account_state_query : () -> (GetAccountStateResult) query;
+	get_asset_metrics : () -> (vec record { text; AssetMetrics }) query;
 	// Returns a list of all supported collateral assets with their metrics.
 	get_collateral_assets : () -> (vec CollateralAssetInfo) query;
 	// Returns the current balances of the Insurance Fund and Treasury.
@@ -398,6 +414,7 @@ service : {
 	get_position : (GetPositionParams) -> (opt Position) query;
 	// Retrieves all open positions for the caller.
 	get_positions : () -> (vec Position) query;
+	get_registry_canister : () -> (principal) query;
 	// Returns the full settlement plan including per-position accounting details (admin only).
 	get_settlement_plan : (text) -> (opt SettlementPlan) query;
 	// Returns the public settlement progress for a derivative series without exposing user positions.
@@ -426,6 +443,10 @@ service : {
 	//
 	// Returns 1.0 USD (vUSD) for every full set of N outcome positions provided.
 	redeem_complete_set : (text, int) -> (SubmitMatchedTradeResult);
+	// Automatically registers an ICRC asset by fetching its metadata from the ledger.
+	//
+	// This method is gated to canister controllers.
+	register_icrc_asset : (RegisterIcrcAssetParams) -> (RegisterIcrcAssetResult);
 	// Admin function to manually resume a stuck settlement plan, e.g., if the timer was dropped during
 	// upgrade.
 	resume_settlement : (text) -> (SettleSeriesResult);
@@ -489,7 +510,7 @@ service : {
 	//
 	// This implements the "Deterministic Withdrawal Policy":
 	// 1. Calculate current account equity in USD.
-	// 2. Verify equity >= reserved_margin_usd (risk check).
+	// 2. Verify equity >= `reserved_margin_usd` (risk check).
 	// 3. If ok, proceed with asynchronous ledger transfer.
 	withdraw_collateral : (WithdrawCollateralParams) -> (
 		WithdrawCollateralResult

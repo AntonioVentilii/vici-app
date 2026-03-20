@@ -2,6 +2,7 @@ import type { RegistryDid } from '$declarations';
 import { listOrders as listOrdersApi } from '$lib/api/clearing.api';
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
+	DEFAULT_BALANCE_DOMAIN,
 	NANO_SECONDS_IN_MILLISECOND,
 	PAYOFF_TYPE,
 	PRICE_DECIMALS,
@@ -78,7 +79,7 @@ export const createMarket = async ({
 					}))
 				: undefined
 		),
-		balance_domain: { Settlement: null },
+		balance_domain: DEFAULT_BALANCE_DOMAIN,
 		oracle_source: VICI_ORACLE_V1
 	};
 

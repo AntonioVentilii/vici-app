@@ -55,9 +55,9 @@
 			</div>
 			<p class="mt-1 text-sm text-slate-500">
 				{#if collateral.accountState}
-					Available Equity: <span class="font-bold text-slate-900"
-						>{formatAvailableUsd({ value: collateral.accountState.available_equity_usd })}</span
-					>
+					Available Equity: <span class="font-bold text-slate-900">
+						{formatAvailableUsd({ value: collateral.accountState.available_margin_usd })}
+					</span>
 				{:else}
 					Locked and available margin for trading
 				{/if}

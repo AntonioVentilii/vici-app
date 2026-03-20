@@ -11,6 +11,7 @@ export const ZERO = 0n;
 export const PAYOFF_TYPE: RegistryDid.PayoffType = { Binary: null };
 export const STRIKE: Nullable<RegistryDid.Price> = toNullable();
 export const PRICE_DECIMALS = 2;
+export const DEFAULT_BALANCE_DOMAIN: RegistryDid.BalanceDomain = { Playground: null };
 
 // Oracles
 export const VICI_ORACLE_V1 = 'VICI_ORACLE_V1';

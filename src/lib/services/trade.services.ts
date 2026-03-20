@@ -1,7 +1,9 @@
 import type { ClearingDid } from '$declarations';
 import {
 	getPositions as getPositionsApi,
-	getTradeHistory as getTradeHistoryApi
+	getTradeHistory as getTradeHistoryApi,
+	mintCompleteSet as mintCompleteSetApi,
+	redeemCompleteSet as redeemCompleteSetApi
 } from '$lib/api/clearing.api';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 
@@ -20,5 +22,37 @@ export const getUserTradeHistory = async (): Promise<ClearingDid.Event[]> => {
 
 	return await getTradeHistoryApi({
 		identity
+	});
+};
+
+export const mintCompleteSet = async ({
+	seriesId,
+	qty
+}: {
+	seriesId: string;
+	qty: bigint;
+}): Promise<boolean> => {
+	const identity = await safeGetIdentityOnce();
+
+	return await mintCompleteSetApi({
+		identity,
+		seriesId,
+		qty
+	});
+};
+
+export const redeemCompleteSet = async ({
+	seriesId,
+	qty
+}: {
+	seriesId: string;
+	qty: bigint;
+}): Promise<boolean> => {
+	const identity = await safeGetIdentityOnce();
+
+	return await redeemCompleteSetApi({
+		identity,
+		seriesId,
+		qty
 	});
 };

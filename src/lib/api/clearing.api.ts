@@ -155,6 +155,42 @@ export const listOrders = async ({
 	return await listOrders(rest);
 };
 
+export const mintCompleteSet = async ({
+	identity,
+	...rest
+}: {
+	identity: Identity;
+	seriesId: string;
+	qty: bigint;
+} & QueryParams): Promise<boolean> => {
+	const { mintCompleteSet } = await clearingCanister({ identity });
+	return await mintCompleteSet(rest);
+};
+
+export const redeemCompleteSet = async ({
+	identity,
+	...rest
+}: {
+	identity: Identity;
+	seriesId: string;
+	qty: bigint;
+} & QueryParams): Promise<boolean> => {
+	const { redeemCompleteSet } = await clearingCanister({ identity });
+	return await redeemCompleteSet(rest);
+};
+
+export const registerIcrcAsset = async ({
+	identity,
+	params,
+	...queryParams
+}: {
+	identity: Identity;
+	params: ClearingDid.RegisterIcrcAssetParams;
+} & QueryParams): Promise<void> => {
+	const { registerIcrcAsset } = await clearingCanister({ identity });
+	return await registerIcrcAsset({ params, ...queryParams });
+};
+
 const clearingCanister = async ({
 	identity
 }: {

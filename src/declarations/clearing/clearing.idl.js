@@ -35,7 +35,12 @@ export const CommonError = IDL.Variant({
 	RegistryNotSet: IDL.Null
 });
 export const TradeError = IDL.Variant({
+	SelfTradingNotAllowed: IDL.Null,
 	OrderNotFound: IDL.Text,
+	ArbitrageLimitExceeded: IDL.Record({
+		limit_usd: IDL.Nat,
+		sum_usd: IDL.Nat
+	}),
 	RegistryError: IDL.Text,
 	InsufficientMargin: IDL.Record({
 		balance: IDL.Nat,
@@ -67,8 +72,19 @@ export const SubmitMatchedTradeResult = IDL.Variant({
 	Ok: IDL.Bool,
 	Err: TradeError
 });
+export const Config = IDL.Record({
+	insurance_fund_fee_ratio: IDL.Nat16,
+	signer_canister: IDL.Principal,
+	evm_rpc: IDL.Principal,
+	protocol_fee_ratio: IDL.Nat16
+});
+export const BalanceDomain = IDL.Variant({
+	Playground: IDL.Null,
+	Settlement: IDL.Null
+});
 export const DepositCollateralParams = IDL.Record({
 	deposit_id: IDL.Text,
+	domain: IDL.Opt(BalanceDomain),
 	asset_id: IDL.Text,
 	amount: IDL.Nat
 });
@@ -103,10 +119,6 @@ export const FreezePositionForTransferParams = IDL.Record({
 	transfer_id: IDL.Text,
 	valuation_price: IDL.Opt(Price)
 });
-export const BalanceDomain = IDL.Variant({
-	Playground: IDL.Null,
-	Settlement: IDL.Null
-});
 export const GetAccountStateParams = IDL.Record({
 	domain: IDL.Opt(BalanceDomain),
 	refresh: IDL.Opt(IDL.Bool)
@@ -126,9 +138,9 @@ export const AccountState = IDL.Record({
 });
 export const AccountStateResponse = IDL.Record({
 	assets: IDL.Vec(AssetWorth),
-	available_equity_usd: IDL.Int,
 	state: AccountState,
-	total_equity_usd: IDL.Nat
+	total_equity_usd: IDL.Nat,
+	available_margin_usd: IDL.Int
 });
 export const AccountStateError = IDL.Variant({
 	MathOverflow: IDL.Null,
@@ -319,6 +331,21 @@ export const Series = IDL.Record({
 	balance_domain: BalanceDomain,
 	oracle_source: IDL.Text
 });
+export const RegisterIcrcAssetParams = IDL.Record({
+	haircut_bps: IDL.Nat16,
+	is_enabled: IDL.Bool,
+	ledger_id: IDL.Principal,
+	oracle_id: IDL.Opt(IDL.Text),
+	asset_id: IDL.Text
+});
+export const RegisterIcrcAssetError = IDL.Variant({
+	AssetAlreadyExists: IDL.Null,
+	Common: CommonError
+});
+export const RegisterIcrcAssetResult = IDL.Variant({
+	Ok: IDL.Null,
+	Err: RegisterIcrcAssetError
+});
 export const SettlementError = IDL.Variant({
 	InconsistentSettlementPrice: IDL.Record({
 		requested: Price,
@@ -394,13 +421,8 @@ export const UpdateAssetPriceResult = IDL.Variant({
 export const UpdateCollateralAssetParams = IDL.Record({
 	config: CollateralAssetConfig
 });
-export const Config = IDL.Record({
-	insurance_fund_fee_ratio: IDL.Nat16,
-	signer_canister: IDL.Principal,
-	evm_rpc: IDL.Principal,
-	protocol_fee_ratio: IDL.Nat16
-});
 export const WithdrawCollateralParams = IDL.Record({
+	domain: IDL.Opt(BalanceDomain),
 	withdrawal_id: IDL.Text,
 	asset_id: IDL.Text,
 	amount: IDL.Nat
@@ -442,7 +464,7 @@ export const idlService = IDL.Service({
 	accept_position_transfer: IDL.Func([PositionProof], [AcceptPositionTransferResult], []),
 	cancel_fund_withdrawal: IDL.Func([CancelFundWithdrawalParams], [CancelFundWithdrawalResult], []),
 	cancel_limit_order: IDL.Func([CancelLimitOrderParams], [SubmitMatchedTradeResult], []),
-	debug_get_registry_canister: IDL.Func([], [IDL.Principal], ['query']),
+	config: IDL.Func([], [Config], ['query']),
 	deposit_collateral: IDL.Func([DepositCollateralParams], [DepositCollateralResult], []),
 	freeze_position_for_transfer: IDL.Func(
 		[FreezePositionForTransferParams],
@@ -451,11 +473,13 @@ export const idlService = IDL.Service({
 	),
 	get_account_state: IDL.Func([GetAccountStateParams], [GetAccountStateResult], []),
 	get_account_state_query: IDL.Func([], [GetAccountStateResult], ['query']),
+	get_asset_metrics: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, AssetMetrics))], ['query']),
 	get_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], ['query']),
 	get_funds: IDL.Func([], [GetFundsResult], ['query']),
 	get_orders: IDL.Func([], [IDL.Vec(LimitOrder)], ['query']),
 	get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], ['query']),
 	get_positions: IDL.Func([], [IDL.Vec(Position)], ['query']),
+	get_registry_canister: IDL.Func([], [IDL.Principal], ['query']),
 	get_settlement_plan: IDL.Func([IDL.Text], [IDL.Opt(SettlementPlan)], ['query']),
 	get_settlement_status: IDL.Func([IDL.Text], [IDL.Opt(SettlementStatusView)], ['query']),
 	get_trade_history: IDL.Func([], [IDL.Vec(Event)], ['query']),
@@ -466,6 +490,7 @@ export const idlService = IDL.Service({
 	metrics: IDL.Func([], [IDL.Text], ['query']),
 	mint_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
 	redeem_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
+	register_icrc_asset: IDL.Func([RegisterIcrcAssetParams], [RegisterIcrcAssetResult], []),
 	resume_settlement: IDL.Func([IDL.Text], [SettleSeriesResult], []),
 	set_registry_canister: IDL.Func([IDL.Principal], [], []),
 	settle_series: IDL.Func([SettleSeriesParams], [SettleSeriesResult], []),
@@ -508,7 +533,12 @@ export const idlFactory = ({ IDL }) => {
 		RegistryNotSet: IDL.Null
 	});
 	const TradeError = IDL.Variant({
+		SelfTradingNotAllowed: IDL.Null,
 		OrderNotFound: IDL.Text,
+		ArbitrageLimitExceeded: IDL.Record({
+			limit_usd: IDL.Nat,
+			sum_usd: IDL.Nat
+		}),
 		RegistryError: IDL.Text,
 		InsufficientMargin: IDL.Record({
 			balance: IDL.Nat,
@@ -538,8 +568,19 @@ export const idlFactory = ({ IDL }) => {
 		Ok: IDL.Bool,
 		Err: TradeError
 	});
+	const Config = IDL.Record({
+		insurance_fund_fee_ratio: IDL.Nat16,
+		signer_canister: IDL.Principal,
+		evm_rpc: IDL.Principal,
+		protocol_fee_ratio: IDL.Nat16
+	});
+	const BalanceDomain = IDL.Variant({
+		Playground: IDL.Null,
+		Settlement: IDL.Null
+	});
 	const DepositCollateralParams = IDL.Record({
 		deposit_id: IDL.Text,
+		domain: IDL.Opt(BalanceDomain),
 		asset_id: IDL.Text,
 		amount: IDL.Nat
 	});
@@ -574,10 +615,6 @@ export const idlFactory = ({ IDL }) => {
 		transfer_id: IDL.Text,
 		valuation_price: IDL.Opt(Price)
 	});
-	const BalanceDomain = IDL.Variant({
-		Playground: IDL.Null,
-		Settlement: IDL.Null
-	});
 	const GetAccountStateParams = IDL.Record({
 		domain: IDL.Opt(BalanceDomain),
 		refresh: IDL.Opt(IDL.Bool)
@@ -597,9 +634,9 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AccountStateResponse = IDL.Record({
 		assets: IDL.Vec(AssetWorth),
-		available_equity_usd: IDL.Int,
 		state: AccountState,
-		total_equity_usd: IDL.Nat
+		total_equity_usd: IDL.Nat,
+		available_margin_usd: IDL.Int
 	});
 	const AccountStateError = IDL.Variant({
 		MathOverflow: IDL.Null,
@@ -788,6 +825,21 @@ export const idlFactory = ({ IDL }) => {
 		balance_domain: BalanceDomain,
 		oracle_source: IDL.Text
 	});
+	const RegisterIcrcAssetParams = IDL.Record({
+		haircut_bps: IDL.Nat16,
+		is_enabled: IDL.Bool,
+		ledger_id: IDL.Principal,
+		oracle_id: IDL.Opt(IDL.Text),
+		asset_id: IDL.Text
+	});
+	const RegisterIcrcAssetError = IDL.Variant({
+		AssetAlreadyExists: IDL.Null,
+		Common: CommonError
+	});
+	const RegisterIcrcAssetResult = IDL.Variant({
+		Ok: IDL.Null,
+		Err: RegisterIcrcAssetError
+	});
 	const SettlementError = IDL.Variant({
 		InconsistentSettlementPrice: IDL.Record({
 			requested: Price,
@@ -863,13 +915,8 @@ export const idlFactory = ({ IDL }) => {
 	const UpdateCollateralAssetParams = IDL.Record({
 		config: CollateralAssetConfig
 	});
-	const Config = IDL.Record({
-		insurance_fund_fee_ratio: IDL.Nat16,
-		signer_canister: IDL.Principal,
-		evm_rpc: IDL.Principal,
-		protocol_fee_ratio: IDL.Nat16
-	});
 	const WithdrawCollateralParams = IDL.Record({
+		domain: IDL.Opt(BalanceDomain),
 		withdrawal_id: IDL.Text,
 		asset_id: IDL.Text,
 		amount: IDL.Nat
@@ -915,7 +962,7 @@ export const idlFactory = ({ IDL }) => {
 			[]
 		),
 		cancel_limit_order: IDL.Func([CancelLimitOrderParams], [SubmitMatchedTradeResult], []),
-		debug_get_registry_canister: IDL.Func([], [IDL.Principal], ['query']),
+		config: IDL.Func([], [Config], ['query']),
 		deposit_collateral: IDL.Func([DepositCollateralParams], [DepositCollateralResult], []),
 		freeze_position_for_transfer: IDL.Func(
 			[FreezePositionForTransferParams],
@@ -924,11 +971,13 @@ export const idlFactory = ({ IDL }) => {
 		),
 		get_account_state: IDL.Func([GetAccountStateParams], [GetAccountStateResult], []),
 		get_account_state_query: IDL.Func([], [GetAccountStateResult], ['query']),
+		get_asset_metrics: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, AssetMetrics))], ['query']),
 		get_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], ['query']),
 		get_funds: IDL.Func([], [GetFundsResult], ['query']),
 		get_orders: IDL.Func([], [IDL.Vec(LimitOrder)], ['query']),
 		get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], ['query']),
 		get_positions: IDL.Func([], [IDL.Vec(Position)], ['query']),
+		get_registry_canister: IDL.Func([], [IDL.Principal], ['query']),
 		get_settlement_plan: IDL.Func([IDL.Text], [IDL.Opt(SettlementPlan)], ['query']),
 		get_settlement_status: IDL.Func([IDL.Text], [IDL.Opt(SettlementStatusView)], ['query']),
 		get_trade_history: IDL.Func([], [IDL.Vec(Event)], ['query']),
@@ -939,6 +988,7 @@ export const idlFactory = ({ IDL }) => {
 		metrics: IDL.Func([], [IDL.Text], ['query']),
 		mint_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
 		redeem_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
+		register_icrc_asset: IDL.Func([RegisterIcrcAssetParams], [RegisterIcrcAssetResult], []),
 		resume_settlement: IDL.Func([IDL.Text], [SettleSeriesResult], []),
 		set_registry_canister: IDL.Func([IDL.Principal], [], []),
 		settle_series: IDL.Func([SettleSeriesParams], [SettleSeriesResult], []),

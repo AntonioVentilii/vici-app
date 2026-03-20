@@ -13,6 +13,7 @@ import {
 	ICP_TOKEN,
 	SUPPORTED_TOKENS
 } from '$lib/constants/tokens/tokens.ic.constants';
+import { DEFAULT_BALANCE_DOMAIN } from '$lib/constants/app.constants';
 import { getIdentity } from '$lib/services/identity.services';
 import type { TokenId } from '$lib/types/token';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
@@ -75,7 +76,7 @@ export const getCollateralBalances = async (): Promise<
 		// 2. Fetch Collateral Balances
 		return await getAccountState({
 			identity,
-			params: { refresh: toNullable(true), domain: toNullable({ Settlement: null }) }
+			params: { refresh: toNullable(true), domain: toNullable(DEFAULT_BALANCE_DOMAIN) }
 		});
 	} catch (e: unknown) {
 		console.error('Failed to get collateral balances', e);

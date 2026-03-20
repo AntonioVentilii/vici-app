@@ -102,6 +102,7 @@ export const SeriesError = IDL.Variant({
 	DescriptionTooLong: IDL.Null,
 	TitleTooLong: IDL.Null,
 	Unauthorized: IDL.Null,
+	UnsupportedPayoutUnit: IDL.Null,
 	SeriesAlreadyExists: IDL.Null
 });
 export const AddSeriesResult = IDL.Variant({
@@ -269,6 +270,7 @@ export const idlFactory = ({ IDL }) => {
 		DescriptionTooLong: IDL.Null,
 		TitleTooLong: IDL.Null,
 		Unauthorized: IDL.Null,
+		UnsupportedPayoutUnit: IDL.Null,
 		SeriesAlreadyExists: IDL.Null
 	});
 	const AddSeriesResult = IDL.Variant({ Ok: IDL.Text, Err: SeriesError });
