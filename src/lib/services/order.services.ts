@@ -9,6 +9,7 @@ import {
 import { PRICE_DECIMALS } from '$lib/constants/app.constants';
 import { logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
+import { recordActivity } from '$lib/services/profile.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderBook, OrderBookLevel, OrderSide, OrderType } from '$lib/types/order';
 import { ActivityType } from '$lib/types/social';
@@ -187,6 +188,7 @@ export const placeOrder = async ({
 			title: `Placed ${side} ${type} order`,
 			details: `${side} ${qty} on ${outcome} @ ${price}`
 		});
+		await recordActivity(userText);
 	} catch (e) {
 		console.error('Failed to log trade activity', e);
 	}

@@ -118,7 +118,7 @@
 
 		<!-- Gamification Side-Grid -->
 		<div class="grid grid-cols-1 gap-6">
-			<!-- Fire Streak (Duolingo Style) -->
+			<!-- Daily Fire Streak (Duolingo Style) -->
 			<div
 				class="flex flex-col items-center justify-center gap-4 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 transition-all hover:shadow-md"
 			>
@@ -133,18 +133,21 @@
 					</div>
 				</div>
 				<div class="text-center">
-					<div class="text-3xl font-black text-slate-950">{streak} Day Streak</div>
-					<p class="text-xs font-bold text-slate-400 uppercase">Keep it going!</p>
+					<div class="text-3xl font-black text-slate-950">
+						{profile.dailyStreak ?? 1} Day Streak
+					</div>
+					<p class="text-xs font-bold text-slate-400 uppercase">Daily Activity</p>
 				</div>
 			</div>
 
-			<!-- Points Display -->
-			<StatCard
-				label="Global Rank"
-				size="lg"
-				value={profile.rank ? `#${profile.rank}` : 'Unranked'}
-				variant="primary"
-			/>
+			<!-- Success Streak Sub-Stat -->
+			<div class="flex items-center justify-between rounded-2xl bg-slate-50 px-5 py-3 shadow-inner">
+				<span class="text-[10px] font-bold text-slate-400 uppercase">Success Streak</span>
+				<div class="flex items-center gap-1">
+					<span class="text-lg font-black text-slate-950">{streak}</span>
+					<span class="text-xs">🏆</span>
+				</div>
+			</div>
 		</div>
 	</div>
 

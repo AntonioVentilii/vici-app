@@ -216,3 +216,34 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 		}
 	});
 };
+
+export const recordActivity = async (principal: PrincipalText): Promise<void> => {
+	const profileDoc = await getProfile(principal);
+	const [today] = new Date().toISOString().split('T');
+	const lastDay = profileDoc.data.lastActiveDay;
+
+	if (lastDay === today) {
+		return;
+	}
+
+	let newStreak = 1;
+
+	if (nonNullish(lastDay)) {
+		const yesterday = new Date();
+		yesterday.setDate(yesterday.getDate() - 1);
+		const [yesterdayStr] = yesterday.toISOString().split('T');
+
+		if (lastDay === yesterdayStr) {
+			newStreak = (profileDoc.data.dailyStreak ?? 0) + 1;
+		}
+	}
+
+	await upsertProfile({
+		...profileDoc,
+		data: {
+			...profileDoc.data,
+			dailyStreak: newStreak,
+			lastActiveDay: today
+		}
+	});
+};

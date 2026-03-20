@@ -209,7 +209,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.12 Streak System
+## 4.1.12 Streak System [x]
 
 **Objective:** Daily engagement loop
 

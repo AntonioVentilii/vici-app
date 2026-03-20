@@ -18,6 +18,8 @@ export interface UserProfile {
 	points?: number;
 	level?: number;
 	rank?: number;
+	dailyStreak?: number;
+	lastActiveDay?: string;
 	preferences?: {
 		defaultAmount?: {
 			flow?: string;
