@@ -12,4 +12,5 @@ export interface UserProfile {
 	totalTrades?: number;
 	winRate?: number;
 	pnl?: number;
+	interests?: string[];
 }

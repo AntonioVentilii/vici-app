@@ -43,3 +43,11 @@ export const listCategories = async (): Promise<Category[]> => {
 
 	return items.map(({ data }) => data);
 };
+
+export const listSeriesCategories = async (): Promise<SeriesCategory[]> => {
+	const { items } = await listDocs<SeriesCategory>({
+		collection: Collection.SERIES_CATEGORIES
+	});
+
+	return items.map(({ data }) => data);
+};

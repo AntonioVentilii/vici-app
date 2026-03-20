@@ -63,6 +63,7 @@ export const mapMarketData = ({
 		description,
 		creator: creator.toText(),
 		expiryDate: expiryDate / NANO_SECONDS_IN_MILLISECOND,
+		createdAt: series.created_at_ns / NANO_SECONDS_IN_MILLISECOND,
 		status,
 		outcome,
 		outcomes: outcomes?.[0]?.map((o) => ({

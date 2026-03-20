@@ -3,7 +3,7 @@ import { getAccountState } from '$lib/api/clearing.api';
 import { getTransactions as getIcpTransactionsApi } from '$lib/api/icp-index.api';
 import { getTransactions as getIcrcTransactionsApi } from '$lib/api/icrc-index-ng.api';
 import { balance as getLedgerBalance } from '$lib/api/icrc-ledger.api';
-import { ZERO } from '$lib/constants/app.constants';
+import { DEFAULT_BALANCE_DOMAIN, ZERO } from '$lib/constants/app.constants';
 import {
 	CKUSDC_INDEX_CANISTER_ID,
 	ICP_INDEX_CANISTER_ID
@@ -13,7 +13,6 @@ import {
 	ICP_TOKEN,
 	SUPPORTED_TOKENS
 } from '$lib/constants/tokens/tokens.ic.constants';
-import { DEFAULT_BALANCE_DOMAIN } from '$lib/constants/app.constants';
 import { getIdentity } from '$lib/services/identity.services';
 import type { TokenId } from '$lib/types/token';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';

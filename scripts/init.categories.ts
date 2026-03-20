@@ -7,7 +7,8 @@ const INITIAL_CATEGORIES: Category[] = [
 	{ id: 'sports', name: 'Sports', description: 'Football, Basketball, and other sports events' },
 	{ id: 'politics', name: 'Politics', description: 'Elections and political developments' },
 	{ id: 'tech', name: 'Technology', description: 'AI, Big Tech, and software releases' },
-	{ id: 'science', name: 'Science', description: 'Space, Health, and scientific discoveries' }
+	{ id: 'science', name: 'Science', description: 'Space, Health, and scientific discoveries' },
+	{ id: 'culture', name: 'Culture', description: 'Trends, Entertainment, and Lifestyle' }
 ];
 
 export const initCategories = async () => {

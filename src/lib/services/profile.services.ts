@@ -38,9 +38,28 @@ export const getProfile = async (
 		...profileDoc,
 		data: {
 			...profileDoc.data,
-			role: roleDoc?.data.role
+			role: roleDoc?.data.role,
+			interests: profileDoc.data.interests ?? []
 		}
 	};
+};
+
+export const updateInterests = async ({
+	principal,
+	interests
+}: {
+	principal: PrincipalText;
+	interests: string[];
+}): Promise<void> => {
+	const profileDoc = await getProfile(principal);
+
+	await upsertProfile({
+		...profileDoc,
+		data: {
+			...profileDoc.data,
+			interests
+		}
+	});
 };
 
 export const upsertProfile = async (

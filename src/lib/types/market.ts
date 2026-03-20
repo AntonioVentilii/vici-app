@@ -17,6 +17,7 @@ export interface Market {
 	description: string;
 	creator: PrincipalText;
 	expiryDate: bigint; // timestamp in ms
+	createdAt: bigint; // timestamp in ms
 	status: MarketStatus;
 	outcome?: Outcome;
 	outcomes?: {

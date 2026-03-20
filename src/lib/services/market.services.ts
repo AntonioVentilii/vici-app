@@ -10,6 +10,7 @@ import {
 	VICI_ORACLE_V1
 } from '$lib/constants/app.constants';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
+import { listSeriesCategories } from '$lib/services/category.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
@@ -265,9 +266,34 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 };
 
 export const getRushQueue = async (): Promise<Market[]> => {
-	const markets = await getMarkets();
+	const identity = await getIdentityOrAnonymous();
+	const principal = identity.getPrincipal().toText();
+
+	const [markets, profile, categoryMappings] = await Promise.all([
+		getMarkets(),
+		getProfile(principal),
+		listSeriesCategories()
+	]);
+
+	const userInterests = new Set(profile.data.interests ?? []);
+	const marketCategoryMap = new Map(categoryMappings.map((m) => [m.seriesId, m.categoryId]));
 
 	return markets
 		.filter((m) => m.status === 'Open' && m.payoffType === 'Binary')
-		.sort((a, b) => Number(b.id) - Number(a.id));
+		.map((m) => {
+			const categoryId = marketCategoryMap.get(m.id);
+			let score = 0;
+
+			// Priority 1: User Interests
+			if (categoryId && userInterests.has(categoryId)) {
+				score += 1000;
+			}
+
+			// Priority 2: Recency (createdAt-based, higher is newer)
+			score += Number(m.createdAt) / 1e12; // Scaled to not override interests but provide stable sequence
+
+			return { market: m, score };
+		})
+		.sort((a, b) => b.score - a.score)
+		.map((item) => item.market);
 };

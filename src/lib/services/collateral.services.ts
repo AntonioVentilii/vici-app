@@ -7,8 +7,8 @@ import {
 	withdrawCollateral as withdrawCollateralApi
 } from '$lib/api/clearing.api';
 import { approve } from '$lib/api/icrc-ledger.api';
-import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { DEFAULT_BALANCE_DOMAIN } from '$lib/constants/app.constants';
+import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { refreshAllBalances } from '$lib/utils/refresh.utils';
 import { getAssetIdByLedgerId } from '$lib/utils/tokens.utils';
