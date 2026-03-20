@@ -13,6 +13,11 @@ export interface UserProfile {
 	winRate?: number;
 	pnl?: number;
 	interests?: string[];
+	streak?: number;
+	accuracy?: number;
+	points?: number;
+	level?: number;
+	rank?: number;
 	preferences?: {
 		defaultAmount?: {
 			flow?: string;

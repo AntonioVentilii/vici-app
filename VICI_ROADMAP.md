@@ -168,7 +168,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.9 User Profile (Backend)
+## 4.1.9 User Profile (Backend) [x]
 
 **Objective:** Store performance data
 
@@ -182,7 +182,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.10 User Profile (Frontend)
+## 4.1.10 User Profile (Frontend) [x]
 
 **Objective:** Display user identity
 

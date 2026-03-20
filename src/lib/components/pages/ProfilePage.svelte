@@ -1,30 +1,46 @@
 <script lang="ts">
+	import AvatarSystem from '$lib/components/profile/AvatarSystem.svelte';
+	import ProfileDashboard from '$lib/components/profile/ProfileDashboard.svelte';
 	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
-	import ProfileCard from '$lib/components/social/ProfileCard.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { userStore } from '$lib/stores/user.store';
 </script>
 
-<div class="space-y-8">
+<div class="space-y-12 pb-24">
 	<SectionHeader
-		description="View and manage your public profile and trading history."
-		highlight="Profile"
-		title="User"
+		description="Track your performance, fire streaks, and global accuracy."
+		highlight="Identity"
+		title="Social"
 	/>
 
-	<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-		<div class="lg:col-span-1">
-			{#if $userStore.profile}
-				<ProfileCard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
-			{:else}
-				<div class="rounded-xl border border-slate-200 bg-white p-8 text-center">
-					<p class="text-slate-500">No profile found. Start trading to create one!</p>
-				</div>
-			{/if}
+	{#if $userStore.profile}
+		<div class="space-y-12">
+			<!-- Main Dashboard -->
+			<ProfileDashboard profile={$userStore.profile} />
+
+			<!-- Customization & Settings Section -->
+			<div class="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
+				<AvatarSystem profile={$userStore.profile} />
+			</div>
+
+			<!-- Secondary Content: Activity -->
+			<div class="space-y-8 pt-8">
+				<h3 class="text-xl font-black text-slate-950">Recent Prediction Context</h3>
+				<ActivityFeed mode="user" userPrincipal={$authPrincipal ?? ''} />
+			</div>
 		</div>
-		<div class="lg:col-span-2">
-			<ActivityFeed mode="user" userPrincipal={$authPrincipal ?? ''} />
+	{:else}
+		<div
+			class="flex flex-col items-center justify-center rounded-3xl border-2 border-dashed border-slate-200 bg-slate-50 py-24 text-center"
+		>
+			<div class="mb-6 rounded-full bg-white p-6 shadow-sm">
+				<span class="text-4xl text-slate-300">👤</span>
+			</div>
+			<h2 class="text-2xl font-black text-slate-950">No Profile Found</h2>
+			<p class="mt-2 max-w-xs text-slate-500">
+				You need to sign in or place your first prediction to initialize your social identity.
+			</p>
 		</div>
-	</div>
+	{/if}
 </div>

@@ -158,6 +158,24 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 	const totalTrades = history.filter((e) => 'Executed' in e.event_type).length;
 	const winRate = settledTradesCount > 0 ? (wins / settledTradesCount) * 100 : 0;
 
+	// Calculate streak (consecutive wins in recent history)
+	let currentStreak = 0;
+	const sortedHistory = [...history].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
+
+	for (const event of sortedHistory) {
+		if ('Settled' in event.event_type) {
+			if (event.qty > ZERO) {
+				currentStreak++;
+			} else {
+				break;
+			}
+		}
+	}
+
+	const accuracy = winRate; // Simplified for now
+	const points = wins * 100 + totalTrades * 10;
+	const level = Math.floor(points / 500) + 1;
+
 	const profileDoc = await getProfile(principal);
 
 	await upsertProfile({
@@ -166,7 +184,11 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 			...profileDoc.data,
 			totalTrades,
 			winRate,
-			pnl: realizedPnl
+			pnl: realizedPnl,
+			streak: currentStreak,
+			accuracy,
+			points,
+			level
 		}
 	});
 };
