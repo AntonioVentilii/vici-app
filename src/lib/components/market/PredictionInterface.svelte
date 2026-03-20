@@ -8,6 +8,7 @@
 	import { routeSide } from '$lib/derived/nav.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { getOrderBook } from '$lib/services/order.services';
+	import { getBalances } from '$lib/services/wallet.service';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { orderBookStore } from '$lib/stores/order-book.store';
@@ -17,6 +18,7 @@
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
 	import { formatAvailableUsd, formatCurrency } from '$lib/utils/format.utils';
+	import { parseToken } from '$lib/utils/parse.utils';
 	import { executeOutcomeTrade } from '$lib/utils/trade.utils';
 
 	interface Props {
@@ -52,14 +54,17 @@
 
 	const fetchOrderBook = async () => {
 		try {
-			const orderBook = await getOrderBook({ marketId: market.id, outcomeId: selectedType });
+			const [orderBook] = await Promise.all([
+				getOrderBook({ marketId: market.id, outcomeId: selectedType }),
+				getBalances(market.balanceDomain)
+			]);
 
 			orderBookStore.update((state) => ({
 				...state,
 				[market.id]: orderBook
 			}));
 		} catch (err) {
-			console.error('Failed to fetch order book', err);
+			console.error('Failed to fetch order book or balance', err);
 		}
 	};
 
@@ -178,31 +183,22 @@
 			return '-';
 		}
 
-		const amt = parseFloat(amount);
-
-		const prob =
-			orderType === 'LIMIT'
-				? parseFloat(price) / 100
-				: selectedType === 'YES'
-					? yesProbability
-					: selectedType === 'NO'
-						? noProbability
-						: (marketDepth?.midPrice ?? 0.5);
-
-		if (!prob || prob === 0) {
-			return '0';
-		}
-
-		const cost = BigInt(Math.floor(amt * prob * 10 ** 6));
-		return formatCurrency({ value: cost, decimals: 6 });
+		const cost = parseToken({ value: amount, unitName: market.token.decimals });
+		return formatCurrency({
+			value: cost,
+			decimals: market.token.decimals,
+			symbol: market.token.symbol
+		});
 	});
 
 	const estimatedPayout = $derived.by(() => {
 		if (!amount) {
 			return '-';
 		}
-
 		const amt = parseFloat(amount);
+		if (isNaN(amt) || amt <= 0) {
+			return '-';
+		}
 
 		const prob =
 			orderType === 'LIMIT'
@@ -213,12 +209,46 @@
 						? noProbability
 						: (marketDepth?.midPrice ?? 0.5);
 
-		if (!prob || prob === 0) {
-			return '0';
+		if (!prob || prob <= 0) {
+			return '-';
 		}
 
-		const payout = BigInt(Math.floor(amt * (1 - prob) * 10 ** 6));
-		return formatCurrency({ value: payout, decimals: 6 });
+		const payoutRaw = amt / prob;
+		const payout = parseToken({
+			value: payoutRaw.toFixed(market.token.decimals),
+			unitName: market.token.decimals
+		});
+
+		return formatCurrency({
+			value: payout,
+			decimals: market.token.decimals,
+			symbol: market.token.symbol
+		});
+	});
+
+	const potentialReturnPercent = $derived.by(() => {
+		if (!amount) {
+			return 0;
+		}
+		const amt = parseFloat(amount);
+		if (isNaN(amt) || amt <= 0) {
+			return 0;
+		}
+
+		const prob =
+			orderType === 'LIMIT'
+				? parseFloat(price) / 100
+				: selectedType === 'YES'
+					? yesProbability
+					: selectedType === 'NO'
+						? noProbability
+						: (marketDepth?.midPrice ?? 0.5);
+
+		if (!prob || prob <= 0) {
+			return 0;
+		}
+
+		return (1 / prob) * 100;
 	});
 </script>
 
@@ -352,7 +382,7 @@
 						class="text-[10px] font-bold tracking-widest text-slate-400 uppercase"
 						for="amount"
 					>
-						Order Size (Qty)
+						Investment Amount ({market.token.symbol})
 					</label>
 
 					<span class="text-[10px] font-bold text-slate-400 uppercase">
@@ -398,6 +428,16 @@
 			>
 				{error}
 			</div>
+		{:else if availableEquity === ZERO && $userSignedIn}
+			<div
+				class="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs font-medium text-amber-700"
+			>
+				You have no <strong>Buying Power</strong> in the
+				<span class="font-bold">{Object.keys(market.balanceDomain)[0]}</span> domain.
+				<a class="ml-1 font-bold text-amber-900 underline hover:no-underline" href="/wallet">
+					Deposit collateral in the Wallet
+				</a>
+			</div>
 		{/if}
 
 		<!-- Payout Summary -->
@@ -412,9 +452,7 @@
 				<span class="font-medium text-slate-500">Potential Return</span>
 
 				<span class="font-bold text-green-500">
-					{amount
-						? ((parseFloat(estimatedPayout) / parseFloat(estimatedCost)) * 100).toFixed(1)
-						: 0}%
+					{estimatedPayout} ({potentialReturnPercent.toFixed(1)}%)
 				</span>
 			</div>
 		</div>
@@ -425,6 +463,9 @@
 				onclick={handlePlacePrediction}
 				status={loading ? 'pending' : nonNullish(amount) ? 'enabled' : 'disabled'}
 			>
+				{#snippet busyLabel()}
+					Confirming...
+				{/snippet}
 				Confirm {selectedType}
 			</Button>
 		{:else}

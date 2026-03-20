@@ -37,7 +37,8 @@ export const mapMarketData = ({
 		description: { plain: description },
 		payout_unit: payoutUnit,
 		payoff_type: payoffType,
-		outcomes
+		outcomes,
+		balance_domain: balanceDomain
 	} = series;
 
 	const token = assetToToken(payoutUnit);
@@ -84,7 +85,8 @@ export const mapMarketData = ({
 		bestBidQty,
 		bestAskQty,
 		token,
-		pricePrecision: Number(series.price_precision)
+		pricePrecision: Number(series.price_precision),
+		balanceDomain
 	};
 };
 

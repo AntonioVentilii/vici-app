@@ -7,6 +7,7 @@
 		status?: ButtonStatus;
 		variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 		size?: 'sm' | 'md' | 'lg';
+		busyLabel?: Snippet;
 		children: Snippet;
 		onclick?: () => void;
 		class?: string;
@@ -16,6 +17,7 @@
 		status,
 		variant = 'primary',
 		size = 'md',
+		busyLabel = undefined,
 		children,
 		onclick = undefined,
 		class: className = ''
@@ -38,6 +40,7 @@
 
 <BaseButton
 	class="gap-2 rounded-lg font-bold active:scale-95 {variants[variant]} {sizes[size]} {className}"
+	{busyLabel}
 	{onclick}
 	{status}
 >

@@ -1,3 +1,4 @@
+import type { ClearingDid } from '$declarations';
 import type { MarketIdSchema } from '$lib/schema/market.schema';
 import type { Token } from '$lib/types/token';
 import type { PrincipalText } from '@dfinity/zod-schemas';
@@ -41,4 +42,5 @@ export interface Market {
 	bestAskQty?: bigint;
 	token: Token;
 	pricePrecision: number;
+	balanceDomain: ClearingDid.BalanceDomain;
 }

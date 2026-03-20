@@ -62,9 +62,9 @@ export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	}
 };
 
-export const getCollateralBalances = async (): Promise<
-	ClearingDid.AccountStateResponse | undefined
-> => {
+export const getCollateralBalances = async (
+	domain: ClearingDid.BalanceDomain = DEFAULT_BALANCE_DOMAIN
+): Promise<ClearingDid.AccountStateResponse | undefined> => {
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
@@ -75,17 +75,19 @@ export const getCollateralBalances = async (): Promise<
 		// 2. Fetch Collateral Balances
 		return await getAccountState({
 			identity,
-			params: { refresh: toNullable(true), domain: toNullable(DEFAULT_BALANCE_DOMAIN) }
+			params: { refresh: toNullable(true), domain: toNullable(domain) }
 		});
 	} catch (e: unknown) {
 		console.error('Failed to get collateral balances', e);
 	}
 };
 
-export const getBalances = async (): Promise<WalletBalance> => {
+export const getBalances = async (
+	domain: ClearingDid.BalanceDomain = DEFAULT_BALANCE_DOMAIN
+): Promise<WalletBalance> => {
 	const [balances, accountState] = await Promise.all([
 		getLedgerBalances(),
-		getCollateralBalances()
+		getCollateralBalances(domain)
 	]);
 
 	const collateral: Record<TokenId, bigint> = {};
