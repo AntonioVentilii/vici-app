@@ -36,7 +36,7 @@
 	onMount(() => () => observer?.disconnect());
 </script>
 
-<div class="mx-auto flex w-full max-w-2xl flex-col gap-6 pb-20 sm:gap-10">
+<div class="grid w-full grid-cols-1 gap-6 pb-20 md:grid-cols-2 lg:grid-cols-3">
 	{#if markets.length > 0}
 		{#each markets as market, index (market.id)}
 			<MarketCard {index} {market} />

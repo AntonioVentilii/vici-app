@@ -1,7 +1,8 @@
 <script lang="ts">
 	import { TriangleAlert, X } from 'lucide-svelte/icons';
+	import { isDev } from '$lib/env/app.env';
 
-	let envBannerVisible = $state(true);
+	let envBannerVisible = $state(!isDev());
 
 	const closeEnvBanner = () => (envBannerVisible = false);
 </script>

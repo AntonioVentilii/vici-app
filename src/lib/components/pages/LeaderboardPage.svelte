@@ -178,7 +178,7 @@
 			{:else}
 				{#if !loading && rest.length === 0}
 					<div class="py-12 text-center">
-						<p class="text-sm font-bold text-slate-300 uppercase tracking-widest">
+						<p class="text-sm font-black text-slate-300 uppercase tracking-widest">
 							Joining the pack...
 						</p>
 					</div>

@@ -104,8 +104,8 @@
 		title="Prediction"
 	/>
 
-	<div class="grid grid-cols-1 items-start gap-6 space-y-8 lg:col-span-3 lg:grid-cols-3">
-		<div class="space-y-8 lg:col-span-3">
+	<div class="w-full space-y-8">
+		<div class="space-y-8">
 			<!-- Controls & Filters -->
 			<MarketFilters
 				{activeTab}
