@@ -222,7 +222,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.13 Leaderboard
+## 4.1.13 Leaderboard [x]
 
 **Objective:** Competitive dynamics
 
