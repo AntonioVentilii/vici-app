@@ -173,8 +173,32 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 	}
 
 	const accuracy = winRate; // Simplified for now
-	const points = wins * 100 + totalTrades * 10;
-	const level = Math.floor(points / 500) + 1;
+
+	// Probability-weighted points calculation with Streak Multiplier
+	let totalPoints = 0;
+	let runningStreak = 0;
+
+	// Sort chronologically for streak calculation
+	const chronoHistory = [...history].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
+
+	chronoHistory.forEach((event) => {
+		if ('Settled' in event.event_type) {
+			if (event.qty > ZERO) {
+				runningStreak++;
+				const priceVal = Number(event.price.decimal.value) / 10 ** event.price.decimal.decimals;
+				const weight = priceVal > 0 ? 1.0 / priceVal : 1.0;
+				// Bonus: 10% per consecutive win
+				const multiplier = Math.pow(1.1, runningStreak - 1);
+				totalPoints += Math.floor(100 * weight * multiplier);
+			} else {
+				runningStreak = 0;
+			}
+		} else if ('Executed' in event.event_type) {
+			totalPoints += 10;
+		}
+	});
+
+	const level = Math.floor(totalPoints / 500) + 1;
 
 	const profileDoc = await getProfile(principal);
 
@@ -187,7 +211,7 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 			pnl: realizedPnl,
 			streak: currentStreak,
 			accuracy,
-			points,
+			points: totalPoints,
 			level
 		}
 	});

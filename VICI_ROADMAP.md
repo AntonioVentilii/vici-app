@@ -197,7 +197,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.11 Scoring System (v1)
+## 4.1.11 Scoring System (v1) [x]
 
 **Objective:** Basic performance metric
 
