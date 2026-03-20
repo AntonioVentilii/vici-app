@@ -6,5 +6,5 @@ export enum AppPath {
 	Admin = '/admin',
 	Portfolio = '/portfolio',
 	Leaderboard = '/leaderboard',
-	Rush = '/rush'
+	Flow = '/flow'
 }

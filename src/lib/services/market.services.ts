@@ -265,7 +265,7 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 	});
 };
 
-export const getRushQueue = async (): Promise<Market[]> => {
+export const getFlowQueue = async (): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 	const principal = identity.getPrincipal().toText();
 

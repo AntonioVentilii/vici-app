@@ -87,7 +87,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.3 Flow Mode (ex-Rush mode) (Swipe Interface)
+## 4.1.3 Flow Mode (ex-Rush mode) (Swipe Interface) [x]
 
 **Objective:** Fast intuitive interactions
 

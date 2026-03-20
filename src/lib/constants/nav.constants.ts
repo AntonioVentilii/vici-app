@@ -4,7 +4,7 @@ import { Briefcase, House, LayoutDashboard, Shield, Zap } from 'lucide-svelte/ic
 
 export const navItems: NavItem[] = [
 	{ label: 'Markets', path: AppPath.Home, mobileIcon: House },
-	{ label: 'Rush', path: AppPath.Rush, mobileIcon: Zap, icon: Zap },
+	{ label: 'Flow', path: AppPath.Flow, mobileIcon: Zap, icon: Zap },
 	{ label: 'Leaders', path: AppPath.Leaderboard, mobileIcon: LayoutDashboard },
 	{ label: 'Portfolio', path: AppPath.Portfolio, mobileIcon: Briefcase },
 	{ label: 'Admin', path: AppPath.Admin, mobileIcon: Shield, icon: Shield, adminOnly: true }

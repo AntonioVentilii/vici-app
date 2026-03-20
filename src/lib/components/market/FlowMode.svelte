@@ -3,17 +3,17 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
-	import RushCard from '$lib/components/market/RushCard.svelte';
+	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { getRushQueue } from '$lib/services/market.services';
+	import { flowTradeService } from '$lib/services/flow.services';
+	import { getFlowQueue } from '$lib/services/market.services';
 	import { getPositions } from '$lib/services/position.services';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
-	import { executeOutcomeTrade } from '$lib/utils/trade.utils';
 
 	const MAX_BETS = 10;
 	const MAX_MARKETS = 20;
@@ -33,27 +33,31 @@
 	let positions = $state<Position[]>([]);
 
 	onMount(async () => {
-		// Prevent scrolling on mobile while in Rush Mode
+		// Prevent scrolling on mobile while in Flow Mode
 		document.body.classList.add('overflow-hidden');
+
+		flowTradeService.startSession();
 
 		try {
 			const [queue, userPositions] = await Promise.all([
-				getRushQueue(),
+				getFlowQueue(),
 				nonNullish($userStore.user) ? getPositions() : Promise.resolve([])
 			]);
 
 			markets = queue.slice(0, MAX_MARKETS);
 			positions = userPositions;
 		} catch (e) {
-			console.error('Failed to load Rush queue', e);
+			console.error('Failed to load Flow queue', e);
 		} finally {
 			loading = false;
 		}
 	});
 
 	onDestroy(() => {
-		// Re-enable scrolling when leaving Rush Mode
+		// Re-enable scrolling when leaving Flow Mode
 		document.body.classList.remove('overflow-hidden');
+
+		void flowTradeService.endSession();
 	});
 
 	const handleAction = (action: 'YES' | 'NO' | 'SKIP') => {
@@ -75,7 +79,7 @@
 		if (isNullish($userStore.user)) {
 			notificationsStore.add({
 				title: 'Sign In Required',
-				message: 'Please sign in to place trades in Rush Mode.',
+				message: 'Please sign in to place trades in Flow Mode.',
 				type: 'warning'
 			});
 
@@ -83,17 +87,15 @@
 		}
 
 		// ASYNCHRONOUS TRADE EXECUTION (Non-awaited)
-		// We prepare the data and fire the trade in the background
+		// We prepare the data and fire the trade in the background via FlowTradeService
 		const executeTrade = async () => {
 			try {
-				await executeOutcomeTrade({
+				await flowTradeService.executeTrade({
 					market: currentMarket,
 					action,
 					amount: tradeAmount
 				});
 			} catch (e) {
-				console.error('Background trade failed', e);
-
 				notificationsStore.add({
 					title: 'Trade Failed',
 					message: `Order for "${currentMarket.title.slice(0, 30)}..." failed: ${(e as Error).message}`,
@@ -131,7 +133,7 @@
 	{#if loading}
 		<div in:fade>
 			<LoadingSpinner />
-			<p class="mt-4 font-medium text-slate-500">Preparing your Rush queue...</p>
+			<p class="mt-4 font-medium text-slate-500">Preparing your Flow queue...</p>
 		</div>
 	{:else if completed || markets.length === 0}
 		<div class="max-w-md text-center" in:fly={{ y: 20 }}>
@@ -153,7 +155,7 @@
 					/>
 				</svg>
 			</div>
-			<h2 class="mb-4 text-3xl font-black text-slate-950">Rush Complete!</h2>
+			<h2 class="mb-4 text-3xl font-black text-slate-950">Flow Complete!</h2>
 			<p class="mb-8 text-slate-600">
 				You've reviewed all available markets. Great job keeping up with the pulse!
 			</p>
@@ -164,7 +166,7 @@
 		<!-- Header Info -->
 		<div class="mb-4 flex w-full max-w-90 items-center justify-between sm:mb-8" in:fade>
 			<div class="flex flex-col">
-				<h1 class="text-xl font-black text-slate-950 sm:text-2xl">Rush Mode</h1>
+				<h1 class="text-xl font-black text-slate-950 sm:text-2xl">Flow Mode</h1>
 				<span class="text-xs font-bold tracking-widest text-slate-400 uppercase">
 					Market {currentIndex + 1} of {markets.length}
 				</span>
@@ -203,7 +205,7 @@
 					in:fly={{ y: 300, duration: 400 }}
 					out:fade={{ duration: 200 }}
 				>
-					<RushCard
+					<FlowCard
 						isLimitOrderNo={isNullish(market.bestBid)}
 						isLimitOrderYes={isNullish(market.bestAsk)}
 						{market}
@@ -261,7 +263,7 @@
 			void handleAction('NO');
 		}
 		if (e.key === 'ArrowUp') {
-			advance();
+			handleAction('SKIP');
 		}
 	}}
 />
