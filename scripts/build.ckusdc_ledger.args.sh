@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+source "$(dirname "$0")/utils.sh" "$@"
+
 PRINCIPAL="$(dfx identity get-principal)"
-ARG_FILE="$(jq -re .canisters.ckusdc_ledger.init_arg_file dfx.json)"
+ARGS_FILE="$(jq -re .canisters.ckusdc_ledger.init_arg_file "$PROJECT_ROOT/dfx.json")"
 
-mkdir -p "$(dirname "$ARG_FILE")"
+mkdir -p "$PROJECT_ROOT/$(dirname "$ARGS_FILE")"
+mkdir -p "$PROJECT_ROOT/target/icdc"
 
-cat <<-EOF >"$ARG_FILE"
+cat <<EOF >"$PROJECT_ROOT/$ARGS_FILE"
 (variant {
 	Init = record {
     token_symbol = "ckSepoliaUSDC";

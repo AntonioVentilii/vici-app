@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 set -euxo pipefail
 
-ARGS_FILE="$(jq -re .canisters.minter.init_arg_file dfx.json)"
-mkdir -p "$(dirname "$ARGS_FILE")"
+source "$(dirname "$0")/utils.sh" "$@"
 
-mkdir -p target/icdc
-cat <<EOF >"$ARGS_FILE"
+ARGS_FILE="$(jq -re .canisters.minter.init_arg_file "$PROJECT_ROOT/dfx.json")"
+mkdir -p "$PROJECT_ROOT/$(dirname "$ARGS_FILE")"
+
+mkdir -p "$PROJECT_ROOT/target/icdc"
+cat <<EOF >"$PROJECT_ROOT/$ARGS_FILE"
 (
   record {
     authorized_callers = vec {

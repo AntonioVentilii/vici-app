@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-WASM_FILE="$(jq -re .canisters.registry.wasm dfx.json)"
+source "$(dirname "$0")/utils.sh" "$@"
 
-mkdir -p "$(dirname "$WASM_FILE")"
+WASM_FILE="$(jq -re .canisters.registry.wasm "$PROJECT_ROOT/dfx.json")"
 
-./scripts/download.icdc.registry.sh
+mkdir -p "$PROJECT_ROOT/$(dirname "$WASM_FILE")"
+
+"$SCRIPT_DIR/download.icdc.registry.sh"

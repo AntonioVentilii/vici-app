@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ARG_FILE="$(jq -re .canisters.ckusdc_index.init_arg_file dfx.json)"
+source "$(dirname "$0")/utils.sh" "$@"
 
-mkdir -p "$(dirname "$ARG_FILE")"
+ARGS_FILE="$(jq -re .canisters.ckusdc_index.init_arg_file "$PROJECT_ROOT/dfx.json")"
 
-cat <<-EOF >"$ARG_FILE"
+mkdir -p "$PROJECT_ROOT/$(dirname "$ARGS_FILE")"
+mkdir -p "$PROJECT_ROOT/target/icdc"
+cat <<EOF >"$PROJECT_ROOT/$ARGS_FILE"
 (opt variant {
   Init = record {
     ledger_id = principal "$CANISTER_ID_CKUSDC_LEDGER";

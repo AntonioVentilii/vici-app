@@ -13,28 +13,22 @@ ICP_LEDGER="ryjl3-tyaaa-aaaaa-aaaba-cai"
 echo "Setting registry canister ID $REGISTRY in clearing canister..."
 dfx canister call --network "$NETWORK" clearing set_registry_canister "(principal \"$REGISTRY\")"
 
-echo "Adding ICDC ledger $LEDGER as collateral asset in clearing canister..."
-dfx canister call --network "$NETWORK" clearing update_collateral_asset "(record {
-    config = record {
-        asset_id = \"vusd\";
-        symbol = \"vUSD\";
-        decimals = 8 : nat8;
-        is_enabled = true;
-        oracle_id = null;
-        asset = variant { Icrc = principal \"$LEDGER\" };
-    }
+echo "Registering ICDC ledger $LEDGER as collateral asset in clearing canister..."
+dfx canister call --network "$NETWORK" clearing register_icrc_asset "(record {
+    asset_id = \"vusd\";
+    ledger_id = principal \"$LEDGER\";
+    haircut_bps = 0 : nat16;
+    is_enabled = true;
+    oracle_id = null;
 })"
 
-echo "Adding ICP ledger $ICP_LEDGER as collateral asset in clearing canister..."
-dfx canister call --network "$NETWORK" clearing update_collateral_asset "(record {
-    config = record {
-        asset_id = \"icp\";
-        symbol = \"ICP\";
-        decimals = 8 : nat8;
-        is_enabled = true;
-        oracle_id = null;
-        asset = variant { Icrc = principal \"$ICP_LEDGER\" };
-    }
+echo "Registering ICP ledger $ICP_LEDGER as collateral asset in clearing canister..."
+dfx canister call --network "$NETWORK" clearing register_icrc_asset "(record {
+    asset_id = \"icp\";
+    ledger_id = principal \"$ICP_LEDGER\";
+    haircut_bps = 1_000 : nat16;
+    is_enabled = true;
+    oracle_id = null;
 })"
 
 echo "Setting asset metrics for ICP ledger $ICP_LEDGER in clearing canister..."

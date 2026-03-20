@@ -2,6 +2,6 @@
 
 source "$(dirname "$0")/utils.sh" "$@"
 
-./scripts/import-candid.sh --"$NETWORK"
+"$SCRIPT_DIR/import-candid.sh" --"$NETWORK"
 
-./scripts/compile-idl-js.sh --"$NETWORK"
+"$SCRIPT_DIR/compile-idl-js.sh" --"$NETWORK"

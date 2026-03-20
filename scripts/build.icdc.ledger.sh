@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-scripts/download.icdc.ledger.sh
-scripts/build.icdc.ledger.args.sh
+source "$(dirname "$0")/utils.sh" "$@"
+
+"$SCRIPT_DIR/download.icdc.ledger.sh"
+"$SCRIPT_DIR/build.icdc.ledger.args.sh"

@@ -2,11 +2,14 @@
 set -euo pipefail
 
 PRINCIPAL="$(dfx identity get-principal)"
-ARG_FILE="$(jq -re .canisters.ledger.init_arg_file dfx.json)"
 
-mkdir -p "$(dirname "$ARG_FILE")"
+source "$(dirname "$0")/utils.sh" "$@"
 
-cat <<-EOF >"$ARG_FILE"
+ARGS_FILE="$(jq -re .canisters.ledger.init_arg_file "$PROJECT_ROOT/dfx.json")"
+
+mkdir -p "$PROJECT_ROOT/$(dirname "$ARGS_FILE")"
+mkdir -p "$PROJECT_ROOT/target/icdc"
+cat <<EOF >"$PROJECT_ROOT/$ARGS_FILE"
 (
   variant {
     Init = record {

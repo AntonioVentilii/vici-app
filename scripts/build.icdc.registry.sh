@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-scripts/build.icdc.registry.wasm.sh
-scripts/build.icdc.registry.args.sh
+source "$(dirname "$0")/utils.sh" "$@"
+
+"$SCRIPT_DIR/build.icdc.registry.wasm.sh"
+"$SCRIPT_DIR/build.icdc.registry.args.sh"

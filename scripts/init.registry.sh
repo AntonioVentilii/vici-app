@@ -5,7 +5,7 @@ source "$(dirname "$0")/utils.sh" "$@"
 # This script initializes the registry canister with a list of markets from scripts/data/markets.json
 # It uses dfx to call the add_series method for each market.
 
-DATA_FILE="scripts/data/markets.json"
+DATA_FILE="$SCRIPT_DIR/data/markets.json"
 
 if [ ! -f "$DATA_FILE" ]; then
   echo "Error: $DATA_FILE not found."

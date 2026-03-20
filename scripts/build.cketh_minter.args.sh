@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-ARG_FILE="$(jq -re .canisters.cketh_minter.init_arg_file dfx.json)"
+source "$(dirname "$0")/utils.sh" "$@"
 
-mkdir -p "$(dirname "$ARG_FILE")"
+ARGS_FILE="$(jq -re .canisters.cketh_minter.init_arg_file "$PROJECT_ROOT/dfx.json")"
+
+mkdir -p "$PROJECT_ROOT/$(dirname "$ARGS_FILE")"
+mkdir -p "$PROJECT_ROOT/target/icdc"
 
 [[ "${CANISTER_ID_CKETH_LEDGER:-}" != "" ]] || {
   echo "ERROR: cketh_ledger canister ID is not known."
@@ -16,7 +19,7 @@ mkdir -p "$(dirname "$ARG_FILE")"
   exit 1
 } >&2
 
-cat <<EOF >"$ARG_FILE"
+cat <<EOF >"$ARGS_FILE"
 (variant {
   InitArg = record {
        ethereum_network = variant {Sepolia};

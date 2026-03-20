@@ -29,16 +29,16 @@ dfx deploy registry --network "$NETWORK" --upgrade-unchanged --mode reinstall --
 # 4. Initialize the environment
 echo "Initializing registry and clearing..."
 
-if [ -f "scripts/init.registry.sh" ]; then
-    bash scripts/init.registry.sh "$@"
+if [ -f "$SCRIPT_DIR/init.registry.sh" ]; then
+    bash "$SCRIPT_DIR/init.registry.sh" "$@"
 else
-    echo "Warning: scripts/init.registry.sh not found."
+    echo "Warning: $SCRIPT_DIR/init.registry.sh not found."
 fi
 
-if [ -f "scripts/init.clearing.sh" ]; then
-    bash scripts/init.clearing.sh "$@"
+if [ -f "$SCRIPT_DIR/init.clearing.sh" ]; then
+    bash "$SCRIPT_DIR/init.clearing.sh" "$@"
 else
-    echo "Warning: scripts/init.clearing.sh not found."
+    echo "Warning: $SCRIPT_DIR/init.clearing.sh not found."
 fi
 
 echo "ICDC restart and initialization complete!"

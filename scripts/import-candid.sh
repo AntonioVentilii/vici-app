@@ -32,7 +32,7 @@ download_did() {
 }
 
 : Move to root of the repo
-cd "$(dirname "$(realpath "$0")")/.."
+cd "$SCRIPT_DIR/.."
 
 : Import canisters
 mkdir -p src/declarations/registry

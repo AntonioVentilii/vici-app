@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-scripts/download.cketh.sh # Uses the same Wasm as cketh.
-scripts/build.ckusdc_ledger.args.sh
+source "$(dirname "$0")/utils.sh" "$@"
+
+"$SCRIPT_DIR/download.cketh.sh" # Uses the same Wasm as cketh.
+"$SCRIPT_DIR/build.ckusdc_ledger.args.sh"
