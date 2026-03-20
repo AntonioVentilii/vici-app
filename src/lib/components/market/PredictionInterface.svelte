@@ -12,6 +12,7 @@
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { orderBookStore } from '$lib/stores/order-book.store';
 	import { tradeStore } from '$lib/stores/trade.store';
+	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
@@ -64,6 +65,11 @@
 
 	onMount(() => {
 		fetchOrderBook();
+
+		// Set default amount from profile if empty
+		if (!amount && $userStore.profile?.preferences?.defaultAmount?.manual) {
+			amount = $userStore.profile.preferences.defaultAmount.manual;
+		}
 
 		const interval = setInterval(fetchOrderBook, 5_000);
 
@@ -360,7 +366,7 @@
 					<input
 						id="amount"
 						class="w-full rounded-2xl border-none bg-slate-50 py-4 pr-16 pl-6 text-xl font-bold text-slate-950 ring-1 ring-slate-200 transition-all ring-inset focus:bg-white focus:ring-2 focus:ring-indigo-500"
-						max="100"
+						max="1000"
 						min="0"
 						placeholder="0"
 						step="1"
@@ -370,6 +376,18 @@
 					<div class="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-bold text-slate-400">
 						{market.token.symbol}
 					</div>
+				</div>
+
+				<!-- Quick Amounts -->
+				<div class="flex gap-2">
+					{#each ['1', '10', '50', '100'] as quickAmount}
+						<BaseButton
+							class="flex-1 rounded-xl border border-slate-100 bg-slate-50 py-2 text-[10px] font-bold text-slate-500 transition-all hover:border-indigo-200 hover:bg-white hover:text-indigo-600"
+							onclick={() => (amount = quickAmount)}
+						>
+							${quickAmount}
+						</BaseButton>
+					{/each}
 				</div>
 			</div>
 		</div>

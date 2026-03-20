@@ -101,7 +101,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.4 Flow Mode (ex-Rush mode) Execution Logic
+## 4.1.4 Flow Mode (ex-Rush mode) Execution Logic [x]
 
 **Objective:** Execute predictions via swipe
 
@@ -115,7 +115,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.5 Swipe Feedback System
+## 4.1.5 Swipe Feedback System [x]
 
 **Objective:** Instant feedback
 

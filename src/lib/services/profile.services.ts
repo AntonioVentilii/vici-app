@@ -24,7 +24,13 @@ export const getProfile = async (
 				owner: principal,
 				nickname: `${principal.slice(0, 5)}...${principal.slice(-3)}`,
 				createdAt: Date.now(),
-				updatedAt: Date.now()
+				updatedAt: Date.now(),
+				preferences: {
+					defaultAmount: {
+						flow: '1.0',
+						manual: '1.0'
+					}
+				}
 			}
 		};
 	}

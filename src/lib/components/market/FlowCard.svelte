@@ -11,9 +11,22 @@
 		isLimitOrderNo: boolean;
 		signedIn: boolean;
 		position?: Position;
+		tradeAmount: string;
 	}
 
-	const { market, onAction, isLimitOrderYes, isLimitOrderNo, signedIn, position }: Props = $props();
+	const {
+		market,
+		onAction,
+		isLimitOrderYes,
+		isLimitOrderNo,
+		signedIn,
+		position,
+		tradeAmount
+	}: Props = $props();
+
+	const amount = $derived(parseFloat(tradeAmount) || 0);
+	const potentialReturnYes = $derived(amount / (market.yesProbability || 0.1));
+	const potentialReturnNo = $derived(amount / (market.noProbability || 0.1));
 
 	let startX = 0;
 	let startY = 0;
@@ -102,12 +115,20 @@
 		<!-- YES Indicator -->
 		<div
 			style="opacity: {signedIn ? yesOpacity : yesOpacity * 0.5}; transform: rotate(-12deg)"
-			class="absolute top-12 left-8 z-20 flex flex-col items-center rounded-xl border-4 border-emerald-500 bg-white/90 px-6 py-3 text-4xl font-black tracking-tight text-emerald-500 shadow-xl"
+			class="absolute top-12 left-8 z-20 flex flex-col items-center rounded-xl border-4 border-emerald-500 bg-white/90 px-6 py-3 shadow-xl"
 		>
-			<span>YES</span>
+			<span class="text-4xl font-black tracking-tight text-emerald-500">YES</span>
+			<div class="mt-1 flex flex-col items-center">
+				<span class="text-lg font-black text-emerald-600">
+					+{potentialReturnYes.toFixed(2)}
+				</span>
+				<span class="text-[8px] font-bold tracking-widest text-emerald-500 uppercase">
+					Potential
+				</span>
+			</div>
 			{#if isLimitOrderYes}
 				<span
-					class="mt-1 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] tracking-widest text-white uppercase"
+					class="mt-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] tracking-widest text-white uppercase"
 				>
 					Limit Order
 				</span>
@@ -117,12 +138,20 @@
 		<!-- NO Indicator -->
 		<div
 			style="opacity: {signedIn ? noOpacity : noOpacity * 0.5}; transform: rotate(12deg)"
-			class="absolute top-12 right-8 z-20 flex flex-col items-center rounded-xl border-4 border-rose-500 bg-white/90 px-6 py-3 text-4xl font-black tracking-tight text-rose-500 shadow-xl"
+			class="absolute top-12 right-8 z-20 flex flex-col items-center rounded-xl border-4 border-rose-500 bg-white/90 px-6 py-3 shadow-xl"
 		>
-			<span>NO</span>
+			<span class="text-4xl font-black tracking-tight text-rose-500">NO</span>
+			<div class="mt-1 flex flex-col items-center">
+				<span class="text-lg font-black text-rose-600">
+					+{potentialReturnNo.toFixed(2)}
+				</span>
+				<span class="text-[8px] font-bold tracking-widest text-rose-500 uppercase">
+					Potential
+				</span>
+			</div>
 			{#if isLimitOrderNo}
 				<span
-					class="mt-1 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] tracking-widest text-white uppercase"
+					class="mt-2 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] tracking-widest text-white uppercase"
 				>
 					Limit Order
 				</span>

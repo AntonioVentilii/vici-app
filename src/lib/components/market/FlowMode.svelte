@@ -46,6 +46,11 @@
 
 			markets = queue.slice(0, MAX_MARKETS);
 			positions = userPositions;
+
+			// Set default amount from profile preferences
+			if ($userStore.profile?.preferences?.defaultAmount?.flow) {
+				tradeAmount = $userStore.profile.preferences.defaultAmount.flow;
+			}
 		} catch (e) {
 			console.error('Failed to load Flow queue', e);
 		} finally {
@@ -199,21 +204,24 @@
 
 		<!-- Card Container -->
 		<div class="relative h-125 w-full max-w-90">
-			{#each [markets[currentIndex]] as market (market.id)}
-				<div
-					class="absolute inset-0"
-					in:fly={{ y: 300, duration: 400 }}
-					out:fade={{ duration: 200 }}
-				>
-					<FlowCard
-						isLimitOrderNo={isNullish(market.bestBid)}
-						isLimitOrderYes={isNullish(market.bestAsk)}
-						{market}
-						onAction={handleAction}
-						position={positions.find((p) => p.marketId === market.id)}
-						signedIn={nonNullish($userStore.user)}
-					/>
-				</div>
+			{#each [markets[currentIndex]] as currentMarket (currentMarket?.id)}
+				{#if currentMarket}
+					<div
+						class="absolute inset-0"
+						in:fly={{ y: 300, duration: 400 }}
+						out:fade={{ duration: 200 }}
+					>
+						<FlowCard
+							isLimitOrderNo={isNullish(currentMarket.bestBid)}
+							isLimitOrderYes={isNullish(currentMarket.bestAsk)}
+							market={currentMarket}
+							onAction={handleAction}
+							position={positions.find((p) => p.marketId === currentMarket.id)}
+							signedIn={nonNullish($userStore.user)}
+							{tradeAmount}
+						/>
+					</div>
+				{/if}
 			{/each}
 		</div>
 

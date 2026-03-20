@@ -13,4 +13,10 @@ export interface UserProfile {
 	winRate?: number;
 	pnl?: number;
 	interests?: string[];
+	preferences?: {
+		defaultAmount?: {
+			flow?: string;
+			manual?: string;
+		};
+	};
 }
