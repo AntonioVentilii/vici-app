@@ -9,12 +9,12 @@
 </script>
 
 <div class="space-y-2">
-	<h1 class="text-3xl font-extrabold tracking-tight text-slate-950 sm:text-4xl">
+	<h1 class="text-foreground font-serif text-3xl font-extrabold tracking-tight sm:text-4xl">
 		{title}
-		{#if highlight}<span class="text-indigo-600">{highlight}</span>{/if}
+		{#if highlight}<span class="text-primary">{highlight}</span>{/if}
 	</h1>
 	{#if description}
-		<p class="max-w-2xl text-base text-slate-600">
+		<p class="text-muted-foreground max-w-2xl text-base">
 			{description}
 		</p>
 	{/if}

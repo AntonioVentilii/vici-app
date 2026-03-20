@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
+	import { Sun, Moon, Palette } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { theme, type Theme } from '$lib/stores/theme.store';
 
 	let open = $state(false);
 
@@ -17,6 +19,10 @@
 		open = false;
 
 		await signOut();
+	};
+
+	const setTheme = (val: Theme) => {
+		theme.set(val);
 	};
 </script>
 
@@ -66,7 +72,47 @@
 				Profile
 			</BaseButton>
 
-			<div class="my-1 border-t border-slate-100"></div>
+			<div class="border-border my-1 border-t"></div>
+
+			<div class="px-4 py-2">
+				<div class="text-muted-foreground mb-2 text-[10px] font-bold tracking-widest uppercase">
+					Theme
+				</div>
+				<div class="flex gap-1">
+					<button
+						class="flex flex-1 items-center justify-center rounded-md border p-2 transition-all {$theme ===
+						'peach'
+							? 'border-primary bg-primary/10 text-primary shadow-sm'
+							: 'border-border text-muted-foreground hover:bg-muted'}"
+						aria-label="Peach theme"
+						onclick={() => setTheme('peach')}
+					>
+						<Palette size={16} />
+					</button>
+					<button
+						class="flex flex-1 items-center justify-center rounded-md border p-2 transition-all {$theme ===
+						'light'
+							? 'border-primary bg-primary/10 text-primary shadow-sm'
+							: 'border-border text-muted-foreground hover:bg-muted'}"
+						aria-label="Light theme"
+						onclick={() => setTheme('light')}
+					>
+						<Sun size={16} />
+					</button>
+					<button
+						class="flex flex-1 items-center justify-center rounded-md border p-2 transition-all {$theme ===
+						'dark'
+							? 'border-primary bg-primary/10 text-primary shadow-sm'
+							: 'border-border text-muted-foreground hover:bg-muted'}"
+						aria-label="Dark theme"
+						onclick={() => setTheme('dark')}
+					>
+						<Moon size={16} />
+					</button>
+				</div>
+			</div>
+
+			<div class="border-border my-1 border-t"></div>
 
 			<BaseButton
 				class="w-full gap-3 px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"

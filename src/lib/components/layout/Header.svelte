@@ -61,7 +61,7 @@
 				V
 			</div>
 			<span
-				class="hidden text-xl font-extrabold tracking-tight text-slate-950 drop-shadow-sm sm:block"
+				class="text-foreground hidden font-serif text-xl font-extrabold tracking-tight drop-shadow-sm sm:block"
 			>
 				Veni. Vidi. <span class="text-primary">VICI</span>.
 			</span>

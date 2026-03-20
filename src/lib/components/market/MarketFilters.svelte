@@ -13,7 +13,12 @@
 <div class="flex flex-col items-center justify-between gap-6 lg:flex-row-reverse lg:items-start">
 	<div class="relative w-full lg:max-w-sm">
 		<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-			<svg class="size-5 text-gray-500" aria-hidden="true" fill="currentColor" viewBox="0 0 20 20">
+			<svg
+				class="text-muted-foreground/60 size-5"
+				aria-hidden="true"
+				fill="currentColor"
+				viewBox="0 0 20 20"
+			>
 				<path
 					clip-rule="evenodd"
 					d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z"

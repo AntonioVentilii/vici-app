@@ -13,8 +13,8 @@
 	const { label, value, unit, variant = 'default', size = 'md' }: Props = $props();
 
 	const variantStyles: Record<NonNullable<Props['variant']>, string> = {
-		default: 'text-slate-950',
-		primary: 'text-indigo-600',
+		default: 'text-foreground',
+		primary: 'text-primary',
 		success: 'text-emerald-600',
 		danger: 'text-rose-600',
 		warning: 'text-amber-600'
@@ -33,11 +33,13 @@
 </script>
 
 <Card padding={sizeStyles.padding}>
-	<div class="{sizeStyles.label} font-bold tracking-widest text-slate-500 uppercase">{label}</div>
+	<div class="{sizeStyles.label} text-muted-foreground font-bold tracking-widest uppercase">
+		{label}
+	</div>
 	<div class="mt-1 flex items-baseline gap-2">
-		<span class="{sizeStyles.value} font-black {variantStyles[variant]}">{value}</span>
+		<span class="{sizeStyles.value} font-serif font-black {variantStyles[variant]}">{value}</span>
 		{#if unit}
-			<span class="text-xs font-bold text-slate-500 uppercase">{unit}</span>
+			<span class="text-muted-foreground text-xs font-bold uppercase">{unit}</span>
 		{/if}
 	</div>
 </Card>

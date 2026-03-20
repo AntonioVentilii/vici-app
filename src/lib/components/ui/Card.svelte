@@ -29,7 +29,7 @@
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
 		default: 'bg-card text-card-foreground border-border shadow-sm',
-		glass: 'bg-white/5 backdrop-blur-md border-white/10 shadow-xl',
+		glass: 'bg-foreground/5 backdrop-blur-md border-foreground/10 shadow-xl',
 		outline: 'bg-transparent border-2 border-border'
 	};
 

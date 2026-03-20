@@ -47,7 +47,7 @@
 					<div class="flex flex-col items-center gap-1.5">
 						<div class="relative">
 							<div
-								class="bg-muted h-12 w-12 overflow-hidden rounded-full border-2 border-white/10 shadow-xl {rank ===
+								class="bg-muted border-foreground/10 h-12 w-12 overflow-hidden rounded-full border-2 shadow-xl {rank ===
 								1
 									? 'h-16 w-16'
 									: ''}"
@@ -82,7 +82,7 @@
 			<div class="flex flex-col">
 				{#each leaderboard.slice(3) as entry (entry.rank)}
 					<div
-						class="flex items-center gap-3 border-b border-white/5 px-4 py-3 font-medium transition-colors last:border-0 hover:bg-white/5"
+						class="border-border hover:bg-foreground/5 flex items-center gap-3 border-b px-4 py-3 font-medium transition-colors last:border-0"
 					>
 						<span class="text-muted-foreground w-5 text-[10px]">#{entry.rank}</span>
 						<div class="bg-muted flex h-7 w-7 items-center justify-center rounded-full text-[10px]">

@@ -14,44 +14,137 @@
 	src: url('/fonts/jetbrainsmono-bold.woff2') format('woff2');
 }
 
-@theme {
-	--font-display: 'Inter', 'JetBrains Mono', sans-serif;
+:root {
+	--bg-base: oklch(0.96 0.01 70); /* Precise FT Peach #fff1e5 */
+	--bg-surface: oklch(0.95 0.01 75); /* #fdf0e4 */
+	--bg-popover: oklch(0.98 0.01 70);
 
-	--radius: 0.625rem;
+	--text-base: oklch(0.1 0 0); /* Darker text for better contrast */
+	--text-muted: oklch(0.4 0.01 70);
+	--text-inverse: oklch(0.99 0 0);
 
-	--color-background: oklch(0.99 0 0);
-	--color-foreground: oklch(0.15 0 0);
+	--border-base: oklch(0.85 0.02 75); /* Darker border #dcc9b4 */
+	--color-primary: oklch(0.35 0.15 25); /* FT Red #9c0c0c */
+	--color-primary-foreground: oklch(0.99 0 0);
 
-	--color-card: oklch(1 0 0);
-	--color-card-foreground: oklch(0.15 0 0);
+	--color-success: oklch(0.4 0.12 150); /* Darker Green */
+	--color-warning: oklch(0.5 0.15 60);
+	--color-destructive: oklch(0.4 0.15 25);
 
-	--color-popover: oklch(1 0 0);
-	--color-popover-foreground: oklch(0.15 0 0);
+	--color-accent: oklch(0.35 0.15 25);
+	--color-accent-foreground: oklch(0.99 0 0);
+}
 
+[data-theme='peach'] {
+	--bg-base: oklch(0.96 0.01 70);
+	--bg-surface: oklch(0.95 0.01 75);
+	--bg-popover: oklch(0.98 0.01 70);
+
+	--text-base: oklch(0.1 0 0);
+	--text-muted: oklch(0.4 0.01 70);
+
+	--color-primary: oklch(0.35 0.15 25);
+	--color-success: oklch(0.4 0.12 150);
+	--color-warning: oklch(0.5 0.15 60);
+	--color-destructive: oklch(0.4 0.15 25);
+}
+
+[data-theme='light'] {
+	--bg-base: oklch(0.99 0 0);
+	--bg-surface: oklch(0.97 0 0);
+	--bg-popover: oklch(1 0 0);
+
+	--text-base: oklch(0.15 0 0);
+	--text-muted: oklch(0.5 0 0);
+	--text-inverse: oklch(0.99 0 0);
+
+	--border-base: oklch(0.9 0 0);
 	--color-primary: oklch(0.45 0.18 264);
 	--color-primary-foreground: oklch(0.99 0 0);
 
-	--color-secondary: oklch(0.96 0 0);
-	--color-secondary-foreground: oklch(0.15 0 0);
-
-	--color-muted: oklch(0.96 0 0);
-	--color-muted-foreground: oklch(0.5 0 0);
+	--color-success: oklch(0.6 0.15 150);
+	--color-warning: oklch(0.7 0.15 60);
+	--color-destructive: oklch(0.58 0.22 25);
 
 	--color-accent: oklch(0.96 0 0);
 	--color-accent-foreground: oklch(0.15 0 0);
+}
 
-	--color-destructive: oklch(0.58 0.22 25);
+[data-theme='dark'] {
+	--bg-base: oklch(0.12 0.01 264); /* Slightly darker deep slate */
+	--bg-surface: oklch(0.18 0.02 264);
+	--bg-popover: oklch(0.15 0.02 264);
+
+	--text-base: oklch(0.95 0 0);
+	--text-muted: oklch(0.7 0 0);
+	--text-inverse: oklch(0.12 0 0);
+
+	--border-base: oklch(0.25 0.02 264);
+	--color-primary: oklch(0.6 0.1 200); /* Cyan-ish for dark mode */
+	--color-primary-foreground: oklch(0.12 0 0);
+
+	--color-success: oklch(0.7 0.12 150);
+	--color-warning: oklch(0.8 0.12 60);
+	--color-destructive: oklch(0.6 0.15 25);
+
+	--color-accent: oklch(0.3 0.1 264);
+	--color-accent-foreground: oklch(0.95 0 0);
+}
+
+@theme {
+	--font-display: 'Inter', 'JetBrains Mono', sans-serif;
+	--font-serif: 'Merriweather', serif;
+
+	--radius: 0.625rem;
+
+	--color-background: var(--bg-base);
+	--color-foreground: var(--text-base);
+
+	--color-card: var(--bg-surface);
+	--color-card-foreground: var(--text-base);
+
+	--color-popover: var(--bg-popover);
+	--color-popover-foreground: var(--text-base);
+
+	--color-primary: var(--color-primary);
+	--color-primary-foreground: var(--color-primary-foreground);
+
+	--color-secondary: var(--bg-surface);
+	--color-secondary-foreground: var(--text-base);
+
+	--color-muted: var(--bg-surface);
+	--color-muted-foreground: var(--text-muted);
+
+	--color-accent: var(--color-accent);
+	--color-accent-foreground: var(--color-accent-foreground);
+
+	--color-success: var(--color-success);
+	--color-warning: var(--color-warning);
+
+	--color-destructive: var(--color-destructive);
 	--color-destructive-foreground: oklch(0.99 0 0);
 
-	--color-border: oklch(0.9 0 0);
-	--color-input: oklch(0.9 0 0);
-	--color-ring: oklch(0.45 0.18 264);
+	--color-border: var(--border-base);
+	--color-input: var(--border-base);
+	--color-ring: var(--color-primary);
 
 	--color-chart-1: oklch(0.65 0.2 142);
 	--color-chart-2: oklch(0.55 0.2 264);
 	--color-chart-3: oklch(0.7 0.18 35);
 	--color-chart-4: oklch(0.6 0.22 305);
 	--color-chart-5: oklch(0.75 0.16 85);
+
+	/* Juno logo */
+	--color-lavender-blue-50: #f2f3ff;
+	--color-lavender-blue-100: #e4e7ff;
+	--color-lavender-blue-200: #c9cfff;
+	--color-lavender-blue-300: #aeb8ff;
+	--color-lavender-blue-400: #93a0ff;
+	--color-lavender-blue-500: #7888ff;
+	--color-lavender-blue-600: #606dcc;
+	--color-lavender-blue-700: #485299;
+	--color-lavender-blue-800: #303666;
+	--color-lavender-blue-900: #181b33;
 }
 
 @theme {
@@ -71,10 +164,16 @@
 html {
 	font-family: var(--font-display);
 	scroll-behavior: smooth;
+	background-color: var(--bg-base);
+	color: var(--text-base);
+	transition:
+		background-color 0.3s ease,
+		color 0.3s ease;
 }
 
 body {
-	@apply bg-background text-foreground antialiased;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
 }
 
 /* Custom Scrollbar */
@@ -101,6 +200,6 @@ body {
 
 /* Selection Color */
 ::selection {
-	background: rgba(99, 102, 241, 0.3);
-	color: white;
+	background: var(--color-primary);
+	color: var(--color-primary-foreground);
 }

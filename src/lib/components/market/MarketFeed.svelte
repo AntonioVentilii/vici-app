@@ -51,7 +51,7 @@
 		{#if hasMore}
 			<div bind:this={sentinel} class="flex h-20 items-center justify-center">
 				<div
-					class="h-6 w-6 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent"
+					class="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
 				></div>
 			</div>
 		{/if}
