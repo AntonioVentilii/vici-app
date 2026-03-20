@@ -17,9 +17,15 @@
 	</div>
 
 	<div class="space-y-4">
-		<h1 class="max-w-3xl text-4xl font-black text-slate-950 sm:text-5xl lg:text-6xl">
+		<h1 class="max-w-4xl text-3xl font-black text-slate-950 sm:text-5xl lg:text-5xl">
 			{title}
 		</h1>
+
+		{#if market.description}
+			<p class="mx-auto max-w-2xl text-sm leading-relaxed text-slate-500 sm:text-lg">
+				{market.description}
+			</p>
+		{/if}
 
 		<div class="flex items-center justify-center gap-2">
 			<span

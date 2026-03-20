@@ -50,22 +50,38 @@
 				Market Forecast
 			</h3>
 
-			<div class="mt-8 flex items-center gap-4">
-				<BaseButton
-					class="flex-1 rounded-2xl bg-green-500 py-4 text-center transition-transform hover:scale-[1.02] active:scale-[0.98]"
-					onclick={() => handleOutcomeSelect('YES')}
-				>
-					<span class="block text-[10px] font-bold text-white/80 uppercase">Predict YES</span>
-					<span class="text-2xl font-black text-white">{formatProbability(yesProbability)}</span>
-				</BaseButton>
+			<div class="mt-8 flex flex-col gap-4 sm:flex-row">
+				<div class="flex-1 space-y-1">
+					<BaseButton
+						class="w-full rounded-2xl bg-emerald-500 py-6 text-center shadow-lg shadow-emerald-500/10 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+						onclick={() => handleOutcomeSelect('YES')}
+					>
+						<span class="block text-[10px] font-black tracking-widest text-white/70 uppercase"
+							>Predict YES</span
+						>
+						<span class="text-3xl font-black text-white">{formatProbability(yesProbability)}</span>
+					</BaseButton>
+					<div class="flex items-center justify-center gap-1.5 text-[9px] font-bold text-slate-400">
+						<span class="h-1 w-1 rounded-full bg-emerald-500"></span>
+						<span>INSTANT EXECUTION</span>
+					</div>
+				</div>
 
-				<BaseButton
-					class="flex-1 rounded-2xl bg-red-500 py-4 text-center transition-transform hover:scale-[1.02] active:scale-[0.98]"
-					onclick={() => handleOutcomeSelect('NO')}
-				>
-					<span class="block text-[10px] font-bold text-white/80 uppercase">Predict NO</span>
-					<span class="text-2xl font-black text-white">{formatProbability(noProbability)}</span>
-				</BaseButton>
+				<div class="flex-1 space-y-1">
+					<BaseButton
+						class="w-full rounded-2xl bg-rose-500 py-6 text-center shadow-lg shadow-rose-500/10 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+						onclick={() => handleOutcomeSelect('NO')}
+					>
+						<span class="block text-[10px] font-black tracking-widest text-white/70 uppercase"
+							>Predict NO</span
+						>
+						<span class="text-3xl font-black text-white">{formatProbability(noProbability)}</span>
+					</BaseButton>
+					<div class="flex items-center justify-center gap-1.5 text-[9px] font-bold text-slate-400">
+						<span class="h-1 w-1 rounded-full bg-rose-500"></span>
+						<span>SECURE SETTLEMENT</span>
+					</div>
+				</div>
 			</div>
 
 			<div class="mt-8 flex h-2 w-full overflow-hidden rounded-full bg-slate-100">

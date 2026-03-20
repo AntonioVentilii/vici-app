@@ -235,7 +235,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.14 Market Detail Page
+## 4.1.14 Market Detail Page [x]
 
 **Objective:** Clear, trustworthy info
 
