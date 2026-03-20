@@ -231,9 +231,9 @@
 				: 'text-slate-500 hover:text-slate-700'}"
 			onclick={() => (orderType = 'MARKET')}
 			status={hasMarketDepth ? 'enabled' : 'disabled'}
-			title={!hasMarketDepth ? 'No liquidity for market order' : ''}
+			title={!hasMarketDepth ? 'No liquidity for instant prediction' : ''}
 		>
-			Market
+			Instant
 		</BaseButton>
 
 		<BaseButton
@@ -242,7 +242,7 @@
 				: 'text-slate-500 hover:text-slate-700'}"
 			onclick={() => (orderType = 'LIMIT')}
 		>
-			Limit
+			Set Price
 		</BaseButton>
 	</div>
 
@@ -325,7 +325,7 @@
 			{#if orderType === 'LIMIT'}
 				<div class="space-y-2">
 					<label class="text-[10px] font-bold tracking-widest text-slate-400 uppercase" for="price">
-						Limit Price
+						Target Probability
 					</label>
 
 					<div class="relative">
@@ -380,7 +380,7 @@
 
 				<!-- Quick Amounts -->
 				<div class="flex gap-2">
-					{#each ['1', '10', '50', '100'] as quickAmount}
+					{#each ['1', '10', '50', '100'] as quickAmount (quickAmount)}
 						<BaseButton
 							class="flex-1 rounded-xl border border-slate-100 bg-slate-50 py-2 text-[10px] font-bold text-slate-500 transition-all hover:border-indigo-200 hover:bg-white hover:text-indigo-600"
 							onclick={() => (amount = quickAmount)}
@@ -425,7 +425,7 @@
 				onclick={handlePlacePrediction}
 				status={loading ? 'pending' : nonNullish(amount) ? 'enabled' : 'disabled'}
 			>
-				Place {orderType} Order
+				Confirm {selectedType}
 			</Button>
 		{:else}
 			<div class="flex flex-col items-center gap-4 rounded-2xl bg-indigo-50 p-6 text-center">

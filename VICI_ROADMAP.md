@@ -128,7 +128,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.6 Simplified Trading Interface
+## 4.1.6 Simplified Trading Interface [x]
 
 **Objective:** Hide complexity
 
@@ -142,7 +142,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.7 Pricing Abstraction Layer
+## 4.1.7 Pricing Abstraction Layer (Skipped)
 
 **Objective:** Simplify backend pricing
 
@@ -154,7 +154,7 @@ The Beta version is structured around **five core systems**:
 
 ---
 
-## 4.1.8 Onboarding & Personalisation
+## 4.1.8 Onboarding & Personalisation (Skipped)
 
 **Objective:** Initialise user feed
 

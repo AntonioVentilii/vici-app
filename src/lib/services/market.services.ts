@@ -7,13 +7,15 @@ import {
 	PAYOFF_TYPE,
 	PRICE_DECIMALS,
 	STRIKE,
-	VICI_ORACLE_V1
+	VICI_ORACLE_V1,
+	ZERO
 } from '$lib/constants/app.constants';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
 import { listSeriesCategories } from '$lib/services/category.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
+import type { SeriesCategory } from '$lib/types/category';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
 import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
@@ -265,6 +267,64 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 	});
 };
 
+/**
+ * Ranks markets based on user interests, category relevance (culture fallback),
+ * activity (volume), and recency.
+ */
+export const rankMarkets = ({
+	markets,
+	userInterests,
+	categoryMappings
+}: {
+	markets: Market[];
+	userInterests: Set<string>;
+	categoryMappings: SeriesCategory[];
+}): Market[] => {
+	const marketCategoryMap = new Map<string, string>(
+		categoryMappings.map((m) => [m.seriesId, m.categoryId])
+	);
+
+	return markets
+		.map((m: Market) => {
+			let score = 0;
+			const categoryId = marketCategoryMap.get(m.id);
+
+			// 1. User Interests (High Priority)
+			if (categoryId && userInterests.has(categoryId)) {
+				score += 1000;
+			}
+
+			// 2. Culture Fallback (Discovery Boost)
+			// Boost culture if user has interest in it or if user has NO interests at all
+			if (categoryId === 'culture') {
+				if (userInterests.size === 0 || userInterests.has('culture')) {
+					score += 500;
+				}
+			}
+
+			// 3. Activity / Trending (Volume-based)
+			// Small boost based on total volume (normalized to ~100 max for typical early liquidity)
+			if (m.totalVolume > ZERO) {
+				const volumeInUsd = Number(m.totalVolume) / 10 ** Number(m.token.decimals);
+				score += Math.min(volumeInUsd * 2, 200); // Caps at 200
+			}
+
+			// 4. Relevance / Liquidity
+			// Boost if both sides of the book are populated
+			if (nonNullish(m.bestBid) && nonNullish(m.bestAsk)) {
+				score += 100;
+			}
+
+			// 5. Recency (Tie-breaker)
+			// Scaled createdAt to provide stable sequence within same score brackets
+			score += Number(m.createdAt) / 1e12;
+
+			return { market: m, score };
+		})
+		.sort((a, b) => b.score - a.score)
+		.map((item) => item.market);
+};
+
 export const getFlowQueue = async (): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 	const principal = identity.getPrincipal().toText();
@@ -276,24 +336,13 @@ export const getFlowQueue = async (): Promise<Market[]> => {
 	]);
 
 	const userInterests = new Set(profile.data.interests ?? []);
-	const marketCategoryMap = new Map(categoryMappings.map((m) => [m.seriesId, m.categoryId]));
 
-	return markets
-		.filter((m) => m.status === 'Open' && m.payoffType === 'Binary')
-		.map((m) => {
-			const categoryId = marketCategoryMap.get(m.id);
-			let score = 0;
+	// Filter for binary/open markets for the flow session
+	const eligibleMarkets = markets.filter((m) => m.status === 'Open' && m.payoffType === 'Binary');
 
-			// Priority 1: User Interests
-			if (categoryId && userInterests.has(categoryId)) {
-				score += 1000;
-			}
-
-			// Priority 2: Recency (createdAt-based, higher is newer)
-			score += Number(m.createdAt) / 1e12; // Scaled to not override interests but provide stable sequence
-
-			return { market: m, score };
-		})
-		.sort((a, b) => b.score - a.score)
-		.map((item) => item.market);
+	return rankMarkets({
+		markets: eligibleMarkets,
+		userInterests,
+		categoryMappings
+	});
 };

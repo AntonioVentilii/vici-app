@@ -1,14 +1,24 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
+	import { listSeriesCategories } from '$lib/services/category.services';
+	import { rankMarkets } from '$lib/services/market.services';
+	import { userStore } from '$lib/stores/user.store';
+	import type { SeriesCategory } from '$lib/types/category';
+	import type { Market } from '$lib/types/market';
 
 	let loading = $derived($marketsNotInitialized);
 
 	let searchTerm = $state('');
-
 	let activeTab = $state('Active');
+	let categoryMappings = $state<SeriesCategory[]>([]);
+
+	onMount(async () => {
+		categoryMappings = await listSeriesCategories();
+	});
 
 	const tabs = ['Active', 'Trending', 'Expiring', 'Resolved'];
 
@@ -60,24 +70,31 @@
 		return score;
 	};
 
-	const filteredMarkets = $derived(
-		$markets
-			.map((market) => ({
+	const filteredMarkets = $derived.by(() => {
+		const baseFiltered = $markets
+			.map((market: Market) => ({
 				market,
-				score: getSearchScore({ market, searchTerm })
+				searchScore: getSearchScore({ market, searchTerm })
 			}))
-			.filter(({ market, score }) => {
+			.filter(({ market, searchScore }: { market: Market; searchScore: number }) => {
+				const matchesSearch = searchScore > 0;
 				const matchesTab =
 					activeTab === 'Active' ||
 					(activeTab === 'Resolved' && market.status === 'Resolved') ||
 					(activeTab === 'Expiring' && market.status === 'Expired') ||
 					activeTab === 'Trending';
 
-				return matchesTab && score > 0;
+				return matchesTab && matchesSearch;
 			})
-			.sort((a, b) => b.score - a.score)
-			.map(({ market }) => market)
-	);
+			.map(({ market }) => market);
+
+		// Apply Personalized Ranking
+		return rankMarkets({
+			markets: baseFiltered,
+			userInterests: new Set($userStore.profile?.interests ?? []),
+			categoryMappings
+		});
+	});
 </script>
 
 <section class="space-y-8">
@@ -92,8 +109,8 @@
 			<!-- Controls & Filters -->
 			<MarketFilters
 				{activeTab}
-				onSearchChange={(term) => (searchTerm = term)}
-				onTabChange={(tab) => (activeTab = tab)}
+				onSearchChange={(term: string) => (searchTerm = term)}
+				onTabChange={(tab: string) => (activeTab = tab)}
 				{searchTerm}
 				{tabs}
 			/>
