@@ -20,26 +20,12 @@
 		color = '#6366f1' // indigo-500
 	}: Props = $props();
 
-	// Mock history if none provided to show "Trustworthy" UI for demo
-	const displayData = $derived(
-		data.length > 0
-			? data
-			: [
-					{ time: 0, value: 0.5 },
-					{ time: 1, value: 0.52 },
-					{ time: 2, value: 0.48 },
-					{ time: 3, value: 0.55 },
-					{ time: 4, value: 0.58 },
-					{ time: 5, value: 0.62 },
-					{ time: 6, value: 0.6 },
-					{ time: 7, value: 0.65 }
-				]
-	);
+	const hasEnoughData = $derived(data.length >= 2);
 
 	const points = $derived(
-		displayData
+		data
 			.map((d: DataPoint, i: number) => {
-				const x = (i / (displayData.length - 1)) * width;
+				const x = (i / (data.length - 1)) * width;
 				const y = height - d.value * height;
 				return `${x},${y}`;
 			})
@@ -57,38 +43,46 @@
 		<span class="text-[10px] font-bold text-indigo-600 uppercase">Live (24h)</span>
 	</div>
 
-	<svg
-		class="h-full w-full"
-		preserveAspectRatio="none"
-		viewBox="0 0 {width} {height}"
-		in:fade={{ duration: 1000 }}
-	>
-		<!-- Gradient Area -->
-		<defs>
-			<linearGradient id="area-gradient" x1="0" x2="0" y1="0" y2="1">
-				<stop offset="0%" stop-color={color} stop-opacity="0.2" />
-				<stop offset="100%" stop-color={color} stop-opacity="0" />
-			</linearGradient>
-		</defs>
+	{#if hasEnoughData}
+		<svg
+			class="h-full w-full"
+			preserveAspectRatio="none"
+			viewBox="0 0 {width} {height}"
+			in:fade={{ duration: 1000 }}
+		>
+			<!-- Gradient Area -->
+			<defs>
+				<linearGradient id="area-gradient" x1="0" x2="0" y1="0" y2="1">
+					<stop offset="0%" stop-color={color} stop-opacity="0.2" />
+					<stop offset="100%" stop-color={color} stop-opacity="0" />
+				</linearGradient>
+			</defs>
 
-		<polyline fill="url(#area-gradient)" points={areaPoints} />
+			<polyline fill="url(#area-gradient)" points={areaPoints} />
 
-		<!-- Trend Line -->
-		<polyline
-			class="drop-shadow-sm"
-			fill="none"
-			{points}
-			stroke={color}
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			stroke-width="3"
-		/>
-	</svg>
-
-	<div
-		class="mt-4 flex justify-between border-t border-slate-100 pt-2 text-[8px] font-bold text-slate-300 uppercase"
-	>
-		<span>24h ago</span>
-		<span>Now</span>
-	</div>
+			<!-- Trend Line -->
+			<polyline
+				class="drop-shadow-sm"
+				fill="none"
+				{points}
+				stroke={color}
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				stroke-width="3"
+			/>
+		</svg>
+		<div
+			class="mt-4 flex justify-between border-t border-slate-100 pt-2 text-[8px] font-bold text-slate-300 uppercase"
+		>
+			<span>24h ago</span>
+			<span>Now</span>
+		</div>
+	{:else}
+		<div class="flex h-37.5 items-center justify-center text-center">
+			<div class="space-y-1">
+				<p class="text-xs font-black tracking-widest text-slate-300 uppercase">Insufficient Data</p>
+				<p class="text-[10px] text-slate-400">Trend visualization requires more market activity.</p>
+			</div>
+		</div>
+	{/if}
 </div>

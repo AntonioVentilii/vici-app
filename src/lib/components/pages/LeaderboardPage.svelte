@@ -10,13 +10,22 @@
 	let leaderboard = $state<UserProfile[]>([]);
 	const currentUser = $authPrincipal;
 
-	onMount(async () => {
-		try {
-			const data = await getLeaderboard(50);
-			leaderboard = data;
-		} finally {
-			loading = false;
-		}
+	let intervalId: ReturnType<typeof setInterval> | undefined;
+
+	onMount(() => {
+		const fetchLeaderboard = async () => {
+			try {
+				const data = await getLeaderboard(50);
+				leaderboard = data;
+			} finally {
+				loading = false;
+			}
+		};
+
+		fetchLeaderboard();
+		intervalId = setInterval(fetchLeaderboard, 30000);
+
+		return () => clearInterval(intervalId);
 	});
 
 	let podium = $derived(leaderboard.slice(0, 3));

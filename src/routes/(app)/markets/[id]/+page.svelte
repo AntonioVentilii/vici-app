@@ -31,10 +31,24 @@
 		loading = false;
 	};
 
+	let intervalId: ReturnType<typeof setInterval> | undefined;
+
 	onMount(() => {
 		if (nonNullish($pageMarketId)) {
 			fetchMarket($pageMarketId);
+
+			intervalId = setInterval(() => {
+				if (nonNullish($pageMarketId)) {
+					fetchMarket($pageMarketId);
+				}
+			}, 30000);
 		}
+
+		return () => {
+			if (intervalId) {
+				clearInterval(intervalId);
+			}
+		};
 	});
 
 	$effect(() => {

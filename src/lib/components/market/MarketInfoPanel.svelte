@@ -1,3 +1,4 @@
+<script lang="ts">
 	import MarketRecentTrades from '$lib/components/market/MarketRecentTrades.svelte';
 	import ProbabilityChart from '$lib/components/market/ProbabilityChart.svelte';
 	import type { Market } from '$lib/types/market';

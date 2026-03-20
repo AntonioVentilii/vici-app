@@ -1,10 +1,26 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import AvatarSystem from '$lib/components/profile/AvatarSystem.svelte';
 	import ProfileDashboard from '$lib/components/profile/ProfileDashboard.svelte';
 	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { authPrincipal } from '$lib/derived/user.derived';
+	import { getProfile } from '$lib/services/profile.services';
 	import { userStore } from '$lib/stores/user.store';
+
+	let intervalId: ReturnType<typeof setInterval> | undefined;
+
+	onMount(() => {
+		const refreshProfile = async () => {
+			if ($authPrincipal) {
+				const profileDoc = await getProfile($authPrincipal);
+				userStore.update((s) => ({ ...s, profile: profileDoc.data }));
+			}
+		};
+
+		intervalId = setInterval(refreshProfile, 60000);
+		return () => clearInterval(intervalId);
+	});
 </script>
 
 <div class="space-y-12 pb-24">
