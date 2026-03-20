@@ -20,26 +20,30 @@
 
 	let loading = $state(true);
 
-	const fetchMarket = async (id: MarketId) => {
-		loading = true;
+	const fetchMarket = async ({ id, silent = false }: { id: MarketId; silent?: boolean }) => {
+		if (!silent) {
+			loading = true;
+		}
 
 		const [marketRes, positionsRes] = await Promise.all([getMarket(id), getPositionsForMarket(id)]);
 
 		market = marketRes;
 		positions = positionsRes;
 
-		loading = false;
+		if (!silent) {
+			loading = false;
+		}
 	};
 
 	let intervalId: ReturnType<typeof setInterval> | undefined;
 
 	onMount(() => {
 		if (nonNullish($pageMarketId)) {
-			fetchMarket($pageMarketId);
+			fetchMarket({ id: $pageMarketId });
 
 			intervalId = setInterval(() => {
 				if (nonNullish($pageMarketId)) {
-					fetchMarket($pageMarketId);
+					fetchMarket({ id: $pageMarketId, silent: true });
 				}
 			}, 30000);
 		}
@@ -53,13 +57,13 @@
 
 	$effect(() => {
 		if (nonNullish($pageMarketId) && (isNullish(market) || market.id !== $pageMarketId)) {
-			fetchMarket($pageMarketId);
+			fetchMarket({ id: $pageMarketId });
 		}
 	});
 
 	const onPredictionPlaced = () => {
 		if (nonNullish(market)) {
-			fetchMarket(market.id);
+			fetchMarket({ id: market.id, silent: true });
 		}
 	};
 </script>
@@ -112,7 +116,7 @@
 						{market}
 						onSettled={() => {
 							if (nonNullish(market)) {
-								fetchMarket(market.id);
+								fetchMarket({ id: market.id, silent: true });
 							}
 						}}
 					/>

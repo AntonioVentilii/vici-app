@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount, onDestroy } from 'svelte';
+	import { cubicOut } from 'svelte/easing';
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
@@ -31,6 +32,9 @@
 	let completed = $state(false);
 
 	let positions = $state<Position[]>([]);
+
+	let exitX = $state(0);
+	let exitY = $state(0);
 
 	onMount(async () => {
 		// Prevent scrolling on mobile while in Flow Mode
@@ -73,6 +77,18 @@
 		const currentMarket = markets[currentIndex];
 		if (!currentMarket) {
 			return;
+		}
+
+		// Set exit animation direction
+		if (action === 'YES') {
+			exitX = 500;
+			exitY = 20;
+		} else if (action === 'NO') {
+			exitX = -500;
+			exitY = 20;
+		} else if (action === 'SKIP') {
+			exitX = 0;
+			exitY = -500;
 		}
 
 		if (action === 'SKIP') {
@@ -169,59 +185,60 @@
 		</div>
 	{:else}
 		<!-- Header Info -->
-		<div class="mb-4 flex w-full max-w-90 items-center justify-between sm:mb-8" in:fade>
-			<div class="flex flex-col">
-				<h1 class="text-xl font-black text-slate-950 sm:text-2xl">Flow Mode</h1>
-				<span class="text-xs font-bold tracking-widest text-slate-400 uppercase">
-					Market {currentIndex + 1} of {markets.length}
-				</span>
+		<div class="mb-1 flex w-full max-w-90 flex-row items-center justify-between sm:mb-2" in:fade>
+			<div class="mb-1 flex items-center gap-1 sm:mb-2 sm:gap-3">
+				<div class="flex flex-col items-end">
+					<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Done</span>
+					<span class="text-xs font-black text-slate-900">{betsCount}/{MAX_BETS}</span>
+				</div>
+				<div class="flex flex-col items-end border-l border-slate-200 pl-3">
+					<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Seen</span>
+					<span class="text-xs font-black text-slate-900">{currentIndex + 1}/{MAX_MARKETS}</span>
+				</div>
 			</div>
-			<div class="flex flex-col items-end">
-				<div class="mb-1 flex items-center gap-1 sm:mb-2 sm:gap-3">
-					<div class="flex flex-col items-end">
-						<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Bets</span>
-						<span class="text-xs font-black text-slate-900">{betsCount}/{MAX_BETS}</span>
-					</div>
-					<div class="flex flex-col items-end border-l border-slate-200 pl-3">
-						<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Seen</span>
-						<span class="text-xs font-black text-slate-900">{currentIndex + 1}/{MAX_MARKETS}</span>
-					</div>
-				</div>
-				<div
-					class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 ring-1 ring-slate-200 transition-all focus-within:ring-2 focus-within:ring-indigo-500"
-				>
-					<input
-						class="w-12 bg-transparent text-center text-sm font-black text-slate-950 outline-none"
-						min="1"
-						step="0.1"
-						type="number"
-						bind:value={tradeAmount}
-					/>
-					<span class="text-[10px] font-bold text-slate-500">USD</span>
-				</div>
+			<div
+				class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 ring-1 ring-slate-200 transition-all focus-within:ring-2 focus-within:ring-indigo-500"
+			>
+				<input
+					class="w-12 bg-transparent text-center text-sm font-black text-slate-950 outline-none"
+					min="1"
+					step="0.1"
+					type="number"
+					bind:value={tradeAmount}
+				/>
+				<span class="text-[10px] font-bold text-slate-500">USD</span>
 			</div>
 		</div>
 
 		<!-- Card Container -->
-		<div class="relative h-125 w-full max-w-90">
-			{#each [markets[currentIndex]] as currentMarket (currentMarket?.id)}
-				{#if currentMarket}
+		<div class="relative h-150 w-full max-w-95">
+			{#each markets.slice(currentIndex, currentIndex + 2) as market, i (market?.id)}
+				{@const isCurrent = i === 0}
+				<div
+					style="z-index: {20 - i}"
+					class="absolute inset-0"
+					in:fly={isCurrent && currentIndex === 0
+						? { y: 300, duration: 600, easing: cubicOut }
+						: { y: 100, opacity: 0, duration: 500, easing: cubicOut }}
+					out:fly={{ x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
+				>
 					<div
-						class="absolute inset-0"
-						in:fly={{ y: 300, duration: 400 }}
-						out:fade={{ duration: 200 }}
+						class="h-full w-full transition-all duration-500 ease-out"
+						class:opacity-40={!isCurrent}
+						class:scale-95={!isCurrent}
+						class:translate-y-4={!isCurrent}
 					>
 						<FlowCard
-							isLimitOrderNo={isNullish(currentMarket.bestBid)}
-							isLimitOrderYes={isNullish(currentMarket.bestAsk)}
-							market={currentMarket}
+							isLimitOrderNo={isNullish(market.bestBid)}
+							isLimitOrderYes={isNullish(market.bestAsk)}
+							{market}
 							onAction={handleAction}
-							position={positions.find((p) => p.marketId === currentMarket.id)}
+							position={positions.find((p) => p.marketId === market.id)}
 							signedIn={nonNullish($userStore.user)}
 							{tradeAmount}
 						/>
 					</div>
-				{/if}
+				</div>
 			{/each}
 		</div>
 

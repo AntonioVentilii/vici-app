@@ -1,4 +1,4 @@
+import type { ClearingDid } from '$declarations';
 import { initCertifiedStore } from '$lib/stores/certified.store';
-import type { OrderBook } from '$lib/types/order';
 
-export const orderBookStore = initCertifiedStore<OrderBook>();
+export const orderBookStore = initCertifiedStore<ClearingDid.LimitOrder[], string>();

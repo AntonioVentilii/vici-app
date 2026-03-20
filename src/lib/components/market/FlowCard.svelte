@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Spring } from 'svelte/motion';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { formatCurrency, formatProbability } from '$lib/utils/format.utils';
@@ -107,7 +108,7 @@
 	<div
 		style="transform: translate3d({coords.current.x}px, {coords.current
 			.y}px, 0) rotate({rotation}deg); opacity: {opacity}"
-		class="relative h-[550px] w-full max-w-[380px] cursor-grab select-none active:cursor-grabbing sm:h-[600px]"
+		class="relative h-137.5 w-full max-w-95 cursor-grab select-none active:cursor-grabbing sm:h-150"
 		onmousedown={handleStart}
 		ontouchstart={handleStart}
 		role="presentation"
@@ -167,11 +168,11 @@
 		</div>
 
 		<div
-			class="flex h-full w-full flex-col overflow-hidden rounded-[48px] border-none bg-white shadow-2xl transition-shadow hover:shadow-indigo-500/20"
+			class="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-[48px] border-none bg-white shadow-2xl transition-shadow hover:shadow-indigo-500/20"
 		>
 			<!-- Header Gradient -->
 			<div
-				class="relative h-48 w-full shrink-0 overflow-hidden bg-indigo-600 p-10 text-white sm:h-56"
+				class="relative h-48 w-full shrink-0 items-center justify-center overflow-hidden bg-indigo-600 px-4 py-6 text-white sm:h-56 sm:px-8 sm:py-10"
 			>
 				<!-- Abstract background pattern -->
 				<div class="absolute inset-0 opacity-20">
@@ -181,7 +182,7 @@
 					></div>
 				</div>
 
-				<div class="relative z-10 flex h-full flex-col justify-end">
+				<div class="relative z-10 flex h-full w-full flex-col items-center justify-center">
 					<h2
 						class="text-2xl leading-tight font-black tracking-tight text-wrap wrap-break-word sm:text-3xl"
 					>
@@ -191,57 +192,13 @@
 			</div>
 
 			<!-- Content -->
-			<div class="flex flex-1 flex-col justify-between gap-6 p-10">
-				<div class="flex flex-col gap-6">
+			<div
+				class="flex h-full w-full flex-1 flex-col justify-between gap-6 px-4 py-6 sm:px-8 sm:py-10"
+			>
+				<div class="flex h-full flex-col gap-6">
 					<p class="text-sm leading-relaxed text-wrap wrap-break-word text-slate-500 sm:text-base">
 						{market.description}
 					</p>
-
-					<div class="grid grid-cols-2 gap-4">
-						<div
-							class="flex flex-col items-center rounded-3xl border border-rose-100 bg-rose-50/50 p-5 transition-colors hover:bg-rose-50"
-						>
-							<span
-								class="mb-1 block text-[10px] font-bold tracking-widest text-rose-500 uppercase"
-							>
-								NO Odds
-							</span>
-
-							<span class="text-3xl font-black text-rose-600">
-								{formatProbability(market.noProbability)}
-							</span>
-
-							{#if isLimitOrderNo}
-								<div
-									class="mt-1 inline-block rounded-full bg-rose-200 px-2.5 py-1 text-[8px] font-bold tracking-widest text-rose-700 uppercase"
-								>
-									Limit
-								</div>
-							{/if}
-						</div>
-
-						<div
-							class="flex flex-col items-center rounded-3xl border border-emerald-100 bg-emerald-50/50 p-5 transition-colors hover:bg-emerald-50"
-						>
-							<span
-								class="mb-1 block text-[10px] font-bold tracking-widest text-emerald-500 uppercase"
-							>
-								YES Odds
-							</span>
-
-							<span class="text-3xl font-black text-emerald-600">
-								{formatProbability(market.yesProbability)}
-							</span>
-
-							{#if isLimitOrderYes}
-								<div
-									class="mt-1 inline-block rounded-full bg-emerald-200 px-2.5 py-1 text-[8px] font-bold tracking-widest text-emerald-700 uppercase"
-								>
-									Limit
-								</div>
-							{/if}
-						</div>
-					</div>
 
 					{#if position}
 						<div
@@ -278,6 +235,54 @@
 							Sign in to play
 						</div>
 					{/if}
+
+					<div class="mt-auto grid grid-cols-2 gap-4">
+						<BaseButton
+							class="relative flex-col items-center rounded-3xl border border-rose-100 bg-rose-50/50 p-5 transition-colors hover:bg-rose-50!"
+							onclick={() => onAction('NO')}
+						>
+							<span
+								class="mb-1 block text-[10px] font-bold tracking-widest text-rose-500 uppercase"
+							>
+								NO
+							</span>
+
+							<span class="text-3xl font-black text-rose-600">
+								{formatProbability(market.noProbability)}
+							</span>
+
+							{#if isLimitOrderNo}
+								<div
+									class="absolute top-3 left-3 rounded-full bg-rose-200 px-2.5 py-1 text-[8px] font-bold tracking-widest text-rose-700 uppercase"
+								>
+									Limit
+								</div>
+							{/if}
+						</BaseButton>
+
+						<BaseButton
+							class="relative flex-col items-center rounded-3xl border border-emerald-100 bg-emerald-50/50 p-5 transition-colors hover:bg-emerald-50!"
+							onclick={() => onAction('YES')}
+						>
+							<span
+								class="mb-1 block text-[10px] font-bold tracking-widest text-emerald-500 uppercase"
+							>
+								YES
+							</span>
+
+							<span class="text-3xl font-black text-emerald-600">
+								{formatProbability(market.yesProbability)}
+							</span>
+
+							{#if isLimitOrderYes}
+								<div
+									class="absolute right-3 top-3 rounded-full bg-emerald-200 px-2.5 py-1 text-[8px] font-bold tracking-widest text-emerald-700 uppercase"
+								>
+									Limit
+								</div>
+							{/if}
+						</BaseButton>
+					</div>
 				</div>
 
 				<div class="flex items-center justify-between border-t border-slate-100 pt-6">
@@ -290,7 +295,7 @@
 
 					<div class="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2">
 						<span class="text-[10px] font-black tracking-widest text-slate-600 uppercase">
-							Swipe to play
+							<!-- TODO: put explication arrows here -->
 						</span>
 					</div>
 				</div>

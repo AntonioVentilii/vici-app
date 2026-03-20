@@ -11,19 +11,19 @@ import { logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { recordActivity } from '$lib/services/profile.services';
 import type { MarketId, Outcome } from '$lib/types/market';
-import type { OrderBook, OrderBookLevel, OrderSide, OrderType } from '$lib/types/order';
+import type { OrderSide, OrderType } from '$lib/types/order';
 import { ActivityType } from '$lib/types/social';
 import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
-import { nonNullish, toNullable } from '@dfinity/utils';
+import { isNullish, toNullable } from '@dfinity/utils';
 import { nanoid } from 'nanoid';
 
 export const getOrderBook = async ({
 	marketId,
-	outcomeId = 'YES'
+	domain
 }: {
 	marketId: MarketId;
-	outcomeId: string;
-}): Promise<OrderBook> => {
+	domain?: ClearingDid.BalanceDomain;
+}): Promise<ClearingDid.LimitOrder[]> => {
 	const identity = await getIdentityOrAnonymous();
 
 	const orders = await listOrdersApi({
@@ -31,52 +31,15 @@ export const getOrderBook = async ({
 		params: { series_id: toNullable(marketId) }
 	});
 
-	const bids: OrderBookLevel[] = [];
-	const asks: OrderBookLevel[] = [];
+	if (isNullish(domain)) {
+		return orders;
+	}
 
-	orders.forEach((o: ClearingDid.LimitOrder) => {
-		const side = 'Buy' in o.side ? 'BUY' : 'SELL';
-		const oOutcomeId = o.outcome_id[0] ?? 'YES';
-
-		// Filtering logic:
-		// 1. If requesting YES, we take orders with outcome_id null/undefined (binary) or 'YES'
-		// 2. If requesting NO, (binary only), we take 'YES' orders and flip them? No, NO has its own book maybe?
-		// Actually, let's follow the standard: one book per outcome.
-		if (oOutcomeId !== outcomeId) {
-			return;
-		}
-
-		const target = side === 'BUY' ? bids : asks;
-		const price = Number(o.price.decimal.value) / 10 ** o.price.decimal.decimals;
-
-		const existing = target.find((l) => l.price === price);
-
-		if (nonNullish(existing)) {
-			existing.totalQty += o.qty;
-			existing.orderCount += 1;
-		} else {
-			target.push({
-				price,
-				totalQty: o.qty,
-				orderCount: 1
-			});
-		}
+	return orders.filter((o) => {
+		const [orderDomain] = Object.keys(o.balance_domain);
+		const [targetDomain] = Object.keys(domain);
+		return orderDomain === targetDomain;
 	});
-
-	const sortedBids = bids.sort((a, b) => b.price - a.price);
-	const sortedAsks = asks.sort((a, b) => a.price - b.price);
-
-	const bestBid = sortedBids[0]?.price;
-	const bestAsk = sortedAsks[0]?.price;
-	const midPrice = bestBid && bestAsk ? (bestBid + bestAsk) / 2 : undefined;
-
-	return {
-		marketId,
-		outcomeId,
-		bids: sortedBids,
-		asks: sortedAsks,
-		midPrice
-	};
 };
 
 export const placeOrder = async ({
@@ -209,6 +172,14 @@ export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 	refreshOrders();
 
 	refreshAllBalances();
+};
+
+export const getUserOrdersForMarket = async (
+	marketId: MarketId
+): Promise<ClearingDid.LimitOrder[]> => {
+	const orders = await getUserOrders();
+
+	return orders.filter((o) => o.series_id === marketId);
 };
 
 export const getUserOrders = async (): Promise<ClearingDid.LimitOrder[]> => {

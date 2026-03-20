@@ -101,21 +101,71 @@ export const calculateProbability = ({
 		return 0.5;
 	}
 
-	const sortedBids = bids.sort((a, b) => b.price - a.price);
-	const sortedAsks = asks.sort((a, b) => a.price - b.price);
-
 	if (bids.length > 0 && asks.length > 0) {
-		const bestBid = sortedBids[0].price;
-		const bestAsk = sortedAsks[0].price;
+		const bestBid = bids[0].price;
+		const bestAsk = asks[0].price;
 		return (bestBid + bestAsk) / 2;
 	}
 
 	if (bids.length > 0) {
-		return sortedBids[0].price;
+		return bids[0].price;
 	}
 
-	// asks.length > 0
-	return sortedAsks[0].price;
+	return asks[0].price;
+};
+
+export const calculateMarketStats = ({
+	orders,
+	outcome = 'YES'
+}: {
+	orders: ClearingDid.LimitOrder[];
+	outcome?: string;
+}) => {
+	const bids: OrderBookLevel[] = [];
+	const asks: OrderBookLevel[] = [];
+
+	orders.forEach((o) => {
+		const side = 'Buy' in o.side ? 'BUY' : 'SELL';
+		const oOutcomeId = o.outcome_id[0] ?? 'YES';
+
+		const isBinarySide = outcome === 'YES' || outcome === 'NO';
+		const isOrderBinarySide = oOutcomeId === 'YES' || oOutcomeId === 'NO';
+
+		let displaySide = side;
+		let displayPrice = Number(o.price.decimal.value) / 10 ** o.price.decimal.decimals;
+
+		if (oOutcomeId !== outcome) {
+			if (isBinarySide && isOrderBinarySide) {
+				displaySide = side === 'BUY' ? 'SELL' : 'BUY';
+				displayPrice = 1 - displayPrice;
+			} else {
+				return;
+			}
+		}
+
+		const target = displaySide === 'BUY' ? bids : asks;
+		const existing = target.find((l) => Math.abs(l.price - displayPrice) < 0.000001);
+
+		if (nonNullish(existing)) {
+			existing.totalQty += o.qty;
+			existing.orderCount += 1;
+		} else {
+			target.push({
+				price: displayPrice,
+				totalQty: o.qty,
+				orderCount: 1
+			});
+		}
+	});
+
+	const sortedBids = bids.sort((a, b) => b.price - a.price);
+	const sortedAsks = asks.sort((a, b) => a.price - b.price);
+
+	return {
+		bids: sortedBids,
+		asks: sortedAsks,
+		midPrice: calculateProbability({ bids: sortedBids, asks: sortedAsks })
+	};
 };
 
 export const getTimeRemaining = (expiry: bigint): string => {

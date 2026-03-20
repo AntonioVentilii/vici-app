@@ -19,7 +19,11 @@ import type { SeriesCategory } from '$lib/types/category';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
 import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
-import { calculateCategoricalProbabilities, mapMarketData } from '$lib/utils/market.utils';
+import {
+	calculateCategoricalProbabilities,
+	calculateMarketStats,
+	mapMarketData
+} from '$lib/utils/market.utils';
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
@@ -150,7 +154,12 @@ export const getMarkets = async (): Promise<Market[]> => {
 					orders
 				});
 			} else {
-				const { midPrice, bids, asks } = await getOrderBook({ marketId: mid, outcomeId: 'YES' });
+				const orders = await getOrderBook({ marketId: mid, domain: s.balance_domain });
+				const { midPrice, bids, asks } = calculateMarketStats({
+					orders,
+					outcome: 'YES'
+				});
+
 				bestBid = bids[0]?.price;
 				bestAsk = asks[0]?.price;
 				bestBidQty = bids[0]?.totalQty;
@@ -202,11 +211,16 @@ export const getMarkets = async (): Promise<Market[]> => {
 export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {
 	const identity = await getIdentityOrAnonymous();
 
-	const [s, { midPrice, bids, asks }, activities] = await Promise.all([
+	const [s, rawOrders, activities] = await Promise.all([
 		getSeries({ identity, seriesId: marketId }),
-		getOrderBook({ marketId, outcomeId: 'YES' }),
+		getOrderBook({ marketId }),
 		getGlobalActivities()
 	]);
+
+	const { midPrice, bids, asks } = calculateMarketStats({
+		orders: rawOrders,
+		outcome: 'YES'
+	});
 
 	const yesProb = midPrice ?? 0.5;
 	const noProb = 1 - yesProb;

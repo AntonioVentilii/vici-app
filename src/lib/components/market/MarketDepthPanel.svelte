@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import OrderBook from '$lib/components/market/OrderBook.svelte';
+	import { getOrderBook } from '$lib/services/order.services';
+	import { orderBookStore } from '$lib/stores/order-book.store';
 	import type { Market } from '$lib/types/market';
 	import { formatProbability } from '$lib/utils/format.utils';
 
@@ -11,10 +14,32 @@
 
 	let selectedOutcome = $state<string>('');
 
+	const fetchOrderBook = async () => {
+		try {
+			const orders = await getOrderBook({
+				marketId: market.id,
+				domain: market.balanceDomain
+			});
+
+			orderBookStore.update((state) => ({
+				...state,
+				[market.id]: orders
+			}));
+		} catch (err) {
+			console.error('Failed to fetch order book in depth panel', err);
+		}
+	};
+
+	onMount(() => {
+		fetchOrderBook();
+		const interval = setInterval(fetchOrderBook, 5_000);
+		return () => clearInterval(interval);
+	});
+
 	$effect(() => {
-		if (selectedOutcome === '' && market.outcomes) {
+		if (selectedOutcome === '') {
 			selectedOutcome =
-				market.payoffType === 'Categorical' ? (market.outcomes[0]?.id ?? 'YES') : 'YES';
+				market.payoffType === 'Categorical' ? (market.outcomes?.[0]?.id ?? 'YES') : 'YES';
 		}
 	});
 </script>

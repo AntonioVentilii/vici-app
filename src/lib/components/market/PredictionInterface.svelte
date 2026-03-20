@@ -54,22 +54,45 @@
 
 	const fetchOrderBook = async () => {
 		try {
-			const [orderBook] = await Promise.all([
-				getOrderBook({ marketId: market.id, outcomeId: selectedType }),
-				getBalances(market.balanceDomain)
-			]);
+			const orderBook = await getOrderBook({
+				marketId: market.id,
+				outcomeId: selectedType,
+				domain: market.balanceDomain
+			});
 
 			orderBookStore.update((state) => ({
 				...state,
 				[market.id]: orderBook
 			}));
 		} catch (err) {
-			console.error('Failed to fetch order book or balance', err);
+			console.error('Failed to fetch order book', err);
+		}
+	};
+
+	const fetchBalance = async () => {
+		if (!$userSignedIn) {
+			return;
+		}
+
+		try {
+			const { collateral, accountState } = await getBalances(market.balanceDomain);
+
+			collateralsStore.update((state) => ({
+				...state,
+				balances: collateral,
+				accountState
+			}));
+		} catch (err) {
+			console.error('Failed to fetch balance', err);
 		}
 	};
 
 	onMount(() => {
 		fetchOrderBook();
+
+		if ($userSignedIn) {
+			fetchBalance();
+		}
 
 		// Set default amount from profile if empty
 		if (!amount && $userStore.profile?.preferences?.defaultAmount?.manual) {
@@ -79,6 +102,12 @@
 		const interval = setInterval(fetchOrderBook, 5_000);
 
 		return () => clearInterval(interval);
+	});
+
+	$effect(() => {
+		if (selectedType) {
+			fetchOrderBook();
+		}
 	});
 
 	$effect(() => {
@@ -165,6 +194,7 @@
 			amount = '';
 
 			onPredictionPlaced();
+			fetchBalance();
 
 			notificationsStore.add({
 				title: 'Order Placed',
