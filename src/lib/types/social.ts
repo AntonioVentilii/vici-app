@@ -12,7 +12,9 @@ export enum ActivityType {
 	TRADE = 'trade',
 	SETTLEMENT = 'settlement',
 	COMMENT = 'comment',
-	FOLLOW = 'follow'
+	FOLLOW = 'follow',
+	UPVOTE = 'upvote',
+	DOWNVOTE = 'downvote'
 }
 
 export interface Activity {

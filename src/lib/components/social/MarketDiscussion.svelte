@@ -3,7 +3,12 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { logActivity } from '$lib/services/activity.services';
-	import { addComment, getMarketComments } from '$lib/services/discussion.services';
+	import {
+		addComment,
+		getMarketComments,
+		upvoteComment,
+		downvoteComment
+	} from '$lib/services/discussion.services';
 	import { getProfile } from '$lib/services/profile.services';
 	import type { Comment } from '$lib/types/comment';
 	import type { UserProfile } from '$lib/types/profile';
@@ -25,6 +30,8 @@
 	let loading = $state(true);
 
 	let posting = $state(false);
+
+	let voting = $state<Record<string, boolean>>({});
 
 	onMount(async () => {
 		await loadComments();
@@ -75,6 +82,44 @@
 			posting = false;
 		}
 	};
+
+	const handleVote = async ({ comment, type }: { comment: Comment; type: 'up' | 'down' }) => {
+		if (voting[comment.key]) {
+			return;
+		}
+
+		voting[comment.key] = true;
+		try {
+			if (type === 'up') {
+				const isRemoval = comment.upvotes?.includes(userPrincipal);
+				await upvoteComment({ commentKey: comment.key, userPrincipal });
+				if (!isRemoval) {
+					await logActivity({
+						type: ActivityType.UPVOTE,
+						user: userPrincipal,
+						marketId,
+						title: `Upvoted a comment`,
+						details: comment.content.slice(0, 30) + (comment.content.length > 30 ? '...' : '')
+					});
+				}
+			} else {
+				const isRemoval = comment.downvotes?.includes(userPrincipal);
+				await downvoteComment({ commentKey: comment.key, userPrincipal });
+				if (!isRemoval) {
+					await logActivity({
+						type: ActivityType.DOWNVOTE,
+						user: userPrincipal,
+						marketId,
+						title: `Downvoted a comment`,
+						details: comment.content.slice(0, 30) + (comment.content.length > 30 ? '...' : '')
+					});
+				}
+			}
+			await loadComments();
+		} finally {
+			voting[comment.key] = false;
+		}
+	};
 </script>
 
 <div class="flex flex-col gap-6">
@@ -107,27 +152,92 @@
 				<p class="text-sm italic">No comments yet. Be the first to start the discussion!</p>
 			</div>
 		{:else}
-			{#each comments as comment (comment.timestamp)}
+			{#each comments as comment (comment.key)}
 				{@const profile = profiles.get(comment.user)}
+				{@const upvoted = comment.upvotes?.includes(userPrincipal)}
+				{@const downvoted = comment.downvotes?.includes(userPrincipal)}
+				{@const score = (comment.upvotes?.length ?? 0) - (comment.downvotes?.length ?? 0)}
 
 				<div
 					class="bg-card/20 border-border/50 animate-in fade-in slide-in-from-bottom-2 flex gap-4 rounded-2xl border p-4 duration-300"
 				>
-					<div class="bg-muted h-10 w-10 shrink-0 rounded-full">
-						{#if profile?.avatar}
-							<img class="h-full w-full rounded-full object-cover" alt="" src={profile.avatar} />
-						{:else}
-							<div class="flex h-full w-full items-center justify-center text-xs font-bold">
-								{profile?.nickname?.[0] ?? '?'}
-							</div>
-						{/if}
+					<div class="flex flex-col items-center gap-1">
+						<button
+							class="hover:bg-primary/10 flex h-8 w-8 items-center justify-center rounded-lg transition-colors {upvoted
+								? 'text-primary'
+								: 'opacity-40 hover:opacity-100'}"
+							aria-label="Upvote comment"
+							disabled={voting[comment.key]}
+							onclick={() => handleVote({ comment, type: 'up' })}
+						>
+							<svg
+								fill="none"
+								height="20"
+								stroke="currentColor"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2.5"
+								viewBox="0 0 24 24"
+								width="20"
+								xmlns="http://www.w3.org/2000/svg"><path d="m18 15-6-6-6 6" /></svg
+							>
+						</button>
+
+						<span
+							class="text-xs font-bold {score > 0
+								? 'text-primary'
+								: score < 0
+									? 'text-red-500'
+									: 'opacity-40'}"
+						>
+							{score > 0 ? `+${score}` : score}
+						</span>
+
+						<button
+							class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10 {downvoted
+								? 'text-red-500'
+								: 'opacity-40 hover:opacity-100'}"
+							aria-label="Downvote comment"
+							disabled={voting[comment.key]}
+							onclick={() => handleVote({ comment, type: 'down' })}
+						>
+							<svg
+								fill="none"
+								height="20"
+								stroke="currentColor"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2.5"
+								viewBox="0 0 24 24"
+								width="20"
+								xmlns="http://www.w3.org/2000/svg"><path d="m6 9 6 6 6-6" /></svg
+							>
+						</button>
 					</div>
+
 					<div class="flex-1 overflow-hidden">
-						<div class="mb-1 flex items-center gap-2">
-							<span class="text-sm font-bold">{profile?.nickname ?? 'Anonymous'}</span>
-							<span class="text-muted-foreground text-[10px] opacity-50">
-								{new Date(comment.timestamp).toLocaleString()}
-							</span>
+						<div class="mb-1 flex items-start justify-between">
+							<div class="flex items-center gap-2">
+								<div class="bg-muted h-6 w-6 shrink-0 rounded-full">
+									{#if profile?.avatar}
+										<img
+											class="h-full w-full rounded-full object-cover"
+											alt=""
+											src={profile.avatar}
+										/>
+									{:else}
+										<div
+											class="flex h-full w-full items-center justify-center text-[10px] font-bold"
+										>
+											{profile?.nickname?.[0] ?? '?'}
+										</div>
+									{/if}
+								</div>
+								<span class="text-sm font-bold">{profile?.nickname ?? 'Anonymous'}</span>
+								<span class="text-muted-foreground text-[10px] opacity-50">
+									{new Date(comment.timestamp).toLocaleString()}
+								</span>
+							</div>
 						</div>
 						<p class="text-sm leading-relaxed whitespace-pre-wrap">{comment.content}</p>
 					</div>

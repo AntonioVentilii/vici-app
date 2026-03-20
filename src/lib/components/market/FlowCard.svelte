@@ -276,7 +276,7 @@
 
 							{#if isLimitOrderYes}
 								<div
-									class="absolute right-3 top-3 rounded-full bg-emerald-200 px-2.5 py-1 text-[8px] font-bold tracking-widest text-emerald-700 uppercase"
+									class="absolute top-3 right-3 rounded-full bg-emerald-200 px-2.5 py-1 text-[8px] font-bold tracking-widest text-emerald-700 uppercase"
 								>
 									Limit
 								</div>
