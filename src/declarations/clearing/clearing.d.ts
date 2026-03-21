@@ -443,6 +443,9 @@ export interface _SERVICE {
 	 * Only the creator of the order can cancel it.
 	 */
 	cancel_limit_order: ActorMethod<[CancelLimitOrderParams], SubmitMatchedTradeResult>;
+	/**
+	 * Returns the current global configuration of the Clearing canister.
+	 */
 	config: ActorMethod<[], Config>;
 	/**
 	 * Deposits collateral into the user's account state.
@@ -476,11 +479,6 @@ export interface _SERVICE {
 	 * This does not refresh balances from external ledgers.
 	 */
 	get_account_state_query: ActorMethod<[], GetAccountStateResult>;
-	get_asset_metrics: ActorMethod<[], Array<[string, AssetMetrics]>>;
-	/**
-	 * Returns a list of all supported collateral assets with their metrics.
-	 */
-	get_collateral_assets: ActorMethod<[], Array<CollateralAssetInfo>>;
 	/**
 	 * Returns the current domain policies for all configured domains.
 	 *
@@ -505,6 +503,9 @@ export interface _SERVICE {
 	 * Retrieves all open positions for the caller.
 	 */
 	get_positions: ActorMethod<[], Array<Position>>;
+	/**
+	 * Returns the principal of the Series Registry canister.
+	 */
 	get_registry_canister: ActorMethod<[], Principal>;
 	/**
 	 * Returns the full settlement plan including per-position accounting details (admin only).
@@ -518,13 +519,16 @@ export interface _SERVICE {
 	 * Retrieves the trade history (executed trades) for the caller.
 	 */
 	get_trade_history: ActorMethod<[], Array<Event>>;
+	/**
+	 * Handles incoming HTTP requests for Prometheus metrics.
+	 *
+	 * This endpoint is restricted to canister controllers and serves metrics at `/metrics`.
+	 */
 	http_request: ActorMethod<[HttpRequest], HttpResponse>;
 	/**
-	 * Returns a list of all supported collateral assets.
-	 *
-	 * This method is gated to canister controllers.
+	 * Returns a list of all supported collateral assets with their metrics.
 	 */
-	list_collateral_assets: ActorMethod<[], Array<CollateralAssetConfig>>;
+	list_collateral_assets: ActorMethod<[], Array<CollateralAssetInfo>>;
 	/**
 	 * Returns a list of all active limit orders, potentially filtered by series.
 	 */

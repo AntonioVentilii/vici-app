@@ -102,11 +102,11 @@ export class ClearingCanister extends Canister<ClearingService> {
 		throw new Error(`Failed to query account state: ${JSON.stringify(result.Err, jsonReplacer)}`);
 	};
 
-	getCollateralAssets = async (
+	listCollateralAssets = async (
 		queryParams: QueryParams
 	): Promise<ClearingDid.CollateralAssetInfo[]> => {
-		const { get_collateral_assets } = this.caller(queryParams);
-		return await get_collateral_assets();
+		const { list_collateral_assets } = this.caller(queryParams);
+		return await list_collateral_assets();
 	};
 
 	getPosition = async ({

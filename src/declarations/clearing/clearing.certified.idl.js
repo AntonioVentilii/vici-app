@@ -180,18 +180,6 @@ export const GetAccountStateResult = IDL.Variant({
 	Ok: AccountStateResponse,
 	Err: AccountStateError
 });
-export const AssetMetrics = IDL.Record({
-	haircut_bps: IDL.Nat16,
-	latest_transfer_fee: IDL.Opt(IDL.Nat),
-	insurance_fee_ratio: IDL.Opt(IDL.Nat16),
-	last_updated_ns: IDL.Opt(IDL.Nat64),
-	protocol_fee_ratio: IDL.Opt(IDL.Nat16),
-	price_usd: DecimalValue
-});
-export const CollateralAssetInfo = IDL.Record({
-	metrics: IDL.Opt(AssetMetrics),
-	config: CollateralAssetConfig
-});
 export const DomainPolicy = IDL.Record({
 	deposits_enabled: IDL.Bool,
 	protocol_fee_ratio_override: IDL.Opt(IDL.Nat16),
@@ -296,6 +284,18 @@ export const HttpResponse = IDL.Record({
 	body: IDL.Vec(IDL.Nat8),
 	headers: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
 	status_code: IDL.Nat16
+});
+export const AssetMetrics = IDL.Record({
+	haircut_bps: IDL.Nat16,
+	latest_transfer_fee: IDL.Opt(IDL.Nat),
+	insurance_fee_ratio: IDL.Opt(IDL.Nat16),
+	last_updated_ns: IDL.Opt(IDL.Nat64),
+	protocol_fee_ratio: IDL.Opt(IDL.Nat16),
+	price_usd: DecimalValue
+});
+export const CollateralAssetInfo = IDL.Record({
+	metrics: IDL.Opt(AssetMetrics),
+	config: CollateralAssetConfig
 });
 export const ListOrdersParams = IDL.Record({ series_id: IDL.Opt(IDL.Text) });
 export const PayoffType = IDL.Variant({
@@ -525,8 +525,6 @@ export const idlService = IDL.Service({
 	),
 	get_account_state: IDL.Func([GetAccountStateParams], [GetAccountStateResult], []),
 	get_account_state_query: IDL.Func([], [GetAccountStateResult], []),
-	get_asset_metrics: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, AssetMetrics))], []),
-	get_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], []),
 	get_domain_policies: IDL.Func([], [IDL.Vec(IDL.Tuple(BalanceDomain, DomainPolicy))], []),
 	get_funds: IDL.Func([], [GetFundsResult], []),
 	get_orders: IDL.Func([], [IDL.Vec(LimitOrder)], []),
@@ -537,7 +535,7 @@ export const idlService = IDL.Service({
 	get_settlement_status: IDL.Func([IDL.Text], [IDL.Opt(SettlementStatusView)], []),
 	get_trade_history: IDL.Func([], [IDL.Vec(Event)], []),
 	http_request: IDL.Func([HttpRequest], [HttpResponse], []),
-	list_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetConfig)], []),
+	list_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], []),
 	list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], []),
 	list_series: IDL.Func([], [IDL.Vec(Series)], []),
 	metrics: IDL.Func([], [IDL.Text], []),
@@ -736,18 +734,6 @@ export const idlFactory = ({ IDL }) => {
 		Ok: AccountStateResponse,
 		Err: AccountStateError
 	});
-	const AssetMetrics = IDL.Record({
-		haircut_bps: IDL.Nat16,
-		latest_transfer_fee: IDL.Opt(IDL.Nat),
-		insurance_fee_ratio: IDL.Opt(IDL.Nat16),
-		last_updated_ns: IDL.Opt(IDL.Nat64),
-		protocol_fee_ratio: IDL.Opt(IDL.Nat16),
-		price_usd: DecimalValue
-	});
-	const CollateralAssetInfo = IDL.Record({
-		metrics: IDL.Opt(AssetMetrics),
-		config: CollateralAssetConfig
-	});
 	const DomainPolicy = IDL.Record({
 		deposits_enabled: IDL.Bool,
 		protocol_fee_ratio_override: IDL.Opt(IDL.Nat16),
@@ -850,6 +836,18 @@ export const idlFactory = ({ IDL }) => {
 		body: IDL.Vec(IDL.Nat8),
 		headers: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Text)),
 		status_code: IDL.Nat16
+	});
+	const AssetMetrics = IDL.Record({
+		haircut_bps: IDL.Nat16,
+		latest_transfer_fee: IDL.Opt(IDL.Nat),
+		insurance_fee_ratio: IDL.Opt(IDL.Nat16),
+		last_updated_ns: IDL.Opt(IDL.Nat64),
+		protocol_fee_ratio: IDL.Opt(IDL.Nat16),
+		price_usd: DecimalValue
+	});
+	const CollateralAssetInfo = IDL.Record({
+		metrics: IDL.Opt(AssetMetrics),
+		config: CollateralAssetConfig
 	});
 	const ListOrdersParams = IDL.Record({ series_id: IDL.Opt(IDL.Text) });
 	const PayoffType = IDL.Variant({
@@ -1083,8 +1081,6 @@ export const idlFactory = ({ IDL }) => {
 		),
 		get_account_state: IDL.Func([GetAccountStateParams], [GetAccountStateResult], []),
 		get_account_state_query: IDL.Func([], [GetAccountStateResult], []),
-		get_asset_metrics: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, AssetMetrics))], []),
-		get_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], []),
 		get_domain_policies: IDL.Func([], [IDL.Vec(IDL.Tuple(BalanceDomain, DomainPolicy))], []),
 		get_funds: IDL.Func([], [GetFundsResult], []),
 		get_orders: IDL.Func([], [IDL.Vec(LimitOrder)], []),
@@ -1095,7 +1091,7 @@ export const idlFactory = ({ IDL }) => {
 		get_settlement_status: IDL.Func([IDL.Text], [IDL.Opt(SettlementStatusView)], []),
 		get_trade_history: IDL.Func([], [IDL.Vec(Event)], []),
 		http_request: IDL.Func([HttpRequest], [HttpResponse], []),
-		list_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetConfig)], []),
+		list_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], []),
 		list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], []),
 		list_series: IDL.Func([], [IDL.Vec(Series)], []),
 		metrics: IDL.Func([], [IDL.Text], []),

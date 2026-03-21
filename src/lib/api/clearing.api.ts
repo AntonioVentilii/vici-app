@@ -49,14 +49,14 @@ export const getAccountState = async ({
 	return await getAccountState(rest);
 };
 
-export const getCollateralAssets = async ({
+export const listCollateralAssets = async ({
 	identity,
 	...queryParams
 }: {
 	identity: Identity;
 } & QueryParams): Promise<ClearingDid.CollateralAssetInfo[]> => {
-	const { getCollateralAssets } = await clearingCanister({ identity });
-	return await getCollateralAssets(queryParams);
+	const { listCollateralAssets } = await clearingCanister({ identity });
+	return await listCollateralAssets(queryParams);
 };
 
 export const getPositions = async ({

@@ -2,7 +2,7 @@ import type { ClearingDid } from '$declarations';
 import {
 	depositCollateral as depositCollateralApi,
 	getAccountState as getAccountStateApi,
-	getCollateralAssets as getCollateralAssetsApi,
+	listCollateralAssets as listCollateralAssetsApi,
 	registerIcrcAsset as registerIcrcAssetApi,
 	withdrawCollateral as withdrawCollateralApi
 } from '$lib/api/clearing.api';
@@ -91,7 +91,7 @@ export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAsset
 		return [];
 	}
 
-	return await getCollateralAssetsApi({ identity });
+	return await listCollateralAssetsApi({ identity });
 };
 
 export const registerIcrcAsset = async (
