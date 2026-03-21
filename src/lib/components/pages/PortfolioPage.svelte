@@ -10,6 +10,7 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -40,6 +41,12 @@
 
 	onMount(() => {
 		loadData();
+	});
+
+	$effect(() => {
+		if ($balanceDomain) {
+			loadData();
+		}
 	});
 
 	const getMarketById = (id: string) => $markets.find((m) => m.id === id);

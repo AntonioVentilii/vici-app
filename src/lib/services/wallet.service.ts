@@ -3,7 +3,7 @@ import { getAccountState } from '$lib/api/clearing.api';
 import { getTransactions as getIcpTransactionsApi } from '$lib/api/icp-index.api';
 import { getTransactions as getIcrcTransactionsApi } from '$lib/api/icrc-index-ng.api';
 import { balance as getLedgerBalance } from '$lib/api/icrc-ledger.api';
-import { DEFAULT_BALANCE_DOMAIN, ZERO } from '$lib/constants/app.constants';
+import { ZERO } from '$lib/constants/app.constants';
 import {
 	CKUSDC_INDEX_CANISTER_ID,
 	ICP_INDEX_CANISTER_ID
@@ -13,9 +13,11 @@ import {
 	ICP_TOKEN,
 	SUPPORTED_TOKENS
 } from '$lib/constants/tokens/tokens.ic.constants';
+import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { getIdentity } from '$lib/services/identity.services';
 import type { TokenId } from '$lib/types/token';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
+import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
 import {
 	getIcrcAccount,
 	mapIcpTransaction,
@@ -24,6 +26,7 @@ import {
 	mapTransactionIcrcToSelf
 } from '$lib/utils/transactions.utils';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
+import { get } from 'svelte/store';
 
 export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	const identity = await getIdentity();
@@ -63,7 +66,7 @@ export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 };
 
 export const getCollateralBalances = async (
-	domain: ClearingDid.BalanceDomain = DEFAULT_BALANCE_DOMAIN
+	domain: ClearingDid.BalanceDomain = get(balanceDomain)
 ): Promise<ClearingDid.AccountStateResponse | undefined> => {
 	const identity = await getIdentity();
 
@@ -83,7 +86,7 @@ export const getCollateralBalances = async (
 };
 
 export const getBalances = async (
-	domain: ClearingDid.BalanceDomain = DEFAULT_BALANCE_DOMAIN
+	domain: ClearingDid.BalanceDomain = get(balanceDomain)
 ): Promise<WalletBalance> => {
 	const [balances, accountState] = await Promise.all([
 		getLedgerBalances(),
@@ -93,8 +96,12 @@ export const getBalances = async (
 	const collateral: Record<TokenId, bigint> = {};
 
 	if (nonNullish(accountState)) {
-		// Aggregate balances across all domains
-		accountState.state.balances.forEach(([, domainBalances]) => {
+		const targetDomainBalances = accountState.state.balances.find(([d]) =>
+			compareBalanceDomains(d, domain)
+		);
+
+		if (nonNullish(targetDomainBalances)) {
+			const [, domainBalances] = targetDomainBalances;
 			domainBalances.forEach(([assetId, balance]) => {
 				const token = SUPPORTED_TOKENS.find((t) => t.symbol.toLowerCase() === assetId);
 
@@ -102,7 +109,7 @@ export const getBalances = async (
 					collateral[token.id] = (collateral[token.id] ?? ZERO) + balance;
 				}
 			});
-		});
+		}
 	}
 
 	return {

@@ -7,13 +7,14 @@ import {
 	withdrawCollateral as withdrawCollateralApi
 } from '$lib/api/clearing.api';
 import { approve } from '$lib/api/icrc-ledger.api';
-import { DEFAULT_BALANCE_DOMAIN } from '$lib/constants/app.constants';
 import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
+import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { refreshAllBalances } from '$lib/utils/refresh.utils';
 import { getAssetIdByLedgerId } from '$lib/utils/tokens.utils';
 import { getIcrcAccount } from '$lib/utils/transactions.utils';
 import { nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
+import { get } from 'svelte/store';
 
 export const depositCollateral = async ({
 	assetPrincipal,
@@ -40,7 +41,7 @@ export const depositCollateral = async ({
 		identity,
 		params: {
 			deposit_id: `DEPOSIT_${Date.now()}`,
-			domain: toNullable(DEFAULT_BALANCE_DOMAIN),
+			domain: toNullable(get(balanceDomain)),
 			asset_id,
 			amount
 		}
@@ -64,7 +65,7 @@ export const withdrawCollateral = async ({
 		identity,
 		params: {
 			withdrawal_id: `WITHDRAW_${Date.now()}`,
-			domain: toNullable(DEFAULT_BALANCE_DOMAIN),
+			domain: toNullable(get(balanceDomain)),
 			asset_id,
 			amount
 		}
@@ -78,7 +79,7 @@ export const getAccountState = async (): Promise<ClearingDid.AccountStateRespons
 
 	return await getAccountStateApi({
 		identity,
-		params: { refresh: toNullable(true), domain: toNullable(DEFAULT_BALANCE_DOMAIN) }
+		params: { refresh: toNullable(true), domain: toNullable(get(balanceDomain)) }
 	});
 };
 

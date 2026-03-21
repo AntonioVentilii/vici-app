@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import AtomicLoader from '$lib/components/loaders/AtomicLoader.svelte';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { getMarkets } from '$lib/services/market.services';
 	import { marketsStore } from '$lib/stores/markets.store';
 
@@ -24,6 +25,12 @@
 
 	// eslint-disable-next-line require-await
 	const onShouldUseSlowInterval = async (): Promise<boolean> => shouldUseSlowInterval;
+
+	$effect(() => {
+		if ($balanceDomain) {
+			refresh();
+		}
+	});
 </script>
 
 <svelte:document onviciRefreshMarkets={refresh} />

@@ -1,7 +1,9 @@
 import { getPositions as getPositionsApi } from '$lib/api/clearing.api';
 import { getIdentity } from '$lib/services/identity.services';
+import { getMarkets } from '$lib/services/market.services';
 import type { MarketId } from '$lib/types/market';
 import type { Position } from '$lib/types/position';
+import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
 import { mapPositionData } from '$lib/utils/position.utils';
 import { isNullish } from '@dfinity/utils';
 
@@ -12,9 +14,11 @@ export const getPositions = async (): Promise<Position[]> => {
 		return [];
 	}
 
-	const positions = await getPositionsApi({ identity });
+	const [positions, markets] = await Promise.all([getPositionsApi({ identity }), getMarkets()]);
 
-	return positions.map(mapPositionData);
+	const marketIds = new Set(markets.map((m) => m.id));
+
+	return filterByMarketIds({ items: positions, marketIds }).map(mapPositionData);
 };
 
 export const getPositionsForMarket = async (targetSeriesId: MarketId): Promise<Position[]> => {

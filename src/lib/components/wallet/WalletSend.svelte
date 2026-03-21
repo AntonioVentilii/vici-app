@@ -57,7 +57,7 @@
 			class="text-xs font-bold tracking-wider text-slate-500 uppercase"
 			for="recipient-principal"
 		>
-			Recipient Principal
+			Recipient
 		</label>
 		<input
 			id="recipient-principal"

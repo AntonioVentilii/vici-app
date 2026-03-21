@@ -7,15 +7,18 @@ import {
 	submitMarketOrder
 } from '$lib/api/clearing.api';
 import { PRICE_DECIMALS } from '$lib/constants/app.constants';
+import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { recordActivity } from '$lib/services/profile.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderSide, OrderType } from '$lib/types/order';
 import { ActivityType } from '$lib/types/social';
+import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
 import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 import { isNullish, toNullable } from '@dfinity/utils';
 import { nanoid } from 'nanoid';
+import { get } from 'svelte/store';
 
 export const getOrderBook = async ({
 	marketId,
@@ -185,7 +188,11 @@ export const getUserOrdersForMarket = async (
 export const getUserOrders = async (): Promise<ClearingDid.LimitOrder[]> => {
 	const identity = await safeGetIdentityOnce();
 
-	return await getOrdersApi({
+	const orders = await getOrdersApi({
 		identity
 	});
+
+	const domain = get(balanceDomain);
+
+	return filterByBalanceDomain({ items: orders, targetDomain: domain });
 };

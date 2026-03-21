@@ -2,7 +2,6 @@ import type { RegistryDid } from '$declarations';
 import { listOrders as listOrdersApi } from '$lib/api/clearing.api';
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
-	DEFAULT_BALANCE_DOMAIN,
 	NANO_SECONDS_IN_MILLISECOND,
 	PAYOFF_TYPE,
 	PRICE_DECIMALS,
@@ -10,6 +9,7 @@ import {
 	VICI_ORACLE_V1,
 	ZERO
 } from '$lib/constants/app.constants';
+import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
 import { listSeriesCategories } from '$lib/services/category.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
@@ -19,6 +19,7 @@ import type { SeriesCategory } from '$lib/types/category';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
 import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
+import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
 import {
 	calculateCategoricalProbabilities,
 	calculateMarketStats,
@@ -27,6 +28,7 @@ import {
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
+import { get } from 'svelte/store';
 
 /**
  * Creates a new prediction market.
@@ -86,7 +88,7 @@ export const createMarket = async ({
 					}))
 				: undefined
 		),
-		balance_domain: DEFAULT_BALANCE_DOMAIN,
+		balance_domain: get(balanceDomain),
 		oracle_source: VICI_ORACLE_V1
 	};
 
@@ -205,7 +207,11 @@ export const getMarkets = async (): Promise<Market[]> => {
 			})
 	);
 
-	return [...markets, ...resolvedMarkets].filter(nonNullish);
+	const currentDomain = get(balanceDomain);
+
+	const items = [...markets, ...resolvedMarkets].filter(nonNullish);
+
+	return filterByBalanceDomain({ items, targetDomain: currentDomain });
 };
 
 export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {

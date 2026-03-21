@@ -2,6 +2,7 @@
 	import { signOut } from '@junobuild/core';
 	import { Sun, Moon, Palette } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
+	import DomainSwitch from '$lib/components/layout/DomainSwitch.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -73,6 +74,8 @@
 			</BaseButton>
 
 			<div class="border-border my-1 border-t"></div>
+
+			<DomainSwitch />
 
 			<div class="px-4 py-2">
 				<div class="text-muted-foreground mb-2 text-[10px] font-bold tracking-widest uppercase">

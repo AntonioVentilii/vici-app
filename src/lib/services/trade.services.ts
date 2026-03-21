@@ -6,6 +6,8 @@ import {
 	redeemCompleteSet as redeemCompleteSetApi
 } from '$lib/api/clearing.api';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getMarkets } from '$lib/services/market.services';
+import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
 
 export const getPosition = async (seriesId: string): Promise<ClearingDid.Position | undefined> => {
 	const identity = await safeGetIdentityOnce();
@@ -20,9 +22,11 @@ export const getPosition = async (seriesId: string): Promise<ClearingDid.Positio
 export const getUserTradeHistory = async (): Promise<ClearingDid.Event[]> => {
 	const identity = await safeGetIdentityOnce();
 
-	return await getTradeHistoryApi({
-		identity
-	});
+	const [events, markets] = await Promise.all([getTradeHistoryApi({ identity }), getMarkets()]);
+
+	const marketIds = new Set(markets.map((m) => m.id));
+
+	return filterByMarketIds({ items: events, marketIds });
 };
 
 export const mintCompleteSet = async ({
