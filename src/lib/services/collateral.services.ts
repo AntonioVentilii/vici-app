@@ -13,7 +13,8 @@ import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { refreshAllBalances } from '$lib/utils/refresh.utils';
 import { getAssetIdByLedgerId } from '$lib/utils/tokens.utils';
 import { getIcrcAccount } from '$lib/utils/transactions.utils';
-import { nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
+import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
+import { getIdentityOnce } from '@junobuild/core';
 import { get } from 'svelte/store';
 
 export const depositCollateral = async ({
@@ -84,7 +85,11 @@ export const getAccountState = async (): Promise<ClearingDid.AccountStateRespons
 };
 
 export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAssetInfo[]> => {
-	const identity = await safeGetIdentityOnce();
+	const identity = await getIdentityOnce();
+
+	if (isNullish(identity)) {
+		return [];
+	}
 
 	return await getCollateralAssetsApi({ identity });
 };

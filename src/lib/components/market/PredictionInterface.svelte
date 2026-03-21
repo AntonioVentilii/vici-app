@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
@@ -40,7 +40,7 @@
 	let selectedType = $state<PositionType>('YES');
 
 	$effect(() => {
-		if (initialType) {
+		if (nonNullish(initialType)) {
 			selectedType = initialType;
 		}
 	});
@@ -105,7 +105,7 @@
 	});
 
 	$effect(() => {
-		if (selectedType) {
+		if (nonNullish(selectedType)) {
 			fetchOrderBook();
 		}
 	});
@@ -170,13 +170,16 @@
 	});
 
 	const handlePlacePrediction = async () => {
-		if (!amount || parseFloat(amount) <= 0) {
+		if (isNullish(amount) || parseFloat(amount) <= 0) {
 			error = 'Please enter a valid amount';
 
 			return;
 		}
 
-		if (orderType === 'LIMIT' && (!price || parseFloat(price) <= 0 || parseFloat(price) >= 100)) {
+		if (
+			orderType === 'LIMIT' &&
+			(isNullish(price) || parseFloat(price) <= 0 || parseFloat(price) >= 100)
+		) {
 			error = 'Please enter a valid price between 1 and 99';
 
 			return;
@@ -215,7 +218,7 @@
 	};
 
 	const estimatedCost = $derived.by(() => {
-		if (!amount) {
+		if (isNullish(amount)) {
 			return '-';
 		}
 
@@ -228,7 +231,7 @@
 	});
 
 	const estimatedPayout = $derived.by(() => {
-		if (!amount) {
+		if (isNullish(amount)) {
 			return '-';
 		}
 		const amt = parseFloat(amount);
@@ -245,7 +248,7 @@
 						? noProbability
 						: (marketDepth?.midPrice ?? 0.5);
 
-		if (!prob || prob <= 0) {
+		if (isNullish(prob) || prob <= 0) {
 			return '-';
 		}
 
@@ -263,7 +266,7 @@
 	});
 
 	const potentialReturnPercent = $derived.by(() => {
-		if (!amount) {
+		if (isNullish(amount)) {
 			return 0;
 		}
 		const amt = parseFloat(amount);
@@ -422,7 +425,7 @@
 					</label>
 
 					<span class="text-[10px] font-bold text-slate-400 uppercase">
-						Available: {availableEquity !== undefined
+						Available: {nonNullish(availableEquity)
 							? formatAvailableUsd({ value: availableEquity })
 							: '...'}
 					</span>

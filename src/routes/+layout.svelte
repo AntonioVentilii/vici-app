@@ -12,12 +12,16 @@
 
 	const { children }: Props = $props();
 
+	let satelliteInitialized = $state(false);
+
 	const init = async () => {
 		await initSatellite({
 			workers: {
 				auth: true
 			}
 		});
+
+		satelliteInitialized = true;
 	};
 
 	$effect(() => {
@@ -25,7 +29,16 @@
 	});
 </script>
 
-{@render children()}
+{#if !satelliteInitialized}
+	<div class="flex h-screen items-center justify-center">
+		<div class="text-center">
+			<div class="loader mb-4"></div>
+			<p class="text-lg">Loading...</p>
+		</div>
+	</div>
+{:else}
+	{@render children()}
+{/if}
 
 <Banner />
 

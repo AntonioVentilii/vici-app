@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
@@ -40,13 +41,13 @@
 	let selectedToken = $state<Token | undefined>();
 
 	$effect(() => {
-		if ($defaultSupportedToken && !selectedToken) {
+		if (nonNullish($defaultSupportedToken) && isNullish(selectedToken)) {
 			selectedToken = $defaultSupportedToken;
 		}
 	});
 
 	const handleSend = async () => {
-		if (!recipient || !amount || !selectedToken) {
+		if (isNullish(recipient) || isNullish(amount) || isNullish(selectedToken)) {
 			return;
 		}
 
@@ -116,7 +117,7 @@
 		<Tabs {tabs} bind:activeTab />
 
 		<div class="w-full p-8">
-			{#if activeTab === 'Send' && selectedToken}
+			{#if activeTab === 'Send' && nonNullish(selectedToken)}
 				<WalletSend
 					{amount}
 					onAmountChange={(v) => (amount = v)}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import type { ClearingDid } from '$declarations';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
@@ -44,7 +45,7 @@
 	});
 
 	$effect(() => {
-		if ($balanceDomain) {
+		if (nonNullish($balanceDomain)) {
 			loadData();
 		}
 	});
@@ -53,7 +54,7 @@
 
 	const calculateValue = (pos: Position) => {
 		const market = getMarketById(pos.marketId);
-		if (!market) {
+		if (isNullish(market)) {
 			return ZERO;
 		}
 
@@ -69,7 +70,7 @@
 
 	const calculatePnL = (pos: Position) => {
 		const market = getMarketById(pos.marketId);
-		if (!market) {
+		if (isNullish(market)) {
 			return 0;
 		}
 
@@ -125,7 +126,7 @@
 
 		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
 			<div class="lg:col-span-1">
-				{#if $userStore.profile}
+				{#if nonNullish($userStore.profile)}
 					<ProfileCard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
 				{/if}
 			</div>

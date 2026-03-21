@@ -17,6 +17,7 @@ import { ActivityType } from '$lib/types/social';
 import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
 import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 import { isNullish, toNullable } from '@dfinity/utils';
+import { getIdentityOnce } from '@junobuild/core';
 import { nanoid } from 'nanoid';
 import { get } from 'svelte/store';
 
@@ -186,7 +187,11 @@ export const getUserOrdersForMarket = async (
 };
 
 export const getUserOrders = async (): Promise<ClearingDid.LimitOrder[]> => {
-	const identity = await safeGetIdentityOnce();
+	const identity = await getIdentityOnce();
+
+	if (isNullish(identity)) {
+		return [];
+	}
 
 	const orders = await getOrdersApi({
 		identity

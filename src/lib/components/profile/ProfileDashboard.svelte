@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import Card from '$lib/components/ui/Card.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import type { UserProfile } from '$lib/types/profile';
@@ -38,7 +39,7 @@
 					<div
 						class="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-100 shadow-inner"
 					>
-						{#if profile.avatar}
+						{#if nonNullish(profile.avatar)}
 							<img class="h-full w-full object-cover" alt={profile.nickname} src={profile.avatar} />
 						{:else}
 							<span class="text-4xl font-black text-slate-300">{profile.nickname[0]}</span>

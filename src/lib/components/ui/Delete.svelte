@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { deleteAsset, deleteDoc, type Doc } from '@junobuild/core';
 	import Backdrop from '$lib/components/ui/Backdrop.svelte';
 	import type { Note } from '$lib/types/note';
@@ -20,7 +21,7 @@
 				data: { url }
 			} = doc;
 
-			if (url !== undefined) {
+			if (nonNullish(url)) {
 				const { pathname: fullPath } = new URL(url);
 
 				await deleteAsset({

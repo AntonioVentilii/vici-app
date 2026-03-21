@@ -310,7 +310,7 @@ export const rankMarkets = ({
 			const categoryId = marketCategoryMap.get(m.id);
 
 			// 1. User Interests (High Priority)
-			if (categoryId && userInterests.has(categoryId)) {
+			if (nonNullish(categoryId) && userInterests.has(categoryId)) {
 				score += 1000;
 			}
 

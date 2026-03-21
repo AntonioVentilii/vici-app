@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -24,7 +24,7 @@
 	let selectedToken = $state<Token | undefined>();
 
 	$effect(() => {
-		if ($defaultSupportedToken && !selectedToken) {
+		if (nonNullish($defaultSupportedToken) && isNullish(selectedToken)) {
 			selectedToken = $defaultSupportedToken;
 		}
 	});
@@ -47,7 +47,7 @@
 	};
 
 	const handleSubmit = async () => {
-		if (!amount || parseFloat(amount) <= 0) {
+		if (isNullish(amount) || parseFloat(amount) <= 0) {
 			error = 'Please enter a valid amount';
 			return;
 		}
@@ -56,14 +56,14 @@
 		error = '';
 
 		try {
-			if (!selectedToken) {
+			if (isNullish(selectedToken)) {
 				throw new Error('No token selected');
 			}
 
 			const amt = parseToken({ value: `${amount}`, unitName: selectedToken.decimals });
 
 			if (mode === 'Deposit') {
-				if (!selectedToken) {
+				if (isNullish(selectedToken)) {
 					throw new Error('No token selected');
 				}
 
@@ -72,7 +72,7 @@
 					amount: amt
 				});
 			} else {
-				if (!selectedToken) {
+				if (isNullish(selectedToken)) {
 					throw new Error('No token selected');
 				}
 

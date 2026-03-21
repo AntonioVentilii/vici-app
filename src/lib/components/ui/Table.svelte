@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { type Doc, listDocs } from '@junobuild/core';
 	import Delete from '$lib/components/ui/Delete.svelte';
 	import { userNotSignedIn } from '$lib/derived/user.derived';
@@ -45,7 +46,7 @@
 				</span>
 				<div class="line-clamp-3 grow overflow-hidden" role="cell">{item.data.text}</div>
 				<div class="flex justify-center gap-2 align-middle" role="cell">
-					{#if item.data.url !== undefined}
+					{#if nonNullish(item.data.url)}
 						<a
 							class="hover:text-lavender-blue-500 active:text-lavender-blue-400"
 							aria-label="Open data"

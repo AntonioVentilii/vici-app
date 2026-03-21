@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -47,14 +48,14 @@
 				<div class="text-xs font-bold tracking-widest text-indigo-600 uppercase">
 					Clearing Collateral
 				</div>
-				{#if collateral.accountState}
+				{#if nonNullish(collateral.accountState)}
 					<Badge variant="success">
 						{formatAvailableUsd({ value: collateral.accountState.total_equity_usd })} Total
 					</Badge>
 				{/if}
 			</div>
 			<p class="mt-1 text-sm text-slate-500">
-				{#if collateral.accountState}
+				{#if nonNullish(collateral.accountState)}
 					Available Equity: <span class="font-bold text-slate-900">
 						{formatAvailableUsd({ value: collateral.accountState.available_margin_usd })}
 					</span>
@@ -98,7 +99,7 @@
 								<Badge size="sm" variant="warning">DEV</Badge>
 							{/if}
 						</div>
-						{#if assetWorth && assetWorth.haircut_bps > 0}
+						{#if nonNullish(assetWorth) && assetWorth.haircut_bps > 0}
 							<span class="text-[10px] font-medium text-orange-500">
 								{assetWorth.haircut_bps / 100}% Haircut
 							</span>
@@ -111,7 +112,7 @@
 						{formatToken({ value: balance, unitName: token.decimals })}
 					</div>
 					<div class="text-[10px] font-medium text-slate-400 uppercase">
-						{#if assetWorth}
+						{#if nonNullish(assetWorth)}
 							Value: {formatAvailableUsd({ value: assetWorth.value_usd })}
 							{#if assetWorth.haircut_bps > 0}
 								<span class="line-through opacity-50"
