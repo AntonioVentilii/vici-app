@@ -4,7 +4,7 @@
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
-	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
+	import { defaultSupportedToken, supportedTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { depositCollateral, withdrawCollateral } from '$lib/services/collateral.services';
 	import type { Token } from '$lib/types/token';
@@ -21,7 +21,13 @@
 
 	let mode = $state<'Deposit' | 'Withdraw'>('Deposit');
 
-	let selectedToken = $state<Token>(SUPPORTED_TOKENS[0]);
+	let selectedToken = $state<Token | undefined>();
+
+	$effect(() => {
+		if ($defaultSupportedToken && !selectedToken) {
+			selectedToken = $defaultSupportedToken;
+		}
+	});
 
 	let loading = $state(false);
 
@@ -30,7 +36,7 @@
 	const reset = () => {
 		amount = '';
 		mode = 'Deposit';
-		[selectedToken] = SUPPORTED_TOKENS;
+		selectedToken = $defaultSupportedToken;
 		loading = false;
 		error = '';
 	};
@@ -50,14 +56,26 @@
 		error = '';
 
 		try {
+			if (!selectedToken) {
+				throw new Error('No token selected');
+			}
+
 			const amt = parseToken({ value: `${amount}`, unitName: selectedToken.decimals });
 
 			if (mode === 'Deposit') {
+				if (!selectedToken) {
+					throw new Error('No token selected');
+				}
+
 				await depositCollateral({
 					assetPrincipal: selectedToken.ledgerCanisterId,
 					amount: amt
 				});
 			} else {
+				if (!selectedToken) {
+					throw new Error('No token selected');
+				}
+
 				await withdrawCollateral({
 					assetPrincipal: selectedToken.ledgerCanisterId,
 					amount: amt
@@ -116,9 +134,9 @@
 		<div class="space-y-2">
 			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">Token</span>
 			<div class="grid grid-cols-2 gap-3">
-				{#each SUPPORTED_TOKENS as token (token.ledgerCanisterId)}
+				{#each $supportedTokens as token (token.ledgerCanisterId)}
 					<BaseButton
-						class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 font-bold {selectedToken.ledgerCanisterId ===
+						class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 font-bold {selectedToken?.ledgerCanisterId ===
 						token.ledgerCanisterId
 							? 'border-indigo-600 bg-indigo-50 text-indigo-600'
 							: 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'}"
@@ -134,9 +152,9 @@
 		</div>
 
 		<div class="space-y-2">
-			<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="amount"
-				>Amount ({selectedToken.symbol})</label
-			>
+			<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="amount">
+				Amount ({selectedToken?.symbol ?? ''})
+			</label>
 			<div class="relative">
 				<input
 					id="amount"
@@ -145,9 +163,9 @@
 					type="number"
 					bind:value={amount}
 				/>
-				<span class="absolute top-1/2 right-4 -translate-y-1/2 font-bold text-slate-400"
-					>{selectedToken.symbol}</span
-				>
+				<span class="absolute top-1/2 right-4 -translate-y-1/2 font-bold text-slate-400">
+					{selectedToken?.symbol ?? ''}
+				</span>
 			</div>
 		</div>
 
@@ -160,7 +178,11 @@
 		<Button
 			class="w-full py-4 text-lg font-black"
 			onclick={handleSubmit}
-			status={loading ? 'pending' : nonNullish(amount) ? 'enabled' : 'disabled'}
+			status={loading
+				? 'pending'
+				: nonNullish(amount) && nonNullish(selectedToken)
+					? 'enabled'
+					: 'disabled'}
 		>
 			Confirm {mode}
 		</Button>

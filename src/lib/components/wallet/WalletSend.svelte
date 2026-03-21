@@ -1,13 +1,13 @@
 <script lang="ts">
 	import Badge from '$lib/components/ui/Badge.svelte';
-	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
+	import { supportedTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import type { Token } from '$lib/types/token';
 
 	interface Props {
 		recipient: string;
 		amount: string;
-		selectedToken: Token;
+		selectedToken: Token | undefined;
 		onRecipientChange: (v: string) => void;
 		onAmountChange: (v: string) => void;
 		onTokenChange: (v: Token) => void;
@@ -24,14 +24,14 @@
 		onSend
 	}: Props = $props();
 
-	const isSelected = (token: Token) => selectedToken.ledgerCanisterId === token.ledgerCanisterId;
+	const isSelected = (token: Token) => selectedToken?.ledgerCanisterId === token.ledgerCanisterId;
 </script>
 
 <div class="max-w-xl space-y-6">
 	<div class="space-y-2">
 		<span class="text-xs font-bold tracking-wider text-slate-500 uppercase">Token</span>
 		<div class="grid grid-cols-2 gap-3">
-			{#each SUPPORTED_TOKENS as token (token.ledgerCanisterId)}
+			{#each $supportedTokens as token (token.ledgerCanisterId)}
 				<button
 					class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 font-bold transition-all {isSelected(
 						token

@@ -3,7 +3,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Switch from '$lib/components/ui/Switch.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
+	import { supportedTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import type { WalletBalance } from '$lib/types/wallet';
 	import { formatCurrency, formatToken } from '$lib/utils/format.utils';
@@ -17,7 +17,7 @@
 	let hideZeroBalances = $state(true);
 
 	const displayedTokens = $derived(
-		SUPPORTED_TOKENS.filter((token) => {
+		$supportedTokens.filter((token) => {
 			if (!hideZeroBalances) {
 				return true;
 			}

@@ -4,7 +4,7 @@
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
+	import { supportedTokens } from '$lib/derived/tokens.derived';
 	import type { WalletBalance } from '$lib/types/wallet';
 	import { formatToken } from '$lib/utils/format.utils';
 
@@ -52,7 +52,7 @@
 			<div class="mb-4">
 				<h3 class="px-2 text-xs font-semibold tracking-wider text-slate-400 uppercase">Balances</h3>
 				<div class="mt-2 space-y-1">
-					{#each SUPPORTED_TOKENS as token (token.id)}
+					{#each $supportedTokens as token (token.id)}
 						{@const balance = balances.balances[token.id] ?? ZERO}
 
 						<div class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors">

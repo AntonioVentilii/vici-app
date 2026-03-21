@@ -9,7 +9,7 @@
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
 	import WalletStats from '$lib/components/wallet/WalletStats.svelte';
-	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
+	import { defaultSupportedToken } from '$lib/derived/tokens.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { sendIc } from '$lib/services/send.services';
 	import { getTransactions } from '$lib/services/wallet.service';
@@ -37,12 +37,19 @@
 
 	let amount = $state('');
 
-	let selectedToken = $state<Token>(SUPPORTED_TOKENS[0]);
+	let selectedToken = $state<Token | undefined>();
+
+	$effect(() => {
+		if ($defaultSupportedToken && !selectedToken) {
+			selectedToken = $defaultSupportedToken;
+		}
+	});
 
 	const handleSend = async () => {
-		if (!recipient || !amount) {
+		if (!recipient || !amount || !selectedToken) {
 			return;
 		}
+
 		try {
 			const identity = await safeGetIdentityOnce();
 
@@ -109,7 +116,7 @@
 		<Tabs {tabs} bind:activeTab />
 
 		<div class="w-full p-8">
-			{#if activeTab === 'Send'}
+			{#if activeTab === 'Send' && selectedToken}
 				<WalletSend
 					{amount}
 					onAmountChange={(v) => (amount = v)}
