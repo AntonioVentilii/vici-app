@@ -8,6 +8,41 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const ErcToken = IDL.Record({
+	decimals: IDL.Nat8,
+	token_address: IDL.Text,
+	chain_id: IDL.Nat64
+});
+export const NativeEvmAsset = IDL.Record({
+	decimals: IDL.Nat8,
+	chain_id: IDL.Nat64
+});
+export const Asset = IDL.Variant({
+	Erc20: ErcToken,
+	Icrc: IDL.Principal,
+	NativeEvm: NativeEvmAsset
+});
+export const BalanceDomain = IDL.Variant({
+	Playground: IDL.Null,
+	Settlement: IDL.Null
+});
+export const CollateralAssetConfig = IDL.Record({
+	decimals: IDL.Nat8,
+	asset: Asset,
+	is_enabled: IDL.Bool,
+	allowed_balance_domains: IDL.Vec(BalanceDomain),
+	oracle_id: IDL.Opt(IDL.Text),
+	asset_id: IDL.Text,
+	symbol: IDL.Text
+});
+export const Config = IDL.Record({
+	insurance_fund_fee_ratio: IDL.Nat16,
+	internal_ledger: CollateralAssetConfig,
+	signer_canister: IDL.Principal,
+	version: IDL.Nat32,
+	evm_rpc: IDL.Principal,
+	protocol_fee_ratio: IDL.Nat16
+});
 export const DecimalValue = IDL.Record({
 	decimals: IDL.Nat8,
 	value: IDL.Nat
@@ -72,16 +107,6 @@ export const SubmitMatchedTradeResult = IDL.Variant({
 	Ok: IDL.Bool,
 	Err: TradeError
 });
-export const Config = IDL.Record({
-	insurance_fund_fee_ratio: IDL.Nat16,
-	signer_canister: IDL.Principal,
-	evm_rpc: IDL.Principal,
-	protocol_fee_ratio: IDL.Nat16
-});
-export const BalanceDomain = IDL.Variant({
-	Playground: IDL.Null,
-	Settlement: IDL.Null
-});
 export const DepositCollateralParams = IDL.Record({
 	deposit_id: IDL.Text,
 	domain: IDL.Opt(BalanceDomain),
@@ -105,6 +130,10 @@ export const AssetError = IDL.Variant({
 	UnsupportedAsset: IDL.Null
 });
 export const DepositCollateralError = IDL.Variant({
+	DomainNotAllowed: IDL.Record({
+		domain: BalanceDomain,
+		asset_id: IDL.Text
+	}),
 	MathOverflow: IDL.Null,
 	Asset: AssetError
 });
@@ -159,31 +188,16 @@ export const AssetMetrics = IDL.Record({
 	protocol_fee_ratio: IDL.Opt(IDL.Nat16),
 	price_usd: DecimalValue
 });
-export const ErcToken = IDL.Record({
-	decimals: IDL.Nat8,
-	token_address: IDL.Text,
-	chain_id: IDL.Nat64
-});
-export const NativeEvmAsset = IDL.Record({
-	decimals: IDL.Nat8,
-	chain_id: IDL.Nat64
-});
-export const Asset = IDL.Variant({
-	Erc20: ErcToken,
-	Icrc: IDL.Principal,
-	NativeEvm: NativeEvmAsset
-});
-export const CollateralAssetConfig = IDL.Record({
-	decimals: IDL.Nat8,
-	asset: Asset,
-	is_enabled: IDL.Bool,
-	oracle_id: IDL.Opt(IDL.Text),
-	asset_id: IDL.Text,
-	symbol: IDL.Text
-});
 export const CollateralAssetInfo = IDL.Record({
 	metrics: IDL.Opt(AssetMetrics),
 	config: CollateralAssetConfig
+});
+export const DomainPolicy = IDL.Record({
+	deposits_enabled: IDL.Bool,
+	protocol_fee_ratio_override: IDL.Opt(IDL.Nat16),
+	label: IDL.Text,
+	withdrawals_enabled: IDL.Bool,
+	insurance_fund_fee_ratio_override: IDL.Opt(IDL.Nat16)
 });
 export const GetFundsResult = IDL.Record({
 	insurance_fund: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)),
@@ -331,15 +345,33 @@ export const Series = IDL.Record({
 	balance_domain: BalanceDomain,
 	oracle_source: IDL.Text
 });
+export const MigrateDomainParams = IDL.Record({
+	from_domain: BalanceDomain,
+	migration_id: IDL.Text,
+	to_domain: BalanceDomain
+});
+export const MigrationError = IDL.Variant({
+	NoStateTOMigrate: IDL.Null,
+	SameDomain: IDL.Null,
+	InFlightPlansExist: IDL.Null,
+	Common: CommonError
+});
+export const MigrateDomainResult = IDL.Variant({
+	Ok: IDL.Null,
+	Err: MigrationError
+});
 export const RegisterIcrcAssetParams = IDL.Record({
 	haircut_bps: IDL.Nat16,
 	is_enabled: IDL.Bool,
+	allowed_balance_domains: IDL.Vec(BalanceDomain),
 	ledger_id: IDL.Principal,
 	oracle_id: IDL.Opt(IDL.Text),
 	asset_id: IDL.Text
 });
 export const RegisterIcrcAssetError = IDL.Variant({
+	InvalidAllowedBalanceDomains: IDL.Null,
 	AssetAlreadyExists: IDL.Null,
+	VusdCannotBeCollateral: IDL.Null,
 	Common: CommonError
 });
 export const RegisterIcrcAssetResult = IDL.Variant({
@@ -418,8 +450,24 @@ export const UpdateAssetPriceResult = IDL.Variant({
 	Ok: IDL.Null,
 	Err: UpdateAssetPriceError
 });
+export const UpdateCollateralAllowedDomainsParams = IDL.Record({
+	allowed_balance_domains: IDL.Vec(BalanceDomain),
+	asset_id: IDL.Text
+});
+export const UpdateCollateralAllowedDomainsError = IDL.Variant({
+	AssetNotFound: IDL.Null,
+	InvalidAllowedBalanceDomains: IDL.Null
+});
+export const UpdateCollateralAllowedDomainsResult = IDL.Variant({
+	Ok: IDL.Null,
+	Err: UpdateCollateralAllowedDomainsError
+});
 export const UpdateCollateralAssetParams = IDL.Record({
 	config: CollateralAssetConfig
+});
+export const UpdateDomainPolicyParams = IDL.Record({
+	domain: BalanceDomain,
+	policy: DomainPolicy
 });
 export const WithdrawCollateralParams = IDL.Record({
 	domain: IDL.Opt(BalanceDomain),
@@ -431,6 +479,10 @@ export const WithdrawCollateralError = IDL.Variant({
 	InsufficientExcessMargin: IDL.Record({
 		requested: IDL.Nat,
 		available: IDL.Nat
+	}),
+	DomainNotAllowed: IDL.Record({
+		domain: BalanceDomain,
+		asset_id: IDL.Text
 	}),
 	MathOverflow: IDL.Null,
 	Asset: AssetError
@@ -475,6 +527,7 @@ export const idlService = IDL.Service({
 	get_account_state_query: IDL.Func([], [GetAccountStateResult], []),
 	get_asset_metrics: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, AssetMetrics))], []),
 	get_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], []),
+	get_domain_policies: IDL.Func([], [IDL.Vec(IDL.Tuple(BalanceDomain, DomainPolicy))], []),
 	get_funds: IDL.Func([], [GetFundsResult], []),
 	get_orders: IDL.Func([], [IDL.Vec(LimitOrder)], []),
 	get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], []),
@@ -488,6 +541,7 @@ export const idlService = IDL.Service({
 	list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], []),
 	list_series: IDL.Func([], [IDL.Vec(Series)], []),
 	metrics: IDL.Func([], [IDL.Text], []),
+	migrate_domain: IDL.Func([MigrateDomainParams], [MigrateDomainResult], []),
 	mint_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
 	redeem_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
 	register_icrc_asset: IDL.Func([RegisterIcrcAssetParams], [RegisterIcrcAssetResult], []),
@@ -500,15 +554,56 @@ export const idlService = IDL.Service({
 	submit_matched_trade: IDL.Func([SubmitMatchedTradeParams], [SubmitMatchedTradeResult], []),
 	update_asset_metrics: IDL.Func([UpdateAssetMetricsParams], [], []),
 	update_asset_price: IDL.Func([UpdateAssetPriceParams], [UpdateAssetPriceResult], []),
+	update_collateral_allowed_domains: IDL.Func(
+		[UpdateCollateralAllowedDomainsParams],
+		[UpdateCollateralAllowedDomainsResult],
+		[]
+	),
 	update_collateral_asset: IDL.Func([UpdateCollateralAssetParams], [], []),
 	update_config: IDL.Func([Config], [], []),
+	update_domain_policy: IDL.Func([UpdateDomainPolicyParams], [], []),
 	withdraw_collateral: IDL.Func([WithdrawCollateralParams], [WithdrawCollateralResult], []),
 	withdraw_fund: IDL.Func([WithdrawFundParams], [WithdrawFundResult], [])
 });
 
-export const idlInitArgs = [];
+export const idlInitArgs = [Config];
 
 export const idlFactory = ({ IDL }) => {
+	const ErcToken = IDL.Record({
+		decimals: IDL.Nat8,
+		token_address: IDL.Text,
+		chain_id: IDL.Nat64
+	});
+	const NativeEvmAsset = IDL.Record({
+		decimals: IDL.Nat8,
+		chain_id: IDL.Nat64
+	});
+	const Asset = IDL.Variant({
+		Erc20: ErcToken,
+		Icrc: IDL.Principal,
+		NativeEvm: NativeEvmAsset
+	});
+	const BalanceDomain = IDL.Variant({
+		Playground: IDL.Null,
+		Settlement: IDL.Null
+	});
+	const CollateralAssetConfig = IDL.Record({
+		decimals: IDL.Nat8,
+		asset: Asset,
+		is_enabled: IDL.Bool,
+		allowed_balance_domains: IDL.Vec(BalanceDomain),
+		oracle_id: IDL.Opt(IDL.Text),
+		asset_id: IDL.Text,
+		symbol: IDL.Text
+	});
+	const Config = IDL.Record({
+		insurance_fund_fee_ratio: IDL.Nat16,
+		internal_ledger: CollateralAssetConfig,
+		signer_canister: IDL.Principal,
+		version: IDL.Nat32,
+		evm_rpc: IDL.Principal,
+		protocol_fee_ratio: IDL.Nat16
+	});
 	const DecimalValue = IDL.Record({ decimals: IDL.Nat8, value: IDL.Nat });
 	const Price = IDL.Record({
 		timestamp: IDL.Opt(IDL.Nat64),
@@ -568,16 +663,6 @@ export const idlFactory = ({ IDL }) => {
 		Ok: IDL.Bool,
 		Err: TradeError
 	});
-	const Config = IDL.Record({
-		insurance_fund_fee_ratio: IDL.Nat16,
-		signer_canister: IDL.Principal,
-		evm_rpc: IDL.Principal,
-		protocol_fee_ratio: IDL.Nat16
-	});
-	const BalanceDomain = IDL.Variant({
-		Playground: IDL.Null,
-		Settlement: IDL.Null
-	});
 	const DepositCollateralParams = IDL.Record({
 		deposit_id: IDL.Text,
 		domain: IDL.Opt(BalanceDomain),
@@ -601,6 +686,10 @@ export const idlFactory = ({ IDL }) => {
 		UnsupportedAsset: IDL.Null
 	});
 	const DepositCollateralError = IDL.Variant({
+		DomainNotAllowed: IDL.Record({
+			domain: BalanceDomain,
+			asset_id: IDL.Text
+		}),
 		MathOverflow: IDL.Null,
 		Asset: AssetError
 	});
@@ -655,31 +744,16 @@ export const idlFactory = ({ IDL }) => {
 		protocol_fee_ratio: IDL.Opt(IDL.Nat16),
 		price_usd: DecimalValue
 	});
-	const ErcToken = IDL.Record({
-		decimals: IDL.Nat8,
-		token_address: IDL.Text,
-		chain_id: IDL.Nat64
-	});
-	const NativeEvmAsset = IDL.Record({
-		decimals: IDL.Nat8,
-		chain_id: IDL.Nat64
-	});
-	const Asset = IDL.Variant({
-		Erc20: ErcToken,
-		Icrc: IDL.Principal,
-		NativeEvm: NativeEvmAsset
-	});
-	const CollateralAssetConfig = IDL.Record({
-		decimals: IDL.Nat8,
-		asset: Asset,
-		is_enabled: IDL.Bool,
-		oracle_id: IDL.Opt(IDL.Text),
-		asset_id: IDL.Text,
-		symbol: IDL.Text
-	});
 	const CollateralAssetInfo = IDL.Record({
 		metrics: IDL.Opt(AssetMetrics),
 		config: CollateralAssetConfig
+	});
+	const DomainPolicy = IDL.Record({
+		deposits_enabled: IDL.Bool,
+		protocol_fee_ratio_override: IDL.Opt(IDL.Nat16),
+		label: IDL.Text,
+		withdrawals_enabled: IDL.Bool,
+		insurance_fund_fee_ratio_override: IDL.Opt(IDL.Nat16)
 	});
 	const GetFundsResult = IDL.Record({
 		insurance_fund: IDL.Vec(IDL.Tuple(IDL.Text, IDL.Nat)),
@@ -825,15 +899,33 @@ export const idlFactory = ({ IDL }) => {
 		balance_domain: BalanceDomain,
 		oracle_source: IDL.Text
 	});
+	const MigrateDomainParams = IDL.Record({
+		from_domain: BalanceDomain,
+		migration_id: IDL.Text,
+		to_domain: BalanceDomain
+	});
+	const MigrationError = IDL.Variant({
+		NoStateTOMigrate: IDL.Null,
+		SameDomain: IDL.Null,
+		InFlightPlansExist: IDL.Null,
+		Common: CommonError
+	});
+	const MigrateDomainResult = IDL.Variant({
+		Ok: IDL.Null,
+		Err: MigrationError
+	});
 	const RegisterIcrcAssetParams = IDL.Record({
 		haircut_bps: IDL.Nat16,
 		is_enabled: IDL.Bool,
+		allowed_balance_domains: IDL.Vec(BalanceDomain),
 		ledger_id: IDL.Principal,
 		oracle_id: IDL.Opt(IDL.Text),
 		asset_id: IDL.Text
 	});
 	const RegisterIcrcAssetError = IDL.Variant({
+		InvalidAllowedBalanceDomains: IDL.Null,
 		AssetAlreadyExists: IDL.Null,
+		VusdCannotBeCollateral: IDL.Null,
 		Common: CommonError
 	});
 	const RegisterIcrcAssetResult = IDL.Variant({
@@ -912,8 +1004,24 @@ export const idlFactory = ({ IDL }) => {
 		Ok: IDL.Null,
 		Err: UpdateAssetPriceError
 	});
+	const UpdateCollateralAllowedDomainsParams = IDL.Record({
+		allowed_balance_domains: IDL.Vec(BalanceDomain),
+		asset_id: IDL.Text
+	});
+	const UpdateCollateralAllowedDomainsError = IDL.Variant({
+		AssetNotFound: IDL.Null,
+		InvalidAllowedBalanceDomains: IDL.Null
+	});
+	const UpdateCollateralAllowedDomainsResult = IDL.Variant({
+		Ok: IDL.Null,
+		Err: UpdateCollateralAllowedDomainsError
+	});
 	const UpdateCollateralAssetParams = IDL.Record({
 		config: CollateralAssetConfig
+	});
+	const UpdateDomainPolicyParams = IDL.Record({
+		domain: BalanceDomain,
+		policy: DomainPolicy
 	});
 	const WithdrawCollateralParams = IDL.Record({
 		domain: IDL.Opt(BalanceDomain),
@@ -925,6 +1033,10 @@ export const idlFactory = ({ IDL }) => {
 		InsufficientExcessMargin: IDL.Record({
 			requested: IDL.Nat,
 			available: IDL.Nat
+		}),
+		DomainNotAllowed: IDL.Record({
+			domain: BalanceDomain,
+			asset_id: IDL.Text
 		}),
 		MathOverflow: IDL.Null,
 		Asset: AssetError
@@ -973,6 +1085,7 @@ export const idlFactory = ({ IDL }) => {
 		get_account_state_query: IDL.Func([], [GetAccountStateResult], []),
 		get_asset_metrics: IDL.Func([], [IDL.Vec(IDL.Tuple(IDL.Text, AssetMetrics))], []),
 		get_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], []),
+		get_domain_policies: IDL.Func([], [IDL.Vec(IDL.Tuple(BalanceDomain, DomainPolicy))], []),
 		get_funds: IDL.Func([], [GetFundsResult], []),
 		get_orders: IDL.Func([], [IDL.Vec(LimitOrder)], []),
 		get_position: IDL.Func([GetPositionParams], [IDL.Opt(Position)], []),
@@ -986,6 +1099,7 @@ export const idlFactory = ({ IDL }) => {
 		list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], []),
 		list_series: IDL.Func([], [IDL.Vec(Series)], []),
 		metrics: IDL.Func([], [IDL.Text], []),
+		migrate_domain: IDL.Func([MigrateDomainParams], [MigrateDomainResult], []),
 		mint_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
 		redeem_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
 		register_icrc_asset: IDL.Func([RegisterIcrcAssetParams], [RegisterIcrcAssetResult], []),
@@ -998,13 +1112,55 @@ export const idlFactory = ({ IDL }) => {
 		submit_matched_trade: IDL.Func([SubmitMatchedTradeParams], [SubmitMatchedTradeResult], []),
 		update_asset_metrics: IDL.Func([UpdateAssetMetricsParams], [], []),
 		update_asset_price: IDL.Func([UpdateAssetPriceParams], [UpdateAssetPriceResult], []),
+		update_collateral_allowed_domains: IDL.Func(
+			[UpdateCollateralAllowedDomainsParams],
+			[UpdateCollateralAllowedDomainsResult],
+			[]
+		),
 		update_collateral_asset: IDL.Func([UpdateCollateralAssetParams], [], []),
 		update_config: IDL.Func([Config], [], []),
+		update_domain_policy: IDL.Func([UpdateDomainPolicyParams], [], []),
 		withdraw_collateral: IDL.Func([WithdrawCollateralParams], [WithdrawCollateralResult], []),
 		withdraw_fund: IDL.Func([WithdrawFundParams], [WithdrawFundResult], [])
 	});
 };
 
 export const init = ({ IDL }) => {
-	return [];
+	const ErcToken = IDL.Record({
+		decimals: IDL.Nat8,
+		token_address: IDL.Text,
+		chain_id: IDL.Nat64
+	});
+	const NativeEvmAsset = IDL.Record({
+		decimals: IDL.Nat8,
+		chain_id: IDL.Nat64
+	});
+	const Asset = IDL.Variant({
+		Erc20: ErcToken,
+		Icrc: IDL.Principal,
+		NativeEvm: NativeEvmAsset
+	});
+	const BalanceDomain = IDL.Variant({
+		Playground: IDL.Null,
+		Settlement: IDL.Null
+	});
+	const CollateralAssetConfig = IDL.Record({
+		decimals: IDL.Nat8,
+		asset: Asset,
+		is_enabled: IDL.Bool,
+		allowed_balance_domains: IDL.Vec(BalanceDomain),
+		oracle_id: IDL.Opt(IDL.Text),
+		asset_id: IDL.Text,
+		symbol: IDL.Text
+	});
+	const Config = IDL.Record({
+		insurance_fund_fee_ratio: IDL.Nat16,
+		internal_ledger: CollateralAssetConfig,
+		signer_canister: IDL.Principal,
+		version: IDL.Nat32,
+		evm_rpc: IDL.Principal,
+		protocol_fee_ratio: IDL.Nat16
+	});
+
+	return [Config];
 };

@@ -67,6 +67,7 @@ export interface CollateralAssetConfig {
 	decimals: number;
 	asset: Asset;
 	is_enabled: boolean;
+	allowed_balance_domains: Array<BalanceDomain>;
 	oracle_id: [] | [string];
 	asset_id: string;
 	symbol: string;
@@ -83,7 +84,9 @@ export type CommonError =
 	| { RegistryNotSet: null };
 export interface Config {
 	insurance_fund_fee_ratio: number;
+	internal_ledger: CollateralAssetConfig;
 	signer_canister: Principal;
+	version: number;
 	evm_rpc: Principal;
 	protocol_fee_ratio: number;
 }
@@ -91,7 +94,12 @@ export interface DecimalValue {
 	decimals: number;
 	value: bigint;
 }
-export type DepositCollateralError = { MathOverflow: null } | { Asset: AssetError };
+export type DepositCollateralError =
+	| {
+			DomainNotAllowed: { domain: BalanceDomain; asset_id: string };
+	  }
+	| { MathOverflow: null }
+	| { Asset: AssetError };
 export interface DepositCollateralParams {
 	deposit_id: string;
 	domain: [] | [BalanceDomain];
@@ -103,6 +111,13 @@ export interface Description {
 	html: [] | [string];
 	markdown: [] | [string];
 	plain: string;
+}
+export interface DomainPolicy {
+	deposits_enabled: boolean;
+	protocol_fee_ratio_override: [] | [number];
+	label: string;
+	withdrawals_enabled: boolean;
+	insurance_fund_fee_ratio_override: [] | [number];
 }
 export interface ErcToken {
 	decimals: number;
@@ -171,6 +186,17 @@ export interface LimitOrder {
 export interface ListOrdersParams {
 	series_id: [] | [string];
 }
+export interface MigrateDomainParams {
+	from_domain: BalanceDomain;
+	migration_id: string;
+	to_domain: BalanceDomain;
+}
+export type MigrateDomainResult = { Ok: null } | { Err: MigrationError };
+export type MigrationError =
+	| { NoStateTOMigrate: null }
+	| { SameDomain: null }
+	| { InFlightPlansExist: null }
+	| { Common: CommonError };
 export interface NativeEvmAsset {
 	decimals: number;
 	chain_id: bigint;
@@ -208,10 +234,15 @@ export interface Price {
 	oracle_id: [] | [string];
 	decimal: DecimalValue;
 }
-export type RegisterIcrcAssetError = { AssetAlreadyExists: null } | { Common: CommonError };
+export type RegisterIcrcAssetError =
+	| { InvalidAllowedBalanceDomains: null }
+	| { AssetAlreadyExists: null }
+	| { VusdCannotBeCollateral: null }
+	| { Common: CommonError };
 export interface RegisterIcrcAssetParams {
 	haircut_bps: number;
 	is_enabled: boolean;
+	allowed_balance_domains: Array<BalanceDomain>;
 	ledger_id: Principal;
 	oracle_id: [] | [string];
 	asset_id: string;
@@ -349,13 +380,28 @@ export interface UpdateAssetPriceParams {
 	asset_id: string;
 }
 export type UpdateAssetPriceResult = { Ok: null } | { Err: UpdateAssetPriceError };
+export type UpdateCollateralAllowedDomainsError =
+	| { AssetNotFound: null }
+	| { InvalidAllowedBalanceDomains: null };
+export interface UpdateCollateralAllowedDomainsParams {
+	allowed_balance_domains: Array<BalanceDomain>;
+	asset_id: string;
+}
+export type UpdateCollateralAllowedDomainsResult =
+	| { Ok: null }
+	| { Err: UpdateCollateralAllowedDomainsError };
 export interface UpdateCollateralAssetParams {
 	config: CollateralAssetConfig;
+}
+export interface UpdateDomainPolicyParams {
+	domain: BalanceDomain;
+	policy: DomainPolicy;
 }
 export type WithdrawCollateralError =
 	| {
 			InsufficientExcessMargin: { requested: bigint; available: bigint };
 	  }
+	| { DomainNotAllowed: { domain: BalanceDomain; asset_id: string } }
 	| { MathOverflow: null }
 	| { Asset: AssetError };
 export interface WithdrawCollateralParams {
@@ -436,6 +482,12 @@ export interface _SERVICE {
 	 */
 	get_collateral_assets: ActorMethod<[], Array<CollateralAssetInfo>>;
 	/**
+	 * Returns the current domain policies for all configured domains.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	get_domain_policies: ActorMethod<[], Array<[BalanceDomain, DomainPolicy]>>;
+	/**
 	 * Returns the current balances of the Insurance Fund and Treasury.
 	 *
 	 * This method is gated to canister controllers.
@@ -487,6 +539,19 @@ export interface _SERVICE {
 	 * This method is gated to canister controllers.
 	 */
 	metrics: ActorMethod<[], string>;
+	/**
+	 * Migrates a user's entire domain state (balances, cash, margin, positions, orders)
+	 * from one balance domain to another.
+	 *
+	 * This operation is idempotent: providing the same `migration_id` returns `Ok`
+	 * if the migration was already finalised.
+	 *
+	 * Pre-conditions enforced:
+	 * - `from_domain != to_domain`
+	 * - No in-flight deposit, withdrawal, or settlement plans for the user in the source domain.
+	 * - User must have state to migrate.
+	 */
+	migrate_domain: ActorMethod<[MigrateDomainParams], MigrateDomainResult>;
 	/**
 	 * Mints a complete set of categorical outcome positions.
 	 *
@@ -574,6 +639,15 @@ export interface _SERVICE {
 	 */
 	update_asset_price: ActorMethod<[UpdateAssetPriceParams], UpdateAssetPriceResult>;
 	/**
+	 * Updates which balance domains may hold this collateral asset (deposits and withdrawals).
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	update_collateral_allowed_domains: ActorMethod<
+		[UpdateCollateralAllowedDomainsParams],
+		UpdateCollateralAllowedDomainsResult
+	>;
+	/**
 	 * Adds or updates a collateral asset configuration.
 	 *
 	 * This method is gated to canister controllers.
@@ -582,9 +656,16 @@ export interface _SERVICE {
 	/**
 	 * Updates the global configuration for the Clearing canister.
 	 *
-	 * This method is gated to canister controllers.
+	 * Immutable properties like `internal_ledger_id` and `version` are preserved from the existing
+	 * state. This method is gated to canister controllers.
 	 */
 	update_config: ActorMethod<[Config], undefined>;
+	/**
+	 * Adds or updates the policy for a specific balance domain.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	update_domain_policy: ActorMethod<[UpdateDomainPolicyParams], undefined>;
 	/**
 	 * Withdraws collateral from the user's account state to an external address.
 	 *

@@ -18,6 +18,7 @@
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
 	import { formatAvailableUsd, formatCurrency } from '$lib/utils/format.utils';
+	import { calculateMarketStats } from '$lib/utils/market.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 	import { executeOutcomeTrade } from '$lib/utils/trade.utils';
 
@@ -56,7 +57,6 @@
 		try {
 			const orderBook = await getOrderBook({
 				marketId: market.id,
-				outcomeId: selectedType,
 				domain: market.balanceDomain
 			});
 
@@ -119,7 +119,13 @@
 		}
 	});
 
-	let marketDepth = $derived($orderBookStore?.[market.id]);
+	let marketDepth = $derived.by(() => {
+		const rawOrders = $orderBookStore?.[market.id];
+		if (!rawOrders) {
+			return;
+		}
+		return calculateMarketStats({ orders: rawOrders, outcome: selectedType });
+	});
 
 	let hasMarketDepth = $derived.by(() => {
 		if (!marketDepth) {
