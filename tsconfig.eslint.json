@@ -3,11 +3,13 @@
 	"include": [
 		"ambient.d.ts",
 		"non-ambient.d.ts",
+		"./e2e/",
 		"./scripts/",
 		"./src/",
 		"./eslint.config.js",
 		"./eslint-local-rules.cjs",
 		"./juno.config.ts",
+		"./playwright.config.ts",
 		"./svelte.config.js",
 		"./vite.config.ts"
 	],

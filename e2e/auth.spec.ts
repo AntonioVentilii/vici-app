@@ -15,7 +15,7 @@ testWithII.describe.skip('Authentication Flow', () => {
 	let homePage: HomePage;
 	let loginPage: LoginPage;
 
-	testWithII.beforeEach(async ({ page }) => {
+	testWithII.beforeEach(({ page }) => {
 		homePage = new HomePage(page);
 		loginPage = new LoginPage(page);
 	});
@@ -35,6 +35,7 @@ testWithII.describe.skip('Authentication Flow', () => {
 			await expect(async () => {
 				const cardCount = await cards.count();
 				const skeletonCount = await skeletons.count();
+
 				expect(cardCount + skeletonCount).toBeGreaterThan(0);
 			}).toPass();
 
@@ -66,6 +67,7 @@ testWithII.describe.skip('Authentication Flow', () => {
 			await expect(cards.first()).toBeVisible();
 
 			const cardCount = await cards.count();
+
 			expect(cardCount).toBeGreaterThan(0);
 
 			// 4. Log out
