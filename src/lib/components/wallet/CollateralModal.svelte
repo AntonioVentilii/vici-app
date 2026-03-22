@@ -4,7 +4,7 @@
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
-	import { defaultSupportedToken, supportedTokens } from '$lib/derived/tokens.derived';
+	import { defaultClearingCollateralToken, supportedTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { depositCollateral, withdrawCollateral } from '$lib/services/collateral.services';
 	import type { Token } from '$lib/types/token';
@@ -24,8 +24,8 @@
 	let selectedToken = $state<Token | undefined>();
 
 	$effect(() => {
-		if (nonNullish($defaultSupportedToken) && isNullish(selectedToken)) {
-			selectedToken = $defaultSupportedToken;
+		if (nonNullish($defaultClearingCollateralToken) && isNullish(selectedToken)) {
+			selectedToken = $defaultClearingCollateralToken;
 		}
 	});
 
@@ -36,7 +36,7 @@
 	const reset = () => {
 		amount = '';
 		mode = 'Deposit';
-		selectedToken = $defaultSupportedToken;
+		selectedToken = $defaultClearingCollateralToken;
 		loading = false;
 		error = '';
 	};
@@ -133,22 +133,29 @@
 	<div class="mt-8 space-y-6">
 		<div class="space-y-2">
 			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">Token</span>
-			<div class="grid grid-cols-2 gap-3">
-				{#each $supportedTokens as token (token.ledgerCanisterId)}
-					<BaseButton
-						class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 font-bold {selectedToken?.ledgerCanisterId ===
-						token.ledgerCanisterId
-							? 'border-indigo-600 bg-indigo-50 text-indigo-600'
-							: 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'}"
-						onclick={() => (selectedToken = token)}
-					>
-						{token.symbol}
-						{#if isDev() && token.isDevEnabled}
-							<Badge size="sm" variant="warning">DEV</Badge>
-						{/if}
-					</BaseButton>
-				{/each}
-			</div>
+			{#if $supportedTokens.length === 0}
+				<p class="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+					No collateral assets are available for this balance domain on the clearing canister. If
+					this persists, the ledger may not be registered for deposits on this network.
+				</p>
+			{:else}
+				<div class="grid grid-cols-2 gap-3">
+					{#each $supportedTokens as token (token.ledgerCanisterId)}
+						<BaseButton
+							class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 font-bold {selectedToken?.ledgerCanisterId ===
+							token.ledgerCanisterId
+								? 'border-indigo-600 bg-indigo-50 text-indigo-600'
+								: 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'}"
+							onclick={() => (selectedToken = token)}
+						>
+							{token.symbol}
+							{#if isDev() && token.isDevEnabled}
+								<Badge size="sm" variant="warning">DEV</Badge>
+							{/if}
+						</BaseButton>
+					{/each}
+				</div>
+			{/if}
 		</div>
 
 		<div class="space-y-2">
@@ -180,7 +187,7 @@
 			onclick={handleSubmit}
 			status={loading
 				? 'pending'
-				: nonNullish(amount) && nonNullish(selectedToken)
+				: $supportedTokens.length > 0 && nonNullish(selectedToken) && parseFloat(amount) > 0
 					? 'enabled'
 					: 'disabled'}
 		>

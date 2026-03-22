@@ -6,17 +6,21 @@ import { balance as getLedgerBalance } from '$lib/api/icrc-ledger.api';
 import { ZERO } from '$lib/constants/app.constants';
 import {
 	CKUSDC_INDEX_CANISTER_ID,
-	ICP_INDEX_CANISTER_ID
+	ICP_INDEX_CANISTER_ID,
+	VXP_INDEX_CANISTER_ID
 } from '$lib/constants/canisters.constants';
 import {
 	CKUSDC_TOKEN,
 	ICP_TOKEN,
-	SUPPORTED_TOKENS
+	SUPPORTED_TOKENS,
+	VXP_TOKEN
 } from '$lib/constants/tokens/tokens.ic.constants';
 import { balanceDomain } from '$lib/derived/balance-domain.derived';
+import { getCollateralAssets } from '$lib/services/collateral.services';
 import { getIdentity } from '$lib/services/identity.services';
 import type { TokenId } from '$lib/types/token';
 import type { Transaction, WalletBalance } from '$lib/types/wallet';
+import { findSupportedTokenForClearingAssetId } from '$lib/utils/asset-ref.utils';
 import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
 import {
 	getIcrcAccount,
@@ -28,6 +32,7 @@ import {
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
 import { get } from 'svelte/store';
 
+/** On-ledger balances for each supported token id (empty if not signed in). */
 export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	const identity = await getIdentity();
 
@@ -65,6 +70,7 @@ export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	}
 };
 
+/** Clearing account state for `domain` (defaults to current UI balance domain). */
 export const getCollateralBalances = async (
 	domain: ClearingDid.BalanceDomain = get(balanceDomain)
 ): Promise<ClearingDid.AccountStateResponse | undefined> => {
@@ -85,12 +91,14 @@ export const getCollateralBalances = async (
 	}
 };
 
+/** Combined ledger balances and per-token clearing collateral for the given domain. */
 export const getBalances = async (
 	domain: ClearingDid.BalanceDomain = get(balanceDomain)
 ): Promise<WalletBalance> => {
-	const [balances, accountState] = await Promise.all([
+	const [balances, accountState, collateralInfos] = await Promise.all([
 		getLedgerBalances(),
-		getCollateralBalances(domain)
+		getCollateralBalances(domain),
+		getCollateralAssets()
 	]);
 
 	const collateral: Record<TokenId, bigint> = {};
@@ -103,7 +111,11 @@ export const getBalances = async (
 		if (nonNullish(targetDomainBalances)) {
 			const [, domainBalances] = targetDomainBalances;
 			domainBalances.forEach(([assetId, balance]) => {
-				const token = SUPPORTED_TOKENS.find((t) => t.symbol.toLowerCase() === assetId);
+				const token = findSupportedTokenForClearingAssetId({
+					assetId,
+					collateralInfos,
+					supportedTokens: SUPPORTED_TOKENS
+				});
 
 				if (nonNullish(token)) {
 					collateral[token.id] = (collateral[token.id] ?? ZERO) + balance;
@@ -119,6 +131,7 @@ export const getBalances = async (
 	};
 };
 
+/** Recent ICP, ckUSDC, and VXP index transactions normalized and merged, newest first. */
 export const getTransactions = async (): Promise<Transaction[]> => {
 	const identity = await getIdentity();
 
@@ -129,17 +142,21 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 	const principal = identity.getPrincipal();
 
 	try {
-		// 1. Fetch Index Transactions
-		const [icpTransactions, ckUsdcTransactions] = await Promise.all([
-			await getIcpTransactionsApi({
+		const [icpTransactions, ckUsdcTransactions, vxpTransactions] = await Promise.all([
+			getIcpTransactionsApi({
 				identity,
 				principal,
 				indexCanisterId: ICP_INDEX_CANISTER_ID
 			}),
-			await getIcrcTransactionsApi({
+			getIcrcTransactionsApi({
 				identity,
 				principal,
 				indexCanisterId: CKUSDC_INDEX_CANISTER_ID
+			}),
+			getIcrcTransactionsApi({
+				identity,
+				principal,
+				indexCanisterId: VXP_INDEX_CANISTER_ID
 			})
 		]);
 
@@ -151,7 +168,11 @@ export const getTransactions = async (): Promise<Transaction[]> => {
 			.flatMap(mapTransactionIcrcToSelf)
 			.map((transaction) => mapIcrcTransaction({ transaction, token: CKUSDC_TOKEN, identity }));
 
-		return [...icpNormalized, ...ckUsdcNormalized].sort(
+		const vxpNormalized: Transaction[] = vxpTransactions.transactions
+			.flatMap(mapTransactionIcrcToSelf)
+			.map((transaction) => mapIcrcTransaction({ transaction, token: VXP_TOKEN, identity }));
+
+		return [...icpNormalized, ...ckUsdcNormalized, ...vxpNormalized].sort(
 			(a, b) => Number(b.timestamp) - Number(a.timestamp)
 		);
 	} catch (e: unknown) {

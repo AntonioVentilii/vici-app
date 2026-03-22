@@ -4,11 +4,12 @@
 	import Tabs from '$lib/components/ui/Tabs.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { orders } from '$lib/derived/orders.derived';
+	import { playgroundLockedCapacityLabel } from '$lib/derived/playground.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { cancelLimitOrder } from '$lib/services/order.services';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
-	import { formatToken } from '$lib/utils/format.utils';
+	import { decimalFixedValueToNumber, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -117,10 +118,11 @@
 											<div>
 												<div class="text-sm font-bold text-slate-950">
 													{formatToken({ value: order.qty, unitName: market.token.decimals })}
-													{market.token.symbol} @ {(
-														Number(order.price.decimal.value) /
-														10 ** order.price.decimal.decimals
-													).toFixed(2)}
+													{market.token.symbol} @
+													{decimalFixedValueToNumber({
+														value: order.price.decimal.value,
+														decimals: order.price.decimal.decimals
+													}).toFixed(2)}
 												</div>
 												<div class="text-[10px] font-medium text-slate-400 uppercase">
 													{order.outcome_id[0] ?? 'YES'} • {'Buy' in order.side ? 'Buy' : 'Sell'}
@@ -148,7 +150,7 @@
 									activeOrders.reduce((acc, o) => acc + o.blocked_margin_usd, ZERO),
 								unitName: 6
 							})}
-							vUSD
+							{$playgroundLockedCapacityLabel}
 						</span>
 					</div>
 				{:else}

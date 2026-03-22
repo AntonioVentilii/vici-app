@@ -2,10 +2,14 @@ import type { ClearingDid, RegistryDid } from '$declarations';
 import { NANO_SECONDS_IN_MILLISECOND, ZERO } from '$lib/constants/app.constants';
 import type { Market, MarketStatus, Outcome } from '$lib/types/market';
 import type { OrderBookLevel } from '$lib/types/order';
-import { assetToToken } from '$lib/utils/asset.utils';
+import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
+import { resolveMarketDisplayToken } from '$lib/utils/market-token.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish } from '@dfinity/utils';
 
+/** Maps registry/clearing data into UI market models, order book stats, and display helpers. */
+
+/** Builds a `Market` view model from registry series and optional book/probability fields. */
 export const mapMarketData = ({
 	series,
 	yesProbability = 0,
@@ -41,7 +45,7 @@ export const mapMarketData = ({
 		balance_domain: balanceDomain
 	} = series;
 
-	const token = assetToToken(payoutUnit);
+	const token = resolveMarketDisplayToken({ balanceDomain, payoutUnit });
 
 	if (isNullish(token)) {
 		return;
@@ -90,6 +94,7 @@ export const mapMarketData = ({
 	};
 };
 
+/** Mid-price estimate from bid/ask levels (0.5 if empty, else best bid/ask or one-sided). */
 export const calculateProbability = ({
 	bids,
 	asks
@@ -114,6 +119,7 @@ export const calculateProbability = ({
 	return asks[0].price;
 };
 
+/** Aggregates clearing limit orders into sorted bid/ask ladders and mid-price for an outcome. */
 export const calculateMarketStats = ({
 	orders,
 	outcome = 'YES'
@@ -132,7 +138,10 @@ export const calculateMarketStats = ({
 		const isOrderBinarySide = oOutcomeId === 'YES' || oOutcomeId === 'NO';
 
 		let displaySide = side;
-		let displayPrice = Number(o.price.decimal.value) / 10 ** o.price.decimal.decimals;
+		let displayPrice = decimalFixedValueToNumber({
+			value: o.price.decimal.value,
+			decimals: o.price.decimal.decimals
+		});
 
 		if (oOutcomeId !== outcome) {
 			if (isBinarySide && isOrderBinarySide) {
@@ -168,6 +177,7 @@ export const calculateMarketStats = ({
 	};
 };
 
+/** Human-readable time until `expiry` (ms since epoch) or `"Expired"`. */
 export const getTimeRemaining = (expiry: bigint): string => {
 	const now = BigInt(Date.now());
 	const diff = Number(expiry - now);
@@ -191,6 +201,7 @@ export const getTimeRemaining = (expiry: bigint): string => {
 	return `${minutes}m remaining`;
 };
 
+/** Normalized implied probabilities per categorical outcome from order book top of book. */
 export const calculateCategoricalProbabilities = ({
 	outcomes,
 	orders
@@ -204,11 +215,21 @@ export const calculateCategoricalProbabilities = ({
 		const outcomeOrders = orders.filter((order) => order.outcome_id[0] === o.id);
 		const bids = outcomeOrders
 			.filter((order) => 'Buy' in order.side)
-			.map((order) => Number(order.price.decimal.value) / 10 ** order.price.decimal.decimals)
+			.map((order) =>
+				decimalFixedValueToNumber({
+					value: order.price.decimal.value,
+					decimals: order.price.decimal.decimals
+				})
+			)
 			.sort((a, b) => b - a);
 		const asks = outcomeOrders
 			.filter((order) => 'Sell' in order.side)
-			.map((order) => Number(order.price.decimal.value) / 10 ** order.price.decimal.decimals)
+			.map((order) =>
+				decimalFixedValueToNumber({
+					value: order.price.decimal.value,
+					decimals: order.price.decimal.decimals
+				})
+			)
 			.sort((a, b) => a - b);
 
 		outcomeBook[o.id] = {
@@ -246,6 +267,7 @@ export const calculateCategoricalProbabilities = ({
 	return probs;
 };
 
+/** Badge/variant hint for market or resolution outcome labels. */
 export const getOutcomeVariant = (
 	outcome: string | undefined
 ): 'default' | 'success' | 'warning' | 'danger' | 'info' => {

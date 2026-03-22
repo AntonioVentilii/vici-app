@@ -6,7 +6,11 @@
 	import { selectPrice } from '$lib/stores/trade.store';
 	import type { Market, Outcome } from '$lib/types/market';
 	import type { OrderBookLevel } from '$lib/types/order';
-	import { formatProbability, formatQuantity } from '$lib/utils/format.utils';
+	import {
+		decimalFixedValueToNumber,
+		formatProbability,
+		formatQuantity
+	} from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -48,7 +52,10 @@
 			const isOrderBinarySide = oOutcomeId === 'YES' || oOutcomeId === 'NO';
 
 			let displaySide = side;
-			let displayPrice = Number(o.price.decimal.value) / 10 ** o.price.decimal.decimals;
+			let displayPrice = decimalFixedValueToNumber({
+				value: o.price.decimal.value,
+				decimals: o.price.decimal.decimals
+			});
 
 			if (oOutcomeId !== outcome) {
 				if (isBinarySide && isOrderBinarySide) {
@@ -106,7 +113,10 @@
 			}
 
 			const oOutcomeId = o.outcome_id[0] ?? 'YES';
-			const oPrice = Number(o.price.decimal.value) / 10 ** o.price.decimal.decimals;
+			const oPrice = decimalFixedValueToNumber({
+				value: o.price.decimal.value,
+				decimals: o.price.decimal.decimals
+			});
 
 			if (oOutcomeId === outcome) {
 				return Math.abs(oPrice - price) < 0.000001;

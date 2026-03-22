@@ -3,9 +3,12 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Switch from '$lib/components/ui/Switch.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { supportedTokens } from '$lib/derived/tokens.derived';
+	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
+	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import type { WalletBalance } from '$lib/types/wallet';
+	import { findAssetWorthForIcrcLedger } from '$lib/utils/asset-ref.utils';
 	import { formatCurrency, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
@@ -17,7 +20,7 @@
 	let hideZeroBalances = $state(true);
 
 	const displayedTokens = $derived(
-		$supportedTokens.filter((token) => {
+		$walletUiTokens.filter((token) => {
 			if (!hideZeroBalances) {
 				return true;
 			}
@@ -51,9 +54,11 @@
 		{#each displayedTokens as token (token.ledgerCanisterId)}
 			{@const color = getTokenColor(token.symbol)}
 			{@const balance = balances.balances[token.id] ?? ZERO}
-			{@const assetWorth = balances.accountState?.assets.find(
-				(a) => a.asset_id === token.symbol.toLowerCase()
-			)}
+			{@const assetWorth = findAssetWorthForIcrcLedger({
+				assets: balances.accountState?.assets,
+				ledgerCanisterId: token.ledgerCanisterId,
+				assetsConfig: $collateralsStore.assetsConfig
+			})}
 
 			<div class="flex items-center justify-between p-4 transition-colors hover:bg-slate-50/50">
 				<div class="flex items-center gap-3">
@@ -77,7 +82,9 @@
 						{formatToken({ value: balance, unitName: token.decimals })}
 					</div>
 					<div class="text-[10px] font-medium text-slate-400">
-						{#if assetWorth}
+						{#if $playgroundVxpUnitMode}
+							{token.symbol}
+						{:else if assetWorth}
 							≈ {formatCurrency({ value: assetWorth.value_usd })}
 						{:else if token.symbol === 'ckUSDC'}
 							≈ {formatCurrency({ value: balance, decimals: token.decimals })}

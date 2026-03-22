@@ -6,5 +6,7 @@ export enum Collection {
 	COMMENTS = 'comments',
 	CATEGORIES = 'categories',
 	SERIES_CATEGORIES = 'series_categories',
-	ACTIVITIES = 'activities'
+	ACTIVITIES = 'activities',
+	/** Server-driven VXP new-user ladder state (owed vs paid); written from satellite hooks. */
+	VXP_ONBOARDING = 'vxp_onboarding'
 }

@@ -10,129 +10,540 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
+/**
+ * Input parameters for registering a new price oracle.
+ */
 export interface AddOracleParams {
+	/**
+	 * Initial information about the oracle.
+	 */
 	metadata: OracleMetadata;
+	/**
+	 * Initial list of authorised principals.
+	 */
 	authorized_principals: Array<Principal>;
+	/**
+	 * Unique identifier for the oracle (e.g., "COINGECKO").
+	 */
 	oracle_id: string;
 }
+/**
+ * Input parameters for registering a new derivative series.
+ */
 export interface AddSeriesParams {
+	/**
+	 * A short, descriptive title for the series.
+	 */
 	title: string;
+	/**
+	 * The option strike price, if applicable.
+	 */
 	strike: [] | [Price];
+	/**
+	 * The payoff model for the series.
+	 */
 	payoff_type: PayoffType;
+	/**
+	 * The unit in which the contract payoff is expressed.
+	 */
 	payout_unit: PayoutUnit;
+	/**
+	 * Expiry timestamp in nanoseconds since UNIX epoch.
+	 */
 	expiry_ns: bigint;
+	/**
+	 * An optional banner URL for the market.
+	 */
 	banner_url: [] | [string];
+	/**
+	 * The underlying asset ticker (case-insensitive, e.g., "ICP").
+	 */
 	underlying: string;
+	/**
+	 * A detailed description of the series.
+	 */
 	description: Description;
+	/**
+	 * The defined outcomes for categorical markets (ordered).
+	 */
 	outcomes: [] | [Array<Outcome>];
+	/**
+	 * An optional icon URL for the market.
+	 */
 	icon_url: [] | [string];
+	/**
+	 * The number of decimals used for prices and strikes in this series.
+	 */
 	price_precision: number;
+	/**
+	 * The balance domain this series belongs to.
+	 */
 	balance_domain: BalanceDomain;
+	/**
+	 * The price oracle identifier (case-insensitive, e.g., "Coingecko").
+	 */
 	oracle_source: string;
 }
-export type AddSeriesResult = { Ok: string } | { Err: SeriesError };
-export type Asset = { Erc20: ErcToken } | { Icrc: Principal } | { NativeEvm: NativeEvmAsset };
-export type BalanceDomain = { Playground: null } | { Settlement: null };
+/**
+ * The result of an [`add_series`] operation.
+ */
+export type AddSeriesResult =
+	| {
+			/**
+			 * Successfully registered the series with the returned [`SeriesId`].
+			 */
+			Ok: string;
+	  }
+	| {
+			/**
+			 * Failed to register the series.
+			 */
+			Err: SeriesError;
+	  };
+/**
+ * Represents a supported asset in the ICDC ecosystem.
+ */
+export type Asset =
+	| {
+			/**
+			 * An ERC-20 token on an EVM-compatible chain.
+			 */
+			Erc20: ErcToken;
+	  }
+	| {
+			/**
+			 * An ICRC-compliant token identified by its canister [`Principal`].
+			 */
+			Icrc: Principal;
+	  }
+	| {
+			/**
+			 * A native asset on an EVM-compatible chain.
+			 */
+			NativeEvm: NativeEvmAsset;
+	  };
+/**
+ * Represents a distinct domain for balances and trading logic.
+ */
+export type BalanceDomain =
+	| {
+			/**
+			 * VICI XP (loyalty points) — segregated from Playground test assets.
+			 */
+			ViciXp: null;
+	  }
+	| {
+			/**
+			 * Testnet / sandbox collateral (e.g. TESTICP, Sepolia) — not real funds.
+			 */
+			Playground: null;
+	  }
+	| {
+			/**
+			 * Real collateralized trading (e.g., using ckUSDC, ICP).
+			 */
+			Settlement: null;
+	  };
+/**
+ * A generic representation of a decimal value with fixed precision.
+ * This decouples numeric logic from domain-specific types like Price or Quantity.
+ */
 export interface DecimalValue {
+	/**
+	 * The number of decimal places (exponent).
+	 */
 	decimals: number;
+	/**
+	 * The numeric value (mantissa).
+	 */
 	value: bigint;
 }
+/**
+ * A multiformat description.
+ * Provides multiple versions of the same content for different rendering environments.
+ */
 export interface Description {
+	/**
+	 * Optional HTML version of the description.
+	 */
 	html: [] | [string];
+	/**
+	 * Optional markdown version of the description.
+	 */
 	markdown: [] | [string];
+	/**
+	 * The mandatory plain text description.
+	 */
 	plain: string;
 }
+/**
+ * Represents an ERC-20 token on a specific EVM chain.
+ */
 export interface ErcToken {
+	/**
+	 * The number of decimals the token uses (e.g., 18 for ETH, 6 for USDC).
+	 */
 	decimals: number;
+	/**
+	 * The contract address of the token.
+	 */
 	token_address: string;
+	/**
+	 * The ID of the EVM chain where the token is deployed.
+	 */
 	chain_id: bigint;
 }
 export type FiatUnit = { Chf: null } | { Eur: null } | { Gbp: null } | { Usd: null };
+/**
+ * Parameters for filtering the list of registered derivative series.
+ */
 export interface ListSeriesParams {
+	/**
+	 * Filter by the strike price.
+	 */
 	strike: [] | [Price];
+	/**
+	 * Filter by the principal identifier of the creator.
+	 */
 	creator: [] | [Principal];
+	/**
+	 * Filter by the payoff model.
+	 */
 	payoff_type: [] | [PayoffType];
+	/**
+	 * Filter by the payout unit.
+	 */
 	payout_unit: [] | [PayoutUnit];
+	/**
+	 * Optional pagination parameters.
+	 */
 	pagination: [] | [PaginationParams];
+	/**
+	 * Filter by the underlying asset ticker (case-insensitive).
+	 */
 	underlying: [] | [string];
+	/**
+	 * Filter by a search term in the title or description (case-insensitive, partial match).
+	 */
 	search_term: [] | [string];
+	/**
+	 * Filter by balance domain.
+	 */
 	balance_domain: [] | [BalanceDomain];
+	/**
+	 * Filter by the price oracle identifier (case-insensitive, partial match).
+	 */
 	oracle_source: [] | [string];
 }
+/**
+ * Input parameters for managing authorised principals of an oracle.
+ */
 export interface ManageOraclePrincipalsParams {
+	/**
+	 * Principals to be added to the authorised list.
+	 */
 	add_principals: Array<Principal>;
+	/**
+	 * Principals to be removed from the authorised list.
+	 */
 	remove_principals: Array<Principal>;
+	/**
+	 * The unique identifier of the oracle.
+	 */
 	oracle_id: string;
 }
+/**
+ * Represents a native asset on an EVM-compatible chain
+ * (for example ETH on Ethereum/Base, POL on Polygon, or BNB on BSC).
+ */
 export interface NativeEvmAsset {
+	/**
+	 * The number of decimals the native asset uses.
+	 */
 	decimals: number;
+	/**
+	 * The EVM chain where this native asset is used.
+	 */
 	chain_id: bigint;
 }
 export type NonMonetaryUnit = { Points: null };
+/**
+ * Represents an authorised price oracle group.
+ */
 export interface Oracle {
+	/**
+	 * The principal identifier of the oracle's manager (defaults to creator).
+	 */
 	manager: Principal;
+	/**
+	 * Timestamp of oracle registration in nanoseconds since UNIX epoch.
+	 */
 	registered_at_ns: bigint;
+	/**
+	 * Metadata about the oracle.
+	 */
 	metadata: OracleMetadata;
+	/**
+	 * The set of principals authorised to push settlement data for this oracle.
+	 */
 	authorized_principals: Array<Principal>;
+	/**
+	 * Unique identifier for the oracle (e.g., "COINGECKO").
+	 */
 	oracle_id: string;
 }
+/**
+ * Errors that can occur during oracle-related operations.
+ */
 export type OracleError =
-	| { UnauthorizedOracleManager: null }
-	| { OracleAlreadyExists: null }
-	| { OracleNotFound: null };
+	| {
+			/**
+			 * Returned when the caller is not authorised to manage the oracle.
+			 */
+			UnauthorizedOracleManager: null;
+	  }
+	| {
+			/**
+			 * Returned when attempting to add an oracle that already exists.
+			 */
+			OracleAlreadyExists: null;
+	  }
+	| {
+			/**
+			 * Returned when the specified oracle does not exist.
+			 */
+			OracleNotFound: null;
+	  };
+/**
+ * Metadata about a price oracle entity.
+ */
 export interface OracleMetadata {
+	/**
+	 * The human-readable name of the oracle.
+	 */
 	name: string;
+	/**
+	 * A short description of the oracle's methodology or data sources.
+	 */
 	description: [] | [Description];
+	/**
+	 * Optional URL to the oracle's website.
+	 */
 	website: [] | [string];
 }
+/**
+ * The result of an oracle-related operation.
+ */
 export type OracleResult = { Ok: null } | { Err: OracleError };
+/**
+ * Metadata for a specific outcome in a categorical market.
+ */
 export interface Outcome {
+	/**
+	 * The unique identifier of the outcome.
+	 */
 	id: string;
+	/**
+	 * A short title for the outcome (e.g., "Yes", "No", "Team A").
+	 */
 	title: string;
+	/**
+	 * An optional detailed description of the outcome.
+	 */
 	description: [] | [Description];
+	/**
+	 * An optional icon URL for the outcome.
+	 */
 	icon_url: [] | [string];
 }
+/**
+ * Parameters for paginating results.
+ */
 export interface PaginationParams {
+	/**
+	 * Return items strictly *after* this series id (exclusive).
+	 */
 	cursor: [] | [string];
+	/**
+	 * Maximum number of items to return.
+	 */
 	limit: [] | [bigint];
 }
-export type PayoffType = { Put: null } | { Binary: null } | { Call: null } | { Categorical: null };
+/**
+ * Defines the payoff structure for a derivative contract.
+ */
+export type PayoffType =
+	| {
+			/**
+			 * Payoff based on the positive difference between strike and underlying price.
+			 */
+			Put: null;
+	  }
+	| {
+			/**
+			 * A fixed payoff if the condition is met (all-or-nothing).
+			 */
+			Binary: null;
+	  }
+	| {
+			/**
+			 * Payoff based on the positive difference between underlying price and strike.
+			 */
+			Call: null;
+	  }
+	| {
+			/**
+			 * A categorical market with multiple mutually exclusive outcomes.
+			 */
+			Categorical: null;
+	  };
 export type PayoutUnit = { Fiat: FiatUnit } | { Asset: Asset } | { NonMonetary: NonMonetaryUnit };
+/**
+ * Encapsulates a price with its numerical value and domain-specific metadata.
+ * Decouples the mathematical representation (`DecimalValue`) from the
+ * reporting context (timestamp, oracle Source).
+ */
 export interface Price {
+	/**
+	 * Optional timestamp when this price was generated/observed.
+	 */
 	timestamp: [] | [bigint];
+	/**
+	 * Optional identifier for the oracle source.
+	 */
 	oracle_id: [] | [string];
+	/**
+	 * The numeric component of the price.
+	 */
 	decimal: DecimalValue;
 }
+/**
+ * Defines a specific derivative series (contract).
+ */
 export interface Series {
+	/**
+	 * A short, descriptive title for the series.
+	 */
 	title: string;
+	/**
+	 * Target price for options, if applicable.
+	 */
 	strike: [] | [Price];
+	/**
+	 * The principal identifier of the series creator.
+	 */
 	creator: Principal;
+	/**
+	 * The mathematical payoff model used for this series.
+	 */
 	payoff_type: PayoffType;
+	/**
+	 * The unit in which the contract payoff is expressed.
+	 */
 	payout_unit: PayoutUnit;
+	/**
+	 * Expiry timestamp in nanoseconds since UNIX epoch.
+	 */
 	expiry_ns: bigint;
+	/**
+	 * An optional banner URL for the market.
+	 */
 	banner_url: [] | [string];
+	/**
+	 * Unique identifier computed from series parameters.
+	 */
 	series_id: string;
+	/**
+	 * The underlying asset ticker or identifier (e.g., "ICP/USD").
+	 */
 	underlying: string;
+	/**
+	 * A detailed description of the series.
+	 */
 	description: Description;
+	/**
+	 * The defined outcomes for categorical markets (ordered).
+	 */
 	outcomes: [] | [Array<Outcome>];
+	/**
+	 * Timestamp of series creation in nanoseconds since UNIX epoch.
+	 */
 	created_at_ns: bigint;
+	/**
+	 * An optional icon URL for the market.
+	 */
 	icon_url: [] | [string];
+	/**
+	 * The canonical number of decimals used for prices and strikes in this series.
+	 */
 	price_precision: number;
+	/**
+	 * The domain this market belongs to (e.g. Playground, Settlement).
+	 */
 	balance_domain: BalanceDomain;
+	/**
+	 * The identifier of the oracle providing the settlement data.
+	 */
 	oracle_source: string;
 }
+/**
+ * Errors that can occur during series-related operations.
+ */
 export type SeriesError =
-	| { DescriptionTooLong: null }
-	| { TitleTooLong: null }
-	| { Unauthorized: null }
-	| { UnsupportedPayoutUnit: null }
-	| { SeriesAlreadyExists: null };
+	| {
+			/**
+			 * Returned when the provided description exceeds the maximum allowed length.
+			 */
+			DescriptionTooLong: null;
+	  }
+	| {
+			/**
+			 * Returned when the provided title exceeds the maximum allowed length.
+			 */
+			TitleTooLong: null;
+	  }
+	| {
+			/**
+			 * Returned when the caller is not authorized to add a series.
+			 */
+			Unauthorized: null;
+	  }
+	| {
+			/**
+			 * Returned when the provided payout unit is not supported by the protocol.
+			 */
+			UnsupportedPayoutUnit: null;
+	  }
+	| {
+			/**
+			 * Returned when attempting to add a series that already exists.
+			 */
+			SeriesAlreadyExists: null;
+	  };
+/**
+ * A paginated page of registered series.
+ */
 export interface SeriesPage {
+	/**
+	 * The cursor to be used for the next request, if any.
+	 */
 	next_cursor: [] | [string];
+	/**
+	 * The list of series in this page.
+	 */
 	items: Array<Series>;
 }
+/**
+ * Input parameters for updating an existing oracle's metadata.
+ */
 export interface UpdateOracleMetadataParams {
+	/**
+	 * The updated metadata.
+	 */
 	metadata: OracleMetadata;
+	/**
+	 * The unique identifier of the oracle to update.
+	 */
 	oracle_id: string;
 }
 export interface _SERVICE {

@@ -10,16 +10,21 @@
 	import ProfileCard from '$lib/components/social/ProfileCard.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
+	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
+	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getPositions } from '$lib/services/position.services';
 	import { getUserTradeHistory } from '$lib/services/trade.services';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Position } from '$lib/types/position';
-	import { formatCurrency } from '$lib/utils/format.utils';
+	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
+	import {
+		formatPortfolioHoldingsStatLine,
+		formatPortfolioPnLStatLine
+	} from '$lib/utils/playground-display.utils';
 
 	let positions = $state<Position[]>([]);
 	let tradeHistory = $state<ClearingDid.Event[]>([]);
@@ -75,10 +80,15 @@
 		}
 
 		const currentValue = calculateValue(pos);
-		// lockedCollateral is USD (6 decimals). currentValue has token decimals.
-		// Normalize both to number for P&L display
-		const valNum = Number(currentValue) / 10 ** (market.token.decimals ?? 8);
-		const costNum = Number(pos.lockedCollateral) / 10 ** 6;
+		// lockedCollateral is clearing USD (`USD_DECIMALS`). currentValue uses token decimals.
+		const valNum = decimalFixedValueToNumber({
+			value: currentValue,
+			decimals: market.token.decimals ?? 8
+		});
+		const costNum = decimalFixedValueToNumber({
+			value: pos.lockedCollateral,
+			decimals: USD_DECIMALS
+		});
 
 		return valNum - costNum;
 	};
@@ -88,6 +98,18 @@
 	);
 
 	const totalPnL = $derived(positions.reduce((acc, pos) => acc + calculatePnL(pos), 0));
+
+	const portfolioHoldingsLabel = $derived.by(() =>
+		formatPortfolioHoldingsStatLine({
+			playground: $playgroundVxpUnitMode,
+			totalPortfolioValue,
+			sampleToken: positions[0] ? getMarketById(positions[0].marketId)?.token : undefined
+		})
+	);
+
+	const portfolioPnLLabel = $derived.by(() =>
+		formatPortfolioPnLStatLine({ totalPnL, playground: $playgroundVxpUnitMode })
+	);
 </script>
 
 <svelte:document onviciRefreshPositions={loadData} />
@@ -106,8 +128,8 @@
 		<PortfolioStats
 			activeMarketsCount={positions.length}
 			pnlVariant={totalPnL >= 0 ? 'success' : 'default'}
-			totalHoldings={formatCurrency({ value: totalPortfolioValue, decimals: 8, symbol: 'ICP' })}
-			totalPnL={(totalPnL >= 0 ? '+' : '') + totalPnL.toFixed(2)}
+			totalHoldings={portfolioHoldingsLabel}
+			totalPnL={portfolioPnLLabel}
 		/>
 
 		<!-- Positions Table -->

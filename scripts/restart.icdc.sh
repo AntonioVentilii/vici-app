@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source "$(dirname "$0")/utils.sh" "$@"
+source "$(dirname "$0")/lib/utils.sh" "$@"
 
 echo "Restarting ICDC on $NETWORK..."
 
@@ -29,16 +29,16 @@ dfx deploy registry --network "$NETWORK" --upgrade-unchanged --mode reinstall --
 # 4. Initialize the environment
 echo "Initializing registry and clearing..."
 
-if [ -f "$SCRIPT_DIR/init.registry.sh" ]; then
-    bash "$SCRIPT_DIR/init.registry.sh" "$@"
+if [ -f "$SCRIPT_DIR/init/init.registry.sh" ]; then
+    bash "$SCRIPT_DIR/init/init.registry.sh" "$@"
 else
-    echo "Warning: $SCRIPT_DIR/init.registry.sh not found."
+    echo "Warning: $SCRIPT_DIR/init/init.registry.sh not found."
 fi
 
-if [ -f "$SCRIPT_DIR/init.clearing.sh" ]; then
-    bash "$SCRIPT_DIR/init.clearing.sh" "$@"
+if [ -f "$SCRIPT_DIR/init/init.clearing.sh" ]; then
+    bash "$SCRIPT_DIR/init/init.clearing.sh" "$@"
 else
-    echo "Warning: $SCRIPT_DIR/init.clearing.sh not found."
+    echo "Warning: $SCRIPT_DIR/init/init.clearing.sh not found."
 fi
 
 echo "ICDC restart and initialization complete!"

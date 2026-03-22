@@ -8,6 +8,7 @@ import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
 import { nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 
+/** Admin/resolver-only: settles a series on clearing by outcome id or numeric price and logs activity. */
 export const settleMarket = async ({
 	seriesId,
 	settlementPrice,

@@ -3,6 +3,7 @@ import type { UserProfile } from '$lib/types/profile';
 import type { LeaderboardEntry } from '$lib/types/social';
 import { listDocs } from '@junobuild/core';
 
+/** Top profiles by stored P&L as social leaderboard rows (rank, user, stats). */
 export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
 	const { items } = await listDocs<UserProfile>({
 		collection: Collection.PROFILES
