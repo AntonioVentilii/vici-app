@@ -4,6 +4,9 @@ import type { Token } from '$lib/types/token';
 import { findTokenByLedgerId } from '$lib/utils/tokens.utils';
 import { assertNever } from '@dfinity/utils';
 
+/** Maps registry payout units to app token metadata (ICRC ledger or USD). */
+
+/** Resolves a supported token for the given payout unit, or throws for unsupported variants. */
 export const assetToToken = (payoutUnit: RegistryDid.PayoutUnit): Token | undefined => {
 	if ('Asset' in payoutUnit) {
 		const crypto = payoutUnit.Asset;

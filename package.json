@@ -14,12 +14,16 @@
 		"quality": "npm run format && npm run lint",
 		"did": "./scripts/did.sh && npm run format && npm run lint",
 		"deploy": "./scripts/deploy.sh",
-		"init:clearing": "./scripts/init.clearing.sh",
-		"init:registry": "./scripts/init.registry.sh",
+		"init:clearing": "./scripts/init/init.clearing.sh",
+		"init:registry": "./scripts/init/init.registry.sh",
 		"init:icdc": "npm run init:clearing && npm run init:registry",
+		"init:vxp-treasury": "./scripts/init/init.vxp-treasury.sh",
+		"juno:functions:build": "juno functions build --lang ts",
+		"juno:functions:upgrade:dev": "juno functions upgrade -m development",
 		"restart:icdc": "./scripts/restart.icdc.sh",
 		"postinstall:copy-auth": "node -e \"require('fs').cpSync('node_modules/@junobuild/core/dist/workers/', './static/workers', {recursive: true});\"",
-		"postinstall": "npm run postinstall:copy-auth"
+		"postinstall": "npm run postinstall:copy-auth",
+		"playwright:install": "playwright install --with-deps"
 	},
 	"devDependencies": {
 		"@dfinity/eslint-config-oisy-wallet": "^0.2.3",

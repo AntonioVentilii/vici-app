@@ -6,6 +6,8 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
+	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
+	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { getOrderBook } from '$lib/services/order.services';
 	import { getBalances } from '$lib/services/wallet.service';
@@ -17,9 +19,15 @@
 	import type { Market } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
-	import { formatAvailableUsd, formatCurrency } from '$lib/utils/format.utils';
+	import { formatCurrency } from '$lib/utils/format.utils';
 	import { calculateMarketStats } from '$lib/utils/market.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
+	import {
+		formatAvailableMarginForUi,
+		intuitiveAvailableMarginUsd,
+		nativeToClearingMarginUnits,
+		quickBetChipLabel
+	} from '$lib/utils/playground-display.utils';
 	import { executeOutcomeTrade } from '$lib/utils/trade.utils';
 
 	interface Props {
@@ -51,7 +59,28 @@
 
 	let error = $state('');
 
-	let availableEquity = $derived($collateralsStore.accountState?.available_margin_usd ?? ZERO);
+	let availableEquity = $derived.by(() => {
+		const a = $collateralsStore.accountState;
+		if (isNullish(a)) {
+			return ZERO;
+		}
+		let fallback = ZERO;
+		for (const t of $walletUiTokens) {
+			const b = $collateralsStore.balances[t.id] ?? ZERO;
+			if (b > ZERO) {
+				fallback += nativeToClearingMarginUnits({
+					nativeBalance: b,
+					nativeDecimals: Number(t.decimals)
+				});
+			}
+		}
+		return intuitiveAvailableMarginUsd({
+			assets: a.assets,
+			totalEquityUsd: a.total_equity_usd,
+			availableMarginUsd: a.available_margin_usd,
+			fallbackCollateralMarginUnits: fallback
+		});
+	});
 
 	const fetchOrderBook = async () => {
 		try {
@@ -222,6 +251,11 @@
 			return '-';
 		}
 
+		const amt = parseFloat(amount);
+		if (isNaN(amt) || amt <= 0) {
+			return '-';
+		}
+
 		const cost = parseToken({ value: amount, unitName: market.token.decimals });
 		return formatCurrency({
 			value: cost,
@@ -248,11 +282,15 @@
 						? noProbability
 						: (marketDepth?.midPrice ?? 0.5);
 
-		if (isNullish(prob) || prob <= 0) {
+		if (!Number.isFinite(prob) || prob <= 0) {
 			return '-';
 		}
 
 		const payoutRaw = amt / prob;
+		if (!Number.isFinite(payoutRaw) || payoutRaw < 0) {
+			return '-';
+		}
+
 		const payout = parseToken({
 			value: payoutRaw.toFixed(market.token.decimals),
 			unitName: market.token.decimals
@@ -283,7 +321,7 @@
 						? noProbability
 						: (marketDepth?.midPrice ?? 0.5);
 
-		if (!prob || prob <= 0) {
+		if (!Number.isFinite(prob) || prob <= 0) {
 			return 0;
 		}
 
@@ -426,7 +464,10 @@
 
 					<span class="text-[10px] font-bold text-slate-400 uppercase">
 						Available: {nonNullish(availableEquity)
-							? formatAvailableUsd({ value: availableEquity })
+							? formatAvailableMarginForUi({
+									value: availableEquity,
+									playground: $playgroundVxpUnitMode
+								})
 							: '...'}
 					</span>
 				</div>
@@ -454,7 +495,10 @@
 							class="flex-1 rounded-xl border border-slate-100 bg-slate-50 py-2 text-[10px] font-bold text-slate-500 transition-all hover:border-indigo-200 hover:bg-white hover:text-indigo-600"
 							onclick={() => (amount = quickAmount)}
 						>
-							${quickAmount}
+							{quickBetChipLabel({
+								amount: quickAmount,
+								playground: $playgroundVxpUnitMode
+							})}
 						</BaseButton>
 					{/each}
 				</div>
@@ -500,7 +544,11 @@
 			<Button
 				class="w-full py-5 text-lg font-black"
 				onclick={handlePlacePrediction}
-				status={loading ? 'pending' : nonNullish(amount) ? 'enabled' : 'disabled'}
+				status={loading
+					? 'pending'
+					: !isNullish(amount) && parseFloat(amount) > 0
+						? 'enabled'
+						: 'disabled'}
 			>
 				{#snippet busyLabel()}
 					Confirming...

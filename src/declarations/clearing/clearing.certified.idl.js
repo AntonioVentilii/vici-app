@@ -23,6 +23,7 @@ export const Asset = IDL.Variant({
 	NativeEvm: NativeEvmAsset
 });
 export const BalanceDomain = IDL.Variant({
+	ViciXp: IDL.Null,
 	Playground: IDL.Null,
 	Settlement: IDL.Null
 });
@@ -582,6 +583,7 @@ export const idlFactory = ({ IDL }) => {
 		NativeEvm: NativeEvmAsset
 	});
 	const BalanceDomain = IDL.Variant({
+		ViciXp: IDL.Null,
 		Playground: IDL.Null,
 		Settlement: IDL.Null
 	});
@@ -1137,6 +1139,7 @@ export const init = ({ IDL }) => {
 		NativeEvm: NativeEvmAsset
 	});
 	const BalanceDomain = IDL.Variant({
+		ViciXp: IDL.Null,
 		Playground: IDL.Null,
 		Settlement: IDL.Null
 	});

@@ -9,6 +9,7 @@ import {
 	VICI_ORACLE_V1,
 	ZERO
 } from '$lib/constants/app.constants';
+import { VXP_LEDGER_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
 import { listSeriesCategories } from '$lib/services/category.services';
@@ -20,6 +21,7 @@ import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market'
 import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
 import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
+import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import {
 	calculateCategoricalProbabilities,
 	calculateMarketStats,
@@ -28,6 +30,7 @@ import {
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
+import { Principal } from '@icp-sdk/core/principal';
 import { get } from 'svelte/store';
 
 /**
@@ -39,7 +42,7 @@ export const createMarket = async ({
 	description,
 	expiryDate,
 	outcomes = [],
-	payoutUnit = { Fiat: { Usd: null } }
+	payoutUnit: payoutUnitOverride
 }: {
 	title: string;
 	description: string;
@@ -48,6 +51,13 @@ export const createMarket = async ({
 	payoutUnit?: RegistryDid.PayoutUnit;
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
+
+	const domain = get(balanceDomain);
+	const payoutUnit: RegistryDid.PayoutUnit =
+		payoutUnitOverride ??
+		('ViciXp' in domain
+			? { Asset: { Icrc: Principal.fromText(VXP_LEDGER_CANISTER_ID) } }
+			: { Fiat: { Usd: null } });
 
 	const profileDoc = await getProfile(identity.getPrincipal().toText());
 
@@ -88,7 +98,7 @@ export const createMarket = async ({
 					}))
 				: undefined
 		),
-		balance_domain: get(balanceDomain),
+		balance_domain: domain,
 		oracle_source: VICI_ORACLE_V1
 	};
 
@@ -110,6 +120,7 @@ export const createMarket = async ({
 	return seriesId;
 };
 
+/** Loads series for the current domain, enriches with order book stats, merges resolved markets from activity, and filters by domain. */
 export const getMarkets = async (): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 
@@ -196,7 +207,7 @@ export const getMarkets = async (): Promise<Market[]> => {
 			.map(async (id) => {
 				const series = await getSeries({ identity, seriesId: id });
 				if (isNullish(series)) {
-					return undefined;
+					return;
 				}
 
 				return mapMarketData({
@@ -214,6 +225,7 @@ export const getMarkets = async (): Promise<Market[]> => {
 	return filterByBalanceDomain({ items, targetDomain: currentDomain });
 };
 
+/** Single-market detail with book, categorical probabilities if applicable, and resolution status from activity. */
 export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {
 	const identity = await getIdentityOrAnonymous();
 
@@ -325,7 +337,10 @@ export const rankMarkets = ({
 			// 3. Activity / Trending (Volume-based)
 			// Small boost based on total volume (normalized to ~100 max for typical early liquidity)
 			if (m.totalVolume > ZERO) {
-				const volumeInUsd = Number(m.totalVolume) / 10 ** Number(m.token.decimals);
+				const volumeInUsd = decimalFixedValueToNumber({
+					value: m.totalVolume,
+					decimals: Number(m.token.decimals)
+				});
 				score += Math.min(volumeInUsd * 2, 200); // Caps at 200
 			}
 
@@ -345,6 +360,7 @@ export const rankMarkets = ({
 		.map((item) => item.market);
 };
 
+/** Open binary markets ranked for the prediction flow UI using profile interests and categories. */
 export const getFlowQueue = async (): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 	const principal = identity.getPrincipal().toText();

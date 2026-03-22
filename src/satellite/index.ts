@@ -1,6 +1,10 @@
 import { Collection } from '$lib/constants/collections.constants';
 import { assertSetRole } from '$satellite/services/roles.services';
 import {
+	onProfileSetForVxpOnboarding,
+	onTradeActivityForVxpOnboarding
+} from '$satellite/services/vxp-onboarding.services';
+import {
 	type AssertDeleteAsset,
 	type AssertDeleteDoc,
 	type AssertSetDoc,
@@ -23,9 +27,20 @@ import {
 // you can selectively delete the features you do not need.
 
 export const onSetDoc = defineHook<OnSetDoc>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	run: async (context) => {}
+	collections: [Collection.ACTIVITIES, Collection.PROFILES],
+	run: async (context) => {
+		const { collection } = context.data;
+
+		if (collection === Collection.PROFILES) {
+			await onProfileSetForVxpOnboarding(context);
+
+			return;
+		}
+
+		if (collection === Collection.ACTIVITIES) {
+			await onTradeActivityForVxpOnboarding(context);
+		}
+	}
 });
 
 export const onSetManyDocs = defineHook<OnSetManyDocs>({

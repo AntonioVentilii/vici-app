@@ -2,6 +2,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import type { Comment } from '$lib/types/comment';
 import { deleteDoc, getDoc, listDocs, setDoc } from '@junobuild/core';
 
+/** Loads comments for a market from Juno, oldest first. */
 export const getMarketComments = async (marketId: string): Promise<Comment[]> => {
 	const { items } = await listDocs<Comment>({
 		collection: Collection.COMMENTS
@@ -13,6 +14,7 @@ export const getMarketComments = async (marketId: string): Promise<Comment[]> =>
 		.sort((a, b) => a.timestamp - b.timestamp);
 };
 
+/** Creates a comment with generated key, timestamps, and empty vote arrays. */
 export const addComment = async (
 	comment: Omit<Comment, 'timestamp' | 'key' | 'upvotes' | 'downvotes'>
 ): Promise<void> => {
@@ -34,6 +36,7 @@ export const addComment = async (
 	});
 };
 
+/** Toggles an upvote for `userPrincipal` and clears their downvote if present. */
 export const upvoteComment = async ({
 	commentKey,
 	userPrincipal
@@ -74,6 +77,7 @@ export const upvoteComment = async ({
 	});
 };
 
+/** Toggles a downvote for `userPrincipal` and clears their upvote if present. */
 export const downvoteComment = async ({
 	commentKey,
 	userPrincipal
@@ -114,6 +118,7 @@ export const downvoteComment = async ({
 	});
 };
 
+/** Deletes a comment document if it exists. */
 export const deleteComment = async (commentKey: string): Promise<void> => {
 	const doc = await getDoc<Comment>({
 		collection: Collection.COMMENTS,

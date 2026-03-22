@@ -59,6 +59,19 @@ export const approve = async ({
 	});
 };
 
+/** Per-ledger ICRC transfer fee (base units). Used for approve headroom before `icrc2_transfer_from`. */
+export const transactionFee = async ({
+	identity,
+	ledgerCanisterId
+}: {
+	identity: Identity;
+	ledgerCanisterId: CanisterIdText;
+}): Promise<bigint> => {
+	const { transactionFee: feeQuery } = await ledgerCanister({ identity, ledgerCanisterId });
+
+	return feeQuery({});
+};
+
 export const balance = async ({
 	identity,
 	ledgerCanisterId,

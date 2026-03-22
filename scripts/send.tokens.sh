@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-source "$(dirname "$0")/utils.sh" "$@"
+source "$(dirname "$0")/lib/utils.sh" "$@"
 
 # Utility Script: Send Tokens to a Local User
 # Particularly handy after installing the canisters for the first time or being forced by dfx to clean the local state.
 
-# Usage: ./scripts/send.tokens.sh [principal] [amount] [--network local|staging]
+# Usage: ./scripts/send.tokens.sh [principal] [amount] [--network local|staging]  (from repo root)
 
 if [[ -z "${1:-}" || "$1" == --* ]]; then
   # If first arg is empty or a flag, we might need to prompt or check next args

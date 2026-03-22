@@ -2,7 +2,12 @@ import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { collateralsStore } from '$lib/stores/collaterals.store';
 import type { Token } from '$lib/types/token';
+import { findCollateralInfoByIcrcLedger } from '$lib/utils/asset-ref.utils';
 import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
+import {
+	filterTokensForBalanceDomain,
+	walletLedgerDisplayFallbackTokens
+} from '$lib/utils/playground-token.utils';
 import { isNullish } from '@dfinity/utils';
 import { derived, type Readable } from 'svelte/store';
 
@@ -11,17 +16,10 @@ export const supportedTokens: Readable<Token[]> = derived(
 	([$balanceDomain, $collateralsStore]) => {
 		const { assetsConfig } = $collateralsStore;
 
-		return SUPPORTED_TOKENS.filter((token) => {
-			// Find the corresponding asset in the clearing configuration
-			const assetInfo = Object.values(assetsConfig).find((info) => {
-				const { asset } = info.config;
-
-				if ('Icrc' in asset) {
-					return asset.Icrc.toText() === token.ledgerCanisterId;
-				}
-
-				// Add other asset types (Erc20, etc.) here when supported
-				return false;
+		const filteredByClearing = SUPPORTED_TOKENS.filter((token) => {
+			const assetInfo = findCollateralInfoByIcrcLedger({
+				assetsConfig,
+				ledgerCanisterId: token.ledgerCanisterId
 			});
 
 			if (isNullish(assetInfo)) {
@@ -36,10 +34,38 @@ export const supportedTokens: Readable<Token[]> = derived(
 
 			return allowed_balance_domains.some((d) => compareBalanceDomains(d, $balanceDomain));
 		});
+
+		return filterTokensForBalanceDomain({
+			tokens: filteredByClearing,
+			balanceDomain: $balanceDomain
+		});
+	}
+);
+
+/**
+ * Tokens shown in wallet UI (asset rows, send, history filter). Uses
+ * {@link supportedTokens} (clearing `list_collateral_assets` + `allowed_balance_domains`).
+ * If clearing has not loaded yet, a **display-only** minimal fallback keeps rows from going blank;
+ * it does not grant extra collateral actions.
+ */
+export const walletUiTokens: Readable<Token[]> = derived(
+	[supportedTokens, balanceDomain],
+	([$supportedTokens, $balanceDomain]) => {
+		if ($supportedTokens.length > 0) {
+			return $supportedTokens;
+		}
+
+		return walletLedgerDisplayFallbackTokens($balanceDomain);
 	}
 );
 
 export const defaultSupportedToken: Readable<Token | undefined> = derived(
+	walletUiTokens,
+	($walletUiTokens) => ($walletUiTokens.length > 0 ? $walletUiTokens[0] : undefined)
+);
+
+/** First token registered on clearing for this domain (no ledger-only fallback). */
+export const defaultClearingCollateralToken: Readable<Token | undefined> = derived(
 	supportedTokens,
 	($supportedTokens) => ($supportedTokens.length > 0 ? $supportedTokens[0] : undefined)
 );
