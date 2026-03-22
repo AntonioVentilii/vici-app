@@ -4,6 +4,7 @@ import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext } from '@junobuild/functions';
 import { decodeDocData, getControllers, getDocStore, isController } from '@junobuild/functions/sdk';
 
+/** Juno `setDoc` hook: only controllers or ADMIN users may write roles; validates proposed role enum. */
 export const assertSetRole = ({
 	caller,
 	data: {

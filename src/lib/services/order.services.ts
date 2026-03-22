@@ -21,6 +21,7 @@ import { getIdentityOnce } from '@junobuild/core';
 import { nanoid } from 'nanoid';
 import { get } from 'svelte/store';
 
+/** Lists open limit orders for a market, optionally filtered to a balance domain. */
 export const getOrderBook = async ({
 	marketId,
 	domain
@@ -46,6 +47,7 @@ export const getOrderBook = async ({
 	});
 };
 
+/** Submits a limit order or matches a market order against the book; refreshes UI state and logs activity. */
 export const placeOrder = async ({
 	marketId,
 	side,
@@ -161,6 +163,7 @@ export const placeOrder = async ({
 	}
 };
 
+/** Cancels an open limit order by id. */
 export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -178,6 +181,7 @@ export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 	refreshAllBalances();
 };
 
+/** Signed-in user's orders for a single market. */
 export const getUserOrdersForMarket = async (
 	marketId: MarketId
 ): Promise<ClearingDid.LimitOrder[]> => {
@@ -186,6 +190,7 @@ export const getUserOrdersForMarket = async (
 	return orders.filter((o) => o.series_id === marketId);
 };
 
+/** All open orders for the current user in the active balance domain. */
 export const getUserOrders = async (): Promise<ClearingDid.LimitOrder[]> => {
 	const identity = await getIdentityOnce();
 

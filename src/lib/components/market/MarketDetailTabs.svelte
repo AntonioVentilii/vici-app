@@ -4,6 +4,7 @@
 	import Tabs from '$lib/components/ui/Tabs.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { orders } from '$lib/derived/orders.derived';
+	import { playgroundLockedCapacityLabel } from '$lib/derived/playground.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { cancelLimitOrder } from '$lib/services/order.services';
 	import type { Market } from '$lib/types/market';
@@ -148,7 +149,7 @@
 									activeOrders.reduce((acc, o) => acc + o.blocked_margin_usd, ZERO),
 								unitName: 6
 							})}
-							vUSD
+							{$playgroundLockedCapacityLabel}
 						</span>
 					</div>
 				{:else}

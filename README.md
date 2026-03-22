@@ -42,7 +42,7 @@ This project follows strict development patterns and terminology. See the follow
 - `src/lib/services/`: Business logic and orchestration between UI and APIs.
 - `src/lib/stores/`: Application state management using Svelte Runes.
 - `src/lib/types/`: Shared TypeScript definitions.
-- `scripts/`: Initialization and deployment scripts.
+- `scripts/`: Deploy/restart entrypoints, `lib/` (shared bash + `download-immutable`), `build/` (dfx `build` hooks), `init/` (post-deploy), `data/` (registry seed JSON).
 
 ## 🏁 Getting Started
 

@@ -3,14 +3,17 @@ import type { Market } from '$lib/types/market';
 import type { OrderType } from '$lib/types/order';
 import { nonNullish } from '@dfinity/utils';
 
+/** Parameters for placing an outcome trade from the flow or manual UI. */
 export interface TradeParams {
 	market: Market;
 	action: 'YES' | 'NO' | string;
 	amount: string;
 	orderType?: OrderType;
-	limitPrice?: number; // Normalized (0-1)
+	/** Normalized limit price in `[0, 1]` when `orderType` is LIMIT. */
+	limitPrice?: number;
 }
 
+/** Computes execution price and quantity, then submits a buy via `placeOrder`. */
 export const executeOutcomeTrade = async ({
 	market,
 	action,

@@ -17,6 +17,7 @@ import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 import { getIdentityOnce } from '@junobuild/core';
 import { get } from 'svelte/store';
 
+/** ICRC approve + clearing deposit for the current balance domain; refreshes balances on success. */
 export const depositCollateral = async ({
 	assetPrincipal,
 	amount
@@ -51,6 +52,7 @@ export const depositCollateral = async ({
 	refreshAllBalances();
 };
 
+/** Withdraws collateral from clearing to the user for the given ledger asset. */
 export const withdrawCollateral = async ({
 	assetPrincipal,
 	amount
@@ -75,6 +77,7 @@ export const withdrawCollateral = async ({
 	refreshAllBalances();
 };
 
+/** Fetches clearing account state (balances per domain) for the signed-in user. */
 export const getAccountState = async (): Promise<ClearingDid.AccountStateResponse> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -84,6 +87,7 @@ export const getAccountState = async (): Promise<ClearingDid.AccountStateRespons
 	});
 };
 
+/** Lists collateral assets configured on clearing (empty if anonymous). */
 export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAssetInfo[]> => {
 	const identity = await getIdentityOnce();
 
@@ -94,6 +98,7 @@ export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAsset
 	return await listCollateralAssetsApi({ identity });
 };
 
+/** Registers an ICRC ledger as a collateral asset on clearing (admin-style operation). */
 export const registerIcrcAsset = async (
 	params: ClearingDid.RegisterIcrcAssetParams
 ): Promise<void> => {

@@ -1,0 +1,10 @@
+#!/bin/bash
+
+source "$(dirname "$0")/download.icdc.common.sh"
+
+rm -f "$DIR"/ledger.*
+
+"$SCRIPTS_LIB/download-immutable.sh" "https://github.com/AntonioVentilii/icdc-core/releases/download/$ICDC_CORE_VERSION/ledger.wasm.gz" "$DIR"/ledger.wasm.gz
+gunzip -f "$DIR"/ledger.wasm.gz
+
+"$SCRIPTS_LIB/download-immutable.sh" "https://github.com/AntonioVentilii/icdc-core/releases/download/$ICDC_CORE_VERSION/ledger.did" "$DIR"/ledger.did

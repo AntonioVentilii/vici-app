@@ -28,6 +28,7 @@ import {
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
 import { get } from 'svelte/store';
 
+/** On-ledger balances for each supported token id (empty if not signed in). */
 export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	const identity = await getIdentity();
 
@@ -65,6 +66,7 @@ export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	}
 };
 
+/** Clearing account state for `domain` (defaults to current UI balance domain). */
 export const getCollateralBalances = async (
 	domain: ClearingDid.BalanceDomain = get(balanceDomain)
 ): Promise<ClearingDid.AccountStateResponse | undefined> => {
@@ -85,6 +87,7 @@ export const getCollateralBalances = async (
 	}
 };
 
+/** Combined ledger balances and per-token clearing collateral for the given domain. */
 export const getBalances = async (
 	domain: ClearingDid.BalanceDomain = get(balanceDomain)
 ): Promise<WalletBalance> => {
@@ -119,6 +122,7 @@ export const getBalances = async (
 	};
 };
 
+/** Recent ICP and ckUSDC index transactions normalized and merged, newest first. */
 export const getTransactions = async (): Promise<Transaction[]> => {
 	const identity = await getIdentity();
 

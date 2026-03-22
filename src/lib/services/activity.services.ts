@@ -3,6 +3,7 @@ import type { Activity } from '$lib/types/social';
 import type { PrincipalText } from '@dfinity/zod-schemas';
 import { listDocs, setDoc } from '@junobuild/core';
 
+/** Appends a timestamped activity row to Juno. */
 export const logActivity = async (activity: Omit<Activity, 'timestamp'>): Promise<void> => {
 	const timestamp = Date.now();
 
@@ -20,6 +21,7 @@ export const logActivity = async (activity: Omit<Activity, 'timestamp'>): Promis
 	});
 };
 
+/** Loads all activities from Juno (unsorted). */
 const listActivities = async (): Promise<Activity[]> => {
 	const { items } = await listDocs<Activity>({
 		collection: Collection.ACTIVITIES
@@ -28,6 +30,7 @@ const listActivities = async (): Promise<Activity[]> => {
 	return items.map(({ data }) => data);
 };
 
+/** Recent global activity feed, newest first, capped by `limit`. */
 export const getGlobalActivities = async (limit = 50): Promise<Activity[]> => {
 	if (limit <= 0) {
 		return [];
@@ -38,6 +41,7 @@ export const getGlobalActivities = async (limit = 50): Promise<Activity[]> => {
 	return items.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
 };
 
+/** Activities from users in `friends`, newest first. */
 export const getFriendActivities = async ({
 	friends,
 	limit = 50

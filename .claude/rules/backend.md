@@ -16,7 +16,7 @@ Vici interacts with several canisters on the Internet Computer:
 ## Tooling & Scripts
 
 - **Candid/DID**: Run `npm run did` to update declarations. This executes `@scripts/did.sh`.
-- **Canister Management**: Use scripts in `@scripts/` for building WASMs, importing Candid files, and downloading immutable assets.
+- **Canister Management**: `dfx.json` points at `@scripts/build/` for WASM build hooks; shared helpers live in `@scripts/lib/`; post-deploy calls use `@scripts/init/`.
 - **DFX**: Use `npm run deploy` for local/mainnet canister deployment via `dfx.json`.
 
 ## Best Practices

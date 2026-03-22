@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { Spring } from 'svelte/motion';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
+	import { playgroundPotentialReturnSuffix } from '$lib/derived/playground.derived';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
-	import { formatCurrency, formatProbability } from '$lib/utils/format.utils';
+	import { formatProbability, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -121,7 +122,7 @@
 			<span class="text-4xl font-black tracking-tight text-emerald-500">YES</span>
 			<div class="mt-1 flex flex-col items-center">
 				<span class="text-lg font-black text-emerald-600">
-					+{potentialReturnYes.toFixed(2)}
+					+{potentialReturnYes.toFixed(2)}{$playgroundPotentialReturnSuffix}
 				</span>
 				<span class="text-[8px] font-bold tracking-widest text-emerald-500 uppercase">
 					Potential
@@ -144,7 +145,7 @@
 			<span class="text-4xl font-black tracking-tight text-rose-500">NO</span>
 			<div class="mt-1 flex flex-col items-center">
 				<span class="text-lg font-black text-rose-600">
-					+{potentialReturnNo.toFixed(2)}
+					+{potentialReturnNo.toFixed(2)}{$playgroundPotentialReturnSuffix}
 				</span>
 				<span class="text-[8px] font-bold tracking-widest text-rose-500 uppercase">
 					Potential
@@ -211,9 +212,9 @@
 								</span>
 							</div>
 							<span class="text-xs font-black text-indigo-900">
-								{formatCurrency({
+								{formatToken({
 									value: position.netQty,
-									decimals: Number(market.token.decimals)
+									unitName: market.token.decimals
 								})}
 								{market.token.symbol}
 							</span>

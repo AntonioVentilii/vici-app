@@ -8,6 +8,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { getFlowQueue } from '$lib/services/market.services';
 	import { getPositions } from '$lib/services/position.services';
@@ -206,7 +207,7 @@
 					type="number"
 					bind:value={tradeAmount}
 				/>
-				<span class="text-[10px] font-bold text-slate-500">USD</span>
+				<span class="text-[10px] font-bold text-slate-500">{$playgroundFlowTradeUnitLabel}</span>
 			</div>
 		</div>
 
