@@ -2,6 +2,7 @@
 	import { nonNullish } from '@dfinity/utils';
 	import type { Snippet } from 'svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
+	import type { TestId } from '$lib/constants/test-ids.constants';
 	import type { CardPadding } from '$lib/types/components';
 
 	interface Props {
@@ -12,6 +13,7 @@
 		onkeydown?: (e: KeyboardEvent) => void;
 		role?: 'button' | 'presentation' | 'none';
 		class?: string;
+		testId?: TestId;
 	}
 
 	const {
@@ -21,7 +23,8 @@
 		onclick,
 		onkeydown,
 		role,
-		class: className
+		class: className,
+		testId
 	}: Props = $props();
 
 	const commonClasses =
@@ -46,13 +49,17 @@
 {#if isInteractive}
 	<BaseButton
 		class="{commonClasses} {variants[variant]} {paddings[padding]} {className}"
+		data-tid={testId}
 		{onclick}
 		{onkeydown}
 	>
 		{@render children()}
 	</BaseButton>
 {:else}
-	<div class="{commonClasses} {variants[variant]} {paddings[padding]} {className}">
+	<div
+		class="{commonClasses} {variants[variant]} {paddings[padding]} {className}"
+		data-tid={testId}
+	>
 		{@render children()}
 	</div>
 {/if}

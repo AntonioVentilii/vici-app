@@ -2,6 +2,7 @@
 	import { signIn } from '@junobuild/core';
 	import IconIc from '$lib/components/icons/IconIC.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props {
@@ -28,7 +29,7 @@
 	};
 </script>
 
-<Button onclick={signInWithII} {status}>
+<Button onclick={signInWithII} {status} testId={TestId.SignInII}>
 	<IconIc size="20px" />
 	<span>Sign in with Internet Identity</span>
 </Button>

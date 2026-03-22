@@ -5,6 +5,7 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import type { Market } from '$lib/types/market';
 	import { formatProbability } from '$lib/utils/format.utils';
 	import { getTimeRemaining, getOutcomeVariant } from '$lib/utils/market.utils';
@@ -17,7 +18,11 @@
 	const { market, index = 0 }: Props = $props();
 </script>
 
-<div class="h-full w-full" in:fly={{ y: 20, duration: 400, delay: Math.min(index * 50, 300) }}>
+<div
+	class="h-full w-full"
+	data-tid={TestId.MarketCard}
+	in:fly={{ y: 20, duration: 400, delay: Math.min(index * 50, 300) }}
+>
 	<Card
 		class="group h-full w-full overflow-hidden border-none shadow-md transition-all hover:-translate-y-1 hover:shadow-xl"
 		onclick={() => goto(`${AppPath.Markets}/${market.id}`)}

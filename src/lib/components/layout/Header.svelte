@@ -9,6 +9,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { navItems } from '$lib/constants/nav.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
@@ -86,7 +87,7 @@
 				</div>
 			{:else}
 				<div class="flex items-center gap-2">
-					<Button onclick={openSignInModal}>Sign in</Button>
+					<Button onclick={openSignInModal} testId={TestId.SignInButton}>Sign in</Button>
 				</div>
 			{/if}
 		</div>
