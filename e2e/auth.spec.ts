@@ -8,6 +8,8 @@ import { LoginPage } from './pages/login.page';
 testWithII('should sign-in with a new user', async ({ page, iiPage }) => {
 	await page.goto('/');
 
+	expect(page).toHaveScreenshot();
+
 	await iiPage.signIn();
 });
 
