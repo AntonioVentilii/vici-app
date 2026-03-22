@@ -4,7 +4,8 @@ import { Collection } from './src/lib/constants/collections.constants';
 export default defineConfig({
 	satellite: {
 		ids: {
-			development: 'jx5yt-yyaaa-aaaal-abzbq-cai',
+			test: 'jx5yt-yyaaa-aaaal-abzbq-cai',
+			development: 'auamu-4x777-77775-aaaaa-cai',
 			production: '7scay-7yaaa-aaaal-asxqa-cai'
 		},
 		source: 'build',
