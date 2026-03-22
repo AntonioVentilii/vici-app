@@ -42,6 +42,9 @@ jobs:
       - name: Prepare
         uses: ./.github/actions/prepare
 
+      - name: Install Juno CLI
+        run: npm i -g @junobuild/cli
+
       - name: Run emulator
         run: |
           set -e
