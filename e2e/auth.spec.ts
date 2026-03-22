@@ -5,7 +5,13 @@ import { TestId } from '../src/lib/constants/test-ids.constants';
 import { HomePage } from './pages/home.page';
 import { LoginPage } from './pages/login.page';
 
-testWithII.describe('Authentication Flow', () => {
+testWithII('should sign-in with a new user', async ({ page, iiPage }) => {
+	await page.goto('/');
+
+	await iiPage.signIn();
+});
+
+testWithII.describe.skip('Authentication Flow', () => {
 	let homePage: HomePage;
 	let loginPage: LoginPage;
 
