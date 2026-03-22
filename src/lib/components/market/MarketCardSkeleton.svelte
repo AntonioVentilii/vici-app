@@ -1,8 +1,9 @@
 <script lang="ts">
 	import Card from '$lib/components/ui/Card.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 </script>
 
-<Card padding="lg" variant="default">
+<Card padding="lg" testId={TestId.MarketCardSkeleton} variant="default">
 	<div class="flex h-full w-full flex-col gap-4">
 		<!-- Title and Badge -->
 		<div class="flex items-start justify-between gap-4">

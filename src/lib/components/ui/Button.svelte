@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
+	import type { TestId } from '$lib/constants/test-ids.constants';
 	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props {
@@ -11,6 +12,7 @@
 		children: Snippet;
 		onclick?: () => void;
 		class?: string;
+		testId?: TestId;
 	}
 
 	const {
@@ -20,7 +22,8 @@
 		busyLabel = undefined,
 		children,
 		onclick = undefined,
-		class: className = ''
+		class: className = '',
+		testId
 	}: Props = $props();
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
@@ -41,6 +44,7 @@
 <BaseButton
 	class="gap-2 rounded-lg font-bold active:scale-95 {variants[variant]} {sizes[size]} {className}"
 	{busyLabel}
+	data-tid={testId}
 	{onclick}
 	{status}
 >

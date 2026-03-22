@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { FlaskConical, ShieldCheck } from 'lucide-svelte/icons';
+	import { ShieldCheck, FlaskConical } from 'lucide-svelte/icons';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { setBalanceDomain } from '$lib/services/balance-domain.services';
@@ -32,6 +33,7 @@
 				? 'border-primary bg-primary/10 text-primary shadow-sm'
 				: 'border-border text-muted-foreground hover:bg-muted'}"
 			aria-label="Playground domain"
+			data-tid={TestId.PlaygroundDomain}
 			onclick={setPlaygroundDomain}
 		>
 			<FlaskConical size={16} />
@@ -46,6 +48,7 @@
 					? 'border-border text-muted-foreground hover:bg-muted cursor-not-allowed opacity-50'
 					: 'border-border text-muted-foreground hover:bg-muted active:scale-95'}"
 			aria-label={isDev() ? 'Settlement domain' : 'Settlement domain (Disabled)'}
+			data-tid={TestId.SettlementDomain}
 			disabled={!isDev()}
 			onclick={setSettlementDomain}
 		>
