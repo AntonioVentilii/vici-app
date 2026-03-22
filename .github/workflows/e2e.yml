@@ -117,7 +117,7 @@ jobs:
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
-          name: playwright-report-${{ matrix.os }}-${{ matrix.shardIndex }}
+          name: playwright-report
           path: playwright-report/
           retention-days: 3
 
@@ -125,7 +125,7 @@ jobs:
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         if: always()
         with:
-          name: test-results-${{ matrix.os }}-${{ matrix.shardIndex }}
+          name: test-results
           path: test-results/
           retention-days: 3
 
