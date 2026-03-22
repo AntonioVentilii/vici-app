@@ -2,6 +2,7 @@ import type { ClearingDid, RegistryDid } from '$declarations';
 import { NANO_SECONDS_IN_MILLISECOND, ZERO } from '$lib/constants/app.constants';
 import type { Market, MarketStatus, Outcome } from '$lib/types/market';
 import type { OrderBookLevel } from '$lib/types/order';
+import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { resolveMarketDisplayToken } from '$lib/utils/market-token.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -137,7 +138,10 @@ export const calculateMarketStats = ({
 		const isOrderBinarySide = oOutcomeId === 'YES' || oOutcomeId === 'NO';
 
 		let displaySide = side;
-		let displayPrice = Number(o.price.decimal.value) / 10 ** o.price.decimal.decimals;
+		let displayPrice = decimalFixedValueToNumber({
+			value: o.price.decimal.value,
+			decimals: o.price.decimal.decimals
+		});
 
 		if (oOutcomeId !== outcome) {
 			if (isBinarySide && isOrderBinarySide) {
@@ -211,11 +215,21 @@ export const calculateCategoricalProbabilities = ({
 		const outcomeOrders = orders.filter((order) => order.outcome_id[0] === o.id);
 		const bids = outcomeOrders
 			.filter((order) => 'Buy' in order.side)
-			.map((order) => Number(order.price.decimal.value) / 10 ** order.price.decimal.decimals)
+			.map((order) =>
+				decimalFixedValueToNumber({
+					value: order.price.decimal.value,
+					decimals: order.price.decimal.decimals
+				})
+			)
 			.sort((a, b) => b - a);
 		const asks = outcomeOrders
 			.filter((order) => 'Sell' in order.side)
-			.map((order) => Number(order.price.decimal.value) / 10 ** order.price.decimal.decimals)
+			.map((order) =>
+				decimalFixedValueToNumber({
+					value: order.price.decimal.value,
+					decimals: order.price.decimal.decimals
+				})
+			)
 			.sort((a, b) => a - b);
 
 		outcomeBook[o.id] = {

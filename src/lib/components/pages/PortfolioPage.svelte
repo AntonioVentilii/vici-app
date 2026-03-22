@@ -10,7 +10,7 @@
 	import ProfileCard from '$lib/components/social/ProfileCard.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
+	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
@@ -20,6 +20,7 @@
 	import { getUserTradeHistory } from '$lib/services/trade.services';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Position } from '$lib/types/position';
+	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import {
 		formatPortfolioHoldingsStatLine,
 		formatPortfolioPnLStatLine
@@ -79,10 +80,15 @@
 		}
 
 		const currentValue = calculateValue(pos);
-		// lockedCollateral is USD (6 decimals). currentValue has token decimals.
-		// Normalize both to number for P&L display
-		const valNum = Number(currentValue) / 10 ** (market.token.decimals ?? 8);
-		const costNum = Number(pos.lockedCollateral) / 10 ** 6;
+		// lockedCollateral is clearing USD (`USD_DECIMALS`). currentValue uses token decimals.
+		const valNum = decimalFixedValueToNumber({
+			value: currentValue,
+			decimals: market.token.decimals ?? 8
+		});
+		const costNum = decimalFixedValueToNumber({
+			value: pos.lockedCollateral,
+			decimals: USD_DECIMALS
+		});
 
 		return valNum - costNum;
 	};

@@ -1,5 +1,5 @@
 import type { ClearingDid } from '$declarations';
-import { NANO_SECONDS_IN_MILLISECOND } from '$lib/constants/app.constants';
+import { NANO_SECONDS_IN_MILLISECOND, USD_DECIMALS } from '$lib/constants/app.constants';
 import { isNullish } from '@dfinity/utils';
 import Decimal from 'decimal.js';
 import { type BigNumberish, formatUnits } from 'ethers/utils';
@@ -107,9 +107,23 @@ export const formatNanosecondsToDate = ({ nanoseconds }: { nanoseconds: bigint }
 	return date.toLocaleDateString('en', DATE_TIME_FORMAT_OPTIONS);
 };
 
+/** Converts fixed-point bigint + `decimals` to a float (clearing prices, ledger fractions). */
+export const decimalFixedValueToNumber = ({
+	value,
+	decimals
+}: {
+	value: bigint;
+	decimals: number;
+}): number => Number(formatUnits(value, decimals));
+
 /** Formats a clearing price as a whole-number percentage string. */
 export const formatPrice = (price: ClearingDid.Price): string =>
-	`${Math.round((Number(price.decimal.value) / 10 ** price.decimal.decimals) * 100)}%`;
+	`${Math.round(
+		decimalFixedValueToNumber({
+			value: price.decimal.value,
+			decimals: price.decimal.decimals
+		}) * 100
+	)}%`;
 
 /** Formats a probability in `[0, 1]` as a whole-number percentage string. */
 export const formatProbability = (prob: number): string => `${Math.round(prob * 100)}%`;
@@ -132,7 +146,7 @@ export const formatVolume = ({
 /** Formats available balance as USD (accepts bigint, number, or numeric string). */
 export const formatAvailableUsd = ({
 	value,
-	decimals = 6
+	decimals = USD_DECIMALS
 }: {
 	value: string | number | bigint;
 	decimals?: number;

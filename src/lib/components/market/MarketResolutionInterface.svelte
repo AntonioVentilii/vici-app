@@ -5,6 +5,7 @@
 	import { settleMarket } from '$lib/services/resolution.services';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Market } from '$lib/types/market';
+	import { parseToken } from '$lib/utils/parse.utils';
 
 	interface Props {
 		market: Market;
@@ -42,8 +43,10 @@
 			if (isCategorical) {
 				await settleMarket({ seriesId: market.id, outcomeId: selectedOutcomeId });
 			} else {
-				// Clearing uses token decimals format for prices
-				const price = BigInt(Math.floor(parseFloat(settlementPrice) * 10 ** market.token.decimals));
+				const price = parseToken({
+					value: settlementPrice.trim(),
+					unitName: market.token.decimals
+				});
 				await settleMarket({ seriesId: market.id, settlementPrice: price });
 			}
 			onSettled();

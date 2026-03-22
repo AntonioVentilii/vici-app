@@ -59,6 +59,12 @@ export default defineConfig({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				{
+					collection: Collection.VXP_ONBOARDING,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
 				}
 			]
 		}

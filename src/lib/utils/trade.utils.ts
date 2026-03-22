@@ -1,6 +1,11 @@
 import { placeOrder } from '$lib/services/order.services';
 import type { Market } from '$lib/types/market';
 import type { OrderType } from '$lib/types/order';
+import {
+	parseToken,
+	parseUsdBaseUnitsFromDecimal,
+	tokenBaseUnitsToUsdBaseUnits
+} from '$lib/utils/parse.utils';
 import { nonNullish } from '@dfinity/utils';
 
 /** Parameters for placing an outcome trade from the flow or manual UI. */
@@ -21,8 +26,7 @@ export const executeOutcomeTrade = async ({
 	orderType = 'MARKET',
 	limitPrice
 }: TradeParams): Promise<void> => {
-	const decimals = BigInt(market.token.decimals);
-	const amountE8 = BigInt(Math.floor(parseFloat(amount) * Number(10n ** decimals)));
+	const amountBase = parseToken({ value: amount.trim(), unitName: market.token.decimals });
 
 	let executionPrice: number;
 
@@ -52,9 +56,14 @@ export const executeOutcomeTrade = async ({
 	// Safety: Ensure price is not zero
 	const finalPrice = Math.max(executionPrice, 0.01);
 
-	// qty = amount / price (normalized to token decimals)
-	const qty =
-		(amountE8 * 10n ** decimals) / BigInt(Math.floor(finalPrice * Number(10n ** decimals)));
+	// Clearing margin is `qty * price` in USD `USD_DECIMALS` (see `get_required_margin`). Convert
+	// collateral from token base units to that USD scale (1 token ≈ 1 USD notionally for sizing).
+	const amountUsd = tokenBaseUnitsToUsdBaseUnits({
+		amount: amountBase,
+		tokenDecimals: market.token.decimals
+	});
+	const priceUsd = parseUsdBaseUnitsFromDecimal(finalPrice);
+	const qty = amountUsd / priceUsd;
 
 	const isBinary = market.payoffType === 'Binary';
 

@@ -23,14 +23,24 @@ export const TICRC1_INDEX_CANISTER_ID = 'qzre3-3iaaa-aaaai-aqmsa-cai';
 
 const viteEnvString = (key: string): string | undefined => {
 	if (typeof import.meta === 'undefined') {
-		return undefined;
+		return;
 	}
 	return (import.meta as ImportMeta & { env?: Record<string, string> }).env?.[key];
 };
 
+/** Default VXP ICRC ledger (mainnet). Local replica: set `VITE_VXP_LEDGER_CANISTER_ID` for the app and align the satellite bundle (see vxp-onboarding hook). */
+export const VXP_LEDGER_CANISTER_ID_DEFAULT = 's7ux4-yyaaa-aaaam-qidha-cai';
+
+/** VXP ICRC index (mainnet). Local replica: set `VITE_VXP_INDEX_CANISTER_ID` to match `dfx.json` `vxp_index.specified_id`. */
+export const VXP_INDEX_CANISTER_ID_DEFAULT = 'swx4a-oqaaa-aaaam-qidgq-cai';
+
 /** VXP ledger (ViciXp / playground). Override with `VITE_VXP_LEDGER_CANISTER_ID` for local replica. */
 export const VXP_LEDGER_CANISTER_ID =
-	viteEnvString('VITE_VXP_LEDGER_CANISTER_ID') ?? 's7ux4-yyaaa-aaaam-qidha-cai';
+	viteEnvString('VITE_VXP_LEDGER_CANISTER_ID') ?? VXP_LEDGER_CANISTER_ID_DEFAULT;
+
+/** VXP index (transaction history). Override with `VITE_VXP_INDEX_CANISTER_ID` for local replica. */
+export const VXP_INDEX_CANISTER_ID =
+	viteEnvString('VITE_VXP_INDEX_CANISTER_ID') ?? VXP_INDEX_CANISTER_ID_DEFAULT;
 
 /** VICI ledger (settlement). Override with `VITE_VICI_LEDGER_CANISTER_ID` for local replica. */
 export const VICI_LEDGER_CANISTER_ID =

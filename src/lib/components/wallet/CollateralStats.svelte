@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -10,10 +10,12 @@
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import type { CollateralStoreData } from '$lib/stores/collaterals.store';
+	import { findAssetWorthForIcrcLedger } from '$lib/utils/asset-ref.utils';
 	import { formatAvailableUsd, formatToken } from '$lib/utils/format.utils';
 	import {
 		formatAvailableMarginForUi,
-		formatCollateralTotalEquityBadge
+		intuitiveAvailableMarginUsd,
+		nativeToClearingMarginUnits
 	} from '$lib/utils/playground-display.utils';
 
 	interface Props {
@@ -33,6 +35,44 @@
 			return (collateral.balances[token.id] ?? ZERO) > ZERO;
 		})
 	);
+
+	const depositedNominalLabel = $derived.by(() => {
+		const parts: string[] = [];
+		for (const t of $walletUiTokens) {
+			const b = collateral.balances[t.id] ?? ZERO;
+			if (b !== ZERO) {
+				parts.push(`${formatToken({ value: b, unitName: t.decimals })} ${t.symbol}`);
+			}
+		}
+		return parts.join(' · ');
+	});
+
+	const fallbackCollateralMarginUnits = $derived.by(() => {
+		let total = ZERO;
+		for (const t of $walletUiTokens) {
+			const b = collateral.balances[t.id] ?? ZERO;
+			if (b > ZERO) {
+				total += nativeToClearingMarginUnits({
+					nativeBalance: b,
+					nativeDecimals: Number(t.decimals)
+				});
+			}
+		}
+		return total;
+	});
+
+	const intuitiveAvailable = $derived.by(() => {
+		const a = collateral.accountState;
+		if (isNullish(a)) {
+			return undefined;
+		}
+		return intuitiveAvailableMarginUsd({
+			assets: a.assets,
+			totalEquityUsd: a.total_equity_usd,
+			availableMarginUsd: a.available_margin_usd,
+			fallbackCollateralMarginUnits
+		});
+	});
 
 	const getTokenColorClasses = (symbol: string) => {
 		if (symbol === 'ICP') {
@@ -57,27 +97,26 @@
 				<div class="text-xs font-bold tracking-widest text-indigo-600 uppercase">
 					Clearing Collateral
 				</div>
+			</div>
+			<div class="mt-1 space-y-1 text-sm text-slate-500">
 				{#if nonNullish(collateral.accountState)}
-					<Badge variant="success">
-						{formatCollateralTotalEquityBadge({
-							totalEquityUsd: collateral.accountState.total_equity_usd,
-							playground: $playgroundVxpUnitMode
-						})}
-					</Badge>
+					<p>
+						Deposited: <span class="font-bold text-slate-900">
+							{depositedNominalLabel || '0'}
+						</span>
+					</p>
+					<p>
+						Available: <span class="font-bold text-slate-900">
+							{formatAvailableMarginForUi({
+								value: intuitiveAvailable ?? ZERO,
+								playground: $playgroundVxpUnitMode
+							})}
+						</span>
+					</p>
+				{:else}
+					<p>Sign in to see clearing collateral.</p>
 				{/if}
 			</div>
-			<p class="mt-1 text-sm text-slate-500">
-				{#if nonNullish(collateral.accountState)}
-					Available Equity: <span class="font-bold text-slate-900">
-						{formatAvailableMarginForUi({
-							value: collateral.accountState.available_margin_usd,
-							playground: $playgroundVxpUnitMode
-						})}
-					</span>
-				{:else}
-					Locked and available margin for trading
-				{/if}
-			</p>
 		</div>
 
 		<div class="flex items-center gap-4">
@@ -94,9 +133,11 @@
 		{#each displayedTokens as token (token.id)}
 			{@const balance = collateral.balances[token.id] ?? ZERO}
 			{@const colorClasses = getTokenColorClasses(token.symbol)}
-			{@const assetWorth = collateral.accountState?.assets.find(
-				(a) => a.asset_id === token.symbol.toLowerCase()
-			)}
+			{@const assetWorth = findAssetWorthForIcrcLedger({
+				assets: collateral.accountState?.assets,
+				ledgerCanisterId: token.ledgerCanisterId,
+				assetsConfig: collateral.assetsConfig
+			})}
 
 			<div
 				class="flex items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50/50"

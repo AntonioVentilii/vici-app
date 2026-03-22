@@ -6,7 +6,9 @@
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import type { WalletBalance } from '$lib/types/wallet';
+	import { findAssetWorthForIcrcLedger } from '$lib/utils/asset-ref.utils';
 	import { formatCurrency, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
@@ -52,9 +54,11 @@
 		{#each displayedTokens as token (token.ledgerCanisterId)}
 			{@const color = getTokenColor(token.symbol)}
 			{@const balance = balances.balances[token.id] ?? ZERO}
-			{@const assetWorth = balances.accountState?.assets.find(
-				(a) => a.asset_id === token.symbol.toLowerCase()
-			)}
+			{@const assetWorth = findAssetWorthForIcrcLedger({
+				assets: balances.accountState?.assets,
+				ledgerCanisterId: token.ledgerCanisterId,
+				assetsConfig: $collateralsStore.assetsConfig
+			})}
 
 			<div class="flex items-center justify-between p-4 transition-colors hover:bg-slate-50/50">
 				<div class="flex items-center gap-3">

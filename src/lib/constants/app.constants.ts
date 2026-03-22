@@ -11,6 +11,8 @@ export const ZERO = 0n;
 export const PAYOFF_TYPE: RegistryDid.PayoffType = { Binary: null };
 export const STRIKE: Nullable<RegistryDid.Price> = toNullable();
 export const PRICE_DECIMALS = 2;
+/** Must match `icdc-core` `shared::constants::USD_DECIMALS` (margin / equity use this scale). */
+export const USD_DECIMALS = 4;
 
 // Oracles
 export const VICI_ORACLE_V1 = 'VICI_ORACLE_V1';

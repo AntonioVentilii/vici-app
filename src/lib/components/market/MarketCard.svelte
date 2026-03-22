@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Clock, ArrowRight } from 'lucide-svelte/icons';
+	import { Clock } from 'lucide-svelte/icons';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -149,13 +149,6 @@
 									{getTimeRemaining(market.expiryDate)}
 								</span>
 							</div>
-						</div>
-
-						<div
-							class="text-primary flex items-center gap-1 font-bold transition-transform group-hover:translate-x-1"
-						>
-							<span class="text-xs">Predict Now</span>
-							<ArrowRight size={14} />
 						</div>
 					</div>
 				</div>

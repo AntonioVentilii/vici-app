@@ -4,6 +4,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import type { UserProfile } from '$lib/types/profile';
 import type { UserRole } from '$lib/types/user';
+import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@dfinity/zod-schemas';
 import type { Identity } from '@icp-sdk/core/agent';
@@ -154,7 +155,10 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 	const realizedPnl = history.reduce((acc, event) => {
 		if ('Settled' in event.event_type) {
 			// Mock calculation: qty * price (extremely simplified)
-			const priceVal = Number(event.price.decimal.value) / 10 ** event.price.decimal.decimals;
+			const priceVal = decimalFixedValueToNumber({
+				value: event.price.decimal.value,
+				decimals: event.price.decimal.decimals
+			});
 			return acc + (Number(event.qty) / 1e8) * priceVal;
 		}
 		return acc;
@@ -191,7 +195,10 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 		if ('Settled' in event.event_type) {
 			if (event.qty > ZERO) {
 				runningStreak++;
-				const priceVal = Number(event.price.decimal.value) / 10 ** event.price.decimal.decimals;
+				const priceVal = decimalFixedValueToNumber({
+					value: event.price.decimal.value,
+					decimals: event.price.decimal.decimals
+				});
 				const weight = priceVal > 0 ? 1.0 / priceVal : 1.0;
 				// Bonus: 10% per consecutive win
 				const multiplier = Math.pow(1.1, runningStreak - 1);

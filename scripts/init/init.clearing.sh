@@ -33,37 +33,55 @@ dfx canister call clearing update_domain_policy "(record {
   };
 })" --network "$NETWORK"
 
-# 2. Register Collateral Assets
-# Definitions for allowed domains
-CLEARING_DOMAINS_PLAYGROUND="vec { variant { Playground } }"
-CLEARING_DOMAINS_VICIXP="vec { variant { ViciXp } }"
-CLEARING_DOMAINS_ALL="vec { variant { Playground }; variant { ViciXp } }"
+# 2. Register collateral (ICRC): allowed_balance_domains enforced on deposit/withdraw.
+#    ICP → Settlement only. VXP → ViciXp only (in-app Playground experience).
+#    Override VXP ledger: VXP_LEDGER=principal-text (must match app VITE_VXP_LEDGER_CANISTER_ID).
+#    asset_id strings must match on register_icrc_asset and update_asset_price (opaque; lowercase defaults below).
 
-# Asset IDs and Ledger IDs
+CLEARING_DOMAINS_SETTLEMENT="vec { variant { Settlement } }"
+CLEARING_DOMAINS_VICIXP="vec { variant { ViciXp } }"
+
 ICP_LEDGER="ryjl3-tyaaa-aaaaa-aaaba-cai"
-TESTICP_LEDGER="xafvr-biaaa-aaaai-aql5q-cai"
-TICRC1_LEDGER="3jkp5-oyaaa-aaaaj-azwqa-cai"
-VUSD_LEDGER=$(dfx canister id ledger --network "$NETWORK" 2>/dev/null || echo "5uhob-dyaaa-aaaaj-qqwwa-cai")
+VXP_LEDGER="${VXP_LEDGER:-s7ux4-yyaaa-aaaam-qidha-cai}"
+ICP_ASSET_ID="${ICP_ASSET_ID:-icp}"
+VXP_ASSET_ID="${VXP_ASSET_ID:-vxp}"
 
 USD_DECIMALS=4
 
-# Register ICP (ViciXp — same domain as the in-app Playground / ViciXp experience)
-echo "Registering ICP collateral asset (domains: ViciXp)..."
-dfx canister call clearing register_icrc_asset "(record { 
-    asset_id = \"icp\"; 
+# 2a. ICP (Settlement only)
+echo "Registering ICP collateral asset (asset_id=$ICP_ASSET_ID, domains: Settlement)..."
+dfx canister call clearing register_icrc_asset "(record {
+    asset_id = \"$ICP_ASSET_ID\";
     ledger_id = principal \"$ICP_LEDGER\";
     haircut_bps = 1000 : nat16;
+    oracle_id = null;
+    is_enabled = true;
+    allowed_balance_domains = $CLEARING_DOMAINS_SETTLEMENT;
+})" --network "$NETWORK"
+
+dfx canister call clearing update_asset_price "(record {
+    asset_id = \"$ICP_ASSET_ID\";
+    price = record { decimal = record { value = 30000 : nat; decimals = $USD_DECIMALS : nat8 }; oracle_id = null; timestamp = null };
+})" --network "$NETWORK"
+
+# 2b. VXP (ViciXp / playground only)
+echo "Registering VXP collateral asset (asset_id=$VXP_ASSET_ID, domains: ViciXp; ledger $VXP_LEDGER)..."
+dfx canister call clearing register_icrc_asset "(record {
+    asset_id = \"$VXP_ASSET_ID\";
+    ledger_id = principal \"$VXP_LEDGER\";
+    haircut_bps = 0 : nat16;
     oracle_id = null;
     is_enabled = true;
     allowed_balance_domains = $CLEARING_DOMAINS_VICIXP;
 })" --network "$NETWORK"
 
-dfx canister call clearing update_asset_price "(record { 
-    asset_id = \"icp\"; 
-    price = record { decimal = record { value = 30000 : nat; decimals = $USD_DECIMALS : nat8 }; oracle_id = null; timestamp = null };
+dfx canister call clearing update_asset_price "(record {
+    asset_id = \"$VXP_ASSET_ID\";
+    price = record { decimal = record { value = 10000 : nat; decimals = $USD_DECIMALS : nat8 }; oracle_id = null; timestamp = null };
 })" --network "$NETWORK"
 
-# 4. Add Clearing as controller of vUSD Ledger
+# 3. Add Clearing as controller of vUSD Ledger
+VUSD_LEDGER=$(dfx canister id ledger --network "$NETWORK" 2>/dev/null || echo "5uhob-dyaaa-aaaaj-qqwwa-cai")
 echo "Guaranteeing Clearing canister as controller of vUSD Ledger..."
 CLEARING_CANISTER=$(dfx canister id clearing --network "$NETWORK")
 CURRENT_CONTROLLERS=$(dfx canister status "$VUSD_LEDGER" --network "$NETWORK" 2>&1 | grep "Controllers:" | cut -d: -f2 || echo "")

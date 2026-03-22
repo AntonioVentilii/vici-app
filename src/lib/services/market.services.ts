@@ -21,6 +21,7 @@ import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market'
 import { ActivityType } from '$lib/types/social';
 import { UserRole } from '$lib/types/user';
 import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
+import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import {
 	calculateCategoricalProbabilities,
 	calculateMarketStats,
@@ -206,7 +207,7 @@ export const getMarkets = async (): Promise<Market[]> => {
 			.map(async (id) => {
 				const series = await getSeries({ identity, seriesId: id });
 				if (isNullish(series)) {
-					return undefined;
+					return;
 				}
 
 				return mapMarketData({
@@ -336,7 +337,10 @@ export const rankMarkets = ({
 			// 3. Activity / Trending (Volume-based)
 			// Small boost based on total volume (normalized to ~100 max for typical early liquidity)
 			if (m.totalVolume > ZERO) {
-				const volumeInUsd = Number(m.totalVolume) / 10 ** Number(m.token.decimals);
+				const volumeInUsd = decimalFixedValueToNumber({
+					value: m.totalVolume,
+					decimals: Number(m.token.decimals)
+				});
 				score += Math.min(volumeInUsd * 2, 200); // Caps at 200
 			}
 

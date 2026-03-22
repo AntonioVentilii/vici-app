@@ -15,6 +15,7 @@ import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderSide, OrderType } from '$lib/types/order';
 import { ActivityType } from '$lib/types/social';
 import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
+import { parseLimitOrderPriceValue } from '$lib/utils/parse.utils';
 import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 import { isNullish, toNullable } from '@dfinity/utils';
 import { getIdentityOnce } from '@junobuild/core';
@@ -94,7 +95,7 @@ export const placeOrder = async ({
 				outcome_id: outcomeId,
 				price: {
 					decimal: {
-						value: BigInt(Math.round(normalizedPrice * 10 ** PRICE_DECIMALS)),
+						value: parseLimitOrderPriceValue(normalizedPrice),
 						decimals: PRICE_DECIMALS
 					},
 					timestamp: toNullable(),

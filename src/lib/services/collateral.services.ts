@@ -6,12 +6,12 @@ import {
 	registerIcrcAsset as registerIcrcAssetApi,
 	withdrawCollateral as withdrawCollateralApi
 } from '$lib/api/clearing.api';
-import { approve } from '$lib/api/icrc-ledger.api';
+import { approve, transactionFee } from '$lib/api/icrc-ledger.api';
 import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { refreshAllBalances } from '$lib/utils/refresh.utils';
-import { getAssetIdByLedgerId } from '$lib/utils/tokens.utils';
+import { resolveClearingAssetId } from '$lib/utils/tokens.utils';
 import { getIcrcAccount } from '$lib/utils/transactions.utils';
 import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 import { getIdentityOnce } from '@junobuild/core';
@@ -27,16 +27,19 @@ export const depositCollateral = async ({
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
+	const ledgerFee = await transactionFee({ identity, ledgerCanisterId: assetPrincipal });
+	const approvalHeadroom = ledgerFee * 2n;
+
 	// 1. Approve clearing canister to spend tokens
 	await approve({
 		identity,
 		ledgerCanisterId: assetPrincipal,
-		amount: amount + 10_000n, // Plus fee
+		amount: amount + approvalHeadroom,
 		spender: getIcrcAccount(CLEARING_CANISTER_ID),
 		expiresAt: nowInBigIntNanoSeconds() + 60n * 1_000_000_000n // 1 minute
 	});
 
-	const asset_id = getAssetIdByLedgerId(assetPrincipal);
+	const asset_id = resolveClearingAssetId(assetPrincipal);
 
 	// 2. Deposit collateral
 	await depositCollateralApi({
@@ -62,7 +65,7 @@ export const withdrawCollateral = async ({
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
-	const asset_id = getAssetIdByLedgerId(assetPrincipal);
+	const asset_id = resolveClearingAssetId(assetPrincipal);
 
 	await withdrawCollateralApi({
 		identity,

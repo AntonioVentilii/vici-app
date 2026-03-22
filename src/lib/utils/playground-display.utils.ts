@@ -1,3 +1,5 @@
+import type { ClearingDid } from '$declarations';
+import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import {
 	PLAYGROUND_CLEARING_MARGIN_DECIMALS,
 	PLAYGROUND_DISPLAY_SYMBOL,
@@ -30,14 +32,45 @@ export const formatAvailableMarginForUi = ({
 	playground: boolean;
 }): string => (playground ? formatPlaygroundClearingAsVxp(value) : formatAvailableUsd({ value }));
 
-/** Badge line for total equity, using VXP or USD depending on playground mode. */
-export const formatCollateralTotalEquityBadge = ({
-	totalEquityUsd,
-	playground
+/** Native ICRC amount → clearing margin scale (`USD_DECIMALS`), same units as `total_equity_usd`. */
+export const nativeToClearingMarginUnits = ({
+	nativeBalance,
+	nativeDecimals
 }: {
+	nativeBalance: bigint;
+	nativeDecimals: number;
+}): bigint => {
+	if (nativeDecimals <= USD_DECIMALS) {
+		return nativeBalance * 10n ** BigInt(USD_DECIMALS - nativeDecimals);
+	}
+	return nativeBalance / 10n ** BigInt(nativeDecimals - USD_DECIMALS);
+};
+
+const sumAssetWorthValueUsd = (assets: ClearingDid.AssetWorth[]): bigint =>
+	assets.reduce((sum, asset) => sum + asset.value_usd, ZERO);
+
+/**
+ * “Available” for simple wallet copy: collateral value at mark minus margin reserved for open activity.
+ * Uses `assets[].value_usd` when present; otherwise `fallbackCollateralMarginUnits`.
+ */
+export const intuitiveAvailableMarginUsd = ({
+	assets,
+	totalEquityUsd,
+	availableMarginUsd,
+	fallbackCollateralMarginUnits
+}: {
+	assets: ClearingDid.AssetWorth[] | undefined;
 	totalEquityUsd: bigint;
-	playground: boolean;
-}): string => `${formatAvailableMarginForUi({ value: totalEquityUsd, playground })} Total`;
+	availableMarginUsd: bigint;
+	fallbackCollateralMarginUnits: bigint;
+}): bigint => {
+	const locked = totalEquityUsd - availableMarginUsd;
+	const atMark =
+		assets !== undefined && assets.length > 0
+			? sumAssetWorthValueUsd(assets)
+			: fallbackCollateralMarginUnits;
+	return atMark > locked ? atMark - locked : ZERO;
+};
 
 /** Label for quick-bet chips: amount with VXP symbol or `$` prefix. */
 export const quickBetChipLabel = ({
