@@ -61,5 +61,11 @@ export default defineConfig({
 				}
 			]
 		}
+	},
+	emulator: {
+		runner: {
+			type: 'docker'
+		},
+		satellite: {}
 	}
 });
