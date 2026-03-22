@@ -23,13 +23,13 @@
 			description:
 				'This market resolves to YES if the Bitcoin price reaches $100,000 USD on any major exchange before Jan 1, 2027.',
 			expiryDate: '2027-01-01T00:00:00Z',
-			balanceDomain: 'Settlement'
+			balanceDomain: 'ViciXp'
 		},
 		{
 			title: 'Who will win the 2026 FIFA World Cup?',
 			description: 'Prediction on the champion of the 2026 FIFA World Cup.',
 			expiryDate: '2026-07-20T21:59:59.000Z',
-			balanceDomain: 'Settlement',
+			balanceDomain: 'ViciXp',
 			outcomes: ['Italy', 'Brazil', 'France', 'Argentina', 'England', 'Spain', 'Germany', 'Other']
 		}
 	];

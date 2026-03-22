@@ -9,6 +9,7 @@ import { binaryPayoff } from '$lib/utils/payoff.utils';
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 
+/** Binary resolution path: settles on-chain from YES/NO, logs settlement activity, refreshes markets. */
 export const resolveMarket = async ({
 	marketId,
 	outcome

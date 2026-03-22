@@ -2,9 +2,11 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { formatCurrency, formatQuantity } from '$lib/utils/format.utils';
+	import { formatPositionPnLWithOptionalUnit } from '$lib/utils/playground-display.utils';
 
 	interface Props {
 		positions: Position[];
@@ -93,7 +95,7 @@
 								</td>
 								<td class="px-6 py-4 text-right">
 									<span class="text-sm font-black {pnl >= 0 ? 'text-green-600' : 'text-red-600'}">
-										{pnl >= 0 ? '+' : ''}{pnl.toFixed(2)}
+										{formatPositionPnLWithOptionalUnit({ pnl, playground: $playgroundVxpUnitMode })}
 									</span>
 								</td>
 							</tr>

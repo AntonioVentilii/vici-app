@@ -5,6 +5,7 @@ import { isNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@dfinity/zod-schemas';
 import { deleteDoc, getDoc, listDocs, setDoc, type Doc } from '@junobuild/core';
 
+/** Creates a pending friend relation between sender and target. */
 export const sendFriendRequest = async ({
 	target,
 	sender
@@ -33,6 +34,7 @@ export const sendFriendRequest = async ({
 	});
 };
 
+/** Marks a friend relation as active. */
 export const acceptFriendRequest = async ({
 	currentRelation
 }: {
@@ -51,6 +53,7 @@ export const acceptFriendRequest = async ({
 	});
 };
 
+/** Active friend relations that include the user. */
 export const getFriends = async (userPrincipal: PrincipalText): Promise<Relation[]> => {
 	const { items } = await listDocs<Relation>({
 		collection: Collection.RELATIONS
@@ -67,6 +70,7 @@ export const getFriends = async (userPrincipal: PrincipalText): Promise<Relation
 		.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
 };
 
+/** Creates or overwrites an active follow from sender to target. */
 export const followUser = async ({
 	target,
 	sender
@@ -95,6 +99,7 @@ export const followUser = async ({
 	});
 };
 
+/** Deletes the follow relation document for sender→target. */
 export const unfollowUser = async (params: {
 	sender: PrincipalText;
 	target: PrincipalText;
@@ -121,6 +126,7 @@ export const unfollowUser = async (params: {
 	}
 };
 
+/** Loads all relation documents (internal helper). */
 const listRelations = async (): Promise<Relation[]> => {
 	const { items } = await listDocs<Relation>({
 		collection: Collection.RELATIONS
@@ -129,6 +135,7 @@ const listRelations = async (): Promise<Relation[]> => {
 	return items.map(({ data }) => data);
 };
 
+/** Principals the user follows (follow relation participant order: follower first). */
 export const getFollowing = async (userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
 	// Relations for following are stored in the same collection.
 	// We use matcher to filter for relations involving the user principal.
@@ -141,6 +148,7 @@ export const getFollowing = async (userPrincipal: PrincipalText): Promise<Princi
 		.map((r) => r.participants[1]);
 };
 
+/** Principals following the user. */
 export const getFollowers = async (userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
 	const items = await listRelations();
 

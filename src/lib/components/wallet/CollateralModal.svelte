@@ -4,7 +4,7 @@
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
-	import { defaultSupportedToken, supportedTokens } from '$lib/derived/tokens.derived';
+	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { depositCollateral, withdrawCollateral } from '$lib/services/collateral.services';
 	import type { Token } from '$lib/types/token';
@@ -134,7 +134,7 @@
 		<div class="space-y-2">
 			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">Token</span>
 			<div class="grid grid-cols-2 gap-3">
-				{#each $supportedTokens as token (token.ledgerCanisterId)}
+				{#each $walletUiTokens as token (token.ledgerCanisterId)}
 					<BaseButton
 						class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 font-bold {selectedToken?.ledgerCanisterId ===
 						token.ledgerCanisterId

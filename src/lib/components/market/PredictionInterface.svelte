@@ -6,6 +6,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
+	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { getOrderBook } from '$lib/services/order.services';
 	import { getBalances } from '$lib/services/wallet.service';
@@ -17,9 +18,13 @@
 	import type { Market } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
-	import { formatAvailableUsd, formatCurrency } from '$lib/utils/format.utils';
+	import { formatCurrency } from '$lib/utils/format.utils';
 	import { calculateMarketStats } from '$lib/utils/market.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
+	import {
+		formatAvailableMarginForUi,
+		quickBetChipLabel
+	} from '$lib/utils/playground-display.utils';
 	import { executeOutcomeTrade } from '$lib/utils/trade.utils';
 
 	interface Props {
@@ -426,7 +431,10 @@
 
 					<span class="text-[10px] font-bold text-slate-400 uppercase">
 						Available: {nonNullish(availableEquity)
-							? formatAvailableUsd({ value: availableEquity })
+							? formatAvailableMarginForUi({
+									value: availableEquity,
+									playground: $playgroundVxpUnitMode
+								})
 							: '...'}
 					</span>
 				</div>
@@ -454,7 +462,10 @@
 							class="flex-1 rounded-xl border border-slate-100 bg-slate-50 py-2 text-[10px] font-bold text-slate-500 transition-all hover:border-indigo-200 hover:bg-white hover:text-indigo-600"
 							onclick={() => (amount = quickAmount)}
 						>
-							${quickAmount}
+							{quickBetChipLabel({
+								amount: quickAmount,
+								playground: $playgroundVxpUnitMode
+							})}
 						</BaseButton>
 					{/each}
 				</div>

@@ -80,6 +80,7 @@ export const Outcome = IDL.Record({
 	icon_url: IDL.Opt(IDL.Text)
 });
 export const BalanceDomain = IDL.Variant({
+	ViciXp: IDL.Null,
 	Playground: IDL.Null,
 	Settlement: IDL.Null
 });
@@ -248,6 +249,7 @@ export const idlFactory = ({ IDL }) => {
 		icon_url: IDL.Opt(IDL.Text)
 	});
 	const BalanceDomain = IDL.Variant({
+		ViciXp: IDL.Null,
 		Playground: IDL.Null,
 		Settlement: IDL.Null
 	});

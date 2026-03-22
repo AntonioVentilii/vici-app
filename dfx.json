@@ -3,7 +3,7 @@
 	"canisters": {
 		"clearing": {
 			"type": "custom",
-			"build": "scripts/build.icdc.clearing.sh",
+			"build": "scripts/build/build.icdc.clearing.sh",
 			"candid": "target/icdc/clearing.did",
 			"wasm": "target/icdc/clearing.wasm",
 			"metadata": [
@@ -21,7 +21,7 @@
 		},
 		"registry": {
 			"type": "custom",
-			"build": "scripts/build.icdc.registry.sh",
+			"build": "scripts/build/build.icdc.registry.sh",
 			"candid": "target/icdc/registry.did",
 			"wasm": "target/icdc/registry.wasm",
 			"metadata": [
@@ -39,7 +39,7 @@
 		},
 		"minter": {
 			"type": "custom",
-			"build": "scripts/build.icdc.minter.sh",
+			"build": "scripts/build/build.icdc.minter.sh",
 			"candid": "target/icdc/minter.did",
 			"wasm": "target/icdc/minter.wasm",
 			"metadata": [
@@ -57,7 +57,7 @@
 		},
 		"ledger": {
 			"type": "custom",
-			"build": "scripts/build.icdc.ledger.sh",
+			"build": "scripts/build/build.icdc.ledger.sh",
 			"candid": "target/icdc/ledger.did",
 			"wasm": "target/icdc/ledger.wasm",
 			"metadata": [
@@ -76,7 +76,7 @@
 		"index": {
 			"dependencies": ["ledger"],
 			"type": "custom",
-			"build": "scripts/build.icdc.index.sh",
+			"build": "scripts/build/build.icdc.index.sh",
 			"candid": "target/icdc/index.did",
 			"wasm": "target/icdc/index.wasm",
 			"metadata": [
@@ -94,7 +94,7 @@
 		},
 		"cketh_minter": {
 			"type": "custom",
-			"build": "scripts/build.cketh_minter.sh",
+			"build": "scripts/build/build.cketh_minter.sh",
 			"candid": "target/ic/cketh_minter.did",
 			"wasm": "target/ic/cketh_minter.wasm",
 			"init_arg_file": "target/ic/cketh_minter.args.did",
@@ -110,7 +110,7 @@
 			"dependencies": ["cketh_minter"],
 			"type": "custom",
 			"candid": "target/ic/cketh_ledger.did",
-			"build": "scripts/build.cketh_ledger.sh",
+			"build": "scripts/build/build.cketh_ledger.sh",
 			"wasm": "target/ic/cketh_ledger.wasm",
 			"init_arg_file": "target/ic/cketh_ledger.args.did",
 			"specified_id": "apia6-jaaaa-aaaar-qabma-cai",
@@ -124,7 +124,7 @@
 		"ckusdc_ledger": {
 			"dependencies": ["cketh_minter"],
 			"type": "custom",
-			"build": "scripts/build.ckusdc_ledger.sh",
+			"build": "scripts/build/build.ckusdc_ledger.sh",
 			"candid": "target/ic/cketh_ledger.did",
 			"wasm": "target/ic/cketh_ledger.wasm",
 			"init_arg_file": "target/ic/ckusdc_ledger.args.did",
@@ -139,7 +139,7 @@
 		"ckusdc_index": {
 			"dependencies": ["ckusdc_ledger"],
 			"type": "custom",
-			"build": "scripts/build.ckusdc_index.sh",
+			"build": "scripts/build/build.ckusdc_index.sh",
 			"candid": "target/ic/cketh_index.did",
 			"wasm": "target/ic/cketh_index.wasm",
 			"init_arg_file": "target/ic/ckusdc_index.args.did",
@@ -150,6 +150,58 @@
 					"staging": "xrs4b-hiaaa-aaaar-qafoa-cai"
 				}
 			}
+		},
+		"vxp_minter": {
+			"type": "custom",
+			"build": "scripts/build/build.vxp_minter.sh",
+			"candid": "target/ic/vxp_minter.did",
+			"wasm": "target/ic/vxp_minter.wasm",
+			"init_arg_file": "target/ic/vxp_minter.args.did",
+			"specified_id": "syvri-vaaaa-aaaam-qidhq-cai"
+		},
+		"vxp_ledger": {
+			"dependencies": ["vxp_minter"],
+			"type": "custom",
+			"build": "scripts/build/build.vxp_ledger.sh",
+			"candid": "target/ic/icrc1_ledger.did",
+			"wasm": "target/ic/ic-icrc1-ledger.wasm",
+			"init_arg_file": "target/ic/vxp_ledger.args.did",
+			"specified_id": "s7ux4-yyaaa-aaaam-qidha-cai"
+		},
+		"vxp_index": {
+			"dependencies": ["vxp_ledger"],
+			"type": "custom",
+			"build": "scripts/build/build.vxp_index.sh",
+			"candid": "target/ic/icrc1_index.did",
+			"wasm": "target/ic/ic-icrc1-index-ng.wasm",
+			"init_arg_file": "target/ic/vxp_index.args.did",
+			"specified_id": "swx4a-oqaaa-aaaam-qidgq-cai"
+		},
+		"vici_minter": {
+			"type": "custom",
+			"build": "scripts/build/build.vici_minter.sh",
+			"candid": "target/ic/vici_minter.did",
+			"wasm": "target/ic/vici_minter.wasm",
+			"init_arg_file": "target/ic/vici_minter.args.did",
+			"specified_id": "z2hzh-ziaaa-aaaam-qic2a-cai"
+		},
+		"vici_ledger": {
+			"dependencies": ["vici_minter"],
+			"type": "custom",
+			"build": "scripts/build/build.vici_ledger.sh",
+			"candid": "target/ic/icrc1_ledger.did",
+			"wasm": "target/ic/ic-icrc1-ledger.wasm",
+			"init_arg_file": "target/ic/vici_ledger.args.did",
+			"specified_id": "zpaik-yaaaa-aaaam-qiczq-cai"
+		},
+		"vici_index": {
+			"dependencies": ["vici_ledger"],
+			"type": "custom",
+			"build": "scripts/build/build.vici_index.sh",
+			"candid": "target/ic/icrc1_index.did",
+			"wasm": "target/ic/ic-icrc1-index-ng.wasm",
+			"init_arg_file": "target/ic/vici_index.args.did",
+			"specified_id": "zibo6-vyaaa-aaaam-qicza-cai"
 		}
 	},
 	"defaults": {

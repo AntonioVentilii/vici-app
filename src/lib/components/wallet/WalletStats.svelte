@@ -3,7 +3,8 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Switch from '$lib/components/ui/Switch.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { supportedTokens } from '$lib/derived/tokens.derived';
+	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
+	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import type { WalletBalance } from '$lib/types/wallet';
 	import { formatCurrency, formatToken } from '$lib/utils/format.utils';
@@ -17,7 +18,7 @@
 	let hideZeroBalances = $state(true);
 
 	const displayedTokens = $derived(
-		$supportedTokens.filter((token) => {
+		$walletUiTokens.filter((token) => {
 			if (!hideZeroBalances) {
 				return true;
 			}
@@ -77,7 +78,9 @@
 						{formatToken({ value: balance, unitName: token.decimals })}
 					</div>
 					<div class="text-[10px] font-medium text-slate-400">
-						{#if assetWorth}
+						{#if $playgroundVxpUnitMode}
+							{token.symbol}
+						{:else if assetWorth}
 							≈ {formatCurrency({ value: assetWorth.value_usd })}
 						{:else if token.symbol === 'ckUSDC'}
 							≈ {formatCurrency({ value: balance, decimals: token.decimals })}

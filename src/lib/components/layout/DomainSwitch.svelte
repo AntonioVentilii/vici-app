@@ -5,7 +5,7 @@
 	import { isDev } from '$lib/env/app.env';
 	import { setBalanceDomain } from '$lib/services/balance-domain.services';
 	import type { BalanceDomainKey } from '$lib/types/balance-domain';
-	import { isPlayground, isSettlement } from '$lib/utils/balance-domain.utils';
+	import { isPlaygroundExperience, isSettlement } from '$lib/utils/balance-domain.utils';
 
 	const setDomain = (domain: BalanceDomainKey) => {
 		// Disabled for now in prod
@@ -27,7 +27,7 @@
 	</div>
 	<div class="flex gap-1">
 		<button
-			class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isPlayground(
+			class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isPlaygroundExperience(
 				$balanceDomain
 			)
 				? 'border-primary bg-primary/10 text-primary shadow-sm'

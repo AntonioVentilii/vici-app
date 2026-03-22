@@ -9,6 +9,7 @@ import type { PrincipalText } from '@dfinity/zod-schemas';
 import type { Identity } from '@icp-sdk/core/agent';
 import { getDoc, listDocs, setDoc, type Doc } from '@junobuild/core';
 
+/** Loads a user profile from Juno or returns a default shell; merges role from the roles collection. */
 export const getProfile = async (
 	principal: PrincipalText
 ): Promise<Doc<UserProfile> & { role?: UserRole }> => {
@@ -50,6 +51,7 @@ export const getProfile = async (
 	};
 };
 
+/** Updates interest tags on the user's profile. */
 export const updateInterests = async ({
 	principal,
 	interests
@@ -68,6 +70,7 @@ export const updateInterests = async ({
 	});
 };
 
+/** Writes profile data and bumps `updatedAt`. */
 export const upsertProfile = async (
 	profileDoc: Doc<UserProfile> | { key: string; data: UserProfile }
 ): Promise<void> => {
@@ -83,6 +86,7 @@ export const upsertProfile = async (
 	});
 };
 
+/** Case-insensitive search over nickname, owner, and document key. */
 export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
 	const lowerQuery = query.toLowerCase();
 
@@ -103,6 +107,7 @@ export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
 		);
 };
 
+/** Ensures a profile document exists in Juno, then returns its data. */
 export const ensureProfile = async (principal: PrincipalText): Promise<UserProfile> => {
 	const profileDoc = await getProfile(principal);
 
@@ -115,6 +120,7 @@ export const ensureProfile = async (principal: PrincipalText): Promise<UserProfi
 	return profileDoc.data;
 };
 
+/** Derives trading stats, points, and level from clearing history and writes them to the profile. */
 export const calculateAndSyncStats = async (identity: Identity): Promise<void> => {
 	const principal = identity.getPrincipal().toText();
 	const history = await getUserTradeHistory();
@@ -217,6 +223,7 @@ export const calculateAndSyncStats = async (identity: Identity): Promise<void> =
 	});
 };
 
+/** Updates daily login streak when the calendar day changes. */
 export const recordActivity = async (principal: PrincipalText): Promise<void> => {
 	const profileDoc = await getProfile(principal);
 	const [today] = new Date().toISOString().split('T');

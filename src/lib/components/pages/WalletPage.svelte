@@ -10,7 +10,8 @@
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
 	import WalletStats from '$lib/components/wallet/WalletStats.svelte';
-	import { defaultSupportedToken } from '$lib/derived/tokens.derived';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { sendIc } from '$lib/services/send.services';
 	import { getTransactions } from '$lib/services/wallet.service';
@@ -19,6 +20,7 @@
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Token } from '$lib/types/token';
 	import type { Transaction } from '$lib/types/wallet';
+	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import { emit } from '$lib/utils/events.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 
@@ -28,7 +30,20 @@
 
 	let isCollateralModalOpen = $state(false);
 
-	const tabs = ['Send', 'Receive', 'History'];
+	const isPlaygroundWallet = $derived(isViciXp($balanceDomain));
+
+	const tabs = $derived(isPlaygroundWallet ? ['History'] : ['Send', 'Receive', 'History']);
+
+	const filteredTransactions = $derived.by(() => {
+		const allowed = new Set($walletUiTokens.map((t) => t.ledgerCanisterId));
+		return transactions.filter((tx) => allowed.has(tx.token.ledgerCanisterId));
+	});
+
+	$effect(() => {
+		if (!tabs.includes(activeTab)) {
+			[activeTab] = tabs;
+		}
+	});
 
 	onMount(async () => {
 		transactions = await getTransactions();
@@ -112,25 +127,36 @@
 
 	<CollateralModal isOpen={isCollateralModalOpen} onClose={() => (isCollateralModalOpen = false)} />
 
-	<!-- Operations Tabs -->
+	<!-- Operations Tabs (Send/Receive hidden in ViciXp playground — ledger ops not used there) -->
 	<Card padding="none">
-		<Tabs {tabs} bind:activeTab />
+		{#if !isPlaygroundWallet}
+			<Tabs {tabs} bind:activeTab />
+		{/if}
 
 		<div class="w-full p-8">
-			{#if activeTab === 'Send' && nonNullish(selectedToken)}
-				<WalletSend
-					{amount}
-					onAmountChange={(v) => (amount = v)}
-					onRecipientChange={(v) => (recipient = v)}
-					onSend={handleSend}
-					onTokenChange={(v) => (selectedToken = v)}
-					{recipient}
-					{selectedToken}
-				/>
+			{#if isPlaygroundWallet}
+				<WalletHistory transactions={filteredTransactions} />
+			{:else if activeTab === 'Send'}
+				{#if nonNullish(selectedToken)}
+					<WalletSend
+						{amount}
+						onAmountChange={(v) => (amount = v)}
+						onRecipientChange={(v) => (recipient = v)}
+						onSend={handleSend}
+						onTokenChange={(v) => (selectedToken = v)}
+						{recipient}
+						{selectedToken}
+					/>
+				{:else}
+					<p class="text-sm text-slate-500">
+						Loading send options… If this persists, no tokens are available for your current
+						network.
+					</p>
+				{/if}
 			{:else if activeTab === 'Receive'}
 				<WalletReceive />
-			{:else}
-				<WalletHistory {transactions} />
+			{:else if activeTab === 'History'}
+				<WalletHistory transactions={filteredTransactions} />
 			{/if}
 		</div>
 	</Card>

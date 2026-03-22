@@ -6,7 +6,9 @@ import {
 	GHOST_LEDGER_CANISTER_ID,
 	ICP_LEDGER_CANISTER_ID,
 	TESTICP_LEDGER_CANISTER_ID,
-	TICRC1_LEDGER_CANISTER_ID
+	TICRC1_LEDGER_CANISTER_ID,
+	VICI_LEDGER_CANISTER_ID,
+	VXP_LEDGER_CANISTER_ID
 } from '$lib/constants/canisters.constants';
 import { isDev } from '$lib/env/app.env';
 import type { Token } from '$lib/types/token';
@@ -32,6 +34,22 @@ export const TICRC1_TOKEN: Token = {
 	symbol: 'TICRC1',
 	decimals: 8,
 	ledgerCanisterId: TICRC1_LEDGER_CANISTER_ID
+};
+
+export const VXP_TOKEN: Token = {
+	id: parseTokenId('VXP'),
+	symbol: 'VXP',
+	decimals: 8,
+	ledgerCanisterId: VXP_LEDGER_CANISTER_ID,
+	isDevEnabled: true
+};
+
+export const VICI_TOKEN: Token = {
+	id: parseTokenId('VICI'),
+	symbol: 'VICI',
+	decimals: 8,
+	ledgerCanisterId: VICI_LEDGER_CANISTER_ID,
+	isDevEnabled: true
 };
 
 export const CKUSDC_TOKEN: Token = {
@@ -78,6 +96,8 @@ export const SUPPORTED_TOKENS: Token[] = [
 	ICP_TOKEN,
 	TESTICP_TOKEN,
 	TICRC1_TOKEN,
+	VXP_TOKEN,
+	VICI_TOKEN,
 	CKUSDC_TOKEN,
 	CKBTC_TOKEN,
 	CKETH_TOKEN,

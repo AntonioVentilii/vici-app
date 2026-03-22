@@ -9,11 +9,13 @@ export class FlowTradeService {
 	private pendingTrades: Promise<void>[] = [];
 	private isActive = false;
 
+	/** Begins a flow session: subsequent trades batch refreshes until {@link FlowTradeService.endSession}. */
 	startSession() {
 		this.isActive = true;
 		this.pendingTrades = [];
 	}
 
+	/** Runs `executeOutcomeTrade`; defers UI refresh until session end when a session is active. */
 	async executeTrade(params: TradeParams): Promise<void> {
 		const tradePromise = (async () => {
 			try {
@@ -48,6 +50,7 @@ export class FlowTradeService {
 		this.pendingTrades = [];
 	}
 
+	/** Triggers positions, orders, and balance refresh events. */
 	private refresh() {
 		refreshPositions();
 		refreshOrders();
@@ -55,4 +58,5 @@ export class FlowTradeService {
 	}
 }
 
+/** Shared singleton used by the prediction flow UI. */
 export const flowTradeService = new FlowTradeService();

@@ -3,6 +3,7 @@ import { ZERO } from '$lib/constants/app.constants';
 import type { Position } from '$lib/types/position';
 import { parseMarketId } from '$lib/validation/market.validation';
 
+/** Maps a clearing `Position` record into the UI `Position` shape. */
 export const mapPositionData = (position: ClearingDid.Position): Position => {
 	const { user, series_id: id, net_qty: qty, reserved_margin_usd: locked } = position;
 

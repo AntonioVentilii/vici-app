@@ -5,10 +5,16 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Switch from '$lib/components/ui/Switch.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { supportedTokens } from '$lib/derived/tokens.derived';
+	import { VICI_TOKEN, VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
+	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import type { CollateralStoreData } from '$lib/stores/collaterals.store';
 	import { formatAvailableUsd, formatToken } from '$lib/utils/format.utils';
+	import {
+		formatAvailableMarginForUi,
+		formatCollateralTotalEquityBadge
+	} from '$lib/utils/playground-display.utils';
 
 	interface Props {
 		collateral: CollateralStoreData;
@@ -20,7 +26,7 @@
 	let hideZeroBalances = $state(true);
 
 	const displayedTokens = $derived(
-		$supportedTokens.filter((token) => {
+		$walletUiTokens.filter((token) => {
 			if (!hideZeroBalances) {
 				return true;
 			}
@@ -34,6 +40,9 @@
 		}
 		if (symbol.startsWith('ck')) {
 			return 'bg-green-100 text-green-600';
+		}
+		if (symbol === VXP_TOKEN.symbol || symbol === VICI_TOKEN.symbol) {
+			return 'bg-violet-100 text-violet-600';
 		}
 		return 'bg-slate-100 text-slate-600';
 	};
@@ -50,14 +59,20 @@
 				</div>
 				{#if nonNullish(collateral.accountState)}
 					<Badge variant="success">
-						{formatAvailableUsd({ value: collateral.accountState.total_equity_usd })} Total
+						{formatCollateralTotalEquityBadge({
+							totalEquityUsd: collateral.accountState.total_equity_usd,
+							playground: $playgroundVxpUnitMode
+						})}
 					</Badge>
 				{/if}
 			</div>
 			<p class="mt-1 text-sm text-slate-500">
 				{#if nonNullish(collateral.accountState)}
 					Available Equity: <span class="font-bold text-slate-900">
-						{formatAvailableUsd({ value: collateral.accountState.available_margin_usd })}
+						{formatAvailableMarginForUi({
+							value: collateral.accountState.available_margin_usd,
+							playground: $playgroundVxpUnitMode
+						})}
 					</span>
 				{:else}
 					Locked and available margin for trading
@@ -112,7 +127,9 @@
 						{formatToken({ value: balance, unitName: token.decimals })}
 					</div>
 					<div class="text-[10px] font-medium text-slate-400 uppercase">
-						{#if nonNullish(assetWorth)}
+						{#if $playgroundVxpUnitMode}
+							{token.symbol}
+						{:else if nonNullish(assetWorth)}
 							Value: {formatAvailableUsd({ value: assetWorth.value_usd })}
 							{#if assetWorth.haircut_bps > 0}
 								<span class="line-through opacity-50"
