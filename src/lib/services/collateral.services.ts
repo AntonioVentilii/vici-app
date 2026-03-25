@@ -15,6 +15,18 @@ import { getIcrcAccount } from '$lib/utils/transactions.utils';
 import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 import { getIdentityOnce } from '@junobuild/core';
 
+const makeOperationId = ({ prefix, hint }: { prefix: string; hint?: bigint }): string => {
+	// Idempotency keys are user-provided strings on the clearing canister side.
+	// Using `Date.now()` alone can collide under rapid retries/double-clicks (same ms),
+	// which may lead to surprising "amount mismatch" UX.
+	const uuid =
+		typeof crypto !== 'undefined' && 'randomUUID' in crypto
+			? crypto.randomUUID()
+			: `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+
+	return isNullish(hint) ? `${prefix}_${uuid}` : `${prefix}_${hint.toString()}_${uuid}`;
+};
+
 /** ICRC approve + clearing deposit for the current balance domain; refreshes balances on success. */
 export const depositCollateral = async ({
 	assetPrincipal,
@@ -28,13 +40,14 @@ export const depositCollateral = async ({
 	const identity = await safeGetIdentityOnce();
 
 	const ledgerFee = await transactionFee({ identity, ledgerCanisterId: assetPrincipal });
-	const approvalHeadroom = ledgerFee * 2n;
+	// ICRC-2: allowance must cover `amount + fee` for `icrc2_transfer_from`
+	const approvalAmount = amount + ledgerFee;
 
 	// 1. Approve clearing canister to spend tokens
 	await approve({
 		identity,
 		ledgerCanisterId: assetPrincipal,
-		amount: amount + approvalHeadroom,
+		amount: approvalAmount,
 		spender: getIcrcAccount(CLEARING_CANISTER_ID),
 		expiresAt: nowInBigIntNanoSeconds() + 60n * 1_000_000_000n // 1 minute
 	});
@@ -45,7 +58,7 @@ export const depositCollateral = async ({
 	await depositCollateralApi({
 		identity,
 		params: {
-			deposit_id: `DEPOSIT_${Date.now()}`,
+			deposit_id: makeOperationId({ prefix: 'DEPOSIT', hint: amount }),
 			domain: toNullable(domain),
 			asset_id,
 			amount
@@ -72,7 +85,7 @@ export const withdrawCollateral = async ({
 	await withdrawCollateralApi({
 		identity,
 		params: {
-			withdrawal_id: `WITHDRAW_${Date.now()}`,
+			withdrawal_id: makeOperationId({ prefix: 'WITHDRAW', hint: amount }),
 			domain: toNullable(domain),
 			asset_id,
 			amount
