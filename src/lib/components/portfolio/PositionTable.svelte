@@ -2,6 +2,10 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import {
+		PORTFOLIO_DEFAULT_DECIMALS,
+		PORTFOLIO_DEFAULT_SYMBOL
+	} from '$lib/constants/portfolio.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
@@ -59,9 +63,9 @@
 										>
 											{market?.title ?? 'Unknown Market'}
 										</span>
-										<span class="text-[10px] leading-none tracking-widest text-slate-400 uppercase"
-											>ID: {pos.marketId}</span
-										>
+										<span class="text-[10px] leading-none tracking-widest text-slate-400 uppercase">
+											ID: {pos.marketId}
+										</span>
 									</a>
 								</td>
 								<td class="px-6 py-4">
@@ -82,15 +86,15 @@
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
 									{formatQuantity({
 										value: pos.netQty < ZERO ? -pos.netQty : pos.netQty,
-										decimals: market?.token.decimals ?? 8
+										decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS
 									})}
 									<span class="text-[10px] text-slate-400">QTY</span>
 								</td>
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
 									{formatCurrency({
 										value: onCalculateValue(pos),
-										decimals: market?.token.decimals ?? 8,
-										symbol: market?.token.symbol ?? 'ICP'
+										decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS,
+										symbol: market?.token.symbol ?? PORTFOLIO_DEFAULT_SYMBOL
 									})}
 								</td>
 								<td class="px-6 py-4 text-right">

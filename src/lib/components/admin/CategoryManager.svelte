@@ -5,6 +5,7 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { listCategories, associateSeriesWithCategory } from '$lib/services/category.services';
 	import type { Category } from '$lib/types/category';
+	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	interface Props {
 		seriesId: string;
@@ -49,7 +50,7 @@
 		<div>
 			<h4 class="text-lg font-bold">Predictive Category</h4>
 			<p class="text-muted-foreground text-xs tracking-wider uppercase">
-				Series ID: {seriesId.slice(0, 12)}...
+				Series ID: {shortenWithMiddleEllipsis({ text: seriesId })}
 			</p>
 		</div>
 
@@ -71,9 +72,9 @@
 					>
 						<span class="text-xs font-bold tracking-widest uppercase">{cat.name}</span>
 						{#if cat.description}
-							<span class="text-muted-foreground line-clamp-2 text-[10px] leading-tight"
-								>{cat.description}</span
-							>
+							<span class="text-muted-foreground line-clamp-2 text-[10px] leading-tight">
+								{cat.description}
+							</span>
 						{/if}
 					</button>
 				{/each}

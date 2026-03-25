@@ -146,11 +146,11 @@
 	{#if loading}
 		<div class="flex flex-col items-center justify-center py-20">
 			<div
-				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600"
-			></div>
-			<span class="mt-4 text-[10px] font-bold tracking-widest text-indigo-600 uppercase"
-				>Updating Depth...</span
-			>
+				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600">
+			</div>
+			<span class="mt-4 text-[10px] font-bold tracking-widest text-indigo-600 uppercase">
+				Updating Depth...
+			</span>
 		</div>
 	{:else}
 		<div class="space-y-1">
@@ -168,8 +168,8 @@
 						<!-- Depth Bar -->
 						<div
 							style="width: {calculateDepthPercentage({ qty: ask.totalQty, maxQty: maxQty() })}%"
-							class="absolute inset-y-0 right-0 bg-red-500/5 transition-all group-hover:bg-red-500/10"
-						></div>
+							class="absolute inset-y-0 right-0 bg-red-500/5 transition-all group-hover:bg-red-500/10">
+						</div>
 
 						<span class="relative z-10 text-sm font-bold text-red-500">
 							{formatProbability(ask.price)}
@@ -208,14 +208,14 @@
 						<!-- Depth Bar -->
 						<div
 							style="width: {calculateDepthPercentage({ qty: bid.totalQty, maxQty: maxQty() })}%"
-							class="absolute inset-y-0 right-0 bg-green-500/5 transition-all group-hover:bg-green-500/10"
-						></div>
+							class="absolute inset-y-0 right-0 bg-green-500/5 transition-all group-hover:bg-green-500/10">
+						</div>
 
 						<span class="relative z-10 text-sm font-bold text-green-500">
 							{formatProbability(bid.price)}
 							{#if isUserLevel(bid.price)}
-								<span class="ml-1 inline-block h-1 w-1 rounded-full bg-green-400 align-middle"
-								></span>
+								<span class="ml-1 inline-block h-1 w-1 rounded-full bg-green-400 align-middle">
+								</span>
 							{/if}
 						</span>
 						<span class="relative z-10 text-xs font-medium text-slate-500">

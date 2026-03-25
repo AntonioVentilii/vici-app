@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { getGlobalActivities } from '$lib/services/activity.services';
 	import type { Activity } from '$lib/types/social';
+	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	interface Props {
 		marketId: string;
@@ -39,9 +40,7 @@
 					<div class="min-w-0 flex-1">
 						<div class="flex items-center justify-between gap-2">
 							<span class="truncate text-xs font-bold text-slate-900">
-								{activity.user.substring(0, 8)}...{activity.user.substring(
-									activity.user.length - 3
-								)}
+								{shortenWithMiddleEllipsis({ text: activity.user })}
 							</span>
 							<span class="text-[10px] font-medium text-slate-400">
 								{new Date(activity.timestamp).toLocaleTimeString([], {

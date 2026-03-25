@@ -154,3 +154,17 @@ export const formatAvailableUsd = ({
 	const val = typeof value === 'bigint' ? value : BigInt(Math.floor(Number(value)));
 	return formatCurrency({ value: val, decimals });
 };
+
+export const shortenWithMiddleEllipsis = ({
+	text,
+	splitLength = 7
+}: {
+	text: string;
+	splitLength?: number;
+}): string => {
+	// Original min length was 16 to extract split 7
+	const minLength = splitLength * 2 + 2;
+	return text.length > minLength
+		? `${text.slice(0, splitLength)}...${text.slice(-1 * splitLength)}`
+		: text;
+};

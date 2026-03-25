@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import {
 		followUser,
 		unfollowUser,
@@ -71,7 +72,7 @@
 </script>
 
 <Card padding="lg" variant="glass">
-	<div class="flex flex-col items-center gap-4 text-center">
+	<div class="flex w-full flex-col items-center gap-4 text-center">
 		<div class="relative">
 			<div class="border-primary/20 h-24 w-24 rounded-full border-4 p-1">
 				<div class="bg-muted h-full w-full overflow-hidden rounded-full">
@@ -95,7 +96,9 @@
 
 		<div>
 			<h2 class="text-xl font-black">{profile.nickname}</h2>
-			<p class="text-muted-foreground w-48 truncate text-xs opacity-50">{profile.owner}</p>
+			<p class="text-muted-foreground text-xs opacity-50">
+				<CopyableAddress address={profile.owner} label="Principal ID" />
+			</p>
 		</div>
 
 		{#if loading}

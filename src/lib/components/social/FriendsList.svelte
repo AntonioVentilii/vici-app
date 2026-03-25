@@ -7,6 +7,7 @@
 	import { getFriends, sendFriendRequest } from '$lib/services/relation.services';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { Relation } from '$lib/types/relation';
+	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	interface Props {
 		userPrincipal: string;
@@ -124,13 +125,13 @@
 								{/if}
 							</div>
 							<div
-								class="border-background absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 bg-green-500 shadow-sm"
-							></div>
+								class="border-background absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 bg-green-500 shadow-sm">
+							</div>
 						</div>
 						<div class="flex-1 overflow-hidden">
 							<p class="truncate text-sm font-semibold">{profile?.nickname ?? 'Unknown'}</p>
 							<p class="text-muted-foreground truncate text-xs opacity-70">
-								{friendId?.slice(0, 10)}...
+								{friendId ? shortenWithMiddleEllipsis({ text: friendId }) : ''}
 							</p>
 						</div>
 					</div>

@@ -44,7 +44,7 @@
 							</Badge>
 							{#if market.payoffType === 'Categorical'}
 								<span
-									class="bg-muted text-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"
+									class="border-foreground/25 text-foreground bg-foreground/8 rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"
 								>
 									Multiple
 								</span>
@@ -118,16 +118,16 @@
 											>
 												<div
 													style="width: {(outcome.probability ?? 0) * 100}%"
-													class="bg-primary h-full transition-all duration-700 ease-out"
-												></div>
+													class="bg-primary h-full transition-all duration-700 ease-out">
+												</div>
 											</div>
 										</div>
 									{/each}
 									{#if (market.outcomes?.length ?? 0) > 2}
 										<div class="flex items-center justify-center pt-1">
-											<span class="text-primary text-[10px] font-black tracking-widest uppercase"
-												>+ {(market.outcomes?.length ?? 0) - 2} Other...</span
-											>
+											<span class="text-primary text-[10px] font-black tracking-widest uppercase">
+												+ {(market.outcomes?.length ?? 0) - 2} Other...
+											</span>
 										</div>
 									{/if}
 								</div>

@@ -9,7 +9,7 @@
 	const { message, children }: Props = $props();
 </script>
 
-<div class="space-y-4 py-20 text-center">
+<div class="flex w-full flex-col items-center space-y-4 py-20 text-center">
 	<div
 		class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 text-slate-400"
 	>

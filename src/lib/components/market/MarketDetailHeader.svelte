@@ -1,6 +1,7 @@
 <script lang="ts">
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import type { Market } from '$lib/types/market';
+	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -29,14 +30,12 @@
 
 		<div class="flex items-center justify-center gap-2">
 			<span
-				class="rounded-full bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-500 uppercase"
-				>Memes</span
-			>
-			<span class="text-[10px] font-bold text-slate-400"
-				>Created by {market.creator.substring(0, 5)}...{market.creator.substring(
-					market.creator.length - 3
-				)}</span
-			>
+				class="border-foreground/25 text-foreground bg-foreground/8 rounded-full border px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
+				Memes
+			</span>
+			<span class="text-[10px] font-bold text-slate-400">
+				Created by {shortenWithMiddleEllipsis({ text: market.creator, splitLength: 5 })}
+			</span>
 		</div>
 	</div>
 </div>

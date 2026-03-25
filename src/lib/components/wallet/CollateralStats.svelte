@@ -173,9 +173,9 @@
 						{:else if nonNullish(assetWorth)}
 							Value: {formatAvailableUsd({ value: assetWorth.value_usd })}
 							{#if assetWorth.haircut_bps > 0}
-								<span class="line-through opacity-50"
-									>({formatAvailableUsd({ value: assetWorth.pre_haircut_value_usd })})</span
-								>
+								<span class="line-through opacity-50">
+									({formatAvailableUsd({ value: assetWorth.pre_haircut_value_usd })})
+								</span>
 							{/if}
 						{:else}
 							{token.symbol}

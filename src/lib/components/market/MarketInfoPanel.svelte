@@ -38,9 +38,9 @@
 			<div class="space-y-8">
 				<!-- High-impact Time Left -->
 				<div class="rounded-2xl bg-indigo-50/50 p-4 text-center ring-1 ring-indigo-100">
-					<span class="text-[10px] font-black tracking-widest text-indigo-400 uppercase"
-						>Trading Ends In</span
-					>
+					<span class="text-[10px] font-black tracking-widest text-indigo-400 uppercase">
+						Trading Ends In
+					</span>
 					<div class="mt-1 font-mono text-2xl font-black text-indigo-600">
 						{timeRemaining}
 					</div>
@@ -62,9 +62,9 @@
 
 					<div class="flex items-center justify-between">
 						<span class="text-xs font-bold text-slate-400 uppercase">Total Predictions</span>
-						<span class="text-sm font-black text-slate-900"
-							>{market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0}</span
-						>
+						<span class="text-sm font-black text-slate-900">
+							{market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0}
+						</span>
 					</div>
 				</div>
 			</div>

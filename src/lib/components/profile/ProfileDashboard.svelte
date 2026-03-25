@@ -69,16 +69,16 @@
 		<!-- Level Progress Card (Duolingo Style) -->
 		<div class="w-full max-w-xs space-y-3 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
 			<div class="flex items-center justify-between">
-				<span class="text-xs font-bold tracking-widest text-slate-400 uppercase"
-					>Level {level} Progress</span
-				>
+				<span class="text-xs font-bold tracking-widest text-slate-400 uppercase">
+					Level {level} Progress
+				</span>
 				<span class="text-xs font-black text-indigo-600">{points % 500} / 500 XP</span>
 			</div>
 			<div class="h-4 w-full overflow-hidden rounded-full bg-slate-100 p-1 shadow-inner">
 				<div
 					style="width: {progressPercent}%"
-					class="h-full rounded-full bg-indigo-500 transition-all duration-1000 ease-out"
-				></div>
+					class="h-full rounded-full bg-indigo-500 transition-all duration-1000 ease-out">
+				</div>
 			</div>
 		</div>
 	</div>
@@ -90,9 +90,9 @@
 			class="flex h-full flex-col justify-between rounded-3xl bg-indigo-600 p-8 text-white shadow-xl shadow-indigo-100"
 		>
 			<div>
-				<span class="text-xs font-bold tracking-widest text-indigo-100 uppercase"
-					>Prediction Accuracy</span
-				>
+				<span class="text-xs font-bold tracking-widest text-indigo-100 uppercase">
+					Prediction Accuracy
+				</span>
 				<div class="mt-6 flex items-baseline gap-2">
 					<span class="text-6xl font-black">{Math.round(accuracy)}%</span>
 					<span class="text-indigo-200">win rate</span>
@@ -125,8 +125,8 @@
 			>
 				<div class="relative">
 					<div
-						class="absolute -inset-4 rounded-full bg-gradient-to-tr {flameColor} opacity-20 blur-xl"
-					></div>
+						class="absolute -inset-4 rounded-full bg-gradient-to-tr {flameColor} opacity-20 blur-xl">
+					</div>
 					<div
 						class="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr {flameColor} text-4xl shadow-lg"
 					>

@@ -34,9 +34,21 @@
 	});
 
 	onMount(() => () => observer?.disconnect());
+
+	let isGrid = $derived(markets.length > 0 || loading);
 </script>
 
-<div class="grid w-full grid-cols-1 gap-6 pb-20 md:grid-cols-2 lg:grid-cols-3">
+<div
+	class="w-full pb-20"
+	class:flex={!isGrid}
+	class:gap-6={isGrid}
+	class:grid={isGrid}
+	class:grid-cols-1={isGrid}
+	class:items-center={!isGrid}
+	class:justify-center={!isGrid}
+	class:lg:grid-cols-3={isGrid}
+	class:md:grid-cols-2={isGrid}
+>
 	{#if markets.length > 0}
 		{#each markets as market, index (market.id)}
 			<MarketCard {index} {market} />

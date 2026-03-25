@@ -62,8 +62,8 @@
 				<div class="mt-4 h-1.5 w-full rounded-full bg-emerald-100">
 					<div
 						style="width: {market.yesProbability * 100}%"
-						class="h-full rounded-full bg-emerald-500"
-					></div>
+						class="h-full rounded-full bg-emerald-500">
+					</div>
 				</div>
 			</div>
 
@@ -81,16 +81,16 @@
 				<div class="mt-4 h-1.5 w-full rounded-full bg-rose-100">
 					<div
 						style="width: {market.noProbability * 100}%"
-						class="h-full rounded-full bg-rose-500"
-					></div>
+						class="h-full rounded-full bg-rose-500">
+					</div>
 				</div>
 			</div>
 		{:else}
 			<div class="col-span-full rounded-3xl border border-indigo-100 bg-indigo-50 p-6">
 				<div class="flex items-center justify-between">
-					<span class="text-xs font-bold tracking-widest text-indigo-600 uppercase"
-						>{market.outcomes?.find((o) => o.id === selectedOutcome)?.title ?? 'Outcome'} Odds</span
-					>
+					<span class="text-xs font-bold tracking-widest text-indigo-600 uppercase">
+						{market.outcomes?.find((o) => o.id === selectedOutcome)?.title ?? 'Outcome'} Odds
+					</span>
 					<div class="h-2 w-2 animate-pulse rounded-full bg-indigo-500"></div>
 				</div>
 				<div class="mt-4 flex items-baseline gap-2">

@@ -2,6 +2,7 @@
 	import type { ClearingDid } from '$declarations';
 	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import { PORTFOLIO_DEFAULT_DECIMALS } from '$lib/constants/portfolio.constants';
 	import type { Market } from '$lib/types/market';
 	import { formatPrice, formatQuantity, formatNanosecondsToDate } from '$lib/utils/format.utils';
 
@@ -58,7 +59,10 @@
 									{formatPrice(event.price)}
 								</td>
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
-									{formatQuantity({ value: event.qty, decimals: market?.token.decimals ?? 8 })}
+									{formatQuantity({
+										value: event.qty,
+										decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS
+									})}
 								</td>
 							</tr>
 						{/each}

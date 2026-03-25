@@ -27,9 +27,9 @@
 			onclick={() => handleNav(path)}
 		>
 			<Icon size="20" strokeWidth={isActive(path) ? 2.5 : 2} />
-			<span class="max-w-full text-center text-xs font-medium wrap-break-word whitespace-normal"
-				>{label}</span
-			>
+			<span class="max-w-full text-center text-xs font-medium wrap-break-word whitespace-normal">
+				{label}
+			</span>
 		</button>
 	{/each}
 </nav>

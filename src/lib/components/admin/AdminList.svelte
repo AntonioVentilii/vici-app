@@ -1,8 +1,10 @@
 <script lang="ts">
 	import type { PrincipalText } from '@dfinity/zod-schemas';
 	import Button from '$lib/components/ui/Button.svelte';
+	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import type { UserRoleEntry } from '$lib/services/roles.services';
+	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	let {
 		roleEntries,
@@ -36,8 +38,9 @@
 
 <Dialog title="Remove Admin" bind:show={showConfirmModal}>
 	<p class="mb-6 text-slate-600">
-		Are you sure you want to remove <strong class="break-all">{principalToRemove}</strong> from administrators?
-		They will lose access to the admin dashboard.
+		Are you sure you want to remove <strong class="break-all">
+			{principalToRemove ? shortenWithMiddleEllipsis({ text: principalToRemove }) : ''}
+		</strong> from administrators? They will lose access to the admin dashboard.
 	</p>
 	<div class="flex justify-end gap-3">
 		<Button onclick={handleCancel} variant="ghost">Cancel</Button>
@@ -56,7 +59,9 @@
 				<li class="px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-center gap-3">
-							<span class="truncate text-sm font-medium text-slate-900">{entry.principal}</span>
+							<span class="text-sm font-medium text-slate-900">
+								<CopyableAddress address={entry.principal} label="Principal ID" />
+							</span>
 							<span
 								class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset"
 							>

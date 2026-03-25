@@ -252,8 +252,8 @@
 			<div class="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-100">
 				<div
 					style="width: {(bulkProgress / bulkTotal) * 100}%"
-					class="h-full bg-indigo-600 transition-all duration-300 ease-out"
-				></div>
+					class="h-full bg-indigo-600 transition-all duration-300 ease-out">
+				</div>
 			</div>
 
 			<div class="mb-6 flex justify-between gap-4">

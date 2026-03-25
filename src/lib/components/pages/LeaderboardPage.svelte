@@ -80,8 +80,8 @@
 	{#if loading}
 		<div class="flex flex-col items-center justify-center space-y-4 py-24">
 			<div
-				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent shadow-sm"
-			></div>
+				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent shadow-sm">
+			</div>
 			<p class="animate-pulse text-xs font-bold tracking-widest text-slate-400 uppercase">
 				Calculating Alphas...
 			</p>
@@ -135,9 +135,9 @@
 					in:fade={{ delay: i * 30 }}
 				>
 					<div class="flex items-center gap-4 sm:gap-6">
-						<span class="w-6 text-center text-xs font-black text-slate-300 sm:w-8 sm:text-sm"
-							>#{i + 4}</span
-						>
+						<span class="w-6 text-center text-xs font-black text-slate-300 sm:w-8 sm:text-sm">
+							#{i + 4}
+						</span>
 						<div
 							class="h-8 w-8 overflow-hidden rounded-full bg-slate-100 shadow-inner ring-2 ring-white sm:h-10 sm:w-10"
 						>
@@ -158,13 +158,13 @@
 								{user.nickname}
 							</p>
 							<div class="flex items-center gap-2">
-								<span class="text-[9px] font-bold text-slate-400 uppercase"
-									>Streak: {user.dailyStreak ?? 1}d</span
-								>
+								<span class="text-[9px] font-bold text-slate-400 uppercase">
+									Streak: {user.dailyStreak ?? 1}d
+								</span>
 								<span class="text-[9px] text-slate-200">•</span>
-								<span class="text-[9px] font-bold text-emerald-500 uppercase"
-									>{Math.round(user.accuracy ?? 0)}% ACC</span
-								>
+								<span class="text-[9px] font-bold text-emerald-500 uppercase">
+									{Math.round(user.accuracy ?? 0)}% ACC
+								</span>
 							</div>
 						</div>
 					</div>

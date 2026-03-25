@@ -11,6 +11,10 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
+	import {
+		PORTFOLIO_DEFAULT_DECIMALS,
+		PORTFOLIO_DEFAULT_PROBABILITY
+	} from '$lib/constants/portfolio.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
@@ -66,7 +70,7 @@
 			return ZERO;
 		}
 
-		let prob = 0.5;
+		let prob = PORTFOLIO_DEFAULT_PROBABILITY;
 		if (market.payoffType === 'Binary') {
 			prob = pos.outcomeId === 'YES' ? market.yesProbability : market.noProbability;
 		} else {
@@ -86,7 +90,7 @@
 		// lockedCollateral is clearing USD (`USD_DECIMALS`). currentValue uses token decimals.
 		const valNum = decimalFixedValueToNumber({
 			value: currentValue,
-			decimals: market.token.decimals ?? 8
+			decimals: market.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS
 		});
 		const costNum = decimalFixedValueToNumber({
 			value: pos.lockedCollateral,

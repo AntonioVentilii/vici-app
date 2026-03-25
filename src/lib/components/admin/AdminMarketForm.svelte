@@ -107,9 +107,9 @@
 		</div>
 
 		<div class="space-y-2">
-			<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="expiry-date"
-				>Expiry Date</label
-			>
+			<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="expiry-date">
+				Expiry Date
+			</label>
 			<input
 				id="expiry-date"
 				class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600"

@@ -76,8 +76,8 @@
 	{#if loading}
 		<div class="flex h-96 items-center justify-center">
 			<div
-				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"
-			></div>
+				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent">
+			</div>
 		</div>
 	{:else if market}
 		<div class="space-y-8 lg:space-y-12">

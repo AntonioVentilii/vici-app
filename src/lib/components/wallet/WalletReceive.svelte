@@ -2,6 +2,7 @@
 	import { nonNullish } from '@dfinity/utils';
 	import type { Principal } from '@icp-sdk/core/principal';
 	import { onMount } from 'svelte';
+	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 
 	let principal = $state<Principal | undefined>();
@@ -25,22 +26,10 @@
 	<div class="space-y-2">
 		<p class="text-sm font-bold tracking-widest text-slate-500 uppercase">Your Principal ID</p>
 		{#if nonNullish(principalText)}
-			<div class="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 px-4 py-2">
-				<code class="font-mono text-indigo-600">{principalText}</code>
-				<button
-					class="text-slate-400 transition-colors hover:text-slate-950"
-					aria-label="Copy Principal ID"
-					onclick={() => navigator.clipboard.writeText(principalText)}
-				>
-					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-						/>
-					</svg>
-				</button>
+			<div
+				class="flex items-center justify-center rounded-xl border border-slate-100 bg-slate-50 px-4 py-2 text-sm text-indigo-600"
+			>
+				<CopyableAddress address={principalText} label="Principal ID" />
 			</div>
 		{:else}
 			<p class="text-sm text-slate-400 italic">Loading...</p>

@@ -72,8 +72,8 @@
 </script>
 
 <Card padding="lg" variant="glass">
-	<div class="flex flex-col gap-4">
-		<div class="flex items-center justify-between">
+	<div class="flex w-full flex-col gap-4">
+		<div class="flex w-full items-center justify-between">
 			<h3
 				class="from-primary to-secondary bg-linear-to-r bg-clip-text text-xl font-bold text-transparent"
 			>

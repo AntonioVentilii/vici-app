@@ -179,8 +179,9 @@
 								stroke-width="2.5"
 								viewBox="0 0 24 24"
 								width="20"
-								xmlns="http://www.w3.org/2000/svg"><path d="m18 15-6-6-6 6" /></svg
-							>
+								xmlns="http://www.w3.org/2000/svg"
+								><path d="m18 15-6-6-6 6" />
+							</svg>
 						</button>
 
 						<span
@@ -210,8 +211,10 @@
 								stroke-width="2.5"
 								viewBox="0 0 24 24"
 								width="20"
-								xmlns="http://www.w3.org/2000/svg"><path d="m6 9 6 6 6-6" /></svg
+								xmlns="http://www.w3.org/2000/svg"
 							>
+								<path d="m6 9 6 6 6-6" />
+							</svg>
 						</button>
 					</div>
 

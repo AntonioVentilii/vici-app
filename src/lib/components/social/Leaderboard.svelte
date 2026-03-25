@@ -4,6 +4,7 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { getLeaderboard } from '$lib/services/social.services';
 	import type { LeaderboardEntry } from '$lib/types/social';
+	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	let leaderboard = $state<LeaderboardEntry[]>([]);
 
@@ -65,13 +66,15 @@
 							</div>
 						</div>
 						<div class="text-center">
-							<p class="w-20 truncate text-xs font-bold">{entry.user}</p>
+							<p class="w-20 truncate text-xs font-bold">
+								{shortenWithMiddleEllipsis({ text: entry.user, splitLength: 4 })}
+							</p>
 							<p class="text-primary text-[10px] font-black">+{entry.pnl.toFixed(0)}</p>
 						</div>
 						<div
 							style="height: {rank === 1 ? '70px' : rank === 2 ? '50px' : '35px'}"
-							class="bg-linear-to-t {getPodiumColor(rank)} w-16 rounded-t-xl opacity-80 shadow-2xl"
-						></div>
+							class="bg-linear-to-t {getPodiumColor(rank)} w-16 rounded-t-xl opacity-80 shadow-2xl">
+						</div>
 					</div>
 				{/if}
 			{/each}
@@ -88,7 +91,9 @@
 						<div class="bg-muted flex h-7 w-7 items-center justify-center rounded-full text-[10px]">
 							{entry.user[0]}
 						</div>
-						<span class="flex-1 truncate text-xs">{entry.user}</span>
+						<span class="flex-1 truncate text-xs">
+							{shortenWithMiddleEllipsis({ text: entry.user })}
+						</span>
 						<div class="text-right">
 							<p class="text-xs font-bold">+{entry.pnl.toFixed(0)}</p>
 							<p class="text-muted-foreground text-[8px] opacity-50">{entry.winRate}% SR</p>

@@ -37,9 +37,9 @@
 				{description}
 			</p>
 			<p class="mt-2 text-sm text-slate-500">
-				Required permission: <span class="font-bold text-indigo-600 capitalize"
-					>{permission.replace(/_/g, ' ')}</span
-				>.
+				Required permission: <span class="font-bold text-indigo-600 capitalize">
+					{permission.replace(/_/g, ' ')}
+				</span>.
 			</p>
 		</div>
 

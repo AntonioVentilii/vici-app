@@ -2,6 +2,7 @@
 	import type { ClearingDid } from '$declarations';
 	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import { PORTFOLIO_DEFAULT_DECIMALS } from '$lib/constants/portfolio.constants';
 	import { cancelLimitOrder } from '$lib/services/order.services';
 	import type { Market } from '$lib/types/market';
 	import { formatPrice, formatQuantity } from '$lib/utils/format.utils';
@@ -77,7 +78,10 @@
 									{formatPrice(order.price)}
 								</td>
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
-									{formatQuantity({ value: order.qty, decimals: market?.token.decimals ?? 8 })}
+									{formatQuantity({
+										value: order.qty,
+										decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS
+									})}
 								</td>
 								<td class="px-6 py-4 text-right">
 									<button

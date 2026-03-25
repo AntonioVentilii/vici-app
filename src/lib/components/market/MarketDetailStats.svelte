@@ -22,9 +22,9 @@
 	<div class="flex flex-col items-center">
 		<span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Total Volume</span>
 		<div class="mt-1 flex items-baseline gap-1">
-			<span class="text-xl font-black text-slate-950"
-				>{formatVolume({ volume: totalVolume, decimals: tokenDecimals, symbol: '' })}</span
-			>
+			<span class="text-xl font-black text-slate-950">
+				{formatVolume({ volume: totalVolume, decimals: tokenDecimals, symbol: '' })}
+			</span>
 			<span class="text-xs font-bold text-slate-400">{tokenSymbol}</span>
 		</div>
 	</div>
@@ -35,9 +35,9 @@
 	</div>
 	<div class="h-10 w-px bg-slate-100"></div>
 	<div class="flex flex-col items-center">
-		<span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase"
-			>Time Remaining</span
-		>
+		<span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+			Time Remaining
+		</span>
 		<span class="mt-1 text-xl font-black text-indigo-600">{timeRemaining}</span>
 	</div>
 </div>

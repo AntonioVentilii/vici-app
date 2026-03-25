@@ -190,9 +190,9 @@
 				Required JSON Format
 			</label>
 			<div class="overflow-hidden rounded-2xl bg-slate-900 p-4">
-				<pre class="overflow-x-auto font-mono text-[10px] text-indigo-300"><code
-						>{JSON.stringify(exampleJson, null, 2)}</code
-					></pre>
+				<pre class="overflow-x-auto font-mono text-[10px] text-indigo-300"><code>
+						{JSON.stringify(exampleJson, null, 2)}
+					</code></pre>
 			</div>
 			<button
 				class="flex items-center gap-2 text-xs font-bold text-indigo-600 transition-colors hover:text-indigo-700"

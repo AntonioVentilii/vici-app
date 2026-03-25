@@ -4,7 +4,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import type { UserProfile } from '$lib/types/profile';
 import type { UserRole } from '$lib/types/user';
-import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
+import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@dfinity/zod-schemas';
 import type { Identity } from '@icp-sdk/core/agent';
@@ -24,7 +24,7 @@ export const getProfile = async (
 			key: principal,
 			data: {
 				owner: principal,
-				nickname: `${principal.slice(0, 5)}...${principal.slice(-3)}`,
+				nickname: shortenWithMiddleEllipsis({ text: principal, splitLength: 5 }),
 				createdAt: Date.now(),
 				updatedAt: Date.now(),
 				preferences: {

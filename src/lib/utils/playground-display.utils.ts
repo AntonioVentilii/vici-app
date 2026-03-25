@@ -5,6 +5,10 @@ import {
 	PLAYGROUND_DISPLAY_SYMBOL,
 	SETTLEMENT_LOCKED_CAPACITY_LABEL
 } from '$lib/constants/playground.constants';
+import {
+	PORTFOLIO_DEFAULT_DECIMALS,
+	PORTFOLIO_DEFAULT_SYMBOL
+} from '$lib/constants/portfolio.constants';
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type { LockedCapacityDisplayUnit } from '$lib/types/locked-capacity-display.types';
 import type { Token } from '$lib/types/token';
@@ -122,8 +126,8 @@ export const formatPortfolioHoldingsStatLine = ({
 			displayDecimals: 4
 		})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
 	}
-	const dec = sampleToken?.decimals ?? 8;
-	const sym = sampleToken?.symbol ?? 'ICP';
+	const dec = sampleToken?.decimals ?? PORTFOLIO_DEFAULT_DECIMALS;
+	const sym = sampleToken?.symbol ?? PORTFOLIO_DEFAULT_SYMBOL;
 	return formatCurrency({ value: totalPortfolioValue, decimals: dec, symbol: sym });
 };
 

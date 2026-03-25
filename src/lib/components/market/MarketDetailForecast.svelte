@@ -56,9 +56,9 @@
 						class="w-full rounded-2xl bg-emerald-500 py-6 text-center shadow-lg shadow-emerald-500/10 transition-transform hover:scale-[1.02] active:scale-[0.98]"
 						onclick={() => handleOutcomeSelect('YES')}
 					>
-						<span class="block text-[10px] font-black tracking-widest text-white/70 uppercase"
-							>Predict YES</span
-						>
+						<span class="block text-[10px] font-black tracking-widest text-white/70 uppercase">
+							Predict YES
+						</span>
 						<span class="text-3xl font-black text-white">{formatProbability(yesProbability)}</span>
 					</BaseButton>
 					<div class="flex items-center justify-center gap-1.5 text-[9px] font-bold text-slate-400">
@@ -72,9 +72,9 @@
 						class="w-full rounded-2xl bg-rose-500 py-6 text-center shadow-lg shadow-rose-500/10 transition-transform hover:scale-[1.02] active:scale-[0.98]"
 						onclick={() => handleOutcomeSelect('NO')}
 					>
-						<span class="block text-[10px] font-black tracking-widest text-white/70 uppercase"
-							>Predict NO</span
-						>
+						<span class="block text-[10px] font-black tracking-widest text-white/70 uppercase">
+							Predict NO
+						</span>
 						<span class="text-3xl font-black text-white">{formatProbability(noProbability)}</span>
 					</BaseButton>
 					<div class="flex items-center justify-center gap-1.5 text-[9px] font-bold text-slate-400">
@@ -87,26 +87,26 @@
 			<div class="mt-8 flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
 				<div
 					style="width: {yesProbability * 100}%"
-					class="h-full bg-green-500 transition-all duration-700"
-				></div>
+					class="h-full bg-green-500 transition-all duration-700">
+				</div>
 				<div
 					style="width: {noProbability * 100}%"
-					class="h-full bg-red-500 transition-all duration-700"
-				></div>
+					class="h-full bg-red-500 transition-all duration-700">
+				</div>
 			</div>
 
 			<div class="mt-6 flex justify-between px-2">
 				<div class="flex flex-col">
 					<span class="text-[10px] font-bold text-slate-400 uppercase">YES Vol</span>
-					<span class="text-xs font-bold text-slate-600"
-						>{formatToken({ value: yesVolume, unitName: tokenDecimals })}</span
-					>
+					<span class="text-xs font-bold text-slate-600">
+						{formatToken({ value: yesVolume, unitName: tokenDecimals })}
+					</span>
 				</div>
 				<div class="flex flex-col items-end">
 					<span class="text-[10px] font-bold text-slate-400 uppercase">NO Vol</span>
-					<span class="text-xs font-bold text-slate-600"
-						>{formatToken({ value: noVolume, unitName: tokenDecimals })}</span
-					>
+					<span class="text-xs font-bold text-slate-600">
+						{formatToken({ value: noVolume, unitName: tokenDecimals })}
+					</span>
 				</div>
 			</div>
 		</div>
@@ -130,12 +130,12 @@
 								<div class="flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase">
 									<span>{outcome.totalPredictions ?? 0} predictions</span>
 									<span class="h-1 w-1 rounded-full bg-slate-200"></span>
-									<span
-										>{formatToken({
+									<span>
+										{formatToken({
 											value: outcome.volume ?? ZERO,
 											unitName: tokenDecimals
-										})} pool</span
-									>
+										})} pool
+									</span>
 								</div>
 							</div>
 
@@ -143,9 +143,9 @@
 								<div
 									class="inline-flex items-center rounded-lg bg-indigo-50 px-3 py-1 text-indigo-600"
 								>
-									<span class="text-lg font-black"
-										>{formatProbability(outcome.probability ?? 0)}</span
-									>
+									<span class="text-lg font-black">
+										{formatProbability(outcome.probability ?? 0)}
+									</span>
 								</div>
 							</div>
 						</div>
@@ -153,8 +153,8 @@
 						<div class="absolute bottom-0 left-0 h-1 w-full bg-slate-50">
 							<div
 								style="width: {(outcome.probability ?? 0) * 100}%"
-								class="h-full bg-indigo-500 opacity-20 transition-all duration-700"
-							></div>
+								class="h-full bg-indigo-500 opacity-20 transition-all duration-700">
+							</div>
 						</div>
 					</BaseButton>
 				{/each}

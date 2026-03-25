@@ -53,9 +53,9 @@
 			<span class="text-[9px] font-bold">SETTLEMENT</span>
 			{#if !isDev()}
 				<span
-					class="absolute -top-1 -right-1 flex h-3 w-6 items-center justify-center rounded-full bg-slate-200 text-[7px] font-black tracking-tighter text-slate-500 uppercase"
-					>SOON</span
-				>
+					class="absolute -top-1 -right-1 flex h-3 w-6 items-center justify-center rounded-full bg-slate-200 text-[7px] font-black tracking-tighter text-slate-500 uppercase">
+					SOON
+				</span>
 			{/if}
 		</button>
 	</div>

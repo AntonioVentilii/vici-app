@@ -1,6 +1,7 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import type { LeaderboardEntry } from '$lib/types/social';
+	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	interface Props {
 		leaderboard: LeaderboardEntry[];
@@ -56,18 +57,18 @@
 										</div>
 									</div>
 									<span
-										class="font-mono text-sm text-slate-600 transition-colors group-hover:text-slate-950"
-										>{entry.user}</span
-									>
+										class="font-mono text-sm text-slate-600 transition-colors group-hover:text-slate-950">
+										{shortenWithMiddleEllipsis({ text: entry.user })}
+									</span>
 								</div>
 							</td>
 							<td class="px-8 py-6 text-right font-bold text-slate-950">{entry.activePositions}</td>
 							<td class="px-8 py-6 text-right font-bold text-slate-950">{entry.winRate}%</td>
 							<td class="px-8 py-6 text-right">
-								<span class="text-lg font-black text-green-600"
-									>+{entry.pnl.toFixed(1)}
-									<span class="text-xs uppercase opacity-60">ICP</span></span
-								>
+								<span class="text-lg font-black text-green-600">
+									+{entry.pnl.toFixed(1)}
+									<span class="text-xs uppercase opacity-60">ICP</span>
+								</span>
 							</td>
 						</tr>
 					{/each}

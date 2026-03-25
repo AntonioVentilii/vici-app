@@ -70,9 +70,9 @@
 	</div>
 
 	<div class="space-y-2">
-		<label class="text-xs font-bold tracking-wider text-slate-500 uppercase" for="send-amount"
-			>Amount</label
-		>
+		<label class="text-xs font-bold tracking-wider text-slate-500 uppercase" for="send-amount">
+			Amount
+		</label>
 		<input
 			id="send-amount"
 			class="w-full rounded-xl border-none bg-slate-50 px-4 py-3 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600"
