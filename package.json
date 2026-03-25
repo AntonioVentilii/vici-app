@@ -21,6 +21,7 @@
 		"juno:functions:build": "juno functions build --lang ts",
 		"juno:functions:upgrade:dev": "juno functions upgrade -m development",
 		"restart:icdc": "./scripts/restart.icdc.sh",
+		"restart:vxp": "./scripts/restart.vxp.sh",
 		"postinstall:copy-auth": "node -e \"require('fs').cpSync('node_modules/@junobuild/core/dist/workers/', './static/workers', {recursive: true});\"",
 		"postinstall": "npm run postinstall:copy-auth",
 		"playwright:install": "playwright install --with-deps"
