@@ -19,6 +19,7 @@
 	import type { Market } from '$lib/types/market';
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
+	import { icrcLedgerDecimalsFromCollateralConfig } from '$lib/utils/asset-ref.utils';
 	import { formatCurrency } from '$lib/utils/format.utils';
 	import { calculateMarketStats } from '$lib/utils/market.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
@@ -68,9 +69,14 @@
 		for (const t of $walletUiTokens) {
 			const b = $collateralsStore.balances[t.id] ?? ZERO;
 			if (b > ZERO) {
+				const d = icrcLedgerDecimalsFromCollateralConfig({
+					assetsConfig: $collateralsStore.assetsConfig,
+					ledgerCanisterId: t.ledgerCanisterId,
+					fallbackDecimals: t.decimals
+				});
 				fallback += nativeToClearingMarginUnits({
 					nativeBalance: b,
-					nativeDecimals: Number(t.decimals)
+					nativeDecimals: d
 				});
 			}
 		}

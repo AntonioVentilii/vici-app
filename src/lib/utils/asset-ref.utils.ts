@@ -83,6 +83,24 @@ export const findCollateralInfoByIcrcLedger = ({
 		clearingAssetIsIcrcLedger({ asset: info.config.asset, ledgerCanisterId })
 	);
 
+/**
+ * Decimal places for an ICRC ledger as registered on clearing (from ledger metadata at
+ * registration). Clearing stores and transfers collateral in these base units; app `Token.decimals`
+ * must match for UX, but when they drift, prefer this for parse/format of collateral amounts.
+ */
+export const icrcLedgerDecimalsFromCollateralConfig = ({
+	assetsConfig,
+	ledgerCanisterId,
+	fallbackDecimals
+}: {
+	assetsConfig: Record<string, ClearingDid.CollateralAssetInfo>;
+	ledgerCanisterId: string;
+	fallbackDecimals: number;
+}): number => {
+	const info = findCollateralInfoByIcrcLedger({ assetsConfig, ledgerCanisterId });
+	return info?.config.decimals ?? fallbackDecimals;
+};
+
 /** Account `AssetWorth` row for a token identified by ICRC ledger (via clearing config). */
 export const findAssetWorthForIcrcLedger = ({
 	assets,

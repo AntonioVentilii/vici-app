@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { get } from 'svelte/store';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -8,7 +9,9 @@
 	import { defaultClearingCollateralToken, supportedTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { depositCollateral, withdrawCollateral } from '$lib/services/collateral.services';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import type { Token } from '$lib/types/token';
+	import { icrcLedgerDecimalsFromCollateralConfig } from '$lib/utils/asset-ref.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 
 	interface Props {
@@ -61,7 +64,13 @@
 				throw new Error('No token selected');
 			}
 
-			const amt = parseToken({ value: `${amount}`, unitName: selectedToken.decimals });
+			const ledgerDecimals = icrcLedgerDecimalsFromCollateralConfig({
+				assetsConfig: get(collateralsStore).assetsConfig,
+				ledgerCanisterId: selectedToken.ledgerCanisterId,
+				fallbackDecimals: selectedToken.decimals
+			});
+
+			const amt = parseToken({ value: `${amount}`, unitName: ledgerDecimals });
 
 			if (mode === 'Deposit') {
 				if (isNullish(selectedToken)) {

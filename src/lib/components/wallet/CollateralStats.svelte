@@ -10,7 +10,10 @@
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import type { CollateralStoreData } from '$lib/stores/collaterals.store';
-	import { findAssetWorthForIcrcLedger } from '$lib/utils/asset-ref.utils';
+	import {
+		findAssetWorthForIcrcLedger,
+		icrcLedgerDecimalsFromCollateralConfig
+	} from '$lib/utils/asset-ref.utils';
 	import { formatAvailableUsd, formatToken } from '$lib/utils/format.utils';
 	import {
 		formatAvailableMarginForUi,
@@ -41,7 +44,12 @@
 		for (const t of $walletUiTokens) {
 			const b = collateral.balances[t.id] ?? ZERO;
 			if (b !== ZERO) {
-				parts.push(`${formatToken({ value: b, unitName: t.decimals })} ${t.symbol}`);
+				const d = icrcLedgerDecimalsFromCollateralConfig({
+					assetsConfig: collateral.assetsConfig,
+					ledgerCanisterId: t.ledgerCanisterId,
+					fallbackDecimals: t.decimals
+				});
+				parts.push(`${formatToken({ value: b, unitName: d })} ${t.symbol}`);
 			}
 		}
 		return parts.join(' · ');
@@ -52,9 +60,14 @@
 		for (const t of $walletUiTokens) {
 			const b = collateral.balances[t.id] ?? ZERO;
 			if (b > ZERO) {
+				const d = icrcLedgerDecimalsFromCollateralConfig({
+					assetsConfig: collateral.assetsConfig,
+					ledgerCanisterId: t.ledgerCanisterId,
+					fallbackDecimals: t.decimals
+				});
 				total += nativeToClearingMarginUnits({
 					nativeBalance: b,
-					nativeDecimals: Number(t.decimals)
+					nativeDecimals: d
 				});
 			}
 		}
@@ -132,6 +145,11 @@
 	<div class="flex w-full flex-col divide-y divide-slate-50">
 		{#each displayedTokens as token (token.id)}
 			{@const balance = collateral.balances[token.id] ?? ZERO}
+			{@const collateralDecimals = icrcLedgerDecimalsFromCollateralConfig({
+				assetsConfig: collateral.assetsConfig,
+				ledgerCanisterId: token.ledgerCanisterId,
+				fallbackDecimals: token.decimals
+			})}
 			{@const colorClasses = getTokenColorClasses(token.symbol)}
 			{@const assetWorth = findAssetWorthForIcrcLedger({
 				assets: collateral.accountState?.assets,
@@ -165,7 +183,7 @@
 
 				<div class="text-right">
 					<div class="text-sm font-black text-slate-950">
-						{formatToken({ value: balance, unitName: token.decimals })}
+						{formatToken({ value: balance, unitName: collateralDecimals })}
 					</div>
 					<div class="text-[10px] font-medium text-slate-400 uppercase">
 						{#if $playgroundVxpUnitMode}
