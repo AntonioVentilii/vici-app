@@ -75,14 +75,37 @@ export const updateInterests = async ({
 export const upsertProfile = async (
 	profileDoc: Doc<UserProfile> | { key: string; data: UserProfile }
 ): Promise<void> => {
+	const { key } = profileDoc;
+	const existing = await getDoc<UserProfile>({
+		collection: Collection.PROFILES,
+		key
+	});
+
+	const data: UserProfile = {
+		...(existing?.data ?? profileDoc.data),
+		...profileDoc.data,
+		updatedAt: Date.now()
+	};
+
+	// Juno requires omitting `version` on create and passing current `version` on update.
+	if (isNullish(existing)) {
+		await setDoc({
+			collection: Collection.PROFILES,
+			doc: { key, data }
+		});
+		return;
+	}
+
+	if (isNullish(existing.version)) {
+		throw new Error('Cannot update profile: document is missing version.');
+	}
+
 	await setDoc({
 		collection: Collection.PROFILES,
 		doc: {
-			...profileDoc,
-			data: {
-				...profileDoc.data,
-				updatedAt: Date.now()
-			}
+			key,
+			version: existing.version,
+			data
 		}
 	});
 };

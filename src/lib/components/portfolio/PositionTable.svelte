@@ -37,8 +37,8 @@
 				</a>
 			</EmptyState>
 		{:else}
-			<div class="flex min-w-0 w-full overflow-x-auto">
-				<table class="min-w-0 w-full table-fixed text-left">
+			<div class="flex w-full min-w-0 overflow-x-auto">
+				<table class="w-full min-w-0 table-fixed text-left">
 					<thead>
 						<tr
 							class="border-b border-slate-100 bg-slate-50 text-[10px] tracking-widest text-slate-500 uppercase"

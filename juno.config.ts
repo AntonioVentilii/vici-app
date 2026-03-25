@@ -1,5 +1,26 @@
 import { defineConfig } from '@junobuild/config';
-import collections from './juno.collections.json';
+
+/**
+ * Datastore collection names for `satellite.collections` below.
+ *
+ * We keep them here instead of importing e.g. `./juno.collections.json`. Juno’s Docker-based
+ * emulator/CLI often evaluates this config in an isolated context where extra project files
+ * are not available or not bundled—importing external JSON can fail silently or break config load.
+ * Track upstream: https://github.com/junobuild/juno-docker/issues/262
+ *
+ * The app still uses `juno.collections.json` via `Collection` in `src/lib`; keep both in sync when renaming.
+ */
+enum JunoDatastoreCollection {
+	ROLES = 'roles',
+	PROFILES = 'profiles',
+	RELATIONS = 'relations',
+	CHATS = 'chats',
+	COMMENTS = 'comments',
+	CATEGORIES = 'categories',
+	SERIES_CATEGORIES = 'series_categories',
+	ACTIVITIES = 'activities',
+	VXP_ONBOARDING = 'vxp_onboarding'
+}
 
 export default defineConfig({
 	satellite: {
@@ -12,55 +33,55 @@ export default defineConfig({
 		collections: {
 			datastore: [
 				{
-					collection: collections.ROLES,
+					collection: JunoDatastoreCollection.ROLES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: collections.PROFILES,
+					collection: JunoDatastoreCollection.PROFILES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: collections.RELATIONS,
+					collection: JunoDatastoreCollection.RELATIONS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: collections.CHATS,
+					collection: JunoDatastoreCollection.CHATS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: collections.COMMENTS,
+					collection: JunoDatastoreCollection.COMMENTS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: collections.CATEGORIES,
+					collection: JunoDatastoreCollection.CATEGORIES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: collections.SERIES_CATEGORIES,
+					collection: JunoDatastoreCollection.SERIES_CATEGORIES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: collections.ACTIVITIES,
+					collection: JunoDatastoreCollection.ACTIVITIES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: collections.VXP_ONBOARDING,
+					collection: JunoDatastoreCollection.VXP_ONBOARDING,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'

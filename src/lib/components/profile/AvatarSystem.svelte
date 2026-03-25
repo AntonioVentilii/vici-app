@@ -25,17 +25,27 @@
 
 	let pending = $state(false);
 
+	/** Stable per-user + style seed so the same emoji looks different across principals. */
+	const avatarSeed = (emoji: string): string => `${profile.owner}|${profile.nickname}|${emoji}`;
+
+	/** DiceBear encodes the seed in the URL; match that for save + selected state. */
+	const avatarUrlForEmoji = (emoji: string): string =>
+		`https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(avatarSeed(emoji))}`;
+
+	const isSelected = (emoji: string): boolean => profile.avatar === avatarUrlForEmoji(emoji);
+
 	const selectAvatar = async (option: { emoji: string; color: string }) => {
 		pending = true;
 		try {
-			// Mocking avatar URL as an emoji for now, or we could generate an image
-			const updatedProfile = {
+			const avatar = avatarUrlForEmoji(option.emoji);
+			const updatedProfile: UserProfile = {
 				...profile,
-				avatar: `https://api.dicebear.com/7.x/notionists/svg?seed=${option.emoji}`
+				avatar
 			};
 			await upsertProfile({ key: profile.owner, data: updatedProfile });
-			// Update local store
 			userStore.update((s: UserStoreData) => ({ ...s, profile: updatedProfile }));
+		} catch (e) {
+			console.error('Failed to save avatar', e);
 		} finally {
 			pending = false;
 		}
@@ -53,7 +63,7 @@
 				onclick={() => selectAvatar(option)}
 			>
 				<span class="text-4xl transition-transform group-hover:rotate-12">{option.emoji}</span>
-				{#if profile.avatar?.includes(option.emoji)}
+				{#if isSelected(option.emoji)}
 					<div
 						class="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-[10px] text-white shadow-sm ring-2 ring-white"
 					>
