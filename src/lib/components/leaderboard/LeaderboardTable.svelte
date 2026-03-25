@@ -57,7 +57,8 @@
 										</div>
 									</div>
 									<span
-										class="font-mono text-sm text-slate-600 transition-colors group-hover:text-slate-950">
+										class="font-mono text-sm text-slate-600 transition-colors group-hover:text-slate-950"
+									>
 										{shortenWithMiddleEllipsis({ text: entry.user })}
 									</span>
 								</div>

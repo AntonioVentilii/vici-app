@@ -30,7 +30,8 @@
 
 		<div class="flex items-center justify-center gap-2">
 			<span
-				class="border-foreground/25 text-foreground bg-foreground/8 rounded-full border px-3 py-1 text-[10px] font-bold tracking-widest uppercase">
+				class="border-foreground/25 text-foreground bg-foreground/8 rounded-full border px-3 py-1 text-[10px] font-bold tracking-widest uppercase"
+			>
 				Memes
 			</span>
 			<span class="text-[10px] font-bold text-slate-400">

@@ -3,7 +3,7 @@ import { getAccountState } from '$lib/api/clearing.api';
 import { getTransactions as getIcpTransactionsApi } from '$lib/api/icp-index.api';
 import { getTransactions as getIcrcTransactionsApi } from '$lib/api/icrc-index-ng.api';
 import { balance as getLedgerBalance } from '$lib/api/icrc-ledger.api';
-import { ZERO } from '$lib/constants/app.constants';
+import { WALLET_PAGINATION, ZERO } from '$lib/constants/app.constants';
 import {
 	CKUSDC_INDEX_CANISTER_ID,
 	ICP_INDEX_CANISTER_ID,
@@ -127,53 +127,171 @@ export const getBalances = async (domain: ClearingDid.BalanceDomain): Promise<Wa
 	};
 };
 
-/** Recent ICP, ckUSDC, and VXP index transactions normalized and merged, newest first. */
-export const getTransactions = async (): Promise<Transaction[]> => {
+export interface WalletTransactionsCursors {
+	icp?: bigint;
+	ckUsdc?: bigint;
+	vxp?: bigint;
+}
+
+export interface WalletTransactionsDone {
+	icp: boolean;
+	ckUsdc: boolean;
+	vxp: boolean;
+}
+
+/**
+ * Fetch the next "batch" of merged wallet transactions.
+ *
+ * Note: we fetch one page per index canister (ICP, ckUSDC, VXP) and then merge/sort newest-first.
+ * This means the *exact* number of rendered rows per batch can vary slightly.
+ */
+export const getTransactionsPage = async ({
+	batchSize,
+	cursors = {},
+	done
+}: {
+	batchSize: bigint;
+	cursors?: WalletTransactionsCursors;
+	done?: Partial<WalletTransactionsDone>;
+}): Promise<{
+	transactions: Transaction[];
+	cursors: WalletTransactionsCursors;
+	done: WalletTransactionsDone;
+	hasMore: boolean;
+}> => {
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
-		return [];
+		return {
+			transactions: [],
+			cursors: {},
+			done: {
+				icp: done?.icp ?? false,
+				ckUsdc: done?.ckUsdc ?? false,
+				vxp: done?.vxp ?? false
+			},
+			hasMore: false
+		};
 	}
 
 	const principal = identity.getPrincipal();
 
+	const resolvedDone: WalletTransactionsDone = {
+		icp: done?.icp ?? false,
+		ckUsdc: done?.ckUsdc ?? false,
+		vxp: done?.vxp ?? false
+	};
+
 	try {
-		const [icpTransactions, ckUsdcTransactions, vxpTransactions] = await Promise.all([
-			getIcpTransactionsApi({
-				identity,
-				principal,
-				indexCanisterId: ICP_INDEX_CANISTER_ID
-			}),
-			getIcrcTransactionsApi({
-				identity,
-				principal,
-				indexCanisterId: CKUSDC_INDEX_CANISTER_ID
-			}),
-			getIcrcTransactionsApi({
-				identity,
-				principal,
-				indexCanisterId: VXP_INDEX_CANISTER_ID
-			})
+		const [icpPage, ckUsdcPage, vxpPage] = await Promise.all([
+			resolvedDone.icp
+				? Promise.resolve(undefined)
+				: getIcpTransactionsApi({
+						identity,
+						principal,
+						start: cursors.icp,
+						maxResults: batchSize,
+						indexCanisterId: ICP_INDEX_CANISTER_ID
+					}),
+			resolvedDone.ckUsdc
+				? Promise.resolve(undefined)
+				: getIcrcTransactionsApi({
+						identity,
+						principal,
+						start: cursors.ckUsdc,
+						maxResults: batchSize,
+						indexCanisterId: CKUSDC_INDEX_CANISTER_ID
+					}),
+			resolvedDone.vxp
+				? Promise.resolve(undefined)
+				: getIcrcTransactionsApi({
+						identity,
+						principal,
+						start: cursors.vxp,
+						maxResults: batchSize,
+						indexCanisterId: VXP_INDEX_CANISTER_ID
+					})
 		]);
 
-		const icpNormalized: Transaction[] = icpTransactions.transactions
+		const icpTxs = icpPage?.transactions ?? [];
+		const ckUsdcTxs = ckUsdcPage?.transactions ?? [];
+		const vxpTxs = vxpPage?.transactions ?? [];
+
+		const icpNextStart = icpTxs.length > 0 ? icpTxs[icpTxs.length - 1]?.id : cursors.icp;
+		const ckUsdcNextStart =
+			ckUsdcTxs.length > 0 ? ckUsdcTxs[ckUsdcTxs.length - 1]?.id : cursors.ckUsdc;
+		const vxpNextStart = vxpTxs.length > 0 ? vxpTxs[vxpTxs.length - 1]?.id : cursors.vxp;
+
+		const icpNextDone =
+			resolvedDone.icp ||
+			icpTxs.length === 0 ||
+			icpTxs.length < batchSize ||
+			((icpPage?.oldest_tx_id.length ?? 0) > 0 && icpNextStart === icpPage?.oldest_tx_id[0]);
+
+		const ckUsdcNextDone =
+			resolvedDone.ckUsdc ||
+			ckUsdcTxs.length === 0 ||
+			ckUsdcTxs.length < batchSize ||
+			((ckUsdcPage?.oldest_tx_id.length ?? 0) > 0 &&
+				ckUsdcNextStart === ckUsdcPage?.oldest_tx_id[0]);
+
+		const vxpNextDone =
+			resolvedDone.vxp ||
+			vxpTxs.length === 0 ||
+			vxpTxs.length < batchSize ||
+			((vxpPage?.oldest_tx_id.length ?? 0) > 0 && vxpNextStart === vxpPage?.oldest_tx_id[0]);
+
+		const icpNormalized: Transaction[] = icpTxs
 			.flatMap(mapTransactionIcpToSelf)
 			.map((transaction) => mapIcpTransaction({ transaction, token: ICP_TOKEN, identity }));
 
-		const ckUsdcNormalized: Transaction[] = ckUsdcTransactions.transactions
+		const ckUsdcNormalized: Transaction[] = ckUsdcTxs
 			.flatMap(mapTransactionIcrcToSelf)
 			.map((transaction) => mapIcrcTransaction({ transaction, token: CKUSDC_TOKEN, identity }));
 
-		const vxpNormalized: Transaction[] = vxpTransactions.transactions
+		const vxpNormalized: Transaction[] = vxpTxs
 			.flatMap(mapTransactionIcrcToSelf)
 			.map((transaction) => mapIcrcTransaction({ transaction, token: VXP_TOKEN, identity }));
 
-		return [...icpNormalized, ...ckUsdcNormalized, ...vxpNormalized].sort(
-			(a, b) => Number(b.timestamp) - Number(a.timestamp)
-		);
+		const transactions = [...icpNormalized, ...ckUsdcNormalized, ...vxpNormalized].sort((a, b) => {
+			if (a.timestamp === b.timestamp) {
+				return 0;
+			}
+			return a.timestamp > b.timestamp ? -1 : 1;
+		});
+
+		const nextDone: WalletTransactionsDone = {
+			icp: icpNextDone,
+			ckUsdc: ckUsdcNextDone,
+			vxp: vxpNextDone
+		};
+
+		const nextCursors: WalletTransactionsCursors = {
+			icp: icpNextDone ? cursors.icp : icpNextStart,
+			ckUsdc: ckUsdcNextDone ? cursors.ckUsdc : ckUsdcNextStart,
+			vxp: vxpNextDone ? cursors.vxp : vxpNextStart
+		};
+
+		return {
+			transactions,
+			cursors: nextCursors,
+			done: nextDone,
+			hasMore: !(icpNextDone && ckUsdcNextDone && vxpNextDone)
+		};
 	} catch (e: unknown) {
 		console.error('Failed to get transactions', e);
 
-		return [];
+		return {
+			transactions: [],
+			cursors: cursors ?? {},
+			done: resolvedDone,
+			hasMore: false
+		};
 	}
+};
+
+/** Backwards-compatible helper: first batch only. */
+export const getTransactions = async (): Promise<Transaction[]> => {
+	const result = await getTransactionsPage({ batchSize: WALLET_PAGINATION });
+	return result.transactions;
 };

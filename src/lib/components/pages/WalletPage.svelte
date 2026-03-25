@@ -2,6 +2,7 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import InfiniteScroll from '$lib/components/ui/InfiniteScroll.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
 	import CollateralModal from '$lib/components/wallet/CollateralModal.svelte';
@@ -14,7 +15,11 @@
 	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { sendIc } from '$lib/services/send.services';
-	import { getTransactions } from '$lib/services/wallet.service';
+	import {
+		getTransactionsPage,
+		type WalletTransactionsCursors,
+		type WalletTransactionsDone
+	} from '$lib/services/wallet.service';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -25,6 +30,13 @@
 	import { parseToken } from '$lib/utils/parse.utils';
 
 	let transactions = $state<Transaction[]>([]);
+	let batchSize = $state<bigint>(20n);
+	const batchSizeOptions: bigint[] = [10n, 20n, 50n];
+	let loadingHistory = $state(false);
+	let hasMoreHistory = $state(true);
+
+	let cursors = $state<WalletTransactionsCursors>({});
+	let done = $state<WalletTransactionsDone>({ icp: false, ckUsdc: false, vxp: false });
 
 	let activeTab = $state('Send');
 
@@ -45,8 +57,55 @@
 		}
 	});
 
-	onMount(async () => {
-		transactions = await getTransactions();
+	const sortNewestFirst = (arr: Transaction[]) =>
+		arr.sort((a, b) => (a.timestamp === b.timestamp ? 0 : a.timestamp > b.timestamp ? -1 : 1));
+
+	const resetHistory = () => {
+		transactions = [];
+		cursors = {};
+		done = { icp: false, ckUsdc: false, vxp: false };
+		hasMoreHistory = true;
+		loadingHistory = false;
+	};
+
+	const loadNextBatch = async () => {
+		if (loadingHistory || !hasMoreHistory) {
+			return;
+		}
+
+		loadingHistory = true;
+		try {
+			const result = await getTransactionsPage({ batchSize, cursors, done });
+
+			const txKey = (tx: Transaction) => `${tx.id}-${tx.token.ledgerCanisterId}`;
+			const merged: Record<string, Transaction> = {};
+
+			for (const t of transactions) {
+				merged[txKey(t)] = t;
+			}
+
+			for (const tx of result.transactions) {
+				merged[txKey(tx)] = tx;
+			}
+
+			transactions = sortNewestFirst(Object.values(merged));
+
+			const { cursors: nextCursors, done: nextDone, hasMore: nextHasMore } = result;
+			cursors = nextCursors;
+			done = nextDone;
+			hasMoreHistory = nextHasMore;
+		} finally {
+			loadingHistory = false;
+		}
+	};
+
+	const reloadHistory = async () => {
+		resetHistory();
+		await loadNextBatch();
+	};
+
+	onMount(() => {
+		void reloadHistory();
 	});
 
 	let recipient = $state('');
@@ -81,7 +140,7 @@
 
 			emit({ message: 'viciRefreshBalances' });
 
-			transactions = await getTransactions();
+			await reloadHistory();
 
 			amount = '';
 
@@ -156,7 +215,44 @@
 			{:else if activeTab === 'Receive'}
 				<WalletReceive />
 			{:else if activeTab === 'History'}
-				<WalletHistory transactions={filteredTransactions} />
+				<div class="space-y-4">
+					<div class="flex items-center justify-between gap-4">
+						<div class="text-sm font-bold text-slate-950">Batch size</div>
+						<div class="flex items-center gap-2">
+							<select
+								class="rounded border border-slate-200 bg-white px-2 py-1 text-sm text-slate-950"
+								aria-label="Transactions batch size"
+								disabled={loadingHistory}
+								onchange={(e) => {
+									batchSize = BigInt((e.target as HTMLSelectElement).value);
+									void reloadHistory();
+								}}
+							>
+								{#each batchSizeOptions as option (option.toString())}
+									<option selected={option === batchSize} value={option.toString()}>
+										{option.toString()}
+									</option>
+								{/each}
+							</select>
+						</div>
+					</div>
+
+					<WalletHistory transactions={filteredTransactions} />
+
+					<div class="flex flex-col items-center gap-3 pt-6 pb-2">
+						{#if !loadingHistory && !hasMoreHistory && transactions.length > 0}
+							<div class="text-xs text-slate-500">All caught up.</div>
+						{/if}
+
+						<InfiniteScroll
+							hasMore={hasMoreHistory}
+							loading={loadingHistory}
+							onLoadMore={() => {
+								void loadNextBatch();
+							}}
+						/>
+					</div>
+				</div>
 			{/if}
 		</div>
 	</Card>

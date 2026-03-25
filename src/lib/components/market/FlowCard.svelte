@@ -179,8 +179,8 @@
 				<div class="absolute inset-0 opacity-20">
 					<div class="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-white blur-3xl"></div>
 					<div
-						class="absolute -right-24 -bottom-24 h-64 w-64 rounded-full bg-indigo-400 blur-3xl">
-					</div>
+						class="absolute -right-24 -bottom-24 h-64 w-64 rounded-full bg-indigo-400 blur-3xl"
+					></div>
 				</div>
 
 				<div class="relative z-10 flex h-full w-full flex-col items-center justify-center">

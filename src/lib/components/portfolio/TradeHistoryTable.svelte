@@ -18,12 +18,12 @@
 
 <div class="space-y-4">
 	<h2 class="text-xl font-bold tracking-wider text-slate-950 uppercase">Trade History</h2>
-	<Card padding="none">
+	<Card class="overflow-hidden" padding="none">
 		{#if events.length === 0}
 			<EmptyState message="No trade history found." />
 		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-left">
+			<div class="flex min-w-0 w-full overflow-x-auto">
+				<table class="min-w-0 w-full table-fixed text-left">
 					<thead>
 						<tr
 							class="border-b border-slate-100 bg-slate-50 text-[10px] tracking-widest text-slate-500 uppercase"
@@ -43,9 +43,9 @@
 								<td class="px-6 py-4 text-[10px] text-slate-500">
 									{formatNanosecondsToDate({ nanoseconds: event.timestamp })}
 								</td>
-								<td class="px-6 py-4">
-									<div class="flex flex-col">
-										<span class="text-sm font-bold text-slate-950">
+								<td class="min-w-0 px-6 py-4">
+									<div class="flex min-w-0 flex-col">
+										<span class="block truncate text-sm font-bold text-slate-950">
 											{market?.title ?? 'Unknown Market'}
 										</span>
 									</div>

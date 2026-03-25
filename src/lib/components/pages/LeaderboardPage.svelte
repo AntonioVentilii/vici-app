@@ -80,8 +80,8 @@
 	{#if loading}
 		<div class="flex flex-col items-center justify-center space-y-4 py-24">
 			<div
-				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent shadow-sm">
-			</div>
+				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent shadow-sm"
+			></div>
 			<p class="animate-pulse text-xs font-bold tracking-widest text-slate-400 uppercase">
 				Calculating Alphas...
 			</p>

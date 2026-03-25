@@ -77,8 +77,8 @@
 			<div class="h-4 w-full overflow-hidden rounded-full bg-slate-100 p-1 shadow-inner">
 				<div
 					style="width: {progressPercent}%"
-					class="h-full rounded-full bg-indigo-500 transition-all duration-1000 ease-out">
-				</div>
+					class="h-full rounded-full bg-indigo-500 transition-all duration-1000 ease-out"
+				></div>
 			</div>
 		</div>
 	</div>
@@ -125,8 +125,8 @@
 			>
 				<div class="relative">
 					<div
-						class="absolute -inset-4 rounded-full bg-gradient-to-tr {flameColor} opacity-20 blur-xl">
-					</div>
+						class="absolute -inset-4 rounded-full bg-gradient-to-tr {flameColor} opacity-20 blur-xl"
+					></div>
 					<div
 						class="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr {flameColor} text-4xl shadow-lg"
 					>

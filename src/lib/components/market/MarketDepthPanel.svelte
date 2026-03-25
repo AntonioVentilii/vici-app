@@ -62,8 +62,8 @@
 				<div class="mt-4 h-1.5 w-full rounded-full bg-emerald-100">
 					<div
 						style="width: {market.yesProbability * 100}%"
-						class="h-full rounded-full bg-emerald-500">
-					</div>
+						class="h-full rounded-full bg-emerald-500"
+					></div>
 				</div>
 			</div>
 
@@ -81,8 +81,8 @@
 				<div class="mt-4 h-1.5 w-full rounded-full bg-rose-100">
 					<div
 						style="width: {market.noProbability * 100}%"
-						class="h-full rounded-full bg-rose-500">
-					</div>
+						class="h-full rounded-full bg-rose-500"
+					></div>
 				</div>
 			</div>
 		{:else}

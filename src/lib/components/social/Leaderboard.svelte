@@ -73,8 +73,8 @@
 						</div>
 						<div
 							style="height: {rank === 1 ? '70px' : rank === 2 ? '50px' : '35px'}"
-							class="bg-linear-to-t {getPodiumColor(rank)} w-16 rounded-t-xl opacity-80 shadow-2xl">
-						</div>
+							class="bg-linear-to-t {getPodiumColor(rank)} w-16 rounded-t-xl opacity-80 shadow-2xl"
+						></div>
 					</div>
 				{/if}
 			{/each}

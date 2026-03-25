@@ -87,12 +87,12 @@
 			<div class="mt-8 flex h-2 w-full overflow-hidden rounded-full bg-slate-100">
 				<div
 					style="width: {yesProbability * 100}%"
-					class="h-full bg-green-500 transition-all duration-700">
-				</div>
+					class="h-full bg-green-500 transition-all duration-700"
+				></div>
 				<div
 					style="width: {noProbability * 100}%"
-					class="h-full bg-red-500 transition-all duration-700">
-				</div>
+					class="h-full bg-red-500 transition-all duration-700"
+				></div>
 			</div>
 
 			<div class="mt-6 flex justify-between px-2">
@@ -153,8 +153,8 @@
 						<div class="absolute bottom-0 left-0 h-1 w-full bg-slate-50">
 							<div
 								style="width: {(outcome.probability ?? 0) * 100}%"
-								class="h-full bg-indigo-500 opacity-20 transition-all duration-700">
-							</div>
+								class="h-full bg-indigo-500 opacity-20 transition-all duration-700"
+							></div>
 						</div>
 					</BaseButton>
 				{/each}

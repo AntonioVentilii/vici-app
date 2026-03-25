@@ -26,7 +26,7 @@
 
 <div class="space-y-4">
 	<h2 class="text-xl font-bold tracking-wider text-slate-950 uppercase">Active Positions</h2>
-	<Card padding="none">
+	<Card class="overflow-hidden" padding="none">
 		{#if positions.length === 0}
 			<EmptyState message="You haven't placed any predictions yet.">
 				<a
@@ -37,8 +37,8 @@
 				</a>
 			</EmptyState>
 		{:else}
-			<div class="overflow-x-auto">
-				<table class="w-full text-left">
+			<div class="flex min-w-0 w-full overflow-x-auto">
+				<table class="min-w-0 w-full table-fixed text-left">
 					<thead>
 						<tr
 							class="border-b border-slate-100 bg-slate-50 text-[10px] tracking-widest text-slate-500 uppercase"
@@ -56,14 +56,16 @@
 							{@const pnl = onCalculatePnL(pos)}
 
 							<tr class="group transition-colors hover:bg-slate-50">
-								<td class="px-6 py-4">
-									<a class="group block max-w-xs" href="/(app)/markets/{pos.marketId}">
+								<td class="min-w-0 px-6 py-4">
+									<a class="group block min-w-0" href="/(app)/markets/{pos.marketId}">
 										<span
-											class="line-clamp-1 text-sm font-bold text-slate-950 transition-colors group-hover:text-indigo-600"
+											class="block truncate text-sm font-bold text-slate-950 transition-colors group-hover:text-indigo-600"
 										>
 											{market?.title ?? 'Unknown Market'}
 										</span>
-										<span class="text-[10px] leading-none tracking-widest text-slate-400 uppercase">
+										<span
+											class="block truncate text-[10px] leading-none tracking-widest text-slate-400 uppercase"
+										>
 											ID: {pos.marketId}
 										</span>
 									</a>

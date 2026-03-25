@@ -8,6 +8,6 @@
 
 <div class="flex justify-center py-24 {className}">
 	<div
-		class="border-primary h-10 w-10 animate-spin rounded-full border-4 border-t-transparent">
-	</div>
+		class="border-primary h-10 w-10 animate-spin rounded-full border-4 border-t-transparent"
+	></div>
 </div>

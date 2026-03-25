@@ -118,8 +118,8 @@
 											>
 												<div
 													style="width: {(outcome.probability ?? 0) * 100}%"
-													class="bg-primary h-full transition-all duration-700 ease-out">
-												</div>
+													class="bg-primary h-full transition-all duration-700 ease-out"
+												></div>
 											</div>
 										</div>
 									{/each}
