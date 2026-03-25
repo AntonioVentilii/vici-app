@@ -23,7 +23,7 @@ export const associateSeriesWithCategory = async ({
 	await setDoc({
 		collection: Collection.SERIES_CATEGORIES,
 		doc: {
-			key: seriesId, // Use seriesId as key for easy lookup
+			key: `${seriesId}-${categoryId}`,
 			data: mapping
 		}
 	});

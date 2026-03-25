@@ -15,7 +15,6 @@ import {
 	SUPPORTED_TOKENS,
 	VXP_TOKEN
 } from '$lib/constants/tokens/tokens.ic.constants';
-import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { getCollateralAssets } from '$lib/services/collateral.services';
 import { getIdentity } from '$lib/services/identity.services';
 import type { TokenId } from '$lib/types/token';
@@ -30,7 +29,6 @@ import {
 	mapTransactionIcrcToSelf
 } from '$lib/utils/transactions.utils';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
-import { get } from 'svelte/store';
 
 /** On-ledger balances for each supported token id (empty if not signed in). */
 export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
@@ -70,9 +68,9 @@ export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	}
 };
 
-/** Clearing account state for `domain` (defaults to current UI balance domain). */
+/** Clearing account state for `domain`. */
 export const getCollateralBalances = async (
-	domain: ClearingDid.BalanceDomain = get(balanceDomain)
+	domain: ClearingDid.BalanceDomain
 ): Promise<ClearingDid.AccountStateResponse | undefined> => {
 	const identity = await getIdentity();
 
@@ -92,9 +90,7 @@ export const getCollateralBalances = async (
 };
 
 /** Combined ledger balances and per-token clearing collateral for the given domain. */
-export const getBalances = async (
-	domain: ClearingDid.BalanceDomain = get(balanceDomain)
-): Promise<WalletBalance> => {
+export const getBalances = async (domain: ClearingDid.BalanceDomain): Promise<WalletBalance> => {
 	const [balances, accountState, collateralInfos] = await Promise.all([
 		getLedgerBalances(),
 		getCollateralBalances(domain),

@@ -36,7 +36,10 @@
 	const loadData = async () => {
 		loading = true;
 		try {
-			const [posRes, historyRes] = await Promise.all([getPositions(), getUserTradeHistory()]);
+			const [posRes, historyRes] = await Promise.all([
+				getPositions($balanceDomain),
+				getUserTradeHistory($balanceDomain)
+			]);
 
 			positions = posRes;
 			tradeHistory = historyRes;

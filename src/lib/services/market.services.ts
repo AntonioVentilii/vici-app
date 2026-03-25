@@ -9,8 +9,6 @@ import {
 	VICI_ORACLE_V1,
 	ZERO
 } from '$lib/constants/app.constants';
-import { VXP_LEDGER_CANISTER_ID } from '$lib/constants/canisters.constants';
-import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
 import { listSeriesCategories } from '$lib/services/category.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
@@ -30,8 +28,6 @@ import {
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
-import { Principal } from '@icp-sdk/core/principal';
-import { get } from 'svelte/store';
 
 /**
  * Creates a new prediction market.
@@ -42,22 +38,20 @@ export const createMarket = async ({
 	description,
 	expiryDate,
 	outcomes = [],
-	payoutUnit: payoutUnitOverride
+	payoutUnit: payoutUnitOverride,
+	balanceDomain
 }: {
 	title: string;
 	description: string;
 	expiryDate: bigint;
 	outcomes?: string[];
 	payoutUnit?: RegistryDid.PayoutUnit;
+	balanceDomain: RegistryDid.BalanceDomain;
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 
-	const domain = get(balanceDomain);
-	const payoutUnit: RegistryDid.PayoutUnit =
-		payoutUnitOverride ??
-		('ViciXp' in domain
-			? { Asset: { Icrc: Principal.fromText(VXP_LEDGER_CANISTER_ID) } }
-			: { Fiat: { Usd: null } });
+	const domain = balanceDomain;
+	const payoutUnit: RegistryDid.PayoutUnit = payoutUnitOverride ?? { Fiat: { Usd: null } };
 
 	const profileDoc = await getProfile(identity.getPrincipal().toText());
 
@@ -121,7 +115,7 @@ export const createMarket = async ({
 };
 
 /** Loads series for the current domain, enriches with order book stats, merges resolved markets from activity, and filters by domain. */
-export const getMarkets = async (): Promise<Market[]> => {
+export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 
 	const [seriesList, activities] = await Promise.all([
@@ -218,11 +212,9 @@ export const getMarkets = async (): Promise<Market[]> => {
 			})
 	);
 
-	const currentDomain = get(balanceDomain);
-
 	const items = [...markets, ...resolvedMarkets].filter(nonNullish);
 
-	return filterByBalanceDomain({ items, targetDomain: currentDomain });
+	return filterByBalanceDomain({ items, targetDomain: domain });
 };
 
 /** Single-market detail with book, categorical probabilities if applicable, and resolution status from activity. */
@@ -361,12 +353,12 @@ export const rankMarkets = ({
 };
 
 /** Open binary markets ranked for the prediction flow UI using profile interests and categories. */
-export const getFlowQueue = async (): Promise<Market[]> => {
+export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 	const principal = identity.getPrincipal().toText();
 
 	const [markets, profile, categoryMappings] = await Promise.all([
-		getMarkets(),
+		getMarkets(domain),
 		getProfile(principal),
 		listSeriesCategories()
 	]);

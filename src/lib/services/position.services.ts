@@ -1,3 +1,4 @@
+import type { RegistryDid } from '$declarations';
 import { getPositions as getPositionsApi } from '$lib/api/clearing.api';
 import { getIdentity } from '$lib/services/identity.services';
 import { getMarkets } from '$lib/services/market.services';
@@ -8,14 +9,17 @@ import { mapPositionData } from '$lib/utils/position.utils';
 import { isNullish } from '@dfinity/utils';
 
 /** All positions for the signed-in user, limited to markets returned by {@link getMarkets}. */
-export const getPositions = async (): Promise<Position[]> => {
+export const getPositions = async (domain: RegistryDid.BalanceDomain): Promise<Position[]> => {
 	const identity = await getIdentity();
 
 	if (isNullish(identity)) {
 		return [];
 	}
 
-	const [positions, markets] = await Promise.all([getPositionsApi({ identity }), getMarkets()]);
+	const [positions, markets] = await Promise.all([
+		getPositionsApi({ identity }),
+		getMarkets(domain)
+	]);
 
 	const marketIds = new Set(markets.map((m) => m.id));
 

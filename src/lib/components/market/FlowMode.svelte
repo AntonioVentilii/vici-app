@@ -8,6 +8,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { getFlowQueue } from '$lib/services/market.services';
@@ -45,8 +46,8 @@
 
 		try {
 			const [queue, userPositions] = await Promise.all([
-				getFlowQueue(),
-				nonNullish($userStore.user) ? getPositions() : Promise.resolve([])
+				getFlowQueue($balanceDomain),
+				nonNullish($userStore.user) ? getPositions($balanceDomain) : Promise.resolve([])
 			]);
 
 			markets = queue.slice(0, MAX_MARKETS);

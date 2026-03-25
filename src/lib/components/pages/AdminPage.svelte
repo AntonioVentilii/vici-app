@@ -7,13 +7,17 @@
 	import AdminMarketForm from '$lib/components/admin/AdminMarketForm.svelte';
 	import AdminResolutionHistory from '$lib/components/admin/AdminResolutionHistory.svelte';
 	import AdminResolutionList from '$lib/components/admin/AdminResolutionList.svelte';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { markets } from '$lib/derived/markets.derived';
 	import { resolveMarket } from '$lib/services/authn.services';
+	import { associateSeriesWithCategory } from '$lib/services/category.services';
+	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { createMarket } from '$lib/services/market.services';
 	import { listRoles, removeRole, setRole, type UserRoleEntry } from '$lib/services/roles.services';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { MarketId, Outcome } from '$lib/types/market';
 	import { UserRole } from '$lib/types/user';
+	import { toBalanceDomain } from '$lib/utils/balance-domain.utils';
 
 	let loading = $state(true);
 
@@ -55,6 +59,7 @@
 			expiryDate: string;
 			balanceDomain?: string;
 			outcomes?: string[];
+			categories?: string[];
 		}[]
 	) => {
 		const results = { success: 0, failed: 0 };
@@ -65,25 +70,47 @@
 		bulkSuccess = 0;
 		bulkFailed = 0;
 
-		await Promise.allSettled(
-			bulkMarkets.map(async ({ title, description, expiryDate, outcomes }) => {
-				try {
-					const result = await createMarket({
-						title,
-						description,
-						expiryDate: BigInt(new Date(expiryDate).getTime()),
-						outcomes
-					});
+		const identity = await safeGetIdentityOnce();
+		const adminPrincipal = identity.getPrincipal().toText();
+		const currentDomain = $balanceDomain;
 
-					bulkSuccess++;
-					return result;
-				} catch (e) {
-					bulkFailed++;
-					throw e;
-				} finally {
-					bulkProgress++;
+		await Promise.allSettled(
+			bulkMarkets.map(
+				async ({ title, description, expiryDate, outcomes, balanceDomain, categories }) => {
+					try {
+						const result = await createMarket({
+							title,
+							description,
+							expiryDate: BigInt(new Date(expiryDate).getTime()),
+							outcomes,
+							balanceDomain: balanceDomain ? toBalanceDomain(balanceDomain) : currentDomain
+						});
+
+						// Associate categories if provided
+						if (categories && categories.length > 0) {
+							await Promise.allSettled(
+								categories.map((categoryId) =>
+									associateSeriesWithCategory({
+										seriesId: result,
+										categoryId: categoryId.toLowerCase(),
+										adminPrincipal
+									})
+								)
+							);
+						}
+
+						bulkSuccess++;
+						return result;
+					} catch (e) {
+						console.error(`Failed to create bulk market: ${title}`, e);
+
+						bulkFailed++;
+						throw e;
+					} finally {
+						bulkProgress++;
+					}
 				}
-			})
+			)
 		);
 
 		results.success = bulkSuccess;

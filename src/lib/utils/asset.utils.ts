@@ -1,5 +1,6 @@
 import type { RegistryDid } from '$declarations';
 import { USD_ASSET } from '$lib/constants/tokens/assets.fiat.constants';
+import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type { Token } from '$lib/types/token';
 import { findTokenByLedgerId } from '$lib/utils/tokens.utils';
 import { assertNever } from '@dfinity/utils';
@@ -30,6 +31,10 @@ export const assetToToken = (payoutUnit: RegistryDid.PayoutUnit): Token | undefi
 
 	if ('NonMonetary' in payoutUnit) {
 		const nonMonetary = payoutUnit.NonMonetary;
+
+		if ('Points' in nonMonetary) {
+			return VXP_TOKEN;
+		}
 
 		throw new Error(`Unsupported non-monetary payout unit: ${nonMonetary}`);
 	}

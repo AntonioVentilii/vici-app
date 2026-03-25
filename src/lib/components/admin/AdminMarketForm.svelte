@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { isNullish } from '@dfinity/utils';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { createMarket } from '$lib/services/market.services';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { ButtonStatus } from '$lib/types/components';
@@ -42,7 +43,8 @@
 				title,
 				description,
 				expiryDate: BigInt(new Date(expiryDate).getTime()),
-				outcomes: marketType === 'Categorical' ? outcomes : []
+				outcomes: marketType === 'Categorical' ? outcomes : [],
+				balanceDomain: $balanceDomain
 			});
 
 			title = '';

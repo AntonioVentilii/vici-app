@@ -1,4 +1,4 @@
-import type { ClearingDid } from '$declarations';
+import type { ClearingDid, RegistryDid } from '$declarations';
 import {
 	getPositions as getPositionsApi,
 	getTradeHistory as getTradeHistoryApi,
@@ -21,10 +21,15 @@ export const getPosition = async (seriesId: string): Promise<ClearingDid.Positio
 };
 
 /** Trade/settlement events for the user, restricted to markets visible in the current app domain. */
-export const getUserTradeHistory = async (): Promise<ClearingDid.Event[]> => {
+export const getUserTradeHistory = async (
+	domain: RegistryDid.BalanceDomain
+): Promise<ClearingDid.Event[]> => {
 	const identity = await safeGetIdentityOnce();
 
-	const [events, markets] = await Promise.all([getTradeHistoryApi({ identity }), getMarkets()]);
+	const [events, markets] = await Promise.all([
+		getTradeHistoryApi({ identity }),
+		getMarkets(domain)
+	]);
 
 	const marketIds = new Set(markets.map((m) => m.id));
 

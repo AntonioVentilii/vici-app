@@ -2,6 +2,17 @@ import type { ClearingDid } from '$declarations';
 import type { MarketId } from '$lib/types/market';
 import { parseMarketId } from '$lib/validation/market.validation';
 
+/** Converts a domain string (e.g. from JSON) to a Clearing BalanceDomain variant. */
+export const toBalanceDomain = (domain: string): ClearingDid.BalanceDomain => {
+	if (domain === 'Playground') {
+		return { Playground: null };
+	}
+	if (domain === 'Settlement') {
+		return { Settlement: null };
+	}
+	return { ViciXp: null };
+};
+
 /** Predicates and filters for clearing balance domains (playground, settlement, ViciXp). */
 
 /** On-chain testnet/sandbox domain (not used for Vici app playground UI). */

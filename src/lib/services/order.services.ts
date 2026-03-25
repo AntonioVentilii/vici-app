@@ -7,7 +7,6 @@ import {
 	submitMarketOrder
 } from '$lib/api/clearing.api';
 import { PRICE_DECIMALS } from '$lib/constants/app.constants';
-import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { recordActivity } from '$lib/services/profile.services';
@@ -20,7 +19,6 @@ import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/
 import { isNullish, toNullable } from '@dfinity/utils';
 import { getIdentityOnce } from '@junobuild/core';
 import { nanoid } from 'nanoid';
-import { get } from 'svelte/store';
 
 /** Lists open limit orders for a market, optionally filtered to a balance domain. */
 export const getOrderBook = async ({
@@ -183,16 +181,22 @@ export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 };
 
 /** Signed-in user's orders for a single market. */
-export const getUserOrdersForMarket = async (
-	marketId: MarketId
-): Promise<ClearingDid.LimitOrder[]> => {
-	const orders = await getUserOrders();
+export const getUserOrdersForMarket = async ({
+	marketId,
+	domain
+}: {
+	marketId: MarketId;
+	domain: ClearingDid.BalanceDomain;
+}): Promise<ClearingDid.LimitOrder[]> => {
+	const orders = await getUserOrders(domain);
 
 	return orders.filter((o) => o.series_id === marketId);
 };
 
 /** All open orders for the current user in the active balance domain. */
-export const getUserOrders = async (): Promise<ClearingDid.LimitOrder[]> => {
+export const getUserOrders = async (
+	domain: ClearingDid.BalanceDomain
+): Promise<ClearingDid.LimitOrder[]> => {
 	const identity = await getIdentityOnce();
 
 	if (isNullish(identity)) {
@@ -202,8 +206,6 @@ export const getUserOrders = async (): Promise<ClearingDid.LimitOrder[]> => {
 	const orders = await getOrdersApi({
 		identity
 	});
-
-	const domain = get(balanceDomain);
 
 	return filterByBalanceDomain({ items: orders, targetDomain: domain });
 };

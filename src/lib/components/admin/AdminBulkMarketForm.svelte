@@ -7,6 +7,7 @@
 				expiryDate: string;
 				balanceDomain?: string;
 				outcomes?: string[];
+				categories?: string[];
 			}[]
 		) => void;
 	}
@@ -23,14 +24,16 @@
 			description:
 				'This market resolves to YES if the Bitcoin price reaches $100,000 USD on any major exchange before Jan 1, 2027.',
 			expiryDate: '2027-01-01T00:00:00Z',
-			balanceDomain: 'ViciXp'
+			balanceDomain: 'ViciXp',
+			categories: ['Finance', 'Crypto']
 		},
 		{
 			title: 'Who will win the 2026 FIFA World Cup?',
 			description: 'Prediction on the champion of the 2026 FIFA World Cup.',
 			expiryDate: '2026-07-20T21:59:59.000Z',
 			balanceDomain: 'ViciXp',
-			outcomes: ['Italy', 'Brazil', 'France', 'Argentina', 'England', 'Spain', 'Germany', 'Other']
+			outcomes: ['Italy', 'Brazil', 'France', 'Argentina', 'England', 'Spain', 'Germany', 'Other'],
+			categories: ['Sports', 'Football']
 		}
 	];
 
@@ -71,6 +74,16 @@
 					}
 					if (item.outcomes.length < 2) {
 						error = `Categorical markets must have at least 2 outcomes: ${item.title}`;
+						return;
+					}
+				}
+				if (item.categories) {
+					if (!Array.isArray(item.categories)) {
+						error = `Categories must be an array for market: ${item.title}`;
+						return;
+					}
+					if (item.categories.some((c: unknown) => typeof c !== 'string')) {
+						error = `Each category must be a string for market: ${item.title}`;
 						return;
 					}
 				}

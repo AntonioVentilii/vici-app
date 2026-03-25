@@ -4,6 +4,7 @@
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { defaultClearingCollateralToken, supportedTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { depositCollateral, withdrawCollateral } from '$lib/services/collateral.services';
@@ -69,7 +70,8 @@
 
 				await depositCollateral({
 					assetPrincipal: selectedToken.ledgerCanisterId,
-					amount: amt
+					amount: amt,
+					domain: $balanceDomain
 				});
 			} else {
 				if (isNullish(selectedToken)) {
@@ -78,7 +80,8 @@
 
 				await withdrawCollateral({
 					assetPrincipal: selectedToken.ledgerCanisterId,
-					amount: amt
+					amount: amt,
+					domain: $balanceDomain
 				});
 			}
 

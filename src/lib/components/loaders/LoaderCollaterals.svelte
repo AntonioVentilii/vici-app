@@ -8,7 +8,7 @@
 
 	const refresh = async () => {
 		const [{ collateral, accountState }, assets] = await Promise.all([
-			getBalances(),
+			getBalances($balanceDomain),
 			getCollateralAssets()
 		]);
 

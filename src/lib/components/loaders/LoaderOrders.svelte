@@ -5,7 +5,7 @@
 	import { ordersStore } from '$lib/stores/orders.store';
 
 	const refresh = async () => {
-		const orders = await getUserOrders();
+		const orders = await getUserOrders($balanceDomain);
 
 		ordersStore.set(orders);
 	};

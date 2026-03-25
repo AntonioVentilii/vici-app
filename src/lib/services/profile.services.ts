@@ -1,4 +1,4 @@
-import type { ClearingDid } from '$declarations';
+import type { ClearingDid, RegistryDid } from '$declarations';
 import { ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { getUserTradeHistory } from '$lib/services/trade.services';
@@ -122,9 +122,15 @@ export const ensureProfile = async (principal: PrincipalText): Promise<UserProfi
 };
 
 /** Derives trading stats, points, and level from clearing history and writes them to the profile. */
-export const calculateAndSyncStats = async (identity: Identity): Promise<void> => {
+export const calculateAndSyncStats = async ({
+	identity,
+	domain
+}: {
+	identity: Identity;
+	domain: RegistryDid.BalanceDomain;
+}): Promise<void> => {
 	const principal = identity.getPrincipal().toText();
-	const history = await getUserTradeHistory();
+	const history = await getUserTradeHistory(domain);
 
 	// In the current clearing canister:
 	// - Executed events have the trade details.

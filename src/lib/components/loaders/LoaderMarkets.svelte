@@ -6,7 +6,7 @@
 	import { marketsStore } from '$lib/stores/markets.store';
 
 	const refresh = async () => {
-		const markets = await getMarkets();
+		const markets = await getMarkets($balanceDomain);
 
 		marketsStore.set(markets);
 	};

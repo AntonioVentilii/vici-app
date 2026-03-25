@@ -8,22 +8,22 @@ import {
 } from '$lib/api/clearing.api';
 import { approve, transactionFee } from '$lib/api/icrc-ledger.api';
 import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
-import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { refreshAllBalances } from '$lib/utils/refresh.utils';
 import { resolveClearingAssetId } from '$lib/utils/tokens.utils';
 import { getIcrcAccount } from '$lib/utils/transactions.utils';
 import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 import { getIdentityOnce } from '@junobuild/core';
-import { get } from 'svelte/store';
 
 /** ICRC approve + clearing deposit for the current balance domain; refreshes balances on success. */
 export const depositCollateral = async ({
 	assetPrincipal,
-	amount
+	amount,
+	domain
 }: {
 	assetPrincipal: string;
 	amount: bigint;
+	domain: ClearingDid.BalanceDomain;
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -46,7 +46,7 @@ export const depositCollateral = async ({
 		identity,
 		params: {
 			deposit_id: `DEPOSIT_${Date.now()}`,
-			domain: toNullable(get(balanceDomain)),
+			domain: toNullable(domain),
 			asset_id,
 			amount
 		}
@@ -58,10 +58,12 @@ export const depositCollateral = async ({
 /** Withdraws collateral from clearing to the user for the given ledger asset. */
 export const withdrawCollateral = async ({
 	assetPrincipal,
-	amount
+	amount,
+	domain
 }: {
 	assetPrincipal: string;
 	amount: bigint;
+	domain: ClearingDid.BalanceDomain;
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -71,7 +73,7 @@ export const withdrawCollateral = async ({
 		identity,
 		params: {
 			withdrawal_id: `WITHDRAW_${Date.now()}`,
-			domain: toNullable(get(balanceDomain)),
+			domain: toNullable(domain),
 			asset_id,
 			amount
 		}
@@ -81,12 +83,14 @@ export const withdrawCollateral = async ({
 };
 
 /** Fetches clearing account state (balances per domain) for the signed-in user. */
-export const getAccountState = async (): Promise<ClearingDid.AccountStateResponse> => {
+export const getAccountState = async (
+	domain: ClearingDid.BalanceDomain
+): Promise<ClearingDid.AccountStateResponse> => {
 	const identity = await safeGetIdentityOnce();
 
 	return await getAccountStateApi({
 		identity,
-		params: { refresh: toNullable(true), domain: toNullable(get(balanceDomain)) }
+		params: { refresh: toNullable(true), domain: toNullable(domain) }
 	});
 };
 
