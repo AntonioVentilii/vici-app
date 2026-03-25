@@ -1,5 +1,5 @@
 import { defineConfig } from '@junobuild/config';
-import { Collection } from './src/lib/constants/collections.constants';
+import collections from './juno.collections.json';
 
 export default defineConfig({
 	satellite: {
@@ -12,55 +12,55 @@ export default defineConfig({
 		collections: {
 			datastore: [
 				{
-					collection: Collection.ROLES,
+					collection: collections.ROLES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: Collection.PROFILES,
+					collection: collections.PROFILES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: Collection.RELATIONS,
+					collection: collections.RELATIONS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: Collection.CHATS,
+					collection: collections.CHATS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: Collection.COMMENTS,
+					collection: collections.COMMENTS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: Collection.CATEGORIES,
+					collection: collections.CATEGORIES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: Collection.SERIES_CATEGORIES,
+					collection: collections.SERIES_CATEGORIES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: Collection.ACTIVITIES,
+					collection: collections.ACTIVITIES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
 				},
 				{
-					collection: Collection.VXP_ONBOARDING,
+					collection: collections.VXP_ONBOARDING,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'

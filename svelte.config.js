@@ -27,7 +27,8 @@ const config = {
 		alias: {
 			$declarations: './src/declarations',
 			$routes: './src/lib/routes',
-			$satellite: './src/satellite'
+			$satellite: './src/satellite',
+			$root: './'
 		}
 	}
 };
