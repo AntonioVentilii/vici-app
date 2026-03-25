@@ -7,6 +7,9 @@ import { defineConfig } from 'vite';
 export default defineConfig({
 	plugins: [sveltekit(), juno(), tailwindcss()],
 	server: {
+		fs: {
+			allow: ['.']
+		},
 		proxy: {
 			'/api': {
 				target: 'http://localhost:5987',
