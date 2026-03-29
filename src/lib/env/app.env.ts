@@ -1,6 +1,9 @@
-export const isSkylab = (): boolean => import.meta.env.MODE === 'skylab';
+const viteEnv = (): ImportMetaEnv | undefined =>
+	typeof import.meta !== 'undefined' ? (import.meta as ImportMeta & { env?: ImportMetaEnv }).env : undefined;
+
+export const isSkylab = (): boolean => viteEnv()?.MODE === 'skylab';
 export const isNotSkylab = (): boolean => !isSkylab();
 
-export const isDev = (): boolean => import.meta.env.DEV || isSkylab();
+export const isDev = (): boolean => viteEnv()?.DEV === true || isSkylab();
 
-export const isProd = (): boolean => import.meta.env.PROD;
+export const isProd = (): boolean => viteEnv()?.PROD === true;
