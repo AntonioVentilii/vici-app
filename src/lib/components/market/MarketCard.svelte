@@ -49,6 +49,9 @@
 									Multiple
 								</span>
 							{/if}
+							{#if market.isInviteOnly}
+								<Badge size="sm" variant="warning">Closed Circle</Badge>
+							{/if}
 						</div>
 					</div>
 				</div>

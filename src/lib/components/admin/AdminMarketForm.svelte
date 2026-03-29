@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { isNullish } from '@dfinity/utils';
+	import { onMount } from 'svelte';
+	import type { RegistryDid } from '$declarations';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { listGroups } from '$lib/services/group.services';
 	import { createMarket } from '$lib/services/market.services';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { ButtonStatus } from '$lib/types/components';
@@ -21,6 +24,18 @@
 	let marketType = $state<'Binary' | 'Categorical'>('Binary');
 	let outcomes = $state<string[]>(['Option A', 'Option B']);
 
+	let isRestricted = $state(false);
+	let availableGroups = $state<RegistryDid.Group[]>([]);
+	let selectedGroupIds = $state<string[]>([]);
+
+	onMount(async () => {
+		try {
+			availableGroups = await listGroups();
+		} catch {
+			// Groups API may not be available yet
+		}
+	});
+
 	const addOutcome = () => {
 		outcomes = [...outcomes, `Option ${String.fromCharCode(65 + outcomes.length)}`];
 	};
@@ -38,13 +53,19 @@
 
 		status = 'pending';
 
+		const tradingAccess: RegistryDid.TradingAccess[] =
+			isRestricted && selectedGroupIds.length > 0
+				? [{ Restricted: { groups: selectedGroupIds } }]
+				: [{ Open: null }];
+
 		try {
 			await createMarket({
 				title,
 				description,
 				expiryDate: BigInt(new Date(expiryDate).getTime()),
 				outcomes: marketType === 'Categorical' ? outcomes : [],
-				balanceDomain: $balanceDomain
+				balanceDomain: $balanceDomain,
+				tradingAccess
 			});
 
 			title = '';
@@ -52,6 +73,8 @@
 			expiryDate = '';
 			outcomes = ['Option A', 'Option B'];
 			marketType = 'Binary';
+			isRestricted = false;
+			selectedGroupIds = [];
 
 			await onAddMarketSuccess();
 
@@ -190,6 +213,71 @@
 				<p class="text-[10px] text-slate-400">
 					Minimum 2 outcomes required. Each outcome will be tradable as a YES position.
 				</p>
+			</div>
+		{/if}
+
+		<!-- Trading Access -->
+		<div class="space-y-4">
+			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">
+				Trading Access
+			</span>
+			<div class="flex gap-4">
+				<button
+					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {!isRestricted
+						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+					onclick={() => (isRestricted = false)}
+					type="button"
+				>
+					Open to All
+				</button>
+				<button
+					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {isRestricted
+						? 'border-amber-500 bg-amber-50 text-amber-700'
+						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+					onclick={() => (isRestricted = true)}
+					type="button"
+				>
+					Closed Circle
+				</button>
+			</div>
+		</div>
+
+		{#if isRestricted}
+			<div class="space-y-3 rounded-3xl bg-amber-50/50 p-6">
+				<span class="text-xs font-bold tracking-widest text-amber-700 uppercase">
+					Restrict to Groups
+				</span>
+				{#if availableGroups.length === 0}
+					<p class="text-sm text-amber-600 italic">
+						No groups created yet. Create a group first to restrict market access.
+					</p>
+				{:else}
+					<div class="space-y-2">
+						{#each availableGroups as group (group.group_id)}
+							<label
+								class="flex cursor-pointer items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-amber-200 transition-colors ring-inset hover:bg-amber-50"
+							>
+								<input
+									class="accent-amber-600"
+									checked={selectedGroupIds.includes(group.group_id)}
+									onchange={() => {
+										if (selectedGroupIds.includes(group.group_id)) {
+											selectedGroupIds = selectedGroupIds.filter((id) => id !== group.group_id);
+										} else {
+											selectedGroupIds = [...selectedGroupIds, group.group_id];
+										}
+									}}
+									type="checkbox"
+								/>
+								<span class="text-sm font-semibold text-slate-800">{group.name}</span>
+								<span class="ml-auto text-xs text-slate-400">
+									{group.members.length} members
+								</span>
+							</label>
+						{/each}
+					</div>
+				{/if}
 			</div>
 		{/if}
 

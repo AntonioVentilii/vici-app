@@ -63,6 +63,7 @@ for ((i = 0; i < $length; i++)); do
         icon_url = null;
         balance_domain = variant { ViciXp };
         oracle_source = \"Manual\";
+        trading_access = vec { variant { Open } };
     })"
 done
 

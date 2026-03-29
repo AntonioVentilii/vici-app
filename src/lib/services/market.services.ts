@@ -39,7 +39,8 @@ export const createMarket = async ({
 	expiryDate,
 	outcomes = [],
 	payoutUnit: payoutUnitOverride,
-	balanceDomain
+	balanceDomain,
+	tradingAccess = [{ Open: null }]
 }: {
 	title: string;
 	description: string;
@@ -47,6 +48,7 @@ export const createMarket = async ({
 	outcomes?: string[];
 	payoutUnit?: RegistryDid.PayoutUnit;
 	balanceDomain: RegistryDid.BalanceDomain;
+	tradingAccess?: RegistryDid.TradingAccess[];
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -93,7 +95,8 @@ export const createMarket = async ({
 				: undefined
 		),
 		balance_domain: domain,
-		oracle_source: VICI_ORACLE_V1
+		oracle_source: VICI_ORACLE_V1,
+		trading_access: tradingAccess
 	};
 
 	const seriesId = await addSeries({

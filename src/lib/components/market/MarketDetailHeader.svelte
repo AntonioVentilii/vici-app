@@ -1,5 +1,6 @@
 <script lang="ts">
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
+	import Badge from '$lib/components/ui/Badge.svelte';
 	import type { Market } from '$lib/types/market';
 	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
@@ -34,6 +35,9 @@
 			>
 				Memes
 			</span>
+			{#if market.isInviteOnly}
+				<Badge size="sm" variant="warning">Closed Circle</Badge>
+			{/if}
 			<span class="text-[10px] font-bold text-slate-400">
 				Created by {shortenWithMiddleEllipsis({ text: market.creator, splitLength: 5 })}
 			</span>

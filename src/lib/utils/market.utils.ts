@@ -1,13 +1,11 @@
 import type { ClearingDid, RegistryDid } from '$declarations';
 import { NANO_SECONDS_IN_MILLISECOND, ZERO } from '$lib/constants/app.constants';
-import type { Market, MarketStatus, Outcome } from '$lib/types/market';
+import type { Market, MarketStatus, Outcome, TradingAccessUI } from '$lib/types/market';
 import type { OrderBookLevel } from '$lib/types/order';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { resolveMarketDisplayToken } from '$lib/utils/market-token.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish } from '@dfinity/utils';
-
-/** Maps registry/clearing data into UI market models, order book stats, and display helpers. */
 
 /** Builds a `Market` view model from registry series and optional book/probability fields. */
 export const mapMarketData = ({
@@ -42,7 +40,8 @@ export const mapMarketData = ({
 		payout_unit: payoutUnit,
 		payoff_type: payoffType,
 		outcomes,
-		balance_domain: balanceDomain
+		balance_domain: balanceDomain,
+		trading_access: rawTradingAccess
 	} = series;
 
 	const token = resolveMarketDisplayToken({ balanceDomain, payoutUnit });
@@ -62,6 +61,9 @@ export const mapMarketData = ({
 		payoffTypeMapped = 'Put';
 	}
 
+	const tradingAccess: TradingAccessUI[] = mapTradingAccess(rawTradingAccess);
+	const isInviteOnly = tradingAccess.length > 0 && !tradingAccess.some((a) => a.type === 'Open');
+
 	return {
 		id: parseMarketId(id),
 		title,
@@ -77,8 +79,9 @@ export const mapMarketData = ({
 			probability: payoffTypeMapped === 'Categorical' ? categoricalProbabilities?.[o.id] : undefined
 		})),
 		payoffType: payoffTypeMapped,
-		isInviteOnly: false,
+		isInviteOnly,
 		inviteList: [],
+		tradingAccess,
 		totalVolume: ZERO,
 		yesVolume: ZERO,
 		noVolume: ZERO,
@@ -265,6 +268,29 @@ export const calculateCategoricalProbabilities = ({
 	}
 
 	return probs;
+};
+
+const mapTradingAccess = (
+	raw: RegistryDid.Series['trading_access'] | undefined
+): TradingAccessUI[] => {
+	if (!raw || raw.length === 0) {
+		return [{ type: 'Open' }];
+	}
+
+	return raw.map((policy) => {
+		if ('Open' in policy) {
+			return { type: 'Open' as const };
+		}
+
+		if ('Restricted' in policy) {
+			return {
+				type: 'Restricted' as const,
+				groupIds: policy.Restricted.groups.map((g) => g)
+			};
+		}
+
+		return { type: 'Open' as const };
+	});
 };
 
 /** Badge/variant hint for market or resolution outcome labels. */

@@ -2,5 +2,6 @@ export enum UserRole {
 	CONTROLLER = 'controller',
 	ADMIN = 'admin',
 	RESOLVER = 'resolver',
-	CREATOR = 'creator'
+	CREATOR = 'creator',
+	GROUP_CREATOR = 'group_creator'
 }

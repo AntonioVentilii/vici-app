@@ -1,5 +1,7 @@
 const viteEnv = (): ImportMetaEnv | undefined =>
-	typeof import.meta !== 'undefined' ? (import.meta as ImportMeta & { env?: ImportMetaEnv }).env : undefined;
+	typeof import.meta !== 'undefined'
+		? (import.meta as ImportMeta & { env?: ImportMetaEnv }).env
+		: undefined;
 
 export const isSkylab = (): boolean => viteEnv()?.MODE === 'skylab';
 export const isNotSkylab = (): boolean => !isSkylab();

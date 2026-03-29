@@ -6,6 +6,8 @@ import type * as z from 'zod';
 
 export type MarketId = z.infer<typeof MarketIdSchema>;
 
+export type TradingAccessUI = { type: 'Open' } | { type: 'Restricted'; groupIds: string[] };
+
 export type MarketStatus = 'Open' | 'Expired' | 'Resolved';
 
 export type OutcomeId = 'YES' | 'NO' | 'CANCELED' | string;
@@ -31,6 +33,7 @@ export interface Market {
 	payoffType: 'Binary' | 'Categorical' | 'Call' | 'Put';
 	isInviteOnly: boolean;
 	inviteList: PrincipalText[];
+	tradingAccess: TradingAccessUI[];
 	totalVolume: bigint;
 	yesVolume: bigint;
 	noVolume: bigint;
