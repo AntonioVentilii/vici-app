@@ -42,7 +42,6 @@
 
 			<!-- Secondary Content: Activity -->
 			<div class="space-y-8 pt-8">
-				<h3 class="text-xl font-black text-slate-950">Recent Prediction Context</h3>
 				<ActivityFeed mode="user" userPrincipal={$authPrincipal ?? ''} />
 			</div>
 		</div>
