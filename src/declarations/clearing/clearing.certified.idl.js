@@ -85,6 +85,7 @@ export const TradeError = IDL.Variant({
 	}),
 	NotOrderCreator: IDL.Null,
 	SeriesNotFound: IDL.Text,
+	NotAuthorizedToTrade: IDL.Null,
 	Common: CommonError
 });
 export const AcceptPositionTransferResult = IDL.Variant({
@@ -328,6 +329,10 @@ export const Outcome = IDL.Record({
 	description: IDL.Opt(Description),
 	icon_url: IDL.Opt(IDL.Text)
 });
+export const TradingAccess = IDL.Variant({
+	Open: IDL.Null,
+	Restricted: IDL.Record({ groups: IDL.Vec(IDL.Text) })
+});
 export const Series = IDL.Record({
 	title: IDL.Text,
 	strike: IDL.Opt(Price),
@@ -342,6 +347,7 @@ export const Series = IDL.Record({
 	outcomes: IDL.Opt(IDL.Vec(Outcome)),
 	created_at_ns: IDL.Nat64,
 	icon_url: IDL.Opt(IDL.Text),
+	trading_access: IDL.Vec(TradingAccess),
 	price_precision: IDL.Nat8,
 	balance_domain: BalanceDomain,
 	oracle_source: IDL.Text
@@ -535,6 +541,7 @@ export const idlService = IDL.Service({
 	get_settlement_plan: IDL.Func([IDL.Text], [IDL.Opt(SettlementPlan)], []),
 	get_settlement_status: IDL.Func([IDL.Text], [IDL.Opt(SettlementStatusView)], []),
 	get_trade_history: IDL.Func([], [IDL.Vec(Event)], []),
+	get_usd_decimals: IDL.Func([], [IDL.Nat8], []),
 	http_request: IDL.Func([HttpRequest], [HttpResponse], []),
 	list_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], []),
 	list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], []),
@@ -642,6 +649,7 @@ export const idlFactory = ({ IDL }) => {
 		}),
 		NotOrderCreator: IDL.Null,
 		SeriesNotFound: IDL.Text,
+		NotAuthorizedToTrade: IDL.Null,
 		Common: CommonError
 	});
 	const AcceptPositionTransferResult = IDL.Variant({
@@ -881,6 +889,10 @@ export const idlFactory = ({ IDL }) => {
 		description: IDL.Opt(Description),
 		icon_url: IDL.Opt(IDL.Text)
 	});
+	const TradingAccess = IDL.Variant({
+		Open: IDL.Null,
+		Restricted: IDL.Record({ groups: IDL.Vec(IDL.Text) })
+	});
 	const Series = IDL.Record({
 		title: IDL.Text,
 		strike: IDL.Opt(Price),
@@ -895,6 +907,7 @@ export const idlFactory = ({ IDL }) => {
 		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		created_at_ns: IDL.Nat64,
 		icon_url: IDL.Opt(IDL.Text),
+		trading_access: IDL.Vec(TradingAccess),
 		price_precision: IDL.Nat8,
 		balance_domain: BalanceDomain,
 		oracle_source: IDL.Text
@@ -1092,6 +1105,7 @@ export const idlFactory = ({ IDL }) => {
 		get_settlement_plan: IDL.Func([IDL.Text], [IDL.Opt(SettlementPlan)], []),
 		get_settlement_status: IDL.Func([IDL.Text], [IDL.Opt(SettlementStatusView)], []),
 		get_trade_history: IDL.Func([], [IDL.Vec(Event)], []),
+		get_usd_decimals: IDL.Func([], [IDL.Nat8], []),
 		http_request: IDL.Func([HttpRequest], [HttpResponse], []),
 		list_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], []),
 		list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], []),

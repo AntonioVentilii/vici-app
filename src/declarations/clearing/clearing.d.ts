@@ -291,8 +291,6 @@ export interface CollateralAssetConfig {
 	is_enabled: boolean;
 	/**
 	 * Balance domains where this asset may be deposited or withdrawn.
-	 *
-	 * Defaults to both domains when deserializing legacy state.
 	 */
 	allowed_balance_domains: Array<BalanceDomain>;
 	/**
@@ -996,6 +994,18 @@ export interface Series {
 	 */
 	icon_url: [] | [string];
 	/**
+	 * The set of trading access policies governing who may trade this series.
+	 * **Must never be empty** — every series carries at least one policy.
+	 *
+	 * Evaluated as a logical OR: a caller is authorized if **any** policy
+	 * in the list grants them access.
+	 *
+	 * - `[Open]` → explicitly unrestricted (default).
+	 * - `[Restricted { groups }]` → only group members may trade.
+	 * - Multiple policies can coexist (e.g. `[Open, Restricted { groups }]`).
+	 */
+	trading_access: Array<TradingAccess>;
+	/**
 	 * The canonical number of decimals used for prices and strikes in this series.
 	 */
 	price_precision: number;
@@ -1377,9 +1387,68 @@ export type TradeError =
 	  }
 	| {
 			/**
+			 * The caller is not authorized to trade on this restricted series.
+			 *
+			 * Returned when a series carries `TradingAccess::Restricted` policies
+			 * and the caller is not a member of any of the referenced groups.
+			 * The caller should check `is_trading_authorized` on the registry
+			 * or contact the group creator to be added as a member.
+			 */
+			NotAuthorizedToTrade: null;
+	  }
+	| {
+			/**
 			 * A common error occurred.
 			 */
 			Common: CommonError;
+	  };
+/**
+ * A single trading access policy attached to a derivative series.
+ *
+ * A [`Series`](super::series::Series) holds a `Vec<TradingAccess>`.
+ * Authorization is evaluated as a logical **OR** across all policies:
+ * if *any* policy in the list grants access to the caller, the caller
+ * may trade.
+ *
+ * # Invariant
+ *
+ * The `trading_access` vector on a [`Series`](super::series::Series) **must
+ * never be empty**. Every series must carry at least one policy. The default
+ * is `[Open]`. This invariant is enforced at the API level: `add_series`
+ * fills `[Open]` if empty, and `update_trading_access` rejects empty lists.
+ *
+ * # Combining policies
+ *
+ * A series may carry multiple policies simultaneously. For example:
+ * - `[Open]` — open to everyone (default).
+ * - `[Restricted { groups: [g1, g2] }]` — only members of g1 or g2.
+ * - `[Open, Restricted { groups: [g1] }]` — open to everyone *and* additionally tagged as
+ * belonging to g1 (useful for discovery/UI filtering).
+ *
+ * # Extensibility
+ *
+ * New variants (e.g. `TokenGated`, `ReputationBased`) can be added in
+ * the future without breaking existing policies or on-chain state.
+ */
+export type TradingAccess =
+	| {
+			/**
+			 * Unrestricted: any authenticated (non-anonymous) caller can trade.
+			 */
+			Open: null;
+	  }
+	| {
+			/**
+			 * Restricted to members of the specified groups.
+			 * The caller is authorized if they belong to **at least one** of the
+			 * listed groups.
+			 */
+			Restricted: {
+				/**
+				 * The group IDs whose members are allowed to trade.
+				 */
+				groups: Array<string>;
+			};
 	  };
 export interface UpdateAssetMetricsParams {
 	metrics: AssetMetrics;
@@ -1594,6 +1663,10 @@ export interface _SERVICE {
 	 * Retrieves the trade history (executed trades) for the caller.
 	 */
 	get_trade_history: ActorMethod<[], Array<Event>>;
+	/**
+	 * Returns the official number of decimals for USD accounting.
+	 */
+	get_usd_decimals: ActorMethod<[], number>;
 	/**
 	 * Handles incoming HTTP requests for Prometheus metrics.
 	 *

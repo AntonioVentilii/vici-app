@@ -8,6 +8,19 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const UpdateGroupAdminsParams = IDL.Record({
+	group_id: IDL.Text,
+	principals: IDL.Vec(IDL.Principal)
+});
+export const GroupError = IDL.Variant({
+	GroupNotFound: IDL.Null,
+	EmptyTradingAccess: IDL.Null,
+	Unauthorized: IDL.Null,
+	GroupAlreadyExists: IDL.Null,
+	NameTooLong: IDL.Null,
+	SeriesNotFound: IDL.Null
+});
+export const GroupResult = IDL.Variant({ Ok: IDL.Bool, Err: GroupError });
 export const Description = IDL.Record({
 	html: IDL.Opt(IDL.Text),
 	markdown: IDL.Opt(IDL.Text),
@@ -79,6 +92,10 @@ export const Outcome = IDL.Record({
 	description: IDL.Opt(Description),
 	icon_url: IDL.Opt(IDL.Text)
 });
+export const TradingAccess = IDL.Variant({
+	Open: IDL.Null,
+	Restricted: IDL.Record({ groups: IDL.Vec(IDL.Text) })
+});
 export const BalanceDomain = IDL.Variant({
 	ViciXp: IDL.Null,
 	Playground: IDL.Null,
@@ -95,6 +112,7 @@ export const AddSeriesParams = IDL.Record({
 	description: Description,
 	outcomes: IDL.Opt(IDL.Vec(Outcome)),
 	icon_url: IDL.Opt(IDL.Text),
+	trading_access: IDL.Vec(TradingAccess),
 	price_precision: IDL.Nat8,
 	balance_domain: BalanceDomain,
 	oracle_source: IDL.Text
@@ -109,6 +127,27 @@ export const SeriesError = IDL.Variant({
 export const AddSeriesResult = IDL.Variant({
 	Ok: IDL.Text,
 	Err: SeriesError
+});
+export const CreateGroupParams = IDL.Record({
+	name: IDL.Text,
+	description: IDL.Opt(IDL.Text),
+	icon_url: IDL.Opt(IDL.Text)
+});
+export const CreateGroupResult = IDL.Variant({
+	Ok: IDL.Text,
+	Err: GroupError
+});
+export const Group = IDL.Record({
+	updated_by: IDL.Principal,
+	creator: IDL.Principal,
+	members: IDL.Vec(IDL.Principal),
+	name: IDL.Text,
+	description: IDL.Opt(IDL.Text),
+	updated_at_ns: IDL.Nat64,
+	created_at_ns: IDL.Nat64,
+	icon_url: IDL.Opt(IDL.Text),
+	group_id: IDL.Text,
+	admins: IDL.Vec(IDL.Principal)
 });
 export const Oracle = IDL.Record({
 	manager: IDL.Principal,
@@ -131,6 +170,7 @@ export const Series = IDL.Record({
 	outcomes: IDL.Opt(IDL.Vec(Outcome)),
 	created_at_ns: IDL.Nat64,
 	icon_url: IDL.Opt(IDL.Text),
+	trading_access: IDL.Vec(TradingAccess),
 	price_precision: IDL.Nat8,
 	balance_domain: BalanceDomain,
 	oracle_source: IDL.Text
@@ -159,30 +199,65 @@ export const ManageOraclePrincipalsParams = IDL.Record({
 	remove_principals: IDL.Vec(IDL.Principal),
 	oracle_id: IDL.Text
 });
+export const UpdateGroupParams = IDL.Record({
+	name: IDL.Opt(IDL.Text),
+	description: IDL.Opt(IDL.Opt(IDL.Text)),
+	icon_url: IDL.Opt(IDL.Opt(IDL.Text)),
+	group_id: IDL.Text
+});
 export const UpdateOracleMetadataParams = IDL.Record({
 	metadata: OracleMetadata,
 	oracle_id: IDL.Text
 });
+export const UpdateTradingAccessParams = IDL.Record({
+	series_id: IDL.Text,
+	trading_access: IDL.Vec(TradingAccess)
+});
 
 export const idlService = IDL.Service({
 	add_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
+	add_group_admins: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
+	add_group_members: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
 	add_oracle: IDL.Func([AddOracleParams], [OracleResult], []),
 	add_series: IDL.Func([AddSeriesParams], [AddSeriesResult], []),
+	create_group: IDL.Func([CreateGroupParams], [CreateGroupResult], []),
+	delete_group: IDL.Func([IDL.Text], [GroupResult], []),
+	get_group: IDL.Func([IDL.Text], [IDL.Opt(Group)], []),
 	get_oracle: IDL.Func([IDL.Text], [IDL.Opt(Oracle)], []),
 	get_series: IDL.Func([IDL.Text], [IDL.Opt(Series)], []),
 	is_authorized_creator: IDL.Func([IDL.Principal], [IDL.Bool], []),
+	is_group_member: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], []),
 	is_oracle_authorized: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], []),
+	is_trading_authorized: IDL.Func([IDL.Principal, IDL.Text], [IDL.Bool], []),
 	list_authorized_creators: IDL.Func([], [IDL.Vec(IDL.Principal)], []),
+	list_groups: IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Vec(Group)], []),
 	list_series: IDL.Func([PaginationParams], [SeriesPage], []),
 	list_series_with: IDL.Func([ListSeriesParams], [SeriesPage], []),
 	manage_oracle_principals: IDL.Func([ManageOraclePrincipalsParams], [OracleResult], []),
 	remove_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
-	update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], [])
+	remove_group_admins: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
+	remove_group_members: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
+	update_group: IDL.Func([UpdateGroupParams], [GroupResult], []),
+	update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], []),
+	update_trading_access: IDL.Func([UpdateTradingAccessParams], [GroupResult], [])
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+	const UpdateGroupAdminsParams = IDL.Record({
+		group_id: IDL.Text,
+		principals: IDL.Vec(IDL.Principal)
+	});
+	const GroupError = IDL.Variant({
+		GroupNotFound: IDL.Null,
+		EmptyTradingAccess: IDL.Null,
+		Unauthorized: IDL.Null,
+		GroupAlreadyExists: IDL.Null,
+		NameTooLong: IDL.Null,
+		SeriesNotFound: IDL.Null
+	});
+	const GroupResult = IDL.Variant({ Ok: IDL.Bool, Err: GroupError });
 	const Description = IDL.Record({
 		html: IDL.Opt(IDL.Text),
 		markdown: IDL.Opt(IDL.Text),
@@ -248,6 +323,10 @@ export const idlFactory = ({ IDL }) => {
 		description: IDL.Opt(Description),
 		icon_url: IDL.Opt(IDL.Text)
 	});
+	const TradingAccess = IDL.Variant({
+		Open: IDL.Null,
+		Restricted: IDL.Record({ groups: IDL.Vec(IDL.Text) })
+	});
 	const BalanceDomain = IDL.Variant({
 		ViciXp: IDL.Null,
 		Playground: IDL.Null,
@@ -264,6 +343,7 @@ export const idlFactory = ({ IDL }) => {
 		description: Description,
 		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		icon_url: IDL.Opt(IDL.Text),
+		trading_access: IDL.Vec(TradingAccess),
 		price_precision: IDL.Nat8,
 		balance_domain: BalanceDomain,
 		oracle_source: IDL.Text
@@ -276,6 +356,27 @@ export const idlFactory = ({ IDL }) => {
 		SeriesAlreadyExists: IDL.Null
 	});
 	const AddSeriesResult = IDL.Variant({ Ok: IDL.Text, Err: SeriesError });
+	const CreateGroupParams = IDL.Record({
+		name: IDL.Text,
+		description: IDL.Opt(IDL.Text),
+		icon_url: IDL.Opt(IDL.Text)
+	});
+	const CreateGroupResult = IDL.Variant({
+		Ok: IDL.Text,
+		Err: GroupError
+	});
+	const Group = IDL.Record({
+		updated_by: IDL.Principal,
+		creator: IDL.Principal,
+		members: IDL.Vec(IDL.Principal),
+		name: IDL.Text,
+		description: IDL.Opt(IDL.Text),
+		updated_at_ns: IDL.Nat64,
+		created_at_ns: IDL.Nat64,
+		icon_url: IDL.Opt(IDL.Text),
+		group_id: IDL.Text,
+		admins: IDL.Vec(IDL.Principal)
+	});
 	const Oracle = IDL.Record({
 		manager: IDL.Principal,
 		registered_at_ns: IDL.Nat64,
@@ -297,6 +398,7 @@ export const idlFactory = ({ IDL }) => {
 		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		created_at_ns: IDL.Nat64,
 		icon_url: IDL.Opt(IDL.Text),
+		trading_access: IDL.Vec(TradingAccess),
 		price_precision: IDL.Nat8,
 		balance_domain: BalanceDomain,
 		oracle_source: IDL.Text
@@ -325,25 +427,47 @@ export const idlFactory = ({ IDL }) => {
 		remove_principals: IDL.Vec(IDL.Principal),
 		oracle_id: IDL.Text
 	});
+	const UpdateGroupParams = IDL.Record({
+		name: IDL.Opt(IDL.Text),
+		description: IDL.Opt(IDL.Opt(IDL.Text)),
+		icon_url: IDL.Opt(IDL.Opt(IDL.Text)),
+		group_id: IDL.Text
+	});
 	const UpdateOracleMetadataParams = IDL.Record({
 		metadata: OracleMetadata,
 		oracle_id: IDL.Text
 	});
+	const UpdateTradingAccessParams = IDL.Record({
+		series_id: IDL.Text,
+		trading_access: IDL.Vec(TradingAccess)
+	});
 
 	return IDL.Service({
 		add_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
+		add_group_admins: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
+		add_group_members: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
 		add_oracle: IDL.Func([AddOracleParams], [OracleResult], []),
 		add_series: IDL.Func([AddSeriesParams], [AddSeriesResult], []),
+		create_group: IDL.Func([CreateGroupParams], [CreateGroupResult], []),
+		delete_group: IDL.Func([IDL.Text], [GroupResult], []),
+		get_group: IDL.Func([IDL.Text], [IDL.Opt(Group)], []),
 		get_oracle: IDL.Func([IDL.Text], [IDL.Opt(Oracle)], []),
 		get_series: IDL.Func([IDL.Text], [IDL.Opt(Series)], []),
 		is_authorized_creator: IDL.Func([IDL.Principal], [IDL.Bool], []),
+		is_group_member: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], []),
 		is_oracle_authorized: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], []),
+		is_trading_authorized: IDL.Func([IDL.Principal, IDL.Text], [IDL.Bool], []),
 		list_authorized_creators: IDL.Func([], [IDL.Vec(IDL.Principal)], []),
+		list_groups: IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Vec(Group)], []),
 		list_series: IDL.Func([PaginationParams], [SeriesPage], []),
 		list_series_with: IDL.Func([ListSeriesParams], [SeriesPage], []),
 		manage_oracle_principals: IDL.Func([ManageOraclePrincipalsParams], [OracleResult], []),
 		remove_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
-		update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], [])
+		remove_group_admins: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
+		remove_group_members: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
+		update_group: IDL.Func([UpdateGroupParams], [GroupResult], []),
+		update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], []),
+		update_trading_access: IDL.Func([UpdateTradingAccessParams], [GroupResult], [])
 	});
 };
 

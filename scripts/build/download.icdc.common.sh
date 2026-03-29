@@ -9,4 +9,4 @@ fi
 DIR="$PROJECT_ROOT/target/icdc"
 mkdir -p "$DIR"
 
-ICDC_CORE_VERSION="v0.0.4"
+ICDC_CORE_VERSION="v0.0.5"
