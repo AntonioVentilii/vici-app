@@ -1,5 +1,6 @@
 import { Collection } from '$lib/constants/collections.constants';
 import { UserRole } from '$lib/types/user';
+import { isNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext } from '@junobuild/functions';
 import { decodeDocData, getControllers, getDocStore, isController } from '@junobuild/functions/sdk';
@@ -31,7 +32,7 @@ export const assertSetRole = ({
 		caller
 	});
 
-	if (callerDoc === undefined) {
+	if (isNullish(callerDoc)) {
 		throw new Error('You do not have permission to set roles.');
 	}
 

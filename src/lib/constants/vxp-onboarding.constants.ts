@@ -6,7 +6,7 @@ import { parseToken } from '$lib/utils/parse.utils';
  * Split 10% / 40% / 50%: at registration, after the first bet, after five bets.
  */
 export const NEW_USER_VXP_TOTAL_BASE_UNITS = parseToken({
-	value: '10000',
+	value: '100',
 	unitName: VXP_TOKEN.decimals
 });
 

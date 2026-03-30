@@ -76,9 +76,11 @@
 
 	const intuitiveAvailable = $derived.by(() => {
 		const a = collateral.accountState;
+
 		if (isNullish(a)) {
-			return undefined;
+			return;
 		}
+
 		return intuitiveAvailableMarginUsd({
 			assets: a.assets,
 			totalEquityUsd: a.total_equity_usd,

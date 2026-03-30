@@ -1,3 +1,4 @@
+import { ZERO } from '$lib/constants/app.constants';
 import { VXP_LEDGER_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import {
@@ -11,6 +12,7 @@ import type {
 	VxpNewUserMilestoneKey,
 	VxpOnboardingDoc
 } from '$lib/types/vxp-onboarding';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { OnSetDocContext } from '@junobuild/functions';
 import { IcrcLedgerCanister, type IcrcLedgerDid } from '@junobuild/functions/canisters/ledger/icrc';
@@ -132,7 +134,7 @@ const persistOnboarding = ({
 		key,
 		doc: {
 			data: encodeDocData(doc),
-			...(version !== undefined ? { version } : {})
+			...(nonNullish(version) ? { version } : {})
 		}
 	});
 };
@@ -150,7 +152,7 @@ const countUserTradeActivities = (caller: Uint8Array): number => {
 				owner: caller,
 				paginate: {
 					limit: LIST_PAGE_SIZE,
-					...(startAfter !== undefined ? { start_after: startAfter } : {})
+					...(nonNullish(startAfter) ? { start_after: startAfter } : {})
 				},
 				order: { field: 'keys', desc: false }
 			}
@@ -171,7 +173,7 @@ const countUserTradeActivities = (caller: Uint8Array): number => {
 		}
 
 		const lastKey = page.items[page.items.length - 1]?.[0];
-		if (lastKey === undefined || lastKey === startAfter) {
+		if (isNullish(lastKey) || lastKey === startAfter) {
 			break;
 		}
 		startAfter = lastKey;
@@ -214,7 +216,7 @@ const reconcileLegacyOnboardingState = ({
 		key: userKey,
 		caller
 	});
-	const hasProfile = profileDoc !== undefined;
+	const hasProfile = nonNullish(profileDoc);
 
 	const tradeCount = Math.max(base.tradeCount, historicalTrades, minimumTradeCount ?? 0);
 
@@ -270,7 +272,7 @@ const ensureRegistrationMilestoneIfEligible = ({
 		caller
 	});
 
-	if (profileDoc === undefined) {
+	if (isNullish(profileDoc)) {
 		return;
 	}
 
@@ -280,7 +282,7 @@ const ensureRegistrationMilestoneIfEligible = ({
 		caller
 	});
 
-	if (existing === undefined) {
+	if (isNullish(existing)) {
 		return;
 	}
 
@@ -306,7 +308,136 @@ const ensureRegistrationMilestoneIfEligible = ({
 	});
 };
 
-/** Try to transfer every milestone currently marked `owed` (order m1 → m3). */
+const PERSIST_MAX_RETRIES = 3;
+
+/**
+ * Determines the transfer needed for a single milestone:
+ * - `owed` → transfer the current expected amount (ignores stale owed values from old constants).
+ * - `paid` but below current expected → top-up the difference.
+ * - otherwise → nothing to do.
+ */
+const milestoneTransferNeeded = ({
+	ms,
+	mk
+}: {
+	ms: VxpMilestoneState;
+	mk: VxpNewUserMilestoneKey;
+}): { transferAmount: bigint; memoLabel: string } | undefined => {
+	const expectedAmount = amountForMilestone(mk);
+
+	if (ms.status === 'owed') {
+		return { transferAmount: expectedAmount, memoLabel: mk };
+	}
+
+	if (ms.status === 'paid') {
+		const paidSoFar = BigInt(ms.amountBaseUnits);
+		if (paidSoFar < expectedAmount) {
+			return { transferAmount: expectedAmount - paidSoFar, memoLabel: `${mk}:topup` };
+		}
+	}
+
+	return undefined;
+};
+
+const payOutMilestoneIfNeeded = async ({
+	ledger,
+	caller,
+	userKey,
+	mk
+}: {
+	ledger: IcrcLedgerCanister;
+	caller: Uint8Array;
+	userKey: string;
+	mk: VxpNewUserMilestoneKey;
+}): Promise<void> => {
+	const snapshot = getDocStore({
+		collection: Collection.VXP_ONBOARDING,
+		key: userKey,
+		caller
+	});
+
+	if (isNullish(snapshot)) {
+		return;
+	}
+
+	const snapshotDoc = decodeDocData<VxpOnboardingDoc>(snapshot.data);
+	const needed = milestoneTransferNeeded({ ms: snapshotDoc.milestones[mk], mk });
+
+	if (isNullish(needed) || needed.transferAmount <= ZERO) {
+		return;
+	}
+
+	const expectedAmount = amountForMilestone(mk);
+
+	const result = await payoutMilestone({
+		ledger,
+		toOwner: Principal.fromText(userKey),
+		amount: needed.transferAmount,
+		memoLabel: needed.memoLabel
+	});
+
+	for (let attempt = 0; attempt < PERSIST_MAX_RETRIES; attempt++) {
+		const latest = getDocStore({
+			collection: Collection.VXP_ONBOARDING,
+			key: userKey,
+			caller
+		});
+
+		if (isNullish(latest)) {
+			break;
+		}
+
+		const latestDoc = decodeDocData<VxpOnboardingDoc>(latest.data);
+		const curMs = latestDoc.milestones[mk];
+
+		const needsUpdate =
+			curMs.status === 'owed' ||
+			(curMs.status === 'paid' && BigInt(curMs.amountBaseUnits) < expectedAmount);
+
+		if (!needsUpdate) {
+			break;
+		}
+
+		const updatedMilestone: VxpMilestoneState = result.ok
+			? {
+					status: 'paid',
+					amountBaseUnits: expectedAmount.toString(),
+					blockIndex: result.blockIndex.toString()
+				}
+			: {
+					...curMs,
+					lastError: result.error
+				};
+
+		try {
+			persistOnboarding({
+				caller,
+				key: userKey,
+				doc: {
+					...latestDoc,
+					milestones: {
+						...latestDoc.milestones,
+						[mk]: updatedMilestone
+					}
+				},
+				version: latest.version
+			});
+			break;
+		} catch {
+			if (attempt === PERSIST_MAX_RETRIES - 1) {
+				throw new Error(
+					`Failed to persist ${mk} after transfer (user=${userKey}, ok=${result.ok})`
+				);
+			}
+		}
+	}
+};
+
+/**
+ * Try to transfer every milestone that is `owed` or `paid` below the current expected
+ * amount (order m1 → m3). After each transfer the persist is retried with a fresh read
+ * so a concurrent doc write does not leave a "transferred but not recorded" state.
+ */
 const payOutOwedMilestones = async ({
 	caller,
 	userKey
@@ -319,75 +450,7 @@ const payOutOwedMilestones = async ({
 	});
 
 	for (const mk of MILESTONE_KEYS) {
-		const snapshot = getDocStore({
-			collection: Collection.VXP_ONBOARDING,
-			key: userKey,
-			caller
-		});
-
-		if (snapshot !== undefined) {
-			const snapshotDoc = decodeDocData<VxpOnboardingDoc>(snapshot.data);
-			const ms = snapshotDoc.milestones[mk];
-
-			if (ms.status === 'owed') {
-				const amount = BigInt(ms.amountBaseUnits);
-				const result = await payoutMilestone({
-					ledger,
-					toOwner: Principal.fromText(userKey),
-					amount,
-					memoLabel: mk
-				});
-
-				const latest = getDocStore({
-					collection: Collection.VXP_ONBOARDING,
-					key: userKey,
-					caller
-				});
-
-				if (latest !== undefined) {
-					const latestDoc = decodeDocData<VxpOnboardingDoc>(latest.data);
-					const curMs = latestDoc.milestones[mk];
-
-					if (curMs.status === 'owed') {
-						if (result.ok) {
-							const paid: VxpMilestoneState = {
-								status: 'paid',
-								amountBaseUnits: curMs.amountBaseUnits,
-								blockIndex: result.blockIndex.toString()
-							};
-							persistOnboarding({
-								caller,
-								key: userKey,
-								doc: {
-									...latestDoc,
-									milestones: {
-										...latestDoc.milestones,
-										[mk]: paid
-									}
-								},
-								version: latest.version
-							});
-						} else {
-							persistOnboarding({
-								caller,
-								key: userKey,
-								doc: {
-									...latestDoc,
-									milestones: {
-										...latestDoc.milestones,
-										[mk]: {
-											...curMs,
-											lastError: result.error
-										}
-									}
-								},
-								version: latest.version
-							});
-						}
-					}
-				}
-			}
-		}
+		await payOutMilestoneIfNeeded({ ledger, caller, userKey, mk });
 	}
 };
 
@@ -417,7 +480,7 @@ export const onProfileSetForVxpOnboarding = async ({
 		caller
 	});
 
-	const prev: VxpOnboardingDoc | undefined = existing
+	const prev: VxpOnboardingDoc | undefined = nonNullish(existing)
 		? decodeDocData<VxpOnboardingDoc>(existing.data)
 		: undefined;
 
@@ -453,7 +516,7 @@ export const onTradeActivityForVxpOnboarding = async ({
 		return;
 	}
 
-	if (before !== undefined) {
+	if (nonNullish(before)) {
 		return;
 	}
 
@@ -482,7 +545,7 @@ export const onTradeActivityForVxpOnboarding = async ({
 		caller
 	});
 
-	const prev: VxpOnboardingDoc | undefined = existing
+	const prev: VxpOnboardingDoc | undefined = nonNullish(existing)
 		? decodeDocData<VxpOnboardingDoc>(existing.data)
 		: undefined;
 
