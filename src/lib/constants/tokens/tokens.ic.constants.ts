@@ -39,7 +39,7 @@ export const TICRC1_TOKEN: Token = {
 export const VXP_TOKEN: Token = {
 	id: parseTokenId('VXP'),
 	symbol: 'VXP',
-	decimals: 8,
+	decimals: 4,
 	ledgerCanisterId: VXP_LEDGER_CANISTER_ID,
 	isDevEnabled: true
 };

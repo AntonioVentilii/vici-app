@@ -13,7 +13,7 @@
 # Env:
 #   VICI_JUNO_SATELLITE_PRINCIPAL — satellite canister id (default: dev id from juno.config.ts).
 #   VXP_RESERVE_ID — skip add_reserve and use this reserve (e.g. after first run).
-#   VXP_TREASURY_TOPUP_BASE_UNITS — minted amount (default: 1e15 = 10M VXP at 8 decimals).
+#   VXP_TREASURY_TOPUP_BASE_UNITS — minted amount (default: 1e11 = 10M VXP at 4 decimals).
 #
 # shellcheck source=scripts/lib/utils.sh
 source "$(dirname "$0")/../lib/utils.sh" "$@"
@@ -21,8 +21,8 @@ source "$(dirname "$0")/../lib/utils.sh" "$@"
 set -euo pipefail
 
 SATELLITE="${VICI_JUNO_SATELLITE_PRINCIPAL:-auamu-4x777-77775-aaaaa-cai}"
-# 1e15 base units @ 8 decimals => 10^7 VXP = 10,000,000 VXP
-TOPUP="${VXP_TREASURY_TOPUP_BASE_UNITS:-1000000000000000}"
+# 1e11 base units @ 4 decimals => 10,000,000 VXP
+TOPUP="${VXP_TREASURY_TOPUP_BASE_UNITS:-100000000000}"
 
 echo "Satellite (VXP sender): $SATELLITE"
 echo "Top-up amount (base units): $TOPUP"

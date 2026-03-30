@@ -9,18 +9,18 @@ MINTER_PRINCIPAL="${CANISTER_ID_VXP_MINTER:-$(dfx canister id vxp_minter --netwo
 
 mkdir -p "$PROJECT_ROOT/$(dirname "$ARGS_FILE")"
 
-# 8 decimals: 1000 VXP for local testing
-INITIAL_UNITS='100_000_000_000'
+# 4 decimals: 1,000 VXP for local testing
+INITIAL_UNITS='10_000_000'
 
 cat <<EOF >"$PROJECT_ROOT/$ARGS_FILE"
 (variant {
   Init = record {
     token_symbol = "VXP";
     token_name = "Vici XP";
-    decimals = opt 8;
+    decimals = opt 4;
     max_memo_length = opt 80;
     minting_account = record { owner = principal "$MINTER_PRINCIPAL" };
-    transfer_fee = 100_000;
+    transfer_fee = 1;
     metadata = vec {};
     initial_balances = vec {
       record { record { owner = principal "$PRINCIPAL"; }; $INITIAL_UNITS; };
