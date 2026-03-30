@@ -1,12 +1,46 @@
+import { VXP_MIN_MAX_PAYOUT_VXP, VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 import { placeOrder } from '$lib/services/order.services';
 import type { Market } from '$lib/types/market';
 import type { OrderType } from '$lib/types/order';
+import { isViciXp } from '$lib/utils/balance-domain.utils';
 import {
 	parseToken,
 	parseUsdBaseUnitsFromDecimal,
 	tokenBaseUnitsToUsdBaseUnits
 } from '$lib/utils/parse.utils';
-import { nonNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
+
+/** @throws Error when premium or implied max payout breaks ViciXp sizing rules. */
+export const assertViciXpHumanPremiumAndPayout = ({
+	amountStr,
+	executionPrice
+}: {
+	amountStr: string;
+	executionPrice: number;
+}): void => {
+	const finalPrice = Math.max(executionPrice, 0.01);
+
+	const premiumHuman = Number(String(amountStr).trim());
+
+	if (
+		!Number.isFinite(premiumHuman) ||
+		premiumHuman < VXP_STAKE_STEP_VXP ||
+		premiumHuman % VXP_STAKE_STEP_VXP !== 0 ||
+		!Number.isInteger(premiumHuman)
+	) {
+		throw new Error(
+			`VXP premium must be a whole amount of at least ${VXP_STAKE_STEP_VXP} in steps of ${VXP_STAKE_STEP_VXP}`
+		);
+	}
+
+	const maxPayoutHuman = premiumHuman / finalPrice;
+
+	if (!Number.isFinite(maxPayoutHuman) || maxPayoutHuman < VXP_MIN_MAX_PAYOUT_VXP) {
+		throw new Error(
+			`Potential payout if you win must be at least ${VXP_MIN_MAX_PAYOUT_VXP} VXP — raise the premium or adjust the price`
+		);
+	}
+};
 
 /** Parameters for placing an outcome trade from the flow or manual UI. */
 export interface TradeParams {
@@ -18,6 +52,32 @@ export interface TradeParams {
 	limitPrice?: number;
 }
 
+/**
+ * Resolves execution probability (price of the bought outcome) for margin and VXP sizing checks.
+ * Matches the path used by {@link executeOutcomeTrade} before `placeOrder` adjusts binary NO prices.
+ */
+export const resolveOutcomeExecutionPriceForSizing = ({
+	market,
+	action,
+	orderType = 'MARKET',
+	limitPrice
+}: Pick<TradeParams, 'market' | 'action' | 'orderType' | 'limitPrice'>): number => {
+	let executionPrice: number;
+
+	if (orderType === 'LIMIT' && nonNullish(limitPrice)) {
+		executionPrice = limitPrice;
+	} else if (action === 'YES') {
+		executionPrice = market.bestAsk ?? market.yesProbability;
+	} else if (action === 'NO') {
+		executionPrice = nonNullish(market.bestBid) ? 1 - market.bestBid : market.noProbability;
+	} else {
+		const outcome = market.outcomes?.find((o) => o.id === action);
+		executionPrice = outcome?.probability ?? 0.5;
+	}
+
+	return Math.max(executionPrice, 0.01);
+};
+
 /** Computes execution price and quantity, then submits a buy via `placeOrder`. */
 export const executeOutcomeTrade = async ({
 	market,
@@ -26,35 +86,33 @@ export const executeOutcomeTrade = async ({
 	orderType = 'MARKET',
 	limitPrice
 }: TradeParams): Promise<void> => {
-	const amountBase = parseToken({ value: amount.trim(), unitName: market.token.decimals });
-
-	let executionPrice: number;
+	const amountBase = parseToken({
+		value: String(amount).trim(),
+		unitName: market.token.decimals
+	});
 
 	let type: OrderType = orderType;
 
-	if (orderType === 'LIMIT' && nonNullish(limitPrice)) {
-		executionPrice = limitPrice;
-	} else {
-		// MARKET Logic
+	if (orderType !== 'LIMIT' || isNullish(limitPrice)) {
 		if (action === 'YES') {
-			executionPrice = market.bestAsk ?? market.yesProbability;
 			type = nonNullish(market.bestAsk) ? 'MARKET' : 'LIMIT';
 		} else if (action === 'NO') {
-			// For NO, we buy the NO outcome.
-			// The price for NO is 1 - price for YES.
-			// bestBid is the price for YES, so 1 - bestBid is the price for NO.
-			executionPrice = nonNullish(market.bestBid) ? 1 - market.bestBid : market.noProbability;
 			type = nonNullish(market.bestBid) ? 'MARKET' : 'LIMIT';
 		} else {
-			// Categorical or other custom outcome
-			const outcome = market.outcomes?.find((o) => o.id === action);
-			executionPrice = outcome?.probability ?? 0.5;
-			type = 'LIMIT'; // Default to limit for categorical market orders for now
+			type = 'LIMIT';
 		}
 	}
 
-	// Safety: Ensure price is not zero
-	const finalPrice = Math.max(executionPrice, 0.01);
+	const finalPrice = resolveOutcomeExecutionPriceForSizing({
+		market,
+		action,
+		orderType,
+		limitPrice
+	});
+
+	if (isViciXp(market.balanceDomain)) {
+		assertViciXpHumanPremiumAndPayout({ amountStr: String(amount), executionPrice: finalPrice });
+	}
 
 	// Clearing margin is `qty * price` in USD `USD_DECIMALS` (see `get_required_margin`). Convert
 	// collateral from token base units to that USD scale (1 token ≈ 1 USD notionally for sizing).

@@ -8,6 +8,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { flowTradeService } from '$lib/services/flow.services';
@@ -17,6 +18,11 @@
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
+	import { isViciXp } from '$lib/utils/balance-domain.utils';
+	import {
+		assertViciXpHumanPremiumAndPayout,
+		resolveOutcomeExecutionPriceForSizing
+	} from '$lib/utils/trade.utils';
 
 	const MAX_BETS = 10;
 	const MAX_MARKETS = 20;
@@ -53,9 +59,22 @@
 			markets = queue.slice(0, MAX_MARKETS);
 			positions = userPositions;
 
-			// Set default amount from profile preferences
-			if ($userStore.profile?.preferences?.defaultAmount?.flow) {
-				tradeAmount = $userStore.profile.preferences.defaultAmount.flow;
+			const fromProfile = $userStore.profile?.preferences?.defaultAmount?.flow;
+
+			if (isViciXp($balanceDomain)) {
+				const candidate = fromProfile ?? String(VXP_STAKE_STEP_VXP);
+
+				const n = Number(candidate);
+
+				tradeAmount =
+					Number.isFinite(n) &&
+					n >= VXP_STAKE_STEP_VXP &&
+					n % VXP_STAKE_STEP_VXP === 0 &&
+					Number.isInteger(n)
+						? String(n)
+						: String(VXP_STAKE_STEP_VXP);
+			} else if (fromProfile) {
+				tradeAmount = fromProfile;
 			}
 		} catch (e) {
 			console.error('Failed to load Flow queue', e);
@@ -113,6 +132,18 @@
 		// We prepare the data and fire the trade in the background via FlowTradeService
 		const executeTrade = async () => {
 			try {
+				if (isViciXp(currentMarket.balanceDomain)) {
+					const executionPrice = resolveOutcomeExecutionPriceForSizing({
+						market: currentMarket,
+						action,
+						orderType: 'MARKET'
+					});
+
+					assertViciXpHumanPremiumAndPayout({
+						amountStr: tradeAmount,
+						executionPrice
+					});
+				}
 				await flowTradeService.executeTrade({
 					market: currentMarket,
 					action,
@@ -202,9 +233,9 @@
 				class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 ring-1 ring-slate-200 transition-all focus-within:ring-2 focus-within:ring-indigo-500"
 			>
 				<input
-					class="w-12 bg-transparent text-center text-sm font-black text-slate-950 outline-none"
-					min="1"
-					step="0.1"
+					class="w-16 bg-transparent text-center text-sm font-black text-slate-950 outline-none"
+					min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 1}
+					step={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
 					type="number"
 					bind:value={tradeAmount}
 				/>

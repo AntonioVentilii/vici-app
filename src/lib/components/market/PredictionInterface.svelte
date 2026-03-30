@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
@@ -20,6 +22,7 @@
 	import type { OrderType } from '$lib/types/order';
 	import type { PositionType } from '$lib/types/position';
 	import { icrcLedgerDecimalsFromCollateralConfig } from '$lib/utils/asset-ref.utils';
+	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import { formatCurrency } from '$lib/utils/format.utils';
 	import { calculateMarketStats } from '$lib/utils/market.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
@@ -29,7 +32,11 @@
 		nativeToClearingMarginUnits,
 		quickBetChipLabel
 	} from '$lib/utils/playground-display.utils';
-	import { executeOutcomeTrade } from '$lib/utils/trade.utils';
+	import {
+		assertViciXpHumanPremiumAndPayout,
+		executeOutcomeTrade,
+		resolveOutcomeExecutionPriceForSizing
+	} from '$lib/utils/trade.utils';
 
 	interface Props {
 		market: Market;
@@ -131,7 +138,12 @@
 
 		// Set default amount from profile if empty
 		if (!amount && $userStore.profile?.preferences?.defaultAmount?.manual) {
-			amount = $userStore.profile.preferences.defaultAmount.manual;
+			const pref = $userStore.profile.preferences.defaultAmount.manual;
+
+			amount =
+				get(playgroundVxpUnitMode) && Number(pref) < VXP_STAKE_STEP_VXP
+					? String(VXP_STAKE_STEP_VXP)
+					: pref;
 		}
 
 		const interval = setInterval(fetchOrderBook, 5_000);
@@ -153,6 +165,13 @@
 			orderType = 'LIMIT';
 		}
 	});
+
+	const vxpQuickAmounts = ['100', '200', '500', '1000'] as const;
+	const settlementQuickAmounts = ['1', '10', '50', '100'] as const;
+
+	let quickBetAmounts = $derived(
+		$playgroundVxpUnitMode ? [...vxpQuickAmounts] : [...settlementQuickAmounts]
+	);
 
 	let marketDepth = $derived.by(() => {
 		const rawOrders = $orderBookStore?.[market.id];
@@ -220,6 +239,25 @@
 			return;
 		}
 
+		if (isViciXp(market.balanceDomain)) {
+			try {
+				const limitPrice = orderType === 'LIMIT' ? parseFloat(price) / 100 : undefined;
+				assertViciXpHumanPremiumAndPayout({
+					amountStr: String(amount),
+					executionPrice: resolveOutcomeExecutionPriceForSizing({
+						market,
+						action: selectedType,
+						orderType,
+						limitPrice
+					})
+				});
+			} catch (e) {
+				error = (e as Error).message ?? 'Invalid VXP amount';
+
+				return;
+			}
+		}
+
 		loading = true;
 
 		error = '';
@@ -262,7 +300,7 @@
 			return '-';
 		}
 
-		const cost = parseToken({ value: amount, unitName: market.token.decimals });
+		const cost = parseToken({ value: String(amount), unitName: market.token.decimals });
 		return formatCurrency({
 			value: cost,
 			decimals: market.token.decimals,
@@ -482,10 +520,10 @@
 					<input
 						id="amount"
 						class="w-full rounded-2xl border-none bg-slate-50 py-4 pr-16 pl-6 text-xl font-bold text-slate-950 ring-1 ring-slate-200 transition-all ring-inset focus:bg-white focus:ring-2 focus:ring-indigo-500"
-						max="1000"
-						min="0"
+						max="10000000"
+						min={$playgroundVxpUnitMode ? VXP_STAKE_STEP_VXP : 0}
 						placeholder="0"
-						step="1"
+						step={$playgroundVxpUnitMode ? VXP_STAKE_STEP_VXP : 1}
 						type="number"
 						bind:value={amount}
 					/>
@@ -496,7 +534,7 @@
 
 				<!-- Quick Amounts -->
 				<div class="flex gap-2">
-					{#each ['1', '10', '50', '100'] as quickAmount (quickAmount)}
+					{#each quickBetAmounts as quickAmount (quickAmount)}
 						<BaseButton
 							class="flex-1 rounded-xl border border-slate-100 bg-slate-50 py-2 text-[10px] font-bold text-slate-500 transition-all hover:border-indigo-200 hover:bg-white hover:text-indigo-600"
 							onclick={() => (amount = quickAmount)}
