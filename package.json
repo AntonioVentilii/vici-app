@@ -1,6 +1,11 @@
 {
 	"name": "vici-app",
 	"version": "0.0.1",
+	"juno": {
+		"functions": {
+			"version": "0.0.4"
+		}
+	},
 	"private": true,
 	"scripts": {
 		"dev": "vite dev --force",

@@ -30,6 +30,39 @@ const TRADE_KEY_SUFFIX = `#${ActivityType.TRADE}`;
 
 const LIST_PAGE_SIZE = 500n;
 
+const LOG_PREFIX = '[vxp-onboarding]';
+
+// eslint-disable-next-line local-rules/prefer-object-params
+const logInfo = (
+	message: string,
+	detail?: Record<string, string | number | bigint | boolean>
+): void => {
+	const suffix =
+		detail === undefined
+			? ''
+			: ` ${Object.entries(detail)
+					.map(([k, v]) => `${k}=${typeof v === 'bigint' ? v.toString() : v}`)
+					.join(' ')}`;
+
+	// eslint-disable-next-line no-console
+	console.log(`${LOG_PREFIX} ${message}${suffix}`);
+};
+
+// eslint-disable-next-line local-rules/prefer-object-params
+const logError = (
+	message: string,
+	detail?: Record<string, string | number | bigint | boolean>
+): void => {
+	const suffix =
+		detail === undefined
+			? ''
+			: ` ${Object.entries(detail)
+					.map(([k, v]) => `${k}=${typeof v === 'bigint' ? v.toString() : v}`)
+					.join(' ')}`;
+
+	console.error(`${LOG_PREFIX} ${message}${suffix}`);
+};
+
 const emptyMilestones = (): VxpOnboardingDoc['milestones'] => ({
 	m1: { status: 'none', amountBaseUnits: '0' },
 	m2: { status: 'none', amountBaseUnits: '0' },
@@ -128,6 +161,15 @@ const persistOnboarding = ({
 	doc: VxpOnboardingDoc;
 	version?: bigint;
 }): void => {
+	logInfo('vxp_onboarding_write', {
+		collection: Collection.VXP_ONBOARDING,
+		key,
+		trade_count: doc.tradeCount,
+		milestones: MILESTONE_KEYS.map((mk) => `${mk}:${doc.milestones[mk].status}`).join('|'),
+		legacy_onboarding_synced: doc.legacyOnboardingSynced === true,
+		doc_version: nonNullish(version) ? version.toString() : 'create'
+	});
+
 	setDocStore({
 		caller,
 		collection: Collection.VXP_ONBOARDING,
@@ -376,6 +418,24 @@ const payOutMilestoneIfNeeded = async ({
 		memoLabel: needed.memoLabel
 	});
 
+	if (result.ok) {
+		logInfo('payout_ok', {
+			user: userKey,
+			milestone: mk,
+			amount: needed.transferAmount,
+			block_index: result.blockIndex,
+			memo: needed.memoLabel
+		});
+	} else {
+		logError('payout_err', {
+			user: userKey,
+			milestone: mk,
+			amount: needed.transferAmount,
+			memo: needed.memoLabel,
+			error: result.error
+		});
+	}
+
 	for (let attempt = 0; attempt < PERSIST_MAX_RETRIES; attempt++) {
 		const latest = getDocStore({
 			collection: Collection.VXP_ONBOARDING,
@@ -423,8 +483,15 @@ const payOutMilestoneIfNeeded = async ({
 				version: latest.version
 			});
 			break;
-		} catch {
+		} catch (e: unknown) {
 			if (attempt === PERSIST_MAX_RETRIES - 1) {
+				const msg = e instanceof Error ? e.message : String(e);
+				logError('persist_failed', {
+					user: userKey,
+					milestone: mk,
+					transfer_ok: result.ok,
+					error: msg
+				});
 				throw new Error(
 					`Failed to persist ${mk} after transfer (user=${userKey}, ok=${result.ok})`
 				);
@@ -455,153 +522,175 @@ const payOutOwedMilestones = async ({
 };
 
 /** 10% at registration; runs on profile create and updates so legacy users are covered. */
-export const onProfileSetForVxpOnboarding = async ({
-	caller,
-	data: {
-		collection,
-		key,
-		data: { before: _before }
-	}
-}: OnSetDocContext): Promise<void> => {
-	if (collection !== Collection.PROFILES) {
-		return;
-	}
+export const onProfileSetForVxpOnboarding = async (ctx: OnSetDocContext): Promise<void> => {
+	const {
+		caller,
+		data: {
+			collection,
+			key,
+			data: { before: _before }
+		}
+	} = ctx;
 
-	const callerText = Principal.fromUint8Array(caller).toText();
-	if (key !== callerText) {
-		return;
-	}
+	try {
+		if (collection !== Collection.PROFILES) {
+			return;
+		}
 
-	const userKey = key;
+		const callerText = Principal.fromUint8Array(caller).toText();
 
-	const existing = getDocStore({
-		collection: Collection.VXP_ONBOARDING,
-		key: userKey,
-		caller
-	});
+		if (key !== callerText) {
+			return;
+		}
 
-	const prev: VxpOnboardingDoc | undefined = nonNullish(existing)
-		? decodeDocData<VxpOnboardingDoc>(existing.data)
-		: undefined;
+		const userKey = key;
 
-	const base: VxpOnboardingDoc = prev ?? {
-		version: 1,
-		tradeCount: 0,
-		milestones: emptyMilestones()
-	};
-
-	if (base.legacyOnboardingSynced !== true) {
-		reconcileLegacyOnboardingState({
-			caller,
-			userKey,
-			base,
-			version: existing?.version
+		const existing = getDocStore({
+			collection: Collection.VXP_ONBOARDING,
+			key: userKey,
+			caller
 		});
-	} else {
-		ensureRegistrationMilestoneIfEligible({ caller, userKey });
-	}
 
-	await payOutOwedMilestones({ caller, userKey });
+		const prev: VxpOnboardingDoc | undefined = nonNullish(existing)
+			? decodeDocData<VxpOnboardingDoc>(existing.data)
+			: undefined;
+
+		const base: VxpOnboardingDoc = prev ?? {
+			version: 1,
+			tradeCount: 0,
+			milestones: emptyMilestones()
+		};
+
+		if (base.legacyOnboardingSynced !== true) {
+			reconcileLegacyOnboardingState({
+				caller,
+				userKey,
+				base,
+				version: existing?.version
+			});
+		} else {
+			ensureRegistrationMilestoneIfEligible({ caller, userKey });
+		}
+
+		await payOutOwedMilestones({ caller, userKey });
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+		const user =
+			collection === Collection.PROFILES ? key : Principal.fromUint8Array(caller).toText();
+		logError('hook_error', { hook: 'profile', user, error: msg });
+		throw e;
+	}
 };
 
 /** 40% after first bet; 50% after five bets; retries any `owed` payouts. */
-export const onTradeActivityForVxpOnboarding = async ({
-	caller,
-	data: {
-		collection,
-		data: { before, after }
-	}
-}: OnSetDocContext): Promise<void> => {
-	if (collection !== Collection.ACTIVITIES) {
-		return;
-	}
-
-	if (nonNullish(before)) {
-		return;
-	}
-
-	const activity = decodeDocData<Activity>(after.data);
-
-	if (activity.type !== ActivityType.TRADE) {
-		return;
-	}
-
-	let activityUserPrincipal: Principal;
-	try {
-		activityUserPrincipal = Principal.fromText(activity.user);
-	} catch {
-		return;
-	}
-
-	if (activityUserPrincipal.compareTo(Principal.fromUint8Array(caller)) !== 'eq') {
-		return;
-	}
-
-	const userKey = activity.user;
-
-	const existing = getDocStore({
-		collection: Collection.VXP_ONBOARDING,
-		key: userKey,
-		caller
-	});
-
-	const prev: VxpOnboardingDoc | undefined = nonNullish(existing)
-		? decodeDocData<VxpOnboardingDoc>(existing.data)
-		: undefined;
-
-	const base: VxpOnboardingDoc = prev ?? {
-		version: 1,
-		tradeCount: 0,
-		milestones: emptyMilestones()
-	};
-
-	if (base.legacyOnboardingSynced !== true) {
-		reconcileLegacyOnboardingState({
-			caller,
-			userKey,
-			base,
-			version: existing?.version,
-			minimumTradeCount: base.tradeCount + 1
-		});
-		await payOutOwedMilestones({ caller, userKey });
-		return;
-	}
-
-	const tradeCount = base.tradeCount + 1;
-
-	let milestones: VxpOnboardingDoc['milestones'] = { ...base.milestones };
-
-	if (tradeCount === 1 && milestones.m2.status === 'none') {
-		milestones = {
-			...milestones,
-			m2: {
-				status: 'owed',
-				amountBaseUnits: amountForMilestone('m2').toString()
-			}
-		};
-	}
-
-	if (tradeCount === 5 && milestones.m3.status === 'none') {
-		milestones = {
-			...milestones,
-			m3: {
-				status: 'owed',
-				amountBaseUnits: amountForMilestone('m3').toString()
-			}
-		};
-	}
-
-	persistOnboarding({
+export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Promise<void> => {
+	const {
 		caller,
-		key: userKey,
-		doc: {
-			...base,
-			tradeCount,
-			milestones,
-			legacyOnboardingSynced: true
-		},
-		version: existing?.version
-	});
+		data: {
+			collection,
+			data: { before, after }
+		}
+	} = ctx;
 
-	await payOutOwedMilestones({ caller, userKey });
+	let userKeyForLog = Principal.fromUint8Array(caller).toText();
+
+	try {
+		if (collection !== Collection.ACTIVITIES) {
+			return;
+		}
+
+		if (nonNullish(before)) {
+			return;
+		}
+
+		const activity = decodeDocData<Activity>(after.data);
+
+		if (activity.type !== ActivityType.TRADE) {
+			return;
+		}
+
+		let activityUserPrincipal: Principal;
+		try {
+			activityUserPrincipal = Principal.fromText(activity.user);
+		} catch {
+			return;
+		}
+
+		if (activityUserPrincipal.compareTo(Principal.fromUint8Array(caller)) !== 'eq') {
+			return;
+		}
+
+		const userKey = activity.user;
+		userKeyForLog = userKey;
+
+		const existing = getDocStore({
+			collection: Collection.VXP_ONBOARDING,
+			key: userKey,
+			caller
+		});
+
+		const prev: VxpOnboardingDoc | undefined = nonNullish(existing)
+			? decodeDocData<VxpOnboardingDoc>(existing.data)
+			: undefined;
+
+		const base: VxpOnboardingDoc = prev ?? {
+			version: 1,
+			tradeCount: 0,
+			milestones: emptyMilestones()
+		};
+
+		if (base.legacyOnboardingSynced !== true) {
+			reconcileLegacyOnboardingState({
+				caller,
+				userKey,
+				base,
+				version: existing?.version,
+				minimumTradeCount: base.tradeCount + 1
+			});
+			await payOutOwedMilestones({ caller, userKey });
+			return;
+		}
+
+		const tradeCount = base.tradeCount + 1;
+
+		let milestones: VxpOnboardingDoc['milestones'] = { ...base.milestones };
+
+		if (tradeCount === 1 && milestones.m2.status === 'none') {
+			milestones = {
+				...milestones,
+				m2: {
+					status: 'owed',
+					amountBaseUnits: amountForMilestone('m2').toString()
+				}
+			};
+		}
+
+		if (tradeCount === 5 && milestones.m3.status === 'none') {
+			milestones = {
+				...milestones,
+				m3: {
+					status: 'owed',
+					amountBaseUnits: amountForMilestone('m3').toString()
+				}
+			};
+		}
+
+		persistOnboarding({
+			caller,
+			key: userKey,
+			doc: {
+				...base,
+				tradeCount,
+				milestones,
+				legacyOnboardingSynced: true
+			},
+			version: existing?.version
+		});
+
+		await payOutOwedMilestones({ caller, userKey });
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+		logError('hook_error', { hook: 'trade', user: userKeyForLog, error: msg });
+		throw e;
+	}
 };
