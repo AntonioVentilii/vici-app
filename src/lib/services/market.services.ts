@@ -2,7 +2,7 @@ import type { RegistryDid } from '$declarations';
 import { listOrders as listOrdersApi } from '$lib/api/clearing.api';
 import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
-	NANO_SECONDS_IN_MILLISECOND,
+	MILLISECOND_IN_NANOSECONDS,
 	PAYOFF_TYPE,
 	PRICE_DECIMALS,
 	STRIKE,
@@ -77,7 +77,7 @@ export const createMarket = async ({
 			markdown: toNullable(),
 			html: toNullable()
 		},
-		expiry_ns: expiryDate * NANO_SECONDS_IN_MILLISECOND,
+		expiry_ns: expiryDate * MILLISECOND_IN_NANOSECONDS,
 		payout_unit: payoutUnit,
 		strike: STRIKE,
 		icon_url: toNullable(),
@@ -181,7 +181,7 @@ export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Mar
 				noProb = 1 - yesProb;
 			}
 
-			const isExpired = s.expiry_ns / NANO_SECONDS_IN_MILLISECOND <= BigInt(Date.now());
+			const isExpired = s.expiry_ns / MILLISECOND_IN_NANOSECONDS <= BigInt(Date.now());
 
 			return mapMarketData({
 				series: s,
@@ -281,7 +281,7 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 		} catch (e) {
 			console.error('Failed to parse outcome from activity', e);
 		}
-	} else if (s.expiry_ns / NANO_SECONDS_IN_MILLISECOND <= BigInt(Date.now())) {
+	} else if (s.expiry_ns / MILLISECOND_IN_NANOSECONDS <= BigInt(Date.now())) {
 		status = 'Expired';
 	}
 

@@ -2,6 +2,7 @@
 	import { signIn } from '@junobuild/core';
 	import IconIc from '$lib/components/icons/IconIC.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { II_MAX_TIME_TO_LIVE_NS } from '$lib/constants/app.constants';
 	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props {
@@ -16,7 +17,11 @@
 
 		try {
 			await signIn({
-				internet_identity: {}
+				internet_identity: {
+					options: {
+						maxTimeToLiveInNanoseconds: II_MAX_TIME_TO_LIVE_NS
+					}
+				}
 			});
 
 			onSuccess?.();

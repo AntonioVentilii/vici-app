@@ -1,5 +1,5 @@
 import type { ClearingDid, RegistryDid } from '$declarations';
-import { NANO_SECONDS_IN_MILLISECOND, ZERO } from '$lib/constants/app.constants';
+import { MILLISECOND_IN_NANOSECONDS, ZERO } from '$lib/constants/app.constants';
 import type { Market, MarketStatus, Outcome, TradingAccessUI } from '$lib/types/market';
 import type { OrderBookLevel } from '$lib/types/order';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
@@ -72,8 +72,8 @@ export const mapMarketData = ({
 		title,
 		description,
 		creator: creator.toText(),
-		expiryDate: expiryDate / NANO_SECONDS_IN_MILLISECOND,
-		createdAt: series.created_at_ns / NANO_SECONDS_IN_MILLISECOND,
+		expiryDate: expiryDate / MILLISECOND_IN_NANOSECONDS,
+		createdAt: series.created_at_ns / MILLISECOND_IN_NANOSECONDS,
 		status,
 		outcome,
 		outcomes: outcomes?.[0]?.map((o) => ({

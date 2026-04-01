@@ -1,5 +1,5 @@
 import type { ClearingDid } from '$declarations';
-import { NANO_SECONDS_IN_MILLISECOND, USD_DECIMALS } from '$lib/constants/app.constants';
+import { MILLISECOND_IN_NANOSECONDS, USD_DECIMALS } from '$lib/constants/app.constants';
 import { isNullish } from '@dfinity/utils';
 import Decimal from 'decimal.js';
 import { type BigNumberish, formatUnits } from 'ethers/utils';
@@ -92,7 +92,7 @@ const DATE_TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
 };
 
 export const formatNanosecondsToDate = ({ nanoseconds }: { nanoseconds: bigint }): string => {
-	const date = new Date(Number(nanoseconds / NANO_SECONDS_IN_MILLISECOND));
+	const date = new Date(Number(nanoseconds / MILLISECOND_IN_NANOSECONDS));
 
 	return date.toLocaleDateString('en', DATE_TIME_FORMAT_OPTIONS);
 };
