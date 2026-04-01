@@ -411,6 +411,34 @@ const payOutMilestoneIfNeeded = async ({
 
 	const expectedAmount = amountForMilestone(mk);
 
+	try {
+		persistOnboarding({
+			caller,
+			key: userKey,
+			doc: {
+				...snapshotDoc,
+				milestones: {
+					...snapshotDoc.milestones,
+					[mk]: {
+						...snapshotDoc.milestones[mk],
+						status: 'processing'
+					}
+				}
+			},
+			version: snapshot.version
+		});
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+
+		logInfo('payout_locked', {
+			user: userKey,
+			milestone: mk,
+			error: msg
+		});
+
+		return;
+	}
+
 	const result = await payoutMilestone({
 		ledger,
 		toOwner: Principal.fromText(userKey),
@@ -452,6 +480,7 @@ const payOutMilestoneIfNeeded = async ({
 
 		const needsUpdate =
 			curMs.status === 'owed' ||
+			curMs.status === 'processing' ||
 			(curMs.status === 'paid' && BigInt(curMs.amountBaseUnits) < expectedAmount);
 
 		if (!needsUpdate) {
@@ -466,6 +495,7 @@ const payOutMilestoneIfNeeded = async ({
 				}
 			: {
 					...curMs,
+					status: curMs.status === 'processing' ? 'owed' : curMs.status,
 					lastError: result.error
 				};
 

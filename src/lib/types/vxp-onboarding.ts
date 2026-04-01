@@ -3,7 +3,7 @@
  */
 export type VxpNewUserMilestoneKey = 'm1' | 'm2' | 'm3';
 
-export type VxpMilestonePayoutStatus = 'none' | 'owed' | 'paid';
+export type VxpMilestonePayoutStatus = 'none' | 'owed' | 'processing' | 'paid';
 
 export interface VxpMilestoneState {
 	status: VxpMilestonePayoutStatus;
