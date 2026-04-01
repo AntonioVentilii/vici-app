@@ -31,6 +31,7 @@
 
 	const loadFriends = async () => {
 		loading = true;
+
 		try {
 			const activeFriends = await getFriends(userPrincipal);
 
@@ -38,8 +39,10 @@
 
 			for (const relation of activeFriends) {
 				const friendId = relation.participants.find((p) => p !== userPrincipal);
+
 				if (friendId && !friendProfiles.has(friendId)) {
 					const profileDoc = await getProfile(friendId);
+
 					if (profileDoc) {
 						friendProfiles.set(friendId, profileDoc.data);
 					}
@@ -54,7 +57,9 @@
 		if (!newFriendPrincipal) {
 			return;
 		}
+
 		adding = true;
+
 		try {
 			await sendFriendRequest({ target: newFriendPrincipal, sender: userPrincipal });
 			newFriendPrincipal = '';

@@ -33,5 +33,17 @@ export default ts.config(
 				}
 			]
 		}
+	},
+
+	{
+		rules: {
+			'padding-line-between-statements': [
+				'error',
+				{ blankLine: 'always', prev: '*', next: 'try' },
+				{ blankLine: 'always', prev: 'block-like', next: '*' },
+				{ blankLine: 'always', prev: '*', next: 'block-like' },
+				{ blankLine: 'always', prev: '*', next: 'return' }
+			]
+		}
 	}
 );

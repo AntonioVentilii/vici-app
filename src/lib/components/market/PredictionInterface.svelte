@@ -69,12 +69,16 @@
 
 	let availableEquity = $derived.by(() => {
 		const a = $collateralsStore.accountState;
+
 		if (isNullish(a)) {
 			return ZERO;
 		}
+
 		let fallback = ZERO;
+
 		for (const t of $walletUiTokens) {
 			const b = $collateralsStore.balances[t.id] ?? ZERO;
+
 			if (b > ZERO) {
 				const d = icrcLedgerDecimalsFromCollateralConfig({
 					assetsConfig: $collateralsStore.assetsConfig,
@@ -87,6 +91,7 @@
 				});
 			}
 		}
+
 		return intuitiveAvailableMarginUsd({
 			assets: a.assets,
 			totalEquityUsd: a.total_equity_usd,
@@ -175,9 +180,11 @@
 
 	let marketDepth = $derived.by(() => {
 		const rawOrders = $orderBookStore?.[market.id];
+
 		if (!rawOrders) {
 			return;
 		}
+
 		return calculateMarketStats({ orders: rawOrders, outcome: selectedType });
 	});
 
@@ -215,6 +222,7 @@
 					).toString();
 				} else {
 					const outcome = market.outcomes?.find((o) => o.id === selectedType);
+
 					if (outcome?.probability) {
 						price = Math.round(outcome.probability * 100).toString();
 					}
@@ -222,6 +230,22 @@
 			}
 		}
 	});
+
+	const handleOutcomeSelect = ({
+		outcomeId,
+		probability
+	}: {
+		outcomeId: string;
+		probability?: number;
+	}) => {
+		selectedType = outcomeId;
+
+		if (nonNullish(probability) && orderType === 'MARKET') {
+			price = Math.round(probability * 100).toString();
+		} else if (isNullish(probability)) {
+			price = '';
+		}
+	};
 
 	const handlePlacePrediction = async () => {
 		if (isNullish(amount) || parseFloat(amount) <= 0) {
@@ -296,11 +320,13 @@
 		}
 
 		const amt = parseFloat(amount);
+
 		if (isNaN(amt) || amt <= 0) {
 			return '-';
 		}
 
 		const cost = parseToken({ value: String(amount), unitName: market.token.decimals });
+
 		return formatCurrency({
 			value: cost,
 			decimals: market.token.decimals,
@@ -312,7 +338,9 @@
 		if (isNullish(amount)) {
 			return '-';
 		}
+
 		const amt = parseFloat(amount);
+
 		if (isNaN(amt) || amt <= 0) {
 			return '-';
 		}
@@ -331,6 +359,7 @@
 		}
 
 		const payoutRaw = amt / prob;
+
 		if (!Number.isFinite(payoutRaw) || payoutRaw < 0) {
 			return '-';
 		}
@@ -351,7 +380,9 @@
 		if (isNullish(amount)) {
 			return 0;
 		}
+
 		const amt = parseFloat(amount);
+
 		if (isNaN(amt) || amt <= 0) {
 			return 0;
 		}
@@ -407,12 +438,7 @@
 						'YES'
 							? 'border-green-500 bg-green-50 text-green-700'
 							: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
-						onclick={() => {
-							selectedType = 'YES';
-							if (orderType === 'MARKET') {
-								price = Math.round(yesProbability * 100).toString();
-							}
-						}}
+						onclick={() => handleOutcomeSelect({ outcomeId: 'YES', probability: yesProbability })}
 					>
 						<div class="relative z-10 flex flex-col items-center gap-1">
 							<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
@@ -430,12 +456,7 @@
 						'NO'
 							? 'border-red-500 bg-red-50 text-red-700'
 							: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
-						onclick={() => {
-							selectedType = 'NO';
-							if (orderType === 'MARKET') {
-								price = Math.round(noProbability * 100).toString();
-							}
-						}}
+						onclick={() => handleOutcomeSelect({ outcomeId: 'NO', probability: noProbability })}
 					>
 						<div class="relative z-10 flex flex-col items-center gap-1">
 							<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
@@ -455,10 +476,7 @@
 								outcome.id
 									? 'border-indigo-600 bg-indigo-50 text-indigo-700'
 									: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
-								onclick={() => {
-									selectedType = outcome.id;
-									price = ''; // Reset price on outcome change for now
-								}}
+								onclick={() => handleOutcomeSelect({ outcomeId: outcome.id })}
 							>
 								<div class="relative z-10 flex flex-col items-center gap-0.5">
 									<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>

@@ -96,6 +96,7 @@
 		}
 
 		const currentMarket = markets[currentIndex];
+
 		if (!currentMarket) {
 			return;
 		}
@@ -114,6 +115,7 @@
 
 		if (action === 'SKIP') {
 			advance();
+
 			return;
 		}
 
@@ -144,6 +146,7 @@
 						executionPrice
 					});
 				}
+
 				await flowTradeService.executeTrade({
 					market: currentMarket,
 					action,
@@ -314,12 +317,15 @@
 		if (loading || completed) {
 			return;
 		}
+
 		if (e.key === 'ArrowRight') {
 			void handleAction('YES');
 		}
+
 		if (e.key === 'ArrowLeft') {
 			void handleAction('NO');
 		}
+
 		if (e.key === 'ArrowUp') {
 			handleAction('SKIP');
 		}

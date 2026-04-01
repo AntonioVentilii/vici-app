@@ -100,6 +100,7 @@
 						}
 
 						bulkSuccess++;
+
 						return result;
 					} catch (e) {
 						console.error(`Failed to create bulk market: ${title}`, e);
@@ -151,6 +152,7 @@
 		if (!newRolePrincipal) {
 			return;
 		}
+
 		try {
 			await setRole({ principal: newRolePrincipal, role: newRoleSelected });
 

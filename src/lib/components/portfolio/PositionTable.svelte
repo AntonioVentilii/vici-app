@@ -11,15 +11,14 @@
 	import type { Position } from '$lib/types/position';
 	import { formatCurrency, formatQuantity } from '$lib/utils/format.utils';
 	import { formatPositionPnLWithOptionalUnit } from '$lib/utils/playground-display.utils';
+	import { calculatePositionPnL, calculatePositionValue } from '$lib/utils/portfolio.utils';
 
 	interface Props {
 		positions: Position[];
 		markets: Market[];
-		onCalculateValue: (pos: Position) => bigint;
-		onCalculatePnL: (pos: Position) => number;
 	}
 
-	const { positions, markets, onCalculateValue, onCalculatePnL }: Props = $props();
+	const { positions, markets }: Props = $props();
 
 	const getMarketById = (id: string) => markets.find((m) => m.id === id);
 </script>
@@ -53,7 +52,7 @@
 					<tbody class="divide-y divide-slate-100">
 						{#each positions as pos, index (index)}
 							{@const market = getMarketById(pos.marketId)}
-							{@const pnl = onCalculatePnL(pos)}
+							{@const pnl = calculatePositionPnL({ position: pos, market })}
 
 							<tr class="group transition-colors hover:bg-slate-50">
 								<td class="min-w-0 px-6 py-4">
@@ -94,7 +93,7 @@
 								</td>
 								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
 									{formatCurrency({
-										value: onCalculateValue(pos),
+										value: calculatePositionValue({ position: pos, market }),
 										decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS,
 										symbol: market?.token.symbol ?? PORTFOLIO_DEFAULT_SYMBOL
 									})}

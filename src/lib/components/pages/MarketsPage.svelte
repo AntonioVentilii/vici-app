@@ -5,10 +5,9 @@
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { listSeriesCategories } from '$lib/services/category.services';
-	import { rankMarkets } from '$lib/services/market.services';
 	import { userStore } from '$lib/stores/user.store';
 	import type { SeriesCategory } from '$lib/types/category';
-	import type { Market } from '$lib/types/market';
+	import { filterAndRankMarkets } from '$lib/utils/market-filters.utils';
 
 	let loading = $derived($marketsNotInitialized);
 
@@ -22,79 +21,15 @@
 
 	const tabs = ['Active', 'Trending', 'Expiring', 'Resolved'];
 
-	const normalise = (value: string): string =>
-		value
-			.toLowerCase()
-			.normalize('NFKD')
-			.replace(/[^\p{L}\p{N}\s]/gu, ' ')
-			.replace(/\s+/g, ' ')
-			.trim();
-
-	const getSearchScore = ({
-		market,
-		searchTerm
-	}: {
-		market: { title: string; description: string };
-		searchTerm: string;
-	}): number => {
-		const query = normalise(searchTerm);
-
-		if (query === '') {
-			return 1;
-		}
-
-		const title = normalise(market.title);
-		const description = normalise(market.description);
-		const terms = query.split(/\s+/).filter(Boolean);
-
-		let score = 0;
-
-		if (title.includes(query)) {
-			score += 10;
-		}
-
-		if (description.includes(query)) {
-			score += 5;
-		}
-
-		for (const term of terms) {
-			if (title.includes(term)) {
-				score += 3;
-			}
-
-			if (description.includes(term)) {
-				score += 1;
-			}
-		}
-
-		return score;
-	};
-
-	const filteredMarkets = $derived.by(() => {
-		const baseFiltered = $markets
-			.map((market: Market) => ({
-				market,
-				searchScore: getSearchScore({ market, searchTerm })
-			}))
-			.filter(({ market, searchScore }: { market: Market; searchScore: number }) => {
-				const matchesSearch = searchScore > 0;
-				const matchesTab =
-					activeTab === 'Active' ||
-					(activeTab === 'Resolved' && market.status === 'Resolved') ||
-					(activeTab === 'Expiring' && market.status === 'Expired') ||
-					activeTab === 'Trending';
-
-				return matchesTab && matchesSearch;
-			})
-			.map(({ market }) => market);
-
-		// Apply Personalized Ranking
-		return rankMarkets({
-			markets: baseFiltered,
-			userInterests: new Set($userStore.profile?.interests ?? []),
+	const filteredMarkets = $derived(
+		filterAndRankMarkets({
+			markets: $markets,
+			searchTerm,
+			activeTab,
+			userInterests: $userStore.profile?.interests ?? [],
 			categoryMappings
-		});
-	});
+		})
+	);
 </script>
 
 <section class="space-y-8">
@@ -106,7 +41,6 @@
 
 	<div class="w-full space-y-8">
 		<div class="space-y-8">
-			<!-- Controls & Filters -->
 			<MarketFilters
 				{activeTab}
 				onSearchChange={(term: string) => (searchTerm = term)}
@@ -115,7 +49,6 @@
 				{tabs}
 			/>
 
-			<!-- Markets Feed -->
 			<MarketFeed {loading} markets={filteredMarkets} />
 		</div>
 	</div>

@@ -31,7 +31,9 @@
 		if (!selectedCategoryId) {
 			return;
 		}
+
 		saving = true;
+
 		try {
 			await associateSeriesWithCategory({
 				seriesId,

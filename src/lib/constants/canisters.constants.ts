@@ -25,6 +25,7 @@ const viteEnvString = (key: string): string | undefined => {
 	if (typeof import.meta === 'undefined') {
 		return;
 	}
+
 	return (import.meta as ImportMeta & { env?: Record<string, string> }).env?.[key];
 };
 

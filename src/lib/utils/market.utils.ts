@@ -51,12 +51,15 @@ export const mapMarketData = ({
 	}
 
 	let payoffTypeMapped: Market['payoffType'] = 'Binary';
+
 	if ('Categorical' in payoffType) {
 		payoffTypeMapped = 'Categorical';
 	}
+
 	if ('Call' in payoffType) {
 		payoffTypeMapped = 'Call';
 	}
+
 	if ('Put' in payoffType) {
 		payoffTypeMapped = 'Put';
 	}
@@ -112,6 +115,7 @@ export const calculateProbability = ({
 	if (bids.length > 0 && asks.length > 0) {
 		const bestBid = bids[0].price;
 		const bestAsk = asks[0].price;
+
 		return (bestBid + bestAsk) / 2;
 	}
 
@@ -247,6 +251,7 @@ export const calculateCategoricalProbabilities = ({
 	outcomes.forEach((o) => {
 		const { bestBid, bestAsk } = outcomeBook[o.id];
 		let p = 0;
+
 		if (nonNullish(bestBid) && nonNullish(bestAsk)) {
 			p = (bestBid + bestAsk) / 2;
 		} else if (nonNullish(bestBid)) {
@@ -256,6 +261,7 @@ export const calculateCategoricalProbabilities = ({
 		} else {
 			p = 1 / outcomes.length; // Default to uniform
 		}
+
 		probs[o.id] = p;
 		totalWeight += p;
 	});

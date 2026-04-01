@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { isNullish } from '@dfinity/utils';
 	import { onAuthStateChange, type User } from '@junobuild/core';
 	import { onMount, type Snippet } from 'svelte';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
@@ -32,14 +32,12 @@
 
 		userStore.set({ user, profile });
 
-		// Sync stats if user is authenticated
-		if (nonNullish(user)) {
-			try {
-				const identity = await safeGetIdentityOnce();
-				await calculateAndSyncStats({ identity, domain: $balanceDomain });
-			} catch (e) {
-				console.error('Failed to sync stats on login', e);
-			}
+		try {
+			const identity = await safeGetIdentityOnce();
+
+			await calculateAndSyncStats({ identity, domain: $balanceDomain });
+		} catch (e) {
+			console.error('Failed to sync stats on login', e);
 		}
 	};
 

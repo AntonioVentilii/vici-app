@@ -51,6 +51,7 @@ export const createGroup = async ({
 	params: RegistryDid.CreateGroupParams;
 } & QueryParams): Promise<string> => {
 	const { createGroup } = await registryCanister({ identity });
+
 	return await createGroup({ params, ...queryParams });
 };
 
@@ -63,6 +64,7 @@ export const updateGroup = async ({
 	params: RegistryDid.UpdateGroupParams;
 } & QueryParams): Promise<void> => {
 	const { updateGroup } = await registryCanister({ identity });
+
 	return await updateGroup({ params, ...queryParams });
 };
 
@@ -75,6 +77,7 @@ export const addGroupAdmins = async ({
 	params: RegistryDid.UpdateGroupAdminsParams;
 } & QueryParams): Promise<void> => {
 	const { addGroupAdmins } = await registryCanister({ identity });
+
 	return await addGroupAdmins({ params, ...queryParams });
 };
 
@@ -87,6 +90,7 @@ export const removeGroupAdmins = async ({
 	params: RegistryDid.UpdateGroupAdminsParams;
 } & QueryParams): Promise<void> => {
 	const { removeGroupAdmins } = await registryCanister({ identity });
+
 	return await removeGroupAdmins({ params, ...queryParams });
 };
 
@@ -99,6 +103,7 @@ export const addGroupMembers = async ({
 	params: RegistryDid.UpdateGroupAdminsParams;
 } & QueryParams): Promise<void> => {
 	const { addGroupMembers } = await registryCanister({ identity });
+
 	return await addGroupMembers({ params, ...queryParams });
 };
 
@@ -111,6 +116,7 @@ export const removeGroupMembers = async ({
 	params: RegistryDid.UpdateGroupAdminsParams;
 } & QueryParams): Promise<void> => {
 	const { removeGroupMembers } = await registryCanister({ identity });
+
 	return await removeGroupMembers({ params, ...queryParams });
 };
 
@@ -123,6 +129,7 @@ export const getGroup = async ({
 	groupId: string;
 } & QueryParams): Promise<RegistryDid.Group | undefined> => {
 	const { getGroup } = await registryCanister({ identity });
+
 	return await getGroup({ groupId, ...queryParams });
 };
 
@@ -135,6 +142,7 @@ export const listGroups = async ({
 	creator?: string;
 } & QueryParams): Promise<RegistryDid.Group[]> => {
 	const { listGroups } = await registryCanister({ identity });
+
 	return await listGroups({ creator, ...queryParams });
 };
 
@@ -147,6 +155,7 @@ export const deleteGroup = async ({
 	groupId: string;
 } & QueryParams): Promise<void> => {
 	const { deleteGroup } = await registryCanister({ identity });
+
 	return await deleteGroup({ groupId, ...queryParams });
 };
 
@@ -159,6 +168,7 @@ export const updateTradingAccess = async ({
 	params: RegistryDid.UpdateTradingAccessParams;
 } & QueryParams): Promise<void> => {
 	const { updateTradingAccess } = await registryCanister({ identity });
+
 	return await updateTradingAccess({ params, ...queryParams });
 };
 

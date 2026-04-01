@@ -23,6 +23,7 @@
 
 	const handleCancel = async (orderId: string) => {
 		cancellingId = orderId;
+
 		try {
 			await cancelLimitOrder(orderId);
 			onRefresh();

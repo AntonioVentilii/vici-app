@@ -26,6 +26,7 @@
 		if (principalToRemove) {
 			await onRemoveRole(principalToRemove);
 		}
+
 		showConfirmModal = false;
 		principalToRemove = null;
 	};

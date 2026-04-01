@@ -7,9 +7,11 @@ export const toBalanceDomain = (domain: string): ClearingDid.BalanceDomain => {
 	if (domain === 'Playground') {
 		return { Playground: null };
 	}
+
 	if (domain === 'Settlement') {
 		return { Settlement: null };
 	}
+
 	return { ViciXp: null };
 };
 
@@ -63,6 +65,7 @@ export const filterByBalanceDomain = <
 }): T[] =>
 	items.filter((item) => {
 		const itemDomain = 'balanceDomain' in item ? item.balanceDomain : item.balance_domain;
+
 		return compareBalanceDomains(itemDomain, targetDomain);
 	});
 

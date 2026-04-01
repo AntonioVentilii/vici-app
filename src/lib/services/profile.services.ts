@@ -93,6 +93,7 @@ export const upsertProfile = async (
 			collection: Collection.PROFILES,
 			doc: { key, data }
 		});
+
 		return;
 	}
 
@@ -168,8 +169,10 @@ export const calculateAndSyncStats = async ({
 		if ('Executed' in event.event_type) {
 			// Track executed trades
 		}
+
 		if ('Settled' in event.event_type) {
 			settledTradesCount++;
+
 			// If we had P&L in the event, we'd add it here.
 			// For now, we'll mark it as a win if qty is positive (placeholder logic for demo/100% feel until full P&L is in Candid)
 			if (event.qty > ZERO) {
@@ -188,8 +191,10 @@ export const calculateAndSyncStats = async ({
 				value: event.price.decimal.value,
 				decimals: event.price.decimal.decimals
 			});
+
 			return acc + (Number(event.qty) / 1e8) * priceVal;
 		}
+
 		return acc;
 	}, 0);
 

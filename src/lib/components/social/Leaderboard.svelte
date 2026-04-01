@@ -12,6 +12,7 @@
 
 	onMount(async () => {
 		loading = true;
+
 		try {
 			leaderboard = await getLeaderboard();
 		} finally {

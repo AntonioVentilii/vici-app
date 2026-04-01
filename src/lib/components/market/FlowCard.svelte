@@ -76,6 +76,7 @@
 		if (!dragging) {
 			return;
 		}
+
 		dragging = false;
 
 		const threshold = 120;
@@ -93,6 +94,7 @@
 
 	const formatDate = (expiry: bigint) => {
 		const date = new Date(Number(expiry) / 1_000_000);
+
 		return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 	};
 </script>

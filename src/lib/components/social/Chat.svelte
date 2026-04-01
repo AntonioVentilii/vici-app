@@ -29,6 +29,7 @@
 		loadMessages();
 		// Polling for new messages (simple implementation)
 		const interval = setInterval(loadMessages, 5000);
+
 		return () => clearInterval(interval);
 	});
 
@@ -40,6 +41,7 @@
 		for (const msg of messages) {
 			if (!profiles.has(msg.sender)) {
 				const profileDoc = await getProfile(msg.sender);
+
 				if (profileDoc) {
 					profiles.set(msg.sender, profileDoc.data);
 				}
@@ -47,6 +49,7 @@
 		}
 
 		loading = false;
+
 		if (hasNew) {
 			await scrollToBottom();
 		}
@@ -56,7 +59,9 @@
 		if (!newMessage.trim() || sending) {
 			return;
 		}
+
 		sending = true;
+
 		try {
 			await sendMessage({ marketId, sender: userPrincipal, content: newMessage.trim() });
 			newMessage = '';
@@ -68,6 +73,7 @@
 
 	const scrollToBottom = async () => {
 		await tick();
+
 		if (chatContainer) {
 			chatContainer.scrollTo({
 				top: chatContainer.scrollHeight,

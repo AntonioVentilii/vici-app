@@ -24,6 +24,7 @@
 			if (!hideZeroBalances) {
 				return true;
 			}
+
 			return (balances.balances[token.id] ?? ZERO) > ZERO;
 		})
 	);
@@ -32,9 +33,11 @@
 		if (symbol === 'ICP') {
 			return 'indigo';
 		}
+
 		if (symbol.startsWith('ck')) {
 			return 'green';
 		}
+
 		return 'slate';
 	};
 </script>

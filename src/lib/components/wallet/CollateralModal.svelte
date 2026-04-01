@@ -53,6 +53,7 @@
 	const handleSubmit = async () => {
 		if (isNullish(amount) || parseFloat(amount) <= 0) {
 			error = 'Please enter a valid amount';
+
 			return;
 		}
 
@@ -73,20 +74,12 @@
 			const amt = parseToken({ value: `${amount}`, unitName: ledgerDecimals });
 
 			if (mode === 'Deposit') {
-				if (isNullish(selectedToken)) {
-					throw new Error('No token selected');
-				}
-
 				await depositCollateral({
 					assetPrincipal: selectedToken.ledgerCanisterId,
 					amount: amt,
 					domain: $balanceDomain
 				});
 			} else {
-				if (isNullish(selectedToken)) {
-					throw new Error('No token selected');
-				}
-
 				await withdrawCollateral({
 					assetPrincipal: selectedToken.ledgerCanisterId,
 					amount: amt,

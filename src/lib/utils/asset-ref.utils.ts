@@ -29,6 +29,7 @@ export const networkAssetRefsEqual = ({
 	if (left.family !== right.family) {
 		return false;
 	}
+
 	if (left.family === 'internet_computer' && right.family === 'internet_computer') {
 		return (
 			left.kind === 'icrc' &&
@@ -39,11 +40,13 @@ export const networkAssetRefsEqual = ({
 			})
 		);
 	}
+
 	if (left.family === 'evm' && right.family === 'evm') {
 		return (
 			left.chainId === right.chainId && left.contract.toLowerCase() === right.contract.toLowerCase()
 		);
 	}
+
 	return false;
 };
 
@@ -65,6 +68,7 @@ export const clearingAssetIsIcrcLedger = ({
 	if (!('Icrc' in asset)) {
 		return false;
 	}
+
 	return icrcLedgerIdsEqual({
 		first: asset.Icrc.toText(),
 		second: ledgerCanisterId
@@ -98,6 +102,7 @@ export const icrcLedgerDecimalsFromCollateralConfig = ({
 	fallbackDecimals: number;
 }): number => {
 	const info = findCollateralInfoByIcrcLedger({ assetsConfig, ledgerCanisterId });
+
 	return info?.config.decimals ?? fallbackDecimals;
 };
 
@@ -112,10 +117,13 @@ export const findAssetWorthForIcrcLedger = ({
 	assetsConfig: Record<string, ClearingDid.CollateralAssetInfo>;
 }): ClearingDid.AssetWorth | undefined => {
 	const info = findCollateralInfoByIcrcLedger({ assetsConfig, ledgerCanisterId });
+
 	if (!info) {
 		return;
 	}
+
 	const canonicalId = info.config.asset_id;
+
 	return assets?.find((w) => w.asset_id === canonicalId);
 };
 
@@ -133,9 +141,12 @@ export const findSupportedTokenForClearingAssetId = ({
 	supportedTokens: readonly Token[];
 }): Token | undefined => {
 	const info = collateralInfos.find((i) => i.config.asset_id === assetId);
+
 	if (!info || !('Icrc' in info.config.asset)) {
 		return;
 	}
+
 	const ledger = info.config.asset.Icrc.toText();
+
 	return supportedTokens.find((t) => t.ledgerCanisterId === ledger);
 };

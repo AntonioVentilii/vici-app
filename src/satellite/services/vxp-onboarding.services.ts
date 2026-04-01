@@ -12,6 +12,7 @@ import type {
 	VxpNewUserMilestoneKey,
 	VxpOnboardingDoc
 } from '$lib/types/vxp-onboarding';
+import { logError, logInfo } from '$satellite/utils/logger.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { OnSetDocContext } from '@junobuild/functions';
@@ -30,39 +31,6 @@ const TRADE_KEY_SUFFIX = `#${ActivityType.TRADE}`;
 
 const LIST_PAGE_SIZE = 500n;
 
-const LOG_PREFIX = '[vxp-onboarding]';
-
-// eslint-disable-next-line local-rules/prefer-object-params
-const logInfo = (
-	message: string,
-	detail?: Record<string, string | number | bigint | boolean>
-): void => {
-	const suffix =
-		detail === undefined
-			? ''
-			: ` ${Object.entries(detail)
-					.map(([k, v]) => `${k}=${typeof v === 'bigint' ? v.toString() : v}`)
-					.join(' ')}`;
-
-	// eslint-disable-next-line no-console
-	console.log(`${LOG_PREFIX} ${message}${suffix}`);
-};
-
-// eslint-disable-next-line local-rules/prefer-object-params
-const logError = (
-	message: string,
-	detail?: Record<string, string | number | bigint | boolean>
-): void => {
-	const suffix =
-		detail === undefined
-			? ''
-			: ` ${Object.entries(detail)
-					.map(([k, v]) => `${k}=${typeof v === 'bigint' ? v.toString() : v}`)
-					.join(' ')}`;
-
-	console.error(`${LOG_PREFIX} ${message}${suffix}`);
-};
-
 const emptyMilestones = (): VxpOnboardingDoc['milestones'] => ({
 	m1: { status: 'none', amountBaseUnits: '0' },
 	m2: { status: 'none', amountBaseUnits: '0' },
@@ -77,8 +45,10 @@ const amountForMilestone = (key: VxpNewUserMilestoneKey): bigint => {
 			return newUserVxpAmountMilestone2BaseUnits();
 		case 'm3':
 			return newUserVxpAmountMilestone3BaseUnits();
+
 		default: {
 			const _: never = key;
+
 			return _;
 		}
 	}
@@ -128,6 +98,7 @@ const payoutMilestone = async ({
 
 	if ('Err' in transfer) {
 		const err = transfer.Err;
+
 		if ('BadFee' in err) {
 			fee = [err.BadFee.expected_fee];
 			transfer = await ledger.icrc1Transfer({
@@ -161,13 +132,16 @@ const persistOnboarding = ({
 	doc: VxpOnboardingDoc;
 	version?: bigint;
 }): void => {
-	logInfo('vxp_onboarding_write', {
-		collection: Collection.VXP_ONBOARDING,
-		key,
-		trade_count: doc.tradeCount,
-		milestones: MILESTONE_KEYS.map((mk) => `${mk}:${doc.milestones[mk].status}`).join('|'),
-		legacy_onboarding_synced: doc.legacyOnboardingSynced === true,
-		doc_version: nonNullish(version) ? version.toString() : 'create'
+	logInfo({
+		message: 'vxp_onboarding_write',
+		detail: {
+			collection: Collection.VXP_ONBOARDING,
+			key,
+			trade_count: doc.tradeCount,
+			milestones: MILESTONE_KEYS.map((mk) => `${mk}:${doc.milestones[mk].status}`).join('|'),
+			legacy_onboarding_synced: doc.legacyOnboardingSynced === true,
+			doc_version: nonNullish(version) ? version.toString() : 'create'
+		}
 	});
 
 	setDocStore({
@@ -215,9 +189,11 @@ const countUserTradeActivities = (caller: Uint8Array): number => {
 		}
 
 		const lastKey = page.items[page.items.length - 1]?.[0];
+
 		if (isNullish(lastKey) || lastKey === startAfter) {
 			break;
 		}
+
 		startAfter = lastKey;
 	}
 
@@ -274,6 +250,7 @@ const reconcileLegacyOnboardingState = ({
 		if (milestones[mk].status !== 'none' || !eligible) {
 			return;
 		}
+
 		milestones = {
 			...milestones,
 			[mk]: {
@@ -373,6 +350,7 @@ const milestoneTransferNeeded = ({
 
 	if (ms.status === 'paid') {
 		const paidSoFar = BigInt(ms.amountBaseUnits);
+
 		if (paidSoFar < expectedAmount) {
 			return { transferAmount: expectedAmount - paidSoFar, memoLabel: `${mk}:topup` };
 		}
@@ -430,10 +408,13 @@ const payOutMilestoneIfNeeded = async ({
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
 
-		logInfo('payout_locked', {
-			user: userKey,
-			milestone: mk,
-			error: msg
+		logInfo({
+			message: 'payout_locked',
+			detail: {
+				user: userKey,
+				milestone: mk,
+				error: msg
+			}
 		});
 
 		return;
@@ -447,20 +428,26 @@ const payOutMilestoneIfNeeded = async ({
 	});
 
 	if (result.ok) {
-		logInfo('payout_ok', {
-			user: userKey,
-			milestone: mk,
-			amount: needed.transferAmount,
-			block_index: result.blockIndex,
-			memo: needed.memoLabel
+		logInfo({
+			message: 'payout_ok',
+			detail: {
+				user: userKey,
+				milestone: mk,
+				amount: needed.transferAmount,
+				block_index: result.blockIndex,
+				memo: needed.memoLabel
+			}
 		});
 	} else {
-		logError('payout_err', {
-			user: userKey,
-			milestone: mk,
-			amount: needed.transferAmount,
-			memo: needed.memoLabel,
-			error: result.error
+		logError({
+			message: 'payout_err',
+			detail: {
+				user: userKey,
+				milestone: mk,
+				amount: needed.transferAmount,
+				memo: needed.memoLabel,
+				error: result.error
+			}
 		});
 	}
 
@@ -516,11 +503,14 @@ const payOutMilestoneIfNeeded = async ({
 		} catch (e: unknown) {
 			if (attempt === PERSIST_MAX_RETRIES - 1) {
 				const msg = e instanceof Error ? e.message : String(e);
-				logError('persist_failed', {
-					user: userKey,
-					milestone: mk,
-					transfer_ok: result.ok,
-					error: msg
+				logError({
+					message: 'persist_failed',
+					detail: {
+						user: userKey,
+						milestone: mk,
+						transfer_ok: result.ok,
+						error: msg
+					}
 				});
 				throw new Error(
 					`Failed to persist ${mk} after transfer (user=${userKey}, ok=${result.ok})`
@@ -607,7 +597,7 @@ export const onProfileSetForVxpOnboarding = async (ctx: OnSetDocContext): Promis
 		const msg = e instanceof Error ? e.message : String(e);
 		const user =
 			collection === Collection.PROFILES ? key : Principal.fromUint8Array(caller).toText();
-		logError('hook_error', { hook: 'profile', user, error: msg });
+		logError({ message: 'hook_error', detail: { hook: 'profile', user, error: msg } });
 		throw e;
 	}
 };
@@ -640,6 +630,7 @@ export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Pro
 		}
 
 		let activityUserPrincipal: Principal;
+
 		try {
 			activityUserPrincipal = Principal.fromText(activity.user);
 		} catch {
@@ -678,6 +669,7 @@ export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Pro
 				minimumTradeCount: base.tradeCount + 1
 			});
 			await payOutOwedMilestones({ caller, userKey });
+
 			return;
 		}
 
@@ -720,7 +712,7 @@ export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Pro
 		await payOutOwedMilestones({ caller, userKey });
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
-		logError('hook_error', { hook: 'trade', user: userKeyForLog, error: msg });
+		logError({ message: 'hook_error', detail: { hook: 'trade', user: userKeyForLog, error: msg } });
 		throw e;
 	}
 };

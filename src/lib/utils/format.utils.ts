@@ -93,6 +93,7 @@ const DATE_TIME_FORMAT_OPTIONS: Intl.DateTimeFormatOptions = {
 
 export const formatNanosecondsToDate = ({ nanoseconds }: { nanoseconds: bigint }): string => {
 	const date = new Date(Number(nanoseconds / NANO_SECONDS_IN_MILLISECOND));
+
 	return date.toLocaleDateString('en', DATE_TIME_FORMAT_OPTIONS);
 };
 
@@ -135,6 +136,7 @@ export const formatAvailableUsd = ({
 	decimals?: number;
 }) => {
 	const val = typeof value === 'bigint' ? value : BigInt(Math.floor(Number(value)));
+
 	return formatCurrency({ value: val, decimals });
 };
 
@@ -147,6 +149,7 @@ export const shortenWithMiddleEllipsis = ({
 }): string => {
 	// Original min length was 16 to extract split 7
 	const minLength = splitLength * 2 + 2;
+
 	return text.length > minLength
 		? `${text.slice(0, splitLength)}...${text.slice(-1 * splitLength)}`
 		: text;

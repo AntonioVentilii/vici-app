@@ -81,7 +81,6 @@
 		</div>
 	{:else if market}
 		<div class="space-y-8 lg:space-y-12">
-			<!-- Market Header - Always at the top, centered -->
 			<MarketDetailHeader {market} />
 
 			<!-- Main Content Grid -->

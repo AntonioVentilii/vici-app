@@ -45,6 +45,7 @@ export const assertSetRole = ({
 	// 3. Validate the proposed data
 	const { role: newRole } = decodeDocData<{ role: UserRole }>(proposed.data);
 	const validRoles = Object.values(UserRole);
+
 	if (!validRoles.includes(newRole)) {
 		throw new Error(`Invalid role: ${newRole}`);
 	}

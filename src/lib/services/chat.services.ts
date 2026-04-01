@@ -13,14 +13,16 @@ export const sendMessage = async ({
 	sender: PrincipalText;
 	content: string;
 }): Promise<void> => {
+	const timestamp = Date.now();
+
 	const message: ChatMessage = {
 		marketId,
 		sender,
 		content,
-		timestamp: Date.now()
+		timestamp
 	};
 
-	const messageKey = `${marketId}#${Date.now()}#${sender.slice(0, 5)}`;
+	const messageKey = `${marketId}#${timestamp}#${sender.slice(0, 5)}`;
 
 	await setDoc({
 		collection: Collection.CHATS,

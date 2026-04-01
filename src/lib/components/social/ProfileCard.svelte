@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
+	import ProfileStats from '$lib/components/social/ProfileStats.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
@@ -101,35 +102,12 @@
 			</p>
 		</div>
 
-		{#if loading}
-			<div class="py-6 text-xs opacity-60">Loading social graph...</div>
-		{:else}
-			<div class="grid w-full grid-cols-3 gap-2 border-y border-white/5 py-4">
-				<div>
-					<p class="text-lg font-bold">{followers.length}</p>
-					<p class="text-muted-foreground text-[10px] uppercase">Followers</p>
-				</div>
-				<div>
-					<p class="text-lg font-bold">{following.length}</p>
-					<p class="text-muted-foreground text-[10px] uppercase">Following</p>
-				</div>
-				<div>
-					<p class="text-lg font-bold">{profile.totalTrades ?? 0}</p>
-					<p class="text-muted-foreground text-[10px] uppercase">Trades</p>
-				</div>
-			</div>
-		{/if}
-
-		<div class="flex w-full gap-4">
-			<div class="flex-1 rounded-xl bg-white/5 p-3">
-				<p class="text-primary text-xl font-black">{profile.pnl?.toFixed(2) ?? '0.00'}</p>
-				<p class="text-muted-foreground text-[10px] uppercase">Total P&L</p>
-			</div>
-			<div class="flex-1 rounded-xl bg-white/5 p-3">
-				<p class="text-xl font-black text-emerald-500">{profile.winRate?.toFixed(1) ?? '0'}%</p>
-				<p class="text-muted-foreground text-[10px] uppercase">Win Rate</p>
-			</div>
-		</div>
+		<ProfileStats
+			followersCount={followers.length}
+			followingCount={following.length}
+			{loading}
+			{profile}
+		/>
 
 		{#if nonNullish(viewerPrincipal) && viewerPrincipal !== profile.owner}
 			<Button

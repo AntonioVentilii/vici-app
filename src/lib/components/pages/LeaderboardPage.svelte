@@ -36,36 +36,45 @@
 		if (podium.length === 0) {
 			return [];
 		}
+
 		if (podium.length === 1) {
 			return [podium[0]];
 		}
+
 		if (podium.length === 2) {
 			return [podium[1], podium[0]];
 		}
+
 		return [podium[1], podium[0], podium[2]];
 	});
 
 	const getPodiumStyle = (indexInDisplay: number) => {
 		const isFirst =
 			(podium.length >= 2 && indexInDisplay === 1) || (podium.length === 1 && indexInDisplay === 0);
+
 		if (isFirst) {
 			return 'h-40 w-40 sm:h-48 sm:w-48 -mt-8 border-amber-400 ring-amber-100 ring-8 shadow-2xl z-20 scale-110';
 		}
+
 		if (indexInDisplay === 0) {
 			return 'h-28 w-28 sm:h-36 sm:w-36 border-slate-300 ring-slate-100 ring-4 opacity-100';
 		}
+
 		return 'h-24 w-24 sm:h-32 sm:w-32 border-orange-300 ring-orange-100 ring-4 opacity-90';
 	};
 
 	const getMedalEmoji = (indexInDisplay: number) => {
 		const isFirst =
 			(podium.length >= 2 && indexInDisplay === 1) || (podium.length === 1 && indexInDisplay === 0);
+
 		if (isFirst) {
 			return '🥇';
 		}
+
 		if (indexInDisplay === 0) {
 			return '🥈';
 		}
+
 		return '🥉';
 	};
 </script>

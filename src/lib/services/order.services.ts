@@ -42,6 +42,7 @@ export const getOrderBook = async ({
 	return orders.filter((o) => {
 		const [orderDomain] = Object.keys(o.balance_domain);
 		const [targetDomain] = Object.keys(domain);
+
 		return orderDomain === targetDomain;
 	});
 };
@@ -118,11 +119,13 @@ export const placeOrder = async ({
 			.filter((o: ClearingDid.LimitOrder) => {
 				const isCorrectSide = counterSide in o.side;
 				const isCorrectOutcome = o.outcome_id[0] === targetOutcomeId;
+
 				return isCorrectSide && isCorrectOutcome;
 			})
 			.sort((a: ClearingDid.LimitOrder, b: ClearingDid.LimitOrder) => {
 				const priceA = Number(a.price.decimal.value);
 				const priceB = Number(b.price.decimal.value);
+
 				return normalizedSide === 'BUY' ? priceA - priceB : priceB - priceA;
 			});
 

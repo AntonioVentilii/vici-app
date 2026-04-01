@@ -27,6 +27,7 @@
 			.map((d: DataPoint, i: number) => {
 				const x = (i / (data.length - 1)) * width;
 				const y = height - d.value * height;
+
 				return `${x},${y}`;
 			})
 			.join(' ')

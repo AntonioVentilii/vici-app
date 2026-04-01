@@ -47,6 +47,7 @@
 			if (!alive || !playgroundNow()) {
 				return;
 			}
+
 			clearTimer();
 			timeoutId = setTimeout(() => {
 				void run();
@@ -60,6 +61,7 @@
 
 			if (inFlight) {
 				scheduleNext();
+
 				return;
 			}
 
@@ -67,6 +69,7 @@
 
 			if (!alive || !playgroundNow() || isNullish(identity)) {
 				scheduleNext();
+
 				return;
 			}
 
@@ -84,6 +87,7 @@
 			} catch (e: unknown) {
 				console.warn('Playground VXP auto-deposit: balance/fee read failed', e);
 				scheduleNext();
+
 				return;
 			}
 
@@ -96,6 +100,7 @@
 
 			if (amount <= ZERO) {
 				scheduleNext();
+
 				return;
 			}
 

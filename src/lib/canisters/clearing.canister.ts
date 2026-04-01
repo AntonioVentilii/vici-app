@@ -106,6 +106,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 		queryParams: QueryParams
 	): Promise<ClearingDid.CollateralAssetInfo[]> => {
 		const { list_collateral_assets } = this.caller(queryParams);
+
 		return await list_collateral_assets();
 	};
 
@@ -123,11 +124,13 @@ export class ClearingCanister extends Canister<ClearingService> {
 
 	getPositions = async (queryParams: QueryParams): Promise<ClearingDid.Position[]> => {
 		const { get_positions } = this.caller(queryParams);
+
 		return await get_positions();
 	};
 
 	listSeries = async (queryParams: QueryParams): Promise<ClearingDid.Series[]> => {
 		const { list_series } = this.caller(queryParams);
+
 		return await list_series();
 	};
 
@@ -138,6 +141,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 		registryId: Principal;
 	} & QueryParams): Promise<void> => {
 		const { set_registry_canister } = this.caller(queryParams);
+
 		return await set_registry_canister(registryId);
 	};
 
@@ -239,6 +243,7 @@ export class ClearingCanister extends Canister<ClearingService> {
 
 	getOrders = async (queryParams: QueryParams): Promise<ClearingDid.LimitOrder[]> => {
 		const { get_orders } = this.caller(queryParams);
+
 		return await get_orders();
 	};
 
@@ -249,11 +254,13 @@ export class ClearingCanister extends Canister<ClearingService> {
 		params: ClearingDid.ListOrdersParams;
 	} & QueryParams): Promise<ClearingDid.LimitOrder[]> => {
 		const { list_orders } = this.caller(queryParams);
+
 		return await list_orders(params);
 	};
 
 	getTradeHistory = async (queryParams: QueryParams): Promise<ClearingDid.Event[]> => {
 		const { get_trade_history } = this.caller(queryParams);
+
 		return await get_trade_history();
 	};
 

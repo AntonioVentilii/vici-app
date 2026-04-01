@@ -27,6 +27,7 @@ const assertPermission = async (permission: Permission): Promise<void> => {
 	}
 
 	const permissions = ROLE_PERMISSIONS[role] ?? [];
+
 	if (!permissions.includes(permission)) {
 		throw new Error(`Unauthorized: missing ${permission} permission`);
 	}
@@ -44,6 +45,7 @@ export const createGroup = async ({
 	await assertPermission(Permission.CREATE_GROUP);
 
 	const identity = await safeGetIdentityOnce();
+
 	return await createGroupApi({
 		identity,
 		params: {
@@ -66,6 +68,7 @@ export const updateGroup = async ({
 	iconUrl?: string | null;
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
+
 	return await updateGroupApi({
 		identity,
 		params: {
@@ -85,6 +88,7 @@ export const addGroupAdmins = async ({
 	principals: string[];
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
+
 	return await addGroupAdminsApi({
 		identity,
 		params: {
@@ -102,6 +106,7 @@ export const removeGroupAdmins = async ({
 	principals: string[];
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
+
 	return await removeGroupAdminsApi({
 		identity,
 		params: {
@@ -119,6 +124,7 @@ export const addGroupMembers = async ({
 	principals: string[];
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
+
 	return await addGroupMembersApi({
 		identity,
 		params: {
@@ -136,6 +142,7 @@ export const removeGroupMembers = async ({
 	principals: string[];
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
+
 	return await removeGroupMembersApi({
 		identity,
 		params: {
@@ -147,16 +154,19 @@ export const removeGroupMembers = async ({
 
 export const getGroup = async (groupId: string): Promise<RegistryDid.Group | undefined> => {
 	const identity = await safeGetIdentityOnce();
+
 	return await getGroupApi({ identity, groupId });
 };
 
 export const listGroups = async (creator?: string): Promise<RegistryDid.Group[]> => {
 	const identity = await safeGetIdentityOnce();
+
 	return await listGroupsApi({ identity, creator });
 };
 
 export const deleteGroup = async (groupId: string): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
+
 	return await deleteGroupApi({ identity, groupId });
 };
 
@@ -170,6 +180,7 @@ export const updateTradingAccess = async ({
 	await assertPermission(Permission.MANAGE_TRADING_ACCESS);
 
 	const identity = await safeGetIdentityOnce();
+
 	return await updateTradingAccessApi({
 		identity,
 		params: {

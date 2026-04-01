@@ -65,6 +65,7 @@ export const walletLedgerDisplayFallbackTokens = (
 
 	if (isSettlement(balanceDomain)) {
 		const byLedger = new Map([ICP_TOKEN, CKUSDC_TOKEN].map((t) => [t.ledgerCanisterId, t]));
+
 		return SETTLEMENT_LEDGER_ORDER.map((id) => byLedger.get(id)).filter(nonNullish);
 	}
 

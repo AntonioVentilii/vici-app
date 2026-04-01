@@ -21,6 +21,11 @@
 		isAvailable = await isWebAuthnAvailable();
 	});
 
+	const toggleMode = () => {
+		isSignUp = !isSignUp;
+		nickname = '';
+	};
+
 	const handlePasskeyAction = async () => {
 		status = 'pending';
 
@@ -80,10 +85,7 @@
 
 			<button
 				class="text-muted-foreground hover:text-foreground text-xs underline"
-				onclick={() => {
-					isSignUp = !isSignUp;
-					nickname = '';
-				}}
+				onclick={toggleMode}
 				type="button"
 			>
 				{isSignUp ? 'Already have a passkey? Sign in' : 'First time? Create a passkey'}

@@ -13,6 +13,7 @@ export const depositCollateral = async ({
 	params: ClearingDid.DepositCollateralParams;
 } & QueryParams): Promise<void> => {
 	const { depositCollateral } = await clearingCanister({ identity });
+
 	return await depositCollateral(rest);
 };
 
@@ -24,6 +25,7 @@ export const withdrawCollateral = async ({
 	params: ClearingDid.WithdrawCollateralParams;
 } & QueryParams): Promise<void> => {
 	const { withdrawCollateral } = await clearingCanister({ identity });
+
 	return await withdrawCollateral(rest);
 };
 
@@ -35,6 +37,7 @@ export const submitMatchedTrade = async ({
 	params: ClearingDid.SubmitMatchedTradeParams;
 } & QueryParams): Promise<boolean> => {
 	const { submitMatchedTrade } = await clearingCanister({ identity });
+
 	return await submitMatchedTrade(rest);
 };
 
@@ -46,6 +49,7 @@ export const getAccountState = async ({
 	params: ClearingDid.GetAccountStateParams;
 } & QueryParams): Promise<ClearingDid.AccountStateResponse> => {
 	const { getAccountState } = await clearingCanister({ identity });
+
 	return await getAccountState(rest);
 };
 
@@ -56,6 +60,7 @@ export const listCollateralAssets = async ({
 	identity: Identity;
 } & QueryParams): Promise<ClearingDid.CollateralAssetInfo[]> => {
 	const { listCollateralAssets } = await clearingCanister({ identity });
+
 	return await listCollateralAssets(queryParams);
 };
 
@@ -66,6 +71,7 @@ export const getPositions = async ({
 	identity: Identity;
 } & QueryParams): Promise<ClearingDid.Position[]> => {
 	const { getPositions } = await clearingCanister({ identity });
+
 	return await getPositions(queryParams);
 };
 
@@ -77,6 +83,7 @@ export const settleSeries = async ({
 	params: ClearingDid.SettleSeriesParams;
 } & QueryParams): Promise<void> => {
 	const { settleSeries } = await clearingCanister({ identity });
+
 	return await settleSeries(rest);
 };
 
@@ -88,6 +95,7 @@ export const getPosition = async ({
 	params: ClearingDid.GetPositionParams;
 } & QueryParams): Promise<ClearingDid.Position | undefined> => {
 	const { getPosition } = await clearingCanister({ identity });
+
 	return await getPosition(rest);
 };
 
@@ -99,6 +107,7 @@ export const submitLimitOrder = async ({
 	params: ClearingDid.SubmitLimitOrderParams;
 }): Promise<boolean> => {
 	const { submitLimitOrder } = await clearingCanister({ identity });
+
 	return await submitLimitOrder({ params });
 };
 
@@ -110,6 +119,7 @@ export const submitMarketOrder = async ({
 	params: ClearingDid.SubmitMarketOrderParams;
 }): Promise<boolean> => {
 	const { submitMarketOrder } = await clearingCanister({ identity });
+
 	return await submitMarketOrder({ params });
 };
 
@@ -121,6 +131,7 @@ export const cancelLimitOrder = async ({
 	params: ClearingDid.CancelLimitOrderParams;
 }): Promise<boolean> => {
 	const { cancelLimitOrder } = await clearingCanister({ identity });
+
 	return await cancelLimitOrder({ params });
 };
 
@@ -131,6 +142,7 @@ export const getOrders = async ({
 	identity: Identity;
 } & QueryParams): Promise<ClearingDid.LimitOrder[]> => {
 	const { getOrders } = await clearingCanister({ identity });
+
 	return await getOrders(queryParams);
 };
 
@@ -141,6 +153,7 @@ export const getTradeHistory = async ({
 	identity: Identity;
 } & QueryParams): Promise<ClearingDid.Event[]> => {
 	const { getTradeHistory } = await clearingCanister({ identity });
+
 	return await getTradeHistory(queryParams);
 };
 
@@ -152,6 +165,7 @@ export const listOrders = async ({
 	params: ClearingDid.ListOrdersParams;
 } & QueryParams): Promise<ClearingDid.LimitOrder[]> => {
 	const { listOrders } = await clearingCanister({ identity });
+
 	return await listOrders(rest);
 };
 
@@ -164,6 +178,7 @@ export const mintCompleteSet = async ({
 	qty: bigint;
 } & QueryParams): Promise<boolean> => {
 	const { mintCompleteSet } = await clearingCanister({ identity });
+
 	return await mintCompleteSet(rest);
 };
 
@@ -176,6 +191,7 @@ export const redeemCompleteSet = async ({
 	qty: bigint;
 } & QueryParams): Promise<boolean> => {
 	const { redeemCompleteSet } = await clearingCanister({ identity });
+
 	return await redeemCompleteSet(rest);
 };
 
@@ -188,6 +204,7 @@ export const registerIcrcAsset = async ({
 	params: ClearingDid.RegisterIcrcAssetParams;
 } & QueryParams): Promise<void> => {
 	const { registerIcrcAsset } = await clearingCanister({ identity });
+
 	return await registerIcrcAsset({ params, ...queryParams });
 };
 

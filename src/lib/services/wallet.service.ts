@@ -257,6 +257,7 @@ export const getTransactionsPage = async ({
 			if (a.timestamp === b.timestamp) {
 				return 0;
 			}
+
 			return a.timestamp > b.timestamp ? -1 : 1;
 		});
 
@@ -293,5 +294,6 @@ export const getTransactionsPage = async ({
 /** Backwards-compatible helper: first batch only. */
 export const getTransactions = async (): Promise<Transaction[]> => {
 	const result = await getTransactionsPage({ batchSize: WALLET_PAGINATION });
+
 	return result.transactions;
 };

@@ -27,11 +27,13 @@
 		if (isCategorical) {
 			if (!selectedOutcomeId) {
 				error = 'Please select a winning outcome';
+
 				return;
 			}
 		} else {
 			if (!settlementPrice || parseFloat(settlementPrice) < 0) {
 				error = 'Please enter a valid settlement price';
+
 				return;
 			}
 		}
@@ -49,6 +51,7 @@
 				});
 				await settleMarket({ seriesId: market.id, settlementPrice: price });
 			}
+
 			onSettled();
 			notificationsStore.add({
 				title: 'Success',

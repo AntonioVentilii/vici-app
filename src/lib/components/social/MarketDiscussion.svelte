@@ -39,6 +39,7 @@
 
 	const loadComments = async () => {
 		loading = true;
+
 		try {
 			comments = await getMarketComments(marketId);
 
@@ -60,7 +61,9 @@
 		if (!newComment.trim() || posting) {
 			return;
 		}
+
 		posting = true;
+
 		try {
 			await addComment({
 				marketId,
@@ -89,10 +92,12 @@
 		}
 
 		voting[comment.key] = true;
+
 		try {
 			if (type === 'up') {
 				const isRemoval = comment.upvotes?.includes(userPrincipal);
 				await upvoteComment({ commentKey: comment.key, userPrincipal });
+
 				if (!isRemoval) {
 					await logActivity({
 						type: ActivityType.UPVOTE,
@@ -105,6 +110,7 @@
 			} else {
 				const isRemoval = comment.downvotes?.includes(userPrincipal);
 				await downvoteComment({ commentKey: comment.key, userPrincipal });
+
 				if (!isRemoval) {
 					await logActivity({
 						type: ActivityType.DOWNVOTE,
@@ -115,6 +121,7 @@
 					});
 				}
 			}
+
 			await loadComments();
 		} finally {
 			voting[comment.key] = false;

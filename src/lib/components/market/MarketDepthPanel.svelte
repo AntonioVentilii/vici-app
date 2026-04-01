@@ -33,6 +33,7 @@
 	onMount(() => {
 		fetchOrderBook();
 		const interval = setInterval(fetchOrderBook, 5_000);
+
 		return () => clearInterval(interval);
 	});
 

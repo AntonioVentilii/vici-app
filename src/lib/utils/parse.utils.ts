@@ -39,5 +39,6 @@ export const tokenBaseUnitsToUsdBaseUnits = ({
 	tokenDecimals: number | bigint;
 }): bigint => {
 	const td = typeof tokenDecimals === 'bigint' ? tokenDecimals : BigInt(tokenDecimals);
+
 	return (amount * 10n ** BigInt(USD_DECIMALS)) / 10n ** td;
 };

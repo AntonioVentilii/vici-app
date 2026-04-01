@@ -28,6 +28,7 @@ export const supportedTokens: Readable<Token[]> = derived(
 
 			// Check if the asset is enabled and allowed in the current domain
 			const { is_enabled, allowed_balance_domains } = assetInfo.config;
+
 			if (!is_enabled) {
 				return false;
 			}

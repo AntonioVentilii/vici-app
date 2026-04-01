@@ -5,111 +5,31 @@ import {
 	onTradeActivityForVxpOnboarding
 } from '$satellite/services/vxp-onboarding.services';
 import {
-	type AssertDeleteAsset,
-	type AssertDeleteDoc,
-	type AssertSetDoc,
-	type AssertUploadAsset,
 	defineAssert,
 	defineHook,
-	type OnDeleteAsset,
-	type OnDeleteDoc,
-	type OnDeleteFilteredAssets,
-	type OnDeleteFilteredDocs,
-	type OnDeleteManyAssets,
-	type OnDeleteManyDocs,
+	type AssertSetDoc,
 	type OnSetDoc,
-	type OnSetManyDocs,
-	type OnUploadAsset
+	type OnSetDocContext,
+	type RunFunction
 } from '@junobuild/functions';
 
-// All the available hooks and assertions for your Datastore and Storage are scaffolded by default in this module.
-// However, if you don’t have to implement all of them, for example to improve readability or reduce unnecessary logic,
-// you can selectively delete the features you do not need.
+const setDocCollections = [Collection.ACTIVITIES, Collection.PROFILES] as const;
+
+type OnSetDocCollection = (typeof setDocCollections)[number];
 
 export const onSetDoc = defineHook<OnSetDoc>({
-	collections: [Collection.ACTIVITIES, Collection.PROFILES],
+	collections: setDocCollections,
 	run: async (context) => {
-		const { collection } = context.data;
+		const fn: Record<OnSetDocCollection, RunFunction<OnSetDocContext>> = {
+			[Collection.PROFILES]: onProfileSetForVxpOnboarding,
+			[Collection.ACTIVITIES]: onTradeActivityForVxpOnboarding
+		};
 
-		if (collection === Collection.PROFILES) {
-			await onProfileSetForVxpOnboarding(context);
-
-			return;
-		}
-
-		if (collection === Collection.ACTIVITIES) {
-			await onTradeActivityForVxpOnboarding(context);
-		}
+		await fn[context.data.collection]?.(context);
 	}
-});
-
-export const onSetManyDocs = defineHook<OnSetManyDocs>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	run: async (context) => {}
-});
-
-export const onDeleteDoc = defineHook<OnDeleteDoc>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	run: async (context) => {}
-});
-
-export const onDeleteManyDocs = defineHook<OnDeleteManyDocs>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	run: async (context) => {}
-});
-
-export const onDeleteFilteredDocs = defineHook<OnDeleteFilteredDocs>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	run: async (context) => {}
-});
-
-export const onUploadAsset = defineHook<OnUploadAsset>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	run: async (context) => {}
-});
-
-export const onDeleteAsset = defineHook<OnDeleteAsset>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	run: async (context) => {}
-});
-
-export const onDeleteManyAssets = defineHook<OnDeleteManyAssets>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	run: async (context) => {}
-});
-
-export const onDeleteFilteredAssets = defineHook<OnDeleteFilteredAssets>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	run: async (context) => {}
 });
 
 export const assertSetDoc = defineAssert<AssertSetDoc>({
 	collections: [Collection.ROLES],
 	assert: assertSetRole
-});
-
-export const assertDeleteDoc = defineAssert<AssertDeleteDoc>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	assert: (context) => {}
-});
-
-export const assertUploadAsset = defineAssert<AssertUploadAsset>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	assert: (context) => {}
-});
-
-export const assertDeleteAsset = defineAssert<AssertDeleteAsset>({
-	collections: [],
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	assert: (context) => {}
 });

@@ -13,6 +13,7 @@ const INITIAL_CATEGORIES: Category[] = [
 
 export const initCategories = async () => {
 	console.log('Initializing categories...');
+
 	for (const cat of INITIAL_CATEGORIES) {
 		await setDoc({
 			collection: Collection.CATEGORIES,
@@ -23,5 +24,6 @@ export const initCategories = async () => {
 		});
 		console.log(`- Initialized category: ${cat.name}`);
 	}
+
 	console.log('Categories initialization complete.');
 };

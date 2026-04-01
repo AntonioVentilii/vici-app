@@ -2,12 +2,13 @@
 	import { Clock } from 'lucide-svelte/icons';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
+	import BinaryProbabilities from '$lib/components/market/BinaryProbabilities.svelte';
+	import CategoricalProbabilities from '$lib/components/market/CategoricalProbabilities.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import type { Market } from '$lib/types/market';
-	import { formatProbability } from '$lib/utils/format.utils';
-	import { getTimeRemaining, getOutcomeVariant } from '$lib/utils/market.utils';
+	import { getOutcomeVariant, getTimeRemaining } from '$lib/utils/market.utils';
 
 	interface Props {
 		market: Market;
@@ -64,77 +65,12 @@
 					<!-- Probabilities Area -->
 					<div class="grid grid-cols-2 gap-4">
 						{#if market.payoffType === 'Binary'}
-							<div
-								class="border-destructive/20 bg-destructive/5 hover:bg-destructive/10 relative flex flex-col items-center rounded-2xl border p-4 transition-colors"
-							>
-								<div class="text-destructive mb-1 text-[10px] font-bold tracking-widest uppercase">
-									No
-								</div>
-								<div class="text-destructive font-serif text-2xl font-black">
-									{formatProbability(market.noProbability)}
-								</div>
-							</div>
-
-							<div
-								class="border-success/20 bg-success/5 hover:bg-success/10 relative flex flex-col items-center rounded-2xl border p-4 transition-colors"
-							>
-								<div class="text-success mb-1 text-[10px] font-bold tracking-widest uppercase">
-									Yes
-								</div>
-								<div class="text-success font-serif text-2xl font-black">
-									{formatProbability(market.yesProbability)}
-								</div>
-							</div>
+							<BinaryProbabilities
+								noProbability={market.noProbability}
+								yesProbability={market.yesProbability}
+							/>
 						{:else}
-							<div
-								class="border-border bg-muted/30 col-span-2 flex flex-col gap-3 rounded-2xl border p-5"
-							>
-								<div class="flex items-center justify-between">
-									<div
-										class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
-									>
-										Top Outcomes
-									</div>
-									<div class="text-primary text-[10px] font-bold tracking-widest uppercase">
-										{market.outcomes?.length ?? 0} total
-									</div>
-								</div>
-
-								<div class="flex flex-col gap-3">
-									{#each (market.outcomes ?? [])
-										.toSorted(// eslint-disable-next-line local-rules/prefer-object-params
-											(a, b) => {
-												const probA = a.probability ?? 0;
-												const probB = b.probability ?? 0;
-												return probB - probA || a.title.localeCompare(b.title);
-											})
-										.slice(0, 2) as outcome (outcome.id)}
-										<div class="flex flex-col gap-1.5">
-											<div class="flex items-center justify-between text-xs">
-												<span class="text-foreground font-bold">{outcome.title}</span>
-												<span class="text-foreground font-serif font-black">
-													{formatProbability(outcome.probability ?? 0)}
-												</span>
-											</div>
-											<div
-												class="bg-background ring-border h-1.5 w-full overflow-hidden rounded-full ring-1 ring-inset"
-											>
-												<div
-													style="width: {(outcome.probability ?? 0) * 100}%"
-													class="bg-primary h-full transition-all duration-700 ease-out"
-												></div>
-											</div>
-										</div>
-									{/each}
-									{#if (market.outcomes?.length ?? 0) > 2}
-										<div class="flex items-center justify-center pt-1">
-											<span class="text-primary text-[10px] font-black tracking-widest uppercase">
-												+ {(market.outcomes?.length ?? 0) - 2} Other...
-											</span>
-										</div>
-									{/if}
-								</div>
-							</div>
+							<CategoricalProbabilities outcomes={market.outcomes ?? []} />
 						{/if}
 					</div>
 

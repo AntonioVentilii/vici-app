@@ -29,6 +29,7 @@
 		if (outcome) {
 			outcomeChanging = true;
 			const timer = setTimeout(() => (outcomeChanging = false), 300);
+
 			return () => clearTimeout(timer);
 		}
 	});
@@ -94,11 +95,13 @@
 		if (maxQty === ZERO) {
 			return 0;
 		}
+
 		return (Number(qty) / Number(maxQty)) * 100;
 	};
 
 	const maxQty = $derived(() => {
 		const allLevels = [...displayBids, ...displayAsks];
+
 		return allLevels.reduce((max, level) => (level.totalQty > max ? level.totalQty : max), ZERO);
 	});
 

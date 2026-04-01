@@ -47,6 +47,7 @@ export const nativeToClearingMarginUnits = ({
 	if (nativeDecimals <= USD_DECIMALS) {
 		return nativeBalance * 10n ** BigInt(USD_DECIMALS - nativeDecimals);
 	}
+
 	return nativeBalance / 10n ** BigInt(nativeDecimals - USD_DECIMALS);
 };
 
@@ -73,6 +74,7 @@ export const intuitiveAvailableMarginUsd = ({
 		assets !== undefined && assets.length > 0
 			? sumAssetWorthValueUsd(assets)
 			: fallbackCollateralMarginUnits;
+
 	return atMark > locked ? atMark - locked : ZERO;
 };
 
@@ -106,6 +108,7 @@ export const formatPortfolioPnLStatLine = ({
 	playground: boolean;
 }): string => {
 	const core = `${totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}`;
+
 	return playground ? `${core} ${PLAYGROUND_DISPLAY_SYMBOL}` : core;
 };
 
@@ -126,8 +129,10 @@ export const formatPortfolioHoldingsStatLine = ({
 			displayDecimals: 4
 		})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
 	}
+
 	const dec = sampleToken?.decimals ?? PORTFOLIO_DEFAULT_DECIMALS;
 	const sym = sampleToken?.symbol ?? PORTFOLIO_DEFAULT_SYMBOL;
+
 	return formatCurrency({ value: totalPortfolioValue, decimals: dec, symbol: sym });
 };
 
@@ -140,5 +145,6 @@ export const formatPositionPnLWithOptionalUnit = ({
 	playground: boolean;
 }): string => {
 	const core = `${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}`;
+
 	return playground ? `${core} ${PLAYGROUND_DISPLAY_SYMBOL}` : core;
 };

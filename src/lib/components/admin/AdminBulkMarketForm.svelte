@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { downloadJsonFile } from '$lib/utils/download.utils';
+
 	interface Props {
 		onBulkCreate: (
 			markets: {
@@ -39,8 +41,10 @@
 
 	const processFile = async (file: File) => {
 		error = null;
+
 		if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
 			error = 'Please upload a JSON file.';
+
 			return;
 		}
 
@@ -50,6 +54,7 @@
 
 			if (!Array.isArray(data)) {
 				error = 'JSON must be an array of market objects.';
+
 				return;
 			}
 
@@ -57,39 +62,53 @@
 			for (const item of data) {
 				if (!item.title || !item.description || !item.expiryDate) {
 					error = 'Each market must have a title, description, and expiryDate.';
+
 					return;
 				}
+
 				if (isNaN(Date.parse(item.expiryDate))) {
 					error = `Invalid date format: ${item.expiryDate}`;
+
 					return;
 				}
+
 				if (item.outcomes) {
 					if (!Array.isArray(item.outcomes)) {
 						error = `Outcomes must be an array for market: ${item.title}`;
+
 						return;
 					}
+
 					if (item.outcomes.some((o: unknown) => typeof o !== 'string')) {
 						error = `Each outcome must be a string for market: ${item.title}`;
+
 						return;
 					}
+
 					if (item.outcomes.length < 2) {
 						error = `Categorical markets must have at least 2 outcomes: ${item.title}`;
+
 						return;
 					}
 				}
+
 				if (item.categories) {
 					if (!Array.isArray(item.categories)) {
 						error = `Categories must be an array for market: ${item.title}`;
+
 						return;
 					}
+
 					if (item.categories.some((c: unknown) => typeof c !== 'string')) {
 						error = `Each category must be a string for market: ${item.title}`;
+
 						return;
 					}
 				}
 			}
 
 			onBulkCreate(data);
+
 			if (fileInput) {
 				fileInput.value = '';
 			}
@@ -100,6 +119,7 @@
 
 	const handleFileChange = (e: Event) => {
 		const target = e.target as HTMLInputElement;
+
 		if (target.files && target.files[0]) {
 			processFile(target.files[0]);
 		}
@@ -108,6 +128,7 @@
 	const handleDrop = (e: DragEvent) => {
 		e.preventDefault();
 		dragging = false;
+
 		if (e.dataTransfer?.files && e.dataTransfer.files[0]) {
 			processFile(e.dataTransfer.files[0]);
 		}
@@ -196,17 +217,7 @@
 			</div>
 			<button
 				class="flex items-center gap-2 text-xs font-bold text-indigo-600 transition-colors hover:text-indigo-700"
-				onclick={() => {
-					const blob = new Blob([JSON.stringify(exampleJson, null, 2)], {
-						type: 'application/json'
-					});
-					const url = URL.createObjectURL(blob);
-					const a = document.createElement('a');
-					a.href = url;
-					a.download = 'markets_template.json';
-					a.click();
-					URL.revokeObjectURL(url);
-				}}
+				onclick={() => downloadJsonFile({ data: exampleJson, filename: 'markets_template.json' })}
 			>
 				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path

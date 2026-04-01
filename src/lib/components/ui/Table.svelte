@@ -10,6 +10,7 @@
 	const list = async (userNotSignedIn: boolean) => {
 		if (userNotSignedIn) {
 			items = [];
+
 			return;
 		}
 

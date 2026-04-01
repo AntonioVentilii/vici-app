@@ -9,6 +9,7 @@ const getInitialTheme = (): Theme => {
 	if (!browser) {
 		return 'peach';
 	}
+
 	return (localStorage.getItem(THEME_KEY) as Theme) || 'peach';
 };
 

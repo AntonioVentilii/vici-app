@@ -48,6 +48,7 @@
 
 	const filteredTransactions = $derived.by(() => {
 		const allowed = new Set($walletUiTokens.map((t) => t.ledgerCanisterId));
+
 		return transactions.filter((tx) => allowed.has(tx.token.ledgerCanisterId));
 	});
 
@@ -74,6 +75,7 @@
 		}
 
 		loadingHistory = true;
+
 		try {
 			const result = await getTransactionsPage({ batchSize, cursors, done });
 

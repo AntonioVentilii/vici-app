@@ -174,6 +174,7 @@ export class RegistryCanister extends Canister<RegistryService> {
 		creator?: string;
 	} & QueryParams): Promise<RegistryDid.Group[]> => {
 		const { list_groups } = this.caller(queryParams);
+
 		return await list_groups(creator ? toNullable(Principal.fromText(creator)) : toNullable());
 	};
 

@@ -130,14 +130,17 @@ export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Mar
 		.filter((a) => a.type === ActivityType.SETTLEMENT && nonNullish(a.marketId))
 		.reduce<Record<string, { outcome: Outcome }>>((acc, a) => {
 			const { marketId, details } = a;
+
 			try {
 				const { outcome } = JSON.parse(details ?? '{}');
+
 				if (nonNullish(marketId)) {
 					acc[marketId] = { outcome };
 				}
 			} catch (e) {
 				console.error('Failed to parse settlement details', e);
 			}
+
 			return acc;
 		}, {});
 
@@ -203,6 +206,7 @@ export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Mar
 			.filter((id) => !activeSeriesIds.has(id))
 			.map(async (id) => {
 				const series = await getSeries({ identity, seriesId: id });
+
 				if (isNullish(series)) {
 					return;
 				}
@@ -270,6 +274,7 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 
 	if (nonNullish(resolution)) {
 		status = 'Resolved';
+
 		try {
 			const { outcome: settlementOutcome } = JSON.parse(resolution.details ?? '{}');
 			outcome = settlementOutcome;

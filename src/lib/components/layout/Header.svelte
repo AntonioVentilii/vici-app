@@ -3,12 +3,13 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import SignInModal from '$lib/components/authn/SignInModal.svelte';
+	import Logo from '$lib/components/layout/Logo.svelte';
 	import UserDropdown from '$lib/components/layout/UserDropdown.svelte';
 	import WalletDropdown from '$lib/components/layout/WalletDropdown.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { navItems } from '$lib/constants/nav.constants';
-	import { AppPath } from '$lib/constants/routes.constants';
+	import type { AppPath } from '$lib/constants/routes.constants';
 	import { userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
@@ -53,19 +54,8 @@
 	class="border-border bg-background/95 sticky top-0 z-50 w-full border-b backdrop-blur-md transition-all duration-300"
 >
 	<div class="container mx-auto flex h-16 items-center justify-between px-4">
-		<!-- Logo -->
-		<BaseButton class="group flex items-center gap-2" onclick={() => handleNav(AppPath.Home)}>
-			<div
-				class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg font-bold shadow-lg transition-transform group-hover:scale-110"
-			>
-				V
-			</div>
-			<span
-				class="text-foreground hidden font-serif text-xl font-extrabold tracking-tight drop-shadow-sm sm:block"
-			>
-				Veni. Vidi. <span class="text-primary">VICI</span>.
-			</span>
-		</BaseButton>
+		<!-- Left side -->
+		<Logo />
 
 		<!-- Desktop Nav -->
 		<nav class="hidden items-center gap-1 md:flex">

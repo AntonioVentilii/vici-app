@@ -36,6 +36,7 @@
 
 	const selectAvatar = async (option: { emoji: string; color: string }) => {
 		pending = true;
+
 		try {
 			const avatar = avatarUrlForEmoji(option.emoji);
 			const updatedProfile: UserProfile = {

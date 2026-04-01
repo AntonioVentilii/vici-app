@@ -1,12 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import ActivityItem from '$lib/components/social/ActivityItem.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { getFriendActivities, getGlobalActivities } from '$lib/services/activity.services';
 	import { getProfile } from '$lib/services/profile.services';
 	import { getFollowing } from '$lib/services/relation.services';
 	import type { UserProfile } from '$lib/types/profile';
-	import { ActivityType, type Activity } from '$lib/types/social';
+	import type { Activity } from '$lib/types/social';
 
 	interface Props {
 		userPrincipal?: string;
@@ -27,6 +28,7 @@
 
 	const loadActivities = async () => {
 		loading = true;
+
 		try {
 			if (mode === 'friends' && userPrincipal) {
 				const following = await getFollowing(userPrincipal);
@@ -41,9 +43,11 @@
 
 			for (const activity of activities) {
 				const usersToFetch = [activity.user, activity.targetUser].filter(Boolean) as string[];
+
 				for (const u of usersToFetch) {
 					if (!profiles.has(u)) {
 						const profileDoc = await getProfile(u);
+
 						if (profileDoc) {
 							profiles.set(u, profileDoc.data);
 						}
@@ -52,21 +56,6 @@
 			}
 		} finally {
 			loading = false;
-		}
-	};
-
-	const getActivityIcon = (type: ActivityType) => {
-		switch (type) {
-			case ActivityType.TRADE:
-				return '📈';
-			case ActivityType.SETTLEMENT:
-				return '🏁';
-			case ActivityType.COMMENT:
-				return '💬';
-			case ActivityType.FOLLOW:
-				return '👤';
-			default:
-				return '📍';
 		}
 	};
 </script>
@@ -100,32 +89,7 @@
 				{#each activities as activity (activity.timestamp + activity.user)}
 					{@const profile = profiles.get(activity.user)}
 
-					<div
-						class="group relative flex gap-3 rounded-2xl bg-white/5 p-3 transition-all hover:bg-white/10"
-					>
-						<div class="text-xl">{getActivityIcon(activity.type)}</div>
-						<div class="flex-1 overflow-hidden">
-							<div class="flex items-center justify-between gap-2">
-								<p
-									class="group-hover:text-primary truncate text-sm font-semibold transition-colors"
-								>
-									{profile?.nickname ?? 'Anonymous'}
-								</p>
-								<span class="text-muted-foreground shrink-0 text-[10px] opacity-50">
-									{new Date(activity.timestamp).toLocaleTimeString([], {
-										hour: '2-digit',
-										minute: '2-digit'
-									})}
-								</span>
-							</div>
-							<p class="text-foreground/80 mb-1 text-xs font-medium">{activity.title}</p>
-							{#if activity.details}
-								<p class="text-muted-foreground line-clamp-2 text-[11px] italic opacity-70">
-									"{activity.details}"
-								</p>
-							{/if}
-						</div>
-					</div>
+					<ActivityItem {activity} {profile} />
 				{/each}
 			{/if}
 		</div>

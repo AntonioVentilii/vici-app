@@ -35,6 +35,7 @@ export const getSeriesCategory = async (seriesId: string): Promise<SeriesCategor
 		collection: Collection.SERIES_CATEGORIES,
 		key: seriesId
 	});
+
 	return doc?.data;
 };
 
