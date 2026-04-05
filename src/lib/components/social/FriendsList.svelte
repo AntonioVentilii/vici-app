@@ -1,10 +1,19 @@
 <script lang="ts">
+	import type { Doc } from '@junobuild/core';
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { getProfile } from '$lib/services/profile.services';
-	import { getFriends, sendFriendRequest } from '$lib/services/relation.services';
+	import {
+		acceptFriendRequest,
+		getFriendRequests,
+		getFriends,
+		getRejectedFriendships,
+		rejectFriendRequest,
+		sendFriendRequest,
+		unfriendUser
+	} from '$lib/services/relation.services';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { Relation } from '$lib/types/relation';
 	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
@@ -15,29 +24,40 @@
 
 	const { userPrincipal }: Props = $props();
 
-	let friends = $state<Relation[]>([]);
+	type TabType = 'active' | 'requests' | 'rejected';
+	let activeTab = $state<TabType>('active');
+
+	let activeFriends = $state<Relation[]>([]);
+	let pendingRequests = $state<Doc<Relation>[]>([]);
+	let rejectedRelations = $state<Doc<Relation>[]>([]);
 
 	const friendProfiles = $state<Map<string, UserProfile>>(new Map());
 
 	let loading = $state(true);
-
 	let newFriendPrincipal = $state('');
-
 	let adding = $state(false);
 
 	onMount(async () => {
-		await loadFriends();
+		await loadData();
 	});
 
-	const loadFriends = async () => {
+	const loadData = async () => {
 		loading = true;
 
 		try {
-			const activeFriends = await getFriends(userPrincipal);
+			[activeFriends, pendingRequests, rejectedRelations] = await Promise.all([
+				getFriends(userPrincipal),
+				getFriendRequests(userPrincipal),
+				getRejectedFriendships(userPrincipal)
+			]);
 
-			friends = activeFriends;
+			const allRelations = [
+				...activeFriends,
+				...pendingRequests.map((p) => p.data),
+				...rejectedRelations.map((p) => p.data)
+			];
 
-			for (const relation of activeFriends) {
+			for (const relation of allRelations) {
 				const friendId = relation.participants.find((p) => p !== userPrincipal);
 
 				if (friendId && !friendProfiles.has(friendId)) {
@@ -63,9 +83,36 @@
 		try {
 			await sendFriendRequest({ target: newFriendPrincipal, sender: userPrincipal });
 			newFriendPrincipal = '';
-			// Show success toast or similar (omitted for brevity)
+			await loadData();
+		} catch (err: unknown) {
+			console.error(err);
+			alert(err instanceof Error && err.message ? err.message : 'Failed to send request');
 		} finally {
 			adding = false;
+		}
+	};
+
+	const handleAccept = async (doc: Doc<Relation>) => {
+		await acceptFriendRequest({ currentRelation: doc });
+		await loadData();
+	};
+
+	const handleReject = async (doc: Doc<Relation>) => {
+		await rejectFriendRequest({ currentRelation: doc });
+		await loadData();
+	};
+
+	const handleUnfriend = async (friendId: string) => {
+		if (!confirm('Are you sure you want to unfriend this user?')) {
+			return;
+		}
+
+		try {
+			await unfriendUser({ target: friendId, sender: userPrincipal });
+			await loadData();
+		} catch (err) {
+			console.error(err);
+			alert('Failed to unfriend');
 		}
 	};
 </script>
@@ -73,74 +120,211 @@
 <Card padding="lg" variant="glass">
 	<div class="flex flex-col gap-4">
 		<div class="flex items-center justify-between">
-			<h3
-				class="from-primary to-secondary bg-linear-to-r bg-clip-text text-xl font-bold text-transparent"
-			>
-				Friends
-			</h3>
-			<span class="text-muted-foreground text-sm">{friends.length} active</span>
+			<h3 class="text-primary text-xl font-bold">Friends</h3>
 		</div>
 
-		<div class="flex gap-2">
-			<input
-				class="border-border bg-background/50 focus:ring-primary/50 flex-1 rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-				placeholder="Principal ID..."
-				type="text"
-				bind:value={newFriendPrincipal}
-			/>
-			<Button
-				onclick={handleAddFriend}
-				status={adding || !newFriendPrincipal ? 'disabled' : 'enabled'}
+		<!-- Tabs -->
+		<div class="border-border flex gap-4 border-b text-sm font-medium">
+			<button
+				class="pb-2 {activeTab === 'active'
+					? 'border-primary text-primary border-b-2'
+					: 'text-muted-foreground'}"
+				onclick={() => (activeTab = 'active')}
 			>
-				{adding ? 'Adding...' : 'Add'}
-			</Button>
+				Active ({activeFriends.length})
+			</button>
+			<button
+				class="pb-2 {activeTab === 'requests'
+					? 'border-primary text-primary border-b-2'
+					: 'text-muted-foreground'}"
+				onclick={() => (activeTab = 'requests')}
+			>
+				Requests ({pendingRequests.length})
+			</button>
+			<button
+				class="pb-2 {activeTab === 'rejected'
+					? 'border-primary text-primary border-b-2'
+					: 'text-muted-foreground'}"
+				onclick={() => (activeTab = 'rejected')}
+			>
+				Rejected ({rejectedRelations.length})
+			</button>
 		</div>
+
+		{#if activeTab === 'active'}
+			<div class="flex gap-2">
+				<input
+					class="border-border bg-background/50 focus:ring-primary/50 flex-1 rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
+					placeholder="User Principal ID..."
+					type="text"
+					bind:value={newFriendPrincipal}
+				/>
+				<Button
+					onclick={handleAddFriend}
+					status={adding || !newFriendPrincipal ? 'disabled' : 'enabled'}
+				>
+					{adding ? 'Sending...' : 'Add Friend'}
+				</Button>
+			</div>
+		{/if}
 
 		<div class="custom-scrollbar flex max-h-80 flex-col gap-2 overflow-y-auto pr-1">
 			{#if loading}
 				<div class="flex justify-center py-4">
 					<LoadingSpinner />
 				</div>
-			{:else if friends.length === 0}
-				<p class="text-muted-foreground py-8 text-center text-sm opacity-50">
-					No friends yet. Add some!
-				</p>
 			{:else}
-				{#each friends as relation (relation.createdAt)}
-					{@const friendId = relation.participants.find((p) => p !== userPrincipal)}
-					{@const profile = friendId ? friendProfiles.get(friendId) : null}
+				<!-- ACTIVE TAB -->
+				{#if activeTab === 'active'}
+					{#if activeFriends.length === 0}
+						<p class="text-muted-foreground py-8 text-center text-sm opacity-50">
+							No active friends. Send a request!
+						</p>
+					{:else}
+						{#each activeFriends as relation (relation.createdAt)}
+							{@const friendId = relation.participants.find((p) => p !== userPrincipal)}
+							{@const profile = friendId ? friendProfiles.get(friendId) : null}
 
-					<div
-						class="bg-accent/20 hover:bg-accent/40 group flex items-center gap-3 rounded-xl p-3 transition-all"
-					>
-						<div class="relative">
 							<div
-								class="bg-muted h-10 w-10 overflow-hidden rounded-full shadow-inner transition-transform group-hover:scale-110"
+								class="bg-accent/20 hover:bg-accent/40 group flex flex-col items-start justify-between gap-3 rounded-xl p-3 transition-all sm:flex-row sm:items-center"
 							>
-								{#if profile?.avatar}
-									<img
-										class="h-full w-full object-cover"
-										alt={profile.nickname}
-										src={profile.avatar}
-									/>
-								{:else}
-									<div class="flex h-full w-full items-center justify-center text-lg font-bold">
-										{profile?.nickname?.[0] ?? '?'}
+								<div class="flex items-center gap-3">
+									<div class="relative">
+										<div
+											class="bg-muted h-10 w-10 overflow-hidden rounded-full shadow-inner transition-transform group-hover:scale-110"
+										>
+											{#if profile?.avatar}
+												<img
+													class="h-full w-full object-cover"
+													alt={profile.nickname}
+													src={profile.avatar}
+												/>
+											{:else}
+												<div
+													class="flex h-full w-full items-center justify-center text-lg font-bold"
+												>
+													{profile?.nickname?.[0] ?? '?'}
+												</div>
+											{/if}
+										</div>
+										<div
+											class="border-background absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 bg-green-500 shadow-sm"
+										></div>
 									</div>
-								{/if}
+									<div class="flex-1 overflow-hidden">
+										<p class="truncate text-sm font-semibold">{profile?.nickname ?? 'Unknown'}</p>
+										<p class="text-muted-foreground truncate text-xs opacity-70">
+											{friendId ? shortenWithMiddleEllipsis({ text: friendId }) : ''}
+										</p>
+									</div>
+								</div>
+
+								<Button
+									onclick={() => friendId && handleUnfriend(friendId)}
+									size="sm"
+									variant="ghost"
+								>
+									Unfriend
+								</Button>
 							</div>
+						{/each}
+					{/if}
+				{/if}
+
+				<!-- REQUESTS TAB -->
+				{#if activeTab === 'requests'}
+					{#if pendingRequests.length === 0}
+						<p class="text-muted-foreground py-8 text-center text-sm opacity-50">
+							No pending incoming requests.
+						</p>
+					{:else}
+						{#each pendingRequests as doc (doc.data.createdAt)}
+							{@const relation = doc.data}
+							{@const friendId = relation.participants.find((p) => p !== userPrincipal)}
+							{@const profile = friendId ? friendProfiles.get(friendId) : null}
+
 							<div
-								class="border-background absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 bg-green-500 shadow-sm"
-							></div>
-						</div>
-						<div class="flex-1 overflow-hidden">
-							<p class="truncate text-sm font-semibold">{profile?.nickname ?? 'Unknown'}</p>
-							<p class="text-muted-foreground truncate text-xs opacity-70">
-								{friendId ? shortenWithMiddleEllipsis({ text: friendId }) : ''}
-							</p>
-						</div>
-					</div>
-				{/each}
+								class="bg-accent/20 hover:bg-accent/40 group flex flex-col items-start justify-between gap-3 rounded-xl p-3 transition-all sm:flex-row sm:items-center"
+							>
+								<div class="flex items-center gap-3">
+									<div class="relative">
+										<div class="bg-muted h-10 w-10 overflow-hidden rounded-full shadow-inner">
+											{#if profile?.avatar}
+												<img
+													class="h-full w-full object-cover"
+													alt={profile.nickname}
+													src={profile.avatar}
+												/>
+											{:else}
+												<div
+													class="flex h-full w-full items-center justify-center text-lg font-bold"
+												>
+													{profile?.nickname?.[0] ?? '?'}
+												</div>
+											{/if}
+										</div>
+									</div>
+									<div class="flex-1 overflow-hidden">
+										<p class="truncate text-sm font-semibold">{profile?.nickname ?? 'Unknown'}</p>
+										<p class="text-muted-foreground truncate text-xs opacity-70">
+											{friendId ? shortenWithMiddleEllipsis({ text: friendId }) : ''}
+										</p>
+									</div>
+								</div>
+								<div class="flex gap-2">
+									<Button onclick={() => handleReject(doc)} size="sm" variant="outline"
+										>Reject</Button
+									>
+									<Button onclick={() => handleAccept(doc)} size="sm">Accept</Button>
+								</div>
+							</div>
+						{/each}
+					{/if}
+				{/if}
+
+				<!-- REJECTED TAB -->
+				{#if activeTab === 'rejected'}
+					{#if rejectedRelations.length === 0}
+						<p class="text-muted-foreground py-8 text-center text-sm opacity-50">
+							No rejected friendships. You're keeping it clean!
+						</p>
+					{:else}
+						{#each rejectedRelations as doc (doc.data.createdAt)}
+							{@const relation = doc.data}
+							{@const friendId = relation.participants.find((p) => p !== userPrincipal)}
+							{@const profile = friendId ? friendProfiles.get(friendId) : null}
+
+							<div
+								class="bg-destructive/10 group flex items-center gap-3 rounded-xl p-3 opacity-70"
+							>
+								<div class="bg-muted h-10 w-10 overflow-hidden rounded-full grayscale">
+									{#if profile?.avatar}
+										<img
+											class="h-full w-full object-cover"
+											alt={profile.nickname}
+											src={profile.avatar}
+										/>
+									{:else}
+										<div class="flex h-full w-full items-center justify-center text-lg font-bold">
+											{profile?.nickname?.[0] ?? '?'}
+										</div>
+									{/if}
+								</div>
+								<div class="flex-1 overflow-hidden">
+									<p class="truncate text-sm font-semibold line-through">
+										{profile?.nickname ?? 'Unknown'}
+									</p>
+									<p class="text-muted-foreground truncate text-xs">
+										{friendId ? shortenWithMiddleEllipsis({ text: friendId }) : ''}
+									</p>
+								</div>
+								<span class="bg-destructive/20 text-destructive rounded px-2 py-1 text-xs"
+									>Rejected</span
+								>
+							</div>
+						{/each}
+					{/if}
+				{/if}
 			{/if}
 		</div>
 	</div>

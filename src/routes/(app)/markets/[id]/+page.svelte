@@ -8,7 +8,7 @@
 	import MarketInfoPanel from '$lib/components/market/MarketInfoPanel.svelte';
 	import MarketResolutionInterface from '$lib/components/market/MarketResolutionInterface.svelte';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
-	import { userIsAdminOrResolver } from '$lib/derived/user.derived';
+	import { userIsAdminOrSolver } from '$lib/derived/user.derived';
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
 	import type { Market, MarketId } from '$lib/types/market';
@@ -109,7 +109,7 @@
 			</div>
 
 			<!-- Admin Resolution Section -->
-			{#if market.status === 'Open' && $userIsAdminOrResolver}
+			{#if market.status === 'Open' && $userIsAdminOrSolver}
 				<div class="mx-auto max-w-4xl border-t border-slate-100 pt-12">
 					<MarketResolutionInterface
 						{market}

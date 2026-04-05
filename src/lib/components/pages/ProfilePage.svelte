@@ -3,6 +3,8 @@
 	import AvatarSystem from '$lib/components/profile/AvatarSystem.svelte';
 	import ProfileDashboard from '$lib/components/profile/ProfileDashboard.svelte';
 	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
+	import FriendsList from '$lib/components/social/FriendsList.svelte';
+	import GroupManager from '$lib/components/social/GroupManager.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getProfile } from '$lib/services/profile.services';
@@ -39,6 +41,12 @@
 			<!-- Customization & Settings Section -->
 			<div class="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">
 				<AvatarSystem profile={$userStore.profile} />
+			</div>
+
+			<!-- Social Connections Section -->
+			<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
+				<FriendsList userPrincipal={$authPrincipal ?? ''} />
+				<GroupManager userPrincipal={$authPrincipal ?? ''} />
 			</div>
 
 			<!-- Secondary Content: Activity -->

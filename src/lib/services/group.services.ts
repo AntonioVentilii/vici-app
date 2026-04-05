@@ -189,3 +189,31 @@ export const updateTradingAccess = async ({
 		}
 	});
 };
+
+export const syncGroupAdminsAfterUnfriend = async ({
+	userA,
+	userB
+}: {
+	userA: string;
+	userB: string;
+}): Promise<void> => {
+	try {
+		const groupsA = await listGroups(userA);
+
+		for (const group of groupsA) {
+			if (group.admins.some((a) => a.toText() === userB)) {
+				await removeGroupAdmins({ groupId: group.group_id, principals: [userB] });
+			}
+		}
+
+		const groupsB = await listGroups(userB);
+
+		for (const group of groupsB) {
+			if (group.admins.some((a) => a.toText() === userA)) {
+				await removeGroupAdmins({ groupId: group.group_id, principals: [userA] });
+			}
+		}
+	} catch (e) {
+		console.error('Failed to sync group admins after unfriend', e);
+	}
+};

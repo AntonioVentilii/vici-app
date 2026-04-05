@@ -15,6 +15,15 @@ export const sendFriendRequest = async ({
 }): Promise<void> => {
 	const relationId = [sender, target].sort().join('#');
 
+	const existingDoc = await getDoc<Relation>({
+		collection: Collection.RELATIONS,
+		key: relationId
+	});
+
+	if (existingDoc !== undefined) {
+		throw new Error(`Friend request already exists with state: ${existingDoc.data.state}`);
+	}
+
 	const now = Date.now();
 
 	const relation: Relation = {
@@ -53,6 +62,57 @@ export const acceptFriendRequest = async ({
 	});
 };
 
+/** Marks a friend relation as rejected. */
+export const rejectFriendRequest = async ({
+	currentRelation
+}: {
+	currentRelation: Doc<Relation>;
+}): Promise<void> => {
+	await setDoc({
+		collection: Collection.RELATIONS,
+		doc: {
+			...currentRelation,
+			data: {
+				...currentRelation.data,
+				state: RelationState.REJECTED,
+				updatedAt: Date.now()
+			}
+		}
+	});
+};
+
+/** Removes a friend relation and syncs group admins. */
+export const unfriendUser = async (params: {
+	sender: PrincipalText;
+	target: PrincipalText;
+}): Promise<void> => {
+	const relationId = [params.sender, params.target].sort().join('#');
+
+	const doc = await getDoc<Relation>({
+		collection: Collection.RELATIONS,
+		key: relationId
+	});
+
+	if (isNullish(doc)) {
+		throw new Error('Relation does not exist');
+	}
+
+	try {
+		// We delete the relation so it is clear and they can retry later
+		await deleteDoc({
+			collection: Collection.RELATIONS,
+			doc
+		});
+
+		// Sync group admins dynamically to avoid circular dependency
+		const { syncGroupAdminsAfterUnfriend } = await import('$lib/services/group.services');
+		await syncGroupAdminsAfterUnfriend({ userA: params.sender, userB: params.target });
+	} catch (e) {
+		console.error('Failed to unfriend', e);
+		throw e;
+	}
+};
+
 /** Active friend relations that include the user. */
 export const getFriends = async (userPrincipal: PrincipalText): Promise<Relation[]> => {
 	const { items } = await listDocs<Relation>({
@@ -68,6 +128,40 @@ export const getFriends = async (userPrincipal: PrincipalText): Promise<Relation
 				data.participants.includes(userPrincipal)
 		)
 		.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+};
+
+/** Pending incoming friend requests for the user. */
+export const getFriendRequests = async (userPrincipal: PrincipalText): Promise<Doc<Relation>[]> => {
+	const { items } = await listDocs<Relation>({
+		collection: Collection.RELATIONS
+	});
+
+	return items
+		.filter(
+			({ data }) =>
+				data.category === RelationCategory.FRIEND &&
+				data.state === RelationState.PENDING &&
+				data.participants[1] === userPrincipal // User is the target
+		)
+		.sort((a, b) => (b.data.createdAt ?? 0) - (a.data.createdAt ?? 0));
+};
+
+/** Friendships that the user explicitly rejected or was involved in rejecting. */
+export const getRejectedFriendships = async (
+	userPrincipal: PrincipalText
+): Promise<Doc<Relation>[]> => {
+	const { items } = await listDocs<Relation>({
+		collection: Collection.RELATIONS
+	});
+
+	return items
+		.filter(
+			({ data }) =>
+				data.category === RelationCategory.FRIEND &&
+				data.state === RelationState.REJECTED &&
+				data.participants.includes(userPrincipal)
+		)
+		.sort((a, b) => (b.data.createdAt ?? 0) - (a.data.createdAt ?? 0));
 };
 
 /** Creates or overwrites an active follow from sender to target. */

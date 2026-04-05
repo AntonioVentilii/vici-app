@@ -63,9 +63,7 @@
 <Card padding="lg" variant="glass">
 	<div class="flex w-full flex-col gap-4">
 		<div class="flex w-full items-center justify-between">
-			<h3
-				class="from-primary to-secondary bg-linear-to-r bg-clip-text text-xl font-bold text-transparent"
-			>
+			<h3 class="text-primary text-xl font-bold">
 				{mode === 'friends' ? 'Friend Activity' : 'Recent Activity'}
 			</h3>
 			<button

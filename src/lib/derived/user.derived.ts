@@ -34,7 +34,7 @@ export const userIsAdmin: Readable<boolean> = derived(
 	([$userIsController, $userRole]) => $userIsController || $userRole === UserRole.ADMIN
 );
 
-export const userIsAdminOrResolver: Readable<boolean> = derived(
+export const userIsAdminOrSolver: Readable<boolean> = derived(
 	[userIsAdmin, userRole],
-	([$userIsAdmin, $userRole]) => $userIsAdmin || $userRole === UserRole.RESOLVER
+	([$userIsAdmin, $userRole]) => $userIsAdmin || $userRole === UserRole.SOLVER
 );
