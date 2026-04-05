@@ -22,7 +22,7 @@ enum JunoDatastoreCollection {
 	VXP_ONBOARDING = 'vxp_onboarding'
 }
 
-export default defineConfig({
+export default defineConfig(({ mode }) => ({
 	satellite: {
 		ids: {
 			development: 'auamu-4x777-77775-aaaaa-cai',
@@ -30,6 +30,17 @@ export default defineConfig({
 		},
 		source: 'build',
 		predeploy: ['npm run build'],
+		authentication: {
+			google: {
+				clientId:
+					mode === 'production'
+						? '215111139647-7hat1jefroe7tkgu5kds4s8sv4dgf3fu.apps.googleusercontent.com'
+						: '794351932143-em7c7j4rko2ok5fhk4crhv6f44ifmpqv.apps.googleusercontent.com'
+			},
+			delegation: {
+				sessionDuration: BigInt(7 * 24 * 60 * 60 * 1_000_000_000)
+			}
+		},
 		collections: {
 			datastore: [
 				{
@@ -89,4 +100,4 @@ export default defineConfig({
 			]
 		}
 	}
-});
+}));

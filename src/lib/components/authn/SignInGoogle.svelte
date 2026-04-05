@@ -2,6 +2,7 @@
 	import { signIn } from '@junobuild/core';
 	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { isDev } from '$lib/env/app.env';
 	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props {
@@ -12,25 +13,29 @@
 	const { status = $bindable('enabled'), onSuccess }: Props = $props();
 
 	const signInWithGoogle = async () => {
-		await signIn({
-			google: {}
-		});
-
-		onSuccess?.();
+		try {
+			await signIn({
+				google: {
+					options: {
+						redirect: {
+							clientId: isDev()
+								? '794351932143-em7c7j4rko2ok5fhk4crhv6f44ifmpqv.apps.googleusercontent.com'
+								: '215111139647-7hat1jefroe7tkgu5kds4s8sv4dgf3fu.apps.googleusercontent.com',
+							redirectUrl: `${window.location.origin}/auth/callback/google`
+						}
+					}
+				}
+			});
+			onSuccess?.();
+		} catch (err) {
+			console.error('Failed to start Google sign-in:', err);
+		}
 	};
 </script>
 
 <div class="relative w-full">
-	<Button class="w-full opacity-70 grayscale" onclick={signInWithGoogle} {status}>
+	<Button class="w-full" onclick={signInWithGoogle} {status}>
 		<IconGoogle size="20px" />
 		<span>Sign in with Google</span>
 	</Button>
-
-	<div class="pointer-events-none absolute -top-2 -right-2 z-10">
-		<span
-			class="bg-primary text-primary-foreground rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm"
-		>
-			Coming Soon
-		</span>
-	</div>
 </div>

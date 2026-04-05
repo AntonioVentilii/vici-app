@@ -20,7 +20,7 @@
 		<SignInDev {onSuccess} />
 	{/if}
 
-	<SignInGoogle {onSuccess} status="disabled" />
+	<SignInGoogle {onSuccess} />
 
 	<SignInII {onSuccess} status={prodStatus} />
 
