@@ -119,17 +119,6 @@
 			return;
 		}
 
-		// AUTH CHECK: Guests cannot trade
-		if (isNullish($userStore.user)) {
-			notificationsStore.add({
-				title: 'Sign In Required',
-				message: 'Please sign in to place trades in Flow Mode.',
-				type: 'warning'
-			});
-
-			return;
-		}
-
 		// ASYNCHRONOUS TRADE EXECUTION (Non-awaited)
 		// We prepare the data and fire the trade in the background via FlowTradeService
 		const executeTrade = async () => {
