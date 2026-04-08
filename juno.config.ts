@@ -22,6 +22,13 @@ enum JunoDatastoreCollection {
 	VXP_ONBOARDING = 'vxp_onboarding'
 }
 
+const delegation = {
+	// Like identities derived by Internet Identity, those derived with OpenID
+	// are allowed to interact with any canister on the Internet Computer.
+	allowedTargets: null,
+	sessionDuration: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000) // 7 days in nanoseconds
+};
+
 export default defineConfig(({ mode }) => ({
 	satellite: {
 		ids: {
@@ -35,10 +42,8 @@ export default defineConfig(({ mode }) => ({
 				clientId:
 					mode === 'production'
 						? '215111139647-7hat1jefroe7tkgu5kds4s8sv4dgf3fu.apps.googleusercontent.com'
-						: '794351932143-em7c7j4rko2ok5fhk4crhv6f44ifmpqv.apps.googleusercontent.com'
-			},
-			delegation: {
-				sessionDuration: BigInt(7 * 24 * 60 * 60 * 1_000_000_000)
+						: '794351932143-em7c7j4rko2ok5fhk4crhv6f44ifmpqv.apps.googleusercontent.com',
+				delegation
 			}
 		},
 		collections: {

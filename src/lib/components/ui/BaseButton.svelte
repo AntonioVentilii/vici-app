@@ -48,7 +48,7 @@
 >
 	{#if isBusy}
 		<span class="flex h-4 w-4 items-center justify-center">
-			<LoadingSpinner size="current" border={2} color="border-current" center={false} />
+			<LoadingSpinner border={2} center={false} color="border-current" size="current" />
 		</span>
 
 		{#if nonNullish(busyLabel)}

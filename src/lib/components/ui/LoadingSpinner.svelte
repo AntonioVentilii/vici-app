@@ -32,6 +32,8 @@
 
 <div class={center ? `flex justify-center py-24 ${className}` : className}>
 	<div
-		class="animate-spin rounded-full border-t-transparent {sizeClasses[size]} {borderClasses[border]} {color}"
+		class="animate-spin rounded-full border-t-transparent {sizeClasses[size]} {borderClasses[
+			border
+		]} {color}"
 	></div>
 </div>
