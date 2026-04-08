@@ -61,7 +61,7 @@
 	},
 	"type": "module",
 	"dependencies": {
-		"@dfinity/utils": "^4.1.0",
+		"@dfinity/utils": "^4.2.0",
 		"@icp-sdk/canisters": "^3.5.0",
 		"@junobuild/core": "^5.3.1",
 		"@junobuild/functions": "^0.5.6",
