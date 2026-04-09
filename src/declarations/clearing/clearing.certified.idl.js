@@ -24,6 +24,7 @@ export const Asset = IDL.Variant({
 });
 export const BalanceDomain = IDL.Variant({
 	ViciXp: IDL.Null,
+	Social: IDL.Null,
 	Playground: IDL.Null,
 	Settlement: IDL.Null
 });
@@ -312,7 +313,15 @@ export const FiatUnit = IDL.Variant({
 	Gbp: IDL.Null,
 	Usd: IDL.Null
 });
-export const NonMonetaryUnit = IDL.Variant({ Points: IDL.Null });
+export const SocialReward = IDL.Record({
+	title: IDL.Text,
+	description: IDL.Opt(IDL.Text),
+	icon_url: IDL.Opt(IDL.Text)
+});
+export const NonMonetaryUnit = IDL.Variant({
+	Points: IDL.Null,
+	Social: SocialReward
+});
 export const PayoutUnit = IDL.Variant({
 	Fiat: FiatUnit,
 	Asset: Asset,
@@ -366,6 +375,18 @@ export const MigrationError = IDL.Variant({
 export const MigrateDomainResult = IDL.Variant({
 	Ok: IDL.Null,
 	Err: MigrationError
+});
+export const RefreshIcrcAssetMetadataParams = IDL.Record({
+	asset_id: IDL.Text
+});
+export const RefreshIcrcAssetMetadataError = IDL.Variant({
+	AssetNotFound: IDL.Null,
+	NotAnIcrcAsset: IDL.Null,
+	Common: CommonError
+});
+export const RefreshIcrcAssetMetadataResult = IDL.Variant({
+	Ok: IDL.Null,
+	Err: RefreshIcrcAssetMetadataError
 });
 export const RegisterIcrcAssetParams = IDL.Record({
 	haircut_bps: IDL.Nat16,
@@ -550,6 +571,11 @@ export const idlService = IDL.Service({
 	migrate_domain: IDL.Func([MigrateDomainParams], [MigrateDomainResult], []),
 	mint_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
 	redeem_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
+	refresh_icrc_asset_metadata: IDL.Func(
+		[RefreshIcrcAssetMetadataParams],
+		[RefreshIcrcAssetMetadataResult],
+		[]
+	),
 	register_icrc_asset: IDL.Func([RegisterIcrcAssetParams], [RegisterIcrcAssetResult], []),
 	resume_settlement: IDL.Func([IDL.Text], [SettleSeriesResult], []),
 	set_registry_canister: IDL.Func([IDL.Principal], [], []),
@@ -591,6 +617,7 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const BalanceDomain = IDL.Variant({
 		ViciXp: IDL.Null,
+		Social: IDL.Null,
 		Playground: IDL.Null,
 		Settlement: IDL.Null
 	});
@@ -872,7 +899,15 @@ export const idlFactory = ({ IDL }) => {
 		Gbp: IDL.Null,
 		Usd: IDL.Null
 	});
-	const NonMonetaryUnit = IDL.Variant({ Points: IDL.Null });
+	const SocialReward = IDL.Record({
+		title: IDL.Text,
+		description: IDL.Opt(IDL.Text),
+		icon_url: IDL.Opt(IDL.Text)
+	});
+	const NonMonetaryUnit = IDL.Variant({
+		Points: IDL.Null,
+		Social: SocialReward
+	});
 	const PayoutUnit = IDL.Variant({
 		Fiat: FiatUnit,
 		Asset: Asset,
@@ -926,6 +961,16 @@ export const idlFactory = ({ IDL }) => {
 	const MigrateDomainResult = IDL.Variant({
 		Ok: IDL.Null,
 		Err: MigrationError
+	});
+	const RefreshIcrcAssetMetadataParams = IDL.Record({ asset_id: IDL.Text });
+	const RefreshIcrcAssetMetadataError = IDL.Variant({
+		AssetNotFound: IDL.Null,
+		NotAnIcrcAsset: IDL.Null,
+		Common: CommonError
+	});
+	const RefreshIcrcAssetMetadataResult = IDL.Variant({
+		Ok: IDL.Null,
+		Err: RefreshIcrcAssetMetadataError
 	});
 	const RegisterIcrcAssetParams = IDL.Record({
 		haircut_bps: IDL.Nat16,
@@ -1114,6 +1159,11 @@ export const idlFactory = ({ IDL }) => {
 		migrate_domain: IDL.Func([MigrateDomainParams], [MigrateDomainResult], []),
 		mint_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
 		redeem_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),
+		refresh_icrc_asset_metadata: IDL.Func(
+			[RefreshIcrcAssetMetadataParams],
+			[RefreshIcrcAssetMetadataResult],
+			[]
+		),
 		register_icrc_asset: IDL.Func([RegisterIcrcAssetParams], [RegisterIcrcAssetResult], []),
 		resume_settlement: IDL.Func([IDL.Text], [SettleSeriesResult], []),
 		set_registry_canister: IDL.Func([IDL.Principal], [], []),
@@ -1154,6 +1204,7 @@ export const init = ({ IDL }) => {
 	});
 	const BalanceDomain = IDL.Variant({
 		ViciXp: IDL.Null,
+		Social: IDL.Null,
 		Playground: IDL.Null,
 		Settlement: IDL.Null
 	});

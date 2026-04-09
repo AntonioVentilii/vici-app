@@ -146,6 +146,12 @@ export type BalanceDomain =
 	  }
 	| {
 			/**
+			 * Non-monetary social bets (e.g., betting a pizza).
+			 */
+			Social: null;
+	  }
+	| {
+			/**
 			 * Testnet / sandbox collateral (e.g. TESTICP, Sepolia) — not real funds.
 			 */
 			Playground: null;
@@ -440,7 +446,7 @@ export interface NativeEvmAsset {
 	 */
 	chain_id: bigint;
 }
-export type NonMonetaryUnit = { Points: null };
+export type NonMonetaryUnit = { Points: null } | { Social: SocialReward };
 /**
  * Represents an authorised price oracle group.
  */
@@ -678,6 +684,12 @@ export interface Series {
 export type SeriesError =
 	| {
 			/**
+			 * Social reward description exceeds limit.
+			 */
+			RewardDescriptionTooLong: null;
+	  }
+	| {
+			/**
 			 * Returned when the provided description exceeds the maximum allowed length.
 			 */
 			DescriptionTooLong: null;
@@ -687,6 +699,12 @@ export type SeriesError =
 			 * Returned when the provided title exceeds the maximum allowed length.
 			 */
 			TitleTooLong: null;
+	  }
+	| {
+			/**
+			 * Social reward icon URL exceeds limit.
+			 */
+			RewardIconUrlTooLong: null;
 	  }
 	| {
 			/**
@@ -705,6 +723,12 @@ export type SeriesError =
 			 * Returned when attempting to add a series that already exists.
 			 */
 			SeriesAlreadyExists: null;
+	  }
+	| {
+			/**
+			 * Social reward title exceeds limit.
+			 */
+			RewardTitleTooLong: null;
 	  };
 /**
  * A paginated page of registered series.
@@ -718,6 +742,20 @@ export interface SeriesPage {
 	 * The list of series in this page.
 	 */
 	items: Array<Series>;
+}
+export interface SocialReward {
+	/**
+	 * A short title for the reward (e.g., "Pizza 🍕").
+	 */
+	title: string;
+	/**
+	 * An optional detailed description of the reward.
+	 */
+	description: [] | [string];
+	/**
+	 * An optional icon URL for the reward.
+	 */
+	icon_url: [] | [string];
 }
 /**
  * A single trading access policy attached to a derivative series.

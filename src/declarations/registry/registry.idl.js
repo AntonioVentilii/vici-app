@@ -80,7 +80,15 @@ export const Asset = IDL.Variant({
 	Icrc: IDL.Principal,
 	NativeEvm: NativeEvmAsset
 });
-export const NonMonetaryUnit = IDL.Variant({ Points: IDL.Null });
+export const SocialReward = IDL.Record({
+	title: IDL.Text,
+	description: IDL.Opt(IDL.Text),
+	icon_url: IDL.Opt(IDL.Text)
+});
+export const NonMonetaryUnit = IDL.Variant({
+	Points: IDL.Null,
+	Social: SocialReward
+});
 export const PayoutUnit = IDL.Variant({
 	Fiat: FiatUnit,
 	Asset: Asset,
@@ -98,6 +106,7 @@ export const TradingAccess = IDL.Variant({
 });
 export const BalanceDomain = IDL.Variant({
 	ViciXp: IDL.Null,
+	Social: IDL.Null,
 	Playground: IDL.Null,
 	Settlement: IDL.Null
 });
@@ -118,11 +127,14 @@ export const AddSeriesParams = IDL.Record({
 	oracle_source: IDL.Text
 });
 export const SeriesError = IDL.Variant({
+	RewardDescriptionTooLong: IDL.Null,
 	DescriptionTooLong: IDL.Null,
 	TitleTooLong: IDL.Null,
+	RewardIconUrlTooLong: IDL.Null,
 	Unauthorized: IDL.Null,
 	UnsupportedPayoutUnit: IDL.Null,
-	SeriesAlreadyExists: IDL.Null
+	SeriesAlreadyExists: IDL.Null,
+	RewardTitleTooLong: IDL.Null
 });
 export const AddSeriesResult = IDL.Variant({
 	Ok: IDL.Text,
@@ -311,7 +323,15 @@ export const idlFactory = ({ IDL }) => {
 		Icrc: IDL.Principal,
 		NativeEvm: NativeEvmAsset
 	});
-	const NonMonetaryUnit = IDL.Variant({ Points: IDL.Null });
+	const SocialReward = IDL.Record({
+		title: IDL.Text,
+		description: IDL.Opt(IDL.Text),
+		icon_url: IDL.Opt(IDL.Text)
+	});
+	const NonMonetaryUnit = IDL.Variant({
+		Points: IDL.Null,
+		Social: SocialReward
+	});
 	const PayoutUnit = IDL.Variant({
 		Fiat: FiatUnit,
 		Asset: Asset,
@@ -329,6 +349,7 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const BalanceDomain = IDL.Variant({
 		ViciXp: IDL.Null,
+		Social: IDL.Null,
 		Playground: IDL.Null,
 		Settlement: IDL.Null
 	});
@@ -349,11 +370,14 @@ export const idlFactory = ({ IDL }) => {
 		oracle_source: IDL.Text
 	});
 	const SeriesError = IDL.Variant({
+		RewardDescriptionTooLong: IDL.Null,
 		DescriptionTooLong: IDL.Null,
 		TitleTooLong: IDL.Null,
+		RewardIconUrlTooLong: IDL.Null,
 		Unauthorized: IDL.Null,
 		UnsupportedPayoutUnit: IDL.Null,
-		SeriesAlreadyExists: IDL.Null
+		SeriesAlreadyExists: IDL.Null,
+		RewardTitleTooLong: IDL.Null
 	});
 	const AddSeriesResult = IDL.Variant({ Ok: IDL.Text, Err: SeriesError });
 	const CreateGroupParams = IDL.Record({

@@ -246,6 +246,12 @@ export type BalanceDomain =
 	  }
 	| {
 			/**
+			 * Non-monetary social bets (e.g., betting a pizza).
+			 */
+			Social: null;
+	  }
+	| {
+			/**
 			 * Testnet / sandbox collateral (e.g. TESTICP, Sepolia) — not real funds.
 			 */
 			Playground: null;
@@ -752,7 +758,7 @@ export interface NativeEvmAsset {
 	 */
 	chain_id: bigint;
 }
-export type NonMonetaryUnit = { Points: null };
+export type NonMonetaryUnit = { Points: null } | { Social: SocialReward };
 /**
  * Metadata for a specific outcome in a categorical market.
  */
@@ -915,6 +921,14 @@ export interface Price {
 	 */
 	decimal: DecimalValue;
 }
+export type RefreshIcrcAssetMetadataError =
+	| { AssetNotFound: null }
+	| { NotAnIcrcAsset: null }
+	| { Common: CommonError };
+export interface RefreshIcrcAssetMetadataParams {
+	asset_id: string;
+}
+export type RefreshIcrcAssetMetadataResult = { Ok: null } | { Err: RefreshIcrcAssetMetadataError };
 export type RegisterIcrcAssetError =
 	| {
 			/**
@@ -1185,6 +1199,20 @@ export interface SettlementStatusView {
  * Represents the side of an order or trade.
  */
 export type Side = { Buy: null } | { Sell: null };
+export interface SocialReward {
+	/**
+	 * A short title for the reward (e.g., "Pizza 🍕").
+	 */
+	title: string;
+	/**
+	 * An optional detailed description of the reward.
+	 */
+	description: [] | [string];
+	/**
+	 * An optional icon URL for the reward.
+	 */
+	icon_url: [] | [string];
+}
 /**
  * Represents structured statistics for the clearing system.
  */
@@ -1717,6 +1745,15 @@ export interface _SERVICE {
 	 * Returns 1.0 USD (vUSD) for every full set of N outcome positions provided.
 	 */
 	redeem_complete_set: ActorMethod<[string, bigint], SubmitMatchedTradeResult>;
+	/**
+	 * Refreshes the metadata (decimals, fee, symbol) of an already registered ICRC asset.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	refresh_icrc_asset_metadata: ActorMethod<
+		[RefreshIcrcAssetMetadataParams],
+		RefreshIcrcAssetMetadataResult
+	>;
 	/**
 	 * Automatically registers an ICRC asset by fetching its metadata from the ledger.
 	 *
