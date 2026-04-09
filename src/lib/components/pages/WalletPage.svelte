@@ -11,7 +11,6 @@
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
 	import WalletStats from '$lib/components/wallet/WalletStats.svelte';
-	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { sendIc } from '$lib/services/send.services';
@@ -25,7 +24,6 @@
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Token } from '$lib/types/token';
 	import type { Transaction } from '$lib/types/wallet';
-	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import { emit } from '$lib/utils/events.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 
@@ -42,9 +40,7 @@
 
 	let isCollateralModalOpen = $state(false);
 
-	const isPlaygroundWallet = $derived(isViciXp($balanceDomain));
-
-	const tabs = $derived(isPlaygroundWallet ? ['History'] : ['Send', 'Receive', 'History']);
+	const tabs = ['History', 'Send', 'Receive'];
 
 	const filteredTransactions = $derived.by(() => {
 		const allowed = new Set($walletUiTokens.map((t) => t.ledgerCanisterId));
@@ -188,16 +184,12 @@
 
 	<CollateralModal isOpen={isCollateralModalOpen} onClose={() => (isCollateralModalOpen = false)} />
 
-	<!-- Operations Tabs (Send/Receive hidden in ViciXp playground — ledger ops not used there) -->
+	<!-- Operations -->
 	<Card padding="none">
-		{#if !isPlaygroundWallet}
-			<Tabs {tabs} bind:activeTab />
-		{/if}
+		<Tabs {tabs} bind:activeTab />
 
 		<div class="w-full p-8">
-			{#if isPlaygroundWallet}
-				<WalletHistory transactions={filteredTransactions} />
-			{:else if activeTab === 'Send'}
+			{#if activeTab === 'Send'}
 				{#if nonNullish(selectedToken)}
 					<WalletSend
 						{amount}
