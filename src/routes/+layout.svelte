@@ -17,7 +17,8 @@
 	const init = async () => {
 		await initSatellite({
 			workers: {
-				auth: true
+				// TODO: reinstate the `auth: true` when the PR is merged and released: https://github.com/junobuild/juno-js/issues/877#issuecomment-4206881878
+				auth: '/workers/auth.worker.js'
 			}
 		});
 
