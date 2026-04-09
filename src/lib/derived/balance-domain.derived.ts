@@ -10,6 +10,15 @@ export const balanceDomainValue: Readable<BalanceDomainKey> = derived(
 
 export const balanceDomain: Readable<ClearingDid.BalanceDomain> = derived(
 	balanceDomainStore,
-	($balanceDomainStore) =>
-		$balanceDomainStore.value === 'settlement' ? { Settlement: null } : { ViciXp: null }
+	($balanceDomainStore) => {
+		switch ($balanceDomainStore.value) {
+			case 'settlement':
+				return { Settlement: null };
+			case 'social':
+				return { Social: null };
+			case 'playground':
+			default:
+				return { ViciXp: null }; // Mapping playground experience to ViciXp on-chain
+		}
+	}
 );

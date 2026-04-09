@@ -256,3 +256,39 @@ export const getOrCreateFriendsGroup = async (): Promise<string> => {
 
 	return friendsGroup.group_id;
 };
+
+/**
+ * Gets or creates a "My Followers" group for the current user and syncs their active followers.
+ */
+export const getOrCreateFollowersGroup = async (): Promise<string> => {
+	const identity = await safeGetIdentityOnce();
+	const principal = identity.getPrincipal().toText();
+
+	const allGroups = await listGroups(principal);
+	let followersGroup = allGroups.find((g) => g.name === 'My Followers');
+
+	if (!followersGroup) {
+		const groupId = await createGroup({
+			name: 'My Followers',
+			description: 'A private circle for the people who follow me.'
+		});
+		followersGroup = await getGroup(groupId);
+	}
+
+	if (!followersGroup) {
+		throw new Error('Failed to retrieve followers group after creation');
+	}
+
+	// Sync followers
+	const { getFollowers } = await import('$lib/services/relation.services');
+	const followerPrincipals = await getFollowers(principal);
+
+	const currentMembers = followersGroup.members.map((m) => m.toText());
+	const missingMembers = followerPrincipals.filter((p) => !currentMembers.includes(p));
+
+	if (missingMembers.length > 0) {
+		await addGroupMembers({ groupId: followersGroup.group_id, principals: missingMembers });
+	}
+
+	return followersGroup.group_id;
+};

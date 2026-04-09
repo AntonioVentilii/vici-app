@@ -1,10 +1,10 @@
 <script lang="ts">
-	import { FlaskConical, ShieldCheck } from 'lucide-svelte/icons';
+	import { FlaskConical, ShieldCheck, Users } from 'lucide-svelte/icons';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { setBalanceDomain } from '$lib/services/balance-domain.services';
 	import type { BalanceDomainKey } from '$lib/types/balance-domain';
-	import { isPlaygroundExperience, isSettlement } from '$lib/utils/balance-domain.utils';
+	import { isPlaygroundExperience, isSettlement, isSocial } from '$lib/utils/balance-domain.utils';
 
 	const setDomain = (domain: BalanceDomainKey) => {
 		// Disabled for now in prod
@@ -18,6 +18,8 @@
 	const setPlaygroundDomain = () => setDomain('playground');
 
 	const setSettlementDomain = () => setDomain('settlement');
+
+	const setSocialDomain = () => setDomain('social');
 </script>
 
 <div class="px-4 py-2">
@@ -36,6 +38,18 @@
 		>
 			<FlaskConical size={16} />
 			<span class="text-[9px] font-bold">PLAYGROUND</span>
+		</button>
+		<button
+			class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isSocial(
+				$balanceDomain
+			)
+				? 'border-fuchsia-600 bg-fuchsia-50 text-fuchsia-700 shadow-sm'
+				: 'border-border text-muted-foreground hover:bg-muted'}"
+			aria-label="Social domain"
+			onclick={setSocialDomain}
+		>
+			<Users size={16} />
+			<span class="text-[9px] font-bold uppercase">Social</span>
 		</button>
 		<button
 			class="relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isSettlement(

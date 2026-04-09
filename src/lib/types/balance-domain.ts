@@ -1,1 +1,1 @@
-export type BalanceDomainKey = 'playground' | 'settlement';
+export type BalanceDomainKey = 'playground' | 'settlement' | 'social';

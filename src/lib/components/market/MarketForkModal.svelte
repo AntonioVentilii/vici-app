@@ -4,7 +4,11 @@
 	import type { RegistryDid } from '$declarations';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
-	import { getOrCreateFriendsGroup, listGroups } from '$lib/services/group.services';
+	import {
+		getOrCreateFollowersGroup,
+		getOrCreateFriendsGroup,
+		listGroups
+	} from '$lib/services/group.services';
 	import { forkMarket } from '$lib/services/market.services';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Market } from '$lib/types/market';
@@ -17,7 +21,7 @@
 
 	const { isOpen, market, onClose }: Props = $props();
 
-	let mode = $state<'Friends' | 'Group'>('Friends');
+	let mode = $state<'Friends' | 'Followers' | 'Group'>('Friends');
 	let availableGroups = $state<RegistryDid.Group[]>([]);
 	let selectedGroupId = $state<string | null>(null);
 	let loadingGroups = $state(false);
@@ -48,6 +52,9 @@
 			if (mode === 'Friends') {
 				const friendsGroupId = await getOrCreateFriendsGroup();
 				targetGroupIds = [friendsGroupId];
+			} else if (mode === 'Followers') {
+				const followersGroupId = await getOrCreateFollowersGroup();
+				targetGroupIds = [followersGroupId];
 			} else if (selectedGroupId) {
 				targetGroupIds = [selectedGroupId];
 			} else {
@@ -102,6 +109,16 @@
 					<span class="text-xs font-bold tracking-wider uppercase">Friends</span>
 				</button>
 				<button
+					class="flex-1 rounded-2xl border-2 px-4 py-3 text-center transition-all {mode ===
+					'Followers'
+						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+					onclick={() => (mode = 'Followers')}
+				>
+					<span class="block text-lg">📣</span>
+					<span class="text-xs font-bold tracking-wider uppercase">Followers</span>
+				</button>
+				<button
 					class="flex-1 rounded-2xl border-2 px-4 py-3 text-center transition-all {mode === 'Group'
 						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
 						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
@@ -116,6 +133,12 @@
 				<div class="rounded-2xl bg-slate-50 p-4 text-center ring-1 ring-slate-200">
 					<p class="text-xs leading-relaxed text-slate-600">
 						This will create a private market accessible only to you and your active friends.
+					</p>
+				</div>
+			{:else if mode === 'Followers'}
+				<div class="rounded-2xl bg-slate-50 p-4 text-center ring-1 ring-slate-200">
+					<p class="text-xs leading-relaxed text-slate-600">
+						This will create a private market accessible only to you and your active followers.
 					</p>
 				</div>
 			{:else}

@@ -12,6 +12,10 @@ export const toBalanceDomain = (domain: string): ClearingDid.BalanceDomain => {
 		return { Settlement: null };
 	}
 
+	if (domain === 'Social') {
+		return { Social: null };
+	}
+
 	return { ViciXp: null };
 };
 
@@ -25,6 +29,9 @@ export const isSettlement = (domain: ClearingDid.BalanceDomain): boolean => 'Set
 
 /** True when the clearing domain is ViciXp (in-app playground experience). */
 export const isViciXp = (domain: ClearingDid.BalanceDomain): boolean => 'ViciXp' in domain;
+
+/** True for non-monetary social bets domain. */
+export const isSocial = (domain: ClearingDid.BalanceDomain): boolean => 'Social' in domain;
 
 /** True when the UI "Playground" tab is active (maps to `ViciXp` on the clearing). */
 export const isPlaygroundExperience = (domain: ClearingDid.BalanceDomain): boolean =>
@@ -46,6 +53,10 @@ export const compareBalanceDomains = (
 
 	if (isViciXp(a)) {
 		return isViciXp(b);
+	}
+
+	if (isSocial(a)) {
+		return isSocial(b);
 	}
 
 	return false;

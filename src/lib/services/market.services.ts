@@ -39,6 +39,7 @@ export const createMarket = async ({
 	expiryDate,
 	outcomes = [],
 	payoutUnit: payoutUnitOverride,
+	socialReward,
 	balanceDomain,
 	tradingAccess = [{ Open: null }]
 }: {
@@ -47,21 +48,40 @@ export const createMarket = async ({
 	expiryDate: bigint;
 	outcomes?: string[];
 	payoutUnit?: RegistryDid.PayoutUnit;
+	socialReward?: { title: string; description?: string; iconUrl?: string };
 	balanceDomain: RegistryDid.BalanceDomain;
 	tradingAccess?: RegistryDid.TradingAccess[];
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 
 	const domain = balanceDomain;
-	const payoutUnit: RegistryDid.PayoutUnit = payoutUnitOverride ?? { Fiat: { Usd: null } };
+	let payoutUnit: RegistryDid.PayoutUnit = payoutUnitOverride ?? { Fiat: { Usd: null } };
+
+	if (nonNullish(socialReward)) {
+		payoutUnit = {
+			NonMonetary: {
+				Social: {
+					title: socialReward.title,
+					description: toNullable(socialReward.description),
+					icon_url: toNullable(socialReward.iconUrl)
+				}
+			}
+		};
+	}
 
 	const profileDoc = await getProfile(identity.getPrincipal().toText());
 
 	const { role } = profileDoc.data;
 	const isRestrictedToGroups = tradingAccess.some((access) => 'Restricted' in access);
+	const isSocialMarket = 'Social' in domain;
 
-	if (role !== UserRole.ADMIN && role !== UserRole.CREATOR && !isRestrictedToGroups) {
-		throw new Error('Unauthorized: only admins or creators can create open markets');
+	if (
+		role !== UserRole.ADMIN &&
+		role !== UserRole.CREATOR &&
+		!isRestrictedToGroups &&
+		!isSocialMarket
+	) {
+		throw new Error('Unauthorized: only admins or creators can create open financial markets');
 	}
 
 	const underlying = title

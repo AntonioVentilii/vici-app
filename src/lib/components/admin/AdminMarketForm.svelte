@@ -23,6 +23,8 @@
 
 	let marketType = $state<'Binary' | 'Categorical'>('Binary');
 	let outcomes = $state<string[]>(['Option A', 'Option B']);
+	let socialRewardTitle = $state('');
+	let socialRewardDescription = $state('');
 
 	let isRestricted = $state(false);
 	let availableGroups = $state<RegistryDid.Group[]>([]);
@@ -65,6 +67,13 @@
 				expiryDate: BigInt(new Date(expiryDate).getTime()),
 				outcomes: marketType === 'Categorical' ? outcomes : [],
 				balanceDomain: $balanceDomain,
+				socialReward:
+					'Social' in $balanceDomain
+						? {
+								title: socialRewardTitle,
+								description: socialRewardDescription
+							}
+						: undefined,
 				tradingAccess
 			});
 
@@ -72,6 +81,8 @@
 			description = '';
 			expiryDate = '';
 			outcomes = ['Option A', 'Option B'];
+			socialRewardTitle = '';
+			socialRewardDescription = '';
 			marketType = 'Binary';
 			isRestricted = false;
 			selectedGroupIds = [];
@@ -213,6 +224,42 @@
 				<p class="text-[10px] text-slate-400">
 					Minimum 2 outcomes required. Each outcome will be tradable as a YES position.
 				</p>
+			</div>
+		{/if}
+
+		{#if 'Social' in $balanceDomain}
+			<div class="space-y-4 rounded-3xl bg-fuchsia-50 p-6 ring-1 ring-fuchsia-100 ring-inset">
+				<span class="text-xs font-bold tracking-widest text-fuchsia-700 uppercase">
+					Social Reward (Non-Monetary)
+				</span>
+				<div class="space-y-4">
+					<div class="space-y-2">
+						<label class="text-[10px] font-bold text-fuchsia-600 uppercase" for="reward-title">
+							Reward Title
+						</label>
+						<input
+							id="reward-title"
+							class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-slate-950 ring-1 ring-fuchsia-200 ring-inset focus:ring-2 focus:ring-fuchsia-600"
+							oninput={(e) => (socialRewardTitle = e.currentTarget.value)}
+							placeholder="e.g., Pizza 🍕"
+							type="text"
+							value={socialRewardTitle}
+						/>
+					</div>
+					<div class="space-y-2">
+						<label class="text-[10px] font-bold text-fuchsia-600 uppercase" for="reward-desc">
+							Reward Description
+						</label>
+						<textarea
+							id="reward-desc"
+							class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-slate-950 ring-1 ring-fuchsia-200 ring-inset focus:ring-2 focus:ring-fuchsia-600"
+							oninput={(e) => (socialRewardDescription = e.currentTarget.value)}
+							placeholder="e.g., Winner gets a pizza of their choice."
+							rows="2"
+							value={socialRewardDescription}
+						></textarea>
+					</div>
+				</div>
 			</div>
 		{/if}
 
