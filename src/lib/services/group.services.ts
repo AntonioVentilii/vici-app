@@ -14,6 +14,7 @@ import {
 import { ROLE_PERMISSIONS } from '$lib/constants/authz.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
+import { getFriends } from '$lib/services/relation.services';
 import { Permission } from '$lib/types/permission';
 import { Principal } from '@icp-sdk/core/principal';
 
@@ -216,4 +217,42 @@ export const syncGroupAdminsAfterUnfriend = async ({
 	} catch (e) {
 		console.error('Failed to sync group admins after unfriend', e);
 	}
+};
+
+/**
+ * Gets or creates a "My Friends" group for the current user and syncs their active friends.
+ */
+export const getOrCreateFriendsGroup = async (): Promise<string> => {
+	const identity = await safeGetIdentityOnce();
+	const principal = identity.getPrincipal().toText();
+
+	const allGroups = await listGroups(principal);
+	let friendsGroup = allGroups.find((g) => g.name === 'My Friends');
+
+	if (!friendsGroup) {
+		const groupId = await createGroup({
+			name: 'My Friends',
+			description: 'A private circle for my friends.'
+		});
+		friendsGroup = await getGroup(groupId);
+	}
+
+	if (!friendsGroup) {
+		throw new Error('Failed to retrieve friends group after creation');
+	}
+
+	// Sync friends
+	const activeFriends = await getFriends(principal);
+	const friendPrincipals = activeFriends
+		.map((f) => f.participants.find((p) => p !== principal))
+		.filter((p): p is string => p !== undefined);
+
+	const currentMembers = friendsGroup.members.map((m) => m.toText());
+	const missingMembers = friendPrincipals.filter((p) => !currentMembers.includes(p));
+
+	if (missingMembers.length > 0) {
+		await addGroupMembers({ groupId: friendsGroup.group_id, principals: missingMembers });
+	}
+
+	return friendsGroup.group_id;
 };

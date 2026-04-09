@@ -58,9 +58,10 @@ export const createMarket = async ({
 	const profileDoc = await getProfile(identity.getPrincipal().toText());
 
 	const { role } = profileDoc.data;
+	const isRestrictedToGroups = tradingAccess.some((access) => 'Restricted' in access);
 
-	if (role !== UserRole.ADMIN && role !== UserRole.CREATOR) {
-		throw new Error('Unauthorized: only admins or creators can create markets');
+	if (role !== UserRole.ADMIN && role !== UserRole.CREATOR && !isRestrictedToGroups) {
+		throw new Error('Unauthorized: only admins or creators can create open markets');
 	}
 
 	const underlying = title
@@ -380,5 +381,33 @@ export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<M
 		markets: eligibleMarkets,
 		userInterests,
 		categoryMappings
+	});
+};
+
+/**
+ * Creates a restricted clone of an existing market.
+ */
+export const forkMarket = async ({
+	marketId,
+	groupIds
+}: {
+	marketId: MarketId;
+	groupIds: string[];
+}): Promise<string> => {
+	const sourceMarket = await getMarket(marketId);
+
+	if (!sourceMarket) {
+		throw new Error('Source market not found');
+	}
+
+	const tradingAccess: RegistryDid.TradingAccess[] = [{ Restricted: { groups: groupIds } }];
+
+	return await createMarket({
+		title: `${sourceMarket.title} (Circle)`,
+		description: sourceMarket.description,
+		expiryDate: BigInt(sourceMarket.expiryDate),
+		outcomes: sourceMarket.outcomes?.map((o) => o.title),
+		balanceDomain: sourceMarket.balanceDomain,
+		tradingAccess
 	});
 };

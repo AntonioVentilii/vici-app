@@ -1,6 +1,8 @@
 <script lang="ts">
+	import MarketForkModal from '$lib/components/market/MarketForkModal.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import type { Market } from '$lib/types/market';
 	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
@@ -9,6 +11,7 @@
 	}
 
 	const { market }: Props = $props();
+	let isForkModalOpen = $state(false);
 
 	const { title, status } = $derived(market);
 </script>
@@ -42,5 +45,13 @@
 				Created by {shortenWithMiddleEllipsis({ text: market.creator, splitLength: 5 })}
 			</span>
 		</div>
+
+		<div class="pt-2">
+			<Button onclick={() => (isForkModalOpen = true)} size="sm" variant="outline">
+				<span class="mr-2">🤝</span> Challenge Friends
+			</Button>
+		</div>
 	</div>
 </div>
+
+<MarketForkModal isOpen={isForkModalOpen} {market} onClose={() => (isForkModalOpen = false)} />
