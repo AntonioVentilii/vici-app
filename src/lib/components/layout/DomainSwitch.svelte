@@ -26,33 +26,36 @@
 	<div class="text-muted-foreground mb-2 text-[10px] font-bold tracking-widest uppercase">
 		Domain Balance
 	</div>
-	<div class="flex gap-1">
+	<div class="flex flex-col gap-1">
+		<div class="flex gap-1">
+			<button
+				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isPlaygroundExperience(
+					$balanceDomain
+				)
+					? 'border-primary bg-primary/10 text-primary shadow-sm'
+					: 'border-border text-muted-foreground hover:bg-muted'}"
+				aria-label="Playground domain"
+				onclick={setPlaygroundDomain}
+			>
+				<FlaskConical size={16} />
+				<span class="text-[9px] font-bold">PLAYGROUND</span>
+			</button>
+			<button
+				class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isSocial(
+					$balanceDomain
+				)
+					? 'border-fuchsia-600 bg-fuchsia-50 text-fuchsia-700 shadow-sm'
+					: 'border-border text-muted-foreground hover:bg-muted'}"
+				aria-label="Social domain"
+				onclick={setSocialDomain}
+			>
+				<Users size={16} />
+				<span class="text-[9px] font-bold uppercase">Social</span>
+			</button>
+		</div>
+
 		<button
-			class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isPlaygroundExperience(
-				$balanceDomain
-			)
-				? 'border-primary bg-primary/10 text-primary shadow-sm'
-				: 'border-border text-muted-foreground hover:bg-muted'}"
-			aria-label="Playground domain"
-			onclick={setPlaygroundDomain}
-		>
-			<FlaskConical size={16} />
-			<span class="text-[9px] font-bold">PLAYGROUND</span>
-		</button>
-		<button
-			class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isSocial(
-				$balanceDomain
-			)
-				? 'border-fuchsia-600 bg-fuchsia-50 text-fuchsia-700 shadow-sm'
-				: 'border-border text-muted-foreground hover:bg-muted'}"
-			aria-label="Social domain"
-			onclick={setSocialDomain}
-		>
-			<Users size={16} />
-			<span class="text-[9px] font-bold uppercase">Social</span>
-		</button>
-		<button
-			class="relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isSettlement(
+			class="relative flex w-full cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isSettlement(
 				$balanceDomain
 			)
 				? 'border-primary bg-primary/10 text-primary shadow-sm'
