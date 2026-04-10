@@ -10,7 +10,7 @@ updates:
     commit-message:
       prefix: 'chore(github-actions): '
     cooldown:
-      default-days: 30
+      default-days: 7
 
   - package-ecosystem: npm
     directory: '/'
@@ -20,7 +20,7 @@ updates:
       prefix: 'chore(npm-deps): '
       prefix-development: 'chore(npm-deps-dev): '
     cooldown:
-      default-days: 30
+      default-days: 7
     allow:
       - dependency-type: all
     open-pull-requests-limit: 10
@@ -34,3 +34,9 @@ updates:
           - 'eslint-plugin-svelte'
           - 'typescript-eslint'
           - 'globals'
+      juno-kit:
+        patterns:
+          - '@junobuild/config'
+          - '@junobuild/vite-plugin'
+          - '@junobuild/core'
+          - '@junobuild/functions'
