@@ -64,7 +64,7 @@
 		"@dfinity/utils": "^4.2.0",
 		"@icp-sdk/canisters": "^3.5.1",
 		"@junobuild/core": "^5.3.1",
-		"@junobuild/functions": "^0.5.6",
+		"@junobuild/functions": "^0.8.2",
 		"decimal.js": "^10.6.0",
 		"ethers": "^6.16.0",
 		"lucide-svelte": "^0.577.0",
