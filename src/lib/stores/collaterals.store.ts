@@ -8,8 +8,4 @@ export interface CollateralStoreData {
 	assetsConfig: Record<string, ClearingDid.CollateralAssetInfo>;
 }
 
-export const collateralsStore = writable<CollateralStoreData>({
-	balances: {},
-	accountState: undefined,
-	assetsConfig: {}
-});
+export const collateralsStore = writable<CollateralStoreData | undefined>(undefined);

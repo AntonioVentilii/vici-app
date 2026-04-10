@@ -69,7 +69,10 @@
 			{#if $userSignedIn}
 				<div class="flex items-center gap-3">
 					<WalletDropdown
-						balances={{ balances: $balancesStore, collateral: $collateralsStore.balances }}
+						balances={{
+							balances: $balancesStore ?? {},
+							collateral: $collateralsStore?.balances ?? {}
+						}}
 					/>
 
 					<UserDropdown />

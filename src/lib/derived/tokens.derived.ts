@@ -14,6 +14,10 @@ import { derived, type Readable } from 'svelte/store';
 export const supportedTokens: Readable<Token[]> = derived(
 	[balanceDomain, collateralsStore],
 	([$balanceDomain, $collateralsStore]) => {
+		if (isNullish($collateralsStore)) {
+			return [];
+		}
+
 		const { assetsConfig } = $collateralsStore;
 
 		const filteredByClearing = SUPPORTED_TOKENS.filter((token) => {

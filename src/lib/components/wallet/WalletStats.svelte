@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { isNullish } from '@dfinity/utils';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Switch from '$lib/components/ui/Switch.svelte';
@@ -12,7 +13,7 @@
 	import { formatCurrency, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
-		balances: WalletBalance;
+		balances: WalletBalance | undefined;
 	}
 
 	const { balances }: Props = $props();
@@ -21,6 +22,10 @@
 
 	const displayedTokens = $derived(
 		$walletUiTokens.filter((token) => {
+			if (isNullish(balances)) {
+				return false;
+			}
+
 			if (!hideZeroBalances) {
 				return true;
 			}
@@ -54,53 +59,68 @@
 	</div>
 
 	<div class="flex w-full flex-col divide-y divide-slate-50">
-		{#each displayedTokens as token (token.ledgerCanisterId)}
-			{@const color = getTokenColor(token.symbol)}
-			{@const balance = balances.balances[token.id] ?? ZERO}
-			{@const assetWorth = findAssetWorthForIcrcLedger({
-				assets: balances.accountState?.assets,
-				ledgerCanisterId: token.ledgerCanisterId,
-				assetsConfig: $collateralsStore.assetsConfig
-			})}
-
-			<div class="flex items-center justify-between p-4 transition-colors hover:bg-slate-50/50">
-				<div class="flex items-center gap-3">
-					<div
-						class="flex h-8 w-8 items-center justify-center rounded-full bg-{color}-100 text-{color}-600"
-					>
-						<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
-							<path d="M12 2L2 12l10 10 10-10L12 2z" />
-						</svg>
+		{#if isNullish(balances)}
+			{#each { length: 3 } as _, i (i)}
+				<div class="flex items-center justify-between p-4 px-6">
+					<div class="flex items-center gap-3">
+						<div class="h-8 w-8 animate-pulse rounded-full bg-slate-100"></div>
+						<div class="h-4 w-24 animate-pulse rounded bg-slate-100"></div>
 					</div>
-					<div class="flex items-center gap-2">
-						<div class="text-sm font-bold text-slate-900">{token.symbol}</div>
-						{#if isDev() && token.isDevEnabled}
-							<Badge size="sm" variant="warning">DEV</Badge>
-						{/if}
+					<div class="text-right">
+						<div class="h-4 w-16 animate-pulse rounded bg-slate-100"></div>
+						<div class="mt-1 h-3 w-12 animate-pulse rounded bg-slate-100"></div>
 					</div>
 				</div>
+			{/each}
+		{:else}
+			{#each displayedTokens as token (token.ledgerCanisterId)}
+				{@const color = getTokenColor(token.symbol)}
+				{@const balance = balances.balances[token.id] ?? ZERO}
+				{@const assetWorth = findAssetWorthForIcrcLedger({
+					assets: balances.accountState?.assets,
+					ledgerCanisterId: token.ledgerCanisterId,
+					assetsConfig: $collateralsStore?.assetsConfig ?? {}
+				})}
 
-				<div class="text-right">
-					<div class="text-sm font-black text-slate-950">
-						{formatToken({ value: balance, unitName: token.decimals })}
+				<div class="flex items-center justify-between p-4 transition-colors hover:bg-slate-50/50">
+					<div class="flex items-center gap-3">
+						<div
+							class="flex h-8 w-8 items-center justify-center rounded-full bg-{color}-100 text-{color}-600"
+						>
+							<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+								<path d="M12 2L2 12l10 10 10-10L12 2z" />
+							</svg>
+						</div>
+						<div class="flex items-center gap-2">
+							<div class="text-sm font-bold text-slate-900">{token.symbol}</div>
+							{#if isDev() && token.isDevEnabled}
+								<Badge size="sm" variant="warning">DEV</Badge>
+							{/if}
+						</div>
 					</div>
-					<div class="text-[10px] font-medium text-slate-400">
-						{#if $playgroundVxpUnitMode}
-							{token.symbol}
-						{:else if assetWorth}
-							≈ {formatCurrency({ value: assetWorth.value_usd })}
-						{:else if token.symbol === 'ckUSDC'}
-							≈ {formatCurrency({ value: balance, decimals: token.decimals })}
-						{:else}
-							--
-						{/if}
+
+					<div class="text-right">
+						<div class="text-sm font-black text-slate-950">
+							{formatToken({ value: balance, unitName: token.decimals })}
+						</div>
+						<div class="text-[10px] font-medium text-slate-400">
+							{#if $playgroundVxpUnitMode}
+								{token.symbol}
+							{:else if assetWorth}
+								≈ {formatCurrency({ value: assetWorth.value_usd })}
+							{:else if token.symbol === 'ckUSDC'}
+								≈ {formatCurrency({ value: balance, decimals: token.decimals })}
+							{:else}
+								--
+							{/if}
+						</div>
 					</div>
 				</div>
-			</div>
-		{/each}
+			{/each}
 
-		{#if displayedTokens.length === 0}
-			<div class="p-8 text-center text-sm text-slate-400 italic">No assets to display</div>
+			{#if displayedTokens.length === 0}
+				<div class="p-8 text-center text-sm text-slate-400 italic">No assets to display</div>
+			{/if}
 		{/if}
 	</div>
 </Card>

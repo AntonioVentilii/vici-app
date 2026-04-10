@@ -68,6 +68,10 @@
 	let error = $state('');
 
 	let availableEquity = $derived.by(() => {
+		if (isNullish($collateralsStore)) {
+			return ZERO;
+		}
+
 		const a = $collateralsStore.accountState;
 
 		if (isNullish(a)) {
@@ -77,11 +81,11 @@
 		let fallback = ZERO;
 
 		for (const t of $walletUiTokens) {
-			const b = $collateralsStore.balances[t.id] ?? ZERO;
+			const b = $collateralsStore?.balances[t.id] ?? ZERO;
 
 			if (b > ZERO) {
 				const d = icrcLedgerDecimalsFromCollateralConfig({
-					assetsConfig: $collateralsStore.assetsConfig,
+					assetsConfig: $collateralsStore?.assetsConfig ?? {},
 					ledgerCanisterId: t.ledgerCanisterId,
 					fallbackDecimals: t.decimals
 				});
@@ -125,9 +129,9 @@
 			const { collateral, accountState } = await getBalances(market.balanceDomain);
 
 			collateralsStore.update((state) => ({
-				...state,
 				balances: collateral,
-				accountState
+				accountState,
+				assetsConfig: state?.assetsConfig ?? {}
 			}));
 		} catch (err) {
 			console.error('Failed to fetch balance', err);

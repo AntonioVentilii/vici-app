@@ -66,7 +66,7 @@
 			}
 
 			const ledgerDecimals = icrcLedgerDecimalsFromCollateralConfig({
-				assetsConfig: get(collateralsStore).assetsConfig,
+				assetsConfig: get(collateralsStore)?.assetsConfig ?? {},
 				ledgerCanisterId: selectedToken.ledgerCanisterId,
 				fallbackDecimals: selectedToken.decimals
 			});

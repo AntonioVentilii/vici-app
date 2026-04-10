@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Switch from '$lib/components/ui/Switch.svelte';
@@ -19,7 +19,7 @@
 	import { formatAvailableMarginForUi } from '$lib/utils/playground-display.utils';
 
 	interface Props {
-		collateral: CollateralStoreData;
+		collateral: CollateralStoreData | undefined;
 		onManage: () => void;
 	}
 
@@ -29,6 +29,10 @@
 
 	const displayedTokens = $derived(
 		$walletUiTokens.filter((token) => {
+			if (isNullish(collateral)) {
+				return false;
+			}
+
 			if (!hideZeroBalances) {
 				return true;
 			}
@@ -37,13 +41,21 @@
 		})
 	);
 
-	const depositedNominalLabel = $derived(
-		calculateDepositedNominalLabel({ collateral, tokens: $walletUiTokens })
-	);
+	const depositedNominalLabel = $derived.by(() => {
+		if (isNullish(collateral)) {
+			return '...';
+		}
 
-	const intuitiveAvailable = $derived(
-		calculateIntuitiveAvailable({ collateral, tokens: $walletUiTokens })
-	);
+		return calculateDepositedNominalLabel({ collateral, tokens: $walletUiTokens });
+	});
+
+	const intuitiveAvailable = $derived.by(() => {
+		if (isNullish(collateral)) {
+			return undefined;
+		}
+
+		return calculateIntuitiveAvailable({ collateral, tokens: $walletUiTokens });
+	});
 </script>
 
 <Card padding="none" variant="default">
@@ -57,7 +69,10 @@
 				</div>
 			</div>
 			<div class="mt-1 space-y-1 text-sm text-slate-500">
-				{#if nonNullish(collateral.accountState)}
+				{#if isNullish(collateral)}
+					<div class="h-4 w-32 animate-pulse rounded bg-slate-100"></div>
+					<div class="mt-2 h-4 w-24 animate-pulse rounded bg-slate-100"></div>
+				{:else if nonNullish(collateral.accountState)}
 					<p>
 						Deposited: <span class="font-bold text-slate-900">
 							{depositedNominalLabel || '0'}
@@ -88,30 +103,42 @@
 	</div>
 
 	<div class="flex w-full flex-col divide-y divide-slate-50">
-		{#each displayedTokens as token (token.id)}
-			{@const balance = collateral.balances[token.id] ?? ZERO}
-			{@const collateralDecimals = icrcLedgerDecimalsFromCollateralConfig({
-				assetsConfig: collateral.assetsConfig,
-				ledgerCanisterId: token.ledgerCanisterId,
-				fallbackDecimals: token.decimals
-			})}
-			{@const assetWorth = findAssetWorthForIcrcLedger({
-				assets: collateral.accountState?.assets,
-				ledgerCanisterId: token.ledgerCanisterId,
-				assetsConfig: collateral.assetsConfig
-			})}
+		{#if isNullish(collateral)}
+			{#each { length: 3 } as _, i (i)}
+				<div class="flex items-center justify-between p-6">
+					<div class="flex items-center gap-3">
+						<div class="h-10 w-10 animate-pulse rounded-full bg-slate-100"></div>
+						<div class="h-4 w-24 animate-pulse rounded bg-slate-100"></div>
+					</div>
+					<div class="h-4 w-16 animate-pulse rounded bg-slate-100"></div>
+				</div>
+			{/each}
+		{:else}
+			{#each displayedTokens as token (token.id)}
+				{@const balance = collateral.balances[token.id] ?? ZERO}
+				{@const collateralDecimals = icrcLedgerDecimalsFromCollateralConfig({
+					assetsConfig: collateral.assetsConfig,
+					ledgerCanisterId: token.ledgerCanisterId,
+					fallbackDecimals: token.decimals
+				})}
+				{@const assetWorth = findAssetWorthForIcrcLedger({
+					assets: collateral.accountState?.assets,
+					ledgerCanisterId: token.ledgerCanisterId,
+					assetsConfig: collateral.assetsConfig
+				})}
 
-			<CollateralTokenRow
-				{assetWorth}
-				{balance}
-				decimals={collateralDecimals}
-				isDevEnabled={token.isDevEnabled}
-				tokenSymbol={token.symbol}
-			/>
-		{/each}
+				<CollateralTokenRow
+					{assetWorth}
+					{balance}
+					decimals={collateralDecimals}
+					isDevEnabled={token.isDevEnabled}
+					tokenSymbol={token.symbol}
+				/>
+			{/each}
 
-		{#if displayedTokens.length === 0}
-			<div class="p-8 text-center text-sm text-slate-400 italic">No collateral to display</div>
+			{#if displayedTokens.length === 0}
+				<div class="p-8 text-center text-sm text-slate-400 italic">No collateral to display</div>
+			{/if}
 		{/if}
 	</div>
 </Card>

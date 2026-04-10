@@ -14,7 +14,15 @@ export const findTokenByLedgerId = (ledgerCanisterId: string): Token | undefined
  * config (ledger match), never from token symbol.
  */
 export const resolveClearingAssetId = (ledgerCanisterId: string): string => {
-	const { assetsConfig } = get(collateralsStore);
+	const collateralData = get(collateralsStore);
+
+	if (isNullish(collateralData)) {
+		throw new Error(
+			`Cannot resolve asset ID: collateral configuration is still loading. Ensure clearing registry is populated.`
+		);
+	}
+
+	const { assetsConfig } = collateralData;
 	const info = findCollateralInfoByIcrcLedger({ assetsConfig, ledgerCanisterId });
 
 	if (isNullish(info)) {
