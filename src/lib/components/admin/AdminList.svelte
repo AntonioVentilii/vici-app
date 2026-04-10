@@ -16,6 +16,7 @@
 
 	let showConfirmModal = $state(false);
 	let principalToRemove = $state<PrincipalText | null>(null);
+	let isRemoving = $state(false);
 
 	const confirmRemove = (principal: PrincipalText) => {
 		principalToRemove = principal;
@@ -24,7 +25,12 @@
 
 	const handleConfirm = async () => {
 		if (principalToRemove) {
-			await onRemoveRole(principalToRemove);
+			isRemoving = true;
+			try {
+				await onRemoveRole(principalToRemove);
+			} finally {
+				isRemoving = false;
+			}
 		}
 
 		showConfirmModal = false;
@@ -44,8 +50,16 @@
 		</strong> from administrators? They will lose access to the admin dashboard.
 	</p>
 	<div class="flex justify-end gap-3">
-		<Button onclick={handleCancel} variant="ghost">Cancel</Button>
-		<Button onclick={handleConfirm} variant="danger">Remove</Button>
+		<Button onclick={handleCancel} status={isRemoving ? 'disabled' : 'enabled'} variant="ghost">
+			Cancel
+		</Button>
+		<Button
+			onclick={handleConfirm}
+			status={isRemoving ? 'pending' : 'enabled'}
+			variant="danger"
+		>
+			Remove
+		</Button>
 	</div>
 </Dialog>
 

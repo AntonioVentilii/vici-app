@@ -20,6 +20,7 @@
 	import { toBalanceDomain } from '$lib/utils/balance-domain.utils';
 
 	let loading = $state(true);
+	let isAssigningRole = $state(false);
 
 	// Admin Management State
 	let roleEntries = $state<UserRoleEntry[]>([]);
@@ -149,12 +150,18 @@
 	};
 
 	const handleAddRole = async () => {
-		if (!newRolePrincipal) {
+		const principal = newRolePrincipal.trim();
+
+		const role = newRoleSelected;
+
+		if (!principal) {
 			return;
 		}
 
+		isAssigningRole = true;
+
 		try {
-			await setRole({ principal: newRolePrincipal, role: newRoleSelected });
+			await setRole({ principal, role });
 
 			notificationsStore.add({
 				title: 'Role Granted',
@@ -165,6 +172,8 @@
 			newRolePrincipal = '';
 			newRoleSelected = UserRole.ADMIN;
 
+			roleEntries = [...roleEntries.filter((e) => e.principal !== principal), { principal, role }];
+
 			await fetchRoles();
 		} catch (e: unknown) {
 			notificationsStore.add({
@@ -172,6 +181,8 @@
 				message: (e as Error).message,
 				type: 'error'
 			});
+		} finally {
+			isAssigningRole = false;
 		}
 	};
 
@@ -183,6 +194,10 @@
 				message: 'Role removed successfully!',
 				type: 'success'
 			});
+
+
+			roleEntries = roleEntries.filter((e) => e.principal !== principal);
+
 			await fetchRoles();
 		} catch (e: unknown) {
 			notificationsStore.add({
@@ -218,6 +233,7 @@
 				onRoleChange={(v) => (newRoleSelected = v)}
 				principal={newRolePrincipal}
 				role={newRoleSelected}
+				isAssigning={isAssigningRole}
 			/>
 
 			<!-- Create Market -->

@@ -5,12 +5,14 @@
 	let {
 		principal = '',
 		role = UserRole.ADMIN,
+		isAssigning = false,
 		onPrincipalChange,
 		onRoleChange,
 		onAddRole
 	}: {
 		principal: string;
 		role: UserRole;
+		isAssigning?: boolean;
 		onPrincipalChange: (val: string) => void;
 		onRoleChange: (val: UserRole) => void;
 		onAddRole: () => void;
@@ -38,7 +40,7 @@
 				<input
 					id="admin-principal"
 					class="focus:ring-brand-600 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-slate-300 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
-					oninput={(e) => onPrincipalChange(e.currentTarget.value)}
+					oninput={(e) => onPrincipalChange(e.currentTarget.value.trim())}
 					placeholder="aaaaa-aa..."
 					required
 					type="text"
@@ -67,6 +69,11 @@
 			<p class="mt-2 text-sm text-slate-500">Select the permission level for this user.</p>
 		</div>
 
-		<Button onclick={onAddRole} status={!principal ? 'disabled' : 'enabled'}>Assign Role</Button>
+		<Button
+			onclick={onAddRole}
+			status={isAssigning ? 'pending' : !principal ? 'disabled' : 'enabled'}
+		>
+			Assign Role
+		</Button>
 	</form>
 </div>
