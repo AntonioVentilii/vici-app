@@ -19,6 +19,8 @@ export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
 			user: p.owner,
 			pnl: p.pnl ?? 0,
 			winRate: p.winRate ?? 0,
-			activePositions: p.totalTrades ?? 0
+			activePositions: p.totalTrades ?? 0,
+			nickname: p.nickname,
+			visibility: p.visibility ?? 'friends'
 		}));
 };

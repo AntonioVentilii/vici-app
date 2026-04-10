@@ -3,12 +3,13 @@ import { ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import type { UserProfile } from '$lib/types/profile';
-import type { UserRole } from '$lib/types/user';
+import { RelationCategory, RelationState, type Relation } from '$lib/types/relation';
+import { UserRole } from '$lib/types/user';
 import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@dfinity/zod-schemas';
 import type { Identity } from '@icp-sdk/core/agent';
-import { getDoc, listDocs, setDoc, type Doc } from '@junobuild/core';
+import { getDoc, listDocs, setDoc, type Doc, type User } from '@junobuild/core';
 
 /** Loads a user profile from Juno or returns a default shell; merges role from the roles collection. */
 export const getProfile = async (
@@ -27,6 +28,7 @@ export const getProfile = async (
 				nickname: shortenWithMiddleEllipsis({ text: principal, splitLength: 5 }),
 				createdAt: Date.now(),
 				updatedAt: Date.now(),
+				visibility: 'friends',
 				preferences: {
 					defaultAmount: {
 						flow: '1.0',
@@ -133,16 +135,96 @@ export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
 };
 
 /** Ensures a profile document exists in Juno, then returns its data. */
-export const ensureProfile = async (principal: PrincipalText): Promise<UserProfile> => {
+export const ensureProfile = async (user: User): Promise<UserProfile> => {
+	const principal = user.key;
 	const profileDoc = await getProfile(principal);
 
 	if (nonNullish(profileDoc.version)) {
 		return profileDoc.data;
 	}
 
-	await upsertProfile(profileDoc);
+	// Extract nickname from Google provider if available
+	let { nickname } = profileDoc.data;
+	const { details } = user.data as { details?: Record<string, unknown> };
 
-	return profileDoc.data;
+	if (nonNullish(details) && 'profile' in details && nonNullish(details.profile)) {
+		const gProfile = details.profile as {
+			name?: string;
+			given_name?: string;
+			family_name?: string;
+		};
+		const fullName =
+			gProfile.name ?? [gProfile.given_name, gProfile.family_name].filter(Boolean).join(' ');
+
+		if (fullName.trim().length > 0) {
+			nickname = fullName;
+		}
+	}
+
+	const newProfile = {
+		...profileDoc,
+		data: {
+			...profileDoc.data,
+			nickname
+		}
+	};
+
+	await upsertProfile(newProfile);
+
+	return newProfile.data;
+};
+
+/** Returns the display name based on visibility settings and viewer role. */
+export const getDisplayName = ({
+	profile,
+	viewerPrincipal,
+	viewerRole,
+	isFriend = false
+}: {
+	profile: { owner: PrincipalText; nickname: string; visibility?: 'public' | 'friends' };
+	viewerPrincipal?: PrincipalText;
+	viewerRole?: UserRole;
+	isFriend?: boolean;
+}): string => {
+	if (profile.owner === viewerPrincipal) {
+		return profile.nickname;
+	}
+
+	// Admins and controllers see everything
+	if (viewerRole === UserRole.ADMIN || viewerRole === UserRole.CONTROLLER) {
+		return profile.nickname;
+	}
+
+	if (profile.visibility === 'public') {
+		return profile.nickname;
+	}
+
+	if (profile.visibility === 'friends' && isFriend) {
+		return profile.nickname;
+	}
+
+	return shortenWithMiddleEllipsis({ text: profile.owner, splitLength: 5 });
+};
+
+/** Checks if two users have an active friend relation. */
+export const checkFriendship = async ({
+	userA,
+	userB
+}: {
+	userA: PrincipalText;
+	userB: PrincipalText;
+}): Promise<boolean> => {
+	const relationId = [userA, userB].sort().join('#');
+	const doc = await getDoc<Relation>({
+		collection: Collection.RELATIONS,
+		key: relationId
+	});
+
+	return (
+		nonNullish(doc) &&
+		doc.data.category === RelationCategory.FRIEND &&
+		doc.data.state === RelationState.ACTIVE
+	);
 };
 
 /** Derives trading stats, points, and level from clearing history and writes them to the profile. */

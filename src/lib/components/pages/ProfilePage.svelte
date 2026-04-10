@@ -36,7 +36,7 @@
 	{#if $userStore.profile}
 		<div class="space-y-12">
 			<!-- Main Dashboard -->
-			<ProfileDashboard profile={$userStore.profile} />
+			<ProfileDashboard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
 
 			<!-- Customization & Settings Section -->
 			<div class="rounded-3xl border border-slate-100 bg-white p-8 shadow-sm">

@@ -6,6 +6,8 @@ export interface LeaderboardEntry {
 	pnl: number;
 	winRate: number;
 	activePositions: number;
+	nickname: string;
+	visibility: 'public' | 'friends';
 }
 
 export enum ActivityType {

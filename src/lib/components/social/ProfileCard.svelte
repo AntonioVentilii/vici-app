@@ -5,12 +5,14 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
+	import { getDisplayName, checkFriendship } from '$lib/services/profile.services';
 	import {
 		followUser,
 		unfollowUser,
 		getFollowing,
 		getFollowers
 	} from '$lib/services/relation.services';
+	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
 
 	interface Props {
@@ -29,11 +31,24 @@
 	);
 
 	let loading = $state(true);
-
 	let pending = $state(false);
+	let isFriend = $state(false);
+
+	const displayName = $derived(
+		getDisplayName({
+			profile,
+			viewerPrincipal,
+			viewerRole: $userStore.profile?.role,
+			isFriend
+		})
+	);
 
 	onMount(async () => {
 		await loadSocialGraph();
+
+		if (nonNullish(viewerPrincipal) && viewerPrincipal !== profile.owner) {
+			isFriend = await checkFriendship({ userA: viewerPrincipal, userB: profile.owner });
+		}
 	});
 
 	const loadSocialGraph = async () => {
@@ -66,6 +81,7 @@
 			}
 
 			await loadSocialGraph();
+			isFriend = await checkFriendship({ userA: viewerPrincipal, userB: profile.owner });
 		} finally {
 			pending = false;
 		}
@@ -81,7 +97,7 @@
 						<img class="h-full w-full object-cover" alt={profile.nickname} src={profile.avatar} />
 					{:else}
 						<div class="flex h-full w-full items-center justify-center text-3xl font-bold">
-							{profile.nickname[0]}
+							{displayName[0]}
 						</div>
 					{/if}
 				</div>
@@ -96,8 +112,9 @@
 		</div>
 
 		<div>
-			<h2 class="text-xl font-black">{profile.nickname}</h2>
-			<p class="text-muted-foreground text-xs opacity-50">
+			<h2 class="text-xl font-black">{displayName}</h2>
+
+			<p class="text-muted-foreground mt-1 text-xs opacity-50">
 				<CopyableAddress address={profile.owner} label="Principal ID" />
 			</p>
 		</div>

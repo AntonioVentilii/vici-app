@@ -26,6 +26,7 @@
 	const handleConfirm = async () => {
 		if (principalToRemove) {
 			isRemoving = true;
+
 			try {
 				await onRemoveRole(principalToRemove);
 			} finally {
@@ -53,11 +54,7 @@
 		<Button onclick={handleCancel} status={isRemoving ? 'disabled' : 'enabled'} variant="ghost">
 			Cancel
 		</Button>
-		<Button
-			onclick={handleConfirm}
-			status={isRemoving ? 'pending' : 'enabled'}
-			variant="danger"
-		>
+		<Button onclick={handleConfirm} status={isRemoving ? 'pending' : 'enabled'} variant="danger">
 			Remove
 		</Button>
 	</div>

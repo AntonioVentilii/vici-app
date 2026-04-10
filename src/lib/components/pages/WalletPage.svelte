@@ -20,8 +20,8 @@
 		type WalletTransactionsCursors,
 		type WalletTransactionsDone
 	} from '$lib/services/wallet.service';
-	import { balancesStore } from '$lib/stores/balances.store';
 	import { balanceDomainStore } from '$lib/stores/balance-domain.store';
+	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Token } from '$lib/types/token';

@@ -104,16 +104,16 @@
 	{#if refreshing}
 		<LoadingSpinner />
 	{:else}
-	{#if $balanceDomainStore.value !== 'social'}
-		<div transition:slide>
-			<PortfolioStats
-				activeMarketsCount={positions.length}
-				pnlVariant={totalPnL >= 0 ? 'success' : 'default'}
-				totalHoldings={portfolioHoldingsLabel}
-				totalPnL={portfolioPnLLabel}
-			/>
-		</div>
-	{/if}
+		{#if $balanceDomainStore.value !== 'social'}
+			<div transition:slide>
+				<PortfolioStats
+					activeMarketsCount={positions.length}
+					pnlVariant={totalPnL >= 0 ? 'success' : 'default'}
+					totalHoldings={portfolioHoldingsLabel}
+					totalPnL={portfolioPnLLabel}
+				/>
+			</div>
+		{/if}
 
 		<PositionTable markets={$markets} {positions} />
 

@@ -1,15 +1,59 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
+	import { Pencil, Check, X } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
+	import { upsertProfile } from '$lib/services/profile.services';
+	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import { formatCurrency } from '$lib/utils/format.utils';
 
 	interface Props {
 		profile: UserProfile;
+		viewerPrincipal?: string;
 	}
 
-	const { profile }: Props = $props();
+	const { profile, viewerPrincipal }: Props = $props();
+
+	let isEditingNickname = $state(false);
+	let editedNickname = $state(profile.nickname);
+	let pending = $state(false);
+
+	const handleSaveNickname = async () => {
+		if (editedNickname.trim().length < 2) {
+			return;
+		}
+
+		pending = true;
+
+		try {
+			const updatedData = {
+				...profile,
+				nickname: editedNickname.trim()
+			};
+
+			await upsertProfile({
+				key: profile.owner,
+				data: updatedData
+			});
+
+			// Update global store
+			userStore.update((curr) => ({
+				...curr,
+				profile: updatedData
+			}));
+
+			isEditingNickname = false;
+		} finally {
+			pending = false;
+		}
+	};
+
+	const cancelEdit = () => {
+		editedNickname = profile.nickname;
+		isEditingNickname = false;
+	};
 
 	// Calculate display values
 	const accuracy = $derived(profile.accuracy ?? 0);
@@ -54,15 +98,61 @@
 			</div>
 
 			<div class="text-center sm:text-left">
-				<h1 class="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-					{profile.nickname}
-				</h1>
+				{#if isEditingNickname}
+					<div class="flex items-center gap-2">
+						<input
+							class="bg-foreground/5 border-border rounded-lg border px-3 py-1 text-2xl font-black focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+							autofocus
+							disabled={pending}
+							onkeydown={(e) => e.key === 'Enter' && handleSaveNickname()}
+							type="text"
+							bind:value={editedNickname}
+						/>
+						<button
+							class="cursor-pointer text-emerald-500 hover:text-emerald-600 disabled:opacity-50"
+							aria-label="Save"
+							disabled={pending || editedNickname.trim().length < 2}
+							onclick={handleSaveNickname}
+						>
+							<Check size={24} />
+						</button>
+						<button
+							class="cursor-pointer text-red-500 hover:text-red-600 disabled:opacity-50"
+							aria-label="Cancel"
+							disabled={pending}
+							onclick={cancelEdit}
+						>
+							<X size={24} />
+						</button>
+					</div>
+					{#if editedNickname.trim().length < 2}
+						<p class="mt-1 text-[10px] font-bold text-red-500 uppercase">Min 2 characters</p>
+					{/if}
+				{:else}
+					<h1
+						class="flex items-center gap-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl"
+					>
+						{profile.nickname}
+						{#if viewerPrincipal === profile.owner}
+							<button
+								class="text-muted-foreground cursor-pointer transition-colors hover:text-indigo-600"
+								aria-label="Edit Nickname"
+								onclick={() => (isEditingNickname = true)}
+							>
+								<Pencil size={20} />
+							</button>
+						{/if}
+					</h1>
+				{/if}
 				<p class="mt-1 text-sm font-medium text-slate-500">
 					Joined {new Date(profile.createdAt).toLocaleDateString(undefined, {
 						month: 'long',
 						year: 'numeric'
 					})}
 				</p>
+				<div class="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+					<CopyableAddress address={profile.owner} label="Principal ID" />
+				</div>
 			</div>
 		</div>
 

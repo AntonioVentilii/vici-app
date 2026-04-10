@@ -28,7 +28,7 @@
 			return;
 		}
 
-		const profile = await ensureProfile(userText);
+		const profile = await ensureProfile(user);
 
 		userStore.set({ user, profile });
 

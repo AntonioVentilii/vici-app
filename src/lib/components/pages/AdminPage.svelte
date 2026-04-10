@@ -195,7 +195,6 @@
 				type: 'success'
 			});
 
-
 			roleEntries = roleEntries.filter((e) => e.principal !== principal);
 
 			await fetchRoles();
@@ -228,12 +227,12 @@
 		<section class="space-y-8">
 			<!-- Add Role -->
 			<AdminAddForm
+				isAssigning={isAssigningRole}
 				onAddRole={handleAddRole}
 				onPrincipalChange={(v) => (newRolePrincipal = v)}
 				onRoleChange={(v) => (newRoleSelected = v)}
 				principal={newRolePrincipal}
 				role={newRoleSelected}
-				isAssigning={isAssigningRole}
 			/>
 
 			<!-- Create Market -->

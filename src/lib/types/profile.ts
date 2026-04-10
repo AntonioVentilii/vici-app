@@ -20,6 +20,7 @@ export interface UserProfile {
 	rank?: number;
 	dailyStreak?: number;
 	lastActiveDay?: string;
+	visibility?: 'public' | 'friends';
 	preferences?: {
 		defaultAmount?: {
 			flow?: string;
