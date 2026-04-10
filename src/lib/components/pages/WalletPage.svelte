@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
+	import { slide } from 'svelte/transition';
 	import Card from '$lib/components/ui/Card.svelte';
 	import InfiniteScroll from '$lib/components/ui/InfiniteScroll.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
@@ -20,6 +21,7 @@
 		type WalletTransactionsDone
 	} from '$lib/services/wallet.service';
 	import { balancesStore } from '$lib/stores/balances.store';
+	import { balanceDomainStore } from '$lib/stores/balance-domain.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Token } from '$lib/types/token';
@@ -167,23 +169,25 @@
 	/>
 
 	<!-- Balances Cards -->
-	<div class="flex w-full flex-col gap-6 lg:flex-row">
-		<div class="grow">
-			<WalletStats
-				balances={{
-					balances: $balancesStore ?? {},
-					collateral: $collateralsStore?.balances ?? {}
-				}}
-			/>
-		</div>
+	{#if $balanceDomainStore.value !== 'social'}
+		<div class="flex w-full flex-col gap-6 lg:flex-row" transition:slide>
+			<div class="grow">
+				<WalletStats
+					balances={{
+						balances: $balancesStore ?? {},
+						collateral: $collateralsStore?.balances ?? {}
+					}}
+				/>
+			</div>
 
-		<div class="grow-2">
-			<CollateralStats
-				collateral={$collateralsStore}
-				onManage={() => (isCollateralModalOpen = true)}
-			/>
+			<div class="grow-2">
+				<CollateralStats
+					collateral={$collateralsStore}
+					onManage={() => (isCollateralModalOpen = true)}
+				/>
+			</div>
 		</div>
-	</div>
+	{/if}
 
 	<CollateralModal isOpen={isCollateralModalOpen} onClose={() => (isCollateralModalOpen = false)} />
 
