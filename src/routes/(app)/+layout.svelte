@@ -8,24 +8,33 @@
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import Banner from '$lib/components/ui/Banner.svelte';
+	import { AppPath } from '$lib/constants/routes.constants';
 
 	interface Props {
 		children: Snippet;
 	}
 
 	const { children }: Props = $props();
+
+	const isFlowPage = $derived(page.url.pathname === AppPath.Flow);
 </script>
 
 <div class="relative isolate min-h-dvh">
-	<Banner />
+	<div class={isFlowPage ? 'hidden md:block' : ''}>
+		<Banner />
+	</div>
 
-	<Header />
+	<div class={isFlowPage ? 'hidden md:block' : ''}>
+		<Header />
+	</div>
 
-	<main class="flex-1 pb-20 md:pb-0">
+	<main class="flex-1 {isFlowPage ? 'md:pb-0' : 'pb-20 md:pb-0'}">
 		<Authn>
 			{#key page.url.pathname}
 				<div
-					class="container mx-auto px-4 py-8"
+					class={isFlowPage
+						? 'md:container md:mx-auto md:px-4 md:py-8'
+						: 'container mx-auto px-4 py-8'}
 					in:fade={{ duration: 100, delay: 100 }}
 					out:fade={{ duration: 100 }}
 				>
@@ -37,7 +46,11 @@
 		</Authn>
 	</main>
 
-	<Footer />
+	<div class={isFlowPage ? 'hidden md:block' : ''}>
+		<Footer />
+	</div>
 
-	<MobileNav />
+	{#if !isFlowPage}
+		<MobileNav />
+	{/if}
 </div>

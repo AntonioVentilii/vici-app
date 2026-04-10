@@ -17,8 +17,16 @@
 	const { profile, viewerPrincipal }: Props = $props();
 
 	let isEditingNickname = $state(false);
-	let editedNickname = $state(profile.nickname);
+	let editedNickname = $state('');
 	let pending = $state(false);
+
+	// Sync editedNickname with profile.nickname when not editing to avoid stale values
+	// and fix the Svelte warning about capturing initial value.
+	$effect(() => {
+		if (!isEditingNickname) {
+			editedNickname = profile.nickname;
+		}
+	});
 
 	const handleSaveNickname = async () => {
 		if (editedNickname.trim().length < 2) {
@@ -51,7 +59,6 @@
 	};
 
 	const cancelEdit = () => {
-		editedNickname = profile.nickname;
 		isEditingNickname = false;
 	};
 
@@ -102,7 +109,6 @@
 					<div class="flex items-center gap-2">
 						<input
 							class="bg-foreground/5 border-border rounded-lg border px-3 py-1 text-2xl font-black focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-							autofocus
 							disabled={pending}
 							onkeydown={(e) => e.key === 'Enter' && handleSaveNickname()}
 							type="text"

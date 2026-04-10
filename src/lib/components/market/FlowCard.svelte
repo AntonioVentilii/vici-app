@@ -100,7 +100,7 @@
 </script>
 
 <div
-	class="perspective-1000 relative flex h-full w-full items-center justify-center p-4 sm:p-0"
+	class="perspective-1000 relative flex h-full w-full items-center justify-center p-0 md:p-4"
 	onmouseleave={handleEnd}
 	onmousemove={handleMove}
 	onmouseup={handleEnd}
@@ -111,7 +111,7 @@
 	<div
 		style="transform: translate3d({coords.current.x}px, {coords.current
 			.y}px, 0) rotate({rotation}deg); opacity: {opacity}"
-		class="relative h-137.5 w-full max-w-95 cursor-grab select-none active:cursor-grabbing sm:h-150"
+		class="relative h-[85vh] w-full max-w-95 cursor-grab select-none active:cursor-grabbing md:h-150"
 		onmousedown={handleStart}
 		ontouchstart={handleStart}
 		role="presentation"
@@ -119,20 +119,20 @@
 		<!-- YES Indicator -->
 		<div
 			style="opacity: {signedIn ? yesOpacity : yesOpacity * 0.5}; transform: rotate(-12deg)"
-			class="absolute top-12 left-8 z-20 flex flex-col items-center rounded-xl border-4 border-emerald-500 bg-white/90 px-6 py-3 shadow-xl"
+			class="absolute top-16 left-8 z-20 flex flex-col items-center rounded-2xl border-4 border-emerald-500 bg-white/95 px-8 py-4 shadow-[0_20px_50px_rgba(16,185,129,0.3)]"
 		>
-			<span class="text-4xl font-black tracking-tight text-emerald-500">YES</span>
-			<div class="mt-1 flex flex-col items-center">
-				<span class="text-lg font-black text-emerald-600">
+			<span class="text-5xl font-black tracking-tighter text-emerald-500">YES</span>
+			<div class="mt-2 flex flex-col items-center">
+				<span class="text-xl font-black text-emerald-600">
 					+{potentialReturnYes.toFixed(2)}{$playgroundPotentialReturnSuffix}
 				</span>
-				<span class="text-[8px] font-bold tracking-widest text-emerald-500 uppercase">
+				<span class="text-[10px] font-bold tracking-widest text-emerald-500 uppercase">
 					Potential
 				</span>
 			</div>
 			{#if isLimitOrderYes}
 				<span
-					class="mt-2 rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] tracking-widest text-white uppercase"
+					class="mt-3 rounded-full bg-emerald-500 px-3 py-1 text-xs tracking-widest text-white uppercase"
 				>
 					Limit Order
 				</span>
@@ -142,20 +142,20 @@
 		<!-- NO Indicator -->
 		<div
 			style="opacity: {signedIn ? noOpacity : noOpacity * 0.5}; transform: rotate(12deg)"
-			class="absolute top-12 right-8 z-20 flex flex-col items-center rounded-xl border-4 border-rose-500 bg-white/90 px-6 py-3 shadow-xl"
+			class="absolute top-16 right-8 z-20 flex flex-col items-center rounded-2xl border-4 border-rose-500 bg-white/95 px-8 py-4 shadow-[0_20px_50px_rgba(244,63,94,0.3)]"
 		>
-			<span class="text-4xl font-black tracking-tight text-rose-500">NO</span>
-			<div class="mt-1 flex flex-col items-center">
-				<span class="text-lg font-black text-rose-600">
+			<span class="text-5xl font-black tracking-tighter text-rose-500">NO</span>
+			<div class="mt-2 flex flex-col items-center">
+				<span class="text-xl font-black text-rose-600">
 					+{potentialReturnNo.toFixed(2)}{$playgroundPotentialReturnSuffix}
 				</span>
-				<span class="text-[8px] font-bold tracking-widest text-rose-500 uppercase">
+				<span class="text-[10px] font-bold tracking-widest text-rose-500 uppercase">
 					Potential
 				</span>
 			</div>
 			{#if isLimitOrderNo}
 				<span
-					class="mt-2 rounded-full bg-rose-500 px-2 py-0.5 text-[10px] tracking-widest text-white uppercase"
+					class="mt-3 rounded-full bg-rose-500 px-3 py-1 text-xs tracking-widest text-white uppercase"
 				>
 					Limit Order
 				</span>
@@ -165,29 +165,29 @@
 		<!-- SKIP Indicator -->
 		<div
 			style="opacity: {skipOpacity}"
-			class="absolute bottom-12 left-1/2 z-20 -translate-x-1/2 rounded-xl border-4 border-slate-400 bg-white/90 px-6 py-3 text-4xl font-black tracking-tight text-slate-400 shadow-xl"
+			class="absolute bottom-24 left-1/2 z-20 -translate-x-1/2 rounded-2xl border-4 border-slate-400 bg-white/95 px-10 py-5 text-5xl font-black tracking-tighter text-slate-400 shadow-2xl"
 		>
 			SKIP
 		</div>
 
 		<div
-			class="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-[48px] border-none bg-white shadow-2xl transition-shadow hover:shadow-indigo-500/20"
+			class="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-[40px] border-none bg-white shadow-2xl transition-shadow hover:shadow-indigo-500/20 md:rounded-[48px]"
 		>
 			<!-- Header Gradient -->
 			<div
-				class="relative h-48 w-full shrink-0 items-center justify-center overflow-hidden bg-indigo-600 px-4 py-6 text-white sm:h-56 sm:px-8 sm:py-10"
+				class="relative h-40 w-full shrink-0 items-center justify-center overflow-hidden bg-indigo-600 px-6 py-4 text-white md:h-56 md:px-8 md:py-10"
 			>
 				<!-- Abstract background pattern -->
 				<div class="absolute inset-0 opacity-20">
-					<div class="absolute -top-24 -left-24 h-64 w-64 rounded-full bg-white blur-3xl"></div>
+					<div class="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-white blur-3xl"></div>
 					<div
-						class="absolute -right-24 -bottom-24 h-64 w-64 rounded-full bg-indigo-400 blur-3xl"
+						class="absolute -right-32 -bottom-32 h-80 w-80 rounded-full bg-indigo-400 blur-3xl"
 					></div>
 				</div>
 
 				<div class="relative z-10 flex h-full w-full flex-col items-center justify-center">
 					<h2
-						class="text-2xl leading-tight font-black tracking-tight text-wrap wrap-break-word sm:text-3xl"
+						class="text-lg leading-[1.1] font-black tracking-tight wrap-break-word text-white sm:text-2xl md:text-3xl"
 					>
 						{market.title}
 					</h2>
@@ -196,24 +196,26 @@
 
 			<!-- Content -->
 			<div
-				class="flex h-full w-full flex-1 flex-col justify-between gap-6 px-4 py-6 sm:px-8 sm:py-10"
+				class="flex h-full w-full flex-1 flex-col justify-between gap-6 px-6 py-8 md:px-8 md:py-10"
 			>
 				<div class="flex h-full flex-col gap-6">
-					<p class="text-sm leading-relaxed text-wrap wrap-break-word text-slate-500 sm:text-base">
+					<p
+						class="text-[13px] leading-relaxed wrap-break-word text-slate-600 sm:text-base md:text-slate-500"
+					>
 						{market.description}
 					</p>
 
 					{#if position}
 						<div
-							class="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50/50 p-4"
+							class="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5"
 						>
 							<div class="flex items-center gap-2">
-								<div class="h-2 w-2 animate-pulse rounded-full bg-indigo-500"></div>
+								<div class="h-2.5 w-2.5 animate-pulse rounded-full bg-indigo-500"></div>
 								<span class="text-[10px] font-bold tracking-widest text-indigo-700 uppercase">
 									Your Position
 								</span>
 							</div>
-							<span class="text-xs font-black text-indigo-900">
+							<span class="text-sm font-black text-indigo-900">
 								{formatToken({
 									value: position.netQty,
 									unitName: market.token.decimals
@@ -227,7 +229,7 @@
 						<div
 							class="mt-2 flex items-center justify-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase"
 						>
-							<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path
 									d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
 									stroke-linecap="round"
@@ -241,7 +243,7 @@
 
 					<div class="mt-auto grid grid-cols-2 gap-4">
 						<BaseButton
-							class="relative flex-col items-center rounded-3xl border border-rose-100 bg-rose-50/50 p-5 transition-colors hover:bg-rose-50!"
+							class="relative flex-col items-center rounded-[32px] border border-rose-100 bg-rose-50/50 p-6 transition-all hover:bg-rose-50! active:scale-95"
 							onclick={() => onAction('NO')}
 						>
 							<span
@@ -256,7 +258,7 @@
 
 							{#if isLimitOrderNo}
 								<div
-									class="absolute top-3 left-3 rounded-full bg-rose-200 px-2.5 py-1 text-[8px] font-bold tracking-widest text-rose-700 uppercase"
+									class="absolute top-4 left-4 rounded-full bg-rose-200 px-3 py-1 text-[8px] font-bold tracking-widest text-rose-700 uppercase"
 								>
 									Limit
 								</div>
@@ -264,7 +266,7 @@
 						</BaseButton>
 
 						<BaseButton
-							class="relative flex-col items-center rounded-3xl border border-emerald-100 bg-emerald-50/50 p-5 transition-colors hover:bg-emerald-50!"
+							class="relative flex-col items-center rounded-[32px] border border-emerald-100 bg-emerald-50/50 p-6 transition-all hover:bg-emerald-50! active:scale-95"
 							onclick={() => onAction('YES')}
 						>
 							<span
@@ -279,7 +281,7 @@
 
 							{#if isLimitOrderYes}
 								<div
-									class="absolute top-3 right-3 rounded-full bg-emerald-200 px-2.5 py-1 text-[8px] font-bold tracking-widest text-emerald-700 uppercase"
+									class="absolute top-4 right-4 rounded-full bg-emerald-200 px-3 py-1 text-[8px] font-bold tracking-widest text-emerald-700 uppercase"
 								>
 									Limit
 								</div>
@@ -288,17 +290,19 @@
 					</div>
 				</div>
 
-				<div class="flex items-center justify-between border-t border-slate-100 pt-6">
+				<div class="flex items-center justify-between border-t border-slate-100 pt-8">
 					<div class="flex flex-col gap-1">
 						<span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
 							Expires
 						</span>
-						<span class="text-sm font-black text-slate-900">{formatDate(market.expiryDate)}</span>
+						<span class="text-base font-black text-slate-900">{formatDate(market.expiryDate)}</span>
 					</div>
 
-					<div class="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2">
-						<span class="text-[10px] font-black tracking-widest text-slate-600 uppercase">
-							<!-- TODO: put explication arrows here -->
+					<div
+						class="flex items-center gap-2 rounded-full bg-slate-50 px-4 py-2 ring-1 ring-slate-100"
+					>
+						<span class="text-[10px] font-black tracking-widest text-slate-500 uppercase">
+							Market Details
 						</span>
 					</div>
 				</div>

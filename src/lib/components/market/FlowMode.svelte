@@ -175,7 +175,14 @@
 	};
 </script>
 
-<div class="flex min-h-[calc(100vh-10rem)] flex-col items-center justify-center px-4">
+<div
+	class="flex min-h-dvh flex-col items-center justify-center px-4 md:px-0"
+	class:bg-white={!completed && markets.length > 0}
+	class:fixed={!completed && markets.length > 0}
+	class:inset-0={!completed && markets.length > 0}
+	class:md:z-0={!completed && markets.length > 0}
+	class:z-50={!completed && markets.length > 0}
+>
 	{#if loading}
 		<div in:fade>
 			<LoadingSpinner />
@@ -209,20 +216,21 @@
 			<Button onclick={backToMarkets}>Back to Markets</Button>
 		</div>
 	{:else}
-		<!-- Header Info -->
-		<div class="mb-1 flex w-full max-w-90 flex-row items-center justify-between sm:mb-2" in:fade>
-			<div class="mb-1 flex items-center gap-1 sm:mb-2 sm:gap-3">
-				<div class="flex flex-col items-end">
-					<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Done</span>
+		<!-- Desktop Header Info (Restored) -->
+		<div class="mb-2 hidden w-full max-w-95 flex-row items-center justify-between md:flex" in:fade>
+			<div class="flex items-center gap-4">
+				<div class="flex flex-col items-start">
+					<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Progress</span
+					>
 					<span class="text-xs font-black text-slate-900">{betsCount}/{MAX_BETS}</span>
 				</div>
-				<div class="flex flex-col items-end border-l border-slate-200 pl-3">
-					<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Seen</span>
+				<div class="flex flex-col items-start border-l border-slate-200 pl-4">
+					<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Markets</span>
 					<span class="text-xs font-black text-slate-900">{currentIndex + 1}/{MAX_MARKETS}</span>
 				</div>
 			</div>
 			<div
-				class="flex items-center gap-2 rounded-full bg-slate-100 px-3 py-1 ring-1 ring-slate-200 transition-all focus-within:ring-2 focus-within:ring-indigo-500"
+				class="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 ring-1 ring-slate-200 transition-all focus-within:ring-2 focus-within:ring-indigo-500"
 			>
 				<input
 					class="w-16 bg-transparent text-center text-sm font-black text-slate-950 outline-none"
@@ -235,8 +243,59 @@
 			</div>
 		</div>
 
+		<!-- Mobile Layout Extra Elements (Refined) -->
+		<div class="md:hidden">
+			<!-- Floating Exit Button -->
+			<button
+				class="fixed top-6 left-6 z-70 flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/10 text-slate-900 backdrop-blur-md active:scale-95"
+				aria-label="Back to Markets"
+				onclick={backToMarkets}
+			>
+				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						d="M6 18L18 6M6 6l12 12"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="2.5"
+					/>
+				</svg>
+			</button>
+
+			<!-- Tiny Progress Bar at Top -->
+			<div class="fixed top-0 left-0 z-70 h-1.5 w-full bg-slate-100/50">
+				<div
+					style="width: {(betsCount / MAX_BETS) * 100}%"
+					class="h-full bg-indigo-500 transition-all duration-500"
+				></div>
+			</div>
+
+			<!-- Mobile Stats & Trade Amount (Updated to Progress/Seen) -->
+			<div
+				class="fixed top-6 right-6 z-70 flex items-center gap-2 rounded-full bg-slate-900/10 px-3 py-1.5 backdrop-blur-md"
+			>
+				<div class="flex flex-col items-center border-r border-slate-900/10 pr-2 leading-none">
+					<span class="text-[6px] font-black tracking-tighter text-slate-500 uppercase">Prog</span>
+					<span class="text-[9px] font-black text-slate-800">{betsCount}/{MAX_BETS}</span>
+				</div>
+				<div class="flex flex-col items-center border-r border-slate-900/10 pr-2 leading-none">
+					<span class="text-[6px] font-black tracking-tighter text-slate-500 uppercase">Seen</span>
+					<span class="text-[9px] font-black text-slate-800">{currentIndex + 1}/{MAX_MARKETS}</span>
+				</div>
+				<div class="flex items-center gap-1">
+					<input
+						class="w-8 bg-transparent text-center text-xs font-black text-slate-950 outline-none"
+						min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 1}
+						step={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
+						type="number"
+						bind:value={tradeAmount}
+					/>
+					<span class="text-[7px] font-bold text-slate-600">{$playgroundFlowTradeUnitLabel}</span>
+				</div>
+			</div>
+		</div>
+
 		<!-- Card Container -->
-		<div class="relative h-150 w-full max-w-95">
+		<div class="relative h-screen w-full md:h-150 md:max-w-95">
 			{#each markets.slice(currentIndex, currentIndex + 2) as market, i (market?.id)}
 				{@const isCurrent = i === 0}
 				<div
@@ -267,8 +326,8 @@
 			{/each}
 		</div>
 
-		<!-- Controls Hint -->
-		<div class="mt-12 text-center text-slate-400" in:fade>
+		<!-- Controls Hint (Desktop) -->
+		<div class="mt-12 hidden text-center text-slate-400 md:block" in:fade>
 			<div
 				class="flex items-center justify-center gap-8 text-[10px] font-black tracking-widest uppercase"
 			>
@@ -297,6 +356,60 @@
 					<span>YES</span>
 				</div>
 			</div>
+		</div>
+
+		<!-- Mobile Footer Controls -->
+		<div
+			class="fixed bottom-0 left-0 z-60 hidden w-full items-center justify-center gap-8 bg-linear-to-t from-white via-white/70 to-transparent pt-12 pb-4 max-md:flex md:hidden!"
+			in:fade
+		>
+			<button
+				class="flex h-16 w-16 items-center justify-center rounded-full border-4 border-rose-100 bg-white text-rose-500 shadow-xl transition-transform active:scale-90"
+				aria-label="Predict NO"
+				onclick={() => handleAction('NO')}
+			>
+				<svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						d="M19 12H5M12 19l-7-7 7-7"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="3"
+					/>
+				</svg>
+			</button>
+
+			<div class="flex flex-col items-center gap-2">
+				<button
+					class="flex h-12 w-12 items-center justify-center rounded-full border-4 border-slate-100 bg-white text-slate-400 shadow-lg transition-transform active:scale-90"
+					aria-label="Skip Market"
+					onclick={() => handleAction('SKIP')}
+				>
+					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							d="M5 10l7-7m0 0l7 7m-7-7v18"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="3"
+						/>
+					</svg>
+				</button>
+				<span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Skip</span>
+			</div>
+
+			<button
+				class="flex h-16 w-16 items-center justify-center rounded-full border-4 border-emerald-100 bg-white text-emerald-500 shadow-xl transition-transform active:scale-90"
+				aria-label="Predict YES"
+				onclick={() => handleAction('YES')}
+			>
+				<svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<path
+						d="M5 12h14M12 5l7 7-7 7"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="3"
+					/>
+				</svg>
+			</button>
 		</div>
 	{/if}
 </div>
