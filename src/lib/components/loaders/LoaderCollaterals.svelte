@@ -5,12 +5,26 @@
 	import { getCollateralAssets } from '$lib/services/collateral.services';
 	import { getBalances } from '$lib/services/wallet.service';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
 
-	const refresh = async () => {
+	let prevDomain: ClearingDid.BalanceDomain | undefined = undefined;
+
+	const refresh = async ({ resetStore = false } = {}) => {
+		const domainToken = $balanceDomain;
+
+		if (resetStore) {
+			collateralsStore.set(undefined);
+		}
+
 		const [{ collateral, accountState }, assets] = await Promise.all([
-			getBalances($balanceDomain),
+			getBalances(domainToken),
 			getCollateralAssets()
 		]);
+
+		// Only update if the domain hasn't changed during the fetch
+		if ($balanceDomain !== domainToken) {
+			return;
+		}
 
 		const assetsConfig: Record<string, ClearingDid.CollateralAssetInfo> = {};
 
@@ -26,12 +40,13 @@
 	};
 
 	$effect(() => {
-		if ($balanceDomain) {
-			refresh();
+		if ($balanceDomain && (!prevDomain || !compareBalanceDomains($balanceDomain, prevDomain))) {
+			prevDomain = $balanceDomain;
+			refresh({ resetStore: true });
 		}
 	});
 </script>
 
-<svelte:window onviciRefreshCollaterals={refresh} />
+<svelte:window onviciRefreshCollaterals={() => refresh()} />
 
 <IdentityAwareLoader onLoad={refresh} />

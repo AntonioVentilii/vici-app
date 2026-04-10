@@ -1,22 +1,36 @@
 <script lang="ts">
+	import type { ClearingDid } from '$declarations';
 	import IdentityAwareLoader from '$lib/components/loaders/IdentityAwareLoader.svelte';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { getUserOrders } from '$lib/services/order.services';
 	import { ordersStore } from '$lib/stores/orders.store';
+	import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
 
-	const refresh = async () => {
-		const orders = await getUserOrders($balanceDomain);
+	let prevDomain: ClearingDid.BalanceDomain | undefined = undefined;
 
-		ordersStore.set(orders);
+	const refresh = async ({ resetStore = false } = {}) => {
+		const domainToken = $balanceDomain;
+
+		if (resetStore) {
+			ordersStore.set(undefined);
+		}
+
+		const orders = await getUserOrders(domainToken);
+
+		// Only update if the domain hasn't changed during the fetch
+		if ($balanceDomain === domainToken) {
+			ordersStore.set(orders);
+		}
 	};
 
 	$effect(() => {
-		if ($balanceDomain) {
-			refresh();
+		if ($balanceDomain && (!prevDomain || !compareBalanceDomains($balanceDomain, prevDomain))) {
+			prevDomain = $balanceDomain;
+			refresh({ resetStore: true });
 		}
 	});
 </script>
 
-<svelte:document onviciRefreshOrders={refresh} />
+<svelte:document onviciRefreshOrders={() => refresh()} />
 
 <IdentityAwareLoader onLoad={refresh} />
