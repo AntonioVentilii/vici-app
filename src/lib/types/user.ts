@@ -4,5 +4,6 @@ export enum UserRole {
 	SOLVER = 'solver',
 	CREATOR = 'creator',
 	MODERATOR = 'moderator',
-	GROUP_CREATOR = 'group_creator'
+	GROUP_CREATOR = 'group_creator',
+	USER = 'user'
 }
