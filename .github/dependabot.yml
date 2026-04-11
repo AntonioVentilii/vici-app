@@ -40,3 +40,4 @@ updates:
           - '@junobuild/vite-plugin'
           - '@junobuild/core'
           - '@junobuild/functions'
+          - '@junobuild/schema'
