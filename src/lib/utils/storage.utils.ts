@@ -26,7 +26,7 @@ export const del = ({ key }: { key: string }) => {
 /** Parses JSON from localStorage for `key`, or `undefined` if missing or invalid. */
 export const get = <T>({ key }: { key: string }): T | undefined => {
 	try {
-		const { [key]: value } = browser ? localStorage : ({ [key]: undefined } as unknown as Storage);
+		const value = browser ? localStorage.getItem(key) : null;
 
 		return nonNullish(value) ? JSON.parse(value) : undefined;
 	} catch (err: unknown) {

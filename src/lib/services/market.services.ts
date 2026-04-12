@@ -16,8 +16,8 @@ import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
 import type { SeriesCategory } from '$lib/types/category';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
-import { ActivityType } from '$lib/types/social';
-import { UserRole } from '$lib/types/user';
+import { ActivityType } from '$lib/enums/social';
+import { UserRole } from '$lib/enums/user';
 import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import {

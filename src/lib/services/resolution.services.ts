@@ -4,8 +4,8 @@ import { VICI_ORACLE_V1, ZERO } from '$lib/constants/app.constants';
 import { logActivity } from '$lib/services/activity.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
-import { ActivityType } from '$lib/types/social';
-import { UserRole } from '$lib/types/user';
+import { ActivityType } from '$lib/enums/social';
+import { UserRole } from '$lib/enums/user';
 import { nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 
 /** Admin/resolver-only: settles a series on clearing by outcome id or numeric price and logs activity. */

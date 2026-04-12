@@ -1,4 +1,7 @@
-import type { PrincipalText } from '@dfinity/zod-schemas';
+import type { ProfileVisibility } from '$lib/enums/profile';
+import type { ActivityType } from '$lib/enums/social';
+import type { Nickname } from '$lib/types/profile';
+import type { PrincipalText } from '@junobuild/schema';
 
 export interface LeaderboardEntry {
 	rank: number;
@@ -6,17 +9,8 @@ export interface LeaderboardEntry {
 	pnl: number;
 	winRate: number;
 	activePositions: number;
-	nickname: string;
-	visibility: 'public' | 'friends';
-}
-
-export enum ActivityType {
-	TRADE = 'trade',
-	SETTLEMENT = 'settlement',
-	COMMENT = 'comment',
-	FOLLOW = 'follow',
-	UPVOTE = 'upvote',
-	DOWNVOTE = 'downvote'
+	nickname: Nickname;
+	visibility: ProfileVisibility;
 }
 
 export interface Activity {

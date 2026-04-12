@@ -1,7 +1,7 @@
 import { Collection } from '$lib/constants/collections.constants';
 import type { Activity } from '$lib/types/social';
-import type { PrincipalText } from '@dfinity/zod-schemas';
 import { listDocs, setDoc } from '@junobuild/core';
+import type { PrincipalText } from '@junobuild/schema';
 
 /** Appends a timestamped activity row to Juno. */
 export const logActivity = async (activity: Omit<Activity, 'timestamp'>): Promise<void> => {

@@ -1,5 +1,5 @@
-import { Permission } from '$lib/types/permission';
-import { UserRole } from '$lib/types/user';
+import { Permission } from '$lib/enums/permission';
+import { UserRole } from '$lib/enums/user';
 
 export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 	[UserRole.CONTROLLER]: [

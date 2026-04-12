@@ -1,0 +1,12 @@
+export enum RelationCategory {
+	FRIEND = 'FRIEND',
+	FOLLOW = 'follow',
+	GROUP = 'GROUP'
+}
+
+export enum RelationState {
+	PENDING = 'PENDING',
+	ACTIVE = 'ACTIVE',
+	REJECTED = 'REJECTED',
+	BLOCKED = 'BLOCKED'
+}

@@ -1,5 +1,5 @@
 import type { MarketId, Outcome } from '$lib/types/market';
-import type { PrincipalText } from '@dfinity/zod-schemas';
+import type { PrincipalText } from '@junobuild/schema';
 
 export type OrderType = 'LIMIT' | 'MARKET';
 

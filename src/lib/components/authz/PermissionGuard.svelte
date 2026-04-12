@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { userPermissions } from '$lib/derived/user.derived';
-	import type { Permission } from '$lib/types/permission';
+	import type { Permission } from '$lib/enums/permission';
 
 	interface Props {
 		children: Snippet;

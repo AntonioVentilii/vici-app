@@ -1,7 +1,7 @@
 import { Collection } from '$lib/constants/collections.constants';
-import type { UserRole } from '$lib/types/user';
-import type { PrincipalText } from '@dfinity/zod-schemas';
+import type { UserRole } from '$lib/enums/user';
 import { deleteDoc, getDoc, listDocs, setDoc } from '@junobuild/core';
+import type { PrincipalText } from '@junobuild/schema';
 
 /** Juno document payload for the roles collection. */
 export interface RoleDoc {

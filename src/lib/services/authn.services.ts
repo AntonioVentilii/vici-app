@@ -4,7 +4,7 @@ import { PRICE_DECIMALS, VICI_ORACLE_V1 } from '$lib/constants/app.constants';
 import { logActivity } from '$lib/services/activity.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId, Outcome } from '$lib/types/market';
-import { ActivityType } from '$lib/types/social';
+import { ActivityType } from '$lib/enums/social';
 import { binaryPayoff } from '$lib/utils/payoff.utils';
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';

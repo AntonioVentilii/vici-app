@@ -1,6 +1,6 @@
 import { ROLE_PERMISSIONS } from '$lib/constants/authz.constants';
-import type { Permission } from '$lib/types/permission';
-import type { UserRole } from '$lib/types/user';
+import type { Permission } from '$lib/enums/permission';
+import type { UserRole } from '$lib/enums/user';
 import { isNullish } from '@dfinity/utils';
 
 /** Returns whether `role` grants `permission` per `ROLE_PERMISSIONS`. */

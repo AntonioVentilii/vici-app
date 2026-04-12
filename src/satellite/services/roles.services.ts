@@ -1,5 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
-import { UserRole } from '$lib/types/user';
+import { UserRole } from '$lib/enums/user';
 import { isNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext } from '@junobuild/functions';

@@ -1,30 +1,6 @@
-import type { UserRole } from '$lib/types/user';
-import type { PrincipalText } from '@dfinity/zod-schemas';
+import type { NicknameSchema, UserProfileSchema } from '$lib/schema/profile.schema';
+import type { j } from '@junobuild/schema';
 
-export interface UserProfile {
-	owner: PrincipalText;
-	nickname: string;
-	avatar?: string;
-	bio?: string;
-	role?: UserRole;
-	createdAt: number;
-	updatedAt: number;
-	totalTrades?: number;
-	winRate?: number;
-	pnl?: number;
-	interests?: string[];
-	streak?: number;
-	accuracy?: number;
-	points?: number;
-	level?: number;
-	rank?: number;
-	dailyStreak?: number;
-	lastActiveDay?: string;
-	visibility?: 'public' | 'friends';
-	preferences?: {
-		defaultAmount?: {
-			flow?: string;
-			manual?: string;
-		};
-	};
-}
+export type Nickname = j.infer<typeof NicknameSchema>;
+
+export type UserProfile = j.infer<typeof UserProfileSchema>;

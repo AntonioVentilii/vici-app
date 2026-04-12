@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PrincipalText } from '@dfinity/zod-schemas';
+	import type { PrincipalText } from '@junobuild/schema';
 	import Button from '$lib/components/ui/Button.svelte';
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';

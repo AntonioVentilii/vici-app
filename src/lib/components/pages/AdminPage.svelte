@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { PrincipalText } from '@dfinity/zod-schemas';
+	import type { PrincipalText } from '@junobuild/schema';
 	import { onMount } from 'svelte';
 	import AdminAddForm from '$lib/components/admin/AdminAddForm.svelte';
 	import AdminBulkMarketForm from '$lib/components/admin/AdminBulkMarketForm.svelte';
@@ -9,6 +9,7 @@
 	import AdminResolutionList from '$lib/components/admin/AdminResolutionList.svelte';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { markets } from '$lib/derived/markets.derived';
+	import { UserRole } from '$lib/enums/user';
 	import { resolveMarket } from '$lib/services/authn.services';
 	import { associateSeriesWithCategory } from '$lib/services/category.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
@@ -16,7 +17,6 @@
 	import { listRoles, removeRole, setRole, type UserRoleEntry } from '$lib/services/roles.services';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { MarketId, Outcome } from '$lib/types/market';
-	import { UserRole } from '$lib/types/user';
 	import { toBalanceDomain } from '$lib/utils/balance-domain.utils';
 
 	let loading = $state(true);

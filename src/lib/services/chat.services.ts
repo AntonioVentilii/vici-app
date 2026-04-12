@@ -1,7 +1,7 @@
 import { Collection } from '$lib/constants/collections.constants';
 import type { ChatMessage } from '$lib/types/chat';
-import type { PrincipalText } from '@dfinity/zod-schemas';
 import { listDocs, setDoc } from '@junobuild/core';
+import type { PrincipalText } from '@junobuild/schema';
 
 /** Persists a market chat message with a generated document key. */
 export const sendMessage = async ({

@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { ActivityType } from '$lib/enums/social';
 	import { logActivity } from '$lib/services/activity.services';
 	import {
 		addComment,
@@ -12,7 +13,6 @@
 	import { getProfile } from '$lib/services/profile.services';
 	import type { Comment } from '$lib/types/comment';
 	import type { UserProfile } from '$lib/types/profile';
-	import { ActivityType } from '$lib/types/social';
 
 	interface Props {
 		marketId: string;

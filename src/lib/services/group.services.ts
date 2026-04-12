@@ -15,8 +15,9 @@ import { ROLE_PERMISSIONS } from '$lib/constants/authz.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
 import { getFriends } from '$lib/services/relation.services';
-import { Permission } from '$lib/types/permission';
+import { Permission } from '$lib/enums/permission';
 import { Principal } from '@icp-sdk/core/principal';
+import type { PrincipalText } from '@junobuild/schema';
 
 const assertPermission = async (permission: Permission): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
@@ -86,7 +87,7 @@ export const addGroupAdmins = async ({
 	principals
 }: {
 	groupId: string;
-	principals: string[];
+	principals: PrincipalText[];
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -104,7 +105,7 @@ export const removeGroupAdmins = async ({
 	principals
 }: {
 	groupId: string;
-	principals: string[];
+	principals: PrincipalText[];
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -122,7 +123,7 @@ export const addGroupMembers = async ({
 	principals
 }: {
 	groupId: string;
-	principals: string[];
+	principals: PrincipalText[];
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -140,7 +141,7 @@ export const removeGroupMembers = async ({
 	principals
 }: {
 	groupId: string;
-	principals: string[];
+	principals: PrincipalText[];
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -159,7 +160,7 @@ export const getGroup = async (groupId: string): Promise<RegistryDid.Group | und
 	return await getGroupApi({ identity, groupId });
 };
 
-export const listGroups = async (creator?: string): Promise<RegistryDid.Group[]> => {
+export const listGroups = async (creator?: PrincipalText): Promise<RegistryDid.Group[]> => {
 	const identity = await safeGetIdentityOnce();
 
 	return await listGroupsApi({ identity, creator });
@@ -195,8 +196,8 @@ export const syncGroupAdminsAfterUnfriend = async ({
 	userA,
 	userB
 }: {
-	userA: string;
-	userB: string;
+	userA: PrincipalText;
+	userB: PrincipalText;
 }): Promise<void> => {
 	try {
 		const groupsA = await listGroups(userA);
@@ -219,9 +220,6 @@ export const syncGroupAdminsAfterUnfriend = async ({
 	}
 };
 
-/**
- * Gets or creates a "My Friends" group for the current user and syncs their active friends.
- */
 export const getOrCreateFriendsGroup = async (): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 	const principal = identity.getPrincipal().toText();
@@ -245,7 +243,7 @@ export const getOrCreateFriendsGroup = async (): Promise<string> => {
 	const activeFriends = await getFriends(principal);
 	const friendPrincipals = activeFriends
 		.map((f) => f.participants.find((p) => p !== principal))
-		.filter((p): p is string => p !== undefined);
+		.filter((p): p is PrincipalText => p !== undefined);
 
 	const currentMembers = friendsGroup.members.map((m) => m.toText());
 	const missingMembers = friendPrincipals.filter((p) => !currentMembers.includes(p));
@@ -257,9 +255,6 @@ export const getOrCreateFriendsGroup = async (): Promise<string> => {
 	return friendsGroup.group_id;
 };
 
-/**
- * Gets or creates a "My Followers" group for the current user and syncs their active followers.
- */
 export const getOrCreateFollowersGroup = async (): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 	const principal = identity.getPrincipal().toText();

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
-	import { UserRole } from '$lib/types/user';
+	import { UserRole } from '$lib/enums/user';
 
 	let {
 		principal = '',

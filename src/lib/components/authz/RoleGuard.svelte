@@ -2,7 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { userRole } from '$lib/derived/user.derived';
-	import type { UserRole } from '$lib/types/user';
+	import type { UserRole } from '$lib/enums/user';
 
 	interface Props {
 		children: Snippet;

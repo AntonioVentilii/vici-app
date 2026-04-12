@@ -1,7 +1,7 @@
 import { Collection } from '$lib/constants/collections.constants';
 import type { Category, SeriesCategory } from '$lib/types/category';
-import type { PrincipalText } from '@dfinity/zod-schemas';
 import { getDoc, listDocs, setDoc } from '@junobuild/core';
+import type { PrincipalText } from '@junobuild/schema';
 
 /** Stores a series→category mapping (keyed by series id). */
 export const associateSeriesWithCategory = async ({

@@ -1,4 +1,4 @@
-import { ActivityType } from '$lib/types/social';
+import { ActivityType } from '$lib/enums/social';
 
 export const getActivityIcon = (type: ActivityType) => {
 	switch (type) {

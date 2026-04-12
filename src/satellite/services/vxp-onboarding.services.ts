@@ -6,7 +6,8 @@ import {
 	newUserVxpAmountMilestone2BaseUnits,
 	newUserVxpAmountMilestone3BaseUnits
 } from '$lib/constants/vxp-onboarding.constants';
-import { ActivityType, type Activity } from '$lib/types/social';
+import { ActivityType } from '$lib/enums/social';
+import type { Activity } from '$lib/types/social';
 import type {
 	VxpMilestoneState,
 	VxpNewUserMilestoneKey,

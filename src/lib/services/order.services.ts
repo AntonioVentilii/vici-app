@@ -12,7 +12,7 @@ import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/ident
 import { recordActivity } from '$lib/services/profile.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderSide, OrderType } from '$lib/types/order';
-import { ActivityType } from '$lib/types/social';
+import { ActivityType } from '$lib/enums/social';
 import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
 import { parseLimitOrderPriceValue } from '$lib/utils/parse.utils';
 import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';

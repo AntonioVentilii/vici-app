@@ -2,7 +2,7 @@
 	import Protected from '$lib/components/authn/Protected.svelte';
 	import PermissionGuard from '$lib/components/authz/PermissionGuard.svelte';
 	import AdminPage from '$lib/components/pages/AdminPage.svelte';
-	import { Permission } from '$lib/types/permission';
+	import { Permission } from '$lib/enums/permission';
 </script>
 
 <Protected
