@@ -11,19 +11,21 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 /**
+
  * Input parameters for registering a new price oracle.
+
  */
 export interface AddOracleParams {
 	/**
-	 * Initial information about the oracle.
+	 * * Initial information about the oracle.
 	 */
 	metadata: OracleMetadata;
 	/**
-	 * Initial list of authorised principals.
+	 * * Initial list of authorised principals.
 	 */
 	authorized_principals: Array<Principal>;
 	/**
-	 * Unique identifier for the oracle (e.g., "COINGECKO").
+	 * * Unique identifier for the oracle (e.g., "COINGECKO").
 	 */
 	oracle_id: string;
 }
@@ -32,43 +34,43 @@ export interface AddOracleParams {
  */
 export interface AddSeriesParams {
 	/**
-	 * A short, descriptive title for the series.
+	 * * A short, descriptive title for the series.
 	 */
 	title: string;
 	/**
-	 * The option strike price, if applicable.
+	 * * The option strike price, if applicable.
 	 */
 	strike: [] | [Price];
 	/**
-	 * The payoff model for the series.
+	 * * The payoff model for the series.
 	 */
 	payoff_type: PayoffType;
 	/**
-	 * The unit in which the contract payoff is expressed.
+	 * * The unit in which the contract payoff is expressed.
 	 */
 	payout_unit: PayoutUnit;
 	/**
-	 * Expiry timestamp in nanoseconds since UNIX epoch.
+	 * * Expiry timestamp in nanoseconds since UNIX epoch.
 	 */
 	expiry_ns: bigint;
 	/**
-	 * An optional banner URL for the market.
+	 * * An optional banner URL for the market.
 	 */
 	banner_url: [] | [string];
 	/**
-	 * The underlying asset ticker (case-insensitive, e.g., "ICP").
+	 * * The underlying asset ticker (case-insensitive, e.g., "ICP").
 	 */
 	underlying: string;
 	/**
-	 * A detailed description of the series.
+	 * * A detailed description of the series.
 	 */
 	description: Description;
 	/**
-	 * The defined outcomes for categorical markets (ordered).
+	 * * The defined outcomes for categorical markets (ordered).
 	 */
 	outcomes: [] | [Array<Outcome>];
 	/**
-	 * An optional icon URL for the market.
+	 * * An optional icon URL for the market.
 	 */
 	icon_url: [] | [string];
 	/**
@@ -84,15 +86,15 @@ export interface AddSeriesParams {
 	 */
 	trading_access: Array<TradingAccess>;
 	/**
-	 * The number of decimals used for prices and strikes in this series.
+	 * * The number of decimals used for prices and strikes in this series.
 	 */
 	price_precision: number;
 	/**
-	 * The balance domain this series belongs to.
+	 * * The balance domain this series belongs to.
 	 */
 	balance_domain: BalanceDomain;
 	/**
-	 * The price oracle identifier (case-insensitive, e.g., "Coingecko").
+	 * * The price oracle identifier (case-insensitive, e.g., "Coingecko").
 	 */
 	oracle_source: string;
 }
@@ -102,13 +104,13 @@ export interface AddSeriesParams {
 export type AddSeriesResult =
 	| {
 			/**
-			 * Successfully registered the series with the returned [`SeriesId`].
+			 * * Successfully registered the series with the returned [`SeriesId`].
 			 */
 			Ok: string;
 	  }
 	| {
 			/**
-			 * Failed to register the series.
+			 * * Failed to register the series.
 			 */
 			Err: SeriesError;
 	  };
@@ -118,19 +120,19 @@ export type AddSeriesResult =
 export type Asset =
 	| {
 			/**
-			 * An ERC-20 token on an EVM-compatible chain.
+			 * * An ERC-20 token on an EVM-compatible chain.
 			 */
 			Erc20: ErcToken;
 	  }
 	| {
 			/**
-			 * An ICRC-compliant token identified by its canister [`Principal`].
+			 * * An ICRC-compliant token identified by its canister [`Principal`].
 			 */
 			Icrc: Principal;
 	  }
 	| {
 			/**
-			 * A native asset on an EVM-compatible chain.
+			 * * A native asset on an EVM-compatible chain.
 			 */
 			NativeEvm: NativeEvmAsset;
 	  };
@@ -140,25 +142,25 @@ export type Asset =
 export type BalanceDomain =
 	| {
 			/**
-			 * VICI XP (loyalty points) — segregated from Playground test assets.
+			 * * VICI XP (loyalty points) — segregated from Playground test assets.
 			 */
 			ViciXp: null;
 	  }
 	| {
 			/**
-			 * Non-monetary social bets (e.g., betting a pizza).
+			 * * Non-monetary social bets (e.g., betting a pizza).
 			 */
 			Social: null;
 	  }
 	| {
 			/**
-			 * Testnet / sandbox collateral (e.g. TESTICP, Sepolia) — not real funds.
+			 * * Testnet / sandbox collateral (e.g. TESTICP, Sepolia) — not real funds.
 			 */
 			Playground: null;
 	  }
 	| {
 			/**
-			 * Real collateralized trading (e.g., using ckUSDC, ICP).
+			 * * Real collateralized trading (e.g., using ckUSDC, ICP).
 			 */
 			Settlement: null;
 	  };
@@ -170,15 +172,15 @@ export type BalanceDomain =
  */
 export interface CreateGroupParams {
 	/**
-	 * A human-readable name for the group. Must not exceed 128 characters.
+	 * * A human-readable name for the group. Must not exceed 128 characters.
 	 */
 	name: string;
 	/**
-	 * An optional longer description of the group's purpose.
+	 * * An optional longer description of the group's purpose.
 	 */
 	description: [] | [string];
 	/**
-	 * An optional icon/avatar URL for the group.
+	 * * An optional icon/avatar URL for the group.
 	 */
 	icon_url: [] | [string];
 }
@@ -190,13 +192,13 @@ export interface CreateGroupParams {
 export type CreateGroupResult =
 	| {
 			/**
-			 * The group was created successfully.
+			 * * The group was created successfully.
 			 */
 			Ok: string;
 	  }
 	| {
 			/**
-			 * The group creation failed.
+			 * * The group creation failed.
 			 */
 			Err: GroupError;
 	  };
@@ -206,11 +208,11 @@ export type CreateGroupResult =
  */
 export interface DecimalValue {
 	/**
-	 * The number of decimal places (exponent).
+	 * * The number of decimal places (exponent).
 	 */
 	decimals: number;
 	/**
-	 * The numeric value (mantissa).
+	 * * The numeric value (mantissa).
 	 */
 	value: bigint;
 }
@@ -220,15 +222,15 @@ export interface DecimalValue {
  */
 export interface Description {
 	/**
-	 * Optional HTML version of the description.
+	 * * Optional HTML version of the description.
 	 */
 	html: [] | [string];
 	/**
-	 * Optional markdown version of the description.
+	 * * Optional markdown version of the description.
 	 */
 	markdown: [] | [string];
 	/**
-	 * The mandatory plain text description.
+	 * * The mandatory plain text description.
 	 */
 	plain: string;
 }
@@ -237,15 +239,15 @@ export interface Description {
  */
 export interface ErcToken {
 	/**
-	 * The number of decimals the token uses (e.g., 18 for ETH, 6 for USDC).
+	 * * The number of decimals the token uses (e.g., 18 for ETH, 6 for USDC).
 	 */
 	decimals: number;
 	/**
-	 * The contract address of the token.
+	 * * The contract address of the token.
 	 */
 	token_address: string;
 	/**
-	 * The ID of the EVM chain where the token is deployed.
+	 * * The ID of the EVM chain where the token is deployed.
 	 */
 	chain_id: bigint;
 }
@@ -265,7 +267,7 @@ export type FiatUnit = { Chf: null } | { Eur: null } | { Gbp: null } | { Usd: nu
  */
 export interface Group {
 	/**
-	 * The principal that performed the last mutation.
+	 * * The principal that performed the last mutation.
 	 */
 	updated_by: Principal;
 	/**
@@ -279,11 +281,11 @@ export interface Group {
 	 */
 	members: Array<Principal>;
 	/**
-	 * A human-readable display name for the group (max 128 chars).
+	 * * A human-readable display name for the group (max 128 chars).
 	 */
 	name: string;
 	/**
-	 * An optional longer description of the group's purpose.
+	 * * An optional longer description of the group's purpose.
 	 */
 	description: [] | [string];
 	/**
@@ -293,15 +295,15 @@ export interface Group {
 	 */
 	updated_at_ns: bigint;
 	/**
-	 * Timestamp of group creation in nanoseconds since UNIX epoch.
+	 * * Timestamp of group creation in nanoseconds since UNIX epoch.
 	 */
 	created_at_ns: bigint;
 	/**
-	 * An optional icon/avatar URL for the group.
+	 * * An optional icon/avatar URL for the group.
 	 */
 	icon_url: [] | [string];
 	/**
-	 * The unique identifier assigned at creation.
+	 * * The unique identifier assigned at creation.
 	 */
 	group_id: string;
 	/**
@@ -318,7 +320,7 @@ export interface Group {
 export type GroupError =
 	| {
 			/**
-			 * The specified group ID does not exist in the registry.
+			 * * The specified group ID does not exist in the registry.
 			 */
 			GroupNotFound: null;
 	  }
@@ -339,13 +341,13 @@ export type GroupError =
 	  }
 	| {
 			/**
-			 * A group with this name already exists for this creator.
+			 * * A group with this name already exists for this creator.
 			 */
 			GroupAlreadyExists: null;
 	  }
 	| {
 			/**
-			 * The provided group name exceeds the maximum allowed length (128 chars).
+			 * * The provided group name exceeds the maximum allowed length (128 chars).
 			 */
 			NameTooLong: null;
 	  }
@@ -364,13 +366,13 @@ export type GroupError =
 export type GroupResult =
 	| {
 			/**
-			 * The operation succeeded.
+			 * * The operation succeeded.
 			 */
 			Ok: boolean;
 	  }
 	| {
 			/**
-			 * The operation failed.
+			 * * The operation failed.
 			 */
 			Err: GroupError;
 	  };
@@ -379,39 +381,39 @@ export type GroupResult =
  */
 export interface ListSeriesParams {
 	/**
-	 * Filter by the strike price.
+	 * * Filter by the strike price.
 	 */
 	strike: [] | [Price];
 	/**
-	 * Filter by the principal identifier of the creator.
+	 * * Filter by the principal identifier of the creator.
 	 */
 	creator: [] | [Principal];
 	/**
-	 * Filter by the payoff model.
+	 * * Filter by the payoff model.
 	 */
 	payoff_type: [] | [PayoffType];
 	/**
-	 * Filter by the payout unit.
+	 * * Filter by the payout unit.
 	 */
 	payout_unit: [] | [PayoutUnit];
 	/**
-	 * Optional pagination parameters.
+	 * * Optional pagination parameters.
 	 */
 	pagination: [] | [PaginationParams];
 	/**
-	 * Filter by the underlying asset ticker (case-insensitive).
+	 * * Filter by the underlying asset ticker (case-insensitive).
 	 */
 	underlying: [] | [string];
 	/**
-	 * Filter by a search term in the title or description (case-insensitive, partial match).
+	 * * Filter by a search term in the title or description (case-insensitive, partial match).
 	 */
 	search_term: [] | [string];
 	/**
-	 * Filter by balance domain.
+	 * * Filter by balance domain.
 	 */
 	balance_domain: [] | [BalanceDomain];
 	/**
-	 * Filter by the price oracle identifier (case-insensitive, partial match).
+	 * * Filter by the price oracle identifier (case-insensitive, partial match).
 	 */
 	oracle_source: [] | [string];
 }
@@ -420,15 +422,15 @@ export interface ListSeriesParams {
  */
 export interface ManageOraclePrincipalsParams {
 	/**
-	 * Principals to be added to the authorised list.
+	 * * Principals to be added to the authorised list.
 	 */
 	add_principals: Array<Principal>;
 	/**
-	 * Principals to be removed from the authorised list.
+	 * * Principals to be removed from the authorised list.
 	 */
 	remove_principals: Array<Principal>;
 	/**
-	 * The unique identifier of the oracle.
+	 * * The unique identifier of the oracle.
 	 */
 	oracle_id: string;
 }
@@ -438,11 +440,11 @@ export interface ManageOraclePrincipalsParams {
  */
 export interface NativeEvmAsset {
 	/**
-	 * The number of decimals the native asset uses.
+	 * * The number of decimals the native asset uses.
 	 */
 	decimals: number;
 	/**
-	 * The EVM chain where this native asset is used.
+	 * * The EVM chain where this native asset is used.
 	 */
 	chain_id: bigint;
 }
@@ -452,23 +454,23 @@ export type NonMonetaryUnit = { Points: null } | { Social: SocialReward };
  */
 export interface Oracle {
 	/**
-	 * The principal identifier of the oracle's manager (defaults to creator).
+	 * * The principal identifier of the oracle's manager (defaults to creator).
 	 */
 	manager: Principal;
 	/**
-	 * Timestamp of oracle registration in nanoseconds since UNIX epoch.
+	 * * Timestamp of oracle registration in nanoseconds since UNIX epoch.
 	 */
 	registered_at_ns: bigint;
 	/**
-	 * Metadata about the oracle.
+	 * * Metadata about the oracle.
 	 */
 	metadata: OracleMetadata;
 	/**
-	 * The set of principals authorised to push settlement data for this oracle.
+	 * * The set of principals authorised to push settlement data for this oracle.
 	 */
 	authorized_principals: Array<Principal>;
 	/**
-	 * Unique identifier for the oracle (e.g., "COINGECKO").
+	 * * Unique identifier for the oracle (e.g., "COINGECKO").
 	 */
 	oracle_id: string;
 }
@@ -478,19 +480,19 @@ export interface Oracle {
 export type OracleError =
 	| {
 			/**
-			 * Returned when the caller is not authorised to manage the oracle.
+			 * * Returned when the caller is not authorised to manage the oracle.
 			 */
 			UnauthorizedOracleManager: null;
 	  }
 	| {
 			/**
-			 * Returned when attempting to add an oracle that already exists.
+			 * * Returned when attempting to add an oracle that already exists.
 			 */
 			OracleAlreadyExists: null;
 	  }
 	| {
 			/**
-			 * Returned when the specified oracle does not exist.
+			 * * Returned when the specified oracle does not exist.
 			 */
 			OracleNotFound: null;
 	  };
@@ -499,15 +501,15 @@ export type OracleError =
  */
 export interface OracleMetadata {
 	/**
-	 * The human-readable name of the oracle.
+	 * * The human-readable name of the oracle.
 	 */
 	name: string;
 	/**
-	 * A short description of the oracle's methodology or data sources.
+	 * * A short description of the oracle's methodology or data sources.
 	 */
 	description: [] | [Description];
 	/**
-	 * Optional URL to the oracle's website.
+	 * * Optional URL to the oracle's website.
 	 */
 	website: [] | [string];
 }
@@ -520,19 +522,19 @@ export type OracleResult = { Ok: null } | { Err: OracleError };
  */
 export interface Outcome {
 	/**
-	 * The unique identifier of the outcome.
+	 * * The unique identifier of the outcome.
 	 */
 	id: string;
 	/**
-	 * A short title for the outcome (e.g., "Yes", "No", "Team A").
+	 * * A short title for the outcome (e.g., "Yes", "No", "Team A").
 	 */
 	title: string;
 	/**
-	 * An optional detailed description of the outcome.
+	 * * An optional detailed description of the outcome.
 	 */
 	description: [] | [Description];
 	/**
-	 * An optional icon URL for the outcome.
+	 * * An optional icon URL for the outcome.
 	 */
 	icon_url: [] | [string];
 }
@@ -541,11 +543,11 @@ export interface Outcome {
  */
 export interface PaginationParams {
 	/**
-	 * Return items strictly *after* this series id (exclusive).
+	 * * Return items strictly *after* this series id (exclusive).
 	 */
 	cursor: [] | [string];
 	/**
-	 * Maximum number of items to return.
+	 * * Maximum number of items to return.
 	 */
 	limit: [] | [bigint];
 }
@@ -555,25 +557,25 @@ export interface PaginationParams {
 export type PayoffType =
 	| {
 			/**
-			 * Payoff based on the positive difference between strike and underlying price.
+			 * * Payoff based on the positive difference between strike and underlying price.
 			 */
 			Put: null;
 	  }
 	| {
 			/**
-			 * A fixed payoff if the condition is met (all-or-nothing).
+			 * * A fixed payoff if the condition is met (all-or-nothing).
 			 */
 			Binary: null;
 	  }
 	| {
 			/**
-			 * Payoff based on the positive difference between underlying price and strike.
+			 * * Payoff based on the positive difference between underlying price and strike.
 			 */
 			Call: null;
 	  }
 	| {
 			/**
-			 * A categorical market with multiple mutually exclusive outcomes.
+			 * * A categorical market with multiple mutually exclusive outcomes.
 			 */
 			Categorical: null;
 	  };
@@ -585,15 +587,15 @@ export type PayoutUnit = { Fiat: FiatUnit } | { Asset: Asset } | { NonMonetary: 
  */
 export interface Price {
 	/**
-	 * Optional timestamp when this price was generated/observed.
+	 * * Optional timestamp when this price was generated/observed.
 	 */
 	timestamp: [] | [bigint];
 	/**
-	 * Optional identifier for the oracle source.
+	 * * Optional identifier for the oracle source.
 	 */
 	oracle_id: [] | [string];
 	/**
-	 * The numeric component of the price.
+	 * * The numeric component of the price.
 	 */
 	decimal: DecimalValue;
 }
@@ -602,55 +604,55 @@ export interface Price {
  */
 export interface Series {
 	/**
-	 * A short, descriptive title for the series.
+	 * * A short, descriptive title for the series.
 	 */
 	title: string;
 	/**
-	 * Target price for options, if applicable.
+	 * * Target price for options, if applicable.
 	 */
 	strike: [] | [Price];
 	/**
-	 * The principal identifier of the series creator.
+	 * * The principal identifier of the series creator.
 	 */
 	creator: Principal;
 	/**
-	 * The mathematical payoff model used for this series.
+	 * * The mathematical payoff model used for this series.
 	 */
 	payoff_type: PayoffType;
 	/**
-	 * The unit in which the contract payoff is expressed.
+	 * * The unit in which the contract payoff is expressed.
 	 */
 	payout_unit: PayoutUnit;
 	/**
-	 * Expiry timestamp in nanoseconds since UNIX epoch.
+	 * * Expiry timestamp in nanoseconds since UNIX epoch.
 	 */
 	expiry_ns: bigint;
 	/**
-	 * An optional banner URL for the market.
+	 * * An optional banner URL for the market.
 	 */
 	banner_url: [] | [string];
 	/**
-	 * Unique identifier computed from series parameters.
+	 * * Unique identifier computed from series parameters.
 	 */
 	series_id: string;
 	/**
-	 * The underlying asset ticker or identifier (e.g., "ICP/USD").
+	 * * The underlying asset ticker or identifier (e.g., "ICP/USD").
 	 */
 	underlying: string;
 	/**
-	 * A detailed description of the series.
+	 * * A detailed description of the series.
 	 */
 	description: Description;
 	/**
-	 * The defined outcomes for categorical markets (ordered).
+	 * * The defined outcomes for categorical markets (ordered).
 	 */
 	outcomes: [] | [Array<Outcome>];
 	/**
-	 * Timestamp of series creation in nanoseconds since UNIX epoch.
+	 * * Timestamp of series creation in nanoseconds since UNIX epoch.
 	 */
 	created_at_ns: bigint;
 	/**
-	 * An optional icon URL for the market.
+	 * * An optional icon URL for the market.
 	 */
 	icon_url: [] | [string];
 	/**
@@ -666,15 +668,15 @@ export interface Series {
 	 */
 	trading_access: Array<TradingAccess>;
 	/**
-	 * The canonical number of decimals used for prices and strikes in this series.
+	 * * The canonical number of decimals used for prices and strikes in this series.
 	 */
 	price_precision: number;
 	/**
-	 * The domain this market belongs to (e.g. Playground, Settlement).
+	 * * The domain this market belongs to (e.g. Playground, Settlement).
 	 */
 	balance_domain: BalanceDomain;
 	/**
-	 * The identifier of the oracle providing the settlement data.
+	 * * The identifier of the oracle providing the settlement data.
 	 */
 	oracle_source: string;
 }
@@ -684,49 +686,49 @@ export interface Series {
 export type SeriesError =
 	| {
 			/**
-			 * Social reward description exceeds limit.
+			 * * Social reward description exceeds limit.
 			 */
 			RewardDescriptionTooLong: null;
 	  }
 	| {
 			/**
-			 * Returned when the provided description exceeds the maximum allowed length.
+			 * * Returned when the provided description exceeds the maximum allowed length.
 			 */
 			DescriptionTooLong: null;
 	  }
 	| {
 			/**
-			 * Returned when the provided title exceeds the maximum allowed length.
+			 * * Returned when the provided title exceeds the maximum allowed length.
 			 */
 			TitleTooLong: null;
 	  }
 	| {
 			/**
-			 * Social reward icon URL exceeds limit.
+			 * * Social reward icon URL exceeds limit.
 			 */
 			RewardIconUrlTooLong: null;
 	  }
 	| {
 			/**
-			 * Returned when the caller is not authorized to add a series.
+			 * * Returned when the caller is not authorized to add a series.
 			 */
 			Unauthorized: null;
 	  }
 	| {
 			/**
-			 * Returned when the provided payout unit is not supported by the protocol.
+			 * * Returned when the provided payout unit is not supported by the protocol.
 			 */
 			UnsupportedPayoutUnit: null;
 	  }
 	| {
 			/**
-			 * Returned when attempting to add a series that already exists.
+			 * * Returned when attempting to add a series that already exists.
 			 */
 			SeriesAlreadyExists: null;
 	  }
 	| {
 			/**
-			 * Social reward title exceeds limit.
+			 * * Social reward title exceeds limit.
 			 */
 			RewardTitleTooLong: null;
 	  };
@@ -735,25 +737,25 @@ export type SeriesError =
  */
 export interface SeriesPage {
 	/**
-	 * The cursor to be used for the next request, if any.
+	 * * The cursor to be used for the next request, if any.
 	 */
 	next_cursor: [] | [string];
 	/**
-	 * The list of series in this page.
+	 * * The list of series in this page.
 	 */
 	items: Array<Series>;
 }
 export interface SocialReward {
 	/**
-	 * A short title for the reward (e.g., "Pizza 🍕").
+	 * * A short title for the reward (e.g., "Pizza 🍕").
 	 */
 	title: string;
 	/**
-	 * An optional detailed description of the reward.
+	 * * An optional detailed description of the reward.
 	 */
 	description: [] | [string];
 	/**
-	 * An optional icon URL for the reward.
+	 * * An optional icon URL for the reward.
 	 */
 	icon_url: [] | [string];
 }
@@ -788,7 +790,7 @@ export interface SocialReward {
 export type TradingAccess =
 	| {
 			/**
-			 * Unrestricted: any authenticated (non-anonymous) caller can trade.
+			 * * Unrestricted: any authenticated (non-anonymous) caller can trade.
 			 */
 			Open: null;
 	  }
@@ -800,7 +802,7 @@ export type TradingAccess =
 			 */
 			Restricted: {
 				/**
-				 * The group IDs whose members are allowed to trade.
+				 * * The group IDs whose members are allowed to trade.
 				 */
 				groups: Array<string>;
 			};
@@ -814,11 +816,11 @@ export type TradingAccess =
  */
 export interface UpdateGroupAdminsParams {
 	/**
-	 * The group to modify.
+	 * * The group to modify.
 	 */
 	group_id: string;
 	/**
-	 * The principals to add or remove as admins.
+	 * * The principals to add or remove as admins.
 	 */
 	principals: Array<Principal>;
 }
@@ -833,19 +835,19 @@ export interface UpdateGroupAdminsParams {
  */
 export interface UpdateGroupParams {
 	/**
-	 * New name, or `None` to keep the current name.
+	 * * New name, or `None` to keep the current name.
 	 */
 	name: [] | [string];
 	/**
-	 * New description: `None` = keep, `Some(None)` = clear, `Some(Some(..))` = set.
+	 * * New description: `None` = keep, `Some(None)` = clear, `Some(Some(..))` = set.
 	 */
 	description: [] | [[] | [string]];
 	/**
-	 * New icon URL: `None` = keep, `Some(None)` = clear, `Some(Some(..))` = set.
+	 * * New icon URL: `None` = keep, `Some(None)` = clear, `Some(Some(..))` = set.
 	 */
 	icon_url: [] | [[] | [string]];
 	/**
-	 * The group to update.
+	 * * The group to update.
 	 */
 	group_id: string;
 }
@@ -854,11 +856,11 @@ export interface UpdateGroupParams {
  */
 export interface UpdateOracleMetadataParams {
 	/**
-	 * The updated metadata.
+	 * * The updated metadata.
 	 */
 	metadata: OracleMetadata;
 	/**
-	 * The unique identifier of the oracle to update.
+	 * * The unique identifier of the oracle to update.
 	 */
 	oracle_id: string;
 }
@@ -870,7 +872,7 @@ export interface UpdateOracleMetadataParams {
  */
 export interface UpdateTradingAccessParams {
 	/**
-	 * The series whose trading access policies will be replaced.
+	 * * The series whose trading access policies will be replaced.
 	 */
 	series_id: string;
 	/**
@@ -917,7 +919,7 @@ export interface _SERVICE {
 	 */
 	add_group_members: ActorMethod<[UpdateGroupAdminsParams], GroupResult>;
 	/**
-	 * Registers a new price oracle in the registry.
+	 * * Registers a new price oracle in the registry.
 	 */
 	add_oracle: ActorMethod<[AddOracleParams], OracleResult>;
 	/**
@@ -979,7 +981,7 @@ export interface _SERVICE {
 	 */
 	get_group: ActorMethod<[string], [] | [Group]>;
 	/**
-	 * Retrieves the details of a specific oracle by its ID.
+	 * * Retrieves the details of a specific oracle by its ID.
 	 */
 	get_oracle: ActorMethod<[string], [] | [Oracle]>;
 	/**
@@ -994,7 +996,7 @@ export interface _SERVICE {
 	 */
 	get_series: ActorMethod<[string], [] | [Series]>;
 	/**
-	 * Checks if a principal is authorized to create derivative series.
+	 * * Checks if a principal is authorized to create derivative series.
 	 */
 	is_authorized_creator: ActorMethod<[Principal], boolean>;
 	/**
@@ -1008,7 +1010,7 @@ export interface _SERVICE {
 	 */
 	is_group_member: ActorMethod<[string, Principal], boolean>;
 	/**
-	 * Checks if a principal is authorized to push settlement data for a given oracle.
+	 * * Checks if a principal is authorized to push settlement data for a given oracle.
 	 */
 	is_oracle_authorized: ActorMethod<[string, Principal], boolean>;
 	/**
@@ -1055,15 +1057,15 @@ export interface _SERVICE {
 	 */
 	list_groups: ActorMethod<[[] | [Principal]], Array<Group>>;
 	/**
-	 * Returns a paginated page of all registered derivative series.
+	 * * Returns a paginated page of all registered derivative series.
 	 */
 	list_series: ActorMethod<[PaginationParams], SeriesPage>;
 	/**
-	 * Returns a paginated page of registered derivative series, optionally filtered.
+	 * * Returns a paginated page of registered derivative series, optionally filtered.
 	 */
 	list_series_with: ActorMethod<[ListSeriesParams], SeriesPage>;
 	/**
-	 * Adds or removes authorised principals for an oracle.
+	 * * Adds or removes authorised principals for an oracle.
 	 */
 	manage_oracle_principals: ActorMethod<[ManageOraclePrincipalsParams], OracleResult>;
 	/**
@@ -1122,7 +1124,7 @@ export interface _SERVICE {
 	 */
 	update_group: ActorMethod<[UpdateGroupParams], GroupResult>;
 	/**
-	 * Updates the metadata of an existing oracle.
+	 * * Updates the metadata of an existing oracle.
 	 */
 	update_oracle_metadata: ActorMethod<[UpdateOracleMetadataParams], OracleResult>;
 	/**

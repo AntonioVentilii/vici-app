@@ -11,18 +11,20 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 /**
+
  * Outcome of a position transfer acceptance.
+
  */
 export type AcceptPositionTransferResult =
 	| {
 			/**
-			 * Returns `true` if the transfer was successfully accepted and processed.
+			 * * Returns `true` if the transfer was successfully accepted and processed.
 			 */
 			Ok: boolean;
 	  }
 	| {
 			/**
-			 * Failed to accept the position transfer.
+			 * * Failed to accept the position transfer.
 			 */
 			Err: TradeError;
 	  };
@@ -31,19 +33,19 @@ export type AcceptPositionTransferResult =
  */
 export interface AccountState {
 	/**
-	 * The owner of the account.
+	 * * The owner of the account.
 	 */
 	user: Principal;
 	/**
-	 * The total required margin reserved for current activity, scoped by domain.
+	 * * The total required margin reserved for current activity, scoped by domain.
 	 */
 	reserved_margins_usd: Array<[BalanceDomain, bigint]>;
 	/**
-	 * Internal realised `PnL` / debt / credits, scoped by domain.
+	 * * Internal realised `PnL` / debt / credits, scoped by domain.
 	 */
 	cash_balances_usd: Array<[BalanceDomain, bigint]>;
 	/**
-	 * Real deposited collateral assets and their balances, scoped by domain.
+	 * * Real deposited collateral assets and their balances, scoped by domain.
 	 */
 	balances: Array<[BalanceDomain, Array<[string, bigint]>]>;
 }
@@ -53,19 +55,19 @@ export interface AccountState {
 export type AccountStateError =
 	| {
 			/**
-			 * Overflow during account state calculation.
+			 * * Overflow during account state calculation.
 			 */
 			MathOverflow: null;
 	  }
 	| {
 			/**
-			 * An error occurred while interacting with the asset.
+			 * * An error occurred while interacting with the asset.
 			 */
 			Asset: AssetError;
 	  }
 	| {
 			/**
-			 * No account state exists for the specified user.
+			 * * No account state exists for the specified user.
 			 */
 			NoAccountStateFound: null;
 	  };
@@ -74,19 +76,19 @@ export type AccountStateError =
  */
 export interface AccountStateResponse {
 	/**
-	 * Detailed worth of each collateral asset.
+	 * * Detailed worth of each collateral asset.
 	 */
 	assets: Array<AssetWorth>;
 	/**
-	 * The raw account state.
+	 * * The raw account state.
 	 */
 	state: AccountState;
 	/**
-	 * Total equity in USD (cash balance + sum of collateral values).
+	 * * Total equity in USD (cash balance + sum of collateral values).
 	 */
 	total_equity_usd: bigint;
 	/**
-	 * Available equity in USD (total equity - reserved margin).
+	 * * Available equity in USD (total equity - reserved margin).
 	 */
 	available_margin_usd: bigint;
 }
@@ -96,19 +98,19 @@ export interface AccountStateResponse {
 export type Asset =
 	| {
 			/**
-			 * An ERC-20 token on an EVM-compatible chain.
+			 * * An ERC-20 token on an EVM-compatible chain.
 			 */
 			Erc20: ErcToken;
 	  }
 	| {
 			/**
-			 * An ICRC-compliant token identified by its canister [`Principal`].
+			 * * An ICRC-compliant token identified by its canister [`Principal`].
 			 */
 			Icrc: Principal;
 	  }
 	| {
 			/**
-			 * A native asset on an EVM-compatible chain.
+			 * * A native asset on an EVM-compatible chain.
 			 */
 			NativeEvm: NativeEvmAsset;
 	  };
@@ -118,65 +120,65 @@ export type Asset =
 export type AssetError =
 	| {
 			/**
-			 * Failed to transfer tokens/assets.
+			 * * Failed to transfer tokens/assets.
 			 */
 			TransferError: string;
 	  }
 	| {
 			/**
-			 * The account has insufficient funds for the operation.
+			 * * The account has insufficient funds for the operation.
 			 */
 			InsufficientBalance: {
 				/**
-				 * The current balance of the account.
+				 * * The current balance of the account.
 				 */
 				balance: bigint;
 				/**
-				 * The amount required for the operation.
+				 * * The amount required for the operation.
 				 */
 				required: bigint;
 			};
 	  }
 	| {
 			/**
-			 * Overflow during internal balance calculations.
+			 * * Overflow during internal balance calculations.
 			 */
 			MathOverflow: null;
 	  }
 	| {
 			/**
-			 * The asset identifier is invalid or incorrectly formatted.
+			 * * The asset identifier is invalid or incorrectly formatted.
 			 */
 			InvalidAssetId: string;
 	  }
 	| {
 			/**
-			 * A cross-canister or RPC call failed.
+			 * * A cross-canister or RPC call failed.
 			 */
 			CallError: {
 				/**
-				 * The name of the method that failed.
+				 * * The name of the method that failed.
 				 */
 				method: string;
 				/**
-				 * The rejection code from the IC or error code from RPC.
+				 * * The rejection code from the IC or error code from RPC.
 				 */
 				code: number;
 				/**
-				 * The rejection/error message.
+				 * * The rejection/error message.
 				 */
 				message: string;
 			};
 	  }
 	| {
 			/**
-			 * The asset variant is incompatible with the current handler.
+			 * * The asset variant is incompatible with the current handler.
 			 */
 			InvalidAssetForHandler: null;
 	  }
 	| {
 			/**
-			 * The specified asset is not supported.
+			 * * The specified asset is not supported.
 			 */
 			UnsupportedAsset: null;
 	  };
@@ -185,27 +187,27 @@ export type AssetError =
  */
 export interface AssetMetrics {
 	/**
-	 * Haircut in basis points (e.g., 1000 = 10% haircut, 90% value).
+	 * * Haircut in basis points (e.g., 1000 = 10% haircut, 90% value).
 	 */
 	haircut_bps: number;
 	/**
-	 * Latest known transfer fee for the asset.
+	 * * Latest known transfer fee for the asset.
 	 */
 	latest_transfer_fee: [] | [bigint];
 	/**
-	 * Optional asset-specific insurance fund fee ratio in basis points.
+	 * * Optional asset-specific insurance fund fee ratio in basis points.
 	 */
 	insurance_fee_ratio: [] | [number];
 	/**
-	 * Last time the asset metrics were updated (in nanoseconds).
+	 * * Last time the asset metrics were updated (in nanoseconds).
 	 */
 	last_updated_ns: [] | [bigint];
 	/**
-	 * Optional asset-specific protocol fee ratio in basis points.
+	 * * Optional asset-specific protocol fee ratio in basis points.
 	 */
 	protocol_fee_ratio: [] | [number];
 	/**
-	 * Oracle-updated price in USD (canonical accounting unit).
+	 * * Oracle-updated price in USD (canonical accounting unit).
 	 */
 	price_usd: DecimalValue;
 }
@@ -214,23 +216,23 @@ export interface AssetMetrics {
  */
 export interface AssetWorth {
 	/**
-	 * The USD value of the balance (before haircut).
+	 * * The USD value of the balance (before haircut).
 	 */
 	pre_haircut_value_usd: bigint;
 	/**
-	 * The applied haircut in basis points.
+	 * * The applied haircut in basis points.
 	 */
 	haircut_bps: number;
 	/**
-	 * The raw balance of the asset.
+	 * * The raw balance of the asset.
 	 */
 	balance: bigint;
 	/**
-	 * The USD value of the balance (including haircut).
+	 * * The USD value of the balance (including haircut).
 	 */
 	value_usd: bigint;
 	/**
-	 * The unique identifier of the asset.
+	 * * The unique identifier of the asset.
 	 */
 	asset_id: string;
 }
@@ -240,25 +242,25 @@ export interface AssetWorth {
 export type BalanceDomain =
 	| {
 			/**
-			 * VICI XP (loyalty points) — segregated from Playground test assets.
+			 * * VICI XP (loyalty points) — segregated from Playground test assets.
 			 */
 			ViciXp: null;
 	  }
 	| {
 			/**
-			 * Non-monetary social bets (e.g., betting a pizza).
+			 * * Non-monetary social bets (e.g., betting a pizza).
 			 */
 			Social: null;
 	  }
 	| {
 			/**
-			 * Testnet / sandbox collateral (e.g. TESTICP, Sepolia) — not real funds.
+			 * * Testnet / sandbox collateral (e.g. TESTICP, Sepolia) — not real funds.
 			 */
 			Playground: null;
 	  }
 	| {
 			/**
-			 * Real collateralized trading (e.g., using ckUSDC, ICP).
+			 * * Real collateralized trading (e.g., using ckUSDC, ICP).
 			 */
 			Settlement: null;
 	  };
@@ -275,7 +277,7 @@ export type CancelFundWithdrawalResult = { Ok: null } | { Err: CancelFundWithdra
  */
 export interface CancelLimitOrderParams {
 	/**
-	 * Unique identifier for the order to cancel.
+	 * * Unique identifier for the order to cancel.
 	 */
 	order_id: string;
 }
@@ -284,31 +286,31 @@ export interface CancelLimitOrderParams {
  */
 export interface CollateralAssetConfig {
 	/**
-	 * The number of decimal places defined by the underlying ledger.
+	 * * The number of decimal places defined by the underlying ledger.
 	 */
 	decimals: number;
 	/**
-	 * The underlying configuration required to interact with the asset's ledger.
+	 * * The underlying configuration required to interact with the asset's ledger.
 	 */
 	asset: Asset;
 	/**
-	 * Whether the asset is currently enabled for deposits.
+	 * * Whether the asset is currently enabled for deposits.
 	 */
 	is_enabled: boolean;
 	/**
-	 * Balance domains where this asset may be deposited or withdrawn.
+	 * * Balance domains where this asset may be deposited or withdrawn.
 	 */
 	allowed_balance_domains: Array<BalanceDomain>;
 	/**
-	 * Identifier of the oracle responsible for updating this asset's metrics.
+	 * * Identifier of the oracle responsible for updating this asset's metrics.
 	 */
 	oracle_id: [] | [string];
 	/**
-	 * The canonical identifier for this asset within the clearing protocol.
+	 * * The canonical identifier for this asset within the clearing protocol.
 	 */
 	asset_id: string;
 	/**
-	 * The ticker symbol used for display purposes.
+	 * * The ticker symbol used for display purposes.
 	 */
 	symbol: string;
 }
@@ -325,31 +327,31 @@ export interface CollateralAssetInfo {
 export type CommonError =
 	| {
 			/**
-			 * An unexpected internal error occurred.
+			 * * An unexpected internal error occurred.
 			 */
 			Internal: string;
 	  }
 	| {
 			/**
-			 * The input provided for the request is invalid.
+			 * * The input provided for the request is invalid.
 			 */
 			InvalidInput: string;
 	  }
 	| {
 			/**
-			 * A mathematical calculation resulted in an overflow or underflow.
+			 * * A mathematical calculation resulted in an overflow or underflow.
 			 */
 			MathOverflow: null;
 	  }
 	| {
 			/**
-			 * The caller does not have permission to perform this action.
+			 * * The caller does not have permission to perform this action.
 			 */
 			Unauthorized: null;
 	  }
 	| {
 			/**
-			 * The registry canister principal has not been configured.
+			 * * The registry canister principal has not been configured.
 			 */
 			RegistryNotSet: null;
 	  };
@@ -358,27 +360,27 @@ export type CommonError =
  */
 export interface Config {
 	/**
-	 * The global insurance fund fee ratio in basis points (1 bp = 0.01%).
+	 * * The global insurance fund fee ratio in basis points (1 bp = 0.01%).
 	 */
 	insurance_fund_fee_ratio: number;
 	/**
-	 * The comprehensive configuration for the internal accounting ledger (vUSD).
+	 * * The comprehensive configuration for the internal accounting ledger (vUSD).
 	 */
 	internal_ledger: CollateralAssetConfig;
 	/**
-	 * The principal of the Chain Fusion Signer canister.
+	 * * The principal of the Chain Fusion Signer canister.
 	 */
 	signer_canister: Principal;
 	/**
-	 * The economic epoch version.
+	 * * The economic epoch version.
 	 */
 	version: number;
 	/**
-	 * The principal of the EVM RPC canister.
+	 * * The principal of the EVM RPC canister.
 	 */
 	evm_rpc: Principal;
 	/**
-	 * The global protocol fee ratio (Treasury) in basis points.
+	 * * The global protocol fee ratio (Treasury) in basis points.
 	 */
 	protocol_fee_ratio: number;
 }
@@ -388,11 +390,11 @@ export interface Config {
  */
 export interface DecimalValue {
 	/**
-	 * The number of decimal places (exponent).
+	 * * The number of decimal places (exponent).
 	 */
 	decimals: number;
 	/**
-	 * The numeric value (mantissa).
+	 * * The numeric value (mantissa).
 	 */
 	value: bigint;
 }
@@ -402,19 +404,19 @@ export interface DecimalValue {
 export type DepositCollateralError =
 	| {
 			/**
-			 * The asset is not permitted in this balance domain.
+			 * * The asset is not permitted in this balance domain.
 			 */
 			DomainNotAllowed: { domain: BalanceDomain; asset_id: string };
 	  }
 	| {
 			/**
-			 * Overflow during collateral calculation.
+			 * * Overflow during collateral calculation.
 			 */
 			MathOverflow: null;
 	  }
 	| {
 			/**
-			 * An error occurred while interacting with the asset.
+			 * * An error occurred while interacting with the asset.
 			 */
 			Asset: AssetError;
 	  };
@@ -423,19 +425,19 @@ export type DepositCollateralError =
  */
 export interface DepositCollateralParams {
 	/**
-	 * Unique identifier for the deposit operation.
+	 * * Unique identifier for the deposit operation.
 	 */
 	deposit_id: string;
 	/**
-	 * The specific balance domain to deposit into (defaults to Settlement).
+	 * * The specific balance domain to deposit into (defaults to Settlement).
 	 */
 	domain: [] | [BalanceDomain];
 	/**
-	 * The unique identifier of the asset to deposit.
+	 * * The unique identifier of the asset to deposit.
 	 */
 	asset_id: string;
 	/**
-	 * The amount of the asset to deposit.
+	 * * The amount of the asset to deposit.
 	 */
 	amount: bigint;
 }
@@ -445,13 +447,13 @@ export interface DepositCollateralParams {
 export type DepositCollateralResult =
 	| {
 			/**
-			 * Deposit was successfully planned or executed.
+			 * * Deposit was successfully planned or executed.
 			 */
 			Ok: null;
 	  }
 	| {
 			/**
-			 * Failed to process deposit.
+			 * * Failed to process deposit.
 			 */
 			Err: DepositCollateralError;
 	  };
@@ -461,15 +463,15 @@ export type DepositCollateralResult =
  */
 export interface Description {
 	/**
-	 * Optional HTML version of the description.
+	 * * Optional HTML version of the description.
 	 */
 	html: [] | [string];
 	/**
-	 * Optional markdown version of the description.
+	 * * Optional markdown version of the description.
 	 */
 	markdown: [] | [string];
 	/**
-	 * The mandatory plain text description.
+	 * * The mandatory plain text description.
 	 */
 	plain: string;
 }
@@ -481,7 +483,7 @@ export interface Description {
  */
 export interface DomainPolicy {
 	/**
-	 * Whether deposits of real collateral assets are accepted in this domain.
+	 * * Whether deposits of real collateral assets are accepted in this domain.
 	 */
 	deposits_enabled: boolean;
 	/**
@@ -490,11 +492,11 @@ export interface DomainPolicy {
 	 */
 	protocol_fee_ratio_override: [] | [number];
 	/**
-	 * Human-readable label for this domain.
+	 * * Human-readable label for this domain.
 	 */
 	label: string;
 	/**
-	 * Whether withdrawals of real collateral assets are allowed from this domain.
+	 * * Whether withdrawals of real collateral assets are allowed from this domain.
 	 */
 	withdrawals_enabled: boolean;
 	/**
@@ -508,15 +510,15 @@ export interface DomainPolicy {
  */
 export interface ErcToken {
 	/**
-	 * The number of decimals the token uses (e.g., 18 for ETH, 6 for USDC).
+	 * * The number of decimals the token uses (e.g., 18 for ETH, 6 for USDC).
 	 */
 	decimals: number;
 	/**
-	 * The contract address of the token.
+	 * * The contract address of the token.
 	 */
 	token_address: string;
 	/**
-	 * The ID of the EVM chain where the token is deployed.
+	 * * The ID of the EVM chain where the token is deployed.
 	 */
 	chain_id: bigint;
 }
@@ -525,35 +527,35 @@ export interface ErcToken {
  */
 export interface Event {
 	/**
-	 * The quantity involved in the event.
+	 * * The quantity involved in the event.
 	 */
 	qty: bigint;
 	/**
-	 * The series ID associated with the event.
+	 * * The series ID associated with the event.
 	 */
 	series_id: string;
 	/**
-	 * The user associated with the event.
+	 * * The user associated with the event.
 	 */
 	user: Principal;
 	/**
-	 * Timestamp in nanoseconds since UNIX epoch.
+	 * * Timestamp in nanoseconds since UNIX epoch.
 	 */
 	timestamp: bigint;
 	/**
-	 * Unique identifier for the event.
+	 * * Unique identifier for the event.
 	 */
 	event_id: bigint;
 	/**
-	 * The price at which the event occurred (if applicable).
+	 * * The price at which the event occurred (if applicable).
 	 */
 	price: Price;
 	/**
-	 * The type of the event.
+	 * * The type of the event.
 	 */
 	event_type: EventType;
 	/**
-	 * The principal of the clearing canister.
+	 * * The principal of the clearing canister.
 	 */
 	clearing_id: Principal;
 }
@@ -563,25 +565,25 @@ export interface Event {
 export type EventType =
 	| {
 			/**
-			 * A new order was recorded.
+			 * * A new order was recorded.
 			 */
 			OrderPlaced: null;
 	  }
 	| {
 			/**
-			 * A trade was matched and executed.
+			 * * A trade was matched and executed.
 			 */
 			Executed: null;
 	  }
 	| {
 			/**
-			 * A position was liquidated due to insufficient margin.
+			 * * A position was liquidated due to insufficient margin.
 			 */
 			Liquidated: null;
 	  }
 	| {
 			/**
-			 * A series was settled.
+			 * * A series was settled.
 			 */
 			Settled: null;
 	  };
@@ -591,23 +593,23 @@ export type FiatUnit = { Chf: null } | { Eur: null } | { Gbp: null } | { Usd: nu
  */
 export interface FreezePositionForTransferParams {
 	/**
-	 * The specific outcome for categorical markets.
+	 * * The specific outcome for categorical markets.
 	 */
 	outcome_id: [] | [string];
 	/**
-	 * The derivative series identifier.
+	 * * The derivative series identifier.
 	 */
 	series_id: string;
 	/**
-	 * The user whose position is being frozen.
+	 * * The user whose position is being frozen.
 	 */
 	user: Principal;
 	/**
-	 * Unique identifier for the transfer operation.
+	 * * Unique identifier for the transfer operation.
 	 */
 	transfer_id: string;
 	/**
-	 * Optional valuation price to include in the proof.
+	 * * Optional valuation price to include in the proof.
 	 */
 	valuation_price: [] | [Price];
 }
@@ -617,11 +619,11 @@ export type FundType = { Insurance: null } | { Treasury: null };
  */
 export interface GetAccountStateParams {
 	/**
-	 * The specific balance domain to query (defaults to Settlement if not provided).
+	 * * The specific balance domain to query (defaults to Settlement if not provided).
 	 */
 	domain: [] | [BalanceDomain];
 	/**
-	 * Whether to force a recalculation of the margin status (e.g. refresh from ledgers).
+	 * * Whether to force a recalculation of the margin status (e.g. refresh from ledgers).
 	 */
 	refresh: [] | [boolean];
 }
@@ -631,13 +633,13 @@ export interface GetAccountStateParams {
 export type GetAccountStateResult =
 	| {
 			/**
-			 * Successfully retrieved the account state details.
+			 * * Successfully retrieved the account state details.
 			 */
 			Ok: AccountStateResponse;
 	  }
 	| {
 			/**
-			 * Failed to retrieve the account state.
+			 * * Failed to retrieve the account state.
 			 */
 			Err: AccountStateError;
 	  };
@@ -650,11 +652,11 @@ export interface GetFundsResult {
  */
 export interface GetPositionParams {
 	/**
-	 * Optional outcome identifier for categorical markets.
+	 * * Optional outcome identifier for categorical markets.
 	 */
 	outcome_id: [] | [string];
 	/**
-	 * The derivative series identifier.
+	 * * The derivative series identifier.
 	 */
 	series_id: string;
 }
@@ -663,19 +665,19 @@ export interface GetPositionParams {
  */
 export interface HttpRequest {
 	/**
-	 * The URL of the request.
+	 * * The URL of the request.
 	 */
 	url: string;
 	/**
-	 * The HTTP method (e.g., "GET", "POST").
+	 * * The HTTP method (e.g., "GET", "POST").
 	 */
 	method: string;
 	/**
-	 * The request body.
+	 * * The request body.
 	 */
 	body: Uint8Array;
 	/**
-	 * The request headers.
+	 * * The request headers.
 	 */
 	headers: Array<[string, string]>;
 }
@@ -684,15 +686,15 @@ export interface HttpRequest {
  */
 export interface HttpResponse {
 	/**
-	 * The response body.
+	 * * The response body.
 	 */
 	body: Uint8Array;
 	/**
-	 * The response headers.
+	 * * The response headers.
 	 */
 	headers: Array<[string, string]>;
 	/**
-	 * The HTTP status code.
+	 * * The HTTP status code.
 	 */
 	status_code: number;
 }
@@ -709,18 +711,18 @@ export interface LimitOrder {
 	creator: Principal;
 	outcome_id: [] | [string];
 	/**
-	 * Amount blocked in collateral (denominated in USD base units, see `USD_DECIMALS`).
+	 * * Amount blocked in collateral (denominated in USD base units, see `USD_DECIMALS`).
 	 */
 	blocked_margin_usd: bigint;
 	series_id: string;
 	side: Side;
 	order_id: string;
 	/**
-	 * Limit price in the precision defined by the associated series (`series.price_precision`).
+	 * * Limit price in the precision defined by the associated series (`series.price_precision`).
 	 */
 	price: Price;
 	/**
-	 * The balance domain this order belongs to.
+	 * * The balance domain this order belongs to.
 	 */
 	balance_domain: BalanceDomain;
 }
@@ -729,7 +731,7 @@ export interface LimitOrder {
  */
 export interface ListOrdersParams {
 	/**
-	 * Optional series identifier to filter orders.
+	 * * Optional series identifier to filter orders.
 	 */
 	series_id: [] | [string];
 }
@@ -750,11 +752,11 @@ export type MigrationError =
  */
 export interface NativeEvmAsset {
 	/**
-	 * The number of decimals the native asset uses.
+	 * * The number of decimals the native asset uses.
 	 */
 	decimals: number;
 	/**
-	 * The EVM chain where this native asset is used.
+	 * * The EVM chain where this native asset is used.
 	 */
 	chain_id: bigint;
 }
@@ -764,19 +766,19 @@ export type NonMonetaryUnit = { Points: null } | { Social: SocialReward };
  */
 export interface Outcome {
 	/**
-	 * The unique identifier of the outcome.
+	 * * The unique identifier of the outcome.
 	 */
 	id: string;
 	/**
-	 * A short title for the outcome (e.g., "Yes", "No", "Team A").
+	 * * A short title for the outcome (e.g., "Yes", "No", "Team A").
 	 */
 	title: string;
 	/**
-	 * An optional detailed description of the outcome.
+	 * * An optional detailed description of the outcome.
 	 */
 	description: [] | [Description];
 	/**
-	 * An optional icon URL for the outcome.
+	 * * An optional icon URL for the outcome.
 	 */
 	icon_url: [] | [string];
 }
@@ -785,7 +787,7 @@ export interface Outcome {
  */
 export type PaymentIdempotency = {
 	/**
-	 * Uses the ICRC `created_at_time` field to prevent duplicate transfers.
+	 * * Uses the ICRC `created_at_time` field to prevent duplicate transfers.
 	 */
 	IcrcCreatedAtTimeNs: bigint;
 };
@@ -795,25 +797,25 @@ export type PaymentIdempotency = {
 export type PayoffType =
 	| {
 			/**
-			 * Payoff based on the positive difference between strike and underlying price.
+			 * * Payoff based on the positive difference between strike and underlying price.
 			 */
 			Put: null;
 	  }
 	| {
 			/**
-			 * A fixed payoff if the condition is met (all-or-nothing).
+			 * * A fixed payoff if the condition is met (all-or-nothing).
 			 */
 			Binary: null;
 	  }
 	| {
 			/**
-			 * Payoff based on the positive difference between underlying price and strike.
+			 * * Payoff based on the positive difference between underlying price and strike.
 			 */
 			Call: null;
 	  }
 	| {
 			/**
-			 * A categorical market with multiple mutually exclusive outcomes.
+			 * * A categorical market with multiple mutually exclusive outcomes.
 			 */
 			Categorical: null;
 	  };
@@ -824,19 +826,19 @@ export type PayoutUnit = { Fiat: FiatUnit } | { Asset: Asset } | { NonMonetary: 
 export type PlanStatus =
 	| {
 			/**
-			 * The plan has been successfully completed.
+			 * * The plan has been successfully completed.
 			 */
 			Finalised: null;
 	  }
 	| {
 			/**
-			 * The plan is created but execution has not started.
+			 * * The plan is created but execution has not started.
 			 */
 			Planned: null;
 	  }
 	| {
 			/**
-			 * The plan is currently being executed.
+			 * * The plan is currently being executed.
 			 */
 			Executing: null;
 	  };
@@ -845,23 +847,23 @@ export type PlanStatus =
  */
 export interface Position {
 	/**
-	 * The specific outcome for categorical markets.
+	 * * The specific outcome for categorical markets.
 	 */
 	outcome_id: [] | [string];
 	/**
-	 * The unique identifier of the derivative series.
+	 * * The unique identifier of the derivative series.
 	 */
 	series_id: string;
 	/**
-	 * The net quantity of the position (positive for Long, negative for Short).
+	 * * The net quantity of the position (positive for Long, negative for Short).
 	 */
 	net_qty: bigint;
 	/**
-	 * The user who owns the position.
+	 * * The user who owns the position.
 	 */
 	user: Principal;
 	/**
-	 * The amount of margin reserved for this specific position in USD.
+	 * * The amount of margin reserved for this specific position in USD.
 	 */
 	reserved_margin_usd: bigint;
 }
@@ -870,35 +872,35 @@ export interface Position {
  */
 export interface PositionProof {
 	/**
-	 * The quantity of the position.
+	 * * The quantity of the position.
 	 */
 	qty: bigint;
 	/**
-	 * The cryptographic signature of the proof data.
+	 * * The cryptographic signature of the proof data.
 	 */
 	signature: Uint8Array;
 	/**
-	 * The specific outcome for categorical markets.
+	 * * The specific outcome for categorical markets.
 	 */
 	outcome_id: [] | [string];
 	/**
-	 * The unique identifier of the derivative series.
+	 * * The unique identifier of the derivative series.
 	 */
 	series_id: string;
 	/**
-	 * The user whose position is being proven.
+	 * * The user whose position is being proven.
 	 */
 	user: Principal;
 	/**
-	 * Unique identifier for the transfer operation.
+	 * * Unique identifier for the transfer operation.
 	 */
 	transfer_id: string;
 	/**
-	 * Optional valuation price for the position.
+	 * * Optional valuation price for the position.
 	 */
 	valuation_price: [] | [Price];
 	/**
-	 * The principal of the clearing canister that issued the proof.
+	 * * The principal of the clearing canister that issued the proof.
 	 */
 	clearing_id: Principal;
 }
@@ -909,15 +911,15 @@ export interface PositionProof {
  */
 export interface Price {
 	/**
-	 * Optional timestamp when this price was generated/observed.
+	 * * Optional timestamp when this price was generated/observed.
 	 */
 	timestamp: [] | [bigint];
 	/**
-	 * Optional identifier for the oracle source.
+	 * * Optional identifier for the oracle source.
 	 */
 	oracle_id: [] | [string];
 	/**
-	 * The numeric component of the price.
+	 * * The numeric component of the price.
 	 */
 	decimal: DecimalValue;
 }
@@ -932,7 +934,7 @@ export type RefreshIcrcAssetMetadataResult = { Ok: null } | { Err: RefreshIcrcAs
 export type RegisterIcrcAssetError =
 	| {
 			/**
-			 * `allowed_balance_domains` was empty or could not be normalized.
+			 * * `allowed_balance_domains` was empty or could not be normalized.
 			 */
 			InvalidAllowedBalanceDomains: null;
 	  }
@@ -943,7 +945,7 @@ export interface RegisterIcrcAssetParams {
 	haircut_bps: number;
 	is_enabled: boolean;
 	/**
-	 * Non-empty. Duplicates are removed. Order is normalized for stable storage.
+	 * * Non-empty. Duplicates are removed. Order is normalized for stable storage.
 	 */
 	allowed_balance_domains: Array<BalanceDomain>;
 	ledger_id: Principal;
@@ -956,55 +958,55 @@ export type RegisterIcrcAssetResult = { Ok: null } | { Err: RegisterIcrcAssetErr
  */
 export interface Series {
 	/**
-	 * A short, descriptive title for the series.
+	 * * A short, descriptive title for the series.
 	 */
 	title: string;
 	/**
-	 * Target price for options, if applicable.
+	 * * Target price for options, if applicable.
 	 */
 	strike: [] | [Price];
 	/**
-	 * The principal identifier of the series creator.
+	 * * The principal identifier of the series creator.
 	 */
 	creator: Principal;
 	/**
-	 * The mathematical payoff model used for this series.
+	 * * The mathematical payoff model used for this series.
 	 */
 	payoff_type: PayoffType;
 	/**
-	 * The unit in which the contract payoff is expressed.
+	 * * The unit in which the contract payoff is expressed.
 	 */
 	payout_unit: PayoutUnit;
 	/**
-	 * Expiry timestamp in nanoseconds since UNIX epoch.
+	 * * Expiry timestamp in nanoseconds since UNIX epoch.
 	 */
 	expiry_ns: bigint;
 	/**
-	 * An optional banner URL for the market.
+	 * * An optional banner URL for the market.
 	 */
 	banner_url: [] | [string];
 	/**
-	 * Unique identifier computed from series parameters.
+	 * * Unique identifier computed from series parameters.
 	 */
 	series_id: string;
 	/**
-	 * The underlying asset ticker or identifier (e.g., "ICP/USD").
+	 * * The underlying asset ticker or identifier (e.g., "ICP/USD").
 	 */
 	underlying: string;
 	/**
-	 * A detailed description of the series.
+	 * * A detailed description of the series.
 	 */
 	description: Description;
 	/**
-	 * The defined outcomes for categorical markets (ordered).
+	 * * The defined outcomes for categorical markets (ordered).
 	 */
 	outcomes: [] | [Array<Outcome>];
 	/**
-	 * Timestamp of series creation in nanoseconds since UNIX epoch.
+	 * * Timestamp of series creation in nanoseconds since UNIX epoch.
 	 */
 	created_at_ns: bigint;
 	/**
-	 * An optional icon URL for the market.
+	 * * An optional icon URL for the market.
 	 */
 	icon_url: [] | [string];
 	/**
@@ -1020,15 +1022,15 @@ export interface Series {
 	 */
 	trading_access: Array<TradingAccess>;
 	/**
-	 * The canonical number of decimals used for prices and strikes in this series.
+	 * * The canonical number of decimals used for prices and strikes in this series.
 	 */
 	price_precision: number;
 	/**
-	 * The domain this market belongs to (e.g. Playground, Settlement).
+	 * * The domain this market belongs to (e.g. Playground, Settlement).
 	 */
 	balance_domain: BalanceDomain;
 	/**
-	 * The identifier of the oracle providing the settlement data.
+	 * * The identifier of the oracle providing the settlement data.
 	 */
 	oracle_source: string;
 }
@@ -1037,11 +1039,11 @@ export interface Series {
  */
 export interface SettleSeriesParams {
 	/**
-	 * The derivative series identifier.
+	 * * The derivative series identifier.
 	 */
 	series_id: string;
 	/**
-	 * The final settlement data from the oracle.
+	 * * The final settlement data from the oracle.
 	 */
 	settlement: SettlementInput;
 }
@@ -1051,13 +1053,13 @@ export interface SettleSeriesParams {
 export type SettleSeriesResult =
 	| {
 			/**
-			 * Settlement plan was successfully created and all processing is complete.
+			 * * Settlement plan was successfully created and all processing is complete.
 			 */
 			Ok: null;
 	  }
 	| {
 			/**
-			 * Failed to initiate settlement.
+			 * * Failed to initiate settlement.
 			 */
 			Err: SettlementError;
 	  }
@@ -1074,19 +1076,19 @@ export type SettleSeriesResult =
 export type SettlementError =
 	| {
 			/**
-			 * Settlement price inconsistent with already executing plan.
+			 * * Settlement price inconsistent with already executing plan.
 			 */
 			InconsistentSettlementPrice: { requested: Price; existing: Price };
 	  }
 	| {
 			/**
-			 * Overflow during settlement calculation.
+			 * * Overflow during settlement calculation.
 			 */
 			MathOverflow: null;
 	  }
 	| {
 			/**
-			 * Total net payoffs (post-fee) exceed global system equity (system insolvency).
+			 * * Total net payoffs (post-fee) exceed global system equity (system insolvency).
 			 */
 			SolvencyViolation: {
 				total_net_payoff: bigint;
@@ -1095,13 +1097,13 @@ export type SettlementError =
 	  }
 	| {
 			/**
-			 * An error occurred while interacting with the asset.
+			 * * An error occurred while interacting with the asset.
 			 */
 			Asset: AssetError;
 	  }
 	| {
 			/**
-			 * A common error occurred.
+			 * * A common error occurred.
 			 */
 			Common: CommonError;
 	  };
@@ -1111,13 +1113,13 @@ export type SettlementError =
 export type SettlementInput =
 	| {
 			/**
-			 * Final price for scalar markets (Binary, Call, Put).
+			 * * Final price for scalar markets (Binary, Call, Put).
 			 */
 			Price: Price;
 	  }
 	| {
 			/**
-			 * Resolved winner for categorical markets.
+			 * * Resolved winner for categorical markets.
 			 */
 			Outcome: string;
 	  };
@@ -1126,47 +1128,47 @@ export type SettlementInput =
  */
 export interface SettlementPlan {
 	/**
-	 * Current execution status of the plan.
+	 * * Current execution status of the plan.
 	 */
 	status: PlanStatus;
 	/**
-	 * Base idempotency key in nanoseconds.
+	 * * Base idempotency key in nanoseconds.
 	 */
 	idempotency_ns: PaymentIdempotency;
 	/**
-	 * The unique identifier of the derivative series.
+	 * * The unique identifier of the derivative series.
 	 */
 	series_id: string;
 	/**
-	 * The protocol fee (in USD units).
+	 * * The protocol fee (in USD units).
 	 */
 	fee_usd: bigint;
 	/**
-	 * Tracks progress through accounting updates.
+	 * * Tracks progress through accounting updates.
 	 */
 	accounting_cursor: bigint;
 	/**
-	 * The insurance fee (in USD units).
+	 * * The insurance fee (in USD units).
 	 */
 	insurance_fee_usd: bigint;
 	/**
-	 * Detailed position snapshots and accounting updates.
+	 * * Detailed position snapshots and accounting updates.
 	 */
 	positions: Array<SettlementPosition>;
 	/**
-	 * Whether all accounting updates have been applied to account states.
+	 * * Whether all accounting updates have been applied to account states.
 	 */
 	accounting_applied: boolean;
 	/**
-	 * The domain of the series being settled.
+	 * * The domain of the series being settled.
 	 */
 	balance_domain: BalanceDomain;
 	/**
-	 * The oracle source identifier for authorization.
+	 * * The oracle source identifier for authorization.
 	 */
 	oracle_source: string;
 	/**
-	 * The final settlement data.
+	 * * The final settlement data.
 	 */
 	settlement: SettlementInput;
 }
@@ -1201,15 +1203,15 @@ export interface SettlementStatusView {
 export type Side = { Buy: null } | { Sell: null };
 export interface SocialReward {
 	/**
-	 * A short title for the reward (e.g., "Pizza 🍕").
+	 * * A short title for the reward (e.g., "Pizza 🍕").
 	 */
 	title: string;
 	/**
-	 * An optional detailed description of the reward.
+	 * * An optional detailed description of the reward.
 	 */
 	description: [] | [string];
 	/**
-	 * An optional icon URL for the reward.
+	 * * An optional icon URL for the reward.
 	 */
 	icon_url: [] | [string];
 }
@@ -1218,31 +1220,31 @@ export interface SocialReward {
  */
 export interface Stats {
 	/**
-	 * Total number of unique margin accounts.
+	 * * Total number of unique margin accounts.
 	 */
 	total_users: bigint;
 	/**
-	 * Total collateral balance in margin accounts per asset.
+	 * * Total collateral balance in margin accounts per asset.
 	 */
 	margin_balances: Array<[Asset, bigint]>;
 	/**
-	 * Total collateral locked across all positions.
+	 * * Total collateral locked across all positions.
 	 */
 	total_collateral_locked: bigint;
 	/**
-	 * Total number of executed trades.
+	 * * Total number of executed trades.
 	 */
 	total_trades: bigint;
 	/**
-	 * Total number of derivative series.
+	 * * Total number of derivative series.
 	 */
 	total_series: bigint;
 	/**
-	 * Total absolute open interest across all series.
+	 * * Total absolute open interest across all series.
 	 */
 	open_interest: bigint;
 	/**
-	 * Total number of events per type.
+	 * * Total number of events per type.
 	 */
 	event_counts: Array<[string, bigint]>;
 }
@@ -1251,27 +1253,27 @@ export interface Stats {
  */
 export interface SubmitLimitOrderParams {
 	/**
-	 * The quantity of the order. Must be positive.
+	 * * The quantity of the order. Must be positive.
 	 */
 	qty: bigint;
 	/**
-	 * The specific outcome for categorical markets.
+	 * * The specific outcome for categorical markets.
 	 */
 	outcome_id: [] | [string];
 	/**
-	 * The derivative series identifier.
+	 * * The derivative series identifier.
 	 */
 	series_id: string;
 	/**
-	 * The side of the order (Buy or Sell).
+	 * * The side of the order (Buy or Sell).
 	 */
 	side: Side;
 	/**
-	 * Unique identifier for the order.
+	 * * Unique identifier for the order.
 	 */
 	order_id: string;
 	/**
-	 * The limit price of the order.
+	 * * The limit price of the order.
 	 */
 	price: Price;
 }
@@ -1280,11 +1282,11 @@ export interface SubmitLimitOrderParams {
  */
 export interface SubmitMarketOrderParams {
 	/**
-	 * Unique identifier for the trade resulting from this match.
+	 * * Unique identifier for the trade resulting from this match.
 	 */
 	trade_id: string;
 	/**
-	 * The identifier of the limit order to be matched.
+	 * * The identifier of the limit order to be matched.
 	 */
 	matching_order_id: string;
 }
@@ -1293,39 +1295,39 @@ export interface SubmitMarketOrderParams {
  */
 export interface SubmitMatchedTradeParams {
 	/**
-	 * The quantity of the trade. Must be positive.
+	 * * The quantity of the trade. Must be positive.
 	 */
 	qty: bigint;
 	/**
-	 * Unique identifier for the trade provided by the exchange.
+	 * * Unique identifier for the trade provided by the exchange.
 	 */
 	trade_id: string;
 	/**
-	 * The specific outcome for categorical markets.
+	 * * The specific outcome for categorical markets.
 	 */
 	outcome_id: [] | [string];
 	/**
-	 * The derivative series identifier.
+	 * * The derivative series identifier.
 	 */
 	series_id: string;
 	/**
-	 * The user opening or increasing a Short position (seller).
+	 * * The user opening or increasing a Short position (seller).
 	 */
 	seller: Principal;
 	/**
-	 * Optional amount to atomically unblock for the buyer.
+	 * * Optional amount to atomically unblock for the buyer.
 	 */
 	buyer_unblock_amount: [] | [bigint];
 	/**
-	 * The user opening or increasing a Long position (buyer).
+	 * * The user opening or increasing a Long position (buyer).
 	 */
 	buyer: Principal;
 	/**
-	 * The execution price of the trade.
+	 * * The execution price of the trade.
 	 */
 	price: Price;
 	/**
-	 * Optional amount to atomically unblock for the seller.
+	 * * Optional amount to atomically unblock for the seller.
 	 */
 	seller_unblock_amount: [] | [bigint];
 }
@@ -1335,13 +1337,13 @@ export interface SubmitMatchedTradeParams {
 export type SubmitMatchedTradeResult =
 	| {
 			/**
-			 * Returns `true` if the trade was successfully processed.
+			 * * Returns `true` if the trade was successfully processed.
 			 */
 			Ok: boolean;
 	  }
 	| {
 			/**
-			 * Failed to submit or match the trade.
+			 * * Failed to submit or match the trade.
 			 */
 			Err: TradeError;
 	  };
@@ -1351,65 +1353,65 @@ export type SubmitMatchedTradeResult =
 export type TradeError =
 	| {
 			/**
-			 * A user tried to trade with themselves.
+			 * * A user tried to trade with themselves.
 			 */
 			SelfTradingNotAllowed: null;
 	  }
 	| {
 			/**
-			 * The specified order was not found.
+			 * * The specified order was not found.
 			 */
 			OrderNotFound: string;
 	  }
 	| {
 			/**
-			 * The trade would violate the no-arbitrage principle (e.g., sum of outcome prices > 1.0).
+			 * * The trade would violate the no-arbitrage principle (e.g., sum of outcome prices > 1.0).
 			 */
 			ArbitrageLimitExceeded: {
 				/**
-				 * The hard limit (usually 1.0 USD).
+				 * * The hard limit (usually 1.0 USD).
 				 */
 				limit_usd: bigint;
 				/**
-				 * The current sum of best bids across all outcomes.
+				 * * The current sum of best bids across all outcomes.
 				 */
 				sum_usd: bigint;
 			};
 	  }
 	| {
 			/**
-			 * Failed to communicate with the registry canister.
+			 * * Failed to communicate with the registry canister.
 			 */
 			RegistryError: string;
 	  }
 	| {
 			/**
-			 * The user has insufficient margin to open or maintain the position.
+			 * * The user has insufficient margin to open or maintain the position.
 			 */
 			InsufficientMargin: {
 				/**
-				 * Current margin balance.
+				 * * Current margin balance.
 				 */
 				balance: bigint;
 				/**
-				 * The user whose margin is insufficient.
+				 * * The user whose margin is insufficient.
 				 */
 				user: Principal;
 				/**
-				 * Required margin for the trade.
+				 * * Required margin for the trade.
 				 */
 				required: bigint;
 			};
 	  }
 	| {
 			/**
-			 * The caller is not the creator of the order.
+			 * * The caller is not the creator of the order.
 			 */
 			NotOrderCreator: null;
 	  }
 	| {
 			/**
-			 * The specified series was not found in the registry.
+			 * * The specified series was not found in the registry.
 			 */
 			SeriesNotFound: string;
 	  }
@@ -1426,7 +1428,7 @@ export type TradeError =
 	  }
 	| {
 			/**
-			 * A common error occurred.
+			 * * A common error occurred.
 			 */
 			Common: CommonError;
 	  };
@@ -1461,7 +1463,7 @@ export type TradeError =
 export type TradingAccess =
 	| {
 			/**
-			 * Unrestricted: any authenticated (non-anonymous) caller can trade.
+			 * * Unrestricted: any authenticated (non-anonymous) caller can trade.
 			 */
 			Open: null;
 	  }
@@ -1473,7 +1475,7 @@ export type TradingAccess =
 			 */
 			Restricted: {
 				/**
-				 * The group IDs whose members are allowed to trade.
+				 * * The group IDs whose members are allowed to trade.
 				 */
 				groups: Array<string>;
 			};
@@ -1515,34 +1517,34 @@ export interface UpdateDomainPolicyParams {
 export type WithdrawCollateralError =
 	| {
 			/**
-			 * The user does not have enough excess margin to withdraw the requested amount.
+			 * * The user does not have enough excess margin to withdraw the requested amount.
 			 */
 			InsufficientExcessMargin: {
 				/**
-				 * The amount requested to be withdrawn.
+				 * * The amount requested to be withdrawn.
 				 */
 				requested: bigint;
 				/**
-				 * Current excess margin available for withdrawal.
+				 * * Current excess margin available for withdrawal.
 				 */
 				available: bigint;
 			};
 	  }
 	| {
 			/**
-			 * The asset is not permitted in this balance domain.
+			 * * The asset is not permitted in this balance domain.
 			 */
 			DomainNotAllowed: { domain: BalanceDomain; asset_id: string };
 	  }
 	| {
 			/**
-			 * Overflow during collateral calculation.
+			 * * Overflow during collateral calculation.
 			 */
 			MathOverflow: null;
 	  }
 	| {
 			/**
-			 * An error occurred while interacting with the asset.
+			 * * An error occurred while interacting with the asset.
 			 */
 			Asset: AssetError;
 	  };
@@ -1551,19 +1553,19 @@ export type WithdrawCollateralError =
  */
 export interface WithdrawCollateralParams {
 	/**
-	 * The specific balance domain to withdraw from (defaults to Settlement).
+	 * * The specific balance domain to withdraw from (defaults to Settlement).
 	 */
 	domain: [] | [BalanceDomain];
 	/**
-	 * Unique identifier for the withdrawal operation.
+	 * * Unique identifier for the withdrawal operation.
 	 */
 	withdrawal_id: string;
 	/**
-	 * The unique identifier of the asset to withdraw.
+	 * * The unique identifier of the asset to withdraw.
 	 */
 	asset_id: string;
 	/**
-	 * The amount of the asset to withdraw.
+	 * * The amount of the asset to withdraw.
 	 */
 	amount: bigint;
 }
@@ -1573,13 +1575,13 @@ export interface WithdrawCollateralParams {
 export type WithdrawCollateralResult =
 	| {
 			/**
-			 * Withdrawal was successfully planned or executed.
+			 * * Withdrawal was successfully planned or executed.
 			 */
 			Ok: null;
 	  }
 	| {
 			/**
-			 * Failed to process withdrawal.
+			 * * Failed to process withdrawal.
 			 */
 			Err: WithdrawCollateralError;
 	  };
@@ -1616,7 +1618,7 @@ export interface _SERVICE {
 	 */
 	cancel_limit_order: ActorMethod<[CancelLimitOrderParams], SubmitMatchedTradeResult>;
 	/**
-	 * Returns the current global configuration of the Clearing canister.
+	 * * Returns the current global configuration of the Clearing canister.
 	 */
 	config: ActorMethod<[], Config>;
 	/**
@@ -1664,35 +1666,35 @@ export interface _SERVICE {
 	 */
 	get_funds: ActorMethod<[], GetFundsResult>;
 	/**
-	 * Retrieves all active limit orders for the caller.
+	 * * Retrieves all active limit orders for the caller.
 	 */
 	get_orders: ActorMethod<[], Array<LimitOrder>>;
 	/**
-	 * Retrieves a specific position for the caller.
+	 * * Retrieves a specific position for the caller.
 	 */
 	get_position: ActorMethod<[GetPositionParams], [] | [Position]>;
 	/**
-	 * Retrieves all open positions for the caller.
+	 * * Retrieves all open positions for the caller.
 	 */
 	get_positions: ActorMethod<[], Array<Position>>;
 	/**
-	 * Returns the principal of the Series Registry canister.
+	 * * Returns the principal of the Series Registry canister.
 	 */
 	get_registry_canister: ActorMethod<[], Principal>;
 	/**
-	 * Returns the full settlement plan including per-position accounting details (admin only).
+	 * * Returns the full settlement plan including per-position accounting details (admin only).
 	 */
 	get_settlement_plan: ActorMethod<[string], [] | [SettlementPlan]>;
 	/**
-	 * Returns the public settlement progress for a derivative series without exposing user positions.
+	 * * Returns the public settlement progress for a derivative series without exposing user positions.
 	 */
 	get_settlement_status: ActorMethod<[string], [] | [SettlementStatusView]>;
 	/**
-	 * Retrieves the trade history (executed trades) for the caller.
+	 * * Retrieves the trade history (executed trades) for the caller.
 	 */
 	get_trade_history: ActorMethod<[], Array<Event>>;
 	/**
-	 * Returns the official number of decimals for USD accounting.
+	 * * Returns the official number of decimals for USD accounting.
 	 */
 	get_usd_decimals: ActorMethod<[], number>;
 	/**
@@ -1702,15 +1704,15 @@ export interface _SERVICE {
 	 */
 	http_request: ActorMethod<[HttpRequest], HttpResponse>;
 	/**
-	 * Returns a list of all supported collateral assets with their metrics.
+	 * * Returns a list of all supported collateral assets with their metrics.
 	 */
 	list_collateral_assets: ActorMethod<[], Array<CollateralAssetInfo>>;
 	/**
-	 * Returns a list of all active limit orders, potentially filtered by series.
+	 * * Returns a list of all active limit orders, potentially filtered by series.
 	 */
 	list_orders: ActorMethod<[ListOrdersParams], Array<LimitOrder>>;
 	/**
-	 * Returns a list of all derivative series currently cached in the clearing canister.
+	 * * Returns a list of all derivative series currently cached in the clearing canister.
 	 */
 	list_series: ActorMethod<[], Array<Series>>;
 	/**

@@ -51,19 +51,19 @@ export default defineConfig(({ mode }) => ({
 				{
 					collection: JunoDatastoreCollection.ROLES,
 					memory: 'stable',
-					read: 'public',
+					read: 'managed',
 					write: 'public'
 				},
 				{
 					collection: JunoDatastoreCollection.PROFILES,
 					memory: 'stable',
-					read: 'public',
+					read: 'managed',
 					write: 'public'
 				},
 				{
 					collection: JunoDatastoreCollection.RELATIONS,
 					memory: 'stable',
-					read: 'public',
+					read: 'managed',
 					write: 'public'
 				},
 				{

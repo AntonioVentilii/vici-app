@@ -156,7 +156,9 @@ const persistOnboarding = ({
 	});
 };
 
-/** Count `activities` rows owned by `caller` whose key ends with `#trade` (see `logActivity`). */
+/**
+ * Count `activities` rows owned by `caller` whose key ends with `#trade` (see `logActivity`).
+ */
 const countUserTradeActivities = (caller: Uint8Array): number => {
 	let total = 0;
 	let startAfter: string | undefined;
@@ -356,8 +358,6 @@ const milestoneTransferNeeded = ({
 			return { transferAmount: expectedAmount - paidSoFar, memoLabel: `${mk}:topup` };
 		}
 	}
-
-	return undefined;
 };
 
 const payOutMilestoneIfNeeded = async ({
@@ -542,7 +542,9 @@ const payOutOwedMilestones = async ({
 	}
 };
 
-/** 10% at registration; runs on profile create and updates so legacy users are covered. */
+/**
+ * 10% at registration; runs on profile create and updates so legacy users are covered.
+ */
 export const onProfileSetForVxpOnboarding = async (ctx: OnSetDocContext): Promise<void> => {
 	const {
 		caller,
@@ -603,7 +605,9 @@ export const onProfileSetForVxpOnboarding = async (ctx: OnSetDocContext): Promis
 	}
 };
 
-/** 40% after first bet; 50% after five bets; retries any `owed` payouts. */
+/**
+ * 40% after first bet; 50% after five bets; retries any `owed` payouts.
+ */
 export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Promise<void> => {
 	const {
 		caller,
