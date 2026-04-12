@@ -18,6 +18,6 @@ export const getLeaderboard = async (): Promise<LeaderboardEntry[]> => {
 		winRate: (p.winRate as number) ?? 0,
 		activePositions: (p.totalTrades as number) ?? 0,
 		nickname: (p.nickname as Nickname) ?? undefined,
-		visibility: (p.visibility as ProfileVisibility) ?? ProfileVisibility.FRIENDS
+		visibility: (p.visibility as ProfileVisibility) ?? ProfileVisibility.FRIENDS_ONLY
 	}));
 };

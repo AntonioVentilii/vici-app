@@ -12,10 +12,10 @@ import {
 	updateTradingAccess as updateTradingAccessApi
 } from '$lib/api/registry.api';
 import { ROLE_PERMISSIONS } from '$lib/constants/authz.constants';
+import { Permission } from '$lib/enums/permission';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
 import { getFriends } from '$lib/services/relation.services';
-import { Permission } from '$lib/enums/permission';
 import { Principal } from '@icp-sdk/core/principal';
 import type { PrincipalText } from '@junobuild/schema';
 

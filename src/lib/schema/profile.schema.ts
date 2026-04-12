@@ -14,7 +14,7 @@ export const UserProfileSchema = j.strictObject({
 	bio: j.string().default(''),
 	avatar: j.string().default(''),
 	pnl: j.number().default(0),
-	visibility: ProfileVisibilitySchema.default(ProfileVisibility.FRIENDS),
+	visibility: ProfileVisibilitySchema.default(ProfileVisibility.FRIENDS_ONLY),
 	role: UserRoleSchema.optional(),
 	totalTrades: j.number().default(0),
 	winRate: j.number().default(0),

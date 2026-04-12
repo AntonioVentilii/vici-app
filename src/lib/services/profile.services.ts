@@ -32,7 +32,7 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				bio: '',
 				avatar: '',
 				pnl: 0,
-				visibility: ProfileVisibility.FRIENDS,
+				visibility: ProfileVisibility.FRIENDS_ONLY,
 				totalTrades: 0,
 				winRate: 0,
 				dailyStreak: 0,

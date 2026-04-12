@@ -1,5 +1,5 @@
 export enum ProfileVisibility {
 	PUBLIC = 'public',
-	PRIVATE = 'private',
-	FRIENDS = 'friends'
+	FRIENDS_AND_FOLLOWERS = 'friends_and_followers',
+	FRIENDS_ONLY = 'friends_only'
 }

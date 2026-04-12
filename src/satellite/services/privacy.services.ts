@@ -10,9 +10,9 @@ import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
 import type { PrincipalText } from '@junobuild/schema';
 
 /**
- * Checks if two users are friends.
+ * Checks if two users are friends (mutual, active relationship).
  */
-export const areFriends = ({
+const areFriends = ({
 	caller,
 	targetOwner
 }: {
@@ -37,9 +37,36 @@ export const areFriends = ({
 };
 
 /**
- * Checks if a user is an admin.
+ * Checks if the caller is following the target user.
  */
-export const isAdmin = (caller: Principal): boolean => {
+const isFollowing = ({
+	caller,
+	targetOwner
+}: {
+	caller: Principal;
+	targetOwner: PrincipalText;
+}): boolean => {
+	const relationId = `follow#${caller.toText()}#${targetOwner}`;
+
+	const relationDoc = getDocStore({
+		collection: Collection.RELATIONS,
+		key: relationId,
+		caller
+	});
+
+	if (isNullish(relationDoc)) {
+		return false;
+	}
+
+	const relation = decodeDocData<Relation>(relationDoc.data);
+
+	return relation.category === RelationCategory.FOLLOW && relation.state === RelationState.ACTIVE;
+};
+
+/**
+ * Checks if the caller has an admin or controller role.
+ */
+const isAdminOrController = (caller: Principal): boolean => {
 	const roleDoc = getDocStore({
 		collection: Collection.ROLES,
 		key: caller.toText(),
@@ -52,13 +79,13 @@ export const isAdmin = (caller: Principal): boolean => {
 
 	const { role } = decodeDocData<{ role: UserRole }>(roleDoc.data);
 
-	return role === UserRole.ADMIN;
+	return role === UserRole.ADMIN || role === UserRole.CONTROLLER;
 };
 
 /**
  * Checks if a target user has any role.
  */
-export const hasAnyRole = ({
+const hasAnyRole = ({
 	targetOwner,
 	caller
 }: {
@@ -75,9 +102,14 @@ export const hasAnyRole = ({
 };
 
 /**
- * Determines if the caller can see the target user's nickname.
+ * Determines if the caller can see the target user's nickname based on visibility settings.
+ *
+ * - PUBLIC: everyone can see
+ * - FRIENDS_AND_FOLLOWERS: friends and followers can see
+ * - FRIENDS_ONLY: only mutual friends can see
+ * - Admins/controllers can always see nicknames of users who have roles
  */
-export const canSeeNickname = ({
+const canSeeNickname = ({
 	caller,
 	profile
 }: {
@@ -92,11 +124,18 @@ export const canSeeNickname = ({
 		return true;
 	}
 
+	if (isAdminOrController(caller) && hasAnyRole({ targetOwner: profile.owner, caller })) {
+		return true;
+	}
+
 	if (areFriends({ caller, targetOwner: profile.owner })) {
 		return true;
 	}
 
-	if (isAdmin(caller) && hasAnyRole({ targetOwner: profile.owner, caller })) {
+	if (
+		profile.visibility === ProfileVisibility.FRIENDS_AND_FOLLOWERS &&
+		isFollowing({ caller, targetOwner: profile.owner })
+	) {
 		return true;
 	}
 
@@ -104,7 +143,7 @@ export const canSeeNickname = ({
 };
 
 /**
- * Redacts profile information if necessary.
+ * Redacts profile information if the caller lacks visibility.
  */
 export const redactProfile = ({
 	caller,
