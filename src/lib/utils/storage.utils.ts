@@ -1,9 +1,12 @@
 import { browser } from '$app/environment';
 import { nonNullish } from '@dfinity/utils';
 
-/** Best-effort JSON localStorage helpers (errors are logged, never thrown). */
-
-/** Serializes `value` to JSON and stores it under `key`. */
+/**
+ * Best-effort JSON localStorage helpers (errors are logged, never thrown).
+ */
+/**
+ * Serializes `value` to JSON and stores it under `key`.
+ */
 export const set = <T>({ key, value }: { key: string; value: T }) => {
 	try {
 		localStorage.setItem(key, JSON.stringify(value));
@@ -13,7 +16,9 @@ export const set = <T>({ key, value }: { key: string; value: T }) => {
 	}
 };
 
-/** Removes a key from localStorage if present. */
+/**
+ * Removes a key from localStorage if present.
+ */
 export const del = ({ key }: { key: string }) => {
 	try {
 		localStorage.removeItem(key);
@@ -23,7 +28,9 @@ export const del = ({ key }: { key: string }) => {
 	}
 };
 
-/** Parses JSON from localStorage for `key`, or `undefined` if missing or invalid. */
+/**
+ * Parses JSON from localStorage for `key`, or `undefined` if missing or invalid.
+ */
 export const get = <T>({ key }: { key: string }): T | undefined => {
 	try {
 		const value = browser ? localStorage.getItem(key) : null;

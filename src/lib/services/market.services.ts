@@ -9,6 +9,8 @@ import {
 	VICI_ORACLE_V1,
 	ZERO
 } from '$lib/constants/app.constants';
+import { ActivityType } from '$lib/enums/social';
+import { UserRole } from '$lib/enums/user';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
 import { listSeriesCategories } from '$lib/services/category.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
@@ -16,8 +18,6 @@ import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
 import type { SeriesCategory } from '$lib/types/category';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
-import { ActivityType } from '$lib/enums/social';
-import { UserRole } from '$lib/enums/user';
 import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import {
@@ -138,7 +138,9 @@ export const createMarket = async ({
 	return seriesId;
 };
 
-/** Loads series for the current domain, enriches with order book stats, merges resolved markets from activity, and filters by domain. */
+/**
+ * Loads series for the current domain, enriches with order book stats, merges resolved markets from activity, and filters by domain.
+ */
 export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 
@@ -245,7 +247,9 @@ export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Mar
 	return filterByBalanceDomain({ items, targetDomain: domain });
 };
 
-/** Single-market detail with book, categorical probabilities if applicable, and resolution status from activity. */
+/**
+ * Single-market detail with book, categorical probabilities if applicable, and resolution status from activity.
+ */
 export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {
 	const identity = await getIdentityOrAnonymous();
 
@@ -381,7 +385,9 @@ export const rankMarkets = ({
 		.map((item) => item.market);
 };
 
-/** Open binary markets ranked for the prediction flow UI using profile interests and categories. */
+/**
+ * Open binary markets ranked for the prediction flow UI using profile interests and categories.
+ */
 export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 	const principal = identity.getPrincipal().toText();

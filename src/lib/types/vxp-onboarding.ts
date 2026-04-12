@@ -7,11 +7,17 @@ export type VxpMilestonePayoutStatus = 'none' | 'owed' | 'processing' | 'paid';
 
 export interface VxpMilestoneState {
 	status: VxpMilestonePayoutStatus;
-	/** Amount owed or paid, in ICRC base units (smallest indivisible). */
+	/**
+	 * Amount owed or paid, in ICRC base units (smallest indivisible).
+	 */
 	amountBaseUnits: string;
-	/** Set when status is `paid`. */
+	/**
+	 * Set when status is `paid`.
+	 */
 	blockIndex?: string;
-	/** Last ledger error when status is `owed` (retry on next trade). */
+	/**
+	 * Last ledger error when status is `owed` (retry on next trade).
+	 */
 	lastError?: string;
 }
 

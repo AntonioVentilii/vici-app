@@ -18,7 +18,9 @@ export type NetworkAssetRef =
 			contract: `0x${string}`;
 	  };
 
-/** Returns true when two refs denote the same underlying asset. */
+/**
+ * Returns true when two refs denote the same underlying asset.
+ */
 export const networkAssetRefsEqual = ({
 	left,
 	right
@@ -50,14 +52,18 @@ export const networkAssetRefsEqual = ({
 	return false;
 };
 
-/** Principal text in canonical form for stable string comparison. */
+/**
+ * Principal text in canonical form for stable string comparison.
+ */
 export const normalizeIcrcLedgerId = (ledgerCanisterId: string): string =>
 	Principal.fromText(ledgerCanisterId).toText();
 
 export const icrcLedgerIdsEqual = ({ first, second }: { first: string; second: string }): boolean =>
 	normalizeIcrcLedgerId(first) === normalizeIcrcLedgerId(second);
 
-/** Whether a clearing `Asset` is the given ICRC ledger. */
+/**
+ * Whether a clearing `Asset` is the given ICRC ledger.
+ */
 export const clearingAssetIsIcrcLedger = ({
 	asset,
 	ledgerCanisterId
@@ -75,7 +81,9 @@ export const clearingAssetIsIcrcLedger = ({
 	});
 };
 
-/** First collateral row whose underlying ledger matches (ICRC only for now). */
+/**
+ * First collateral row whose underlying ledger matches (ICRC only for now).
+ */
 export const findCollateralInfoByIcrcLedger = ({
 	assetsConfig,
 	ledgerCanisterId
@@ -106,7 +114,9 @@ export const icrcLedgerDecimalsFromCollateralConfig = ({
 	return info?.config.decimals ?? fallbackDecimals;
 };
 
-/** Account `AssetWorth` row for a token identified by ICRC ledger (via clearing config). */
+/**
+ * Account `AssetWorth` row for a token identified by ICRC ledger (via clearing config).
+ */
 export const findAssetWorthForIcrcLedger = ({
 	assets,
 	ledgerCanisterId,

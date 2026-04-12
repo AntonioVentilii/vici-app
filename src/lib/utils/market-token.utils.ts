@@ -4,7 +4,9 @@ import type { Token } from '$lib/types/token';
 import { assetToToken } from '$lib/utils/asset.utils';
 import { isViciXp } from '$lib/utils/balance-domain.utils';
 
-/** Resolves the display token for a market from balance domain and payout unit (VXP or ledger-mapped asset). */
+/**
+ * Resolves the display token for a market from balance domain and payout unit (VXP or ledger-mapped asset).
+ */
 export const resolveMarketDisplayToken = ({
 	balanceDomain,
 	payoutUnit

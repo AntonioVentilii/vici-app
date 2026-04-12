@@ -3,7 +3,9 @@ import type { ChatMessage } from '$lib/types/chat';
 import { listDocs, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
-/** Persists a market chat message with a generated document key. */
+/**
+ * Persists a market chat message with a generated document key.
+ */
 export const sendMessage = async ({
 	marketId,
 	sender,
@@ -33,7 +35,9 @@ export const sendMessage = async ({
 	});
 };
 
-/** Lists chat messages for a market, oldest first. */
+/**
+ * Lists chat messages for a market, oldest first.
+ */
 export const getMarketMessages = async (marketId: string): Promise<ChatMessage[]> => {
 	const { items } = await listDocs<ChatMessage>({
 		collection: Collection.CHATS

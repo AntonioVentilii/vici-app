@@ -1,12 +1,16 @@
 <script lang="ts">
+	import type { PrincipalText } from '@junobuild/schema';
 	import { onMount } from 'svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { getDisplayName } from '$lib/services/profile.services';
+	import { getFriends } from '$lib/services/relation.services';
 	import { getLeaderboard } from '$lib/services/social.services';
+	import { userStore } from '$lib/stores/user.store';
 	import type { LeaderboardEntry } from '$lib/types/social';
-	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	let leaderboard = $state<LeaderboardEntry[]>([]);
+	let friends = $state<PrincipalText[]>([]);
 
 	let loading = $state(true);
 
@@ -14,11 +18,28 @@
 		loading = true;
 
 		try {
-			leaderboard = await getLeaderboard();
+			const [data, relations] = await Promise.all([
+				getLeaderboard(),
+				$userStore.user ? getFriends($userStore.user.key) : Promise.resolve([])
+			]);
+			leaderboard = data;
+			friends = relations.flatMap((r) => r.participants.filter((p) => p !== $userStore.user?.key));
 		} finally {
 			loading = false;
 		}
 	});
+
+	const resolveDisplayName = (entry: LeaderboardEntry) =>
+		getDisplayName({
+			profile: {
+				owner: entry.user,
+				nickname: entry.nickname,
+				visibility: entry.visibility
+			},
+			viewerPrincipal: $userStore.user?.key,
+			viewerRole: $userStore.profile?.role,
+			isFriend: friends.includes(entry.user)
+		});
 
 	const getPodiumColor = (rank: number) => {
 		switch (rank) {
@@ -55,7 +76,7 @@
 									: ''}"
 							>
 								<div class="flex h-full w-full items-center justify-center text-lg font-bold">
-									{entry.user[0]}
+									{resolveDisplayName(entry)[0]}
 								</div>
 							</div>
 							<div
@@ -68,7 +89,7 @@
 						</div>
 						<div class="text-center">
 							<p class="w-20 truncate text-xs font-bold">
-								{shortenWithMiddleEllipsis({ text: entry.user, splitLength: 4 })}
+								{resolveDisplayName(entry)}
 							</p>
 							<p class="text-primary text-[10px] font-black">+{entry.pnl.toFixed(0)}</p>
 						</div>
@@ -90,10 +111,10 @@
 					>
 						<span class="text-muted-foreground w-5 text-[10px]">#{entry.rank}</span>
 						<div class="bg-muted flex h-7 w-7 items-center justify-center rounded-full text-[10px]">
-							{entry.user[0]}
+							{resolveDisplayName(entry)[0]}
 						</div>
 						<span class="flex-1 truncate text-xs">
-							{shortenWithMiddleEllipsis({ text: entry.user })}
+							{resolveDisplayName(entry)}
 						</span>
 						<div class="text-right">
 							<p class="text-xs font-bold">+{entry.pnl.toFixed(0)}</p>

@@ -59,7 +59,9 @@ export const approve = async ({
 	});
 };
 
-/** Per-ledger ICRC transfer fee (base units). Used for approve headroom before `icrc2_transfer_from`. */
+/**
+ * Per-ledger ICRC transfer fee (base units). Used for approve headroom before `icrc2_transfer_from`.
+ */
 export const transactionFee = async ({
 	identity,
 	ledgerCanisterId

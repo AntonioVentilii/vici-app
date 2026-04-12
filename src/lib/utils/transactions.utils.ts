@@ -16,16 +16,23 @@ import {
 import type { Identity } from '@icp-sdk/core/agent';
 import type { Principal } from '@icp-sdk/core/principal';
 
-/** ICP account identifier and ICRC account helpers; maps index transactions into wallet `Transaction` rows. */
-
-/** ICP ledger account identifier (no subaccount) for the given principal. */
+/**
+ * ICP account identifier and ICRC account helpers; maps index transactions into wallet `Transaction` rows.
+ */
+/**
+ * ICP ledger account identifier (no subaccount) for the given principal.
+ */
 export const getAccountIdentifier = (principal: Principal): AccountIdentifier =>
 	AccountIdentifier.fromPrincipal({ principal, subAccount: undefined });
 
-/** Default ICRC-1 account for a principal (no subaccount). */
+/**
+ * Default ICRC-1 account for a principal (no subaccount).
+ */
 export const getIcrcAccount = (principal: Principal): IcrcAccount => ({ owner: principal });
 
-/** Splits ICP self-transfers into send and receive pseudo-rows for the activity list. */
+/**
+ * Splits ICP self-transfers into send and receive pseudo-rows for the activity list.
+ */
 export const mapTransactionIcpToSelf = (
 	tx: IcpIndexDid.TransactionWithId
 ): ({ transaction: IcpIndexDid.Transaction & IcTransactionAddOnsInfo } & Pick<
@@ -70,7 +77,9 @@ export const mapTransactionIcpToSelf = (
 	];
 };
 
-/** Normalizes an ICP ledger transfer (or related op) into a unified `Transaction` for the wallet UI. */
+/**
+ * Normalizes an ICP ledger transfer (or related op) into a unified `Transaction` for the wallet UI.
+ */
 export const mapIcpTransaction = ({
 	transaction: { transaction, id },
 	token,
@@ -142,7 +151,9 @@ export const mapIcpTransaction = ({
 	throw new Error(`Unknown transaction type ${JSON.stringify(transaction, jsonReplacer)}`);
 };
 
-/** Splits ICRC self-transfers into send/receive variants like {@link mapTransactionIcpToSelf}. */
+/**
+ * Splits ICRC self-transfers into send/receive variants like {@link mapTransactionIcpToSelf}.
+ */
 export const mapTransactionIcrcToSelf = (tx: IcrcIndexDid.TransactionWithId): IcrcTransaction[] => {
 	const { transaction, id } = tx;
 	const { transfer: t } = transaction;
@@ -186,7 +197,9 @@ export const mapTransactionIcrcToSelf = (tx: IcrcIndexDid.TransactionWithId): Ic
 	];
 };
 
-/** Normalizes an ICRC index transaction into a unified `Transaction` for the wallet UI. */
+/**
+ * Normalizes an ICRC index transaction into a unified `Transaction` for the wallet UI.
+ */
 export const mapIcrcTransaction = ({
 	transaction: { transaction, id },
 	token,

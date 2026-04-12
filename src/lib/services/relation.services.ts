@@ -1,87 +1,48 @@
+import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
-import { RelationCategory, RelationState, type Relation } from '$lib/types/relation';
+import type { Relation } from '$lib/types/relation';
 import { toRelationId } from '$lib/utils/relation.utils';
 import { isNullish } from '@dfinity/utils';
-import type { PrincipalText } from '@dfinity/zod-schemas';
-import { deleteDoc, getDoc, listDocs, setDoc, type Doc } from '@junobuild/core';
+import { deleteDoc, getDoc, type Doc } from '@junobuild/core';
+import type { PrincipalText } from '@junobuild/schema';
 
-/** Creates a pending friend relation between sender and target. */
+/**
+ * Creates a pending friend relation between sender and target.
+ */
 export const sendFriendRequest = async ({
-	target,
-	sender
+	target
 }: {
 	target: PrincipalText;
 	sender: PrincipalText;
 }): Promise<void> => {
-	const relationId = [sender, target].sort().join('#');
-
-	const existingDoc = await getDoc<Relation>({
-		collection: Collection.RELATIONS,
-		key: relationId
-	});
-
-	if (existingDoc !== undefined) {
-		throw new Error(`Friend request already exists with state: ${existingDoc.data.state}`);
-	}
-
-	const now = Date.now();
-
-	const relation: Relation = {
-		category: RelationCategory.FRIEND,
-		state: RelationState.PENDING,
-		participants: [sender, target],
-		createdAt: now,
-		updatedAt: now
-	};
-
-	await setDoc({
-		collection: Collection.RELATIONS,
-		doc: {
-			key: relationId,
-			data: relation
-		}
-	});
+	await functions.sendFriendRequest({ target });
 };
 
-/** Marks a friend relation as active. */
+/**
+ * Marks a friend relation as active.
+ */
 export const acceptFriendRequest = async ({
 	currentRelation
 }: {
-	currentRelation: Doc<Relation>;
+	currentRelation: Doc<Relation> | { key: string };
 }): Promise<void> => {
-	await setDoc({
-		collection: Collection.RELATIONS,
-		doc: {
-			...currentRelation,
-			data: {
-				...currentRelation.data,
-				state: RelationState.ACTIVE,
-				updatedAt: Date.now()
-			}
-		}
-	});
+	await functions.acceptFriendRequest({ relationId: currentRelation.key });
 };
 
-/** Marks a friend relation as rejected. */
+/**
+ * Marks a friend relation as rejected.
+ */
 export const rejectFriendRequest = async ({
 	currentRelation
 }: {
-	currentRelation: Doc<Relation>;
+	currentRelation: Doc<Relation> | { key: string };
 }): Promise<void> => {
-	await setDoc({
-		collection: Collection.RELATIONS,
-		doc: {
-			...currentRelation,
-			data: {
-				...currentRelation.data,
-				state: RelationState.REJECTED,
-				updatedAt: Date.now()
-			}
-		}
-	});
+	await functions.rejectFriendRequest({ relationId: currentRelation.key });
 };
 
-/** Removes a friend relation and syncs group admins. */
+/**
+ * Removes a friend relation and syncs group admins.
+ */
 export const unfriendUser = async (params: {
 	sender: PrincipalText;
 	target: PrincipalText;
@@ -113,87 +74,58 @@ export const unfriendUser = async (params: {
 	}
 };
 
-/** Active friend relations that include the user. */
-export const getFriends = async (userPrincipal: PrincipalText): Promise<Relation[]> => {
-	const { items } = await listDocs<Relation>({
-		collection: Collection.RELATIONS
-	});
+/**
+ * Active friend relations that include the user.
+ */
+export const getFriends = async (_userPrincipal: PrincipalText): Promise<Relation[]> => {
+	const { items } = (await functions.listFriends()) as { items: Relation[] };
 
-	return items
-		.map(({ data }) => data)
-		.filter(
-			(data) =>
-				data.category === RelationCategory.FRIEND &&
-				data.state === RelationState.ACTIVE &&
-				data.participants.includes(userPrincipal)
-		)
-		.sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0));
+	return items;
 };
 
-/** Pending incoming friend requests for the user. */
-export const getFriendRequests = async (userPrincipal: PrincipalText): Promise<Doc<Relation>[]> => {
-	const { items } = await listDocs<Relation>({
-		collection: Collection.RELATIONS
-	});
-
-	return items
-		.filter(
-			({ data }) =>
-				data.category === RelationCategory.FRIEND &&
-				data.state === RelationState.PENDING &&
-				data.participants[1] === userPrincipal // User is the target
-		)
-		.sort((a, b) => (b.data.createdAt ?? 0) - (a.data.createdAt ?? 0));
-};
-
-/** Friendships that the user explicitly rejected or was involved in rejecting. */
-export const getRejectedFriendships = async (
-	userPrincipal: PrincipalText
+/**
+ * Pending incoming friend requests for the user.
+ */
+export const getFriendRequests = async (
+	_userPrincipal: PrincipalText
 ): Promise<Doc<Relation>[]> => {
-	const { items } = await listDocs<Relation>({
-		collection: Collection.RELATIONS
-	});
+	const { items } = (await functions.listFriendRequests()) as { items: Relation[] };
 
-	return items
-		.filter(
-			({ data }) =>
-				data.category === RelationCategory.FRIEND &&
-				data.state === RelationState.REJECTED &&
-				data.participants.includes(userPrincipal)
-		)
-		.sort((a, b) => (b.data.createdAt ?? 0) - (a.data.createdAt ?? 0));
+	return items.map((r: Relation, i: number) => ({
+		key: `request-${i}`,
+		data: r
+	}));
 };
 
-/** Creates or overwrites an active follow from sender to target. */
+/**
+ * Friendships that the user explicitly rejected or was involved in rejecting.
+ */
+export const getRejectedFriendships = async (
+	_userPrincipal: PrincipalText
+): Promise<Doc<Relation>[]> => {
+	const { items } = (await functions.listRejectedFriendships()) as { items: Relation[] };
+
+	return items.map((r: Relation, i: number) => ({
+		key: `rejected-${i}`,
+		data: r
+	}));
+};
+
+/**
+ * Creates or overwrites an active follow from sender to target.
+ */
 export const followUser = async ({
-	target,
-	sender
+	target
 }: {
 	target: PrincipalText;
 	sender: PrincipalText;
 }): Promise<void> => {
-	const relationId = toRelationId({ sender, target });
-
-	const now = Date.now();
-
-	const relation: Relation = {
-		category: RelationCategory.FOLLOW,
-		state: RelationState.ACTIVE,
-		participants: [sender, target],
-		createdAt: now,
-		updatedAt: now
-	};
-
-	await setDoc({
-		collection: Collection.RELATIONS,
-		doc: {
-			key: relationId,
-			data: relation
-		}
-	});
+	await functions.followUser({ target });
 };
 
-/** Deletes the follow relation document for sender→target. */
+/**
+ * Deletes the follow relation document for sender→target.
+ */
 export const unfollowUser = async (params: {
 	sender: PrincipalText;
 	target: PrincipalText;
@@ -205,7 +137,6 @@ export const unfollowUser = async (params: {
 		key: relationId
 	});
 
-	// This should never happen since we only show the unfollow button for existing relations, but we check just in case
 	if (isNullish(doc)) {
 		throw new Error('Relation does not exist');
 	}
@@ -220,35 +151,20 @@ export const unfollowUser = async (params: {
 	}
 };
 
-/** Loads all relation documents (internal helper). */
-const listRelations = async (): Promise<Relation[]> => {
-	const { items } = await listDocs<Relation>({
-		collection: Collection.RELATIONS
-	});
+/**
+ * Principals the user follows.
+ */
+export const getFollowing = async (_userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
+	const { items } = (await functions.listFollowing()) as { items: Relation[] };
 
-	return items.map(({ data }) => data);
+	return items.map((r: Relation) => r.participants[1]);
 };
 
-/** Principals the user follows (follow relation participant order: follower first). */
-export const getFollowing = async (userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
-	// Relations for following are stored in the same collection.
-	// We use matcher to filter for relations involving the user principal.
-	const items = await listRelations();
+/**
+ * Principals following the user.
+ */
+export const getFollowers = async (_userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
+	const { items } = (await functions.listFollowers()) as { items: Relation[] };
 
-	return items
-		.filter(
-			(data) => data.category === RelationCategory.FOLLOW && data.participants[0] === userPrincipal
-		)
-		.map((r) => r.participants[1]);
-};
-
-/** Principals following the user. */
-export const getFollowers = async (userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
-	const items = await listRelations();
-
-	return items
-		.filter(
-			(data) => data.category === RelationCategory.FOLLOW && data.participants[1] === userPrincipal
-		)
-		.map((r) => r.participants[0]);
+	return items.map((r: Relation) => r.participants[0]);
 };

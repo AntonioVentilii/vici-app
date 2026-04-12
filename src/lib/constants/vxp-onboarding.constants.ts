@@ -13,15 +13,21 @@ export const NEW_USER_VXP_TOTAL_BASE_UNITS = parseToken({
 const PERCENT_MILESTONE_1 = 10n;
 const PERCENT_MILESTONE_2 = 40n;
 
-/** 10% — at registration (profile first create). */
+/**
+ * 10% — at registration (profile first create).
+ */
 export const newUserVxpAmountMilestone1BaseUnits = (): bigint =>
 	(NEW_USER_VXP_TOTAL_BASE_UNITS * PERCENT_MILESTONE_1) / 100n;
 
-/** 40% — after the first bet. */
+/**
+ * 40% — after the first bet.
+ */
 export const newUserVxpAmountMilestone2BaseUnits = (): bigint =>
 	(NEW_USER_VXP_TOTAL_BASE_UNITS * PERCENT_MILESTONE_2) / 100n;
 
-/** 50% — after five bets (remainder so the three payouts sum exactly to total). */
+/**
+ * 50% — after five bets (remainder so the three payouts sum exactly to total).
+ */
 export const newUserVxpAmountMilestone3BaseUnits = (): bigint =>
 	NEW_USER_VXP_TOTAL_BASE_UNITS -
 	newUserVxpAmountMilestone1BaseUnits() -

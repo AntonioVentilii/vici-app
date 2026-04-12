@@ -11,10 +11,14 @@ import { icrcLedgerIdsEqual } from '$lib/utils/asset-ref.utils';
 import { isSettlement, isViciXp } from '$lib/utils/balance-domain.utils';
 import { nonNullish } from '@dfinity/utils';
 
-/** Product rule: VICI ledger is not surfaced in wallet UI until wired end-to-end. */
+/**
+ * Product rule: VICI ledger is not surfaced in wallet UI until wired end-to-end.
+ */
 const isViciToken = (t: Token): boolean => t.ledgerCanisterId === VICI_LEDGER_CANISTER_ID;
 
-/** Settlement collateral: ICP + ckUSDC ICRC ledgers only (order for display). */
+/**
+ * Settlement collateral: ICP + ckUSDC ICRC ledgers only (order for display).
+ */
 const SETTLEMENT_LEDGER_ORDER = [ICP_LEDGER_CANISTER_ID, CKUSDC_LEDGER_CANISTER_ID] as const;
 
 /**

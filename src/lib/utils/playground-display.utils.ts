@@ -14,9 +14,12 @@ import type { LockedCapacityDisplayUnit } from '$lib/types/locked-capacity-displ
 import type { Token } from '$lib/types/token';
 import { formatAvailableUsd, formatCurrency, formatToken } from '$lib/utils/format.utils';
 
-/** Playground (VXP) vs live settlement labels and amount formatting for portfolio and trade UI. */
-
-/** Clearing 6-decimal scale shown as VXP 1:1 (no $). */
+/**
+ * Playground (VXP) vs live settlement labels and amount formatting for portfolio and trade UI.
+ */
+/**
+ * Clearing 6-decimal scale shown as VXP 1:1 (no $).
+ */
 export const formatPlaygroundClearingAsVxp = (value: bigint): string =>
 	formatCurrency({
 		value,
@@ -24,10 +27,14 @@ export const formatPlaygroundClearingAsVxp = (value: bigint): string =>
 		symbol: PLAYGROUND_DISPLAY_SYMBOL
 	});
 
-/** @deprecated Use `formatPlaygroundClearingAsVxp`; kept for existing imports. */
+/**
+ * @deprecated Use `formatPlaygroundClearingAsVxp`; kept for existing imports.
+ */
 export const formatPlaygroundVxpAmount = formatPlaygroundClearingAsVxp;
 
-/** Available margin for UI: VXP-style in playground, USD otherwise. */
+/**
+ * Available margin for UI: VXP-style in playground, USD otherwise.
+ */
 export const formatAvailableMarginForUi = ({
 	value,
 	playground
@@ -36,7 +43,9 @@ export const formatAvailableMarginForUi = ({
 	playground: boolean;
 }): string => (playground ? formatPlaygroundClearingAsVxp(value) : formatAvailableUsd({ value }));
 
-/** Native ICRC amount → clearing margin scale (`USD_DECIMALS`), same units as `total_equity_usd`. */
+/**
+ * Native ICRC amount → clearing margin scale (`USD_DECIMALS`), same units as `total_equity_usd`.
+ */
 export const nativeToClearingMarginUnits = ({
 	nativeBalance,
 	nativeDecimals
@@ -78,7 +87,9 @@ export const intuitiveAvailableMarginUsd = ({
 	return atMark > locked ? atMark - locked : ZERO;
 };
 
-/** Label for quick-bet chips: amount with VXP symbol or `$` prefix. */
+/**
+ * Label for quick-bet chips: amount with VXP symbol or `$` prefix.
+ */
 export const quickBetChipLabel = ({
 	amount,
 	playground
@@ -87,19 +98,27 @@ export const quickBetChipLabel = ({
 	playground: boolean;
 }): string => (playground ? `${amount} ${PLAYGROUND_DISPLAY_SYMBOL}` : `$${amount}`);
 
-/** Unit label for flow trade entry (VXP in playground, USD otherwise). */
+/**
+ * Unit label for flow trade entry (VXP in playground, USD otherwise).
+ */
 export const flowTradeDenominationLabel = (playground: boolean): 'VXP' | 'USD' =>
 	playground ? PLAYGROUND_DISPLAY_SYMBOL : 'USD';
 
-/** Label for locked-capacity UI (VXP vs settlement unit). */
+/**
+ * Label for locked-capacity UI (VXP vs settlement unit).
+ */
 export const lockedCapacityDenominationLabel = (playground: boolean): LockedCapacityDisplayUnit =>
 	playground ? PLAYGROUND_DISPLAY_SYMBOL : SETTLEMENT_LOCKED_CAPACITY_LABEL;
 
-/** Suffix appended to potential-return figures in playground (space + VXP symbol) or empty. */
+/**
+ * Suffix appended to potential-return figures in playground (space + VXP symbol) or empty.
+ */
 export const potentialReturnUnitSuffix = (playground: boolean): string =>
 	playground ? ` ${PLAYGROUND_DISPLAY_SYMBOL}` : '';
 
-/** Single-line portfolio P&L with optional VXP suffix. */
+/**
+ * Single-line portfolio P&L with optional VXP suffix.
+ */
 export const formatPortfolioPnLStatLine = ({
 	totalPnL,
 	playground
@@ -112,7 +131,9 @@ export const formatPortfolioPnLStatLine = ({
 	return playground ? `${core} ${PLAYGROUND_DISPLAY_SYMBOL}` : core;
 };
 
-/** Portfolio holdings summary: VXP token amount or fiat token currency from a sample token. */
+/**
+ * Portfolio holdings summary: VXP token amount or fiat token currency from a sample token.
+ */
 export const formatPortfolioHoldingsStatLine = ({
 	playground,
 	totalPortfolioValue,
@@ -136,7 +157,9 @@ export const formatPortfolioHoldingsStatLine = ({
 	return formatCurrency({ value: totalPortfolioValue, decimals: dec, symbol: sym });
 };
 
-/** Position P&L string with optional VXP unit in playground mode. */
+/**
+ * Position P&L string with optional VXP unit in playground mode.
+ */
 export const formatPositionPnLWithOptionalUnit = ({
 	pnl,
 	playground

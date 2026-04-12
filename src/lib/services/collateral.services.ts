@@ -27,7 +27,9 @@ const makeOperationId = ({ prefix, hint }: { prefix: string; hint?: bigint }): s
 	return isNullish(hint) ? `${prefix}_${uuid}` : `${prefix}_${hint.toString()}_${uuid}`;
 };
 
-/** ICRC approve + clearing deposit for the current balance domain; refreshes balances on success. */
+/**
+ * ICRC approve + clearing deposit for the current balance domain; refreshes balances on success.
+ */
 export const depositCollateral = async ({
 	assetPrincipal,
 	amount,
@@ -68,7 +70,9 @@ export const depositCollateral = async ({
 	refreshAllBalances();
 };
 
-/** Withdraws collateral from clearing to the user for the given ledger asset. */
+/**
+ * Withdraws collateral from clearing to the user for the given ledger asset.
+ */
 export const withdrawCollateral = async ({
 	assetPrincipal,
 	amount,
@@ -95,7 +99,9 @@ export const withdrawCollateral = async ({
 	refreshAllBalances();
 };
 
-/** Fetches clearing account state (balances per domain) for the signed-in user. */
+/**
+ * Fetches clearing account state (balances per domain) for the signed-in user.
+ */
 export const getAccountState = async (
 	domain: ClearingDid.BalanceDomain
 ): Promise<ClearingDid.AccountStateResponse> => {
@@ -107,7 +113,9 @@ export const getAccountState = async (
 	});
 };
 
-/** Lists collateral assets configured on clearing (empty if anonymous). */
+/**
+ * Lists collateral assets configured on clearing (empty if anonymous).
+ */
 export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAssetInfo[]> => {
 	const identity = await getIdentityOnce();
 
@@ -118,7 +126,9 @@ export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAsset
 	return await listCollateralAssetsApi({ identity });
 };
 
-/** Registers an ICRC ledger as a collateral asset on clearing (admin-style operation). */
+/**
+ * Registers an ICRC ledger as a collateral asset on clearing (admin-style operation).
+ */
 export const registerIcrcAsset = async (
 	params: ClearingDid.RegisterIcrcAssetParams
 ): Promise<void> => {

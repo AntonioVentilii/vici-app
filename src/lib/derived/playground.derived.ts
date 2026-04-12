@@ -7,7 +7,9 @@ import {
 } from '$lib/utils/playground-display.utils';
 import { derived, type Readable } from 'svelte/store';
 
-/** App "Playground" tab: on-chain `ViciXp`; clearing margin shown as VXP 1:1 (no USD framing). */
+/**
+ * App "Playground" tab: on-chain `ViciXp`; clearing margin shown as VXP 1:1 (no USD framing).
+ */
 export const playgroundVxpUnitMode: Readable<boolean> = derived(
 	balanceDomainStore,
 	($s) => $s.value === 'playground'

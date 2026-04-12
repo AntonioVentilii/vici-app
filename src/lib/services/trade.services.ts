@@ -9,7 +9,9 @@ import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getMarkets } from '$lib/services/market.services';
 import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
 
-/** Clearing position for one series, if any. */
+/**
+ * Clearing position for one series, if any.
+ */
 export const getPosition = async (seriesId: string): Promise<ClearingDid.Position | undefined> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -20,7 +22,9 @@ export const getPosition = async (seriesId: string): Promise<ClearingDid.Positio
 	return positions.find((p) => p.series_id === seriesId);
 };
 
-/** Trade/settlement events for the user, restricted to markets visible in the current app domain. */
+/**
+ * Trade/settlement events for the user, restricted to markets visible in the current app domain.
+ */
 export const getUserTradeHistory = async (
 	domain: RegistryDid.BalanceDomain
 ): Promise<ClearingDid.Event[]> => {
@@ -36,7 +40,9 @@ export const getUserTradeHistory = async (
 	return filterByMarketIds({ items: events, marketIds });
 };
 
-/** Mints a complete YES/NO set on clearing for `qty`. */
+/**
+ * Mints a complete YES/NO set on clearing for `qty`.
+ */
 export const mintCompleteSet = async ({
 	seriesId,
 	qty
@@ -53,7 +59,9 @@ export const mintCompleteSet = async ({
 	});
 };
 
-/** Redeems a complete set back into collateral for `qty`. */
+/**
+ * Redeems a complete set back into collateral for `qty`.
+ */
 export const redeemCompleteSet = async ({
 	seriesId,
 	qty

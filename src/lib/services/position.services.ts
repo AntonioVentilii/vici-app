@@ -8,7 +8,9 @@ import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
 import { mapPositionData } from '$lib/utils/position.utils';
 import { isNullish } from '@dfinity/utils';
 
-/** All positions for the signed-in user, limited to markets returned by {@link getMarkets}. */
+/**
+ * All positions for the signed-in user, limited to markets returned by {@link getMarkets}.
+ */
 export const getPositions = async (domain: RegistryDid.BalanceDomain): Promise<Position[]> => {
 	const identity = await getIdentity();
 
@@ -26,7 +28,9 @@ export const getPositions = async (domain: RegistryDid.BalanceDomain): Promise<P
 	return filterByMarketIds({ items: positions, marketIds }).map(mapPositionData);
 };
 
-/** Positions for a single market id. */
+/**
+ * Positions for a single market id.
+ */
 export const getPositionsForMarket = async (targetSeriesId: MarketId): Promise<Position[]> => {
 	const identity = await getIdentity();
 

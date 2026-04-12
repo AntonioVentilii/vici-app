@@ -1,14 +1,16 @@
 import type { ClearingDid } from '$declarations';
 import { settleSeries as settleSeriesApi } from '$lib/api/clearing.api';
 import { VICI_ORACLE_V1, ZERO } from '$lib/constants/app.constants';
+import { ActivityType } from '$lib/enums/social';
+import { UserRole } from '$lib/enums/user';
 import { logActivity } from '$lib/services/activity.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
-import { ActivityType } from '$lib/enums/social';
-import { UserRole } from '$lib/enums/user';
 import { nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 
-/** Admin/resolver-only: settles a series on clearing by outcome id or numeric price and logs activity. */
+/**
+ * Admin/resolver-only: settles a series on clearing by outcome id or numeric price and logs activity.
+ */
 export const settleMarket = async ({
 	seriesId,
 	settlementPrice,

@@ -5,7 +5,9 @@ import { findCollateralInfoByIcrcLedger } from '$lib/utils/asset-ref.utils';
 import { isNullish } from '@dfinity/utils';
 import { get } from 'svelte/store';
 
-/** Looks up a supported token by ICRC ledger canister id. */
+/**
+ * Looks up a supported token by ICRC ledger canister id.
+ */
 export const findTokenByLedgerId = (ledgerCanisterId: string): Token | undefined =>
 	SUPPORTED_TOKENS.find((t) => t.ledgerCanisterId === ledgerCanisterId);
 

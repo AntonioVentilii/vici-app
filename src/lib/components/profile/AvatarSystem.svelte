@@ -25,10 +25,14 @@
 
 	let pending = $state(false);
 
-	/** Stable per-user + style seed so the same emoji looks different across principals. */
+	/**
+	 * Stable per-user + style seed so the same emoji looks different across principals.
+	 */
 	const avatarSeed = (emoji: string): string => `${profile.owner}|${profile.nickname}|${emoji}`;
 
-	/** DiceBear encodes the seed in the URL; match that for save + selected state. */
+	/**
+	 * DiceBear encodes the seed in the URL; match that for save + selected state.
+	 */
 	const avatarUrlForEmoji = (emoji: string): string =>
 		`https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(avatarSeed(emoji))}`;
 

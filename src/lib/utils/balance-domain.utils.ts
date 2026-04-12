@@ -2,7 +2,9 @@ import type { ClearingDid } from '$declarations';
 import type { MarketId } from '$lib/types/market';
 import { parseMarketId } from '$lib/validation/market.validation';
 
-/** Converts a domain string (e.g. from JSON) to a Clearing BalanceDomain variant. */
+/**
+ * Converts a domain string (e.g. from JSON) to a Clearing BalanceDomain variant.
+ */
 export const toBalanceDomain = (domain: string): ClearingDid.BalanceDomain => {
 	if (domain === 'Playground') {
 		return { Playground: null };
@@ -19,25 +21,38 @@ export const toBalanceDomain = (domain: string): ClearingDid.BalanceDomain => {
 	return { ViciXp: null };
 };
 
-/** Predicates and filters for clearing balance domains (playground, settlement, ViciXp). */
-
-/** On-chain testnet/sandbox domain (not used for Vici app playground UI). */
+/**
+ * Predicates and filters for clearing balance domains (playground, settlement, ViciXp).
+ */
+/**
+ * On-chain testnet/sandbox domain (not used for Vici app playground UI).
+ */
 export const isPlayground = (domain: ClearingDid.BalanceDomain): boolean => 'Playground' in domain;
 
-/** True when the domain is production settlement collateral. */
+/**
+ * True when the domain is production settlement collateral.
+ */
 export const isSettlement = (domain: ClearingDid.BalanceDomain): boolean => 'Settlement' in domain;
 
-/** True when the clearing domain is ViciXp (in-app playground experience). */
+/**
+ * True when the clearing domain is ViciXp (in-app playground experience).
+ */
 export const isViciXp = (domain: ClearingDid.BalanceDomain): boolean => 'ViciXp' in domain;
 
-/** True for non-monetary social bets domain. */
+/**
+ * True for non-monetary social bets domain.
+ */
 export const isSocial = (domain: ClearingDid.BalanceDomain): boolean => 'Social' in domain;
 
-/** True when the UI "Playground" tab is active (maps to `ViciXp` on the clearing). */
+/**
+ * True when the UI "Playground" tab is active (maps to `ViciXp` on the clearing).
+ */
 export const isPlaygroundExperience = (domain: ClearingDid.BalanceDomain): boolean =>
 	isViciXp(domain);
 
-/** Equality for balance domains (Playground, Settlement, or ViciXp buckets). */
+/**
+ * Equality for balance domains (Playground, Settlement, or ViciXp buckets).
+ */
 // eslint-disable-next-line local-rules/prefer-object-params -- Compare functions are more readable with primitive params
 export const compareBalanceDomains = (
 	a: ClearingDid.BalanceDomain,
@@ -62,7 +77,9 @@ export const compareBalanceDomains = (
 	return false;
 };
 
-/** Keeps items whose `balanceDomain` / `balance_domain` matches `targetDomain`. */
+/**
+ * Keeps items whose `balanceDomain` / `balance_domain` matches `targetDomain`.
+ */
 export const filterByBalanceDomain = <
 	T extends
 		| { balanceDomain: ClearingDid.BalanceDomain }
@@ -80,7 +97,9 @@ export const filterByBalanceDomain = <
 		return compareBalanceDomains(itemDomain, targetDomain);
 	});
 
-/** Keeps clearing rows whose parsed `series_id` is in `marketIds`. */
+/**
+ * Keeps clearing rows whose parsed `series_id` is in `marketIds`.
+ */
 export const filterByMarketIds = <T extends { series_id: string }>({
 	items,
 	marketIds

@@ -10,7 +10,9 @@ import {
 } from '$lib/utils/parse.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 
-/** @throws Error when premium or implied max payout breaks ViciXp sizing rules. */
+/**
+ * @throws Error when premium or implied max payout breaks ViciXp sizing rules.
+ */
 export const assertViciXpHumanPremiumAndPayout = ({
 	amountStr,
 	executionPrice
@@ -42,13 +44,17 @@ export const assertViciXpHumanPremiumAndPayout = ({
 	}
 };
 
-/** Parameters for placing an outcome trade from the flow or manual UI. */
+/**
+ * Parameters for placing an outcome trade from the flow or manual UI.
+ */
 export interface TradeParams {
 	market: Market;
 	action: 'YES' | 'NO' | string;
 	amount: string;
 	orderType?: OrderType;
-	/** Normalized limit price in `[0, 1]` when `orderType` is LIMIT. */
+	/**
+	 * Normalized limit price in `[0, 1]` when `orderType` is LIMIT.
+	 */
 	limitPrice?: number;
 }
 
@@ -78,7 +84,9 @@ export const resolveOutcomeExecutionPriceForSizing = ({
 	return Math.max(executionPrice, 0.01);
 };
 
-/** Computes execution price and quantity, then submits a buy via `placeOrder`. */
+/**
+ * Computes execution price and quantity, then submits a buy via `placeOrder`.
+ */
 export const executeOutcomeTrade = async ({
 	market,
 	action,

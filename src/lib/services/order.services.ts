@@ -7,12 +7,12 @@ import {
 	submitMarketOrder
 } from '$lib/api/clearing.api';
 import { PRICE_DECIMALS } from '$lib/constants/app.constants';
+import { ActivityType } from '$lib/enums/social';
 import { logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { recordActivity } from '$lib/services/profile.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderSide, OrderType } from '$lib/types/order';
-import { ActivityType } from '$lib/enums/social';
 import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
 import { parseLimitOrderPriceValue } from '$lib/utils/parse.utils';
 import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
@@ -20,7 +20,9 @@ import { isNullish, toNullable } from '@dfinity/utils';
 import { getIdentityOnce } from '@junobuild/core';
 import { nanoid } from 'nanoid';
 
-/** Lists open limit orders for a market, optionally filtered to a balance domain. */
+/**
+ * Lists open limit orders for a market, optionally filtered to a balance domain.
+ */
 export const getOrderBook = async ({
 	marketId,
 	domain
@@ -47,7 +49,9 @@ export const getOrderBook = async ({
 	});
 };
 
-/** Submits a limit order or matches a market order against the book; refreshes UI state and logs activity. */
+/**
+ * Submits a limit order or matches a market order against the book; refreshes UI state and logs activity.
+ */
 export const placeOrder = async ({
 	marketId,
 	side,
@@ -165,7 +169,9 @@ export const placeOrder = async ({
 	}
 };
 
-/** Cancels an open limit order by id. */
+/**
+ * Cancels an open limit order by id.
+ */
 export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -183,7 +189,9 @@ export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 	refreshAllBalances();
 };
 
-/** Signed-in user's orders for a single market. */
+/**
+ * Signed-in user's orders for a single market.
+ */
 export const getUserOrdersForMarket = async ({
 	marketId,
 	domain
@@ -196,7 +204,9 @@ export const getUserOrdersForMarket = async ({
 	return orders.filter((o) => o.series_id === marketId);
 };
 
-/** All open orders for the current user in the active balance domain. */
+/**
+ * All open orders for the current user in the active balance domain.
+ */
 export const getUserOrders = async (
 	domain: ClearingDid.BalanceDomain
 ): Promise<ClearingDid.LimitOrder[]> => {

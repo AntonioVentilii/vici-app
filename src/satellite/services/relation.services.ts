@@ -14,7 +14,9 @@ import type { PrincipalText } from '@junobuild/schema';
 
 export const listFriends = (): Relation[] => {
 	const caller = msgCaller();
+
 	const callerText = caller.toText();
+
 	const { items } = listDocsStore({
 		collection: Collection.RELATIONS,
 		caller,
@@ -33,7 +35,9 @@ export const listFriends = (): Relation[] => {
 
 export const listFollowers = (): Relation[] => {
 	const caller = msgCaller();
+
 	const callerText = caller.toText();
+
 	const { items } = listDocsStore({
 		collection: Collection.RELATIONS,
 		caller,
@@ -52,7 +56,9 @@ export const listFollowers = (): Relation[] => {
 
 export const listFollowing = (): Relation[] => {
 	const caller = msgCaller();
+
 	const callerText = caller.toText();
+
 	const { items } = listDocsStore({
 		collection: Collection.RELATIONS,
 		caller,
@@ -77,6 +83,7 @@ export const checkFriendship = ({
 	userB: PrincipalText;
 }): boolean => {
 	const caller = msgCaller();
+
 	const relationId = [userA, userB].sort().join('#');
 
 	const doc = getDocStore({
@@ -96,7 +103,9 @@ export const checkFriendship = ({
 
 export const listFriendRequests = (): Relation[] => {
 	const caller = msgCaller();
+
 	const callerText = caller.toText();
+
 	const { items } = listDocsStore({
 		collection: Collection.RELATIONS,
 		caller,
@@ -115,7 +124,9 @@ export const listFriendRequests = (): Relation[] => {
 
 export const listRejectedFriendships = (): Relation[] => {
 	const caller = msgCaller();
+
 	const callerText = caller.toText();
+
 	const { items } = listDocsStore({
 		collection: Collection.RELATIONS,
 		caller,
@@ -134,7 +145,9 @@ export const listRejectedFriendships = (): Relation[] => {
 
 export const sendFriendRequest = ({ target }: { target: PrincipalText }): void => {
 	const caller = msgCaller();
+
 	const sender = caller.toText();
+
 	const relationId = [sender, target].sort().join('#');
 
 	const existingDoc = getDocStore({
@@ -149,6 +162,7 @@ export const sendFriendRequest = ({ target }: { target: PrincipalText }): void =
 	}
 
 	const now = Date.now();
+
 	const relation: Relation = {
 		category: RelationCategory.FRIEND,
 		state: RelationState.PENDING,
@@ -169,6 +183,7 @@ export const sendFriendRequest = ({ target }: { target: PrincipalText }): void =
 
 export const acceptFriendRequest = ({ relationId }: { relationId: string }): void => {
 	const caller = msgCaller();
+
 	const callerText = caller.toText();
 
 	const doc = getDocStore({
@@ -204,6 +219,7 @@ export const acceptFriendRequest = ({ relationId }: { relationId: string }): voi
 
 export const rejectFriendRequest = ({ relationId }: { relationId: string }): void => {
 	const caller = msgCaller();
+
 	const callerText = caller.toText();
 
 	const doc = getDocStore({
@@ -239,10 +255,13 @@ export const rejectFriendRequest = ({ relationId }: { relationId: string }): voi
 
 export const followUser = ({ target }: { target: PrincipalText }): void => {
 	const caller = msgCaller();
+
 	const sender = caller.toText();
+
 	const relationId = `follow#${sender}#${target}`;
 
 	const now = Date.now();
+
 	const relation: Relation = {
 		category: RelationCategory.FOLLOW,
 		state: RelationState.ACTIVE,

@@ -30,7 +30,9 @@ import {
 } from '$lib/utils/transactions.utils';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
 
-/** On-ledger balances for each supported token id (empty if not signed in). */
+/**
+ * On-ledger balances for each supported token id (empty if not signed in).
+ */
 export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	const identity = await getIdentity();
 
@@ -68,7 +70,9 @@ export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	}
 };
 
-/** Clearing account state for `domain`. */
+/**
+ * Clearing account state for `domain`.
+ */
 export const getCollateralBalances = async (
 	domain: ClearingDid.BalanceDomain
 ): Promise<ClearingDid.AccountStateResponse | undefined> => {
@@ -89,7 +93,9 @@ export const getCollateralBalances = async (
 	}
 };
 
-/** Combined ledger balances and per-token clearing collateral for the given domain. */
+/**
+ * Combined ledger balances and per-token clearing collateral for the given domain.
+ */
 export const getBalances = async (domain: ClearingDid.BalanceDomain): Promise<WalletBalance> => {
 	const [balances, accountState, collateralInfos] = await Promise.all([
 		getLedgerBalances(),
@@ -291,7 +297,9 @@ export const getTransactionsPage = async ({
 	}
 };
 
-/** Backwards-compatible helper: first batch only. */
+/**
+ * Backwards-compatible helper: first batch only.
+ */
 export const getTransactions = async (): Promise<Transaction[]> => {
 	const result = await getTransactionsPage({ batchSize: WALLET_PAGINATION });
 
