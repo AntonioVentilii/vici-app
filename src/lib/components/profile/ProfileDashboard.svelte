@@ -271,11 +271,8 @@
 		</Card>
 
 		<Card padding="lg">
-			<h4 class="mb-4 text-xs font-bold tracking-widest text-slate-400 uppercase">Quick Bio</h4>
-			<p class="leading-relaxed text-slate-600 italic">
-				"Predicting the future, one market at a time. Obsessed with tech and culture markets."
-			</p>
-			<div class="mt-6 flex flex-wrap gap-2">
+			<h4 class="mb-4 text-xs font-bold tracking-widest text-slate-400 uppercase">Interests</h4>
+			<div class="flex flex-wrap gap-2">
 				{#each profile.interests ?? [] as interest (interest)}
 					<span
 						class="rounded-lg bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-600 uppercase"

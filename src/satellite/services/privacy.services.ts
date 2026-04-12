@@ -161,7 +161,6 @@ export const redactProfile = ({
 	return {
 		...profile,
 		nickname: `User ${truncatedPrincipal}`,
-		bio: '',
 		avatar: ''
 	};
 };

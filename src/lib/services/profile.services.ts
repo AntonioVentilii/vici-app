@@ -29,7 +29,6 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 			data: {
 				owner: principal,
 				nickname: shortenWithMiddleEllipsis({ text: principal, splitLength: 5 }),
-				bio: '',
 				avatar: '',
 				pnl: 0,
 				visibility: ProfileVisibility.FRIENDS_ONLY,

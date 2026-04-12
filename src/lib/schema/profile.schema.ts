@@ -11,7 +11,6 @@ export const NicknameSchema = j.string();
 export const UserProfileSchema = j.strictObject({
 	owner: PrincipalTextSchema,
 	nickname: NicknameSchema.default(''),
-	bio: j.string().default(''),
 	avatar: j.string().default(''),
 	pnl: j.number().default(0),
 	visibility: ProfileVisibilitySchema.default(ProfileVisibility.FRIENDS_ONLY),

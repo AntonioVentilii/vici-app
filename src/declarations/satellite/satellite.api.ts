@@ -15,7 +15,6 @@ export const idlFactory: IDL.InterfaceFactory = ({ IDL }) => {
 	const UserProfile = IDL.Record({
 		owner: IDL.Principal,
 		nickname: IDL.Opt(IDL.Text),
-		bio: IDL.Opt(IDL.Text),
 		avatar: IDL.Opt(IDL.Text),
 		pnl: IDL.Opt(IDL.Float64),
 		visibility: IDL.Opt(IDL.Text),
