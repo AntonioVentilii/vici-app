@@ -63,7 +63,7 @@
 	"dependencies": {
 		"@dfinity/utils": "^4.2.0",
 		"@icp-sdk/canisters": "^3.5.1",
-		"@junobuild/core": "^5.3.1",
+		"@junobuild/core": "^5.4.0",
 		"@junobuild/functions": "^0.8.3",
 		"@junobuild/schema": "^1.2.1",
 		"decimal.js": "^10.6.0",
