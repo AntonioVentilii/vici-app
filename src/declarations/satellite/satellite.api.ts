@@ -11,7 +11,7 @@ import { schemaFromIdl, schemaToIdl } from '@junobuild/schema/utils';
 import type { _SERVICE as SatelliteActor } from './satellite.did';
 import { idlFactory } from './satellite.factory.did.js';
 
-const AppCheckFriendshipArgsSchema = j.strictObject({ userA: j.string(), userB: j.string() });
+const AppCheckFriendshipArgsSchema = j.strictObject({ user_a: j.string(), user_b: j.string() });
 const AppCheckFriendshipResultSchema = j.strictObject({ isFriend: j.boolean() });
 
 const checkFriendship = async (
@@ -30,7 +30,7 @@ const checkFriendship = async (
 	return AppCheckFriendshipResultSchema.parse(result);
 };
 
-const AppGetProfileArgsSchema = j.strictObject({ principalStr: j.string() });
+const AppGetProfileArgsSchema = j.strictObject({ principal_str: j.string() });
 const AppGetProfileResultSchema = j.strictObject({
 	profile: j.optional(
 		j.strictObject({
@@ -246,7 +246,7 @@ const listRejectedFriendships = async (): Promise<
 	return AppListRejectedFriendshipsResultSchema.parse(result);
 };
 
-const AppSearchProfilesArgsSchema = j.strictObject({ queryStr: j.string() });
+const AppSearchProfilesArgsSchema = j.strictObject({ query_str: j.string() });
 const AppSearchProfilesResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
@@ -292,7 +292,7 @@ const searchProfiles = async (
 	return AppSearchProfilesResultSchema.parse(result);
 };
 
-const AppAcceptFriendRequestArgsSchema = j.strictObject({ relationId: j.string() });
+const AppAcceptFriendRequestArgsSchema = j.strictObject({ relation_id: j.string() });
 
 const acceptFriendRequest = async (
 	args: j.infer<typeof AppAcceptFriendRequestArgsSchema>
@@ -321,7 +321,7 @@ const followUser = async (args: j.infer<typeof AppFollowUserArgsSchema>): Promis
 	await app_follow_user(idlArgs);
 };
 
-const AppRejectFriendRequestArgsSchema = j.strictObject({ relationId: j.string() });
+const AppRejectFriendRequestArgsSchema = j.strictObject({ relation_id: j.string() });
 
 const rejectFriendRequest = async (
 	args: j.infer<typeof AppRejectFriendRequestArgsSchema>

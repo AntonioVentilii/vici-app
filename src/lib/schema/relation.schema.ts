@@ -18,6 +18,6 @@ export const RelationSchema = j.strictObject({
 });
 
 export const CheckFriendshipArgsSchema = j.strictObject({
-	userA: PrincipalTextSchema,
-	userB: PrincipalTextSchema
+	user_a: PrincipalTextSchema,
+	user_b: PrincipalTextSchema
 });

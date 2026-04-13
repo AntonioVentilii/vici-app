@@ -26,7 +26,7 @@ export const acceptFriendRequest = async ({
 }: {
 	currentRelation: Doc<Relation> | { key: string };
 }): Promise<void> => {
-	await functions.acceptFriendRequest({ relationId: currentRelation.key });
+	await functions.acceptFriendRequest({ relation_id: currentRelation.key });
 };
 
 /**
@@ -37,7 +37,7 @@ export const rejectFriendRequest = async ({
 }: {
 	currentRelation: Doc<Relation> | { key: string };
 }): Promise<void> => {
-	await functions.rejectFriendRequest({ relationId: currentRelation.key });
+	await functions.rejectFriendRequest({ relation_id: currentRelation.key });
 };
 
 /**

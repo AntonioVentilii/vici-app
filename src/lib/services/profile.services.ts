@@ -16,7 +16,7 @@ import type { PrincipalText } from '@junobuild/schema';
  * Loads a user profile from Juno or returns a default shell; merges role from the satellite query.
  */
 export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProfile>> => {
-	const { profile } = await functions.getProfile({ principalStr: principal });
+	const { profile } = await functions.getProfile({ principal_str: principal });
 
 	if (isNullish(profile)) {
 		return {
@@ -119,7 +119,7 @@ export const upsertProfile = async (
  * Case-insensitive search over nickname, owner, and document key via secure satellite query.
  */
 export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
-	const { items } = await functions.searchProfiles({ queryStr: query });
+	const { items } = await functions.searchProfiles({ query_str: query });
 
 	return items as UserProfile[];
 };
@@ -195,7 +195,7 @@ export const checkFriendship = async ({
 	userA: PrincipalText;
 	userB: PrincipalText;
 }): Promise<boolean> => {
-	const { isFriend } = await functions.checkFriendship({ userA, userB });
+	const { isFriend } = await functions.checkFriendship({ user_a: userA, user_b: userB });
 
 	return isFriend;
 };

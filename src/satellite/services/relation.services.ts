@@ -76,11 +76,11 @@ export const listFollowing = (): Relation[] => {
 };
 
 export const checkFriendship = ({
-	userA,
-	userB
+	user_a: userA,
+	user_b: userB
 }: {
-	userA: PrincipalText;
-	userB: PrincipalText;
+	user_a: PrincipalText;
+	user_b: PrincipalText;
 }): boolean => {
 	const caller = msgCaller();
 
@@ -181,7 +181,7 @@ export const sendFriendRequest = ({ target }: { target: PrincipalText }): void =
 	});
 };
 
-export const acceptFriendRequest = ({ relationId }: { relationId: string }): void => {
+export const acceptFriendRequest = ({ relation_id: relationId }: { relation_id: string }): void => {
 	const caller = msgCaller();
 
 	const callerText = caller.toText();
@@ -217,7 +217,7 @@ export const acceptFriendRequest = ({ relationId }: { relationId: string }): voi
 	});
 };
 
-export const rejectFriendRequest = ({ relationId }: { relationId: string }): void => {
+export const rejectFriendRequest = ({ relation_id: relationId }: { relation_id: string }): void => {
 	const caller = msgCaller();
 
 	const callerText = caller.toText();

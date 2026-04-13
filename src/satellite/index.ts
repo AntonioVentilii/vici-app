@@ -50,27 +50,25 @@ export const listLeaderboard = defineQuery({
 
 export const getProfile = defineQuery({
 	args: j.strictObject({
-		// TODO: Check why I cannot call it `principal` directly
-		principalStr: PrincipalTextSchema
+		principal_str: PrincipalTextSchema
 	}),
 	result: j.strictObject({
 		profile: j.optional(UserProfileSchema)
 	}),
-	handler: ({ principalStr }) => ({
-		profile: getProfileFn(principalStr)
+	handler: ({ principal_str }) => ({
+		profile: getProfileFn(principal_str)
 	})
 });
 
 export const searchProfiles = defineQuery({
 	args: j.strictObject({
-		// TODO: Check why I cannot call it `query` directly
-		queryStr: j.string()
+		query: j.string()
 	}),
 	result: j.strictObject({
 		items: j.array(UserProfileSchema)
 	}),
-	handler: ({ queryStr }) => ({
-		items: searchProfilesFn(queryStr)
+	handler: ({ query }) => ({
+		items: searchProfilesFn(query)
 	})
 });
 
@@ -132,14 +130,14 @@ export const sendFriendRequest = defineUpdate({
 
 export const acceptFriendRequest = defineUpdate({
 	args: j.strictObject({
-		relationId: j.string()
+		relation_id: j.string()
 	}),
 	handler: acceptFriendRequestFn
 });
 
 export const rejectFriendRequest = defineUpdate({
 	args: j.strictObject({
-		relationId: j.string()
+		relation_id: j.string()
 	}),
 	handler: rejectFriendRequestFn
 });

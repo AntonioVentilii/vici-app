@@ -21,7 +21,7 @@ type AppListLeaderboardResult = record { items : vec record { owner : text; nick
 
 type AppListRejectedFriendshipsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator; moderator; group_creator; user }; is_friend : opt bool; created_at : float64; updated_at : float64 } };
 
-type AppSearchProfilesArgs = record { query_str : text };
+type AppSearchProfilesArgs = record { query : text };
 
 type AppSearchProfilesResult = record { items : vec record { owner : text; nickname : text; avatar : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator; moderator; group_creator; user }; total_trades : float64; win_rate : float64; daily_streak : float64; streak : float64; accuracy : float64; points : float64; level : float64; interests : vec text; last_active_day : opt text; created_at : float64; updated_at : float64; preferences : opt record { default_amount : record { flow : text; manual : text } } } };
 
