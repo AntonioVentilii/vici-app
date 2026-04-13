@@ -16,9 +16,9 @@ import type { PrincipalText } from '@junobuild/schema';
  * Loads a user profile from Juno or returns a default shell; merges role from the satellite query.
  */
 export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProfile>> => {
-	const { profile: candidProfile } = await functions.getProfile({ principalStr: principal });
+	const { profile } = await functions.getProfile({ principalStr: principal });
 
-	if (isNullish(candidProfile)) {
+	if (isNullish(profile)) {
 		return {
 			key: principal,
 			data: {
@@ -47,11 +47,9 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 		};
 	}
 
-	const profile = fromCandidProfile(candidProfile);
-
 	return {
 		key: principal,
-		data: profile
+		data: profile as UserProfile
 	};
 };
 
@@ -123,7 +121,7 @@ export const upsertProfile = async (
 export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
 	const { items } = await functions.searchProfiles({ queryStr: query });
 
-	return items.map(fromCandidProfile);
+	return items as UserProfile[];
 };
 
 /**
@@ -337,17 +335,4 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 			lastActiveDay: today
 		}
 	});
-};
-
-/**
- * Maps the profile returned from the Satellite (Candid) to the application's UserProfile type.
- */
-const fromCandidProfile = (profile: any): UserProfile => {
-	const { visibility, role, ...rest } = profile;
-
-	return {
-		...rest,
-		visibility: visibility as ProfileVisibility,
-		role: role ? (role as UserRole) : undefined
-	};
 };
