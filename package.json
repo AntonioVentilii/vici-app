@@ -33,7 +33,7 @@
 	},
 	"devDependencies": {
 		"@dfinity/eslint-config-oisy-wallet": "^0.2.3",
-		"@junobuild/config": "^2.15.1",
+		"@junobuild/config": "^3.0.0",
 		"@junobuild/vite-plugin": "^4.7.1",
 		"@sveltejs/adapter-static": "^3.0.9",
 		"@sveltejs/kit": "^2.37.0",
@@ -63,9 +63,9 @@
 	"dependencies": {
 		"@dfinity/utils": "^4.2.0",
 		"@icp-sdk/canisters": "^3.5.1",
-		"@junobuild/core": "^5.3.1",
-		"@junobuild/functions": "^0.8.3",
-		"@junobuild/schema": "^1.2.1",
+		"@junobuild/core": "^5.4.0",
+		"@junobuild/functions": "^0.8.4",
+		"@junobuild/schema": "^1.2.4",
 		"decimal.js": "^10.6.0",
 		"ethers": "^6.16.0",
 		"lucide-svelte": "^0.577.0",
