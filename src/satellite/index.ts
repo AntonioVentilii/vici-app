@@ -62,13 +62,13 @@ export const getProfile = defineQuery({
 
 export const searchProfiles = defineQuery({
 	args: j.strictObject({
-		query: j.string()
+		query_str: j.string()
 	}),
 	result: j.strictObject({
 		items: j.array(UserProfileSchema)
 	}),
-	handler: ({ query }) => ({
-		items: searchProfilesFn(query)
+	handler: ({ query_str }) => ({
+		items: searchProfilesFn(query_str)
 	})
 });
 
