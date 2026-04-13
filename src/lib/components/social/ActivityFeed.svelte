@@ -31,7 +31,7 @@
 
 		try {
 			if (mode === 'friends' && userPrincipal) {
-				const following = await getFollowing(userPrincipal);
+				const following = await getFollowing();
 				activities = await getFriendActivities({ friends: following });
 			} else if (mode === 'user' && userPrincipal) {
 				// For now, we reuse global and filter, but ideally we'd have a specific API

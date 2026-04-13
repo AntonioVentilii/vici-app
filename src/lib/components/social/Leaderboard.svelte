@@ -20,7 +20,7 @@
 		try {
 			const [data, relations] = await Promise.all([
 				getLeaderboard(),
-				$userStore.user ? getFriends($userStore.user.key) : Promise.resolve([])
+				$userStore.user ? getFriends() : Promise.resolve([])
 			]);
 			leaderboard = data;
 			friends = relations.flatMap((r) => r.participants.filter((p) => p !== $userStore.user?.key));

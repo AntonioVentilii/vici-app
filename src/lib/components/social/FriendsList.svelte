@@ -46,9 +46,9 @@
 
 		try {
 			[activeFriends, pendingRequests, rejectedRelations] = await Promise.all([
-				getFriends(userPrincipal),
-				getFriendRequests(userPrincipal),
-				getRejectedFriendships(userPrincipal)
+				getFriends(),
+				getFriendRequests(),
+				getRejectedFriendships()
 			]);
 
 			const allRelations = [

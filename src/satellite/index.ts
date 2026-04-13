@@ -50,25 +50,27 @@ export const listLeaderboard = defineQuery({
 
 export const getProfile = defineQuery({
 	args: j.strictObject({
-		principal: PrincipalTextSchema
+		// TODO: Check why I cannot call it `principal` directly
+		principalStr: PrincipalTextSchema
 	}),
 	result: j.strictObject({
 		profile: j.optional(UserProfileSchema)
 	}),
-	handler: ({ principal }) => ({
-		profile: getProfileFn(principal)
+	handler: ({ principalStr }) => ({
+		profile: getProfileFn(principalStr)
 	})
 });
 
 export const searchProfiles = defineQuery({
 	args: j.strictObject({
-		query: j.string()
+		// TODO: Check why I cannot call it `query` directly
+		queryStr: j.string()
 	}),
 	result: j.strictObject({
 		items: j.array(UserProfileSchema)
 	}),
-	handler: ({ query }) => ({
-		items: searchProfilesFn(query)
+	handler: ({ queryStr }) => ({
+		items: searchProfilesFn(queryStr)
 	})
 });
 

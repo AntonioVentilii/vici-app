@@ -12,18 +12,13 @@ import type { Identity } from '@icp-sdk/core/agent';
 import { getDoc, setDoc, type Doc, type User } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
-const toOwnerText = (owner: unknown): PrincipalText =>
-	typeof owner === 'string' ? owner : (owner as { toText: () => string }).toText();
-
 /**
  * Loads a user profile from Juno or returns a default shell; merges role from the satellite query.
  */
 export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProfile>> => {
-	const { profile } = (await functions.getProfile({ principal })) as {
-		profile: Record<string, unknown> | undefined;
-	};
+	const { profile: candidProfile } = await functions.getProfile({ principalStr: principal });
 
-	if (isNullish(profile)) {
+	if (isNullish(candidProfile)) {
 		return {
 			key: principal,
 			data: {
@@ -52,13 +47,11 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 		};
 	}
 
+	const profile = fromCandidProfile(candidProfile);
+
 	return {
 		key: principal,
-		data: {
-			...(profile as UserProfile),
-			owner: toOwnerText(profile.owner),
-			role: (profile.role as UserRole) ?? undefined
-		}
+		data: profile
 	};
 };
 
@@ -128,14 +121,9 @@ export const upsertProfile = async (
  * Case-insensitive search over nickname, owner, and document key via secure satellite query.
  */
 export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
-	const { items } = (await functions.searchProfiles({ query })) as {
-		items: Record<string, unknown>[];
-	};
+	const { items } = await functions.searchProfiles({ queryStr: query });
 
-	return items.map((p) => ({
-		...(p as UserProfile),
-		owner: toOwnerText(p.owner)
-	}));
+	return items.map(fromCandidProfile);
 };
 
 /**
@@ -209,9 +197,7 @@ export const checkFriendship = async ({
 	userA: PrincipalText;
 	userB: PrincipalText;
 }): Promise<boolean> => {
-	const { isFriend } = (await functions.checkFriendship({ userA, userB })) as {
-		isFriend: boolean;
-	};
+	const { isFriend } = await functions.checkFriendship({ userA, userB });
 
 	return isFriend;
 };
@@ -351,4 +337,17 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 			lastActiveDay: today
 		}
 	});
+};
+
+/**
+ * Maps the profile returned from the Satellite (Candid) to the application's UserProfile type.
+ */
+const fromCandidProfile = (profile: any): UserProfile => {
+	const { visibility, role, ...rest } = profile;
+
+	return {
+		...rest,
+		visibility: visibility as ProfileVisibility,
+		role: role ? (role as UserRole) : undefined
+	};
 };

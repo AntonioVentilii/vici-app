@@ -240,7 +240,7 @@ export const getOrCreateFriendsGroup = async (): Promise<string> => {
 	}
 
 	// Sync friends
-	const activeFriends = await getFriends(principal);
+	const activeFriends = await getFriends();
 	const friendPrincipals = activeFriends
 		.map((f) => f.participants.find((p) => p !== principal))
 		.filter((p): p is PrincipalText => p !== undefined);
@@ -276,7 +276,7 @@ export const getOrCreateFollowersGroup = async (): Promise<string> => {
 
 	// Sync followers
 	const { getFollowers } = await import('$lib/services/relation.services');
-	const followerPrincipals = await getFollowers(principal);
+	const followerPrincipals = await getFollowers();
 
 	const currentMembers = followersGroup.members.map((m) => m.toText());
 	const missingMembers = followerPrincipals.filter((p) => !currentMembers.includes(p));

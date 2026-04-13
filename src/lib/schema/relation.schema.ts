@@ -10,7 +10,6 @@ export const RelationSchema = j.strictObject({
 	category: RelationCategorySchema,
 	state: RelationStateSchema,
 	participants: j.array(PrincipalTextSchema),
-	metadata: j.record(j.string(), j.any()).optional(),
 	viewerPrincipal: PrincipalTextSchema.optional(),
 	viewerRole: j.enum(UserRole).optional(),
 	isFriend: j.boolean().optional(),

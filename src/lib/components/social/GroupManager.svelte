@@ -58,7 +58,7 @@
 			);
 
 			// Fetch active friends to show in Add Member list
-			activeFriends = await getFriends(userPrincipal);
+			activeFriends = await getFriends();
 
 			for (const relation of activeFriends) {
 				const friendId = relation.participants.find((p) => p !== userPrincipal);

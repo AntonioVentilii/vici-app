@@ -55,10 +55,7 @@
 		loading = true;
 
 		try {
-			[following, followers] = await Promise.all([
-				getFollowing(profile.owner),
-				getFollowers(profile.owner)
-			]);
+			[following, followers] = await Promise.all([getFollowing(), getFollowers()]);
 		} finally {
 			loading = false;
 		}

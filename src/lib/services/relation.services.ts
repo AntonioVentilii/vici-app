@@ -59,13 +59,11 @@ export const unfriendUser = async (params: {
 	}
 
 	try {
-		// We delete the relation so it is clear and they can retry later
 		await deleteDoc({
 			collection: Collection.RELATIONS,
 			doc
 		});
 
-		// Sync group admins dynamically to avoid circular dependency
 		const { syncGroupAdminsAfterUnfriend } = await import('$lib/services/group.services');
 		await syncGroupAdminsAfterUnfriend({ userA: params.sender, userB: params.target });
 	} catch (e) {
@@ -77,37 +75,33 @@ export const unfriendUser = async (params: {
 /**
  * Active friend relations that include the user.
  */
-export const getFriends = async (_userPrincipal: PrincipalText): Promise<Relation[]> => {
-	const { items } = (await functions.listFriends()) as { items: Relation[] };
+export const getFriends = async (): Promise<Relation[]> => {
+	const { items } = await functions.listFriends();
 
-	return items;
+	return items as Relation[];
 };
 
 /**
  * Pending incoming friend requests for the user.
  */
-export const getFriendRequests = async (
-	_userPrincipal: PrincipalText
-): Promise<Doc<Relation>[]> => {
-	const { items } = (await functions.listFriendRequests()) as { items: Relation[] };
+export const getFriendRequests = async (): Promise<Doc<Relation>[]> => {
+	const { items } = await functions.listFriendRequests();
 
-	return items.map((r: Relation, i: number) => ({
+	return items.map((r, i) => ({
 		key: `request-${i}`,
-		data: r
+		data: r as Relation
 	}));
 };
 
 /**
  * Friendships that the user explicitly rejected or was involved in rejecting.
  */
-export const getRejectedFriendships = async (
-	_userPrincipal: PrincipalText
-): Promise<Doc<Relation>[]> => {
-	const { items } = (await functions.listRejectedFriendships()) as { items: Relation[] };
+export const getRejectedFriendships = async (): Promise<Doc<Relation>[]> => {
+	const { items } = await functions.listRejectedFriendships();
 
-	return items.map((r: Relation, i: number) => ({
+	return items.map((r, i) => ({
 		key: `rejected-${i}`,
-		data: r
+		data: r as Relation
 	}));
 };
 
@@ -124,7 +118,7 @@ export const followUser = async ({
 };
 
 /**
- * Deletes the follow relation document for sender→target.
+ * Deletes the follow relation document for sender->target.
  */
 export const unfollowUser = async (params: {
 	sender: PrincipalText;
@@ -154,17 +148,17 @@ export const unfollowUser = async (params: {
 /**
  * Principals the user follows.
  */
-export const getFollowing = async (_userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
-	const { items } = (await functions.listFollowing()) as { items: Relation[] };
+export const getFollowing = async (): Promise<PrincipalText[]> => {
+	const { items } = await functions.listFollowing();
 
-	return items.map((r: Relation) => r.participants[1]);
+	return items.map((r) => r.participants[1]);
 };
 
 /**
  * Principals following the user.
  */
-export const getFollowers = async (_userPrincipal: PrincipalText): Promise<PrincipalText[]> => {
-	const { items } = (await functions.listFollowers()) as { items: Relation[] };
+export const getFollowers = async (): Promise<PrincipalText[]> => {
+	const { items } = await functions.listFollowers();
 
-	return items.map((r: Relation) => r.participants[0]);
+	return items.map((r) => r.participants[0]);
 };
