@@ -1,9 +1,9 @@
 <footer
-	class="text-muted-foreground mx-auto flex h-24 max-w-7xl flex-col items-center justify-between gap-4 px-8 py-16 md:flex-row md:justify-start md:gap-24 md:px-24"
+	class="text-muted-foreground mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-3 text-xs opacity-60"
 >
-	<div class="flex items-center gap-4">
+	<div class="flex items-center gap-2">
 		Built on
-		<span class="flex items-baseline gap-2">
+		<span class="flex items-baseline gap-1">
 			<a
 				class="group hover:text-lavender-blue-500 active:text-lavender-blue-400"
 				aria-label="Go to Juno website and documentation"
@@ -15,7 +15,7 @@
 					id="Layer_2"
 					fill="currentColor"
 					viewBox="0 0 1000 220.39"
-					width="100"
+					width="70"
 					xmlns="http://www.w3.org/2000/svg"
 				>
 					<g>

@@ -1,5 +1,6 @@
 import { Collection } from '$lib/constants/collections.constants';
 import type { UserRole } from '$lib/enums/user';
+import { getProfile } from '$lib/services/profile.services';
 import { deleteDoc, getDoc, listDocs, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
@@ -16,20 +17,36 @@ export interface RoleDoc {
 export interface UserRoleEntry {
 	principal: PrincipalText;
 	role: UserRole;
+	nickname?: string;
 }
 
 /**
- * Lists all role assignments from Juno.
+ * Lists all role assignments from Juno, enriched with profile nicknames.
  */
 export const listRoles = async (): Promise<UserRoleEntry[]> => {
 	const { items } = await listDocs<RoleDoc>({
 		collection: Collection.ROLES
 	});
 
-	return items.map((doc) => ({
-		principal: doc.key,
-		role: doc.data.role
-	}));
+	const entries = await Promise.all(
+		items.map(async (doc) => {
+			const entry: UserRoleEntry = {
+				principal: doc.key,
+				role: doc.data.role
+			};
+
+			try {
+				const profile = await getProfile(doc.key);
+				entry.nickname = profile.data.nickname;
+			} catch {
+				// Profile unavailable, display principal only
+			}
+
+			return entry;
+		})
+	);
+
+	return entries;
 };
 
 /**

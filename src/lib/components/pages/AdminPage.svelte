@@ -1,19 +1,20 @@
 <script lang="ts">
 	import type { PrincipalText } from '@junobuild/schema';
 	import { onMount } from 'svelte';
+	import type { RegistryDid } from '$declarations';
 	import AdminAddForm from '$lib/components/admin/AdminAddForm.svelte';
 	import AdminBulkMarketForm from '$lib/components/admin/AdminBulkMarketForm.svelte';
 	import AdminList from '$lib/components/admin/AdminList.svelte';
 	import AdminMarketForm from '$lib/components/admin/AdminMarketForm.svelte';
 	import AdminResolutionHistory from '$lib/components/admin/AdminResolutionHistory.svelte';
 	import AdminResolutionList from '$lib/components/admin/AdminResolutionList.svelte';
-	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { markets } from '$lib/derived/markets.derived';
 	import { UserRole } from '$lib/enums/user';
 	import { resolveMarket } from '$lib/services/authn.services';
 	import { associateSeriesWithCategory } from '$lib/services/category.services';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { createMarket } from '$lib/services/market.services';
+	import { getProfile } from '$lib/services/profile.services';
 	import { listRoles, removeRole, setRole, type UserRoleEntry } from '$lib/services/roles.services';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { MarketId, Outcome } from '$lib/types/market';
@@ -73,7 +74,7 @@
 
 		const identity = await safeGetIdentityOnce();
 		const adminPrincipal = identity.getPrincipal().toText();
-		const currentDomain = $balanceDomain;
+		const defaultDomain: RegistryDid.BalanceDomain = { ViciXp: null };
 
 		await Promise.allSettled(
 			bulkMarkets.map(
@@ -84,7 +85,7 @@
 							description,
 							expiryDate: BigInt(new Date(expiryDate).getTime()),
 							outcomes,
-							balanceDomain: balanceDomain ? toBalanceDomain(balanceDomain) : currentDomain
+							balanceDomain: balanceDomain ? toBalanceDomain(balanceDomain) : defaultDomain
 						});
 
 						// Associate categories if provided
@@ -172,7 +173,22 @@
 			newRolePrincipal = '';
 			newRoleSelected = UserRole.ADMIN;
 
-			roleEntries = [...roleEntries.filter((e) => e.principal !== principal), { principal, role }];
+			const getNickname = async (principal: PrincipalText): Promise<string | undefined> => {
+				try {
+					const profile = await getProfile(principal);
+
+					return profile.data?.nickname;
+				} catch {
+					// No issue in not having the nickname, just return undefined
+				}
+			};
+
+			const nickname = await getNickname(principal);
+
+			roleEntries = [
+				...roleEntries.filter((e) => e.principal !== principal),
+				{ principal, role, nickname }
+			];
 
 			await fetchRoles();
 		} catch (e: unknown) {
