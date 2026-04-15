@@ -10,9 +10,10 @@
 		loading: boolean;
 		hasMore?: boolean;
 		onLoadMore?: () => void;
+		onChallenge?: (market: Market) => void;
 	}
 
-	let { markets, loading, hasMore = false, onLoadMore }: Props = $props();
+	let { markets, loading, hasMore = false, onLoadMore, onChallenge }: Props = $props();
 
 	let observer: IntersectionObserver | undefined;
 	let sentinel: HTMLElement | undefined = $state();
@@ -51,7 +52,7 @@
 >
 	{#if markets.length > 0}
 		{#each markets as market, index (market.id)}
-			<MarketCard {index} {market} />
+			<MarketCard {index} {market} {onChallenge} />
 		{/each}
 
 		{#if loading}

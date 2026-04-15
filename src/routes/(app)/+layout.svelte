@@ -24,7 +24,7 @@
 	let challengeModalOpen = $state(false);
 </script>
 
-<div class="relative isolate min-h-dvh">
+<div class="relative isolate flex min-h-dvh flex-col">
 	<div class={isFlowPage ? 'hidden md:block' : ''}>
 		<Banner />
 	</div>

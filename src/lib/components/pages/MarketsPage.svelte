@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import ForkMarketModal from '$lib/components/challenge/ForkMarketModal.svelte';
 	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
@@ -7,6 +8,7 @@
 	import { listSeriesCategories } from '$lib/services/category.services';
 	import { userStore } from '$lib/stores/user.store';
 	import type { SeriesCategory } from '$lib/types/category';
+	import type { Market } from '$lib/types/market';
 	import {
 		DEFAULT_SECONDARY_FILTERS,
 		type MarketSecondaryFilters
@@ -19,6 +21,14 @@
 	let activeTab = $state('Active');
 	let filters = $state<MarketSecondaryFilters>({ ...DEFAULT_SECONDARY_FILTERS });
 	let categoryMappings = $state<SeriesCategory[]>([]);
+
+	let forkModalOpen = $state(false);
+	let forkTarget = $state<Market | null>(null);
+
+	const handleChallenge = (market: Market) => {
+		forkTarget = market;
+		forkModalOpen = true;
+	};
 
 	onMount(async () => {
 		categoryMappings = await listSeriesCategories();
@@ -57,7 +67,13 @@
 				{tabs}
 			/>
 
-			<MarketFeed {loading} markets={filteredMarkets} />
+			<MarketFeed {loading} markets={filteredMarkets} onChallenge={handleChallenge} />
 		</div>
 	</div>
+
+	<ForkMarketModal
+		isOpen={forkModalOpen}
+		market={forkTarget}
+		onClose={() => (forkModalOpen = false)}
+	/>
 </section>
