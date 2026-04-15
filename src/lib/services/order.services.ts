@@ -13,7 +13,7 @@ import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/ident
 import { recordActivity } from '$lib/services/profile.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderSide, OrderType } from '$lib/types/order';
-import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
+import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
 import { parseLimitOrderPriceValue } from '$lib/utils/parse.utils';
 import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 import { isNullish, toNullable } from '@dfinity/utils';
@@ -206,6 +206,7 @@ export const getUserOrdersForMarket = async ({
 
 /**
  * All open orders for the current user in the active balance domain.
+ * In playground mode (ViciXp), Social-domain orders are included.
  */
 export const getUserOrders = async (
 	domain: ClearingDid.BalanceDomain
@@ -220,5 +221,5 @@ export const getUserOrders = async (
 		identity
 	});
 
-	return filterByBalanceDomain({ items: orders, targetDomain: domain });
+	return filterByPlaygroundExpandedDomain({ items: orders, targetDomain: domain });
 };

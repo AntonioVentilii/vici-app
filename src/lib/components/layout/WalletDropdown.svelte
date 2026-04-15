@@ -5,7 +5,6 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
-	import { balanceDomainStore } from '$lib/stores/balance-domain.store';
 	import type { WalletBalance } from '$lib/types/wallet';
 	import { formatToken } from '$lib/utils/format.utils';
 
@@ -50,27 +49,21 @@
 
 	{#snippet content()}
 		<div class="w-64 p-2">
-			{#if $balanceDomainStore.value !== 'social'}
-				<div class="mb-4">
-					<h3 class="px-2 text-xs font-semibold tracking-wider text-slate-400 uppercase">
-						Balances
-					</h3>
-					<div class="mt-2 space-y-1">
-						{#each $walletUiTokens as token (token.id)}
-							{@const balance = balances.balances[token.id] ?? ZERO}
+			<div class="mb-4">
+				<h3 class="px-2 text-xs font-semibold tracking-wider text-slate-400 uppercase">Balances</h3>
+				<div class="mt-2 space-y-1">
+					{#each $walletUiTokens as token (token.id)}
+						{@const balance = balances.balances[token.id] ?? ZERO}
 
-							<div
-								class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors"
-							>
-								<span class="text-sm font-medium text-slate-600">{token.symbol}</span>
-								<span class="text-sm font-bold text-slate-900">
-									{formatToken({ value: balance, unitName: token.decimals })}
-								</span>
-							</div>
-						{/each}
-					</div>
+						<div class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors">
+							<span class="text-sm font-medium text-slate-600">{token.symbol}</span>
+							<span class="text-sm font-bold text-slate-900">
+								{formatToken({ value: balance, unitName: token.decimals })}
+							</span>
+						</div>
+					{/each}
 				</div>
-			{/if}
+			</div>
 
 			<div class="border-t border-slate-100 pt-2">
 				<BaseButton

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Clock } from 'lucide-svelte/icons';
+	import { Clock, Users } from 'lucide-svelte/icons';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import BinaryProbabilities from '$lib/components/market/BinaryProbabilities.svelte';
@@ -8,6 +8,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import type { Market } from '$lib/types/market';
+	import { isSocial } from '$lib/utils/balance-domain.utils';
 	import { getOutcomeVariant, getTimeRemaining } from '$lib/utils/market.utils';
 
 	interface Props {
@@ -16,6 +17,8 @@
 	}
 
 	const { market, index = 0 }: Props = $props();
+
+	const isChallenge = $derived(isSocial(market.balanceDomain));
 </script>
 
 <div class="h-full w-full" in:fly={{ y: 20, duration: 400, delay: Math.min(index * 50, 300) }}>
@@ -29,7 +32,11 @@
 	>
 		<div class="flex h-full w-full flex-col text-left">
 			<!-- Header Border -->
-			<div class="bg-border h-1.5 w-full"></div>
+			<div
+				class="h-1.5 w-full {isChallenge
+					? 'bg-gradient-to-r from-fuchsia-500 to-violet-500'
+					: 'bg-border'}"
+			></div>
 
 			<div class="flex flex-1 flex-col gap-5 p-6 sm:p-8">
 				<div class="flex items-start justify-between gap-4">
@@ -43,6 +50,14 @@
 							<Badge variant={getOutcomeVariant(market.status)}>
 								{market.status}
 							</Badge>
+							{#if isChallenge}
+								<span
+									class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-50 px-2 py-0.5 text-[10px] font-bold tracking-widest text-fuchsia-700 uppercase"
+								>
+									<Users size={10} />
+									Challenge
+								</span>
+							{/if}
 							{#if market.payoffType === 'Categorical'}
 								<span
 									class="border-foreground/25 text-foreground bg-foreground/8 rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"

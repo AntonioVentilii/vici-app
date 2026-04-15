@@ -5,7 +5,8 @@ import { derived, type Readable } from 'svelte/store';
 
 export const balanceDomainValue: Readable<BalanceDomainKey> = derived(
 	balanceDomainStore,
-	($balanceDomainStore) => $balanceDomainStore.value
+	($balanceDomainStore) =>
+		$balanceDomainStore.value === 'social' ? 'playground' : $balanceDomainStore.value
 );
 
 export const balanceDomain: Readable<ClearingDid.BalanceDomain> = derived(
@@ -15,10 +16,9 @@ export const balanceDomain: Readable<ClearingDid.BalanceDomain> = derived(
 			case 'settlement':
 				return { Settlement: null };
 			case 'social':
-				return { Social: null };
 			case 'playground':
 			default:
-				return { ViciXp: null }; // Mapping playground experience to ViciXp on-chain
+				return { ViciXp: null };
 		}
 	}
 );

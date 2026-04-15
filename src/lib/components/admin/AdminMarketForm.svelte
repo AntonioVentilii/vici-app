@@ -3,7 +3,6 @@
 	import { onMount } from 'svelte';
 	import type { RegistryDid } from '$declarations';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { listGroups } from '$lib/services/group.services';
 	import { createMarket } from '$lib/services/market.services';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -25,6 +24,8 @@
 	let outcomes = $state<string[]>(['Option A', 'Option B']);
 	let socialRewardTitle = $state('');
 	let socialRewardDescription = $state('');
+
+	let selectedDomain = $state<'ViciXp' | 'Social'>('ViciXp');
 
 	let isRestricted = $state(false);
 	let availableGroups = $state<RegistryDid.Group[]>([]);
@@ -60,15 +61,18 @@
 				? [{ Restricted: { groups: selectedGroupIds } }]
 				: [{ Open: null }];
 
+		const domain: RegistryDid.BalanceDomain =
+			selectedDomain === 'Social' ? { Social: null } : { ViciXp: null };
+
 		try {
 			await createMarket({
 				title,
 				description,
 				expiryDate: BigInt(new Date(expiryDate).getTime()),
 				outcomes: marketType === 'Categorical' ? outcomes : [],
-				balanceDomain: $balanceDomain,
+				balanceDomain: domain,
 				socialReward:
-					'Social' in $balanceDomain
+					selectedDomain === 'Social'
 						? {
 								title: socialRewardTitle,
 								description: socialRewardDescription
@@ -227,10 +231,39 @@
 			</div>
 		{/if}
 
-		{#if 'Social' in $balanceDomain}
+		<!-- Balance Domain -->
+		<div class="space-y-4">
+			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">
+				Balance Domain
+			</span>
+			<div class="flex gap-4">
+				<button
+					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {selectedDomain ===
+					'ViciXp'
+						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
+						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+					onclick={() => (selectedDomain = 'ViciXp')}
+					type="button"
+				>
+					ViciXp (Playground)
+				</button>
+				<button
+					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {selectedDomain ===
+					'Social'
+						? 'border-fuchsia-600 bg-fuchsia-50 text-fuchsia-700'
+						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+					onclick={() => (selectedDomain = 'Social')}
+					type="button"
+				>
+					Social (Fun Dare)
+				</button>
+			</div>
+		</div>
+
+		{#if selectedDomain === 'Social'}
 			<div class="space-y-4 rounded-3xl bg-fuchsia-50 p-6 ring-1 ring-fuchsia-100 ring-inset">
 				<span class="text-xs font-bold tracking-widest text-fuchsia-700 uppercase">
-					Social Reward (Non-Monetary)
+					Social Reward (Fun Dare)
 				</span>
 				<div class="space-y-4">
 					<div class="space-y-2">

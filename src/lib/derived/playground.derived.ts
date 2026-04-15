@@ -12,7 +12,7 @@ import { derived, type Readable } from 'svelte/store';
  */
 export const playgroundVxpUnitMode: Readable<boolean> = derived(
 	balanceDomainStore,
-	($s) => $s.value === 'playground'
+	($s) => $s.value !== 'settlement'
 );
 
 export const playgroundFlowTradeUnitLabel: Readable<'VXP' | 'USD'> = derived(

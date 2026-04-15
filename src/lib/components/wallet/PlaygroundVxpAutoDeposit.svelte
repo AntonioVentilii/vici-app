@@ -14,9 +14,6 @@
 	 *
 	 * Timer + deposit loop lives in `$effect` keyed on `isPlayground`; cleanup clears timeouts and
 	 * drops `alive` so async work cannot reschedule after teardown or domain switch.
-	 *
-	 * Does not run when the tab is closed. In-flight `depositCollateral` cannot be aborted on
-	 * unmount. Fee headroom: `2 × ledger fee` (approve + `transfer_from`).
 	 */
 	const POLL_MS = 10_000;
 

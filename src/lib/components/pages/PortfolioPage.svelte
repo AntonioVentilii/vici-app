@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
-	import { slide } from 'svelte/transition';
 	import type { ClearingDid } from '$declarations';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioStats from '$lib/components/portfolio/PortfolioStats.svelte';
@@ -19,7 +18,6 @@
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getPositions } from '$lib/services/position.services';
 	import { getUserTradeHistory } from '$lib/services/trade.services';
-	import { balanceDomainStore } from '$lib/stores/balance-domain.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Position } from '$lib/types/position';
 	import {
@@ -104,16 +102,12 @@
 	{#if refreshing}
 		<LoadingSpinner />
 	{:else}
-		{#if $balanceDomainStore.value !== 'social'}
-			<div transition:slide>
-				<PortfolioStats
-					activeMarketsCount={positions.length}
-					pnlVariant={totalPnL >= 0 ? 'success' : 'default'}
-					totalHoldings={portfolioHoldingsLabel}
-					totalPnL={portfolioPnLLabel}
-				/>
-			</div>
-		{/if}
+		<PortfolioStats
+			activeMarketsCount={positions.length}
+			pnlVariant={totalPnL >= 0 ? 'success' : 'default'}
+			totalHoldings={portfolioHoldingsLabel}
+			totalPnL={portfolioPnLLabel}
+		/>
 
 		<PositionTable markets={$markets} {positions} />
 

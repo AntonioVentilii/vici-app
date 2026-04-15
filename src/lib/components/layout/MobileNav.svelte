@@ -19,7 +19,7 @@
 >
 	{#each visibleNavItems as { label, path, mobileIcon: Icon } (path)}
 		<button
-			class="flex min-w-0 flex-1 flex-col items-center justify-center gap-1 px-2 py-1 transition-colors {isActive(
+			class="flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-1 transition-colors {isActive(
 				path
 			)
 				? 'text-primary'

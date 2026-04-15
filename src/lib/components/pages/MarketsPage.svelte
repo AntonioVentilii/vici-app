@@ -7,12 +7,17 @@
 	import { listSeriesCategories } from '$lib/services/category.services';
 	import { userStore } from '$lib/stores/user.store';
 	import type { SeriesCategory } from '$lib/types/category';
+	import {
+		DEFAULT_SECONDARY_FILTERS,
+		type MarketSecondaryFilters
+	} from '$lib/types/market-filters';
 	import { filterAndRankMarkets } from '$lib/utils/market-filters.utils';
 
 	let loading = $derived($marketsNotInitialized);
 
 	let searchTerm = $state('');
 	let activeTab = $state('Active');
+	let filters = $state<MarketSecondaryFilters>({ ...DEFAULT_SECONDARY_FILTERS });
 	let categoryMappings = $state<SeriesCategory[]>([]);
 
 	onMount(async () => {
@@ -26,6 +31,7 @@
 			markets: $markets,
 			searchTerm,
 			activeTab,
+			filters,
 			userInterests: $userStore.profile?.interests ?? [],
 			categoryMappings
 		})
@@ -43,8 +49,10 @@
 		<div class="space-y-8">
 			<MarketFilters
 				{activeTab}
-				onSearchChange={(term: string) => (searchTerm = term)}
-				onTabChange={(tab: string) => (activeTab = tab)}
+				{filters}
+				onFiltersChange={(f) => (filters = f)}
+				onSearchChange={(term) => (searchTerm = term)}
+				onTabChange={(tab) => (activeTab = tab)}
 				{searchTerm}
 				{tabs}
 			/>

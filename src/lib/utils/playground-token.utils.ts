@@ -8,7 +8,7 @@ import {
 import { CKUSDC_TOKEN, ICP_TOKEN, VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type { Token } from '$lib/types/token';
 import { icrcLedgerIdsEqual } from '$lib/utils/asset-ref.utils';
-import { isSettlement, isViciXp } from '$lib/utils/balance-domain.utils';
+import { isSettlement, isSocial, isViciXp } from '$lib/utils/balance-domain.utils';
 import { nonNullish } from '@dfinity/utils';
 
 /**
@@ -26,6 +26,7 @@ const SETTLEMENT_LEDGER_ORDER = [ICP_LEDGER_CANISTER_ID, CKUSDC_LEDGER_CANISTER_
  * ledger** the UI exposes per experience — by **ledger canister id**, not symbol:
  * - **ViciXp (playground):** VXP ledger only.
  * - **Settlement:** ICP + ckUSDC ledgers only.
+ * - **Social:** VXP ledger (social challenges can coexist with VXP display).
  */
 export const filterTokensForBalanceDomain = ({
 	tokens,
@@ -36,7 +37,7 @@ export const filterTokensForBalanceDomain = ({
 }): Token[] => {
 	const withoutVici = tokens.filter((t) => !isViciToken(t));
 
-	if (isViciXp(balanceDomain)) {
+	if (isViciXp(balanceDomain) || isSocial(balanceDomain)) {
 		return withoutVici.filter((t) =>
 			icrcLedgerIdsEqual({
 				first: t.ledgerCanisterId,
@@ -63,7 +64,7 @@ export const filterTokensForBalanceDomain = ({
 export const walletLedgerDisplayFallbackTokens = (
 	balanceDomain: ClearingDid.BalanceDomain
 ): Token[] => {
-	if (isViciXp(balanceDomain)) {
+	if (isViciXp(balanceDomain) || isSocial(balanceDomain)) {
 		return [VXP_TOKEN];
 	}
 

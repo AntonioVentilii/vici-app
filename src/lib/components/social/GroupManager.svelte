@@ -177,7 +177,7 @@
 				You don't belong to any groups yet.
 			</p>
 		{:else}
-			<div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+			<div class="grid grid-cols-1 gap-3">
 				{#each groups as group (group.group_id)}
 					<!-- svelte-ignore a11y_click_events_have_key_events -->
 					<!-- svelte-ignore a11y_no_static_element_interactions -->

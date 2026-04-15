@@ -18,7 +18,7 @@ import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
 import type { SeriesCategory } from '$lib/types/category';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
-import { filterByBalanceDomain } from '$lib/utils/balance-domain.utils';
+import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import {
 	calculateCategoricalProbabilities,
@@ -139,7 +139,8 @@ export const createMarket = async ({
 };
 
 /**
- * Loads series for the current domain, enriches with order book stats, merges resolved markets from activity, and filters by domain.
+ * Loads series for the current domain, enriches with order book stats, merges resolved markets
+ * from activity, and filters by domain. In playground mode (ViciXp), Social markets are included.
  */
 export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
@@ -244,7 +245,7 @@ export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Mar
 
 	const items = [...markets, ...resolvedMarkets].filter(nonNullish);
 
-	return filterByBalanceDomain({ items, targetDomain: domain });
+	return filterByPlaygroundExpandedDomain({ items, targetDomain: domain });
 };
 
 /**

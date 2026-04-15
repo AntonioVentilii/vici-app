@@ -98,6 +98,32 @@ export const filterByBalanceDomain = <
 	});
 
 /**
+ * Like {@link filterByBalanceDomain}, but when `targetDomain` is ViciXp (playground),
+ * also includes Social-domain items so that social challenges appear in the unified feed.
+ */
+export const filterByPlaygroundExpandedDomain = <
+	T extends
+		| { balanceDomain: ClearingDid.BalanceDomain }
+		| { balance_domain: ClearingDid.BalanceDomain }
+>({
+	items,
+	targetDomain
+}: {
+	items: T[];
+	targetDomain: ClearingDid.BalanceDomain;
+}): T[] => {
+	if (isViciXp(targetDomain)) {
+		return items.filter((item) => {
+			const d = 'balanceDomain' in item ? item.balanceDomain : item.balance_domain;
+
+			return isViciXp(d) || isSocial(d);
+		});
+	}
+
+	return filterByBalanceDomain({ items, targetDomain });
+};
+
+/**
  * Keeps clearing rows whose parsed `series_id` is in `marketIds`.
  */
 export const filterByMarketIds = <T extends { series_id: string }>({
