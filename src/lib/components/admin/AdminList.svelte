@@ -42,12 +42,19 @@
 		showConfirmModal = false;
 		principalToRemove = null;
 	};
+
+	const nicknameToRemove = $derived(
+		principalToRemove
+			? roleEntries.find((e) => e.principal === principalToRemove)?.nickname
+			: undefined
+	);
 </script>
 
 <Dialog title="Remove Admin" bind:show={showConfirmModal}>
 	<p class="mb-6 text-slate-600">
 		Are you sure you want to remove <strong class="break-all">
-			{principalToRemove ? shortenWithMiddleEllipsis({ text: principalToRemove }) : ''}
+			{nicknameToRemove ??
+				(principalToRemove ? shortenWithMiddleEllipsis({ text: principalToRemove }) : '')}
 		</strong> from administrators? They will lose access to the admin dashboard.
 	</p>
 	<div class="flex justify-end gap-3">
@@ -70,18 +77,25 @@
 			{#each roleEntries as entry (entry.principal)}
 				<li class="px-6 py-4">
 					<div class="flex items-center justify-between">
-						<div class="flex items-center gap-3">
-							<span class="text-sm font-medium text-slate-900">
-								<CopyableAddress address={entry.principal} label="Principal ID" />
-							</span>
+						<div class="flex items-start gap-3">
+							<div class="min-w-0">
+								{#if entry.nickname}
+									<span class="block text-sm font-semibold text-slate-900">
+										{entry.nickname}
+									</span>
+								{/if}
+								<span class="text-sm text-slate-500" class:font-medium={!entry.nickname}>
+									<CopyableAddress address={entry.principal} label="Principal ID" />
+								</span>
+							</div>
 							<span
-								class="inline-flex items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset"
+								class="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset"
 							>
 								{entry.role}
 							</span>
 						</div>
 						<button
-							class="text-sm font-medium text-red-600 hover:text-red-700"
+							class="ml-4 shrink-0 text-sm font-medium text-red-600 hover:text-red-700"
 							onclick={() => confirmRemove(entry.principal)}
 						>
 							Remove
