@@ -22,7 +22,6 @@ export const AppGetProfileResult = IDL.Record({
 	profile: IDL.Opt(
 		IDL.Record({
 			pnl: IDL.Float64,
-			updated_at: IDL.Float64,
 			streak: IDL.Float64,
 			nickname: IDL.Text,
 			owner: IDL.Text,
@@ -38,7 +37,6 @@ export const AppGetProfileResult = IDL.Record({
 					group_creator: IDL.Null
 				})
 			),
-			created_at: IDL.Float64,
 			level: IDL.Float64,
 			preferences: IDL.Opt(
 				IDL.Record({
@@ -77,10 +75,8 @@ export const AppListFollowersResult = IDL.Record({
 					group_creator: IDL.Null
 				})
 			),
-			updated_at: IDL.Float64,
 			participants: IDL.Vec(IDL.Text),
 			is_friend: IDL.Opt(IDL.Bool),
-			created_at: IDL.Float64,
 			state: IDL.Variant({
 				REJECTED: IDL.Null,
 				PENDING: IDL.Null,
@@ -110,10 +106,8 @@ export const AppListFollowingResult = IDL.Record({
 					group_creator: IDL.Null
 				})
 			),
-			updated_at: IDL.Float64,
 			participants: IDL.Vec(IDL.Text),
 			is_friend: IDL.Opt(IDL.Bool),
-			created_at: IDL.Float64,
 			state: IDL.Variant({
 				REJECTED: IDL.Null,
 				PENDING: IDL.Null,
@@ -143,10 +137,8 @@ export const AppListFriendRequestsResult = IDL.Record({
 					group_creator: IDL.Null
 				})
 			),
-			updated_at: IDL.Float64,
 			participants: IDL.Vec(IDL.Text),
 			is_friend: IDL.Opt(IDL.Bool),
-			created_at: IDL.Float64,
 			state: IDL.Variant({
 				REJECTED: IDL.Null,
 				PENDING: IDL.Null,
@@ -176,10 +168,8 @@ export const AppListFriendsResult = IDL.Record({
 					group_creator: IDL.Null
 				})
 			),
-			updated_at: IDL.Float64,
 			participants: IDL.Vec(IDL.Text),
 			is_friend: IDL.Opt(IDL.Bool),
-			created_at: IDL.Float64,
 			state: IDL.Variant({
 				REJECTED: IDL.Null,
 				PENDING: IDL.Null,
@@ -199,7 +189,6 @@ export const AppListLeaderboardResult = IDL.Record({
 	items: IDL.Vec(
 		IDL.Record({
 			pnl: IDL.Float64,
-			updated_at: IDL.Float64,
 			streak: IDL.Float64,
 			nickname: IDL.Text,
 			owner: IDL.Text,
@@ -215,7 +204,6 @@ export const AppListLeaderboardResult = IDL.Record({
 					group_creator: IDL.Null
 				})
 			),
-			created_at: IDL.Float64,
 			level: IDL.Float64,
 			preferences: IDL.Opt(
 				IDL.Record({
@@ -254,10 +242,8 @@ export const AppListRejectedFriendshipsResult = IDL.Record({
 					group_creator: IDL.Null
 				})
 			),
-			updated_at: IDL.Float64,
 			participants: IDL.Vec(IDL.Text),
 			is_friend: IDL.Opt(IDL.Bool),
-			created_at: IDL.Float64,
 			state: IDL.Variant({
 				REJECTED: IDL.Null,
 				PENDING: IDL.Null,
@@ -281,7 +267,6 @@ export const AppSearchProfilesResult = IDL.Record({
 	items: IDL.Vec(
 		IDL.Record({
 			pnl: IDL.Float64,
-			updated_at: IDL.Float64,
 			streak: IDL.Float64,
 			nickname: IDL.Text,
 			owner: IDL.Text,
@@ -297,7 +282,6 @@ export const AppSearchProfilesResult = IDL.Record({
 					group_creator: IDL.Null
 				})
 			),
-			created_at: IDL.Float64,
 			level: IDL.Float64,
 			preferences: IDL.Opt(
 				IDL.Record({
@@ -355,7 +339,6 @@ export const idlFactory = ({ IDL }) => {
 		profile: IDL.Opt(
 			IDL.Record({
 				pnl: IDL.Float64,
-				updated_at: IDL.Float64,
 				streak: IDL.Float64,
 				nickname: IDL.Text,
 				owner: IDL.Text,
@@ -371,7 +354,6 @@ export const idlFactory = ({ IDL }) => {
 						group_creator: IDL.Null
 					})
 				),
-				created_at: IDL.Float64,
 				level: IDL.Float64,
 				preferences: IDL.Opt(
 					IDL.Record({
@@ -410,10 +392,8 @@ export const idlFactory = ({ IDL }) => {
 						group_creator: IDL.Null
 					})
 				),
-				updated_at: IDL.Float64,
 				participants: IDL.Vec(IDL.Text),
 				is_friend: IDL.Opt(IDL.Bool),
-				created_at: IDL.Float64,
 				state: IDL.Variant({
 					REJECTED: IDL.Null,
 					PENDING: IDL.Null,
@@ -443,10 +423,8 @@ export const idlFactory = ({ IDL }) => {
 						group_creator: IDL.Null
 					})
 				),
-				updated_at: IDL.Float64,
 				participants: IDL.Vec(IDL.Text),
 				is_friend: IDL.Opt(IDL.Bool),
-				created_at: IDL.Float64,
 				state: IDL.Variant({
 					REJECTED: IDL.Null,
 					PENDING: IDL.Null,
@@ -476,10 +454,8 @@ export const idlFactory = ({ IDL }) => {
 						group_creator: IDL.Null
 					})
 				),
-				updated_at: IDL.Float64,
 				participants: IDL.Vec(IDL.Text),
 				is_friend: IDL.Opt(IDL.Bool),
-				created_at: IDL.Float64,
 				state: IDL.Variant({
 					REJECTED: IDL.Null,
 					PENDING: IDL.Null,
@@ -509,10 +485,8 @@ export const idlFactory = ({ IDL }) => {
 						group_creator: IDL.Null
 					})
 				),
-				updated_at: IDL.Float64,
 				participants: IDL.Vec(IDL.Text),
 				is_friend: IDL.Opt(IDL.Bool),
-				created_at: IDL.Float64,
 				state: IDL.Variant({
 					REJECTED: IDL.Null,
 					PENDING: IDL.Null,
@@ -532,7 +506,6 @@ export const idlFactory = ({ IDL }) => {
 		items: IDL.Vec(
 			IDL.Record({
 				pnl: IDL.Float64,
-				updated_at: IDL.Float64,
 				streak: IDL.Float64,
 				nickname: IDL.Text,
 				owner: IDL.Text,
@@ -548,7 +521,6 @@ export const idlFactory = ({ IDL }) => {
 						group_creator: IDL.Null
 					})
 				),
-				created_at: IDL.Float64,
 				level: IDL.Float64,
 				preferences: IDL.Opt(
 					IDL.Record({
@@ -587,10 +559,8 @@ export const idlFactory = ({ IDL }) => {
 						group_creator: IDL.Null
 					})
 				),
-				updated_at: IDL.Float64,
 				participants: IDL.Vec(IDL.Text),
 				is_friend: IDL.Opt(IDL.Bool),
-				created_at: IDL.Float64,
 				state: IDL.Variant({
 					REJECTED: IDL.Null,
 					PENDING: IDL.Null,
@@ -612,7 +582,6 @@ export const idlFactory = ({ IDL }) => {
 		items: IDL.Vec(
 			IDL.Record({
 				pnl: IDL.Float64,
-				updated_at: IDL.Float64,
 				streak: IDL.Float64,
 				nickname: IDL.Text,
 				owner: IDL.Text,
@@ -628,7 +597,6 @@ export const idlFactory = ({ IDL }) => {
 						group_creator: IDL.Null
 					})
 				),
-				created_at: IDL.Float64,
 				level: IDL.Float64,
 				preferences: IDL.Opt(
 					IDL.Record({

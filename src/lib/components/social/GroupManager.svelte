@@ -301,7 +301,7 @@
 						<p class="text-muted-foreground text-sm">All your friends are already in this group.</p>
 					{:else}
 						<div class="grid grid-cols-1 gap-2">
-							{#each unaddedFriends as friend (friend.createdAt)}
+							{#each unaddedFriends as friend (friend.participants.toSorted().join('#'))}
 								{@const friendId = friend.participants.find((p) => p !== userPrincipal)}
 								{#if friendId}
 									<div

@@ -12,9 +12,7 @@ export const RelationSchema = j.strictObject({
 	participants: j.array(PrincipalTextSchema),
 	viewerPrincipal: PrincipalTextSchema.optional(),
 	viewerRole: j.enum(UserRole).optional(),
-	isFriend: j.boolean().optional(),
-	createdAt: j.number(),
-	updatedAt: j.number()
+	isFriend: j.boolean().optional()
 });
 
 export const CheckFriendshipArgsSchema = j.strictObject({

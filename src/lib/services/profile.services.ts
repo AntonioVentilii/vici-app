@@ -35,8 +35,6 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				points: 0,
 				level: 1,
 				interests: [],
-				createdAt: Date.now(),
-				updatedAt: Date.now(),
 				preferences: {
 					defaultAmount: {
 						flow: '1.0',
@@ -74,9 +72,6 @@ export const updateInterests = async ({
 	});
 };
 
-/**
- * Writes profile data and bumps `updatedAt`.
- */
 export const upsertProfile = async (
 	profileDoc: Doc<UserProfile> | { key: string; data: UserProfile }
 ): Promise<void> => {
@@ -88,8 +83,7 @@ export const upsertProfile = async (
 
 	const data: UserProfile = {
 		...(existing?.data ?? profileDoc.data),
-		...profileDoc.data,
-		updatedAt: Date.now()
+		...profileDoc.data
 	};
 
 	if (isNullish(existing)) {

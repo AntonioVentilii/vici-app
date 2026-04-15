@@ -151,10 +151,7 @@
 					</h1>
 				{/if}
 				<p class="mt-1 text-sm font-medium text-slate-500">
-					Joined {new Date(profile.createdAt).toLocaleDateString(undefined, {
-						month: 'long',
-						year: 'numeric'
-					})}
+					{profile.owner}
 				</p>
 				<div class="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
 					<CopyableAddress address={profile.owner} label="Principal ID" />

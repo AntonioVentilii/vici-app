@@ -161,14 +161,10 @@ export const sendFriendRequest = ({ target }: { target: PrincipalText }): void =
 		throw new Error(`Friend request already exists with state: ${existing.state}`);
 	}
 
-	const now = Date.now();
-
 	const relation: Relation = {
 		category: RelationCategory.FRIEND,
 		state: RelationState.PENDING,
-		participants: [sender, target],
-		createdAt: now,
-		updatedAt: now
+		participants: [sender, target]
 	};
 
 	setDocStore({
@@ -209,8 +205,7 @@ export const acceptFriendRequest = ({ relationId }: { relationId: string }): voi
 			...doc,
 			data: encodeDocData({
 				...relation,
-				state: RelationState.ACTIVE,
-				updatedAt: Date.now()
+				state: RelationState.ACTIVE
 			})
 		},
 		caller
@@ -245,8 +240,7 @@ export const rejectFriendRequest = ({ relationId }: { relationId: string }): voi
 			...doc,
 			data: encodeDocData({
 				...relation,
-				state: RelationState.REJECTED,
-				updatedAt: Date.now()
+				state: RelationState.REJECTED
 			})
 		},
 		caller
@@ -260,14 +254,10 @@ export const followUser = ({ target }: { target: PrincipalText }): void => {
 
 	const relationId = `follow#${sender}#${target}`;
 
-	const now = Date.now();
-
 	const relation: Relation = {
 		category: RelationCategory.FOLLOW,
 		state: RelationState.ACTIVE,
-		participants: [sender, target],
-		createdAt: now,
-		updatedAt: now
+		participants: [sender, target]
 	};
 
 	setDocStore({

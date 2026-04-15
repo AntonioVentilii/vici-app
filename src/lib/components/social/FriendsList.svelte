@@ -181,7 +181,7 @@
 							No active friends. Send a request!
 						</p>
 					{:else}
-						{#each activeFriends as relation (relation.createdAt)}
+						{#each activeFriends as relation (relation.participants.toSorted().join('#'))}
 							{@const friendId = relation.participants.find((p) => p !== userPrincipal)}
 							{@const profile = friendId ? friendProfiles.get(friendId) : null}
 
@@ -238,7 +238,7 @@
 							No pending incoming requests.
 						</p>
 					{:else}
-						{#each pendingRequests as doc (doc.data.createdAt)}
+						{#each pendingRequests as doc (doc.key)}
 							{@const relation = doc.data}
 							{@const friendId = relation.participants.find((p) => p !== userPrincipal)}
 							{@const profile = friendId ? friendProfiles.get(friendId) : null}
@@ -289,7 +289,7 @@
 							No rejected friendships. You're keeping it clean!
 						</p>
 					{:else}
-						{#each rejectedRelations as doc (doc.data.createdAt)}
+						{#each rejectedRelations as doc (doc.key)}
 							{@const relation = doc.data}
 							{@const friendId = relation.participants.find((p) => p !== userPrincipal)}
 							{@const profile = friendId ? friendProfiles.get(friendId) : null}

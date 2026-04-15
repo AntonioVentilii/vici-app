@@ -51,8 +51,6 @@ const AppGetProfileResultSchema = j.strictObject({
 			level: j.number(),
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
-			createdAt: j.number(),
-			updatedAt: j.number(),
 			preferences: j.optional(
 				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
 			)
@@ -85,9 +83,7 @@ const AppListFollowersResultSchema = j.strictObject({
 			viewerRole: j.optional(
 				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
 			),
-			isFriend: j.optional(j.boolean()),
-			createdAt: j.number(),
-			updatedAt: j.number()
+			isFriend: j.optional(j.boolean())
 		})
 	)
 });
@@ -110,9 +106,7 @@ const AppListFollowingResultSchema = j.strictObject({
 			viewerRole: j.optional(
 				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
 			),
-			isFriend: j.optional(j.boolean()),
-			createdAt: j.number(),
-			updatedAt: j.number()
+			isFriend: j.optional(j.boolean())
 		})
 	)
 });
@@ -135,9 +129,7 @@ const AppListFriendRequestsResultSchema = j.strictObject({
 			viewerRole: j.optional(
 				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
 			),
-			isFriend: j.optional(j.boolean()),
-			createdAt: j.number(),
-			updatedAt: j.number()
+			isFriend: j.optional(j.boolean())
 		})
 	)
 });
@@ -162,9 +154,7 @@ const AppListFriendsResultSchema = j.strictObject({
 			viewerRole: j.optional(
 				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
 			),
-			isFriend: j.optional(j.boolean()),
-			createdAt: j.number(),
-			updatedAt: j.number()
+			isFriend: j.optional(j.boolean())
 		})
 	)
 });
@@ -197,8 +187,6 @@ const AppListLeaderboardResultSchema = j.strictObject({
 			level: j.number(),
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
-			createdAt: j.number(),
-			updatedAt: j.number(),
 			preferences: j.optional(
 				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
 			)
@@ -224,9 +212,7 @@ const AppListRejectedFriendshipsResultSchema = j.strictObject({
 			viewerRole: j.optional(
 				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
 			),
-			isFriend: j.optional(j.boolean()),
-			createdAt: j.number(),
-			updatedAt: j.number()
+			isFriend: j.optional(j.boolean())
 		})
 	)
 });
@@ -267,8 +253,6 @@ const AppSearchProfilesResultSchema = j.strictObject({
 			level: j.number(),
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
-			createdAt: j.number(),
-			updatedAt: j.number(),
 			preferences: j.optional(
 				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
 			)

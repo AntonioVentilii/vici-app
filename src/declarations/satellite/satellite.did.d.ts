@@ -31,7 +31,6 @@ export interface AppGetProfileResult {
 		| [
 				{
 					pnl: number;
-					updated_at: number;
 					streak: number;
 					nickname: string;
 					owner: string;
@@ -47,7 +46,6 @@ export interface AppGetProfileResult {
 								| { user: null }
 								| { group_creator: null }
 						  ];
-					created_at: number;
 					level: number;
 					preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 					last_active_day: [] | [string];
@@ -74,10 +72,8 @@ export interface AppListFollowersResult {
 					| { user: null }
 					| { group_creator: null }
 			  ];
-		updated_at: number;
 		participants: Array<string>;
 		is_friend: [] | [boolean];
-		created_at: number;
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
 		category: { GROUP: null } | { FRIEND: null } | { follow: null };
 		viewer_principal: [] | [string];
@@ -96,10 +92,8 @@ export interface AppListFollowingResult {
 					| { user: null }
 					| { group_creator: null }
 			  ];
-		updated_at: number;
 		participants: Array<string>;
 		is_friend: [] | [boolean];
-		created_at: number;
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
 		category: { GROUP: null } | { FRIEND: null } | { follow: null };
 		viewer_principal: [] | [string];
@@ -118,10 +112,8 @@ export interface AppListFriendRequestsResult {
 					| { user: null }
 					| { group_creator: null }
 			  ];
-		updated_at: number;
 		participants: Array<string>;
 		is_friend: [] | [boolean];
-		created_at: number;
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
 		category: { GROUP: null } | { FRIEND: null } | { follow: null };
 		viewer_principal: [] | [string];
@@ -140,10 +132,8 @@ export interface AppListFriendsResult {
 					| { user: null }
 					| { group_creator: null }
 			  ];
-		updated_at: number;
 		participants: Array<string>;
 		is_friend: [] | [boolean];
-		created_at: number;
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
 		category: { GROUP: null } | { FRIEND: null } | { follow: null };
 		viewer_principal: [] | [string];
@@ -152,7 +142,6 @@ export interface AppListFriendsResult {
 export interface AppListLeaderboardResult {
 	items: Array<{
 		pnl: number;
-		updated_at: number;
 		streak: number;
 		nickname: string;
 		owner: string;
@@ -168,7 +157,6 @@ export interface AppListLeaderboardResult {
 					| { user: null }
 					| { group_creator: null }
 			  ];
-		created_at: number;
 		level: number;
 		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 		last_active_day: [] | [string];
@@ -194,10 +182,8 @@ export interface AppListRejectedFriendshipsResult {
 					| { user: null }
 					| { group_creator: null }
 			  ];
-		updated_at: number;
 		participants: Array<string>;
 		is_friend: [] | [boolean];
-		created_at: number;
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
 		category: { GROUP: null } | { FRIEND: null } | { follow: null };
 		viewer_principal: [] | [string];
@@ -212,7 +198,6 @@ export interface AppSearchProfilesArgs {
 export interface AppSearchProfilesResult {
 	items: Array<{
 		pnl: number;
-		updated_at: number;
 		streak: number;
 		nickname: string;
 		owner: string;
@@ -228,7 +213,6 @@ export interface AppSearchProfilesResult {
 					| { user: null }
 					| { group_creator: null }
 			  ];
-		created_at: number;
 		level: number;
 		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 		last_active_day: [] | [string];

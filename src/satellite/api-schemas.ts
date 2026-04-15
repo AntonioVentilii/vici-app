@@ -29,8 +29,6 @@ export const UserProfileApiSchema = j.strictObject({
 	level: j.number().default(1),
 	interests: j.array(j.string()).default([]),
 	lastActiveDay: j.string().optional(),
-	createdAt: j.number().default(() => Date.now()),
-	updatedAt: j.number().default(() => Date.now()),
 	preferences: j
 		.strictObject({
 			defaultAmount: j.strictObject({
@@ -47,7 +45,5 @@ export const RelationApiSchema = j.strictObject({
 	participants: j.array(PrincipalTextSchema),
 	viewerPrincipal: PrincipalTextSchema.optional(),
 	viewerRole: j.string().optional(),
-	isFriend: j.boolean().optional(),
-	createdAt: j.number(),
-	updatedAt: j.number()
+	isFriend: j.boolean().optional()
 });

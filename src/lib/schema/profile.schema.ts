@@ -24,8 +24,6 @@ export const UserProfileSchema = j.strictObject({
 	level: j.number().default(1),
 	interests: j.array(j.string()).default([]),
 	lastActiveDay: j.string().optional(),
-	createdAt: j.number().default(() => Date.now()),
-	updatedAt: j.number().default(() => Date.now()),
 	preferences: j
 		.strictObject({
 			defaultAmount: j.strictObject({
