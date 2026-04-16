@@ -37,6 +37,33 @@ const areFriends = ({
 };
 
 /**
+ * Checks if there is a pending friend request between the caller and the target (either direction).
+ */
+const hasPendingFriendRequest = ({
+	caller,
+	targetOwner
+}: {
+	caller: Principal;
+	targetOwner: PrincipalText;
+}): boolean => {
+	const relationId = [caller.toText(), targetOwner].sort().join('#');
+
+	const relationDoc = getDocStore({
+		collection: Collection.RELATIONS,
+		key: relationId,
+		caller
+	});
+
+	if (isNullish(relationDoc)) {
+		return false;
+	}
+
+	const relation = decodeDocData<Relation>(relationDoc.data);
+
+	return relation.category === RelationCategory.FRIEND && relation.state === RelationState.PENDING;
+};
+
+/**
  * Checks if the caller is following the target user.
  */
 const isFollowing = ({
@@ -129,6 +156,10 @@ const canSeeNickname = ({
 	}
 
 	if (areFriends({ caller, targetOwner: profile.owner })) {
+		return true;
+	}
+
+	if (hasPendingFriendRequest({ caller, targetOwner: profile.owner })) {
 		return true;
 	}
 
