@@ -87,10 +87,14 @@ export const getFriends = async (): Promise<Relation[]> => {
 export const getFriendRequests = async (): Promise<Doc<Relation>[]> => {
 	const { items } = await functions.listFriendRequests();
 
-	return items.map((r, i) => ({
-		key: `request-${i}`,
-		data: r as Relation
-	}));
+	return items.map((r) => {
+		const relation = r as Relation;
+
+		return {
+			key: [...relation.participants].sort().join('#'),
+			data: relation
+		};
+	});
 };
 
 /**
@@ -99,10 +103,14 @@ export const getFriendRequests = async (): Promise<Doc<Relation>[]> => {
 export const getRejectedFriendships = async (): Promise<Doc<Relation>[]> => {
 	const { items } = await functions.listRejectedFriendships();
 
-	return items.map((r, i) => ({
-		key: `rejected-${i}`,
-		data: r as Relation
-	}));
+	return items.map((r) => {
+		const relation = r as Relation;
+
+		return {
+			key: [...relation.participants].sort().join('#'),
+			data: relation
+		};
+	});
 };
 
 /**

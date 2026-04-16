@@ -202,7 +202,7 @@ export const acceptFriendRequest = ({ relationId }: { relationId: string }): voi
 		collection: Collection.RELATIONS,
 		key: relationId,
 		doc: {
-			...doc,
+			version: doc.version,
 			data: encodeDocData({
 				...relation,
 				state: RelationState.ACTIVE
@@ -237,7 +237,7 @@ export const rejectFriendRequest = ({ relationId }: { relationId: string }): voi
 		collection: Collection.RELATIONS,
 		key: relationId,
 		doc: {
-			...doc,
+			version: doc.version,
 			data: encodeDocData({
 				...relation,
 				state: RelationState.REJECTED
