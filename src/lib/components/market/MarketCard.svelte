@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Clock, Users, UsersRound } from 'lucide-svelte/icons';
+	import { Clock, Copy, Users, UsersRound } from 'lucide-svelte/icons';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import BinaryProbabilities from '$lib/components/market/BinaryProbabilities.svelte';
@@ -100,7 +100,7 @@
 						</div>
 						{#if onChallenge}
 							<button
-								class="text-muted-foreground/40 hover:text-primary cursor-pointer rounded-lg p-1 transition-colors hover:bg-slate-100"
+								class="text-muted-foreground/40 hover:text-primary flex cursor-pointer items-center gap-1 rounded-lg p-1 transition-colors hover:bg-slate-100"
 								aria-label="Challenge friends"
 								onclick={(e) => {
 									e.stopPropagation();
@@ -109,6 +109,7 @@
 								onkeydown={(e) => e.stopPropagation()}
 								title="Challenge friends"
 							>
+								<Copy size={14} />
 								<UsersRound size={18} />
 							</button>
 						{:else}
@@ -116,6 +117,7 @@
 								class="text-muted-foreground/40 group-hover:text-primary/50 flex items-center gap-1 transition-colors"
 								title="Challenge friends"
 							>
+								<Copy size={14} />
 								<UsersRound size={18} />
 							</div>
 						{/if}
