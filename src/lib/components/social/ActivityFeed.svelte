@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import ActivityItem from '$lib/components/social/ActivityItem.svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { getFriendActivities, getGlobalActivities } from '$lib/services/activity.services';
@@ -21,10 +22,21 @@
 	const profiles = $state<Map<string, UserProfile>>(new Map());
 
 	let loading = $state(true);
+	let refreshing = $state(false);
 
 	onMount(async () => {
 		await loadActivities();
 	});
+
+	const handleRefresh = async () => {
+		refreshing = true;
+
+		try {
+			await loadActivities();
+		} finally {
+			refreshing = false;
+		}
+	};
 
 	const loadActivities = async () => {
 		loading = true;
@@ -66,12 +78,13 @@
 			<h3 class="text-primary text-xl font-bold">
 				{mode === 'friends' ? 'Friend Activity' : 'Recent Activity'}
 			</h3>
-			<button
+			<BaseButton
 				class="text-primary hover:text-primary/80 text-xs font-medium transition-colors"
-				onclick={loadActivities}
+				onclick={handleRefresh}
+				status={refreshing ? 'pending' : 'enabled'}
 			>
 				Refresh
-			</button>
+			</BaseButton>
 		</div>
 
 		<div class="custom-scrollbar flex max-h-120 flex-col gap-4 overflow-y-auto pr-2">

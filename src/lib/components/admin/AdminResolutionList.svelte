@@ -1,13 +1,26 @@
 <script lang="ts">
+	import Button from '$lib/components/ui/Button.svelte';
 	import type { Market, MarketId, Outcome } from '$lib/types/market';
 
 	interface Props {
 		markets: Market[];
 		loading: boolean;
-		onResolve: (params: { marketId: MarketId; outcome: Outcome }) => void;
+		onResolve: (params: { marketId: MarketId; outcome: Outcome }) => Promise<void>;
 	}
 
 	const { markets, loading, onResolve }: Props = $props();
+
+	let resolvingMarketId = $state<MarketId | null>(null);
+
+	const handleResolve = async (params: { marketId: MarketId; outcome: Outcome }) => {
+		resolvingMarketId = params.marketId;
+
+		try {
+			await onResolve(params);
+		} finally {
+			resolvingMarketId = null;
+		}
+	};
 
 	const sortedMarkets = $derived([...markets].sort((a, b) => Number(a.expiryDate - b.expiryDate)));
 
@@ -109,24 +122,33 @@
 					</div>
 
 					<div class="flex gap-2">
-						<button
-							class="flex-1 rounded-xl border border-green-200 bg-green-50 py-2 text-xs font-bold text-green-700 transition-all hover:bg-green-100"
-							onclick={() => onResolve({ marketId, outcome: 'YES' })}
+						<Button
+							class="flex-1 rounded-xl border border-green-200 bg-green-50 py-2 text-xs font-bold text-green-700 hover:bg-green-100"
+							onclick={() => handleResolve({ marketId, outcome: 'YES' })}
+							size="sm"
+							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
+							variant="ghost"
 						>
 							Resolve YES
-						</button>
-						<button
-							class="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-700 transition-all hover:bg-red-100"
-							onclick={() => onResolve({ marketId, outcome: 'NO' })}
+						</Button>
+						<Button
+							class="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-700 hover:bg-red-100"
+							onclick={() => handleResolve({ marketId, outcome: 'NO' })}
+							size="sm"
+							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
+							variant="ghost"
 						>
 							Resolve NO
-						</button>
-						<button
-							class="flex-1 rounded-xl border border-slate-200 bg-slate-50 py-2 text-xs font-bold text-slate-600 transition-all hover:bg-slate-100"
-							onclick={() => onResolve({ marketId, outcome: 'CANCELED' })}
+						</Button>
+						<Button
+							class="flex-1 rounded-xl border border-slate-200 bg-slate-50 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100"
+							onclick={() => handleResolve({ marketId, outcome: 'CANCELED' })}
+							size="sm"
+							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
+							variant="ghost"
 						>
 							Cancel
-						</button>
+						</Button>
 					</div>
 				</div>
 			{/each}

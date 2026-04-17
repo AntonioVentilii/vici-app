@@ -1,14 +1,26 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
+	import type { ButtonStatus } from '$lib/types/components';
 
-	const doSignOut = (): Promise<void> => signOut();
+	let status = $state<ButtonStatus>('enabled');
+
+	const doSignOut = async () => {
+		status = 'pending';
+
+		try {
+			await signOut();
+		} finally {
+			status = 'enabled';
+		}
+	};
 </script>
 
 <BaseButton
 	class="text-slate-500 hover:text-indigo-600 active:text-indigo-700"
 	aria-label="Sign out"
 	onclick={doSignOut}
+	{status}
 >
 	<svg
 		fill="currentColor"

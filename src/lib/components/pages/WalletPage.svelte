@@ -112,6 +112,8 @@
 
 	let selectedToken = $state<Token | undefined>();
 
+	let sending = $state(false);
+
 	$effect(() => {
 		if (nonNullish($defaultSupportedToken) && isNullish(selectedToken)) {
 			selectedToken = $defaultSupportedToken;
@@ -122,6 +124,8 @@
 		if (isNullish(recipient) || isNullish(amount) || isNullish(selectedToken)) {
 			return;
 		}
+
+		sending = true;
 
 		try {
 			const identity = await safeGetIdentityOnce();
@@ -155,6 +159,8 @@
 				message: (e as Error).message,
 				type: 'error'
 			});
+		} finally {
+			sending = false;
 		}
 	};
 </script>
@@ -202,6 +208,7 @@
 						onTokenChange={(v) => (selectedToken = v)}
 						{recipient}
 						{selectedToken}
+						sendStatus={sending ? 'pending' : 'enabled'}
 					/>
 				{:else}
 					<p class="text-sm text-slate-500">

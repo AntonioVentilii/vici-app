@@ -10,9 +10,11 @@
 		onSuccess?: () => void;
 	}
 
-	const { status = $bindable('enabled'), onSuccess }: Props = $props();
+	let { status = $bindable('enabled'), onSuccess }: Props = $props();
 
 	const signInWithGoogle = async () => {
+		status = 'pending';
+
 		try {
 			await signIn({
 				google: {
@@ -29,6 +31,8 @@
 			onSuccess?.();
 		} catch (err) {
 			console.error('Failed to start Google sign-in:', err);
+		} finally {
+			status = 'enabled';
 		}
 	};
 </script>

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { ClearingDid } from '$declarations';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { PORTFOLIO_DEFAULT_DECIMALS } from '$lib/constants/portfolio.constants';
@@ -87,13 +88,13 @@
 									})}
 								</td>
 								<td class="px-6 py-4 text-right">
-									<button
-										class="rounded-lg bg-red-50 px-3 py-1 text-[10px] font-bold text-red-600 transition-all hover:bg-red-100 disabled:opacity-50"
-										disabled={cancellingId === order.order_id}
+									<BaseButton
+										class="rounded-lg bg-red-50 px-3 py-1 text-[10px] font-bold text-red-600 hover:bg-red-100"
 										onclick={() => handleCancel(order.order_id)}
+										status={cancellingId === order.order_id ? 'pending' : 'enabled'}
 									>
-										{cancellingId === order.order_id ? '...' : 'Cancel'}
-									</button>
+										Cancel
+									</BaseButton>
 								</td>
 							</tr>
 						{/each}

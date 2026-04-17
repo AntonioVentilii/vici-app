@@ -1,4 +1,5 @@
 <script lang="ts">
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { userStore, type UserStoreData } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
@@ -62,10 +63,10 @@
 
 	<div class="grid grid-cols-3 gap-4 sm:grid-cols-6">
 		{#each avatarOptions as option (option.emoji)}
-			<button
+			<BaseButton
 				class="group relative flex aspect-square items-center justify-center rounded-2xl {option.color} transition-all hover:scale-110 hover:shadow-lg focus:ring-4 focus:ring-indigo-100"
-				disabled={pending}
 				onclick={() => selectAvatar(option)}
+				status={pending ? 'pending' : 'enabled'}
 			>
 				<span class="text-4xl transition-transform group-hover:rotate-12">{option.emoji}</span>
 				{#if isSelected(option.emoji)}
@@ -75,7 +76,7 @@
 						✓
 					</div>
 				{/if}
-			</button>
+			</BaseButton>
 		{/each}
 	</div>
 </div>

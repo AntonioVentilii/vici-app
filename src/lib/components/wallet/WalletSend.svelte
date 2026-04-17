@@ -1,13 +1,16 @@
 <script lang="ts">
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import Button from '$lib/components/ui/Button.svelte';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
+	import type { ButtonStatus } from '$lib/types/components';
 	import type { Token } from '$lib/types/token';
 
 	interface Props {
 		recipient: string;
 		amount: string;
 		selectedToken: Token | undefined;
+		sendStatus?: ButtonStatus;
 		onRecipientChange: (v: string) => void;
 		onAmountChange: (v: string) => void;
 		onTokenChange: (v: Token) => void;
@@ -18,6 +21,7 @@
 		recipient,
 		amount,
 		selectedToken,
+		sendStatus = 'enabled',
 		onRecipientChange,
 		onAmountChange,
 		onTokenChange,
@@ -83,11 +87,8 @@
 		/>
 	</div>
 
-	<button
-		class="w-full rounded-xl bg-indigo-600 py-4 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition-all hover:bg-indigo-700 active:scale-[0.98]"
-		onclick={onSend}
-		type="button"
-	>
+	<Button class="w-full py-4 text-sm font-black" onclick={onSend} status={sendStatus}>
+		{#snippet busyLabel()}Sending...{/snippet}
 		Send Tokens
-	</button>
+	</Button>
 </div>

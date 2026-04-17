@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
 	import { Pencil, Check, X } from 'lucide-svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
@@ -114,22 +115,26 @@
 							type="text"
 							bind:value={editedNickname}
 						/>
-						<button
-							class="cursor-pointer text-emerald-500 hover:text-emerald-600 disabled:opacity-50"
+						<BaseButton
+							class="cursor-pointer text-emerald-500 hover:text-emerald-600"
 							aria-label="Save"
-							disabled={pending || editedNickname.trim().length < 2}
 							onclick={handleSaveNickname}
+							status={pending
+								? 'pending'
+								: editedNickname.trim().length < 2
+									? 'disabled'
+									: 'enabled'}
 						>
 							<Check size={24} />
-						</button>
-						<button
-							class="cursor-pointer text-red-500 hover:text-red-600 disabled:opacity-50"
+						</BaseButton>
+						<BaseButton
+							class="cursor-pointer text-red-500 hover:text-red-600"
 							aria-label="Cancel"
-							disabled={pending}
 							onclick={cancelEdit}
+							status={pending ? 'disabled' : 'enabled'}
 						>
 							<X size={24} />
-						</button>
+						</BaseButton>
 					</div>
 					{#if editedNickname.trim().length < 2}
 						<p class="mt-1 text-[10px] font-bold text-red-500 uppercase">Min 2 characters</p>

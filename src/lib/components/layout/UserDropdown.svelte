@@ -7,8 +7,10 @@
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { theme, type Theme } from '$lib/stores/theme.store';
+	import type { ButtonStatus } from '$lib/types/components';
 
 	let open = $state(false);
+	let signOutStatus = $state<ButtonStatus>('enabled');
 
 	const goToProfile = () => {
 		open = false;
@@ -17,9 +19,14 @@
 	};
 
 	const doSignOut = async () => {
-		open = false;
+		signOutStatus = 'pending';
 
-		await signOut();
+		try {
+			await signOut();
+			open = false;
+		} finally {
+			signOutStatus = 'enabled';
+		}
 	};
 
 	const setTheme = (val: Theme) => {
@@ -120,6 +127,7 @@
 			<BaseButton
 				class="w-full gap-3 px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"
 				onclick={doSignOut}
+				status={signOutStatus}
 			>
 				<svg
 					fill="none"

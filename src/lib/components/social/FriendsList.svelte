@@ -36,6 +36,8 @@
 	let loading = $state(true);
 	let newFriendPrincipal = $state('');
 	let adding = $state(false);
+	let processingKey = $state<string | null>(null);
+	let unfriendingId = $state<string | null>(null);
 
 	onMount(async () => {
 		await loadData();
@@ -93,13 +95,25 @@
 	};
 
 	const handleAccept = async (doc: Doc<Relation>) => {
-		await acceptFriendRequest({ currentRelation: doc });
-		await loadData();
+		processingKey = doc.key;
+
+		try {
+			await acceptFriendRequest({ currentRelation: doc });
+			await loadData();
+		} finally {
+			processingKey = null;
+		}
 	};
 
 	const handleReject = async (doc: Doc<Relation>) => {
-		await rejectFriendRequest({ currentRelation: doc });
-		await loadData();
+		processingKey = doc.key;
+
+		try {
+			await rejectFriendRequest({ currentRelation: doc });
+			await loadData();
+		} finally {
+			processingKey = null;
+		}
 	};
 
 	const handleUnfriend = async (friendId: string) => {
@@ -107,12 +121,16 @@
 			return;
 		}
 
+		unfriendingId = friendId;
+
 		try {
 			await unfriendUser({ target: friendId, sender: userPrincipal });
 			await loadData();
 		} catch (err) {
 			console.error(err);
 			alert('Failed to unfriend');
+		} finally {
+			unfriendingId = null;
 		}
 	};
 </script>
@@ -161,9 +179,10 @@
 				/>
 				<Button
 					onclick={handleAddFriend}
-					status={adding || !newFriendPrincipal ? 'disabled' : 'enabled'}
+					status={adding ? 'pending' : !newFriendPrincipal ? 'disabled' : 'enabled'}
 				>
-					{adding ? 'Sending...' : 'Add Friend'}
+					{#snippet busyLabel()}Sending...{/snippet}
+					Add Friend
 				</Button>
 			</div>
 		{/if}
@@ -222,6 +241,7 @@
 								<Button
 									onclick={() => friendId && handleUnfriend(friendId)}
 									size="sm"
+									status={unfriendingId === friendId ? 'pending' : 'enabled'}
 									variant="ghost"
 								>
 									Unfriend
@@ -272,10 +292,21 @@
 									</div>
 								</div>
 								<div class="flex gap-2">
-									<Button onclick={() => handleReject(doc)} size="sm" variant="outline"
-										>Reject</Button
+									<Button
+										onclick={() => handleReject(doc)}
+										size="sm"
+										status={processingKey === doc.key ? 'pending' : 'enabled'}
+										variant="outline"
 									>
-									<Button onclick={() => handleAccept(doc)} size="sm">Accept</Button>
+										Reject
+									</Button>
+									<Button
+										onclick={() => handleAccept(doc)}
+										size="sm"
+										status={processingKey === doc.key ? 'pending' : 'enabled'}
+									>
+										Accept
+									</Button>
 								</div>
 							</div>
 						{/each}

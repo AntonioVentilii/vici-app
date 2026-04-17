@@ -223,9 +223,10 @@
 			<Button onclick={() => (isCreateModalOpen = false)} variant="ghost">Cancel</Button>
 			<Button
 				onclick={handleCreateGroup}
-				status={processing || !newGroupName ? 'disabled' : 'enabled'}
+				status={processing ? 'pending' : !newGroupName ? 'disabled' : 'enabled'}
 			>
-				{processing ? 'Creating...' : 'Create'}
+				{#snippet busyLabel()}Creating...{/snippet}
+				Create
 			</Button>
 		</div>
 	</div>
@@ -268,16 +269,15 @@
 								<Button
 									onclick={() => toggleAdmin({ memberId, isAdmin })}
 									size="sm"
-									status={processing ? 'disabled' : 'enabled'}
+									status={processing ? 'pending' : 'enabled'}
 									variant="outline"
 								>
 									{isAdmin ? 'Revoke Admin' : 'Make Admin'}
 								</Button>
-								<!-- Removing class from Button because it uses variant -->
 								<Button
 									onclick={() => removeMember(memberId)}
 									size="sm"
-									status={processing ? 'disabled' : 'enabled'}
+									status={processing ? 'pending' : 'enabled'}
 									variant="ghost"
 								>
 									Remove
@@ -313,7 +313,7 @@
 										<Button
 											onclick={() => addFriendToGroup(friendId)}
 											size="sm"
-											status={processing ? 'disabled' : 'enabled'}
+											status={processing ? 'pending' : 'enabled'}
 											variant="outline">Add</Button
 										>
 									</div>

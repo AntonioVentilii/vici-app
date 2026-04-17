@@ -196,6 +196,7 @@
 					? 'enabled'
 					: 'disabled'}
 		>
+			{#snippet busyLabel()}Processing...{/snippet}
 			Confirm {mode}
 		</Button>
 	</div>

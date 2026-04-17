@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { sendMessage, getMarketMessages } from '$lib/services/chat.services';
 	import { getProfile } from '$lib/services/profile.services';
@@ -160,10 +161,10 @@
 				type="text"
 				bind:value={newMessage}
 			/>
-			<button
-				class="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95 disabled:scale-100 disabled:opacity-50"
+			<BaseButton
+				class="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
 				aria-label="Send message"
-				disabled={!newMessage.trim() || sending}
+				status={sending ? 'pending' : !newMessage.trim() ? 'disabled' : 'enabled'}
 				type="submit"
 			>
 				<svg
@@ -180,7 +181,7 @@
 					<line x1="22" x2="11" y1="2" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2">
 					</polygon>
 				</svg>
-			</button>
+			</BaseButton>
 		</form>
 	</div>
 </div>

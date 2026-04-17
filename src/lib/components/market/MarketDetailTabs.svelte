@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MarketDepthPanel from '$lib/components/market/MarketDepthPanel.svelte';
 	import MarketDiscussion from '$lib/components/social/MarketDiscussion.svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { orders } from '$lib/derived/orders.derived';
@@ -32,6 +33,18 @@
 	);
 
 	const activeOrders = $derived($orders.filter((o) => o.series_id === market.id));
+
+	let cancellingId = $state<string | null>(null);
+
+	const handleCancel = async (orderId: string) => {
+		cancellingId = orderId;
+
+		try {
+			await cancelLimitOrder(orderId);
+		} finally {
+			cancellingId = null;
+		}
+	};
 </script>
 
 <div class="mt-8">
@@ -129,12 +142,13 @@
 												</div>
 											</div>
 										</div>
-										<button
-											class="rounded-xl border border-rose-100 bg-rose-50 px-4 py-2 text-[10px] font-bold text-rose-600 transition-all hover:bg-rose-100"
-											onclick={() => cancelLimitOrder(order.order_id)}
+										<BaseButton
+											class="rounded-xl border border-rose-100 bg-rose-50 px-4 py-2 text-[10px] font-bold text-rose-600 hover:bg-rose-100"
+											onclick={() => handleCancel(order.order_id)}
+											status={cancellingId === order.order_id ? 'pending' : 'enabled'}
 										>
 											Cancel
-										</button>
+										</BaseButton>
 									</div>
 								{/each}
 							</div>

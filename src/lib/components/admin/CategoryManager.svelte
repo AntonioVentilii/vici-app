@@ -84,9 +84,10 @@
 
 			<Button
 				onclick={handleAssociate}
-				status={!selectedCategoryId || saving ? 'disabled' : 'enabled'}
+				status={saving ? 'pending' : !selectedCategoryId ? 'disabled' : 'enabled'}
 			>
-				{saving ? 'Associating...' : 'Set Category'}
+				{#snippet busyLabel()}Associating...{/snippet}
+				Set Category
 			</Button>
 		{/if}
 	</div>

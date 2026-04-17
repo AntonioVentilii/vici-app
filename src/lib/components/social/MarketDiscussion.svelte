@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { ActivityType } from '$lib/enums/social';
@@ -141,9 +142,10 @@
 		<div class="mt-3 flex justify-end">
 			<Button
 				onclick={handlePostComment}
-				status={!newComment.trim() || posting ? 'disabled' : 'enabled'}
+				status={posting ? 'pending' : !newComment.trim() ? 'disabled' : 'enabled'}
 			>
-				{posting ? 'Posting...' : 'Post Comment'}
+				{#snippet busyLabel()}Posting...{/snippet}
+				Post Comment
 			</Button>
 		</div>
 	</div>
@@ -169,13 +171,13 @@
 					class="bg-card/20 border-border/50 animate-in fade-in slide-in-from-bottom-2 flex gap-4 rounded-2xl border p-4 duration-300"
 				>
 					<div class="flex flex-col items-center gap-1">
-						<button
+						<BaseButton
 							class="hover:bg-primary/10 flex h-8 w-8 items-center justify-center rounded-lg transition-colors {upvoted
 								? 'text-primary'
 								: 'opacity-40 hover:opacity-100'}"
 							aria-label="Upvote comment"
-							disabled={voting[comment.key]}
 							onclick={() => handleVote({ comment, type: 'up' })}
+							status={voting[comment.key] ? 'pending' : 'enabled'}
 						>
 							<svg
 								fill="none"
@@ -189,7 +191,7 @@
 								xmlns="http://www.w3.org/2000/svg"
 								><path d="m18 15-6-6-6 6" />
 							</svg>
-						</button>
+						</BaseButton>
 
 						<span
 							class="text-xs font-bold {score > 0
@@ -201,13 +203,13 @@
 							{score > 0 ? `+${score}` : score}
 						</span>
 
-						<button
+						<BaseButton
 							class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10 {downvoted
 								? 'text-red-500'
 								: 'opacity-40 hover:opacity-100'}"
 							aria-label="Downvote comment"
-							disabled={voting[comment.key]}
 							onclick={() => handleVote({ comment, type: 'down' })}
+							status={voting[comment.key] ? 'pending' : 'enabled'}
 						>
 							<svg
 								fill="none"
@@ -222,7 +224,7 @@
 							>
 								<path d="m6 9 6 6 6-6" />
 							</svg>
-						</button>
+						</BaseButton>
 					</div>
 
 					<div class="flex-1 overflow-hidden">
