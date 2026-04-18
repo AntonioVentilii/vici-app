@@ -207,4 +207,46 @@ export class RegistryCanister extends Canister<RegistryService> {
 			);
 		}
 	};
+
+	getOracle = async ({
+		oracleId,
+		...queryParams
+	}: {
+		oracleId: string;
+	} & QueryParams): Promise<RegistryDid.Oracle | undefined> => {
+		const { get_oracle } = this.caller(queryParams);
+		const result = await get_oracle(oracleId);
+
+		return fromNullable(result);
+	};
+
+	addOracle = async ({
+		params,
+		...queryParams
+	}: {
+		params: RegistryDid.AddOracleParams;
+	} & QueryParams): Promise<void> => {
+		const { add_oracle } = this.caller(queryParams);
+		const result = await add_oracle(params);
+
+		if ('Err' in result) {
+			throw new Error(`Failed to add oracle: ${JSON.stringify(result.Err, jsonReplacer)}`);
+		}
+	};
+
+	manageOraclePrincipals = async ({
+		params,
+		...queryParams
+	}: {
+		params: RegistryDid.ManageOraclePrincipalsParams;
+	} & QueryParams): Promise<void> => {
+		const { manage_oracle_principals } = this.caller(queryParams);
+		const result = await manage_oracle_principals(params);
+
+		if ('Err' in result) {
+			throw new Error(
+				`Failed to manage oracle principals: ${JSON.stringify(result.Err, jsonReplacer)}`
+			);
+		}
+	};
 }

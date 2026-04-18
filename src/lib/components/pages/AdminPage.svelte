@@ -6,6 +6,7 @@
 	import AdminBulkMarketForm from '$lib/components/admin/AdminBulkMarketForm.svelte';
 	import AdminList from '$lib/components/admin/AdminList.svelte';
 	import AdminMarketForm from '$lib/components/admin/AdminMarketForm.svelte';
+	import AdminOracleManager from '$lib/components/admin/AdminOracleManager.svelte';
 	import AdminResolutionHistory from '$lib/components/admin/AdminResolutionHistory.svelte';
 	import AdminResolutionList from '$lib/components/admin/AdminResolutionList.svelte';
 	import { markets } from '$lib/derived/markets.derived';
@@ -262,6 +263,9 @@
 		<section class="space-y-8">
 			<!-- Roles List -->
 			<AdminList onRemoveRole={handleRemoveRole} {roleEntries} />
+
+			<!-- Oracle Authorization -->
+			<AdminOracleManager />
 
 			<!-- Resolve Markets -->
 			<AdminResolutionList {loading} markets={unresolvedMarkets} onResolve={handleResolve} />

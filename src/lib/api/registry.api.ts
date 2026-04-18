@@ -172,6 +172,45 @@ export const updateTradingAccess = async ({
 	return await updateTradingAccess({ params, ...queryParams });
 };
 
+export const getOracle = async ({
+	identity,
+	oracleId,
+	...queryParams
+}: {
+	identity: Identity;
+	oracleId: string;
+} & QueryParams): Promise<RegistryDid.Oracle | undefined> => {
+	const { getOracle } = await registryCanister({ identity });
+
+	return await getOracle({ oracleId, ...queryParams });
+};
+
+export const addOracle = async ({
+	identity,
+	params,
+	...queryParams
+}: {
+	identity: Identity;
+	params: RegistryDid.AddOracleParams;
+} & QueryParams): Promise<void> => {
+	const { addOracle } = await registryCanister({ identity });
+
+	return await addOracle({ params, ...queryParams });
+};
+
+export const manageOraclePrincipals = async ({
+	identity,
+	params,
+	...queryParams
+}: {
+	identity: Identity;
+	params: RegistryDid.ManageOraclePrincipalsParams;
+} & QueryParams): Promise<void> => {
+	const { manageOraclePrincipals } = await registryCanister({ identity });
+
+	return await manageOraclePrincipals({ params, ...queryParams });
+};
+
 const registryCanister = async ({
 	identity
 }: {
