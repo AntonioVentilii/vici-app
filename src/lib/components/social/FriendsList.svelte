@@ -4,6 +4,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import { getProfile } from '$lib/services/profile.services';
 	import {
 		acceptFriendRequest,
@@ -16,7 +17,6 @@
 	} from '$lib/services/relation.services';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { Relation } from '$lib/types/relation';
-	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	interface Props {
 		userPrincipal: string;
@@ -233,7 +233,9 @@
 									<div class="flex-1 overflow-hidden">
 										<p class="truncate text-sm font-semibold">{profile?.nickname ?? 'Unknown'}</p>
 										<p class="text-muted-foreground truncate text-xs opacity-70">
-											{friendId ? shortenWithMiddleEllipsis({ text: friendId }) : ''}
+											{#if friendId}
+												<PrincipalText principal={friendId} />
+											{/if}
 										</p>
 									</div>
 								</div>
@@ -287,7 +289,9 @@
 									<div class="flex-1 overflow-hidden">
 										<p class="truncate text-sm font-semibold">{profile?.nickname ?? 'Unknown'}</p>
 										<p class="text-muted-foreground truncate text-xs opacity-70">
-											{friendId ? shortenWithMiddleEllipsis({ text: friendId }) : ''}
+											{#if friendId}
+												<PrincipalText principal={friendId} />
+											{/if}
 										</p>
 									</div>
 								</div>
@@ -346,7 +350,9 @@
 										{profile?.nickname ?? 'Unknown'}
 									</p>
 									<p class="text-muted-foreground truncate text-xs">
-										{friendId ? shortenWithMiddleEllipsis({ text: friendId }) : ''}
+										{#if friendId}
+											<PrincipalText principal={friendId} />
+										{/if}
 									</p>
 								</div>
 								<span class="bg-destructive/20 text-destructive rounded px-2 py-1 text-xs"

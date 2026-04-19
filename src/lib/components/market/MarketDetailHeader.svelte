@@ -3,8 +3,8 @@
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import type { Market } from '$lib/types/market';
-	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	interface Props {
 		market: Market;
@@ -41,8 +41,8 @@
 			{#if market.isInviteOnly}
 				<Badge size="sm" variant="warning">Closed Circle</Badge>
 			{/if}
-			<span class="text-[10px] font-bold text-slate-400">
-				Created by {shortenWithMiddleEllipsis({ text: market.creator, splitLength: 5 })}
+			<span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400">
+				Created by <PrincipalText principal={market.creator} splitLength={5} />
 			</span>
 		</div>
 

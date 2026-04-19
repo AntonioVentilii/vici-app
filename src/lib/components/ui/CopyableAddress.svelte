@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Copy, Check } from 'lucide-svelte/icons';
 	import { fade } from 'svelte/transition';
+	import YouBadge from '$lib/components/ui/YouBadge.svelte';
+	import { authPrincipal } from '$lib/derived/user.derived';
 	import { copyToClipboard } from '$lib/utils/clipboard.utils';
 	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
@@ -8,13 +10,15 @@
 		address: string;
 		splitLength?: number;
 		label?: string;
+		showSelfIndicator?: boolean;
 	}
 
-	const { address, splitLength = 7, label = 'Address' }: Props = $props();
+	const { address, splitLength = 7, label = 'Address', showSelfIndicator = true }: Props = $props();
 
 	let copied = $state(false);
 
 	const displayAddress = $derived(shortenWithMiddleEllipsis({ text: address, splitLength }));
+	const isSelf = $derived(showSelfIndicator && !!$authPrincipal && address === $authPrincipal);
 
 	const handleCopy = async () => {
 		await copyToClipboard({ value: address, text: label });
@@ -25,7 +29,7 @@
 	};
 </script>
 
-<span class="inline-flex items-center gap-1">
+<span class="inline-flex items-center gap-1.5">
 	<span class="font-mono text-inherit">{displayAddress}</span>
 	<button
 		class="relative inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-slate-400 transition-colors hover:text-slate-700"
@@ -42,4 +46,7 @@
 			</span>
 		{/if}
 	</button>
+	{#if isSelf}
+		<YouBadge />
+	{/if}
 </span>

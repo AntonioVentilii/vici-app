@@ -1,10 +1,7 @@
 <script lang="ts">
+	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import type { Transaction } from '$lib/types/wallet';
-	import {
-		formatNanosecondsToDate,
-		formatToken,
-		shortenWithMiddleEllipsis
-	} from '$lib/utils/format.utils';
+	import { formatNanosecondsToDate, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
 		transactions: Transaction[];
@@ -49,7 +46,7 @@
 							{#if marketId}
 								Market Prediction ID: {marketId}
 							{:else if counterparty}
-								To/From: {shortenWithMiddleEllipsis({ text: counterparty })}
+								To/From: <PrincipalText principal={counterparty} />
 							{:else}
 								-
 							{/if}

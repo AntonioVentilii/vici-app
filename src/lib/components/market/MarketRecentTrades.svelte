@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import { getGlobalActivities } from '$lib/services/activity.services';
 	import type { Activity } from '$lib/types/social';
-	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	interface Props {
 		marketId: string;
@@ -40,7 +40,7 @@
 					<div class="min-w-0 flex-1">
 						<div class="flex items-center justify-between gap-2">
 							<span class="truncate text-xs font-bold text-slate-900">
-								{shortenWithMiddleEllipsis({ text: activity.user })}
+								<PrincipalText principal={activity.user} />
 							</span>
 							<span class="text-[10px] font-medium text-slate-400">
 								{new Date(activity.timestamp).toLocaleTimeString([], {

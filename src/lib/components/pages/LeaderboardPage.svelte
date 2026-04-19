@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
+	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getLeaderboard } from '$lib/services/leaderboard.services';
 	import type { UserProfile } from '$lib/types/profile';
@@ -124,7 +125,14 @@
 						</div>
 					</div>
 					<div class="max-w-25 text-center sm:max-w-none">
-						<h3 class="truncate text-sm font-black text-slate-950 sm:text-lg">{user.nickname}</h3>
+						<div class="flex items-center justify-center gap-1.5">
+							<h3 class="truncate text-sm font-black text-slate-950 sm:text-lg">
+								{user.nickname}
+							</h3>
+							{#if user.owner === currentUser}
+								<YouBadge />
+							{/if}
+						</div>
 						<p class="text-[10px] font-bold tracking-tighter text-indigo-600 uppercase sm:text-xs">
 							{Math.floor(user.points ?? 0)} XP
 						</p>
@@ -161,11 +169,16 @@
 							{/if}
 						</div>
 						<div class="min-w-0">
-							<p
-								class="max-w-30 truncate text-xs font-bold text-slate-950 sm:max-w-none sm:text-sm"
-							>
-								{user.nickname}
-							</p>
+							<div class="flex items-center gap-1.5">
+								<p
+									class="max-w-30 truncate text-xs font-bold text-slate-950 sm:max-w-none sm:text-sm"
+								>
+									{user.nickname}
+								</p>
+								{#if user.owner === currentUser}
+									<YouBadge />
+								{/if}
+							</div>
 							<div class="flex items-center gap-2">
 								<span class="text-[9px] font-bold text-slate-400 uppercase">
 									Streak: {user.dailyStreak ?? 1}d

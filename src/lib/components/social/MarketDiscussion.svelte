@@ -3,6 +3,7 @@
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { ActivityType } from '$lib/enums/social';
 	import { logActivity } from '$lib/services/activity.services';
 	import {
@@ -246,6 +247,9 @@
 									{/if}
 								</div>
 								<span class="text-sm font-bold">{profile?.nickname ?? 'Anonymous'}</span>
+								{#if comment.user === userPrincipal}
+									<YouBadge />
+								{/if}
 								<span class="text-muted-foreground text-[10px] opacity-50">
 									{new Date(comment.timestamp).toLocaleString()}
 								</span>

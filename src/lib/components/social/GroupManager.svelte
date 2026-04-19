@@ -5,6 +5,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
+	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import {
 		createGroup,
 		listGroups,
@@ -251,11 +252,12 @@
 					{@const isAdmin = isCreator || selectedGroup.admins.some((a) => a.toText() === memberId)}
 					<div class="bg-accent/10 flex items-center justify-between rounded-lg p-2">
 						<div class="mr-4 flex items-center gap-2 truncate">
-							<span class="text-sm"
-								>{memberId === userPrincipal
-									? 'You'
-									: (friendProfiles.get(memberId)?.nickname ?? 'User')}</span
-							>
+							<span class="text-sm">
+								{friendProfiles.get(memberId)?.nickname ?? 'User'}
+							</span>
+							{#if memberId === userPrincipal}
+								<YouBadge />
+							{/if}
 							{#if isAdmin}
 								<span
 									class="bg-primary/20 text-primary rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase"

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import type { LeaderboardEntry } from '$lib/types/social';
-	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	interface Props {
 		leaderboard: LeaderboardEntry[];
@@ -56,10 +56,8 @@
 											{entry.user.substring(0, 2).toUpperCase()}
 										</div>
 									</div>
-									<span
-										class="font-mono text-sm text-slate-600 transition-colors group-hover:text-slate-950"
-									>
-										{shortenWithMiddleEllipsis({ text: entry.user })}
+									<span class="text-sm text-slate-600 transition-colors group-hover:text-slate-950">
+										<PrincipalText principal={entry.user} />
 									</span>
 								</div>
 							</td>
