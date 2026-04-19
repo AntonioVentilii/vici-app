@@ -11,21 +11,19 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 /**
-
  * Input parameters for registering a new price oracle.
-
  */
 export interface AddOracleParams {
 	/**
-	 * * Initial information about the oracle.
+	 * Initial information about the oracle.
 	 */
 	metadata: OracleMetadata;
 	/**
-	 * * Initial list of authorised principals.
+	 * Initial list of authorised principals.
 	 */
 	authorized_principals: Array<Principal>;
 	/**
-	 * * Unique identifier for the oracle (e.g., "COINGECKO").
+	 * Unique identifier for the oracle (e.g., "COINGECKO").
 	 */
 	oracle_id: string;
 }
@@ -34,43 +32,49 @@ export interface AddOracleParams {
  */
 export interface AddSeriesParams {
 	/**
-	 * * A short, descriptive title for the series.
+	 * A short, descriptive title for the series.
 	 */
 	title: string;
 	/**
-	 * * The option strike price, if applicable.
+	 * The option strike price, if applicable.
 	 */
 	strike: [] | [Price];
 	/**
-	 * * The payoff model for the series.
+	 * The payoff model for the series.
 	 */
 	payoff_type: PayoffType;
 	/**
-	 * * The unit in which the contract payoff is expressed.
+	 * The Engine on whose behalf this series is created.
+	 * Controllers may omit this. Non-controller callers must provide
+	 * a valid EngineId on which they hold the Creator role.
+	 */
+	engine_id: [] | [string];
+	/**
+	 * The unit in which the contract payoff is expressed.
 	 */
 	payout_unit: PayoutUnit;
 	/**
-	 * * Expiry timestamp in nanoseconds since UNIX epoch.
+	 * Expiry timestamp in nanoseconds since UNIX epoch.
 	 */
 	expiry_ns: bigint;
 	/**
-	 * * An optional banner URL for the market.
+	 * An optional banner URL for the market.
 	 */
 	banner_url: [] | [string];
 	/**
-	 * * The underlying asset ticker (case-insensitive, e.g., "ICP").
+	 * The underlying asset ticker (case-insensitive, e.g., "ICP").
 	 */
 	underlying: string;
 	/**
-	 * * A detailed description of the series.
+	 * A detailed description of the series.
 	 */
 	description: Description;
 	/**
-	 * * The defined outcomes for categorical markets (ordered).
+	 * The defined outcomes for categorical markets (ordered).
 	 */
 	outcomes: [] | [Array<Outcome>];
 	/**
-	 * * An optional icon URL for the market.
+	 * An optional icon URL for the market.
 	 */
 	icon_url: [] | [string];
 	/**
@@ -86,15 +90,15 @@ export interface AddSeriesParams {
 	 */
 	trading_access: Array<TradingAccess>;
 	/**
-	 * * The number of decimals used for prices and strikes in this series.
+	 * The number of decimals used for prices and strikes in this series.
 	 */
 	price_precision: number;
 	/**
-	 * * The balance domain this series belongs to.
+	 * The balance domain this series belongs to.
 	 */
 	balance_domain: BalanceDomain;
 	/**
-	 * * The price oracle identifier (case-insensitive, e.g., "Coingecko").
+	 * The price oracle identifier (case-insensitive, e.g., "Coingecko").
 	 */
 	oracle_source: string;
 }
@@ -104,13 +108,13 @@ export interface AddSeriesParams {
 export type AddSeriesResult =
 	| {
 			/**
-			 * * Successfully registered the series with the returned [`SeriesId`].
+			 * Successfully registered the series with the returned [`SeriesId`].
 			 */
 			Ok: string;
 	  }
 	| {
 			/**
-			 * * Failed to register the series.
+			 * Failed to register the series.
 			 */
 			Err: SeriesError;
 	  };
@@ -120,19 +124,19 @@ export type AddSeriesResult =
 export type Asset =
 	| {
 			/**
-			 * * An ERC-20 token on an EVM-compatible chain.
+			 * An ERC-20 token on an EVM-compatible chain.
 			 */
 			Erc20: ErcToken;
 	  }
 	| {
 			/**
-			 * * An ICRC-compliant token identified by its canister [`Principal`].
+			 * An ICRC-compliant token identified by its canister [`Principal`].
 			 */
 			Icrc: Principal;
 	  }
 	| {
 			/**
-			 * * A native asset on an EVM-compatible chain.
+			 * A native asset on an EVM-compatible chain.
 			 */
 			NativeEvm: NativeEvmAsset;
 	  };
@@ -142,25 +146,25 @@ export type Asset =
 export type BalanceDomain =
 	| {
 			/**
-			 * * VICI XP (loyalty points) — segregated from Playground test assets.
+			 * VICI XP (loyalty points) — segregated from Playground test assets.
 			 */
 			ViciXp: null;
 	  }
 	| {
 			/**
-			 * * Non-monetary social bets (e.g., betting a pizza).
+			 * Non-monetary social bets (e.g., betting a pizza).
 			 */
 			Social: null;
 	  }
 	| {
 			/**
-			 * * Testnet / sandbox collateral (e.g. TESTICP, Sepolia) — not real funds.
+			 * Testnet / sandbox collateral (e.g. TESTICP, Sepolia) — not real funds.
 			 */
 			Playground: null;
 	  }
 	| {
 			/**
-			 * * Real collateralized trading (e.g., using ckUSDC, ICP).
+			 * Real collateralized trading (e.g., using ckUSDC, ICP).
 			 */
 			Settlement: null;
 	  };
@@ -172,15 +176,15 @@ export type BalanceDomain =
  */
 export interface CreateGroupParams {
 	/**
-	 * * A human-readable name for the group. Must not exceed 128 characters.
+	 * A human-readable name for the group. Must not exceed 128 characters.
 	 */
 	name: string;
 	/**
-	 * * An optional longer description of the group's purpose.
+	 * An optional longer description of the group's purpose.
 	 */
 	description: [] | [string];
 	/**
-	 * * An optional icon/avatar URL for the group.
+	 * An optional icon/avatar URL for the group.
 	 */
 	icon_url: [] | [string];
 }
@@ -192,13 +196,13 @@ export interface CreateGroupParams {
 export type CreateGroupResult =
 	| {
 			/**
-			 * * The group was created successfully.
+			 * The group was created successfully.
 			 */
 			Ok: string;
 	  }
 	| {
 			/**
-			 * * The group creation failed.
+			 * The group creation failed.
 			 */
 			Err: GroupError;
 	  };
@@ -208,11 +212,11 @@ export type CreateGroupResult =
  */
 export interface DecimalValue {
 	/**
-	 * * The number of decimal places (exponent).
+	 * The number of decimal places (exponent).
 	 */
 	decimals: number;
 	/**
-	 * * The numeric value (mantissa).
+	 * The numeric value (mantissa).
 	 */
 	value: bigint;
 }
@@ -222,36 +226,221 @@ export interface DecimalValue {
  */
 export interface Description {
 	/**
-	 * * Optional HTML version of the description.
+	 * Optional HTML version of the description.
 	 */
 	html: [] | [string];
 	/**
-	 * * Optional markdown version of the description.
+	 * Optional markdown version of the description.
 	 */
 	markdown: [] | [string];
 	/**
-	 * * The mandatory plain text description.
+	 * The mandatory plain text description.
 	 */
 	plain: string;
 }
+/**
+ * A multi-tenant organizational entity for dApps using the clearing layer.
+ *
+ * Engines allow dApps to autonomously manage their own creators, oracle
+ * admins, and other roles without being canister controllers. Each Engine
+ * has a set of admins who can grant roles to principals, subject to the
+ * `allowed_roles` constraint set by the canister controllers at registration.
+ */
+export interface Engine {
+	/**
+	 * The principal that performed the last mutation.
+	 */
+	updated_by: Principal;
+	/**
+	 * The principal that registered this Engine (a canister controller).
+	 */
+	creator: Principal;
+	/**
+	 * Unique identifier assigned at creation.
+	 */
+	engine_id: string;
+	/**
+	 * A human-readable name for the Engine (e.g., "Vici App").
+	 */
+	name: string;
+	/**
+	 * An optional description of the Engine's purpose.
+	 */
+	description: [] | [string];
+	/**
+	 * Timestamp of the last mutation in nanoseconds since UNIX epoch.
+	 */
+	updated_at_ns: bigint;
+	/**
+	 * Timestamp of engine creation in nanoseconds since UNIX epoch.
+	 */
+	created_at_ns: bigint;
+	/**
+	 * An optional icon/avatar URL for the Engine.
+	 */
+	icon_url: [] | [string];
+	/**
+	 * Principals with administrative privileges on this Engine.
+	 * Admins can grant/revoke roles and manage other admins.
+	 * The creator is implicitly an admin.
+	 */
+	admins: Array<Principal>;
+	/**
+	 * The subset of [`EngineRole`] variants this Engine is allowed to grant.
+	 * Set by the canister controller at registration time. Admins cannot
+	 * grant roles outside this set.
+	 */
+	allowed_roles: Array<EngineRole>;
+	/**
+	 * Audit trail of all active role grants.
+	 */
+	role_grants: Array<RoleGrant>;
+	/**
+	 * Optional per-engine override for social market rate limits.
+	 */
+	social_limits: [] | [SocialLimits];
+}
+/**
+ * Errors that can occur during Engine-related operations.
+ */
+export type EngineError =
+	| {
+			/**
+			 * The principal already has this role in this Engine.
+			 */
+			RoleAlreadyGranted: null;
+	  }
+	| {
+			/**
+			 * The specified Engine ID does not exist.
+			 */
+			EngineNotFound: null;
+	  }
+	| {
+			/**
+			 * An Engine with this name already exists.
+			 */
+			EngineAlreadyExists: null;
+	  }
+	| {
+			/**
+			 * Cannot remove the Engine creator as an admin.
+			 */
+			CannotRemoveCreator: null;
+	  }
+	| {
+			/**
+			 * The requested role is not in the Engine's `allowed_roles`.
+			 */
+			RoleNotAllowed: null;
+	  }
+	| {
+			/**
+			 * The principal does not have this role in this Engine.
+			 */
+			RoleNotGranted: null;
+	  }
+	| {
+			/**
+			 * The caller is not authorized for this operation.
+			 */
+			Unauthorized: null;
+	  }
+	| {
+			/**
+			 * The Engine name exceeds the maximum allowed length.
+			 */
+			NameTooLong: null;
+	  };
+/**
+ * The result of an Engine mutation operation.
+ */
+export type EngineResult = { Ok: null } | { Err: EngineError };
+/**
+ * Roles that can be granted to principals within an Engine.
+ *
+ * This is a fixed enum extended over time at the protocol level.
+ * Engines declare which subset of roles they are allowed to grant
+ * via [`Engine::allowed_roles`].
+ */
+export type EngineRole =
+	| {
+			/**
+			 * Can register oracles and manage their metadata and principals.
+			 */
+			OracleAdmin: null;
+	  }
+	| {
+			/**
+			 * Can create series via `add_series` and fork series via `fork_series`.
+			 */
+			Creator: null;
+	  };
 /**
  * Represents an ERC-20 token on a specific EVM chain.
  */
 export interface ErcToken {
 	/**
-	 * * The number of decimals the token uses (e.g., 18 for ETH, 6 for USDC).
+	 * The number of decimals the token uses (e.g., 18 for ETH, 6 for USDC).
 	 */
 	decimals: number;
 	/**
-	 * * The contract address of the token.
+	 * The contract address of the token.
 	 */
 	token_address: string;
 	/**
-	 * * The ID of the EVM chain where the token is deployed.
+	 * The ID of the EVM chain where the token is deployed.
 	 */
 	chain_id: bigint;
 }
 export type FiatUnit = { Chf: null } | { Eur: null } | { Gbp: null } | { Usd: null };
+/**
+ * Input parameters for forking (cloning) an existing series into a restricted circle.
+ *
+ * The forked series inherits all defining parameters from the source series but
+ * gets a distinct ID (via the `forked_from` hash component) and carries a reference
+ * back to the original.
+ */
+export interface ForkSeriesParams {
+	/**
+	 * The source series to fork.
+	 */
+	source_series_id: string;
+	/**
+	 * Optional title override. Falls back to the source series title.
+	 */
+	title: [] | [string];
+	/**
+	 * The Engine on whose behalf this fork is created.
+	 * Controllers may omit this. Non-controller callers must provide
+	 * a valid EngineId on which they hold the Creator role.
+	 */
+	engine_id: [] | [string];
+	/**
+	 * Optional description override. Falls back to the source series description.
+	 */
+	description: [] | [Description];
+	/**
+	 * Trading access policies for the forked series. Must be `Restricted`.
+	 */
+	trading_access: Array<TradingAccess>;
+}
+/**
+ * Input parameters for granting a role within an Engine.
+ *
+ * Only Engine admins or canister controllers may grant roles.
+ */
+export interface GrantEngineRoleParams {
+	principal: Principal;
+	/**
+	 * The Engine in which to grant the role.
+	 */
+	engine_id: string;
+	/**
+	 * The role to grant.
+	 */
+	role: EngineRole;
+}
 /**
  * A trading group (closed circle).
  *
@@ -267,7 +456,7 @@ export type FiatUnit = { Chf: null } | { Eur: null } | { Gbp: null } | { Usd: nu
  */
 export interface Group {
 	/**
-	 * * The principal that performed the last mutation.
+	 * The principal that performed the last mutation.
 	 */
 	updated_by: Principal;
 	/**
@@ -281,11 +470,11 @@ export interface Group {
 	 */
 	members: Array<Principal>;
 	/**
-	 * * A human-readable display name for the group (max 128 chars).
+	 * A human-readable display name for the group (max 128 chars).
 	 */
 	name: string;
 	/**
-	 * * An optional longer description of the group's purpose.
+	 * An optional longer description of the group's purpose.
 	 */
 	description: [] | [string];
 	/**
@@ -295,15 +484,15 @@ export interface Group {
 	 */
 	updated_at_ns: bigint;
 	/**
-	 * * Timestamp of group creation in nanoseconds since UNIX epoch.
+	 * Timestamp of group creation in nanoseconds since UNIX epoch.
 	 */
 	created_at_ns: bigint;
 	/**
-	 * * An optional icon/avatar URL for the group.
+	 * An optional icon/avatar URL for the group.
 	 */
 	icon_url: [] | [string];
 	/**
-	 * * The unique identifier assigned at creation.
+	 * The unique identifier assigned at creation.
 	 */
 	group_id: string;
 	/**
@@ -320,7 +509,7 @@ export interface Group {
 export type GroupError =
 	| {
 			/**
-			 * * The specified group ID does not exist in the registry.
+			 * The specified group ID does not exist in the registry.
 			 */
 			GroupNotFound: null;
 	  }
@@ -341,13 +530,13 @@ export type GroupError =
 	  }
 	| {
 			/**
-			 * * A group with this name already exists for this creator.
+			 * A group with this name already exists for this creator.
 			 */
 			GroupAlreadyExists: null;
 	  }
 	| {
 			/**
-			 * * The provided group name exceeds the maximum allowed length (128 chars).
+			 * The provided group name exceeds the maximum allowed length (128 chars).
 			 */
 			NameTooLong: null;
 	  }
@@ -366,13 +555,13 @@ export type GroupError =
 export type GroupResult =
 	| {
 			/**
-			 * * The operation succeeded.
+			 * The operation succeeded.
 			 */
 			Ok: boolean;
 	  }
 	| {
 			/**
-			 * * The operation failed.
+			 * The operation failed.
 			 */
 			Err: GroupError;
 	  };
@@ -381,39 +570,39 @@ export type GroupResult =
  */
 export interface ListSeriesParams {
 	/**
-	 * * Filter by the strike price.
+	 * Filter by the strike price.
 	 */
 	strike: [] | [Price];
 	/**
-	 * * Filter by the principal identifier of the creator.
+	 * Filter by the principal identifier of the creator.
 	 */
 	creator: [] | [Principal];
 	/**
-	 * * Filter by the payoff model.
+	 * Filter by the payoff model.
 	 */
 	payoff_type: [] | [PayoffType];
 	/**
-	 * * Filter by the payout unit.
+	 * Filter by the payout unit.
 	 */
 	payout_unit: [] | [PayoutUnit];
 	/**
-	 * * Optional pagination parameters.
+	 * Optional pagination parameters.
 	 */
 	pagination: [] | [PaginationParams];
 	/**
-	 * * Filter by the underlying asset ticker (case-insensitive).
+	 * Filter by the underlying asset ticker (case-insensitive).
 	 */
 	underlying: [] | [string];
 	/**
-	 * * Filter by a search term in the title or description (case-insensitive, partial match).
+	 * Filter by a search term in the title or description (case-insensitive, partial match).
 	 */
 	search_term: [] | [string];
 	/**
-	 * * Filter by balance domain.
+	 * Filter by balance domain.
 	 */
 	balance_domain: [] | [BalanceDomain];
 	/**
-	 * * Filter by the price oracle identifier (case-insensitive, partial match).
+	 * Filter by the price oracle identifier (case-insensitive, partial match).
 	 */
 	oracle_source: [] | [string];
 }
@@ -422,15 +611,15 @@ export interface ListSeriesParams {
  */
 export interface ManageOraclePrincipalsParams {
 	/**
-	 * * Principals to be added to the authorised list.
+	 * Principals to be added to the authorised list.
 	 */
 	add_principals: Array<Principal>;
 	/**
-	 * * Principals to be removed from the authorised list.
+	 * Principals to be removed from the authorised list.
 	 */
 	remove_principals: Array<Principal>;
 	/**
-	 * * The unique identifier of the oracle.
+	 * The unique identifier of the oracle.
 	 */
 	oracle_id: string;
 }
@@ -440,11 +629,11 @@ export interface ManageOraclePrincipalsParams {
  */
 export interface NativeEvmAsset {
 	/**
-	 * * The number of decimals the native asset uses.
+	 * The number of decimals the native asset uses.
 	 */
 	decimals: number;
 	/**
-	 * * The EVM chain where this native asset is used.
+	 * The EVM chain where this native asset is used.
 	 */
 	chain_id: bigint;
 }
@@ -454,23 +643,23 @@ export type NonMonetaryUnit = { Points: null } | { Social: SocialReward };
  */
 export interface Oracle {
 	/**
-	 * * The principal identifier of the oracle's manager (defaults to creator).
+	 * The principal identifier of the oracle's manager (defaults to creator).
 	 */
 	manager: Principal;
 	/**
-	 * * Timestamp of oracle registration in nanoseconds since UNIX epoch.
+	 * Timestamp of oracle registration in nanoseconds since UNIX epoch.
 	 */
 	registered_at_ns: bigint;
 	/**
-	 * * Metadata about the oracle.
+	 * Metadata about the oracle.
 	 */
 	metadata: OracleMetadata;
 	/**
-	 * * The set of principals authorised to push settlement data for this oracle.
+	 * The set of principals authorised to push settlement data for this oracle.
 	 */
 	authorized_principals: Array<Principal>;
 	/**
-	 * * Unique identifier for the oracle (e.g., "COINGECKO").
+	 * Unique identifier for the oracle (e.g., "COINGECKO").
 	 */
 	oracle_id: string;
 }
@@ -480,19 +669,19 @@ export interface Oracle {
 export type OracleError =
 	| {
 			/**
-			 * * Returned when the caller is not authorised to manage the oracle.
+			 * Returned when the caller is not authorised to manage the oracle.
 			 */
 			UnauthorizedOracleManager: null;
 	  }
 	| {
 			/**
-			 * * Returned when attempting to add an oracle that already exists.
+			 * Returned when attempting to add an oracle that already exists.
 			 */
 			OracleAlreadyExists: null;
 	  }
 	| {
 			/**
-			 * * Returned when the specified oracle does not exist.
+			 * Returned when the specified oracle does not exist.
 			 */
 			OracleNotFound: null;
 	  };
@@ -501,15 +690,15 @@ export type OracleError =
  */
 export interface OracleMetadata {
 	/**
-	 * * The human-readable name of the oracle.
+	 * The human-readable name of the oracle.
 	 */
 	name: string;
 	/**
-	 * * A short description of the oracle's methodology or data sources.
+	 * A short description of the oracle's methodology or data sources.
 	 */
 	description: [] | [Description];
 	/**
-	 * * Optional URL to the oracle's website.
+	 * Optional URL to the oracle's website.
 	 */
 	website: [] | [string];
 }
@@ -522,19 +711,19 @@ export type OracleResult = { Ok: null } | { Err: OracleError };
  */
 export interface Outcome {
 	/**
-	 * * The unique identifier of the outcome.
+	 * The unique identifier of the outcome.
 	 */
 	id: string;
 	/**
-	 * * A short title for the outcome (e.g., "Yes", "No", "Team A").
+	 * A short title for the outcome (e.g., "Yes", "No", "Team A").
 	 */
 	title: string;
 	/**
-	 * * An optional detailed description of the outcome.
+	 * An optional detailed description of the outcome.
 	 */
 	description: [] | [Description];
 	/**
-	 * * An optional icon URL for the outcome.
+	 * An optional icon URL for the outcome.
 	 */
 	icon_url: [] | [string];
 }
@@ -543,11 +732,11 @@ export interface Outcome {
  */
 export interface PaginationParams {
 	/**
-	 * * Return items strictly *after* this series id (exclusive).
+	 * Return items strictly *after* this series id (exclusive).
 	 */
 	cursor: [] | [string];
 	/**
-	 * * Maximum number of items to return.
+	 * Maximum number of items to return.
 	 */
 	limit: [] | [bigint];
 }
@@ -557,25 +746,25 @@ export interface PaginationParams {
 export type PayoffType =
 	| {
 			/**
-			 * * Payoff based on the positive difference between strike and underlying price.
+			 * Payoff based on the positive difference between strike and underlying price.
 			 */
 			Put: null;
 	  }
 	| {
 			/**
-			 * * A fixed payoff if the condition is met (all-or-nothing).
+			 * A fixed payoff if the condition is met (all-or-nothing).
 			 */
 			Binary: null;
 	  }
 	| {
 			/**
-			 * * Payoff based on the positive difference between underlying price and strike.
+			 * Payoff based on the positive difference between underlying price and strike.
 			 */
 			Call: null;
 	  }
 	| {
 			/**
-			 * * A categorical market with multiple mutually exclusive outcomes.
+			 * A categorical market with multiple mutually exclusive outcomes.
 			 */
 			Categorical: null;
 	  };
@@ -587,72 +776,142 @@ export type PayoutUnit = { Fiat: FiatUnit } | { Asset: Asset } | { NonMonetary: 
  */
 export interface Price {
 	/**
-	 * * Optional timestamp when this price was generated/observed.
+	 * Optional timestamp when this price was generated/observed.
 	 */
 	timestamp: [] | [bigint];
 	/**
-	 * * Optional identifier for the oracle source.
+	 * Optional identifier for the oracle source.
 	 */
 	oracle_id: [] | [string];
 	/**
-	 * * The numeric component of the price.
+	 * The numeric component of the price.
 	 */
 	decimal: DecimalValue;
+}
+/**
+ * Input parameters for registering a new Engine.
+ *
+ * Only canister controllers may call `register_engine`.
+ */
+export interface RegisterEngineParams {
+	/**
+	 * A human-readable name for the Engine.
+	 */
+	name: string;
+	/**
+	 * An optional description.
+	 */
+	description: [] | [string];
+	/**
+	 * An optional icon URL.
+	 */
+	icon_url: [] | [string];
+	/**
+	 * Initial admin principals. The caller is always added as an admin.
+	 */
+	admins: Array<Principal>;
+	/**
+	 * The set of roles this Engine is allowed to grant.
+	 */
+	allowed_roles: Array<EngineRole>;
+}
+/**
+ * The result of a `register_engine` operation.
+ */
+export type RegisterEngineResult = { Ok: string } | { Err: EngineError };
+/**
+ * Input parameters for revoking a role within an Engine.
+ *
+ * Only Engine admins or canister controllers may revoke roles.
+ */
+export interface RevokeEngineRoleParams {
+	principal: Principal;
+	/**
+	 * The Engine in which to revoke the role.
+	 */
+	engine_id: string;
+	/**
+	 * The role to revoke.
+	 */
+	role: EngineRole;
+}
+/**
+ * An audit record of a role grant within an Engine.
+ */
+export interface RoleGrant {
+	principal: Principal;
+	/**
+	 * The granted role.
+	 */
+	role: EngineRole;
+	/**
+	 * Timestamp of the grant in nanoseconds since UNIX epoch.
+	 */
+	granted_at_ns: bigint;
+	/**
+	 * The principal that performed the grant.
+	 */
+	granted_by: Principal;
 }
 /**
  * Defines a specific derivative series (contract).
  */
 export interface Series {
 	/**
-	 * * A short, descriptive title for the series.
+	 * A short, descriptive title for the series.
 	 */
 	title: string;
 	/**
-	 * * Target price for options, if applicable.
+	 * Target price for options, if applicable.
 	 */
 	strike: [] | [Price];
 	/**
-	 * * The principal identifier of the series creator.
+	 * The principal identifier of the series creator.
 	 */
 	creator: Principal;
 	/**
-	 * * The mathematical payoff model used for this series.
+	 * The mathematical payoff model used for this series.
 	 */
 	payoff_type: PayoffType;
 	/**
-	 * * The unit in which the contract payoff is expressed.
+	 * The Engine that created this series, if any.
+	 * `None` for series created directly by a canister controller.
+	 */
+	engine_id: [] | [string];
+	/**
+	 * The unit in which the contract payoff is expressed.
 	 */
 	payout_unit: PayoutUnit;
 	/**
-	 * * Expiry timestamp in nanoseconds since UNIX epoch.
+	 * Expiry timestamp in nanoseconds since UNIX epoch.
 	 */
 	expiry_ns: bigint;
 	/**
-	 * * An optional banner URL for the market.
+	 * An optional banner URL for the market.
 	 */
 	banner_url: [] | [string];
 	/**
-	 * * Unique identifier computed from series parameters.
+	 * Unique identifier computed from series parameters.
 	 */
 	series_id: string;
 	/**
-	 * * The underlying asset ticker or identifier (e.g., "ICP/USD").
+	 * The underlying asset ticker or identifier (e.g., "ICP/USD").
 	 */
 	underlying: string;
 	/**
-	 * * A detailed description of the series.
+	 * A detailed description of the series.
 	 */
 	description: Description;
 	/**
-	 * * The defined outcomes for categorical markets (ordered).
+	 * The defined outcomes for categorical markets (ordered).
 	 */
 	outcomes: [] | [Array<Outcome>];
 	/**
-	 * * Timestamp of series creation in nanoseconds since UNIX epoch.
+	 * Timestamp of series creation in nanoseconds since UNIX epoch.
 	 */
 	created_at_ns: bigint;
 	/**
-	 * * An optional icon URL for the market.
+	 * An optional icon URL for the market.
 	 */
 	icon_url: [] | [string];
 	/**
@@ -668,17 +927,21 @@ export interface Series {
 	 */
 	trading_access: Array<TradingAccess>;
 	/**
-	 * * The canonical number of decimals used for prices and strikes in this series.
+	 * The canonical number of decimals used for prices and strikes in this series.
 	 */
 	price_precision: number;
 	/**
-	 * * The domain this market belongs to (e.g. Playground, Settlement).
+	 * The domain this market belongs to (e.g. Playground, Settlement).
 	 */
 	balance_domain: BalanceDomain;
 	/**
-	 * * The identifier of the oracle providing the settlement data.
+	 * The identifier of the oracle providing the settlement data.
 	 */
 	oracle_source: string;
+	/**
+	 * If this series was forked from another, the source series ID.
+	 */
+	forked_from: [] | [string];
 }
 /**
  * Errors that can occur during series-related operations.
@@ -686,76 +949,143 @@ export interface Series {
 export type SeriesError =
 	| {
 			/**
-			 * * Social reward description exceeds limit.
+			 * Social reward description exceeds limit.
 			 */
 			RewardDescriptionTooLong: null;
 	  }
 	| {
 			/**
-			 * * Returned when the provided description exceeds the maximum allowed length.
+			 * The caller has reached the maximum number of social markets allowed per user.
+			 */
+			SocialMaxPerUserReached: null;
+	  }
+	| {
+			/**
+			 * Returned when the provided description exceeds the maximum allowed length.
 			 */
 			DescriptionTooLong: null;
 	  }
 	| {
 			/**
-			 * * Returned when the provided title exceeds the maximum allowed length.
+			 * Returned when the provided title exceeds the maximum allowed length.
 			 */
 			TitleTooLong: null;
 	  }
 	| {
 			/**
-			 * * Social reward icon URL exceeds limit.
+			 * Social reward icon URL exceeds limit.
 			 */
 			RewardIconUrlTooLong: null;
 	  }
 	| {
 			/**
-			 * * Returned when the caller is not authorized to add a series.
+			 * Social markets require a `NonMonetary` payout unit.
+			 */
+			SocialMarketRequiresNonMonetaryPayout: null;
+	  }
+	| {
+			/**
+			 * The caller has reached the maximum number of forks for this source series.
+			 */
+			ForkLimitReached: null;
+	  }
+	| {
+			/**
+			 * Social markets must have `Restricted` trading access.
+			 */
+			SocialMarketMustBeRestricted: null;
+	  }
+	| {
+			/**
+			 * Non-controller callers must specify an engine_id for non-social markets.
+			 */
+			EngineIdRequired: null;
+	  }
+	| {
+			/**
+			 * Returned when the caller is not authorized to add a series.
 			 */
 			Unauthorized: null;
 	  }
 	| {
 			/**
-			 * * Returned when the provided payout unit is not supported by the protocol.
+			 * Forked series must have `Restricted` trading access.
+			 */
+			ForkMustBeRestricted: null;
+	  }
+	| {
+			/**
+			 * Returned when the provided payout unit is not supported by the protocol.
 			 */
 			UnsupportedPayoutUnit: null;
 	  }
 	| {
 			/**
-			 * * Returned when attempting to add a series that already exists.
+			 * The caller has exceeded the hourly social market creation limit.
+			 */
+			SocialRateLimitExceeded: null;
+	  }
+	| {
+			/**
+			 * Returned when attempting to add a series that already exists.
 			 */
 			SeriesAlreadyExists: null;
 	  }
 	| {
 			/**
-			 * * Social reward title exceeds limit.
+			 * The source series specified in a fork does not exist.
+			 */
+			SourceSeriesNotFound: null;
+	  }
+	| {
+			/**
+			 * Social reward title exceeds limit.
 			 */
 			RewardTitleTooLong: null;
+	  }
+	| {
+			/**
+			 * The specified Engine does not exist or the caller does not hold the required role on it.
+			 */
+			EngineRoleNotHeld: null;
 	  };
 /**
  * A paginated page of registered series.
  */
 export interface SeriesPage {
 	/**
-	 * * The cursor to be used for the next request, if any.
+	 * The cursor to be used for the next request, if any.
 	 */
 	next_cursor: [] | [string];
 	/**
-	 * * The list of series in this page.
+	 * The list of series in this page.
 	 */
 	items: Array<Series>;
 }
+/**
+ * Configurable rate limits for social (non-monetary) market creation.
+ */
+export interface SocialLimits {
+	/**
+	 * Maximum social markets any single user may create within a rolling hour.
+	 */
+	max_per_hour: bigint;
+	/**
+	 * Maximum total social markets any single user may create (lifetime).
+	 */
+	max_per_user: bigint;
+}
 export interface SocialReward {
 	/**
-	 * * A short title for the reward (e.g., "Pizza 🍕").
+	 * A short title for the reward (e.g., "Pizza 🍕").
 	 */
 	title: string;
 	/**
-	 * * An optional detailed description of the reward.
+	 * An optional detailed description of the reward.
 	 */
 	description: [] | [string];
 	/**
-	 * * An optional icon URL for the reward.
+	 * An optional icon URL for the reward.
 	 */
 	icon_url: [] | [string];
 }
@@ -790,7 +1120,7 @@ export interface SocialReward {
 export type TradingAccess =
 	| {
 			/**
-			 * * Unrestricted: any authenticated (non-anonymous) caller can trade.
+			 * Unrestricted: any authenticated (non-anonymous) caller can trade.
 			 */
 			Open: null;
 	  }
@@ -802,11 +1132,62 @@ export type TradingAccess =
 			 */
 			Restricted: {
 				/**
-				 * * The group IDs whose members are allowed to trade.
+				 * The group IDs whose members are allowed to trade.
 				 */
 				groups: Array<string>;
 			};
 	  };
+/**
+ * Input parameters for managing Engine admins (adding or removing).
+ */
+export interface UpdateEngineAdminsParams {
+	/**
+	 * The Engine to modify.
+	 */
+	engine_id: string;
+	/**
+	 * Principals to add or remove as admins.
+	 */
+	principals: Array<Principal>;
+}
+/**
+ * Input parameters for updating the allowed roles of an Engine.
+ *
+ * Only canister controllers may call this.
+ */
+export interface UpdateEngineAllowedRolesParams {
+	/**
+	 * The Engine to update.
+	 */
+	engine_id: string;
+	/**
+	 * The new set of allowed roles. Replaces the existing set entirely.
+	 */
+	allowed_roles: Array<EngineRole>;
+}
+/**
+ * Input parameters for updating an existing Engine's metadata.
+ *
+ * Only Engine admins or canister controllers may call `update_engine`.
+ */
+export interface UpdateEngineParams {
+	/**
+	 * The Engine to update.
+	 */
+	engine_id: string;
+	/**
+	 * New name, or `None` to keep the current name.
+	 */
+	name: [] | [string];
+	/**
+	 * New description: `None` = keep, `Some(None)` = clear, `Some(Some(..))` = set.
+	 */
+	description: [] | [[] | [string]];
+	/**
+	 * New icon URL: `None` = keep, `Some(None)` = clear, `Some(Some(..))` = set.
+	 */
+	icon_url: [] | [[] | [string]];
+}
 /**
  * Input parameters for adding or removing group admins.
  *
@@ -816,11 +1197,11 @@ export type TradingAccess =
  */
 export interface UpdateGroupAdminsParams {
 	/**
-	 * * The group to modify.
+	 * The group to modify.
 	 */
 	group_id: string;
 	/**
-	 * * The principals to add or remove as admins.
+	 * The principals to add or remove as admins.
 	 */
 	principals: Array<Principal>;
 }
@@ -835,19 +1216,19 @@ export interface UpdateGroupAdminsParams {
  */
 export interface UpdateGroupParams {
 	/**
-	 * * New name, or `None` to keep the current name.
+	 * New name, or `None` to keep the current name.
 	 */
 	name: [] | [string];
 	/**
-	 * * New description: `None` = keep, `Some(None)` = clear, `Some(Some(..))` = set.
+	 * New description: `None` = keep, `Some(None)` = clear, `Some(Some(..))` = set.
 	 */
 	description: [] | [[] | [string]];
 	/**
-	 * * New icon URL: `None` = keep, `Some(None)` = clear, `Some(Some(..))` = set.
+	 * New icon URL: `None` = keep, `Some(None)` = clear, `Some(Some(..))` = set.
 	 */
 	icon_url: [] | [[] | [string]];
 	/**
-	 * * The group to update.
+	 * The group to update.
 	 */
 	group_id: string;
 }
@@ -856,11 +1237,11 @@ export interface UpdateGroupParams {
  */
 export interface UpdateOracleMetadataParams {
 	/**
-	 * * The updated metadata.
+	 * The updated metadata.
 	 */
 	metadata: OracleMetadata;
 	/**
-	 * * The unique identifier of the oracle to update.
+	 * The unique identifier of the oracle to update.
 	 */
 	oracle_id: string;
 }
@@ -872,7 +1253,7 @@ export interface UpdateOracleMetadataParams {
  */
 export interface UpdateTradingAccessParams {
 	/**
-	 * * The series whose trading access policies will be replaced.
+	 * The series whose trading access policies will be replaced.
 	 */
 	series_id: string;
 	/**
@@ -883,11 +1264,9 @@ export interface UpdateTradingAccessParams {
 }
 export interface _SERVICE {
 	/**
-	 * Authorizes a list of principals to create new derivative series.
-	 *
-	 * This method is gated to canister controllers.
+	 * Adds admin principals to an Engine. Engine admins or controllers may call this.
 	 */
-	add_authorized_creators: ActorMethod<[Array<Principal>], undefined>;
+	add_engine_admins: ActorMethod<[UpdateEngineAdminsParams], EngineResult>;
 	/**
 	 * Adds one or more principals to an existing group's admin set.
 	 *
@@ -919,22 +1298,19 @@ export interface _SERVICE {
 	 */
 	add_group_members: ActorMethod<[UpdateGroupAdminsParams], GroupResult>;
 	/**
-	 * * Registers a new price oracle in the registry.
+	 * Registers a new price oracle in the registry.
+	 *
+	 * Controllers and Engine `OracleAdmin` role holders may register oracles.
 	 */
 	add_oracle: ActorMethod<[AddOracleParams], OracleResult>;
 	/**
 	 * Adds a new derivative series to the registry.
 	 *
-	 * This method generates a canonical [`SeriesId`] for the provided parameters.
-	 * If the series already exists, it returns an error.
+	 * Authorization is tiered:
 	 *
-	 * # Arguments
-	 * * `params` - The defining parameters for the new series.
-	 *
-	 * # Returns
-	 * * [`AddSeriesResult::Ok`] containing the new [`SeriesId`] on success.
-	 * * [`AddSeriesResult::Err`] with [`SeriesError::SeriesAlreadyExists`] if the series is already
-	 * registered.
+	 * 1. **Creators** (controllers + Engine `Creator` role holders): may create any series.
+	 * 2. **Any authenticated user**: may create **social** markets (`BalanceDomain::Social` +
+	 * `NonMonetary` payout) with `Restricted` trading access, subject to per-user rate limits.
 	 */
 	add_series: ActorMethod<[AddSeriesParams], AddSeriesResult>;
 	/**
@@ -973,6 +1349,19 @@ export interface _SERVICE {
 	 */
 	delete_group: ActorMethod<[string], GroupResult>;
 	/**
+	 * Forks (clones) an existing series into a new restricted-access market.
+	 *
+	 * The forked series inherits all defining parameters from the source but gets a
+	 * distinct ID and carries a `forked_from` reference back to the original.
+	 *
+	 * Only controllers and Engine Creators may fork series.
+	 */
+	fork_series: ActorMethod<[ForkSeriesParams], AddSeriesResult>;
+	/**
+	 * Retrieves an Engine by its ID.
+	 */
+	get_engine: ActorMethod<[string], [] | [Engine]>;
+	/**
 	 * Retrieves a group by its ID, returning `None` if it does not exist.
 	 *
 	 * # Access
@@ -981,24 +1370,24 @@ export interface _SERVICE {
 	 */
 	get_group: ActorMethod<[string], [] | [Group]>;
 	/**
-	 * * Retrieves the details of a specific oracle by its ID.
+	 * Retrieves the details of a specific oracle by its ID.
 	 */
 	get_oracle: ActorMethod<[string], [] | [Oracle]>;
 	/**
 	 * Retrieves a specific [`Series`] by its [`SeriesId`].
-	 *
-	 * # Arguments
-	 * * `series_id` - The unique identifier of the series to retrieve.
-	 *
-	 * # Returns
-	 * * `Some(Series)` if the series exists in the registry.
-	 * * `None` otherwise.
 	 */
 	get_series: ActorMethod<[string], [] | [Series]>;
 	/**
-	 * * Checks if a principal is authorized to create derivative series.
+	 * Returns the current rate limits for social market creation.
 	 */
-	is_authorized_creator: ActorMethod<[Principal], boolean>;
+	get_social_limits: ActorMethod<[], SocialLimits>;
+	/**
+	 * Grants a role to a principal within an Engine.
+	 *
+	 * The role must be in the Engine's `allowed_roles` set. Only Engine admins
+	 * or controllers may grant roles.
+	 */
+	grant_engine_role: ActorMethod<[GrantEngineRoleParams], EngineResult>;
 	/**
 	 * Checks whether a principal is a member of a specific group.
 	 *
@@ -1010,7 +1399,7 @@ export interface _SERVICE {
 	 */
 	is_group_member: ActorMethod<[string, Principal], boolean>;
 	/**
-	 * * Checks if a principal is authorized to push settlement data for a given oracle.
+	 * Checks if a principal is authorized to push settlement data for a given oracle.
 	 */
 	is_oracle_authorized: ActorMethod<[string, Principal], boolean>;
 	/**
@@ -1038,11 +1427,9 @@ export interface _SERVICE {
 	 */
 	is_trading_authorized: ActorMethod<[Principal, string], boolean>;
 	/**
-	 * Returns a list of all principals currently authorized to create series.
-	 *
-	 * This method is gated to canister controllers.
+	 * Lists all registered Engines.
 	 */
-	list_authorized_creators: ActorMethod<[], Array<Principal>>;
+	list_engines: ActorMethod<[], Array<Engine>>;
 	/**
 	 * Lists all registered groups, optionally filtered by creator principal.
 	 *
@@ -1057,23 +1444,29 @@ export interface _SERVICE {
 	 */
 	list_groups: ActorMethod<[[] | [Principal]], Array<Group>>;
 	/**
-	 * * Returns a paginated page of all registered derivative series.
+	 * Returns a paginated page of all registered derivative series.
 	 */
 	list_series: ActorMethod<[PaginationParams], SeriesPage>;
 	/**
-	 * * Returns a paginated page of registered derivative series, optionally filtered.
+	 * Returns a paginated page of registered derivative series, optionally filtered.
 	 */
 	list_series_with: ActorMethod<[ListSeriesParams], SeriesPage>;
 	/**
-	 * * Adds or removes authorised principals for an oracle.
+	 * Adds or removes authorised principals for an oracle.
+	 *
+	 * Controllers, the oracle's manager, and Engine `OracleAdmin` role holders may manage principals.
 	 */
 	manage_oracle_principals: ActorMethod<[ManageOraclePrincipalsParams], OracleResult>;
 	/**
-	 * Removes authorization from a list of principals, preventing them from creating new series.
-	 *
-	 * This method is gated to canister controllers.
+	 * Registers a new Engine. Only canister controllers may call this.
 	 */
-	remove_authorized_creators: ActorMethod<[Array<Principal>], undefined>;
+	register_engine: ActorMethod<[RegisterEngineParams], RegisterEngineResult>;
+	/**
+	 * Removes admin principals from an Engine. Engine admins or controllers may call this.
+	 *
+	 * The Engine creator cannot be removed as an admin.
+	 */
+	remove_engine_admins: ActorMethod<[UpdateEngineAdminsParams], EngineResult>;
 	/**
 	 * Removes one or more principals from an existing group's admin set.
 	 *
@@ -1107,6 +1500,26 @@ export interface _SERVICE {
 	 */
 	remove_group_members: ActorMethod<[UpdateGroupAdminsParams], GroupResult>;
 	/**
+	 * Revokes a role from a principal within an Engine.
+	 *
+	 * Only Engine admins or controllers may revoke roles.
+	 */
+	revoke_engine_role: ActorMethod<[RevokeEngineRoleParams], EngineResult>;
+	/**
+	 * Updates the rate limits for social (non-monetary) market creation.
+	 *
+	 * This method is gated to canister controllers.
+	 */
+	set_social_limits: ActorMethod<[SocialLimits], undefined>;
+	/**
+	 * Updates an Engine's metadata. Engine admins or controllers may call this.
+	 */
+	update_engine: ActorMethod<[UpdateEngineParams], EngineResult>;
+	/**
+	 * Updates the allowed roles for an Engine. Only controllers may call this.
+	 */
+	update_engine_allowed_roles: ActorMethod<[UpdateEngineAllowedRolesParams], EngineResult>;
+	/**
 	 * Updates a group's metadata (name, description, icon URL).
 	 *
 	 * Fields set to `None` are left unchanged. For `description` and `icon_url`,
@@ -1124,7 +1537,9 @@ export interface _SERVICE {
 	 */
 	update_group: ActorMethod<[UpdateGroupParams], GroupResult>;
 	/**
-	 * * Updates the metadata of an existing oracle.
+	 * Updates the metadata of an existing oracle.
+	 *
+	 * Controllers, the oracle's manager, and Engine `OracleAdmin` role holders may update metadata.
 	 */
 	update_oracle_metadata: ActorMethod<[UpdateOracleMetadataParams], OracleResult>;
 	/**

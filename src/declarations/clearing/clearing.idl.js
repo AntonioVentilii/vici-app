@@ -347,6 +347,7 @@ export const Series = IDL.Record({
 	strike: IDL.Opt(Price),
 	creator: IDL.Principal,
 	payoff_type: PayoffType,
+	engine_id: IDL.Opt(IDL.Text),
 	payout_unit: PayoutUnit,
 	expiry_ns: IDL.Nat64,
 	banner_url: IDL.Opt(IDL.Text),
@@ -359,7 +360,8 @@ export const Series = IDL.Record({
 	trading_access: IDL.Vec(TradingAccess),
 	price_precision: IDL.Nat8,
 	balance_domain: BalanceDomain,
-	oracle_source: IDL.Text
+	oracle_source: IDL.Text,
+	forked_from: IDL.Opt(IDL.Text)
 });
 export const MigrateDomainParams = IDL.Record({
 	from_domain: BalanceDomain,
@@ -933,6 +935,7 @@ export const idlFactory = ({ IDL }) => {
 		strike: IDL.Opt(Price),
 		creator: IDL.Principal,
 		payoff_type: PayoffType,
+		engine_id: IDL.Opt(IDL.Text),
 		payout_unit: PayoutUnit,
 		expiry_ns: IDL.Nat64,
 		banner_url: IDL.Opt(IDL.Text),
@@ -945,7 +948,8 @@ export const idlFactory = ({ IDL }) => {
 		trading_access: IDL.Vec(TradingAccess),
 		price_precision: IDL.Nat8,
 		balance_domain: BalanceDomain,
-		oracle_source: IDL.Text
+		oracle_source: IDL.Text,
+		forked_from: IDL.Opt(IDL.Text)
 	});
 	const MigrateDomainParams = IDL.Record({
 		from_domain: BalanceDomain,

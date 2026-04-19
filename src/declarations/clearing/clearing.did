@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 0c11d4c85a21960cdd5237ad203b4d78f1ac4f1d for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit e3ef7468e7dc9bd5357c15d853efe15c926f9121 for file 'src/clearing/clearing.did'
 
 // Outcome of a position transfer acceptance.
 type AcceptPositionTransferResult = variant {
@@ -507,6 +507,9 @@ type Series = record {
 	creator : principal;
 	// The mathematical payoff model used for this series.
 	payoff_type : PayoffType;
+	// The Engine that created this series, if any.
+	// `None` for series created directly by a canister controller.
+	engine_id : opt text;
 	// The unit in which the contract payoff is expressed.
 	payout_unit : PayoutUnit;
 	// Expiry timestamp in nanoseconds since UNIX epoch.
@@ -540,7 +543,9 @@ type Series = record {
 	// The domain this market belongs to (e.g. Playground, Settlement).
 	balance_domain : BalanceDomain;
 	// The identifier of the oracle providing the settlement data.
-	oracle_source : text
+	oracle_source : text;
+	// If this series was forked from another, the source series ID.
+	forked_from : opt text
 };
 // Input parameters for initiating a series settlement.
 type SettleSeriesParams = record {

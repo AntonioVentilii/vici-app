@@ -8,6 +8,24 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
+export const UpdateEngineAdminsParams = IDL.Record({
+	engine_id: IDL.Text,
+	principals: IDL.Vec(IDL.Principal)
+});
+export const EngineError = IDL.Variant({
+	RoleAlreadyGranted: IDL.Null,
+	EngineNotFound: IDL.Null,
+	EngineAlreadyExists: IDL.Null,
+	CannotRemoveCreator: IDL.Null,
+	RoleNotAllowed: IDL.Null,
+	RoleNotGranted: IDL.Null,
+	Unauthorized: IDL.Null,
+	NameTooLong: IDL.Null
+});
+export const EngineResult = IDL.Variant({
+	Ok: IDL.Null,
+	Err: EngineError
+});
 export const UpdateGroupAdminsParams = IDL.Record({
 	group_id: IDL.Text,
 	principals: IDL.Vec(IDL.Principal)
@@ -114,6 +132,7 @@ export const AddSeriesParams = IDL.Record({
 	title: IDL.Text,
 	strike: IDL.Opt(Price),
 	payoff_type: PayoffType,
+	engine_id: IDL.Opt(IDL.Text),
 	payout_unit: PayoutUnit,
 	expiry_ns: IDL.Nat64,
 	banner_url: IDL.Opt(IDL.Text),
@@ -128,13 +147,22 @@ export const AddSeriesParams = IDL.Record({
 });
 export const SeriesError = IDL.Variant({
 	RewardDescriptionTooLong: IDL.Null,
+	SocialMaxPerUserReached: IDL.Null,
 	DescriptionTooLong: IDL.Null,
 	TitleTooLong: IDL.Null,
 	RewardIconUrlTooLong: IDL.Null,
+	SocialMarketRequiresNonMonetaryPayout: IDL.Null,
+	ForkLimitReached: IDL.Null,
+	SocialMarketMustBeRestricted: IDL.Null,
+	EngineIdRequired: IDL.Null,
 	Unauthorized: IDL.Null,
+	ForkMustBeRestricted: IDL.Null,
 	UnsupportedPayoutUnit: IDL.Null,
+	SocialRateLimitExceeded: IDL.Null,
 	SeriesAlreadyExists: IDL.Null,
-	RewardTitleTooLong: IDL.Null
+	SourceSeriesNotFound: IDL.Null,
+	RewardTitleTooLong: IDL.Null,
+	EngineRoleNotHeld: IDL.Null
 });
 export const AddSeriesResult = IDL.Variant({
 	Ok: IDL.Text,
@@ -148,6 +176,41 @@ export const CreateGroupParams = IDL.Record({
 export const CreateGroupResult = IDL.Variant({
 	Ok: IDL.Text,
 	Err: GroupError
+});
+export const ForkSeriesParams = IDL.Record({
+	source_series_id: IDL.Text,
+	title: IDL.Opt(IDL.Text),
+	engine_id: IDL.Opt(IDL.Text),
+	description: IDL.Opt(Description),
+	trading_access: IDL.Vec(TradingAccess)
+});
+export const EngineRole = IDL.Variant({
+	OracleAdmin: IDL.Null,
+	Creator: IDL.Null
+});
+export const RoleGrant = IDL.Record({
+	principal: IDL.Principal,
+	role: EngineRole,
+	granted_at_ns: IDL.Nat64,
+	granted_by: IDL.Principal
+});
+export const SocialLimits = IDL.Record({
+	max_per_hour: IDL.Nat64,
+	max_per_user: IDL.Nat64
+});
+export const Engine = IDL.Record({
+	updated_by: IDL.Principal,
+	creator: IDL.Principal,
+	engine_id: IDL.Text,
+	name: IDL.Text,
+	description: IDL.Opt(IDL.Text),
+	updated_at_ns: IDL.Nat64,
+	created_at_ns: IDL.Nat64,
+	icon_url: IDL.Opt(IDL.Text),
+	admins: IDL.Vec(IDL.Principal),
+	allowed_roles: IDL.Vec(EngineRole),
+	role_grants: IDL.Vec(RoleGrant),
+	social_limits: IDL.Opt(SocialLimits)
 });
 export const Group = IDL.Record({
 	updated_by: IDL.Principal,
@@ -173,6 +236,7 @@ export const Series = IDL.Record({
 	strike: IDL.Opt(Price),
 	creator: IDL.Principal,
 	payoff_type: PayoffType,
+	engine_id: IDL.Opt(IDL.Text),
 	payout_unit: PayoutUnit,
 	expiry_ns: IDL.Nat64,
 	banner_url: IDL.Opt(IDL.Text),
@@ -185,7 +249,13 @@ export const Series = IDL.Record({
 	trading_access: IDL.Vec(TradingAccess),
 	price_precision: IDL.Nat8,
 	balance_domain: BalanceDomain,
-	oracle_source: IDL.Text
+	oracle_source: IDL.Text,
+	forked_from: IDL.Opt(IDL.Text)
+});
+export const GrantEngineRoleParams = IDL.Record({
+	principal: IDL.Principal,
+	engine_id: IDL.Text,
+	role: EngineRole
 });
 export const PaginationParams = IDL.Record({
 	cursor: IDL.Opt(IDL.Text),
@@ -211,6 +281,32 @@ export const ManageOraclePrincipalsParams = IDL.Record({
 	remove_principals: IDL.Vec(IDL.Principal),
 	oracle_id: IDL.Text
 });
+export const RegisterEngineParams = IDL.Record({
+	name: IDL.Text,
+	description: IDL.Opt(IDL.Text),
+	icon_url: IDL.Opt(IDL.Text),
+	admins: IDL.Vec(IDL.Principal),
+	allowed_roles: IDL.Vec(EngineRole)
+});
+export const RegisterEngineResult = IDL.Variant({
+	Ok: IDL.Text,
+	Err: EngineError
+});
+export const RevokeEngineRoleParams = IDL.Record({
+	principal: IDL.Principal,
+	engine_id: IDL.Text,
+	role: EngineRole
+});
+export const UpdateEngineParams = IDL.Record({
+	engine_id: IDL.Text,
+	name: IDL.Opt(IDL.Text),
+	description: IDL.Opt(IDL.Opt(IDL.Text)),
+	icon_url: IDL.Opt(IDL.Opt(IDL.Text))
+});
+export const UpdateEngineAllowedRolesParams = IDL.Record({
+	engine_id: IDL.Text,
+	allowed_roles: IDL.Vec(EngineRole)
+});
 export const UpdateGroupParams = IDL.Record({
 	name: IDL.Opt(IDL.Text),
 	description: IDL.Opt(IDL.Opt(IDL.Text)),
@@ -227,28 +323,36 @@ export const UpdateTradingAccessParams = IDL.Record({
 });
 
 export const idlService = IDL.Service({
-	add_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
+	add_engine_admins: IDL.Func([UpdateEngineAdminsParams], [EngineResult], []),
 	add_group_admins: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
 	add_group_members: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
 	add_oracle: IDL.Func([AddOracleParams], [OracleResult], []),
 	add_series: IDL.Func([AddSeriesParams], [AddSeriesResult], []),
 	create_group: IDL.Func([CreateGroupParams], [CreateGroupResult], []),
 	delete_group: IDL.Func([IDL.Text], [GroupResult], []),
+	fork_series: IDL.Func([ForkSeriesParams], [AddSeriesResult], []),
+	get_engine: IDL.Func([IDL.Text], [IDL.Opt(Engine)], []),
 	get_group: IDL.Func([IDL.Text], [IDL.Opt(Group)], []),
 	get_oracle: IDL.Func([IDL.Text], [IDL.Opt(Oracle)], []),
 	get_series: IDL.Func([IDL.Text], [IDL.Opt(Series)], []),
-	is_authorized_creator: IDL.Func([IDL.Principal], [IDL.Bool], []),
+	get_social_limits: IDL.Func([], [SocialLimits], []),
+	grant_engine_role: IDL.Func([GrantEngineRoleParams], [EngineResult], []),
 	is_group_member: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], []),
 	is_oracle_authorized: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], []),
 	is_trading_authorized: IDL.Func([IDL.Principal, IDL.Text], [IDL.Bool], []),
-	list_authorized_creators: IDL.Func([], [IDL.Vec(IDL.Principal)], []),
+	list_engines: IDL.Func([], [IDL.Vec(Engine)], []),
 	list_groups: IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Vec(Group)], []),
 	list_series: IDL.Func([PaginationParams], [SeriesPage], []),
 	list_series_with: IDL.Func([ListSeriesParams], [SeriesPage], []),
 	manage_oracle_principals: IDL.Func([ManageOraclePrincipalsParams], [OracleResult], []),
-	remove_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
+	register_engine: IDL.Func([RegisterEngineParams], [RegisterEngineResult], []),
+	remove_engine_admins: IDL.Func([UpdateEngineAdminsParams], [EngineResult], []),
 	remove_group_admins: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
 	remove_group_members: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
+	revoke_engine_role: IDL.Func([RevokeEngineRoleParams], [EngineResult], []),
+	set_social_limits: IDL.Func([SocialLimits], [], []),
+	update_engine: IDL.Func([UpdateEngineParams], [EngineResult], []),
+	update_engine_allowed_roles: IDL.Func([UpdateEngineAllowedRolesParams], [EngineResult], []),
 	update_group: IDL.Func([UpdateGroupParams], [GroupResult], []),
 	update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], []),
 	update_trading_access: IDL.Func([UpdateTradingAccessParams], [GroupResult], [])
@@ -257,6 +361,21 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
+	const UpdateEngineAdminsParams = IDL.Record({
+		engine_id: IDL.Text,
+		principals: IDL.Vec(IDL.Principal)
+	});
+	const EngineError = IDL.Variant({
+		RoleAlreadyGranted: IDL.Null,
+		EngineNotFound: IDL.Null,
+		EngineAlreadyExists: IDL.Null,
+		CannotRemoveCreator: IDL.Null,
+		RoleNotAllowed: IDL.Null,
+		RoleNotGranted: IDL.Null,
+		Unauthorized: IDL.Null,
+		NameTooLong: IDL.Null
+	});
+	const EngineResult = IDL.Variant({ Ok: IDL.Null, Err: EngineError });
 	const UpdateGroupAdminsParams = IDL.Record({
 		group_id: IDL.Text,
 		principals: IDL.Vec(IDL.Principal)
@@ -357,6 +476,7 @@ export const idlFactory = ({ IDL }) => {
 		title: IDL.Text,
 		strike: IDL.Opt(Price),
 		payoff_type: PayoffType,
+		engine_id: IDL.Opt(IDL.Text),
 		payout_unit: PayoutUnit,
 		expiry_ns: IDL.Nat64,
 		banner_url: IDL.Opt(IDL.Text),
@@ -371,13 +491,22 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const SeriesError = IDL.Variant({
 		RewardDescriptionTooLong: IDL.Null,
+		SocialMaxPerUserReached: IDL.Null,
 		DescriptionTooLong: IDL.Null,
 		TitleTooLong: IDL.Null,
 		RewardIconUrlTooLong: IDL.Null,
+		SocialMarketRequiresNonMonetaryPayout: IDL.Null,
+		ForkLimitReached: IDL.Null,
+		SocialMarketMustBeRestricted: IDL.Null,
+		EngineIdRequired: IDL.Null,
 		Unauthorized: IDL.Null,
+		ForkMustBeRestricted: IDL.Null,
 		UnsupportedPayoutUnit: IDL.Null,
+		SocialRateLimitExceeded: IDL.Null,
 		SeriesAlreadyExists: IDL.Null,
-		RewardTitleTooLong: IDL.Null
+		SourceSeriesNotFound: IDL.Null,
+		RewardTitleTooLong: IDL.Null,
+		EngineRoleNotHeld: IDL.Null
 	});
 	const AddSeriesResult = IDL.Variant({ Ok: IDL.Text, Err: SeriesError });
 	const CreateGroupParams = IDL.Record({
@@ -388,6 +517,41 @@ export const idlFactory = ({ IDL }) => {
 	const CreateGroupResult = IDL.Variant({
 		Ok: IDL.Text,
 		Err: GroupError
+	});
+	const ForkSeriesParams = IDL.Record({
+		source_series_id: IDL.Text,
+		title: IDL.Opt(IDL.Text),
+		engine_id: IDL.Opt(IDL.Text),
+		description: IDL.Opt(Description),
+		trading_access: IDL.Vec(TradingAccess)
+	});
+	const EngineRole = IDL.Variant({
+		OracleAdmin: IDL.Null,
+		Creator: IDL.Null
+	});
+	const RoleGrant = IDL.Record({
+		principal: IDL.Principal,
+		role: EngineRole,
+		granted_at_ns: IDL.Nat64,
+		granted_by: IDL.Principal
+	});
+	const SocialLimits = IDL.Record({
+		max_per_hour: IDL.Nat64,
+		max_per_user: IDL.Nat64
+	});
+	const Engine = IDL.Record({
+		updated_by: IDL.Principal,
+		creator: IDL.Principal,
+		engine_id: IDL.Text,
+		name: IDL.Text,
+		description: IDL.Opt(IDL.Text),
+		updated_at_ns: IDL.Nat64,
+		created_at_ns: IDL.Nat64,
+		icon_url: IDL.Opt(IDL.Text),
+		admins: IDL.Vec(IDL.Principal),
+		allowed_roles: IDL.Vec(EngineRole),
+		role_grants: IDL.Vec(RoleGrant),
+		social_limits: IDL.Opt(SocialLimits)
 	});
 	const Group = IDL.Record({
 		updated_by: IDL.Principal,
@@ -413,6 +577,7 @@ export const idlFactory = ({ IDL }) => {
 		strike: IDL.Opt(Price),
 		creator: IDL.Principal,
 		payoff_type: PayoffType,
+		engine_id: IDL.Opt(IDL.Text),
 		payout_unit: PayoutUnit,
 		expiry_ns: IDL.Nat64,
 		banner_url: IDL.Opt(IDL.Text),
@@ -425,7 +590,13 @@ export const idlFactory = ({ IDL }) => {
 		trading_access: IDL.Vec(TradingAccess),
 		price_precision: IDL.Nat8,
 		balance_domain: BalanceDomain,
-		oracle_source: IDL.Text
+		oracle_source: IDL.Text,
+		forked_from: IDL.Opt(IDL.Text)
+	});
+	const GrantEngineRoleParams = IDL.Record({
+		principal: IDL.Principal,
+		engine_id: IDL.Text,
+		role: EngineRole
 	});
 	const PaginationParams = IDL.Record({
 		cursor: IDL.Opt(IDL.Text),
@@ -451,6 +622,32 @@ export const idlFactory = ({ IDL }) => {
 		remove_principals: IDL.Vec(IDL.Principal),
 		oracle_id: IDL.Text
 	});
+	const RegisterEngineParams = IDL.Record({
+		name: IDL.Text,
+		description: IDL.Opt(IDL.Text),
+		icon_url: IDL.Opt(IDL.Text),
+		admins: IDL.Vec(IDL.Principal),
+		allowed_roles: IDL.Vec(EngineRole)
+	});
+	const RegisterEngineResult = IDL.Variant({
+		Ok: IDL.Text,
+		Err: EngineError
+	});
+	const RevokeEngineRoleParams = IDL.Record({
+		principal: IDL.Principal,
+		engine_id: IDL.Text,
+		role: EngineRole
+	});
+	const UpdateEngineParams = IDL.Record({
+		engine_id: IDL.Text,
+		name: IDL.Opt(IDL.Text),
+		description: IDL.Opt(IDL.Opt(IDL.Text)),
+		icon_url: IDL.Opt(IDL.Opt(IDL.Text))
+	});
+	const UpdateEngineAllowedRolesParams = IDL.Record({
+		engine_id: IDL.Text,
+		allowed_roles: IDL.Vec(EngineRole)
+	});
 	const UpdateGroupParams = IDL.Record({
 		name: IDL.Opt(IDL.Text),
 		description: IDL.Opt(IDL.Opt(IDL.Text)),
@@ -467,28 +664,36 @@ export const idlFactory = ({ IDL }) => {
 	});
 
 	return IDL.Service({
-		add_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
+		add_engine_admins: IDL.Func([UpdateEngineAdminsParams], [EngineResult], []),
 		add_group_admins: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
 		add_group_members: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
 		add_oracle: IDL.Func([AddOracleParams], [OracleResult], []),
 		add_series: IDL.Func([AddSeriesParams], [AddSeriesResult], []),
 		create_group: IDL.Func([CreateGroupParams], [CreateGroupResult], []),
 		delete_group: IDL.Func([IDL.Text], [GroupResult], []),
+		fork_series: IDL.Func([ForkSeriesParams], [AddSeriesResult], []),
+		get_engine: IDL.Func([IDL.Text], [IDL.Opt(Engine)], []),
 		get_group: IDL.Func([IDL.Text], [IDL.Opt(Group)], []),
 		get_oracle: IDL.Func([IDL.Text], [IDL.Opt(Oracle)], []),
 		get_series: IDL.Func([IDL.Text], [IDL.Opt(Series)], []),
-		is_authorized_creator: IDL.Func([IDL.Principal], [IDL.Bool], []),
+		get_social_limits: IDL.Func([], [SocialLimits], []),
+		grant_engine_role: IDL.Func([GrantEngineRoleParams], [EngineResult], []),
 		is_group_member: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], []),
 		is_oracle_authorized: IDL.Func([IDL.Text, IDL.Principal], [IDL.Bool], []),
 		is_trading_authorized: IDL.Func([IDL.Principal, IDL.Text], [IDL.Bool], []),
-		list_authorized_creators: IDL.Func([], [IDL.Vec(IDL.Principal)], []),
+		list_engines: IDL.Func([], [IDL.Vec(Engine)], []),
 		list_groups: IDL.Func([IDL.Opt(IDL.Principal)], [IDL.Vec(Group)], []),
 		list_series: IDL.Func([PaginationParams], [SeriesPage], []),
 		list_series_with: IDL.Func([ListSeriesParams], [SeriesPage], []),
 		manage_oracle_principals: IDL.Func([ManageOraclePrincipalsParams], [OracleResult], []),
-		remove_authorized_creators: IDL.Func([IDL.Vec(IDL.Principal)], [], []),
+		register_engine: IDL.Func([RegisterEngineParams], [RegisterEngineResult], []),
+		remove_engine_admins: IDL.Func([UpdateEngineAdminsParams], [EngineResult], []),
 		remove_group_admins: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
 		remove_group_members: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
+		revoke_engine_role: IDL.Func([RevokeEngineRoleParams], [EngineResult], []),
+		set_social_limits: IDL.Func([SocialLimits], [], []),
+		update_engine: IDL.Func([UpdateEngineParams], [EngineResult], []),
+		update_engine_allowed_roles: IDL.Func([UpdateEngineAllowedRolesParams], [EngineResult], []),
 		update_group: IDL.Func([UpdateGroupParams], [GroupResult], []),
 		update_oracle_metadata: IDL.Func([UpdateOracleMetadataParams], [OracleResult], []),
 		update_trading_access: IDL.Func([UpdateTradingAccessParams], [GroupResult], [])
