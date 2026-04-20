@@ -110,7 +110,7 @@ if [ "$NETWORK" = "local" ]; then
   echo "Granting Creator role to $TEST_PRINCIPAL (dry-run check)..."
   GRANT_OUT="$(dfx canister call --network "$NETWORK" registry grant_engine_role "(record {
     engine_id = \"$EXPECTED_ENGINE_ID\";
-    principal = principal \"$TEST_PRINCIPAL\";
+    \"principal\" = principal \"$TEST_PRINCIPAL\";
     role = variant { Creator }
   })")"
 
@@ -123,7 +123,7 @@ if [ "$NETWORK" = "local" ]; then
   echo "Revoking Creator role from $TEST_PRINCIPAL..."
   REVOKE_OUT="$(dfx canister call --network "$NETWORK" registry revoke_engine_role "(record {
     engine_id = \"$EXPECTED_ENGINE_ID\";
-    principal = principal \"$TEST_PRINCIPAL\";
+    \"principal\" = principal \"$TEST_PRINCIPAL\";
     role = variant { Creator }
   })")"
 
