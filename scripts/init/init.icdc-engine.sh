@@ -118,7 +118,7 @@ else
   echo "Registering new Vici engine..."
   REGISTER_RESULT="$(dfx canister call --network "$NETWORK" registry register_engine "(record {
     name = \"$ENGINE_NAME\";
-    description = opt record { plain = \"Vici prediction markets\"; markdown = null; html = null };
+    description = opt \"Vici prediction markets\";
     icon_url = null;
     admins = $ADMINS_VEC;
     allowed_roles = vec { variant { Creator }; variant { OracleAdmin } }
