@@ -24,7 +24,10 @@
 		await loadMarkets({
 			domain: domainToken,
 			onLoad: ({ response }) => {
-				if ($balanceDomain === domainToken) {
+				// Structural compare: `balanceDomain` is a derived store that emits
+				// fresh `{ Settlement: null }`-style literals, so referential `===`
+				// is unreliable even when the logical domain is unchanged.
+				if (compareBalanceDomains($balanceDomain, domainToken)) {
 					marketsStore.set(response);
 				}
 			}

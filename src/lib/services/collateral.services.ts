@@ -2,6 +2,7 @@ import type { ClearingDid } from '$declarations';
 import {
 	depositCollateral as depositCollateralApi,
 	getAccountState as getAccountStateApi,
+	getAccountStateQuery as getAccountStateQueryApi,
 	listCollateralAssets as listCollateralAssetsApi,
 	registerIcrcAsset as registerIcrcAssetApi,
 	withdrawCollateral as withdrawCollateralApi
@@ -102,14 +103,17 @@ export const withdrawCollateral = async ({
 };
 
 /**
- * Core account-state fetch: threads identity + certified so it composes with
- * {@link loadAccountState} / `queryAndUpdate`.
+ * Core account-state fetch: routes to the right canister method per path.
  *
- * Note: `refresh: true` is required to re-price mark-to-market values server-side,
- * so this call always mutates canister state and should be certified in practice.
- * We still expose a query path for the "fast first render" benefit via `queryAndUpdate`.
+ * - Uncertified (query) → `get_account_state_query` (declared `query` in Candid,
+ *   read-only, does NOT refresh external ledger balances). Fast first paint.
+ * - Certified (update)  → `get_account_state` with `refresh: true`, which
+ *   re-prices mark-to-market and reconciles external ledgers. Source of truth.
+ *
+ * Using the same update method on both paths would double the external-ledger
+ * refresh cost and side-effects on every load.
  */
-const fetchAccountState = async ({
+const fetchAccountState = ({
 	identity,
 	certified,
 	domain
@@ -117,12 +121,19 @@ const fetchAccountState = async ({
 	identity: Identity;
 	certified: boolean;
 	domain: ClearingDid.BalanceDomain;
-}): Promise<ClearingDid.AccountStateResponse> =>
-	await getAccountStateApi({
-		identity,
-		certified,
-		params: { refresh: toNullable(true), domain: toNullable(domain) }
-	});
+}): Promise<ClearingDid.AccountStateResponse> => {
+	if (certified) {
+		return getAccountStateApi({
+			identity,
+			certified: true,
+			params: { refresh: toNullable(true), domain: toNullable(domain) }
+		});
+	}
+
+	// `get_account_state_query` takes no params and returns all domains; the
+	// caller (see `LoaderCollaterals`) filters by domain client-side.
+	return getAccountStateQueryApi({ identity, certified: false });
+};
 
 /**
  * Fetches clearing account state (balances per domain) for the signed-in user.
