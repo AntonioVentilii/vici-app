@@ -159,8 +159,6 @@ export const calculateMarketStats = ({
 					qty: o.qty
 				};
 			}
-
-			return undefined;
 		})
 		.filter(nonNullish);
 

@@ -51,7 +51,7 @@
 
 	const intuitiveAvailable = $derived.by(() => {
 		if (isNullish(collateral)) {
-			return undefined;
+			return;
 		}
 
 		return calculateIntuitiveAvailable({ collateral, tokens: $walletUiTokens });

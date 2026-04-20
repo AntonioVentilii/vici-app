@@ -293,9 +293,8 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 
 			return settlementOutcome;
 		} catch (e) {
+			// Malformed settlement details should not block rendering the rest of the market; log and fall through so the market appears resolved without an outcome label.
 			console.error('Failed to parse outcome from activity', e);
-
-			return undefined;
 		}
 	};
 

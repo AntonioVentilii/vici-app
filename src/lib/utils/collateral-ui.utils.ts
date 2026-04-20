@@ -73,7 +73,7 @@ export const calculateIntuitiveAvailable = ({
 	const a = collateral.accountState;
 
 	if (isNullish(a)) {
-		return undefined;
+		return;
 	}
 
 	const fallbackCollateralMarginUnits = calculateFallbackCollateralMarginUnits({

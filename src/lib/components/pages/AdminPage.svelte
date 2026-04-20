@@ -180,7 +180,7 @@
 
 					return profile.data?.nickname;
 				} catch {
-					// No issue in not having the nickname, just return undefined
+					// The nickname is purely cosmetic for the admin role list; missing profiles should not block the grant flow.
 				}
 			};
 

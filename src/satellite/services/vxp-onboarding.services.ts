@@ -14,7 +14,7 @@ import type {
 	VxpOnboardingDoc
 } from '$lib/types/vxp-onboarding';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
-import { isNullish, nonNullish } from '@dfinity/utils';
+import { isNullish, nonNullish, type Nullable } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { OnSetDocContext } from '@junobuild/functions';
 import { IcrcLedgerCanister, type IcrcLedgerDid } from '@junobuild/functions/canisters/ledger/icrc';
@@ -85,7 +85,7 @@ const payoutMilestone = async ({
 
 	const memoBytes = new TextEncoder().encode(`vxp:new-user:${memoLabel}`);
 
-	const tryTransfer = (fee: [] | [bigint]) =>
+	const tryTransfer = (fee: Nullable<bigint>) =>
 		ledger.icrc1Transfer({
 			args: {
 				to,
@@ -611,19 +611,19 @@ export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Pro
 		try {
 			return Principal.fromText(text);
 		} catch {
-			return undefined;
+			// A malformed principal on an activity doc must not abort the hook; skip onboarding for this event instead.
 		}
 	};
 
 	const resolveUserKey = (): string | undefined => {
 		if (collection !== Collection.ACTIVITIES || nonNullish(before)) {
-			return undefined;
+			return;
 		}
 
 		const activity = decodeDocData<Activity>(after.data);
 
 		if (activity.type !== ActivityType.TRADE) {
-			return undefined;
+			return;
 		}
 
 		const activityUserPrincipal = parsePrincipalText(activity.user);
@@ -632,7 +632,7 @@ export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Pro
 			isNullish(activityUserPrincipal) ||
 			activityUserPrincipal.compareTo(Principal.fromUint8Array(caller)) !== 'eq'
 		) {
-			return undefined;
+			return;
 		}
 
 		return activity.user;

@@ -298,7 +298,7 @@ const readRoleFromDoc = (data: Uint8Array): UserRole | undefined => {
 
 		return role;
 	} catch {
-		return undefined;
+		// Malformed role document: treat as "no role" so the sync diff can proceed without aborting the whole reconciliation.
 	}
 };
 
@@ -306,7 +306,7 @@ const tryParsePrincipal = (key: string): Principal | undefined => {
 	try {
 		return Principal.fromText(key);
 	} catch {
-		return undefined;
+		// Non-principal keys are skipped silently; throwing would break iteration over unrelated doc keys.
 	}
 };
 

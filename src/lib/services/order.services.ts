@@ -16,7 +16,7 @@ import type { OrderSide, OrderType } from '$lib/types/order';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
 import { parseLimitOrderPriceValue } from '$lib/utils/parse.utils';
 import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
-import { isNullish, toNullable } from '@dfinity/utils';
+import { isNullish, toNullable, type Nullable } from '@dfinity/utils';
 import { getIdentityOnce } from '@junobuild/core';
 import { nanoid } from 'nanoid';
 
@@ -80,7 +80,7 @@ export const placeOrder = async ({
 			: side
 		: side;
 	const normalizedPrice = isBinary && outcome === 'NO' ? 1 - price : price;
-	const outcomeId: [] | [string] = isBinary ? toNullable() : toNullable(outcome);
+	const outcomeId: Nullable<string> = isBinary ? toNullable() : toNullable(outcome);
 
 	if (type === 'LIMIT') {
 		const orderId = `ORD_${nanoid(8)}`;

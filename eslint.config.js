@@ -30,6 +30,11 @@ export default ts.config(
 				{
 					selector: "Literal[raw='0n']",
 					message: 'Use the shared constant `ZERO` instead of `0n`.'
+				},
+				{
+					selector: "ReturnStatement[argument.type='Identifier'][argument.name='undefined']",
+					message:
+						'Do not `return undefined;`. Use a bare `return;` for early exits, or in `catch` blocks let the function fall through with a comment explaining why the error is swallowed.'
 				}
 			]
 		}
