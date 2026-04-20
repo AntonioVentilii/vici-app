@@ -1,5 +1,5 @@
 import type { RegistryDid } from '$declarations';
-import { addOracle, getOracle, manageOraclePrincipals } from '$lib/api/registry.api';
+import { addOracle, getOracle } from '$lib/api/registry.api';
 import { VICI_ORACLE_V1 } from '$lib/constants/app.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import { Principal } from '@icp-sdk/core/principal';
@@ -49,47 +49,9 @@ export const registerViciOracle = async ({
 	await addOracle({ identity, params });
 };
 
-/**
- * Adds principals to the Vici oracle's authorized list.
- *
- * The caller must be the registry controller, the oracle manager, or an Engine
- * `OracleAdmin`. The principals granted here become allowed to settle markets
- * whose `oracle_source = VICI_ORACLE_V1` via `settle_series` on the clearing
- * canister.
- */
-export const authorizeOraclePrincipals = async ({
-	principals
-}: {
-	principals: PrincipalText[];
-}): Promise<void> => {
-	const identity = await safeGetIdentityOnce();
-
-	await manageOraclePrincipals({
-		identity,
-		params: {
-			oracle_id: VICI_ORACLE_V1,
-			add_principals: principals.map((p) => Principal.fromText(p)),
-			remove_principals: []
-		}
-	});
-};
-
-/**
- * Removes principals from the Vici oracle's authorized list.
- */
-export const revokeOraclePrincipals = async ({
-	principals
-}: {
-	principals: PrincipalText[];
-}): Promise<void> => {
-	const identity = await safeGetIdentityOnce();
-
-	await manageOraclePrincipals({
-		identity,
-		params: {
-			oracle_id: VICI_ORACLE_V1,
-			add_principals: [],
-			remove_principals: principals.map((p) => Principal.fromText(p))
-		}
-	});
-};
+// Note: direct add/remove of oracle settlers used to live here. It is now driven
+// automatically by the `syncRoleToEngine` satellite hook (see
+// `src/satellite/services/engine-sync.services.ts`) — assigning the `ADMIN` or
+// `SOLVER` role to a user both grants them `OracleAdmin` on the Vici engine and
+// adds them to `VICI_ORACLE_V1.authorized_principals`. For manual reconciliation,
+// see `.agents/workflows/icdc-engine-operations.md`.

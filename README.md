@@ -18,6 +18,15 @@ The core trading logic and market registry are powered by high-performance Motok
 - **Clearing Canister**: Handles margin accounts, collateral management, and on-chain trade matching.
 - **Registry Canister**: Manages the prediction market lifecycle, including creation, discovery, and settlement.
 
+### Engine integration
+
+Vici is registered as an **Engine** on the `icdc-core` registry so it can create markets and
+manage oracles without its users being explicit controllers of the registry canister. Roles
+assigned in the Juno `roles` collection (e.g. `ADMIN`, `CREATOR`, `SOLVER`) are automatically
+synced to the Vici engine via a satellite `onSetDoc(ROLES)` / `onDeleteDoc(ROLES)` hook. See
+[docs/engine-integration.md](./docs/engine-integration.md) for architecture, setup, and
+operational runbooks.
+
 ## 🛠️ Technology Stack
 
 - **Frontend**: [SvelteKit](https://kit.svelte.dev/) with **Svelte 5 (Runes)**.
@@ -82,10 +91,23 @@ To deploy locally, we use the Juno emulator as the primary replica.
    npm run deploy
    ```
 
-3. **Start the development server**:
+3. **Initialize the registry + Vici engine**:
+
+   ```bash
+   npm run init:icdc
+   ```
+
+   Registers the Vici engine, seeds the oracle, and adds sample markets. Re-run after any
+   registry reinstall.
+
+4. **Start the development server**:
    ```bash
    npm run dev
    ```
+
+For deeper workflows (staging reset, engine operations, debugging role sync) see the
+step-by-step runbooks in [`.agents/workflows/`](./.agents/workflows/) and the architecture
+reference in [`docs/engine-integration.md`](./docs/engine-integration.md).
 
 > [!IMPORTANT]
 > Do **NOT** run `dfx start`. The Juno emulator acts as the only local replica and avoids CORS/404 errors with custom canisters.

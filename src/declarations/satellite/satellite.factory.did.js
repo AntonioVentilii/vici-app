@@ -31,9 +31,7 @@ export const AppGetProfileResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					moderator: IDL.Null,
 					solver: IDL.Null,
-					user: IDL.Null,
 					group_creator: IDL.Null
 				})
 			),
@@ -69,9 +67,7 @@ export const AppListFollowersResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					moderator: IDL.Null,
 					solver: IDL.Null,
-					user: IDL.Null,
 					group_creator: IDL.Null
 				})
 			),
@@ -100,9 +96,7 @@ export const AppListFollowingResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					moderator: IDL.Null,
 					solver: IDL.Null,
-					user: IDL.Null,
 					group_creator: IDL.Null
 				})
 			),
@@ -131,9 +125,7 @@ export const AppListFriendRequestsResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					moderator: IDL.Null,
 					solver: IDL.Null,
-					user: IDL.Null,
 					group_creator: IDL.Null
 				})
 			),
@@ -162,9 +154,7 @@ export const AppListFriendsResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					moderator: IDL.Null,
 					solver: IDL.Null,
-					user: IDL.Null,
 					group_creator: IDL.Null
 				})
 			),
@@ -198,9 +188,7 @@ export const AppListLeaderboardResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					moderator: IDL.Null,
 					solver: IDL.Null,
-					user: IDL.Null,
 					group_creator: IDL.Null
 				})
 			),
@@ -236,9 +224,7 @@ export const AppListRejectedFriendshipsResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					moderator: IDL.Null,
 					solver: IDL.Null,
-					user: IDL.Null,
 					group_creator: IDL.Null
 				})
 			),
@@ -276,9 +262,7 @@ export const AppSearchProfilesResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					moderator: IDL.Null,
 					solver: IDL.Null,
-					user: IDL.Null,
 					group_creator: IDL.Null
 				})
 			),
@@ -348,9 +332,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						moderator: IDL.Null,
 						solver: IDL.Null,
-						user: IDL.Null,
 						group_creator: IDL.Null
 					})
 				),
@@ -386,9 +368,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						moderator: IDL.Null,
 						solver: IDL.Null,
-						user: IDL.Null,
 						group_creator: IDL.Null
 					})
 				),
@@ -417,9 +397,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						moderator: IDL.Null,
 						solver: IDL.Null,
-						user: IDL.Null,
 						group_creator: IDL.Null
 					})
 				),
@@ -448,9 +426,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						moderator: IDL.Null,
 						solver: IDL.Null,
-						user: IDL.Null,
 						group_creator: IDL.Null
 					})
 				),
@@ -479,9 +455,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						moderator: IDL.Null,
 						solver: IDL.Null,
-						user: IDL.Null,
 						group_creator: IDL.Null
 					})
 				),
@@ -515,9 +489,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						moderator: IDL.Null,
 						solver: IDL.Null,
-						user: IDL.Null,
 						group_creator: IDL.Null
 					})
 				),
@@ -553,9 +525,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						moderator: IDL.Null,
 						solver: IDL.Null,
-						user: IDL.Null,
 						group_creator: IDL.Null
 					})
 				),
@@ -591,9 +561,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						moderator: IDL.Null,
 						solver: IDL.Null,
-						user: IDL.Null,
 						group_creator: IDL.Null
 					})
 				),

@@ -1,6 +1,10 @@
 import { Collection } from '$lib/constants/collections.constants';
 import { UserProfileSchema } from '$lib/schema/profile.schema';
 import { CheckFriendshipArgsSchema, RelationSchema } from '$lib/schema/relation.schema';
+import {
+	syncRoleToEngineOnDelete,
+	syncRoleToEngineOnSet
+} from '$satellite/services/engine-sync.services';
 import { listLeaderboard as listLeaderboardFn } from '$satellite/services/leaderboard.services';
 import {
 	assertUniqueNickname,
@@ -31,6 +35,8 @@ import {
 	defineUpdate,
 	type AssertSetDoc,
 	type AssertSetDocContext,
+	type OnDeleteDoc,
+	type OnDeleteDocContext,
 	type OnSetDoc,
 	type OnSetDocContext,
 	type RunFunction
@@ -171,7 +177,7 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 
 // --- Hooks ---
 
-const setDocCollections = [Collection.ACTIVITIES, Collection.PROFILES] as const;
+const setDocCollections = [Collection.ACTIVITIES, Collection.PROFILES, Collection.ROLES] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
 
@@ -180,7 +186,23 @@ export const onSetDoc = defineHook<OnSetDoc>({
 	run: async (context) => {
 		const fn: Record<OnSetDocCollection, RunFunction<OnSetDocContext>> = {
 			[Collection.PROFILES]: onProfileSetForVxpOnboarding,
-			[Collection.ACTIVITIES]: onTradeActivityForVxpOnboarding
+			[Collection.ACTIVITIES]: onTradeActivityForVxpOnboarding,
+			[Collection.ROLES]: syncRoleToEngineOnSet
+		};
+
+		await fn[context.data.collection]?.(context);
+	}
+});
+
+const deleteDocCollections = [Collection.ROLES] as const;
+
+type OnDeleteDocCollection = (typeof deleteDocCollections)[number];
+
+export const onDeleteDoc = defineHook<OnDeleteDoc>({
+	collections: deleteDocCollections,
+	run: async (context) => {
+		const fn: Record<OnDeleteDocCollection, RunFunction<OnDeleteDocContext>> = {
+			[Collection.ROLES]: syncRoleToEngineOnDelete
 		};
 
 		await fn[context.data.collection]?.(context);

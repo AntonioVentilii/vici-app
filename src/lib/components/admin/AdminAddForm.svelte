@@ -18,7 +18,15 @@
 		onAddRole: () => void;
 	} = $props();
 
-	const validRoles = Object.values(UserRole).filter((role) => role !== UserRole.CONTROLLER);
+	// Explicitly listed rather than derived from `Object.values(UserRole)` so adding a new
+	// non-grantable role (e.g. a future system-level marker) doesn't silently show up in the
+	// dropdown. `CONTROLLER` is managed at the IC level and cannot be granted from the UI.
+	const grantableRoles: UserRole[] = [
+		UserRole.ADMIN,
+		UserRole.SOLVER,
+		UserRole.CREATOR,
+		UserRole.GROUP_CREATOR
+	];
 </script>
 
 <div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
@@ -61,7 +69,7 @@
 					onchange={(e) => onRoleChange(e.currentTarget.value as UserRole)}
 					value={role}
 				>
-					{#each validRoles as role (role)}
+					{#each grantableRoles as role (role)}
 						<option value={role}>{role}</option>
 					{/each}
 				</select>

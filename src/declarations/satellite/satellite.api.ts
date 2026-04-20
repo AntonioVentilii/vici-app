@@ -39,9 +39,7 @@ const AppGetProfileResultSchema = j.strictObject({
 			avatar: j.string(),
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
-			role: j.optional(
-				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
-			),
+			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator', 'group_creator'])),
 			totalTrades: j.number(),
 			winRate: j.number(),
 			dailyStreak: j.number(),
@@ -80,9 +78,7 @@ const AppListFollowersResultSchema = j.strictObject({
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
 			viewerPrincipal: j.optional(j.string()),
-			viewerRole: j.optional(
-				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
-			),
+			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator', 'group_creator'])),
 			isFriend: j.optional(j.boolean())
 		})
 	)
@@ -103,9 +99,7 @@ const AppListFollowingResultSchema = j.strictObject({
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
 			viewerPrincipal: j.optional(j.string()),
-			viewerRole: j.optional(
-				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
-			),
+			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator', 'group_creator'])),
 			isFriend: j.optional(j.boolean())
 		})
 	)
@@ -126,9 +120,7 @@ const AppListFriendRequestsResultSchema = j.strictObject({
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
 			viewerPrincipal: j.optional(j.string()),
-			viewerRole: j.optional(
-				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
-			),
+			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator', 'group_creator'])),
 			isFriend: j.optional(j.boolean())
 		})
 	)
@@ -151,9 +143,7 @@ const AppListFriendsResultSchema = j.strictObject({
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
 			viewerPrincipal: j.optional(j.string()),
-			viewerRole: j.optional(
-				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
-			),
+			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator', 'group_creator'])),
 			isFriend: j.optional(j.boolean())
 		})
 	)
@@ -175,9 +165,7 @@ const AppListLeaderboardResultSchema = j.strictObject({
 			avatar: j.string(),
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
-			role: j.optional(
-				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
-			),
+			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator', 'group_creator'])),
 			totalTrades: j.number(),
 			winRate: j.number(),
 			dailyStreak: j.number(),
@@ -209,9 +197,7 @@ const AppListRejectedFriendshipsResultSchema = j.strictObject({
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
 			viewerPrincipal: j.optional(j.string()),
-			viewerRole: j.optional(
-				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
-			),
+			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator', 'group_creator'])),
 			isFriend: j.optional(j.boolean())
 		})
 	)
@@ -241,9 +227,7 @@ const AppSearchProfilesResultSchema = j.strictObject({
 			avatar: j.string(),
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
-			role: j.optional(
-				j.enum(['controller', 'admin', 'solver', 'creator', 'moderator', 'group_creator', 'user'])
-			),
+			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator', 'group_creator'])),
 			totalTrades: j.number(),
 			winRate: j.number(),
 			dailyStreak: j.number(),

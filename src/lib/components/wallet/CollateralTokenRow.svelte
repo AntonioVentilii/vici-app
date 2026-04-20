@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import { VXP_BALANCE_DISPLAY_DECIMALS } from '$lib/constants/playground.constants';
+	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { formatAvailableUsd, formatToken } from '$lib/utils/format.utils';
@@ -24,6 +26,8 @@
 	const { tokenSymbol, isDevEnabled, balance, decimals, assetWorth }: Props = $props();
 
 	const colorClasses = $derived(getTokenColorClasses(tokenSymbol));
+
+	const isVxp = $derived(tokenSymbol === VXP_TOKEN.symbol);
 </script>
 
 <div class="flex items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50/50">
@@ -50,7 +54,11 @@
 
 	<div class="text-right">
 		<div class="text-sm font-black text-slate-950">
-			{formatToken({ value: balance, unitName: decimals })}
+			{formatToken({
+				value: balance,
+				unitName: decimals,
+				displayDecimals: isVxp ? VXP_BALANCE_DISPLAY_DECIMALS : undefined
+			})}
 		</div>
 		<div class="text-[10px] font-medium text-slate-400 uppercase">
 			{#if $playgroundVxpUnitMode}

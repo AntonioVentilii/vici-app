@@ -20,7 +20,5 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 	],
 	[UserRole.SOLVER]: [Permission.RESOLVE_MARKET],
 	[UserRole.CREATOR]: [Permission.CREATE_MARKET],
-	[UserRole.MODERATOR]: [],
-	[UserRole.GROUP_CREATOR]: [Permission.CREATE_GROUP],
-	[UserRole.USER]: []
+	[UserRole.GROUP_CREATOR]: [Permission.CREATE_GROUP]
 };

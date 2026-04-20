@@ -12,3 +12,12 @@ export const PLAYGROUND_DISPLAY_SYMBOL = LOCKED_CAPACITY_DISPLAY_UNIT.Playground
  * Label for locked margin in settlement (internal vUSD).
  */
 export const SETTLEMENT_LOCKED_CAPACITY_LABEL = LOCKED_CAPACITY_DISPLAY_UNIT.Settlement;
+
+/**
+ * Display decimals for VXP balances.
+ *
+ * VXP is framed as a point-like currency, so balances render as whole numbers
+ * (e.g. `1,000 VXP`) to reinforce the "points" feel. Transfers and other
+ * non-balance flows keep their native precision.
+ */
+export const VXP_BALANCE_DISPLAY_DECIMALS = 0;

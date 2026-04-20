@@ -1,4 +1,6 @@
 import { ZERO } from '$lib/constants/app.constants';
+import { VXP_BALANCE_DISPLAY_DECIMALS } from '$lib/constants/playground.constants';
+import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type { CollateralStoreData } from '$lib/stores/collaterals.store';
 import type { Token } from '$lib/types/token';
 import { icrcLedgerDecimalsFromCollateralConfig } from '$lib/utils/asset-ref.utils';
@@ -28,7 +30,10 @@ export const calculateDepositedNominalLabel = ({
 				fallbackDecimals: t.decimals
 			});
 
-			parts.push(`${formatToken({ value: b, unitName: d })} ${t.symbol}`);
+			const displayDecimals =
+				t.symbol === VXP_TOKEN.symbol ? VXP_BALANCE_DISPLAY_DECIMALS : undefined;
+
+			parts.push(`${formatToken({ value: b, unitName: d, displayDecimals })} ${t.symbol}`);
 		}
 	}
 

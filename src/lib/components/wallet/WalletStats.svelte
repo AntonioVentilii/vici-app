@@ -4,6 +4,8 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Switch from '$lib/components/ui/Switch.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { VXP_BALANCE_DISPLAY_DECIMALS } from '$lib/constants/playground.constants';
+	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
@@ -101,7 +103,12 @@
 
 					<div class="text-right">
 						<div class="text-sm font-black text-slate-950">
-							{formatToken({ value: balance, unitName: token.decimals })}
+							{formatToken({
+								value: balance,
+								unitName: token.decimals,
+								displayDecimals:
+									token.symbol === VXP_TOKEN.symbol ? VXP_BALANCE_DISPLAY_DECIMALS : undefined
+							})}
 						</div>
 						<div class="text-[10px] font-medium text-slate-400">
 							{#if $playgroundVxpUnitMode}
