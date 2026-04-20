@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
+	import { LoaderCircle } from 'lucide-svelte';
 	import type { Snippet } from 'svelte';
 	import type { HTMLButtonAttributes } from 'svelte/elements';
-	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props extends Omit<HTMLButtonAttributes, 'disabled' | 'aria-busy'> {
@@ -47,9 +47,7 @@
 	{...rest}
 >
 	{#if isBusy}
-		<span class="flex h-4 w-4 items-center justify-center">
-			<LoadingSpinner border={2} center={false} color="border-current" size="current" />
-		</span>
+		<LoaderCircle class="animate-spin" size={20} strokeWidth={2.5} aria-hidden="true" />
 
 		{#if nonNullish(busyLabel)}
 			{@render busyLabel()}
