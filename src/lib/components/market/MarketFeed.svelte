@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import MarketCard from '$lib/components/market/MarketCard.svelte';
 	import MarketCardSkeleton from '$lib/components/market/MarketCardSkeleton.svelte';
+	import StackedMarketCard from '$lib/components/market/StackedMarketCard.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import { authPrincipal } from '$lib/derived/user.derived';
 	import type { Market } from '$lib/types/market';
+	import { groupMarketsByLineage } from '$lib/utils/market-groups.utils';
 
 	interface Props {
 		markets: Market[];
@@ -14,6 +16,8 @@
 	}
 
 	let { markets, loading, hasMore = false, onLoadMore, onChallenge }: Props = $props();
+
+	const groups = $derived(groupMarketsByLineage({ markets, userPrincipal: $authPrincipal }));
 
 	let observer: IntersectionObserver | undefined;
 	let sentinel: HTMLElement | undefined = $state();
@@ -36,13 +40,14 @@
 
 	onMount(() => () => observer?.disconnect());
 
-	let isGrid = $derived(markets.length > 0 || loading);
+	let isGrid = $derived(groups.length > 0 || loading);
 </script>
 
 <div
 	class="w-full pb-20"
 	class:flex={!isGrid}
 	class:gap-6={isGrid}
+	class:gap-y-8={isGrid}
 	class:grid={isGrid}
 	class:grid-cols-1={isGrid}
 	class:items-center={!isGrid}
@@ -50,9 +55,9 @@
 	class:lg:grid-cols-3={isGrid}
 	class:md:grid-cols-2={isGrid}
 >
-	{#if markets.length > 0}
-		{#each markets as market, index (market.id)}
-			<MarketCard {index} {market} {onChallenge} />
+	{#if groups.length > 0}
+		{#each groups as group, index (group.rootId)}
+			<StackedMarketCard {group} {index} {onChallenge} userPrincipal={$authPrincipal} />
 		{/each}
 
 		{#if loading}

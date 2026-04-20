@@ -1,6 +1,7 @@
 <script lang="ts">
 	import type { Doc } from '@junobuild/core';
 	import { onMount } from 'svelte';
+	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -136,7 +137,7 @@
 </script>
 
 <Card padding="lg" variant="glass">
-	<div class="flex flex-col gap-4">
+	<div class="flex w-full flex-col gap-4">
 		<div class="flex items-center justify-between">
 			<h3 class="text-primary text-xl font-bold">Friends</h3>
 		</div>
@@ -209,23 +210,12 @@
 							>
 								<div class="flex items-center gap-3">
 									<div class="relative">
-										<div
-											class="bg-muted h-10 w-10 overflow-hidden rounded-full shadow-inner transition-transform group-hover:scale-110"
-										>
-											{#if profile?.avatar}
-												<img
-													class="h-full w-full object-cover"
-													alt={profile.nickname}
-													src={profile.avatar}
-												/>
-											{:else}
-												<div
-													class="flex h-full w-full items-center justify-center text-lg font-bold"
-												>
-													{profile?.nickname?.[0] ?? '?'}
-												</div>
-											{/if}
-										</div>
+										<Avatar
+											class="bg-muted h-10 w-10 shadow-inner transition-transform group-hover:scale-110"
+											avatar={profile?.avatar}
+											nickname={profile?.nickname ?? 'Friend'}
+											owner={profile?.owner ?? friendId ?? ''}
+										/>
 										<div
 											class="border-background absolute right-0 bottom-0 h-3 w-3 rounded-full border-2 bg-green-500 shadow-sm"
 										></div>
@@ -270,21 +260,12 @@
 							>
 								<div class="flex items-center gap-3">
 									<div class="relative">
-										<div class="bg-muted h-10 w-10 overflow-hidden rounded-full shadow-inner">
-											{#if profile?.avatar}
-												<img
-													class="h-full w-full object-cover"
-													alt={profile.nickname}
-													src={profile.avatar}
-												/>
-											{:else}
-												<div
-													class="flex h-full w-full items-center justify-center text-lg font-bold"
-												>
-													{profile?.nickname?.[0] ?? '?'}
-												</div>
-											{/if}
-										</div>
+										<Avatar
+											class="bg-muted h-10 w-10 shadow-inner"
+											avatar={profile?.avatar}
+											nickname={profile?.nickname ?? 'Friend'}
+											owner={profile?.owner ?? friendId ?? ''}
+										/>
 									</div>
 									<div class="flex-1 overflow-hidden">
 										<p class="truncate text-sm font-semibold">{profile?.nickname ?? 'Unknown'}</p>
@@ -332,19 +313,12 @@
 							<div
 								class="bg-destructive/10 group flex items-center gap-3 rounded-xl p-3 opacity-70"
 							>
-								<div class="bg-muted h-10 w-10 overflow-hidden rounded-full grayscale">
-									{#if profile?.avatar}
-										<img
-											class="h-full w-full object-cover"
-											alt={profile.nickname}
-											src={profile.avatar}
-										/>
-									{:else}
-										<div class="flex h-full w-full items-center justify-center text-lg font-bold">
-											{profile?.nickname?.[0] ?? '?'}
-										</div>
-									{/if}
-								</div>
+								<Avatar
+									class="bg-muted h-10 w-10 grayscale"
+									avatar={profile?.avatar}
+									nickname={profile?.nickname ?? 'Friend'}
+									owner={profile?.owner ?? friendId ?? ''}
+								/>
 								<div class="flex-1 overflow-hidden">
 									<p class="truncate text-sm font-semibold line-through">
 										{profile?.nickname ?? 'Unknown'}

@@ -1,6 +1,6 @@
 import type { RegistryDid } from '$declarations';
 import { listOrders as listOrdersApi } from '$lib/api/clearing.api';
-import { addSeries, getSeries, listSeries } from '$lib/api/registry.api';
+import { addSeries, forkSeries, getSeries, listSeries } from '$lib/api/registry.api';
 import {
 	MILLISECOND_IN_NANOSECONDS,
 	PAYOFF_TYPE,
@@ -503,29 +503,42 @@ export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<M
 };
 
 /**
- * Creates a restricted clone of an existing market.
+ * Forks an existing market into a new restricted-access clone ("circle match").
+ *
+ * Uses the registry's `fork_series` endpoint so the resulting market carries a
+ * `forked_from` reference back to the source. This lineage is what powers the
+ * stacked-card UI and lets us enforce per-user fork limits on the backend.
+ *
+ * The fork inherits the source's title, description, outcomes, expiry,
+ * balance domain, payout unit, etc. — the caller only supplies the target
+ * group(s) and (optionally) a custom title/description.
  */
 export const forkMarket = async ({
 	marketId,
-	groupIds
+	groupIds,
+	title,
+	description
 }: {
 	marketId: MarketId;
 	groupIds: string[];
+	title?: string;
+	description?: string;
 }): Promise<string> => {
-	const sourceMarket = await getMarket(marketId);
-
-	if (!sourceMarket) {
-		throw new Error('Source market not found');
+	if (groupIds.length === 0) {
+		throw new Error('Fork requires at least one target group');
 	}
 
-	const tradingAccess: RegistryDid.TradingAccess[] = [{ Restricted: { groups: groupIds } }];
+	const identity = await safeGetIdentityOnce();
 
-	return await createMarket({
-		title: `${sourceMarket.title} (Circle)`,
-		description: sourceMarket.description,
-		expiryDate: BigInt(sourceMarket.expiryDate),
-		outcomes: sourceMarket.outcomes?.map((o) => o.title),
-		balanceDomain: sourceMarket.balanceDomain,
-		tradingAccess
-	});
+	const params: RegistryDid.ForkSeriesParams = {
+		source_series_id: marketId,
+		title: toNullable(title),
+		description: toNullable(
+			nonNullish(description) ? { plain: description, html: [], markdown: [] } : undefined
+		),
+		trading_access: [{ Restricted: { groups: groupIds } }],
+		engine_id: toNullable()
+	};
+
+	return await forkSeries({ identity, params });
 };

@@ -46,4 +46,10 @@ export interface Market {
 	token: Token;
 	pricePrecision: number;
 	balanceDomain: ClearingDid.BalanceDomain;
+	/**
+	 * If this market was forked from another, the source market ID. A market
+	 * is a "fork" iff this is defined; the public/root market always has
+	 * `forkedFrom === undefined`.
+	 */
+	forkedFrom?: MarketId;
 }

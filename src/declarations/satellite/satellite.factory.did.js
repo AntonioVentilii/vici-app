@@ -31,8 +31,7 @@ export const AppGetProfileResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					solver: IDL.Null,
-					group_creator: IDL.Null
+					solver: IDL.Null
 				})
 			),
 			level: IDL.Float64,
@@ -67,8 +66,7 @@ export const AppListFollowersResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					solver: IDL.Null,
-					group_creator: IDL.Null
+					solver: IDL.Null
 				})
 			),
 			participants: IDL.Vec(IDL.Text),
@@ -96,8 +94,7 @@ export const AppListFollowingResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					solver: IDL.Null,
-					group_creator: IDL.Null
+					solver: IDL.Null
 				})
 			),
 			participants: IDL.Vec(IDL.Text),
@@ -125,8 +122,7 @@ export const AppListFriendRequestsResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					solver: IDL.Null,
-					group_creator: IDL.Null
+					solver: IDL.Null
 				})
 			),
 			participants: IDL.Vec(IDL.Text),
@@ -154,8 +150,7 @@ export const AppListFriendsResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					solver: IDL.Null,
-					group_creator: IDL.Null
+					solver: IDL.Null
 				})
 			),
 			participants: IDL.Vec(IDL.Text),
@@ -188,8 +183,7 @@ export const AppListLeaderboardResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					solver: IDL.Null,
-					group_creator: IDL.Null
+					solver: IDL.Null
 				})
 			),
 			level: IDL.Float64,
@@ -224,8 +218,7 @@ export const AppListRejectedFriendshipsResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					solver: IDL.Null,
-					group_creator: IDL.Null
+					solver: IDL.Null
 				})
 			),
 			participants: IDL.Vec(IDL.Text),
@@ -262,8 +255,7 @@ export const AppSearchProfilesResult = IDL.Record({
 					controller: IDL.Null,
 					creator: IDL.Null,
 					admin: IDL.Null,
-					solver: IDL.Null,
-					group_creator: IDL.Null
+					solver: IDL.Null
 				})
 			),
 			level: IDL.Float64,
@@ -332,8 +324,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						solver: IDL.Null,
-						group_creator: IDL.Null
+						solver: IDL.Null
 					})
 				),
 				level: IDL.Float64,
@@ -368,8 +359,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						solver: IDL.Null,
-						group_creator: IDL.Null
+						solver: IDL.Null
 					})
 				),
 				participants: IDL.Vec(IDL.Text),
@@ -397,8 +387,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						solver: IDL.Null,
-						group_creator: IDL.Null
+						solver: IDL.Null
 					})
 				),
 				participants: IDL.Vec(IDL.Text),
@@ -426,8 +415,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						solver: IDL.Null,
-						group_creator: IDL.Null
+						solver: IDL.Null
 					})
 				),
 				participants: IDL.Vec(IDL.Text),
@@ -455,8 +443,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						solver: IDL.Null,
-						group_creator: IDL.Null
+						solver: IDL.Null
 					})
 				),
 				participants: IDL.Vec(IDL.Text),
@@ -489,8 +476,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						solver: IDL.Null,
-						group_creator: IDL.Null
+						solver: IDL.Null
 					})
 				),
 				level: IDL.Float64,
@@ -525,8 +511,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						solver: IDL.Null,
-						group_creator: IDL.Null
+						solver: IDL.Null
 					})
 				),
 				participants: IDL.Vec(IDL.Text),
@@ -561,8 +546,7 @@ export const idlFactory = ({ IDL }) => {
 						controller: IDL.Null,
 						creator: IDL.Null,
 						admin: IDL.Null,
-						solver: IDL.Null,
-						group_creator: IDL.Null
+						solver: IDL.Null
 					})
 				),
 				level: IDL.Float64,

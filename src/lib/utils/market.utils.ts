@@ -43,7 +43,8 @@ export const mapMarketData = ({
 		payoff_type: payoffType,
 		outcomes,
 		balance_domain: balanceDomain,
-		trading_access: rawTradingAccess
+		trading_access: rawTradingAccess,
+		forked_from: forkedFromOpt
 	} = series;
 
 	const token = resolveMarketDisplayToken({ balanceDomain, payoutUnit });
@@ -93,7 +94,8 @@ export const mapMarketData = ({
 		bestAskQty,
 		token,
 		pricePrecision: Number(series.price_precision),
-		balanceDomain
+		balanceDomain,
+		forkedFrom: forkedFromOpt?.[0] !== undefined ? parseMarketId(forkedFromOpt[0]) : undefined
 	};
 };
 

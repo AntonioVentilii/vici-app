@@ -66,15 +66,12 @@ type EngineRoleVariant = RegistryDid.EngineRole;
  * hold on the Vici engine in icdc-core.
  *
  * `CONTROLLER` is empty because canister controllers bypass all engine-role checks.
- * `GROUP_CREATOR` has no icdc-core counterpart today; extend this table if/when new engine
- * roles are added on the protocol side.
  */
 const ROLE_TO_ENGINE_ROLES: Record<UserRole, EngineRoleVariant[]> = {
 	[UserRole.CONTROLLER]: [],
 	[UserRole.ADMIN]: [{ Creator: null }, { OracleAdmin: null }],
 	[UserRole.SOLVER]: [{ OracleAdmin: null }],
-	[UserRole.CREATOR]: [{ Creator: null }],
-	[UserRole.GROUP_CREATOR]: []
+	[UserRole.CREATOR]: [{ Creator: null }]
 };
 
 const engineRoleKey = (role: EngineRoleVariant): string => Object.keys(role)[0];

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
 	import { Pencil, Check, X } from 'lucide-svelte';
+	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
@@ -88,15 +88,12 @@
 				<div
 					class="h-28 w-28 rounded-full border-4 border-white p-1 shadow-xl ring-4 ring-indigo-50"
 				>
-					<div
-						class="flex h-full w-full items-center justify-center overflow-hidden rounded-full bg-slate-100 shadow-inner"
-					>
-						{#if nonNullish(profile.avatar)}
-							<img class="h-full w-full object-cover" alt={profile.nickname} src={profile.avatar} />
-						{:else}
-							<span class="text-4xl font-black text-slate-300">{profile.nickname[0]}</span>
-						{/if}
-					</div>
+					<Avatar
+						class="h-full w-full bg-slate-100 shadow-inner"
+						avatar={profile.avatar}
+						nickname={profile.nickname}
+						owner={profile.owner}
+					/>
 				</div>
 				<div
 					class="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 font-bold text-white shadow-lg ring-4 ring-white"
