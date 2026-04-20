@@ -1,0 +1,462 @@
+import type { RegistryDid } from '$declarations';
+import { VICI_ORACLE_V1 } from '$lib/constants/app.constants';
+import { REGISTRY_CANISTER_ID } from '$lib/constants/canisters.constants';
+import { Collection } from '$lib/constants/collections.constants';
+import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
+import { UserRole } from '$lib/enums/user';
+import { logError, logInfo } from '$satellite/utils/logger.utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
+import { IDL } from '@icp-sdk/core/candid';
+import { Principal } from '@icp-sdk/core/principal';
+import type { OnDeleteDocContext, OnSetDocContext } from '@junobuild/functions';
+import { call } from '@junobuild/functions/ic-cdk';
+import { decodeDocData } from '@junobuild/functions/sdk';
+
+// Minimal IDL definitions for the subset of the registry interface we call from the
+// satellite. Kept local (rather than imported from the generated declarations) because the
+// generated file carries `// @ts-nocheck` and so its named exports are not visible to TS.
+// Source of truth: src/declarations/registry/registry.idl.js.
+const EngineRoleIdl = IDL.Variant({
+	OracleAdmin: IDL.Null,
+	Creator: IDL.Null
+});
+const EngineErrorIdl = IDL.Variant({
+	RoleAlreadyGranted: IDL.Null,
+	EngineNotFound: IDL.Null,
+	EngineAlreadyExists: IDL.Null,
+	CannotRemoveCreator: IDL.Null,
+	RoleNotAllowed: IDL.Null,
+	RoleNotGranted: IDL.Null,
+	Unauthorized: IDL.Null,
+	NameTooLong: IDL.Null
+});
+const EngineResultIdl = IDL.Variant({
+	Ok: IDL.Null,
+	Err: EngineErrorIdl
+});
+const GrantEngineRoleParamsIdl = IDL.Record({
+	principal: IDL.Principal,
+	engine_id: IDL.Text,
+	role: EngineRoleIdl
+});
+const RevokeEngineRoleParamsIdl = IDL.Record({
+	principal: IDL.Principal,
+	engine_id: IDL.Text,
+	role: EngineRoleIdl
+});
+const ManageOraclePrincipalsParamsIdl = IDL.Record({
+	oracle_id: IDL.Text,
+	add_principals: IDL.Vec(IDL.Principal),
+	remove_principals: IDL.Vec(IDL.Principal)
+});
+const OracleErrorIdl = IDL.Variant({
+	UnauthorizedOracleManager: IDL.Null,
+	OracleAlreadyExists: IDL.Null,
+	OracleNotFound: IDL.Null
+});
+const OracleResultIdl = IDL.Variant({
+	Ok: IDL.Null,
+	Err: OracleErrorIdl
+});
+
+type EngineRoleVariant = RegistryDid.EngineRole;
+
+/**
+ * Maps Juno `UserRole` values to the set of `EngineRole`s the corresponding principal should
+ * hold on the Vici engine in icdc-core.
+ *
+ * `CONTROLLER` is empty because canister controllers bypass all engine-role checks.
+ * `GROUP_CREATOR` has no icdc-core counterpart today; extend this table if/when new engine
+ * roles are added on the protocol side.
+ */
+const ROLE_TO_ENGINE_ROLES: Record<UserRole, EngineRoleVariant[]> = {
+	[UserRole.CONTROLLER]: [],
+	[UserRole.ADMIN]: [{ Creator: null }, { OracleAdmin: null }],
+	[UserRole.SOLVER]: [{ OracleAdmin: null }],
+	[UserRole.CREATOR]: [{ Creator: null }],
+	[UserRole.GROUP_CREATOR]: []
+};
+
+const engineRoleKey = (role: EngineRoleVariant): string => Object.keys(role)[0];
+
+const diffRoles = ({
+	previous,
+	next
+}: {
+	previous: EngineRoleVariant[];
+	next: EngineRoleVariant[];
+}): { toGrant: EngineRoleVariant[]; toRevoke: EngineRoleVariant[] } => {
+	const prevKeys = new Set(previous.map(engineRoleKey));
+	const nextKeys = new Set(next.map(engineRoleKey));
+
+	return {
+		toGrant: next.filter((r) => !prevKeys.has(engineRoleKey(r))),
+		toRevoke: previous.filter((r) => !nextKeys.has(engineRoleKey(r)))
+	};
+};
+
+const isIdempotentEngineError = ({
+	method,
+	result
+}: {
+	method: 'grant' | 'revoke';
+	result: RegistryDid.EngineResult;
+}): boolean => {
+	if (!('Err' in result)) {
+		return false;
+	}
+
+	const err = result.Err;
+
+	if (method === 'grant' && 'RoleAlreadyGranted' in err) {
+		return true;
+	}
+
+	if (method === 'revoke' && 'RoleNotGranted' in err) {
+		return true;
+	}
+
+	return false;
+};
+
+const errToString = (err: RegistryDid.EngineError | RegistryDid.OracleError): string =>
+	Object.keys(err)[0];
+
+/**
+ * Whether the given `UserRole` should also be an authorized settler on `VICI_ORACLE_V1`.
+ *
+ * Today this is derived from whether the role grants `OracleAdmin` on the Vici engine:
+ * anyone who can manage oracles in Vici's single-oracle setup is also expected to settle.
+ * If the mapping diverges in the future (e.g. adding a "settle-only" role), flip this to a
+ * standalone table.
+ */
+const shouldBeOracleSettler = (role: UserRole | undefined): boolean =>
+	nonNullish(role) && ROLE_TO_ENGINE_ROLES[role].some((r) => engineRoleKey(r) === 'OracleAdmin');
+
+const manageOraclePrincipal = async ({
+	principal,
+	action
+}: {
+	principal: Principal;
+	action: 'add' | 'remove';
+}): Promise<void> => {
+	const result = await call<RegistryDid.OracleResult>({
+		canisterId: REGISTRY_CANISTER_ID,
+		method: 'manage_oracle_principals',
+		args: [
+			[
+				ManageOraclePrincipalsParamsIdl,
+				{
+					oracle_id: VICI_ORACLE_V1,
+					add_principals: action === 'add' ? [principal] : [],
+					remove_principals: action === 'remove' ? [principal] : []
+				}
+			]
+		],
+		result: OracleResultIdl
+	});
+
+	if ('Ok' in result) {
+		logInfo({
+			message: 'oracle_settler_synced',
+			detail: {
+				oracle_id: VICI_ORACLE_V1,
+				principal: principal.toText(),
+				action
+			}
+		});
+
+		return;
+	}
+
+	// The oracle may not have been registered yet (fresh install before `init:registry`
+	// ran). Log a warning and keep going — the engine role grant still succeeded, and the
+	// admin can reconcile manually by bootstrapping the oracle + replaying the role change.
+	if ('OracleNotFound' in result.Err) {
+		logError({
+			message: 'oracle_settler_skipped_missing_oracle',
+			detail: {
+				oracle_id: VICI_ORACLE_V1,
+				principal: principal.toText(),
+				action
+			}
+		});
+
+		return;
+	}
+
+	throw new Error(`manage_oracle_principals failed: ${errToString(result.Err)}`);
+};
+
+const grantEngineRole = async ({
+	principal,
+	role
+}: {
+	principal: Principal;
+	role: EngineRoleVariant;
+}): Promise<void> => {
+	const result = await call<RegistryDid.EngineResult>({
+		canisterId: REGISTRY_CANISTER_ID,
+		method: 'grant_engine_role',
+		args: [
+			[
+				GrantEngineRoleParamsIdl,
+				{
+					principal,
+					engine_id: VICI_ENGINE_ID,
+					role
+				}
+			]
+		],
+		result: EngineResultIdl
+	});
+
+	if ('Ok' in result) {
+		logInfo({
+			message: 'engine_role_granted',
+			detail: {
+				engine_id: VICI_ENGINE_ID,
+				principal: principal.toText(),
+				role: engineRoleKey(role)
+			}
+		});
+
+		return;
+	}
+
+	if (isIdempotentEngineError({ method: 'grant', result })) {
+		logInfo({
+			message: 'engine_role_grant_idempotent',
+			detail: {
+				engine_id: VICI_ENGINE_ID,
+				principal: principal.toText(),
+				role: engineRoleKey(role)
+			}
+		});
+
+		return;
+	}
+
+	throw new Error(`grant_engine_role failed: ${errToString(result.Err)}`);
+};
+
+const revokeEngineRole = async ({
+	principal,
+	role
+}: {
+	principal: Principal;
+	role: EngineRoleVariant;
+}): Promise<void> => {
+	const result = await call<RegistryDid.EngineResult>({
+		canisterId: REGISTRY_CANISTER_ID,
+		method: 'revoke_engine_role',
+		args: [
+			[
+				RevokeEngineRoleParamsIdl,
+				{
+					principal,
+					engine_id: VICI_ENGINE_ID,
+					role
+				}
+			]
+		],
+		result: EngineResultIdl
+	});
+
+	if ('Ok' in result) {
+		logInfo({
+			message: 'engine_role_revoked',
+			detail: {
+				engine_id: VICI_ENGINE_ID,
+				principal: principal.toText(),
+				role: engineRoleKey(role)
+			}
+		});
+
+		return;
+	}
+
+	if (isIdempotentEngineError({ method: 'revoke', result })) {
+		logInfo({
+			message: 'engine_role_revoke_idempotent',
+			detail: {
+				engine_id: VICI_ENGINE_ID,
+				principal: principal.toText(),
+				role: engineRoleKey(role)
+			}
+		});
+
+		return;
+	}
+
+	throw new Error(`revoke_engine_role failed: ${errToString(result.Err)}`);
+};
+
+const readRoleFromDoc = (data: Uint8Array): UserRole | undefined => {
+	try {
+		const { role } = decodeDocData<{ role: UserRole }>(data);
+
+		return role;
+	} catch {
+		return undefined;
+	}
+};
+
+const applyDiff = async ({
+	principal,
+	prevRole,
+	nextRole
+}: {
+	principal: Principal;
+	prevRole: UserRole | undefined;
+	nextRole: UserRole | undefined;
+}): Promise<void> => {
+	const previous = nonNullish(prevRole) ? ROLE_TO_ENGINE_ROLES[prevRole] : [];
+	const next = nonNullish(nextRole) ? ROLE_TO_ENGINE_ROLES[nextRole] : [];
+
+	const { toGrant, toRevoke } = diffRoles({ previous, next });
+
+	for (const role of toRevoke) {
+		await revokeEngineRole({ principal, role });
+	}
+
+	for (const role of toGrant) {
+		await grantEngineRole({ principal, role });
+	}
+
+	// Mirror OracleAdmin membership into the Vici oracle's `authorized_principals` set, so
+	// an admin/solver assignment is enough to both manage and actually settle markets. The
+	// underlying canister uses a `BTreeSet`, so duplicate adds / missing removes are no-ops.
+	const wasSettler = shouldBeOracleSettler(prevRole);
+	const isSettler = shouldBeOracleSettler(nextRole);
+
+	if (!wasSettler && isSettler) {
+		await manageOraclePrincipal({ principal, action: 'add' });
+	} else if (wasSettler && !isSettler) {
+		await manageOraclePrincipal({ principal, action: 'remove' });
+	}
+};
+
+/**
+ * Invoked by the `onSetDoc` hook for the `roles` collection.
+ *
+ * Diffs the previous and proposed `role` fields and issues the minimum number of
+ * `grant_engine_role` / `revoke_engine_role` calls to bring the Vici engine in sync with the
+ * doc. Idempotent: if the engine already has/lacks the role, the corresponding call short-
+ * circuits without error.
+ *
+ * The doc key must be a principal text — this is enforced by `assertSetRole` upstream.
+ */
+export const syncRoleToEngineOnSet = async (ctx: OnSetDocContext): Promise<void> => {
+	const {
+		data: {
+			collection,
+			key,
+			data: { before, after }
+		}
+	} = ctx;
+
+	if (collection !== Collection.ROLES) {
+		return;
+	}
+
+	let principal: Principal;
+
+	try {
+		principal = Principal.fromText(key);
+	} catch {
+		logError({
+			message: 'engine_sync_invalid_key',
+			detail: { key }
+		});
+
+		return;
+	}
+
+	const prevRole = nonNullish(before) ? readRoleFromDoc(before.data) : undefined;
+	const nextRole = readRoleFromDoc(after.data);
+
+	if (isNullish(nextRole)) {
+		logError({
+			message: 'engine_sync_decode_failed',
+			detail: { key, stage: 'after' }
+		});
+
+		return;
+	}
+
+	try {
+		await applyDiff({ principal, prevRole, nextRole });
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+		logError({
+			message: 'engine_sync_error',
+			detail: {
+				hook: 'on_set',
+				key,
+				prev_role: prevRole ?? 'none',
+				next_role: nextRole,
+				error: msg
+			}
+		});
+		throw e;
+	}
+};
+
+/**
+ * Invoked by the `onDeleteDoc` hook for the `roles` collection.
+ *
+ * Revokes every engine role previously mapped to the deleted `UserRole`. If the doc's data
+ * cannot be decoded (legacy or partial state), falls back to revoking the union of all
+ * possible engine roles so the engine does not retain a stale grant.
+ */
+export const syncRoleToEngineOnDelete = async (ctx: OnDeleteDocContext): Promise<void> => {
+	const {
+		data: { collection, key, data: deletedDoc }
+	} = ctx;
+
+	if (collection !== Collection.ROLES) {
+		return;
+	}
+
+	let principal: Principal;
+
+	try {
+		principal = Principal.fromText(key);
+	} catch {
+		logError({
+			message: 'engine_sync_invalid_key',
+			detail: { key }
+		});
+
+		return;
+	}
+
+	const prevRole = nonNullish(deletedDoc) ? readRoleFromDoc(deletedDoc.data) : undefined;
+
+	try {
+		await applyDiff({ principal, prevRole, nextRole: undefined });
+	} catch (e: unknown) {
+		const msg = e instanceof Error ? e.message : String(e);
+		logError({
+			message: 'engine_sync_error',
+			detail: {
+				hook: 'on_delete',
+				key,
+				prev_role: prevRole ?? 'none',
+				error: msg
+			}
+		});
+		throw e;
+	}
+};
+
+/**
+ * Exposed for unit testing: the UserRole → EngineRole mapping table.
+ */
+export const __testOnly = {
+	ROLE_TO_ENGINE_ROLES,
+	diffRoles,
+	engineRoleKey,
+	shouldBeOracleSettler
+};

@@ -9,6 +9,7 @@ import {
 	VICI_ORACLE_V1,
 	ZERO
 } from '$lib/constants/app.constants';
+import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
 import { ActivityType } from '$lib/enums/social';
 import { UserRole } from '$lib/enums/user';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
@@ -117,7 +118,8 @@ export const createMarket = async ({
 		),
 		balance_domain: domain,
 		oracle_source: VICI_ORACLE_V1,
-		trading_access: tradingAccess
+		trading_access: tradingAccess,
+		engine_id: toNullable(VICI_ENGINE_ID)
 	};
 
 	const seriesId = await addSeries({

@@ -19,7 +19,23 @@ juno emulator start
 npm run deploy
 ```
 
-4. Start the SvelteKit development server:
+4. Initialize the registry and register the Vici engine on icdc-core:
+   // turbo
+
+```bash
+npm run init:icdc
+```
+
+This runs clearing init → `init:icdc-engine` (registers the Vici engine with the satellite + human admins) → `init:registry` (seeds the oracle and demo markets tagged with `engine_id`).
+
+5. (Optional) smoke-test the engine wiring:
+   // turbo
+
+```bash
+npm run test:engine-sync
+```
+
+6. Start the SvelteKit development server:
 
 ```bash
 npm run dev
@@ -27,3 +43,9 @@ npm run dev
 
 > [!IMPORTANT]
 > Do NOT run `dfx start`. The Juno emulator acts as the only local replica.
+
+See also:
+
+- [icdc-engine-reset.md](./icdc-engine-reset.md) — fresh registry reset on local or staging.
+- [icdc-engine-operations.md](./icdc-engine-operations.md) — grant/revoke/audit role grants.
+- [../../docs/engine-integration.md](../../docs/engine-integration.md) — architecture.

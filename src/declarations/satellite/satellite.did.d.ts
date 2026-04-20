@@ -41,9 +41,7 @@ export interface AppGetProfileResult {
 								| { controller: null }
 								| { creator: null }
 								| { admin: null }
-								| { moderator: null }
 								| { solver: null }
-								| { user: null }
 								| { group_creator: null }
 						  ];
 					level: number;
@@ -67,9 +65,7 @@ export interface AppListFollowersResult {
 					| { controller: null }
 					| { creator: null }
 					| { admin: null }
-					| { moderator: null }
 					| { solver: null }
-					| { user: null }
 					| { group_creator: null }
 			  ];
 		participants: Array<string>;
@@ -87,9 +83,7 @@ export interface AppListFollowingResult {
 					| { controller: null }
 					| { creator: null }
 					| { admin: null }
-					| { moderator: null }
 					| { solver: null }
-					| { user: null }
 					| { group_creator: null }
 			  ];
 		participants: Array<string>;
@@ -107,9 +101,7 @@ export interface AppListFriendRequestsResult {
 					| { controller: null }
 					| { creator: null }
 					| { admin: null }
-					| { moderator: null }
 					| { solver: null }
-					| { user: null }
 					| { group_creator: null }
 			  ];
 		participants: Array<string>;
@@ -127,9 +119,7 @@ export interface AppListFriendsResult {
 					| { controller: null }
 					| { creator: null }
 					| { admin: null }
-					| { moderator: null }
 					| { solver: null }
-					| { user: null }
 					| { group_creator: null }
 			  ];
 		participants: Array<string>;
@@ -152,9 +142,7 @@ export interface AppListLeaderboardResult {
 					| { controller: null }
 					| { creator: null }
 					| { admin: null }
-					| { moderator: null }
 					| { solver: null }
-					| { user: null }
 					| { group_creator: null }
 			  ];
 		level: number;
@@ -177,9 +165,7 @@ export interface AppListRejectedFriendshipsResult {
 					| { controller: null }
 					| { creator: null }
 					| { admin: null }
-					| { moderator: null }
 					| { solver: null }
-					| { user: null }
 					| { group_creator: null }
 			  ];
 		participants: Array<string>;
@@ -208,9 +194,7 @@ export interface AppSearchProfilesResult {
 					| { controller: null }
 					| { creator: null }
 					| { admin: null }
-					| { moderator: null }
 					| { solver: null }
-					| { user: null }
 					| { group_creator: null }
 			  ];
 		level: number;

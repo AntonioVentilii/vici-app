@@ -264,7 +264,7 @@
 			<!-- Roles List -->
 			<AdminList onRemoveRole={handleRemoveRole} {roleEntries} />
 
-			<!-- Oracle Authorization -->
+			<!-- Oracle Settlers (read-only, synced from Roles) -->
 			<AdminOracleManager />
 
 			<!-- Resolve Markets -->

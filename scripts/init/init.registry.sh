@@ -19,6 +19,11 @@ source "$(dirname "$0")/../lib/utils.sh" "$@"
 ORACLE_ID="VICI_ORACLE_V1"
 DATA_FILE="$SCRIPT_DIR/data/markets.json"
 
+# Keep in sync with src/lib/constants/icdc.constants.ts. The script runs as the registry
+# canister controller, so `engine_id` is optional (controllers bypass the check), but we
+# attribute seeded markets to the Vici engine for consistency with frontend-created ones.
+VICI_ENGINE_ID="${VICI_ENGINE_ID:-eng_0}"
+
 if [ ! -f "$DATA_FILE" ]; then
   echo "Error: $DATA_FILE not found."
   exit 1
@@ -141,6 +146,7 @@ for ((i = 0; i < $length; i++)); do
         balance_domain = variant { ViciXp };
         oracle_source = \"$ORACLE_ID\";
         trading_access = vec { variant { Open } };
+        engine_id = opt \"$VICI_ENGINE_ID\";
     })"
 done
 
