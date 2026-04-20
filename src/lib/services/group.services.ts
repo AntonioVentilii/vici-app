@@ -13,9 +13,12 @@ import {
 } from '$lib/api/registry.api';
 import { ROLE_PERMISSIONS } from '$lib/constants/authz.constants';
 import { Permission } from '$lib/enums/permission';
-import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
+import { loadWithCertification } from '$lib/services/query-update.services';
 import { getFriends } from '$lib/services/relation.services';
+import { isNullish } from '@dfinity/utils';
+import type { Identity } from '@icp-sdk/core/agent';
 import { Principal } from '@icp-sdk/core/principal';
 import type { PrincipalText } from '@junobuild/schema';
 
@@ -157,13 +160,70 @@ export const removeGroupMembers = async ({
 export const getGroup = async (groupId: string): Promise<RegistryDid.Group | undefined> => {
 	const identity = await safeGetIdentityOnce();
 
-	return await getGroupApi({ identity, groupId });
+	return await getGroupApi({ identity, groupId, certified: true });
+};
+
+/**
+ * Callback-based variant of {@link getGroup}. Delivers `onLoad` twice —
+ * uncertified query first, certified update second. No-op when the user is not
+ * signed in (mirrors `safeGetIdentityOnce` auth gating without throwing).
+ */
+export const loadGroup = async ({
+	groupId,
+	onLoad,
+	onUpdateError
+}: {
+	groupId: string;
+	onLoad: (options: { certified: boolean; response: RegistryDid.Group | undefined }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> => {
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return;
+	}
+
+	return loadWithCertification<RegistryDid.Group | undefined>({
+		identity,
+		request: ({ certified, identity: reqIdentity }: { certified: boolean; identity: Identity }) =>
+			getGroupApi({ identity: reqIdentity, groupId, certified }),
+		onLoad,
+		onUpdateError
+	});
 };
 
 export const listGroups = async (creator?: PrincipalText): Promise<RegistryDid.Group[]> => {
 	const identity = await safeGetIdentityOnce();
 
-	return await listGroupsApi({ identity, creator });
+	return await listGroupsApi({ identity, creator, certified: true });
+};
+
+/**
+ * Callback-based variant of {@link listGroups}. No-op when the user is not
+ * signed in.
+ */
+export const loadGroups = async ({
+	creator,
+	onLoad,
+	onUpdateError
+}: {
+	creator?: PrincipalText;
+	onLoad: (options: { certified: boolean; response: RegistryDid.Group[] }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> => {
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return;
+	}
+
+	return loadWithCertification<RegistryDid.Group[]>({
+		identity,
+		request: ({ certified, identity: reqIdentity }: { certified: boolean; identity: Identity }) =>
+			listGroupsApi({ identity: reqIdentity, creator, certified }),
+		onLoad,
+		onUpdateError
+	});
 };
 
 export const deleteGroup = async (groupId: string): Promise<void> => {

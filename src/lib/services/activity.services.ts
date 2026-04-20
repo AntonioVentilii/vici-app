@@ -26,9 +26,12 @@ export const logActivity = async (activity: Omit<Activity, 'timestamp'>): Promis
 /**
  * Loads all activities from Juno (unsorted).
  */
-const listActivities = async (): Promise<Activity[]> => {
+const listActivities = async ({ certified = false }: { certified?: boolean } = {}): Promise<
+	Activity[]
+> => {
 	const { items } = await listDocs<Activity>({
-		collection: Collection.ACTIVITIES
+		collection: Collection.ACTIVITIES,
+		options: { certified }
 	});
 
 	return items.map(({ data }) => data);
@@ -37,12 +40,15 @@ const listActivities = async (): Promise<Activity[]> => {
 /**
  * Recent global activity feed, newest first, capped by `limit`.
  */
-export const getGlobalActivities = async (limit = 50): Promise<Activity[]> => {
+export const getGlobalActivities = async ({
+	limit = 50,
+	certified = false
+}: { limit?: number; certified?: boolean } = {}): Promise<Activity[]> => {
 	if (limit <= 0) {
 		return [];
 	}
 
-	const items = await listActivities();
+	const items = await listActivities({ certified });
 
 	return items.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
 };
@@ -52,16 +58,18 @@ export const getGlobalActivities = async (limit = 50): Promise<Activity[]> => {
  */
 export const getFriendActivities = async ({
 	friends,
-	limit = 50
+	limit = 50,
+	certified = false
 }: {
 	friends: PrincipalText[];
 	limit?: number;
+	certified?: boolean;
 }): Promise<Activity[]> => {
 	if (friends.length === 0) {
 		return [];
 	}
 
-	const items = await listActivities();
+	const items = await listActivities({ certified });
 
 	return items
 		.filter((a) => friends.includes(a.user))

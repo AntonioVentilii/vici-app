@@ -9,31 +9,41 @@ import {
 import { PRICE_DECIMALS } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
 import { logActivity } from '$lib/services/activity.services';
-import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
+import {
+	getIdentity,
+	getIdentityOrAnonymous,
+	safeGetIdentityOnce
+} from '$lib/services/identity.services';
 import { recordActivity } from '$lib/services/profile.services';
+import { loadWithCertification } from '$lib/services/query-update.services';
 import type { MarketId, Outcome } from '$lib/types/market';
 import type { OrderSide, OrderType } from '$lib/types/order';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
 import { parseLimitOrderPriceValue } from '$lib/utils/parse.utils';
 import { refreshAllBalances, refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 import { isNullish, toNullable, type Nullable } from '@dfinity/utils';
+import type { Identity } from '@icp-sdk/core/agent';
 import { getIdentityOnce } from '@junobuild/core';
 import { nanoid } from 'nanoid';
 
 /**
- * Lists open limit orders for a market, optionally filtered to a balance domain.
+ * Core order-book fetch: threads identity + certified so it composes with
+ * {@link loadOrderBook} / `queryAndUpdate`.
  */
-export const getOrderBook = async ({
+const fetchOrderBook = async ({
+	identity,
+	certified,
 	marketId,
 	domain
 }: {
+	identity: Identity;
+	certified: boolean;
 	marketId: MarketId;
 	domain?: ClearingDid.BalanceDomain;
 }): Promise<ClearingDid.LimitOrder[]> => {
-	const identity = await getIdentityOrAnonymous();
-
 	const orders = await listOrdersApi({
 		identity,
+		certified,
 		params: { series_id: toNullable(marketId) }
 	});
 
@@ -48,6 +58,49 @@ export const getOrderBook = async ({
 		return orderDomain === targetDomain;
 	});
 };
+
+/**
+ * Lists open limit orders for a market, optionally filtered to a balance domain.
+ *
+ * Performs a single certified update. Prefer {@link loadOrderBook} for UI flows
+ * that should render fast then upgrade to a certified result.
+ */
+export const getOrderBook = async ({
+	marketId,
+	domain,
+	identity: identityOverride,
+	certified = true
+}: {
+	marketId: MarketId;
+	domain?: ClearingDid.BalanceDomain;
+	identity?: Identity;
+	certified?: boolean;
+}): Promise<ClearingDid.LimitOrder[]> => {
+	const identity = identityOverride ?? (await getIdentityOrAnonymous());
+
+	return fetchOrderBook({ identity, certified, marketId, domain });
+};
+
+/**
+ * Callback-based variant of {@link getOrderBook} that fires `onLoad` up to
+ * twice — once for the uncertified query, once for the certified update.
+ */
+export const loadOrderBook = ({
+	marketId,
+	domain,
+	onLoad,
+	onUpdateError
+}: {
+	marketId: MarketId;
+	domain?: ClearingDid.BalanceDomain;
+	onLoad: (options: { certified: boolean; response: ClearingDid.LimitOrder[] }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> =>
+	loadWithCertification<ClearingDid.LimitOrder[]>({
+		request: ({ certified, identity }) => fetchOrderBook({ identity, certified, marketId, domain }),
+		onLoad,
+		onUpdateError
+	});
 
 /**
  * Submits a limit order or matches a market order against the book; refreshes UI state and logs activity.
@@ -186,6 +239,24 @@ export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 };
 
 /**
+ * Fetches the signed-in user's open orders, filtered to the active balance domain.
+ * Threads identity + certified for `queryAndUpdate` compatibility.
+ */
+const fetchUserOrders = async ({
+	identity,
+	certified,
+	domain
+}: {
+	identity: Identity;
+	certified: boolean;
+	domain: ClearingDid.BalanceDomain;
+}): Promise<ClearingDid.LimitOrder[]> => {
+	const orders = await getOrdersApi({ identity, certified });
+
+	return filterByPlaygroundExpandedDomain({ items: orders, targetDomain: domain });
+};
+
+/**
  * Signed-in user's orders for a single market.
  */
 export const getUserOrdersForMarket = async ({
@@ -203,6 +274,10 @@ export const getUserOrdersForMarket = async ({
 /**
  * All open orders for the current user in the active balance domain.
  * In playground mode (ViciXp), Social-domain orders are included.
+ *
+ * Performs a single certified update. Returns `[]` when the user is not signed in.
+ * Prefer {@link loadUserOrders} for UI flows that benefit from the fast-then-certified
+ * render pattern.
  */
 export const getUserOrders = async (
 	domain: ClearingDid.BalanceDomain
@@ -213,9 +288,55 @@ export const getUserOrders = async (
 		return [];
 	}
 
-	const orders = await getOrdersApi({
-		identity
-	});
-
-	return filterByPlaygroundExpandedDomain({ items: orders, targetDomain: domain });
+	return fetchUserOrders({ identity, certified: true, domain });
 };
+
+/**
+ * Callback-based variant of {@link getUserOrders}. No-op when the user is not
+ * signed in (mirrors `getUserOrders` returning `[]`).
+ */
+export const loadUserOrders = async ({
+	domain,
+	onLoad,
+	onUpdateError
+}: {
+	domain: ClearingDid.BalanceDomain;
+	onLoad: (options: { certified: boolean; response: ClearingDid.LimitOrder[] }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> => {
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return;
+	}
+
+	return loadWithCertification<ClearingDid.LimitOrder[]>({
+		identity,
+		request: ({ certified, identity: reqIdentity }) =>
+			fetchUserOrders({ identity: reqIdentity, certified, domain }),
+		onLoad,
+		onUpdateError
+	});
+};
+
+/**
+ * Callback-based variant of {@link getUserOrdersForMarket}. No-op when the user
+ * is not signed in.
+ */
+export const loadUserOrdersForMarket = ({
+	marketId,
+	domain,
+	onLoad,
+	onUpdateError
+}: {
+	marketId: MarketId;
+	domain: ClearingDid.BalanceDomain;
+	onLoad: (options: { certified: boolean; response: ClearingDid.LimitOrder[] }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> =>
+	loadUserOrders({
+		domain,
+		onLoad: ({ certified, response }) =>
+			onLoad({ certified, response: response.filter((o) => o.series_id === marketId) }),
+		onUpdateError
+	});

@@ -5,39 +5,135 @@ import {
 	mintCompleteSet as mintCompleteSetApi,
 	redeemCompleteSet as redeemCompleteSetApi
 } from '$lib/api/clearing.api';
-import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getMarkets } from '$lib/services/market.services';
+import { loadWithCertification } from '$lib/services/query-update.services';
 import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
+import { isNullish } from '@dfinity/utils';
+import type { Identity } from '@icp-sdk/core/agent';
 
 /**
- * Clearing position for one series, if any.
+ * Core fetch for a single-series position: threads identity + certified so it
+ * composes with {@link loadPosition} / `queryAndUpdate`.
  */
-export const getPosition = async (seriesId: string): Promise<ClearingDid.Position | undefined> => {
-	const identity = await safeGetIdentityOnce();
-
-	const positions = await getPositionsApi({
-		identity
-	});
+const fetchPosition = async ({
+	identity,
+	certified,
+	seriesId
+}: {
+	identity: Identity;
+	certified: boolean;
+	seriesId: string;
+}): Promise<ClearingDid.Position | undefined> => {
+	const positions = await getPositionsApi({ identity, certified });
 
 	return positions.find((p) => p.series_id === seriesId);
 };
 
 /**
- * Trade/settlement events for the user, restricted to markets visible in the current app domain.
+ * Clearing position for one series, if any.
+ *
+ * Performs a single certified update. Prefer {@link loadPosition} for UI flows
+ * that should render fast then upgrade to a certified result.
  */
-export const getUserTradeHistory = async (
-	domain: RegistryDid.BalanceDomain
-): Promise<ClearingDid.Event[]> => {
+export const getPosition = async (seriesId: string): Promise<ClearingDid.Position | undefined> => {
 	const identity = await safeGetIdentityOnce();
 
+	return fetchPosition({ identity, certified: true, seriesId });
+};
+
+/**
+ * Callback-based variant of {@link getPosition}. No-op when the user is not
+ * signed in.
+ */
+export const loadPosition = async ({
+	seriesId,
+	onLoad,
+	onUpdateError
+}: {
+	seriesId: string;
+	onLoad: (options: { certified: boolean; response: ClearingDid.Position | undefined }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> => {
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return;
+	}
+
+	return loadWithCertification<ClearingDid.Position | undefined>({
+		identity,
+		request: ({ certified, identity: reqIdentity }) =>
+			fetchPosition({ identity: reqIdentity, certified, seriesId }),
+		onLoad,
+		onUpdateError
+	});
+};
+
+/**
+ * Core fetch for user trade history, restricted to the current app domain.
+ */
+const fetchUserTradeHistory = async ({
+	identity,
+	certified,
+	domain
+}: {
+	identity: Identity;
+	certified: boolean;
+	domain: RegistryDid.BalanceDomain;
+}): Promise<ClearingDid.Event[]> => {
 	const [events, markets] = await Promise.all([
-		getTradeHistoryApi({ identity }),
+		getTradeHistoryApi({ identity, certified }),
+		// getMarkets internally performs a certified update; the trade history
+		// would otherwise tear against the market set.
 		getMarkets(domain)
 	]);
 
 	const marketIds = new Set(markets.map((m) => m.id));
 
 	return filterByMarketIds({ items: events, marketIds });
+};
+
+/**
+ * Trade/settlement events for the user, restricted to markets visible in the current app domain.
+ *
+ * Performs a single certified update. Prefer {@link loadUserTradeHistory} for
+ * UI flows that benefit from the fast-then-certified render pattern.
+ */
+export const getUserTradeHistory = async (
+	domain: RegistryDid.BalanceDomain
+): Promise<ClearingDid.Event[]> => {
+	const identity = await safeGetIdentityOnce();
+
+	return fetchUserTradeHistory({ identity, certified: true, domain });
+};
+
+/**
+ * Callback-based variant of {@link getUserTradeHistory}. No-op when the user
+ * is not signed in.
+ */
+export const loadUserTradeHistory = async ({
+	domain,
+	onLoad,
+	onUpdateError
+}: {
+	domain: RegistryDid.BalanceDomain;
+	onLoad: (options: { certified: boolean; response: ClearingDid.Event[] }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> => {
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return;
+	}
+
+	return loadWithCertification<ClearingDid.Event[]>({
+		identity,
+		request: ({ certified, identity: reqIdentity }) =>
+			fetchUserTradeHistory({ identity: reqIdentity, certified, domain }),
+		onLoad,
+		onUpdateError
+	});
 };
 
 /**

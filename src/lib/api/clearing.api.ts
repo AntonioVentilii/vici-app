@@ -53,6 +53,23 @@ export const getAccountState = async ({
 	return await getAccountState(rest);
 };
 
+/**
+ * Query-only account-state read. Declared `query` in Candid, so it's fast and
+ * does NOT refresh from external ledgers. Use for the "first paint" path and
+ * follow up with {@link getAccountState} (`refresh: true`) to re-price and
+ * certify.
+ */
+export const getAccountStateQuery = async ({
+	identity,
+	...queryParams
+}: {
+	identity: Identity;
+} & QueryParams): Promise<ClearingDid.AccountStateResponse> => {
+	const { getAccountStateQuery } = await clearingCanister({ identity });
+
+	return await getAccountStateQuery(queryParams);
+};
+
 export const listCollateralAssets = async ({
 	identity,
 	...queryParams

@@ -17,6 +17,7 @@ import { listSeriesCategories } from '$lib/services/category.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
+import { loadWithCertification } from '$lib/services/query-update.services';
 import type { SeriesCategory } from '$lib/types/category';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
@@ -29,6 +30,7 @@ import {
 import { refreshMarkets } from '$lib/utils/refresh.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 import { isNullish, nonNullish, toNullable } from '@dfinity/utils';
+import type { Identity } from '@icp-sdk/core/agent';
 
 /**
  * Creates a new prediction market.
@@ -139,15 +141,27 @@ export const createMarket = async ({
 };
 
 /**
- * Loads series for the current domain, enriches with order book stats, merges resolved markets
- * from activity, and filters by domain. In playground mode (ViciXp), Social markets are included.
+ * Core market-loading logic: series + enrichment + resolution merge.
+ *
+ * Accepts an explicit `identity` and `certified` flag so the caller can run this
+ * once as an uncertified query (fast) and/or once as a certified update (verified).
+ * This is what makes the function compatible with {@link loadMarkets} / `queryAndUpdate`.
+ *
+ * Note: Juno-backed calls (`getGlobalActivities`) honor the same flag but tap the
+ * satellite datastore, not an ICDC canister.
  */
-export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
-	const identity = await getIdentityOrAnonymous();
-
+const fetchMarkets = async ({
+	identity,
+	certified,
+	domain
+}: {
+	identity: Identity;
+	certified: boolean;
+	domain: RegistryDid.BalanceDomain;
+}): Promise<Market[]> => {
 	const [seriesList, activities] = await Promise.all([
-		listSeries({ identity }),
-		getGlobalActivities()
+		listSeries({ identity, certified }),
+		getGlobalActivities({ certified })
 	]);
 
 	const resolutionMap = activities
@@ -178,6 +192,7 @@ export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Mar
 			if (isCategorical && nonNullish(s.outcomes?.[0])) {
 				const orders = await listOrdersApi({
 					identity,
+					certified,
 					params: { series_id: toNullable(mid) }
 				});
 				const categoricalProbabilities = calculateCategoricalProbabilities({
@@ -194,7 +209,12 @@ export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Mar
 				});
 			}
 
-			const orders = await getOrderBook({ marketId: mid, domain: s.balance_domain });
+			const orders = await getOrderBook({
+				marketId: mid,
+				domain: s.balance_domain,
+				identity,
+				certified
+			});
 			const { midPrice, bids, asks } = calculateMarketStats({
 				orders,
 				outcome: 'YES'
@@ -223,7 +243,7 @@ export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Mar
 		resolvedSeriesIds
 			.filter((id) => !activeSeriesIds.has(id))
 			.map(async (id) => {
-				const series = await getSeries({ identity, seriesId: id });
+				const series = await getSeries({ identity, certified, seriesId: id });
 
 				if (isNullish(series)) {
 					return;
@@ -243,15 +263,57 @@ export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Mar
 };
 
 /**
- * Single-market detail with book, categorical probabilities if applicable, and resolution status from activity.
+ * Loads series for the current domain, enriches with order book stats, merges resolved markets
+ * from activity, and filters by domain. In playground mode (ViciXp), Social markets are included.
+ *
+ * Performs a single certified update. Prefer {@link loadMarkets} for UI flows that
+ * should render a fast uncertified result first and upgrade once certified data arrives.
  */
-export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {
+export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 
+	return fetchMarkets({ identity, certified: true, domain });
+};
+
+/**
+ * Callback-based variant of {@link getMarkets} built on `queryAndUpdate`: fires
+ * `onLoad` up to twice — once with the fast uncertified query result, then again
+ * with the certified update result. The underlying utility drops stale query
+ * responses that arrive after the update has settled, so callers can safely
+ * overwrite their sink on every invocation.
+ */
+export const loadMarkets = ({
+	domain,
+	onLoad,
+	onUpdateError
+}: {
+	domain: RegistryDid.BalanceDomain;
+	onLoad: (options: { certified: boolean; response: Market[] }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> =>
+	loadWithCertification<Market[]>({
+		request: ({ certified, identity }) => fetchMarkets({ identity, certified, domain }),
+		onLoad,
+		onUpdateError
+	});
+
+/**
+ * Core single-market fetch: threads identity + certified so it composes with
+ * {@link loadMarket} / `queryAndUpdate`.
+ */
+const fetchMarket = async ({
+	identity,
+	certified,
+	marketId
+}: {
+	identity: Identity;
+	certified: boolean;
+	marketId: MarketId;
+}): Promise<Market | undefined> => {
 	const [s, rawOrders, activities] = await Promise.all([
-		getSeries({ identity, seriesId: marketId }),
-		getOrderBook({ marketId }),
-		getGlobalActivities()
+		getSeries({ identity, certified, seriesId: marketId }),
+		getOrderBook({ marketId, identity, certified }),
+		getGlobalActivities({ certified })
 	]);
 
 	const { midPrice, bids, asks } = calculateMarketStats({
@@ -278,6 +340,7 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 					outcomes: s.outcomes[0],
 					orders: await listOrdersApi({
 						identity,
+						certified,
 						params: { series_id: toNullable(marketId) }
 					})
 				})
@@ -320,6 +383,39 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 		categoricalProbabilities
 	});
 };
+
+/**
+ * Single-market detail with book, categorical probabilities if applicable, and resolution status from activity.
+ *
+ * Performs a single certified update. Prefer {@link loadMarket} for UI flows
+ * that should render fast then upgrade once verified.
+ */
+export const getMarket = async (marketId: MarketId): Promise<Market | undefined> => {
+	const identity = await getIdentityOrAnonymous();
+
+	return fetchMarket({ identity, certified: true, marketId });
+};
+
+/**
+ * Callback-based variant of {@link getMarket} that fires `onLoad` up to twice:
+ * once for the uncertified query, then again for the certified update. Stale
+ * query responses that arrive after the update has settled are dropped by the
+ * underlying `queryAndUpdate`.
+ */
+export const loadMarket = ({
+	marketId,
+	onLoad,
+	onUpdateError
+}: {
+	marketId: MarketId;
+	onLoad: (options: { certified: boolean; response: Market | undefined }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> =>
+	loadWithCertification<Market | undefined>({
+		request: ({ certified, identity }) => fetchMarket({ identity, certified, marketId }),
+		onLoad,
+		onUpdateError
+	});
 
 /**
  * Ranks markets based on user interests, category relevance (culture fallback),
