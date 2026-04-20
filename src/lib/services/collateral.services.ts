@@ -8,11 +8,13 @@ import {
 } from '$lib/api/clearing.api';
 import { approve, transactionFee } from '$lib/api/icrc-ledger.api';
 import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
-import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.services';
+import { loadWithCertification } from '$lib/services/query-update.services';
 import { refreshAllBalances } from '$lib/utils/refresh.utils';
 import { resolveClearingAssetId } from '$lib/utils/tokens.utils';
 import { getIcrcAccount } from '$lib/utils/transactions.utils';
 import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
+import type { Identity } from '@icp-sdk/core/agent';
 import { getIdentityOnce } from '@junobuild/core';
 
 const makeOperationId = ({ prefix, hint }: { prefix: string; hint?: bigint }): string => {
@@ -100,21 +102,87 @@ export const withdrawCollateral = async ({
 };
 
 /**
+ * Core account-state fetch: threads identity + certified so it composes with
+ * {@link loadAccountState} / `queryAndUpdate`.
+ *
+ * Note: `refresh: true` is required to re-price mark-to-market values server-side,
+ * so this call always mutates canister state and should be certified in practice.
+ * We still expose a query path for the "fast first render" benefit via `queryAndUpdate`.
+ */
+const fetchAccountState = async ({
+	identity,
+	certified,
+	domain
+}: {
+	identity: Identity;
+	certified: boolean;
+	domain: ClearingDid.BalanceDomain;
+}): Promise<ClearingDid.AccountStateResponse> =>
+	await getAccountStateApi({
+		identity,
+		certified,
+		params: { refresh: toNullable(true), domain: toNullable(domain) }
+	});
+
+/**
  * Fetches clearing account state (balances per domain) for the signed-in user.
+ *
+ * Performs a single certified update. Prefer {@link loadAccountState} for UI
+ * flows that benefit from the fast-then-certified render pattern.
  */
 export const getAccountState = async (
 	domain: ClearingDid.BalanceDomain
 ): Promise<ClearingDid.AccountStateResponse> => {
 	const identity = await safeGetIdentityOnce();
 
-	return await getAccountStateApi({
+	return fetchAccountState({ identity, certified: true, domain });
+};
+
+/**
+ * Callback-based variant of {@link getAccountState}. No-op when the user is
+ * not signed in.
+ */
+export const loadAccountState = async ({
+	domain,
+	onLoad,
+	onUpdateError
+}: {
+	domain: ClearingDid.BalanceDomain;
+	onLoad: (options: { certified: boolean; response: ClearingDid.AccountStateResponse }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> => {
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return;
+	}
+
+	return loadWithCertification<ClearingDid.AccountStateResponse>({
 		identity,
-		params: { refresh: toNullable(true), domain: toNullable(domain) }
+		request: ({ certified, identity: reqIdentity }) =>
+			fetchAccountState({ identity: reqIdentity, certified, domain }),
+		onLoad,
+		onUpdateError
 	});
 };
 
 /**
+ * Core collateral-assets fetch: threads identity + certified so it composes
+ * with {@link loadCollateralAssets} / `queryAndUpdate`.
+ */
+const fetchCollateralAssets = ({
+	identity,
+	certified
+}: {
+	identity: Identity;
+	certified: boolean;
+}): Promise<ClearingDid.CollateralAssetInfo[]> => listCollateralAssetsApi({ identity, certified });
+
+/**
  * Lists collateral assets configured on clearing (empty if anonymous).
+ *
+ * Performs a single certified update. Prefer {@link loadCollateralAssets} for
+ * UI flows that benefit from the fast-then-certified render pattern.
  */
 export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAssetInfo[]> => {
 	const identity = await getIdentityOnce();
@@ -123,7 +191,33 @@ export const getCollateralAssets = async (): Promise<ClearingDid.CollateralAsset
 		return [];
 	}
 
-	return await listCollateralAssetsApi({ identity });
+	return fetchCollateralAssets({ identity, certified: true });
+};
+
+/**
+ * Callback-based variant of {@link getCollateralAssets}. No-op when the user
+ * is not signed in (mirrors `getCollateralAssets` returning `[]`).
+ */
+export const loadCollateralAssets = async ({
+	onLoad,
+	onUpdateError
+}: {
+	onLoad: (options: { certified: boolean; response: ClearingDid.CollateralAssetInfo[] }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> => {
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return;
+	}
+
+	return loadWithCertification<ClearingDid.CollateralAssetInfo[]>({
+		identity,
+		request: ({ certified, identity: reqIdentity }) =>
+			fetchCollateralAssets({ identity: reqIdentity, certified }),
+		onLoad,
+		onUpdateError
+	});
 };
 
 /**

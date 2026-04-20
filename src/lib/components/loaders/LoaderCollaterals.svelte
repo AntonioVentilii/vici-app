@@ -1,10 +1,14 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import type { ClearingDid } from '$declarations';
 	import IdentityAwareLoader from '$lib/components/loaders/IdentityAwareLoader.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
+	import { SUPPORTED_TOKENS } from '$lib/constants/tokens/tokens.ic.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
-	import { getCollateralAssets } from '$lib/services/collateral.services';
-	import { getBalances } from '$lib/services/wallet.service';
+	import { loadAccountState, loadCollateralAssets } from '$lib/services/collateral.services';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import type { TokenId } from '$lib/types/token';
+	import { findSupportedTokenForClearingAssetId } from '$lib/utils/asset-ref.utils';
 	import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
 
 	let prevDomain: ClearingDid.BalanceDomain | undefined = undefined;
@@ -16,27 +20,75 @@
 			collateralsStore.set(undefined);
 		}
 
-		const [{ collateral, accountState }, assets] = await Promise.all([
-			getBalances(domainToken),
-			getCollateralAssets()
+		// Local "latest" cache for both streams: loadAccountState and
+		// loadCollateralAssets fire onLoad up to twice each (query + update). We
+		// recompute the aggregated store shape every time either arrives so the UI
+		// reflects the freshest data from both sides.
+		let latestAccountState: ClearingDid.AccountStateResponse | undefined;
+		let latestAssets: ClearingDid.CollateralAssetInfo[] | undefined;
+
+		const recompute = () => {
+			// Narrow once via local aliases so TS knows they're defined in closures below.
+			const accountState = latestAccountState;
+			const assets = latestAssets;
+
+			if (accountState === undefined || assets === undefined) {
+				return;
+			}
+
+			// Domain changed mid-flight: drop the stale result.
+			if (!compareBalanceDomains($balanceDomain, domainToken)) {
+				return;
+			}
+
+			const assetsConfig: Record<string, ClearingDid.CollateralAssetInfo> = {};
+
+			assets.forEach((asset) => {
+				assetsConfig[asset.config.asset_id] = asset;
+			});
+
+			const collateral: Record<TokenId, bigint> = {};
+			const targetDomainBalances = accountState.state.balances.find(([d]) =>
+				compareBalanceDomains(d, domainToken)
+			);
+
+			if (nonNullish(targetDomainBalances)) {
+				const [, domainBalances] = targetDomainBalances;
+				domainBalances.forEach(([assetId, balance]) => {
+					const token = findSupportedTokenForClearingAssetId({
+						assetId,
+						collateralInfos: assets,
+						supportedTokens: SUPPORTED_TOKENS
+					});
+
+					if (nonNullish(token)) {
+						collateral[token.id] = (collateral[token.id] ?? ZERO) + balance;
+					}
+				});
+			}
+
+			collateralsStore.set({
+				balances: collateral,
+				accountState,
+				assetsConfig
+			});
+		};
+
+		await Promise.all([
+			loadAccountState({
+				domain: domainToken,
+				onLoad: ({ response }) => {
+					latestAccountState = response;
+					recompute();
+				}
+			}),
+			loadCollateralAssets({
+				onLoad: ({ response }) => {
+					latestAssets = response;
+					recompute();
+				}
+			})
 		]);
-
-		// Only update if the domain hasn't changed during the fetch
-		if ($balanceDomain !== domainToken) {
-			return;
-		}
-
-		const assetsConfig: Record<string, ClearingDid.CollateralAssetInfo> = {};
-
-		assets.forEach((asset) => {
-			assetsConfig[asset.config.asset_id] = asset;
-		});
-
-		collateralsStore.set({
-			balances: collateral,
-			accountState,
-			assetsConfig
-		});
 	};
 
 	$effect(() => {

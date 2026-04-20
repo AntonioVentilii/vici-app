@@ -2,7 +2,7 @@
 	import type { ClearingDid } from '$declarations';
 	import IdentityAwareLoader from '$lib/components/loaders/IdentityAwareLoader.svelte';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
-	import { getUserOrders } from '$lib/services/order.services';
+	import { loadUserOrders } from '$lib/services/order.services';
 	import { ordersStore } from '$lib/stores/orders.store';
 	import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
 
@@ -15,12 +15,14 @@
 			ordersStore.set(undefined);
 		}
 
-		const orders = await getUserOrders(domainToken);
-
-		// Only update if the domain hasn't changed during the fetch
-		if ($balanceDomain === domainToken) {
-			ordersStore.set(orders);
-		}
+		await loadUserOrders({
+			domain: domainToken,
+			onLoad: ({ response }) => {
+				if ($balanceDomain === domainToken) {
+					ordersStore.set(response);
+				}
+			}
+		});
 	};
 
 	$effect(() => {

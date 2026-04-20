@@ -1,7 +1,10 @@
 import type { RegistryDid } from '$declarations';
 import { addOracle, getOracle } from '$lib/api/registry.api';
 import { VICI_ORACLE_V1 } from '$lib/constants/app.constants';
-import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.services';
+import { loadWithCertification } from '$lib/services/query-update.services';
+import { isNullish } from '@dfinity/utils';
+import type { Identity } from '@icp-sdk/core/agent';
 import { Principal } from '@icp-sdk/core/principal';
 import type { PrincipalText } from '@junobuild/schema';
 
@@ -10,11 +13,40 @@ import type { PrincipalText } from '@junobuild/schema';
  *
  * Returns `undefined` when the oracle has not been registered yet, in which
  * case the admin must call {@link registerViciOracle} to create it.
+ *
+ * Performs a single certified update. Prefer {@link loadViciOracle} for UI
+ * flows that benefit from the fast-then-certified render pattern.
  */
 export const getViciOracle = async (): Promise<RegistryDid.Oracle | undefined> => {
 	const identity = await safeGetIdentityOnce();
 
-	return await getOracle({ identity, oracleId: VICI_ORACLE_V1 });
+	return await getOracle({ identity, oracleId: VICI_ORACLE_V1, certified: true });
+};
+
+/**
+ * Callback-based variant of {@link getViciOracle}. No-op when the user is not
+ * signed in (mirrors `safeGetIdentityOnce` auth gating without throwing).
+ */
+export const loadViciOracle = async ({
+	onLoad,
+	onUpdateError
+}: {
+	onLoad: (options: { certified: boolean; response: RegistryDid.Oracle | undefined }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> => {
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return;
+	}
+
+	return loadWithCertification<RegistryDid.Oracle | undefined>({
+		identity,
+		request: ({ certified, identity: reqIdentity }: { certified: boolean; identity: Identity }) =>
+			getOracle({ identity: reqIdentity, oracleId: VICI_ORACLE_V1, certified }),
+		onLoad,
+		onUpdateError
+	});
 };
 
 /**

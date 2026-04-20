@@ -3,7 +3,7 @@
 	import type { ClearingDid } from '$declarations';
 	import AtomicLoader from '$lib/components/loaders/AtomicLoader.svelte';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
-	import { getMarkets } from '$lib/services/market.services';
+	import { loadMarkets } from '$lib/services/market.services';
 	import { marketsStore } from '$lib/stores/markets.store';
 	import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
 
@@ -16,12 +16,19 @@
 			marketsStore.set(undefined);
 		}
 
-		const markets = await getMarkets(domainToken);
-
-		// Only update if the domain hasn't changed during the fetch
-		if ($balanceDomain === domainToken) {
-			marketsStore.set(markets);
-		}
+		// `loadMarkets` invokes `onLoad` up to twice: first with the uncertified
+		// query (fast, for instant UI), then with the certified update (verified).
+		// The underlying `queryAndUpdate` drops stale query responses that land
+		// after the update has already settled, so we only need to guard against
+		// a balance-domain switch that happened mid-flight.
+		await loadMarkets({
+			domain: domainToken,
+			onLoad: ({ response }) => {
+				if ($balanceDomain === domainToken) {
+					marketsStore.set(response);
+				}
+			}
+		});
 	};
 
 	let shouldUseSlowInterval = false;

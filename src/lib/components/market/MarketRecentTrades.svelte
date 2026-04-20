@@ -14,7 +14,7 @@
 	let activities = $state<Activity[]>([]);
 
 	onMount(async () => {
-		const all = await getGlobalActivities(20);
+		const all = await getGlobalActivities({ limit: 20 });
 		activities = all.filter((a) => a.marketId === marketId);
 	});
 </script>
