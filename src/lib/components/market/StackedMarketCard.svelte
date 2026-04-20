@@ -22,22 +22,33 @@
 
 	let popoverOpen = $state(false);
 
-	const togglePopover = (e: MouseEvent | KeyboardEvent) => {
+	const togglePopover = (e: MouseEvent) => {
 		e.stopPropagation();
 		popoverOpen = !popoverOpen;
-	};
-
-	const closePopover = () => {
-		popoverOpen = false;
 	};
 
 	const openFork = (fork: Market) => {
 		popoverOpen = false;
 		goto(`${AppPath.Markets}/${fork.id}`);
 	};
-</script>
 
-<svelte:window onclick={closePopover} />
+	// Close-on-outside-click: only attach the window listener while the
+	// popover is open, so a feed of N cards doesn't register N global
+	// click handlers that all fire on every click.
+	$effect(() => {
+		if (!popoverOpen) {
+			return;
+		}
+
+		const onWindowClick = () => {
+			popoverOpen = false;
+		};
+
+		window.addEventListener('click', onWindowClick);
+
+		return () => window.removeEventListener('click', onWindowClick);
+	});
+</script>
 
 <div class="relative isolate h-full w-full">
 	{#if ghostLayers >= 1}
@@ -64,17 +75,11 @@
 					aria-haspopup="menu"
 					aria-label={`${forks.length} more ${forks.length === 1 ? 'circle' : 'circles'}`}
 					onclick={togglePopover}
-					onkeydown={(e) => {
-						if (e.key === 'Enter' || e.key === ' ') {
-							togglePopover(e);
-						}
-					}}
 					title="See forks of this market"
 					type="button"
 				>
 					<Layers size={12} />
-					+{forks.length}
-					{forks.length === 1 ? 'circle' : 'circles'}
+					<span>+{forks.length} {forks.length === 1 ? 'circle' : 'circles'}</span>
 				</button>
 
 				{#if popoverOpen}

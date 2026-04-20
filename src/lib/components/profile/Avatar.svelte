@@ -16,6 +16,7 @@
 	<img
 		class="h-full w-full object-cover"
 		alt={nickname ?? 'Avatar'}
+		referrerpolicy="no-referrer"
 		src={resolveAvatarUrl({ avatar, owner })}
 	/>
 </div>
