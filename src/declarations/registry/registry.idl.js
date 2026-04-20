@@ -189,9 +189,9 @@ export const EngineRole = IDL.Variant({
 	Creator: IDL.Null
 });
 export const RoleGrant = IDL.Record({
-	principal: IDL.Principal,
 	role: EngineRole,
 	granted_at_ns: IDL.Nat64,
+	grantee: IDL.Principal,
 	granted_by: IDL.Principal
 });
 export const SocialLimits = IDL.Record({
@@ -253,9 +253,9 @@ export const Series = IDL.Record({
 	forked_from: IDL.Opt(IDL.Text)
 });
 export const GrantEngineRoleParams = IDL.Record({
-	principal: IDL.Principal,
 	engine_id: IDL.Text,
-	role: EngineRole
+	role: EngineRole,
+	grantee: IDL.Principal
 });
 export const PaginationParams = IDL.Record({
 	cursor: IDL.Opt(IDL.Text),
@@ -291,11 +291,6 @@ export const RegisterEngineParams = IDL.Record({
 export const RegisterEngineResult = IDL.Variant({
 	Ok: IDL.Text,
 	Err: EngineError
-});
-export const RevokeEngineRoleParams = IDL.Record({
-	principal: IDL.Principal,
-	engine_id: IDL.Text,
-	role: EngineRole
 });
 export const UpdateEngineParams = IDL.Record({
 	engine_id: IDL.Text,
@@ -349,7 +344,7 @@ export const idlService = IDL.Service({
 	remove_engine_admins: IDL.Func([UpdateEngineAdminsParams], [EngineResult], []),
 	remove_group_admins: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
 	remove_group_members: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
-	revoke_engine_role: IDL.Func([RevokeEngineRoleParams], [EngineResult], []),
+	revoke_engine_role: IDL.Func([GrantEngineRoleParams], [EngineResult], []),
 	set_social_limits: IDL.Func([SocialLimits], [], []),
 	update_engine: IDL.Func([UpdateEngineParams], [EngineResult], []),
 	update_engine_allowed_roles: IDL.Func([UpdateEngineAllowedRolesParams], [EngineResult], []),
@@ -530,9 +525,9 @@ export const idlFactory = ({ IDL }) => {
 		Creator: IDL.Null
 	});
 	const RoleGrant = IDL.Record({
-		principal: IDL.Principal,
 		role: EngineRole,
 		granted_at_ns: IDL.Nat64,
+		grantee: IDL.Principal,
 		granted_by: IDL.Principal
 	});
 	const SocialLimits = IDL.Record({
@@ -594,9 +589,9 @@ export const idlFactory = ({ IDL }) => {
 		forked_from: IDL.Opt(IDL.Text)
 	});
 	const GrantEngineRoleParams = IDL.Record({
-		principal: IDL.Principal,
 		engine_id: IDL.Text,
-		role: EngineRole
+		role: EngineRole,
+		grantee: IDL.Principal
 	});
 	const PaginationParams = IDL.Record({
 		cursor: IDL.Opt(IDL.Text),
@@ -632,11 +627,6 @@ export const idlFactory = ({ IDL }) => {
 	const RegisterEngineResult = IDL.Variant({
 		Ok: IDL.Text,
 		Err: EngineError
-	});
-	const RevokeEngineRoleParams = IDL.Record({
-		principal: IDL.Principal,
-		engine_id: IDL.Text,
-		role: EngineRole
 	});
 	const UpdateEngineParams = IDL.Record({
 		engine_id: IDL.Text,
@@ -690,7 +680,7 @@ export const idlFactory = ({ IDL }) => {
 		remove_engine_admins: IDL.Func([UpdateEngineAdminsParams], [EngineResult], []),
 		remove_group_admins: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
 		remove_group_members: IDL.Func([UpdateGroupAdminsParams], [GroupResult], []),
-		revoke_engine_role: IDL.Func([RevokeEngineRoleParams], [EngineResult], []),
+		revoke_engine_role: IDL.Func([GrantEngineRoleParams], [EngineResult], []),
 		set_social_limits: IDL.Func([SocialLimits], [], []),
 		update_engine: IDL.Func([UpdateEngineParams], [EngineResult], []),
 		update_engine_allowed_roles: IDL.Func([UpdateEngineAllowedRolesParams], [EngineResult], []),

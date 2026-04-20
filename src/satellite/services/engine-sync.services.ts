@@ -35,12 +35,12 @@ const EngineResultIdl = IDL.Variant({
 	Err: EngineErrorIdl
 });
 const GrantEngineRoleParamsIdl = IDL.Record({
-	principal: IDL.Principal,
+	grantee: IDL.Principal,
 	engine_id: IDL.Text,
 	role: EngineRoleIdl
 });
 const RevokeEngineRoleParamsIdl = IDL.Record({
-	principal: IDL.Principal,
+	grantee: IDL.Principal,
 	engine_id: IDL.Text,
 	role: EngineRoleIdl
 });
@@ -199,7 +199,7 @@ const grantEngineRole = async ({
 			[
 				GrantEngineRoleParamsIdl,
 				{
-					principal,
+					grantee: principal,
 					engine_id: VICI_ENGINE_ID,
 					role
 				}
@@ -251,7 +251,7 @@ const revokeEngineRole = async ({
 			[
 				RevokeEngineRoleParamsIdl,
 				{
-					principal,
+					grantee: principal,
 					engine_id: VICI_ENGINE_ID,
 					role
 				}

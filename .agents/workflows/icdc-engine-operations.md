@@ -24,7 +24,7 @@ collection doc is written. Manual reconciliation is only needed if:
 ```bash
 dfx canister call --network staging registry grant_engine_role "(record {
   engine_id = \"eng_0\";
-  principal = principal \"<user-principal>\";
+  grantee = principal \"<user-principal>\";
   role = variant { Creator }
 })"
 ```
@@ -36,7 +36,7 @@ Valid roles today: `Creator`, `OracleAdmin`.
 ```bash
 dfx canister call --network staging registry revoke_engine_role "(record {
   engine_id = \"eng_0\";
-  principal = principal \"<user-principal>\";
+  grantee = principal \"<user-principal>\";
   role = variant { Creator }
 })"
 ```

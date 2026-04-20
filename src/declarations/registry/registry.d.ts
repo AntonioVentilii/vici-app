@@ -45,8 +45,8 @@ export interface AddSeriesParams {
 	payoff_type: PayoffType;
 	/**
 	 * The Engine on whose behalf this series is created.
-	 * Controllers may omit this. Non-controller callers must provide
-	 * a valid EngineId on which they hold the Creator role.
+	 * Controllers may omit this (`None`). Non-controller callers must provide
+	 * a valid `EngineId` on which they hold the `Creator` role.
 	 */
 	engine_id: [] | [string];
 	/**
@@ -366,13 +366,22 @@ export type EngineResult = { Ok: null } | { Err: EngineError };
 export type EngineRole =
 	| {
 			/**
-			 * Can register oracles and manage their metadata and principals.
+			 * Can register oracles and manage their metadata and principals
+			 * **registry-wide** (not scoped to a specific engine).
+			 *
+			 * Oracles are shared infrastructure consumed by series across multiple
+			 * engines, so `OracleAdmin` intentionally grants global oracle management.
+			 * Engine-scoped oracle ownership can be added later by introducing an
+			 * `engine_id` field on the `Oracle` struct if needed.
 			 */
 			OracleAdmin: null;
 	  }
 	| {
 			/**
 			 * Can create series via `add_series` and fork series via `fork_series`.
+			 *
+			 * Series creation/forking requires the caller to specify the `engine_id`
+			 * on which they hold this role.
 			 */
 			Creator: null;
 	  };
@@ -412,8 +421,8 @@ export interface ForkSeriesParams {
 	title: [] | [string];
 	/**
 	 * The Engine on whose behalf this fork is created.
-	 * Controllers may omit this. Non-controller callers must provide
-	 * a valid EngineId on which they hold the Creator role.
+	 * Controllers may omit this (`None`). Non-controller callers must provide
+	 * a valid `EngineId` on which they hold the `Creator` role.
 	 */
 	engine_id: [] | [string];
 	/**
@@ -431,7 +440,6 @@ export interface ForkSeriesParams {
  * Only Engine admins or canister controllers may grant roles.
  */
 export interface GrantEngineRoleParams {
-	principal: Principal;
 	/**
 	 * The Engine in which to grant the role.
 	 */
@@ -440,6 +448,10 @@ export interface GrantEngineRoleParams {
 	 * The role to grant.
 	 */
 	role: EngineRole;
+	/**
+	 * The principal receiving the role.
+	 */
+	grantee: Principal;
 }
 /**
  * A trading group (closed circle).
@@ -820,26 +832,9 @@ export interface RegisterEngineParams {
  */
 export type RegisterEngineResult = { Ok: string } | { Err: EngineError };
 /**
- * Input parameters for revoking a role within an Engine.
- *
- * Only Engine admins or canister controllers may revoke roles.
- */
-export interface RevokeEngineRoleParams {
-	principal: Principal;
-	/**
-	 * The Engine in which to revoke the role.
-	 */
-	engine_id: string;
-	/**
-	 * The role to revoke.
-	 */
-	role: EngineRole;
-}
-/**
  * An audit record of a role grant within an Engine.
  */
 export interface RoleGrant {
-	principal: Principal;
 	/**
 	 * The granted role.
 	 */
@@ -848,6 +843,10 @@ export interface RoleGrant {
 	 * Timestamp of the grant in nanoseconds since UNIX epoch.
 	 */
 	granted_at_ns: bigint;
+	/**
+	 * The principal that received the role.
+	 */
+	grantee: Principal;
 	/**
 	 * The principal that performed the grant.
 	 */
@@ -997,7 +996,7 @@ export type SeriesError =
 	  }
 	| {
 			/**
-			 * Non-controller callers must specify an engine_id for non-social markets.
+			 * Non-controller callers must specify an `engine_id` for non-social markets.
 			 */
 			EngineIdRequired: null;
 	  }
@@ -1308,8 +1307,10 @@ export interface _SERVICE {
 	 *
 	 * Authorization is tiered:
 	 *
-	 * 1. **Creators** (controllers + Engine `Creator` role holders): may create any series.
-	 * 2. **Any authenticated user**: may create **social** markets (`BalanceDomain::Social` +
+	 * 1. **Controllers**: may create any series with or without `engine_id`.
+	 * 2. **Engine Creators**: must provide `engine_id` referencing an Engine where they hold the
+	 * `Creator` role.
+	 * 3. **Any authenticated user**: may create **social** markets (`BalanceDomain::Social` +
 	 * `NonMonetary` payout) with `Restricted` trading access, subject to per-user rate limits.
 	 */
 	add_series: ActorMethod<[AddSeriesParams], AddSeriesResult>;
@@ -1354,7 +1355,16 @@ export interface _SERVICE {
 	 * The forked series inherits all defining parameters from the source but gets a
 	 * distinct ID and carries a `forked_from` reference back to the original.
 	 *
-	 * Only controllers and Engine Creators may fork series.
+	 * Authorization is tiered, mirroring [`add_series`]:
+	 *
+	 * 1. **Controllers**: may fork any series.
+	 * 2. **Engine Creators**: must provide an `engine_id` on which they hold the `Creator` role.
+	 * 3. **Any authenticated user**: may fork **social** source markets (`BalanceDomain::Social` +
+	 * `NonMonetary` payout) into their own closed circle, subject to the same per-user rate limits
+	 * as social market creation. This is the "Challenge your friends" flow.
+	 *
+	 * In all cases the fork's `trading_access` must be fully `Restricted` — a fork
+	 * never widens access.
 	 */
 	fork_series: ActorMethod<[ForkSeriesParams], AddSeriesResult>;
 	/**
@@ -1444,11 +1454,18 @@ export interface _SERVICE {
 	 */
 	list_groups: ActorMethod<[[] | [Principal]], Array<Group>>;
 	/**
-	 * Returns a paginated page of all registered derivative series.
+	 * Returns a paginated page of all registered derivative series visible to the caller.
 	 */
 	list_series: ActorMethod<[PaginationParams], SeriesPage>;
 	/**
 	 * Returns a paginated page of registered derivative series, optionally filtered.
+	 *
+	 * # Visibility
+	 *
+	 * Results are scoped to what the caller is allowed to see. Restricted series
+	 * are omitted unless the caller is a controller, the series creator, or a
+	 * member of at least one group referenced by the series' `trading_access`.
+	 * See [`can_principal_see_series`] for the full predicate.
 	 */
 	list_series_with: ActorMethod<[ListSeriesParams], SeriesPage>;
 	/**
@@ -1504,7 +1521,7 @@ export interface _SERVICE {
 	 *
 	 * Only Engine admins or controllers may revoke roles.
 	 */
-	revoke_engine_role: ActorMethod<[RevokeEngineRoleParams], EngineResult>;
+	revoke_engine_role: ActorMethod<[GrantEngineRoleParams], EngineResult>;
 	/**
 	 * Updates the rate limits for social (non-monetary) market creation.
 	 *
