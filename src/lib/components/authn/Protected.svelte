@@ -2,7 +2,8 @@
 	import type { Snippet } from 'svelte';
 	import SignInModal from '$lib/components/authn/SignInModal.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { userSignedIn } from '$lib/derived/user.derived';
+	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { authBusy, userSignedIn } from '$lib/derived/user.derived';
 
 	interface Props {
 		children: Snippet;
@@ -25,6 +26,10 @@
 
 {#if $userSignedIn}
 	{@render children()}
+{:else if $authBusy}
+	<div class="py-20" aria-label="Checking sign-in status" aria-live="polite" role="status">
+		<LoadingSpinner size="md" />
+	</div>
 {:else}
 	<div class="flex flex-col items-center justify-center py-20 text-center">
 		<div class="mb-12 max-w-md">

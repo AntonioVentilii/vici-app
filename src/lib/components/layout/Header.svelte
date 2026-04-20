@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
+	import { LoaderCircle } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import SignInModal from '$lib/components/authn/SignInModal.svelte';
@@ -10,7 +11,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { navItems } from '$lib/constants/nav.constants';
 	import type { AppPath } from '$lib/constants/routes.constants';
-	import { userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
+	import { authBusy, userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import type { NavItem } from '$lib/types/nav';
@@ -66,7 +67,16 @@
 
 		<!-- Right side -->
 		<div class="flex items-center gap-4">
-			{#if $userSignedIn}
+			{#if $authBusy}
+				<div
+					class="text-muted-foreground flex h-10 items-center justify-center px-2"
+					aria-label="Checking sign-in status"
+					aria-live="polite"
+					role="status"
+				>
+					<LoaderCircle class="animate-spin" aria-hidden="true" size={20} strokeWidth={2.5} />
+				</div>
+			{:else if $userSignedIn}
 				<div class="flex items-center gap-3">
 					<WalletDropdown
 						balances={{

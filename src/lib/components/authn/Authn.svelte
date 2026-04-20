@@ -14,30 +14,36 @@
 	const { children }: Props = $props();
 
 	const updateUserStore = async (user: User | null) => {
-		if (isNullish(user)) {
-			userStore.set({ user: undefined, profile: undefined });
-
-			return;
-		}
-
-		const { key: userText } = user;
-
-		if (isNullish(userText)) {
-			userStore.set({ user: undefined, profile: undefined });
-
-			return;
-		}
-
-		const profile = await ensureProfile(user);
-
-		userStore.set({ user, profile });
+		userStore.update((data) => ({ ...data, authBusy: true }));
 
 		try {
-			const identity = await safeGetIdentityOnce();
+			if (isNullish(user)) {
+				userStore.set({ user: undefined, profile: undefined, authBusy: false });
 
-			await calculateAndSyncStats({ identity, domain: $balanceDomain });
-		} catch (e) {
-			console.error('Failed to sync stats on login', e);
+				return;
+			}
+
+			const { key: userText } = user;
+
+			if (isNullish(userText)) {
+				userStore.set({ user: undefined, profile: undefined, authBusy: false });
+
+				return;
+			}
+
+			const profile = await ensureProfile(user);
+
+			userStore.set({ user, profile, authBusy: false });
+
+			try {
+				const identity = await safeGetIdentityOnce();
+
+				await calculateAndSyncStats({ identity, domain: $balanceDomain });
+			} catch (e) {
+				console.error('Failed to sync stats on login', e);
+			}
+		} finally {
+			userStore.update((data) => ({ ...data, authBusy: false }));
 		}
 	};
 

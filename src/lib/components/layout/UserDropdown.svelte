@@ -7,6 +7,7 @@
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { theme, type Theme } from '$lib/stores/theme.store';
+	import { setAuthBusy } from '$lib/stores/user.store';
 	import type { ButtonStatus } from '$lib/types/components';
 
 	let open = $state(false);
@@ -20,6 +21,7 @@
 
 	const doSignOut = async () => {
 		signOutStatus = 'pending';
+		setAuthBusy(true);
 
 		try {
 			await signOut();

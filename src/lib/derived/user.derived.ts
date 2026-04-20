@@ -11,6 +11,22 @@ export const userSignedIn: Readable<boolean> = derived(userStore, ({ user }) => 
 
 export const userNotSignedIn: Readable<boolean> = derived(userSignedIn, (signedIn) => !signedIn);
 
+/**
+ * True while the authentication state is being resolved. Use this to render
+ * a loading indicator instead of signed-in / signed-out UI.
+ */
+export const authBusy: Readable<boolean> = derived(userStore, ({ authBusy }) => authBusy);
+
+/**
+ * True only once we know for sure the user is signed out (auth resolved and
+ * no user). Prevents the "signed-out" UI from flashing during the initial
+ * session check or auth transitions.
+ */
+export const userSignedOutResolved: Readable<boolean> = derived(
+	userStore,
+	({ user, authBusy }) => !authBusy && !nonNullish(user)
+);
+
 export const authPrincipal: Readable<PrincipalText | undefined> = derived(
 	userStore,
 	({ user }) => user?.owner

@@ -1,6 +1,7 @@
 <script lang="ts">
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import { setAuthBusy } from '$lib/stores/user.store';
 
 	interface Props {
 		show: boolean;
@@ -9,6 +10,10 @@
 	let { show = $bindable(false) }: Props = $props();
 
 	const onSuccess = () => {
+		// Mark auth as busy so the UI shows a spinner during the brief
+		// window between closing the modal and `onAuthStateChange` firing
+		// with the newly signed-in user.
+		setAuthBusy(true);
 		show = false;
 	};
 </script>
