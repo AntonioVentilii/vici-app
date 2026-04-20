@@ -9,7 +9,8 @@ MINTER_PRINCIPAL="${CANISTER_ID_VXP_MINTER:-$(dfx canister id vxp_minter --netwo
 
 mkdir -p "$PROJECT_ROOT/$(dirname "$ARGS_FILE")"
 
-# 4 decimals: 1,000 VXP for local testing
+# 4 decimals (matches mainnet vxp ledger, which is already live and immutable on decimals)
+# 10_000_000 base units = 1,000 VXP for local testing
 INITIAL_UNITS='10_000_000'
 
 cat <<EOF >"$PROJECT_ROOT/$ARGS_FILE"
@@ -20,7 +21,7 @@ cat <<EOF >"$PROJECT_ROOT/$ARGS_FILE"
     decimals = opt 4;
     max_memo_length = opt 80;
     minting_account = record { owner = principal "$MINTER_PRINCIPAL" };
-    transfer_fee = 1;
+    transfer_fee = 0;
     metadata = vec {};
     initial_balances = vec {
       record { record { owner = principal "$PRINCIPAL"; }; $INITIAL_UNITS; };

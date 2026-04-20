@@ -3,7 +3,8 @@ import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import {
 	PLAYGROUND_CLEARING_MARGIN_DECIMALS,
 	PLAYGROUND_DISPLAY_SYMBOL,
-	SETTLEMENT_LOCKED_CAPACITY_LABEL
+	SETTLEMENT_LOCKED_CAPACITY_LABEL,
+	VXP_BALANCE_DISPLAY_DECIMALS
 } from '$lib/constants/playground.constants';
 import {
 	PORTFOLIO_DEFAULT_DECIMALS,
@@ -19,13 +20,16 @@ import { formatAvailableUsd, formatCurrency, formatToken } from '$lib/utils/form
  */
 /**
  * Clearing 6-decimal scale shown as VXP 1:1 (no $).
+ *
+ * VXP is framed as a point-like currency, so balances render as whole numbers
+ * (no fractional part) to reinforce the "points" feel.
  */
 export const formatPlaygroundClearingAsVxp = (value: bigint): string =>
-	formatCurrency({
+	`${formatToken({
 		value,
-		decimals: PLAYGROUND_CLEARING_MARGIN_DECIMALS,
-		symbol: PLAYGROUND_DISPLAY_SYMBOL
-	});
+		unitName: PLAYGROUND_CLEARING_MARGIN_DECIMALS,
+		displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS
+	})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
 
 /**
  * @deprecated Use `formatPlaygroundClearingAsVxp`; kept for existing imports.
@@ -147,7 +151,7 @@ export const formatPortfolioHoldingsStatLine = ({
 		return `${formatToken({
 			value: totalPortfolioValue,
 			unitName: VXP_TOKEN.decimals,
-			displayDecimals: 4
+			displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS
 		})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
 	}
 
