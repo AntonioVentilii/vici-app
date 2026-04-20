@@ -7,7 +7,6 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 		Permission.RESOLVE_MARKET,
 		Permission.CREATE_MARKET,
 		Permission.VIEW_ADMIN_PANEL,
-		Permission.CREATE_GROUP,
 		Permission.MANAGE_TRADING_ACCESS
 	],
 	[UserRole.ADMIN]: [
@@ -15,10 +14,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
 		Permission.RESOLVE_MARKET,
 		Permission.CREATE_MARKET,
 		Permission.VIEW_ADMIN_PANEL,
-		Permission.CREATE_GROUP,
 		Permission.MANAGE_TRADING_ACCESS
 	],
 	[UserRole.SOLVER]: [Permission.RESOLVE_MARKET],
-	[UserRole.CREATOR]: [Permission.CREATE_MARKET],
-	[UserRole.GROUP_CREATOR]: [Permission.CREATE_GROUP]
+	[UserRole.CREATOR]: [Permission.CREATE_MARKET]
 };

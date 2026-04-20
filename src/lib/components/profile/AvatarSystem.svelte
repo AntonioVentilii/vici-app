@@ -3,6 +3,7 @@
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { userStore, type UserStoreData } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
+	import { dicebearAvatarUrl } from '$lib/utils/avatar.utils';
 
 	interface Props {
 		profile: UserProfile;
@@ -34,8 +35,7 @@
 	/**
 	 * DiceBear encodes the seed in the URL; match that for save + selected state.
 	 */
-	const avatarUrlForEmoji = (emoji: string): string =>
-		`https://api.dicebear.com/9.x/notionists/svg?seed=${encodeURIComponent(avatarSeed(emoji))}`;
+	const avatarUrlForEmoji = (emoji: string): string => dicebearAvatarUrl(avatarSeed(emoji));
 
 	const isSelected = (emoji: string): boolean => profile.avatar === avatarUrlForEmoji(emoji);
 

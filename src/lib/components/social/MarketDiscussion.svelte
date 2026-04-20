@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -231,21 +232,12 @@
 					<div class="flex-1 overflow-hidden">
 						<div class="mb-1 flex items-start justify-between">
 							<div class="flex items-center gap-2">
-								<div class="bg-muted h-6 w-6 shrink-0 rounded-full">
-									{#if profile?.avatar}
-										<img
-											class="h-full w-full rounded-full object-cover"
-											alt=""
-											src={profile.avatar}
-										/>
-									{:else}
-										<div
-											class="flex h-full w-full items-center justify-center text-[10px] font-bold"
-										>
-											{profile?.nickname?.[0] ?? '?'}
-										</div>
-									{/if}
-								</div>
+								<Avatar
+									class="bg-muted h-6 w-6 shrink-0"
+									avatar={profile?.avatar}
+									nickname={profile?.nickname}
+									owner={profile?.owner ?? comment.user}
+								/>
 								<span class="text-sm font-bold">{profile?.nickname ?? 'Anonymous'}</span>
 								{#if comment.user === userPrincipal}
 									<YouBadge />

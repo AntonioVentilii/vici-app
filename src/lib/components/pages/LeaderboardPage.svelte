@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
+	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -105,19 +106,12 @@
 					in:fly={{ y: 50, delay: i * 200 }}
 				>
 					<div class="relative">
-						<div
-							class="overflow-hidden rounded-full border-4 bg-white shadow-xl {getPodiumStyle(i)}"
-						>
-							{#if user.avatar}
-								<img class="h-full w-full object-cover" alt={user.nickname} src={user.avatar} />
-							{:else}
-								<div
-									class="flex h-full w-full items-center justify-center bg-slate-50 text-4xl font-black text-slate-200"
-								>
-									{user.nickname[0]}
-								</div>
-							{/if}
-						</div>
+						<Avatar
+							class="border-4 bg-white shadow-xl {getPodiumStyle(i)}"
+							avatar={user.avatar}
+							nickname={user.nickname}
+							owner={user.owner}
+						/>
 						<div
 							class="absolute -top-4 -right-1 text-3xl shadow-sm drop-shadow-md sm:-right-2 sm:text-4xl"
 						>
@@ -155,19 +149,12 @@
 						<span class="w-6 text-center text-xs font-black text-slate-300 sm:w-8 sm:text-sm">
 							#{i + 4}
 						</span>
-						<div
-							class="h-8 w-8 overflow-hidden rounded-full bg-slate-100 shadow-inner ring-2 ring-white sm:h-10 sm:w-10"
-						>
-							{#if user.avatar}
-								<img class="h-full w-full object-cover" alt={user.nickname} src={user.avatar} />
-							{:else}
-								<div
-									class="flex h-full w-full items-center justify-center text-[10px] font-black text-slate-400"
-								>
-									{user.nickname[0]}
-								</div>
-							{/if}
-						</div>
+						<Avatar
+							class="h-8 w-8 bg-slate-100 shadow-inner ring-2 ring-white sm:h-10 sm:w-10"
+							avatar={user.avatar}
+							nickname={user.nickname}
+							owner={user.owner}
+						/>
 						<div class="min-w-0">
 							<div class="flex items-center gap-1.5">
 								<p

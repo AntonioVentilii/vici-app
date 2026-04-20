@@ -37,13 +37,7 @@ export interface AppGetProfileResult {
 					interests: Array<string>;
 					role:
 						| []
-						| [
-								| { controller: null }
-								| { creator: null }
-								| { admin: null }
-								| { solver: null }
-								| { group_creator: null }
-						  ];
+						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 					level: number;
 					preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 					last_active_day: [] | [string];
@@ -61,13 +55,7 @@ export interface AppListFollowersResult {
 	items: Array<{
 		viewer_role:
 			| []
-			| [
-					| { controller: null }
-					| { creator: null }
-					| { admin: null }
-					| { solver: null }
-					| { group_creator: null }
-			  ];
+			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 		participants: Array<string>;
 		is_friend: [] | [boolean];
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
@@ -79,13 +67,7 @@ export interface AppListFollowingResult {
 	items: Array<{
 		viewer_role:
 			| []
-			| [
-					| { controller: null }
-					| { creator: null }
-					| { admin: null }
-					| { solver: null }
-					| { group_creator: null }
-			  ];
+			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 		participants: Array<string>;
 		is_friend: [] | [boolean];
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
@@ -97,13 +79,7 @@ export interface AppListFriendRequestsResult {
 	items: Array<{
 		viewer_role:
 			| []
-			| [
-					| { controller: null }
-					| { creator: null }
-					| { admin: null }
-					| { solver: null }
-					| { group_creator: null }
-			  ];
+			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 		participants: Array<string>;
 		is_friend: [] | [boolean];
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
@@ -115,13 +91,7 @@ export interface AppListFriendsResult {
 	items: Array<{
 		viewer_role:
 			| []
-			| [
-					| { controller: null }
-					| { creator: null }
-					| { admin: null }
-					| { solver: null }
-					| { group_creator: null }
-			  ];
+			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 		participants: Array<string>;
 		is_friend: [] | [boolean];
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
@@ -136,15 +106,7 @@ export interface AppListLeaderboardResult {
 		nickname: string;
 		owner: string;
 		interests: Array<string>;
-		role:
-			| []
-			| [
-					| { controller: null }
-					| { creator: null }
-					| { admin: null }
-					| { solver: null }
-					| { group_creator: null }
-			  ];
+		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 		level: number;
 		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 		last_active_day: [] | [string];
@@ -161,13 +123,7 @@ export interface AppListRejectedFriendshipsResult {
 	items: Array<{
 		viewer_role:
 			| []
-			| [
-					| { controller: null }
-					| { creator: null }
-					| { admin: null }
-					| { solver: null }
-					| { group_creator: null }
-			  ];
+			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 		participants: Array<string>;
 		is_friend: [] | [boolean];
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
@@ -188,15 +144,7 @@ export interface AppSearchProfilesResult {
 		nickname: string;
 		owner: string;
 		interests: Array<string>;
-		role:
-			| []
-			| [
-					| { controller: null }
-					| { creator: null }
-					| { admin: null }
-					| { solver: null }
-					| { group_creator: null }
-			  ];
+		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 		level: number;
 		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 		last_active_day: [] | [string];

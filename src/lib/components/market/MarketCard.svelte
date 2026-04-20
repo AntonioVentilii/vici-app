@@ -20,6 +20,8 @@
 	const { market, index = 0, onChallenge }: Props = $props();
 
 	const isChallenge = $derived(isSocial(market.balanceDomain));
+	const isFork = $derived(market.forkedFrom !== undefined);
+	const showChallengeSlot = $derived(!isFork);
 </script>
 
 <div class="h-full w-full" in:fly={{ y: 20, duration: 400, delay: Math.min(index * 50, 300) }}>
@@ -98,28 +100,30 @@
 								{getTimeRemaining(market.expiryDate)}
 							</span>
 						</div>
-						{#if onChallenge}
-							<button
-								class="text-muted-foreground/40 hover:text-primary flex cursor-pointer items-center gap-1 rounded-lg p-1 transition-colors hover:bg-slate-100"
-								aria-label="Challenge friends"
-								onclick={(e) => {
-									e.stopPropagation();
-									onChallenge(market);
-								}}
-								onkeydown={(e) => e.stopPropagation()}
-								title="Challenge friends"
-							>
-								<Copy size={14} />
-								<UsersRound size={18} />
-							</button>
-						{:else}
-							<div
-								class="text-muted-foreground/40 group-hover:text-primary/50 flex items-center gap-1 transition-colors"
-								title="Challenge friends"
-							>
-								<Copy size={14} />
-								<UsersRound size={18} />
-							</div>
+						{#if showChallengeSlot}
+							{#if onChallenge}
+								<button
+									class="text-muted-foreground/40 hover:text-primary flex cursor-pointer items-center gap-1 rounded-lg p-1 transition-colors hover:bg-slate-100"
+									aria-label="Challenge friends"
+									onclick={(e) => {
+										e.stopPropagation();
+										onChallenge(market);
+									}}
+									onkeydown={(e) => e.stopPropagation()}
+									title="Challenge friends"
+								>
+									<Copy size={14} />
+									<UsersRound size={18} />
+								</button>
+							{:else}
+								<div
+									class="text-muted-foreground/40 group-hover:text-primary/50 flex items-center gap-1 transition-colors"
+									title="Challenge friends"
+								>
+									<Copy size={14} />
+									<UsersRound size={18} />
+								</div>
+							{/if}
 						{/if}
 					</div>
 				</div>

@@ -61,7 +61,6 @@ canonical list of grantable roles.
 | `ADMIN`         | `Creator`, `OracleAdmin`        | yes                                              |
 | `SOLVER`        | `OracleAdmin`                   | yes                                              |
 | `CREATOR`       | `Creator`                       | no                                               |
-| `GROUP_CREATOR` | _(none)_                        | no                                               |
 
 The hook computes the **diff** between the previous and new role and issues only the needed
 `grant_engine_role` / `revoke_engine_role` calls, plus a single `manage_oracle_principals`

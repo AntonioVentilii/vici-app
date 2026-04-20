@@ -47,8 +47,6 @@ export const createGroup = async ({
 	description?: string;
 	iconUrl?: string;
 }): Promise<string> => {
-	await assertPermission(Permission.CREATE_GROUP);
-
 	const identity = await safeGetIdentityOnce();
 
 	return await createGroupApi({

@@ -14,6 +14,7 @@
 	let isForkModalOpen = $state(false);
 
 	const { title, status } = $derived(market);
+	const isFork = $derived(market.forkedFrom !== undefined);
 </script>
 
 <div class="flex flex-col items-center space-y-6 text-center">
@@ -46,12 +47,16 @@
 			</span>
 		</div>
 
-		<div class="pt-2">
-			<Button onclick={() => (isForkModalOpen = true)} size="sm" variant="outline">
-				<span class="mr-2">🤝</span> Challenge Friends
-			</Button>
-		</div>
+		{#if !isFork}
+			<div class="pt-2">
+				<Button onclick={() => (isForkModalOpen = true)} size="sm" variant="outline">
+					<span class="mr-2">🤝</span> Challenge Friends
+				</Button>
+			</div>
+		{/if}
 	</div>
 </div>
 
-<MarketForkModal isOpen={isForkModalOpen} {market} onClose={() => (isForkModalOpen = false)} />
+{#if !isFork}
+	<MarketForkModal isOpen={isForkModalOpen} {market} onClose={() => (isForkModalOpen = false)} />
+{/if}

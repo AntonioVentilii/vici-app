@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { onMount, tick } from 'svelte';
+	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { sendMessage, getMarketMessages } from '$lib/services/chat.services';
@@ -121,15 +122,12 @@
 						: 'items-start'} animate-in fade-in slide-in-from-bottom-2 duration-300"
 				>
 					<div class="flex items-end gap-2 {isMe ? 'flex-row-reverse' : 'flex-row'}">
-						<div class="bg-muted h-6 w-6 shrink-0 rounded-full">
-							{#if profile?.avatar}
-								<img class="h-full w-full rounded-full" alt="" src={profile.avatar} />
-							{:else}
-								<div class="flex h-full w-full items-center justify-center text-[10px] uppercase">
-									{profile?.nickname?.[0] ?? '?'}
-								</div>
-							{/if}
-						</div>
+						<Avatar
+							class="bg-muted h-6 w-6 shrink-0"
+							avatar={profile?.avatar}
+							nickname={profile?.nickname}
+							owner={profile?.owner ?? msg.sender}
+						/>
 						<div
 							class="rounded-2xl px-4 py-2 text-sm shadow-sm transition-all {isMe
 								? 'bg-primary text-primary-foreground rounded-br-none'
