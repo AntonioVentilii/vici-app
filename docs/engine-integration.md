@@ -50,15 +50,18 @@ Responsibilities:
 
 ## Role mapping
 
+Regular users have **no role doc** in Juno. That state is what was previously encoded as
+`USER` / `MODERATOR` and grants nothing — no engine role, no entry in
+`VICI_ORACLE_V1.authorized_principals`. See `UserRole` in `src/lib/enums/user.ts` for the
+canonical list of grantable roles.
+
 | Juno `UserRole` | icdc-core `EngineRole`s granted | Added to `VICI_ORACLE_V1.authorized_principals`? |
 | --------------- | ------------------------------- | ------------------------------------------------ |
 | `CONTROLLER`    | _(none — controllers bypass)_   | _(no — controllers bypass)_                      |
 | `ADMIN`         | `Creator`, `OracleAdmin`        | yes                                              |
 | `SOLVER`        | `OracleAdmin`                   | yes                                              |
 | `CREATOR`       | `Creator`                       | no                                               |
-| `MODERATOR`     | _(none)_                        | no                                               |
 | `GROUP_CREATOR` | _(none)_                        | no                                               |
-| `USER`          | _(none)_                        | no                                               |
 
 The hook computes the **diff** between the previous and new role and issues only the needed
 `grant_engine_role` / `revoke_engine_role` calls, plus a single `manage_oracle_principals`

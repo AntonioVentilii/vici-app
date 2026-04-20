@@ -406,9 +406,15 @@ export const syncRoleToEngineOnSet = async (ctx: OnSetDocContext): Promise<void>
 /**
  * Invoked by the `onDeleteDoc` hook for the `roles` collection.
  *
- * Revokes every engine role previously mapped to the deleted `UserRole`. If the doc's data
- * cannot be decoded (legacy or partial state), falls back to revoking the union of all
- * possible engine roles so the engine does not retain a stale grant.
+ * Revokes every engine role previously mapped to the deleted `UserRole`, and removes the
+ * principal from `VICI_ORACLE_V1.authorized_principals` if the prior role was a settler.
+ *
+ * If the deleted doc's `data` cannot be decoded (legacy or partial state), the hook logs
+ * `engine_sync_decode_failed` and becomes a **no-op** — we intentionally do NOT blindly
+ * revoke the union of all possible engine roles on a decode failure, because that would
+ * let a single malformed/transient write silently strip privileges from a principal whose
+ * role we just can't see right now. Operators can reconcile manually via
+ * `dfx canister call registry revoke_engine_role ...` (see `docs/engine-integration.md`).
  */
 export const syncRoleToEngineOnDelete = async (ctx: OnDeleteDocContext): Promise<void> => {
 	const {
@@ -432,7 +438,22 @@ export const syncRoleToEngineOnDelete = async (ctx: OnDeleteDocContext): Promise
 		return;
 	}
 
-	const prevRole = nonNullish(deletedDoc) ? readRoleFromDoc(deletedDoc.data) : undefined;
+	let prevRole: UserRole | undefined;
+
+	if (nonNullish(deletedDoc)) {
+		prevRole = readRoleFromDoc(deletedDoc.data);
+
+		// No-op if the deleted doc had data but we couldn't decode it — see JSDoc above
+		// for why we don't blindly revoke all roles. Log so operators can reconcile.
+		if (isNullish(prevRole)) {
+			logError({
+				message: 'engine_sync_decode_failed',
+				detail: { key, stage: 'deleted' }
+			});
+
+			return;
+		}
+	}
 
 	try {
 		await applyDiff({ principal, prevRole, nextRole: undefined });

@@ -71,12 +71,40 @@ echo "  Admins: $ADMINS_VEC"
 # Look up whether an engine with this name is already registered.
 LIST_OUT="$(dfx canister call --network "$NETWORK" registry list_engines 2>/dev/null || echo '')"
 
-EXISTING_ID=""
-if echo "$LIST_OUT" | grep -q "name = \"$ENGINE_NAME\""; then
-  # Extract `engine_id = "eng_N"` from the record immediately preceding the matching name.
-  # Format: `record { engine_id = "eng_0"; name = "Vici"; ... }`
-  EXISTING_ID="$(echo "$LIST_OUT" | grep -Eo 'engine_id = "[^"]+"' | head -1 | sed 's/engine_id = "//;s/"//')"
-fi
+# Extract the `engine_id` from the same top-level `record { ... }` whose
+# `name = "$ENGINE_NAME"`. A naive `grep | head -1` is unsafe once there is more than one
+# engine on the registry — it would return the first engine_id in list_engines rather
+# than the one we care about. Brace-count to isolate each top-level engine record; nested
+# `opt record { ... }` (description) and `vec { record { ... } }` (role_grants) are
+# correctly skipped because we only emit on depth 2 → 1 transitions.
+EXISTING_ID="$(printf '%s\n' "$LIST_OUT" | awk -v engine_name="$ENGINE_NAME" '
+  {
+    n = length($0)
+    for (i = 1; i <= n; i++) {
+      ch = substr($0, i, 1)
+      if (ch == "{") {
+        depth++
+        if (depth == 2) { buf = ""; collecting = 1; continue }
+      } else if (ch == "}") {
+        if (depth == 2 && collecting) {
+          if (buf ~ ("name[[:space:]]*=[[:space:]]*\"" engine_name "\"")) {
+            if (match(buf, /engine_id[[:space:]]*=[[:space:]]*"[^"]+"/)) {
+              id = substr(buf, RSTART, RLENGTH)
+              sub(/^engine_id[[:space:]]*=[[:space:]]*"/, "", id)
+              sub(/"$/, "", id)
+              print id
+              exit
+            }
+          }
+          collecting = 0
+        }
+        depth--
+      }
+      if (collecting) buf = buf ch
+    }
+    if (collecting) buf = buf "\n"
+  }
+')"
 
 if [ -n "$EXISTING_ID" ]; then
   echo "Engine '$ENGINE_NAME' already registered: $EXISTING_ID"
