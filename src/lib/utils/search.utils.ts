@@ -23,25 +23,12 @@ export const getSearchScore = ({
 	const description = normalise(market.description ?? '');
 	const terms = query.split(/\s+/).filter(Boolean);
 
-	let score = 0;
+	const fullMatchScore = (title.includes(query) ? 10 : 0) + (description.includes(query) ? 5 : 0);
 
-	if (title.includes(query)) {
-		score += 10;
-	}
+	const termsScore = terms.reduce(
+		(acc, term) => acc + (title.includes(term) ? 3 : 0) + (description.includes(term) ? 1 : 0),
+		0
+	);
 
-	if (description.includes(query)) {
-		score += 5;
-	}
-
-	for (const term of terms) {
-		if (title.includes(term)) {
-			score += 3;
-		}
-
-		if (description.includes(term)) {
-			score += 1;
-		}
-	}
-
-	return score;
+	return fullMatchScore + termsScore;
 };

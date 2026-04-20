@@ -101,17 +101,20 @@ export const assertUniqueNickname = ({
 		params: {}
 	});
 
-	for (const [key, item] of items) {
-		if (key !== documentKey) {
+	const hasConflict = items
+		.filter(([key]) => key !== documentKey)
+		.some(([, item]) => {
 			try {
 				const existingProfile = decodeDocData<UserProfile>(item.data);
 
-				if (existingProfile.nickname?.trim().toLowerCase() === normalizedNickname) {
-					throw new Error(`The nickname "${nickname}" is already taken.`);
-				}
+				return existingProfile.nickname?.trim().toLowerCase() === normalizedNickname;
 			} catch (_e) {
 				// If decoding fails, skip this item (might be legacy or different format)
+				return false;
 			}
-		}
+		});
+
+	if (hasConflict) {
+		throw new Error(`The nickname "${nickname}" is already taken.`);
 	}
 };

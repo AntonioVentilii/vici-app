@@ -85,41 +85,30 @@ const payoutMilestone = async ({
 
 	const memoBytes = new TextEncoder().encode(`vxp:new-user:${memoLabel}`);
 
-	let fee: [] | [bigint] = [];
-	let transfer = await ledger.icrc1Transfer({
-		args: {
-			to,
-			amount,
-			fee,
-			memo: [memoBytes],
-			from_subaccount: [],
-			created_at_time: []
-		}
-	});
+	const tryTransfer = (fee: [] | [bigint]) =>
+		ledger.icrc1Transfer({
+			args: {
+				to,
+				amount,
+				fee,
+				memo: [memoBytes],
+				from_subaccount: [],
+				created_at_time: []
+			}
+		});
 
-	if ('Err' in transfer) {
-		const err = transfer.Err;
+	const firstAttempt = await tryTransfer([]);
 
-		if ('BadFee' in err) {
-			fee = [err.BadFee.expected_fee];
-			transfer = await ledger.icrc1Transfer({
-				args: {
-					to,
-					amount,
-					fee,
-					memo: [memoBytes],
-					from_subaccount: [],
-					created_at_time: []
-				}
-			});
-		}
+	const finalAttempt =
+		'Err' in firstAttempt && 'BadFee' in firstAttempt.Err
+			? await tryTransfer([firstAttempt.Err.BadFee.expected_fee])
+			: firstAttempt;
+
+	if ('Ok' in finalAttempt) {
+		return { ok: true, blockIndex: finalAttempt.Ok };
 	}
 
-	if ('Ok' in transfer) {
-		return { ok: true, blockIndex: transfer.Ok };
-	}
-
-	return { ok: false, error: transferErrorText(transfer.Err) };
+	return { ok: false, error: transferErrorText(finalAttempt.Err) };
 };
 
 const persistOnboarding = ({
@@ -160,10 +149,13 @@ const persistOnboarding = ({
  * Count `activities` rows owned by `caller` whose key ends with `#trade` (see `logActivity`).
  */
 const countUserTradeActivities = (caller: Uint8Array): number => {
-	let total = 0;
-	let startAfter: string | undefined;
-
-	while (true) {
+	const countPage = ({
+		startAfter,
+		acc
+	}: {
+		startAfter: string | undefined;
+		acc: number;
+	}): number => {
 		const page = listDocsStore({
 			collection: Collection.ACTIVITIES,
 			caller,
@@ -178,29 +170,26 @@ const countUserTradeActivities = (caller: Uint8Array): number => {
 		});
 
 		if (page.items.length === 0) {
-			break;
+			return acc;
 		}
 
-		for (const [key] of page.items) {
-			if (key.endsWith(TRADE_KEY_SUFFIX)) {
-				total += 1;
-			}
-		}
+		const pageCount = page.items.filter(([key]) => key.endsWith(TRADE_KEY_SUFFIX)).length;
+		const nextAcc = acc + pageCount;
 
 		if (BigInt(page.items.length) < LIST_PAGE_SIZE) {
-			break;
+			return nextAcc;
 		}
 
 		const lastKey = page.items[page.items.length - 1]?.[0];
 
 		if (isNullish(lastKey) || lastKey === startAfter) {
-			break;
+			return nextAcc;
 		}
 
-		startAfter = lastKey;
-	}
+		return countPage({ startAfter: lastKey, acc: nextAcc });
+	};
 
-	return total;
+	return countPage({ startAfter: undefined, acc: 0 });
 };
 
 const countUserTradeActivitiesSafe = (caller: Uint8Array): number => {
@@ -241,31 +230,25 @@ const reconcileLegacyOnboardingState = ({
 
 	const tradeCount = Math.max(base.tradeCount, historicalTrades, minimumTradeCount ?? 0);
 
-	let milestones = { ...base.milestones };
+	const milestoneEligibility: Array<{ mk: VxpNewUserMilestoneKey; eligible: boolean }> = [
+		{ mk: 'm1', eligible: hasProfile },
+		{ mk: 'm2', eligible: tradeCount >= 1 },
+		{ mk: 'm3', eligible: tradeCount >= 5 }
+	];
 
-	const oweIfEligible = ({
-		mk,
-		eligible
-	}: {
-		mk: VxpNewUserMilestoneKey;
-		eligible: boolean;
-	}): void => {
-		if (milestones[mk].status !== 'none' || !eligible) {
-			return;
-		}
-
-		milestones = {
-			...milestones,
-			[mk]: {
-				status: 'owed',
-				amountBaseUnits: amountForMilestone(mk).toString()
-			}
-		};
-	};
-
-	oweIfEligible({ mk: 'm1', eligible: hasProfile });
-	oweIfEligible({ mk: 'm2', eligible: tradeCount >= 1 });
-	oweIfEligible({ mk: 'm3', eligible: tradeCount >= 5 });
+	const milestones = milestoneEligibility.reduce<VxpOnboardingDoc['milestones']>(
+		(acc, { mk, eligible }) =>
+			acc[mk].status === 'none' && eligible
+				? {
+						...acc,
+						[mk]: {
+							status: 'owed',
+							amountBaseUnits: amountForMilestone(mk).toString()
+						}
+					}
+				: acc,
+		{ ...base.milestones }
+	);
 
 	const doc: VxpOnboardingDoc = {
 		...base,
@@ -452,7 +435,11 @@ const payOutMilestoneIfNeeded = async ({
 		});
 	}
 
-	for (let attempt = 0; attempt < PERSIST_MAX_RETRIES; attempt++) {
+	const attemptPersist = async (attempt: number): Promise<void> => {
+		if (attempt >= PERSIST_MAX_RETRIES) {
+			return;
+		}
+
 		const latest = getDocStore({
 			collection: Collection.VXP_ONBOARDING,
 			key: userKey,
@@ -460,7 +447,7 @@ const payOutMilestoneIfNeeded = async ({
 		});
 
 		if (isNullish(latest)) {
-			break;
+			return;
 		}
 
 		const latestDoc = decodeDocData<VxpOnboardingDoc>(latest.data);
@@ -472,7 +459,7 @@ const payOutMilestoneIfNeeded = async ({
 			(curMs.status === 'paid' && BigInt(curMs.amountBaseUnits) < expectedAmount);
 
 		if (!needsUpdate) {
-			break;
+			return;
 		}
 
 		const updatedMilestone: VxpMilestoneState = result.ok
@@ -500,7 +487,6 @@ const payOutMilestoneIfNeeded = async ({
 				},
 				version: latest.version
 			});
-			break;
 		} catch (e: unknown) {
 			if (attempt === PERSIST_MAX_RETRIES - 1) {
 				const msg = e instanceof Error ? e.message : String(e);
@@ -517,8 +503,12 @@ const payOutMilestoneIfNeeded = async ({
 					`Failed to persist ${mk} after transfer (user=${userKey}, ok=${result.ok})`
 				);
 			}
+
+			await attemptPersist(attempt + 1);
 		}
-	}
+	};
+
+	await attemptPersist(0);
 };
 
 /**
@@ -617,38 +607,44 @@ export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Pro
 		}
 	} = ctx;
 
-	let userKeyForLog = Principal.fromUint8Array(caller).toText();
-
-	try {
-		if (collection !== Collection.ACTIVITIES) {
-			return;
+	const parsePrincipalText = (text: string): Principal | undefined => {
+		try {
+			return Principal.fromText(text);
+		} catch {
+			return undefined;
 		}
+	};
 
-		if (nonNullish(before)) {
-			return;
+	const resolveUserKey = (): string | undefined => {
+		if (collection !== Collection.ACTIVITIES || nonNullish(before)) {
+			return undefined;
 		}
 
 		const activity = decodeDocData<Activity>(after.data);
 
 		if (activity.type !== ActivityType.TRADE) {
-			return;
+			return undefined;
 		}
 
-		let activityUserPrincipal: Principal;
+		const activityUserPrincipal = parsePrincipalText(activity.user);
 
-		try {
-			activityUserPrincipal = Principal.fromText(activity.user);
-		} catch {
-			return;
+		if (
+			isNullish(activityUserPrincipal) ||
+			activityUserPrincipal.compareTo(Principal.fromUint8Array(caller)) !== 'eq'
+		) {
+			return undefined;
 		}
 
-		if (activityUserPrincipal.compareTo(Principal.fromUint8Array(caller)) !== 'eq') {
-			return;
-		}
+		return activity.user;
+	};
 
-		const userKey = activity.user;
-		userKeyForLog = userKey;
+	const userKey = resolveUserKey();
 
+	if (isNullish(userKey)) {
+		return;
+	}
+
+	try {
 		const existing = getDocStore({
 			collection: Collection.VXP_ONBOARDING,
 			key: userKey,
@@ -680,27 +676,24 @@ export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Pro
 
 		const tradeCount = base.tradeCount + 1;
 
-		let milestones: VxpOnboardingDoc['milestones'] = { ...base.milestones };
+		const milestoneUpdates: Array<{ mk: VxpNewUserMilestoneKey; eligible: boolean }> = [
+			{ mk: 'm2', eligible: tradeCount === 1 },
+			{ mk: 'm3', eligible: tradeCount === 5 }
+		];
 
-		if (tradeCount === 1 && milestones.m2.status === 'none') {
-			milestones = {
-				...milestones,
-				m2: {
-					status: 'owed',
-					amountBaseUnits: amountForMilestone('m2').toString()
-				}
-			};
-		}
-
-		if (tradeCount === 5 && milestones.m3.status === 'none') {
-			milestones = {
-				...milestones,
-				m3: {
-					status: 'owed',
-					amountBaseUnits: amountForMilestone('m3').toString()
-				}
-			};
-		}
+		const milestones = milestoneUpdates.reduce<VxpOnboardingDoc['milestones']>(
+			(acc, { mk, eligible }) =>
+				eligible && acc[mk].status === 'none'
+					? {
+							...acc,
+							[mk]: {
+								status: 'owed',
+								amountBaseUnits: amountForMilestone(mk).toString()
+							}
+						}
+					: acc,
+			{ ...base.milestones }
+		);
 
 		persistOnboarding({
 			caller,
@@ -717,7 +710,10 @@ export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Pro
 		await payOutOwedMilestones({ caller, userKey });
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);
-		logError({ message: 'hook_error', detail: { hook: 'trade', user: userKeyForLog, error: msg } });
+		logError({
+			message: 'hook_error',
+			detail: { hook: 'trade', user: userKey, error: msg }
+		});
 		throw e;
 	}
 };

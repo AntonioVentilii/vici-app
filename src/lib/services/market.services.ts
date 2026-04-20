@@ -56,19 +56,17 @@ export const createMarket = async ({
 	const identity = await safeGetIdentityOnce();
 
 	const domain = balanceDomain;
-	let payoutUnit: RegistryDid.PayoutUnit = payoutUnitOverride ?? { Fiat: { Usd: null } };
-
-	if (nonNullish(socialReward)) {
-		payoutUnit = {
-			NonMonetary: {
-				Social: {
-					title: socialReward.title,
-					description: toNullable(socialReward.description),
-					icon_url: toNullable(socialReward.iconUrl)
+	const payoutUnit: RegistryDid.PayoutUnit = nonNullish(socialReward)
+		? {
+				NonMonetary: {
+					Social: {
+						title: socialReward.title,
+						description: toNullable(socialReward.description),
+						icon_url: toNullable(socialReward.iconUrl)
+					}
 				}
 			}
-		};
-	}
+		: (payoutUnitOverride ?? { Fiat: { Usd: null } });
 
 	const profileDoc = await getProfile(identity.getPrincipal().toText());
 
@@ -174,51 +172,45 @@ export const getMarkets = async (domain: RegistryDid.BalanceDomain): Promise<Mar
 		seriesList.map(async (s) => {
 			const mid = parseMarketId(s.series_id);
 			const isCategorical = 'Categorical' in s.payoff_type;
-
-			let yesProb = 0.5;
-			let noProb = 0.5;
-			let bestBid: number | undefined;
-			let bestAsk: number | undefined;
-			let bestBidQty: bigint | undefined;
-			let bestAskQty: bigint | undefined;
-			let categoricalProbabilities: Record<string, number> | undefined;
+			const isExpired = s.expiry_ns / MILLISECOND_IN_NANOSECONDS <= BigInt(Date.now());
+			const status: MarketStatus = isExpired ? 'Expired' : 'Open';
 
 			if (isCategorical && nonNullish(s.outcomes?.[0])) {
 				const orders = await listOrdersApi({
 					identity,
 					params: { series_id: toNullable(mid) }
 				});
-				categoricalProbabilities = calculateCategoricalProbabilities({
+				const categoricalProbabilities = calculateCategoricalProbabilities({
 					outcomes: s.outcomes[0],
 					orders
 				});
-			} else {
-				const orders = await getOrderBook({ marketId: mid, domain: s.balance_domain });
-				const { midPrice, bids, asks } = calculateMarketStats({
-					orders,
-					outcome: 'YES'
-				});
 
-				bestBid = bids[0]?.price;
-				bestAsk = asks[0]?.price;
-				bestBidQty = bids[0]?.totalQty;
-				bestAskQty = asks[0]?.totalQty;
-				yesProb = midPrice ?? 0.5;
-				noProb = 1 - yesProb;
+				return mapMarketData({
+					series: s,
+					yesProbability: 0.5,
+					noProbability: 0.5,
+					status,
+					categoricalProbabilities
+				});
 			}
 
-			const isExpired = s.expiry_ns / MILLISECOND_IN_NANOSECONDS <= BigInt(Date.now());
+			const orders = await getOrderBook({ marketId: mid, domain: s.balance_domain });
+			const { midPrice, bids, asks } = calculateMarketStats({
+				orders,
+				outcome: 'YES'
+			});
+
+			const yesProb = midPrice ?? 0.5;
 
 			return mapMarketData({
 				series: s,
 				yesProbability: yesProb,
-				noProbability: noProb,
-				bestBid,
-				bestAsk,
-				bestBidQty,
-				bestAskQty,
-				status: isExpired ? 'Expired' : 'Open',
-				categoricalProbabilities
+				noProbability: 1 - yesProb,
+				bestBid: bids[0]?.price,
+				bestAsk: asks[0]?.price,
+				bestBidQty: bids[0]?.totalQty,
+				bestAskQty: asks[0]?.totalQty,
+				status
 			});
 		})
 	);
@@ -280,38 +272,41 @@ export const getMarket = async (marketId: MarketId): Promise<Market | undefined>
 	}
 
 	const isCategorical = 'Categorical' in s.payoff_type;
-	let categoricalProbabilities: Record<string, number> | undefined;
-
-	if (isCategorical && nonNullish(s.outcomes?.[0])) {
-		const orders = await listOrdersApi({
-			identity,
-			params: { series_id: toNullable(marketId) }
-		});
-		categoricalProbabilities = calculateCategoricalProbabilities({
-			outcomes: s.outcomes[0],
-			orders
-		});
-	}
+	const categoricalProbabilities: Record<string, number> | undefined =
+		isCategorical && nonNullish(s.outcomes?.[0])
+			? calculateCategoricalProbabilities({
+					outcomes: s.outcomes[0],
+					orders: await listOrdersApi({
+						identity,
+						params: { series_id: toNullable(marketId) }
+					})
+				})
+			: undefined;
 
 	const resolution = activities.find(
 		(a) => a.type === ActivityType.SETTLEMENT && a.marketId === marketId
 	);
 
-	let status: MarketStatus = 'Open';
-	let outcome: Outcome | undefined;
-
-	if (nonNullish(resolution)) {
-		status = 'Resolved';
-
+	const parseResolutionOutcome = (details: string | undefined): Outcome | undefined => {
 		try {
-			const { outcome: settlementOutcome } = JSON.parse(resolution.details ?? '{}');
-			outcome = settlementOutcome;
+			const { outcome: settlementOutcome } = JSON.parse(details ?? '{}');
+
+			return settlementOutcome;
 		} catch (e) {
 			console.error('Failed to parse outcome from activity', e);
+
+			return undefined;
 		}
-	} else if (s.expiry_ns / MILLISECOND_IN_NANOSECONDS <= BigInt(Date.now())) {
-		status = 'Expired';
-	}
+	};
+
+	const status: MarketStatus = nonNullish(resolution)
+		? 'Resolved'
+		: s.expiry_ns / MILLISECOND_IN_NANOSECONDS <= BigInt(Date.now())
+			? 'Expired'
+			: 'Open';
+	const outcome: Outcome | undefined = nonNullish(resolution)
+		? parseResolutionOutcome(resolution.details)
+		: undefined;
 
 	return mapMarketData({
 		series: s,
@@ -344,48 +339,47 @@ export const rankMarkets = ({
 		categoryMappings.map((m) => [m.seriesId, m.categoryId])
 	);
 
+	const computeScore = (m: Market): number => {
+		const categoryId = marketCategoryMap.get(m.id);
+
+		// 1. User Interests (High Priority)
+		const interestScore = nonNullish(categoryId) && userInterests.has(categoryId) ? 1000 : 0;
+
+		// 2. Culture Fallback (Discovery Boost)
+		// Boost culture if user has interest in it or if user has NO interests at all
+		const cultureScore =
+			categoryId === 'culture' && (userInterests.size === 0 || userInterests.has('culture'))
+				? 500
+				: 0;
+
+		// 3. Activity / Trending (Volume-based)
+		// Small boost based on total volume (normalized to ~100 max for typical early liquidity)
+		const volumeScore =
+			m.totalVolume > ZERO
+				? Math.min(
+						decimalFixedValueToNumber({
+							value: m.totalVolume,
+							decimals: Number(m.token.decimals)
+						}) * 2,
+						200
+					)
+				: 0;
+
+		// 4. Relevance / Liquidity
+		// Boost if both sides of the book are populated
+		const liquidityScore = nonNullish(m.bestBid) && nonNullish(m.bestAsk) ? 100 : 0;
+
+		// 5. Recency (Tie-breaker)
+		// Scaled createdAt to provide stable sequence within same score brackets
+		const recencyScore = Number(m.createdAt) / 1e12;
+
+		return interestScore + cultureScore + volumeScore + liquidityScore + recencyScore;
+	};
+
 	return markets
-		.map((m: Market) => {
-			let score = 0;
-			const categoryId = marketCategoryMap.get(m.id);
-
-			// 1. User Interests (High Priority)
-			if (nonNullish(categoryId) && userInterests.has(categoryId)) {
-				score += 1000;
-			}
-
-			// 2. Culture Fallback (Discovery Boost)
-			// Boost culture if user has interest in it or if user has NO interests at all
-			if (categoryId === 'culture') {
-				if (userInterests.size === 0 || userInterests.has('culture')) {
-					score += 500;
-				}
-			}
-
-			// 3. Activity / Trending (Volume-based)
-			// Small boost based on total volume (normalized to ~100 max for typical early liquidity)
-			if (m.totalVolume > ZERO) {
-				const volumeInUsd = decimalFixedValueToNumber({
-					value: m.totalVolume,
-					decimals: Number(m.token.decimals)
-				});
-				score += Math.min(volumeInUsd * 2, 200); // Caps at 200
-			}
-
-			// 4. Relevance / Liquidity
-			// Boost if both sides of the book are populated
-			if (nonNullish(m.bestBid) && nonNullish(m.bestAsk)) {
-				score += 100;
-			}
-
-			// 5. Recency (Tie-breaker)
-			// Scaled createdAt to provide stable sequence within same score brackets
-			score += Number(m.createdAt) / 1e12;
-
-			return { market: m, score };
-		})
+		.map((m) => ({ market: m, score: computeScore(m) }))
 		.sort((a, b) => b.score - a.score)
-		.map((item) => item.market);
+		.map(({ market }) => market);
 };
 
 /**

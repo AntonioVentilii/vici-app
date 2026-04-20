@@ -17,28 +17,22 @@ export const calculateDepositedNominalLabel = ({
 }: {
 	collateral: CollateralStoreData;
 	tokens: Token[];
-}): string => {
-	const parts: string[] = [];
-
-	for (const t of tokens) {
-		const b = collateral.balances[t.id] ?? ZERO;
-
-		if (b !== ZERO) {
-			const d = icrcLedgerDecimalsFromCollateralConfig({
+}): string =>
+	tokens
+		.map((t) => ({ token: t, balance: collateral.balances[t.id] ?? ZERO }))
+		.filter(({ balance }) => balance !== ZERO)
+		.map(({ token, balance }) => {
+			const unitName = icrcLedgerDecimalsFromCollateralConfig({
 				assetsConfig: collateral.assetsConfig,
-				ledgerCanisterId: t.ledgerCanisterId,
-				fallbackDecimals: t.decimals
+				ledgerCanisterId: token.ledgerCanisterId,
+				fallbackDecimals: token.decimals
 			});
-
 			const displayDecimals =
-				t.symbol === VXP_TOKEN.symbol ? VXP_BALANCE_DISPLAY_DECIMALS : undefined;
+				token.symbol === VXP_TOKEN.symbol ? VXP_BALANCE_DISPLAY_DECIMALS : undefined;
 
-			parts.push(`${formatToken({ value: b, unitName: d, displayDecimals })} ${t.symbol}`);
-		}
-	}
-
-	return parts.join(' · ');
-};
+			return `${formatToken({ value: balance, unitName, displayDecimals })} ${token.symbol}`;
+		})
+		.join(' · ');
 
 export const calculateFallbackCollateralMarginUnits = ({
 	collateral,
@@ -46,28 +40,28 @@ export const calculateFallbackCollateralMarginUnits = ({
 }: {
 	collateral: CollateralStoreData;
 	tokens: Token[];
-}): bigint => {
-	let total = ZERO;
-
-	for (const t of tokens) {
+}): bigint =>
+	tokens.reduce<bigint>((total, t) => {
 		const b = collateral.balances[t.id] ?? ZERO;
 
-		if (b > ZERO) {
-			const d = icrcLedgerDecimalsFromCollateralConfig({
-				assetsConfig: collateral.assetsConfig,
-				ledgerCanisterId: t.ledgerCanisterId,
-				fallbackDecimals: t.decimals
-			});
+		if (b <= ZERO) {
+			return total;
+		}
 
-			total += nativeToClearingMarginUnits({
+		const d = icrcLedgerDecimalsFromCollateralConfig({
+			assetsConfig: collateral.assetsConfig,
+			ledgerCanisterId: t.ledgerCanisterId,
+			fallbackDecimals: t.decimals
+		});
+
+		return (
+			total +
+			nativeToClearingMarginUnits({
 				nativeBalance: b,
 				nativeDecimals: d
-			});
-		}
-	}
-
-	return total;
-};
+			})
+		);
+	}, ZERO);
 
 export const calculateIntuitiveAvailable = ({
 	collateral,

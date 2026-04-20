@@ -1,8 +1,5 @@
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
-import {
-	PORTFOLIO_DEFAULT_DECIMALS,
-	PORTFOLIO_DEFAULT_PROBABILITY
-} from '$lib/constants/portfolio.constants';
+import { PORTFOLIO_DEFAULT_DECIMALS } from '$lib/constants/portfolio.constants';
 import type { Market } from '$lib/types/market';
 import type { Position } from '$lib/types/position';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
@@ -22,13 +19,12 @@ export const calculatePositionValue = ({
 		return ZERO;
 	}
 
-	let prob = PORTFOLIO_DEFAULT_PROBABILITY;
-
-	if (market.payoffType === 'Binary') {
-		prob = position.outcomeId === 'YES' ? market.yesProbability : market.noProbability;
-	} else {
-		prob = 1 / (market.outcomes?.length ?? 1);
-	}
+	const prob =
+		market.payoffType === 'Binary'
+			? position.outcomeId === 'YES'
+				? market.yesProbability
+				: market.noProbability
+			: 1 / (market.outcomes?.length ?? 1);
 
 	return BigInt(Math.floor(Number(position.netQty) * prob));
 };

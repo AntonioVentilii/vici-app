@@ -129,22 +129,19 @@ export const ensureProfile = async (user: User): Promise<UserProfile> => {
 		return profileDoc.data;
 	}
 
-	let { nickname } = profileDoc.data;
 	const { details } = user.data as { details?: Record<string, unknown> };
-
-	if (nonNullish(details) && 'profile' in details && nonNullish(details.profile)) {
-		const gProfile = details.profile as {
-			name?: string;
-			given_name?: string;
-			family_name?: string;
-		};
-		const fullName =
-			gProfile.name ?? [gProfile.given_name, gProfile.family_name].filter(Boolean).join(' ');
-
-		if (fullName.trim().length > 0) {
-			nickname = fullName;
-		}
-	}
+	const gProfile =
+		nonNullish(details) && 'profile' in details && nonNullish(details.profile)
+			? (details.profile as {
+					name?: string;
+					given_name?: string;
+					family_name?: string;
+				})
+			: undefined;
+	const fullName = nonNullish(gProfile)
+		? (gProfile.name ?? [gProfile.given_name, gProfile.family_name].filter(Boolean).join(' '))
+		: '';
+	const nickname = fullName.trim().length > 0 ? fullName : profileDoc.data.nickname;
 
 	const data: UserProfile = {
 		...profileDoc.data,
@@ -207,76 +204,65 @@ export const calculateAndSyncStats = async ({
 	const principal = identity.getPrincipal().toText();
 	const history = await getUserTradeHistory(domain);
 
-	let wins = 0;
-	let settledTradesCount = 0;
+	const isSettled = (event: ClearingDid.Event): boolean => 'Settled' in event.event_type;
+	const isExecuted = (event: ClearingDid.Event): boolean => 'Executed' in event.event_type;
+	const isWin = (event: ClearingDid.Event): boolean => isSettled(event) && event.qty > ZERO;
 
-	history.forEach((event: ClearingDid.Event) => {
-		if ('Executed' in event.event_type) {
-			// Track executed trades
-		}
+	const settledTradesCount = history.filter(isSettled).length;
+	const wins = history.filter(isWin).length;
 
-		if ('Settled' in event.event_type) {
-			settledTradesCount++;
+	const realizedPnl = history.filter(isSettled).reduce(
+		(acc, event) =>
+			acc +
+			(Number(event.qty) / 1e8) *
+				decimalFixedValueToNumber({
+					value: event.price.decimal.value,
+					decimals: event.price.decimal.decimals
+				}),
+		0
+	);
 
-			if (event.qty > ZERO) {
-				wins++;
-			}
-		}
-	});
-
-	const realizedPnl = history.reduce((acc, event) => {
-		if ('Settled' in event.event_type) {
-			const priceVal = decimalFixedValueToNumber({
-				value: event.price.decimal.value,
-				decimals: event.price.decimal.decimals
-			});
-
-			return acc + (Number(event.qty) / 1e8) * priceVal;
-		}
-
-		return acc;
-	}, 0);
-
-	const totalTrades = history.filter((e) => 'Executed' in e.event_type).length;
+	const totalTrades = history.filter(isExecuted).length;
 	const winRate = settledTradesCount > 0 ? (wins / settledTradesCount) * 100 : 0;
 
-	let currentStreak = 0;
 	const sortedHistory = [...history].sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
-
-	for (const event of sortedHistory) {
-		if ('Settled' in event.event_type) {
-			if (event.qty > ZERO) {
-				currentStreak++;
-			} else {
-				break;
-			}
-		}
-	}
+	const currentStreak = sortedHistory.filter(isSettled).findIndex((event) => event.qty <= ZERO);
+	const resolvedStreak =
+		currentStreak === -1 ? sortedHistory.filter(isSettled).length : currentStreak;
 
 	const accuracy = winRate;
-	let totalPoints = 0;
-	let runningStreak = 0;
 
 	const chronoHistory = [...history].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
 
-	chronoHistory.forEach((event) => {
-		if ('Settled' in event.event_type) {
-			if (event.qty > ZERO) {
-				runningStreak++;
-				const priceVal = decimalFixedValueToNumber({
-					value: event.price.decimal.value,
-					decimals: event.price.decimal.decimals
-				});
-				const weight = priceVal > 0 ? 1.0 / priceVal : 1.0;
-				const multiplier = Math.pow(1.1, runningStreak - 1);
-				totalPoints += Math.floor(100 * weight * multiplier);
-			} else {
-				runningStreak = 0;
+	const { totalPoints } = chronoHistory.reduce<{ totalPoints: number; runningStreak: number }>(
+		(acc, event) => {
+			if (isSettled(event)) {
+				if (event.qty > ZERO) {
+					const nextStreak = acc.runningStreak + 1;
+					const priceVal = decimalFixedValueToNumber({
+						value: event.price.decimal.value,
+						decimals: event.price.decimal.decimals
+					});
+					const weight = priceVal > 0 ? 1.0 / priceVal : 1.0;
+					const multiplier = Math.pow(1.1, nextStreak - 1);
+
+					return {
+						totalPoints: acc.totalPoints + Math.floor(100 * weight * multiplier),
+						runningStreak: nextStreak
+					};
+				}
+
+				return { totalPoints: acc.totalPoints, runningStreak: 0 };
 			}
-		} else if ('Executed' in event.event_type) {
-			totalPoints += 10;
-		}
-	});
+
+			if (isExecuted(event)) {
+				return { totalPoints: acc.totalPoints + 10, runningStreak: acc.runningStreak };
+			}
+
+			return acc;
+		},
+		{ totalPoints: 0, runningStreak: 0 }
+	);
 
 	const level = Math.floor(totalPoints / 500) + 1;
 
@@ -289,7 +275,7 @@ export const calculateAndSyncStats = async ({
 			totalTrades,
 			winRate,
 			pnl: realizedPnl,
-			streak: currentStreak,
+			streak: resolvedStreak,
 			accuracy,
 			points: totalPoints,
 			level
@@ -309,17 +295,18 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 		return;
 	}
 
-	let newStreak = 1;
-
-	if (nonNullish(lastDay)) {
+	const getYesterdayStr = (): string => {
 		const yesterday = new Date();
 		yesterday.setDate(yesterday.getDate() - 1);
 		const [yesterdayStr] = yesterday.toISOString().split('T');
 
-		if (lastDay === yesterdayStr) {
-			newStreak = (profileDoc.data.dailyStreak ?? 0) + 1;
-		}
-	}
+		return yesterdayStr;
+	};
+
+	const newStreak =
+		nonNullish(lastDay) && lastDay === getYesterdayStr()
+			? (profileDoc.data.dailyStreak ?? 0) + 1
+			: 1;
 
 	await upsertProfile({
 		...profileDoc,

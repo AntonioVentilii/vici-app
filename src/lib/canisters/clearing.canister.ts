@@ -153,11 +153,16 @@ export class ClearingCanister extends Canister<ClearingService> {
 	} & QueryParams): Promise<void> => {
 		const { settle_series } = this.caller(queryParams);
 
-		let result = await settle_series(params);
+		type SettleResult = Awaited<ReturnType<typeof settle_series>>;
+		type FinalSettleResult = Exclude<SettleResult, { Processing: null }>;
 
-		while ('Processing' in result) {
-			result = await settle_series(params);
-		}
+		const pollUntilFinal = async (): Promise<FinalSettleResult> => {
+			const r = await settle_series(params);
+
+			return 'Processing' in r ? pollUntilFinal() : r;
+		};
+
+		const result = await pollUntilFinal();
 
 		if ('Ok' in result) {
 			return;

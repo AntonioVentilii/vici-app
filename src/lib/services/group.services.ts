@@ -199,22 +199,27 @@ export const syncGroupAdminsAfterUnfriend = async ({
 	userA: PrincipalText;
 	userB: PrincipalText;
 }): Promise<void> => {
+	const removeFromAdminsIfPresent = async ({
+		groups,
+		adminToRemove
+	}: {
+		groups: RegistryDid.Group[];
+		adminToRemove: PrincipalText;
+	}): Promise<void> => {
+		await Promise.all(
+			groups
+				.filter((group) => group.admins.some((a) => a.toText() === adminToRemove))
+				.map((group) => removeGroupAdmins({ groupId: group.group_id, principals: [adminToRemove] }))
+		);
+	};
+
 	try {
-		const groupsA = await listGroups(userA);
+		const [groupsA, groupsB] = await Promise.all([listGroups(userA), listGroups(userB)]);
 
-		for (const group of groupsA) {
-			if (group.admins.some((a) => a.toText() === userB)) {
-				await removeGroupAdmins({ groupId: group.group_id, principals: [userB] });
-			}
-		}
-
-		const groupsB = await listGroups(userB);
-
-		for (const group of groupsB) {
-			if (group.admins.some((a) => a.toText() === userA)) {
-				await removeGroupAdmins({ groupId: group.group_id, principals: [userA] });
-			}
-		}
+		await Promise.all([
+			removeFromAdminsIfPresent({ groups: groupsA, adminToRemove: userB }),
+			removeFromAdminsIfPresent({ groups: groupsB, adminToRemove: userA })
+		]);
 	} catch (e) {
 		console.error('Failed to sync group admins after unfriend', e);
 	}
@@ -225,15 +230,15 @@ export const getOrCreateFriendsGroup = async (): Promise<string> => {
 	const principal = identity.getPrincipal().toText();
 
 	const allGroups = await listGroups(principal);
-	let friendsGroup = allGroups.find((g) => g.name === 'My Friends');
-
-	if (!friendsGroup) {
-		const groupId = await createGroup({
-			name: 'My Friends',
-			description: 'A private circle for my friends.'
-		});
-		friendsGroup = await getGroup(groupId);
-	}
+	const existingFriendsGroup = allGroups.find((g) => g.name === 'My Friends');
+	const friendsGroup =
+		existingFriendsGroup ??
+		(await getGroup(
+			await createGroup({
+				name: 'My Friends',
+				description: 'A private circle for my friends.'
+			})
+		));
 
 	if (!friendsGroup) {
 		throw new Error('Failed to retrieve friends group after creation');
@@ -260,15 +265,15 @@ export const getOrCreateFollowersGroup = async (): Promise<string> => {
 	const principal = identity.getPrincipal().toText();
 
 	const allGroups = await listGroups(principal);
-	let followersGroup = allGroups.find((g) => g.name === 'My Followers');
-
-	if (!followersGroup) {
-		const groupId = await createGroup({
-			name: 'My Followers',
-			description: 'A private circle for the people who follow me.'
-		});
-		followersGroup = await getGroup(groupId);
-	}
+	const existingFollowersGroup = allGroups.find((g) => g.name === 'My Followers');
+	const followersGroup =
+		existingFollowersGroup ??
+		(await getGroup(
+			await createGroup({
+				name: 'My Followers',
+				description: 'A private circle for the people who follow me.'
+			})
+		));
 
 	if (!followersGroup) {
 		throw new Error('Failed to retrieve followers group after creation');

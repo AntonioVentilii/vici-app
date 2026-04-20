@@ -71,20 +71,16 @@ export const placeOrder = async ({
 
 	// Normalize Binary Outcome to "YES" asset
 	// price is expected as probability (0-1)
-	let normalizedSide = side;
-	let normalizedPrice = price;
-	let outcomeId: [] | [string] = toNullable();
-
-	// Check if it's a binary market (YES/NO) vs Categorical
-	// For now we assume YES/NO are special strings for Binary
-	if (outcome === 'YES' || outcome === 'NO') {
-		normalizedSide = outcome === 'NO' ? (side === 'BUY' ? 'SELL' : 'BUY') : side;
-		normalizedPrice = outcome === 'NO' ? 1 - price : price;
-		outcomeId = toNullable(); // Use default (usually first outcome) for binary
-	} else {
-		// Categorical: use outcome directly as outcome_id
-		outcomeId = toNullable(outcome);
-	}
+	const isBinary = outcome === 'YES' || outcome === 'NO';
+	const normalizedSide: OrderSide = isBinary
+		? outcome === 'NO'
+			? side === 'BUY'
+				? 'SELL'
+				: 'BUY'
+			: side
+		: side;
+	const normalizedPrice = isBinary && outcome === 'NO' ? 1 - price : price;
+	const outcomeId: [] | [string] = isBinary ? toNullable() : toNullable(outcome);
 
 	if (type === 'LIMIT') {
 		const orderId = `ORD_${nanoid(8)}`;

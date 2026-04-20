@@ -302,6 +302,14 @@ const readRoleFromDoc = (data: Uint8Array): UserRole | undefined => {
 	}
 };
 
+const tryParsePrincipal = (key: string): Principal | undefined => {
+	try {
+		return Principal.fromText(key);
+	} catch {
+		return undefined;
+	}
+};
+
 const applyDiff = async ({
 	principal,
 	prevRole,
@@ -360,11 +368,9 @@ export const syncRoleToEngineOnSet = async (ctx: OnSetDocContext): Promise<void>
 		return;
 	}
 
-	let principal: Principal;
+	const principal = tryParsePrincipal(key);
 
-	try {
-		principal = Principal.fromText(key);
-	} catch {
+	if (isNullish(principal)) {
 		logError({
 			message: 'engine_sync_invalid_key',
 			detail: { key }
@@ -425,11 +431,9 @@ export const syncRoleToEngineOnDelete = async (ctx: OnDeleteDocContext): Promise
 		return;
 	}
 
-	let principal: Principal;
+	const principal = tryParsePrincipal(key);
 
-	try {
-		principal = Principal.fromText(key);
-	} catch {
+	if (isNullish(principal)) {
 		logError({
 			message: 'engine_sync_invalid_key',
 			detail: { key }
@@ -438,21 +442,17 @@ export const syncRoleToEngineOnDelete = async (ctx: OnDeleteDocContext): Promise
 		return;
 	}
 
-	let prevRole: UserRole | undefined;
+	const prevRole = nonNullish(deletedDoc) ? readRoleFromDoc(deletedDoc.data) : undefined;
 
-	if (nonNullish(deletedDoc)) {
-		prevRole = readRoleFromDoc(deletedDoc.data);
+	// No-op if the deleted doc had data but we couldn't decode it — see JSDoc above
+	// for why we don't blindly revoke all roles. Log so operators can reconcile.
+	if (nonNullish(deletedDoc) && isNullish(prevRole)) {
+		logError({
+			message: 'engine_sync_decode_failed',
+			detail: { key, stage: 'deleted' }
+		});
 
-		// No-op if the deleted doc had data but we couldn't decode it — see JSDoc above
-		// for why we don't blindly revoke all roles. Log so operators can reconcile.
-		if (isNullish(prevRole)) {
-			logError({
-				message: 'engine_sync_decode_failed',
-				detail: { key, stage: 'deleted' }
-			});
-
-			return;
-		}
+		return;
 	}
 
 	try {

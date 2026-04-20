@@ -60,15 +60,16 @@ export const upvoteComment = async ({
 	}
 
 	const { data } = doc;
-	let upvotes = data.upvotes || [];
-	let downvotes = data.downvotes || [];
+	const currentUpvotes = data.upvotes ?? [];
+	const currentDownvotes = data.downvotes ?? [];
+	const hasUpvoted = currentUpvotes.includes(userPrincipal);
 
-	if (upvotes.includes(userPrincipal)) {
-		upvotes = upvotes.filter((u) => u !== userPrincipal);
-	} else {
-		upvotes.push(userPrincipal);
-		downvotes = downvotes.filter((u) => u !== userPrincipal);
-	}
+	const upvotes = hasUpvoted
+		? currentUpvotes.filter((u) => u !== userPrincipal)
+		: [...currentUpvotes, userPrincipal];
+	const downvotes = hasUpvoted
+		? currentDownvotes
+		: currentDownvotes.filter((u) => u !== userPrincipal);
 
 	await setDoc({
 		collection: Collection.COMMENTS,
@@ -103,15 +104,14 @@ export const downvoteComment = async ({
 	}
 
 	const { data } = doc;
-	let upvotes = data.upvotes || [];
-	let downvotes = data.downvotes || [];
+	const currentUpvotes = data.upvotes ?? [];
+	const currentDownvotes = data.downvotes ?? [];
+	const hasDownvoted = currentDownvotes.includes(userPrincipal);
 
-	if (downvotes.includes(userPrincipal)) {
-		downvotes = downvotes.filter((u) => u !== userPrincipal);
-	} else {
-		downvotes.push(userPrincipal);
-		upvotes = upvotes.filter((u) => u !== userPrincipal);
-	}
+	const downvotes = hasDownvoted
+		? currentDownvotes.filter((u) => u !== userPrincipal)
+		: [...currentDownvotes, userPrincipal];
+	const upvotes = hasDownvoted ? currentUpvotes : currentUpvotes.filter((u) => u !== userPrincipal);
 
 	await setDoc({
 		collection: Collection.COMMENTS,

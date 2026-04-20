@@ -8,7 +8,7 @@ import {
 	parseUsdBaseUnitsFromDecimal,
 	tokenBaseUnitsToUsdBaseUnits
 } from '$lib/utils/parse.utils';
-import { isNullish, nonNullish } from '@dfinity/utils';
+import { nonNullish } from '@dfinity/utils';
 
 /**
  * @throws Error when premium or implied max payout breaks ViciXp sizing rules.
@@ -68,20 +68,25 @@ export const resolveOutcomeExecutionPriceForSizing = ({
 	orderType = 'MARKET',
 	limitPrice
 }: Pick<TradeParams, 'market' | 'action' | 'orderType' | 'limitPrice'>): number => {
-	let executionPrice: number;
+	const computeExecutionPrice = (): number => {
+		if (orderType === 'LIMIT' && nonNullish(limitPrice)) {
+			return limitPrice;
+		}
 
-	if (orderType === 'LIMIT' && nonNullish(limitPrice)) {
-		executionPrice = limitPrice;
-	} else if (action === 'YES') {
-		executionPrice = market.bestAsk ?? market.yesProbability;
-	} else if (action === 'NO') {
-		executionPrice = nonNullish(market.bestBid) ? 1 - market.bestBid : market.noProbability;
-	} else {
+		if (action === 'YES') {
+			return market.bestAsk ?? market.yesProbability;
+		}
+
+		if (action === 'NO') {
+			return nonNullish(market.bestBid) ? 1 - market.bestBid : market.noProbability;
+		}
+
 		const outcome = market.outcomes?.find((o) => o.id === action);
-		executionPrice = outcome?.probability ?? 0.5;
-	}
 
-	return Math.max(executionPrice, 0.01);
+		return outcome?.probability ?? 0.5;
+	};
+
+	return Math.max(computeExecutionPrice(), 0.01);
 };
 
 /**
@@ -99,17 +104,23 @@ export const executeOutcomeTrade = async ({
 		unitName: market.token.decimals
 	});
 
-	let type: OrderType = orderType;
-
-	if (orderType !== 'LIMIT' || isNullish(limitPrice)) {
-		if (action === 'YES') {
-			type = nonNullish(market.bestAsk) ? 'MARKET' : 'LIMIT';
-		} else if (action === 'NO') {
-			type = nonNullish(market.bestBid) ? 'MARKET' : 'LIMIT';
-		} else {
-			type = 'LIMIT';
+	const resolveOrderType = (): OrderType => {
+		if (orderType === 'LIMIT' && nonNullish(limitPrice)) {
+			return orderType;
 		}
-	}
+
+		if (action === 'YES') {
+			return nonNullish(market.bestAsk) ? 'MARKET' : 'LIMIT';
+		}
+
+		if (action === 'NO') {
+			return nonNullish(market.bestBid) ? 'MARKET' : 'LIMIT';
+		}
+
+		return 'LIMIT';
+	};
+
+	const type = resolveOrderType();
 
 	const finalPrice = resolveOutcomeExecutionPriceForSizing({
 		market,

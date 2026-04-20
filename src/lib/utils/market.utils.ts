@@ -52,19 +52,14 @@ export const mapMarketData = ({
 		return;
 	}
 
-	let payoffTypeMapped: Market['payoffType'] = 'Binary';
-
-	if ('Categorical' in payoffType) {
-		payoffTypeMapped = 'Categorical';
-	}
-
-	if ('Call' in payoffType) {
-		payoffTypeMapped = 'Call';
-	}
-
-	if ('Put' in payoffType) {
-		payoffTypeMapped = 'Put';
-	}
+	const payoffTypeMapped: Market['payoffType'] =
+		'Categorical' in payoffType
+			? 'Categorical'
+			: 'Call' in payoffType
+				? 'Call'
+				: 'Put' in payoffType
+					? 'Put'
+					: 'Binary';
 
 	const tradingAccess: TradingAccessUI[] = mapTradingAccess(rawTradingAccess);
 	const isInviteOnly = tradingAccess.length > 0 && !tradingAccess.some((a) => a.type === 'Open');
@@ -140,53 +135,64 @@ export const calculateMarketStats = ({
 	orders: ClearingDid.LimitOrder[];
 	outcome?: string;
 }) => {
-	const bids: OrderBookLevel[] = [];
-	const asks: OrderBookLevel[] = [];
+	const isBinarySide = outcome === 'YES' || outcome === 'NO';
 
-	orders.forEach((o) => {
-		const side = 'Buy' in o.side ? 'BUY' : 'SELL';
-		const oOutcomeId = o.outcome_id[0] ?? 'YES';
-
-		const isBinarySide = outcome === 'YES' || outcome === 'NO';
-		const isOrderBinarySide = oOutcomeId === 'YES' || oOutcomeId === 'NO';
-
-		let displaySide = side;
-		let displayPrice = decimalFixedValueToNumber({
-			value: o.price.decimal.value,
-			decimals: o.price.decimal.decimals
-		});
-
-		if (oOutcomeId !== outcome) {
-			if (isBinarySide && isOrderBinarySide) {
-				displaySide = side === 'BUY' ? 'SELL' : 'BUY';
-				displayPrice = 1 - displayPrice;
-			} else {
-				return;
-			}
-		}
-
-		const target = displaySide === 'BUY' ? bids : asks;
-		const existing = target.find((l) => Math.abs(l.price - displayPrice) < 0.000001);
-
-		if (nonNullish(existing)) {
-			existing.totalQty += o.qty;
-			existing.orderCount += 1;
-		} else {
-			target.push({
-				price: displayPrice,
-				totalQty: o.qty,
-				orderCount: 1
+	const normalizedOrders = orders
+		.map((o) => {
+			const side = 'Buy' in o.side ? 'BUY' : 'SELL';
+			const oOutcomeId = o.outcome_id[0] ?? 'YES';
+			const rawPrice = decimalFixedValueToNumber({
+				value: o.price.decimal.value,
+				decimals: o.price.decimal.decimals
 			});
-		}
-	});
 
-	const sortedBids = bids.sort((a, b) => b.price - a.price);
-	const sortedAsks = asks.sort((a, b) => a.price - b.price);
+			if (oOutcomeId === outcome) {
+				return { displaySide: side, displayPrice: rawPrice, qty: o.qty };
+			}
+
+			const isOrderBinarySide = oOutcomeId === 'YES' || oOutcomeId === 'NO';
+
+			if (isBinarySide && isOrderBinarySide) {
+				return {
+					displaySide: side === 'BUY' ? ('SELL' as const) : ('BUY' as const),
+					displayPrice: 1 - rawPrice,
+					qty: o.qty
+				};
+			}
+
+			return undefined;
+		})
+		.filter(nonNullish);
+
+	const aggregateByPrice = (entries: typeof normalizedOrders): OrderBookLevel[] =>
+		Array.from(
+			entries
+				.reduce<Map<number, OrderBookLevel>>((acc, { displayPrice, qty }) => {
+					const key = Math.round(displayPrice * 1e6) / 1e6;
+					const existing = acc.get(key);
+
+					acc.set(key, {
+						price: key,
+						totalQty: (existing?.totalQty ?? ZERO) + qty,
+						orderCount: (existing?.orderCount ?? 0) + 1
+					});
+
+					return acc;
+				}, new Map())
+				.values()
+		);
+
+	const bids = aggregateByPrice(normalizedOrders.filter((o) => o.displaySide === 'BUY')).sort(
+		(a, b) => b.price - a.price
+	);
+	const asks = aggregateByPrice(normalizedOrders.filter((o) => o.displaySide === 'SELL')).sort(
+		(a, b) => a.price - b.price
+	);
 
 	return {
-		bids: sortedBids,
-		asks: sortedAsks,
-		midPrice: calculateProbability({ bids: sortedBids, asks: sortedAsks })
+		bids,
+		asks,
+		midPrice: calculateProbability({ bids, asks })
 	};
 };
 
@@ -226,64 +232,53 @@ export const calculateCategoricalProbabilities = ({
 	outcomes: { id: string; title: string }[];
 	orders: ClearingDid.LimitOrder[];
 }): Record<string, number> => {
-	const outcomeBook: Record<string, { bestBid?: number; bestAsk?: number }> = {};
-
-	outcomes.forEach((o) => {
-		const outcomeOrders = orders.filter((order) => order.outcome_id[0] === o.id);
-		const bids = outcomeOrders
-			.filter((order) => 'Buy' in order.side)
-			.map((order) =>
-				decimalFixedValueToNumber({
-					value: order.price.decimal.value,
-					decimals: order.price.decimal.decimals
-				})
-			)
-			.sort((a, b) => b - a);
-		const asks = outcomeOrders
-			.filter((order) => 'Sell' in order.side)
-			.map((order) =>
-				decimalFixedValueToNumber({
-					value: order.price.decimal.value,
-					decimals: order.price.decimal.decimals
-				})
-			)
-			.sort((a, b) => a - b);
-
-		outcomeBook[o.id] = {
-			bestBid: bids[0],
-			bestAsk: asks[0]
-		};
-	});
-
-	const probs: Record<string, number> = {};
-	let totalWeight = 0;
-
-	outcomes.forEach((o) => {
-		const { bestBid, bestAsk } = outcomeBook[o.id];
-		let p = 0;
-
-		if (nonNullish(bestBid) && nonNullish(bestAsk)) {
-			p = (bestBid + bestAsk) / 2;
-		} else if (nonNullish(bestBid)) {
-			p = bestBid;
-		} else if (nonNullish(bestAsk)) {
-			p = bestAsk;
-		} else {
-			p = 1 / outcomes.length; // Default to uniform
-		}
-
-		probs[o.id] = p;
-		totalWeight += p;
-	});
-
-	// Normalize
-	if (totalWeight > 0) {
-		Object.keys(probs).forEach((id) => {
-			probs[id] = probs[id] / totalWeight;
+	const orderPrice = (order: ClearingDid.LimitOrder): number =>
+		decimalFixedValueToNumber({
+			value: order.price.decimal.value,
+			decimals: order.price.decimal.decimals
 		});
+
+	const outcomeBook = outcomes.reduce<Record<string, { bestBid?: number; bestAsk?: number }>>(
+		(acc, o) => {
+			const outcomeOrders = orders.filter((order) => order.outcome_id[0] === o.id);
+			const [bestBid] = outcomeOrders
+				.filter((order) => 'Buy' in order.side)
+				.map(orderPrice)
+				.sort((a, b) => b - a);
+			const [bestAsk] = outcomeOrders
+				.filter((order) => 'Sell' in order.side)
+				.map(orderPrice)
+				.sort((a, b) => a - b);
+
+			acc[o.id] = { bestBid, bestAsk };
+
+			return acc;
+		},
+		{}
+	);
+
+	const rawProbs = outcomes.reduce<Record<string, number>>((acc, o) => {
+		const { bestBid, bestAsk } = outcomeBook[o.id];
+
+		acc[o.id] =
+			nonNullish(bestBid) && nonNullish(bestAsk)
+				? (bestBid + bestAsk) / 2
+				: nonNullish(bestBid)
+					? bestBid
+					: nonNullish(bestAsk)
+						? bestAsk
+						: 1 / outcomes.length;
+
+		return acc;
+	}, {});
+
+	const totalWeight = Object.values(rawProbs).reduce((sum, p) => sum + p, 0);
+
+	if (totalWeight <= 0) {
+		return rawProbs;
 	}
 
-	return probs;
+	return Object.fromEntries(Object.entries(rawProbs).map(([id, p]) => [id, p / totalWeight]));
 };
 
 const mapTradingAccess = (
