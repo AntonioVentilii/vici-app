@@ -47,7 +47,7 @@
 	{...rest}
 >
 	{#if isBusy}
-		<LoaderCircle class="animate-spin" size={20} strokeWidth={2.5} aria-hidden="true" />
+		<LoaderCircle class="animate-spin" aria-hidden="true" size={20} strokeWidth={2.5} />
 
 		{#if nonNullish(busyLabel)}
 			{@render busyLabel()}
