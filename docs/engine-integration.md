@@ -142,6 +142,45 @@ Operational procedures live as step-by-step workflows under [`.agents/workflows/
 - [`icdc-engine-operations.md`](../.agents/workflows/icdc-engine-operations.md) — day-2
   ops: reconcile a grant, audit role grants, rotate admins, kill-switch.
 
+## Persistence across registry reinstalls
+
+`dfx deploy --mode reinstall registry` wipes `eng_0.role_grants`. The intended source of
+truth is the Juno `ROLES` collection, and `syncRoleToEngineOnSet` mirrors writes into the
+registry — but only on writes, not on startup. So after a reset the engine's `role_grants`
+starts empty until role docs are re-saved (or grants are replayed out-of-band via `dfx`).
+
+Three options today, in order of durability:
+
+1. **Grant once via `dfx`** (fastest, ephemeral). See `icdc-engine-operations.md`. Wiped
+   on the next reinstall.
+2. **Set a `roles` doc in Juno** (durable across reinstalls, but needs a manual re-save
+   after each reset to retrigger the hook). Set from the admin UI with value `ADMIN` or
+   `CREATOR`. Recommended for any principal that should survive long-term.
+3. **Local dev bootstrap via `DEV_CREATOR_PRINCIPAL`** (recommended for a dev laptop):
+
+   ```bash
+   export DEV_CREATOR_PRINCIPAL="<your-II-principal>"
+   npm run init:icdc
+   ```
+
+   The trailing `init:icdc-dev-bootstrap` step in `init:icdc` runs
+   `scripts/init/init.icdc-dev-bootstrap.sh`, which — when `NETWORK=local` and the env
+   var is set — grants `Creator` + `OracleAdmin` on `eng_0` and adds the principal to
+   `VICI_ORACLE_V1.authorized_principals`. No-op on staging (hard-gated). Idempotent:
+   replays return `RoleAlreadyGranted` and the oracle set is a `BTreeSet`.
+
+   You can also run it standalone after a grant drift:
+
+   ```bash
+   DEV_CREATOR_PRINCIPAL="<your-II-principal>" npm run init:icdc-dev-bootstrap
+   ```
+
+> [!NOTE]
+> Option 3 is intentionally out-of-band from Juno (no `roles` doc is written). The
+> cross-environment fix is a Juno-driven reconcile step on the satellite — either an
+> admin endpoint that re-fires the sync for every `roles` doc, or an init-script pass
+> that enumerates the collection and replays writes. Tracked as future work.
+
 ## Frontend notes
 
 - `src/lib/services/market.services.ts` picks `engine_id` per-call based on the caller's

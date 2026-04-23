@@ -21,10 +21,15 @@ Assumes the Juno emulator is running (see [deployment.md](./deployment.md)).
 dfx deploy --mode reinstall registry
 ```
 
-2. Re-register the Vici engine + reseed markets:
+2. Re-register the Vici engine + reseed markets. Optionally export
+   `DEV_CREATOR_PRINCIPAL` so your signed-in II user is auto-granted `Creator` +
+   `OracleAdmin` on `eng_0` (see
+   [../../docs/engine-integration.md](../../docs/engine-integration.md) — "Persistence
+   across registry reinstalls"):
    // turbo
 
 ```bash
+export DEV_CREATOR_PRINCIPAL="<your-II-principal>"   # optional, local-only
 npm run init:icdc
 ```
 
