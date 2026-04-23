@@ -73,7 +73,6 @@ export const createMarket = async ({
 	const profileDoc = await getProfile(identity.getPrincipal().toText());
 
 	const { role } = profileDoc.data;
-	const isRestrictedToGroups = tradingAccess.some((access) => 'Restricted' in access);
 	const isSocialMarket = 'Social' in domain;
 	const isEngineCreator = role === UserRole.ADMIN || role === UserRole.CREATOR;
 
