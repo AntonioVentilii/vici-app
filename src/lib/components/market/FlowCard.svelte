@@ -14,6 +14,7 @@
 		signedIn: boolean;
 		position?: Position;
 		tradeAmount: string;
+		interactive?: boolean;
 	}
 
 	const {
@@ -23,7 +24,8 @@
 		isLimitOrderNo,
 		signedIn,
 		position,
-		tradeAmount
+		tradeAmount,
+		interactive = true
 	}: Props = $props();
 
 	const amount = $derived(parseFloat(tradeAmount) || 0);
@@ -32,7 +34,7 @@
 
 	let startX = 0;
 	let startY = 0;
-	let dragging = false;
+	let dragging = $state(false);
 
 	const coords = new Spring(
 		{ x: 0, y: 0 },
@@ -42,17 +44,27 @@
 		}
 	);
 
-	const rotation = $derived(coords.current.x / 12);
-	const opacity = $derived(
-		1 - Math.min(Math.abs(coords.current.x) / 500 + Math.abs(coords.current.y) / 500, 0.4)
+	const rotation = $derived(coords.current.x / 14);
+	const dragMagnitude = $derived(
+		Math.min(Math.sqrt(coords.current.x ** 2 + coords.current.y ** 2) / 260, 1)
 	);
+	const opacity = $derived(1 - dragMagnitude * 0.25);
 
-	// Action indicators
-	const yesOpacity = $derived(Math.max(0, coords.current.x / 80));
-	const noOpacity = $derived(Math.max(0, -coords.current.x / 80));
-	const skipOpacity = $derived(Math.max(0, -coords.current.y / 80));
+	// Action indicators (0 - 1)
+	const yesOpacity = $derived(Math.max(0, coords.current.x / 90));
+	const noOpacity = $derived(Math.max(0, -coords.current.x / 90));
+	const skipOpacity = $derived(Math.max(0, -coords.current.y / 90));
+
+	// Tint glow based on drag
+	const tintYes = $derived(Math.min(yesOpacity, 1));
+	const tintNo = $derived(Math.min(noOpacity, 1));
+	const tintSkip = $derived(Math.min(skipOpacity, 1));
 
 	const handleStart = (e: MouseEvent | TouchEvent) => {
+		if (!interactive) {
+			return;
+		}
+
 		dragging = true;
 		startX = 'touches' in e ? e.touches[0].clientX : e.clientX;
 		startY = 'touches' in e ? e.touches[0].clientY : e.clientY;
@@ -97,10 +109,18 @@
 
 		return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 	};
+
+	const daysUntilExpiry = $derived.by(() => {
+		const now = Date.now();
+		const exp = Number(market.expiryDate) / 1_000_000;
+		const days = Math.max(0, Math.ceil((exp - now) / (1000 * 60 * 60 * 24)));
+
+		return days;
+	});
 </script>
 
 <div
-	class="perspective-1000 relative flex h-full w-full items-center justify-center p-0 md:p-4"
+	class="flow-card-root"
 	onmouseleave={handleEnd}
 	onmousemove={handleMove}
 	onmouseup={handleEnd}
@@ -110,126 +130,190 @@
 >
 	<div
 		style="transform: translate3d({coords.current.x}px, {coords.current
-			.y}px, 0) rotate({rotation}deg); opacity: {opacity}"
-		class="relative h-[85vh] w-full max-w-95 cursor-grab select-none active:cursor-grabbing md:h-150"
+			.y}px, 0) rotate({rotation}deg); opacity: {opacity};"
+		class="flow-card"
+		class:is-grabbing={dragging}
+		class:is-static={!interactive}
 		onmousedown={handleStart}
 		ontouchstart={handleStart}
 		role="presentation"
 	>
-		<!-- YES Indicator -->
+		<!-- Swipe tint glow -->
 		<div
-			style="opacity: {signedIn ? yesOpacity : yesOpacity * 0.5}; transform: rotate(-12deg)"
-			class="absolute top-16 left-8 z-20 flex flex-col items-center rounded-2xl border-4 border-emerald-500 bg-white/95 px-8 py-4 shadow-[0_20px_50px_rgba(16,185,129,0.3)]"
+			style="box-shadow: inset 0 0 0 4px rgba(16, 185, 129, {tintYes}), inset 0 0 60px rgba(16, 185, 129, {tintYes *
+				0.4}); opacity: {tintYes}"
+			class="pointer-events-none absolute inset-0 z-10 rounded-4xl transition-opacity md:rounded-[40px]"
+		></div>
+		<div
+			style="box-shadow: inset 0 0 0 4px rgba(244, 63, 94, {tintNo}), inset 0 0 60px rgba(244, 63, 94, {tintNo *
+				0.4}); opacity: {tintNo}"
+			class="pointer-events-none absolute inset-0 z-10 rounded-4xl transition-opacity md:rounded-[40px]"
+		></div>
+		<div
+			style="box-shadow: inset 0 0 0 4px rgba(148, 163, 184, {tintSkip}), inset 0 0 60px rgba(148, 163, 184, {tintSkip *
+				0.4}); opacity: {tintSkip}"
+			class="pointer-events-none absolute inset-0 z-10 rounded-4xl transition-opacity md:rounded-[40px]"
+		></div>
+
+		<!-- YES Indicator (stamp) -->
+		<div
+			style="opacity: {signedIn
+				? yesOpacity
+				: yesOpacity * 0.5}; transform: rotate(-12deg) scale({0.85 + yesOpacity * 0.15})"
+			class="stamp stamp-yes"
 		>
 			<span class="text-5xl font-black tracking-tighter text-emerald-500">YES</span>
-			<div class="mt-2 flex flex-col items-center">
-				<span class="text-xl font-black text-emerald-600">
+			<div class="mt-1 flex flex-col items-center">
+				<span class="text-lg font-black text-emerald-600">
 					+{potentialReturnYes.toFixed(2)}{$playgroundPotentialReturnSuffix}
 				</span>
-				<span class="text-[10px] font-bold tracking-widest text-emerald-500 uppercase">
+				<span class="text-[9px] font-bold tracking-widest text-emerald-500 uppercase">
 					Potential
 				</span>
 			</div>
 			{#if isLimitOrderYes}
-				<span
-					class="mt-3 rounded-full bg-emerald-500 px-3 py-1 text-xs tracking-widest text-white uppercase"
-				>
-					Limit Order
-				</span>
+				<span class="stamp-pill bg-emerald-500">Limit Order</span>
 			{/if}
 		</div>
 
-		<!-- NO Indicator -->
+		<!-- NO Indicator (stamp) -->
 		<div
-			style="opacity: {signedIn ? noOpacity : noOpacity * 0.5}; transform: rotate(12deg)"
-			class="absolute top-16 right-8 z-20 flex flex-col items-center rounded-2xl border-4 border-rose-500 bg-white/95 px-8 py-4 shadow-[0_20px_50px_rgba(244,63,94,0.3)]"
+			style="opacity: {signedIn
+				? noOpacity
+				: noOpacity * 0.5}; transform: rotate(12deg) scale({0.85 + noOpacity * 0.15})"
+			class="stamp stamp-no"
 		>
 			<span class="text-5xl font-black tracking-tighter text-rose-500">NO</span>
-			<div class="mt-2 flex flex-col items-center">
-				<span class="text-xl font-black text-rose-600">
+			<div class="mt-1 flex flex-col items-center">
+				<span class="text-lg font-black text-rose-600">
 					+{potentialReturnNo.toFixed(2)}{$playgroundPotentialReturnSuffix}
 				</span>
-				<span class="text-[10px] font-bold tracking-widest text-rose-500 uppercase">
+				<span class="text-[9px] font-bold tracking-widest text-rose-500 uppercase">
 					Potential
 				</span>
 			</div>
 			{#if isLimitOrderNo}
-				<span
-					class="mt-3 rounded-full bg-rose-500 px-3 py-1 text-xs tracking-widest text-white uppercase"
-				>
-					Limit Order
-				</span>
+				<span class="stamp-pill bg-rose-500">Limit Order</span>
 			{/if}
 		</div>
 
-		<!-- SKIP Indicator -->
+		<!-- SKIP Indicator (stamp) -->
 		<div
-			style="opacity: {skipOpacity}"
-			class="absolute bottom-24 left-1/2 z-20 -translate-x-1/2 rounded-2xl border-4 border-slate-400 bg-white/95 px-10 py-5 text-5xl font-black tracking-tighter text-slate-400 shadow-2xl"
+			style="opacity: {skipOpacity}; transform: translate(-50%, 0) scale({0.85 +
+				skipOpacity * 0.15})"
+			class="stamp stamp-skip"
 		>
-			SKIP
+			<span class="text-4xl font-black tracking-tighter text-slate-400">SKIP</span>
 		</div>
 
-		<div
-			class="flex h-full w-full flex-col items-center justify-center overflow-hidden rounded-[40px] border-none bg-white shadow-2xl transition-shadow hover:shadow-indigo-500/20 md:rounded-[48px]"
-		>
-			<!-- Header Gradient -->
-			<div
-				class="relative h-40 w-full shrink-0 items-center justify-center overflow-hidden bg-indigo-600 px-6 py-4 text-white md:h-56 md:px-8 md:py-10"
-			>
-				<!-- Abstract background pattern -->
-				<div class="absolute inset-0 opacity-20">
-					<div class="absolute -top-32 -left-32 h-80 w-80 rounded-full bg-white blur-3xl"></div>
+		<div class="flow-card-body">
+			<!-- Header -->
+			<div class="flow-card-header">
+				<div class="absolute inset-0 opacity-30">
+					<div class="absolute -top-32 -left-20 h-72 w-72 rounded-full bg-white blur-3xl"></div>
 					<div
-						class="absolute -right-32 -bottom-32 h-80 w-80 rounded-full bg-indigo-400 blur-3xl"
+						class="absolute -right-20 -bottom-24 h-72 w-72 rounded-full bg-indigo-300 blur-3xl"
 					></div>
 				</div>
 
-				<div class="relative z-10 flex h-full w-full flex-col items-center justify-center">
-					<h2
-						class="text-lg leading-[1.1] font-black tracking-tight wrap-break-word text-white sm:text-2xl md:text-3xl"
+				<!-- Top chips -->
+				<div class="relative z-10 flex items-start justify-between gap-2">
+					<div
+						class="flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
 					>
-						{market.title}
-					</h2>
-				</div>
-			</div>
-
-			<!-- Content -->
-			<div
-				class="flex h-full w-full flex-1 flex-col justify-between gap-6 px-6 py-8 md:px-8 md:py-10"
-			>
-				<div class="flex h-full flex-col gap-6">
-					<p
-						class="text-[13px] leading-relaxed wrap-break-word text-slate-600 sm:text-base md:text-slate-500"
-					>
-						{market.description}
-					</p>
+						<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+							<path
+								d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2.5"
+							/>
+						</svg>
+						<span class="text-[10px] font-black tracking-wider text-white uppercase tabular-nums">
+							{#if daysUntilExpiry === 0}
+								Ends today
+							{:else if daysUntilExpiry === 1}
+								1 day
+							{:else}
+								{daysUntilExpiry} days
+							{/if}
+						</span>
+					</div>
 
 					{#if position}
 						<div
-							class="flex items-center justify-between rounded-2xl border border-indigo-100 bg-indigo-50/50 p-5"
+							class="flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
 						>
-							<div class="flex items-center gap-2">
-								<div class="h-2.5 w-2.5 animate-pulse rounded-full bg-indigo-500"></div>
-								<span class="text-[10px] font-bold tracking-widest text-indigo-700 uppercase">
-									Your Position
-								</span>
-							</div>
-							<span class="text-sm font-black text-indigo-900">
-								{formatToken({
-									value: position.netQty,
-									unitName: market.token.decimals
-								})}
+							<div class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300"></div>
+							<span class="text-[10px] font-black tracking-wider text-white uppercase">
+								Holding {formatToken({ value: position.netQty, unitName: market.token.decimals })}
 								{market.token.symbol}
 							</span>
 						</div>
 					{/if}
+				</div>
+
+				<!-- Title -->
+				<h2 class="flow-card-title">{market.title}</h2>
+			</div>
+
+			<!-- Content -->
+			<div class="flow-card-content">
+				<p class="flow-card-desc">{market.description}</p>
+
+				<div class="flow-card-tiles">
+					<BaseButton class="flow-tile flow-tile-no" onclick={() => onAction('NO')}>
+						<span class="flow-tile-label text-rose-500">NO</span>
+						<span class="flow-tile-pct text-rose-600">
+							{formatProbability(market.noProbability)}
+						</span>
+						<span class="flow-tile-hint text-rose-400"> ← Swipe </span>
+						{#if isLimitOrderNo}
+							<div class="flow-tile-badge bg-rose-200 text-rose-700">Limit</div>
+						{/if}
+					</BaseButton>
+
+					<BaseButton class="flow-tile flow-tile-yes" onclick={() => onAction('YES')}>
+						<span class="flow-tile-label text-emerald-500">YES</span>
+						<span class="flow-tile-pct text-emerald-600">
+							{formatProbability(market.yesProbability)}
+						</span>
+						<span class="flow-tile-hint text-emerald-400"> Swipe → </span>
+						{#if isLimitOrderYes}
+							<div class="flow-tile-badge bg-emerald-200 text-emerald-700">Limit</div>
+						{/if}
+					</BaseButton>
+				</div>
+
+				<!-- Footer -->
+				<div class="flow-card-footer">
+					<div class="flex items-center gap-1.5">
+						<svg
+							class="h-3 w-3 text-slate-400"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
+						>
+							<path
+								d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+								stroke-width="2"
+							/>
+						</svg>
+						<span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+							Expires {formatDate(market.expiryDate)}
+						</span>
+					</div>
 
 					{#if !signedIn}
-						<div
-							class="mt-2 flex items-center justify-center gap-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase"
-						>
-							<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<div class="flex items-center gap-1.5">
+							<svg
+								class="h-3 w-3 text-slate-400"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
 								<path
 									d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
 									stroke-linecap="round"
@@ -237,74 +321,11 @@
 									stroke-width="2"
 								/>
 							</svg>
-							Sign in to play
+							<span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+								Sign in to play
+							</span>
 						</div>
 					{/if}
-
-					<div class="mt-auto grid grid-cols-2 gap-4">
-						<BaseButton
-							class="relative flex-col items-center rounded-[32px] border border-rose-100 bg-rose-50/50 p-6 transition-all hover:bg-rose-50! active:scale-95"
-							onclick={() => onAction('NO')}
-						>
-							<span
-								class="mb-1 block text-[10px] font-bold tracking-widest text-rose-500 uppercase"
-							>
-								NO
-							</span>
-
-							<span class="text-3xl font-black text-rose-600">
-								{formatProbability(market.noProbability)}
-							</span>
-
-							{#if isLimitOrderNo}
-								<div
-									class="absolute top-4 left-4 rounded-full bg-rose-200 px-3 py-1 text-[8px] font-bold tracking-widest text-rose-700 uppercase"
-								>
-									Limit
-								</div>
-							{/if}
-						</BaseButton>
-
-						<BaseButton
-							class="relative flex-col items-center rounded-[32px] border border-emerald-100 bg-emerald-50/50 p-6 transition-all hover:bg-emerald-50! active:scale-95"
-							onclick={() => onAction('YES')}
-						>
-							<span
-								class="mb-1 block text-[10px] font-bold tracking-widest text-emerald-500 uppercase"
-							>
-								YES
-							</span>
-
-							<span class="text-3xl font-black text-emerald-600">
-								{formatProbability(market.yesProbability)}
-							</span>
-
-							{#if isLimitOrderYes}
-								<div
-									class="absolute top-4 right-4 rounded-full bg-emerald-200 px-3 py-1 text-[8px] font-bold tracking-widest text-emerald-700 uppercase"
-								>
-									Limit
-								</div>
-							{/if}
-						</BaseButton>
-					</div>
-				</div>
-
-				<div class="flex items-center justify-between border-t border-slate-100 pt-8">
-					<div class="flex flex-col gap-1">
-						<span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
-							Expires
-						</span>
-						<span class="text-base font-black text-slate-900">{formatDate(market.expiryDate)}</span>
-					</div>
-
-					<div
-						class="flex items-center gap-2 rounded-full bg-slate-50 px-4 py-2 ring-1 ring-slate-100"
-					>
-						<span class="text-[10px] font-black tracking-widest text-slate-500 uppercase">
-							Market Details
-						</span>
-					</div>
 				</div>
 			</div>
 		</div>
@@ -312,7 +333,246 @@
 </div>
 
 <style lang="postcss">
-	.perspective-1000 {
+	.flow-card-root {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 100%;
+		height: 100%;
 		perspective: 1000px;
+	}
+
+	.flow-card {
+		position: relative;
+		width: 100%;
+		height: 100%;
+		cursor: grab;
+		user-select: none;
+		touch-action: pan-y;
+		will-change: transform, opacity;
+	}
+	.flow-card.is-grabbing {
+		cursor: grabbing;
+	}
+	.flow-card.is-static {
+		cursor: default;
+	}
+
+	.flow-card-body {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		height: 100%;
+		width: 100%;
+		background: white;
+		border-radius: 32px;
+		box-shadow:
+			0 2px 4px rgba(15, 23, 42, 0.04),
+			0 12px 24px rgba(15, 23, 42, 0.08),
+			0 32px 60px rgba(79, 70, 229, 0.12);
+	}
+	@media (min-width: 768px) {
+		.flow-card-body {
+			border-radius: 40px;
+		}
+	}
+
+	.flow-card-header {
+		position: relative;
+		flex: 0 0 auto;
+		padding: 1.25rem 1.5rem 1.5rem;
+		background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+		color: white;
+		overflow: hidden;
+	}
+	@media (min-width: 768px) {
+		.flow-card-header {
+			padding: 1.75rem 2rem 2rem;
+		}
+	}
+
+	.flow-card-title {
+		position: relative;
+		z-index: 1;
+		margin-top: 0.875rem;
+		font-size: 1.25rem;
+		line-height: 1.2;
+		font-weight: 900;
+		letter-spacing: -0.015em;
+		color: white;
+		overflow-wrap: anywhere;
+	}
+	@media (min-width: 400px) {
+		.flow-card-title {
+			font-size: 1.5rem;
+		}
+	}
+	@media (min-width: 768px) {
+		.flow-card-title {
+			font-size: 1.75rem;
+			margin-top: 1rem;
+		}
+	}
+
+	.flow-card-content {
+		flex: 1 1 auto;
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		padding: 1.25rem 1.5rem 1.5rem;
+		min-height: 0;
+	}
+	@media (min-width: 768px) {
+		.flow-card-content {
+			padding: 1.75rem 2rem 2rem;
+			gap: 1.25rem;
+		}
+	}
+
+	.flow-card-desc {
+		flex: 1 1 auto;
+		font-size: 0.875rem;
+		line-height: 1.55;
+		color: rgb(71, 85, 105);
+		overflow: hidden;
+		overflow-wrap: anywhere;
+		display: -webkit-box;
+		-webkit-line-clamp: 4;
+		-webkit-box-orient: vertical;
+	}
+	@media (min-width: 768px) {
+		.flow-card-desc {
+			font-size: 0.9375rem;
+			-webkit-line-clamp: 6;
+		}
+	}
+
+	.flow-card-tiles {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.625rem;
+	}
+
+	:global(.flow-tile) {
+		position: relative;
+		display: flex !important;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 2px;
+		padding: 0.875rem 0.5rem;
+		border-radius: 24px;
+		border-width: 1px;
+		border-style: solid;
+		transition:
+			transform 0.15s ease,
+			background-color 0.2s ease;
+	}
+	:global(.flow-tile:active) {
+		transform: scale(0.96);
+	}
+	:global(.flow-tile-no) {
+		background: rgb(255, 241, 242);
+		border-color: rgb(254, 226, 226);
+	}
+	:global(.flow-tile-no:hover) {
+		background: rgb(255, 228, 230);
+	}
+	:global(.flow-tile-yes) {
+		background: rgb(240, 253, 244);
+		border-color: rgb(209, 250, 229);
+	}
+	:global(.flow-tile-yes:hover) {
+		background: rgb(220, 252, 231);
+	}
+
+	:global(.flow-tile-label) {
+		display: block;
+		font-size: 10px;
+		font-weight: 900;
+		letter-spacing: 0.18em;
+		text-transform: uppercase;
+	}
+	:global(.flow-tile-pct) {
+		display: block;
+		font-size: 1.875rem;
+		font-weight: 900;
+		letter-spacing: -0.025em;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+	}
+	:global(.flow-tile-hint) {
+		display: block;
+		font-size: 9px;
+		font-weight: 800;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		margin-top: 2px;
+	}
+	:global(.flow-tile-badge) {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		padding: 2px 8px;
+		border-radius: 999px;
+		font-size: 8px;
+		font-weight: 900;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
+
+	.flow-card-footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		padding-top: 0.625rem;
+		border-top: 1px solid rgb(241, 245, 249);
+		flex-wrap: wrap;
+	}
+
+	/* Swipe stamps */
+	.stamp {
+		position: absolute;
+		z-index: 20;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		padding: 0.75rem 1.75rem;
+		background: rgba(255, 255, 255, 0.96);
+		border-radius: 18px;
+		border-width: 4px;
+		border-style: solid;
+		pointer-events: none;
+	}
+	.stamp-yes {
+		top: 2.5rem;
+		left: 1.5rem;
+		border-color: rgb(16, 185, 129);
+		box-shadow: 0 20px 50px rgba(16, 185, 129, 0.3);
+	}
+	.stamp-no {
+		top: 2.5rem;
+		right: 1.5rem;
+		border-color: rgb(244, 63, 94);
+		box-shadow: 0 20px 50px rgba(244, 63, 94, 0.3);
+	}
+	.stamp-skip {
+		bottom: 30%;
+		left: 50%;
+		border-color: rgb(148, 163, 184);
+		box-shadow: 0 20px 50px rgba(148, 163, 184, 0.3);
+	}
+	.stamp-pill {
+		margin-top: 0.5rem;
+		padding: 3px 10px;
+		border-radius: 999px;
+		font-size: 10px;
+		font-weight: 900;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: white;
 	}
 </style>

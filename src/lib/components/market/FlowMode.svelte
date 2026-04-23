@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount, onDestroy } from 'svelte';
-	import { cubicOut } from 'svelte/easing';
-	import { fade, fly } from 'svelte/transition';
+	import { cubicOut, backOut } from 'svelte/easing';
+	import { fade, fly, scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -26,26 +26,47 @@
 
 	const MAX_BETS = 10;
 	const MAX_MARKETS = 20;
+	const BASE_XP_PER_BET = 10;
 
 	let markets = $state<Market[]>([]);
-
 	let currentIndex = $state(0);
-
 	let loading = $state(true);
-
 	let tradeAmount = $state('1.0');
-
 	let betsCount = $state(0);
-
 	let completed = $state(false);
-
 	let positions = $state<Position[]>([]);
 
 	let exitX = $state(0);
 	let exitY = $state(0);
 
+	let streak = $state(0);
+	let bestStreak = $state(0);
+	let xp = $state(0);
+	let lastStreakShown = $state(0);
+
+	interface XpPop {
+		id: number;
+		amount: number;
+		combo: number;
+		side: 'YES' | 'NO';
+	}
+
+	let xpPops = $state<XpPop[]>([]);
+	let popCounter = 0;
+
+	const comboMultiplier = $derived(streak >= 5 ? 3 : streak >= 3 ? 2 : 1);
+
+	const vibrate = (pattern: number | number[]) => {
+		if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+			try {
+				navigator.vibrate(pattern);
+			} catch {
+				/* ignore */
+			}
+		}
+	};
+
 	onMount(async () => {
-		// Prevent scrolling on mobile while in Flow Mode
 		document.body.classList.add('overflow-hidden');
 
 		flowTradeService.startSession();
@@ -63,7 +84,6 @@
 
 			if (isViciXp($balanceDomain)) {
 				const candidate = fromProfile ?? String(VXP_STAKE_STEP_VXP);
-
 				const n = Number(candidate);
 
 				tradeAmount =
@@ -84,11 +104,26 @@
 	});
 
 	onDestroy(() => {
-		// Re-enable scrolling when leaving Flow Mode
 		document.body.classList.remove('overflow-hidden');
-
 		void flowTradeService.endSession();
 	});
+
+	const spawnXpPop = ({
+		amount,
+		combo,
+		side
+	}: {
+		amount: number;
+		combo: number;
+		side: 'YES' | 'NO';
+	}) => {
+		const id = ++popCounter;
+		xpPops = [...xpPops, { id, amount, combo, side }];
+
+		setTimeout(() => {
+			xpPops = xpPops.filter((p) => p.id !== id);
+		}, 1100);
+	};
 
 	const handleAction = (action: 'YES' | 'NO' | 'SKIP') => {
 		if (completed) {
@@ -101,26 +136,27 @@
 			return;
 		}
 
-		// Set exit animation direction
 		if (action === 'YES') {
 			exitX = 500;
 			exitY = 20;
+			vibrate(12);
 		} else if (action === 'NO') {
 			exitX = -500;
 			exitY = 20;
+			vibrate(12);
 		} else if (action === 'SKIP') {
 			exitX = 0;
 			exitY = -500;
+			vibrate(8);
 		}
 
 		if (action === 'SKIP') {
+			streak = 0;
 			advance();
 
 			return;
 		}
 
-		// ASYNCHRONOUS TRADE EXECUTION (Non-awaited)
-		// We prepare the data and fire the trade in the background via FlowTradeService
 		const executeTrade = async () => {
 			try {
 				if (isViciXp(currentMarket.balanceDomain)) {
@@ -150,14 +186,26 @@
 			}
 		};
 
-		// Fire and forget
 		void executeTrade();
 
-		// Immediately update UI
 		betsCount += 1;
+		streak += 1;
+		bestStreak = Math.max(bestStreak, streak);
 
-		// Optimistically update positions for the badge if needed,
-		// but since we advance it's mainly for history if we were to go back (which we don't yet)
+		const awarded = BASE_XP_PER_BET * comboMultiplier;
+		xp += awarded;
+		spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
+
+		if (streak === 3 || streak === 5 || streak === 10) {
+			const shown = streak;
+			lastStreakShown = shown;
+			vibrate([12, 40, 18]);
+			setTimeout(() => {
+				if (lastStreakShown === shown) {
+					lastStreakShown = 0;
+				}
+			}, 1600);
+		}
 
 		advance();
 	};
@@ -167,91 +215,89 @@
 			currentIndex += 1;
 		} else {
 			completed = true;
+			vibrate([14, 30, 20, 30, 40]);
 		}
 	};
 
 	const backToMarkets = () => {
 		goto(AppPath.Home);
 	};
+
+	const incrementAmount = (direction: 1 | -1) => {
+		const step = isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1;
+		const min = isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1;
+		const current = Number(tradeAmount) || 0;
+		const next = Math.max(min, Number((current + direction * step).toFixed(2)));
+		tradeAmount = String(next);
+	};
+
+	const visibleCards = $derived(markets.slice(currentIndex, currentIndex + 3));
 </script>
 
-<div
-	class="flex min-h-dvh flex-col items-center justify-center px-4 md:px-0"
-	class:bg-white={!completed && markets.length > 0}
-	class:fixed={!completed && markets.length > 0}
-	class:inset-0={!completed && markets.length > 0}
-	class:md:z-0={!completed && markets.length > 0}
-	class:z-50={!completed && markets.length > 0}
->
+<div class="flow-shell bg-white" class:is-active={!completed && markets.length > 0 && !loading}>
 	{#if loading}
-		<div in:fade>
+		<div class="flex h-full w-full flex-col items-center justify-center gap-4" in:fade>
 			<LoadingSpinner />
-			<p class="mt-4 font-medium text-slate-500">Preparing your Flow queue...</p>
+			<p class="font-medium text-slate-500">Preparing your Flow queue…</p>
 		</div>
 	{:else if completed || markets.length === 0}
-		<div class="max-w-md text-center" in:fly={{ y: 20 }}>
-			<div
-				class="mb-6 inline-flex h-20 w-20 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"
-			>
-				<svg
-					class="h-10 w-10"
-					fill="none"
-					stroke="currentColor"
-					viewBox="0 0 24 24"
-					xmlns="http://www.w3.org/2000/svg"
-				>
-					<path
-						d="M5 13l4 4L19 7"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="3"
-					/>
-				</svg>
+		<div class="completion-bg flex h-full w-full flex-col items-center justify-center px-6">
+			<!-- Confetti particles -->
+			<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+				{#each Array(24) as _, i (i)}
+					<span style="--i: {i}; --delay: {i * 0.08}s; --hue: {(i * 37) % 360}deg" class="confetti"
+					></span>
+				{/each}
 			</div>
-			<h2 class="mb-4 text-3xl font-black text-slate-950">Flow Complete!</h2>
-			<p class="mb-8 text-slate-600">
-				You've reviewed all available markets. Great job keeping up with the pulse!
-			</p>
 
-			<Button onclick={backToMarkets}>Back to Markets</Button>
+			<div class="relative z-10 max-w-md text-center" in:fly={{ y: 20, duration: 500 }}>
+				<div
+					class="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-[0_20px_40px_rgba(16,185,129,0.3)]"
+					in:scale={{ start: 0.4, duration: 600, easing: backOut, delay: 120 }}
+				>
+					<svg class="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							d="M5 13l4 4L19 7"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="3"
+						/>
+					</svg>
+				</div>
+
+				<h2 class="mb-2 text-4xl font-black tracking-tighter text-slate-950">Flow Complete</h2>
+				<p class="mb-6 text-slate-600">
+					{#if betsCount === 0}
+						You reviewed all available markets.
+					{:else}
+						You made <span class="font-black text-slate-900">{betsCount}</span>
+						{betsCount === 1 ? 'prediction' : 'predictions'}. Not bad at all.
+					{/if}
+				</p>
+
+				<div class="mb-8 grid grid-cols-3 gap-3">
+					<div class="rounded-2xl bg-slate-100 px-3 py-4">
+						<div class="text-[9px] font-bold tracking-widest text-slate-500 uppercase">XP</div>
+						<div class="text-2xl font-black text-slate-900 tabular-nums">+{xp}</div>
+					</div>
+					<div class="rounded-2xl bg-orange-100 px-3 py-4">
+						<div class="text-[9px] font-bold tracking-widest text-orange-600 uppercase">Streak</div>
+						<div class="text-2xl font-black text-orange-700 tabular-nums">{bestStreak}🔥</div>
+					</div>
+					<div class="rounded-2xl bg-indigo-100 px-3 py-4">
+						<div class="text-[9px] font-bold tracking-widest text-indigo-600 uppercase">Bets</div>
+						<div class="text-2xl font-black text-indigo-700 tabular-nums">{betsCount}</div>
+					</div>
+				</div>
+
+				<Button onclick={backToMarkets}>Back to Markets</Button>
+			</div>
 		</div>
 	{:else}
-		<!-- Desktop Header Info (Restored) -->
-		<div class="mb-2 hidden w-full max-w-95 flex-row items-center justify-between md:flex" in:fade>
-			<div class="flex items-center gap-4">
-				<div class="flex flex-col items-start">
-					<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Progress</span
-					>
-					<span class="text-xs font-black text-slate-900">{betsCount}/{MAX_BETS}</span>
-				</div>
-				<div class="flex flex-col items-start border-l border-slate-200 pl-4">
-					<span class="text-[8px] font-bold tracking-widest text-slate-400 uppercase">Markets</span>
-					<span class="text-xs font-black text-slate-900">{currentIndex + 1}/{MAX_MARKETS}</span>
-				</div>
-			</div>
-			<div
-				class="flex items-center gap-2 rounded-full bg-slate-100 px-4 py-2 ring-1 ring-slate-200 transition-all focus-within:ring-2 focus-within:ring-indigo-500"
-			>
-				<input
-					class="w-16 bg-transparent text-center text-sm font-black text-slate-950 outline-none"
-					min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 1}
-					step={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
-					type="number"
-					bind:value={tradeAmount}
-				/>
-				<span class="text-[10px] font-bold text-slate-500">{$playgroundFlowTradeUnitLabel}</span>
-			</div>
-		</div>
-
-		<!-- Mobile Layout Extra Elements (Refined) -->
-		<div class="md:hidden">
-			<!-- Floating Exit Button -->
-			<button
-				class="fixed top-6 left-6 z-70 flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/10 text-slate-900 backdrop-blur-md active:scale-95"
-				aria-label="Back to Markets"
-				onclick={backToMarkets}
-			>
-				<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+		<!-- ===== TOP APP BAR ===== -->
+		<header class="flow-topbar" in:fade>
+			<button class="flow-icon-btn" aria-label="Exit Flow" onclick={backToMarkets}>
+				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
 						d="M6 18L18 6M6 6l12 12"
 						stroke-linecap="round"
@@ -261,58 +307,63 @@
 				</svg>
 			</button>
 
-			<!-- Tiny Progress Bar at Top -->
-			<div class="fixed top-0 left-0 z-70 h-1.5 w-full bg-slate-100/50">
-				<div
-					style="width: {(betsCount / MAX_BETS) * 100}%"
-					class="h-full bg-indigo-500 transition-all duration-500"
-				></div>
+			<!-- Segmented progress (Instagram stories style) -->
+			<div class="flow-progress" aria-label="Progress">
+				{#each Array(MAX_BETS) as _, i (i)}
+					<div class="flow-progress-seg">
+						<div
+							style:--p={i < betsCount ? '100%' : i === betsCount ? '30%' : '0%'}
+							class="flow-progress-fill"
+							class:is-current={i === betsCount}
+							class:is-full={i < betsCount}
+						></div>
+					</div>
+				{/each}
 			</div>
 
-			<!-- Mobile Stats & Trade Amount (Updated to Progress/Seen) -->
-			<div
-				class="fixed top-6 right-6 z-70 flex items-center gap-2 rounded-full bg-slate-900/10 px-3 py-1.5 backdrop-blur-md"
-			>
-				<div class="flex flex-col items-center border-r border-slate-900/10 pr-2 leading-none">
-					<span class="text-[6px] font-black tracking-tighter text-slate-500 uppercase">Prog</span>
-					<span class="text-[9px] font-black text-slate-800">{betsCount}/{MAX_BETS}</span>
+			<!-- Streak + XP pill -->
+			<div class="flow-stats">
+				<div class="flow-stat flow-stat-streak" class:is-hot={streak >= 3} aria-label="Streak">
+					<span class="text-sm leading-none">🔥</span>
+					<span class="tabular-nums">{streak}</span>
 				</div>
-				<div class="flex flex-col items-center border-r border-slate-900/10 pr-2 leading-none">
-					<span class="text-[6px] font-black tracking-tighter text-slate-500 uppercase">Seen</span>
-					<span class="text-[9px] font-black text-slate-800">{currentIndex + 1}/{MAX_MARKETS}</span>
-				</div>
-				<div class="flex items-center gap-1">
-					<input
-						class="w-8 bg-transparent text-center text-xs font-black text-slate-950 outline-none"
-						min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 1}
-						step={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
-						type="number"
-						bind:value={tradeAmount}
-					/>
-					<span class="text-[7px] font-bold text-slate-600">{$playgroundFlowTradeUnitLabel}</span>
+				<div class="flow-stat flow-stat-xp" aria-label="XP">
+					<span class="text-[10px] font-black tracking-widest text-indigo-500">XP</span>
+					<span class="text-indigo-900 tabular-nums">{xp}</span>
 				</div>
 			</div>
-		</div>
+		</header>
 
-		<!-- Card Container -->
-		<div class="relative h-screen w-full md:h-150 md:max-w-95">
-			{#each markets.slice(currentIndex, currentIndex + 2) as market, i (market?.id)}
-				{@const isCurrent = i === 0}
+		<!-- Combo celebration banner -->
+		{#if lastStreakShown > 0}
+			{#key lastStreakShown}
 				<div
-					style="z-index: {20 - i}"
-					class="absolute inset-0"
-					in:fly={isCurrent && currentIndex === 0
-						? { y: 300, duration: 600, easing: cubicOut }
-						: { y: 100, opacity: 0, duration: 500, easing: cubicOut }}
-					out:fly={{ x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
+					class="combo-banner"
+					in:fly={{ y: -8, duration: 300, easing: backOut }}
+					out:fade={{ duration: 250 }}
 				>
+					<span>🔥 Streak ×{lastStreakShown}</span>
+					<span class="combo-banner-xp">x{lastStreakShown >= 5 ? 3 : 2} XP</span>
+				</div>
+			{/key}
+		{/if}
+
+		<!-- ===== CARD STACK ===== -->
+		<main class="flow-stage">
+			<div class="flow-card-wrap">
+				{#each visibleCards as market, i (market?.id)}
+					{@const isCurrent = i === 0}
 					<div
-						class="h-full w-full transition-all duration-500 ease-out"
-						class:opacity-40={!isCurrent}
-						class:scale-95={!isCurrent}
-						class:translate-y-4={!isCurrent}
+						style="z-index: {20 - i}; --depth: {i};"
+						class="flow-card-slot"
+						class:is-back={!isCurrent}
+						in:fly={isCurrent && currentIndex === 0
+							? { y: 300, duration: 600, easing: cubicOut }
+							: { y: 30, opacity: 0, duration: 400, easing: cubicOut }}
+						out:fly={{ x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
 					>
 						<FlowCard
+							interactive={isCurrent}
 							isLimitOrderNo={isNullish(market.bestBid)}
 							isLimitOrderYes={isNullish(market.bestAsk)}
 							{market}
@@ -322,95 +373,115 @@
 							{tradeAmount}
 						/>
 					</div>
-				</div>
-			{/each}
-		</div>
-
-		<!-- Controls Hint (Desktop) -->
-		<div class="mt-12 hidden text-center text-slate-400 md:block" in:fade>
-			<div
-				class="flex items-center justify-center gap-8 text-[10px] font-black tracking-widest uppercase"
-			>
-				<div class="flex flex-col items-center gap-2">
-					<div
-						class="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-slate-200"
-					>
-						←
-					</div>
-					<span>NO</span>
-				</div>
-				<div class="flex flex-col items-center gap-2">
-					<div
-						class="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-slate-200"
-					>
-						↑
-					</div>
-					<span>SKIP</span>
-				</div>
-				<div class="flex flex-col items-center gap-2">
-					<div
-						class="flex h-8 w-8 items-center justify-center rounded-lg border-2 border-slate-200"
-					>
-						→
-					</div>
-					<span>YES</span>
-				</div>
+				{/each}
 			</div>
-		</div>
 
-		<!-- Mobile Footer Controls -->
-		<div
-			class="fixed bottom-0 left-0 z-60 hidden w-full items-center justify-center gap-8 bg-linear-to-t from-white via-white/70 to-transparent pt-12 pb-4 max-md:flex md:hidden!"
-			in:fade
-		>
-			<button
-				class="flex h-16 w-16 items-center justify-center rounded-full border-4 border-rose-100 bg-white text-rose-500 shadow-xl transition-transform active:scale-90"
-				aria-label="Predict NO"
-				onclick={() => handleAction('NO')}
-			>
-				<svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						d="M19 12H5M12 19l-7-7 7-7"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="3"
-					/>
-				</svg>
-			</button>
+			<!-- Floating XP pops -->
+			<div class="xp-pops" aria-hidden="true">
+				{#each xpPops as pop (pop.id)}
+					<div
+						class="xp-pop"
+						class:xp-pop-no={pop.side === 'NO'}
+						class:xp-pop-yes={pop.side === 'YES'}
+					>
+						+{pop.amount}
+						<span class="xp-pop-label">XP{pop.combo > 1 ? ` · ×${pop.combo}` : ''}</span>
+					</div>
+				{/each}
+			</div>
+		</main>
 
-			<div class="flex flex-col items-center gap-2">
+		<!-- ===== BOTTOM ACTION BAR ===== -->
+		<footer class="flow-bottombar">
+			<!-- Amount picker -->
+			<div class="flow-amount">
 				<button
-					class="flex h-12 w-12 items-center justify-center rounded-full border-4 border-slate-100 bg-white text-slate-400 shadow-lg transition-transform active:scale-90"
-					aria-label="Skip Market"
-					onclick={() => handleAction('SKIP')}
+					class="flow-amount-btn"
+					aria-label="Decrease amount"
+					onclick={() => incrementAmount(-1)}
 				>
-					<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					−
+				</button>
+				<div class="flow-amount-field">
+					<input
+						class="flow-amount-input"
+						inputmode="decimal"
+						min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
+						step={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
+						type="number"
+						bind:value={tradeAmount}
+					/>
+					<span class="flow-amount-unit">{$playgroundFlowTradeUnitLabel}</span>
+				</div>
+				<button
+					class="flow-amount-btn"
+					aria-label="Increase amount"
+					onclick={() => incrementAmount(1)}
+				>
+					+
+				</button>
+			</div>
+
+			<!-- Action buttons -->
+			<div class="flow-actions">
+				<button
+					class="flow-action flow-action-no"
+					aria-label="Predict NO"
+					onclick={() => handleAction('NO')}
+				>
+					<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
-							d="M5 10l7-7m0 0l7 7m-7-7v18"
+							d="M6 18L18 6M6 6l12 12"
 							stroke-linecap="round"
 							stroke-linejoin="round"
 							stroke-width="3"
 						/>
 					</svg>
+					<span class="flow-action-label">NO</span>
 				</button>
-				<span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Skip</span>
+
+				<button
+					class="flow-action flow-action-skip"
+					aria-label="Skip"
+					onclick={() => handleAction('SKIP')}
+				>
+					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							d="M5 12l7-7 7 7M5 19l7-7 7 7"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="3"
+						/>
+					</svg>
+					<span class="flow-action-label">SKIP</span>
+				</button>
+
+				<button
+					class="flow-action flow-action-yes"
+					aria-label="Predict YES"
+					onclick={() => handleAction('YES')}
+				>
+					<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<path
+							d="M5 13l4 4L19 7"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							stroke-width="3.5"
+						/>
+					</svg>
+					<span class="flow-action-label">YES</span>
+				</button>
 			</div>
 
-			<button
-				class="flex h-16 w-16 items-center justify-center rounded-full border-4 border-emerald-100 bg-white text-emerald-500 shadow-xl transition-transform active:scale-90"
-				aria-label="Predict YES"
-				onclick={() => handleAction('YES')}
-			>
-				<svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						d="M5 12h14M12 5l7 7-7 7"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="3"
-					/>
-				</svg>
-			</button>
-		</div>
+			<!-- Keyboard hint (desktop) -->
+			<div class="flow-kbd">
+				<kbd>←</kbd> NO
+				<span>·</span>
+				<kbd>↑</kbd> SKIP
+				<span>·</span>
+				<kbd>→</kbd> YES
+			</div>
+		</footer>
 	{/if}
 </div>
 
@@ -429,7 +500,437 @@
 		}
 
 		if (e.key === 'ArrowUp') {
-			handleAction('SKIP');
+			void handleAction('SKIP');
 		}
 	}}
 />
+
+<style lang="postcss">
+	.flow-shell {
+		position: relative;
+		min-height: 100dvh;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.flow-shell.is-active {
+		position: fixed;
+		inset: 0;
+		z-index: 50;
+		overflow: hidden;
+	}
+
+	/* ===== Top bar ===== */
+	.flow-topbar {
+		position: sticky;
+		top: 0;
+		z-index: 60;
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		align-items: center;
+		gap: 0.75rem;
+		padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.75rem 0.5rem
+			calc(env(safe-area-inset-left, 0px) + 0.75rem);
+		padding-right: calc(env(safe-area-inset-right, 0px) + 0.75rem);
+		background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.75));
+		backdrop-filter: saturate(180%) blur(12px);
+		-webkit-backdrop-filter: saturate(180%) blur(12px);
+	}
+
+	.flow-icon-btn {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 2.25rem;
+		height: 2.25rem;
+		border-radius: 999px;
+		background: rgba(15, 23, 42, 0.06);
+		color: rgb(15, 23, 42);
+		transition:
+			transform 0.15s ease,
+			background-color 0.2s ease;
+	}
+	.flow-icon-btn:active {
+		transform: scale(0.92);
+		background: rgba(15, 23, 42, 0.12);
+	}
+
+	.flow-progress {
+		display: flex;
+		align-items: center;
+		gap: 3px;
+		min-width: 0;
+	}
+	.flow-progress-seg {
+		flex: 1;
+		height: 4px;
+		border-radius: 999px;
+		background: rgba(15, 23, 42, 0.08);
+		overflow: hidden;
+	}
+	.flow-progress-fill {
+		height: 100%;
+		width: var(--p);
+		background: linear-gradient(90deg, #6366f1, #8b5cf6);
+		border-radius: inherit;
+		transition: width 450ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.flow-progress-fill.is-current {
+		animation: progressPulse 1.6s ease-in-out infinite;
+	}
+	@keyframes progressPulse {
+		0%,
+		100% {
+			opacity: 0.6;
+		}
+		50% {
+			opacity: 1;
+		}
+	}
+
+	.flow-stats {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+	}
+	.flow-stat {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 5px 9px;
+		border-radius: 999px;
+		font-weight: 900;
+		font-size: 12px;
+		line-height: 1;
+	}
+	.flow-stat-streak {
+		background: rgb(255, 237, 213);
+		color: rgb(154, 52, 18);
+		transition:
+			transform 0.2s ease,
+			background-color 0.2s ease;
+	}
+	.flow-stat-streak.is-hot {
+		background: linear-gradient(135deg, #fb923c, #ef4444);
+		color: white;
+		box-shadow: 0 4px 12px rgba(251, 146, 60, 0.4);
+		animation: hotPulse 1.4s ease-in-out infinite;
+	}
+	@keyframes hotPulse {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.06);
+		}
+	}
+	.flow-stat-xp {
+		background: rgb(238, 242, 255);
+		display: inline-flex;
+		gap: 5px;
+		align-items: baseline;
+		font-variant-numeric: tabular-nums;
+	}
+
+	/* ===== Combo banner ===== */
+	.combo-banner {
+		position: fixed;
+		left: 50%;
+		top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+		transform: translateX(-50%);
+		z-index: 65;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 10px 16px;
+		border-radius: 999px;
+		background: linear-gradient(135deg, #fb923c, #ef4444);
+		color: white;
+		font-size: 13px;
+		font-weight: 900;
+		letter-spacing: 0.02em;
+		box-shadow: 0 14px 40px rgba(251, 146, 60, 0.5);
+		pointer-events: none;
+	}
+	.combo-banner-xp {
+		padding: 3px 8px;
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.25);
+		font-size: 11px;
+	}
+
+	/* ===== Card stage ===== */
+	.flow-stage {
+		position: relative;
+		flex: 1 1 auto;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.5rem 1rem;
+		min-height: 0;
+	}
+
+	.flow-card-wrap {
+		position: relative;
+		width: 100%;
+		max-width: 26rem;
+		height: 100%;
+		max-height: 620px;
+	}
+
+	.flow-card-slot {
+		position: absolute;
+		inset: 0;
+		transition:
+			transform 420ms cubic-bezier(0.22, 1, 0.36, 1),
+			opacity 420ms ease;
+	}
+	.flow-card-slot.is-back {
+		pointer-events: none;
+		transform: translateY(calc(var(--depth) * 10px)) scale(calc(1 - var(--depth) * 0.04));
+		opacity: calc(1 - var(--depth) * 0.35);
+	}
+
+	/* ===== XP pops ===== */
+	.xp-pops {
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+		z-index: 55;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+	.xp-pop {
+		position: absolute;
+		display: inline-flex;
+		align-items: baseline;
+		gap: 0.4rem;
+		padding: 10px 16px;
+		border-radius: 999px;
+		font-size: 22px;
+		font-weight: 900;
+		letter-spacing: -0.02em;
+		background: white;
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+		animation: xpPop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+	}
+	.xp-pop-label {
+		font-size: 11px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
+		opacity: 0.7;
+	}
+	.xp-pop-yes {
+		color: rgb(4, 120, 87);
+		border: 2px solid rgb(16, 185, 129);
+	}
+	.xp-pop-no {
+		color: rgb(190, 18, 60);
+		border: 2px solid rgb(244, 63, 94);
+	}
+	@keyframes xpPop {
+		0% {
+			transform: translateY(0) scale(0.6);
+			opacity: 0;
+		}
+		20% {
+			transform: translateY(-10px) scale(1.1);
+			opacity: 1;
+		}
+		100% {
+			transform: translateY(-120px) scale(0.9);
+			opacity: 0;
+		}
+	}
+
+	/* ===== Bottom bar ===== */
+	.flow-bottombar {
+		position: sticky;
+		bottom: 0;
+		z-index: 60;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
+		background: linear-gradient(to top, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0));
+	}
+
+	.flow-amount {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
+		padding: 4px;
+		border-radius: 999px;
+		background: rgb(241, 245, 249);
+		ring: 1px solid rgba(15, 23, 42, 0.06);
+		box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+	}
+	.flow-amount-btn {
+		width: 2rem;
+		height: 2rem;
+		border-radius: 999px;
+		background: white;
+		color: rgb(15, 23, 42);
+		font-size: 18px;
+		font-weight: 900;
+		line-height: 1;
+		transition: transform 0.12s ease;
+		box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+	}
+	.flow-amount-btn:active {
+		transform: scale(0.9);
+	}
+	.flow-amount-field {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 4px;
+		padding: 0 10px;
+		min-width: 5.5rem;
+		justify-content: center;
+	}
+	.flow-amount-input {
+		width: 3.5rem;
+		background: transparent;
+		text-align: right;
+		font-size: 15px;
+		font-weight: 900;
+		color: rgb(15, 23, 42);
+		outline: none;
+		font-variant-numeric: tabular-nums;
+		-moz-appearance: textfield;
+	}
+	.flow-amount-input::-webkit-outer-spin-button,
+	.flow-amount-input::-webkit-inner-spin-button {
+		-webkit-appearance: none;
+		margin: 0;
+	}
+	.flow-amount-unit {
+		font-size: 10px;
+		font-weight: 900;
+		letter-spacing: 0.08em;
+		color: rgb(100, 116, 139);
+	}
+
+	.flow-actions {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 1.25rem;
+	}
+	.flow-action {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 0;
+		border-radius: 999px;
+		background: white;
+		transition:
+			transform 0.12s ease,
+			box-shadow 0.2s ease;
+		position: relative;
+	}
+	.flow-action:active {
+		transform: scale(0.9);
+	}
+	.flow-action-label {
+		position: absolute;
+		bottom: -1.25rem;
+		font-size: 9px;
+		font-weight: 900;
+		letter-spacing: 0.18em;
+		color: rgb(148, 163, 184);
+	}
+
+	.flow-action-no {
+		width: 3.75rem;
+		height: 3.75rem;
+		border: 3px solid rgb(254, 226, 226);
+		color: rgb(244, 63, 94);
+		box-shadow: 0 10px 24px rgba(244, 63, 94, 0.18);
+	}
+	.flow-action-skip {
+		width: 3rem;
+		height: 3rem;
+		border: 3px solid rgb(226, 232, 240);
+		color: rgb(148, 163, 184);
+		box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+	}
+	.flow-action-yes {
+		width: 3.75rem;
+		height: 3.75rem;
+		border: 3px solid rgb(209, 250, 229);
+		color: rgb(16, 185, 129);
+		box-shadow: 0 10px 24px rgba(16, 185, 129, 0.22);
+	}
+
+	/* Desktop only keyboard hints */
+	.flow-kbd {
+		display: none;
+		align-items: center;
+		gap: 8px;
+		font-size: 10px;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		color: rgb(148, 163, 184);
+		text-transform: uppercase;
+		margin-top: 0.25rem;
+	}
+	.flow-kbd kbd {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		min-width: 1.25rem;
+		height: 1.25rem;
+		padding: 0 4px;
+		border: 1.5px solid rgb(226, 232, 240);
+		border-radius: 6px;
+		background: white;
+		color: rgb(15, 23, 42);
+		font-family: inherit;
+		font-size: 11px;
+		line-height: 1;
+	}
+
+	@media (hover: hover) and (pointer: fine) {
+		.flow-kbd {
+			display: flex;
+		}
+	}
+
+	/* ===== Completion ===== */
+	.completion-bg {
+		position: relative;
+		background:
+			radial-gradient(circle at 20% 10%, rgba(99, 102, 241, 0.1), transparent 40%),
+			radial-gradient(circle at 80% 90%, rgba(16, 185, 129, 0.1), transparent 40%);
+		overflow: hidden;
+	}
+	.confetti {
+		position: absolute;
+		top: -40px;
+		left: calc((var(--i) * 4.16%));
+		width: 8px;
+		height: 14px;
+		border-radius: 2px;
+		background: hsl(var(--hue), 80%, 60%);
+		animation: fall 3.2s linear var(--delay) forwards;
+		opacity: 0.9;
+	}
+	@keyframes fall {
+		0% {
+			transform: translateY(-50px) rotate(0deg);
+			opacity: 0;
+		}
+		10% {
+			opacity: 1;
+		}
+		100% {
+			transform: translateY(110vh) rotate(720deg);
+			opacity: 0.3;
+		}
+	}
+</style>
