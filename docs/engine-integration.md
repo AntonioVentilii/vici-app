@@ -144,12 +144,20 @@ Operational procedures live as step-by-step workflows under [`.agents/workflows/
 
 ## Frontend notes
 
-- `src/lib/services/market.services.ts` passes `engine_id = opt "$VICI_ENGINE_ID"` on every
-  `add_series` call. The protocol accepts `null` from controllers but requires `Some` from
-  engine Creators — we send it uniformly to future-proof against controller-principal
-  rotation.
-- There is no fork UI today, so `fork_series` has no frontend callsite. When one is added,
-  remember to pass `engine_id = opt VICI_ENGINE_ID` there too.
+- `src/lib/services/market.services.ts` picks `engine_id` per-call based on the caller's
+  Juno role:
+  - `ADMIN` / `CREATOR` → `engine_id = opt "$VICI_ENGINE_ID"` so the registry routes the
+    call to `CreationTier::Creator` and runs the `has_engine_role_on` check against the
+    caller's grant on `eng_0`.
+  - Regular users (no role) → `engine_id = null` so the registry routes the call to
+    `CreationTier::Social`, which is the only tier available to users that hold no
+    engine role. This path only accepts Social markets (`BalanceDomain::Social` +
+    `NonMonetary` payout + `Restricted` trading access); anything else is rejected
+    with `EngineIdRequired`.
+- `forkMarket` in the same file passes `engine_id = opt "$VICI_ENGINE_ID"` on every
+  `fork_series` call. Forks always go through the Creator tier, so the caller must hold
+  `Creator` on `eng_0`. Non-controller callers are rejected with `EngineIdRequired` or
+  `EngineRoleNotHeld` otherwise.
 - Market creation is still gated to `ADMIN` / `CREATOR` users in the UI via
   `market.services.ts` — the engine-level `Creator` grant is a necessary, not sufficient,
   condition for calling `add_series`. To open creation to a wider audience, relax the check

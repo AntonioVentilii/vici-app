@@ -75,14 +75,13 @@ export const createMarket = async ({
 	const { role } = profileDoc.data;
 	const isRestrictedToGroups = tradingAccess.some((access) => 'Restricted' in access);
 	const isSocialMarket = 'Social' in domain;
+	const isEngineCreator = role === UserRole.ADMIN || role === UserRole.CREATOR;
 
-	if (
-		role !== UserRole.ADMIN &&
-		role !== UserRole.CREATOR &&
-		!isRestrictedToGroups &&
-		!isSocialMarket
-	) {
-		throw new Error('Unauthorized: only admins or creators can create open financial markets');
+	if (!isEngineCreator && !isSocialMarket) {
+		throw new Error(
+			'Unauthorized: only admins or creators can create financial markets. ' +
+				'Regular users may only create social (bragging-stakes) challenges.'
+		);
 	}
 
 	const underlying = title
@@ -119,7 +118,12 @@ export const createMarket = async ({
 		balance_domain: domain,
 		oracle_source: VICI_ORACLE_V1,
 		trading_access: tradingAccess,
-		engine_id: toNullable(VICI_ENGINE_ID)
+		// Engine tier vs. Social tier on the registry is selected by the presence of
+		// `engine_id`. Engine Creators (ADMIN/CREATOR) go through `CreationTier::Creator`
+		// on `eng_0`. Regular users creating a Social market must send `None` so the
+		// call routes to `CreationTier::Social` instead of being rejected with
+		// `EngineRoleNotHeld`.
+		engine_id: isEngineCreator ? toNullable(VICI_ENGINE_ID) : toNullable()
 	};
 
 	const seriesId = await addSeries({
@@ -537,7 +541,7 @@ export const forkMarket = async ({
 			nonNullish(description) ? { plain: description, html: [], markdown: [] } : undefined
 		),
 		trading_access: [{ Restricted: { groups: groupIds } }],
-		engine_id: toNullable()
+		engine_id: toNullable(VICI_ENGINE_ID)
 	};
 
 	return await forkSeries({ identity, params });
