@@ -34,6 +34,16 @@
 
 	const activeOrders = $derived($orders.filter((o) => o.series_id === market.id));
 
+	const isResolved = $derived(market.status === 'Resolved');
+
+	const positionResult = (outcomeId: string): 'won' | 'lost' | undefined => {
+		if (!isResolved || !market.outcome) {
+			return;
+		}
+
+		return outcomeId === market.outcome ? 'won' : 'lost';
+	};
+
 	let cancellingId = $state<string | null>(null);
 
 	const handleCancel = async (orderId: string) => {
@@ -73,31 +83,57 @@
 							<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 								{#each positions as pos (pos.marketId)}
 									{#if pos.netQty !== ZERO}
+										{@const result = positionResult(pos.outcomeId)}
 										<div
-											class="flex flex-col gap-2 rounded-2xl border border-slate-100 bg-white p-5 shadow-sm {pos.outcomeId ===
-											'YES'
-												? 'border-emerald-100 bg-emerald-50/30'
-												: pos.outcomeId === 'NO'
-													? 'border-rose-100 bg-rose-50/30'
-													: 'border-indigo-100 bg-indigo-50/30'}"
+											class="flex flex-col gap-2 rounded-2xl border p-5 shadow-sm {result === 'won'
+												? 'border-emerald-300 bg-emerald-50'
+												: result === 'lost'
+													? 'border-slate-200 bg-slate-50 opacity-60'
+													: pos.outcomeId === 'YES'
+														? 'border-emerald-100 bg-emerald-50/30'
+														: pos.outcomeId === 'NO'
+															? 'border-rose-100 bg-rose-50/30'
+															: 'border-indigo-100 bg-indigo-50/30'}"
 										>
-											<span
-												class="text-[10px] font-bold tracking-widest uppercase {pos.outcomeId ===
-												'YES'
-													? 'text-emerald-600'
-													: pos.outcomeId === 'NO'
-														? 'text-rose-600'
-														: 'text-indigo-600'}"
-											>
-												{market.outcomes?.find((o) => o.id === pos.outcomeId)?.title ??
-													pos.outcomeId}
-											</span>
+											<div class="flex items-center justify-between">
+												<span
+													class="text-[10px] font-bold tracking-widest uppercase {result === 'won'
+														? 'text-emerald-700'
+														: result === 'lost'
+															? 'text-slate-500 line-through'
+															: pos.outcomeId === 'YES'
+																? 'text-emerald-600'
+																: pos.outcomeId === 'NO'
+																	? 'text-rose-600'
+																	: 'text-indigo-600'}"
+												>
+													{market.outcomes?.find((o) => o.id === pos.outcomeId)?.title ??
+														pos.outcomeId}
+												</span>
+												{#if result === 'won'}
+													<span
+														class="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase"
+													>
+														Won
+													</span>
+												{:else if result === 'lost'}
+													<span
+														class="rounded-full bg-slate-400 px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase"
+													>
+														Lost
+													</span>
+												{/if}
+											</div>
 											<div
-												class="text-xl font-black {pos.outcomeId === 'YES'
+												class="text-xl font-black {result === 'won'
 													? 'text-emerald-950'
-													: pos.outcomeId === 'NO'
-														? 'text-rose-950'
-														: 'text-indigo-950'}"
+													: result === 'lost'
+														? 'text-slate-500 line-through'
+														: pos.outcomeId === 'YES'
+															? 'text-emerald-950'
+															: pos.outcomeId === 'NO'
+																? 'text-rose-950'
+																: 'text-indigo-950'}"
 											>
 												{formatToken({ value: pos.netQty, unitName: market.token.decimals })} Units
 											</div>
