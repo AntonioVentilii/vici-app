@@ -109,7 +109,12 @@
 			</div>
 
 			<!-- Admin Resolution Section -->
-			{#if market.status === 'Open' && $userIsAdminOrSolver}
+			<!--
+				Shown whenever the market is not already resolved: we need this UI on
+				`Expired` markets too (that is the normal state at settlement time),
+				not only on still-`Open` ones.
+			-->
+			{#if market.status !== 'Resolved' && $userIsAdminOrSolver}
 				<div class="mx-auto max-w-4xl border-t border-slate-100 pt-12">
 					<MarketResolutionInterface
 						{market}
