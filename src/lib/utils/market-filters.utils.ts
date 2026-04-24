@@ -71,11 +71,15 @@ export const filterAndRankMarkets = ({
 		}))
 		.filter(({ market, searchScore }) => {
 			const matchesSearch = searchScore > 0;
+			// `Active` and `Trending` previously used unconditional `||` clauses,
+			// which meant every market (including resolved and expired ones) fell
+			// through. Both tabs now explicitly exclude non-open markets.
+			const isOpen = market.status === 'Open';
 			const matchesTab =
-				activeTab === 'Active' ||
+				(activeTab === 'Active' && isOpen) ||
+				(activeTab === 'Trending' && isOpen) ||
 				(activeTab === 'Resolved' && market.status === 'Resolved') ||
-				(activeTab === 'Expiring' && market.status === 'Expired') ||
-				activeTab === 'Trending';
+				(activeTab === 'Expiring' && market.status === 'Expired');
 
 			return matchesTab && matchesSearch && matchesSecondaryFilters({ market, filters });
 		})
