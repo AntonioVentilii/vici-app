@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ResolvedMarketPanel from '$lib/components/market/ResolvedMarketPanel.svelte';
 	import TradeModal from '$lib/components/market/TradeModal.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
@@ -22,16 +23,23 @@
 		noVolume,
 		payoffType,
 		outcomes,
+		status,
 		token: { decimals: tokenDecimals }
 	} = $derived(market);
 
+	const isResolved = $derived(status === 'Resolved');
+
 	const handleOutcomeSelect = (id: OutcomeId) => {
+		if (isResolved) {
+			return;
+		}
+
 		selectedOutcomeId = id;
 		onOutcomeSelect?.(id);
 	};
 </script>
 
-{#if selectedOutcomeId}
+{#if selectedOutcomeId && !isResolved}
 	<TradeModal
 		{market}
 		onClose={() => (selectedOutcomeId = undefined)}
@@ -44,7 +52,9 @@
 {/if}
 
 <div class="mx-auto max-w-2xl space-y-6">
-	{#if payoffType === 'Binary'}
+	{#if isResolved}
+		<ResolvedMarketPanel {market} />
+	{:else if payoffType === 'Binary'}
 		<div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
 			<h3 class="text-center text-xs font-bold tracking-widest text-slate-400 uppercase">
 				Market Forecast

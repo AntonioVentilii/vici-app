@@ -109,7 +109,7 @@
 			</div>
 
 			<!-- Admin Resolution Section -->
-			{#if market.status === 'Open' && $userIsAdminOrSolver}
+			{#if market.status !== 'Resolved' && $userIsAdminOrSolver}
 				<div class="mx-auto max-w-4xl border-t border-slate-100 pt-12">
 					<MarketResolutionInterface
 						{market}

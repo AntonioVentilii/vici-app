@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import OrderBook from '$lib/components/market/OrderBook.svelte';
 	import { getOrderBook } from '$lib/services/order.services';
 	import { orderBookStore } from '$lib/stores/order-book.store';
@@ -13,6 +12,8 @@
 	const { market }: Props = $props();
 
 	let selectedOutcome = $state<string>('');
+
+	const isResolved = $derived(market.status === 'Resolved');
 
 	const fetchOrderBook = async () => {
 		try {
@@ -30,7 +31,17 @@
 		}
 	};
 
-	onMount(() => {
+	// Drive the 5s order-book poll reactively on `isResolved`. Using `onMount`
+	// left the interval running if a market transitioned Open → Resolved while
+	// the panel stayed mounted (e.g. another user/admin settled the market in
+	// a different tab). The effect tears the interval down the moment
+	// `market.status` flips and re-establishes it if it somehow goes back to
+	// open (shouldn't happen, but harmless).
+	$effect(() => {
+		if (isResolved) {
+			return;
+		}
+
 		fetchOrderBook();
 		const interval = setInterval(fetchOrderBook, 5_000);
 

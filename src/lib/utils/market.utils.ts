@@ -306,6 +306,10 @@ const mapTradingAccess = (
 
 /**
  * Badge/variant hint for market or resolution outcome labels.
+ *
+ * Outcome ids for cancellation are normalized as `CANCELED` across the app
+ * (see `OutcomeId` in `$lib/types/market`), so the check must match that
+ * casing rather than `Canceled`.
  */
 export const getOutcomeVariant = (
 	outcome: string | undefined
@@ -314,8 +318,12 @@ export const getOutcomeVariant = (
 		return 'success';
 	}
 
-	if (outcome === 'NO' || outcome === 'Canceled') {
+	if (outcome === 'NO' || outcome === 'CANCELED') {
 		return 'danger';
+	}
+
+	if (outcome === 'Expired') {
+		return 'warning';
 	}
 
 	return 'default';

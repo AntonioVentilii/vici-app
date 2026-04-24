@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import MarketForkModal from '$lib/components/market/MarketForkModal.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
@@ -13,14 +14,21 @@
 	const { market }: Props = $props();
 	let isForkModalOpen = $state(false);
 
-	const { title, status } = $derived(market);
+	const { title, status, outcome } = $derived(market);
 	const isFork = $derived(market.forkedFrom !== undefined);
+	const isResolved = $derived(status === 'Resolved');
 </script>
 
 <div class="flex flex-col items-center space-y-6 text-center">
 	<div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 p-4 shadow-sm">
 		<OutcomeBadge {status} />
 	</div>
+
+	{#if isResolved && nonNullish(outcome)}
+		<div class="-mt-2">
+			<OutcomeBadge {outcome} />
+		</div>
+	{/if}
 
 	<div class="space-y-4">
 		<h1 class="max-w-4xl text-3xl font-black text-slate-950 sm:text-5xl lg:text-5xl">

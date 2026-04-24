@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import { Clock, Copy, Users, UsersRound } from 'lucide-svelte/icons';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
@@ -21,7 +22,8 @@
 
 	const isChallenge = $derived(isSocial(market.balanceDomain));
 	const isFork = $derived(market.forkedFrom !== undefined);
-	const showChallengeSlot = $derived(!isFork);
+	const isResolved = $derived(market.status === 'Resolved');
+	const showChallengeSlot = $derived(!isFork && !isResolved);
 </script>
 
 <div class="h-full w-full" in:fly={{ y: 20, duration: 400, delay: Math.min(index * 50, 300) }}>
@@ -53,6 +55,18 @@
 							<Badge variant={getOutcomeVariant(market.status)}>
 								{market.status}
 							</Badge>
+							{#if isResolved && nonNullish(market.outcome)}
+								<Badge variant={getOutcomeVariant(market.outcome)}>
+									{market.outcome === 'YES'
+										? 'YES won'
+										: market.outcome === 'NO'
+											? 'NO won'
+											: market.outcome === 'CANCELED'
+												? 'Canceled'
+												: (market.outcomes?.find((o) => o.id === market.outcome)?.title ??
+													market.outcome)}
+								</Badge>
+							{/if}
 							{#if isChallenge}
 								<span
 									class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-50 px-2 py-0.5 text-[10px] font-bold tracking-widest text-fuchsia-700 uppercase"
@@ -85,10 +99,14 @@
 						{#if market.payoffType === 'Binary'}
 							<BinaryProbabilities
 								noProbability={market.noProbability}
+								winningOutcome={isResolved ? market.outcome : undefined}
 								yesProbability={market.yesProbability}
 							/>
 						{:else}
-							<CategoricalProbabilities outcomes={market.outcomes ?? []} />
+							<CategoricalProbabilities
+								outcomes={market.outcomes ?? []}
+								winningOutcomeId={isResolved ? market.outcome : undefined}
+							/>
 						{/if}
 					</div>
 

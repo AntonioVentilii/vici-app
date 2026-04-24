@@ -2,6 +2,7 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import { PRICE_DECIMALS } from '$lib/constants/app.constants';
 	import { settleMarket } from '$lib/services/resolution.services';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Market } from '$lib/types/market';
@@ -45,9 +46,16 @@
 			if (isCategorical) {
 				await settleMarket({ seriesId: market.id, outcomeId: selectedOutcomeId });
 			} else {
+				// `settleMarket` expects a bigint already scaled to `PRICE_DECIMALS`
+				// (the clearing canister's settlement-price unit). Previously this
+				// parsed with `market.token.decimals`, which is the collateral
+				// ledger's scale (e.g. 6 for USDC) and does NOT match PRICE_DECIMALS
+				// (2). The resulting bigint was off by 10^(token.decimals −
+				// PRICE_DECIMALS) and only happened to work for the binary YES/NO
+				// path because clearing treats any `price > 0` as YES.
 				const price = parseToken({
 					value: settlementPrice.trim(),
-					unitName: market.token.decimals
+					unitName: PRICE_DECIMALS
 				});
 				await settleMarket({ seriesId: market.id, settlementPrice: price });
 			}

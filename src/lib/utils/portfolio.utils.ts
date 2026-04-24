@@ -3,10 +3,40 @@ import { PORTFOLIO_DEFAULT_DECIMALS } from '$lib/constants/portfolio.constants';
 import type { Market } from '$lib/types/market';
 import type { Position } from '$lib/types/position';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 
 /**
- * Calculates the current real-value of a user position based on market probability.
+ * Returns the settled value of a position on a resolved market, in the
+ * position's native `netQty` bigint units. Mirrors the clearing engine's
+ * binary / categorical payoff rules: the full `netQty` on the winning
+ * outcome, `ZERO` on every other outcome. Returns `undefined` if we don't
+ * know which outcome won so the caller can fall back to live probabilities.
+ *
+ * Uses bigint arithmetic end-to-end — avoid routing position quantities
+ * through `Number` here, which would lose precision on positions larger
+ * than `Number.MAX_SAFE_INTEGER` (2^53 − 1).
+ */
+const resolvedPositionValue = ({
+	position,
+	market
+}: {
+	position: Position;
+	market: Market;
+}): bigint | undefined => {
+	if (isNullish(market.outcome)) {
+		return;
+	}
+
+	return position.outcomeId === market.outcome ? position.netQty : ZERO;
+};
+
+/**
+ * Calculates the current real-value of a user position.
+ *
+ * For open markets we use live implied probability from the order book.
+ * For resolved markets we use the final outcome (full `netQty` if won, zero
+ * if lost) so the portfolio reflects the settled value rather than
+ * pre-resolution midpoints.
  */
 export const calculatePositionValue = ({
 	position,
@@ -17,6 +47,14 @@ export const calculatePositionValue = ({
 }): bigint => {
 	if (isNullish(market)) {
 		return ZERO;
+	}
+
+	if (market.status === 'Resolved') {
+		const settled = resolvedPositionValue({ position, market });
+
+		if (nonNullish(settled)) {
+			return settled;
+		}
 	}
 
 	const prob =

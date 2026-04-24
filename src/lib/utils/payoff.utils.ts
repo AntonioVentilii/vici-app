@@ -6,3 +6,17 @@ import type { Outcome } from '$lib/types/market';
  */
 export const binaryPayoff = (outcome: Outcome): bigint | undefined =>
 	outcome === 'YES' ? 100n : outcome === 'NO' ? ZERO : undefined;
+
+/**
+ * Strict inverse of {@link binaryPayoff}: recovers the `YES`/`NO` label from
+ * a settlement price that was produced by `binaryPayoff`.
+ *
+ * Only the canonical values round-trip: `100n` ⇒ `YES`, `0n` ⇒ `NO`. Any
+ * other value (e.g. a partial price like `50n`) returns `undefined` so we
+ * don't silently mislabel a mid-market settlement as YES. The engine's
+ * binary payoff rule is `price > 0 ⇒ YES`, but the UI has no way to render
+ * "50% YES / 50% NO" as a winner; better to surface "settled, outcome
+ * unknown" than to pick a side.
+ */
+export const binaryPayoffLabel = (price: bigint): Outcome | undefined =>
+	price === 100n ? 'YES' : price === ZERO ? 'NO' : undefined;

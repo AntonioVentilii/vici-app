@@ -41,26 +41,24 @@ export const resolveMarket = async ({
 		}
 	};
 
-	try {
-		// Trigger on-chain settlement
-		await settleSeries({
-			identity,
-			params
-		});
+	// Trigger on-chain settlement. We deliberately do NOT swallow errors here:
+	// settlement failure must surface to the caller so the admin UI can render
+	// the error state instead of showing a false success. The Juno activity row
+	// is only written AFTER on-chain settlement succeeds, otherwise the UI would
+	// start showing the market as "Resolved" even though nothing settled.
+	await settleSeries({
+		identity,
+		params
+	});
 
-		// Record resolution in Juno for UI persistence
-		await logActivity({
-			type: ActivityType.SETTLEMENT,
-			user: identity.getPrincipal().toText(),
-			marketId,
-			title: `Market Resolved: ${outcome}`,
-			// TODO: parse with built-in bigint instead of string
-			details: JSON.stringify({ outcome, price: settlementPrice.toString() })
-		});
-	} catch (e: unknown) {
-		console.error('Failed to settle series on-chain', e);
-	}
+	await logActivity({
+		type: ActivityType.SETTLEMENT,
+		user: identity.getPrincipal().toText(),
+		marketId,
+		title: `Market Resolved: ${outcome}`,
+		// TODO: parse with built-in bigint instead of string
+		details: JSON.stringify({ outcome, price: settlementPrice.toString() })
+	});
 
-	// Trigger UI refresh
 	refreshMarkets();
 };

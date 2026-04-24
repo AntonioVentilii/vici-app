@@ -1,18 +1,48 @@
 <script lang="ts">
+	import { nonNullish } from '@dfinity/utils';
 	import type { Market } from '$lib/types/market';
 	import { formatProbability } from '$lib/utils/format.utils';
 
 	interface Props {
 		outcomes: NonNullable<Market['outcomes']>;
+		winningOutcomeId?: string;
 	}
 
-	const { outcomes }: Props = $props();
+	const { outcomes, winningOutcomeId }: Props = $props();
+
+	const isResolved = $derived(nonNullish(winningOutcomeId));
+
+	// When resolved, surface the winning outcome first even if it had a low
+	// pre-settlement probability. Otherwise keep the existing probability-desc
+	// ordering so the card preview shows the most likely outcomes.
+	const topOutcomes = $derived.by(() => {
+		const sorted = outcomes.toSorted(
+			// eslint-disable-next-line local-rules/prefer-object-params
+			(a, b) => {
+				if (isResolved) {
+					const aWon = a.id === winningOutcomeId ? 1 : 0;
+					const bWon = b.id === winningOutcomeId ? 1 : 0;
+
+					if (aWon !== bWon) {
+						return bWon - aWon;
+					}
+				}
+
+				const probA = a.probability ?? 0;
+				const probB = b.probability ?? 0;
+
+				return probB - probA || a.title.localeCompare(b.title);
+			}
+		);
+
+		return sorted.slice(0, 2);
+	});
 </script>
 
 <div class="border-border bg-muted/30 col-span-2 flex flex-col gap-3 rounded-2xl border p-5">
 	<div class="flex items-center justify-between">
 		<div class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-			Top Outcomes
+			{isResolved ? 'Resolved Outcome' : 'Top Outcomes'}
 		</div>
 		<div class="text-primary text-[10px] font-bold tracking-widest uppercase">
 			{outcomes.length} total
@@ -20,28 +50,33 @@
 	</div>
 
 	<div class="flex flex-col gap-3">
-		{#each outcomes
-			.toSorted(// eslint-disable-next-line local-rules/prefer-object-params
-				(a, b) => {
-					const probA = a.probability ?? 0;
-					const probB = b.probability ?? 0;
-
-					return probB - probA || a.title.localeCompare(b.title);
-				})
-			.slice(0, 2) as outcome (outcome.id)}
-			<div class="flex flex-col gap-1.5">
+		{#each topOutcomes as outcome (outcome.id)}
+			{@const isWinner = isResolved && outcome.id === winningOutcomeId}
+			{@const isLoser = isResolved && !isWinner}
+			<div class="flex flex-col gap-1.5 {isLoser ? 'opacity-50' : ''}">
 				<div class="flex items-center justify-between text-xs">
-					<span class="text-foreground font-bold">{outcome.title}</span>
+					<span
+						class="font-bold {isWinner
+							? 'text-success'
+							: isLoser
+								? 'text-foreground line-through'
+								: 'text-foreground'}"
+					>
+						{outcome.title}{#if isWinner}
+							✓{/if}
+					</span>
 					<span class="text-foreground font-serif font-black">
-						{formatProbability(outcome.probability ?? 0)}
+						{isResolved ? (isWinner ? '100%' : '0%') : formatProbability(outcome.probability ?? 0)}
 					</span>
 				</div>
 				<div
 					class="bg-background ring-border h-1.5 w-full overflow-hidden rounded-full ring-1 ring-inset"
 				>
 					<div
-						style="width: {(outcome.probability ?? 0) * 100}%"
-						class="bg-primary h-full transition-all duration-700 ease-out"
+						style="width: {isResolved ? (isWinner ? 100 : 0) : (outcome.probability ?? 0) * 100}%"
+						class="h-full transition-all duration-700 ease-out {isWinner
+							? 'bg-success'
+							: 'bg-primary'}"
 					></div>
 				</div>
 			</div>

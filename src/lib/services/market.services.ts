@@ -20,6 +20,7 @@ import { getProfile } from '$lib/services/profile.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
 import type { SeriesCategory } from '$lib/types/category';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
+import type { Activity } from '$lib/types/social';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import {
@@ -167,30 +168,23 @@ const fetchMarkets = async ({
 		getGlobalActivities({ certified })
 	]);
 
-	const resolutionMap = activities
-		.filter((a) => a.type === ActivityType.SETTLEMENT && nonNullish(a.marketId))
-		.reduce<Record<string, { outcome: Outcome }>>((acc, a) => {
-			const { marketId, details } = a;
-
-			try {
-				const { outcome } = JSON.parse(details ?? '{}');
-
-				if (nonNullish(marketId)) {
-					acc[marketId] = { outcome };
-				}
-			} catch (e) {
-				console.error('Failed to parse settlement details', e);
-			}
-
-			return acc;
-		}, {});
+	const resolutionMap = buildResolutionMap(activities);
 
 	const markets = await Promise.all(
 		seriesList.map(async (s) => {
 			const mid = parseMarketId(s.series_id);
 			const isCategorical = 'Categorical' in s.payoff_type;
+			const resolution = resolutionMap[s.series_id];
+			const isResolved = nonNullish(resolution);
 			const isExpired = s.expiry_ns / MILLISECOND_IN_NANOSECONDS <= BigInt(Date.now());
-			const status: MarketStatus = isExpired ? 'Expired' : 'Open';
+
+			// A settled series can still live in the registry after clearing drops
+			// it from its `SERIES` cache (see icdc-core: series is removed from
+			// the clearing map on `Finalised`, but the registry keeps it). Overlay
+			// the `SETTLEMENT` activity so the markets list agrees with the market
+			// detail page on `Resolved` state.
+			const status: MarketStatus = isResolved ? 'Resolved' : isExpired ? 'Expired' : 'Open';
+			const outcome: Outcome | undefined = resolution?.outcome;
 
 			if (isCategorical && nonNullish(s.outcomes?.[0])) {
 				const orders = await listOrdersApi({
@@ -208,6 +202,7 @@ const fetchMarkets = async ({
 					yesProbability: 0.5,
 					noProbability: 0.5,
 					status,
+					outcome,
 					categoricalProbabilities
 				});
 			}
@@ -233,12 +228,13 @@ const fetchMarkets = async ({
 				bestAsk: asks[0]?.price,
 				bestBidQty: bids[0]?.totalQty,
 				bestAskQty: asks[0]?.totalQty,
-				status
+				status,
+				outcome
 			});
 		})
 	);
 
-	// Add resolved markets that are no longer in the registry
+	// Add resolved markets that are no longer in the registry at all.
 	const resolvedSeriesIds = Object.keys(resolutionMap);
 	const activeSeriesIds = new Set(seriesList.map((s) => s.series_id));
 
@@ -264,6 +260,44 @@ const fetchMarkets = async ({
 
 	return filterByPlaygroundExpandedDomain({ items, targetDomain: domain });
 };
+
+/**
+ * Extracts a `seriesId -> { outcome }` map from Juno settlement activities.
+ * Details are expected to be stringified JSON (`{ outcome, price }`); malformed
+ * entries are skipped so they do not block the rest of the market list.
+ */
+const buildResolutionMap = (activities: Activity[]): Record<string, { outcome?: Outcome }> =>
+	activities
+		.filter((a) => a.type === ActivityType.SETTLEMENT && nonNullish(a.marketId))
+		.reduce<Record<string, { outcome?: Outcome }>>((acc, a) => {
+			const { marketId, details } = a;
+
+			if (!nonNullish(marketId)) {
+				return acc;
+			}
+
+			// The activity row itself is the source of truth for "this market is
+			// resolved" — do NOT drop the entry just because the JSON payload is
+			// malformed or missing, otherwise `fetchMarkets` (list) and
+			// `fetchMarket` (detail) disagree: detail already degrades gracefully
+			// to `status = 'Resolved'` with `outcome = undefined`, and the list
+			// must do the same.
+			let outcome: Outcome | undefined;
+
+			try {
+				const parsed = JSON.parse(details ?? '{}');
+				outcome =
+					typeof parsed?.outcome === 'string' && parsed.outcome.length > 0
+						? parsed.outcome
+						: undefined;
+			} catch (e) {
+				console.error('Failed to parse settlement details', e);
+			}
+
+			acc[marketId] = { outcome };
+
+			return acc;
+		}, {});
 
 /**
  * Loads series for the current domain, enriches with order book stats, merges resolved markets
