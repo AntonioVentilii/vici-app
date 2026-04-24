@@ -14,5 +14,4 @@ export const binaryPayoff = (outcome: Outcome): bigint | undefined =>
  *
  * Mirrors the engine's binary payoff rule: `price > 0` ⇒ YES, else NO.
  */
-export const binaryPayoffLabel = (price: bigint): Outcome =>
-	price > ZERO ? 'YES' : 'NO';
+export const binaryPayoffLabel = (price: bigint): Outcome => (price > ZERO ? 'YES' : 'NO');

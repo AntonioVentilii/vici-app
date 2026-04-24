@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { formatProbability } from '$lib/utils/format.utils';
 	import type { Outcome } from '$lib/types/market';
+	import { formatProbability } from '$lib/utils/format.utils';
 
 	interface Props {
 		yesProbability: number;
@@ -31,7 +31,8 @@
 			? 'text-slate-400 line-through'
 			: 'text-destructive'}"
 	>
-		No{#if noWon}{' '}✓{/if}
+		No{#if noWon}
+			✓{/if}
 	</div>
 	<div
 		class="font-serif text-2xl font-black {isResolved && !noWon
@@ -54,7 +55,8 @@
 			? 'text-slate-400 line-through'
 			: 'text-success'}"
 	>
-		Yes{#if yesWon}{' '}✓{/if}
+		Yes{#if yesWon}
+			✓{/if}
 	</div>
 	<div
 		class="font-serif text-2xl font-black {isResolved && !yesWon

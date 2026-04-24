@@ -66,25 +66,18 @@
 								? 'text-foreground line-through'
 								: 'text-foreground'}"
 					>
-						{outcome.title}{#if isWinner}{' '}✓{/if}
+						{outcome.title}{#if isWinner}
+							✓{/if}
 					</span>
 					<span class="text-foreground font-serif font-black">
-						{isResolved
-							? isWinner
-								? '100%'
-								: '0%'
-							: formatProbability(outcome.probability ?? 0)}
+						{isResolved ? (isWinner ? '100%' : '0%') : formatProbability(outcome.probability ?? 0)}
 					</span>
 				</div>
 				<div
 					class="bg-background ring-border h-1.5 w-full overflow-hidden rounded-full ring-1 ring-inset"
 				>
 					<div
-						style="width: {isResolved
-							? isWinner
-								? 100
-								: 0
-							: (outcome.probability ?? 0) * 100}%"
+						style="width: {isResolved ? (isWinner ? 100 : 0) : (outcome.probability ?? 0) * 100}%"
 						class="h-full transition-all duration-700 ease-out {isWinner
 							? 'bg-success'
 							: 'bg-primary'}"

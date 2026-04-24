@@ -99,8 +99,8 @@
 						{#if market.payoffType === 'Binary'}
 							<BinaryProbabilities
 								noProbability={market.noProbability}
-								yesProbability={market.yesProbability}
 								winningOutcome={isResolved ? market.outcome : undefined}
+								yesProbability={market.yesProbability}
 							/>
 						{:else}
 							<CategoricalProbabilities

@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { CheckCircle2 } from 'lucide-svelte/icons';
 	import { nonNullish } from '@dfinity/utils';
+	import { CheckCircle2 } from 'lucide-svelte/icons';
 	import type { Market } from '$lib/types/market';
 
 	interface Props {
@@ -56,9 +56,7 @@
 		</div>
 
 		<div class="space-y-1">
-			<p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">
-				Market Resolved
-			</p>
+			<p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Market Resolved</p>
 			{#if nonNullish(winnerLabel)}
 				<h3 class="font-serif text-3xl font-black text-slate-950 sm:text-4xl">
 					{#if isCanceled}
