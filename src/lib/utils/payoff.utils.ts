@@ -8,10 +8,15 @@ export const binaryPayoff = (outcome: Outcome): bigint | undefined =>
 	outcome === 'YES' ? 100n : outcome === 'NO' ? ZERO : undefined;
 
 /**
- * Inverse of {@link binaryPayoff}: derives the `YES`/`NO` label from a numeric
- * settlement price. Used when logging resolution activity from a price-based
- * settlement so downstream consumers can show the winning outcome.
+ * Strict inverse of {@link binaryPayoff}: recovers the `YES`/`NO` label from
+ * a settlement price that was produced by `binaryPayoff`.
  *
- * Mirrors the engine's binary payoff rule: `price > 0` ⇒ YES, else NO.
+ * Only the canonical values round-trip: `100n` ⇒ `YES`, `0n` ⇒ `NO`. Any
+ * other value (e.g. a partial price like `50n`) returns `undefined` so we
+ * don't silently mislabel a mid-market settlement as YES. The engine's
+ * binary payoff rule is `price > 0 ⇒ YES`, but the UI has no way to render
+ * "50% YES / 50% NO" as a winner; better to surface "settled, outcome
+ * unknown" than to pick a side.
  */
-export const binaryPayoffLabel = (price: bigint): Outcome => (price > ZERO ? 'YES' : 'NO');
+export const binaryPayoffLabel = (price: bigint): Outcome | undefined =>
+	price === 100n ? 'YES' : price === ZERO ? 'NO' : undefined;
