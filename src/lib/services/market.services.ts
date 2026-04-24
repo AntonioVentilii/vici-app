@@ -266,21 +266,35 @@ const fetchMarkets = async ({
  * Details are expected to be stringified JSON (`{ outcome, price }`); malformed
  * entries are skipped so they do not block the rest of the market list.
  */
-const buildResolutionMap = (activities: Activity[]): Record<string, { outcome: Outcome }> =>
+const buildResolutionMap = (activities: Activity[]): Record<string, { outcome?: Outcome }> =>
 	activities
 		.filter((a) => a.type === ActivityType.SETTLEMENT && nonNullish(a.marketId))
-		.reduce<Record<string, { outcome: Outcome }>>((acc, a) => {
+		.reduce<Record<string, { outcome?: Outcome }>>((acc, a) => {
 			const { marketId, details } = a;
 
-			try {
-				const { outcome } = JSON.parse(details ?? '{}');
+			if (!nonNullish(marketId)) {
+				return acc;
+			}
 
-				if (nonNullish(marketId)) {
-					acc[marketId] = { outcome };
-				}
+			// The activity row itself is the source of truth for "this market is
+			// resolved" — do NOT drop the entry just because the JSON payload is
+			// malformed or missing, otherwise `fetchMarkets` (list) and
+			// `fetchMarket` (detail) disagree: detail already degrades gracefully
+			// to `status = 'Resolved'` with `outcome = undefined`, and the list
+			// must do the same.
+			let outcome: Outcome | undefined;
+
+			try {
+				const parsed = JSON.parse(details ?? '{}');
+				outcome =
+					typeof parsed?.outcome === 'string' && parsed.outcome.length > 0
+						? parsed.outcome
+						: undefined;
 			} catch (e) {
 				console.error('Failed to parse settlement details', e);
 			}
+
+			acc[marketId] = { outcome };
 
 			return acc;
 		}, {});
