@@ -14,6 +14,8 @@
 
 	let selectedOutcome = $state<string>('');
 
+	const isResolved = $derived(market.status === 'Resolved');
+
 	const fetchOrderBook = async () => {
 		try {
 			const orders = await getOrderBook({
@@ -31,6 +33,12 @@
 	};
 
 	onMount(() => {
+		// Resolved markets have a frozen book; skip the initial fetch + 5s poll
+		// so we don't keep hitting clearing for a series that can no longer trade.
+		if (isResolved) {
+			return;
+		}
+
 		fetchOrderBook();
 		const interval = setInterval(fetchOrderBook, 5_000);
 
