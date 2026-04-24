@@ -3,10 +3,35 @@ import { PORTFOLIO_DEFAULT_DECIMALS } from '$lib/constants/portfolio.constants';
 import type { Market } from '$lib/types/market';
 import type { Position } from '$lib/types/position';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 
 /**
- * Calculates the current real-value of a user position based on market probability.
+ * Returns the settlement multiplier (0..1) for a position on a resolved
+ * market. Mirrors the clearing engine's payoff rules:
+ *   - Binary / Categorical: 1 on the winning outcome, 0 otherwise.
+ *   - Unknown winner (settlement activity without an outcome label): undefined
+ *     so callers can fall back to live probabilities.
+ */
+const resolvedPositionMultiplier = ({
+	position,
+	market
+}: {
+	position: Position;
+	market: Market;
+}): number | undefined => {
+	if (isNullish(market.outcome)) {
+		return;
+	}
+
+	return position.outcomeId === market.outcome ? 1 : 0;
+};
+
+/**
+ * Calculates the current real-value of a user position.
+ *
+ * For open markets we use live implied probability from the order book.
+ * For resolved markets we use the final outcome (1 if won, 0 if lost) so the
+ * portfolio reflects the settled value rather than pre-resolution midpoints.
  */
 export const calculatePositionValue = ({
 	position,
@@ -17,6 +42,14 @@ export const calculatePositionValue = ({
 }): bigint => {
 	if (isNullish(market)) {
 		return ZERO;
+	}
+
+	if (market.status === 'Resolved') {
+		const multiplier = resolvedPositionMultiplier({ position, market });
+
+		if (nonNullish(multiplier)) {
+			return BigInt(Math.floor(Number(position.netQty) * multiplier));
+		}
 	}
 
 	const prob =
