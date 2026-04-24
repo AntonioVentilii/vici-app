@@ -5,10 +5,6 @@
 
 	interface Props {
 		outcomes: NonNullable<Market['outcomes']>;
-		/**
-		 * When set, the categorical market has resolved. The matching outcome
-		 * is rendered as the winner (100%) and the others are greyed out.
-		 */
 		winningOutcomeId?: string;
 	}
 

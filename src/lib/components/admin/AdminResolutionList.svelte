@@ -140,13 +140,6 @@
 						>
 							Resolve NO
 						</Button>
-						<!--
-							"Cancel" maps to the CANCELED outcome, but the engine has no Void/
-							Refund settlement variant and `binaryPayoff('CANCELED')` returns
-							undefined, so clicking it previously threw "Market cancellation
-							not implemented yet". Hide the button until the void path exists
-							end-to-end instead of shipping a broken CTA.
-						-->
 					</div>
 				</div>
 			{/each}

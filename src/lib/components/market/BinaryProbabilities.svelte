@@ -5,10 +5,6 @@
 	interface Props {
 		yesProbability: number;
 		noProbability: number;
-		/**
-		 * When set, the market has resolved and we want the winning/losing side
-		 * to be visually distinguished instead of showing live probabilities.
-		 */
 		winningOutcome?: Outcome;
 	}
 

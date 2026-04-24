@@ -24,10 +24,6 @@
 		<OutcomeBadge {status} />
 	</div>
 
-	<!--
-		On resolved markets, surface the winning outcome as a second badge so the
-		header actually tells you who won, not just that the market is over.
-	-->
 	{#if isResolved && nonNullish(outcome)}
 		<div class="-mt-2">
 			<OutcomeBadge {outcome} />
