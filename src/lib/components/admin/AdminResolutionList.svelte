@@ -140,15 +140,13 @@
 						>
 							Resolve NO
 						</Button>
-						<Button
-							class="flex-1 rounded-xl border border-slate-200 bg-slate-50 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100"
-							onclick={() => handleResolve({ marketId, outcome: 'CANCELED' })}
-							size="sm"
-							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
-							variant="ghost"
-						>
-							Cancel
-						</Button>
+						<!--
+							"Cancel" maps to the CANCELED outcome, but the engine has no Void/
+							Refund settlement variant and `binaryPayoff('CANCELED')` returns
+							undefined, so clicking it previously threw "Market cancellation
+							not implemented yet". Hide the button until the void path exists
+							end-to-end instead of shipping a broken CTA.
+						-->
 					</div>
 				</div>
 			{/each}
