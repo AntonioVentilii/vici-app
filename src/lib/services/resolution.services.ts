@@ -13,6 +13,14 @@ import { nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 /**
  * Admin/resolver-only: settles a series on clearing by outcome id or numeric price and logs activity.
  *
+ * **`settlementPrice` contract:** must be a bigint already scaled to
+ * {@link PRICE_DECIMALS}. E.g. $1.00 ⇒ `100n`, $0.00 ⇒ `0n`. Callers that
+ * start from a human-entered string should use `parseToken({ value, unitName:
+ * PRICE_DECIMALS })`. Passing a value scaled to a different unit (such as the
+ * collateral ledger's `token.decimals`) will silently settle at the wrong
+ * price; binary YES/NO happens to work because clearing treats any `price > 0`
+ * as YES, but any non-binary case would be off by a factor of 10.
+ *
  * The activity `details` field is stringified JSON so downstream market loaders
  * (`fetchMarkets` / `fetchMarket`) can deserialize it into `{ outcome, price }`
  * and surface the winning outcome on resolved markets. Writing plain strings here
@@ -24,6 +32,10 @@ export const settleMarket = async ({
 	outcomeId
 }: {
 	seriesId: string;
+	/**
+	 * Settlement price as a bigint in {@link PRICE_DECIMALS} base units (e.g.
+	 * `100n` for `$1.00` when `PRICE_DECIMALS === 2`).
+	 */
 	settlementPrice?: bigint;
 	outcomeId?: string;
 }): Promise<void> => {
