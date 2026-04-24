@@ -6,32 +6,37 @@ import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 
 /**
- * Returns the settlement multiplier (0..1) for a position on a resolved
- * market. Mirrors the clearing engine's payoff rules:
- *   - Binary / Categorical: 1 on the winning outcome, 0 otherwise.
- *   - Unknown winner (settlement activity without an outcome label): undefined
- *     so callers can fall back to live probabilities.
+ * Returns the settled value of a position on a resolved market, in the
+ * position's native `netQty` bigint units. Mirrors the clearing engine's
+ * binary / categorical payoff rules: the full `netQty` on the winning
+ * outcome, `ZERO` on every other outcome. Returns `undefined` if we don't
+ * know which outcome won so the caller can fall back to live probabilities.
+ *
+ * Uses bigint arithmetic end-to-end — avoid routing position quantities
+ * through `Number` here, which would lose precision on positions larger
+ * than `Number.MAX_SAFE_INTEGER` (2^53 − 1).
  */
-const resolvedPositionMultiplier = ({
+const resolvedPositionValue = ({
 	position,
 	market
 }: {
 	position: Position;
 	market: Market;
-}): number | undefined => {
+}): bigint | undefined => {
 	if (isNullish(market.outcome)) {
 		return;
 	}
 
-	return position.outcomeId === market.outcome ? 1 : 0;
+	return position.outcomeId === market.outcome ? position.netQty : ZERO;
 };
 
 /**
  * Calculates the current real-value of a user position.
  *
  * For open markets we use live implied probability from the order book.
- * For resolved markets we use the final outcome (1 if won, 0 if lost) so the
- * portfolio reflects the settled value rather than pre-resolution midpoints.
+ * For resolved markets we use the final outcome (full `netQty` if won, zero
+ * if lost) so the portfolio reflects the settled value rather than
+ * pre-resolution midpoints.
  */
 export const calculatePositionValue = ({
 	position,
@@ -45,10 +50,10 @@ export const calculatePositionValue = ({
 	}
 
 	if (market.status === 'Resolved') {
-		const multiplier = resolvedPositionMultiplier({ position, market });
+		const settled = resolvedPositionValue({ position, market });
 
-		if (nonNullish(multiplier)) {
-			return BigInt(Math.floor(Number(position.netQty) * multiplier));
+		if (nonNullish(settled)) {
+			return settled;
 		}
 	}
 
