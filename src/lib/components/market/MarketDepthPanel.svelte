@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import OrderBook from '$lib/components/market/OrderBook.svelte';
 	import { getOrderBook } from '$lib/services/order.services';
 	import { orderBookStore } from '$lib/stores/order-book.store';
@@ -32,9 +31,13 @@
 		}
 	};
 
-	onMount(() => {
-		// Resolved markets have a frozen book; skip the initial fetch + 5s poll
-		// so we don't keep hitting clearing for a series that can no longer trade.
+	// Drive the 5s order-book poll reactively on `isResolved`. Using `onMount`
+	// left the interval running if a market transitioned Open → Resolved while
+	// the panel stayed mounted (e.g. another user/admin settled the market in
+	// a different tab). The effect tears the interval down the moment
+	// `market.status` flips and re-establishes it if it somehow goes back to
+	// open (shouldn't happen, but harmless).
+	$effect(() => {
 		if (isResolved) {
 			return;
 		}
