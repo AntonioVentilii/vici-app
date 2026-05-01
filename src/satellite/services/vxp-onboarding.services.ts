@@ -19,10 +19,10 @@ import { Principal } from '@icp-sdk/core/principal';
 import type { OnSetDocContext } from '@junobuild/functions';
 import { IcrcLedgerCanister, type IcrcLedgerDid } from '@junobuild/functions/canisters/ledger/icrc';
 import {
+	countDocsStore,
 	decodeDocData,
 	encodeDocData,
 	getDocStore,
-	listDocsStore,
 	setDocStore
 } from '@junobuild/functions/sdk';
 
@@ -148,55 +148,21 @@ const persistOnboarding = ({
 /**
  * Count `activities` rows owned by `caller` whose key ends with `#trade` (see `logActivity`).
  */
-const countUserTradeActivities = (caller: Uint8Array): number => {
-	const countPage = ({
-		startAfter,
-		acc
-	}: {
-		startAfter: string | undefined;
-		acc: number;
-	}): number => {
-		const page = listDocsStore({
-			collection: Collection.ACTIVITIES,
-			caller,
-			params: {
-				owner: caller,
-				paginate: {
-					limit: LIST_PAGE_SIZE,
-					...(nonNullish(startAfter) ? { start_after: startAfter } : {})
-				},
-				order: { field: 'keys', desc: false }
-			}
-		});
-
-		if (page.items.length === 0) {
-			return acc;
+const countUserTradeActivities = (caller: Uint8Array): bigint =>
+	countDocsStore({
+		collection: Collection.ACTIVITIES,
+		caller,
+		params: {
+			owner: caller,
+			order: { field: 'keys', desc: false }
 		}
+	});
 
-		const pageCount = page.items.filter(([key]) => key.endsWith(TRADE_KEY_SUFFIX)).length;
-		const nextAcc = acc + pageCount;
-
-		if (BigInt(page.items.length) < LIST_PAGE_SIZE) {
-			return nextAcc;
-		}
-
-		const lastKey = page.items[page.items.length - 1]?.[0];
-
-		if (isNullish(lastKey) || lastKey === startAfter) {
-			return nextAcc;
-		}
-
-		return countPage({ startAfter: lastKey, acc: nextAcc });
-	};
-
-	return countPage({ startAfter: undefined, acc: 0 });
-};
-
-const countUserTradeActivitiesSafe = (caller: Uint8Array): number => {
+const countUserTradeActivitiesSafe = (caller: Uint8Array): bigint => {
 	try {
 		return countUserTradeActivities(caller);
 	} catch {
-		return 0;
+		return ZERO;
 	}
 };
 
@@ -228,7 +194,8 @@ const reconcileLegacyOnboardingState = ({
 	});
 	const hasProfile = nonNullish(profileDoc);
 
-	const tradeCount = Math.max(base.tradeCount, historicalTrades, minimumTradeCount ?? 0);
+	// TODO: consider using bigint. Found this https://stackoverflow.com/a/61324746/5404186 to find max value.
+	const tradeCount = Math.max(base.tradeCount, Number(historicalTrades), minimumTradeCount ?? 0);
 
 	const milestoneEligibility: Array<{ mk: VxpNewUserMilestoneKey; eligible: boolean }> = [
 		{ mk: 'm1', eligible: hasProfile },
