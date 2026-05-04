@@ -36,6 +36,7 @@
 	},
 	"devDependencies": {
 		"@dfinity/eslint-config-oisy-wallet": "^0.2.3",
+		"@icp-sdk/bindgen": "^0.4.0",
 		"@junobuild/config": "^3.0.0",
 		"@junobuild/vite-plugin": "^4.7.1",
 		"@sveltejs/adapter-static": "^3.0.9",
