@@ -13,7 +13,7 @@ Vici Social Markets is a modern prediction platform built on the **Internet Comp
 
 ## ⚙️ Backend Canisters (ICDC-Core)
 
-The core trading logic and market registry are powered by high-performance Motoko-based canisters from the **[icdc-core](https://github.com/AntonioVentilii/icdc-core)** project:
+The core trading logic and market registry are powered by high-performance Rust-based canisters from the **[icdc-core](https://github.com/AntonioVentilii/icdc-core)** project:
 
 - **Clearing Canister**: Handles margin accounts, collateral management, and on-chain trade matching.
 - **Registry Canister**: Manages the prediction market lifecycle, including creation, discovery, and settlement.
@@ -31,7 +31,7 @@ operational runbooks.
 
 - **Frontend**: [SvelteKit](https://kit.svelte.dev/) with **Svelte 5 (Runes)**.
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/) with a premium glassmorphic design system.
-- **Backend/Storage**: [Juno](https://juno.build/) and Motoko-based canisters on the Internet Computer.
+- **Backend/Storage**: [Juno](https://juno.build/) and Rust-based canisters on the Internet Computer.
 - **Blockchain**: [Internet Computer (IC)](https://internetcomputer.org/).
 - **Authentication**: [Internet Identity](https://identity.ic0.app/).
 

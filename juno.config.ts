@@ -35,8 +35,10 @@ export default defineConfig(({ mode }) => ({
 			development: 'auamu-4x777-77775-aaaaa-cai',
 			production: '7scay-7yaaa-aaaal-asxqa-cai'
 		},
-		source: 'build',
-		predeploy: ['npm run build'],
+		hosting: {
+			source: 'build',
+			predeploy: ['npm run build']
+		},
 		authentication: {
 			google: {
 				clientId:

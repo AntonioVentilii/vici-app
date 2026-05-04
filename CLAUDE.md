@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Prediction platform on Internet Computer using SvelteKit (Runes), Juno, and Motoko.
+Prediction platform on Internet Computer using SvelteKit (Runes), Juno, and Rust.
 
 ## Essential Commands
 
