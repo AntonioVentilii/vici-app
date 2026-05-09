@@ -24,3 +24,8 @@ vite.config.ts.timestamp-*
 static/workers
 
 target
+
+# Playwright E2E
+/playwright-report/
+/test-results/
+/playwright/.cache/

@@ -1,17 +1,23 @@
 # Frontend Testing
 
-> **Status: bootstrap.** This repo does **not** ship a configured frontend
+> **Status: bootstrap.** This repo does **not** ship a configured **unit**
 > test runner today. There is no Vitest config, no `npm run test` script,
-> and no `*.spec.ts` / `*.test.ts` files. The
-> `@dfinity/eslint-config-oisy-wallet/vitest` preset is wired into
-> `eslint.config.js`, so once the runner exists ESLint will already
-> understand it. Until then, this page is the **forward-looking contract**:
-> when the first test lands, the conventions below kick in.
+> and no `*.test.ts` files. The `@dfinity/eslint-config-oisy-wallet/vitest`
+> preset is wired into `eslint.config.js`, so once the runner exists ESLint
+> will already understand it. Until then, this section is the
+> **forward-looking contract**: when the first unit test lands, the
+> conventions below kick in.
+>
+> **End-to-end (Playwright) tests are configured.** See
+> [E2E (Playwright)](#e2e-playwright) below.
 
 ## Today
 
-- **No tests are required by CI.** The `checks.yml` workflow runs `format`,
-  `lint`, and `check` only.
+- **Unit / component tests are not required by CI.** The `checks.yml`
+  workflow runs `format`, `lint`, and `check` only.
+- **E2E (Playwright) is required by CI.** The `e2e.yml` workflow boots the
+  Juno emulator and runs `npm run e2e:ci`. See
+  [E2E (Playwright)](#e2e-playwright).
 - **Bug fixes still benefit from a manual repro.** Document repro steps in
   the PR body's `# Tests` section so a reviewer can verify.
 - **Engine sanity** has its own smoke-test script:
@@ -126,3 +132,98 @@ needs a test runner:
 
 Until then, this page documents the target shape so the first test
 doesn't have to invent it from scratch.
+
+## E2E (Playwright)
+
+End-to-end tests live under [`e2e/`](../../../e2e/) and are driven by
+[Playwright](https://playwright.dev/). They exercise the real frontend
+against a local [Juno emulator](https://juno.build/docs/guides/local-development),
+which boots a `junobuild/satellite` container with Internet Identity
+pre-deployed.
+
+### Stack
+
+- **Runner:** `@playwright/test`.
+- **Auth fixture:** [`@dfinity/internet-identity-playwright`](https://github.com/dfinity/internet-identity-playwright)
+  — drives the II passkey flow programmatically. Reused across tests in
+  the same Playwright session for reproducibility.
+- **Backend:** Juno emulator started by `juno emulator start --headless`,
+  with `mode: test` mapped to satellite ID `jx5yt-yyaaa-aaaal-abzbq-cai`
+  in [`juno.config.ts`](../../../juno.config.ts).
+- **Frontend:** the dev server (`npm run dev`) — booted automatically by
+  Playwright's `webServer` config.
+
+### Layout
+
+```text
+e2e/
+├── config.ts             # II URL / canister / timeouts (env-overridable)
+├── pages/                # Page-Object Model classes
+│   └── home.page.ts
+├── homepage.spec.ts      # logged-out smoke test
+└── auth.spec.ts          # logged-in II flow (sign in + sign out)
+```
+
+- **One spec per high-level user-facing flow.** Don't co-locate specs with
+  components.
+- **Page objects** wrap selectors and high-level actions so structural
+  changes update one file, not every spec.
+- **Selectors** go through `page.getByTestId(TestId.X)`. Playwright is
+  configured with `testIdAttribute: 'data-tid'`, so a component opts in
+  by exposing `data-tid={TestId.X}`. The catalog of IDs lives in
+  [`src/lib/constants/test-ids.constants.ts`](../../../src/lib/constants/test-ids.constants.ts).
+  **Add a new entry only when an E2E test references it** — keep the
+  enum minimal.
+- **Imports across the boundary:** specs and page objects under `e2e/`
+  use **relative** imports (e.g. `../src/lib/constants/test-ids.constants`).
+  The `local-rules/no-relative-imports` ESLint rule that bans relative
+  imports under `src/**` does not apply here.
+
+### Local commands
+
+```bash
+# Boot the Juno emulator (Docker image junobuild/satellite)
+juno emulator start
+juno login --emulator --mode test
+juno config apply --mode test
+
+# In another terminal — run all specs (installs browsers on first run)
+npm run e2e
+
+# Open the HTML report after a CI-style run
+npm run e2e:report
+```
+
+The `webServer` block in `playwright.config.ts` boots `npm run dev` on
+:5173 automatically when you run `npm run e2e`.
+
+### CI
+
+The [`.github/workflows/e2e.yml`](../../../.github/workflows/e2e.yml)
+workflow installs the Juno CLI, starts the emulator headlessly,
+`apply`s the `test` config, then runs `npm run e2e:ci`. The HTML report
+is uploaded as the `playwright-report` artifact (always); raw results
+ship as `test-results` only on failure.
+
+### Forbidden in E2E
+
+- `test.skip` / `testWithII.skip` left on `main`. Either remove the test
+  or make it pass.
+- Hard-coded waits (`page.waitForTimeout(...)`). Use `expect(locator).toBeVisible()`
+  / `toHaveText()` with the configured `actionTimeout` instead.
+- Real network calls outside the emulator. The whole point of the
+  emulator is reproducibility.
+- Logging in by stuffing identities into `localStorage` / `IndexedDB`.
+  Use the `iiPage` fixture; that's what it's for.
+
+### Adding a new E2E test
+
+1. Add an entry to `TestId` only if the new test needs a stable hook the
+   surrounding components don't already expose.
+2. Add `data-tid={TestId.X}` on the smallest meaningful element.
+3. Extend the relevant page object (`e2e/pages/*.page.ts`) — never
+   reach into selectors from the spec directly.
+4. Write the spec under `e2e/<flow>.spec.ts`. Use `testWithII` from
+   `@dfinity/internet-identity-playwright` for any flow that needs to
+   be signed in.
+5. Run `npm run e2e` locally before pushing.

@@ -32,6 +32,9 @@ const delegation = {
 export default defineConfig(({ mode }) => ({
 	satellite: {
 		ids: {
+			// Predictable satellite ID baked into the `junobuild/satellite` emulator
+			// image used by E2E (mode === 'test'). See docs/ai/frontend/testing.md.
+			test: 'jx5yt-yyaaa-aaaal-abzbq-cai',
 			development: 'auamu-4x777-77775-aaaaa-cai',
 			production: '7scay-7yaaa-aaaal-asxqa-cai'
 		},
@@ -106,5 +109,11 @@ export default defineConfig(({ mode }) => ({
 				}
 			]
 		}
+	},
+	emulator: {
+		runner: {
+			type: 'docker'
+		},
+		satellite: {}
 	}
 }));

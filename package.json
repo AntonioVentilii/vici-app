@@ -32,13 +32,18 @@
 		"restart:vxp": "./scripts/restart.vxp.sh",
 		"postinstall:copy-auth": "node -e \"require('fs').cpSync('node_modules/@junobuild/core/dist/workers/', './static/workers', {recursive: true});\"",
 		"postinstall": "npm run postinstall:copy-auth",
-		"playwright:install": "playwright install --with-deps"
+		"playwright:install": "playwright install --with-deps",
+		"e2e": "npm run playwright:install && playwright test",
+		"e2e:ci": "playwright test --reporter=html,list",
+		"e2e:report": "playwright show-report"
 	},
 	"devDependencies": {
 		"@dfinity/eslint-config-oisy-wallet": "^0.2.3",
+		"@dfinity/internet-identity-playwright": "^3.0.0",
 		"@icp-sdk/bindgen": "^0.4.0",
 		"@junobuild/config": "^3.0.1",
 		"@junobuild/vite-plugin": "^4.7.1",
+		"@playwright/test": "^1.59.1",
 		"@sveltejs/adapter-static": "^3.0.9",
 		"@sveltejs/kit": "^2.37.0",
 		"@sveltejs/vite-plugin-svelte": "^6.1.4",
@@ -50,6 +55,7 @@
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.12.1",
 		"globals": "^16.5.0",
+		"playwright": "^1.59.1",
 		"postcss": "^8.5.13",
 		"prettier": "^3.8.2",
 		"prettier-plugin-organize-imports": "^4.3.0",
