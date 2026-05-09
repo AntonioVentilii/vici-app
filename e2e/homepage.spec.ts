@@ -1,13 +1,17 @@
 import { expect, test } from '@playwright/test';
 import { HomePage } from './pages/home.page';
 
-const REGISTRY_QUERY_GLOB = '**/api/v3/canister/g5pxl-pyaaa-aaaaj-qqhoq-cai/**';
+// Match every API version (v2/v3/v4 — the SDK uses v3 for `query` /
+// `read_state` and v4 for `call`) and any path under the Registry canister.
+// A v3-only glob lets v4 update calls leak through and quietly populate the
+// feed before the screenshot, which is exactly what made this test flaky.
+const REGISTRY_GLOB = '**/api/*/canister/g5pxl-pyaaa-aaaaj-qqhoq-cai/**';
 
 test.describe('homepage (logged out)', () => {
 	test('renders the loading skeletons while markets are still being fetched', async ({ page }) => {
 		const home = new HomePage(page);
 
-		// Stall every Registry query so the feed stays in its skeleton state long
+		// Stall every Registry call so the feed stays in its skeleton state long
 		// enough for a deterministic screenshot. We hold the route handler on a
 		// deferred promise we explicitly release in `finally` — this avoids a
 		// long-lived `setTimeout` that could outlive the test and keep the
@@ -17,7 +21,7 @@ test.describe('homepage (logged out)', () => {
 			releaseStall = resolve;
 		});
 
-		await page.route(REGISTRY_QUERY_GLOB, async (route) => {
+		await page.route(REGISTRY_GLOB, async (route) => {
 			await stalled;
 			await route.abort();
 		});
@@ -26,8 +30,15 @@ test.describe('homepage (logged out)', () => {
 			await home.goto();
 
 			await expect(home.marketFeed).toBeVisible();
-			await expect(home.marketCardSkeleton.first()).toBeVisible();
 			await expect(home.signInButton).toBeVisible();
+
+			// Pin the rendered state so the screenshot can't be accidentally
+			// taken in a half-loaded transition: we expect *exactly* the three
+			// MarketCardSkeletons that MarketFeed.svelte renders while loading,
+			// and zero real cards. If anything leaked past the route stall,
+			// `toHaveCount(0)` will fail before we write a polluted baseline.
+			await expect(home.marketCardSkeleton).toHaveCount(3);
+			await expect(home.marketCard).toHaveCount(0);
 
 			await expect(page).toHaveScreenshot('homepage-loading.png', { fullPage: true });
 		} finally {
