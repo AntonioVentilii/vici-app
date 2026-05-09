@@ -14,5 +14,8 @@ export enum TestId {
 	SignInDev = 'sign-in-dev',
 	UserMenu = 'user-menu',
 	Logout = 'logout',
-	MarketFeed = 'market-feed'
+	MarketFeed = 'market-feed',
+	MarketCard = 'market-card',
+	MarketCardSkeleton = 'market-card-skeleton',
+	MarketTimeRemaining = 'market-time-remaining'
 }

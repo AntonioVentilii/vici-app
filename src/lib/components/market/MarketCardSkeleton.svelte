@@ -1,8 +1,14 @@
 <script lang="ts">
 	import Card from '$lib/components/ui/Card.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 </script>
 
-<Card class="bg-muted/20 animate-pulse !border-dashed" padding="lg" variant="default">
+<Card
+	class="bg-muted/20 animate-pulse !border-dashed"
+	data-tid={TestId.MarketCardSkeleton}
+	padding="lg"
+	variant="default"
+>
 	<div class="flex h-full w-full flex-col gap-4">
 		<!-- Title and Badge -->
 		<div class="flex items-start justify-between gap-4">

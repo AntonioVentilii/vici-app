@@ -22,13 +22,14 @@ test.describe('authentication (dev sign-in)', () => {
 
 		await expect(home.userMenu).toBeVisible();
 		await expect(home.signInButton).not.toBeVisible();
+		await expect(home.marketCard.first()).toBeVisible();
 
-		// Mask the user-menu trigger because dev sign-in mints a fresh
-		// principal on every run, so the avatar / fallback initials drift.
-		// The rest of the chrome (header, market feed, footer) is stable.
+		// Mask the user-menu trigger (dev sign-in mints a fresh principal each
+		// run, so the avatar / fallback initials drift) and the time-remaining
+		// chips (`X days left` is wall-clock-relative).
 		await expect(page).toHaveScreenshot('homepage-logged-in.png', {
 			fullPage: true,
-			mask: [home.userMenu]
+			mask: [home.userMenu, home.marketTimeRemaining]
 		});
 
 		await home.logout();

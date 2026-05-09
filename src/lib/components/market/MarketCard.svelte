@@ -8,6 +8,7 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import type { Market } from '$lib/types/market';
 	import { isSocial } from '$lib/utils/balance-domain.utils';
 	import { getOutcomeVariant, getTimeRemaining } from '$lib/utils/market.utils';
@@ -114,7 +115,10 @@
 					<div class="border-border flex items-center justify-between border-t pt-5">
 						<div class="text-muted-foreground/60 flex items-center gap-1.5">
 							<Clock size={14} />
-							<span class="text-xs font-bold whitespace-nowrap">
+							<span
+								class="text-xs font-bold whitespace-nowrap"
+								data-tid={TestId.MarketTimeRemaining}
+							>
 								{getTimeRemaining(market.expiryDate)}
 							</span>
 						</div>

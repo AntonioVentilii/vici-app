@@ -4,6 +4,7 @@
 	import MarketCard from '$lib/components/market/MarketCard.svelte';
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import type { Market } from '$lib/types/market';
 	import type { MarketGroup } from '$lib/utils/market-groups.utils';
 
@@ -50,7 +51,7 @@
 	});
 </script>
 
-<div class="relative isolate h-full w-full">
+<div class="relative isolate h-full w-full" data-tid={TestId.MarketCard}>
 	{#if ghostLayers >= 1}
 		<div
 			class="pointer-events-none absolute inset-0 -z-10 translate-x-[6px] translate-y-[6px] rounded-2xl bg-white shadow-md ring-1 ring-slate-200/80"

@@ -19,7 +19,7 @@ concurrency:
 jobs:
   e2e:
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     permissions:
       # Needed so the snapshot-update step can push a commit back to the
       # PR branch when Playwright generates / updates baselines.
@@ -65,6 +65,28 @@ jobs:
         # an upstream breaking change silently red the whole pipeline.
         run: npm i -g @junobuild/cli@0.15.4
 
+      - name: Install dfx
+        # Match the version pinned in dfx.json. dfx.json's `local` network
+        # already points at 127.0.0.1:5987, which is exactly the port the
+        # Juno emulator's PocketIC listens on, so `dfx deploy --network local`
+        # works against the running emulator without extra plumbing.
+        env:
+          DFX_VERSION: '0.26.1'
+          DFXVM_INIT_YES: 'true'
+        run: |
+          set -e
+          curl -fsSL https://internetcomputer.org/install.sh | sh
+          echo "$HOME/.local/share/dfx/bin" >> "$GITHUB_PATH"
+
+      - name: Configure dfx identity
+        # `dfx canister create / deploy` need a non-anonymous identity.
+        # `--storage-mode plaintext` skips the keyring prompt that would
+        # otherwise hang in CI; the identity is ephemeral to this runner.
+        run: |
+          set -e
+          dfx identity new --storage-mode plaintext --force ci-runner
+          dfx identity use ci-runner
+
       - name: Start Juno emulator
         run: |
           set -e
@@ -83,6 +105,32 @@ jobs:
           set -e
           npm run juno:functions:build
           juno functions upgrade -m development --no-snapshot
+
+      - name: Deploy icdc-core canisters
+        # Mirrors the local `npm run deploy` flow: dfx pulls the icdc-core
+        # WASMs from the AntonioVentilii/icdc-core GitHub releases (see
+        # scripts/build/download.icdc.*.sh) and installs them into the
+        # PocketIC instance the emulator is already running. After this,
+        # the registry / clearing / vUSD / VXP / vici / cketh / ckusdc
+        # canisters all live at their `specified_id` from dfx.json.
+        run: npm run deploy
+
+      - name: Initialize icdc-core (clearing + engine + registry)
+        # 1. init.clearing  — wires the registry, opens domain policies,
+        #    registers ICP / VXP collateral.
+        # 2. init.icdc-engine — registers the Vici engine (eng_0) on the
+        #    registry with the satellite + dfx-runner as admins.
+        # 3. init.registry  — registers VICI_ORACLE_V1 and seeds the 20
+        #    markets in scripts/data/markets.json so the home feed has
+        #    something to render.
+        # `init.icdc-dev-bootstrap` is a no-op without DEV_CREATOR_PRINCIPAL
+        # (we sign in via the dev mock identity each run, so there's no
+        # stable principal to pre-grant), and we skip it intentionally.
+        run: |
+          set -e
+          npm run init:clearing
+          npm run init:icdc-engine
+          npm run init:registry
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
