@@ -1,49 +1,74 @@
-# Juno Integration Rules
+# Juno Integration (Claude quick-reference)
 
-## External Reference
-
-- **Authoritative Docs**: [Juno LLM Documentation](https://juno.build/llms-full.txt)
+> **Authoritative sources:**
+>
+> - Satellite README: [`docs/ai/satellite/README.md`](../../docs/ai/satellite/README.md)
+> - Satellite patterns: [`docs/ai/satellite/patterns.md`](../../docs/ai/satellite/patterns.md)
+> - External docs: [Juno LLM Documentation](https://juno.build/llms-full.txt)
+>
+> This card is a Claude-only summary. If it disagrees with the docs
+> above, the docs above win.
 
 ## Overview
 
-Vici uses `@junobuild/core` for backend services on the Internet Computer. It is a client-side architecture where the frontend interacts directly with the Satellite container.
+Vici uses `@junobuild/core` for FE auth + datastore client and
+`@junobuild/functions` for satellite-side hooks / asserts / typed
+endpoints. The frontend interacts directly with the satellite container.
 
-## Key SDK Functions (`@junobuild/core`)
+## Key SDK functions (`@junobuild/core`)
 
-- **Initialization**: `initSatellite()` (typically in `+layout.svelte`).
-- **Auth**: `signIn()`, `signOut()`, `onAuthStateChange()`.
-- **Datastore**: `setDoc()`, `getDoc()`, `listDocs()`, `deleteDoc()`.
-- **Storage**: `uploadFile()`, `deleteAsset()`.
+- **Initialization:** `initSatellite()` (typically in `+layout.svelte`).
+- **Auth:** `signIn()`, `signOut()`, `onAuthStateChange()`.
+- **Datastore:** `setDoc()`, `getDoc()`, `listDocs()`, `countDocs()`,
+  `deleteDoc()`.
+- **Storage:** `uploadFile()`, `deleteAsset()`.
 
-## Satellite Configuration
+## Satellite configuration
 
-- **Development ID**: `auamu-4x777-77775-aaaaa-cai`
-- **Production ID**: `7scay-7yaaa-aaaal-asxqa-cai`
-- **Config**: @juno.config.ts
+- **Development ID:** `auamu-4x777-77775-aaaaa-cai`
+- **Production ID:** `7scay-7yaaa-aaaal-asxqa-cai`
+- **Config:** [`juno.config.ts`](../../juno.config.ts).
 
-## Local Development
+## Local development
 
-- **Emulator**: Use `juno emulator start` for local development.
-- **Local Console**: [http://localhost:5866](http://localhost:5866).
-- **Vite Plugin**: Ensure `@junobuild/vite-plugin` is used in `vite.config.ts` for automatic environment variable injection.
+- **Emulator:** `juno emulator start` for local development.
+- **Local Console:** [http://localhost:5866](http://localhost:5866).
+- **Vite plugin:** `@junobuild/vite-plugin` is wired in
+  [`vite.config.ts`](../../vite.config.ts) for env-var injection.
 
-## Data Collections (Datastore)
+> [!IMPORTANT]
+> Do **NOT** run `dfx start`. The Juno emulator is the only local
+> replica.
 
-- **ROLES**: Stores user roles and permissions (`roles` collection).
-- **Rules**: Consult `juno.config.ts` for collection rules (read/write permissions).
-- **Constants**: See @src/lib/constants/collections.constants.ts.
+## Data collections
 
-## Serverless Functions (TypeScript)
+Collection names are pinned in **two** places that must stay in sync:
 
-- **Location**: `src/satellite/index.ts`.
-- **Framework**: Uses `@junobuild/functions`.
-- **Hooks (`defineHook`)**: For post-operation logic (e.g., Mutation). See [Juno Mutation Docs](https://juno.build/docs/examples/functions/typescript/mutating-docs).
-- **Assertions (`defineAssert`)**: For pre-operation validation. See [Juno Assertion Docs](https://juno.build/docs/examples/functions/typescript/assertion).
-- **Canister Calls**: Can be performed within functions (e.g., calling the ICRC ledger). See [Juno Canister Calls Docs](https://juno.build/docs/examples/functions/typescript/canister-calls).
+- [`juno.config.ts`](../../juno.config.ts) — deployment config.
+- [`src/lib/constants/collections.constants.ts`](../../src/lib/constants/collections.constants.ts)
+  — the typed `Collection` enum used by the satellite + FE.
 
-## Best Practices
+When adding a new collection, edit both files in the same PR.
 
-- **Client-Side Only**: SSR is typically not used with Juno; logic lives in components/stores.
-- **Auth Guards**: Use `safeGetIdentityOnce` from @src/lib/services/identity.services.ts to protect authenticated actions.
-- **Post-install**: Auth workers must be synced via `npm run postinstall` to `./static/workers`.
-- **Modularity**: If `src/satellite/index.ts` grows too large, refactor individual hooks/assertions into separate files within `src/satellite/` and import them into the main index.
+## Serverless functions (TypeScript)
+
+- **Location:** [`src/satellite/`](../../src/satellite/).
+- **Framework:** `@junobuild/functions`.
+- **Primitives:** `defineHook` (post-write), `defineAssert` (pre-write
+  veto), `defineQuery`, `defineUpdate`. See
+  [`docs/ai/satellite/patterns.md`](../../docs/ai/satellite/patterns.md)
+  for the canonical shapes (collection-dispatch tables, idempotent
+  hooks, schema-first endpoints).
+- **Build:** `npm run juno:functions:build`.
+
+## Best practices
+
+- **Client-side only.** SSR is typically not used with Juno; FE logic
+  lives in components / stores.
+- **Auth guards.** Use `safeGetIdentityOnce` from
+  [`identity.services.ts`](../../src/lib/services/identity.services.ts)
+  to protect authenticated actions.
+- **Post-install.** Auth workers are synced via `npm run postinstall`
+  to `./static/workers`. Don't hand-edit those files.
+- **Modularity.** Keep `src/satellite/index.ts` declarative — schemas +
+  dispatch tables only. Push logic into `src/satellite/services/`.
