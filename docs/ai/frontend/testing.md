@@ -147,9 +147,13 @@ pre-deployed.
 - **Auth fixture:** [`@dfinity/internet-identity-playwright`](https://github.com/dfinity/internet-identity-playwright)
   — drives the II passkey flow programmatically. Reused across tests in
   the same Playwright session for reproducibility.
-- **Backend:** Juno emulator started by `juno emulator start --headless`,
-  with `mode: test` mapped to satellite ID `jx5yt-yyaaa-aaaal-abzbq-cai`
-  in [`juno.config.ts`](../../../juno.config.ts).
+- **Backend:** Juno emulator started by `juno emulator start --headless`.
+  The Juno CLI's `--emulator` flag is only valid with `--mode development`,
+  so E2E reuses development mode but exports `JUNO_EMULATOR=true`, which
+  makes [`juno.config.ts`](../../../juno.config.ts) swap `ids.development`
+  to the emulator's predictable satellite ID
+  (`jx5yt-yyaaa-aaaal-abzbq-cai`). Without that env flag, the dev satellite
+  ID still points at the real remote dev satellite.
 - **Frontend:** the dev server (`npm run dev`) — booted automatically by
   Playwright's `webServer` config.
 
@@ -183,16 +187,24 @@ e2e/
 
 ```bash
 # Boot the Juno emulator (Docker image junobuild/satellite)
+export JUNO_EMULATOR=true
 juno emulator start
-juno login --emulator --mode test
-juno config apply --mode test
+juno login --emulator --mode development
+juno config apply --mode development
 
 # In another terminal — run all specs (installs browsers on first run)
-npm run e2e
+JUNO_EMULATOR=true npm run e2e
 
 # Open the HTML report after a CI-style run
 npm run e2e:report
 ```
+
+`JUNO_EMULATOR=true` is what flips `ids.development` in
+[`juno.config.ts`](../../../juno.config.ts) to the emulator satellite.
+Without it the CLI / dev server would aim at the real remote dev
+satellite — the E2E run would either fail loudly or, worse, write to
+the real satellite. The CI workflow sets the env at the job level so
+contributors don't have to think about it.
 
 The `webServer` block in `playwright.config.ts` boots `npm run dev` on
 :5173 automatically when you run `npm run e2e`.

@@ -60,6 +60,12 @@ jobs:
       github.event_name != 'pull_request' ||
       needs.check-e2e-changes.outputs.changed == 'true' ||
       contains(github.event.pull_request.labels.*.name, 'run-e2e')
+    env:
+      # Swap juno.config.ts `ids.development` to the emulator's predictable
+      # satellite ID (jx5yt-yyaaa-aaaal-abzbq-cai). Required because
+      # `juno login --emulator` is only valid with `--mode development`.
+      JUNO_EMULATOR: 'true'
+      CI: 'true'
 
     steps:
       - name: Checkout
@@ -81,15 +87,13 @@ jobs:
           set -e
           juno emulator start --headless &
           juno emulator wait
-          juno login --emulator --mode test --headless
-          juno config apply --mode test --headless
+          juno login --emulator --mode development --headless
+          juno config apply --mode development --headless
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
-        env:
-          CI: 'true'
         run: npm run e2e:ci
 
       - name: Upload Playwright report
