@@ -17,10 +17,18 @@ const PAGES = [
 ] as const;
 
 /**
- * Wait for the page chrome (h1 in the section header + the auth control
- * in the right of the navbar) before screenshotting. The section header
- * is rendered by `SectionHeader.svelte` which every top-level page
- * mounts, so a single locator works for all of them.
+ * Wait for the page chrome before screenshotting:
+ *
+ * 1. The routed container (`data-tid="app-main"`, set on the
+ *    `{#key page.url.pathname}` div in `(app)/+layout.svelte`) has
+ *    `in:fade={{ duration: 100, delay: 100 }}` on it. Playwright's
+ *    `toBeVisible()` does NOT consider opacity, so without an explicit
+ *    `toHaveCSS('opacity', '1')` the screenshot can be taken mid-fade
+ *    and the baseline ends up half-transparent.
+ * 2. The section header `<h1>` is rendered by every top-level page via
+ *    `SectionHeader.svelte`, so a single locator works for all of them.
+ * 3. The auth control in the navbar is the third anchor — it confirms
+ *    we landed in the expected auth state.
  */
 const waitForPage = async ({
 	page,
@@ -31,6 +39,8 @@ const waitForPage = async ({
 }) => {
 	const home = new HomePage(page);
 
+	await expect(home.appMain).toBeVisible();
+	await expect(home.appMain).toHaveCSS('opacity', '1');
 	await expect(page.locator('h1').first()).toBeVisible();
 
 	if (expectedLanding === 'logged-out') {

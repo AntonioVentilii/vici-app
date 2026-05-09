@@ -11,6 +11,7 @@
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import Banner from '$lib/components/ui/Banner.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
 
 	interface Props {
@@ -40,6 +41,7 @@
 					class={isFlowPage
 						? 'md:container md:mx-auto md:px-4 md:py-8'
 						: 'container mx-auto px-4 py-8'}
+					data-tid={TestId.AppMain}
 					in:fade={{ duration: 100, delay: 100 }}
 					out:fade={{ duration: 100 }}
 				>
