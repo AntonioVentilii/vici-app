@@ -14,10 +14,14 @@ import type {
 	VxpOnboardingDoc
 } from '$lib/types/vxp-onboarding';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
-import { isNullish, nonNullish, type Nullable } from '@dfinity/utils';
+import { isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { OnSetDocContext } from '@junobuild/functions';
-import { IcrcLedgerCanister, type IcrcLedgerDid } from '@junobuild/functions/canisters/ledger/icrc';
+import {
+	IcrcLedgerCanister,
+	type Account,
+	type TransferError
+} from '@junobuild/functions/canisters/ledger/icrc';
 import {
 	countDocsStore,
 	decodeDocData,
@@ -55,7 +59,7 @@ const amountForMilestone = (key: VxpNewUserMilestoneKey): bigint => {
 	}
 };
 
-const transferErrorText = (err: IcrcLedgerDid.TransferError): string => {
+const transferErrorText = (err: TransferError): string => {
 	if ('InsufficientFunds' in err) {
 		return `InsufficientFunds(balance=${err.InsufficientFunds.balance})`;
 	}
@@ -64,7 +68,7 @@ const transferErrorText = (err: IcrcLedgerDid.TransferError): string => {
 		return `BadFee(expected_fee=${err.BadFee.expected_fee})`;
 	}
 
-	return JSON.stringify(err);
+	return JSON.stringify(err, jsonReplacer);
 };
 
 const payoutMilestone = async ({
@@ -78,30 +82,27 @@ const payoutMilestone = async ({
 	amount: bigint;
 	memoLabel: string;
 }): Promise<{ ok: true; blockIndex: bigint } | { ok: false; error: string }> => {
-	const to: IcrcLedgerDid.Account = {
-		owner: toOwner,
-		subaccount: []
+	const to: Account = {
+		owner: toOwner
 	};
 
 	const memoBytes = new TextEncoder().encode(`vxp:new-user:${memoLabel}`);
 
-	const tryTransfer = (fee: Nullable<bigint>) =>
+	const tryTransfer = (fee?: bigint) =>
 		ledger.icrc1Transfer({
 			args: {
 				to,
 				amount,
 				fee,
-				memo: [memoBytes],
-				from_subaccount: [],
-				created_at_time: []
+				memo: memoBytes
 			}
 		});
 
-	const firstAttempt = await tryTransfer([]);
+	const firstAttempt = await tryTransfer();
 
 	const finalAttempt =
 		'Err' in firstAttempt && 'BadFee' in firstAttempt.Err
-			? await tryTransfer([firstAttempt.Err.BadFee.expected_fee])
+			? await tryTransfer(firstAttempt.Err.BadFee.expected_fee)
 			: firstAttempt;
 
 	if ('Ok' in finalAttempt) {
