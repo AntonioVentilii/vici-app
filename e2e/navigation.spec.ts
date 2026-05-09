@@ -22,13 +22,16 @@ const PAGES = [
  * 1. The routed container (`data-tid="app-main"`, set on the
  *    `{#key page.url.pathname}` div in `(app)/+layout.svelte`) has
  *    `in:fade={{ duration: 100, delay: 100 }}` on it. Playwright's
- *    `toBeVisible()` does NOT consider opacity, so without an explicit
- *    `toHaveCSS('opacity', '1')` the screenshot can be taken mid-fade
- *    and the baseline ends up half-transparent.
+ *    `toBeVisible()` propagates parent opacity — so until we wait for
+ *    `opacity: '1'`, every descendant (including the page's `<h1>`) is
+ *    considered hidden.
  * 2. The section header `<h1>` is rendered by every top-level page via
- *    `SectionHeader.svelte`, so a single locator works for all of them.
- * 3. The auth control in the navbar is the third anchor — it confirms
- *    we landed in the expected auth state.
+ *    `SectionHeader.svelte`. We scope the lookup to `appMain` because
+ *    `SignInModal.svelte` ALSO renders an `<h1>` inside its `<dialog>`,
+ *    which lives in the DOM even when the dialog is closed — a global
+ *    `page.locator('h1').first()` picks that hidden h1 first.
+ * 3. The auth control in the navbar confirms we landed in the expected
+ *    auth state.
  */
 const waitForPage = async ({
 	page,
@@ -41,7 +44,7 @@ const waitForPage = async ({
 
 	await expect(home.appMain).toBeVisible();
 	await expect(home.appMain).toHaveCSS('opacity', '1');
-	await expect(page.locator('h1').first()).toBeVisible();
+	await expect(home.appMain.locator('h1').first()).toBeVisible();
 
 	if (expectedLanding === 'logged-out') {
 		await expect(home.signInButton).toBeVisible();
