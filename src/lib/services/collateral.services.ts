@@ -25,7 +25,9 @@ const makeOperationId = ({ prefix, hint }: { prefix: string; hint?: bigint }): s
 	const uuid =
 		typeof crypto !== 'undefined' && 'randomUUID' in crypto
 			? crypto.randomUUID()
-			: `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+			: `${Date.now()}_${Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) =>
+					b.toString(16).padStart(2, '0')
+				).join('')}`;
 
 	return isNullish(hint) ? `${prefix}_${uuid}` : `${prefix}_${hint.toString()}_${uuid}`;
 };
