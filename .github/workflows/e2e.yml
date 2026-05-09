@@ -93,6 +93,17 @@ jobs:
           juno login --emulator --mode development --headless
           juno config apply --mode development --headless
 
+      - name: Build & upgrade satellite functions
+        # The bare junobuild/satellite image doesn't ship our app-specific
+        # typed queries / hooks (defined in src/satellite/index.ts and
+        # surfaced via $declarations/satellite/satellite.api). Without
+        # this step, calls like `functions.getProfile()` 4xx on the
+        # emulator and the auth flow rolls back to signed-out.
+        run: |
+          set -e
+          npm run juno:functions:build
+          juno functions upgrade -m development --no-snapshot
+
       - name: Install Playwright browsers
         run: npx playwright install --with-deps chromium
 
