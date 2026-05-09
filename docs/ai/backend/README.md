@@ -81,8 +81,7 @@ the icdc-core PR / commit.
 
 If at some future point this repo grows its own Rust crate (e.g. a
 Vici-specific oracle, or a custom canister that doesn't fit
-icdc-core), this page will expand to mirror
-`../icdc-core/.agents/` and the oisy-wallet `docs/ai/backend/` shape:
+icdc-core), this page will expand to mirror `../icdc-core/.agents/`:
 
 - `structure.md` — crate layout, module conventions.
 - `patterns.md` — Rust patterns (handler split, error types, …).

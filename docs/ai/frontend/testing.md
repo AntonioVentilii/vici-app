@@ -28,7 +28,7 @@
 
 ## When the first Vitest spec lands
 
-The expected setup mirrors the sister repos (oisy-wallet, control-panel):
+The expected setup:
 
 - **Stack:** Vitest + `@testing-library/svelte` + `jsdom`.
 - **Where tests live:** mirror `src/` under `src/tests/`. Never put a
@@ -115,10 +115,8 @@ needs a test runner:
    matching `tsconfig.spec.json`.
 2. Wire `npm run test`, `npm run test:watch`, and (optionally)
    `npm run test:coverage` in `package.json`.
-3. Mirror the convention from sister repos
-   ([oisy-wallet](https://github.com/dfinity/oisy-wallet) /
-   [control-panel](https://github.com/dfinity/control-panel)) — same
-   folder layout (`src/tests/`), same suffixes (`*.spec.ts`).
+3. Use the folder layout (`src/tests/` mirroring `src/`) and the
+   `*.spec.ts` suffix as anchored above.
 4. Add a `test` job to `.github/workflows/checks.yml` and update
    [`pr-and-ci.md`](../pr-and-ci.md) accordingly.
 5. **Update this page** in the same PR to flip "bootstrap" → the actual
