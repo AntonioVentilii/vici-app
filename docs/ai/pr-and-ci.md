@@ -77,20 +77,14 @@ Honor [`.github/pull_request_template.md`](../../.github/pull_request_template.m
 
 Rules:
 
-- **All three sections are required.** Don't leave them empty. Even tiny
-  PRs benefit from one bullet per section.
-- **Atomicity statement** if the PR touches more than one logical thing —
-  add a one-liner explaining why they belong together. If you can't, split.
-- **Mention `docs/ai/` updates** under `# Changes` whenever the
-  [meta-update rule](./governance.md#meta-update-rule) fired.
-- **Screenshots are welcome** for visual changes — link them; don't paste
-  giant base64 in the body.
-- **For interface-breaking changes** (satellite `.did`, `juno.config.ts`
-  collections), include a `BREAKING CHANGE:` block in `# Changes` listing
-  what callers / data has to do to migrate.
-- **For changes that depend on `../icdc-core/`** (e.g. you regenerated
-  Candid bindings against a new icdc-core version), call out the upstream
-  PR / commit in `# Motivation` so reviewers can sequence the deploy.
+- **All three sections are required.** Don't leave them empty. Even tiny PRs benefit from one bullet per section.
+- **Use the exact section headings** (`# Motivation`, `# Changes`, `# Tests`) so downstream tooling (release notes, search, changelog grep) can find them.
+- **Do not hard-wrap lines.** Write one line per paragraph or list item and let the GitHub renderer wrap. Hard-wrapping at ~80 columns (a default many models fall back to) breaks rendering inside lists, blockquotes, and tables, and makes later edits in the GitHub UI ugly. This applies to the PR body only — source files still follow `.prettierrc`.
+- **Atomicity statement** if the PR touches more than one logical thing — add a one-liner explaining why they belong together. If you can't, split.
+- **Mention `docs/ai/` updates** under `# Changes` whenever the [meta-update rule](./governance.md#meta-update-rule) fired.
+- **Screenshots are welcome** for visual changes — link them; don't paste giant base64 in the body.
+- **For interface-breaking changes** (satellite `.did`, `juno.config.ts` collections), include a `BREAKING CHANGE:` block in `# Changes` listing what callers / data has to do to migrate.
+- **For changes that depend on `../icdc-core/`** (e.g. you regenerated Candid bindings against a new icdc-core version), call out the upstream PR / commit in `# Motivation` so reviewers can sequence the deploy.
 
 ## 3. Atomicity
 
