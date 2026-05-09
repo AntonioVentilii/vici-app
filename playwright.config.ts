@@ -38,8 +38,6 @@ export default defineConfig({
 		stdout: 'pipe',
 		stderr: 'pipe',
 		env: {
-			// Unlock the real II sign-in button in dev (see app.env.ts → isE2E).
-			VITE_E2E: 'true',
 			// Point juno.config.ts at the emulator satellite (see juno.config.ts).
 			JUNO_EMULATOR: 'true'
 		}

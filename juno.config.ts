@@ -124,15 +124,6 @@ export default defineConfig(({ mode }) => ({
 		runner: {
 			type: 'docker'
 		},
-		// Opt the satellite emulator into Internet Identity so the E2E auth
-		// flow can drive a real II popup (otherwise the `junobuild/satellite`
-		// image only ships the satellite + ledger, and `signIn({
-		// internet_identity })` has nothing to talk to).
-		network: {
-			services: {
-				internet_identity: true
-			}
-		},
 		satellite: {}
 	}
 }));

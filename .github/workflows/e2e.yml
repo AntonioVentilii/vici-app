@@ -65,9 +65,6 @@ jobs:
       # satellite ID (jx5yt-yyaaa-aaaal-abzbq-cai). Required because
       # `juno login --emulator` is only valid with `--mode development`.
       JUNO_EMULATOR: 'true'
-      # Unlock the real Internet Identity sign-in button in dev (it is
-      # gated to prod by default). See src/lib/env/app.env.ts → isE2E().
-      VITE_E2E: 'true'
       CI: 'true'
 
     steps:

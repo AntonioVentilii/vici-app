@@ -2,6 +2,7 @@
 	import { signIn } from '@junobuild/core';
 	import IconRobot from '$lib/components/icons/IconRobot.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props {
@@ -28,7 +29,7 @@
 	};
 </script>
 
-<Button onclick={signInWithDev} {status}>
+<Button data-tid={TestId.SignInDev} onclick={signInWithDev} {status}>
 	<IconRobot size="20px" />
 	Sign in for Dev
 </Button>

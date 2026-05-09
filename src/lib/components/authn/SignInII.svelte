@@ -3,7 +3,6 @@
 	import IconIc from '$lib/components/icons/IconIC.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { II_MAX_TIME_TO_LIVE_NS } from '$lib/constants/app.constants';
-	import { TestId } from '$lib/constants/test-ids.constants';
 	import type { ButtonStatus } from '$lib/types/components';
 
 	interface Props {
@@ -34,7 +33,7 @@
 	};
 </script>
 
-<Button data-tid={TestId.SignInII} onclick={signInWithII} {status}>
+<Button onclick={signInWithII} {status}>
 	<IconIc size="20px" />
 	<span>Sign in with Internet Identity</span>
 </Button>

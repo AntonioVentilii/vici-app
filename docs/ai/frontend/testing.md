@@ -144,9 +144,16 @@ pre-deployed.
 ### Stack
 
 - **Runner:** `@playwright/test`.
-- **Auth fixture:** [`@dfinity/internet-identity-playwright`](https://github.com/dfinity/internet-identity-playwright)
-  — drives the II passkey flow programmatically. Reused across tests in
-  the same Playwright session for reproducibility.
+- **Auth:** the dev-only mock identity exposed by `@junobuild/core`'s
+  `signIn({ dev: {} })`, surfaced through the `SignInDev` button in
+  [`SignInActions.svelte`](../../../src/lib/components/authn/SignInActions.svelte)
+  (only rendered when `isDev()`). This is the path Juno's official E2E
+  guide recommends and what `@junobuild/emulator-playwright` uses under
+  the hood. It exercises the real `onAuthStateChange` pipeline — same
+  store, same `UserDropdown`, same sign-out button — without depending
+  on the Internet Identity popup, which is brittle in a containerized
+  emulator (the II canister version drifts vs. driver libraries). A
+  follow-up PR can add real II coverage on top of this base if needed.
 - **Backend:** Juno emulator started by `juno emulator start --headless`.
   The Juno CLI's `--emulator` flag is only valid with `--mode development`,
   so E2E reuses development mode but exports `JUNO_EMULATOR=true`, which
@@ -161,11 +168,10 @@ pre-deployed.
 
 ```text
 e2e/
-├── config.ts             # II URL / canister / timeouts (env-overridable)
 ├── pages/                # Page-Object Model classes
 │   └── home.page.ts
 ├── homepage.spec.ts      # logged-out smoke test
-└── auth.spec.ts          # logged-in II flow (sign in + sign out)
+└── auth.spec.ts          # dev sign-in / sign-out flow
 ```
 
 - **One spec per high-level user-facing flow.** Don't co-locate specs with
@@ -234,14 +240,14 @@ The workflow uses three patterns worth knowing:
 
 ### Forbidden in E2E
 
-- `test.skip` / `testWithII.skip` left on `main`. Either remove the test
-  or make it pass.
+- `test.skip` left on `main`. Either remove the test or make it pass.
 - Hard-coded waits (`page.waitForTimeout(...)`). Use `expect(locator).toBeVisible()`
   / `toHaveText()` with the configured `actionTimeout` instead.
 - Real network calls outside the emulator. The whole point of the
   emulator is reproducibility.
 - Logging in by stuffing identities into `localStorage` / `IndexedDB`.
-  Use the `iiPage` fixture; that's what it's for.
+  Use the `SignInDev` button via the `HomePage` page object instead —
+  that's the same path the dev runtime uses.
 
 ### Adding a new E2E test
 
@@ -250,7 +256,8 @@ The workflow uses three patterns worth knowing:
 2. Add `data-tid={TestId.X}` on the smallest meaningful element.
 3. Extend the relevant page object (`e2e/pages/*.page.ts`) — never
    reach into selectors from the spec directly.
-4. Write the spec under `e2e/<flow>.spec.ts`. Use `testWithII` from
-   `@dfinity/internet-identity-playwright` for any flow that needs to
-   be signed in.
+4. Write the spec under `e2e/<flow>.spec.ts`. For flows that need a
+   signed-in user, drive `HomePage.openSignInModal()` followed by
+   `HomePage.signInDevButton.click()` (or wrap that in a page-object
+   helper if it gets repetitive).
 5. Run `npm run e2e` locally before pushing.

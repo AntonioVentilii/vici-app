@@ -11,7 +11,7 @@
  */
 export enum TestId {
 	SignInButton = 'sign-in-button',
-	SignInII = 'sign-in-ii',
+	SignInDev = 'sign-in-dev',
 	UserMenu = 'user-menu',
 	Logout = 'logout',
 	MarketFeed = 'market-feed'

@@ -1,19 +1,16 @@
-import { testWithII } from '@dfinity/internet-identity-playwright';
-import { expect } from '@playwright/test';
-import { TestId } from '../src/lib/constants/test-ids.constants';
-import { E2E_CONFIG } from './config';
+import { expect, test } from '@playwright/test';
 import { HomePage } from './pages/home.page';
 
-testWithII.describe('authentication (Internet Identity)', () => {
-	testWithII.beforeEach(async ({ iiPage }) => {
-		await iiPage.waitReady({
-			url: E2E_CONFIG.iiUrl,
-			canisterId: E2E_CONFIG.iiCanisterId,
-			timeout: E2E_CONFIG.iiReadyTimeoutMs
-		});
-	});
-
-	testWithII('signs in with a fresh passkey and signs out again', async ({ page, iiPage }) => {
+/**
+ * Sign-in flow against the Juno emulator using the dev-only mock identity
+ * (`signIn({ dev: {} })`) — the same path Juno's official E2E guide
+ * recommends and that `@junobuild/emulator-playwright` uses under the
+ * hood. Real Internet Identity flows can be added in a follow-up; the
+ * `SignInDev` button exercises the same `onAuthStateChange` pipeline,
+ * which is what makes a sign-in / sign-out test useful.
+ */
+test.describe('authentication (dev sign-in)', () => {
+	test('signs in via the dev mock identity and signs back out', async ({ page }) => {
 		const home = new HomePage(page);
 
 		await home.goto();
@@ -21,10 +18,7 @@ testWithII.describe('authentication (Internet Identity)', () => {
 		await expect(home.signInButton).toBeVisible();
 
 		await home.openSignInModal();
-
-		await iiPage.signIn({
-			passkey: { selector: `[data-tid="${TestId.SignInII}"]` }
-		});
+		await home.signInDevButton.click();
 
 		await expect(home.userMenu).toBeVisible();
 		await expect(home.signInButton).not.toBeVisible();
