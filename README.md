@@ -35,14 +35,34 @@ operational runbooks.
 - **Blockchain**: [Internet Computer (IC)](https://internetcomputer.org/).
 - **Authentication**: [Internet Identity](https://identity.ic0.app/).
 
-## 📖 Project Guidelines & Rules
+## 📖 Project Guidelines & AI Agent Docs
 
-This project follows strict development patterns and terminology. See the following files for details:
+This project follows strict development patterns and terminology. AI agents
+(Claude Code, Cursor, Copilot, Codex, …) and humans should start at the
+canonical entry point:
 
-- **[CLAUDE.md](./CLAUDE.md)**: Project memory, essential commands, and core patterns.
-- **[.claude/rules/](./.claude/rules/)**: Detailed documentation for Svelte 5, coding standards, Juno, and backend logic.
-- **Terminology**: Always use **"prediction"** instead of "bet".
-- **Naming Conventions**: Suffix time-based variables with `_ms` (milliseconds) or `_ns` (nanoseconds).
+- **[AGENTS.md](./AGENTS.md)** — universal entry for every AI agent.
+- **[CLAUDE.md](./CLAUDE.md)** — Claude-specific runtime layer (defers to
+  AGENTS.md).
+- **[docs/ai/](./docs/ai/)** — long-form documentation:
+  - [`docs/ai/governance.md`](./docs/ai/governance.md) — truth hierarchy,
+    boundaries, capabilities, meta-update rule.
+  - [`docs/ai/pr-and-ci.md`](./docs/ai/pr-and-ci.md) — PR conventions, CI
+    gates, local quality gates.
+  - [`docs/ai/frontend/`](./docs/ai/frontend/) — SvelteKit + Svelte 5 +
+    Tailwind v4 conventions, structure, reusability catalog, a11y, testing.
+  - [`docs/ai/satellite/`](./docs/ai/satellite/) — Juno satellite (TS hooks,
+    asserts, typed query / update endpoints) conventions and workflows.
+  - [`docs/ai/backend/`](./docs/ai/backend/) — pointer to
+    [`../icdc-core/`](https://github.com/AntonioVentilii/icdc-core), where
+    the on-chain Rust risk engine lives.
+- **[.agents/workflows/](./.agents/workflows/)** — operational runbooks
+  (deployment, engine reset, engine ops).
+- **[.claude/rules/](./.claude/rules/)** — Claude-only quick-reference
+  cards that defer to `docs/ai/`.
+- **Terminology:** always use **"prediction"** instead of "bet".
+- **Naming conventions:** suffix time-based variables with `_ms`
+  (milliseconds) or `_ns` (nanoseconds).
 
 ## 📦 Project Structure
 

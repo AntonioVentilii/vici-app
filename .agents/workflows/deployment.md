@@ -49,3 +49,5 @@ See also:
 - [icdc-engine-reset.md](./icdc-engine-reset.md) — fresh registry reset on local or staging.
 - [icdc-engine-operations.md](./icdc-engine-operations.md) — grant/revoke/audit role grants.
 - [../../docs/engine-integration.md](../../docs/engine-integration.md) — architecture.
+- [../../docs/ai/satellite/workflows/engine-sync.md](../../docs/ai/satellite/workflows/engine-sync.md) — satellite-side engine syncing.
+- [../../docs/ai/README.md](../../docs/ai/README.md) — AI agent docs index.
