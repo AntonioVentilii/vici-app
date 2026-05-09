@@ -112,20 +112,11 @@ jobs:
 
       - name: Deploy icdc-core canisters
         # Mirrors the local `npm run deploy` flow: dfx pulls the icdc-core
-        # WASMs from the AntonioVentilii/icdc-core GitHub releases (see
-        # scripts/build/download.icdc.*.sh) and installs them into the
-        # PocketIC instance the emulator is already running. After this,
-        # the registry / clearing / vUSD / VXP / vici / cketh / ckusdc
-        # canisters all live at their `specified_id` from dfx.json.
-        #
-        # `GH_TOKEN` is needed for the vxp_minter / vici_minter downloads
-        # because vici-points and vici-icrc are PRIVATE repos. Add a fine-
-        # grained PAT with `Contents: read` on both repos to this repo's
-        # secrets as `GH_RELEASES_TOKEN`. The build scripts also fall back
-        # to a sibling cargo build if the repos are checked out next to
-        # vici-app, which is what local dev uses.
-        env:
-          GH_TOKEN: ${{ secrets.GH_RELEASES_TOKEN }}
+        # WASMs from the AntonioVentilii/icdc-core / vici-points / vici-icrc
+        # GitHub releases (see scripts/build/download.*.sh) and installs
+        # them into the PocketIC instance the emulator is already running.
+        # After this, the registry / clearing / vUSD / VXP / vici / cketh /
+        # ckusdc canisters all live at their `specified_id` from dfx.json.
         run: npm run deploy
 
       - name: Initialize icdc-core (clearing + engine + registry)

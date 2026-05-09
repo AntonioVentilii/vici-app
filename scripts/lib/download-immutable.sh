@@ -38,23 +38,13 @@ URL="$1"
 DOWNLOAD_DESTINATION="$2"
 URL_HASH="$(echo "$URL" | sha256sum | awk '{print substr($1,1,10)}')"
 REAL_DOWNLOAD_DESTINATION="$DOWNLOAD_DESTINATION.$URL_HASH"
-
-# If `GH_TOKEN` (or `GITHUB_TOKEN`) is set, send it as a bearer token so this
-# script can fetch assets from PRIVATE GitHub releases (vici-points,
-# vici-icrc, …). For public releases (icdc-core) the header is harmless.
-CURL_AUTH=()
-TOKEN="${GH_TOKEN:-${GITHUB_TOKEN:-}}"
-if [[ -n "$TOKEN" ]]; then
-  CURL_AUTH=(-H "Authorization: Bearer $TOKEN")
-fi
-
 if test -e "$REAL_DOWNLOAD_DESTINATION"; then
   echo "Download already exists for: '$DOWNLOAD_DESTINATION'  Skipping..."
 else
   echo "Downloading ${URL} --> ${DOWNLOAD_DESTINATION}"
   mkdir -p "$(dirname "$DOWNLOAD_DESTINATION")"
   TMP_DOWNLOAD_DESTINATION="$(mktemp "$REAL_DOWNLOAD_DESTINATION.XXXXX")"
-  curl --fail -sSL "${CURL_AUTH[@]}" "$URL" >"$TMP_DOWNLOAD_DESTINATION"
+  curl --fail -sSL "$URL" >"$TMP_DOWNLOAD_DESTINATION"
   mv "$TMP_DOWNLOAD_DESTINATION" "$REAL_DOWNLOAD_DESTINATION"
 fi
 

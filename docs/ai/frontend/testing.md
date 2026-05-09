@@ -245,7 +245,9 @@ const stalled = new Promise<void>((resolve) => {
 	releaseStall = resolve;
 });
 
-await page.route('**/api/v3/canister/g5pxl-pyaaa-aaaaj-qqhoq-cai/**', async (route) => {
+// Match every API version: the SDK uses v3 for `query` / `read_state` and
+// v4 for `call`. A v3-only glob lets v4 update calls leak past the stall.
+await page.route('**/api/*/canister/g5pxl-pyaaa-aaaaj-qqhoq-cai/**', async (route) => {
 	await stalled;
 	await route.abort();
 });
