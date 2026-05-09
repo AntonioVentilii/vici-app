@@ -237,18 +237,32 @@ await expect(page).toHaveScreenshot('logged-in.png', {
 To capture a transient state deterministically — e.g. the markets-feed
 **skeletons**, which would otherwise be replaced by real data within
 ~100ms once the registry responds — stall the upstream request inside
-`page.route()`:
+`page.route()` and release it explicitly once the screenshot is taken:
 
 ```ts
-await page.route('**/api/v3/canister/g5pxl-pyaaa-aaaaj-qqhoq-cai/**', async () => {
-	// never resolve — Playwright tears the request down at end of test
-	await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+let releaseStall!: () => void;
+const stalled = new Promise<void>((resolve) => {
+	releaseStall = resolve;
 });
+
+await page.route('**/api/v3/canister/g5pxl-pyaaa-aaaaj-qqhoq-cai/**', async (route) => {
+	await stalled;
+	await route.abort();
+});
+
+try {
+	await home.goto();
+	await expect(home.marketCardSkeleton.first()).toBeVisible();
+	await expect(page).toHaveScreenshot('homepage-loading.png', { fullPage: true });
+} finally {
+	releaseStall();
+}
 ```
 
-The pending request keeps the feed in its loading state, the screenshot
-gets a clean skeleton render, and Playwright cleans the pending route
-up when the test finishes — no orphan promise.
+The pending promise keeps the feed in its loading state long enough for
+Playwright to render skeletons and snapshot, then the `finally` releases
+every blocked route handler so they `route.abort()` and unwind. No
+long-lived timers, no orphan promises.
 
 CI runs on `ubuntu-24.04` only, so committed snapshots use the Linux
 suffix Playwright auto-appends. Snapshots generated locally on macOS /

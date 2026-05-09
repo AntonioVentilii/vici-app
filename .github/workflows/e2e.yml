@@ -70,11 +70,15 @@ jobs:
         # already points at 127.0.0.1:5987, which is exactly the port the
         # Juno emulator's PocketIC listens on, so `dfx deploy --network local`
         # works against the running emulator without extra plumbing.
+        #
+        # `pipefail` is needed so a failed `curl` doesn't get masked by a
+        # successful `sh` exit — otherwise the step "succeeds" with no dfx
+        # installed and the next step fails with a confusing PATH error.
         env:
           DFX_VERSION: '0.26.1'
           DFXVM_INIT_YES: 'true'
         run: |
-          set -e
+          set -euo pipefail
           curl -fsSL https://internetcomputer.org/install.sh | sh
           echo "$HOME/.local/share/dfx/bin" >> "$GITHUB_PATH"
 
@@ -83,13 +87,13 @@ jobs:
         # `--storage-mode plaintext` skips the keyring prompt that would
         # otherwise hang in CI; the identity is ephemeral to this runner.
         run: |
-          set -e
+          set -euo pipefail
           dfx identity new --storage-mode plaintext --force ci-runner
           dfx identity use ci-runner
 
       - name: Start Juno emulator
         run: |
-          set -e
+          set -euo pipefail
           juno emulator start --headless &
           juno emulator wait
           juno login --emulator --mode development --headless
@@ -102,7 +106,7 @@ jobs:
         # this step, calls like `functions.getProfile()` 4xx on the
         # emulator and the auth flow rolls back to signed-out.
         run: |
-          set -e
+          set -euo pipefail
           npm run juno:functions:build
           juno functions upgrade -m development --no-snapshot
 
@@ -136,7 +140,7 @@ jobs:
         # (we sign in via the dev mock identity each run, so there's no
         # stable principal to pre-grant), and we skip it intentionally.
         run: |
-          set -e
+          set -euo pipefail
           npm run init:clearing
           npm run init:icdc-engine
           npm run init:registry

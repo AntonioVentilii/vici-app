@@ -8,20 +8,31 @@ test.describe('homepage (logged out)', () => {
 		const home = new HomePage(page);
 
 		// Stall every Registry query so the feed stays in its skeleton state long
-		// enough for a deterministic screenshot. We never call route.continue —
-		// Playwright tears the request down at the end of the test, which is fine
-		// because we only care about the rendered DOM, not the round-trip.
-		await page.route(REGISTRY_QUERY_GLOB, async () => {
-			await new Promise((resolve) => setTimeout(resolve, 5 * 60 * 1000));
+		// enough for a deterministic screenshot. We hold the route handler on a
+		// deferred promise we explicitly release in `finally` — this avoids a
+		// long-lived `setTimeout` that could outlive the test and keep the
+		// Playwright worker process alive.
+		let releaseStall!: () => void;
+		const stalled = new Promise<void>((resolve) => {
+			releaseStall = resolve;
 		});
 
-		await home.goto();
+		await page.route(REGISTRY_QUERY_GLOB, async (route) => {
+			await stalled;
+			await route.abort();
+		});
 
-		await expect(home.marketFeed).toBeVisible();
-		await expect(home.marketCardSkeleton.first()).toBeVisible();
-		await expect(home.signInButton).toBeVisible();
+		try {
+			await home.goto();
 
-		await expect(page).toHaveScreenshot('homepage-loading.png', { fullPage: true });
+			await expect(home.marketFeed).toBeVisible();
+			await expect(home.marketCardSkeleton.first()).toBeVisible();
+			await expect(home.signInButton).toBeVisible();
+
+			await expect(page).toHaveScreenshot('homepage-loading.png', { fullPage: true });
+		} finally {
+			releaseStall();
+		}
 	});
 
 	test('renders the markets feed once data is loaded', async ({ page }) => {

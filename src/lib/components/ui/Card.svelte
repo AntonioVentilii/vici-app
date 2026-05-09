@@ -50,12 +50,13 @@
 		class="{commonClasses} {variants[variant]} {paddings[padding]} {className}"
 		{onclick}
 		{onkeydown}
+		{role}
 		{...rest}
 	>
 		{@render children()}
 	</BaseButton>
 {:else}
-	<div class="{commonClasses} {variants[variant]} {paddings[padding]} {className}" {...rest}>
+	<div class="{commonClasses} {variants[variant]} {paddings[padding]} {className}" {role} {...rest}>
 		{@render children()}
 	</div>
 {/if}
