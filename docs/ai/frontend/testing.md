@@ -270,25 +270,17 @@ The `webServer` block in `playwright.config.ts` boots `npm run dev` on
 ### CI
 
 The [`.github/workflows/e2e.yml`](../../../.github/workflows/e2e.yml)
-workflow auto-runs on every push to `main`, every relevant pull request,
-every `merge_group`, on a nightly schedule, and on `workflow_dispatch`.
-It installs the Juno CLI, starts the emulator headlessly, `apply`s the
-`test` config, then runs `npm run e2e:ci`. The HTML report is uploaded
-as the `playwright-report` artifact (always); raw results ship as
+workflow runs on **every** push to `main`, every pull request, every
+`merge_group`, on a nightly schedule, and on `workflow_dispatch` — no
+paths-filter / label gate. The Juno emulator is cheap enough relative
+to the value of catching a regression. Concurrency is grouped on the
+ref so pushing a new commit to a PR cancels the in-flight run.
+
+The job installs the Juno CLI, starts the emulator headlessly, applies
+the development-mode config, builds + upgrades the satellite functions
+WASM, then runs `npm run e2e:ci`. The HTML report is uploaded as the
+`playwright-report` artifact (always); raw results ship as
 `test-results` only on failure.
-
-The workflow uses three patterns worth knowing:
-
-- **Smart skip via `paths-filter`.** On pull requests, the `e2e` job
-  only runs when E2E-relevant files changed (`e2e/**`, `src/**`,
-  `static/**`, the Playwright / Juno / Svelte / Vite configs, lockfile,
-  `.node-version`, the workflow itself, or the `prepare` action). Doc-only
-  PRs skip E2E entirely; the aggregator (`e2e-pass`) treats that skip as
-  a pass.
-- **Force-run label.** Add the `run-e2e` label to a PR to force the
-  `e2e` job even if `paths-filter` would have skipped it.
-- **Concurrency cancellation.** Pushing a new commit to a PR cancels any
-  in-flight E2E run for the same ref.
 
 ### Forbidden in E2E
 

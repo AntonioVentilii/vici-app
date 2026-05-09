@@ -5,7 +5,6 @@ on:
     branches:
       - main
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
   merge_group:
   schedule:
     - cron: '30 3 * * *'
@@ -18,50 +17,13 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  check-e2e-changes:
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-    outputs:
-      changed: ${{ steps.change.outputs.relevant }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Detect E2E-relevant changes
-        id: change
-        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4.0.1
-        with:
-          filters: |
-            relevant:
-              - 'e2e/**'
-              - 'src/**'
-              - 'static/**'
-              - 'playwright.config.ts'
-              - 'juno.config.ts'
-              - 'svelte.config.js'
-              - 'vite.config.ts'
-              - 'tsconfig.json'
-              - 'package.json'
-              - 'package-lock.json'
-              - '.node-version'
-              - '.github/workflows/e2e.yml'
-              - '.github/actions/prepare/**'
-
   e2e:
-    needs: [check-e2e-changes]
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
       # Needed so the snapshot-update step can push a commit back to the
       # PR branch when Playwright generates / updates baselines.
       contents: write
-    if: >-
-      github.event_name != 'pull_request' ||
-      needs.check-e2e-changes.outputs.changed == 'true' ||
-      contains(github.event.pull_request.labels.*.name, 'run-e2e')
     env:
       # Swap juno.config.ts `ids.development` to the emulator's predictable
       # satellite ID (jx5yt-yyaaa-aaaal-abzbq-cai). Required because
@@ -179,21 +141,14 @@ jobs:
 
   e2e-pass:
     if: always()
-    needs: [check-e2e-changes, e2e]
+    needs: [e2e]
     runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - name: Cleared for merging
-        env:
-          E2E_RESULT: ${{ needs.e2e.result }}
-          CHANGED: ${{ needs.check-e2e-changes.outputs.changed }}
-        run: |
-          if [[ "$E2E_RESULT" == "success" ]]; then
-            echo "E2E passed."
-          elif [[ "$E2E_RESULT" == "skipped" && "$CHANGED" == "false" ]]; then
-            echo "E2E skipped — no E2E-relevant changes detected."
-          else
-            echo "E2E did not pass (result=$E2E_RESULT, changed=$CHANGED)."
-            exit 1
-          fi
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/needs_success
+        with:
+          needs: '${{ toJson(needs) }}'
