@@ -21,9 +21,7 @@ if [[ -d "$ICRC_LOCAL" ]]; then
 	cp "$ICRC_ROOT/src/minter/minter.did" "$OUT_DIR/vici_minter.did"
 else
 	# CI / fresh dev box: pull the prebuilt artifact from the vici-icrc
-	# release. Mirrors what build.icdc.*.sh does for the public icdc-core
-	# repo. Note: vici-icrc is private, so the download script honors
-	# `GH_TOKEN` to authenticate.
+	# release. Mirrors what build.icdc.*.sh does for icdc-core.
 	"$BUILD_SCRIPTS_DIR/download.vici_icrc.minter.sh"
 fi
 
