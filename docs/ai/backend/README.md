@@ -1,9 +1,11 @@
 # Backend AI Guide (pointer)
 
 > **The Rust risk engine does not live in this repo.** The on-chain
-> Clearing + Registry canisters that Vici depends on live in
-> [`../icdc-core/`](../../../../icdc-core/). When in doubt, open that
-> repo and obey **its** [`AGENTS.md`](../../../../icdc-core/AGENTS.md).
+> Clearing + Registry canisters that Vici depends on live in the
+> [`icdc-core`](https://github.com/AntonioVentilii/icdc-core) repo
+> (typically checked out at [`../icdc-core/`](../../../../icdc-core/)).
+> When in doubt, open that repo and obey **its**
+> [`AGENTS.md`](../../../../icdc-core/AGENTS.md).
 
 This page exists so agents have a default rule and a clear place to
 land when they are about to "edit the backend".

@@ -194,7 +194,8 @@ not assign reviewers — the file does it.
 
 ## 9. Cross-repo changes (icdc-core)
 
-If your change requires changes in `../icdc-core/`:
+If your change requires changes in [`icdc-core`](https://github.com/AntonioVentilii/icdc-core)
+(typically checked out at `../icdc-core/`):
 
 1. Land the icdc-core PR first (or simultaneously, with the icdc-core PR
    merging into a tagged version).
