@@ -17,17 +17,15 @@ import { getIcrcAccount } from '$lib/utils/transactions.utils';
 import { isNullish, nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { getIdentityOnce } from '@junobuild/core';
+import { nanoid } from 'nanoid';
 
 const makeOperationId = ({ prefix, hint }: { prefix: string; hint?: bigint }): string => {
 	// Idempotency keys are user-provided strings on the clearing canister side.
-	// Using `Date.now()` alone can collide under rapid retries/double-clicks (same ms),
-	// which may lead to surprising "amount mismatch" UX.
-	const uuid =
-		typeof crypto !== 'undefined' && 'randomUUID' in crypto
-			? crypto.randomUUID()
-			: `${Date.now()}_${Math.random().toString(16).slice(2)}`;
+	// `nanoid` is cryptographically secure by default and avoids the
+	// `Date.now()` collision risk under rapid retries/double-clicks.
+	const id = nanoid();
 
-	return isNullish(hint) ? `${prefix}_${uuid}` : `${prefix}_${hint.toString()}_${uuid}`;
+	return isNullish(hint) ? `${prefix}_${id}` : `${prefix}_${hint.toString()}_${id}`;
 };
 
 /**
