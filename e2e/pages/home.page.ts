@@ -10,6 +10,9 @@ import { TestId } from '../../src/lib/constants/test-ids.constants';
 export class HomePage {
 	readonly page: Page;
 	readonly marketFeed: Locator;
+	readonly marketCard: Locator;
+	readonly marketCardSkeleton: Locator;
+	readonly marketTimeRemaining: Locator;
 	readonly signInButton: Locator;
 	readonly signInDevButton: Locator;
 	readonly userMenu: Locator;
@@ -18,6 +21,9 @@ export class HomePage {
 	constructor(page: Page) {
 		this.page = page;
 		this.marketFeed = page.getByTestId(TestId.MarketFeed);
+		this.marketCard = page.getByTestId(TestId.MarketCard);
+		this.marketCardSkeleton = page.getByTestId(TestId.MarketCardSkeleton);
+		this.marketTimeRemaining = page.getByTestId(TestId.MarketTimeRemaining);
 		this.signInButton = page.getByTestId(TestId.SignInButton);
 		this.signInDevButton = page.getByTestId(TestId.SignInDev);
 		this.userMenu = page.getByTestId(TestId.UserMenu);

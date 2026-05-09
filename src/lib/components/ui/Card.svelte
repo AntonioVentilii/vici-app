@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
 	import type { Snippet } from 'svelte';
+	import type { HTMLAttributes } from 'svelte/elements';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import type { CardPadding } from '$lib/types/components';
 
-	interface Props {
+	interface Props extends Omit<HTMLAttributes<HTMLElement>, 'class' | 'role'> {
 		children: Snippet;
 		variant?: 'default' | 'glass' | 'outline';
 		padding?: CardPadding;
@@ -21,7 +22,8 @@
 		onclick,
 		onkeydown,
 		role,
-		class: className
+		class: className,
+		...rest
 	}: Props = $props();
 
 	const commonClasses =
@@ -48,11 +50,13 @@
 		class="{commonClasses} {variants[variant]} {paddings[padding]} {className}"
 		{onclick}
 		{onkeydown}
+		{role}
+		{...rest}
 	>
 		{@render children()}
 	</BaseButton>
 {:else}
-	<div class="{commonClasses} {variants[variant]} {paddings[padding]} {className}">
+	<div class="{commonClasses} {variants[variant]} {paddings[padding]} {className}" {role} {...rest}>
 		{@render children()}
 	</div>
 {/if}

@@ -161,6 +161,18 @@ pre-deployed.
   to the emulator's predictable satellite ID
   (`jx5yt-yyaaa-aaaal-abzbq-cai`). Without that env flag, the dev satellite
   ID still points at the real remote dev satellite.
+- **icdc-core canisters:** deployed by **`dfx`** into the same PocketIC
+  instance the Juno emulator is running. The local `network` in
+  [`dfx.json`](../../../dfx.json) already points at `127.0.0.1:5987` — the
+  same port Juno's emulator listens on — so `dfx deploy --network local`
+  works against the running emulator without extra plumbing. WASMs are
+  pulled from the
+  [`AntonioVentilii/icdc-core`](https://github.com/AntonioVentilii/icdc-core)
+  GitHub releases (no Rust toolchain in CI). After deploy, CI runs
+  `init.clearing`, `init.icdc-engine`, and `init.registry` — the same
+  scripts that back the local `npm run init:icdc` flow — so the home feed
+  has 20 markets seeded from
+  [`scripts/data/markets.json`](../../../scripts/data/markets.json).
 - **Frontend:** the dev server (`npm run dev`) — booted automatically by
   Playwright's `webServer` config.
 
@@ -171,8 +183,8 @@ e2e/
 ├── pages/                # Page-Object Model classes
 │   └── home.page.ts
 ├── snapshots/            # Playwright visual baselines, committed
-├── homepage.spec.ts      # logged-out smoke + screenshot
-└── auth.spec.ts          # dev sign-in / sign-out + screenshot
+├── homepage.spec.ts      # logged-out: skeleton state + populated feed
+└── auth.spec.ts          # dev sign-in / sign-out + populated feed
 ```
 
 ### Visual snapshots
@@ -212,14 +224,45 @@ so the snapshot commit doesn't loop into another E2E run.
   differences without flapping.
 
 When a region of the page is genuinely non-deterministic (random
-principals from dev sign-in, generated avatars, timestamps), mask it:
+principals from dev sign-in, generated avatars, time-remaining
+counters that drift relative to the wall clock), mask it:
 
 ```ts
 await expect(page).toHaveScreenshot('logged-in.png', {
 	fullPage: true,
-	mask: [home.userMenu]
+	mask: [home.userMenu, home.marketTimeRemaining]
 });
 ```
+
+To capture a transient state deterministically — e.g. the markets-feed
+**skeletons**, which would otherwise be replaced by real data within
+~100ms once the registry responds — stall the upstream request inside
+`page.route()` and release it explicitly once the screenshot is taken:
+
+```ts
+let releaseStall!: () => void;
+const stalled = new Promise<void>((resolve) => {
+	releaseStall = resolve;
+});
+
+await page.route('**/api/v3/canister/g5pxl-pyaaa-aaaaj-qqhoq-cai/**', async (route) => {
+	await stalled;
+	await route.abort();
+});
+
+try {
+	await home.goto();
+	await expect(home.marketCardSkeleton.first()).toBeVisible();
+	await expect(page).toHaveScreenshot('homepage-loading.png', { fullPage: true });
+} finally {
+	releaseStall();
+}
+```
+
+The pending promise keeps the feed in its loading state long enough for
+Playwright to render skeletons and snapshot, then the `finally` releases
+every blocked route handler so they `route.abort()` and unwind. No
+long-lived timers, no orphan promises.
 
 CI runs on `ubuntu-24.04` only, so committed snapshots use the Linux
 suffix Playwright auto-appends. Snapshots generated locally on macOS /
