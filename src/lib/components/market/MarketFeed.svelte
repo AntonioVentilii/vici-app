@@ -3,6 +3,7 @@
 	import MarketCardSkeleton from '$lib/components/market/MarketCardSkeleton.svelte';
 	import StackedMarketCard from '$lib/components/market/StackedMarketCard.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import type { Market } from '$lib/types/market';
 	import { groupMarketsByLineage } from '$lib/utils/market-groups.utils';
@@ -54,6 +55,7 @@
 	class:justify-center={!isGrid}
 	class:lg:grid-cols-3={isGrid}
 	class:md:grid-cols-2={isGrid}
+	data-tid={TestId.MarketFeed}
 >
 	{#if groups.length > 0}
 		{#each groups as group, index (group.rootId)}

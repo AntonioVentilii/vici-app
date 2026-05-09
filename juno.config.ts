@@ -29,10 +29,23 @@ const delegation = {
 	sessionDuration: BigInt(7 * 24 * 60 * 60 * 1000 * 1000 * 1000) // 7 days in nanoseconds
 };
 
+/**
+ * The Juno CLI's `--emulator` flag is only valid with `--mode development`,
+ * so E2E (which runs against the `junobuild/satellite` image) must reuse
+ * `mode === 'development'`. To avoid pointing the CLI at the *real* dev
+ * satellite, callers (CI + local emulator workflows) export
+ * `JUNO_EMULATOR=true`, which swaps `ids.development` to the predictable
+ * satellite ID baked into the emulator image. See
+ * `docs/ai/frontend/testing.md`.
+ */
+const isEmulator = process.env.JUNO_EMULATOR === 'true';
+
+const EMULATOR_SATELLITE_ID = 'jx5yt-yyaaa-aaaal-abzbq-cai';
+
 export default defineConfig(({ mode }) => ({
 	satellite: {
 		ids: {
-			development: 'auamu-4x777-77775-aaaaa-cai',
+			development: isEmulator ? EMULATOR_SATELLITE_ID : 'auamu-4x777-77775-aaaaa-cai',
 			production: '7scay-7yaaa-aaaal-asxqa-cai'
 		},
 		hosting: {
@@ -106,5 +119,11 @@ export default defineConfig(({ mode }) => ({
 				}
 			]
 		}
+	},
+	emulator: {
+		runner: {
+			type: 'docker'
+		},
+		satellite: {}
 	}
 }));

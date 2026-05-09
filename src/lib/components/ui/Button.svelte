@@ -1,9 +1,10 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import type { HTMLButtonAttributes } from 'svelte/elements';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import type { ButtonStatus } from '$lib/types/components';
 
-	interface Props {
+	interface Props extends Omit<HTMLButtonAttributes, 'disabled' | 'aria-busy'> {
 		status?: ButtonStatus;
 		variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 		size?: 'sm' | 'md' | 'lg';
@@ -20,7 +21,8 @@
 		busyLabel = undefined,
 		children,
 		onclick = undefined,
-		class: className = ''
+		class: className = '',
+		...rest
 	}: Props = $props();
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
@@ -43,6 +45,7 @@
 	{busyLabel}
 	{onclick}
 	{status}
+	{...rest}
 >
 	{@render children()}
 </BaseButton>

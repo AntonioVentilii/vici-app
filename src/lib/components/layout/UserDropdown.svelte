@@ -6,6 +6,7 @@
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { theme, type Theme } from '$lib/stores/theme.store';
 	import { setAuthBusy } from '$lib/stores/user.store';
 	import type { ButtonStatus } from '$lib/types/components';
@@ -41,6 +42,7 @@
 		<BaseButton
 			class="h-10 w-10 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 active:scale-95"
 			aria-label="User profile"
+			data-tid={TestId.UserMenu}
 		>
 			<svg
 				fill="none"
@@ -128,6 +130,7 @@
 
 			<BaseButton
 				class="w-full gap-3 px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+				data-tid={TestId.Logout}
 				onclick={doSignOut}
 				status={signOutStatus}
 			>

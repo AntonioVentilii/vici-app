@@ -5,9 +5,11 @@
 		"non-ambient.d.ts",
 		"./scripts/",
 		"./src/",
+		"./e2e/",
 		"./eslint.config.js",
 		"./eslint-local-rules.cjs",
 		"./juno.config.ts",
+		"./playwright.config.ts",
 		"./svelte.config.js",
 		"./vite.config.ts"
 	],

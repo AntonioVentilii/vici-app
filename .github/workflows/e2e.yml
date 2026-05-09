@@ -1,0 +1,154 @@
+name: E2E
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  merge_group:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch:
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      # Needed so the snapshot-update step can push a commit back to the
+      # PR branch when Playwright generates / updates baselines.
+      contents: write
+    env:
+      # Swap juno.config.ts `ids.development` to the emulator's predictable
+      # satellite ID (jx5yt-yyaaa-aaaal-abzbq-cai). Required because
+      # `juno login --emulator` is only valid with `--mode development`.
+      JUNO_EMULATOR: 'true'
+      CI: 'true'
+
+    steps:
+      # On same-repo PRs, check out the actual head ref so a follow-up
+      # snapshot commit lands on the PR's tip rather than the temporary
+      # merge commit GitHub creates. For pushes / merge_group / fork PRs
+      # the default checkout is fine.
+      - name: Checkout (same-repo PR head)
+        if: >-
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          persist-credentials: false
+
+      - name: Checkout (default)
+        if: >-
+          github.event_name != 'pull_request' ||
+          github.event.pull_request.head.repo.full_name != github.repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+
+      - name: Print Chrome version
+        run: google-chrome --version || true
+
+      - name: Prepare
+        uses: ./.github/actions/prepare
+
+      - name: Install Juno CLI
+        # Pin to a known-good version. Bump deliberately when @junobuild/cli
+        # ships a release we want to track; an unpinned `latest` would let
+        # an upstream breaking change silently red the whole pipeline.
+        run: npm i -g @junobuild/cli@0.15.4
+
+      - name: Start Juno emulator
+        run: |
+          set -e
+          juno emulator start --headless &
+          juno emulator wait
+          juno login --emulator --mode development --headless
+          juno config apply --mode development --headless
+
+      - name: Build & upgrade satellite functions
+        # The bare junobuild/satellite image doesn't ship our app-specific
+        # typed queries / hooks (defined in src/satellite/index.ts and
+        # surfaced via $declarations/satellite/satellite.api). Without
+        # this step, calls like `functions.getProfile()` 4xx on the
+        # emulator and the auth flow rolls back to signed-out.
+        run: |
+          set -e
+          npm run juno:functions:build
+          juno functions upgrade -m development --no-snapshot
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run e2e:ci
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+
+      - name: Upload Playwright results
+        if: failure()
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: test-results
+          path: test-results/
+          retention-days: 7
+
+      # Playwright runs with `--update-snapshots=changed`, so missing or
+      # diffed baselines are written into `e2e/snapshots/` rather than
+      # failing the test. Surface those as both an artifact (for run-id
+      # auditability) and — on same-repo PRs — a commit pushed back to
+      # the PR branch so the diff shows up in code review.
+      - name: Detect snapshot changes
+        id: snapshots
+        run: |
+          if [[ -n "$(git status --porcelain e2e/snapshots)" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Upload changed snapshots
+        if: steps.snapshots.outputs.changed == 'true'
+        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+        with:
+          name: snapshots-update
+          path: e2e/snapshots/
+          retention-days: 7
+
+      - name: Commit & push snapshot updates (same-repo PR)
+        if: >-
+          steps.snapshots.outputs.changed == 'true' &&
+          github.event_name == 'pull_request' &&
+          github.event.pull_request.head.repo.full_name == github.repository
+        uses: ./.github/actions/add-and-commit
+        with:
+          add: e2e/snapshots
+          message: '🤖 chore(e2e): update Playwright snapshots'
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  e2e-pass:
+    if: always()
+    needs: [e2e]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/needs_success
+        with:
+          needs: '${{ toJson(needs) }}'
