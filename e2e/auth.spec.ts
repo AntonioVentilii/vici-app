@@ -23,6 +23,14 @@ test.describe('authentication (dev sign-in)', () => {
 		await expect(home.userMenu).toBeVisible();
 		await expect(home.signInButton).not.toBeVisible();
 
+		// Mask the user-menu trigger because dev sign-in mints a fresh
+		// principal on every run, so the avatar / fallback initials drift.
+		// The rest of the chrome (header, market feed, footer) is stable.
+		await expect(page).toHaveScreenshot('homepage-logged-in.png', {
+			fullPage: true,
+			mask: [home.userMenu]
+		});
+
 		await home.logout();
 
 		await expect(home.signInButton).toBeVisible();

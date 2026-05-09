@@ -170,9 +170,61 @@ pre-deployed.
 e2e/
 ├── pages/                # Page-Object Model classes
 │   └── home.page.ts
-├── homepage.spec.ts      # logged-out smoke test
-└── auth.spec.ts          # dev sign-in / sign-out flow
+├── snapshots/            # Playwright visual baselines, committed
+├── homepage.spec.ts      # logged-out smoke + screenshot
+└── auth.spec.ts          # dev sign-in / sign-out + screenshot
 ```
+
+### Visual snapshots
+
+Both specs end with `await expect(page).toHaveScreenshot(...)` — that's
+the same flow `oisy-wallet` and `gix-components` use: the PNG baselines
+live under [`e2e/snapshots/`](../../../e2e/snapshots/) and **are
+committed to the repo**, so any visual regression shows up directly in
+the PR diff.
+
+The CI script (`npm run e2e:ci`) runs Playwright with
+`--update-snapshots=changed`. That means:
+
+- **First time** the test sees a name (no baseline yet) → Playwright
+  writes the PNG. The workflow detects the change under
+  `e2e/snapshots/`, commits it, and pushes the commit back to the PR
+  branch (via [`./.github/actions/add-and-commit`](../../../.github/actions/add-and-commit/action.yml)
+  using `secrets.GITHUB_TOKEN`).
+- **Subsequent runs** that diff against the baseline → Playwright
+  rewrites the PNG, and the same auto-commit step pushes the update.
+  The reviewer sees the new screenshot in the PR diff and either
+  accepts or rejects the visual change.
+- **Fork PRs** can't be pushed to from `GITHUB_TOKEN`, so the changed
+  baselines are still uploaded as the `snapshots-update` artifact;
+  contributors can download them and commit manually.
+
+Pushes from `GITHUB_TOKEN` deliberately don't re-trigger the workflow,
+so the snapshot commit doesn't loop into another E2E run.
+
+### Keeping snapshots stable
+
+`playwright.config.ts` configures `expect.toHaveScreenshot` with:
+
+- `animations: 'disabled'` — kills CSS animations / transitions.
+- `caret: 'hide'` — hides the input caret.
+- `threshold: 0.3` — tolerates minor anti-aliasing / font-hinting
+  differences without flapping.
+
+When a region of the page is genuinely non-deterministic (random
+principals from dev sign-in, generated avatars, timestamps), mask it:
+
+```ts
+await expect(page).toHaveScreenshot('logged-in.png', {
+	fullPage: true,
+	mask: [home.userMenu]
+});
+```
+
+CI runs on `ubuntu-24.04` only, so committed snapshots use the Linux
+suffix Playwright auto-appends. Snapshots generated locally on macOS /
+Windows get a different suffix and don't collide — but **don't commit
+them**; they'll just bloat the repo and won't be checked by CI.
 
 - **One spec per high-level user-facing flow.** Don't co-locate specs with
   components.

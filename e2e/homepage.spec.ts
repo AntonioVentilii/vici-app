@@ -9,5 +9,9 @@ test.describe('homepage (logged out)', () => {
 
 		await expect(home.marketFeed).toBeVisible();
 		await expect(home.signInButton).toBeVisible();
+
+		await expect(page).toHaveScreenshot('homepage-logged-out.png', {
+			fullPage: true
+		});
 	});
 });

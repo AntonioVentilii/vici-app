@@ -8,8 +8,19 @@ export default defineConfig({
 	testDir: 'e2e',
 	testMatch: ['**/*.spec.ts'],
 	timeout: FIVE_MINUTES_MS,
+	snapshotDir: 'e2e/snapshots',
 	expect: {
-		timeout: 30_000
+		timeout: 30_000,
+		toHaveScreenshot: {
+			// Tolerate sub-pixel rendering / font-hinting differences; the diff
+			// still shows up clearly enough for review while not red-ing CI on
+			// a 1-pixel anti-aliasing change.
+			threshold: 0.3,
+			// Disable CSS animations so spinner / skeleton frames don't drift.
+			animations: 'disabled',
+			// Hide caret to keep input snapshots stable.
+			caret: 'hide'
+		}
 	},
 	fullyParallel: false,
 	forbidOnly: isCI,
