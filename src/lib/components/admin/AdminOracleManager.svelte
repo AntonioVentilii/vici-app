@@ -99,7 +99,9 @@
 			></div>
 		</div>
 	{:else if status === 'error'}
-		<div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+		<div
+			class="border-destructive/20 bg-destructive/10 text-destructive rounded-lg border p-4 text-sm"
+		>
 			<p class="font-semibold">Failed to load oracle</p>
 			<p class="mt-1 break-all">{errorMessage}</p>
 			<Button class="mt-3" onclick={load} size="sm" variant="outline">Retry</Button>

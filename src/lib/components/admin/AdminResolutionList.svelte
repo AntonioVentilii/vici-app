@@ -51,11 +51,11 @@
 	const getStatusStyles = (color: string) => {
 		switch (color) {
 			case 'red':
-				return 'bg-red-50 border-red-200 text-red-700';
+				return 'bg-destructive/10 border-destructive/20 text-destructive';
 			case 'orange':
-				return 'bg-orange-100 border-orange-300 text-orange-900';
+				return 'bg-primary/10 border-primary/30 text-primary';
 			case 'orange-light':
-				return 'bg-orange-50 border-orange-200 text-orange-700';
+				return 'bg-primary/10 border-primary/25 text-primary';
 			case 'amber':
 				return 'bg-amber-50 border-amber-100 text-amber-700';
 			default:
@@ -66,11 +66,11 @@
 	const getBadgeStyles = (color: string) => {
 		switch (color) {
 			case 'red':
-				return 'bg-red-200 text-red-800';
+				return 'bg-destructive/20 text-destructive';
 			case 'orange':
-				return 'bg-orange-200 text-orange-900';
+				return 'bg-primary/20 text-primary';
 			case 'orange-light':
-				return 'bg-orange-100 text-orange-800';
+				return 'bg-primary/10 text-primary';
 			case 'amber':
 				return 'bg-amber-100 text-amber-800';
 			default:
@@ -123,7 +123,7 @@
 
 					<div class="flex gap-2">
 						<Button
-							class="flex-1 rounded-xl border border-green-200 bg-green-50 py-2 text-xs font-bold text-green-700 hover:bg-green-100"
+							class="border-success/20 bg-success/10 text-success hover:bg-success/15 flex-1 rounded-xl border py-2 text-xs font-bold"
 							onclick={() => handleResolve({ marketId, outcome: 'YES' })}
 							size="sm"
 							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
@@ -132,7 +132,7 @@
 							Resolve YES
 						</Button>
 						<Button
-							class="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-700 hover:bg-red-100"
+							class="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15 flex-1 rounded-xl border py-2 text-xs font-bold"
 							onclick={() => handleResolve({ marketId, outcome: 'NO' })}
 							size="sm"
 							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}

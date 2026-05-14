@@ -134,7 +134,7 @@
 						</BaseButton>
 					</div>
 					{#if editedNickname.trim().length < 2}
-						<p class="mt-1 text-[10px] font-bold text-red-500 uppercase">Min 2 characters</p>
+						<p class="text-destructive mt-1 text-[10px] font-bold uppercase">Min 2 characters</p>
 					{/if}
 				{:else}
 					<h1

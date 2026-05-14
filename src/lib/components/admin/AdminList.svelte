@@ -89,13 +89,13 @@
 								</span>
 							</div>
 							<span
-								class="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-blue-50 px-2 py-1 text-xs font-medium text-blue-700 ring-1 ring-blue-700/10 ring-inset"
+								class="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-[var(--hold-wash)] px-2 py-1 text-xs font-medium text-[var(--hold)] ring-1 ring-[var(--hold)]/10 ring-inset"
 							>
 								{entry.role}
 							</span>
 						</div>
 						<button
-							class="ml-4 shrink-0 text-sm font-medium text-red-600 hover:text-red-700"
+							class="text-destructive hover:text-destructive ml-4 shrink-0 text-sm font-medium"
 							onclick={() => confirmRemove(entry.principal)}
 						>
 							Remove

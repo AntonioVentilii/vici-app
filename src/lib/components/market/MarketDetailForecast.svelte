@@ -63,7 +63,7 @@
 			<div class="mt-8 flex flex-col gap-4 sm:flex-row">
 				<div class="flex-1 space-y-1">
 					<BaseButton
-						class="w-full rounded-2xl bg-emerald-500 py-6 text-center shadow-lg shadow-emerald-500/10 transition-transform hover:scale-[1.02] active:scale-[0.98]"
+						class="bg-success shadow-success/10 w-full rounded-2xl py-6 text-center shadow-lg transition-transform hover:scale-[1.02] active:scale-[0.98]"
 						onclick={() => handleOutcomeSelect('YES')}
 					>
 						<span class="block text-[10px] font-black tracking-widest text-white/70 uppercase">
@@ -105,7 +105,7 @@
 				></div>
 				<div
 					style="width: {noProbability * 100}%"
-					class="h-full bg-red-500 transition-all duration-700"
+					class="bg-destructive h-full transition-all duration-700"
 				></div>
 			</div>
 

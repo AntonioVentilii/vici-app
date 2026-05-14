@@ -97,7 +97,7 @@
 				>
 
 				{#if availableGroups.length === 0}
-					<p class="text-muted-foreground rounded-2xl bg-slate-50 p-4 text-sm italic">
+					<p class="text-muted-foreground bg-foreground/5 rounded-2xl p-4 text-sm italic">
 						No groups yet. Create one from your Profile page first.
 					</p>
 				{:else}

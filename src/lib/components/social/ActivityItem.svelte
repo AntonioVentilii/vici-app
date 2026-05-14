@@ -15,7 +15,9 @@
 	const isSelf = $derived(!!$authPrincipal && activity.user === $authPrincipal);
 </script>
 
-<div class="group relative flex gap-3 rounded-2xl bg-white/5 p-3 transition-all hover:bg-white/10">
+<div
+	class="group bg-foreground/5 hover:bg-foreground/10 relative flex gap-3 rounded-2xl p-3 transition-all"
+>
 	<div class="text-xl">{getActivityIcon(activity.type)}</div>
 	<div class="flex-1 overflow-hidden">
 		<div class="flex items-center justify-between gap-2">

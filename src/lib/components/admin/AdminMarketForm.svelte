@@ -346,7 +346,7 @@
 					<div class="space-y-2">
 						{#each availableGroups as group (group.group_id)}
 							<label
-								class="flex cursor-pointer items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-amber-200 transition-colors ring-inset hover:bg-amber-50"
+								class="bg-card flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 ring-1 ring-amber-200 transition-colors ring-inset hover:bg-amber-50"
 							>
 								<input
 									class="accent-amber-600"

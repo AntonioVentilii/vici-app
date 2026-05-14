@@ -31,13 +31,13 @@
 {/if}
 
 <div class="flex w-full gap-4">
-	<div class="flex-1 rounded-xl bg-white/5 p-3">
+	<div class="bg-foreground/5 flex-1 rounded-xl p-3">
 		<p class="text-primary font-mono text-xl font-black tabular-nums">
 			{profile.pnl?.toFixed(2) ?? '0.00'}
 		</p>
 		<p class="text-muted-foreground text-[10px] uppercase">Total P&L</p>
 	</div>
-	<div class="flex-1 rounded-xl bg-white/5 p-3">
+	<div class="bg-foreground/5 flex-1 rounded-xl p-3">
 		<p class="font-mono text-xl font-black text-[var(--yes)] tabular-nums">
 			{profile.winRate?.toFixed(1) ?? '0'}%
 		</p>

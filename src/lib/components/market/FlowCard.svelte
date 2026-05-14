@@ -221,7 +221,7 @@
 				<!-- Top chips -->
 				<div class="relative z-10 flex items-start justify-between gap-2">
 					<div
-						class="flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
+						class="bg-foreground/15 flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
 					>
 						<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -244,7 +244,7 @@
 
 					{#if position}
 						<div
-							class="flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
+							class="bg-foreground/15 flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
 						>
 							<div class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300"></div>
 							<span class="text-[10px] font-black tracking-wider text-white uppercase">

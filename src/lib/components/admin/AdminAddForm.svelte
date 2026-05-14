@@ -50,7 +50,7 @@
 					value={principal}
 				/>
 			</div>
-			<div class="mt-2 text-sm text-slate-500">
+			<div class="text-muted-foreground mt-2 text-sm">
 				Enter the Internet Identity Principal of the user you wish to grant rights to.
 			</div>
 		</div>

@@ -17,12 +17,12 @@
 	}
 
 	const avatarOptions: AvatarOption[] = [
-		{ emoji: '🦊', color: 'bg-orange-100' },
-		{ emoji: '🐧', color: 'bg-blue-100' },
+		{ emoji: '🦊', color: 'bg-primary/10' },
+		{ emoji: '🐧', color: 'bg-[var(--hold-wash)]' },
 		{ emoji: '🦁', color: 'bg-amber-100' },
-		{ emoji: '🐼', color: 'bg-slate-100' },
+		{ emoji: '🐼', color: 'bg-foreground/8' },
 		{ emoji: '🦄', color: 'bg-pink-100' },
-		{ emoji: '🐲', color: 'bg-emerald-100' }
+		{ emoji: '🐲', color: 'bg-success/10' }
 	];
 
 	let pending = $state(false);

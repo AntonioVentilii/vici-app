@@ -17,7 +17,7 @@
 		>
 			{#if notification.type === 'error'}
 				<div
-					class="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600"
+					class="bg-destructive/10 text-destructive mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
 				>
 					<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path

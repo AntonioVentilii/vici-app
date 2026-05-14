@@ -173,7 +173,7 @@
 			/>
 			<div class="text-center">
 				<div
-					class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm"
+					class="bg-card mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full shadow-sm"
 				>
 					<svg class="text-primary h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -190,7 +190,9 @@
 		</div>
 
 		{#if error}
-			<div class="rounded-xl border border-red-100 bg-red-50 p-4 text-xs font-medium text-red-600">
+			<div
+				class="border-border bg-destructive/10 text-destructive rounded-xl border p-4 text-xs font-medium"
+			>
 				{error}
 			</div>
 		{/if}
