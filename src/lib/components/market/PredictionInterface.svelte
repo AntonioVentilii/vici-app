@@ -408,13 +408,13 @@
 	});
 </script>
 
-<div class="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+<div class="border-border bg-card rounded-3xl border p-6">
 	<!-- Order Type Toggle -->
-	<div class="flex rounded-xl bg-slate-100 p-1">
+	<div class="bg-foreground/5 flex rounded-xl p-1">
 		<BaseButton
 			class="flex-1 rounded-lg py-2 text-xs font-bold {orderType === 'MARKET'
-				? 'bg-white text-indigo-600 shadow-sm'
-				: 'text-slate-500 hover:text-slate-700'}"
+				? 'bg-card text-primary shadow-sm'
+				: 'text-muted-foreground hover:text-foreground'}"
 			onclick={() => (orderType = 'MARKET')}
 			status={hasMarketDepth ? 'enabled' : 'disabled'}
 			title={!hasMarketDepth ? 'No liquidity for instant prediction' : ''}
@@ -424,8 +424,8 @@
 
 		<BaseButton
 			class="flex-1 rounded-lg py-2 text-xs font-bold {orderType === 'LIMIT'
-				? 'bg-white text-indigo-600 shadow-sm'
-				: 'text-slate-500 hover:text-slate-700'}"
+				? 'bg-card text-primary shadow-sm'
+				: 'text-muted-foreground hover:text-foreground'}"
 			onclick={() => (orderType = 'LIMIT')}
 		>
 			Set Price
@@ -440,8 +440,8 @@
 					<BaseButton
 						class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
 						'YES'
-							? 'border-green-500 bg-green-50 text-green-700'
-							: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+							? 'border-[var(--yes)] bg-[var(--yes-wash)] text-[var(--yes)]'
+							: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 						onclick={() => handleOutcomeSelect({ outcomeId: 'YES', probability: yesProbability })}
 					>
 						<div class="relative z-10 flex flex-col items-center gap-1">
@@ -458,8 +458,8 @@
 					<BaseButton
 						class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
 						'NO'
-							? 'border-red-500 bg-red-50 text-red-700'
-							: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+							? 'border-destructive bg-destructive/10 text-destructive'
+							: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 						onclick={() => handleOutcomeSelect({ outcomeId: 'NO', probability: noProbability })}
 					>
 						<div class="relative z-10 flex flex-col items-center gap-1">
@@ -478,8 +478,8 @@
 							<BaseButton
 								class="group relative overflow-hidden rounded-2xl border-2 px-4 py-4 {selectedType ===
 								outcome.id
-									? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-									: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+									? 'border-primary bg-primary/10 text-primary'
+									: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 								onclick={() => handleOutcomeSelect({ outcomeId: outcome.id })}
 							>
 								<div class="relative z-10 flex flex-col items-center gap-0.5">
@@ -497,14 +497,17 @@
 		<div class="space-y-4">
 			{#if orderType === 'LIMIT'}
 				<div class="space-y-2">
-					<label class="text-[10px] font-bold tracking-widest text-slate-400 uppercase" for="price">
+					<label
+						class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
+						for="price"
+					>
 						Target Probability
 					</label>
 
 					<div class="relative">
 						<input
 							id="price"
-							class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-xl font-bold text-slate-950 ring-1 ring-slate-200 transition-all ring-inset focus:bg-white focus:ring-2 focus:ring-indigo-500"
+							class="bg-foreground/5 text-foreground ring-border focus:bg-card focus:ring-primary w-full rounded-2xl border-none px-6 py-4 text-xl font-bold ring-1 transition-all ring-inset focus:ring-2"
 							max={99}
 							min={1}
 							placeholder="50"
@@ -512,7 +515,9 @@
 							type="number"
 							bind:value={price}
 						/>
-						<div class="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-bold text-slate-400">
+						<div
+							class="text-muted-foreground absolute top-1/2 right-4 -translate-y-1/2 text-xs font-bold"
+						>
 							%
 						</div>
 					</div>
@@ -522,13 +527,13 @@
 			<div class="space-y-2">
 				<div class="flex justify-between">
 					<label
-						class="text-[10px] font-bold tracking-widest text-slate-400 uppercase"
+						class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
 						for="amount"
 					>
 						Investment Amount ({market.token.symbol})
 					</label>
 
-					<span class="text-[10px] font-bold text-slate-400 uppercase">
+					<span class="text-muted-foreground text-[10px] font-bold uppercase">
 						Available: {nonNullish(availableEquity)
 							? formatAvailableMarginForUi({
 									value: availableEquity,
@@ -541,7 +546,7 @@
 				<div class="relative">
 					<input
 						id="amount"
-						class="w-full rounded-2xl border-none bg-slate-50 py-4 pr-16 pl-6 text-xl font-bold text-slate-950 ring-1 ring-slate-200 transition-all ring-inset focus:bg-white focus:ring-2 focus:ring-indigo-500"
+						class="bg-foreground/5 text-foreground ring-border focus:bg-card focus:ring-primary w-full rounded-2xl border-none py-4 pr-16 pl-6 text-xl font-bold ring-1 transition-all ring-inset focus:ring-2"
 						max="10000000"
 						min={$playgroundVxpUnitMode ? VXP_STAKE_STEP_VXP : 0}
 						placeholder="0"
@@ -549,7 +554,9 @@
 						type="number"
 						bind:value={amount}
 					/>
-					<div class="absolute top-1/2 right-4 -translate-y-1/2 text-xs font-bold text-slate-400">
+					<div
+						class="text-muted-foreground absolute top-1/2 right-4 -translate-y-1/2 text-xs font-bold"
+					>
 						{market.token.symbol}
 					</div>
 				</div>
@@ -558,7 +565,7 @@
 				<div class="flex gap-2">
 					{#each quickBetAmounts as quickAmount (quickAmount)}
 						<BaseButton
-							class="flex-1 rounded-xl border border-slate-100 bg-slate-50 py-2 text-[10px] font-bold text-slate-500 transition-all hover:border-indigo-200 hover:bg-white hover:text-indigo-600"
+							class="border-border bg-foreground/5 text-muted-foreground hover:border-primary/30 hover:bg-card hover:text-primary flex-1 rounded-xl border py-2 text-[10px] font-bold transition-all"
 							onclick={() => (amount = quickAmount)}
 						>
 							{quickBetChipLabel({
@@ -590,17 +597,17 @@
 		{/if}
 
 		<!-- Payout Summary -->
-		<div class="space-y-3 rounded-2xl bg-slate-50 p-5">
+		<div class="bg-foreground/5 space-y-3 rounded-2xl p-5">
 			<div class="flex justify-between text-xs">
-				<span class="font-medium text-slate-500">Estimated Cost</span>
+				<span class="text-muted-foreground font-medium">Estimated Cost</span>
 
-				<span class="font-bold text-slate-950">{estimatedCost}</span>
+				<span class="text-foreground font-bold">{estimatedCost}</span>
 			</div>
 
 			<div class="flex justify-between text-xs">
-				<span class="font-medium text-slate-500">Potential Return</span>
+				<span class="text-muted-foreground font-medium">Potential Return</span>
 
-				<span class="font-bold text-green-500">
+				<span class="font-bold text-[var(--yes)]">
 					{estimatedPayout} ({potentialReturnPercent.toFixed(1)}%)
 				</span>
 			</div>
@@ -622,8 +629,8 @@
 				Confirm {selectedType}
 			</Button>
 		{:else}
-			<div class="flex flex-col items-center gap-4 rounded-2xl bg-indigo-50 p-6 text-center">
-				<p class="text-sm font-medium text-indigo-900">Sign in to trade</p>
+			<div class="bg-primary/10 flex flex-col items-center gap-4 rounded-2xl p-6 text-center">
+				<p class="text-primary text-sm font-medium">Sign in to trade</p>
 				<SignInActions />
 			</div>
 		{/if}

@@ -13,7 +13,7 @@
 </script>
 
 <span
-	class="inline-flex shrink-0 items-center rounded-full bg-indigo-50 font-bold tracking-wider text-indigo-700 uppercase ring-1 ring-indigo-700/20 ring-inset {sizes[
+	class="bg-primary/10 text-primary ring-primary/20 inline-flex shrink-0 items-center rounded-full font-bold tracking-wider uppercase ring-1 ring-inset {sizes[
 		size
 	]}"
 	title="This is you"

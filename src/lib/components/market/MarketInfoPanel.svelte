@@ -16,16 +16,14 @@
 	const timeRemaining = $derived(getTimeRemaining(market.expiryDate));
 </script>
 
-<div
-	class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md"
->
+<div class="border-border bg-card overflow-hidden rounded-3xl border transition-all">
 	<!-- Tab-like Header -->
-	<div class="flex border-b border-slate-100 bg-slate-50/50">
+	<div class="border-border bg-foreground/5 flex border-b">
 		{#each ['Odds', 'History', 'Rules'] as tab (tab)}
 			<button
 				class="flex-1 px-4 py-3 text-xs font-bold transition-all {selectedTab === tab
-					? 'border-b-2 border-indigo-600 bg-white text-indigo-600'
-					: 'text-slate-400 hover:text-slate-600'}"
+					? 'border-primary bg-card text-primary border-b-2'
+					: 'text-muted-foreground hover:text-foreground'}"
 				onclick={() => (selectedTab = tab as typeof selectedTab)}
 			>
 				{tab === 'Rules' ? 'Resolution' : tab}
@@ -37,11 +35,11 @@
 		{#if selectedTab === 'Odds'}
 			<div class="space-y-8">
 				<!-- High-impact Time Left -->
-				<div class="rounded-2xl bg-indigo-50/50 p-4 text-center ring-1 ring-indigo-100">
-					<span class="text-[10px] font-black tracking-widest text-indigo-400 uppercase">
+				<div class="bg-primary/10 ring-primary/20 rounded-2xl p-4 text-center ring-1">
+					<span class="text-primary/60 text-[10px] font-black tracking-widest uppercase">
 						Trading Ends In
 					</span>
-					<div class="mt-1 font-mono text-2xl font-black text-indigo-600">
+					<div class="text-primary mt-1 font-mono text-2xl font-black">
 						{timeRemaining}
 					</div>
 				</div>
@@ -49,20 +47,20 @@
 				<!-- Trend Chart -->
 				<ProbabilityChart />
 
-				<div class="space-y-4 border-t border-slate-50 pt-4">
+				<div class="border-border space-y-4 border-t pt-4">
 					<div class="flex items-center justify-between">
-						<span class="text-xs font-bold text-slate-400 uppercase">Total Pool</span>
+						<span class="text-muted-foreground text-xs font-bold uppercase">Total Pool</span>
 						<div class="flex items-center gap-1.5">
-							<span class="text-sm font-black text-slate-900">
+							<span class="text-foreground text-sm font-black">
 								{formatCurrency({ value: market.totalVolume, decimals: market.token.decimals })}
 							</span>
-							<span class="text-[10px] font-bold text-slate-400">{market.token.symbol}</span>
+							<span class="text-muted-foreground text-[10px] font-bold">{market.token.symbol}</span>
 						</div>
 					</div>
 
 					<div class="flex items-center justify-between">
-						<span class="text-xs font-bold text-slate-400 uppercase">Total Predictions</span>
-						<span class="text-sm font-black text-slate-900">
+						<span class="text-muted-foreground text-xs font-bold uppercase">Total Predictions</span>
+						<span class="text-foreground text-sm font-black">
 							{market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0}
 						</span>
 					</div>
@@ -75,25 +73,25 @@
 		{:else}
 			<div class="space-y-6">
 				<div class="space-y-3">
-					<h4 class="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+					<h4 class="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
 						Official Criteria
 					</h4>
 					<div
-						class="rounded-2xl border border-slate-100 bg-slate-50/30 p-5 leading-relaxed text-slate-600"
+						class="border-border bg-foreground/5 text-foreground rounded-2xl border p-5 leading-relaxed"
 					>
 						<div class="flex gap-3">
-							<span class="font-bold text-indigo-500">●</span>
+							<span class="text-primary font-bold">●</span>
 							<p class="text-sm">{market.description || 'Verified via public consensus.'}</p>
 						</div>
 					</div>
 				</div>
 
 				<div class="space-y-4">
-					<div class="flex items-start gap-3 rounded-xl bg-amber-50 p-4 ring-1 ring-amber-100">
+					<div class="bg-primary/10 ring-primary/20 flex items-start gap-3 rounded-xl p-4 ring-1">
 						<span class="text-lg">⚖️</span>
 						<div>
-							<h5 class="text-[10px] font-black text-amber-800 uppercase">Settlement Rule</h5>
-							<p class="mt-1 text-xs leading-snug text-amber-700/80">
+							<h5 class="text-primary text-[10px] font-black uppercase">Settlement Rule</h5>
+							<p class="text-muted-foreground mt-1 text-xs leading-snug">
 								This market will resolve based on verifiable public data at the time of expiry. If
 								the outcome is ambiguous, it will be decided by the Vici Oracle Council.
 							</p>
@@ -104,7 +102,7 @@
 		{/if}
 
 		<!-- Social links (Visual footer, always present) -->
-		<div class="mt-12 flex justify-center gap-4 border-t border-slate-50 pt-6 text-slate-400">
+		<div class="border-border text-muted-foreground mt-12 flex justify-center gap-4 border-t pt-6">
 			<span class="text-xl">𝕏</span>
 			<span class="text-xl">✈</span>
 			<span class="text-xl">tiktok</span>

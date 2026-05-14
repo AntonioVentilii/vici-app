@@ -91,7 +91,7 @@
 	<!-- Header -->
 	<div class="flex items-center justify-between border-b border-white/5 bg-white/5 px-6 py-4">
 		<div class="flex items-center gap-3">
-			<div class="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
+			<div class="h-2 w-2 animate-pulse rounded-full bg-[var(--yes)]"></div>
 			<h4 class="font-bold tracking-tight">Market Chat</h4>
 		</div>
 		<span class="text-muted-foreground text-xs">{messages.length} messages</span>

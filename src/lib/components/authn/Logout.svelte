@@ -17,7 +17,7 @@
 </script>
 
 <BaseButton
-	class="text-slate-500 hover:text-indigo-600 active:text-indigo-700"
+	class="text-muted-foreground hover:text-primary active:text-primary"
 	aria-label="Sign out"
 	onclick={doSignOut}
 	{status}

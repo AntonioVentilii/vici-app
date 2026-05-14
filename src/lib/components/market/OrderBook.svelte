@@ -137,21 +137,22 @@
 	);
 </script>
 
-<div class="overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+<div class="border-border bg-card overflow-hidden rounded-3xl border p-6">
 	<div class="mb-6 flex items-center justify-between">
-		<h3 class="text-lg font-bold text-slate-950">Order Book ({outcome})</h3>
+		<h3 class="text-foreground text-lg font-bold">Order Book ({outcome})</h3>
 		<div class="flex items-center gap-2">
-			<span class="flex h-2 w-2 animate-pulse rounded-full bg-green-500"></span>
-			<span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">Live</span>
+			<span class="flex h-2 w-2 animate-pulse rounded-full bg-[var(--yes)]"></span>
+			<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Live</span
+			>
 		</div>
 	</div>
 
 	{#if loading}
 		<div class="flex flex-col items-center justify-center py-20">
 			<div
-				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-100 border-t-indigo-600"
+				class="border-primary/20 border-t-primary h-12 w-12 animate-spin rounded-full border-4"
 			></div>
-			<span class="mt-4 text-[10px] font-bold tracking-widest text-indigo-600 uppercase">
+			<span class="text-primary mt-4 text-[10px] font-bold tracking-widest uppercase">
 				Updating Depth...
 			</span>
 		</div>
@@ -161,10 +162,10 @@
 			<div class="flex flex-col-reverse">
 				{#each displayAsks as ask (ask.price)}
 					<button
-						class="group relative flex items-center justify-between overflow-hidden rounded-lg px-2 py-2 transition-colors hover:bg-slate-50 {isUserLevel(
+						class="group hover:bg-foreground/5 relative flex items-center justify-between overflow-hidden rounded-lg px-2 py-2 transition-colors {isUserLevel(
 							ask.price
 						)
-							? 'bg-slate-50/50 ring-1 ring-slate-200 ring-inset'
+							? 'bg-foreground/5 ring-border ring-1 ring-inset'
 							: ''}"
 						onclick={() => handlePriceSelect(ask.price)}
 					>
@@ -174,13 +175,14 @@
 							class="absolute inset-y-0 right-0 bg-red-500/5 transition-all group-hover:bg-red-500/10"
 						></div>
 
-						<span class="relative z-10 text-sm font-bold text-red-500">
+						<span class="text-destructive relative z-10 text-sm font-bold">
 							{formatProbability(ask.price)}
 							{#if isUserLevel(ask.price)}
-								<span class="ml-1 inline-block h-1 w-1 rounded-full bg-red-400 align-middle"></span>
+								<span class="bg-destructive ml-1 inline-block h-1 w-1 rounded-full align-middle"
+								></span>
 							{/if}
 						</span>
-						<span class="relative z-10 text-xs font-medium text-slate-500">
+						<span class="text-muted-foreground relative z-10 text-xs font-medium">
 							{formatQuantity({ value: ask.totalQty, decimals: tokenDecimals })}
 						</span>
 					</button>
@@ -188,10 +190,12 @@
 			</div>
 
 			<!-- Spread -->
-			<div class="flex items-center justify-between border-y border-slate-100 px-2 py-4">
-				<span class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Spread</span>
+			<div class="border-border flex items-center justify-between border-y px-2 py-4">
+				<span class="text-muted-foreground text-[10px] font-black tracking-widest uppercase"
+					>Spread</span
+				>
 				{#if displayAsks.length > 0 && displayBids.length > 0}
-					<span class="text-xs font-bold text-slate-600">
+					<span class="text-foreground text-xs font-bold">
 						{formatProbability(Math.abs(displayAsks[0].price - displayBids[0].price))}
 					</span>
 				{/if}
@@ -201,10 +205,10 @@
 			<div class="flex flex-col">
 				{#each displayBids as bid (bid.price)}
 					<button
-						class="group relative flex items-center justify-between overflow-hidden rounded-lg px-2 py-2 transition-colors hover:bg-slate-50 {isUserLevel(
+						class="group hover:bg-foreground/5 relative flex items-center justify-between overflow-hidden rounded-lg px-2 py-2 transition-colors {isUserLevel(
 							bid.price
 						)
-							? 'bg-slate-50/50 ring-1 ring-slate-200 ring-inset'
+							? 'bg-foreground/5 ring-border ring-1 ring-inset'
 							: ''}"
 						onclick={() => handlePriceSelect(bid.price)}
 					>
@@ -214,14 +218,14 @@
 							class="absolute inset-y-0 right-0 bg-green-500/5 transition-all group-hover:bg-green-500/10"
 						></div>
 
-						<span class="relative z-10 text-sm font-bold text-green-500">
+						<span class="relative z-10 text-sm font-bold text-[var(--yes)]">
 							{formatProbability(bid.price)}
 							{#if isUserLevel(bid.price)}
-								<span class="ml-1 inline-block h-1 w-1 rounded-full bg-green-400 align-middle">
+								<span class="ml-1 inline-block h-1 w-1 rounded-full bg-[var(--yes)] align-middle">
 								</span>
 							{/if}
 						</span>
-						<span class="relative z-10 text-xs font-medium text-slate-500">
+						<span class="text-muted-foreground relative z-10 text-xs font-medium">
 							{formatQuantity({ value: bid.totalQty, decimals: tokenDecimals })}
 						</span>
 					</button>
@@ -230,7 +234,7 @@
 		</div>
 
 		<div
-			class="mt-6 grid grid-cols-2 gap-4 border-t border-slate-100 pt-4 text-[10px] font-bold tracking-widest text-slate-400 uppercase"
+			class="border-border text-muted-foreground mt-6 grid grid-cols-2 gap-4 border-t pt-4 text-[10px] font-bold tracking-widest uppercase"
 		>
 			<div>Price</div>
 			<div class="text-right">Qty</div>

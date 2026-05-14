@@ -27,11 +27,11 @@
 	}: Props = $props();
 
 	const commonClasses =
-		'flex flex-col items-start justify-between rounded-2xl border transition-all';
+		'flex flex-col items-start justify-between rounded-lg border transition-all duration-[var(--d-hover)] ease-[var(--ease-vici)]';
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
-		default: 'bg-card text-card-foreground border-border shadow-sm',
-		glass: 'bg-foreground/5 backdrop-blur-md border-foreground/10 shadow-xl',
+		default: 'bg-card text-card-foreground border-border shadow-[var(--inset-hi)]',
+		glass: 'bg-foreground/5 backdrop-blur-md border-foreground/10',
 		outline: 'bg-transparent border-2 border-border'
 	};
 
@@ -43,11 +43,15 @@
 	};
 
 	const isInteractive = $derived(nonNullish(onclick) || nonNullish(onkeydown) || role === 'button');
+
+	const interactiveClass = $derived(
+		isInteractive ? 'hover:border-[var(--border-strong)] active:scale-[0.985]' : ''
+	);
 </script>
 
 {#if isInteractive}
 	<BaseButton
-		class="{commonClasses} {variants[variant]} {paddings[padding]} {className}"
+		class="{commonClasses} {variants[variant]} {paddings[padding]} {interactiveClass} {className}"
 		{onclick}
 		{onkeydown}
 		{role}

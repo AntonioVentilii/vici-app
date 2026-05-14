@@ -30,7 +30,7 @@
 	const isVxp = $derived(tokenSymbol === VXP_TOKEN.symbol);
 </script>
 
-<div class="flex items-center justify-between px-6 py-4 transition-colors hover:bg-slate-50/50">
+<div class="hover:bg-foreground/5 flex items-center justify-between px-6 py-4 transition-colors">
 	<div class="flex items-center gap-3">
 		<div class="flex h-8 w-8 items-center justify-center rounded-full {colorClasses}">
 			<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -39,13 +39,13 @@
 		</div>
 		<div class="flex flex-col">
 			<div class="flex items-center gap-2">
-				<span class="text-sm font-bold text-slate-900">{tokenSymbol}</span>
+				<span class="text-foreground text-sm font-bold">{tokenSymbol}</span>
 				{#if isDev() && isDevEnabled}
 					<Badge size="sm" variant="warning">DEV</Badge>
 				{/if}
 			</div>
 			{#if nonNullish(assetWorth) && assetWorth.haircut_bps > 0}
-				<span class="text-[10px] font-medium text-orange-500">
+				<span class="text-primary text-[10px] font-medium">
 					{assetWorth.haircut_bps / 100}% Haircut
 				</span>
 			{/if}
@@ -53,14 +53,14 @@
 	</div>
 
 	<div class="text-right">
-		<div class="text-sm font-black text-slate-950">
+		<div class="text-foreground text-sm font-black">
 			{formatToken({
 				value: balance,
 				unitName: decimals,
 				displayDecimals: isVxp ? VXP_BALANCE_DISPLAY_DECIMALS : undefined
 			})}
 		</div>
-		<div class="text-[10px] font-medium text-slate-400 uppercase">
+		<div class="text-muted-foreground text-[10px] font-medium uppercase">
 			{#if $playgroundVxpUnitMode}
 				{tokenSymbol}
 			{:else if nonNullish(assetWorth)}

@@ -1,11 +1,11 @@
 <footer
-	class="text-muted-foreground mx-auto flex max-w-7xl items-center justify-center gap-2 px-4 py-3 text-xs opacity-60"
+	class="border-border text-muted-foreground mx-auto flex max-w-7xl items-center justify-center gap-2 border-t px-4 py-3 text-xs"
 >
 	<div class="flex items-center gap-2">
 		Built on
 		<span class="flex items-baseline gap-1">
 			<a
-				class="group hover:text-lavender-blue-500 active:text-lavender-blue-400"
+				class="group hover:text-foreground active:text-foreground/80"
 				aria-label="Go to Juno website and documentation"
 				href="https://juno.build"
 				rel="noopener noreferrer"
@@ -33,7 +33,7 @@
 						>
 						</path>
 						<circle
-							class="cls-1 fill-lavender-blue-500 group-hover:fill-black group-active:fill-black dark:group-hover:fill-white dark:group-active:fill-white"
+							class="cls-1 fill-primary group-hover:fill-foreground group-active:fill-foreground"
 							cx="931.86"
 							cy="68.14"
 							r="68.14"

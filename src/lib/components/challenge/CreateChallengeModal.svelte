@@ -116,20 +116,23 @@
 <Modal {isOpen} onClose={close}>
 	<div class="space-y-6">
 		<div>
-			<h3 class="text-2xl font-black text-slate-950">Create a Challenge</h3>
-			<p class="mt-1 text-sm text-slate-500">
+			<h3 class="text-foreground text-2xl font-black">Create a Challenge</h3>
+			<p class="text-muted-foreground mt-1 text-sm">
 				Ask a question and let your circle predict the answer.
 			</p>
 		</div>
 
 		<!-- Question -->
 		<div class="space-y-2">
-			<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="ch-title">
+			<label
+				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
+				for="ch-title"
+			>
 				What's the question?
 			</label>
 			<input
 				id="ch-title"
-				class="w-full rounded-2xl border-none bg-slate-50 px-5 py-4 text-lg font-bold text-slate-950 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-fuchsia-500"
+				class="bg-foreground/5 text-foreground ring-border focus:bg-card focus:ring-primary w-full rounded-2xl border-none px-5 py-4 text-lg font-bold ring-1 ring-inset focus:ring-2"
 				placeholder="e.g., Will I quit smoking by June?"
 				type="text"
 				bind:value={title}
@@ -138,13 +141,16 @@
 
 		<!-- Description (optional) -->
 		<div class="space-y-2">
-			<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="ch-desc">
+			<label
+				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
+				for="ch-desc"
+			>
 				Details
-				<span class="font-normal text-slate-400">(optional)</span>
+				<span class="text-muted-foreground font-normal">(optional)</span>
 			</label>
 			<textarea
 				id="ch-desc"
-				class="w-full rounded-2xl border-none bg-slate-50 px-5 py-3 text-sm text-slate-950 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-fuchsia-500"
+				class="bg-foreground/5 text-foreground ring-border focus:bg-card focus:ring-primary w-full rounded-2xl border-none px-5 py-3 text-sm ring-1 ring-inset focus:ring-2"
 				placeholder="Add context or resolution criteria..."
 				rows="2"
 				bind:value={description}
@@ -153,12 +159,15 @@
 
 		<!-- Expiry -->
 		<div class="space-y-2">
-			<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="ch-expiry">
+			<label
+				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
+				for="ch-expiry"
+			>
 				When does it expire?
 			</label>
 			<input
 				id="ch-expiry"
-				class="w-full rounded-2xl border-none bg-slate-50 px-5 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-fuchsia-500"
+				class="bg-foreground/5 text-foreground ring-border focus:bg-card focus:ring-primary w-full rounded-2xl border-none px-5 py-4 ring-1 ring-inset focus:ring-2"
 				type="datetime-local"
 				bind:value={expiryDate}
 			/>
@@ -166,13 +175,13 @@
 
 		<!-- Stakes -->
 		<div class="space-y-3">
-			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">Stakes</span>
+			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">Stakes</span>
 			<div class="grid grid-cols-2 gap-3">
 				<button
 					class="rounded-2xl border-2 px-4 py-3 text-center font-bold transition-all {stakes ===
 					'bragging'
-						? 'border-fuchsia-500 bg-fuchsia-50 text-fuchsia-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-primary bg-primary/10 text-primary'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (stakes = 'bragging')}
 					type="button"
 				>
@@ -182,8 +191,8 @@
 				<button
 					class="rounded-2xl border-2 px-4 py-3 text-center font-bold transition-all {stakes ===
 					'vxp'
-						? 'border-indigo-500 bg-indigo-50 text-indigo-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-primary bg-primary/10 text-primary'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (stakes = 'vxp')}
 					type="button"
 				>
@@ -195,13 +204,15 @@
 
 		<!-- Audience -->
 		<div class="space-y-3">
-			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">Who can play?</span>
+			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
+				>Who can play?</span
+			>
 			<div class="grid grid-cols-3 gap-2">
 				<button
 					class="rounded-xl border-2 px-3 py-2.5 text-xs font-bold transition-all {audience ===
 					'public'
-						? 'border-slate-900 bg-slate-900 text-white'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-foreground bg-foreground text-background'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (audience = 'public')}
 					type="button"
 				>
@@ -210,8 +221,8 @@
 				<button
 					class="rounded-xl border-2 px-3 py-2.5 text-xs font-bold transition-all {audience ===
 					'friends'
-						? 'border-slate-900 bg-slate-900 text-white'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-foreground bg-foreground text-background'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (audience = 'friends')}
 					type="button"
 				>
@@ -220,8 +231,8 @@
 				<button
 					class="rounded-xl border-2 px-3 py-2.5 text-xs font-bold transition-all {audience ===
 					'group'
-						? 'border-slate-900 bg-slate-900 text-white'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-foreground bg-foreground text-background'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (audience = 'group')}
 					type="button"
 				>
@@ -231,18 +242,18 @@
 		</div>
 
 		{#if audience === 'group'}
-			<div class="space-y-2 rounded-2xl bg-slate-50 p-4">
+			<div class="bg-foreground/5 space-y-2 rounded-2xl p-4">
 				{#if availableGroups.length === 0}
-					<p class="text-sm text-slate-500 italic">
+					<p class="text-muted-foreground text-sm italic">
 						No groups yet. Create one from your Profile page first.
 					</p>
 				{:else}
 					{#each availableGroups as group (group.group_id)}
 						<label
-							class="flex cursor-pointer items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-slate-200 transition-colors ring-inset hover:bg-slate-50"
+							class="bg-card ring-border hover:bg-foreground/5 flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 ring-1 transition-colors ring-inset"
 						>
 							<input
-								class="accent-slate-900"
+								class="accent-primary"
 								checked={selectedGroupIds.includes(group.group_id)}
 								onchange={() => {
 									if (selectedGroupIds.includes(group.group_id)) {
@@ -253,8 +264,8 @@
 								}}
 								type="checkbox"
 							/>
-							<span class="text-sm font-semibold text-slate-800">{group.name}</span>
-							<span class="ml-auto text-xs text-slate-400">{group.members.length}</span>
+							<span class="text-foreground text-sm font-semibold">{group.name}</span>
+							<span class="text-muted-foreground ml-auto text-xs">{group.members.length}</span>
 						</label>
 					{/each}
 				{/if}
@@ -262,8 +273,8 @@
 		{/if}
 
 		<!-- Explainer -->
-		<div class="rounded-2xl bg-gradient-to-br from-fuchsia-50 to-violet-50 p-4">
-			<p class="text-xs leading-relaxed text-fuchsia-900/70">
+		<div class="bg-primary/5 ring-primary/10 rounded-2xl p-4 ring-1 ring-inset">
+			<p class="text-muted-foreground text-xs leading-relaxed">
 				<strong>How it works:</strong> Your challenge appears in the markets feed.
 				{#if stakes === 'bragging'}
 					Participants predict YES or NO — the loser pays the dare!

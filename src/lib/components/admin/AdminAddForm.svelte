@@ -24,8 +24,8 @@
 	const grantableRoles: UserRole[] = [UserRole.ADMIN, UserRole.SOLVER, UserRole.CREATOR];
 </script>
 
-<div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-	<h2 class="mb-6 text-xl font-semibold text-slate-900">Assign Role</h2>
+<div class="border-border bg-card rounded-xl border p-6">
+	<h2 class="text-foreground mb-6 text-xl font-semibold">Assign Role</h2>
 
 	<form
 		class="space-y-6"
@@ -36,13 +36,13 @@
 		}}
 	>
 		<div>
-			<label class="block text-sm font-medium text-slate-900" for="admin-principal">
+			<label class="text-foreground block text-sm font-medium" for="admin-principal">
 				User Principal ID
 			</label>
 			<div class="mt-2">
 				<input
 					id="admin-principal"
-					class="focus:ring-brand-600 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-slate-300 ring-inset placeholder:text-slate-400 focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
+					class="focus:ring-brand-600 text-foreground ring-border placeholder:text-muted-foreground focus:ring-primary block w-full rounded-md border-0 py-1.5 ring-1 ring-inset focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
 					oninput={(e) => onPrincipalChange(e.currentTarget.value.trim())}
 					placeholder="aaaaa-aa..."
 					required
@@ -56,11 +56,11 @@
 		</div>
 
 		<div>
-			<label class="block text-sm font-medium text-slate-900" for="user-role"> Role </label>
+			<label class="text-foreground block text-sm font-medium" for="user-role"> Role </label>
 			<div class="mt-2">
 				<select
 					id="user-role"
-					class="focus:ring-brand-600 block w-full rounded-md border-0 py-2 pr-10 pl-3 text-slate-900 shadow-sm ring-1 ring-slate-300 ring-inset focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
+					class="focus:ring-brand-600 text-foreground ring-border focus:ring-primary block w-full rounded-md border-0 py-2 pr-10 pl-3 ring-1 ring-inset focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
 					onchange={(e) => onRoleChange(e.currentTarget.value as UserRole)}
 					value={role}
 				>
@@ -69,7 +69,7 @@
 					{/each}
 				</select>
 			</div>
-			<p class="mt-2 text-sm text-slate-500">Select the permission level for this user.</p>
+			<p class="text-muted-foreground mt-2 text-sm">Select the permission level for this user.</p>
 		</div>
 
 		<Button

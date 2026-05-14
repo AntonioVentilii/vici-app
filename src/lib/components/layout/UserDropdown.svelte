@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
-	import { Sun, Moon, Palette } from 'lucide-svelte/icons';
+	import { Sun, Moon } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import DomainSwitch from '$lib/components/layout/DomainSwitch.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
@@ -40,7 +40,7 @@
 <PopOver bind:open>
 	{#snippet trigger()}
 		<BaseButton
-			class="h-10 w-10 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 active:scale-95"
+			class="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-base)] bg-[var(--bg-surface)] text-[var(--text-base)] transition-all hover:border-[var(--border-strong)] active:scale-95"
 			aria-label="User profile"
 			data-tid={TestId.UserMenu}
 		>
@@ -64,7 +64,7 @@
 	{#snippet content()}
 		<div class="w-48 py-1">
 			<BaseButton
-				class="flex w-full items-center gap-3 px-4 py-2 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-indigo-600"
+				class="text-foreground hover:bg-primary/10 hover:text-primary flex w-full items-center gap-3 px-4 py-2 text-left text-sm font-medium"
 				onclick={goToProfile}
 			>
 				<svg
@@ -95,13 +95,13 @@
 				<div class="flex gap-1">
 					<button
 						class="flex flex-1 items-center justify-center rounded-md border p-2 transition-all {$theme ===
-						'peach'
+						'dark'
 							? 'border-primary bg-primary/10 text-primary shadow-sm'
 							: 'border-border text-muted-foreground hover:bg-muted'}"
-						aria-label="Peach theme"
-						onclick={() => setTheme('peach')}
+						aria-label="Dark theme"
+						onclick={() => setTheme('dark')}
 					>
-						<Palette size={16} />
+						<Moon size={16} />
 					</button>
 					<button
 						class="flex flex-1 items-center justify-center rounded-md border p-2 transition-all {$theme ===
@@ -113,23 +113,13 @@
 					>
 						<Sun size={16} />
 					</button>
-					<button
-						class="flex flex-1 items-center justify-center rounded-md border p-2 transition-all {$theme ===
-						'dark'
-							? 'border-primary bg-primary/10 text-primary shadow-sm'
-							: 'border-border text-muted-foreground hover:bg-muted'}"
-						aria-label="Dark theme"
-						onclick={() => setTheme('dark')}
-					>
-						<Moon size={16} />
-					</button>
 				</div>
 			</div>
 
 			<div class="border-border my-1 border-t"></div>
 
 			<BaseButton
-				class="w-full gap-3 px-4 py-2 text-left text-sm font-medium text-red-600 hover:bg-red-50"
+				class="text-destructive hover:bg-destructive/10 w-full gap-3 px-4 py-2 text-left text-sm font-medium"
 				data-tid={TestId.Logout}
 				onclick={doSignOut}
 				status={signOutStatus}

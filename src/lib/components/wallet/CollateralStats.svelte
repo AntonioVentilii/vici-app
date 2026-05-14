@@ -60,26 +60,26 @@
 
 <Card padding="none" variant="default">
 	<div
-		class="flex w-full flex-col justify-between gap-4 border-b border-slate-100 p-6 sm:flex-row sm:items-center"
+		class="border-border flex w-full flex-col justify-between gap-4 border-b p-6 sm:flex-row sm:items-center"
 	>
 		<div>
 			<div class="flex items-center gap-3">
-				<div class="text-xs font-bold tracking-widest text-indigo-600 uppercase">
+				<div class="text-primary text-xs font-bold tracking-widest uppercase">
 					Clearing Collateral
 				</div>
 			</div>
-			<div class="mt-1 space-y-1 text-sm text-slate-500">
+			<div class="text-muted-foreground mt-1 space-y-1 text-sm">
 				{#if isNullish(collateral)}
-					<div class="h-4 w-32 animate-pulse rounded bg-slate-100"></div>
-					<div class="mt-2 h-4 w-24 animate-pulse rounded bg-slate-100"></div>
+					<div class="h-4 w-32 animate-pulse rounded bg-[var(--bg-surface)]"></div>
+					<div class="mt-2 h-4 w-24 animate-pulse rounded bg-[var(--bg-surface)]"></div>
 				{:else if nonNullish(collateral.accountState)}
 					<p>
-						Deposited: <span class="font-bold text-slate-900">
+						Deposited: <span class="text-foreground font-mono font-bold tabular-nums">
 							{depositedNominalLabel || '0'}
 						</span>
 					</p>
 					<p>
-						Available: <span class="font-bold text-slate-900">
+						Available: <span class="text-foreground font-mono font-bold tabular-nums">
 							{formatAvailableMarginForUi({
 								value: intuitiveAvailable ?? ZERO,
 								playground: $playgroundVxpUnitMode
@@ -94,7 +94,7 @@
 
 		<div class="flex items-center gap-4">
 			<div class="flex items-center gap-2">
-				<span class="text-xs text-slate-500">Hide zero</span>
+				<span class="text-muted-foreground text-xs">Hide zero</span>
 				<Switch bind:checked={hideZeroBalances} />
 			</div>
 
@@ -102,15 +102,15 @@
 		</div>
 	</div>
 
-	<div class="flex w-full flex-col divide-y divide-slate-50">
+	<div class="divide-border flex w-full flex-col divide-y">
 		{#if isNullish(collateral)}
 			{#each { length: 3 } as _, i (i)}
 				<div class="flex items-center justify-between p-6">
 					<div class="flex items-center gap-3">
-						<div class="h-10 w-10 animate-pulse rounded-full bg-slate-100"></div>
-						<div class="h-4 w-24 animate-pulse rounded bg-slate-100"></div>
+						<div class="h-10 w-10 animate-pulse rounded-full bg-[var(--bg-surface)]"></div>
+						<div class="h-4 w-24 animate-pulse rounded bg-[var(--bg-surface)]"></div>
 					</div>
-					<div class="h-4 w-16 animate-pulse rounded bg-slate-100"></div>
+					<div class="h-4 w-16 animate-pulse rounded bg-[var(--bg-surface)]"></div>
 				</div>
 			{/each}
 		{:else}
@@ -137,7 +137,9 @@
 			{/each}
 
 			{#if displayedTokens.length === 0}
-				<div class="p-8 text-center text-sm text-slate-400 italic">No collateral to display</div>
+				<div class="text-muted-foreground p-8 text-center text-sm italic">
+					No collateral to display
+				</div>
 			{/if}
 		{/if}
 	</div>

@@ -31,25 +31,29 @@
 
 <svelte:window onjunoExampleReload={reload} />
 
-<div class="mt-8 w-full max-w-2xl text-slate-950" role="table">
+<div class="text-foreground mt-8 w-full max-w-2xl" role="table">
 	<div role="row">
-		<span aria-sort="none" role="columnheader"> Entries </span>
+		<span class="eyebrow" aria-sort="none" role="columnheader"> Entries </span>
 	</div>
 
 	<div class="py-2" role="rowgroup">
 		{#each items as item, index (index)}
 			<div
-				class="mb-4 flex items-center gap-2 rounded-sm border-[3px] border-slate-950 bg-white px-3 shadow-[8px_8px_0px_rgba(0,0,0,1)] transition-all"
+				class="border-border bg-card mb-4 flex items-center gap-2 rounded-lg border px-3 shadow-[var(--inset-hi)] transition-all duration-[var(--d-hover)] ease-[var(--ease-vici)] hover:border-[var(--border-strong)]"
 				role="row"
 			>
-				<span class="align-center flex min-w-max p-1" aria-rowindex={index} role="cell">
+				<span
+					class="num align-center text-muted-foreground flex min-w-max p-1"
+					aria-rowindex={index}
+					role="cell"
+				>
 					{index + 1}
 				</span>
 				<div class="line-clamp-3 grow overflow-hidden" role="cell">{item.data.text}</div>
 				<div class="flex justify-center gap-2 align-middle" role="cell">
 					{#if nonNullish(item.data.url)}
 						<a
-							class="hover:text-lavender-blue-500 active:text-lavender-blue-400"
+							class="text-muted-foreground hover:text-primary active:text-primary/80"
 							aria-label="Open data"
 							href={item.data.url}
 							rel="noopener noreferrer"

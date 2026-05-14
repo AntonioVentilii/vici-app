@@ -26,11 +26,14 @@
 	}: Props = $props();
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
-		primary: 'bg-primary text-primary-foreground shadow-lg hover:opacity-90',
-		secondary: 'bg-secondary text-secondary-foreground shadow-sm hover:opacity-90',
-		outline: 'border-2 border-primary text-primary bg-transparent hover:bg-primary/5',
-		ghost: 'bg-transparent text-foreground hover:bg-primary/10',
-		danger: 'bg-destructive text-destructive-foreground shadow-md hover:opacity-90'
+		primary:
+			'bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] hover:bg-[var(--laurel-deep)]',
+		secondary:
+			'bg-foreground/6 text-foreground border border-border hover:border-[var(--border-strong)]',
+		outline: 'border border-primary text-primary bg-transparent hover:bg-primary/5',
+		ghost: 'bg-transparent text-foreground hover:bg-foreground/6',
+		danger:
+			'bg-destructive text-destructive-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] hover:bg-[var(--no-deep)]'
 	};
 
 	const sizes: Record<NonNullable<Props['size']>, string> = {
@@ -41,7 +44,9 @@
 </script>
 
 <BaseButton
-	class="gap-2 rounded-lg font-bold active:scale-95 {variants[variant]} {sizes[size]} {className}"
+	class="gap-2 rounded-[4px] font-bold transition-all duration-[var(--d-hover)] ease-[var(--ease-vici)] active:scale-[0.985] {variants[
+		variant
+	]} {sizes[size]} {className}"
 	{busyLabel}
 	{onclick}
 	{status}

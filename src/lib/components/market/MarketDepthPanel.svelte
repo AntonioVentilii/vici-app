@@ -60,71 +60,74 @@
 	<!-- Probability Overview -->
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
 		{#if market.payoffType === 'Binary'}
-			<div class="rounded-3xl border border-emerald-100 bg-emerald-50 p-6">
+			<div class="rounded-3xl border border-[var(--yes)]/20 bg-[var(--yes-wash)] p-6">
 				<div class="flex items-center justify-between">
-					<span class="text-xs font-bold tracking-widest text-emerald-600 uppercase">YES Odds</span>
-					<div class="h-2 w-2 animate-pulse rounded-full bg-emerald-500"></div>
+					<span class="text-xs font-bold tracking-widest text-[var(--yes)] uppercase">YES Odds</span
+					>
+					<div class="h-2 w-2 animate-pulse rounded-full bg-[var(--yes)]"></div>
 				</div>
 				<div class="mt-4 flex items-baseline gap-2">
-					<span class="text-4xl font-black text-emerald-950">
+					<span class="text-foreground text-4xl font-black">
 						{formatProbability(market.yesProbability)}
 					</span>
-					<span class="text-xs font-medium text-emerald-600">probability</span>
+					<span class="text-xs font-medium text-[var(--yes)]">probability</span>
 				</div>
-				<div class="mt-4 h-1.5 w-full rounded-full bg-emerald-100">
+				<div class="mt-4 h-1.5 w-full rounded-full bg-[var(--yes)]/20">
 					<div
 						style="width: {market.yesProbability * 100}%"
-						class="h-full rounded-full bg-emerald-500"
+						class="h-full rounded-full bg-[var(--yes)]"
 					></div>
 				</div>
 			</div>
 
-			<div class="rounded-3xl border border-rose-100 bg-rose-50 p-6">
+			<div class="border-destructive/20 bg-destructive/10 rounded-3xl border p-6">
 				<div class="flex items-center justify-between">
-					<span class="text-xs font-bold tracking-widest text-rose-600 uppercase">NO Odds</span>
-					<div class="h-2 w-2 animate-pulse rounded-full bg-rose-500"></div>
+					<span class="text-destructive text-xs font-bold tracking-widest uppercase">NO Odds</span>
+					<div class="bg-destructive h-2 w-2 animate-pulse rounded-full"></div>
 				</div>
 				<div class="mt-4 flex items-baseline gap-2">
-					<span class="text-4xl font-black text-rose-950">
+					<span class="text-foreground text-4xl font-black">
 						{formatProbability(market.noProbability)}
 					</span>
-					<span class="text-xs font-medium text-rose-600">probability</span>
+					<span class="text-destructive text-xs font-medium">probability</span>
 				</div>
-				<div class="mt-4 h-1.5 w-full rounded-full bg-rose-100">
+				<div class="bg-destructive/20 mt-4 h-1.5 w-full rounded-full">
 					<div
 						style="width: {market.noProbability * 100}%"
-						class="h-full rounded-full bg-rose-500"
+						class="bg-destructive h-full rounded-full"
 					></div>
 				</div>
 			</div>
 		{:else}
-			<div class="col-span-full rounded-3xl border border-indigo-100 bg-indigo-50 p-6">
+			<div class="border-primary/20 bg-primary/10 col-span-full rounded-3xl border p-6">
 				<div class="flex items-center justify-between">
-					<span class="text-xs font-bold tracking-widest text-indigo-600 uppercase">
+					<span class="text-primary text-xs font-bold tracking-widest uppercase">
 						{market.outcomes?.find((o) => o.id === selectedOutcome)?.title ?? 'Outcome'} Odds
 					</span>
-					<div class="h-2 w-2 animate-pulse rounded-full bg-indigo-500"></div>
+					<div class="bg-primary h-2 w-2 animate-pulse rounded-full"></div>
 				</div>
 				<div class="mt-4 flex items-baseline gap-2">
-					<span class="text-4xl font-black text-indigo-950"> -- </span>
-					<span class="text-xs font-medium text-indigo-600">probability</span>
+					<span class="text-foreground text-4xl font-black"> -- </span>
+					<span class="text-primary text-xs font-medium">probability</span>
 				</div>
-				<div class="mt-4 h-1.5 w-full rounded-full bg-indigo-100">
-					<div style="width: 50%" class="h-full rounded-full bg-indigo-500"></div>
+				<div class="bg-primary/20 mt-4 h-1.5 w-full rounded-full">
+					<div style="width: 50%" class="bg-primary h-full rounded-full"></div>
 				</div>
 			</div>
 		{/if}
 	</div>
 
 	<div class="mt-8 flex flex-col gap-4">
-		<h4 class="text-sm font-bold tracking-widest text-slate-400 uppercase">Live Liquidity</h4>
-		<div class="flex flex-wrap gap-2 rounded-2xl bg-slate-50 p-2">
+		<h4 class="text-muted-foreground text-sm font-bold tracking-widest uppercase">
+			Live Liquidity
+		</h4>
+		<div class="bg-foreground/5 flex flex-wrap gap-2 rounded-2xl p-2">
 			{#if market.payoffType === 'Binary'}
 				<button
 					class="rounded-xl px-6 py-2 text-[10px] font-black tracking-widest uppercase transition-all {selectedOutcome ===
 					'YES'
-						? 'bg-white text-indigo-600 shadow-sm'
-						: 'text-slate-500 hover:text-slate-700'}"
+						? 'bg-card text-primary shadow-sm'
+						: 'text-muted-foreground hover:text-foreground'}"
 					onclick={() => (selectedOutcome = 'YES')}
 				>
 					Show YES
@@ -132,8 +135,8 @@
 				<button
 					class="rounded-xl px-6 py-2 text-[10px] font-black tracking-widest uppercase transition-all {selectedOutcome ===
 					'NO'
-						? 'bg-white text-indigo-600 shadow-sm'
-						: 'text-slate-500 hover:text-slate-700'}"
+						? 'bg-card text-primary shadow-sm'
+						: 'text-muted-foreground hover:text-foreground'}"
 					onclick={() => (selectedOutcome = 'NO')}
 				>
 					Show NO
@@ -143,8 +146,8 @@
 					<button
 						class="rounded-xl px-4 py-2 text-[10px] font-black tracking-widest uppercase transition-all {selectedOutcome ===
 						outcome.id
-							? 'bg-white text-indigo-600 shadow-sm'
-							: 'text-slate-500 hover:text-slate-700'}"
+							? 'bg-card text-primary shadow-sm'
+							: 'text-muted-foreground hover:text-foreground'}"
 						onclick={() => (selectedOutcome = outcome.id)}
 					>
 						{outcome.title}

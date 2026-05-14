@@ -28,7 +28,7 @@
 <PopOver bind:open>
 	{#snippet trigger()}
 		<BaseButton
-			class="h-10 w-10 rounded-full bg-slate-100 text-slate-600 hover:bg-slate-200 hover:text-slate-900 active:scale-95"
+			class="bg-foreground/5 text-muted-foreground hover:bg-foreground/8 hover:text-foreground h-10 w-10 rounded-full active:scale-95"
 			aria-label="Wallet"
 		>
 			<svg
@@ -52,7 +52,9 @@
 	{#snippet content()}
 		<div class="w-64 p-2">
 			<div class="mb-4">
-				<h3 class="px-2 text-xs font-semibold tracking-wider text-slate-400 uppercase">Balances</h3>
+				<h3 class="text-muted-foreground px-2 text-xs font-semibold tracking-wider uppercase">
+					Balances
+				</h3>
 				<div class="mt-2 space-y-1">
 					{#each $walletUiTokens as token (token.id)}
 						{@const walletBalance = balances.balances[token.id] ?? ZERO}
@@ -60,8 +62,8 @@
 						{@const totalBalance = walletBalance + collateralBalance}
 
 						<div class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors">
-							<span class="text-sm font-medium text-slate-600">{token.symbol}</span>
-							<span class="text-sm font-bold text-slate-900">
+							<span class="text-muted-foreground text-sm font-medium">{token.symbol}</span>
+							<span class="text-foreground text-sm font-bold">
 								{formatToken({
 									value: totalBalance,
 									unitName: token.decimals,
@@ -74,9 +76,9 @@
 				</div>
 			</div>
 
-			<div class="border-t border-slate-100 pt-2">
+			<div class="border-border border-t pt-2">
 				<BaseButton
-					class="w-full rounded-lg bg-indigo-600 px-4 py-2 text-center text-sm font-semibold text-white hover:bg-indigo-700 active:scale-95"
+					class="bg-primary text-primary-foreground hover:bg-primary/90 w-full rounded-lg px-4 py-2 text-center text-sm font-semibold active:scale-95"
 					onclick={goToWallet}
 				>
 					Go to Wallet

@@ -20,7 +20,7 @@
 </script>
 
 <div class="flex flex-col items-center space-y-6 text-center">
-	<div class="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-100 p-4 shadow-sm">
+	<div class="bg-card flex h-16 w-16 items-center justify-center rounded-2xl p-4 shadow-sm">
 		<OutcomeBadge {status} />
 	</div>
 
@@ -31,12 +31,12 @@
 	{/if}
 
 	<div class="space-y-4">
-		<h1 class="max-w-4xl text-3xl font-black text-slate-950 sm:text-5xl lg:text-5xl">
+		<h1 class="text-foreground max-w-4xl text-3xl font-black sm:text-5xl lg:text-5xl">
 			{title}
 		</h1>
 
 		{#if market.description}
-			<p class="mx-auto max-w-2xl text-sm leading-relaxed text-slate-500 sm:text-lg">
+			<p class="text-muted-foreground mx-auto max-w-2xl text-sm leading-relaxed sm:text-lg">
 				{market.description}
 			</p>
 		{/if}
@@ -50,7 +50,7 @@
 			{#if market.isInviteOnly}
 				<Badge size="sm" variant="warning">Closed Circle</Badge>
 			{/if}
-			<span class="inline-flex items-center gap-1 text-[10px] font-bold text-slate-400">
+			<span class="text-muted-foreground inline-flex items-center gap-1 text-[10px] font-bold">
 				Created by <PrincipalText principal={market.creator} splitLength={5} />
 			</span>
 		</div>
@@ -58,7 +58,7 @@
 		{#if !isFork}
 			<div class="pt-2">
 				<Button onclick={() => (isForkModalOpen = true)} size="sm" variant="outline">
-					<span class="mr-2">🤝</span> Challenge Friends
+					Challenge Friends
 				</Button>
 			</div>
 		{/if}

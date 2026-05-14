@@ -234,11 +234,14 @@
 	const visibleCards = $derived(markets.slice(currentIndex, currentIndex + 3));
 </script>
 
-<div class="flow-shell bg-white" class:is-active={!completed && markets.length > 0 && !loading}>
+<div
+	class="flow-shell bg-background"
+	class:is-active={!completed && markets.length > 0 && !loading}
+>
 	{#if loading}
 		<div class="flex h-full w-full flex-col items-center justify-center gap-4" in:fade>
 			<LoadingSpinner />
-			<p class="font-medium text-slate-500">Preparing your Flow queue…</p>
+			<p class="text-muted-foreground font-medium">Preparing your Flow queue…</p>
 		</div>
 	{:else if completed || markets.length === 0}
 		<div class="completion-bg flex h-full w-full flex-col items-center justify-center px-6">
@@ -252,7 +255,7 @@
 
 			<div class="relative z-10 max-w-md text-center" in:fly={{ y: 20, duration: 500 }}>
 				<div
-					class="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-emerald-100 text-emerald-600 shadow-[0_20px_40px_rgba(16,185,129,0.3)]"
+					class="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-[var(--yes-wash)] text-[var(--yes)] shadow-[0_20px_40px_rgba(79,211,161,0.2)]"
 					in:scale={{ start: 0.4, duration: 600, easing: backOut, delay: 120 }}
 				>
 					<svg class="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -265,28 +268,38 @@
 					</svg>
 				</div>
 
-				<h2 class="mb-2 text-4xl font-black tracking-tighter text-slate-950">Flow Complete</h2>
-				<p class="mb-6 text-slate-600">
+				<h2 class="text-foreground mb-2 text-4xl font-black tracking-tighter">Flow Complete</h2>
+				<p class="text-muted-foreground mb-6">
 					{#if betsCount === 0}
 						You reviewed all available markets.
 					{:else}
-						You made <span class="font-black text-slate-900">{betsCount}</span>
-						{betsCount === 1 ? 'prediction' : 'predictions'}. Not bad at all.
+						You made <span class="text-foreground font-black">{betsCount}</span>
+						{betsCount === 1 ? 'prediction' : 'predictions'}. Called it.
 					{/if}
 				</p>
 
 				<div class="mb-8 grid grid-cols-3 gap-3">
-					<div class="rounded-2xl bg-slate-100 px-3 py-4">
-						<div class="text-[9px] font-bold tracking-widest text-slate-500 uppercase">XP</div>
-						<div class="text-2xl font-black text-slate-900 tabular-nums">+{xp}</div>
+					<div class="bg-card border-border rounded-2xl border px-3 py-4">
+						<div class="text-[9px] font-bold tracking-widest text-[var(--laurel)] uppercase">
+							XP
+						</div>
+						<div class="text-foreground font-mono text-2xl font-black tabular-nums">+{xp}</div>
 					</div>
-					<div class="rounded-2xl bg-orange-100 px-3 py-4">
-						<div class="text-[9px] font-bold tracking-widest text-orange-600 uppercase">Streak</div>
-						<div class="text-2xl font-black text-orange-700 tabular-nums">{bestStreak}🔥</div>
+					<div class="bg-card border-border rounded-2xl border px-3 py-4">
+						<div class="text-[9px] font-bold tracking-widest text-[var(--laurel)] uppercase">
+							Streak
+						</div>
+						<div class="font-mono text-2xl font-black text-[var(--laurel)] tabular-nums">
+							{bestStreak}
+						</div>
 					</div>
-					<div class="rounded-2xl bg-indigo-100 px-3 py-4">
-						<div class="text-[9px] font-bold tracking-widest text-indigo-600 uppercase">Bets</div>
-						<div class="text-2xl font-black text-indigo-700 tabular-nums">{betsCount}</div>
+					<div class="bg-card border-border rounded-2xl border px-3 py-4">
+						<div class="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
+							Predictions
+						</div>
+						<div class="text-foreground font-mono text-2xl font-black tabular-nums">
+							{betsCount}
+						</div>
 					</div>
 				</div>
 
@@ -324,12 +337,12 @@
 			<!-- Streak + XP pill -->
 			<div class="flow-stats">
 				<div class="flow-stat flow-stat-streak" class:is-hot={streak >= 3} aria-label="Streak">
-					<span class="text-sm leading-none">🔥</span>
-					<span class="tabular-nums">{streak}</span>
+					<span class="text-[9px] font-black tracking-widest uppercase">Streak</span>
+					<span class="font-mono tabular-nums">{streak}</span>
 				</div>
 				<div class="flow-stat flow-stat-xp" aria-label="XP">
-					<span class="text-[10px] font-black tracking-widest text-indigo-500">XP</span>
-					<span class="text-indigo-900 tabular-nums">{xp}</span>
+					<span class="text-[10px] font-black tracking-widest text-[var(--laurel)]">XP</span>
+					<span class="text-foreground font-mono tabular-nums">{xp}</span>
 				</div>
 			</div>
 		</header>
@@ -342,7 +355,7 @@
 					in:fly={{ y: -8, duration: 300, easing: backOut }}
 					out:fade={{ duration: 250 }}
 				>
-					<span>🔥 Streak ×{lastStreakShown}</span>
+					<span>Streak ×{lastStreakShown}</span>
 					<span class="combo-banner-xp">x{lastStreakShown >= 5 ? 3 : 2} XP</span>
 				</div>
 			{/key}
@@ -532,7 +545,7 @@
 		padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.75rem 0.5rem
 			calc(env(safe-area-inset-left, 0px) + 0.75rem);
 		padding-right: calc(env(safe-area-inset-right, 0px) + 0.75rem);
-		background: linear-gradient(to bottom, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.75));
+		background: linear-gradient(to bottom, rgba(14, 13, 11, 0.95), rgba(14, 13, 11, 0.75));
 		backdrop-filter: saturate(180%) blur(12px);
 		-webkit-backdrop-filter: saturate(180%) blur(12px);
 	}
@@ -544,15 +557,15 @@
 		width: 2.25rem;
 		height: 2.25rem;
 		border-radius: 999px;
-		background: rgba(15, 23, 42, 0.06);
-		color: rgb(15, 23, 42);
+		background: rgba(242, 236, 220, 0.08);
+		color: var(--parchment);
 		transition:
 			transform 0.15s ease,
 			background-color 0.2s ease;
 	}
 	.flow-icon-btn:active {
 		transform: scale(0.92);
-		background: rgba(15, 23, 42, 0.12);
+		background: rgba(242, 236, 220, 0.15);
 	}
 
 	.flow-progress {
@@ -565,13 +578,13 @@
 		flex: 1;
 		height: 4px;
 		border-radius: 999px;
-		background: rgba(15, 23, 42, 0.08);
+		background: rgba(242, 236, 220, 0.08);
 		overflow: hidden;
 	}
 	.flow-progress-fill {
 		height: 100%;
 		width: var(--p);
-		background: linear-gradient(90deg, #6366f1, #8b5cf6);
+		background: linear-gradient(90deg, var(--laurel-deep), var(--laurel));
 		border-radius: inherit;
 		transition: width 450ms cubic-bezier(0.22, 1, 0.36, 1);
 	}
@@ -604,16 +617,16 @@
 		line-height: 1;
 	}
 	.flow-stat-streak {
-		background: rgb(255, 237, 213);
-		color: rgb(154, 52, 18);
+		background: var(--bg-surface);
+		color: var(--parchment-dim);
 		transition:
 			transform 0.2s ease,
 			background-color 0.2s ease;
 	}
 	.flow-stat-streak.is-hot {
-		background: linear-gradient(135deg, #fb923c, #ef4444);
-		color: white;
-		box-shadow: 0 4px 12px rgba(251, 146, 60, 0.4);
+		background: linear-gradient(135deg, var(--laurel-deep), var(--laurel));
+		color: var(--ink);
+		box-shadow: 0 4px 12px var(--laurel-glow);
 		animation: hotPulse 1.4s ease-in-out infinite;
 	}
 	@keyframes hotPulse {
@@ -626,7 +639,7 @@
 		}
 	}
 	.flow-stat-xp {
-		background: rgb(238, 242, 255);
+		background: var(--bg-surface);
 		display: inline-flex;
 		gap: 5px;
 		align-items: baseline;
@@ -645,18 +658,18 @@
 		gap: 0.75rem;
 		padding: 10px 16px;
 		border-radius: 999px;
-		background: linear-gradient(135deg, #fb923c, #ef4444);
-		color: white;
+		background: linear-gradient(135deg, var(--laurel-deep), var(--laurel));
+		color: var(--ink);
 		font-size: 13px;
 		font-weight: 900;
 		letter-spacing: 0.02em;
-		box-shadow: 0 14px 40px rgba(251, 146, 60, 0.5);
+		box-shadow: 0 14px 40px rgba(226, 184, 66, 0.4);
 		pointer-events: none;
 	}
 	.combo-banner-xp {
 		padding: 3px 8px;
 		border-radius: 999px;
-		background: rgba(255, 255, 255, 0.25);
+		background: rgba(14, 13, 11, 0.2);
 		font-size: 11px;
 	}
 
@@ -709,11 +722,13 @@
 		gap: 0.4rem;
 		padding: 10px 16px;
 		border-radius: 999px;
+		font-family: var(--font-mono);
 		font-size: 22px;
 		font-weight: 900;
 		letter-spacing: -0.02em;
-		background: white;
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
+		background: var(--bg-popover);
+		color: var(--laurel);
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
 		animation: xpPop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 	}
 	.xp-pop-label {
@@ -723,12 +738,12 @@
 		opacity: 0.7;
 	}
 	.xp-pop-yes {
-		color: rgb(4, 120, 87);
-		border: 2px solid rgb(16, 185, 129);
+		color: var(--yes);
+		border: 2px solid var(--yes);
 	}
 	.xp-pop-no {
-		color: rgb(190, 18, 60);
-		border: 2px solid rgb(244, 63, 94);
+		color: var(--no);
+		border: 2px solid var(--no);
 	}
 	@keyframes xpPop {
 		0% {
@@ -755,7 +770,7 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 0.75rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
-		background: linear-gradient(to top, rgba(255, 255, 255, 1) 50%, rgba(255, 255, 255, 0));
+		background: linear-gradient(to top, rgba(14, 13, 11, 1) 50%, rgba(14, 13, 11, 0));
 	}
 
 	.flow-amount {
@@ -764,21 +779,20 @@
 		gap: 4px;
 		padding: 4px;
 		border-radius: 999px;
-		background: rgb(241, 245, 249);
-		ring: 1px solid rgba(15, 23, 42, 0.06);
-		box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.05);
+		background: var(--bg-surface);
+		box-shadow: inset 0 0 0 1px var(--border-base);
 	}
 	.flow-amount-btn {
 		width: 2rem;
 		height: 2rem;
 		border-radius: 999px;
-		background: white;
-		color: rgb(15, 23, 42);
+		background: var(--bg-popover);
+		color: var(--parchment);
 		font-size: 18px;
 		font-weight: 900;
 		line-height: 1;
 		transition: transform 0.12s ease;
-		box-shadow: 0 2px 6px rgba(15, 23, 42, 0.08);
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 	}
 	.flow-amount-btn:active {
 		transform: scale(0.9);
@@ -795,9 +809,10 @@
 		width: 3.5rem;
 		background: transparent;
 		text-align: right;
+		font-family: var(--font-mono);
 		font-size: 15px;
 		font-weight: 900;
-		color: rgb(15, 23, 42);
+		color: var(--parchment);
 		outline: none;
 		font-variant-numeric: tabular-nums;
 		-moz-appearance: textfield;
@@ -811,7 +826,7 @@
 		font-size: 10px;
 		font-weight: 900;
 		letter-spacing: 0.08em;
-		color: rgb(100, 116, 139);
+		color: var(--parchment-mute);
 	}
 
 	.flow-actions {
@@ -827,7 +842,7 @@
 		justify-content: center;
 		gap: 0;
 		border-radius: 999px;
-		background: white;
+		background: var(--bg-surface);
 		transition:
 			transform 0.12s ease,
 			box-shadow 0.2s ease;
@@ -842,29 +857,29 @@
 		font-size: 9px;
 		font-weight: 900;
 		letter-spacing: 0.18em;
-		color: rgb(148, 163, 184);
+		color: var(--parchment-mute);
 	}
 
 	.flow-action-no {
 		width: 3.75rem;
 		height: 3.75rem;
-		border: 3px solid rgb(254, 226, 226);
-		color: rgb(244, 63, 94);
-		box-shadow: 0 10px 24px rgba(244, 63, 94, 0.18);
+		border: 3px solid rgba(255, 107, 107, 0.25);
+		color: var(--no);
+		box-shadow: 0 10px 24px rgba(255, 107, 107, 0.12);
 	}
 	.flow-action-skip {
 		width: 3rem;
 		height: 3rem;
-		border: 3px solid rgb(226, 232, 240);
-		color: rgb(148, 163, 184);
-		box-shadow: 0 6px 14px rgba(15, 23, 42, 0.08);
+		border: 3px solid var(--border-strong);
+		color: var(--parchment-mute);
+		box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
 	}
 	.flow-action-yes {
 		width: 3.75rem;
 		height: 3.75rem;
-		border: 3px solid rgb(209, 250, 229);
-		color: rgb(16, 185, 129);
-		box-shadow: 0 10px 24px rgba(16, 185, 129, 0.22);
+		border: 3px solid rgba(79, 211, 161, 0.25);
+		color: var(--yes);
+		box-shadow: 0 10px 24px rgba(79, 211, 161, 0.15);
 	}
 
 	/* Desktop only keyboard hints */
@@ -875,7 +890,7 @@
 		font-size: 10px;
 		font-weight: 700;
 		letter-spacing: 0.14em;
-		color: rgb(148, 163, 184);
+		color: var(--parchment-mute);
 		text-transform: uppercase;
 		margin-top: 0.25rem;
 	}
@@ -886,10 +901,10 @@
 		min-width: 1.25rem;
 		height: 1.25rem;
 		padding: 0 4px;
-		border: 1.5px solid rgb(226, 232, 240);
+		border: 1.5px solid var(--border-strong);
 		border-radius: 6px;
-		background: white;
-		color: rgb(15, 23, 42);
+		background: var(--bg-surface);
+		color: var(--parchment);
 		font-family: inherit;
 		font-size: 11px;
 		line-height: 1;
@@ -905,8 +920,8 @@
 	.completion-bg {
 		position: relative;
 		background:
-			radial-gradient(circle at 20% 10%, rgba(99, 102, 241, 0.1), transparent 40%),
-			radial-gradient(circle at 80% 90%, rgba(16, 185, 129, 0.1), transparent 40%);
+			radial-gradient(circle at 20% 10%, rgba(226, 184, 66, 0.08), transparent 40%),
+			radial-gradient(circle at 80% 90%, rgba(79, 211, 161, 0.06), transparent 40%);
 		overflow: hidden;
 	}
 	.confetti {

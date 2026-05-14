@@ -135,12 +135,10 @@
 	};
 </script>
 
-<div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+<div class="border-border bg-card rounded-3xl border p-8">
 	<div class="mb-6 flex items-center justify-between">
-		<h2 class="text-2xl font-bold text-slate-950">Bulk Create Markets</h2>
-		<span
-			class="rounded-full bg-indigo-50 px-3 py-1 text-[10px] font-bold text-indigo-600 uppercase"
-		>
+		<h2 class="text-foreground text-2xl font-bold">Bulk Create Markets</h2>
+		<span class="bg-primary/10 text-primary rounded-full px-3 py-1 text-[10px] font-bold uppercase">
 			JSON Upload
 		</span>
 	</div>
@@ -149,8 +147,8 @@
 		<!-- Drop Zone -->
 		<div
 			class="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 transition-all {dragging
-				? 'border-indigo-500 bg-indigo-50'
-				: 'border-slate-200 bg-slate-50 hover:bg-slate-100'}"
+				? 'border-primary bg-primary/10'
+				: 'border-border bg-foreground/5 hover:bg-foreground/8'}"
 			aria-label="Upload markets JSON"
 			ondragleave={() => (dragging = false)}
 			ondragover={(e) => {
@@ -177,12 +175,7 @@
 				<div
 					class="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm"
 				>
-					<svg
-						class="h-6 w-6 text-indigo-600"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
+					<svg class="text-primary h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
 							d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
 							stroke-linecap="round"
@@ -191,8 +184,8 @@
 						/>
 					</svg>
 				</div>
-				<p class="text-sm font-semibold text-slate-900">Click to upload or drag and drop</p>
-				<p class="mt-1 text-xs text-slate-500">JSON file containing an array of markets</p>
+				<p class="text-foreground text-sm font-semibold">Click to upload or drag and drop</p>
+				<p class="text-muted-foreground mt-1 text-xs">JSON file containing an array of markets</p>
 			</div>
 		</div>
 
@@ -205,18 +198,18 @@
 		<!-- Example Section -->
 		<div class="space-y-3">
 			<label
-				class="text-xs font-bold tracking-widest text-slate-500 uppercase"
+				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				for="bulk-market-upload"
 			>
 				Required JSON Format
 			</label>
-			<div class="overflow-hidden rounded-2xl bg-slate-900 p-4">
-				<pre class="overflow-x-auto font-mono text-[10px] text-indigo-300"><code>
+			<div class="bg-background overflow-hidden rounded-2xl p-4">
+				<pre class="text-primary overflow-x-auto font-mono text-[10px]"><code>
 						{JSON.stringify(exampleJson, null, 2)}
 					</code></pre>
 			</div>
 			<button
-				class="flex items-center gap-2 text-xs font-bold text-indigo-600 transition-colors hover:text-indigo-700"
+				class="text-primary hover:text-primary flex items-center gap-2 text-xs font-bold transition-colors"
 				onclick={() => downloadJsonFile({ data: exampleJson, filename: 'markets_template.json' })}
 			>
 				<svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

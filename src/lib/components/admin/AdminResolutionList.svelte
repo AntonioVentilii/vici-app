@@ -45,7 +45,7 @@
 			return { label: 'THIS WEEK', color: 'amber' };
 		}
 
-		return { label: 'PENDING', color: 'slate' };
+		return { label: 'PENDING', color: 'muted' };
 	};
 
 	const getStatusStyles = (color: string) => {
@@ -59,7 +59,7 @@
 			case 'amber':
 				return 'bg-amber-50 border-amber-100 text-amber-700';
 			default:
-				return 'bg-slate-50 border-slate-100 text-slate-600';
+				return 'bg-foreground/5 border-border text-muted-foreground';
 		}
 	};
 
@@ -74,22 +74,22 @@
 			case 'amber':
 				return 'bg-amber-100 text-amber-800';
 			default:
-				return 'bg-slate-200 text-slate-700';
+				return 'bg-foreground/8 text-foreground';
 		}
 	};
 </script>
 
-<div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-	<h2 class="mb-6 text-2xl font-bold text-slate-950">Resolve Active Markets</h2>
+<div class="border-border bg-card rounded-3xl border p-8">
+	<h2 class="text-foreground mb-6 text-2xl font-bold">Resolve Active Markets</h2>
 
 	{#if loading}
 		<div class="flex justify-center py-12">
 			<div
-				class="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"
+				class="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
 			></div>
 		</div>
 	{:else if sortedMarkets.length === 0}
-		<p class="py-12 text-center text-sm text-slate-500 italic">
+		<p class="text-muted-foreground py-12 text-center text-sm italic">
 			No active markets requiring resolution.
 		</p>
 	{:else}

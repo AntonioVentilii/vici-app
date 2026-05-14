@@ -24,12 +24,14 @@
 </script>
 
 <div class="space-y-4">
-	<h2 class="text-xl font-bold tracking-wider text-slate-950 uppercase">Active Positions</h2>
+	<h2 class="font-display text-foreground text-xl font-semibold tracking-wider uppercase">
+		Active Positions
+	</h2>
 	<Card class="overflow-hidden" padding="none">
 		{#if positions.length === 0}
 			<EmptyState message="You haven't placed any predictions yet.">
 				<a
-					class="inline-block rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-bold text-white transition-all hover:bg-indigo-500"
+					class="bg-primary text-primary-foreground hover:bg-primary/90 inline-block rounded-[4px] px-6 py-2.5 text-sm font-bold transition-all active:scale-[0.985]"
 					href="/"
 				>
 					Explore Markets
@@ -40,7 +42,7 @@
 				<table class="w-full min-w-0 table-fixed text-left">
 					<thead>
 						<tr
-							class="border-b border-slate-100 bg-slate-50 text-[10px] tracking-widest text-slate-500 uppercase"
+							class="border-border text-muted-foreground border-b bg-[var(--bg-surface)] text-[10px] tracking-widest uppercase"
 						>
 							<th class="px-6 py-4 font-black">Market</th>
 							<th class="px-6 py-4 font-black">Side</th>
@@ -49,21 +51,21 @@
 							<th class="px-6 py-4 text-right font-black">P&L</th>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-slate-100">
+					<tbody class="divide-border divide-y">
 						{#each positions as pos, index (index)}
 							{@const market = getMarketById(pos.marketId)}
 							{@const pnl = calculatePositionPnL({ position: pos, market })}
 
-							<tr class="group transition-colors hover:bg-slate-50">
+							<tr class="group transition-colors hover:bg-[var(--bg-surface)]">
 								<td class="min-w-0 px-6 py-4">
 									<a class="group block min-w-0" href="/(app)/markets/{pos.marketId}">
 										<span
-											class="block truncate text-sm font-bold text-slate-950 transition-colors group-hover:text-indigo-600"
+											class="text-foreground group-hover:text-primary block truncate text-sm font-bold transition-colors"
 										>
 											{market?.title ?? 'Unknown Market'}
 										</span>
 										<span
-											class="block truncate text-[10px] leading-none tracking-widest text-slate-400 uppercase"
+											class="text-muted-foreground block truncate text-[10px] leading-none tracking-widest uppercase"
 										>
 											ID: {pos.marketId}
 										</span>
@@ -74,24 +76,28 @@
 										<span
 											class="rounded-md border px-1.5 py-0.5 text-[10px] font-black tracking-tight uppercase {pos.outcomeId ===
 											'YES'
-												? 'border-green-200 bg-green-50 text-green-700'
+												? 'border-[var(--yes)]/30 bg-[var(--yes-wash)] text-[var(--yes)]'
 												: pos.outcomeId === 'NO'
-													? 'border-red-200 bg-red-50 text-red-700'
-													: 'border-indigo-200 bg-indigo-50 text-indigo-700'}"
+													? 'border-[var(--no)]/30 bg-[var(--no-wash)] text-[var(--no)]'
+													: 'border-[var(--hold)]/30 bg-[var(--hold-wash)] text-[var(--hold)]'}"
 										>
 											{market?.outcomes?.find((o) => o.id === pos.outcomeId)?.title ??
 												pos.outcomeId}
 										</span>
 									</div>
 								</td>
-								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
+								<td
+									class="text-foreground px-6 py-4 text-right font-mono text-sm font-bold tabular-nums"
+								>
 									{formatQuantity({
 										value: pos.netQty < ZERO ? -pos.netQty : pos.netQty,
 										decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS
 									})}
-									<span class="text-[10px] text-slate-400">QTY</span>
+									<span class="text-muted-foreground text-[10px]">QTY</span>
 								</td>
-								<td class="px-6 py-4 text-right text-sm font-bold text-slate-950">
+								<td
+									class="text-foreground px-6 py-4 text-right font-mono text-sm font-bold tabular-nums"
+								>
 									{formatCurrency({
 										value: calculatePositionValue({ position: pos, market }),
 										decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS,
@@ -99,7 +105,11 @@
 									})}
 								</td>
 								<td class="px-6 py-4 text-right">
-									<span class="text-sm font-black {pnl >= 0 ? 'text-green-600' : 'text-red-600'}">
+									<span
+										class="font-mono text-sm font-black tabular-nums {pnl >= 0
+											? 'text-[var(--yes)]'
+											: 'text-[var(--no)]'}"
+									>
 										{formatPositionPnLWithOptionalUnit({ pnl, playground: $playgroundVxpUnitMode })}
 									</span>
 								</td>

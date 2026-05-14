@@ -20,13 +20,13 @@
 <Modal isOpen={true} {onClose}>
 	<div class="relative overflow-hidden">
 		<div class="space-y-6">
-			<div class=" items center flex flex-row justify-between rounded-2xl bg-slate-50 p-4">
+			<div class=" items center bg-foreground/5 flex flex-row justify-between rounded-2xl p-4">
 				<div class="flex flex-col">
-					<span class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+					<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
 						Predicting on
 					</span>
 
-					<span class="text-xl font-black text-slate-900">
+					<span class="text-foreground text-xl font-black">
 						{market.payoffType === 'Binary'
 							? selectedOutcome
 							: (market.outcomes?.find((o) => o.id === selectedOutcome)?.title ?? selectedOutcome)}
@@ -34,9 +34,9 @@
 				</div>
 
 				<div class="flex flex-col items-end">
-					<span class="text-[10px] font-bold text-indigo-600 uppercase">Current Chance</span>
+					<span class="text-primary text-[10px] font-bold uppercase">Current Chance</span>
 
-					<span class="text-lg font-black text-indigo-600">
+					<span class="text-primary text-lg font-black">
 						{Math.round(
 							(selectedOutcome === 'YES'
 								? market.yesProbability

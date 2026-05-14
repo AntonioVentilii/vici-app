@@ -51,7 +51,7 @@
 </script>
 
 <Dialog title="Remove Admin" bind:show={showConfirmModal}>
-	<p class="mb-6 text-slate-600">
+	<p class="text-muted-foreground mb-6">
 		Are you sure you want to remove <strong class="break-all">
 			{nicknameToRemove ??
 				(principalToRemove ? shortenWithMiddleEllipsis({ text: principalToRemove }) : '')}
@@ -68,23 +68,23 @@
 </Dialog>
 
 <div class="space-y-4">
-	<h3 class="text-xl font-semibold text-slate-900">Current Assigned Roles</h3>
+	<h3 class="text-foreground text-xl font-semibold">Current Assigned Roles</h3>
 
 	{#if roleEntries.length === 0}
-		<p class="text-sm text-slate-500">No roles found or still loading...</p>
+		<p class="text-muted-foreground text-sm">No roles found or still loading...</p>
 	{:else}
-		<ul class="divide-y divide-slate-200 overflow-hidden rounded-md border border-slate-200">
+		<ul class="divide-border border-border divide-y overflow-hidden rounded-md border">
 			{#each roleEntries as entry (entry.principal)}
 				<li class="px-6 py-4">
 					<div class="flex items-center justify-between">
 						<div class="flex items-start gap-3">
 							<div class="min-w-0">
 								{#if entry.nickname}
-									<span class="block text-sm font-semibold text-slate-900">
+									<span class="text-foreground block text-sm font-semibold">
 										{entry.nickname}
 									</span>
 								{/if}
-								<span class="text-sm text-slate-500" class:font-medium={!entry.nickname}>
+								<span class="text-muted-foreground text-sm" class:font-medium={!entry.nickname}>
 									<CopyableAddress address={entry.principal} label="Principal ID" />
 								</span>
 							</div>

@@ -98,7 +98,7 @@
 
 <Modal {isOpen} {onClose}>
 	<BaseButton
-		class="absolute top-6 right-6 text-slate-400 hover:text-slate-600"
+		class="text-muted-foreground hover:text-foreground absolute top-6 right-6"
 		aria-label="Close modal"
 		onclick={close}
 	>
@@ -112,14 +112,14 @@
 		</svg>
 	</BaseButton>
 
-	<h3 class="text-2xl font-black text-slate-950 uppercase">{mode} Collateral</h3>
-	<p class="mt-2 text-sm text-slate-500">Manage your market margin account collateral.</p>
+	<h3 class="text-foreground text-2xl font-black uppercase">{mode} Collateral</h3>
+	<p class="text-muted-foreground mt-2 text-sm">Manage your market margin account collateral.</p>
 
-	<div class="mt-8 flex rounded-2xl bg-slate-100 p-1">
+	<div class="bg-foreground/5 mt-8 flex rounded-2xl p-1">
 		<BaseButton
 			class="flex-1 rounded-xl py-2 text-sm font-bold {mode === 'Deposit'
-				? 'bg-white text-slate-950 shadow-sm'
-				: 'text-slate-500 hover:text-slate-700'}"
+				? 'bg-card text-foreground shadow-sm'
+				: 'text-muted-foreground hover:text-foreground'}"
 			onclick={() => (mode = 'Deposit')}
 		>
 			Deposit
@@ -127,8 +127,8 @@
 
 		<BaseButton
 			class="flex-1 rounded-xl py-2 text-sm font-bold {mode === 'Withdraw'
-				? 'bg-white text-slate-950 shadow-sm'
-				: 'text-slate-500 hover:text-slate-700'}"
+				? 'bg-card text-foreground shadow-sm'
+				: 'text-muted-foreground hover:text-foreground'}"
 			onclick={() => (mode = 'Withdraw')}
 		>
 			Withdraw
@@ -137,9 +137,9 @@
 
 	<div class="mt-8 space-y-6">
 		<div class="space-y-2">
-			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">Token</span>
+			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">Token</span>
 			{#if $supportedTokens.length === 0}
-				<p class="rounded-xl bg-slate-50 p-4 text-sm text-slate-600">
+				<p class="bg-foreground/5 text-muted-foreground rounded-xl p-4 text-sm">
 					No collateral assets are available for this balance domain on the clearing canister. If
 					this persists, the ledger may not be registered for deposits on this network.
 				</p>
@@ -149,8 +149,8 @@
 						<BaseButton
 							class="flex items-center justify-center gap-2 rounded-xl border-2 px-3 py-2.5 font-bold {selectedToken?.ledgerCanisterId ===
 							token.ledgerCanisterId
-								? 'border-indigo-600 bg-indigo-50 text-indigo-600'
-								: 'border-slate-100 bg-slate-50 text-slate-400 hover:border-slate-200'}"
+								? 'border-primary bg-primary/10 text-primary'
+								: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 							onclick={() => (selectedToken = token)}
 						>
 							{token.symbol}
@@ -164,25 +164,27 @@
 		</div>
 
 		<div class="space-y-2">
-			<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="amount">
+			<label class="text-muted-foreground text-xs font-bold tracking-widest uppercase" for="amount">
 				Amount ({selectedToken?.symbol ?? ''})
 			</label>
 			<div class="relative">
 				<input
 					id="amount"
-					class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-xl font-bold text-slate-950 ring-1 ring-slate-200 ring-inset focus:bg-white focus:ring-2 focus:ring-indigo-500"
+					class="bg-foreground/5 text-foreground ring-border focus:bg-card focus:ring-primary w-full rounded-2xl border-none px-6 py-4 text-xl font-bold ring-1 ring-inset focus:ring-2"
 					placeholder="0.00"
 					type="number"
 					bind:value={amount}
 				/>
-				<span class="absolute top-1/2 right-4 -translate-y-1/2 font-bold text-slate-400">
+				<span class="text-muted-foreground absolute top-1/2 right-4 -translate-y-1/2 font-bold">
 					{selectedToken?.symbol ?? ''}
 				</span>
 			</div>
 		</div>
 
 		{#if error}
-			<div class="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+			<div
+				class="border-destructive/20 bg-destructive/10 text-destructive rounded-xl border p-4 text-sm"
+			>
 				{error}
 			</div>
 		{/if}
