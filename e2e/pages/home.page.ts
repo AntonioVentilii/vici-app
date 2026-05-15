@@ -9,6 +9,7 @@ import { TestId } from '../../src/lib/constants/test-ids.constants';
  */
 export class HomePage {
 	readonly page: Page;
+	readonly appMain: Locator;
 	readonly marketFeed: Locator;
 	readonly marketCard: Locator;
 	readonly marketCardSkeleton: Locator;
@@ -20,6 +21,7 @@ export class HomePage {
 
 	constructor(page: Page) {
 		this.page = page;
+		this.appMain = page.getByTestId(TestId.AppMain);
 		this.marketFeed = page.getByTestId(TestId.MarketFeed);
 		this.marketCard = page.getByTestId(TestId.MarketCard);
 		this.marketCardSkeleton = page.getByTestId(TestId.MarketCardSkeleton);

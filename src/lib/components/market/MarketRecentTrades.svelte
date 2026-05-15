@@ -20,36 +20,38 @@
 </script>
 
 <div
-	class={isEmbedded
-		? 'space-y-4 pt-4'
-		: 'space-y-4 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm'}
+	class={isEmbedded ? 'space-y-4 pt-4' : 'border-border bg-card space-y-4 rounded-3xl border p-6'}
 >
 	{#if !isEmbedded}
-		<h3 class="text-xs font-black tracking-widest text-slate-400 uppercase">Recent Activity</h3>
+		<h3 class="text-muted-foreground text-xs font-black tracking-widest uppercase">
+			Recent Activity
+		</h3>
 	{/if}
 
 	<div class="space-y-4">
 		{#if activities.length === 0}
-			<p class="py-4 text-center text-xs text-slate-400">No recent activity</p>
+			<p class="text-muted-foreground py-4 text-center text-xs">No recent activity</p>
 		{:else}
 			{#each activities as activity (activity.timestamp + activity.user)}
 				<div class="flex items-start gap-3">
-					<div class="flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-xs">
+					<div
+						class="bg-foreground/5 flex h-8 w-8 items-center justify-center rounded-full text-xs"
+					>
 						👤
 					</div>
 					<div class="min-w-0 flex-1">
 						<div class="flex items-center justify-between gap-2">
-							<span class="truncate text-xs font-bold text-slate-900">
+							<span class="text-foreground truncate text-xs font-bold">
 								<PrincipalText principal={activity.user} />
 							</span>
-							<span class="text-[10px] font-medium text-slate-400">
+							<span class="text-muted-foreground text-[10px] font-medium">
 								{new Date(activity.timestamp).toLocaleTimeString([], {
 									hour: '2-digit',
 									minute: '2-digit'
 								})}
 							</span>
 						</div>
-						<p class="mt-0.5 text-[10px] leading-tight text-slate-500">
+						<p class="text-muted-foreground mt-0.5 text-[10px] leading-tight">
 							{activity.details ?? `predicted on ${activity.title}`}
 						</p>
 					</div>

@@ -32,13 +32,13 @@
 <span class="inline-flex items-center gap-1.5">
 	<span class="font-mono text-inherit">{displayAddress}</span>
 	<button
-		class="relative inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded text-slate-400 transition-colors hover:text-slate-700"
+		class="text-muted-foreground hover:text-foreground relative inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded transition-colors"
 		aria-label="Copy {label}"
 		onclick={handleCopy}
 	>
 		{#if copied}
 			<span class="absolute inset-0 flex items-center justify-center" in:fade={{ duration: 150 }}>
-				<Check class="h-3.5 w-3.5 text-emerald-500" />
+				<Check class="h-3.5 w-3.5 text-[var(--yes)]" />
 			</span>
 		{:else}
 			<span class="absolute inset-0 flex items-center justify-center" in:fade={{ duration: 150 }}>

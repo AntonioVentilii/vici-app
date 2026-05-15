@@ -55,14 +55,14 @@
 			(podium.length >= 2 && indexInDisplay === 1) || (podium.length === 1 && indexInDisplay === 0);
 
 		if (isFirst) {
-			return 'h-40 w-40 sm:h-48 sm:w-48 -mt-8 border-amber-400 ring-amber-100 ring-8 shadow-2xl z-20 scale-110';
+			return 'h-40 w-40 sm:h-48 sm:w-48 -mt-8 border-primary ring-primary/20 ring-8 shadow-2xl z-20 scale-110';
 		}
 
 		if (indexInDisplay === 0) {
-			return 'h-28 w-28 sm:h-36 sm:w-36 border-slate-300 ring-slate-100 ring-4 opacity-100';
+			return 'h-28 w-28 sm:h-36 sm:w-36 border-muted-foreground/40 ring-muted-foreground/10 ring-4 opacity-100';
 		}
 
-		return 'h-24 w-24 sm:h-32 sm:w-32 border-orange-300 ring-orange-100 ring-4 opacity-90';
+		return 'h-24 w-24 sm:h-32 sm:w-32 border-[#CD7F32] ring-[#CD7F32]/10 ring-4 opacity-90';
 	};
 
 	const getMedalEmoji = (indexInDisplay: number) => {
@@ -91,9 +91,9 @@
 	{#if loading}
 		<div class="flex flex-col items-center justify-center space-y-4 py-24">
 			<div
-				class="h-12 w-12 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent shadow-sm"
+				class="border-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
 			></div>
-			<p class="animate-pulse text-xs font-bold tracking-widest text-slate-400 uppercase">
+			<p class="text-muted-foreground animate-pulse text-xs font-bold tracking-widest uppercase">
 				Calculating Alphas...
 			</p>
 		</div>
@@ -107,7 +107,7 @@
 				>
 					<div class="relative">
 						<Avatar
-							class="border-4 bg-white shadow-xl {getPodiumStyle(i)}"
+							class="bg-card border-4 shadow-xl {getPodiumStyle(i)}"
 							avatar={user.avatar}
 							nickname={user.nickname}
 							owner={user.owner}
@@ -120,14 +120,16 @@
 					</div>
 					<div class="max-w-25 text-center sm:max-w-none">
 						<div class="flex items-center justify-center gap-1.5">
-							<h3 class="truncate text-sm font-black text-slate-950 sm:text-lg">
+							<h3 class="text-foreground truncate text-sm font-black sm:text-lg">
 								{user.nickname}
 							</h3>
 							{#if user.owner === currentUser}
 								<YouBadge />
 							{/if}
 						</div>
-						<p class="text-[10px] font-bold tracking-tighter text-indigo-600 uppercase sm:text-xs">
+						<p
+							class="text-primary font-mono text-[10px] font-bold tracking-tighter uppercase sm:text-xs"
+						>
 							{Math.floor(user.points ?? 0)} XP
 						</p>
 					</div>
@@ -139,18 +141,20 @@
 		<div class="mx-auto max-w-2xl space-y-2 px-4 pt-8">
 			{#each rest as user, i (user.owner)}
 				<div
-					class="group flex items-center justify-between rounded-2xl bg-white p-3 shadow-sm ring-1 ring-slate-100 transition-all hover:shadow-md hover:ring-indigo-200 sm:p-4 {user.owner ===
+					class="group border-border bg-card hover:border-primary/30 flex items-center justify-between rounded-lg border p-3 transition-all sm:p-4 {user.owner ===
 					currentUser
-						? 'bg-indigo-50/10 ring-2 ring-indigo-500'
+						? 'border-primary/50 bg-primary/5'
 						: ''}"
 					in:fade={{ delay: i * 30 }}
 				>
 					<div class="flex items-center gap-4 sm:gap-6">
-						<span class="w-6 text-center text-xs font-black text-slate-300 sm:w-8 sm:text-sm">
+						<span
+							class="text-muted-foreground w-6 text-center font-mono text-xs font-black sm:w-8 sm:text-sm"
+						>
 							#{i + 4}
 						</span>
 						<Avatar
-							class="h-8 w-8 bg-slate-100 shadow-inner ring-2 ring-white sm:h-10 sm:w-10"
+							class="ring-border h-8 w-8 bg-[var(--bg-surface)] shadow-inner ring-2 sm:h-10 sm:w-10"
 							avatar={user.avatar}
 							nickname={user.nickname}
 							owner={user.owner}
@@ -158,7 +162,7 @@
 						<div class="min-w-0">
 							<div class="flex items-center gap-1.5">
 								<p
-									class="max-w-30 truncate text-xs font-bold text-slate-950 sm:max-w-none sm:text-sm"
+									class="text-foreground max-w-30 truncate text-xs font-bold sm:max-w-none sm:text-sm"
 								>
 									{user.nickname}
 								</p>
@@ -167,27 +171,27 @@
 								{/if}
 							</div>
 							<div class="flex items-center gap-2">
-								<span class="text-[9px] font-bold text-slate-400 uppercase">
+								<span class="text-muted-foreground font-mono text-[9px] font-bold uppercase">
 									Streak: {user.dailyStreak ?? 1}d
 								</span>
-								<span class="text-[9px] text-slate-200">•</span>
-								<span class="text-[9px] font-bold text-emerald-500 uppercase">
+								<span class="text-border text-[9px]">•</span>
+								<span class="font-mono text-[9px] font-bold text-[var(--yes)] uppercase">
 									{Math.round(user.accuracy ?? 0)}% ACC
 								</span>
 							</div>
 						</div>
 					</div>
 					<div class="flex flex-col items-end text-right">
-						<p class="text-xs font-black text-slate-950 sm:text-sm">
+						<p class="text-foreground font-mono text-xs font-black tabular-nums sm:text-sm">
 							{Math.floor(user.points ?? 0)}
 						</p>
-						<p class="text-[9px] leading-none font-bold text-slate-400 uppercase">XP</p>
+						<p class="text-muted-foreground text-[9px] leading-none font-bold uppercase">XP</p>
 					</div>
 				</div>
 			{:else}
 				{#if !loading && rest.length === 0}
 					<div class="py-12 text-center">
-						<p class="text-sm font-black text-slate-300 uppercase tracking-widest">
+						<p class="text-sm font-black text-muted-foreground uppercase tracking-widest">
 							Joining the pack...
 						</p>
 					</div>

@@ -45,51 +45,51 @@
 			return { label: 'THIS WEEK', color: 'amber' };
 		}
 
-		return { label: 'PENDING', color: 'slate' };
+		return { label: 'PENDING', color: 'muted' };
 	};
 
 	const getStatusStyles = (color: string) => {
 		switch (color) {
 			case 'red':
-				return 'bg-red-50 border-red-200 text-red-700';
+				return 'bg-destructive/10 border-destructive/20 text-destructive';
 			case 'orange':
-				return 'bg-orange-100 border-orange-300 text-orange-900';
+				return 'bg-primary/10 border-primary/30 text-primary';
 			case 'orange-light':
-				return 'bg-orange-50 border-orange-200 text-orange-700';
+				return 'bg-primary/10 border-primary/25 text-primary';
 			case 'amber':
 				return 'bg-amber-50 border-amber-100 text-amber-700';
 			default:
-				return 'bg-slate-50 border-slate-100 text-slate-600';
+				return 'bg-foreground/5 border-border text-muted-foreground';
 		}
 	};
 
 	const getBadgeStyles = (color: string) => {
 		switch (color) {
 			case 'red':
-				return 'bg-red-200 text-red-800';
+				return 'bg-destructive/20 text-destructive';
 			case 'orange':
-				return 'bg-orange-200 text-orange-900';
+				return 'bg-primary/20 text-primary';
 			case 'orange-light':
-				return 'bg-orange-100 text-orange-800';
+				return 'bg-primary/10 text-primary';
 			case 'amber':
 				return 'bg-amber-100 text-amber-800';
 			default:
-				return 'bg-slate-200 text-slate-700';
+				return 'bg-foreground/8 text-foreground';
 		}
 	};
 </script>
 
-<div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-	<h2 class="mb-6 text-2xl font-bold text-slate-950">Resolve Active Markets</h2>
+<div class="border-border bg-card rounded-3xl border p-8">
+	<h2 class="text-foreground mb-6 text-2xl font-bold">Resolve Active Markets</h2>
 
 	{#if loading}
 		<div class="flex justify-center py-12">
 			<div
-				class="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"
+				class="border-primary h-8 w-8 animate-spin rounded-full border-4 border-t-transparent"
 			></div>
 		</div>
 	{:else if sortedMarkets.length === 0}
-		<p class="py-12 text-center text-sm text-slate-500 italic">
+		<p class="text-muted-foreground py-12 text-center text-sm italic">
 			No active markets requiring resolution.
 		</p>
 	{:else}
@@ -123,7 +123,7 @@
 
 					<div class="flex gap-2">
 						<Button
-							class="flex-1 rounded-xl border border-green-200 bg-green-50 py-2 text-xs font-bold text-green-700 hover:bg-green-100"
+							class="border-success/20 bg-success/10 text-success hover:bg-success/15 flex-1 rounded-xl border py-2 text-xs font-bold"
 							onclick={() => handleResolve({ marketId, outcome: 'YES' })}
 							size="sm"
 							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
@@ -132,7 +132,7 @@
 							Resolve YES
 						</Button>
 						<Button
-							class="flex-1 rounded-xl border border-red-200 bg-red-50 py-2 text-xs font-bold text-red-700 hover:bg-red-100"
+							class="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15 flex-1 rounded-xl border py-2 text-xs font-bold"
 							onclick={() => handleResolve({ marketId, outcome: 'NO' })}
 							size="sm"
 							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}

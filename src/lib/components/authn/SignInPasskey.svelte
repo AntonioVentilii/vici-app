@@ -62,14 +62,14 @@
 		{#if isSignUp}
 			<div class="flex flex-col gap-1.5">
 				<label
-					class="px-1 text-[10px] font-bold tracking-wider text-slate-500 uppercase"
+					class="text-muted-foreground px-1 text-[10px] font-bold tracking-wider uppercase"
 					for="nickname"
 				>
 					Your Nickname
 				</label>
 				<input
 					id="nickname"
-					class="w-full rounded-xl border-none bg-slate-50 px-3 py-2 text-sm text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600"
+					class="bg-foreground/5 text-foreground ring-border focus:ring-primary w-full rounded-xl border-none px-3 py-2 text-sm ring-1 ring-inset focus:ring-2"
 					placeholder="Enter a nickname..."
 					type="text"
 					bind:value={nickname}

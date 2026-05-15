@@ -15,9 +15,9 @@
 	const variantStyles: Record<NonNullable<Props['variant']>, string> = {
 		default: 'text-foreground',
 		primary: 'text-primary',
-		success: 'text-emerald-600',
-		danger: 'text-rose-600',
-		warning: 'text-amber-600'
+		success: 'text-[var(--yes)]',
+		danger: 'text-[var(--no)]',
+		warning: 'text-[var(--laurel)]'
 	};
 
 	const sizes: Record<
@@ -33,11 +33,11 @@
 </script>
 
 <Card padding={sizeStyles.padding}>
-	<div class="{sizeStyles.label} text-muted-foreground font-bold tracking-widest uppercase">
+	<div class="eyebrow {sizeStyles.label}">
 		{label}
 	</div>
 	<div class="mt-1 flex items-baseline gap-2">
-		<span class="{sizeStyles.value} font-serif font-black {variantStyles[variant]}">{value}</span>
+		<span class="num {sizeStyles.value} font-black {variantStyles[variant]}">{value}</span>
 		{#if unit}
 			<span class="text-muted-foreground text-xs font-bold uppercase">{unit}</span>
 		{/if}

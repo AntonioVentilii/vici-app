@@ -2,16 +2,16 @@ import { VICI_TOKEN, VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants
 
 export const getTokenColorClasses = (symbol: string) => {
 	if (symbol === 'ICP') {
-		return 'bg-indigo-100 text-indigo-600';
+		return 'bg-[var(--hold-wash)] text-[var(--hold)]';
 	}
 
 	if (symbol.startsWith('ck')) {
-		return 'bg-green-100 text-green-600';
+		return 'bg-[var(--yes-wash)] text-[var(--yes)]';
 	}
 
 	if (symbol === VXP_TOKEN.symbol || symbol === VICI_TOKEN.symbol) {
-		return 'bg-violet-100 text-violet-600';
+		return 'bg-[var(--laurel-glow)] text-primary';
 	}
 
-	return 'bg-slate-100 text-slate-600';
+	return 'bg-foreground/8 text-foreground';
 };

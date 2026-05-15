@@ -29,7 +29,7 @@
 
 <div class="h-full w-full" in:fly={{ y: 20, duration: 400, delay: Math.min(index * 50, 300) }}>
 	<Card
-		class="group h-full w-full overflow-hidden border-none shadow-md transition-all hover:-translate-y-1 hover:shadow-xl"
+		class="group border-border h-full w-full overflow-hidden border shadow-[var(--inset-hi)] transition-all hover:-translate-y-0.5 hover:border-[var(--border-strong)]"
 		onclick={() => goto(`${AppPath.Markets}/${market.id}`)}
 		onkeydown={(e) => e.key === 'Enter' && goto(`${AppPath.Markets}/${market.id}`)}
 		padding="none"
@@ -37,18 +37,11 @@
 		variant="default"
 	>
 		<div class="flex h-full w-full flex-col text-left">
-			<!-- Header Border -->
-			<div
-				class="h-1.5 w-full {isChallenge
-					? 'bg-gradient-to-r from-fuchsia-500 to-violet-500'
-					: 'bg-border'}"
-			></div>
-
 			<div class="flex flex-1 flex-col gap-5 p-6 sm:p-8">
 				<div class="flex items-start justify-between gap-4">
 					<div class="flex flex-col gap-1">
 						<h3
-							class="text-foreground group-hover:text-primary font-serif text-xl leading-snug font-black tracking-tight transition-colors sm:text-2xl"
+							class="text-foreground group-hover:text-primary font-display text-xl leading-snug font-semibold tracking-tight transition-colors sm:text-2xl"
 						>
 							{market.title}
 						</h3>
@@ -70,7 +63,7 @@
 							{/if}
 							{#if isChallenge}
 								<span
-									class="inline-flex items-center gap-1 rounded-full border border-fuchsia-200 bg-fuchsia-50 px-2 py-0.5 text-[10px] font-bold tracking-widest text-fuchsia-700 uppercase"
+									class="inline-flex items-center gap-1 rounded-full border border-[var(--laurel)]/25 bg-[var(--laurel-glow)] px-2 py-0.5 text-[10px] font-bold tracking-widest text-[var(--laurel)] uppercase"
 								>
 									<Users size={10} />
 									Challenge
@@ -125,7 +118,7 @@
 						{#if showChallengeSlot}
 							{#if onChallenge}
 								<button
-									class="text-muted-foreground/40 hover:text-primary flex cursor-pointer items-center gap-1 rounded-lg p-1 transition-colors hover:bg-slate-100"
+									class="text-muted-foreground/40 hover:text-primary flex cursor-pointer items-center gap-1 rounded-lg p-1 transition-colors hover:bg-[var(--laurel-glow)]"
 									aria-label="Challenge friends"
 									onclick={(e) => {
 										e.stopPropagation();

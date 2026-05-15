@@ -11,6 +11,7 @@
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import Banner from '$lib/components/ui/Banner.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
 
 	interface Props {
@@ -40,6 +41,7 @@
 					class={isFlowPage
 						? 'md:container md:mx-auto md:px-4 md:py-8'
 						: 'container mx-auto px-4 py-8'}
+					data-tid={TestId.AppMain}
 					in:fade={{ duration: 100, delay: 100 }}
 					out:fade={{ duration: 100 }}
 				>
@@ -61,7 +63,7 @@
 
 	{#if $userSignedIn && !isFlowPage}
 		<button
-			class="fixed right-6 bottom-24 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-500 to-violet-600 text-white shadow-xl transition-all hover:scale-105 hover:shadow-2xl active:scale-95 md:bottom-8"
+			class="bg-primary text-primary-foreground fixed right-6 bottom-24 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-[0_8px_24px_-8px_var(--laurel-glow)] transition-all hover:scale-105 active:scale-[0.985] md:bottom-8"
 			aria-label="Create Challenge"
 			onclick={() => (challengeModalOpen = true)}
 		>

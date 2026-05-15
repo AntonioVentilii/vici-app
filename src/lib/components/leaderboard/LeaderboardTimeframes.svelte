@@ -12,8 +12,8 @@
 	{#each timeframes as timeframe (timeframe)}
 		<button
 			class="rounded-xl px-6 py-2.5 text-sm font-bold transition-all {activeTimeframe === timeframe
-				? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20'
-				: 'bg-white/5 text-slate-500 hover:bg-white/10 hover:text-slate-950'}"
+				? 'bg-primary text-primary-foreground shadow-primary/20 shadow-lg'
+				: 'bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground'}"
 			onclick={() => onTimeframeChange(timeframe)}
 		>
 			{timeframe}

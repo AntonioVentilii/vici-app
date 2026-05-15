@@ -83,8 +83,8 @@
 		{/if}
 
 		<div>
-			<h3 class="text-lg font-black text-slate-950 uppercase">Admin Resolution</h3>
-			<p class="mt-2 text-xs text-slate-500">
+			<h3 class="text-foreground text-lg font-black uppercase">Admin Resolution</h3>
+			<p class="text-muted-foreground mt-2 text-xs">
 				{isCategorical
 					? 'Select the winning outcome to settle this market.'
 					: 'Enter the final price (e.g. 1.00 for YES, 0.00 for NO) to settle this market.'}
@@ -98,14 +98,14 @@
 						<button
 							class="flex w-full items-center justify-between rounded-xl border-2 px-4 py-3 transition-all {selectedOutcomeId ===
 							outcome.id
-								? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-								: 'border-slate-100 bg-white text-slate-600 hover:border-slate-200'}"
+								? 'border-primary bg-primary/10 text-primary'
+								: 'border-border bg-card text-foreground hover:border-foreground/10'}"
 							onclick={() => (selectedOutcomeId = outcome.id)}
 							type="button"
 						>
 							<span class="font-bold">{outcome.title}</span>
 							{#if selectedOutcomeId === outcome.id}
-								<div class="h-2 w-2 rounded-full bg-indigo-600"></div>
+								<div class="bg-primary h-2 w-2 rounded-full"></div>
 							{/if}
 						</button>
 					{/each}
@@ -132,7 +132,7 @@
 					</div>
 					<div class="space-y-2">
 						<label
-							class="text-[10px] font-bold tracking-widest text-slate-600 uppercase"
+							class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
 							for="settlement-price"
 						>
 							Custom Settlement Price ({market.token.symbol})
@@ -140,7 +140,7 @@
 						<div class="relative">
 							<input
 								id="settlement-price"
-								class="focus:ring-primary w-full rounded-2xl border-none bg-slate-50 px-4 py-3 text-lg font-bold text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2"
+								class="focus:ring-primary bg-foreground/5 text-foreground ring-border w-full rounded-2xl border-none px-4 py-3 text-lg font-bold ring-1 ring-inset focus:ring-2"
 								placeholder="0.00"
 								type="number"
 								bind:value={settlementPrice}

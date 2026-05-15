@@ -18,26 +18,30 @@
 	const timeRemaining = $derived(getTimeRemaining(market.expiryDate));
 </script>
 
-<div class="flex flex-wrap justify-center gap-6 border-y border-slate-100 py-6">
+<div class="border-border flex flex-wrap justify-center gap-6 border-y py-6">
 	<div class="flex flex-col items-center">
-		<span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Total Volume</span>
+		<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
+			>Total Volume</span
+		>
 		<div class="mt-1 flex items-baseline gap-1">
-			<span class="text-xl font-black text-slate-950">
+			<span class="text-foreground font-mono text-xl font-black tabular-nums">
 				{formatVolume({ volume: totalVolume, decimals: tokenDecimals, symbol: '' })}
 			</span>
-			<span class="text-xs font-bold text-slate-400">{tokenSymbol}</span>
+			<span class="text-muted-foreground text-xs font-bold">{tokenSymbol}</span>
 		</div>
 	</div>
-	<div class="h-10 w-px bg-slate-100"></div>
+	<div class="bg-border h-10 w-px"></div>
 	<div class="flex flex-col items-center">
-		<span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">Expiry Date</span>
-		<span class="mt-1 text-xl font-black text-slate-950">{formatDate(expiryDate)}</span>
+		<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
+			>Expiry Date</span
+		>
+		<span class="text-foreground mt-1 text-xl font-black">{formatDate(expiryDate)}</span>
 	</div>
-	<div class="h-10 w-px bg-slate-100"></div>
+	<div class="bg-border h-10 w-px"></div>
 	<div class="flex flex-col items-center">
-		<span class="text-[10px] font-bold tracking-widest text-slate-500 uppercase">
+		<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
 			Time Remaining
 		</span>
-		<span class="mt-1 text-xl font-black text-indigo-600">{timeRemaining}</span>
+		<span class="text-primary mt-1 text-xl font-black">{timeRemaining}</span>
 	</div>
 </div>

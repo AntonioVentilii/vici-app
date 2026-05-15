@@ -17,12 +17,12 @@
 	}
 
 	const avatarOptions: AvatarOption[] = [
-		{ emoji: '🦊', color: 'bg-orange-100' },
-		{ emoji: '🐧', color: 'bg-blue-100' },
+		{ emoji: '🦊', color: 'bg-primary/10' },
+		{ emoji: '🐧', color: 'bg-[var(--hold-wash)]' },
 		{ emoji: '🦁', color: 'bg-amber-100' },
-		{ emoji: '🐼', color: 'bg-slate-100' },
+		{ emoji: '🐼', color: 'bg-foreground/8' },
 		{ emoji: '🦄', color: 'bg-pink-100' },
-		{ emoji: '🐲', color: 'bg-emerald-100' }
+		{ emoji: '🐲', color: 'bg-success/10' }
 	];
 
 	let pending = $state(false);
@@ -59,19 +59,21 @@
 </script>
 
 <div class="space-y-6">
-	<h3 class="text-sm font-bold tracking-widest text-slate-400 uppercase">Choose Your Identity</h3>
+	<h3 class="text-muted-foreground text-sm font-bold tracking-widest uppercase">
+		Choose Your Identity
+	</h3>
 
 	<div class="grid grid-cols-3 gap-4 sm:grid-cols-6">
 		{#each avatarOptions as option (option.emoji)}
 			<BaseButton
-				class="group relative flex aspect-square items-center justify-center rounded-2xl {option.color} transition-all hover:scale-110 hover:shadow-lg focus:ring-4 focus:ring-indigo-100"
+				class="group relative flex aspect-square items-center justify-center rounded-2xl {option.color} focus:ring-primary/20 transition-all hover:scale-110 hover:shadow-lg focus:ring-4"
 				onclick={() => selectAvatar(option)}
 				status={pending ? 'pending' : 'enabled'}
 			>
 				<span class="text-4xl transition-transform group-hover:rotate-12">{option.emoji}</span>
 				{#if isSelected(option.emoji)}
 					<div
-						class="absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-indigo-600 text-[10px] text-white shadow-sm ring-2 ring-white"
+						class="bg-primary text-primary-foreground ring-card absolute -top-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full text-[10px] shadow-sm ring-2"
 					>
 						✓
 					</div>

@@ -34,13 +34,15 @@
 
 {#snippet navButton({ label, path, icon: Icon, adminOnly = false }: NavItem)}
 	<BaseButton
-		class="rounded-lg px-4 py-2 text-sm leading-none font-medium {isActive(path)
+		class="relative px-4 py-2 text-sm leading-none font-medium transition-colors duration-200 {isActive(
+			path
+		)
 			? adminOnly
-				? 'bg-primary/10 text-primary'
-				: 'bg-primary text-primary-foreground'
+				? 'text-primary'
+				: 'text-foreground'
 			: adminOnly
-				? 'text-primary/60 hover:bg-primary/5 hover:text-primary'
-				: 'hover:bg-muted/50 hover:text-foreground'}"
+				? 'text-primary/60 hover:text-primary'
+				: 'text-muted-foreground hover:text-foreground'}"
 		onclick={() => handleNav(path)}
 	>
 		<span class="inline-flex items-center gap-1 whitespace-nowrap">
@@ -49,13 +51,17 @@
 			{/if}
 			<span class="whitespace-nowrap">{label}</span>
 		</span>
+		{#if isActive(path)}
+			<span class="bg-primary absolute bottom-0 left-1/2 h-0.5 w-4/5 -translate-x-1/2 rounded-full"
+			></span>
+		{/if}
 	</BaseButton>
 {/snippet}
 
 <header
 	class="border-border bg-background/95 sticky top-0 z-50 w-full border-b backdrop-blur-md transition-all duration-300"
 >
-	<div class="container mx-auto flex h-16 items-center justify-between px-4">
+	<div class="container mx-auto flex h-14 items-center justify-between px-4">
 		<!-- Left side -->
 		<Logo />
 

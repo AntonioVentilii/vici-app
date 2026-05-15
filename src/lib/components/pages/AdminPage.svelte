@@ -230,10 +230,10 @@
 
 <div class="space-y-12">
 	<div class="space-y-4">
-		<h1 class="text-4xl font-extrabold tracking-tight text-slate-950 sm:text-5xl">
+		<h1 class="font-display text-foreground text-4xl font-semibold tracking-tight sm:text-5xl">
 			Admin Dashboard
 		</h1>
-		<p class="max-w-2xl text-lg text-slate-600">
+		<p class="text-muted-foreground max-w-2xl text-lg">
 			Manage markets, create new opportunities, resolve expired predictions, and manage
 			administrators.
 		</p>
@@ -277,38 +277,40 @@
 </div>
 
 {#if loading && bulkTotal > 0}
-	<div class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/40 backdrop-blur-sm">
-		<div class="scale-up w-full max-w-md rounded-3xl bg-white p-8 shadow-2xl">
+	<div
+		class="bg-background/80 fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm"
+	>
+		<div class="scale-up border-border bg-card w-full max-w-md rounded-lg border p-8 shadow-2xl">
 			<div class="mb-6 flex items-center justify-between">
-				<h3 class="text-xl font-bold text-slate-950">Creating Markets</h3>
-				<span class="text-sm font-medium text-slate-500">
+				<h3 class="text-foreground text-xl font-bold">Creating Markets</h3>
+				<span class="text-muted-foreground font-mono text-sm font-medium tabular-nums">
 					{bulkProgress} of {bulkTotal}
 				</span>
 			</div>
 
-			<div class="mb-4 h-3 w-full overflow-hidden rounded-full bg-slate-100">
+			<div class="mb-4 h-3 w-full overflow-hidden rounded-full bg-[var(--bg-surface)]">
 				<div
 					style="width: {(bulkProgress / bulkTotal) * 100}%"
-					class="h-full bg-indigo-600 transition-all duration-300 ease-out"
+					class="bg-primary h-full transition-all duration-300 ease-out"
 				></div>
 			</div>
 
 			<div class="mb-6 flex justify-between gap-4">
 				<div
-					class="flex grow flex-col items-center justify-center rounded-2xl bg-emerald-50 p-3 text-center"
+					class="flex grow flex-col items-center justify-center rounded-lg bg-[var(--yes-wash)] p-3 text-center"
 				>
-					<span class="text-xs font-bold text-emerald-600 uppercase">Success</span>
-					<span class="text-xl font-bold text-emerald-950">{bulkSuccess}</span>
+					<span class="text-xs font-bold text-[var(--yes)] uppercase">Success</span>
+					<span class="text-foreground font-mono text-xl font-bold">{bulkSuccess}</span>
 				</div>
 				<div
-					class="flex grow flex-col items-center justify-center rounded-2xl bg-rose-50 p-3 text-center"
+					class="flex grow flex-col items-center justify-center rounded-lg bg-[var(--no-wash)] p-3 text-center"
 				>
-					<span class="text-xs font-bold text-rose-600 uppercase">Failed</span>
-					<span class="text-xl font-bold text-rose-950">{bulkFailed}</span>
+					<span class="text-xs font-bold text-[var(--no)] uppercase">Failed</span>
+					<span class="text-foreground font-mono text-xl font-bold">{bulkFailed}</span>
 				</div>
 			</div>
 
-			<p class="text-center text-sm text-slate-600 italic">
+			<p class="text-muted-foreground text-center text-sm italic">
 				Please wait while we set up your prediction markets on the blockchain...
 			</p>
 		</div>

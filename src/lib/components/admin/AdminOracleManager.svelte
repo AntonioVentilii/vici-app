@@ -67,24 +67,24 @@
 	};
 </script>
 
-<div class="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+<div class="border-border bg-card rounded-xl border p-6">
 	<div class="mb-6 flex items-start justify-between gap-4">
 		<div>
-			<h2 class="text-xl font-semibold text-slate-900">Oracle Settlers</h2>
-			<p class="mt-1 text-sm text-slate-500">
+			<h2 class="text-foreground text-xl font-semibold">Oracle Settlers</h2>
+			<p class="text-muted-foreground mt-1 text-sm">
 				Principals authorized to settle markets backed by
-				<code class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-800">
+				<code class="bg-foreground/5 text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
 					{VICI_ORACLE_V1}
 				</code>. This list is driven by the
 				<strong>Roles</strong> panel above: granting
-				<code class="rounded bg-slate-100 px-1 py-0.5 font-mono text-xs">ADMIN</code>
+				<code class="bg-foreground/5 rounded px-1 py-0.5 font-mono text-xs">ADMIN</code>
 				or
-				<code class="rounded bg-slate-100 px-1 py-0.5 font-mono text-xs">SOLVER</code>
+				<code class="bg-foreground/5 rounded px-1 py-0.5 font-mono text-xs">SOLVER</code>
 				automatically adds a user here, and revoking the role removes them.
 			</p>
 		</div>
 		<button
-			class="shrink-0 text-sm font-medium text-indigo-600 hover:text-indigo-700 disabled:opacity-50"
+			class="text-primary hover:text-primary shrink-0 text-sm font-medium disabled:opacity-50"
 			disabled={status === 'loading' || isSubmitting}
 			onclick={load}
 		>
@@ -95,11 +95,13 @@
 	{#if status === 'loading'}
 		<div class="flex justify-center py-8">
 			<div
-				class="h-6 w-6 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"
+				class="border-primary h-6 w-6 animate-spin rounded-full border-4 border-t-transparent"
 			></div>
 		</div>
 	{:else if status === 'error'}
-		<div class="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+		<div
+			class="border-destructive/20 bg-destructive/10 text-destructive rounded-lg border p-4 text-sm"
+		>
 			<p class="font-semibold">Failed to load oracle</p>
 			<p class="mt-1 break-all">{errorMessage}</p>
 			<Button class="mt-3" onclick={load} size="sm" variant="outline">Retry</Button>
@@ -126,20 +128,20 @@
 		</div>
 	{:else}
 		<div class="space-y-4">
-			<h3 class="text-sm font-semibold tracking-wider text-slate-900 uppercase">
+			<h3 class="text-foreground text-sm font-semibold tracking-wider uppercase">
 				Authorized ({authorizedPrincipals.length})
 			</h3>
 
 			{#if authorizedPrincipals.length === 0}
-				<p class="text-sm text-slate-500 italic">
+				<p class="text-muted-foreground text-sm italic">
 					No principals authorized yet. Assign the <strong>ADMIN</strong> or
 					<strong>SOLVER</strong> role to a user above; the satellite hook will sync them here.
 				</p>
 			{:else}
-				<ul class="divide-y divide-slate-200 overflow-hidden rounded-md border border-slate-200">
+				<ul class="divide-border border-border divide-y overflow-hidden rounded-md border">
 					{#each authorizedPrincipals as principal (principal)}
 						<li class="px-6 py-4">
-							<div class="min-w-0 text-sm text-slate-700">
+							<div class="text-foreground min-w-0 text-sm">
 								<CopyableAddress address={principal} label="Principal ID" />
 							</div>
 						</li>

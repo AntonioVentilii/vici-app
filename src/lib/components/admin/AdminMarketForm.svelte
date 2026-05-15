@@ -110,16 +110,19 @@
 	};
 </script>
 
-<div class="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-	<h2 class="mb-6 text-2xl font-bold text-slate-950">Create New Market</h2>
+<div class="border-border bg-card rounded-3xl border p-8">
+	<h2 class="text-foreground mb-6 text-2xl font-bold">Create New Market</h2>
 	<div class="space-y-6">
 		<div class="space-y-2">
-			<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="market-title">
+			<label
+				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
+				for="market-title"
+			>
 				Market Title
 			</label>
 			<input
 				id="market-title"
-				class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600"
+				class="bg-foreground/5 text-foreground ring-border focus:ring-primary w-full rounded-2xl border-none px-6 py-4 ring-1 ring-inset focus:ring-2"
 				oninput={(e) => (title = e.currentTarget.value)}
 				placeholder="e.g., Will Bitcoin hit $100k by 2027?"
 				type="text"
@@ -129,14 +132,14 @@
 
 		<div class="space-y-2">
 			<label
-				class="text-xs font-bold tracking-widest text-slate-500 uppercase"
+				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				for="market-description"
 			>
 				Description
 			</label>
 			<textarea
 				id="market-description"
-				class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600"
+				class="bg-foreground/5 text-foreground ring-border focus:ring-primary w-full rounded-2xl border-none px-6 py-4 ring-1 ring-inset focus:ring-2"
 				oninput={(e) => (description = e.currentTarget.value)}
 				placeholder="Provide detailed criteria for resolution..."
 				rows="4"
@@ -145,12 +148,15 @@
 		</div>
 
 		<div class="space-y-2">
-			<label class="text-xs font-bold tracking-widest text-slate-500 uppercase" for="expiry-date">
+			<label
+				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
+				for="expiry-date"
+			>
 				Expiry Date
 			</label>
 			<input
 				id="expiry-date"
-				class="w-full rounded-2xl border-none bg-slate-50 px-6 py-4 text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600"
+				class="bg-foreground/5 text-foreground ring-border focus:ring-primary w-full rounded-2xl border-none px-6 py-4 ring-1 ring-inset focus:ring-2"
 				oninput={(e) => (expiryDate = e.currentTarget.value)}
 				type="datetime-local"
 				value={expiryDate}
@@ -158,13 +164,15 @@
 		</div>
 
 		<div class="space-y-4">
-			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase"> Market Type </span>
+			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
+				Market Type
+			</span>
 			<div class="flex gap-4">
 				<button
 					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {marketType ===
 					'Binary'
-						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-primary bg-primary/10 text-primary'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (marketType = 'Binary')}
 					type="button"
 				>
@@ -173,8 +181,8 @@
 				<button
 					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {marketType ===
 					'Categorical'
-						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-primary bg-primary/10 text-primary'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (marketType = 'Categorical')}
 					type="button"
 				>
@@ -184,11 +192,13 @@
 		</div>
 
 		{#if marketType === 'Categorical'}
-			<div class="space-y-4 rounded-3xl bg-slate-50 p-6">
+			<div class="bg-foreground/5 space-y-4 rounded-3xl p-6">
 				<div class="flex items-center justify-between">
-					<span class="text-xs font-bold tracking-widest text-slate-500 uppercase"> Outcomes </span>
+					<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
+						Outcomes
+					</span>
 					<button
-						class="text-xs font-bold text-indigo-600 hover:text-indigo-700"
+						class="text-primary hover:text-primary text-xs font-bold"
 						onclick={addOutcome}
 						type="button"
 					>
@@ -199,7 +209,7 @@
 					{#each outcomes as outcome, i (i)}
 						<div class="flex gap-2">
 							<input
-								class="flex-1 rounded-xl border-none bg-white px-4 py-3 text-sm text-slate-950 ring-1 ring-slate-200 ring-inset focus:ring-2 focus:ring-indigo-600"
+								class="bg-card text-foreground ring-border focus:ring-primary flex-1 rounded-xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
 								oninput={(e) => (outcomes[i] = e.currentTarget.value)}
 								placeholder={`Outcome ${i + 1}`}
 								type="text"
@@ -207,7 +217,7 @@
 							/>
 							{#if outcomes.length > 2}
 								<button
-									class="rounded-xl bg-white px-4 py-3 text-slate-400 ring-1 ring-slate-200 ring-inset hover:text-red-500"
+									class="bg-card text-muted-foreground ring-border hover:text-destructive rounded-xl px-4 py-3 ring-1 ring-inset"
 									aria-label="Remove outcome"
 									onclick={() => removeOutcome(i)}
 									type="button"
@@ -225,7 +235,7 @@
 						</div>
 					{/each}
 				</div>
-				<p class="text-[10px] text-slate-400">
+				<p class="text-muted-foreground text-[10px]">
 					Minimum 2 outcomes required. Each outcome will be tradable as a YES position.
 				</p>
 			</div>
@@ -233,15 +243,15 @@
 
 		<!-- Balance Domain -->
 		<div class="space-y-4">
-			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">
+			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
 				Balance Domain
 			</span>
 			<div class="flex gap-4">
 				<button
 					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {selectedDomain ===
 					'ViciXp'
-						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-primary bg-primary/10 text-primary'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (selectedDomain = 'ViciXp')}
 					type="button"
 				>
@@ -250,8 +260,8 @@
 				<button
 					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {selectedDomain ===
 					'Social'
-						? 'border-fuchsia-600 bg-fuchsia-50 text-fuchsia-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-primary bg-primary/10 text-primary'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (selectedDomain = 'Social')}
 					type="button"
 				>
@@ -261,18 +271,18 @@
 		</div>
 
 		{#if selectedDomain === 'Social'}
-			<div class="space-y-4 rounded-3xl bg-fuchsia-50 p-6 ring-1 ring-fuchsia-100 ring-inset">
-				<span class="text-xs font-bold tracking-widest text-fuchsia-700 uppercase">
+			<div class="bg-primary/5 ring-primary/20 space-y-4 rounded-3xl p-6 ring-1 ring-inset">
+				<span class="text-primary text-xs font-bold tracking-widest uppercase">
 					Social Reward (Fun Dare)
 				</span>
 				<div class="space-y-4">
 					<div class="space-y-2">
-						<label class="text-[10px] font-bold text-fuchsia-600 uppercase" for="reward-title">
+						<label class="text-primary text-[10px] font-bold uppercase" for="reward-title">
 							Reward Title
 						</label>
 						<input
 							id="reward-title"
-							class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-slate-950 ring-1 ring-fuchsia-200 ring-inset focus:ring-2 focus:ring-fuchsia-600"
+							class="bg-card text-foreground ring-primary/30 focus:ring-primary w-full rounded-xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
 							oninput={(e) => (socialRewardTitle = e.currentTarget.value)}
 							placeholder="e.g., Pizza 🍕"
 							type="text"
@@ -280,12 +290,12 @@
 						/>
 					</div>
 					<div class="space-y-2">
-						<label class="text-[10px] font-bold text-fuchsia-600 uppercase" for="reward-desc">
+						<label class="text-primary text-[10px] font-bold uppercase" for="reward-desc">
 							Reward Description
 						</label>
 						<textarea
 							id="reward-desc"
-							class="w-full rounded-xl border-none bg-white px-4 py-3 text-sm text-slate-950 ring-1 ring-fuchsia-200 ring-inset focus:ring-2 focus:ring-fuchsia-600"
+							class="bg-card text-foreground ring-primary/30 focus:ring-primary w-full rounded-xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
 							oninput={(e) => (socialRewardDescription = e.currentTarget.value)}
 							placeholder="e.g., Winner gets a pizza of their choice."
 							rows="2"
@@ -298,14 +308,14 @@
 
 		<!-- Trading Access -->
 		<div class="space-y-4">
-			<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">
+			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
 				Trading Access
 			</span>
 			<div class="flex gap-4">
 				<button
 					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {!isRestricted
-						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-primary bg-primary/10 text-primary'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (isRestricted = false)}
 					type="button"
 				>
@@ -314,7 +324,7 @@
 				<button
 					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {isRestricted
 						? 'border-amber-500 bg-amber-50 text-amber-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (isRestricted = true)}
 					type="button"
 				>
@@ -336,7 +346,7 @@
 					<div class="space-y-2">
 						{#each availableGroups as group (group.group_id)}
 							<label
-								class="flex cursor-pointer items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-amber-200 transition-colors ring-inset hover:bg-amber-50"
+								class="bg-card flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 ring-1 ring-amber-200 transition-colors ring-inset hover:bg-amber-50"
 							>
 								<input
 									class="accent-amber-600"
@@ -350,8 +360,8 @@
 									}}
 									type="checkbox"
 								/>
-								<span class="text-sm font-semibold text-slate-800">{group.name}</span>
-								<span class="ml-auto text-xs text-slate-400">
+								<span class="text-foreground text-sm font-semibold">{group.name}</span>
+								<span class="text-muted-foreground ml-auto text-xs">
 									{group.members.length} members
 								</span>
 							</label>

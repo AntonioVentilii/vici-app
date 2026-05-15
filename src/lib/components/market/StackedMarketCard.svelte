@@ -54,13 +54,13 @@
 <div class="relative isolate h-full w-full" data-tid={TestId.MarketCard}>
 	{#if ghostLayers >= 1}
 		<div
-			class="pointer-events-none absolute inset-0 -z-10 translate-x-[6px] translate-y-[6px] rounded-2xl bg-white shadow-md ring-1 ring-slate-200/80"
+			class="bg-card ring-border/80 pointer-events-none absolute inset-0 -z-10 translate-x-[6px] translate-y-[6px] rounded-2xl ring-1"
 			aria-hidden="true"
 		></div>
 	{/if}
 	{#if ghostLayers >= 2}
 		<div
-			class="pointer-events-none absolute inset-0 -z-20 translate-x-[12px] translate-y-[12px] rounded-2xl bg-white shadow-sm ring-1 ring-slate-100"
+			class="bg-card ring-border/50 pointer-events-none absolute inset-0 -z-20 translate-x-[12px] translate-y-[12px] rounded-2xl ring-1"
 			aria-hidden="true"
 		></div>
 	{/if}
@@ -71,7 +71,7 @@
 		<div class="absolute top-3 right-3 z-10">
 			<div class="relative">
 				<button
-					class="inline-flex items-center gap-1.5 rounded-full border border-fuchsia-200 bg-white/90 px-2.5 py-1 text-[11px] font-bold text-fuchsia-700 shadow-sm backdrop-blur transition-colors hover:border-fuchsia-400 hover:bg-fuchsia-50"
+					class="border-primary/30 bg-card/90 text-primary hover:border-primary/50 hover:bg-primary/10 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold shadow-sm backdrop-blur transition-colors"
 					aria-expanded={popoverOpen}
 					aria-haspopup="menu"
 					aria-label={`${forks.length} more ${forks.length === 1 ? 'circle' : 'circles'}`}
@@ -85,14 +85,14 @@
 
 				{#if popoverOpen}
 					<div
-						class="absolute top-full right-0 z-20 mt-2 w-64 origin-top-right rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
+						class="border-border bg-card absolute top-full right-0 z-20 mt-2 w-64 origin-top-right rounded-2xl border p-2 shadow-xl"
 						onclick={(e) => e.stopPropagation()}
 						onkeydown={(e) => e.stopPropagation()}
 						role="menu"
 						tabindex="-1"
 					>
 						<div
-							class="px-2 pt-1 pb-2 text-[10px] font-bold tracking-widest text-slate-400 uppercase"
+							class="text-muted-foreground px-2 pt-1 pb-2 text-[10px] font-bold tracking-widest uppercase"
 						>
 							Your circles for this market
 						</div>
@@ -102,18 +102,18 @@
 								{@const isMine = userPrincipal !== undefined && fork.creator === userPrincipal}
 								<li>
 									<button
-										class="group flex w-full items-start gap-3 rounded-xl px-2 py-2 text-left transition-colors hover:bg-fuchsia-50"
+										class="group hover:bg-primary/10 flex w-full items-start gap-3 rounded-xl px-2 py-2 text-left transition-colors"
 										onclick={() => openFork(fork)}
 										type="button"
 									>
 										<div
-											class="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-gradient-to-br from-fuchsia-100 to-violet-100 text-fuchsia-700"
+											class="bg-primary/10 text-primary mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full"
 										>
 											<UsersRound size={14} />
 										</div>
 										<div class="min-w-0 flex-1">
 											<div class="flex items-center gap-1.5">
-												<span class="truncate text-sm font-semibold text-slate-800">
+												<span class="text-foreground truncate text-sm font-semibold">
 													{#if isMine}
 														Your circle
 													{:else}
@@ -122,13 +122,13 @@
 												</span>
 												{#if isMine}
 													<span
-														class="rounded-full bg-fuchsia-100 px-1.5 py-0.5 text-[9px] font-bold tracking-wider text-fuchsia-700 uppercase"
+														class="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase"
 													>
 														You
 													</span>
 												{/if}
 											</div>
-											<div class="text-[11px] text-slate-400">
+											<div class="text-muted-foreground text-[11px]">
 												by <PrincipalText principal={fork.creator} splitLength={4} />
 											</div>
 										</div>

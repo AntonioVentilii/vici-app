@@ -80,36 +80,38 @@
 	{#if market}
 		<div class="space-y-6">
 			<div>
-				<h3 class="text-2xl font-black text-slate-950">Challenge Your Friends</h3>
-				<p class="mt-1 text-sm text-slate-500">
+				<h3 class="text-foreground text-2xl font-black">Challenge Your Friends</h3>
+				<p class="text-muted-foreground mt-1 text-sm">
 					Fork this market into a private challenge for your group.
 				</p>
 			</div>
 
-			<div class="rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200 ring-inset">
-				<h4 class="text-sm font-bold text-slate-900">{market.title}</h4>
-				<p class="mt-1 line-clamp-2 text-xs text-slate-500">{market.description}</p>
+			<div class="bg-foreground/5 ring-border rounded-2xl p-4 ring-1 ring-inset">
+				<h4 class="text-foreground text-sm font-bold">{market.title}</h4>
+				<p class="text-muted-foreground mt-1 line-clamp-2 text-xs">{market.description}</p>
 			</div>
 
 			<div class="space-y-3">
-				<span class="text-xs font-bold tracking-widest text-slate-500 uppercase">Pick a group</span>
+				<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
+					>Pick a group</span
+				>
 
 				{#if availableGroups.length === 0}
-					<p class="rounded-2xl bg-slate-50 p-4 text-sm text-slate-500 italic">
+					<p class="text-muted-foreground bg-foreground/5 rounded-2xl p-4 text-sm italic">
 						No groups yet. Create one from your Profile page first.
 					</p>
 				{:else}
 					<div class="space-y-2">
 						{#each availableGroups as group (group.group_id)}
 							<label
-								class="flex cursor-pointer items-center gap-3 rounded-xl bg-white px-4 py-3 ring-1 ring-slate-200 transition-colors ring-inset hover:bg-slate-50 {selectedGroupIds.includes(
+								class="bg-card ring-border hover:bg-foreground/5 flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 ring-1 transition-colors ring-inset {selectedGroupIds.includes(
 									group.group_id
 								)
-									? 'bg-fuchsia-50/50 ring-2 ring-fuchsia-500'
+									? 'bg-primary/10 ring-primary ring-2'
 									: ''}"
 							>
 								<input
-									class="accent-fuchsia-600"
+									class="accent-primary"
 									checked={selectedGroupIds.includes(group.group_id)}
 									onchange={() => {
 										if (selectedGroupIds.includes(group.group_id)) {
@@ -121,8 +123,10 @@
 									type="checkbox"
 								/>
 								<div class="flex-1">
-									<span class="text-sm font-semibold text-slate-800">{group.name}</span>
-									<span class="ml-2 text-xs text-slate-400">{group.members.length} members</span>
+									<span class="text-foreground text-sm font-semibold">{group.name}</span>
+									<span class="text-muted-foreground ml-2 text-xs"
+										>{group.members.length} members</span
+									>
 								</div>
 							</label>
 						{/each}
@@ -130,8 +134,8 @@
 				{/if}
 			</div>
 
-			<div class="rounded-2xl bg-gradient-to-br from-fuchsia-50 to-violet-50 p-4">
-				<p class="text-xs leading-relaxed text-fuchsia-900/70">
+			<div class="bg-primary/5 ring-primary/10 rounded-2xl p-4 ring-1 ring-inset">
+				<p class="text-muted-foreground text-xs leading-relaxed">
 					This creates a copy of the market restricted to your selected group(s). Members can
 					predict YES or NO within their circle.
 				</p>

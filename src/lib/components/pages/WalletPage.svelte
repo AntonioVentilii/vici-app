@@ -211,7 +211,7 @@
 						sendStatus={sending ? 'pending' : 'enabled'}
 					/>
 				{:else}
-					<p class="text-sm text-slate-500">
+					<p class="text-muted-foreground text-sm">
 						Loading send options… If this persists, no tokens are available for your current
 						network.
 					</p>
@@ -221,10 +221,10 @@
 			{:else if activeTab === 'History'}
 				<div class="space-y-4">
 					<div class="flex items-center justify-between gap-4">
-						<div class="text-sm font-bold text-slate-950">Batch size</div>
+						<div class="text-foreground text-sm font-bold">Batch size</div>
 						<div class="flex items-center gap-2">
 							<select
-								class="rounded border border-slate-200 bg-white px-2 py-1 text-sm text-slate-950"
+								class="border-border bg-card text-foreground rounded border px-2 py-1 text-sm"
 								aria-label="Transactions batch size"
 								disabled={loadingHistory}
 								onchange={(e) => {
@@ -245,7 +245,7 @@
 
 					<div class="flex flex-col items-center gap-3 pt-6 pb-2">
 						{#if !loadingHistory && !hasMoreHistory && transactions.length > 0}
-							<div class="text-xs text-slate-500">All caught up.</div>
+							<div class="text-muted-foreground text-xs">All caught up.</div>
 						{/if}
 
 						<InfiniteScroll

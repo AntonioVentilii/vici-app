@@ -19,16 +19,16 @@
 	<Card class="w-full max-w-md text-center" padding="lg" variant="glass">
 		<div in:fly={{ y: 20, delay: 100 }}>
 			<div
-				class="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400"
+				class="bg-primary/10 text-primary mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
 			>
 				<Lock size={40} strokeWidth={2.5} />
 			</div>
 
-			<h2 class="mb-4 text-3xl font-black text-slate-950 dark:text-white">
+			<h2 class="text-foreground mb-4 text-3xl font-black">
 				{title}
 			</h2>
 
-			<p class="mb-10 text-slate-600 dark:text-slate-400">
+			<p class="text-muted-foreground mb-10">
 				{message}
 			</p>
 

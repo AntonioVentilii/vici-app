@@ -89,9 +89,9 @@
 	class="border-border bg-card/30 flex h-125 flex-col overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl"
 >
 	<!-- Header -->
-	<div class="flex items-center justify-between border-b border-white/5 bg-white/5 px-6 py-4">
+	<div class="bg-foreground/5 flex items-center justify-between border-b border-white/5 px-6 py-4">
 		<div class="flex items-center gap-3">
-			<div class="h-2 w-2 animate-pulse rounded-full bg-green-500"></div>
+			<div class="h-2 w-2 animate-pulse rounded-full bg-[var(--yes)]"></div>
 			<h4 class="font-bold tracking-tight">Market Chat</h4>
 		</div>
 		<span class="text-muted-foreground text-xs">{messages.length} messages</span>
@@ -145,7 +145,7 @@
 	</div>
 
 	<!-- Input -->
-	<div class="border-t border-white/5 bg-white/5 p-4">
+	<div class="bg-foreground/5 border-t border-white/5 p-4">
 		<form
 			class="flex gap-2"
 			onsubmit={(e) => {

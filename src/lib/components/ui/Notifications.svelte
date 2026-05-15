@@ -10,14 +10,14 @@
 >
 	{#each $notificationsStore as notification (notification.id)}
 		<button
-			class="pointer-events-auto flex w-full items-start gap-3 rounded-2xl bg-white p-4 text-left shadow-2xl ring-1 ring-slate-200"
+			class="bg-card ring-border pointer-events-auto flex w-full items-start gap-3 rounded-2xl p-4 text-left shadow-2xl ring-1"
 			onclick={() => remove(notification.id)}
 			in:fly={{ y: 20, duration: 300 }}
 			out:fade={{ duration: 200 }}
 		>
 			{#if notification.type === 'error'}
 				<div
-					class="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-rose-100 text-rose-600"
+					class="bg-destructive/10 text-destructive mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
 				>
 					<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -30,7 +30,7 @@
 				</div>
 			{:else}
 				<div
-					class="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600"
+					class="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--yes-wash)] text-[var(--yes)]"
 				>
 					<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
@@ -43,8 +43,8 @@
 				</div>
 			{/if}
 			<div class="flex flex-col">
-				<span class="text-sm font-black text-slate-900">{notification.title}</span>
-				<p class="text-xs text-slate-500">{notification.message}</p>
+				<span class="text-foreground text-sm font-black">{notification.title}</span>
+				<p class="text-muted-foreground text-xs">{notification.message}</p>
 			</div>
 		</button>
 	{/each}

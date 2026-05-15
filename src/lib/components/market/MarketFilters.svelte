@@ -33,7 +33,7 @@
 	const clearFilters = () => onFiltersChange({ kind: 'all', payout: 'all', access: 'all' });
 
 	const selectClasses =
-		'h-8 appearance-none rounded-lg border-none bg-muted pl-3 pr-7 text-xs font-bold text-foreground ring-1 ring-border ring-inset transition-all focus:ring-2 focus:ring-primary cursor-pointer';
+		'h-8 appearance-none rounded-[12px] border-none bg-muted pl-3 pr-7 text-xs font-bold text-foreground ring-1 ring-border ring-inset transition-all focus:ring-2 focus:ring-primary cursor-pointer';
 </script>
 
 <div class="space-y-4">
@@ -55,7 +55,7 @@
 				</svg>
 			</div>
 			<input
-				class="bg-muted text-foreground placeholder-muted-foreground ring-border focus:bg-muted/80 focus:ring-primary block h-9 w-full rounded-lg border-none py-3 pr-4 pl-10 text-sm ring-1 transition-all ring-inset focus:ring-2"
+				class="bg-muted text-foreground placeholder-muted-foreground ring-border focus:bg-muted/80 focus:ring-primary block h-9 w-full rounded-[12px] border-none py-3 pr-4 pl-10 text-sm ring-1 transition-all ring-inset focus:ring-2"
 				oninput={(e) => onSearchChange(e.currentTarget.value)}
 				placeholder="Search markets..."
 				type="text"
@@ -63,12 +63,13 @@
 			/>
 		</div>
 
-		<div class="flex flex-wrap gap-2">
+		<div class="flex flex-wrap gap-1.5">
 			{#each tabs as tab (tab)}
 				<button
-					class="h-9 rounded-lg px-5 py-2.5 text-sm font-bold transition-all {activeTab === tab
-						? 'bg-primary text-primary-foreground shadow-lg'
-						: 'bg-muted text-muted-foreground hover:bg-muted/80 hover:text-foreground'}"
+					class="rounded-full border px-3 py-1.5 text-xs font-medium transition-all {activeTab ===
+					tab
+						? 'border-primary/30 text-primary bg-[var(--laurel-glow)]'
+						: 'border-border bg-foreground/6 text-muted-foreground hover:bg-foreground/10 hover:text-foreground'}"
 					onclick={() => onTabChange(tab)}
 				>
 					{tab}

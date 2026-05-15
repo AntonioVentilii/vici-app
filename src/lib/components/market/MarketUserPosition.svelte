@@ -21,36 +21,39 @@
 </script>
 
 {#if position && absQty > ZERO}
-	<div
-		class="rounded-3xl border border-indigo-100 bg-linear-to-br from-indigo-50 to-white p-6 shadow-sm"
-	>
-		<h3 class="text-xs font-bold tracking-widest text-indigo-600 uppercase">Your Position</h3>
+	<div class="border-primary/20 bg-primary/5 rounded-3xl border p-6">
+		<h3 class="text-primary text-xs font-bold tracking-widest uppercase">Your Position</h3>
 
 		<div class="mt-4 flex items-center justify-between">
 			<div class="flex flex-col">
-				<span class="text-2xl font-black text-slate-950">
+				<span class="text-foreground text-2xl font-black">
 					{formatQuantity({ value: absQty, decimals: tokenDecimals })} Qty
 				</span>
 				<div class="flex items-center gap-2">
 					<span
 						class="text-xs font-bold {isYes
-							? 'text-green-600'
+							? 'text-[var(--yes)]'
 							: isNo
-								? 'text-red-600'
-								: 'text-indigo-600'} uppercase"
+								? 'text-destructive'
+								: 'text-primary'} uppercase"
 					>
 						{displayOutcome}
 					</span>
-					<span class="text-[10px] text-slate-400">•</span>
-					<span class="text-[10px] font-medium text-slate-500">
+					<span class="text-muted-foreground text-[10px]">•</span>
+					<span class="text-muted-foreground text-[10px] font-medium">
 						Locked: {formatCurrency({ value: position.lockedCollateral, decimals: 6 })}
 					</span>
 				</div>
 			</div>
 
-			<div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-white p-2 shadow-sm">
+			<div class="bg-card flex h-10 w-10 items-center justify-center rounded-2xl p-2">
 				{#if isYes}
-					<svg class="h-6 w-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg
+						class="h-6 w-6 text-[var(--yes)]"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
 						<path
 							d="M5 13l4 4L19 7"
 							stroke-linecap="round"
@@ -59,7 +62,12 @@
 						/>
 					</svg>
 				{:else if isNo}
-					<svg class="h-6 w-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<svg
+						class="text-destructive h-6 w-6"
+						fill="none"
+						stroke="currentColor"
+						viewBox="0 0 24 24"
+					>
 						<path
 							d="M6 18L18 6M6 6l12 12"
 							stroke-linecap="round"
@@ -68,12 +76,7 @@
 						/>
 					</svg>
 				{:else}
-					<svg
-						class="h-6 w-6 text-indigo-500"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
+					<svg class="text-primary h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
 							d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
 							stroke-linecap="round"

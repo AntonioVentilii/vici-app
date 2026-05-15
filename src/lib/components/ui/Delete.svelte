@@ -45,7 +45,7 @@
 </script>
 
 <button
-	class="hover:text-indigo-600 active:text-indigo-400"
+	class="hover:text-primary active:text-primary/70"
 	aria-label="Delete entry"
 	onclick={delItem}
 	role="cell"

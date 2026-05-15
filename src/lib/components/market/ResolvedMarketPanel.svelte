@@ -34,45 +34,47 @@
 </script>
 
 <div
-	class="relative overflow-hidden rounded-3xl border p-8 shadow-sm {isWin
-		? 'border-emerald-200 bg-emerald-50'
+	class="relative overflow-hidden rounded-3xl border p-8 {isWin
+		? 'border-[var(--yes)]/20 bg-[var(--yes-wash)]'
 		: isLoss
-			? 'border-rose-200 bg-rose-50'
+			? 'border-destructive/20 bg-destructive/10'
 			: isCanceled
-				? 'border-amber-200 bg-amber-50'
-				: 'border-slate-200 bg-white'}"
+				? 'border-primary/20 bg-primary/10'
+				: 'border-border bg-card'}"
 >
 	<div class="flex flex-col items-center gap-4 text-center">
 		<div
 			class="flex h-12 w-12 items-center justify-center rounded-full {isWin
-				? 'bg-emerald-500 text-white'
+				? 'bg-[var(--yes)] text-white'
 				: isLoss
-					? 'bg-rose-500 text-white'
+					? 'bg-destructive text-white'
 					: isCanceled
-						? 'bg-amber-500 text-white'
-						: 'bg-slate-500 text-white'}"
+						? 'bg-primary text-white'
+						: 'bg-muted-foreground text-white'}"
 		>
 			<CheckCircle2 size={24} />
 		</div>
 
 		<div class="space-y-1">
-			<p class="text-[10px] font-black tracking-widest text-slate-400 uppercase">Market Resolved</p>
+			<p class="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
+				Market Resolved
+			</p>
 			{#if nonNullish(winnerLabel)}
-				<h3 class="font-serif text-3xl font-black text-slate-950 sm:text-4xl">
+				<h3 class="text-foreground font-serif text-3xl font-black sm:text-4xl">
 					{#if isCanceled}
 						Canceled
 					{:else}
 						Winner: <span
-							class={isWin ? 'text-emerald-600' : isLoss ? 'text-rose-600' : 'text-indigo-600'}
+							class={isWin ? 'text-[var(--yes)]' : isLoss ? 'text-destructive' : 'text-primary'}
 						>
 							{winnerLabel}
 						</span>
 					{/if}
 				</h3>
 			{:else}
-				<h3 class="font-serif text-2xl font-black text-slate-950">Settled</h3>
+				<h3 class="text-foreground font-serif text-2xl font-black">Settled</h3>
 			{/if}
-			<p class="text-sm text-slate-500">
+			<p class="text-muted-foreground text-sm">
 				Trading is closed. Settled payouts have been applied to every holder's balance.
 			</p>
 		</div>

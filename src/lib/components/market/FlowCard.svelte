@@ -140,18 +140,18 @@
 	>
 		<!-- Swipe tint glow -->
 		<div
-			style="box-shadow: inset 0 0 0 4px rgba(16, 185, 129, {tintYes}), inset 0 0 60px rgba(16, 185, 129, {tintYes *
+			style="box-shadow: inset 0 0 0 4px rgba(79, 211, 161, {tintYes}), inset 0 0 60px rgba(79, 211, 161, {tintYes *
 				0.4}); opacity: {tintYes}"
 			class="pointer-events-none absolute inset-0 z-10 rounded-4xl transition-opacity md:rounded-[40px]"
 		></div>
 		<div
-			style="box-shadow: inset 0 0 0 4px rgba(244, 63, 94, {tintNo}), inset 0 0 60px rgba(244, 63, 94, {tintNo *
+			style="box-shadow: inset 0 0 0 4px rgba(255, 107, 107, {tintNo}), inset 0 0 60px rgba(255, 107, 107, {tintNo *
 				0.4}); opacity: {tintNo}"
 			class="pointer-events-none absolute inset-0 z-10 rounded-4xl transition-opacity md:rounded-[40px]"
 		></div>
 		<div
-			style="box-shadow: inset 0 0 0 4px rgba(148, 163, 184, {tintSkip}), inset 0 0 60px rgba(148, 163, 184, {tintSkip *
-				0.4}); opacity: {tintSkip}"
+			style="box-shadow: inset 0 0 0 4px var(--parchment-faint, rgba(148, 163, 184, {tintSkip})), inset 0 0 60px rgba(242, 236, 220, {tintSkip *
+				0.2}); opacity: {tintSkip}"
 			class="pointer-events-none absolute inset-0 z-10 rounded-4xl transition-opacity md:rounded-[40px]"
 		></div>
 
@@ -162,17 +162,17 @@
 				: yesOpacity * 0.5}; transform: rotate(-12deg) scale({0.85 + yesOpacity * 0.15})"
 			class="stamp stamp-yes"
 		>
-			<span class="text-5xl font-black tracking-tighter text-emerald-500">YES</span>
+			<span class="text-5xl font-black tracking-tighter text-[var(--yes)]">YES</span>
 			<div class="mt-1 flex flex-col items-center">
-				<span class="text-lg font-black text-emerald-600">
+				<span class="font-mono text-lg font-black text-[var(--yes-deep)] tabular-nums">
 					+{potentialReturnYes.toFixed(2)}{$playgroundPotentialReturnSuffix}
 				</span>
-				<span class="text-[9px] font-bold tracking-widest text-emerald-500 uppercase">
+				<span class="text-[9px] font-bold tracking-widest text-[var(--yes)] uppercase">
 					Potential
 				</span>
 			</div>
 			{#if isLimitOrderYes}
-				<span class="stamp-pill bg-emerald-500">Limit Order</span>
+				<span class="stamp-pill bg-[var(--yes)]">Limit Order</span>
 			{/if}
 		</div>
 
@@ -183,17 +183,17 @@
 				: noOpacity * 0.5}; transform: rotate(12deg) scale({0.85 + noOpacity * 0.15})"
 			class="stamp stamp-no"
 		>
-			<span class="text-5xl font-black tracking-tighter text-rose-500">NO</span>
+			<span class="text-5xl font-black tracking-tighter text-[var(--no)]">NO</span>
 			<div class="mt-1 flex flex-col items-center">
-				<span class="text-lg font-black text-rose-600">
+				<span class="font-mono text-lg font-black text-[var(--no-deep)] tabular-nums">
 					+{potentialReturnNo.toFixed(2)}{$playgroundPotentialReturnSuffix}
 				</span>
-				<span class="text-[9px] font-bold tracking-widest text-rose-500 uppercase">
+				<span class="text-[9px] font-bold tracking-widest text-[var(--no)] uppercase">
 					Potential
 				</span>
 			</div>
 			{#if isLimitOrderNo}
-				<span class="stamp-pill bg-rose-500">Limit Order</span>
+				<span class="stamp-pill bg-[var(--no)]">Limit Order</span>
 			{/if}
 		</div>
 
@@ -203,23 +203,25 @@
 				skipOpacity * 0.15})"
 			class="stamp stamp-skip"
 		>
-			<span class="text-4xl font-black tracking-tighter text-slate-400">SKIP</span>
+			<span class="text-muted-foreground text-4xl font-black tracking-tighter">SKIP</span>
 		</div>
 
 		<div class="flow-card-body">
 			<!-- Header -->
 			<div class="flow-card-header">
 				<div class="absolute inset-0 opacity-30">
-					<div class="absolute -top-32 -left-20 h-72 w-72 rounded-full bg-white blur-3xl"></div>
 					<div
-						class="absolute -right-20 -bottom-24 h-72 w-72 rounded-full bg-indigo-300 blur-3xl"
+						class="absolute -top-32 -left-20 h-72 w-72 rounded-full bg-[var(--laurel)]/20 blur-3xl"
+					></div>
+					<div
+						class="absolute -right-20 -bottom-24 h-72 w-72 rounded-full bg-[var(--laurel)]/10 blur-3xl"
 					></div>
 				</div>
 
 				<!-- Top chips -->
 				<div class="relative z-10 flex items-start justify-between gap-2">
 					<div
-						class="flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
+						class="bg-foreground/15 flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
 					>
 						<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 							<path
@@ -242,7 +244,7 @@
 
 					{#if position}
 						<div
-							class="flex items-center gap-1.5 rounded-full bg-white/15 px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
+							class="bg-foreground/15 flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
 						>
 							<div class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300"></div>
 							<span class="text-[10px] font-black tracking-wider text-white uppercase">
@@ -263,24 +265,24 @@
 
 				<div class="flow-card-tiles">
 					<BaseButton class="flow-tile flow-tile-no" onclick={() => onAction('NO')}>
-						<span class="flow-tile-label text-rose-500">NO</span>
-						<span class="flow-tile-pct text-rose-600">
+						<span class="flow-tile-label text-[var(--no)]">NO</span>
+						<span class="flow-tile-pct text-[var(--no)]">
 							{formatProbability(market.noProbability)}
 						</span>
-						<span class="flow-tile-hint text-rose-400"> ← Swipe </span>
+						<span class="flow-tile-hint text-[var(--no)]/60"> ← Swipe </span>
 						{#if isLimitOrderNo}
-							<div class="flow-tile-badge bg-rose-200 text-rose-700">Limit</div>
+							<div class="flow-tile-badge bg-[var(--no-wash)] text-[var(--no)]">Limit</div>
 						{/if}
 					</BaseButton>
 
 					<BaseButton class="flow-tile flow-tile-yes" onclick={() => onAction('YES')}>
-						<span class="flow-tile-label text-emerald-500">YES</span>
-						<span class="flow-tile-pct text-emerald-600">
+						<span class="flow-tile-label text-[var(--yes)]">YES</span>
+						<span class="flow-tile-pct text-[var(--yes)]">
 							{formatProbability(market.yesProbability)}
 						</span>
-						<span class="flow-tile-hint text-emerald-400"> Swipe → </span>
+						<span class="flow-tile-hint text-[var(--yes)]/60"> Swipe → </span>
 						{#if isLimitOrderYes}
-							<div class="flow-tile-badge bg-emerald-200 text-emerald-700">Limit</div>
+							<div class="flow-tile-badge bg-[var(--yes-wash)] text-[var(--yes)]">Limit</div>
 						{/if}
 					</BaseButton>
 				</div>
@@ -289,7 +291,7 @@
 				<div class="flow-card-footer">
 					<div class="flex items-center gap-1.5">
 						<svg
-							class="h-3 w-3 text-slate-400"
+							class="text-muted-foreground h-3 w-3"
 							fill="none"
 							stroke="currentColor"
 							viewBox="0 0 24 24"
@@ -301,7 +303,7 @@
 								stroke-width="2"
 							/>
 						</svg>
-						<span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+						<span class="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
 							Expires {formatDate(market.expiryDate)}
 						</span>
 					</div>
@@ -309,7 +311,7 @@
 					{#if !signedIn}
 						<div class="flex items-center gap-1.5">
 							<svg
-								class="h-3 w-3 text-slate-400"
+								class="text-muted-foreground h-3 w-3"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
@@ -321,7 +323,7 @@
 									stroke-width="2"
 								/>
 							</svg>
-							<span class="text-[10px] font-bold tracking-wider text-slate-400 uppercase">
+							<span class="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
 								Sign in to play
 							</span>
 						</div>
@@ -366,16 +368,17 @@
 		overflow: hidden;
 		height: 100%;
 		width: 100%;
-		background: white;
-		border-radius: 32px;
+		background: var(--bg-popover);
+		border: 1px solid var(--border-strong);
+		border-radius: 12px;
 		box-shadow:
-			0 2px 4px rgba(15, 23, 42, 0.04),
-			0 12px 24px rgba(15, 23, 42, 0.08),
-			0 32px 60px rgba(79, 70, 229, 0.12);
+			var(--inset-hi),
+			0 12px 24px rgba(0, 0, 0, 0.3),
+			0 32px 60px rgba(0, 0, 0, 0.2);
 	}
 	@media (min-width: 768px) {
 		.flow-card-body {
-			border-radius: 40px;
+			border-radius: 16px;
 		}
 	}
 
@@ -383,8 +386,8 @@
 		position: relative;
 		flex: 0 0 auto;
 		padding: 1.25rem 1.5rem 1.5rem;
-		background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-		color: white;
+		background: linear-gradient(135deg, var(--ink-deep) 0%, var(--ink-raised) 100%);
+		color: var(--parchment);
 		overflow: hidden;
 	}
 	@media (min-width: 768px) {
@@ -397,11 +400,12 @@
 		position: relative;
 		z-index: 1;
 		margin-top: 0.875rem;
+		font-family: var(--font-display);
 		font-size: 1.25rem;
 		line-height: 1.2;
-		font-weight: 900;
+		font-weight: 600;
 		letter-spacing: -0.015em;
-		color: white;
+		color: var(--parchment);
 		overflow-wrap: anywhere;
 	}
 	@media (min-width: 400px) {
@@ -435,7 +439,7 @@
 		flex: 1 1 auto;
 		font-size: 0.875rem;
 		line-height: 1.55;
-		color: rgb(71, 85, 105);
+		color: var(--text-muted);
 		overflow: hidden;
 		overflow-wrap: anywhere;
 		display: -webkit-box;
@@ -471,21 +475,21 @@
 			background-color 0.2s ease;
 	}
 	:global(.flow-tile:active) {
-		transform: scale(0.96);
+		transform: scale(0.985);
 	}
 	:global(.flow-tile-no) {
-		background: rgb(255, 241, 242);
-		border-color: rgb(254, 226, 226);
+		background: var(--bg-surface);
+		border-color: rgba(255, 107, 107, 0.2);
 	}
 	:global(.flow-tile-no:hover) {
-		background: rgb(255, 228, 230);
+		background: var(--no-wash);
 	}
 	:global(.flow-tile-yes) {
-		background: rgb(240, 253, 244);
-		border-color: rgb(209, 250, 229);
+		background: var(--bg-surface);
+		border-color: rgba(79, 211, 161, 0.2);
 	}
 	:global(.flow-tile-yes:hover) {
-		background: rgb(220, 252, 231);
+		background: var(--yes-wash);
 	}
 
 	:global(.flow-tile-label) {
@@ -497,6 +501,7 @@
 	}
 	:global(.flow-tile-pct) {
 		display: block;
+		font-family: var(--font-mono);
 		font-size: 1.875rem;
 		font-weight: 900;
 		letter-spacing: -0.025em;
@@ -529,7 +534,7 @@
 		justify-content: space-between;
 		gap: 0.75rem;
 		padding-top: 0.625rem;
-		border-top: 1px solid rgb(241, 245, 249);
+		border-top: 1px solid var(--border-base);
 		flex-wrap: wrap;
 	}
 
@@ -541,7 +546,7 @@
 		flex-direction: column;
 		align-items: center;
 		padding: 0.75rem 1.75rem;
-		background: rgba(255, 255, 255, 0.96);
+		background: rgba(14, 13, 11, 0.92);
 		border-radius: 18px;
 		border-width: 4px;
 		border-style: solid;
@@ -550,20 +555,20 @@
 	.stamp-yes {
 		top: 2.5rem;
 		left: 1.5rem;
-		border-color: rgb(16, 185, 129);
-		box-shadow: 0 20px 50px rgba(16, 185, 129, 0.3);
+		border-color: var(--yes);
+		box-shadow: 0 20px 50px rgba(79, 211, 161, 0.3);
 	}
 	.stamp-no {
 		top: 2.5rem;
 		right: 1.5rem;
-		border-color: rgb(244, 63, 94);
-		box-shadow: 0 20px 50px rgba(244, 63, 94, 0.3);
+		border-color: var(--no);
+		box-shadow: 0 20px 50px rgba(255, 107, 107, 0.3);
 	}
 	.stamp-skip {
 		bottom: 30%;
 		left: 50%;
-		border-color: rgb(148, 163, 184);
-		box-shadow: 0 20px 50px rgba(148, 163, 184, 0.3);
+		border-color: var(--border-strong);
+		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
 	}
 	.stamp-pill {
 		margin-top: 0.5rem;

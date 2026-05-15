@@ -62,8 +62,8 @@
 
 	<div class="mt-8 min-h-75">
 		{#if activeTabId === 'description'}
-			<div class="prose prose-slate max-w-none">
-				<p class="text-lg leading-relaxed text-slate-600">
+			<div class="prose max-w-none">
+				<p class="text-muted-foreground text-lg leading-relaxed">
 					{market.description}
 				</p>
 			</div>
@@ -77,7 +77,7 @@
 					<!-- Positions Section -->
 					{#if positions.filter((p) => p.netQty !== ZERO).length > 0}
 						<div class="space-y-4">
-							<h5 class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+							<h5 class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
 								Your Active Positions
 							</h5>
 							<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -85,40 +85,40 @@
 									{#if pos.netQty !== ZERO}
 										{@const result = positionResult(pos.outcomeId)}
 										<div
-											class="flex flex-col gap-2 rounded-2xl border p-5 shadow-sm {result === 'won'
-												? 'border-emerald-300 bg-emerald-50'
+											class="flex flex-col gap-2 rounded-2xl border p-5 {result === 'won'
+												? 'border-[var(--yes)]/30 bg-[var(--yes-wash)]'
 												: result === 'lost'
-													? 'border-slate-200 bg-slate-50 opacity-60'
+													? 'border-border bg-foreground/5 opacity-60'
 													: pos.outcomeId === 'YES'
-														? 'border-emerald-100 bg-emerald-50/30'
+														? 'border-[var(--yes)]/20 bg-[var(--yes-wash)]/30'
 														: pos.outcomeId === 'NO'
-															? 'border-rose-100 bg-rose-50/30'
-															: 'border-indigo-100 bg-indigo-50/30'}"
+															? 'border-destructive/20 bg-destructive/5'
+															: 'border-primary/20 bg-primary/5'}"
 										>
 											<div class="flex items-center justify-between">
 												<span
 													class="text-[10px] font-bold tracking-widest uppercase {result === 'won'
-														? 'text-emerald-700'
+														? 'text-[var(--yes)]'
 														: result === 'lost'
-															? 'text-slate-500 line-through'
+															? 'text-muted-foreground line-through'
 															: pos.outcomeId === 'YES'
-																? 'text-emerald-600'
+																? 'text-[var(--yes)]'
 																: pos.outcomeId === 'NO'
-																	? 'text-rose-600'
-																	: 'text-indigo-600'}"
+																	? 'text-destructive'
+																	: 'text-primary'}"
 												>
 													{market.outcomes?.find((o) => o.id === pos.outcomeId)?.title ??
 														pos.outcomeId}
 												</span>
 												{#if result === 'won'}
 													<span
-														class="rounded-full bg-emerald-500 px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase"
+														class="rounded-full bg-[var(--yes)] px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase"
 													>
 														Won
 													</span>
 												{:else if result === 'lost'}
 													<span
-														class="rounded-full bg-slate-400 px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase"
+														class="bg-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase"
 													>
 														Lost
 													</span>
@@ -126,14 +126,14 @@
 											</div>
 											<div
 												class="text-xl font-black {result === 'won'
-													? 'text-emerald-950'
+													? 'text-foreground'
 													: result === 'lost'
-														? 'text-slate-500 line-through'
+														? 'text-muted-foreground line-through'
 														: pos.outcomeId === 'YES'
-															? 'text-emerald-950'
+															? 'text-foreground'
 															: pos.outcomeId === 'NO'
-																? 'text-rose-950'
-																: 'text-indigo-950'}"
+																? 'text-foreground'
+																: 'text-foreground'}"
 											>
 												{formatToken({ value: pos.netQty, unitName: market.token.decimals })} Units
 											</div>
@@ -147,25 +147,25 @@
 					<!-- Active Orders Section -->
 					{#if activeOrders.length > 0}
 						<div class="space-y-4">
-							<h5 class="text-[10px] font-bold tracking-widest text-slate-400 uppercase">
+							<h5 class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
 								Your Open Limit Orders
 							</h5>
 							<div class="flex flex-col gap-3">
 								{#each activeOrders as order (order.order_id)}
 									<div
-										class="flex items-center justify-between rounded-2xl border border-slate-100 bg-white p-4 shadow-sm"
+										class="border-border bg-card flex items-center justify-between rounded-2xl border p-4"
 									>
 										<div class="flex items-center gap-4">
 											<div
 												class="flex h-10 w-10 items-center justify-center rounded-xl font-black {'Buy' in
 												order.side
-													? 'bg-emerald-100 text-emerald-700'
-													: 'bg-rose-100 text-rose-700'}"
+													? 'bg-[var(--yes-wash)] text-[var(--yes)]'
+													: 'bg-destructive/10 text-destructive'}"
 											>
 												{'Buy' in order.side ? 'B' : 'S'}
 											</div>
 											<div>
-												<div class="text-sm font-bold text-slate-950">
+												<div class="text-foreground text-sm font-bold">
 													{formatToken({ value: order.qty, unitName: market.token.decimals })}
 													{market.token.symbol} @
 													{decimalFixedValueToNumber({
@@ -173,13 +173,13 @@
 														decimals: order.price.decimal.decimals
 													}).toFixed(2)}
 												</div>
-												<div class="text-[10px] font-medium text-slate-400 uppercase">
+												<div class="text-muted-foreground text-[10px] font-medium uppercase">
 													{order.outcome_id[0] ?? 'YES'} • {'Buy' in order.side ? 'Buy' : 'Sell'}
 												</div>
 											</div>
 										</div>
 										<BaseButton
-											class="rounded-xl border border-rose-100 bg-rose-50 px-4 py-2 text-[10px] font-bold text-rose-600 hover:bg-rose-100"
+											class="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/20 rounded-xl border px-4 py-2 text-[10px] font-bold"
 											onclick={() => handleCancel(order.order_id)}
 											status={cancellingId === order.order_id ? 'pending' : 'enabled'}
 										>
@@ -191,9 +191,9 @@
 						</div>
 					{/if}
 
-					<div class="flex items-center justify-between border-t border-slate-100 pt-6">
-						<span class="text-xs font-medium text-slate-500">Locked Asset Capacity</span>
-						<span class="text-sm font-black text-slate-950">
+					<div class="border-border flex items-center justify-between border-t pt-6">
+						<span class="text-muted-foreground text-xs font-medium">Locked Asset Capacity</span>
+						<span class="text-foreground text-sm font-black">
 							{formatToken({
 								value:
 									positions.reduce((acc, p) => acc + p.lockedCollateral, ZERO) +
@@ -205,9 +205,9 @@
 					</div>
 				{:else}
 					<div class="flex flex-col items-center justify-center py-12 text-center">
-						<div class="mb-4 rounded-full bg-slate-50 p-4">
+						<div class="bg-foreground/5 mb-4 rounded-full p-4">
 							<svg
-								class="h-6 w-6 text-slate-300"
+								class="text-muted-foreground h-6 w-6"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
@@ -220,10 +220,12 @@
 								/>
 							</svg>
 						</div>
-						<h4 class="text-sm font-bold tracking-widest text-slate-400 uppercase">
+						<h4 class="text-muted-foreground text-sm font-bold tracking-widest uppercase">
 							No Recent Activity
 						</h4>
-						<p class="mt-1 text-xs text-slate-400">Place a prediction to see your activity here.</p>
+						<p class="text-muted-foreground mt-1 text-xs">
+							Place a prediction to see your activity here.
+						</p>
 					</div>
 				{/if}
 			</div>

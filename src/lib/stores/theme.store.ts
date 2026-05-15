@@ -1,16 +1,16 @@
 import { browser } from '$app/environment';
 import { writable } from 'svelte/store';
 
-export type Theme = 'peach' | 'light' | 'dark';
+export type Theme = 'dark' | 'light';
 
 const THEME_KEY = 'vici-theme';
 
 const getInitialTheme = (): Theme => {
 	if (!browser) {
-		return 'peach';
+		return 'dark';
 	}
 
-	return (localStorage.getItem(THEME_KEY) as Theme) || 'peach';
+	return (localStorage.getItem(THEME_KEY) as Theme) || 'dark';
 };
 
 export const theme = writable<Theme>(getInitialTheme());

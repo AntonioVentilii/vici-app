@@ -25,11 +25,11 @@
 
 {#if isOpen}
 	<div
-		class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-sm"
+		class="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-[8px]"
 		role="presentation"
 	>
 		<BaseButton
-			class="fixed inset-0 bg-slate-950/40! opacity-100!"
+			class="fixed inset-0 bg-black/55! opacity-100!"
 			aria-label="Close modal"
 			onclick={close}
 		>
@@ -37,7 +37,7 @@
 		</BaseButton>
 
 		<div
-			class="animate-in fade-in zoom-in wrapper relative flex w-full max-w-md flex-col overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-2xl duration-200"
+			class="animate-in fade-in zoom-in wrapper bg-popover relative flex w-full max-w-md flex-col overflow-hidden rounded-[12px] border border-[var(--border-strong)] shadow-[var(--shadow-modal)] duration-200"
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}
@@ -47,7 +47,7 @@
 			<div class="header relative flex items-center justify-between gap-4 p-4 pb-0">
 				<div class="flex flex-1 items-center justify-end gap-2">
 					<button
-						class="rounded-full p-2 text-slate-500 transition-colors hover:bg-slate-100"
+						class="text-muted-foreground hover:bg-foreground/6 hover:text-foreground rounded-full p-2 transition-colors"
 						aria-label="Close"
 						onclick={close}
 						type="button"
@@ -71,7 +71,7 @@
 				</div>
 			</div>
 
-			<div class="content flex-1 overflow-y-auto p-8 pt-4">
+			<div class="content text-foreground flex-1 overflow-y-auto p-8 pt-4">
 				{@render children()}
 			</div>
 		</div>

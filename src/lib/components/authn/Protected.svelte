@@ -33,16 +33,16 @@
 {:else}
 	<div class="flex flex-col items-center justify-center py-20 text-center">
 		<div class="mb-12 max-w-md">
-			<h2 class="text-4xl font-black text-slate-950">{title}</h2>
-			<p class="mt-4 text-lg text-slate-600">
+			<h2 class="text-foreground text-4xl font-black">{title}</h2>
+			<p class="text-muted-foreground mt-4 text-lg">
 				{description}
 			</p>
 		</div>
 
-		<div class="rounded-3xl border border-slate-100 bg-white p-12 shadow-2xl">
+		<div class="border-border bg-card rounded-3xl border p-12 shadow-2xl">
 			<div class="flex flex-col items-center gap-6">
 				<div
-					class="flex h-16 w-16 items-center justify-center rounded-2xl bg-linear-to-br from-indigo-500 to-purple-600 text-2xl font-bold text-white shadow-xl"
+					class="bg-primary text-primary-foreground flex h-16 w-16 items-center justify-center rounded-2xl text-2xl font-bold shadow-xl"
 				>
 					V
 				</div>

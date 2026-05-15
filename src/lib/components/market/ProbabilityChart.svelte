@@ -13,12 +13,7 @@
 		color?: string;
 	}
 
-	const {
-		data = [],
-		width = 600,
-		height = 200,
-		color = '#6366f1' // indigo-500
-	}: Props = $props();
+	const { data = [], width = 600, height = 200, color = 'var(--primary)' }: Props = $props();
 
 	const hasEnoughData = $derived(data.length >= 2);
 
@@ -36,12 +31,12 @@
 	const areaPoints = $derived(`${points} ${width},${height} 0,${height}`);
 </script>
 
-<div class="relative w-full overflow-hidden rounded-2xl bg-slate-50/50 p-4 ring-1 ring-slate-100">
+<div class="bg-foreground/5 ring-border relative w-full overflow-hidden rounded-2xl p-4 ring-1">
 	<div class="mb-4 flex items-center justify-between">
-		<h4 class="text-[10px] font-black tracking-widest text-slate-400 uppercase">
+		<h4 class="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
 			Probability Trend
 		</h4>
-		<span class="text-[10px] font-bold text-indigo-600 uppercase">Live (24h)</span>
+		<span class="text-primary text-[10px] font-bold uppercase">Live (24h)</span>
 	</div>
 
 	{#if hasEnoughData}
@@ -73,7 +68,7 @@
 			/>
 		</svg>
 		<div
-			class="mt-4 flex justify-between border-t border-slate-100 pt-2 text-[8px] font-bold text-slate-300 uppercase"
+			class="border-border text-muted-foreground mt-4 flex justify-between border-t pt-2 text-[8px] font-bold uppercase"
 		>
 			<span>24h ago</span>
 			<span>Now</span>
@@ -81,8 +76,12 @@
 	{:else}
 		<div class="flex h-37.5 items-center justify-center text-center">
 			<div class="space-y-1">
-				<p class="text-xs font-black tracking-widest text-slate-300 uppercase">Insufficient Data</p>
-				<p class="text-[10px] text-slate-400">Trend visualization requires more market activity.</p>
+				<p class="text-muted-foreground text-xs font-black tracking-widest uppercase">
+					Insufficient Data
+				</p>
+				<p class="text-muted-foreground text-[10px]">
+					Trend visualization requires more market activity.
+				</p>
 			</div>
 		</div>
 	{/if}

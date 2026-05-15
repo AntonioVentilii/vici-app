@@ -89,9 +89,9 @@
 <Modal {isOpen} {onClose}>
 	<div class="space-y-6">
 		<div class="space-y-2">
-			<h2 class="text-2xl font-black text-slate-950">Bring to your Circle</h2>
-			<p class="text-sm text-slate-500">
-				Create a private match of <span class="font-bold text-slate-700">"{market.title}"</span> just
+			<h2 class="text-foreground text-2xl font-black">Bring to your Circle</h2>
+			<p class="text-muted-foreground text-sm">
+				Create a private match of <span class="text-foreground font-bold">"{market.title}"</span> just
 				for your close circle.
 			</p>
 		</div>
@@ -101,8 +101,8 @@
 				<button
 					class="flex-1 rounded-2xl border-2 px-4 py-3 text-center transition-all {mode ===
 					'Friends'
-						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-primary bg-primary/10 text-primary'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (mode = 'Friends')}
 				>
 					<span class="block text-lg">👫</span>
@@ -111,8 +111,8 @@
 				<button
 					class="flex-1 rounded-2xl border-2 px-4 py-3 text-center transition-all {mode ===
 					'Followers'
-						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-primary bg-primary/10 text-primary'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (mode = 'Followers')}
 				>
 					<span class="block text-lg">📣</span>
@@ -120,8 +120,8 @@
 				</button>
 				<button
 					class="flex-1 rounded-2xl border-2 px-4 py-3 text-center transition-all {mode === 'Group'
-						? 'border-indigo-600 bg-indigo-50 text-indigo-700'
-						: 'border-slate-100 bg-slate-50 text-slate-500 hover:border-slate-200'}"
+						? 'border-primary bg-primary/10 text-primary'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 					onclick={() => (mode = 'Group')}
 				>
 					<span class="block text-lg">🏘️</span>
@@ -130,38 +130,38 @@
 			</div>
 
 			{#if mode === 'Friends'}
-				<div class="rounded-2xl bg-slate-50 p-4 text-center ring-1 ring-slate-200">
-					<p class="text-xs leading-relaxed text-slate-600">
+				<div class="bg-foreground/5 ring-border rounded-2xl p-4 text-center ring-1">
+					<p class="text-muted-foreground text-xs leading-relaxed">
 						This will create a private market accessible only to you and your active friends.
 					</p>
 				</div>
 			{:else if mode === 'Followers'}
-				<div class="rounded-2xl bg-slate-50 p-4 text-center ring-1 ring-slate-200">
-					<p class="text-xs leading-relaxed text-slate-600">
+				<div class="bg-foreground/5 ring-border rounded-2xl p-4 text-center ring-1">
+					<p class="text-muted-foreground text-xs leading-relaxed">
 						This will create a private market accessible only to you and your active followers.
 					</p>
 				</div>
 			{:else}
 				<div class="space-y-2">
 					{#if loadingGroups}
-						<div class="py-4 text-center text-xs text-slate-400">Loading your groups...</div>
+						<div class="text-muted-foreground py-4 text-center text-xs">Loading your groups...</div>
 					{:else if availableGroups.length === 0}
-						<p class="py-4 text-center text-xs text-slate-400 italic">No groups found.</p>
+						<p class="text-muted-foreground py-4 text-center text-xs italic">No groups found.</p>
 					{:else}
 						<div class="max-h-48 space-y-2 overflow-y-auto pr-1">
 							{#each availableGroups as group (group.group_id)}
 								<label
-									class="flex cursor-pointer items-center gap-3 rounded-xl border border-slate-100 bg-white px-4 py-3 transition-colors hover:bg-slate-50"
+									class="border-border bg-card hover:bg-foreground/5 flex cursor-pointer items-center gap-3 rounded-xl border px-4 py-3 transition-colors"
 								>
 									<input
 										name="group"
-										class="accent-indigo-600"
+										class="accent-primary"
 										checked={selectedGroupId === group.group_id}
 										onchange={() => (selectedGroupId = group.group_id)}
 										type="radio"
 										value={group.group_id}
 									/>
-									<span class="text-sm font-semibold text-slate-800">{group.name}</span>
+									<span class="text-foreground text-sm font-semibold">{group.name}</span>
 								</label>
 							{/each}
 						</div>

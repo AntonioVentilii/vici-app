@@ -86,17 +86,17 @@
 		<div class="flex flex-col items-center gap-6 sm:flex-row">
 			<div class="relative">
 				<div
-					class="h-28 w-28 rounded-full border-4 border-white p-1 shadow-xl ring-4 ring-indigo-50"
+					class="border-border ring-primary/10 h-28 w-28 rounded-full border-4 p-1 shadow-xl ring-4"
 				>
 					<Avatar
-						class="h-full w-full bg-slate-100 shadow-inner"
+						class="h-full w-full bg-[var(--bg-surface)] shadow-inner"
 						avatar={profile.avatar}
 						nickname={profile.nickname}
 						owner={profile.owner}
 					/>
 				</div>
 				<div
-					class="absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full bg-indigo-600 font-bold text-white shadow-lg ring-4 ring-white"
+					class="bg-primary text-primary-foreground ring-background absolute -right-2 -bottom-2 flex h-8 w-8 items-center justify-center rounded-full font-mono font-bold shadow-lg ring-4"
 				>
 					{level}
 				</div>
@@ -106,14 +106,14 @@
 				{#if isEditingNickname}
 					<div class="flex items-center gap-2">
 						<input
-							class="bg-foreground/5 border-border rounded-lg border px-3 py-1 text-2xl font-black focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+							class="bg-foreground/5 border-border focus:ring-primary rounded-[12px] border px-3 py-1 text-2xl font-black focus:ring-2 focus:outline-none"
 							disabled={pending}
 							onkeydown={(e) => e.key === 'Enter' && handleSaveNickname()}
 							type="text"
 							bind:value={editedNickname}
 						/>
 						<BaseButton
-							class="cursor-pointer text-emerald-500 hover:text-emerald-600"
+							class="cursor-pointer text-[var(--yes)] hover:text-[var(--yes)]"
 							aria-label="Save"
 							onclick={handleSaveNickname}
 							status={pending
@@ -125,7 +125,7 @@
 							<Check size={24} />
 						</BaseButton>
 						<BaseButton
-							class="cursor-pointer text-red-500 hover:text-red-600"
+							class="text-destructive hover:text-destructive cursor-pointer"
 							aria-label="Cancel"
 							onclick={cancelEdit}
 							status={pending ? 'disabled' : 'enabled'}
@@ -134,16 +134,16 @@
 						</BaseButton>
 					</div>
 					{#if editedNickname.trim().length < 2}
-						<p class="mt-1 text-[10px] font-bold text-red-500 uppercase">Min 2 characters</p>
+						<p class="text-destructive mt-1 text-[10px] font-bold uppercase">Min 2 characters</p>
 					{/if}
 				{:else}
 					<h1
-						class="flex items-center gap-3 text-3xl font-black tracking-tight text-slate-950 sm:text-4xl"
+						class="font-display text-foreground flex items-center gap-3 text-3xl font-semibold tracking-tight sm:text-4xl"
 					>
 						{profile.nickname}
 						{#if viewerPrincipal === profile.owner}
 							<button
-								class="text-muted-foreground cursor-pointer transition-colors hover:text-indigo-600"
+								class="text-muted-foreground hover:text-primary cursor-pointer transition-colors"
 								aria-label="Edit Nickname"
 								onclick={() => (isEditingNickname = true)}
 							>
@@ -152,24 +152,26 @@
 						{/if}
 					</h1>
 				{/if}
-				<div class="mt-1 flex items-center gap-1.5 text-xs text-slate-400">
+				<div class="text-muted-foreground mt-1 flex items-center gap-1.5 text-xs">
 					<CopyableAddress address={profile.owner} label="Principal ID" />
 				</div>
 			</div>
 		</div>
 
 		<!-- Level Progress Card (Duolingo Style) -->
-		<div class="w-full max-w-xs space-y-3 rounded-3xl bg-white p-5 shadow-sm ring-1 ring-slate-100">
+		<div class="border-border bg-card w-full max-w-xs space-y-3 rounded-2xl border p-5">
 			<div class="flex items-center justify-between">
-				<span class="text-xs font-bold tracking-widest text-slate-400 uppercase">
+				<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
 					Level {level} Progress
 				</span>
-				<span class="text-xs font-black text-indigo-600">{points % 500} / 500 XP</span>
+				<span class="text-primary font-mono text-xs font-black tabular-nums"
+					>{points % 500} / 500 XP</span
+				>
 			</div>
-			<div class="h-4 w-full overflow-hidden rounded-full bg-slate-100 p-1 shadow-inner">
+			<div class="h-4 w-full overflow-hidden rounded-full bg-[var(--bg-surface)] p-1 shadow-inner">
 				<div
 					style="width: {progressPercent}%"
-					class="h-full rounded-full bg-indigo-500 transition-all duration-1000 ease-out"
+					class="bg-primary h-full rounded-full transition-all duration-1000 ease-out"
 				></div>
 			</div>
 		</div>
@@ -179,22 +181,22 @@
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
 		<!-- Accuracy Gauge (Big Metric) -->
 		<div
-			class="flex h-full flex-col justify-between rounded-3xl bg-indigo-600 p-8 text-white shadow-xl shadow-indigo-100"
+			class="border-primary/20 bg-primary/10 text-foreground flex h-full flex-col justify-between rounded-2xl border p-8"
 		>
 			<div>
-				<span class="text-xs font-bold tracking-widest text-indigo-100 uppercase">
+				<span class="text-primary text-xs font-bold tracking-widest uppercase">
 					Prediction Accuracy
 				</span>
 				<div class="mt-6 flex items-baseline gap-2">
-					<span class="text-6xl font-black">{Math.round(accuracy)}%</span>
-					<span class="text-indigo-200">win rate</span>
+					<span class="font-mono text-6xl font-black tabular-nums">{Math.round(accuracy)}%</span>
+					<span class="text-muted-foreground">win rate</span>
 				</div>
 			</div>
 			<div class="mt-8 flex items-center gap-3">
-				<div class="h-2 flex-1 overflow-hidden rounded-full bg-indigo-800">
-					<div style="width: {accuracy}%" class="h-full bg-emerald-400"></div>
+				<div class="h-2 flex-1 overflow-hidden rounded-full bg-[var(--bg-surface)]">
+					<div style="width: {accuracy}%" class="h-full bg-[var(--yes)]"></div>
 				</div>
-				<span class="text-[10px] font-bold text-indigo-200">PRO LEVEL</span>
+				<span class="text-primary text-[10px] font-bold">PRO LEVEL</span>
 			</div>
 		</div>
 
@@ -213,7 +215,7 @@
 		<div class="grid grid-cols-1 gap-6">
 			<!-- Daily Fire Streak (Duolingo Style) -->
 			<div
-				class="flex flex-col items-center justify-center gap-4 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-100 transition-all hover:shadow-md"
+				class="border-border bg-card hover:border-primary/20 flex flex-col items-center justify-center gap-4 rounded-2xl border p-6 transition-all"
 			>
 				<div class="relative">
 					<div
@@ -222,23 +224,27 @@
 					<div
 						class="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr {flameColor} text-4xl shadow-lg"
 					>
-						🔥
+						<svg class="h-10 w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+							<path
+								d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-1 .5-2 1-2.5 0 2 1 3 2 3 0-3-1-5 1-8.5z M5 14a7 7 0 1 0 14 0c0-3-2-5-4-7 0 3-1 4-2 4-2 0-3-2-3-4-3 2-5 4-5 7z"
+							/>
+						</svg>
 					</div>
 				</div>
 				<div class="text-center">
-					<div class="text-3xl font-black text-slate-950">
+					<div class="text-foreground text-3xl font-black">
 						{profile.dailyStreak ?? 1} Day Streak
 					</div>
-					<p class="text-xs font-bold text-slate-400 uppercase">Daily Activity</p>
+					<p class="text-muted-foreground text-xs font-bold uppercase">Daily Activity</p>
 				</div>
 			</div>
 
 			<!-- Success Streak Sub-Stat -->
-			<div class="flex items-center justify-between rounded-2xl bg-slate-50 px-5 py-3 shadow-inner">
-				<span class="text-[10px] font-bold text-slate-400 uppercase">Success Streak</span>
+			<div class="flex items-center justify-between rounded-2xl bg-[var(--bg-surface)] px-5 py-3">
+				<span class="text-muted-foreground text-[10px] font-bold uppercase">Success Streak</span>
 				<div class="flex items-center gap-1">
-					<span class="text-lg font-black text-slate-950">{streak}</span>
-					<span class="text-xs">🏆</span>
+					<span class="text-foreground font-mono text-lg font-black">{streak}</span>
+					<span class="text-primary text-xs">·</span>
 				</div>
 			</div>
 		</div>
@@ -247,31 +253,61 @@
 	<!-- Activity / Badges Placeholder -->
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
 		<Card padding="lg">
-			<h4 class="mb-6 text-xs font-bold tracking-widest text-slate-400 uppercase">Achievements</h4>
+			<h4 class="text-muted-foreground mb-6 text-xs font-bold tracking-widest uppercase">
+				Achievements
+			</h4>
 			<div class="flex flex-wrap gap-4 py-4">
 				{#each Array(4) as _, i (i)}
 					<div
-						class="flex h-16 w-16 cursor-help items-center justify-center rounded-2xl bg-slate-50 opacity-40 grayscale transition-all hover:scale-110 hover:opacity-100 hover:grayscale-0"
+						class="bg-foreground/5 flex h-16 w-16 cursor-help items-center justify-center rounded-xl opacity-40 grayscale transition-all hover:scale-110 hover:opacity-100 hover:grayscale-0"
 						title="Locked Achievement"
 					>
-						<span class="text-2xl">🏆</span>
+						<svg
+							class="text-muted-foreground h-6 w-6"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+							viewBox="0 0 24 24"
+							aria-hidden="true"
+						>
+							<path
+								d="M7 4h10v6a5 5 0 0 1-10 0V4z M5 4h2M17 4h2M9 18h6M12 14v4M8 22h8"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+						</svg>
 					</div>
 				{/each}
 				<div
-					class="flex h-16 w-16 animate-bounce items-center justify-center rounded-2xl border-2 border-indigo-200 bg-indigo-50 text-2xl shadow-sm"
+					class="border-primary/30 bg-primary/10 flex h-16 w-16 animate-bounce items-center justify-center rounded-xl border-2"
 					title="Early Adopter"
 				>
-					🚀
+					<svg
+						class="text-primary h-6 w-6"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+					>
+						<path
+							d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
 				</div>
 			</div>
 		</Card>
 
 		<Card padding="lg">
-			<h4 class="mb-4 text-xs font-bold tracking-widest text-slate-400 uppercase">Interests</h4>
+			<h4 class="text-muted-foreground mb-4 text-xs font-bold tracking-widest uppercase">
+				Interests
+			</h4>
 			<div class="flex flex-wrap gap-2">
 				{#each profile.interests ?? [] as interest (interest)}
 					<span
-						class="rounded-lg bg-slate-100 px-3 py-1 text-[10px] font-bold text-slate-600 uppercase"
+						class="bg-foreground/5 text-foreground rounded-[4px] px-3 py-1 text-[10px] font-bold uppercase"
 					>
 						{interest}
 					</span>

@@ -8,15 +8,11 @@
 	};
 </script>
 
-<BaseButton class="group flex items-center gap-2" onclick={() => handleNav(AppPath.Home)}>
-	<div
-		class="bg-primary text-primary-foreground flex h-10 w-10 items-center justify-center rounded-lg font-bold shadow-lg transition-transform group-hover:scale-110"
-	>
-		V
-	</div>
+<BaseButton class="group flex items-center" onclick={() => handleNav(AppPath.Home)}>
 	<span
-		class="text-foreground hidden font-serif text-xl font-extrabold tracking-tight drop-shadow-sm sm:block"
+		class="text-primary font-display text-xl font-bold uppercase transition-all duration-200 group-hover:[text-shadow:0_0_12px_var(--laurel-glow)]"
+		style="letter-spacing: 0.18em;"
 	>
-		Veni. Vidi. <span class="text-primary">VICI</span>.
+		VICI
 	</span>
 </BaseButton>

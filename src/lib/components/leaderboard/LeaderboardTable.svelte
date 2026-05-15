@@ -11,7 +11,7 @@
 	const { leaderboard, loading }: Props = $props();
 </script>
 
-<div class="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+<div class="border-border bg-card overflow-hidden rounded-lg border">
 	{#if loading}
 		<LoadingSpinner />
 	{:else}
@@ -19,7 +19,7 @@
 			<table class="w-full text-left">
 				<thead>
 					<tr
-						class="border-b border-slate-100 bg-slate-50 text-[10px] tracking-[0.2em] text-slate-500 uppercase"
+						class="border-border text-muted-foreground border-b bg-[var(--bg-surface)] text-[10px] tracking-[0.2em] uppercase"
 					>
 						<th class="px-8 py-5 font-black">Rank</th>
 						<th class="px-8 py-5 font-black">User / Principal</th>
@@ -28,19 +28,19 @@
 						<th class="px-8 py-5 text-right font-black">Total P&L</th>
 					</tr>
 				</thead>
-				<tbody class="divide-y divide-slate-50">
+				<tbody class="divide-border divide-y">
 					{#each leaderboard as entry, index (index)}
-						<tr class="group transition-colors hover:bg-slate-50/50">
+						<tr class="group transition-colors hover:bg-[var(--bg-surface)]">
 							<td class="px-8 py-6">
 								<div
-									class="flex h-10 w-10 items-center justify-center rounded-xl font-black {entry.rank ===
+									class="flex h-10 w-10 items-center justify-center rounded-lg font-mono font-black {entry.rank ===
 									1
-										? 'border border-yellow-200 bg-yellow-100 text-yellow-700 shadow-sm'
+										? 'border-primary/30 bg-primary/15 text-primary border'
 										: entry.rank === 2
-											? 'border border-slate-200 bg-slate-100 text-slate-700'
+											? 'border-muted-foreground/30 bg-muted-foreground/10 text-muted-foreground border'
 											: entry.rank === 3
-												? 'border border-amber-200 bg-amber-100 text-amber-700'
-												: 'border border-slate-100 bg-slate-50 text-slate-500'}"
+												? 'border border-[#CD7F32]/30 bg-[#CD7F32]/10 text-[#CD7F32]'
+												: 'border-border text-muted-foreground border bg-[var(--bg-surface)]'}"
 								>
 									#{entry.rank}
 								</div>
@@ -48,23 +48,29 @@
 							<td class="px-8 py-6">
 								<div class="flex items-center gap-3">
 									<div
-										class="h-10 w-10 rounded-full bg-linear-to-br from-indigo-500 to-purple-600 p-px"
+										class="from-primary to-primary/60 h-10 w-10 rounded-full bg-linear-to-br p-px"
 									>
 										<div
-											class="flex h-full w-full items-center justify-center rounded-full bg-white text-[10px] font-bold text-indigo-600"
+											class="bg-card text-primary flex h-full w-full items-center justify-center rounded-full text-[10px] font-bold"
 										>
 											{entry.user.substring(0, 2).toUpperCase()}
 										</div>
 									</div>
-									<span class="text-sm text-slate-600 transition-colors group-hover:text-slate-950">
+									<span
+										class="text-muted-foreground group-hover:text-foreground text-sm transition-colors"
+									>
 										<PrincipalText principal={entry.user} />
 									</span>
 								</div>
 							</td>
-							<td class="px-8 py-6 text-right font-bold text-slate-950">{entry.activePositions}</td>
-							<td class="px-8 py-6 text-right font-bold text-slate-950">{entry.winRate}%</td>
+							<td class="text-foreground px-8 py-6 text-right font-mono font-bold tabular-nums"
+								>{entry.activePositions}</td
+							>
+							<td class="text-foreground px-8 py-6 text-right font-mono font-bold tabular-nums"
+								>{entry.winRate}%</td
+							>
 							<td class="px-8 py-6 text-right">
-								<span class="text-lg font-black text-green-600">
+								<span class="font-mono text-lg font-black text-[var(--yes)] tabular-nums">
 									+{entry.pnl.toFixed(1)}
 									<span class="text-xs uppercase opacity-60">ICP</span>
 								</span>

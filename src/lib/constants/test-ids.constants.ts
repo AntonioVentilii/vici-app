@@ -10,6 +10,7 @@
  * See `docs/ai/frontend/testing.md` for the broader testing policy.
  */
 export enum TestId {
+	AppMain = 'app-main',
 	SignInButton = 'sign-in-button',
 	SignInDev = 'sign-in-dev',
 	UserMenu = 'user-menu',
