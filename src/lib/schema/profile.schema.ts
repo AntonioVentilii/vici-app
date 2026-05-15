@@ -22,6 +22,7 @@ export const UserProfileSchema = j.strictObject({
 	accuracy: j.number().default(0),
 	points: j.number().default(0),
 	level: j.number().default(1),
+	archetype: j.string().default(''),
 	interests: j.array(j.string()).default([]),
 	lastActiveDay: j.string().optional(),
 	preferences: j

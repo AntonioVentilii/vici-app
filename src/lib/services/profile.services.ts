@@ -34,6 +34,7 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				accuracy: 0,
 				points: 0,
 				level: 1,
+				archetype: '',
 				interests: [],
 				preferences: {
 					defaultAmount: {
