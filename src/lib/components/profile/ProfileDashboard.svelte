@@ -6,6 +6,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
+	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
@@ -74,6 +75,7 @@
 
 	const flameStage = $derived(stageForStreak(streak));
 	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
+	const archetype = $derived(profile.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
 </script>
 
 <div class="space-y-8">
@@ -99,6 +101,19 @@
 			</div>
 
 			<div class="text-center sm:text-left">
+				{#if archetype}
+					<div
+						style="border-color: {archetype.accent}40; border-left: 2px solid {archetype.accent}"
+						class="mb-2 inline-flex items-center gap-2 rounded-[4px] border px-2.5 py-1"
+					>
+						<span
+							style="color: {archetype.accent}"
+							class="text-[10px] font-bold tracking-widest uppercase"
+						>
+							{archetype.tag}
+						</span>
+					</div>
+				{/if}
 				{#if isEditingNickname}
 					<div class="flex items-center gap-2">
 						<input
