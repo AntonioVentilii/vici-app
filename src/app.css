@@ -72,6 +72,14 @@
 	--color-accent: var(--laurel);
 	--color-accent-foreground: var(--ink);
 
+	/* Category accents */
+	--cat-macro: #7eb6ff;
+	--cat-crypto: #f7931a;
+	--cat-politics: #ff6b6b;
+	--cat-tech: #b49cff;
+	--cat-sports: #6fe0b6;
+	--cat-culture: #ffb066;
+
 	/* Character accents */
 	--char-vici: #b7b0e8;
 	--char-vici-deep: #6f66b3;
