@@ -76,8 +76,7 @@ test.describe('navigation (signed in)', () => {
 	test.beforeEach(async ({ page }) => {
 		const home = new HomePage(page);
 		await home.goto();
-		await home.openSignInModal();
-		await home.signInDevButton.click();
+		await home.signInAsDevUser();
 
 		await expect(home.userMenu).toBeVisible();
 	});

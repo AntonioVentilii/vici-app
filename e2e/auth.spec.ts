@@ -17,8 +17,7 @@ test.describe('authentication (dev sign-in)', () => {
 
 		await expect(home.signInButton).toBeVisible();
 
-		await home.openSignInModal();
-		await home.signInDevButton.click();
+		await home.signInAsDevUser();
 
 		await expect(home.userMenu).toBeVisible();
 		await expect(home.signInButton).not.toBeVisible();

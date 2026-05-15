@@ -3,6 +3,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import ViciChar from '$lib/components/characters/ViciChar.svelte';
 	import { ARCHETYPES } from '$lib/constants/archetypes.constants';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { categoryColor } from '$lib/utils/category-color.utils';
 
 	interface Props {
@@ -46,7 +47,7 @@
 	const progressWidth = $derived(`${((step + 1) / 5) * 100}%`);
 </script>
 
-<div class="fixed inset-0 z-50 flex flex-col bg-[var(--bg-base)]">
+<div class="fixed inset-0 z-50 flex flex-col bg-[var(--bg-base)]" data-tid={TestId.OnboardingFlow}>
 	<!-- Progress bar -->
 	<div class="px-6 pt-5">
 		<div class="mb-1.5 flex items-center justify-between">
@@ -142,6 +143,7 @@
 							class="flex cursor-pointer flex-col items-start rounded-2xl border p-[18px] text-left transition-all {selected
 								? 'text-foreground'
 								: 'border-border text-muted-foreground bg-[var(--bg-surface)]'}"
+							data-tid={TestId.OnboardingInterest}
 							onclick={() => toggleInterest(id)}
 						>
 							<div
@@ -185,6 +187,7 @@
 							class="flex w-full cursor-pointer flex-col rounded-2xl border p-4 text-left transition-all {selected
 								? 'bg-[rgba(226,184,66,0.06)]'
 								: 'bg-[var(--bg-surface)]'}"
+							data-tid={TestId.OnboardingArchetype}
 							onclick={() => (archetype = a.id)}
 						>
 							<div class="flex items-center justify-between">
@@ -228,6 +231,7 @@
 						<span class="text-muted-foreground font-mono text-lg">@</span>
 						<input
 							class="flex-1 border-0 bg-transparent font-mono text-[22px] font-semibold text-[var(--text-base)] outline-none"
+							data-tid={TestId.OnboardingHandleInput}
 							oninput={(e) => (handle = sanitizeHandle(e.currentTarget.value))}
 							placeholder="tacitus"
 							type="text"
@@ -261,6 +265,7 @@
 		{#if step === 0}
 			<button
 				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold"
+				data-tid={TestId.OnboardingPrimary}
 				onclick={next}
 			>
 				Begin
@@ -268,6 +273,7 @@
 		{:else if step === 1}
 			<button
 				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold"
+				data-tid={TestId.OnboardingPrimary}
 				onclick={next}
 			>
 				Got it
@@ -276,6 +282,7 @@
 			<button
 				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold transition-opacity"
 				class:opacity-35={interests.size < 3}
+				data-tid={TestId.OnboardingPrimary}
 				disabled={interests.size < 3}
 				onclick={next}
 			>
@@ -285,6 +292,7 @@
 			<button
 				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold transition-opacity"
 				class:opacity-35={!archetype}
+				data-tid={TestId.OnboardingPrimary}
 				disabled={!archetype}
 				onclick={next}
 			>
@@ -294,6 +302,7 @@
 			<button
 				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold transition-opacity"
 				class:opacity-35={handle.length < 3}
+				data-tid={TestId.OnboardingPrimary}
 				disabled={handle.length < 3}
 				onclick={() => onComplete({ handle, archetype, interests: Array.from(interests) })}
 			>
