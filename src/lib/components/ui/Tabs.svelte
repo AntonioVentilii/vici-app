@@ -18,7 +18,7 @@
 <div class="border-border flex w-full border-b">
 	{#each tabs as tab (tab)}
 		<BaseButton
-			class="ease-vici flex-1 py-4 text-sm font-bold transition-colors duration-100 {activeTab ===
+			class="ease-vici duration-hover flex-1 py-4 text-sm font-bold transition-colors {activeTab ===
 			tab
 				? 'text-foreground border-primary border-b-2'
 				: 'text-muted-foreground hover:text-foreground'}"

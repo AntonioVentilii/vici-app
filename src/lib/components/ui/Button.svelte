@@ -43,7 +43,7 @@
 </script>
 
 <BaseButton
-	class="ease-vici gap-2 rounded-[12px] font-semibold transition-all duration-100 active:scale-[0.985] {variants[
+	class="ease-vici duration-hover gap-2 rounded-[12px] font-semibold transition-all active:scale-[0.985] {variants[
 		variant
 	]} {sizes[size]} {className}"
 	{busyLabel}

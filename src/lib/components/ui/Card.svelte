@@ -27,7 +27,7 @@
 	}: Props = $props();
 
 	const commonClasses =
-		'flex flex-col items-start justify-between rounded-2xl border transition-all duration-100 ease-vici';
+		'flex flex-col items-start justify-between rounded-2xl border transition-all duration-hover ease-vici';
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
 		default: 'bg-card text-card-foreground border-border shadow-inset-hi',

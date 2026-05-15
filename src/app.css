@@ -221,8 +221,16 @@
 	--color-laurel-glow: var(--laurel-glow);
 
 	/* Canvas reference (text-on-laurel etc.) — exposed so components can
-	 * write `text-ink` instead of `text-ink`. */
+	 * write `text-ink` instead of `text-[var(--ink)]`. */
 	--color-ink: var(--ink);
+
+	/* Theme-stable parchment-tinted lines, used by surfaces that opt out
+	 * of theme switching (e.g. MobileNav has a hard-coded dark translucent
+	 * bg and needs the border to stay parchment in BOTH dark and light
+	 * themes — `--color-border` flips to a dark rgba in light theme and
+	 * would disappear against that bg). */
+	--color-ink-line: var(--ink-line);
+	--color-ink-line-strong: var(--ink-line-strong);
 
 	--color-chart-1: var(--yes);
 	--color-chart-2: var(--hold);
@@ -269,6 +277,33 @@
 			opacity: 1;
 		}
 	}
+}
+
+/* ─── Custom utilities ─── */
+
+/* Tailwind v4 ships built-in `duration-{75|100|150|200|…}` utilities on
+ * a fixed numeric scale, but no namespace for *named* token-bound
+ * durations. These thin `@utility` wrappers keep the design-token link
+ * intact (one source of truth in `:root`) so components can write
+ * `duration-hover` / `duration-state` and changes to `--d-hover` /
+ * `--d-state` propagate everywhere. */
+@utility duration-hover {
+	transition-duration: var(--d-hover);
+}
+
+@utility duration-state {
+	transition-duration: var(--d-state);
+}
+
+/* MobileNav active-tab shadow — composed from the laurel-glow drop +
+ * a parchment inset highlight. Encapsulated as a named utility so the
+ * call-site doesn't keep an arbitrary `shadow-[…var(--laurel-glow)…]`
+ * value (which would re-introduce the [var(--token)] anti-pattern this
+ * refactor is trying to remove). */
+@utility shadow-mobilenav-active {
+	box-shadow:
+		0 8px 24px -8px var(--laurel-glow),
+		inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 html {
