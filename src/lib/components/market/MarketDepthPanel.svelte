@@ -60,22 +60,21 @@
 	<!-- Probability Overview -->
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
 		{#if market.payoffType === 'Binary'}
-			<div class="rounded-3xl border border-[var(--yes)]/20 bg-[var(--yes-wash)] p-6">
+			<div class="border-yes/20 bg-yes-wash rounded-3xl border p-6">
 				<div class="flex items-center justify-between">
-					<span class="text-xs font-bold tracking-widest text-[var(--yes)] uppercase">YES Odds</span
-					>
-					<div class="h-2 w-2 animate-pulse rounded-full bg-[var(--yes)]"></div>
+					<span class="text-yes text-xs font-bold tracking-widest uppercase">YES Odds</span>
+					<div class="bg-yes h-2 w-2 animate-pulse rounded-full"></div>
 				</div>
 				<div class="mt-4 flex items-baseline gap-2">
 					<span class="text-foreground text-4xl font-black">
 						{formatProbability(market.yesProbability)}
 					</span>
-					<span class="text-xs font-medium text-[var(--yes)]">probability</span>
+					<span class="text-yes text-xs font-medium">probability</span>
 				</div>
-				<div class="mt-4 h-1.5 w-full rounded-full bg-[var(--yes)]/20">
+				<div class="bg-yes/20 mt-4 h-1.5 w-full rounded-full">
 					<div
 						style="width: {market.yesProbability * 100}%"
-						class="h-full rounded-full bg-[var(--yes)]"
+						class="bg-yes h-full rounded-full"
 					></div>
 				</div>
 			</div>

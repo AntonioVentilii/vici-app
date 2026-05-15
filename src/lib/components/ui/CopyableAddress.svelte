@@ -38,7 +38,7 @@
 	>
 		{#if copied}
 			<span class="absolute inset-0 flex items-center justify-center" in:fade={{ duration: 150 }}>
-				<Check class="h-3.5 w-3.5 text-[var(--yes)]" />
+				<Check class="text-yes h-3.5 w-3.5" />
 			</span>
 		{:else}
 			<span class="absolute inset-0 flex items-center justify-center" in:fade={{ duration: 150 }}>

@@ -32,7 +32,7 @@
 				<div class="flex items-center gap-2">
 					<span
 						class="text-xs font-bold {isYes
-							? 'text-[var(--yes)]'
+							? 'text-yes'
 							: isNo
 								? 'text-destructive'
 								: 'text-primary'} uppercase"
@@ -48,12 +48,7 @@
 
 			<div class="bg-card flex h-10 w-10 items-center justify-center rounded-2xl p-2">
 				{#if isYes}
-					<svg
-						class="h-6 w-6 text-[var(--yes)]"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
+					<svg class="text-yes h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path
 							d="M5 13l4 4L19 7"
 							stroke-linecap="round"

@@ -37,7 +37,7 @@
 		</BaseButton>
 
 		<div
-			class="animate-in fade-in zoom-in wrapper bg-popover relative flex w-full max-w-md flex-col overflow-hidden rounded-[12px] border border-[var(--border-strong)] shadow-[var(--shadow-modal)] duration-200"
+			class="animate-in fade-in zoom-in wrapper bg-popover border-border-strong shadow-modal relative flex w-full max-w-md flex-col overflow-hidden rounded-[12px] border duration-200"
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
 			onkeydown={(e) => e.stopPropagation()}

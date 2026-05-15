@@ -42,7 +42,7 @@
 				<table class="w-full min-w-0 table-fixed text-left">
 					<thead>
 						<tr
-							class="border-border text-muted-foreground border-b bg-[var(--bg-surface)] text-[10px] tracking-widest uppercase"
+							class="border-border text-muted-foreground bg-card border-b text-[10px] tracking-widest uppercase"
 						>
 							<th class="px-6 py-4 font-black">Market</th>
 							<th class="px-6 py-4 font-black">Side</th>
@@ -56,7 +56,7 @@
 							{@const market = getMarketById(pos.marketId)}
 							{@const pnl = calculatePositionPnL({ position: pos, market })}
 
-							<tr class="group transition-colors hover:bg-[var(--bg-surface)]">
+							<tr class="group hover:bg-card transition-colors">
 								<td class="min-w-0 px-6 py-4">
 									<a class="group block min-w-0" href="/(app)/markets/{pos.marketId}">
 										<span
@@ -76,10 +76,10 @@
 										<span
 											class="rounded-md border px-1.5 py-0.5 text-[10px] font-black tracking-tight uppercase {pos.outcomeId ===
 											'YES'
-												? 'border-[var(--yes)]/30 bg-[var(--yes-wash)] text-[var(--yes)]'
+												? 'border-yes/30 bg-yes-wash text-yes'
 												: pos.outcomeId === 'NO'
-													? 'border-[var(--no)]/30 bg-[var(--no-wash)] text-[var(--no)]'
-													: 'border-[var(--hold)]/30 bg-[var(--hold-wash)] text-[var(--hold)]'}"
+													? 'border-no/30 bg-no-wash text-no'
+													: 'border-hold/30 bg-hold-wash text-hold'}"
 										>
 											{market?.outcomes?.find((o) => o.id === pos.outcomeId)?.title ??
 												pos.outcomeId}
@@ -107,8 +107,8 @@
 								<td class="px-6 py-4 text-right">
 									<span
 										class="font-mono text-sm font-black tabular-nums {pnl >= 0
-											? 'text-[var(--yes)]'
-											: 'text-[var(--no)]'}"
+											? 'text-yes'
+											: 'text-no'}"
 									>
 										{formatPositionPnLWithOptionalUnit({ pnl, playground: $playgroundVxpUnitMode })}
 									</span>

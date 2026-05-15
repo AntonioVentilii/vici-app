@@ -154,7 +154,7 @@
 							#{i + 4}
 						</span>
 						<Avatar
-							class="ring-border h-8 w-8 bg-[var(--bg-surface)] shadow-inner ring-2 sm:h-10 sm:w-10"
+							class="ring-border bg-card h-8 w-8 shadow-inner ring-2 sm:h-10 sm:w-10"
 							avatar={user.avatar}
 							nickname={user.nickname}
 							owner={user.owner}
@@ -175,7 +175,7 @@
 									Streak: {user.dailyStreak ?? 1}d
 								</span>
 								<span class="text-border text-[9px]">•</span>
-								<span class="font-mono text-[9px] font-bold text-[var(--yes)] uppercase">
+								<span class="text-yes font-mono text-[9px] font-bold uppercase">
 									{Math.round(user.accuracy ?? 0)}% ACC
 								</span>
 							</div>

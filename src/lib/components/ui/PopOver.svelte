@@ -34,7 +34,7 @@
 		<div
 			class="absolute {align === 'right'
 				? 'right-0'
-				: 'left-0'} bg-popover z-50 mt-2 min-w-48 origin-top-right rounded-[8px] border border-[var(--border-strong)] p-2 shadow-[var(--shadow-modal)] backdrop-blur-md focus:outline-none"
+				: 'left-0'} bg-popover border-border-strong shadow-modal z-50 mt-2 min-w-48 origin-top-right rounded-[8px] border p-2 backdrop-blur-md focus:outline-none"
 			transition:fly={{ y: 8, duration: 200 }}
 		>
 			{@render content()}

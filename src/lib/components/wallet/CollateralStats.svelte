@@ -70,8 +70,8 @@
 			</div>
 			<div class="text-muted-foreground mt-1 space-y-1 text-sm">
 				{#if isNullish(collateral)}
-					<div class="h-4 w-32 animate-pulse rounded bg-[var(--bg-surface)]"></div>
-					<div class="mt-2 h-4 w-24 animate-pulse rounded bg-[var(--bg-surface)]"></div>
+					<div class="bg-card h-4 w-32 animate-pulse rounded"></div>
+					<div class="bg-card mt-2 h-4 w-24 animate-pulse rounded"></div>
 				{:else if nonNullish(collateral.accountState)}
 					<p>
 						Deposited: <span class="text-foreground font-mono font-bold tabular-nums">
@@ -107,10 +107,10 @@
 			{#each { length: 3 } as _, i (i)}
 				<div class="flex items-center justify-between p-6">
 					<div class="flex items-center gap-3">
-						<div class="h-10 w-10 animate-pulse rounded-full bg-[var(--bg-surface)]"></div>
-						<div class="h-4 w-24 animate-pulse rounded bg-[var(--bg-surface)]"></div>
+						<div class="bg-card h-10 w-10 animate-pulse rounded-full"></div>
+						<div class="bg-card h-4 w-24 animate-pulse rounded"></div>
 					</div>
-					<div class="h-4 w-16 animate-pulse rounded bg-[var(--bg-surface)]"></div>
+					<div class="bg-card h-4 w-16 animate-pulse rounded"></div>
 				</div>
 			{/each}
 		{:else}

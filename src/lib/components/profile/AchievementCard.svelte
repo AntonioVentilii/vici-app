@@ -40,7 +40,7 @@
 
 		{#if !unlocked && progress > 0}
 			<div class="mt-2.5 flex items-center gap-2">
-				<div class="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--bg-surface)]">
+				<div class="bg-card h-1.5 flex-1 overflow-hidden rounded-full">
 					<div
 						style="width: {progressPercent}%"
 						class="bg-primary h-full rounded-full transition-all duration-500"

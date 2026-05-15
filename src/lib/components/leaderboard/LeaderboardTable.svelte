@@ -19,7 +19,7 @@
 			<table class="w-full text-left">
 				<thead>
 					<tr
-						class="border-border text-muted-foreground border-b bg-[var(--bg-surface)] text-[10px] tracking-[0.2em] uppercase"
+						class="border-border text-muted-foreground bg-card border-b text-[10px] tracking-[0.2em] uppercase"
 					>
 						<th class="px-8 py-5 font-black">Rank</th>
 						<th class="px-8 py-5 font-black">User / Principal</th>
@@ -30,7 +30,7 @@
 				</thead>
 				<tbody class="divide-border divide-y">
 					{#each leaderboard as entry, index (index)}
-						<tr class="group transition-colors hover:bg-[var(--bg-surface)]">
+						<tr class="group hover:bg-card transition-colors">
 							<td class="px-8 py-6">
 								<div
 									class="flex h-10 w-10 items-center justify-center rounded-lg font-mono font-black {entry.rank ===
@@ -40,7 +40,7 @@
 											? 'border-muted-foreground/30 bg-muted-foreground/10 text-muted-foreground border'
 											: entry.rank === 3
 												? 'border border-[#CD7F32]/30 bg-[#CD7F32]/10 text-[#CD7F32]'
-												: 'border-border text-muted-foreground border bg-[var(--bg-surface)]'}"
+												: 'border-border text-muted-foreground bg-card border'}"
 								>
 									#{entry.rank}
 								</div>
@@ -70,7 +70,7 @@
 								>{entry.winRate}%</td
 							>
 							<td class="px-8 py-6 text-right">
-								<span class="font-mono text-lg font-black text-[var(--yes)] tabular-nums">
+								<span class="text-yes font-mono text-lg font-black tabular-nums">
 									+{entry.pnl.toFixed(1)}
 									<span class="text-xs uppercase opacity-60">ICP</span>
 								</span>

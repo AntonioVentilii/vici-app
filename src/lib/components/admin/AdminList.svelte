@@ -89,7 +89,7 @@
 								</span>
 							</div>
 							<span
-								class="mt-0.5 inline-flex shrink-0 items-center rounded-full bg-[var(--hold-wash)] px-2 py-1 text-xs font-medium text-[var(--hold)] ring-1 ring-[var(--hold)]/10 ring-inset"
+								class="bg-hold-wash text-hold ring-hold/10 mt-0.5 inline-flex shrink-0 items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset"
 							>
 								{entry.role}
 							</span>

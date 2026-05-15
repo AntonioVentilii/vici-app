@@ -166,9 +166,21 @@ pins `VICI_ENGINE_ID` is
 ## Tailwind v4 + design tokens
 
 - **Use the project's tokens.** [`src/app.css`](../../../src/app.css)
-  exposes `primary`, `background`, `card`, `card-border`, etc. Class-based
-  utilities reference them (`bg-card`, `text-card-foreground`, etc.).
-- **No raw hex** (`bg-[#0f0]`), no inline `style="color:…"`.
+  exposes `primary`, `background`, `card`, `card-border`, the prediction
+  signals (`yes` / `no` / `hold` and their `-deep` / `-wash` variants),
+  the `laurel` brand ramp (`laurel` / `laurel-deep` / `laurel-glow`),
+  `ink`, `border-strong`, the `ease-vici` curve, and the `inset-hi` /
+  `inset-hi-strong` / `modal` shadows. Use the generated utilities —
+  `bg-card`, `text-yes`, `bg-no-wash`, `border-border-strong`,
+  `shadow-inset-hi`, `ease-vici`, `bg-laurel/20` — directly.
+- **No `[var(--…)]` arbitrary values for design tokens.** Tailwind v4
+  generates `bg-foo` / `text-foo` / `border-foo` / `ring-foo` /
+  `shadow-foo` / `ease-foo` utilities for every `--color-*`, `--shadow-*`
+  and `--ease-*` token in `@theme`. If a token is missing from `@theme`,
+  add it there in the same PR rather than reaching for
+  `bg-[var(--my-token)]`. Same goes for `style="color: var(--foo)"` /
+  `style="box-shadow: var(--foo)"` — use the utility.
+- **No raw hex** (`bg-[#0f0]`).
 - **Class order** is auto-sorted by `prettier-plugin-tailwindcss`. Don't
   bikeshed it.
 - **Variants & responsive:** prefer Tailwind variants (`md:`, `dark:`,

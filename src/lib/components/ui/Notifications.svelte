@@ -30,7 +30,7 @@
 				</div>
 			{:else}
 				<div
-					class="mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[var(--yes-wash)] text-[var(--yes)]"
+					class="bg-yes-wash text-yes mt-1 flex h-5 w-5 shrink-0 items-center justify-center rounded-full"
 				>
 					<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 						<path

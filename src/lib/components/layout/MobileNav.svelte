@@ -15,14 +15,14 @@
 </script>
 
 <nav
-	class="fixed bottom-0 left-0 z-50 grid w-full grid-cols-5 border-t border-[var(--ink-line)] bg-[rgba(14,13,11,0.85)] px-2 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] backdrop-blur-[24px] md:hidden"
+	class="border-border fixed bottom-0 left-0 z-50 grid w-full grid-cols-5 border-t bg-[rgba(14,13,11,0.85)] px-2 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] backdrop-blur-[24px] md:hidden"
 >
 	{#each visibleNavItems as { label, path, mobileIcon: Icon } (path)}
 		{@const isFlow = label === 'Flow'}
 		<button
-			class="relative flex cursor-pointer flex-col items-center justify-center gap-1 transition-colors duration-[var(--d-state)] ease-[var(--ease-vici)]
+			class="ease-vici relative flex cursor-pointer flex-col items-center justify-center gap-1 transition-colors duration-200
 				{isFlow
-				? 'bg-primary mx-1 -mt-2.5 rounded-2xl py-3 text-[var(--ink)] shadow-[0_8px_24px_-8px_var(--laurel-glow),inset_0_1px_0_rgba(255,255,255,0.3)]'
+				? 'bg-primary text-ink mx-1 -mt-2.5 rounded-2xl py-3 shadow-[0_8px_24px_-8px_var(--laurel-glow),inset_0_1px_0_rgba(255,255,255,0.3)]'
 				: isActive(path)
 					? 'text-foreground py-2'
 					: 'text-muted-foreground hover:text-foreground py-2'}"

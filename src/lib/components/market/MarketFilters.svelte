@@ -68,7 +68,7 @@
 				<button
 					class="rounded-full border px-3 py-1.5 text-xs font-medium transition-all {activeTab ===
 					tab
-						? 'border-primary/30 text-primary bg-[var(--laurel-glow)]'
+						? 'border-primary/30 text-primary bg-laurel-glow'
 						: 'border-border bg-foreground/6 text-muted-foreground hover:bg-foreground/10 hover:text-foreground'}"
 					onclick={() => onTabChange(tab)}
 				>

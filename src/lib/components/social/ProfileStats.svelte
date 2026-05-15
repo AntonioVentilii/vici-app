@@ -38,7 +38,7 @@
 		<p class="text-muted-foreground text-[10px] uppercase">Total P&L</p>
 	</div>
 	<div class="bg-foreground/5 flex-1 rounded-xl p-3">
-		<p class="font-mono text-xl font-black text-[var(--yes)] tabular-nums">
+		<p class="text-yes font-mono text-xl font-black tabular-nums">
 			{profile.winRate?.toFixed(1) ?? '0'}%
 		</p>
 		<p class="text-muted-foreground text-[10px] uppercase">Win Rate</p>

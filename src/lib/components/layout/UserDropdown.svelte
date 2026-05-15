@@ -40,7 +40,7 @@
 <PopOver bind:open>
 	{#snippet trigger()}
 		<BaseButton
-			class="flex h-10 w-10 items-center justify-center rounded-full border border-[var(--border-base)] bg-[var(--bg-surface)] text-[var(--text-base)] transition-all hover:border-[var(--border-strong)] active:scale-95"
+			class="border-border bg-card text-foreground hover:border-border-strong flex h-10 w-10 items-center justify-center rounded-full border transition-all active:scale-95"
 			aria-label="User profile"
 			data-tid={TestId.UserMenu}
 		>

@@ -27,13 +27,12 @@
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
 		primary:
-			'bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] hover:bg-[var(--laurel-deep)]',
-		secondary:
-			'bg-foreground/6 text-foreground border border-border hover:border-[var(--border-strong)]',
+			'bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] hover:bg-laurel-deep',
+		secondary: 'bg-foreground/6 text-foreground border border-border hover:border-border-strong',
 		outline: 'border border-primary text-primary bg-transparent hover:bg-primary/5',
 		ghost: 'bg-transparent text-foreground hover:bg-foreground/6',
 		danger:
-			'bg-destructive text-destructive-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] hover:bg-[var(--no-deep)]'
+			'bg-destructive text-destructive-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] hover:bg-no-deep'
 	};
 
 	const sizes: Record<NonNullable<Props['size']>, string> = {
@@ -44,7 +43,7 @@
 </script>
 
 <BaseButton
-	class="gap-2 rounded-[12px] font-semibold transition-all duration-[var(--d-hover)] ease-[var(--ease-vici)] active:scale-[0.985] {variants[
+	class="ease-vici gap-2 rounded-[12px] font-semibold transition-all duration-100 active:scale-[0.985] {variants[
 		variant
 	]} {sizes[size]} {className}"
 	{busyLabel}

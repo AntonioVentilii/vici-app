@@ -34,9 +34,9 @@
 						</td>
 						<td
 							class="py-4 font-bold"
-							class:text-[var(--yes)]={type === 'Receive'}
 							class:text-destructive={type === 'Send'}
 							class:text-primary={type !== 'Receive' && type !== 'Send'}
+							class:text-yes={type === 'Receive'}
 						>
 							{type}
 						</td>

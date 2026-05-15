@@ -114,7 +114,7 @@
 					class="border-border ring-primary/10 h-28 w-28 rounded-full border-4 p-1 shadow-xl ring-4"
 				>
 					<Avatar
-						class="h-full w-full bg-[var(--bg-surface)] shadow-inner"
+						class="bg-card h-full w-full shadow-inner"
 						avatar={profile.avatar}
 						nickname={profile.nickname}
 						owner={profile.owner}
@@ -151,7 +151,7 @@
 							bind:value={editedNickname}
 						/>
 						<BaseButton
-							class="cursor-pointer text-[var(--yes)] hover:text-[var(--yes)]"
+							class="text-yes hover:text-yes cursor-pointer"
 							aria-label="Save"
 							onclick={handleSaveNickname}
 							status={pending
@@ -206,7 +206,7 @@
 					>{points % 500} / 500 XP</span
 				>
 			</div>
-			<div class="h-4 w-full overflow-hidden rounded-full bg-[var(--bg-surface)] p-1 shadow-inner">
+			<div class="bg-card h-4 w-full overflow-hidden rounded-full p-1 shadow-inner">
 				<div
 					style="width: {progressPercent}%"
 					class="bg-primary h-full rounded-full transition-all duration-1000 ease-out"
@@ -231,8 +231,8 @@
 				</div>
 			</div>
 			<div class="mt-8 flex items-center gap-3">
-				<div class="h-2 flex-1 overflow-hidden rounded-full bg-[var(--bg-surface)]">
-					<div style="width: {accuracy}%" class="h-full bg-[var(--yes)]"></div>
+				<div class="bg-card h-2 flex-1 overflow-hidden rounded-full">
+					<div style="width: {accuracy}%" class="bg-yes h-full"></div>
 				</div>
 				<span class="text-primary text-[10px] font-bold">PRO LEVEL</span>
 			</div>
@@ -269,7 +269,7 @@
 			</div>
 
 			<!-- Daily Activity Sub-Stat -->
-			<div class="flex items-center justify-between rounded-2xl bg-[var(--bg-surface)] px-5 py-3">
+			<div class="bg-card flex items-center justify-between rounded-2xl px-5 py-3">
 				<span class="text-muted-foreground text-[10px] font-bold uppercase">Daily streak</span>
 				<div class="flex items-center gap-1.5">
 					<FlameChar animate={false} size={18} stage={flameStage} />
@@ -282,10 +282,7 @@
 	</div>
 
 	<!-- Oracle Weekly Insight -->
-	<div
-		style="box-shadow: var(--inset-hi)"
-		class="border-border flex items-center gap-4 rounded-2xl border bg-[var(--bg-surface)] p-5"
-	>
+	<div class="border-border bg-card shadow-inset-hi flex items-center gap-4 rounded-2xl border p-5">
 		<div class="flex-none">
 			<OracleChar size={48} />
 		</div>

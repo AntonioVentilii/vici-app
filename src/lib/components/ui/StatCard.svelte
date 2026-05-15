@@ -15,9 +15,9 @@
 	const variantStyles: Record<NonNullable<Props['variant']>, string> = {
 		default: 'text-foreground',
 		primary: 'text-primary',
-		success: 'text-[var(--yes)]',
-		danger: 'text-[var(--no)]',
-		warning: 'text-[var(--laurel)]'
+		success: 'text-yes',
+		danger: 'text-no',
+		warning: 'text-laurel'
 	};
 
 	const sizes: Record<
