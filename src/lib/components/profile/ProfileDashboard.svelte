@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Pencil, Check, X } from 'lucide-svelte';
+	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
@@ -9,6 +10,7 @@
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import { formatCurrency } from '$lib/utils/format.utils';
+	import { stageForStreak, FLAME_STAGE_LABELS } from '$lib/utils/streak.utils';
 
 	interface Props {
 		profile: UserProfile;
@@ -70,14 +72,8 @@
 	const points = $derived(profile.points ?? 0);
 	const progressPercent = $derived((points % 500) / 5); // 0-100
 
-	// Dynamic flame color based on streak
-	const flameColor = $derived(
-		streak >= 10
-			? 'from-purple-500 to-pink-500'
-			: streak >= 5
-				? 'from-orange-500 to-red-600'
-				: 'from-amber-400 to-orange-500'
-	);
+	const flameStage = $derived(stageForStreak(streak));
+	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
 </script>
 
 <div class="space-y-8">
@@ -213,38 +209,31 @@
 
 		<!-- Gamification Side-Grid -->
 		<div class="grid grid-cols-1 gap-6">
-			<!-- Daily Fire Streak (Duolingo Style) -->
+			<!-- Streak with Flame Character -->
 			<div
 				class="border-border bg-card hover:border-primary/20 flex flex-col items-center justify-center gap-4 rounded-2xl border p-6 transition-all"
 			>
-				<div class="relative">
-					<div
-						class="absolute -inset-4 rounded-full bg-gradient-to-tr {flameColor} opacity-20 blur-xl"
-					></div>
-					<div
-						class="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr {flameColor} text-4xl shadow-lg"
-					>
-						<svg class="h-10 w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-							<path
-								d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-1 .5-2 1-2.5 0 2 1 3 2 3 0-3-1-5 1-8.5z M5 14a7 7 0 1 0 14 0c0-3-2-5-4-7 0 3-1 4-2 4-2 0-3-2-3-4-3 2-5 4-5 7z"
-							/>
-						</svg>
-					</div>
+				<div class="char-pop">
+					<FlameChar size={80} stage={flameStage} />
 				</div>
 				<div class="text-center">
-					<div class="text-foreground text-3xl font-black">
-						{profile.dailyStreak ?? 1} Day Streak
+					<div class="text-foreground font-mono text-3xl font-black tabular-nums">
+						{streak}
 					</div>
-					<p class="text-muted-foreground text-xs font-bold uppercase">Daily Activity</p>
+					<p class="text-muted-foreground text-xs font-bold uppercase">
+						Day streak · {flameLabel}
+					</p>
 				</div>
 			</div>
 
-			<!-- Success Streak Sub-Stat -->
+			<!-- Daily Activity Sub-Stat -->
 			<div class="flex items-center justify-between rounded-2xl bg-[var(--bg-surface)] px-5 py-3">
-				<span class="text-muted-foreground text-[10px] font-bold uppercase">Success Streak</span>
-				<div class="flex items-center gap-1">
-					<span class="text-foreground font-mono text-lg font-black">{streak}</span>
-					<span class="text-primary text-xs">·</span>
+				<span class="text-muted-foreground text-[10px] font-bold uppercase">Daily streak</span>
+				<div class="flex items-center gap-1.5">
+					<FlameChar animate={false} size={18} stage={flameStage} />
+					<span class="text-foreground font-mono text-lg font-black tabular-nums">
+						{profile.dailyStreak ?? 1}
+					</span>
 				</div>
 			</div>
 		</div>
@@ -264,11 +253,11 @@
 					>
 						<svg
 							class="text-muted-foreground h-6 w-6"
+							aria-hidden="true"
 							fill="none"
 							stroke="currentColor"
 							stroke-width="1.5"
 							viewBox="0 0 24 24"
-							aria-hidden="true"
 						>
 							<path
 								d="M7 4h10v6a5 5 0 0 1-10 0V4z M5 4h2M17 4h2M9 18h6M12 14v4M8 22h8"
@@ -284,11 +273,11 @@
 				>
 					<svg
 						class="text-primary h-6 w-6"
+						aria-hidden="true"
 						fill="none"
 						stroke="currentColor"
 						stroke-width="1.5"
 						viewBox="0 0 24 24"
-						aria-hidden="true"
 					>
 						<path
 							d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4"
