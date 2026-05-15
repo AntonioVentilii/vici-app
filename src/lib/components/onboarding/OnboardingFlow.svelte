@@ -3,6 +3,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import ViciChar from '$lib/components/characters/ViciChar.svelte';
 	import { ARCHETYPES } from '$lib/constants/archetypes.constants';
+	import { categoryColor } from '$lib/utils/category-color.utils';
 
 	interface Props {
 		onComplete: (result: { handle: string; archetype: string; interests: string[] }) => void;
@@ -135,16 +136,17 @@
 				<div class="mt-2 grid grid-cols-2 gap-2.5">
 					{#each INTEREST_CATS as { id, label, Icon } (id)}
 						{@const selected = interests.has(id)}
+						{@const color = categoryColor(id)}
 						<button
+							style={selected ? `border-color: ${color}40; background: ${color}0D` : undefined}
 							class="flex cursor-pointer flex-col items-start rounded-2xl border p-[18px] text-left transition-all {selected
-								? 'border-primary/40 text-foreground bg-[rgba(226,184,66,0.08)]'
+								? 'text-foreground'
 								: 'border-border text-muted-foreground bg-[var(--bg-surface)]'}"
 							onclick={() => toggleInterest(id)}
 						>
 							<div
-								class="flex h-9 w-9 items-center justify-center rounded-lg {selected
-									? 'bg-primary/15 text-primary'
-									: 'bg-foreground/6 text-muted-foreground'}"
+								style="background: {color}22; color: {color}"
+								class="flex h-9 w-9 items-center justify-center rounded-lg"
 							>
 								<Icon size={18} />
 							</div>
