@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Pencil, Check, X } from 'lucide-svelte';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
+	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import AchievementCard from '$lib/components/profile/AchievementCard.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
@@ -78,6 +79,30 @@
 	const flameStage = $derived(stageForStreak(streak));
 	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
 	const archetype = $derived(profile.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
+
+	const oracleInsight = $derived.by(() => {
+		const trades = profile.totalTrades ?? 0;
+		const acc = Math.round(accuracy);
+		const s = streak;
+
+		if (trades === 0) {
+			return 'No calls yet. The Oracle waits.';
+		}
+
+		if (acc >= 80) {
+			return `${acc}% accuracy across ${trades} calls. The Oracle approves.`;
+		}
+
+		if (s >= 7) {
+			return `${s}-day streak and ${acc}% accuracy. Consistency compounds.`;
+		}
+
+		if (acc >= 60) {
+			return `${acc}% accuracy over ${trades} calls. Above the crowd.`;
+		}
+
+		return `${trades} calls logged. ${acc}% hit rate. Room to sharpen.`;
+	});
 </script>
 
 <div class="space-y-8">
@@ -256,7 +281,23 @@
 		</div>
 	</div>
 
-	<!-- Activity / Badges Placeholder -->
+	<!-- Oracle Weekly Insight -->
+	<div
+		style="box-shadow: var(--inset-hi)"
+		class="border-border flex items-center gap-4 rounded-2xl border bg-[var(--bg-surface)] p-5"
+	>
+		<div class="flex-none">
+			<OracleChar size={48} />
+		</div>
+		<div class="min-w-0 flex-1">
+			<div class="flex items-center gap-2">
+				<span style="color: var(--char-oracle)" class="eyebrow">ORACLE INSIGHT</span>
+			</div>
+			<p class="text-foreground mt-1 text-sm leading-relaxed">{oracleInsight}</p>
+		</div>
+	</div>
+
+	<!-- Activity / Badges -->
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
 		<Card padding="lg">
 			<h4 class="text-muted-foreground mb-4 text-xs font-bold tracking-widest uppercase">
