@@ -61,7 +61,7 @@
 <header
 	class="border-border bg-background/95 sticky top-0 z-50 w-full border-b backdrop-blur-md transition-all duration-300"
 >
-	<div class="container mx-auto flex h-16 items-center justify-between px-4">
+	<div class="container mx-auto flex h-14 items-center justify-between px-4">
 		<!-- Left side -->
 		<Logo />
 

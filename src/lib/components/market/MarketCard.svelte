@@ -29,7 +29,7 @@
 
 <div class="h-full w-full" in:fly={{ y: 20, duration: 400, delay: Math.min(index * 50, 300) }}>
 	<Card
-		class="group border-border h-full w-full overflow-hidden rounded-lg border shadow-[var(--inset-hi)] transition-all hover:-translate-y-0.5 hover:border-[var(--border-strong)]"
+		class="group border-border h-full w-full overflow-hidden border shadow-[var(--inset-hi)] transition-all hover:-translate-y-0.5 hover:border-[var(--border-strong)]"
 		onclick={() => goto(`${AppPath.Markets}/${market.id}`)}
 		onkeydown={(e) => e.key === 'Enter' && goto(`${AppPath.Markets}/${market.id}`)}
 		padding="none"

@@ -37,14 +37,14 @@
 	};
 
 	const sizes: Record<NonNullable<Props['size']>, string> = {
-		sm: 'px-4 py-1.5 text-xs',
-		md: 'px-8 py-2.5 text-sm',
-		lg: 'px-10 py-3.5 text-base'
+		sm: 'px-3 py-2 text-xs',
+		md: 'px-5 py-3.5 text-[15px]',
+		lg: 'px-6 py-4 text-base rounded-[14px]'
 	};
 </script>
 
 <BaseButton
-	class="gap-2 rounded-[4px] font-bold transition-all duration-[var(--d-hover)] ease-[var(--ease-vici)] active:scale-[0.985] {variants[
+	class="gap-2 rounded-[12px] font-semibold transition-all duration-[var(--d-hover)] ease-[var(--ease-vici)] active:scale-[0.985] {variants[
 		variant
 	]} {sizes[size]} {className}"
 	{busyLabel}

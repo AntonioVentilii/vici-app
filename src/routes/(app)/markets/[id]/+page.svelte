@@ -76,7 +76,7 @@
 	{#if loading}
 		<div class="flex h-96 items-center justify-center">
 			<div
-				class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"
+				class="border-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
 			></div>
 		</div>
 	{:else if market}
@@ -110,7 +110,7 @@
 
 			<!-- Admin Resolution Section -->
 			{#if market.status !== 'Resolved' && $userIsAdminOrSolver}
-				<div class="mx-auto max-w-4xl border-t border-border pt-12">
+				<div class="border-border mx-auto max-w-4xl border-t pt-12">
 					<MarketResolutionInterface
 						{market}
 						onSettled={() => {
@@ -124,12 +124,12 @@
 		</div>
 	{:else}
 		<div class="flex flex-col items-center justify-center py-24 text-center">
-			<h1 class="text-4xl font-extrabold text-foreground">404 - Market Not Found</h1>
-			<p class="mt-4 text-muted-foreground">
+			<h1 class="text-foreground text-4xl font-extrabold">404 - Market Not Found</h1>
+			<p class="text-muted-foreground mt-4">
 				The market you are seeking is either hidden or does not exist.
 			</p>
 			<a
-				class="mt-8 rounded-xl bg-primary px-8 py-3 font-bold text-primary-foreground transition-all hover:bg-primary/90"
+				class="bg-primary text-primary-foreground hover:bg-primary/90 mt-8 rounded-xl px-8 py-3 font-bold transition-all"
 				href="/static"
 			>
 				Return to Markets

@@ -22,7 +22,7 @@
 	<div class="flex flex-col items-center justify-center gap-8 py-4 text-center">
 		<div class="flex flex-col items-center justify-center gap-3">
 			<div
-				class="bg-primary text-primary-foreground flex h-16 w-16 items-center justify-center rounded-lg text-2xl font-bold shadow-[var(--laurel-glow)] shadow-xl"
+				class="bg-primary text-primary-foreground flex h-16 w-16 items-center justify-center rounded-xl text-2xl font-bold shadow-[var(--laurel-glow)] shadow-xl"
 			>
 				V
 			</div>
@@ -31,7 +31,7 @@
 			</h1>
 		</div>
 
-		<div class="border-border w-full max-w-sm rounded-lg border bg-[var(--bg-surface)] p-6">
+		<div class="border-border w-full max-w-sm rounded-2xl border bg-[var(--bg-surface)] p-6">
 			<p class="text-muted-foreground mb-6 text-sm font-semibold tracking-wider uppercase">
 				Sign in with
 			</p>

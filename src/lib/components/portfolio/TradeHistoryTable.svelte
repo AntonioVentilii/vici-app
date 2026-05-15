@@ -17,7 +17,7 @@
 </script>
 
 <div class="space-y-4">
-	<h2 class="text-xl font-bold tracking-wider text-foreground uppercase">Trade History</h2>
+	<h2 class="text-foreground text-xl font-bold tracking-wider uppercase">Trade History</h2>
 	<Card class="overflow-hidden" padding="none">
 		{#if events.length === 0}
 			<EmptyState message="No trade history found." />
@@ -26,7 +26,7 @@
 				<table class="w-full min-w-0 table-fixed text-left">
 					<thead>
 						<tr
-							class="border-b border-border bg-foreground/5 text-[10px] tracking-widest text-muted-foreground uppercase"
+							class="border-border bg-foreground/5 text-muted-foreground border-b text-[10px] tracking-widest uppercase"
 						>
 							<th class="px-6 py-4 font-black">Time</th>
 							<th class="px-6 py-4 font-black">Market</th>
@@ -35,30 +35,30 @@
 							<th class="px-6 py-4 text-right font-black">Qty</th>
 						</tr>
 					</thead>
-					<tbody class="divide-y divide-border">
+					<tbody class="divide-border divide-y">
 						{#each events as event (event.event_id)}
 							{@const market = getMarketById(event.series_id)}
 
-							<tr class="group transition-colors hover:bg-foreground/5">
-								<td class="px-6 py-4 text-[10px] text-muted-foreground">
+							<tr class="group hover:bg-foreground/5 transition-colors">
+								<td class="text-muted-foreground px-6 py-4 text-[10px]">
 									{formatNanosecondsToDate({ nanoseconds: event.timestamp })}
 								</td>
 								<td class="min-w-0 px-6 py-4">
 									<div class="flex min-w-0 flex-col">
-										<span class="block truncate text-sm font-bold text-foreground">
+										<span class="text-foreground block truncate text-sm font-bold">
 											{market?.title ?? 'Unknown Market'}
 										</span>
 									</div>
 								</td>
 								<td class="px-6 py-4">
-									<span class="text-[10px] font-bold text-muted-foreground uppercase">
+									<span class="text-muted-foreground text-[10px] font-bold uppercase">
 										{Object.keys(event.event_type)[0]}
 									</span>
 								</td>
-								<td class="px-6 py-4 text-right text-sm font-bold text-foreground">
+								<td class="text-foreground px-6 py-4 text-right text-sm font-bold">
 									{formatPrice(event.price)}
 								</td>
-								<td class="px-6 py-4 text-right text-sm font-bold text-foreground">
+								<td class="text-foreground px-6 py-4 text-right text-sm font-bold">
 									{formatQuantity({
 										value: event.qty,
 										decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS

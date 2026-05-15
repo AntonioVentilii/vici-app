@@ -9,8 +9,10 @@
 </script>
 
 <div class="space-y-2">
-	<h1 class="text-foreground font-serif text-3xl font-extrabold tracking-tight sm:text-4xl">
-		{title}{#if highlight}<span class="text-primary"> {highlight}</span>{/if}
+	<h1 class="text-foreground text-3xl tracking-tight sm:text-4xl">
+		<span class="serif-italic">{title}</span>{#if highlight}<span
+				class="text-primary font-display font-bold">{highlight}</span
+			>{/if}
 	</h1>
 	{#if description}
 		<p class="text-muted-foreground max-w-2xl text-sm leading-relaxed">

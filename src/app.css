@@ -287,3 +287,21 @@ body {
 	border-radius: 0.5rem;
 	box-shadow: var(--inset-hi);
 }
+
+/* Probability bar */
+.probbar {
+	position: relative;
+	height: 8px;
+	border-radius: 999px;
+	background: var(--no-wash);
+	overflow: hidden;
+}
+
+.probbar > i {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(90deg, var(--yes-deep), var(--yes));
+	border-radius: 999px;
+	transform-origin: left;
+	transition: width 320ms var(--ease-vici);
+}

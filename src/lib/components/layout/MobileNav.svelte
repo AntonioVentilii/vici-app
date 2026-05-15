@@ -15,23 +15,25 @@
 </script>
 
 <nav
-	class="border-border bg-background/85 fixed bottom-0 left-0 z-50 flex w-full items-center border-t px-2 py-3 backdrop-blur-lg transition-all md:hidden"
+	class="fixed bottom-0 left-0 z-50 grid w-full grid-cols-5 border-t border-[var(--ink-line)] bg-[rgba(14,13,11,0.85)] px-2 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] backdrop-blur-[24px] md:hidden"
 >
 	{#each visibleNavItems as { label, path, mobileIcon: Icon } (path)}
+		{@const isFlow = label === 'Flow'}
 		<button
-			class="relative flex min-w-0 flex-1 cursor-pointer flex-col items-center justify-center gap-1 px-2 py-1 transition-colors {isActive(
-				path
-			)
-				? 'text-foreground'
-				: 'text-muted-foreground hover:text-foreground'}"
+			class="relative flex cursor-pointer flex-col items-center justify-center gap-1 transition-colors duration-[var(--d-state)] ease-[var(--ease-vici)]
+				{isFlow
+				? 'bg-primary mx-1 -mt-2.5 rounded-2xl py-3 text-[var(--ink)] shadow-[0_8px_24px_-8px_var(--laurel-glow),inset_0_1px_0_rgba(255,255,255,0.3)]'
+				: isActive(path)
+					? 'text-foreground py-2'
+					: 'text-muted-foreground hover:text-foreground py-2'}"
 			onclick={() => handleNav(path)}
 		>
-			{#if isActive(path)}
-				<span class="bg-primary absolute top-0 left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full"
+			{#if !isFlow && isActive(path)}
+				<span class="bg-primary absolute -top-px left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full"
 				></span>
 			{/if}
-			<Icon size="20" strokeWidth={isActive(path) ? 2.5 : 2} />
-			<span class="max-w-full text-center text-xs font-medium wrap-break-word whitespace-normal">
+			<Icon size={isFlow ? 22 : 20} strokeWidth={isActive(path) ? 2.5 : 1.6} />
+			<span class="text-center text-[10px] font-semibold uppercase" style="letter-spacing: 0.06em;">
 				{label}
 			</span>
 		</button>

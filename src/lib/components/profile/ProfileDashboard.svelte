@@ -106,7 +106,7 @@
 				{#if isEditingNickname}
 					<div class="flex items-center gap-2">
 						<input
-							class="bg-foreground/5 border-border focus:ring-primary rounded-lg border px-3 py-1 text-2xl font-black focus:ring-2 focus:outline-none"
+							class="bg-foreground/5 border-border focus:ring-primary rounded-[12px] border px-3 py-1 text-2xl font-black focus:ring-2 focus:outline-none"
 							disabled={pending}
 							onkeydown={(e) => e.key === 'Enter' && handleSaveNickname()}
 							type="text"
@@ -159,7 +159,7 @@
 		</div>
 
 		<!-- Level Progress Card (Duolingo Style) -->
-		<div class="border-border bg-card w-full max-w-xs space-y-3 rounded-lg border p-5">
+		<div class="border-border bg-card w-full max-w-xs space-y-3 rounded-2xl border p-5">
 			<div class="flex items-center justify-between">
 				<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
 					Level {level} Progress
@@ -181,7 +181,7 @@
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
 		<!-- Accuracy Gauge (Big Metric) -->
 		<div
-			class="border-primary/20 bg-primary/10 text-foreground flex h-full flex-col justify-between rounded-lg border p-8"
+			class="border-primary/20 bg-primary/10 text-foreground flex h-full flex-col justify-between rounded-2xl border p-8"
 		>
 			<div>
 				<span class="text-primary text-xs font-bold tracking-widest uppercase">
@@ -215,7 +215,7 @@
 		<div class="grid grid-cols-1 gap-6">
 			<!-- Daily Fire Streak (Duolingo Style) -->
 			<div
-				class="border-border bg-card hover:border-primary/20 flex flex-col items-center justify-center gap-4 rounded-lg border p-6 transition-all"
+				class="border-border bg-card hover:border-primary/20 flex flex-col items-center justify-center gap-4 rounded-2xl border p-6 transition-all"
 			>
 				<div class="relative">
 					<div
@@ -236,7 +236,7 @@
 			</div>
 
 			<!-- Success Streak Sub-Stat -->
-			<div class="flex items-center justify-between rounded-lg bg-[var(--bg-surface)] px-5 py-3">
+			<div class="flex items-center justify-between rounded-2xl bg-[var(--bg-surface)] px-5 py-3">
 				<span class="text-muted-foreground text-[10px] font-bold uppercase">Success Streak</span>
 				<div class="flex items-center gap-1">
 					<span class="text-foreground font-mono text-lg font-black">{streak}</span>
@@ -255,14 +255,14 @@
 			<div class="flex flex-wrap gap-4 py-4">
 				{#each Array(4) as _, i (i)}
 					<div
-						class="bg-foreground/5 flex h-16 w-16 cursor-help items-center justify-center rounded-2xl opacity-40 grayscale transition-all hover:scale-110 hover:opacity-100 hover:grayscale-0"
+						class="bg-foreground/5 flex h-16 w-16 cursor-help items-center justify-center rounded-xl opacity-40 grayscale transition-all hover:scale-110 hover:opacity-100 hover:grayscale-0"
 						title="Locked Achievement"
 					>
 						<span class="text-2xl">🏆</span>
 					</div>
 				{/each}
 				<div
-					class="border-primary/30 bg-primary/10 flex h-16 w-16 animate-bounce items-center justify-center rounded-2xl border-2 text-2xl"
+					class="border-primary/30 bg-primary/10 flex h-16 w-16 animate-bounce items-center justify-center rounded-xl border-2 text-2xl"
 					title="Early Adopter"
 				>
 					🚀
@@ -277,7 +277,7 @@
 			<div class="flex flex-wrap gap-2">
 				{#each profile.interests ?? [] as interest (interest)}
 					<span
-						class="bg-foreground/5 text-foreground rounded-lg px-3 py-1 text-[10px] font-bold uppercase"
+						class="bg-foreground/5 text-foreground rounded-[4px] px-3 py-1 text-[10px] font-bold uppercase"
 					>
 						{interest}
 					</span>
