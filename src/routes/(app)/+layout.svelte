@@ -10,6 +10,7 @@
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import Banner from '$lib/components/ui/Banner.svelte';
+	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
@@ -72,4 +73,6 @@
 	{/if}
 
 	<CreateChallengeModal isOpen={challengeModalOpen} onClose={() => (challengeModalOpen = false)} />
+
+	<CompanionOverlay />
 </div>
