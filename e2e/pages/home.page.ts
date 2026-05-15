@@ -51,15 +51,30 @@ export class HomePage {
 	}
 
 	/**
-	 * Clicks through the 5-step OnboardingFlow with deterministic choices so
-	 * the rest of the suite can interact with the signed-in app shell. Dev
-	 * sign-in mints a fresh principal each run, which always lands on a
-	 * profile with no archetype, which always shows the onboarding overlay
-	 * (`fixed inset-0 z-50` — intercepts every click underneath). Without
-	 * dismissing it, even a `userMenu.click()` would time out.
+	 * Walks past the 5-step OnboardingFlow with deterministic choices so the
+	 * rest of the suite can interact with the signed-in app shell.
+	 *
+	 * The overlay (`fixed inset-0 z-50`) intercepts every click underneath,
+	 * so without dismissing it even `userMenu.click()` would time out. But
+	 * Juno's dev mock identity is **deterministic across the emulator
+	 * session** — every test in the same Playwright run signs in as the
+	 * same principal. The first test mints the profile + completes
+	 * onboarding (writes `archetype` to the satellite); subsequent tests
+	 * inherit the already-onboarded state and never see the overlay.
+	 *
+	 * We race the overlay against the post-sign-in shell (`userMenu`):
+	 * whichever appears first tells us which path we're on, and we either
+	 * walk through onboarding or no-op.
 	 */
 	async completeOnboarding(): Promise<void> {
-		await expect(this.onboardingFlow).toBeVisible();
+		await Promise.race([
+			this.onboardingFlow.waitFor({ state: 'visible' }),
+			this.userMenu.waitFor({ state: 'visible' })
+		]);
+
+		if (!(await this.onboardingFlow.isVisible())) {
+			return;
+		}
 
 		// Step 0: welcome.
 		await this.onboardingPrimary.click();
@@ -78,8 +93,15 @@ export class HomePage {
 
 		await this.onboardingPrimary.click();
 
-		// Step 3: pick the first archetype.
-		await this.onboardingArchetype.first().click();
+		// Step 3: pick the first archetype. Asserting the count up-front
+		// surfaces a clear "expected 4 got X" failure if the archetype
+		// catalog (or the test-id) is later changed, instead of letting
+		// `.first().click()` time out silently against an empty locator.
+		const archetypes = this.onboardingArchetype;
+
+		await expect(archetypes).toHaveCount(4);
+
+		await archetypes.first().click();
 		await this.onboardingPrimary.click();
 
 		// Step 4: claim a handle and finish. The placeholder ("tacitus") is
