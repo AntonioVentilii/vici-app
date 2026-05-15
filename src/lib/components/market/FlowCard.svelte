@@ -162,17 +162,15 @@
 				: yesOpacity * 0.5}; transform: rotate(-12deg) scale({0.85 + yesOpacity * 0.15})"
 			class="stamp stamp-yes"
 		>
-			<span class="text-5xl font-black tracking-tighter text-[var(--yes)]">YES</span>
+			<span class="text-yes text-5xl font-black tracking-tighter">YES</span>
 			<div class="mt-1 flex flex-col items-center">
-				<span class="font-mono text-lg font-black text-[var(--yes-deep)] tabular-nums">
+				<span class="text-yes-deep font-mono text-lg font-black tabular-nums">
 					+{potentialReturnYes.toFixed(2)}{$playgroundPotentialReturnSuffix}
 				</span>
-				<span class="text-[9px] font-bold tracking-widest text-[var(--yes)] uppercase">
-					Potential
-				</span>
+				<span class="text-yes text-[9px] font-bold tracking-widest uppercase"> Potential </span>
 			</div>
 			{#if isLimitOrderYes}
-				<span class="stamp-pill bg-[var(--yes)]">Limit Order</span>
+				<span class="stamp-pill bg-yes">Limit Order</span>
 			{/if}
 		</div>
 
@@ -183,17 +181,15 @@
 				: noOpacity * 0.5}; transform: rotate(12deg) scale({0.85 + noOpacity * 0.15})"
 			class="stamp stamp-no"
 		>
-			<span class="text-5xl font-black tracking-tighter text-[var(--no)]">NO</span>
+			<span class="text-no text-5xl font-black tracking-tighter">NO</span>
 			<div class="mt-1 flex flex-col items-center">
-				<span class="font-mono text-lg font-black text-[var(--no-deep)] tabular-nums">
+				<span class="text-no-deep font-mono text-lg font-black tabular-nums">
 					+{potentialReturnNo.toFixed(2)}{$playgroundPotentialReturnSuffix}
 				</span>
-				<span class="text-[9px] font-bold tracking-widest text-[var(--no)] uppercase">
-					Potential
-				</span>
+				<span class="text-no text-[9px] font-bold tracking-widest uppercase"> Potential </span>
 			</div>
 			{#if isLimitOrderNo}
-				<span class="stamp-pill bg-[var(--no)]">Limit Order</span>
+				<span class="stamp-pill bg-no">Limit Order</span>
 			{/if}
 		</div>
 
@@ -210,11 +206,9 @@
 			<!-- Header -->
 			<div class="flow-card-header">
 				<div class="absolute inset-0 opacity-30">
+					<div class="bg-laurel/20 absolute -top-32 -left-20 h-72 w-72 rounded-full blur-3xl"></div>
 					<div
-						class="absolute -top-32 -left-20 h-72 w-72 rounded-full bg-[var(--laurel)]/20 blur-3xl"
-					></div>
-					<div
-						class="absolute -right-20 -bottom-24 h-72 w-72 rounded-full bg-[var(--laurel)]/10 blur-3xl"
+						class="bg-laurel/10 absolute -right-20 -bottom-24 h-72 w-72 rounded-full blur-3xl"
 					></div>
 				</div>
 
@@ -265,24 +259,24 @@
 
 				<div class="flow-card-tiles">
 					<BaseButton class="flow-tile flow-tile-no" onclick={() => onAction('NO')}>
-						<span class="flow-tile-label text-[var(--no)]">NO</span>
-						<span class="flow-tile-pct text-[var(--no)]">
+						<span class="flow-tile-label text-no">NO</span>
+						<span class="flow-tile-pct text-no">
 							{formatProbability(market.noProbability)}
 						</span>
-						<span class="flow-tile-hint text-[var(--no)]/60"> ← Swipe </span>
+						<span class="flow-tile-hint text-no/60"> ← Swipe </span>
 						{#if isLimitOrderNo}
-							<div class="flow-tile-badge bg-[var(--no-wash)] text-[var(--no)]">Limit</div>
+							<div class="flow-tile-badge bg-no-wash text-no">Limit</div>
 						{/if}
 					</BaseButton>
 
 					<BaseButton class="flow-tile flow-tile-yes" onclick={() => onAction('YES')}>
-						<span class="flow-tile-label text-[var(--yes)]">YES</span>
-						<span class="flow-tile-pct text-[var(--yes)]">
+						<span class="flow-tile-label text-yes">YES</span>
+						<span class="flow-tile-pct text-yes">
 							{formatProbability(market.yesProbability)}
 						</span>
-						<span class="flow-tile-hint text-[var(--yes)]/60"> Swipe → </span>
+						<span class="flow-tile-hint text-yes/60"> Swipe → </span>
 						{#if isLimitOrderYes}
-							<div class="flow-tile-badge bg-[var(--yes-wash)] text-[var(--yes)]">Limit</div>
+							<div class="flow-tile-badge bg-yes-wash text-yes">Limit</div>
 						{/if}
 					</BaseButton>
 				</div>

@@ -35,7 +35,7 @@
 
 <div
 	class="relative overflow-hidden rounded-3xl border p-8 {isWin
-		? 'border-[var(--yes)]/20 bg-[var(--yes-wash)]'
+		? 'border-yes/20 bg-yes-wash'
 		: isLoss
 			? 'border-destructive/20 bg-destructive/10'
 			: isCanceled
@@ -45,7 +45,7 @@
 	<div class="flex flex-col items-center gap-4 text-center">
 		<div
 			class="flex h-12 w-12 items-center justify-center rounded-full {isWin
-				? 'bg-[var(--yes)] text-white'
+				? 'bg-yes text-white'
 				: isLoss
 					? 'bg-destructive text-white'
 					: isCanceled
@@ -64,9 +64,7 @@
 					{#if isCanceled}
 						Canceled
 					{:else}
-						Winner: <span
-							class={isWin ? 'text-[var(--yes)]' : isLoss ? 'text-destructive' : 'text-primary'}
-						>
+						Winner: <span class={isWin ? 'text-yes' : isLoss ? 'text-destructive' : 'text-primary'}>
 							{winnerLabel}
 						</span>
 					{/if}

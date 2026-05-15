@@ -41,7 +41,7 @@
 
 <dialog
 	bind:this={dialog}
-	class="bg-popover fixed inset-0 z-50 m-auto min-h-50 w-full max-w-lg overflow-hidden rounded-[12px] border border-[var(--border-strong)] p-0 shadow-[var(--shadow-modal)] backdrop:bg-black/55 backdrop:backdrop-blur-[8px]"
+	class="bg-popover border-border-strong shadow-modal fixed inset-0 z-50 m-auto min-h-50 w-full max-w-lg overflow-hidden rounded-[12px] border p-0 backdrop:bg-black/55 backdrop:backdrop-blur-[8px]"
 	oncancel={close}
 	onclose={handleClose}
 >

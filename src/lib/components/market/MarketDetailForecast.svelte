@@ -74,7 +74,7 @@
 					<div
 						class="text-muted-foreground flex items-center justify-center gap-1.5 text-[9px] font-bold"
 					>
-						<span class="h-1 w-1 rounded-full bg-[var(--yes)]"></span>
+						<span class="bg-yes h-1 w-1 rounded-full"></span>
 						<span>INSTANT EXECUTION</span>
 					</div>
 				</div>

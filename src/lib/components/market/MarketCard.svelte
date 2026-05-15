@@ -29,7 +29,7 @@
 
 <div class="h-full w-full" in:fly={{ y: 20, duration: 400, delay: Math.min(index * 50, 300) }}>
 	<Card
-		class="group border-border h-full w-full overflow-hidden border shadow-[var(--inset-hi)] transition-all hover:-translate-y-0.5 hover:border-[var(--border-strong)]"
+		class="group border-border shadow-inset-hi hover:border-border-strong h-full w-full overflow-hidden border transition-all hover:-translate-y-0.5"
 		onclick={() => goto(`${AppPath.Markets}/${market.id}`)}
 		onkeydown={(e) => e.key === 'Enter' && goto(`${AppPath.Markets}/${market.id}`)}
 		padding="none"
@@ -63,7 +63,7 @@
 							{/if}
 							{#if isChallenge}
 								<span
-									class="inline-flex items-center gap-1 rounded-full border border-[var(--laurel)]/25 bg-[var(--laurel-glow)] px-2 py-0.5 text-[10px] font-bold tracking-widest text-[var(--laurel)] uppercase"
+									class="border-laurel/25 bg-laurel-glow text-laurel inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"
 								>
 									<Users size={10} />
 									Challenge
@@ -118,7 +118,7 @@
 						{#if showChallengeSlot}
 							{#if onChallenge}
 								<button
-									class="text-muted-foreground/40 hover:text-primary flex cursor-pointer items-center gap-1 rounded-lg p-1 transition-colors hover:bg-[var(--laurel-glow)]"
+									class="text-muted-foreground/40 hover:text-primary hover:bg-laurel-glow flex cursor-pointer items-center gap-1 rounded-lg p-1 transition-colors"
 									aria-label="Challenge friends"
 									onclick={(e) => {
 										e.stopPropagation();

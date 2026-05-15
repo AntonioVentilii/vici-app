@@ -58,7 +58,7 @@
 		<div
 			class="border-border bg-card flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center"
 		>
-			<div class="mb-6 rounded-full bg-[var(--bg-surface)] p-6">
+			<div class="bg-card mb-6 rounded-full p-6">
 				<span class="text-muted-foreground text-4xl">👤</span>
 			</div>
 			<h2 class="font-display text-foreground text-2xl font-semibold">No Profile Found</h2>

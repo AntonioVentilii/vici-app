@@ -27,10 +27,10 @@
 	}: Props = $props();
 
 	const commonClasses =
-		'flex flex-col items-start justify-between rounded-2xl border transition-all duration-[var(--d-hover)] ease-[var(--ease-vici)]';
+		'flex flex-col items-start justify-between rounded-2xl border transition-all duration-hover ease-vici';
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
-		default: 'bg-card text-card-foreground border-border shadow-[var(--inset-hi)]',
+		default: 'bg-card text-card-foreground border-border shadow-inset-hi',
 		glass: 'bg-foreground/5 backdrop-blur-md border-foreground/10',
 		outline: 'bg-transparent border-2 border-border'
 	};
@@ -45,7 +45,7 @@
 	const isInteractive = $derived(nonNullish(onclick) || nonNullish(onkeydown) || role === 'button');
 
 	const interactiveClass = $derived(
-		isInteractive ? 'hover:border-[var(--border-strong)] active:scale-[0.985]' : ''
+		isInteractive ? 'hover:border-border-strong active:scale-[0.985]' : ''
 	);
 </script>
 

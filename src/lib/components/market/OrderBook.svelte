@@ -141,7 +141,7 @@
 	<div class="mb-6 flex items-center justify-between">
 		<h3 class="text-foreground text-lg font-bold">Order Book ({outcome})</h3>
 		<div class="flex items-center gap-2">
-			<span class="flex h-2 w-2 animate-pulse rounded-full bg-[var(--yes)]"></span>
+			<span class="bg-yes flex h-2 w-2 animate-pulse rounded-full"></span>
 			<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Live</span
 			>
 		</div>
@@ -218,11 +218,10 @@
 							class="absolute inset-y-0 right-0 bg-green-500/5 transition-all group-hover:bg-green-500/10"
 						></div>
 
-						<span class="relative z-10 text-sm font-bold text-[var(--yes)]">
+						<span class="text-yes relative z-10 text-sm font-bold">
 							{formatProbability(bid.price)}
 							{#if isUserLevel(bid.price)}
-								<span class="ml-1 inline-block h-1 w-1 rounded-full bg-[var(--yes)] align-middle">
-								</span>
+								<span class="bg-yes ml-1 inline-block h-1 w-1 rounded-full align-middle"> </span>
 							{/if}
 						</span>
 						<span class="text-muted-foreground relative z-10 text-xs font-medium">

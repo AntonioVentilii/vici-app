@@ -255,7 +255,7 @@
 
 			<div class="relative z-10 max-w-md text-center" in:fly={{ y: 20, duration: 500 }}>
 				<div
-					class="mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full bg-[var(--yes-wash)] text-[var(--yes)] shadow-[0_20px_40px_rgba(79,211,161,0.2)]"
+					class="bg-yes-wash text-yes mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full shadow-[0_20px_40px_rgba(79,211,161,0.2)]"
 					in:scale={{ start: 0.4, duration: 600, easing: backOut, delay: 120 }}
 				>
 					<svg class="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -280,16 +280,12 @@
 
 				<div class="mb-8 grid grid-cols-3 gap-3">
 					<div class="bg-card border-border rounded-2xl border px-3 py-4">
-						<div class="text-[9px] font-bold tracking-widest text-[var(--laurel)] uppercase">
-							XP
-						</div>
+						<div class="text-laurel text-[9px] font-bold tracking-widest uppercase">XP</div>
 						<div class="text-foreground font-mono text-2xl font-black tabular-nums">+{xp}</div>
 					</div>
 					<div class="bg-card border-border rounded-2xl border px-3 py-4">
-						<div class="text-[9px] font-bold tracking-widest text-[var(--laurel)] uppercase">
-							Streak
-						</div>
-						<div class="font-mono text-2xl font-black text-[var(--laurel)] tabular-nums">
+						<div class="text-laurel text-[9px] font-bold tracking-widest uppercase">Streak</div>
+						<div class="text-laurel font-mono text-2xl font-black tabular-nums">
 							{bestStreak}
 						</div>
 					</div>
@@ -341,7 +337,7 @@
 					<span class="font-mono tabular-nums">{streak}</span>
 				</div>
 				<div class="flow-stat flow-stat-xp" aria-label="XP">
-					<span class="text-[10px] font-black tracking-widest text-[var(--laurel)]">XP</span>
+					<span class="text-laurel text-[10px] font-black tracking-widest">XP</span>
 					<span class="text-foreground font-mono tabular-nums">{xp}</span>
 				</div>
 			</div>

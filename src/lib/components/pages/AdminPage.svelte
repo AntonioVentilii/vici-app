@@ -288,7 +288,7 @@
 				</span>
 			</div>
 
-			<div class="mb-4 h-3 w-full overflow-hidden rounded-full bg-[var(--bg-surface)]">
+			<div class="bg-card mb-4 h-3 w-full overflow-hidden rounded-full">
 				<div
 					style="width: {(bulkProgress / bulkTotal) * 100}%"
 					class="bg-primary h-full transition-all duration-300 ease-out"
@@ -297,15 +297,15 @@
 
 			<div class="mb-6 flex justify-between gap-4">
 				<div
-					class="flex grow flex-col items-center justify-center rounded-lg bg-[var(--yes-wash)] p-3 text-center"
+					class="bg-yes-wash flex grow flex-col items-center justify-center rounded-lg p-3 text-center"
 				>
-					<span class="text-xs font-bold text-[var(--yes)] uppercase">Success</span>
+					<span class="text-yes text-xs font-bold uppercase">Success</span>
 					<span class="text-foreground font-mono text-xl font-bold">{bulkSuccess}</span>
 				</div>
 				<div
-					class="flex grow flex-col items-center justify-center rounded-lg bg-[var(--no-wash)] p-3 text-center"
+					class="bg-no-wash flex grow flex-col items-center justify-center rounded-lg p-3 text-center"
 				>
-					<span class="text-xs font-bold text-[var(--no)] uppercase">Failed</span>
+					<span class="text-no text-xs font-bold uppercase">Failed</span>
 					<span class="text-foreground font-mono text-xl font-bold">{bulkFailed}</span>
 				</div>
 			</div>

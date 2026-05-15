@@ -53,12 +53,12 @@
 			{#each { length: 3 } as _, i (i)}
 				<div class="flex items-center justify-between p-4 px-6">
 					<div class="flex items-center gap-3">
-						<div class="h-8 w-8 animate-pulse rounded-full bg-[var(--bg-surface)]"></div>
-						<div class="h-4 w-24 animate-pulse rounded bg-[var(--bg-surface)]"></div>
+						<div class="bg-card h-8 w-8 animate-pulse rounded-full"></div>
+						<div class="bg-card h-4 w-24 animate-pulse rounded"></div>
 					</div>
 					<div class="text-right">
-						<div class="h-4 w-16 animate-pulse rounded bg-[var(--bg-surface)]"></div>
-						<div class="mt-1 h-3 w-12 animate-pulse rounded bg-[var(--bg-surface)]"></div>
+						<div class="bg-card h-4 w-16 animate-pulse rounded"></div>
+						<div class="bg-card mt-1 h-3 w-12 animate-pulse rounded"></div>
 					</div>
 				</div>
 			{/each}
@@ -71,9 +71,7 @@
 					assetsConfig: $collateralsStore?.assetsConfig ?? {}
 				})}
 
-				<div
-					class="flex items-center justify-between p-4 transition-colors hover:bg-[var(--bg-surface)]"
-				>
+				<div class="hover:bg-card flex items-center justify-between p-4 transition-colors">
 					<div class="flex items-center gap-3">
 						<div
 							class="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full"

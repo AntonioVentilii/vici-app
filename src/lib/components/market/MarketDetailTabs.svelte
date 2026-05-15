@@ -86,11 +86,11 @@
 										{@const result = positionResult(pos.outcomeId)}
 										<div
 											class="flex flex-col gap-2 rounded-2xl border p-5 {result === 'won'
-												? 'border-[var(--yes)]/30 bg-[var(--yes-wash)]'
+												? 'border-yes/30 bg-yes-wash'
 												: result === 'lost'
 													? 'border-border bg-foreground/5 opacity-60'
 													: pos.outcomeId === 'YES'
-														? 'border-[var(--yes)]/20 bg-[var(--yes-wash)]/30'
+														? 'border-yes/20 bg-yes-wash/30'
 														: pos.outcomeId === 'NO'
 															? 'border-destructive/20 bg-destructive/5'
 															: 'border-primary/20 bg-primary/5'}"
@@ -98,11 +98,11 @@
 											<div class="flex items-center justify-between">
 												<span
 													class="text-[10px] font-bold tracking-widest uppercase {result === 'won'
-														? 'text-[var(--yes)]'
+														? 'text-yes'
 														: result === 'lost'
 															? 'text-muted-foreground line-through'
 															: pos.outcomeId === 'YES'
-																? 'text-[var(--yes)]'
+																? 'text-yes'
 																: pos.outcomeId === 'NO'
 																	? 'text-destructive'
 																	: 'text-primary'}"
@@ -112,7 +112,7 @@
 												</span>
 												{#if result === 'won'}
 													<span
-														class="rounded-full bg-[var(--yes)] px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase"
+														class="bg-yes rounded-full px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase"
 													>
 														Won
 													</span>
@@ -159,7 +159,7 @@
 											<div
 												class="flex h-10 w-10 items-center justify-center rounded-xl font-black {'Buy' in
 												order.side
-													? 'bg-[var(--yes-wash)] text-[var(--yes)]'
+													? 'bg-yes-wash text-yes'
 													: 'bg-destructive/10 text-destructive'}"
 											>
 												{'Buy' in order.side ? 'B' : 'S'}

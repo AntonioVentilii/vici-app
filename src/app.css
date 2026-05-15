@@ -87,8 +87,8 @@
 	--char-trickster: #ff8a7a;
 	--char-flame: #f08a3c;
 
-	/* Motion */
-	--ease-vici: cubic-bezier(0.2, 0.7, 0.2, 1);
+	/* Motion (--ease-vici lives in `@theme` so Tailwind generates the
+	 * `ease-vici` utility; the value still cascades into `:root`). */
 	--d-hover: 120ms;
 	--d-state: 200ms;
 	--d-enter: 320ms;
@@ -99,10 +99,12 @@
 	--header-h: 56px;
 	--bottomnav-h: 64px;
 
-	/* Shadows (dark theme: inner highlights) */
+	/* Shadows (dark theme: inner highlights). The dark/light values get
+	 * picked up by `--shadow-inset-hi` / `--shadow-inset-hi-strong` in
+	 * `@theme` (the modal shadow is theme-stable and lives entirely in
+	 * `@theme`). */
 	--inset-hi: inset 0 1px 0 rgba(242, 236, 220, 0.04);
 	--inset-hi-strong: inset 0 1px 0 rgba(242, 236, 220, 0.08);
-	--shadow-modal: 0 24px 60px -20px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 [data-theme='dark'],
@@ -190,14 +192,65 @@
 	--color-destructive-foreground: var(--parchment);
 
 	--color-border: var(--border-base);
+	/* Border emphasis (separate from --color-input which is also wired to
+	 * --border-strong but is reserved for actual `<input>` borders). */
+	--color-border-strong: var(--border-strong);
 	--color-input: var(--border-strong);
 	--color-ring: var(--laurel);
+
+	/* Prediction-market signals — preserve YES / NO / HOLD semantics so
+	 * components can write `text-yes` / `bg-no-wash` instead of reaching
+	 * for arbitrary `[var(--yes)]` references. */
+	--color-yes: var(--yes);
+	--color-yes-deep: var(--yes-deep);
+	--color-yes-wash: var(--yes-wash);
+
+	--color-no: var(--no);
+	--color-no-deep: var(--no-deep);
+	--color-no-wash: var(--no-wash);
+
+	--color-hold: var(--hold);
+	--color-hold-deep: var(--hold-deep);
+	--color-hold-wash: var(--hold-wash);
+
+	/* Brand colour ramp (laurel) — `--color-primary` already maps to
+	 * `--laurel`; these expose the deep / glow variants as `bg-laurel-deep`
+	 * and `bg-laurel-glow` utilities. */
+	--color-laurel: var(--laurel);
+	--color-laurel-deep: var(--laurel-deep);
+	--color-laurel-glow: var(--laurel-glow);
+
+	/* Canvas reference (text-on-laurel etc.) — exposed so components can
+	 * write `text-ink` instead of `text-[var(--ink)]`. */
+	--color-ink: var(--ink);
+
+	/* Theme-stable parchment-tinted lines, used by surfaces that opt out
+	 * of theme switching (e.g. MobileNav has a hard-coded dark translucent
+	 * bg and needs the border to stay parchment in BOTH dark and light
+	 * themes — `--color-border` flips to a dark rgba in light theme and
+	 * would disappear against that bg). */
+	--color-ink-line: var(--ink-line);
+	--color-ink-line-strong: var(--ink-line-strong);
 
 	--color-chart-1: var(--yes);
 	--color-chart-2: var(--hold);
 	--color-chart-3: var(--laurel);
 	--color-chart-4: var(--no);
 	--color-chart-5: var(--terracotta);
+
+	/* Easing curve exposed as the `ease-vici` utility. Tailwind v4 emits
+	 * theme tokens to `:root`, so existing `var(--ease-vici)` references
+	 * elsewhere in this stylesheet still resolve. */
+	--ease-vici: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+	/* Inset highlights exposed as `shadow-inset-hi` / `shadow-inset-hi-strong`
+	 * utilities. The light / dark theme overrides on `--inset-hi` still
+	 * cascade through to the resolved value at use-site. */
+	--shadow-inset-hi: var(--inset-hi);
+	--shadow-inset-hi-strong: var(--inset-hi-strong);
+
+	/* Modal shadow exposed as the `shadow-modal` utility. */
+	--shadow-modal: 0 24px 60px -20px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4);
 
 	/* Juno logo */
 	--color-lavender-blue-50: #f2f3ff;
@@ -224,6 +277,33 @@
 			opacity: 1;
 		}
 	}
+}
+
+/* ─── Custom utilities ─── */
+
+/* Tailwind v4 ships built-in `duration-{75|100|150|200|…}` utilities on
+ * a fixed numeric scale, but no namespace for *named* token-bound
+ * durations. These thin `@utility` wrappers keep the design-token link
+ * intact (one source of truth in `:root`) so components can write
+ * `duration-hover` / `duration-state` and changes to `--d-hover` /
+ * `--d-state` propagate everywhere. */
+@utility duration-hover {
+	transition-duration: var(--d-hover);
+}
+
+@utility duration-state {
+	transition-duration: var(--d-state);
+}
+
+/* MobileNav active-tab shadow — composed from the laurel-glow drop +
+ * a parchment inset highlight. Encapsulated as a named utility so the
+ * call-site doesn't keep an arbitrary `shadow-[…var(--laurel-glow)…]`
+ * value (which would re-introduce the [var(--token)] anti-pattern this
+ * refactor is trying to remove). */
+@utility shadow-mobilenav-active {
+	box-shadow:
+		0 8px 24px -8px var(--laurel-glow),
+		inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 html {

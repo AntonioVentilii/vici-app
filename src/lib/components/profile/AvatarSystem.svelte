@@ -18,7 +18,7 @@
 
 	const avatarOptions: AvatarOption[] = [
 		{ emoji: '🦊', color: 'bg-primary/10' },
-		{ emoji: '🐧', color: 'bg-[var(--hold-wash)]' },
+		{ emoji: '🐧', color: 'bg-hold-wash' },
 		{ emoji: '🦁', color: 'bg-amber-100' },
 		{ emoji: '🐼', color: 'bg-foreground/8' },
 		{ emoji: '🦄', color: 'bg-pink-100' },

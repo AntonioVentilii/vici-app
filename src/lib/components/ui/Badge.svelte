@@ -11,10 +11,10 @@
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
 		default: 'bg-foreground/8 text-foreground border-foreground/15',
-		success: 'bg-[var(--yes-wash)] text-[var(--yes)] border-[var(--yes)]/25',
-		warning: 'bg-[var(--laurel-glow)] text-primary border-primary/25',
-		danger: 'bg-[var(--no-wash)] text-destructive border-destructive/25',
-		info: 'bg-[var(--hold-wash)] text-[var(--hold)] border-[var(--hold)]/25'
+		success: 'bg-yes-wash text-yes border-yes/25',
+		warning: 'bg-laurel-glow text-primary border-primary/25',
+		danger: 'bg-no-wash text-destructive border-destructive/25',
+		info: 'bg-hold-wash text-hold border-hold/25'
 	};
 
 	const sizes: Record<NonNullable<Props['size']>, string> = {

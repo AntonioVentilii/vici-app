@@ -47,7 +47,7 @@
 	const progressWidth = $derived(`${((step + 1) / 5) * 100}%`);
 </script>
 
-<div class="fixed inset-0 z-50 flex flex-col bg-[var(--bg-base)]" data-tid={TestId.OnboardingFlow}>
+<div class="bg-background fixed inset-0 z-50 flex flex-col" data-tid={TestId.OnboardingFlow}>
 	<!-- Progress bar -->
 	<div class="px-6 pt-5">
 		<div class="mb-1.5 flex items-center justify-between">
@@ -84,22 +84,17 @@
 				<p class="text-muted-foreground text-[15px] leading-relaxed">
 					Real markets. Real signals. Make calls in seconds, build a track record over time.
 				</p>
-				<div
-					style="box-shadow: var(--inset-hi)"
-					class="border-border mt-6 rounded-2xl border bg-[var(--bg-surface)] p-[18px]"
-				>
+				<div class="border-border bg-card shadow-inset-hi mt-6 rounded-2xl border p-[18px]">
 					<div class="flex items-center justify-between">
-						<span class="text-[10px] font-bold tracking-widest text-[var(--hold)] uppercase">
-							MACRO
-						</span>
+						<span class="text-hold text-[10px] font-bold tracking-widest uppercase"> MACRO </span>
 						<span class="text-muted-foreground font-mono text-[11px] tabular-nums">2.4M vol</span>
 					</div>
 					<div class="text-foreground mt-3 text-[15px] leading-snug font-semibold">
 						Will the Fed cut rates in June?
 					</div>
 					<div class="mt-3 flex items-center justify-between">
-						<span class="font-mono font-semibold text-[var(--yes)] tabular-nums">64%</span>
-						<span class="font-mono font-semibold text-[var(--no)] tabular-nums">36%</span>
+						<span class="text-yes font-mono font-semibold tabular-nums">64%</span>
+						<span class="text-no font-mono font-semibold tabular-nums">36%</span>
 					</div>
 					<div class="probbar mt-1.5"><i style="width: 64%"></i></div>
 				</div>
@@ -112,8 +107,8 @@
 					style="letter-spacing: -0.025em"
 					class="font-display text-foreground text-[30px] font-semibold"
 				>
-					Right for <span class="text-[var(--yes)]">YES</span>. Left for
-					<span class="text-[var(--no)]">NO</span>.
+					Right for <span class="text-yes">YES</span>. Left for
+					<span class="text-no">NO</span>.
 				</h2>
 				<p class="text-muted-foreground text-sm">
 					Each swipe earns XP. Accuracy compounds into rank, reputation, and rewards.
@@ -142,7 +137,7 @@
 							style={selected ? `border-color: ${color}40; background: ${color}0D` : undefined}
 							class="flex cursor-pointer flex-col items-start rounded-2xl border p-[18px] text-left transition-all {selected
 								? 'text-foreground'
-								: 'border-border text-muted-foreground bg-[var(--bg-surface)]'}"
+								: 'border-border text-muted-foreground bg-card'}"
 							data-tid={TestId.OnboardingInterest}
 							onclick={() => toggleInterest(id)}
 						>
@@ -186,7 +181,7 @@
 								: 'var(--border-base)'}"
 							class="flex w-full cursor-pointer flex-col rounded-2xl border p-4 text-left transition-all {selected
 								? 'bg-[rgba(226,184,66,0.06)]'
-								: 'bg-[var(--bg-surface)]'}"
+								: 'bg-card'}"
 							data-tid={TestId.OnboardingArchetype}
 							onclick={() => (archetype = a.id)}
 						>
@@ -222,15 +217,12 @@
 						This is the name on the leaderboard. Choose carefully.
 					</p>
 				</div>
-				<div
-					style="box-shadow: var(--inset-hi)"
-					class="mt-2 rounded-2xl border border-[var(--border-base)] bg-[var(--bg-surface)] p-4"
-				>
+				<div class="border-border bg-card shadow-inset-hi mt-2 rounded-2xl border p-4">
 					<div class="eyebrow">YOUR HANDLE</div>
 					<div class="mt-2 flex items-baseline gap-2">
 						<span class="text-muted-foreground font-mono text-lg">@</span>
 						<input
-							class="flex-1 border-0 bg-transparent font-mono text-[22px] font-semibold text-[var(--text-base)] outline-none"
+							class="text-foreground flex-1 border-0 bg-transparent font-mono text-[22px] font-semibold outline-none"
 							data-tid={TestId.OnboardingHandleInput}
 							oninput={(e) => (handle = sanitizeHandle(e.currentTarget.value))}
 							placeholder="tacitus"
@@ -238,7 +230,7 @@
 							value={handle}
 						/>
 					</div>
-					<div class="mt-1.5 h-px bg-[var(--border-base)]"></div>
+					<div class="bg-border mt-1.5 h-px"></div>
 					<div class="text-muted-foreground mt-2 font-mono text-[11px]">
 						{handle ? `vici.app/${handle}` : 'a-z, 0-9, dot or underscore'}
 					</div>
@@ -259,9 +251,7 @@
 	</div>
 
 	<!-- Bottom action -->
-	<div
-		class="border-t border-[var(--border-base)] px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+24px)]"
-	>
+	<div class="border-border border-t px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+24px)]">
 		{#if step === 0}
 			<button
 				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold"

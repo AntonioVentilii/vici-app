@@ -440,7 +440,7 @@
 					<BaseButton
 						class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
 						'YES'
-							? 'border-[var(--yes)] bg-[var(--yes-wash)] text-[var(--yes)]'
+							? 'border-yes bg-yes-wash text-yes'
 							: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
 						onclick={() => handleOutcomeSelect({ outcomeId: 'YES', probability: yesProbability })}
 					>
@@ -607,7 +607,7 @@
 			<div class="flex justify-between text-xs">
 				<span class="text-muted-foreground font-medium">Potential Return</span>
 
-				<span class="font-bold text-[var(--yes)]">
+				<span class="text-yes font-bold">
 					{estimatedPayout} ({potentialReturnPercent.toFixed(1)}%)
 				</span>
 			</div>

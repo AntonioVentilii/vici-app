@@ -39,7 +39,7 @@
 	<div class="py-2" role="rowgroup">
 		{#each items as item, index (index)}
 			<div
-				class="border-border bg-card mb-4 flex items-center gap-2 rounded-lg border px-3 shadow-[var(--inset-hi)] transition-all duration-[var(--d-hover)] ease-[var(--ease-vici)] hover:border-[var(--border-strong)]"
+				class="border-border bg-card shadow-inset-hi ease-vici duration-hover hover:border-border-strong mb-4 flex items-center gap-2 rounded-lg border px-3 transition-all"
 				role="row"
 			>
 				<span
