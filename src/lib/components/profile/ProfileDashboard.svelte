@@ -1,11 +1,14 @@
 <script lang="ts">
 	import { Pencil, Check, X } from 'lucide-svelte';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
+	import OracleChar from '$lib/components/characters/OracleChar.svelte';
+	import AchievementCard from '$lib/components/profile/AchievementCard.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import StatCard from '$lib/components/ui/StatCard.svelte';
+	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { userStore } from '$lib/stores/user.store';
@@ -76,6 +79,30 @@
 	const flameStage = $derived(stageForStreak(streak));
 	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
 	const archetype = $derived(profile.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
+
+	const oracleInsight = $derived.by(() => {
+		const trades = profile.totalTrades ?? 0;
+		const acc = Math.round(accuracy);
+		const s = streak;
+
+		if (trades === 0) {
+			return 'No calls yet. The Oracle waits.';
+		}
+
+		if (acc >= 80) {
+			return `${acc}% accuracy across ${trades} calls. The Oracle approves.`;
+		}
+
+		if (s >= 7) {
+			return `${s}-day streak and ${acc}% accuracy. Consistency compounds.`;
+		}
+
+		if (acc >= 60) {
+			return `${acc}% accuracy over ${trades} calls. Above the crowd.`;
+		}
+
+		return `${trades} calls logged. ${acc}% hit rate. Room to sharpen.`;
+	});
 </script>
 
 <div class="space-y-8">
@@ -254,53 +281,40 @@
 		</div>
 	</div>
 
-	<!-- Activity / Badges Placeholder -->
+	<!-- Oracle Weekly Insight -->
+	<div
+		style="box-shadow: var(--inset-hi)"
+		class="border-border flex items-center gap-4 rounded-2xl border bg-[var(--bg-surface)] p-5"
+	>
+		<div class="flex-none">
+			<OracleChar size={48} />
+		</div>
+		<div class="min-w-0 flex-1">
+			<div class="flex items-center gap-2">
+				<span style="color: var(--char-oracle)" class="eyebrow">ORACLE INSIGHT</span>
+			</div>
+			<p class="text-foreground mt-1 text-sm leading-relaxed">{oracleInsight}</p>
+		</div>
+	</div>
+
+	<!-- Activity / Badges -->
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
 		<Card padding="lg">
-			<h4 class="text-muted-foreground mb-6 text-xs font-bold tracking-widest uppercase">
+			<h4 class="text-muted-foreground mb-4 text-xs font-bold tracking-widest uppercase">
 				Achievements
 			</h4>
-			<div class="flex flex-wrap gap-4 py-4">
-				{#each Array(4) as _, i (i)}
-					<div
-						class="bg-foreground/5 flex h-16 w-16 cursor-help items-center justify-center rounded-xl opacity-40 grayscale transition-all hover:scale-110 hover:opacity-100 hover:grayscale-0"
-						title="Locked Achievement"
-					>
-						<svg
-							class="text-muted-foreground h-6 w-6"
-							aria-hidden="true"
-							fill="none"
-							stroke="currentColor"
-							stroke-width="1.5"
-							viewBox="0 0 24 24"
-						>
-							<path
-								d="M7 4h10v6a5 5 0 0 1-10 0V4z M5 4h2M17 4h2M9 18h6M12 14v4M8 22h8"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-							/>
-						</svg>
-					</div>
+			<div class="space-y-3">
+				{#each ACHIEVEMENTS as achievement (achievement.id)}
+					<AchievementCard
+						{achievement}
+						progress={achievement.id === 'first-blood'
+							? (profile.totalTrades ?? 0) > 0
+								? 1
+								: 0
+							: 0}
+						unlocked={achievement.id === 'first-blood' && (profile.totalTrades ?? 0) > 0}
+					/>
 				{/each}
-				<div
-					class="border-primary/30 bg-primary/10 flex h-16 w-16 animate-bounce items-center justify-center rounded-xl border-2"
-					title="Early Adopter"
-				>
-					<svg
-						class="text-primary h-6 w-6"
-						aria-hidden="true"
-						fill="none"
-						stroke="currentColor"
-						stroke-width="1.5"
-						viewBox="0 0 24 24"
-					>
-						<path
-							d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-						/>
-					</svg>
-				</div>
 			</div>
 		</Card>
 
