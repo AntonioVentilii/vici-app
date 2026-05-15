@@ -9,11 +9,14 @@
 	import Header from '$lib/components/layout/Header.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
+	import OnboardingFlow from '$lib/components/onboarding/OnboardingFlow.svelte';
 	import Banner from '$lib/components/ui/Banner.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
+	import { upsertProfile } from '$lib/services/profile.services';
+	import { userStore } from '$lib/stores/user.store';
 
 	interface Props {
 		children: Snippet;
@@ -24,6 +27,38 @@
 	const isFlowPage = $derived(page.url.pathname === AppPath.Flow);
 
 	let challengeModalOpen = $state(false);
+	let onboardingDismissed = $state(false);
+
+	const needsOnboarding = $derived(
+		$userSignedIn && !onboardingDismissed && !$userStore.profile?.archetype
+	);
+
+	const handleOnboardingComplete = async (result: {
+		handle: string;
+		archetype: string;
+		interests: string[];
+	}) => {
+		const {profile} = $userStore;
+
+		if (!profile) {
+			return;
+		}
+
+		const updated = {
+			...profile,
+			nickname: result.handle,
+			archetype: result.archetype,
+			interests: result.interests
+		};
+
+		await upsertProfile({
+			key: profile.owner,
+			data: updated
+		});
+
+		userStore.update((curr) => ({ ...curr, profile: updated }));
+		onboardingDismissed = true;
+	};
 </script>
 
 <div class="relative isolate flex min-h-dvh flex-col">
@@ -75,4 +110,8 @@
 	<CreateChallengeModal isOpen={challengeModalOpen} onClose={() => (challengeModalOpen = false)} />
 
 	<CompanionOverlay />
+
+	{#if needsOnboarding}
+		<OnboardingFlow onComplete={handleOnboardingComplete} />
+	{/if}
 </div>
