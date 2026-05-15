@@ -32,10 +32,6 @@ import {
 
 const MILESTONE_KEYS: VxpNewUserMilestoneKey[] = ['m1', 'm2', 'm3'];
 
-const TRADE_KEY_SUFFIX = `#${ActivityType.TRADE}`;
-
-const LIST_PAGE_SIZE = 500n;
-
 const emptyMilestones = (): VxpOnboardingDoc['milestones'] => ({
 	m1: { status: 'none', amountBaseUnits: '0' },
 	m2: { status: 'none', amountBaseUnits: '0' },

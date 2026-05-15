@@ -24,10 +24,10 @@
 </script>
 
 <span
+	style="letter-spacing: 0.08em;"
 	class="inline-flex items-center gap-1 rounded-[4px] border text-center font-bold uppercase transition-colors {variants[
 		variant
 	]} {sizes[size]}"
-	style="letter-spacing: 0.08em;"
 >
 	{@render children()}
 </span>
