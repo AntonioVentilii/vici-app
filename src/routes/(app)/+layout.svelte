@@ -38,7 +38,7 @@
 		archetype: string;
 		interests: string[];
 	}) => {
-		const {profile} = $userStore;
+		const { profile } = $userStore;
 
 		if (!profile) {
 			return;

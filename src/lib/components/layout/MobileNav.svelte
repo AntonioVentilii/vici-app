@@ -33,7 +33,7 @@
 				></span>
 			{/if}
 			<Icon size={isFlow ? 22 : 20} strokeWidth={isActive(path) ? 2.5 : 1.6} />
-			<span class="text-center text-[10px] font-semibold uppercase" style="letter-spacing: 0.06em;">
+			<span style="letter-spacing: 0.06em;" class="text-center text-[10px] font-semibold uppercase">
 				{label}
 			</span>
 		</button>
