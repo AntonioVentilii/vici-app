@@ -18,5 +18,10 @@ export enum TestId {
 	MarketFeed = 'market-feed',
 	MarketCard = 'market-card',
 	MarketCardSkeleton = 'market-card-skeleton',
-	MarketTimeRemaining = 'market-time-remaining'
+	MarketTimeRemaining = 'market-time-remaining',
+	OnboardingFlow = 'onboarding-flow',
+	OnboardingPrimary = 'onboarding-primary',
+	OnboardingInterest = 'onboarding-interest',
+	OnboardingArchetype = 'onboarding-archetype',
+	OnboardingHandleInput = 'onboarding-handle-input'
 }
