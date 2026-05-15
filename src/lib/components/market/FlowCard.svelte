@@ -475,7 +475,7 @@
 			background-color 0.2s ease;
 	}
 	:global(.flow-tile:active) {
-		transform: scale(0.96);
+		transform: scale(0.985);
 	}
 	:global(.flow-tile-no) {
 		background: var(--bg-surface);

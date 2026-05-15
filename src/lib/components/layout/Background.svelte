@@ -11,9 +11,9 @@
 		style="background: radial-gradient(circle, var(--hold) 0%, transparent 70%);"
 	></div>
 
-	<!-- Dot grid -->
+	<!-- Dot grid with vignette mask -->
 	<div
-		class="absolute inset-0 opacity-[0.03]"
-		style="background-image: radial-gradient(var(--parchment) 1px, transparent 1px); background-size: 24px 24px;"
+		class="pointer-events-none absolute inset-0"
+		style="background-image: radial-gradient(rgba(242, 236, 220, 0.04) 1px, transparent 1px); background-size: 32px 32px; mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);"
 	></div>
 </div>

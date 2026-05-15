@@ -224,7 +224,11 @@
 					<div
 						class="relative flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-tr {flameColor} text-4xl shadow-lg"
 					>
-						🔥
+						<svg class="h-10 w-10" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+							<path
+								d="M12 2s4 4 4 8a4 4 0 0 1-8 0c0-1 .5-2 1-2.5 0 2 1 3 2 3 0-3-1-5 1-8.5z M5 14a7 7 0 1 0 14 0c0-3-2-5-4-7 0 3-1 4-2 4-2 0-3-2-3-4-3 2-5 4-5 7z"
+							/>
+						</svg>
 					</div>
 				</div>
 				<div class="text-center">
@@ -240,7 +244,7 @@
 				<span class="text-muted-foreground text-[10px] font-bold uppercase">Success Streak</span>
 				<div class="flex items-center gap-1">
 					<span class="text-foreground font-mono text-lg font-black">{streak}</span>
-					<span class="text-xs">🏆</span>
+					<span class="text-primary text-xs">·</span>
 				</div>
 			</div>
 		</div>
@@ -258,14 +262,40 @@
 						class="bg-foreground/5 flex h-16 w-16 cursor-help items-center justify-center rounded-xl opacity-40 grayscale transition-all hover:scale-110 hover:opacity-100 hover:grayscale-0"
 						title="Locked Achievement"
 					>
-						<span class="text-2xl">🏆</span>
+						<svg
+							class="text-muted-foreground h-6 w-6"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="1.5"
+							viewBox="0 0 24 24"
+							aria-hidden="true"
+						>
+							<path
+								d="M7 4h10v6a5 5 0 0 1-10 0V4z M5 4h2M17 4h2M9 18h6M12 14v4M8 22h8"
+								stroke-linecap="round"
+								stroke-linejoin="round"
+							/>
+						</svg>
 					</div>
 				{/each}
 				<div
-					class="border-primary/30 bg-primary/10 flex h-16 w-16 animate-bounce items-center justify-center rounded-xl border-2 text-2xl"
+					class="border-primary/30 bg-primary/10 flex h-16 w-16 animate-bounce items-center justify-center rounded-xl border-2"
 					title="Early Adopter"
 				>
-					🚀
+					<svg
+						class="text-primary h-6 w-6"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.5"
+						viewBox="0 0 24 24"
+						aria-hidden="true"
+					>
+						<path
+							d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+						/>
+					</svg>
 				</div>
 			</div>
 		</Card>

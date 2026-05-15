@@ -38,7 +38,7 @@
 	class:cursor-pointer={isEnabled}
 	class:cursor-progress={isPending}
 	class:cursor-wait={isLoading}
-	class:opacity-50={isBlocked}
+	class:opacity-35={isBlocked}
 	aria-busy={isBusy}
 	disabled={isBlocked}
 	{onclick}

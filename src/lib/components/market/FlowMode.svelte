@@ -564,7 +564,7 @@
 			background-color 0.2s ease;
 	}
 	.flow-icon-btn:active {
-		transform: scale(0.92);
+		transform: scale(0.985);
 		background: rgba(242, 236, 220, 0.15);
 	}
 
@@ -795,7 +795,7 @@
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 	}
 	.flow-amount-btn:active {
-		transform: scale(0.9);
+		transform: scale(0.985);
 	}
 	.flow-amount-field {
 		display: inline-flex;
@@ -849,7 +849,7 @@
 		position: relative;
 	}
 	.flow-action:active {
-		transform: scale(0.9);
+		transform: scale(0.985);
 	}
 	.flow-action-label {
 		position: absolute;
