@@ -122,6 +122,13 @@ jobs:
         with:
           args: functions build --lang ts
 
+      # The Juno CLI emits the regenerated outputs in its own style (tabs,
+      # line wrapping, …) which differs from this repo's prettier config.
+      # Without this step the drift check below fails on pure formatting,
+      # not real schema changes.
+      - name: Format regenerated outputs
+        run: npm run format
+
       - name: Fail if satellite Candid / declarations drifted
         run: |
           drift_paths=(
@@ -131,7 +138,7 @@ jobs:
             src/declarations/satellite
           )
           if [[ -n "$(git status --porcelain -- "${drift_paths[@]}")" ]]; then
-            echo "::error::Satellite schema/.did/declarations are out of date. Run 'npm run juno:functions:build' locally and commit the result. Diff follows:"
+            echo "::error::Satellite schema/.did/declarations are out of date. Run 'npm run juno:functions:build && npm run format' locally and commit the result. Diff follows:"
             git --no-pager diff --stat -- "${drift_paths[@]}"
             git --no-pager diff -- "${drift_paths[@]}"
             exit 1

@@ -116,8 +116,10 @@ npm run did             # ./scripts/did.sh + format + lint
 
 # Satellite (run whenever you touch src/satellite/** OR a $lib/schema/*
 # file imported by src/satellite/index.ts — CI's `satellite-schema` job
-# fails on any drift it produces, so commit the regenerated outputs)
-npm run juno:functions:build
+# fails on any drift it produces, so commit the regenerated outputs).
+# Always pair with `npm run format` because the Juno CLI emits in its
+# own style and the drift check compares against repo-formatted files.
+npm run juno:functions:build && npm run format
 
 # Engine sanity (after re-init or refactors that touch engine wiring)
 npm run test:engine-sync

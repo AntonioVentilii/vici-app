@@ -153,7 +153,9 @@ When a hook calls another canister (typically the icdc-core registry):
 - ❌ Import `@junobuild/core` (FE-only).
 - ❌ Touch `api-schemas.ts`, `satellite.did`, or
   `satellite_extension.did` by hand — regenerate via
-  `npm run juno:functions:build` and commit the regenerated
+  `npm run juno:functions:build && npm run format` (the Juno CLI emits
+  in its own style; the format pass aligns the output with this repo's
+  prettier config). Commit the regenerated
   `src/satellite/{satellite,satellite_extension}.did`,
   `src/satellite/api-schemas.ts`, **and** `src/declarations/satellite/**`.
   This applies whenever you change a `$lib/schema/*.ts` file imported by

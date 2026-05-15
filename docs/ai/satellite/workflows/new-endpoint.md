@@ -59,6 +59,7 @@ datastore SDK gives you.
 
    ```bash
    npm run juno:functions:build
+   npm run format   # the Juno CLI emits in its own style; align with repo prettier
    ```
 
    This regenerates:
