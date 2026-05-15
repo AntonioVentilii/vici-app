@@ -23,6 +23,13 @@ test.describe('authentication (dev sign-in)', () => {
 		await expect(home.signInButton).not.toBeVisible();
 		await expect(home.marketCard.first()).toBeVisible();
 
+		// `marketCard.first()` only proves at least one card has rendered;
+		// the remaining 19 may still be streaming in. Wait for `networkidle`
+		// to pin the feed in its fully-loaded state before snapshotting,
+		// otherwise the baseline drifts whenever a card lands a few ms
+		// late and CI auto-commits a "new" snapshot on the next run.
+		await page.waitForLoadState('networkidle');
+
 		// Mask the user-menu trigger (dev sign-in mints a fresh principal each
 		// run, so the avatar / fallback initials drift) and the time-remaining
 		// chips (`X days left` is wall-clock-relative).

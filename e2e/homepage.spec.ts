@@ -55,6 +55,12 @@ test.describe('homepage (logged out)', () => {
 		await expect(home.marketCard.first()).toBeVisible();
 		await expect(home.signInButton).toBeVisible();
 
+		// `marketCard.first()` only proves at least one card has rendered;
+		// the remaining cards may still be streaming in. Wait for the
+		// network to go idle so the snapshot captures the fully-loaded
+		// feed deterministically.
+		await page.waitForLoadState('networkidle');
+
 		// "X days left" / "X hours left" drift relative to the wall clock; mask
 		// every instance so the screenshot stays stable regardless of when CI ran.
 		await expect(page).toHaveScreenshot('homepage-with-markets.png', {

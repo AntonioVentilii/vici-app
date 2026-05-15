@@ -17,7 +17,8 @@ const PAGES = [
 ] as const;
 
 /**
- * Wait for the page chrome before screenshotting:
+ * Wait for the page chrome AND every initial data fetch to settle before
+ * screenshotting:
  *
  * 1. The routed container (`data-tid="app-main"`, set on the
  *    `{#key page.url.pathname}` div in `(app)/+layout.svelte`) has
@@ -32,6 +33,16 @@ const PAGES = [
  *    `page.locator('h1').first()` picks that hidden h1 first.
  * 3. The auth control in the navbar confirms we landed in the expected
  *    auth state.
+ * 4. `networkidle` waits until there's been no network activity for
+ *    500ms, which lets every page's `onMount` data fetch (Leaderboard's
+ *    `getLeaderboard`, Portfolio's `getPositions` + `getUserTradeHistory`,
+ *    Wallet's `reloadHistory`, Profile's friends / groups / activity
+ *    sub-loaders, etc.) finish rendering before the screenshot — without
+ *    this, the snapshot races the data fetch and ping-pongs between
+ *    "Calculating Alphas…" spinners and the loaded view, which is what
+ *    was causing CI to auto-commit a different baseline on every re-run.
+ *    The repo has no <5s polling on any test page (Leaderboard refreshes
+ *    every 30s, Profile every 60s), so 500ms idle is reliably reachable.
  */
 const waitForPage = async ({
 	page,
@@ -51,6 +62,8 @@ const waitForPage = async ({
 	} else {
 		await expect(home.userMenu).toBeVisible();
 	}
+
+	await page.waitForLoadState('networkidle');
 };
 
 test.describe('navigation (logged out)', () => {
