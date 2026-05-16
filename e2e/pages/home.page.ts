@@ -93,15 +93,30 @@ export class HomePage {
 	 * onboarding (writes `archetype` to the satellite); subsequent tests
 	 * inherit the already-onboarded state and never see the overlay.
 	 *
-	 * We race the overlay against the post-sign-in shell (`userMenu`):
-	 * whichever appears first tells us which path we're on, and we either
-	 * walk through onboarding or no-op.
+	 * Detecting which path we're on is subtle: `userMenu` lives in
+	 * `Header` (already mounted, just flips visibility on sign-in) while
+	 * `OnboardingFlow` is gated by an `{#if needsOnboarding}` block in
+	 * `(app)/+layout.svelte` and has to be created + inserted. Svelte
+	 * flushes the header update one microtask before the `{#if}` block
+	 * creates the overlay, so a `Promise.race(onboardingFlow, userMenu)`
+	 * resolves on `userMenu` first and `isVisible(onboardingFlow)`
+	 * synchronously after is `false` — even for a brand-new profile
+	 * that genuinely needs onboarding. Result: the first test in the
+	 * suite (the only one that hits a fresh satellite) silently skips
+	 * onboarding ~half the time, leaving the profile at its default
+	 * principal-derived nickname and producing flaky `tacitus` vs
+	 * `eqorn…k-4qe` baselines on every snapshot that renders the
+	 * leaderboard / profile body.
+	 *
+	 * Fix: wait for `userMenu` (cheap — auth pipeline has fired) AND
+	 * `networkidle` (the satellite `ensureProfile` / `upsertProfile`
+	 * round-trip has settled and the `{#if needsOnboarding}` block has
+	 * had room to flush). After both, the overlay's presence is
+	 * deterministic: visible ⇒ walk through, hidden ⇒ no-op.
 	 */
 	async completeOnboarding(): Promise<void> {
-		await Promise.race([
-			this.onboardingFlow.waitFor({ state: 'visible' }),
-			this.userMenu.waitFor({ state: 'visible' })
-		]);
+		await this.userMenu.waitFor({ state: 'visible' });
+		await this.page.waitForLoadState('networkidle');
 
 		if (!(await this.onboardingFlow.isVisible())) {
 			return;
