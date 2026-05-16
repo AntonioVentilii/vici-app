@@ -46,6 +46,37 @@ export class HomePage {
 		await this.page.goto('/');
 	}
 
+	/**
+	 * Pin everything that drifts between runs so {@link expect.toHaveScreenshot}
+	 * compares apples to apples:
+	 *
+	 * - Waits for web fonts to load so glyph metrics (and therefore the height
+	 *   of every text run) are stable. Without this, snapshots taken before
+	 *   `document.fonts.ready` use the system fallback font and any later
+	 *   run-with-fonts produces a multi-pixel diff on every character.
+	 * - Replaces every `MarketTimeRemaining` chip with a fixed-width placeholder.
+	 *   `getTimeRemaining()` is wall-clock-relative (`"7d 14h"`, `"0d 23h"`,
+	 *   `"15m remaining"`, …); the strings have different rendered widths,
+	 *   and Playwright's `mask` option overlays a magenta rectangle the size
+	 *   of the element's bounding box, so even masked the rectangle width
+	 *   drifts run-to-run and the diff fires. Owning the text content is the
+	 *   only way to make it byte-stable.
+	 *
+	 * Call this immediately before any `toHaveScreenshot` in a spec that
+	 * renders market cards.
+	 */
+	async stabilizeForSnapshot(): Promise<void> {
+		await this.page.evaluate(async () => {
+			await document.fonts.ready;
+		});
+
+		await this.page.evaluate((selector) => {
+			for (const el of document.querySelectorAll<HTMLElement>(selector)) {
+				el.textContent = '-- remaining';
+			}
+		}, `[data-tid="${TestId.MarketTimeRemaining}"]`);
+	}
+
 	async openSignInModal(): Promise<void> {
 		await this.signInButton.click();
 	}

@@ -30,12 +30,16 @@ test.describe('authentication (dev sign-in)', () => {
 		// late and CI auto-commits a "new" snapshot on the next run.
 		await page.waitForLoadState('networkidle');
 
-		// Mask the user-menu trigger (dev sign-in mints a fresh principal each
-		// run, so the avatar / fallback initials drift) and the time-remaining
-		// chips (`X days left` is wall-clock-relative).
+		// Pin every wall-clock-relative "X days left" chip to a fixed string.
+		await home.stabilizeForSnapshot();
+
+		// Mask the user-menu trigger only — dev sign-in mints a fresh principal
+		// each run, so the avatar / fallback initials genuinely differ. The
+		// time-remaining chips are handled by `stabilizeForSnapshot` instead
+		// (masking varies-width text doesn't actually pin the snapshot).
 		await expect(page).toHaveScreenshot('homepage-logged-in.png', {
 			fullPage: true,
-			mask: [home.userMenu, home.marketTimeRemaining]
+			mask: [home.userMenu]
 		});
 
 		await home.logout();

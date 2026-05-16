@@ -74,12 +74,12 @@ test.describe('navigation (logged out)', () => {
 			await page.goto(path);
 			await waitForPage({ page, expectedLanding: 'logged-out' });
 
-			// The market-time-remaining chip drifts vs. the wall clock; mask
-			// every instance so screenshots stay stable run-to-run. Pages
-			// that don't render any are no-ops for the mask.
+			// Pin wall-clock-relative chips so the snapshot is byte-stable
+			// run-to-run. No-op for pages that don't render market cards.
+			await home.stabilizeForSnapshot();
+
 			await expect(page).toHaveScreenshot(`navigation-${name}-logged-out.png`, {
-				fullPage: true,
-				mask: [home.marketTimeRemaining]
+				fullPage: true
 			});
 		});
 	}
@@ -101,11 +101,13 @@ test.describe('navigation (signed in)', () => {
 			await page.goto(path);
 			await waitForPage({ page, expectedLanding: 'logged-in' });
 
-			// Mask the user-menu (random principal each run) and any
-			// time-remaining chips on the page.
+			// Pin wall-clock-relative chips; mask only the user-menu (a fresh
+			// principal is minted per run so the avatar genuinely differs).
+			await home.stabilizeForSnapshot();
+
 			await expect(page).toHaveScreenshot(`navigation-${name}-logged-in.png`, {
 				fullPage: true,
-				mask: [home.userMenu, home.marketTimeRemaining]
+				mask: [home.userMenu]
 			});
 		});
 	}

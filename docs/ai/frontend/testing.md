@@ -196,23 +196,29 @@ committed to the repo**, so any visual regression shows up directly in
 the PR diff.
 
 The CI script (`npm run e2e:ci`) runs Playwright with
-`--update-snapshots=changed`. That means:
+`--update-snapshots=missing`. That means:
 
 - **First time** the test sees a name (no baseline yet) → Playwright
-  writes the PNG. The workflow detects the change under
+  writes the PNG. The workflow detects the new file under
   `e2e/snapshots/`, commits it, and pushes the commit back to the PR
   branch (via [`./.github/actions/add-and-commit`](../../../.github/actions/add-and-commit/action.yml)
-  using `secrets.GITHUB_TOKEN`).
-- **Subsequent runs** that diff against the baseline → Playwright
-  rewrites the PNG, and the same auto-commit step pushes the update.
-  The reviewer sees the new screenshot in the PR diff and either
-  accepts or rejects the visual change.
-- **Fork PRs** can't be pushed to from `GITHUB_TOKEN`, so the changed
-  baselines are still uploaded as the `snapshots-update` artifact;
-  contributors can download them and commit manually.
+  using `secrets.GITHUB_TOKEN`). So adding a `toHaveScreenshot` test
+  still doesn't require a local round-trip.
+- **Subsequent runs** that diff against the baseline → **the test
+  fails**. Auto-overwriting on diff (the old `--update-snapshots=changed`
+  policy) sounded convenient but turned every flake into a silent
+  baseline-bump commit, and a single drift would re-fire on every
+  unrelated push. If a diff is real and intentional, run
+  `npm run e2e -- --update-snapshots` locally, eyeball the new PNG, and
+  commit it yourself. If a diff is a flake, fix the flake (see
+  [Keeping snapshots stable](#keeping-snapshots-stable)) — don't paper
+  over it.
+- **Fork PRs** can't be pushed to from `GITHUB_TOKEN`, so any new
+  baselines are uploaded as the `snapshots-update` artifact only;
+  contributors download and commit them manually.
 
 Pushes from `GITHUB_TOKEN` deliberately don't re-trigger the workflow,
-so the snapshot commit doesn't loop into another E2E run.
+so the new-snapshot commit doesn't loop into another E2E run.
 
 ### Keeping snapshots stable
 
@@ -224,15 +230,38 @@ so the snapshot commit doesn't loop into another E2E run.
   differences without flapping.
 
 When a region of the page is genuinely non-deterministic (random
-principals from dev sign-in, generated avatars, time-remaining
-counters that drift relative to the wall clock), mask it:
+principals from dev sign-in, generated avatars), mask it. Playwright
+overlays the masked element's bounding box with a magenta rectangle:
 
 ```ts
 await expect(page).toHaveScreenshot('logged-in.png', {
 	fullPage: true,
-	mask: [home.userMenu, home.marketTimeRemaining]
+	mask: [home.userMenu]
 });
 ```
+
+⚠️ `mask` does NOT pin variable-width text. The magenta rectangle takes
+the size of the element's bounding box, so a chip that renders `"7d 14h"`
+on one run and `"6d 23h"` on the next produces a different-sized
+rectangle and the snapshot diffs anyway. For wall-clock-relative text
+(the `MarketTimeRemaining` chip is the canonical example), overwrite
+the `textContent` to a fixed string before screenshot — call
+`home.stabilizeForSnapshot()` (defined in
+[`e2e/pages/home.page.ts`](../../../e2e/pages/home.page.ts)), which
+waits for `document.fonts.ready` and pins every time-remaining chip
+to a constant placeholder:
+
+```ts
+await home.stabilizeForSnapshot();
+
+await expect(page).toHaveScreenshot('homepage-logged-in.png', {
+	fullPage: true,
+	mask: [home.userMenu]
+});
+```
+
+If you add a new wall-clock-relative element, extend
+`stabilizeForSnapshot` there rather than reaching for another `mask`.
 
 To capture a transient state deterministically — e.g. the markets-feed
 **skeletons**, which would otherwise be replaced by real data within

@@ -158,11 +158,15 @@ jobs:
           path: test-results/
           retention-days: 7
 
-      # Playwright runs with `--update-snapshots=changed`, so missing or
-      # diffed baselines are written into `e2e/snapshots/` rather than
-      # failing the test. Surface those as both an artifact (for run-id
-      # auditability) and — on same-repo PRs — a commit pushed back to
-      # the PR branch so the diff shows up in code review.
+      # Playwright runs with `--update-snapshots=missing`: *brand-new*
+      # baselines are written into `e2e/snapshots/` (so adding a snapshot
+      # test doesn't require a local round-trip), but a CHANGED baseline
+      # fails the run rather than being silently overwritten. Surface any
+      # new baselines as both an artifact (for run-id auditability) and —
+      # on same-repo PRs — a commit pushed back to the PR branch so the
+      # new file shows up in code review. If you actually intend to change
+      # an existing baseline, run `npm run e2e -- --update-snapshots`
+      # locally and commit the diff yourself.
       - name: Detect snapshot changes
         id: snapshots
         run: |
@@ -180,7 +184,7 @@ jobs:
           path: e2e/snapshots/
           retention-days: 7
 
-      - name: Commit & push snapshot updates (same-repo PR)
+      - name: Commit & push new snapshots (same-repo PR)
         if: >-
           steps.snapshots.outputs.changed == 'true' &&
           github.event_name == 'pull_request' &&
@@ -188,7 +192,7 @@ jobs:
         uses: ./.github/actions/add-and-commit
         with:
           add: e2e/snapshots
-          message: '🤖 chore(e2e): update Playwright snapshots'
+          message: '🤖 chore(e2e): add new Playwright snapshots'
           token: ${{ secrets.GITHUB_TOKEN }}
 
   e2e-pass:
