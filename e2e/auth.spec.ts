@@ -36,7 +36,8 @@ test.describe('authentication (dev sign-in)', () => {
 		// Mask the user-menu trigger only — dev sign-in mints a fresh principal
 		// each run, so the avatar / fallback initials genuinely differ. The
 		// time-remaining chips are handled by `stabilizeForSnapshot` instead
-		// (masking varies-width text doesn't actually pin the snapshot).
+		// (masking variable-width text doesn't actually pin the snapshot —
+		// see `HomePage.stabilizeForSnapshot` for the full rationale).
 		await expect(page).toHaveScreenshot('homepage-logged-in.png', {
 			fullPage: true,
 			mask: [home.userMenu]

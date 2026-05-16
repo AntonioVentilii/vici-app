@@ -167,26 +167,26 @@ jobs:
       # new file shows up in code review. If you actually intend to change
       # an existing baseline, run `npm run e2e -- --update-snapshots`
       # locally and commit the diff yourself.
-      - name: Detect snapshot changes
+      - name: Detect new snapshots
         id: snapshots
         run: |
           if [[ -n "$(git status --porcelain e2e/snapshots)" ]]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            echo "new=true" >> "$GITHUB_OUTPUT"
           else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
+            echo "new=false" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Upload changed snapshots
-        if: steps.snapshots.outputs.changed == 'true'
+      - name: Upload new snapshots
+        if: steps.snapshots.outputs.new == 'true'
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
-          name: snapshots-update
+          name: snapshots-new
           path: e2e/snapshots/
           retention-days: 7
 
       - name: Commit & push new snapshots (same-repo PR)
         if: >-
-          steps.snapshots.outputs.changed == 'true' &&
+          steps.snapshots.outputs.new == 'true' &&
           github.event_name == 'pull_request' &&
           github.event.pull_request.head.repo.full_name == github.repository
         uses: ./.github/actions/add-and-commit
