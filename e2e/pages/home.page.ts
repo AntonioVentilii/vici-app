@@ -61,20 +61,40 @@ export class HomePage {
 	 *   of the element's bounding box, so even masked the rectangle width
 	 *   drifts run-to-run and the diff fires. Owning the text content is the
 	 *   only way to make it byte-stable.
+	 * - Replaces every `PrincipalDisplay` (the shortened principal text
+	 *   rendered by `CopyableAddress`) with a fixed-width placeholder.
+	 *   Juno's dev mock identity is deterministic WITHIN a CI run but the
+	 *   PocketIC emulator container mints a different principal on every
+	 *   fresh boot, so the rendered shortened form (e.g. `aapr-r…dnh-4qe`
+	 *   vs `xqzm-i…inh-4qe`) drifts run-to-run wherever a `CopyableAddress`
+	 *   appears outside the (already-masked) `userMenu` — most notably on
+	 *   the profile page body. Same byte-stability rationale as the time
+	 *   chip: pinning the text is the only fix that doesn't trade one
+	 *   variable-width drift for another.
 	 *
 	 * Call this immediately before any `toHaveScreenshot` in a spec that
-	 * renders market cards.
+	 * renders market cards or signed-in profile content.
 	 */
 	async stabilizeForSnapshot(): Promise<void> {
 		await this.page.evaluate(async () => {
 			await document.fonts.ready;
 		});
 
-		await this.page.evaluate((selector) => {
-			for (const el of document.querySelectorAll<HTMLElement>(selector)) {
-				el.textContent = '-- remaining';
+		await this.page.evaluate(
+			({ timeRemainingSel, principalSel }) => {
+				for (const el of document.querySelectorAll<HTMLElement>(timeRemainingSel)) {
+					el.textContent = '-- remaining';
+				}
+
+				for (const el of document.querySelectorAll<HTMLElement>(principalSel)) {
+					el.textContent = 'xxxxxxx…xxxxxxx';
+				}
+			},
+			{
+				timeRemainingSel: `[data-tid="${TestId.MarketTimeRemaining}"]`,
+				principalSel: `[data-tid="${TestId.PrincipalDisplay}"]`
 			}
-		}, `[data-tid="${TestId.MarketTimeRemaining}"]`);
+		);
 	}
 
 	async openSignInModal(): Promise<void> {

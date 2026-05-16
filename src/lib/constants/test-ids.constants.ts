@@ -19,6 +19,7 @@ export enum TestId {
 	MarketCard = 'market-card',
 	MarketCardSkeleton = 'market-card-skeleton',
 	MarketTimeRemaining = 'market-time-remaining',
+	PrincipalDisplay = 'principal-display',
 	OnboardingFlow = 'onboarding-flow',
 	OnboardingPrimary = 'onboarding-primary',
 	OnboardingInterest = 'onboarding-interest',

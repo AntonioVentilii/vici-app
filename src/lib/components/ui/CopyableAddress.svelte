@@ -2,6 +2,7 @@
 	import { Copy, Check } from 'lucide-svelte/icons';
 	import { fade } from 'svelte/transition';
 	import YouBadge from '$lib/components/ui/YouBadge.svelte';
+	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { copyToClipboard } from '$lib/utils/clipboard.utils';
 	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
@@ -30,7 +31,7 @@
 </script>
 
 <span class="inline-flex items-center gap-1.5">
-	<span class="font-mono text-inherit">{displayAddress}</span>
+	<span class="font-mono text-inherit" data-tid={TestId.PrincipalDisplay}>{displayAddress}</span>
 	<button
 		class="text-muted-foreground hover:text-foreground relative inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded transition-colors"
 		aria-label="Copy {label}"
