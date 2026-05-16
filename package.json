@@ -34,7 +34,7 @@
 		"postinstall": "npm run postinstall:copy-auth",
 		"playwright:install": "playwright install --with-deps",
 		"e2e": "npm run playwright:install && playwright test",
-		"e2e:ci": "playwright test --update-snapshots=missing --reporter=html,list",
+		"e2e:ci": "playwright test --update-snapshots=changed --reporter=html,list",
 		"e2e:report": "playwright show-report"
 	},
 	"devDependencies": {
