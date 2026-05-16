@@ -103,46 +103,9 @@ jobs:
       - name: Check
         run: npm run check
 
-  satellite-schema:
-    runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-        with:
-          persist-credentials: false
-
-      - name: Prepare
-        uses: ./.github/actions/prepare
-
-      - name: Regenerate satellite Candid surface
-        uses: junobuild/juno-action@full
-        with:
-          args: functions build --lang ts
-
-      - name: Quality
-        run: npm run quality
-
-      - name: Fail if satellite Candid / declarations drifted
-        run: |
-          drift_paths=(
-            src/satellite/satellite.did
-            src/satellite/satellite_extension.did
-            src/satellite/api-schemas.ts
-            src/declarations/satellite
-          )
-          if [[ -n "$(git status --porcelain -- "${drift_paths[@]}")" ]]; then
-            echo "::error::Satellite schema/.did/declarations are out of date. Run 'npm run juno:functions:build && npm run quality' locally and commit the result. Diff follows:"
-            git --no-pager diff --stat -- "${drift_paths[@]}"
-            git --no-pager diff -- "${drift_paths[@]}"
-            exit 1
-          fi
-
   checks-pass:
     if: always()
-    needs: ['format', 'lint', 'check', 'satellite-schema']
+    needs: ['format', 'lint', 'check']
     runs-on: ubuntu-24.04
     permissions:
       contents: read

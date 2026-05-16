@@ -115,9 +115,10 @@ npm run quality         # = format && lint
 npm run did             # ./scripts/did.sh + format + lint
 
 # Satellite (run whenever you touch src/satellite/** OR a $lib/schema/*
-# file imported by src/satellite/index.ts — CI's `satellite-schema` job
-# fails on any drift it produces, so commit the regenerated outputs).
-# Pair with `npm run quality` so the drift check compares apples to apples.
+# file imported by src/satellite/index.ts; commit the regenerated
+# .did + src/declarations/satellite/** together with the source change).
+# Pair with `npm run quality` since the Juno CLI emits in its own style.
+# Note: CI does not currently re-run this — it is enforced by review.
 npm run juno:functions:build && npm run quality
 
 # Engine sanity (after re-init or refactors that touch engine wiring)
@@ -131,15 +132,14 @@ fixes back to your branch on PRs from non-forks; you should still run
 
 ## 5. CI jobs you must keep green
 
-| Workflow      | Job(s)             | What it runs                                                                                                                                                                                                                      |
-| ------------- | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `checks.yml`  | `format`           | `npm run format`. Auto-commits prettier fixes on non-fork PRs.                                                                                                                                                                    |
-| `checks.yml`  | `lint`             | `npm run lint` (prettier `--check` + eslint).                                                                                                                                                                                     |
-| `checks.yml`  | `check`            | `npm run check` (`svelte-check`).                                                                                                                                                                                                 |
-| `checks.yml`  | `satellite-schema` | `juno functions build --lang ts` then fails if `src/satellite/{satellite,satellite_extension}.did`, `api-schemas.ts`, or `src/declarations/satellite/**` drift. Run `npm run juno:functions:build` locally and commit the result. |
-| `checks.yml`  | `checks-pass`      | Aggregator — must be green to merge.                                                                                                                                                                                              |
-| `deploy.yml`  | deploy             | Deploys on tag / push to `main`. Don't bypass.                                                                                                                                                                                    |
-| `publish.yml` | publish            | Releases / packaging hooks.                                                                                                                                                                                                       |
+| Workflow      | Job(s)        | What it runs                                                   |
+| ------------- | ------------- | -------------------------------------------------------------- |
+| `checks.yml`  | `format`      | `npm run format`. Auto-commits prettier fixes on non-fork PRs. |
+| `checks.yml`  | `lint`        | `npm run lint` (prettier `--check` + eslint).                  |
+| `checks.yml`  | `check`       | `npm run check` (`svelte-check`).                              |
+| `checks.yml`  | `checks-pass` | Aggregator — must be green to merge.                           |
+| `deploy.yml`  | deploy        | Deploys on tag / push to `main`. Don't bypass.                 |
+| `publish.yml` | publish       | Releases / packaging hooks.                                    |
 
 If your change is doc-only, the `format` and `lint` jobs still run because
 they cover the whole repo. The `check` job covers `*.svelte` / `*.ts` only,

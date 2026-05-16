@@ -159,8 +159,9 @@ When a hook calls another canister (typically the icdc-core registry):
   `src/satellite/{satellite,satellite_extension}.did`,
   `src/satellite/api-schemas.ts`, **and** `src/declarations/satellite/**`.
   This applies whenever you change a `$lib/schema/*.ts` file imported by
-  `src/satellite/index.ts` too — CI's `satellite-schema` job fails on
-  any drift.
+  `src/satellite/index.ts` too — CI does not yet re-run the build, so
+  reviewers must enforce it (forgetting it ships a stale Candid surface
+  that traps `app_get_profile` and friends on every call).
 - ❌ Throw inside a hook for an expected condition. Log + return.
 - ❌ Add a hook that mutates the **same** doc that triggered it without
   an explicit termination guard — write loops are a real failure mode.
