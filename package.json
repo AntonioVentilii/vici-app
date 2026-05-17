@@ -38,7 +38,7 @@
 		"e2e:report": "playwright show-report"
 	},
 	"devDependencies": {
-		"@dfinity/eslint-config-oisy-wallet": "^0.2.3",
+		"@dfinity/eslint-config-oisy-wallet": "^0.3.0",
 		"@icp-sdk/bindgen": "^0.4.0",
 		"@junobuild/config": "^3.0.1",
 		"@junobuild/vite-plugin": "^4.7.1",
@@ -53,7 +53,7 @@
 		"eslint": "^9.34.0",
 		"eslint-config-prettier": "^10.1.8",
 		"eslint-plugin-svelte": "^3.12.1",
-		"globals": "^16.5.0",
+		"globals": "^17.3.0",
 		"playwright": "^1.59.1",
 		"postcss": "^8.5.13",
 		"prettier": "^3.8.2",

@@ -76,7 +76,7 @@ export class RegistryCanister extends Canister<RegistryService> {
 		const page = await list_series({
 			cursor: toNullable(),
 			limit: toNullable()
-		} as RegistryDid.PaginationParams);
+		});
 
 		const { items: series } = page;
 
