@@ -48,7 +48,6 @@
 </script>
 
 <div class="bg-background fixed inset-0 z-50 flex flex-col" data-tid={TestId.OnboardingFlow}>
-	<!-- Progress bar -->
 	<div class="px-6 pt-5">
 		<div class="mb-1.5 flex items-center justify-between">
 			<span class="text-primary font-display text-sm font-bold tracking-[0.18em] uppercase">
@@ -66,10 +65,8 @@
 		</div>
 	</div>
 
-	<!-- Step content -->
 	<div class="flex-1 overflow-auto px-6 pt-10 pb-6">
 		{#if step === 0}
-			<!-- Welcome -->
 			<div class="space-y-4">
 				<div class="mb-6">
 					<ViciChar mood="happy" size={64} />
@@ -100,7 +97,6 @@
 				</div>
 			</div>
 		{:else if step === 1}
-			<!-- Swipe tutorial -->
 			<div class="space-y-3.5">
 				<div class="eyebrow">SWIPE TO PREDICT</div>
 				<h2
@@ -115,7 +111,6 @@
 				</p>
 			</div>
 		{:else if step === 2}
-			<!-- Interest selection -->
 			<div class="space-y-4">
 				<div>
 					<div class="eyebrow">PICK YOUR INTERESTS</div>
@@ -156,7 +151,6 @@
 				</div>
 			</div>
 		{:else if step === 3}
-			<!-- Archetype selection -->
 			<div class="space-y-3.5">
 				<div>
 					<div class="eyebrow">CHOOSE YOUR STARTING ARCHETYPE</div>
@@ -203,7 +197,6 @@
 				</div>
 			</div>
 		{:else if step === 4}
-			<!-- Handle claim -->
 			<div class="space-y-3.5">
 				<div>
 					<div class="eyebrow">CLAIM YOUR HANDLE</div>
@@ -250,7 +243,6 @@
 		{/if}
 	</div>
 
-	<!-- Bottom action -->
 	<div class="border-border border-t px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+24px)]">
 		{#if step === 0}
 			<button

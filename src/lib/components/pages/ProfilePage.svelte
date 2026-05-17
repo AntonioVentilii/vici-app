@@ -35,21 +35,17 @@
 
 	{#if $userStore.profile}
 		<div class="space-y-12">
-			<!-- Main Dashboard -->
 			<ProfileDashboard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
 
-			<!-- Customization & Settings Section -->
 			<div class="border-border bg-card rounded-lg border p-8">
 				<AvatarSystem profile={$userStore.profile} />
 			</div>
 
-			<!-- Social Connections Section -->
 			<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
 				<FriendsList userPrincipal={$authPrincipal ?? ''} />
 				<GroupManager userPrincipal={$authPrincipal ?? ''} />
 			</div>
 
-			<!-- Secondary Content: Activity -->
 			<div class="space-y-8 pt-8">
 				<ActivityFeed mode="user" userPrincipal={$authPrincipal ?? ''} />
 			</div>

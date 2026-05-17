@@ -24,13 +24,11 @@
 	let loading = $state(true);
 	let isAssigningRole = $state(false);
 
-	// Admin Management State
 	let roleEntries = $state<UserRoleEntry[]>([]);
 
 	let newRolePrincipal = $state('');
 	let newRoleSelected = $state<UserRole>(UserRole.ADMIN);
 
-	// Bulk Creation Progress
 	let bulkProgress = $state(0);
 	let bulkTotal = $state(0);
 	let bulkSuccess = $state(0);
@@ -89,7 +87,6 @@
 							balanceDomain: balanceDomain ? toBalanceDomain(balanceDomain) : defaultDomain
 						});
 
-						// Associate categories if provided
 						if (categories && categories.length > 0) {
 							await Promise.allSettled(
 								categories.map((categoryId) =>
@@ -240,9 +237,7 @@
 	</div>
 
 	<div class="grid grid-cols-1 gap-12 lg:grid-cols-2">
-		<!-- Main Admin Forms Stack -->
 		<section class="space-y-8">
-			<!-- Add Role -->
 			<AdminAddForm
 				isAssigning={isAssigningRole}
 				onAddRole={handleAddRole}
@@ -252,25 +247,18 @@
 				role={newRoleSelected}
 			/>
 
-			<!-- Create Market -->
 			<AdminMarketForm onAddMarketSuccess={fetchMarkets} />
 
-			<!-- Bulk Create -->
 			<AdminBulkMarketForm onBulkCreate={handleBulkCreate} />
 		</section>
 
-		<!-- Lists Stack -->
 		<section class="space-y-8">
-			<!-- Roles List -->
 			<AdminList onRemoveRole={handleRemoveRole} {roleEntries} />
 
-			<!-- Oracle Settlers (read-only, synced from Roles) -->
 			<AdminOracleManager />
 
-			<!-- Resolve Markets -->
 			<AdminResolutionList {loading} markets={unresolvedMarkets} onResolve={handleResolve} />
 
-			<!-- Resolved History -->
 			<AdminResolutionHistory markets={resolvedMarkets} />
 		</section>
 	</div>

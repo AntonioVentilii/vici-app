@@ -74,8 +74,7 @@ test.describe('navigation (logged out)', () => {
 			await page.goto(path);
 			await waitForPage({ page, expectedLanding: 'logged-out' });
 
-			// Pin wall-clock-relative chips so the snapshot is byte-stable
-			// run-to-run. No-op for pages that don't render market cards.
+			// Harmless on pages without market cards (e.g. leaderboard).
 			await home.stabilizeForSnapshot();
 
 			await expect(page).toHaveScreenshot(`navigation-${name}-logged-out.png`, {
@@ -101,8 +100,8 @@ test.describe('navigation (signed in)', () => {
 			await page.goto(path);
 			await waitForPage({ page, expectedLanding: 'logged-in' });
 
-			// Pin wall-clock-relative chips; mask only the user-menu (a fresh
-			// principal is minted per run so the avatar genuinely differs).
+			// Mask only the user-menu: dev sign-in mints a fresh principal per run,
+			// so the avatar genuinely differs.
 			await home.stabilizeForSnapshot();
 
 			await expect(page).toHaveScreenshot(`navigation-${name}-logged-in.png`, {

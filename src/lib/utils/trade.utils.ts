@@ -148,9 +148,6 @@ export const executeOutcomeTrade = async ({
 		marketId: market.id,
 		side: 'BUY',
 		type,
-		// For binary "NO", the protocol expects (1 - price) if we are effectively buying YES at a low price
-		// Actually, placeOrder handles categorical normalization.
-		// If binary and NO, price = 1 - finalPrice
 		price: isBinary && action === 'NO' ? 1 - finalPrice : finalPrice,
 		qty,
 		outcome: action

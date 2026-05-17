@@ -3,9 +3,6 @@ import type { Category, SeriesCategory } from '$lib/types/category';
 import { getDoc, listDocs, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
-/**
- * Stores a series→category mapping (keyed by series id).
- */
 export const associateSeriesWithCategory = async ({
 	seriesId,
 	categoryId,
@@ -31,9 +28,6 @@ export const associateSeriesWithCategory = async ({
 	});
 };
 
-/**
- * Returns the category mapping for a series, if any.
- */
 export const getSeriesCategory = async (seriesId: string): Promise<SeriesCategory | undefined> => {
 	const doc = await getDoc<SeriesCategory>({
 		collection: Collection.SERIES_CATEGORIES,
@@ -43,9 +37,6 @@ export const getSeriesCategory = async (seriesId: string): Promise<SeriesCategor
 	return doc?.data;
 };
 
-/**
- * All taxonomy categories from Juno.
- */
 export const listCategories = async (): Promise<Category[]> => {
 	const { items } = await listDocs<Category>({
 		collection: Collection.CATEGORIES
@@ -54,9 +45,6 @@ export const listCategories = async (): Promise<Category[]> => {
 	return items.map(({ data }) => data);
 };
 
-/**
- * All series–category associations.
- */
 export const listSeriesCategories = async (): Promise<SeriesCategory[]> => {
 	const { items } = await listDocs<SeriesCategory>({
 		collection: Collection.SERIES_CATEGORIES

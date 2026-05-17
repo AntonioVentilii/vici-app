@@ -142,13 +142,10 @@ export class HomePage {
 			return;
 		}
 
-		// Step 0: welcome.
+		await this.onboardingPrimary.click();
 		await this.onboardingPrimary.click();
 
-		// Step 1: swipe tutorial.
-		await this.onboardingPrimary.click();
-
-		// Step 2: pick 3 interests (the minimum required to advance).
+		// Minimum 3 interests required to advance.
 		const interests = this.onboardingInterest;
 
 		await expect(interests).toHaveCount(6);
@@ -159,10 +156,8 @@ export class HomePage {
 
 		await this.onboardingPrimary.click();
 
-		// Step 3: pick the first archetype. Asserting the count up-front
-		// surfaces a clear "expected 4 got X" failure if the archetype
-		// catalog (or the test-id) is later changed, instead of letting
-		// `.first().click()` time out silently against an empty locator.
+		// Assert the archetype count up-front so a catalog/test-id drift surfaces
+		// as "expected 4 got X" instead of `.first().click()` silently timing out.
 		const archetypes = this.onboardingArchetype;
 
 		await expect(archetypes).toHaveCount(4);
@@ -170,8 +165,7 @@ export class HomePage {
 		await archetypes.first().click();
 		await this.onboardingPrimary.click();
 
-		// Step 4: claim a handle and finish. The placeholder ("tacitus") is
-		// not auto-filled, so the input must be typed into explicitly.
+		// Placeholder ("tacitus") is not auto-filled — must type explicitly.
 		await this.onboardingHandleInput.fill('tacitus');
 		await this.onboardingPrimary.click();
 

@@ -57,7 +57,6 @@
 </script>
 
 <div class="space-y-8">
-	<!-- Probability Overview -->
 	<div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
 		{#if market.payoffType === 'Binary'}
 			<div class="border-yes/20 bg-yes-wash rounded-3xl border p-6">

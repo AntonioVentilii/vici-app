@@ -3,9 +3,6 @@ import type { Permission } from '$lib/enums/permission';
 import type { UserRole } from '$lib/enums/user';
 import { isNullish } from '@dfinity/utils';
 
-/**
- * Returns whether `role` grants `permission` per `ROLE_PERMISSIONS`.
- */
 export const hasPermission = ({
 	role,
 	permission

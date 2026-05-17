@@ -3,7 +3,8 @@
 
 	interface DataPoint {
 		time: number;
-		value: number; // 0 to 1
+		/** Probability in `[0, 1]`. */
+		value: number;
 	}
 
 	interface Props {
@@ -46,7 +47,6 @@
 			viewBox="0 0 {width} {height}"
 			in:fade={{ duration: 1000 }}
 		>
-			<!-- Gradient Area -->
 			<defs>
 				<linearGradient id="area-gradient" x1="0" x2="0" y1="0" y2="1">
 					<stop offset="0%" stop-color={color} stop-opacity="0.2" />
@@ -56,7 +56,6 @@
 
 			<polyline fill="url(#area-gradient)" points={areaPoints} />
 
-			<!-- Trend Line -->
 			<polyline
 				class="drop-shadow-sm"
 				fill="none"

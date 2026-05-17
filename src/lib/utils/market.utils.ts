@@ -196,9 +196,6 @@ export const calculateMarketStats = ({
 	};
 };
 
-/**
- * Human-readable time until `expiry` (ms since epoch) or `"Expired"`.
- */
 export const getTimeRemaining = (expiry: bigint): string => {
 	const now = BigInt(Date.now());
 	const diff = Number(expiry - now);

@@ -241,7 +241,6 @@
 			</div>
 		{/if}
 
-		<!-- Balance Domain -->
 		<div class="space-y-4">
 			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
 				Balance Domain
@@ -306,7 +305,6 @@
 			</div>
 		{/if}
 
-		<!-- Trading Access -->
 		<div class="space-y-4">
 			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
 				Trading Access

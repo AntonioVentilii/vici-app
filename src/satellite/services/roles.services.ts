@@ -16,7 +16,6 @@ export const assertSetRole = ({
 		return;
 	}
 
-	// Check if caller is an admin by querying their own role in the 'roles' collection
 	const callerPrincipal = Principal.fromUint8Array(caller).toText();
 	const callerDoc = getDocStore({
 		collection: Collection.ROLES,
@@ -34,7 +33,6 @@ export const assertSetRole = ({
 		throw new Error('Only admins can set roles.');
 	}
 
-	// 3. Validate the proposed data
 	const { role: newRole } = decodeDocData<{ role: UserRole }>(proposed.data);
 	const validRoles = Object.values(UserRole);
 

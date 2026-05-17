@@ -1,5 +1,10 @@
 /**
- * Milestone keys: `m1` = 10% at registration; `m2` = 40% after first bet; `m3` = 50% after five bets.
+ * Onboarding milestones, in award order:
+ * - `m1` — registration (profile created)
+ * - `m2` — first trade
+ * - `m3` — fifth trade
+ *
+ * Splits live in `vxp-onboarding.constants.ts`.
  */
 export type VxpNewUserMilestoneKey = 'm1' | 'm2' | 'm3';
 
@@ -12,7 +17,8 @@ export interface VxpMilestoneState {
 	 */
 	amountBaseUnits: string;
 	/**
-	 * Set when status is `paid`.
+	 * ICRC ledger block index of the successful transfer. Present only when
+	 * `status === 'paid'`.
 	 */
 	blockIndex?: string;
 	/**

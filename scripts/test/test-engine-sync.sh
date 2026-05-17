@@ -35,7 +35,6 @@ fail() { echo "  FAIL: $1"; exit 1; }
 
 echo "Testing Vici engine on $NETWORK..."
 
-# 1. Engine registered under expected id.
 LIST_OUT="$(dfx canister call --network "$NETWORK" registry list_engines)"
 
 # Isolate the single top-level `record { ... }` whose `engine_id = "$EXPECTED_ENGINE_ID"`.

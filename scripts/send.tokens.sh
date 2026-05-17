@@ -2,13 +2,9 @@
 
 source "$(dirname "$0")/lib/utils.sh" "$@"
 
-# Utility Script: Send Tokens to a Local User
-# Particularly handy after installing the canisters for the first time or being forced by dfx to clean the local state.
-
 # Usage: ./scripts/send.tokens.sh [principal] [amount] [--network local|staging]  (from repo root)
 
 if [[ -z "${1:-}" || "$1" == --* ]]; then
-  # If first arg is empty or a flag, we might need to prompt or check next args
   if [[ -n "${2:-}" && "$2" != --* ]]; then
       PRINCIPAL=$2
   else
@@ -18,9 +14,8 @@ else
   PRINCIPAL=$1
 fi
 
-CKUSDC_AMOUNT=30000000 # default
+CKUSDC_AMOUNT=30000000
 
-# Find first two non-option arguments
 args=()
 for arg in "$@"; do
     if [[ "$arg" != --* ]]; then

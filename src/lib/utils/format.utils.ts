@@ -147,7 +147,6 @@ export const shortenWithMiddleEllipsis = ({
 	text: string;
 	splitLength?: number;
 }): string => {
-	// Original min length was 16 to extract split 7
 	const minLength = splitLength * 2 + 2;
 
 	return text.length > minLength

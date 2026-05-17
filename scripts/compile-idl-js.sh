@@ -2,14 +2,11 @@
 
 source "$(dirname "$0")/lib/utils.sh" "$@"
 
-# Compiles candid .did files to .idl.js and .d.ts
-
 did_files_to_compile() {
   find src/declarations -type f -name '*.did' \
     ! -name 'payloads.did'
 }
 
-# Normal API access.
 compile_did() {
   local didfile="$1"
   local didfolder="$(dirname "$didfile")"
@@ -25,11 +22,9 @@ compile_did() {
 compile_certified_did() {
   local didfile="$1"
 
-  # Temporary folder and DID file
   local didtmpfolder="$(mktemp -d)"
   local certified_didfile="$didtmpfolder/tmp.did"
 
-  # Output finds place in the project
   local jsFactoryFile="$(echo "$didfile" | sed 's/did$/certified.idl.js/g')"
   local tsFactoryFile="$(echo "$didfile" | sed 's/did$/certified.idl.d.ts/g')"
 
@@ -48,15 +43,14 @@ generate_did() {
 
   local tsfile="$(echo "$didfile" | sed 's/did$/d.ts/g')"
 
-  # icp-bindgen non-optional output folder and filenames
   local declarationsfolder="${didfolder}/declarations"
   local filename="$(basename "$didfile" .did)"
   local generatedTsfile="${declarationsfolder}/${filename}.did.d.ts"
   local generatedJsfile="${declarationsfolder}/${filename}.did.js"
 
-  # --actor-disabled: skip generating actor files, since we handle those ourselves
-  # --force: overwrite files. Required; otherwise, icp-bindgen would delete files at preprocess,
-  # which causes issues when multiple .did files are located in the same folder.
+  # `--force` is required: without it, icp-bindgen deletes files at preprocess,
+  # which breaks when multiple .did files share a folder. (Actor files are
+  # disabled because we generate factory bindings ourselves below.)
   npx icp-bindgen --did-file "${didfile}" --out-dir "${didfolder}" --actor-disabled --force
 
   # icp-bindgen generates the files in a `declarations` subfolder

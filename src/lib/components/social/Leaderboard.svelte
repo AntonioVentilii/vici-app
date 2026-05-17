@@ -61,7 +61,6 @@
 			<LoadingSpinner />
 		</div>
 	{:else}
-		<!-- Podium -->
 		<div class="flex items-end justify-center gap-3 pt-8">
 			{#each [2, 1, 3] as rank (rank)}
 				{@const entry = leaderboard.find((e) => e.rank === rank)}
@@ -102,7 +101,6 @@
 			{/each}
 		</div>
 
-		<!-- List -->
 		<Card padding="none" variant="glass">
 			<div class="flex flex-col">
 				{#each leaderboard.slice(3) as entry (entry.rank)}

@@ -3,9 +3,6 @@ import type { Activity } from '$lib/types/social';
 import { listDocs, setDoc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
-/**
- * Appends a timestamped activity row to Juno.
- */
 export const logActivity = async (activity: Omit<Activity, 'timestamp'>): Promise<void> => {
 	const timestamp = Date.now();
 
@@ -23,9 +20,6 @@ export const logActivity = async (activity: Omit<Activity, 'timestamp'>): Promis
 	});
 };
 
-/**
- * Loads all activities from Juno (unsorted).
- */
 const listActivities = async ({ certified = false }: { certified?: boolean } = {}): Promise<
 	Activity[]
 > => {
@@ -37,9 +31,6 @@ const listActivities = async ({ certified = false }: { certified?: boolean } = {
 	return items.map(({ data }) => data);
 };
 
-/**
- * Recent global activity feed, newest first, capped by `limit`.
- */
 export const getGlobalActivities = async ({
 	limit = 50,
 	certified = false
@@ -53,9 +44,6 @@ export const getGlobalActivities = async ({
 	return items.sort((a, b) => b.timestamp - a.timestamp).slice(0, limit);
 };
 
-/**
- * Activities from users in `friends`, newest first.
- */
 export const getFriendActivities = async ({
 	friends,
 	limit = 50,

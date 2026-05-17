@@ -70,10 +70,6 @@ export const searchProfiles = (query: string): UserProfile[] => {
 		.map((profile) => redactProfile({ caller, profile }));
 };
 
-/**
- * Asserts that the nickname in the proposed profile document is unique across all users.
- * Performs a case-insensitive check.
- */
 export const assertUniqueNickname = ({
 	data: {
 		collection,

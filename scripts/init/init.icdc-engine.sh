@@ -68,7 +68,6 @@ echo "Starting Vici Engine initialization on $NETWORK..."
 echo "  Engine name: $ENGINE_NAME"
 echo "  Admins: $ADMINS_VEC"
 
-# Look up whether an engine with this name is already registered.
 LIST_OUT="$(dfx canister call --network "$NETWORK" registry list_engines 2>/dev/null || echo '')"
 
 # Extract the `engine_id` from the same top-level `record { ... }` whose

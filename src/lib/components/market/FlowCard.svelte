@@ -50,12 +50,10 @@
 	);
 	const opacity = $derived(1 - dragMagnitude * 0.25);
 
-	// Action indicators (0 - 1)
 	const yesOpacity = $derived(Math.max(0, coords.current.x / 90));
 	const noOpacity = $derived(Math.max(0, -coords.current.x / 90));
 	const skipOpacity = $derived(Math.max(0, -coords.current.y / 90));
 
-	// Tint glow based on drag
 	const tintYes = $derived(Math.min(yesOpacity, 1));
 	const tintNo = $derived(Math.min(noOpacity, 1));
 	const tintSkip = $derived(Math.min(skipOpacity, 1));
@@ -138,7 +136,6 @@
 		ontouchstart={handleStart}
 		role="presentation"
 	>
-		<!-- Swipe tint glow -->
 		<div
 			style="box-shadow: inset 0 0 0 4px rgba(79, 211, 161, {tintYes}), inset 0 0 60px rgba(79, 211, 161, {tintYes *
 				0.4}); opacity: {tintYes}"
@@ -155,7 +152,6 @@
 			class="pointer-events-none absolute inset-0 z-10 rounded-4xl transition-opacity md:rounded-[40px]"
 		></div>
 
-		<!-- YES Indicator (stamp) -->
 		<div
 			style="opacity: {signedIn
 				? yesOpacity
@@ -174,7 +170,6 @@
 			{/if}
 		</div>
 
-		<!-- NO Indicator (stamp) -->
 		<div
 			style="opacity: {signedIn
 				? noOpacity
@@ -193,7 +188,6 @@
 			{/if}
 		</div>
 
-		<!-- SKIP Indicator (stamp) -->
 		<div
 			style="opacity: {skipOpacity}; transform: translate(-50%, 0) scale({0.85 +
 				skipOpacity * 0.15})"
@@ -203,7 +197,6 @@
 		</div>
 
 		<div class="flow-card-body">
-			<!-- Header -->
 			<div class="flow-card-header">
 				<div class="absolute inset-0 opacity-30">
 					<div class="bg-laurel/20 absolute -top-32 -left-20 h-72 w-72 rounded-full blur-3xl"></div>
@@ -212,7 +205,6 @@
 					></div>
 				</div>
 
-				<!-- Top chips -->
 				<div class="relative z-10 flex items-start justify-between gap-2">
 					<div
 						class="bg-foreground/15 flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
@@ -249,11 +241,9 @@
 					{/if}
 				</div>
 
-				<!-- Title -->
 				<h2 class="flow-card-title">{market.title}</h2>
 			</div>
 
-			<!-- Content -->
 			<div class="flow-card-content">
 				<p class="flow-card-desc">{market.description}</p>
 
@@ -281,7 +271,6 @@
 					</BaseButton>
 				</div>
 
-				<!-- Footer -->
 				<div class="flow-card-footer">
 					<div class="flex items-center gap-1.5">
 						<svg
@@ -532,7 +521,6 @@
 		flex-wrap: wrap;
 	}
 
-	/* Swipe stamps */
 	.stamp {
 		position: absolute;
 		z-index: 20;

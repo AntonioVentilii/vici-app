@@ -8,7 +8,6 @@ LEDGER_CANISTER_ID=$(dfx canister id ledger --network "$NETWORK")
 # Anonymous principal (placeholder until EVM / signer canisters are wired)
 ANONYMOUS_PRINCIPAL="aaaaa-aa"
 
-# Configurable values
 CLEARING_INSURANCE_FEE_BPS="${CLEARING_INSURANCE_FEE_BPS:-10}"
 CLEARING_PROTOCOL_FEE_BPS="${CLEARING_PROTOCOL_FEE_BPS:-5}"
 CLEARING_VERSION="${CLEARING_VERSION:-1}"

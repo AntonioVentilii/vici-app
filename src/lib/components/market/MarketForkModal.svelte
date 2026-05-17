@@ -32,9 +32,6 @@
 
 		try {
 			const all = await listGroups();
-			// Only show groups where user is admin/creator or member?
-			// For forking, user probably needs to be admin to "manage" the forked market's access?
-			// Actually, createMarket (relaxed) allows creating restricted markets.
 			availableGroups = all;
 		} catch (e) {
 			console.error('Failed to load groups', e);

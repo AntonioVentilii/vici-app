@@ -142,7 +142,6 @@
 			<h3 class="text-primary text-xl font-bold">Friends</h3>
 		</div>
 
-		<!-- Tabs -->
 		<div class="border-border flex gap-4 border-b text-sm font-medium">
 			<button
 				class="pb-2 {activeTab === 'active'
@@ -194,7 +193,6 @@
 					<LoadingSpinner />
 				</div>
 			{:else}
-				<!-- ACTIVE TAB -->
 				{#if activeTab === 'active'}
 					{#if activeFriends.length === 0}
 						<p class="text-muted-foreground py-8 text-center text-sm opacity-50">
@@ -243,7 +241,6 @@
 					{/if}
 				{/if}
 
-				<!-- REQUESTS TAB -->
 				{#if activeTab === 'requests'}
 					{#if pendingRequests.length === 0}
 						<p class="text-muted-foreground py-8 text-center text-sm opacity-50">
@@ -298,7 +295,6 @@
 					{/if}
 				{/if}
 
-				<!-- REJECTED TAB -->
 				{#if activeTab === 'rejected'}
 					{#if rejectedRelations.length === 0}
 						<p class="text-muted-foreground py-8 text-center text-sm opacity-50">

@@ -245,7 +245,6 @@
 		</div>
 	{:else if completed || markets.length === 0}
 		<div class="completion-bg flex h-full w-full flex-col items-center justify-center px-6">
-			<!-- Confetti particles -->
 			<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
 				{#each Array(24) as _, i (i)}
 					<span style="--i: {i}; --delay: {i * 0.08}s; --hue: {(i * 37) % 360}deg" class="confetti"
@@ -303,7 +302,6 @@
 			</div>
 		</div>
 	{:else}
-		<!-- ===== TOP APP BAR ===== -->
 		<header class="flow-topbar" in:fade>
 			<button class="flow-icon-btn" aria-label="Exit Flow" onclick={backToMarkets}>
 				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -316,7 +314,6 @@
 				</svg>
 			</button>
 
-			<!-- Segmented progress (Instagram stories style) -->
 			<div class="flow-progress" aria-label="Progress">
 				{#each Array(MAX_BETS) as _, i (i)}
 					<div class="flow-progress-seg">
@@ -330,7 +327,6 @@
 				{/each}
 			</div>
 
-			<!-- Streak + XP pill -->
 			<div class="flow-stats">
 				<div class="flow-stat flow-stat-streak" class:is-hot={streak >= 3} aria-label="Streak">
 					<span class="text-[9px] font-black tracking-widest uppercase">Streak</span>
@@ -343,7 +339,6 @@
 			</div>
 		</header>
 
-		<!-- Combo celebration banner -->
 		{#if lastStreakShown > 0}
 			{#key lastStreakShown}
 				<div
@@ -357,7 +352,6 @@
 			{/key}
 		{/if}
 
-		<!-- ===== CARD STACK ===== -->
 		<main class="flow-stage">
 			<div class="flow-card-wrap">
 				{#each visibleCards as market, i (market?.id)}
@@ -385,7 +379,6 @@
 				{/each}
 			</div>
 
-			<!-- Floating XP pops -->
 			<div class="xp-pops" aria-hidden="true">
 				{#each xpPops as pop (pop.id)}
 					<div
@@ -400,9 +393,7 @@
 			</div>
 		</main>
 
-		<!-- ===== BOTTOM ACTION BAR ===== -->
 		<footer class="flow-bottombar">
-			<!-- Amount picker -->
 			<div class="flow-amount">
 				<button
 					class="flow-amount-btn"
@@ -431,7 +422,6 @@
 				</button>
 			</div>
 
-			<!-- Action buttons -->
 			<div class="flow-actions">
 				<button
 					class="flow-action flow-action-no"
@@ -482,7 +472,6 @@
 				</button>
 			</div>
 
-			<!-- Keyboard hint (desktop) -->
 			<div class="flow-kbd">
 				<kbd>←</kbd> NO
 				<span>·</span>
@@ -529,7 +518,6 @@
 		overflow: hidden;
 	}
 
-	/* ===== Top bar ===== */
 	.flow-topbar {
 		position: sticky;
 		top: 0;
@@ -642,7 +630,6 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	/* ===== Combo banner ===== */
 	.combo-banner {
 		position: fixed;
 		left: 50%;
@@ -669,7 +656,6 @@
 		font-size: 11px;
 	}
 
-	/* ===== Card stage ===== */
 	.flow-stage {
 		position: relative;
 		flex: 1 1 auto;
@@ -701,7 +687,6 @@
 		opacity: calc(1 - var(--depth) * 0.35);
 	}
 
-	/* ===== XP pops ===== */
 	.xp-pops {
 		position: absolute;
 		inset: 0;
@@ -756,7 +741,6 @@
 		}
 	}
 
-	/* ===== Bottom bar ===== */
 	.flow-bottombar {
 		position: sticky;
 		bottom: 0;
@@ -912,7 +896,6 @@
 		}
 	}
 
-	/* ===== Completion ===== */
 	.completion-bg {
 		position: relative;
 		background:

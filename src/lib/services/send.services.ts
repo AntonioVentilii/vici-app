@@ -2,16 +2,10 @@ import { transfer as transferIcrc } from '$lib/api/icrc-ledger.api';
 import type { IcSendParams } from '$lib/types/ic-send';
 import { decodeIcrcAccount, type IcrcLedgerDid } from '@icp-sdk/canisters/ledger/icrc';
 
-/**
- * Sends ICRC tokens; alias for {@link sendIcrc}.
- */
 export const sendIc = async (params: IcSendParams): Promise<void> => {
 	await sendIcrc(params);
 };
 
-/**
- * Transfers `amount` to decoded `to` on the given ICRC ledger.
- */
 export const sendIcrc = ({
 	to,
 	amount,
