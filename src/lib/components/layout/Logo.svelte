@@ -8,11 +8,25 @@
 	};
 </script>
 
-<BaseButton class="group flex items-center" onclick={() => handleNav(AppPath.Home)}>
-	<span
-		style="letter-spacing: 0.18em;"
-		class="text-primary font-display text-xl font-bold uppercase transition-all duration-200 group-hover:[text-shadow:0_0_12px_var(--laurel-glow)]"
+<BaseButton
+	class="group flex items-center"
+	aria-label="VICI — go to home"
+	onclick={() => handleNav(AppPath.Home)}
+>
+	<svg
+		class="text-primary h-6 w-auto transition-[filter] duration-200 group-hover:[filter:drop-shadow(0_0_12px_var(--laurel-glow))]"
+		aria-hidden="true"
+		fill="currentColor"
+		viewBox="0 0 262 120"
+		xmlns="http://www.w3.org/2000/svg"
 	>
-		VICI
-	</span>
+		<g>
+			<path d="M 6 14 L 30 14 L 50 88 L 70 14 L 94 14 L 64 106 L 36 106 Z" />
+			<path d="M 102 14 L 124 14 L 124 106 L 102 106 Z" />
+			<path
+				d="M 222 30 C 214 20 200 14 184 14 C 158 14 140 35 140 60 C 140 85 158 106 184 106 C 200 106 214 100 222 90 L 204 78 C 198 84 192 86 184 86 C 170 86 162 76 162 60 C 162 44 170 34 184 34 C 192 34 198 36 204 42 Z"
+			/>
+			<path d="M 234 14 L 256 14 L 256 106 L 234 106 Z" />
+		</g>
+	</svg>
 </BaseButton>
