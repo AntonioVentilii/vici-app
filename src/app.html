@@ -5,6 +5,28 @@
 		<link rel="icon" type="image/svg+xml" href="%sveltekit.assets%/branding/vici-app-icon.svg" />
 		<link rel="icon" type="image/png" href="%sveltekit.assets%/favicon.png" />
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+		<!-- Address-bar / status-bar tint. Dark default matches `--ink`; the
+			 light-scheme override matches the parchment surface. -->
+		<meta name="theme-color" content="#0e0d0b" media="(prefers-color-scheme: dark)" />
+		<meta name="theme-color" content="#f2ecdc" media="(prefers-color-scheme: light)" />
+		<meta name="color-scheme" content="dark light" />
+
+		<meta
+			name="description"
+			content="VICI — a consumer-first prediction platform. Forecast outcomes, build a reputation, earn XP."
+		/>
+
+		<!-- Open Graph / Twitter — no og:image yet (needs a 1200×630 raster
+			 that the design hasn't shipped). Share previews fall back to the
+			 page title + description, which is fine until art lands. -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="VICI" />
+		<meta property="og:description" content="Forecast outcomes, build a reputation, earn XP." />
+		<meta name="twitter:card" content="summary" />
+		<meta name="twitter:title" content="VICI" />
+		<meta name="twitter:description" content="Forecast outcomes, build a reputation, earn XP." />
+
 		%sveltekit.head%
 
 		<title>VICI</title>
