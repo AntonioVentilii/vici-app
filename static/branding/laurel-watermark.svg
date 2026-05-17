@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240">
+  
+  <defs>
+    <g id="leaf">
+      <ellipse cx="0" cy="0" rx="14" ry="5" fill="none" stroke="currentColor" stroke-width="1"></ellipse>
+    </g>
+  </defs>
+  <g opacity="0.5">
+    
+    <path d="M120 220 C 70 200, 40 160, 40 110 C 40 80, 50 50, 70 30" fill="none" stroke="currentColor" stroke-width="1"></path>
+    <use href="#leaf" transform="translate(70 180) rotate(-50)"></use>
+    <use href="#leaf" transform="translate(55 150) rotate(-65)"></use>
+    <use href="#leaf" transform="translate(46 118) rotate(-78)"></use>
+    <use href="#leaf" transform="translate(46 86) rotate(-92)"></use>
+    <use href="#leaf" transform="translate(56 56) rotate(-110)"></use>
+    <use href="#leaf" transform="translate(94 204) rotate(-30)"></use>
+    
+    <path d="M120 220 C 170 200, 200 160, 200 110 C 200 80, 190 50, 170 30" fill="none" stroke="currentColor" stroke-width="1"></path>
+    <use href="#leaf" transform="translate(170 180) rotate(50)"></use>
+    <use href="#leaf" transform="translate(185 150) rotate(65)"></use>
+    <use href="#leaf" transform="translate(194 118) rotate(78)"></use>
+    <use href="#leaf" transform="translate(194 86) rotate(92)"></use>
+    <use href="#leaf" transform="translate(184 56) rotate(110)"></use>
+    <use href="#leaf" transform="translate(146 204) rotate(30)"></use>
+  </g>
+</svg>
