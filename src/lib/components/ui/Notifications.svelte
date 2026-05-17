@@ -10,7 +10,7 @@
 >
 	{#each $notificationsStore as notification (notification.id)}
 		<button
-			class="bg-card ring-border pointer-events-auto flex w-full items-start gap-3 rounded-2xl p-4 text-left shadow-2xl ring-1"
+			class="bg-card ring-border shadow-toast pointer-events-auto flex w-full items-start gap-3 rounded-2xl p-4 text-left ring-1"
 			onclick={() => remove(notification.id)}
 			in:fly={{ y: 20, duration: 300 }}
 			out:fade={{ duration: 200 }}

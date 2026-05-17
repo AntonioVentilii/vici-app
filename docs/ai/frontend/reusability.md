@@ -63,6 +63,27 @@
 | `Tabs`            | Tab strip.                                                  |
 | `YouBadge`        | "You" callout next to a profile.                            |
 
+### Bespoke icons — `$lib/components/icons/`
+
+Use `lucide-svelte` first; these are the project's own SVGs.
+
+| Component         | Use it for                                                                                             |
+| ----------------- | ------------------------------------------------------------------------------------------------------ |
+| `IconGoogle`      | Google sign-in button.                                                                                 |
+| `IconIC`          | Internet Identity sign-in button.                                                                      |
+| `IconPasskey`     | Passkey / WebAuthn surfaces.                                                                           |
+| `IconRobot`       | Bot / automation surfaces.                                                                             |
+| `IconSignalYes`   | YES prediction signal — arrow-up + tail. Use `text-yes` to colour it.                                  |
+| `IconSignalNo`    | NO prediction signal — arrow-down + tail. Use `text-no` to colour it.                                  |
+| `IconSignalHold`  | HOLD prediction signal — pause-style glyph. Use `text-hold` to colour it.                              |
+| `IconStreakFlame` | Small streak-counter flame badge. Distinct from `FlameChar.svelte` (the animated companion character). |
+| `IconLaurel`      | Two laurel branches (200×120, non-square). For rank / achievement surfaces. Pass `size` as the height. |
+| `IconXpChevron`   | XP indicator — stacked chevrons.                                                                       |
+
+Static brand assets that aren't components live in `static/branding/`:
+`vici-wordmark.svg`, `vici-monogram.svg`, `vici-app-icon.svg`, `grain.svg`
+(noise overlay), `laurel-watermark.svg` (background watermark).
+
 ### Feature folders worth knowing
 
 | Folder                         | Purpose                                                                   |

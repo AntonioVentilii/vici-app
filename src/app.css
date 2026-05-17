@@ -97,6 +97,7 @@
 	/* Layout */
 	--content-max: 1280px;
 	--header-h: 56px;
+	--ticker-h: 32px;
 	--bottomnav-h: 64px;
 
 	/* Shadows (dark theme: inner highlights). The dark/light values get
@@ -105,6 +106,14 @@
 	 * `@theme`). */
 	--inset-hi: inset 0 1px 0 rgba(242, 236, 220, 0.04);
 	--inset-hi-strong: inset 0 1px 0 rgba(242, 236, 220, 0.08);
+
+	/* Cards need different shadow strategies per theme: inset highlight in
+	 * dark, soft drop shadow in light (an inset highlight is invisible on a
+	 * parchment background). `--shadow-card` is the semantic alias surfaces
+	 * read; `--shadow-card-light` is the raw light-theme value, exposed as
+	 * its own named token so light-theme callers can opt in directly. */
+	--shadow-card-light: 0 1px 2px rgba(14, 13, 11, 0.06), 0 8px 24px -12px rgba(14, 13, 11, 0.1);
+	--shadow-card: var(--inset-hi);
 }
 
 [data-theme='dark'],
@@ -155,6 +164,8 @@
 
 	--inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 	--inset-hi-strong: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+	--shadow-card: var(--shadow-card-light);
 }
 
 @theme {
@@ -251,6 +262,17 @@
 
 	/* Modal shadow exposed as the `shadow-modal` utility. */
 	--shadow-modal: 0 24px 60px -20px rgba(0, 0, 0, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4);
+
+	/* Toast shadow exposed as the `shadow-toast` utility. Theme-stable —
+	 * toasts sit on a translucent dark surface in both themes, so the
+	 * drop-shadow value cascades unchanged. */
+	--shadow-toast: 0 12px 32px -8px rgba(0, 0, 0, 0.5);
+
+	/* Card shadow exposed as the `shadow-card` utility. Resolves to
+	 * `--inset-hi` in dark theme and `--shadow-card-light` in light theme;
+	 * the per-theme overrides on `--shadow-card` in `:root` /
+	 * `[data-theme='light']` cascade through to the resolved value. */
+	--shadow-card: var(--shadow-card);
 
 	/* Juno logo */
 	--color-lavender-blue-50: #f2f3ff;

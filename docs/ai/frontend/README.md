@@ -15,6 +15,8 @@ it once per session.
       component / util / store / service before creating one.
 - [ ] My code follows [`stack-and-patterns.md`](./stack-and-patterns.md)
       (Svelte 5 runes, named `Props` interface, no `any`).
+- [ ] If I'm aligning a screen / token / asset with the app design, I
+      checked and updated [`design.md`](./design.md) in the same PR.
 - [ ] No bare clickable `<div>`s; labelled inputs; `aria-hidden` on
       decorative icons — [`a11y.md`](./a11y.md).
 - [ ] Terminology check: **prediction**, never "bet". `_ms` for milliseconds,
