@@ -29,7 +29,7 @@
 
 <div class="h-full w-full" in:fly={{ y: 20, duration: 400, delay: Math.min(index * 50, 300) }}>
 	<Card
-		class="group border-border shadow-inset-hi hover:border-border-strong h-full w-full overflow-hidden border transition-all hover:-translate-y-0.5"
+		class="group border-border hover:border-border-strong h-full w-full overflow-hidden border transition-all hover:-translate-y-0.5"
 		onclick={() => goto(`${AppPath.Markets}/${market.id}`)}
 		onkeydown={(e) => e.key === 'Enter' && goto(`${AppPath.Markets}/${market.id}`)}
 		padding="none"
@@ -107,7 +107,7 @@
 						<div class="text-muted-foreground/60 flex items-center gap-1.5">
 							<Clock size={14} />
 							<span
-								class="text-xs font-bold whitespace-nowrap"
+								class="num text-xs font-bold whitespace-nowrap"
 								data-tid={TestId.MarketTimeRemaining}
 							>
 								{getTimeRemaining(market.expiryDate)}
