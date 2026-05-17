@@ -320,6 +320,18 @@ html {
 	font-feature-settings: 'ss01', 'cv11';
 }
 
+/* Tailwind v4's preflight no longer sets `cursor: pointer` on buttons
+ * (it inherits the OS default, which is the text cursor). Restore the
+ * v3 behaviour project-wide so we don't have to sprinkle `cursor-pointer`
+ * on every interactive control. `:disabled` keeps the not-allowed cursor. */
+@layer base {
+	button:not(:disabled),
+	[role='button']:not(:disabled),
+	summary:not(:disabled) {
+		cursor: pointer;
+	}
+}
+
 body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
