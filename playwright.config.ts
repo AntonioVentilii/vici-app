@@ -9,6 +9,11 @@ export default defineConfig({
 	testMatch: ['**/*.spec.ts'],
 	timeout: FIVE_MINUTES_MS,
 	snapshotDir: 'e2e/snapshots',
+	// Fail fast (and with a useful message) if the Vite dev server or the
+	// Juno emulator isn't reachable at suite start, instead of letting every
+	// spec time out 30s deep in `home.page.ts` on a missing `user-menu`.
+	// See e2e/global-setup.ts.
+	globalSetup: './e2e/global-setup.ts',
 	expect: {
 		timeout: 30_000,
 		toHaveScreenshot: {

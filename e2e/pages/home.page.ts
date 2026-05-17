@@ -176,11 +176,43 @@ export class HomePage {
 	 * High-level helper: opens the sign-in modal, signs in via the dev mock
 	 * identity, and walks past the onboarding overlay so the caller lands
 	 * on a fully-interactive signed-in app shell.
+	 *
+	 * Wrapped in one auto-retry with a page reload between attempts. The
+	 * sign-in pipeline rides on `/api/v3|v4/canister/*` calls through the
+	 * Vite dev-server proxy, which has been observed to enter a sticky
+	 * `socket hang up` / `ECONNRESET` state mid-suite. Top-level Playwright
+	 * retries don't help — they share the same dev-server process and the
+	 * connection pool stays poisoned. A `page.reload()` opens a fresh
+	 * browser context against the proxy and is often enough to recover.
+	 *
+	 * If the second attempt also fails, throws with the underlying error
+	 * wrapped in context so it doesn't get swallowed into a generic
+	 * "user-menu not visible".
 	 */
 	async signInAsDevUser(): Promise<void> {
-		await this.openSignInModal();
-		await this.signInDevButton.click();
-		await this.completeOnboarding();
+		const attempt = async (): Promise<void> => {
+			await this.openSignInModal();
+			await this.signInDevButton.click();
+			await this.completeOnboarding();
+		};
+
+		try {
+			await attempt();
+		} catch (firstError) {
+			await this.page.reload({ waitUntil: 'networkidle' });
+
+			try {
+				await attempt();
+			} catch (secondError) {
+				throw new Error(
+					`signInAsDevUser failed twice. ` +
+						`First attempt: ${(firstError as Error).message}. ` +
+						`Second attempt (after page reload): ${(secondError as Error).message}. ` +
+						`This typically indicates the Vite-↔-PocketIC proxy has entered a ` +
+						`sticky error state — see docs/ai/frontend/testing.md.`
+				);
+			}
+		}
 	}
 
 	async logout(): Promise<void> {
