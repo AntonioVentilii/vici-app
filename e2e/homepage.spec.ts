@@ -61,11 +61,13 @@ test.describe('homepage (logged out)', () => {
 		// feed deterministically.
 		await page.waitForLoadState('networkidle');
 
-		// "X days left" / "X hours left" drift relative to the wall clock; mask
-		// every instance so the screenshot stays stable regardless of when CI ran.
+		// Pin every wall-clock-relative "X days left" chip to a fixed string;
+		// otherwise the rendered width of the masked element itself drifts
+		// run-to-run (see `HomePage.stabilizeForSnapshot`).
+		await home.stabilizeForSnapshot();
+
 		await expect(page).toHaveScreenshot('homepage-with-markets.png', {
-			fullPage: true,
-			mask: [home.marketTimeRemaining]
+			fullPage: true
 		});
 	});
 });

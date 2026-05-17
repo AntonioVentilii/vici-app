@@ -214,6 +214,13 @@ The CI script (`npm run e2e:ci`) runs Playwright with
 Pushes from `GITHUB_TOKEN` deliberately don't re-trigger the workflow,
 so the snapshot commit doesn't loop into another E2E run.
 
+Because this policy auto-accepts any diff, a **flaky** snapshot
+manifests as constant baseline churn — a fresh "🤖 chore(e2e): update
+Playwright snapshots" commit on every push — rather than a failing
+test. If that's happening, fix the flake at the source (see
+[Keeping snapshots stable](#keeping-snapshots-stable)); don't paper
+over it.
+
 ### Keeping snapshots stable
 
 `playwright.config.ts` configures `expect.toHaveScreenshot` with:
@@ -224,15 +231,43 @@ so the snapshot commit doesn't loop into another E2E run.
   differences without flapping.
 
 When a region of the page is genuinely non-deterministic (random
-principals from dev sign-in, generated avatars, time-remaining
-counters that drift relative to the wall clock), mask it:
+principals from dev sign-in, generated avatars), mask it. Playwright
+overlays the masked element's bounding box with a magenta rectangle:
 
 ```ts
 await expect(page).toHaveScreenshot('logged-in.png', {
 	fullPage: true,
-	mask: [home.userMenu, home.marketTimeRemaining]
+	mask: [home.userMenu]
 });
 ```
+
+⚠️ `mask` does NOT pin variable-width text. The magenta rectangle takes
+the size of the element's bounding box, so a chip that renders `"7d 14h"`
+on one run and `"6d 23h"` on the next produces a different-sized
+rectangle and the snapshot diffs anyway. For wall-clock-relative text
+(the `MarketTimeRemaining` chip is the canonical example) and for any
+other element whose text varies per CI run (notably the shortened
+principal rendered by `CopyableAddress` — Juno's dev mock identity is
+deterministic within a CI run but the PocketIC emulator container
+mints a different principal on every fresh boot), overwrite the
+`textContent` to a fixed string before screenshot — call
+`home.stabilizeForSnapshot()` (defined in
+[`e2e/pages/home.page.ts`](../../../e2e/pages/home.page.ts)), which
+waits for `document.fonts.ready` and pins every time-remaining chip
+and principal-display element
+to a constant placeholder:
+
+```ts
+await home.stabilizeForSnapshot();
+
+await expect(page).toHaveScreenshot('homepage-logged-in.png', {
+	fullPage: true,
+	mask: [home.userMenu]
+});
+```
+
+If you add a new wall-clock-relative element, extend
+`stabilizeForSnapshot` there rather than reaching for another `mask`.
 
 To capture a transient state deterministically — e.g. the markets-feed
 **skeletons**, which would otherwise be replaced by real data within
