@@ -118,7 +118,7 @@
 						{#if showChallengeSlot}
 							{#if onChallenge}
 								<button
-									class="text-muted-foreground/40 hover:text-primary hover:bg-laurel-glow flex cursor-pointer items-center gap-1 rounded-lg p-1 transition-colors"
+									class="text-muted-foreground/40 hover:text-primary hover:bg-laurel-glow flex items-center gap-1 rounded-lg p-1 transition-colors"
 									aria-label="Challenge friends"
 									onclick={(e) => {
 										e.stopPropagation();

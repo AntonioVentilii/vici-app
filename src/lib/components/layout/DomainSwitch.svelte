@@ -25,7 +25,7 @@
 	</div>
 	<div class="flex gap-1">
 		<button
-			class="flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isPlaygroundExperience(
+			class="flex flex-1 flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isPlaygroundExperience(
 				$balanceDomain
 			)
 				? 'border-primary bg-primary/10 text-primary shadow-sm'
@@ -38,7 +38,7 @@
 		</button>
 
 		<button
-			class="relative flex flex-1 cursor-pointer flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isSettlement(
+			class="relative flex flex-1 flex-col items-center justify-center gap-1 rounded-md border p-2 transition-all {isSettlement(
 				$balanceDomain
 			)
 				? 'border-primary bg-primary/10 text-primary shadow-sm'

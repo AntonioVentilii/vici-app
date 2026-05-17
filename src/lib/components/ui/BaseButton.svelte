@@ -35,7 +35,6 @@
 <button
 	class="inline-flex items-center justify-center gap-2 transition-all {className}"
 	class:cursor-not-allowed={isDisabled}
-	class:cursor-pointer={isEnabled}
 	class:cursor-progress={isPending}
 	class:cursor-wait={isLoading}
 	class:opacity-35={isBlocked}

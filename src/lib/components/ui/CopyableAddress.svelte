@@ -33,7 +33,7 @@
 <span class="inline-flex items-center gap-1.5">
 	<span class="font-mono text-inherit" data-tid={TestId.PrincipalDisplay}>{displayAddress}</span>
 	<button
-		class="text-muted-foreground hover:text-foreground relative inline-flex h-5 w-5 shrink-0 cursor-pointer items-center justify-center rounded transition-colors"
+		class="text-muted-foreground hover:text-foreground relative inline-flex h-5 w-5 shrink-0 items-center justify-center rounded transition-colors"
 		aria-label="Copy {label}"
 		onclick={handleCopy}
 	>

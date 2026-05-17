@@ -15,6 +15,6 @@
 			<TriangleAlert size="48" />
 			<h3 class="clamp-4">For testing purposes only!</h3>
 		</span>
-		<button class="cursor-pointer" aria-label="Close banner" onclick={closeEnvBanner}><X /></button>
+		<button aria-label="Close banner" onclick={closeEnvBanner}><X /></button>
 	</div>
 {/if}

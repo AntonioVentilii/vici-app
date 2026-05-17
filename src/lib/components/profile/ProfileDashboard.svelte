@@ -151,7 +151,7 @@
 							bind:value={editedNickname}
 						/>
 						<BaseButton
-							class="text-yes hover:text-yes cursor-pointer"
+							class="text-yes hover:text-yes"
 							aria-label="Save"
 							onclick={handleSaveNickname}
 							status={pending
@@ -163,7 +163,7 @@
 							<Check size={24} />
 						</BaseButton>
 						<BaseButton
-							class="text-destructive hover:text-destructive cursor-pointer"
+							class="text-destructive hover:text-destructive"
 							aria-label="Cancel"
 							onclick={cancelEdit}
 							status={pending ? 'disabled' : 'enabled'}
@@ -181,7 +181,7 @@
 						{profile.nickname}
 						{#if viewerPrincipal === profile.owner}
 							<button
-								class="text-muted-foreground hover:text-primary cursor-pointer transition-colors"
+								class="text-muted-foreground hover:text-primary transition-colors"
 								aria-label="Edit Nickname"
 								onclick={() => (isEditingNickname = true)}
 							>

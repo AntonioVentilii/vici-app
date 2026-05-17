@@ -135,7 +135,7 @@
 						{@const color = categoryColor(id)}
 						<button
 							style={selected ? `border-color: ${color}40; background: ${color}0D` : undefined}
-							class="flex cursor-pointer flex-col items-start rounded-2xl border p-[18px] text-left transition-all {selected
+							class="flex flex-col items-start rounded-2xl border p-[18px] text-left transition-all {selected
 								? 'text-foreground'
 								: 'border-border text-muted-foreground bg-card'}"
 							data-tid={TestId.OnboardingInterest}
@@ -179,7 +179,7 @@
 								: 'var(--border-base)'}; border-left: 2px solid {selected
 								? a.accent
 								: 'var(--border-base)'}"
-							class="flex w-full cursor-pointer flex-col rounded-2xl border p-4 text-left transition-all {selected
+							class="flex w-full flex-col rounded-2xl border p-4 text-left transition-all {selected
 								? 'bg-[rgba(226,184,66,0.06)]'
 								: 'bg-card'}"
 							data-tid={TestId.OnboardingArchetype}
