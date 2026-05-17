@@ -6,20 +6,16 @@ print_help() {
 
 	Formats bash scripts.
 	EOF
-  # TODO: Consider using clap for argument parsing.  If not, describe the flags here.
 }
 
-# Lists all files that should be formatted.
 list_files() {
   git ls-files | filter
 }
 
-# Selects eligible files; filenames are read from stdin, one line per filename.
 filter() {
   while read -r line; do if [[ "$line" = *.sh ]] || file "$line" | grep -qw Bourne; then echo "$line"; fi; done
 }
 
-# Formatting options
 options=(-i 2)
 
 case "${1:-}" in

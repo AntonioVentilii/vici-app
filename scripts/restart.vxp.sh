@@ -4,13 +4,13 @@ source "$(dirname "$0")/lib/utils.sh" "$@"
 
 echo "Restarting VXP on $NETWORK..."
 
-# 1. Pre-create canisters to satisfy dependency requirements
 echo "Creating canister IDs for vxp_minter, vxp_ledger, and vxp_index..."
 dfx canister create vxp_minter --network "$NETWORK"
 dfx canister create vxp_ledger --network "$NETWORK"
 dfx canister create vxp_index --network "$NETWORK"
 
-# 2. Reinstall VXP stack (order: minter → ledger → index)
+# Reinstall order matters: ledger init args reference the minter, and the
+# index reads from the ledger.
 echo "Deploying vxp_minter (reinstall)..."
 dfx deploy vxp_minter --network "$NETWORK" --upgrade-unchanged --mode reinstall --yes
 
@@ -20,7 +20,6 @@ dfx deploy vxp_ledger --network "$NETWORK" --upgrade-unchanged --mode reinstall 
 echo "Deploying vxp_index (reinstall)..."
 dfx deploy vxp_index --network "$NETWORK" --upgrade-unchanged --mode reinstall --yes
 
-# 3. Initialize satellite treasury (mint authority + top-up for Juno hooks)
 echo "Initializing VXP treasury for satellite..."
 
 if [ -f "$SCRIPT_DIR/init/init.vxp-treasury.sh" ]; then

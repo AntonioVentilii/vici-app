@@ -120,16 +120,11 @@ jobs:
         run: npm run deploy
 
       - name: Initialize icdc-core (clearing + engine + registry)
-        # 1. init.clearing  — wires the registry, opens domain policies,
-        #    registers ICP / VXP collateral.
-        # 2. init.icdc-engine — registers the Vici engine (eng_0) on the
-        #    registry with the satellite + dfx-runner as admins.
-        # 3. init.registry  — registers VICI_ORACLE_V1 and seeds the 20
-        #    markets in scripts/data/markets.json so the home feed has
-        #    something to render.
-        # `init.icdc-dev-bootstrap` is a no-op without DEV_CREATOR_PRINCIPAL
-        # (we sign in via the dev mock identity each run, so there's no
-        # stable principal to pre-grant), and we skip it intentionally.
+        # Order matters: clearing wires domain policies, the engine must be
+        # registered before markets, and registry seeds the demo markets the
+        # home feed needs. `init.icdc-dev-bootstrap` is intentionally skipped:
+        # CI signs in via the dev mock identity each run, so there is no
+        # stable `DEV_CREATOR_PRINCIPAL` to pre-grant.
         run: |
           set -euo pipefail
           npm run init:clearing

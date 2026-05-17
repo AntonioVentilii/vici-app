@@ -1,8 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-# Download ckETH assets into target/ic/
-
 _DLD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [[ -z "${PROJECT_ROOT:-}" ]]; then
 	source "$_DLD_DIR/../lib/utils.sh"

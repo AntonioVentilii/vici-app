@@ -61,9 +61,6 @@ test.describe('homepage (logged out)', () => {
 		// feed deterministically.
 		await page.waitForLoadState('networkidle');
 
-		// Pin every wall-clock-relative "X days left" chip to a fixed string;
-		// otherwise the rendered width of the masked element itself drifts
-		// run-to-run (see `HomePage.stabilizeForSnapshot`).
 		await home.stabilizeForSnapshot();
 
 		await expect(page).toHaveScreenshot('homepage-with-markets.png', {
