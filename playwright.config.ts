@@ -39,6 +39,22 @@ export default defineConfig({
 		{
 			name: 'chromium',
 			use: devices['Desktop Chrome']
+		},
+		{
+			name: 'Galaxy S9+',
+			use: {
+				...devices['Galaxy S9+'],
+				screen: { width: 320, height: 658 },
+				viewport: { width: 320, height: 658 }
+			}
+		},
+		{
+			name: 'Galaxy A55',
+			use: {
+				...devices['Galaxy A55'],
+				screen: { width: 480, height: 1040 },
+				viewport: { width: 480, height: 1040 }
+			}
 		}
 	],
 	webServer: {
