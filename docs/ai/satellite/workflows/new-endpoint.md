@@ -75,10 +75,9 @@ datastore SDK gives you.
    `$lib/schema/*.ts` that the satellite imports (e.g. adding a field to
    `UserProfileSchema`) — the satellite's Candid + the FE IDL must move
    in lockstep with the schema, or `app_get_profile` and friends will
-   trap with `Unrecognized key` once the FE writes the new field. CI
-   does not yet re-run the build (the Juno docker action and the local
-   CLI produce divergent output today, so the drift check is held back),
-   so reviewers must enforce it.
+   trap with `Unrecognized key` once the FE writes the new field. CI's
+   `satellite-schema` job ([`checks.yml`](../../../../.github/workflows/checks.yml))
+   re-runs `juno functions build` and fails on any drift.
 
 5. **Call it from the FE** via `@junobuild/core`'s `call()` (or whatever
    wrapper the project ends up exposing). Wrap the call in a service
