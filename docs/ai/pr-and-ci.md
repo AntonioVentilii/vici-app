@@ -114,9 +114,9 @@ npm run quality         # = format && lint
 # Bindings (only if you changed Candid sources or upgraded an upstream canister)
 npm run did             # ./scripts/did.sh + format + lint
 
-# Satellite (run whenever you touch src/satellite/** OR a $lib/schema/*
-# file imported by src/satellite/index.ts — CI's `satellite-schema` job
-# fails on any drift it produces, so commit the regenerated outputs).
+# Satellite: run whenever you touch src/satellite/** OR a $lib/schema/*
+# file imported by src/satellite/index.ts. CI's `satellite-schema` job
+# fails on any drift it produces, so commit the regenerated outputs.
 # Pair with `npm run quality` so the drift check compares apples to apples.
 npm run juno:functions:build && npm run quality
 
