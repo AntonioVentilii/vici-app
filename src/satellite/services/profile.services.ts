@@ -1,4 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
+import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
 import { redactProfile } from '$satellite/services/privacy.services';
@@ -70,7 +71,7 @@ export const searchProfiles = (query: string): UserProfile[] => {
 		.map((profile) => redactProfile({ caller, profile }));
 };
 
-export const assertUniqueNickname = ({
+export const assertValidNickname = ({
 	data: {
 		collection,
 		key: documentKey,
@@ -87,7 +88,13 @@ export const assertUniqueNickname = ({
 		throw new Error('Nickname is required.');
 	}
 
-	const normalizedNickname = nickname.trim().toLowerCase();
+	const trimmedNickname = nickname.trim();
+
+	if (trimmedNickname.length < MIN_NICKNAME_LENGTH) {
+		throw new Error(`Nickname must be at least ${MIN_NICKNAME_LENGTH} characters.`);
+	}
+
+	const normalizedNickname = trimmedNickname.toLowerCase();
 
 	const caller = msgCaller();
 

@@ -10,6 +10,7 @@
 	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
+	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
@@ -36,7 +37,7 @@
 	});
 
 	const handleSaveNickname = async () => {
-		if (editedNickname.trim().length < 2) {
+		if (editedNickname.trim().length < MIN_NICKNAME_LENGTH) {
 			return;
 		}
 
@@ -129,7 +130,7 @@
 				{#if archetype}
 					<div
 						style="border-color: {archetype.accent}40; border-left: 2px solid {archetype.accent}"
-						class="mb-2 inline-flex items-center gap-2 rounded-[4px] border px-2.5 py-1"
+						class="mb-2 inline-flex items-center gap-2 rounded-sm border px-2.5 py-1"
 					>
 						<span
 							style="color: {archetype.accent}"
@@ -142,7 +143,7 @@
 				{#if isEditingNickname}
 					<div class="flex items-center gap-2">
 						<input
-							class="bg-foreground/5 border-border focus:ring-primary rounded-[12px] border px-3 py-1 text-2xl font-black focus:ring-2 focus:outline-none"
+							class="bg-foreground/5 border-border focus:ring-primary rounded-xl border px-3 py-1 text-2xl font-black focus:ring-2 focus:outline-none"
 							disabled={pending}
 							onkeydown={(e) => e.key === 'Enter' && handleSaveNickname()}
 							type="text"
@@ -154,7 +155,7 @@
 							onclick={handleSaveNickname}
 							status={pending
 								? 'pending'
-								: editedNickname.trim().length < 2
+								: editedNickname.trim().length < MIN_NICKNAME_LENGTH
 									? 'disabled'
 									: 'enabled'}
 						>
@@ -169,8 +170,10 @@
 							<X size={24} />
 						</BaseButton>
 					</div>
-					{#if editedNickname.trim().length < 2}
-						<p class="text-destructive mt-1 text-[10px] font-bold uppercase">Min 2 characters</p>
+					{#if editedNickname.trim().length < MIN_NICKNAME_LENGTH}
+						<p class="text-destructive mt-1 text-[10px] font-bold uppercase">
+							Min {MIN_NICKNAME_LENGTH} characters
+						</p>
 					{/if}
 				{:else}
 					<h1
@@ -311,7 +314,7 @@
 			<div class="flex flex-wrap gap-2">
 				{#each profile.interests ?? [] as interest (interest)}
 					<span
-						class="bg-foreground/5 text-foreground rounded-[4px] px-3 py-1 text-[10px] font-bold uppercase"
+						class="bg-foreground/5 text-foreground rounded-sm px-3 py-1 text-[10px] font-bold uppercase"
 					>
 						{interest}
 					</span>
