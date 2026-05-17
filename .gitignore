@@ -27,7 +27,6 @@ target
 /test-results/
 /playwright/.cache/
 
-# Local design reference (large media + prototype files). Kept locally as
-# a working reference; not part of the shipped repo. See
-# docs/ai/frontend/design.md for what's aligned and what's still open.
-/vici design team/
+
+
+
