@@ -47,6 +47,7 @@ const AppGetProfileResultSchema = j.strictObject({
 			accuracy: j.number(),
 			points: j.number(),
 			level: j.number(),
+			archetype: j.string(),
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
 			preferences: j.optional(
@@ -173,6 +174,7 @@ const AppListLeaderboardResultSchema = j.strictObject({
 			accuracy: j.number(),
 			points: j.number(),
 			level: j.number(),
+			archetype: j.string(),
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
 			preferences: j.optional(
@@ -235,6 +237,7 @@ const AppSearchProfilesResultSchema = j.strictObject({
 			accuracy: j.number(),
 			points: j.number(),
 			level: j.number(),
+			archetype: j.string(),
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
 			preferences: j.optional(

@@ -40,6 +40,7 @@ export interface AppGetProfileResult {
 						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 					level: number;
 					preferences: [] | [{ default_amount: { flow: string; manual: string } }];
+					archetype: string;
 					last_active_day: [] | [string];
 					total_trades: number;
 					win_rate: number;
@@ -109,6 +110,7 @@ export interface AppListLeaderboardResult {
 		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 		level: number;
 		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
+		archetype: string;
 		last_active_day: [] | [string];
 		total_trades: number;
 		win_rate: number;
@@ -147,6 +149,7 @@ export interface AppSearchProfilesResult {
 		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 		level: number;
 		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
+		archetype: string;
 		last_active_day: [] | [string];
 		total_trades: number;
 		win_rate: number;
