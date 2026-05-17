@@ -114,8 +114,12 @@ npm run quality         # = format && lint
 # Bindings (only if you changed Candid sources or upgraded an upstream canister)
 npm run did             # ./scripts/did.sh + format + lint
 
-# Satellite (only if you edited src/satellite/**)
-npm run juno:functions:build
+# Satellite (run whenever you touch src/satellite/** OR a $lib/schema/*
+# file imported by src/satellite/index.ts; commit the regenerated
+# .did + src/declarations/satellite/** together with the source change).
+# Pair with `npm run quality` since the Juno CLI emits in its own style.
+# Note: CI does not currently re-run this — it is enforced by review.
+npm run juno:functions:build && npm run quality
 
 # Engine sanity (after re-init or refactors that touch engine wiring)
 npm run test:engine-sync

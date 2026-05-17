@@ -59,6 +59,7 @@ datastore SDK gives you.
 
    ```bash
    npm run juno:functions:build
+   npm run quality   # align with repo prettier + eslint
    ```
 
    This regenerates:
@@ -66,8 +67,18 @@ datastore SDK gives you.
      uses).
    - `src/satellite/satellite.did` and
      `src/satellite/satellite_extension.did` (Candid surface).
+   - `src/declarations/satellite/{satellite.api.ts,satellite.did.d.ts,satellite.factory.did.js}`
+     (FE-side bindings).
 
-   **Commit all three regenerated files together with your source change.**
+   **Commit all regenerated files together with your source change.**
+   This rule also fires when you only edit a shared schema file under
+   `$lib/schema/*.ts` that the satellite imports (e.g. adding a field to
+   `UserProfileSchema`) — the satellite's Candid + the FE IDL must move
+   in lockstep with the schema, or `app_get_profile` and friends will
+   trap with `Unrecognized key` once the FE writes the new field. CI
+   does not yet re-run the build (the Juno docker action and the local
+   CLI produce divergent output today, so the drift check is held back),
+   so reviewers must enforce it.
 
 5. **Call it from the FE** via `@junobuild/core`'s `call()` (or whatever
    wrapper the project ends up exposing). Wrap the call in a service
