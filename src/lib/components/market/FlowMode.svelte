@@ -541,7 +541,7 @@
 		width: 2.25rem;
 		height: 2.25rem;
 		border-radius: 999px;
-		background: rgba(242, 236, 220, 0.08);
+		background: var(--ink-line);
 		color: var(--parchment);
 		transition:
 			transform 0.15s ease,
@@ -562,7 +562,7 @@
 		flex: 1;
 		height: 4px;
 		border-radius: 999px;
-		background: rgba(242, 236, 220, 0.08);
+		background: var(--ink-line);
 		overflow: hidden;
 	}
 	.flow-progress-fill {
@@ -845,7 +845,7 @@
 		height: 3.75rem;
 		border: 3px solid rgba(255, 107, 107, 0.25);
 		color: var(--no);
-		box-shadow: 0 10px 24px rgba(255, 107, 107, 0.12);
+		box-shadow: 0 10px 24px var(--no-wash);
 	}
 	.flow-action-skip {
 		width: 3rem;
