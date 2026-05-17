@@ -15,6 +15,10 @@ it once per session.
       component / util / store / service before creating one.
 - [ ] My code follows [`stack-and-patterns.md`](./stack-and-patterns.md)
       (Svelte 5 runes, named `Props` interface, no `any`).
+- [ ] If I'm porting / aligning anything from the design-team handoff,
+      I checked and updated
+      [`design-handoff-audit.md`](./design-handoff-audit.md) in the
+      same PR.
 - [ ] No bare clickable `<div>`s; labelled inputs; `aria-hidden` on
       decorative icons — [`a11y.md`](./a11y.md).
 - [ ] Terminology check: **prediction**, never "bet". `_ms` for milliseconds,
