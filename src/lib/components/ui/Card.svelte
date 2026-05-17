@@ -30,7 +30,7 @@
 		'flex flex-col items-start justify-between rounded-2xl border transition-all duration-hover ease-vici';
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
-		default: 'bg-card text-card-foreground border-border shadow-inset-hi',
+		default: 'bg-card text-card-foreground border-border shadow-card',
 		glass: 'bg-foreground/5 backdrop-blur-md border-foreground/10',
 		outline: 'bg-transparent border-2 border-border'
 	};

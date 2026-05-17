@@ -13,4 +13,12 @@
 		style="background-image: radial-gradient(rgba(242, 236, 220, 0.04) 1px, transparent 1px); background-size: 32px 32px; mask-image: radial-gradient(ellipse at center, black 20%, transparent 75%);"
 		class="pointer-events-none absolute inset-0"
 	></div>
+
+	<!-- Brand grain texture — adds subtle tooth to flat surfaces without
+		 reading as visible noise. `overlay` blends light/dark per pixel so
+		 the effect is symmetric across dark / light themes. -->
+	<div
+		style="background-image: url('/branding/grain.svg'); background-size: 200px 200px; mix-blend-mode: overlay;"
+		class="pointer-events-none absolute inset-0 opacity-[0.05]"
+	></div>
 </div>

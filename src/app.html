@@ -2,8 +2,61 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<link rel="icon" href="%sveltekit.assets%/favicon.png" />
+
+		<!-- Icons. SVG is preferred by modern browsers (sharp at every size);
+			 the 32 / 16 PNGs are size-targeted fallbacks for older browsers
+			 and the legacy favicon.png is kept as a final safety net. -->
+		<link rel="icon" type="image/svg+xml" href="%sveltekit.assets%/branding/vici-app-icon.svg" />
+		<link
+			rel="icon"
+			type="image/png"
+			sizes="32x32"
+			href="%sveltekit.assets%/branding/favicon-32.png"
+		/>
+		<link
+			rel="icon"
+			type="image/png"
+			sizes="16x16"
+			href="%sveltekit.assets%/branding/favicon-16.png"
+		/>
+		<link rel="icon" type="image/png" href="%sveltekit.assets%/favicon.png" />
+		<!-- iOS rejects SVG for the home-screen icon — needs a 180×180 PNG. -->
+		<link
+			rel="apple-touch-icon"
+			sizes="180x180"
+			href="%sveltekit.assets%/branding/apple-touch-icon.png"
+		/>
+
 		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+
+		<!-- Address-bar / status-bar tint. Dark default matches `--ink`; the
+			 light-scheme override matches the parchment surface. -->
+		<meta name="theme-color" content="#0e0d0b" media="(prefers-color-scheme: dark)" />
+		<meta name="theme-color" content="#f2ecdc" media="(prefers-color-scheme: light)" />
+		<meta name="color-scheme" content="dark light" />
+
+		<meta
+			name="description"
+			content="VICI — a consumer-first prediction platform. Forecast outcomes. Build a reputation. Earn XP."
+		/>
+
+		<!-- Open Graph / Twitter. The og:image is a 1200×630 raster rendered
+			 from the brand SVGs (wordmark on the ink canvas + tagline). Twitter
+			 card upgraded to `summary_large_image` to honour it. -->
+		<meta property="og:type" content="website" />
+		<meta property="og:title" content="VICI" />
+		<meta property="og:description" content="Forecast outcomes. Build a reputation. Earn XP." />
+		<meta property="og:image" content="%sveltekit.assets%/branding/og-image.png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:type" content="image/png" />
+		<meta property="og:image:alt" content="VICI — a consumer-first prediction platform." />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content="VICI" />
+		<meta name="twitter:description" content="Forecast outcomes. Build a reputation. Earn XP." />
+		<meta name="twitter:image" content="%sveltekit.assets%/branding/og-image.png" />
+		<meta name="twitter:image:alt" content="VICI — a consumer-first prediction platform." />
+
 		%sveltekit.head%
 
 		<title>VICI</title>
