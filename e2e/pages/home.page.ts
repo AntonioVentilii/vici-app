@@ -46,6 +46,57 @@ export class HomePage {
 		await this.page.goto('/');
 	}
 
+	/**
+	 * Pin everything that drifts between runs so {@link expect.toHaveScreenshot}
+	 * compares apples to apples:
+	 *
+	 * - Waits for web fonts to load so glyph metrics (and therefore the height
+	 *   of every text run) are stable. Without this, snapshots taken before
+	 *   `document.fonts.ready` use the system fallback font and any later
+	 *   run-with-fonts produces a multi-pixel diff on every character.
+	 * - Replaces every `MarketTimeRemaining` chip with a fixed-width placeholder.
+	 *   `getTimeRemaining()` is wall-clock-relative (`"7d 14h"`, `"0d 23h"`,
+	 *   `"15m remaining"`, …); the strings have different rendered widths,
+	 *   and Playwright's `mask` option overlays a magenta rectangle the size
+	 *   of the element's bounding box, so even masked the rectangle width
+	 *   drifts run-to-run and the diff fires. Owning the text content is the
+	 *   only way to make it byte-stable.
+	 * - Replaces every `PrincipalDisplay` (the shortened principal text
+	 *   rendered by `CopyableAddress`) with a fixed-width placeholder.
+	 *   Juno's dev mock identity is deterministic WITHIN a CI run but the
+	 *   PocketIC emulator container mints a different principal on every
+	 *   fresh boot, so the rendered shortened form (e.g. `aapr-r…dnh-4qe`
+	 *   vs `xqzm-i…inh-4qe`) drifts run-to-run wherever a `CopyableAddress`
+	 *   appears outside the (already-masked) `userMenu` — most notably on
+	 *   the profile page body. Same byte-stability rationale as the time
+	 *   chip: pinning the text is the only fix that doesn't trade one
+	 *   variable-width drift for another.
+	 *
+	 * Call this immediately before any `toHaveScreenshot` in a spec that
+	 * renders market cards or signed-in profile content.
+	 */
+	async stabilizeForSnapshot(): Promise<void> {
+		await this.page.evaluate(async () => {
+			await document.fonts.ready;
+		});
+
+		await this.page.evaluate(
+			({ timeRemainingSel, principalSel }) => {
+				for (const el of document.querySelectorAll<HTMLElement>(timeRemainingSel)) {
+					el.textContent = '-- remaining';
+				}
+
+				for (const el of document.querySelectorAll<HTMLElement>(principalSel)) {
+					el.textContent = 'xxxxxxx…xxxxxxx';
+				}
+			},
+			{
+				timeRemainingSel: `[data-tid="${TestId.MarketTimeRemaining}"]`,
+				principalSel: `[data-tid="${TestId.PrincipalDisplay}"]`
+			}
+		);
+	}
+
 	async openSignInModal(): Promise<void> {
 		await this.signInButton.click();
 	}
@@ -62,15 +113,30 @@ export class HomePage {
 	 * onboarding (writes `archetype` to the satellite); subsequent tests
 	 * inherit the already-onboarded state and never see the overlay.
 	 *
-	 * We race the overlay against the post-sign-in shell (`userMenu`):
-	 * whichever appears first tells us which path we're on, and we either
-	 * walk through onboarding or no-op.
+	 * Detecting which path we're on is subtle: `userMenu` lives in
+	 * `Header` (already mounted, just flips visibility on sign-in) while
+	 * `OnboardingFlow` is gated by an `{#if needsOnboarding}` block in
+	 * `(app)/+layout.svelte` and has to be created + inserted. Svelte
+	 * flushes the header update one microtask before the `{#if}` block
+	 * creates the overlay, so a `Promise.race(onboardingFlow, userMenu)`
+	 * resolves on `userMenu` first and `isVisible(onboardingFlow)`
+	 * synchronously after is `false` — even for a brand-new profile
+	 * that genuinely needs onboarding. Result: the first test in the
+	 * suite (the only one that hits a fresh satellite) silently skips
+	 * onboarding ~half the time, leaving the profile at its default
+	 * principal-derived nickname and producing flaky `tacitus` vs
+	 * `eqorn…k-4qe` baselines on every snapshot that renders the
+	 * leaderboard / profile body.
+	 *
+	 * Fix: wait for `userMenu` (cheap — auth pipeline has fired) AND
+	 * `networkidle` (the satellite `ensureProfile` / `upsertProfile`
+	 * round-trip has settled and the `{#if needsOnboarding}` block has
+	 * had room to flush). After both, the overlay's presence is
+	 * deterministic: visible ⇒ walk through, hidden ⇒ no-op.
 	 */
 	async completeOnboarding(): Promise<void> {
-		await Promise.race([
-			this.onboardingFlow.waitFor({ state: 'visible' }),
-			this.userMenu.waitFor({ state: 'visible' })
-		]);
+		await this.userMenu.waitFor({ state: 'visible' });
+		await this.page.waitForLoadState('networkidle');
 
 		if (!(await this.onboardingFlow.isVisible())) {
 			return;
