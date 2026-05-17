@@ -7,7 +7,7 @@ import {
 } from '$satellite/services/engine-sync.services';
 import { listLeaderboard as listLeaderboardFn } from '$satellite/services/leaderboard.services';
 import {
-	assertUniqueNickname,
+	assertValidNickname,
 	getProfile as getProfileFn,
 	searchProfiles as searchProfilesFn
 } from '$satellite/services/profile.services';
@@ -161,7 +161,7 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 	collections: assertSetDocCollections,
 	assert: (context) => {
 		const fn: Record<AssertSetDocCollection, (ctx: AssertSetDocContext) => void> = {
-			[Collection.PROFILES]: assertUniqueNickname,
+			[Collection.PROFILES]: assertValidNickname,
 			[Collection.ROLES]: assertSetRole
 		};
 

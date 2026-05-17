@@ -3,6 +3,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import ViciChar from '$lib/components/characters/ViciChar.svelte';
 	import { ARCHETYPES } from '$lib/constants/archetypes.constants';
+	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { categoryColor } from '$lib/utils/category-color.utils';
 
@@ -57,10 +58,10 @@
 				Step {step + 1} of 5
 			</span>
 		</div>
-		<div class="h-[3px] overflow-hidden rounded-full bg-[rgba(242,236,220,0.08)]">
+		<div class="h-0.75 overflow-hidden rounded-full bg-[rgba(242,236,220,0.08)]">
 			<div
 				style="width: {progressWidth}; transition-timing-function: var(--ease-vici)"
-				class="bg-primary h-full transition-all duration-[320ms]"
+				class="bg-primary h-full transition-all duration-320"
 			></div>
 		</div>
 	</div>
@@ -81,7 +82,7 @@
 				<p class="text-muted-foreground text-[15px] leading-relaxed">
 					Real markets. Real signals. Make calls in seconds, build a track record over time.
 				</p>
-				<div class="border-border bg-card shadow-inset-hi mt-6 rounded-2xl border p-[18px]">
+				<div class="border-border bg-card shadow-inset-hi mt-6 rounded-2xl border p-4.5">
 					<div class="flex items-center justify-between">
 						<span class="text-hold text-[10px] font-bold tracking-widest uppercase"> MACRO </span>
 						<span class="text-muted-foreground font-mono text-[11px] tabular-nums">2.4M vol</span>
@@ -130,7 +131,7 @@
 						{@const color = categoryColor(id)}
 						<button
 							style={selected ? `border-color: ${color}40; background: ${color}0D` : undefined}
-							class="flex flex-col items-start rounded-2xl border p-[18px] text-left transition-all {selected
+							class="flex flex-col items-start rounded-2xl border p-4.5 text-left transition-all {selected
 								? 'text-foreground'
 								: 'border-border text-muted-foreground bg-card'}"
 							data-tid={TestId.OnboardingInterest}
@@ -243,10 +244,10 @@
 		{/if}
 	</div>
 
-	<div class="border-border border-t px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+24px)]">
+	<div class="border-border border-t px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0)+24px)]">
 		{#if step === 0}
 			<button
-				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold"
+				class="bg-primary text-primary-foreground w-full rounded-xl py-4 text-base font-semibold"
 				data-tid={TestId.OnboardingPrimary}
 				onclick={next}
 			>
@@ -254,7 +255,7 @@
 			</button>
 		{:else if step === 1}
 			<button
-				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold"
+				class="bg-primary text-primary-foreground w-full rounded-xl py-4 text-base font-semibold"
 				data-tid={TestId.OnboardingPrimary}
 				onclick={next}
 			>
@@ -262,7 +263,7 @@
 			</button>
 		{:else if step === 2}
 			<button
-				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold transition-opacity"
+				class="bg-primary text-primary-foreground w-full rounded-xl py-4 text-base font-semibold transition-opacity"
 				class:opacity-35={interests.size < 3}
 				data-tid={TestId.OnboardingPrimary}
 				disabled={interests.size < 3}
@@ -272,7 +273,7 @@
 			</button>
 		{:else if step === 3}
 			<button
-				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold transition-opacity"
+				class="bg-primary text-primary-foreground w-full rounded-xl py-4 text-base font-semibold transition-opacity"
 				class:opacity-35={!archetype}
 				data-tid={TestId.OnboardingPrimary}
 				disabled={!archetype}
@@ -282,10 +283,10 @@
 			</button>
 		{:else if step === 4}
 			<button
-				class="bg-primary text-primary-foreground w-full rounded-[12px] py-4 text-base font-semibold transition-opacity"
-				class:opacity-35={handle.length < 3}
+				class="bg-primary text-primary-foreground w-full rounded-xl py-4 text-base font-semibold transition-opacity"
+				class:opacity-35={handle.length < MIN_NICKNAME_LENGTH}
 				data-tid={TestId.OnboardingPrimary}
-				disabled={handle.length < 3}
+				disabled={handle.length < MIN_NICKNAME_LENGTH}
 				onclick={() => onComplete({ handle, archetype, interests: Array.from(interests) })}
 			>
 				Enter VICI
