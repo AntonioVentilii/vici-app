@@ -40,7 +40,6 @@
 				categoryId: selectedCategoryId,
 				adminPrincipal
 			});
-			// Success notification logic...
 		} finally {
 			saving = false;
 		}

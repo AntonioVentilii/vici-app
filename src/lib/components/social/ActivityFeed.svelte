@@ -46,7 +46,7 @@
 				const following = await getFollowing();
 				activities = await getFriendActivities({ friends: following });
 			} else if (mode === 'user' && userPrincipal) {
-				// For now, we reuse global and filter, but ideally we'd have a specific API
+				// No per-user activity endpoint yet — filter the global feed client-side.
 				const all = await getGlobalActivities();
 				activities = all.filter((a) => a.user === userPrincipal);
 			} else {

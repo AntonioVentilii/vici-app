@@ -45,7 +45,6 @@ export const getLedgerBalances = async (): Promise<Record<string, bigint>> => {
 	try {
 		const account = getIcrcAccount(principal);
 
-		// 1. Fetch Ledger Balances for supported tokens
 		const balancePromises = SUPPORTED_TOKENS.map((token) =>
 			getLedgerBalance({
 				identity,
@@ -83,7 +82,6 @@ export const getCollateralBalances = async (
 	}
 
 	try {
-		// 2. Fetch Collateral Balances
 		return await getAccountState({
 			identity,
 			params: { refresh: toNullable(true), domain: toNullable(domain) }

@@ -122,7 +122,6 @@
 			</p>
 		</div>
 
-		<!-- Question -->
 		<div class="space-y-2">
 			<label
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
@@ -139,7 +138,6 @@
 			/>
 		</div>
 
-		<!-- Description (optional) -->
 		<div class="space-y-2">
 			<label
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
@@ -157,7 +155,6 @@
 			></textarea>
 		</div>
 
-		<!-- Expiry -->
 		<div class="space-y-2">
 			<label
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
@@ -173,7 +170,6 @@
 			/>
 		</div>
 
-		<!-- Stakes -->
 		<div class="space-y-3">
 			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">Stakes</span>
 			<div class="grid grid-cols-2 gap-3">
@@ -202,7 +198,6 @@
 			</div>
 		</div>
 
-		<!-- Audience -->
 		<div class="space-y-3">
 			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				>Who can play?</span
@@ -272,7 +267,6 @@
 			</div>
 		{/if}
 
-		<!-- Explainer -->
 		<div class="bg-primary/5 ring-primary/10 rounded-2xl p-4 ring-1 ring-inset">
 			<p class="text-muted-foreground text-xs leading-relaxed">
 				<strong>How it works:</strong> Your challenge appears in the markets feed.

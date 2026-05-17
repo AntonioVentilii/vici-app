@@ -11,17 +11,13 @@ BUILD_SCRIPTS_DIR="$SCRIPTS_ROOT/build"
 export SCRIPTS_LIB SCRIPTS_ROOT PROJECT_ROOT BUILD_SCRIPTS_DIR
 export SCRIPT_DIR="$SCRIPTS_ROOT"
 
-# Default network
 NETWORK="local"
 
-# Acceptable networks
 ACCEPTABLE_NETWORKS=("local" "staging")
 
-# Function to check if the network is acceptable
 check_network() {
 	local requested_network=$1
 
-	# Remove leading dashes if any
 	requested_network=${requested_network#--}
 
 	if [[ -z "$requested_network" ]]; then
@@ -39,7 +35,6 @@ check_network() {
 	exit 1
 }
 
-# Parse basic arguments to find network
 while [[ $# -gt 0 ]]; do
 	case $1 in
 		local | staging)
@@ -55,7 +50,6 @@ while [[ $# -gt 0 ]]; do
 			shift
 			;;
 		*)
-			# Check if it's an invalid network argument
 			if [[ "$1" == --* ]]; then
 				check_network "${1#--}"
 			fi
@@ -64,7 +58,8 @@ while [[ $# -gt 0 ]]; do
 	esac
 done
 
-# Final validation (in case it was set directly but incorrectly, or not caught by loop)
+# Final validation: catches the case where `NETWORK` was set in the environment
+# (bypassing the loop) but to an invalid value.
 check_network "$NETWORK"
 
 export NETWORK

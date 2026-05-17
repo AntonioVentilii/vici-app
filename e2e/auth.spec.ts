@@ -30,7 +30,6 @@ test.describe('authentication (dev sign-in)', () => {
 		// late and CI auto-commits a "new" snapshot on the next run.
 		await page.waitForLoadState('networkidle');
 
-		// Pin every wall-clock-relative "X days left" chip to a fixed string.
 		await home.stabilizeForSnapshot();
 
 		// Mask the user-menu trigger only — dev sign-in mints a fresh principal

@@ -58,7 +58,6 @@
 				return;
 			}
 
-			// Basic validation
 			for (const item of data) {
 				if (!item.title || !item.description || !item.expiryDate) {
 					error = 'Each market must have a title, description, and expiryDate.';
@@ -144,7 +143,6 @@
 	</div>
 
 	<div class="space-y-6">
-		<!-- Drop Zone -->
 		<div
 			class="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 transition-all {dragging
 				? 'border-primary bg-primary/10'
@@ -197,7 +195,6 @@
 			</div>
 		{/if}
 
-		<!-- Example Section -->
 		<div class="space-y-3">
 			<label
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"

@@ -441,8 +441,6 @@ export const syncRoleToEngineOnDelete = async (ctx: OnDeleteDocContext): Promise
 
 	const prevRole = nonNullish(deletedDoc) ? readRoleFromDoc(deletedDoc.data) : undefined;
 
-	// No-op if the deleted doc had data but we couldn't decode it — see JSDoc above
-	// for why we don't blindly revoke all roles. Log so operators can reconcile.
 	if (nonNullish(deletedDoc) && isNullish(prevRole)) {
 		logError({
 			message: 'engine_sync_decode_failed',

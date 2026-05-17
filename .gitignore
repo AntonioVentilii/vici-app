@@ -2,12 +2,10 @@
 
 .eslintcache
 
-# Various IDEs and Editors
 .vscode/
 .idea/
 **/*~
 
-# Mac OSX temporary files
 .DS_Store
 **/.DS_Store
 
@@ -25,7 +23,6 @@ static/workers
 
 target
 
-# Playwright E2E
 /playwright-report/
 /test-results/
 /playwright/.cache/

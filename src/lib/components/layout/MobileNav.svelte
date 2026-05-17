@@ -40,5 +40,4 @@
 	{/each}
 </nav>
 
-<!-- Padding for fixed nav -->
 <div class="h-20 md:hidden"></div>

@@ -9,12 +9,10 @@ download_did() {
 
   local out_path="${dir}/${out_filename}"
 
-  # Extract repository, branch, and file path from the raw URL
   local repo=$(echo "$raw_url" | awk -F '/' '{print $4"/"$5}')
   local branch=$(echo "$raw_url" | awk -F '/' '{print $6}')
   local file_path=$(echo "$raw_url" | awk -F "$branch/" '{print $2}')
 
-  # Get the latest commit hash for the specified file
   local api_url="https://api.github.com/repos/${repo}/commits?path=${file_path}&sha=${branch}"
   local commit_hash=$(curl -s "$api_url" | jq -r '.[0].sha')
 
@@ -31,13 +29,10 @@ download_did() {
   } >"${out_path}"
 }
 
-: Move to root of the repo
 cd "$SCRIPT_DIR/.."
 
-: Import canisters
 mkdir -p src/declarations/registry
 download_did https://raw.githubusercontent.com/AntonioVentilii/icdc-core/main/src/registry/registry.did "registry.did" "src/declarations/registry"
 
 mkdir -p src/declarations/clearing
 download_did https://raw.githubusercontent.com/AntonioVentilii/icdc-core/main/src/clearing/clearing.did "clearing.did" "src/declarations/clearing"
-: Fin

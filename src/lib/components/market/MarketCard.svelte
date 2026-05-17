@@ -88,7 +88,6 @@
 				</p>
 
 				<div class="mt-auto space-y-5">
-					<!-- Probabilities Area -->
 					<div class="grid grid-cols-2 gap-4">
 						{#if market.payoffType === 'Binary'}
 							<BinaryProbabilities
@@ -104,7 +103,6 @@
 						{/if}
 					</div>
 
-					<!-- Footer Stats -->
 					<div class="border-border flex items-center justify-between border-t pt-5">
 						<div class="text-muted-foreground/60 flex items-center gap-1.5">
 							<Clock size={14} />

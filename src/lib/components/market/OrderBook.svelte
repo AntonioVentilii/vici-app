@@ -158,7 +158,6 @@
 		</div>
 	{:else}
 		<div class="space-y-1">
-			<!-- Asks (Sells) -->
 			<div class="flex flex-col-reverse">
 				{#each displayAsks as ask (ask.price)}
 					<button
@@ -169,7 +168,6 @@
 							: ''}"
 						onclick={() => handlePriceSelect(ask.price)}
 					>
-						<!-- Depth Bar -->
 						<div
 							style="width: {calculateDepthPercentage({ qty: ask.totalQty, maxQty: maxQty() })}%"
 							class="absolute inset-y-0 right-0 bg-red-500/5 transition-all group-hover:bg-red-500/10"
@@ -189,7 +187,6 @@
 				{/each}
 			</div>
 
-			<!-- Spread -->
 			<div class="border-border flex items-center justify-between border-y px-2 py-4">
 				<span class="text-muted-foreground text-[10px] font-black tracking-widest uppercase"
 					>Spread</span
@@ -201,7 +198,6 @@
 				{/if}
 			</div>
 
-			<!-- Bids (Buys) -->
 			<div class="flex flex-col">
 				{#each displayBids as bid (bid.price)}
 					<button
@@ -212,7 +208,6 @@
 							: ''}"
 						onclick={() => handlePriceSelect(bid.price)}
 					>
-						<!-- Depth Bar -->
 						<div
 							style="width: {calculateDepthPercentage({ qty: bid.totalQty, maxQty: maxQty() })}%"
 							class="absolute inset-y-0 right-0 bg-green-500/5 transition-all group-hover:bg-green-500/10"

@@ -17,7 +17,6 @@
 </script>
 
 <div class="border-border bg-card overflow-hidden rounded-3xl border transition-all">
-	<!-- Tab-like Header -->
 	<div class="border-border bg-foreground/5 flex border-b">
 		{#each ['Odds', 'History', 'Rules'] as tab (tab)}
 			<button
@@ -34,7 +33,6 @@
 	<div class="min-h-[400px] p-6">
 		{#if selectedTab === 'Odds'}
 			<div class="space-y-8">
-				<!-- High-impact Time Left -->
 				<div class="bg-primary/10 ring-primary/20 rounded-2xl p-4 text-center ring-1">
 					<span class="text-primary/60 text-[10px] font-black tracking-widest uppercase">
 						Trading Ends In
@@ -44,7 +42,6 @@
 					</div>
 				</div>
 
-				<!-- Trend Chart -->
 				<ProbabilityChart />
 
 				<div class="border-border space-y-4 border-t pt-4">
@@ -101,7 +98,6 @@
 			</div>
 		{/if}
 
-		<!-- Social links (Visual footer, always present) -->
 		<div class="border-border text-muted-foreground mt-12 flex justify-center gap-4 border-t pt-6">
 			<span class="text-xl">𝕏</span>
 			<span class="text-xl">✈</span>

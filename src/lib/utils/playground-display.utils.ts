@@ -16,13 +16,8 @@ import type { Token } from '$lib/types/token';
 import { formatAvailableUsd, formatCurrency, formatToken } from '$lib/utils/format.utils';
 
 /**
- * Playground (VXP) vs live settlement labels and amount formatting for portfolio and trade UI.
- */
-/**
- * Clearing 6-decimal scale shown as VXP 1:1 (no $).
- *
- * VXP is framed as a point-like currency, so balances render as whole numbers
- * (no fractional part) to reinforce the "points" feel.
+ * VXP balances render as whole numbers (no fractional part) to reinforce the
+ * "points" feel, even though the underlying clearing scale is 6 decimals.
  */
 export const formatPlaygroundClearingAsVxp = (value: bigint): string =>
 	`${formatToken({
@@ -31,14 +26,9 @@ export const formatPlaygroundClearingAsVxp = (value: bigint): string =>
 		displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS
 	})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
 
-/**
- * @deprecated Use `formatPlaygroundClearingAsVxp`; kept for existing imports.
- */
+/** @deprecated Use {@link formatPlaygroundClearingAsVxp}. */
 export const formatPlaygroundVxpAmount = formatPlaygroundClearingAsVxp;
 
-/**
- * Available margin for UI: VXP-style in playground, USD otherwise.
- */
 export const formatAvailableMarginForUi = ({
 	value,
 	playground
@@ -68,8 +58,9 @@ const sumAssetWorthValueUsd = (assets: ClearingDid.AssetWorth[]): bigint =>
 	assets.reduce((sum, asset) => sum + asset.value_usd, ZERO);
 
 /**
- * “Available” for simple wallet copy: collateral value at mark minus margin reserved for open activity.
- * Uses `assets[].value_usd` when present; otherwise `fallbackCollateralMarginUnits`.
+ * "Available" margin for simple wallet copy: collateral value at mark minus
+ * margin reserved for open activity. Uses `assets[].value_usd` when present;
+ * otherwise `fallbackCollateralMarginUnits`.
  */
 export const intuitiveAvailableMarginUsd = ({
 	assets,
@@ -91,9 +82,6 @@ export const intuitiveAvailableMarginUsd = ({
 	return atMark > locked ? atMark - locked : ZERO;
 };
 
-/**
- * Label for quick-bet chips: amount with VXP symbol or `$` prefix.
- */
 export const quickBetChipLabel = ({
 	amount,
 	playground
@@ -102,27 +90,15 @@ export const quickBetChipLabel = ({
 	playground: boolean;
 }): string => (playground ? `${amount} ${PLAYGROUND_DISPLAY_SYMBOL}` : `$${amount}`);
 
-/**
- * Unit label for flow trade entry (VXP in playground, USD otherwise).
- */
 export const flowTradeDenominationLabel = (playground: boolean): 'VXP' | 'USD' =>
 	playground ? PLAYGROUND_DISPLAY_SYMBOL : 'USD';
 
-/**
- * Label for locked-capacity UI (VXP vs settlement unit).
- */
 export const lockedCapacityDenominationLabel = (playground: boolean): LockedCapacityDisplayUnit =>
 	playground ? PLAYGROUND_DISPLAY_SYMBOL : SETTLEMENT_LOCKED_CAPACITY_LABEL;
 
-/**
- * Suffix appended to potential-return figures in playground (space + VXP symbol) or empty.
- */
 export const potentialReturnUnitSuffix = (playground: boolean): string =>
 	playground ? ` ${PLAYGROUND_DISPLAY_SYMBOL}` : '';
 
-/**
- * Single-line portfolio P&L with optional VXP suffix.
- */
 export const formatPortfolioPnLStatLine = ({
 	totalPnL,
 	playground
@@ -135,9 +111,6 @@ export const formatPortfolioPnLStatLine = ({
 	return playground ? `${core} ${PLAYGROUND_DISPLAY_SYMBOL}` : core;
 };
 
-/**
- * Portfolio holdings summary: VXP token amount or fiat token currency from a sample token.
- */
 export const formatPortfolioHoldingsStatLine = ({
 	playground,
 	totalPortfolioValue,
@@ -161,9 +134,6 @@ export const formatPortfolioHoldingsStatLine = ({
 	return formatCurrency({ value: totalPortfolioValue, decimals: dec, symbol: sym });
 };
 
-/**
- * Position P&L string with optional VXP unit in playground mode.
- */
 export const formatPositionPnLWithOptionalUnit = ({
 	pnl,
 	playground

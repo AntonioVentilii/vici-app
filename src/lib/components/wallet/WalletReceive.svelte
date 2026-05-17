@@ -19,7 +19,6 @@
 <div class="flex flex-col items-center space-y-6 text-center">
 	<div class="border-border bg-card rounded-2xl border p-4">
 		<div class="bg-foreground/5 flex h-48 w-48 items-center justify-center rounded-lg">
-			<!-- Placeholder QR -->
 			<span class="text-muted-foreground text-xs font-bold">QR CODE PLACEHOLDER</span>
 		</div>
 	</div>

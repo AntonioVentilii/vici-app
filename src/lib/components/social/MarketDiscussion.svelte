@@ -133,7 +133,6 @@
 </script>
 
 <div class="flex flex-col gap-6">
-	<!-- Input -->
 	<div class="glassmorphism rounded-2xl p-4">
 		<textarea
 			class="border-border bg-background/50 focus:ring-primary/50 w-full resize-none rounded-xl border p-4 text-sm focus:ring-2 focus:outline-none"
@@ -152,7 +151,6 @@
 		</div>
 	</div>
 
-	<!-- List -->
 	<div class="flex flex-col gap-4">
 		{#if loading}
 			<div class="flex justify-center py-8">

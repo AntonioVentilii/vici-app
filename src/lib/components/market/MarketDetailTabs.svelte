@@ -74,7 +74,6 @@
 		{:else if activeTabId === 'activity'}
 			<div class="space-y-8">
 				{#if positions.length > 0 || activeOrders.length > 0}
-					<!-- Positions Section -->
 					{#if positions.filter((p) => p.netQty !== ZERO).length > 0}
 						<div class="space-y-4">
 							<h5 class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
@@ -144,7 +143,6 @@
 						</div>
 					{/if}
 
-					<!-- Active Orders Section -->
 					{#if activeOrders.length > 0}
 						<div class="space-y-4">
 							<h5 class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">

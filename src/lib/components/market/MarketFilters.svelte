@@ -37,7 +37,6 @@
 </script>
 
 <div class="space-y-4">
-	<!-- Primary: Status tabs + Search -->
 	<div class="flex flex-col items-center justify-between gap-6 lg:flex-row-reverse lg:items-start">
 		<div class="relative w-full lg:max-w-sm">
 			<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
@@ -78,7 +77,6 @@
 		</div>
 	</div>
 
-	<!-- Secondary: dropdowns -->
 	<div class="flex flex-wrap items-center gap-3">
 		<select
 			class={selectClasses}

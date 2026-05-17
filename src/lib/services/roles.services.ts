@@ -39,7 +39,7 @@ export const listRoles = async (): Promise<UserRoleEntry[]> => {
 				const profile = await getProfile(doc.key);
 				entry.nickname = profile.data.nickname;
 			} catch {
-				// Profile unavailable, display principal only
+				// Best-effort enrichment; fall back to bare principal on lookup failure.
 			}
 
 			return entry;
@@ -80,9 +80,6 @@ export const setRole = async ({
 	});
 };
 
-/**
- * Deletes a user's role document.
- */
 export const removeRole = async (principal: PrincipalText): Promise<void> => {
 	const existingDoc = await getDoc<RoleDoc>({
 		collection: Collection.ROLES,

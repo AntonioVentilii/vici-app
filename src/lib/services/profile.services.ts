@@ -52,9 +52,6 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 	};
 };
 
-/**
- * Updates interest tags on the user's profile.
- */
 export const updateInterests = async ({
 	principal,
 	interests
@@ -119,9 +116,6 @@ export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
 	return items as UserProfile[];
 };
 
-/**
- * Ensures a profile document exists in Juno, then returns its data.
- */
 export const ensureProfile = async (user: User): Promise<UserProfile> => {
 	const principal = user.key;
 	const profileDoc = await getProfile(principal);
@@ -155,8 +149,8 @@ export const ensureProfile = async (user: User): Promise<UserProfile> => {
 };
 
 /**
- * Returns the display name.
- * Profiles are now redacted server-side, but we still handle fallback to principal if needed.
+ * Profiles are redacted server-side per visibility rules; this still falls back
+ * to a shortened principal so the UI never renders an empty name.
  */
 export const getDisplayName = ({
 	profile
@@ -284,9 +278,6 @@ export const calculateAndSyncStats = async ({
 	});
 };
 
-/**
- * Updates daily login streak when the calendar day changes.
- */
 export const recordActivity = async (principal: PrincipalText): Promise<void> => {
 	const profileDoc = await getProfile(principal);
 	const [today] = new Date().toISOString().split('T');

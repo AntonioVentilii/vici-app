@@ -172,7 +172,6 @@
 		title="Your"
 	/>
 
-	<!-- Balances Cards -->
 	<div class="flex w-full flex-col gap-6 lg:flex-row">
 		<div class="grow">
 			<WalletStats
@@ -193,7 +192,6 @@
 
 	<CollateralModal isOpen={isCollateralModalOpen} onClose={() => (isCollateralModalOpen = false)} />
 
-	<!-- Operations -->
 	<Card padding="none">
 		<Tabs {tabs} bind:activeTab />
 

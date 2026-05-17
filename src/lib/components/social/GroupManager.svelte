@@ -30,7 +30,6 @@
 	let activeFriends = $state<Relation[]>([]);
 	let friendProfiles = $state<Map<string, UserProfile>>(new Map());
 
-	// Modals
 	let isCreateModalOpen = $state(false);
 	let isManageModalOpen = $state(false);
 
@@ -38,7 +37,6 @@
 	let newGroupDesc = $state('');
 	let selectedGroup = $state<RegistryDid.Group | null>(null);
 
-	// Action loading
 	let processing = $state(false);
 
 	onMount(async () => {
@@ -49,7 +47,6 @@
 		loading = true;
 
 		try {
-			// In realistic scenario we'd query all groups we belong to.
 			const all = await listGroups();
 			groups = all.filter(
 				(g) =>
@@ -58,7 +55,6 @@
 					g.members.some((m) => m.toText() === userPrincipal)
 			);
 
-			// Fetch active friends to show in Add Member list
 			activeFriends = await getFriends();
 
 			for (const relation of activeFriends) {

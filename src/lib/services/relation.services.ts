@@ -6,9 +6,6 @@ import { isNullish } from '@dfinity/utils';
 import { deleteDoc, getDoc, type Doc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
-/**
- * Creates a pending friend relation between sender and target.
- */
 export const sendFriendRequest = async ({
 	target
 }: {
@@ -18,9 +15,6 @@ export const sendFriendRequest = async ({
 	await functions.sendFriendRequest({ target });
 };
 
-/**
- * Marks a friend relation as active.
- */
 export const acceptFriendRequest = async ({
 	currentRelation
 }: {
@@ -29,9 +23,6 @@ export const acceptFriendRequest = async ({
 	await functions.acceptFriendRequest({ relationId: currentRelation.key });
 };
 
-/**
- * Marks a friend relation as rejected.
- */
 export const rejectFriendRequest = async ({
 	currentRelation
 }: {
@@ -41,7 +32,8 @@ export const rejectFriendRequest = async ({
 };
 
 /**
- * Removes a friend relation and syncs group admins.
+ * Removes a friend relation and rebalances group admins so groups don't end up
+ * pointing at a no-longer-friend pair.
  */
 export const unfriendUser = async (params: {
 	sender: PrincipalText;
@@ -72,18 +64,12 @@ export const unfriendUser = async (params: {
 	}
 };
 
-/**
- * Active friend relations that include the user.
- */
 export const getFriends = async (): Promise<Relation[]> => {
 	const { items } = await functions.listFriends();
 
 	return items as Relation[];
 };
 
-/**
- * Pending incoming friend requests for the user.
- */
 export const getFriendRequests = async (): Promise<Doc<Relation>[]> => {
 	const { items } = await functions.listFriendRequests();
 
@@ -97,9 +83,6 @@ export const getFriendRequests = async (): Promise<Doc<Relation>[]> => {
 	});
 };
 
-/**
- * Friendships that the user explicitly rejected or was involved in rejecting.
- */
 export const getRejectedFriendships = async (): Promise<Doc<Relation>[]> => {
 	const { items } = await functions.listRejectedFriendships();
 
@@ -113,9 +96,6 @@ export const getRejectedFriendships = async (): Promise<Doc<Relation>[]> => {
 	});
 };
 
-/**
- * Creates or overwrites an active follow from sender to target.
- */
 export const followUser = async ({
 	target
 }: {
@@ -125,9 +105,6 @@ export const followUser = async ({
 	await functions.followUser({ target });
 };
 
-/**
- * Deletes the follow relation document for sender->target.
- */
 export const unfollowUser = async (params: {
 	sender: PrincipalText;
 	target: PrincipalText;
@@ -153,18 +130,12 @@ export const unfollowUser = async (params: {
 	}
 };
 
-/**
- * Principals the user follows.
- */
 export const getFollowing = async (): Promise<PrincipalText[]> => {
 	const { items } = await functions.listFollowing();
 
 	return items.map((r) => r.participants[1]);
 };
 
-/**
- * Principals following the user.
- */
 export const getFollowers = async (): Promise<PrincipalText[]> => {
 	const { items } = await functions.listFollowers();
 

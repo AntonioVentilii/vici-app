@@ -21,7 +21,6 @@ source "$(dirname "$0")/../lib/utils.sh" "$@"
 set -euo pipefail
 
 SATELLITE="${VICI_JUNO_SATELLITE_PRINCIPAL:-auamu-4x777-77775-aaaaa-cai}"
-# 1e11 base units @ 4 decimals => 10,000,000 VXP
 TOPUP="${VXP_TREASURY_TOPUP_BASE_UNITS:-100000000000}"
 
 echo "Satellite (VXP sender): $SATELLITE"

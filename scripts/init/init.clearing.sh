@@ -4,12 +4,10 @@ source "$(dirname "$0")/../lib/utils.sh" "$@"
 
 echo "Starting clearing initialization on $NETWORK..."
 
-# 1. Set Registry Canister
 REGISTRY=$(dfx canister id registry --network "$NETWORK")
 echo "Setting registry canister ID $REGISTRY in clearing canister..."
 dfx canister call clearing set_registry_canister "(principal \"$REGISTRY\")" --network "$NETWORK"
 
-# 1b. Domain policies (Settlement + ViciXp)
 echo "Configuring balance domain policies (Settlement, ViciXp)..."
 dfx canister call clearing update_domain_policy "(record {
   domain = variant { Settlement };
@@ -48,7 +46,6 @@ VXP_ASSET_ID="${VXP_ASSET_ID:-vxp}"
 
 USD_DECIMALS=4
 
-# 2a. ICP (Settlement only)
 echo "Registering ICP collateral asset (asset_id=$ICP_ASSET_ID, domains: Settlement)..."
 dfx canister call clearing register_icrc_asset "(record {
     asset_id = \"$ICP_ASSET_ID\";
@@ -64,7 +61,6 @@ dfx canister call clearing update_asset_price "(record {
     price = record { decimal = record { value = 30000 : nat; decimals = $USD_DECIMALS : nat8 }; oracle_id = null; timestamp = null };
 })" --network "$NETWORK"
 
-# 2b. VXP (ViciXp / playground only)
 echo "Registering VXP collateral asset (asset_id=$VXP_ASSET_ID, domains: ViciXp; ledger $VXP_LEDGER)..."
 dfx canister call clearing register_icrc_asset "(record {
     asset_id = \"$VXP_ASSET_ID\";
@@ -80,7 +76,6 @@ dfx canister call clearing update_asset_price "(record {
     price = record { decimal = record { value = 10000 : nat; decimals = $USD_DECIMALS : nat8 }; oracle_id = null; timestamp = null };
 })" --network "$NETWORK"
 
-# 3. Add Clearing as controller of vUSD Ledger
 VUSD_LEDGER=$(dfx canister id ledger --network "$NETWORK" 2>/dev/null || echo "5uhob-dyaaa-aaaaj-qqwwa-cai")
 echo "Guaranteeing Clearing canister as controller of vUSD Ledger..."
 CLEARING_CANISTER=$(dfx canister id clearing --network "$NETWORK")

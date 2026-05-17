@@ -132,7 +132,7 @@ export const createMarket = async ({
 	});
 
 	await logActivity({
-		type: ActivityType.TRADE, // Or add a specific "MARKET_CREATED" if needed
+		type: ActivityType.TRADE,
 		user: identity.getPrincipal().toText(),
 		marketId: seriesId,
 		title: `Market created: ${title}`,
@@ -234,7 +234,6 @@ const fetchMarkets = async ({
 		})
 	);
 
-	// Add resolved markets that are no longer in the registry at all.
 	const resolvedSeriesIds = Object.keys(resolutionMap);
 	const activeSeriesIds = new Set(seriesList.map((s) => s.series_id));
 
@@ -455,8 +454,9 @@ export const loadMarket = ({
 	});
 
 /**
- * Ranks markets based on user interests, category relevance (culture fallback),
- * activity (volume), and recency.
+ * Ranks markets by user interest first, then a culture-fallback boost (so users
+ * with no declared interests still get a meaningful feed), then activity
+ * (volume) and liquidity, with `createdAt` as the final tie-breaker.
  */
 export const rankMarkets = ({
 	markets,
@@ -474,18 +474,13 @@ export const rankMarkets = ({
 	const computeScore = (m: Market): number => {
 		const categoryId = marketCategoryMap.get(m.id);
 
-		// 1. User Interests (High Priority)
 		const interestScore = nonNullish(categoryId) && userInterests.has(categoryId) ? 1000 : 0;
 
-		// 2. Culture Fallback (Discovery Boost)
-		// Boost culture if user has interest in it or if user has NO interests at all
 		const cultureScore =
 			categoryId === 'culture' && (userInterests.size === 0 || userInterests.has('culture'))
 				? 500
 				: 0;
 
-		// 3. Activity / Trending (Volume-based)
-		// Small boost based on total volume (normalized to ~100 max for typical early liquidity)
 		const volumeScore =
 			m.totalVolume > ZERO
 				? Math.min(
@@ -497,12 +492,8 @@ export const rankMarkets = ({
 					)
 				: 0;
 
-		// 4. Relevance / Liquidity
-		// Boost if both sides of the book are populated
 		const liquidityScore = nonNullish(m.bestBid) && nonNullish(m.bestAsk) ? 100 : 0;
 
-		// 5. Recency (Tie-breaker)
-		// Scaled createdAt to provide stable sequence within same score brackets
 		const recencyScore = Number(m.createdAt) / 1e12;
 
 		return interestScore + cultureScore + volumeScore + liquidityScore + recencyScore;
@@ -529,7 +520,6 @@ export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<M
 
 	const userInterests = new Set(profile.data.interests ?? []);
 
-	// Filter for binary/open markets for the flow session
 	const eligibleMarkets = markets.filter((m) => m.status === 'Open' && m.payoffType === 'Binary');
 
 	return rankMarkets({

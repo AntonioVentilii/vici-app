@@ -108,8 +108,6 @@ export const groupMarketsByLineage = ({
 		const bucket = buckets.get(rootId) ?? [];
 		const actualRoot = byId.get(rootId) ?? null;
 
-		// If the actual root is in this bucket, that's the face and everything
-		// else is a fork.
 		if (actualRoot !== null && bucket.some((m) => m.id === rootId)) {
 			const forks = bucket.filter((m) => m.id !== rootId);
 
@@ -121,7 +119,8 @@ export const groupMarketsByLineage = ({
 			};
 		}
 
-		// Root not visible — promote the best available fork.
+		// Root not visible to this viewer — promote the best available fork so
+		// the stacked-card UI always shows a card per lineage.
 		const promoted = pickPromotedRoot({ forks: bucket, userPrincipal });
 		const forks = bucket.filter((m) => m.id !== promoted.id);
 

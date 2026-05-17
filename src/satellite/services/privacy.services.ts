@@ -9,9 +9,6 @@ import type { Principal } from '@icp-sdk/core/principal';
 import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
 import type { PrincipalText } from '@junobuild/schema';
 
-/**
- * Checks if two users are friends (mutual, active relationship).
- */
 const areFriends = ({
 	caller,
 	targetOwner
@@ -36,9 +33,6 @@ const areFriends = ({
 	return relation.category === RelationCategory.FRIEND && relation.state === RelationState.ACTIVE;
 };
 
-/**
- * Checks if there is a pending friend request between the caller and the target (either direction).
- */
 const hasPendingFriendRequest = ({
 	caller,
 	targetOwner
@@ -63,9 +57,6 @@ const hasPendingFriendRequest = ({
 	return relation.category === RelationCategory.FRIEND && relation.state === RelationState.PENDING;
 };
 
-/**
- * Checks if the caller is following the target user.
- */
 const isFollowing = ({
 	caller,
 	targetOwner
@@ -90,9 +81,6 @@ const isFollowing = ({
 	return relation.category === RelationCategory.FOLLOW && relation.state === RelationState.ACTIVE;
 };
 
-/**
- * Checks if the caller has an admin or controller role.
- */
 const isAdminOrController = (caller: Principal): boolean => {
 	const roleDoc = getDocStore({
 		collection: Collection.ROLES,
@@ -109,9 +97,6 @@ const isAdminOrController = (caller: Principal): boolean => {
 	return role === UserRole.ADMIN || role === UserRole.CONTROLLER;
 };
 
-/**
- * Checks if a target user has any role.
- */
 const hasAnyRole = ({
 	targetOwner,
 	caller
@@ -173,9 +158,6 @@ const canSeeNickname = ({
 	return false;
 };
 
-/**
- * Redacts profile information if the caller lacks visibility.
- */
 export const redactProfile = ({
 	caller,
 	profile

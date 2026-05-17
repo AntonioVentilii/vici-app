@@ -29,7 +29,6 @@ if [ ! -f "$DATA_FILE" ]; then
   exit 1
 fi
 
-# Function to slugify title
 slugify() {
   printf '%s' "$1" |
     tr '[:upper:]' '[:lower:]' |
@@ -71,8 +70,6 @@ build_principal_vec() {
 
 echo "Starting registry initialization on $NETWORK..."
 
-# --- Oracle setup ---------------------------------------------------------
-
 PRINCIPAL_VEC=$(build_principal_vec)
 
 echo "Registering oracle $ORACLE_ID with authorised principals:"
@@ -100,8 +97,6 @@ dfx canister call --network "$NETWORK" registry manage_oracle_principals "(recor
     add_principals = $PRINCIPAL_VEC;
     remove_principals = vec {}
 })" >/dev/null
-
-# --- Markets seeding ------------------------------------------------------
 
 # Registry and clearing only accept USD payout_unit today (see icdc-core registry add_series).
 

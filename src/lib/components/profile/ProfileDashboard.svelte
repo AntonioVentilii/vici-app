@@ -53,7 +53,6 @@
 				data: updatedData
 			});
 
-			// Update global store
 			userStore.update((curr) => ({
 				...curr,
 				profile: updatedData
@@ -69,12 +68,12 @@
 		isEditingNickname = false;
 	};
 
-	// Calculate display values
 	const accuracy = $derived(profile.accuracy ?? 0);
 	const streak = $derived(profile.streak ?? 0);
 	const level = $derived(profile.level ?? 1);
 	const points = $derived(profile.points ?? 0);
-	const progressPercent = $derived((points % 500) / 5); // 0-100
+	// Progress (0–100) toward the next 500-point level bracket.
+	const progressPercent = $derived((points % 500) / 5);
 
 	const flameStage = $derived(stageForStreak(streak));
 	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
@@ -106,7 +105,6 @@
 </script>
 
 <div class="space-y-8">
-	<!-- Top Level Identity Section -->
 	<div class="flex flex-col items-center gap-6 sm:flex-row sm:items-end sm:justify-between">
 		<div class="flex flex-col items-center gap-6 sm:flex-row">
 			<div class="relative">
@@ -196,7 +194,6 @@
 			</div>
 		</div>
 
-		<!-- Level Progress Card (Duolingo Style) -->
 		<div class="border-border bg-card w-full max-w-xs space-y-3 rounded-2xl border p-5">
 			<div class="flex items-center justify-between">
 				<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
@@ -215,9 +212,7 @@
 		</div>
 	</div>
 
-	<!-- Stats Dashboard Grid -->
 	<div class="grid grid-cols-1 gap-6 md:grid-cols-3">
-		<!-- Accuracy Gauge (Big Metric) -->
 		<div
 			class="border-primary/20 bg-primary/10 text-foreground flex h-full flex-col justify-between rounded-2xl border p-8"
 		>
@@ -238,7 +233,6 @@
 			</div>
 		</div>
 
-		<!-- PnL & Stats Side-Grid -->
 		<div class="grid grid-cols-1 gap-6">
 			<StatCard
 				label="Total Profit"
@@ -249,9 +243,7 @@
 			<StatCard label="Total Predictions" size="lg" value={profile.totalTrades ?? 0} />
 		</div>
 
-		<!-- Gamification Side-Grid -->
 		<div class="grid grid-cols-1 gap-6">
-			<!-- Streak with Flame Character -->
 			<div
 				class="border-border bg-card hover:border-primary/20 flex flex-col items-center justify-center gap-4 rounded-2xl border p-6 transition-all"
 			>
@@ -268,7 +260,6 @@
 				</div>
 			</div>
 
-			<!-- Daily Activity Sub-Stat -->
 			<div class="bg-card flex items-center justify-between rounded-2xl px-5 py-3">
 				<span class="text-muted-foreground text-[10px] font-bold uppercase">Daily streak</span>
 				<div class="flex items-center gap-1.5">
@@ -281,7 +272,6 @@
 		</div>
 	</div>
 
-	<!-- Oracle Weekly Insight -->
 	<div class="border-border bg-card shadow-inset-hi flex items-center gap-4 rounded-2xl border p-5">
 		<div class="flex-none">
 			<OracleChar size={48} />
@@ -294,7 +284,6 @@
 		</div>
 	</div>
 
-	<!-- Activity / Badges -->
 	<div class="grid grid-cols-1 gap-8 lg:grid-cols-2">
 		<Card padding="lg">
 			<h4 class="text-muted-foreground mb-4 text-xs font-bold tracking-widest uppercase">
