@@ -51,7 +51,7 @@
 
 	let amount = $state('');
 
-	let price = $state(''); // This will now hold percentage (e.g., "35")
+	let price = $state('');
 
 	let selectedType = $state<PositionType>('YES');
 
@@ -145,7 +145,6 @@
 			fetchBalance();
 		}
 
-		// Set default amount from profile if empty
 		if (!amount && $userStore.profile?.preferences?.defaultAmount?.manual) {
 			const pref = $userStore.profile.preferences.defaultAmount.manual;
 
@@ -168,7 +167,6 @@
 
 	$effect(() => {
 		if (nonNullish($tradeStore.selectedPrice)) {
-			// Convert decimal (0.35) to percentage (35)
 			price = Math.round($tradeStore.selectedPrice * 100).toString();
 
 			orderType = 'LIMIT';
@@ -219,7 +217,6 @@
 			selectedType = isBinarySide ? sideParam.toUpperCase() : sideParam;
 
 			if (orderType === 'MARKET') {
-				// For binary, we have yes/noProb. For categorical, we might need to find it in market.outcomes
 				if (isBinarySide) {
 					price = Math.round(
 						(selectedType === 'YES' ? yesProbability : noProbability) * 100
@@ -409,7 +406,6 @@
 </script>
 
 <div class="border-border bg-card rounded-3xl border p-6">
-	<!-- Order Type Toggle -->
 	<div class="bg-foreground/5 flex rounded-xl p-1">
 		<BaseButton
 			class="flex-1 rounded-lg py-2 text-xs font-bold {orderType === 'MARKET'
@@ -434,7 +430,6 @@
 
 	<div class="mt-6 space-y-6">
 		{#if !hideSelector}
-			<!-- Outcome Selector -->
 			<div class="grid grid-cols-2 gap-4">
 				{#if market.payoffType === 'Binary'}
 					<BaseButton
@@ -493,7 +488,6 @@
 			</div>
 		{/if}
 
-		<!-- Inputs -->
 		<div class="space-y-4">
 			{#if orderType === 'LIMIT'}
 				<div class="space-y-2">
@@ -561,7 +555,6 @@
 					</div>
 				</div>
 
-				<!-- Quick Amounts -->
 				<div class="flex gap-2">
 					{#each quickBetAmounts as quickAmount (quickAmount)}
 						<BaseButton
@@ -596,7 +589,6 @@
 			</div>
 		{/if}
 
-		<!-- Payout Summary -->
 		<div class="bg-foreground/5 space-y-3 rounded-2xl p-5">
 			<div class="flex justify-between text-xs">
 				<span class="text-muted-foreground font-medium">Estimated Cost</span>

@@ -302,7 +302,6 @@ export const getOrCreateFriendsGroup = async (): Promise<string> => {
 		throw new Error('Failed to retrieve friends group after creation');
 	}
 
-	// Sync friends
 	const activeFriends = await getFriends();
 	const friendPrincipals = activeFriends
 		.map((f) => f.participants.find((p) => p !== principal))
@@ -337,7 +336,6 @@ export const getOrCreateFollowersGroup = async (): Promise<string> => {
 		throw new Error('Failed to retrieve followers group after creation');
 	}
 
-	// Sync followers
 	const { getFollowers } = await import('$lib/services/relation.services');
 	const followerPrincipals = await getFollowers();
 

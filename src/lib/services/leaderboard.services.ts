@@ -14,7 +14,7 @@ export const getLeaderboard = async (limit = 100): Promise<UserProfile[]> => {
 	return items
 		.map((doc) => ({
 			...doc.data,
-			owner: doc.key // Ensure owner is synced with doc key if not present
+			owner: doc.key
 		}))
 		.sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
 		.slice(0, limit);

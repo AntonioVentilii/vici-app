@@ -62,17 +62,14 @@
 	class="border-border bg-background/95 sticky top-0 z-50 w-full border-b backdrop-blur-md transition-all duration-300"
 >
 	<div class="container mx-auto flex h-14 items-center justify-between px-4">
-		<!-- Left side -->
 		<Logo />
 
-		<!-- Desktop Nav -->
 		<nav class="hidden items-center gap-1 md:flex">
 			{#each visibleNavItems as item (item.path)}
 				{@render navButton(item)}
 			{/each}
 		</nav>
 
-		<!-- Right side -->
 		<div class="flex items-center gap-4">
 			{#if $authBusy}
 				<div

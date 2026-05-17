@@ -43,8 +43,6 @@ import {
 } from '@junobuild/functions';
 import { j, PrincipalTextSchema } from '@junobuild/schema';
 
-// --- Queries ---
-
 export const listLeaderboard = defineQuery({
 	result: j.strictObject({
 		items: j.array(UserProfileSchema)
@@ -56,7 +54,7 @@ export const listLeaderboard = defineQuery({
 
 export const getProfile = defineQuery({
 	args: j.strictObject({
-		// TODO: Check why I cannot call it `principal` directly
+		// `principal` collides with @junobuild/schema's reserved name; rename on the wire.
 		principalStr: PrincipalTextSchema
 	}),
 	result: j.strictObject({
@@ -69,7 +67,7 @@ export const getProfile = defineQuery({
 
 export const searchProfiles = defineQuery({
 	args: j.strictObject({
-		// TODO: Check why I cannot call it `query` directly
+		// `query` collides with @junobuild/schema's reserved name; rename on the wire.
 		queryStr: j.string()
 	}),
 	result: j.strictObject({
@@ -127,8 +125,6 @@ export const listRejectedFriendships = defineQuery({
 	})
 });
 
-// --- Updates ---
-
 export const sendFriendRequest = defineUpdate({
 	args: j.strictObject({
 		target: PrincipalTextSchema
@@ -157,8 +153,6 @@ export const followUser = defineUpdate({
 	handler: followUserFn
 });
 
-// --- Assertions ---
-
 const assertSetDocCollections = [Collection.PROFILES, Collection.ROLES] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -174,8 +168,6 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 		fn[context.data.collection]?.(context);
 	}
 });
-
-// --- Hooks ---
 
 const setDocCollections = [Collection.ACTIVITIES, Collection.PROFILES, Collection.ROLES] as const;
 

@@ -46,7 +46,6 @@ export const depositCollateral = async ({
 	// ICRC-2: allowance must cover `amount + fee` for `icrc2_transfer_from`
 	const approvalAmount = amount + ledgerFee;
 
-	// 1. Approve clearing canister to spend tokens
 	await approve({
 		identity,
 		ledgerCanisterId: assetPrincipal,
@@ -57,7 +56,6 @@ export const depositCollateral = async ({
 
 	const asset_id = resolveClearingAssetId(assetPrincipal);
 
-	// 2. Deposit collateral
 	await depositCollateralApi({
 		identity,
 		params: {

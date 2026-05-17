@@ -122,8 +122,6 @@ export const placeOrder = async ({
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
-	// Normalize Binary Outcome to "YES" asset
-	// price is expected as probability (0-1)
 	const isBinary = outcome === 'YES' || outcome === 'NO';
 	const normalizedSide: OrderSide = isBinary
 		? outcome === 'NO'
@@ -157,7 +155,6 @@ export const placeOrder = async ({
 			}
 		});
 	} else {
-		// MARKET ORDER (Taker)
 		const orders = await listOrdersApi({
 			identity,
 			params: { series_id: toNullable(marketId) }
@@ -165,7 +162,6 @@ export const placeOrder = async ({
 
 		const counterSide = normalizedSide === 'BUY' ? 'Sell' : 'Buy';
 
-		// Identify the target outcome for binary vs categorical
 		const targetOutcomeId = outcome === 'YES' || outcome === 'NO' ? undefined : outcome;
 
 		const matchingOrders = orders
@@ -202,7 +198,6 @@ export const placeOrder = async ({
 
 	refreshAllBalances();
 
-	// Log Social Activity (Vici Social Features)
 	try {
 		const userText = identity.getPrincipal().toText();
 		await logActivity({
@@ -218,9 +213,6 @@ export const placeOrder = async ({
 	}
 };
 
-/**
- * Cancels an open limit order by id.
- */
 export const cancelLimitOrder = async (orderId: string): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -256,9 +248,6 @@ const fetchUserOrders = async ({
 	return filterByPlaygroundExpandedDomain({ items: orders, targetDomain: domain });
 };
 
-/**
- * Signed-in user's orders for a single market.
- */
 export const getUserOrdersForMarket = async ({
 	marketId,
 	domain

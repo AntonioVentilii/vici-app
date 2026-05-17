@@ -33,7 +33,7 @@
 	let podium = $derived(leaderboard.slice(0, 3));
 	let rest = $derived(leaderboard.slice(3));
 
-	// Reorder podium to [2nd, 1st, 3rd] for display
+	// Olympic podium order: silver | gold | bronze (so #1 sits centered).
 	let displayPodium = $derived.by(() => {
 		if (podium.length === 0) {
 			return [];
@@ -98,7 +98,6 @@
 			</p>
 		</div>
 	{:else}
-		<!-- The Podium Section -->
 		<div class="flex min-h-75 flex-row items-end justify-center gap-1 px-4 sm:gap-8">
 			{#each displayPodium as user, i (user.owner)}
 				<div
@@ -137,7 +136,6 @@
 			{/each}
 		</div>
 
-		<!-- The Detailed List -->
 		<div class="mx-auto max-w-2xl space-y-2 px-4 pt-8">
 			{#each rest as user, i (user.owner)}
 				<div

@@ -29,7 +29,6 @@
 
 	onMount(() => {
 		loadMessages();
-		// Polling for new messages (simple implementation)
 		const interval = setInterval(loadMessages, 5000);
 
 		return () => clearInterval(interval);
@@ -88,7 +87,6 @@
 <div
 	class="border-border bg-card/30 flex h-125 flex-col overflow-hidden rounded-2xl border shadow-2xl backdrop-blur-xl"
 >
-	<!-- Header -->
 	<div class="bg-foreground/5 flex items-center justify-between border-b border-white/5 px-6 py-4">
 		<div class="flex items-center gap-3">
 			<div class="bg-yes h-2 w-2 animate-pulse rounded-full"></div>
@@ -97,7 +95,6 @@
 		<span class="text-muted-foreground text-xs">{messages.length} messages</span>
 	</div>
 
-	<!-- Messages -->
 	<div
 		bind:this={chatContainer}
 		class="custom-scrollbar flex flex-1 flex-col gap-4 overflow-y-auto p-4"
@@ -144,7 +141,6 @@
 		{/if}
 	</div>
 
-	<!-- Input -->
 	<div class="bg-foreground/5 border-t border-white/5 p-4">
 		<form
 			class="flex gap-2"

@@ -83,11 +83,8 @@
 		<div class="space-y-8 lg:space-y-12">
 			<MarketDetailHeader {market} />
 
-			<!-- Main Content Grid -->
 			<div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-				<!-- Left Column: Primary Market Actions -->
 				<div class="space-y-8 lg:col-span-8">
-					<!-- Mobile-only Stats (Horizontal) -->
 					<div class="lg:hidden">
 						<MarketDetailStats {market} />
 					</div>
@@ -97,18 +94,15 @@
 					<MarketDetailTabs {market} {positions} />
 				</div>
 
-				<!-- Right Column: Sidebar Info (Visible from LG+) -->
 				<aside class="hidden space-y-8 lg:col-span-4 lg:block">
 					<MarketInfoPanel {market} />
 				</aside>
 
-				<!-- Mobile fallback for sidebar components if needed at bottom -->
 				<div class="space-y-8 lg:hidden">
 					<MarketInfoPanel {market} />
 				</div>
 			</div>
 
-			<!-- Admin Resolution Section -->
 			{#if market.status !== 'Resolved' && $userIsAdminOrSolver}
 				<div class="border-border mx-auto max-w-4xl border-t pt-12">
 					<MarketResolutionInterface

@@ -17,7 +17,6 @@
 
 		const balances = await getLedgerBalances();
 
-		// Only update if the domain hasn't changed during the fetch
 		if ($balanceDomain === domainToken) {
 			balancesStore.set(balances);
 		}
