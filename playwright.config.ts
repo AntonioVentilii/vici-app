@@ -39,6 +39,30 @@ export default defineConfig({
 		{
 			name: 'chromium',
 			use: devices['Desktop Chrome']
+		},
+		// Small Samsung Galaxy: tests narrow-mobile layouts (320 CSS px wide is
+		// the narrowest viewport real users hit on modern Android). Both screen
+		// and viewport are pinned explicitly so any future Playwright bump to
+		// the bundled device profile can't silently re-baseline the snapshots.
+		{
+			name: 'Galaxy S9+',
+			use: {
+				...devices['Galaxy S9+'],
+				screen: { width: 320, height: 658 },
+				viewport: { width: 320, height: 658 }
+			}
+		},
+		// Big Samsung Galaxy: tests roomy-mobile layouts (480 CSS px wide is
+		// the widest non-tablet Galaxy profile Playwright ships, and still
+		// below Tailwind's `md` breakpoint at 768px so the `MobileNav` is in
+		// effect — that's the variant we actually want covered).
+		{
+			name: 'Galaxy A55',
+			use: {
+				...devices['Galaxy A55'],
+				screen: { width: 480, height: 1040 },
+				viewport: { width: 480, height: 1040 }
+			}
 		}
 	],
 	webServer: {
