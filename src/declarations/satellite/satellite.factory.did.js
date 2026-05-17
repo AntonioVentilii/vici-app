@@ -40,6 +40,7 @@ export const idlFactory = ({ IDL }) => {
 						})
 					})
 				),
+				archetype: IDL.Text,
 				last_active_day: IDL.Opt(IDL.Text),
 				total_trades: IDL.Float64,
 				win_rate: IDL.Float64,
@@ -192,6 +193,7 @@ export const idlFactory = ({ IDL }) => {
 						})
 					})
 				),
+				archetype: IDL.Text,
 				last_active_day: IDL.Opt(IDL.Text),
 				total_trades: IDL.Float64,
 				win_rate: IDL.Float64,
@@ -262,6 +264,7 @@ export const idlFactory = ({ IDL }) => {
 						})
 					})
 				),
+				archetype: IDL.Text,
 				last_active_day: IDL.Opt(IDL.Text),
 				total_trades: IDL.Float64,
 				win_rate: IDL.Float64,
