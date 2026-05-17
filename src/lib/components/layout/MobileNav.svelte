@@ -20,7 +20,7 @@
 	{#each visibleNavItems as { label, path, mobileIcon: Icon } (path)}
 		{@const isFlow = label === 'Flow'}
 		<button
-			class="ease-vici duration-state relative flex cursor-pointer flex-col items-center justify-center gap-1 transition-colors
+			class="ease-vici duration-state relative flex flex-col items-center justify-center gap-1 transition-colors
 				{isFlow
 				? 'bg-primary text-ink shadow-mobilenav-active mx-1 -mt-2.5 rounded-2xl py-3'
 				: isActive(path)

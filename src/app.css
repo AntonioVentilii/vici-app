@@ -320,6 +320,18 @@ html {
 	font-feature-settings: 'ss01', 'cv11';
 }
 
+/* Tailwind v4's preflight dropped the default `cursor: pointer` on
+ * buttons. Restore it so we don't sprinkle `cursor-pointer` everywhere.
+ * `:disabled` only matches form elements, so we also exclude
+ * `[aria-disabled='true']` / `[disabled]` for custom buttons. */
+@layer base {
+	button:not(:disabled):not([aria-disabled='true']),
+	[role='button']:not([disabled]):not([aria-disabled='true']),
+	summary:not([aria-disabled='true']) {
+		cursor: pointer;
+	}
+}
+
 body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
