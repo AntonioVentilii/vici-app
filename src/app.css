@@ -320,17 +320,10 @@ html {
 	font-feature-settings: 'ss01', 'cv11';
 }
 
-/* Tailwind v4's preflight no longer sets `cursor: pointer` on buttons
- * (it inherits the OS default, which is the text cursor). Restore the
- * v3 behaviour project-wide so we don't have to sprinkle `cursor-pointer`
- * on every interactive control.
- *
- * Disabled handling: `:disabled` only matches form elements (works for
- * `<button>`), so we also exclude `[aria-disabled='true']` and the
- * `[disabled]` attribute to cover custom buttons (`<div role='button'>`,
- * `<summary>`). Components are still expected to add their own
- * `disabled:cursor-not-allowed` (or equivalent) to indicate disabled
- * state visually — this rule only avoids overriding it. */
+/* Tailwind v4's preflight dropped the default `cursor: pointer` on
+ * buttons. Restore it so we don't sprinkle `cursor-pointer` everywhere.
+ * `:disabled` only matches form elements, so we also exclude
+ * `[aria-disabled='true']` / `[disabled]` for custom buttons. */
 @layer base {
 	button:not(:disabled):not([aria-disabled='true']),
 	[role='button']:not([disabled]):not([aria-disabled='true']),
