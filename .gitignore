@@ -27,7 +27,7 @@ target
 /test-results/
 /playwright/.cache/
 
-# Design-team handoff reference (HTML previews, JSX prototypes, PNG uploads).
-# Tracked locally as a working reference; not part of the shipped repo.
-# See docs/ai/frontend/design-handoff-audit.md for what gets ported and where.
+# Local design reference (large media + prototype files). Kept locally as
+# a working reference; not part of the shipped repo. See
+# docs/ai/frontend/design.md for what's aligned and what's still open.
 /vici design team/
