@@ -11,7 +11,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import {
-		BASE_XP_PER_BET,
+		BASE_XP_PER_PREDICTION,
 		findFlowMilestone,
 		isAccuracyUnlocked
 	} from '$lib/constants/flow-rewards.constants';
@@ -300,7 +300,7 @@
 		betsCount += 1;
 		streak += 1;
 
-		const awarded = BASE_XP_PER_BET * comboMultiplier;
+		const awarded = BASE_XP_PER_PREDICTION * comboMultiplier;
 		xp += awarded;
 		spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
 
@@ -400,10 +400,10 @@
 
 	// Trickster appears on the active card when the YES probability is
 	// strongly skewed (≤ 25 % or ≥ 75 %) — testAV1 + brand README §07
-	// "Trickster · Loves the contrarian — appears only when you bet
-	// against the crowd". Per "defended territory" rule, Trickster
-	// owns this surface alone — it doesn't get pre-empted by other
-	// per-card ambient beats.
+	// ("Trickster owns contrarian predictions — appears only when the
+	// user is the minority on a market"). Per "defended territory"
+	// rule, Trickster owns this surface alone — it doesn't get
+	// pre-empted by other per-card ambient beats.
 	const trickstered = new SvelteSet<string>();
 
 	$effect(() => {

@@ -102,10 +102,17 @@ interface RenderArgs {
 const makeRng = (seed: string | number): Rng => {
 	const r = mulberry32(typeof seed === 'string' ? hashStr(seed) : seed);
 
+	// `prefer-object-params` is intentionally relaxed for `range` and
+	// `int` here — positional `(lo, hi)` is the canonical PRNG /
+	// math signature and is called thousands of times across the six
+	// category renderers. An object form would hurt readability and
+	// generate per-call allocations on every random draw.
 	return {
 		r,
+		// eslint-disable-next-line local-rules/prefer-object-params
 		range: (lo, hi) => lo + r() * (hi - lo),
 		pick: (arr) => arr[Math.floor(r() * arr.length)],
+		// eslint-disable-next-line local-rules/prefer-object-params
 		int: (lo, hi) => lo + Math.floor(r() * (hi - lo + 1)),
 		chance: (p) => r() < p
 	};
@@ -300,6 +307,10 @@ const PAL: Record<FlowArtCategory, CategoryPalettes> = {
 // =============================================================
 
 const deg = (d: number): number => (d * Math.PI) / 180;
+// Standard math-helper signature `(a, b, t)`. `prefer-object-params`
+// is intentionally relaxed — `lerp` is called dozens of times across
+// the renderers and an object form would obscure the math.
+// eslint-disable-next-line local-rules/prefer-object-params
 const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
 const svgOpen = (size: number): string =>
@@ -601,6 +612,10 @@ const renderTech = ({ rng, p, state }: RenderArgs): string => {
 	const iy: [number, number] = [-u * 0.866, -u * 0.5];
 	const iz: [number, number] = [0, -u];
 
+	// 3D-to-screen isometric projection — `(x, y, z)` is the canonical
+	// positional signature for a coordinate transform; object form
+	// would be unreadable in the per-vertex calls below.
+	// eslint-disable-next-line local-rules/prefer-object-params
 	const iso = (x: number, y: number, z: number): [number, number] => [
 		ox + x * ix[0] + y * iy[0] + z * iz[0],
 		oy + x * ix[1] + y * iy[1] + z * iz[1]
@@ -609,6 +624,11 @@ const renderTech = ({ rng, p, state }: RenderArgs): string => {
 	const ptStr = (pts: ReadonlyArray<readonly [number, number]>): string =>
 		pts.map((pp) => pp.map((n) => n.toFixed(2)).join(',')).join(' ');
 
+	// `(x, y, z)` mirrors the canonical iso-coordinate signature; the
+	// trailing `hot` flag toggles the focal-block treatment. Keeping
+	// positional preserves the visual parallel between the call sites
+	// (`drawBox(b.x, b.y, z, isHot)`) and the coordinate transform.
+	// eslint-disable-next-line local-rules/prefer-object-params
 	const drawBox = (x: number, y: number, z: number, hot: boolean): void => {
 		const tA = iso(x, y, z + 1);
 		const tB = iso(x + 1, y, z + 1);

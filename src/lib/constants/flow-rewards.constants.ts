@@ -7,10 +7,10 @@
 // fireworks, later rewards are rare and feel earned.
 
 /**
- * Base XP awarded on every committed swipe (YES / NO). Skips do not
- * award XP. Multiplied by the streak combo multiplier.
+ * Base XP awarded on every committed prediction (YES / NO). Skips
+ * do not award XP. Multiplied by the streak combo multiplier.
  */
-export const BASE_XP_PER_BET = 10;
+export const BASE_XP_PER_PREDICTION = 10;
 
 export type FlowMilestoneId = 'first-call' | 'swipe-10' | 'swipe-50' | 'swipe-250' | 'swipe-1000';
 
