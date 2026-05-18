@@ -28,6 +28,11 @@
 		// Optional accent chip (e.g. "FIRST CALL") shown on the right of
 		// the header row. Sits in laurel.
 		flag?: string;
+		// When set, the card has already been committed to a side and is
+		// playing the 80ms commit-feedback beat before the parent unmounts
+		// it. Drag is locked, the matching edge tint goes to full
+		// intensity, and the directional label sits at full opacity.
+		committedAction?: 'YES' | 'NO' | 'SKIP' | null;
 	}
 
 	const {
@@ -41,8 +46,11 @@
 		interactive = true,
 		category,
 		subtitle,
-		flag
+		flag,
+		committedAction = null
 	}: Props = $props();
+
+	const isCommitted = $derived(committedAction !== null);
 
 	const amount = $derived(parseFloat(tradeAmount) || 0);
 	const potentialReturnYes = $derived(amount / (market.yesProbability || 0.1));
@@ -74,16 +82,23 @@
 	);
 	const opacity = $derived(1 - dragMagnitude * 0.18);
 
-	const yesOpacity = $derived(Math.max(0, coords.current.x / 90));
-	const noOpacity = $derived(Math.max(0, -coords.current.x / 90));
-	const skipOpacity = $derived(Math.max(0, -coords.current.y / 90));
+	const dragYesOpacity = $derived(Math.max(0, coords.current.x / 90));
+	const dragNoOpacity = $derived(Math.max(0, -coords.current.x / 90));
+	const dragSkipOpacity = $derived(Math.max(0, -coords.current.y / 90));
+
+	// When the card has been committed, the matching edge label / tint
+	// jump to full opacity so the 80 ms feedback beat reads as a clear
+	// "I felt that" moment before the exit transition fires.
+	const yesOpacity = $derived(committedAction === 'YES' ? 1 : dragYesOpacity);
+	const noOpacity = $derived(committedAction === 'NO' ? 1 : dragNoOpacity);
+	const skipOpacity = $derived(committedAction === 'SKIP' ? 1 : dragSkipOpacity);
 
 	const tintYes = $derived(Math.min(yesOpacity, 1));
 	const tintNo = $derived(Math.min(noOpacity, 1));
 	const tintSkip = $derived(Math.min(skipOpacity, 1));
 
 	const handleStart = (e: MouseEvent | TouchEvent) => {
-		if (!interactive) {
+		if (!interactive || isCommitted) {
 			return;
 		}
 
@@ -174,6 +189,7 @@
 		style:transform="translate3d({coords.current.x}px, {coords.current.y}px, 0) rotate({rotation}deg)"
 		style:opacity
 		class="flow-card"
+		class:is-committed={isCommitted}
 		class:is-grabbing={dragging}
 		class:is-static={!interactive}
 		onmousedown={handleStart}
@@ -325,6 +341,13 @@
 	}
 	.flow-card.is-static {
 		cursor: default;
+	}
+	/* Brief 80 ms commit-feedback beat — drag is locked from
+	   `handleStart`; the visual lock here is the cursor / pointer
+	   change so the user sees the card stop responding to motion. */
+	.flow-card.is-committed {
+		cursor: default;
+		pointer-events: none;
 	}
 
 	.flow-card-tint {

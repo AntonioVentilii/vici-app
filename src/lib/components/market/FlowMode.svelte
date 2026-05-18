@@ -39,6 +39,14 @@
 	let exitX = $state(0);
 	let exitY = $state(0);
 
+	// Per testAV1 commit spec: the card has an 80 ms feedback beat with
+	// edge tint locked at full intensity before it flies off-screen. The
+	// parent holds the committed action for that window so children can
+	// react.
+	let committedAction = $state<'YES' | 'NO' | 'SKIP' | null>(null);
+	const COMMIT_FEEDBACK_MS = 80;
+	const COMMIT_RESET_MS = 600;
+
 	let streak = $state(0);
 	let bestStreak = $state(0);
 	let xp = $state(0);
@@ -130,6 +138,11 @@
 			return;
 		}
 
+		// Ignore double-commits during the 80 ms feedback window.
+		if (nonNullish(committedAction)) {
+			return;
+		}
+
 		const currentMarket = markets[currentIndex];
 
 		if (!currentMarket) {
@@ -150,9 +163,19 @@
 			vibrate(8);
 		}
 
+		// Lock the card into its commit-feedback beat. Drag is disabled
+		// in FlowCard while this is set; the matching edge tint and
+		// directional label go to full opacity.
+		committedAction = action;
+
 		if (action === 'SKIP') {
 			streak = 0;
-			advance();
+			setTimeout(() => {
+				advance();
+			}, COMMIT_FEEDBACK_MS);
+			setTimeout(() => {
+				committedAction = null;
+			}, COMMIT_RESET_MS);
 
 			return;
 		}
@@ -207,7 +230,14 @@
 			}, 1600);
 		}
 
-		advance();
+		// Advance after the 80 ms feedback beat — Svelte's `out:fly` on
+		// the keyed card then plays as it unmounts.
+		setTimeout(() => {
+			advance();
+		}, COMMIT_FEEDBACK_MS);
+		setTimeout(() => {
+			committedAction = null;
+		}, COMMIT_RESET_MS);
 	};
 
 	const advance = () => {
@@ -366,6 +396,7 @@
 						out:fly={{ x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
 					>
 						<FlowCard
+							committedAction={isCurrent ? committedAction : null}
 							interactive={isCurrent}
 							isLimitOrderNo={isNullish(market.bestBid)}
 							isLimitOrderYes={isNullish(market.bestAsk)}
