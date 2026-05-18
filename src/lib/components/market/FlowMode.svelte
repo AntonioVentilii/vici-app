@@ -7,6 +7,7 @@
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { BASE_XP_PER_BET, findFlowMilestone } from '$lib/constants/flow-rewards.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
@@ -26,7 +27,6 @@
 
 	const MAX_BETS = 10;
 	const MAX_MARKETS = 20;
-	const BASE_XP_PER_BET = 10;
 
 	let markets = $state<Market[]>([]);
 	let currentIndex = $state(0);
@@ -52,11 +52,18 @@
 	let xp = $state(0);
 	let lastStreakShown = $state(0);
 
+	type XpPopKind = 'normal' | 'bonus';
+
 	interface XpPop {
 		id: number;
 		amount: number;
 		combo: number;
 		side: 'YES' | 'NO';
+		// 'bonus' = milestone reward (laurel, larger, paired copy).
+		kind: XpPopKind;
+		// Paired copy ("First call.", "Ten deep.") shown above the
+		// number on bonus pops; undefined for normal pops.
+		copy?: string;
 	}
 
 	let xpPops = $state<XpPop[]>([]);
@@ -119,18 +126,24 @@
 	const spawnXpPop = ({
 		amount,
 		combo,
-		side
+		side,
+		kind = 'normal',
+		copy
 	}: {
 		amount: number;
 		combo: number;
 		side: 'YES' | 'NO';
+		kind?: XpPopKind;
+		copy?: string;
 	}) => {
 		const id = ++popCounter;
-		xpPops = [...xpPops, { id, amount, combo, side }];
+		xpPops = [...xpPops, { id, amount, combo, side, kind, copy }];
 
+		// Bonus pops linger longer (paired copy needs to read).
+		const ttl = kind === 'bonus' ? 1800 : 1100;
 		setTimeout(() => {
 			xpPops = xpPops.filter((p) => p.id !== id);
-		}, 1100);
+		}, ttl);
 	};
 
 	const handleAction = (action: 'YES' | 'NO' | 'SKIP') => {
@@ -228,6 +241,26 @@
 					lastStreakShown = 0;
 				}
 			}, 1600);
+		}
+
+		// Rarity-scaled bonus ladder (testAV1 §03 reward map) — fires on
+		// the exact milestone count: 1, 10, 50, 250, 1000. The base XP
+		// has already been added above; bonus stacks on top.
+		const milestone = findFlowMilestone(betsCount);
+
+		if (nonNullish(milestone)) {
+			xp += milestone.bonusXp;
+			spawnXpPop({
+				amount: milestone.bonusXp,
+				combo: 1,
+				side: action,
+				kind: 'bonus',
+				copy: milestone.copy
+			});
+			// First-call gets the strongest haptic — triple tap. Other
+			// milestones use a double pulse so they don't shout louder
+			// than streak tier-ups.
+			vibrate(milestone.id === 'first-call' ? [12, 40, 18] : [12, 40]);
 		}
 
 		// Advance after the 80 ms feedback beat — Svelte's `out:fly` on
@@ -414,10 +447,14 @@
 				{#each xpPops as pop (pop.id)}
 					<div
 						class="xp-pop"
-						class:xp-pop-no={pop.side === 'NO'}
-						class:xp-pop-yes={pop.side === 'YES'}
+						class:xp-pop-bonus={pop.kind === 'bonus'}
+						class:xp-pop-no={pop.kind === 'normal' && pop.side === 'NO'}
+						class:xp-pop-yes={pop.kind === 'normal' && pop.side === 'YES'}
 					>
-						+{pop.amount}
+						{#if pop.kind === 'bonus' && pop.copy}
+							<span class="xp-pop-copy serif-italic">{pop.copy}</span>
+						{/if}
+						<span class="xp-pop-amount num">+{pop.amount}</span>
 						<span class="xp-pop-label">XP{pop.combo > 1 ? ` · ×${pop.combo}` : ''}</span>
 					</div>
 				{/each}
@@ -756,6 +793,54 @@
 	.xp-pop-no {
 		color: var(--no);
 		border: 2px solid var(--no);
+	}
+	/* Bonus pop — milestone reward (rarity ladder). Laurel ring, larger
+	   amount, paired serif-italic copy on top, longer dwell. */
+	.xp-pop-bonus {
+		flex-direction: column;
+		gap: 4px;
+		padding: 14px 22px;
+		font-size: 30px;
+		color: var(--laurel);
+		border: 2px solid var(--laurel);
+		background: rgba(14, 13, 11, 0.92);
+		box-shadow:
+			0 0 32px var(--laurel-glow),
+			var(--inset-hi);
+		animation:
+			xpPopBonus 1.8s var(--ease-vici) forwards,
+			none;
+	}
+	.xp-pop-copy {
+		font-family: var(--font-serif);
+		font-style: italic;
+		font-size: 14px;
+		font-weight: 400;
+		color: var(--parchment-dim);
+		letter-spacing: 0;
+		text-transform: none;
+		line-height: 1.1;
+	}
+	.xp-pop-amount {
+		font-weight: 600;
+	}
+	@keyframes xpPopBonus {
+		0% {
+			transform: translateY(0) scale(0.7);
+			opacity: 0;
+		}
+		15% {
+			transform: translateY(-12px) scale(1.08);
+			opacity: 1;
+		}
+		70% {
+			transform: translateY(-90px) scale(1);
+			opacity: 1;
+		}
+		100% {
+			transform: translateY(-150px) scale(0.95);
+			opacity: 0;
+		}
 	}
 	@keyframes xpPop {
 		0% {
