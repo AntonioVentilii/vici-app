@@ -3,7 +3,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { cubicOut, backOut } from 'svelte/easing';
 	import { SvelteSet } from 'svelte/reactivity';
-	import { fade, fly, scale } from 'svelte/transition';
+	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import ViciChar from '$lib/components/characters/ViciChar.svelte';
@@ -64,7 +64,6 @@
 	const COMMIT_RESET_MS = 600;
 
 	let streak = $state(0);
-	let bestStreak = $state(0);
 	let xp = $state(0);
 	let lastStreakShown = $state(0);
 
@@ -300,7 +299,6 @@
 
 		betsCount += 1;
 		streak += 1;
-		bestStreak = Math.max(bestStreak, streak);
 
 		const awarded = BASE_XP_PER_BET * comboMultiplier;
 		xp += awarded;
@@ -466,63 +464,42 @@
 			</div>
 		</div>
 	{:else if completed}
-		<div class="completion-bg flex h-full w-full flex-col items-center justify-center px-6">
-			<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-				{#each Array(24) as _, i (i)}
-					<span style="--i: {i}; --delay: {i * 0.08}s; --hue: {(i * 37) % 360}deg" class="confetti"
-					></span>
-				{/each}
-			</div>
-
-			<div class="relative z-10 max-w-md text-center" in:fly={{ y: 20, duration: 500 }}>
-				<div
-					class="bg-yes-wash text-yes mb-6 inline-flex h-24 w-24 items-center justify-center rounded-full shadow-[0_20px_40px_rgba(79,211,161,0.2)]"
-					in:scale={{ start: 0.4, duration: 600, easing: backOut, delay: 120 }}
-				>
-					<svg class="h-12 w-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M5 13l4 4L19 7"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="3"
-						/>
-					</svg>
-				</div>
-
-				<h2 class="text-foreground mb-2 text-4xl font-black tracking-tighter">Flow Complete</h2>
-				<p class="text-muted-foreground mb-6">
+		<!-- FlowEnd — brand voice ("Vici." serif-italic display, terse
+		     copy). No confetti / no green-check celebration; the
+		     accomplishment is the laurel + the numbers, not noise. -->
+		<div class="flow-end">
+			<div class="flow-end-inner" in:fly={{ y: 20, duration: 500 }}>
+				<h2 class="flow-end-title display">Vici.</h2>
+				<p class="flow-end-sub">
 					{#if betsCount === 0}
-						You reviewed all available markets.
+						No calls. Nothing locked in.
+					{:else if betsCount === 1}
+						One call. Locked in.
 					{:else}
-						You made <span class="text-foreground font-black">{betsCount}</span>
-						{betsCount === 1 ? 'prediction' : 'predictions'}. Called it.
+						{betsCount} calls. Locked in.
 					{/if}
 				</p>
 
-				<div class="mb-8 grid grid-cols-3 gap-3">
-					<div class="bg-card border-border rounded-2xl border px-3 py-4">
-						<div class="text-laurel text-[9px] font-bold tracking-widest uppercase">XP</div>
-						<div class="text-foreground font-mono text-2xl font-black tabular-nums">+{xp}</div>
+				<div class="flow-end-grid">
+					<div class="flow-end-cell">
+						<div class="allcaps flow-end-cell-label">Session XP</div>
+						<div class="num flow-end-cell-value">+{xp}</div>
 					</div>
-					<div class="bg-card border-border rounded-2xl border px-3 py-4">
-						<div class="text-laurel text-[9px] font-bold tracking-widest uppercase">Streak</div>
-						<div class="text-laurel font-mono text-2xl font-black tabular-nums">
-							{bestStreak}
+					<div class="flow-end-cell flow-end-cell-streak" class:is-hot={dailyStreak >= 7}>
+						<div class="flow-end-cell-flame">
+							<FlameChar animate={dailyStreak >= 1} size={28} stage={flameStage} />
 						</div>
+						<div class="allcaps flow-end-cell-label">{flameLabel}</div>
+						<div class="num flow-end-cell-value">{dailyStreak}d</div>
 					</div>
-					<div class="bg-card border-border rounded-2xl border px-3 py-4">
+					<div class="flow-end-cell">
 						{#if accuracyUnlocked}
-							<div class="text-laurel text-[9px] font-bold tracking-widest uppercase">Accuracy</div>
-							<div class="text-foreground font-mono text-2xl font-black tabular-nums">
-								{Math.round(lifetimeAccuracy)}%
-							</div>
+							<div class="allcaps flow-end-cell-label">Accuracy</div>
+							<div class="num flow-end-cell-value">{Math.round(lifetimeAccuracy)}%</div>
 						{:else}
-							<div class="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
-								Calls
-							</div>
-							<div class="text-foreground font-mono text-2xl font-black tabular-nums">
-								{lifetimeTotalTrades + betsCount}
-							</div>
+							<div class="allcaps flow-end-cell-label">Calls</div>
+							<div class="num flow-end-cell-value">{lifetimeTotalTrades + betsCount}</div>
+							<div class="flow-end-cell-foot">until accuracy</div>
 						{/if}
 					</div>
 				</div>
@@ -1270,35 +1247,91 @@
 		}
 	}
 
-	.completion-bg {
+	/* FlowEnd — session summary surface. Brand voice over confetti.
+	   `.display` headline (serif italic) sits with the bedded grid;
+	   no green-check celebration, no big particle field. */
+	.flow-end {
 		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 1.5rem;
 		background:
-			radial-gradient(circle at 20% 10%, rgba(226, 184, 66, 0.08), transparent 40%),
-			radial-gradient(circle at 80% 90%, rgba(79, 211, 161, 0.06), transparent 40%);
+			radial-gradient(circle at 20% 10%, var(--laurel-glow), transparent 45%), var(--bg-base);
 		overflow: hidden;
 	}
-	.confetti {
-		position: absolute;
-		top: -40px;
-		left: calc((var(--i) * 4.16%));
-		width: 8px;
-		height: 14px;
-		border-radius: 2px;
-		background: hsl(var(--hue), 80%, 60%);
-		animation: fall 3.2s linear var(--delay) forwards;
-		opacity: 0.9;
+	.flow-end-inner {
+		max-width: 22rem;
+		text-align: center;
 	}
-	@keyframes fall {
-		0% {
-			transform: translateY(-50px) rotate(0deg);
-			opacity: 0;
+	.flow-end-title {
+		font-size: var(--t-64);
+		margin: 0 0 0.5rem;
+		color: var(--laurel);
+	}
+	@media (min-width: 400px) {
+		.flow-end-title {
+			font-size: var(--t-88);
 		}
-		10% {
-			opacity: 1;
-		}
-		100% {
-			transform: translateY(110vh) rotate(720deg);
-			opacity: 0.3;
-		}
+	}
+	.flow-end-sub {
+		font-size: var(--t-14);
+		color: var(--text-muted);
+		margin: 0 0 1.75rem;
+		font-family: var(--font-display);
+	}
+
+	.flow-end-grid {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.625rem;
+		margin-bottom: 1.5rem;
+	}
+	.flow-end-cell {
+		background: var(--bg-surface);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		padding: 0.875rem 0.5rem;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 4px;
+		box-shadow: var(--inset-hi);
+	}
+	.flow-end-cell-streak.is-hot {
+		background: linear-gradient(135deg, var(--laurel-deep), var(--laurel));
+		color: var(--ink);
+		box-shadow: 0 4px 12px var(--laurel-glow);
+	}
+	.flow-end-cell-flame {
+		display: flex;
+		justify-content: center;
+		margin-bottom: 2px;
+	}
+	.flow-end-cell-label {
+		font-size: 10px;
+		color: var(--text-muted);
+	}
+	.flow-end-cell-streak.is-hot .flow-end-cell-label {
+		color: var(--ink);
+		opacity: 0.85;
+	}
+	.flow-end-cell-value {
+		font-size: var(--t-24);
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		line-height: 1.05;
+		color: var(--text-base);
+	}
+	.flow-end-cell-streak.is-hot .flow-end-cell-value {
+		color: var(--ink);
+	}
+	.flow-end-cell-foot {
+		font-size: 9px;
+		color: var(--parchment-faint);
+		font-family: var(--font-display);
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-allcaps);
 	}
 </style>
