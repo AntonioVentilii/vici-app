@@ -27,7 +27,6 @@ target
 /test-results/
 /playwright/.cache/
 
-# Design-team reference materials (specs, mockups, reference implementations).
-# Never ships to production — read-only inputs for the agent / design alignment work.
-/vici design team/
+
+
 

@@ -362,6 +362,43 @@ WASM, then runs `npm run e2e:ci`. The HTML report is uploaded as the
 `playwright-report` artifact (always); raw results ship as
 `test-results` only on failure.
 
+### Resilience against infra flakes
+
+The suite talks to a real Vite dev server which proxies HTTP traffic to
+a PocketIC instance (the Juno emulator). Two failure modes have been
+observed and the suite guards against both:
+
+1. **Endpoint not reachable at startup** — the emulator failed to boot,
+   or the dev server crashed before any spec ran. Caught by
+   [`e2e/global-setup.ts`](../../../e2e/global-setup.ts), which pings
+   `http://localhost:5173/` and `http://127.0.0.1:5987/` with a short
+   retry loop and throws a clear "X was not reachable" error. Without
+   this guard you'd get 13 identical `Timeout 30000ms exceeded` failures
+   inside `home.page.ts` and have to read traces to figure out the
+   emulator was dead the whole time.
+2. **Proxy enters a sticky `socket hang up` / `ECONNRESET` state
+   mid-suite** — the Vite dev server's HTTP proxy to the IC boundary
+   node stops resolving canister calls, often for the rest of the run.
+   `HomePage.signInAsDevUser` auto-retries once with a `page.reload()`
+   in between; the reload opens a fresh browser context against the
+   proxy and often recovers. If the second attempt also fails, the
+   error message names the proxy as the likely cause so triage doesn't
+   chase a UI red herring.
+
+If a CI run fails with a string of identical mobile timeouts on
+`getByTestId('user-menu')` / `getByTestId('market-card')`, suspect the
+mid-run proxy flake before suspecting the diff. Confirm by checking the
+Playwright trace for `ECONNRESET` in the network panel; rerun the job
+with `gh run rerun <run-id> --failed`.
+
+Top-level `retries: 2` is **not** bumped to 3 — the mid-run flake
+persists past Playwright-level retries (they share the same poisoned
+connection pool), so the cost (more runtime, harder 45-minute workflow
+cap) outweighs the benefit. The fix has to be at the per-test recovery
+layer (the `signInAsDevUser` retry-with-reload above) or by replacing
+Vite's HTTP proxy with a more resilient connector — outside this
+testing layer's scope.
+
 ### Forbidden in E2E
 
 - `test.skip` left on `main`. Either remove the test or make it pass.
