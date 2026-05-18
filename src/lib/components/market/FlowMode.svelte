@@ -26,6 +26,7 @@
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
+	import { haptic } from '$lib/utils/haptics.utils';
 	import {
 		applyDailyStreakBump,
 		FLAME_STAGE_LABELS,
@@ -95,15 +96,10 @@
 
 	const comboMultiplier = $derived(streak >= 5 ? 3 : streak >= 3 ? 2 : 1);
 
-	const vibrate = (pattern: number | number[]) => {
-		if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
-			try {
-				navigator.vibrate(pattern);
-			} catch {
-				/* ignore */
-			}
-		}
-	};
+	// Local alias — every haptic in this file maps to a named pattern
+	// from `haptics.utils.ts`. Naming kept minimal so existing call
+	// sites read the same way.
+	const vibrate = haptic;
 
 	onMount(async () => {
 		document.body.classList.add('overflow-hidden');
@@ -196,18 +192,17 @@
 		if (action === 'YES') {
 			exitX = 500;
 			exitY = 20;
-			vibrate(12);
+			vibrate('firm-tap');
 		} else if (action === 'NO') {
 			exitX = -500;
 			exitY = 20;
-			vibrate(12);
+			vibrate('firm-tap');
 		} else if (action === 'SKIP') {
 			exitX = 0;
 			exitY = -500;
-			// Soft-tick haptic per testAV1 §05 negative-states. Lighter
-			// than the YES / NO firm tap so the rhythm reads "passed" not
-			// "committed".
-			vibrate([4, 8]);
+			// Skip is a negative-state per testAV1 §05 — softer beat
+			// than YES / NO so the rhythm reads "passed" not "committed".
+			vibrate('soft-tick');
 		}
 
 		// Lock the card into its commit-feedback beat. Drag is disabled
@@ -226,7 +221,7 @@
 			if (bump.transition === 'break') {
 				const previousStage = stageForStreak(Math.max(1, $userStore.profile?.dailyStreak ?? 0));
 				streakBreakBanner = { stage: previousStage };
-				vibrate(4);
+				vibrate('low-thud');
 				setTimeout(() => {
 					streakBreakBanner = null;
 				}, 2200);
@@ -292,7 +287,7 @@
 		if (streak === 3 || streak === 5 || streak === 10) {
 			const shown = streak;
 			lastStreakShown = shown;
-			vibrate([12, 40, 18]);
+			vibrate('triple-tap');
 			setTimeout(() => {
 				if (lastStreakShown === shown) {
 					lastStreakShown = 0;
@@ -317,7 +312,7 @@
 			// First-call gets the strongest haptic — triple tap. Other
 			// milestones use a double pulse so they don't shout louder
 			// than streak tier-ups.
-			vibrate(milestone.id === 'first-call' ? [12, 40, 18] : [12, 40]);
+			vibrate(milestone.id === 'first-call' ? 'triple-tap' : 'double-pulse');
 		}
 
 		// Advance after the 80 ms feedback beat — Svelte's `out:fly` on
@@ -335,7 +330,7 @@
 			currentIndex += 1;
 		} else {
 			completed = true;
-			vibrate([14, 30, 20, 30, 40]);
+			vibrate('celebration');
 		}
 	};
 
