@@ -254,7 +254,8 @@
 			{:else}
 				<!-- Pre-gate state: accuracy is hidden until the user has
 				     `ACCURACY_GATE_CALLS` lifetime calls. Calls + streak
-				     are the visible stats until then (testAV1 §03). -->
+				     are the visible stats until then. See
+				     `docs/ai/frontend/design.md` §7.5 for the rule. -->
 				<div>
 					<span class="text-primary text-xs font-bold tracking-widest uppercase">
 						Calls Logged
