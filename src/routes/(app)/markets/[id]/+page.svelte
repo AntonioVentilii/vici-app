@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import MarketDetailForecast from '$lib/components/market/MarketDetailForecast.svelte';
 	import MarketDetailHeader from '$lib/components/market/MarketDetailHeader.svelte';
 	import MarketDetailStats from '$lib/components/market/MarketDetailStats.svelte';
@@ -11,8 +12,10 @@
 	import { userIsAdminOrSolver } from '$lib/derived/user.derived';
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
+	import { showCompanion } from '$lib/stores/companion.store';
 	import type { Market, MarketId } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
+	import { positionResolvedResult } from '$lib/utils/position.utils';
 
 	let market = $state<Market | undefined>();
 
@@ -66,6 +69,63 @@
 			fetchMarket({ id: market.id, silent: true });
 		}
 	};
+
+	// Resolution choreography per testAV1 §05 + brand README §07.
+	// On the first time the user views a resolved market they have a
+	// position on:
+	//   right call → Oracle 1.2 s, "Called it."
+	//   wrong call → no character, the visual ResolvedMarketPanel +
+	//                lost-state crossfade in MarketDetailTabs is the
+	//                ack (silence is dishonest, but the artwork
+	//                already says it).
+	// Tracked in `sessionStorage` per market id so re-navigating to
+	// the same page within a session doesn't re-fire.
+	const RESOLUTION_BEAT_KEY_PREFIX = 'vici:resolution-beat:';
+	$effect(() => {
+		if (!browser) {
+			return;
+		}
+
+		const m = market;
+
+		if (isNullish(m) || m.status !== 'Resolved' || positions.length === 0) {
+			return;
+		}
+
+		const wonAny = positions.some(
+			(p) => positionResolvedResult({ market: m, position: p }) === 'won'
+		);
+
+		if (!wonAny) {
+			return;
+		}
+
+		const beatKey = `${RESOLUTION_BEAT_KEY_PREFIX}${m.id}`;
+
+		try {
+			if (sessionStorage.getItem(beatKey) !== null) {
+				return;
+			}
+
+			sessionStorage.setItem(beatKey, '1');
+		} catch {
+			// sessionStorage can throw in privacy modes / sandboxed
+			// iframes — fail open: still fire the beat, just lose the
+			// once-per-session guard.
+		}
+
+		// Defer slightly so the page settles before the bubble appears.
+		const id = setTimeout(() => {
+			showCompanion({
+				who: 'oracle',
+				line: 'Called it.',
+				dwell_ms: 1200,
+				anchor: 'br'
+			});
+		}, 320);
+
+		return () => clearTimeout(id);
+	});
 </script>
 
 <svelte:head>
