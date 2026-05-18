@@ -2,6 +2,7 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount, onDestroy } from 'svelte';
 	import { cubicOut, backOut } from 'svelte/easing';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
@@ -21,11 +22,13 @@
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { getFlowQueue } from '$lib/services/market.services';
 	import { getPositions } from '$lib/services/position.services';
+	import { showCompanion } from '$lib/stores/companion.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
+	import { pickHighestPriorityBeat, type CompanionBeat } from '$lib/utils/flow-companion.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import {
 		applyDailyStreakBump,
@@ -210,10 +213,17 @@
 		// directional label go to full opacity.
 		committedAction = action;
 
+		// Collect candidate companion beats; the priority resolver
+		// picks one at the end of this handler so a single swipe never
+		// stacks character bubbles (testAV1 §00 "scarcity protects
+		// meaning" + §06 priority).
+		const beats: CompanionBeat[] = [];
+
 		// Daily-streak bump — fires once per session on the first
 		// committed swipe (any of YES / NO / SKIP qualifies; spec calls
 		// out that streak progresses on any swipe).
 		if (!hasMarkedActiveThisSession) {
+			const previousDailyStreak = dailyStreak;
 			const bump = applyDailyStreakBump({ streak: dailyStreak, lastActiveDay });
 			({ streak: dailyStreak, lastActiveDay } = bump);
 			hasMarkedActiveThisSession = true;
@@ -225,6 +235,18 @@
 				setTimeout(() => {
 					streakBreakBanner = null;
 				}, 2200);
+			} else if (bump.bumped) {
+				const previousStage = stageForStreak(previousDailyStreak);
+				const newStage = stageForStreak(bump.streak);
+
+				if (previousStage !== newStage) {
+					beats.push({
+						kind: 'streak-tier',
+						who: 'flame',
+						line: `${FLAME_STAGE_LABELS[newStage]}. ${bump.streak} days.`,
+						stage: newStage
+					});
+				}
 			}
 		}
 
@@ -313,6 +335,36 @@
 			// milestones use a double pulse so they don't shout louder
 			// than streak tier-ups.
 			vibrate(milestone.id === 'first-call' ? 'triple-tap' : 'double-pulse');
+
+			if (milestone.id === 'first-call') {
+				beats.push({
+					kind: 'first-time',
+					who: 'vici',
+					line: 'Veni. Tap for depth, swipe to call it.',
+					dwell_ms: 3600
+				});
+			} else {
+				beats.push({
+					kind: 'swipe-count',
+					who: 'vici',
+					line: `${milestone.copy} +${milestone.bonusXp} XP.`
+				});
+			}
+		}
+
+		// Resolve the highest-priority companion beat for this commit
+		// (testAV1 §06 priority order). Lower-priority beats are
+		// dropped, not queued — by next swipe they're stale.
+		const winningBeat = pickHighestPriorityBeat(beats);
+
+		if (nonNullish(winningBeat)) {
+			showCompanion({
+				who: winningBeat.who,
+				line: winningBeat.line,
+				stage: winningBeat.stage,
+				dwell_ms: winningBeat.dwell_ms ?? 3200,
+				anchor: 'br'
+			});
 		}
 
 		// Advance after the 80 ms feedback beat — Svelte's `out:fly` on
@@ -347,6 +399,39 @@
 	};
 
 	const visibleCards = $derived(markets.slice(currentIndex, currentIndex + 3));
+
+	// Trickster appears on the active card when the YES probability is
+	// strongly skewed (≤ 25 % or ≥ 75 %) — testAV1 + brand README §07
+	// "Trickster · Loves the contrarian — appears only when you bet
+	// against the crowd". Per "defended territory" rule, Trickster
+	// owns this surface alone — it doesn't get pre-empted by other
+	// per-card ambient beats.
+	const trickstered = new SvelteSet<string>();
+
+	$effect(() => {
+		const m = markets[currentIndex];
+
+		if (isNullish(m) || trickstered.has(m.id)) {
+			return;
+		}
+
+		const yes = m.yesProbability ?? 0.5;
+		const consensusSide = yes >= 0.75 ? 'YES' : yes <= 0.25 ? 'NO' : null;
+
+		if (consensusSide === null) {
+			return;
+		}
+
+		const minorityPct = Math.round(Math.min(yes, 1 - yes) * 100);
+		showCompanion({
+			who: 'trickster',
+			line: `Only ${minorityPct}% disagree. Bold.`,
+			anchor: 'br',
+			dwell_ms: 2800,
+			lightning: true
+		});
+		trickstered.add(m.id);
+	});
 
 	// Accuracy is gated until the user has enough lifetime calls for
 	// the percentage to mean anything (testAV1 §03 / Self-check). Below
