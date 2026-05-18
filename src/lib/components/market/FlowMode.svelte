@@ -8,7 +8,11 @@
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import { BASE_XP_PER_BET, findFlowMilestone } from '$lib/constants/flow-rewards.constants';
+	import {
+		BASE_XP_PER_BET,
+		findFlowMilestone,
+		isAccuracyUnlocked
+	} from '$lib/constants/flow-rewards.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
@@ -339,6 +343,14 @@
 	};
 
 	const visibleCards = $derived(markets.slice(currentIndex, currentIndex + 3));
+
+	// Accuracy is gated until the user has enough lifetime calls for
+	// the percentage to mean anything (testAV1 §03 / Self-check). Below
+	// the gate the FlowEnd summary surfaces the lifetime call count
+	// instead — calls + streak are the publicly visible stats.
+	const lifetimeTotalTrades = $derived($userStore.profile?.totalTrades ?? 0);
+	const lifetimeAccuracy = $derived($userStore.profile?.accuracy ?? 0);
+	const accuracyUnlocked = $derived(isAccuracyUnlocked(lifetimeTotalTrades));
 </script>
 
 <div
@@ -396,12 +408,19 @@
 						</div>
 					</div>
 					<div class="bg-card border-border rounded-2xl border px-3 py-4">
-						<div class="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
-							Predictions
-						</div>
-						<div class="text-foreground font-mono text-2xl font-black tabular-nums">
-							{betsCount}
-						</div>
+						{#if accuracyUnlocked}
+							<div class="text-laurel text-[9px] font-bold tracking-widest uppercase">Accuracy</div>
+							<div class="text-foreground font-mono text-2xl font-black tabular-nums">
+								{Math.round(lifetimeAccuracy)}%
+							</div>
+						{:else}
+							<div class="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
+								Calls
+							</div>
+							<div class="text-foreground font-mono text-2xl font-black tabular-nums">
+								{lifetimeTotalTrades + betsCount}
+							</div>
+						{/if}
 					</div>
 				</div>
 
