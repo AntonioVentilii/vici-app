@@ -4,6 +4,7 @@
 	import { cubicOut, backOut } from 'svelte/easing';
 	import { fade, fly, scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
+	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -20,6 +21,12 @@
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
+	import {
+		applyDailyStreakBump,
+		FLAME_STAGE_LABELS,
+		stageForStreak,
+		type FlameStage
+	} from '$lib/utils/streak.utils';
 	import {
 		assertViciXpHumanPremiumAndPayout,
 		resolveOutcomeExecutionPriceForSizing
@@ -51,6 +58,18 @@
 	let bestStreak = $state(0);
 	let xp = $state(0);
 	let lastStreakShown = $state(0);
+
+	// Daily-streak engine — read from the persisted profile on entry,
+	// bump locally on the first swipe of a new local day. The Flow top
+	// bar shows the resulting Flame stage; on break we fire the low-thud
+	// haptic and a single-line banner ("Blaze ended", etc.).
+	// (Server-side persistence on session end is a separate follow-up.)
+	let dailyStreak = $state(0);
+	let lastActiveDay = $state<string | undefined>(undefined);
+	let hasMarkedActiveThisSession = false;
+	let streakBreakBanner = $state<{ stage: FlameStage } | null>(null);
+	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
+	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
 
 	type XpPopKind = 'normal' | 'bonus';
 
@@ -94,6 +113,13 @@
 
 			markets = queue.slice(0, MAX_MARKETS);
 			positions = userPositions;
+
+			const { profile } = $userStore;
+
+			if (nonNullish(profile)) {
+				dailyStreak = profile.dailyStreak ?? 0;
+				({ lastActiveDay } = profile);
+			}
 
 			const fromProfile = $userStore.profile?.preferences?.defaultAmount?.flow;
 
@@ -180,6 +206,24 @@
 		// in FlowCard while this is set; the matching edge tint and
 		// directional label go to full opacity.
 		committedAction = action;
+
+		// Daily-streak bump — fires once per session on the first
+		// committed swipe (any of YES / NO / SKIP qualifies; spec calls
+		// out that streak progresses on any swipe).
+		if (!hasMarkedActiveThisSession) {
+			const bump = applyDailyStreakBump({ streak: dailyStreak, lastActiveDay });
+			({ streak: dailyStreak, lastActiveDay } = bump);
+			hasMarkedActiveThisSession = true;
+
+			if (bump.transition === 'break') {
+				const previousStage = stageForStreak(Math.max(1, $userStore.profile?.dailyStreak ?? 0));
+				streakBreakBanner = { stage: previousStage };
+				vibrate(4);
+				setTimeout(() => {
+					streakBreakBanner = null;
+				}, 2200);
+			}
+		}
 
 		if (action === 'SKIP') {
 			streak = 0;
@@ -391,9 +435,16 @@
 			</div>
 
 			<div class="flow-stats">
-				<div class="flow-stat flow-stat-streak" class:is-hot={streak >= 3} aria-label="Streak">
-					<span class="text-[9px] font-black tracking-widest uppercase">Streak</span>
-					<span class="font-mono tabular-nums">{streak}</span>
+				<div
+					class="flow-stat flow-stat-flame"
+					class:is-hot={dailyStreak >= 7}
+					aria-label="Daily streak"
+				>
+					<FlameChar animate={dailyStreak >= 1} size={20} stage={flameStage} />
+					<span class="flow-flame-meta">
+						<span class="flow-flame-label">{flameLabel}</span>
+						<span class="num flow-flame-count">{dailyStreak}d</span>
+					</span>
 				</div>
 				<div class="flow-stat flow-stat-xp" aria-label="XP">
 					<span class="text-laurel text-[10px] font-black tracking-widest">XP</span>
@@ -413,6 +464,16 @@
 					<span class="combo-banner-xp">x{lastStreakShown >= 5 ? 3 : 2} XP</span>
 				</div>
 			{/key}
+		{/if}
+
+		{#if streakBreakBanner}
+			<!-- Streak-break choreography per testAV1 §05: single low thud
+			     (haptic fires in handleAction), banner names the stage that
+			     ended, fresh start at SPARK. No rescues, no second chances. -->
+			<div class="streak-break" in:fly={{ y: -8, duration: 300, easing: backOut }} out:fade>
+				<span class="serif-italic">{FLAME_STAGE_LABELS[streakBreakBanner.stage]} ended.</span>
+				<span class="streak-break-sub">Fresh start.</span>
+			</div>
 		{/if}
 
 		<main class="flow-stage">
@@ -668,18 +729,39 @@
 		font-size: 12px;
 		line-height: 1;
 	}
-	.flow-stat-streak {
+	/* Daily-streak Flame chip: shows the current stage + day count.
+	   Always-visible (per testAV1 — Flame in Flow header + home only),
+	   never dominant; activates `is-hot` from FLAME stage upward. */
+	.flow-stat-flame {
+		gap: 6px;
+		padding: 4px 9px 4px 6px;
 		background: var(--bg-surface);
 		color: var(--parchment-dim);
 		transition:
-			transform 0.2s ease,
-			background-color 0.2s ease;
+			transform var(--d-state) var(--ease-vici),
+			background-color var(--d-state) var(--ease-vici);
 	}
-	.flow-stat-streak.is-hot {
+	.flow-stat-flame.is-hot {
 		background: linear-gradient(135deg, var(--laurel-deep), var(--laurel));
 		color: var(--ink);
 		box-shadow: 0 4px 12px var(--laurel-glow);
-		animation: hotPulse 1.4s ease-in-out infinite;
+	}
+	.flow-flame-meta {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: flex-start;
+		line-height: 1;
+	}
+	.flow-flame-label {
+		font-size: 9px;
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+		opacity: 0.85;
+	}
+	.flow-flame-count {
+		font-size: 11px;
+		font-weight: 600;
 	}
 	@keyframes hotPulse {
 		0%,
@@ -722,6 +804,35 @@
 		border-radius: 999px;
 		background: rgba(14, 13, 11, 0.2);
 		font-size: 11px;
+	}
+
+	/* Streak-break banner — shows once when the previous-day gap broke
+	   the streak. Mute palette (parchment-mute, no laurel celebration);
+	   spec is explicit that the break is honest, not consoling. */
+	.streak-break {
+		position: fixed;
+		left: 50%;
+		top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
+		transform: translateX(-50%);
+		z-index: 65;
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 2px;
+		padding: 8px 16px;
+		border-radius: var(--r-pill);
+		background: rgba(14, 13, 11, 0.92);
+		border: 1px solid var(--ink-line-strong);
+		color: var(--parchment-mute);
+		font-size: 13px;
+		box-shadow: var(--shadow-toast);
+	}
+	.streak-break-sub {
+		font-size: 10px;
+		font-weight: 600;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+		color: var(--parchment-faint);
 	}
 
 	.flow-stage {

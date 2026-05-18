@@ -31,3 +31,113 @@ export const FLAME_STAGE_LABELS: Record<FlameStage, string> = {
 	blaze: 'BLAZE',
 	inferno: 'INFERNO'
 };
+
+/**
+ * Local-day key in `YYYY-MM-DD` form (user's local timezone). Used as
+ * the persistence anchor for the daily-streak engine.
+ */
+export const todayKey = (now: Date = new Date()): string => {
+	const y = now.getFullYear();
+	const m = String(now.getMonth() + 1).padStart(2, '0');
+	const d = String(now.getDate()).padStart(2, '0');
+
+	return `${y}-${m}-${d}`;
+};
+
+/**
+ * Day delta between two `YYYY-MM-DD` keys (`to - from`). Returns
+ * `Infinity` if either key is malformed. Used to decide whether the
+ * previous recorded day was "yesterday" (continue), "today" (no-op),
+ * or "earlier" (break).
+ */
+export const dayDelta = ({ from, to }: { from: string; to: string }): number => {
+	const parse = (k: string): number | null => {
+		const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(k);
+
+		if (!m) {
+			return null;
+		}
+
+		const [, y, mo, d] = m;
+		const ts = Date.UTC(Number(y), Number(mo) - 1, Number(d));
+
+		return Number.isFinite(ts) ? ts : null;
+	};
+
+	const a = parse(from);
+	const b = parse(to);
+
+	if (a === null || b === null) {
+		return Infinity;
+	}
+
+	return Math.round((b - a) / (1000 * 60 * 60 * 24));
+};
+
+export interface DailyStreakBump {
+	// New streak day count after the bump (`>= 1`).
+	streak: number;
+	// `'continue'` — same day or +1 day from the recorded key (or
+	// no record at all → start at SPARK 1).
+	// `'break'`    — gap >= 2 days; previous streak ended, fresh
+	// start at SPARK 1 with the break choreography.
+	transition: 'continue' | 'break';
+	// `true` only on the first swipe of a new local day (the count
+	// actually moved). `false` for additional swipes on the same day.
+	bumped: boolean;
+	// New value to persist as the user's `lastActiveDay`.
+	lastActiveDay: string;
+}
+
+/**
+ * Compute the next daily-streak state from the persisted streak +
+ * lastActiveDay and a fresh "now". Stateless — callers (FlowMode,
+ * profile sync, etc.) decide when to persist the result.
+ *
+ * Spec: testAV1 §03 "Reward ladder map" + brand README §07
+ * ("Flame evolution"). Streak progresses on any swipe; no freezes,
+ * no rescues; missed-day = reset to SPARK 1 with break choreography.
+ */
+export const applyDailyStreakBump = ({
+	streak,
+	lastActiveDay,
+	now = new Date()
+}: {
+	streak: number;
+	lastActiveDay?: string;
+	now?: Date;
+}): DailyStreakBump => {
+	const today = todayKey(now);
+
+	if (lastActiveDay === undefined || lastActiveDay === '') {
+		return { streak: 1, transition: 'continue', bumped: true, lastActiveDay: today };
+	}
+
+	const delta = dayDelta({ from: lastActiveDay, to: today });
+
+	if (delta <= 0) {
+		// Same day (or — defensively — clock drift to the past). No
+		// further bump, but echo the existing streak / day so callers
+		// can branch on `bumped`.
+		return {
+			streak: Math.max(1, streak),
+			transition: 'continue',
+			bumped: false,
+			lastActiveDay
+		};
+	}
+
+	if (delta === 1) {
+		return {
+			streak: Math.max(1, streak) + 1,
+			transition: 'continue',
+			bumped: true,
+			lastActiveDay: today
+		};
+	}
+
+	// `delta >= 2` — at least one day was missed. Streak breaks; the
+	// today-swipe restarts the ladder at SPARK 1 (Flame never goes
+	// dark — it returns to SPARK).
+	return { streak: 1, transition: 'break', bumped: true, lastActiveDay: today };
+};
