@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { Spring } from 'svelte/motion';
+	import FlowArtFrame from '$lib/components/artwork/FlowArtFrame.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import { playgroundPotentialReturnSuffix } from '$lib/derived/playground.derived';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
+	import { categoryColor } from '$lib/utils/category-color.utils';
+	import { FLOW_ART_CATEGORIES, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import { formatProbability, formatToken } from '$lib/utils/format.utils';
 
 	interface Props {
@@ -15,6 +18,16 @@
 		position?: Position;
 		tradeAmount: string;
 		interactive?: boolean;
+		// Generative-artwork category. FlowMode resolves this from the
+		// SeriesCategory mappings; FlowCard treats it as opaque, falls
+		// back to 'macro' if missing or unknown.
+		category?: FlowArtCategory | string;
+		// Optional editorial sub-line ("FOMC · rate-cut call"). When
+		// undefined, FlowCard derives a short fallback from the description.
+		subtitle?: string;
+		// Optional accent chip (e.g. "FIRST CALL") shown on the right of
+		// the header row. Sits in laurel.
+		flag?: string;
 	}
 
 	const {
@@ -25,12 +38,23 @@
 		signedIn,
 		position,
 		tradeAmount,
-		interactive = true
+		interactive = true,
+		category,
+		subtitle,
+		flag
 	}: Props = $props();
 
 	const amount = $derived(parseFloat(tradeAmount) || 0);
 	const potentialReturnYes = $derived(amount / (market.yesProbability || 0.1));
 	const potentialReturnNo = $derived(amount / (market.noProbability || 0.1));
+
+	const FLOW_ART_SET = new Set<string>(FLOW_ART_CATEGORIES);
+	const resolvedCategory: FlowArtCategory = $derived.by(() => {
+		const raw = (category ?? '').toString().toLowerCase();
+
+		return FLOW_ART_SET.has(raw) ? (raw as FlowArtCategory) : 'macro';
+	});
+	const catColor = $derived(categoryColor(resolvedCategory));
 
 	let startX = 0;
 	let startY = 0;
@@ -48,7 +72,7 @@
 	const dragMagnitude = $derived(
 		Math.min(Math.sqrt(coords.current.x ** 2 + coords.current.y ** 2) / 260, 1)
 	);
-	const opacity = $derived(1 - dragMagnitude * 0.25);
+	const opacity = $derived(1 - dragMagnitude * 0.18);
 
 	const yesOpacity = $derived(Math.max(0, coords.current.x / 90));
 	const noOpacity = $derived(Math.max(0, -coords.current.x / 90));
@@ -102,19 +126,39 @@
 		}
 	};
 
-	const formatDate = (expiry: bigint) => {
-		const date = new Date(Number(expiry) / 1_000_000);
-
-		return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-	};
-
-	const daysUntilExpiry = $derived.by(() => {
+	const formatExpiryEyebrow = $derived.by(() => {
 		const now = Date.now();
 		const exp = Number(market.expiryDate) / 1_000_000;
 		const days = Math.max(0, Math.ceil((exp - now) / (1000 * 60 * 60 * 24)));
 
-		return days;
+		if (days === 0) {
+			return 'TODAY';
+		}
+
+		if (days >= 365) {
+			return `${Math.round(days / 365)}y`;
+		}
+
+		return `${days}d`;
 	});
+
+	// First clause of description (up to ~52 chars) — only used when no
+	// explicit `subtitle` is passed by the parent.
+	const fallbackSubtitle = $derived.by(() => {
+		const desc = market.description ?? '';
+		const head = desc.split(/[.!?]\s/)[0]?.trim() ?? '';
+
+		if (head.length <= 52) {
+			return head;
+		}
+
+		return `${head.slice(0, 49).trimEnd()}…`;
+	});
+
+	const subtitleText = $derived(subtitle ?? fallbackSubtitle);
+
+	const yesPctLabel = $derived(formatProbability(market.yesProbability));
+	const noPctLabel = $derived(formatProbability(market.noProbability));
 </script>
 
 <div
@@ -127,8 +171,8 @@
 	role="presentation"
 >
 	<div
-		style="transform: translate3d({coords.current.x}px, {coords.current
-			.y}px, 0) rotate({rotation}deg); opacity: {opacity};"
+		style:transform="translate3d({coords.current.x}px, {coords.current.y}px, 0) rotate({rotation}deg)"
+		style:opacity
 		class="flow-card"
 		class:is-grabbing={dragging}
 		class:is-static={!interactive}
@@ -136,182 +180,121 @@
 		ontouchstart={handleStart}
 		role="presentation"
 	>
+		<!-- Edge-tint layers — subtle ring inside the card during drag.
+		     Per testAV1: routine swipes get edge tint + XP pop + haptic, no character. -->
 		<div
-			style="box-shadow: inset 0 0 0 4px rgba(79, 211, 161, {tintYes}), inset 0 0 60px rgba(79, 211, 161, {tintYes *
-				0.4}); opacity: {tintYes}"
-			class="pointer-events-none absolute inset-0 z-10 rounded-4xl transition-opacity md:rounded-[40px]"
+			style:opacity={tintYes}
+			style:box-shadow="inset 0 0 0 2px rgba(79, 211, 161, {tintYes}), inset 0 0 60px rgba(79, 211,
+			161, {tintYes * 0.35})"
+			class="flow-card-tint"
 		></div>
 		<div
-			style="box-shadow: inset 0 0 0 4px rgba(255, 107, 107, {tintNo}), inset 0 0 60px rgba(255, 107, 107, {tintNo *
-				0.4}); opacity: {tintNo}"
-			class="pointer-events-none absolute inset-0 z-10 rounded-4xl transition-opacity md:rounded-[40px]"
+			style:opacity={tintNo}
+			style:box-shadow="inset 0 0 0 2px rgba(255, 107, 107, {tintNo}), inset 0 0 60px rgba(255, 107,
+			107, {tintNo * 0.35})"
+			class="flow-card-tint"
 		></div>
 		<div
-			style="box-shadow: inset 0 0 0 4px var(--parchment-faint, rgba(148, 163, 184, {tintSkip})), inset 0 0 60px rgba(242, 236, 220, {tintSkip *
-				0.2}); opacity: {tintSkip}"
-			class="pointer-events-none absolute inset-0 z-10 rounded-4xl transition-opacity md:rounded-[40px]"
+			style:opacity={tintSkip}
+			style:box-shadow="inset 0 0 0 2px rgba(242, 236, 220, {tintSkip * 0.4}), inset 0 0 60px
+			rgba(242, 236, 220, {tintSkip * 0.18})"
+			class="flow-card-tint"
 		></div>
 
+		<!-- Drag-direction labels (replace the old giant YES/NO/SKIP stamps).
+		     Tiny laurel/yes/no signals that appear on edge approach. -->
 		<div
-			style="opacity: {signedIn
-				? yesOpacity
-				: yesOpacity * 0.5}; transform: rotate(-12deg) scale({0.85 + yesOpacity * 0.15})"
-			class="stamp stamp-yes"
+			style:opacity={signedIn ? yesOpacity : yesOpacity * 0.5}
+			style:transform="scale({0.92 + yesOpacity * 0.08})"
+			class="flow-edge-label flow-edge-yes"
 		>
-			<span class="text-yes text-5xl font-black tracking-tighter">YES</span>
-			<div class="mt-1 flex flex-col items-center">
-				<span class="text-yes-deep font-mono text-lg font-black tabular-nums">
-					+{potentialReturnYes.toFixed(2)}{$playgroundPotentialReturnSuffix}
-				</span>
-				<span class="text-yes text-[9px] font-bold tracking-widest uppercase"> Potential </span>
-			</div>
+			<span class="flow-edge-arrow">→</span>
+			<span class="flow-edge-text">YES</span>
+			<span class="flow-edge-meta num">
+				+{potentialReturnYes.toFixed(2)}{$playgroundPotentialReturnSuffix}
+			</span>
 			{#if isLimitOrderYes}
-				<span class="stamp-pill bg-yes">Limit Order</span>
+				<span class="flow-edge-pill">Limit</span>
 			{/if}
 		</div>
-
 		<div
-			style="opacity: {signedIn
-				? noOpacity
-				: noOpacity * 0.5}; transform: rotate(12deg) scale({0.85 + noOpacity * 0.15})"
-			class="stamp stamp-no"
+			style:opacity={signedIn ? noOpacity : noOpacity * 0.5}
+			style:transform="scale({0.92 + noOpacity * 0.08})"
+			class="flow-edge-label flow-edge-no"
 		>
-			<span class="text-no text-5xl font-black tracking-tighter">NO</span>
-			<div class="mt-1 flex flex-col items-center">
-				<span class="text-no-deep font-mono text-lg font-black tabular-nums">
-					+{potentialReturnNo.toFixed(2)}{$playgroundPotentialReturnSuffix}
-				</span>
-				<span class="text-no text-[9px] font-bold tracking-widest uppercase"> Potential </span>
-			</div>
+			<span class="flow-edge-arrow">←</span>
+			<span class="flow-edge-text">NO</span>
+			<span class="flow-edge-meta num">
+				+{potentialReturnNo.toFixed(2)}{$playgroundPotentialReturnSuffix}
+			</span>
 			{#if isLimitOrderNo}
-				<span class="stamp-pill bg-no">Limit Order</span>
+				<span class="flow-edge-pill">Limit</span>
 			{/if}
 		</div>
-
 		<div
-			style="opacity: {skipOpacity}; transform: translate(-50%, 0) scale({0.85 +
-				skipOpacity * 0.15})"
-			class="stamp stamp-skip"
+			style:opacity={skipOpacity}
+			style:transform="translate(-50%, 0) scale({0.92 + skipOpacity * 0.08})"
+			class="flow-edge-label flow-edge-skip"
 		>
-			<span class="text-muted-foreground text-4xl font-black tracking-tighter">SKIP</span>
+			<span class="flow-edge-arrow">↑</span>
+			<span class="flow-edge-text">SKIP</span>
 		</div>
 
 		<div class="flow-card-body">
-			<div class="flow-card-header">
-				<div class="absolute inset-0 opacity-30">
-					<div class="bg-laurel/20 absolute -top-32 -left-20 h-72 w-72 rounded-full blur-3xl"></div>
-					<div
-						class="bg-laurel/10 absolute -right-20 -bottom-24 h-72 w-72 rounded-full blur-3xl"
-					></div>
-				</div>
-
-				<div class="relative z-10 flex items-start justify-between gap-2">
-					<div
-						class="bg-foreground/15 flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
-					>
-						<svg class="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path
-								d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2.5"
-							/>
-						</svg>
-						<span class="text-[10px] font-black tracking-wider text-white uppercase tabular-nums">
-							{#if daysUntilExpiry === 0}
-								Ends today
-							{:else if daysUntilExpiry === 1}
-								1 day
-							{:else}
-								{daysUntilExpiry} days
-							{/if}
-						</span>
-					</div>
-
+			<header class="flow-card-head">
+				<div class="flow-meta-row">
+					<span style:color={catColor} class="allcaps flow-cat">{resolvedCategory}</span>
+					<span class="flow-meta-sep" aria-hidden="true">·</span>
+					<span class="num flow-meta-time">{formatExpiryEyebrow}</span>
 					{#if position}
-						<div
-							class="bg-foreground/15 flex items-center gap-1.5 rounded-full px-2.5 py-1 ring-1 ring-white/20 backdrop-blur-sm"
-						>
-							<div class="h-1.5 w-1.5 animate-pulse rounded-full bg-amber-300"></div>
-							<span class="text-[10px] font-black tracking-wider text-white uppercase">
-								Holding {formatToken({ value: position.netQty, unitName: market.token.decimals })}
-								{market.token.symbol}
-							</span>
-						</div>
+						<span class="flow-meta-sep" aria-hidden="true">·</span>
+						<span class="allcaps flow-meta-position num">
+							Holding {formatToken({ value: position.netQty, unitName: market.token.decimals })}
+							{market.token.symbol}
+						</span>
+					{/if}
+					{#if flag}
+						<span class="allcaps flow-flag">{flag}</span>
 					{/if}
 				</div>
 
 				<h2 class="flow-card-title">{market.title}</h2>
+				{#if subtitleText}
+					<p class="flow-card-sub">{subtitleText}</p>
+				{/if}
+			</header>
+
+			<div class="flow-art-slot">
+				<FlowArtFrame
+					class="flow-art"
+					category={resolvedCategory}
+					seed={market.id}
+					size={260}
+					state="neutral"
+				/>
 			</div>
 
-			<div class="flow-card-content">
-				<p class="flow-card-desc">{market.description}</p>
-
-				<div class="flow-card-tiles">
-					<BaseButton class="flow-tile flow-tile-no" onclick={() => onAction('NO')}>
-						<span class="flow-tile-label text-no">NO</span>
-						<span class="flow-tile-pct text-no">
-							{formatProbability(market.noProbability)}
-						</span>
-						<span class="flow-tile-hint text-no/60"> ← Swipe </span>
-						{#if isLimitOrderNo}
-							<div class="flow-tile-badge bg-no-wash text-no">Limit</div>
-						{/if}
-					</BaseButton>
-
-					<BaseButton class="flow-tile flow-tile-yes" onclick={() => onAction('YES')}>
-						<span class="flow-tile-label text-yes">YES</span>
-						<span class="flow-tile-pct text-yes">
-							{formatProbability(market.yesProbability)}
-						</span>
-						<span class="flow-tile-hint text-yes/60"> Swipe → </span>
-						{#if isLimitOrderYes}
-							<div class="flow-tile-badge bg-yes-wash text-yes">Limit</div>
-						{/if}
-					</BaseButton>
-				</div>
-
-				<div class="flow-card-footer">
-					<div class="flex items-center gap-1.5">
-						<svg
-							class="text-muted-foreground h-3 w-3"
-							fill="none"
-							stroke="currentColor"
-							viewBox="0 0 24 24"
-						>
-							<path
-								d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-								stroke-linecap="round"
-								stroke-linejoin="round"
-								stroke-width="2"
-							/>
-						</svg>
-						<span class="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
-							Expires {formatDate(market.expiryDate)}
-						</span>
-					</div>
-
-					{#if !signedIn}
-						<div class="flex items-center gap-1.5">
-							<svg
-								class="text-muted-foreground h-3 w-3"
-								fill="none"
-								stroke="currentColor"
-								viewBox="0 0 24 24"
-							>
-								<path
-									d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-									stroke-linecap="round"
-									stroke-linejoin="round"
-									stroke-width="2"
-								/>
-							</svg>
-							<span class="text-muted-foreground text-[10px] font-bold tracking-wider uppercase">
-								Sign in to play
-							</span>
-						</div>
+			<div class="flow-prob">
+				<BaseButton class="flow-prob-side flow-prob-no" onclick={() => onAction('NO')}>
+					<span class="allcaps flow-prob-label text-no">NO</span>
+					<span class="num flow-prob-pct text-no">{noPctLabel}</span>
+					{#if isLimitOrderNo}
+						<span class="flow-prob-badge bg-no-wash text-no">Limit</span>
 					{/if}
-				</div>
+				</BaseButton>
+				<BaseButton class="flow-prob-side flow-prob-yes" onclick={() => onAction('YES')}>
+					<span class="allcaps flow-prob-label text-yes">YES</span>
+					<span class="num flow-prob-pct text-yes">{yesPctLabel}</span>
+					{#if isLimitOrderYes}
+						<span class="flow-prob-badge bg-yes-wash text-yes">Limit</span>
+					{/if}
+				</BaseButton>
+			</div>
+
+			<div class="flow-card-rail">
+				<span class="flow-rail-side"><span class="flow-rail-arrow">←</span> NO</span>
+				<span class="flow-rail-mid allcaps">DRAG TO COMMIT · TAP FOR DETAIL</span>
+				<span class="flow-rail-side">YES <span class="flow-rail-arrow">→</span></span>
 			</div>
 		</div>
 	</div>
@@ -344,16 +327,27 @@
 		cursor: default;
 	}
 
+	.flow-card-tint {
+		position: absolute;
+		inset: 0;
+		z-index: 10;
+		pointer-events: none;
+		border-radius: var(--r-12);
+		transition: opacity var(--d-state) var(--ease-vici);
+	}
+
 	.flow-card-body {
 		position: relative;
 		display: flex;
 		flex-direction: column;
+		gap: 1rem;
 		overflow: hidden;
 		height: 100%;
 		width: 100%;
+		padding: 1.25rem 1.25rem 1rem;
 		background: var(--bg-popover);
 		border: 1px solid var(--border-strong);
-		border-radius: 12px;
+		border-radius: var(--r-12);
 		box-shadow:
 			var(--inset-hi),
 			0 12px 24px rgba(0, 0, 0, 0.3),
@@ -361,205 +355,249 @@
 	}
 	@media (min-width: 768px) {
 		.flow-card-body {
-			border-radius: 16px;
+			padding: 1.5rem 1.5rem 1.25rem;
+			gap: 1.25rem;
 		}
 	}
 
-	.flow-card-header {
-		position: relative;
-		flex: 0 0 auto;
-		padding: 1.25rem 1.5rem 1.5rem;
-		background: linear-gradient(135deg, var(--ink-deep) 0%, var(--ink-raised) 100%);
-		color: var(--parchment);
-		overflow: hidden;
+	.flow-card-head {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
-	@media (min-width: 768px) {
-		.flow-card-header {
-			padding: 1.75rem 2rem 2rem;
-		}
+
+	.flow-meta-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+		font-size: var(--t-12);
+		color: var(--text-muted);
+	}
+	.flow-cat {
+		color: var(--cat-macro); /* overridden inline by `style:color={catColor}` */
+		font-size: var(--t-12);
+	}
+	.flow-meta-sep {
+		color: var(--text-muted);
+		opacity: 0.6;
+	}
+	.flow-meta-time {
+		font-size: var(--t-12);
+		color: var(--text-muted);
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-allcaps);
+	}
+	.flow-meta-position {
+		color: var(--laurel);
+	}
+	.flow-flag {
+		margin-left: auto;
+		color: var(--laurel);
+		font-size: var(--t-12);
 	}
 
 	.flow-card-title {
-		position: relative;
-		z-index: 1;
-		margin-top: 0.875rem;
+		margin: 0;
 		font-family: var(--font-display);
-		font-size: 1.25rem;
-		line-height: 1.2;
+		font-size: 1.5rem;
+		line-height: var(--leading-snug);
 		font-weight: 600;
-		letter-spacing: -0.015em;
+		letter-spacing: var(--tracking-snug);
 		color: var(--parchment);
 		overflow-wrap: anywhere;
 	}
 	@media (min-width: 400px) {
 		.flow-card-title {
-			font-size: 1.5rem;
+			font-size: 1.75rem;
 		}
 	}
 	@media (min-width: 768px) {
 		.flow-card-title {
-			font-size: 1.75rem;
-			margin-top: 1rem;
+			font-size: 2rem;
 		}
 	}
 
-	.flow-card-content {
-		flex: 1 1 auto;
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		padding: 1.25rem 1.5rem 1.5rem;
-		min-height: 0;
-	}
-	@media (min-width: 768px) {
-		.flow-card-content {
-			padding: 1.75rem 2rem 2rem;
-			gap: 1.25rem;
-		}
-	}
-
-	.flow-card-desc {
-		flex: 1 1 auto;
-		font-size: 0.875rem;
-		line-height: 1.55;
+	.flow-card-sub {
+		margin: 0;
+		font-size: var(--t-13);
+		line-height: var(--leading-normal);
 		color: var(--text-muted);
-		overflow: hidden;
-		overflow-wrap: anywhere;
-		display: -webkit-box;
-		-webkit-line-clamp: 4;
-		-webkit-box-orient: vertical;
-	}
-	@media (min-width: 768px) {
-		.flow-card-desc {
-			font-size: 0.9375rem;
-			-webkit-line-clamp: 6;
-		}
+		font-family: var(--font-display);
 	}
 
-	.flow-card-tiles {
+	.flow-art-slot {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex: 1 1 auto;
+		min-height: 0;
+		padding: 0.25rem 0;
+	}
+
+	.flow-art-slot :global(.flow-art) {
+		max-width: 100%;
+		height: auto;
+		max-height: 100%;
+		aspect-ratio: 1 / 1;
+	}
+
+	.flow-prob {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 0.625rem;
 	}
 
-	:global(.flow-tile) {
+	:global(.flow-prob-side) {
 		position: relative;
 		display: flex !important;
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		gap: 2px;
-		padding: 0.875rem 0.5rem;
-		border-radius: 24px;
+		padding: 0.625rem 0.5rem;
+		border-radius: var(--r-8);
 		border-width: 1px;
 		border-style: solid;
+		background: var(--bg-surface);
 		transition:
-			transform 0.15s ease,
-			background-color 0.2s ease;
+			transform var(--d-hover) var(--ease-vici),
+			background-color var(--d-state) var(--ease-vici);
 	}
-	:global(.flow-tile:active) {
+	:global(.flow-prob-side:active) {
 		transform: scale(0.985);
 	}
-	:global(.flow-tile-no) {
-		background: var(--bg-surface);
-		border-color: rgba(255, 107, 107, 0.2);
+	:global(.flow-prob-no) {
+		border-color: rgba(255, 107, 107, 0.18);
 	}
-	:global(.flow-tile-no:hover) {
+	:global(.flow-prob-no:hover) {
 		background: var(--no-wash);
 	}
-	:global(.flow-tile-yes) {
-		background: var(--bg-surface);
-		border-color: rgba(79, 211, 161, 0.2);
+	:global(.flow-prob-yes) {
+		border-color: rgba(79, 211, 161, 0.18);
 	}
-	:global(.flow-tile-yes:hover) {
+	:global(.flow-prob-yes:hover) {
 		background: var(--yes-wash);
 	}
-
-	:global(.flow-tile-label) {
+	:global(.flow-prob-label) {
 		display: block;
-		font-size: 10px;
-		font-weight: 900;
-		letter-spacing: 0.18em;
-		text-transform: uppercase;
+		font-size: var(--t-12);
+		font-weight: 600;
 	}
-	:global(.flow-tile-pct) {
+	:global(.flow-prob-pct) {
 		display: block;
-		font-family: var(--font-mono);
-		font-size: 1.875rem;
-		font-weight: 900;
-		letter-spacing: -0.025em;
+		font-size: 1.5rem;
+		font-weight: 600;
+		letter-spacing: -0.02em;
 		line-height: 1;
-		font-variant-numeric: tabular-nums;
 	}
-	:global(.flow-tile-hint) {
-		display: block;
-		font-size: 9px;
-		font-weight: 800;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		margin-top: 2px;
-	}
-	:global(.flow-tile-badge) {
+	:global(.flow-prob-badge) {
 		position: absolute;
-		top: 0.5rem;
-		right: 0.5rem;
-		padding: 2px 8px;
-		border-radius: 999px;
-		font-size: 8px;
-		font-weight: 900;
-		letter-spacing: 0.14em;
+		top: 0.4rem;
+		right: 0.4rem;
+		padding: 2px 6px;
+		border-radius: var(--r-pill);
+		font-size: 9px;
+		font-weight: 700;
+		letter-spacing: 0.12em;
 		text-transform: uppercase;
 	}
 
-	.flow-card-footer {
+	.flow-card-rail {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		gap: 0.75rem;
-		padding-top: 0.625rem;
+		gap: 0.5rem;
+		padding-top: 0.5rem;
 		border-top: 1px solid var(--border-base);
-		flex-wrap: wrap;
+		font-size: var(--t-12);
+		color: var(--text-muted);
+		font-family: var(--font-display);
+		font-weight: 500;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+	.flow-rail-side {
+		flex: 0 0 auto;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		color: var(--parchment-mute);
+	}
+	.flow-rail-arrow {
+		color: var(--laurel);
+		font-weight: 700;
+	}
+	.flow-rail-mid {
+		flex: 1 1 auto;
+		text-align: center;
+		font-size: 10px;
+		color: var(--parchment-faint);
+	}
+	@media (max-width: 360px) {
+		.flow-rail-mid {
+			display: none;
+		}
 	}
 
-	.stamp {
+	.flow-edge-label {
 		position: absolute;
 		z-index: 20;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		padding: 0.75rem 1.75rem;
+		gap: 2px;
+		padding: 0.5rem 1rem;
 		background: rgba(14, 13, 11, 0.92);
-		border-radius: 18px;
-		border-width: 4px;
-		border-style: solid;
+		border: 1px solid var(--ink-line-strong);
+		border-radius: var(--r-8);
 		pointer-events: none;
+		font-family: var(--font-display);
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-allcaps);
 	}
-	.stamp-yes {
-		top: 2.5rem;
-		left: 1.5rem;
+	.flow-edge-arrow {
+		font-size: var(--t-20);
+		font-weight: 700;
+		line-height: 1;
+	}
+	.flow-edge-text {
+		font-size: var(--t-12);
+		font-weight: 700;
+	}
+	.flow-edge-meta {
+		font-size: 10px;
+		color: var(--parchment-mute);
+	}
+	.flow-edge-pill {
+		margin-top: 0.25rem;
+		padding: 1px 6px;
+		border-radius: var(--r-pill);
+		font-size: 8px;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+		color: var(--parchment);
+		background: var(--ink-elevated);
+	}
+	.flow-edge-yes {
+		top: 1.25rem;
+		right: 1rem;
 		border-color: var(--yes);
-		box-shadow: 0 20px 50px rgba(79, 211, 161, 0.3);
+		color: var(--yes);
 	}
-	.stamp-no {
-		top: 2.5rem;
-		right: 1.5rem;
+	.flow-edge-no {
+		top: 1.25rem;
+		left: 1rem;
 		border-color: var(--no);
-		box-shadow: 0 20px 50px rgba(255, 107, 107, 0.3);
+		color: var(--no);
 	}
-	.stamp-skip {
+	.flow-edge-skip {
 		bottom: 30%;
 		left: 50%;
 		border-color: var(--border-strong);
-		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
-	}
-	.stamp-pill {
-		margin-top: 0.5rem;
-		padding: 3px 10px;
-		border-radius: 999px;
-		font-size: 10px;
-		font-weight: 900;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
-		color: white;
+		color: var(--parchment-mute);
 	}
 </style>
