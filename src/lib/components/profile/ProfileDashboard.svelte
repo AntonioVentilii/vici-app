@@ -10,6 +10,7 @@
 	import StatCard from '$lib/components/ui/StatCard.svelte';
 	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
+	import { ACCURACY_GATE_CALLS, isAccuracyUnlocked } from '$lib/constants/flow-rewards.constants';
 	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { userStore } from '$lib/stores/user.store';
@@ -80,13 +81,26 @@
 	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
 	const archetype = $derived(profile.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
 
+	const totalTrades = $derived(profile.totalTrades ?? 0);
+	const accuracyUnlocked = $derived(isAccuracyUnlocked(totalTrades));
+	const callsUntilAccuracy = $derived(Math.max(0, ACCURACY_GATE_CALLS - totalTrades));
+
 	const oracleInsight = $derived.by(() => {
-		const trades = profile.totalTrades ?? 0;
+		const trades = totalTrades;
 		const acc = Math.round(accuracy);
 		const s = streak;
 
 		if (trades === 0) {
 			return 'No calls yet. The Oracle waits.';
+		}
+
+		// Pre-gate: never reveal accuracy %. Calls + streak only.
+		if (!accuracyUnlocked) {
+			if (s >= 7) {
+				return `${s}-day streak across ${trades} ${trades === 1 ? 'call' : 'calls'}. Consistency compounds.`;
+			}
+
+			return `${trades} ${trades === 1 ? 'call' : 'calls'} logged. Accuracy unlocks at ${ACCURACY_GATE_CALLS}.`;
 		}
 
 		if (acc >= 80) {
@@ -219,21 +233,49 @@
 		<div
 			class="border-primary/20 bg-primary/10 text-foreground flex h-full flex-col justify-between rounded-2xl border p-8"
 		>
-			<div>
-				<span class="text-primary text-xs font-bold tracking-widest uppercase">
-					Prediction Accuracy
-				</span>
-				<div class="mt-6 flex items-baseline gap-2">
-					<span class="font-mono text-6xl font-black tabular-nums">{Math.round(accuracy)}%</span>
-					<span class="text-muted-foreground">win rate</span>
+			{#if accuracyUnlocked}
+				<div>
+					<span class="text-primary text-xs font-bold tracking-widest uppercase">
+						Prediction Accuracy
+					</span>
+					<div class="mt-6 flex items-baseline gap-2">
+						<span class="font-mono text-6xl font-black tabular-nums">
+							{Math.round(accuracy)}%
+						</span>
+						<span class="text-muted-foreground">win rate</span>
+					</div>
 				</div>
-			</div>
-			<div class="mt-8 flex items-center gap-3">
-				<div class="bg-card h-2 flex-1 overflow-hidden rounded-full">
-					<div style="width: {accuracy}%" class="bg-yes h-full"></div>
+				<div class="mt-8 flex items-center gap-3">
+					<div class="bg-card h-2 flex-1 overflow-hidden rounded-full">
+						<div style="width: {accuracy}%" class="bg-yes h-full"></div>
+					</div>
+					<span class="text-primary text-[10px] font-bold">PRO LEVEL</span>
 				</div>
-				<span class="text-primary text-[10px] font-bold">PRO LEVEL</span>
-			</div>
+			{:else}
+				<!-- Pre-gate state: accuracy is hidden until the user has
+				     `ACCURACY_GATE_CALLS` lifetime calls. Calls + streak
+				     are the visible stats until then (testAV1 §03). -->
+				<div>
+					<span class="text-primary text-xs font-bold tracking-widest uppercase">
+						Calls Logged
+					</span>
+					<div class="mt-6 flex items-baseline gap-2">
+						<span class="font-mono text-6xl font-black tabular-nums">{totalTrades}</span>
+						<span class="text-muted-foreground">calls</span>
+					</div>
+				</div>
+				<div class="mt-8 flex items-center gap-3">
+					<div class="bg-card h-2 flex-1 overflow-hidden rounded-full">
+						<div
+							style="width: {(totalTrades / ACCURACY_GATE_CALLS) * 100}%"
+							class="bg-primary h-full"
+						></div>
+					</div>
+					<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+						{callsUntilAccuracy} until accuracy
+					</span>
+				</div>
+			{/if}
 		</div>
 
 		<div class="grid grid-cols-1 gap-6">
