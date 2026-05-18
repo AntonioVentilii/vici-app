@@ -252,12 +252,11 @@
 		}
 
 		if (action === 'SKIP') {
-			// Skip is a no-op for the session combo: it does not bump
-			// (skip isn't a call) but it also does not reset (per
-			// testAV1 — "Streak progresses on any swipe. YES, NO, skip
-			// all count" at the daily-streak layer; the session combo
-			// is a separate concept and skip is neutral). The daily
-			// streak still bumps via `applyDailyStreakBump` above.
+			// Skip is a no-op for the session combo: it doesn't bump
+			// (skip isn't a call) and doesn't reset (skip is neutral —
+			// it's not a win and not a loss). The daily streak still
+			// bumps via `applyDailyStreakBump` above; streak progresses
+			// on any swipe, YES / NO / SKIP all count at that layer.
 			setTimeout(() => {
 				advance();
 			}, COMMIT_FEEDBACK_MS);
