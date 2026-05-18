@@ -70,6 +70,36 @@ export const updateInterests = async ({
 	});
 };
 
+/**
+ * Persist the user's daily-streak engine state. Called from Flow Mode
+ * after `applyDailyStreakBump` flips the locally held value, so a
+ * refresh mid-session doesn't reset the Flame stage.
+ *
+ * Best-effort — callers should fire-and-forget; the local UI already
+ * reflects the bumped values for the rest of the session even if the
+ * round-trip fails.
+ */
+export const persistDailyStreak = async ({
+	principal,
+	dailyStreak,
+	lastActiveDay
+}: {
+	principal: PrincipalText;
+	dailyStreak: number;
+	lastActiveDay: string;
+}): Promise<UserProfile> => {
+	const profileDoc = await getProfile(principal);
+	const data: UserProfile = {
+		...profileDoc.data,
+		dailyStreak,
+		lastActiveDay
+	};
+
+	await upsertProfile({ ...profileDoc, data });
+
+	return data;
+};
+
 export const upsertProfile = async (
 	profileDoc: Doc<UserProfile> | { key: string; data: UserProfile }
 ): Promise<void> => {
