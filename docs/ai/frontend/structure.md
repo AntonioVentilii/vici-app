@@ -48,15 +48,20 @@ src/
 top-level group:
 
 - `admin/` — admin console surfaces.
+- `artwork/` — generative visual primitives shared across features
+  (e.g. `FlowArtFrame` — per-category SVG marks rendered by
+  `$lib/utils/flow-art.utils.ts`). Parallel to `characters/`.
 - `authn/` — authentication / Internet Identity / OAuth flows.
 - `authz/` — authorization (role gating, guards rendering).
 - `challenge/` — challenge / passkey UI.
+- `characters/` — character SVGs (Vici, Oracle, Trickster, Flame).
 - `icons/` — bespoke icons not covered by `lucide-svelte`.
 - `layout/` — top-level chrome (`Header`, navigation surfaces).
 - `leaderboard/` — leaderboard widgets.
 - `loaders/` — loaders, skeletons, suspense boundaries.
 - `market/` — prediction-market UI (filters, cards, detail, order book, …).
-- `pages/` — page-level shells composed inside the single SvelteKit route.
+- `onboarding/` — first-run / profile onboarding flows.
+- `pages/` — page-level shells composed inside specific routes.
 - `portfolio/` — user portfolio surfaces (positions, balances).
 - `profile/` — user profile (own + public).
 - `social/` — social graph (relations, comments, discussion).

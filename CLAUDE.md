@@ -24,9 +24,14 @@ Claude-specific runtime layer. Anything not contradicted here defers to
   [`src/lib/services/identity.services.ts`](./src/lib/services/identity.services.ts).
   Use `getIdentityOrAnonymous` for public views and `safeGetIdentityOnce` for
   authenticated actions.
-- **Routing:** single SvelteKit route. Top-level views are components routed
-  via [`src/lib/stores/nav.store.ts`](./src/lib/stores/nav.store.ts) inside
-  [`src/routes/(app)/+page.svelte`](<./src/routes/(app)/+page.svelte>).
+- **Routing:** SvelteKit file-based routes under
+  [`src/routes/(app)/`](<./src/routes/(app)/>) (`/`, `/flow`,
+  `/markets/[id]`, …). The mobile tab bar
+  ([`src/lib/components/layout/MobileNav.svelte`](./src/lib/components/layout/MobileNav.svelte))
+  compares `page.url.pathname` to `AppPath` from
+  [`src/lib/constants/routes.constants.ts`](./src/lib/constants/routes.constants.ts);
+  the visible nav items are configured in
+  [`src/lib/constants/nav.constants.ts`](./src/lib/constants/nav.constants.ts).
 - **Local replica:** Juno emulator only. **Never** run `dfx start`.
 
 ---
