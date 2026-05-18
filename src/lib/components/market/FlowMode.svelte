@@ -5,6 +5,7 @@
 	import { fade, fly, scale } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
+	import ViciChar from '$lib/components/characters/ViciChar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -203,7 +204,10 @@
 		} else if (action === 'SKIP') {
 			exitX = 0;
 			exitY = -500;
-			vibrate(8);
+			// Soft-tick haptic per testAV1 §05 negative-states. Lighter
+			// than the YES / NO firm tap so the rhythm reads "passed" not
+			// "committed".
+			vibrate([4, 8]);
 		}
 
 		// Lock the card into its commit-feedback beat. Drag is disabled
@@ -230,7 +234,12 @@
 		}
 
 		if (action === 'SKIP') {
-			streak = 0;
+			// Skip is a no-op for the session combo: it does not bump
+			// (skip isn't a call) but it also does not reset (per
+			// testAV1 — "Streak progresses on any swipe. YES, NO, skip
+			// all count" at the daily-streak layer; the session combo
+			// is a separate concept and skip is neutral). The daily
+			// streak still bumps via `applyDailyStreakBump` above.
 			setTimeout(() => {
 				advance();
 			}, COMMIT_FEEDBACK_MS);
@@ -362,7 +371,21 @@
 			<LoadingSpinner />
 			<p class="text-muted-foreground font-medium">Preparing your Flow queue…</p>
 		</div>
-	{:else if completed || markets.length === 0}
+	{:else if markets.length === 0}
+		<!-- Empty-deck state per testAV1 §05 negative-states: VICI THINKING
+		     holds the canvas, single-line copy, no escalation, no
+		     celebration. -->
+		<div class="empty-deck flex h-full w-full flex-col items-center justify-center px-6">
+			<div class="relative z-10 max-w-md text-center" in:fly={{ y: 20, duration: 500 }}>
+				<div class="empty-deck-char">
+					<ViciChar mood="thinking" size={96} />
+				</div>
+				<h2 class="empty-deck-title">Nothing here. Yet.</h2>
+				<p class="empty-deck-sub">VICI is queueing more markets.</p>
+				<Button onclick={backToMarkets}>Back to Markets</Button>
+			</div>
+		</div>
+	{:else if completed}
 		<div class="completion-bg flex h-full w-full flex-col items-center justify-center px-6">
 			<div class="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
 				{#each Array(24) as _, i (i)}
@@ -823,6 +846,31 @@
 		border-radius: 999px;
 		background: rgba(14, 13, 11, 0.2);
 		font-size: 11px;
+	}
+
+	/* Empty-deck negative state per testAV1 §05. VICI THINKING owns
+	   the canvas; copy is single-line; no celebration; no escalation. */
+	.empty-deck {
+		position: relative;
+		background: var(--bg-base);
+	}
+	.empty-deck-char {
+		margin-bottom: 1.5rem;
+		display: flex;
+		justify-content: center;
+	}
+	.empty-deck-title {
+		font-family: var(--font-display);
+		font-size: var(--t-32);
+		font-weight: 600;
+		letter-spacing: var(--tracking-snug);
+		color: var(--parchment);
+		margin: 0 0 0.5rem;
+	}
+	.empty-deck-sub {
+		font-size: var(--t-14);
+		color: var(--text-muted);
+		margin: 0 0 1.5rem;
 	}
 
 	/* Streak-break banner — shows once when the previous-day gap broke
