@@ -19,6 +19,7 @@
 	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
+	import { listSeriesCategories } from '$lib/services/category.services';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { getFlowQueue } from '$lib/services/market.services';
 	import { getPositions } from '$lib/services/position.services';
@@ -51,17 +52,23 @@
 	let betsCount = $state(0);
 	let completed = $state(false);
 	let positions = $state<Position[]>([]);
+	// `seriesId → categoryId` lookup loaded once on mount; consumed by
+	// the FlowCard render loop to drive the per-card generative artwork.
+	let marketCategoryMap = $state<Map<string, string>>(new Map());
 
 	let exitX = $state(0);
 	let exitY = $state(0);
 
-	// Commit-feedback beat: the card holds for 80 ms with edge tint
-	// locked at full intensity before it flies off-screen. The parent
-	// keeps the committed action for that window so children can react.
-	// 80 ms is the upper bound of the reactive-motion budget (80–150 ms);
-	// past 200 ms the swipe rhythm breaks and the lag becomes the
-	// experience instead of the result.
+	// Commit-feedback beat: the outgoing card holds for 80 ms with edge
+	// tint locked at full intensity before it flies off-screen. 80 ms
+	// is the upper bound of the reactive-motion budget (80–150 ms); past
+	// 200 ms the swipe rhythm breaks and the lag becomes the experience.
+	//
+	// Bound to the committed market's id so that once `advance()` shifts
+	// the deck, the *next* card never inherits the committed state — the
+	// outgoing card keeps it for the duration of its exit transition.
 	let committedAction = $state<'YES' | 'NO' | 'SKIP' | null>(null);
+	let committedMarketId = $state<string | null>(null);
 	const COMMIT_FEEDBACK_MS = 80;
 	const COMMIT_RESET_MS = 600;
 
@@ -111,13 +118,15 @@
 		flowTradeService.startSession();
 
 		try {
-			const [queue, userPositions] = await Promise.all([
+			const [queue, userPositions, seriesCategories] = await Promise.all([
 				getFlowQueue($balanceDomain),
-				nonNullish($userStore.user) ? getPositions($balanceDomain) : Promise.resolve([])
+				nonNullish($userStore.user) ? getPositions($balanceDomain) : Promise.resolve([]),
+				listSeriesCategories()
 			]);
 
 			markets = queue.slice(0, MAX_MARKETS);
 			positions = userPositions;
+			marketCategoryMap = new Map(seriesCategories.map((m) => [m.seriesId, m.categoryId]));
 
 			const { profile } = $userStore;
 
@@ -183,7 +192,7 @@
 		}
 
 		// Ignore double-commits during the 80 ms feedback window.
-		if (nonNullish(committedAction)) {
+		if (nonNullish(committedMarketId)) {
 			return;
 		}
 
@@ -209,10 +218,11 @@
 			vibrate('soft-tick');
 		}
 
-		// Lock the card into its commit-feedback beat. Drag is disabled
-		// in FlowCard while this is set; the matching edge tint and
-		// directional label go to full opacity.
+		// Lock the outgoing card into its commit-feedback beat. Drag is
+		// disabled in FlowCard for the matching market.id; the matching
+		// edge tint and directional label go to full opacity.
 		committedAction = action;
+		committedMarketId = currentMarket.id;
 
 		// Collect candidate companion beats; the priority resolver picks
 		// one at the end of this handler so a single swipe never stacks
@@ -262,6 +272,7 @@
 			}, COMMIT_FEEDBACK_MS);
 			setTimeout(() => {
 				committedAction = null;
+				committedMarketId = null;
 			}, COMMIT_RESET_MS);
 
 			return;
@@ -316,10 +327,15 @@
 			}, 1600);
 		}
 
-		// Rarity-scaled bonus ladder — fires on the exact milestone count
-		// (1, 10, 50, 250, 1000). Base XP has already been added above;
-		// the bonus stacks on top.
-		const milestone = findFlowMilestone(betsCount);
+		// Rarity-scaled bonus ladder — fires on the exact lifetime
+		// committed-call count (1, 10, 50, 250, 1000). Counts across
+		// all sessions, not just this one: at `MAX_BETS = 10` per
+		// session the 50 / 250 / 1000 tiers would otherwise be
+		// unreachable. `betsCount` is the in-session delta;
+		// `profile.totalTrades` is the satellite-persisted lifetime
+		// total before this session.
+		const lifetimeCallCount = ($userStore.profile?.totalTrades ?? 0) + betsCount;
+		const milestone = findFlowMilestone(lifetimeCallCount);
 
 		if (nonNullish(milestone)) {
 			xp += milestone.bonusXp;
@@ -373,6 +389,7 @@
 		}, COMMIT_FEEDBACK_MS);
 		setTimeout(() => {
 			committedAction = null;
+			committedMarketId = null;
 		}, COMMIT_RESET_MS);
 	};
 
@@ -578,6 +595,7 @@
 			<div class="flow-card-wrap">
 				{#each visibleCards as market, i (market?.id)}
 					{@const isCurrent = i === 0}
+					{@const category = marketCategoryMap.get(market.id)}
 					<div
 						style="z-index: {20 - i}; --depth: {i};"
 						class="flow-card-slot"
@@ -588,7 +606,8 @@
 						out:fly={{ x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
 					>
 						<FlowCard
-							committedAction={isCurrent ? committedAction : null}
+							{category}
+							committedAction={market.id === committedMarketId ? committedAction : null}
 							interactive={isCurrent}
 							isLimitOrderNo={isNullish(market.bestBid)}
 							isLimitOrderYes={isNullish(market.bestAsk)}

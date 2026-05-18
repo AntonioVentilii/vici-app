@@ -89,13 +89,20 @@ interface Rng {
 	chance: (p: number) => boolean;
 }
 
-// Renderer protocol — every category renderer takes the same triplet,
+// Renderer protocol — every category renderer takes the same args
 // so the dispatch table types cleanly. Object form (vs positional) per
 // the repo's `prefer-object-params` convention.
+//
+// `uid` is a stable per-render suffix appended to every SVG `<defs>`
+// id (gradients, filters, etc.) so multiple FlowArtFrames on the same
+// document never collide on `url(#mwash)` lookups. Derived from the
+// hash of `${category}::${seed}::${state}` so identical inputs reuse
+// the same uid (the renderer is still deterministic).
 interface RenderArgs {
 	rng: Rng;
 	p: FlowArtPalette;
 	state: FlowArtState;
+	uid: string;
 }
 
 const makeRng = (seed: string | number): Rng => {
@@ -331,7 +338,7 @@ const frameInset = ({ p, state }: { p: FlowArtPalette; state: FlowArtState }): s
 // =============================================================
 
 // MACRO — concentric rings + horizontal atmospheric planes.
-const renderMacro = ({ rng, p, state }: RenderArgs): string => {
+const renderMacro = ({ rng, p, state, uid }: RenderArgs): string => {
 	const focals: ReadonlyArray<readonly [number, number]> = [
 		[33, 38],
 		[66, 38],
@@ -355,17 +362,17 @@ const renderMacro = ({ rng, p, state }: RenderArgs): string => {
 
 	let s = '';
 	s += `<defs>
-      <radialGradient id="mwash" cx="${fx}%" cy="${fy - 8}%" r="80%">
+      <radialGradient id="mwash-${uid}" cx="${fx}%" cy="${fy - 8}%" r="80%">
         <stop offset="0%" stop-color="${p.base}" stop-opacity="0.8"/>
         <stop offset="100%" stop-color="${p.bg}" stop-opacity="0"/>
       </radialGradient>
-      <radialGradient id="mglow" cx="50%" cy="50%" r="55%">
+      <radialGradient id="mglow-${uid}" cx="50%" cy="50%" r="55%">
         <stop offset="0%" stop-color="${p.accent}" stop-opacity="${state === 'won' ? 0.65 : 0.35}"/>
         <stop offset="55%" stop-color="${p.accent}" stop-opacity="0.05"/>
         <stop offset="100%" stop-color="${p.accent}" stop-opacity="0"/>
       </radialGradient>
     </defs>`;
-	s += `<rect width="100" height="100" fill="url(#mwash)"/>`;
+	s += `<rect width="100" height="100" fill="url(#mwash-${uid})"/>`;
 
 	planes.forEach((pl) => {
 		s += `<rect x="-5" y="${pl.y}" width="110" height="0.9" fill="${p.ink}" opacity="${pl.op}" transform="rotate(${pl.skew} 50 ${pl.y})"/>`;
@@ -387,7 +394,7 @@ const renderMacro = ({ rng, p, state }: RenderArgs): string => {
 	}
 
 	const fr = rng.range(14, 22);
-	s += `<circle cx="${fx}" cy="${fy}" r="${fr}" fill="url(#mglow)"/>`;
+	s += `<circle cx="${fx}" cy="${fy}" r="${fr}" fill="url(#mglow-${uid})"/>`;
 	s += `<circle cx="${fx}" cy="${fy}" r="${fr}" fill="none" stroke="${p.accent}" stroke-width="${state === 'won' ? 1.0 : 0.7}" opacity="${state === 'won' ? 0.95 : 0.85}"/>`;
 	s += `<circle cx="${fx}" cy="${fy}" r="${state === 'won' ? 2.6 : 1.6}" fill="${p.accent}" opacity="${state === 'won' ? 1 : 0.9}"/>`;
 
@@ -402,18 +409,18 @@ const renderMacro = ({ rng, p, state }: RenderArgs): string => {
 };
 
 // CRYPTO — angular shards + neon seam.
-const renderCrypto = ({ rng, p, state }: RenderArgs): string => {
+const renderCrypto = ({ rng, p, state, uid }: RenderArgs): string => {
 	const shardCount = rng.int(3, 5);
 	const cx = rng.range(40, 60);
 	const cy = rng.range(40, 60);
 	let s = '';
 	s += `<defs>
-      <linearGradient id="cgrad" x1="0" x2="1" y1="0" y2="1">
+      <linearGradient id="cgrad-${uid}" x1="0" x2="1" y1="0" y2="1">
         <stop offset="0%" stop-color="${p.base}" stop-opacity="0.85"/>
         <stop offset="100%" stop-color="${p.bg}" stop-opacity="0.4"/>
       </linearGradient>
     </defs>`;
-	s += `<rect width="100" height="100" fill="url(#cgrad)"/>`;
+	s += `<rect width="100" height="100" fill="url(#cgrad-${uid})"/>`;
 
 	for (let i = 0; i < 12; i++) {
 		const y = i * 10 + rng.range(-3, 3);
@@ -477,15 +484,15 @@ const renderCrypto = ({ rng, p, state }: RenderArgs): string => {
 };
 
 // SPORTS — chevron motion.
-const renderSports = ({ rng, p, state }: RenderArgs): string => {
+const renderSports = ({ rng, p, state, uid }: RenderArgs): string => {
 	let s = '';
 	s += `<defs>
-      <linearGradient id="swash" x1="0" x2="1" y1="0.5" y2="0.5">
+      <linearGradient id="swash-${uid}" x1="0" x2="1" y1="0.5" y2="0.5">
         <stop offset="0%" stop-color="${p.bg}" stop-opacity="1"/>
         <stop offset="100%" stop-color="${p.base}" stop-opacity="1"/>
       </linearGradient>
     </defs>`;
-	s += `<rect width="100" height="100" fill="url(#swash)"/>`;
+	s += `<rect width="100" height="100" fill="url(#swash-${uid})"/>`;
 
 	const strokeAngle = rng.range(-25, 5);
 
@@ -533,7 +540,7 @@ const renderSports = ({ rng, p, state }: RenderArgs): string => {
 };
 
 // POLITICS — colonnade architecture.
-const renderPolitics = ({ rng, p, state }: RenderArgs): string => {
+const renderPolitics = ({ rng, p, state, uid }: RenderArgs): string => {
 	let s = '';
 	const cols = rng.int(5, 9);
 	const lintelY = rng.range(18, 28);
@@ -541,12 +548,12 @@ const renderPolitics = ({ rng, p, state }: RenderArgs): string => {
 	const focalCol = rng.int(0, cols - 1);
 
 	s += `<defs>
-      <linearGradient id="pwash" x1="0" x2="0" y1="0" y2="1">
+      <linearGradient id="pwash-${uid}" x1="0" x2="0" y1="0" y2="1">
         <stop offset="0%" stop-color="${p.bg}" stop-opacity="1"/>
         <stop offset="100%" stop-color="${p.base}" stop-opacity="1"/>
       </linearGradient>
     </defs>`;
-	s += `<rect width="100" height="100" fill="url(#pwash)"/>`;
+	s += `<rect width="100" height="100" fill="url(#pwash-${uid})"/>`;
 
 	s += `<ellipse cx="50" cy="${(lintelY + baseY) / 2}" rx="42" ry="22" fill="${p.ink}" opacity="0.18"/>`;
 
@@ -594,7 +601,10 @@ const renderPolitics = ({ rng, p, state }: RenderArgs): string => {
 };
 
 // TECH — isometric modular block stack.
-const renderTech = ({ rng, p, state }: RenderArgs): string => {
+// (No `<defs>` so `uid` is unused; kept in the signature for protocol
+// uniformity with the other renderers. Underscore-prefixed per the
+// `@typescript-eslint/no-unused-vars` convention.)
+const renderTech = ({ rng, p, state, uid: _uid }: RenderArgs): string => {
 	let s = '';
 	s += `<rect width="100" height="100" fill="${p.bg}"/>`;
 
@@ -712,15 +722,15 @@ const renderTech = ({ rng, p, state }: RenderArgs): string => {
 };
 
 // CULTURE — ink blobs on warm paper.
-const renderCulture = ({ rng, p, state }: RenderArgs): string => {
+const renderCulture = ({ rng, p, state, uid }: RenderArgs): string => {
 	let s = '';
 	s += `<defs>
-      <radialGradient id="cugrad" cx="50%" cy="40%" r="70%">
+      <radialGradient id="cugrad-${uid}" cx="50%" cy="40%" r="70%">
         <stop offset="0%" stop-color="${p.base}" stop-opacity="0.85"/>
         <stop offset="100%" stop-color="${p.bg}" stop-opacity="1"/>
       </radialGradient>
     </defs>`;
-	s += `<rect width="100" height="100" fill="url(#cugrad)"/>`;
+	s += `<rect width="100" height="100" fill="url(#cugrad-${uid})"/>`;
 
 	for (let i = 0; i < 60; i++) {
 		const x = rng.range(0, 100);
@@ -824,8 +834,15 @@ export const renderFlowArt = ({
 }: FlowArtRenderOptions): string => {
 	const renderer = RENDERERS[category] ?? renderMacro;
 	const pal = (PAL[category] ?? PAL.macro)[state] ?? PAL[category].neutral;
-	const rng = makeRng(`${category}::${seed}::${state}`);
-	const body = renderer({ rng, p: pal, state });
+	const seedKey = `${category}::${seed}::${state}`;
+	const rng = makeRng(seedKey);
+	// Stable per-render suffix for SVG `<defs>` ids. Multiple
+	// FlowArtFrames render simultaneously in the FlowMode deck and
+	// `<defs>` ids live in the document scope — without a suffix,
+	// `url(#mwash)` would resolve to the first match in the document
+	// (potentially another card's gradient).
+	const uid = hashStr(seedKey).toString(36);
+	const body = renderer({ rng, p: pal, state, uid });
 	let svg = svgOpen(size) + bgRect(pal) + body;
 
 	if (frame) {

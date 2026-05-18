@@ -60,7 +60,21 @@
 	const resolvedCategory: FlowArtCategory = $derived.by(() => {
 		const raw = (category ?? '').toString().toLowerCase();
 
-		return FLOW_ART_SET.has(raw) ? (raw as FlowArtCategory) : 'macro';
+		if (FLOW_ART_SET.has(raw)) {
+			return raw as FlowArtCategory;
+		}
+
+		// No mapping for this market yet (admin hasn't tagged it).
+		// Deterministically pick from the 6 categories using the
+		// market.id so each untagged market still gets distinct
+		// artwork instead of every card falling to the same default.
+		let h = 0;
+
+		for (let i = 0; i < market.id.length; i++) {
+			h = (h * 31 + market.id.charCodeAt(i)) | 0;
+		}
+
+		return FLOW_ART_CATEGORIES[Math.abs(h) % FLOW_ART_CATEGORIES.length];
 	});
 	const catColor = $derived(categoryColor(resolvedCategory));
 
