@@ -94,9 +94,9 @@ export interface DailyStreakBump {
  * lastActiveDay and a fresh "now". Stateless — callers (FlowMode,
  * profile sync, etc.) decide when to persist the result.
  *
- * Spec: testAV1 §03 "Reward ladder map" + brand README §07
- * ("Flame evolution"). Streak progresses on any swipe; no freezes,
- * no rescues; missed-day = reset to SPARK 1 with break choreography.
+ * Rules: streak progresses on any swipe (YES / NO / SKIP all count);
+ * no freezes, no rescues; missed-day = reset to SPARK 1 with the
+ * break choreography. Flame never goes dark — it returns to SPARK.
  */
 export const applyDailyStreakBump = ({
 	streak,

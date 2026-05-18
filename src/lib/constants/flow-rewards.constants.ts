@@ -1,5 +1,4 @@
-// Flow Mode reward ladder — derived from the canonical motion spec
-// (`vici design team/testAV1.html`, "Reward ladder map" + "Self-check").
+// Flow Mode reward ladder.
 //
 // Two ladders run in parallel: the swipe-count milestones below (this
 // file) and streak / accuracy events (handled separately by the
@@ -45,9 +44,9 @@ export const findFlowMilestone = (swipeCount: number): FlowMilestone | null =>
 
 /**
  * Lifetime-call threshold below which accuracy is *not* surfaced in
- * the UI. Per testAV1 §03 reward map / Self-check:
- *   "Accuracy display is gated by call volume. Hidden until 30
- *    lifetime calls. Until then, calls + streak are the visible stats."
+ * the UI. Below the gate, calls + streak are the visible stats; the
+ * accuracy percentage unlocks once the sample is large enough to be
+ * meaningful.
  *
  * Applies to anywhere user-facing accuracy would otherwise show
  * (Flow end summary, Profile dashboard, leaderboard preview cards).

@@ -197,7 +197,7 @@
 		role="presentation"
 	>
 		<!-- Edge-tint layers — subtle ring inside the card during drag.
-		     Per testAV1: routine swipes get edge tint + XP pop + haptic, no character. -->
+		     Routine swipes get edge tint + XP pop + haptic, no character. -->
 		<div
 			style:opacity={tintYes}
 			style:box-shadow="inset 0 0 0 2px rgba(79, 211, 161, {tintYes}), inset 0 0 60px rgba(79, 211,

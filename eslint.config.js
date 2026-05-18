@@ -7,7 +7,16 @@ export default ts.config(
 	...svelteConfig,
 
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/', 'static/', 'src/declarations/']
+		ignores: [
+			'build/',
+			'.svelte-kit/',
+			'dist/',
+			'static/',
+			'src/declarations/',
+			// Local scratch — mirrors the .gitignore / .prettierignore
+			// entry. Never linted, formatted, or shipped.
+			'vici design team/'
+		]
 	},
 
 	{

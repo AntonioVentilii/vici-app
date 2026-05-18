@@ -147,24 +147,7 @@ backend conventions is `../icdc-core/`.
 
 ---
 
-## 7. Design-team source materials (local-only)
-
-Latest design specs from the design team live under
-`vici design team/` at the repo root. The folder is **gitignored** —
-read-only inputs for design-alignment work, never ships to production.
-
-| Path                                   | Source of truth for                                |
-| -------------------------------------- | -------------------------------------------------- |
-| `vici design team/testAV1.html`        | Flow Mode — Motion + Reward (canonical, latest).   |
-| `vici design team/testAV2.html`        | Flow Mode — Generative Artwork System (canonical). |
-| `vici design team/VICI Design System/` | Brand brief, tokens, characters (older reference). |
-| `vici design team/VICI WebApp/`        | React reference implementation (older reference).  |
-
-Open `testAV*` locally in a browser to see the canonical output;
-re-run a quick `python3 -m http.server` from the folder if your
-browser blocks `file://` for the inline scripts.
-
-## 8. Tool-specific entry points
+## 7. Tool-specific entry points
 
 These are thin layers on top of this file. They never contradict it.
 

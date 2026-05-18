@@ -1,3 +1,7 @@
 pnpm-lock.yaml
 package-lock.json
 yarn.lock
+
+# Local scratch — mirrors the .gitignore entry. Files here are
+# never linted, formatted, or shipped.
+/vici design team/

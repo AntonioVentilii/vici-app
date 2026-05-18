@@ -55,10 +55,12 @@
 	let exitX = $state(0);
 	let exitY = $state(0);
 
-	// Per testAV1 commit spec: the card has an 80 ms feedback beat with
-	// edge tint locked at full intensity before it flies off-screen. The
-	// parent holds the committed action for that window so children can
-	// react.
+	// Commit-feedback beat: the card holds for 80 ms with edge tint
+	// locked at full intensity before it flies off-screen. The parent
+	// keeps the committed action for that window so children can react.
+	// 80 ms is the upper bound of the reactive-motion budget (80–150 ms);
+	// past 200 ms the swipe rhythm breaks and the lag becomes the
+	// experience instead of the result.
 	let committedAction = $state<'YES' | 'NO' | 'SKIP' | null>(null);
 	const COMMIT_FEEDBACK_MS = 80;
 	const COMMIT_RESET_MS = 600;
@@ -202,8 +204,8 @@
 		} else if (action === 'SKIP') {
 			exitX = 0;
 			exitY = -500;
-			// Skip is a negative-state per testAV1 §05 — softer beat
-			// than YES / NO so the rhythm reads "passed" not "committed".
+			// Skip is a negative-state — softer beat than YES / NO so the
+			// rhythm reads "passed" not "committed".
 			vibrate('soft-tick');
 		}
 
@@ -212,15 +214,15 @@
 		// directional label go to full opacity.
 		committedAction = action;
 
-		// Collect candidate companion beats; the priority resolver
-		// picks one at the end of this handler so a single swipe never
-		// stacks character bubbles (testAV1 §00 "scarcity protects
-		// meaning" + §06 priority).
+		// Collect candidate companion beats; the priority resolver picks
+		// one at the end of this handler so a single swipe never stacks
+		// character bubbles (characters are scarce — they appear at
+		// milestones, not as ambient garnish).
 		const beats: CompanionBeat[] = [];
 
 		// Daily-streak bump — fires once per session on the first
-		// committed swipe (any of YES / NO / SKIP qualifies; spec calls
-		// out that streak progresses on any swipe).
+		// committed swipe. Any of YES / NO / SKIP qualifies (streak
+		// progresses on any swipe).
 		if (!hasMarkedActiveThisSession) {
 			const previousDailyStreak = dailyStreak;
 			const bump = applyDailyStreakBump({ streak: dailyStreak, lastActiveDay });
@@ -315,9 +317,9 @@
 			}, 1600);
 		}
 
-		// Rarity-scaled bonus ladder (testAV1 §03 reward map) — fires on
-		// the exact milestone count: 1, 10, 50, 250, 1000. The base XP
-		// has already been added above; bonus stacks on top.
+		// Rarity-scaled bonus ladder — fires on the exact milestone count
+		// (1, 10, 50, 250, 1000). Base XP has already been added above;
+		// the bonus stacks on top.
 		const milestone = findFlowMilestone(betsCount);
 
 		if (nonNullish(milestone)) {
@@ -350,9 +352,9 @@
 			}
 		}
 
-		// Resolve the highest-priority companion beat for this commit
-		// (testAV1 §06 priority order). Lower-priority beats are
-		// dropped, not queued — by next swipe they're stale.
+		// Resolve the highest-priority companion beat for this commit.
+		// Lower-priority beats are dropped, not queued — by the next
+		// swipe they're stale.
 		const winningBeat = pickHighestPriorityBeat(beats);
 
 		if (nonNullish(winningBeat)) {
@@ -399,11 +401,10 @@
 	const visibleCards = $derived(markets.slice(currentIndex, currentIndex + 3));
 
 	// Trickster appears on the active card when the YES probability is
-	// strongly skewed (≤ 25 % or ≥ 75 %) — testAV1 + brand README §07
-	// ("Trickster owns contrarian predictions — appears only when the
-	// user is the minority on a market"). Per "defended territory"
-	// rule, Trickster owns this surface alone — it doesn't get
-	// pre-empted by other per-card ambient beats.
+	// strongly skewed (≤ 25 % or ≥ 75 %) — i.e. when committing on this
+	// card would put the user in the minority on a contrarian call.
+	// Trickster owns this surface alone (defended territory) — no other
+	// per-card ambient beat pre-empts it.
 	const trickstered = new SvelteSet<string>();
 
 	$effect(() => {
@@ -432,9 +433,9 @@
 	});
 
 	// Accuracy is gated until the user has enough lifetime calls for
-	// the percentage to mean anything (testAV1 §03 / Self-check). Below
-	// the gate the FlowEnd summary surfaces the lifetime call count
-	// instead — calls + streak are the publicly visible stats.
+	// the percentage to mean anything. Below the gate the FlowEnd
+	// summary surfaces the lifetime call count instead — calls + streak
+	// are the publicly visible stats.
 	const lifetimeTotalTrades = $derived($userStore.profile?.totalTrades ?? 0);
 	const lifetimeAccuracy = $derived($userStore.profile?.accuracy ?? 0);
 	const accuracyUnlocked = $derived(isAccuracyUnlocked(lifetimeTotalTrades));
@@ -450,9 +451,8 @@
 			<p class="text-muted-foreground font-medium">Preparing your Flow queue…</p>
 		</div>
 	{:else if markets.length === 0}
-		<!-- Empty-deck state per testAV1 §05 negative-states: VICI THINKING
-		     holds the canvas, single-line copy, no escalation, no
-		     celebration. -->
+		<!-- Empty-deck state. VICI in `thinking` mood holds the canvas,
+		     single-line copy, no escalation, no celebration. -->
 		<div class="empty-deck flex h-full w-full flex-col items-center justify-center px-6">
 			<div class="relative z-10 max-w-md text-center" in:fly={{ y: 20, duration: 500 }}>
 				<div class="empty-deck-char">
@@ -566,9 +566,9 @@
 		{/if}
 
 		{#if streakBreakBanner}
-			<!-- Streak-break choreography per testAV1 §05: single low thud
-			     (haptic fires in handleAction), banner names the stage that
-			     ended, fresh start at SPARK. No rescues, no second chances. -->
+			<!-- Streak-break choreography: single low thud (haptic fires in
+			     handleAction), banner names the stage that ended, fresh start
+			     at SPARK. No rescues, no second chances. -->
 			<div class="streak-break" in:fly={{ y: -8, duration: 300, easing: backOut }} out:fade>
 				<span class="serif-italic">{FLAME_STAGE_LABELS[streakBreakBanner.stage]} ended.</span>
 				<span class="streak-break-sub">Fresh start.</span>
@@ -829,8 +829,9 @@
 		line-height: 1;
 	}
 	/* Daily-streak Flame chip: shows the current stage + day count.
-	   Always-visible (per testAV1 — Flame in Flow header + home only),
-	   never dominant; activates `is-hot` from FLAME stage upward. */
+	   Flame appears in the Flow header + home screen only (never on
+	   every screen); always-visible here, never dominant. Activates
+	   `is-hot` from FLAME stage upward. */
 	.flow-stat-flame {
 		gap: 6px;
 		padding: 4px 9px 4px 6px;
@@ -905,8 +906,8 @@
 		font-size: 11px;
 	}
 
-	/* Empty-deck negative state per testAV1 §05. VICI THINKING owns
-	   the canvas; copy is single-line; no celebration; no escalation. */
+	/* Empty-deck negative state. VICI in `thinking` mood owns the
+	   canvas; copy is single-line; no celebration; no escalation. */
 	.empty-deck {
 		position: relative;
 		background: var(--bg-base);

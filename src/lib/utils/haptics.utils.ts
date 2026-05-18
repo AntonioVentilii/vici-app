@@ -1,13 +1,10 @@
 // Named haptic patterns — single source of truth for VICI's
-// touch-feedback vocabulary. Per `vici design team/testAV1.html` §02
-// (every motion moment has a paired haptic) and the system-wide
-// Self-check ("Light tap / soft tick / double pulse / triple tap /
-// mischief / soft hum / firm tap / low thud — eight distinct
-// patterns documented").
+// touch-feedback vocabulary. Every motion moment has a paired
+// haptic; the eight named patterns below are the full set.
 //
-// Call sites use the named pattern, not raw ms numbers. That keeps
-// the spec → code mapping inspectable and avoids drift when a
-// pattern needs to be retuned globally.
+// Call sites use the named pattern, not raw ms numbers — that
+// keeps the vocabulary inspectable and avoids drift when a pattern
+// needs to be retuned globally.
 
 export type HapticPattern =
 	| 'light-tap'
@@ -44,9 +41,9 @@ const HAPTIC_PATTERNS: Record<HapticPattern, HapticValue> = {
 	'soft-hum': [40],
 	// Streak break — single low buzz, honest, no warmth.
 	'low-thud': 28,
-	// Session complete celebration. Distinct envelope; not in the
-	// canonical 8 (those are within-session beats) but carved out so
-	// it lives in the same vocabulary.
+	// Session complete celebration — distinct envelope from the
+	// within-session beats. Lives in the same vocabulary so call
+	// sites stay consistent.
 	celebration: [14, 30, 20, 30, 40]
 };
 

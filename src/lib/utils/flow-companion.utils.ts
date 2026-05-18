@@ -1,15 +1,15 @@
 // Companion beats — priority resolver for Flow Mode.
 //
-// Per `vici design team/testAV1.html` §06 Self-check:
-//   "Priority order resolves conflicts cleanly. Resolution >
-//    Threshold > Streak tier-up > First-time > Swipe-count >
-//    Every-10th ambient. Highest wins; lower defers to the next
-//    eligible swipe."
+// Priority order (highest wins; lower defers to the next eligible
+// swipe):
+//   Resolution > Threshold > Streak tier-up > First-time >
+//   Swipe-count > Low-consensus > Ambient
 //
 // On any single committed swipe, multiple beats can be eligible
-// (e.g. swipe-count milestone + streak tier-up). Calling
-// `showCompanion` for each would clobber the bubble and break
-// "scarcity protects meaning" (testAV1 §00). This module picks one.
+// (e.g. swipe-count milestone + streak tier-up). Firing every one
+// would clobber the bubble and break the brand's scarcity rule —
+// characters appear at milestones, not as ambient garnish. This
+// module picks one.
 
 import type { FlameStage } from '$lib/utils/streak.utils';
 
@@ -25,10 +25,11 @@ export type CompanionBeatKind =
 export interface CompanionBeat {
 	kind: CompanionBeatKind;
 	// Routed `who` — drives which character renders in the bubble.
-	// Per spec defended-territory rules (testAV1 §00 + brand
-	// README §07): VICI = protagonist + ambient; Flame = streak
-	// only; Oracle = truth / threshold / resolution; Trickster =
-	// contrarian wins (low-consensus).
+	// Defended-territory rule: VICI owns protagonist + ambient
+	// moments; Flame owns streak only; Oracle owns truth /
+	// threshold / resolution; Trickster owns contrarian wins
+	// (low-consensus). Characters never cross into each other's
+	// territory.
 	who: 'vici' | 'oracle' | 'trickster' | 'flame';
 	// Single-line copy. Brand voice — terse, second-person,
 	// imperative or declarative, no narration, no emoji.
@@ -40,8 +41,8 @@ export interface CompanionBeat {
 }
 
 /**
- * Numeric priorities — higher wins. Mirrors the spec's order
- * exactly; do not retune without re-reading testAV1 §06.
+ * Numeric priorities — higher wins. Do not retune lightly; the
+ * order encodes which character is allowed to interrupt which.
  */
 const PRIORITY: Record<CompanionBeatKind, number> = {
 	resolution: 60,

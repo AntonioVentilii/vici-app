@@ -6,7 +6,7 @@
 	} from '$lib/utils/flow-art.utils';
 
 	interface Props {
-		// Visual language. One of the six canonical categories.
+		// Visual language. One of the six prediction-market categories.
 		category: FlowArtCategory;
 		// Stable seed — pass `market.id` or any deterministic string /
 		// number. Same seed + state always produces the same composition.
@@ -14,7 +14,7 @@
 		// Resolution state. Flow Mode only ever uses 'neutral'; 'won' /
 		// 'lost' are reserved for Portfolio resolution crossfades.
 		state?: FlowArtState;
-		// Output size in CSS px. Spec checks: 80 (deck thumb),
+		// Output size in CSS px. Standard scales: 80 (deck thumb),
 		// 140 (list card), 220 (hero card on swipe surface).
 		size?: number;
 		// When true, draws an additional inset stroke frame inside the
