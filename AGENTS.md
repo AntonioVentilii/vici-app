@@ -27,9 +27,11 @@ typically checked out at `../icdc-core/`).
 | CI / infra               | `.github/workflows/`              | YAML                                      | Restricted                                                       |
 | **Risk engine (Rust)**   | **`../icdc-core/`**               | Rust (canisters)                          | **External repo — see §4**                                       |
 
-The platform mounts as a single SvelteKit page. Top-level views (Markets,
-Portfolio, Wallet, Profile, Admin, …) are components routed via
-`src/lib/stores/nav.store.ts`, not separate SvelteKit routes.
+The platform uses SvelteKit file-based routes under `src/routes/(app)/`
+(`/`, `/flow`, `/markets/[id]`, …). The mobile tab bar
+(`src/lib/components/layout/MobileNav.svelte`) compares `page.url.pathname`
+to `AppPath` from `src/lib/constants/routes.constants.ts`; visible nav
+items are configured in `src/lib/constants/nav.constants.ts`.
 
 ---
 

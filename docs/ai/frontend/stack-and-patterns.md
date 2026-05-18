@@ -211,18 +211,19 @@ pins `VICI_ENGINE_ID` is
 
 ## Routing
 
-- Single-route SvelteKit shell — see
-  [`src/routes/(app)/+page.svelte`](<../../../src/routes/(app)/+page.svelte>).
-  Top-level views (Markets, Portfolio, Wallet, Profile, Admin, …) are
-  components, not separate `+page.svelte` files.
-- Navigation state lives in
-  [`src/lib/stores/nav.store.ts`](../../../src/lib/stores/nav.store.ts).
-  Add a new view by extending the nav config in
-  [`src/lib/constants/nav.constants.ts`](../../../src/lib/constants/nav.constants.ts)
-  and the matching component in `$lib/components/pages/` (or its feature
-  folder).
-- Hard-coded URL paths go in
+- SvelteKit **file-based routes** under
+  [`src/routes/(app)/`](<../../../src/routes/(app)/>) (`/`, `/flow`,
+  `/markets/[id]`, …). Add a new view by adding a new
+  `(app)/<path>/+page.svelte` (or sub-route) and a matching `AppPath`
+  entry — there is no central nav store.
+- The mobile tab bar
+  ([`src/lib/components/layout/MobileNav.svelte`](../../../src/lib/components/layout/MobileNav.svelte))
+  compares `page.url.pathname` to `AppPath` from
   [`src/lib/constants/routes.constants.ts`](../../../src/lib/constants/routes.constants.ts).
+  Visible nav items (icon, label, path) are configured in
+  [`src/lib/constants/nav.constants.ts`](../../../src/lib/constants/nav.constants.ts).
+- Page-level shells composed inside specific routes live in
+  `$lib/components/pages/` (or the matching feature folder).
 
 ## Performance
 

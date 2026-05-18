@@ -94,6 +94,41 @@
 	--d-enter: 320ms;
 	--d-hero: 600ms;
 
+	/* Type scale — modular 1.250 (major third), tuned at top end. The
+	 * Tailwind text utilities still cover most copy; these tokens are
+	 * for hand-tuned editorial moments (display, hero numeric). */
+	--t-12: 0.75rem;
+	--t-13: 0.8125rem;
+	--t-14: 0.875rem;
+	--t-16: 1rem;
+	--t-18: 1.125rem;
+	--t-20: 1.25rem;
+	--t-24: 1.5rem;
+	--t-32: 2rem;
+	--t-44: 2.75rem;
+	--t-64: 4rem;
+	--t-88: 5.5rem;
+	--t-128: 8rem;
+
+	--leading-tight: 1.05;
+	--leading-snug: 1.2;
+	--leading-normal: 1.45;
+	--leading-loose: 1.65;
+
+	--tracking-tight: -0.02em;
+	--tracking-snug: -0.01em;
+	--tracking-normal: 0;
+	--tracking-wide: 0.04em;
+	--tracking-allcaps: 0.12em;
+
+	/* Radii — the standard scale. Buttons 4, cards 8, swipe-card 12.
+	 * Pills (999) are rare. Don't deviate. */
+	--r-2: 2px;
+	--r-4: 4px;
+	--r-8: 8px;
+	--r-12: 12px;
+	--r-pill: 999px;
+
 	/* Layout */
 	--content-max: 1280px;
 	--header-h: 56px;
@@ -410,11 +445,67 @@ body {
 	letter-spacing: 0;
 }
 
+/* Editorial display — italic serif at hero scale. Used for first-launch
+ * "Veni." moments, FlowEnd headlines, "Identity, *not information.*"
+ * type beats. Pairs with sans body copy. */
+.display {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	font-size: var(--t-88);
+	line-height: var(--leading-tight);
+	letter-spacing: var(--tracking-tight);
+}
+
+/* Hero numeric — every big probability / XP total / streak count. Mono,
+ * tabular, slashed-zero. */
+.display-num {
+	font-family: var(--font-mono);
+	font-size: var(--t-128);
+	font-weight: 500;
+	line-height: 1;
+	letter-spacing: -0.04em;
+	font-feature-settings: 'tnum', 'zero';
+	font-variant-numeric: tabular-nums slashed-zero;
+}
+
+/* Lede — first-paragraph treatment (e.g. spec page intros). */
+.lede {
+	font-size: var(--t-18);
+	line-height: var(--leading-loose);
+	color: var(--text-base);
+}
+
+/* All-caps tag style. Alias for `.eyebrow` when the call-site reads
+ * better as "allcaps" (ticker chips, status pills, MARKET·47d badges). */
+.allcaps {
+	font-family: var(--font-display);
+	font-size: var(--t-12);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: var(--tracking-allcaps);
+	color: var(--text-muted);
+}
+
 .surface {
 	background: var(--bg-surface);
 	border: 1px solid var(--border-base);
-	border-radius: 0.5rem;
+	border-radius: var(--r-8);
 	box-shadow: var(--inset-hi);
+}
+
+/* Elevated surface — sheets, modals, popovers. Drops a soft modal
+ * shadow on top of the inner highlight in dark theme. */
+.surface-elevated {
+	background: var(--bg-popover);
+	border: 1px solid var(--border-base);
+	border-radius: var(--r-8);
+	box-shadow: var(--inset-hi-strong), var(--shadow-modal);
+}
+
+/* Hairline — top divider. Minimal so it can't get any thicker. */
+.hairline {
+	border-top: 1px solid var(--border-base);
 }
 
 /* Probability bar */

@@ -59,8 +59,10 @@ it once per session.
 ```
 src/
 ├── app.{css,html,d.ts}        Theme tokens, base HTML, ambient types
-├── routes/                    SvelteKit shell — single page mounts the app
-│   ├── (app)/+page.svelte     Hosts the navigation router (nav.store)
+├── routes/                    SvelteKit file-based routes
+│   ├── (app)/                 Authenticated app group: /, /flow, /markets/[id], …
+│   │   ├── +layout.svelte     App shell (gates onboarding, mounts MobileNav)
+│   │   └── +page.svelte       Home page (markets feed)
 │   └── auth/                  OAuth callback + delegation handling
 ├── lib/
 │   ├── components/            UI grouped by feature (admin, market, wallet, social, …)

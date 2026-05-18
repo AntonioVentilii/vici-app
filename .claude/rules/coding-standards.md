@@ -83,7 +83,9 @@ Use **kebab-case** with a functional dot-suffix:
 
 ## Routing
 
-- Single-route architecture using `src/lib/stores/nav.store.ts` in
-  `src/routes/(app)/+page.svelte`.
-- Main views (Markets, Portfolio, Wallet, …) are components, not
-  separate SvelteKit routes.
+- SvelteKit file-based routes under `src/routes/(app)/` (`/`,
+  `/flow`, `/markets/[id]`, …).
+- The mobile tab bar (`src/lib/components/layout/MobileNav.svelte`)
+  compares `page.url.pathname` to `AppPath` from
+  `src/lib/constants/routes.constants.ts`; visible nav items are
+  configured in `src/lib/constants/nav.constants.ts`.
