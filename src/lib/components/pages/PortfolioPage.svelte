@@ -16,9 +16,11 @@
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
+	import { listSeriesCategories } from '$lib/services/category.services';
 	import { getPositions } from '$lib/services/position.services';
 	import { getUserTradeHistory } from '$lib/services/trade.services';
 	import { userStore } from '$lib/stores/user.store';
+	import type { SeriesCategory } from '$lib/types/category';
 	import type { Position } from '$lib/types/position';
 	import {
 		formatPortfolioHoldingsStatLine,
@@ -28,6 +30,7 @@
 
 	let positions = $state<Position[]>([]);
 	let tradeHistory = $state<ClearingDid.Event[]>([]);
+	let categoryMappings = $state<SeriesCategory[]>([]);
 
 	let loading = $state(true);
 
@@ -37,13 +40,17 @@
 		loading = true;
 
 		try {
-			const [posRes, historyRes] = await Promise.all([
+			const [posRes, historyRes, mappingsRes] = await Promise.all([
 				getPositions($balanceDomain),
-				getUserTradeHistory($balanceDomain)
+				getUserTradeHistory($balanceDomain),
+				// Failure here only degrades artwork (falls back to a
+				// hash-pick category); never block the whole page.
+				listSeriesCategories().catch(() => [] as SeriesCategory[])
 			]);
 
 			positions = posRes;
 			tradeHistory = historyRes;
+			categoryMappings = mappingsRes;
 		} finally {
 			loading = false;
 		}
@@ -109,7 +116,7 @@
 			totalPnL={portfolioPnLLabel}
 		/>
 
-		<PositionTable markets={$markets} {positions} />
+		<PositionTable {categoryMappings} markets={$markets} {positions} />
 
 		<div class="grid grid-cols-1 gap-8 xl:grid-cols-2">
 			<OpenOrdersTable markets={$markets} onRefresh={loadData} orders={$orders} />

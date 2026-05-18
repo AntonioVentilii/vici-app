@@ -861,3 +861,29 @@ export const flowArtPalette = ({
 	category: FlowArtCategory;
 	state?: FlowArtState;
 }): FlowArtPalette => (PAL[category] ?? PAL.macro)[state];
+
+/**
+ * Resolve a `FlowArtCategory` for a market with optional admin-tagged
+ * `categoryId`. When the tagged category matches one of the six
+ * canonical languages, use it; otherwise hash the `seed` (typically
+ * `market.id`) to deterministically pick one. Mirrors the resolution
+ * FlowCard does inline so untagged markets still render artwork
+ * stably across renders.
+ */
+export const resolveFlowArtCategory = ({
+	categoryId,
+	seed
+}: {
+	categoryId?: string | null;
+	seed: string | number;
+}): FlowArtCategory => {
+	const canonical = (categoryId ?? '').toString().toLowerCase();
+
+	if ((FLOW_ART_CATEGORIES as readonly string[]).includes(canonical)) {
+		return canonical as FlowArtCategory;
+	}
+
+	const idx = hashStr(String(seed)) % FLOW_ART_CATEGORIES.length;
+
+	return FLOW_ART_CATEGORIES[idx];
+};
