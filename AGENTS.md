@@ -64,7 +64,14 @@ items are configured in `src/lib/constants/nav.constants.ts`.
 8. **Respect terminology.** Use **"prediction"**, never "bet" — in code,
    comments, and any user-visible copy. Time variables end in `_ms`
    (milliseconds — business logic) or `_ns` (nanoseconds — protocol /
-   idempotency).
+   idempotency). **Never reference temporary or external design source
+   materials** — folder names, file names (e.g. spec exports), or
+   section numbers from those files — anywhere in the repo (code,
+   comments, commit messages, PR bodies). The product reflects **the**
+   design — there is no "new", "old", "redesigned", or "previous"
+   design. When a code comment needs to cite a rule, point at
+   [`docs/ai/frontend/design.md`](./docs/ai/frontend/design.md) (§ 7
+   for Flow Mode); describe behaviour and intent, not its source.
 9. **Respect CI.** Run the local gates from
    [`docs/ai/pr-and-ci.md`](./docs/ai/pr-and-ci.md#local-quality-gates)
    before opening a PR.
