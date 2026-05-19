@@ -30,6 +30,51 @@ const checkFriendship = async (
 	return AppCheckFriendshipResultSchema.parse(result);
 };
 
+const AppGetMarketMetadataArgsSchema = j.strictObject({ seriesId: j.string() });
+const AppGetMarketMetadataResultSchema = j.strictObject({
+	metadata: j.optional(
+		j.strictObject({
+			seriesId: j.string(),
+			whyNow: j.optional(
+				j.strictObject({
+					kind: j.enum(['closing', 'trending', 'new', 'topical', 'social']),
+					text: j.string()
+				})
+			),
+			events: j.array(
+				j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
+			),
+			resolution: j.optional(
+				j.strictObject({
+					text: j.string(),
+					source: j.string(),
+					settlesAtMs: j.optional(j.number())
+				})
+			),
+			updatedAt: j.number(),
+			updatedBy: j.string()
+		})
+	)
+});
+
+const getMarketMetadata = async (
+	args: j.infer<typeof AppGetMarketMetadataArgsSchema>
+): Promise<j.infer<typeof AppGetMarketMetadataResultSchema>> => {
+	const parsedArgs = AppGetMarketMetadataArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetMarketMetadataArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_market_metadata']>[0];
+
+	const { app_get_market_metadata } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_market_metadata(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetMarketMetadataResultSchema, value: idlResult });
+	return AppGetMarketMetadataResultSchema.parse(result);
+};
+
 const AppGetProfileArgsSchema = j.strictObject({ principalStr: j.string() });
 const AppGetProfileResultSchema = j.strictObject({
 	profile: j.optional(
@@ -329,8 +374,64 @@ const sendFriendRequest = async (
 	await app_send_friend_request(idlArgs);
 };
 
+const AppUpsertMarketMetadataArgsSchema = j.strictObject({
+	seriesId: j.string(),
+	data: j.strictObject({
+		whyNow: j.optional(
+			j.strictObject({
+				kind: j.enum(['closing', 'trending', 'new', 'topical', 'social']),
+				text: j.string()
+			})
+		),
+		events: j.array(
+			j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
+		),
+		resolution: j.optional(
+			j.strictObject({ text: j.string(), source: j.string(), settlesAtMs: j.optional(j.number()) })
+		)
+	})
+});
+const AppUpsertMarketMetadataResultSchema = j.strictObject({
+	metadata: j.strictObject({
+		seriesId: j.string(),
+		whyNow: j.optional(
+			j.strictObject({
+				kind: j.enum(['closing', 'trending', 'new', 'topical', 'social']),
+				text: j.string()
+			})
+		),
+		events: j.array(
+			j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
+		),
+		resolution: j.optional(
+			j.strictObject({ text: j.string(), source: j.string(), settlesAtMs: j.optional(j.number()) })
+		),
+		updatedAt: j.number(),
+		updatedBy: j.string()
+	})
+});
+
+const upsertMarketMetadata = async (
+	args: j.infer<typeof AppUpsertMarketMetadataArgsSchema>
+): Promise<j.infer<typeof AppUpsertMarketMetadataResultSchema>> => {
+	const parsedArgs = AppUpsertMarketMetadataArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppUpsertMarketMetadataArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_upsert_market_metadata']>[0];
+
+	const { app_upsert_market_metadata } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_upsert_market_metadata(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppUpsertMarketMetadataResultSchema, value: idlResult });
+	return AppUpsertMarketMetadataResultSchema.parse(result);
+};
+
 export const functions = {
 	checkFriendship,
+	getMarketMetadata,
 	getProfile,
 	listFollowers,
 	listFollowing,
@@ -342,5 +443,6 @@ export const functions = {
 	acceptFriendRequest,
 	followUser,
 	rejectFriendRequest,
-	sendFriendRequest
+	sendFriendRequest,
+	upsertMarketMetadata
 };

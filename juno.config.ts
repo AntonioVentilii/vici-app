@@ -18,6 +18,7 @@ enum JunoDatastoreCollection {
 	COMMENTS = 'comments',
 	CATEGORIES = 'categories',
 	SERIES_CATEGORIES = 'series_categories',
+	MARKET_METADATA = 'market_metadata',
 	ACTIVITIES = 'activities',
 	VXP_ONBOARDING = 'vxp_onboarding'
 }
@@ -104,6 +105,12 @@ export default defineConfig(({ mode }) => ({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.MARKET_METADATA,
+					memory: 'stable',
+					read: 'public',
+					write: 'controllers'
 				},
 				{
 					collection: JunoDatastoreCollection.ACTIVITIES,

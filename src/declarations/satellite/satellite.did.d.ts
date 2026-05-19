@@ -22,6 +22,39 @@ export interface AppCheckFriendshipResult {
 export interface AppFollowUserArgs {
 	target: string;
 }
+export interface AppGetMarketMetadataArgs {
+	series_id: string;
+}
+export interface AppGetMarketMetadataResult {
+	metadata:
+		| []
+		| [
+				{
+					updated_at: number;
+					updated_by: string;
+					series_id: string;
+					resolution: [] | [{ settles_at_ms: [] | [number]; source: string; text: string }];
+					events: Array<{
+						day: number;
+						dir: { up: null } | { down: null };
+						label: string;
+					}>;
+					why_now:
+						| []
+						| [
+								{
+									kind:
+										| { new: null }
+										| { social: null }
+										| { trending: null }
+										| { closing: null }
+										| { topical: null };
+									text: string;
+								}
+						  ];
+				}
+		  ];
+}
 export interface AppGetProfileArgs {
 	principal_str: string;
 }
@@ -166,10 +199,61 @@ export interface AppSearchProfilesResult {
 export interface AppSendFriendRequestArgs {
 	target: string;
 }
+export interface AppUpsertMarketMetadataArgs {
+	data: {
+		resolution: [] | [{ settles_at_ms: [] | [number]; source: string; text: string }];
+		events: Array<{
+			day: number;
+			dir: { up: null } | { down: null };
+			label: string;
+		}>;
+		why_now:
+			| []
+			| [
+					{
+						kind:
+							| { new: null }
+							| { social: null }
+							| { trending: null }
+							| { closing: null }
+							| { topical: null };
+						text: string;
+					}
+			  ];
+	};
+	series_id: string;
+}
+export interface AppUpsertMarketMetadataResult {
+	metadata: {
+		updated_at: number;
+		updated_by: string;
+		series_id: string;
+		resolution: [] | [{ settles_at_ms: [] | [number]; source: string; text: string }];
+		events: Array<{
+			day: number;
+			dir: { up: null } | { down: null };
+			label: string;
+		}>;
+		why_now:
+			| []
+			| [
+					{
+						kind:
+							| { new: null }
+							| { social: null }
+							| { trending: null }
+							| { closing: null }
+							| { topical: null };
+						text: string;
+					}
+			  ];
+	};
+}
 export interface _SERVICE {
 	app_accept_friend_request: ActorMethod<[AppAcceptFriendRequestArgs], undefined>;
 	app_check_friendship: ActorMethod<[AppCheckFriendshipArgs], AppCheckFriendshipResult>;
 	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;
+	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
 	app_list_followers: ActorMethod<[], AppListFollowersResult>;
 	app_list_following: ActorMethod<[], AppListFollowingResult>;
@@ -180,6 +264,10 @@ export interface _SERVICE {
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
 	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
+	app_upsert_market_metadata: ActorMethod<
+		[AppUpsertMarketMetadataArgs],
+		AppUpsertMarketMetadataResult
+	>;
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

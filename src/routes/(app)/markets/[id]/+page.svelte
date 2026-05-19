@@ -7,9 +7,10 @@
 	import MarketDetailStats from '$lib/components/market/MarketDetailStats.svelte';
 	import MarketDetailTabs from '$lib/components/market/MarketDetailTabs.svelte';
 	import MarketInfoPanel from '$lib/components/market/MarketInfoPanel.svelte';
+	import MarketMetadataForm from '$lib/components/market/MarketMetadataForm.svelte';
 	import MarketResolutionInterface from '$lib/components/market/MarketResolutionInterface.svelte';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
-	import { userIsAdminOrSolver } from '$lib/derived/user.derived';
+	import { authPrincipal, userIsAdmin, userIsAdminOrSolver } from '$lib/derived/user.derived';
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
 	import { showCompanion } from '$lib/stores/companion.store';
@@ -69,6 +70,10 @@
 			fetchMarket({ id: market.id, silent: true });
 		}
 	};
+
+	const canEditMetadata = $derived(
+		nonNullish(market) && ($userIsAdmin || market.creator === $authPrincipal)
+	);
 
 	// Resolution choreography — see `docs/ai/frontend/design.md` §7.6.
 	// On the first time the user views a resolved market they have a
@@ -168,6 +173,8 @@
 					<MarketDetailForecast {market} {onPredictionPlaced} />
 
 					<MarketDetailTabs {market} {positions} />
+
+					<MarketMetadataForm canEdit={canEditMetadata} {market} />
 				</div>
 
 				<aside class="hidden space-y-8 lg:col-span-4 lg:block">
