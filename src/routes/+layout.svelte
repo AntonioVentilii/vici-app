@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { initSatellite } from '@junobuild/core';
 	import type { Snippet } from 'svelte';
+	import TweaksPanel from '$lib/components/dev/TweaksPanel.svelte';
 	import Banner from '$lib/components/layout/Banner.svelte';
 	import Notifications from '$lib/components/ui/Notifications.svelte';
 	// eslint-disable-next-line import/no-relative-parent-imports
@@ -44,3 +45,5 @@
 <Banner />
 
 <Notifications />
+
+<TweaksPanel />

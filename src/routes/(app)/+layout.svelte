@@ -2,6 +2,8 @@
 	import { Plus } from 'lucide-svelte/icons';
 	import type { Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { browser } from '$app/environment';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import Authn from '$lib/components/authn/Authn.svelte';
 	import CreateChallengeModal from '$lib/components/challenge/CreateChallengeModal.svelte';
@@ -12,9 +14,9 @@
 	import OnboardingFlow from '$lib/components/onboarding/OnboardingFlow.svelte';
 	import Banner from '$lib/components/ui/Banner.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
-	import { AppPath } from '$lib/constants/routes.constants';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
-	import { userSignedIn } from '$lib/derived/user.derived';
+	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { userStore } from '$lib/stores/user.store';
 
@@ -28,6 +30,21 @@
 
 	let challengeModalOpen = $state(false);
 	let onboardingDismissed = $state(false);
+
+	// Auth gate — every (app) route requires a session. We only
+	// redirect once `userSignedOutResolved` is true, i.e. after the
+	// initial auth handshake has completed. Reacting to `authBusy`
+	// directly would bounce users to /signin during a normal page
+	// load. See `docs/ai/frontend/design.md` §8.1.
+	$effect(() => {
+		if (!browser) {
+			return;
+		}
+
+		if ($userSignedOutResolved) {
+			void goto(PublicPath.SignIn, { replaceState: true });
+		}
+	});
 
 	const needsOnboarding = $derived(
 		$userSignedIn && !onboardingDismissed && !$userStore.profile?.archetype
