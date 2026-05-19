@@ -1,4 +1,4 @@
-import { expect, type Locator, type Page } from '@playwright/test';
+import type { Locator, Page } from '@playwright/test';
 import { TestId } from '../../src/lib/constants/test-ids.constants';
 
 /**
@@ -23,7 +23,6 @@ export class HomePage {
 	readonly onboardingFlow: Locator;
 	readonly onboardingPrimary: Locator;
 	readonly onboardingInterest: Locator;
-	readonly onboardingArchetype: Locator;
 	readonly onboardingHandleInput: Locator;
 
 	constructor(page: Page) {
@@ -39,7 +38,6 @@ export class HomePage {
 		this.onboardingFlow = page.getByTestId(TestId.OnboardingFlow);
 		this.onboardingPrimary = page.getByTestId(TestId.OnboardingPrimary);
 		this.onboardingInterest = page.getByTestId(TestId.OnboardingInterest);
-		this.onboardingArchetype = page.getByTestId(TestId.OnboardingArchetype);
 		this.onboardingHandleInput = page.getByTestId(TestId.OnboardingHandleInput);
 	}
 
@@ -113,74 +111,15 @@ export class HomePage {
 	}
 
 	/**
-	 * Walks past the 5-step OnboardingFlow with deterministic choices so the
-	 * rest of the suite can interact with the signed-in app shell.
-	 *
-	 * The overlay (`fixed inset-0 z-50`) intercepts every click underneath,
-	 * so without dismissing it even `userMenu.click()` would time out. But
-	 * Juno's dev mock identity is **deterministic across the emulator
-	 * session** — every test in the same Playwright run signs in as the
-	 * same principal. The first test mints the profile + completes
-	 * onboarding (writes `archetype` to the satellite); subsequent tests
-	 * inherit the already-onboarded state and never see the overlay.
-	 *
-	 * Detecting which path we're on is subtle: `userMenu` lives in
-	 * `Header` (already mounted, just flips visibility on sign-in) while
-	 * `OnboardingFlow` is gated by an `{#if needsOnboarding}` block in
-	 * `(app)/+layout.svelte` and has to be created + inserted. Svelte
-	 * flushes the header update one microtask before the `{#if}` block
-	 * creates the overlay, so a `Promise.race(onboardingFlow, userMenu)`
-	 * resolves on `userMenu` first and `isVisible(onboardingFlow)`
-	 * synchronously after is `false` — even for a brand-new profile
-	 * that genuinely needs onboarding. Result: the first test in the
-	 * suite (the only one that hits a fresh satellite) silently skips
-	 * onboarding ~half the time, leaving the profile at its default
-	 * principal-derived nickname and producing flaky `tacitus` vs
-	 * `eqorn…k-4qe` baselines on every snapshot that renders the
-	 * leaderboard / profile body.
-	 *
-	 * Fix: wait for `userMenu` (cheap — auth pipeline has fired) AND
-	 * `networkidle` (the satellite `ensureProfile` / `upsertProfile`
-	 * round-trip has settled and the `{#if needsOnboarding}` block has
-	 * had room to flush). After both, the overlay's presence is
-	 * deterministic: visible ⇒ walk through, hidden ⇒ no-op.
+	 * Phase 2 moved onboarding to `/signup` before authentication.
+	 * Signing in through `/signin` should therefore land directly in
+	 * the app shell. Keep this helper as a synchronization point for
+	 * specs that still call `signInAsDevUser()` — it waits for the
+	 * signed-in shell and profile hydration to settle.
 	 */
 	async completeOnboarding(): Promise<void> {
 		await this.userMenu.waitFor({ state: 'visible' });
 		await this.page.waitForLoadState('networkidle');
-
-		if (!(await this.onboardingFlow.isVisible())) {
-			return;
-		}
-
-		await this.onboardingPrimary.click();
-		await this.onboardingPrimary.click();
-
-		// Minimum 3 interests required to advance.
-		const interests = this.onboardingInterest;
-
-		await expect(interests).toHaveCount(6);
-
-		for (let i = 0; i < 3; i++) {
-			await interests.nth(i).click();
-		}
-
-		await this.onboardingPrimary.click();
-
-		// Assert the archetype count up-front so a catalog/test-id drift surfaces
-		// as "expected 4 got X" instead of `.first().click()` silently timing out.
-		const archetypes = this.onboardingArchetype;
-
-		await expect(archetypes).toHaveCount(4);
-
-		await archetypes.first().click();
-		await this.onboardingPrimary.click();
-
-		// Placeholder ("tacitus") is not auto-filled — must type explicitly.
-		await this.onboardingHandleInput.fill('tacitus');
-		await this.onboardingPrimary.click();
-
-		await expect(this.onboardingFlow).toBeHidden();
 	}
 
 	/**
