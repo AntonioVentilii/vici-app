@@ -1,13 +1,12 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
-	import { Sun, Moon } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import DomainSwitch from '$lib/components/layout/DomainSwitch.svelte';
+	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
-	import { theme, type Theme } from '$lib/stores/theme.store';
 	import { setAuthBusy } from '$lib/stores/user.store';
 	import type { ButtonStatus } from '$lib/types/components';
 
@@ -30,10 +29,6 @@
 		} finally {
 			signOutStatus = 'enabled';
 		}
-	};
-
-	const setTheme = (val: Theme) => {
-		theme.set(val);
 	};
 </script>
 
@@ -62,7 +57,7 @@
 	{/snippet}
 
 	{#snippet content()}
-		<div class="w-48 py-1">
+		<div class="w-72 py-1">
 			<BaseButton
 				class="text-foreground hover:bg-primary/10 hover:text-primary flex w-full items-center gap-3 px-4 py-2 text-left text-sm font-medium"
 				onclick={goToProfile}
@@ -92,28 +87,7 @@
 				<div class="text-muted-foreground mb-2 text-[10px] font-bold tracking-widest uppercase">
 					Theme
 				</div>
-				<div class="flex gap-1">
-					<button
-						class="flex flex-1 items-center justify-center rounded-md border p-2 transition-all {$theme ===
-						'dark'
-							? 'border-primary bg-primary/10 text-primary shadow-sm'
-							: 'border-border text-muted-foreground hover:bg-muted'}"
-						aria-label="Dark theme"
-						onclick={() => setTheme('dark')}
-					>
-						<Moon size={16} />
-					</button>
-					<button
-						class="flex flex-1 items-center justify-center rounded-md border p-2 transition-all {$theme ===
-						'light'
-							? 'border-primary bg-primary/10 text-primary shadow-sm'
-							: 'border-border text-muted-foreground hover:bg-muted'}"
-						aria-label="Light theme"
-						onclick={() => setTheme('light')}
-					>
-						<Sun size={16} />
-					</button>
-				</div>
+				<AppearancePicker />
 			</div>
 
 			<div class="border-border my-1 border-t"></div>

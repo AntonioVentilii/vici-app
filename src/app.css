@@ -203,6 +203,34 @@
 	--shadow-card: var(--shadow-card-light);
 }
 
+[data-theme='peach'] {
+	--bg-base: #fae0cc;
+	--bg-surface: #ffead9;
+	--bg-popover: #fff3e8;
+
+	--text-base: #3d2419;
+	--text-muted: rgba(61, 36, 25, 0.5);
+	--text-inverse: #f2ecdc;
+
+	--border-base: rgba(61, 36, 25, 0.1);
+	--border-strong: rgba(61, 36, 25, 0.18);
+
+	--color-primary: var(--laurel-deep);
+	--color-primary-foreground: #3d2419;
+
+	--color-success: var(--yes-deep);
+	--color-warning: var(--laurel-deep);
+	--color-destructive: var(--no-deep);
+
+	--color-accent: var(--laurel-deep);
+	--color-accent-foreground: #3d2419;
+
+	--inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+	--inset-hi-strong: inset 0 1px 0 rgba(255, 255, 255, 0.85);
+
+	--shadow-card: var(--shadow-card-light);
+}
+
 @theme {
 	--font-display: 'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 	--font-serif: 'Instrument Serif', 'Source Serif 4', Georgia, serif;

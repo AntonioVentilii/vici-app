@@ -43,6 +43,7 @@ easing curve are present. Outstanding items:
 | -------------------------------------------------------------------------------------------------------------------- | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `--shadow-toast`, `--shadow-card`, `--shadow-card-light`                                                             | ✅ Done                 | Exposed in `@theme`. `Notifications.svelte` uses `shadow-toast`. `Card.svelte` default variant uses `shadow-card`, which resolves to `--inset-hi` in dark and `--shadow-card-light` in light. |
 | `--ticker-h: 32px`                                                                                                   | ✅ Done (token only)    | Declared in `:root` alongside `--header-h` / `--bottomnav-h`. Wire when a Ticker component lands.                                                                                             |
+| Peach theme tokens                                                                                                   | ✅ Done                 | `[data-theme='peach']` defines the warm blush canvas, warm dark foreground, and deeper laurel accent swap.                                                                                    |
 | `--reading-max: 64ch`                                                                                                | ❌ Missing              | Add when a body-text surface needs it; not blocking today.                                                                                                                                    |
 | Numeric spacing scale (`--s-N`)                                                                                      | ⚠️ Intentionally absent | **Do not port.** Tailwind v4 ships the same 4-px scale as `p-1`, `gap-3`, etc. The design's hand-rolled scale exists because their CSS is hand-rolled; ours is utility-generated.             |
 | Numeric type scale (`--t-N`)                                                                                         | ⚠️ Intentionally absent | **Do not port** for the same reason — use Tailwind's `text-xs` / `text-sm` / `text-base` / … Only port the named oversize values (`--t-88`, `--t-128`) **if** a hero treatment lands.         |
@@ -50,6 +51,31 @@ easing curve are present. Outstanding items:
 | Numeric radii scale (`--r-N`)                                                                                        | ⚠️ Partial              | The app uses Tailwind's `rounded-{sm,md,lg,xl,full}` plus `--radius: 0.5rem`. Only port a missing radius **on demand** when a component needs a non-Tailwind value.                           |
 | Z-index scale (`--z-overlay`, `--z-modal`, `--z-dropdown`, `--z-toast`, `--z-tooltip`)                               | ❓ Implicit             | Audit existing modals / popovers; if z-index is inlined per-component, extract to `@theme` once during a primitive pass.                                                                      |
 | Utility classes (`.allcaps`, `.tabular`, `.serif-italic`, `.lede`, `.surface-elevated`, `.hairline`, `.display-num`) | ⚠️ Partial              | `.eyebrow`, `.serif-italic`, `.surface`, `.num` already exist in `src/app.css`. Add the missing helpers only when first consumer needs them.                                                  |
+
+---
+
+## 1.1 Themes
+
+The app supports three themes through `data-theme` on `<html>`:
+
+| Theme   | Canvas / register                     | Accent rule                                                                |
+| ------- | ------------------------------------- | -------------------------------------------------------------------------- |
+| `dark`  | Warm near-black, terminal / editorial | `--laurel`                                                                 |
+| `light` | Parchment / ink                       | `--laurel`                                                                 |
+| `peach` | Warm blush / coral-cream              | `--laurel-deep` (`#B68B1F`) for primary/accent so contrast holds on peach. |
+
+Theme state lives in
+[`src/lib/stores/theme.store.ts`](../../../src/lib/stores/theme.store.ts)
+and persists to `localStorage` as `vici-theme`.
+
+The canonical picker is
+[`src/lib/components/ui/AppearancePicker.svelte`](../../../src/lib/components/ui/AppearancePicker.svelte).
+It renders three swatch tiles with `role="radiogroup"` / `role="radio"`
+semantics and is currently mounted in the user menu and the dev-only
+Tweaks panel. When the Settings surface lands, use the same component —
+do not create a second picker.
+
+Third-party marks keep their own colours in every theme (see §2).
 
 ---
 
@@ -100,7 +126,7 @@ Already implemented. **No work needed.**
 | Flow card          | [`src/lib/components/market/FlowCard.svelte`](../../../src/lib/components/market/FlowCard.svelte)     | ⚠️ Audit             | Side-by-side visual diff against the design's flow-card spec.                                                                                                                                                                                                                                                |
 | Market card        | [`src/lib/components/market/MarketCard.svelte`](../../../src/lib/components/market/MarketCard.svelte) | ✅ Hero card aligned | The design's market card is a compact list-row (one bar, vol/traders footer). The app's is a richer hero card with badges + challenge slot — kept as the hero variant. If a tighter row variant becomes needed, add a separate `MarketRow.svelte`. Numbers (time-remaining) now use the `.num` mono utility. |
 | Ticker             | _no app equivalent_                                                                                   | ❌ New               | Lives at top of the marketing surface (and possibly app shell). Goes in `$lib/components/layout/Ticker.svelte` if app-shell, else marketing folder.                                                                                                                                                          |
-| UI primitives      | `$lib/components/ui/{Button,Card,Badge,Dialog,Modal,Tabs,Tooltip,…}.svelte`                           | ⚠️ Audit             | The repo already has a fuller UI primitives set in `$lib/components/ui/`. Diff button/badge/input variants and inputs against the design.                                                                                                                                                                    |
+| UI primitives      | `$lib/components/ui/{Button,Card,Badge,Dialog,Modal,Tabs,Tooltip,…}.svelte`                           | ⚠️ Audit             | The repo already has a fuller UI primitives set in `$lib/components/ui/`. `AppearancePicker.svelte` is the canonical theme picker. Diff button/badge/input variants and inputs against the design.                                                                                                           |
 | Top header / frame | [`Header.svelte`](../../../src/lib/components/layout/Header.svelte) + `MobileNav`                     | ⚠️ Likely covered    | Header layout + bottom nav. No new component, but audit Header tokens (height, padding, dividers).                                                                                                                                                                                                           |
 | Characters         | _see §3_                                                                                              | ✅ Done              |                                                                                                                                                                                                                                                                                                              |
 
@@ -252,10 +278,10 @@ they're stale.
 ### 7.8 Generative artwork — per-category
 
 Defined in [`src/lib/utils/flow-art.utils.ts`](../../../src/lib/utils/flow-art.utils.ts)
-
-- [`src/lib/components/artwork/FlowArtFrame.svelte`](../../../src/lib/components/artwork/FlowArtFrame.svelte).
-  Six categories, six visual languages — same formal vocabulary per
-  category, different specifics per market:
+and rendered by
+[`src/lib/components/artwork/FlowArtFrame.svelte`](../../../src/lib/components/artwork/FlowArtFrame.svelte).
+Six categories, six visual languages — same formal vocabulary per
+category, different specifics per market:
 
 | Category   | Visual language                                                                        |
 | ---------- | -------------------------------------------------------------------------------------- |
@@ -269,6 +295,11 @@ Defined in [`src/lib/utils/flow-art.utils.ts`](../../../src/lib/utils/flow-art.u
 Three states per category — neutral (Flow Mode default), won
 (saturate + gild), lost (fracture + desaturate). Resolution-state
 crossfade is for Portfolio only; Flow Mode renders neutral only.
+Artwork is theme-aware: `dark` defines neutral / won / lost palettes;
+`light` and `peach` define neutral palettes and reuse neutral for
+resolved states. `FlowArtFrame` passes the active theme from
+`theme.store.ts` into `renderFlowArt`, so previews react immediately
+when the user switches appearance.
 
 Compositional rules every piece must satisfy:
 

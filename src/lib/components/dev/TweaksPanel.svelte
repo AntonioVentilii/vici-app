@@ -3,6 +3,7 @@
 	import { Wrench, X } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { isDev } from '$lib/env/app.env';
 
@@ -53,6 +54,11 @@
 				</header>
 
 				<section class="tweaks-section">
+					<span class="allcaps tweaks-label">Appearance</span>
+					<AppearancePicker />
+				</section>
+
+				<section class="tweaks-section">
 					<span class="allcaps tweaks-label">Quick jumps</span>
 					<div class="tweaks-jumps">
 						<button onclick={() => jumpTo('/')} type="button">Home (/)</button>
@@ -77,7 +83,9 @@
 					</div>
 				</section>
 
-				<p class="tweaks-foot">Theme switcher (Dark / Light / Peach) lands in a later phase.</p>
+				<p class="tweaks-foot">
+					Dev-only panel. User-facing settings follow in the Settings phase.
+				</p>
 			</aside>
 		{/if}
 	</div>

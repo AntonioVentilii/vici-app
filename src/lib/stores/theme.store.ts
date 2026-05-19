@@ -1,16 +1,19 @@
 import { browser } from '$app/environment';
 import { writable } from 'svelte/store';
 
-export type Theme = 'dark' | 'light';
+export type Theme = 'dark' | 'light' | 'peach';
 
 const THEME_KEY = 'vici-theme';
+const THEMES: readonly Theme[] = ['dark', 'light', 'peach'] as const;
 
 const getInitialTheme = (): Theme => {
 	if (!browser) {
 		return 'dark';
 	}
 
-	return (localStorage.getItem(THEME_KEY) as Theme) || 'dark';
+	const value = localStorage.getItem(THEME_KEY);
+
+	return THEMES.includes(value as Theme) ? (value as Theme) : 'dark';
 };
 
 export const theme = writable<Theme>(getInitialTheme());
