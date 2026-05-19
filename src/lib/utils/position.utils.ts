@@ -39,7 +39,14 @@ export const positionResolvedResult = ({
 		return null;
 	}
 
-	if (position.netQty <= ZERO) {
+	// `netQty` is signed (NO positions can be negative; see the
+	// `qty > ZERO ? 'YES' : 'NO'` fallback in `mapPositionData`). A
+	// zero quantity means the user has fully exited; treat that as
+	// "no position" and skip the won/lost classification. Sign of
+	// `netQty` itself doesn't carry side information here — the
+	// `outcomeId` field is the source of truth for which outcome
+	// the user predicted.
+	if (position.netQty === ZERO) {
 		return null;
 	}
 

@@ -1,6 +1,14 @@
-<script lang="ts">
-	import { onMount } from 'svelte';
+<script lang="ts" module>
 	import { SvelteSet } from 'svelte/reactivity';
+
+	// Module-scope so the "only fade once per marketId+result" guard
+	// survives component remounts (table sort / filter / virtualization /
+	// page navigation back-and-forth). Component-instance state would
+	// reset on every mount and re-trigger the crossfade.
+	const seen = new SvelteSet<string>();
+</script>
+
+<script lang="ts">
 	import FlowArtFrame from '$lib/components/artwork/FlowArtFrame.svelte';
 	import { resolveFlowArtCategory, type FlowArtState } from '$lib/utils/flow-art.utils';
 
@@ -30,19 +38,21 @@
 		class: extraClass = ''
 	}: Props = $props();
 
-	// Only crossfade once per `marketId` per page life — prevents
-	// re-running the animation when the table re-sorts or re-renders.
-	const seen = new SvelteSet<string>();
-	const seenKey = $derived(`${marketId}::${result}`);
-
 	let faded = $state(false);
 
-	onMount(() => {
+	// React to `result` transitions, not just initial mount — `result`
+	// can flip from 'neutral' → 'won' / 'lost' when the parent's
+	// market data arrives async after the row first renders.
+	$effect(() => {
 		if (result === 'neutral') {
+			faded = false;
+
 			return;
 		}
 
-		if (seen.has(seenKey)) {
+		const key = `${marketId}::${result}`;
+
+		if (seen.has(key)) {
 			faded = true;
 
 			return;
@@ -52,7 +62,7 @@
 		// then fades in over the spec's hero duration.
 		const id = setTimeout(() => {
 			faded = true;
-			seen.add(seenKey);
+			seen.add(key);
 		}, 80);
 
 		return () => clearTimeout(id);

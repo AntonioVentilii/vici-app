@@ -62,7 +62,7 @@
 						</tr>
 					</thead>
 					<tbody class="divide-border divide-y">
-						{#each positions as pos, index (index)}
+						{#each positions as pos (`${pos.marketId}::${pos.outcomeId}`)}
 							{@const market = getMarketById(pos.marketId)}
 							{@const pnl = calculatePositionPnL({ position: pos, market })}
 							{@const result = market

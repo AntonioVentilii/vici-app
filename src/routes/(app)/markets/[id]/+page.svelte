@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import MarketDetailForecast from '$lib/components/market/MarketDetailForecast.svelte';
 	import MarketDetailHeader from '$lib/components/market/MarketDetailHeader.svelte';
@@ -79,6 +79,9 @@
 	// Tracked in `sessionStorage` per market id so re-navigating to
 	// the same page within a session doesn't re-fire.
 	const RESOLUTION_BEAT_KEY_PREFIX = 'vici:resolution-beat:';
+	let resolutionBeatTimeoutId: ReturnType<typeof setTimeout> | undefined;
+	let resolutionBeatScheduledFor: string | undefined;
+
 	$effect(() => {
 		if (!browser) {
 			return;
@@ -87,6 +90,14 @@
 		const m = market;
 
 		if (isNullish(m) || m.status !== 'Resolved' || positions.length === 0) {
+			return;
+		}
+
+		// Guard against re-runs of this effect (e.g. when the 30 s
+		// silent refetch updates `market` / `positions`) cancelling the
+		// 320 ms timeout before it fires. Schedule once per market id;
+		// `onDestroy` does the unmount cleanup instead of $effect.
+		if (resolutionBeatScheduledFor === m.id) {
 			return;
 		}
 
@@ -102,6 +113,8 @@
 
 		try {
 			if (sessionStorage.getItem(beatKey) !== null) {
+				resolutionBeatScheduledFor = m.id;
+
 				return;
 			}
 
@@ -112,17 +125,22 @@
 			// once-per-session guard.
 		}
 
-		// Defer slightly so the page settles before the bubble appears.
-		const id = setTimeout(() => {
+		resolutionBeatScheduledFor = m.id;
+		resolutionBeatTimeoutId = setTimeout(() => {
 			showCompanion({
 				who: 'oracle',
 				line: 'Called it.',
 				dwell_ms: 1200,
 				anchor: 'br'
 			});
+			resolutionBeatTimeoutId = undefined;
 		}, 320);
+	});
 
-		return () => clearTimeout(id);
+	onDestroy(() => {
+		if (resolutionBeatTimeoutId !== undefined) {
+			clearTimeout(resolutionBeatTimeoutId);
+		}
 	});
 </script>
 
