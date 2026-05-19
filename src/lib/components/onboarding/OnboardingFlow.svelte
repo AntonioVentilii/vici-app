@@ -813,7 +813,7 @@
 					/>
 					<small class={emailLooksValid ? 'num' : 'num warning'}>
 						{emailLooksValid
-							? 'Recoverable later. Never required to continue.'
+							? 'Saved after sign-in. Never required to continue.'
 							: 'Email is optional; you can continue without it.'}
 					</small>
 				</label>
@@ -999,6 +999,11 @@
 	.market-card.dragging {
 		cursor: grabbing;
 		transition: none;
+	}
+
+	.market-card.flipped {
+		touch-action: pan-y;
+		cursor: default;
 	}
 
 	.market-card.committed,
@@ -1413,6 +1418,8 @@
 		flex-direction: column;
 		gap: 1rem;
 		overflow-y: auto;
+		touch-action: pan-y;
+		overscroll-behavior: contain;
 	}
 
 	.depth-body h2 {

@@ -12,6 +12,7 @@ export const UserProfileSchema = j.strictObject({
 	owner: PrincipalTextSchema,
 	nickname: NicknameSchema.default(''),
 	avatar: j.string().default(''),
+	email: j.string().default(''),
 	pnl: j.number().default(0),
 	visibility: ProfileVisibilitySchema.default(ProfileVisibility.FRIENDS_ONLY),
 	role: UserRoleSchema.optional(),

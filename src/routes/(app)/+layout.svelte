@@ -49,7 +49,7 @@
 
 	const parsePendingOnboarding = (
 		raw: string
-	): { handle: string; interests: string[] } | undefined => {
+	): { handle: string; interests: string[]; email?: string } | undefined => {
 		let parsed: unknown;
 
 		try {
@@ -71,10 +71,15 @@
 			'interests' in parsed && Array.isArray(parsed.interests)
 				? parsed.interests.filter((interest): interest is string => typeof interest === 'string')
 				: [];
+		const email =
+			'email' in parsed && typeof parsed.email === 'string' && parsed.email.trim().length > 0
+				? parsed.email.trim()
+				: undefined;
 
 		return {
 			handle: parsed.handle,
-			interests
+			interests,
+			email
 		};
 	};
 
@@ -102,7 +107,8 @@
 		const updated = {
 			...$userStore.profile,
 			nickname: pending.handle,
-			interests: pending.interests
+			interests: pending.interests,
+			...(pending.email && { email: pending.email })
 		};
 
 		void upsertProfile({
@@ -111,6 +117,10 @@
 		})
 			.then(() => {
 				userStore.update((curr) => ({ ...curr, profile: updated }));
+				localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
+			})
+			.catch((err: unknown) => {
+				console.warn('Pending onboarding handoff failed:', err);
 				localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
 			})
 			.finally(() => {

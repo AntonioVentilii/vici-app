@@ -3,7 +3,6 @@
 	import { Wrench, X } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { isDev } from '$lib/env/app.env';
 
@@ -11,28 +10,11 @@
 
 	let open = $state(false);
 
-	const resolvedPath = (path: AppPath | PublicPath): string => {
-		switch (path) {
-			case AppPath.Home:
-				return resolve('/');
-			case AppPath.Flow:
-				return resolve('/flow');
-			case AppPath.Portfolio:
-				return resolve('/portfolio');
-			case AppPath.Profile:
-				return resolve('/profile');
-			case PublicPath.SignIn:
-				return resolve('/signin');
-			case PublicPath.SignUp:
-				return resolve('/signup');
-			default:
-				return resolve('/');
-		}
-	};
+	type TweakRoute = '/' | '/flow' | '/portfolio' | '/profile' | '/signin' | '/signup';
 
-	const jumpTo = async (path: AppPath | PublicPath) => {
+	const jumpTo = async (path: TweakRoute) => {
 		open = false;
-		await goto(resolvedPath(path));
+		await goto(resolve(path));
 	};
 
 	const handleSignOut = async () => {
@@ -73,12 +55,12 @@
 				<section class="tweaks-section">
 					<span class="allcaps tweaks-label">Quick jumps</span>
 					<div class="tweaks-jumps">
-						<button onclick={() => jumpTo(AppPath.Home)} type="button">Home (/)</button>
-						<button onclick={() => jumpTo(AppPath.Flow)} type="button">Flow</button>
-						<button onclick={() => jumpTo(AppPath.Portfolio)} type="button">Portfolio</button>
-						<button onclick={() => jumpTo(AppPath.Profile)} type="button">Profile</button>
-						<button onclick={() => jumpTo(PublicPath.SignIn)} type="button">Sign in</button>
-						<button onclick={() => jumpTo(PublicPath.SignUp)} type="button">Sign up</button>
+						<button onclick={() => jumpTo('/')} type="button">Home (/)</button>
+						<button onclick={() => jumpTo('/flow')} type="button">Flow</button>
+						<button onclick={() => jumpTo('/portfolio')} type="button">Portfolio</button>
+						<button onclick={() => jumpTo('/profile')} type="button">Profile</button>
+						<button onclick={() => jumpTo('/signin')} type="button">Sign in</button>
+						<button onclick={() => jumpTo('/signup')} type="button">Sign up</button>
 					</div>
 				</section>
 

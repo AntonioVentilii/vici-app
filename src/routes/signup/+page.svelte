@@ -20,10 +20,14 @@
 
 	const handleComplete = (result: { handle: string; interests: string[]; email?: string }) => {
 		if (browser) {
-			localStorage.setItem(
-				PENDING_ONBOARDING_STORAGE_KEY,
-				JSON.stringify({ ...result, completedAt: new Date().toISOString() })
-			);
+			try {
+				localStorage.setItem(
+					PENDING_ONBOARDING_STORAGE_KEY,
+					JSON.stringify({ ...result, completedAt: new Date().toISOString() })
+				);
+			} catch (err) {
+				console.warn('Onboarding handoff could not be stored:', err);
+			}
 		}
 
 		void goto(resolve('/signin'));
