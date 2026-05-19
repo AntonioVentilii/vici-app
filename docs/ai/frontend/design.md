@@ -1,13 +1,24 @@
-# App Design Alignment
+# App Design
 
-Working roadmap for keeping the SvelteKit app aligned with the app
-design. This page is the single source of truth for which surfaces /
-tokens / assets match the design and which still need work — tick rows
-off as PRs land.
+Working roadmap and rule book for the SvelteKit app's design. This
+page is the single source of truth for which surfaces / tokens /
+assets exist, which still need work, and the behavioural rules that
+govern Flow Mode (§7). Tick rows off as PRs land.
 
-> **Convention:** any commit that aligns a surface with the design must
-> update at least one row here in the same commit. When a row reaches
-> "✅ Done" it stays in the table for traceability — it's not deleted.
+> **Conventions** — any agent or contributor working on the design
+> must respect both:
+>
+> 1. Any commit that adjusts a design surface must update at least
+>    one row here in the same commit. When a row reaches "✅ Done"
+>    it stays in the table for traceability — it's not deleted.
+> 2. **Never reference temporary or external design source materials**
+>    — folder names, spec exports, file names, or section numbers
+>    from those files — anywhere in the repo (code, comments, commit
+>    messages, PR bodies). Temporary scratch is temporary; the
+>    product reflects **the** design. When a code comment needs to
+>    cite a rule, point at this file (`docs/ai/frontend/design.md`)
+>    and the relevant section. Don't qualify the design as "new",
+>    "old", "redesigned", or "previous" — there is only one.
 
 The companion guidance lives in:
 
