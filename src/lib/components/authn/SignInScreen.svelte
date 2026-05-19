@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
-	import { PublicPath } from '$lib/constants/routes.constants';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 
 	interface Props {
 		// Mode: `signin` for returning users (welcome-back framing),
@@ -9,12 +9,17 @@
 		// flow once Phase 2 lands).
 		mode?: 'signin' | 'signup';
 		// Callback for after a successful auth handshake. Defaults to
-		// navigating home; routes calling this from a layout can hook
-		// in a different post-auth target.
+		// navigating to `AppPath.Home`; routes calling this from a
+		// layout can pass a different post-auth target.
 		onSuccess?: () => void;
 	}
 
-	const { mode = 'signin', onSuccess }: Props = $props();
+	const {
+		mode = 'signin',
+		onSuccess = () => {
+			void goto(AppPath.Home);
+		}
+	}: Props = $props();
 
 	const isSignUp = $derived(mode === 'signup');
 
