@@ -82,17 +82,10 @@
 	let startY = 0;
 	let dragging = $state(false);
 
-	// Brand README §05 ("Animation"): "Swipe physics (Flow Mode) are
-	// heavier than Tinder — damping: 0.85, stiffness: 220. Cards feel
-	// weighted, like flipping a tile, not flicking a Polaroid."
-	//
-	// The spec value `stiffness: 220` is iOS / SwiftUI native units;
-	// Svelte's `Spring` exposes a normalized 0..1 stiffness. The
-	// translation here keeps the same "snappy + settled" character —
-	// `damping: 0.85` maps directly (Svelte's damping is the same
-	// damping-ratio concept), and `stiffness: 0.4` is the closest
-	// settled-but-responsive point on Svelte's curve. Tuned by feel
-	// against the spec's "tile flip, not Polaroid flick" intent.
+	// Swipe physics: weighted, settled, decisive. Cards should feel
+	// like a tile being flipped — not flicked. `damping: 0.85` keeps
+	// the spring-back from oscillating; `stiffness: 0.4` is the
+	// snappy-but-not-twitchy point on Svelte's normalized curve.
 	const coords = new Spring(
 		{ x: 0, y: 0 },
 		{
