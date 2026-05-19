@@ -2,10 +2,33 @@
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
 	import { navItems } from '$lib/constants/nav.constants';
-	import type { AppPath } from '$lib/constants/routes.constants';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { userIsAdmin } from '$lib/derived/user.derived';
 
-	const isActive = (path: AppPath) => page.url.pathname === path;
+	// Routes that don't have their own nav slot but should still light
+	// up a parent tab (per `docs/ai/frontend/design.md` §8.4 active-
+	// state cascade). Markets owns the detail-by-id sub-route; Profile
+	// owns the personal-area routes that branch off from it.
+	const isActive = (path: AppPath) => {
+		const current = page.url.pathname;
+
+		if (current === path) {
+			return true;
+		}
+
+		// The Markets nav button is configured as `AppPath.Home` (the
+		// markets feed lives at `/`), so detail pages like
+		// `/markets/[id]` should still light it up.
+		if (path === AppPath.Home && current.startsWith('/markets/')) {
+			return true;
+		}
+
+		if (path === AppPath.Profile && current === AppPath.Wallet) {
+			return true;
+		}
+
+		return false;
+	};
 
 	const handleNav = (path: AppPath) => {
 		goto(path);

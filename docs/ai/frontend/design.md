@@ -302,6 +302,93 @@ The wrapper is best-effort — no-ops on iOS Safari and any UA without
 
 ---
 
+## 8. Routing & sign-in shell
+
+The product splits into two layers: a public layer (sign-in,
+sign-up, OAuth callbacks) and the gated `(app)` group. SvelteKit
+file-based routes — there is no central nav store.
+
+### 8.1 Auth gate
+
+`src/routes/(app)/+layout.svelte` gates every route in the group.
+It reacts to `userSignedOutResolved` from
+[`src/lib/derived/user.derived.ts`](../../../src/lib/derived/user.derived.ts)
+— the `authBusy`-aware derived store that's only `true` after the
+initial auth handshake has resolved to "definitely signed out".
+Reacting to `authBusy` directly would bounce users to `/signin`
+during a normal page load.
+
+When the gate triggers, redirect via `goto(PublicPath.SignIn,
+{ replaceState: true })` so the back-button doesn't loop the user
+back into the gated route.
+
+### 8.2 Public surfaces
+
+| Path               | Purpose                                                                                                                                                                                                     |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/signin`          | Returning-user sign-in surface (`SignInScreen` mode `"signin"`). Welcome-back framing. Routes signed-in users straight to home.                                                                             |
+| `/signup`          | Create-account framing (`SignInScreen` mode `"signup"`). Today renders the same shell with a "create account" CTA; the pre-sign-in 4-step onboarding flow lands in a later phase and replaces the contents. |
+| `/auth/callback/*` | OAuth callback handlers (Google today). Public — `signInWithGoogle` redirects through these.                                                                                                                |
+
+`PublicPath` enum + `isPublicPath(pathname)` helper live in
+[`src/lib/constants/routes.constants.ts`](../../../src/lib/constants/routes.constants.ts).
+
+### 8.3 SignInScreen — visual shell
+
+[`src/lib/components/authn/SignInScreen.svelte`](../../../src/lib/components/authn/SignInScreen.svelte)
+is the canonical sign-in / sign-up visual:
+
+- Tracked-out `WELCOME BACK` / `WELCOME` eyebrow (`.allcaps`).
+- Display sans + serif italic title — `Sign in to *VICI.*` /
+  `Start predicting on *VICI.*`. Wordmark italicised in `.serif-italic`,
+  in `--laurel`.
+- Sub copy in `--text-muted`.
+- Provider stack rendered through
+  [`SignInActions.svelte`](../../../src/lib/components/authn/SignInActions.svelte) —
+  the four supported methods today: Internet Identity, Google,
+  Passkey (WebAuthn), Dev (local only).
+- Footer switcher between sign-in and sign-up modes.
+- Legal fineprint at the bottom of the page (terms, privacy,
+  play-money preview disclaimer).
+
+**Out of scope today**: Apple Sign-In (Juno's auth provider list
+covers `internet_identity` / `google` / `github` / `webauthn` /
+`dev` only — adding Apple needs a custom OAuth flow on top of
+Juno's delegation system) and email magic-link.
+
+### 8.4 Bottom-nav active state
+
+The mobile tab bar
+([`MobileNav.svelte`](../../../src/lib/components/layout/MobileNav.svelte))
+exact-matches `page.url.pathname` to the nav button's path, with
+two cascade rules:
+
+1. The Markets nav button (configured as `AppPath.Home` since the
+   markets feed lives at `/`) lights up for any
+   `/markets/[id]` detail route.
+2. The Profile nav button lights up on `/wallet` (which has no
+   nav slot of its own).
+
+If new nav-less routes are added (e.g. `/notifications`,
+`/settings` — both deferred), they extend this cascade table.
+
+### 8.5 Dev-only Tweaks panel
+
+[`src/lib/components/dev/TweaksPanel.svelte`](../../../src/lib/components/dev/TweaksPanel.svelte)
+is a floating wrench-icon FAB, gated by `isDev()` from
+[`src/lib/env/app.env.ts`](../../../src/lib/env/app.env.ts).
+Currently provides quick-jumps to every nav-relevant route plus a
+sign-out trigger. Theme switching (Dark / Light / Peach) lands
+when the theme system does.
+
+It mounts in the **root** layout
+([`src/routes/+layout.svelte`](../../../src/routes/+layout.svelte))
+so it's available on the public surfaces too — a QA flow that
+needs to bounce between `/signin` and the gated app benefits from
+having it everywhere.
+
+---
+
 ## Out-of-scope (deliberately)
 
 - Renaming features just because the design uses a different word

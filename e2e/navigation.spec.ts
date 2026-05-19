@@ -2,12 +2,18 @@ import { expect, test, type Page } from '@playwright/test';
 import { HomePage } from './pages/home.page';
 
 /**
- * Top-level navigation smoke tests. For each app page (except `/flow`,
- * which is intentionally excluded), navigate, wait for the page header
- * to render, and snapshot. We exercise both the logged-out variant
- * (some pages render a public view, some render an in-page sign-in
- * prompt) and the dev-signed-in variant (which gets the user-scoped
- * version). Markets / home is covered by `homepage.spec.ts`.
+ * Top-level navigation smoke tests.
+ *
+ * Phase 1 routing change: every (app) path is auth-gated. Anonymous
+ * navigation to a gated path bounces to `/signin`. Signed-in users see
+ * the page chrome as before. We exercise:
+ *
+ * - One redirect-from-anonymous test per gated path, so a regression
+ *   in the gate (e.g. the redirect getting deleted) fails loud.
+ * - The signed-in variant for each non-Flow page, snapshotted so a
+ *   structural drift on the page surfaces in CI.
+ *
+ * Markets / home is covered by `homepage.spec.ts`.
  */
 const PAGES = [
 	{ name: 'leaderboard', path: '/leaderboard' },
@@ -31,8 +37,7 @@ const PAGES = [
  *    `SignInModal.svelte` ALSO renders an `<h1>` inside its `<dialog>`,
  *    which lives in the DOM even when the dialog is closed — a global
  *    `page.locator('h1').first()` picks that hidden h1 first.
- * 3. The auth control in the navbar confirms we landed in the expected
- *    auth state.
+ * 3. The user-menu confirms we landed in the signed-in auth state.
  * 4. `networkidle` waits until there's been no network activity for
  *    500ms, which lets every page's `onMount` data fetch (Leaderboard's
  *    `getLeaderboard`, Portfolio's `getPositions` + `getUserTradeHistory`,
@@ -44,42 +49,28 @@ const PAGES = [
  *    The repo has no <5s polling on any test page (Leaderboard refreshes
  *    every 30s, Profile every 60s), so 500ms idle is reliably reachable.
  */
-const waitForPage = async ({
-	page,
-	expectedLanding
-}: {
-	page: Page;
-	expectedLanding: 'logged-out' | 'logged-in';
-}) => {
+const waitForSignedInPage = async ({ page }: { page: Page }): Promise<void> => {
 	const home = new HomePage(page);
 
 	await expect(home.appMain).toBeVisible();
 	await expect(home.appMain).toHaveCSS('opacity', '1');
 	await expect(home.appMain.locator('h1').first()).toBeVisible();
-
-	if (expectedLanding === 'logged-out') {
-		await expect(home.signInButton).toBeVisible();
-	} else {
-		await expect(home.userMenu).toBeVisible();
-	}
+	await expect(home.userMenu).toBeVisible();
 
 	await page.waitForLoadState('networkidle');
 };
 
-test.describe('navigation (logged out)', () => {
-	for (const { name, path } of PAGES) {
-		test(`renders ${path}`, async ({ page }) => {
-			const home = new HomePage(page);
-
+test.describe('navigation (anonymous → redirected to signin)', () => {
+	for (const { path } of PAGES) {
+		test(`anonymous visit to ${path} redirects to /signin`, async ({ page }) => {
 			await page.goto(path);
-			await waitForPage({ page, expectedLanding: 'logged-out' });
 
-			// Harmless on pages without market cards (e.g. leaderboard).
-			await home.stabilizeForSnapshot();
+			// The auth gate fires once `userSignedOutResolved` flips true,
+			// which can take a tick after the initial mount. `waitForURL`
+			// gives it room to settle.
+			await page.waitForURL('**/signin');
 
-			await expect(page).toHaveScreenshot(`navigation-${name}-logged-out.png`, {
-				fullPage: true
-			});
+			expect(new URL(page.url()).pathname).toBe('/signin');
 		});
 	}
 });
@@ -87,7 +78,6 @@ test.describe('navigation (logged out)', () => {
 test.describe('navigation (signed in)', () => {
 	test.beforeEach(async ({ page }) => {
 		const home = new HomePage(page);
-		await home.goto();
 		await home.signInAsDevUser();
 
 		await expect(home.userMenu).toBeVisible();
@@ -98,10 +88,10 @@ test.describe('navigation (signed in)', () => {
 			const home = new HomePage(page);
 
 			await page.goto(path);
-			await waitForPage({ page, expectedLanding: 'logged-in' });
+			await waitForSignedInPage({ page });
 
-			// Mask only the user-menu: dev sign-in mints a fresh principal per run,
-			// so the avatar genuinely differs.
+			// Mask only the user-menu: dev sign-in mints a fresh principal
+			// per run, so the avatar genuinely differs.
 			await home.stabilizeForSnapshot();
 
 			await expect(page).toHaveScreenshot(`navigation-${name}-logged-in.png`, {

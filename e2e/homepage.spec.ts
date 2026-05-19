@@ -7,15 +7,28 @@ import { HomePage } from './pages/home.page';
 // feed before the screenshot, which is exactly what made this test flaky.
 const REGISTRY_GLOB = '**/api/*/canister/g5pxl-pyaaa-aaaaj-qqhoq-cai/**';
 
-test.describe('homepage (logged out)', () => {
+/**
+ * Phase 1 routing change: the markets feed at `/` is auth-gated.
+ * Anonymous users land on `/signin` instead, so the loading-state and
+ * loaded-state snapshots are now signed-in flows. Sign-out still
+ * returns to `/signin` (covered in `auth.spec.ts`).
+ */
+test.describe('homepage (signed in)', () => {
+	test.beforeEach(async ({ page }) => {
+		const home = new HomePage(page);
+		await home.signInAsDevUser();
+
+		await expect(home.userMenu).toBeVisible();
+	});
+
 	test('renders the loading skeletons while markets are still being fetched', async ({ page }) => {
 		const home = new HomePage(page);
 
-		// Stall every Registry call so the feed stays in its skeleton state long
-		// enough for a deterministic screenshot. We hold the route handler on a
-		// deferred promise we explicitly release in `finally` — this avoids a
-		// long-lived `setTimeout` that could outlive the test and keep the
-		// Playwright worker process alive.
+		// Stall every Registry call so the feed stays in its skeleton state
+		// long enough for a deterministic screenshot. We hold the route
+		// handler on a deferred promise we explicitly release in `finally`
+		// — this avoids a long-lived `setTimeout` that could outlive the
+		// test and keep the Playwright worker process alive.
 		let releaseStall!: () => void;
 		const stalled = new Promise<void>((resolve) => {
 			releaseStall = resolve;
@@ -27,20 +40,26 @@ test.describe('homepage (logged out)', () => {
 		});
 
 		try {
-			await home.goto();
+			// Reload to re-trigger the markets fetch with the route stall
+			// in place — the `signInAsDevUser` flow already populated the
+			// feed once during onboarding completion.
+			await page.reload();
 
 			await expect(home.marketFeed).toBeVisible();
-			await expect(home.signInButton).toBeVisible();
 
 			// Pin the rendered state so the screenshot can't be accidentally
-			// taken in a half-loaded transition: we expect *exactly* the three
-			// MarketCardSkeletons that MarketFeed.svelte renders while loading,
-			// and zero real cards. If anything leaked past the route stall,
-			// `toHaveCount(0)` will fail before we write a polluted baseline.
+			// taken in a half-loaded transition: we expect *exactly* the
+			// three MarketCardSkeletons that MarketFeed.svelte renders while
+			// loading, and zero real cards. If anything leaked past the
+			// route stall, `toHaveCount(0)` will fail before we write a
+			// polluted baseline.
 			await expect(home.marketCardSkeleton).toHaveCount(3);
 			await expect(home.marketCard).toHaveCount(0);
 
-			await expect(page).toHaveScreenshot('homepage-loading.png', { fullPage: true });
+			await expect(page).toHaveScreenshot('homepage-loading.png', {
+				fullPage: true,
+				mask: [home.userMenu]
+			});
 		} finally {
 			releaseStall();
 		}
@@ -49,11 +68,10 @@ test.describe('homepage (logged out)', () => {
 	test('renders the markets feed once data is loaded', async ({ page }) => {
 		const home = new HomePage(page);
 
-		await home.goto();
-
+		// `signInAsDevUser` lands at `/` already; just wait for the feed
+		// to settle past first-paint.
 		await expect(home.marketFeed).toBeVisible();
 		await expect(home.marketCard.first()).toBeVisible();
-		await expect(home.signInButton).toBeVisible();
 
 		// `marketCard.first()` only proves at least one card has rendered;
 		// the remaining cards may still be streaming in. Wait for the
@@ -64,7 +82,8 @@ test.describe('homepage (logged out)', () => {
 		await home.stabilizeForSnapshot();
 
 		await expect(page).toHaveScreenshot('homepage-with-markets.png', {
-			fullPage: true
+			fullPage: true,
+			mask: [home.userMenu]
 		});
 	});
 });
