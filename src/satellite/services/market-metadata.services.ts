@@ -165,6 +165,10 @@ export const upsertMarketMetadata = async ({
 	seriesId: string;
 	data: MarketMetadataInput;
 }): Promise<MarketMetadata> => {
+	if ((data.events ?? []).length > 2) {
+		throw new Error('Market metadata supports at most two events.');
+	}
+
 	await assertCanWriteMarketMetadata({ seriesId });
 
 	const caller = msgCaller();

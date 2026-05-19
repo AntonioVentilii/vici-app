@@ -174,7 +174,9 @@
 
 					<MarketDetailTabs {market} {positions} />
 
-					<MarketMetadataForm canEdit={canEditMetadata} {market} />
+					{#if canEditMetadata}
+						<MarketMetadataForm canEdit {market} />
+					{/if}
 				</div>
 
 				<aside class="hidden space-y-8 lg:col-span-4 lg:block">

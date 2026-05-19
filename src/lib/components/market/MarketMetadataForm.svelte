@@ -29,11 +29,18 @@
 	let status = $state<ButtonStatus>('enabled');
 	let loaded = $state(false);
 	let savedAt = $state<number | undefined>(undefined);
+	let error = $state<string | undefined>(undefined);
 
 	const parseDay = (value: string): number | undefined => {
-		const parsed = Number(value);
+		const trimmed = value.trim();
 
-		return Number.isFinite(parsed) ? parsed : undefined;
+		if (trimmed.length === 0) {
+			return;
+		}
+
+		const parsed = Number(trimmed);
+
+		return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
 	};
 
 	const eventFromFields = ({
@@ -85,6 +92,7 @@
 
 	const save = async () => {
 		status = 'pending';
+		error = undefined;
 
 		try {
 			const metadata = await upsertMarketMetadata({
@@ -92,40 +100,48 @@
 				data: buildInput()
 			});
 			savedAt = metadata.updatedAt;
+		} catch (err) {
+			console.warn('Market metadata save failed:', err);
+			error = 'Could not save market context.';
 		} finally {
 			status = 'enabled';
 		}
 	};
 
 	onMount(async () => {
-		const metadata = await getMarketMetadata(market.id);
+		try {
+			const metadata = await getMarketMetadata(market.id);
 
-		if (metadata?.whyNow) {
-			whyKind = metadata.whyNow.kind;
-			whyText = metadata.whyNow.text;
+			if (metadata?.whyNow) {
+				whyKind = metadata.whyNow.kind;
+				whyText = metadata.whyNow.text;
+			}
+
+			if (metadata?.resolution) {
+				resolutionText = metadata.resolution.text;
+				resolutionSource = metadata.resolution.source;
+				settlesAtMs = metadata.resolution.settlesAtMs?.toString() ?? '';
+			}
+
+			const [eventOne, eventTwo] = metadata?.events ?? [];
+
+			if (eventOne) {
+				eventOneLabel = eventOne.label;
+				eventOneDay = String(eventOne.day);
+				eventOneDir = eventOne.dir;
+			}
+
+			if (eventTwo) {
+				eventTwoLabel = eventTwo.label;
+				eventTwoDay = String(eventTwo.day);
+				eventTwoDir = eventTwo.dir;
+			}
+		} catch (err) {
+			console.warn('Market metadata load failed:', err);
+			error = 'Could not load market context.';
+		} finally {
+			loaded = true;
 		}
-
-		if (metadata?.resolution) {
-			resolutionText = metadata.resolution.text;
-			resolutionSource = metadata.resolution.source;
-			settlesAtMs = metadata.resolution.settlesAtMs?.toString() ?? '';
-		}
-
-		const [eventOne, eventTwo] = metadata?.events ?? [];
-
-		if (eventOne) {
-			eventOneLabel = eventOne.label;
-			eventOneDay = String(eventOne.day);
-			eventOneDir = eventOne.dir;
-		}
-
-		if (eventTwo) {
-			eventTwoLabel = eventTwo.label;
-			eventTwoDay = String(eventTwo.day);
-			eventTwoDir = eventTwo.dir;
-		}
-
-		loaded = true;
 	});
 </script>
 
@@ -144,6 +160,10 @@
 		{#if !loaded}
 			<p class="market-metadata-muted">Loading metadata…</p>
 		{:else}
+			{#if error}
+				<p class="market-metadata-error">{error}</p>
+			{/if}
+
 			<div class="market-metadata-grid">
 				<label>
 					<span>Why this card now</span>
@@ -218,6 +238,12 @@
 	.market-metadata-muted {
 		color: var(--text-muted);
 		font-size: var(--t-12);
+	}
+
+	.market-metadata-error {
+		margin: 0 0 1rem;
+		color: var(--no);
+		font-size: var(--t-13);
 	}
 
 	.market-metadata-grid {
