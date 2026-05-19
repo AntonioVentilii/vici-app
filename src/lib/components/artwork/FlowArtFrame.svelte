@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { theme } from '$lib/stores/theme.store';
 	import {
 		renderFlowArt,
 		type FlowArtCategory,
@@ -33,7 +34,7 @@
 		class: extraClass = ''
 	}: Props = $props();
 
-	const svg = $derived(renderFlowArt({ category, seed, state, size, frame }));
+	const svg = $derived(renderFlowArt({ category, seed, state, theme: $theme, size, frame }));
 </script>
 
 <div
