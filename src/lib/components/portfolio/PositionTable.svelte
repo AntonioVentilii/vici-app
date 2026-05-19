@@ -1,4 +1,5 @@
 <script lang="ts">
+	import PositionArtThumb from '$lib/components/portfolio/PositionArtThumb.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
@@ -7,20 +8,29 @@
 		PORTFOLIO_DEFAULT_SYMBOL
 	} from '$lib/constants/portfolio.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
+	import type { SeriesCategory } from '$lib/types/category';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { formatCurrency, formatQuantity } from '$lib/utils/format.utils';
 	import { formatPositionPnLWithOptionalUnit } from '$lib/utils/playground-display.utils';
 	import { calculatePositionPnL, calculatePositionValue } from '$lib/utils/portfolio.utils';
+	import { positionResolvedResult } from '$lib/utils/position.utils';
 
 	interface Props {
 		positions: Position[];
 		markets: Market[];
+		// Optional admin-tagged category mappings. When provided, each
+		// thumb resolves its visual language from the matching
+		// `SeriesCategory.categoryId`; otherwise it falls back to a
+		// deterministic hash of the market id.
+		categoryMappings?: SeriesCategory[];
 	}
 
-	const { positions, markets }: Props = $props();
+	const { positions, markets, categoryMappings = [] }: Props = $props();
 
 	const getMarketById = (id: string) => markets.find((m) => m.id === id);
+	const getCategoryId = (marketId: string): string | null =>
+		categoryMappings.find((c) => c.seriesId === marketId)?.categoryId ?? null;
 </script>
 
 <div class="space-y-4">
@@ -52,22 +62,32 @@
 						</tr>
 					</thead>
 					<tbody class="divide-border divide-y">
-						{#each positions as pos, index (index)}
+						{#each positions as pos (`${pos.marketId}::${pos.outcomeId}`)}
 							{@const market = getMarketById(pos.marketId)}
 							{@const pnl = calculatePositionPnL({ position: pos, market })}
+							{@const result = market
+								? (positionResolvedResult({ market, position: pos }) ?? 'neutral')
+								: 'neutral'}
+							{@const categoryId = getCategoryId(pos.marketId)}
 
 							<tr class="group hover:bg-card transition-colors">
 								<td class="min-w-0 px-6 py-4">
-									<a class="group block min-w-0" href="/(app)/markets/{pos.marketId}">
-										<span
-											class="text-foreground group-hover:text-primary block truncate text-sm font-bold transition-colors"
-										>
-											{market?.title ?? 'Unknown Market'}
-										</span>
-										<span
-											class="text-muted-foreground block truncate text-[10px] leading-none tracking-widest uppercase"
-										>
-											ID: {pos.marketId}
+									<a
+										class="group flex min-w-0 items-center gap-3"
+										href="/(app)/markets/{pos.marketId}"
+									>
+										<PositionArtThumb {categoryId} marketId={pos.marketId} {result} size={44} />
+										<span class="min-w-0 flex-1">
+											<span
+												class="text-foreground group-hover:text-primary block truncate text-sm font-bold transition-colors"
+											>
+												{market?.title ?? 'Unknown Market'}
+											</span>
+											<span
+												class="text-muted-foreground block truncate text-[10px] leading-none tracking-widest uppercase"
+											>
+												ID: {pos.marketId}
+											</span>
 										</span>
 									</a>
 								</td>
