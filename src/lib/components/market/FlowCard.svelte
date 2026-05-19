@@ -82,11 +82,15 @@
 	let startY = 0;
 	let dragging = $state(false);
 
+	// Swipe physics: weighted, settled, decisive. Cards should feel
+	// like a tile being flipped — not flicked. `damping: 0.85` keeps
+	// the spring-back from oscillating; `stiffness: 0.4` is the
+	// snappy-but-not-twitchy point on Svelte's normalized curve.
 	const coords = new Spring(
 		{ x: 0, y: 0 },
 		{
-			stiffness: 0.15,
-			damping: 0.5
+			stiffness: 0.4,
+			damping: 0.85
 		}
 	);
 
