@@ -21,8 +21,10 @@ export enum TestId {
 	MarketTimeRemaining = 'market-time-remaining',
 	PrincipalDisplay = 'principal-display',
 	OnboardingFlow = 'onboarding-flow',
+	OnboardingFirstCallCard = 'onboarding-first-call-card',
+	OnboardingPracticeCard = 'onboarding-practice-card',
 	OnboardingPrimary = 'onboarding-primary',
 	OnboardingInterest = 'onboarding-interest',
-	OnboardingArchetype = 'onboarding-archetype',
-	OnboardingHandleInput = 'onboarding-handle-input'
+	OnboardingHandleInput = 'onboarding-handle-input',
+	OnboardingEmailInput = 'onboarding-email-input'
 }

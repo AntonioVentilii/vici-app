@@ -4,6 +4,7 @@
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import Authn from '$lib/components/authn/Authn.svelte';
 	import CreateChallengeModal from '$lib/components/challenge/CreateChallengeModal.svelte';
@@ -11,9 +12,9 @@
 	import Header from '$lib/components/layout/Header.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
-	import OnboardingFlow from '$lib/components/onboarding/OnboardingFlow.svelte';
 	import Banner from '$lib/components/ui/Banner.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
+	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
@@ -29,7 +30,7 @@
 	const isFlowPage = $derived(page.url.pathname === AppPath.Flow);
 
 	let challengeModalOpen = $state(false);
-	let onboardingDismissed = $state(false);
+	let applyingPendingOnboarding = $state(false);
 
 	// Auth gate — every (app) route requires a session. We only
 	// redirect once `userSignedOutResolved` is true, i.e. after the
@@ -42,40 +43,90 @@
 		}
 
 		if ($userSignedOutResolved) {
-			void goto(PublicPath.SignIn, { replaceState: true });
+			void goto(resolve(PublicPath.SignIn), { replaceState: true });
 		}
 	});
 
-	const needsOnboarding = $derived(
-		$userSignedIn && !onboardingDismissed && !$userStore.profile?.archetype
-	);
+	const parsePendingOnboarding = (
+		raw: string
+	): { handle: string; interests: string[]; email?: string } | undefined => {
+		let parsed: unknown;
 
-	const handleOnboardingComplete = async (result: {
-		handle: string;
-		archetype: string;
-		interests: string[];
-	}) => {
-		const { profile } = $userStore;
+		try {
+			parsed = JSON.parse(raw);
+		} catch {
+			parsed = null;
+		}
 
-		if (!profile) {
+		if (
+			typeof parsed !== 'object' ||
+			parsed === null ||
+			!('handle' in parsed) ||
+			typeof parsed.handle !== 'string'
+		) {
 			return;
 		}
 
+		const interests =
+			'interests' in parsed && Array.isArray(parsed.interests)
+				? parsed.interests.filter((interest): interest is string => typeof interest === 'string')
+				: [];
+		const email =
+			'email' in parsed && typeof parsed.email === 'string' && parsed.email.trim().length > 0
+				? parsed.email.trim()
+				: undefined;
+
+		return {
+			handle: parsed.handle,
+			interests,
+			email
+		};
+	};
+
+	$effect(() => {
+		if (!browser || applyingPendingOnboarding || !$userSignedIn || !$userStore.profile) {
+			return;
+		}
+
+		const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
+
+		if (!raw) {
+			return;
+		}
+
+		const pending = parsePendingOnboarding(raw);
+
+		if (!pending) {
+			localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
+
+			return;
+		}
+
+		applyingPendingOnboarding = true;
+
 		const updated = {
-			...profile,
-			nickname: result.handle,
-			archetype: result.archetype,
-			interests: result.interests
+			...$userStore.profile,
+			nickname: pending.handle,
+			interests: pending.interests,
+			...(pending.email && { email: pending.email })
 		};
 
-		await upsertProfile({
-			key: profile.owner,
+		void upsertProfile({
+			key: updated.owner,
 			data: updated
-		});
-
-		userStore.update((curr) => ({ ...curr, profile: updated }));
-		onboardingDismissed = true;
-	};
+		})
+			.then(() => {
+				userStore.update((curr) => ({ ...curr, profile: updated }));
+				localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
+			})
+			.catch((err: unknown) => {
+				console.warn('Pending onboarding handoff failed:', err);
+				localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
+			})
+			.finally(() => {
+				applyingPendingOnboarding = false;
+			});
+	});
 </script>
 
 <div class="relative isolate flex min-h-dvh flex-col">
@@ -127,8 +178,4 @@
 	<CreateChallengeModal isOpen={challengeModalOpen} onClose={() => (challengeModalOpen = false)} />
 
 	<CompanionOverlay />
-
-	{#if needsOnboarding}
-		<OnboardingFlow onComplete={handleOnboardingComplete} />
-	{/if}
 </div>

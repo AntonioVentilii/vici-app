@@ -31,6 +31,7 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
+				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Opt(
 					IDL.Record({
@@ -184,6 +185,7 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
+				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Opt(
 					IDL.Record({
@@ -255,6 +257,7 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
+				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Opt(
 					IDL.Record({

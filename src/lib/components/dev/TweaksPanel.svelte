@@ -2,7 +2,7 @@
 	import { signOut } from '@junobuild/core';
 	import { Wrench, X } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
-	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { resolve } from '$app/paths';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { isDev } from '$lib/env/app.env';
 
@@ -10,9 +10,11 @@
 
 	let open = $state(false);
 
-	const jumpTo = async (path: string) => {
+	type TweakRoute = '/' | '/flow' | '/portfolio' | '/profile' | '/signin' | '/signup';
+
+	const jumpTo = async (path: TweakRoute) => {
 		open = false;
-		await goto(path);
+		await goto(resolve(path));
 	};
 
 	const handleSignOut = async () => {
@@ -25,7 +27,7 @@
 			// regardless so the panel doesn't get stuck.
 		}
 
-		await goto(PublicPath.SignIn, { replaceState: true });
+		await goto(resolve('/signin'), { replaceState: true });
 	};
 </script>
 
@@ -53,12 +55,12 @@
 				<section class="tweaks-section">
 					<span class="allcaps tweaks-label">Quick jumps</span>
 					<div class="tweaks-jumps">
-						<button onclick={() => jumpTo(AppPath.Home)} type="button">Home (/)</button>
-						<button onclick={() => jumpTo(AppPath.Flow)} type="button">Flow</button>
-						<button onclick={() => jumpTo(AppPath.Portfolio)} type="button">Portfolio</button>
-						<button onclick={() => jumpTo(AppPath.Profile)} type="button">Profile</button>
-						<button onclick={() => jumpTo(PublicPath.SignIn)} type="button">Sign in</button>
-						<button onclick={() => jumpTo(PublicPath.SignUp)} type="button">Sign up</button>
+						<button onclick={() => jumpTo('/')} type="button">Home (/)</button>
+						<button onclick={() => jumpTo('/flow')} type="button">Flow</button>
+						<button onclick={() => jumpTo('/portfolio')} type="button">Portfolio</button>
+						<button onclick={() => jumpTo('/profile')} type="button">Profile</button>
+						<button onclick={() => jumpTo('/signin')} type="button">Sign in</button>
+						<button onclick={() => jumpTo('/signup')} type="button">Sign up</button>
 					</div>
 				</section>
 

@@ -70,6 +70,11 @@ easing curve are present. Outstanding items:
 When adding bespoke icons, register them in
 [`reusability.md`](./reusability.md) so the next agent finds them.
 
+Third-party marks keep their own brand colours. Do not recolour the
+Juno footer mark, Internet Computer mark, Google mark, or future Apple
+mark with VICI theme tokens. They may sit inside VICI surfaces, but the
+SVG paths / fills remain brand-owned.
+
 ---
 
 ## 3. Characters
@@ -107,7 +112,7 @@ Already implemented. **No work needed.**
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Flow Mode         | [`src/lib/components/market/FlowMode.svelte`](../../../src/lib/components/market/FlowMode.svelte) + [`FlowCard.svelte`](../../../src/lib/components/market/FlowCard.svelte) | ✅ Done  | Swipe deck with brand-aligned typography, generative artwork in-card, footer hint rail, 80 ms commit-feedback beat, named haptic patterns, daily-streak Flame chip, reward ladder, character bubbles (priority-resolved), and a brand-voice FlowEnd. Buttons + keyboard shortcuts kept as accessibility fallback. See §7 below for the rules. |
 | Markets list      | [`MarketsPage.svelte`](../../../src/lib/components/pages/MarketsPage.svelte)                                                                                                | ⚠️ Audit | Filters, card grid, empty state.                                                                                                                                                                                                                                                                                                              |
-| Onboarding        | [`OnboardingFlow.svelte`](../../../src/lib/components/onboarding/OnboardingFlow.svelte)                                                                                     | ⚠️ Audit | Compare step content + character moments (`Vici` happy / encouraging / thinking).                                                                                                                                                                                                                                                             |
+| Onboarding        | [`OnboardingFlow.svelte`](../../../src/lib/components/onboarding/OnboardingFlow.svelte)                                                                                     | ✅ Done  | Pre-sign-in four-step flow on `/signup`: first call, gesture practice, category picks, identity handoff.                                                                                                                                                                                                                                      |
 | Profile           | [`ProfilePage.svelte`](../../../src/lib/components/pages/ProfilePage.svelte) + `ProfileDashboard.svelte`                                                                    | ⚠️ Audit | Stats / streak / achievements.                                                                                                                                                                                                                                                                                                                |
 | Leaderboard       | [`LeaderboardPage.svelte`](../../../src/lib/components/pages/LeaderboardPage.svelte) + `LeaderboardTable.svelte`                                                            | ⚠️ Audit |                                                                                                                                                                                                                                                                                                                                               |
 | Wallet            | [`WalletPage.svelte`](../../../src/lib/components/pages/WalletPage.svelte) + `WalletStats.svelte`                                                                           | ⚠️ Audit |                                                                                                                                                                                                                                                                                                                                               |
@@ -324,16 +329,39 @@ back into the gated route.
 
 ### 8.2 Public surfaces
 
-| Path               | Purpose                                                                                                                                                                                                     |
-| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/signin`          | Returning-user sign-in surface (`SignInScreen` mode `"signin"`). Welcome-back framing. Routes signed-in users straight to home.                                                                             |
-| `/signup`          | Create-account framing (`SignInScreen` mode `"signup"`). Today renders the same shell with a "create account" CTA; the pre-sign-in 4-step onboarding flow lands in a later phase and replaces the contents. |
-| `/auth/callback/*` | OAuth callback handlers (Google today). Public — `signInWithGoogle` redirects through these.                                                                                                                |
+| Path               | Purpose                                                                                                                                                    |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/signin`          | Returning-user sign-in surface (`SignInScreen` mode `"signin"`). Welcome-back framing. Routes signed-in users straight to home.                            |
+| `/signup`          | Pre-sign-in onboarding flow. Collects a first call, gesture practice, category interests, handle, and optional email before sending the user to `/signin`. |
+| `/auth/callback/*` | OAuth callback handlers (Google today). Public — `signInWithGoogle` redirects through these.                                                               |
 
 `PublicPath` enum + `isPublicPath(pathname)` helper live in
 [`src/lib/constants/routes.constants.ts`](../../../src/lib/constants/routes.constants.ts).
 
-### 8.3 SignInScreen — visual shell
+### 8.3 Onboarding
+
+[`src/lib/components/onboarding/OnboardingFlow.svelte`](../../../src/lib/components/onboarding/OnboardingFlow.svelte)
+is the canonical create-account prelude. It has exactly four steps:
+
+1. **First call** — one live swipeable market card. There is no Begin
+   button; the user commits with a YES / NO swipe or the accessible card
+   buttons. Commit triggers a first-call celebration with rings, sparks,
+   `FIRST CALL`, `Called it.`, and `+50 XP` before advancing.
+2. **Gestures** — one practice card. The user must tap to reveal details
+   and swipe up to skip before the `Got it` button appears.
+3. **Categories** — six FlowArt-backed tiles:
+   `macro`, `crypto`, `politics`, `tech`, `sports`, `culture`. Require at
+   least three selections. Show a small deck preview once the third
+   category is selected.
+4. **Identity** — starter-pack hero, handle input, optional non-blocking
+   email input, social proof, and `Enter VICI →`.
+
+The archetype step is not part of onboarding. Post-auth layouts must not
+gate on `profile.archetype`; if pre-sign-in onboarding data is available,
+apply the handle and interests to the profile after authentication and
+clear the pending handoff.
+
+### 8.4 SignInScreen — visual shell
 
 [`src/lib/components/authn/SignInScreen.svelte`](../../../src/lib/components/authn/SignInScreen.svelte)
 is the canonical sign-in / sign-up visual:
@@ -356,7 +384,7 @@ covers `internet_identity` / `google` / `github` / `webauthn` /
 `dev` only — adding Apple needs a custom OAuth flow on top of
 Juno's delegation system) and email magic-link.
 
-### 8.4 Bottom-nav active state
+### 8.5 Bottom-nav active state
 
 The mobile tab bar
 ([`MobileNav.svelte`](../../../src/lib/components/layout/MobileNav.svelte))
@@ -372,7 +400,7 @@ two cascade rules:
 If new nav-less routes are added (e.g. `/notifications`,
 `/settings` — both deferred), they extend this cascade table.
 
-### 8.5 Dev-only Tweaks panel
+### 8.6 Dev-only Tweaks panel
 
 [`src/lib/components/dev/TweaksPanel.svelte`](../../../src/lib/components/dev/TweaksPanel.svelte)
 is a floating wrench-icon FAB, gated by `isDev()` from
