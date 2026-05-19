@@ -8,6 +8,7 @@ export const Collection = {
 	COMMENTS: collections.COMMENTS,
 	CATEGORIES: collections.CATEGORIES,
 	SERIES_CATEGORIES: collections.SERIES_CATEGORIES,
+	MARKET_METADATA: collections.MARKET_METADATA,
 	ACTIVITIES: collections.ACTIVITIES,
 	/**
 	 * Server-driven VXP new-user ladder state (owed vs paid); written from satellite hooks.

@@ -5,6 +5,10 @@ type AppCheckFriendshipArgs = record { user_a : text; user_b : text };
 
 type AppCheckFriendshipResult = record { is_friend : bool };
 
+type AppGetMarketMetadataArgs = record { series_id : text };
+
+type AppGetMarketMetadataResult = record { metadata : opt record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; resolution : opt record { text : text; source : text; settles_at_ms : opt float64 }; updated_at : float64; updated_by : text } };
+
 type AppGetProfileArgs = record { principal_str : text };
 
 type AppGetProfileResult = record { profile : opt record { owner : text; nickname : text; avatar : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; preferences : opt record { default_amount : record { flow : text; manual : text } } } };
@@ -33,8 +37,13 @@ type AppRejectFriendRequestArgs = record { relation_id : text };
 
 type AppSendFriendRequestArgs = record { target : text };
 
+type AppUpsertMarketMetadataArgs = record { series_id : text; data : record { why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; resolution : opt record { text : text; source : text; settles_at_ms : opt float64 } } };
+
+type AppUpsertMarketMetadataResult = record { metadata : record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; resolution : opt record { text : text; source : text; settles_at_ms : opt float64 }; updated_at : float64; updated_by : text } };
+
 service : {
 	app_check_friendship : (AppCheckFriendshipArgs) -> (AppCheckFriendshipResult) query;
+	app_get_market_metadata : (AppGetMarketMetadataArgs) -> (AppGetMarketMetadataResult) query;
 	app_get_profile : (AppGetProfileArgs) -> (AppGetProfileResult) query;
 	app_list_followers : () -> (AppListFollowersResult) query;
 	app_list_following : () -> (AppListFollowingResult) query;
@@ -47,4 +56,5 @@ service : {
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_reject_friend_request : (AppRejectFriendRequestArgs) -> ();
 	app_send_friend_request : (AppSendFriendRequestArgs) -> ();
+	app_upsert_market_metadata : (AppUpsertMarketMetadataArgs) -> (AppUpsertMarketMetadataResult);
 };

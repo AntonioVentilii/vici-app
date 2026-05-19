@@ -1,4 +1,9 @@
 import { Collection } from '$lib/constants/collections.constants';
+import {
+	GetMarketMetadataArgsSchema,
+	MarketMetadataSchema,
+	UpsertMarketMetadataArgsSchema
+} from '$lib/schema/market-metadata.schema';
 import { UserProfileSchema } from '$lib/schema/profile.schema';
 import { CheckFriendshipArgsSchema, RelationSchema } from '$lib/schema/relation.schema';
 import {
@@ -6,6 +11,10 @@ import {
 	syncRoleToEngineOnSet
 } from '$satellite/services/engine-sync.services';
 import { listLeaderboard as listLeaderboardFn } from '$satellite/services/leaderboard.services';
+import {
+	getMarketMetadata as getMarketMetadataFn,
+	upsertMarketMetadata as upsertMarketMetadataFn
+} from '$satellite/services/market-metadata.services';
 import {
 	assertValidNickname,
 	getProfile as getProfileFn,
@@ -75,6 +84,26 @@ export const searchProfiles = defineQuery({
 	}),
 	handler: ({ queryStr }) => ({
 		items: searchProfilesFn(queryStr)
+	})
+});
+
+export const getMarketMetadata = defineQuery({
+	args: GetMarketMetadataArgsSchema,
+	result: j.strictObject({
+		metadata: j.optional(MarketMetadataSchema)
+	}),
+	handler: (args) => ({
+		metadata: getMarketMetadataFn(args)
+	})
+});
+
+export const upsertMarketMetadata = defineUpdate({
+	args: UpsertMarketMetadataArgsSchema,
+	result: j.strictObject({
+		metadata: MarketMetadataSchema
+	}),
+	handler: async (args) => ({
+		metadata: await upsertMarketMetadataFn(args)
 	})
 });
 
