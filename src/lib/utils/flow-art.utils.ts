@@ -984,7 +984,8 @@ export const renderFlowArt = ({
 	frame = false
 }: FlowArtRenderOptions): string => {
 	const renderer = RENDERERS[category] ?? renderMacro;
-	const themePalettes = (PAL[category] ?? PAL.macro)[theme] ?? PAL[category].dark;
+	const categoryPalettes = PAL[category] ?? PAL.macro;
+	const themePalettes = categoryPalettes[theme] ?? categoryPalettes.dark;
 	const pal = themePalettes[state] ?? themePalettes.neutral;
 	const seedKey = `${category}::${seed}::${state}::${theme}`;
 	const rng = makeRng(seedKey);
@@ -1015,7 +1016,8 @@ export const flowArtPalette = ({
 	state?: FlowArtState;
 	theme?: FlowArtTheme;
 }): FlowArtPalette => {
-	const themePalettes = (PAL[category] ?? PAL.macro)[theme] ?? PAL[category].dark;
+	const categoryPalettes = PAL[category] ?? PAL.macro;
+	const themePalettes = categoryPalettes[theme] ?? categoryPalettes.dark;
 
 	return themePalettes[state] ?? themePalettes.neutral;
 };

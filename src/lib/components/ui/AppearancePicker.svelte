@@ -35,14 +35,13 @@
 	};
 </script>
 
-<div class="appearance-picker" aria-label="Appearance" role="radiogroup">
+<div class="appearance-picker" aria-label="Appearance">
 	{#each options as option (option.id)}
 		<button
 			class="appearance-option"
 			class:is-active={$theme === option.id}
-			aria-checked={$theme === option.id}
+			aria-pressed={$theme === option.id}
 			onclick={() => setTheme(option.id)}
-			role="radio"
 			type="button"
 		>
 			<span class="appearance-swatches" aria-hidden="true">

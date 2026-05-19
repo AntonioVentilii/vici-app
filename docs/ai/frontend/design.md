@@ -70,10 +70,10 @@ and persists to `localStorage` as `vici-theme`.
 
 The canonical picker is
 [`src/lib/components/ui/AppearancePicker.svelte`](../../../src/lib/components/ui/AppearancePicker.svelte).
-It renders three swatch tiles with `role="radiogroup"` / `role="radio"`
-semantics and is currently mounted in the user menu and the dev-only
-Tweaks panel. When the Settings surface lands, use the same component —
-do not create a second picker.
+It renders three swatch tiles as pressed buttons (`aria-pressed`) and
+is currently mounted in the user menu and the dev-only Tweaks panel.
+When the Settings surface lands, use the same component — do not create
+a second picker.
 
 Third-party marks keep their own colours in every theme (see §2).
 
