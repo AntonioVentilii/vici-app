@@ -71,13 +71,17 @@
 	};
 
 	const accuracy = $derived(profile.accuracy ?? 0);
-	const streak = $derived(profile.streak ?? 0);
+	// `profile.streak` is the trade-momentum streak (consecutive
+	// winning trades) — distinct from `dailyStreak` (day count) which
+	// drives the Flame stage. Surface only the day count here; the
+	// trade-momentum streak isn't user-facing on this dashboard.
+	const dailyStreak = $derived(profile.dailyStreak ?? 0);
 	const level = $derived(profile.level ?? 1);
 	const points = $derived(profile.points ?? 0);
 	// Progress (0–100) toward the next 500-point level bracket.
 	const progressPercent = $derived((points % 500) / 5);
 
-	const flameStage = $derived(stageForStreak(streak));
+	const flameStage = $derived(stageForStreak(dailyStreak));
 	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
 	const archetype = $derived(profile.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
 
@@ -88,7 +92,7 @@
 	const oracleInsight = $derived.by(() => {
 		const trades = totalTrades;
 		const acc = Math.round(accuracy);
-		const s = streak;
+		const d = dailyStreak;
 
 		if (trades === 0) {
 			return 'No calls yet. The Oracle waits.';
@@ -96,8 +100,8 @@
 
 		// Pre-gate: never reveal accuracy %. Calls + streak only.
 		if (!accuracyUnlocked) {
-			if (s >= 7) {
-				return `${s}-day streak across ${trades} ${trades === 1 ? 'call' : 'calls'}. Consistency compounds.`;
+			if (d >= 7) {
+				return `${d}-day streak across ${trades} ${trades === 1 ? 'call' : 'calls'}. Consistency compounds.`;
 			}
 
 			return `${trades} ${trades === 1 ? 'call' : 'calls'} logged. Accuracy unlocks at ${ACCURACY_GATE_CALLS}.`;
@@ -107,8 +111,8 @@
 			return `${acc}% accuracy across ${trades} calls. The Oracle approves.`;
 		}
 
-		if (s >= 7) {
-			return `${s}-day streak and ${acc}% accuracy. Consistency compounds.`;
+		if (d >= 7) {
+			return `${d}-day streak and ${acc}% accuracy. Consistency compounds.`;
 		}
 
 		if (acc >= 60) {
@@ -298,7 +302,7 @@
 				</div>
 				<div class="text-center">
 					<div class="text-foreground font-mono text-3xl font-black tabular-nums">
-						{streak}
+						{dailyStreak}
 					</div>
 					<p class="text-muted-foreground text-xs font-bold uppercase">
 						Day streak · {flameLabel}
