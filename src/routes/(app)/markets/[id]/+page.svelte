@@ -70,14 +70,12 @@
 		}
 	};
 
-	// Resolution choreography per testAV1 §05 + brand README §07.
+	// Resolution choreography — see `docs/ai/frontend/design.md` §7.6.
 	// On the first time the user views a resolved market they have a
 	// position on:
 	//   right call → Oracle 1.2 s, "Called it."
-	//   wrong call → no character, the visual ResolvedMarketPanel +
-	//                lost-state crossfade in MarketDetailTabs is the
-	//                ack (silence is dishonest, but the artwork
-	//                already says it).
+	//   wrong call → no character; the resolved panel + lost-state
+	//                crossfade carry the acknowledgement.
 	// Tracked in `sessionStorage` per market id so re-navigating to
 	// the same page within a session doesn't re-fire.
 	const RESOLUTION_BEAT_KEY_PREFIX = 'vici:resolution-beat:';
