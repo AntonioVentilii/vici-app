@@ -7,6 +7,7 @@ import type { UserRole } from '$lib/enums/user';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import type { Nickname, UserProfile } from '$lib/types/profile';
 import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
+import { applyDailyStreakBump } from '$lib/utils/streak.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { getDoc, setDoc, type Doc, type User } from '@junobuild/core';
@@ -68,6 +69,36 @@ export const updateInterests = async ({
 			interests
 		}
 	});
+};
+
+/**
+ * Persist the user's daily-streak engine state. Called from Flow Mode
+ * after `applyDailyStreakBump` flips the locally held value, so a
+ * refresh mid-session doesn't reset the Flame stage.
+ *
+ * Best-effort — callers should fire-and-forget; the local UI already
+ * reflects the bumped values for the rest of the session even if the
+ * round-trip fails.
+ */
+export const persistDailyStreak = async ({
+	principal,
+	dailyStreak,
+	lastActiveDay
+}: {
+	principal: PrincipalText;
+	dailyStreak: number;
+	lastActiveDay: string;
+}): Promise<UserProfile> => {
+	const profileDoc = await getProfile(principal);
+	const data: UserProfile = {
+		...profileDoc.data,
+		dailyStreak,
+		lastActiveDay
+	};
+
+	await upsertProfile({ ...profileDoc, data });
+
+	return data;
 };
 
 export const upsertProfile = async (
@@ -278,34 +309,34 @@ export const calculateAndSyncStats = async ({
 	});
 };
 
+/**
+ * Record that the user did something predictable today — bumps the
+ * daily-streak engine and persists the result. Currently called from
+ * the trade-execution path (`placeOrder`) so a successful trade keeps
+ * the Flame alive for the day.
+ *
+ * Uses the same `applyDailyStreakBump` engine as Flow Mode, so the
+ * two writers produce identical values for the same local day — no
+ * race, no UTC-vs-local drift. Same-day calls early-return without
+ * a write.
+ */
 export const recordActivity = async (principal: PrincipalText): Promise<void> => {
 	const profileDoc = await getProfile(principal);
-	const [today] = new Date().toISOString().split('T');
-	const lastDay = profileDoc.data.lastActiveDay;
+	const bump = applyDailyStreakBump({
+		streak: profileDoc.data.dailyStreak ?? 0,
+		lastActiveDay: profileDoc.data.lastActiveDay
+	});
 
-	if (lastDay === today) {
+	if (!bump.bumped) {
 		return;
 	}
-
-	const getYesterdayStr = (): string => {
-		const yesterday = new Date();
-		yesterday.setDate(yesterday.getDate() - 1);
-		const [yesterdayStr] = yesterday.toISOString().split('T');
-
-		return yesterdayStr;
-	};
-
-	const newStreak =
-		nonNullish(lastDay) && lastDay === getYesterdayStr()
-			? (profileDoc.data.dailyStreak ?? 0) + 1
-			: 1;
 
 	await upsertProfile({
 		...profileDoc,
 		data: {
 			...profileDoc.data,
-			dailyStreak: newStreak,
-			lastActiveDay: today
+			dailyStreak: bump.streak,
+			lastActiveDay: bump.lastActiveDay
 		}
 	});
 };

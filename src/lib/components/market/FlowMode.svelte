@@ -23,6 +23,7 @@
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { getFlowQueue } from '$lib/services/market.services';
 	import { getPositions } from '$lib/services/position.services';
+	import { persistDailyStreak } from '$lib/services/profile.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -238,6 +239,29 @@
 			const bump = applyDailyStreakBump({ streak: dailyStreak, lastActiveDay });
 			({ streak: dailyStreak, lastActiveDay } = bump);
 			hasMarkedActiveThisSession = true;
+
+			// Persist server-side once per session — survives refresh.
+			// Best-effort; on failure, the local values still drive the
+			// rest of the session and the next session re-runs the bump.
+			if (bump.bumped) {
+				const principal = $userStore.user?.key;
+				const persistedDay = lastActiveDay;
+				const persistedStreak = dailyStreak;
+
+				if (nonNullish(principal) && nonNullish(persistedDay)) {
+					void persistDailyStreak({
+						principal,
+						dailyStreak: persistedStreak,
+						lastActiveDay: persistedDay
+					})
+						.then((data) => {
+							userStore.update((s) => ({ ...s, profile: data }));
+						})
+						.catch((e: unknown) => {
+							console.warn('Daily-streak persistence failed (non-fatal):', e);
+						});
+				}
+			}
 
 			if (bump.transition === 'break') {
 				const previousStage = stageForStreak(Math.max(1, $userStore.profile?.dailyStreak ?? 0));
