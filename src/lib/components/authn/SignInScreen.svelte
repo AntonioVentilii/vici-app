@@ -1,6 +1,11 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
+	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 
 	interface Props {
@@ -17,14 +22,27 @@
 	const {
 		mode = 'signin',
 		onSuccess = () => {
-			void goto(AppPath.Home);
+			void goto(resolve(AppPath.Home));
 		}
 	}: Props = $props();
 
 	const isSignUp = $derived(mode === 'signup');
+	let hasPendingOnboarding = $state(false);
+
+	onMount(() => {
+		if (!browser) {
+			return;
+		}
+
+		hasPendingOnboarding = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY) !== null;
+	});
+
+	const onboardingComplete = $derived(
+		page.url.searchParams.get('onboarded') === '1' || hasPendingOnboarding
+	);
 
 	const handleSwitch = () => {
-		goto(isSignUp ? PublicPath.SignIn : PublicPath.SignUp);
+		goto(resolve(isSignUp ? PublicPath.SignIn : PublicPath.SignUp));
 	};
 </script>
 
@@ -32,10 +50,17 @@
 	<div class="signin-card">
 		<header class="signin-head">
 			<p class="allcaps signin-eyebrow">
-				{isSignUp ? 'Welcome' : 'Welcome back'}
+				{#if onboardingComplete}
+					Starter pack ready
+				{:else}
+					{isSignUp ? 'Welcome' : 'Welcome back'}
+				{/if}
 			</p>
 			<h1 class="signin-title">
-				{#if isSignUp}
+				{#if onboardingComplete}
+					Sign in to enter
+					<span class="serif-italic signin-wordmark">VICI.</span>
+				{:else if isSignUp}
 					Start predicting on
 					<span class="serif-italic signin-wordmark">VICI.</span>
 				{:else}
@@ -44,9 +69,13 @@
 				{/if}
 			</h1>
 			<p class="signin-sub">
-				{isSignUp
-					? 'Create an account to track your calls and your streak.'
-					: 'Pick up where you left off.'}
+				{#if onboardingComplete}
+					We'll attach your handle and Flow picks after sign-in.
+				{:else}
+					{isSignUp
+						? 'Create an account to track your calls and your streak.'
+						: 'Pick up where you left off.'}
+				{/if}
 			</p>
 		</header>
 
@@ -65,9 +94,8 @@
 	</div>
 
 	<p class="signin-legal">
-		By continuing you agree to the <a href="/legal/terms">Terms</a> and
-		<a href="/legal/privacy">Privacy Policy</a>. VICI is play-money during preview. No financial
-		advice.
+		By continuing you agree to the Terms and Privacy Policy. VICI is play-money during preview. No
+		financial advice.
 	</p>
 </div>
 
@@ -179,9 +207,5 @@
 		font-size: var(--t-12);
 		line-height: var(--leading-normal);
 		color: var(--parchment-faint);
-	}
-
-	.signin-legal :global(a) {
-		color: var(--text-muted);
 	}
 </style>

@@ -5,7 +5,7 @@
 		Built on
 		<span class="flex items-baseline gap-1">
 			<a
-				class="group hover:text-foreground active:text-foreground/80"
+				class="group hover:text-lavender-blue-500 active:text-lavender-blue-400"
 				aria-label="Go to Juno website and documentation"
 				href="https://juno.build"
 				rel="noopener noreferrer"
@@ -33,7 +33,7 @@
 						>
 						</path>
 						<circle
-							class="cls-1 fill-primary group-hover:fill-foreground group-active:fill-foreground"
+							class="cls-1 fill-lavender-blue-500 group-hover:fill-black group-active:fill-black dark:group-hover:fill-white dark:group-active:fill-white"
 							cx="931.86"
 							cy="68.14"
 							r="68.14"

@@ -2,6 +2,7 @@
 	import { signOut } from '@junobuild/core';
 	import { Wrench, X } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { isDev } from '$lib/env/app.env';
@@ -10,9 +11,28 @@
 
 	let open = $state(false);
 
-	const jumpTo = async (path: string) => {
+	const resolvedPath = (path: AppPath | PublicPath): string => {
+		switch (path) {
+			case AppPath.Home:
+				return resolve('/');
+			case AppPath.Flow:
+				return resolve('/flow');
+			case AppPath.Portfolio:
+				return resolve('/portfolio');
+			case AppPath.Profile:
+				return resolve('/profile');
+			case PublicPath.SignIn:
+				return resolve('/signin');
+			case PublicPath.SignUp:
+				return resolve('/signup');
+			default:
+				return resolve('/');
+		}
+	};
+
+	const jumpTo = async (path: AppPath | PublicPath) => {
 		open = false;
-		await goto(path);
+		await goto(resolvedPath(path));
 	};
 
 	const handleSignOut = async () => {
@@ -25,7 +45,7 @@
 			// regardless so the panel doesn't get stuck.
 		}
 
-		await goto(PublicPath.SignIn, { replaceState: true });
+		await goto(resolve('/signin'), { replaceState: true });
 	};
 </script>
 
