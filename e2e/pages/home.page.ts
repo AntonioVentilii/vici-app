@@ -2,7 +2,10 @@ import { expect, type Locator, type Page } from '@playwright/test';
 import { TestId } from '../../src/lib/constants/test-ids.constants';
 
 /**
- * Page object for the Vici home / markets feed.
+ * Page object for the Vici home / markets feed and the public-layer
+ * surfaces it routes through. The (app) layout gates every route on a
+ * resolved session — anonymous visits to `/`, `/portfolio`, etc. now
+ * redirect to `/signin`. The page object reflects that flow.
  *
  * Tests should prefer this object over reaching into selectors so that
  * structural changes only have to be reflected in one place.
@@ -14,7 +17,6 @@ export class HomePage {
 	readonly marketCard: Locator;
 	readonly marketCardSkeleton: Locator;
 	readonly marketTimeRemaining: Locator;
-	readonly signInButton: Locator;
 	readonly signInDevButton: Locator;
 	readonly userMenu: Locator;
 	readonly logoutButton: Locator;
@@ -31,7 +33,6 @@ export class HomePage {
 		this.marketCard = page.getByTestId(TestId.MarketCard);
 		this.marketCardSkeleton = page.getByTestId(TestId.MarketCardSkeleton);
 		this.marketTimeRemaining = page.getByTestId(TestId.MarketTimeRemaining);
-		this.signInButton = page.getByTestId(TestId.SignInButton);
 		this.signInDevButton = page.getByTestId(TestId.SignInDev);
 		this.userMenu = page.getByTestId(TestId.UserMenu);
 		this.logoutButton = page.getByTestId(TestId.Logout);
@@ -44,6 +45,10 @@ export class HomePage {
 
 	async goto(): Promise<void> {
 		await this.page.goto('/');
+	}
+
+	async gotoSignIn(): Promise<void> {
+		await this.page.goto('/signin');
 	}
 
 	/**
@@ -97,8 +102,14 @@ export class HomePage {
 		);
 	}
 
-	async openSignInModal(): Promise<void> {
-		await this.signInButton.click();
+	/**
+	 * Wait until the auth gate has settled — either we landed on a
+	 * gated route (signed-in path) or we got redirected to `/signin`
+	 * (signed-out path). Useful as the first await after a navigation
+	 * so subsequent assertions see a stable URL.
+	 */
+	async waitForAuthGate(): Promise<void> {
+		await this.page.waitForURL(/\/(signin|signup)?(?:\?.*)?$|\/[a-z]+/);
 	}
 
 	/**
@@ -173,9 +184,9 @@ export class HomePage {
 	}
 
 	/**
-	 * High-level helper: opens the sign-in modal, signs in via the dev mock
-	 * identity, and walks past the onboarding overlay so the caller lands
-	 * on a fully-interactive signed-in app shell.
+	 * High-level helper: navigates to `/signin`, signs in via the dev
+	 * mock identity, walks past the onboarding overlay, and lands on a
+	 * fully-interactive signed-in app shell at `/`.
 	 *
 	 * Wrapped in one auto-retry with a page reload between attempts. The
 	 * sign-in pipeline rides on `/api/v3|v4/canister/*` calls through the
@@ -191,7 +202,12 @@ export class HomePage {
 	 */
 	async signInAsDevUser(): Promise<void> {
 		const attempt = async (): Promise<void> => {
-			await this.openSignInModal();
+			// `signin` is the canonical entry — direct navigation avoids
+			// a redirect bounce when the test starts at a gated path.
+			if (!this.page.url().includes('/signin')) {
+				await this.gotoSignIn();
+			}
+
 			await this.signInDevButton.click();
 			await this.completeOnboarding();
 		};
