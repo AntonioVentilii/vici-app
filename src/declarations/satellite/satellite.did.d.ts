@@ -38,6 +38,7 @@ export interface AppGetProfileResult {
 					role:
 						| []
 						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
+					email: string;
 					level: number;
 					preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 					archetype: string;
@@ -108,6 +109,7 @@ export interface AppListLeaderboardResult {
 		owner: string;
 		interests: Array<string>;
 		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
+		email: string;
 		level: number;
 		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 		archetype: string;
@@ -147,6 +149,7 @@ export interface AppSearchProfilesResult {
 		owner: string;
 		interests: Array<string>;
 		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
+		email: string;
 		level: number;
 		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
 		archetype: string;
