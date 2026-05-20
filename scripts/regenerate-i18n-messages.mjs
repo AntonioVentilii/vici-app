@@ -1,6 +1,18 @@
 import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const src = fs.readFileSync('../VICI_BETA_V1.1/i18n.js', 'utf8');
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const defaultSource = path.resolve(scriptDir, '../VICI_BETA_V1.1/i18n.js');
+const sourcePath = process.env.VICI_I18N_SOURCE ?? process.argv[2] ?? defaultSource;
+
+if (!fs.existsSync(sourcePath)) {
+	console.error(`i18n source not found: ${sourcePath}`);
+	console.error('Pass a path as argv[2] or set VICI_I18N_SOURCE to the prototype i18n.js file.');
+	process.exit(1);
+}
+
+const src = fs.readFileSync(sourcePath, 'utf8');
 
 const unescape = (s) =>
 	s

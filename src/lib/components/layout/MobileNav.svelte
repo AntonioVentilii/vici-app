@@ -42,10 +42,15 @@
 	};
 
 	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
+
+	const mobileNavColumns = $derived(
+		`repeat(${Math.max(visibleNavItems.length, 1)}, minmax(0, 1fr))`
+	);
 </script>
 
 <nav
-	class="border-ink-line fixed bottom-0 left-0 z-50 grid w-full grid-cols-5 border-t bg-[rgba(14,13,11,0.85)] px-2 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] backdrop-blur-[24px] md:hidden"
+	style:grid-template-columns={mobileNavColumns}
+	class="border-ink-line fixed bottom-0 left-0 z-50 grid w-full border-t bg-[rgba(14,13,11,0.85)] px-2 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] backdrop-blur-[24px] md:hidden"
 >
 	{#each visibleNavItems as { labelKey, path, mobileIcon: Icon } (path)}
 		{@const isFlow = labelKey === 'nav.flow'}
