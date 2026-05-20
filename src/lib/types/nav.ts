@@ -1,4 +1,5 @@
 import type { AppPath } from '$lib/constants/routes.constants';
+import type { MessageKey } from '$lib/utils/i18n.utils';
 import type {
 	Briefcase,
 	CircleUserRound,
@@ -9,7 +10,7 @@ import type {
 } from 'lucide-svelte/icons';
 
 export interface NavItem {
-	label: string;
+	labelKey: MessageKey;
 	path: AppPath;
 	mobileIcon:
 		| typeof House

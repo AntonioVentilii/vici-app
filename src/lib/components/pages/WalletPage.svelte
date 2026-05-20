@@ -21,10 +21,12 @@
 	} from '$lib/services/wallet.service';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Token } from '$lib/types/token';
 	import type { Transaction } from '$lib/types/wallet';
 	import { emit } from '$lib/utils/events.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 
 	let transactions = $state<Transaction[]>([]);
@@ -167,9 +169,9 @@
 
 <div class="space-y-8">
 	<SectionHeader
-		description="Manage your assets securely on the Internet Computer."
-		highlight="Wallet"
-		title="Your"
+		description={t({ locale: $localeStore, key: 'wallet.sub' })}
+		highlight={t({ locale: $localeStore, key: 'wallet.eyebrow' })}
+		title={t({ locale: $localeStore, key: 'wallet.title' })}
 	/>
 
 	<div class="flex w-full flex-col gap-6 lg:flex-row">

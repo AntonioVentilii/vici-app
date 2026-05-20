@@ -4,6 +4,8 @@
 	import { navItems } from '$lib/constants/nav.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { userIsAdmin } from '$lib/derived/user.derived';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	// Routes that don't have their own nav slot but should still light
 	// up a parent tab (per `docs/ai/frontend/design.md` §8.4 active-
@@ -23,7 +25,12 @@
 			return true;
 		}
 
-		if (path === AppPath.Profile && current === AppPath.Wallet) {
+		if (
+			path === AppPath.Profile &&
+			(current === AppPath.Wallet ||
+				current === AppPath.Settings ||
+				current === AppPath.Notifications)
+		) {
 			return true;
 		}
 
@@ -40,8 +47,8 @@
 <nav
 	class="border-ink-line fixed bottom-0 left-0 z-50 grid w-full grid-cols-5 border-t bg-[rgba(14,13,11,0.85)] px-2 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] backdrop-blur-[24px] md:hidden"
 >
-	{#each visibleNavItems as { label, path, mobileIcon: Icon } (path)}
-		{@const isFlow = label === 'Flow'}
+	{#each visibleNavItems as { labelKey, path, mobileIcon: Icon } (path)}
+		{@const isFlow = labelKey === 'nav.flow'}
 		<button
 			class="ease-vici duration-state relative flex flex-col items-center justify-center gap-1 transition-colors
 				{isFlow
@@ -57,7 +64,7 @@
 			{/if}
 			<Icon size={isFlow ? 22 : 20} strokeWidth={isActive(path) ? 2.5 : 1.6} />
 			<span style="letter-spacing: 0.06em;" class="text-center text-[10px] font-semibold uppercase">
-				{label}
+				{t({ locale: $localeStore, key: labelKey })}
 			</span>
 		</button>
 	{/each}

@@ -56,7 +56,7 @@ top-level group:
 - `challenge/` — challenge / passkey UI.
 - `characters/` — character SVGs (Vici, Oracle, Trickster, Flame).
 - `icons/` — bespoke icons not covered by `lucide-svelte`.
-- `layout/` — top-level chrome (`Header`, navigation surfaces).
+- `layout/` — top-level chrome (`Header`, `Ticker`, navigation surfaces).
 - `leaderboard/` — leaderboard widgets.
 - `loaders/` — loaders, skeletons, suspense boundaries.
 - `market/` — prediction-market UI (filters, cards, detail, order book, …).

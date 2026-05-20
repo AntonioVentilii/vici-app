@@ -6,7 +6,9 @@
 	import YouBadge from '$lib/components/ui/YouBadge.svelte';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getLeaderboard } from '$lib/services/leaderboard.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { UserProfile } from '$lib/types/profile';
+	import { t } from '$lib/utils/i18n.utils';
 
 	let loading = $state(true);
 	let leaderboard = $state<UserProfile[]>([]);
@@ -83,9 +85,9 @@
 
 <div class="space-y-12 pb-24">
 	<SectionHeader
-		description="Compete with the world's most accurate predictors."
-		highlight="Leaderboard"
-		title="Global"
+		description={t({ locale: $localeStore, key: 'leaderboard.sub' })}
+		highlight={t({ locale: $localeStore, key: 'leaderboard.eyebrow' })}
+		title={t({ locale: $localeStore, key: 'leaderboard.title' })}
 	/>
 
 	{#if loading}
@@ -94,7 +96,7 @@
 				class="border-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
 			></div>
 			<p class="text-muted-foreground animate-pulse text-xs font-bold tracking-widest uppercase">
-				Calculating Alphas...
+				{t({ locale: $localeStore, key: 'leaderboard.loading' })}
 			</p>
 		</div>
 	{:else}
@@ -190,7 +192,7 @@
 				{#if !loading && rest.length === 0}
 					<div class="py-12 text-center">
 						<p class="text-sm font-black text-muted-foreground uppercase tracking-widest">
-							Joining the pack...
+							{t({ locale: $localeStore, key: 'leaderboard.empty' })}
 						</p>
 					</div>
 				{/if}

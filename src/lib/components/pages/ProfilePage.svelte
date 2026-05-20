@@ -8,7 +8,9 @@
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getProfile } from '$lib/services/profile.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	let intervalId: ReturnType<typeof setInterval> | undefined;
 
@@ -28,9 +30,9 @@
 
 <div class="space-y-12 pb-24">
 	<SectionHeader
-		description="Track your performance, fire streaks, and global accuracy."
-		highlight="Identity"
-		title="Social"
+		description={t({ locale: $localeStore, key: 'profile.sub' })}
+		highlight={t({ locale: $localeStore, key: 'profile.eyebrow' })}
+		title={t({ locale: $localeStore, key: 'profile.title' })}
 	/>
 
 	{#if $userStore.profile}
@@ -57,9 +59,11 @@
 			<div class="bg-card mb-6 rounded-full p-6">
 				<span class="text-muted-foreground text-4xl">👤</span>
 			</div>
-			<h2 class="font-display text-foreground text-2xl font-semibold">No Profile Found</h2>
+			<h2 class="font-display text-foreground text-2xl font-semibold">
+				{t({ locale: $localeStore, key: 'profile.empty.title' })}
+			</h2>
 			<p class="text-muted-foreground mt-2 max-w-xs">
-				You need to sign in or place your first prediction to initialize your social identity.
+				{t({ locale: $localeStore, key: 'profile.empty.sub' })}
 			</p>
 		</div>
 	{/if}
