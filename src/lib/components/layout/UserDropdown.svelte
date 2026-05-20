@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
+	import { Settings } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import DomainSwitch from '$lib/components/layout/DomainSwitch.svelte';
 	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';
@@ -17,6 +18,12 @@
 		open = false;
 
 		goto(AppPath.Profile);
+	};
+
+	const goToSettings = () => {
+		open = false;
+
+		goto(AppPath.Settings);
 	};
 
 	const doSignOut = async () => {
@@ -77,6 +84,14 @@
 					<circle cx="12" cy="7" r="4" />
 				</svg>
 				Profile
+			</BaseButton>
+
+			<BaseButton
+				class="text-foreground hover:bg-primary/10 hover:text-primary flex w-full items-center gap-3 px-4 py-2 text-left text-sm font-medium"
+				onclick={goToSettings}
+			>
+				<Settings size={16} strokeWidth={1.8} />
+				Settings
 			</BaseButton>
 
 			<div class="border-border my-1 border-t"></div>

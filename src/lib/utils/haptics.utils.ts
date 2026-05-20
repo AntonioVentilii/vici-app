@@ -1,3 +1,6 @@
+import { preferencesStore } from '$lib/stores/preferences.store';
+import { get } from 'svelte/store';
+
 // Named haptic patterns — single source of truth for VICI's
 // touch-feedback vocabulary. Every motion moment has a paired
 // haptic; the eight named patterns below are the full set.
@@ -63,6 +66,10 @@ const HAPTIC_PATTERNS: Record<HapticPattern, HapticValue> = {
  * Use the named pattern, not raw ms — see file header for why.
  */
 export const haptic = (pattern: HapticPattern): void => {
+	if (!get(preferencesStore).hapticsEnabled) {
+		return;
+	}
+
 	if (typeof navigator === 'undefined' || !('vibrate' in navigator)) {
 		return;
 	}

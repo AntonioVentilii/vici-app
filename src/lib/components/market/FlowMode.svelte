@@ -29,6 +29,7 @@
 	import { persistDailyStreak } from '$lib/services/profile.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
+	import { flowSessionMaxBets, preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market, MarketId } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
@@ -53,8 +54,8 @@
 		resolveOutcomeExecutionPriceForSizing
 	} from '$lib/utils/trade.utils';
 
-	const MAX_BETS = 10;
 	const MAX_MARKETS = 20;
+	const maxBets = $derived(flowSessionMaxBets($preferencesStore));
 	const FLOW_ART_SET = new Set<string>(FLOW_ART_CATEGORIES);
 
 	const resolveFlowCategory = ({
@@ -441,7 +442,7 @@
 	};
 
 	const advance = () => {
-		if (currentIndex < markets.length - 1 && betsCount < MAX_BETS) {
+		if (currentIndex < markets.length - 1 && betsCount < maxBets) {
 			currentIndex += 1;
 		} else {
 			completed = true;
@@ -586,7 +587,7 @@
 			</button>
 
 			<div class="flow-progress" aria-label="Progress">
-				{#each Array(MAX_BETS) as _, i (i)}
+				{#each Array(maxBets) as _, i (i)}
 					<div class="flow-progress-seg">
 						<div
 							style:--p={i < betsCount ? '100%' : i === betsCount ? '30%' : '0%'}

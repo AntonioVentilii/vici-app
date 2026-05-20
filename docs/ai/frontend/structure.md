@@ -64,6 +64,7 @@ top-level group:
 - `pages/` — page-level shells composed inside specific routes.
 - `portfolio/` — user portfolio surfaces (positions, balances).
 - `profile/` — user profile (own + public).
+- `settings/` — settings screen row primitives (`SetRow`, `SetToggle`, …).
 - `social/` — social graph (relations, comments, discussion).
 - `ui/` — app-local UI primitives — see
   [`reusability.md`](./reusability.md#ui-primitives).
