@@ -9,20 +9,20 @@ export interface CategoryAccuracySignal {
 }
 
 export interface PriorCallSignal {
-	marketId: MarketId | string;
-	side: string;
+	marketId: MarketId;
+	side: 'YES' | 'NO';
 	when: string;
 	consensusThen?: number;
 }
 
 export interface FollowedLeanSignal {
-	marketId: MarketId | string;
+	marketId: MarketId;
 	yes: number;
 	total: number;
 }
 
 export interface UserMarketSignals {
 	categoryAcc: Partial<Record<FlowArtCategory, CategoryAccuracySignal>>;
-	priorCalls: Record<string, PriorCallSignal>;
-	followedLean: Record<string, FollowedLeanSignal>;
+	priorCalls: Partial<Record<MarketId, PriorCallSignal>>;
+	followedLean: Partial<Record<MarketId, FollowedLeanSignal>>;
 }

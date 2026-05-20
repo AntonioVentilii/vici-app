@@ -2,6 +2,7 @@ import type { ClearingDid } from '$declarations';
 import { ZERO } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
 import type { SeriesCategory } from '$lib/types/category';
+import type { MarketId } from '$lib/types/market';
 import type {
 	CategoryAccuracySignal,
 	FollowedLeanSignal,
@@ -105,19 +106,25 @@ export const deriveCategoryAccuracySignals = ({
 
 export const derivePriorCallSignals = (
 	events: ClearingDid.Event[]
-): Record<string, PriorCallSignal> => {
-	const priorCalls: Record<string, PriorCallSignal> = {};
+): Partial<Record<MarketId, PriorCallSignal>> => {
+	const priorCalls: Partial<Record<MarketId, PriorCallSignal>> = {};
+	const latestTimestampByMarket = new Map<MarketId, bigint>();
 
-	for (const event of [...events]
-		.filter(isExecuted)
-		.sort((a, b) => Number(a.timestamp - b.timestamp))) {
-		const marketId = parseMarketId(event.series_id);
-		priorCalls[marketId] = {
-			marketId,
-			side: eventSide(event),
-			when: formatWhen(event.timestamp),
-			consensusThen: eventConsensus(event)
-		};
+	for (const event of events) {
+		if (isExecuted(event)) {
+			const marketId = parseMarketId(event.series_id);
+			const previous = latestTimestampByMarket.get(marketId);
+
+			if (previous === undefined || event.timestamp > previous) {
+				latestTimestampByMarket.set(marketId, event.timestamp);
+				priorCalls[marketId] = {
+					marketId,
+					side: eventSide(event),
+					when: formatWhen(event.timestamp),
+					consensusThen: eventConsensus(event)
+				};
+			}
+		}
 	}
 
 	return priorCalls;
@@ -131,8 +138,8 @@ export const derivePriorCallSignals = (
  */
 export const deriveFollowedLeanSignals = (
 	activities: Activity[]
-): Record<string, FollowedLeanSignal> => {
-	const bucket = new Map<string, { yes: number; total: number }>();
+): Partial<Record<MarketId, FollowedLeanSignal>> => {
+	const bucket = new Map<MarketId, { yes: number; total: number }>();
 
 	for (const activity of activities.filter(
 		(a) => Boolean(a.marketId) && a.type === ActivityType.TRADE
@@ -140,22 +147,21 @@ export const deriveFollowedLeanSignals = (
 		const side = activityOutcome(activity.details);
 
 		if (side !== undefined && activity.marketId) {
-			const current = bucket.get(activity.marketId) ?? { yes: 0, total: 0 };
+			const marketId = activity.marketId as MarketId;
+			const current = bucket.get(marketId) ?? { yes: 0, total: 0 };
 			current.total += 1;
 			current.yes += side === 'YES' ? 1 : 0;
-			bucket.set(activity.marketId, current);
+			bucket.set(marketId, current);
 		}
 	}
 
-	return Object.fromEntries(
-		Array.from(bucket.entries()).map(([marketId, value]) => [
-			marketId,
-			{
-				marketId,
-				...value
-			}
-		])
-	);
+	const followedLean: Partial<Record<MarketId, FollowedLeanSignal>> = {};
+
+	for (const [marketId, value] of bucket.entries()) {
+		followedLean[marketId] = { marketId, ...value };
+	}
+
+	return followedLean;
 };
 
 export const deriveUserMarketSignals = ({

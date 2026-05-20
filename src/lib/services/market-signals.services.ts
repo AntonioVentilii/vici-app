@@ -11,7 +11,7 @@ export const getUserMarketSignals = async (
 ): Promise<UserMarketSignals> => {
 	const [events, categoryMappings, following] = await Promise.all([
 		getUserTradeHistory(domain),
-		listSeriesCategories(),
+		listSeriesCategories().catch(() => []),
 		getFollowing().catch(() => [])
 	]);
 
