@@ -7,13 +7,13 @@
 	import { categoryColor } from '$lib/utils/category-color.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
-	const previewCallers = (id: string): string => {
+	const previewCallers = ({ id }: { id: string }): string => {
 		const seed = id.charCodeAt(0);
 
 		return (1200 + ((seed * 173) % 8500)).toLocaleString();
 	};
 
-	const isTrendingUp = (yesPercent: number, index: number): boolean =>
+	const isTrendingUp = ({ yesPercent, index }: { yesPercent: number; index: number }): boolean =>
 		(yesPercent + index * 3) % 7 < 3;
 </script>
 
