@@ -3,6 +3,8 @@
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
+	import IconSignalNo from '$lib/components/icons/IconSignalNo.svelte';
+	import IconSignalYes from '$lib/components/icons/IconSignalYes.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
@@ -14,6 +16,7 @@
 	import { getOrderBook } from '$lib/services/order.services';
 	import { getBalances } from '$lib/services/wallet.service';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { orderBookStore } from '$lib/stores/order-book.store';
 	import { tradeStore } from '$lib/stores/trade.store';
@@ -24,6 +27,7 @@
 	import { icrcLedgerDecimalsFromCollateralConfig } from '$lib/utils/asset-ref.utils';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import { formatCurrency } from '$lib/utils/format.utils';
+	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { calculateMarketStats } from '$lib/utils/market.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 	import {
@@ -48,6 +52,9 @@
 	const { market, onPredictionPlaced, initialType, hideSelector = false }: Props = $props();
 
 	const { yesProbability, noProbability } = $derived(market);
+
+	const tr = ({ key, params }: { key: MessageKey; params?: Record<string, string | number> }) =>
+		t({ locale: $localeStore, key, params });
 
 	let amount = $state('');
 
@@ -250,7 +257,7 @@
 
 	const handlePlacePrediction = async () => {
 		if (isNullish(amount) || parseFloat(amount) <= 0) {
-			error = 'Please enter a valid amount';
+			error = tr({ key: 'prediction.error.invalid_amount' });
 
 			return;
 		}
@@ -259,7 +266,7 @@
 			orderType === 'LIMIT' &&
 			(isNullish(price) || parseFloat(price) <= 0 || parseFloat(price) >= 100)
 		) {
-			error = 'Please enter a valid price between 1 and 99';
+			error = tr({ key: 'prediction.error.invalid_price' });
 
 			return;
 		}
@@ -277,7 +284,7 @@
 					})
 				});
 			} catch (e) {
-				error = (e as Error).message ?? 'Invalid VXP amount';
+				error = (e as Error).message ?? tr({ key: 'prediction.error.invalid_vxp' });
 
 				return;
 			}
@@ -304,12 +311,18 @@
 			fetchBalance();
 
 			notificationsStore.add({
-				title: 'Order Placed',
-				message: `Successfully placed ${orderType} ${selectedType} order!`,
+				title: tr({ key: 'prediction.notification.title' }),
+				message: tr({
+					key: 'prediction.notification.message',
+					params: {
+						orderType,
+						side: selectedType
+					}
+				}),
 				type: 'success'
 			});
 		} catch (err: unknown) {
-			error = (err as Error).message ?? 'Failed to place prediction';
+			error = (err as Error).message ?? tr({ key: 'prediction.error.failed' });
 		} finally {
 			loading = false;
 		}
@@ -413,9 +426,9 @@
 				: 'text-muted-foreground hover:text-foreground'}"
 			onclick={() => (orderType = 'MARKET')}
 			status={hasMarketDepth ? 'enabled' : 'disabled'}
-			title={!hasMarketDepth ? 'No liquidity for instant prediction' : ''}
+			title={!hasMarketDepth ? tr({ key: 'prediction.no_liquidity_title' }) : ''}
 		>
-			Instant
+			{tr({ key: 'prediction.order.instant' })}
 		</BaseButton>
 
 		<BaseButton
@@ -424,7 +437,7 @@
 				: 'text-muted-foreground hover:text-foreground'}"
 			onclick={() => (orderType = 'LIMIT')}
 		>
-			Set Price
+			{tr({ key: 'prediction.order.set_price' })}
 		</BaseButton>
 	</div>
 
@@ -440,8 +453,11 @@
 						onclick={() => handleOutcomeSelect({ outcomeId: 'YES', probability: yesProbability })}
 					>
 						<div class="relative z-10 flex flex-col items-center gap-1">
-							<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
-							<span class="text-xl font-black">YES</span>
+							<IconSignalYes size="22px" />
+							<span class="text-[10px] font-bold tracking-widest uppercase">
+								{tr({ key: 'prediction.choice.label' })}
+							</span>
+							<span class="text-xl font-black">{tr({ key: 'outcome.yes' })}</span>
 							{#if orderType === 'MARKET'}
 								<span class="text-[10px] font-medium opacity-60">
 									{(yesProbability * 100).toFixed(1)}%
@@ -458,8 +474,11 @@
 						onclick={() => handleOutcomeSelect({ outcomeId: 'NO', probability: noProbability })}
 					>
 						<div class="relative z-10 flex flex-col items-center gap-1">
-							<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
-							<span class="text-xl font-black">NO</span>
+							<IconSignalNo size="22px" />
+							<span class="text-[10px] font-bold tracking-widest uppercase">
+								{tr({ key: 'prediction.choice.label' })}
+							</span>
+							<span class="text-xl font-black">{tr({ key: 'outcome.no' })}</span>
 							{#if orderType === 'MARKET'}
 								<span class="text-[10px] font-medium opacity-60">
 									{(noProbability * 100).toFixed(1)}%
@@ -478,7 +497,9 @@
 								onclick={() => handleOutcomeSelect({ outcomeId: outcome.id })}
 							>
 								<div class="relative z-10 flex flex-col items-center gap-0.5">
-									<span class="text-[10px] font-bold tracking-widest uppercase">Predict</span>
+									<span class="text-[10px] font-bold tracking-widest uppercase">
+										{tr({ key: 'prediction.choice.label' })}
+									</span>
 									<span class="text-center text-sm font-black">{outcome.title}</span>
 								</div>
 							</BaseButton>
@@ -495,7 +516,7 @@
 						class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
 						for="price"
 					>
-						Target Probability
+						{tr({ key: 'prediction.target_probability' })}
 					</label>
 
 					<div class="relative">
@@ -524,16 +545,24 @@
 						class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
 						for="amount"
 					>
-						Investment Amount ({market.token.symbol})
+						{tr({
+							key: 'prediction.investment_amount',
+							params: { symbol: market.token.symbol }
+						})}
 					</label>
 
 					<span class="text-muted-foreground text-[10px] font-bold uppercase">
-						Available: {nonNullish(availableEquity)
-							? formatAvailableMarginForUi({
-									value: availableEquity,
-									playground: $playgroundVxpUnitMode
-								})
-							: '...'}
+						{tr({
+							key: 'prediction.available',
+							params: {
+								amount: nonNullish(availableEquity)
+									? formatAvailableMarginForUi({
+											value: availableEquity,
+											playground: $playgroundVxpUnitMode
+										})
+									: '...'
+							}
+						})}
 					</span>
 				</div>
 
@@ -573,31 +602,37 @@
 
 		{#if error}
 			<div
-				class="rounded-xl border border-red-500/20 bg-red-500/10 p-4 text-xs font-medium text-red-500"
+				class="border-destructive/20 bg-no-wash text-destructive rounded-xl border p-4 text-xs font-medium"
 			>
 				{error}
 			</div>
 		{:else if availableEquity === ZERO && $userSignedIn}
 			<div
-				class="rounded-xl border border-amber-500/20 bg-amber-500/10 p-4 text-xs font-medium text-amber-700"
+				class="border-warning/20 bg-warning/10 text-foreground rounded-xl border p-4 text-xs font-medium"
 			>
-				You have no <strong>Buying Power</strong> in the
-				<span class="font-bold">{Object.keys(market.balanceDomain)[0]}</span> domain.
-				<a class="ml-1 font-bold text-amber-900 underline hover:no-underline" href="/wallet">
-					Deposit collateral in the Wallet
+				{tr({
+					key: 'prediction.no_buying_power',
+					params: { domain: Object.keys(market.balanceDomain)[0] ?? '' }
+				})}
+				<a class="text-primary ml-1 font-bold underline hover:no-underline" href="/wallet">
+					{tr({ key: 'prediction.deposit_wallet' })}
 				</a>
 			</div>
 		{/if}
 
 		<div class="bg-foreground/5 space-y-3 rounded-2xl p-5">
 			<div class="flex justify-between text-xs">
-				<span class="text-muted-foreground font-medium">Estimated Cost</span>
+				<span class="text-muted-foreground font-medium"
+					>{tr({ key: 'prediction.estimated_cost' })}</span
+				>
 
 				<span class="text-foreground font-bold">{estimatedCost}</span>
 			</div>
 
 			<div class="flex justify-between text-xs">
-				<span class="text-muted-foreground font-medium">Potential Return</span>
+				<span class="text-muted-foreground font-medium"
+					>{tr({ key: 'prediction.potential_return' })}</span
+				>
 
 				<span class="text-yes font-bold">
 					{estimatedPayout} ({potentialReturnPercent.toFixed(1)}%)
@@ -616,13 +651,13 @@
 						: 'disabled'}
 			>
 				{#snippet busyLabel()}
-					Confirming...
+					{tr({ key: 'prediction.confirming' })}
 				{/snippet}
-				Confirm {selectedType}
+				{tr({ key: 'prediction.confirm', params: { side: selectedType } })}
 			</Button>
 		{:else}
 			<div class="bg-primary/10 flex flex-col items-center gap-4 rounded-2xl p-6 text-center">
-				<p class="text-primary text-sm font-medium">Sign in to trade</p>
+				<p class="text-primary text-sm font-medium">{tr({ key: 'prediction.sign_in' })}</p>
 				<SignInActions />
 			</div>
 		{/if}

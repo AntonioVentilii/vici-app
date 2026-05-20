@@ -5,7 +5,9 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		market: Market;
@@ -45,20 +47,23 @@
 			<span
 				class="border-foreground/25 text-foreground bg-foreground/8 rounded-full border px-3 py-1 text-[10px] font-bold tracking-widest uppercase"
 			>
-				Memes
+				{t({ locale: $localeStore, key: 'market.detail.category_default' })}
 			</span>
 			{#if market.isInviteOnly}
-				<Badge size="sm" variant="warning">Closed Circle</Badge>
+				<Badge size="sm" variant="warning">
+					{t({ locale: $localeStore, key: 'markets.filter.access.closed' })}
+				</Badge>
 			{/if}
 			<span class="text-muted-foreground inline-flex items-center gap-1 text-[10px] font-bold">
-				Created by <PrincipalText principal={market.creator} splitLength={5} />
+				{t({ locale: $localeStore, key: 'market.detail.created_by' })}
+				<PrincipalText principal={market.creator} splitLength={5} />
 			</span>
 		</div>
 
 		{#if !isFork}
 			<div class="pt-2">
 				<Button onclick={() => (isForkModalOpen = true)} size="sm" variant="outline">
-					Challenge Friends
+					{t({ locale: $localeStore, key: 'card.challenge_friends' })}
 				</Button>
 			</div>
 		{/if}
