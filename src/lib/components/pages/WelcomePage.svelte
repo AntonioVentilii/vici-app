@@ -5,6 +5,7 @@
 	import WelcomeFlowFeature from '$lib/components/landing/WelcomeFlowFeature.svelte';
 	import WelcomeFooter from '$lib/components/landing/WelcomeFooter.svelte';
 	import WelcomeLiveMarkets from '$lib/components/landing/WelcomeLiveMarkets.svelte';
+	import WelcomeSocialProof from '$lib/components/landing/WelcomeSocialProof.svelte';
 	import Ticker from '$lib/components/layout/Ticker.svelte';
 	import WelcomeNav from '$lib/components/layout/WelcomeNav.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -97,14 +98,7 @@
 		</section>
 
 		<section id="leaderboard" class="welcome-section">
-			<div class="welcome-section-inner">
-				<LandingSectionHeader
-					eyebrow={t({ locale: $localeStore, key: 'social.eyebrow' })}
-					sub={t({ locale: $localeStore, key: 'social.sub' })}
-					title={t({ locale: $localeStore, key: 'social.title_a' })}
-					titleAccent={t({ locale: $localeStore, key: 'social.title_b' })}
-				/>
-			</div>
+			<WelcomeSocialProof />
 		</section>
 
 		<section id="trust" class="welcome-section">
