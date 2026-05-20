@@ -494,6 +494,26 @@ The satellite authorizes writes if:
 
 ---
 
+## 10. User market signals
+
+The Flow-card back face needs user-specific context. The derived signal
+layer lives in
+[`src/lib/utils/market-signals.utils.ts`](../../../src/lib/utils/market-signals.utils.ts)
+and
+[`src/lib/services/market-signals.services.ts`](../../../src/lib/services/market-signals.services.ts).
+
+| Signal         | Source                                          | Behaviour                                                                                                              |
+| -------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| `categoryAcc`  | User clearing history + series category mapping | Settled events are grouped by FlowArt category. Positive settled quantity counts as a win. Accuracy is `wins / calls`. |
+| `priorCalls`   | User executed clearing events                   | Latest executed event per market. Stores side, display date, and event-time consensus proxy when available.            |
+| `followedLean` | Followed users' public trade activity           | Sparse map of followed-user YES/NO activity per market. If there is no usable followed activity, omit the row.         |
+
+These signals are client-derived. They are not persisted in the
+metadata collection and do not affect clearing, settlement, or profile
+statistics.
+
+---
+
 ## Out-of-scope (deliberately)
 
 - Renaming features just because the design uses a different word
