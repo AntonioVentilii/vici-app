@@ -8,11 +8,12 @@
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import ViciChar from '$lib/components/characters/ViciChar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
+	import FlowInviteCard from '$lib/components/market/FlowInviteCard.svelte';
+	import MotionBeat from '$lib/components/market/MotionBeat.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import {
 		BASE_XP_PER_PREDICTION,
-		findFlowMilestone,
 		isAccuracyUnlocked
 	} from '$lib/constants/flow-rewards.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -41,6 +42,7 @@
 	} from '$lib/utils/flow-art.utils';
 	import { pickHighestPriorityBeat, type CompanionBeat } from '$lib/utils/flow-companion.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
+	import { recordMotionSwipe, type MotionBeatPayload } from '$lib/utils/motion-engine.utils';
 	import {
 		applyDailyStreakBump,
 		FLAME_STAGE_LABELS,
@@ -116,6 +118,8 @@
 	let lastActiveDay = $state<string | undefined>(undefined);
 	let hasMarkedActiveThisSession = false;
 	let streakBreakBanner = $state<{ stage: FlameStage } | null>(null);
+	let flowPaused = $state(false);
+	let activeMotionBeat = $state<MotionBeatPayload | null>(null);
 	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
 	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
 
@@ -238,8 +242,28 @@
 		}, ttl);
 	};
 
+	const finishCommitAdvance = () => {
+		setTimeout(() => {
+			advance();
+		}, COMMIT_FEEDBACK_MS);
+		setTimeout(() => {
+			committedAction = null;
+			committedMarketId = null;
+		}, COMMIT_RESET_MS);
+	};
+
+	const onMotionBeatDone = () => {
+		const wasPaused = flowPaused;
+		activeMotionBeat = null;
+		flowPaused = false;
+
+		if (wasPaused) {
+			finishCommitAdvance();
+		}
+	};
+
 	const handleAction = (action: 'YES' | 'NO' | 'SKIP') => {
-		if (completed) {
+		if (completed || flowPaused) {
 			return;
 		}
 
@@ -286,7 +310,6 @@
 		// committed swipe. Any of YES / NO / SKIP qualifies (streak
 		// progresses on any swipe).
 		if (!hasMarkedActiveThisSession) {
-			const previousDailyStreak = dailyStreak;
 			const bump = applyDailyStreakBump({ streak: dailyStreak, lastActiveDay });
 			({ streak: dailyStreak, lastActiveDay } = bump);
 			hasMarkedActiveThisSession = true;
@@ -321,18 +344,6 @@
 				setTimeout(() => {
 					streakBreakBanner = null;
 				}, 2200);
-			} else if (bump.bumped) {
-				const previousStage = stageForStreak(previousDailyStreak);
-				const newStage = stageForStreak(bump.streak);
-
-				if (previousStage !== newStage) {
-					beats.push({
-						kind: 'streak-tier',
-						who: 'flame',
-						line: `${FLAME_STAGE_LABELS[newStage]}. ${bump.streak} days.`,
-						stage: newStage
-					});
-				}
 			}
 		}
 
@@ -342,13 +353,7 @@
 			// it's not a win and not a loss). The daily streak still
 			// bumps via `applyDailyStreakBump` above; streak progresses
 			// on any swipe, YES / NO / SKIP all count at that layer.
-			setTimeout(() => {
-				advance();
-			}, COMMIT_FEEDBACK_MS);
-			setTimeout(() => {
-				committedAction = null;
-				committedMarketId = null;
-			}, COMMIT_RESET_MS);
+			finishCommitAdvance();
 
 			return;
 		}
@@ -402,49 +407,43 @@
 			}, 1600);
 		}
 
-		// Rarity-scaled bonus ladder — fires on the exact lifetime
-		// committed-call count (1, 10, 50, 250, 1000). Counts across
-		// all sessions, not just this one: at `MAX_BETS = 10` per
-		// session the 50 / 250 / 1000 tiers would otherwise be
-		// unreachable. `betsCount` is the in-session delta;
-		// `profile.totalTrades` is the satellite-persisted lifetime
-		// total before this session.
-		const lifetimeCallCount = ($userStore.profile?.totalTrades ?? 0) + betsCount;
-		const milestone = findFlowMilestone(lifetimeCallCount);
+		const isContrarian =
+			currentMarket.yesProbability <= 0.25 || currentMarket.yesProbability >= 0.75;
 
-		if (nonNullish(milestone)) {
-			xp += milestone.bonusXp;
+		const motion = recordMotionSwipe({
+			side: action,
+			isContrarian,
+			dailyStreak
+		});
+
+		if (motion.bonusXp > 0) {
+			xp += motion.bonusXp;
 			spawnXpPop({
-				amount: milestone.bonusXp,
+				amount: motion.bonusXp,
 				combo: 1,
 				side: action,
 				kind: 'bonus',
-				copy: milestone.copy
+				copy: motion.beat?.copy ?? undefined
 			});
-			// First-call gets the strongest haptic — triple tap. Other
-			// milestones use a double pulse so they don't shout louder
-			// than streak tier-ups.
-			vibrate(milestone.id === 'first-call' ? 'triple-tap' : 'double-pulse');
-
-			if (milestone.id === 'first-call') {
-				beats.push({
-					kind: 'first-time',
-					who: 'vici',
-					line: 'Veni. Tap for depth, swipe to call it.',
-					dwell_ms: 3600
-				});
-			} else {
-				beats.push({
-					kind: 'swipe-count',
-					who: 'vici',
-					line: `${milestone.copy} +${milestone.bonusXp} XP.`
-				});
-			}
+			vibrate(motion.beat?.kind === 'milestone-1' ? 'triple-tap' : 'double-pulse');
 		}
 
-		// Resolve the highest-priority companion beat for this commit.
-		// Lower-priority beats are dropped, not queued — by the next
-		// swipe they're stale.
+		if (motion.beat?.hardPause) {
+			activeMotionBeat = motion.beat;
+			flowPaused = true;
+			vibrate('double-pulse');
+			setTimeout(() => {
+				committedAction = null;
+				committedMarketId = null;
+			}, COMMIT_RESET_MS);
+
+			return;
+		}
+
+		if (motion.beat) {
+			activeMotionBeat = motion.beat;
+		}
+
 		const winningBeat = pickHighestPriorityBeat(beats);
 
 		if (nonNullish(winningBeat)) {
@@ -457,15 +456,7 @@
 			});
 		}
 
-		// Advance after the 80 ms feedback beat — Svelte's `out:fly` on
-		// the keyed card then plays as it unmounts.
-		setTimeout(() => {
-			advance();
-		}, COMMIT_FEEDBACK_MS);
-		setTimeout(() => {
-			committedAction = null;
-			committedMarketId = null;
-		}, COMMIT_RESET_MS);
+		finishCommitAdvance();
 	};
 
 	const advance = () => {
@@ -535,6 +526,7 @@
 <div
 	class="flow-shell bg-background"
 	class:is-active={!completed && markets.length > 0 && !loading}
+	class:is-paused={flowPaused}
 >
 	{#if loading}
 		<div class="flex h-full w-full flex-col items-center justify-center gap-4" in:fade>
@@ -595,6 +587,7 @@
 					</div>
 				</div>
 
+				<FlowInviteCard sessionXp={xp} />
 				<Button onclick={backToMarkets}>Back to Markets</Button>
 			</div>
 		</div>
@@ -690,7 +683,7 @@
 							{categoryAcc}
 							committedAction={market.id === committedMarketId ? committedAction : null}
 							{followedLean}
-							interactive={isCurrent}
+							interactive={isCurrent && !flowPaused}
 							isLimitOrderNo={isNullish(market.bestBid)}
 							isLimitOrderYes={isNullish(market.bestAsk)}
 							{market}
@@ -721,6 +714,14 @@
 					</div>
 				{/each}
 			</div>
+
+			{#if activeMotionBeat}
+				<MotionBeat
+					beat={activeMotionBeat}
+					bonusXp={activeMotionBeat.bonusXp}
+					onDone={onMotionBeatDone}
+				/>
+			{/if}
 		</main>
 
 		<footer class="flow-bottombar">
