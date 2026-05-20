@@ -6,7 +6,9 @@ export enum AppPath {
 	Admin = '/admin',
 	Portfolio = '/portfolio',
 	Leaderboard = '/leaderboard',
-	Flow = '/flow'
+	Flow = '/flow',
+	Settings = '/settings',
+	Notifications = '/notifications'
 }
 
 /**
@@ -20,7 +22,8 @@ export enum AppPath {
  */
 export enum PublicPath {
 	SignIn = '/signin',
-	SignUp = '/signup'
+	SignUp = '/signup',
+	Welcome = '/welcome'
 }
 
 /**
@@ -36,6 +39,7 @@ export enum PublicPath {
 export const PUBLIC_PATH_PREFIXES: readonly string[] = [
 	PublicPath.SignIn,
 	PublicPath.SignUp,
+	PublicPath.Welcome,
 	'/auth'
 ] as const;
 
