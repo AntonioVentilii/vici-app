@@ -174,5 +174,8 @@ export const enMessages = {
 	'use.vis_t': 'The Visionary',
 	'wallet.eyebrow': 'TREASURY',
 	'wallet.sub': 'Balances, send, receive, and collateral.',
-	'wallet.title': 'Wallet'
+	'wallet.title': 'Wallet',
+	'welcome.deck.category': 'MACRO',
+	'welcome.deck.consensus': '62% consensus',
+	'welcome.deck.question': 'Fed cuts in June?'
 } as const;

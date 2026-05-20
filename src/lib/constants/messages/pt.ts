@@ -173,5 +173,8 @@ export const ptMessages = {
 	'use.vis_t': 'The Visionary',
 	'wallet.eyebrow': 'TESOURO',
 	'wallet.sub': 'Saldos, enviar, receber e colateral.',
-	'wallet.title': 'Carteira'
+	'wallet.title': 'Carteira',
+	'welcome.deck.category': 'MACRO',
+	'welcome.deck.consensus': '62% consenso',
+	'welcome.deck.question': 'Corte do Fed em junho?'
 } as const;

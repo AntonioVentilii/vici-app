@@ -3,18 +3,24 @@
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 
+	interface Props {
+		/** When set, render a link (for public landing) instead of the in-app home button. */
+		href?: string;
+	}
+
+	const { href }: Props = $props();
+
 	const handleNav = (path: AppPath) => {
 		goto(path);
 	};
+
+	const wordmarkClass =
+		'text-primary h-6 w-auto transition-[filter] duration-200 group-hover:[filter:drop-shadow(0_0_12px_var(--laurel-glow))]';
 </script>
 
-<BaseButton
-	class="group flex items-center"
-	aria-label="VICI — go to home"
-	onclick={() => handleNav(AppPath.Home)}
->
+{#snippet wordmark()}
 	<svg
-		class="text-primary h-6 w-auto transition-[filter] duration-200 group-hover:[filter:drop-shadow(0_0_12px_var(--laurel-glow))]"
+		class={wordmarkClass}
 		aria-hidden="true"
 		fill="currentColor"
 		viewBox="0 0 262 120"
@@ -29,4 +35,18 @@
 			<path d="M 234 14 L 256 14 L 256 106 L 234 106 Z" />
 		</g>
 	</svg>
-</BaseButton>
+{/snippet}
+
+{#if href}
+	<a class="group inline-flex items-center" aria-label="VICI" {href}>
+		{@render wordmark()}
+	</a>
+{:else}
+	<BaseButton
+		class="group flex items-center"
+		aria-label="VICI — go to home"
+		onclick={() => handleNav(AppPath.Home)}
+	>
+		{@render wordmark()}
+	</BaseButton>
+{/if}

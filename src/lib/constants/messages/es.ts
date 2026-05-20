@@ -174,5 +174,8 @@ export const esMessages = {
 	'use.vis_t': 'El Visionario',
 	'wallet.eyebrow': 'TESORO',
 	'wallet.sub': 'Saldos, envío, recepción y colateral.',
-	'wallet.title': 'Cartera'
+	'wallet.title': 'Cartera',
+	'welcome.deck.category': 'MACRO',
+	'welcome.deck.consensus': '62% consenso',
+	'welcome.deck.question': '¿Recorte de la Fed en junio?'
 } as const;

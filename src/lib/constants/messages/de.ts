@@ -175,5 +175,8 @@ export const deMessages = {
 	'use.vis_t': 'Der Visionär',
 	'wallet.eyebrow': 'TRESOR',
 	'wallet.sub': 'Salden, Senden, Empfangen und Collateral.',
-	'wallet.title': 'Wallet'
+	'wallet.title': 'Wallet',
+	'welcome.deck.category': 'MACRO',
+	'welcome.deck.consensus': '62% Konsens',
+	'welcome.deck.question': 'Fed-Senkung im Juni?'
 } as const;

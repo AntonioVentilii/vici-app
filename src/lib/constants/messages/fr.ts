@@ -177,5 +177,8 @@ export const frMessages = {
 	'use.vis_t': 'Le Visionnaire',
 	'wallet.eyebrow': 'TRÉSORERIE',
 	'wallet.sub': 'Soldes, envoi, réception et collatéral.',
-	'wallet.title': 'Portefeuille'
+	'wallet.title': 'Portefeuille',
+	'welcome.deck.category': 'MACRO',
+	'welcome.deck.consensus': '62% consensus',
+	'welcome.deck.question': 'Baisse de la Fed en juin ?'
 } as const;
