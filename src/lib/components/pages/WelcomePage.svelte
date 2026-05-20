@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import LandingSectionHeader from '$lib/components/landing/LandingSectionHeader.svelte';
+	import WelcomeFlowFeature from '$lib/components/landing/WelcomeFlowFeature.svelte';
 	import WelcomeFooter from '$lib/components/landing/WelcomeFooter.svelte';
 	import WelcomeLiveMarkets from '$lib/components/landing/WelcomeLiveMarkets.svelte';
 	import Ticker from '$lib/components/layout/Ticker.svelte';
@@ -92,14 +93,7 @@
 		</section>
 
 		<section id="flow" class="welcome-section">
-			<div class="welcome-section-inner">
-				<LandingSectionHeader
-					eyebrow={t({ locale: $localeStore, key: 'flow.eyebrow' })}
-					sub={t({ locale: $localeStore, key: 'flow.lede' })}
-					title={t({ locale: $localeStore, key: 'flow.title_a' })}
-					titleAccent={t({ locale: $localeStore, key: 'flow.title_b' })}
-				/>
-			</div>
+			<WelcomeFlowFeature />
 		</section>
 
 		<section id="leaderboard" class="welcome-section">
