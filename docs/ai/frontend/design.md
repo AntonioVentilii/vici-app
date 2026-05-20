@@ -123,7 +123,7 @@ Already implemented. **No work needed.**
 | Component          | App equivalent (search-first)                                                                         | Status               | Notes                                                                                                                                                                                                                                                                                                        |
 | ------------------ | ----------------------------------------------------------------------------------------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Bottom navigation  | [`src/lib/components/layout/MobileNav.svelte`](../../../src/lib/components/layout/MobileNav.svelte)   | ⚠️ Audit             | Already exists with active-tab shadow. Diff against the design for icons, labels, order; align rather than replace.                                                                                                                                                                                          |
-| Flow card          | [`src/lib/components/market/FlowCard.svelte`](../../../src/lib/components/market/FlowCard.svelte)     | ⚠️ Audit             | Side-by-side visual diff against the design's flow-card spec.                                                                                                                                                                                                                                                |
+| Flow card          | [`src/lib/components/market/FlowCard.svelte`](../../../src/lib/components/market/FlowCard.svelte)     | ⚠️ Audit             | Front/back flip, why-now chip, crowd-lean strip, metadata resolution + sparkline events, and user-context block wired. Top-10% accuracy lean still uses crowd consensus until a reputation aggregate exists.                                                                                                 |
 | Market card        | [`src/lib/components/market/MarketCard.svelte`](../../../src/lib/components/market/MarketCard.svelte) | ✅ Hero card aligned | The design's market card is a compact list-row (one bar, vol/traders footer). The app's is a richer hero card with badges + challenge slot — kept as the hero variant. If a tighter row variant becomes needed, add a separate `MarketRow.svelte`. Numbers (time-remaining) now use the `.num` mono utility. |
 | Ticker             | _no app equivalent_                                                                                   | ❌ New               | Lives at top of the marketing surface (and possibly app shell). Goes in `$lib/components/layout/Ticker.svelte` if app-shell, else marketing folder.                                                                                                                                                          |
 | UI primitives      | `$lib/components/ui/{Button,Card,Badge,Dialog,Modal,Tabs,Tooltip,…}.svelte`                           | ⚠️ Audit             | The repo already has a fuller UI primitives set in `$lib/components/ui/`. `AppearancePicker.svelte` is the canonical theme picker. Diff button/badge/input variants and inputs against the design.                                                                                                           |
@@ -489,8 +489,10 @@ The satellite authorizes writes if:
 - The creator/admin editor lives in
   [`MarketMetadataForm.svelte`](../../../src/lib/components/market/MarketMetadataForm.svelte)
   and is mounted on market detail when the viewer is authorized.
-- Flow-card front/back consumers should read from this service once the
-  back-card surfaces land.
+- Flow-card front/back consumers read from this service in
+  [`FlowMode.svelte`](../../../src/lib/components/market/FlowMode.svelte)
+  (batch load per deck) and pass metadata into
+  [`FlowCard.svelte`](../../../src/lib/components/market/FlowCard.svelte).
 
 ---
 
