@@ -5,6 +5,7 @@
 	import WelcomeFlowFeature from '$lib/components/landing/WelcomeFlowFeature.svelte';
 	import WelcomeFooter from '$lib/components/landing/WelcomeFooter.svelte';
 	import WelcomeLiveMarkets from '$lib/components/landing/WelcomeLiveMarkets.svelte';
+	import WelcomeLoop from '$lib/components/landing/WelcomeLoop.svelte';
 	import WelcomeSocialProof from '$lib/components/landing/WelcomeSocialProof.svelte';
 	import Ticker from '$lib/components/layout/Ticker.svelte';
 	import WelcomeNav from '$lib/components/layout/WelcomeNav.svelte';
@@ -99,6 +100,10 @@
 
 		<section id="leaderboard" class="welcome-section">
 			<WelcomeSocialProof />
+		</section>
+
+		<section id="loop" class="welcome-section">
+			<WelcomeLoop />
 		</section>
 
 		<section id="trust" class="welcome-section">
