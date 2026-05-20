@@ -3,13 +3,14 @@
 	import { resolve } from '$app/paths';
 	import IconStreakFlame from '$lib/components/icons/IconStreakFlame.svelte';
 	import IconXpChevron from '$lib/components/icons/IconXpChevron.svelte';
+	import type { AppLocale } from '$lib/constants/locale.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { WELCOME_MARKET_PREVIEWS } from '$lib/constants/welcome-markets.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { categoryColor } from '$lib/utils/category-color.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
-	const FLOW_ACTIVE_COUNT = '2,847';
+	const FLOW_ACTIVE_COUNT = 2847;
 	const TOP_CARD_INDEX = 2;
 
 	const FLOW_STEPS = [
@@ -19,7 +20,7 @@
 		{ number: '04', key: 'flow.list_04' }
 	] as const satisfies readonly { number: string; key: MessageKey }[];
 
-	const FLOW_DEMO_MARKETS = [...WELCOME_MARKET_PREVIEWS.slice(0, 3)].reverse();
+	const FLOW_DEMO_MARKETS = WELCOME_MARKET_PREVIEWS.slice(0, 3).reverse();
 
 	const flowCardClass = ({ index }: { index: number }): string => {
 		if (index === TOP_CARD_INDEX) {
@@ -33,10 +34,13 @@
 		return 'welcome-flow-demo-card welcome-flow-demo-card--back';
 	};
 
-	const previewCallers = ({ id }: { id: string }): string => {
+	const formatCount = ({ value, locale }: { value: number; locale: AppLocale }): string =>
+		new Intl.NumberFormat(locale).format(value);
+
+	const previewCallers = ({ id, locale }: { id: string; locale: AppLocale }): string => {
 		const seed = id.charCodeAt(id.length - 1);
 
-		return (2600 + ((seed * 137) % 1700)).toLocaleString();
+		return formatCount({ value: 2600 + ((seed * 137) % 1700), locale });
 	};
 
 	const sharpPercent = ({ yesPercent }: { yesPercent: number }): number =>
@@ -57,10 +61,12 @@
 
 			<div class="welcome-flow-live">
 				<span class="welcome-flow-pulse-dot" aria-hidden="true"></span>
-				<span class="num welcome-flow-live-count">{FLOW_ACTIVE_COUNT}</span>
 				<span class="welcome-flow-live-label">
-					<span class="serif-italic">{t({ locale: $localeStore, key: 'flow.in_flow' })}</span>
-					{t({ locale: $localeStore, key: 'flow.right_now' })}
+					{t({
+						locale: $localeStore,
+						key: 'flow.live_active',
+						params: { count: formatCount({ value: FLOW_ACTIVE_COUNT, locale: $localeStore }) }
+					})}
 				</span>
 			</div>
 
@@ -91,6 +97,10 @@
 					{@const { yesPercent } = market}
 					{@const noPercent = 100 - yesPercent}
 					{@const sharpPct = sharpPercent({ yesPercent })}
+					{@const callers = previewCallers({ id: market.id, locale: $localeStore })}
+					{@const yesLabel = t({ locale: $localeStore, key: 'outcome.yes' })}
+					{@const noLabel = t({ locale: $localeStore, key: 'outcome.no' })}
+					{@const sharpSide = sharpPct >= 50 ? yesLabel : noLabel}
 					<article
 						style:--market-accent={categoryColor(market.category)}
 						style:--yes-percent={`${yesPercent}%`}
@@ -113,8 +123,11 @@
 									<span></span>
 								</span>
 								<span class="num">
-									{previewCallers({ id: market.id })}
-									{t({ locale: $localeStore, key: 'card.predicting' })}
+									{t({
+										locale: $localeStore,
+										key: 'card.predicting_count',
+										params: { count: callers }
+									})}
 								</span>
 							</div>
 
@@ -127,19 +140,21 @@
 							<div class="welcome-flow-sharp">
 								<span class="welcome-flow-sharp-dot" aria-hidden="true"></span>
 								<span>
-									{t({ locale: $localeStore, key: 'card.sharp' })}
-									<strong class="num">{sharpPct}%</strong>
-									<strong>{sharpPct >= 50 ? 'YES' : 'NO'}</strong>
+									{t({
+										locale: $localeStore,
+										key: 'card.sharp_signal',
+										params: { percent: sharpPct, side: sharpSide }
+									})}
 								</span>
 							</div>
 
 							<div class="welcome-flow-probs">
 								<div class="welcome-flow-prob welcome-flow-prob--no">
-									<span class="eyebrow">NO</span>
+									<span class="eyebrow">{noLabel}</span>
 									<span class="num">{noPercent}%</span>
 								</div>
 								<div class="welcome-flow-prob welcome-flow-prob--yes">
-									<span class="eyebrow">YES</span>
+									<span class="eyebrow">{yesLabel}</span>
 									<span class="num">{yesPercent}%</span>
 								</div>
 							</div>
@@ -151,15 +166,18 @@
 
 							<div class="welcome-flow-card-foot">
 								<span class="num">
-									{previewCallers({ id: market.id })}
-									{t({ locale: $localeStore, key: 'card.calls' })}
+									{t({
+										locale: $localeStore,
+										key: 'card.call_count',
+										params: { count: callers }
+									})}
 								</span>
 								<span class="num">{t({ locale: $localeStore, key: 'card.tap_depth' })}</span>
 							</div>
 						</div>
 
 						{#if index === TOP_CARD_INDEX}
-							<div class="welcome-flow-yes-overlay" aria-hidden="true">YES</div>
+							<div class="welcome-flow-yes-overlay" aria-hidden="true">{yesLabel}</div>
 						{/if}
 					</article>
 				{/each}
@@ -239,11 +257,6 @@
 		background: var(--yes);
 		box-shadow: 0 0 12px color-mix(in srgb, var(--yes) 70%, transparent);
 		animation: welcome-flow-pulse 1.8s ease-in-out infinite;
-	}
-
-	.welcome-flow-live-count {
-		font-weight: 700;
-		color: var(--foreground);
 	}
 
 	.welcome-flow-live-label {
@@ -504,10 +517,6 @@
 		background: color-mix(in srgb, var(--yes) 5%, transparent);
 		font-size: var(--t-12);
 		color: var(--muted-foreground);
-	}
-
-	.welcome-flow-sharp strong {
-		color: var(--yes);
 	}
 
 	.welcome-flow-sharp-dot {
