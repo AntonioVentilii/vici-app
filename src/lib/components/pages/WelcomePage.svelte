@@ -73,9 +73,13 @@
 						<div class="welcome-deck-card welcome-deck-card--back"></div>
 						<div class="welcome-deck-card welcome-deck-card--mid"></div>
 						<div class="welcome-deck-card welcome-deck-card--front">
-							<p class="eyebrow">MACRO</p>
-							<p class="welcome-deck-question">Fed cuts in June?</p>
-							<p class="num welcome-deck-consensus">62% consensus</p>
+							<p class="eyebrow">{t({ locale: $localeStore, key: 'welcome.deck.category' })}</p>
+							<p class="welcome-deck-question">
+								{t({ locale: $localeStore, key: 'welcome.deck.question' })}
+							</p>
+							<p class="num welcome-deck-consensus">
+								{t({ locale: $localeStore, key: 'welcome.deck.consensus' })}
+							</p>
 						</div>
 					</div>
 				</div>

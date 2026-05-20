@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import Logo from '$lib/components/layout/Logo.svelte';
-	import { AppPath } from '$lib/constants/routes.constants';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 </script>
@@ -9,7 +9,7 @@
 <footer class="welcome-footer">
 	<div class="welcome-footer-inner">
 		<div class="welcome-footer-brand">
-			<Logo />
+			<Logo href={PublicPath.Welcome} />
 			<p class="welcome-footer-tagline">{t({ locale: $localeStore, key: 'footer.tagline' })}</p>
 		</div>
 

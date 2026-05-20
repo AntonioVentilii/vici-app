@@ -25,9 +25,9 @@
 
 <nav class="welcome-nav" class:is-scrolled={scrolled} aria-label="Landing">
 	<div class="welcome-nav-inner">
-		<a class="welcome-nav-logo" href={PublicPath.Welcome}>
-			<Logo />
-		</a>
+		<div class="welcome-nav-logo">
+			<Logo href={PublicPath.Welcome} />
+		</div>
 
 		<div class="welcome-nav-links">
 			<a href="#markets">{t({ locale: $localeStore, key: 'nav.markets' })}</a>

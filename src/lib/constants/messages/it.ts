@@ -173,5 +173,8 @@ export const itMessages = {
 	'use.vis_t': 'Il Visionario',
 	'wallet.eyebrow': 'TESORO',
 	'wallet.sub': 'Saldi, invio, ricezione e collateral.',
-	'wallet.title': 'Portafoglio'
+	'wallet.title': 'Portafoglio',
+	'welcome.deck.category': 'MACRO',
+	'welcome.deck.consensus': '62% consenso',
+	'welcome.deck.question': 'Taglio Fed a giugno?'
 } as const;
