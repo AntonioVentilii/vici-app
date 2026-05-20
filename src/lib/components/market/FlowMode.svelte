@@ -21,15 +21,24 @@
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { listSeriesCategories } from '$lib/services/category.services';
 	import { flowTradeService } from '$lib/services/flow.services';
+	import { getMarketMetadata } from '$lib/services/market-metadata.services';
+	import { getUserMarketSignals } from '$lib/services/market-signals.services';
 	import { getFlowQueue } from '$lib/services/market.services';
 	import { getPositions } from '$lib/services/position.services';
 	import { persistDailyStreak } from '$lib/services/profile.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
-	import type { Market } from '$lib/types/market';
+	import type { Market, MarketId } from '$lib/types/market';
+	import type { MarketMetadata } from '$lib/types/market-metadata';
+	import type { UserMarketSignals } from '$lib/types/market-signals';
 	import type { Position } from '$lib/types/position';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
+	import {
+		FLOW_ART_CATEGORIES,
+		resolveFlowArtCategory,
+		type FlowArtCategory
+	} from '$lib/utils/flow-art.utils';
 	import { pickHighestPriorityBeat, type CompanionBeat } from '$lib/utils/flow-companion.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import {
@@ -45,6 +54,21 @@
 
 	const MAX_BETS = 10;
 	const MAX_MARKETS = 20;
+	const FLOW_ART_SET = new Set<string>(FLOW_ART_CATEGORIES);
+
+	const resolveFlowCategory = ({
+		categoryId,
+		marketId
+	}: {
+		categoryId: string | undefined;
+		marketId: string;
+	}): FlowArtCategory => {
+		if (categoryId && FLOW_ART_SET.has(categoryId)) {
+			return categoryId as FlowArtCategory;
+		}
+
+		return resolveFlowArtCategory({ categoryId, seed: marketId });
+	};
 
 	let markets = $state<Market[]>([]);
 	let currentIndex = $state(0);
@@ -56,6 +80,12 @@
 	// `seriesId → categoryId` lookup loaded once on mount; consumed by
 	// the FlowCard render loop to drive the per-card generative artwork.
 	let marketCategoryMap = $state<Map<string, string>>(new Map());
+	let marketMetadataMap = $state<Map<MarketId, MarketMetadata>>(new Map());
+	let userSignals = $state<UserMarketSignals>({
+		categoryAcc: {},
+		priorCalls: {},
+		followedLean: {}
+	});
 
 	let exitX = $state(0);
 	let exitY = $state(0);
@@ -128,6 +158,27 @@
 			markets = queue.slice(0, MAX_MARKETS);
 			positions = userPositions;
 			marketCategoryMap = new Map(seriesCategories.map((m) => [m.seriesId, m.categoryId]));
+
+			const metadataEntries: [MarketId, MarketMetadata][] = [];
+
+			await Promise.all(
+				markets.map(async (m) => {
+					const doc = await getMarketMetadata(m.id).catch(() => undefined);
+
+					if (doc) {
+						metadataEntries.push([m.id, doc]);
+					}
+				})
+			);
+			marketMetadataMap = new Map(metadataEntries);
+
+			if (nonNullish($userStore.user)) {
+				userSignals = await getUserMarketSignals($balanceDomain).catch(() => ({
+					categoryAcc: {},
+					priorCalls: {},
+					followedLean: {}
+				}));
+			}
 
 			const { profile } = $userStore;
 
@@ -620,6 +671,11 @@
 				{#each visibleCards as market, i (market?.id)}
 					{@const isCurrent = i === 0}
 					{@const category = marketCategoryMap.get(market.id)}
+					{@const flowCategory = resolveFlowCategory({ categoryId: category, marketId: market.id })}
+					{@const metadata = marketMetadataMap.get(market.id)}
+					{@const priorCall = userSignals.priorCalls[market.id]}
+					{@const followedLean = userSignals.followedLean[market.id]}
+					{@const categoryAcc = userSignals.categoryAcc[flowCategory]}
 					<div
 						style="z-index: {20 - i}; --depth: {i};"
 						class="flow-card-slot"
@@ -630,14 +686,18 @@
 						out:fly={{ x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
 					>
 						<FlowCard
-							{category}
+							category={flowCategory}
+							{categoryAcc}
 							committedAction={market.id === committedMarketId ? committedAction : null}
+							{followedLean}
 							interactive={isCurrent}
 							isLimitOrderNo={isNullish(market.bestBid)}
 							isLimitOrderYes={isNullish(market.bestAsk)}
 							{market}
+							{metadata}
 							onAction={handleAction}
 							position={positions.find((p) => p.marketId === market.id)}
+							{priorCall}
 							signedIn={nonNullish($userStore.user)}
 							{tradeAmount}
 						/>
