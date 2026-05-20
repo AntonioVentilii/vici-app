@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { initSatellite } from '@junobuild/core';
 	import type { Snippet } from 'svelte';
+	import { browser } from '$app/environment';
 	import TweaksPanel from '$lib/components/dev/TweaksPanel.svelte';
 	import Banner from '$lib/components/layout/Banner.svelte';
 	import Notifications from '$lib/components/ui/Notifications.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	// eslint-disable-next-line import/no-relative-parent-imports
 	import '../app.css';
 
@@ -28,6 +30,14 @@
 
 	$effect(() => {
 		init();
+	});
+
+	$effect(() => {
+		if (!browser) {
+			return;
+		}
+
+		document.documentElement.lang = $localeStore;
 	});
 </script>
 

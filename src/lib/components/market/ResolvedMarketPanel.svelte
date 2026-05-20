@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
 	import { CheckCircle2 } from 'lucide-svelte/icons';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		market: Market;
@@ -57,23 +59,26 @@
 
 		<div class="space-y-1">
 			<p class="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-				Market Resolved
+				{t({ locale: $localeStore, key: 'resolution.resolved' })}
 			</p>
 			{#if nonNullish(winnerLabel)}
 				<h3 class="text-foreground font-serif text-3xl font-black sm:text-4xl">
 					{#if isCanceled}
-						Canceled
+						{t({ locale: $localeStore, key: 'resolution.canceled' })}
 					{:else}
-						Winner: <span class={isWin ? 'text-yes' : isLoss ? 'text-destructive' : 'text-primary'}>
+						{t({ locale: $localeStore, key: 'resolution.winner' })}:
+						<span class={isWin ? 'text-yes' : isLoss ? 'text-destructive' : 'text-primary'}>
 							{winnerLabel}
 						</span>
 					{/if}
 				</h3>
 			{:else}
-				<h3 class="text-foreground font-serif text-2xl font-black">Settled</h3>
+				<h3 class="text-foreground font-serif text-2xl font-black">
+					{t({ locale: $localeStore, key: 'resolution.settled' })}
+				</h3>
 			{/if}
 			<p class="text-muted-foreground text-sm">
-				Trading is closed. Settled payouts have been applied to every holder's balance.
+				{t({ locale: $localeStore, key: 'resolution.closed' })}
 			</p>
 		</div>
 	</div>

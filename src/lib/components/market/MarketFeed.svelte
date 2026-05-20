@@ -11,12 +11,20 @@
 	interface Props {
 		markets: Market[];
 		loading: boolean;
+		emptyMessage?: string;
 		hasMore?: boolean;
 		onLoadMore?: () => void;
 		onChallenge?: (market: Market) => void;
 	}
 
-	let { markets, loading, hasMore = false, onLoadMore, onChallenge }: Props = $props();
+	let {
+		markets,
+		loading,
+		emptyMessage = 'No markets found. Try adjusting your filters or search term.',
+		hasMore = false,
+		onLoadMore,
+		onChallenge
+	}: Props = $props();
 
 	const groups = $derived(groupMarketsByLineage({ markets, userPrincipal: $authPrincipal }));
 
@@ -80,6 +88,6 @@
 			<MarketCardSkeleton />
 		{/each}
 	{:else}
-		<EmptyState message="No markets found. Try adjusting your filters or search term." />
+		<EmptyState message={emptyMessage} />
 	{/if}
 </div>

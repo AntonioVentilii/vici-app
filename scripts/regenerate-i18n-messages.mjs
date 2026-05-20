@@ -1,0 +1,404 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const scriptDir = path.dirname(fileURLToPath(import.meta.url));
+const defaultSource = path.resolve(scriptDir, '../VICI_BETA_V1.1/i18n.js');
+const sourcePath = process.env.VICI_I18N_SOURCE ?? process.argv[2] ?? defaultSource;
+
+if (!fs.existsSync(sourcePath)) {
+	console.error(`i18n source not found: ${sourcePath}`);
+	console.error('Pass a path as argv[2] or set VICI_I18N_SOURCE to the prototype i18n.js file.');
+	process.exit(1);
+}
+
+const src = fs.readFileSync(sourcePath, 'utf8');
+
+const unescape = (s) =>
+	s
+		.replace(/\\u([0-9a-fA-F]{4})/g, (_, h) => String.fromCharCode(parseInt(h, 16)))
+		.replace(/\\'/g, "'")
+		.replace(/\\n/g, '\n');
+
+const appKeys = {
+	en: {
+		'nav.portfolio': 'Portfolio',
+		'nav.profile': 'Profile',
+		'nav.admin': 'Admin',
+		'settings.title': 'Settings',
+		'notifications.title': 'Notifications',
+		'landing.cta.signup': 'Create account',
+		'landing.faq.title': 'How it works',
+		'landing.faq.flow': 'Flow — rapid-fire calls on live markets.',
+		'landing.faq.markets': 'Markets — depth, resolution, and portfolio tracking.',
+		'landing.faq.streak': 'Streak — daily flame rewards consistency.',
+		'markets.page.eyebrow': 'LIVE QUESTIONS',
+		'markets.page.title': 'Pick a question.',
+		'markets.page.sub': 'Explore and predict markets.',
+		'markets.empty': 'No markets found. Try adjusting your filters or search term.',
+		'markets.tab.active': 'Active',
+		'markets.tab.trending': 'Trending',
+		'markets.tab.expiring': 'Expiring',
+		'markets.tab.resolved': 'Resolved',
+		'leaderboard.eyebrow': 'REPUTATION',
+		'leaderboard.title': 'Global accuracy',
+		'leaderboard.sub': 'Ranked by who is right — not who is loudest.',
+		'wallet.eyebrow': 'TREASURY',
+		'wallet.title': 'Wallet',
+		'wallet.sub': 'Balances, send, receive, and collateral.',
+		'profile.eyebrow': 'IDENTITY',
+		'profile.title': 'Social',
+		'profile.sub': 'Track your performance, fire streaks, and global accuracy.',
+		'profile.empty.title': 'No Profile Found',
+		'profile.empty.sub':
+			'Sign in or place your first prediction to initialize your social identity.',
+		'resolution.eyebrow': 'RESOLUTION',
+		'resolution.title': 'Market outcome',
+		'resolution.sub': 'Settlement and oracle evidence.',
+		'markets.search': 'Search markets...',
+		'markets.filter.clear': 'Clear filters',
+		'markets.filter.type': 'Filter by type',
+		'markets.filter.type.all': 'All types',
+		'markets.filter.type.challenge': 'Challenges',
+		'markets.filter.type.market': 'Markets',
+		'markets.filter.stakes': 'Filter by stakes',
+		'markets.filter.stakes.all': 'All stakes',
+		'markets.filter.stakes.vxp': 'VXP',
+		'markets.filter.stakes.fun': 'Fun Dare',
+		'markets.filter.access': 'Filter by access',
+		'markets.filter.access.all': 'All access',
+		'markets.filter.access.open': 'Open',
+		'markets.filter.access.closed': 'Closed Circle',
+		'resolution.resolved': 'Market Resolved',
+		'resolution.winner': 'Winner',
+		'resolution.canceled': 'Canceled',
+		'resolution.settled': 'Settled',
+		'resolution.closed':
+			"Trading is closed. Settled payouts have been applied to every holder's balance.",
+		'leaderboard.loading': 'Calculating Alphas...',
+		'leaderboard.empty': 'Joining the pack...'
+	},
+	it: {
+		'nav.portfolio': 'Portafoglio',
+		'nav.profile': 'Profilo',
+		'nav.admin': 'Admin',
+		'settings.title': 'Impostazioni',
+		'notifications.title': 'Notifiche',
+		'landing.cta.signup': 'Crea account',
+		'landing.faq.title': 'Come funziona',
+		'landing.faq.flow': 'Flow — previsioni rapide su mercati live.',
+		'landing.faq.markets': 'Mercati — profondità, risoluzione e portafoglio.',
+		'landing.faq.streak': 'Serie — la fiamma quotidiana premia la costanza.',
+		'markets.page.eyebrow': 'DOMANDE LIVE',
+		'markets.page.title': 'Scegli una domanda.',
+		'markets.page.sub': 'Esplora e prevedi i mercati.',
+		'markets.empty': 'Nessun mercato trovato. Prova a modificare filtri o ricerca.',
+		'markets.tab.active': 'Attivi',
+		'markets.tab.trending': 'Di tendenza',
+		'markets.tab.expiring': 'In scadenza',
+		'markets.tab.resolved': 'Risolti',
+		'leaderboard.eyebrow': 'REPUTAZIONE',
+		'leaderboard.title': 'Precisione globale',
+		'leaderboard.sub': 'Classifica per chi ha ragione — non per chi urla di più.',
+		'wallet.eyebrow': 'TESORO',
+		'wallet.title': 'Portafoglio',
+		'wallet.sub': 'Saldi, invio, ricezione e collateral.',
+		'profile.eyebrow': 'IDENTITÀ',
+		'profile.title': 'Social',
+		'profile.sub': 'Performance, serie e precisione globale.',
+		'profile.empty.title': 'Profilo non trovato',
+		'profile.empty.sub': 'Accedi o fai la prima previsione per creare la tua identità.',
+		'resolution.eyebrow': 'RISOLUZIONE',
+		'resolution.title': 'Esito del mercato',
+		'resolution.sub': 'Liquidazione e prove oracle.',
+		'markets.search': 'Cerca mercati...',
+		'markets.filter.clear': 'Cancella filtri',
+		'markets.filter.type': 'Filtra per tipo',
+		'markets.filter.type.all': 'Tutti i tipi',
+		'markets.filter.type.challenge': 'Sfide',
+		'markets.filter.type.market': 'Mercati',
+		'markets.filter.stakes': 'Filtra per puntata',
+		'markets.filter.stakes.all': 'Tutte le puntate',
+		'markets.filter.stakes.vxp': 'VXP',
+		'markets.filter.stakes.fun': 'Sfida divertente',
+		'markets.filter.access': 'Filtra per accesso',
+		'markets.filter.access.all': "Tutto l'accesso",
+		'markets.filter.access.open': 'Aperto',
+		'markets.filter.access.closed': 'Cerchia chiusa',
+		'resolution.resolved': 'Mercato risolto',
+		'resolution.winner': 'Vincitore',
+		'resolution.canceled': 'Annullato',
+		'resolution.settled': 'Liquidato',
+		'resolution.closed':
+			'Trading chiuso. I pagamenti sono stati applicati ai saldi di ogni titolare.',
+		'leaderboard.loading': 'Calcolo degli alpha...',
+		'leaderboard.empty': 'Si uniscono al gruppo...'
+	},
+	es: {
+		'nav.portfolio': 'Cartera',
+		'nav.profile': 'Perfil',
+		'nav.admin': 'Admin',
+		'settings.title': 'Ajustes',
+		'notifications.title': 'Notificaciones',
+		'landing.cta.signup': 'Crear cuenta',
+		'landing.faq.title': 'Cómo funciona',
+		'landing.faq.flow': 'Flow — predicciones rápidas en mercados en vivo.',
+		'landing.faq.markets': 'Mercados — profundidad, resolución y cartera.',
+		'landing.faq.streak': 'Racha — la llama diaria premia la constancia.',
+		'markets.page.eyebrow': 'PREGUNTAS EN VIVO',
+		'markets.page.title': 'Elige una pregunta.',
+		'markets.page.sub': 'Explora y predice mercados.',
+		'markets.empty': 'No hay mercados. Ajusta filtros o búsqueda.',
+		'markets.tab.active': 'Activos',
+		'markets.tab.trending': 'Tendencia',
+		'markets.tab.expiring': 'Por vencer',
+		'markets.tab.resolved': 'Resueltos',
+		'leaderboard.eyebrow': 'REPUTACIÓN',
+		'leaderboard.title': 'Precisión global',
+		'leaderboard.sub': 'Quien acierta — no quien grita más.',
+		'wallet.eyebrow': 'TESORO',
+		'wallet.title': 'Cartera',
+		'wallet.sub': 'Saldos, envío, recepción y colateral.',
+		'profile.eyebrow': 'IDENTIDAD',
+		'profile.title': 'Social',
+		'profile.sub': 'Rendimiento, rachas y precisión global.',
+		'profile.empty.title': 'Sin perfil',
+		'profile.empty.sub': 'Inicia sesión o haz tu primera predicción.',
+		'resolution.eyebrow': 'RESOLUCIÓN',
+		'resolution.title': 'Resultado del mercado',
+		'resolution.sub': 'Liquidación y evidencia oracle.',
+		'markets.search': 'Buscar mercados...',
+		'markets.filter.clear': 'Borrar filtros',
+		'markets.filter.type': 'Filtrar por tipo',
+		'markets.filter.type.all': 'Todos los tipos',
+		'markets.filter.type.challenge': 'Desafíos',
+		'markets.filter.type.market': 'Mercados',
+		'markets.filter.stakes': 'Filtrar por apuesta',
+		'markets.filter.stakes.all': 'Todas las apuestas',
+		'markets.filter.stakes.vxp': 'VXP',
+		'markets.filter.stakes.fun': 'Reto divertido',
+		'markets.filter.access': 'Filtrar por acceso',
+		'markets.filter.access.all': 'Todo el acceso',
+		'markets.filter.access.open': 'Abierto',
+		'markets.filter.access.closed': 'Círculo cerrado',
+		'resolution.resolved': 'Mercado resuelto',
+		'resolution.winner': 'Ganador',
+		'resolution.canceled': 'Cancelado',
+		'resolution.settled': 'Liquidado',
+		'resolution.closed': 'Operaciones cerradas. Los pagos se aplicaron al saldo de cada titular.',
+		'leaderboard.loading': 'Calculando alfas...',
+		'leaderboard.empty': 'Se unen al grupo...'
+	},
+	de: {
+		'nav.portfolio': 'Portfolio',
+		'nav.profile': 'Profil',
+		'nav.admin': 'Admin',
+		'settings.title': 'Einstellungen',
+		'notifications.title': 'Benachrichtigungen',
+		'landing.cta.signup': 'Konto erstellen',
+		'landing.faq.title': 'So funktioniert’s',
+		'landing.faq.flow': 'Flow — schnelle Vorhersagen auf Live-Märkten.',
+		'landing.faq.markets': 'Märkte — Tiefe, Auflösung und Portfolio.',
+		'landing.faq.streak': 'Streak — tägliche Flamme belohnt Beständigkeit.',
+		'markets.page.eyebrow': 'LIVE-FRAGEN',
+		'markets.page.title': 'Wähl eine Frage.',
+		'markets.page.sub': 'Märkte erkunden und vorhersagen.',
+		'markets.empty': 'Keine Märkte. Filter oder Suche anpassen.',
+		'markets.tab.active': 'Aktiv',
+		'markets.tab.trending': 'Trend',
+		'markets.tab.expiring': 'Läuft ab',
+		'markets.tab.resolved': 'Aufgelöst',
+		'leaderboard.eyebrow': 'REPUTATION',
+		'leaderboard.title': 'Globale Trefferquote',
+		'leaderboard.sub': 'Wer recht hat — nicht wer am lautesten ist.',
+		'wallet.eyebrow': 'TRESOR',
+		'wallet.title': 'Wallet',
+		'wallet.sub': 'Salden, Senden, Empfangen und Collateral.',
+		'profile.eyebrow': 'IDENTITÄT',
+		'profile.title': 'Social',
+		'profile.sub': 'Performance, Streaks und globale Genauigkeit.',
+		'profile.empty.title': 'Kein Profil',
+		'profile.empty.sub': 'Anmelden oder erste Vorhersage tätigen.',
+		'resolution.eyebrow': 'AUFLÖSUNG',
+		'resolution.title': 'Marktergebnis',
+		'resolution.sub': 'Abwicklung und Oracle-Nachweise.',
+		'markets.search': 'Märkte suchen...',
+		'markets.filter.clear': 'Filter löschen',
+		'markets.filter.type': 'Nach Typ filtern',
+		'markets.filter.type.all': 'Alle Typen',
+		'markets.filter.type.challenge': 'Challenges',
+		'markets.filter.type.market': 'Märkte',
+		'markets.filter.stakes': 'Nach Einsatz filtern',
+		'markets.filter.stakes.all': 'Alle Einsätze',
+		'markets.filter.stakes.vxp': 'VXP',
+		'markets.filter.stakes.fun': 'Spaß-Wette',
+		'markets.filter.access': 'Nach Zugang filtern',
+		'markets.filter.access.all': 'Alle Zugänge',
+		'markets.filter.access.open': 'Offen',
+		'markets.filter.access.closed': 'Geschlossener Kreis',
+		'resolution.resolved': 'Markt aufgelöst',
+		'resolution.winner': 'Gewinner',
+		'resolution.canceled': 'Abgebrochen',
+		'resolution.settled': 'Abgewickelt',
+		'resolution.closed': 'Handel geschlossen. Auszahlungen wurden auf alle Kontostände angewendet.',
+		'leaderboard.loading': 'Alphas werden berechnet...',
+		'leaderboard.empty': 'Sie schließen sich an...'
+	},
+	fr: {
+		'nav.portfolio': 'Portefeuille',
+		'nav.profile': 'Profil',
+		'nav.admin': 'Admin',
+		'settings.title': 'Paramètres',
+		'notifications.title': 'Notifications',
+		'landing.cta.signup': 'Créer un compte',
+		'landing.faq.title': 'Comment ça marche',
+		'landing.faq.flow': 'Flow — prédictions rapides sur marchés live.',
+		'landing.faq.markets': 'Marchés — profondeur, résolution et portefeuille.',
+		'landing.faq.streak': 'Série — la flamme quotidienne récompense la régularité.',
+		'markets.page.eyebrow': 'QUESTIONS EN DIRECT',
+		'markets.page.title': 'Choisissez une question.',
+		'markets.page.sub': 'Explorez et prédisez les marchés.',
+		'markets.empty': 'Aucun marché. Ajustez filtres ou recherche.',
+		'markets.tab.active': 'Actifs',
+		'markets.tab.trending': 'Tendance',
+		'markets.tab.expiring': 'Expirent',
+		'markets.tab.resolved': 'Résolus',
+		'leaderboard.eyebrow': 'RÉPUTATION',
+		'leaderboard.title': 'Précision mondiale',
+		'leaderboard.sub': 'Classés par justesse — pas par le bruit.',
+		'wallet.eyebrow': 'TRÉSORERIE',
+		'wallet.title': 'Portefeuille',
+		'wallet.sub': 'Soldes, envoi, réception et collatéral.',
+		'profile.eyebrow': 'IDENTITÉ',
+		'profile.title': 'Social',
+		'profile.sub': 'Performance, séries et précision globale.',
+		'profile.empty.title': 'Profil introuvable',
+		'profile.empty.sub': 'Connectez-vous ou faites votre première prédiction.',
+		'resolution.eyebrow': 'RÉSOLUTION',
+		'resolution.title': 'Résultat du marché',
+		'resolution.sub': 'Règlement et preuves oracle.',
+		'markets.search': 'Rechercher des marchés...',
+		'markets.filter.clear': 'Effacer les filtres',
+		'markets.filter.type': 'Filtrer par type',
+		'markets.filter.type.all': 'Tous les types',
+		'markets.filter.type.challenge': 'Défis',
+		'markets.filter.type.market': 'Marchés',
+		'markets.filter.stakes': 'Filtrer par mise',
+		'markets.filter.stakes.all': 'Toutes les mises',
+		'markets.filter.stakes.vxp': 'VXP',
+		'markets.filter.stakes.fun': 'Défi fun',
+		'markets.filter.access': 'Filtrer par accès',
+		'markets.filter.access.all': 'Tous les accès',
+		'markets.filter.access.open': 'Ouvert',
+		'markets.filter.access.closed': 'Cercle fermé',
+		'resolution.resolved': 'Marché résolu',
+		'resolution.winner': 'Gagnant',
+		'resolution.canceled': 'Annulé',
+		'resolution.settled': 'Réglé',
+		'resolution.closed':
+			'Trading fermé. Les paiements ont été appliqués au solde de chaque détenteur.',
+		'leaderboard.loading': 'Calcul des alphas...',
+		'leaderboard.empty': 'Ils rejoignent le groupe...'
+	},
+	pt: {
+		'nav.portfolio': 'Carteira',
+		'nav.profile': 'Perfil',
+		'nav.admin': 'Admin',
+		'settings.title': 'Definições',
+		'notifications.title': 'Notificações',
+		'landing.cta.signup': 'Criar conta',
+		'landing.faq.title': 'Como funciona',
+		'landing.faq.flow': 'Flow — previsões rápidas em mercados ao vivo.',
+		'landing.faq.markets': 'Mercados — profundidade, resolução e carteira.',
+		'landing.faq.streak': 'Sequência — a chama diária premia consistência.',
+		'markets.page.eyebrow': 'PERGUNTAS AO VIVO',
+		'markets.page.title': 'Escolha uma pergunta.',
+		'markets.page.sub': 'Explore e preveja mercados.',
+		'markets.empty': 'Nenhum mercado. Ajuste filtros ou pesquisa.',
+		'markets.tab.active': 'Ativos',
+		'markets.tab.trending': 'Em alta',
+		'markets.tab.expiring': 'A expirar',
+		'markets.tab.resolved': 'Resolvidos',
+		'leaderboard.eyebrow': 'REPUTAÇÃO',
+		'leaderboard.title': 'Precisão global',
+		'leaderboard.sub': 'Quem acerta — não quem grita mais.',
+		'wallet.eyebrow': 'TESOURO',
+		'wallet.title': 'Carteira',
+		'wallet.sub': 'Saldos, enviar, receber e colateral.',
+		'profile.eyebrow': 'IDENTIDADE',
+		'profile.title': 'Social',
+		'profile.sub': 'Desempenho, sequências e precisão global.',
+		'profile.empty.title': 'Perfil não encontrado',
+		'profile.empty.sub': 'Entre ou faça a primeira previsão.',
+		'resolution.eyebrow': 'RESOLUÇÃO',
+		'resolution.title': 'Resultado do mercado',
+		'resolution.sub': 'Liquidação e provas oracle.',
+		'markets.search': 'Pesquisar mercados...',
+		'markets.filter.clear': 'Limpar filtros',
+		'markets.filter.type': 'Filtrar por tipo',
+		'markets.filter.type.all': 'Todos os tipos',
+		'markets.filter.type.challenge': 'Desafios',
+		'markets.filter.type.market': 'Mercados',
+		'markets.filter.stakes': 'Filtrar por aposta',
+		'markets.filter.stakes.all': 'Todas as apostas',
+		'markets.filter.stakes.vxp': 'VXP',
+		'markets.filter.stakes.fun': 'Desafio divertido',
+		'markets.filter.access': 'Filtrar por acesso',
+		'markets.filter.access.all': 'Todo o acesso',
+		'markets.filter.access.open': 'Aberto',
+		'markets.filter.access.closed': 'Círculo fechado',
+		'resolution.resolved': 'Mercado resolvido',
+		'resolution.winner': 'Vencedor',
+		'resolution.canceled': 'Cancelado',
+		'resolution.settled': 'Liquidado',
+		'resolution.closed': 'Negociação encerrada. Pagamentos aplicados ao saldo de cada titular.',
+		'leaderboard.loading': 'A calcular alphas...',
+		'leaderboard.empty': 'A juntar-se ao grupo...'
+	}
+};
+
+const locales = ['en', 'it', 'es', 'de', 'fr', 'pt'];
+
+/** @type {Record<string, string>} */
+let enCatalog = {};
+
+for (const loc of locales) {
+	const re = new RegExp(`\\n    ${loc}: \\{([\\s\\S]*?)\\n    \\},`, 'm');
+	const m = src.match(re);
+	const entries = new Map();
+
+	if (m) {
+		const keyValue = /'([^']+)':\s*(?:'((?:\\'|[^'])*)'|"((?:\\"|[^"])*)")/g;
+
+		for (const match of m[1].matchAll(keyValue)) {
+			const [, k, singleQuoted, doubleQuoted] = match;
+			entries.set(k, unescape(singleQuoted ?? doubleQuoted));
+		}
+	}
+
+	const prototype = Object.fromEntries(entries);
+	const merged = { ...appKeys.en, ...prototype, ...appKeys[loc] };
+
+	if (loc === 'en') {
+		enCatalog = merged;
+	}
+
+	if (loc === 'pt') {
+		for (const [k, v] of Object.entries(enCatalog)) {
+			if (!(k in merged)) {
+				merged[k] = v;
+			}
+		}
+	}
+
+	const lines = Object.entries(merged)
+		.sort(([a], [b]) => a.localeCompare(b))
+		.map(([k, v]) => `\t'${k}': ${JSON.stringify(v)},`);
+
+	fs.writeFileSync(
+		`src/lib/constants/messages/${loc}.ts`,
+		`export const ${loc}Messages = {\n${lines.join('\n')}\n} as const;\n`
+	);
+
+	console.log(loc, Object.keys(merged).length);
+}

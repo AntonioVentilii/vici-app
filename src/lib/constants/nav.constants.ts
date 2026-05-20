@@ -10,10 +10,16 @@ import {
 } from 'lucide-svelte/icons';
 
 export const navItems: NavItem[] = [
-	{ label: 'Markets', path: AppPath.Home, mobileIcon: House },
-	{ label: 'Portfolio', path: AppPath.Portfolio, mobileIcon: Briefcase },
-	{ label: 'Flow', path: AppPath.Flow, mobileIcon: Zap, icon: Zap },
-	{ label: 'Leaders', path: AppPath.Leaderboard, mobileIcon: LayoutDashboard },
-	{ label: 'Profile', path: AppPath.Profile, mobileIcon: CircleUserRound },
-	{ label: 'Admin', path: AppPath.Admin, mobileIcon: Shield, icon: Shield, adminOnly: true }
+	{ labelKey: 'nav.markets', path: AppPath.Home, mobileIcon: House },
+	{ labelKey: 'nav.portfolio', path: AppPath.Portfolio, mobileIcon: Briefcase },
+	{ labelKey: 'nav.flow', path: AppPath.Flow, mobileIcon: Zap, icon: Zap },
+	{ labelKey: 'nav.leaderboard', path: AppPath.Leaderboard, mobileIcon: LayoutDashboard },
+	{ labelKey: 'nav.profile', path: AppPath.Profile, mobileIcon: CircleUserRound },
+	{
+		labelKey: 'nav.admin',
+		path: AppPath.Admin,
+		mobileIcon: Shield,
+		icon: Shield,
+		adminOnly: true
+	}
 ];

@@ -1,13 +1,20 @@
 <script lang="ts">
+	import { localeStore } from '$lib/stores/locale.store';
 	import type {
 		MarketAccessFilter,
 		MarketKindFilter,
 		MarketPayoutFilter,
 		MarketSecondaryFilters
 	} from '$lib/types/market-filters';
+	import { t } from '$lib/utils/i18n.utils';
+
+	interface TabOption {
+		id: string;
+		label: string;
+	}
 
 	interface Props {
-		tabs: string[];
+		tabs: readonly TabOption[];
 		activeTab: string;
 		searchTerm: string;
 		filters: MarketSecondaryFilters;
@@ -56,22 +63,23 @@
 			<input
 				class="bg-muted text-foreground placeholder-muted-foreground ring-border focus:bg-muted/80 focus:ring-primary block h-9 w-full rounded-[12px] border-none py-3 pr-4 pl-10 text-sm ring-1 transition-all ring-inset focus:ring-2"
 				oninput={(e) => onSearchChange(e.currentTarget.value)}
-				placeholder="Search markets..."
+				placeholder={t({ locale: $localeStore, key: 'markets.search' })}
 				type="text"
 				value={searchTerm}
 			/>
 		</div>
 
 		<div class="flex flex-wrap gap-1.5">
-			{#each tabs as tab (tab)}
+			{#each tabs as tab (tab.id)}
 				<button
 					class="rounded-full border px-3 py-1.5 text-xs font-medium transition-all {activeTab ===
-					tab
+					tab.id
 						? 'border-primary/30 text-primary bg-laurel-glow'
 						: 'border-border bg-foreground/6 text-muted-foreground hover:bg-foreground/10 hover:text-foreground'}"
-					onclick={() => onTabChange(tab)}
+					onclick={() => onTabChange(tab.id)}
+					type="button"
 				>
-					{tab}
+					{tab.label}
 				</button>
 			{/each}
 		</div>
@@ -80,46 +88,55 @@
 	<div class="flex flex-wrap items-center gap-3">
 		<select
 			class={selectClasses}
-			aria-label="Filter by type"
+			aria-label={t({ locale: $localeStore, key: 'markets.filter.type' })}
 			onchange={(e) =>
 				onFiltersChange({ ...filters, kind: e.currentTarget.value as MarketKindFilter })}
 			value={filters.kind}
 		>
-			<option value="all">All types</option>
-			<option value="challenge">Challenges</option>
-			<option value="market">Markets</option>
+			<option value="all">{t({ locale: $localeStore, key: 'markets.filter.type.all' })}</option>
+			<option value="challenge"
+				>{t({ locale: $localeStore, key: 'markets.filter.type.challenge' })}</option
+			>
+			<option value="market"
+				>{t({ locale: $localeStore, key: 'markets.filter.type.market' })}</option
+			>
 		</select>
 
 		<select
 			class={selectClasses}
-			aria-label="Filter by stakes"
+			aria-label={t({ locale: $localeStore, key: 'markets.filter.stakes' })}
 			onchange={(e) =>
 				onFiltersChange({ ...filters, payout: e.currentTarget.value as MarketPayoutFilter })}
 			value={filters.payout}
 		>
-			<option value="all">All stakes</option>
-			<option value="vxp">VXP</option>
-			<option value="non-monetary">Fun Dare</option>
+			<option value="all">{t({ locale: $localeStore, key: 'markets.filter.stakes.all' })}</option>
+			<option value="vxp">{t({ locale: $localeStore, key: 'markets.filter.stakes.vxp' })}</option>
+			<option value="non-monetary"
+				>{t({ locale: $localeStore, key: 'markets.filter.stakes.fun' })}</option
+			>
 		</select>
 
 		<select
 			class={selectClasses}
-			aria-label="Filter by access"
+			aria-label={t({ locale: $localeStore, key: 'markets.filter.access' })}
 			onchange={(e) =>
 				onFiltersChange({ ...filters, access: e.currentTarget.value as MarketAccessFilter })}
 			value={filters.access}
 		>
-			<option value="all">All access</option>
-			<option value="open">Open</option>
-			<option value="closed">Closed Circle</option>
+			<option value="all">{t({ locale: $localeStore, key: 'markets.filter.access.all' })}</option>
+			<option value="open">{t({ locale: $localeStore, key: 'markets.filter.access.open' })}</option>
+			<option value="closed"
+				>{t({ locale: $localeStore, key: 'markets.filter.access.closed' })}</option
+			>
 		</select>
 
 		{#if hasActiveFilters}
 			<button
 				class="text-muted-foreground hover:text-foreground text-[10px] font-bold tracking-widest uppercase transition-colors"
 				onclick={clearFilters}
+				type="button"
 			>
-				Clear filters
+				{t({ locale: $localeStore, key: 'markets.filter.clear' })}
 			</button>
 		{/if}
 	</div>
