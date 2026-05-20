@@ -1,12 +1,14 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import LandingSectionHeader from '$lib/components/landing/LandingSectionHeader.svelte';
+	import WelcomeFinalCTA from '$lib/components/landing/WelcomeFinalCTA.svelte';
 	import WelcomeFlowFeature from '$lib/components/landing/WelcomeFlowFeature.svelte';
 	import WelcomeFooter from '$lib/components/landing/WelcomeFooter.svelte';
 	import WelcomeLiveMarkets from '$lib/components/landing/WelcomeLiveMarkets.svelte';
 	import WelcomeLoop from '$lib/components/landing/WelcomeLoop.svelte';
 	import WelcomeSocialProof from '$lib/components/landing/WelcomeSocialProof.svelte';
+	import WelcomeTrust from '$lib/components/landing/WelcomeTrust.svelte';
+	import WelcomeUseCases from '$lib/components/landing/WelcomeUseCases.svelte';
 	import Ticker from '$lib/components/layout/Ticker.svelte';
 	import WelcomeNav from '$lib/components/layout/WelcomeNav.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -106,25 +108,16 @@
 			<WelcomeLoop />
 		</section>
 
-		<section id="trust" class="welcome-section">
-			<div class="welcome-section-inner">
-				<LandingSectionHeader
-					eyebrow={t({ locale: $localeStore, key: 'trust.eyebrow' })}
-					sub={t({ locale: $localeStore, key: 'trust.sub' })}
-					title={t({ locale: $localeStore, key: 'trust.title_a' })}
-					titleAccent={t({ locale: $localeStore, key: 'trust.title_b' })}
-				/>
-			</div>
+		<section id="vision" class="welcome-section">
+			<WelcomeUseCases />
+		</section>
+
+		<section id="trust" class="welcome-section welcome-section--trust">
+			<WelcomeTrust />
 		</section>
 
 		<section class="welcome-final">
-			<div class="welcome-section-inner">
-				<h2 class="display">{t({ locale: $localeStore, key: 'final.title' })}</h2>
-				<p class="lede">{t({ locale: $localeStore, key: 'final.lede' })}</p>
-				<Button onclick={() => goto(PublicPath.SignUp)} size="lg">
-					{t({ locale: $localeStore, key: 'cta.start_predict' })}
-				</Button>
-			</div>
+			<WelcomeFinalCTA />
 		</section>
 	</main>
 
@@ -308,23 +301,11 @@
 		padding: 4rem clamp(1.25rem, 4vw, 2rem);
 	}
 
-	.welcome-section-inner {
-		max-width: 80rem;
-		margin: 0 auto;
+	.welcome-section--trust {
+		background: color-mix(in srgb, var(--foreground) 2%, transparent);
 	}
 
 	.welcome-final {
 		padding: 4rem clamp(1.25rem, 4vw, 2rem) 2rem;
-		text-align: center;
-	}
-
-	.welcome-final .display {
-		margin: 0;
-		font-size: clamp(1.75rem, 4vw, 2.75rem);
-	}
-
-	.welcome-final .lede {
-		margin: 1rem auto 1.5rem;
-		max-width: 28rem;
 	}
 </style>

@@ -3,10 +3,11 @@
 		eyebrow: string;
 		title: string;
 		titleAccent?: string;
-		sub: string;
+		titleSuffix?: string;
+		sub?: string;
 	}
 
-	const { eyebrow, title, titleAccent, sub }: Props = $props();
+	let { eyebrow, title, titleAccent, titleSuffix, sub = '' }: Props = $props();
 </script>
 
 <header class="landing-section-header">
@@ -16,8 +17,13 @@
 		{#if titleAccent}
 			<span class="serif-italic acc">{titleAccent}</span>
 		{/if}
+		{#if titleSuffix}
+			{titleSuffix}
+		{/if}
 	</h2>
-	<p class="landing-section-sub lede">{sub}</p>
+	{#if sub}
+		<p class="landing-section-sub lede">{sub}</p>
+	{/if}
 </header>
 
 <style lang="postcss">
