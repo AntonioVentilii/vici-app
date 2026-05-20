@@ -140,6 +140,22 @@ export const esMessages = {
 	'resolution.title': 'Resultado del mercado',
 	'resolution.winner': 'Ganador',
 	'settings.title': 'Ajustes',
+	'signin.eyebrow.onboarded': 'PACK INICIAL LISTO',
+	'signin.eyebrow.signin': 'BIENVENIDO DE NUEVO',
+	'signin.eyebrow.signup': 'BIENVENIDO',
+	'signin.footer.cta.signin': 'Iniciar sesión →',
+	'signin.footer.cta.signup': 'Crear una cuenta →',
+	'signin.footer.prompt.signin': '¿Ya tienes una cuenta?',
+	'signin.footer.prompt.signup': '¿Nuevo en VICI?',
+	'signin.legal':
+		'Al continuar aceptas los Términos y la Política de privacidad. VICI usa dinero ficticio durante la vista previa. No es asesoramiento financiero.',
+	'signin.sub.onboarded':
+		'Adjuntaremos tu usuario y tus selecciones de Flow después de iniciar sesión.',
+	'signin.sub.signin': 'Retoma donde lo dejaste.',
+	'signin.sub.signup': 'Crea una cuenta para seguir tus predicciones y tu racha.',
+	'signin.title.onboarded': 'Inicia sesión para entrar en {brand}',
+	'signin.title.signin': 'Inicia sesión en {brand}',
+	'signin.title.signup': 'Empieza a predecir en {brand}',
 	'social.accuracy_value': '{accuracy} de precisión',
 	'social.aspire': 'Empezarías en el',
 	'social.aspire_line':
