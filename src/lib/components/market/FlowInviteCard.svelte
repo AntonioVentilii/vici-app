@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { browser } from '$app/environment';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { userStore } from '$lib/stores/user.store';
 
@@ -10,7 +11,11 @@
 
 	let toast = $state('');
 
-	const handle = $derived($userStore.profile?.nickname?.trim() ?? 'predictor');
+	const handle = $derived.by(() => {
+		const nick = $userStore.profile?.nickname?.trim();
+
+		return nick && nick.length > 0 ? nick : 'predictor';
+	});
 
 	const inviteCode = $derived.by(() => {
 		const seed = `${handle}|${sessionXp}|${$userStore.profile?.level ?? 0}`;
@@ -26,7 +31,9 @@
 		return `${prefix}-${suffix}`;
 	});
 
-	const inviteUrl = $derived(`https://vici.markets/i/${inviteCode}`);
+	const inviteUrl = $derived(
+		browser ? `${window.location.origin}/i/${inviteCode}` : `/i/${inviteCode}`
+	);
 	const shareText = 'Predict at the speed of thought. Join me on VICI.';
 
 	const showToast = (message: string) => {

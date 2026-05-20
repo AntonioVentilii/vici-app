@@ -40,7 +40,6 @@
 		resolveFlowArtCategory,
 		type FlowArtCategory
 	} from '$lib/utils/flow-art.utils';
-	import { pickHighestPriorityBeat, type CompanionBeat } from '$lib/utils/flow-companion.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { recordMotionSwipe, type MotionBeatPayload } from '$lib/utils/motion-engine.utils';
 	import {
@@ -300,12 +299,6 @@
 		committedAction = action;
 		committedMarketId = currentMarket.id;
 
-		// Collect candidate companion beats; the priority resolver picks
-		// one at the end of this handler so a single swipe never stacks
-		// character bubbles (characters are scarce — they appear at
-		// milestones, not as ambient garnish).
-		const beats: CompanionBeat[] = [];
-
 		// Daily-streak bump — fires once per session on the first
 		// committed swipe. Any of YES / NO / SKIP qualifies (streak
 		// progresses on any swipe).
@@ -353,6 +346,7 @@
 			// it's not a win and not a loss). The daily streak still
 			// bumps via `applyDailyStreakBump` above; streak progresses
 			// on any swipe, YES / NO / SKIP all count at that layer.
+			recordMotionSwipe({ side: 'SKIP', dailyStreak });
 			finishCommitAdvance();
 
 			return;
@@ -407,12 +401,15 @@
 			}, 1600);
 		}
 
-		const isContrarian =
-			currentMarket.yesProbability <= 0.25 || currentMarket.yesProbability >= 0.75;
+		const yesProb = currentMarket.yesProbability ?? 0.5;
+		const isContrarian = yesProb <= 0.25 || yesProb >= 0.75;
+		const alignedWithCrowd =
+			(action === 'YES' && yesProb >= 0.5) || (action === 'NO' && yesProb < 0.5);
 
 		const motion = recordMotionSwipe({
 			side: action,
 			isContrarian,
+			correct: alignedWithCrowd,
 			dailyStreak
 		});
 
@@ -432,28 +429,12 @@
 			activeMotionBeat = motion.beat;
 			flowPaused = true;
 			vibrate('double-pulse');
-			setTimeout(() => {
-				committedAction = null;
-				committedMarketId = null;
-			}, COMMIT_RESET_MS);
 
 			return;
 		}
 
 		if (motion.beat) {
 			activeMotionBeat = motion.beat;
-		}
-
-		const winningBeat = pickHighestPriorityBeat(beats);
-
-		if (nonNullish(winningBeat)) {
-			showCompanion({
-				who: winningBeat.who,
-				line: winningBeat.line,
-				stage: winningBeat.stage,
-				dwell_ms: winningBeat.dwell_ms ?? 3200,
-				anchor: 'br'
-			});
 		}
 
 		finishCommitAdvance();

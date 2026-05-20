@@ -92,12 +92,17 @@ const loadState = (): MotionState => {
 
 		const parsed = JSON.parse(raw) as Partial<MotionState>;
 		const base = defaultState();
+		const streakTier =
+			typeof parsed.streakTier === 'string' && parsed.streakTier in TIER_RANK
+				? parsed.streakTier
+				: base.streakTier;
 
 		return {
 			...base,
 			...parsed,
 			lifetime: { ...base.lifetime, ...parsed.lifetime },
-			flags: { ...base.flags, ...parsed.flags }
+			flags: { ...base.flags, ...parsed.flags },
+			streakTier
 		};
 	} catch {
 		return defaultState();
