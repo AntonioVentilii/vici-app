@@ -448,15 +448,22 @@
 	}
 
 	.settings-appearance {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
 		padding: 0.875rem;
 		background: var(--bg-surface);
 	}
 
 	.settings-appearance-label {
-		margin: 0 0 0.5rem;
-		font-size: var(--t-14);
-		font-weight: 600;
-		color: var(--text-base);
+		margin: 0;
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
 	}
 
 	.settings-about {

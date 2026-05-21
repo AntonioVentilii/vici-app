@@ -98,10 +98,10 @@
 
 			<DomainSwitch />
 
-			<div class="px-4 py-2">
-				<div class="text-muted-foreground mb-2 text-[10px] font-bold tracking-widest uppercase">
+			<div class="flex items-center justify-between gap-3 px-4 py-2">
+				<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
 					Theme
-				</div>
+				</span>
 				<AppearancePicker />
 			</div>
 
