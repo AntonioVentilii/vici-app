@@ -16,8 +16,10 @@
 		sendFriendRequest,
 		unfriendUser
 	} from '$lib/services/relation.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { Relation } from '$lib/types/relation';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		userPrincipal: string;
@@ -89,7 +91,11 @@
 			await loadData();
 		} catch (err: unknown) {
 			console.error(err);
-			alert(err instanceof Error && err.message ? err.message : 'Failed to send request');
+			alert(
+				err instanceof Error && err.message
+					? err.message
+					: t({ locale: $localeStore, key: 'social.friends.error.send_failed' })
+			);
 		} finally {
 			adding = false;
 		}
@@ -118,7 +124,7 @@
 	};
 
 	const handleUnfriend = async (friendId: string) => {
-		if (!confirm('Are you sure you want to unfriend this user?')) {
+		if (!confirm(t({ locale: $localeStore, key: 'social.friends.confirm.unfriend' }))) {
 			return;
 		}
 
@@ -129,7 +135,7 @@
 			await loadData();
 		} catch (err) {
 			console.error(err);
-			alert('Failed to unfriend');
+			alert(t({ locale: $localeStore, key: 'social.friends.error.unfriend_failed' }));
 		} finally {
 			unfriendingId = null;
 		}
@@ -139,7 +145,9 @@
 <Card padding="lg" variant="glass">
 	<div class="flex w-full flex-col gap-4">
 		<div class="flex items-center justify-between">
-			<h3 class="text-primary text-xl font-bold">Friends</h3>
+			<h3 class="text-primary text-xl font-bold">
+				{t({ locale: $localeStore, key: 'social.friends.title' })}
+			</h3>
 		</div>
 
 		<div class="border-border flex gap-4 border-b text-sm font-medium">
@@ -149,7 +157,11 @@
 					: 'text-muted-foreground'}"
 				onclick={() => (activeTab = 'active')}
 			>
-				Active ({activeFriends.length})
+				{t({
+					locale: $localeStore,
+					key: 'social.friends.tab.active_count',
+					params: { count: activeFriends.length }
+				})}
 			</button>
 			<button
 				class="pb-2 {activeTab === 'requests'
@@ -157,7 +169,11 @@
 					: 'text-muted-foreground'}"
 				onclick={() => (activeTab = 'requests')}
 			>
-				Requests ({pendingRequests.length})
+				{t({
+					locale: $localeStore,
+					key: 'social.friends.tab.requests_count',
+					params: { count: pendingRequests.length }
+				})}
 			</button>
 			<button
 				class="pb-2 {activeTab === 'rejected'
@@ -165,7 +181,11 @@
 					: 'text-muted-foreground'}"
 				onclick={() => (activeTab = 'rejected')}
 			>
-				Rejected ({rejectedRelations.length})
+				{t({
+					locale: $localeStore,
+					key: 'social.friends.tab.rejected_count',
+					params: { count: rejectedRelations.length }
+				})}
 			</button>
 		</div>
 
@@ -173,7 +193,7 @@
 			<div class="flex gap-2">
 				<input
 					class="border-border bg-background/50 focus:ring-primary/50 flex-1 rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-					placeholder="User Principal ID..."
+					placeholder={t({ locale: $localeStore, key: 'social.friends.add.placeholder' })}
 					type="text"
 					bind:value={newFriendPrincipal}
 				/>
@@ -181,8 +201,11 @@
 					onclick={handleAddFriend}
 					status={adding ? 'pending' : !newFriendPrincipal ? 'disabled' : 'enabled'}
 				>
-					{#snippet busyLabel()}Sending...{/snippet}
-					Add Friend
+					{#snippet busyLabel()}{t({
+							locale: $localeStore,
+							key: 'social.friends.add.sending'
+						})}{/snippet}
+					{t({ locale: $localeStore, key: 'social.friends.add.cta' })}
 				</Button>
 			</div>
 		{/if}
@@ -196,7 +219,7 @@
 				{#if activeTab === 'active'}
 					{#if activeFriends.length === 0}
 						<p class="text-muted-foreground py-8 text-center text-sm opacity-50">
-							No active friends. Send a request!
+							{t({ locale: $localeStore, key: 'social.friends.empty.active' })}
 						</p>
 					{:else}
 						{#each activeFriends as relation (relation.participants.toSorted().join('#'))}
@@ -211,7 +234,8 @@
 										<Avatar
 											class="bg-muted h-10 w-10 shadow-inner transition-transform group-hover:scale-110"
 											avatar={profile?.avatar}
-											nickname={profile?.nickname ?? 'Friend'}
+											nickname={profile?.nickname ??
+												t({ locale: $localeStore, key: 'social.friends.fallback.nickname' })}
 											owner={profile?.owner ?? friendId ?? ''}
 										/>
 										<div
@@ -219,7 +243,10 @@
 										></div>
 									</div>
 									<div class="flex-1 overflow-hidden">
-										<p class="truncate text-sm font-semibold">{profile?.nickname ?? 'Unknown'}</p>
+										<p class="truncate text-sm font-semibold">
+											{profile?.nickname ??
+												t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
+										</p>
 										<p class="text-muted-foreground truncate text-xs opacity-70">
 											{#if friendId}
 												<PrincipalText principal={friendId} />
@@ -234,7 +261,7 @@
 									status={unfriendingId === friendId ? 'pending' : 'enabled'}
 									variant="ghost"
 								>
-									Unfriend
+									{t({ locale: $localeStore, key: 'social.friends.action.unfriend' })}
 								</Button>
 							</div>
 						{/each}
@@ -244,7 +271,7 @@
 				{#if activeTab === 'requests'}
 					{#if pendingRequests.length === 0}
 						<p class="text-muted-foreground py-8 text-center text-sm opacity-50">
-							No pending incoming requests.
+							{t({ locale: $localeStore, key: 'social.friends.empty.requests' })}
 						</p>
 					{:else}
 						{#each pendingRequests as doc (doc.key)}
@@ -260,12 +287,16 @@
 										<Avatar
 											class="bg-muted h-10 w-10 shadow-inner"
 											avatar={profile?.avatar}
-											nickname={profile?.nickname ?? 'Friend'}
+											nickname={profile?.nickname ??
+												t({ locale: $localeStore, key: 'social.friends.fallback.nickname' })}
 											owner={profile?.owner ?? friendId ?? ''}
 										/>
 									</div>
 									<div class="flex-1 overflow-hidden">
-										<p class="truncate text-sm font-semibold">{profile?.nickname ?? 'Unknown'}</p>
+										<p class="truncate text-sm font-semibold">
+											{profile?.nickname ??
+												t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
+										</p>
 										<p class="text-muted-foreground truncate text-xs opacity-70">
 											{#if friendId}
 												<PrincipalText principal={friendId} />
@@ -280,14 +311,14 @@
 										status={processingKey === doc.key ? 'pending' : 'enabled'}
 										variant="outline"
 									>
-										Reject
+										{t({ locale: $localeStore, key: 'social.friends.action.reject' })}
 									</Button>
 									<Button
 										onclick={() => handleAccept(doc)}
 										size="sm"
 										status={processingKey === doc.key ? 'pending' : 'enabled'}
 									>
-										Accept
+										{t({ locale: $localeStore, key: 'social.friends.action.accept' })}
 									</Button>
 								</div>
 							</div>
@@ -298,7 +329,7 @@
 				{#if activeTab === 'rejected'}
 					{#if rejectedRelations.length === 0}
 						<p class="text-muted-foreground py-8 text-center text-sm opacity-50">
-							No rejected friendships. You're keeping it clean!
+							{t({ locale: $localeStore, key: 'social.friends.empty.rejected' })}
 						</p>
 					{:else}
 						{#each rejectedRelations as doc (doc.key)}
@@ -312,12 +343,14 @@
 								<Avatar
 									class="bg-muted h-10 w-10 grayscale"
 									avatar={profile?.avatar}
-									nickname={profile?.nickname ?? 'Friend'}
+									nickname={profile?.nickname ??
+										t({ locale: $localeStore, key: 'social.friends.fallback.nickname' })}
 									owner={profile?.owner ?? friendId ?? ''}
 								/>
 								<div class="flex-1 overflow-hidden">
 									<p class="truncate text-sm font-semibold line-through">
-										{profile?.nickname ?? 'Unknown'}
+										{profile?.nickname ??
+											t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
 									</p>
 									<p class="text-muted-foreground truncate text-xs">
 										{#if friendId}
@@ -325,9 +358,9 @@
 										{/if}
 									</p>
 								</div>
-								<span class="bg-destructive/20 text-destructive rounded px-2 py-1 text-xs"
-									>Rejected</span
-								>
+								<span class="bg-destructive/20 text-destructive rounded px-2 py-1 text-xs">
+									{t({ locale: $localeStore, key: 'social.friends.rejected_badge' })}
+								</span>
 							</div>
 						{/each}
 					{/if}

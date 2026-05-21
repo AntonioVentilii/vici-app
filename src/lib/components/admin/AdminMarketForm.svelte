@@ -5,8 +5,10 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { listGroups } from '$lib/services/group.services';
 	import { createMarket } from '$lib/services/market.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { ButtonStatus } from '$lib/types/components';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		onAddMarketSuccess: () => Promise<void>;
@@ -94,13 +96,13 @@
 			await onAddMarketSuccess();
 
 			notificationsStore.add({
-				title: 'Success',
-				message: 'Market created successfully!',
+				title: t({ locale: $localeStore, key: 'wallet.send.success_title' }),
+				message: t({ locale: $localeStore, key: 'admin.markets.form.success.message' }),
 				type: 'success'
 			});
 		} catch (e: unknown) {
 			notificationsStore.add({
-				title: 'Error',
+				title: t({ locale: $localeStore, key: 'wallet.send.error_title' }),
 				message: (e as Error).message,
 				type: 'error'
 			});
@@ -111,20 +113,25 @@
 </script>
 
 <div class="border-border bg-card rounded-3xl border p-8">
-	<h2 class="text-foreground mb-6 text-2xl font-bold">Create New Market</h2>
+	<h2 class="text-foreground mb-6 text-2xl font-bold">
+		{t({ locale: $localeStore, key: 'admin.markets.form.title' })}
+	</h2>
 	<div class="space-y-6">
 		<div class="space-y-2">
 			<label
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				for="market-title"
 			>
-				Market Title
+				{t({ locale: $localeStore, key: 'admin.markets.form.field.title' })}
 			</label>
 			<input
 				id="market-title"
 				class="bg-foreground/5 text-foreground ring-border focus:ring-primary w-full rounded-2xl border-none px-6 py-4 ring-1 ring-inset focus:ring-2"
 				oninput={(e) => (title = e.currentTarget.value)}
-				placeholder="e.g., Will Bitcoin hit $100k by 2027?"
+				placeholder={t({
+					locale: $localeStore,
+					key: 'admin.markets.form.field.title_placeholder'
+				})}
 				type="text"
 				value={title}
 			/>
@@ -135,13 +142,16 @@
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				for="market-description"
 			>
-				Description
+				{t({ locale: $localeStore, key: 'admin.markets.form.field.description' })}
 			</label>
 			<textarea
 				id="market-description"
 				class="bg-foreground/5 text-foreground ring-border focus:ring-primary w-full rounded-2xl border-none px-6 py-4 ring-1 ring-inset focus:ring-2"
 				oninput={(e) => (description = e.currentTarget.value)}
-				placeholder="Provide detailed criteria for resolution..."
+				placeholder={t({
+					locale: $localeStore,
+					key: 'admin.markets.form.field.description_placeholder'
+				})}
 				rows="4"
 				value={description}
 			></textarea>
@@ -152,7 +162,7 @@
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				for="expiry-date"
 			>
-				Expiry Date
+				{t({ locale: $localeStore, key: 'admin.markets.form.field.expiry_date' })}
 			</label>
 			<input
 				id="expiry-date"
@@ -165,7 +175,7 @@
 
 		<div class="space-y-4">
 			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
-				Market Type
+				{t({ locale: $localeStore, key: 'admin.markets.form.field.market_type' })}
 			</span>
 			<div class="flex gap-4">
 				<button
@@ -176,7 +186,7 @@
 					onclick={() => (marketType = 'Binary')}
 					type="button"
 				>
-					Binary (Yes/No)
+					{t({ locale: $localeStore, key: 'admin.markets.form.type.binary' })}
 				</button>
 				<button
 					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {marketType ===
@@ -186,7 +196,7 @@
 					onclick={() => (marketType = 'Categorical')}
 					type="button"
 				>
-					Categorical (Multi)
+					{t({ locale: $localeStore, key: 'admin.markets.form.type.categorical' })}
 				</button>
 			</div>
 		</div>
@@ -195,14 +205,14 @@
 			<div class="bg-foreground/5 space-y-4 rounded-3xl p-6">
 				<div class="flex items-center justify-between">
 					<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
-						Outcomes
+						{t({ locale: $localeStore, key: 'admin.markets.form.outcomes.label' })}
 					</span>
 					<button
 						class="text-primary hover:text-primary text-xs font-bold"
 						onclick={addOutcome}
 						type="button"
 					>
-						+ Add Outcome
+						{t({ locale: $localeStore, key: 'admin.markets.form.outcomes.add' })}
 					</button>
 				</div>
 				<div class="space-y-3">
@@ -211,14 +221,21 @@
 							<input
 								class="bg-card text-foreground ring-border focus:ring-primary flex-1 rounded-xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
 								oninput={(e) => (outcomes[i] = e.currentTarget.value)}
-								placeholder={`Outcome ${i + 1}`}
+								placeholder={t({
+									locale: $localeStore,
+									key: 'admin.markets.form.outcomes.placeholder',
+									params: { n: i + 1 }
+								})}
 								type="text"
 								value={outcome}
 							/>
 							{#if outcomes.length > 2}
 								<button
 									class="bg-card text-muted-foreground ring-border hover:text-destructive rounded-xl px-4 py-3 ring-1 ring-inset"
-									aria-label="Remove outcome"
+									aria-label={t({
+										locale: $localeStore,
+										key: 'admin.markets.form.outcomes.remove'
+									})}
 									onclick={() => removeOutcome(i)}
 									type="button"
 								>
@@ -236,14 +253,14 @@
 					{/each}
 				</div>
 				<p class="text-muted-foreground text-[10px]">
-					Minimum 2 outcomes required. Each outcome will be tradable as a YES position.
+					{t({ locale: $localeStore, key: 'admin.markets.form.outcomes.note' })}
 				</p>
 			</div>
 		{/if}
 
 		<div class="space-y-4">
 			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
-				Balance Domain
+				{t({ locale: $localeStore, key: 'admin.markets.form.domain.label' })}
 			</span>
 			<div class="flex gap-4">
 				<button
@@ -254,7 +271,7 @@
 					onclick={() => (selectedDomain = 'ViciXp')}
 					type="button"
 				>
-					ViciXp (Playground)
+					{t({ locale: $localeStore, key: 'admin.markets.form.domain.vici_xp' })}
 				</button>
 				<button
 					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {selectedDomain ===
@@ -264,7 +281,7 @@
 					onclick={() => (selectedDomain = 'Social')}
 					type="button"
 				>
-					Social (Fun Dare)
+					{t({ locale: $localeStore, key: 'admin.markets.form.domain.social' })}
 				</button>
 			</div>
 		</div>
@@ -272,31 +289,37 @@
 		{#if selectedDomain === 'Social'}
 			<div class="bg-primary/5 ring-primary/20 space-y-4 rounded-3xl p-6 ring-1 ring-inset">
 				<span class="text-primary text-xs font-bold tracking-widest uppercase">
-					Social Reward (Fun Dare)
+					{t({ locale: $localeStore, key: 'admin.markets.form.social.section_title' })}
 				</span>
 				<div class="space-y-4">
 					<div class="space-y-2">
 						<label class="text-primary text-[10px] font-bold uppercase" for="reward-title">
-							Reward Title
+							{t({ locale: $localeStore, key: 'admin.markets.form.social.reward_title' })}
 						</label>
 						<input
 							id="reward-title"
 							class="bg-card text-foreground ring-primary/30 focus:ring-primary w-full rounded-xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
 							oninput={(e) => (socialRewardTitle = e.currentTarget.value)}
-							placeholder="e.g., Pizza 🍕"
+							placeholder={t({
+								locale: $localeStore,
+								key: 'admin.markets.form.social.reward_title_placeholder'
+							})}
 							type="text"
 							value={socialRewardTitle}
 						/>
 					</div>
 					<div class="space-y-2">
 						<label class="text-primary text-[10px] font-bold uppercase" for="reward-desc">
-							Reward Description
+							{t({ locale: $localeStore, key: 'admin.markets.form.social.reward_description' })}
 						</label>
 						<textarea
 							id="reward-desc"
 							class="bg-card text-foreground ring-primary/30 focus:ring-primary w-full rounded-xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
 							oninput={(e) => (socialRewardDescription = e.currentTarget.value)}
-							placeholder="e.g., Winner gets a pizza of their choice."
+							placeholder={t({
+								locale: $localeStore,
+								key: 'admin.markets.form.social.reward_description_placeholder'
+							})}
 							rows="2"
 							value={socialRewardDescription}
 						></textarea>
@@ -307,7 +330,7 @@
 
 		<div class="space-y-4">
 			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
-				Trading Access
+				{t({ locale: $localeStore, key: 'admin.markets.form.access.label' })}
 			</span>
 			<div class="flex gap-4">
 				<button
@@ -317,7 +340,7 @@
 					onclick={() => (isRestricted = false)}
 					type="button"
 				>
-					Open to All
+					{t({ locale: $localeStore, key: 'admin.markets.form.access.open' })}
 				</button>
 				<button
 					class="flex-1 rounded-2xl border-2 px-6 py-4 font-bold transition-all {isRestricted
@@ -326,7 +349,7 @@
 					onclick={() => (isRestricted = true)}
 					type="button"
 				>
-					Closed Circle
+					{t({ locale: $localeStore, key: 'markets.filter.access.closed' })}
 				</button>
 			</div>
 		</div>
@@ -334,11 +357,11 @@
 		{#if isRestricted}
 			<div class="space-y-3 rounded-3xl bg-amber-50/50 p-6">
 				<span class="text-xs font-bold tracking-widest text-amber-700 uppercase">
-					Restrict to Groups
+					{t({ locale: $localeStore, key: 'admin.markets.form.access.restrict_to_groups' })}
 				</span>
 				{#if availableGroups.length === 0}
 					<p class="text-sm text-amber-600 italic">
-						No groups created yet. Create a group first to restrict market access.
+						{t({ locale: $localeStore, key: 'admin.markets.form.access.no_groups' })}
 					</p>
 				{:else}
 					<div class="space-y-2">
@@ -360,7 +383,11 @@
 								/>
 								<span class="text-foreground text-sm font-semibold">{group.name}</span>
 								<span class="text-muted-foreground ml-auto text-xs">
-									{group.members.length} members
+									{t({
+										locale: $localeStore,
+										key: 'admin.markets.form.access.members_count',
+										params: { count: group.members.length }
+									})}
 								</span>
 							</label>
 						{/each}
@@ -369,6 +396,8 @@
 			</div>
 		{/if}
 
-		<Button class="w-full" onclick={onCreate} size="lg" {status}>Deploy Market</Button>
+		<Button class="w-full" onclick={onCreate} size="lg" {status}>
+			{t({ locale: $localeStore, key: 'admin.markets.form.deploy' })}
+		</Button>
 	</div>
 </div>

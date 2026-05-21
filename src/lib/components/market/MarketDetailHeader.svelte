@@ -62,11 +62,14 @@
 
 	<div class="detail-meta-grid">
 		<div class="detail-meta-cell">
-			<span class="allcaps">Settles</span>
+			<span class="allcaps">{t({ locale: $localeStore, key: 'market.detail.header.settles' })}</span
+			>
 			<strong class="num">{formatDate(market.expiryDate)}</strong>
 		</div>
 		<div class="detail-meta-cell">
-			<span class="allcaps">Time left</span>
+			<span class="allcaps"
+				>{t({ locale: $localeStore, key: 'market.detail.header.time_left' })}</span
+			>
 			<strong class="num text-primary">{timeRemaining}</strong>
 		</div>
 		<div class="detail-meta-cell detail-meta-creator">

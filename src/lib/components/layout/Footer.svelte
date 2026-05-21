@@ -1,12 +1,17 @@
+<script lang="ts">
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
+</script>
+
 <footer
 	class="border-border text-muted-foreground mx-auto flex max-w-7xl items-center justify-center gap-2 border-t px-4 py-3 text-xs"
 >
 	<div class="flex items-center gap-2">
-		Built on
+		{t({ locale: $localeStore, key: 'layout.footer.built_on' })}
 		<span class="flex items-baseline gap-1">
 			<a
 				class="group hover:text-lavender-blue-500 active:text-lavender-blue-400"
-				aria-label="Go to Juno website and documentation"
+				aria-label={t({ locale: $localeStore, key: 'a11y.juno_website' })}
 				href="https://juno.build"
 				rel="noopener noreferrer"
 				target="_blank"

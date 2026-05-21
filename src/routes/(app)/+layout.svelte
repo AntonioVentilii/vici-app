@@ -19,7 +19,9 @@
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		children: Snippet;
@@ -168,7 +170,7 @@
 	{#if $userSignedIn && !isFlowPage}
 		<button
 			class="bg-primary text-primary-foreground fixed right-6 bottom-24 z-40 hidden h-14 w-14 items-center justify-center rounded-full shadow-[0_8px_24px_-8px_var(--laurel-glow)] transition-all hover:scale-105 active:scale-[0.985] md:bottom-8 md:flex"
-			aria-label="Create Challenge"
+			aria-label={t({ locale: $localeStore, key: 'a11y.create_challenge' })}
 			onclick={() => (challengeModalOpen = true)}
 		>
 			<Plus size={28} strokeWidth={2.5} />

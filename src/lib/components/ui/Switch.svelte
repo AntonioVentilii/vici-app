@@ -1,4 +1,7 @@
 <script lang="ts">
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
+
 	interface Props {
 		checked: boolean;
 		disabled?: boolean;
@@ -20,7 +23,7 @@
 		? 'bg-primary'
 		: 'bg-foreground/8'}"
 	aria-checked={checked}
-	aria-label="Toggle switch"
+	aria-label={t({ locale: $localeStore, key: 'a11y.toggle_switch' })}
 	{disabled}
 	onclick={toggle}
 	role="switch"

@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import { formatDate, formatVolume } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { getTimeRemaining } from '$lib/utils/market.utils';
 
 	interface Props {
@@ -20,7 +22,9 @@
 
 <div class="detail-stats">
 	<div class="detail-stat">
-		<span class="allcaps">Total volume</span>
+		<span class="allcaps"
+			>{t({ locale: $localeStore, key: 'market.detail.stats.total_volume' })}</span
+		>
 		<div class="detail-stat-value">
 			<span class="num">
 				{formatVolume({ volume: totalVolume, decimals: tokenDecimals, symbol: '' })}
@@ -29,11 +33,15 @@
 		</div>
 	</div>
 	<div class="detail-stat">
-		<span class="allcaps">Expiry date</span>
+		<span class="allcaps"
+			>{t({ locale: $localeStore, key: 'market.detail.stats.expiry_date' })}</span
+		>
 		<strong>{formatDate(expiryDate)}</strong>
 	</div>
 	<div class="detail-stat">
-		<span class="allcaps">Time remaining</span>
+		<span class="allcaps"
+			>{t({ locale: $localeStore, key: 'market.detail.stats.time_remaining' })}</span
+		>
 		<strong class="text-primary">{timeRemaining}</strong>
 	</div>
 </div>

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market, MarketId, Outcome } from '$lib/types/market';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		markets: Market[];
@@ -30,22 +32,37 @@
 		const diff = Number(expiryDate - now);
 
 		if (diff <= 0) {
-			return { label: 'EXPIRED', color: 'red' };
+			return {
+				label: t({ locale: $localeStore, key: 'admin.resolution.status.expired' }),
+				color: 'red'
+			};
 		}
 
 		if (diff < 1000 * 60 * 60) {
-			return { label: 'URGENT (<1h)', color: 'orange' };
+			return {
+				label: t({ locale: $localeStore, key: 'admin.resolution.status.urgent' }),
+				color: 'orange'
+			};
 		}
 
 		if (diff < 1000 * 60 * 60 * 24) {
-			return { label: 'TODAY', color: 'orange-light' };
+			return {
+				label: t({ locale: $localeStore, key: 'admin.resolution.status.today' }),
+				color: 'orange-light'
+			};
 		}
 
 		if (diff < 1000 * 60 * 60 * 24 * 7) {
-			return { label: 'THIS WEEK', color: 'amber' };
+			return {
+				label: t({ locale: $localeStore, key: 'admin.resolution.status.this_week' }),
+				color: 'amber'
+			};
 		}
 
-		return { label: 'PENDING', color: 'muted' };
+		return {
+			label: t({ locale: $localeStore, key: 'admin.resolution.status.pending' }),
+			color: 'muted'
+		};
 	};
 
 	const getStatusStyles = (color: string) => {
@@ -80,7 +97,9 @@
 </script>
 
 <div class="border-border bg-card rounded-3xl border p-8">
-	<h2 class="text-foreground mb-6 text-2xl font-bold">Resolve Active Markets</h2>
+	<h2 class="text-foreground mb-6 text-2xl font-bold">
+		{t({ locale: $localeStore, key: 'admin.resolution.title' })}
+	</h2>
 
 	{#if loading}
 		<div class="flex justify-center py-12">
@@ -90,7 +109,7 @@
 		</div>
 	{:else if sortedMarkets.length === 0}
 		<p class="text-muted-foreground py-12 text-center text-sm italic">
-			No active markets requiring resolution.
+			{t({ locale: $localeStore, key: 'admin.resolution.empty' })}
 		</p>
 	{:else}
 		<div class="space-y-6">
@@ -113,11 +132,21 @@
 									{status.label}
 								</span>
 							</div>
-							<p class="font-mono text-[10px] opacity-60">ID: {marketId}</p>
+							<p class="font-mono text-[10px] opacity-60">
+								{t({
+									locale: $localeStore,
+									key: 'admin.resolution.id_label',
+									params: { marketId }
+								})}
+							</p>
 						</div>
 
 						<div class="text-[11px] font-semibold opacity-80">
-							Expires: {new Date(Number(expiryDate)).toLocaleString()}
+							{t({
+								locale: $localeStore,
+								key: 'admin.resolution.expires',
+								params: { date: new Date(Number(expiryDate)).toLocaleString() }
+							})}
 						</div>
 					</div>
 
@@ -129,7 +158,7 @@
 							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
 							variant="ghost"
 						>
-							Resolve YES
+							{t({ locale: $localeStore, key: 'admin.resolution.action.resolve_yes' })}
 						</Button>
 						<Button
 							class="border-destructive/20 bg-destructive/10 text-destructive hover:bg-destructive/15 flex-1 rounded-xl border py-2 text-xs font-bold"
@@ -138,7 +167,7 @@
 							status={resolvingMarketId === marketId ? 'pending' : 'enabled'}
 							variant="ghost"
 						>
-							Resolve NO
+							{t({ locale: $localeStore, key: 'admin.resolution.action.resolve_no' })}
 						</Button>
 					</div>
 				</div>

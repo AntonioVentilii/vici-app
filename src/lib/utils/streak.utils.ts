@@ -1,3 +1,5 @@
+import type { MessageKey } from '$lib/utils/i18n.utils';
+
 export type FlameStage = 'spark' | 'ember' | 'flame' | 'blaze' | 'inferno';
 
 /**
@@ -24,12 +26,12 @@ export const stageForStreak = (days: number): FlameStage => {
 	return 'spark';
 };
 
-export const FLAME_STAGE_LABELS: Record<FlameStage, string> = {
-	spark: 'SPARK',
-	ember: 'EMBER',
-	flame: 'FLAME',
-	blaze: 'BLAZE',
-	inferno: 'INFERNO'
+export const FLAME_STAGE_LABEL_KEYS: Record<FlameStage, MessageKey> = {
+	spark: 'flame.spark',
+	ember: 'flame.ember',
+	flame: 'flame.flame',
+	blaze: 'flame.blaze',
+	inferno: 'flame.inferno'
 };
 
 /**

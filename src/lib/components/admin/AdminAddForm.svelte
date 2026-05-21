@@ -1,6 +1,8 @@
 <script lang="ts">
 	import Button from '$lib/components/ui/Button.svelte';
 	import { UserRole } from '$lib/enums/user';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	let {
 		principal = '',
@@ -25,7 +27,9 @@
 </script>
 
 <div class="border-border bg-card rounded-xl border p-6">
-	<h2 class="text-foreground mb-6 text-xl font-semibold">Assign Role</h2>
+	<h2 class="text-foreground mb-6 text-xl font-semibold">
+		{t({ locale: $localeStore, key: 'admin.roles.add.title' })}
+	</h2>
 
 	<form
 		class="space-y-6"
@@ -37,26 +41,28 @@
 	>
 		<div>
 			<label class="text-foreground block text-sm font-medium" for="admin-principal">
-				User Principal ID
+				{t({ locale: $localeStore, key: 'admin.roles.add.principal_label' })}
 			</label>
 			<div class="mt-2">
 				<input
 					id="admin-principal"
 					class="focus:ring-brand-600 text-foreground ring-border placeholder:text-muted-foreground focus:ring-primary block w-full rounded-md border-0 py-1.5 ring-1 ring-inset focus:ring-2 focus:ring-inset sm:text-sm sm:leading-6"
 					oninput={(e) => onPrincipalChange(e.currentTarget.value.trim())}
-					placeholder="aaaaa-aa..."
+					placeholder={t({ locale: $localeStore, key: 'admin.roles.add.principal_placeholder' })}
 					required
 					type="text"
 					value={principal}
 				/>
 			</div>
 			<div class="text-muted-foreground mt-2 text-sm">
-				Enter the Internet Identity Principal of the user you wish to grant rights to.
+				{t({ locale: $localeStore, key: 'admin.roles.add.principal_hint' })}
 			</div>
 		</div>
 
 		<div>
-			<label class="text-foreground block text-sm font-medium" for="user-role"> Role </label>
+			<label class="text-foreground block text-sm font-medium" for="user-role">
+				{t({ locale: $localeStore, key: 'admin.roles.add.role_label' })}
+			</label>
 			<div class="mt-2">
 				<select
 					id="user-role"
@@ -69,14 +75,16 @@
 					{/each}
 				</select>
 			</div>
-			<p class="text-muted-foreground mt-2 text-sm">Select the permission level for this user.</p>
+			<p class="text-muted-foreground mt-2 text-sm">
+				{t({ locale: $localeStore, key: 'admin.roles.add.role_hint' })}
+			</p>
 		</div>
 
 		<Button
 			onclick={onAddRole}
 			status={isAssigning ? 'pending' : !principal ? 'disabled' : 'enabled'}
 		>
-			Assign Role
+			{t({ locale: $localeStore, key: 'admin.roles.add.title' })}
 		</Button>
 	</form>
 </div>

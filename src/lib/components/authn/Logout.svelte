@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { ButtonStatus } from '$lib/types/components';
+	import { t } from '$lib/utils/i18n.utils';
 
 	let status = $state<ButtonStatus>('enabled');
 
@@ -18,7 +20,7 @@
 
 <BaseButton
 	class="text-muted-foreground hover:text-primary active:text-primary"
-	aria-label="Sign out"
+	aria-label={t({ locale: $localeStore, key: 'settings.sign_out' })}
 	onclick={doSignOut}
 	{status}
 >

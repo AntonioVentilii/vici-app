@@ -12,7 +12,7 @@
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import { t } from '$lib/utils/i18n.utils';
-	import { FLAME_STAGE_LABELS, stageForStreak } from '$lib/utils/streak.utils';
+	import { FLAME_STAGE_LABEL_KEYS, stageForStreak } from '$lib/utils/streak.utils';
 
 	interface Props {
 		profile: UserProfile;
@@ -67,7 +67,7 @@
 	const xpProgressPercent = $derived((xpInLevel / 500) * 100);
 
 	const flameStage = $derived(stageForStreak(dailyStreak));
-	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
+	const flameLabel = $derived(t({ locale: $localeStore, key: FLAME_STAGE_LABEL_KEYS[flameStage] }));
 	const archetype = $derived(profile.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
 
 	const totalTrades = $derived(profile.totalTrades ?? 0);
@@ -79,7 +79,11 @@
 	const accuracyDisplay = $derived(
 		accuracyUnlocked
 			? `${(Math.round(accuracy * 10) / 10).toFixed(1)}%`
-			: `${callsUntilAccuracy} left`
+			: t({
+					locale: $localeStore,
+					key: 'profile.dashboard.accuracy_remaining',
+					params: { count: callsUntilAccuracy }
+				})
 	);
 
 	const oracleInsight = $derived.by(() => {
@@ -88,30 +92,60 @@
 		const d = dailyStreak;
 
 		if (trades === 0) {
-			return 'No calls yet. The Oracle waits.';
+			return t({ locale: $localeStore, key: 'profile.dashboard.oracle.no_calls' });
 		}
 
 		if (!accuracyUnlocked) {
 			if (d >= 7) {
-				return `${d}-day streak across ${trades} ${trades === 1 ? 'call' : 'calls'}. Consistency compounds.`;
+				return t({
+					locale: $localeStore,
+					key:
+						trades === 1
+							? 'profile.dashboard.oracle.gate_streak_one'
+							: 'profile.dashboard.oracle.gate_streak',
+					params: { days: d, trades }
+				});
 			}
 
-			return `${trades} ${trades === 1 ? 'call' : 'calls'} logged. Accuracy unlocks at ${ACCURACY_GATE_CALLS}.`;
+			return t({
+				locale: $localeStore,
+				key:
+					trades === 1
+						? 'profile.dashboard.oracle.gate_no_streak_one'
+						: 'profile.dashboard.oracle.gate_no_streak',
+				params: { trades, gate: ACCURACY_GATE_CALLS }
+			});
 		}
 
 		if (acc >= 80) {
-			return `${acc}% accuracy across ${trades} calls. The Oracle approves.`;
+			return t({
+				locale: $localeStore,
+				key: 'profile.dashboard.oracle.approves',
+				params: { acc, trades }
+			});
 		}
 
 		if (d >= 7) {
-			return `${d}-day streak and ${acc}% accuracy. Consistency compounds.`;
+			return t({
+				locale: $localeStore,
+				key: 'profile.dashboard.oracle.streak_acc',
+				params: { days: d, acc }
+			});
 		}
 
 		if (acc >= 60) {
-			return `${acc}% accuracy over ${trades} calls. Above the crowd.`;
+			return t({
+				locale: $localeStore,
+				key: 'profile.dashboard.oracle.above',
+				params: { acc, trades }
+			});
 		}
 
-		return `${trades} calls logged. ${acc}% hit rate. Room to sharpen.`;
+		return t({
+			locale: $localeStore,
+			key: 'profile.dashboard.oracle.room_sharpen',
+			params: { trades, acc }
+		});
 	});
 
 	const streakBlocks = $derived.by(() => {
@@ -203,7 +237,8 @@
 						{#if archetype}
 							<span
 								style="color: {archetype.accent}; background: color-mix(in srgb, {archetype.accent} 14%, transparent);"
-								class="profile-archetype-chip">{archetype.tag}</span
+								class="profile-archetype-chip"
+								>{t({ locale: $localeStore, key: archetype.tagKey })}</span
 							>
 						{/if}
 						{#if viewerPrincipal === profile.owner}
@@ -219,16 +254,25 @@
 					</div>
 				{/if}
 
-				<p class="profile-stats-line">Lvl <span class="num">{level}</span> · global</p>
+				<p class="profile-stats-line">
+					{t({ locale: $localeStore, key: 'profile.dashboard.stats_line', params: { level } })}
+				</p>
 				<p class="profile-fire-line">
 					<Flame aria-hidden="true" size={14} strokeWidth={2} />
-					<span class="num">{dailyStreak}</span> · <span class="num">{totalTrades}</span> calls
+					{t({
+						locale: $localeStore,
+						key:
+							totalTrades === 1 ? 'profile.dashboard.fire_line_one' : 'profile.dashboard.fire_line',
+						params: { streak: dailyStreak, trades: totalTrades }
+					})}
 				</p>
 			</div>
 		</div>
 
 		<div class="profile-level-row">
-			<span class="profile-level-label">Level {level}</span>
+			<span class="profile-level-label">
+				{t({ locale: $localeStore, key: 'profile.dashboard.level_badge', params: { level } })}
+			</span>
 			<span class="num profile-level-target">
 				{points.toLocaleString()} / {nextLevelTarget.toLocaleString()} XP
 			</span>
@@ -241,30 +285,48 @@
 	{#if archetype}
 		<section style:--archetype-accent={archetype.accent} class="profile-archetype-card">
 			<p class="profile-archetype-eyebrow">
-				Your archetype · <span>{archetype.tag}</span>
+				{t({
+					locale: $localeStore,
+					key: 'profile.dashboard.your_archetype',
+					params: { tag: t({ locale: $localeStore, key: archetype.tagKey }) }
+				})}
 			</p>
-			<p class="profile-archetype-name">{archetype.name}</p>
-			<p class="profile-archetype-body">{archetype.description}</p>
+			<p class="profile-archetype-name">
+				{t({ locale: $localeStore, key: archetype.nameKey })}
+			</p>
+			<p class="profile-archetype-body">
+				{t({ locale: $localeStore, key: archetype.descriptionKey })}
+			</p>
 		</section>
 	{/if}
 
 	<section class="profile-skill">
-		<h2 class="profile-section-title">Skill</h2>
+		<h2 class="profile-section-title">
+			{t({ locale: $localeStore, key: 'profile.dashboard.skill' })}
+		</h2>
 		<div class="profile-skill-grid">
 			<div class="profile-stat">
-				<span class="profile-stat-label">Accuracy</span>
+				<span class="profile-stat-label">
+					{t({ locale: $localeStore, key: 'profile.dashboard.accuracy_short' })}
+				</span>
 				<span class="num profile-stat-value">{accuracyDisplay}</span>
 			</div>
 			<div class="profile-stat">
-				<span class="profile-stat-label">Calls</span>
+				<span class="profile-stat-label">
+					{t({ locale: $localeStore, key: 'profile.dashboard.calls_short' })}
+				</span>
 				<span class="num profile-stat-value">{totalTrades}</span>
 			</div>
 			<div class="profile-stat">
-				<span class="profile-stat-label">Wins</span>
+				<span class="profile-stat-label">
+					{t({ locale: $localeStore, key: 'profile.dashboard.wins' })}
+				</span>
 				<span class="num profile-stat-value">{wins}</span>
 			</div>
 			<div class="profile-stat">
-				<span class="profile-stat-label">Streak</span>
+				<span class="profile-stat-label">
+					{t({ locale: $localeStore, key: 'profile.dashboard.streak_short' })}
+				</span>
 				<span class="num profile-stat-value">{dailyStreak}d</span>
 			</div>
 		</div>
@@ -272,7 +334,9 @@
 
 	<section class="profile-activity">
 		<div class="profile-activity-head">
-			<span class="profile-activity-label">Last 30 days</span>
+			<span class="profile-activity-label">
+				{t({ locale: $localeStore, key: 'profile.dashboard.last_30_days' })}
+			</span>
 			<span class="profile-activity-meta">
 				<span class="num">{dailyStreak}</span>
 				<span>{flameLabel}</span>
@@ -287,8 +351,12 @@
 
 	<section class="profile-achievements">
 		<div class="profile-achievements-head">
-			<h2 class="profile-section-title">Achievements</h2>
-			<button class="profile-achievements-all" type="button">All</button>
+			<h2 class="profile-section-title">
+				{t({ locale: $localeStore, key: 'profile.dashboard.achievements' })}
+			</h2>
+			<button class="profile-achievements-all" type="button">
+				{t({ locale: $localeStore, key: 'profile.dashboard.all' })}
+			</button>
 		</div>
 		<div class="profile-achievements-rail">
 			{#each ACHIEVEMENTS as achievement (achievement.id)}
@@ -298,8 +366,12 @@
 					<span class="profile-achievement-icon" aria-hidden="true">
 						<Icon size={16} strokeWidth={1.8} />
 					</span>
-					<span class="profile-achievement-name">{achievement.name}</span>
-					<span class="profile-achievement-sub">{achievement.description}</span>
+					<span class="profile-achievement-name">
+						{t({ locale: $localeStore, key: achievement.nameKey })}
+					</span>
+					<span class="profile-achievement-sub">
+						{t({ locale: $localeStore, key: achievement.descriptionKey })}
+					</span>
 				</div>
 			{/each}
 		</div>
@@ -311,7 +383,8 @@
 		</div>
 		<div class="profile-oracle-body">
 			<p class="profile-oracle-eyebrow">
-				Oracle · <span>Weekly insight</span>
+				{t({ locale: $localeStore, key: 'profile.dashboard.oracle_label' })}
+				<span>{t({ locale: $localeStore, key: 'profile.dashboard.oracle_weekly' })}</span>
 			</p>
 			<p class="profile-oracle-text serif-italic">{oracleInsight}</p>
 		</div>
@@ -508,10 +581,6 @@
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
-	}
-
-	.profile-archetype-eyebrow span {
-		color: var(--archetype-accent, var(--color-primary));
 	}
 
 	.profile-archetype-name {

@@ -1,8 +1,10 @@
 <script lang="ts">
 	import MarketRecentTrades from '$lib/components/market/MarketRecentTrades.svelte';
 	import ProbabilityChart from '$lib/components/market/ProbabilityChart.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import { formatCurrency } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { getTimeRemaining } from '$lib/utils/market.utils';
 
 	interface Props {
@@ -14,16 +16,22 @@
 	let selectedTab = $state<'Odds' | 'History' | 'Rules'>('Odds');
 
 	const timeRemaining = $derived(getTimeRemaining(market.expiryDate));
+
+	const infoTabs = $derived([
+		{ id: 'Odds' as const, label: t({ locale: $localeStore, key: 'market.info.tab.odds' }) },
+		{ id: 'History' as const, label: t({ locale: $localeStore, key: 'market.info.tab.history' }) },
+		{ id: 'Rules' as const, label: t({ locale: $localeStore, key: 'market.info.tab.resolution' }) }
+	]);
 </script>
 
 <div class="info-panel">
 	<div class="info-tabs">
-		{#each ['Odds', 'History', 'Rules'] as tab (tab)}
+		{#each infoTabs as tab (tab.id)}
 			<button
-				class="info-tab {selectedTab === tab ? 'is-active' : ''}"
-				onclick={() => (selectedTab = tab as typeof selectedTab)}
+				class="info-tab {selectedTab === tab.id ? 'is-active' : ''}"
+				onclick={() => (selectedTab = tab.id)}
 			>
-				{tab === 'Rules' ? 'Resolution' : tab}
+				{tab.label}
 			</button>
 		{/each}
 	</div>
@@ -32,7 +40,9 @@
 		{#if selectedTab === 'Odds'}
 			<div class="info-stack">
 				<div class="info-countdown">
-					<span class="allcaps">Trading ends in</span>
+					<span class="allcaps"
+						>{t({ locale: $localeStore, key: 'market.info.trading_ends_in' })}</span
+					>
 					<div class="num">{timeRemaining}</div>
 				</div>
 
@@ -40,7 +50,8 @@
 
 				<div class="info-metrics">
 					<div>
-						<span class="allcaps">Total pool</span>
+						<span class="allcaps">{t({ locale: $localeStore, key: 'market.info.total_pool' })}</span
+						>
 						<strong class="num">
 							{formatCurrency({ value: market.totalVolume, decimals: market.token.decimals })}
 							<span>{market.token.symbol}</span>
@@ -48,7 +59,9 @@
 					</div>
 
 					<div>
-						<span class="allcaps">Total predictions</span>
+						<span class="allcaps"
+							>{t({ locale: $localeStore, key: 'market.info.total_predictions' })}</span
+						>
 						<strong class="num">
 							{market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0}
 						</strong>
@@ -62,17 +75,18 @@
 		{:else}
 			<div class="info-stack">
 				<div class="info-resolution">
-					<p class="eyebrow">Official criteria</p>
-					<p>{market.description || 'Verified via public consensus.'}</p>
+					<p class="eyebrow">{t({ locale: $localeStore, key: 'market.info.official_criteria' })}</p>
+					<p>
+						{market.description || t({ locale: $localeStore, key: 'market.info.verified_default' })}
+					</p>
 				</div>
 
 				<div class="info-note">
 					<span aria-hidden="true">●</span>
 					<div>
-						<h5>Settlement rule</h5>
+						<h5>{t({ locale: $localeStore, key: 'market.info.settlement_rule' })}</h5>
 						<p>
-							This market resolves from verifiable public data at expiry. If the outcome is
-							ambiguous, review follows the app's resolution process.
+							{t({ locale: $localeStore, key: 'market.info.settlement_body' })}
 						</p>
 					</div>
 				</div>

@@ -23,7 +23,11 @@
 	});
 </script>
 
-<nav class="welcome-nav" class:is-scrolled={scrolled} aria-label="Landing">
+<nav
+	class="welcome-nav"
+	class:is-scrolled={scrolled}
+	aria-label={t({ locale: $localeStore, key: 'a11y.landing' })}
+>
 	<div class="welcome-nav-inner">
 		<div class="welcome-nav-logo">
 			<Logo href={PublicPath.Welcome} />

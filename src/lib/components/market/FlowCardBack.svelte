@@ -1,5 +1,6 @@
 <script lang="ts">
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type {
@@ -19,6 +20,7 @@
 		formatResolutionLine
 	} from '$lib/utils/flow-card-display.utils';
 	import { formatDate, formatProbability } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { getTimeRemaining } from '$lib/utils/market.utils';
 
 	interface Props {
@@ -69,7 +71,7 @@
 			<span class="allcaps flow-back-cat">{category}</span>
 			<button
 				class="flow-back-close"
-				aria-label="Return to card front"
+				aria-label={t({ locale: $localeStore, key: 'card.back.return_aria' })}
 				onclick={onClose}
 				type="button"
 			>
@@ -80,19 +82,41 @@
 		<div class="flow-back-scroll">
 			<h3 class="flow-back-title">{market.title}</h3>
 			<p class="flow-back-meta num">
-				Settles {formatDate(market.expiryDate)} · {getTimeRemaining(market.expiryDate)}
+				{t({
+					locale: $localeStore,
+					key: 'card.back.settles_line',
+					params: {
+						date: formatDate(market.expiryDate),
+						timeRemaining: getTimeRemaining(market.expiryDate)
+					}
+				})}
 				{#if predictorsNow > 0}
-					· {predictorsNow.toLocaleString()} predicting
+					·
+					{t({
+						locale: $localeStore,
+						key: 'card.predicting_count',
+						params: { count: predictorsNow.toLocaleString() }
+					})}
 				{/if}
 			</p>
 
 			<section class="flow-back-block flow-resolution">
-				<p class="eyebrow flow-back-label">Resolves yes if</p>
+				<p class="eyebrow flow-back-label">
+					{t({ locale: $localeStore, key: 'card.back.resolves_if' })}
+				</p>
 				<p class="flow-back-copy">{resolution.condition}</p>
 				<p class="flow-back-source">
-					Source: {resolution.source}
+					{t({
+						locale: $localeStore,
+						key: 'card.back.source',
+						params: { source: resolution.source }
+					})}
 					{#if resolution.settlesLabel}
-						· settles {resolution.settlesLabel}
+						{t({
+							locale: $localeStore,
+							key: 'card.back.source_settles',
+							params: { settles: resolution.settlesLabel }
+						})}
 					{/if}
 				</p>
 				<button
@@ -103,18 +127,22 @@
 					}}
 					type="button"
 				>
-					{rulesOpen ? 'Hide full rules' : 'Show full rules'}
+					{rulesOpen
+						? t({ locale: $localeStore, key: 'card.back.hide_rules' })
+						: t({ locale: $localeStore, key: 'card.back.show_rules' })}
 				</button>
 				{#if rulesOpen}
 					<p class="flow-back-rules">
-						Resolution is final at trading close. Edge cases follow the source's official wording.
+						{t({ locale: $localeStore, key: 'card.back.rules_body' })}
 					</p>
 				{/if}
 			</section>
 
 			<section class="flow-back-block flow-community">
 				<div class="flow-community-top">
-					<p class="eyebrow flow-back-label">Crowd split</p>
+					<p class="eyebrow flow-back-label">
+						{t({ locale: $localeStore, key: 'card.back.crowd_split' })}
+					</p>
 					<span
 						class="num flow-back-pct"
 						class:text-no={crowdSide === 'NO'}
@@ -133,15 +161,19 @@
 			</section>
 
 			<section class="flow-back-block flow-activity">
-				<p class="eyebrow flow-back-label">Activity</p>
+				<p class="eyebrow flow-back-label">
+					{t({ locale: $localeStore, key: 'market.detail.tab.activity' })}
+				</p>
 				<p class="flow-back-activity num">{callsLabel}</p>
 			</section>
 
 			<section class="flow-back-block">
-				<p class="eyebrow flow-back-label">Who's calling what</p>
+				<p class="eyebrow flow-back-label">
+					{t({ locale: $localeStore, key: 'card.back.who_calling' })}
+				</p>
 				<div class="flow-split-row">
 					<div class="flow-split-meta">
-						<span>All callers</span>
+						<span>{t({ locale: $localeStore, key: 'card.back.all_callers' })}</span>
 						<span class="num">{yesPct}%</span>
 					</div>
 					<div class="flow-split-bar" role="presentation">
@@ -151,7 +183,7 @@
 				</div>
 				<div class="flow-split-row">
 					<div class="flow-split-meta">
-						<span>Top accuracy</span>
+						<span>{t({ locale: $localeStore, key: 'card.back.top_accuracy' })}</span>
 						<span class="num">{sharpPct}% {crowdSide}</span>
 					</div>
 					<div class="flow-split-bar" role="presentation">
@@ -162,8 +194,14 @@
 				{#if followedLean}
 					<div class="flow-split-row">
 						<div class="flow-split-meta">
-							<span>Predictors you follow</span>
-							<span class="num">{followedLean.yes} of {followedLean.total} YES</span>
+							<span>{t({ locale: $localeStore, key: 'card.back.predictors_you_follow' })}</span>
+							<span class="num">
+								{t({
+									locale: $localeStore,
+									key: 'card.back.followed_count',
+									params: { count: followedLean.yes, total: followedLean.total }
+								})}
+							</span>
 						</div>
 						<div class="flow-follow-dots" aria-label={followedLine} role="img">
 							{#each Array.from({ length: followedLean.total }, (_, i) => i) as i (i)}
@@ -176,7 +214,9 @@
 
 			{#if hasUserContext}
 				<section class="flow-back-context">
-					<p class="eyebrow flow-back-label">Your context</p>
+					<p class="eyebrow flow-back-label">
+						{t({ locale: $localeStore, key: 'card.back.your_context' })}
+					</p>
 					{#if categoryAccLine}
 						<p class="flow-back-context-line">{categoryAccLine}</p>
 					{/if}

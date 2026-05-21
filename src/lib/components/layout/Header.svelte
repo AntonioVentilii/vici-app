@@ -97,7 +97,7 @@
 			{#if $authBusy}
 				<div
 					class="text-muted-foreground flex h-10 items-center justify-center px-2"
-					aria-label="Checking sign-in status"
+					aria-label={t({ locale: $localeStore, key: 'a11y.checking_signin' })}
 					aria-live="polite"
 					role="status"
 				>

@@ -4,7 +4,9 @@
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import Dialog from '$lib/components/ui/Dialog.svelte';
 	import type { UserRoleEntry } from '$lib/services/roles.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	let {
 		roleEntries,
@@ -50,28 +52,37 @@
 	);
 </script>
 
-<Dialog title="Remove Admin" bind:show={showConfirmModal}>
+<Dialog
+	title={t({ locale: $localeStore, key: 'admin.roles.remove.title' })}
+	bind:show={showConfirmModal}
+>
 	<p class="text-muted-foreground mb-6">
-		Are you sure you want to remove <strong class="break-all">
+		{t({ locale: $localeStore, key: 'admin.roles.remove.confirm_prefix' })}
+		<strong class="break-all">
 			{nicknameToRemove ??
 				(principalToRemove ? shortenWithMiddleEllipsis({ text: principalToRemove }) : '')}
-		</strong> from administrators? They will lose access to the admin dashboard.
+		</strong>
+		{t({ locale: $localeStore, key: 'admin.roles.remove.confirm_suffix' })}
 	</p>
 	<div class="flex justify-end gap-3">
 		<Button onclick={handleCancel} status={isRemoving ? 'disabled' : 'enabled'} variant="ghost">
-			Cancel
+			{t({ locale: $localeStore, key: 'settings.cancel' })}
 		</Button>
 		<Button onclick={handleConfirm} status={isRemoving ? 'pending' : 'enabled'} variant="danger">
-			Remove
+			{t({ locale: $localeStore, key: 'admin.roles.remove.action' })}
 		</Button>
 	</div>
 </Dialog>
 
 <div class="space-y-4">
-	<h3 class="text-foreground text-xl font-semibold">Current Assigned Roles</h3>
+	<h3 class="text-foreground text-xl font-semibold">
+		{t({ locale: $localeStore, key: 'admin.roles.current_title' })}
+	</h3>
 
 	{#if roleEntries.length === 0}
-		<p class="text-muted-foreground text-sm">No roles found or still loading...</p>
+		<p class="text-muted-foreground text-sm">
+			{t({ locale: $localeStore, key: 'admin.roles.empty' })}
+		</p>
 	{:else}
 		<ul class="divide-border border-border divide-y overflow-hidden rounded-md border">
 			{#each roleEntries as entry (entry.principal)}
@@ -85,7 +96,10 @@
 									</span>
 								{/if}
 								<span class="text-muted-foreground text-sm" class:font-medium={!entry.nickname}>
-									<CopyableAddress address={entry.principal} label="Principal ID" />
+									<CopyableAddress
+										address={entry.principal}
+										label={t({ locale: $localeStore, key: 'profile.dashboard.principal' })}
+									/>
 								</span>
 							</div>
 							<span
@@ -98,7 +112,7 @@
 							class="text-destructive hover:text-destructive ml-4 shrink-0 text-sm font-medium"
 							onclick={() => confirmRemove(entry.principal)}
 						>
-							Remove
+							{t({ locale: $localeStore, key: 'admin.roles.remove.action' })}
 						</button>
 					</div>
 				</li>

@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { browser } from '$app/environment';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		sessionXp?: number;
@@ -34,7 +36,7 @@
 	const inviteUrl = $derived(
 		browser ? `${window.location.origin}/i/${inviteCode}` : `/i/${inviteCode}`
 	);
-	const shareText = 'Predict at the speed of thought. Join me on VICI.';
+	const shareText = $derived(t({ locale: $localeStore, key: 'flow.invite.share_text' }));
 
 	const showToast = (message: string) => {
 		toast = message;
@@ -46,9 +48,9 @@
 	const copyCode = async () => {
 		try {
 			await navigator.clipboard.writeText(inviteCode);
-			showToast('Code copied');
+			showToast(t({ locale: $localeStore, key: 'flow.invite.toast_code_copied' }));
 		} catch {
-			showToast('Copy failed');
+			showToast(t({ locale: $localeStore, key: 'flow.invite.toast_copy_failed' }));
 		}
 	};
 
@@ -67,9 +69,9 @@
 
 		try {
 			await navigator.clipboard.writeText(`${shareText} ${inviteUrl}`);
-			showToast('Invite copied');
+			showToast(t({ locale: $localeStore, key: 'flow.invite.toast_invite_copied' }));
 		} catch {
-			showToast('Copy failed');
+			showToast(t({ locale: $localeStore, key: 'flow.invite.toast_copy_failed' }));
 		}
 	};
 </script>
@@ -77,19 +79,32 @@
 <section class="flow-invite">
 	<div class="flow-invite-head">
 		<div>
-			<p class="eyebrow flow-invite-label">Bring a friend</p>
+			<p class="eyebrow flow-invite-label">
+				{t({ locale: $localeStore, key: 'flow.invite.title' })}
+			</p>
 			<p class="flow-invite-copy">
-				Both of you earn <span class="num text-laurel">+500 XP</span> on their first call.
+				{t({ locale: $localeStore, key: 'flow.invite.copy_lead' })}
+				<span class="num text-laurel">
+					{t({ locale: $localeStore, key: 'flow.invite.copy_xp', params: { xp: 500 } })}
+				</span>
+				{t({ locale: $localeStore, key: 'flow.invite.copy_tail' })}
 			</p>
 		</div>
 	</div>
 
 	<div class="flow-invite-actions">
-		<button class="flow-invite-code" aria-label="Copy invite code" onclick={copyCode} type="button">
-			<span class="eyebrow">Code</span>
+		<button
+			class="flow-invite-code"
+			aria-label={t({ locale: $localeStore, key: 'flow.invite.copy_code_aria' })}
+			onclick={copyCode}
+			type="button"
+		>
+			<span class="eyebrow">{t({ locale: $localeStore, key: 'flow.invite.code_label' })}</span>
 			<span class="num flow-invite-code-value">{inviteCode}</span>
 		</button>
-		<Button class="flow-invite-share" onclick={shareInvite}>Share</Button>
+		<Button class="flow-invite-share" onclick={shareInvite}>
+			{t({ locale: $localeStore, key: 'flow.invite.share' })}
+		</Button>
 	</div>
 
 	{#if toast}

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		markets: Market[];
@@ -10,7 +12,9 @@
 </script>
 
 <div class="border-border bg-card rounded-3xl border p-8">
-	<h2 class="text-foreground mb-6 text-2xl font-bold">Recent Resolutions</h2>
+	<h2 class="text-foreground mb-6 text-2xl font-bold">
+		{t({ locale: $localeStore, key: 'admin.resolution.history.title' })}
+	</h2>
 	<div class="space-y-4">
 		{#each markets.slice(0, 5) as market (market.id)}
 			<div

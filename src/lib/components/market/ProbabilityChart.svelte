@@ -1,5 +1,7 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface DataPoint {
 		time: number;
@@ -35,9 +37,11 @@
 <div class="bg-foreground/5 ring-border relative w-full overflow-hidden rounded-2xl p-4 ring-1">
 	<div class="mb-4 flex items-center justify-between">
 		<h4 class="text-muted-foreground text-[10px] font-black tracking-widest uppercase">
-			Probability Trend
+			{t({ locale: $localeStore, key: 'market.chart.probability_trend' })}
 		</h4>
-		<span class="text-primary text-[10px] font-bold uppercase">Live (24h)</span>
+		<span class="text-primary text-[10px] font-bold uppercase">
+			{t({ locale: $localeStore, key: 'market.chart.live_24h' })}
+		</span>
 	</div>
 
 	{#if hasEnoughData}
@@ -69,17 +73,17 @@
 		<div
 			class="border-border text-muted-foreground mt-4 flex justify-between border-t pt-2 text-[8px] font-bold uppercase"
 		>
-			<span>24h ago</span>
-			<span>Now</span>
+			<span>{t({ locale: $localeStore, key: 'market.chart.ago_24h' })}</span>
+			<span>{t({ locale: $localeStore, key: 'market.chart.now' })}</span>
 		</div>
 	{:else}
 		<div class="flex h-37.5 items-center justify-center text-center">
 			<div class="space-y-1">
 				<p class="text-muted-foreground text-xs font-black tracking-widest uppercase">
-					Insufficient Data
+					{t({ locale: $localeStore, key: 'market.chart.insufficient_data' })}
 				</p>
 				<p class="text-muted-foreground text-[10px]">
-					Trend visualization requires more market activity.
+					{t({ locale: $localeStore, key: 'market.chart.insufficient_sub' })}
 				</p>
 			</div>
 		</div>

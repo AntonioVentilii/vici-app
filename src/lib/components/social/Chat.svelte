@@ -5,8 +5,10 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { sendMessage, getMarketMessages } from '$lib/services/chat.services';
 	import { getProfile } from '$lib/services/profile.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { ChatMessage } from '$lib/types/chat';
 	import type { UserProfile } from '$lib/types/profile';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		marketId: string;
@@ -90,9 +92,17 @@
 	<div class="bg-foreground/5 flex items-center justify-between border-b border-white/5 px-6 py-4">
 		<div class="flex items-center gap-3">
 			<div class="bg-yes h-2 w-2 animate-pulse rounded-full"></div>
-			<h4 class="font-bold tracking-tight">Market Chat</h4>
+			<h4 class="font-bold tracking-tight">
+				{t({ locale: $localeStore, key: 'social.chat.title' })}
+			</h4>
 		</div>
-		<span class="text-muted-foreground text-xs">{messages.length} messages</span>
+		<span class="text-muted-foreground text-xs">
+			{t({
+				locale: $localeStore,
+				key: 'social.chat.message_count',
+				params: { count: messages.length }
+			})}
+		</span>
 	</div>
 
 	<div
@@ -106,7 +116,7 @@
 		{:else if messages.length === 0}
 			<div class="flex flex-1 flex-col items-center justify-center text-center opacity-40">
 				<div class="mb-2 text-3xl">💬</div>
-				<p class="text-sm italic">No messages yet. Be the first to speak!</p>
+				<p class="text-sm italic">{t({ locale: $localeStore, key: 'social.chat.empty' })}</p>
 			</div>
 		{:else}
 			{#each messages as msg (msg.timestamp)}
@@ -151,13 +161,13 @@
 		>
 			<input
 				class="focus:border-primary/50 focus:ring-primary/10 flex-1 rounded-full border border-white/10 bg-black/20 px-4 py-2 text-sm transition-all focus:ring-4 focus:outline-none"
-				placeholder="Write a message..."
+				placeholder={t({ locale: $localeStore, key: 'social.chat.input.placeholder' })}
 				type="text"
 				bind:value={newMessage}
 			/>
 			<BaseButton
 				class="bg-primary text-primary-foreground flex h-9 w-9 items-center justify-center rounded-full shadow-lg transition-transform hover:scale-105 active:scale-95"
-				aria-label="Send message"
+				aria-label={t({ locale: $localeStore, key: 'social.chat.action.send' })}
 				status={sending ? 'pending' : !newMessage.trim() ? 'disabled' : 'enabled'}
 				type="submit"
 			>

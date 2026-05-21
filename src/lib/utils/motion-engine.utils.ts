@@ -3,7 +3,8 @@
 // See `docs/ai/frontend/design.md` §7.
 
 import { FLOW_MILESTONES } from '$lib/constants/flow-rewards.constants';
-import { FLAME_STAGE_LABELS, stageForStreak, type FlameStage } from '$lib/utils/streak.utils';
+import type { MessageKey } from '$lib/utils/i18n.utils';
+import { stageForStreak, type FlameStage } from '$lib/utils/streak.utils';
 
 const STORAGE_KEY = 'vici.motion.state.v1';
 
@@ -20,11 +21,12 @@ export type MotionCharacter = 'vici' | 'oracle' | 'trickster' | 'flame';
 export interface MotionBeatPayload {
 	kind: string;
 	character: MotionCharacter;
-	copy: string | null;
+	copyKey: MessageKey | null;
+	copyParams?: Record<string, string | number>;
 	duration_ms: number;
 	hardPause: boolean;
 	bonusXp: number;
-	badge?: string;
+	badgeKey?: MessageKey;
 	flameStage?: FlameStage;
 }
 
@@ -121,8 +123,6 @@ const saveState = (state: MotionState): void => {
 	}
 };
 
-const titleCaseStage = (stage: FlameStage): string => FLAME_STAGE_LABELS[stage];
-
 const milestoneBeat = (swipeCount: number): MotionBeatPayload | null => {
 	const milestone = FLOW_MILESTONES.find((m) => m.swipeCount === swipeCount);
 
@@ -135,11 +135,11 @@ const milestoneBeat = (swipeCount: number): MotionBeatPayload | null => {
 	return {
 		kind: `milestone-${swipeCount}`,
 		character,
-		copy: milestone.copy,
+		copyKey: milestone.copyKey,
 		duration_ms: swipeCount === 1 ? 1300 : swipeCount >= 50 ? 1500 : 1200,
 		hardPause: true,
 		bonusXp: milestone.bonusXp,
-		badge: swipeCount === 1000 ? 'One thousand' : undefined
+		badgeKey: swipeCount === 1000 ? 'flow.milestone.badge_one_thousand' : undefined
 	};
 };
 
@@ -195,7 +195,8 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 				beat = {
 					kind: 'acc-threshold',
 					character: 'oracle',
-					copy: `Top ${threshold.label}% accuracy.`,
+					copyKey: 'motion.acc_threshold',
+					copyParams: { label: threshold.label },
 					duration_ms: 1500,
 					hardPause: true,
 					bonusXp
@@ -214,7 +215,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 		beat = {
 			kind: 'streak-tier-up',
 			character: 'flame',
-			copy: `${titleCaseStage(nextTier)}.`,
+			copyKey: 'motion.streak_tier_up',
 			duration_ms: 800,
 			hardPause: true,
 			bonusXp: 0,
@@ -231,7 +232,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 			beat = {
 				kind: 'first-yes',
 				character: 'vici',
-				copy: 'Locked in.',
+				copyKey: 'motion.first_yes',
 				duration_ms: 900,
 				hardPause: true,
 				bonusXp: 0
@@ -241,7 +242,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 			beat = {
 				kind: 'first-no',
 				character: 'vici',
-				copy: 'Filed.',
+				copyKey: 'motion.first_no',
 				duration_ms: 900,
 				hardPause: true,
 				bonusXp: 0
@@ -251,7 +252,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 			beat = {
 				kind: 'first-contrarian',
 				character: 'trickster',
-				copy: 'Against the grain.',
+				copyKey: 'motion.first_contrarian',
 				duration_ms: 1100,
 				hardPause: true,
 				bonusXp: 0
@@ -274,7 +275,7 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 		beat = {
 			kind: 'ambient-10',
 			character: 'vici',
-			copy: null,
+			copyKey: null,
 			duration_ms: 360,
 			hardPause: false,
 			bonusXp: 0

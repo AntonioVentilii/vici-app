@@ -4,7 +4,9 @@
 	import { onMount } from 'svelte';
 	import IconPasskey from '$lib/components/icons/IconPasskey.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { ButtonStatus } from '$lib/types/components';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		status?: ButtonStatus;
@@ -36,7 +38,9 @@
 						options: {
 							passkey: {
 								user: {
-									displayName: notEmptyString(nickname) ? nickname : 'Vici User'
+									displayName: notEmptyString(nickname)
+										? nickname
+										: t({ locale: $localeStore, key: 'authn.passkey.fallback_displayname' })
 								}
 							}
 						}
@@ -61,19 +65,34 @@
 	<div class="passkey-auth">
 		{#if isSignUp}
 			<div class="passkey-nickname">
-				<label for="nickname"> Your Nickname </label>
-				<input id="nickname" placeholder="Enter a nickname..." type="text" bind:value={nickname} />
+				<label for="nickname">
+					{t({ locale: $localeStore, key: 'authn.passkey.your_nickname' })}
+				</label>
+				<input
+					id="nickname"
+					placeholder={t({ locale: $localeStore, key: 'authn.passkey.enter_nickname' })}
+					type="text"
+					bind:value={nickname}
+				/>
 			</div>
 		{/if}
 
 		<div class="passkey-actions">
 			<Button class="signin-provider-button w-full" onclick={handlePasskeyAction} {status}>
 				<IconPasskey size="20px" />
-				<span>{isSignUp ? 'Create Passkey' : 'Sign in with Passkey'}</span>
+				<span>
+					{t({
+						locale: $localeStore,
+						key: isSignUp ? 'authn.passkey.create_button' : 'authn.passkey.signin_button'
+					})}
+				</span>
 			</Button>
 
 			<button class="passkey-toggle" onclick={toggleMode} type="button">
-				{isSignUp ? 'Already have a passkey? Sign in' : 'First time? Create a passkey'}
+				{t({
+					locale: $localeStore,
+					key: isSignUp ? 'authn.passkey.toggle_signin' : 'authn.passkey.toggle_signup'
+				})}
 			</button>
 		</div>
 	</div>

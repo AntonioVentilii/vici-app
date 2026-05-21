@@ -19,8 +19,10 @@
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
 	import { showCompanion } from '$lib/stores/companion.store';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market, MarketId } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
+	import { t } from '$lib/utils/i18n.utils';
 	import { positionResolvedResult } from '$lib/utils/position.utils';
 
 	let market = $state<Market | undefined>();
@@ -139,7 +141,7 @@
 		resolutionBeatTimeoutId = setTimeout(() => {
 			showCompanion({
 				who: 'oracle',
-				line: 'Called it.',
+				line: t({ locale: $localeStore, key: 'companion.oracle.called_it' }),
 				dwell_ms: 1200,
 				anchor: 'br'
 			});
@@ -155,7 +157,10 @@
 </script>
 
 <svelte:head>
-	<title>{market ? market.title : 'Market'} | Vici Social Markets</title>
+	<title
+		>{market ? market.title : t({ locale: $localeStore, key: 'market.detail.fallback_title' })} | Vici
+		Social Markets</title
+	>
 </svelte:head>
 
 <div class="market-detail-shell">
@@ -167,7 +172,11 @@
 		</div>
 	{:else if market}
 		{#snippet detailRight()}
-			<button class="market-detail-bell" aria-label="Notifications" type="button">
+			<button
+				class="market-detail-bell"
+				aria-label={t({ locale: $localeStore, key: 'a11y.notifications' })}
+				type="button"
+			>
 				<Bell aria-hidden="true" size={16} strokeWidth={1.8} />
 			</button>
 		{/snippet}
@@ -175,7 +184,7 @@
 		<div class="market-detail-stack">
 			<MobileAppBar
 				back={{
-					label: 'Back to markets',
+					label: t({ locale: $localeStore, key: 'market.detail.back_to_markets' }),
 					onBack: () => void goto(resolve(AppPath.Home))
 				}}
 				right={detailRight}
@@ -224,15 +233,17 @@
 		</div>
 	{:else}
 		<div class="flex flex-col items-center justify-center py-24 text-center">
-			<h1 class="text-foreground text-4xl font-extrabold">404 - Market Not Found</h1>
+			<h1 class="text-foreground text-4xl font-extrabold">
+				{t({ locale: $localeStore, key: 'market.detail.not_found.title' })}
+			</h1>
 			<p class="text-muted-foreground mt-4">
-				The market you are seeking is either hidden or does not exist.
+				{t({ locale: $localeStore, key: 'market.detail.not_found.sub' })}
 			</p>
 			<a
 				class="bg-primary text-primary-foreground hover:bg-primary/90 mt-8 rounded-xl px-8 py-3 font-bold transition-all"
 				href={resolve(AppPath.Home)}
 			>
-				Return to Markets
+				{t({ locale: $localeStore, key: 'market.detail.not_found.cta' })}
 			</a>
 		</div>
 	{/if}

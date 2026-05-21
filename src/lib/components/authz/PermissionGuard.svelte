@@ -3,6 +3,8 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { userPermissions } from '$lib/derived/user.derived';
 	import type { Permission } from '$lib/enums/permission';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		children: Snippet;
@@ -12,13 +14,7 @@
 		description?: string;
 	}
 
-	const {
-		children,
-		permission,
-		showWarning = false,
-		title = 'Access Denied',
-		description = 'You do not have the required permissions to access this area.'
-	}: Props = $props();
+	const { children, permission, showWarning = false, title, description }: Props = $props();
 
 	const isAuthorized = $derived($userPermissions.includes(permission));
 
@@ -32,14 +28,18 @@
 {:else if showWarning}
 	<div class="flex flex-col items-center justify-center py-20 text-center">
 		<div class="mb-12 max-w-md">
-			<h2 class="text-foreground text-4xl font-black">{title}</h2>
+			<h2 class="text-foreground text-4xl font-black">
+				{title ?? t({ locale: $localeStore, key: 'authz.access_denied.title' })}
+			</h2>
 			<p class="text-muted-foreground mt-4 text-lg">
-				{description}
+				{description ?? t({ locale: $localeStore, key: 'authz.access_denied.description' })}
 			</p>
 			<p class="text-muted-foreground mt-2 text-sm">
-				Required permission: <span class="text-primary font-bold capitalize">
-					{permission.replace(/_/g, ' ')}
-				</span>.
+				{t({
+					locale: $localeStore,
+					key: 'authz.access_denied.required_permission',
+					params: { permission: permission.replace(/_/g, ' ') }
+				})}
 			</p>
 		</div>
 
@@ -50,7 +50,9 @@
 				>
 					!
 				</div>
-				<Button onclick={handleRefresh}>Refresh Session</Button>
+				<Button onclick={handleRefresh}
+					>{t({ locale: $localeStore, key: 'authz.access_denied.refresh' })}</Button
+				>
 			</div>
 		</div>
 	</div>

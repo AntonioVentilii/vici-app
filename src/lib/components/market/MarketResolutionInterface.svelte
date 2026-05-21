@@ -4,8 +4,10 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import { PRICE_DECIMALS } from '$lib/constants/app.constants';
 	import { settleMarket } from '$lib/services/resolution.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Market } from '$lib/types/market';
+	import { t } from '$lib/utils/i18n.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 
 	interface Props {
@@ -27,13 +29,13 @@
 	const handleSettle = async () => {
 		if (isCategorical) {
 			if (!selectedOutcomeId) {
-				error = 'Please select a winning outcome';
+				error = t({ locale: $localeStore, key: 'market.resolution.error.select_outcome' });
 
 				return;
 			}
 		} else {
 			if (!settlementPrice || parseFloat(settlementPrice) < 0) {
-				error = 'Please enter a valid settlement price';
+				error = t({ locale: $localeStore, key: 'market.resolution.error.invalid_price' });
 
 				return;
 			}
@@ -62,12 +64,13 @@
 
 			onSettled();
 			notificationsStore.add({
-				title: 'Success',
-				message: 'Market successfully settled!',
+				title: t({ locale: $localeStore, key: 'wallet.send.success_title' }),
+				message: t({ locale: $localeStore, key: 'market.resolution.notify.success_message' }),
 				type: 'success'
 			});
 		} catch (e: unknown) {
-			error = (e as Error).message ?? 'Settlement failed';
+			error =
+				(e as Error).message ?? t({ locale: $localeStore, key: 'market.resolution.error.failed' });
 		} finally {
 			loading = false;
 		}
@@ -78,16 +81,20 @@
 	<div class="space-y-6">
 		{#if isUrgent}
 			<div class="flex items-center gap-2">
-				<Badge variant="danger">URGENT: NEEDS SETTLEMENT</Badge>
+				<Badge variant="danger"
+					>{t({ locale: $localeStore, key: 'market.resolution.urgent_badge' })}</Badge
+				>
 			</div>
 		{/if}
 
 		<div>
-			<h3 class="text-foreground text-lg font-black uppercase">Admin Resolution</h3>
+			<h3 class="text-foreground text-lg font-black uppercase">
+				{t({ locale: $localeStore, key: 'market.resolution.admin_title' })}
+			</h3>
 			<p class="text-muted-foreground mt-2 text-xs">
 				{isCategorical
-					? 'Select the winning outcome to settle this market.'
-					: 'Enter the final price (e.g. 1.00 for YES, 0.00 for NO) to settle this market.'}
+					? t({ locale: $localeStore, key: 'market.resolution.categorical_sub' })
+					: t({ locale: $localeStore, key: 'market.resolution.scalar_sub' })}
 			</p>
 		</div>
 
@@ -119,7 +126,7 @@
 							size="sm"
 							variant={settlementPrice === '1.0' ? 'primary' : 'outline'}
 						>
-							Settle YES (1.0)
+							{t({ locale: $localeStore, key: 'market.resolution.settle_yes' })}
 						</Button>
 						<Button
 							class="flex-1"
@@ -127,7 +134,7 @@
 							size="sm"
 							variant={settlementPrice === '0.0' ? 'primary' : 'outline'}
 						>
-							Settle NO (0.0)
+							{t({ locale: $localeStore, key: 'market.resolution.settle_no' })}
 						</Button>
 					</div>
 					<div class="space-y-2">
@@ -135,7 +142,11 @@
 							class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
 							for="settlement-price"
 						>
-							Custom Settlement Price ({market.token.symbol})
+							{t({
+								locale: $localeStore,
+								key: 'market.resolution.custom_price',
+								params: { symbol: market.token.symbol }
+							})}
 						</label>
 						<div class="relative">
 							<input
@@ -166,7 +177,7 @@
 						: 'disabled'}
 				variant={isUrgent ? 'danger' : 'primary'}
 			>
-				Resolve & Settle Market
+				{t({ locale: $localeStore, key: 'market.resolution.resolve_settle' })}
 			</Button>
 		</div>
 	</div>

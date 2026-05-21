@@ -1,39 +1,41 @@
+import type { MessageKey } from '$lib/utils/i18n.utils';
+
 export interface Archetype {
 	id: string;
-	name: string;
-	description: string;
+	nameKey: MessageKey;
+	descriptionKey: MessageKey;
 	accent: string;
-	tag: string;
+	tagKey: MessageKey;
 }
 
 export const ARCHETYPES: Archetype[] = [
 	{
 		id: 'strategist',
-		name: 'Strategist',
-		description: 'Calculates the field. High-conviction, low-volume.',
+		nameKey: 'archetype.strategist.name',
+		descriptionKey: 'archetype.strategist.description',
 		accent: '#7EB6FF',
-		tag: 'STRATEGIST'
+		tagKey: 'archetype.strategist.tag'
 	},
 	{
 		id: 'conservative',
-		name: 'Conservative',
-		description: 'Backs the consensus. Steady accuracy over time.',
+		nameKey: 'archetype.conservative.name',
+		descriptionKey: 'archetype.conservative.description',
 		accent: '#6FE0B6',
-		tag: 'CONSERVATIVE'
+		tagKey: 'archetype.conservative.tag'
 	},
 	{
 		id: 'bold',
-		name: 'Bold predictor',
-		description: 'Hunts upside. Goes against the crowd.',
+		nameKey: 'archetype.bold.name',
+		descriptionKey: 'archetype.bold.description',
 		accent: '#FF8A4C',
-		tag: 'BOLD'
+		tagKey: 'archetype.bold.tag'
 	},
 	{
 		id: 'visionary',
-		name: 'Visionary',
-		description: 'Long-horizon. Sees what others miss.',
+		nameKey: 'archetype.visionary.name',
+		descriptionKey: 'archetype.visionary.description',
 		accent: '#B49CFF',
-		tag: 'VISIONARY'
+		tagKey: 'archetype.visionary.tag'
 	}
 ];
 

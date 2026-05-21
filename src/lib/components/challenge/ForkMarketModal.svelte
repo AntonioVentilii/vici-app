@@ -5,9 +5,11 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { listGroups } from '$lib/services/group.services';
 	import { forkMarket } from '$lib/services/market.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { ButtonStatus } from '$lib/types/components';
 	import type { Market } from '$lib/types/market';
+	import { t } from '$lib/utils/i18n.utils';
 	import { refreshMarkets } from '$lib/utils/refresh.utils';
 
 	interface Props {
@@ -43,8 +45,8 @@
 	const onFork = async () => {
 		if (!market || selectedGroupIds.length === 0) {
 			notificationsStore.add({
-				title: 'Select a Group',
-				message: 'Pick at least one group to challenge.',
+				title: t({ locale: $localeStore, key: 'challenge.fork.error.no_group.title' }),
+				message: t({ locale: $localeStore, key: 'challenge.fork.error.no_group.message' }),
 				type: 'warning'
 			});
 
@@ -57,8 +59,12 @@
 			await forkMarket({ marketId: market.id, groupIds: selectedGroupIds });
 
 			notificationsStore.add({
-				title: 'Challenge Sent!',
-				message: `"${market.title}" is now live for your group.`,
+				title: t({ locale: $localeStore, key: 'challenge.fork.success.title' }),
+				message: t({
+					locale: $localeStore,
+					key: 'challenge.fork.success.message',
+					params: { title: market.title }
+				}),
 				type: 'success'
 			});
 
@@ -66,7 +72,7 @@
 			close();
 		} catch (e: unknown) {
 			notificationsStore.add({
-				title: 'Fork Failed',
+				title: t({ locale: $localeStore, key: 'challenge.fork.failed.title' }),
 				message: (e as Error).message,
 				type: 'error'
 			});
@@ -80,9 +86,11 @@
 	{#if market}
 		<div class="space-y-6">
 			<div>
-				<h3 class="text-foreground text-2xl font-black">Challenge Your Friends</h3>
+				<h3 class="text-foreground text-2xl font-black">
+					{t({ locale: $localeStore, key: 'challenge.fork.title' })}
+				</h3>
 				<p class="text-muted-foreground mt-1 text-sm">
-					Fork this market into a private challenge for your group.
+					{t({ locale: $localeStore, key: 'challenge.fork.sub' })}
 				</p>
 			</div>
 
@@ -92,13 +100,13 @@
 			</div>
 
 			<div class="space-y-3">
-				<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
-					>Pick a group</span
-				>
+				<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
+					{t({ locale: $localeStore, key: 'challenge.fork.pick_group' })}
+				</span>
 
 				{#if availableGroups.length === 0}
 					<p class="text-muted-foreground bg-foreground/5 rounded-2xl p-4 text-sm italic">
-						No groups yet. Create one from your Profile page first.
+						{t({ locale: $localeStore, key: 'challenge.fork.no_groups' })}
 					</p>
 				{:else}
 					<div class="space-y-2">
@@ -124,9 +132,13 @@
 								/>
 								<div class="flex-1">
 									<span class="text-foreground text-sm font-semibold">{group.name}</span>
-									<span class="text-muted-foreground ml-2 text-xs"
-										>{group.members.length} members</span
-									>
+									<span class="text-muted-foreground ml-2 text-xs">
+										{t({
+											locale: $localeStore,
+											key: 'challenge.fork.members_count',
+											params: { count: group.members.length }
+										})}
+									</span>
 								</div>
 							</label>
 						{/each}
@@ -136,8 +148,7 @@
 
 			<div class="bg-primary/5 ring-primary/10 rounded-2xl p-4 ring-1 ring-inset">
 				<p class="text-muted-foreground text-xs leading-relaxed">
-					This creates a copy of the market restricted to your selected group(s). Members can
-					predict YES or NO within their circle.
+					{t({ locale: $localeStore, key: 'challenge.fork.note' })}
 				</p>
 			</div>
 
@@ -147,9 +158,9 @@
 				status={availableGroups.length === 0 ? 'disabled' : status}
 			>
 				{#snippet busyLabel()}
-					Forking...
+					{t({ locale: $localeStore, key: 'challenge.fork.cta_busy' })}
 				{/snippet}
-				Challenge Group
+				{t({ locale: $localeStore, key: 'challenge.fork.cta' })}
 			</Button>
 		</div>
 	{/if}

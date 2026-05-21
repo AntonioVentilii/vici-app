@@ -14,8 +14,10 @@
 		downvoteComment
 	} from '$lib/services/discussion.services';
 	import { getProfile } from '$lib/services/profile.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Comment } from '$lib/types/comment';
 	import type { UserProfile } from '$lib/types/profile';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		marketId: string;
@@ -78,7 +80,7 @@
 				type: ActivityType.COMMENT,
 				user: userPrincipal,
 				marketId,
-				title: `New comment on market`,
+				title: t({ locale: $localeStore, key: 'social.discussion.activity.new_comment' }),
 				details: newComment.trim().slice(0, 50) + (newComment.length > 50 ? '...' : '')
 			});
 
@@ -106,7 +108,7 @@
 						type: ActivityType.UPVOTE,
 						user: userPrincipal,
 						marketId,
-						title: `Upvoted a comment`,
+						title: t({ locale: $localeStore, key: 'social.discussion.activity.upvoted' }),
 						details: comment.content.slice(0, 30) + (comment.content.length > 30 ? '...' : '')
 					});
 				}
@@ -119,7 +121,7 @@
 						type: ActivityType.DOWNVOTE,
 						user: userPrincipal,
 						marketId,
-						title: `Downvoted a comment`,
+						title: t({ locale: $localeStore, key: 'social.discussion.activity.downvoted' }),
 						details: comment.content.slice(0, 30) + (comment.content.length > 30 ? '...' : '')
 					});
 				}
@@ -136,7 +138,7 @@
 	<div class="glassmorphism rounded-2xl p-4">
 		<textarea
 			class="border-border bg-background/50 focus:ring-primary/50 w-full resize-none rounded-xl border p-4 text-sm focus:ring-2 focus:outline-none"
-			placeholder="Share your thoughts..."
+			placeholder={t({ locale: $localeStore, key: 'social.discussion.input.placeholder' })}
 			rows="3"
 			bind:value={newComment}
 		></textarea>
@@ -145,8 +147,11 @@
 				onclick={handlePostComment}
 				status={posting ? 'pending' : !newComment.trim() ? 'disabled' : 'enabled'}
 			>
-				{#snippet busyLabel()}Posting...{/snippet}
-				Post Comment
+				{#snippet busyLabel()}{t({
+						locale: $localeStore,
+						key: 'social.discussion.action.posting'
+					})}{/snippet}
+				{t({ locale: $localeStore, key: 'social.discussion.action.post' })}
 			</Button>
 		</div>
 	</div>
@@ -158,7 +163,9 @@
 			</div>
 		{:else if comments.length === 0}
 			<div class="py-12 text-center opacity-40">
-				<p class="text-sm italic">No comments yet. Be the first to start the discussion!</p>
+				<p class="text-sm italic">
+					{t({ locale: $localeStore, key: 'social.discussion.empty' })}
+				</p>
 			</div>
 		{:else}
 			{#each comments as comment (comment.key)}
@@ -175,7 +182,7 @@
 							class="hover:bg-primary/10 flex h-8 w-8 items-center justify-center rounded-lg transition-colors {upvoted
 								? 'text-primary'
 								: 'opacity-40 hover:opacity-100'}"
-							aria-label="Upvote comment"
+							aria-label={t({ locale: $localeStore, key: 'social.discussion.action.upvote' })}
 							onclick={() => handleVote({ comment, type: 'up' })}
 							status={voting[comment.key] ? 'pending' : 'enabled'}
 						>
@@ -207,7 +214,7 @@
 							class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10 {downvoted
 								? 'text-red-500'
 								: 'opacity-40 hover:opacity-100'}"
-							aria-label="Downvote comment"
+							aria-label={t({ locale: $localeStore, key: 'social.discussion.action.downvote' })}
 							onclick={() => handleVote({ comment, type: 'down' })}
 							status={voting[comment.key] ? 'pending' : 'enabled'}
 						>
@@ -236,7 +243,10 @@
 									nickname={profile?.nickname}
 									owner={profile?.owner ?? comment.user}
 								/>
-								<span class="text-sm font-bold">{profile?.nickname ?? 'Anonymous'}</span>
+								<span class="text-sm font-bold">
+									{profile?.nickname ??
+										t({ locale: $localeStore, key: 'social.discussion.anonymous' })}
+								</span>
 								{#if comment.user === userPrincipal}
 									<YouBadge />
 								{/if}

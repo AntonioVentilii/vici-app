@@ -1,7 +1,9 @@
+import type { MessageKey } from '$lib/utils/i18n.utils';
+
 export interface AchievementDef {
 	id: string;
-	name: string;
-	description: string;
+	nameKey: MessageKey;
+	descriptionKey: MessageKey;
 	xp: number;
 	icon: 'target' | 'flame' | 'eye' | 'zap' | 'timer' | 'star';
 }
@@ -9,43 +11,43 @@ export interface AchievementDef {
 export const ACHIEVEMENTS: AchievementDef[] = [
 	{
 		id: 'first-blood',
-		name: 'First call',
-		description: 'Make your first prediction',
+		nameKey: 'achievement.first_blood.name',
+		descriptionKey: 'achievement.first_blood.description',
 		xp: 50,
 		icon: 'target'
 	},
 	{
 		id: 'on-fire',
-		name: 'On fire',
-		description: '10 correct in a row',
+		nameKey: 'achievement.on_fire.name',
+		descriptionKey: 'achievement.on_fire.description',
 		xp: 200,
 		icon: 'flame'
 	},
 	{
 		id: 'oracle',
-		name: 'Oracle',
-		description: '80% accuracy over 50 calls',
+		nameKey: 'achievement.oracle.name',
+		descriptionKey: 'achievement.oracle.description',
 		xp: 500,
 		icon: 'eye'
 	},
 	{
 		id: 'contrarian',
-		name: 'Contrarian',
-		description: '10 wins on <30% consensus',
+		nameKey: 'achievement.contrarian.name',
+		descriptionKey: 'achievement.contrarian.description',
 		xp: 400,
 		icon: 'zap'
 	},
 	{
 		id: 'marathon',
-		name: 'Marathon',
-		description: '30-day streak',
+		nameKey: 'achievement.marathon.name',
+		descriptionKey: 'achievement.marathon.description',
 		xp: 800,
 		icon: 'timer'
 	},
 	{
 		id: 'lvl-25',
-		name: 'Level 25',
-		description: 'Reach level 25',
+		nameKey: 'achievement.lvl_25.name',
+		descriptionKey: 'achievement.lvl_25.description',
 		xp: 1000,
 		icon: 'star'
 	}

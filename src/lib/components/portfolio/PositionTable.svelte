@@ -8,10 +8,12 @@
 		PORTFOLIO_DEFAULT_SYMBOL
 	} from '$lib/constants/portfolio.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { SeriesCategory } from '$lib/types/category';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { formatCurrency, formatQuantity } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { formatPositionPnLWithOptionalUnit } from '$lib/utils/playground-display.utils';
 	import { calculatePositionPnL, calculatePositionValue } from '$lib/utils/portfolio.utils';
 	import { positionResolvedResult } from '$lib/utils/position.utils';
@@ -35,16 +37,16 @@
 
 <div class="space-y-4">
 	<h2 class="font-display text-foreground text-xl font-semibold tracking-wider uppercase">
-		Active Positions
+		{t({ locale: $localeStore, key: 'portfolio.positions.title' })}
 	</h2>
 	<Card class="overflow-hidden" padding="none">
 		{#if positions.length === 0}
-			<EmptyState message="You haven't placed any predictions yet.">
+			<EmptyState message={t({ locale: $localeStore, key: 'portfolio.positions.empty' })}>
 				<a
 					class="bg-primary text-primary-foreground hover:bg-primary/90 inline-block rounded-[4px] px-6 py-2.5 text-sm font-bold transition-all active:scale-[0.985]"
 					href="/"
 				>
-					Explore Markets
+					{t({ locale: $localeStore, key: 'portfolio.positions.explore_markets' })}
 				</a>
 			</EmptyState>
 		{:else}
@@ -54,11 +56,21 @@
 						<tr
 							class="border-border text-muted-foreground bg-card border-b text-[10px] tracking-widest uppercase"
 						>
-							<th class="px-6 py-4 font-black">Market</th>
-							<th class="px-6 py-4 font-black">Side</th>
-							<th class="px-6 py-4 text-right font-black">Size</th>
-							<th class="px-6 py-4 text-right font-black">Value</th>
-							<th class="px-6 py-4 text-right font-black">P&L</th>
+							<th class="px-6 py-4 font-black"
+								>{t({ locale: $localeStore, key: 'portfolio.positions.col.market' })}</th
+							>
+							<th class="px-6 py-4 font-black"
+								>{t({ locale: $localeStore, key: 'portfolio.positions.col.side' })}</th
+							>
+							<th class="px-6 py-4 text-right font-black"
+								>{t({ locale: $localeStore, key: 'portfolio.positions.col.size' })}</th
+							>
+							<th class="px-6 py-4 text-right font-black"
+								>{t({ locale: $localeStore, key: 'portfolio.positions.col.value' })}</th
+							>
+							<th class="px-6 py-4 text-right font-black"
+								>{t({ locale: $localeStore, key: 'portfolio.positions.col.pnl' })}</th
+							>
 						</tr>
 					</thead>
 					<tbody class="divide-border divide-y">
@@ -81,12 +93,17 @@
 											<span
 												class="text-foreground group-hover:text-primary block truncate text-sm font-bold transition-colors"
 											>
-												{market?.title ?? 'Unknown Market'}
+												{market?.title ??
+													t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 											</span>
 											<span
 												class="text-muted-foreground block truncate text-[10px] leading-none tracking-widest uppercase"
 											>
-												ID: {pos.marketId}
+												{t({
+													locale: $localeStore,
+													key: 'portfolio.id_label',
+													params: { id: pos.marketId }
+												})}
 											</span>
 										</span>
 									</a>
@@ -113,7 +130,9 @@
 										value: pos.netQty < ZERO ? -pos.netQty : pos.netQty,
 										decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS
 									})}
-									<span class="text-muted-foreground text-[10px]">QTY</span>
+									<span class="text-muted-foreground text-[10px]"
+										>{t({ locale: $localeStore, key: 'portfolio.qty_unit' })}</span
+									>
 								</td>
 								<td
 									class="text-foreground px-6 py-4 text-right font-mono text-sm font-bold tabular-nums"

@@ -2,6 +2,7 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { orders } from '$lib/derived/orders.derived';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { orderBookStore } from '$lib/stores/order-book.store';
 	import { selectPrice } from '$lib/stores/trade.store';
 	import type { Market, Outcome } from '$lib/types/market';
@@ -11,6 +12,7 @@
 		formatProbability,
 		formatQuantity
 	} from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		market: Market;
@@ -139,10 +141,17 @@
 
 <div class="border-border bg-card overflow-hidden rounded-3xl border p-6">
 	<div class="mb-6 flex items-center justify-between">
-		<h3 class="text-foreground text-lg font-bold">Order Book ({outcome})</h3>
+		<h3 class="text-foreground text-lg font-bold">
+			{t({
+				locale: $localeStore,
+				key: 'market.order_book.title',
+				params: { outcome }
+			})}
+		</h3>
 		<div class="flex items-center gap-2">
 			<span class="bg-yes flex h-2 w-2 animate-pulse rounded-full"></span>
-			<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">Live</span
+			<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
+				>{t({ locale: $localeStore, key: 'market.order_book.live' })}</span
 			>
 		</div>
 	</div>
@@ -153,7 +162,7 @@
 				class="border-primary/20 border-t-primary h-12 w-12 animate-spin rounded-full border-4"
 			></div>
 			<span class="text-primary mt-4 text-[10px] font-bold tracking-widest uppercase">
-				Updating Depth...
+				{t({ locale: $localeStore, key: 'market.order_book.updating' })}
 			</span>
 		</div>
 	{:else}
@@ -189,7 +198,7 @@
 
 			<div class="border-border flex items-center justify-between border-y px-2 py-4">
 				<span class="text-muted-foreground text-[10px] font-black tracking-widest uppercase"
-					>Spread</span
+					>{t({ locale: $localeStore, key: 'market.order_book.spread' })}</span
 				>
 				{#if displayAsks.length > 0 && displayBids.length > 0}
 					<span class="text-foreground text-xs font-bold">
@@ -230,8 +239,8 @@
 		<div
 			class="border-border text-muted-foreground mt-6 grid grid-cols-2 gap-4 border-t pt-4 text-[10px] font-bold tracking-widest uppercase"
 		>
-			<div>Price</div>
-			<div class="text-right">Qty</div>
+			<div>{t({ locale: $localeStore, key: 'market.order_book.price' })}</div>
+			<div class="text-right">{t({ locale: $localeStore, key: 'market.order_book.qty' })}</div>
 		</div>
 	{/if}
 </div>

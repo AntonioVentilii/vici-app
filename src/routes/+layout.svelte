@@ -5,6 +5,7 @@
 	import TweaksPanel from '$lib/components/dev/TweaksPanel.svelte';
 	import Notifications from '$lib/components/ui/Notifications.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 	// eslint-disable-next-line import/no-relative-parent-imports
 	import '../app.css';
 
@@ -44,7 +45,7 @@
 	<div class="flex h-screen items-center justify-center">
 		<div class="text-center">
 			<div class="loader mb-4"></div>
-			<p class="text-lg">Loading...</p>
+			<p class="text-lg">{t({ locale: $localeStore, key: 'ui.loading' })}</p>
 		</div>
 	</div>
 {:else}

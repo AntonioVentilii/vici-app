@@ -4,6 +4,7 @@
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import { playgroundPotentialReturnSuffix } from '$lib/derived/playground.derived';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type {
@@ -21,6 +22,7 @@
 		formatWhyNowChip
 	} from '$lib/utils/flow-card-display.utils';
 	import { formatProbability, formatToken } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		market: Market;
@@ -298,7 +300,7 @@
 				+{potentialReturnYes.toFixed(2)}{$playgroundPotentialReturnSuffix}
 			</span>
 			{#if isLimitOrderYes}
-				<span class="flow-edge-pill">Limit</span>
+				<span class="flow-edge-pill">{t({ locale: $localeStore, key: 'card.limit' })}</span>
 			{/if}
 		</div>
 		<div
@@ -312,7 +314,7 @@
 				+{potentialReturnNo.toFixed(2)}{$playgroundPotentialReturnSuffix}
 			</span>
 			{#if isLimitOrderNo}
-				<span class="flow-edge-pill">Limit</span>
+				<span class="flow-edge-pill">{t({ locale: $localeStore, key: 'card.limit' })}</span>
 			{/if}
 		</div>
 		<div
@@ -400,7 +402,9 @@
 						</span>
 						<span class="num flow-prob-pct text-no">{noPctLabel}</span>
 						{#if isLimitOrderNo}
-							<span class="flow-prob-badge bg-no-wash text-no">Limit</span>
+							<span class="flow-prob-badge bg-no-wash text-no">
+								{t({ locale: $localeStore, key: 'card.limit' })}
+							</span>
 						{/if}
 					</BaseButton>
 					<BaseButton
@@ -413,14 +417,16 @@
 						</span>
 						<span class="num flow-prob-pct text-yes">{yesPctLabel}</span>
 						{#if isLimitOrderYes}
-							<span class="flow-prob-badge bg-yes-wash text-yes">Limit</span>
+							<span class="flow-prob-badge bg-yes-wash text-yes">
+								{t({ locale: $localeStore, key: 'card.limit' })}
+							</span>
 						{/if}
 					</BaseButton>
 				</div>
 
 				<div class="flow-card-foot num">
 					<span>{callsLabel}</span>
-					<span class="allcaps">Tap for depth</span>
+					<span class="allcaps">{t({ locale: $localeStore, key: 'card.tap_depth' })}</span>
 				</div>
 
 				<div class="flow-card-rail">

@@ -8,8 +8,10 @@
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { setAuthBusy } from '$lib/stores/user.store';
 	import type { ButtonStatus } from '$lib/types/components';
+	import { t } from '$lib/utils/i18n.utils';
 
 	let open = $state(false);
 	let signOutStatus = $state<ButtonStatus>('enabled');
@@ -43,7 +45,7 @@
 	{#snippet trigger()}
 		<BaseButton
 			class="border-border bg-card text-foreground hover:border-border-strong flex h-10 w-10 items-center justify-center rounded-full border transition-all active:scale-95"
-			aria-label="User profile"
+			aria-label={t({ locale: $localeStore, key: 'a11y.user_profile' })}
 			data-tid={TestId.UserMenu}
 		>
 			<svg
@@ -83,7 +85,7 @@
 					<path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
 					<circle cx="12" cy="7" r="4" />
 				</svg>
-				Profile
+				{t({ locale: $localeStore, key: 'nav.profile' })}
 			</BaseButton>
 
 			<BaseButton
@@ -91,7 +93,7 @@
 				onclick={goToSettings}
 			>
 				<Settings size={16} strokeWidth={1.8} />
-				Settings
+				{t({ locale: $localeStore, key: 'settings.title' })}
 			</BaseButton>
 
 			<div class="border-border my-1 border-t"></div>
@@ -100,7 +102,7 @@
 
 			<div class="flex items-center justify-between gap-3 px-4 py-2">
 				<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-					Theme
+					{t({ locale: $localeStore, key: 'layout.user.theme' })}
 				</span>
 				<AppearancePicker />
 			</div>
@@ -128,7 +130,7 @@
 					<polyline points="16 17 21 12 16 7" />
 					<line x1="21" x2="9" y1="12" y2="12" />
 				</svg>
-				Log out
+				{t({ locale: $localeStore, key: 'layout.user.log_out' })}
 			</BaseButton>
 		</div>
 	{/snippet}

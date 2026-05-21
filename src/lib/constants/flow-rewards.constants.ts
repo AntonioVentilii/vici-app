@@ -5,6 +5,8 @@
 // streak engine). Rarity grows exponentially — first swipes feel like
 // fireworks, later rewards are rare and feel earned.
 
+import type { MessageKey } from '$lib/utils/i18n.utils';
+
 /**
  * Base XP awarded on every committed prediction (YES / NO). Skips
  * do not award XP. Multiplied by the streak combo multiplier.
@@ -19,7 +21,7 @@ export interface FlowMilestone {
 	bonusXp: number;
 	// Paired copy — terse, second-person, no narration. Surfaces in the
 	// XP pop and (later) the Companion bubble.
-	copy: string;
+	copyKey: MessageKey;
 }
 
 /**
@@ -28,11 +30,11 @@ export interface FlowMilestone {
  * 1 → 10 → 50 → 250 → 1000 (exponential spacing on a log axis).
  */
 export const FLOW_MILESTONES: readonly FlowMilestone[] = [
-	{ id: 'first-call', swipeCount: 1, bonusXp: 50, copy: 'First call.' },
-	{ id: 'swipe-10', swipeCount: 10, bonusXp: 100, copy: 'Ten deep.' },
-	{ id: 'swipe-50', swipeCount: 50, bonusXp: 250, copy: 'Fifty in.' },
-	{ id: 'swipe-250', swipeCount: 250, bonusXp: 500, copy: 'Two-fifty.' },
-	{ id: 'swipe-1000', swipeCount: 1000, bonusXp: 1000, copy: 'One thousand.' }
+	{ id: 'first-call', swipeCount: 1, bonusXp: 50, copyKey: 'flow.milestone.first_call' },
+	{ id: 'swipe-10', swipeCount: 10, bonusXp: 100, copyKey: 'flow.milestone.ten_deep' },
+	{ id: 'swipe-50', swipeCount: 50, bonusXp: 250, copyKey: 'flow.milestone.fifty_in' },
+	{ id: 'swipe-250', swipeCount: 250, bonusXp: 500, copyKey: 'flow.milestone.two_fifty' },
+	{ id: 'swipe-1000', swipeCount: 1000, bonusXp: 1000, copyKey: 'flow.milestone.one_thousand' }
 ] as const;
 
 /**

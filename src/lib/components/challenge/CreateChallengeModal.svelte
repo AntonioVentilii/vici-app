@@ -6,8 +6,10 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { listGroups } from '$lib/services/group.services';
 	import { createMarket } from '$lib/services/market.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { ButtonStatus } from '$lib/types/components';
+	import { t } from '$lib/utils/i18n.utils';
 	import { refreshMarkets } from '$lib/utils/refresh.utils';
 
 	interface Props {
@@ -52,8 +54,8 @@
 	const onCreate = async () => {
 		if (isNullish(title) || !title.trim()) {
 			notificationsStore.add({
-				title: 'Missing Title',
-				message: 'Give your challenge a question or title.',
+				title: t({ locale: $localeStore, key: 'challenge.create.error.missing_title' }),
+				message: t({ locale: $localeStore, key: 'challenge.create.error.missing_title_message' }),
 				type: 'warning'
 			});
 
@@ -62,8 +64,8 @@
 
 		if (isNullish(expiryDate)) {
 			notificationsStore.add({
-				title: 'Missing Date',
-				message: 'Set an expiry date for your challenge.',
+				title: t({ locale: $localeStore, key: 'challenge.create.error.missing_date' }),
+				message: t({ locale: $localeStore, key: 'challenge.create.error.missing_date_message' }),
 				type: 'warning'
 			});
 
@@ -88,14 +90,20 @@
 				balanceDomain: domain,
 				socialReward:
 					stakes === 'bragging'
-						? { title: 'Fun Dare', description: 'Loser pays the dare!' }
+						? {
+								title: t({ locale: $localeStore, key: 'challenge.create.social_reward_title' }),
+								description: t({
+									locale: $localeStore,
+									key: 'challenge.create.social_reward_desc'
+								})
+							}
 						: undefined,
 				tradingAccess
 			});
 
 			notificationsStore.add({
-				title: 'Challenge Created',
-				message: 'Your challenge is live!',
+				title: t({ locale: $localeStore, key: 'challenge.create.created.title' }),
+				message: t({ locale: $localeStore, key: 'challenge.create.created.message' }),
 				type: 'success'
 			});
 
@@ -103,7 +111,7 @@
 			close();
 		} catch (e: unknown) {
 			notificationsStore.add({
-				title: 'Creation Failed',
+				title: t({ locale: $localeStore, key: 'challenge.create.failed.title' }),
 				message: (e as Error).message,
 				type: 'error'
 			});
@@ -116,9 +124,11 @@
 <Modal {isOpen} onClose={close}>
 	<div class="space-y-6">
 		<div>
-			<h3 class="text-foreground text-2xl font-black">Create a Challenge</h3>
+			<h3 class="text-foreground text-2xl font-black">
+				{t({ locale: $localeStore, key: 'challenge.create.title' })}
+			</h3>
 			<p class="text-muted-foreground mt-1 text-sm">
-				Ask a question and let your circle predict the answer.
+				{t({ locale: $localeStore, key: 'challenge.create.sub' })}
 			</p>
 		</div>
 
@@ -127,12 +137,12 @@
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				for="ch-title"
 			>
-				What's the question?
+				{t({ locale: $localeStore, key: 'challenge.create.question_label' })}
 			</label>
 			<input
 				id="ch-title"
 				class="bg-foreground/5 text-foreground ring-border focus:bg-card focus:ring-primary w-full rounded-2xl border-none px-5 py-4 text-lg font-bold ring-1 ring-inset focus:ring-2"
-				placeholder="e.g., Will I quit smoking by June?"
+				placeholder={t({ locale: $localeStore, key: 'challenge.create.question_placeholder' })}
 				type="text"
 				bind:value={title}
 			/>
@@ -143,13 +153,15 @@
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				for="ch-desc"
 			>
-				Details
-				<span class="text-muted-foreground font-normal">(optional)</span>
+				{t({ locale: $localeStore, key: 'challenge.create.details_label' })}
+				<span class="text-muted-foreground font-normal">
+					{t({ locale: $localeStore, key: 'challenge.create.details_optional' })}
+				</span>
 			</label>
 			<textarea
 				id="ch-desc"
 				class="bg-foreground/5 text-foreground ring-border focus:bg-card focus:ring-primary w-full rounded-2xl border-none px-5 py-3 text-sm ring-1 ring-inset focus:ring-2"
-				placeholder="Add context or resolution criteria..."
+				placeholder={t({ locale: $localeStore, key: 'challenge.create.details_placeholder' })}
 				rows="2"
 				bind:value={description}
 			></textarea>
@@ -160,7 +172,7 @@
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				for="ch-expiry"
 			>
-				When does it expire?
+				{t({ locale: $localeStore, key: 'challenge.create.expiry_label' })}
 			</label>
 			<input
 				id="ch-expiry"
@@ -171,7 +183,9 @@
 		</div>
 
 		<div class="space-y-3">
-			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">Stakes</span>
+			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
+				{t({ locale: $localeStore, key: 'challenge.create.stakes' })}
+			</span>
 			<div class="grid grid-cols-2 gap-3">
 				<button
 					class="rounded-2xl border-2 px-4 py-3 text-center font-bold transition-all {stakes ===
@@ -181,8 +195,12 @@
 					onclick={() => (stakes = 'bragging')}
 					type="button"
 				>
-					<div class="text-sm">Fun Dare</div>
-					<div class="text-[10px] font-normal opacity-70">Pizza, push-ups, beer...</div>
+					<div class="text-sm">
+						{t({ locale: $localeStore, key: 'challenge.create.stakes.bragging' })}
+					</div>
+					<div class="text-[10px] font-normal opacity-70">
+						{t({ locale: $localeStore, key: 'challenge.create.stakes.bragging_sub' })}
+					</div>
 				</button>
 				<button
 					class="rounded-2xl border-2 px-4 py-3 text-center font-bold transition-all {stakes ===
@@ -192,16 +210,20 @@
 					onclick={() => (stakes = 'vxp')}
 					type="button"
 				>
-					<div class="text-sm">VXP Points</div>
-					<div class="text-[10px] font-normal opacity-70">Playground stakes</div>
+					<div class="text-sm">
+						{t({ locale: $localeStore, key: 'challenge.create.stakes.vxp' })}
+					</div>
+					<div class="text-[10px] font-normal opacity-70">
+						{t({ locale: $localeStore, key: 'challenge.create.stakes.vxp_sub' })}
+					</div>
 				</button>
 			</div>
 		</div>
 
 		<div class="space-y-3">
-			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
-				>Who can play?</span
-			>
+			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
+				{t({ locale: $localeStore, key: 'challenge.create.audience' })}
+			</span>
 			<div class="grid grid-cols-3 gap-2">
 				<button
 					class="rounded-xl border-2 px-3 py-2.5 text-xs font-bold transition-all {audience ===
@@ -211,7 +233,7 @@
 					onclick={() => (audience = 'public')}
 					type="button"
 				>
-					Public
+					{t({ locale: $localeStore, key: 'challenge.create.audience.public' })}
 				</button>
 				<button
 					class="rounded-xl border-2 px-3 py-2.5 text-xs font-bold transition-all {audience ===
@@ -221,7 +243,7 @@
 					onclick={() => (audience = 'friends')}
 					type="button"
 				>
-					Friends
+					{t({ locale: $localeStore, key: 'challenge.create.audience.friends' })}
 				</button>
 				<button
 					class="rounded-xl border-2 px-3 py-2.5 text-xs font-bold transition-all {audience ===
@@ -231,7 +253,7 @@
 					onclick={() => (audience = 'group')}
 					type="button"
 				>
-					Group
+					{t({ locale: $localeStore, key: 'challenge.create.audience.group' })}
 				</button>
 			</div>
 		</div>
@@ -240,7 +262,7 @@
 			<div class="bg-foreground/5 space-y-2 rounded-2xl p-4">
 				{#if availableGroups.length === 0}
 					<p class="text-muted-foreground text-sm italic">
-						No groups yet. Create one from your Profile page first.
+						{t({ locale: $localeStore, key: 'challenge.create.no_groups' })}
 					</p>
 				{:else}
 					{#each availableGroups as group (group.group_id)}
@@ -269,21 +291,20 @@
 
 		<div class="bg-primary/5 ring-primary/10 rounded-2xl p-4 ring-1 ring-inset">
 			<p class="text-muted-foreground text-xs leading-relaxed">
-				<strong>How it works:</strong> Your challenge appears in the markets feed.
+				<strong>{t({ locale: $localeStore, key: 'challenge.create.how_it_works_prefix' })}</strong>
 				{#if stakes === 'bragging'}
-					Participants predict YES or NO — the loser pays the dare!
+					{t({ locale: $localeStore, key: 'challenge.create.how_it_works.bragging' })}
 				{:else}
-					Participants stake VXP points — correct predictors win the pot.
+					{t({ locale: $localeStore, key: 'challenge.create.how_it_works.vxp' })}
 				{/if}
-				You resolve the outcome when the time comes.
 			</p>
 		</div>
 
 		<Button class="w-full py-4 text-lg font-black" onclick={onCreate} {status}>
 			{#snippet busyLabel()}
-				Creating...
+				{t({ locale: $localeStore, key: 'challenge.create.cta_busy' })}
 			{/snippet}
-			Launch Challenge
+			{t({ locale: $localeStore, key: 'challenge.create.cta' })}
 		</Button>
 	</div>
 </Modal>

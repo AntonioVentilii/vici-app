@@ -8,6 +8,7 @@
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import type { CollateralStoreData } from '$lib/stores/collaterals.store';
+	import { localeStore } from '$lib/stores/locale.store';
 	import {
 		findAssetWorthForIcrcLedger,
 		icrcLedgerDecimalsFromCollateralConfig
@@ -16,6 +17,7 @@
 		calculateDepositedNominalLabel,
 		calculateIntuitiveAvailable
 	} from '$lib/utils/collateral-ui.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { formatAvailableMarginForUi } from '$lib/utils/playground-display.utils';
 
 	interface Props {
@@ -64,7 +66,9 @@
 	>
 		<div>
 			<div class="flex items-center gap-3">
-				<div class="eyebrow text-primary">Clearing Collateral</div>
+				<div class="eyebrow text-primary">
+					{t({ locale: $localeStore, key: 'wallet.collateral.eyebrow' })}
+				</div>
 			</div>
 			<div class="text-muted-foreground mt-1 space-y-1 text-sm">
 				{#if isNullish(collateral)}
@@ -72,12 +76,14 @@
 					<div class="bg-foreground/10 mt-2 h-4 w-24 animate-pulse rounded"></div>
 				{:else if nonNullish(collateral.accountState)}
 					<p>
-						Deposited: <span class="text-foreground font-mono font-bold tabular-nums">
+						{t({ locale: $localeStore, key: 'wallet.collateral.deposited' })}
+						<span class="text-foreground font-mono font-bold tabular-nums">
 							{depositedNominalLabel || '0'}
 						</span>
 					</p>
 					<p>
-						Available: <span class="text-foreground font-mono font-bold tabular-nums">
+						{t({ locale: $localeStore, key: 'wallet.collateral.available' })}
+						<span class="text-foreground font-mono font-bold tabular-nums">
 							{formatAvailableMarginForUi({
 								value: intuitiveAvailable ?? ZERO,
 								playground: $playgroundVxpUnitMode
@@ -85,18 +91,22 @@
 						</span>
 					</p>
 				{:else}
-					<p>Sign in to see clearing collateral.</p>
+					<p>{t({ locale: $localeStore, key: 'wallet.collateral.signin_required' })}</p>
 				{/if}
 			</div>
 		</div>
 
 		<div class="flex flex-wrap items-center gap-3">
 			<div class="bg-foreground/5 flex items-center gap-2 rounded-full px-3 py-1.5">
-				<span class="text-muted-foreground text-xs">Hide zero</span>
+				<span class="text-muted-foreground text-xs">
+					{t({ locale: $localeStore, key: 'wallet.collateral.hide_zero' })}
+				</span>
 				<Switch bind:checked={hideZeroBalances} />
 			</div>
 
-			<Button onclick={onManage} size="sm" variant="primary">Manage</Button>
+			<Button onclick={onManage} size="sm" variant="primary">
+				{t({ locale: $localeStore, key: 'wallet.collateral.manage' })}
+			</Button>
 		</div>
 	</div>
 
@@ -135,7 +145,9 @@
 			{/each}
 
 			{#if displayedTokens.length === 0}
-				<div class="text-muted-foreground p-8 text-center text-sm">No collateral to display</div>
+				<div class="text-muted-foreground p-8 text-center text-sm">
+					{t({ locale: $localeStore, key: 'wallet.collateral.empty' })}
+				</div>
 			{/if}
 		{/if}
 	</div>

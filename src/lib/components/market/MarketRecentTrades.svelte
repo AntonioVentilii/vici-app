@@ -4,9 +4,11 @@
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getGlobalActivities } from '$lib/services/activity.services';
 	import { getProfile } from '$lib/services/profile.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { Activity } from '$lib/types/social';
 	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		marketId: string;
@@ -48,13 +50,15 @@
 >
 	{#if !isEmbedded}
 		<h3 class="text-muted-foreground text-xs font-black tracking-widest uppercase">
-			Recent Activity
+			{t({ locale: $localeStore, key: 'market.recent.title' })}
 		</h3>
 	{/if}
 
 	<div class="space-y-4">
 		{#if activities.length === 0}
-			<p class="text-muted-foreground py-4 text-center text-xs">No recent activity</p>
+			<p class="text-muted-foreground py-4 text-center text-xs">
+				{t({ locale: $localeStore, key: 'market.recent.empty' })}
+			</p>
 		{:else}
 			{#each activities as activity (activity.timestamp + activity.user)}
 				<div class="flex items-start gap-3">
@@ -81,7 +85,12 @@
 							</span>
 						</div>
 						<p class="text-muted-foreground mt-0.5 text-[10px] leading-tight">
-							{activity.details ?? `predicted on ${activity.title}`}
+							{activity.details ??
+								t({
+									locale: $localeStore,
+									key: 'market.recent.predicted_on',
+									params: { title: activity.title }
+								})}
 						</p>
 					</div>
 				</div>

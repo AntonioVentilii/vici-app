@@ -5,8 +5,10 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import { PORTFOLIO_DEFAULT_DECIMALS } from '$lib/constants/portfolio.constants';
 	import { cancelLimitOrder } from '$lib/services/order.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import { formatPrice, formatQuantity } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		orders: ClearingDid.LimitOrder[];
@@ -35,10 +37,12 @@
 </script>
 
 <div class="space-y-4">
-	<h2 class="text-foreground text-xl font-bold tracking-wider uppercase">Open Orders</h2>
+	<h2 class="text-foreground text-xl font-bold tracking-wider uppercase">
+		{t({ locale: $localeStore, key: 'portfolio.orders.title' })}
+	</h2>
 	<Card class="overflow-hidden" padding="none">
 		{#if orders.length === 0}
-			<EmptyState message="No open orders found." />
+			<EmptyState message={t({ locale: $localeStore, key: 'portfolio.orders.empty' })} />
 		{:else}
 			<div class="flex w-full min-w-0 overflow-x-auto">
 				<table class="w-full min-w-0 table-fixed text-left">
@@ -46,11 +50,21 @@
 						<tr
 							class="border-border bg-foreground/5 text-muted-foreground border-b text-[10px] tracking-widest uppercase"
 						>
-							<th class="px-6 py-4 font-black">Market</th>
-							<th class="px-6 py-4 font-black">Side</th>
-							<th class="px-6 py-4 text-right font-black">Price</th>
-							<th class="px-6 py-4 text-right font-black">Qty</th>
-							<th class="px-6 py-4 text-right font-black">Action</th>
+							<th class="px-6 py-4 font-black"
+								>{t({ locale: $localeStore, key: 'portfolio.orders.col.market' })}</th
+							>
+							<th class="px-6 py-4 font-black"
+								>{t({ locale: $localeStore, key: 'portfolio.orders.col.side' })}</th
+							>
+							<th class="px-6 py-4 text-right font-black"
+								>{t({ locale: $localeStore, key: 'portfolio.orders.col.price' })}</th
+							>
+							<th class="px-6 py-4 text-right font-black"
+								>{t({ locale: $localeStore, key: 'portfolio.orders.col.qty' })}</th
+							>
+							<th class="px-6 py-4 text-right font-black"
+								>{t({ locale: $localeStore, key: 'portfolio.orders.col.action' })}</th
+							>
 						</tr>
 					</thead>
 					<tbody class="divide-border divide-y">
@@ -62,10 +76,15 @@
 								<td class="min-w-0 px-6 py-4">
 									<div class="flex min-w-0 flex-col">
 										<span class="text-foreground block truncate text-sm font-bold">
-											{market?.title ?? 'Unknown Market'}
+											{market?.title ??
+												t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 										</span>
 										<span class="text-muted-foreground truncate text-[10px] uppercase"
-											>ID: {order.series_id}</span
+											>{t({
+												locale: $localeStore,
+												key: 'portfolio.id_label',
+												params: { id: order.series_id }
+											})}</span
 										>
 									</div>
 								</td>
@@ -75,7 +94,9 @@
 											? 'border-success/20 bg-success/10 text-success'
 											: 'border-destructive/20 bg-destructive/10 text-destructive'}"
 									>
-										{isBuy ? 'BUY' : 'SELL'}
+										{isBuy
+											? t({ locale: $localeStore, key: 'portfolio.orders.side.buy' })
+											: t({ locale: $localeStore, key: 'portfolio.orders.side.sell' })}
 									</span>
 								</td>
 								<td class="text-foreground px-6 py-4 text-right text-sm font-bold">
@@ -93,7 +114,7 @@
 										onclick={() => handleCancel(order.order_id)}
 										status={cancellingId === order.order_id ? 'pending' : 'enabled'}
 									>
-										Cancel
+										{t({ locale: $localeStore, key: 'profile.dashboard.cancel' })}
 									</BaseButton>
 								</td>
 							</tr>

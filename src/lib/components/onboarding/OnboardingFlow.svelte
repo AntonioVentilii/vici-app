@@ -9,6 +9,7 @@
 	import { categoryColor } from '$lib/utils/category-color.utils';
 	import { FLOW_ART_CATEGORIES, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
+	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	interface OnboardingResult {
 		handle: string;
@@ -24,19 +25,9 @@
 	interface OnboardingMarket {
 		id: string;
 		category: FlowArtCategory;
-		title: string;
-		subtitle: string;
 		yesProbability: number;
 		calls: string;
 		days: number;
-		resolution: string;
-		source: string;
-	}
-
-	interface CategoryOption {
-		id: FlowArtCategory;
-		label: string;
-		feedLine: string;
 	}
 
 	type CallSide = 'YES' | 'NO';
@@ -51,79 +42,67 @@
 		{
 			id: 'fed-jun',
 			category: 'macro',
-			title: 'Will the Fed cut rates in June?',
-			subtitle: 'FOMC · rate-cut call',
 			yesProbability: 0.64,
 			calls: '2.4M',
-			days: 47,
-			resolution: 'Resolves YES if the FOMC announces any rate cut at the June meeting.',
-			source: 'Federal Reserve press release'
+			days: 47
 		},
 		{
 			id: 'btc-150k',
 			category: 'crypto',
-			title: 'Will BTC close above $150K by year-end?',
-			subtitle: 'Spot price · 7d +4.2%',
 			yesProbability: 0.38,
 			calls: '8.1M',
-			days: 228,
-			resolution: 'Resolves YES if BTC closes above $150,000 at the year-end spot close.',
-			source: 'Coinbase Spot close'
+			days: 228
 		},
 		{
 			id: 'gpt6-2026',
 			category: 'tech',
-			title: 'Will OpenAI release GPT-6 before Q4?',
-			subtitle: 'Model-release window',
 			yesProbability: 0.22,
 			calls: '620K',
-			days: 135,
-			resolution: 'Resolves YES if a model named GPT-6 is publicly released before Q4.',
-			source: 'Public release announcement'
+			days: 135
 		},
 		{
 			id: 'eu-ai-act',
 			category: 'politics',
-			title: 'Will the EU pass the AI Liability Act this session?',
-			subtitle: 'Council vote pending',
 			yesProbability: 0.55,
 			calls: '410K',
-			days: 58,
-			resolution: 'Resolves YES if the Council passes the act in the current session.',
-			source: 'EU Council vote record'
+			days: 58
 		},
 		{
 			id: 'sb-niners',
 			category: 'sports',
-			title: 'Will the 49ers win the Super Bowl?',
-			subtitle: 'Season market',
 			yesProbability: 0.31,
 			calls: '1.8M',
-			days: 266,
-			resolution: 'Resolves YES if San Francisco wins the championship game.',
-			source: 'Official league result'
+			days: 266
 		},
 		{
 			id: 'taylor-tour',
 			category: 'culture',
-			title: 'Will Taylor Swift announce a 2027 tour by August?',
-			subtitle: 'Artist announcement watch',
 			yesProbability: 0.48,
 			calls: '380K',
-			days: 106,
-			resolution: 'Resolves YES if a 2027 tour is officially announced before September.',
-			source: 'Official artist announcement'
+			days: 106
 		}
 	] satisfies readonly [OnboardingMarket, OnboardingMarket, ...OnboardingMarket[]];
 
-	const categoryOptions: readonly CategoryOption[] = [
-		{ id: 'macro', label: 'Macro', feedLine: 'Rates, GDP, inflation' },
-		{ id: 'crypto', label: 'Crypto', feedLine: 'BTC, ETH, on-chain signals' },
-		{ id: 'politics', label: 'Politics', feedLine: 'Elections, policy, courts' },
-		{ id: 'tech', label: 'Tech', feedLine: 'AI, chips, platform shifts' },
-		{ id: 'sports', label: 'Sports', feedLine: 'Leagues, finals, roster moves' },
-		{ id: 'culture', label: 'Culture', feedLine: 'Tours, film, media moments' }
+	const categoryOptions: readonly FlowArtCategory[] = [
+		'macro',
+		'crypto',
+		'politics',
+		'tech',
+		'sports',
+		'culture'
 	];
+
+	const marketFieldKey = ({
+		id,
+		field
+	}: {
+		id: string;
+		field: 'title' | 'subtitle' | 'resolution' | 'source';
+	}): MessageKey => `onboarding.markets.${id.replace(/-/g, '_')}.${field}` as MessageKey;
+
+	const categoryLabelKey = (id: FlowArtCategory): MessageKey => `onboarding.category.${id}.label`;
+
+	const categoryFeedKey = (id: FlowArtCategory): MessageKey => `onboarding.category.${id}.feed`;
 
 	let step = $state(0);
 	let firstDragX = $state(0);
@@ -159,7 +138,13 @@
 	const progressTone = $derived(
 		step === 0 ? 'var(--text-muted)' : step === 1 ? 'var(--laurel-deep)' : 'var(--laurel)'
 	);
-	const progressLatin = $derived(step === 0 ? 'Veni.' : step === 3 ? 'Vici.' : '');
+	const progressLatin = $derived(
+		step === 0
+			? t({ locale: $localeStore, key: 'onboarding.latin.veni' })
+			: step === 3
+				? t({ locale: $localeStore, key: 'onboarding.latin.vici' })
+				: ''
+	);
 	const firstRotation = $derived(firstDragX / 18);
 	const firstYesOpacity = $derived(firstCommitted === 'YES' ? 1 : Math.max(0, firstDragX / 70));
 	const firstNoOpacity = $derived(firstCommitted === 'NO' ? 1 : Math.max(0, -firstDragX / 70));
@@ -442,15 +427,23 @@
 <div class="onboarding-shell" data-tid={TestId.OnboardingFlow}>
 	{#if onSignIn && step === 0}
 		<div class="signin-switch">
-			<span>Have an account?</span>
-			<button onclick={onSignIn} type="button">Sign in →</button>
+			<span>{t({ locale: $localeStore, key: 'onboarding.signin_prompt' })}</span>
+			<button onclick={onSignIn} type="button">
+				{t({ locale: $localeStore, key: 'signin.footer.cta.signin' })}
+			</button>
 		</div>
 	{/if}
 
 	<header class="progress-head">
 		<div class="progress-meta">
 			<span class="serif-italic latin">{progressLatin}</span>
-			<span class="num step-count">Step {step + 1} of 4</span>
+			<span class="num step-count">
+				{t({
+					locale: $localeStore,
+					key: 'onboarding.step_count',
+					params: { current: step + 1 }
+				})}
+			</span>
 		</div>
 		<div class="progress-track" aria-hidden="true">
 			<div style:background={progressTone} style:width={progressWidth} class="progress-fill"></div>
@@ -461,9 +454,13 @@
 		{#if step === 0}
 			<section class="step step-first" aria-labelledby="first-call-title">
 				<div class="step-copy">
-					<p class="eyebrow">First call</p>
-					<h1 id="first-call-title">Make your first call.</h1>
-					<p>One swipe starts your track record.</p>
+					<p class="eyebrow">
+						{t({ locale: $localeStore, key: 'onboarding.eyebrow.first_call' })}
+					</p>
+					<h1 id="first-call-title">
+						{t({ locale: $localeStore, key: 'onboarding.step1.title' })}
+					</h1>
+					<p>{t({ locale: $localeStore, key: 'onboarding.step1.sub' })}</p>
 				</div>
 
 				<div class="card-stage">
@@ -474,7 +471,7 @@
 						class="market-card {firstDragging ? 'dragging' : ''} {firstCommitted !== null
 							? 'committed'
 							: ''}"
-						aria-label="Swipe right for YES or left for NO"
+						aria-label={t({ locale: $localeStore, key: 'onboarding.aria.swipe_first_call' })}
 						data-tid={TestId.OnboardingFirstCallCard}
 						onpointercancel={endFirstDrag}
 						onpointerdown={startFirstDrag}
@@ -488,10 +485,22 @@
 									{firstMarket.category}
 								</span>
 								<span class="num muted">{firstMarket.days}d</span>
-								<span class="allcaps first-flag">FIRST CALL</span>
+								<span class="allcaps first-flag">
+									{t({ locale: $localeStore, key: 'onboarding.first_call_badge' })}
+								</span>
 							</div>
-							<h2>{firstMarket.title}</h2>
-							<p>{firstMarket.subtitle}</p>
+							<h2>
+								{t({
+									locale: $localeStore,
+									key: marketFieldKey({ id: firstMarket.id, field: 'title' })
+								})}
+							</h2>
+							<p>
+								{t({
+									locale: $localeStore,
+									key: marketFieldKey({ id: firstMarket.id, field: 'subtitle' })
+								})}
+							</p>
 						</div>
 
 						<div class="art-slot">
@@ -510,7 +519,7 @@
 								onpointerdown={stopPointer}
 								type="button"
 							>
-								<span>NO</span>
+								<span>{t({ locale: $localeStore, key: 'outcome.no' })}</span>
 								<strong class="num">{formatProbability(noProbability(firstMarket))}</strong>
 							</button>
 							<button
@@ -519,33 +528,49 @@
 								onpointerdown={stopPointer}
 								type="button"
 							>
-								<span>YES</span>
+								<span>{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
 								<strong class="num">{formatProbability(firstMarket.yesProbability)}</strong>
 							</button>
 						</div>
 
 						<div class="call-rail">
-							<span>← NO</span>
-							<span>{firstMarket.calls} calls</span>
-							<span>YES →</span>
+							<span>{t({ locale: $localeStore, key: 'onboarding.call_rail.left' })}</span>
+							<span>
+								{t({
+									locale: $localeStore,
+									key: 'card.call_count',
+									params: { count: firstMarket.calls }
+								})}
+							</span>
+							<span>{t({ locale: $localeStore, key: 'onboarding.call_rail.right' })}</span>
 						</div>
 
 						<div style:opacity={Math.min(firstYesOpacity, 1)} class="edge-tint yes"></div>
 						<div style:opacity={Math.min(firstNoOpacity, 1)} class="edge-tint no"></div>
-						<span style:opacity={Math.min(firstYesOpacity, 1)} class="stamp yes">YES</span>
-						<span style:opacity={Math.min(firstNoOpacity, 1)} class="stamp no">NO</span>
+						<span style:opacity={Math.min(firstYesOpacity, 1)} class="stamp yes">
+							{t({ locale: $localeStore, key: 'outcome.yes' })}
+						</span>
+						<span style:opacity={Math.min(firstNoOpacity, 1)} class="stamp no">
+							{t({ locale: $localeStore, key: 'outcome.no' })}
+						</span>
 					</div>
 
 					<div style:opacity={firstCoachOpacity} class="coach" aria-hidden={!firstCoachVisible}>
 						<div class="coach-row">
 							<span class="coach-arrow no">←</span>
 							<span>
-								Swipe <em class="serif-italic no">left</em> or
-								<em class="serif-italic yes">right</em>
+								{t({ locale: $localeStore, key: 'onboarding.coach.swipe' })}
+								<em class="serif-italic no">
+									{t({ locale: $localeStore, key: 'onboarding.coach.left' })}
+								</em>
+								{t({ locale: $localeStore, key: 'onboarding.coach.or' })}
+								<em class="serif-italic yes">
+									{t({ locale: $localeStore, key: 'onboarding.coach.right' })}
+								</em>
 							</span>
 							<span class="coach-arrow yes">→</span>
 						</div>
-						<p>Right for YES · left for NO</p>
+						<p>{t({ locale: $localeStore, key: 'onboarding.coach.right_yes_left_no' })}</p>
 					</div>
 
 					<div
@@ -560,9 +585,16 @@
 							{/each}
 						</div>
 						<div class="celebration-copy">
-							<span class="allcaps">FIRST CALL</span>
-							<strong class="serif-italic">Called it.</strong>
-							<span class="num">+50 <small>XP</small></span>
+							<span class="allcaps">
+								{t({ locale: $localeStore, key: 'onboarding.first_call_badge' })}
+							</span>
+							<strong class="serif-italic">
+								{t({ locale: $localeStore, key: 'onboarding.celebration.called_it' })}
+							</strong>
+							<span class="num">
+								{t({ locale: $localeStore, key: 'onboarding.celebration.bonus' })}
+								<small>{t({ locale: $localeStore, key: 'leaderboard.row.xp' })}</small>
+							</span>
 						</div>
 					</div>
 				</div>
@@ -570,25 +602,29 @@
 		{:else if step === 1}
 			<section class="step step-gestures" aria-labelledby="gestures-title">
 				<div class="step-copy">
-					<p class="eyebrow">Gestures</p>
-					<h1 id="gestures-title">There's more than yes and no.</h1>
-					<p>Train the two moves that keep Flow fast.</p>
+					<p class="eyebrow">{t({ locale: $localeStore, key: 'onboarding.eyebrow.gestures' })}</p>
+					<h1 id="gestures-title">{t({ locale: $localeStore, key: 'onboarding.step2.title' })}</h1>
+					<p>{t({ locale: $localeStore, key: 'onboarding.step2.sub' })}</p>
 				</div>
 
 				{#if practicePhase === 'done'}
 					<div class="done-panel" aria-live="polite">
-						<span class="eyebrow">Two gestures learned.</span>
+						<span class="eyebrow">
+							{t({ locale: $localeStore, key: 'onboarding.eyebrow.two_gestures_learned' })}
+						</span>
 						<ul>
 							<li>
 								<Check class="done-check" aria-hidden="true" size={15} strokeWidth={2.5} />
-								Tap for details
+								{t({ locale: $localeStore, key: 'onboarding.step2.done.tap_details' })}
 							</li>
 							<li>
 								<Check class="done-check" aria-hidden="true" size={15} strokeWidth={2.5} />
-								Swipe to skip
+								{t({ locale: $localeStore, key: 'onboarding.step2.done.swipe_skip' })}
 							</li>
 						</ul>
-						<p class="serif-italic">You're ready for Flow.</p>
+						<p class="serif-italic">
+							{t({ locale: $localeStore, key: 'onboarding.step2.done.ready' })}
+						</p>
 					</div>
 					<button
 						class="primary-action"
@@ -596,7 +632,7 @@
 						onclick={() => (step = 2)}
 						type="button"
 					>
-						Got it
+						{t({ locale: $localeStore, key: 'onboarding.action.got_it' })}
 					</button>
 				{:else}
 					<div class="card-stage">
@@ -607,7 +643,9 @@
 							class="market-card practice-card {practiceDragging ? 'dragging' : ''} {practiceFlipped
 								? 'flipped'
 								: ''} {practiceExiting ? 'exiting' : ''}"
-							aria-label={practicePhase === 'flip' ? 'Tap to show details' : 'Swipe up to skip'}
+							aria-label={practicePhase === 'flip'
+								? t({ locale: $localeStore, key: 'onboarding.aria.tap_show_details' })
+								: t({ locale: $localeStore, key: 'onboarding.aria.swipe_up_skip' })}
 							data-tid={TestId.OnboardingPracticeCard}
 							onpointercancel={endPracticeDrag}
 							onpointerdown={startPracticeDrag}
@@ -623,8 +661,18 @@
 										</span>
 										<span class="num muted">{practiceMarket.days}d</span>
 									</div>
-									<h2>{practiceMarket.title}</h2>
-									<p>{practiceMarket.subtitle}</p>
+									<h2>
+										{t({
+											locale: $localeStore,
+											key: marketFieldKey({ id: practiceMarket.id, field: 'title' })
+										})}
+									</h2>
+									<p>
+										{t({
+											locale: $localeStore,
+											key: marketFieldKey({ id: practiceMarket.id, field: 'subtitle' })
+										})}
+									</p>
 								</div>
 
 								<div class="art-slot">
@@ -638,11 +686,11 @@
 
 								<div class="prob-grid">
 									<div class="prob-button no static">
-										<span>NO</span>
+										<span>{t({ locale: $localeStore, key: 'outcome.no' })}</span>
 										<strong class="num">{formatProbability(noProbability(practiceMarket))}</strong>
 									</div>
 									<div class="prob-button yes static">
-										<span>YES</span>
+										<span>{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
 										<strong class="num">{formatProbability(practiceMarket.yesProbability)}</strong>
 									</div>
 								</div>
@@ -653,31 +701,62 @@
 									<span style:color={categoryColor(practiceMarket.category)} class="allcaps">
 										{practiceMarket.category}
 									</span>
-									<span class="eyebrow">Depth</span>
+									<span class="eyebrow">
+										{t({ locale: $localeStore, key: 'onboarding.eyebrow.depth' })}
+									</span>
 								</div>
 								<div class="depth-body">
-									<h2>{practiceMarket.title}</h2>
+									<h2>
+										{t({
+											locale: $localeStore,
+											key: marketFieldKey({ id: practiceMarket.id, field: 'title' })
+										})}
+									</h2>
 									<div>
-										<span class="eyebrow">Resolution</span>
-										<p>{practiceMarket.resolution}</p>
-										<small class="num">Source: {practiceMarket.source}</small>
+										<span class="eyebrow">
+											{t({ locale: $localeStore, key: 'onboarding.eyebrow.resolution' })}
+										</span>
+										<p>
+											{t({
+												locale: $localeStore,
+												key: marketFieldKey({ id: practiceMarket.id, field: 'resolution' })
+											})}
+										</p>
+										<small class="num">
+											{t({
+												locale: $localeStore,
+												key: 'onboarding.depth.source',
+												params: {
+													source: t({
+														locale: $localeStore,
+														key: marketFieldKey({ id: practiceMarket.id, field: 'source' })
+													})
+												}
+											})}
+										</small>
 									</div>
 									<div>
-										<span class="eyebrow">Consensus</span>
+										<span class="eyebrow">
+											{t({ locale: $localeStore, key: 'onboarding.eyebrow.consensus' })}
+										</span>
 										<div class="consensus-bar">
 											<i style:width={formatProbability(practiceMarket.yesProbability)}></i>
 										</div>
 										<p>
-											YES sits at
+											{t({ locale: $localeStore, key: 'onboarding.depth.yes_sits_at' })}
 											<strong class="num">{formatProbability(practiceMarket.yesProbability)}</strong
 											>.
 										</p>
 									</div>
-									<div class="tap-return">Tap to return</div>
+									<div class="tap-return">
+										{t({ locale: $localeStore, key: 'onboarding.depth.tap_return' })}
+									</div>
 								</div>
 							</div>
 
-							<span style:opacity={Math.min(practiceSkipOpacity, 1)} class="stamp skip">SKIP</span>
+							<span style:opacity={Math.min(practiceSkipOpacity, 1)} class="stamp skip">
+								{t({ locale: $localeStore, key: 'onboarding.skip_stamp' })}
+							</span>
 						</div>
 
 						<div style:opacity={practiceCoachOpacity} class="coach coach-practice">
@@ -685,18 +764,25 @@
 								<div class="coach-row">
 									<span class="coach-dot" aria-hidden="true"></span>
 									<span>
-										Tap to show <em class="serif-italic acc">details.</em>
+										{t({ locale: $localeStore, key: 'onboarding.coach.tap_show' })}
+										<em class="serif-italic acc">
+											{t({ locale: $localeStore, key: 'onboarding.coach.details' })}
+										</em>
 									</span>
 								</div>
-								<p>Then tap again to return</p>
+								<p>{t({ locale: $localeStore, key: 'onboarding.coach.tap_again_return' })}</p>
 							{:else}
 								<div class="coach-row vertical">
 									<span class="coach-arrow up">↑</span>
 									<span>
-										Swipe <em class="serif-italic acc">up</em> to skip.
+										{t({ locale: $localeStore, key: 'onboarding.coach.swipe' })}
+										<em class="serif-italic acc">
+											{t({ locale: $localeStore, key: 'onboarding.coach.up' })}
+										</em>
+										{t({ locale: $localeStore, key: 'onboarding.coach.to_skip' })}
 									</span>
 								</div>
-								<p>Not your call? Pass without scoring.</p>
+								<p>{t({ locale: $localeStore, key: 'onboarding.coach.not_your_call' })}</p>
 							{/if}
 						</div>
 					</div>
@@ -705,26 +791,30 @@
 		{:else if step === 2}
 			<section class="step step-categories" aria-labelledby="categories-title">
 				<div class="step-copy">
-					<p class="eyebrow">Categories</p>
-					<h1 id="categories-title">What do you want to predict?</h1>
-					<p>Pick 3 or more. We'll seed your Flow with the markets that matter.</p>
+					<p class="eyebrow">
+						{t({ locale: $localeStore, key: 'onboarding.eyebrow.categories' })}
+					</p>
+					<h1 id="categories-title">
+						{t({ locale: $localeStore, key: 'onboarding.step3.title' })}
+					</h1>
+					<p>{t({ locale: $localeStore, key: 'onboarding.step3.sub' })}</p>
 				</div>
 
 				<div class="category-grid">
-					{#each categoryOptions as category (category.id)}
-						{@const selected = interests.has(category.id)}
+					{#each categoryOptions as category (category)}
+						{@const selected = interests.has(category)}
 						<button
-							style:--cat-color={categoryColor(category.id)}
+							style:--cat-color={categoryColor(category)}
 							class={selected ? 'category-tile selected' : 'category-tile'}
 							aria-pressed={selected}
 							data-tid={TestId.OnboardingInterest}
-							onclick={() => toggleInterest(category.id)}
+							onclick={() => toggleInterest(category)}
 							type="button"
 						>
-							<FlowArtFrame category={category.id} seed={`category-${category.id}`} size={64} />
+							<FlowArtFrame {category} seed={`category-${category}`} size={64} />
 							<span>
-								<strong>{category.label}</strong>
-								<small>{category.feedLine}</small>
+								<strong>{t({ locale: $localeStore, key: categoryLabelKey(category) })}</strong>
+								<small>{t({ locale: $localeStore, key: categoryFeedKey(category) })}</small>
 							</span>
 						</button>
 					{/each}
@@ -732,18 +822,36 @@
 
 				<div class="category-count {selectedInterestCount >= 3 ? 'ready' : ''}">
 					{selectedInterestCount >= 3
-						? `${selectedInterestCount} selected - your Flow is ready`
-						: `${selectedInterestCount} of ${FLOW_ART_CATEGORIES.length} selected`}
+						? t({
+								locale: $localeStore,
+								key: 'onboarding.step3.ready_count',
+								params: { count: selectedInterestCount }
+							})
+						: t({
+								locale: $localeStore,
+								key: 'onboarding.step3.count',
+								params: {
+									count: selectedInterestCount,
+									total: FLOW_ART_CATEGORIES.length
+								}
+							})}
 				</div>
 
 				{#if selectedInterestCount >= 3}
 					<div class="deck-preview" aria-live="polite">
-						<span class="eyebrow">Your first deck</span>
+						<span class="eyebrow">
+							{t({ locale: $localeStore, key: 'onboarding.eyebrow.first_deck' })}
+						</span>
 						<div>
 							{#each previewMarkets as market (market.id)}
 								<article>
 									<FlowArtFrame category={market.category} seed={market.id} size={52} />
-									<p>{market.title}</p>
+									<p>
+										{t({
+											locale: $localeStore,
+											key: marketFieldKey({ id: market.id, field: 'title' })
+										})}
+									</p>
 								</article>
 							{/each}
 						</div>
@@ -757,42 +865,66 @@
 					onclick={() => (step = 3)}
 					type="button"
 				>
-					{selectedInterestCount >= 3 ? 'Continue' : 'Pick 3 to continue'}
+					{selectedInterestCount >= 3
+						? t({ locale: $localeStore, key: 'onboarding.action.continue' })
+						: t({ locale: $localeStore, key: 'onboarding.action.pick_three' })}
 				</button>
 			</section>
 		{:else}
 			<section class="step step-identity" aria-labelledby="identity-title">
 				<div class="step-copy">
-					<p class="serif-italic latin">Vici.</p>
+					<p class="serif-italic latin">
+						{t({ locale: $localeStore, key: 'onboarding.latin.vici' })}
+					</p>
 					<h1 id="identity-title">
-						One name. <em class="serif-italic">Earned, not given.</em>
+						{t({ locale: $localeStore, key: 'onboarding.step4.title_a' })}
+						<em class="serif-italic">
+							{t({ locale: $localeStore, key: 'onboarding.step4.title_b' })}
+						</em>
 					</h1>
-					<p>This is the name on the leaderboard.</p>
+					<p>{t({ locale: $localeStore, key: 'onboarding.step4.sub' })}</p>
 				</div>
 
 				<div class="starter-pack">
 					<div class="pack-top">
-						<span class="eyebrow">Your starter pack</span>
+						<span class="eyebrow">
+							{t({ locale: $localeStore, key: 'onboarding.eyebrow.starter_pack' })}
+						</span>
 						<span class="pack-gift">
-							VXP
+							{t({ locale: $localeStore, key: 'onboarding.starter.vxp_label' })}
 							<Sparkles class="pack-spark" aria-hidden="true" size={15} strokeWidth={2} />
 						</span>
 					</div>
 					<div class="pack-xp">
 						<strong class="num">{starterXp.toLocaleString($localeStore)}</strong>
-						<span>VXP</span>
+						<span>{t({ locale: $localeStore, key: 'onboarding.starter.vxp_label' })}</span>
 					</div>
 					<ul>
-						<li><span>10 starter markets</span><small>seeded</small></li>
-						<li><span>3-day streak grace</span><small>forgiveness</small></li>
+						<li>
+							<span>{t({ locale: $localeStore, key: 'onboarding.starter.markets' })}</span>
+							<small>{t({ locale: $localeStore, key: 'onboarding.starter.markets_meta' })}</small>
+						</li>
+						<li>
+							<span>{t({ locale: $localeStore, key: 'onboarding.starter.grace' })}</span>
+							<small>{t({ locale: $localeStore, key: 'onboarding.starter.grace_meta' })}</small>
+						</li>
 						{#if firstCallSide}
-							<li><span>First-call bonus</span><small>+50 banked</small></li>
+							<li>
+								<span>
+									{t({ locale: $localeStore, key: 'onboarding.starter.first_call_bonus' })}
+								</span>
+								<small>
+									{t({ locale: $localeStore, key: 'onboarding.starter.first_call_bonus_meta' })}
+								</small>
+							</li>
 						{/if}
 					</ul>
 				</div>
 
 				<label class="field">
-					<span class="eyebrow">Your handle</span>
+					<span class="eyebrow"
+						>{t({ locale: $localeStore, key: 'onboarding.eyebrow.handle' })}</span
+					>
 					<span class="handle-row">
 						<span aria-hidden="true">@</span>
 						<input
@@ -800,36 +932,49 @@
 							inputmode="text"
 							maxlength="16"
 							oninput={updateHandle}
-							placeholder="tacitus"
+							placeholder={t({ locale: $localeStore, key: 'onboarding.handle.placeholder' })}
 							spellcheck="false"
 							type="text"
 							value={handle}
 						/>
 					</span>
 					<small class="num">
-						{handle ? `vici.app/${handle}` : 'a-z, 0-9, dot or underscore'}
+						{handle
+							? t({
+									locale: $localeStore,
+									key: 'onboarding.handle.url',
+									params: { handle }
+								})
+							: t({ locale: $localeStore, key: 'onboarding.handle.hint' })}
 					</small>
 				</label>
 
 				<label class="field">
-					<span class="eyebrow">Email (optional)</span>
+					<span class="eyebrow">{t({ locale: $localeStore, key: 'onboarding.eyebrow.email' })}</span
+					>
 					<input
 						data-tid={TestId.OnboardingEmailInput}
 						oninput={updateEmail}
-						placeholder="you@email.com"
+						placeholder={t({ locale: $localeStore, key: 'onboarding.email.placeholder' })}
 						type="email"
 						value={email}
 					/>
 					<small class={emailLooksValid ? 'num' : 'num warning'}>
 						{emailLooksValid
-							? 'Saved after sign-in. Never required to continue.'
-							: 'Email is optional; you can continue without it.'}
+							? t({ locale: $localeStore, key: 'onboarding.email.saved_note' })
+							: t({ locale: $localeStore, key: 'onboarding.email.optional_note' })}
 					</small>
 				</label>
 
 				<div class="social-proof">
 					<span class="avatars" aria-hidden="true"><i></i><i></i><i></i></span>
-					<span>Join <strong class="num">184,210</strong> predictors</span>
+					<span>
+						{t({ locale: $localeStore, key: 'onboarding.social_proof.join' })}
+						<strong class="num">
+							{t({ locale: $localeStore, key: 'onboarding.social_proof.count' })}
+						</strong>
+						{t({ locale: $localeStore, key: 'onboarding.social_proof.predictors' })}
+					</span>
 				</div>
 
 				<button
@@ -839,7 +984,9 @@
 					onclick={complete}
 					type="button"
 				>
-					{submitting ? 'Entering...' : 'Enter VICI →'}
+					{submitting
+						? t({ locale: $localeStore, key: 'onboarding.action.entering' })
+						: t({ locale: $localeStore, key: 'onboarding.action.enter' })}
 				</button>
 			</section>
 		{/if}

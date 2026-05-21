@@ -3,7 +3,9 @@
 	import { type Doc, listDocs } from '@junobuild/core';
 	import Delete from '$lib/components/ui/Delete.svelte';
 	import { userNotSignedIn } from '$lib/derived/user.derived';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Note } from '$lib/types/note';
+	import { t } from '$lib/utils/i18n.utils';
 
 	let items = $state<Doc<Note>[]>([]);
 
@@ -33,7 +35,9 @@
 
 <div class="text-foreground mt-8 w-full max-w-2xl" role="table">
 	<div role="row">
-		<span class="eyebrow" aria-sort="none" role="columnheader"> Entries </span>
+		<span class="eyebrow" aria-sort="none" role="columnheader">
+			{t({ locale: $localeStore, key: 'ui.table.entries' })}
+		</span>
 	</div>
 
 	<div class="py-2" role="rowgroup">
@@ -54,7 +58,7 @@
 					{#if nonNullish(item.data.url)}
 						<a
 							class="text-muted-foreground hover:text-primary active:text-primary/80"
-							aria-label="Open data"
+							aria-label={t({ locale: $localeStore, key: 'a11y.open_data' })}
 							href={item.data.url}
 							rel="noopener noreferrer"
 							target="_blank"

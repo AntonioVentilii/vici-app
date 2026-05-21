@@ -10,8 +10,10 @@
 		listGroups
 	} from '$lib/services/group.services';
 	import { forkMarket } from '$lib/services/market.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Market } from '$lib/types/market';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		isOpen: boolean;
@@ -55,7 +57,7 @@
 			} else if (selectedGroupId) {
 				targetGroupIds = [selectedGroupId];
 			} else {
-				throw new Error('Please select a group');
+				throw new Error(t({ locale: $localeStore, key: 'market.fork.error.select_group' }));
 			}
 
 			const newMarketId = await forkMarket({
@@ -64,8 +66,8 @@
 			});
 
 			notificationsStore.add({
-				title: 'Challenge Started!',
-				message: 'Your private circle can now start betting.',
+				title: t({ locale: $localeStore, key: 'market.fork.notify.success_title' }),
+				message: t({ locale: $localeStore, key: 'market.fork.notify.success_message' }),
 				type: 'success'
 			});
 
@@ -73,8 +75,11 @@
 			goto(`/markets/${newMarketId}`);
 		} catch (e: unknown) {
 			notificationsStore.add({
-				title: 'Fork Failed',
-				message: e instanceof Error ? e.message : 'Unknown error',
+				title: t({ locale: $localeStore, key: 'market.fork.notify.fail_title' }),
+				message:
+					e instanceof Error
+						? e.message
+						: t({ locale: $localeStore, key: 'market.fork.notify.unknown_error' }),
 				type: 'error'
 			});
 		} finally {
@@ -86,10 +91,13 @@
 <Modal {isOpen} {onClose}>
 	<div class="space-y-6">
 		<div class="space-y-2">
-			<h2 class="text-foreground text-2xl font-black">Bring to your Circle</h2>
+			<h2 class="text-foreground text-2xl font-black">
+				{t({ locale: $localeStore, key: 'market.fork.title' })}
+			</h2>
 			<p class="text-muted-foreground text-sm">
-				Create a private match of <span class="text-foreground font-bold">"{market.title}"</span> just
-				for your close circle.
+				{t({ locale: $localeStore, key: 'market.fork.sub_prefix' })}
+				<span class="text-foreground font-bold">"{market.title}"</span>
+				{t({ locale: $localeStore, key: 'market.fork.sub_suffix' })}
 			</p>
 		</div>
 
@@ -103,7 +111,9 @@
 					onclick={() => (mode = 'Friends')}
 				>
 					<span class="block text-lg">👫</span>
-					<span class="text-xs font-bold tracking-wider uppercase">Friends</span>
+					<span class="text-xs font-bold tracking-wider uppercase"
+						>{t({ locale: $localeStore, key: 'leaderboard.tab.friends' })}</span
+					>
 				</button>
 				<button
 					class="flex-1 rounded-2xl border-2 px-4 py-3 text-center transition-all {mode ===
@@ -113,7 +123,9 @@
 					onclick={() => (mode = 'Followers')}
 				>
 					<span class="block text-lg">📣</span>
-					<span class="text-xs font-bold tracking-wider uppercase">Followers</span>
+					<span class="text-xs font-bold tracking-wider uppercase"
+						>{t({ locale: $localeStore, key: 'market.fork.mode.followers' })}</span
+					>
 				</button>
 				<button
 					class="flex-1 rounded-2xl border-2 px-4 py-3 text-center transition-all {mode === 'Group'
@@ -122,28 +134,34 @@
 					onclick={() => (mode = 'Group')}
 				>
 					<span class="block text-lg">🏘️</span>
-					<span class="text-xs font-bold tracking-wider uppercase">Group</span>
+					<span class="text-xs font-bold tracking-wider uppercase"
+						>{t({ locale: $localeStore, key: 'market.fork.mode.group' })}</span
+					>
 				</button>
 			</div>
 
 			{#if mode === 'Friends'}
 				<div class="bg-foreground/5 ring-border rounded-2xl p-4 text-center ring-1">
 					<p class="text-muted-foreground text-xs leading-relaxed">
-						This will create a private market accessible only to you and your active friends.
+						{t({ locale: $localeStore, key: 'market.fork.friends_desc' })}
 					</p>
 				</div>
 			{:else if mode === 'Followers'}
 				<div class="bg-foreground/5 ring-border rounded-2xl p-4 text-center ring-1">
 					<p class="text-muted-foreground text-xs leading-relaxed">
-						This will create a private market accessible only to you and your active followers.
+						{t({ locale: $localeStore, key: 'market.fork.followers_desc' })}
 					</p>
 				</div>
 			{:else}
 				<div class="space-y-2">
 					{#if loadingGroups}
-						<div class="text-muted-foreground py-4 text-center text-xs">Loading your groups...</div>
+						<div class="text-muted-foreground py-4 text-center text-xs">
+							{t({ locale: $localeStore, key: 'market.fork.loading_groups' })}
+						</div>
 					{:else if availableGroups.length === 0}
-						<p class="text-muted-foreground py-4 text-center text-xs italic">No groups found.</p>
+						<p class="text-muted-foreground py-4 text-center text-xs italic">
+							{t({ locale: $localeStore, key: 'market.fork.no_groups' })}
+						</p>
 					{:else}
 						<div class="max-h-48 space-y-2 overflow-y-auto pr-1">
 							{#each availableGroups as group (group.group_id)}
@@ -174,7 +192,9 @@
 				size="lg"
 				status={forking ? 'pending' : mode === 'Group' && !selectedGroupId ? 'disabled' : 'enabled'}
 			>
-				{forking ? 'Creating...' : 'Start Circle Match'}
+				{forking
+					? t({ locale: $localeStore, key: 'market.fork.creating' })
+					: t({ locale: $localeStore, key: 'market.fork.start' })}
 			</Button>
 		</div>
 	</div>

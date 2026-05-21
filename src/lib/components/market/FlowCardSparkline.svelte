@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { MarketEvent } from '$lib/types/market-metadata';
 	import { eventMarkerX, sparklinePoints } from '$lib/utils/flow-card-display.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		seed: string;
@@ -34,7 +36,7 @@
 <div class="flow-spark-wrap">
 	<svg
 		class="flow-spark"
-		aria-label="Seven-day lean trend"
+		aria-label={t({ locale: $localeStore, key: 'a11y.seven_day_lean' })}
 		role="img"
 		viewBox="0 0 {width} {height}"
 	>

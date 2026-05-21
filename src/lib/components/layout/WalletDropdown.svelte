@@ -7,8 +7,10 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { WalletBalance } from '$lib/types/wallet';
 	import { formatToken } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		balances: WalletBalance;
@@ -29,7 +31,7 @@
 	{#snippet trigger()}
 		<BaseButton
 			class="bg-foreground/5 text-muted-foreground hover:bg-foreground/8 hover:text-foreground h-10 w-10 rounded-full active:scale-95"
-			aria-label="Wallet"
+			aria-label={t({ locale: $localeStore, key: 'wallet.title' })}
 		>
 			<svg
 				fill="none"
@@ -53,7 +55,7 @@
 		<div class="w-64 p-2">
 			<div class="mb-4">
 				<h3 class="text-muted-foreground px-2 text-xs font-semibold tracking-wider uppercase">
-					Balances
+					{t({ locale: $localeStore, key: 'layout.wallet.balances' })}
 				</h3>
 				<div class="mt-2 space-y-1">
 					{#each $walletUiTokens as token (token.id)}
@@ -81,7 +83,7 @@
 					class="bg-primary text-primary-foreground hover:bg-primary/90 w-full rounded-lg px-4 py-2 text-center text-sm font-semibold active:scale-95"
 					onclick={goToWallet}
 				>
-					Go to Wallet
+					{t({ locale: $localeStore, key: 'layout.wallet.go_to_wallet' })}
 				</BaseButton>
 			</div>
 		</div>

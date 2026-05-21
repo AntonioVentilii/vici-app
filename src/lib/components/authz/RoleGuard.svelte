@@ -3,6 +3,8 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { userRole } from '$lib/derived/user.derived';
 	import type { UserRole } from '$lib/enums/user';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		children: Snippet;
@@ -24,12 +26,18 @@
 {:else if showWarning}
 	<div class="flex flex-col items-center justify-center py-20 text-center">
 		<div class="mb-12 max-w-md">
-			<h2 class="text-foreground text-4xl font-black">Access Denied</h2>
+			<h2 class="text-foreground text-4xl font-black">
+				{t({ locale: $localeStore, key: 'authz.access_denied.title' })}
+			</h2>
 			<p class="text-muted-foreground mt-4 text-lg">
-				You do not have the required permissions to access this area.
+				{t({ locale: $localeStore, key: 'authz.access_denied.description' })}
 			</p>
 			<p class="text-muted-foreground mt-2 text-sm">
-				Required role: <span class="text-primary font-bold capitalize">{requiredRole}</span>.
+				{t({
+					locale: $localeStore,
+					key: 'authz.access_denied.required_role',
+					params: { role: requiredRole }
+				})}
 			</p>
 		</div>
 
@@ -40,7 +48,9 @@
 				>
 					!
 				</div>
-				<Button onclick={handleRefresh}>Refresh Session</Button>
+				<Button onclick={handleRefresh}
+					>{t({ locale: $localeStore, key: 'authz.access_denied.refresh' })}</Button
+				>
 			</div>
 		</div>
 	</div>

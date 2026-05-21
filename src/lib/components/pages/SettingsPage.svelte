@@ -232,7 +232,7 @@
 								style:background={`color-mix(in srgb, ${archetype.accent} 14%, transparent)`}
 								class="set-identity-tag"
 							>
-								{archetype.tag}
+								{t({ locale: $localeStore, key: archetype.tagKey })}
 							</span>
 						{/if}
 					</span>

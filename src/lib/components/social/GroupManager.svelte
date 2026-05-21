@@ -16,8 +16,10 @@
 	} from '$lib/services/group.services';
 	import { getProfile } from '$lib/services/profile.services';
 	import { getFriends } from '$lib/services/relation.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { Relation } from '$lib/types/relation';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		userPrincipal: string;
@@ -87,7 +89,11 @@
 			newGroupDesc = '';
 			await loadAll();
 		} catch (e: unknown) {
-			alert(e instanceof Error && e.message ? e.message : 'Failed to create group');
+			alert(
+				e instanceof Error && e.message
+					? e.message
+					: t({ locale: $localeStore, key: 'social.group.error.create_failed' })
+			);
 		} finally {
 			processing = false;
 		}
@@ -105,7 +111,11 @@
 			await loadAll();
 			selectedGroup = groups.find((g) => g.group_id === selectedGroup?.group_id) ?? null;
 		} catch (e: unknown) {
-			alert(e instanceof Error && e.message ? e.message : 'Failed to add member');
+			alert(
+				e instanceof Error && e.message
+					? e.message
+					: t({ locale: $localeStore, key: 'social.group.error.add_member_failed' })
+			);
 		} finally {
 			processing = false;
 		}
@@ -128,7 +138,11 @@
 			await loadAll();
 			selectedGroup = groups.find((g) => g.group_id === selectedGroup?.group_id) ?? null;
 		} catch (e: unknown) {
-			alert(e instanceof Error && e.message ? e.message : 'Failed to toggle admin');
+			alert(
+				e instanceof Error && e.message
+					? e.message
+					: t({ locale: $localeStore, key: 'social.group.error.toggle_admin_failed' })
+			);
 		} finally {
 			processing = false;
 		}
@@ -147,7 +161,11 @@
 			await loadAll();
 			selectedGroup = groups.find((g) => g.group_id === selectedGroup?.group_id) ?? null;
 		} catch (e: unknown) {
-			alert(e instanceof Error && e.message ? e.message : 'Failed to remove member');
+			alert(
+				e instanceof Error && e.message
+					? e.message
+					: t({ locale: $localeStore, key: 'social.group.error.remove_member_failed' })
+			);
 		} finally {
 			processing = false;
 		}
@@ -161,8 +179,12 @@
 <Card padding="lg" variant="glass">
 	<div class="flex w-full flex-col gap-4">
 		<div class="flex items-center justify-between">
-			<h3 class="text-primary text-xl font-bold">Groups</h3>
-			<Button onclick={() => (isCreateModalOpen = true)} size="sm">New Group</Button>
+			<h3 class="text-primary text-xl font-bold">
+				{t({ locale: $localeStore, key: 'social.group.title' })}
+			</h3>
+			<Button onclick={() => (isCreateModalOpen = true)} size="sm">
+				{t({ locale: $localeStore, key: 'social.group.action.new' })}
+			</Button>
 		</div>
 
 		{#if loading}
@@ -171,7 +193,7 @@
 			</div>
 		{:else if groups.length === 0}
 			<p class="text-muted-foreground py-8 text-center text-sm opacity-50">
-				You don't belong to any groups yet.
+				{t({ locale: $localeStore, key: 'social.group.empty' })}
 			</p>
 		{:else}
 			<div class="grid grid-cols-1 gap-3">
@@ -187,13 +209,19 @@
 					>
 						<div>
 							<h4 class="font-bold">{group.name}</h4>
-							<p class="text-muted-foreground text-xs">{group.members.length} members</p>
+							<p class="text-muted-foreground text-xs">
+								{t({
+									locale: $localeStore,
+									key: 'social.group.members_count',
+									params: { count: group.members.length }
+								})}
+							</p>
 						</div>
 						{#if userIsAdminOrCreator(group)}
 							<div
 								class="bg-primary/20 text-primary w-fit rounded px-2 py-0.5 text-xs font-semibold"
 							>
-								Admin
+								{t({ locale: $localeStore, key: 'social.group.admin_badge' })}
 							</div>
 						{/if}
 					</div>
@@ -205,25 +233,35 @@
 
 <Modal isOpen={isCreateModalOpen} onClose={() => (isCreateModalOpen = false)}>
 	<div class="flex flex-col gap-4">
-		<h2 class="text-xl font-bold">Create Group</h2>
+		<h2 class="text-xl font-bold">
+			{t({ locale: $localeStore, key: 'social.group.create.title' })}
+		</h2>
 		<input
 			class="border-border bg-background focus:ring-primary/50 rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-			placeholder="Group Name"
+			placeholder={t({ locale: $localeStore, key: 'social.group.create.name_placeholder' })}
 			bind:value={newGroupName}
 		/>
 		<textarea
 			class="border-border bg-background focus:ring-primary/50 rounded-lg border px-3 py-2 text-sm focus:ring-2 focus:outline-none"
-			placeholder="Description (optional)"
+			placeholder={t({
+				locale: $localeStore,
+				key: 'social.group.create.description_placeholder'
+			})}
 			bind:value={newGroupDesc}
 		></textarea>
 		<div class="flex justify-end gap-2">
-			<Button onclick={() => (isCreateModalOpen = false)} variant="ghost">Cancel</Button>
+			<Button onclick={() => (isCreateModalOpen = false)} variant="ghost">
+				{t({ locale: $localeStore, key: 'settings.cancel' })}
+			</Button>
 			<Button
 				onclick={handleCreateGroup}
 				status={processing ? 'pending' : !newGroupName ? 'disabled' : 'enabled'}
 			>
-				{#snippet busyLabel()}Creating...{/snippet}
-				Create
+				{#snippet busyLabel()}{t({
+						locale: $localeStore,
+						key: 'social.group.action.creating'
+					})}{/snippet}
+				{t({ locale: $localeStore, key: 'social.group.action.create' })}
 			</Button>
 		</div>
 	</div>
@@ -236,12 +274,15 @@
 			<div>
 				<h2 class="text-xl font-bold">{selectedGroup.name}</h2>
 				<p class="text-muted-foreground text-sm">
-					{selectedGroup.description?.[0] ?? 'No description'}
+					{selectedGroup.description?.[0] ??
+						t({ locale: $localeStore, key: 'social.group.no_description' })}
 				</p>
 			</div>
 
 			<div class="space-y-3">
-				<h3 class="text-lg font-semibold">Members</h3>
+				<h3 class="text-lg font-semibold">
+					{t({ locale: $localeStore, key: 'social.group.section.members' })}
+				</h3>
 				{#each selectedGroup.members as member (member.toText())}
 					{@const memberId = member.toText()}
 					{@const isCreator = selectedGroup.creator.toText() === memberId}
@@ -249,7 +290,8 @@
 					<div class="bg-accent/10 flex items-center justify-between rounded-lg p-2">
 						<div class="mr-4 flex items-center gap-2 truncate">
 							<span class="text-sm">
-								{friendProfiles.get(memberId)?.nickname ?? 'User'}
+								{friendProfiles.get(memberId)?.nickname ??
+									t({ locale: $localeStore, key: 'social.group.member.fallback' })}
 							</span>
 							{#if memberId === userPrincipal}
 								<YouBadge />
@@ -257,8 +299,9 @@
 							{#if isAdmin}
 								<span
 									class="bg-primary/20 text-primary rounded px-1.5 py-0.5 text-[10px] font-bold tracking-wider uppercase"
-									>Admin</span
 								>
+									{t({ locale: $localeStore, key: 'social.group.admin_badge' })}
+								</span>
 							{/if}
 						</div>
 
@@ -270,7 +313,9 @@
 									status={processing ? 'pending' : 'enabled'}
 									variant="outline"
 								>
-									{isAdmin ? 'Revoke Admin' : 'Make Admin'}
+									{isAdmin
+										? t({ locale: $localeStore, key: 'social.group.action.revoke_admin' })
+										: t({ locale: $localeStore, key: 'social.group.action.make_admin' })}
 								</Button>
 								<Button
 									onclick={() => removeMember(memberId)}
@@ -278,7 +323,7 @@
 									status={processing ? 'pending' : 'enabled'}
 									variant="ghost"
 								>
-									Remove
+									{t({ locale: $localeStore, key: 'social.group.action.remove' })}
 								</Button>
 							</div>
 						{/if}
@@ -293,10 +338,14 @@
 					return fid && !selectedGroup?.members.some((m) => m.toText() === fid);
 				})}
 				<div class="border-border space-y-3 border-t pt-4">
-					<h3 class="text-lg font-semibold">Add Friends</h3>
+					<h3 class="text-lg font-semibold">
+						{t({ locale: $localeStore, key: 'social.group.section.add_friends' })}
+					</h3>
 
 					{#if unaddedFriends.length === 0}
-						<p class="text-muted-foreground text-sm">All your friends are already in this group.</p>
+						<p class="text-muted-foreground text-sm">
+							{t({ locale: $localeStore, key: 'social.group.no_unadded_friends' })}
+						</p>
 					{:else}
 						<div class="grid grid-cols-1 gap-2">
 							{#each unaddedFriends as friend (friend.participants.toSorted().join('#'))}
@@ -312,8 +361,10 @@
 											onclick={() => addFriendToGroup(friendId)}
 											size="sm"
 											status={processing ? 'pending' : 'enabled'}
-											variant="outline">Add</Button
+											variant="outline"
 										>
+											{t({ locale: $localeStore, key: 'social.group.action.add' })}
+										</Button>
 									</div>
 								{/if}
 							{/each}
@@ -323,7 +374,9 @@
 			{/if}
 
 			<div class="flex justify-end pt-4">
-				<Button onclick={() => (isManageModalOpen = false)} variant="ghost">Close</Button>
+				<Button onclick={() => (isManageModalOpen = false)} variant="ghost">
+					{t({ locale: $localeStore, key: 'social.group.action.close' })}
+				</Button>
 			</div>
 		</div>
 	{/if}

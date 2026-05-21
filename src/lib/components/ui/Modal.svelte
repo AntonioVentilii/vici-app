@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		isOpen: boolean;
@@ -30,10 +32,10 @@
 	>
 		<BaseButton
 			class="fixed inset-0 bg-black/55! opacity-100!"
-			aria-label="Close modal"
+			aria-label={t({ locale: $localeStore, key: 'a11y.close_modal' })}
 			onclick={close}
 		>
-			<span class="sr-only">Close</span>
+			<span class="sr-only">{t({ locale: $localeStore, key: 'a11y.close' })}</span>
 		</BaseButton>
 
 		<div
@@ -48,7 +50,7 @@
 				<div class="flex flex-1 items-center justify-end gap-2">
 					<button
 						class="text-muted-foreground hover:bg-foreground/6 hover:text-foreground rounded-full p-2 transition-colors"
-						aria-label="Close"
+						aria-label={t({ locale: $localeStore, key: 'a11y.close' })}
 						onclick={close}
 						type="button"
 					>

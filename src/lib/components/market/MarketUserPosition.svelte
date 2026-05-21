@@ -1,7 +1,9 @@
 <script lang="ts">
 	import { ZERO } from '$lib/constants/app.constants';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Position } from '$lib/types/position';
 	import { formatCurrency, formatQuantity } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		position: Position | undefined;
@@ -13,7 +15,9 @@
 	const isYes = $derived(position?.outcomeId === 'YES');
 	const isNo = $derived(position?.outcomeId === 'NO');
 
-	const displayOutcome = $derived(position?.outcomeId ?? 'Unknown');
+	const displayOutcome = $derived(
+		position?.outcomeId ?? t({ locale: $localeStore, key: 'status.unknown' })
+	);
 
 	const absQty = $derived(
 		position ? (position.netQty < ZERO ? -position.netQty : position.netQty) : ZERO
@@ -22,12 +26,18 @@
 
 {#if position && absQty > ZERO}
 	<div class="border-primary/20 bg-primary/5 rounded-3xl border p-6">
-		<h3 class="text-primary text-xs font-bold tracking-widest uppercase">Your Position</h3>
+		<h3 class="text-primary text-xs font-bold tracking-widest uppercase">
+			{t({ locale: $localeStore, key: 'market.user_position.title' })}
+		</h3>
 
 		<div class="mt-4 flex items-center justify-between">
 			<div class="flex flex-col">
 				<span class="text-foreground text-2xl font-black">
-					{formatQuantity({ value: absQty, decimals: tokenDecimals })} Qty
+					{t({
+						locale: $localeStore,
+						key: 'market.user_position.qty_value',
+						params: { value: formatQuantity({ value: absQty, decimals: tokenDecimals }) }
+					})}
 				</span>
 				<div class="flex items-center gap-2">
 					<span
@@ -41,7 +51,11 @@
 					</span>
 					<span class="text-muted-foreground text-[10px]">•</span>
 					<span class="text-muted-foreground text-[10px] font-medium">
-						Locked: {formatCurrency({ value: position.lockedCollateral, decimals: 6 })}
+						{t({
+							locale: $localeStore,
+							key: 'market.user_position.locked',
+							params: { amount: formatCurrency({ value: position.lockedCollateral, decimals: 6 }) }
+						})}
 					</span>
 				</div>
 			</div>

@@ -71,7 +71,7 @@
 		<section class="forecast-card">
 			<div class="forecast-card-head">
 				<div>
-					<p class="eyebrow">Crowd split</p>
+					<p class="eyebrow">{t({ locale: $localeStore, key: 'market.forecast.crowd_split' })}</p>
 					<div class="forecast-hero-line">
 						<span
 							class="num forecast-hero-pct"
@@ -90,7 +90,7 @@
 					</div>
 				</div>
 				<div class="forecast-countdown">
-					<span class="allcaps">Closes</span>
+					<span class="allcaps">{t({ locale: $localeStore, key: 'market.forecast.closes' })}</span>
 					<strong class="num">{timeRemaining}</strong>
 				</div>
 			</div>
@@ -105,8 +105,11 @@
 			</div>
 
 			<div class="forecast-resolution">
-				<p class="eyebrow">Resolution</p>
-				<p>{market.description || 'Resolves from the market criteria at close.'}</p>
+				<p class="eyebrow">{t({ locale: $localeStore, key: 'market.forecast.resolution' })}</p>
+				<p>
+					{market.description ||
+						t({ locale: $localeStore, key: 'market.forecast.resolution_fallback' })}
+				</p>
 			</div>
 
 			<div class="forecast-actions">
@@ -167,7 +170,9 @@
 					</strong>
 				</div>
 				<div>
-					<span class="allcaps">Predicting</span>
+					<span class="allcaps"
+						>{t({ locale: $localeStore, key: 'market.forecast.predicting' })}</span
+					>
 					<strong class="num">{totalPredictions.toLocaleString()}</strong>
 				</div>
 			</div>

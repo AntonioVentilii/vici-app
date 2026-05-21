@@ -4,9 +4,11 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import { MarketEventDirection, MarketWhyNowKind } from '$lib/enums/market-metadata';
 	import { getMarketMetadata, upsertMarketMetadata } from '$lib/services/market-metadata.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { ButtonStatus } from '$lib/types/components';
 	import type { Market } from '$lib/types/market';
 	import type { MarketEvent, MarketMetadataInput } from '$lib/types/market-metadata';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		market: Market;
@@ -102,7 +104,7 @@
 			savedAt = metadata.updatedAt;
 		} catch (err) {
 			console.warn('Market metadata save failed:', err);
-			error = 'Could not save market context.';
+			error = t({ locale: $localeStore, key: 'market.metadata.error.save' });
 		} finally {
 			status = 'enabled';
 		}
@@ -138,7 +140,7 @@
 			}
 		} catch (err) {
 			console.warn('Market metadata load failed:', err);
-			error = 'Could not load market context.';
+			error = t({ locale: $localeStore, key: 'market.metadata.error.load' });
 		} finally {
 			loaded = true;
 		}
@@ -149,16 +151,20 @@
 	<Card class="market-metadata-card" padding="lg">
 		<div class="market-metadata-head">
 			<div>
-				<p class="eyebrow">VICI metadata</p>
-				<h3>Market context</h3>
+				<p class="eyebrow">{t({ locale: $localeStore, key: 'market.metadata.eyebrow' })}</p>
+				<h3>{t({ locale: $localeStore, key: 'market.metadata.title' })}</h3>
 			</div>
 			{#if savedAt}
-				<span class="num market-metadata-saved">Saved</span>
+				<span class="num market-metadata-saved"
+					>{t({ locale: $localeStore, key: 'market.metadata.saved' })}</span
+				>
 			{/if}
 		</div>
 
 		{#if !loaded}
-			<p class="market-metadata-muted">Loading metadata…</p>
+			<p class="market-metadata-muted">
+				{t({ locale: $localeStore, key: 'market.metadata.loading' })}
+			</p>
 		{:else}
 			{#if error}
 				<p class="market-metadata-error">{error}</p>
@@ -166,55 +172,92 @@
 
 			<div class="market-metadata-grid">
 				<label>
-					<span>Why this card now</span>
+					<span>{t({ locale: $localeStore, key: 'market.metadata.why_now' })}</span>
 					<select bind:value={whyKind}>
 						{#each Object.values(MarketWhyNowKind) as kind (kind)}
 							<option value={kind}>{kind}</option>
 						{/each}
 					</select>
-					<input placeholder="Closing soon" bind:value={whyText} />
+					<input
+						placeholder={t({
+							locale: $localeStore,
+							key: 'market.metadata.placeholder.closing_soon'
+						})}
+						bind:value={whyText}
+					/>
 				</label>
 
 				<label>
-					<span>Resolution text</span>
+					<span>{t({ locale: $localeStore, key: 'market.metadata.resolution_text' })}</span>
 					<textarea
-						placeholder="Resolves YES if the official result confirms the outcome."
+						placeholder={t({
+							locale: $localeStore,
+							key: 'market.metadata.placeholder.resolution_text'
+						})}
 						bind:value={resolutionText}
 					></textarea>
 				</label>
 
 				<label>
-					<span>Source</span>
-					<input placeholder="Official source" bind:value={resolutionSource} />
+					<span>{t({ locale: $localeStore, key: 'market.metadata.source' })}</span>
+					<input
+						placeholder={t({
+							locale: $localeStore,
+							key: 'market.metadata.placeholder.official_source'
+						})}
+						bind:value={resolutionSource}
+					/>
 				</label>
 
 				<label>
-					<span>Settles at (ms, optional)</span>
+					<span>{t({ locale: $localeStore, key: 'market.metadata.settles_at' })}</span>
 					<input inputmode="numeric" placeholder="1767225600000" bind:value={settlesAtMs} />
 				</label>
 
 				<div class="market-metadata-events">
-					<span>Events</span>
+					<span>{t({ locale: $localeStore, key: 'market.metadata.events' })}</span>
 					<div class="event-row">
-						<input inputmode="numeric" placeholder="Day" bind:value={eventOneDay} />
+						<input
+							inputmode="numeric"
+							placeholder={t({ locale: $localeStore, key: 'market.metadata.placeholder.day' })}
+							bind:value={eventOneDay}
+						/>
 						<select bind:value={eventOneDir}>
 							<option value={MarketEventDirection.UP}>+</option>
 							<option value={MarketEventDirection.DOWN}>-</option>
 						</select>
-						<input placeholder="Powell speech" bind:value={eventOneLabel} />
+						<input
+							placeholder={t({
+								locale: $localeStore,
+								key: 'market.metadata.placeholder.event_one'
+							})}
+							bind:value={eventOneLabel}
+						/>
 					</div>
 					<div class="event-row">
-						<input inputmode="numeric" placeholder="Day" bind:value={eventTwoDay} />
+						<input
+							inputmode="numeric"
+							placeholder={t({ locale: $localeStore, key: 'market.metadata.placeholder.day' })}
+							bind:value={eventTwoDay}
+						/>
 						<select bind:value={eventTwoDir}>
 							<option value={MarketEventDirection.UP}>+</option>
 							<option value={MarketEventDirection.DOWN}>-</option>
 						</select>
-						<input placeholder="CPI release" bind:value={eventTwoLabel} />
+						<input
+							placeholder={t({
+								locale: $localeStore,
+								key: 'market.metadata.placeholder.event_two'
+							})}
+							bind:value={eventTwoLabel}
+						/>
 					</div>
 				</div>
 			</div>
 
-			<Button onclick={save} {status}>Save context</Button>
+			<Button onclick={save} {status}
+				>{t({ locale: $localeStore, key: 'market.metadata.save' })}</Button
+			>
 		{/if}
 	</Card>
 {/if}

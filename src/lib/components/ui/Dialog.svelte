@@ -2,6 +2,8 @@
 	import { isNullish } from '@dfinity/utils';
 	import type { Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		show: boolean;
@@ -53,7 +55,7 @@
 
 			<button
 				class="text-muted-foreground hover:bg-foreground/6 hover:text-foreground rounded-full p-2 transition-colors"
-				aria-label="Close dialog"
+				aria-label={t({ locale: $localeStore, key: 'a11y.close_dialog' })}
 				onclick={close}
 			>
 				<svg

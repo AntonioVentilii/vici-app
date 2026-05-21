@@ -10,8 +10,10 @@
 	import { isDev } from '$lib/env/app.env';
 	import { depositCollateral, withdrawCollateral } from '$lib/services/collateral.services';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Token } from '$lib/types/token';
 	import { icrcLedgerDecimalsFromCollateralConfig } from '$lib/utils/asset-ref.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 
 	interface Props {
@@ -52,7 +54,7 @@
 
 	const handleSubmit = async () => {
 		if (isNullish(amount) || parseFloat(amount) <= 0) {
-			error = 'Please enter a valid amount';
+			error = t({ locale: $localeStore, key: 'prediction.error.invalid_amount' });
 
 			return;
 		}
@@ -62,7 +64,7 @@
 
 		try {
 			if (isNullish(selectedToken)) {
-				throw new Error('No token selected');
+				throw new Error(t({ locale: $localeStore, key: 'wallet.collateral.no_token_selected' }));
 			}
 
 			const ledgerDecimals = icrcLedgerDecimalsFromCollateralConfig({
@@ -89,17 +91,31 @@
 
 			close();
 		} catch (e: unknown) {
-			error = (e as Error).message ?? 'Operation failed';
+			error =
+				(e as Error).message ??
+				t({ locale: $localeStore, key: 'wallet.collateral.operation_failed' });
 		} finally {
 			loading = false;
 		}
 	};
+
+	const modalTitle = $derived(
+		mode === 'Deposit'
+			? t({ locale: $localeStore, key: 'wallet.collateral.deposit_title' })
+			: t({ locale: $localeStore, key: 'wallet.collateral.withdraw_title' })
+	);
+
+	const confirmLabel = $derived(
+		mode === 'Deposit'
+			? t({ locale: $localeStore, key: 'wallet.collateral.confirm_deposit' })
+			: t({ locale: $localeStore, key: 'wallet.collateral.confirm_withdraw' })
+	);
 </script>
 
 <Modal {isOpen} {onClose}>
 	<BaseButton
 		class="text-muted-foreground hover:text-foreground absolute top-6 right-6"
-		aria-label="Close modal"
+		aria-label={t({ locale: $localeStore, key: 'wallet.collateral.close_modal' })}
 		onclick={close}
 	>
 		<svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,8 +128,10 @@
 		</svg>
 	</BaseButton>
 
-	<h3 class="text-foreground text-2xl font-black uppercase">{mode} Collateral</h3>
-	<p class="text-muted-foreground mt-2 text-sm">Manage your market margin account collateral.</p>
+	<h3 class="text-foreground text-2xl font-black uppercase">{modalTitle}</h3>
+	<p class="text-muted-foreground mt-2 text-sm">
+		{t({ locale: $localeStore, key: 'wallet.collateral.modal_subtitle' })}
+	</p>
 
 	<div class="bg-foreground/5 mt-8 flex rounded-2xl p-1">
 		<BaseButton
@@ -122,7 +140,7 @@
 				: 'text-muted-foreground hover:text-foreground'}"
 			onclick={() => (mode = 'Deposit')}
 		>
-			Deposit
+			{t({ locale: $localeStore, key: 'wallet.collateral.deposit' })}
 		</BaseButton>
 
 		<BaseButton
@@ -131,17 +149,18 @@
 				: 'text-muted-foreground hover:text-foreground'}"
 			onclick={() => (mode = 'Withdraw')}
 		>
-			Withdraw
+			{t({ locale: $localeStore, key: 'wallet.collateral.withdraw' })}
 		</BaseButton>
 	</div>
 
 	<div class="mt-8 space-y-6">
 		<div class="space-y-2">
-			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">Token</span>
+			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
+				{t({ locale: $localeStore, key: 'wallet.collateral.token' })}
+			</span>
 			{#if $supportedTokens.length === 0}
 				<p class="bg-foreground/5 text-muted-foreground rounded-xl p-4 text-sm">
-					No collateral assets are available for this balance domain on the clearing canister. If
-					this persists, the ledger may not be registered for deposits on this network.
+					{t({ locale: $localeStore, key: 'wallet.collateral.no_assets' })}
 				</p>
 			{:else}
 				<div class="grid grid-cols-2 gap-3">
@@ -155,7 +174,9 @@
 						>
 							{token.symbol}
 							{#if isDev() && token.isDevEnabled}
-								<Badge size="sm" variant="warning">DEV</Badge>
+								<Badge size="sm" variant="warning">
+									{t({ locale: $localeStore, key: 'wallet.badge.dev' })}
+								</Badge>
 							{/if}
 						</BaseButton>
 					{/each}
@@ -165,7 +186,11 @@
 
 		<div class="space-y-2">
 			<label class="text-muted-foreground text-xs font-bold tracking-widest uppercase" for="amount">
-				Amount ({selectedToken?.symbol ?? ''})
+				{t({
+					locale: $localeStore,
+					key: 'wallet.collateral.amount_with_symbol',
+					params: { symbol: selectedToken?.symbol ?? '' }
+				})}
 			</label>
 			<div class="relative">
 				<input
@@ -198,8 +223,10 @@
 					? 'enabled'
 					: 'disabled'}
 		>
-			{#snippet busyLabel()}Processing...{/snippet}
-			Confirm {mode}
+			{#snippet busyLabel()}
+				{t({ locale: $localeStore, key: 'wallet.collateral.processing' })}
+			{/snippet}
+			{confirmLabel}
 		</Button>
 	</div>
 </Modal>

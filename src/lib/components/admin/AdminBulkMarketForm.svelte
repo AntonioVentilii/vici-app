@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { localeStore } from '$lib/stores/locale.store';
 	import { downloadJsonFile } from '$lib/utils/download.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		onBulkCreate: (
@@ -43,7 +45,7 @@
 		error = null;
 
 		if (file.type !== 'application/json' && !file.name.endsWith('.json')) {
-			error = 'Please upload a JSON file.';
+			error = t({ locale: $localeStore, key: 'admin.markets.bulk.error.not_json' });
 
 			return;
 		}
@@ -53,39 +55,55 @@
 			const data = JSON.parse(text);
 
 			if (!Array.isArray(data)) {
-				error = 'JSON must be an array of market objects.';
+				error = t({ locale: $localeStore, key: 'admin.markets.bulk.error.not_array' });
 
 				return;
 			}
 
 			for (const item of data) {
 				if (!item.title || !item.description || !item.expiryDate) {
-					error = 'Each market must have a title, description, and expiryDate.';
+					error = t({ locale: $localeStore, key: 'admin.markets.bulk.error.missing_fields' });
 
 					return;
 				}
 
 				if (isNaN(Date.parse(item.expiryDate))) {
-					error = `Invalid date format: ${item.expiryDate}`;
+					error = t({
+						locale: $localeStore,
+						key: 'admin.markets.bulk.error.invalid_date',
+						params: { date: item.expiryDate }
+					});
 
 					return;
 				}
 
 				if (item.outcomes) {
 					if (!Array.isArray(item.outcomes)) {
-						error = `Outcomes must be an array for market: ${item.title}`;
+						error = t({
+							locale: $localeStore,
+							key: 'admin.markets.bulk.error.outcomes_not_array',
+							params: { title: item.title }
+						});
 
 						return;
 					}
 
 					if (item.outcomes.some((o: unknown) => typeof o !== 'string')) {
-						error = `Each outcome must be a string for market: ${item.title}`;
+						error = t({
+							locale: $localeStore,
+							key: 'admin.markets.bulk.error.outcome_not_string',
+							params: { title: item.title }
+						});
 
 						return;
 					}
 
 					if (item.outcomes.length < 2) {
-						error = `Categorical markets must have at least 2 outcomes: ${item.title}`;
+						error = t({
+							locale: $localeStore,
+							key: 'admin.markets.bulk.error.too_few_outcomes',
+							params: { title: item.title }
+						});
 
 						return;
 					}
@@ -93,13 +111,21 @@
 
 				if (item.categories) {
 					if (!Array.isArray(item.categories)) {
-						error = `Categories must be an array for market: ${item.title}`;
+						error = t({
+							locale: $localeStore,
+							key: 'admin.markets.bulk.error.categories_not_array',
+							params: { title: item.title }
+						});
 
 						return;
 					}
 
 					if (item.categories.some((c: unknown) => typeof c !== 'string')) {
-						error = `Each category must be a string for market: ${item.title}`;
+						error = t({
+							locale: $localeStore,
+							key: 'admin.markets.bulk.error.category_not_string',
+							params: { title: item.title }
+						});
 
 						return;
 					}
@@ -112,7 +138,11 @@
 				fileInput.value = '';
 			}
 		} catch (e: unknown) {
-			error = `Failed to parse JSON: ${(e as Error).message}`;
+			error = t({
+				locale: $localeStore,
+				key: 'admin.markets.bulk.error.parse_failed',
+				params: { message: (e as Error).message }
+			});
 		}
 	};
 
@@ -136,9 +166,11 @@
 
 <div class="border-border bg-card rounded-3xl border p-8">
 	<div class="mb-6 flex items-center justify-between">
-		<h2 class="text-foreground text-2xl font-bold">Bulk Create Markets</h2>
+		<h2 class="text-foreground text-2xl font-bold">
+			{t({ locale: $localeStore, key: 'admin.markets.bulk.title' })}
+		</h2>
 		<span class="bg-primary/10 text-primary rounded-full px-3 py-1 text-[10px] font-bold uppercase">
-			JSON Upload
+			{t({ locale: $localeStore, key: 'admin.markets.bulk.badge' })}
 		</span>
 	</div>
 
@@ -147,7 +179,7 @@
 			class="relative flex flex-col items-center justify-center rounded-2xl border-2 border-dashed p-10 transition-all {dragging
 				? 'border-primary bg-primary/10'
 				: 'border-border bg-foreground/5 hover:bg-foreground/8'}"
-			aria-label="Upload markets JSON"
+			aria-label={t({ locale: $localeStore, key: 'admin.markets.bulk.upload_label' })}
 			ondragleave={() => (dragging = false)}
 			ondragover={(e) => {
 				e.preventDefault();
@@ -182,8 +214,12 @@
 						/>
 					</svg>
 				</div>
-				<p class="text-foreground text-sm font-semibold">Click to upload or drag and drop</p>
-				<p class="text-muted-foreground mt-1 text-xs">JSON file containing an array of markets</p>
+				<p class="text-foreground text-sm font-semibold">
+					{t({ locale: $localeStore, key: 'admin.markets.bulk.upload_cta' })}
+				</p>
+				<p class="text-muted-foreground mt-1 text-xs">
+					{t({ locale: $localeStore, key: 'admin.markets.bulk.upload_hint' })}
+				</p>
 			</div>
 		</div>
 
@@ -200,7 +236,7 @@
 				class="text-muted-foreground text-xs font-bold tracking-widest uppercase"
 				for="bulk-market-upload"
 			>
-				Required JSON Format
+				{t({ locale: $localeStore, key: 'admin.markets.bulk.format_label' })}
 			</label>
 			<div class="bg-background overflow-hidden rounded-2xl p-4">
 				<pre class="text-primary overflow-x-auto font-mono text-[10px]"><code>
@@ -219,7 +255,7 @@
 						stroke-width="2"
 					/>
 				</svg>
-				Download Template
+				{t({ locale: $localeStore, key: 'admin.markets.bulk.download_template' })}
 			</button>
 		</div>
 	</div>

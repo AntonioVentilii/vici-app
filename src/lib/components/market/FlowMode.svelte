@@ -29,6 +29,7 @@
 	import { getPositions } from '$lib/services/position.services';
 	import { persistDailyStreak } from '$lib/services/profile.services';
 	import { showCompanion } from '$lib/stores/companion.store';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { flowSessionMaxBets, preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -43,10 +44,11 @@
 		type FlowArtCategory
 	} from '$lib/utils/flow-art.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { recordMotionSwipe, type MotionBeatPayload } from '$lib/utils/motion-engine.utils';
 	import {
 		applyDailyStreakBump,
-		FLAME_STAGE_LABELS,
+		FLAME_STAGE_LABEL_KEYS,
 		stageForStreak,
 		type FlameStage
 	} from '$lib/utils/streak.utils';
@@ -122,7 +124,7 @@
 	let flowPaused = $state(false);
 	let activeMotionBeat = $state<MotionBeatPayload | null>(null);
 	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
-	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
+	const flameLabel = $derived(t({ locale: $localeStore, key: FLAME_STAGE_LABEL_KEYS[flameStage] }));
 
 	type XpPopKind = 'normal' | 'bonus';
 
@@ -376,8 +378,15 @@
 				});
 			} catch (e) {
 				notificationsStore.add({
-					title: 'Trade Failed',
-					message: `Order for "${currentMarket.title.slice(0, 30)}..." failed: ${(e as Error).message}`,
+					title: t({ locale: $localeStore, key: 'flow.notification.trade_failed_title' }),
+					message: t({
+						locale: $localeStore,
+						key: 'flow.notification.trade_failed_message',
+						params: {
+							title: currentMarket.title.slice(0, 30),
+							error: (e as Error).message
+						}
+					}),
 					type: 'error'
 				});
 			}
@@ -417,12 +426,30 @@
 
 		if (motion.bonusXp > 0) {
 			xp += motion.bonusXp;
+			let popCopy: string | undefined;
+
+			if (motion.beat?.copyKey != null) {
+				const params: Record<string, string | number> = { ...(motion.beat.copyParams ?? {}) };
+
+				if (
+					motion.beat.copyKey === 'motion.streak_tier_up' &&
+					motion.beat.flameStage !== undefined
+				) {
+					params.stage = t({
+						locale: $localeStore,
+						key: FLAME_STAGE_LABEL_KEYS[motion.beat.flameStage]
+					});
+				}
+
+				popCopy = t({ locale: $localeStore, key: motion.beat.copyKey, params });
+			}
+
 			spawnXpPop({
 				amount: motion.bonusXp,
 				combo: 1,
 				side: action,
 				kind: 'bonus',
-				copy: motion.beat?.copy ?? undefined
+				copy: popCopy
 			});
 			vibrate(motion.beat?.kind === 'milestone-1' ? 'triple-tap' : 'double-pulse');
 		}
@@ -489,7 +516,11 @@
 		const minorityPct = Math.round(Math.min(yes, 1 - yes) * 100);
 		showCompanion({
 			who: 'trickster',
-			line: `Only ${minorityPct}% disagree. Bold.`,
+			line: t({
+				locale: $localeStore,
+				key: 'flow.companion.trickster',
+				params: { pct: minorityPct }
+			}),
 			anchor: 'br',
 			dwell_ms: 2800,
 			lightning: true
@@ -514,7 +545,9 @@
 	{#if loading}
 		<div class="flex h-full w-full flex-col items-center justify-center gap-4" in:fade>
 			<LoadingSpinner />
-			<p class="text-muted-foreground font-medium">Preparing your Flow queue…</p>
+			<p class="text-muted-foreground font-medium">
+				{t({ locale: $localeStore, key: 'flow.preparing' })}
+			</p>
 		</div>
 	{:else if markets.length === 0}
 		<!-- Empty-deck state. VICI in `thinking` mood holds the canvas,
@@ -524,9 +557,11 @@
 				<div class="empty-deck-char">
 					<ViciChar mood="thinking" size={96} />
 				</div>
-				<h2 class="empty-deck-title">Nothing here. Yet.</h2>
-				<p class="empty-deck-sub">VICI is queueing more markets.</p>
-				<Button onclick={backToMarkets}>Back to Markets</Button>
+				<h2 class="empty-deck-title">{t({ locale: $localeStore, key: 'flow.empty.title' })}</h2>
+				<p class="empty-deck-sub">{t({ locale: $localeStore, key: 'flow.empty.sub' })}</p>
+				<Button onclick={backToMarkets}>
+					{t({ locale: $localeStore, key: 'flow.back_to_markets' })}
+				</Button>
 			</div>
 		</div>
 	{:else if completed}
@@ -538,17 +573,23 @@
 				<h2 class="flow-end-title display">Vici.</h2>
 				<p class="flow-end-sub">
 					{#if betsCount === 0}
-						No calls. Nothing locked in.
+						{t({ locale: $localeStore, key: 'flow.end.no_calls' })}
 					{:else if betsCount === 1}
-						One call. Locked in.
+						{t({ locale: $localeStore, key: 'flow.end.one_call' })}
 					{:else}
-						{betsCount} calls. Locked in.
+						{t({
+							locale: $localeStore,
+							key: 'flow.end.many_calls',
+							params: { count: betsCount }
+						})}
 					{/if}
 				</p>
 
 				<div class="flow-end-grid">
 					<div class="flow-end-cell">
-						<div class="allcaps flow-end-cell-label">Session XP</div>
+						<div class="allcaps flow-end-cell-label">
+							{t({ locale: $localeStore, key: 'flow.session_xp' })}
+						</div>
 						<div class="num flow-end-cell-value">+{xp}</div>
 					</div>
 					<div class="flow-end-cell flow-end-cell-streak" class:is-hot={dailyStreak >= 7}>
@@ -560,23 +601,35 @@
 					</div>
 					<div class="flow-end-cell">
 						{#if accuracyUnlocked}
-							<div class="allcaps flow-end-cell-label">Accuracy</div>
+							<div class="allcaps flow-end-cell-label">
+								{t({ locale: $localeStore, key: 'profile.dashboard.accuracy_short' })}
+							</div>
 							<div class="num flow-end-cell-value">{Math.round(lifetimeAccuracy)}%</div>
 						{:else}
-							<div class="allcaps flow-end-cell-label">Calls</div>
+							<div class="allcaps flow-end-cell-label">
+								{t({ locale: $localeStore, key: 'profile.dashboard.calls_short' })}
+							</div>
 							<div class="num flow-end-cell-value">{lifetimeTotalTrades + betsCount}</div>
-							<div class="flow-end-cell-foot">until accuracy</div>
+							<div class="flow-end-cell-foot">
+								{t({ locale: $localeStore, key: 'flow.until_accuracy' })}
+							</div>
 						{/if}
 					</div>
 				</div>
 
 				<FlowInviteCard sessionXp={xp} />
-				<Button onclick={backToMarkets}>Back to Markets</Button>
+				<Button onclick={backToMarkets}>
+					{t({ locale: $localeStore, key: 'flow.back_to_markets' })}
+				</Button>
 			</div>
 		</div>
 	{:else}
 		<header class="flow-topbar" in:fade>
-			<button class="flow-icon-btn" aria-label="Exit Flow" onclick={backToMarkets}>
+			<button
+				class="flow-icon-btn"
+				aria-label={t({ locale: $localeStore, key: 'flow.exit_aria' })}
+				onclick={backToMarkets}
+			>
 				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 					<path
 						d="M6 18L18 6M6 6l12 12"
@@ -587,7 +640,10 @@
 				</svg>
 			</button>
 
-			<div class="flow-progress" aria-label="Progress">
+			<div
+				class="flow-progress"
+				aria-label={t({ locale: $localeStore, key: 'flow.progress_aria' })}
+			>
 				{#each Array(maxBets) as _, i (i)}
 					<div class="flow-progress-seg">
 						<div
@@ -604,7 +660,7 @@
 				<div
 					class="flow-stat flow-stat-flame"
 					class:is-hot={dailyStreak >= 7}
-					aria-label="Daily streak"
+					aria-label={t({ locale: $localeStore, key: 'flow.daily_streak_aria' })}
 				>
 					<FlameChar animate={dailyStreak >= 1} size={20} stage={flameStage} />
 					<span class="flow-flame-meta">
@@ -612,7 +668,10 @@
 						<span class="num flow-flame-count">{dailyStreak}d</span>
 					</span>
 				</div>
-				<div class="flow-stat flow-stat-xp" aria-label="XP">
+				<div
+					class="flow-stat flow-stat-xp"
+					aria-label={t({ locale: $localeStore, key: 'flow.xp_aria' })}
+				>
 					<span class="text-laurel text-[10px] font-black tracking-widest">XP</span>
 					<span class="text-foreground font-mono tabular-nums">{xp}</span>
 				</div>
@@ -626,8 +685,20 @@
 					in:fly={{ y: -8, duration: 300, easing: backOut }}
 					out:fade={{ duration: 250 }}
 				>
-					<span>Streak ×{lastStreakShown}</span>
-					<span class="combo-banner-xp">x{lastStreakShown >= 5 ? 3 : 2} XP</span>
+					<span>
+						{t({
+							locale: $localeStore,
+							key: 'flow.streak_combo',
+							params: { count: lastStreakShown }
+						})}
+					</span>
+					<span class="combo-banner-xp">
+						{t({
+							locale: $localeStore,
+							key: 'flow.streak_xp_multiplier',
+							params: { multi: lastStreakShown >= 5 ? 3 : 2 }
+						})}
+					</span>
 				</div>
 			{/key}
 		{/if}
@@ -637,8 +708,21 @@
 			     handleAction), banner names the stage that ended, fresh start
 			     at SPARK. No rescues, no second chances. -->
 			<div class="streak-break" in:fly={{ y: -8, duration: 300, easing: backOut }} out:fade>
-				<span class="serif-italic">{FLAME_STAGE_LABELS[streakBreakBanner.stage]} ended.</span>
-				<span class="streak-break-sub">Fresh start.</span>
+				<span class="serif-italic">
+					{t({
+						locale: $localeStore,
+						key: 'flow.stage_ended',
+						params: {
+							stage: t({
+								locale: $localeStore,
+								key: FLAME_STAGE_LABEL_KEYS[streakBreakBanner.stage]
+							})
+						}
+					})}
+				</span>
+				<span class="streak-break-sub">
+					{t({ locale: $localeStore, key: 'flow.fresh_start' })}
+				</span>
 			</div>
 		{/if}
 
@@ -693,7 +777,15 @@
 							<span class="xp-pop-copy serif-italic">{pop.copy}</span>
 						{/if}
 						<span class="xp-pop-amount num">+{pop.amount}</span>
-						<span class="xp-pop-label">XP{pop.combo > 1 ? ` · ×${pop.combo}` : ''}</span>
+						<span class="xp-pop-label">
+							{pop.combo > 1
+								? t({
+										locale: $localeStore,
+										key: 'flow.xp_combo',
+										params: { combo: pop.combo }
+									})
+								: t({ locale: $localeStore, key: 'flow.xp_label' })}
+						</span>
 					</div>
 				{/each}
 			</div>
@@ -711,7 +803,7 @@
 			<div class="flow-amount">
 				<button
 					class="flow-amount-btn"
-					aria-label="Decrease amount"
+					aria-label={t({ locale: $localeStore, key: 'flow.amount.decrease_aria' })}
 					onclick={() => incrementAmount(-1)}
 				>
 					−
@@ -729,7 +821,7 @@
 				</div>
 				<button
 					class="flow-amount-btn"
-					aria-label="Increase amount"
+					aria-label={t({ locale: $localeStore, key: 'flow.amount.increase_aria' })}
 					onclick={() => incrementAmount(1)}
 				>
 					+
@@ -739,7 +831,7 @@
 			<div class="flow-actions">
 				<button
 					class="flow-action flow-action-no"
-					aria-label="Predict NO"
+					aria-label={t({ locale: $localeStore, key: 'market.forecast.predict_no' })}
 					onclick={() => handleAction('NO')}
 				>
 					<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -755,7 +847,7 @@
 
 				<button
 					class="flow-action flow-action-skip"
-					aria-label="Skip"
+					aria-label={t({ locale: $localeStore, key: 'flow.skip_aria' })}
 					onclick={() => handleAction('SKIP')}
 				>
 					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -771,7 +863,7 @@
 
 				<button
 					class="flow-action flow-action-yes"
-					aria-label="Predict YES"
+					aria-label={t({ locale: $localeStore, key: 'market.forecast.predict_yes' })}
 					onclick={() => handleAction('YES')}
 				>
 					<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">

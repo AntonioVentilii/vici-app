@@ -6,7 +6,9 @@
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
+	import { t } from '$lib/utils/i18n.utils';
 	import type { MarketGroup } from '$lib/utils/market-groups.utils';
 
 	interface Props {
@@ -70,13 +72,27 @@
 					class="border-primary/30 bg-card/90 text-primary hover:border-primary/50 hover:bg-primary/10 shadow-card inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold backdrop-blur transition-colors"
 					aria-expanded={popoverOpen}
 					aria-haspopup="menu"
-					aria-label={`${forks.length} more ${forks.length === 1 ? 'circle' : 'circles'}`}
+					aria-label={t({
+						locale: $localeStore,
+						key:
+							forks.length === 1
+								? 'market.stacked.more_circle_aria'
+								: 'market.stacked.more_circles_aria',
+						params: { count: forks.length }
+					})}
 					onclick={togglePopover}
-					title="See forks of this market"
+					title={t({ locale: $localeStore, key: 'market.stacked.see_forks_title' })}
 					type="button"
 				>
 					<Layers size={12} />
-					<span>+{forks.length} {forks.length === 1 ? 'circle' : 'circles'}</span>
+					<span>
+						{t({
+							locale: $localeStore,
+							key:
+								forks.length === 1 ? 'market.stacked.plus_circle' : 'market.stacked.plus_circles',
+							params: { count: forks.length }
+						})}
+					</span>
 				</button>
 
 				{#if popoverOpen}
@@ -90,7 +106,7 @@
 						<div
 							class="text-muted-foreground px-2 pt-1 pb-2 text-[10px] font-bold tracking-widest uppercase"
 						>
-							Your circles for this market
+							{t({ locale: $localeStore, key: 'market.stacked.your_circles' })}
 						</div>
 
 						<ul class="max-h-64 space-y-1 overflow-y-auto">
@@ -111,7 +127,7 @@
 											<div class="flex items-center gap-1.5">
 												<span class="text-foreground truncate text-sm font-semibold">
 													{#if isMine}
-														Your circle
+														{t({ locale: $localeStore, key: 'market.stacked.your_circle' })}
 													{:else}
 														{fork.title}
 													{/if}
@@ -120,12 +136,13 @@
 													<span
 														class="bg-primary/10 text-primary rounded-full px-1.5 py-0.5 text-[9px] font-bold tracking-wider uppercase"
 													>
-														You
+														{t({ locale: $localeStore, key: 'market.stacked.you' })}
 													</span>
 												{/if}
 											</div>
 											<div class="text-muted-foreground text-[11px]">
-												by <PrincipalText principal={fork.creator} splitLength={4} />
+												{t({ locale: $localeStore, key: 'market.stacked.by' })}
+												<PrincipalText principal={fork.creator} splitLength={4} />
 											</div>
 										</div>
 									</button>

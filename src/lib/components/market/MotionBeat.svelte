@@ -4,7 +4,10 @@
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import TricksterChar from '$lib/components/characters/TricksterChar.svelte';
 	import ViciChar from '$lib/components/characters/ViciChar.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 	import type { MotionBeatPayload } from '$lib/utils/motion-engine.utils';
+	import { FLAME_STAGE_LABEL_KEYS } from '$lib/utils/streak.utils';
 
 	interface Props {
 		beat: MotionBeatPayload;
@@ -13,6 +16,25 @@
 	}
 
 	const { beat, bonusXp = 0, onDone }: Props = $props();
+
+	const copy = $derived.by(() => {
+		if (beat.copyKey === null) {
+			return null;
+		}
+
+		// `motion.streak_tier_up` interpolates `{stage}` from the localized
+		// flame label, so resolve it here using the beat's `flameStage`.
+		const params: Record<string, string | number> = { ...(beat.copyParams ?? {}) };
+
+		if (beat.copyKey === 'motion.streak_tier_up' && beat.flameStage !== undefined) {
+			params.stage = t({
+				locale: $localeStore,
+				key: FLAME_STAGE_LABEL_KEYS[beat.flameStage]
+			});
+		}
+
+		return t({ locale: $localeStore, key: beat.copyKey, params });
+	});
 
 	onMount(() => {
 		const total = beat.duration_ms + 500;
@@ -35,11 +57,13 @@
 		{/if}
 
 		<div class="motion-beat-copy">
-			{#if beat.badge}
-				<span class="motion-beat-badge allcaps">{beat.badge}</span>
+			{#if beat.badgeKey}
+				<span class="motion-beat-badge allcaps">
+					{t({ locale: $localeStore, key: beat.badgeKey })}
+				</span>
 			{/if}
-			{#if beat.copy}
-				<p class="motion-beat-line serif-italic">{beat.copy}</p>
+			{#if copy !== null}
+				<p class="motion-beat-line serif-italic">{copy}</p>
 			{/if}
 			{#if bonusXp > 0}
 				<p class="motion-beat-xp num">+{bonusXp} XP</p>

@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { Target, Flame, Eye, Zap, Timer, Star } from 'lucide-svelte';
 	import type { AchievementDef } from '$lib/constants/achievements.constants';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		achievement: AchievementDef;
@@ -31,12 +33,16 @@
 
 	<div class="min-w-0 flex-1">
 		<div class="flex items-center justify-between gap-2">
-			<span class="text-foreground text-sm font-semibold">{achievement.name}</span>
+			<span class="text-foreground text-sm font-semibold">
+				{t({ locale: $localeStore, key: achievement.nameKey })}
+			</span>
 			<span class="text-primary font-mono text-xs font-bold tabular-nums">
 				+{achievement.xp} XP
 			</span>
 		</div>
-		<p class="text-muted-foreground mt-0.5 text-xs">{achievement.description}</p>
+		<p class="text-muted-foreground mt-0.5 text-xs">
+			{t({ locale: $localeStore, key: achievement.descriptionKey })}
+		</p>
 
 		{#if !unlocked && progress > 0}
 			<div class="mt-2.5 flex items-center gap-2">

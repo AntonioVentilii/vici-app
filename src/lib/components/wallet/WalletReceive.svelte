@@ -4,6 +4,8 @@
 	import { onMount } from 'svelte';
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	let principal = $state<Principal | undefined>();
 
@@ -19,19 +21,27 @@
 <div class="flex flex-col items-center space-y-5 text-center">
 	<div class="border-border bg-foreground/5 shadow-card rounded-2xl border p-4">
 		<div class="bg-card/70 flex h-48 w-48 items-center justify-center rounded-xl">
-			<span class="text-muted-foreground text-xs font-bold">QR CODE PLACEHOLDER</span>
+			<span class="text-muted-foreground text-xs font-bold">
+				{t({ locale: $localeStore, key: 'wallet.receive.qr_placeholder' })}
+			</span>
 		</div>
 	</div>
 	<div class="space-y-2">
-		<p class="eyebrow">Your Principal ID</p>
+		<p class="eyebrow">{t({ locale: $localeStore, key: 'wallet.receive.your_principal' })}</p>
 		{#if nonNullish(principalText)}
 			<div
 				class="border-border bg-foreground/5 text-primary shadow-card flex items-center justify-center rounded-xl border px-4 py-2 text-sm"
 			>
-				<CopyableAddress address={principalText} label="Principal ID" showSelfIndicator={false} />
+				<CopyableAddress
+					address={principalText}
+					label={t({ locale: $localeStore, key: 'wallet.receive.principal_label' })}
+					showSelfIndicator={false}
+				/>
 			</div>
 		{:else}
-			<p class="text-muted-foreground text-sm italic">Loading...</p>
+			<p class="text-muted-foreground text-sm italic">
+				{t({ locale: $localeStore, key: 'wallet.receive.loading' })}
+			</p>
 		{/if}
 	</div>
 </div>

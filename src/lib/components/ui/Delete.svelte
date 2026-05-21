@@ -2,7 +2,9 @@
 	import { nonNullish } from '@dfinity/utils';
 	import { deleteAsset, deleteDoc, type Doc } from '@junobuild/core';
 	import Backdrop from '$lib/components/ui/Backdrop.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Note } from '$lib/types/note';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		doc: Doc<Note>;
@@ -46,7 +48,7 @@
 
 <button
 	class="hover:text-primary active:text-primary/70"
-	aria-label="Delete entry"
+	aria-label={t({ locale: $localeStore, key: 'a11y.delete_entry' })}
 	onclick={delItem}
 	role="cell"
 >

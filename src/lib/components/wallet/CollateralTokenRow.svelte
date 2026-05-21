@@ -5,7 +5,9 @@
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { isDev } from '$lib/env/app.env';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { formatAvailableUsd, formatToken } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { getTokenColorClasses } from '$lib/utils/token-ui.utils';
 
 	interface Props {
@@ -41,12 +43,18 @@
 			<div class="flex items-center gap-2">
 				<span class="text-foreground text-sm font-bold">{tokenSymbol}</span>
 				{#if isDev() && isDevEnabled}
-					<Badge size="sm" variant="warning">DEV</Badge>
+					<Badge size="sm" variant="warning">
+						{t({ locale: $localeStore, key: 'wallet.badge.dev' })}
+					</Badge>
 				{/if}
 			</div>
 			{#if nonNullish(assetWorth) && assetWorth.haircut_bps > 0}
 				<span class="text-primary text-[10px] font-medium">
-					{assetWorth.haircut_bps / 100}% Haircut
+					{t({
+						locale: $localeStore,
+						key: 'wallet.collateral.haircut',
+						params: { percent: assetWorth.haircut_bps / 100 }
+					})}
 				</span>
 			{/if}
 		</div>
@@ -64,7 +72,8 @@
 			{#if $playgroundVxpUnitMode}
 				{tokenSymbol}
 			{:else if nonNullish(assetWorth)}
-				Value: {formatAvailableUsd({ value: assetWorth.value_usd })}
+				{t({ locale: $localeStore, key: 'wallet.collateral.value' })}
+				{formatAvailableUsd({ value: assetWorth.value_usd })}
 				{#if assetWorth.haircut_bps > 0}
 					<span class="line-through opacity-50">
 						({formatAvailableUsd({ value: assetWorth.pre_haircut_value_usd })})

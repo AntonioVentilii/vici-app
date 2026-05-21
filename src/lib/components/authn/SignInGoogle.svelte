@@ -3,7 +3,9 @@
 	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { isDev } from '$lib/env/app.env';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { ButtonStatus } from '$lib/types/components';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		status?: ButtonStatus;
@@ -40,6 +42,6 @@
 <div class="relative w-full">
 	<Button class="signin-provider-button w-full" onclick={signInWithGoogle} {status}>
 		<IconGoogle size="20px" />
-		<span>Sign in with Google</span>
+		<span>{t({ locale: $localeStore, key: 'authn.signin_with.google' })}</span>
 	</Button>
 </div>

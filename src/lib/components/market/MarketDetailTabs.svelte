@@ -87,7 +87,7 @@
 					{#if positions.filter((p) => p.netQty !== ZERO).length > 0}
 						<div class="space-y-4">
 							<h5 class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-								Your Active Positions
+								{t({ locale: $localeStore, key: 'market.detail.tabs.your_active_positions' })}
 							</h5>
 							<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 								{#each positions as pos (pos.marketId)}
@@ -123,13 +123,13 @@
 													<span
 														class="bg-yes rounded-full px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase"
 													>
-														Won
+														{t({ locale: $localeStore, key: 'market.detail.tabs.won' })}
 													</span>
 												{:else if result === 'lost'}
 													<span
 														class="bg-muted-foreground rounded-full px-2 py-0.5 text-[10px] font-black tracking-widest text-white uppercase"
 													>
-														Lost
+														{t({ locale: $localeStore, key: 'market.detail.tabs.lost' })}
 													</span>
 												{/if}
 											</div>
@@ -144,7 +144,16 @@
 																? 'text-foreground'
 																: 'text-foreground'}"
 											>
-												{formatToken({ value: pos.netQty, unitName: market.token.decimals })} Units
+												{t({
+													locale: $localeStore,
+													key: 'market.detail.tabs.units_value',
+													params: {
+														amount: formatToken({
+															value: pos.netQty,
+															unitName: market.token.decimals
+														})
+													}
+												})}
 											</div>
 										</div>
 									{/if}
@@ -156,7 +165,7 @@
 					{#if activeOrders.length > 0}
 						<div class="space-y-4">
 							<h5 class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-								Your Open Limit Orders
+								{t({ locale: $localeStore, key: 'market.detail.tabs.your_open_limit_orders' })}
 							</h5>
 							<div class="flex flex-col gap-3">
 								{#each activeOrders as order (order.order_id)}
@@ -170,7 +179,9 @@
 													? 'bg-yes-wash text-yes'
 													: 'bg-destructive/10 text-destructive'}"
 											>
-												{'Buy' in order.side ? 'B' : 'S'}
+												{'Buy' in order.side
+													? t({ locale: $localeStore, key: 'market.detail.tabs.buy_short' })
+													: t({ locale: $localeStore, key: 'market.detail.tabs.sell_short' })}
 											</div>
 											<div>
 												<div class="text-foreground text-sm font-bold">
@@ -182,7 +193,9 @@
 													}).toFixed(2)}
 												</div>
 												<div class="text-muted-foreground text-[10px] font-medium uppercase">
-													{order.outcome_id[0] ?? 'YES'} • {'Buy' in order.side ? 'Buy' : 'Sell'}
+													{order.outcome_id[0] ?? 'YES'} • {'Buy' in order.side
+														? t({ locale: $localeStore, key: 'market.detail.tabs.buy' })
+														: t({ locale: $localeStore, key: 'market.detail.tabs.sell' })}
 												</div>
 											</div>
 										</div>
@@ -191,7 +204,7 @@
 											onclick={() => handleCancel(order.order_id)}
 											status={cancellingId === order.order_id ? 'pending' : 'enabled'}
 										>
-											Cancel
+											{t({ locale: $localeStore, key: 'settings.cancel' })}
 										</BaseButton>
 									</div>
 								{/each}
@@ -200,7 +213,9 @@
 					{/if}
 
 					<div class="border-border flex items-center justify-between border-t pt-6">
-						<span class="text-muted-foreground text-xs font-medium">Locked Asset Capacity</span>
+						<span class="text-muted-foreground text-xs font-medium"
+							>{t({ locale: $localeStore, key: 'market.detail.tabs.locked_asset_capacity' })}</span
+						>
 						<span class="text-foreground text-sm font-black">
 							{formatToken({
 								value:
@@ -229,10 +244,10 @@
 							</svg>
 						</div>
 						<h4 class="text-muted-foreground text-sm font-bold tracking-widest uppercase">
-							No Recent Activity
+							{t({ locale: $localeStore, key: 'market.detail.tabs.no_recent_activity' })}
 						</h4>
 						<p class="text-muted-foreground mt-1 text-xs">
-							Place a prediction to see your activity here.
+							{t({ locale: $localeStore, key: 'market.detail.tabs.no_activity_sub' })}
 						</p>
 					</div>
 				{/if}

@@ -3,8 +3,10 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { setBalanceDomain } from '$lib/services/balance-domain.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { BalanceDomainKey } from '$lib/types/balance-domain';
 	import { isPlaygroundExperience, isSettlement } from '$lib/utils/balance-domain.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	const setDomain = (domain: BalanceDomainKey) => {
 		if (domain === 'settlement' && !isDev()) {
@@ -21,7 +23,7 @@
 
 <div class="px-4 py-2">
 	<div class="text-muted-foreground mb-2 text-[10px] font-bold tracking-widest uppercase">
-		Domain Balance
+		{t({ locale: $localeStore, key: 'layout.domain.title' })}
 	</div>
 	<div class="flex gap-1">
 		<button
@@ -30,11 +32,13 @@
 			)
 				? 'border-primary bg-primary/10 text-primary shadow-sm'
 				: 'border-border text-muted-foreground hover:bg-muted'}"
-			aria-label="Playground domain"
+			aria-label={t({ locale: $localeStore, key: 'a11y.playground_domain' })}
 			onclick={setPlaygroundDomain}
 		>
 			<FlaskConical size={16} />
-			<span class="text-[9px] font-bold">PLAYGROUND</span>
+			<span class="text-[9px] font-bold">
+				{t({ locale: $localeStore, key: 'layout.domain.playground' })}
+			</span>
 		</button>
 
 		<button
@@ -45,17 +49,21 @@
 				: !isDev()
 					? 'border-border text-muted-foreground hover:bg-muted cursor-not-allowed opacity-50'
 					: 'border-border text-muted-foreground hover:bg-muted active:scale-95'}"
-			aria-label={isDev() ? 'Settlement domain' : 'Settlement domain (Disabled)'}
+			aria-label={isDev()
+				? t({ locale: $localeStore, key: 'a11y.settlement_domain' })
+				: t({ locale: $localeStore, key: 'a11y.settlement_domain_disabled' })}
 			disabled={!isDev()}
 			onclick={setSettlementDomain}
 		>
 			<ShieldCheck size={16} />
-			<span class="text-[9px] font-bold">SETTLEMENT</span>
+			<span class="text-[9px] font-bold">
+				{t({ locale: $localeStore, key: 'layout.domain.settlement' })}
+			</span>
 			{#if !isDev()}
 				<span
 					class="bg-foreground/8 text-muted-foreground absolute -top-1 -right-1 flex h-3 w-6 items-center justify-center rounded-full text-[7px] font-black tracking-tighter uppercase"
 				>
-					SOON
+					{t({ locale: $localeStore, key: 'layout.domain.soon' })}
 				</span>
 			{/if}
 		</button>

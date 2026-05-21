@@ -10,9 +10,11 @@
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { WalletBalance } from '$lib/types/wallet';
 	import { findAssetWorthForIcrcLedger } from '$lib/utils/asset-ref.utils';
 	import { formatCurrency, formatToken } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		balances: WalletBalance | undefined;
@@ -40,12 +42,16 @@
 <Card class="bg-card/85 h-full overflow-hidden" padding="none" variant="default">
 	<div class="border-border flex w-full items-center justify-between gap-4 border-b p-4">
 		<div>
-			<p class="eyebrow">Assets</p>
-			<h3 class="text-foreground mt-1 text-sm font-bold">Token balances</h3>
+			<p class="eyebrow">{t({ locale: $localeStore, key: 'wallet.stats.assets_eyebrow' })}</p>
+			<h3 class="text-foreground mt-1 text-sm font-bold">
+				{t({ locale: $localeStore, key: 'wallet.stats.token_balances' })}
+			</h3>
 		</div>
 
 		<div class="bg-foreground/5 flex items-center gap-2 rounded-full px-3 py-1.5">
-			<span class="text-muted-foreground text-xs">Hide zero balances</span>
+			<span class="text-muted-foreground text-xs">
+				{t({ locale: $localeStore, key: 'wallet.stats.hide_zero_balances' })}
+			</span>
 
 			<Switch bind:checked={hideZeroBalances} />
 		</div>
@@ -86,7 +92,9 @@
 						<div class="flex items-center gap-2">
 							<div class="text-foreground text-sm font-bold">{token.symbol}</div>
 							{#if isDev() && token.isDevEnabled}
-								<Badge size="sm" variant="warning">DEV</Badge>
+								<Badge size="sm" variant="warning">
+									{t({ locale: $localeStore, key: 'wallet.badge.dev' })}
+								</Badge>
 							{/if}
 						</div>
 					</div>
@@ -116,7 +124,9 @@
 			{/each}
 
 			{#if displayedTokens.length === 0}
-				<div class="text-muted-foreground p-8 text-center text-sm">No assets to display</div>
+				<div class="text-muted-foreground p-8 text-center text-sm">
+					{t({ locale: $localeStore, key: 'wallet.stats.empty' })}
+				</div>
 			{/if}
 		{/if}
 	</div>

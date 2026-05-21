@@ -4,6 +4,8 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { authBusy, userSignedIn } from '$lib/derived/user.derived';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		children: Snippet;
@@ -11,11 +13,7 @@
 		description?: string;
 	}
 
-	const {
-		children,
-		title = 'Authentication Required',
-		description = 'Please sign in to access this page.'
-	}: Props = $props();
+	const { children, title, description }: Props = $props();
 
 	let showSignInModal = $state(false);
 
@@ -27,15 +25,22 @@
 {#if $userSignedIn}
 	{@render children()}
 {:else if $authBusy}
-	<div class="py-20" aria-label="Checking sign-in status" aria-live="polite" role="status">
+	<div
+		class="py-20"
+		aria-label={t({ locale: $localeStore, key: 'authn.checking.aria' })}
+		aria-live="polite"
+		role="status"
+	>
 		<LoadingSpinner size="md" />
 	</div>
 {:else}
 	<div class="flex flex-col items-center justify-center py-20 text-center">
 		<div class="mb-12 max-w-md">
-			<h2 class="text-foreground text-4xl font-black">{title}</h2>
+			<h2 class="text-foreground text-4xl font-black">
+				{title ?? t({ locale: $localeStore, key: 'authn.required.title' })}
+			</h2>
 			<p class="text-muted-foreground mt-4 text-lg">
-				{description}
+				{description ?? t({ locale: $localeStore, key: 'authn.required.description' })}
 			</p>
 		</div>
 
@@ -46,7 +51,9 @@
 				>
 					V
 				</div>
-				<Button onclick={openSignInModal}>Sign in to Continue</Button>
+				<Button onclick={openSignInModal}
+					>{t({ locale: $localeStore, key: 'authn.required.cta' })}</Button
+				>
 			</div>
 		</div>
 	</div>

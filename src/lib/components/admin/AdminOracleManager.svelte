@@ -6,7 +6,9 @@
 	import { VICI_ORACLE_V1 } from '$lib/constants/app.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { getViciOracle, registerViciOracle } from '$lib/services/oracle.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	type Status = 'loading' | 'missing' | 'ready' | 'error';
 
@@ -49,15 +51,19 @@
 			await registerViciOracle({ authorizedPrincipals: [self] });
 
 			notificationsStore.add({
-				title: 'Oracle Registered',
-				message: `${VICI_ORACLE_V1} created with your principal authorized. Subsequent settlers are synced automatically from the Roles list above.`,
+				title: t({ locale: $localeStore, key: 'admin.oracle.registered.title' }),
+				message: t({
+					locale: $localeStore,
+					key: 'admin.oracle.registered.message',
+					params: { oracle: VICI_ORACLE_V1 }
+				}),
 				type: 'success'
 			});
 
 			await load();
 		} catch (e: unknown) {
 			notificationsStore.add({
-				title: 'Registration Failed',
+				title: t({ locale: $localeStore, key: 'admin.oracle.registration_failed' }),
 				message: (e as Error).message,
 				type: 'error'
 			});
@@ -70,17 +76,20 @@
 <div class="border-border bg-card rounded-xl border p-6">
 	<div class="mb-6 flex items-start justify-between gap-4">
 		<div>
-			<h2 class="text-foreground text-xl font-semibold">Oracle Settlers</h2>
+			<h2 class="text-foreground text-xl font-semibold">
+				{t({ locale: $localeStore, key: 'admin.oracle.title' })}
+			</h2>
 			<p class="text-muted-foreground mt-1 text-sm">
-				Principals authorized to settle markets backed by
+				{t({ locale: $localeStore, key: 'admin.oracle.sub_prefix' })}
 				<code class="bg-foreground/5 text-foreground rounded px-1.5 py-0.5 font-mono text-xs">
 					{VICI_ORACLE_V1}
-				</code>. This list is driven by the
-				<strong>Roles</strong> panel above: granting
+				</code>{t({ locale: $localeStore, key: 'admin.oracle.sub_driven_by' })}
+				<strong>{t({ locale: $localeStore, key: 'admin.oracle.sub_roles_word' })}</strong>
+				{t({ locale: $localeStore, key: 'admin.oracle.sub_granting' })}
 				<code class="bg-foreground/5 rounded px-1 py-0.5 font-mono text-xs">ADMIN</code>
-				or
+				{t({ locale: $localeStore, key: 'admin.oracle.sub_or' })}
 				<code class="bg-foreground/5 rounded px-1 py-0.5 font-mono text-xs">SOLVER</code>
-				automatically adds a user here, and revoking the role removes them.
+				{t({ locale: $localeStore, key: 'admin.oracle.sub_suffix' })}
 			</p>
 		</div>
 		<button
@@ -88,7 +97,7 @@
 			disabled={status === 'loading' || isSubmitting}
 			onclick={load}
 		>
-			Refresh
+			{t({ locale: $localeStore, key: 'admin.oracle.action.refresh' })}
 		</button>
 	</div>
 
@@ -102,20 +111,25 @@
 		<div
 			class="border-destructive/20 bg-destructive/10 text-destructive rounded-lg border p-4 text-sm"
 		>
-			<p class="font-semibold">Failed to load oracle</p>
+			<p class="font-semibold">
+				{t({ locale: $localeStore, key: 'admin.oracle.error.title' })}
+			</p>
 			<p class="mt-1 break-all">{errorMessage}</p>
-			<Button class="mt-3" onclick={load} size="sm" variant="outline">Retry</Button>
+			<Button class="mt-3" onclick={load} size="sm" variant="outline">
+				{t({ locale: $localeStore, key: 'admin.oracle.action.retry' })}
+			</Button>
 		</div>
 	{:else if status === 'missing'}
 		<div class="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-			<p class="font-semibold">Oracle not registered</p>
+			<p class="font-semibold">
+				{t({ locale: $localeStore, key: 'admin.oracle.missing.title' })}
+			</p>
 			<p class="mt-1">
-				<code>{VICI_ORACLE_V1}</code> does not exist in the registry yet. Markets cannot be settled until
-				it is registered. Only a controller or an Engine OracleAdmin can do this.
+				<code>{VICI_ORACLE_V1}</code>
+				{t({ locale: $localeStore, key: 'admin.oracle.missing.body' })}
 			</p>
 			<p class="mt-2">
-				Registering adds your principal as the first settler. Future settlers are added/removed
-				automatically when the corresponding Juno role changes.
+				{t({ locale: $localeStore, key: 'admin.oracle.missing.body_2' })}
 			</p>
 			<Button
 				class="mt-3"
@@ -123,26 +137,32 @@
 				size="sm"
 				status={isSubmitting ? 'pending' : 'enabled'}
 			>
-				Register Oracle with My Principal
+				{t({ locale: $localeStore, key: 'admin.oracle.missing.register_cta' })}
 			</Button>
 		</div>
 	{:else}
 		<div class="space-y-4">
 			<h3 class="text-foreground text-sm font-semibold tracking-wider uppercase">
-				Authorized ({authorizedPrincipals.length})
+				{t({
+					locale: $localeStore,
+					key: 'admin.oracle.authorized_count',
+					params: { count: authorizedPrincipals.length }
+				})}
 			</h3>
 
 			{#if authorizedPrincipals.length === 0}
 				<p class="text-muted-foreground text-sm italic">
-					No principals authorized yet. Assign the <strong>ADMIN</strong> or
-					<strong>SOLVER</strong> role to a user above; the satellite hook will sync them here.
+					{t({ locale: $localeStore, key: 'admin.oracle.no_authorized' })}
 				</p>
 			{:else}
 				<ul class="divide-border border-border divide-y overflow-hidden rounded-md border">
 					{#each authorizedPrincipals as principal (principal)}
 						<li class="px-6 py-4">
 							<div class="text-foreground min-w-0 text-sm">
-								<CopyableAddress address={principal} label="Principal ID" />
+								<CopyableAddress
+									address={principal}
+									label={t({ locale: $localeStore, key: 'profile.dashboard.principal' })}
+								/>
 							</div>
 						</li>
 					{/each}

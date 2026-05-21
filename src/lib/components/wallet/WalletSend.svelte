@@ -3,8 +3,10 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { isDev } from '$lib/env/app.env';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { ButtonStatus } from '$lib/types/components';
 	import type { Token } from '$lib/types/token';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		recipient: string;
@@ -33,7 +35,7 @@
 
 <div class="max-w-xl space-y-5">
 	<div class="space-y-2">
-		<span class="eyebrow">Token</span>
+		<span class="eyebrow">{t({ locale: $localeStore, key: 'wallet.send.token' })}</span>
 		<div class="grid grid-cols-2 gap-2.5">
 			{#each $walletUiTokens as token (token.ledgerCanisterId)}
 				<button
@@ -48,7 +50,9 @@
 				>
 					{token.symbol}
 					{#if isDev() && token.isDevEnabled}
-						<Badge size="sm" variant="warning">DEV</Badge>
+						<Badge size="sm" variant="warning">
+							{t({ locale: $localeStore, key: 'wallet.badge.dev' })}
+						</Badge>
 					{/if}
 				</button>
 			{/each}
@@ -56,19 +60,23 @@
 	</div>
 
 	<div class="space-y-2">
-		<label class="eyebrow" for="recipient-principal"> Recipient </label>
+		<label class="eyebrow" for="recipient-principal">
+			{t({ locale: $localeStore, key: 'wallet.send.recipient' })}
+		</label>
 		<input
 			id="recipient-principal"
 			class="bg-foreground/5 text-foreground ring-border focus:ring-primary w-full rounded-xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
 			oninput={(e) => onRecipientChange(e.currentTarget.value)}
-			placeholder="aaaaa-aa..."
+			placeholder={t({ locale: $localeStore, key: 'wallet.send.recipient_placeholder' })}
 			type="text"
 			value={recipient}
 		/>
 	</div>
 
 	<div class="space-y-2">
-		<label class="eyebrow" for="send-amount"> Amount </label>
+		<label class="eyebrow" for="send-amount">
+			{t({ locale: $localeStore, key: 'wallet.send.amount' })}
+		</label>
 		<input
 			id="send-amount"
 			class="bg-foreground/5 text-foreground ring-border focus:ring-primary num w-full rounded-xl border-none px-4 py-3 ring-1 ring-inset focus:ring-2"
@@ -80,7 +88,7 @@
 	</div>
 
 	<Button class="w-full py-4 text-sm font-black" onclick={onSend} status={sendStatus}>
-		{#snippet busyLabel()}Sending...{/snippet}
-		Send Tokens
+		{#snippet busyLabel()}{t({ locale: $localeStore, key: 'wallet.send.sending' })}{/snippet}
+		{t({ locale: $localeStore, key: 'wallet.send.send_tokens' })}
 	</Button>
 </div>

@@ -4,8 +4,10 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { listCategories, associateSeriesWithCategory } from '$lib/services/category.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Category } from '$lib/types/category';
 	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		seriesId: string;
@@ -49,9 +51,15 @@
 <Card padding="lg" variant="outline">
 	<div class="flex flex-col gap-4">
 		<div>
-			<h4 class="text-lg font-bold">Predictive Category</h4>
+			<h4 class="text-lg font-bold">
+				{t({ locale: $localeStore, key: 'admin.category.title' })}
+			</h4>
 			<p class="text-muted-foreground text-xs tracking-wider uppercase">
-				Series ID: {shortenWithMiddleEllipsis({ text: seriesId })}
+				{t({
+					locale: $localeStore,
+					key: 'admin.category.series_id',
+					params: { id: shortenWithMiddleEllipsis({ text: seriesId }) }
+				})}
 			</p>
 		</div>
 
@@ -59,7 +67,7 @@
 			<LoadingSpinner />
 		{:else if categories.length === 0}
 			<p class="py-4 text-center text-sm italic opacity-50">
-				No categories defined. Please add them in the admin settings.
+				{t({ locale: $localeStore, key: 'admin.category.empty' })}
 			</p>
 		{:else}
 			<div class="grid grid-cols-2 gap-2">
@@ -85,8 +93,11 @@
 				onclick={handleAssociate}
 				status={saving ? 'pending' : !selectedCategoryId ? 'disabled' : 'enabled'}
 			>
-				{#snippet busyLabel()}Associating...{/snippet}
-				Set Category
+				{#snippet busyLabel()}{t({
+						locale: $localeStore,
+						key: 'admin.category.action.associating'
+					})}{/snippet}
+				{t({ locale: $localeStore, key: 'admin.category.action.set' })}
 			</Button>
 		{/if}
 	</div>

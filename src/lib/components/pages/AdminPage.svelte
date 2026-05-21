@@ -17,9 +17,11 @@
 	import { createMarket } from '$lib/services/market.services';
 	import { getProfile } from '$lib/services/profile.services';
 	import { listRoles, removeRole, setRole, type UserRoleEntry } from '$lib/services/roles.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { MarketId, Outcome } from '$lib/types/market';
 	import { toBalanceDomain } from '$lib/utils/balance-domain.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	let loading = $state(true);
 	let isAssigningRole = $state(false);
@@ -122,10 +124,15 @@
 		loading = false;
 
 		notificationsStore.add({
-			title: 'Bulk Creation Complete',
-			message: `Success: ${results.success}\nFailed: ${results.failed}${
-				results.failed > 0 ? '\nCheck console for errors.' : ''
-			}`,
+			title: t({ locale: $localeStore, key: 'admin.markets.bulk.complete_title' }),
+			message: t({
+				locale: $localeStore,
+				key:
+					results.failed > 0
+						? 'admin.markets.bulk.complete_message_with_errors'
+						: 'admin.markets.bulk.complete_message',
+				params: { success: results.success, failed: results.failed }
+			}),
 			type: results.failed > 0 ? 'warning' : 'success'
 		});
 	};
@@ -135,13 +142,17 @@
 			await resolveMarket({ marketId, outcome });
 			await fetchMarkets();
 			notificationsStore.add({
-				title: 'Market Resolved',
-				message: `Market ${marketId} resolved as ${outcome}`,
+				title: t({ locale: $localeStore, key: 'admin.markets.resolved.title' }),
+				message: t({
+					locale: $localeStore,
+					key: 'admin.markets.resolved.message',
+					params: { marketId, outcome }
+				}),
 				type: 'success'
 			});
 		} catch (e: unknown) {
 			notificationsStore.add({
-				title: 'Resolution Failed',
+				title: t({ locale: $localeStore, key: 'admin.markets.resolution_failed' }),
 				message: (e as Error).message,
 				type: 'error'
 			});
@@ -163,8 +174,8 @@
 			await setRole({ principal, role });
 
 			notificationsStore.add({
-				title: 'Role Granted',
-				message: 'Role granted successfully!',
+				title: t({ locale: $localeStore, key: 'admin.roles.granted.title' }),
+				message: t({ locale: $localeStore, key: 'admin.roles.granted.message' }),
 				type: 'success'
 			});
 
@@ -191,7 +202,7 @@
 			await fetchRoles();
 		} catch (e: unknown) {
 			notificationsStore.add({
-				title: 'Grant Failed',
+				title: t({ locale: $localeStore, key: 'admin.roles.grant_failed' }),
 				message: (e as Error).message,
 				type: 'error'
 			});
@@ -204,8 +215,8 @@
 		try {
 			await removeRole(principal);
 			notificationsStore.add({
-				title: 'Role Removed',
-				message: 'Role removed successfully!',
+				title: t({ locale: $localeStore, key: 'admin.roles.removed.title' }),
+				message: t({ locale: $localeStore, key: 'admin.roles.removed.message' }),
 				type: 'success'
 			});
 
@@ -214,7 +225,7 @@
 			await fetchRoles();
 		} catch (e: unknown) {
 			notificationsStore.add({
-				title: 'Removal Failed',
+				title: t({ locale: $localeStore, key: 'admin.roles.removal_failed' }),
 				message: (e as Error).message,
 				type: 'error'
 			});
@@ -228,11 +239,10 @@
 <div class="space-y-12">
 	<div class="space-y-4">
 		<h1 class="font-display text-foreground text-4xl font-semibold tracking-tight sm:text-5xl">
-			Admin Dashboard
+			{t({ locale: $localeStore, key: 'admin.dashboard.title' })}
 		</h1>
 		<p class="text-muted-foreground max-w-2xl text-lg">
-			Manage markets, create new opportunities, resolve expired predictions, and manage
-			administrators.
+			{t({ locale: $localeStore, key: 'admin.dashboard.sub' })}
 		</p>
 	</div>
 
@@ -270,9 +280,15 @@
 	>
 		<div class="scale-up border-border bg-card w-full max-w-md rounded-lg border p-8 shadow-2xl">
 			<div class="mb-6 flex items-center justify-between">
-				<h3 class="text-foreground text-xl font-bold">Creating Markets</h3>
+				<h3 class="text-foreground text-xl font-bold">
+					{t({ locale: $localeStore, key: 'admin.markets.bulk.creating' })}
+				</h3>
 				<span class="text-muted-foreground font-mono text-sm font-medium tabular-nums">
-					{bulkProgress} of {bulkTotal}
+					{t({
+						locale: $localeStore,
+						key: 'admin.markets.bulk.progress',
+						params: { progress: bulkProgress, total: bulkTotal }
+					})}
 				</span>
 			</div>
 
@@ -287,19 +303,23 @@
 				<div
 					class="bg-yes-wash flex grow flex-col items-center justify-center rounded-lg p-3 text-center"
 				>
-					<span class="text-yes text-xs font-bold uppercase">Success</span>
+					<span class="text-yes text-xs font-bold uppercase">
+						{t({ locale: $localeStore, key: 'admin.markets.bulk.success_label' })}
+					</span>
 					<span class="text-foreground font-mono text-xl font-bold">{bulkSuccess}</span>
 				</div>
 				<div
 					class="bg-no-wash flex grow flex-col items-center justify-center rounded-lg p-3 text-center"
 				>
-					<span class="text-no text-xs font-bold uppercase">Failed</span>
+					<span class="text-no text-xs font-bold uppercase">
+						{t({ locale: $localeStore, key: 'admin.markets.bulk.failed_label' })}
+					</span>
 					<span class="text-foreground font-mono text-xl font-bold">{bulkFailed}</span>
 				</div>
 			</div>
 
 			<p class="text-muted-foreground text-center text-sm italic">
-				Please wait while we set up your prediction markets on the blockchain...
+				{t({ locale: $localeStore, key: 'admin.markets.bulk.busy' })}
 			</p>
 		</div>
 	</div>

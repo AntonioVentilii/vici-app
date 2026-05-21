@@ -1,9 +1,11 @@
 <script lang="ts">
+	import { localeStore } from '$lib/stores/locale.store';
 	import { theme, type Theme } from '$lib/stores/theme.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface ThemeOption {
 		id: Theme;
-		label: string;
+		labelKey: 'ui.theme.dark' | 'ui.theme.light' | 'ui.theme.peach';
 		bg: string;
 		dot: string;
 	}
@@ -15,9 +17,9 @@
 	const { variant = 'dots' }: Props = $props();
 
 	const options: readonly ThemeOption[] = [
-		{ id: 'dark', label: 'Dark', bg: '#0E0D0B', dot: '#F2ECDC' },
-		{ id: 'light', label: 'Light', bg: '#F2ECDC', dot: '#0E0D0B' },
-		{ id: 'peach', label: 'Peach', bg: '#FAE0CC', dot: '#3D2419' }
+		{ id: 'dark', labelKey: 'ui.theme.dark', bg: '#0E0D0B', dot: '#F2ECDC' },
+		{ id: 'light', labelKey: 'ui.theme.light', bg: '#F2ECDC', dot: '#0E0D0B' },
+		{ id: 'peach', labelKey: 'ui.theme.peach', bg: '#FAE0CC', dot: '#3D2419' }
 	] as const;
 
 	const setTheme = (value: Theme) => {
@@ -26,37 +28,47 @@
 </script>
 
 {#if variant === 'tiles'}
-	<div class="appearance-tiles" aria-label="Appearance" role="radiogroup">
+	<div
+		class="appearance-tiles"
+		aria-label={t({ locale: $localeStore, key: 'a11y.appearance' })}
+		role="radiogroup"
+	>
 		{#each options as option (option.id)}
+			{@const optionLabel = t({ locale: $localeStore, key: option.labelKey })}
 			<button
 				class="appearance-tile"
 				class:is-active={$theme === option.id}
 				aria-checked={$theme === option.id}
-				aria-label={option.label}
+				aria-label={optionLabel}
 				onclick={() => setTheme(option.id)}
 				role="radio"
-				title={option.label}
+				title={optionLabel}
 				type="button"
 			>
 				<span style:background={option.bg} class="appearance-tile-swatch">
 					<span style:background={option.dot} class="appearance-tile-dot"></span>
 				</span>
-				<span class="appearance-tile-label">{option.label}</span>
+				<span class="appearance-tile-label">{optionLabel}</span>
 			</button>
 		{/each}
 	</div>
 {:else}
-	<div class="appearance-picker" aria-label="Appearance" role="radiogroup">
+	<div
+		class="appearance-picker"
+		aria-label={t({ locale: $localeStore, key: 'a11y.appearance' })}
+		role="radiogroup"
+	>
 		{#each options as option (option.id)}
+			{@const optionLabel = t({ locale: $localeStore, key: option.labelKey })}
 			<button
 				style:background={option.bg}
 				class="appearance-dot"
 				class:is-active={$theme === option.id}
 				aria-checked={$theme === option.id}
-				aria-label={option.label}
+				aria-label={optionLabel}
 				onclick={() => setTheme(option.id)}
 				role="radio"
-				title={option.label}
+				title={optionLabel}
 				type="button"
 			>
 				<span style:background={option.dot} class="appearance-dot-inner"></span>

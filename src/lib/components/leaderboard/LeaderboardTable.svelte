@@ -1,7 +1,9 @@
 <script lang="ts">
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { LeaderboardEntry } from '$lib/types/social';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		leaderboard: LeaderboardEntry[];
@@ -21,11 +23,21 @@
 					<tr
 						class="border-border text-muted-foreground bg-card border-b text-[10px] tracking-[0.2em] uppercase"
 					>
-						<th class="px-8 py-5 font-black">Rank</th>
-						<th class="px-8 py-5 font-black">User / Principal</th>
-						<th class="px-8 py-5 text-right font-black">Active Positions</th>
-						<th class="px-8 py-5 text-right font-black">Win Rate</th>
-						<th class="px-8 py-5 text-right font-black">Total P&L</th>
+						<th class="px-8 py-5 font-black"
+							>{t({ locale: $localeStore, key: 'leaderboard.row.rank' })}</th
+						>
+						<th class="px-8 py-5 font-black"
+							>{t({ locale: $localeStore, key: 'leaderboard.col.user_principal' })}</th
+						>
+						<th class="px-8 py-5 text-right font-black"
+							>{t({ locale: $localeStore, key: 'leaderboard.col.active_positions' })}</th
+						>
+						<th class="px-8 py-5 text-right font-black"
+							>{t({ locale: $localeStore, key: 'leaderboard.col.win_rate' })}</th
+						>
+						<th class="px-8 py-5 text-right font-black"
+							>{t({ locale: $localeStore, key: 'leaderboard.col.total_pnl' })}</th
+						>
 					</tr>
 				</thead>
 				<tbody class="divide-border divide-y">
