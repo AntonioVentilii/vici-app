@@ -1,9 +1,11 @@
 <script lang="ts">
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import { upsertProfile } from '$lib/services/profile.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore, type UserStoreData } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import { dicebearAvatarUrl } from '$lib/utils/avatar.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		profile: UserProfile;
@@ -60,7 +62,7 @@
 
 <div class="space-y-6">
 	<h3 class="text-muted-foreground text-sm font-bold tracking-widest uppercase">
-		Choose Your Identity
+		{t({ locale: $localeStore, key: 'profile.avatar_style' })}
 	</h3>
 
 	<div class="grid grid-cols-3 gap-4 sm:grid-cols-6">

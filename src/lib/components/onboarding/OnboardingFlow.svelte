@@ -155,6 +155,9 @@
 
 	const [firstMarket, practiceMarket] = markets;
 	const progressWidth = $derived(`${((step + 1) / 4) * 100}%`);
+	const progressTone = $derived(
+		step === 0 ? 'var(--text-muted)' : step === 1 ? 'var(--laurel-deep)' : 'var(--laurel)'
+	);
 	const progressLatin = $derived(step === 0 ? 'Veni.' : step === 3 ? 'Vici.' : '');
 	const firstRotation = $derived(firstDragX / 18);
 	const firstYesOpacity = $derived(firstCommitted === 'YES' ? 1 : Math.max(0, firstDragX / 70));
@@ -449,7 +452,7 @@
 			<span class="num step-count">Step {step + 1} of 4</span>
 		</div>
 		<div class="progress-track" aria-hidden="true">
-			<div style:width={progressWidth} class="progress-fill"></div>
+			<div style:background={progressTone} style:width={progressWidth} class="progress-fill"></div>
 		</div>
 	</header>
 
@@ -459,6 +462,7 @@
 				<div class="step-copy">
 					<p class="eyebrow">First call</p>
 					<h1 id="first-call-title">Make your first call.</h1>
+					<p>One swipe starts your track record.</p>
 				</div>
 
 				<div class="card-stage">
@@ -567,6 +571,7 @@
 				<div class="step-copy">
 					<p class="eyebrow">Gestures</p>
 					<h1 id="gestures-title">There's more than yes and no.</h1>
+					<p>Train the two moves that keep Flow fast.</p>
 				</div>
 
 				{#if practicePhase === 'done'}
@@ -766,8 +771,11 @@
 
 				<div class="starter-pack">
 					<div class="pack-top">
-						<span class="eyebrow">Starter pack</span>
-						<Sparkles class="pack-spark" aria-hidden="true" size={18} strokeWidth={2} />
+						<span class="eyebrow">Your starter pack</span>
+						<span class="pack-gift">
+							VXP
+							<Sparkles class="pack-spark" aria-hidden="true" size={15} strokeWidth={2} />
+						</span>
 					</div>
 					<div class="pack-xp">
 						<strong class="num">{starterXp.toLocaleString()}</strong>
@@ -901,14 +909,17 @@
 		overflow: hidden;
 		height: 3px;
 		border-radius: var(--r-pill);
-		background: var(--border-base);
+		background: color-mix(in srgb, var(--text-base) 8%, transparent);
+		box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--text-base) 4%, transparent);
 	}
 
 	.progress-fill {
 		height: 100%;
 		border-radius: inherit;
-		background: var(--laurel);
-		transition: width var(--d-enter) var(--ease-vici);
+		box-shadow: 0 0 18px color-mix(in srgb, var(--laurel) 24%, transparent);
+		transition:
+			width var(--d-enter) var(--ease-vici),
+			background var(--d-enter) var(--ease-vici);
 	}
 
 	.step-frame {
@@ -932,7 +943,7 @@
 		display: flex;
 		flex: 0 0 auto;
 		flex-direction: column;
-		gap: 0.45rem;
+		gap: 0.5rem;
 	}
 
 	.step-copy h1 {
@@ -960,16 +971,18 @@
 		position: relative;
 		flex: 1 1 auto;
 		min-height: 22rem;
-		margin-top: 1rem;
+		margin-top: 1.1rem;
 	}
 
 	.shadow-card {
 		position: absolute;
-		inset: 1rem 0.75rem -0.25rem;
+		inset: 1rem 0.9rem -0.2rem;
 		z-index: 1;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
-		background: var(--bg-surface);
+		background:
+			linear-gradient(180deg, color-mix(in srgb, var(--laurel) 8%, transparent), transparent),
+			var(--bg-surface);
 		opacity: 0.46;
 		transform: rotate(-2deg);
 	}
@@ -983,7 +996,13 @@
 		overflow: hidden;
 		border: 1px solid var(--border-strong);
 		border-radius: var(--r-12);
-		background: var(--bg-popover);
+		background:
+			linear-gradient(
+				180deg,
+				color-mix(in srgb, var(--text-base) 3%, transparent),
+				transparent 42%
+			),
+			var(--bg-popover);
 		box-shadow:
 			var(--inset-hi-strong),
 			0 18px 50px -18px rgba(0, 0, 0, 0.72);
@@ -1017,7 +1036,9 @@
 		flex-direction: column;
 		gap: 0.4rem;
 		padding: 1rem 1.125rem 0.75rem;
-		background: linear-gradient(155deg, rgba(226, 184, 66, 0.08), transparent 70%);
+		background:
+			linear-gradient(155deg, rgba(226, 184, 66, 0.11), transparent 70%),
+			color-mix(in srgb, var(--text-base) 2%, transparent);
 		border-bottom: 1px solid var(--border-base);
 	}
 
@@ -1060,7 +1081,7 @@
 		align-items: center;
 		justify-content: center;
 		min-height: 0;
-		padding: 0.75rem;
+		padding: clamp(0.55rem, 2vw, 0.85rem);
 		border-bottom: 1px solid var(--border-base);
 	}
 
@@ -1085,7 +1106,7 @@
 		padding: 0.75rem 0.875rem;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-8);
-		background: var(--bg-surface);
+		background: color-mix(in srgb, var(--text-base) 3%, transparent);
 		color: var(--text-base);
 		text-align: left;
 		cursor: pointer;
@@ -1513,7 +1534,7 @@
 	.category-grid {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
-		gap: 0.7rem;
+		gap: 0.75rem;
 		margin-top: 1rem;
 	}
 
@@ -1522,10 +1543,13 @@
 		align-items: center;
 		gap: 0.75rem;
 		min-width: 0;
+		min-height: 5.25rem;
 		padding: 0.75rem;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
-		background: var(--bg-surface);
+		background:
+			linear-gradient(180deg, color-mix(in srgb, var(--text-base) 3%, transparent), transparent),
+			var(--bg-surface);
 		color: var(--text-muted);
 		text-align: left;
 		cursor: pointer;
@@ -1536,8 +1560,8 @@
 	}
 
 	.category-tile :global(.flow-art-frame) {
-		width: 3.25rem !important;
-		height: 3.25rem !important;
+		width: 3.5rem !important;
+		height: 3.5rem !important;
 		border-radius: var(--r-8);
 	}
 
@@ -1561,7 +1585,13 @@
 
 	.category-tile.selected {
 		border-color: color-mix(in srgb, var(--cat-color), transparent 52%);
-		background: color-mix(in srgb, var(--cat-color), transparent 92%);
+		background:
+			radial-gradient(
+				circle at 18% 18%,
+				color-mix(in srgb, var(--cat-color) 18%, transparent),
+				transparent 56%
+			),
+			color-mix(in srgb, var(--cat-color), transparent 92%);
 		color: var(--text-base);
 	}
 
@@ -1587,7 +1617,8 @@
 		padding: 0.85rem;
 		border: 1px solid rgba(226, 184, 66, 0.24);
 		border-radius: var(--r-12);
-		background: rgba(226, 184, 66, 0.05);
+		background:
+			linear-gradient(180deg, rgba(226, 184, 66, 0.08), rgba(226, 184, 66, 0.03)), var(--bg-surface);
 		animation: preview-in 260ms var(--ease-vici) both;
 	}
 
@@ -1629,12 +1660,15 @@
 		flex-direction: column;
 		gap: 0.8rem;
 		margin-top: 1rem;
-		padding: 1rem;
+		padding: 1.05rem;
 		border: 1px solid rgba(226, 184, 66, 0.38);
 		border-radius: var(--r-12);
 		background:
 			radial-gradient(circle at 82% 12%, rgba(226, 184, 66, 0.2), transparent 45%),
 			linear-gradient(155deg, rgba(226, 184, 66, 0.15), rgba(226, 184, 66, 0.03));
+		box-shadow:
+			var(--inset-hi-strong),
+			0 16px 44px -28px color-mix(in srgb, var(--laurel) 72%, transparent);
 	}
 
 	.pack-top,
@@ -1652,6 +1686,24 @@
 
 	.pack-top :global(.pack-spark) {
 		color: var(--laurel);
+	}
+
+	.pack-gift {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.35rem 0.45rem;
+		border-radius: var(--r-8);
+		background: var(--laurel);
+		color: var(--ink);
+		font-family: var(--font-mono);
+		font-size: 0.68rem;
+		font-weight: 900;
+		letter-spacing: 0.08em;
+	}
+
+	.pack-gift :global(.pack-spark) {
+		color: currentColor;
 	}
 
 	.pack-xp {
@@ -1707,10 +1759,15 @@
 		flex-direction: column;
 		gap: 0.45rem;
 		margin-top: 0.75rem;
-		padding: 0.85rem;
+		padding: 0.85rem 0.9rem;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
-		background: var(--bg-surface);
+		background: color-mix(in srgb, var(--text-base) 3%, transparent);
+	}
+
+	.field:focus-within {
+		border-color: color-mix(in srgb, var(--laurel) 48%, transparent);
+		background: color-mix(in srgb, var(--laurel) 5%, transparent);
 	}
 
 	.field input {
@@ -1770,7 +1827,7 @@
 		height: 1.125rem;
 		border: 2px solid var(--bg-base);
 		border-radius: 999px;
-		background: linear-gradient(135deg, #3d5a85, #1e2c4d);
+		background: linear-gradient(135deg, oklch(0.45 0.08 245), oklch(0.27 0.05 245));
 	}
 
 	.avatars i:not(:first-child) {
@@ -1778,11 +1835,11 @@
 	}
 
 	.avatars i:nth-child(2) {
-		background: linear-gradient(135deg, #7a4fb8, #3d1f66);
+		background: linear-gradient(135deg, oklch(0.48 0.1 310), oklch(0.29 0.06 310));
 	}
 
 	.avatars i:nth-child(3) {
-		background: linear-gradient(135deg, #b5462c, #6f1c20);
+		background: linear-gradient(135deg, oklch(0.52 0.11 45), oklch(0.32 0.07 45));
 	}
 
 	.primary-action {

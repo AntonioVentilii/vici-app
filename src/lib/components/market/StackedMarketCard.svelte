@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Layers, UsersRound } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import MarketCard from '$lib/components/market/MarketCard.svelte';
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -28,39 +29,34 @@
 		popoverOpen = !popoverOpen;
 	};
 
-	const openFork = (fork: Market) => {
+	const closePopover = () => {
 		popoverOpen = false;
-		goto(`${AppPath.Markets}/${fork.id}`);
 	};
 
-	// Close-on-outside-click: only attach the window listener while the
-	// popover is open, so a feed of N cards doesn't register N global
-	// click handlers that all fire on every click.
-	$effect(() => {
-		if (!popoverOpen) {
-			return;
+	const handleWindowClick = () => {
+		if (popoverOpen) {
+			closePopover();
 		}
+	};
 
-		const onWindowClick = () => {
-			popoverOpen = false;
-		};
-
-		window.addEventListener('click', onWindowClick);
-
-		return () => window.removeEventListener('click', onWindowClick);
-	});
+	const openFork = (fork: Market) => {
+		popoverOpen = false;
+		goto(resolve(`${AppPath.Markets}/${fork.id}`));
+	};
 </script>
+
+<svelte:window onclick={handleWindowClick} />
 
 <div class="relative isolate h-full w-full" data-tid={TestId.MarketCard}>
 	{#if ghostLayers >= 1}
 		<div
-			class="bg-card ring-border/80 pointer-events-none absolute inset-0 -z-10 translate-x-[6px] translate-y-[6px] rounded-2xl ring-1"
+			class="bg-card ring-border/80 pointer-events-none absolute inset-0 -z-10 translate-x-[5px] translate-y-[5px] rounded-2xl ring-1"
 			aria-hidden="true"
 		></div>
 	{/if}
 	{#if ghostLayers >= 2}
 		<div
-			class="bg-card ring-border/50 pointer-events-none absolute inset-0 -z-20 translate-x-[12px] translate-y-[12px] rounded-2xl ring-1"
+			class="bg-card ring-border/50 pointer-events-none absolute inset-0 -z-20 translate-x-[10px] translate-y-[10px] rounded-2xl ring-1"
 			aria-hidden="true"
 		></div>
 	{/if}
@@ -71,7 +67,7 @@
 		<div class="absolute top-3 right-3 z-10">
 			<div class="relative">
 				<button
-					class="border-primary/30 bg-card/90 text-primary hover:border-primary/50 hover:bg-primary/10 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold shadow-sm backdrop-blur transition-colors"
+					class="border-primary/30 bg-card/90 text-primary hover:border-primary/50 hover:bg-primary/10 shadow-card inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-bold backdrop-blur transition-colors"
 					aria-expanded={popoverOpen}
 					aria-haspopup="menu"
 					aria-label={`${forks.length} more ${forks.length === 1 ? 'circle' : 'circles'}`}

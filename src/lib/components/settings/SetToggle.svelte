@@ -50,14 +50,20 @@
 		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		padding: 0.75rem 0.875rem;
+		padding: 0.875rem;
 		background: var(--bg-surface);
 	}
 
 	.set-toggle-icon {
 		display: flex;
 		flex-shrink: 0;
-		color: var(--parchment-dim);
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: var(--r-8);
+		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+		color: var(--color-primary);
 	}
 
 	.set-toggle-copy {
@@ -70,13 +76,13 @@
 
 	.set-toggle-label {
 		font-size: var(--t-14);
-		font-weight: 500;
-		color: var(--parchment);
+		font-weight: 600;
+		color: var(--text-base);
 	}
 
 	.set-toggle-sub {
-		font-size: var(--t-11);
-		color: var(--parchment-mute);
+		font-size: 0.6875rem;
+		color: var(--text-muted);
 	}
 
 	.set-switch {
@@ -86,13 +92,13 @@
 		height: 1.25rem;
 		border: none;
 		border-radius: var(--r-pill);
-		background: var(--ink-line);
+		background: color-mix(in srgb, var(--text-base) 10%, transparent);
 		cursor: pointer;
 		transition: background-color var(--d-hover) var(--ease-vici);
 	}
 
 	.set-switch.is-on {
-		background: var(--laurel);
+		background: var(--color-primary);
 	}
 
 	.set-switch-thumb {
@@ -102,7 +108,7 @@
 		width: 1rem;
 		height: 1rem;
 		border-radius: 50%;
-		background: var(--parchment);
+		background: var(--bg-popover);
 		transition: transform var(--d-hover) var(--ease-vici);
 	}
 

@@ -42,7 +42,6 @@
 
 	let isCollateralModalOpen = $state(false);
 
-	const walletTabValues = ['history', 'send', 'receive'];
 	const tabs = $derived([
 		{ value: 'history', label: t({ locale: $localeStore, key: 'wallet.tab.history' }) },
 		{ value: 'send', label: t({ locale: $localeStore, key: 'wallet.tab.send' }) },
@@ -53,12 +52,6 @@
 		const allowed = new Set($walletUiTokens.map((t) => t.ledgerCanisterId));
 
 		return transactions.filter((tx) => allowed.has(tx.token.ledgerCanisterId));
-	});
-
-	$effect(() => {
-		if (!walletTabValues.includes(activeTab)) {
-			[activeTab] = walletTabValues;
-		}
 	});
 
 	const sortNewestFirst = (arr: Transaction[]) =>
@@ -121,14 +114,10 @@
 
 	let sending = $state(false);
 
-	$effect(() => {
-		if (nonNullish($defaultSupportedToken) && isNullish(selectedToken)) {
-			selectedToken = $defaultSupportedToken;
-		}
-	});
+	const selectedTokenForSend = $derived(selectedToken ?? $defaultSupportedToken);
 
 	const handleSend = async () => {
-		if (isNullish(recipient) || isNullish(amount) || isNullish(selectedToken)) {
+		if (isNullish(recipient) || isNullish(amount) || isNullish(selectedTokenForSend)) {
 			return;
 		}
 
@@ -142,9 +131,9 @@
 				to: recipient,
 				amount: parseToken({
 					value: `${amount}`,
-					unitName: selectedToken.decimals
+					unitName: selectedTokenForSend.decimals
 				}),
-				ledgerCanisterId: selectedToken.ledgerCanisterId
+				ledgerCanisterId: selectedTokenForSend.ledgerCanisterId
 			});
 
 			emit({ message: 'viciRefreshBalances' });
@@ -172,15 +161,15 @@
 	};
 </script>
 
-<div class="space-y-8">
+<div class="space-y-6">
 	<SectionHeader
 		description={t({ locale: $localeStore, key: 'wallet.sub' })}
 		highlight={t({ locale: $localeStore, key: 'wallet.eyebrow' })}
 		title={t({ locale: $localeStore, key: 'wallet.title' })}
 	/>
 
-	<div class="flex w-full flex-col gap-6 lg:flex-row">
-		<div class="grow">
+	<div class="grid w-full gap-4 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
+		<div class="min-w-0">
 			<WalletStats
 				balances={{
 					balances: $balancesStore ?? {},
@@ -189,7 +178,7 @@
 			/>
 		</div>
 
-		<div class="grow-2">
+		<div class="min-w-0">
 			<CollateralStats
 				collateral={$collateralsStore}
 				onManage={() => (isCollateralModalOpen = true)}
@@ -199,12 +188,14 @@
 
 	<CollateralModal isOpen={isCollateralModalOpen} onClose={() => (isCollateralModalOpen = false)} />
 
-	<Card padding="none">
-		<Tabs {tabs} bind:activeTab />
+	<Card class="bg-card/85 overflow-hidden" padding="none">
+		<div class="border-border border-b p-2">
+			<Tabs {tabs} bind:activeTab />
+		</div>
 
-		<div class="w-full p-8">
+		<div class="w-full p-4 sm:p-6">
 			{#if activeTab === 'send'}
-				{#if nonNullish(selectedToken)}
+				{#if nonNullish(selectedTokenForSend)}
 					<WalletSend
 						{amount}
 						onAmountChange={(v) => (amount = v)}
@@ -212,7 +203,7 @@
 						onSend={handleSend}
 						onTokenChange={(v) => (selectedToken = v)}
 						{recipient}
-						{selectedToken}
+						selectedToken={selectedTokenForSend}
 						sendStatus={sending ? 'pending' : 'enabled'}
 					/>
 				{:else}
@@ -225,12 +216,12 @@
 			{:else if activeTab === 'history'}
 				<div class="space-y-4">
 					<div class="flex items-center justify-between gap-4">
-						<div class="text-foreground text-sm font-bold">
+						<div class="eyebrow">
 							{t({ locale: $localeStore, key: 'wallet.history.batch_size' })}
 						</div>
 						<div class="flex items-center gap-2">
 							<select
-								class="border-border bg-card text-foreground rounded border px-2 py-1 text-sm"
+								class="border-border bg-foreground/5 text-foreground focus:border-primary rounded-full border px-3 py-1.5 text-sm"
 								aria-label={t({ locale: $localeStore, key: 'wallet.history.batch_size_label' })}
 								disabled={loadingHistory}
 								onchange={(e) => {

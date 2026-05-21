@@ -24,13 +24,13 @@
 	};
 </script>
 
-<div class="border-border flex w-full border-b">
+<div class="border-border bg-foreground/5 shadow-inset-hi flex w-full gap-1 rounded-xl border p-1">
 	{#each tabOptions as tab (tab.value)}
 		<BaseButton
-			class="ease-vici duration-hover flex-1 py-4 text-sm font-bold transition-colors {activeTab ===
+			class="ease-vici duration-hover flex-1 rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors {activeTab ===
 			tab.value
-				? 'text-foreground border-primary border-b-2'
-				: 'text-muted-foreground hover:text-foreground'}"
+				? 'bg-popover text-foreground shadow-card'
+				: 'text-muted-foreground hover:text-foreground hover:bg-foreground/5'}"
 			onclick={() => handleTabClick(tab.value)}
 		>
 			{tab.label}

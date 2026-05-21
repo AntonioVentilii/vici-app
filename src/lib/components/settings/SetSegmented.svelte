@@ -57,7 +57,7 @@
 
 <style lang="postcss">
 	.set-segmented {
-		padding: 0.75rem 0.875rem;
+		padding: 0.875rem;
 		background: var(--bg-surface);
 	}
 
@@ -71,7 +71,13 @@
 	.set-segmented-icon {
 		display: flex;
 		flex-shrink: 0;
-		color: var(--parchment-dim);
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: var(--r-8);
+		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+		color: var(--color-primary);
 	}
 
 	.set-segmented-copy {
@@ -82,13 +88,13 @@
 
 	.set-segmented-label {
 		font-size: var(--t-14);
-		font-weight: 500;
-		color: var(--parchment);
+		font-weight: 600;
+		color: var(--text-base);
 	}
 
 	.set-segmented-sub {
-		font-size: var(--t-11);
-		color: var(--parchment-mute);
+		font-size: 0.6875rem;
+		color: var(--text-muted);
 	}
 
 	.set-segmented-track {
@@ -97,7 +103,7 @@
 		gap: 0.25rem;
 		padding: 0.2rem;
 		border-radius: var(--r-8);
-		background: var(--bg-popover);
+		background: color-mix(in srgb, var(--text-base) 5%, transparent);
 		border: 1px solid var(--border-base);
 	}
 
@@ -112,7 +118,7 @@
 		background: transparent;
 		font-size: var(--t-12);
 		font-weight: 600;
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 		cursor: pointer;
 		transition:
 			background-color var(--d-hover) var(--ease-vici),
@@ -121,7 +127,7 @@
 
 	.set-segment.is-active {
 		background: var(--bg-surface);
-		color: var(--laurel);
-		box-shadow: var(--shadow-card-light);
+		color: var(--color-primary);
+		box-shadow: var(--shadow-card);
 	}
 </style>

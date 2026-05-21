@@ -16,7 +16,7 @@
 </script>
 
 <div
-	class="relative flex flex-col items-center rounded-2xl border p-4 transition-colors {isResolved
+	class="relative flex flex-col items-center rounded-xl border p-3 transition-colors {isResolved
 		? noWon
 			? 'border-no/30 bg-no-wash'
 			: 'border-border bg-card opacity-60'
@@ -31,7 +31,7 @@
 			✓{/if}
 	</div>
 	<div
-		class="font-mono text-2xl font-black tabular-nums {isResolved && !noWon
+		class="num text-lg font-black tabular-nums sm:text-xl {isResolved && !noWon
 			? 'text-muted-foreground line-through'
 			: 'text-no'}"
 	>
@@ -40,7 +40,7 @@
 </div>
 
 <div
-	class="relative flex flex-col items-center rounded-2xl border p-4 transition-colors {isResolved
+	class="relative flex flex-col items-center rounded-xl border p-3 transition-colors {isResolved
 		? yesWon
 			? 'border-yes/30 bg-yes-wash'
 			: 'border-border bg-card opacity-60'
@@ -55,7 +55,7 @@
 			✓{/if}
 	</div>
 	<div
-		class="font-mono text-2xl font-black tabular-nums {isResolved && !yesWon
+		class="num text-lg font-black tabular-nums sm:text-xl {isResolved && !yesWon
 			? 'text-muted-foreground line-through'
 			: 'text-yes'}"
 	>

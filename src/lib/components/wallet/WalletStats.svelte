@@ -37,11 +37,14 @@
 	);
 </script>
 
-<Card padding="none" variant="default">
-	<div class="border-border flex w-full items-center justify-between border-b p-4">
-		<h3 class="text-foreground text-sm font-bold">Assets</h3>
+<Card class="bg-card/85 h-full overflow-hidden" padding="none" variant="default">
+	<div class="border-border flex w-full items-center justify-between gap-4 border-b p-4">
+		<div>
+			<p class="eyebrow">Assets</p>
+			<h3 class="text-foreground mt-1 text-sm font-bold">Token balances</h3>
+		</div>
 
-		<div class="flex items-center gap-2">
+		<div class="bg-foreground/5 flex items-center gap-2 rounded-full px-3 py-1.5">
 			<span class="text-muted-foreground text-xs">Hide zero balances</span>
 
 			<Switch bind:checked={hideZeroBalances} />
@@ -51,14 +54,14 @@
 	<div class="divide-border flex w-full flex-col divide-y">
 		{#if isNullish(balances)}
 			{#each { length: 3 } as _, i (i)}
-				<div class="flex items-center justify-between p-4 px-6">
+				<div class="flex items-center justify-between p-4">
 					<div class="flex items-center gap-3">
-						<div class="bg-card h-8 w-8 animate-pulse rounded-full"></div>
-						<div class="bg-card h-4 w-24 animate-pulse rounded"></div>
+						<div class="bg-foreground/10 h-8 w-8 animate-pulse rounded-full"></div>
+						<div class="bg-foreground/10 h-4 w-24 animate-pulse rounded"></div>
 					</div>
 					<div class="text-right">
-						<div class="bg-card h-4 w-16 animate-pulse rounded"></div>
-						<div class="bg-card mt-1 h-3 w-12 animate-pulse rounded"></div>
+						<div class="bg-foreground/10 h-4 w-16 animate-pulse rounded"></div>
+						<div class="bg-foreground/10 mt-1 h-3 w-12 animate-pulse rounded"></div>
 					</div>
 				</div>
 			{/each}
@@ -71,12 +74,12 @@
 					assetsConfig: $collateralsStore?.assetsConfig ?? {}
 				})}
 
-				<div class="hover:bg-card flex items-center justify-between p-4 transition-colors">
+				<div class="hover:bg-foreground/5 flex items-center justify-between p-4 transition-colors">
 					<div class="flex items-center gap-3">
 						<div
 							class="bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full"
 						>
-							<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+							<svg class="h-4 w-4" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
 								<path d="M12 2L2 12l10 10 10-10L12 2z" />
 							</svg>
 						</div>
@@ -113,7 +116,7 @@
 			{/each}
 
 			{#if displayedTokens.length === 0}
-				<div class="text-muted-foreground p-8 text-center text-sm italic">No assets to display</div>
+				<div class="text-muted-foreground p-8 text-center text-sm">No assets to display</div>
 			{/if}
 		{/if}
 	</div>

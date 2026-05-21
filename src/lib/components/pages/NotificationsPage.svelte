@@ -11,6 +11,7 @@
 		Users
 	} from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { inboxStore, markAllInboxRead } from '$lib/stores/inbox.store';
@@ -33,7 +34,7 @@
 		<button
 			class="notifications-back"
 			aria-label={t({ locale: $localeStore, key: 'notifications.back_settings' })}
-			onclick={() => goto(AppPath.Settings)}
+			onclick={() => goto(resolve(AppPath.Settings))}
 			type="button"
 		>
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
@@ -76,7 +77,7 @@
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.5rem 0 1rem;
+		padding: 0.25rem 0 1rem;
 	}
 
 	.notifications-back {
@@ -84,10 +85,10 @@
 		align-items: center;
 		justify-content: center;
 		padding: 0.5rem 0.625rem;
-		border: none;
+		border: 1px solid var(--border-base);
 		border-radius: var(--r-8);
-		background: transparent;
-		color: var(--parchment);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		color: var(--text-base);
 		cursor: pointer;
 	}
 
@@ -96,12 +97,13 @@
 		font-size: var(--t-18);
 		font-weight: 600;
 		text-align: center;
+		color: var(--text-base);
 	}
 
 	.notifications-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.375rem;
+		gap: 0.5rem;
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -115,12 +117,13 @@
 		padding: 0.875rem;
 		border-radius: var(--r-12);
 		border: 1px solid var(--border-base);
-		background: var(--bg-raised);
+		background: var(--bg-surface);
+		box-shadow: var(--shadow-card);
 	}
 
 	.notification-card.is-unread {
-		border-color: color-mix(in srgb, var(--laurel) 30%, var(--border-base));
-		background: color-mix(in srgb, var(--laurel) 4%, var(--bg-raised));
+		border-color: color-mix(in srgb, var(--color-primary) 30%, var(--border-base));
+		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-surface));
 	}
 
 	.notification-icon {
@@ -130,8 +133,8 @@
 		width: 2rem;
 		height: 2rem;
 		border-radius: var(--r-8);
-		background: var(--ink-line);
-		color: var(--laurel);
+		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+		color: var(--color-primary);
 	}
 
 	.notification-copy {
@@ -144,19 +147,19 @@
 	.notification-title {
 		font-size: var(--t-13);
 		font-weight: 600;
-		color: var(--parchment);
+		color: var(--text-base);
 	}
 
 	.notification-body {
 		margin: 0;
 		font-size: var(--t-12);
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 
 	.notification-when {
 		margin-top: 0.125rem;
-		font-size: var(--t-11);
-		color: var(--parchment-faint);
+		font-size: 0.6875rem;
+		color: var(--text-muted);
 	}
 
 	.notification-dot {
@@ -164,6 +167,6 @@
 		height: 0.375rem;
 		margin-top: 0.375rem;
 		border-radius: 50%;
-		background: var(--laurel);
+		background: var(--color-primary);
 	}
 </style>

@@ -15,15 +15,19 @@
 	const height = 48;
 	const padding = 4;
 	const points = $derived(sparklinePoints({ yesPercent, seed }));
-	const polyline = $derived(
-		points
-			.map((y, i) => {
-				const x = padding + (i / Math.max(points.length - 1, 1)) * (width - padding * 2);
-				const py = padding + ((100 - y) / 100) * (height - padding * 2);
+	const plottedPoints = $derived(
+		points.map((y, i) => {
+			const x = padding + (i / Math.max(points.length - 1, 1)) * (width - padding * 2);
+			const py = padding + ((100 - y) / 100) * (height - padding * 2);
 
-				return `${x},${py}`;
-			})
-			.join(' ')
+			return `${x},${py}`;
+		})
+	);
+	const polyline = $derived(plottedPoints.join(' '));
+	const areaPath = $derived(
+		plottedPoints.length > 0
+			? `M ${plottedPoints.join(' L ')} L ${width - padding},${height - padding} L ${padding},${height - padding} Z`
+			: ''
 	);
 </script>
 
@@ -34,9 +38,10 @@
 		role="img"
 		viewBox="0 0 {width} {height}"
 	>
+		<path d={areaPath} fill={accentColor} opacity="0.08" />
 		<polyline
 			fill="none"
-			opacity="0.85"
+			opacity="0.95"
 			points={polyline}
 			stroke={accentColor}
 			stroke-linecap="round"
@@ -84,6 +89,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		border-radius: var(--r-12);
 	}
 
 	.flow-spark {

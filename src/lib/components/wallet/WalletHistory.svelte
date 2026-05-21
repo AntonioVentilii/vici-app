@@ -10,41 +10,41 @@
 	const { transactions }: Props = $props();
 </script>
 
-<div class="overflow-x-auto">
+<div class="border-border bg-foreground/3 overflow-x-auto rounded-2xl border">
 	{#if transactions.length === 0}
-		<div class="text-muted-foreground py-12 text-center">No transactions yet.</div>
+		<div class="text-muted-foreground py-12 text-center text-sm">No transactions yet.</div>
 	{:else}
-		<table class="w-full text-left">
+		<table class="w-full text-left text-sm">
 			<thead>
 				<tr
-					class="border-border text-muted-foreground border-b text-[10px] tracking-widest uppercase"
+					class="border-border text-muted-foreground bg-foreground/5 border-b text-[10px] tracking-widest uppercase"
 				>
-					<th class="pb-4 font-bold">Date</th>
-					<th class="pb-4 font-bold">Type</th>
-					<th class="pb-4 font-bold">Token</th>
-					<th class="pb-4 font-bold">Amount</th>
-					<th class="pb-4 font-bold">Details</th>
+					<th class="px-4 py-3 font-bold">Date</th>
+					<th class="px-4 py-3 font-bold">Type</th>
+					<th class="px-4 py-3 font-bold">Token</th>
+					<th class="px-4 py-3 font-bold">Amount</th>
+					<th class="px-4 py-3 font-bold">Details</th>
 				</tr>
 			</thead>
 			<tbody class="divide-border/50 divide-y">
 				{#each transactions as { id, timestamp, type, token, amount, marketId, counterparty } (`${id}-${token.symbol}`)}
-					<tr class="text-sm">
-						<td class="text-muted-foreground py-4">
+					<tr class="hover:bg-foreground/5 transition-colors">
+						<td class="text-muted-foreground px-4 py-3">
 							{formatNanosecondsToDate({ nanoseconds: timestamp })}
 						</td>
 						<td
-							class="py-4 font-bold"
+							class="px-4 py-3 font-bold"
 							class:text-destructive={type === 'Send'}
 							class:text-primary={type !== 'Receive' && type !== 'Send'}
 							class:text-yes={type === 'Receive'}
 						>
 							{type}
 						</td>
-						<td class="text-foreground py-4 uppercase">{token.symbol}</td>
-						<td class="text-foreground py-4 font-bold">
+						<td class="text-foreground px-4 py-3 uppercase">{token.symbol}</td>
+						<td class="text-foreground num px-4 py-3 font-bold">
 							{formatToken({ value: amount, unitName: token.decimals })}
 						</td>
-						<td class="text-muted-foreground py-4">
+						<td class="text-muted-foreground px-4 py-3">
 							{#if marketId}
 								Market Prediction ID: {marketId}
 							{:else if counterparty}

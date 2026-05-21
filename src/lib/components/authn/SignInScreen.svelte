@@ -132,44 +132,37 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: center;
-		gap: 1rem;
+		justify-content: flex-start;
+		gap: 1.25rem;
 		min-height: 100dvh;
-		overflow: hidden;
-		padding: 2rem 1.25rem;
+		overflow-y: auto;
+		padding: max(1.75rem, env(safe-area-inset-top, 0px)) 1.25rem
+			max(1.5rem, env(safe-area-inset-bottom, 0px));
 		background:
-			radial-gradient(circle at 50% 0%, var(--laurel-glow), transparent 30rem),
-			linear-gradient(180deg, var(--bg-base) 0%, var(--bg-surface) 100%);
+			radial-gradient(circle at 52% -4rem, var(--laurel-glow), transparent 22rem),
+			radial-gradient(circle at 0% 76%, var(--yes-wash), transparent 16rem), var(--bg-base);
 	}
 
 	.signin-card {
 		position: relative;
 		z-index: 1;
 		width: 100%;
-		max-width: 25.5rem;
+		max-width: 26.25rem;
 		display: flex;
 		flex-direction: column;
-		gap: 1.75rem;
-		padding: 2rem 1.5rem 1.5rem;
-		background:
-			linear-gradient(
-				180deg,
-				color-mix(in srgb, var(--bg-surface) 92%, transparent),
-				var(--bg-base)
-			),
-			var(--bg-surface);
-		border: 1px solid var(--ink-line);
-		border-radius: var(--r-12);
-		box-shadow: var(--inset-hi-strong), var(--shadow-modal);
-		backdrop-filter: blur(1.5rem);
+		flex: 1 1 auto;
+		gap: 1.45rem;
+		margin: 0 auto;
+		padding: 0.25rem 0 0;
 	}
 
 	.signin-head {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		gap: 0.65rem;
-		text-align: center;
+		align-items: flex-start;
+		gap: 0.625rem;
+		padding-top: 0.25rem;
+		text-align: left;
 	}
 
 	.signin-brand {
@@ -177,7 +170,7 @@
 		align-items: center;
 		justify-content: center;
 		min-height: 2rem;
-		margin-bottom: 0.15rem;
+		margin-bottom: 1rem;
 	}
 
 	.signin-eyebrow {
@@ -188,7 +181,7 @@
 	.signin-title {
 		margin: 0;
 		font-family: var(--font-display);
-		font-size: clamp(var(--t-32), 9vw, var(--t-48));
+		font-size: clamp(var(--t-32), 8.5vw, var(--t-44));
 		line-height: var(--leading-snug);
 		font-weight: 600;
 		letter-spacing: var(--tracking-snug);
@@ -201,7 +194,7 @@
 
 	.signin-sub {
 		margin: 0;
-		max-width: 19rem;
+		max-width: 21rem;
 		font-size: var(--t-14);
 		line-height: var(--leading-relaxed);
 		color: var(--text-muted);
@@ -210,7 +203,8 @@
 	.signin-providers {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0;
+		margin-top: 0.4rem;
 	}
 
 	.signin-providers :global(> div) {
@@ -223,8 +217,8 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0.4rem;
-		padding-top: 1rem;
-		border-top: 1px solid var(--ink-line);
+		margin-top: auto;
+		padding-top: 0.9rem;
 		font-size: var(--t-13);
 		text-align: center;
 	}
@@ -254,8 +248,8 @@
 	.signin-legal {
 		position: relative;
 		z-index: 1;
-		max-width: 24rem;
-		margin: 0;
+		max-width: 25.5rem;
+		margin: auto 0 0;
 		padding: 0 0.5rem;
 		text-align: center;
 		font-size: var(--t-12);
@@ -273,24 +267,41 @@
 	}
 
 	.signin-orb-a {
-		top: 12%;
-		left: max(-7rem, 4vw);
-		width: 13rem;
-		height: 13rem;
+		top: 10%;
+		left: max(-8rem, 2vw);
+		width: 12rem;
+		height: 12rem;
 		background: radial-gradient(circle, var(--yes-wash), transparent 68%);
 	}
 
 	.signin-orb-b {
-		right: max(-8rem, 2vw);
-		bottom: 8%;
-		width: 18rem;
-		height: 18rem;
+		right: max(-10rem, 0vw);
+		bottom: 4%;
+		width: 16rem;
+		height: 16rem;
 		background: radial-gradient(circle, var(--laurel-glow), transparent 68%);
 	}
 
 	@media (min-width: 48rem) {
+		.signin-wrap {
+			justify-content: center;
+			padding-block: 3rem;
+		}
+
 		.signin-card {
-			padding: 2.5rem 2rem 1.75rem;
+			flex: 0 1 auto;
+			padding: 2rem;
+			border: 1px solid var(--border-base);
+			border-radius: var(--r-12);
+			background:
+				linear-gradient(
+					180deg,
+					color-mix(in srgb, var(--bg-surface) 90%, transparent),
+					color-mix(in srgb, var(--bg-base) 96%, transparent)
+				),
+				var(--bg-surface);
+			box-shadow: var(--inset-hi-strong), var(--shadow-modal);
+			backdrop-filter: blur(1.5rem);
 		}
 	}
 </style>

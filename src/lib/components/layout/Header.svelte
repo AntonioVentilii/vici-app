@@ -57,15 +57,15 @@
 
 {#snippet navButton({ labelKey, path, icon: Icon, adminOnly = false }: NavItem)}
 	<BaseButton
-		class="relative px-4 py-2 text-sm leading-none font-medium transition-colors duration-200 {isActive(
+		class="ease-vici duration-hover relative rounded-full px-4 py-2 text-sm leading-none font-medium transition-all {isActive(
 			path
 		)
 			? adminOnly
-				? 'text-primary'
-				: 'text-foreground'
+				? 'bg-laurel-glow text-primary'
+				: 'bg-foreground/6 text-foreground shadow-inset-hi'
 			: adminOnly
-				? 'text-primary/60 hover:text-primary'
-				: 'text-muted-foreground hover:text-foreground'}"
+				? 'text-primary/60 hover:bg-laurel-glow hover:text-primary'
+				: 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'}"
 		onclick={() => handleNav(path)}
 	>
 		<span class="inline-flex items-center gap-1 whitespace-nowrap">
@@ -75,14 +75,14 @@
 			<span class="whitespace-nowrap">{t({ locale: $localeStore, key: labelKey })}</span>
 		</span>
 		{#if isActive(path)}
-			<span class="bg-primary absolute bottom-0 left-1/2 h-0.5 w-4/5 -translate-x-1/2 rounded-full"
+			<span class="bg-primary absolute bottom-1 left-1/2 h-0.5 w-5 -translate-x-1/2 rounded-full"
 			></span>
 		{/if}
 	</BaseButton>
 {/snippet}
 
 <header
-	class="border-ink-line bg-background/95 sticky top-0 z-50 w-full border-b backdrop-blur-md transition-all duration-300"
+	class="border-border bg-background/85 shadow-card sticky top-0 z-50 w-full border-b backdrop-blur-xl transition-all duration-300"
 >
 	<div class="container mx-auto flex h-14 items-center justify-between px-4">
 		<Logo />

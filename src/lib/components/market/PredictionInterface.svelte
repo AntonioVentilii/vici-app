@@ -2,12 +2,14 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import { get } from 'svelte/store';
+	import { resolve } from '$app/paths';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import IconSignalNo from '$lib/components/icons/IconSignalNo.svelte';
 	import IconSignalYes from '$lib/components/icons/IconSignalYes.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
@@ -436,8 +438,8 @@
 	});
 </script>
 
-<div class="border-border bg-card rounded-3xl border p-6">
-	<div class="bg-foreground/5 flex rounded-xl p-1">
+<div class="prediction-panel">
+	<div class="prediction-order-toggle">
 		<BaseButton
 			class="flex-1 rounded-lg py-2 text-xs font-bold {orderType === 'MARKET'
 				? 'bg-card text-primary shadow-sm'
@@ -632,7 +634,10 @@
 					key: 'prediction.no_buying_power',
 					params: { domain: Object.keys(market.balanceDomain)[0] ?? '' }
 				})}
-				<a class="text-primary ml-1 font-bold underline hover:no-underline" href="/wallet">
+				<a
+					class="text-primary ml-1 font-bold underline hover:no-underline"
+					href={resolve(AppPath.Wallet)}
+				>
 					{tr({ key: 'prediction.deposit_wallet' })}
 				</a>
 			</div>
@@ -681,3 +686,29 @@
 		{/if}
 	</div>
 </div>
+
+<style lang="postcss">
+	.prediction-panel {
+		border: 1px solid var(--border-base);
+		border-radius: 1.5rem;
+		background:
+			radial-gradient(circle at 18% 0%, var(--laurel-glow), transparent 34%),
+			linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
+		box-shadow: var(--shadow-card);
+		padding: 1rem;
+	}
+
+	.prediction-order-toggle {
+		display: flex;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
+		padding: 0.25rem;
+	}
+
+	@media (min-width: 640px) {
+		.prediction-panel {
+			padding: 1.25rem;
+		}
+	}
+</style>

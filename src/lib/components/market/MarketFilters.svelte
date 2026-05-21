@@ -40,15 +40,17 @@
 	const clearFilters = () => onFiltersChange({ kind: 'all', payout: 'all', access: 'all' });
 
 	const selectClasses =
-		'h-8 appearance-none rounded-[12px] border-none bg-muted pl-3 pr-7 text-xs font-bold text-foreground ring-1 ring-border ring-inset transition-all focus:ring-2 focus:ring-primary cursor-pointer';
+		'h-9 appearance-none rounded-full border border-border bg-card/80 px-3 pr-8 text-xs font-bold text-foreground shadow-card transition-all focus:border-primary focus:ring-2 focus:ring-primary/30 cursor-pointer';
 </script>
 
-<div class="space-y-4">
-	<div class="flex flex-col items-center justify-between gap-6 lg:flex-row-reverse lg:items-start">
+<div class="surface space-y-4 rounded-2xl p-3 sm:p-4">
+	<div
+		class="flex flex-col items-stretch justify-between gap-3 lg:flex-row-reverse lg:items-center"
+	>
 		<div class="relative w-full lg:max-w-sm">
 			<div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
 				<svg
-					class="text-muted-foreground/60 size-5"
+					class="text-muted-foreground/60 size-4"
 					aria-hidden="true"
 					fill="currentColor"
 					viewBox="0 0 20 20"
@@ -61,7 +63,8 @@
 				</svg>
 			</div>
 			<input
-				class="bg-muted text-foreground placeholder-muted-foreground ring-border focus:bg-muted/80 focus:ring-primary block h-9 w-full rounded-[12px] border-none py-3 pr-4 pl-10 text-sm ring-1 transition-all ring-inset focus:ring-2"
+				class="bg-foreground/5 text-foreground placeholder-muted-foreground ring-border focus:bg-foreground/8 focus:ring-primary block h-10 w-full rounded-full border-none py-3 pr-4 pl-9 text-sm ring-1 transition-all ring-inset focus:ring-2"
+				aria-label={t({ locale: $localeStore, key: 'markets.search' })}
 				oninput={(e) => onSearchChange(e.currentTarget.value)}
 				placeholder={t({ locale: $localeStore, key: 'markets.search' })}
 				type="text"
@@ -69,13 +72,14 @@
 			/>
 		</div>
 
-		<div class="flex flex-wrap gap-1.5">
+		<div class="flex gap-1.5 overflow-x-auto pb-1">
 			{#each tabs as tab (tab.id)}
 				<button
-					class="rounded-full border px-3 py-1.5 text-xs font-medium transition-all {activeTab ===
+					class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all {activeTab ===
 					tab.id
-						? 'border-primary/30 text-primary bg-laurel-glow'
-						: 'border-border bg-foreground/6 text-muted-foreground hover:bg-foreground/10 hover:text-foreground'}"
+						? 'border-primary/30 text-primary bg-laurel-glow shadow-card'
+						: 'border-border bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground'}"
+					aria-pressed={activeTab === tab.id}
 					onclick={() => onTabChange(tab.id)}
 					type="button"
 				>
@@ -85,7 +89,7 @@
 		</div>
 	</div>
 
-	<div class="flex flex-wrap items-center gap-3">
+	<div class="flex flex-wrap items-center gap-2">
 		<select
 			class={selectClasses}
 			aria-label={t({ locale: $localeStore, key: 'markets.filter.type' })}
@@ -132,7 +136,7 @@
 
 		{#if hasActiveFilters}
 			<button
-				class="text-muted-foreground hover:text-foreground text-[10px] font-bold tracking-widest uppercase transition-colors"
+				class="text-muted-foreground hover:text-foreground rounded-full px-2 py-1 text-[10px] font-bold tracking-widest uppercase transition-colors"
 				onclick={clearFilters}
 				type="button"
 			>

@@ -30,9 +30,10 @@
 		'flex flex-col items-start justify-between rounded-2xl border transition-all duration-hover ease-vici';
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
-		default: 'bg-card text-card-foreground border-border shadow-card',
-		glass: 'bg-foreground/5 backdrop-blur-md border-foreground/10',
-		outline: 'bg-transparent border-2 border-border'
+		default: 'border-border bg-card text-card-foreground shadow-card',
+		glass:
+			'border-border-strong/70 bg-popover/70 text-popover-foreground shadow-card backdrop-blur-xl',
+		outline: 'border-border bg-card/35 text-card-foreground'
 	};
 
 	const paddings: Record<NonNullable<Props['padding']>, string> = {
@@ -45,7 +46,7 @@
 	const isInteractive = $derived(nonNullish(onclick) || nonNullish(onkeydown) || role === 'button');
 
 	const interactiveClass = $derived(
-		isInteractive ? 'hover:border-border-strong active:scale-[0.985]' : ''
+		isInteractive ? 'hover:border-border-strong hover:bg-card/80 active:scale-[0.985]' : ''
 	);
 </script>
 

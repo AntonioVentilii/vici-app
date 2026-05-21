@@ -75,17 +75,49 @@
 					</div>
 				</div>
 				<div class="welcome-hero-visual" aria-hidden="true">
-					<div class="welcome-deck">
-						<div class="welcome-deck-card welcome-deck-card--back"></div>
-						<div class="welcome-deck-card welcome-deck-card--mid"></div>
-						<div class="welcome-deck-card welcome-deck-card--front">
-							<p class="eyebrow">{t({ locale: $localeStore, key: 'welcome.deck.category' })}</p>
-							<p class="welcome-deck-question">
-								{t({ locale: $localeStore, key: 'welcome.deck.question' })}
-							</p>
-							<p class="num welcome-deck-consensus">
-								{t({ locale: $localeStore, key: 'welcome.deck.consensus' })}
-							</p>
+					<div class="welcome-product-mockup">
+						<div class="welcome-product-chrome">
+							<span></span><span></span><span></span>
+						</div>
+
+						<div class="welcome-deck">
+							<div class="welcome-deck-card welcome-deck-card--back"></div>
+							<div class="welcome-deck-card welcome-deck-card--mid"></div>
+							<div class="welcome-deck-card welcome-deck-card--front">
+								<div class="welcome-deck-top">
+									<p class="eyebrow">{t({ locale: $localeStore, key: 'welcome.deck.category' })}</p>
+									<span class="num">47d</span>
+								</div>
+								<p class="welcome-deck-question">
+									{t({ locale: $localeStore, key: 'welcome.deck.question' })}
+								</p>
+								<div class="welcome-deck-meter" aria-hidden="true">
+									<span></span>
+								</div>
+								<p class="num welcome-deck-consensus">
+									{t({ locale: $localeStore, key: 'welcome.deck.consensus' })}
+								</p>
+								<div class="welcome-question-grid">
+									<span>
+										<strong class="num">YES</strong>
+										<small>62%</small>
+									</span>
+									<span>
+										<strong class="num">NO</strong>
+										<small>38%</small>
+									</span>
+									<span>
+										<strong class="num">2.4M</strong>
+										<small>{t({ locale: $localeStore, key: 'card.calls' })}</small>
+									</span>
+								</div>
+							</div>
+						</div>
+
+						<div class="welcome-mockup-rail">
+							<span>{t({ locale: $localeStore, key: 'loop.flow_name' })}</span>
+							<span>{t({ locale: $localeStore, key: 'loop.market_name' })}</span>
+							<span>{t({ locale: $localeStore, key: 'loop.port_name' })}</span>
 						</div>
 					</div>
 				</div>
@@ -148,14 +180,20 @@
 	}
 
 	.welcome-hero {
-		padding: 2.5rem clamp(1.25rem, 4vw, 2rem) 3rem;
+		position: relative;
+		overflow: hidden;
+		padding: clamp(3rem, 7vw, 5rem) clamp(1.25rem, 4vw, 2rem) clamp(3.5rem, 6vw, 4.75rem);
+		border-bottom: 1px solid var(--border);
+		background:
+			linear-gradient(180deg, color-mix(in srgb, var(--laurel) 5%, transparent), transparent 58%),
+			color-mix(in srgb, var(--background) 94%, var(--laurel) 6%);
 	}
 
 	.welcome-hero-inner {
 		max-width: 80rem;
 		margin: 0 auto;
 		display: grid;
-		gap: 2.5rem;
+		gap: clamp(2.5rem, 6vw, 4rem);
 		align-items: center;
 	}
 
@@ -209,8 +247,9 @@
 
 	.welcome-headline {
 		margin: 0;
-		font-size: clamp(2rem, 5vw, 3.25rem);
+		font-size: clamp(2.5rem, 6.5vw, 5rem);
 		line-height: 1.02;
+		letter-spacing: -0.04em;
 		color: var(--foreground);
 	}
 
@@ -248,8 +287,7 @@
 
 	.welcome-deck {
 		position: relative;
-		min-height: 16rem;
-		max-width: 20rem;
+		min-height: 19rem;
 		margin: 0 auto;
 	}
 
@@ -257,48 +295,190 @@
 		position: absolute;
 		inset: auto;
 		width: 100%;
-		border-radius: 16px;
+		border-radius: 20px;
 		border: 1px solid var(--border);
 		background: var(--card);
-		box-shadow: var(--shadow-card);
+		box-shadow:
+			var(--shadow-card),
+			0 18px 48px -28px color-mix(in srgb, var(--foreground) 52%, transparent);
 		padding: 1rem 1.125rem;
 	}
 
 	.welcome-deck-card--back {
-		transform: translate(-32px, -24px) rotate(-4deg);
-		opacity: 0.68;
-		min-height: 10rem;
+		transform: translate(-28px, -20px) rotate(-4deg);
+		opacity: 0.48;
+		min-height: 14.5rem;
 	}
 
 	.welcome-deck-card--mid {
-		transform: translate(-16px, -12px) rotate(-2deg);
-		opacity: 0.84;
-		min-height: 11rem;
+		transform: translate(-14px, -10px) rotate(-2deg);
+		opacity: 0.72;
+		min-height: 15.75rem;
 	}
 
 	.welcome-deck-card--front {
 		position: relative;
-		transform: none;
 		z-index: 2;
+		display: flex;
+		min-height: 17rem;
+		flex-direction: column;
+		gap: 0.85rem;
+		background:
+			linear-gradient(155deg, color-mix(in srgb, var(--laurel) 12%, transparent), transparent 58%),
+			var(--card);
+	}
+
+	.welcome-hero-visual {
+		position: relative;
+		min-height: 26rem;
+	}
+
+	.welcome-product-mockup {
+		position: relative;
+		width: min(100%, 27rem);
+		margin: 0 auto;
+		padding: 1rem;
+		border: 1px solid var(--border);
+		border-radius: 28px;
+		background:
+			radial-gradient(
+				circle at 82% 10%,
+				color-mix(in srgb, var(--laurel) 18%, transparent),
+				transparent 34%
+			),
+			color-mix(in srgb, var(--card) 92%, var(--background) 8%);
+		box-shadow:
+			0 24px 70px -34px color-mix(in srgb, var(--foreground) 38%, transparent),
+			inset 0 1px 0 color-mix(in srgb, var(--background) 76%, transparent);
+	}
+
+	.welcome-product-chrome {
+		display: flex;
+		gap: 0.35rem;
+		padding: 0.25rem 0.25rem 0.85rem;
+	}
+
+	.welcome-product-chrome span {
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 999px;
+		background: var(--border-strong);
+	}
+
+	.welcome-product-chrome span:first-child {
+		background: var(--no);
+	}
+
+	.welcome-product-chrome span:nth-child(2) {
+		background: var(--laurel);
+	}
+
+	.welcome-product-chrome span:last-child {
+		background: var(--yes);
+	}
+
+	.welcome-deck-top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+	}
+
+	.welcome-deck-top p {
+		margin: 0;
+	}
+
+	.welcome-deck-top .num {
+		color: var(--muted-foreground);
+		font-size: var(--t-12);
 	}
 
 	.welcome-deck-question {
-		margin: 0.5rem 0 0;
-		font-size: var(--t-16);
-		font-weight: 600;
+		margin: 0;
+		font-size: clamp(1.15rem, 3vw, 1.35rem);
+		font-weight: 700;
+		line-height: 1.18;
+		letter-spacing: -0.015em;
 		color: var(--foreground);
+		text-wrap: balance;
+	}
+
+	.welcome-deck-meter {
+		overflow: hidden;
+		height: 0.45rem;
+		border-radius: 999px;
+		background: var(--no-wash);
+	}
+
+	.welcome-deck-meter span {
+		display: block;
+		width: 62%;
+		height: 100%;
+		border-radius: inherit;
+		background: linear-gradient(90deg, var(--yes-deep), var(--yes));
 	}
 
 	.welcome-deck-consensus {
-		margin: 0.75rem 0 0;
+		margin: 0;
 		color: var(--laurel);
 		font-size: var(--t-12);
+		font-weight: 800;
 		text-transform: uppercase;
 		letter-spacing: 0.08em;
 	}
 
+	.welcome-question-grid {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.55rem;
+		margin-top: auto;
+	}
+
+	.welcome-question-grid span {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		padding: 0.65rem;
+		border: 1px solid var(--border);
+		border-radius: 12px;
+		background: color-mix(in srgb, var(--foreground) 3%, transparent);
+	}
+
+	.welcome-question-grid strong {
+		color: var(--foreground);
+		font-size: var(--t-13);
+	}
+
+	.welcome-question-grid small {
+		color: var(--muted-foreground);
+		font-size: var(--t-12);
+	}
+
+	.welcome-mockup-rail {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.5rem;
+		margin-top: 0.85rem;
+	}
+
+	.welcome-mockup-rail span {
+		padding: 0.6rem 0.4rem;
+		border: 1px solid var(--border);
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--foreground) 3%, transparent);
+		color: var(--muted-foreground);
+		font-size: var(--t-12);
+		font-weight: 700;
+		text-align: center;
+	}
+
+	.welcome-mockup-rail span:first-child {
+		background: var(--laurel);
+		color: var(--ink);
+	}
+
 	.welcome-section {
-		padding: 4rem clamp(1.25rem, 4vw, 2rem);
+		padding: clamp(4rem, 8vw, 6rem) clamp(1.25rem, 4vw, 2rem);
 	}
 
 	.welcome-section--trust {

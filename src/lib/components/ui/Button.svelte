@@ -26,24 +26,24 @@
 	}: Props = $props();
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
-		primary:
-			'bg-primary text-primary-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.25)] hover:bg-laurel-deep',
-		secondary: 'bg-foreground/6 text-foreground border border-border hover:border-border-strong',
-		outline: 'border border-primary text-primary bg-transparent hover:bg-primary/5',
+		primary: 'bg-primary text-primary-foreground shadow-inset-hi hover:bg-laurel-deep',
+		secondary:
+			'border border-border bg-foreground/6 text-foreground shadow-inset-hi hover:border-border-strong hover:bg-foreground/10',
+		outline:
+			'border border-primary/45 bg-transparent text-primary hover:border-primary hover:bg-laurel-glow',
 		ghost: 'bg-transparent text-foreground hover:bg-foreground/6',
-		danger:
-			'bg-destructive text-destructive-foreground shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] hover:bg-no-deep'
+		danger: 'bg-destructive text-destructive-foreground shadow-inset-hi hover:bg-no-deep'
 	};
 
 	const sizes: Record<NonNullable<Props['size']>, string> = {
 		sm: 'px-3 py-2 text-xs',
 		md: 'px-5 py-3.5 text-[15px]',
-		lg: 'px-6 py-4 text-base rounded-[14px]'
+		lg: 'rounded-[14px] px-6 py-4 text-base'
 	};
 </script>
 
 <BaseButton
-	class="ease-vici duration-hover gap-2 rounded-[12px] font-semibold transition-all active:scale-[0.985] {variants[
+	class="ease-vici duration-hover gap-2 rounded-xl font-semibold tracking-tight whitespace-nowrap transition-all active:scale-[0.985] {variants[
 		variant
 	]} {sizes[size]} {className}"
 	{busyLabel}

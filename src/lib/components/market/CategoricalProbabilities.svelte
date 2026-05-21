@@ -8,6 +8,8 @@
 		winningOutcomeId?: string;
 	}
 
+	type MarketOutcome = NonNullable<Market['outcomes']>[number];
+
 	const { outcomes, winningOutcomeId }: Props = $props();
 
 	const isResolved = $derived(nonNullish(winningOutcomeId));
@@ -16,30 +18,27 @@
 	// pre-settlement probability. Otherwise keep the existing probability-desc
 	// ordering so the card preview shows the most likely outcomes.
 	const topOutcomes = $derived.by(() => {
-		const sorted = outcomes.toSorted(
-			// eslint-disable-next-line local-rules/prefer-object-params
-			(a, b) => {
-				if (isResolved) {
-					const aWon = a.id === winningOutcomeId ? 1 : 0;
-					const bWon = b.id === winningOutcomeId ? 1 : 0;
+		const sorted = outcomes.toSorted((...[a, b]: [MarketOutcome, MarketOutcome]) => {
+			if (isResolved) {
+				const aWon = a.id === winningOutcomeId ? 1 : 0;
+				const bWon = b.id === winningOutcomeId ? 1 : 0;
 
-					if (aWon !== bWon) {
-						return bWon - aWon;
-					}
+				if (aWon !== bWon) {
+					return bWon - aWon;
 				}
-
-				const probA = a.probability ?? 0;
-				const probB = b.probability ?? 0;
-
-				return probB - probA || a.title.localeCompare(b.title);
 			}
-		);
+
+			const probA = a.probability ?? 0;
+			const probB = b.probability ?? 0;
+
+			return probB - probA || a.title.localeCompare(b.title);
+		});
 
 		return sorted.slice(0, 2);
 	});
 </script>
 
-<div class="border-border bg-muted/30 col-span-2 flex flex-col gap-3 rounded-2xl border p-5">
+<div class="border-border bg-muted/30 col-span-2 flex flex-col gap-3 rounded-xl border p-4">
 	<div class="flex items-center justify-between">
 		<div class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
 			{isResolved ? 'Resolved Outcome' : 'Top Outcomes'}
@@ -65,7 +64,7 @@
 						{outcome.title}{#if isWinner}
 							✓{/if}
 					</span>
-					<span class="text-foreground font-serif font-black">
+					<span class="text-foreground num font-bold">
 						{isResolved ? (isWinner ? '100%' : '0%') : formatProbability(outcome.probability ?? 0)}
 					</span>
 				</div>

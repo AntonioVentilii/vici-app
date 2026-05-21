@@ -10,7 +10,7 @@
 	const { children, variant = 'default', size = 'md' }: Props = $props();
 
 	const variants: Record<NonNullable<Props['variant']>, string> = {
-		default: 'bg-foreground/8 text-foreground border-foreground/15',
+		default: 'border-border bg-foreground/6 text-muted-foreground',
 		success: 'bg-yes-wash text-yes border-yes/25',
 		warning: 'bg-laurel-glow text-primary border-primary/25',
 		danger: 'bg-no-wash text-destructive border-destructive/25',
@@ -25,7 +25,7 @@
 
 <span
 	style="letter-spacing: 0.08em;"
-	class="inline-flex items-center gap-1 rounded-[4px] border text-center font-bold uppercase transition-colors {variants[
+	class="shadow-inset-hi inline-flex items-center gap-1 rounded-full border text-center font-bold uppercase transition-colors {variants[
 		variant
 	]} {sizes[size]}"
 >

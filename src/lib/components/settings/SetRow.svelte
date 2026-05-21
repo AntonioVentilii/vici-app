@@ -52,10 +52,10 @@
 		align-items: center;
 		gap: 0.75rem;
 		width: 100%;
-		padding: 0.75rem 0.875rem;
+		padding: 0.875rem;
 		border: none;
 		background: var(--bg-surface);
-		color: var(--parchment);
+		color: var(--text-base);
 		text-align: left;
 		cursor: pointer;
 		transition: background-color var(--d-hover) var(--ease-vici);
@@ -66,17 +66,24 @@
 	}
 
 	.set-row.is-muted {
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 
 	.set-row-icon {
 		display: flex;
 		flex-shrink: 0;
-		color: var(--parchment-dim);
+		align-items: center;
+		justify-content: center;
+		width: 2rem;
+		height: 2rem;
+		border-radius: var(--r-8);
+		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+		color: var(--color-primary);
 	}
 
 	.set-row.is-muted .set-row-icon {
-		color: var(--parchment-mute);
+		background: color-mix(in srgb, var(--text-base) 7%, transparent);
+		color: var(--text-muted);
 	}
 
 	.set-row-copy {
@@ -89,26 +96,26 @@
 
 	.set-row-label {
 		font-size: var(--t-14);
-		font-weight: 500;
+		font-weight: 600;
 	}
 
 	.set-row-sub {
-		font-size: var(--t-11);
-		color: var(--parchment-mute);
+		font-size: 0.6875rem;
+		color: var(--text-muted);
 	}
 
 	.set-row-badge {
 		flex-shrink: 0;
 		padding: 0.125rem 0.375rem;
 		border-radius: var(--r-pill);
-		font-size: var(--t-10);
+		font-size: 0.625rem;
 		font-weight: 600;
-		background: var(--laurel-wash);
-		color: var(--laurel);
+		background: var(--laurel-glow);
+		color: var(--color-primary);
 	}
 
 	:global(.set-row-chevron) {
 		flex-shrink: 0;
-		color: var(--parchment-faint);
+		color: var(--text-muted);
 	}
 </style>
