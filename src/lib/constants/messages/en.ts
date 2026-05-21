@@ -206,6 +206,8 @@ export const enMessages = {
 	'profile.dashboard.win_rate': 'win rate',
 	'profile.empty.sub': 'Sign in or place your first prediction to initialize your social identity.',
 	'profile.empty.title': 'No Profile Found',
+	'profile.loading.sub': 'Fetching your performance identity and social graph…',
+	'profile.loading.title': 'Loading profile…',
 	'profile.eyebrow': 'IDENTITY',
 	'profile.sub': 'Performance identity, streaks, achievements, and social graph.',
 	'profile.title': 'Profile',

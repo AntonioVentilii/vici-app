@@ -100,6 +100,12 @@
 	</span>
 {/snippet}
 
+{#snippet portfolioDesktopRight()}
+	<span class="portfolio-desktop-icon" aria-hidden="true">
+		<LineChart size={22} strokeWidth={1.6} />
+	</span>
+{/snippet}
+
 <svelte:document onviciRefreshPositions={loadData} />
 
 <div class="space-y-7 pb-24">
@@ -112,7 +118,7 @@
 	<div class="hidden md:block">
 		<SectionHeader
 			description={t({ locale: $localeStore, key: 'portfolio.sub' })}
-			highlight={t({ locale: $localeStore, key: 'portfolio.eyebrow' })}
+			right={portfolioDesktopRight}
 			title={t({ locale: $localeStore, key: 'portfolio.title' })}
 		/>
 	</div>
@@ -144,6 +150,18 @@
 		display: inline-flex;
 		width: 2.25rem;
 		height: 2.25rem;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: var(--bg-surface);
+		color: var(--color-primary);
+	}
+
+	.portfolio-desktop-icon {
+		display: inline-flex;
+		width: 2.75rem;
+		height: 2.75rem;
 		align-items: center;
 		justify-content: center;
 		border: 1px solid var(--border-base);

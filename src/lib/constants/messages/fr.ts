@@ -208,6 +208,8 @@ export const frMessages = {
 	'profile.dashboard.win_rate': 'taux de réussite',
 	'profile.empty.sub': 'Connectez-vous ou faites votre première prédiction.',
 	'profile.empty.title': 'Profil introuvable',
+	'profile.loading.sub': 'Chargement de votre identité et de votre graphe social…',
+	'profile.loading.title': 'Chargement du profil…',
 	'profile.eyebrow': 'IDENTITÉ',
 	'profile.sub': 'Identité de performance, séries, succès et graphe social.',
 	'profile.title': 'Profil',

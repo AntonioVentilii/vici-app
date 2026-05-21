@@ -200,6 +200,8 @@ export const zhCnMessages = {
 	'profile.dashboard.win_rate': '胜率',
 	'profile.empty.sub': '登录或完成第一笔预测以初始化你的社交身份。',
 	'profile.empty.title': '未找到资料',
+	'profile.loading.sub': '正在加载你的表现身份与社交图谱…',
+	'profile.loading.title': '正在加载资料…',
 	'profile.eyebrow': '身份',
 	'profile.sub': '表现身份、连胜、成就与社交图谱。',
 	'profile.title': '个人',

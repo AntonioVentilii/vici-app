@@ -205,6 +205,8 @@ export const esMessages = {
 	'profile.dashboard.win_rate': 'tasa de acierto',
 	'profile.empty.sub': 'Inicia sesión o haz tu primera predicción.',
 	'profile.empty.title': 'Sin perfil',
+	'profile.loading.sub': 'Cargando tu identidad y grafo social…',
+	'profile.loading.title': 'Cargando perfil…',
 	'profile.eyebrow': 'IDENTIDAD',
 	'profile.sub': 'Identidad de rendimiento, rachas, logros y grafo social.',
 	'profile.title': 'Perfil',

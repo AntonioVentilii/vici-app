@@ -205,6 +205,8 @@ export const itMessages = {
 	'profile.dashboard.win_rate': 'tasso vittorie',
 	'profile.empty.sub': 'Accedi o fai la prima previsione per creare la tua identità.',
 	'profile.empty.title': 'Profilo non trovato',
+	'profile.loading.sub': 'Sto caricando la tua identità e il grafo social…',
+	'profile.loading.title': 'Caricamento profilo…',
 	'profile.eyebrow': 'IDENTITÀ',
 	'profile.sub': 'Identità di performance, serie, traguardi e grafo social.',
 	'profile.title': 'Profilo',

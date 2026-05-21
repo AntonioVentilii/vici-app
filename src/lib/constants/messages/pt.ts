@@ -206,6 +206,8 @@ export const ptMessages = {
 	'profile.dashboard.win_rate': 'taxa de acerto',
 	'profile.empty.sub': 'Entre ou faça a primeira previsão.',
 	'profile.empty.title': 'Perfil não encontrado',
+	'profile.loading.sub': 'Carregando sua identidade e grafo social…',
+	'profile.loading.title': 'Carregando perfil…',
 	'profile.eyebrow': 'IDENTIDADE',
 	'profile.sub': 'Identidade de desempenho, sequências, conquistas e grafo social.',
 	'profile.title': 'Perfil',

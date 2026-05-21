@@ -144,6 +144,12 @@
 	</span>
 {/snippet}
 
+{#snippet socialDesktopRight()}
+	<span class="social-desktop-icon" aria-hidden="true">
+		<Users size={22} strokeWidth={1.6} />
+	</span>
+{/snippet}
+
 <div class="space-y-7 pb-24">
 	<MobileAppBar
 		align="left"
@@ -154,7 +160,7 @@
 	<div class="hidden md:block">
 		<SectionHeader
 			description={t({ locale: $localeStore, key: 'leaderboard.sub' })}
-			highlight={t({ locale: $localeStore, key: 'leaderboard.eyebrow' })}
+			right={socialDesktopRight}
 			title={t({ locale: $localeStore, key: 'leaderboard.title' })}
 		/>
 	</div>
@@ -390,6 +396,18 @@
 		display: inline-flex;
 		width: 2.25rem;
 		height: 2.25rem;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: var(--bg-surface);
+		color: var(--color-primary);
+	}
+
+	.social-desktop-icon {
+		display: inline-flex;
+		width: 2.75rem;
+		height: 2.75rem;
 		align-items: center;
 		justify-content: center;
 		border: 1px solid var(--border-base);

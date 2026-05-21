@@ -207,6 +207,8 @@ export const deMessages = {
 	'profile.dashboard.win_rate': 'Trefferquote',
 	'profile.empty.sub': 'Anmelden oder erste Vorhersage tätigen.',
 	'profile.empty.title': 'Kein Profil',
+	'profile.loading.sub': 'Lade Performance-Identität und Social Graph…',
+	'profile.loading.title': 'Profil wird geladen…',
 	'profile.eyebrow': 'IDENTITÄT',
 	'profile.sub': 'Performance-Identität, Streaks, Erfolge und Social Graph.',
 	'profile.title': 'Profil',

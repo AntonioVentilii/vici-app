@@ -1,19 +1,27 @@
 <script lang="ts">
+	import type { Snippet } from 'svelte';
+
 	interface Props {
 		title: string;
 		highlight?: string;
 		description?: string;
+		right?: Snippet;
 	}
 
-	const { title, highlight, description }: Props = $props();
+	const { title, highlight, description, right }: Props = $props();
 </script>
 
 <div class="space-y-2">
-	<h1 class="text-foreground text-3xl leading-tight tracking-tight sm:text-4xl">
-		<span class="serif-italic">{title}</span>{#if highlight}<span
-				class="text-primary font-display font-bold">{highlight}</span
-			>{/if}
-	</h1>
+	<div class="flex items-start justify-between gap-4">
+		<h1 class="text-foreground text-3xl leading-tight tracking-tight sm:text-4xl">
+			<span class="serif-italic">{title}</span>{#if highlight}<span
+					class="text-primary font-display font-bold">{highlight}</span
+				>{/if}
+		</h1>
+		{#if right}
+			<div class="shrink-0">{@render right()}</div>
+		{/if}
+	</div>
 	{#if description}
 		<p class="text-muted-foreground max-w-2xl text-sm leading-relaxed text-pretty">
 			{description}
