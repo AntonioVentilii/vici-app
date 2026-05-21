@@ -1,8 +1,12 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
+	import YouBadge from '$lib/components/ui/YouBadge.svelte';
+	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getGlobalActivities } from '$lib/services/activity.services';
+	import { getProfile } from '$lib/services/profile.services';
+	import type { UserProfile } from '$lib/types/profile';
 	import type { Activity } from '$lib/types/social';
+	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 
 	interface Props {
 		marketId: string;
@@ -12,11 +16,31 @@
 	const { marketId, isEmbedded = false }: Props = $props();
 
 	let activities = $state<Activity[]>([]);
+	const profiles = $state<Map<string, UserProfile>>(new Map());
 
 	onMount(async () => {
 		const all = await getGlobalActivities({ limit: 20 });
 		activities = all.filter((a) => a.marketId === marketId);
+
+		const uniquePrincipals = Array.from(new Set(activities.map((a) => a.user)));
+		const fetched = await Promise.all(
+			uniquePrincipals.map(async (principal) => [principal, await getProfile(principal)] as const)
+		);
+
+		for (const [principal, doc] of fetched) {
+			if (doc) {
+				profiles.set(principal, doc.data);
+			}
+		}
 	});
+
+	const displayNameFor = (principal: string): string => {
+		const nickname = profiles.get(principal)?.nickname;
+
+		return nickname && nickname.length > 0
+			? nickname
+			: shortenWithMiddleEllipsis({ text: principal });
+	};
 </script>
 
 <div
@@ -41,8 +65,13 @@
 					</div>
 					<div class="min-w-0 flex-1">
 						<div class="flex items-center justify-between gap-2">
-							<span class="text-foreground truncate text-xs font-bold">
-								<PrincipalText principal={activity.user} />
+							<span
+								class="text-foreground inline-flex min-w-0 items-center gap-1.5 text-xs font-bold"
+							>
+								<span class="truncate">{displayNameFor(activity.user)}</span>
+								{#if $authPrincipal && activity.user === $authPrincipal}
+									<YouBadge />
+								{/if}
 							</span>
 							<span class="text-muted-foreground text-[10px] font-medium">
 								{new Date(activity.timestamp).toLocaleTimeString([], {
