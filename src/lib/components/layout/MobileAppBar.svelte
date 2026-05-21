@@ -24,7 +24,7 @@
 	};
 </script>
 
-<header class="mobile-appbar md:hidden" data-align={resolvedAlign}>
+<header class="mobile-appbar" data-align={resolvedAlign}>
 	{#if back}
 		<button class="mobile-appbar-back" aria-label={back.label} onclick={handleBack} type="button">
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
@@ -57,6 +57,12 @@
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.25rem 0.25rem 0.5rem;
+	}
+
+	@media (min-width: 768px) {
+		.mobile-appbar {
+			display: none;
+		}
 	}
 
 	.mobile-appbar[data-align='left'] {
