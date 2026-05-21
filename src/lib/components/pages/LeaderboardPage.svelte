@@ -115,7 +115,6 @@
 						/>
 						<div
 							class="bg-card text-primary border-border absolute -top-3 -right-2 rounded-full border px-2 py-1 font-mono text-[10px] font-black tracking-[0.16em] uppercase shadow-sm sm:-right-4"
-							aria-hidden="true"
 						>
 							{t({ locale: $localeStore, key: getMedalLabelKey(i) })}
 						</div>
