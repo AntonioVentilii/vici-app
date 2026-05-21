@@ -5,6 +5,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import ViciChar from '$lib/components/characters/ViciChar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
@@ -451,7 +452,7 @@
 	};
 
 	const backToMarkets = () => {
-		goto(AppPath.Home);
+		goto(resolve(AppPath.Home));
 	};
 
 	const incrementAmount = (direction: 1 | -1) => {
@@ -822,6 +823,8 @@
 		min-height: 100dvh;
 		display: flex;
 		flex-direction: column;
+		background:
+			radial-gradient(circle at 50% -10%, var(--laurel-glow), transparent 34%), var(--bg-base);
 	}
 
 	.flow-shell.is-active {
@@ -838,21 +841,26 @@
 		display: grid;
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
-		gap: 0.75rem;
-		padding: calc(env(safe-area-inset-top, 0px) + 0.5rem) 0.75rem 0.5rem
-			calc(env(safe-area-inset-left, 0px) + 0.75rem);
-		padding-right: calc(env(safe-area-inset-right, 0px) + 0.75rem);
-		background: linear-gradient(to bottom, rgba(14, 13, 11, 0.95), rgba(14, 13, 11, 0.75));
+		gap: 0.65rem;
+		padding: calc(env(safe-area-inset-top, 0px) + 0.45rem) 0.8rem 0.45rem
+			calc(env(safe-area-inset-left, 0px) + 0.8rem);
+		padding-right: calc(env(safe-area-inset-right, 0px) + 0.8rem);
+		background: linear-gradient(
+			to bottom,
+			color-mix(in srgb, var(--bg-base) 96%, transparent),
+			color-mix(in srgb, var(--bg-base) 72%, transparent)
+		);
 		backdrop-filter: saturate(180%) blur(12px);
 		-webkit-backdrop-filter: saturate(180%) blur(12px);
+		border-bottom: 1px solid var(--border-base);
 	}
 
 	.flow-icon-btn {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 2.25rem;
-		height: 2.25rem;
+		width: 2rem;
+		height: 2rem;
 		border-radius: 999px;
 		background: var(--ink-line);
 		color: var(--parchment);
@@ -873,7 +881,7 @@
 	}
 	.flow-progress-seg {
 		flex: 1;
-		height: 4px;
+		height: 3px;
 		border-radius: 999px;
 		background: var(--ink-line);
 		overflow: hidden;
@@ -907,7 +915,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
-		padding: 5px 9px;
+		padding: 4px 8px;
 		border-radius: 999px;
 		font-weight: 900;
 		font-size: 12px;
@@ -1051,16 +1059,20 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0.5rem 1rem;
+		padding: 0.35rem 1rem 0.5rem;
 		min-height: 0;
 	}
 
 	.flow-card-wrap {
 		position: relative;
 		width: 100%;
-		max-width: 26rem;
+		max-width: min(25.5rem, calc(100vw - 2rem));
 		height: 100%;
-		max-height: 620px;
+		max-height: min(
+			650px,
+			calc(100dvh - 13.75rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+		);
+		min-height: min(34rem, calc(100dvh - 14.75rem));
 	}
 
 	.flow-card-slot {
@@ -1072,8 +1084,9 @@
 	}
 	.flow-card-slot.is-back {
 		pointer-events: none;
-		transform: translateY(calc(var(--depth) * 10px)) scale(calc(1 - var(--depth) * 0.04));
-		opacity: calc(1 - var(--depth) * 0.35);
+		transform: translateY(calc(var(--depth) * 9px)) scale(calc(1 - var(--depth) * 0.035));
+		opacity: calc(1 - var(--depth) * 0.28);
+		filter: saturate(calc(1 - var(--depth) * 0.12));
 	}
 
 	.xp-pops {
@@ -1185,16 +1198,20 @@
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.75rem;
-		padding: 0.75rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.75rem);
-		background: linear-gradient(to top, rgba(14, 13, 11, 1) 50%, rgba(14, 13, 11, 0));
+		gap: 0.6rem;
+		padding: 0.55rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.65rem);
+		background: linear-gradient(
+			to top,
+			color-mix(in srgb, var(--bg-base) 98%, transparent) 56%,
+			transparent
+		);
 	}
 
 	.flow-amount {
 		display: inline-flex;
 		align-items: center;
 		gap: 4px;
-		padding: 4px;
+		padding: 3px;
 		border-radius: 999px;
 		background: var(--bg-surface);
 		box-shadow: inset 0 0 0 1px var(--border-base);
@@ -1250,7 +1267,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		gap: 1.25rem;
+		gap: 1rem;
 	}
 	.flow-action {
 		display: inline-flex;
@@ -1278,22 +1295,22 @@
 	}
 
 	.flow-action-no {
-		width: 3.75rem;
-		height: 3.75rem;
+		width: 3.35rem;
+		height: 3.35rem;
 		border: 3px solid rgba(255, 107, 107, 0.25);
 		color: var(--no);
 		box-shadow: 0 10px 24px var(--no-wash);
 	}
 	.flow-action-skip {
-		width: 3rem;
-		height: 3rem;
+		width: 2.75rem;
+		height: 2.75rem;
 		border: 3px solid var(--border-strong);
 		color: var(--parchment-mute);
 		box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
 	}
 	.flow-action-yes {
-		width: 3.75rem;
-		height: 3.75rem;
+		width: 3.35rem;
+		height: 3.35rem;
 		border: 3px solid rgba(79, 211, 161, 0.25);
 		color: var(--yes);
 		box-shadow: 0 10px 24px rgba(79, 211, 161, 0.15);
@@ -1331,6 +1348,19 @@
 		.flow-kbd {
 			display: flex;
 		}
+	}
+
+	@media (min-width: 640px) {
+		.flow-card-wrap {
+			max-height: 660px;
+			min-height: 36rem;
+		}
+	}
+
+	:global([data-theme='light']) .flow-card-slot.is-back,
+	:global([data-theme='peach']) .flow-card-slot.is-back {
+		opacity: calc(1 - var(--depth) * 0.22);
+		filter: saturate(calc(1 - var(--depth) * 0.08)) drop-shadow(0 18px 32px rgba(14, 13, 11, 0.08));
 	}
 
 	/* FlowEnd — session summary surface. Brand voice over confetti.

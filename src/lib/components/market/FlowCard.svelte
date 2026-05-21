@@ -329,10 +329,10 @@
 			style:transition="opacity {FLIP_MS}ms var(--ease-vici) {flipped ? '0ms' : `${FLIP_MS}ms`}"
 			class="flow-face flow-face-front"
 		>
-			<div class="flow-card-body">
+			<div style:--cat-color={catColor} class="flow-card-body">
 				<header class="flow-card-head">
 					<div class="flow-meta-row">
-						<span style:color={catColor} class="allcaps flow-cat">{resolvedCategory}</span>
+						<span class="allcaps flow-cat">{resolvedCategory}</span>
 						<span class="flow-meta-sep" aria-hidden="true">·</span>
 						<span class="num flow-meta-time">{formatExpiryEyebrow}</span>
 						{#if position}
@@ -374,7 +374,7 @@
 				<p class="flow-sharp">
 					<span class="flow-sharp-dot" aria-hidden="true"></span>
 					<span>
-						Crowd lean:
+						Sharp predictors:
 						<span
 							class="num"
 							class:text-no={crowdSide === 'NO'}
@@ -393,7 +393,10 @@
 						class="flow-prob-side flow-prob-no{crowdSide === 'NO' ? ' is-consensus' : ''}"
 						onclick={() => onAction('NO')}
 					>
-						<span class="allcaps flow-prob-label text-no">NO</span>
+						<span class="flow-prob-top">
+							<span class="flow-prob-chevron text-no" aria-hidden="true">←</span>
+							<span class="allcaps flow-prob-label text-no">NO</span>
+						</span>
 						<span class="num flow-prob-pct text-no">{noPctLabel}</span>
 						{#if isLimitOrderNo}
 							<span class="flow-prob-badge bg-no-wash text-no">Limit</span>
@@ -403,7 +406,10 @@
 						class="flow-prob-side flow-prob-yes{crowdSide === 'YES' ? ' is-consensus' : ''}"
 						onclick={() => onAction('YES')}
 					>
-						<span class="allcaps flow-prob-label text-yes">YES</span>
+						<span class="flow-prob-top">
+							<span class="allcaps flow-prob-label text-yes">YES</span>
+							<span class="flow-prob-chevron text-yes" aria-hidden="true">→</span>
+						</span>
 						<span class="num flow-prob-pct text-yes">{yesPctLabel}</span>
 						{#if isLimitOrderYes}
 							<span class="flow-prob-badge bg-yes-wash text-yes">Limit</span>
@@ -508,12 +514,18 @@
 		position: relative;
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0.8rem;
 		overflow: hidden;
 		height: 100%;
 		width: 100%;
-		padding: 1.25rem 1.25rem 1rem;
-		background: var(--bg-popover);
+		padding: 0;
+		background:
+			radial-gradient(
+				circle at 18% 0%,
+				color-mix(in srgb, var(--cat-color) 18%, transparent),
+				transparent 32%
+			),
+			linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
 		border: 1px solid var(--border-strong);
 		border-radius: var(--r-12);
 		box-shadow:
@@ -523,15 +535,26 @@
 	}
 	@media (min-width: 768px) {
 		.flow-card-body {
-			padding: 1.5rem 1.5rem 1.25rem;
-			gap: 1.25rem;
+			gap: 1rem;
 		}
 	}
 
 	.flow-card-head {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.55rem;
+		padding: 1.1rem 1.1rem 1rem;
+		border-bottom: 1px solid color-mix(in srgb, var(--cat-color) 18%, transparent);
+		background: linear-gradient(
+			160deg,
+			color-mix(in srgb, var(--cat-color) 14%, transparent),
+			transparent 68%
+		);
+	}
+	@media (min-width: 768px) {
+		.flow-card-head {
+			padding: 1.25rem 1.25rem 1rem;
+		}
 	}
 
 	.flow-meta-row {
@@ -543,7 +566,7 @@
 		color: var(--text-muted);
 	}
 	.flow-cat {
-		color: var(--cat-macro); /* overridden inline by `style:color={catColor}` */
+		color: var(--cat-color);
 		font-size: var(--t-12);
 	}
 	.flow-meta-sep {
@@ -569,7 +592,7 @@
 	.flow-card-title {
 		margin: 0;
 		font-family: var(--font-display);
-		font-size: 1.5rem;
+		font-size: clamp(1.35rem, 5.8vw, 1.75rem);
 		line-height: var(--leading-snug);
 		font-weight: 600;
 		letter-spacing: var(--tracking-snug);
@@ -578,7 +601,7 @@
 	}
 	@media (min-width: 400px) {
 		.flow-card-title {
-			font-size: 1.75rem;
+			font-size: 1.85rem;
 		}
 	}
 	@media (min-width: 768px) {
@@ -596,11 +619,12 @@
 	}
 
 	.flow-whynow {
+		align-self: flex-start;
 		margin: 0;
-		padding: 0.35rem 0.55rem;
+		padding: 0.32rem 0.55rem;
 		border-radius: var(--r-pill);
-		border: 1px solid var(--border-base);
-		background: var(--bg-surface);
+		border: 1px solid color-mix(in srgb, var(--cat-color) 24%, var(--border-base));
+		background: color-mix(in srgb, var(--cat-color) 10%, var(--bg-surface));
 		font-size: var(--t-12);
 		color: var(--laurel);
 		letter-spacing: var(--tracking-allcaps);
@@ -615,11 +639,13 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		margin: 0;
-		padding: 0.45rem 0.6rem;
+		margin: 0 1.1rem;
+		padding: 0.5rem 0.65rem;
 		border-radius: var(--r-8);
-		border: 1px solid var(--border-base);
-		background: var(--bg-surface);
+		border: 1px solid color-mix(in srgb, var(--cat-color) 18%, var(--border-base));
+		background:
+			linear-gradient(90deg, color-mix(in srgb, var(--cat-color) 10%, transparent), transparent),
+			var(--bg-surface);
 		font-size: var(--t-12);
 		color: var(--text-muted);
 	}
@@ -628,7 +654,8 @@
 		width: 6px;
 		height: 6px;
 		border-radius: var(--r-pill);
-		background: var(--laurel);
+		background: var(--cat-color);
+		box-shadow: 0 0 0 4px color-mix(in srgb, var(--cat-color) 12%, transparent);
 		flex-shrink: 0;
 	}
 
@@ -636,6 +663,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
+		margin: 0 1.1rem;
 		font-size: var(--t-12);
 		color: var(--text-muted);
 		letter-spacing: 0.06em;
@@ -648,7 +676,7 @@
 		justify-content: center;
 		flex: 1 1 auto;
 		min-height: 0;
-		padding: 0.25rem 0;
+		padding: 0.15rem 1rem 0;
 	}
 
 	.flow-art-slot :global(.flow-art) {
@@ -662,6 +690,7 @@
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 0.625rem;
+		margin: 0 1.1rem;
 	}
 
 	:global(.flow-prob-side) {
@@ -670,9 +699,10 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 2px;
-		padding: 0.625rem 0.5rem;
-		border-radius: var(--r-8);
+		gap: 0.35rem;
+		min-height: 5.4rem;
+		padding: 0.75rem 0.65rem;
+		border-radius: var(--r-12);
 		border-width: 1px;
 		border-style: solid;
 		background: var(--bg-surface);
@@ -708,9 +738,20 @@
 		font-size: var(--t-12);
 		font-weight: 600;
 	}
+	:global(.flow-prob-top) {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.35rem;
+	}
+	:global(.flow-prob-chevron) {
+		font-size: var(--t-16);
+		font-weight: 700;
+		line-height: 1;
+	}
 	:global(.flow-prob-pct) {
 		display: block;
-		font-size: 1.5rem;
+		font-size: 1.8rem;
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		line-height: 1;
@@ -732,7 +773,8 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.5rem;
-		padding-top: 0.5rem;
+		margin: 0 1.1rem 1rem;
+		padding-top: 0.65rem;
 		border-top: 1px solid var(--border-base);
 		font-size: var(--t-12);
 		color: var(--text-muted);

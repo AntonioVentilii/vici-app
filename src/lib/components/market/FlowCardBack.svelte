@@ -37,6 +37,10 @@
 	const catColor = $derived(categoryColor(category));
 	const yesPct = $derived(consensusPercent(market));
 	const crowdSide = $derived(consensusSide(market));
+	const predictorsNow = $derived(
+		market.outcomes?.reduce((acc, outcome) => acc + (outcome.totalPredictions ?? 0), 0) ?? 0
+	);
+	const sharpPct = $derived(yesPct);
 	const callsLabel = $derived(
 		formatFlowCallsLabel({ volume: market.totalVolume, decimals: market.token.decimals })
 	);
@@ -60,9 +64,9 @@
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div class="flow-back" onclick={onClose}>
-	<div class="flow-back-panel" onclick={(e) => e.stopPropagation()}>
+	<div style:--cat-color={catColor} class="flow-back-panel" onclick={(e) => e.stopPropagation()}>
 		<header class="flow-back-head">
-			<span style:color={catColor} class="allcaps flow-back-cat">{category}</span>
+			<span class="allcaps flow-back-cat">{category}</span>
 			<button
 				class="flow-back-close"
 				aria-label="Return to card front"
@@ -77,9 +81,12 @@
 			<h3 class="flow-back-title">{market.title}</h3>
 			<p class="flow-back-meta num">
 				Settles {formatDate(market.expiryDate)} · {getTimeRemaining(market.expiryDate)}
+				{#if predictorsNow > 0}
+					· {predictorsNow.toLocaleString()} predicting
+				{/if}
 			</p>
 
-			<section class="flow-back-block">
+			<section class="flow-back-block flow-resolution">
 				<p class="eyebrow flow-back-label">Resolves yes if</p>
 				<p class="flow-back-copy">{resolution.condition}</p>
 				<p class="flow-back-source">
@@ -105,8 +112,9 @@
 				{/if}
 			</section>
 
-			<section class="flow-back-block">
-				<div class="flow-back-community">
+			<section class="flow-back-block flow-community">
+				<div class="flow-community-top">
+					<p class="eyebrow flow-back-label">Crowd split</p>
 					<span
 						class="num flow-back-pct"
 						class:text-no={crowdSide === 'NO'}
@@ -124,7 +132,7 @@
 				/>
 			</section>
 
-			<section class="flow-back-block">
+			<section class="flow-back-block flow-activity">
 				<p class="eyebrow flow-back-label">Activity</p>
 				<p class="flow-back-activity num">{callsLabel}</p>
 			</section>
@@ -137,8 +145,18 @@
 						<span class="num">{yesPct}%</span>
 					</div>
 					<div class="flow-split-bar" role="presentation">
-						<span style:width="{100 - yesPct}%" class="flow-split-no"></span>
-						<span style:width="{yesPct}%" class="flow-split-yes"></span>
+						<span style:width={`${100 - yesPct}%`} class="flow-split-no"></span>
+						<span style:width={`${yesPct}%`} class="flow-split-yes"></span>
+					</div>
+				</div>
+				<div class="flow-split-row">
+					<div class="flow-split-meta">
+						<span>Top accuracy</span>
+						<span class="num">{sharpPct}% {crowdSide}</span>
+					</div>
+					<div class="flow-split-bar" role="presentation">
+						<span style:width={`${100 - sharpPct}%`} class="flow-split-no"></span>
+						<span style:width={`${sharpPct}%`} class="flow-split-yes"></span>
 					</div>
 				</div>
 				{#if followedLean}
@@ -189,21 +207,30 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
-		background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
+		background:
+			radial-gradient(
+				circle at 18% 0%,
+				color-mix(in srgb, var(--cat-color) 18%, transparent),
+				transparent 34%
+			),
+			linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
 		border: 1px solid var(--border-strong);
 		border-radius: var(--r-12);
-		box-shadow: var(--inset-hi);
+		box-shadow:
+			var(--inset-hi),
+			0 24px 52px rgba(0, 0, 0, 0.24);
 	}
 
 	.flow-back-head {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 1rem 1.25rem 0.5rem;
+		padding: 0.95rem 1.1rem 0.45rem;
 	}
 
 	.flow-back-cat {
 		font-size: var(--t-12);
+		color: var(--cat-color);
 	}
 
 	.flow-back-close {
@@ -214,8 +241,8 @@
 		height: 2rem;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-		color: var(--parchment);
+		background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+		color: var(--text-base);
 		font-size: 1.25rem;
 		line-height: 1;
 		cursor: pointer;
@@ -225,18 +252,18 @@
 		flex: 1 1 auto;
 		min-height: 0;
 		overflow-y: auto;
-		padding: 0 1.25rem 1.25rem;
+		padding: 0 1.1rem 1.1rem;
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0.85rem;
 	}
 
 	.flow-back-title {
 		margin: 0;
 		font-family: var(--font-display);
-		font-size: 1.25rem;
+		font-size: clamp(1.15rem, 4.6vw, 1.45rem);
 		line-height: var(--leading-snug);
-		color: var(--parchment);
+		color: var(--text-base);
 	}
 
 	.flow-back-meta {
@@ -251,6 +278,22 @@
 		gap: 0.5rem;
 	}
 
+	.flow-resolution,
+	.flow-community,
+	.flow-activity,
+	.flow-split-row,
+	.flow-back-context {
+		padding: 0.75rem;
+		border-radius: var(--r-12);
+		border: 1px solid var(--border-base);
+		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
+		box-shadow: var(--inset-hi);
+	}
+
+	.flow-resolution {
+		border-color: color-mix(in srgb, var(--cat-color) 20%, var(--border-base));
+	}
+
 	.flow-back-label {
 		margin: 0;
 		color: var(--text-muted);
@@ -263,7 +306,11 @@
 		margin: 0;
 		font-size: var(--t-13);
 		line-height: var(--leading-normal);
-		color: var(--parchment-mute);
+		color: var(--text-muted);
+	}
+
+	.flow-back-copy {
+		color: var(--text-base);
 	}
 
 	.flow-back-source {
@@ -287,15 +334,17 @@
 		color: var(--text-muted);
 	}
 
-	.flow-back-community {
+	.flow-community-top {
 		display: flex;
 		align-items: baseline;
-		gap: 0.5rem;
+		justify-content: space-between;
+		gap: 0.75rem;
 	}
 
 	.flow-back-pct {
-		font-size: 1.75rem;
+		font-size: 2rem;
 		font-weight: 600;
+		letter-spacing: -0.04em;
 	}
 
 	.flow-back-side {
@@ -320,7 +369,7 @@
 
 	.flow-split-bar {
 		display: flex;
-		height: 6px;
+		height: 7px;
 		border-radius: var(--r-pill);
 		overflow: hidden;
 		background: var(--ink-line);
@@ -357,12 +406,12 @@
 	}
 
 	.flow-back-context {
-		padding: 0.75rem;
-		border-radius: var(--r-8);
-		border: 1px solid var(--border-base);
-		background: var(--bg-surface);
 		display: flex;
 		flex-direction: column;
 		gap: 0.35rem;
+		border-color: color-mix(in srgb, var(--cat-color) 22%, var(--border-base));
+		background:
+			linear-gradient(90deg, color-mix(in srgb, var(--cat-color) 8%, transparent), transparent),
+			color-mix(in srgb, var(--bg-surface) 90%, transparent);
 	}
 </style>

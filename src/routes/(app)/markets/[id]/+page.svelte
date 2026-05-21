@@ -2,6 +2,7 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { resolve } from '$app/paths';
 	import MarketDetailForecast from '$lib/components/market/MarketDetailForecast.svelte';
 	import MarketDetailHeader from '$lib/components/market/MarketDetailHeader.svelte';
 	import MarketDetailStats from '$lib/components/market/MarketDetailStats.svelte';
@@ -9,6 +10,7 @@
 	import MarketInfoPanel from '$lib/components/market/MarketInfoPanel.svelte';
 	import MarketMetadataForm from '$lib/components/market/MarketMetadataForm.svelte';
 	import MarketResolutionInterface from '$lib/components/market/MarketResolutionInterface.svelte';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
 	import { authPrincipal, userIsAdmin, userIsAdminOrSolver } from '$lib/derived/user.derived';
 	import { getMarket } from '$lib/services/market.services';
@@ -153,7 +155,7 @@
 	<title>{market ? market.title : 'Market'} | Vici Social Markets</title>
 </svelte:head>
 
-<div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+<div class="market-detail-shell">
 	{#if loading}
 		<div class="flex h-96 items-center justify-center">
 			<div
@@ -161,12 +163,12 @@
 			></div>
 		</div>
 	{:else if market}
-		<div class="space-y-8 lg:space-y-12">
+		<div class="market-detail-stack">
 			<MarketDetailHeader {market} />
 
-			<div class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-12">
-				<div class="space-y-8 lg:col-span-8">
-					<div class="lg:hidden">
+			<div class="market-detail-grid">
+				<div class="market-detail-main">
+					<div class="market-detail-mobile-stats">
 						<MarketDetailStats {market} />
 					</div>
 
@@ -174,18 +176,19 @@
 
 					<MarketDetailTabs {market} {positions} />
 
+					<div class="market-detail-mobile-info">
+						<MarketInfoPanel {market} />
+					</div>
+
 					{#if canEditMetadata}
 						<MarketMetadataForm canEdit {market} />
 					{/if}
 				</div>
 
-				<aside class="hidden space-y-8 lg:col-span-4 lg:block">
+				<aside class="market-detail-aside">
+					<MarketDetailStats {market} />
 					<MarketInfoPanel {market} />
 				</aside>
-
-				<div class="space-y-8 lg:hidden">
-					<MarketInfoPanel {market} />
-				</div>
 			</div>
 
 			{#if market.status !== 'Resolved' && $userIsAdminOrSolver}
@@ -209,10 +212,91 @@
 			</p>
 			<a
 				class="bg-primary text-primary-foreground hover:bg-primary/90 mt-8 rounded-xl px-8 py-3 font-bold transition-all"
-				href="/static"
+				href={resolve(AppPath.Home)}
 			>
 				Return to Markets
 			</a>
 		</div>
 	{/if}
 </div>
+
+<style lang="postcss">
+	.market-detail-shell {
+		position: relative;
+		margin: 0 auto;
+		width: 100%;
+		max-width: 74rem;
+		padding: 0.75rem 1rem 2rem;
+	}
+
+	.market-detail-shell::before {
+		content: '';
+		position: fixed;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+		background:
+			radial-gradient(circle at 50% -10%, var(--laurel-glow), transparent 34%),
+			linear-gradient(
+				180deg,
+				color-mix(in srgb, var(--bg-surface) 42%, transparent),
+				transparent 18rem
+			);
+	}
+
+	.market-detail-stack {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.market-detail-grid {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr);
+		gap: 1rem;
+	}
+
+	.market-detail-main,
+	.market-detail-aside {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		min-width: 0;
+	}
+
+	.market-detail-aside {
+		display: none;
+	}
+
+	@media (min-width: 768px) {
+		.market-detail-shell {
+			padding: 1rem 1.5rem 3rem;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.market-detail-stack {
+			gap: 1.25rem;
+		}
+
+		.market-detail-grid {
+			grid-template-columns: minmax(0, 1fr) 22rem;
+			gap: 1.25rem;
+			align-items: start;
+		}
+
+		.market-detail-mobile-stats {
+			display: none;
+		}
+
+		.market-detail-mobile-info {
+			display: none;
+		}
+
+		.market-detail-aside {
+			display: flex;
+			position: sticky;
+			top: calc(var(--header-h) + 1rem);
+		}
+	}
+</style>

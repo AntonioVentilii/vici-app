@@ -7,7 +7,9 @@
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
+	import { formatDate } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { getTimeRemaining } from '$lib/utils/market.utils';
 
 	interface Props {
 		market: Market;
@@ -19,57 +21,178 @@
 	const { title, status, outcome } = $derived(market);
 	const isFork = $derived(market.forkedFrom !== undefined);
 	const isResolved = $derived(status === 'Resolved');
+	const timeRemaining = $derived(getTimeRemaining(market.expiryDate));
 </script>
 
-<div class="flex flex-col items-center space-y-6 text-center">
-	<div class="bg-card flex h-16 w-16 items-center justify-center rounded-2xl p-4 shadow-sm">
-		<OutcomeBadge {status} />
-	</div>
-
-	{#if isResolved && nonNullish(outcome)}
-		<div class="-mt-2">
-			<OutcomeBadge {outcome} />
-		</div>
-	{/if}
-
-	<div class="space-y-4">
-		<h1 class="text-foreground max-w-4xl text-3xl font-black sm:text-5xl lg:text-5xl">
-			{title}
-		</h1>
-
-		{#if market.description}
-			<p class="text-muted-foreground mx-auto max-w-2xl text-sm leading-relaxed sm:text-lg">
-				{market.description}
-			</p>
-		{/if}
-
-		<div class="flex items-center justify-center gap-2">
-			<span
-				class="border-foreground/25 text-foreground bg-foreground/8 rounded-full border px-3 py-1 text-[10px] font-bold tracking-widest uppercase"
-			>
+<section class="detail-hero">
+	<div class="detail-hero-top">
+		<div class="detail-chip-row">
+			<span class="detail-chip detail-chip-category">
 				{t({ locale: $localeStore, key: 'market.detail.category_default' })}
 			</span>
+			<span class="detail-chip detail-chip-status">
+				<OutcomeBadge {status} />
+			</span>
+			{#if isResolved && nonNullish(outcome)}
+				<span class="detail-chip detail-chip-status">
+					<OutcomeBadge {outcome} />
+				</span>
+			{/if}
 			{#if market.isInviteOnly}
 				<Badge size="sm" variant="warning">
 					{t({ locale: $localeStore, key: 'markets.filter.access.closed' })}
 				</Badge>
 			{/if}
-			<span class="text-muted-foreground inline-flex items-center gap-1 text-[10px] font-bold">
-				{t({ locale: $localeStore, key: 'market.detail.created_by' })}
-				<PrincipalText principal={market.creator} splitLength={5} />
-			</span>
 		</div>
 
 		{#if !isFork}
-			<div class="pt-2">
-				<Button onclick={() => (isForkModalOpen = true)} size="sm" variant="outline">
-					{t({ locale: $localeStore, key: 'card.challenge_friends' })}
-				</Button>
-			</div>
+			<Button onclick={() => (isForkModalOpen = true)} size="sm" variant="outline">
+				{t({ locale: $localeStore, key: 'card.challenge_friends' })}
+			</Button>
 		{/if}
 	</div>
-</div>
+
+	<div class="detail-hero-copy">
+		<h1>{title}</h1>
+
+		{#if market.description}
+			<p>{market.description}</p>
+		{/if}
+	</div>
+
+	<div class="detail-meta-grid">
+		<div class="detail-meta-cell">
+			<span class="allcaps">Settles</span>
+			<strong class="num">{formatDate(market.expiryDate)}</strong>
+		</div>
+		<div class="detail-meta-cell">
+			<span class="allcaps">Time left</span>
+			<strong class="num text-primary">{timeRemaining}</strong>
+		</div>
+		<div class="detail-meta-cell detail-meta-creator">
+			<span class="allcaps">{t({ locale: $localeStore, key: 'market.detail.created_by' })}</span>
+			<strong><PrincipalText principal={market.creator} splitLength={5} /></strong>
+		</div>
+	</div>
+</section>
 
 {#if !isFork}
 	<MarketForkModal isOpen={isForkModalOpen} {market} onClose={() => (isForkModalOpen = false)} />
 {/if}
+
+<style lang="postcss">
+	.detail-hero {
+		position: relative;
+		overflow: hidden;
+		border: 1px solid var(--border-base);
+		border-radius: 1.75rem;
+		background:
+			radial-gradient(circle at 14% 0%, var(--laurel-glow), transparent 34%),
+			linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
+		box-shadow: var(--shadow-card);
+		padding: 1rem;
+	}
+
+	.detail-hero-top {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.75rem;
+	}
+
+	.detail-chip-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.detail-chip {
+		display: inline-flex;
+		align-items: center;
+		border-radius: var(--r-pill);
+		border: 1px solid var(--border-base);
+		background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
+	}
+
+	.detail-chip-category {
+		padding: 0.35rem 0.65rem;
+		color: var(--laurel);
+		font-size: var(--t-12);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.detail-chip-status {
+		padding: 0.25rem 0.45rem;
+	}
+
+	.detail-hero-copy {
+		margin-top: 1rem;
+		max-width: 52rem;
+	}
+
+	.detail-hero-copy h1 {
+		margin: 0;
+		color: var(--text-base);
+		font-family: var(--font-display);
+		font-size: clamp(2rem, 8vw, 4.4rem);
+		font-weight: 700;
+		letter-spacing: -0.055em;
+		line-height: 0.98;
+	}
+
+	.detail-hero-copy p {
+		margin: 0.85rem 0 0;
+		max-width: 44rem;
+		color: var(--text-muted);
+		font-size: var(--t-14);
+		line-height: var(--leading-normal);
+	}
+
+	.detail-meta-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.5rem;
+		margin-top: 1rem;
+	}
+
+	.detail-meta-cell {
+		min-width: 0;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
+		padding: 0.75rem;
+	}
+
+	.detail-meta-cell strong {
+		display: block;
+		margin-top: 0.25rem;
+		overflow: hidden;
+		color: var(--text-base);
+		font-size: var(--t-13);
+		font-weight: 700;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.detail-meta-creator {
+		grid-column: 1 / -1;
+	}
+
+	@media (min-width: 768px) {
+		.detail-hero {
+			padding: 1.35rem;
+		}
+
+		.detail-meta-grid {
+			grid-template-columns: repeat(3, minmax(0, 1fr));
+			max-width: 42rem;
+		}
+
+		.detail-meta-creator {
+			grid-column: auto;
+		}
+	}
+</style>

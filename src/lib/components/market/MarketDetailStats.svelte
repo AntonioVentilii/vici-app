@@ -18,30 +18,69 @@
 	const timeRemaining = $derived(getTimeRemaining(market.expiryDate));
 </script>
 
-<div class="border-border flex flex-wrap justify-center gap-6 border-y py-6">
-	<div class="flex flex-col items-center">
-		<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
-			>Total Volume</span
-		>
-		<div class="mt-1 flex items-baseline gap-1">
-			<span class="text-foreground font-mono text-xl font-black tabular-nums">
+<div class="detail-stats">
+	<div class="detail-stat">
+		<span class="allcaps">Total calls</span>
+		<div class="detail-stat-value">
+			<span class="num">
 				{formatVolume({ volume: totalVolume, decimals: tokenDecimals, symbol: '' })}
 			</span>
-			<span class="text-muted-foreground text-xs font-bold">{tokenSymbol}</span>
+			<span>{tokenSymbol}</span>
 		</div>
 	</div>
-	<div class="bg-border h-10 w-px"></div>
-	<div class="flex flex-col items-center">
-		<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
-			>Expiry Date</span
-		>
-		<span class="text-foreground mt-1 text-xl font-black">{formatDate(expiryDate)}</span>
+	<div class="detail-stat">
+		<span class="allcaps">Expiry date</span>
+		<strong>{formatDate(expiryDate)}</strong>
 	</div>
-	<div class="bg-border h-10 w-px"></div>
-	<div class="flex flex-col items-center">
-		<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-			Time Remaining
-		</span>
-		<span class="text-primary mt-1 text-xl font-black">{timeRemaining}</span>
+	<div class="detail-stat">
+		<span class="allcaps">Time remaining</span>
+		<strong class="text-primary">{timeRemaining}</strong>
 	</div>
 </div>
+
+<style lang="postcss">
+	.detail-stats {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.5rem;
+	}
+
+	.detail-stat {
+		min-width: 0;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
+		box-shadow: var(--inset-hi);
+		padding: 0.75rem;
+	}
+
+	.detail-stat-value {
+		display: flex;
+		align-items: baseline;
+		gap: 0.25rem;
+		margin-top: 0.3rem;
+	}
+
+	.detail-stat-value .num,
+	.detail-stat strong {
+		display: block;
+		overflow: hidden;
+		color: var(--text-base);
+		font-size: var(--t-14);
+		font-weight: 800;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.detail-stat-value span:last-child {
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		font-weight: 700;
+	}
+
+	@media (min-width: 1024px) {
+		.detail-stats {
+			grid-template-columns: 1fr;
+		}
+	}
+</style>
