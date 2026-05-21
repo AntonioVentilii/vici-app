@@ -65,9 +65,9 @@
 
 <div class="mt-8">
 	<Tabs
-		tabs={tabOptions.map((tab) => tab.label)}
 		activeTab={activeTabLabel}
 		onTabChange={handleTabChange}
+		tabs={tabOptions.map((tab) => tab.label)}
 	/>
 
 	<div class="mt-8 min-h-75">
