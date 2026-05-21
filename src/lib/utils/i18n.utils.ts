@@ -17,7 +17,13 @@ const catalogs: Record<AppLocale, Record<string, string>> = {
 
 export type MessageKey = keyof typeof enMessages;
 
-const interpolate = (template: string, params?: Record<string, string | number>): string => {
+const interpolate = ({
+	template,
+	params
+}: {
+	template: string;
+	params?: Record<string, string | number>;
+}): string => {
 	if (!params) {
 		return template;
 	}
@@ -40,5 +46,5 @@ export const t = ({
 	const catalog = catalogs[locale] ?? catalogs.en;
 	const template = catalog[key] ?? catalogs.en[key] ?? key;
 
-	return interpolate(template, params);
+	return interpolate({ template, params });
 };
