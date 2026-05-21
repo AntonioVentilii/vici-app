@@ -377,5 +377,6 @@ export const frMessages = {
 	'welcome.deck.closing_soon': 'Bientôt clos',
 	'welcome.deck.predictors_count': '{count} prédisent',
 	'welcome.deck.question': 'La Fed baissera-t-elle les taux en juin ?',
-	'welcome.deck.subtitle': 'FOMC · décision de taux'
+	'welcome.deck.subtitle': 'FOMC · décision de taux',
+	'welcome.deck.consensus': '74% YES CONSENSUS'
 } as const;

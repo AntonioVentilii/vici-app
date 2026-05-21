@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { LineChart } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import type { ClearingDid } from '$declarations';
+	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioStats from '$lib/components/portfolio/PortfolioStats.svelte';
 	import PositionTable from '$lib/components/portfolio/PositionTable.svelte';
@@ -92,14 +94,28 @@
 	);
 </script>
 
+{#snippet portfolioAppbarRight()}
+	<span class="portfolio-mobile-icon" aria-hidden="true">
+		<LineChart size={18} strokeWidth={1.8} />
+	</span>
+{/snippet}
+
 <svelte:document onviciRefreshPositions={loadData} />
 
 <div class="space-y-7 pb-24">
-	<SectionHeader
-		description={t({ locale: $localeStore, key: 'portfolio.sub' })}
-		highlight={t({ locale: $localeStore, key: 'portfolio.eyebrow' })}
+	<MobileAppBar
+		align="left"
+		right={portfolioAppbarRight}
 		title={t({ locale: $localeStore, key: 'portfolio.title' })}
 	/>
+
+	<div class="hidden md:block">
+		<SectionHeader
+			description={t({ locale: $localeStore, key: 'portfolio.sub' })}
+			highlight={t({ locale: $localeStore, key: 'portfolio.eyebrow' })}
+			title={t({ locale: $localeStore, key: 'portfolio.title' })}
+		/>
+	</div>
 
 	{#if refreshing}
 		<LoadingSpinner />
@@ -122,3 +138,17 @@
 		</div>
 	{/if}
 </div>
+
+<style lang="postcss">
+	.portfolio-mobile-icon {
+		display: inline-flex;
+		width: 2.25rem;
+		height: 2.25rem;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: var(--bg-surface);
+		color: var(--color-primary);
+	}
+</style>

@@ -1,6 +1,8 @@
 <script lang="ts">
+	import { Users } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
+	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
@@ -136,12 +138,26 @@
 	});
 </script>
 
+{#snippet socialAppbarRight()}
+	<span class="social-mobile-icon" aria-hidden="true">
+		<Users size={18} strokeWidth={1.8} />
+	</span>
+{/snippet}
+
 <div class="space-y-7 pb-24">
-	<SectionHeader
-		description={t({ locale: $localeStore, key: 'leaderboard.sub' })}
-		highlight={t({ locale: $localeStore, key: 'leaderboard.eyebrow' })}
+	<MobileAppBar
+		align="left"
+		right={socialAppbarRight}
 		title={t({ locale: $localeStore, key: 'leaderboard.title' })}
 	/>
+
+	<div class="hidden md:block">
+		<SectionHeader
+			description={t({ locale: $localeStore, key: 'leaderboard.sub' })}
+			highlight={t({ locale: $localeStore, key: 'leaderboard.eyebrow' })}
+			title={t({ locale: $localeStore, key: 'leaderboard.title' })}
+		/>
+	</div>
 
 	<section
 		class="border-border bg-card shadow-card relative overflow-hidden rounded-[2rem] border p-4 sm:p-5"
@@ -368,3 +384,17 @@
 		</div>
 	{/if}
 </div>
+
+<style lang="postcss">
+	.social-mobile-icon {
+		display: inline-flex;
+		width: 2.25rem;
+		height: 2.25rem;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: var(--bg-surface);
+		color: var(--color-primary);
+	}
+</style>

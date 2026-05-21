@@ -372,5 +372,6 @@ export const ptMessages = {
 	'welcome.deck.closing_soon': 'Fecha em breve',
 	'welcome.deck.predictors_count': '{count} prevendo',
 	'welcome.deck.question': 'O Fed cortará juros em junho?',
-	'welcome.deck.subtitle': 'FOMC · decisão de juros'
+	'welcome.deck.subtitle': 'FOMC · decisão de juros',
+	'welcome.deck.consensus': '74% YES CONSENSO'
 } as const;

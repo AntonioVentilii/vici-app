@@ -373,5 +373,6 @@ export const esMessages = {
 	'welcome.deck.closing_soon': 'Cierra pronto',
 	'welcome.deck.predictors_count': '{count} prediciendo',
 	'welcome.deck.question': '¿Recortará la Fed los tipos en junio?',
-	'welcome.deck.subtitle': 'FOMC · decisión sobre tipos'
+	'welcome.deck.subtitle': 'FOMC · decisión sobre tipos',
+	'welcome.deck.consensus': '74% YES CONSENSO'
 } as const;

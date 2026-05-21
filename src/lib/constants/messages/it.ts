@@ -371,5 +371,6 @@ export const itMessages = {
 	'welcome.deck.closing_soon': 'In chiusura',
 	'welcome.deck.predictors_count': '{count} prevedono',
 	'welcome.deck.question': 'La Fed taglierà i tassi a giugno?',
-	'welcome.deck.subtitle': 'FOMC · decisione sui tassi'
+	'welcome.deck.subtitle': 'FOMC · decisione sui tassi',
+	'welcome.deck.consensus': '74% YES CONSENSO'
 } as const;

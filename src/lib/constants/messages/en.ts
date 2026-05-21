@@ -370,6 +370,7 @@ export const enMessages = {
 	'wallet.title': 'Wallet',
 	'welcome.deck.category': 'MACRO',
 	'welcome.deck.closing_soon': 'Closing soon',
+	'welcome.deck.consensus': '74% YES CONSENSUS',
 	'welcome.deck.predictors_count': '{count} predicting',
 	'welcome.deck.question': 'Will the Fed cut rates in June?',
 	'welcome.deck.subtitle': 'FOMC · rate-cut call'

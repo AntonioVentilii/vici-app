@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import ForkMarketModal from '$lib/components/challenge/ForkMarketModal.svelte';
+	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
@@ -63,14 +64,17 @@
 	);
 </script>
 
+{#snippet marketsTitle()}
+	<h1 class="markets-mobile-title">{t({ locale: $localeStore, key: 'nav.markets' })}</h1>
+	<span class="markets-mobile-live">{t({ locale: $localeStore, key: 'hero.live' })}</span>
+{/snippet}
+
+{#snippet marketsCount()}
+	<strong class="markets-mobile-count num">{filteredMarkets.length}</strong>
+{/snippet}
+
 <section class="space-y-6">
-	<div class="mobile-markets-appbar">
-		<div class="flex items-center gap-2">
-			<h1>{t({ locale: $localeStore, key: 'nav.markets' })}</h1>
-			<span>{t({ locale: $localeStore, key: 'hero.live' })}</span>
-		</div>
-		<strong class="num">{filteredMarkets.length}</strong>
-	</div>
+	<MobileAppBar align="left" right={marketsCount} titleChildren={marketsTitle} />
 
 	<div class="hidden md:block">
 		<SectionHeader
@@ -114,15 +118,7 @@
 </section>
 
 <style lang="postcss">
-	.mobile-markets-appbar {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		padding-inline: 0.25rem;
-	}
-
-	.mobile-markets-appbar h1 {
+	.markets-mobile-title {
 		margin: 0;
 		color: var(--text-base);
 		font-size: var(--t-24);
@@ -130,7 +126,7 @@
 		letter-spacing: var(--tracking-tight);
 	}
 
-	.mobile-markets-appbar span {
+	.markets-mobile-live {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.35rem;
@@ -144,7 +140,7 @@
 		text-transform: uppercase;
 	}
 
-	.mobile-markets-appbar span::before {
+	.markets-mobile-live::before {
 		width: 0.3rem;
 		height: 0.3rem;
 		border-radius: var(--r-pill);
@@ -152,14 +148,8 @@
 		content: '';
 	}
 
-	.mobile-markets-appbar strong {
+	.markets-mobile-count {
 		color: var(--text-muted);
 		font-size: var(--t-12);
-	}
-
-	@media (min-width: 768px) {
-		.mobile-markets-appbar {
-			display: none;
-		}
 	}
 </style>

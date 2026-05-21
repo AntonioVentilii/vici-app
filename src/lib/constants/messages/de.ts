@@ -375,5 +375,6 @@ export const deMessages = {
 	'welcome.deck.closing_soon': 'Schließt bald',
 	'welcome.deck.predictors_count': '{count} tippen',
 	'welcome.deck.question': 'Senkt die Fed im Juni die Zinsen?',
-	'welcome.deck.subtitle': 'FOMC · Zinsentscheid'
+	'welcome.deck.subtitle': 'FOMC · Zinsentscheid',
+	'welcome.deck.consensus': '74% YES KONSENS'
 } as const;

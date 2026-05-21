@@ -3,7 +3,9 @@
 	import { Bell } from 'lucide-svelte/icons';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import MarketDetailForecast from '$lib/components/market/MarketDetailForecast.svelte';
 	import MarketDetailHeader from '$lib/components/market/MarketDetailHeader.svelte';
 	import MarketDetailStats from '$lib/components/market/MarketDetailStats.svelte';
@@ -164,13 +166,21 @@
 			></div>
 		</div>
 	{:else if market}
+		{#snippet detailRight()}
+			<button class="market-detail-bell" aria-label="Notifications" type="button">
+				<Bell aria-hidden="true" size={16} strokeWidth={1.8} />
+			</button>
+		{/snippet}
+
 		<div class="market-detail-stack">
-			<div class="market-mobile-appbar">
-				<span>VICI</span>
-				<button aria-label="Notifications" type="button">
-					<Bell aria-hidden="true" size={16} strokeWidth={1.8} />
-				</button>
-			</div>
+			<MobileAppBar
+				back={{
+					label: 'Back to markets',
+					onBack: () => void goto(resolve(AppPath.Home))
+				}}
+				right={detailRight}
+				title={market.title}
+			/>
 
 			<MarketDetailHeader {market} />
 
@@ -258,22 +268,7 @@
 		gap: 1rem;
 	}
 
-	.market-mobile-appbar {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 0.125rem 0.25rem;
-	}
-
-	.market-mobile-appbar span {
-		color: var(--color-primary);
-		font-family: var(--font-mono);
-		font-size: var(--t-12);
-		font-weight: 800;
-		letter-spacing: 0.18em;
-	}
-
-	.market-mobile-appbar button {
+	.market-detail-bell {
 		display: inline-flex;
 		width: 2.25rem;
 		height: 2.25rem;
@@ -306,10 +301,6 @@
 	@media (min-width: 768px) {
 		.market-detail-shell {
 			padding: 1rem 1.5rem 3rem;
-		}
-
-		.market-mobile-appbar {
-			display: none;
 		}
 	}
 

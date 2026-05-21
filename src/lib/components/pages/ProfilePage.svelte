@@ -1,12 +1,16 @@
 <script lang="ts">
-	import { User } from 'lucide-svelte/icons';
+	import { Settings, User } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import AvatarSystem from '$lib/components/profile/AvatarSystem.svelte';
 	import ProfileDashboard from '$lib/components/profile/ProfileDashboard.svelte';
 	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
 	import FriendsList from '$lib/components/social/FriendsList.svelte';
 	import GroupManager from '$lib/components/social/GroupManager.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getProfile } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -29,12 +33,31 @@
 	});
 </script>
 
+{#snippet profileAppbarRight()}
+	<button
+		class="profile-mobile-icon-btn"
+		aria-label={t({ locale: $localeStore, key: 'settings.title' })}
+		onclick={() => goto(resolve(AppPath.Settings))}
+		type="button"
+	>
+		<Settings aria-hidden="true" size={18} strokeWidth={1.8} />
+	</button>
+{/snippet}
+
 <div class="space-y-10 pb-24">
-	<SectionHeader
-		description={t({ locale: $localeStore, key: 'profile.sub' })}
-		highlight={t({ locale: $localeStore, key: 'profile.eyebrow' })}
+	<MobileAppBar
+		align="left"
+		right={profileAppbarRight}
 		title={t({ locale: $localeStore, key: 'profile.title' })}
 	/>
+
+	<div class="hidden md:block">
+		<SectionHeader
+			description={t({ locale: $localeStore, key: 'profile.sub' })}
+			highlight={t({ locale: $localeStore, key: 'profile.eyebrow' })}
+			title={t({ locale: $localeStore, key: 'profile.title' })}
+		/>
+	</div>
 
 	{#if $userStore.profile}
 		<div class="space-y-7">
@@ -87,3 +110,26 @@
 		</div>
 	{/if}
 </div>
+
+<style lang="postcss">
+	.profile-mobile-icon-btn {
+		display: inline-flex;
+		width: 2.25rem;
+		height: 2.25rem;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: var(--bg-surface);
+		color: var(--text-base);
+		cursor: pointer;
+		transition:
+			background-color var(--d-hover) var(--ease-vici),
+			border-color var(--d-hover) var(--ease-vici);
+	}
+
+	.profile-mobile-icon-btn:hover {
+		border-color: var(--border-strong);
+		background: var(--bg-popover);
+	}
+</style>
