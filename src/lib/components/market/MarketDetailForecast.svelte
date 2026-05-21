@@ -34,8 +34,8 @@
 	} = $derived(market);
 
 	const isResolved = $derived(status === 'Resolved');
-	const yesPercent = $derived(Math.round(yesProbability * 100));
-	const noPercent = $derived(Math.round(noProbability * 100));
+	const yesPercent = $derived(Math.min(100, Math.max(0, Math.round(yesProbability * 100))));
+	const noPercent = $derived(100 - yesPercent);
 	const crowdSide = $derived(yesProbability >= noProbability ? 'YES' : 'NO');
 	const totalPredictions = $derived(
 		outcomes?.reduce((acc, outcome) => acc + (outcome.totalPredictions ?? 0), 0) ?? 0
