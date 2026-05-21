@@ -64,11 +64,21 @@
 </script>
 
 <section class="space-y-6">
-	<SectionHeader
-		description={t({ locale: $localeStore, key: 'markets.page.sub' })}
-		highlight={t({ locale: $localeStore, key: 'markets.eyebrow' })}
-		title={t({ locale: $localeStore, key: 'markets.page.title' })}
-	/>
+	<div class="mobile-markets-appbar">
+		<div class="flex items-center gap-2">
+			<h1>{t({ locale: $localeStore, key: 'nav.markets' })}</h1>
+			<span>{t({ locale: $localeStore, key: 'hero.live' })}</span>
+		</div>
+		<strong class="num">{filteredMarkets.length}</strong>
+	</div>
+
+	<div class="hidden md:block">
+		<SectionHeader
+			description={t({ locale: $localeStore, key: 'markets.page.sub' })}
+			highlight={t({ locale: $localeStore, key: 'markets.eyebrow' })}
+			title={t({ locale: $localeStore, key: 'markets.page.title' })}
+		/>
+	</div>
 
 	<div class="w-full space-y-5">
 		<div class="space-y-5">
@@ -102,3 +112,54 @@
 		onClose={() => (forkModalOpen = false)}
 	/>
 </section>
+
+<style lang="postcss">
+	.mobile-markets-appbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+		padding-inline: 0.25rem;
+	}
+
+	.mobile-markets-appbar h1 {
+		margin: 0;
+		color: var(--text-base);
+		font-size: var(--t-24);
+		font-weight: 700;
+		letter-spacing: var(--tracking-tight);
+	}
+
+	.mobile-markets-appbar span {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		border-radius: var(--r-4);
+		background: var(--no-wash);
+		padding: 0.2rem 0.45rem;
+		color: var(--no);
+		font-size: 0.625rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.mobile-markets-appbar span::before {
+		width: 0.3rem;
+		height: 0.3rem;
+		border-radius: var(--r-pill);
+		background: currentColor;
+		content: '';
+	}
+
+	.mobile-markets-appbar strong {
+		color: var(--text-muted);
+		font-size: var(--t-12);
+	}
+
+	@media (min-width: 768px) {
+		.mobile-markets-appbar {
+			display: none;
+		}
+	}
+</style>

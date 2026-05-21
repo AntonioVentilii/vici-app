@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { Bell } from 'lucide-svelte/icons';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
@@ -164,6 +165,13 @@
 		</div>
 	{:else if market}
 		<div class="market-detail-stack">
+			<div class="market-mobile-appbar">
+				<span>VICI</span>
+				<button aria-label="Notifications" type="button">
+					<Bell aria-hidden="true" size={16} strokeWidth={1.8} />
+				</button>
+			</div>
+
 			<MarketDetailHeader {market} />
 
 			<div class="market-detail-grid">
@@ -250,6 +258,33 @@
 		gap: 1rem;
 	}
 
+	.market-mobile-appbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 0.125rem 0.25rem;
+	}
+
+	.market-mobile-appbar span {
+		color: var(--color-primary);
+		font-family: var(--font-mono);
+		font-size: var(--t-12);
+		font-weight: 800;
+		letter-spacing: 0.18em;
+	}
+
+	.market-mobile-appbar button {
+		display: inline-flex;
+		width: 2.25rem;
+		height: 2.25rem;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: var(--bg-surface);
+		color: var(--text-muted);
+	}
+
 	.market-detail-grid {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr);
@@ -271,6 +306,10 @@
 	@media (min-width: 768px) {
 		.market-detail-shell {
 			padding: 1rem 1.5rem 3rem;
+		}
+
+		.market-mobile-appbar {
+			display: none;
 		}
 	}
 

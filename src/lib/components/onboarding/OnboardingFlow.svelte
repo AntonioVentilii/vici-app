@@ -1221,19 +1221,6 @@
 		transition: opacity 180ms var(--ease-vici);
 	}
 
-	.coach::before {
-		position: absolute;
-		z-index: -1;
-		top: 50%;
-		left: 50%;
-		width: 92%;
-		height: 12rem;
-		border-radius: 999px;
-		background: radial-gradient(ellipse, rgba(14, 13, 11, 0.78), rgba(14, 13, 11, 0));
-		content: '';
-		transform: translate(-50%, -50%);
-	}
-
 	.coach-row {
 		display: flex;
 		align-items: center;
@@ -1244,7 +1231,9 @@
 		font-size: clamp(1.35rem, 6.5vw, 2rem);
 		font-weight: 700;
 		line-height: var(--leading-snug);
-		text-shadow: 0 1px 16px rgba(0, 0, 0, 0.4);
+		text-shadow:
+			0 1px 10px rgba(0, 0, 0, 0.42),
+			0 0 22px rgba(0, 0, 0, 0.28);
 	}
 
 	.coach-row.vertical {

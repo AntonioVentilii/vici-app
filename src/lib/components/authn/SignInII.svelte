@@ -33,7 +33,7 @@
 	};
 </script>
 
-<Button onclick={signInWithII} {status}>
+<Button class="signin-provider-button w-full" onclick={signInWithII} {status}>
 	<IconIc size="20px" />
 	<span>Sign in with Internet Identity</span>
 </Button>

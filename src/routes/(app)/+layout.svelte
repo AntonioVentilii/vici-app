@@ -130,11 +130,11 @@
 </script>
 
 <div class="relative isolate flex min-h-dvh flex-col">
-	<div class={isFlowPage ? 'hidden md:block' : ''}>
+	<div class="hidden md:block">
 		<Banner />
 	</div>
 
-	<div class={isFlowPage ? 'hidden md:block' : ''}>
+	<div class="hidden md:block">
 		<Header />
 	</div>
 
@@ -144,7 +144,7 @@
 				<div
 					class={isFlowPage
 						? 'md:container md:mx-auto md:px-4 md:py-8'
-						: 'container mx-auto px-4 py-8'}
+						: 'container mx-auto px-4 py-4 md:py-8'}
 					data-tid={TestId.AppMain}
 					in:fade={{ duration: 100, delay: 100 }}
 					out:fade={{ duration: 100 }}
@@ -157,7 +157,7 @@
 		</Authn>
 	</main>
 
-	<div class={isFlowPage ? 'hidden md:block' : ''}>
+	<div class="hidden md:block">
 		<Footer />
 	</div>
 
@@ -167,7 +167,7 @@
 
 	{#if $userSignedIn && !isFlowPage}
 		<button
-			class="bg-primary text-primary-foreground fixed right-6 bottom-24 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-[0_8px_24px_-8px_var(--laurel-glow)] transition-all hover:scale-105 active:scale-[0.985] md:bottom-8"
+			class="bg-primary text-primary-foreground fixed right-6 bottom-24 z-40 hidden h-14 w-14 items-center justify-center rounded-full shadow-[0_8px_24px_-8px_var(--laurel-glow)] transition-all hover:scale-105 active:scale-[0.985] md:bottom-8 md:flex"
 			aria-label="Create Challenge"
 			onclick={() => (challengeModalOpen = true)}
 		>

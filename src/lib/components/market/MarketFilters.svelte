@@ -38,12 +38,9 @@
 	);
 
 	const clearFilters = () => onFiltersChange({ kind: 'all', payout: 'all', access: 'all' });
-
-	const selectClasses =
-		'h-9 appearance-none rounded-full border border-border bg-card/80 px-3 pr-8 text-xs font-bold text-foreground shadow-card transition-all focus:border-primary focus:ring-2 focus:ring-primary/30 cursor-pointer';
 </script>
 
-<div class="surface space-y-4 rounded-2xl p-3 sm:p-4">
+<div class="market-filters">
 	<div
 		class="flex flex-col items-stretch justify-between gap-3 lg:flex-row-reverse lg:items-center"
 	>
@@ -63,7 +60,7 @@
 				</svg>
 			</div>
 			<input
-				class="bg-foreground/5 text-foreground placeholder-muted-foreground ring-border focus:bg-foreground/8 focus:ring-primary block h-10 w-full rounded-full border-none py-3 pr-4 pl-9 text-sm ring-1 transition-all ring-inset focus:ring-2"
+				class="market-search"
 				aria-label={t({ locale: $localeStore, key: 'markets.search' })}
 				oninput={(e) => onSearchChange(e.currentTarget.value)}
 				placeholder={t({ locale: $localeStore, key: 'markets.search' })}
@@ -75,10 +72,8 @@
 		<div class="flex gap-1.5 overflow-x-auto pb-1">
 			{#each tabs as tab (tab.id)}
 				<button
-					class="shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-all {activeTab ===
-					tab.id
-						? 'border-primary/30 text-primary bg-laurel-glow shadow-card'
-						: 'border-border bg-foreground/5 text-muted-foreground hover:bg-foreground/10 hover:text-foreground'}"
+					class="market-tab"
+					class:is-active={activeTab === tab.id}
 					aria-pressed={activeTab === tab.id}
 					onclick={() => onTabChange(tab.id)}
 					type="button"
@@ -91,7 +86,7 @@
 
 	<div class="flex flex-wrap items-center gap-2">
 		<select
-			class={selectClasses}
+			class="market-select"
 			aria-label={t({ locale: $localeStore, key: 'markets.filter.type' })}
 			onchange={(e) =>
 				onFiltersChange({ ...filters, kind: e.currentTarget.value as MarketKindFilter })}
@@ -107,7 +102,7 @@
 		</select>
 
 		<select
-			class={selectClasses}
+			class="market-select"
 			aria-label={t({ locale: $localeStore, key: 'markets.filter.stakes' })}
 			onchange={(e) =>
 				onFiltersChange({ ...filters, payout: e.currentTarget.value as MarketPayoutFilter })}
@@ -121,7 +116,7 @@
 		</select>
 
 		<select
-			class={selectClasses}
+			class="market-select"
 			aria-label={t({ locale: $localeStore, key: 'markets.filter.access' })}
 			onchange={(e) =>
 				onFiltersChange({ ...filters, access: e.currentTarget.value as MarketAccessFilter })}
@@ -145,3 +140,96 @@
 		{/if}
 	</div>
 </div>
+
+<style lang="postcss">
+	.market-filters {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		border: 1px solid var(--border-base);
+		border-radius: 1rem;
+		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		padding: 0.75rem;
+		box-shadow: var(--shadow-card);
+	}
+
+	.market-search {
+		display: block;
+		width: 100%;
+		height: 2.5rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: var(--bg-popover);
+		padding: 0.75rem 1rem 0.75rem 2.25rem;
+		color: var(--text-base);
+		font-size: var(--t-14);
+		outline: none;
+		box-shadow: var(--inset-hi);
+		transition:
+			border-color var(--d-hover) var(--ease-vici),
+			box-shadow var(--d-hover) var(--ease-vici);
+	}
+
+	.market-search::placeholder {
+		color: var(--text-muted);
+	}
+
+	.market-search:focus {
+		border-color: var(--color-primary);
+		box-shadow:
+			var(--inset-hi),
+			0 0 0 2px var(--laurel-glow);
+	}
+
+	.market-tab,
+	.market-select {
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: var(--bg-surface);
+		color: var(--text-muted);
+		font-weight: 700;
+		transition:
+			background-color var(--d-hover) var(--ease-vici),
+			border-color var(--d-hover) var(--ease-vici),
+			color var(--d-hover) var(--ease-vici);
+	}
+
+	.market-tab {
+		flex-shrink: 0;
+		padding: 0.375rem 0.75rem;
+		font-size: var(--t-12);
+	}
+
+	.market-tab:hover,
+	.market-select:hover {
+		border-color: var(--border-strong);
+		color: var(--text-base);
+	}
+
+	.market-tab.is-active {
+		border-color: color-mix(in srgb, var(--color-primary) 34%, var(--border-base));
+		background: var(--laurel-glow);
+		color: var(--color-primary);
+		box-shadow: var(--shadow-card);
+	}
+
+	.market-select {
+		height: 2.25rem;
+		appearance: none;
+		cursor: pointer;
+		padding: 0 2rem 0 0.75rem;
+		font-size: var(--t-12);
+		outline: none;
+	}
+
+	.market-select:focus {
+		border-color: var(--color-primary);
+		box-shadow: 0 0 0 2px var(--laurel-glow);
+	}
+
+	@media (min-width: 640px) {
+		.market-filters {
+			padding: 1rem;
+		}
+	}
+</style>

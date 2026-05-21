@@ -95,9 +95,13 @@
 
 	.detail-hero-top {
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		justify-content: space-between;
 		gap: 0.75rem;
+	}
+
+	.detail-hero-top :global(.btn) {
+		display: none;
 	}
 
 	.detail-chip-row {
@@ -137,10 +141,10 @@
 		margin: 0;
 		color: var(--text-base);
 		font-family: var(--font-display);
-		font-size: clamp(2rem, 8vw, 4.4rem);
+		font-size: clamp(1.45rem, 6.2vw, 2rem);
 		font-weight: 700;
-		letter-spacing: -0.055em;
-		line-height: 0.98;
+		letter-spacing: -0.025em;
+		line-height: 1.12;
 	}
 
 	.detail-hero-copy p {
@@ -184,6 +188,16 @@
 	@media (min-width: 768px) {
 		.detail-hero {
 			padding: 1.35rem;
+		}
+
+		.detail-hero-top :global(.btn) {
+			display: inline-flex;
+		}
+
+		.detail-hero-copy h1 {
+			font-size: clamp(2.5rem, 5vw, 4.4rem);
+			letter-spacing: -0.055em;
+			line-height: 0.98;
 		}
 
 		.detail-meta-grid {

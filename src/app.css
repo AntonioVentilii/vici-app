@@ -153,6 +153,8 @@
 
 [data-theme='dark'],
 :root {
+	color-scheme: dark;
+
 	--bg-base: var(--ink);
 	--bg-surface: var(--ink-raised);
 	--bg-popover: var(--ink-elevated);
@@ -176,6 +178,8 @@
 }
 
 [data-theme='light'] {
+	color-scheme: light;
+
 	--bg-base: #f2ecdc;
 	--bg-surface: #faf6ea;
 	--bg-popover: #ffffff;
@@ -204,6 +208,8 @@
 }
 
 [data-theme='peach'] {
+	color-scheme: light;
+
 	--bg-base: #fae0cc;
 	--bg-surface: #ffead9;
 	--bg-popover: #fff3e8;

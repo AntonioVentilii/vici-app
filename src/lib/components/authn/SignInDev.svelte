@@ -29,7 +29,12 @@
 	};
 </script>
 
-<Button data-tid={TestId.SignInDev} onclick={signInWithDev} {status}>
+<Button
+	class="signin-provider-button w-full"
+	data-tid={TestId.SignInDev}
+	onclick={signInWithDev}
+	{status}
+>
 	<IconRobot size="20px" />
 	Sign in for Dev
 </Button>

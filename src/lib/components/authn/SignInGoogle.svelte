@@ -38,7 +38,7 @@
 </script>
 
 <div class="relative w-full">
-	<Button class="w-full" onclick={signInWithGoogle} {status}>
+	<Button class="signin-provider-button w-full" onclick={signInWithGoogle} {status}>
 		<IconGoogle size="20px" />
 		<span>Sign in with Google</span>
 	</Button>

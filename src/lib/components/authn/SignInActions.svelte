@@ -87,7 +87,7 @@
 		width: 100%;
 	}
 
-	.signin-live-providers :global(button) {
+	.signin-live-providers :global(.signin-provider-button) {
 		width: 100%;
 		justify-content: center;
 		border: 1px solid var(--border-base);
@@ -95,7 +95,12 @@
 		color: var(--text-base);
 	}
 
+	.signin-live-providers :global(.signin-provider-button:hover) {
+		background: color-mix(in srgb, var(--text-base) 7%, transparent);
+	}
+
 	.signin-placeholder-provider {
+		position: relative;
 		display: flex;
 		width: 100%;
 		align-items: center;
@@ -119,7 +124,8 @@
 	}
 
 	.signin-placeholder-provider small {
-		margin-left: auto;
+		position: absolute;
+		right: 1rem;
 		color: var(--text-muted);
 		font-family: var(--font-mono);
 		font-size: 0.62rem;
