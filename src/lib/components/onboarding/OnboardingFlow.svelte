@@ -5,6 +5,7 @@
 	import FlowArtFrame from '$lib/components/artwork/FlowArtFrame.svelte';
 	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { categoryColor } from '$lib/utils/category-color.utils';
 	import { FLOW_ART_CATEGORIES, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
@@ -778,7 +779,7 @@
 						</span>
 					</div>
 					<div class="pack-xp">
-						<strong class="num">{starterXp.toLocaleString()}</strong>
+						<strong class="num">{starterXp.toLocaleString($localeStore)}</strong>
 						<span>VXP</span>
 					</div>
 					<ul>
