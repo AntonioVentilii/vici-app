@@ -8,9 +8,11 @@
 	import { playgroundLockedCapacityLabel } from '$lib/derived/playground.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { cancelLimitOrder } from '$lib/services/order.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { decimalFixedValueToNumber, formatToken } from '$lib/utils/format.utils';
+	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		market: Market;
@@ -19,18 +21,22 @@
 
 	const { market, positions }: Props = $props();
 
-	const tabOptions = [
-		{ id: 'description', label: 'Description' },
-		{ id: 'depth', label: 'Depth & Analytics' },
-		{ id: 'discussion', label: 'Discussion' },
-		{ id: 'activity', label: 'Your Activity' }
-	];
+	const tabOptions = $derived([
+		{ id: 'description', label: t({ locale: $localeStore, key: 'market.detail.tab.description' }) },
+		{ id: 'depth', label: t({ locale: $localeStore, key: 'market.detail.tab.depth' }) },
+		{ id: 'discussion', label: t({ locale: $localeStore, key: 'market.detail.tab.discussion' }) },
+		{ id: 'activity', label: t({ locale: $localeStore, key: 'market.detail.tab.activity' }) }
+	]);
 
-	let activeTabLabel = $state(tabOptions[0].label);
+	let activeTabId = $state('description');
 
-	let activeTabId = $derived(
-		tabOptions.find((t) => t.label === activeTabLabel)?.id ?? 'description'
+	let activeTabLabel = $derived(
+		tabOptions.find((tab) => tab.id === activeTabId)?.label ?? tabOptions[0].label
 	);
+
+	const handleTabChange = (label: string) => {
+		activeTabId = tabOptions.find((tab) => tab.label === label)?.id ?? 'description';
+	};
 
 	const activeOrders = $derived($orders.filter((o) => o.series_id === market.id));
 
@@ -58,7 +64,11 @@
 </script>
 
 <div class="mt-8">
-	<Tabs tabs={tabOptions.map((t) => t.label)} bind:activeTab={activeTabLabel} />
+	<Tabs
+		tabs={tabOptions.map((tab) => tab.label)}
+		activeTab={activeTabLabel}
+		onTabChange={handleTabChange}
+	/>
 
 	<div class="mt-8 min-h-75">
 		{#if activeTabId === 'description'}
