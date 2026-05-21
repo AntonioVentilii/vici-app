@@ -3,7 +3,6 @@
 	import type { Snippet } from 'svelte';
 	import { browser } from '$app/environment';
 	import TweaksPanel from '$lib/components/dev/TweaksPanel.svelte';
-	import Banner from '$lib/components/layout/Banner.svelte';
 	import Notifications from '$lib/components/ui/Notifications.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	// eslint-disable-next-line import/no-relative-parent-imports
@@ -51,8 +50,6 @@
 {:else}
 	{@render children()}
 {/if}
-
-<Banner />
 
 <Notifications />
 
