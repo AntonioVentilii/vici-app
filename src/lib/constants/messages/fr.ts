@@ -374,6 +374,8 @@ export const frMessages = {
 	'wallet.sub': 'Soldes, envoi, réception et collatéral.',
 	'wallet.title': 'Portefeuille',
 	'welcome.deck.category': 'MACRO',
-	'welcome.deck.consensus': '62% consensus',
-	'welcome.deck.question': 'Baisse de la Fed en juin ?'
+	'welcome.deck.closing_soon': 'Bientôt clos',
+	'welcome.deck.predictors_count': '{count} prédisent',
+	'welcome.deck.question': 'La Fed baissera-t-elle les taux en juin ?',
+	'welcome.deck.subtitle': 'FOMC · décision de taux'
 } as const;

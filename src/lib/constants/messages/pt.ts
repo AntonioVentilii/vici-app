@@ -369,6 +369,8 @@ export const ptMessages = {
 	'wallet.sub': 'Saldos, enviar, receber e colateral.',
 	'wallet.title': 'Carteira',
 	'welcome.deck.category': 'MACRO',
-	'welcome.deck.consensus': '62% consenso',
-	'welcome.deck.question': 'Corte do Fed em junho?'
+	'welcome.deck.closing_soon': 'Fecha em breve',
+	'welcome.deck.predictors_count': '{count} prevendo',
+	'welcome.deck.question': 'O Fed cortará juros em junho?',
+	'welcome.deck.subtitle': 'FOMC · decisão de juros'
 } as const;

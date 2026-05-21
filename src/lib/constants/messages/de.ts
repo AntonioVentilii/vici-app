@@ -372,6 +372,8 @@ export const deMessages = {
 	'wallet.sub': 'Salden, Senden, Empfangen und Collateral.',
 	'wallet.title': 'Wallet',
 	'welcome.deck.category': 'MACRO',
-	'welcome.deck.consensus': '62% Konsens',
-	'welcome.deck.question': 'Fed-Senkung im Juni?'
+	'welcome.deck.closing_soon': 'Schließt bald',
+	'welcome.deck.predictors_count': '{count} tippen',
+	'welcome.deck.question': 'Senkt die Fed im Juni die Zinsen?',
+	'welcome.deck.subtitle': 'FOMC · Zinsentscheid'
 } as const;

@@ -368,6 +368,8 @@ export const itMessages = {
 	'wallet.sub': 'Saldi, invio, ricezione e collateral.',
 	'wallet.title': 'Portafoglio',
 	'welcome.deck.category': 'MACRO',
-	'welcome.deck.consensus': '62% consenso',
-	'welcome.deck.question': 'Taglio Fed a giugno?'
+	'welcome.deck.closing_soon': 'In chiusura',
+	'welcome.deck.predictors_count': '{count} prevedono',
+	'welcome.deck.question': 'La Fed taglierà i tassi a giugno?',
+	'welcome.deck.subtitle': 'FOMC · decisione sui tassi'
 } as const;

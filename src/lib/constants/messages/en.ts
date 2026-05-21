@@ -369,6 +369,8 @@ export const enMessages = {
 	'wallet.sub': 'Balances, send, receive, and collateral.',
 	'wallet.title': 'Wallet',
 	'welcome.deck.category': 'MACRO',
-	'welcome.deck.consensus': '62% consensus',
-	'welcome.deck.question': 'Fed cuts in June?'
+	'welcome.deck.closing_soon': 'Closing soon',
+	'welcome.deck.predictors_count': '{count} predicting',
+	'welcome.deck.question': 'Will the Fed cut rates in June?',
+	'welcome.deck.subtitle': 'FOMC · rate-cut call'
 } as const;

@@ -370,6 +370,8 @@ export const esMessages = {
 	'wallet.sub': 'Saldos, envío, recepción y colateral.',
 	'wallet.title': 'Cartera',
 	'welcome.deck.category': 'MACRO',
-	'welcome.deck.consensus': '62% consenso',
-	'welcome.deck.question': '¿Recorte de la Fed en junio?'
+	'welcome.deck.closing_soon': 'Cierra pronto',
+	'welcome.deck.predictors_count': '{count} prediciendo',
+	'welcome.deck.question': '¿Recortará la Fed los tipos en junio?',
+	'welcome.deck.subtitle': 'FOMC · decisión sobre tipos'
 } as const;
