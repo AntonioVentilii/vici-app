@@ -5,6 +5,7 @@ import { esMessages } from '$lib/constants/messages/es';
 import { frMessages } from '$lib/constants/messages/fr';
 import { itMessages } from '$lib/constants/messages/it';
 import { ptMessages } from '$lib/constants/messages/pt';
+import { zhCnMessages } from '$lib/constants/messages/zh-CN';
 
 const catalogs: Record<AppLocale, Record<string, string>> = {
 	en: enMessages,
@@ -12,7 +13,8 @@ const catalogs: Record<AppLocale, Record<string, string>> = {
 	es: esMessages,
 	de: deMessages,
 	fr: frMessages,
-	pt: ptMessages
+	pt: ptMessages,
+	'zh-CN': zhCnMessages
 };
 
 export type MessageKey = keyof typeof enMessages;
