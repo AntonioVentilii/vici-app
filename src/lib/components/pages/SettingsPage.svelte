@@ -16,6 +16,7 @@
 	} from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import SetRow from '$lib/components/settings/SetRow.svelte';
 	import SetSegmented from '$lib/components/settings/SetSegmented.svelte';
 	import SetToggle from '$lib/components/settings/SetToggle.svelte';
@@ -116,7 +117,7 @@
 	onMount(() => {
 		const onKey = (event: KeyboardEvent) => {
 			if (event.key === 'Escape') {
-				void goto(AppPath.Profile);
+				void goto(resolve(AppPath.Profile));
 			}
 		};
 
@@ -131,7 +132,7 @@
 		<button
 			class="settings-back"
 			aria-label={t({ locale: $localeStore, key: 'settings.back_profile' })}
-			onclick={() => goto(AppPath.Profile)}
+			onclick={() => goto(resolve(AppPath.Profile))}
 			type="button"
 		>
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
@@ -142,7 +143,7 @@
 
 	<div class="settings-body">
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.account' })}>
-			<button class="set-identity" onclick={() => goto(AppPath.Profile)} type="button">
+			<button class="set-identity" onclick={() => goto(resolve(AppPath.Profile))} type="button">
 				<span class="set-identity-avatar" aria-hidden="true">
 					{(profile?.nickname?.trim() ?? 'V').slice(0, 1).toUpperCase()}
 				</span>
@@ -171,7 +172,7 @@
 			<SetRow
 				icon={Wallet}
 				label={t({ locale: $localeStore, key: 'settings.wallet' })}
-				onclick={() => goto(AppPath.Wallet)}
+				onclick={() => goto(resolve(AppPath.Wallet))}
 				sub={t({
 					locale: $localeStore,
 					key: 'settings.wallet.sub',
@@ -183,7 +184,7 @@
 				icon={Users}
 				label={t({ locale: $localeStore, key: 'settings.friends' })}
 				muted
-				onclick={() => goto(AppPath.Profile)}
+				onclick={() => goto(resolve(AppPath.Profile))}
 				sub={t({ locale: $localeStore, key: 'settings.friends.sub' })}
 			/>
 		</SettingsSection>
@@ -199,7 +200,7 @@
 			<SetRow
 				icon={Bell}
 				label={t({ locale: $localeStore, key: 'settings.notifications' })}
-				onclick={() => goto(AppPath.Notifications)}
+				onclick={() => goto(resolve(AppPath.Notifications))}
 				sub={t({
 					locale: $localeStore,
 					key: 'settings.notifications.sub',
@@ -359,7 +360,7 @@
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.5rem 0 1rem;
+		padding: 0.25rem 0 1rem;
 	}
 
 	.settings-back {
@@ -367,10 +368,10 @@
 		align-items: center;
 		justify-content: center;
 		padding: 0.5rem 0.625rem;
-		border: none;
+		border: 1px solid var(--border-base);
 		border-radius: var(--r-8);
-		background: transparent;
-		color: var(--parchment);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		color: var(--text-base);
 		cursor: pointer;
 	}
 
@@ -379,6 +380,7 @@
 		font-size: var(--t-18);
 		font-weight: 600;
 		text-align: center;
+		color: var(--text-base);
 	}
 
 	.settings-appbar-spacer {
@@ -388,7 +390,7 @@
 	.settings-body {
 		display: flex;
 		flex-direction: column;
-		gap: 1.125rem;
+		gap: 1rem;
 	}
 
 	.set-identity {
@@ -399,6 +401,7 @@
 		padding: 0.875rem;
 		border: none;
 		background: var(--bg-surface);
+		color: var(--text-base);
 		text-align: left;
 		cursor: pointer;
 	}
@@ -410,8 +413,8 @@
 		width: 2.5rem;
 		height: 2.5rem;
 		border-radius: var(--r-8);
-		background: var(--laurel-wash);
-		color: var(--laurel);
+		background: var(--laurel-glow);
+		color: var(--color-primary);
 		font-weight: 700;
 	}
 
@@ -430,37 +433,39 @@
 		gap: 0.375rem;
 		font-size: var(--t-14);
 		font-weight: 600;
+		color: var(--text-base);
 	}
 
 	.set-identity-tag {
-		font-size: var(--t-10);
+		font-size: 0.625rem;
 		font-weight: 700;
 		letter-spacing: 0.06em;
 	}
 
 	.set-identity-meta {
-		font-size: var(--t-11);
-		color: var(--parchment-mute);
+		font-size: 0.6875rem;
+		color: var(--text-muted);
 	}
 
 	.settings-appearance {
-		padding: 0.75rem 0.875rem;
+		padding: 0.875rem;
 		background: var(--bg-surface);
 	}
 
 	.settings-appearance-label {
 		margin: 0 0 0.5rem;
 		font-size: var(--t-14);
-		font-weight: 500;
+		font-weight: 600;
+		color: var(--text-base);
 	}
 
 	.settings-about {
 		margin: 0.25rem 0 0;
-		font-size: var(--t-10);
+		font-size: 0.625rem;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		text-align: center;
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 
 	.settings-destructive {
@@ -478,7 +483,7 @@
 		border: none;
 		background: none;
 		font-size: var(--t-12);
-		color: var(--no);
+		color: var(--color-destructive);
 		cursor: pointer;
 		text-align: center;
 	}
@@ -488,12 +493,13 @@
 		border-radius: var(--r-8);
 		border: 1px solid var(--border-base);
 		background: var(--bg-surface);
+		box-shadow: var(--shadow-card);
 	}
 
 	.settings-confirm p {
 		margin: 0 0 0.75rem;
 		font-size: var(--t-12);
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 
 	.settings-confirm-actions {

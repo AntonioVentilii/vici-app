@@ -30,10 +30,10 @@
 	const isVxp = $derived(tokenSymbol === VXP_TOKEN.symbol);
 </script>
 
-<div class="hover:bg-foreground/5 flex items-center justify-between px-6 py-4 transition-colors">
+<div class="hover:bg-foreground/5 flex items-center justify-between px-4 py-4 transition-colors">
 	<div class="flex items-center gap-3">
 		<div class="flex h-8 w-8 items-center justify-center rounded-full {colorClasses}">
-			<svg class="h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
+			<svg class="h-4 w-4" aria-hidden="true" fill="currentColor" viewBox="0 0 24 24">
 				<path d="M12 2L2 12l10 10 10-10L12 2z" />
 			</svg>
 		</div>

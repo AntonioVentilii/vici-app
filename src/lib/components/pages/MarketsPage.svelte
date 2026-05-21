@@ -63,15 +63,15 @@
 	);
 </script>
 
-<section class="space-y-8">
+<section class="space-y-6">
 	<SectionHeader
 		description={t({ locale: $localeStore, key: 'markets.page.sub' })}
 		highlight={t({ locale: $localeStore, key: 'markets.eyebrow' })}
 		title={t({ locale: $localeStore, key: 'markets.page.title' })}
 	/>
 
-	<div class="w-full space-y-8">
-		<div class="space-y-8">
+	<div class="w-full space-y-5">
+		<div class="space-y-5">
 			<MarketFilters
 				{activeTab}
 				{filters}
@@ -81,6 +81,11 @@
 				{searchTerm}
 				tabs={tabs.map((tab) => ({ id: tab, label: tabLabel(tab) }))}
 			/>
+
+			<div class="mx-auto flex max-w-4xl items-baseline justify-between px-1">
+				<h2 class="eyebrow">{tabLabel(activeTab as (typeof tabs)[number])}</h2>
+				<span class="num text-muted-foreground text-xs font-bold">{filteredMarkets.length}</span>
+			</div>
 
 			<MarketFeed
 				emptyMessage={t({ locale: $localeStore, key: 'markets.empty' })}

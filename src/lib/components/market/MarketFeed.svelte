@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import type { Attachment } from 'svelte/attachments';
 	import MarketCardSkeleton from '$lib/components/market/MarketCardSkeleton.svelte';
 	import StackedMarketCard from '$lib/components/market/StackedMarketCard.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
@@ -28,41 +28,32 @@
 
 	const groups = $derived(groupMarketsByLineage({ markets, userPrincipal: $authPrincipal }));
 
-	let observer: IntersectionObserver | undefined;
-	let sentinel: HTMLElement | undefined = $state();
+	const loadMoreSentinel: Attachment = (node) => {
+		const observer = new IntersectionObserver(
+			(entries) => {
+				if (entries[0].isIntersecting && hasMore && !loading) {
+					onLoadMore?.();
+				}
+			},
+			{ rootMargin: '400px' }
+		);
 
-	$effect(() => {
-		if (sentinel && hasMore && !loading && onLoadMore) {
-			observer = new IntersectionObserver(
-				(entries) => {
-					if (entries[0].isIntersecting) {
-						onLoadMore();
-					}
-				},
-				{ rootMargin: '400px' }
-			);
-			observer.observe(sentinel);
-		} else {
-			observer?.disconnect();
-		}
-	});
+		observer.observe(node);
 
-	onMount(() => () => observer?.disconnect());
+		return () => observer.disconnect();
+	};
 
 	let isGrid = $derived(groups.length > 0 || loading);
 </script>
 
 <div
-	class="w-full pb-20"
+	class="mx-auto w-full max-w-4xl pb-20"
 	class:flex={!isGrid}
-	class:gap-6={isGrid}
-	class:gap-y-8={isGrid}
+	class:gap-3={isGrid}
 	class:grid={isGrid}
 	class:grid-cols-1={isGrid}
 	class:items-center={!isGrid}
 	class:justify-center={!isGrid}
-	class:lg:grid-cols-3={isGrid}
-	class:md:grid-cols-2={isGrid}
 	data-tid={TestId.MarketFeed}
 >
 	{#if groups.length > 0}
@@ -77,7 +68,7 @@
 		{/if}
 
 		{#if hasMore}
-			<div bind:this={sentinel} class="flex h-20 items-center justify-center">
+			<div class="flex h-20 items-center justify-center" {@attach loadMoreSentinel}>
 				<div
 					class="border-primary h-6 w-6 animate-spin rounded-full border-2 border-t-transparent"
 				></div>

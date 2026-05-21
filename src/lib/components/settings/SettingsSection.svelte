@@ -25,11 +25,11 @@
 
 	.settings-section-title {
 		margin: 0;
-		font-size: var(--t-11);
+		font-size: 0.6875rem;
 		font-weight: 600;
-		letter-spacing: 0.08em;
+		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 
 	.settings-section-panel {
@@ -39,6 +39,7 @@
 		overflow: hidden;
 		border-radius: var(--r-12);
 		border: 1px solid var(--border-base);
-		background: var(--bg-raised);
+		background: var(--bg-surface);
+		box-shadow: var(--shadow-card);
 	}
 </style>

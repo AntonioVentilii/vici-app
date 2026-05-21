@@ -58,20 +58,18 @@
 	});
 </script>
 
-<Card padding="none" variant="default">
+<Card class="bg-card/85 h-full overflow-hidden" padding="none" variant="default">
 	<div
-		class="border-border flex w-full flex-col justify-between gap-4 border-b p-6 sm:flex-row sm:items-center"
+		class="border-border flex w-full flex-col justify-between gap-4 border-b p-4 sm:flex-row sm:items-center"
 	>
 		<div>
 			<div class="flex items-center gap-3">
-				<div class="text-primary text-xs font-bold tracking-widest uppercase">
-					Clearing Collateral
-				</div>
+				<div class="eyebrow text-primary">Clearing Collateral</div>
 			</div>
 			<div class="text-muted-foreground mt-1 space-y-1 text-sm">
 				{#if isNullish(collateral)}
-					<div class="bg-card h-4 w-32 animate-pulse rounded"></div>
-					<div class="bg-card mt-2 h-4 w-24 animate-pulse rounded"></div>
+					<div class="bg-foreground/10 h-4 w-32 animate-pulse rounded"></div>
+					<div class="bg-foreground/10 mt-2 h-4 w-24 animate-pulse rounded"></div>
 				{:else if nonNullish(collateral.accountState)}
 					<p>
 						Deposited: <span class="text-foreground font-mono font-bold tabular-nums">
@@ -92,25 +90,25 @@
 			</div>
 		</div>
 
-		<div class="flex items-center gap-4">
-			<div class="flex items-center gap-2">
+		<div class="flex flex-wrap items-center gap-3">
+			<div class="bg-foreground/5 flex items-center gap-2 rounded-full px-3 py-1.5">
 				<span class="text-muted-foreground text-xs">Hide zero</span>
 				<Switch bind:checked={hideZeroBalances} />
 			</div>
 
-			<Button onclick={onManage} variant="primary">Manage</Button>
+			<Button onclick={onManage} size="sm" variant="primary">Manage</Button>
 		</div>
 	</div>
 
 	<div class="divide-border flex w-full flex-col divide-y">
 		{#if isNullish(collateral)}
 			{#each { length: 3 } as _, i (i)}
-				<div class="flex items-center justify-between p-6">
+				<div class="flex items-center justify-between p-4">
 					<div class="flex items-center gap-3">
-						<div class="bg-card h-10 w-10 animate-pulse rounded-full"></div>
-						<div class="bg-card h-4 w-24 animate-pulse rounded"></div>
+						<div class="bg-foreground/10 h-8 w-8 animate-pulse rounded-full"></div>
+						<div class="bg-foreground/10 h-4 w-24 animate-pulse rounded"></div>
 					</div>
-					<div class="bg-card h-4 w-16 animate-pulse rounded"></div>
+					<div class="bg-foreground/10 h-4 w-16 animate-pulse rounded"></div>
 				</div>
 			{/each}
 		{:else}
@@ -137,9 +135,7 @@
 			{/each}
 
 			{#if displayedTokens.length === 0}
-				<div class="text-muted-foreground p-8 text-center text-sm italic">
-					No collateral to display
-				</div>
+				<div class="text-muted-foreground p-8 text-center text-sm">No collateral to display</div>
 			{/if}
 		{/if}
 	</div>
