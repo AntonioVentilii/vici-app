@@ -241,6 +241,15 @@ export const deMessages = {
 	'signin.footer.prompt.signup': 'Neu bei VICI?',
 	'signin.legal':
 		'Mit dem Fortfahren akzeptierst du die AGB und die Datenschutzerklärung. VICI nutzt in der Vorschau Spielgeld. Keine Finanzberatung.',
+	'signin.divider': 'ODER',
+	'signin.email.cta': 'Anmeldelink senden',
+	'signin.email.disabled_note':
+		'E-Mail-Magic-Links sind noch nicht aktiv. Nutze oben einen Live-Provider.',
+	'signin.email.label': 'E-Mail',
+	'signin.email.placeholder': 'du@example.com',
+	'signin.provider.apple': 'Mit Apple fortfahren',
+	'signin.provider.placeholder_title': 'Noch nicht aktiv',
+	'signin.provider.soon': 'Bald',
 	'signin.sub.onboarded': 'Wir verknüpfen deinen Handle und deine Flow-Auswahl nach der Anmeldung.',
 	'signin.sub.signin': 'Mach dort weiter, wo du aufgehört hast.',
 	'signin.sub.signup': 'Erstelle ein Konto, um deine Vorhersagen und deinen Streak zu verfolgen.',

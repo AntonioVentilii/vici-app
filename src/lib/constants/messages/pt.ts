@@ -239,6 +239,15 @@ export const ptMessages = {
 	'signin.footer.prompt.signup': 'Novo no VICI?',
 	'signin.legal':
 		'Ao continuar, você aceita os Termos e a Política de Privacidade. VICI usa dinheiro fictício durante a prévia. Não é aconselhamento financeiro.',
+	'signin.divider': 'OU',
+	'signin.email.cta': 'Enviar link de entrada',
+	'signin.email.disabled_note':
+		'Magic links por email ainda não estão ativos. Use um provedor ativo acima.',
+	'signin.email.label': 'Email',
+	'signin.email.placeholder': 'voce@example.com',
+	'signin.provider.apple': 'Continuar com Apple',
+	'signin.provider.placeholder_title': 'Ainda não ativo',
+	'signin.provider.soon': 'Em breve',
 	'signin.sub.onboarded': 'Vamos anexar seu usuário e suas escolhas do Flow após entrar.',
 	'signin.sub.signin': 'Continue de onde parou.',
 	'signin.sub.signup': 'Crie uma conta para acompanhar suas previsões e sua sequência.',
