@@ -1,8 +1,7 @@
 # AI Agents Documentation
 
 This is the long-form documentation that backs the agent entry points
-([`AGENTS.md`](../../AGENTS.md), [`CLAUDE.md`](../../CLAUDE.md), and the
-legacy [`.claude/rules/`](../../.claude/rules/) cards).
+([`AGENTS.md`](../../AGENTS.md) and [`CLAUDE.md`](../../CLAUDE.md)).
 
 If you are an agent: do **not** read everything. Read the entry point first
 (`AGENTS.md`), then jump to the specific page you need.
@@ -51,16 +50,11 @@ pattern, naming convention, shared component, shared type, or workflow,
 update the relevant page in the **same PR** as the code change. See the
 [meta-update rule](./governance.md#meta-update-rule).
 
-## Relationship to the legacy `.claude/rules/`
+## Operational runbooks
 
-The repository previously kept Claude-specific guidance under
-[`.claude/rules/`](../../.claude/rules/) and operational runbooks under
-[`.agents/workflows/`](../../.agents/workflows/). Both still exist:
-
-- `.claude/rules/*.md` — short Claude-only quick-reference cards. Defer to
-  the matching `docs/ai/**` page; only Claude-specific tweaks live there.
-- `.agents/workflows/*.md` — operational runbooks (deployment, engine reset,
-  engine ops). Linked from the satellite + backend sections of `docs/ai/`.
+Step-by-step ops runbooks (deployment, engine reset, engine ops) live
+under [`.agents/workflows/`](../../.agents/workflows/) and are linked
+from the satellite + backend sections of `docs/ai/`.
 
 If two pages disagree, the page under `docs/ai/` wins (see the
 [truth hierarchy](./governance.md#truth-hierarchy)). Surface the

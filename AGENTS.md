@@ -158,9 +158,7 @@ backend conventions is `../icdc-core/`.
 
 These are thin layers on top of this file. They never contradict it.
 
-- **Claude Code / Anthropic:** [`CLAUDE.md`](./CLAUDE.md) (+ legacy
-  [`.claude/rules/`](./.claude/rules/) cards — being absorbed into
-  `docs/ai/`).
+- **Claude Code / Anthropic:** [`CLAUDE.md`](./CLAUDE.md).
 - **Cursor:** drop a rule under `.cursor/rules/` that points here.
 - **GitHub Copilot:** drop `.github/copilot-instructions.md` that points here.
 - **OpenAI Codex / Aider / opencode / Continue / …:** read this file

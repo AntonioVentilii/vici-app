@@ -127,9 +127,7 @@ These are on top of the [10 commandments](./AGENTS.md#2-the-10-commandments-read
 > update the relevant doc — usually a page under [`docs/ai/`](./docs/ai/) —
 > in the same PR. See the
 > [meta-update rule](./docs/ai/governance.md#meta-update-rule).
-> Use the legacy [`.claude/rules/`](./.claude/rules/) cards only for very
-> small, Claude-only quick-references; everything substantive lives in
-> `docs/ai/`.
+> Substantive guidance lives under [`docs/ai/`](./docs/ai/).
 
 ---
 

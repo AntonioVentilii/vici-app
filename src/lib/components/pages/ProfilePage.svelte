@@ -4,7 +4,6 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
-	import AvatarSystem from '$lib/components/profile/AvatarSystem.svelte';
 	import ProfileDashboard from '$lib/components/profile/ProfileDashboard.svelte';
 	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
 	import FriendsList from '$lib/components/social/FriendsList.svelte';
@@ -75,23 +74,9 @@
 				<ActivityFeed mode="user" userPrincipal={$authPrincipal ?? ''} />
 			</div>
 
-			<div class="grid grid-cols-1 gap-6 xl:grid-cols-[0.8fr_1.2fr]">
-				<div class="border-border bg-card shadow-card rounded-[1.75rem] border p-6">
-					<div class="mb-5">
-						<h3 class="text-foreground text-sm font-bold tracking-widest uppercase">
-							{t({ locale: $localeStore, key: 'profile.identity_studio' })}
-						</h3>
-						<p class="text-muted-foreground mt-1 text-sm">
-							{t({ locale: $localeStore, key: 'profile.identity_studio_sub' })}
-						</p>
-					</div>
-					<AvatarSystem profile={$userStore.profile} />
-				</div>
-
-				<div class="grid grid-cols-1 gap-6">
-					<FriendsList userPrincipal={$authPrincipal ?? ''} />
-					<GroupManager userPrincipal={$authPrincipal ?? ''} />
-				</div>
+			<div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
+				<FriendsList userPrincipal={$authPrincipal ?? ''} />
+				<GroupManager userPrincipal={$authPrincipal ?? ''} />
 			</div>
 		</div>
 	{:else}
