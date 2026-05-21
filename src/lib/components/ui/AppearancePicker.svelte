@@ -8,6 +8,12 @@
 		dot: string;
 	}
 
+	interface Props {
+		variant?: 'dots' | 'tiles';
+	}
+
+	const { variant = 'dots' }: Props = $props();
+
 	const options: readonly ThemeOption[] = [
 		{ id: 'dark', label: 'Dark', bg: '#0E0D0B', dot: '#F2ECDC' },
 		{ id: 'light', label: 'Light', bg: '#F2ECDC', dot: '#0E0D0B' },
@@ -19,25 +25,48 @@
 	};
 </script>
 
-<div class="appearance-picker" aria-label="Appearance" role="radiogroup">
-	{#each options as option (option.id)}
-		<button
-			style:background={option.bg}
-			class="appearance-dot"
-			class:is-active={$theme === option.id}
-			aria-checked={$theme === option.id}
-			aria-label={option.label}
-			onclick={() => setTheme(option.id)}
-			role="radio"
-			title={option.label}
-			type="button"
-		>
-			<span style:background={option.dot} class="appearance-dot-inner"></span>
-		</button>
-	{/each}
-</div>
+{#if variant === 'tiles'}
+	<div class="appearance-tiles" aria-label="Appearance" role="radiogroup">
+		{#each options as option (option.id)}
+			<button
+				class="appearance-tile"
+				class:is-active={$theme === option.id}
+				aria-checked={$theme === option.id}
+				aria-label={option.label}
+				onclick={() => setTheme(option.id)}
+				role="radio"
+				title={option.label}
+				type="button"
+			>
+				<span style:background={option.bg} class="appearance-tile-swatch">
+					<span style:background={option.dot} class="appearance-tile-dot"></span>
+				</span>
+				<span class="appearance-tile-label">{option.label}</span>
+			</button>
+		{/each}
+	</div>
+{:else}
+	<div class="appearance-picker" aria-label="Appearance" role="radiogroup">
+		{#each options as option (option.id)}
+			<button
+				style:background={option.bg}
+				class="appearance-dot"
+				class:is-active={$theme === option.id}
+				aria-checked={$theme === option.id}
+				aria-label={option.label}
+				onclick={() => setTheme(option.id)}
+				role="radio"
+				title={option.label}
+				type="button"
+			>
+				<span style:background={option.dot} class="appearance-dot-inner"></span>
+			</button>
+		{/each}
+	</div>
+{/if}
 
 <style lang="postcss">
+	/* Dots variant — landing footer, dropdown */
 	.appearance-picker {
 		display: inline-flex;
 		align-items: center;
@@ -81,5 +110,72 @@
 		width: 0.4rem;
 		height: 0.4rem;
 		border-radius: 999px;
+	}
+
+	/* Tiles variant — settings preferences */
+	.appearance-tiles {
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: 0.625rem;
+	}
+
+	.appearance-tile {
+		display: flex;
+		flex-direction: column;
+		align-items: stretch;
+		gap: 0.45rem;
+		padding: 0.4rem 0.4rem 0.55rem;
+		border: 1.5px solid var(--border-base);
+		border-radius: 0.875rem;
+		background: var(--bg-popover);
+		cursor: pointer;
+		transition:
+			border-color var(--d-hover) var(--ease-vici),
+			background-color var(--d-hover) var(--ease-vici),
+			transform var(--d-hover) var(--ease-vici);
+	}
+
+	.appearance-tile:hover {
+		border-color: var(--border-strong);
+	}
+
+	.appearance-tile:active {
+		transform: scale(0.985);
+	}
+
+	.appearance-tile.is-active {
+		border-color: var(--color-primary);
+		background: color-mix(in srgb, var(--color-primary) 10%, var(--bg-popover));
+	}
+
+	.appearance-tile-swatch {
+		position: relative;
+		display: block;
+		width: 100%;
+		aspect-ratio: 4 / 3;
+		border: 1px solid var(--border-base);
+		border-radius: 0.55rem;
+		box-shadow: inset 0 1px 0 color-mix(in srgb, #ffffff 18%, transparent);
+	}
+
+	.appearance-tile-dot {
+		position: absolute;
+		bottom: 0.45rem;
+		left: 0.5rem;
+		display: block;
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 999px;
+	}
+
+	.appearance-tile-label {
+		text-align: center;
+		color: var(--text-base);
+		font-size: var(--t-13);
+		font-weight: 600;
+	}
+
+	.appearance-tile.is-active .appearance-tile-label {
+		color: var(--color-primary);
 	}
 </style>

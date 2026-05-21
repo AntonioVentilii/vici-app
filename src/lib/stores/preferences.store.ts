@@ -2,6 +2,19 @@ import { PREFERENCES_STORAGE_KEY } from '$lib/constants/settings.constants';
 import { initStorageStore, type StorageStore } from '$lib/stores/storage.store';
 import type { UserPreferences } from '$lib/types/preferences';
 
+/**
+ * The six FlowArt categories that ship today. Used as the default set for
+ * the Flow-deck preference so a fresh user sees the full catalog.
+ */
+export const FLOW_CATEGORIES: readonly string[] = [
+	'macro',
+	'crypto',
+	'politics',
+	'tech',
+	'sports',
+	'culture'
+] as const;
+
 export const DEFAULT_PREFERENCES: UserPreferences = {
 	notify: {
 		streakReminder: true,
@@ -11,7 +24,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 	},
 	flowSessionLength: 10,
 	hapticsEnabled: true,
-	callsPublic: true
+	callsPublic: true,
+	flowCategories: [...FLOW_CATEGORIES]
 };
 
 const basePreferencesStore = initStorageStore<UserPreferences>({
@@ -19,11 +33,26 @@ const basePreferencesStore = initStorageStore<UserPreferences>({
 	defaultValue: DEFAULT_PREFERENCES
 });
 
+/**
+ * Hydrates stored preferences against the current default shape so older
+ * payloads that don't yet have a newer field (e.g. `flowCategories`) still
+ * load cleanly without forcing the user back into the default everywhere.
+ */
+const ensureShape = (current: UserPreferences | undefined): UserPreferences => ({
+	...DEFAULT_PREFERENCES,
+	...current,
+	notify: { ...DEFAULT_PREFERENCES.notify, ...(current?.notify ?? {}) },
+	flowCategories:
+		Array.isArray(current?.flowCategories) && current.flowCategories.length > 0
+			? current.flowCategories
+			: [...FLOW_CATEGORIES]
+});
+
 export const preferencesStore: StorageStore<UserPreferences> = {
 	...basePreferencesStore,
 	update: (updater) => {
 		basePreferencesStore.update((current) => {
-			const next = updater(current);
+			const next = updater(ensureShape(current));
 			basePreferencesStore.set({ key: PREFERENCES_STORAGE_KEY, value: next });
 
 			return next;

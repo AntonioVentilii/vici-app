@@ -14,4 +14,5 @@ export interface UserPreferences {
 	flowSessionLength: FlowSessionLength;
 	hapticsEnabled: boolean;
 	callsPublic: boolean;
+	flowCategories: string[];
 }

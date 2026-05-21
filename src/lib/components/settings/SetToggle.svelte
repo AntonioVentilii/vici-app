@@ -7,6 +7,7 @@
 		icon?: typeof LucideIcon;
 		checked: boolean;
 		onchange: (value: boolean) => void;
+		disabled?: boolean;
 	}
 
 	const {
@@ -14,13 +15,20 @@
 		sub = undefined,
 		icon: IconComponent = undefined,
 		checked,
-		onchange
+		onchange,
+		disabled = false
 	}: Props = $props();
 
-	const toggle = () => onchange(!checked);
+	const toggle = () => {
+		if (disabled) {
+			return;
+		}
+
+		onchange(!checked);
+	};
 </script>
 
-<div class="set-toggle">
+<div class="set-toggle" class:is-disabled={disabled}>
 	{#if IconComponent}
 		<span class="set-toggle-icon" aria-hidden="true">
 			<IconComponent size={18} strokeWidth={1.6} />
@@ -36,7 +44,9 @@
 		class="set-switch"
 		class:is-on={checked}
 		aria-checked={checked}
+		aria-disabled={disabled}
 		aria-label={label}
+		{disabled}
 		onclick={toggle}
 		role="switch"
 		type="button"
@@ -114,5 +124,15 @@
 
 	.set-switch.is-on .set-switch-thumb {
 		transform: translateX(1rem);
+	}
+
+	.set-toggle.is-disabled .set-switch,
+	.set-toggle.is-disabled .set-toggle-icon {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+
+	.set-toggle.is-disabled .set-toggle-label {
+		color: var(--text-muted);
 	}
 </style>

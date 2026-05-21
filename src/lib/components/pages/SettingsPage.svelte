@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
 	import {
+		Activity,
 		ArrowLeft,
 		Bell,
 		CircleQuestionMark,
@@ -9,6 +10,7 @@
 		Lock,
 		Search,
 		Share2,
+		Sun,
 		Target,
 		Users,
 		Wallet,
@@ -17,6 +19,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import SetRow from '$lib/components/settings/SetRow.svelte';
 	import SetSegmented from '$lib/components/settings/SetSegmented.svelte';
 	import SetToggle from '$lib/components/settings/SetToggle.svelte';
@@ -34,12 +37,14 @@
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { ProfileVisibility } from '$lib/enums/profile';
 	import { upsertProfile } from '$lib/services/profile.services';
+	import { getFriendRequests, getFriends } from '$lib/services/relation.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { preferencesStore } from '$lib/stores/preferences.store';
+	import { FLOW_CATEGORIES, preferencesStore } from '$lib/stores/preferences.store';
+	import { theme } from '$lib/stores/theme.store';
 	import { setAuthBusy, userStore } from '$lib/stores/user.store';
 	import type { ButtonStatus } from '$lib/types/components';
 	import type { FlowSessionLength, SettingsVisibility } from '$lib/types/preferences';
-	import { t } from '$lib/utils/i18n.utils';
+	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	let confirmingDelete = $state(false);
 	let signOutStatus = $state<ButtonStatus>('enabled');
@@ -90,6 +95,49 @@
 
 	const settingsVisibility = $derived(visibilityFromProfile(profile?.visibility));
 
+	const themeLabel = $derived($theme.charAt(0).toUpperCase() + $theme.slice(1));
+
+	// Flow deck card --------------------------------------------------
+	type FlowDeckTab = 'all' | 'single';
+
+	let flowDeckTab = $state<FlowDeckTab>('all');
+	const flowDeckTabOptions = $derived([
+		{ value: 'all', label: t({ locale: $localeStore, key: 'settings.flow_deck.tab.all' }) },
+		{ value: 'single', label: t({ locale: $localeStore, key: 'settings.flow_deck.tab.single' }) }
+	]);
+
+	const flowCategoriesEnabled = $derived(($preferencesStore.flowCategories ?? []).length);
+	const flowDeckSub = $derived(
+		flowCategoriesEnabled <= 1
+			? t({ locale: $localeStore, key: 'settings.flow_deck.sub_one' })
+			: t({
+					locale: $localeStore,
+					key: 'settings.flow_deck.sub',
+					params: { enabled: flowCategoriesEnabled, total: FLOW_CATEGORIES.length }
+				})
+	);
+
+	const categoryLabelKey = (category: string): MessageKey =>
+		`settings.flow_deck.category.${category}` as MessageKey;
+
+	const toggleFlowCategory = (category: string) => {
+		preferencesStore.update((prefs) => {
+			const current = prefs.flowCategories ?? [...FLOW_CATEGORIES];
+			const next = current.includes(category)
+				? current.filter((c) => c !== category)
+				: [...current, category];
+
+			return { ...prefs, flowCategories: next.length === 0 ? [category] : next };
+		});
+	};
+
+	// Connected friends pending count ---------------------------------
+	let friendsCount = $state(0);
+	let pendingCount = $state(0);
+	const friendsSub = $derived(
+		t({ locale: $localeStore, key: 'settings.friends.count', params: { count: friendsCount } })
+	);
+
 	const persistVisibility = async (value: SettingsVisibility) => {
 		const principal = $authPrincipal;
 
@@ -123,6 +171,22 @@
 
 		window.addEventListener('keydown', onKey);
 
+		const loadCounts = async () => {
+			if (!$authPrincipal) {
+				return;
+			}
+
+			const [friends, pending] = await Promise.all([
+				getFriends().catch(() => []),
+				getFriendRequests().catch(() => [])
+			]);
+
+			friendsCount = friends.length;
+			pendingCount = pending.length;
+		};
+
+		void loadCounts();
+
 		return () => window.removeEventListener('keydown', onKey);
 	});
 </script>
@@ -144,15 +208,32 @@
 	<div class="settings-body">
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.account' })}>
 			<button class="set-identity" onclick={() => goto(resolve(AppPath.Profile))} type="button">
-				<span class="set-identity-avatar" aria-hidden="true">
-					{(profile?.nickname?.trim() ?? 'V').slice(0, 1).toUpperCase()}
-				</span>
+				{#if profile}
+					<span class="set-identity-avatar">
+						<Avatar
+							class="h-full w-full"
+							avatar={profile.avatar}
+							nickname={profile.nickname}
+							owner={profile.owner}
+						/>
+					</span>
+				{:else}
+					<span class="set-identity-avatar set-identity-avatar-fallback" aria-hidden="true">
+						V
+					</span>
+				{/if}
 				<span class="set-identity-copy">
 					<span class="set-identity-handle">
 						@{profile?.nickname?.trim() ??
 							t({ locale: $localeStore, key: 'settings.identity.fallback' })}
 						{#if archetype}
-							<span style:color={archetype.accent} class="set-identity-tag">{archetype.tag}</span>
+							<span
+								style:color={archetype.accent}
+								style:background={`color-mix(in srgb, ${archetype.accent} 14%, transparent)`}
+								class="set-identity-tag"
+							>
+								{archetype.tag}
+							</span>
 						{/if}
 					</span>
 					<span class="set-identity-meta num">
@@ -181,20 +262,85 @@
 			/>
 
 			<SetRow
+				badge={pendingCount > 0
+					? t({
+							locale: $localeStore,
+							key: 'settings.friends.pending',
+							params: { count: pendingCount }
+						})
+					: undefined}
 				icon={Users}
 				label={t({ locale: $localeStore, key: 'settings.friends' })}
-				muted
 				onclick={() => goto(resolve(AppPath.Profile))}
-				sub={t({ locale: $localeStore, key: 'settings.friends.sub' })}
+				sub={friendsSub}
 			/>
 		</SettingsSection>
 
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.preferences' })}>
 			<div class="settings-appearance">
-				<p class="settings-appearance-label">
-					{t({ locale: $localeStore, key: 'settings.appearance' })}
-				</p>
-				<AppearancePicker />
+				<div class="settings-appearance-head">
+					<span class="settings-appearance-icon" aria-hidden="true">
+						<Sun size={16} strokeWidth={1.8} />
+					</span>
+					<div class="settings-appearance-titles">
+						<p class="settings-appearance-label">
+							{t({ locale: $localeStore, key: 'settings.appearance' })}
+						</p>
+						<p class="settings-appearance-current">{themeLabel}</p>
+					</div>
+				</div>
+				<AppearancePicker variant="tiles" />
+			</div>
+
+			<div class="settings-flow-deck">
+				<div class="settings-flow-deck-head">
+					<span class="settings-flow-deck-icon" aria-hidden="true">
+						<Activity size={16} strokeWidth={1.8} />
+					</span>
+					<div class="settings-flow-deck-titles">
+						<p class="settings-flow-deck-label">
+							{t({ locale: $localeStore, key: 'settings.flow_deck' })}
+						</p>
+						<p class="settings-flow-deck-sub">{flowDeckSub}</p>
+					</div>
+				</div>
+
+				<div class="settings-flow-deck-tabs" role="tablist">
+					{#each flowDeckTabOptions as tab (tab.value)}
+						<button
+							class="settings-flow-deck-tab"
+							class:is-active={flowDeckTab === tab.value}
+							aria-selected={flowDeckTab === tab.value}
+							onclick={() => (flowDeckTab = tab.value as FlowDeckTab)}
+							role="tab"
+							type="button"
+						>
+							{tab.label}
+						</button>
+					{/each}
+				</div>
+
+				{#if flowDeckTab === 'all'}
+					<div class="settings-flow-deck-grid" role="group">
+						{#each FLOW_CATEGORIES as category (category)}
+							{@const enabled = ($preferencesStore.flowCategories ?? []).includes(category)}
+							<button
+								class="settings-flow-deck-pill"
+								class:is-active={enabled}
+								aria-pressed={enabled}
+								onclick={() => toggleFlowCategory(category)}
+								type="button"
+							>
+								<span class="settings-flow-deck-pill-dot" aria-hidden="true"></span>
+								{t({ locale: $localeStore, key: categoryLabelKey(category) })}
+							</button>
+						{/each}
+					</div>
+				{:else}
+					<p class="settings-flow-deck-hint">
+						{t({ locale: $localeStore, key: 'settings.flow_deck.single_soon' })}
+					</p>
+				{/if}
 			</div>
 
 			<SetRow
@@ -245,7 +391,8 @@
 
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.privacy' })}>
 			<SetToggle
-				checked={true}
+				checked={false}
+				disabled={true}
 				icon={Lock}
 				label={t({ locale: $localeStore, key: 'settings.two_factor' })}
 				onchange={() => {}}
@@ -278,19 +425,16 @@
 			<SetRow
 				icon={Info}
 				label={t({ locale: $localeStore, key: 'settings.help.resolution' })}
-				muted
 				onclick={() => {}}
 			/>
 			<SetRow
 				icon={Search}
 				label={t({ locale: $localeStore, key: 'settings.help.faq' })}
-				muted
 				onclick={() => {}}
 			/>
 			<SetRow
 				icon={Share2}
 				label={t({ locale: $localeStore, key: 'settings.help.support' })}
-				muted
 				onclick={() => {}}
 			/>
 		</SettingsSection>
@@ -299,19 +443,16 @@
 			<SetRow
 				icon={Lock}
 				label={t({ locale: $localeStore, key: 'settings.legal.terms' })}
-				muted
 				onclick={() => {}}
 			/>
 			<SetRow
 				icon={Eye}
 				label={t({ locale: $localeStore, key: 'settings.legal.privacy' })}
-				muted
 				onclick={() => {}}
 			/>
 			<SetRow
 				icon={CircleQuestionMark}
 				label={t({ locale: $localeStore, key: 'settings.legal.rules' })}
-				muted
 				onclick={() => {}}
 			/>
 		</SettingsSection>
@@ -408,11 +549,17 @@
 
 	.set-identity-avatar {
 		display: flex;
+		overflow: hidden;
 		align-items: center;
 		justify-content: center;
 		width: 2.5rem;
 		height: 2.5rem;
-		border-radius: var(--r-8);
+		flex-shrink: 0;
+		border-radius: 999px;
+		background: var(--bg-popover);
+	}
+
+	.set-identity-avatar-fallback {
 		background: var(--laurel-glow);
 		color: var(--color-primary);
 		font-weight: 700;
@@ -437,9 +584,15 @@
 	}
 
 	.set-identity-tag {
-		font-size: 0.625rem;
-		font-weight: 700;
-		letter-spacing: 0.06em;
+		display: inline-flex;
+		align-items: center;
+		padding: 0.1rem 0.4rem;
+		border-radius: var(--r-4);
+		font-family: var(--font-mono);
+		font-size: 0.6rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
 	}
 
 	.set-identity-meta {
@@ -449,21 +602,180 @@
 
 	.settings-appearance {
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
+		flex-direction: column;
+		gap: 0.85rem;
 		padding: 0.875rem;
 		background: var(--bg-surface);
 	}
 
+	.settings-appearance-head {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+	}
+
+	.settings-appearance-icon {
+		display: inline-flex;
+		width: 1.85rem;
+		height: 1.85rem;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		border-radius: var(--r-8);
+		background: var(--laurel-glow);
+		color: var(--color-primary);
+	}
+
+	.settings-appearance-titles {
+		display: flex;
+		min-width: 0;
+		flex: 1;
+		flex-direction: column;
+		gap: 0.1rem;
+	}
+
 	.settings-appearance-label {
 		margin: 0;
+		color: var(--text-base);
+		font-size: var(--t-14);
+		font-weight: 700;
+	}
+
+	.settings-appearance-current {
+		margin: 0;
 		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: 0.65rem;
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
+		font-size: var(--t-12);
+	}
+
+	/* Flow deck preference card ---------------------------------- */
+	.settings-flow-deck {
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+		padding: 0.875rem;
+		background: var(--bg-surface);
+	}
+
+	.settings-flow-deck-head {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+	}
+
+	.settings-flow-deck-icon {
+		display: inline-flex;
+		width: 1.85rem;
+		height: 1.85rem;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		border-radius: var(--r-8);
+		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+		color: var(--color-primary);
+	}
+
+	.settings-flow-deck-titles {
+		display: flex;
+		min-width: 0;
+		flex: 1;
+		flex-direction: column;
+		gap: 0.1rem;
+	}
+
+	.settings-flow-deck-label {
+		margin: 0;
+		color: var(--text-base);
+		font-size: var(--t-14);
+		font-weight: 700;
+	}
+
+	.settings-flow-deck-sub {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+	}
+
+	.settings-flow-deck-tabs {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.25rem;
+		padding: 0.25rem;
+		border: 1px solid var(--border-base);
+		border-radius: 0.85rem;
+		background: var(--bg-popover);
+	}
+
+	.settings-flow-deck-tab {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.55rem 0.5rem;
+		border: 0;
+		border-radius: 0.65rem;
+		background: transparent;
+		color: var(--text-muted);
+		font-size: var(--t-13);
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background-color var(--d-hover) var(--ease-vici),
+			color var(--d-hover) var(--ease-vici);
+	}
+
+	.settings-flow-deck-tab.is-active {
+		background: var(--bg-surface);
+		color: var(--text-base);
+		box-shadow: var(--shadow-card);
+	}
+
+	.settings-flow-deck-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.5rem;
+	}
+
+	.settings-flow-deck-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.55rem;
+		padding: 0.65rem 0.8rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--color-primary) 5%, var(--bg-popover));
+		color: var(--text-muted);
+		font-size: var(--t-13);
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			border-color var(--d-hover) var(--ease-vici),
+			background-color var(--d-hover) var(--ease-vici),
+			color var(--d-hover) var(--ease-vici);
+	}
+
+	.settings-flow-deck-pill.is-active {
+		border-color: color-mix(in srgb, var(--color-primary) 35%, var(--border-base));
+		background: color-mix(in srgb, var(--color-primary) 12%, var(--bg-popover));
+		color: var(--color-primary);
+	}
+
+	.settings-flow-deck-pill-dot {
+		display: inline-block;
+		width: 0.4rem;
+		height: 0.4rem;
+		border-radius: 999px;
+		background: var(--text-muted);
+	}
+
+	.settings-flow-deck-pill.is-active .settings-flow-deck-pill-dot {
+		background: var(--color-primary);
+	}
+
+	.settings-flow-deck-hint {
+		margin: 0;
+		padding: 0.65rem 0.25rem 0.15rem;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		text-align: center;
 	}
 
 	.settings-about {

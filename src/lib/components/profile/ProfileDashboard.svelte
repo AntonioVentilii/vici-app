@@ -1,12 +1,8 @@
 <script lang="ts">
-	import { Pencil, Check, X } from 'lucide-svelte';
-	import FlameChar from '$lib/components/characters/FlameChar.svelte';
+	import { Check, Eye, Flame, Pencil, Star, Target, Timer, X, Zap } from 'lucide-svelte';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
-	import AchievementCard from '$lib/components/profile/AchievementCard.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
-	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { ACCURACY_GATE_CALLS, isAccuracyUnlocked } from '$lib/constants/flow-rewards.constants';
@@ -15,9 +11,8 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
-	import { formatCurrency } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { stageForStreak, FLAME_STAGE_LABELS } from '$lib/utils/streak.utils';
+	import { FLAME_STAGE_LABELS, stageForStreak } from '$lib/utils/streak.utils';
 
 	interface Props {
 		profile: UserProfile;
@@ -43,16 +38,8 @@
 				nickname: editedNickname.trim()
 			};
 
-			await upsertProfile({
-				key: profile.owner,
-				data: updatedData
-			});
-
-			userStore.update((curr) => ({
-				...curr,
-				profile: updatedData
-			}));
-
+			await upsertProfile({ key: profile.owner, data: updatedData });
+			userStore.update((curr) => ({ ...curr, profile: updatedData }));
 			isEditingNickname = false;
 		} finally {
 			pending = false;
@@ -70,23 +57,30 @@
 
 	const accuracy = $derived(profile.accuracy ?? 0);
 	// `profile.streak` is the trade-momentum streak (consecutive
-	// winning trades) — distinct from `dailyStreak` (day count) which
-	// drives the Flame stage. Surface only the day count here; the
-	// trade-momentum streak isn't user-facing on this dashboard.
+	// winning trades); `dailyStreak` is the day count behind the Flame
+	// stage. The visible streak on this dashboard is the day count.
 	const dailyStreak = $derived(profile.dailyStreak ?? 0);
 	const level = $derived(profile.level ?? 1);
 	const points = $derived(profile.points ?? 0);
 	const xpInLevel = $derived(points % 500);
-	// Progress (0–100) toward the next 500-point level bracket.
-	const progressPercent = $derived(xpInLevel / 5);
+	const nextLevelTarget = $derived(level * 500);
+	const xpProgressPercent = $derived((xpInLevel / 500) * 100);
 
 	const flameStage = $derived(stageForStreak(dailyStreak));
 	const flameLabel = $derived(FLAME_STAGE_LABELS[flameStage]);
 	const archetype = $derived(profile.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
 
 	const totalTrades = $derived(profile.totalTrades ?? 0);
+	const winRate = $derived(profile.winRate ?? profile.accuracy ?? 0);
+	const wins = $derived(Math.round((winRate / 100) * totalTrades));
 	const accuracyUnlocked = $derived(isAccuracyUnlocked(totalTrades));
 	const callsUntilAccuracy = $derived(Math.max(0, ACCURACY_GATE_CALLS - totalTrades));
+
+	const accuracyDisplay = $derived(
+		accuracyUnlocked
+			? `${(Math.round(accuracy * 10) / 10).toFixed(1)}%`
+			: `${callsUntilAccuracy} left`
+	);
 
 	const oracleInsight = $derived.by(() => {
 		const trades = totalTrades;
@@ -97,7 +91,6 @@
 			return 'No calls yet. The Oracle waits.';
 		}
 
-		// Pre-gate: never reveal accuracy %. Calls + streak only.
 		if (!accuracyUnlocked) {
 			if (d >= 7) {
 				return `${d}-day streak across ${trades} ${trades === 1 ? 'call' : 'calls'}. Consistency compounds.`;
@@ -127,28 +120,13 @@
 		return Array.from({ length: 30 }, (_, index) => index >= 30 - activeBlocks);
 	});
 
-	const achievementProgress = (achievementId: string) => {
-		if (achievementId === 'first-blood') {
-			return totalTrades > 0 ? 1 : 0;
-		}
-
-		if (achievementId === 'on-fire') {
-			return Math.min((profile.streak ?? 0) / 10, 1);
-		}
-
-		if (achievementId === 'oracle') {
-			return Math.min(totalTrades / 50, accuracyUnlocked && accuracy >= 80 ? 1 : 0.8);
-		}
-
-		if (achievementId === 'marathon') {
-			return Math.min(dailyStreak / 30, 1);
-		}
-
-		if (achievementId === 'lvl-25') {
-			return Math.min(level / 25, 1);
-		}
-
-		return 0;
+	const achievementIcons = {
+		target: Target,
+		flame: Flame,
+		eye: Eye,
+		zap: Zap,
+		timer: Timer,
+		star: Star
 	};
 
 	const achievementUnlocked = (achievementId: string) => {
@@ -176,387 +154,605 @@
 	};
 </script>
 
-<div class="space-y-6">
-	<section
-		style="--profile-accent: {archetype?.accent ?? 'var(--primary)'}"
-		class="border-border bg-card shadow-card relative overflow-hidden rounded-[2rem] border p-5 md:p-8"
-	>
-		<div
-			style="background: var(--profile-accent)"
-			class="pointer-events-none absolute -top-24 -right-20 h-56 w-56 rounded-full opacity-20 blur-3xl"
-		></div>
-
-		<div class="relative grid gap-6 lg:grid-cols-[1fr_20rem] lg:items-end">
-			<div class="flex flex-col gap-5 sm:flex-row sm:items-center">
-				<div class="relative w-fit">
-					<div
-						class="border-border bg-background/60 ring-primary/10 h-24 w-24 rounded-full border-4 p-1 shadow-xl ring-4 sm:h-28 sm:w-28"
-					>
-						<Avatar
-							class="bg-card h-full w-full shadow-inner"
-							avatar={profile.avatar}
-							nickname={profile.nickname}
-							owner={profile.owner}
-						/>
-					</div>
-					<div
-						class="bg-primary text-primary-foreground ring-background absolute -right-2 -bottom-2 flex h-9 w-9 items-center justify-center rounded-full font-mono text-sm font-black shadow-lg ring-4"
-						aria-label={t({
-							locale: $localeStore,
-							key: 'profile.dashboard.level_badge',
-							params: { level }
-						})}
-					>
-						{level}
-					</div>
-				</div>
-
-				<div class="min-w-0 flex-1">
-					{#if archetype}
-						<div
-							style="border-color: {archetype.accent}40; border-left: 2px solid {archetype.accent}"
-							class="bg-background/35 mb-3 inline-flex items-center gap-2 rounded-sm border px-2.5 py-1"
-						>
-							<span
-								style="color: {archetype.accent}"
-								class="text-[10px] font-bold tracking-widest uppercase"
-							>
-								{archetype.tag}
-							</span>
-						</div>
-					{/if}
-
-					{#if isEditingNickname}
-						<div class="flex flex-col gap-2 sm:flex-row sm:items-center">
-							<input
-								class="bg-foreground/5 border-border focus:ring-primary rounded-xl border px-3 py-2 text-2xl font-black focus:ring-2 focus:outline-none"
-								aria-label={t({ locale: $localeStore, key: 'profile.dashboard.nickname_label' })}
-								disabled={pending}
-								onkeydown={(e) => e.key === 'Enter' && handleSaveNickname()}
-								type="text"
-								bind:value={editedNickname}
-							/>
-							<div class="flex gap-2">
-								<BaseButton
-									class="text-yes hover:text-yes"
-									aria-label={t({ locale: $localeStore, key: 'profile.dashboard.save' })}
-									onclick={handleSaveNickname}
-									status={pending
-										? 'pending'
-										: editedNickname.trim().length < MIN_NICKNAME_LENGTH
-											? 'disabled'
-											: 'enabled'}
-								>
-									<Check size={22} />
-								</BaseButton>
-								<BaseButton
-									class="text-destructive hover:text-destructive"
-									aria-label={t({ locale: $localeStore, key: 'profile.dashboard.cancel' })}
-									onclick={cancelEdit}
-									status={pending ? 'disabled' : 'enabled'}
-								>
-									<X size={22} />
-								</BaseButton>
-							</div>
-						</div>
-						{#if editedNickname.trim().length < MIN_NICKNAME_LENGTH}
-							<p class="text-destructive mt-1 text-[10px] font-bold uppercase">
-								{t({
-									locale: $localeStore,
-									key: 'profile.dashboard.nickname_min',
-									params: { count: MIN_NICKNAME_LENGTH }
-								})}
-							</p>
-						{/if}
-					{:else}
-						<h1
-							class="font-display text-foreground flex min-w-0 items-center gap-3 text-3xl font-semibold tracking-tight sm:text-4xl"
-						>
-							<span class="truncate">@{profile.nickname}</span>
-							{#if viewerPrincipal === profile.owner}
-								<button
-									class="text-muted-foreground hover:text-primary shrink-0 transition-colors"
-									aria-label={t({ locale: $localeStore, key: 'profile.dashboard.edit_nickname' })}
-									onclick={startNicknameEdit}
-								>
-									<Pencil size={20} />
-								</button>
-							{/if}
-						</h1>
-					{/if}
-
-					<div class="text-muted-foreground mt-2 flex items-center gap-1.5 text-xs">
-						<CopyableAddress
-							address={profile.owner}
-							label={t({ locale: $localeStore, key: 'profile.dashboard.principal' })}
-						/>
-					</div>
-
-					<div class="mt-4 grid grid-cols-3 gap-2">
-						<div class="border-border bg-background/35 rounded-xl border px-3 py-2">
-							<p class="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
-								{t({
-									locale: $localeStore,
-									key: 'profile.dashboard.level_badge',
-									params: { level }
-								})}
-							</p>
-							<p class="text-foreground mt-1 font-mono text-sm font-black tabular-nums">
-								{level}
-							</p>
-						</div>
-						<div class="border-border bg-background/35 rounded-xl border px-3 py-2">
-							<p class="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
-								{t({ locale: $localeStore, key: 'profile.dashboard.calls' })}
-							</p>
-							<p class="text-foreground mt-1 font-mono text-sm font-black tabular-nums">
-								{totalTrades}
-							</p>
-						</div>
-						<div class="border-border bg-background/35 rounded-xl border px-3 py-2">
-							<p class="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
-								{t({
-									locale: $localeStore,
-									key: 'profile.dashboard.streak_stage',
-									params: { stage: flameLabel }
-								})}
-							</p>
-							<p class="text-foreground mt-1 font-mono text-sm font-black tabular-nums">
-								{dailyStreak}
-							</p>
-						</div>
-					</div>
-				</div>
+<div class="profile-dashboard">
+	<section class="profile-identity">
+		<div class="profile-identity-row">
+			<div class="profile-avatar">
+				<Avatar
+					class="h-full w-full"
+					avatar={profile.avatar}
+					nickname={profile.nickname}
+					owner={profile.owner}
+				/>
 			</div>
 
-			<div class="border-border bg-background/45 space-y-3 rounded-2xl border p-4 sm:p-5">
-				<div class="flex items-center justify-between gap-3">
-					<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
-						{t({
-							locale: $localeStore,
-							key: 'profile.dashboard.level_progress',
-							params: { level }
-						})}
-					</span>
-					<span class="text-primary font-mono text-xs font-black tabular-nums">
-						{xpInLevel} / 500 XP
-					</span>
-				</div>
-				<div class="bg-card h-3 w-full overflow-hidden rounded-full p-1 shadow-inner">
-					<div
-						style="width: {progressPercent}%"
-						class="bg-primary h-full rounded-full transition-all duration-1000 ease-out"
-					></div>
-				</div>
-				<p class="text-muted-foreground text-xs">
-					{t({
-						locale: $localeStore,
-						key: 'profile.dashboard.total_xp',
-						params: { xp: points }
-					})}
+			<div class="profile-identity-meta">
+				{#if isEditingNickname}
+					<div class="profile-nickname-edit">
+						<input
+							aria-label={t({ locale: $localeStore, key: 'profile.dashboard.nickname_label' })}
+							disabled={pending}
+							onkeydown={(e) => e.key === 'Enter' && handleSaveNickname()}
+							type="text"
+							bind:value={editedNickname}
+						/>
+						<BaseButton
+							class="text-yes hover:text-yes"
+							aria-label={t({ locale: $localeStore, key: 'profile.dashboard.save' })}
+							onclick={handleSaveNickname}
+							status={pending
+								? 'pending'
+								: editedNickname.trim().length < MIN_NICKNAME_LENGTH
+									? 'disabled'
+									: 'enabled'}
+						>
+							<Check size={18} />
+						</BaseButton>
+						<BaseButton
+							class="text-destructive hover:text-destructive"
+							aria-label={t({ locale: $localeStore, key: 'profile.dashboard.cancel' })}
+							onclick={cancelEdit}
+							status={pending ? 'disabled' : 'enabled'}
+						>
+							<X size={18} />
+						</BaseButton>
+					</div>
+				{:else}
+					<div class="profile-handle-row">
+						<h1 class="profile-handle">@{profile.nickname}</h1>
+						{#if archetype}
+							<span
+								style="color: {archetype.accent}; background: color-mix(in srgb, {archetype.accent} 14%, transparent);"
+								class="profile-archetype-chip">{archetype.tag}</span
+							>
+						{/if}
+						{#if viewerPrincipal === profile.owner}
+							<button
+								class="profile-edit-btn"
+								aria-label={t({ locale: $localeStore, key: 'profile.dashboard.edit_nickname' })}
+								onclick={startNicknameEdit}
+								type="button"
+							>
+								<Pencil aria-hidden="true" size={14} strokeWidth={1.8} />
+							</button>
+						{/if}
+					</div>
+				{/if}
+
+				<p class="profile-stats-line">Lvl <span class="num">{level}</span> · global</p>
+				<p class="profile-fire-line">
+					<Flame aria-hidden="true" size={14} strokeWidth={2} />
+					<span class="num">{dailyStreak}</span> · <span class="num">{totalTrades}</span> calls
 				</p>
 			</div>
 		</div>
-	</section>
 
-	<section class="grid grid-cols-1 gap-3 md:grid-cols-4">
-		<div
-			class="border-primary/20 bg-primary/10 text-foreground rounded-2xl border p-5 md:col-span-2"
-		>
-			{#if accuracyUnlocked}
-				<span class="text-primary text-xs font-bold tracking-widest uppercase">
-					{t({ locale: $localeStore, key: 'profile.dashboard.accuracy' })}
-				</span>
-				<div class="mt-5 flex items-baseline gap-2">
-					<span class="font-mono text-5xl font-black tabular-nums">
-						{Math.round(accuracy)}%
-					</span>
-					<span class="text-muted-foreground">
-						{t({ locale: $localeStore, key: 'profile.dashboard.win_rate' })}
-					</span>
-				</div>
-				<div class="mt-6 flex items-center gap-3">
-					<div class="bg-card h-2 flex-1 overflow-hidden rounded-full">
-						<div style="width: {accuracy}%" class="bg-yes h-full"></div>
-					</div>
-					<span class="text-primary text-[10px] font-bold tracking-widest uppercase">
-						{t({ locale: $localeStore, key: 'profile.dashboard.pro_level' })}
-					</span>
-				</div>
-			{:else}
-				<!-- Pre-gate state: accuracy is hidden until the user has
-				     `ACCURACY_GATE_CALLS` lifetime calls. Calls + streak
-				     are the visible stats until then. See
-				     `docs/ai/frontend/design.md` §7.5 for the rule. -->
-				<span class="text-primary text-xs font-bold tracking-widest uppercase">
-					{t({ locale: $localeStore, key: 'profile.dashboard.calls_logged' })}
-				</span>
-				<div class="mt-5 flex items-baseline gap-2">
-					<span class="font-mono text-5xl font-black tabular-nums">{totalTrades}</span>
-					<span class="text-muted-foreground">
-						{t({ locale: $localeStore, key: 'profile.dashboard.calls' })}
-					</span>
-				</div>
-				<div class="mt-6 flex items-center gap-3">
-					<div class="bg-card h-2 flex-1 overflow-hidden rounded-full">
-						<div
-							style="width: {(totalTrades / ACCURACY_GATE_CALLS) * 100}%"
-							class="bg-primary h-full"
-						></div>
-					</div>
-					<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-						{t({
-							locale: $localeStore,
-							key: 'profile.dashboard.until_accuracy',
-							params: { count: callsUntilAccuracy }
-						})}
-					</span>
-				</div>
-			{/if}
-		</div>
-
-		<div class="border-border bg-card rounded-2xl border p-5">
-			<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-				{t({ locale: $localeStore, key: 'profile.dashboard.total_profit' })}
+		<div class="profile-level-row">
+			<span class="profile-level-label">Level {level}</span>
+			<span class="num profile-level-target">
+				{points.toLocaleString()} / {nextLevelTarget.toLocaleString()} XP
 			</span>
-			<p class="text-foreground mt-4 font-mono text-2xl font-black tabular-nums">
-				{formatCurrency({ value: BigInt(Math.floor((profile.pnl ?? 0) * 1e6)), decimals: 6 })}
-			</p>
 		</div>
-
-		<div class="border-border bg-card rounded-2xl border p-5">
-			<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
-				{t({ locale: $localeStore, key: 'profile.dashboard.predictions' })}
-			</span>
-			<p class="text-foreground mt-4 font-mono text-2xl font-black tabular-nums">
-				{totalTrades}
-			</p>
+		<div class="profile-level-bar" role="presentation">
+			<span style:width={`${xpProgressPercent}%`}></span>
 		</div>
 	</section>
 
 	{#if archetype}
-		<section class="border-border bg-card shadow-card rounded-2xl border p-5">
-			<div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-				<div>
-					<p
-						style="color: {archetype.accent}"
-						class="text-[10px] font-black tracking-[0.16em] uppercase"
-					>
-						{archetype.tag}
-					</p>
-					<h3 class="text-foreground mt-1 text-lg font-semibold tracking-tight">
-						{archetype.name}
-					</h3>
-				</div>
-				<p class="text-muted-foreground max-w-xl text-sm leading-relaxed">
-					{archetype.description}
-				</p>
-			</div>
+		<section style:--archetype-accent={archetype.accent} class="profile-archetype-card">
+			<p class="profile-archetype-eyebrow">
+				Your archetype · <span>{archetype.tag}</span>
+			</p>
+			<p class="profile-archetype-name">{archetype.name}</p>
+			<p class="profile-archetype-body">{archetype.description}</p>
 		</section>
 	{/if}
 
-	<section class="grid grid-cols-1 gap-6 lg:grid-cols-[16rem_1fr]">
-		<div
-			class="border-border bg-card shadow-card flex flex-col items-center justify-center gap-4 rounded-2xl border p-6"
-		>
-			<div class="char-pop">
-				<FlameChar size={88} stage={flameStage} />
+	<section class="profile-skill">
+		<h2 class="profile-section-title">Skill</h2>
+		<div class="profile-skill-grid">
+			<div class="profile-stat">
+				<span class="profile-stat-label">Accuracy</span>
+				<span class="num profile-stat-value">{accuracyDisplay}</span>
 			</div>
-			<div class="text-center">
-				<div class="text-foreground font-mono text-4xl font-black tabular-nums">
-					{dailyStreak}
-				</div>
-				<p class="text-muted-foreground text-xs font-bold uppercase">
-					{t({
-						locale: $localeStore,
-						key: 'profile.dashboard.streak_stage',
-						params: { stage: flameLabel }
-					})}
-				</p>
+			<div class="profile-stat">
+				<span class="profile-stat-label">Calls</span>
+				<span class="num profile-stat-value">{totalTrades}</span>
 			</div>
-		</div>
-
-		<div class="border-border bg-card shadow-card rounded-2xl border p-5">
-			<div class="mb-4 flex items-center justify-between gap-3">
-				<div>
-					<h3 class="text-foreground text-sm font-bold tracking-widest uppercase">
-						{t({ locale: $localeStore, key: 'profile.dashboard.recent_activity' })}
-					</h3>
-					<p class="text-muted-foreground mt-1 text-xs">
-						{t({ locale: $localeStore, key: 'profile.dashboard.recent_activity_sub' })}
-					</p>
-				</div>
-				<div class="flex items-center gap-1.5">
-					<FlameChar animate={false} size={18} stage={flameStage} />
-					<span class="text-foreground font-mono text-lg font-black tabular-nums">
-						{dailyStreak}
-					</span>
-				</div>
+			<div class="profile-stat">
+				<span class="profile-stat-label">Wins</span>
+				<span class="num profile-stat-value">{wins}</span>
 			</div>
-			<div class="grid grid-cols-10 gap-1.5 sm:grid-cols-[repeat(15,minmax(0,1fr))] sm:gap-2">
-				{#each streakBlocks as isActive, index (`streak-${index}`)}
-					<div
-						class={[
-							'aspect-square rounded-[0.35rem] border transition-colors',
-							isActive
-								? 'border-primary/30 bg-primary/70 shadow-card'
-								: 'border-border bg-foreground/5'
-						]}
-					></div>
-				{/each}
+			<div class="profile-stat">
+				<span class="profile-stat-label">Streak</span>
+				<span class="num profile-stat-value">{dailyStreak}d</span>
 			</div>
 		</div>
 	</section>
 
-	<div class="border-border bg-card shadow-card flex items-center gap-4 rounded-2xl border p-5">
-		<div class="flex-none">
-			<OracleChar size={48} />
+	<section class="profile-activity">
+		<div class="profile-activity-head">
+			<span class="profile-activity-label">Last 30 days</span>
+			<span class="profile-activity-meta">
+				<span class="num">{dailyStreak}</span>
+				<span>{flameLabel}</span>
+			</span>
 		</div>
-		<div class="min-w-0 flex-1">
-			<div class="flex items-center gap-2">
-				<span style="color: var(--char-oracle)" class="eyebrow">
-					{t({ locale: $localeStore, key: 'profile.dashboard.oracle_insight' })}
-				</span>
-			</div>
-			<p class="text-foreground mt-1 text-sm leading-relaxed">{oracleInsight}</p>
+		<div class="profile-activity-grid" role="presentation">
+			{#each streakBlocks as isActive, index (`day-${index}`)}
+				<span class:is-active={isActive}></span>
+			{/each}
 		</div>
-	</div>
+	</section>
 
-	<div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.3fr_0.7fr]">
-		<Card padding="lg">
-			<h4 class="text-muted-foreground mb-4 text-xs font-bold tracking-widest uppercase">
-				{t({ locale: $localeStore, key: 'profile.dashboard.achievements' })}
-			</h4>
-			<div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-				{#each ACHIEVEMENTS as achievement (achievement.id)}
-					<AchievementCard
-						{achievement}
-						progress={achievementProgress(achievement.id)}
-						unlocked={achievementUnlocked(achievement.id)}
-					/>
-				{/each}
-			</div>
-		</Card>
-
-		<Card padding="lg">
-			<h4 class="text-muted-foreground mb-4 text-xs font-bold tracking-widest uppercase">
-				{t({ locale: $localeStore, key: 'profile.dashboard.interests' })}
-			</h4>
-			{#if (profile.interests ?? []).length > 0}
-				<div class="flex flex-wrap gap-2">
-					{#each profile.interests ?? [] as interest (interest)}
-						<span
-							class="bg-foreground/5 text-foreground rounded-sm px-3 py-1 text-[10px] font-bold uppercase"
-						>
-							{interest}
-						</span>
-					{/each}
+	<section class="profile-achievements">
+		<div class="profile-achievements-head">
+			<h2 class="profile-section-title">Achievements</h2>
+			<button class="profile-achievements-all" type="button">All</button>
+		</div>
+		<div class="profile-achievements-rail">
+			{#each ACHIEVEMENTS as achievement (achievement.id)}
+				{@const Icon = achievementIcons[achievement.icon]}
+				{@const unlocked = achievementUnlocked(achievement.id)}
+				<div class="profile-achievement-card" class:is-unlocked={unlocked}>
+					<span class="profile-achievement-icon" aria-hidden="true">
+						<Icon size={16} strokeWidth={1.8} />
+					</span>
+					<span class="profile-achievement-name">{achievement.name}</span>
+					<span class="profile-achievement-sub">{achievement.description}</span>
 				</div>
-			{:else}
-				<p class="text-muted-foreground text-sm">
-					{t({ locale: $localeStore, key: 'profile.dashboard.no_interests' })}
-				</p>
-			{/if}
-		</Card>
-	</div>
+			{/each}
+		</div>
+	</section>
+
+	<section class="profile-oracle">
+		<div class="profile-oracle-icon" aria-hidden="true">
+			<OracleChar size={32} />
+		</div>
+		<div class="profile-oracle-body">
+			<p class="profile-oracle-eyebrow">
+				Oracle · <span>Weekly insight</span>
+			</p>
+			<p class="profile-oracle-text serif-italic">{oracleInsight}</p>
+		</div>
+	</section>
 </div>
+
+<style lang="postcss">
+	.profile-dashboard {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+	}
+
+	.profile-section-title {
+		margin: 0;
+		color: var(--text-base);
+		font-size: var(--t-18);
+		font-weight: 700;
+		letter-spacing: var(--tracking-tight);
+	}
+
+	/* Identity card ---------------------------------------------------- */
+	.profile-identity {
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+		padding: 1rem;
+		border: 1px solid var(--border-base);
+		border-radius: 1.5rem;
+		background: var(--bg-popover);
+		box-shadow: var(--shadow-card);
+	}
+
+	.profile-identity-row {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+	}
+
+	.profile-avatar {
+		width: 3.5rem;
+		height: 3.5rem;
+		flex-shrink: 0;
+		overflow: hidden;
+		border-radius: 999px;
+		background: var(--bg-surface);
+	}
+
+	.profile-identity-meta {
+		display: flex;
+		min-width: 0;
+		flex: 1;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
+
+	.profile-handle-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.45rem;
+	}
+
+	.profile-handle {
+		margin: 0;
+		overflow: hidden;
+		color: var(--text-base);
+		font-size: var(--t-18);
+		font-weight: 700;
+		letter-spacing: var(--tracking-tight);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.profile-archetype-chip {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.15rem 0.45rem;
+		border-radius: var(--r-4);
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.profile-edit-btn {
+		display: inline-flex;
+		width: 1.5rem;
+		height: 1.5rem;
+		align-items: center;
+		justify-content: center;
+		border: 0;
+		border-radius: 999px;
+		background: transparent;
+		color: var(--text-muted);
+		cursor: pointer;
+	}
+
+	.profile-edit-btn:hover {
+		color: var(--color-primary);
+	}
+
+	.profile-nickname-edit {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.profile-nickname-edit input {
+		min-width: 0;
+		flex: 1;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-8);
+		background: var(--bg-surface);
+		padding: 0.45rem 0.6rem;
+		color: var(--text-base);
+		font-size: var(--t-14);
+		font-weight: 700;
+	}
+
+	.profile-stats-line,
+	.profile-fire-line {
+		margin: 0;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+	}
+
+	.profile-fire-line :global(svg) {
+		color: var(--char-flame);
+	}
+
+	.profile-level-row {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.profile-level-label {
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.profile-level-target {
+		color: var(--text-base);
+		font-size: var(--t-12);
+		font-weight: 700;
+	}
+
+	.profile-level-bar {
+		position: relative;
+		height: 0.4rem;
+		overflow: hidden;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--border-base) 60%, transparent);
+	}
+
+	.profile-level-bar span {
+		display: block;
+		height: 100%;
+		background: linear-gradient(90deg, var(--hold-deep), var(--color-primary));
+		transition: width var(--d-state) var(--ease-vici);
+	}
+
+	/* Archetype card --------------------------------------------------- */
+	.profile-archetype-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+		padding: 0.85rem 1rem;
+		border-left: 3px solid var(--archetype-accent, var(--color-primary));
+		border-radius: 1.25rem;
+		background: color-mix(
+			in srgb,
+			var(--archetype-accent, var(--color-primary)) 8%,
+			var(--bg-surface)
+		);
+	}
+
+	.profile-archetype-eyebrow {
+		margin: 0;
+		color: var(--archetype-accent, var(--color-primary));
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.profile-archetype-eyebrow span {
+		color: var(--archetype-accent, var(--color-primary));
+	}
+
+	.profile-archetype-name {
+		margin: 0;
+		color: var(--text-base);
+		font-size: var(--t-14);
+		font-weight: 700;
+	}
+
+	.profile-archetype-body {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: var(--t-13);
+		line-height: var(--leading-normal);
+	}
+
+	/* Skill grid ------------------------------------------------------- */
+	.profile-skill {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.profile-skill-grid {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.5rem;
+	}
+
+	.profile-stat {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		padding: 0.85rem;
+		border: 1px solid var(--border-base);
+		border-radius: 1rem;
+		background: var(--bg-popover);
+	}
+
+	.profile-stat-label {
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.profile-stat-value {
+		color: var(--text-base);
+		font-size: var(--t-20);
+		font-weight: 800;
+		letter-spacing: var(--tracking-tight);
+	}
+
+	/* Last 30 days ----------------------------------------------------- */
+	.profile-activity {
+		display: flex;
+		flex-direction: column;
+		gap: 0.625rem;
+		padding: 0.85rem 1rem;
+		border: 1px solid var(--border-base);
+		border-radius: 1.25rem;
+		background: var(--bg-popover);
+	}
+
+	.profile-activity-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.profile-activity-label {
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.profile-activity-meta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		font-weight: 700;
+	}
+
+	.profile-activity-meta .num {
+		color: var(--color-primary);
+	}
+
+	.profile-activity-grid {
+		display: grid;
+		grid-template-columns: repeat(15, minmax(0, 1fr));
+		gap: 0.3rem;
+	}
+
+	.profile-activity-grid span {
+		aspect-ratio: 1;
+		border-radius: 0.25rem;
+		background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+	}
+
+	.profile-activity-grid span.is-active {
+		background: var(--color-primary);
+	}
+
+	/* Achievements ----------------------------------------------------- */
+	.profile-achievements-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-bottom: 0.625rem;
+	}
+
+	.profile-achievements-all {
+		border: 0;
+		background: transparent;
+		color: var(--color-primary);
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+		cursor: pointer;
+	}
+
+	.profile-achievements-rail {
+		display: flex;
+		gap: 0.625rem;
+		overflow-x: auto;
+		padding-bottom: 0.5rem;
+		scroll-snap-type: x mandatory;
+		-webkit-overflow-scrolling: touch;
+		scrollbar-width: none;
+	}
+
+	.profile-achievements-rail::-webkit-scrollbar {
+		display: none;
+	}
+
+	.profile-achievement-card {
+		display: flex;
+		min-width: 8.5rem;
+		flex-direction: column;
+		flex-shrink: 0;
+		gap: 0.35rem;
+		padding: 0.85rem;
+		border: 1px solid var(--border-base);
+		border-radius: 1rem;
+		background: var(--bg-popover);
+		scroll-snap-align: start;
+	}
+
+	.profile-achievement-card.is-unlocked {
+		border-color: color-mix(in srgb, var(--color-primary) 30%, var(--border-base));
+	}
+
+	.profile-achievement-icon {
+		display: inline-flex;
+		width: 1.85rem;
+		height: 1.85rem;
+		align-items: center;
+		justify-content: center;
+		border-radius: 0.6rem;
+		background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+		color: var(--color-primary);
+	}
+
+	.profile-achievement-card:not(.is-unlocked) .profile-achievement-icon {
+		background: var(--bg-surface);
+		color: var(--text-muted);
+	}
+
+	.profile-achievement-name {
+		color: var(--text-base);
+		font-size: var(--t-13);
+		font-weight: 700;
+	}
+
+	.profile-achievement-sub {
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		line-height: var(--leading-snug);
+	}
+
+	/* Oracle insight --------------------------------------------------- */
+	.profile-oracle {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.85rem;
+		padding: 0.9rem 1rem;
+		border: 1px solid var(--border-base);
+		border-radius: 1.25rem;
+		background: color-mix(in srgb, var(--char-oracle) 6%, var(--bg-popover));
+	}
+
+	.profile-oracle-icon {
+		display: flex;
+		width: 2.25rem;
+		height: 2.25rem;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--char-oracle) 18%, transparent);
+	}
+
+	.profile-oracle-body {
+		display: flex;
+		min-width: 0;
+		flex: 1;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.profile-oracle-eyebrow {
+		margin: 0;
+		color: var(--char-oracle);
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.profile-oracle-text {
+		margin: 0;
+		color: var(--text-base);
+		font-size: var(--t-14);
+		line-height: var(--leading-snug);
+	}
+
+	@media (min-width: 768px) {
+		.profile-skill-grid {
+			grid-template-columns: repeat(4, minmax(0, 1fr));
+		}
+	}
+</style>

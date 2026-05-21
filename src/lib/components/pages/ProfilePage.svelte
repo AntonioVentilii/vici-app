@@ -5,9 +5,6 @@
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import ProfileDashboard from '$lib/components/profile/ProfileDashboard.svelte';
-	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
-	import FriendsList from '$lib/components/social/FriendsList.svelte';
-	import GroupManager from '$lib/components/social/GroupManager.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -71,26 +68,7 @@
 	</div>
 
 	{#if $userStore.profile}
-		<div class="space-y-7">
-			<ProfileDashboard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
-
-			<div class="space-y-4">
-				<div>
-					<h3 class="text-foreground text-sm font-bold tracking-widest uppercase">
-						{t({ locale: $localeStore, key: 'profile.activity_title' })}
-					</h3>
-					<p class="text-muted-foreground mt-1 text-sm">
-						{t({ locale: $localeStore, key: 'profile.activity_sub' })}
-					</p>
-				</div>
-				<ActivityFeed mode="user" userPrincipal={$authPrincipal ?? ''} />
-			</div>
-
-			<div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-				<FriendsList userPrincipal={$authPrincipal ?? ''} />
-				<GroupManager userPrincipal={$authPrincipal ?? ''} />
-			</div>
-		</div>
+		<ProfileDashboard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
 	{:else if $authBusy}
 		<div
 			class="border-border bg-card flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center"
