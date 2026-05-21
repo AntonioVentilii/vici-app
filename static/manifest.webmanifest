@@ -1,0 +1,29 @@
+{
+	"name": "VICI",
+	"short_name": "VICI",
+	"description": "Forecast outcomes, build a reputation, and earn XP.",
+	"start_url": "/welcome",
+	"scope": "/",
+	"display": "standalone",
+	"background_color": "#0e0d0b",
+	"theme_color": "#0e0d0b",
+	"icons": [
+		{
+			"src": "/branding/vici-app-icon.svg",
+			"sizes": "any",
+			"type": "image/svg+xml",
+			"purpose": "any maskable"
+		},
+		{
+			"src": "/branding/favicon-32.png",
+			"sizes": "32x32",
+			"type": "image/png"
+		},
+		{
+			"src": "/branding/apple-touch-icon.png",
+			"sizes": "180x180",
+			"type": "image/png",
+			"purpose": "any"
+		}
+	]
+}
