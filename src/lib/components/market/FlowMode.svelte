@@ -862,15 +862,15 @@
 		width: 2rem;
 		height: 2rem;
 		border-radius: 999px;
-		background: var(--ink-line);
-		color: var(--parchment);
+		background: var(--border-base);
+		color: var(--text-base);
 		transition:
 			transform 0.15s ease,
 			background-color 0.2s ease;
 	}
 	.flow-icon-btn:active {
 		transform: scale(0.985);
-		background: rgba(242, 236, 220, 0.15);
+		background: var(--border-strong);
 	}
 
 	.flow-progress {
@@ -883,13 +883,13 @@
 		flex: 1;
 		height: 3px;
 		border-radius: 999px;
-		background: var(--ink-line);
+		background: var(--border-base);
 		overflow: hidden;
 	}
 	.flow-progress-fill {
 		height: 100%;
 		width: var(--p);
-		background: linear-gradient(90deg, var(--laurel-deep), var(--laurel));
+		background: linear-gradient(90deg, var(--color-primary), var(--laurel));
 		border-radius: inherit;
 		transition: width 450ms cubic-bezier(0.22, 1, 0.36, 1);
 	}
@@ -929,14 +929,14 @@
 		gap: 6px;
 		padding: 4px 9px 4px 6px;
 		background: var(--bg-surface);
-		color: var(--parchment-dim);
+		color: var(--text-muted);
 		transition:
 			transform var(--d-state) var(--ease-vici),
 			background-color var(--d-state) var(--ease-vici);
 	}
 	.flow-stat-flame.is-hot {
-		background: linear-gradient(135deg, var(--laurel-deep), var(--laurel));
-		color: var(--ink);
+		background: linear-gradient(135deg, var(--color-primary), var(--laurel));
+		color: var(--color-primary-foreground);
 		box-shadow: 0 4px 12px var(--laurel-glow);
 	}
 	.flow-flame-meta {
@@ -984,8 +984,8 @@
 		gap: 0.75rem;
 		padding: 10px 16px;
 		border-radius: 999px;
-		background: linear-gradient(135deg, var(--laurel-deep), var(--laurel));
-		color: var(--ink);
+		background: linear-gradient(135deg, var(--color-primary), var(--laurel));
+		color: var(--color-primary-foreground);
 		font-size: 13px;
 		font-weight: 900;
 		letter-spacing: 0.02em;
@@ -995,7 +995,7 @@
 	.combo-banner-xp {
 		padding: 3px 8px;
 		border-radius: 999px;
-		background: rgba(14, 13, 11, 0.2);
+		background: color-mix(in srgb, var(--color-primary-foreground) 16%, transparent);
 		font-size: 11px;
 	}
 
@@ -1015,7 +1015,7 @@
 		font-size: var(--t-32);
 		font-weight: 600;
 		letter-spacing: var(--tracking-snug);
-		color: var(--parchment);
+		color: var(--text-base);
 		margin: 0 0 0.5rem;
 	}
 	.empty-deck-sub {
@@ -1039,18 +1039,19 @@
 		gap: 2px;
 		padding: 8px 16px;
 		border-radius: var(--r-pill);
-		background: rgba(14, 13, 11, 0.92);
-		border: 1px solid var(--ink-line-strong);
-		color: var(--parchment-mute);
+		background: var(--bg-popover);
+		border: 1px solid var(--border-strong);
+		color: var(--text-muted);
 		font-size: 13px;
-		box-shadow: var(--shadow-toast);
+		box-shadow: var(--shadow-card);
 	}
 	.streak-break-sub {
 		font-size: 10px;
 		font-weight: 600;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
-		color: var(--parchment-faint);
+		color: var(--text-muted);
+		opacity: 0.56;
 	}
 
 	.flow-stage {
@@ -1111,7 +1112,7 @@
 		letter-spacing: -0.02em;
 		background: var(--bg-popover);
 		color: var(--laurel);
-		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+		box-shadow: var(--shadow-card);
 		animation: xpPop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 	}
 	.xp-pop-label {
@@ -1135,12 +1136,12 @@
 		gap: 4px;
 		padding: 14px 22px;
 		font-size: 30px;
-		color: var(--laurel);
-		border: 2px solid var(--laurel);
-		background: rgba(14, 13, 11, 0.92);
+		color: var(--color-primary);
+		border: 2px solid var(--color-primary);
+		background: var(--bg-popover);
 		box-shadow:
 			0 0 32px var(--laurel-glow),
-			var(--inset-hi);
+			var(--shadow-card);
 		animation:
 			xpPopBonus 1.8s var(--ease-vici) forwards,
 			none;
@@ -1150,7 +1151,7 @@
 		font-style: italic;
 		font-size: 14px;
 		font-weight: 400;
-		color: var(--parchment-dim);
+		color: var(--text-muted);
 		letter-spacing: 0;
 		text-transform: none;
 		line-height: 1.1;
@@ -1221,7 +1222,7 @@
 		height: 2rem;
 		border-radius: 999px;
 		background: var(--bg-popover);
-		color: var(--parchment);
+		color: var(--text-base);
 		font-size: 18px;
 		font-weight: 900;
 		line-height: 1;
@@ -1246,7 +1247,7 @@
 		font-family: var(--font-mono);
 		font-size: 15px;
 		font-weight: 900;
-		color: var(--parchment);
+		color: var(--text-base);
 		outline: none;
 		font-variant-numeric: tabular-nums;
 		-moz-appearance: textfield;
@@ -1260,7 +1261,7 @@
 		font-size: 10px;
 		font-weight: 900;
 		letter-spacing: 0.08em;
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 
 	.flow-actions {
@@ -1291,7 +1292,7 @@
 		font-size: 9px;
 		font-weight: 900;
 		letter-spacing: 0.18em;
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 
 	.flow-action-no {
@@ -1305,7 +1306,7 @@
 		width: 2.75rem;
 		height: 2.75rem;
 		border: 3px solid var(--border-strong);
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 		box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
 	}
 	.flow-action-yes {
@@ -1324,7 +1325,7 @@
 		font-size: 10px;
 		font-weight: 700;
 		letter-spacing: 0.14em;
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 		text-transform: uppercase;
 		margin-top: 0.25rem;
 	}
@@ -1338,7 +1339,7 @@
 		border: 1.5px solid var(--border-strong);
 		border-radius: 6px;
 		background: var(--bg-surface);
-		color: var(--parchment);
+		color: var(--text-base);
 		font-family: inherit;
 		font-size: 11px;
 		line-height: 1;
@@ -1416,8 +1417,8 @@
 		box-shadow: var(--inset-hi);
 	}
 	.flow-end-cell-streak.is-hot {
-		background: linear-gradient(135deg, var(--laurel-deep), var(--laurel));
-		color: var(--ink);
+		background: linear-gradient(135deg, var(--color-primary), var(--laurel));
+		color: var(--color-primary-foreground);
 		box-shadow: 0 4px 12px var(--laurel-glow);
 	}
 	.flow-end-cell-flame {
@@ -1430,7 +1431,7 @@
 		color: var(--text-muted);
 	}
 	.flow-end-cell-streak.is-hot .flow-end-cell-label {
-		color: var(--ink);
+		color: var(--color-primary-foreground);
 		opacity: 0.85;
 	}
 	.flow-end-cell-value {
@@ -1441,11 +1442,12 @@
 		color: var(--text-base);
 	}
 	.flow-end-cell-streak.is-hot .flow-end-cell-value {
-		color: var(--ink);
+		color: var(--color-primary-foreground);
 	}
 	.flow-end-cell-foot {
 		font-size: 9px;
-		color: var(--parchment-faint);
+		color: var(--text-muted);
+		opacity: 0.56;
 		font-family: var(--font-display);
 		text-transform: uppercase;
 		letter-spacing: var(--tracking-allcaps);

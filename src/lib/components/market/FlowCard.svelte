@@ -279,8 +279,9 @@
 		></div>
 		<div
 			style:opacity={tintSkip}
-			style:box-shadow="inset 0 0 0 2px rgba(242, 236, 220, {tintSkip * 0.4}), inset 0 0 60px
-			rgba(242, 236, 220, {tintSkip * 0.18})"
+			style:box-shadow="inset 0 0 0 2px color-mix(in srgb, var(--text-base) {tintSkip * 40}%,
+			transparent), inset 0 0 60px color-mix(in srgb, var(--text-base) {tintSkip * 18}%,
+			transparent)"
 			class="flow-card-tint"
 		></div>
 
@@ -596,7 +597,7 @@
 		line-height: var(--leading-snug);
 		font-weight: 600;
 		letter-spacing: var(--tracking-snug);
-		color: var(--parchment);
+		color: var(--text-base);
 		overflow-wrap: anywhere;
 	}
 	@media (min-width: 400px) {
@@ -788,7 +789,7 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.25rem;
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 	.flow-rail-arrow {
 		color: var(--laurel);
@@ -798,7 +799,8 @@
 		flex: 1 1 auto;
 		text-align: center;
 		font-size: 10px;
-		color: var(--parchment-faint);
+		color: var(--text-muted);
+		opacity: 0.56;
 	}
 	@media (max-width: 360px) {
 		.flow-rail-mid {
@@ -814,8 +816,8 @@
 		align-items: center;
 		gap: 2px;
 		padding: 0.5rem 1rem;
-		background: rgba(14, 13, 11, 0.92);
-		border: 1px solid var(--ink-line-strong);
+		background: var(--bg-popover);
+		border: 1px solid var(--border-strong);
 		border-radius: var(--r-8);
 		pointer-events: none;
 		font-family: var(--font-display);
@@ -833,7 +835,7 @@
 	}
 	.flow-edge-meta {
 		font-size: 10px;
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 	.flow-edge-pill {
 		margin-top: 0.25rem;
@@ -843,8 +845,8 @@
 		font-weight: 700;
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
-		color: var(--parchment);
-		background: var(--ink-elevated);
+		color: var(--text-base);
+		background: var(--bg-surface);
 	}
 	.flow-edge-yes {
 		top: 1.25rem;
@@ -862,6 +864,6 @@
 		bottom: 30%;
 		left: 50%;
 		border-color: var(--border-strong);
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 </style>

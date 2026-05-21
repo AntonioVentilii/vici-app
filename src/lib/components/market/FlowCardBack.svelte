@@ -372,7 +372,7 @@
 		height: 7px;
 		border-radius: var(--r-pill);
 		overflow: hidden;
-		background: var(--ink-line);
+		background: var(--border-base);
 	}
 
 	.flow-split-no {

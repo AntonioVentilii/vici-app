@@ -61,7 +61,7 @@
 	}
 
 	.motion-beat.is-hard {
-		background: rgba(14, 13, 11, 0.42);
+		background: color-mix(in srgb, var(--bg-base) 42%, transparent);
 	}
 
 	.motion-beat-inner {
@@ -93,7 +93,7 @@
 		margin: 0;
 		font-size: 1rem;
 		line-height: var(--leading-snug);
-		color: var(--parchment);
+		color: var(--text-base);
 	}
 
 	.motion-beat-xp {

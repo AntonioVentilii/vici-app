@@ -51,7 +51,7 @@
 		{#each events.slice(0, 2) as event, i (event.label + String(event.day))}
 			{@const x = eventMarkerX({ day: event.day, eventCount: points.length, width })}
 			<line
-				stroke="var(--ink-line)"
+				stroke="var(--border-base)"
 				stroke-dasharray="2 3"
 				stroke-width="1"
 				x1={x}

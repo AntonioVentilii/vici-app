@@ -115,7 +115,7 @@
 		margin: 0.35rem 0 0;
 		font-size: var(--t-13);
 		line-height: var(--leading-normal);
-		color: var(--parchment-mute);
+		color: var(--text-muted);
 	}
 
 	.flow-invite-actions {
@@ -142,7 +142,7 @@
 		font-size: var(--t-13);
 		font-weight: 600;
 		letter-spacing: 0.06em;
-		color: var(--parchment);
+		color: var(--text-base);
 	}
 
 	:global(.flow-invite-share) {
