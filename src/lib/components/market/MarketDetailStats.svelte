@@ -20,7 +20,7 @@
 
 <div class="detail-stats">
 	<div class="detail-stat">
-		<span class="allcaps">Total calls</span>
+		<span class="allcaps">Total volume</span>
 		<div class="detail-stat-value">
 			<span class="num">
 				{formatVolume({ volume: totalVolume, decimals: tokenDecimals, symbol: '' })}
