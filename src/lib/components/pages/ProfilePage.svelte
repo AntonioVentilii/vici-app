@@ -29,7 +29,7 @@
 	});
 </script>
 
-<div class="space-y-12 pb-24">
+<div class="space-y-10 pb-24">
 	<SectionHeader
 		description={t({ locale: $localeStore, key: 'profile.sub' })}
 		highlight={t({ locale: $localeStore, key: 'profile.eyebrow' })}
@@ -37,20 +37,38 @@
 	/>
 
 	{#if $userStore.profile}
-		<div class="space-y-12">
+		<div class="space-y-7">
 			<ProfileDashboard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
 
-			<div class="border-border bg-card rounded-lg border p-8">
-				<AvatarSystem profile={$userStore.profile} />
-			</div>
-
-			<div class="grid grid-cols-1 gap-8 md:grid-cols-2">
-				<FriendsList userPrincipal={$authPrincipal ?? ''} />
-				<GroupManager userPrincipal={$authPrincipal ?? ''} />
-			</div>
-
-			<div class="space-y-8 pt-8">
+			<div class="space-y-4">
+				<div>
+					<h3 class="text-foreground text-sm font-bold tracking-widest uppercase">
+						{t({ locale: $localeStore, key: 'profile.activity_title' })}
+					</h3>
+					<p class="text-muted-foreground mt-1 text-sm">
+						{t({ locale: $localeStore, key: 'profile.activity_sub' })}
+					</p>
+				</div>
 				<ActivityFeed mode="user" userPrincipal={$authPrincipal ?? ''} />
+			</div>
+
+			<div class="grid grid-cols-1 gap-6 xl:grid-cols-[0.8fr_1.2fr]">
+				<div class="border-border bg-card shadow-card rounded-[1.75rem] border p-6">
+					<div class="mb-5">
+						<h3 class="text-foreground text-sm font-bold tracking-widest uppercase">
+							{t({ locale: $localeStore, key: 'profile.identity_studio' })}
+						</h3>
+						<p class="text-muted-foreground mt-1 text-sm">
+							{t({ locale: $localeStore, key: 'profile.identity_studio_sub' })}
+						</p>
+					</div>
+					<AvatarSystem profile={$userStore.profile} />
+				</div>
+
+				<div class="grid grid-cols-1 gap-6">
+					<FriendsList userPrincipal={$authPrincipal ?? ''} />
+					<GroupManager userPrincipal={$authPrincipal ?? ''} />
+				</div>
 			</div>
 		</div>
 	{:else}

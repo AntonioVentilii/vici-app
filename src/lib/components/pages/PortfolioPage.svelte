@@ -1,13 +1,10 @@
 <script lang="ts">
-	import { nonNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import type { ClearingDid } from '$declarations';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioStats from '$lib/components/portfolio/PortfolioStats.svelte';
 	import PositionTable from '$lib/components/portfolio/PositionTable.svelte';
 	import TradeHistoryTable from '$lib/components/portfolio/TradeHistoryTable.svelte';
-	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
-	import ProfileCard from '$lib/components/social/ProfileCard.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
@@ -15,12 +12,10 @@
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
-	import { authPrincipal } from '$lib/derived/user.derived';
 	import { listSeriesCategories } from '$lib/services/category.services';
 	import { getPositions } from '$lib/services/position.services';
 	import { getUserTradeHistory } from '$lib/services/trade.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { userStore } from '$lib/stores/user.store';
 	import type { SeriesCategory } from '$lib/types/category';
 	import type { Position } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
@@ -59,13 +54,11 @@
 	};
 
 	onMount(() => {
-		loadData();
-	});
-
-	$effect(() => {
-		if (nonNullish($balanceDomain)) {
+		const unsubscribe = balanceDomain.subscribe(() => {
 			loadData();
-		}
+		});
+
+		return unsubscribe;
 	});
 
 	const getMarketById = (id: string) => $markets.find((m) => m.id === id);
@@ -101,7 +94,7 @@
 
 <svelte:document onviciRefreshPositions={loadData} />
 
-<div class="space-y-8">
+<div class="space-y-7 pb-24">
 	<SectionHeader
 		description={t({ locale: $localeStore, key: 'portfolio.sub' })}
 		highlight={t({ locale: $localeStore, key: 'portfolio.eyebrow' })}
@@ -113,28 +106,19 @@
 	{:else}
 		<PortfolioStats
 			activeMarketsCount={positions.length}
-			pnlVariant={totalPnL >= 0 ? 'success' : 'default'}
+			openOrdersCount={$orders.length}
+			pnlVariant={totalPnL >= 0 ? 'success' : 'warning'}
 			totalHoldings={portfolioHoldingsLabel}
 			totalPnL={portfolioPnLLabel}
+			tradeHistoryCount={tradeHistory.length}
 		/>
 
 		<PositionTable {categoryMappings} markets={$markets} {positions} />
 
-		<div class="grid grid-cols-1 gap-8 xl:grid-cols-2">
+		<div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
 			<OpenOrdersTable markets={$markets} onRefresh={loadData} orders={$orders} />
 
 			<TradeHistoryTable events={tradeHistory} markets={$markets} />
-		</div>
-
-		<div class="grid grid-cols-1 gap-8 lg:grid-cols-3">
-			<div class="lg:col-span-1">
-				{#if nonNullish($userStore.profile)}
-					<ProfileCard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
-				{/if}
-			</div>
-			<div class="lg:col-span-2">
-				<ActivityFeed mode="friends" userPrincipal={$authPrincipal ?? ''} />
-			</div>
 		</div>
 	{/if}
 </div>
