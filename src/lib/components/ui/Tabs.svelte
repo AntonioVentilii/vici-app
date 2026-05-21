@@ -1,5 +1,6 @@
 <script lang="ts">
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
+	import { haptic } from '$lib/utils/haptics.utils';
 
 	interface TabOption {
 		value: string;
@@ -19,7 +20,12 @@
 	);
 
 	const handleTabClick = (value: string) => {
+		if (value === activeTab) {
+			return;
+		}
+
 		activeTab = value;
+		haptic('light-tap');
 		onTabChange?.(value);
 	};
 </script>
