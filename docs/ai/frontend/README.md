@@ -6,85 +6,44 @@ it once per session.
 
 > Higher up the chain: [`AGENTS.md`](../../../AGENTS.md) → [`docs/ai/`](../README.md).
 
-## Pre-flight checklist (every change)
+## Vici-specific things to check (every change)
 
-- [ ] I read [`AGENTS.md`](../../../AGENTS.md) and the
-      [10 commandments](../../../AGENTS.md#2-the-10-commandments-read-before-every-change).
-- [ ] I know which folder my code belongs in — see [`structure.md`](./structure.md).
-- [ ] I checked [`reusability.md`](./reusability.md) for an existing
-      component / util / store / service before creating one.
-- [ ] My code follows [`stack-and-patterns.md`](./stack-and-patterns.md)
-      (Svelte 5 runes, named `Props` interface, no `any`).
-- [ ] If I'm aligning a screen / token / asset with the app design, I
-      checked and updated [`design.md`](./design.md) in the same PR.
-- [ ] No bare clickable `<div>`s; labelled inputs; `aria-hidden` on
-      decorative icons — [`a11y.md`](./a11y.md).
-- [ ] Terminology check: **prediction**, never "bet". `_ms` for milliseconds,
+Generic agent hygiene (read first, run lint/check, atomic PRs) is in
+[`AGENTS.md`](../../../AGENTS.md) and [`pr-and-ci.md`](../pr-and-ci.md).
+What is specific to Vici:
+
+- [ ] **Reuse:** I checked [`reusability.md`](./reusability.md) for an
+      existing component / util / store / service before creating one. If
+      I added a new shared one, I updated the catalog in the same PR.
+- [ ] **Terminology:** **prediction**, never "bet". `_ms` for milliseconds,
       `_ns` for nanoseconds.
-- [ ] I have or extended tests where the [`testing.md`](./testing.md) policy
-      requires (note: testing is currently opt-in — see that page).
-- [ ] No `0n` literals; no relative imports across folders under `src/`;
-      no `return undefined;` (eslint enforces).
-- [ ] Local quality gates pass —
-      [`../pr-and-ci.md`](../pr-and-ci.md#4-local-quality-gates).
-- [ ] PR title + body match conventions — [`../pr-and-ci.md`](../pr-and-ci.md).
-- [ ] If I introduced a new pattern, I updated `docs/ai/**` in the same PR
+- [ ] **A11y:** no bare clickable `<div>`s; labelled inputs; `aria-hidden`
+      on decorative icons. See [`a11y.md`](./a11y.md).
+- [ ] **Eslint landmines:** no `0n` literals (use `ZERO`); no relative
+      imports across folders under `src/`; no `return undefined;`.
+- [ ] **Design rule:** I did **not** reference any temporary or external
+      design source material (folder name, file name, section number) in
+      code, comments, commit message, or PR body.
+- [ ] **Meta-update:** if I introduced a new pattern / shared component /
+      shared type / workflow, I updated `docs/ai/**` in the same PR
       ([meta-update rule](../governance.md#meta-update-rule)).
 
-## Stack at a glance
+## Stack & layout
 
-- **SvelteKit 2 + Svelte 5 (runes)**, TypeScript everywhere.
-- **Tailwind v4** (`@tailwindcss/postcss` + `@tailwindcss/vite`) with the
-  design tokens defined in [`src/app.css`](../../../src/app.css)
-  (`primary`, `background`, `card`, `card-border`, …).
-- **Lucide** for icons (`lucide-svelte`).
-- **`@junobuild/core`** for the auth + datastore client.
-- **`@icp-sdk/canisters`** + **`@dfinity/utils`** for IC actor / utility
-  plumbing.
-- **`ethers`** for ETH-side helpers (used in collateral flows).
-- **`decimal.js`** for fixed-precision math; **`nanoid`** for IDs.
-- **ESLint preset:** `@dfinity/eslint-config-oisy-wallet` (svelte + vitest
-  configs). Local rule `local-rules/no-relative-imports` is **`error`** under
-  `src/**`. `0n` and `return undefined;` are also flagged. See
-  [`eslint.config.js`](../../../eslint.config.js).
-- **No test runner is wired yet** — see [`testing.md`](./testing.md). When
-  the first Vitest spec lands, that page becomes the contract.
-- **Path aliases** (declared in
-  [`svelte.config.js`](../../../svelte.config.js)): `$declarations`,
-  `$routes`, `$satellite`, `$root`. The default `$lib` (= `src/lib`) is
-  provided by SvelteKit.
+The stack is `package.json`; the folder layout is `ls src/lib/`. Use the
+[`structure.md`](./structure.md) decision tree to place new files, and
+[`stack-and-patterns.md`](./stack-and-patterns.md) for Svelte 5 / TS / Tailwind
+idioms.
 
-## Where things go (one-liner)
+Non-obvious points the codebase will not tell you:
 
-```
-src/
-├── app.{css,html,d.ts}        Theme tokens, base HTML, ambient types
-├── routes/                    SvelteKit file-based routes
-│   ├── (app)/                 Authenticated app group: /, /flow, /markets/[id], …
-│   │   ├── +layout.svelte     App shell (gates onboarding, mounts MobileNav)
-│   │   └── +page.svelte       Home page (markets feed)
-│   └── auth/                  OAuth callback + delegation handling
-├── lib/
-│   ├── components/            UI grouped by feature (admin, market, wallet, social, …)
-│   │   └── ui/                App-local UI primitives (Button, Card, Modal, …)
-│   ├── services/              Side-effectful orchestration (`*.services.ts`)
-│   ├── api/                   Wrappers around generated declarations (`*.api.ts`)
-│   ├── canisters/             IC actor factories (`*.canister.ts`)
-│   ├── stores/                Svelte stores
-│   ├── derived/               Derived stores
-│   ├── schema/                Zod schemas for typed boundaries
-│   ├── validation/            Validation helpers
-│   ├── enums/                 Plain TS enums (UserRole, Permission, …)
-│   ├── types/                 TS interfaces / types
-│   ├── constants/             Static config / lookup tables / route paths
-│   ├── utils/                 Pure helpers — no I/O, no DOM
-│   ├── actors/                Generic actor helpers
-│   └── actions/               Svelte `use:` actions (e.g. click-outside)
-├── satellite/                 Juno satellite (TS canister functions) — see ../satellite/
-└── declarations/              Generated bindings (DO NOT hand-edit)
-```
-
-Full taxonomy and naming conventions: [`structure.md`](./structure.md).
+- ESLint's local rule `local-rules/no-relative-imports` is **`error`** under
+  `src/**` — always import via the aliases in
+  [`svelte.config.js`](../../../svelte.config.js).
+- `0n` and `return undefined;` are eslint-flagged — use `ZERO` from
+  `$lib/constants/app.constants` and bare `return;`.
+- No test runner is wired yet — when the first Vitest spec lands,
+  [`testing.md`](./testing.md) becomes the contract.
 
 ## What "good" looks like in this repo
 

@@ -5,7 +5,7 @@
 > - Folder taxonomy + naming: [`docs/ai/frontend/structure.md`](../../docs/ai/frontend/structure.md)
 > - Patterns: [`docs/ai/frontend/stack-and-patterns.md`](../../docs/ai/frontend/stack-and-patterns.md)
 > - Reusability catalog: [`docs/ai/frontend/reusability.md`](../../docs/ai/frontend/reusability.md)
-> - 10 commandments: [`AGENTS.md`](../../AGENTS.md#2-the-10-commandments-read-before-every-change)
+> - Project-specific commandments: [`AGENTS.md`](../../AGENTS.md#2-project-specific-commandments)
 >
 > This card is a Claude-only summary. If it disagrees with the docs
 > above, the docs above win.

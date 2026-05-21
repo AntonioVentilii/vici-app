@@ -13,71 +13,64 @@ file. If it doesn't, point it here.
 ## 1. What this repo is
 
 Vici is a prediction-market platform on the Internet Computer. The repo is
-multi-stack but **frontend-heavy**: the on-chain risk engine lives in a
-separate repository ([`icdc-core`](https://github.com/AntonioVentilii/icdc-core),
+multi-stack but **frontend-heavy**. The on-chain risk engine lives in a
+separate repo ([`icdc-core`](https://github.com/AntonioVentilii/icdc-core),
 typically checked out at `../icdc-core/`).
 
-| Stack                    | Path                              | Language                                  | Status                                                           |
-| ------------------------ | --------------------------------- | ----------------------------------------- | ---------------------------------------------------------------- |
-| Frontend                 | `src/`, `src/routes/`, `src/lib/` | SvelteKit 2 + Svelte 5 + TS + Tailwind v4 | **AI-active**                                                    |
-| Juno satellite functions | `src/satellite/`                  | TypeScript (`@junobuild/functions`)       | **AI-active**                                                    |
-| Generated bindings       | `src/declarations/`               | TS / Candid (generated)                   | **Do not hand-edit**                                             |
-| Init / ops scripts       | `scripts/`                        | Bash + Node                               | AI-assisted                                                      |
-| dfx wiring               | `dfx.json`, `juno.config.ts`      | JSON / TS                                 | Restricted — boundary, see [governance](./docs/ai/governance.md) |
-| CI / infra               | `.github/workflows/`              | YAML                                      | Restricted                                                       |
-| **Risk engine (Rust)**   | **`../icdc-core/`**               | Rust (canisters)                          | **External repo — see §4**                                       |
+What `ls`, `package.json`, and `tsconfig*.json` already tell you, this file
+will not. What they cannot tell you:
 
-The platform uses SvelteKit file-based routes under `src/routes/(app)/`
-(`/`, `/flow`, `/markets/[id]`, …). The mobile tab bar
-(`src/lib/components/layout/MobileNav.svelte`) compares `page.url.pathname`
-to `AppPath` from `src/lib/constants/routes.constants.ts`; visible nav
-items are configured in `src/lib/constants/nav.constants.ts`.
+- **`src/declarations/**`is generated** by`npm run did`from upstream`.did` files. Never hand-edit.
+- **`src/satellite/satellite.did`, `satellite_extension.did`, and
+  `api-schemas.ts` are generated** by `npm run juno:functions:build`.
+- **`static/workers/**`is synced from`@junobuild/core`by`npm run postinstall`\*\* — don't hand-edit.
+- **The risk engine is in [`../icdc-core/`](../icdc-core/)** — a separate
+  repo with its own `AGENTS.md`. Don't try to modify Rust from this repo.
+- **Local replica is the Juno emulator.** Never run `dfx start`.
+
+The full restricted-paths table lives in
+[`docs/ai/governance.md`](./docs/ai/governance.md#boundaries).
 
 ---
 
-## 2. The 10 commandments (read before every change)
+## 2. Project-specific commandments
 
-1. **Always idiomatic.** Use the conventions of the surrounding code (this
-   repo's style), not the ones from your training data.
-2. **Always atomic.** One logical change per PR. No drive-by refactors. No
-   "while I'm here" edits.
-3. **Always small.** Prefer 5 small PRs over 1 big PR. Recent merged history
-   is the model: `fix(collateral): use nanoid for operation IDs`,
-   `feat: count docs instead of list`, `feat: upgrade juno functions v0.9 …`.
-4. **Always reusable.** Before adding a new component / util / constant /
-   service / store, search for an existing one. Extend the catalog in
-   [`docs/ai/frontend/reusability.md`](./docs/ai/frontend/reusability.md)
-   instead of duplicating.
-5. **Always typed.** No `any`, no `as unknown as …`, no ignored `svelte-check`
-   warnings. Generated Candid types from `$declarations/**` are the source of
-   truth at canister boundaries.
-6. **Always a11y safe.** No bare clickable `<div>`s. Real `<button>` / `<a>`
-   elements, labelled inputs, decorative icons `aria-hidden`. See
-   [`docs/ai/frontend/a11y.md`](./docs/ai/frontend/a11y.md).
-   _(There is no i18n layer yet — keep user copy in components and concentrate
-   it where it can later be extracted.)_
-7. **Respect the structure.** New code goes in the folder that already owns
-   that concern (`$lib/{components,services,stores,derived,api,canisters,utils,constants,types,schema,enums,validation}`,
-   `$satellite/{services,utils}`). The taxonomy is closed — see
+Universal "be a good agent" rules (atomic PRs, small diffs, no `any`, no
+new deps without approval, no force-pushing without an explicit named
+ask) are enforced via CI, eslint, the boundary table in
+[`governance.md`](./docs/ai/governance.md), and the PR template in
+[`pr-and-ci.md`](./docs/ai/pr-and-ci.md). What is **specific to Vici**:
+
+1. **Reuse over rebuild.** Before adding a new component / util / constant /
+   service / store, search
+   [`docs/ai/frontend/reusability.md`](./docs/ai/frontend/reusability.md).
+   If you add a new shared one, extend the catalog in the same PR.
+2. **A11y.** No bare clickable `<div>`s. Real `<button>` / `<a>` elements,
+   labelled inputs, decorative icons `aria-hidden`. See
+   [`docs/ai/frontend/a11y.md`](./docs/ai/frontend/a11y.md). (There is no
+   i18n layer yet — keep user copy concentrated where it can later be
+   extracted.)
+3. **The folder taxonomy is closed.** No new top-level folders under
+   `src/` or `src/lib/` without explicit ask. New code goes in the folder
+   that already owns the concern — see
    [`docs/ai/frontend/structure.md`](./docs/ai/frontend/structure.md) and
    [`docs/ai/satellite/structure.md`](./docs/ai/satellite/structure.md).
-8. **Respect terminology.** Use **"prediction"**, never "bet" — in code,
-   comments, and any user-visible copy. Time variables end in `_ms`
-   (milliseconds — business logic) or `_ns` (nanoseconds — protocol /
-   idempotency). **Never reference temporary or external design source
-   materials** — folder names, file names (e.g. spec exports), or
-   section numbers from those files — anywhere in the repo (code,
-   comments, commit messages, PR bodies). The product reflects **the**
+4. **Terminology.** Use **"prediction"**, never "bet" — in code, comments,
+   and user-visible copy. Time variables end in `_ms` (milliseconds,
+   business logic) or `_ns` (nanoseconds, protocol / idempotency).
+   **Never reference temporary or external design source materials** —
+   folder names, file names (e.g. spec exports), or section numbers from
+   those files — anywhere in the repo. The product reflects **the**
    design — there is no "new", "old", "redesigned", or "previous"
    design. When a code comment needs to cite a rule, point at
-   [`docs/ai/frontend/design.md`](./docs/ai/frontend/design.md) (§ 7
-   for Flow Mode); describe behaviour and intent, not its source.
-9. **Respect CI.** Run the local gates from
-   [`docs/ai/pr-and-ci.md`](./docs/ai/pr-and-ci.md#local-quality-gates)
+   [`docs/ai/frontend/design.md`](./docs/ai/frontend/design.md) (§ 7 for
+   Flow Mode); describe behaviour and intent, not its source.
+5. **Eslint disallowed list is hard policy.** `0n` literal → `ZERO` from
+   `$lib/constants/app.constants`. `return undefined;` → bare `return;`.
+   `local-rules/no-relative-imports` is `error` under `src/**` — use the
+   aliases declared in [`svelte.config.js`](./svelte.config.js).
+6. **Run the local gates** ([`pr-and-ci.md`](./docs/ai/pr-and-ci.md#local-quality-gates))
    before opening a PR.
-10. **Don't overengineer.** A 10x engineer ships the smallest correct change.
-    No new abstractions unless they remove duplication that already exists.
-    No new dependencies without explicit user approval.
 
 ---
 
