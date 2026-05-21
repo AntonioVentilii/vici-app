@@ -138,7 +138,7 @@ export const frMessages = {
 	'nav.admin': 'Admin',
 	'nav.cta': 'Rejoindre',
 	'nav.flow': 'Flow',
-	'nav.leaderboard': 'Classement',
+	'nav.leaderboard': 'Social',
 	'nav.markets': 'Marchés',
 	'nav.portfolio': 'Portefeuille',
 	'nav.profile': 'Profil',

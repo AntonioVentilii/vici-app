@@ -136,7 +136,7 @@ export const itMessages = {
 	'nav.admin': 'Admin',
 	'nav.cta': 'Unisciti ora',
 	'nav.flow': 'Flow',
-	'nav.leaderboard': 'Classifica',
+	'nav.leaderboard': 'Social',
 	'nav.markets': 'Mercati',
 	'nav.portfolio': 'Portafoglio',
 	'nav.profile': 'Profilo',

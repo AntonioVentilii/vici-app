@@ -137,7 +137,7 @@ export const ptMessages = {
 	'nav.admin': 'Admin',
 	'nav.cta': 'Entrar agora',
 	'nav.flow': 'Flow',
-	'nav.leaderboard': 'Classificação',
+	'nav.leaderboard': 'Social',
 	'nav.markets': 'Mercados',
 	'nav.portfolio': 'Carteira',
 	'nav.profile': 'Perfil',

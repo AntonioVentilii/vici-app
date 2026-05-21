@@ -138,7 +138,7 @@ export const deMessages = {
 	'nav.admin': 'Admin',
 	'nav.cta': 'Jetzt beitreten',
 	'nav.flow': 'Flow',
-	'nav.leaderboard': 'Rangliste',
+	'nav.leaderboard': 'Social',
 	'nav.markets': 'Märkte',
 	'nav.portfolio': 'Portfolio',
 	'nav.profile': 'Profil',

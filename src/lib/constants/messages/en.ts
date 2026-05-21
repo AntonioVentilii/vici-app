@@ -137,7 +137,7 @@ export const enMessages = {
 	'nav.admin': 'Admin',
 	'nav.cta': 'Join now',
 	'nav.flow': 'Flow',
-	'nav.leaderboard': 'Leaderboard',
+	'nav.leaderboard': 'Social',
 	'nav.markets': 'Markets',
 	'nav.portfolio': 'Portfolio',
 	'nav.profile': 'Profile',

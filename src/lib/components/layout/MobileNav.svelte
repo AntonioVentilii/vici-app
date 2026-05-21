@@ -50,14 +50,14 @@
 
 <nav
 	style:grid-template-columns={mobileNavColumns}
-	class="border-ink-line fixed bottom-0 left-0 z-50 grid w-full border-t bg-[rgba(14,13,11,0.85)] px-2 py-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] backdrop-blur-[24px] md:hidden"
+	class="border-border bg-background/90 shadow-card fixed bottom-0 left-0 z-50 grid w-full border-t px-2 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] backdrop-blur-2xl md:hidden"
 >
 	{#each visibleNavItems as { labelKey, path, mobileIcon: Icon } (path)}
 		{@const isFlow = labelKey === 'nav.flow'}
 		<button
 			class="ease-vici duration-state relative flex flex-col items-center justify-center gap-1 transition-colors
 				{isFlow
-				? 'bg-primary text-ink shadow-mobilenav-active mx-1 -mt-2.5 rounded-2xl py-3'
+				? 'bg-primary text-primary-foreground shadow-mobilenav-active mx-1 -mt-2.5 rounded-2xl px-1 py-3'
 				: isActive(path)
 					? 'text-foreground py-2'
 					: 'text-muted-foreground hover:text-foreground py-2'}"

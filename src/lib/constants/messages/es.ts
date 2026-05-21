@@ -137,7 +137,7 @@ export const esMessages = {
 	'nav.admin': 'Admin',
 	'nav.cta': 'Únete ahora',
 	'nav.flow': 'Flow',
-	'nav.leaderboard': 'Clasificación',
+	'nav.leaderboard': 'Social',
 	'nav.markets': 'Mercados',
 	'nav.portfolio': 'Cartera',
 	'nav.profile': 'Perfil',

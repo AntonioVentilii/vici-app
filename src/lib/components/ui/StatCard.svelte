@@ -36,10 +36,13 @@
 	<div class="eyebrow {sizeStyles.label}">
 		{label}
 	</div>
-	<div class="mt-1 flex items-baseline gap-2">
-		<span class="num {sizeStyles.value} font-black {variantStyles[variant]}">{value}</span>
+	<div class="mt-2 flex items-baseline gap-2">
+		<span
+			class="num {sizeStyles.value} leading-none font-black tracking-tight {variantStyles[variant]}"
+			>{value}</span
+		>
 		{#if unit}
-			<span class="text-muted-foreground text-xs font-bold uppercase">{unit}</span>
+			<span class="text-muted-foreground text-xs font-bold tracking-wide uppercase">{unit}</span>
 		{/if}
 	</div>
 </Card>
