@@ -70,6 +70,24 @@
 
 	let orderType = $state<OrderType>('MARKET');
 
+	let orderTypeLabel = $derived(
+		orderType === 'MARKET'
+			? tr({ key: 'prediction.order.instant' })
+			: tr({ key: 'prediction.order.set_price' })
+	);
+
+	let selectedOutcomeLabel = $derived.by(() => {
+		if (selectedType === 'YES') {
+			return tr({ key: 'outcome.yes' });
+		}
+
+		if (selectedType === 'NO') {
+			return tr({ key: 'outcome.no' });
+		}
+
+		return market.outcomes?.find((outcome) => outcome.id === selectedType)?.title ?? selectedType;
+	});
+
 	let loading = $state(false);
 
 	let error = $state('');
@@ -315,8 +333,8 @@
 				message: tr({
 					key: 'prediction.notification.message',
 					params: {
-						orderType,
-						side: selectedType
+						orderType: orderTypeLabel,
+						side: selectedOutcomeLabel
 					}
 				}),
 				type: 'success'
@@ -653,7 +671,7 @@
 				{#snippet busyLabel()}
 					{tr({ key: 'prediction.confirming' })}
 				{/snippet}
-				{tr({ key: 'prediction.confirm', params: { side: selectedType } })}
+				{tr({ key: 'prediction.confirm', params: { side: selectedOutcomeLabel } })}
 			</Button>
 		{:else}
 			<div class="bg-primary/10 flex flex-col items-center gap-4 rounded-2xl p-6 text-center">
