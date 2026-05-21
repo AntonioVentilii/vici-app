@@ -47,6 +47,21 @@
 	const archetype = $derived(profile?.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
 
 	const notifyOnCount = $derived(Object.values($preferencesStore.notify).filter(Boolean).length);
+	const notifyTotalCount = $derived(Object.values($preferencesStore.notify).length);
+	const visibilityOptions = $derived([
+		{
+			value: 'public',
+			label: t({ locale: $localeStore, key: 'settings.profile_visibility.public' })
+		},
+		{
+			value: 'friends',
+			label: t({ locale: $localeStore, key: 'settings.profile_visibility.friends' })
+		},
+		{
+			value: 'private',
+			label: t({ locale: $localeStore, key: 'settings.profile_visibility.private' })
+		}
+	]);
 
 	const visibilityFromProfile = (value: ProfileVisibility | undefined): SettingsVisibility => {
 		if (value === ProfileVisibility.PUBLIC) {
@@ -115,68 +130,86 @@
 	<header class="settings-appbar">
 		<button
 			class="settings-back"
-			aria-label="Back to profile"
+			aria-label={t({ locale: $localeStore, key: 'settings.back_profile' })}
 			onclick={() => goto(AppPath.Profile)}
 			type="button"
 		>
-			<ArrowLeft size={18} strokeWidth={1.8} />
+			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 		</button>
 		<h1 class="settings-title">{t({ locale: $localeStore, key: 'settings.title' })}</h1>
 		<span class="settings-appbar-spacer" aria-hidden="true"></span>
 	</header>
 
 	<div class="settings-body">
-		<SettingsSection title="Account">
+		<SettingsSection title={t({ locale: $localeStore, key: 'settings.account' })}>
 			<button class="set-identity" onclick={() => goto(AppPath.Profile)} type="button">
 				<span class="set-identity-avatar" aria-hidden="true">
 					{(profile?.nickname?.trim() ?? 'V').slice(0, 1).toUpperCase()}
 				</span>
 				<span class="set-identity-copy">
 					<span class="set-identity-handle">
-						@{profile?.nickname?.trim() ?? 'predictor'}
+						@{profile?.nickname?.trim() ??
+							t({ locale: $localeStore, key: 'settings.identity.fallback' })}
 						{#if archetype}
 							<span style:color={archetype.accent} class="set-identity-tag">{archetype.tag}</span>
 						{/if}
 					</span>
 					<span class="set-identity-meta num">
-						Lvl {profile?.level ?? 1} · {((profile?.accuracy ?? 0) * 100).toFixed(1)}% accuracy ·
-						{profile?.totalTrades ?? 0} calls
+						{t({
+							locale: $localeStore,
+							key: 'settings.identity.meta',
+							params: {
+								level: profile?.level ?? 1,
+								accuracy: ((profile?.accuracy ?? 0) * 100).toFixed(1),
+								calls: profile?.totalTrades ?? 0
+							}
+						})}
 					</span>
 				</span>
 			</button>
 
 			<SetRow
 				icon={Wallet}
-				label="Wallet"
+				label={t({ locale: $localeStore, key: 'settings.wallet' })}
 				onclick={() => goto(AppPath.Wallet)}
-				sub="{(profile?.points ?? 0).toLocaleString()} VXP available"
+				sub={t({
+					locale: $localeStore,
+					key: 'settings.wallet.sub',
+					params: { points: (profile?.points ?? 0).toLocaleString($localeStore) }
+				})}
 			/>
 
 			<SetRow
 				icon={Users}
-				label="Connected friends"
+				label={t({ locale: $localeStore, key: 'settings.friends' })}
 				muted
 				onclick={() => goto(AppPath.Profile)}
-				sub="Social graph"
+				sub={t({ locale: $localeStore, key: 'settings.friends.sub' })}
 			/>
 		</SettingsSection>
 
-		<SettingsSection title="Preferences">
+		<SettingsSection title={t({ locale: $localeStore, key: 'settings.preferences' })}>
 			<div class="settings-appearance">
-				<p class="settings-appearance-label">Appearance</p>
+				<p class="settings-appearance-label">
+					{t({ locale: $localeStore, key: 'settings.appearance' })}
+				</p>
 				<AppearancePicker />
 			</div>
 
 			<SetRow
 				icon={Bell}
-				label="Notifications"
+				label={t({ locale: $localeStore, key: 'settings.notifications' })}
 				onclick={() => goto(AppPath.Notifications)}
-				sub="{notifyOnCount} of 4 on · daily 7pm"
+				sub={t({
+					locale: $localeStore,
+					key: 'settings.notifications.sub',
+					params: { count: notifyOnCount, total: notifyTotalCount }
+				})}
 			/>
 
 			<SetSegmented
 				icon={Zap}
-				label="Flow session length"
+				label={t({ locale: $localeStore, key: 'settings.session_length' })}
 				onchange={(value) => {
 					preferencesStore.update((prefs) => ({
 						...prefs,
@@ -184,83 +217,109 @@
 					}));
 				}}
 				options={FLOW_SESSION_LENGTH_OPTIONS}
-				sub="Markets per session"
+				sub={t({ locale: $localeStore, key: 'settings.session_length.sub' })}
 				value={$preferencesStore.flowSessionLength}
 			/>
 
 			<SetSegmented
-				label="Language"
+				label={t({ locale: $localeStore, key: 'settings.language' })}
 				onchange={(value) => {
 					localeStore.set({ key: LOCALE_STORAGE_KEY, value: value as AppLocale });
 				}}
 				options={SUPPORTED_LOCALES.map((locale) => ({ value: locale.id, label: locale.label }))}
-				sub="English and Italian available now"
+				sub={t({ locale: $localeStore, key: 'settings.language.sub' })}
 				value={$localeStore}
 			/>
 
 			<SetToggle
 				checked={$preferencesStore.hapticsEnabled}
 				icon={Target}
-				label="Haptics & sound"
+				label={t({ locale: $localeStore, key: 'settings.haptics' })}
 				onchange={(value) => {
 					preferencesStore.update((prefs) => ({ ...prefs, hapticsEnabled: value }));
 				}}
-				sub="Subtle taps on YES/NO commit"
+				sub={t({ locale: $localeStore, key: 'settings.haptics.sub' })}
 			/>
 		</SettingsSection>
 
-		<SettingsSection title="Privacy & security">
+		<SettingsSection title={t({ locale: $localeStore, key: 'settings.privacy' })}>
 			<SetToggle
 				checked={true}
 				icon={Lock}
-				label="Two-factor authentication"
+				label={t({ locale: $localeStore, key: 'settings.two_factor' })}
 				onchange={() => {}}
-				sub="Enabled · authenticator app"
+				sub={t({ locale: $localeStore, key: 'settings.two_factor.sub' })}
 			/>
 
 			<SetSegmented
 				icon={Eye}
-				label="Profile visibility"
+				label={t({ locale: $localeStore, key: 'settings.profile_visibility' })}
 				onchange={(value) => {
 					void persistVisibility(value as SettingsVisibility);
 				}}
-				options={[
-					{ value: 'public', label: 'Public' },
-					{ value: 'friends', label: 'Friends' },
-					{ value: 'private', label: 'Private' }
-				]}
-				sub="Who can see your calls and accuracy"
+				options={visibilityOptions}
+				sub={t({ locale: $localeStore, key: 'settings.profile_visibility.sub' })}
 				value={settingsVisibility}
 			/>
 
 			<SetToggle
 				checked={$preferencesStore.callsPublic}
 				icon={Target}
-				label="Public call history"
+				label={t({ locale: $localeStore, key: 'settings.public_calls' })}
 				onchange={(value) => {
 					preferencesStore.update((prefs) => ({ ...prefs, callsPublic: value }));
 				}}
-				sub="Show your last 30 calls on your profile"
+				sub={t({ locale: $localeStore, key: 'settings.public_calls.sub' })}
 			/>
 		</SettingsSection>
 
-		<SettingsSection title="Help">
-			<SetRow icon={Info} label="How resolution works" muted onclick={() => {}} />
-			<SetRow icon={Search} label="Frequently asked" muted onclick={() => {}} />
-			<SetRow icon={Share2} label="Contact support" muted onclick={() => {}} />
+		<SettingsSection title={t({ locale: $localeStore, key: 'settings.help' })}>
+			<SetRow
+				icon={Info}
+				label={t({ locale: $localeStore, key: 'settings.help.resolution' })}
+				muted
+				onclick={() => {}}
+			/>
+			<SetRow
+				icon={Search}
+				label={t({ locale: $localeStore, key: 'settings.help.faq' })}
+				muted
+				onclick={() => {}}
+			/>
+			<SetRow
+				icon={Share2}
+				label={t({ locale: $localeStore, key: 'settings.help.support' })}
+				muted
+				onclick={() => {}}
+			/>
 		</SettingsSection>
 
-		<SettingsSection title="Legal">
-			<SetRow icon={Lock} label="Terms of service" muted onclick={() => {}} />
-			<SetRow icon={Eye} label="Privacy policy" muted onclick={() => {}} />
-			<SetRow icon={CircleQuestionMark} label="Resolution rules" muted onclick={() => {}} />
+		<SettingsSection title={t({ locale: $localeStore, key: 'settings.legal' })}>
+			<SetRow
+				icon={Lock}
+				label={t({ locale: $localeStore, key: 'settings.legal.terms' })}
+				muted
+				onclick={() => {}}
+			/>
+			<SetRow
+				icon={Eye}
+				label={t({ locale: $localeStore, key: 'settings.legal.privacy' })}
+				muted
+				onclick={() => {}}
+			/>
+			<SetRow
+				icon={CircleQuestionMark}
+				label={t({ locale: $localeStore, key: 'settings.legal.rules' })}
+				muted
+				onclick={() => {}}
+			/>
 		</SettingsSection>
 
 		<p class="settings-about num">VICI · v0.0.7</p>
 
 		<div class="settings-destructive">
 			<Button class="settings-signout" onclick={doSignOut} status={signOutStatus} variant="ghost">
-				Sign out
+				{t({ locale: $localeStore, key: 'settings.sign_out' })}
 			</Button>
 
 			{#if !confirmingDelete}
@@ -269,14 +328,18 @@
 					onclick={() => (confirmingDelete = true)}
 					type="button"
 				>
-					Delete account
+					{t({ locale: $localeStore, key: 'settings.delete' })}
 				</button>
 			{:else}
 				<div class="settings-confirm">
-					<p>This erases your handle, history, and XP. Cannot be undone.</p>
+					<p>{t({ locale: $localeStore, key: 'settings.delete.confirm' })}</p>
 					<div class="settings-confirm-actions">
-						<Button onclick={() => (confirmingDelete = false)} variant="ghost">Cancel</Button>
-						<Button onclick={doSignOut} variant="danger">Delete forever</Button>
+						<Button onclick={() => (confirmingDelete = false)} variant="ghost">
+							{t({ locale: $localeStore, key: 'settings.cancel' })}
+						</Button>
+						<Button onclick={doSignOut} variant="danger">
+							{t({ locale: $localeStore, key: 'settings.delete.forever' })}
+						</Button>
 					</div>
 				</div>
 			{/if}

@@ -19,9 +19,11 @@
 	import { listSeriesCategories } from '$lib/services/category.services';
 	import { getPositions } from '$lib/services/position.services';
 	import { getUserTradeHistory } from '$lib/services/trade.services';
+	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { SeriesCategory } from '$lib/types/category';
 	import type { Position } from '$lib/types/position';
+	import { t } from '$lib/utils/i18n.utils';
 	import {
 		formatPortfolioHoldingsStatLine,
 		formatPortfolioPnLStatLine
@@ -101,9 +103,9 @@
 
 <div class="space-y-8">
 	<SectionHeader
-		description="Track your active predictions and performance in real-time."
-		highlight="Portfolio"
-		title="My"
+		description={t({ locale: $localeStore, key: 'portfolio.sub' })}
+		highlight={t({ locale: $localeStore, key: 'portfolio.eyebrow' })}
+		title={t({ locale: $localeStore, key: 'portfolio.title' })}
 	/>
 
 	{#if refreshing}

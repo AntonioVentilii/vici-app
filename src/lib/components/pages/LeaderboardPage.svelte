@@ -8,7 +8,7 @@
 	import { getLeaderboard } from '$lib/services/leaderboard.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { UserProfile } from '$lib/types/profile';
-	import { t } from '$lib/utils/i18n.utils';
+	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	let loading = $state(true);
 	let leaderboard = $state<UserProfile[]>([]);
@@ -35,7 +35,7 @@
 	let podium = $derived(leaderboard.slice(0, 3));
 	let rest = $derived(leaderboard.slice(3));
 
-	// Olympic podium order: silver | gold | bronze (so #1 sits centered).
+	// Podium order keeps #1 centered.
 	let displayPodium = $derived.by(() => {
 		if (podium.length === 0) {
 			return [];
@@ -64,22 +64,22 @@
 			return 'h-28 w-28 sm:h-36 sm:w-36 border-muted-foreground/40 ring-muted-foreground/10 ring-4 opacity-100';
 		}
 
-		return 'h-24 w-24 sm:h-32 sm:w-32 border-[#CD7F32] ring-[#CD7F32]/10 ring-4 opacity-90';
+		return 'h-24 w-24 sm:h-32 sm:w-32 border-laurel-deep ring-laurel-deep/10 ring-4 opacity-90';
 	};
 
-	const getMedalEmoji = (indexInDisplay: number) => {
+	const getMedalLabelKey = (indexInDisplay: number): MessageKey => {
 		const isFirst =
 			(podium.length >= 2 && indexInDisplay === 1) || (podium.length === 1 && indexInDisplay === 0);
 
 		if (isFirst) {
-			return '🥇';
+			return 'leaderboard.medal.gold';
 		}
 
 		if (indexInDisplay === 0) {
-			return '🥈';
+			return 'leaderboard.medal.silver';
 		}
 
-		return '🥉';
+		return 'leaderboard.medal.bronze';
 	};
 </script>
 
@@ -114,9 +114,9 @@
 							owner={user.owner}
 						/>
 						<div
-							class="absolute -top-4 -right-1 text-3xl shadow-sm drop-shadow-md sm:-right-2 sm:text-4xl"
+							class="bg-card text-primary border-border absolute -top-3 -right-2 rounded-full border px-2 py-1 font-mono text-[10px] font-black tracking-[0.16em] uppercase shadow-sm sm:-right-4"
 						>
-							{getMedalEmoji(i)}
+							{t({ locale: $localeStore, key: getMedalLabelKey(i) })}
 						</div>
 					</div>
 					<div class="max-w-25 text-center sm:max-w-none">
@@ -172,11 +172,19 @@
 							</div>
 							<div class="flex items-center gap-2">
 								<span class="text-muted-foreground font-mono text-[9px] font-bold uppercase">
-									Streak: {user.dailyStreak ?? 1}d
+									{t({
+										locale: $localeStore,
+										key: 'leaderboard.row.streak',
+										params: { count: user.dailyStreak ?? 1 }
+									})}
 								</span>
 								<span class="text-border text-[9px]">•</span>
 								<span class="text-yes font-mono text-[9px] font-bold uppercase">
-									{Math.round(user.accuracy ?? 0)}% ACC
+									{t({
+										locale: $localeStore,
+										key: 'leaderboard.row.accuracy',
+										params: { accuracy: Math.round(user.accuracy ?? 0) }
+									})}
 								</span>
 							</div>
 						</div>
@@ -185,7 +193,9 @@
 						<p class="text-foreground font-mono text-xs font-black tabular-nums sm:text-sm">
 							{Math.floor(user.points ?? 0)}
 						</p>
-						<p class="text-muted-foreground text-[9px] leading-none font-bold uppercase">XP</p>
+						<p class="text-muted-foreground text-[9px] leading-none font-bold uppercase">
+							{t({ locale: $localeStore, key: 'leaderboard.row.xp' })}
+						</p>
 					</div>
 				</div>
 			{:else}

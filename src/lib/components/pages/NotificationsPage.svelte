@@ -32,14 +32,16 @@
 	<header class="notifications-appbar">
 		<button
 			class="notifications-back"
-			aria-label="Back to settings"
+			aria-label={t({ locale: $localeStore, key: 'notifications.back_settings' })}
 			onclick={() => goto(AppPath.Settings)}
 			type="button"
 		>
-			<ArrowLeft size={18} strokeWidth={1.8} />
+			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 		</button>
 		<h1 class="notifications-title">{t({ locale: $localeStore, key: 'notifications.title' })}</h1>
-		<Button onclick={markAllInboxRead} size="sm" variant="ghost">Mark read</Button>
+		<Button onclick={markAllInboxRead} size="sm" variant="ghost">
+			{t({ locale: $localeStore, key: 'notifications.mark_read' })}
+		</Button>
 	</header>
 
 	<ul class="notifications-list">

@@ -38,11 +38,16 @@
 	let cursors = $state<WalletTransactionsCursors>({});
 	let done = $state<WalletTransactionsDone>({ icp: false, ckUsdc: false, vxp: false });
 
-	let activeTab = $state('Send');
+	let activeTab = $state('send');
 
 	let isCollateralModalOpen = $state(false);
 
-	const tabs = ['History', 'Send', 'Receive'];
+	const walletTabValues = ['history', 'send', 'receive'];
+	const tabs = $derived([
+		{ value: 'history', label: t({ locale: $localeStore, key: 'wallet.tab.history' }) },
+		{ value: 'send', label: t({ locale: $localeStore, key: 'wallet.tab.send' }) },
+		{ value: 'receive', label: t({ locale: $localeStore, key: 'wallet.tab.receive' }) }
+	]);
 
 	const filteredTransactions = $derived.by(() => {
 		const allowed = new Set($walletUiTokens.map((t) => t.ledgerCanisterId));
@@ -51,8 +56,8 @@
 	});
 
 	$effect(() => {
-		if (!tabs.includes(activeTab)) {
-			[activeTab] = tabs;
+		if (!walletTabValues.includes(activeTab)) {
+			[activeTab] = walletTabValues;
 		}
 	});
 
@@ -151,13 +156,13 @@
 			recipient = '';
 
 			notificationsStore.add({
-				title: 'Success',
-				message: 'Transaction successful!',
+				title: t({ locale: $localeStore, key: 'wallet.send.success_title' }),
+				message: t({ locale: $localeStore, key: 'wallet.send.success_message' }),
 				type: 'success'
 			});
 		} catch (e: unknown) {
 			notificationsStore.add({
-				title: 'Error',
+				title: t({ locale: $localeStore, key: 'wallet.send.error_title' }),
 				message: (e as Error).message,
 				type: 'error'
 			});
@@ -198,7 +203,7 @@
 		<Tabs {tabs} bind:activeTab />
 
 		<div class="w-full p-8">
-			{#if activeTab === 'Send'}
+			{#if activeTab === 'send'}
 				{#if nonNullish(selectedToken)}
 					<WalletSend
 						{amount}
@@ -212,20 +217,21 @@
 					/>
 				{:else}
 					<p class="text-muted-foreground text-sm">
-						Loading send options… If this persists, no tokens are available for your current
-						network.
+						{t({ locale: $localeStore, key: 'wallet.send.empty' })}
 					</p>
 				{/if}
-			{:else if activeTab === 'Receive'}
+			{:else if activeTab === 'receive'}
 				<WalletReceive />
-			{:else if activeTab === 'History'}
+			{:else if activeTab === 'history'}
 				<div class="space-y-4">
 					<div class="flex items-center justify-between gap-4">
-						<div class="text-foreground text-sm font-bold">Batch size</div>
+						<div class="text-foreground text-sm font-bold">
+							{t({ locale: $localeStore, key: 'wallet.history.batch_size' })}
+						</div>
 						<div class="flex items-center gap-2">
 							<select
 								class="border-border bg-card text-foreground rounded border px-2 py-1 text-sm"
-								aria-label="Transactions batch size"
+								aria-label={t({ locale: $localeStore, key: 'wallet.history.batch_size_label' })}
 								disabled={loadingHistory}
 								onchange={(e) => {
 									batchSize = BigInt((e.target as HTMLSelectElement).value);
@@ -245,7 +251,9 @@
 
 					<div class="flex flex-col items-center gap-3 pt-6 pb-2">
 						{#if !loadingHistory && !hasMoreHistory && transactions.length > 0}
-							<div class="text-muted-foreground text-xs">All caught up.</div>
+							<div class="text-muted-foreground text-xs">
+								{t({ locale: $localeStore, key: 'wallet.history.all_caught_up' })}
+							</div>
 						{/if}
 
 						<InfiniteScroll
