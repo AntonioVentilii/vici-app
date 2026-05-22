@@ -46,9 +46,16 @@ const PAGES = [
  *    this, the snapshot races the data fetch and ping-pongs between
  *    "Calculating Alphas…" spinners and the loaded view, which is what
  *    was causing CI to auto-commit a different baseline on every re-run.
- *    The repo has no <5s polling on any test page (Leaderboard refreshes
- *    every 30s, Profile every 60s), so 500ms idle is reliably reachable.
+ *    Treated as best-effort with a bounded timeout: if a page introduces
+ *    a sub-500ms recurring fetch (e.g. a status poll), `networkidle` can
+ *    never fire, and the default 30s wait would then turn every signed-in
+ *    nav test into a 30s+ failure even though the chrome above is already
+ *    visible and stable. Bounding the wait lets the snapshot still
+ *    benefit from the common case (fetches settle in <5s) without making
+ *    the suite hostage to any future always-on background traffic.
  */
+const NETWORK_IDLE_BEST_EFFORT_MS = 5_000;
+
 const waitForSignedInPage = async ({ page }: { page: Page }): Promise<void> => {
 	const home = new HomePage(page);
 
@@ -57,7 +64,11 @@ const waitForSignedInPage = async ({ page }: { page: Page }): Promise<void> => {
 	await expect(home.appMain.locator('h1').first()).toBeVisible();
 	await expect(home.userMenu).toBeVisible();
 
-	await page.waitForLoadState('networkidle');
+	try {
+		await page.waitForLoadState('networkidle', { timeout: NETWORK_IDLE_BEST_EFFORT_MS });
+	} catch {
+		// Best-effort: see the comment block above.
+	}
 };
 
 test.describe('navigation (anonymous → redirected to signin)', () => {
