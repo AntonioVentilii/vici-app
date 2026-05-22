@@ -71,27 +71,44 @@ export const searchProfiles = (query: string): UserProfile[] => {
 		.map((profile) => redactProfile({ caller, profile }));
 };
 
-export const assertValidNickname = ({
-	data: {
-		collection,
-		key: documentKey,
-		data: { proposed }
-	}
-}: AssertSetDocContext) => {
-	if (collection !== Collection.PROFILES) {
-		return;
-	}
+/**
+ * Outcome of a nickname validity + uniqueness check. Returned by
+ * `checkNicknameAvailability` so the FE can render typed inline errors
+ * without parsing error strings.
+ *
+ * `reason` is set only when `available` is `false`:
+ * - `required`  — empty / whitespace.
+ * - `too_short` — under `MIN_NICKNAME_LENGTH`.
+ * - `taken`     — another principal already owns this nickname.
+ */
+export type NicknameAvailability =
+	| { available: true }
+	| { available: false; reason: 'required' | 'too_short' | 'taken' };
 
-	const { nickname } = decodeDocData<UserProfile>(proposed.data);
-
+/**
+ * Shared nickname validator. Used by both the `setDoc` assertion (write-time
+ * guard) and the `checkNicknameAvailability` query (read-time hint), so the
+ * UI and the satellite always agree on what "taken" means.
+ *
+ * `excludeKey` is the doc key (principal) to skip when scanning for
+ * collisions — pass the editing user's principal so a user's own current
+ * nickname doesn't count as a conflict.
+ */
+export const checkNicknameAvailabilityFn = ({
+	nickname,
+	excludeKey
+}: {
+	nickname: string | undefined | null;
+	excludeKey?: string;
+}): NicknameAvailability => {
 	if (isNullish(nickname) || nickname.trim() === '') {
-		throw new Error('Nickname is required.');
+		return { available: false, reason: 'required' };
 	}
 
 	const trimmedNickname = nickname.trim();
 
 	if (trimmedNickname.length < MIN_NICKNAME_LENGTH) {
-		throw new Error(`Nickname must be at least ${MIN_NICKNAME_LENGTH} characters.`);
+		return { available: false, reason: 'too_short' };
 	}
 
 	const normalizedNickname = trimmedNickname.toLowerCase();
@@ -105,19 +122,50 @@ export const assertValidNickname = ({
 	});
 
 	const hasConflict = items
-		.filter(([key]) => key !== documentKey)
+		.filter(([key]) => key !== excludeKey)
 		.some(([, item]) => {
 			try {
 				const existingProfile = decodeDocData<UserProfile>(item.data);
 
 				return existingProfile.nickname?.trim().toLowerCase() === normalizedNickname;
-			} catch (_e) {
-				// If decoding fails, skip this item (might be legacy or different format)
+			} catch (_: unknown) {
 				return false;
 			}
 		});
 
 	if (hasConflict) {
-		throw new Error(`The nickname "${nickname}" is already taken.`);
+		return { available: false, reason: 'taken' };
 	}
+
+	return { available: true };
+};
+
+export const assertValidNickname = ({
+	data: {
+		collection,
+		key: documentKey,
+		data: { proposed }
+	}
+}: AssertSetDocContext) => {
+	if (collection !== Collection.PROFILES) {
+		return;
+	}
+
+	const { nickname } = decodeDocData<UserProfile>(proposed.data);
+
+	const result = checkNicknameAvailabilityFn({ nickname, excludeKey: documentKey });
+
+	if (result.available) {
+		return;
+	}
+
+	if (result.reason === 'required') {
+		throw new Error('Nickname is required.');
+	}
+
+	if (result.reason === 'too_short') {
+		throw new Error(`Nickname must be at least ${MIN_NICKNAME_LENGTH} characters.`);
+	}
+
+	throw new Error(`The nickname "${nickname}" is already taken.`);
 };

@@ -19,6 +19,14 @@ export interface AppCheckFriendshipArgs {
 export interface AppCheckFriendshipResult {
 	is_friend: boolean;
 }
+export interface AppCheckNicknameAvailabilityArgs {
+	nickname: string;
+	exclude_principal_str: string;
+}
+export interface AppCheckNicknameAvailabilityResult {
+	available: boolean;
+	reason: [] | [{ taken: null } | { required: null } | { too_short: null }];
+}
 export interface AppFollowUserArgs {
 	target: string;
 }
@@ -252,6 +260,10 @@ export interface AppUpsertMarketMetadataResult {
 export interface _SERVICE {
 	app_accept_friend_request: ActorMethod<[AppAcceptFriendRequestArgs], undefined>;
 	app_check_friendship: ActorMethod<[AppCheckFriendshipArgs], AppCheckFriendshipResult>;
+	app_check_nickname_availability: ActorMethod<
+		[AppCheckNicknameAvailabilityArgs],
+		AppCheckNicknameAvailabilityResult
+	>;
 	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;
 	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;

@@ -7,8 +7,9 @@
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { ACCURACY_GATE_CALLS, isAccuracyUnlocked } from '$lib/constants/flow-rewards.constants';
 	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
-	import { upsertProfile } from '$lib/services/profile.services';
+	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import { t } from '$lib/utils/i18n.utils';
@@ -24,10 +25,125 @@
 	let isEditingNickname = $state(false);
 	let editedNickname = $state('');
 	let pending = $state(false);
+	type NicknameEditStatus = 'available' | 'taken' | 'too_short' | 'required' | 'check_failed';
+	let nicknameStatus = $state<NicknameEditStatus | undefined>(undefined);
+	let nicknameChecking = $state(false);
+	let nicknameCheckToken = 0;
+	let nicknameCheckTimer: ReturnType<typeof setTimeout> | undefined;
+	const nicknameCheckDebounce_ms = 350;
+
+	const scheduleNicknameAvailabilityCheck = (value: string) => {
+		if (nicknameCheckTimer) {
+			clearTimeout(nicknameCheckTimer);
+		}
+
+		nicknameCheckToken += 1;
+		const token = nicknameCheckToken;
+
+		const trimmed = value.trim();
+
+		if (trimmed.length === 0) {
+			nicknameStatus = 'required';
+			nicknameChecking = false;
+
+			return;
+		}
+
+		if (trimmed.length < MIN_NICKNAME_LENGTH) {
+			nicknameStatus = 'too_short';
+			nicknameChecking = false;
+
+			return;
+		}
+
+		// Editing user's own current nickname is always "available" —
+		// short-circuit the round-trip so the UI never flashes "taken"
+		// while the user is mid-edit on their own handle.
+		if (trimmed.toLowerCase() === profile.nickname.trim().toLowerCase()) {
+			nicknameStatus = 'available';
+			nicknameChecking = false;
+
+			return;
+		}
+
+		nicknameChecking = true;
+		nicknameStatus = undefined;
+
+		nicknameCheckTimer = setTimeout(() => {
+			void (async () => {
+				try {
+					const result = await checkNicknameAvailability({
+						nickname: trimmed,
+						principal: profile.owner
+					});
+
+					if (token !== nicknameCheckToken) {
+						return;
+					}
+
+					nicknameChecking = false;
+					nicknameStatus = result.available ? 'available' : result.reason;
+				} catch (_err: unknown) {
+					if (token !== nicknameCheckToken) {
+						return;
+					}
+
+					nicknameChecking = false;
+					nicknameStatus = 'check_failed';
+				}
+			})();
+		}, nicknameCheckDebounce_ms);
+	};
+
+	const onNicknameInput = (event: Event) => {
+		if (event.currentTarget instanceof HTMLInputElement) {
+			editedNickname = event.currentTarget.value;
+			scheduleNicknameAvailabilityCheck(editedNickname);
+		}
+	};
 
 	const handleSaveNickname = async () => {
-		if (editedNickname.trim().length < MIN_NICKNAME_LENGTH) {
+		const trimmed = editedNickname.trim();
+
+		if (trimmed.length < MIN_NICKNAME_LENGTH) {
 			return;
+		}
+
+		// Final pre-flight against the satellite — the typing-time hint
+		// can be stale (debounce window, race with another user). The
+		// assertion still has the last word; this just gives us a
+		// proper toast instead of an unhandled rejection.
+		if (trimmed.toLowerCase() !== profile.nickname.trim().toLowerCase()) {
+			pending = true;
+
+			try {
+				const probe = await checkNicknameAvailability({
+					nickname: trimmed,
+					principal: profile.owner
+				});
+
+				if (!probe.available) {
+					nicknameStatus = probe.reason;
+
+					if (probe.reason === 'taken') {
+						notificationsStore.add({
+							title: t({ locale: $localeStore, key: 'profile.dashboard.nickname_taken_title' }),
+							message: t({
+								locale: $localeStore,
+								key: 'profile.dashboard.nickname_taken',
+								params: { nickname: trimmed }
+							}),
+							type: 'error'
+						});
+					}
+
+					return;
+				}
+			} catch (_err: unknown) {
+				nicknameStatus = 'check_failed';
+			} finally {
+				pending = false;
+			}
 		}
 
 		pending = true;
@@ -35,25 +151,98 @@
 		try {
 			const updatedData = {
 				...profile,
-				nickname: editedNickname.trim()
+				nickname: trimmed
 			};
 
 			await upsertProfile({ key: profile.owner, data: updatedData });
 			userStore.update((curr) => ({ ...curr, profile: updatedData }));
 			isEditingNickname = false;
+		} catch (err: unknown) {
+			const message = err instanceof Error ? err.message : '';
+
+			if (message.includes('already taken')) {
+				nicknameStatus = 'taken';
+				notificationsStore.add({
+					title: t({ locale: $localeStore, key: 'profile.dashboard.nickname_taken_title' }),
+					message: t({
+						locale: $localeStore,
+						key: 'profile.dashboard.nickname_taken',
+						params: { nickname: trimmed }
+					}),
+					type: 'error'
+				});
+			} else {
+				notificationsStore.add({
+					title: t({ locale: $localeStore, key: 'profile.dashboard.nickname_save_failed_title' }),
+					message: t({ locale: $localeStore, key: 'profile.dashboard.nickname_save_failed' }),
+					type: 'error'
+				});
+			}
 		} finally {
 			pending = false;
 		}
 	};
 
 	const cancelEdit = () => {
+		if (nicknameCheckTimer) {
+			clearTimeout(nicknameCheckTimer);
+		}
+
 		isEditingNickname = false;
+		nicknameStatus = undefined;
+		nicknameChecking = false;
 	};
 
 	const startNicknameEdit = () => {
 		editedNickname = profile.nickname;
 		isEditingNickname = true;
+		nicknameStatus = 'available';
+		nicknameChecking = false;
 	};
+
+	const saveStatus = $derived.by<'pending' | 'disabled' | 'enabled'>(() => {
+		if (pending || nicknameChecking) {
+			return 'pending';
+		}
+
+		const trimmed = editedNickname.trim();
+
+		if (trimmed.length < MIN_NICKNAME_LENGTH) {
+			return 'disabled';
+		}
+
+		if (nicknameStatus === 'taken' || nicknameStatus === 'check_failed') {
+			return 'disabled';
+		}
+
+		return 'enabled';
+	});
+
+	const nicknameHintKey = $derived.by(() => {
+		const trimmed = editedNickname.trim();
+
+		if (trimmed.length === 0) {
+			return 'profile.dashboard.nickname_required' as const;
+		}
+
+		if (trimmed.length < MIN_NICKNAME_LENGTH) {
+			return 'profile.dashboard.nickname_min' as const;
+		}
+
+		if (nicknameChecking) {
+			return 'profile.dashboard.nickname_checking' as const;
+		}
+
+		if (nicknameStatus === 'taken') {
+			return 'profile.dashboard.nickname_taken' as const;
+		}
+
+		if (nicknameStatus === 'check_failed') {
+			return 'profile.dashboard.nickname_check_failed' as const;
+		}
+
+		return null;
+	});
 
 	const accuracy = $derived(profile.accuracy ?? 0);
 	// `profile.streak` is the trade-momentum streak (consecutive
@@ -204,21 +393,22 @@
 				{#if isEditingNickname}
 					<div class="profile-nickname-edit">
 						<input
+							aria-describedby="profile-nickname-status"
+							aria-invalid={nicknameStatus === 'taken' ||
+								nicknameStatus === 'too_short' ||
+								nicknameStatus === 'check_failed'}
 							aria-label={t({ locale: $localeStore, key: 'profile.dashboard.nickname_label' })}
 							disabled={pending}
+							oninput={onNicknameInput}
 							onkeydown={(e) => e.key === 'Enter' && handleSaveNickname()}
 							type="text"
-							bind:value={editedNickname}
+							value={editedNickname}
 						/>
 						<BaseButton
 							class="text-yes hover:text-yes"
 							aria-label={t({ locale: $localeStore, key: 'profile.dashboard.save' })}
 							onclick={handleSaveNickname}
-							status={pending
-								? 'pending'
-								: editedNickname.trim().length < MIN_NICKNAME_LENGTH
-									? 'disabled'
-									: 'enabled'}
+							status={saveStatus}
 						>
 							<Check size={18} />
 						</BaseButton>
@@ -231,6 +421,25 @@
 							<X size={18} />
 						</BaseButton>
 					</div>
+					{#if nicknameHintKey}
+						<p
+							id="profile-nickname-status"
+							class="profile-nickname-hint"
+							class:is-warning={nicknameStatus === 'taken' || nicknameStatus === 'check_failed'}
+							aria-live="polite"
+						>
+							{t({
+								locale: $localeStore,
+								key: nicknameHintKey,
+								params:
+									nicknameHintKey === 'profile.dashboard.nickname_min'
+										? { count: MIN_NICKNAME_LENGTH }
+										: nicknameHintKey === 'profile.dashboard.nickname_taken'
+											? { nickname: editedNickname.trim() }
+											: {}
+							})}
+						</p>
+					{/if}
 				{:else}
 					<div class="profile-handle-row">
 						<h1 class="profile-handle">@{profile.nickname}</h1>
@@ -505,6 +714,17 @@
 		color: var(--text-base);
 		font-size: var(--t-14);
 		font-weight: 700;
+	}
+
+	.profile-nickname-hint {
+		margin: 0.35rem 0 0;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		line-height: var(--leading-snug);
+	}
+
+	.profile-nickname-hint.is-warning {
+		color: var(--no);
 	}
 
 	.profile-stats-line,

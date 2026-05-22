@@ -18,8 +18,9 @@
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
-	import { upsertProfile } from '$lib/services/profile.services';
+	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -104,30 +105,117 @@
 			return;
 		}
 
+		// Returning user — the satellite already had a profile for this
+		// principal at sign-in time. The pending onboarding (picked
+		// pre-auth, while signed-out) belongs to a different intent;
+		// silently overwriting their saved nickname / interests / email
+		// is destructive. Preserve the existing profile and tell them.
+		if ($userStore.profileExisted) {
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'onboarding.handoff.account_exists_title' }),
+				message: t({
+					locale: $localeStore,
+					key: 'onboarding.handoff.account_exists',
+					params: { nickname: $userStore.profile.nickname }
+				}),
+				type: 'info'
+			});
+
+			localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
+
+			return;
+		}
+
 		applyingPendingOnboarding = true;
 
+		const currentProfile = $userStore.profile;
 		const updated = {
-			...$userStore.profile,
+			...currentProfile,
 			nickname: pending.handle,
 			interests: pending.interests,
 			...(pending.email && { email: pending.email })
 		};
 
-		void upsertProfile({
-			key: updated.owner,
-			data: updated
-		})
-			.then(() => {
+		void (async () => {
+			try {
+				// Pre-flight: a brand-new user can still collide if
+				// the handle was claimed in the window between
+				// onboarding step 4 and sign-in landing. Probe first
+				// so we can keep the pending payload around (so the
+				// user has the chance to pick a new handle from their
+				// profile) instead of letting the `setDoc` throw.
+				const probe = await checkNicknameAvailability({
+					nickname: pending.handle,
+					principal: currentProfile.owner
+				});
+
+				if (!probe.available && probe.reason === 'taken') {
+					notificationsStore.add({
+						title: t({
+							locale: $localeStore,
+							key: 'onboarding.handoff.collision_title'
+						}),
+						message: t({
+							locale: $localeStore,
+							key: 'onboarding.handoff.collision',
+							params: { handle: pending.handle }
+						}),
+						type: 'error'
+					});
+
+					// Apply interests + email even when the handle
+					// collides — they're independently useful and
+					// the user can rename later.
+					await upsertProfile({
+						key: currentProfile.owner,
+						data: {
+							...currentProfile,
+							interests: pending.interests,
+							...(pending.email && { email: pending.email })
+						}
+					});
+
+					localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
+
+					return;
+				}
+
+				await upsertProfile({
+					key: updated.owner,
+					data: updated
+				});
+
 				userStore.update((curr) => ({ ...curr, profile: updated }));
 				localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
-			})
-			.catch((err: unknown) => {
-				console.warn('Pending onboarding handoff failed:', err);
+			} catch (err: unknown) {
+				const message = err instanceof Error ? err.message : '';
+
+				if (message.includes('already taken')) {
+					notificationsStore.add({
+						title: t({
+							locale: $localeStore,
+							key: 'onboarding.handoff.collision_title'
+						}),
+						message: t({
+							locale: $localeStore,
+							key: 'onboarding.handoff.collision',
+							params: { handle: pending.handle }
+						}),
+						type: 'error'
+					});
+				} else {
+					notificationsStore.add({
+						title: t({ locale: $localeStore, key: 'onboarding.handoff.failed_title' }),
+						message: t({ locale: $localeStore, key: 'onboarding.handoff.failed' }),
+						type: 'error'
+					});
+				}
+
 				localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
-			})
-			.finally(() => {
+			} finally {
 				applyingPendingOnboarding = false;
-			});
+			}
+		})();
 	});
 </script>
 

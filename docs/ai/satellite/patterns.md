@@ -104,6 +104,43 @@ Why this shape:
 `defineAssert<AssertSetDoc>` and the `onDeleteDoc` hook follow the same
 pattern — keep them consistent.
 
+## Pair every `defineAssert` with a `defineQuery` probe
+
+Write-time guards (`defineAssert`) reject collisions at the door, but
+they only fail _after_ the user has invested in typing, signing in, and
+hitting save. To close that gap, every assertion that can plausibly
+reject for a user-correctable reason (duplicate nickname, taken slug,
+quota exceeded, …) should:
+
+1. **Extract the core validator** into a pure function that takes the
+   candidate value + optional "exclude self" key and returns a typed
+   outcome (`{ available: true } | { available: false; reason: ... }`).
+2. **Have the assertion call it** and throw the appropriate user-facing
+   message when `available` is `false`. The assertion stays the source
+   of truth for what "valid" means.
+3. **Expose a `defineQuery` wrapper** that returns the same typed
+   outcome, so the FE can render an inline hint (debounced behind every
+   keystroke) without parsing thrown strings.
+
+Concrete example: `checkNicknameAvailabilityFn` in
+[`src/satellite/services/profile.services.ts`](../../../src/satellite/services/profile.services.ts)
+backs both `assertValidNickname` and the
+`checkNicknameAvailability` query in
+[`src/satellite/index.ts`](../../../src/satellite/index.ts). The FE
+service wrapper lives at
+[`src/lib/services/profile.services.ts`](../../../src/lib/services/profile.services.ts)
+(`checkNicknameAvailability`); the onboarding flow and the profile-edit
+form share it.
+
+Two rules:
+
+- The query is a **hint**, not a contract. Never skip the assertion
+  even when the probe was `available` — there's always a race window
+  between probe and write.
+- When the query exposes an `exclude` parameter (typically the
+  editor's principal), wire it through to the assertion's "skip my
+  own doc" filter so the two layers can never disagree.
+
 ## Idempotency in hooks
 
 Hooks fire **after** the write, but they can fire more than once

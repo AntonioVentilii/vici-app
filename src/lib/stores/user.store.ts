@@ -12,12 +12,21 @@ export interface UserStoreData {
 	 * avoid rendering signed-out UI.
 	 */
 	authBusy: boolean;
+	/**
+	 * True when the satellite already held a profile doc for this principal
+	 * at sign-in time (a returning user). False when the profile was just
+	 * created during the current session bootstrap. Consumed by the post-
+	 * sign-in pending-onboarding handoff to avoid overwriting an existing
+	 * account's nickname/interests/email with values picked pre-auth.
+	 */
+	profileExisted: boolean;
 }
 
 export const userStore = writable<UserStoreData>({
 	user: undefined,
 	profile: undefined,
-	authBusy: true
+	authBusy: true,
+	profileExisted: false
 });
 
 /**

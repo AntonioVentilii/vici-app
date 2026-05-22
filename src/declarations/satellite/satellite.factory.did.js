@@ -13,6 +13,20 @@ export const idlFactory = ({ IDL }) => {
 		user_b: IDL.Text
 	});
 	const AppCheckFriendshipResult = IDL.Record({ is_friend: IDL.Bool });
+	const AppCheckNicknameAvailabilityArgs = IDL.Record({
+		nickname: IDL.Text,
+		exclude_principal_str: IDL.Text
+	});
+	const AppCheckNicknameAvailabilityResult = IDL.Record({
+		available: IDL.Bool,
+		reason: IDL.Opt(
+			IDL.Variant({
+				taken: IDL.Null,
+				required: IDL.Null,
+				too_short: IDL.Null
+			})
+		)
+	});
 	const AppFollowUserArgs = IDL.Record({ target: IDL.Text });
 	const AppGetMarketMetadataArgs = IDL.Record({ series_id: IDL.Text });
 	const AppGetMarketMetadataResult = IDL.Record({
@@ -388,6 +402,11 @@ export const idlFactory = ({ IDL }) => {
 	return IDL.Service({
 		app_accept_friend_request: IDL.Func([AppAcceptFriendRequestArgs], [], []),
 		app_check_friendship: IDL.Func([AppCheckFriendshipArgs], [AppCheckFriendshipResult], ['query']),
+		app_check_nickname_availability: IDL.Func(
+			[AppCheckNicknameAvailabilityArgs],
+			[AppCheckNicknameAvailabilityResult],
+			['query']
+		),
 		app_follow_user: IDL.Func([AppFollowUserArgs], [], []),
 		app_get_market_metadata: IDL.Func(
 			[AppGetMarketMetadataArgs],

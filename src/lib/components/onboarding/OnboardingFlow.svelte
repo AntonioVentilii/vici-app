@@ -11,6 +11,7 @@
 		ONBOARDING_DEMO_MARKETS,
 		type WelcomeMarketPreview
 	} from '$lib/constants/welcome-markets.constants';
+	import { checkNicknameAvailability } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { CallSide } from '$lib/types/market';
 	import { categoryColor } from '$lib/utils/category-color.utils';
@@ -97,6 +98,17 @@
 	let submitting = $state(false);
 	let starterXp = $state(0);
 
+	// Live nickname availability — debounced behind every keystroke
+	// and against the same satellite validator the assertion uses, so
+	// what the UI says is exactly what the next `setDoc` will accept.
+	// `handleAvailability` is `undefined` until the first probe lands.
+	type HandleAvailability = 'available' | 'taken' | 'too_short' | 'required' | 'check_failed';
+	let handleAvailability = $state<HandleAvailability | undefined>(undefined);
+	let handleChecking = $state(false);
+	let handleCheckToken = 0;
+	let handleCheckTimer: ReturnType<typeof setTimeout> | undefined;
+	const handleCheckDebounce_ms = 350;
+
 	const queuedTimeouts: ReturnType<typeof setTimeout>[] = [];
 
 	const progressWidth = $derived(`${((step + 1) / 4) * 100}%`);
@@ -133,7 +145,9 @@
 	);
 	const cleanEmail = $derived(email.trim().toLowerCase());
 	const emailLooksValid = $derived(cleanEmail.length === 0 || /\S+@\S+\.\S+/.test(cleanEmail));
-	const canSubmitIdentity = $derived(handle.length >= MIN_NICKNAME_LENGTH);
+	const canSubmitIdentity = $derived(
+		handle.length >= MIN_NICKNAME_LENGTH && handleAvailability === 'available' && !handleChecking
+	);
 
 	$effect(() => {
 		if (step !== 3) {
@@ -164,7 +178,60 @@
 		queuedTimeouts.forEach((timeout) => {
 			clearTimeout(timeout);
 		});
+
+		if (handleCheckTimer) {
+			clearTimeout(handleCheckTimer);
+		}
 	});
+
+	const scheduleHandleAvailabilityCheck = (value: string) => {
+		if (handleCheckTimer) {
+			clearTimeout(handleCheckTimer);
+		}
+
+		handleCheckToken += 1;
+		const token = handleCheckToken;
+
+		if (value.length === 0) {
+			handleAvailability = 'required';
+			handleChecking = false;
+
+			return;
+		}
+
+		if (value.length < MIN_NICKNAME_LENGTH) {
+			handleAvailability = 'too_short';
+			handleChecking = false;
+
+			return;
+		}
+
+		handleChecking = true;
+		handleAvailability = undefined;
+
+		handleCheckTimer = setTimeout(() => {
+			void (async () => {
+				try {
+					// Pre-auth: no principal to exclude — any match means taken.
+					const result = await checkNicknameAvailability({ nickname: value });
+
+					if (token !== handleCheckToken) {
+						return;
+					}
+
+					handleChecking = false;
+					handleAvailability = result.available ? 'available' : result.reason;
+				} catch (_err: unknown) {
+					if (token !== handleCheckToken) {
+						return;
+					}
+
+					handleChecking = false;
+					handleAvailability = 'check_failed';
+				}
+			})();
+		}, handleCheckDebounce_ms);
+	};
 
 	const queueTimeout = ({ callback, delay_ms }: { callback: () => void; delay_ms: number }) => {
 		const timeout = setTimeout(callback, delay_ms);
@@ -357,6 +424,7 @@
 	const updateHandle = (event: Event) => {
 		if (event.currentTarget instanceof HTMLInputElement) {
 			handle = sanitizeHandle(event.currentTarget.value);
+			scheduleHandleAvailabilityCheck(handle);
 		}
 	};
 
@@ -891,6 +959,10 @@
 					<span class="handle-row">
 						<span aria-hidden="true">@</span>
 						<input
+							aria-describedby="onboarding-handle-status"
+							aria-invalid={handleAvailability === 'taken' ||
+								handleAvailability === 'too_short' ||
+								handleAvailability === 'check_failed'}
 							data-tid={TestId.OnboardingHandleInput}
 							inputmode="text"
 							maxlength="16"
@@ -901,14 +973,48 @@
 							value={handle}
 						/>
 					</span>
-					<small class="num">
-						{handle
-							? t({
-									locale: $localeStore,
-									key: 'onboarding.handle.url',
-									params: { handle }
-								})
-							: t({ locale: $localeStore, key: 'onboarding.handle.hint' })}
+					<small
+						id="onboarding-handle-status"
+						class={handleAvailability === 'taken' ||
+						handleAvailability === 'too_short' ||
+						handleAvailability === 'check_failed'
+							? 'num warning'
+							: handleAvailability === 'available'
+								? 'num ok'
+								: 'num'}
+						aria-live="polite"
+					>
+						{#if handle.length === 0}
+							{t({ locale: $localeStore, key: 'onboarding.handle.hint' })}
+						{:else if handle.length < MIN_NICKNAME_LENGTH}
+							{t({
+								locale: $localeStore,
+								key: 'onboarding.handle.too_short',
+								params: { count: MIN_NICKNAME_LENGTH }
+							})}
+						{:else if handleChecking}
+							{t({ locale: $localeStore, key: 'onboarding.handle.checking' })}
+						{:else if handleAvailability === 'taken'}
+							{t({
+								locale: $localeStore,
+								key: 'onboarding.handle.taken',
+								params: { handle }
+							})}
+						{:else if handleAvailability === 'check_failed'}
+							{t({ locale: $localeStore, key: 'onboarding.handle.error_check_failed' })}
+						{:else if handleAvailability === 'available'}
+							{t({
+								locale: $localeStore,
+								key: 'onboarding.handle.available',
+								params: { handle }
+							})}
+						{:else}
+							{t({
+								locale: $localeStore,
+								key: 'onboarding.handle.url',
+								params: { handle }
+							})}
+						{/if}
 					</small>
 				</label>
 
@@ -1900,6 +2006,10 @@
 
 	.field small.warning {
 		color: var(--no);
+	}
+
+	.field small.ok {
+		color: var(--yes);
 	}
 
 	.social-proof {

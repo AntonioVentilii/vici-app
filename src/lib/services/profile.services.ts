@@ -148,12 +148,73 @@ export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
 	return items as UserProfile[];
 };
 
-export const ensureProfile = async (user: User): Promise<UserProfile> => {
+/**
+ * Outcome of a nickname availability probe — mirrors
+ * `NicknameAvailability` on the satellite side. The FE uses this to
+ * render typed inline errors (instead of regex-parsing thrown messages).
+ */
+export type NicknameAvailability =
+	| { available: true }
+	| { available: false; reason: 'required' | 'too_short' | 'taken' };
+
+/**
+ * Pre-flight check for the create-account and profile-edit flows.
+ * Runs through the same validator the satellite assertion uses
+ * (`checkNicknameAvailabilityFn`), so a `true` here means the next
+ * `setDoc` will not be vetoed for nickname reasons.
+ *
+ * Pass the editor's `principal` when editing an existing profile so
+ * the user is not told their own current nickname is taken.
+ */
+export const checkNicknameAvailability = async ({
+	nickname,
+	principal
+}: {
+	nickname: string;
+	principal?: PrincipalText;
+}): Promise<NicknameAvailability> => {
+	const result = await functions.checkNicknameAvailability({
+		nickname,
+		excludePrincipalStr: principal ?? ''
+	});
+
+	if (result.available) {
+		return { available: true };
+	}
+
+	return { available: false, reason: result.reason ?? 'taken' };
+};
+
+/**
+ * Result of `ensureProfile` — `existed` flags whether the satellite
+ * already held a profile doc for this principal at sign-in time. The
+ * post-sign-in handoff in `(app)/+layout.svelte` uses this to decide
+ * whether to apply a pending pre-auth onboarding payload (new user)
+ * or preserve the existing profile (returning user).
+ */
+export interface EnsureProfileResult {
+	profile: UserProfile;
+	existed: boolean;
+}
+
+export const ensureProfile = async (user: User): Promise<EnsureProfileResult> => {
 	const principal = user.key;
 	const profileDoc = await getProfile(principal);
 
-	if (nonNullish(profileDoc.version)) {
-		return profileDoc.data;
+	// The synthetic shell from `getProfile` never carries a version. To
+	// detect "has the satellite ever stored a profile for this
+	// principal?" we have to read the doc directly via Juno's SDK —
+	// `version` is only populated on real stored docs. This is what
+	// previously caused every returning user to fall through to the
+	// upsert path and have any pending onboarding silently overwrite
+	// their saved nickname.
+	const existing = await getDoc<UserProfile>({
+		collection: Collection.PROFILES,
+		key: principal
+	});
+
+	if (nonNullish(existing) && nonNullish(existing.version)) {
+		return { profile: existing.data, existed: true };
 	}
 
 	const { details } = user.data as { details?: Record<string, unknown> };
@@ -175,9 +236,28 @@ export const ensureProfile = async (user: User): Promise<UserProfile> => {
 		nickname
 	};
 
-	await upsertProfile({ ...profileDoc, data });
+	// First-touch bootstrap. The default nickname is the user's
+	// shortened principal, which can occasionally collide with another
+	// shortened principal from a different identity provider — fall
+	// back to the unshortened principal so the assertion cannot veto
+	// this implicit write. The user can then change it from the
+	// profile dashboard.
+	try {
+		await upsertProfile({ ...profileDoc, data });
+	} catch (err: unknown) {
+		const message = err instanceof Error ? err.message : '';
 
-	return data;
+		if (message.includes('already taken')) {
+			const fallback: UserProfile = { ...data, nickname: principal };
+			await upsertProfile({ ...profileDoc, data: fallback });
+
+			return { profile: fallback, existed: false };
+		}
+
+		throw err;
+	}
+
+	return { profile: data, existed: false };
 };
 
 /**

@@ -17,6 +17,7 @@ import {
 } from '$satellite/services/market-metadata.services';
 import {
 	assertValidNickname,
+	checkNicknameAvailabilityFn,
 	getProfile as getProfileFn,
 	searchProfiles as searchProfilesFn
 } from '$satellite/services/profile.services';
@@ -85,6 +86,36 @@ export const searchProfiles = defineQuery({
 	handler: ({ queryStr }) => ({
 		items: searchProfilesFn(queryStr)
 	})
+});
+
+// Typed availability probe used by the onboarding handle field and the
+// profile-edit form so the UI can render an inline "already taken" hint
+// before attempting `setDoc`. The same validator backs `assertValidNickname`
+// (write-time guard), so client and server agree on what "taken" means.
+//
+// `excludePrincipalStr` is the editing user's principal — passed so a user
+// editing their own profile is not told their own nickname is taken.
+// `principal` is reserved by the schema layer; we expose it as
+// `excludePrincipalStr` and treat the empty string as "no exclusion".
+export const checkNicknameAvailability = defineQuery({
+	args: j.strictObject({
+		nickname: j.string(),
+		excludePrincipalStr: j.string()
+	}),
+	result: j.strictObject({
+		available: j.boolean(),
+		reason: j.optional(j.enum(['required', 'too_short', 'taken']))
+	}),
+	handler: ({ nickname, excludePrincipalStr }) => {
+		const result = checkNicknameAvailabilityFn({
+			nickname,
+			excludeKey: excludePrincipalStr.length > 0 ? excludePrincipalStr : undefined
+		});
+
+		return result.available
+			? { available: true as const }
+			: { available: false as const, reason: result.reason };
+	}
 });
 
 export const getMarketMetadata = defineQuery({

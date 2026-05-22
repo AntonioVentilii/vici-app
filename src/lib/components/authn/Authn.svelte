@@ -18,7 +18,12 @@
 
 		try {
 			if (isNullish(user)) {
-				userStore.set({ user: undefined, profile: undefined, authBusy: false });
+				userStore.set({
+					user: undefined,
+					profile: undefined,
+					authBusy: false,
+					profileExisted: false
+				});
 
 				return;
 			}
@@ -26,14 +31,19 @@
 			const { key: userText } = user;
 
 			if (isNullish(userText)) {
-				userStore.set({ user: undefined, profile: undefined, authBusy: false });
+				userStore.set({
+					user: undefined,
+					profile: undefined,
+					authBusy: false,
+					profileExisted: false
+				});
 
 				return;
 			}
 
-			const profile = await ensureProfile(user);
+			const { profile, existed } = await ensureProfile(user);
 
-			userStore.set({ user, profile, authBusy: false });
+			userStore.set({ user, profile, authBusy: false, profileExisted: existed });
 
 			try {
 				const identity = await safeGetIdentityOnce();

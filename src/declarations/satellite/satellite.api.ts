@@ -30,6 +30,36 @@ const checkFriendship = async (
 	return AppCheckFriendshipResultSchema.parse(result);
 };
 
+const AppCheckNicknameAvailabilityArgsSchema = j.strictObject({
+	nickname: j.string(),
+	excludePrincipalStr: j.string()
+});
+const AppCheckNicknameAvailabilityResultSchema = j.strictObject({
+	available: j.boolean(),
+	reason: j.optional(j.enum(['required', 'too_short', 'taken']))
+});
+
+const checkNicknameAvailability = async (
+	args: j.infer<typeof AppCheckNicknameAvailabilityArgsSchema>
+): Promise<j.infer<typeof AppCheckNicknameAvailabilityResultSchema>> => {
+	const parsedArgs = AppCheckNicknameAvailabilityArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppCheckNicknameAvailabilityArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_check_nickname_availability']>[0];
+
+	const { app_check_nickname_availability } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_check_nickname_availability(idlArgs);
+
+	const result = schemaFromIdl({
+		schema: AppCheckNicknameAvailabilityResultSchema,
+		value: idlResult
+	});
+	return AppCheckNicknameAvailabilityResultSchema.parse(result);
+};
+
 const AppGetMarketMetadataArgsSchema = j.strictObject({ seriesId: j.string() });
 const AppGetMarketMetadataResultSchema = j.strictObject({
 	metadata: j.optional(
@@ -431,6 +461,7 @@ const upsertMarketMetadata = async (
 
 export const functions = {
 	checkFriendship,
+	checkNicknameAvailability,
 	getMarketMetadata,
 	getProfile,
 	listFollowers,

@@ -5,6 +5,10 @@ type AppCheckFriendshipArgs = record { user_a : text; user_b : text };
 
 type AppCheckFriendshipResult = record { is_friend : bool };
 
+type AppCheckNicknameAvailabilityArgs = record { nickname : text; exclude_principal_str : text };
+
+type AppCheckNicknameAvailabilityResult = record { available : bool; reason : opt variant { required; too_short; taken } };
+
 type AppGetMarketMetadataArgs = record { series_id : text };
 
 type AppGetMarketMetadataResult = record { metadata : opt record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; resolution : opt record { text : text; source : text; settles_at_ms : opt float64 }; updated_at : float64; updated_by : text } };
@@ -43,6 +47,7 @@ type AppUpsertMarketMetadataResult = record { metadata : record { series_id : te
 
 service : {
 	app_check_friendship : (AppCheckFriendshipArgs) -> (AppCheckFriendshipResult) query;
+	app_check_nickname_availability : (AppCheckNicknameAvailabilityArgs) -> (AppCheckNicknameAvailabilityResult) query;
 	app_get_market_metadata : (AppGetMarketMetadataArgs) -> (AppGetMarketMetadataResult) query;
 	app_get_profile : (AppGetProfileArgs) -> (AppGetProfileResult) query;
 	app_list_followers : () -> (AppListFollowersResult) query;
