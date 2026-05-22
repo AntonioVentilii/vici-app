@@ -25,7 +25,7 @@
 					PENDING_ONBOARDING_STORAGE_KEY,
 					JSON.stringify({ ...result, completedAt: new Date().toISOString() })
 				);
-			} catch (err) {
+			} catch (err: unknown) {
 				console.warn('Onboarding handoff could not be stored:', err);
 			}
 		}

@@ -104,7 +104,7 @@
 						bulkSuccess++;
 
 						return result;
-					} catch (e) {
+					} catch (e: unknown) {
 						console.error(`Failed to create bulk market: ${title}`, e);
 
 						bulkFailed++;

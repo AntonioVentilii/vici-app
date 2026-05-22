@@ -289,7 +289,7 @@ const buildResolutionMap = (activities: Activity[]): Record<string, { outcome?: 
 					typeof parsed?.outcome === 'string' && parsed.outcome.length > 0
 						? parsed.outcome
 						: undefined;
-			} catch (e) {
+			} catch (e: unknown) {
 				console.error('Failed to parse settlement details', e);
 			}
 
@@ -391,7 +391,7 @@ const fetchMarket = async ({
 			const { outcome: settlementOutcome } = JSON.parse(details ?? '{}');
 
 			return settlementOutcome;
-		} catch (e) {
+		} catch (e: unknown) {
 			// Malformed settlement details should not block rendering the rest of the market; log and fall through so the market appears resolved without an outcome label.
 			console.error('Failed to parse outcome from activity', e);
 		}

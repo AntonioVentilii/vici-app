@@ -142,7 +142,7 @@
 				...state,
 				[market.id]: orderBook
 			}));
-		} catch (err) {
+		} catch (err: unknown) {
 			console.error('Failed to fetch order book', err);
 		}
 	};
@@ -160,7 +160,7 @@
 				accountState,
 				assetsConfig: state?.assetsConfig ?? {}
 			}));
-		} catch (err) {
+		} catch (err: unknown) {
 			console.error('Failed to fetch balance', err);
 		}
 	};
@@ -303,7 +303,7 @@
 						limitPrice
 					})
 				});
-			} catch (e) {
+			} catch (e: unknown) {
 				error = (e as Error).message ?? tr({ key: 'prediction.error.invalid_vxp' });
 
 				return;

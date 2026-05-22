@@ -12,7 +12,7 @@
 			});
 
 			await goto('/', { replaceState: true });
-		} catch (err) {
+		} catch (err: unknown) {
 			console.error('Failed to finish Google sign-in:', err);
 
 			await goto('/');

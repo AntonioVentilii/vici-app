@@ -58,7 +58,7 @@ export const unfriendUser = async (params: {
 
 		const { syncGroupAdminsAfterUnfriend } = await import('$lib/services/group.services');
 		await syncGroupAdminsAfterUnfriend({ userA: params.sender, userB: params.target });
-	} catch (e) {
+	} catch (e: unknown) {
 		console.error('Failed to unfriend', e);
 		throw e;
 	}
@@ -125,7 +125,7 @@ export const unfollowUser = async (params: {
 			collection: Collection.RELATIONS,
 			doc
 		});
-	} catch (e) {
+	} catch (e: unknown) {
 		console.error('Failed to unfollow', e);
 	}
 };

@@ -102,7 +102,7 @@
 				data: buildInput()
 			});
 			savedAt = metadata.updatedAt;
-		} catch (err) {
+		} catch (err: unknown) {
 			console.warn('Market metadata save failed:', err);
 			error = t({ locale: $localeStore, key: 'market.metadata.error.save' });
 		} finally {
@@ -138,7 +138,7 @@
 				eventTwoDay = String(eventTwo.day);
 				eventTwoDir = eventTwo.dir;
 			}
-		} catch (err) {
+		} catch (err: unknown) {
 			console.warn('Market metadata load failed:', err);
 			error = t({ locale: $localeStore, key: 'market.metadata.error.load' });
 		} finally {

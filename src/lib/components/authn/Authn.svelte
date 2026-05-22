@@ -49,7 +49,7 @@
 				const identity = await safeGetIdentityOnce();
 
 				await calculateAndSyncStats({ identity, domain: $balanceDomain });
-			} catch (e) {
+			} catch (e: unknown) {
 				console.error('Failed to sync stats on login', e);
 			}
 		} finally {

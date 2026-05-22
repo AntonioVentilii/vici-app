@@ -133,7 +133,7 @@
 		try {
 			await unfriendUser({ target: friendId, sender: userPrincipal });
 			await loadData();
-		} catch (err) {
+		} catch (err: unknown) {
 			console.error(err);
 			alert(t({ locale: $localeStore, key: 'social.friends.error.unfriend_failed' }));
 		} finally {

@@ -31,7 +31,7 @@
 				}
 			});
 			onSuccess?.();
-		} catch (err) {
+		} catch (err: unknown) {
 			console.error('Failed to start Google sign-in:', err);
 		} finally {
 			status = 'enabled';

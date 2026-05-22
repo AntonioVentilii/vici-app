@@ -209,7 +209,7 @@
 			} else if (fromProfile) {
 				tradeAmount = fromProfile;
 			}
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error('Failed to load Flow queue', e);
 		} finally {
 			loading = false;
@@ -375,7 +375,7 @@
 					action,
 					amount: tradeAmount
 				});
-			} catch (e) {
+			} catch (e: unknown) {
 				notificationsStore.add({
 					title: t({ locale: $localeStore, key: 'flow.notification.trade_failed_title' }),
 					message: t({

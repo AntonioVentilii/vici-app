@@ -208,7 +208,7 @@ export const placeOrder = async ({
 			details: `${side} ${qty} on ${outcome} @ ${price}`
 		});
 		await recordActivity(userText);
-	} catch (e) {
+	} catch (e: unknown) {
 		console.error('Failed to log trade activity', e);
 	}
 };

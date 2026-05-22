@@ -38,7 +38,7 @@
 			});
 
 			await ondeleted();
-		} catch (err) {
+		} catch (err: unknown) {
 			console.error(err);
 		}
 

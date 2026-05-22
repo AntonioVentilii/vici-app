@@ -153,12 +153,12 @@ export class HomePage {
 
 		try {
 			await attempt();
-		} catch (firstError) {
+		} catch (firstError: unknown) {
 			await this.page.reload({ waitUntil: 'networkidle' });
 
 			try {
 				await attempt();
-			} catch (secondError) {
+			} catch (secondError: unknown) {
 				throw new Error(
 					`signInAsDevUser failed twice. ` +
 						`First attempt: ${(firstError as Error).message}. ` +

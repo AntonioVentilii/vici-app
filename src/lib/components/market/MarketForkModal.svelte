@@ -35,7 +35,7 @@
 		try {
 			const all = await listGroups();
 			availableGroups = all;
-		} catch (e) {
+		} catch (e: unknown) {
 			console.error('Failed to load groups', e);
 		} finally {
 			loadingGroups = false;

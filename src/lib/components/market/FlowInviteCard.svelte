@@ -63,7 +63,7 @@
 				await navigator.share({ title: 'VICI', text: shareText, url: inviteUrl });
 
 				return;
-			} catch (e) {
+			} catch (e: unknown) {
 				if (e instanceof Error && e.name === 'AbortError') {
 					return;
 				}

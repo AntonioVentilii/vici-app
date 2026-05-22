@@ -27,7 +27,7 @@
 				...state,
 				[market.id]: orders
 			}));
-		} catch (err) {
+		} catch (err: unknown) {
 			console.error('Failed to fetch order book in depth panel', err);
 		}
 	};

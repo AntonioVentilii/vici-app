@@ -19,7 +19,7 @@ export class FlowTradeService {
 		const tradePromise = (async () => {
 			try {
 				await executeOutcomeTrade(params);
-			} catch (e) {
+			} catch (e: unknown) {
 				console.error('Flow trade failed', e);
 				throw e;
 			}

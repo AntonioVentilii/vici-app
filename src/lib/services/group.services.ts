@@ -278,7 +278,7 @@ export const syncGroupAdminsAfterUnfriend = async ({
 			removeFromAdminsIfPresent({ groups: groupsA, adminToRemove: userB }),
 			removeFromAdminsIfPresent({ groups: groupsB, adminToRemove: userA })
 		]);
-	} catch (e) {
+	} catch (e: unknown) {
 		console.error('Failed to sync group admins after unfriend', e);
 	}
 };

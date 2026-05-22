@@ -99,6 +99,12 @@ the service layer and let the service own caching.
   `prettier-plugin-organize-imports` will sort them.
 - **`BigInt` zero**: forbidden literal `0n` (eslint). Use the `ZERO`
   constant from `$lib/constants/app.constants`.
+- **`catch` bindings are always `: unknown`.** Even when the binding is
+  unused (`catch (_: unknown)`, `catch (_e: unknown)`). The annotation is
+  redundant under `strict` (TS already infers `unknown`), but we write it
+  explicitly so intent is visible at the call site and so a future
+  `strict: false` slip can't silently widen it back to `any`. Narrow with
+  `instanceof Error` or a `zod` schema before reading properties.
 
 ## Service / data flow
 
