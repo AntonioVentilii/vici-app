@@ -68,7 +68,7 @@
 						{/if}
 						{#if isChallenge}
 							<span
-								class="border-laurel/25 bg-laurel-glow text-laurel inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"
+								class="border-laurel/25 bg-laurel-glow text-laurel eyebrow-xs inline-flex items-center gap-1 rounded-full border px-2 py-0.5"
 							>
 								<Users aria-hidden="true" size={10} />
 								{t({ locale: $localeStore, key: 'card.challenge' })}
@@ -76,7 +76,7 @@
 						{/if}
 						{#if market.payoffType === 'Categorical'}
 							<span
-								class="border-foreground/25 text-foreground bg-foreground/8 rounded-full border px-2 py-0.5 text-[10px] font-bold tracking-widest uppercase"
+								class="border-foreground/25 text-foreground bg-foreground/8 eyebrow-xs rounded-full border px-2 py-0.5"
 							>
 								{t({ locale: $localeStore, key: 'card.multiple' })}
 							</span>

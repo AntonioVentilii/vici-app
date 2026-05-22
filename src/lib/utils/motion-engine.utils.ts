@@ -3,6 +3,7 @@
 // See `docs/ai/frontend/design.md` §7.
 
 import { FLOW_MILESTONES } from '$lib/constants/flow-rewards.constants';
+import type { FlowAction } from '$lib/types/market';
 import type { MessageKey } from '$lib/utils/i18n.utils';
 import { stageForStreak, type FlameStage } from '$lib/utils/streak.utils';
 
@@ -31,7 +32,7 @@ export interface MotionBeatPayload {
 }
 
 export interface MotionSwipeInput {
-	side: 'YES' | 'NO' | 'SKIP';
+	side: FlowAction;
 	correct?: boolean;
 	isContrarian?: boolean;
 	dailyStreak: number;

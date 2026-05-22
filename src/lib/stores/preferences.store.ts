@@ -1,19 +1,7 @@
 import { PREFERENCES_STORAGE_KEY } from '$lib/constants/settings.constants';
 import { initStorageStore, type StorageStore } from '$lib/stores/storage.store';
 import type { UserPreferences } from '$lib/types/preferences';
-
-/**
- * The six FlowArt categories that ship today. Used as the default set for
- * the Flow-deck preference so a fresh user sees the full catalog.
- */
-export const FLOW_CATEGORIES: readonly string[] = [
-	'macro',
-	'crypto',
-	'politics',
-	'tech',
-	'sports',
-	'culture'
-] as const;
+import { FLOW_ART_CATEGORIES } from '$lib/utils/flow-art.utils';
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
 	notify: {
@@ -25,7 +13,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 	flowSessionLength: 10,
 	hapticsEnabled: true,
 	callsPublic: true,
-	flowCategories: [...FLOW_CATEGORIES]
+	flowCategories: [...FLOW_ART_CATEGORIES]
 };
 
 const basePreferencesStore = initStorageStore<UserPreferences>({
@@ -45,7 +33,7 @@ const ensureShape = (current: UserPreferences | undefined): UserPreferences => (
 	flowCategories:
 		Array.isArray(current?.flowCategories) && current.flowCategories.length > 0
 			? current.flowCategories
-			: [...FLOW_CATEGORIES]
+			: [...FLOW_ART_CATEGORIES]
 });
 
 export const preferencesStore: StorageStore<UserPreferences> = {

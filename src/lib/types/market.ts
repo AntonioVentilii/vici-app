@@ -14,6 +14,20 @@ export type OutcomeId = 'YES' | 'NO' | 'CANCELED' | string;
 
 export type Outcome = OutcomeId;
 
+/**
+ * The two binary sides a user can call on. Strictly narrower than
+ * `OutcomeId` (which also covers `'CANCELED'` and categorical ids) —
+ * `CallSide` is what a user can *commit* on a binary market.
+ */
+export type CallSide = 'YES' | 'NO';
+
+/**
+ * Three possible Flow-mode gestures: tap/swipe `YES`, swipe `NO`, or
+ * swipe up to `SKIP`. Used by `FlowCard` / `FlowMode` for the commit
+ * choreography and by `motion-engine.utils.ts` for the beat payload.
+ */
+export type FlowAction = CallSide | 'SKIP';
+
 export interface Market {
 	id: MarketId;
 	title: string;

@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
 	import { isDev } from '$lib/env/app.env';
 
@@ -11,11 +12,9 @@
 
 	let open = $state(false);
 
-	type TweakRoute = '/' | '/flow' | '/portfolio' | '/profile' | '/signin' | '/signup';
-
-	const jumpTo = async (path: TweakRoute) => {
+	const jumpTo = async (href: string) => {
 		open = false;
-		await goto(resolve(path));
+		await goto(href);
 	};
 
 	const handleSignOut = async () => {
@@ -28,7 +27,7 @@
 			// regardless so the panel doesn't get stuck.
 		}
 
-		await goto(resolve('/signin'), { replaceState: true });
+		await goto(resolve(PublicPath.SignIn), { replaceState: true });
 	};
 </script>
 
@@ -61,12 +60,16 @@
 				<section class="tweaks-section">
 					<span class="allcaps tweaks-label">Quick jumps</span>
 					<div class="tweaks-jumps">
-						<button onclick={() => jumpTo('/')} type="button">Home (/)</button>
-						<button onclick={() => jumpTo('/flow')} type="button">Flow</button>
-						<button onclick={() => jumpTo('/portfolio')} type="button">Portfolio</button>
-						<button onclick={() => jumpTo('/profile')} type="button">Profile</button>
-						<button onclick={() => jumpTo('/signin')} type="button">Sign in</button>
-						<button onclick={() => jumpTo('/signup')} type="button">Sign up</button>
+						<button onclick={() => jumpTo(resolve(AppPath.Home))} type="button">Home (/)</button>
+						<button onclick={() => jumpTo(resolve(AppPath.Flow))} type="button">Flow</button>
+						<button onclick={() => jumpTo(resolve(AppPath.Portfolio))} type="button">
+							Portfolio
+						</button>
+						<button onclick={() => jumpTo(resolve(AppPath.Profile))} type="button">Profile</button>
+						<button onclick={() => jumpTo(resolve(PublicPath.SignIn))} type="button">Sign in</button
+						>
+						<button onclick={() => jumpTo(resolve(PublicPath.SignUp))} type="button">Sign up</button
+						>
 					</div>
 				</section>
 

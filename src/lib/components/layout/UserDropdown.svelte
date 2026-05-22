@@ -101,7 +101,7 @@
 			<DomainSwitch />
 
 			<div class="flex items-center justify-between gap-3 px-4 py-2">
-				<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+				<span class="text-muted-foreground eyebrow-xs">
 					{t({ locale: $localeStore, key: 'layout.user.theme' })}
 				</span>
 				<AppearancePicker />

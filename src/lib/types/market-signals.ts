@@ -1,4 +1,4 @@
-import type { MarketId } from '$lib/types/market';
+import type { CallSide, MarketId } from '$lib/types/market';
 import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
 
 export interface CategoryAccuracySignal {
@@ -10,7 +10,7 @@ export interface CategoryAccuracySignal {
 
 export interface PriorCallSignal {
 	marketId: MarketId;
-	side: 'YES' | 'NO';
+	side: CallSide;
 	when: string;
 	consensusThen?: number;
 }

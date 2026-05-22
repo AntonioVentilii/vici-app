@@ -1,3 +1,4 @@
+import { TOAST_DEFAULT_MS } from '$lib/constants/app.constants';
 import { writable } from 'svelte/store';
 
 export type NotificationType = 'success' | 'error' | 'info' | 'warning';
@@ -16,7 +17,7 @@ const createNotificationStore = () => {
 		title,
 		message,
 		type = 'info',
-		duration = 5000
+		duration = TOAST_DEFAULT_MS
 	}: {
 		title: string;
 		message: string;

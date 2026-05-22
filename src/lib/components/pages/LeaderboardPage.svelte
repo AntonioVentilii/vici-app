@@ -181,7 +181,7 @@
 						{t({ locale: $localeStore, key: activeDescriptionKey })}
 					</p>
 				</div>
-				<p class="text-muted-foreground font-mono text-[10px] font-bold tracking-widest uppercase">
+				<p class="text-muted-foreground eyebrow-xs font-mono">
 					{t({
 						locale: $localeStore,
 						key: 'leaderboard.social.count',

@@ -196,6 +196,10 @@ export const calculateMarketStats = ({
 	};
 };
 
+const MS_PER_DAY = 1000 * 60 * 60 * 24;
+const MS_PER_HOUR = 1000 * 60 * 60;
+const MS_PER_MINUTE = 1000 * 60;
+
 export const getTimeRemaining = (expiry: bigint): string => {
 	const now = BigInt(Date.now());
 	const diff = Number(expiry - now);
@@ -204,9 +208,9 @@ export const getTimeRemaining = (expiry: bigint): string => {
 		return 'Expired';
 	}
 
-	const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-	const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-	const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+	const days = Math.floor(diff / MS_PER_DAY);
+	const hours = Math.floor((diff % MS_PER_DAY) / MS_PER_HOUR);
+	const minutes = Math.floor((diff % MS_PER_HOUR) / MS_PER_MINUTE);
 
 	if (days > 0) {
 		return `${days}d ${hours}h`;
@@ -217,6 +221,28 @@ export const getTimeRemaining = (expiry: bigint): string => {
 	}
 
 	return `${minutes}m remaining`;
+};
+
+/**
+ * Compact "eyebrow"-style time-to-expiry label for FlowCard / preview
+ * surfaces where there's only space for ~4 chars. Returns `TODAY` for
+ * the active day, `Td` for sub-year horizons, `Ty` for far-out markets.
+ * Expiry is consumed as nanoseconds (ICP convention) and rounded up so
+ * a market expiring later today still reads as `TODAY`.
+ */
+export const getExpiryEyebrow = (expiryNs: bigint): string => {
+	const expiryMs = Number(expiryNs) / 1_000_000;
+	const days = Math.max(0, Math.ceil((expiryMs - Date.now()) / MS_PER_DAY));
+
+	if (days === 0) {
+		return 'TODAY';
+	}
+
+	if (days >= 365) {
+		return `${Math.round(days / 365)}y`;
+	}
+
+	return `${days}d`;
 };
 
 /**

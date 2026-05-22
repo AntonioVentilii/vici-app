@@ -3,6 +3,7 @@
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { CHAT_POLL_MS } from '$lib/constants/app.constants';
 	import { sendMessage, getMarketMessages } from '$lib/services/chat.services';
 	import { getProfile } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -31,7 +32,7 @@
 
 	onMount(() => {
 		loadMessages();
-		const interval = setInterval(loadMessages, 5000);
+		const interval = setInterval(loadMessages, CHAT_POLL_MS);
 
 		return () => clearInterval(interval);
 	});

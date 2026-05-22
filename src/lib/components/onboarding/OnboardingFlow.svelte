@@ -5,9 +5,17 @@
 	import FlowArtFrame from '$lib/components/artwork/FlowArtFrame.svelte';
 	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
+	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import { newUserVxpAmountMilestone1BaseUnits } from '$lib/constants/vxp-onboarding.constants';
+	import {
+		ONBOARDING_DEMO_MARKETS,
+		type WelcomeMarketPreview
+	} from '$lib/constants/welcome-markets.constants';
 	import { localeStore } from '$lib/stores/locale.store';
+	import type { CallSide } from '$lib/types/market';
 	import { categoryColor } from '$lib/utils/category-color.utils';
 	import { FLOW_ART_CATEGORIES, type FlowArtCategory } from '$lib/utils/flow-art.utils';
+	import { decimalFixedValueToNumber, formatProbability } from '$lib/utils/format.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
@@ -22,75 +30,33 @@
 		onSignIn?: () => void;
 	}
 
-	interface OnboardingMarket {
-		id: string;
-		category: FlowArtCategory;
-		yesProbability: number;
-		calls: string;
-		days: number;
-	}
-
-	type CallSide = 'YES' | 'NO';
-
 	const { onComplete, onSignIn }: Props = $props();
 
 	const firstCallAdvance_ms = 2_400;
 	const firstCallCelebrate_ms = 280;
 	const starterPackAnimation_ms = 720;
+	// Starter VXP — the visible whole-token total animated on the
+	// final screen. Derived from `vxp-onboarding.constants.ts` so the
+	// display amount stays in lockstep with the on-chain milestone
+	// payout, with no hardcoded `1_000` literal to drift from.
+	const STARTER_VXP_DISPLAY = Number(
+		decimalFixedValueToNumber({
+			value: newUserVxpAmountMilestone1BaseUnits(),
+			decimals: VXP_TOKEN.decimals
+		})
+	);
 
-	const markets = [
-		{
-			id: 'fed-jun',
-			category: 'macro',
-			yesProbability: 0.64,
-			calls: '2.4M',
-			days: 47
-		},
-		{
-			id: 'btc-150k',
-			category: 'crypto',
-			yesProbability: 0.38,
-			calls: '8.1M',
-			days: 228
-		},
-		{
-			id: 'gpt6-2026',
-			category: 'tech',
-			yesProbability: 0.22,
-			calls: '620K',
-			days: 135
-		},
-		{
-			id: 'eu-ai-act',
-			category: 'politics',
-			yesProbability: 0.55,
-			calls: '410K',
-			days: 58
-		},
-		{
-			id: 'sb-niners',
-			category: 'sports',
-			yesProbability: 0.31,
-			calls: '1.8M',
-			days: 266
-		},
-		{
-			id: 'taylor-tour',
-			category: 'culture',
-			yesProbability: 0.48,
-			calls: '380K',
-			days: 106
-		}
-	] satisfies readonly [OnboardingMarket, OnboardingMarket, ...OnboardingMarket[]];
+	// Onboarding fixture markets — the first two (`fed-jun`, `btc-150k`)
+	// drive the "first call" and "practice tap" stages; the rest back
+	// the category-preview grid. Sourced from the shared
+	// `ONBOARDING_DEMO_MARKETS` (one per category, derived from the
+	// same SSOT as `WELCOME_MARKET_PREVIEWS`) so the landing and
+	// onboarding surfaces stay in lock-step without duplicating ids
+	// or yes probabilities.
+	const markets: readonly WelcomeMarketPreview[] = ONBOARDING_DEMO_MARKETS;
+	const [firstMarket, practiceMarket] = markets;
 
-	const categoryOptions: readonly FlowArtCategory[] = [
-		'macro',
-		'crypto',
-		'politics',
-		'tech',
-		'sports',
-		'culture'
-	];
+	const categoryOptions: readonly FlowArtCategory[] = FLOW_ART_CATEGORIES;
 
 	const marketFieldKey = ({
 		id,
@@ -133,7 +99,6 @@
 
 	const queuedTimeouts: ReturnType<typeof setTimeout>[] = [];
 
-	const [firstMarket, practiceMarket] = markets;
 	const progressWidth = $derived(`${((step + 1) / 4) * 100}%`);
 	const progressTone = $derived(
 		step === 0 ? 'var(--text-muted)' : step === 1 ? 'var(--laurel-deep)' : 'var(--laurel)'
@@ -163,7 +128,7 @@
 	const previewMarkets = $derived.by(() =>
 		selectedInterestList
 			.map((category) => markets.find((market) => market.category === category))
-			.filter((market): market is OnboardingMarket => market !== undefined)
+			.filter((market): market is WelcomeMarketPreview => market !== undefined)
 			.slice(0, 3)
 	);
 	const cleanEmail = $derived(email.trim().toLowerCase());
@@ -181,7 +146,7 @@
 		const tick = (now: number) => {
 			const progress = Math.min(1, (now - start) / starterPackAnimation_ms);
 			const eased = 1 - Math.pow(1 - progress, 3);
-			starterXp = Math.round(eased * 1_000);
+			starterXp = Math.round(eased * STARTER_VXP_DISPLAY);
 
 			if (progress < 1) {
 				animationFrame = requestAnimationFrame(tick);
@@ -206,9 +171,7 @@
 		queuedTimeouts.push(timeout);
 	};
 
-	const formatProbability = (probability: number): string => `${Math.round(probability * 100)}%`;
-
-	const noProbability = (market: OnboardingMarket): number => 1 - market.yesProbability;
+	const noProbability = (market: WelcomeMarketPreview): number => 1 - market.yesProbability;
 
 	const capturePointer = (event: PointerEvent) => {
 		if (event.currentTarget instanceof HTMLElement) {
@@ -482,7 +445,7 @@
 						<div class="market-head">
 							<div class="market-meta">
 								<span style:color={categoryColor(firstMarket.category)} class="allcaps">
-									{firstMarket.category}
+									{t({ locale: $localeStore, key: categoryLabelKey(firstMarket.category) })}
 								</span>
 								<span class="num muted">{firstMarket.days}d</span>
 								<span class="allcaps first-flag">
@@ -657,7 +620,7 @@
 								<div class="market-head">
 									<div class="market-meta">
 										<span style:color={categoryColor(practiceMarket.category)} class="allcaps">
-											{practiceMarket.category}
+											{t({ locale: $localeStore, key: categoryLabelKey(practiceMarket.category) })}
 										</span>
 										<span class="num muted">{practiceMarket.days}d</span>
 									</div>
@@ -699,7 +662,7 @@
 							<div class="card-face back" aria-hidden={!practiceFlipped}>
 								<div class="depth-head">
 									<span style:color={categoryColor(practiceMarket.category)} class="allcaps">
-										{practiceMarket.category}
+										{t({ locale: $localeStore, key: categoryLabelKey(practiceMarket.category) })}
 									</span>
 									<span class="eyebrow">
 										{t({ locale: $localeStore, key: 'onboarding.eyebrow.depth' })}

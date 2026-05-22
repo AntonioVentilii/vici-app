@@ -1,13 +1,7 @@
 <script lang="ts">
 	import { localeStore } from '$lib/stores/locale.store';
-	import { theme, type Theme } from '$lib/stores/theme.store';
+	import { THEME_SWATCHES, theme } from '$lib/stores/theme.store';
 	import { t } from '$lib/utils/i18n.utils';
-
-	const options: readonly { id: Theme; label: string; bg: string; dot: string }[] = [
-		{ id: 'dark', label: 'Dark', bg: '#0E0D0B', dot: '#F2ECDC' },
-		{ id: 'light', label: 'Light', bg: '#F2ECDC', dot: '#0E0D0B' },
-		{ id: 'peach', label: 'Peach', bg: '#FAE0CC', dot: '#3D2419' }
-	] as const;
 </script>
 
 <div
@@ -15,16 +9,17 @@
 	aria-label={t({ locale: $localeStore, key: 'a11y.appearance' })}
 	role="radiogroup"
 >
-	{#each options as option (option.id)}
+	{#each THEME_SWATCHES as option (option.id)}
+		{@const optionLabel = t({ locale: $localeStore, key: option.labelKey })}
 		<button
 			style={`--swatch-bg: ${option.bg}; --swatch-dot: ${option.dot}`}
 			class="welcome-theme-dot"
 			class:active={$theme === option.id}
 			aria-checked={$theme === option.id}
-			aria-label={option.label}
+			aria-label={optionLabel}
 			onclick={() => theme.set(option.id)}
 			role="radio"
-			title={option.label}
+			title={optionLabel}
 			type="button"
 		>
 			<span class="welcome-theme-dot-inner"></span>

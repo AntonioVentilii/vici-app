@@ -23,7 +23,7 @@
 		: 'border-no/20 bg-no-wash hover:bg-no/15'}"
 >
 	<div
-		class="mb-1 text-[10px] font-bold tracking-widest uppercase {isResolved && !noWon
+		class="eyebrow-xs mb-1 {isResolved && !noWon
 			? 'text-muted-foreground line-through'
 			: 'text-no'}"
 	>
@@ -47,7 +47,7 @@
 		: 'border-yes/20 bg-yes-wash hover:bg-yes/15'}"
 >
 	<div
-		class="mb-1 text-[10px] font-bold tracking-widest uppercase {isResolved && !yesWon
+		class="eyebrow-xs mb-1 {isResolved && !yesWon
 			? 'text-muted-foreground line-through'
 			: 'text-yes'}"
 	>

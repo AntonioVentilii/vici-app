@@ -138,10 +138,7 @@
 						</Button>
 					</div>
 					<div class="space-y-2">
-						<label
-							class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
-							for="settlement-price"
-						>
+						<label class="text-muted-foreground eyebrow-xs" for="settlement-price">
 							{t({
 								locale: $localeStore,
 								key: 'market.resolution.custom_price',

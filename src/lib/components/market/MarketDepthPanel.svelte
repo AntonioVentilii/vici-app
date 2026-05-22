@@ -1,5 +1,6 @@
 <script lang="ts">
 	import OrderBook from '$lib/components/market/OrderBook.svelte';
+	import { ORDER_BOOK_POLL_MS } from '$lib/constants/app.constants';
 	import { getOrderBook } from '$lib/services/order.services';
 	import { orderBookStore } from '$lib/stores/order-book.store';
 	import type { Market } from '$lib/types/market';
@@ -43,7 +44,7 @@
 		}
 
 		fetchOrderBook();
-		const interval = setInterval(fetchOrderBook, 5_000);
+		const interval = setInterval(fetchOrderBook, ORDER_BOOK_POLL_MS);
 
 		return () => clearInterval(interval);
 	});

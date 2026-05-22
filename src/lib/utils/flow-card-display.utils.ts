@@ -1,4 +1,4 @@
-import type { Market } from '$lib/types/market';
+import type { CallSide, Market } from '$lib/types/market';
 import type { MarketMetadata, MarketWhyNow } from '$lib/types/market-metadata';
 import type {
 	CategoryAccuracySignal,
@@ -44,7 +44,7 @@ export const formatFlowCallsLabel = ({
 export const consensusPercent = (market: Market): number =>
 	Math.round(Math.max(0, Math.min(1, market.yesProbability)) * 100);
 
-export const consensusSide = (market: Market): 'YES' | 'NO' =>
+export const consensusSide = (market: Market): CallSide =>
 	consensusPercent(market) >= 50 ? 'YES' : 'NO';
 
 export const formatWhyNowChip = (whyNow: MarketWhyNow | undefined): string | undefined => {

@@ -5,13 +5,21 @@
 	import { WELCOME_MARKET_PREVIEWS } from '$lib/constants/welcome-markets.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { categoryColor } from '$lib/utils/category-color.utils';
+	import { formatLocaleNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { previewCallerCount } from '$lib/utils/welcome-market.utils';
 
-	const previewCallers = ({ id }: { id: string }): string => {
-		const seed = id.charCodeAt(0);
-
-		return (1200 + ((seed * 173) % 8500)).toLocaleString();
-	};
+	const previewCallers = ({ id, locale }: { id: string; locale: string }): string =>
+		formatLocaleNumber({
+			value: previewCallerCount({
+				id,
+				base: 1_200,
+				span: 8_500,
+				whichChar: 'first',
+				multiplier: 173
+			}),
+			locale
+		});
 
 	const isTrendingUp = ({ yesPercent, index }: { yesPercent: number; index: number }): boolean =>
 		(yesPercent + index * 3) % 7 < 3;
@@ -36,7 +44,7 @@
 						>{market.category.toUpperCase()}</span
 					>
 					<span class="welcome-market-meta num">
-						{previewCallers({ id: market.id })}
+						{previewCallers({ id: market.id, locale: $localeStore })}
 						{t({ locale: $localeStore, key: 'card.calls' })}
 						{#if isTrendingUp({ yesPercent: yesPct, index })}
 							<span class="welcome-market-trend text-yes" aria-hidden="true">↑</span>

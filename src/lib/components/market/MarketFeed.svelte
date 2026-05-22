@@ -11,7 +11,11 @@
 	interface Props {
 		markets: Market[];
 		loading: boolean;
-		emptyMessage?: string;
+		// Required so the empty-state copy is always localised at the
+		// call site (see `MarketsPage` for the canonical `markets.empty`
+		// i18n key). No default — keeping one here would silently leak
+		// untranslated English back into the feed.
+		emptyMessage: string;
 		hasMore?: boolean;
 		onLoadMore?: () => void;
 		onChallenge?: (market: Market) => void;
@@ -20,7 +24,7 @@
 	let {
 		markets,
 		loading,
-		emptyMessage = 'No markets found. Try adjusting your filters or search term.',
+		emptyMessage,
 		hasMore = false,
 		onLoadMore,
 		onChallenge

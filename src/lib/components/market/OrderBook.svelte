@@ -150,7 +150,7 @@
 		</h3>
 		<div class="flex items-center gap-2">
 			<span class="bg-yes flex h-2 w-2 animate-pulse rounded-full"></span>
-			<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
+			<span class="text-muted-foreground eyebrow-xs"
 				>{t({ locale: $localeStore, key: 'market.order_book.live' })}</span
 			>
 		</div>
@@ -161,7 +161,7 @@
 			<div
 				class="border-primary/20 border-t-primary h-12 w-12 animate-spin rounded-full border-4"
 			></div>
-			<span class="text-primary mt-4 text-[10px] font-bold tracking-widest uppercase">
+			<span class="text-primary eyebrow-xs mt-4">
 				{t({ locale: $localeStore, key: 'market.order_book.updating' })}
 			</span>
 		</div>
@@ -237,7 +237,7 @@
 		</div>
 
 		<div
-			class="border-border text-muted-foreground mt-6 grid grid-cols-2 gap-4 border-t pt-4 text-[10px] font-bold tracking-widest uppercase"
+			class="border-border text-muted-foreground eyebrow-xs mt-6 grid grid-cols-2 gap-4 border-t pt-4"
 		>
 			<div>{t({ locale: $localeStore, key: 'market.order_book.price' })}</div>
 			<div class="text-right">{t({ locale: $localeStore, key: 'market.order_book.qty' })}</div>

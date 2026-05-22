@@ -13,6 +13,7 @@
 	import type { Position } from '$lib/types/position';
 	import { decimalFixedValueToNumber, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { positionResolvedResult } from '$lib/utils/position.utils';
 
 	interface Props {
 		market: Market;
@@ -40,15 +41,8 @@
 
 	const activeOrders = $derived($orders.filter((o) => o.series_id === market.id));
 
-	const isResolved = $derived(market.status === 'Resolved');
-
-	const positionResult = (outcomeId: string): 'won' | 'lost' | undefined => {
-		if (!isResolved || !market.outcome) {
-			return;
-		}
-
-		return outcomeId === market.outcome ? 'won' : 'lost';
-	};
+	const positionResult = (position: Position): 'won' | 'lost' | null =>
+		positionResolvedResult({ market, position });
 
 	let cancellingId = $state<string | null>(null);
 
@@ -86,13 +80,13 @@
 				{#if positions.length > 0 || activeOrders.length > 0}
 					{#if positions.filter((p) => p.netQty !== ZERO).length > 0}
 						<div class="space-y-4">
-							<h5 class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+							<h5 class="text-muted-foreground eyebrow-xs">
 								{t({ locale: $localeStore, key: 'market.detail.tabs.your_active_positions' })}
 							</h5>
 							<div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 								{#each positions as pos (pos.marketId)}
 									{#if pos.netQty !== ZERO}
-										{@const result = positionResult(pos.outcomeId)}
+										{@const result = positionResult(pos)}
 										<div
 											class="flex flex-col gap-2 rounded-2xl border p-5 {result === 'won'
 												? 'border-yes/30 bg-yes-wash'
@@ -106,7 +100,7 @@
 										>
 											<div class="flex items-center justify-between">
 												<span
-													class="text-[10px] font-bold tracking-widest uppercase {result === 'won'
+													class="eyebrow-xs {result === 'won'
 														? 'text-yes'
 														: result === 'lost'
 															? 'text-muted-foreground line-through'
@@ -164,7 +158,7 @@
 
 					{#if activeOrders.length > 0}
 						<div class="space-y-4">
-							<h5 class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+							<h5 class="text-muted-foreground eyebrow-xs">
 								{t({ locale: $localeStore, key: 'market.detail.tabs.your_open_limit_orders' })}
 							</h5>
 							<div class="flex flex-col gap-3">

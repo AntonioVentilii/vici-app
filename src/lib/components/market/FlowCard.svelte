@@ -5,7 +5,7 @@
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import { playgroundPotentialReturnSuffix } from '$lib/derived/playground.derived';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { Market } from '$lib/types/market';
+	import type { FlowAction, Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type {
 		CategoryAccuracySignal,
@@ -14,7 +14,7 @@
 	} from '$lib/types/market-signals';
 	import type { Position } from '$lib/types/position';
 	import { categoryColor } from '$lib/utils/category-color.utils';
-	import { FLOW_ART_CATEGORIES, type FlowArtCategory } from '$lib/utils/flow-art.utils';
+	import { resolveFlowArtCategory, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import {
 		consensusPercent,
 		consensusSide,
@@ -23,10 +23,11 @@
 	} from '$lib/utils/flow-card-display.utils';
 	import { formatProbability, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { getExpiryEyebrow } from '$lib/utils/market.utils';
 
 	interface Props {
 		market: Market;
-		onAction: (action: 'YES' | 'NO' | 'SKIP') => void;
+		onAction: (action: FlowAction) => void;
 		isLimitOrderYes: boolean;
 		isLimitOrderNo: boolean;
 		signedIn: boolean;
@@ -47,7 +48,7 @@
 		// playing the 80ms commit-feedback beat before the parent unmounts
 		// it. Drag is locked, the matching edge tint goes to full
 		// intensity, and the directional label sits at full opacity.
-		committedAction?: 'YES' | 'NO' | 'SKIP' | null;
+		committedAction?: FlowAction | null;
 		metadata?: MarketMetadata;
 		categoryAcc?: CategoryAccuracySignal;
 		priorCall?: PriorCallSignal;
@@ -91,26 +92,15 @@
 	const potentialReturnYes = $derived(amount / (market.yesProbability || 0.1));
 	const potentialReturnNo = $derived(amount / (market.noProbability || 0.1));
 
-	const FLOW_ART_SET = new Set<string>(FLOW_ART_CATEGORIES);
-	const resolvedCategory: FlowArtCategory = $derived.by(() => {
-		const raw = (category ?? '').toString().toLowerCase();
-
-		if (FLOW_ART_SET.has(raw)) {
-			return raw as FlowArtCategory;
-		}
-
-		// No mapping for this market yet (admin hasn't tagged it).
-		// Deterministically pick from the 6 categories using the
-		// market.id so each untagged market still gets distinct
-		// artwork instead of every card falling to the same default.
-		let h = 0;
-
-		for (let i = 0; i < market.id.length; i++) {
-			h = (h * 31 + market.id.charCodeAt(i)) | 0;
-		}
-
-		return FLOW_ART_CATEGORIES[Math.abs(h) % FLOW_ART_CATEGORIES.length];
-	});
+	// Single source of truth for category resolution: untagged markets
+	// must hash identically here, in FlowMode, in PositionArtThumb, and
+	// in market-signals — otherwise the same market shows up under
+	// different categories (and palettes / artwork) on different
+	// surfaces. See `resolveFlowArtCategory` for the canonical FNV-1a
+	// derivation.
+	const resolvedCategory: FlowArtCategory = $derived(
+		resolveFlowArtCategory({ categoryId: category, seed: market.id })
+	);
 	const catColor = $derived(categoryColor(resolvedCategory));
 
 	let startX = 0;
@@ -204,21 +194,7 @@
 		flipped = false;
 	};
 
-	const formatExpiryEyebrow = $derived.by(() => {
-		const now = Date.now();
-		const exp = Number(market.expiryDate) / 1_000_000;
-		const days = Math.max(0, Math.ceil((exp - now) / (1000 * 60 * 60 * 24)));
-
-		if (days === 0) {
-			return 'TODAY';
-		}
-
-		if (days >= 365) {
-			return `${Math.round(days / 365)}y`;
-		}
-
-		return `${days}d`;
-	});
+	const formatExpiryEyebrow = $derived(getExpiryEyebrow(market.expiryDate));
 
 	// First clause of description (up to ~52 chars) — only used when no
 	// explicit `subtitle` is passed by the parent.

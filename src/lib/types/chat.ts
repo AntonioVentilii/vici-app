@@ -6,12 +6,3 @@ export interface ChatMessage {
 	content: string;
 	timestamp: number;
 }
-
-export interface Comment {
-	marketId: string;
-	userId: PrincipalText;
-	content: string;
-	parentId?: string; // For threaded comments
-	timestamp: number;
-	editedAt?: number;
-}

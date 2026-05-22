@@ -31,3 +31,24 @@ export const WEEK_IN_NANOSECONDS = WEEK_IN_SECONDS * SECOND_IN_NANOSECONDS;
 export const II_MAX_TIME_TO_LIVE_NS = WEEK_IN_NANOSECONDS;
 
 export const WALLET_PAGINATION = 10n;
+
+/**
+ * How often the prediction interface and depth panel re-fetch the
+ * order book while a market is open. 5 s is the eyeballed sweet spot
+ * between "stale" and "wasteful" given typical order-book churn; bump
+ * via this constant rather than the literal inline.
+ */
+export const ORDER_BOOK_POLL_MS = 5_000;
+
+/**
+ * In-market chat poll interval. The chat surface long-polls because
+ * the satellite doesn't push deltas yet; once it does, this constant
+ * (and the consumer's `setInterval`) goes away.
+ */
+export const CHAT_POLL_MS = 5_000;
+
+/**
+ * Default auto-dismiss duration for global toasts (`notificationsStore`).
+ * Per-call overrides still win — this is just the implicit default.
+ */
+export const TOAST_DEFAULT_MS = 5_000;

@@ -40,10 +40,10 @@
 
 <div class="border-border bg-muted/30 col-span-2 flex flex-col gap-3 rounded-xl border p-4">
 	<div class="flex items-center justify-between">
-		<div class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+		<div class="text-muted-foreground eyebrow-xs">
 			{isResolved ? 'Resolved Outcome' : 'Top Outcomes'}
 		</div>
-		<div class="text-primary text-[10px] font-bold tracking-widest uppercase">
+		<div class="text-primary eyebrow-xs">
 			{outcomes.length} total
 		</div>
 	</div>

@@ -88,7 +88,7 @@
 		<div class="border-border bg-background/45 rounded-2xl border p-5">
 			<div class="flex items-start justify-between gap-4">
 				<div>
-					<p class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+					<p class="text-muted-foreground eyebrow-xs">
 						{t({ locale: $localeStore, key: 'portfolio.stats.pnl' })}
 					</p>
 					<p class={['mt-3 font-mono text-3xl font-black tabular-nums md:text-4xl', pnlToneClass]}>

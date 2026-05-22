@@ -3,6 +3,8 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
+	import { writeToClipboard } from '$lib/utils/clipboard.utils';
+	import { djb2 } from '$lib/utils/hash.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
@@ -11,23 +13,23 @@
 
 	const { sessionXp = 0 }: Props = $props();
 
+	const INVITE_TOAST_MS = 1_600;
+
 	let toast = $state('');
 
 	const handle = $derived.by(() => {
 		const nick = $userStore.profile?.nickname?.trim();
 
-		return nick && nick.length > 0 ? nick : 'predictor';
+		if (nick && nick.length > 0) {
+			return nick;
+		}
+
+		return t({ locale: $localeStore, key: 'settings.identity.fallback' });
 	});
 
 	const inviteCode = $derived.by(() => {
 		const seed = `${handle}|${sessionXp}|${$userStore.profile?.level ?? 0}`;
-		let h = 5381;
-
-		for (let i = 0; i < seed.length; i++) {
-			h = ((h << 5) + h + seed.charCodeAt(i)) | 0;
-		}
-
-		const suffix = Math.abs(h).toString(36).slice(0, 5).toUpperCase();
+		const suffix = djb2(seed).toString(36).slice(0, 5).toUpperCase();
 		const prefix = handle.replace(/\s+/g, '-').toUpperCase().slice(0, 24);
 
 		return `${prefix}-${suffix}`;
@@ -42,16 +44,17 @@
 		toast = message;
 		setTimeout(() => {
 			toast = '';
-		}, 1600);
+		}, INVITE_TOAST_MS);
 	};
 
 	const copyCode = async () => {
-		try {
-			await navigator.clipboard.writeText(inviteCode);
-			showToast(t({ locale: $localeStore, key: 'flow.invite.toast_code_copied' }));
-		} catch {
-			showToast(t({ locale: $localeStore, key: 'flow.invite.toast_copy_failed' }));
-		}
+		const ok = await writeToClipboard(inviteCode);
+		showToast(
+			t({
+				locale: $localeStore,
+				key: ok ? 'flow.invite.toast_code_copied' : 'flow.invite.toast_copy_failed'
+			})
+		);
 	};
 
 	const shareInvite = async () => {
@@ -67,12 +70,13 @@
 			}
 		}
 
-		try {
-			await navigator.clipboard.writeText(`${shareText} ${inviteUrl}`);
-			showToast(t({ locale: $localeStore, key: 'flow.invite.toast_invite_copied' }));
-		} catch {
-			showToast(t({ locale: $localeStore, key: 'flow.invite.toast_copy_failed' }));
-		}
+		const ok = await writeToClipboard(`${shareText} ${inviteUrl}`);
+		showToast(
+			t({
+				locale: $localeStore,
+				key: ok ? 'flow.invite.toast_invite_copied' : 'flow.invite.toast_copy_failed'
+			})
+		);
 	};
 </script>
 

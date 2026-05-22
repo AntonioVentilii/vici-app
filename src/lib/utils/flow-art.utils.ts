@@ -9,10 +9,15 @@
 // Returns SVG strings — components mount via {@html ...}. No DOM
 // access, no I/O — pure helper.
 
+import { THEMES, type Theme } from '$lib/stores/theme.store';
+import { fnv1a32 } from '$lib/utils/hash.utils';
+
 export type FlowArtCategory = 'macro' | 'crypto' | 'sports' | 'politics' | 'tech' | 'culture';
 
 export type FlowArtState = 'neutral' | 'won' | 'lost';
-export type FlowArtTheme = 'dark' | 'light' | 'peach';
+// FlowArt's palette dimension is keyed by the app-wide `Theme` union;
+// re-export under a domain alias so existing call sites read naturally.
+export type FlowArtTheme = Theme;
 
 export const FLOW_ART_CATEGORIES: readonly FlowArtCategory[] = [
 	'macro',
@@ -23,8 +28,16 @@ export const FLOW_ART_CATEGORIES: readonly FlowArtCategory[] = [
 	'culture'
 ] as const;
 
+/**
+ * Pre-built lookup set for `FLOW_ART_CATEGORIES`. Three Flow surfaces
+ * (FlowCard, FlowMode, market-signals) need to test whether an
+ * arbitrary string is a canonical category — exporting the Set once
+ * avoids each consumer rebuilding it on module load.
+ */
+export const FLOW_ART_CATEGORY_SET: ReadonlySet<string> = new Set(FLOW_ART_CATEGORIES);
+
 export const FLOW_ART_STATES: readonly FlowArtState[] = ['neutral', 'won', 'lost'] as const;
-export const FLOW_ART_THEMES: readonly FlowArtTheme[] = ['dark', 'light', 'peach'] as const;
+export const FLOW_ART_THEMES: readonly FlowArtTheme[] = THEMES;
 
 export interface FlowArtPalette {
 	bg: string;
@@ -61,16 +74,7 @@ export interface FlowArtRenderOptions {
 //   Hash + PRNG
 // =============================================================
 
-const hashStr = (s: string): number => {
-	let h = 0x811c9dc5;
-
-	for (let i = 0; i < s.length; i++) {
-		h ^= s.charCodeAt(i);
-		h = (h + ((h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24))) | 0;
-	}
-
-	return h >>> 0;
-};
+const hashStr = fnv1a32;
 
 const mulberry32 = (seed: number): (() => number) => {
 	let a = seed >>> 0;
@@ -1039,7 +1043,7 @@ export const resolveFlowArtCategory = ({
 }): FlowArtCategory => {
 	const canonical = (categoryId ?? '').toString().toLowerCase();
 
-	if ((FLOW_ART_CATEGORIES as readonly string[]).includes(canonical)) {
+	if (FLOW_ART_CATEGORY_SET.has(canonical)) {
 		return canonical as FlowArtCategory;
 	}
 

@@ -36,7 +36,7 @@
 		<div class="space-y-6">
 			<div class="bg-foreground/5 flex flex-row items-center justify-between rounded-2xl p-4">
 				<div class="flex flex-col">
-					<span class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase">
+					<span class="text-muted-foreground eyebrow-xs">
 						{t({ locale: $localeStore, key: 'trade.predicting_on' })}
 					</span>
 

@@ -22,7 +22,7 @@
 </script>
 
 <div class="px-4 py-2">
-	<div class="text-muted-foreground mb-2 text-[10px] font-bold tracking-widest uppercase">
+	<div class="text-muted-foreground eyebrow-xs mb-2">
 		{t({ locale: $localeStore, key: 'layout.domain.title' })}
 	</div>
 	<div class="flex gap-1">

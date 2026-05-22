@@ -8,7 +8,7 @@
 	import IconSignalYes from '$lib/components/icons/IconSignalYes.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
+	import { ORDER_BOOK_POLL_MS, ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
@@ -181,7 +181,7 @@
 					: pref;
 		}
 
-		const interval = setInterval(fetchOrderBook, 5_000);
+		const interval = setInterval(fetchOrderBook, ORDER_BOOK_POLL_MS);
 
 		return () => clearInterval(interval);
 	});
@@ -474,7 +474,7 @@
 					>
 						<div class="relative z-10 flex flex-col items-center gap-1">
 							<IconSignalYes size="22px" />
-							<span class="text-[10px] font-bold tracking-widest uppercase">
+							<span class="eyebrow-xs">
 								{tr({ key: 'prediction.choice.label' })}
 							</span>
 							<span class="text-xl font-black">{tr({ key: 'outcome.yes' })}</span>
@@ -495,7 +495,7 @@
 					>
 						<div class="relative z-10 flex flex-col items-center gap-1">
 							<IconSignalNo size="22px" />
-							<span class="text-[10px] font-bold tracking-widest uppercase">
+							<span class="eyebrow-xs">
 								{tr({ key: 'prediction.choice.label' })}
 							</span>
 							<span class="text-xl font-black">{tr({ key: 'outcome.no' })}</span>
@@ -517,7 +517,7 @@
 								onclick={() => handleOutcomeSelect({ outcomeId: outcome.id })}
 							>
 								<div class="relative z-10 flex flex-col items-center gap-0.5">
-									<span class="text-[10px] font-bold tracking-widest uppercase">
+									<span class="eyebrow-xs">
 										{tr({ key: 'prediction.choice.label' })}
 									</span>
 									<span class="text-center text-sm font-black">{outcome.title}</span>
@@ -532,10 +532,7 @@
 		<div class="space-y-4">
 			{#if orderType === 'LIMIT'}
 				<div class="space-y-2">
-					<label
-						class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
-						for="price"
-					>
+					<label class="text-muted-foreground eyebrow-xs" for="price">
 						{tr({ key: 'prediction.target_probability' })}
 					</label>
 
@@ -561,10 +558,7 @@
 
 			<div class="space-y-2">
 				<div class="flex justify-between">
-					<label
-						class="text-muted-foreground text-[10px] font-bold tracking-widest uppercase"
-						for="amount"
-					>
+					<label class="text-muted-foreground eyebrow-xs" for="amount">
 						{tr({
 							key: 'prediction.investment_amount',
 							params: { symbol: market.token.symbol }

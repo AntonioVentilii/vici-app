@@ -472,6 +472,21 @@ body {
 	color: var(--text-muted);
 }
 
+/* Compact eyebrow used in dense tables, order-book columns, position
+ * pills, etc. 10px / wide tracking — same intent as `.eyebrow` but at
+ * a step smaller. Drop-in replacement for the Tailwind blob
+ * `text-[10px] font-bold tracking-widest uppercase` repeated across
+ * 14+ market and order-book components. Color is inherited so the
+ * call site keeps its own `text-yes`, `text-muted-foreground`, etc.
+ */
+.eyebrow-xs {
+	font-family: var(--font-display);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+}
+
 .serif-italic {
 	font-family: var(--font-serif);
 	font-style: italic;

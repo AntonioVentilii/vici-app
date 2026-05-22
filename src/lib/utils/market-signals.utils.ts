@@ -2,7 +2,7 @@ import type { ClearingDid } from '$declarations';
 import { ZERO } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
 import type { SeriesCategory } from '$lib/types/category';
-import type { MarketId } from '$lib/types/market';
+import type { CallSide, MarketId } from '$lib/types/market';
 import type {
 	CategoryAccuracySignal,
 	FollowedLeanSignal,
@@ -11,20 +11,18 @@ import type {
 } from '$lib/types/market-signals';
 import type { Activity } from '$lib/types/social';
 import {
-	FLOW_ART_CATEGORIES,
+	FLOW_ART_CATEGORY_SET,
 	resolveFlowArtCategory,
 	type FlowArtCategory
 } from '$lib/utils/flow-art.utils';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { parseMarketId } from '$lib/validation/market.validation';
 
-const ART_CATEGORY_SET = new Set<string>(FLOW_ART_CATEGORIES);
-
 const isExecuted = (event: ClearingDid.Event): boolean => 'Executed' in event.event_type;
 const isSettled = (event: ClearingDid.Event): boolean => 'Settled' in event.event_type;
 const isWin = (event: ClearingDid.Event): boolean => isSettled(event) && event.qty > ZERO;
 
-const eventSide = (event: ClearingDid.Event): 'YES' | 'NO' => (event.qty >= ZERO ? 'YES' : 'NO');
+const eventSide = (event: ClearingDid.Event): CallSide => (event.qty >= ZERO ? 'YES' : 'NO');
 
 const eventCategory = ({
 	event,
@@ -36,7 +34,7 @@ const eventCategory = ({
 	const marketId = parseMarketId(event.series_id);
 	const categoryId = categoryBySeries.get(marketId);
 
-	if (categoryId && ART_CATEGORY_SET.has(categoryId)) {
+	if (categoryId && FLOW_ART_CATEGORY_SET.has(categoryId)) {
 		return categoryId as FlowArtCategory;
 	}
 
@@ -66,10 +64,10 @@ const eventConsensus = (event: ClearingDid.Event): number | undefined => {
 	return Math.max(0, Math.min(1, value));
 };
 
-const activityOutcome = (details: string | undefined): 'YES' | 'NO' | undefined => {
+const activityOutcome = (details: string | undefined): CallSide | undefined => {
 	const match = /\bon\s+(YES|NO)\b/i.exec(details ?? '');
 
-	return match?.[1]?.toUpperCase() as 'YES' | 'NO' | undefined;
+	return match?.[1]?.toUpperCase() as CallSide | undefined;
 };
 
 export const deriveCategoryAccuracySignals = ({

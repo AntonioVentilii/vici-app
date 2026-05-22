@@ -4,7 +4,36 @@ import { writable } from 'svelte/store';
 export type Theme = 'dark' | 'light' | 'peach';
 
 const THEME_KEY = 'vici-theme';
-const THEMES: readonly Theme[] = ['dark', 'light', 'peach'] as const;
+export const THEMES: readonly Theme[] = ['dark', 'light', 'peach'] as const;
+
+/**
+ * Theme-label i18n keys consumed by `AppearancePicker` (settings tile +
+ * dropdown dots). Centralised so the picker variants and the welcome
+ * theme picker can share the same labelling without each carrying its
+ * own literal map.
+ */
+export type ThemeLabelKey = 'ui.theme.dark' | 'ui.theme.light' | 'ui.theme.peach';
+
+/**
+ * Background / dot hex pairs for theme preview chips. Single source of
+ * truth for `AppearancePicker` (settings + dropdown variants) and
+ * `WelcomeThemePicker`. Hex values intentionally diverge from the
+ * runtime `--bg-base` / `--text-base` tokens — these are static preview
+ * swatches that must read correctly even when the *opposite* theme is
+ * currently active.
+ */
+export interface ThemeSwatch {
+	readonly id: Theme;
+	readonly labelKey: ThemeLabelKey;
+	readonly bg: string;
+	readonly dot: string;
+}
+
+export const THEME_SWATCHES: readonly ThemeSwatch[] = [
+	{ id: 'dark', labelKey: 'ui.theme.dark', bg: '#0E0D0B', dot: '#F2ECDC' },
+	{ id: 'light', labelKey: 'ui.theme.light', bg: '#F2ECDC', dot: '#0E0D0B' },
+	{ id: 'peach', labelKey: 'ui.theme.peach', bg: '#FAE0CC', dot: '#3D2419' }
+] as const;
 
 const getInitialTheme = (): Theme => {
 	if (!browser) {

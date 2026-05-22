@@ -103,9 +103,7 @@
 						role="menu"
 						tabindex="-1"
 					>
-						<div
-							class="text-muted-foreground px-2 pt-1 pb-2 text-[10px] font-bold tracking-widest uppercase"
-						>
+						<div class="text-muted-foreground eyebrow-xs px-2 pt-1 pb-2">
 							{t({ locale: $localeStore, key: 'market.stacked.your_circles' })}
 						</div>
 

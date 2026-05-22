@@ -1,33 +1,9 @@
+import { fnv1a64Hex } from '$lib/utils/hash.utils';
 import { nonNullish } from '@dfinity/utils';
 import type { PrincipalText } from '@junobuild/schema';
 
 const DICEBEAR_STYLE = 'notionists';
 const DICEBEAR_VERSION = '9.x';
-
-/**
- * 64-bit FNV-1a hash, returned as a zero-padded 16-char hex string.
- *
- * Used to derive a deterministic DiceBear seed from the user's principal
- * without ever sending the raw principal to `api.dicebear.com`. FNV-1a is
- * fast, dependency-free and sync, which matters because avatar URL
- * resolution runs on every render.
- *
- * This is **not** a cryptographic hash — it only needs to break the direct
- * `principal -> avatar URL` correlation that a third-party image host would
- * otherwise receive in plaintext.
- */
-const fnv1a64Hex = (input: string): string => {
-	const MASK = 0xffffffffffffffffn;
-	const PRIME = 0x100000001b3n;
-	let hash = 0xcbf29ce484222325n;
-
-	for (let i = 0; i < input.length; i++) {
-		hash ^= BigInt(input.charCodeAt(i));
-		hash = (hash * PRIME) & MASK;
-	}
-
-	return hash.toString(16).padStart(16, '0');
-};
 
 /**
  * DiceBear URL for a given seed. Kept in one place so every surface in the app

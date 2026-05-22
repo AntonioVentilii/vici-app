@@ -39,11 +39,12 @@
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { getFriendRequests, getFriends } from '$lib/services/relation.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { FLOW_CATEGORIES, preferencesStore } from '$lib/stores/preferences.store';
+	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { theme } from '$lib/stores/theme.store';
 	import { setAuthBusy, userStore } from '$lib/stores/user.store';
 	import type { ButtonStatus } from '$lib/types/components';
 	import type { FlowSessionLength, SettingsVisibility } from '$lib/types/preferences';
+	import { FLOW_ART_CATEGORIES } from '$lib/utils/flow-art.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	let confirmingDelete = $state(false);
@@ -113,7 +114,7 @@
 			: t({
 					locale: $localeStore,
 					key: 'settings.flow_deck.sub',
-					params: { enabled: flowCategoriesEnabled, total: FLOW_CATEGORIES.length }
+					params: { enabled: flowCategoriesEnabled, total: FLOW_ART_CATEGORIES.length }
 				})
 	);
 
@@ -122,7 +123,7 @@
 
 	const toggleFlowCategory = (category: string) => {
 		preferencesStore.update((prefs) => {
-			const current = prefs.flowCategories ?? [...FLOW_CATEGORIES];
+			const current = prefs.flowCategories ?? [...FLOW_ART_CATEGORIES];
 			const next = current.includes(category)
 				? current.filter((c) => c !== category)
 				: [...current, category];
@@ -322,7 +323,7 @@
 
 				{#if flowDeckTab === 'all'}
 					<div class="settings-flow-deck-grid" role="group">
-						{#each FLOW_CATEGORIES as category (category)}
+						{#each FLOW_ART_CATEGORIES as category (category)}
 							{@const enabled = ($preferencesStore.flowCategories ?? []).includes(category)}
 							<button
 								class="settings-flow-deck-pill"

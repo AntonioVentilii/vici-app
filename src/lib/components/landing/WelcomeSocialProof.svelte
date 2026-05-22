@@ -1,6 +1,5 @@
 <script lang="ts">
 	import LandingSectionHeader from '$lib/components/landing/LandingSectionHeader.svelte';
-	import type { AppLocale } from '$lib/constants/locale.constants';
 	import {
 		WELCOME_SOCIAL_LEADERBOARD,
 		WELCOME_SOCIAL_PREDICTOR_COUNT,
@@ -10,22 +9,12 @@
 		type WelcomeSocialAvatarTone
 	} from '$lib/constants/welcome-social.constants';
 	import { localeStore } from '$lib/stores/locale.store';
+	import {
+		formatLocaleCompactNumber as formatXp,
+		formatLocaleNumber as formatNumber,
+		formatLocalePercent as formatAccuracy
+	} from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
-
-	const formatNumber = ({ value, locale }: { value: number; locale: AppLocale }): string =>
-		new Intl.NumberFormat(locale).format(value);
-
-	const formatXp = ({ value, locale }: { value: number; locale: AppLocale }): string =>
-		new Intl.NumberFormat(locale, {
-			notation: 'compact',
-			maximumFractionDigits: 1
-		}).format(value);
-
-	const formatAccuracy = ({ value, locale }: { value: number; locale: AppLocale }): string =>
-		new Intl.NumberFormat(locale, {
-			style: 'percent',
-			maximumFractionDigits: 1
-		}).format(value);
 
 	const avatarClass = ({ tone }: { tone: WelcomeSocialAvatarTone }): string =>
 		`welcome-social-avatar welcome-social-avatar--${tone}`;

@@ -3,12 +3,13 @@
 	import { resolve } from '$app/paths';
 	import IconStreakFlame from '$lib/components/icons/IconStreakFlame.svelte';
 	import IconXpChevron from '$lib/components/icons/IconXpChevron.svelte';
-	import type { AppLocale } from '$lib/constants/locale.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { WELCOME_MARKET_PREVIEWS } from '$lib/constants/welcome-markets.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { categoryColor } from '$lib/utils/category-color.utils';
+	import { formatLocaleNumber as formatCount } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { previewCallerCount } from '$lib/utils/welcome-market.utils';
 
 	const FLOW_ACTIVE_COUNT = 2847;
 	const TOP_CARD_INDEX = 2;
@@ -34,14 +35,8 @@
 		return 'welcome-flow-demo-card welcome-flow-demo-card--back';
 	};
 
-	const formatCount = ({ value, locale }: { value: number; locale: AppLocale }): string =>
-		new Intl.NumberFormat(locale).format(value);
-
-	const previewCallers = ({ id, locale }: { id: string; locale: AppLocale }): string => {
-		const seed = id.charCodeAt(id.length - 1);
-
-		return formatCount({ value: 2600 + ((seed * 137) % 1700), locale });
-	};
+	const previewCallers = ({ id, locale }: { id: string; locale: string }): string =>
+		formatCount({ value: previewCallerCount({ id, base: 2_600, span: 1_700 }), locale });
 
 	const sharpPercent = ({ yesPercent }: { yesPercent: number }): number =>
 		Math.min(95, yesPercent + 10);

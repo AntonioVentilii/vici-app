@@ -33,13 +33,13 @@
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { flowSessionMaxBets, preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
-	import type { Market, MarketId } from '$lib/types/market';
+	import type { CallSide, FlowAction, Market, MarketId } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type { UserMarketSignals } from '$lib/types/market-signals';
 	import type { Position } from '$lib/types/position';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import {
-		FLOW_ART_CATEGORIES,
+		FLOW_ART_CATEGORY_SET,
 		resolveFlowArtCategory,
 		type FlowArtCategory
 	} from '$lib/utils/flow-art.utils';
@@ -59,7 +59,6 @@
 
 	const MAX_MARKETS = 20;
 	const maxBets = $derived(flowSessionMaxBets($preferencesStore));
-	const FLOW_ART_SET = new Set<string>(FLOW_ART_CATEGORIES);
 
 	const resolveFlowCategory = ({
 		categoryId,
@@ -68,7 +67,7 @@
 		categoryId: string | undefined;
 		marketId: string;
 	}): FlowArtCategory => {
-		if (categoryId && FLOW_ART_SET.has(categoryId)) {
+		if (categoryId && FLOW_ART_CATEGORY_SET.has(categoryId)) {
 			return categoryId as FlowArtCategory;
 		}
 
@@ -103,7 +102,7 @@
 	// Bound to the committed market's id so that once `advance()` shifts
 	// the deck, the *next* card never inherits the committed state — the
 	// outgoing card keeps it for the duration of its exit transition.
-	let committedAction = $state<'YES' | 'NO' | 'SKIP' | null>(null);
+	let committedAction = $state<FlowAction | null>(null);
 	let committedMarketId = $state<string | null>(null);
 	const COMMIT_FEEDBACK_MS = 80;
 	const COMMIT_RESET_MS = 600;
@@ -132,7 +131,7 @@
 		id: number;
 		amount: number;
 		combo: number;
-		side: 'YES' | 'NO';
+		side: CallSide;
 		// 'bonus' = milestone reward (laurel, larger, paired copy).
 		kind: XpPopKind;
 		// Paired copy ("First call.", "Ten deep.") shown above the
@@ -231,7 +230,7 @@
 	}: {
 		amount: number;
 		combo: number;
-		side: 'YES' | 'NO';
+		side: CallSide;
 		kind?: XpPopKind;
 		copy?: string;
 	}) => {
@@ -265,7 +264,7 @@
 		}
 	};
 
-	const handleAction = (action: 'YES' | 'NO' | 'SKIP') => {
+	const handleAction = (action: FlowAction) => {
 		if (completed || flowPaused) {
 			return;
 		}

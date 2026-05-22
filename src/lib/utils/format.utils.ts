@@ -153,3 +153,50 @@ export const shortenWithMiddleEllipsis = ({
 		? `${text.slice(0, splitLength)}...${text.slice(-1 * splitLength)}`
 		: text;
 };
+
+// =============================================================
+//  Locale-aware Intl wrappers
+// =============================================================
+//
+// Locale-aware integer formatter — what landing / onboarding need most
+// (`new Intl.NumberFormat(locale).format(...)`). Locale is typed as
+// `string` rather than `AppLocale` so callers in surfaces that don't
+// import `AppLocale` (e.g. transient demo surfaces) can pass any
+// BCP-47 string the runtime accepts.
+
+export const formatLocaleNumber = ({ value, locale }: { value: number; locale: string }): string =>
+	new Intl.NumberFormat(locale).format(value);
+
+/**
+ * Compact-notation number ("1.2K", "5M"). Used wherever a constrained
+ * pill / chip shows XP or follower counts.
+ */
+export const formatLocaleCompactNumber = ({
+	value,
+	locale
+}: {
+	value: number;
+	locale: string;
+}): string =>
+	new Intl.NumberFormat(locale, {
+		notation: 'compact',
+		maximumFractionDigits: 1
+	}).format(value);
+
+/**
+ * Locale-aware percent formatter. Input is a 0–1 ratio, not 0–100, to
+ * match `Intl.NumberFormat`'s `style: 'percent'` contract.
+ */
+export const formatLocalePercent = ({
+	value,
+	locale,
+	maximumFractionDigits = 1
+}: {
+	value: number;
+	locale: string;
+	maximumFractionDigits?: number;
+}): string =>
+	new Intl.NumberFormat(locale, {
+		style: 'percent',
+		maximumFractionDigits
+	}).format(value);
