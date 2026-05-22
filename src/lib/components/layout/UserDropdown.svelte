@@ -44,7 +44,7 @@
 <PopOver bind:open>
 	{#snippet trigger()}
 		<BaseButton
-			class="border-border bg-card text-foreground hover:border-border-strong flex h-10 w-10 items-center justify-center rounded-full border transition-all active:scale-95"
+			class="bg-foreground/5 text-muted-foreground hover:bg-foreground/8 hover:text-foreground h-10 w-10 rounded-full active:scale-95"
 			aria-label={t({ locale: $localeStore, key: 'a11y.user_profile' })}
 			data-tid={TestId.UserMenu}
 		>
