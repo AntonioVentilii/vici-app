@@ -1192,6 +1192,7 @@ export const ptMessages = {
 	'onboarding.handle.checking': 'A verificar disponibilidade…',
 	'onboarding.handle.error_check_failed':
 		'Não foi possível verificar a disponibilidade. Tenta novamente.',
+	'onboarding.handle.required': 'Escolhe um handle para continuar.',
 	'onboarding.handle.taken': '@{handle} já está em uso. Tenta outro.',
 	'onboarding.handle.too_short': 'O handle deve ter pelo menos {count} caracteres.',
 	'onboarding.handle.available': '@{handle} está disponível.',

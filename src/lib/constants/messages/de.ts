@@ -1205,6 +1205,7 @@ export const deMessages = {
 	'onboarding.handle.checking': 'Verfügbarkeit wird geprüft…',
 	'onboarding.handle.error_check_failed':
 		'Verfügbarkeit konnte nicht geprüft werden. Bitte erneut versuchen.',
+	'onboarding.handle.required': 'Wähle ein Handle, um fortzufahren.',
 	'onboarding.handle.taken': '@{handle} ist bereits vergeben. Wähle ein anderes.',
 	'onboarding.handle.too_short': 'Das Handle muss mindestens {count} Zeichen lang sein.',
 	'onboarding.handle.available': '@{handle} ist verfügbar.',

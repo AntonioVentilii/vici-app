@@ -109,6 +109,14 @@
 	let handleCheckTimer: ReturnType<typeof setTimeout> | undefined;
 	const handleCheckDebounce_ms = 350;
 
+	// Visual feedback when the user taps the (visually) disabled
+	// "enter" button without a valid handle — a brief shake + red
+	// border on the input + focus, so the gesture is never silent.
+	let handleErrorShake = $state(false);
+	let handleErrorShakeTimer: ReturnType<typeof setTimeout> | undefined;
+	let handleInputEl = $state<HTMLInputElement | undefined>(undefined);
+	const handleErrorShake_ms = 480;
+
 	const queuedTimeouts: ReturnType<typeof setTimeout>[] = [];
 
 	const progressWidth = $derived(`${((step + 1) / 4) * 100}%`);
@@ -148,6 +156,12 @@
 	const canSubmitIdentity = $derived(
 		handle.length >= MIN_NICKNAME_LENGTH && handleAvailability === 'available' && !handleChecking
 	);
+	const handleInvalid = $derived(
+		handleAvailability === 'taken' ||
+			handleAvailability === 'too_short' ||
+			handleAvailability === 'required' ||
+			handleAvailability === 'check_failed'
+	);
 
 	$effect(() => {
 		if (step !== 3) {
@@ -181,6 +195,10 @@
 
 		if (handleCheckTimer) {
 			clearTimeout(handleCheckTimer);
+		}
+
+		if (handleErrorShakeTimer) {
+			clearTimeout(handleErrorShakeTimer);
 		}
 	});
 
@@ -434,8 +452,40 @@
 		}
 	};
 
+	const flashHandleError = () => {
+		if (handleErrorShakeTimer) {
+			clearTimeout(handleErrorShakeTimer);
+		}
+
+		// Restart the keyframe even when one is already running by
+		// dropping the class for a frame before re-applying it.
+		handleErrorShake = false;
+		requestAnimationFrame(() => {
+			handleErrorShake = true;
+
+			handleErrorShakeTimer = setTimeout(() => {
+				handleErrorShake = false;
+			}, handleErrorShake_ms);
+		});
+
+		haptic('low-thud');
+	};
+
 	const complete = () => {
-		if (!canSubmitIdentity || submitting) {
+		if (submitting) {
+			return;
+		}
+
+		if (!canSubmitIdentity) {
+			// Reflect the empty case in the live-region hint so the
+			// shake isn't the only signal a user gets.
+			if (handle.length === 0) {
+				handleAvailability = 'required';
+			}
+
+			flashHandleError();
+			handleInputEl?.focus();
+
 			return;
 		}
 
@@ -952,17 +1002,18 @@
 					</ul>
 				</div>
 
-				<label class="field">
+				<label class="field {handleInvalid ? 'field-invalid' : ''}">
 					<span class="eyebrow"
 						>{t({ locale: $localeStore, key: 'onboarding.eyebrow.handle' })}</span
 					>
-					<span class="handle-row">
+					<span
+						class="handle-row {handleInvalid ? 'invalid' : ''} {handleErrorShake ? 'shake' : ''}"
+					>
 						<span aria-hidden="true">@</span>
 						<input
+							bind:this={handleInputEl}
 							aria-describedby="onboarding-handle-status"
-							aria-invalid={handleAvailability === 'taken' ||
-								handleAvailability === 'too_short' ||
-								handleAvailability === 'check_failed'}
+							aria-invalid={handleInvalid}
 							data-tid={TestId.OnboardingHandleInput}
 							inputmode="text"
 							maxlength="16"
@@ -975,16 +1026,16 @@
 					</span>
 					<small
 						id="onboarding-handle-status"
-						class={handleAvailability === 'taken' ||
-						handleAvailability === 'too_short' ||
-						handleAvailability === 'check_failed'
+						class={handleInvalid
 							? 'num warning'
 							: handleAvailability === 'available'
 								? 'num ok'
 								: 'num'}
 						aria-live="polite"
 					>
-						{#if handle.length === 0}
+						{#if handleAvailability === 'required'}
+							{t({ locale: $localeStore, key: 'onboarding.handle.required' })}
+						{:else if handle.length === 0}
 							{t({ locale: $localeStore, key: 'onboarding.handle.hint' })}
 						{:else if handle.length < MIN_NICKNAME_LENGTH}
 							{t({
@@ -1048,8 +1099,9 @@
 
 				<button
 					class="primary-action {!canSubmitIdentity || submitting ? 'disabled-look' : ''}"
+					aria-disabled={!canSubmitIdentity || submitting}
 					data-tid={TestId.OnboardingPrimary}
-					disabled={!canSubmitIdentity || submitting}
+					disabled={submitting}
 					onclick={complete}
 					type="button"
 				>
@@ -1976,6 +2028,12 @@
 		background: color-mix(in srgb, var(--laurel) 5%, transparent);
 	}
 
+	.field.field-invalid,
+	.field.field-invalid:focus-within {
+		border-color: color-mix(in srgb, var(--no) 55%, transparent);
+		background: color-mix(in srgb, var(--no) 6%, transparent);
+	}
+
 	.field input {
 		width: 100%;
 		border: 0;
@@ -1990,6 +2048,41 @@
 		align-items: baseline;
 		gap: 0.35rem;
 		color: var(--text-muted);
+		transition: color var(--d-state) var(--ease-vici);
+	}
+
+	.handle-row.invalid {
+		color: var(--no);
+	}
+
+	.handle-row.shake {
+		animation: handle-shake var(--shake-duration, 480ms) cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+	}
+
+	@keyframes handle-shake {
+		10%,
+		90% {
+			transform: translateX(-2px);
+		}
+		20%,
+		80% {
+			transform: translateX(4px);
+		}
+		30%,
+		50%,
+		70% {
+			transform: translateX(-7px);
+		}
+		40%,
+		60% {
+			transform: translateX(7px);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.handle-row.shake {
+			animation: none;
+		}
 	}
 
 	.handle-row input {

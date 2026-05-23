@@ -699,6 +699,7 @@ export const enMessages = {
 	'onboarding.handle.error_check_failed': 'Could not check availability. Try again.',
 	'onboarding.handle.hint': 'a-z, 0-9, dot or underscore',
 	'onboarding.handle.placeholder': 'tacitus',
+	'onboarding.handle.required': 'Pick a handle to continue.',
 	'onboarding.handle.taken': '@{handle} is already taken. Try another.',
 	'onboarding.handle.too_short': 'Handle must be at least {count} characters.',
 	'onboarding.handle.url': 'vici.app/{handle}',

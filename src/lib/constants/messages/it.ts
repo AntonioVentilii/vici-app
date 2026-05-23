@@ -1187,6 +1187,7 @@ export const itMessages = {
 	'welcome.deck.subtitle': 'FOMC · decisione sui tassi',
 	'onboarding.handle.checking': 'Verifica disponibilità…',
 	'onboarding.handle.error_check_failed': 'Impossibile verificare la disponibilità. Riprova.',
+	'onboarding.handle.required': 'Scegli uno handle per continuare.',
 	'onboarding.handle.taken': '@{handle} è già in uso. Provane un altro.',
 	'onboarding.handle.too_short': 'Lo handle deve avere almeno {count} caratteri.',
 	'onboarding.handle.available': '@{handle} è disponibile.',

@@ -1199,6 +1199,7 @@ export const esMessages = {
 	'onboarding.handle.checking': 'Comprobando disponibilidad…',
 	'onboarding.handle.error_check_failed':
 		'No se pudo comprobar la disponibilidad. Inténtalo de nuevo.',
+	'onboarding.handle.required': 'Elige un handle para continuar.',
 	'onboarding.handle.taken': '@{handle} ya está en uso. Prueba con otro.',
 	'onboarding.handle.too_short': 'El handle debe tener al menos {count} caracteres.',
 	'onboarding.handle.available': '@{handle} está disponible.',

@@ -1139,6 +1139,7 @@ export const zhCnMessages = {
 	'welcome.deck.subtitle': 'FOMC · 降息预测',
 	'onboarding.handle.checking': '正在检查可用性…',
 	'onboarding.handle.error_check_failed': '无法检查可用性，请重试。',
+	'onboarding.handle.required': '请先选择一个用户名。',
 	'onboarding.handle.taken': '@{handle} 已被占用，请换一个。',
 	'onboarding.handle.too_short': '用户名至少需要 {count} 个字符。',
 	'onboarding.handle.available': '@{handle} 可用。',

@@ -1203,6 +1203,7 @@ export const frMessages = {
 	'welcome.deck.subtitle': 'FOMC · décision de baisse de taux',
 	'onboarding.handle.checking': 'Vérification de la disponibilité…',
 	'onboarding.handle.error_check_failed': 'Impossible de vérifier la disponibilité. Réessayez.',
+	'onboarding.handle.required': 'Choisissez un handle pour continuer.',
 	'onboarding.handle.taken': '@{handle} est déjà pris. Choisissez-en un autre.',
 	'onboarding.handle.too_short': 'Le handle doit comporter au moins {count} caractères.',
 	'onboarding.handle.available': '@{handle} est disponible.',
