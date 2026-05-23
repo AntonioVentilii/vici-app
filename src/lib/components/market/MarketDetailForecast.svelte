@@ -41,6 +41,15 @@
 		outcomes?.reduce((acc, outcome) => acc + (outcome.totalPredictions ?? 0), 0) ?? 0
 	);
 	const timeRemaining = $derived(getTimeRemaining(market.expiryDate));
+	const sortedOutcomes = $derived(
+		[...(outcomes ?? [])].sort((a, b) => {
+			const probDiff = (b.probability ?? 0) - (a.probability ?? 0);
+			if (probDiff !== 0) {
+				return probDiff;
+			}
+			return (a.title ?? '').localeCompare(b.title ?? '');
+		})
+	);
 
 	const handleOutcomeSelect = (id: OutcomeId) => {
 		if (isResolved) {
@@ -184,7 +193,7 @@
 			</h3>
 
 			<div class="space-y-3">
-				{#each outcomes ?? [] as outcome (outcome.id)}
+				{#each sortedOutcomes as outcome (outcome.id)}
 					<BaseButton
 						class="group border-border bg-card hover:border-primary/30 relative w-full overflow-hidden rounded-2xl border p-5 text-left transition-all hover:shadow-md active:scale-[0.99]"
 						onclick={() => handleOutcomeSelect(outcome.id)}
