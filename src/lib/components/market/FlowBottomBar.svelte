@@ -58,7 +58,9 @@
 					stroke-width="3"
 				/>
 			</svg>
-			<span class="flow-action-label">NO</span>
+			<span class="flow-action-label">
+				{t({ locale: $localeStore, key: 'flow.action.no' })}
+			</span>
 		</button>
 
 		<button
@@ -74,7 +76,9 @@
 					stroke-width="3"
 				/>
 			</svg>
-			<span class="flow-action-label">SKIP</span>
+			<span class="flow-action-label">
+				{t({ locale: $localeStore, key: 'flow.action.skip' })}
+			</span>
 		</button>
 
 		<button
@@ -90,7 +94,9 @@
 					stroke-width="3.5"
 				/>
 			</svg>
-			<span class="flow-action-label">YES</span>
+			<span class="flow-action-label">
+				{t({ locale: $localeStore, key: 'flow.action.yes' })}
+			</span>
 		</button>
 	</div>
 

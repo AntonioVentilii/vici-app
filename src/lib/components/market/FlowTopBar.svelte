@@ -56,14 +56,18 @@
 			<FlameChar animate={dailyStreak >= 1} size={20} stage={flameStage} />
 			<span class="flow-flame-meta">
 				<span class="flow-flame-label">{flameLabel}</span>
-				<span class="num flow-flame-count">{dailyStreak}d</span>
+				<span class="num flow-flame-count">
+					{t({ locale: $localeStore, key: 'flow.streak_days', params: { count: dailyStreak } })}
+				</span>
 			</span>
 		</div>
 		<div
 			class="flow-stat flow-stat-xp"
 			aria-label={t({ locale: $localeStore, key: 'flow.xp_aria' })}
 		>
-			<span class="text-laurel text-[10px] font-black tracking-widest">XP</span>
+			<span class="text-laurel text-[10px] font-black tracking-widest">
+				{t({ locale: $localeStore, key: 'flow.xp_label' })}
+			</span>
 			<span class="text-foreground font-mono tabular-nums">{xp}</span>
 		</div>
 	</div>

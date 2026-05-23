@@ -64,7 +64,9 @@
 					<FlameChar animate={dailyStreak >= 1} size={28} stage={flameStage} />
 				</div>
 				<div class="allcaps flow-end-cell-label">{flameLabel}</div>
-				<div class="num flow-end-cell-value">{dailyStreak}d</div>
+				<div class="num flow-end-cell-value">
+					{t({ locale: $localeStore, key: 'flow.streak_days', params: { count: dailyStreak } })}
+				</div>
 			</div>
 			<div class="flow-end-cell">
 				{#if accuracyUnlocked}
