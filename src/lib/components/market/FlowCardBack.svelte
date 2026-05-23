@@ -30,10 +30,82 @@
 		priorCall?: PriorCallSignal;
 		followedLean?: FollowedLeanSignal;
 		onClose: () => void;
+		// Mirrors FlowCard.interactive: only the topmost card is wired
+		// for the tap-to-flip-back gesture so background cards (which
+		// the user can't see) don't react to stray events.
+		interactive?: boolean;
 	}
 
-	const { market, category, metadata, categoryAcc, priorCall, followedLean, onClose }: Props =
-		$props();
+	const {
+		market,
+		category,
+		metadata,
+		categoryAcc,
+		priorCall,
+		followedLean,
+		onClose,
+		interactive = true
+	}: Props = $props();
+
+	// Tap = pointerdown + pointerup with raw movement under this many
+	// pixels. Same threshold and intent as FlowCard's TAP_FLIP_PX, but
+	// the raw deltas are used directly here (no spring lag) so scroll
+	// gestures reliably exceed it and don't trigger a flip-back.
+	const TAP_CLOSE_PX = 12;
+
+	let tapStartX = 0;
+	let tapStartY = 0;
+	let tapTracking = false;
+
+	const isInteractiveTarget = (target: EventTarget | null): boolean => {
+		const el = target as HTMLElement | null;
+
+		if (el === null) {
+			return false;
+		}
+
+		// `[data-no-flip-back]` lets future markup (e.g. a chart, a
+		// long-press copy region) opt out of tap-to-flip-back without
+		// hard-coding selectors here.
+		return Boolean(el.closest('button, a, input, textarea, select, [data-no-flip-back]'));
+	};
+
+	const onPanelDown = (e: MouseEvent | TouchEvent) => {
+		if (!interactive || isInteractiveTarget(e.target)) {
+			tapTracking = false;
+
+			return;
+		}
+
+		const point = 'touches' in e ? e.touches[0] : e;
+		tapStartX = point.clientX;
+		tapStartY = point.clientY;
+		tapTracking = true;
+	};
+
+	const onPanelUp = (e: MouseEvent | TouchEvent) => {
+		if (!tapTracking) {
+			return;
+		}
+
+		tapTracking = false;
+
+		if (isInteractiveTarget(e.target)) {
+			return;
+		}
+
+		const point = 'changedTouches' in e ? e.changedTouches[0] : e;
+		const dx = Math.abs(point.clientX - tapStartX);
+		const dy = Math.abs(point.clientY - tapStartY);
+
+		if (dx < TAP_CLOSE_PX && dy < TAP_CLOSE_PX) {
+			onClose();
+		}
+	};
+
+	const cancelTap = () => {
+		tapTracking = false;
+	};
 
 	const catColor = $derived(categoryColor(category));
 	const yesPct = $derived(consensusPercent(market));
@@ -62,20 +134,20 @@
 	const resolutionCondition = $derived(market.description?.trim() ?? '');
 </script>
 
-<!-- svelte-ignore a11y_click_events_have_key_events -->
-<!-- svelte-ignore a11y_no_static_element_interactions -->
-<div class="flow-back" onclick={onClose}>
-	<div style:--cat-color={catColor} class="flow-back-panel" onclick={(e) => e.stopPropagation()}>
+<div class="flow-back">
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<div
+		style:--cat-color={catColor}
+		class="flow-back-panel"
+		onmousedown={onPanelDown}
+		onmouseleave={cancelTap}
+		onmouseup={onPanelUp}
+		ontouchcancel={cancelTap}
+		ontouchend={onPanelUp}
+		ontouchstart={onPanelDown}
+	>
 		<header class="flow-back-head">
 			<span class="allcaps flow-back-cat">{category}</span>
-			<button
-				class="flow-back-close"
-				aria-label={t({ locale: $localeStore, key: 'card.back.return_aria' })}
-				onclick={onClose}
-				type="button"
-			>
-				×
-			</button>
 		</header>
 
 		<div class="flow-back-scroll">
@@ -234,6 +306,10 @@
 		display: flex;
 		flex-direction: column;
 		height: 100%;
+		/* Mirrors the grab cursor on `.flow-card` so the back reads as
+		   one continuous tappable surface. Buttons and the scrollable
+		   detail body override this with their own cursors. */
+		cursor: grab;
 		background:
 			radial-gradient(
 				circle at 18% 0%,
@@ -251,28 +327,12 @@
 	.flow-back-head {
 		display: flex;
 		align-items: center;
-		justify-content: space-between;
 		padding: 0.95rem 1.1rem 0.45rem;
 	}
 
 	.flow-back-cat {
 		font-size: var(--t-12);
 		color: var(--cat-color);
-	}
-
-	.flow-back-close {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
-		color: var(--text-base);
-		font-size: 1.25rem;
-		line-height: 1;
-		cursor: pointer;
 	}
 
 	.flow-back-scroll {
