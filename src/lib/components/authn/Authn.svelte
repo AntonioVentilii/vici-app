@@ -5,6 +5,7 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { ensureProfile, calculateAndSyncStats } from '$lib/services/profile.services';
+	import { clearFriendRelations } from '$lib/stores/friends.store';
 	import { userStore } from '$lib/stores/user.store';
 
 	interface Props {
@@ -15,6 +16,13 @@
 
 	const updateUserStore = async (user: User | null) => {
 		userStore.update((data) => ({ ...data, authBusy: true }));
+
+		// Drop the previous principal's social-graph cache on every auth
+		// transition (sign-out, user switch, initial bootstrap). Consumers
+		// re-populate via `refreshFriendRelations()` once the new identity
+		// is in place; this just prevents user A's friends/requests from
+		// briefly bleeding into user B's UI.
+		clearFriendRelations();
 
 		try {
 			if (isNullish(user)) {

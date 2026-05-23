@@ -12,7 +12,6 @@
 		Share2,
 		Sun,
 		Target,
-		Users,
 		Wallet,
 		Zap
 	} from 'lucide-svelte/icons';
@@ -40,7 +39,6 @@
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { ProfileVisibility } from '$lib/enums/profile';
 	import { upsertProfile } from '$lib/services/profile.services';
-	import { getFriendRequests, getFriends } from '$lib/services/relation.services';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -154,13 +152,6 @@
 		});
 	};
 
-	// Connected friends pending count ---------------------------------
-	let friendsCount = $state(0);
-	let pendingCount = $state(0);
-	const friendsSub = $derived(
-		t({ locale: $localeStore, key: 'settings.friends.count', params: { count: friendsCount } })
-	);
-
 	const persistVisibility = async (value: SettingsVisibility) => {
 		const principal = $authPrincipal;
 
@@ -193,22 +184,6 @@
 		};
 
 		window.addEventListener('keydown', onKey);
-
-		const loadCounts = async () => {
-			if (!$authPrincipal) {
-				return;
-			}
-
-			const [friends, pending] = await Promise.all([
-				getFriends().catch(() => []),
-				getFriendRequests().catch(() => [])
-			]);
-
-			friendsCount = friends.length;
-			pendingCount = pending.length;
-		};
-
-		void loadCounts();
 
 		return () => window.removeEventListener('keydown', onKey);
 	});
@@ -282,20 +257,6 @@
 					key: 'settings.wallet.sub',
 					params: { amount: vxpAvailableLabel }
 				})}
-			/>
-
-			<SetRow
-				badge={pendingCount > 0
-					? t({
-							locale: $localeStore,
-							key: 'settings.friends.pending',
-							params: { count: pendingCount }
-						})
-					: undefined}
-				icon={Users}
-				label={t({ locale: $localeStore, key: 'settings.friends' })}
-				onclick={() => goto(resolve(AppPath.Profile))}
-				sub={friendsSub}
 			/>
 		</SettingsSection>
 

@@ -8,13 +8,16 @@
 		Swords,
 		Target,
 		TrendingUp,
+		UserPlus,
 		Users
 	} from 'lucide-svelte/icons';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { inboxStore, markAllInboxRead } from '$lib/stores/inbox.store';
+	import { refreshFriendRelations } from '$lib/stores/friends.store';
+	import { combinedInboxStore, markAllInboxRead } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { InboxNotificationKind } from '$lib/types/inbox';
 	import { t } from '$lib/utils/i18n.utils';
@@ -25,8 +28,13 @@
 		social: Users,
 		challenge: Swords,
 		level: Sparkles,
-		market: Target
+		market: Target,
+		friend_request: UserPlus
 	};
+
+	onMount(() => {
+		void refreshFriendRelations();
+	});
 </script>
 
 <div class="notifications-page">
@@ -46,19 +54,37 @@
 	</header>
 
 	<ul class="notifications-list">
-		{#each $inboxStore as notification (notification.id)}
+		{#each $combinedInboxStore as notification (notification.id)}
 			{@const KindIcon = kindIcons[notification.kind] ?? TrendingUp}
-			<li class="notification-card" class:is-unread={notification.unread}>
-				<span class="notification-icon" aria-hidden="true">
-					<KindIcon size={16} strokeWidth={1.8} />
-				</span>
-				<div class="notification-copy">
-					<span class="notification-title">{notification.title}</span>
-					<p class="notification-body">{notification.body}</p>
-					<span class="notification-when num">{notification.when}</span>
-				</div>
-				{#if notification.unread}
-					<span class="notification-dot" aria-hidden="true"></span>
+			<li class="notification-item" class:is-unread={notification.unread}>
+				{#if notification.href}
+					<a class="notification-card notification-card-link" href={notification.href}>
+						<span class="notification-icon" aria-hidden="true">
+							<KindIcon size={16} strokeWidth={1.8} />
+						</span>
+						<div class="notification-copy">
+							<span class="notification-title">{notification.title}</span>
+							<p class="notification-body">{notification.body}</p>
+							<span class="notification-when num">{notification.when}</span>
+						</div>
+						{#if notification.unread}
+							<span class="notification-dot" aria-hidden="true"></span>
+						{/if}
+					</a>
+				{:else}
+					<div class="notification-card">
+						<span class="notification-icon" aria-hidden="true">
+							<KindIcon size={16} strokeWidth={1.8} />
+						</span>
+						<div class="notification-copy">
+							<span class="notification-title">{notification.title}</span>
+							<p class="notification-body">{notification.body}</p>
+							<span class="notification-when num">{notification.when}</span>
+						</div>
+						{#if notification.unread}
+							<span class="notification-dot" aria-hidden="true"></span>
+						{/if}
+					</div>
 				{/if}
 			</li>
 		{/each}
@@ -109,6 +135,10 @@
 		list-style: none;
 	}
 
+	.notification-item {
+		display: block;
+	}
+
 	.notification-card {
 		display: grid;
 		grid-template-columns: auto minmax(0, 1fr) auto;
@@ -119,9 +149,23 @@
 		border: 1px solid var(--border-base);
 		background: var(--bg-surface);
 		box-shadow: var(--shadow-card);
+		color: var(--text-base);
+		text-decoration: none;
 	}
 
-	.notification-card.is-unread {
+	.notification-card-link {
+		cursor: pointer;
+		transition:
+			background-color var(--d-hover) var(--ease-vici),
+			border-color var(--d-hover) var(--ease-vici);
+	}
+
+	.notification-card-link:hover {
+		border-color: var(--border-strong);
+		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-surface));
+	}
+
+	.notification-item.is-unread .notification-card {
 		border-color: color-mix(in srgb, var(--color-primary) 30%, var(--border-base));
 		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-surface));
 	}

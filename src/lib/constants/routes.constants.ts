@@ -11,7 +11,8 @@ export enum AppPath {
 	Leaderboard = '/leaderboard',
 	Flow = '/flow',
 	Settings = '/settings',
-	Notifications = '/notifications'
+	Notifications = '/notifications',
+	Friends = '/friends'
 }
 
 /**

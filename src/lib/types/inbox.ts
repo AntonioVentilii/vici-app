@@ -4,7 +4,8 @@ export type InboxNotificationKind =
 	| 'social'
 	| 'challenge'
 	| 'level'
-	| 'market';
+	| 'market'
+	| 'friend_request';
 
 export interface InboxNotification {
 	id: string;
@@ -13,4 +14,9 @@ export interface InboxNotification {
 	body: string;
 	when: string;
 	unread: boolean;
+	/**
+	 * Optional in-app URL the notification should navigate to when clicked.
+	 * When absent the card renders as a non-interactive surface.
+	 */
+	href?: string;
 }
