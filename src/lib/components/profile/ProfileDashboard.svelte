@@ -1,17 +1,38 @@
 <script lang="ts">
-	import { Check, Eye, Flame, Pencil, Star, Target, Timer, X, Zap } from 'lucide-svelte';
+	import {
+		Check,
+		ChevronRight,
+		Eye,
+		Flame,
+		Pencil,
+		Star,
+		Target,
+		Timer,
+		Users,
+		X,
+		Zap
+	} from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
-	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { ACCURACY_GATE_CALLS, isAccuracyUnlocked } from '$lib/constants/flow-rewards.constants';
 	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
+	import {
+		friendRequestsCountStore,
+		friendsCountStore,
+		refreshFriendRelations
+	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
+	import { evaluateAchievements } from '$lib/utils/achievements.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { FLAME_STAGE_LABEL_KEYS, stageForStreak } from '$lib/utils/streak.utils';
 
@@ -352,29 +373,37 @@
 		star: Star
 	};
 
-	const achievementUnlocked = (achievementId: string) => {
-		if (achievementId === 'first-blood') {
-			return totalTrades > 0;
-		}
+	const isOwnProfile = $derived(viewerPrincipal === profile.owner);
+	const friendsCount = $derived($friendsCountStore);
+	const pendingFriendRequestsCount = $derived($friendRequestsCountStore);
 
-		if (achievementId === 'on-fire') {
-			return (profile.streak ?? 0) >= 10;
-		}
+	const friendsSubKey = $derived<
+		'profile.dashboard.friends.count' | 'profile.dashboard.friends.empty'
+	>(friendsCount > 0 ? 'profile.dashboard.friends.count' : 'profile.dashboard.friends.empty');
 
-		if (achievementId === 'oracle') {
-			return accuracyUnlocked && accuracy >= 80 && totalTrades >= 50;
+	onMount(() => {
+		if (isOwnProfile) {
+			void refreshFriendRelations();
 		}
+	});
 
-		if (achievementId === 'marathon') {
-			return dailyStreak >= 30;
-		}
-
-		if (achievementId === 'lvl-25') {
-			return level >= 25;
-		}
-
-		return false;
-	};
+	// `profile.unlockedAchievements` is the persisted source of truth
+	// (append-only; written by `profile.services.ts` after each stats
+	// sync). The live evaluator runs on the same snapshot to drive
+	// progress bars on not-yet-earned cards — and as a fallback that
+	// keeps the UI honest when persistence lags (e.g. an offline
+	// session before the next sync writes).
+	const persistedUnlocks = $derived(new Set(profile.unlockedAchievements ?? []));
+	const achievementEvaluations = $derived(
+		evaluateAchievements({
+			totalTrades,
+			winStreak: profile.streak ?? 0,
+			dailyStreak,
+			accuracy,
+			level,
+			contrarianWins: profile.contrarianWins ?? 0
+		})
+	);
 </script>
 
 <div class="profile-dashboard">
@@ -541,6 +570,42 @@
 		</div>
 	</section>
 
+	{#if isOwnProfile}
+		<button
+			class="profile-friends-row"
+			onclick={() => goto(resolve(AppPath.Friends))}
+			type="button"
+		>
+			<span class="profile-friends-icon" aria-hidden="true">
+				<Users size={16} strokeWidth={1.8} />
+			</span>
+			<span class="profile-friends-copy">
+				<span class="profile-friends-label">
+					{t({ locale: $localeStore, key: 'profile.dashboard.friends' })}
+				</span>
+				<span class="profile-friends-sub">
+					{t({
+						locale: $localeStore,
+						key: friendsSubKey,
+						params: { count: friendsCount }
+					})}
+				</span>
+			</span>
+			{#if pendingFriendRequestsCount > 0}
+				<span class="profile-friends-badge num">
+					{t({
+						locale: $localeStore,
+						key: 'profile.dashboard.friends.pending',
+						params: { count: pendingFriendRequestsCount }
+					})}
+				</span>
+			{/if}
+			<span class="profile-friends-chevron" aria-hidden="true">
+				<ChevronRight size={16} strokeWidth={1.8} />
+			</span>
+		</button>
+	{/if}
+
 	<section class="profile-activity">
 		<div class="profile-activity-head">
 			<span class="profile-activity-label">
@@ -568,19 +633,32 @@
 			</button>
 		</div>
 		<div class="profile-achievements-rail">
-			{#each ACHIEVEMENTS as achievement (achievement.id)}
-				{@const Icon = achievementIcons[achievement.icon]}
-				{@const unlocked = achievementUnlocked(achievement.id)}
+			{#each achievementEvaluations as evaluation (evaluation.id)}
+				{@const Icon = achievementIcons[evaluation.def.icon]}
+				{@const unlocked = persistedUnlocks.has(evaluation.id) || evaluation.unlocked}
+				{@const progressPercent = Math.round(evaluation.progress * 100)}
 				<div class="profile-achievement-card" class:is-unlocked={unlocked}>
 					<span class="profile-achievement-icon" aria-hidden="true">
 						<Icon size={16} strokeWidth={1.8} />
 					</span>
 					<span class="profile-achievement-name">
-						{t({ locale: $localeStore, key: achievement.nameKey })}
+						{t({ locale: $localeStore, key: evaluation.def.nameKey })}
 					</span>
 					<span class="profile-achievement-sub">
-						{t({ locale: $localeStore, key: achievement.descriptionKey })}
+						{t({ locale: $localeStore, key: evaluation.def.descriptionKey })}
 					</span>
+					{#if !unlocked && evaluation.progress > 0}
+						<div
+							class="profile-achievement-progress"
+							aria-valuemax="100"
+							aria-valuemin="0"
+							aria-valuenow={progressPercent}
+							role="progressbar"
+						>
+							<span style="width: {progressPercent}%" class="profile-achievement-progress-bar"
+							></span>
+						</div>
+					{/if}
 				</div>
 			{/each}
 		</div>
@@ -856,6 +934,76 @@
 		letter-spacing: var(--tracking-tight);
 	}
 
+	/* Friends row ------------------------------------------------------ */
+	.profile-friends-row {
+		display: flex;
+		align-items: center;
+		gap: 0.65rem;
+		width: 100%;
+		padding: 0.85rem 1rem;
+		border: 1px solid var(--border-base);
+		border-radius: 1.25rem;
+		background: var(--bg-popover);
+		color: var(--text-base);
+		text-align: left;
+		cursor: pointer;
+		transition:
+			background-color var(--d-hover) var(--ease-vici),
+			border-color var(--d-hover) var(--ease-vici);
+	}
+
+	.profile-friends-row:hover {
+		border-color: var(--border-strong);
+		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-popover));
+	}
+
+	.profile-friends-icon {
+		display: inline-flex;
+		width: 1.85rem;
+		height: 1.85rem;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		border-radius: var(--r-8);
+		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
+		color: var(--color-primary);
+	}
+
+	.profile-friends-copy {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 0.1rem;
+		min-width: 0;
+	}
+
+	.profile-friends-label {
+		color: var(--text-base);
+		font-size: var(--t-14);
+		font-weight: 700;
+	}
+
+	.profile-friends-sub {
+		color: var(--text-muted);
+		font-size: var(--t-12);
+	}
+
+	.profile-friends-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.15rem 0.5rem;
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--color-primary) 16%, transparent);
+		color: var(--color-primary);
+		font-size: var(--t-12);
+		font-weight: 700;
+	}
+
+	.profile-friends-chevron {
+		display: inline-flex;
+		color: var(--text-muted);
+	}
+
 	/* Last 30 days ----------------------------------------------------- */
 	.profile-activity {
 		display: flex;
@@ -990,6 +1138,24 @@
 		color: var(--text-muted);
 		font-size: var(--t-12);
 		line-height: var(--leading-snug);
+	}
+
+	.profile-achievement-progress {
+		display: block;
+		width: 100%;
+		height: 0.25rem;
+		margin-top: 0.4rem;
+		overflow: hidden;
+		border-radius: 999px;
+		background: var(--bg-surface);
+	}
+
+	.profile-achievement-progress-bar {
+		display: block;
+		height: 100%;
+		border-radius: inherit;
+		background: var(--color-primary);
+		transition: width 320ms ease;
 	}
 
 	/* Oracle insight --------------------------------------------------- */

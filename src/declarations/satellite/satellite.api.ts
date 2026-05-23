@@ -126,6 +126,8 @@ const AppGetProfileResultSchema = j.strictObject({
 			archetype: j.string(),
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
+			unlockedAchievements: j.array(j.string()),
+			contrarianWins: j.number(),
 			preferences: j.optional(
 				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
 			)
@@ -254,6 +256,8 @@ const AppListLeaderboardResultSchema = j.strictObject({
 			archetype: j.string(),
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
+			unlockedAchievements: j.array(j.string()),
+			contrarianWins: j.number(),
 			preferences: j.optional(
 				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
 			)
@@ -318,6 +322,8 @@ const AppSearchProfilesResultSchema = j.strictObject({
 			archetype: j.string(),
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
+			unlockedAchievements: j.array(j.string()),
+			contrarianWins: j.number(),
 			preferences: j.optional(
 				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
 			)

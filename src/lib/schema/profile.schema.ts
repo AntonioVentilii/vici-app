@@ -26,6 +26,17 @@ export const UserProfileSchema = j.strictObject({
 	archetype: j.string().default(''),
 	interests: j.array(j.string()).default([]),
 	lastActiveDay: j.string().optional(),
+	// IDs of achievements the user has ever unlocked (append-only). Source of
+	// truth for the achievement system — `evaluateAchievements` re-derives
+	// current eligibility on every stats sync, and any newly-true ids are
+	// merged in here (with their XP credited to `points`). Unlocks never
+	// rescind: if a stat regresses, the achievement stays "earned".
+	unlockedAchievements: j.array(j.string()).default([]),
+	// Lifetime count of wins on long-shot trades (execution price at or
+	// below `CONTRARIAN_PRICE_THRESHOLD`). Drives the `contrarian`
+	// achievement progress; recomputed from clearing history during
+	// `calculateAndSyncStats`.
+	contrarianWins: j.number().default(0),
 	preferences: j
 		.strictObject({
 			defaultAmount: j.strictObject({

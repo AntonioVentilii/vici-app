@@ -4,8 +4,14 @@ import { ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
+import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import type { Nickname, UserProfile } from '$lib/types/profile';
+import {
+	CONTRARIAN_PRICE_THRESHOLD,
+	evaluateAchievements,
+	mergeUnlockedAchievements
+} from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 import { applyDailyStreakBump } from '$lib/utils/streak.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -38,6 +44,8 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				level: 1,
 				archetype: '',
 				interests: [],
+				unlockedAchievements: [],
+				contrarianWins: 0,
 				preferences: {
 					defaultAmount: {
 						flow: '1.0',
@@ -339,6 +347,22 @@ export const calculateAndSyncStats = async ({
 
 	const accuracy = winRate;
 
+	// Long-shot wins for the `contrarian` achievement. A settled win
+	// at execution price ≤ CONTRARIAN_PRICE_THRESHOLD means the market
+	// priced their side as a long shot when they took it.
+	const contrarianWins = history.filter((event) => {
+		if (!isWin(event)) {
+			return false;
+		}
+
+		const price = decimalFixedValueToNumber({
+			value: event.price.decimal.value,
+			decimals: event.price.decimal.decimals
+		});
+
+		return price <= CONTRARIAN_PRICE_THRESHOLD;
+	}).length;
+
 	const chronoHistory = [...history].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
 
 	const { totalPoints } = chronoHistory.reduce<{ totalPoints: number; runningStreak: number }>(
@@ -371,9 +395,31 @@ export const calculateAndSyncStats = async ({
 		{ totalPoints: 0, runningStreak: 0 }
 	);
 
-	const level = Math.floor(totalPoints / 500) + 1;
-
 	const profileDoc = await getProfile(principal);
+
+	// Evaluate achievements against the freshly-computed snapshot and
+	// fold any newly-unlocked ids into the persisted set. Newly
+	// unlocked achievements also credit their XP into the points total
+	// before we recompute the level — so an achievement that pushes a
+	// user across a 500-point boundary correctly bumps the level in
+	// the same write.
+	const evaluations = evaluateAchievements({
+		totalTrades,
+		winStreak: resolvedStreak,
+		dailyStreak: profileDoc.data.dailyStreak ?? 0,
+		accuracy,
+		level: Math.floor(totalPoints / 500) + 1,
+		contrarianWins
+	});
+
+	const { unlocked, newlyUnlocked } = mergeUnlockedAchievements({
+		previouslyUnlocked: profileDoc.data.unlockedAchievements ?? [],
+		evaluations
+	});
+
+	const bonusXp = newlyUnlocked.reduce((acc, evaluation) => acc + evaluation.def.xp, 0);
+	const adjustedPoints = totalPoints + bonusXp;
+	const level = Math.floor(adjustedPoints / 500) + 1;
 
 	await upsertProfile({
 		...profileDoc,
@@ -384,10 +430,14 @@ export const calculateAndSyncStats = async ({
 			pnl: realizedPnl,
 			streak: resolvedStreak,
 			accuracy,
-			points: totalPoints,
-			level
+			points: adjustedPoints,
+			level,
+			contrarianWins,
+			unlockedAchievements: unlocked
 		}
 	});
+
+	notifyAchievementsUnlocked(newlyUnlocked);
 };
 
 /**
@@ -412,12 +462,40 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 		return;
 	}
 
+	// Re-evaluate so streak-driven achievements (`marathon`) can fire
+	// on the very write that crosses the threshold, rather than
+	// waiting for the next sign-in `calculateAndSyncStats`. Other
+	// achievement axes (trades, accuracy, contrarian) re-use the
+	// persisted values — they're not the trigger here.
+	const evaluations = evaluateAchievements({
+		totalTrades: profileDoc.data.totalTrades ?? 0,
+		winStreak: profileDoc.data.streak ?? 0,
+		dailyStreak: bump.streak,
+		accuracy: profileDoc.data.accuracy ?? 0,
+		level: profileDoc.data.level ?? 1,
+		contrarianWins: profileDoc.data.contrarianWins ?? 0
+	});
+
+	const { unlocked, newlyUnlocked } = mergeUnlockedAchievements({
+		previouslyUnlocked: profileDoc.data.unlockedAchievements ?? [],
+		evaluations
+	});
+
+	const bonusXp = newlyUnlocked.reduce((acc, evaluation) => acc + evaluation.def.xp, 0);
+	const points = (profileDoc.data.points ?? 0) + bonusXp;
+	const level = bonusXp > 0 ? Math.floor(points / 500) + 1 : (profileDoc.data.level ?? 1);
+
 	await upsertProfile({
 		...profileDoc,
 		data: {
 			...profileDoc.data,
 			dailyStreak: bump.streak,
-			lastActiveDay: bump.lastActiveDay
+			lastActiveDay: bump.lastActiveDay,
+			points,
+			level,
+			unlockedAchievements: unlocked
 		}
 	});
+
+	notifyAchievementsUnlocked(newlyUnlocked);
 };

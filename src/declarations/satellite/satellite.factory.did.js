@@ -71,6 +71,7 @@ export const idlFactory = ({ IDL }) => {
 				pnl: IDL.Float64,
 				streak: IDL.Float64,
 				nickname: IDL.Text,
+				contrarian_wins: IDL.Float64,
 				owner: IDL.Text,
 				interests: IDL.Vec(IDL.Text),
 				role: IDL.Opt(
@@ -101,6 +102,7 @@ export const idlFactory = ({ IDL }) => {
 					friends_only: IDL.Null
 				}),
 				daily_streak: IDL.Float64,
+				unlocked_achievements: IDL.Vec(IDL.Text),
 				points: IDL.Float64,
 				avatar: IDL.Text,
 				accuracy: IDL.Float64
@@ -225,6 +227,7 @@ export const idlFactory = ({ IDL }) => {
 				pnl: IDL.Float64,
 				streak: IDL.Float64,
 				nickname: IDL.Text,
+				contrarian_wins: IDL.Float64,
 				owner: IDL.Text,
 				interests: IDL.Vec(IDL.Text),
 				role: IDL.Opt(
@@ -255,6 +258,7 @@ export const idlFactory = ({ IDL }) => {
 					friends_only: IDL.Null
 				}),
 				daily_streak: IDL.Float64,
+				unlocked_achievements: IDL.Vec(IDL.Text),
 				points: IDL.Float64,
 				avatar: IDL.Text,
 				accuracy: IDL.Float64
@@ -297,6 +301,7 @@ export const idlFactory = ({ IDL }) => {
 				pnl: IDL.Float64,
 				streak: IDL.Float64,
 				nickname: IDL.Text,
+				contrarian_wins: IDL.Float64,
 				owner: IDL.Text,
 				interests: IDL.Vec(IDL.Text),
 				role: IDL.Opt(
@@ -327,6 +332,7 @@ export const idlFactory = ({ IDL }) => {
 					friends_only: IDL.Null
 				}),
 				daily_streak: IDL.Float64,
+				unlocked_achievements: IDL.Vec(IDL.Text),
 				points: IDL.Float64,
 				avatar: IDL.Text,
 				accuracy: IDL.Float64

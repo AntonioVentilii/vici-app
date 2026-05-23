@@ -74,6 +74,7 @@ export interface AppGetProfileResult {
 					pnl: number;
 					streak: number;
 					nickname: string;
+					contrarian_wins: number;
 					owner: string;
 					interests: Array<string>;
 					role:
@@ -88,6 +89,7 @@ export interface AppGetProfileResult {
 					win_rate: number;
 					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
 					daily_streak: number;
+					unlocked_achievements: Array<string>;
 					points: number;
 					avatar: string;
 					accuracy: number;
@@ -147,6 +149,7 @@ export interface AppListLeaderboardResult {
 		pnl: number;
 		streak: number;
 		nickname: string;
+		contrarian_wins: number;
 		owner: string;
 		interests: Array<string>;
 		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
@@ -159,6 +162,7 @@ export interface AppListLeaderboardResult {
 		win_rate: number;
 		visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
 		daily_streak: number;
+		unlocked_achievements: Array<string>;
 		points: number;
 		avatar: string;
 		accuracy: number;
@@ -187,6 +191,7 @@ export interface AppSearchProfilesResult {
 		pnl: number;
 		streak: number;
 		nickname: string;
+		contrarian_wins: number;
 		owner: string;
 		interests: Array<string>;
 		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
@@ -199,6 +204,7 @@ export interface AppSearchProfilesResult {
 		win_rate: number;
 		visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
 		daily_streak: number;
+		unlocked_achievements: Array<string>;
 		points: number;
 		avatar: string;
 		accuracy: number;
