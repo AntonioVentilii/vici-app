@@ -1,17 +1,20 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onMount, onDestroy } from 'svelte';
-	import { cubicOut, backOut } from 'svelte/easing';
+	import { cubicOut } from 'svelte/easing';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import FlameChar from '$lib/components/characters/FlameChar.svelte';
-	import ViciChar from '$lib/components/characters/ViciChar.svelte';
+	import FlowBottomBar from '$lib/components/market/FlowBottomBar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
-	import FlowInviteCard from '$lib/components/market/FlowInviteCard.svelte';
+	import FlowComboBanner from '$lib/components/market/FlowComboBanner.svelte';
+	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
+	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
+	import FlowStreakBreakBanner from '$lib/components/market/FlowStreakBreakBanner.svelte';
+	import FlowTopBar from '$lib/components/market/FlowTopBar.svelte';
+	import FlowXpPops from '$lib/components/market/FlowXpPops.svelte';
 	import MotionBeat from '$lib/components/market/MotionBeat.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import {
 		BASE_XP_PER_PREDICTION,
@@ -33,6 +36,7 @@
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { flowSessionMaxBets, preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
+	import type { XpPop, XpPopKind } from '$lib/types/flow';
 	import type { CallSide, FlowAction, Market, MarketId } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type { UserMarketSignals } from '$lib/types/market-signals';
@@ -124,20 +128,6 @@
 	let activeMotionBeat = $state<MotionBeatPayload | null>(null);
 	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
 	const flameLabel = $derived(t({ locale: $localeStore, key: FLAME_STAGE_LABEL_KEYS[flameStage] }));
-
-	type XpPopKind = 'normal' | 'bonus';
-
-	interface XpPop {
-		id: number;
-		amount: number;
-		combo: number;
-		side: CallSide;
-		// 'bonus' = milestone reward (laurel, larger, paired copy).
-		kind: XpPopKind;
-		// Paired copy ("First call.", "Ten deep.") shown above the
-		// number on bonus pops; undefined for normal pops.
-		copy?: string;
-	}
 
 	let xpPops = $state<XpPop[]>([]);
 	let popCounter = 0;
@@ -549,180 +539,38 @@
 			</p>
 		</div>
 	{:else if markets.length === 0}
-		<!-- Empty-deck state. VICI in `thinking` mood holds the canvas,
-		     single-line copy, no escalation, no celebration. -->
-		<div class="empty-deck flex h-full w-full flex-col items-center justify-center px-6">
-			<div class="relative z-10 max-w-md text-center" in:fly={{ y: 20, duration: 500 }}>
-				<div class="empty-deck-char">
-					<ViciChar mood="thinking" size={96} />
-				</div>
-				<h2 class="empty-deck-title">{t({ locale: $localeStore, key: 'flow.empty.title' })}</h2>
-				<p class="empty-deck-sub">{t({ locale: $localeStore, key: 'flow.empty.sub' })}</p>
-				<Button onclick={backToMarkets}>
-					{t({ locale: $localeStore, key: 'flow.back_to_markets' })}
-				</Button>
-			</div>
-		</div>
+		<FlowEmptyDeck onBackToMarkets={backToMarkets} />
 	{:else if completed}
-		<!-- FlowEnd — brand voice ("Vici." serif-italic display, terse
-		     copy). No confetti / no green-check celebration; the
-		     accomplishment is the laurel + the numbers, not noise. -->
-		<div class="flow-end">
-			<div class="flow-end-inner" in:fly={{ y: 20, duration: 500 }}>
-				<h2 class="flow-end-title display">Vici.</h2>
-				<p class="flow-end-sub">
-					{#if betsCount === 0}
-						{t({ locale: $localeStore, key: 'flow.end.no_calls' })}
-					{:else if betsCount === 1}
-						{t({ locale: $localeStore, key: 'flow.end.one_call' })}
-					{:else}
-						{t({
-							locale: $localeStore,
-							key: 'flow.end.many_calls',
-							params: { count: betsCount }
-						})}
-					{/if}
-				</p>
-
-				<div class="flow-end-grid">
-					<div class="flow-end-cell">
-						<div class="allcaps flow-end-cell-label">
-							{t({ locale: $localeStore, key: 'flow.session_xp' })}
-						</div>
-						<div class="num flow-end-cell-value">+{xp}</div>
-					</div>
-					<div class="flow-end-cell flow-end-cell-streak" class:is-hot={dailyStreak >= 7}>
-						<div class="flow-end-cell-flame">
-							<FlameChar animate={dailyStreak >= 1} size={28} stage={flameStage} />
-						</div>
-						<div class="allcaps flow-end-cell-label">{flameLabel}</div>
-						<div class="num flow-end-cell-value">{dailyStreak}d</div>
-					</div>
-					<div class="flow-end-cell">
-						{#if accuracyUnlocked}
-							<div class="allcaps flow-end-cell-label">
-								{t({ locale: $localeStore, key: 'profile.dashboard.accuracy_short' })}
-							</div>
-							<div class="num flow-end-cell-value">{Math.round(lifetimeAccuracy)}%</div>
-						{:else}
-							<div class="allcaps flow-end-cell-label">
-								{t({ locale: $localeStore, key: 'profile.dashboard.calls_short' })}
-							</div>
-							<div class="num flow-end-cell-value">{lifetimeTotalTrades + betsCount}</div>
-							<div class="flow-end-cell-foot">
-								{t({ locale: $localeStore, key: 'flow.until_accuracy' })}
-							</div>
-						{/if}
-					</div>
-				</div>
-
-				<FlowInviteCard sessionXp={xp} />
-				<Button onclick={backToMarkets}>
-					{t({ locale: $localeStore, key: 'flow.back_to_markets' })}
-				</Button>
-			</div>
-		</div>
+		<FlowEnd
+			{accuracyUnlocked}
+			{betsCount}
+			{dailyStreak}
+			{flameLabel}
+			{flameStage}
+			{lifetimeAccuracy}
+			{lifetimeTotalTrades}
+			onBackToMarkets={backToMarkets}
+			{xp}
+		/>
 	{:else}
-		<header class="flow-topbar" in:fade>
-			<button
-				class="flow-icon-btn"
-				aria-label={t({ locale: $localeStore, key: 'flow.exit_aria' })}
-				onclick={backToMarkets}
-			>
-				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						d="M6 18L18 6M6 6l12 12"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2.5"
-					/>
-				</svg>
-			</button>
-
-			<div
-				class="flow-progress"
-				aria-label={t({ locale: $localeStore, key: 'flow.progress_aria' })}
-			>
-				{#each Array(maxBets) as _, i (i)}
-					<div class="flow-progress-seg">
-						<div
-							style:--p={i < betsCount ? '100%' : i === betsCount ? '30%' : '0%'}
-							class="flow-progress-fill"
-							class:is-current={i === betsCount}
-							class:is-full={i < betsCount}
-						></div>
-					</div>
-				{/each}
-			</div>
-
-			<div class="flow-stats">
-				<div
-					class="flow-stat flow-stat-flame"
-					class:is-hot={dailyStreak >= 7}
-					aria-label={t({ locale: $localeStore, key: 'flow.daily_streak_aria' })}
-				>
-					<FlameChar animate={dailyStreak >= 1} size={20} stage={flameStage} />
-					<span class="flow-flame-meta">
-						<span class="flow-flame-label">{flameLabel}</span>
-						<span class="num flow-flame-count">{dailyStreak}d</span>
-					</span>
-				</div>
-				<div
-					class="flow-stat flow-stat-xp"
-					aria-label={t({ locale: $localeStore, key: 'flow.xp_aria' })}
-				>
-					<span class="text-laurel text-[10px] font-black tracking-widest">XP</span>
-					<span class="text-foreground font-mono tabular-nums">{xp}</span>
-				</div>
-			</div>
-		</header>
+		<FlowTopBar
+			{betsCount}
+			{dailyStreak}
+			{flameLabel}
+			{flameStage}
+			{maxBets}
+			onExit={backToMarkets}
+			{xp}
+		/>
 
 		{#if lastStreakShown > 0}
 			{#key lastStreakShown}
-				<div
-					class="combo-banner"
-					in:fly={{ y: -8, duration: 300, easing: backOut }}
-					out:fade={{ duration: 250 }}
-				>
-					<span>
-						{t({
-							locale: $localeStore,
-							key: 'flow.streak_combo',
-							params: { count: lastStreakShown }
-						})}
-					</span>
-					<span class="combo-banner-xp">
-						{t({
-							locale: $localeStore,
-							key: 'flow.streak_xp_multiplier',
-							params: { multi: lastStreakShown >= 5 ? 3 : 2 }
-						})}
-					</span>
-				</div>
+				<FlowComboBanner count={lastStreakShown} />
 			{/key}
 		{/if}
 
 		{#if streakBreakBanner}
-			<!-- Streak-break choreography: single low thud (haptic fires in
-			     handleAction), banner names the stage that ended, fresh start
-			     at SPARK. No rescues, no second chances. -->
-			<div class="streak-break" in:fly={{ y: -8, duration: 300, easing: backOut }} out:fade>
-				<span class="serif-italic">
-					{t({
-						locale: $localeStore,
-						key: 'flow.stage_ended',
-						params: {
-							stage: t({
-								locale: $localeStore,
-								key: FLAME_STAGE_LABEL_KEYS[streakBreakBanner.stage]
-							})
-						}
-					})}
-				</span>
-				<span class="streak-break-sub">
-					{t({ locale: $localeStore, key: 'flow.fresh_start' })}
-				</span>
-			</div>
+			<FlowStreakBreakBanner stage={streakBreakBanner.stage} />
 		{/if}
 
 		<main class="flow-stage">
@@ -764,30 +612,7 @@
 				{/each}
 			</div>
 
-			<div class="xp-pops" aria-hidden="true">
-				{#each xpPops as pop (pop.id)}
-					<div
-						class="xp-pop"
-						class:xp-pop-bonus={pop.kind === 'bonus'}
-						class:xp-pop-no={pop.kind === 'normal' && pop.side === 'NO'}
-						class:xp-pop-yes={pop.kind === 'normal' && pop.side === 'YES'}
-					>
-						{#if pop.kind === 'bonus' && pop.copy}
-							<span class="xp-pop-copy serif-italic">{pop.copy}</span>
-						{/if}
-						<span class="xp-pop-amount num">+{pop.amount}</span>
-						<span class="xp-pop-label">
-							{pop.combo > 1
-								? t({
-										locale: $localeStore,
-										key: 'flow.xp_combo',
-										params: { combo: pop.combo }
-									})
-								: t({ locale: $localeStore, key: 'flow.xp_label' })}
-						</span>
-					</div>
-				{/each}
-			</div>
+			<FlowXpPops pops={xpPops} />
 
 			{#if activeMotionBeat}
 				<MotionBeat
@@ -798,93 +623,14 @@
 			{/if}
 		</main>
 
-		<footer class="flow-bottombar">
-			<div class="flow-amount">
-				<button
-					class="flow-amount-btn"
-					aria-label={t({ locale: $localeStore, key: 'flow.amount.decrease_aria' })}
-					onclick={() => incrementAmount(-1)}
-				>
-					−
-				</button>
-				<div class="flow-amount-field">
-					<input
-						class="flow-amount-input"
-						inputmode="decimal"
-						min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
-						step={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
-						type="number"
-						bind:value={tradeAmount}
-					/>
-					<span class="flow-amount-unit">{$playgroundFlowTradeUnitLabel}</span>
-				</div>
-				<button
-					class="flow-amount-btn"
-					aria-label={t({ locale: $localeStore, key: 'flow.amount.increase_aria' })}
-					onclick={() => incrementAmount(1)}
-				>
-					+
-				</button>
-			</div>
-
-			<div class="flow-actions">
-				<button
-					class="flow-action flow-action-no"
-					aria-label={t({ locale: $localeStore, key: 'market.forecast.predict_no' })}
-					onclick={() => handleAction('NO')}
-				>
-					<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M6 18L18 6M6 6l12 12"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="3"
-						/>
-					</svg>
-					<span class="flow-action-label">NO</span>
-				</button>
-
-				<button
-					class="flow-action flow-action-skip"
-					aria-label={t({ locale: $localeStore, key: 'flow.skip_aria' })}
-					onclick={() => handleAction('SKIP')}
-				>
-					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M5 12l7-7 7 7M5 19l7-7 7 7"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="3"
-						/>
-					</svg>
-					<span class="flow-action-label">SKIP</span>
-				</button>
-
-				<button
-					class="flow-action flow-action-yes"
-					aria-label={t({ locale: $localeStore, key: 'market.forecast.predict_yes' })}
-					onclick={() => handleAction('YES')}
-				>
-					<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M5 13l4 4L19 7"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="3.5"
-						/>
-					</svg>
-					<span class="flow-action-label">YES</span>
-				</button>
-			</div>
-
-			<div class="flow-kbd">
-				<kbd>←</kbd>
-				<span>·</span>
-				<kbd>↑</kbd>
-				<span>·</span>
-				<kbd>→</kbd>
-			</div>
-		</footer>
+		<FlowBottomBar
+			min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
+			onAction={handleAction}
+			onIncrement={incrementAmount}
+			step={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
+			unitLabel={$playgroundFlowTradeUnitLabel}
+			bind:tradeAmount
+		/>
 	{/if}
 </div>
 
@@ -925,226 +671,6 @@
 		overflow: hidden;
 	}
 
-	.flow-topbar {
-		position: sticky;
-		top: 0;
-		z-index: 60;
-		display: grid;
-		grid-template-columns: auto 1fr auto;
-		align-items: center;
-		gap: 0.65rem;
-		padding: calc(env(safe-area-inset-top, 0px) + 0.45rem) 0.8rem 0.45rem
-			calc(env(safe-area-inset-left, 0px) + 0.8rem);
-		padding-right: calc(env(safe-area-inset-right, 0px) + 0.8rem);
-		background: linear-gradient(
-			to bottom,
-			color-mix(in srgb, var(--bg-base) 96%, transparent),
-			color-mix(in srgb, var(--bg-base) 72%, transparent)
-		);
-		backdrop-filter: saturate(180%) blur(12px);
-		-webkit-backdrop-filter: saturate(180%) blur(12px);
-		border-bottom: 1px solid var(--border-base);
-	}
-
-	.flow-icon-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		border-radius: 999px;
-		background: var(--border-base);
-		color: var(--text-base);
-		transition:
-			transform 0.15s ease,
-			background-color 0.2s ease;
-	}
-	.flow-icon-btn:active {
-		transform: scale(0.985);
-		background: var(--border-strong);
-	}
-
-	.flow-progress {
-		display: flex;
-		align-items: center;
-		gap: 3px;
-		min-width: 0;
-	}
-	.flow-progress-seg {
-		flex: 1;
-		height: 3px;
-		border-radius: 999px;
-		background: var(--border-base);
-		overflow: hidden;
-	}
-	.flow-progress-fill {
-		height: 100%;
-		width: var(--p);
-		background: linear-gradient(90deg, var(--color-primary), var(--laurel));
-		border-radius: inherit;
-		transition: width 450ms cubic-bezier(0.22, 1, 0.36, 1);
-	}
-	.flow-progress-fill.is-current {
-		animation: progressPulse 1.6s ease-in-out infinite;
-	}
-	@keyframes progressPulse {
-		0%,
-		100% {
-			opacity: 0.6;
-		}
-		50% {
-			opacity: 1;
-		}
-	}
-
-	.flow-stats {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-	.flow-stat {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 4px 8px;
-		border-radius: 999px;
-		font-weight: 900;
-		font-size: 12px;
-		line-height: 1;
-	}
-	/* Daily-streak Flame chip: shows the current stage + day count.
-	   Flame appears in the Flow header + home screen only (never on
-	   every screen); always-visible here, never dominant. Activates
-	   `is-hot` from FLAME stage upward. */
-	.flow-stat-flame {
-		gap: 6px;
-		padding: 4px 9px 4px 6px;
-		background: var(--bg-surface);
-		color: var(--text-muted);
-		transition:
-			transform var(--d-state) var(--ease-vici),
-			background-color var(--d-state) var(--ease-vici);
-	}
-	.flow-stat-flame.is-hot {
-		background: linear-gradient(135deg, var(--color-primary), var(--laurel));
-		color: var(--color-primary-foreground);
-		box-shadow: 0 4px 12px var(--laurel-glow);
-	}
-	.flow-flame-meta {
-		display: inline-flex;
-		flex-direction: column;
-		align-items: flex-start;
-		line-height: 1;
-	}
-	.flow-flame-label {
-		font-size: 9px;
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-		opacity: 0.85;
-	}
-	.flow-flame-count {
-		font-size: 11px;
-		font-weight: 600;
-	}
-	@keyframes hotPulse {
-		0%,
-		100% {
-			transform: scale(1);
-		}
-		50% {
-			transform: scale(1.06);
-		}
-	}
-	.flow-stat-xp {
-		background: var(--bg-surface);
-		display: inline-flex;
-		gap: 5px;
-		align-items: baseline;
-		font-variant-numeric: tabular-nums;
-	}
-
-	.combo-banner {
-		position: fixed;
-		left: 50%;
-		top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
-		transform: translateX(-50%);
-		z-index: 65;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 10px 16px;
-		border-radius: 999px;
-		background: linear-gradient(135deg, var(--color-primary), var(--laurel));
-		color: var(--color-primary-foreground);
-		font-size: 13px;
-		font-weight: 900;
-		letter-spacing: 0.02em;
-		box-shadow: 0 14px 40px rgba(226, 184, 66, 0.4);
-		pointer-events: none;
-	}
-	.combo-banner-xp {
-		padding: 3px 8px;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--color-primary-foreground) 16%, transparent);
-		font-size: 11px;
-	}
-
-	/* Empty-deck negative state. VICI in `thinking` mood owns the
-	   canvas; copy is single-line; no celebration; no escalation. */
-	.empty-deck {
-		position: relative;
-		background: var(--bg-base);
-	}
-	.empty-deck-char {
-		margin-bottom: 1.5rem;
-		display: flex;
-		justify-content: center;
-	}
-	.empty-deck-title {
-		font-family: var(--font-display);
-		font-size: var(--t-32);
-		font-weight: 600;
-		letter-spacing: var(--tracking-snug);
-		color: var(--text-base);
-		margin: 0 0 0.5rem;
-	}
-	.empty-deck-sub {
-		font-size: var(--t-14);
-		color: var(--text-muted);
-		margin: 0 0 1.5rem;
-	}
-
-	/* Streak-break banner — shows once when the previous-day gap broke
-	   the streak. Mute palette (parchment-mute, no laurel celebration);
-	   spec is explicit that the break is honest, not consoling. */
-	.streak-break {
-		position: fixed;
-		left: 50%;
-		top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
-		transform: translateX(-50%);
-		z-index: 65;
-		display: inline-flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 2px;
-		padding: 8px 16px;
-		border-radius: var(--r-pill);
-		background: var(--bg-popover);
-		border: 1px solid var(--border-strong);
-		color: var(--text-muted);
-		font-size: 13px;
-		box-shadow: var(--shadow-card);
-	}
-	.streak-break-sub {
-		font-size: 10px;
-		font-weight: 600;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-		color: var(--text-muted);
-		opacity: 0.56;
-	}
-
 	.flow-stage {
 		position: relative;
 		flex: 1 1 auto;
@@ -1181,267 +707,6 @@
 		filter: saturate(calc(1 - var(--depth) * 0.12));
 	}
 
-	.xp-pops {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		z-index: 55;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	.xp-pop {
-		position: absolute;
-		display: inline-flex;
-		align-items: baseline;
-		gap: 0.4rem;
-		padding: 10px 16px;
-		border-radius: 999px;
-		font-family: var(--font-mono);
-		font-size: 22px;
-		font-weight: 900;
-		letter-spacing: -0.02em;
-		background: var(--bg-popover);
-		color: var(--laurel);
-		box-shadow: var(--shadow-card);
-		animation: xpPop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-	}
-	.xp-pop-label {
-		font-size: 11px;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		opacity: 0.7;
-	}
-	.xp-pop-yes {
-		color: var(--yes);
-		border: 2px solid var(--yes);
-	}
-	.xp-pop-no {
-		color: var(--no);
-		border: 2px solid var(--no);
-	}
-	/* Bonus pop — milestone reward (rarity ladder). Laurel ring, larger
-	   amount, paired serif-italic copy on top, longer dwell. */
-	.xp-pop-bonus {
-		flex-direction: column;
-		gap: 4px;
-		padding: 14px 22px;
-		font-size: 30px;
-		color: var(--color-primary);
-		border: 2px solid var(--color-primary);
-		background: var(--bg-popover);
-		box-shadow:
-			0 0 32px var(--laurel-glow),
-			var(--shadow-card);
-		animation:
-			xpPopBonus 1.8s var(--ease-vici) forwards,
-			none;
-	}
-	.xp-pop-copy {
-		font-family: var(--font-serif);
-		font-style: italic;
-		font-size: 14px;
-		font-weight: 400;
-		color: var(--text-muted);
-		letter-spacing: 0;
-		text-transform: none;
-		line-height: 1.1;
-	}
-	.xp-pop-amount {
-		font-weight: 600;
-	}
-	@keyframes xpPopBonus {
-		0% {
-			transform: translateY(0) scale(0.7);
-			opacity: 0;
-		}
-		15% {
-			transform: translateY(-12px) scale(1.08);
-			opacity: 1;
-		}
-		70% {
-			transform: translateY(-90px) scale(1);
-			opacity: 1;
-		}
-		100% {
-			transform: translateY(-150px) scale(0.95);
-			opacity: 0;
-		}
-	}
-	@keyframes xpPop {
-		0% {
-			transform: translateY(0) scale(0.6);
-			opacity: 0;
-		}
-		20% {
-			transform: translateY(-10px) scale(1.1);
-			opacity: 1;
-		}
-		100% {
-			transform: translateY(-120px) scale(0.9);
-			opacity: 0;
-		}
-	}
-
-	.flow-bottombar {
-		position: sticky;
-		bottom: 0;
-		z-index: 60;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.6rem;
-		padding: 0.55rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.65rem);
-		background: linear-gradient(
-			to top,
-			color-mix(in srgb, var(--bg-base) 98%, transparent) 56%,
-			transparent
-		);
-	}
-
-	.flow-amount {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 3px;
-		border-radius: 999px;
-		background: var(--bg-surface);
-		box-shadow: inset 0 0 0 1px var(--border-base);
-	}
-	.flow-amount-btn {
-		width: 2rem;
-		height: 2rem;
-		border-radius: 999px;
-		background: var(--bg-popover);
-		color: var(--text-base);
-		font-size: 18px;
-		font-weight: 900;
-		line-height: 1;
-		transition: transform 0.12s ease;
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-	}
-	.flow-amount-btn:active {
-		transform: scale(0.985);
-	}
-	.flow-amount-field {
-		display: inline-flex;
-		align-items: baseline;
-		gap: 4px;
-		padding: 0 10px;
-		min-width: 5.5rem;
-		justify-content: center;
-	}
-	.flow-amount-input {
-		width: 3.5rem;
-		background: transparent;
-		text-align: right;
-		font-family: var(--font-mono);
-		font-size: 15px;
-		font-weight: 900;
-		color: var(--text-base);
-		outline: none;
-		font-variant-numeric: tabular-nums;
-		-moz-appearance: textfield;
-	}
-	.flow-amount-input::-webkit-outer-spin-button,
-	.flow-amount-input::-webkit-inner-spin-button {
-		-webkit-appearance: none;
-		margin: 0;
-	}
-	.flow-amount-unit {
-		font-size: 10px;
-		font-weight: 900;
-		letter-spacing: 0.08em;
-		color: var(--text-muted);
-	}
-
-	.flow-actions {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-	}
-	.flow-action {
-		display: inline-flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 0;
-		border-radius: 999px;
-		background: var(--bg-surface);
-		transition:
-			transform 0.12s ease,
-			box-shadow 0.2s ease;
-		position: relative;
-	}
-	.flow-action:active {
-		transform: scale(0.985);
-	}
-	.flow-action-label {
-		position: absolute;
-		bottom: -1.25rem;
-		font-size: 9px;
-		font-weight: 900;
-		letter-spacing: 0.18em;
-		color: var(--text-muted);
-	}
-
-	.flow-action-no {
-		width: 3.35rem;
-		height: 3.35rem;
-		border: 3px solid rgba(255, 107, 107, 0.25);
-		color: var(--no);
-		box-shadow: 0 10px 24px var(--no-wash);
-	}
-	.flow-action-skip {
-		width: 2.75rem;
-		height: 2.75rem;
-		border: 3px solid var(--border-strong);
-		color: var(--text-muted);
-		box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
-	}
-	.flow-action-yes {
-		width: 3.35rem;
-		height: 3.35rem;
-		border: 3px solid rgba(79, 211, 161, 0.25);
-		color: var(--yes);
-		box-shadow: 0 10px 24px rgba(79, 211, 161, 0.15);
-	}
-
-	/* Desktop only keyboard hints */
-	.flow-kbd {
-		display: none;
-		align-items: center;
-		gap: 8px;
-		font-size: 10px;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		color: var(--text-muted);
-		text-transform: uppercase;
-		margin-top: 0.25rem;
-	}
-	.flow-kbd kbd {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 1.25rem;
-		height: 1.25rem;
-		padding: 0 4px;
-		border: 1.5px solid var(--border-strong);
-		border-radius: 6px;
-		background: var(--bg-surface);
-		color: var(--text-base);
-		font-family: inherit;
-		font-size: 11px;
-		line-height: 1;
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.flow-kbd {
-			display: flex;
-		}
-	}
-
 	@media (min-width: 640px) {
 		.flow-card-wrap {
 			max-height: 660px;
@@ -1453,94 +718,5 @@
 	:global([data-theme='peach']) .flow-card-slot.is-back {
 		opacity: calc(1 - var(--depth) * 0.22);
 		filter: saturate(calc(1 - var(--depth) * 0.08)) drop-shadow(0 18px 32px rgba(14, 13, 11, 0.08));
-	}
-
-	/* FlowEnd — session summary surface. Brand voice over confetti.
-	   `.display` headline (serif italic) sits with the bedded grid;
-	   no green-check celebration, no big particle field. */
-	.flow-end {
-		position: relative;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 1.5rem;
-		background:
-			radial-gradient(circle at 20% 10%, var(--laurel-glow), transparent 45%), var(--bg-base);
-		overflow: hidden;
-	}
-	.flow-end-inner {
-		max-width: 22rem;
-		text-align: center;
-	}
-	.flow-end-title {
-		font-size: var(--t-64);
-		margin: 0 0 0.5rem;
-		color: var(--laurel);
-	}
-	@media (min-width: 400px) {
-		.flow-end-title {
-			font-size: var(--t-88);
-		}
-	}
-	.flow-end-sub {
-		font-size: var(--t-14);
-		color: var(--text-muted);
-		margin: 0 0 1.75rem;
-		font-family: var(--font-display);
-	}
-
-	.flow-end-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 0.625rem;
-		margin-bottom: 1.5rem;
-	}
-	.flow-end-cell {
-		background: var(--bg-surface);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		padding: 0.875rem 0.5rem;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 4px;
-		box-shadow: var(--inset-hi);
-	}
-	.flow-end-cell-streak.is-hot {
-		background: linear-gradient(135deg, var(--color-primary), var(--laurel));
-		color: var(--color-primary-foreground);
-		box-shadow: 0 4px 12px var(--laurel-glow);
-	}
-	.flow-end-cell-flame {
-		display: flex;
-		justify-content: center;
-		margin-bottom: 2px;
-	}
-	.flow-end-cell-label {
-		font-size: 10px;
-		color: var(--text-muted);
-	}
-	.flow-end-cell-streak.is-hot .flow-end-cell-label {
-		color: var(--color-primary-foreground);
-		opacity: 0.85;
-	}
-	.flow-end-cell-value {
-		font-size: var(--t-24);
-		font-weight: 600;
-		letter-spacing: -0.02em;
-		line-height: 1.05;
-		color: var(--text-base);
-	}
-	.flow-end-cell-streak.is-hot .flow-end-cell-value {
-		color: var(--color-primary-foreground);
-	}
-	.flow-end-cell-foot {
-		font-size: 9px;
-		color: var(--text-muted);
-		opacity: 0.56;
-		font-family: var(--font-display);
-		text-transform: uppercase;
-		letter-spacing: var(--tracking-allcaps);
 	}
 </style>
