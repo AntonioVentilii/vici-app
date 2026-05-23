@@ -101,23 +101,18 @@ const walkSvelteText = ({ ast, onMatch }) => {
 		}
 
 		const nextAncestors = ancestors.concat(node);
+		const childKeys = Object.keys(node).filter(
+			(key) => key !== 'parent' && key !== 'loc' && key !== 'range'
+		);
 
-		for (const key of Object.keys(node)) {
-			if (key === 'parent' || key === 'loc' || key === 'range') {
-				continue;
-			}
-
+		for (const key of childKeys) {
 			const child = node[key];
 
 			if (Array.isArray(child)) {
 				for (const item of child) {
 					visit({ node: item, ancestors: nextAncestors });
 				}
-
-				continue;
-			}
-
-			if (child !== null && typeof child === 'object' && typeof child.type === 'string') {
+			} else if (child !== null && typeof child === 'object' && typeof child.type === 'string') {
 				visit({ node: child, ancestors: nextAncestors });
 			}
 		}

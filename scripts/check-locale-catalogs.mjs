@@ -88,25 +88,21 @@ const main = () => {
 	const baseKeys = extractKeys(baseFile);
 	const failures = [];
 
-	for (const locale of supportedLocales) {
-		if (locale === baseLocale) {
-			continue;
-		}
+	const otherLocales = supportedLocales.filter((locale) => locale !== baseLocale);
 
+	for (const locale of otherLocales) {
 		const catalogPath = path.join(messagesDir, `${locale}.ts`);
 
 		if (!fs.existsSync(catalogPath)) {
 			failures.push({ locale, missing: [...baseKeys], extra: [], status: 'absent' });
+		} else {
+			const localeKeys = extractKeys(catalogPath);
+			const missing = [...baseKeys].filter((key) => !localeKeys.has(key));
+			const extra = [...localeKeys].filter((key) => !baseKeys.has(key));
 
-			continue;
-		}
-
-		const localeKeys = extractKeys(catalogPath);
-		const missing = [...baseKeys].filter((key) => !localeKeys.has(key));
-		const extra = [...localeKeys].filter((key) => !baseKeys.has(key));
-
-		if (missing.length > 0 || extra.length > 0) {
-			failures.push({ locale, missing, extra, status: 'drift' });
+			if (missing.length > 0 || extra.length > 0) {
+				failures.push({ locale, missing, extra, status: 'drift' });
+			}
 		}
 	}
 
@@ -122,25 +118,23 @@ const main = () => {
 	for (const { locale, missing, extra, status } of failures) {
 		if (status === 'absent') {
 			console.error(`  [${locale}] catalog file is missing.`);
+		} else {
+			console.error(`  [${locale}]`);
 
-			continue;
-		}
+			if (missing.length > 0) {
+				console.error(`    missing (${missing.length}):`);
 
-		console.error(`  [${locale}]`);
-
-		if (missing.length > 0) {
-			console.error(`    missing (${missing.length}):`);
-
-			for (const key of missing) {
-				console.error(`      - ${key}`);
+				for (const key of missing) {
+					console.error(`      - ${key}`);
+				}
 			}
-		}
 
-		if (extra.length > 0) {
-			console.error(`    extra (${extra.length}):`);
+			if (extra.length > 0) {
+				console.error(`    extra (${extra.length}):`);
 
-			for (const key of extra) {
-				console.error(`      + ${key}`);
+				for (const key of extra) {
+					console.error(`      + ${key}`);
+				}
 			}
 		}
 	}
