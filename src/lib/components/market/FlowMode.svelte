@@ -878,11 +878,11 @@
 			</div>
 
 			<div class="flow-kbd">
-				<kbd>←</kbd> NO
+				<kbd>←</kbd>
 				<span>·</span>
-				<kbd>↑</kbd> SKIP
+				<kbd>↑</kbd>
 				<span>·</span>
-				<kbd>→</kbd> YES
+				<kbd>→</kbd>
 			</div>
 		</footer>
 	{/if}
