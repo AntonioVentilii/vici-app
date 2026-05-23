@@ -8,6 +8,7 @@
 	import { followingStore } from '$lib/stores/following.store';
 	import { clearFriendRelations } from '$lib/stores/friends.store';
 	import { positionsStore } from '$lib/stores/positions.store';
+	import { setCachedProfile } from '$lib/stores/profiles.store';
 	import { tradeHistoryStore } from '$lib/stores/trade-history.store';
 	import { userStore } from '$lib/stores/user.store';
 
@@ -78,6 +79,23 @@
 		return () => {
 			unsubscribe();
 		};
+	});
+
+	// Mirror the current user's profile into `profilesStore` so every
+	// surface that resolves a counterpart's display name via that cache
+	// (activity feed, market recent trades, market discussion, …) renders
+	// the viewer's own latest nickname/avatar instead of whatever the
+	// satellite-side public read most recently returned. Without this,
+	// editing the nickname in this session leaves a stale entry in the
+	// cache until the next page reload.
+	$effect(() => {
+		const { user, profile } = $userStore;
+
+		if (!user?.owner || !profile) {
+			return;
+		}
+
+		setCachedProfile({ principal: user.owner, profile });
 	});
 
 	// eslint-disable-next-line no-console

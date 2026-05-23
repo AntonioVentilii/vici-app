@@ -15,3 +15,28 @@ import { writable } from 'svelte/store';
  * profiles user A just looked at.
  */
 export const profilesStore = writable<Map<PrincipalText, UserProfile>>(new Map());
+
+/**
+ * Merge a single `principal → profile` entry into the cache, replacing
+ * any previous entry for the same principal. No-ops when the cached
+ * reference already matches the incoming one so this stays cheap to call
+ * from a reactive effect.
+ */
+export const setCachedProfile = ({
+	principal,
+	profile
+}: {
+	principal: PrincipalText;
+	profile: UserProfile;
+}): void => {
+	profilesStore.update((current) => {
+		if (current.get(principal) === profile) {
+			return current;
+		}
+
+		const next = new Map(current);
+		next.set(principal, profile);
+
+		return next;
+	});
+};
