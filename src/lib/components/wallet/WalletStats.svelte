@@ -4,7 +4,6 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Switch from '$lib/components/ui/Switch.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { VXP_BALANCE_DISPLAY_DECIMALS } from '$lib/constants/playground.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
@@ -15,6 +14,7 @@
 	import { findAssetWorthForIcrcLedger } from '$lib/utils/asset-ref.utils';
 	import { formatCurrency, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
 	interface Props {
 		balances: WalletBalance | undefined;
@@ -101,12 +101,9 @@
 
 					<div class="text-right">
 						<div class="text-foreground font-mono text-sm font-black tabular-nums">
-							{formatToken({
-								value: balance,
-								unitName: token.decimals,
-								displayDecimals:
-									token.symbol === VXP_TOKEN.symbol ? VXP_BALANCE_DISPLAY_DECIMALS : undefined
-							})}
+							{token.symbol === VXP_TOKEN.symbol
+								? formatVxpBalance({ value: balance, decimals: token.decimals })
+								: formatToken({ value: balance, unitName: token.decimals })}
 						</div>
 						<div class="text-muted-foreground font-mono text-[10px] font-medium">
 							{#if $playgroundVxpUnitMode}

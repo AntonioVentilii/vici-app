@@ -44,7 +44,7 @@ export const formatToken = ({
 	displayDecimals,
 	trailingZeros = false,
 	showPlusSign = false,
-	useGrouping = false
+	useGrouping = true
 }: FormatTokenParams): string => {
 	const parsedUnitName: BigNumberish =
 		typeof unitName === 'number' || typeof unitName === 'bigint'

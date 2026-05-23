@@ -21,17 +21,32 @@ import {
 } from '$lib/utils/format.utils';
 
 /**
- * VXP balances render as whole numbers (no fractional part) to reinforce the
- * "points" feel, even though the underlying clearing scale is 6 decimals.
- * Thousands separators keep large balances readable (e.g. `24,000 VXP`).
+ * Plain VXP balance — whole-number "points" feel with thousands separators
+ * (e.g. `24,000`). Defaults to native VXP ledger decimals; pass `decimals`
+ * when formatting a value already scaled to a different unit (e.g. clearing
+ * margin units). No symbol — callers add `VXP` / `PLAYGROUND_DISPLAY_SYMBOL`
+ * themselves so the same helper works for both display contexts.
+ */
+export const formatVxpBalance = ({
+	value,
+	decimals = VXP_TOKEN.decimals
+}: {
+	value: bigint;
+	decimals?: number;
+}): string =>
+	formatToken({
+		value,
+		unitName: decimals,
+		displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS
+	});
+
+/**
+ * Clearing-margin units → `24,000 VXP` (playground display). Uses the
+ * shared {@link formatVxpBalance} so grouping / display decimals stay in
+ * lock-step with non-playground VXP surfaces.
  */
 export const formatPlaygroundClearingAsVxp = (value: bigint): string =>
-	`${formatToken({
-		value,
-		unitName: PLAYGROUND_CLEARING_MARGIN_DECIMALS,
-		displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS,
-		useGrouping: true
-	})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
+	`${formatVxpBalance({ value, decimals: PLAYGROUND_CLEARING_MARGIN_DECIMALS })} ${PLAYGROUND_DISPLAY_SYMBOL}`;
 
 /** @deprecated Use {@link formatPlaygroundClearingAsVxp}. */
 export const formatPlaygroundVxpAmount = formatPlaygroundClearingAsVxp;
@@ -128,12 +143,7 @@ export const formatPortfolioHoldingsStatLine = ({
 	sampleToken?: Token;
 }): string => {
 	if (playground) {
-		return `${formatToken({
-			value: totalPortfolioValue,
-			unitName: VXP_TOKEN.decimals,
-			displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS,
-			useGrouping: true
-		})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
+		return `${formatVxpBalance({ value: totalPortfolioValue })} ${PLAYGROUND_DISPLAY_SYMBOL}`;
 	}
 
 	const dec = sampleToken?.decimals ?? PORTFOLIO_DEFAULT_DECIMALS;

@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
 	import Badge from '$lib/components/ui/Badge.svelte';
-	import { VXP_BALANCE_DISPLAY_DECIMALS } from '$lib/constants/playground.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { isDev } from '$lib/env/app.env';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { formatAvailableUsd, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 	import { getTokenColorClasses } from '$lib/utils/token-ui.utils';
 
 	interface Props {
@@ -62,11 +62,9 @@
 
 	<div class="text-right">
 		<div class="text-foreground text-sm font-black">
-			{formatToken({
-				value: balance,
-				unitName: decimals,
-				displayDecimals: isVxp ? VXP_BALANCE_DISPLAY_DECIMALS : undefined
-			})}
+			{isVxp
+				? formatVxpBalance({ value: balance, decimals })
+				: formatToken({ value: balance, unitName: decimals })}
 		</div>
 		<div class="text-muted-foreground text-[10px] font-medium uppercase">
 			{#if $playgroundVxpUnitMode}

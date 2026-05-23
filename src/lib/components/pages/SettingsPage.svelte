@@ -32,7 +32,6 @@
 		SUPPORTED_LOCALES,
 		type AppLocale
 	} from '$lib/constants/locale.constants';
-	import { VXP_BALANCE_DISPLAY_DECIMALS } from '$lib/constants/playground.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { FLOW_SESSION_LENGTH_OPTIONS } from '$lib/constants/settings.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
@@ -48,8 +47,8 @@
 	import type { ButtonStatus } from '$lib/types/components';
 	import type { FlowSessionLength, SettingsVisibility } from '$lib/types/preferences';
 	import { FLOW_ART_CATEGORIES } from '$lib/utils/flow-art.utils';
-	import { formatToken } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
 	let confirmingDelete = $state(false);
 	let signOutStatus = $state<ButtonStatus>('enabled');
@@ -63,13 +62,10 @@
 	// the ledger), so we don't add it as a separate term. Unrealized PnL is
 	// intentionally excluded — the breakdown lives on the Wallet page.
 	const vxpAvailableLabel = $derived(
-		formatToken({
+		formatVxpBalance({
 			value:
 				($balancesStore?.[VXP_TOKEN.id] ?? ZERO) +
-				($collateralsStore?.balances[VXP_TOKEN.id] ?? ZERO),
-			unitName: VXP_TOKEN.decimals,
-			displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS,
-			useGrouping: true
+				($collateralsStore?.balances[VXP_TOKEN.id] ?? ZERO)
 		})
 	);
 

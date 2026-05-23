@@ -1,11 +1,11 @@
 import { ZERO } from '$lib/constants/app.constants';
-import { VXP_BALANCE_DISPLAY_DECIMALS } from '$lib/constants/playground.constants';
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type { CollateralStoreData } from '$lib/stores/collaterals.store';
 import type { Token } from '$lib/types/token';
 import { icrcLedgerDecimalsFromCollateralConfig } from '$lib/utils/asset-ref.utils';
 import { formatToken } from '$lib/utils/format.utils';
 import {
+	formatVxpBalance,
 	intuitiveAvailableMarginUsd,
 	nativeToClearingMarginUnits
 } from '$lib/utils/playground-display.utils';
@@ -22,15 +22,18 @@ export const calculateDepositedNominalLabel = ({
 		.map((t) => ({ token: t, balance: collateral.balances[t.id] ?? ZERO }))
 		.filter(({ balance }) => balance !== ZERO)
 		.map(({ token, balance }) => {
-			const unitName = icrcLedgerDecimalsFromCollateralConfig({
+			const decimals = icrcLedgerDecimalsFromCollateralConfig({
 				assetsConfig: collateral.assetsConfig,
 				ledgerCanisterId: token.ledgerCanisterId,
 				fallbackDecimals: token.decimals
 			});
-			const displayDecimals =
-				token.symbol === VXP_TOKEN.symbol ? VXP_BALANCE_DISPLAY_DECIMALS : undefined;
 
-			return `${formatToken({ value: balance, unitName, displayDecimals })} ${token.symbol}`;
+			const formatted =
+				token.symbol === VXP_TOKEN.symbol
+					? formatVxpBalance({ value: balance, decimals })
+					: formatToken({ value: balance, unitName: decimals });
+
+			return `${formatted} ${token.symbol}`;
 		})
 		.join(' · ');
 
