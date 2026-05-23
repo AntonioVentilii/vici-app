@@ -23,7 +23,6 @@ export type SocialPremiumOptionId = SocialPremiumPresetId | typeof SOCIAL_PREMIU
 export interface SocialPremiumPreset {
 	readonly id: SocialPremiumPresetId;
 	readonly emoji: string;
-	readonly labelKey: MessageKey;
 	readonly descKey: MessageKey;
 }
 
@@ -31,31 +30,26 @@ export const SOCIAL_PREMIUM_PRESETS: readonly SocialPremiumPreset[] = [
 	{
 		id: 'coffee',
 		emoji: '☕',
-		labelKey: 'social.premium.coffee.label',
 		descKey: 'social.premium.coffee.desc'
 	},
 	{
 		id: 'beer',
 		emoji: '🍺',
-		labelKey: 'social.premium.beer.label',
 		descKey: 'social.premium.beer.desc'
 	},
 	{
 		id: 'pizza',
 		emoji: '🍕',
-		labelKey: 'social.premium.pizza.label',
 		descKey: 'social.premium.pizza.desc'
 	},
 	{
 		id: 'aperitif',
 		emoji: '🥂',
-		labelKey: 'social.premium.aperitif.label',
 		descKey: 'social.premium.aperitif.desc'
 	},
 	{
 		id: 'dinner',
 		emoji: '🍝',
-		labelKey: 'social.premium.dinner.label',
 		descKey: 'social.premium.dinner.desc'
 	}
 ] as const;
@@ -66,10 +60,13 @@ const findPreset = (id: SocialPremiumOptionId): SocialPremiumPreset | undefined 
 	SOCIAL_PREMIUM_PRESETS.find((preset) => preset.id === id);
 
 /**
- * Render the picked premium into the `{ title, description }` shape consumed
- * by `createMarket`'s `socialReward` argument. Returns `undefined` when the
+ * Render the picked premium into the `{ title }` shape consumed by
+ * `createMarket`'s `socialReward` argument. Returns `undefined` when the
  * "Other" option is selected without any custom text — callers should treat
  * that as a validation error.
+ *
+ * Presets render as `{emoji} {description}` (e.g. `☕ A coffee`); "Other"
+ * passes the user-typed title through verbatim.
  */
 export const formatSocialPremium = ({
 	optionId,
@@ -79,7 +76,7 @@ export const formatSocialPremium = ({
 	optionId: SocialPremiumOptionId;
 	customTitle: string;
 	locale: AppLocale;
-}): { title: string; description: string } | undefined => {
+}): { title: string } | undefined => {
 	if (optionId === SOCIAL_PREMIUM_OTHER_ID) {
 		const trimmed = customTitle.trim();
 
@@ -87,10 +84,7 @@ export const formatSocialPremium = ({
 			return;
 		}
 
-		return {
-			title: trimmed,
-			description: t({ locale, key: 'social.premium.other.desc' })
-		};
+		return { title: trimmed };
 	}
 
 	const preset = findPreset(optionId);
@@ -99,11 +93,7 @@ export const formatSocialPremium = ({
 		return;
 	}
 
-	const label = t({ locale, key: preset.labelKey });
 	const description = t({ locale, key: preset.descKey });
 
-	return {
-		title: `1 ${label} ${preset.emoji}`,
-		description
-	};
+	return { title: `${preset.emoji} ${description}` };
 };

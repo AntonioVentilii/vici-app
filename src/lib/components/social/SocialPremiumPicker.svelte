@@ -44,9 +44,6 @@
 			>
 				<span class="text-2xl" aria-hidden="true">{preset.emoji}</span>
 				<span class="text-sm font-bold">
-					{t({ locale: $localeStore, key: preset.labelKey })}
-				</span>
-				<span class="text-[10px] font-normal opacity-70">
 					{t({ locale: $localeStore, key: preset.descKey })}
 				</span>
 			</button>
@@ -62,9 +59,6 @@
 			<span class="text-2xl" aria-hidden="true">✨</span>
 			<span class="text-sm font-bold">
 				{t({ locale: $localeStore, key: 'social.premium.other.label' })}
-			</span>
-			<span class="text-[10px] font-normal opacity-70">
-				{t({ locale: $localeStore, key: 'social.premium.other.desc' })}
 			</span>
 		</button>
 	</div>
