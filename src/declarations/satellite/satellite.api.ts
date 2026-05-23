@@ -186,9 +186,9 @@ const AppListFollowersResultSchema = j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
-			viewerPrincipal: j.optional(j.string()),
-			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			isFriend: j.optional(j.boolean())
+			viewer_principal: j.optional(j.string()),
+			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			is_friend: j.optional(j.boolean())
 		})
 	)
 });
@@ -207,9 +207,9 @@ const AppListFollowingResultSchema = j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
-			viewerPrincipal: j.optional(j.string()),
-			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			isFriend: j.optional(j.boolean())
+			viewer_principal: j.optional(j.string()),
+			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			is_friend: j.optional(j.boolean())
 		})
 	)
 });
@@ -228,9 +228,9 @@ const AppListFriendRequestsResultSchema = j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
-			viewerPrincipal: j.optional(j.string()),
-			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			isFriend: j.optional(j.boolean())
+			viewer_principal: j.optional(j.string()),
+			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			is_friend: j.optional(j.boolean())
 		})
 	)
 });
@@ -251,9 +251,9 @@ const AppListFriendsResultSchema = j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
-			viewerPrincipal: j.optional(j.string()),
-			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			isFriend: j.optional(j.boolean())
+			viewer_principal: j.optional(j.string()),
+			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			is_friend: j.optional(j.boolean())
 		})
 	)
 });
@@ -276,20 +276,20 @@ const AppListLeaderboardResultSchema = j.strictObject({
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
 			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			totalTrades: j.number(),
-			winRate: j.number(),
-			dailyStreak: j.number(),
+			total_trades: j.number(),
+			win_rate: j.number(),
+			daily_streak: j.number(),
 			streak: j.number(),
 			accuracy: j.number(),
 			points: j.number(),
 			level: j.number(),
 			archetype: j.string(),
 			interests: j.array(j.string()),
-			lastActiveDay: j.optional(j.string()),
-			unlockedAchievements: j.array(j.string()),
-			contrarianWins: j.number(),
+			last_active_day: j.optional(j.string()),
+			unlocked_achievements: j.array(j.string()),
+			contrarian_wins: j.number(),
 			preferences: j.optional(
-				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
+				j.strictObject({ default_amount: j.strictObject({ flow: j.string(), manual: j.string() }) })
 			)
 		})
 	)
@@ -307,13 +307,13 @@ const AppListMarketTranslationsArgsSchema = j.strictObject({ seriesId: j.string(
 const AppListMarketTranslationsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
-			seriesId: j.string(),
+			series_id: j.string(),
 			locale: j.string(),
 			title: j.string(),
 			description: j.string(),
 			outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
-			updatedAt: j.number(),
-			updatedBy: j.string()
+			updated_at: j.number(),
+			updated_by: j.string()
 		})
 	)
 });
@@ -342,9 +342,9 @@ const AppListRejectedFriendshipsResultSchema = j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
 			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
 			participants: j.array(j.string()),
-			viewerPrincipal: j.optional(j.string()),
-			viewerRole: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			isFriend: j.optional(j.boolean())
+			viewer_principal: j.optional(j.string()),
+			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			is_friend: j.optional(j.boolean())
 		})
 	)
 });
@@ -375,20 +375,20 @@ const AppSearchProfilesResultSchema = j.strictObject({
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
 			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
-			totalTrades: j.number(),
-			winRate: j.number(),
-			dailyStreak: j.number(),
+			total_trades: j.number(),
+			win_rate: j.number(),
+			daily_streak: j.number(),
 			streak: j.number(),
 			accuracy: j.number(),
 			points: j.number(),
 			level: j.number(),
 			archetype: j.string(),
 			interests: j.array(j.string()),
-			lastActiveDay: j.optional(j.string()),
-			unlockedAchievements: j.array(j.string()),
-			contrarianWins: j.number(),
+			last_active_day: j.optional(j.string()),
+			unlocked_achievements: j.array(j.string()),
+			contrarian_wins: j.number(),
 			preferences: j.optional(
-				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
+				j.strictObject({ default_amount: j.strictObject({ flow: j.string(), manual: j.string() }) })
 			)
 		})
 	)

@@ -138,6 +138,12 @@ export default defineConfig(({ mode }) => ({
 		runner: {
 			type: 'docker'
 		},
-		skylab: {}
+		// `satellite` profile boots the minimal single-satellite emulator
+		// (`junobuild/satellite:latest`). The `skylab` profile boots the
+		// full Juno suite (`junobuild/skylab:latest`) with the dev Console,
+		// but `juno functions build` exits silently with code 1 against it
+		// — see commit 693c6a6 for the same revert we did earlier. Stick to
+		// `satellite` until juno-cli fixes the skylab build path.
+		satellite: {}
 	}
 }));

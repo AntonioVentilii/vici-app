@@ -2,6 +2,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
 import { redactProfile } from '$satellite/services/privacy.services';
+import { withProfileDefaults } from '$satellite/services/profile.services';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
 
@@ -38,10 +39,10 @@ export const listLeaderboard = (): UserProfile[] => {
 				caller
 			});
 
-			return {
+			return withProfileDefaults({
 				...profile,
 				role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
-			};
+			});
 		})
 		.sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
 		.slice(0, LEADERBOARD_LIMIT)

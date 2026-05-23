@@ -11,7 +11,7 @@ import {
 	UpsertMarketTranslationArgsSchema
 } from '$lib/schema/market-translation.schema';
 import { UserProfileSchema } from '$lib/schema/profile.schema';
-import { CheckFriendshipArgsSchema, RelationSchema } from '$lib/schema/relation.schema';
+import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
 import {
 	syncRoleToEngineOnDelete,
 	syncRoleToEngineOnSet
@@ -49,7 +49,14 @@ import {
 	onProfileSetForVxpOnboarding,
 	onTradeActivityForVxpOnboarding
 } from '$satellite/services/vxp-onboarding.services';
-import { toSnakeCaseItems } from '$satellite/utils/wire-format.utils';
+import {
+	MarketTranslationWireSchema,
+	RelationWireSchema,
+	toWireMarketTranslation,
+	toWireProfile,
+	toWireRelation,
+	UserProfileWireSchema
+} from '$satellite/utils/wire-format.utils';
 import {
 	defineAssert,
 	defineHook,
@@ -66,18 +73,20 @@ import {
 import { j, PrincipalTextSchema } from '@junobuild/schema';
 
 export const listLeaderboard = defineQuery({
-	// `.transform(toSnakeCaseItems)` rewrites the array's item keys from
-	// camelCase to snake_case at serialization time. The Sputnik macro
-	// doesn't apply `#[json_data(nested)]` to `Vec<NestedStruct>` fields,
-	// so the wire format for items is whatever the inner struct's original
-	// `Deserialize` impl expects — which is snake_case (Rust convention).
-	// See `src/satellite/utils/wire-format.utils.ts` for the full rationale.
-	// Apply the same transform to every `j.array(SomeStruct)` result.
+	// Uses the snake_case wire schema. Sputnik's codegen doesn't apply
+	// `#[json_data(nested)]` to `Vec<NestedStruct>` fields, so the wire
+	// format for items is whatever the inner Rust struct's original
+	// `Deserialize` impl expects — snake_case. See
+	// `src/satellite/utils/wire-format.utils.ts` for the full rationale.
+	// `.transform()` on the result schema is NOT an option: juno's codegen
+	// only accepts `ZodObject` and fails with "Unsupported type:
+	// unrepresentable schema" on `ZodEffects`, which silently kills the
+	// whole `juno functions build`.
 	result: j.strictObject({
-		items: j.array(UserProfileSchema).transform(toSnakeCaseItems)
+		items: j.array(UserProfileWireSchema)
 	}),
 	handler: () => ({
-		items: listLeaderboardFn()
+		items: listLeaderboardFn().map(toWireProfile)
 	})
 });
 
@@ -100,10 +109,10 @@ export const searchProfiles = defineQuery({
 		queryStr: j.string()
 	}),
 	result: j.strictObject({
-		items: j.array(UserProfileSchema).transform(toSnakeCaseItems)
+		items: j.array(UserProfileWireSchema)
 	}),
 	handler: ({ queryStr }) => ({
-		items: searchProfilesFn(queryStr)
+		items: searchProfilesFn(queryStr).map(toWireProfile)
 	})
 });
 
@@ -170,10 +179,10 @@ export const getMarketTranslation = defineQuery({
 export const listMarketTranslations = defineQuery({
 	args: ListMarketTranslationsArgsSchema,
 	result: j.strictObject({
-		items: j.array(MarketTranslationSchema).transform(toSnakeCaseItems)
+		items: j.array(MarketTranslationWireSchema)
 	}),
 	handler: (args) => ({
-		items: listMarketTranslationsFn(args)
+		items: listMarketTranslationsFn(args).map(toWireMarketTranslation)
 	})
 });
 
@@ -189,23 +198,23 @@ export const upsertMarketTranslation = defineUpdate({
 
 export const listFriends = defineQuery({
 	result: j.strictObject({
-		items: j.array(RelationSchema).transform(toSnakeCaseItems)
+		items: j.array(RelationWireSchema)
 	}),
-	handler: () => ({ items: listFriendsFn() })
+	handler: () => ({ items: listFriendsFn().map(toWireRelation) })
 });
 
 export const listFollowers = defineQuery({
 	result: j.strictObject({
-		items: j.array(RelationSchema).transform(toSnakeCaseItems)
+		items: j.array(RelationWireSchema)
 	}),
-	handler: () => ({ items: listFollowersFn() })
+	handler: () => ({ items: listFollowersFn().map(toWireRelation) })
 });
 
 export const listFollowing = defineQuery({
 	result: j.strictObject({
-		items: j.array(RelationSchema).transform(toSnakeCaseItems)
+		items: j.array(RelationWireSchema)
 	}),
-	handler: () => ({ items: listFollowingFn() })
+	handler: () => ({ items: listFollowingFn().map(toWireRelation) })
 });
 
 export const checkFriendship = defineQuery({
@@ -218,19 +227,19 @@ export const checkFriendship = defineQuery({
 
 export const listFriendRequests = defineQuery({
 	result: j.strictObject({
-		items: j.array(RelationSchema).transform(toSnakeCaseItems)
+		items: j.array(RelationWireSchema)
 	}),
 	handler: () => ({
-		items: listFriendRequestsFn()
+		items: listFriendRequestsFn().map(toWireRelation)
 	})
 });
 
 export const listRejectedFriendships = defineQuery({
 	result: j.strictObject({
-		items: j.array(RelationSchema).transform(toSnakeCaseItems)
+		items: j.array(RelationWireSchema)
 	}),
 	handler: () => ({
-		items: listRejectedFriendshipsFn()
+		items: listRejectedFriendshipsFn().map(toWireRelation)
 	})
 });
 

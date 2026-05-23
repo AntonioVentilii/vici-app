@@ -1,0 +1,223 @@
+import { ProfileVisibility } from '$lib/enums/profile';
+import { RelationCategory, RelationState } from '$lib/enums/relation';
+import { UserRole } from '$lib/enums/user';
+import { j, PrincipalTextSchema } from '@junobuild/schema';
+
+/**
+ * Snake_case wire-format schemas + converters for Sputnik typed queries
+ * that return arrays of nested structs.
+ *
+ * # Background
+ *
+ * Juno's Sputnik codegen always emits Rust struct fields in snake_case and
+ * the `JsonData` derive macro normally builds a mirror struct with
+ * `#[serde(rename_all = "camelCase")]` so the JSON↔Rust handoff uses
+ * camelCase on the wire. But that mirror only wraps fields explicitly
+ * marked `#[json_data(nested)]`, and the codegen does **not** add that
+ * attribute to `Vec<NestedStruct>` fields. For example:
+ *
+ * ```rust
+ * // ✅ getProfile — `profile` IS nested, so wire format is camelCase
+ * pub struct AppGetProfileResult {
+ *     #[json_data(nested)]
+ *     pub profile: Option<AppGetProfileResultProfile>,
+ * }
+ *
+ * // ❌ listLeaderboard — `items` is NOT nested, so the wire format reverts
+ * //   to the inner struct's original `Deserialize` impl which has no
+ * //   rename_all attribute — i.e. snake_case.
+ * pub struct AppListLeaderboardResult {
+ *     pub items: Vec<AppListLeaderboardResultItems>,
+ * }
+ * ```
+ *
+ * Every `Vec<…Items>` endpoint therefore expects snake_case keys on the
+ * wire, but our app-side schemas (e.g. `UserProfileSchema`) declare camelCase
+ * keys (matching the TypeScript app convention). Without intervention the
+ * `JsonData → Candid` deserializer traps on every read with
+ * `'Error converting from js JsonData into type Candid: missing field
+ * <snake_case_name>'`.
+ *
+ * # Why the schemas below are duplicated
+ *
+ * We can't fix this with `.transform()` on the result schema — that produces
+ * a `ZodEffects`, and juno's schema → Rust codegen only accepts `ZodObject`
+ * (it fails with "Unsupported type: unrepresentable schema" and the whole
+ * `juno functions build` exits silently with code 1).
+ *
+ * Instead, each `Vec<NestedStruct>` endpoint uses a parallel **wire
+ * schema** declared here in snake_case. juno's codegen reads the declared
+ * field names verbatim, the Rust struct is byte-identical to before, and the
+ * runtime handler emits snake_case via the matching `toWire…` converter so
+ * Zod parse succeeds with the same shape it then serializes to JSON.
+ *
+ * # When to apply
+ *
+ * Apply on **every** `j.array(NestedStruct)` result. For `Option<NestedStruct>`
+ * endpoints (e.g. `getProfile`'s `profile`) the wire is already camelCase via
+ * the `#[json_data(nested)]` mirror — keep those camelCase as-is.
+ */
+
+// ─── UserProfile wire format ─────────────────────────────────────────────
+
+export const UserProfileWireSchema = j.strictObject({
+	owner: PrincipalTextSchema,
+	nickname: j.string().default(''),
+	avatar: j.string().default(''),
+	email: j.string().default(''),
+	pnl: j.number().default(0),
+	visibility: j.enum(ProfileVisibility).default(ProfileVisibility.FRIENDS_ONLY),
+	role: j.enum(UserRole).optional(),
+	total_trades: j.number().default(0),
+	win_rate: j.number().default(0),
+	daily_streak: j.number().default(0),
+	streak: j.number().default(0),
+	accuracy: j.number().default(0),
+	points: j.number().default(0),
+	level: j.number().default(1),
+	archetype: j.string().default(''),
+	interests: j.array(j.string()).default([]),
+	last_active_day: j.string().optional(),
+	unlocked_achievements: j.array(j.string()).default([]),
+	contrarian_wins: j.number().default(0),
+	preferences: j
+		.strictObject({
+			default_amount: j
+				.strictObject({
+					flow: j.string().default('0'),
+					manual: j.string().default('0')
+				})
+				.default({ flow: '0', manual: '0' })
+		})
+		.optional()
+});
+
+export type WireUserProfile = j.infer<typeof UserProfileWireSchema>;
+
+// Local TS shape this converter accepts — exactly mirrors UserProfile from
+// `src/lib/types/profile.ts`. Kept inline (instead of importing UserProfile)
+// so a future divergence of either shape doesn't silently break the wire.
+interface AppProfileLike {
+	owner: string;
+	nickname?: string;
+	avatar?: string;
+	email?: string;
+	pnl?: number;
+	visibility: WireUserProfile['visibility'];
+	role?: WireUserProfile['role'];
+	totalTrades?: number;
+	winRate?: number;
+	dailyStreak?: number;
+	streak?: number;
+	accuracy?: number;
+	points?: number;
+	level?: number;
+	archetype?: string;
+	interests?: string[];
+	lastActiveDay?: string;
+	unlockedAchievements?: string[];
+	contrarianWins?: number;
+	preferences?: { defaultAmount?: { flow?: string; manual?: string } };
+}
+
+export const toWireProfile = (profile: AppProfileLike): WireUserProfile => ({
+	owner: profile.owner,
+	nickname: profile.nickname ?? '',
+	avatar: profile.avatar ?? '',
+	email: profile.email ?? '',
+	pnl: profile.pnl ?? 0,
+	visibility: profile.visibility,
+	role: profile.role,
+	total_trades: profile.totalTrades ?? 0,
+	win_rate: profile.winRate ?? 0,
+	daily_streak: profile.dailyStreak ?? 0,
+	streak: profile.streak ?? 0,
+	accuracy: profile.accuracy ?? 0,
+	points: profile.points ?? 0,
+	level: profile.level ?? 1,
+	archetype: profile.archetype ?? '',
+	interests: profile.interests ?? [],
+	last_active_day: profile.lastActiveDay,
+	unlocked_achievements: profile.unlockedAchievements ?? [],
+	contrarian_wins: profile.contrarianWins ?? 0,
+	preferences: profile.preferences
+		? {
+				default_amount: {
+					flow: profile.preferences.defaultAmount?.flow ?? '0',
+					manual: profile.preferences.defaultAmount?.manual ?? '0'
+				}
+			}
+		: undefined
+});
+
+// ─── Relation wire format ────────────────────────────────────────────────
+
+export const RelationWireSchema = j.strictObject({
+	category: j.enum(RelationCategory),
+	state: j.enum(RelationState),
+	participants: j.array(PrincipalTextSchema),
+	viewer_principal: PrincipalTextSchema.optional(),
+	viewer_role: j.enum(UserRole).optional(),
+	is_friend: j.boolean().optional()
+});
+
+export type WireRelation = j.infer<typeof RelationWireSchema>;
+
+interface AppRelationLike {
+	category: WireRelation['category'];
+	state: WireRelation['state'];
+	participants: string[];
+	viewerPrincipal?: string;
+	viewerRole?: WireRelation['viewer_role'];
+	isFriend?: boolean;
+}
+
+export const toWireRelation = (relation: AppRelationLike): WireRelation => ({
+	category: relation.category,
+	state: relation.state,
+	participants: relation.participants,
+	viewer_principal: relation.viewerPrincipal,
+	viewer_role: relation.viewerRole,
+	is_friend: relation.isFriend
+});
+
+// ─── MarketTranslation wire format ───────────────────────────────────────
+
+export const OutcomeTranslationWireSchema = j.strictObject({
+	id: j.string(),
+	title: j.string()
+});
+
+export const MarketTranslationWireSchema = j.strictObject({
+	series_id: j.string(),
+	locale: j.string(),
+	title: j.string(),
+	description: j.string(),
+	outcomes: j.array(OutcomeTranslationWireSchema).default([]),
+	updated_at: j.number(),
+	updated_by: PrincipalTextSchema
+});
+
+export type WireMarketTranslation = j.infer<typeof MarketTranslationWireSchema>;
+
+interface AppMarketTranslationLike {
+	seriesId: string;
+	locale: string;
+	title: string;
+	description: string;
+	outcomes?: { id: string; title: string }[];
+	updatedAt: number;
+	updatedBy: string;
+}
+
+export const toWireMarketTranslation = (
+	translation: AppMarketTranslationLike
+): WireMarketTranslation => ({
+	series_id: translation.seriesId,
+	locale: translation.locale,
+	title: translation.title,
+	description: translation.description,
+	outcomes: translation.outcomes ?? [],
+	updated_at: translation.updatedAt,
+	updated_by: translation.updatedBy
+});
