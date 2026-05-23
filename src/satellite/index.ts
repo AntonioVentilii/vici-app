@@ -4,6 +4,12 @@ import {
 	MarketMetadataSchema,
 	UpsertMarketMetadataArgsSchema
 } from '$lib/schema/market-metadata.schema';
+import {
+	GetMarketTranslationArgsSchema,
+	ListMarketTranslationsArgsSchema,
+	MarketTranslationSchema,
+	UpsertMarketTranslationArgsSchema
+} from '$lib/schema/market-translation.schema';
 import { UserProfileSchema } from '$lib/schema/profile.schema';
 import { CheckFriendshipArgsSchema, RelationSchema } from '$lib/schema/relation.schema';
 import {
@@ -15,6 +21,11 @@ import {
 	getMarketMetadata as getMarketMetadataFn,
 	upsertMarketMetadata as upsertMarketMetadataFn
 } from '$satellite/services/market-metadata.services';
+import {
+	getMarketTranslation as getMarketTranslationFn,
+	listMarketTranslations as listMarketTranslationsFn,
+	upsertMarketTranslation as upsertMarketTranslationFn
+} from '$satellite/services/market-translation.services';
 import {
 	assertValidNickname,
 	checkNicknameAvailabilityFn,
@@ -38,6 +49,7 @@ import {
 	onProfileSetForVxpOnboarding,
 	onTradeActivityForVxpOnboarding
 } from '$satellite/services/vxp-onboarding.services';
+import { toSnakeCaseItems } from '$satellite/utils/wire-format.utils';
 import {
 	defineAssert,
 	defineHook,
@@ -54,8 +66,15 @@ import {
 import { j, PrincipalTextSchema } from '@junobuild/schema';
 
 export const listLeaderboard = defineQuery({
+	// `.transform(toSnakeCaseItems)` rewrites the array's item keys from
+	// camelCase to snake_case at serialization time. The Sputnik macro
+	// doesn't apply `#[json_data(nested)]` to `Vec<NestedStruct>` fields,
+	// so the wire format for items is whatever the inner struct's original
+	// `Deserialize` impl expects — which is snake_case (Rust convention).
+	// See `src/satellite/utils/wire-format.utils.ts` for the full rationale.
+	// Apply the same transform to every `j.array(SomeStruct)` result.
 	result: j.strictObject({
-		items: j.array(UserProfileSchema)
+		items: j.array(UserProfileSchema).transform(toSnakeCaseItems)
 	}),
 	handler: () => ({
 		items: listLeaderboardFn()
@@ -81,7 +100,7 @@ export const searchProfiles = defineQuery({
 		queryStr: j.string()
 	}),
 	result: j.strictObject({
-		items: j.array(UserProfileSchema)
+		items: j.array(UserProfileSchema).transform(toSnakeCaseItems)
 	}),
 	handler: ({ queryStr }) => ({
 		items: searchProfilesFn(queryStr)
@@ -138,23 +157,53 @@ export const upsertMarketMetadata = defineUpdate({
 	})
 });
 
+export const getMarketTranslation = defineQuery({
+	args: GetMarketTranslationArgsSchema,
+	result: j.strictObject({
+		translation: j.optional(MarketTranslationSchema)
+	}),
+	handler: (args) => ({
+		translation: getMarketTranslationFn(args)
+	})
+});
+
+export const listMarketTranslations = defineQuery({
+	args: ListMarketTranslationsArgsSchema,
+	result: j.strictObject({
+		items: j.array(MarketTranslationSchema).transform(toSnakeCaseItems)
+	}),
+	handler: (args) => ({
+		items: listMarketTranslationsFn(args)
+	})
+});
+
+export const upsertMarketTranslation = defineUpdate({
+	args: UpsertMarketTranslationArgsSchema,
+	result: j.strictObject({
+		translation: MarketTranslationSchema
+	}),
+	handler: (args) => ({
+		translation: upsertMarketTranslationFn(args)
+	})
+});
+
 export const listFriends = defineQuery({
 	result: j.strictObject({
-		items: j.array(RelationSchema)
+		items: j.array(RelationSchema).transform(toSnakeCaseItems)
 	}),
 	handler: () => ({ items: listFriendsFn() })
 });
 
 export const listFollowers = defineQuery({
 	result: j.strictObject({
-		items: j.array(RelationSchema)
+		items: j.array(RelationSchema).transform(toSnakeCaseItems)
 	}),
 	handler: () => ({ items: listFollowersFn() })
 });
 
 export const listFollowing = defineQuery({
 	result: j.strictObject({
-		items: j.array(RelationSchema)
+		items: j.array(RelationSchema).transform(toSnakeCaseItems)
 	}),
 	handler: () => ({ items: listFollowingFn() })
 });
@@ -169,7 +218,7 @@ export const checkFriendship = defineQuery({
 
 export const listFriendRequests = defineQuery({
 	result: j.strictObject({
-		items: j.array(RelationSchema)
+		items: j.array(RelationSchema).transform(toSnakeCaseItems)
 	}),
 	handler: () => ({
 		items: listFriendRequestsFn()
@@ -178,7 +227,7 @@ export const listFriendRequests = defineQuery({
 
 export const listRejectedFriendships = defineQuery({
 	result: j.strictObject({
-		items: j.array(RelationSchema)
+		items: j.array(RelationSchema).transform(toSnakeCaseItems)
 	}),
 	handler: () => ({
 		items: listRejectedFriendshipsFn()

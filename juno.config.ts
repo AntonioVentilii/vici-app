@@ -19,6 +19,7 @@ enum JunoDatastoreCollection {
 	CATEGORIES = 'categories',
 	SERIES_CATEGORIES = 'series_categories',
 	MARKET_METADATA = 'market_metadata',
+	MARKET_TRANSLATIONS = 'market_translations',
 	ACTIVITIES = 'activities',
 	VXP_ONBOARDING = 'vxp_onboarding'
 }
@@ -113,6 +114,12 @@ export default defineConfig(({ mode }) => ({
 					write: 'controllers'
 				},
 				{
+					collection: JunoDatastoreCollection.MARKET_TRANSLATIONS,
+					memory: 'stable',
+					read: 'public',
+					write: 'controllers'
+				},
+				{
 					collection: JunoDatastoreCollection.ACTIVITIES,
 					memory: 'stable',
 					read: 'public',
@@ -131,6 +138,6 @@ export default defineConfig(({ mode }) => ({
 		runner: {
 			type: 'docker'
 		},
-		satellite: {}
+		skylab: {}
 	}
 }));

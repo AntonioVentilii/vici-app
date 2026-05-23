@@ -15,23 +15,17 @@ export const MarketEventSchema = j.strictObject({
 	dir: MarketEventDirectionSchema
 });
 
-export const MarketResolutionMetadataSchema = j.strictObject({
-	text: j.string(),
-	source: j.string(),
-	settlesAtMs: j.number().optional()
-});
-
 export const MarketMetadataInputSchema = j.strictObject({
 	whyNow: MarketWhyNowSchema.optional(),
 	events: j.array(MarketEventSchema).default([]),
-	resolution: MarketResolutionMetadataSchema.optional()
+	suggested: j.boolean().default(false)
 });
 
 export const MarketMetadataSchema = j.strictObject({
 	seriesId: j.string(),
 	whyNow: MarketWhyNowSchema.optional(),
 	events: j.array(MarketEventSchema).default([]),
-	resolution: MarketResolutionMetadataSchema.optional(),
+	suggested: j.boolean().default(false),
 	updatedAt: j.number(),
 	updatedBy: PrincipalTextSchema
 });

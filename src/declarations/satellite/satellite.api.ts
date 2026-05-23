@@ -74,13 +74,7 @@ const AppGetMarketMetadataResultSchema = j.strictObject({
 			events: j.array(
 				j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
 			),
-			resolution: j.optional(
-				j.strictObject({
-					text: j.string(),
-					source: j.string(),
-					settlesAtMs: j.optional(j.number())
-				})
-			),
+			suggested: j.boolean(),
 			updatedAt: j.number(),
 			updatedBy: j.string()
 		})
@@ -103,6 +97,42 @@ const getMarketMetadata = async (
 
 	const result = schemaFromIdl({ schema: AppGetMarketMetadataResultSchema, value: idlResult });
 	return AppGetMarketMetadataResultSchema.parse(result);
+};
+
+const AppGetMarketTranslationArgsSchema = j.strictObject({
+	seriesId: j.string(),
+	locale: j.string()
+});
+const AppGetMarketTranslationResultSchema = j.strictObject({
+	translation: j.optional(
+		j.strictObject({
+			seriesId: j.string(),
+			locale: j.string(),
+			title: j.string(),
+			description: j.string(),
+			outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
+			updatedAt: j.number(),
+			updatedBy: j.string()
+		})
+	)
+});
+
+const getMarketTranslation = async (
+	args: j.infer<typeof AppGetMarketTranslationArgsSchema>
+): Promise<j.infer<typeof AppGetMarketTranslationResultSchema>> => {
+	const parsedArgs = AppGetMarketTranslationArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetMarketTranslationArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_market_translation']>[0];
+
+	const { app_get_market_translation } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_market_translation(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetMarketTranslationResultSchema, value: idlResult });
+	return AppGetMarketTranslationResultSchema.parse(result);
 };
 
 const AppGetProfileArgsSchema = j.strictObject({ principalStr: j.string() });
@@ -273,6 +303,39 @@ const listLeaderboard = async (): Promise<j.infer<typeof AppListLeaderboardResul
 	return AppListLeaderboardResultSchema.parse(result);
 };
 
+const AppListMarketTranslationsArgsSchema = j.strictObject({ seriesId: j.string() });
+const AppListMarketTranslationsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			seriesId: j.string(),
+			locale: j.string(),
+			title: j.string(),
+			description: j.string(),
+			outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
+			updatedAt: j.number(),
+			updatedBy: j.string()
+		})
+	)
+});
+
+const listMarketTranslations = async (
+	args: j.infer<typeof AppListMarketTranslationsArgsSchema>
+): Promise<j.infer<typeof AppListMarketTranslationsResultSchema>> => {
+	const parsedArgs = AppListMarketTranslationsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListMarketTranslationsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_market_translations']>[0];
+
+	const { app_list_market_translations } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_market_translations(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppListMarketTranslationsResultSchema, value: idlResult });
+	return AppListMarketTranslationsResultSchema.parse(result);
+};
+
 const AppListRejectedFriendshipsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
@@ -422,9 +485,7 @@ const AppUpsertMarketMetadataArgsSchema = j.strictObject({
 		events: j.array(
 			j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
 		),
-		resolution: j.optional(
-			j.strictObject({ text: j.string(), source: j.string(), settlesAtMs: j.optional(j.number()) })
-		)
+		suggested: j.boolean()
 	})
 });
 const AppUpsertMarketMetadataResultSchema = j.strictObject({
@@ -439,9 +500,7 @@ const AppUpsertMarketMetadataResultSchema = j.strictObject({
 		events: j.array(
 			j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
 		),
-		resolution: j.optional(
-			j.strictObject({ text: j.string(), source: j.string(), settlesAtMs: j.optional(j.number()) })
-		),
+		suggested: j.boolean(),
 		updatedAt: j.number(),
 		updatedBy: j.string()
 	})
@@ -465,21 +524,66 @@ const upsertMarketMetadata = async (
 	return AppUpsertMarketMetadataResultSchema.parse(result);
 };
 
+const AppUpsertMarketTranslationArgsSchema = j.strictObject({
+	seriesId: j.string(),
+	locale: j.string(),
+	data: j.strictObject({
+		title: j.string(),
+		description: j.string(),
+		outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() }))
+	})
+});
+const AppUpsertMarketTranslationResultSchema = j.strictObject({
+	translation: j.strictObject({
+		seriesId: j.string(),
+		locale: j.string(),
+		title: j.string(),
+		description: j.string(),
+		outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
+		updatedAt: j.number(),
+		updatedBy: j.string()
+	})
+});
+
+const upsertMarketTranslation = async (
+	args: j.infer<typeof AppUpsertMarketTranslationArgsSchema>
+): Promise<j.infer<typeof AppUpsertMarketTranslationResultSchema>> => {
+	const parsedArgs = AppUpsertMarketTranslationArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppUpsertMarketTranslationArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_upsert_market_translation']>[0];
+
+	const { app_upsert_market_translation } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_upsert_market_translation(idlArgs);
+
+	const result = schemaFromIdl({
+		schema: AppUpsertMarketTranslationResultSchema,
+		value: idlResult
+	});
+	return AppUpsertMarketTranslationResultSchema.parse(result);
+};
+
 export const functions = {
 	checkFriendship,
 	checkNicknameAvailability,
 	getMarketMetadata,
+	getMarketTranslation,
 	getProfile,
 	listFollowers,
 	listFollowing,
 	listFriendRequests,
 	listFriends,
 	listLeaderboard,
+	listMarketTranslations,
 	listRejectedFriendships,
 	searchProfiles,
 	acceptFriendRequest,
 	followUser,
 	rejectFriendRequest,
 	sendFriendRequest,
-	upsertMarketMetadata
+	upsertMarketMetadata,
+	upsertMarketTranslation
 };

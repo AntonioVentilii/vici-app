@@ -16,8 +16,7 @@
 		formatCategoryAccuracyLine,
 		formatFlowCallsLabel,
 		formatFollowedLeanLine,
-		formatPriorCallLine,
-		formatResolutionLine
+		formatPriorCallLine
 	} from '$lib/utils/flow-card-display.utils';
 	import { formatDate, formatProbability } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -46,7 +45,6 @@
 	const callsLabel = $derived(
 		formatFlowCallsLabel({ volume: market.totalVolume, decimals: market.token.decimals })
 	);
-	const resolution = $derived(formatResolutionLine(metadata?.resolution));
 	const categoryAccLine = $derived(
 		categoryAcc
 			? formatCategoryAccuracyLine({ signal: categoryAcc, categoryLabel: category })
@@ -61,6 +59,7 @@
 	);
 
 	let rulesOpen = $state(false);
+	const resolutionCondition = $derived(market.description?.trim() ?? '');
 </script>
 
 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -100,43 +99,31 @@
 				{/if}
 			</p>
 
-			<section class="flow-back-block flow-resolution">
-				<p class="eyebrow flow-back-label">
-					{t({ locale: $localeStore, key: 'card.back.resolves_if' })}
-				</p>
-				<p class="flow-back-copy">{resolution.condition}</p>
-				<p class="flow-back-source">
-					{t({
-						locale: $localeStore,
-						key: 'card.back.source',
-						params: { source: resolution.source }
-					})}
-					{#if resolution.settlesLabel}
-						{t({
-							locale: $localeStore,
-							key: 'card.back.source_settles',
-							params: { settles: resolution.settlesLabel }
-						})}
-					{/if}
-				</p>
-				<button
-					class="flow-back-toggle"
-					aria-expanded={rulesOpen}
-					onclick={() => {
-						rulesOpen = !rulesOpen;
-					}}
-					type="button"
-				>
-					{rulesOpen
-						? t({ locale: $localeStore, key: 'card.back.hide_rules' })
-						: t({ locale: $localeStore, key: 'card.back.show_rules' })}
-				</button>
-				{#if rulesOpen}
-					<p class="flow-back-rules">
-						{t({ locale: $localeStore, key: 'card.back.rules_body' })}
+			{#if resolutionCondition.length > 0}
+				<section class="flow-back-block flow-resolution">
+					<p class="eyebrow flow-back-label">
+						{t({ locale: $localeStore, key: 'card.back.resolves_if' })}
 					</p>
-				{/if}
-			</section>
+					<p class="flow-back-copy">{resolutionCondition}</p>
+					<button
+						class="flow-back-toggle"
+						aria-expanded={rulesOpen}
+						onclick={() => {
+							rulesOpen = !rulesOpen;
+						}}
+						type="button"
+					>
+						{rulesOpen
+							? t({ locale: $localeStore, key: 'card.back.hide_rules' })
+							: t({ locale: $localeStore, key: 'card.back.show_rules' })}
+					</button>
+					{#if rulesOpen}
+						<p class="flow-back-rules">
+							{t({ locale: $localeStore, key: 'card.back.rules_body' })}
+						</p>
+					{/if}
+				</section>
+			{/if}
 
 			<section class="flow-back-block flow-community">
 				<div class="flow-community-top">
@@ -340,7 +327,6 @@
 	}
 
 	.flow-back-copy,
-	.flow-back-source,
 	.flow-back-activity,
 	.flow-back-context-line {
 		margin: 0;
@@ -351,10 +337,6 @@
 
 	.flow-back-copy {
 		color: var(--text-base);
-	}
-
-	.flow-back-source {
-		font-size: var(--t-12);
 	}
 
 	.flow-back-toggle {

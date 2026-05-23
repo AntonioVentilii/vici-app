@@ -55,31 +55,6 @@ export const formatWhyNowChip = (whyNow: MarketWhyNow | undefined): string | und
 	return whyNow.text.trim();
 };
 
-export const formatResolutionLine = (
-	resolution: MarketMetadata['resolution'] | undefined
-): { condition: string; source: string; settlesLabel?: string } => {
-	if (!resolution?.text?.trim()) {
-		return {
-			condition: 'Resolves on the official source.',
-			source: resolution?.source?.trim() ?? 'official record'
-		};
-	}
-
-	const settlesLabel =
-		resolution.settlesAtMs !== undefined
-			? new Date(resolution.settlesAtMs).toLocaleDateString(undefined, {
-					month: 'long',
-					day: 'numeric'
-				})
-			: undefined;
-
-	return {
-		condition: resolution.text.trim(),
-		source: resolution.source?.trim() || 'official record',
-		settlesLabel
-	};
-};
-
 export const formatCategoryAccuracyLine = ({
 	signal,
 	categoryLabel

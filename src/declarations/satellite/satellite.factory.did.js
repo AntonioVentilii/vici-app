@@ -34,14 +34,8 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				updated_at: IDL.Float64,
 				updated_by: IDL.Text,
+				suggested: IDL.Bool,
 				series_id: IDL.Text,
-				resolution: IDL.Opt(
-					IDL.Record({
-						settles_at_ms: IDL.Opt(IDL.Float64),
-						source: IDL.Text,
-						text: IDL.Text
-					})
-				),
 				events: IDL.Vec(
 					IDL.Record({
 						day: IDL.Float64,
@@ -61,6 +55,23 @@ export const idlFactory = ({ IDL }) => {
 						text: IDL.Text
 					})
 				)
+			})
+		)
+	});
+	const AppGetMarketTranslationArgs = IDL.Record({
+		series_id: IDL.Text,
+		locale: IDL.Text
+	});
+	const AppGetMarketTranslationResult = IDL.Record({
+		translation: IDL.Opt(
+			IDL.Record({
+				title: IDL.Text,
+				updated_at: IDL.Float64,
+				updated_by: IDL.Text,
+				series_id: IDL.Text,
+				locale: IDL.Text,
+				description: IDL.Text,
+				outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
 			})
 		)
 	});
@@ -265,6 +276,20 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListMarketTranslationsArgs = IDL.Record({ series_id: IDL.Text });
+	const AppListMarketTranslationsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				title: IDL.Text,
+				updated_at: IDL.Float64,
+				updated_by: IDL.Text,
+				series_id: IDL.Text,
+				locale: IDL.Text,
+				description: IDL.Text,
+				outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+			})
+		)
+	});
 	const AppListRejectedFriendshipsResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
@@ -342,13 +367,7 @@ export const idlFactory = ({ IDL }) => {
 	const AppSendFriendRequestArgs = IDL.Record({ target: IDL.Text });
 	const AppUpsertMarketMetadataArgs = IDL.Record({
 		data: IDL.Record({
-			resolution: IDL.Opt(
-				IDL.Record({
-					settles_at_ms: IDL.Opt(IDL.Float64),
-					source: IDL.Text,
-					text: IDL.Text
-				})
-			),
+			suggested: IDL.Bool,
 			events: IDL.Vec(
 				IDL.Record({
 					day: IDL.Float64,
@@ -375,14 +394,8 @@ export const idlFactory = ({ IDL }) => {
 		metadata: IDL.Record({
 			updated_at: IDL.Float64,
 			updated_by: IDL.Text,
+			suggested: IDL.Bool,
 			series_id: IDL.Text,
-			resolution: IDL.Opt(
-				IDL.Record({
-					settles_at_ms: IDL.Opt(IDL.Float64),
-					source: IDL.Text,
-					text: IDL.Text
-				})
-			),
 			events: IDL.Vec(
 				IDL.Record({
 					day: IDL.Float64,
@@ -404,6 +417,26 @@ export const idlFactory = ({ IDL }) => {
 			)
 		})
 	});
+	const AppUpsertMarketTranslationArgs = IDL.Record({
+		data: IDL.Record({
+			title: IDL.Text,
+			description: IDL.Text,
+			outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+		}),
+		series_id: IDL.Text,
+		locale: IDL.Text
+	});
+	const AppUpsertMarketTranslationResult = IDL.Record({
+		translation: IDL.Record({
+			title: IDL.Text,
+			updated_at: IDL.Float64,
+			updated_by: IDL.Text,
+			series_id: IDL.Text,
+			locale: IDL.Text,
+			description: IDL.Text,
+			outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+		})
+	});
 
 	return IDL.Service({
 		app_accept_friend_request: IDL.Func([AppAcceptFriendRequestArgs], [], []),
@@ -419,12 +452,22 @@ export const idlFactory = ({ IDL }) => {
 			[AppGetMarketMetadataResult],
 			['query']
 		),
+		app_get_market_translation: IDL.Func(
+			[AppGetMarketTranslationArgs],
+			[AppGetMarketTranslationResult],
+			['query']
+		),
 		app_get_profile: IDL.Func([AppGetProfileArgs], [AppGetProfileResult], ['query']),
 		app_list_followers: IDL.Func([], [AppListFollowersResult], ['query']),
 		app_list_following: IDL.Func([], [AppListFollowingResult], ['query']),
 		app_list_friend_requests: IDL.Func([], [AppListFriendRequestsResult], ['query']),
 		app_list_friends: IDL.Func([], [AppListFriendsResult], ['query']),
 		app_list_leaderboard: IDL.Func([], [AppListLeaderboardResult], ['query']),
+		app_list_market_translations: IDL.Func(
+			[AppListMarketTranslationsArgs],
+			[AppListMarketTranslationsResult],
+			['query']
+		),
 		app_list_rejected_friendships: IDL.Func([], [AppListRejectedFriendshipsResult], ['query']),
 		app_reject_friend_request: IDL.Func([AppRejectFriendRequestArgs], [], []),
 		app_search_profiles: IDL.Func([AppSearchProfilesArgs], [AppSearchProfilesResult], ['query']),
@@ -432,6 +475,11 @@ export const idlFactory = ({ IDL }) => {
 		app_upsert_market_metadata: IDL.Func(
 			[AppUpsertMarketMetadataArgs],
 			[AppUpsertMarketMetadataResult],
+			[]
+		),
+		app_upsert_market_translation: IDL.Func(
+			[AppUpsertMarketTranslationArgs],
+			[AppUpsertMarketTranslationResult],
 			[]
 		)
 	});

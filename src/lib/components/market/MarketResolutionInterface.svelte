@@ -2,13 +2,13 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
-	import { PRICE_DECIMALS } from '$lib/constants/app.constants';
+	import Dialog from '$lib/components/ui/Dialog.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
 	import { settleMarket } from '$lib/services/resolution.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Market } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
-	import { parseToken } from '$lib/utils/parse.utils';
 
 	interface Props {
 		market: Market;
@@ -17,30 +17,49 @@
 
 	const { market, onSettled }: Props = $props();
 
-	let settlementPrice = $state('');
+	let settlementPrice = $state<'' | '1.0' | '0.0'>('');
 	let selectedOutcomeId = $state('');
+	let resolutionText = $state('');
+	let officialSource = $state('');
 	let loading = $state(false);
 	let error = $state('');
+	let showConfirm = $state(false);
 
 	const isExpired = $derived(market.expiryDate < BigInt(Date.now()));
 	const isUrgent = $derived(isExpired && market.status !== 'Resolved');
 	const isCategorical = $derived(market.payoffType === 'Categorical');
 
-	const handleSettle = async () => {
+	const hasOutcome = $derived(isCategorical ? selectedOutcomeId !== '' : settlementPrice !== '');
+	const hasText = $derived(resolutionText.trim().length > 0);
+	const hasSource = $derived(officialSource.trim().length > 0);
+	const canResolve = $derived(hasOutcome && hasText && hasSource);
+
+	const summaryOutcome = $derived.by(() => {
 		if (isCategorical) {
-			if (!selectedOutcomeId) {
-				error = t({ locale: $localeStore, key: 'market.resolution.error.select_outcome' });
-
-				return;
-			}
-		} else {
-			if (!settlementPrice || parseFloat(settlementPrice) < 0) {
-				error = t({ locale: $localeStore, key: 'market.resolution.error.invalid_price' });
-
-				return;
-			}
+			return market.outcomes?.find((o) => o.id === selectedOutcomeId)?.title ?? '';
 		}
 
+		if (settlementPrice === '1.0') {
+			return t({ locale: $localeStore, key: 'market.resolution.settle_yes' });
+		}
+
+		if (settlementPrice === '0.0') {
+			return t({ locale: $localeStore, key: 'market.resolution.settle_no' });
+		}
+
+		return '';
+	});
+
+	const openConfirm = () => {
+		if (!canResolve) {
+			return;
+		}
+
+		error = '';
+		showConfirm = true;
+	};
+
+	const handleSettle = async () => {
 		loading = true;
 		error = '';
 
@@ -48,24 +67,25 @@
 			if (isCategorical) {
 				await settleMarket({ seriesId: market.id, outcomeId: selectedOutcomeId });
 			} else {
-				// `settleMarket` expects a bigint already scaled to `PRICE_DECIMALS`
-				// (the clearing canister's settlement-price unit). Previously this
-				// parsed with `market.token.decimals`, which is the collateral
-				// ledger's scale (e.g. 6 for USDC) and does NOT match PRICE_DECIMALS
-				// (2). The resulting bigint was off by 10^(token.decimals −
-				// PRICE_DECIMALS) and only happened to work for the binary YES/NO
-				// path because clearing treats any `price > 0` as YES.
-				const price = parseToken({
-					value: settlementPrice.trim(),
-					unitName: PRICE_DECIMALS
-				});
+				// Settlement price is a bigint already scaled to PRICE_DECIMALS.
+				// Binary clearing treats any `price > 0` as YES, so 100n / 0n
+				// is the canonical encoding here.
+				const price = settlementPrice === '1.0' ? 100n : ZERO;
 				await settleMarket({ seriesId: market.id, settlementPrice: price });
 			}
 
+			showConfirm = false;
 			onSettled();
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'wallet.send.success_title' }),
-				message: t({ locale: $localeStore, key: 'market.resolution.notify.success_message' }),
+				message: t({
+					locale: $localeStore,
+					key: 'market.resolution.notify.success_with_source',
+					params: {
+						outcome: summaryOutcome,
+						source: officialSource.trim()
+					}
+				}),
 				type: 'success'
 			});
 		} catch (e: unknown) {
@@ -89,12 +109,12 @@
 
 		<div>
 			<h3 class="text-foreground text-lg font-black uppercase">
-				{t({ locale: $localeStore, key: 'market.resolution.admin_title' })}
+				{t({ locale: $localeStore, key: 'market.resolution.title' })}
 			</h3>
 			<p class="text-muted-foreground mt-2 text-xs">
 				{isCategorical
 					? t({ locale: $localeStore, key: 'market.resolution.categorical_sub' })
-					: t({ locale: $localeStore, key: 'market.resolution.scalar_sub' })}
+					: t({ locale: $localeStore, key: 'market.resolution.binary_sub' })}
 			</p>
 		</div>
 
@@ -118,45 +138,56 @@
 					{/each}
 				</div>
 			{:else}
-				<div class="space-y-4">
-					<div class="flex gap-2">
-						<Button
-							class="flex-1"
-							onclick={() => (settlementPrice = '1.0')}
-							size="sm"
-							variant={settlementPrice === '1.0' ? 'primary' : 'outline'}
-						>
-							{t({ locale: $localeStore, key: 'market.resolution.settle_yes' })}
-						</Button>
-						<Button
-							class="flex-1"
-							onclick={() => (settlementPrice = '0.0')}
-							size="sm"
-							variant={settlementPrice === '0.0' ? 'primary' : 'outline'}
-						>
-							{t({ locale: $localeStore, key: 'market.resolution.settle_no' })}
-						</Button>
-					</div>
-					<div class="space-y-2">
-						<label class="text-muted-foreground eyebrow-xs" for="settlement-price">
-							{t({
-								locale: $localeStore,
-								key: 'market.resolution.custom_price',
-								params: { symbol: market.token.symbol }
-							})}
-						</label>
-						<div class="relative">
-							<input
-								id="settlement-price"
-								class="focus:ring-primary bg-foreground/5 text-foreground ring-border w-full rounded-2xl border-none px-4 py-3 text-lg font-bold ring-1 ring-inset focus:ring-2"
-								placeholder="0.00"
-								type="number"
-								bind:value={settlementPrice}
-							/>
-						</div>
-					</div>
+				<div class="flex gap-2">
+					<Button
+						class="flex-1"
+						onclick={() => (settlementPrice = '1.0')}
+						size="sm"
+						variant={settlementPrice === '1.0' ? 'primary' : 'outline'}
+					>
+						{t({ locale: $localeStore, key: 'market.resolution.settle_yes' })}
+					</Button>
+					<Button
+						class="flex-1"
+						onclick={() => (settlementPrice = '0.0')}
+						size="sm"
+						variant={settlementPrice === '0.0' ? 'primary' : 'outline'}
+					>
+						{t({ locale: $localeStore, key: 'market.resolution.settle_no' })}
+					</Button>
 				</div>
 			{/if}
+
+			<div class="space-y-2">
+				<label class="text-muted-foreground eyebrow-xs" for="resolution-text">
+					{t({ locale: $localeStore, key: 'market.resolution.resolution_text' })}
+				</label>
+				<textarea
+					id="resolution-text"
+					class="focus:ring-primary bg-foreground/5 text-foreground ring-border min-h-24 w-full rounded-2xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
+					placeholder={t({
+						locale: $localeStore,
+						key: 'market.resolution.placeholder.text'
+					})}
+					bind:value={resolutionText}
+				></textarea>
+			</div>
+
+			<div class="space-y-2">
+				<label class="text-muted-foreground eyebrow-xs" for="resolution-source">
+					{t({ locale: $localeStore, key: 'market.resolution.source' })}
+				</label>
+				<input
+					id="resolution-source"
+					class="focus:ring-primary bg-foreground/5 text-foreground ring-border w-full rounded-2xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
+					placeholder={t({
+						locale: $localeStore,
+						key: 'market.resolution.placeholder.source'
+					})}
+					type="text"
+					bind:value={officialSource}
+				/>
+			</div>
 
 			{#if error}
 				<div class="text-destructive text-xs font-medium">
@@ -165,13 +196,9 @@
 			{/if}
 
 			<Button
-				onclick={handleSettle}
+				onclick={openConfirm}
 				size="lg"
-				status={loading
-					? 'pending'
-					: (isCategorical && selectedOutcomeId) || (!isCategorical && settlementPrice !== '')
-						? 'enabled'
-						: 'disabled'}
+				status={loading ? 'pending' : canResolve ? 'enabled' : 'disabled'}
 				variant={isUrgent ? 'danger' : 'primary'}
 			>
 				{t({ locale: $localeStore, key: 'market.resolution.resolve_settle' })}
@@ -179,3 +206,58 @@
 		</div>
 	</div>
 </Card>
+
+<Dialog
+	title={t({ locale: $localeStore, key: 'market.resolution.confirm.title' })}
+	bind:show={showConfirm}
+>
+	<div class="space-y-4">
+		<div class="space-y-1">
+			<p class="text-muted-foreground eyebrow-xs">
+				{t({ locale: $localeStore, key: 'market.resolution.confirm.summary_outcome' })}
+			</p>
+			<p class="text-foreground text-base font-bold">{summaryOutcome}</p>
+		</div>
+
+		<div class="space-y-1">
+			<p class="text-muted-foreground eyebrow-xs">
+				{t({ locale: $localeStore, key: 'market.resolution.resolution_text' })}
+			</p>
+			<p class="text-foreground text-sm whitespace-pre-wrap">{resolutionText.trim()}</p>
+		</div>
+
+		<div class="space-y-1">
+			<p class="text-muted-foreground eyebrow-xs">
+				{t({ locale: $localeStore, key: 'market.resolution.source' })}
+			</p>
+			<p class="text-foreground text-sm break-words">{officialSource.trim()}</p>
+		</div>
+
+		{#if error}
+			<div class="text-destructive text-xs font-medium">
+				{error}
+			</div>
+		{/if}
+
+		<div class="flex gap-2 pt-2">
+			<Button
+				class="flex-1"
+				onclick={() => (showConfirm = false)}
+				size="md"
+				status={loading ? 'disabled' : 'enabled'}
+				variant="outline"
+			>
+				{t({ locale: $localeStore, key: 'market.resolution.confirm.cancel' })}
+			</Button>
+			<Button
+				class="flex-1"
+				onclick={handleSettle}
+				size="md"
+				status={loading ? 'pending' : 'enabled'}
+				variant={isUrgent ? 'danger' : 'primary'}
+			>
+				{t({ locale: $localeStore, key: 'market.resolution.confirm.cta' })}
+			</Button>
+		</div>
+	</div>
+</Dialog>

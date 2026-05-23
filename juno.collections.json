@@ -7,6 +7,7 @@
 	"CATEGORIES": "categories",
 	"SERIES_CATEGORIES": "series_categories",
 	"MARKET_METADATA": "market_metadata",
+	"MARKET_TRANSLATIONS": "market_translations",
 	"ACTIVITIES": "activities",
 	"VXP_ONBOARDING": "vxp_onboarding"
 }

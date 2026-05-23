@@ -40,8 +40,8 @@ export interface AppGetMarketMetadataResult {
 				{
 					updated_at: number;
 					updated_by: string;
+					suggested: boolean;
 					series_id: string;
-					resolution: [] | [{ settles_at_ms: [] | [number]; source: string; text: string }];
 					events: Array<{
 						day: number;
 						dir: { up: null } | { down: null };
@@ -60,6 +60,25 @@ export interface AppGetMarketMetadataResult {
 									text: string;
 								}
 						  ];
+				}
+		  ];
+}
+export interface AppGetMarketTranslationArgs {
+	series_id: string;
+	locale: string;
+}
+export interface AppGetMarketTranslationResult {
+	translation:
+		| []
+		| [
+				{
+					title: string;
+					updated_at: number;
+					updated_by: string;
+					series_id: string;
+					locale: string;
+					description: string;
+					outcomes: Array<{ id: string; title: string }>;
 				}
 		  ];
 }
@@ -168,6 +187,20 @@ export interface AppListLeaderboardResult {
 		accuracy: number;
 	}>;
 }
+export interface AppListMarketTranslationsArgs {
+	series_id: string;
+}
+export interface AppListMarketTranslationsResult {
+	items: Array<{
+		title: string;
+		updated_at: number;
+		updated_by: string;
+		series_id: string;
+		locale: string;
+		description: string;
+		outcomes: Array<{ id: string; title: string }>;
+	}>;
+}
 export interface AppListRejectedFriendshipsResult {
 	items: Array<{
 		viewer_role:
@@ -215,7 +248,7 @@ export interface AppSendFriendRequestArgs {
 }
 export interface AppUpsertMarketMetadataArgs {
 	data: {
-		resolution: [] | [{ settles_at_ms: [] | [number]; source: string; text: string }];
+		suggested: boolean;
 		events: Array<{
 			day: number;
 			dir: { up: null } | { down: null };
@@ -241,8 +274,8 @@ export interface AppUpsertMarketMetadataResult {
 	metadata: {
 		updated_at: number;
 		updated_by: string;
+		suggested: boolean;
 		series_id: string;
-		resolution: [] | [{ settles_at_ms: [] | [number]; source: string; text: string }];
 		events: Array<{
 			day: number;
 			dir: { up: null } | { down: null };
@@ -263,6 +296,26 @@ export interface AppUpsertMarketMetadataResult {
 			  ];
 	};
 }
+export interface AppUpsertMarketTranslationArgs {
+	data: {
+		title: string;
+		description: string;
+		outcomes: Array<{ id: string; title: string }>;
+	};
+	series_id: string;
+	locale: string;
+}
+export interface AppUpsertMarketTranslationResult {
+	translation: {
+		title: string;
+		updated_at: number;
+		updated_by: string;
+		series_id: string;
+		locale: string;
+		description: string;
+		outcomes: Array<{ id: string; title: string }>;
+	};
+}
 export interface _SERVICE {
 	app_accept_friend_request: ActorMethod<[AppAcceptFriendRequestArgs], undefined>;
 	app_check_friendship: ActorMethod<[AppCheckFriendshipArgs], AppCheckFriendshipResult>;
@@ -272,12 +325,20 @@ export interface _SERVICE {
 	>;
 	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;
 	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
+	app_get_market_translation: ActorMethod<
+		[AppGetMarketTranslationArgs],
+		AppGetMarketTranslationResult
+	>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
 	app_list_followers: ActorMethod<[], AppListFollowersResult>;
 	app_list_following: ActorMethod<[], AppListFollowingResult>;
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
 	app_list_friends: ActorMethod<[], AppListFriendsResult>;
 	app_list_leaderboard: ActorMethod<[], AppListLeaderboardResult>;
+	app_list_market_translations: ActorMethod<
+		[AppListMarketTranslationsArgs],
+		AppListMarketTranslationsResult
+	>;
 	app_list_rejected_friendships: ActorMethod<[], AppListRejectedFriendshipsResult>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
@@ -285,6 +346,10 @@ export interface _SERVICE {
 	app_upsert_market_metadata: ActorMethod<
 		[AppUpsertMarketMetadataArgs],
 		AppUpsertMarketMetadataResult
+	>;
+	app_upsert_market_translation: ActorMethod<
+		[AppUpsertMarketTranslationArgs],
+		AppUpsertMarketTranslationResult
 	>;
 }
 export declare const idlFactory: IDL.InterfaceFactory;

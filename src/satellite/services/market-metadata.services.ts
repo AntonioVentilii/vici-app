@@ -1,11 +1,10 @@
 import type { RegistryDid } from '$declarations';
 import { REGISTRY_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { Collection } from '$lib/constants/collections.constants';
-import { UserRole } from '$lib/enums/user';
 import type { MarketMetadata, MarketMetadataInput } from '$lib/types/market-metadata';
+import { isAdmin } from '$satellite/services/_authz';
 import { isNullish } from '@dfinity/utils';
 import { IDL } from '@icp-sdk/core/candid';
-import type { Principal } from '@icp-sdk/core/principal';
 import { call, msgCaller, time } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobuild/functions/sdk';
 
@@ -100,22 +99,6 @@ const SeriesIdl = IDL.Record({
 
 const callerText = (): string => msgCaller().toText();
 
-const isAdmin = ({ caller }: { caller: Principal }): boolean => {
-	const callerDoc = getDocStore({
-		collection: Collection.ROLES,
-		key: caller.toText(),
-		caller
-	});
-
-	if (isNullish(callerDoc)) {
-		return false;
-	}
-
-	const { role } = decodeDocData<{ role: UserRole }>(callerDoc.data);
-
-	return role === UserRole.ADMIN;
-};
-
 const getSeriesCreator = async (seriesId: string): Promise<string | undefined> => {
 	const result = await call<[] | [RegistryDid.Series]>({
 		canisterId: REGISTRY_CANISTER_ID,
@@ -172,16 +155,24 @@ export const upsertMarketMetadata = async ({
 	await assertCanWriteMarketMetadata({ seriesId });
 
 	const caller = msgCaller();
+	const callerIsAdmin = isAdmin({ caller });
 	const current = getDocStore({
 		collection: Collection.MARKET_METADATA,
 		key: seriesId,
 		caller
 	});
 
+	const currentData = isNullish(current) ? undefined : decodeDocData<MarketMetadata>(current.data);
+
+	// `suggested` is admin-only: creators can edit whyNow/events but can't
+	// flip the suggested flag. Non-admin writers always keep the stored value.
+	const suggested = callerIsAdmin ? (data.suggested ?? false) : (currentData?.suggested ?? false);
+
 	const metadata: MarketMetadata = {
 		seriesId,
-		...data,
+		whyNow: data.whyNow,
 		events: data.events ?? [],
+		suggested,
 		updatedAt: Number(time() / 1_000_000n),
 		updatedBy: callerText()
 	};
