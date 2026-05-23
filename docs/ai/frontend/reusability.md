@@ -54,6 +54,7 @@
 | `LoadingSpinner`  | Spinner. For full-region loading prefer a `loaders/` block. |
 | `Modal`           | Modal shell with close handling.                            |
 | `Notifications`   | Toast/notification surface.                                 |
+| `Pagination`      | Themed page navigator for tables and lists.                 |
 | `PopOver`         | Anchored popover.                                           |
 | `PrincipalText`   | Render an IC principal in the standard format.              |
 | `SectionHeader`   | Section header w/ tokens.                                   |

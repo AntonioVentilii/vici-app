@@ -2,10 +2,12 @@
 	import PositionArtThumb from '$lib/components/portfolio/PositionArtThumb.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import {
 		PORTFOLIO_DEFAULT_DECIMALS,
-		PORTFOLIO_DEFAULT_SYMBOL
+		PORTFOLIO_DEFAULT_SYMBOL,
+		PORTFOLIO_PAGE_SIZE
 	} from '$lib/constants/portfolio.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
@@ -34,6 +36,23 @@
 	const getMarketById = (id: string) => markets.find((m) => m.id === id);
 	const getCategoryId = (marketId: string): string | null =>
 		categoryMappings.find((c) => c.seriesId === marketId)?.categoryId ?? null;
+
+	let page = $state(1);
+
+	// Clamp the active page when the dataset shrinks (e.g. after a
+	// settlement or refresh). Runs as an effect rather than derived so we
+	// only adjust on real shrinks, not on the first render.
+	$effect(() => {
+		const totalPages = Math.max(1, Math.ceil(positions.length / PORTFOLIO_PAGE_SIZE));
+
+		if (page > totalPages) {
+			page = totalPages;
+		}
+	});
+
+	const pagedPositions = $derived(
+		positions.slice((page - 1) * PORTFOLIO_PAGE_SIZE, page * PORTFOLIO_PAGE_SIZE)
+	);
 </script>
 
 <div class="space-y-4">
@@ -51,7 +70,105 @@
 				</a>
 			</EmptyState>
 		{:else}
-			<div class="flex w-full min-w-0 overflow-x-auto">
+			<!-- Mobile: stacked card list. The desktop table loses too
+				 much per-row text to truncation below ~720px, so we
+				 swap layouts entirely instead of compressing columns. -->
+			<ul class="divide-border block divide-y md:hidden">
+				{#each pagedPositions as pos (`${pos.marketId}::${pos.outcomeId}`)}
+					{@const market = getMarketById(pos.marketId)}
+					{@const pnl = calculatePositionPnL({ position: pos, market })}
+					{@const result = market
+						? (positionResolvedResult({ market, position: pos }) ?? 'neutral')
+						: 'neutral'}
+					{@const categoryId = getCategoryId(pos.marketId)}
+
+					<li>
+						<a
+							class="hover:bg-card block px-4 py-4 transition-colors"
+							href="{AppPath.Markets}/{pos.marketId}"
+						>
+							<div class="flex items-start gap-3">
+								<PositionArtThumb {categoryId} marketId={pos.marketId} {result} size={48} />
+								<div class="flex min-w-0 flex-1 items-start justify-between gap-2">
+									<div class="min-w-0">
+										<p class="text-foreground line-clamp-2 text-sm leading-snug font-bold">
+											{market?.title ??
+												t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+										</p>
+										<p
+											class="text-muted-foreground mt-1 truncate text-[10px] tracking-widest uppercase"
+										>
+											{t({
+												locale: $localeStore,
+												key: 'portfolio.id_label',
+												params: { id: pos.marketId }
+											})}
+										</p>
+									</div>
+									<span
+										class="shrink-0 rounded-md border px-1.5 py-0.5 text-[10px] font-black tracking-tight uppercase {pos.outcomeId ===
+										'YES'
+											? 'border-yes/30 bg-yes-wash text-yes'
+											: pos.outcomeId === 'NO'
+												? 'border-no/30 bg-no-wash text-no'
+												: 'border-hold/30 bg-hold-wash text-hold'}"
+									>
+										{market?.outcomes?.find((o) => o.id === pos.outcomeId)?.title ?? pos.outcomeId}
+									</span>
+								</div>
+							</div>
+
+							<dl class="border-border mt-3 grid grid-cols-3 gap-2 border-t pt-3">
+								<div>
+									<dt class="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
+										{t({ locale: $localeStore, key: 'portfolio.positions.col.size' })}
+									</dt>
+									<dd class="text-foreground mt-1 font-mono text-sm font-bold tabular-nums">
+										{formatQuantity({
+											value: pos.netQty < ZERO ? -pos.netQty : pos.netQty,
+											decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS
+										})}
+										<span class="text-muted-foreground text-[9px]"
+											>{t({ locale: $localeStore, key: 'portfolio.qty_unit' })}</span
+										>
+									</dd>
+								</div>
+								<div>
+									<dt class="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
+										{t({ locale: $localeStore, key: 'portfolio.positions.col.value' })}
+									</dt>
+									<dd class="text-foreground mt-1 font-mono text-sm font-bold tabular-nums">
+										{formatCurrency({
+											value: calculatePositionValue({ position: pos, market }),
+											decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS,
+											symbol: market?.token.symbol ?? PORTFOLIO_DEFAULT_SYMBOL
+										})}
+									</dd>
+								</div>
+								<div class="text-right">
+									<dt class="text-muted-foreground text-[9px] font-bold tracking-widest uppercase">
+										{t({ locale: $localeStore, key: 'portfolio.positions.col.pnl' })}
+									</dt>
+									<dd
+										class={[
+											'mt-1 font-mono text-sm font-black tabular-nums',
+											pnl >= 0 ? 'text-yes' : 'text-no'
+										].join(' ')}
+									>
+										{formatPositionPnLWithOptionalUnit({
+											pnl,
+											playground: $playgroundVxpUnitMode
+										})}
+									</dd>
+								</div>
+							</dl>
+						</a>
+					</li>
+				{/each}
+			</ul>
+
+			<!-- Desktop: full table -->
+			<div class="hidden w-full min-w-0 overflow-x-auto md:flex">
 				<table class="w-full min-w-0 table-fixed text-left">
 					<thead>
 						<tr
@@ -75,7 +192,7 @@
 						</tr>
 					</thead>
 					<tbody class="divide-border divide-y">
-						{#each positions as pos (`${pos.marketId}::${pos.outcomeId}`)}
+						{#each pagedPositions as pos (`${pos.marketId}::${pos.outcomeId}`)}
 							{@const market = getMarketById(pos.marketId)}
 							{@const pnl = calculatePositionPnL({ position: pos, market })}
 							{@const result = market
@@ -158,6 +275,13 @@
 					</tbody>
 				</table>
 			</div>
+
+			<Pagination
+				onPageChange={(p) => (page = p)}
+				{page}
+				pageSize={PORTFOLIO_PAGE_SIZE}
+				totalItems={positions.length}
+			/>
 		{/if}
 	</Card>
 </div>
