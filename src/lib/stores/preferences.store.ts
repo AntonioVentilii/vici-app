@@ -1,7 +1,7 @@
+import { MARKET_TAGS } from '$lib/constants/market-tags.constants';
 import { PREFERENCES_STORAGE_KEY } from '$lib/constants/settings.constants';
 import { initStorageStore, type StorageStore } from '$lib/stores/storage.store';
 import type { UserPreferences } from '$lib/types/preferences';
-import { FLOW_ART_CATEGORIES } from '$lib/utils/flow-art.utils';
 
 export const DEFAULT_PREFERENCES: UserPreferences = {
 	notify: {
@@ -13,7 +13,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 	flowSessionLength: 10,
 	hapticsEnabled: true,
 	callsPublic: true,
-	flowCategories: [...FLOW_ART_CATEGORIES]
+	flowTags: [...MARKET_TAGS]
 };
 
 const basePreferencesStore = initStorageStore<UserPreferences>({
@@ -23,18 +23,30 @@ const basePreferencesStore = initStorageStore<UserPreferences>({
 
 /**
  * Hydrates stored preferences against the current default shape so older
- * payloads that don't yet have a newer field (e.g. `flowCategories`) still
+ * payloads that don't yet have a newer field (e.g. `flowTags`) still
  * load cleanly without forcing the user back into the default everywhere.
+ *
+ * `flowTags` replaced the legacy `flowCategories` field; we transparently
+ * migrate any locally-stored payload that still carries the old name so
+ * users don't notice the rename.
  */
-const ensureShape = (current: UserPreferences | undefined): UserPreferences => ({
-	...DEFAULT_PREFERENCES,
-	...current,
-	notify: { ...DEFAULT_PREFERENCES.notify, ...(current?.notify ?? {}) },
-	flowCategories:
-		Array.isArray(current?.flowCategories) && current.flowCategories.length > 0
-			? current.flowCategories
-			: [...FLOW_ART_CATEGORIES]
-});
+const ensureShape = (current: UserPreferences | undefined): UserPreferences => {
+	const legacyFlowCategories = (current as unknown as { flowCategories?: unknown } | undefined)
+		?.flowCategories;
+	const inheritedTags =
+		Array.isArray(current?.flowTags) && current.flowTags.length > 0
+			? current.flowTags
+			: Array.isArray(legacyFlowCategories) && legacyFlowCategories.length > 0
+				? (legacyFlowCategories as string[])
+				: [...MARKET_TAGS];
+
+	return {
+		...DEFAULT_PREFERENCES,
+		...current,
+		notify: { ...DEFAULT_PREFERENCES.notify, ...(current?.notify ?? {}) },
+		flowTags: inheritedTags
+	};
+};
 
 export const preferencesStore: StorageStore<UserPreferences> = {
 	...basePreferencesStore,

@@ -4,6 +4,7 @@
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import {
 		PORTFOLIO_DEFAULT_DECIMALS,
 		PORTFOLIO_DEFAULT_SYMBOL,
@@ -12,7 +13,6 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { SeriesCategory } from '$lib/types/category';
 	import type { Market } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { formatCurrency, formatQuantity } from '$lib/utils/format.utils';
@@ -24,18 +24,18 @@
 	interface Props {
 		positions: Position[];
 		markets: Market[];
-		// Optional admin-tagged category mappings. When provided, each
-		// thumb resolves its visual language from the matching
-		// `SeriesCategory.categoryId`; otherwise it falls back to a
+		// Optional `seriesId → MarketTag[]` map. When provided, each
+		// thumb resolves its visual language from the market's *primary*
+		// tag (see `primaryMarketTag`); otherwise it falls back to a
 		// deterministic hash of the market id.
-		categoryMappings?: SeriesCategory[];
+		tagMappings?: Record<string, MarketTag[]>;
 	}
 
-	const { positions, markets, categoryMappings = [] }: Props = $props();
+	const { positions, markets, tagMappings = {} }: Props = $props();
 
 	const getMarketById = (id: string) => markets.find((m) => m.id === id);
 	const getCategoryId = (marketId: string): string | null =>
-		categoryMappings.find((c) => c.seriesId === marketId)?.categoryId ?? null;
+		primaryMarketTag(tagMappings[marketId]) ?? null;
 
 	let page = $state(1);
 

@@ -122,30 +122,30 @@ Static brand assets that aren't components live in `static/branding/`:
 
 ### Services worth knowing — `$lib/services/`
 
-| Service                   | Purpose                                                                      |
-| ------------------------- | ---------------------------------------------------------------------------- |
-| `identity.services`       | Principal source of truth (`getIdentityOrAnonymous`, `safeGetIdentityOnce`). |
-| `authn.services`          | Sign-in / sign-out orchestration.                                            |
-| `market.services`         | Market creation, listing, fork, settlement (talks to the registry + engine). |
-| `oracle.services`         | Oracle bootstrap and settlement helpers.                                     |
-| `collateral.services`     | Collateral deposit / withdraw / claim flows.                                 |
-| `order.services`          | Order placement / cancellation against the clearing canister.                |
-| `position.services`       | Position fetching and P&L wiring.                                            |
-| `trade.services`          | Trade execution wrapper.                                                     |
-| `flow.services`           | Multi-step flow orchestration (Rush Mode, etc.).                             |
-| `wallet.service`          | Token balances + send/receive.                                               |
-| `profile.services`        | Read / write user profile via Juno datastore.                                |
-| `relation.services`       | Friends / follow / friend requests.                                          |
-| `roles.services`          | Read role docs from Juno (mirrored to the engine by the satellite hook).     |
-| `discussion.services`     | Per-market comment thread (read + write + per-market cache loader).          |
-| `category.services`       | Market categories.                                                           |
-| `leaderboard.services`    | Leaderboard read paths.                                                      |
-| `activity.services`       | User activity feed.                                                          |
-| `query-update.services`   | Helper for IC query → update certified upgrade flows.                        |
-| `balance-domain.services` | Helpers for reading / switching balance domains.                             |
-| `resolution.services`     | Market resolution flow.                                                      |
-| `send.services`           | Token send.                                                                  |
-| `group.services`          | Group / cohort helpers.                                                      |
+| Service                   | Purpose                                                                                                                                   |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `identity.services`       | Principal source of truth (`getIdentityOrAnonymous`, `safeGetIdentityOnce`).                                                              |
+| `authn.services`          | Sign-in / sign-out orchestration.                                                                                                         |
+| `market.services`         | Market creation, listing, fork, settlement (talks to the registry + engine).                                                              |
+| `oracle.services`         | Oracle bootstrap and settlement helpers.                                                                                                  |
+| `collateral.services`     | Collateral deposit / withdraw / claim flows.                                                                                              |
+| `order.services`          | Order placement / cancellation against the clearing canister.                                                                             |
+| `position.services`       | Position fetching and P&L wiring.                                                                                                         |
+| `trade.services`          | Trade execution wrapper.                                                                                                                  |
+| `flow.services`           | Multi-step flow orchestration (Rush Mode, etc.).                                                                                          |
+| `wallet.service`          | Token balances + send/receive.                                                                                                            |
+| `profile.services`        | Read / write user profile via Juno datastore.                                                                                             |
+| `relation.services`       | Friends / follow / friend requests.                                                                                                       |
+| `roles.services`          | Read role docs from Juno (mirrored to the engine by the satellite hook).                                                                  |
+| `discussion.services`     | Per-market comment thread (read + write + per-market cache loader).                                                                       |
+| `market-tags.services`    | Projects `MarketMetadata` docs into the `seriesId → MarketTag[]` map used by every consumer (Flow ranking, signals, portfolio thumbs, …). |
+| `leaderboard.services`    | Leaderboard read paths.                                                                                                                   |
+| `activity.services`       | User activity feed.                                                                                                                       |
+| `query-update.services`   | Helper for IC query → update certified upgrade flows.                                                                                     |
+| `balance-domain.services` | Helpers for reading / switching balance domains.                                                                                          |
+| `resolution.services`     | Market resolution flow.                                                                                                                   |
+| `send.services`           | Token send.                                                                                                                               |
+| `group.services`          | Group / cohort helpers.                                                                                                                   |
 
 ### Stores & derived worth knowing
 
@@ -158,7 +158,7 @@ Static brand assets that aren't components live in `static/branding/`:
 | `orders.store`, `orders.derived`                               | `$lib/stores/`, `$lib/derived/`    | Order book + derived view.                                                                                                                                                                                                                                                      |
 | `positions.store`, `positions.derived`                         | `$lib/stores/`, `$lib/derived/`    | Cached positions for the active balance domain. Populated by `LoaderPositions`; read by Portfolio (and anything else that needs positions).                                                                                                                                     |
 | `trade-history.store`, `trade-history.derived`                 | `$lib/stores/`, `$lib/derived/`    | Cached user trade / settlement events for the active balance domain. Populated by `LoaderTradeHistory`.                                                                                                                                                                         |
-| `categories.store`, `categories.derived`                       | `$lib/stores/`, `$lib/derived/`    | Cached series-to-category mappings (public). Populated by `LoaderCategories`; read by Markets feed, Portfolio positions table, anything resolving market categories.                                                                                                            |
+| `market-tags.store`, `market-tags.derived`                     | `$lib/stores/`, `$lib/derived/`    | Cached `seriesId → MarketTag[]` projection (public; sourced from `MARKET_METADATA`). Populated by `LoaderMarketTags`; read by Markets feed, Portfolio positions table, FlowMode, and anywhere a market needs its tags resolved.                                                 |
 | `leaderboard.store`, `leaderboard.derived`                     | `$lib/stores/`, `$lib/derived/`    | Cached leaderboard ranks (public). Populated by `LoaderLeaderboard`.                                                                                                                                                                                                            |
 | `following.store`, `following.derived`                         | `$lib/stores/`, `$lib/derived/`    | Cached follow list for the viewer. Populated by `LoaderFollowing`; reset on auth transition.                                                                                                                                                                                    |
 | `friends.store` (incl. `friendsRelationsLoadedStore`)          | `$lib/stores/`                     | Cached social graph (friends + incoming requests + rejected). `friendsRelationsLoadedStore` gates the cold-load spinner.                                                                                                                                                        |

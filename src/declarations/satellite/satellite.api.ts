@@ -74,6 +74,7 @@ const AppGetMarketMetadataResultSchema = j.strictObject({
 			events: j.array(
 				j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
 			),
+			tags: j.array(j.string()),
 			suggested: j.boolean(),
 			updatedAt: j.number(),
 			updatedBy: j.string()
@@ -499,6 +500,7 @@ const AppUpsertMarketMetadataArgsSchema = j.strictObject({
 		events: j.array(
 			j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
 		),
+		tags: j.array(j.string()),
 		suggested: j.boolean()
 	})
 });
@@ -514,6 +516,7 @@ const AppUpsertMarketMetadataResultSchema = j.strictObject({
 		events: j.array(
 			j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
 		),
+		tags: j.array(j.string()),
 		suggested: j.boolean(),
 		updatedAt: j.number(),
 		updatedBy: j.string()

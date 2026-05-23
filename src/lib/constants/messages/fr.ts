@@ -35,11 +35,6 @@ export const frMessages = {
 	'achievement.oracle.name': 'Oracle',
 	'achievement.toast.message': '{name} débloqué · +{xp} XP',
 	'achievement.toast.title': 'Succès débloqué',
-	'admin.category.action.associating': 'Association...',
-	'admin.category.action.set': 'Définir la catégorie',
-	'admin.category.empty': 'Aucune catégorie définie. Ajoutez-en dans les réglages admin.',
-	'admin.category.series_id': 'ID de série : {id}',
-	'admin.category.title': 'Catégorie prédictive',
 	'admin.dashboard.sub':
 		'Gérez les marchés, créez de nouvelles opportunités, résolvez les prédictions expirées et gérez les administrateurs.',
 	'admin.dashboard.title': 'Tableau de bord admin',
@@ -64,10 +59,6 @@ export const frMessages = {
 	'admin.markets.bulk.complete_title': 'Création en masse terminée',
 	'admin.markets.bulk.creating': 'Création des marchés',
 	'admin.markets.bulk.download_template': 'Télécharger le modèle',
-	'admin.markets.bulk.error.categories_not_array':
-		'Les catégories doivent être un tableau pour le marché : {title}',
-	'admin.markets.bulk.error.category_not_string':
-		'Chaque catégorie doit être une chaîne pour le marché : {title}',
 	'admin.markets.bulk.error.invalid_date': 'Format de date invalide : {date}',
 	'admin.markets.bulk.error.missing_fields':
 		'Chaque marché doit avoir un titre, une description et une date d’expiration.',
@@ -78,6 +69,10 @@ export const frMessages = {
 	'admin.markets.bulk.error.outcomes_not_array':
 		'Les résultats doivent être un tableau pour le marché : {title}',
 	'admin.markets.bulk.error.parse_failed': 'Échec de l’analyse JSON : {message}',
+	'admin.markets.bulk.error.tag_not_string':
+		'Chaque tag doit être une chaîne pour le marché : {title}',
+	'admin.markets.bulk.error.tags_not_array':
+		'Les tags doivent être un tableau pour le marché : {title}',
 	'admin.markets.bulk.error.too_few_outcomes':
 		'Les marchés catégoriels doivent avoir au moins 2 résultats : {title}',
 	'admin.markets.bulk.failed_label': 'Échec',
@@ -475,7 +470,6 @@ export const frMessages = {
 	'market.closes': 'ferme',
 	'market.detail.admin_actions': 'Actions administrateur',
 	'market.detail.back_to_markets': 'Retour aux marchés',
-	'market.detail.category_default': 'Memes',
 	'market.detail.created_by': 'Créé par',
 	'market.detail.fallback_title': 'Marché',
 	'market.detail.head_suffix': 'Marchés Sociaux',

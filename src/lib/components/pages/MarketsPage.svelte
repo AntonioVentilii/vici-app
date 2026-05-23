@@ -4,7 +4,7 @@
 	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { categories } from '$lib/derived/categories.derived';
+	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -52,7 +52,7 @@
 			activeTab,
 			filters,
 			userInterests: $userStore.profile?.interests ?? [],
-			categoryMappings: $categories
+			tagMappings: $marketTags
 		})
 	);
 </script>

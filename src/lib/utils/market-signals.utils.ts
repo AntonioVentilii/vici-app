@@ -1,7 +1,7 @@
 import type { ClearingDid } from '$declarations';
 import { ZERO } from '$lib/constants/app.constants';
+import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 import { ActivityType } from '$lib/enums/social';
-import type { SeriesCategory } from '$lib/types/category';
 import type { CallSide, MarketId } from '$lib/types/market';
 import type {
 	CategoryAccuracySignal,
@@ -26,19 +26,19 @@ const eventSide = (event: ClearingDid.Event): CallSide => (event.qty >= ZERO ? '
 
 const eventCategory = ({
 	event,
-	categoryBySeries
+	tagsBySeries
 }: {
 	event: ClearingDid.Event;
-	categoryBySeries: Map<string, string>;
+	tagsBySeries: Record<string, MarketTag[]>;
 }): FlowArtCategory => {
 	const marketId = parseMarketId(event.series_id);
-	const categoryId = categoryBySeries.get(marketId);
+	const primary = primaryMarketTag(tagsBySeries[marketId]);
 
-	if (categoryId && FLOW_ART_CATEGORY_SET.has(categoryId)) {
-		return categoryId as FlowArtCategory;
+	if (primary !== undefined && FLOW_ART_CATEGORY_SET.has(primary)) {
+		return primary;
 	}
 
-	return resolveFlowArtCategory({ categoryId, seed: marketId });
+	return resolveFlowArtCategory({ categoryId: primary, seed: marketId });
 };
 
 const formatWhen = (timestampNs: bigint): string => {
@@ -72,16 +72,15 @@ const activityOutcome = (details: string | undefined): CallSide | undefined => {
 
 export const deriveCategoryAccuracySignals = ({
 	events,
-	categoryMappings
+	tagMappings
 }: {
 	events: ClearingDid.Event[];
-	categoryMappings: SeriesCategory[];
+	tagMappings: Record<string, MarketTag[]>;
 }): Partial<Record<FlowArtCategory, CategoryAccuracySignal>> => {
-	const categoryBySeries = new Map(categoryMappings.map((m) => [m.seriesId, m.categoryId]));
 	const bucket = new Map<FlowArtCategory, { calls: number; wins: number }>();
 
 	for (const event of events.filter(isSettled)) {
-		const category = eventCategory({ event, categoryBySeries });
+		const category = eventCategory({ event, tagsBySeries: tagMappings });
 		const current = bucket.get(category) ?? { calls: 0, wins: 0 };
 		current.calls += 1;
 		current.wins += isWin(event) ? 1 : 0;
@@ -164,14 +163,14 @@ export const deriveFollowedLeanSignals = (
 
 export const deriveUserMarketSignals = ({
 	events,
-	categoryMappings,
+	tagMappings,
 	friendActivities = []
 }: {
 	events: ClearingDid.Event[];
-	categoryMappings: SeriesCategory[];
+	tagMappings: Record<string, MarketTag[]>;
 	friendActivities?: Activity[];
 }): UserMarketSignals => ({
-	categoryAcc: deriveCategoryAccuracySignals({ events, categoryMappings }),
+	categoryAcc: deriveCategoryAccuracySignals({ events, tagMappings }),
 	priorCalls: derivePriorCallSignals(events),
 	followedLean: deriveFollowedLeanSignals(friendActivities)
 });

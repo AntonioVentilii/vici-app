@@ -106,12 +106,12 @@ or stores:
 - `src/lib/components/loaders/DomainCachedLoader.svelte`
 - `src/lib/components/loaders/IdentityAwareLoader.svelte`
 - `src/lib/components/loaders/LoaderBalances.svelte`
-- `src/lib/components/loaders/LoaderCategories.svelte`
 - `src/lib/components/loaders/LoaderCollaterals.svelte`
 - `src/lib/components/loaders/LoaderFollowing.svelte`
 - `src/lib/components/loaders/LoaderGlobalActivities.svelte`
 - `src/lib/components/loaders/LoaderLeaderboard.svelte`
 - `src/lib/components/loaders/LoaderMarkets.svelte`
+- `src/lib/components/loaders/LoaderMarketTags.svelte`
 - `src/lib/components/loaders/LoaderOrders.svelte`
 - `src/lib/components/loaders/LoaderPositions.svelte`
 - `src/lib/components/loaders/LoaderTradeHistory.svelte`

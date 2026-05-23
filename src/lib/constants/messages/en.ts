@@ -35,11 +35,6 @@ export const enMessages = {
 	'achievement.oracle.name': 'Oracle',
 	'achievement.toast.message': '{name} unlocked · +{xp} XP',
 	'achievement.toast.title': 'Achievement unlocked',
-	'admin.category.action.associating': 'Associating...',
-	'admin.category.action.set': 'Set Category',
-	'admin.category.empty': 'No categories defined. Please add them in the admin settings.',
-	'admin.category.series_id': 'Series ID: {id}',
-	'admin.category.title': 'Predictive Category',
 	'admin.dashboard.sub':
 		'Manage markets, create new opportunities, resolve expired predictions, and manage administrators.',
 	'admin.dashboard.title': 'Admin Dashboard',
@@ -62,10 +57,6 @@ export const enMessages = {
 	'admin.markets.bulk.complete_title': 'Bulk Creation Complete',
 	'admin.markets.bulk.creating': 'Creating Markets',
 	'admin.markets.bulk.download_template': 'Download Template',
-	'admin.markets.bulk.error.categories_not_array':
-		'Categories must be an array for market: {title}',
-	'admin.markets.bulk.error.category_not_string':
-		'Each category must be a string for market: {title}',
 	'admin.markets.bulk.error.invalid_date': 'Invalid date format: {date}',
 	'admin.markets.bulk.error.missing_fields':
 		'Each market must have a title, description, and expiryDate.',
@@ -75,6 +66,8 @@ export const enMessages = {
 		'Each outcome must be a string for market: {title}',
 	'admin.markets.bulk.error.outcomes_not_array': 'Outcomes must be an array for market: {title}',
 	'admin.markets.bulk.error.parse_failed': 'Failed to parse JSON: {message}',
+	'admin.markets.bulk.error.tag_not_string': 'Each tag must be a string for market: {title}',
+	'admin.markets.bulk.error.tags_not_array': 'Tags must be an array for market: {title}',
 	'admin.markets.bulk.error.too_few_outcomes':
 		'Categorical markets must have at least 2 outcomes: {title}',
 	'admin.markets.bulk.failed_label': 'Failed',
@@ -462,7 +455,6 @@ export const enMessages = {
 	'market.closes': 'closes',
 	'market.detail.admin_actions': 'Admin actions',
 	'market.detail.back_to_markets': 'Back to markets',
-	'market.detail.category_default': 'Memes',
 	'market.detail.created_by': 'Created by',
 	'market.detail.fallback_title': 'Market',
 	'market.detail.head_suffix': 'Social Markets',

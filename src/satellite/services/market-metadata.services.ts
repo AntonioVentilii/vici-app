@@ -1,6 +1,7 @@
 import type { RegistryDid } from '$declarations';
 import { REGISTRY_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { Collection } from '$lib/constants/collections.constants';
+import { normalizeMarketTags } from '$lib/constants/market-tags.constants';
 import type { MarketMetadata, MarketMetadataInput } from '$lib/types/market-metadata';
 import { isAdmin } from '$satellite/services/_authz';
 import { isNullish } from '@dfinity/utils';
@@ -172,6 +173,7 @@ export const upsertMarketMetadata = async ({
 		seriesId,
 		whyNow: data.whyNow,
 		events: data.events ?? [],
+		tags: normalizeMarketTags(data.tags ?? []),
 		suggested,
 		updatedAt: Number(time() / 1_000_000n),
 		updatedBy: callerText()

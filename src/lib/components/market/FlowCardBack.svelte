@@ -8,7 +8,6 @@
 		FollowedLeanSignal,
 		PriorCallSignal
 	} from '$lib/types/market-signals';
-	import { categoryColor } from '$lib/utils/category-color.utils';
 	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import {
 		consensusPercent,
@@ -21,6 +20,7 @@
 	import { formatDate, formatProbability } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { getTimeRemaining } from '$lib/utils/market.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
 		market: Market;
@@ -107,7 +107,7 @@
 		tapTracking = false;
 	};
 
-	const catColor = $derived(categoryColor(category));
+	const catColor = $derived(tagColor(category));
 	const yesPct = $derived(consensusPercent(market));
 	const crowdSide = $derived(consensusSide(market));
 	const predictorsNow = $derived(

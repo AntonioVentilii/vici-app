@@ -45,6 +45,7 @@ export interface AppGetMarketMetadataResult {
 					updated_by: string;
 					suggested: boolean;
 					series_id: string;
+					tags: Array<string>;
 					events: Array<{
 						day: number;
 						dir: { up: null } | { down: null };
@@ -252,6 +253,7 @@ export interface AppSendFriendRequestArgs {
 export interface AppUpsertMarketMetadataArgs {
 	data: {
 		suggested: boolean;
+		tags: Array<string>;
 		events: Array<{
 			day: number;
 			dir: { up: null } | { down: null };
@@ -279,6 +281,7 @@ export interface AppUpsertMarketMetadataResult {
 		updated_by: string;
 		suggested: boolean;
 		series_id: string;
+		tags: Array<string>;
 		events: Array<{
 			day: number;
 			dir: { up: null } | { down: null };

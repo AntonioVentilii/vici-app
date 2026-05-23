@@ -6,9 +6,9 @@
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { WELCOME_MARKET_PREVIEWS } from '$lib/constants/welcome-markets.constants';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { categoryColor } from '$lib/utils/category-color.utils';
 	import { formatLocaleNumber as formatCount } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 	import { previewCallerCount } from '$lib/utils/welcome-market.utils';
 
 	const FLOW_ACTIVE_COUNT = 2847;
@@ -97,7 +97,7 @@
 					{@const noLabel = t({ locale: $localeStore, key: 'outcome.no' })}
 					{@const sharpSide = sharpPct >= 50 ? yesLabel : noLabel}
 					<article
-						style:--market-accent={categoryColor(market.category)}
+						style:--market-accent={tagColor(market.category)}
 						style:--yes-percent={`${yesPercent}%`}
 						class={flowCardClass({ index })}
 					>

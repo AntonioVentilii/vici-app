@@ -20,14 +20,15 @@
 		BASE_XP_PER_PREDICTION,
 		isAccuracyUnlocked
 	} from '$lib/constants/flow-rewards.constants';
+	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
-	import { listSeriesCategories } from '$lib/services/category.services';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { getMarketMetadata } from '$lib/services/market-metadata.services';
 	import { getUserMarketSignals } from '$lib/services/market-signals.services';
+	import { listMarketTagsBySeries } from '$lib/services/market-tags.services';
 	import { getFlowQueue } from '$lib/services/market.services';
 	import { getPositions } from '$lib/services/position.services';
 	import { persistDailyStreak } from '$lib/services/profile.services';
@@ -85,9 +86,10 @@
 	let betsCount = $state(0);
 	let completed = $state(false);
 	let positions = $state<Position[]>([]);
-	// `seriesId → categoryId` lookup loaded once on mount; consumed by
-	// the FlowCard render loop to drive the per-card generative artwork.
-	let marketCategoryMap = $state<Map<string, string>>(new Map());
+	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
+	// the FlowCard render loop to drive the per-card generative artwork
+	// (which uses the *primary* tag — see `primaryMarketTag`).
+	let marketTagMap = $state<Record<string, string[]>>({});
 	let marketMetadataMap = $state<Map<MarketId, MarketMetadata>>(new Map());
 	let userSignals = $state<UserMarketSignals>({
 		categoryAcc: {},
@@ -145,15 +147,15 @@
 		flowTradeService.startSession();
 
 		try {
-			const [queue, userPositions, seriesCategories] = await Promise.all([
+			const [queue, userPositions, tagMap] = await Promise.all([
 				getFlowQueue($balanceDomain),
 				nonNullish($userStore.user) ? getPositions($balanceDomain) : Promise.resolve([]),
-				listSeriesCategories()
+				listMarketTagsBySeries().catch(() => ({}))
 			]);
 
 			markets = queue.slice(0, MAX_MARKETS);
 			positions = userPositions;
-			marketCategoryMap = new Map(seriesCategories.map((m) => [m.seriesId, m.categoryId]));
+			marketTagMap = tagMap;
 
 			const metadataEntries: [MarketId, MarketMetadata][] = [];
 
@@ -577,8 +579,13 @@
 			<div class="flow-card-wrap">
 				{#each visibleCards as market, i (market?.id)}
 					{@const isCurrent = i === 0}
-					{@const category = marketCategoryMap.get(market.id)}
-					{@const flowCategory = resolveFlowCategory({ categoryId: category, marketId: market.id })}
+					{@const primaryTag = primaryMarketTag(
+						(marketTagMap[market.id] ?? []) as ReadonlyArray<MarketTag>
+					)}
+					{@const flowCategory = resolveFlowCategory({
+						categoryId: primaryTag,
+						marketId: market.id
+					})}
 					{@const metadata = marketMetadataMap.get(market.id)}
 					{@const priorCall = userSignals.priorCalls[market.id]}
 					{@const followedLean = userSignals.followedLean[market.id]}

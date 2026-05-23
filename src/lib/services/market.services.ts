@@ -10,9 +10,9 @@ import {
 	ZERO
 } from '$lib/constants/app.constants';
 import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
+import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { ActivityType } from '$lib/enums/social';
 import { UserRole } from '$lib/enums/user';
-import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { listMarketTagsBySeries } from '$lib/services/market-tags.services';

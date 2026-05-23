@@ -1,6 +1,6 @@
 import type { RegistryDid } from '$declarations';
 import { getFriendActivities } from '$lib/services/activity.services';
-import { listSeriesCategories } from '$lib/services/category.services';
+import { listMarketTagsBySeries } from '$lib/services/market-tags.services';
 import { getFollowing } from '$lib/services/relation.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import type { UserMarketSignals } from '$lib/types/market-signals';
@@ -9,9 +9,9 @@ import { deriveUserMarketSignals } from '$lib/utils/market-signals.utils';
 export const getUserMarketSignals = async (
 	domain: RegistryDid.BalanceDomain
 ): Promise<UserMarketSignals> => {
-	const [events, categoryMappings, following] = await Promise.all([
+	const [events, tagMappings, following] = await Promise.all([
 		getUserTradeHistory(domain),
-		listSeriesCategories().catch(() => []),
+		listMarketTagsBySeries().catch(() => ({})),
 		getFollowing().catch(() => [])
 	]);
 
@@ -24,7 +24,7 @@ export const getUserMarketSignals = async (
 
 	return deriveUserMarketSignals({
 		events,
-		categoryMappings,
+		tagMappings,
 		friendActivities
 	});
 };

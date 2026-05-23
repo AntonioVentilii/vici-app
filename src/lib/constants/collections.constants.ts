@@ -6,8 +6,6 @@ export const Collection = {
 	RELATIONS: collections.RELATIONS,
 	CHATS: collections.CHATS,
 	COMMENTS: collections.COMMENTS,
-	CATEGORIES: collections.CATEGORIES,
-	SERIES_CATEGORIES: collections.SERIES_CATEGORIES,
 	MARKET_METADATA: collections.MARKET_METADATA,
 	MARKET_TRANSLATIONS: collections.MARKET_TRANSLATIONS,
 	ACTIVITIES: collections.ACTIVITIES,

@@ -1,5 +1,5 @@
+import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { rankMarkets } from '$lib/services/market.services';
-import type { SeriesCategory } from '$lib/types/category';
 import type { Market } from '$lib/types/market';
 import type { MarketSecondaryFilters } from '$lib/types/market-filters';
 import { isSocial, isViciXp } from '$lib/utils/balance-domain.utils';
@@ -55,14 +55,14 @@ export const filterAndRankMarkets = ({
 	activeTab,
 	filters,
 	userInterests = [],
-	categoryMappings = []
+	tagMappings = {}
 }: {
 	markets: Market[];
 	searchTerm: string;
 	activeTab: string;
 	filters: MarketSecondaryFilters;
 	userInterests?: string[];
-	categoryMappings?: SeriesCategory[];
+	tagMappings?: Record<string, MarketTag[]>;
 }): Market[] => {
 	const baseFiltered = markets
 		.map((market) => ({
@@ -88,6 +88,6 @@ export const filterAndRankMarkets = ({
 	return rankMarkets({
 		markets: baseFiltered,
 		userInterests: new Set(userInterests),
-		categoryMappings
+		tagMappings
 	});
 };

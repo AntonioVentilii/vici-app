@@ -18,6 +18,7 @@ export const MarketEventSchema = j.strictObject({
 export const MarketMetadataInputSchema = j.strictObject({
 	whyNow: MarketWhyNowSchema.optional(),
 	events: j.array(MarketEventSchema).default([]),
+	tags: j.array(j.string()).default([]),
 	suggested: j.boolean().default(false)
 });
 
@@ -25,6 +26,7 @@ export const MarketMetadataSchema = j.strictObject({
 	seriesId: j.string(),
 	whyNow: MarketWhyNowSchema.optional(),
 	events: j.array(MarketEventSchema).default([]),
+	tags: j.array(j.string()).default([]),
 	suggested: j.boolean().default(false),
 	updatedAt: j.number(),
 	updatedBy: PrincipalTextSchema

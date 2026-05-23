@@ -4,9 +4,9 @@
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { WELCOME_MARKET_PREVIEWS } from '$lib/constants/welcome-markets.constants';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { categoryColor } from '$lib/utils/category-color.utils';
 	import { formatLocaleNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 	import { previewCallerCount } from '$lib/utils/welcome-market.utils';
 
 	const previewCallers = ({ id, locale }: { id: string; locale: string }): string =>
@@ -35,7 +35,7 @@
 
 	<div class="welcome-market-grid">
 		{#each WELCOME_MARKET_PREVIEWS as market, index (market.id)}
-			{@const catColor = categoryColor(market.category)}
+			{@const catColor = tagColor(market.category)}
 			{@const yesPct = market.yesPercent}
 			{@const noPct = 100 - yesPct}
 			<a class="welcome-market-card" href={PublicPath.SignUp}>

@@ -11,7 +11,7 @@ type AppCheckNicknameAvailabilityResult = record { available : bool; reason : op
 
 type AppGetMarketMetadataArgs = record { series_id : text };
 
-type AppGetMarketMetadataResult = record { metadata : opt record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; suggested : bool; updated_at : float64; updated_by : text } };
+type AppGetMarketMetadataResult = record { metadata : opt record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool; updated_at : float64; updated_by : text } };
 
 type AppGetMarketTranslationArgs = record { series_id : text; locale : text };
 
@@ -51,9 +51,9 @@ type AppRejectFriendRequestArgs = record { relation_id : text };
 
 type AppSendFriendRequestArgs = record { target : text };
 
-type AppUpsertMarketMetadataArgs = record { series_id : text; data : record { why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; suggested : bool } };
+type AppUpsertMarketMetadataArgs = record { series_id : text; data : record { why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool } };
 
-type AppUpsertMarketMetadataResult = record { metadata : record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; suggested : bool; updated_at : float64; updated_by : text } };
+type AppUpsertMarketMetadataResult = record { metadata : record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool; updated_at : float64; updated_by : text } };
 
 type AppUpsertMarketTranslationArgs = record { series_id : text; locale : text; data : record { title : text; description : text; outcomes : vec record { id : text; title : text } } };
 

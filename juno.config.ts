@@ -16,8 +16,6 @@ enum JunoDatastoreCollection {
 	RELATIONS = 'relations',
 	CHATS = 'chats',
 	COMMENTS = 'comments',
-	CATEGORIES = 'categories',
-	SERIES_CATEGORIES = 'series_categories',
 	MARKET_METADATA = 'market_metadata',
 	MARKET_TRANSLATIONS = 'market_translations',
 	ACTIVITIES = 'activities',
@@ -96,28 +94,16 @@ export default defineConfig(({ mode }) => ({
 					write: 'public'
 				},
 				{
-					collection: JunoDatastoreCollection.CATEGORIES,
-					memory: 'stable',
-					read: 'public',
-					write: 'public'
-				},
-				{
-					collection: JunoDatastoreCollection.SERIES_CATEGORIES,
-					memory: 'stable',
-					read: 'public',
-					write: 'public'
-				},
-				{
 					collection: JunoDatastoreCollection.MARKET_METADATA,
 					memory: 'stable',
 					read: 'public',
-					write: 'controllers'
+					write: 'public'
 				},
 				{
 					collection: JunoDatastoreCollection.MARKET_TRANSLATIONS,
 					memory: 'stable',
 					read: 'public',
-					write: 'controllers'
+					write: 'public'
 				},
 				{
 					collection: JunoDatastoreCollection.ACTIVITIES,

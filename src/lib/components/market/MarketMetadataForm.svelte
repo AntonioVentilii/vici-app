@@ -6,6 +6,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import { normalizeMarketTags, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { userIsAdmin } from '$lib/derived/user.derived';
 	import { MarketEventDirection, MarketWhyNowKind } from '$lib/enums/market-metadata';
 	import { getMarketMetadata, upsertMarketMetadata } from '$lib/services/market-metadata.services';
@@ -14,6 +15,7 @@
 	import type { Market } from '$lib/types/market';
 	import type { MarketEvent, MarketMetadataInput } from '$lib/types/market-metadata';
 	import { t } from '$lib/utils/i18n.utils';
+	import { refreshMarketTags } from '$lib/utils/refresh.utils';
 
 	interface Props {
 		market: Market;
@@ -34,6 +36,7 @@
 
 	let whyKind = $state<MarketWhyNowKind>(MarketWhyNowKind.CLOSING);
 	let whyText = $state('');
+	let tags = $state<MarketTag[]>([]);
 	let suggested = $state(false);
 	let eventOne = $state<EventRow>({ day: '', dir: MarketEventDirection.UP, label: '' });
 	let eventTwo = $state<EventRow>({ day: '', dir: MarketEventDirection.UP, label: '' });
@@ -97,6 +100,7 @@
 		return {
 			...(why.length > 0 && { whyNow: { kind: whyKind, text: why } }),
 			events,
+			tags,
 			suggested
 		};
 	};
@@ -111,6 +115,8 @@
 				data: buildInput()
 			});
 			({ updatedAt: savedAt, suggested } = metadata);
+			tags = normalizeMarketTags(metadata.tags ?? []);
+			refreshMarketTags();
 		} catch (err: unknown) {
 			console.warn('Market metadata save failed:', err);
 			error = t({ locale: $localeStore, key: 'market.metadata.error.save' });
@@ -129,6 +135,7 @@
 			}
 
 			suggested = metadata?.suggested ?? false;
+			tags = normalizeMarketTags(metadata?.tags ?? []);
 
 			const [first, second] = metadata?.events ?? [];
 
@@ -183,9 +190,11 @@
 				<MetadataShowcaseTab
 					isAdmin={$userIsAdmin}
 					onSuggestedChange={(value) => (suggested = value)}
+					onTagsChange={(value) => (tags = value)}
 					onWhyKindChange={(value) => (whyKind = value)}
 					onWhyTextChange={(value) => (whyText = value)}
 					{suggested}
+					{tags}
 					{whyKind}
 					{whyText}
 				/>

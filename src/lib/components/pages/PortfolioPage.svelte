@@ -9,7 +9,7 @@
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
-	import { categories } from '$lib/derived/categories.derived';
+	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
@@ -141,7 +141,7 @@
 			tradeHistoryCount={$tradeHistory.length}
 		/>
 
-		<PositionTable categoryMappings={$categories} markets={$markets} positions={$positions} />
+		<PositionTable markets={$markets} positions={$positions} tagMappings={$marketTags} />
 
 		<div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
 			<OpenOrdersTable markets={$markets} onRefresh={onOrdersRefresh} orders={$orders} />

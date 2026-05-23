@@ -15,7 +15,7 @@
 	interface Props {
 		// Stable seed — `market.id` for parity with FlowCard.
 		marketId: string | number;
-		// Admin-tagged category id (`SeriesCategory.categoryId`) when
+		// The market's primary tag (see `primaryMarketTag`) when
 		// available; the renderer falls back to a hash-based pick when
 		// missing or unrecognised.
 		categoryId?: string | null;

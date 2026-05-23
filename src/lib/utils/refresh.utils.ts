@@ -35,3 +35,14 @@ export const refreshAllBalances = () => {
 
 	emit({ message: VICI_EVENTS.REFRESH_COLLATERALS });
 };
+
+/**
+ * Re-projects every `MarketMetadata` doc into the cached `seriesId →
+ * MarketTag[]` map. Fire this after editing a market's tags so the
+ * detail header, FlowCard artwork, Markets feed ranking, and any other
+ * surface reading from `marketTagsStore` picks up the change without a
+ * full page reload.
+ */
+export const refreshMarketTags = () => {
+	emit({ message: VICI_EVENTS.REFRESH_MARKET_TAGS });
+};

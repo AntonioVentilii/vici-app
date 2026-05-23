@@ -1,4 +1,9 @@
 <script lang="ts">
+	import {
+		MARKET_TAGS,
+		MARKET_TAG_LABEL_KEYS,
+		type MarketTag
+	} from '$lib/constants/market-tags.constants';
 	import { MarketWhyNowKind } from '$lib/enums/market-metadata';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -6,22 +11,32 @@
 	interface Props {
 		whyKind: MarketWhyNowKind;
 		whyText: string;
+		tags: MarketTag[];
 		suggested: boolean;
 		isAdmin: boolean;
 		onWhyKindChange: (value: MarketWhyNowKind) => void;
 		onWhyTextChange: (value: string) => void;
+		onTagsChange: (value: MarketTag[]) => void;
 		onSuggestedChange: (value: boolean) => void;
 	}
 
 	const {
 		whyKind,
 		whyText,
+		tags,
 		suggested,
 		isAdmin,
 		onWhyKindChange,
 		onWhyTextChange,
+		onTagsChange,
 		onSuggestedChange
 	}: Props = $props();
+
+	const toggleTag = (tag: MarketTag) => {
+		const next = tags.includes(tag) ? tags.filter((value) => value !== tag) : [...tags, tag];
+
+		onTagsChange(MARKET_TAGS.filter((value) => next.includes(value)));
+	};
 </script>
 
 <div class="market-metadata-grid">
@@ -44,6 +59,29 @@
 			value={whyText}
 		/>
 	</label>
+
+	<div class="market-metadata-tags">
+		<span class="market-metadata-tags-label">
+			{t({ locale: $localeStore, key: 'market.metadata.tags' })}
+		</span>
+		<p class="market-metadata-tags-help">
+			{t({ locale: $localeStore, key: 'market.metadata.tags_help' })}
+		</p>
+		<div class="market-metadata-tags-grid">
+			{#each MARKET_TAGS as tag (tag)}
+				{@const selected = tags.includes(tag)}
+				<button
+					class="market-metadata-tag-chip"
+					class:selected
+					aria-pressed={selected}
+					onclick={() => toggleTag(tag)}
+					type="button"
+				>
+					{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}
+				</button>
+			{/each}
+		</div>
+	</div>
 
 	{#if isAdmin}
 		<label class="market-metadata-toggle">
@@ -125,5 +163,56 @@
 		letter-spacing: normal;
 		text-transform: none;
 		margin-top: 0.15rem;
+	}
+
+	.market-metadata-tags {
+		display: grid;
+		gap: 0.4rem;
+	}
+
+	.market-metadata-tags-label {
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.market-metadata-tags-help {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+	}
+
+	.market-metadata-tags-grid {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.market-metadata-tag-chip {
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill, 999px);
+		background: var(--bg-surface);
+		color: var(--text-base);
+		padding: 0.35rem 0.8rem;
+		font: inherit;
+		font-size: var(--t-13);
+		font-weight: 500;
+		cursor: pointer;
+		transition:
+			background 0.15s ease,
+			border-color 0.15s ease,
+			color 0.15s ease;
+	}
+
+	.market-metadata-tag-chip:hover {
+		border-color: var(--text-base);
+	}
+
+	.market-metadata-tag-chip.selected {
+		background: var(--text-base);
+		border-color: var(--text-base);
+		color: var(--bg-surface);
 	}
 </style>

@@ -72,7 +72,7 @@
 	--color-accent: var(--laurel);
 	--color-accent-foreground: var(--ink);
 
-	/* Category accents */
+	/* Tag accents */
 	--cat-macro: #7eb6ff;
 	--cat-crypto: #f7931a;
 	--cat-politics: #ff6b6b;

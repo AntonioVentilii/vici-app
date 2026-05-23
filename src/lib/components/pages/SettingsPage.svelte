@@ -32,6 +32,7 @@
 		SUPPORTED_LOCALES,
 		type AppLocale
 	} from '$lib/constants/locale.constants';
+	import { MARKET_TAGS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { FLOW_SESSION_LENGTH_OPTIONS } from '$lib/constants/settings.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
@@ -46,7 +47,6 @@
 	import { setAuthBusy, userStore } from '$lib/stores/user.store';
 	import type { ButtonStatus } from '$lib/types/components';
 	import type { FlowSessionLength, SettingsVisibility } from '$lib/types/preferences';
-	import { FLOW_ART_CATEGORIES } from '$lib/utils/flow-art.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
@@ -123,28 +123,26 @@
 		{ value: 'single', label: t({ locale: $localeStore, key: 'settings.flow_deck.tab.single' }) }
 	]);
 
-	const flowCategoriesEnabled = $derived(($preferencesStore.flowCategories ?? []).length);
+	const flowTagsEnabled = $derived(($preferencesStore.flowTags ?? []).length);
 	const flowDeckSub = $derived(
-		flowCategoriesEnabled <= 1
+		flowTagsEnabled <= 1
 			? t({ locale: $localeStore, key: 'settings.flow_deck.sub_one' })
 			: t({
 					locale: $localeStore,
 					key: 'settings.flow_deck.sub',
-					params: { enabled: flowCategoriesEnabled, total: FLOW_ART_CATEGORIES.length }
+					params: { enabled: flowTagsEnabled, total: MARKET_TAGS.length }
 				})
 	);
 
-	const categoryLabelKey = (category: string): MessageKey =>
-		`settings.flow_deck.category.${category}` as MessageKey;
+	const tagLabelKey = (tag: string): MessageKey =>
+		`settings.flow_deck.category.${tag}` as MessageKey;
 
-	const toggleFlowCategory = (category: string) => {
+	const toggleFlowTag = (tag: string) => {
 		preferencesStore.update((prefs) => {
-			const current = prefs.flowCategories ?? [...FLOW_ART_CATEGORIES];
-			const next = current.includes(category)
-				? current.filter((c) => c !== category)
-				: [...current, category];
+			const current = prefs.flowTags ?? [...MARKET_TAGS];
+			const next = current.includes(tag) ? current.filter((c) => c !== tag) : [...current, tag];
 
-			return { ...prefs, flowCategories: next.length === 0 ? [category] : next };
+			return { ...prefs, flowTags: next.length === 0 ? [tag] : next };
 		});
 	};
 
@@ -302,17 +300,17 @@
 
 				{#if flowDeckTab === 'all'}
 					<div class="settings-flow-deck-grid" role="group">
-						{#each FLOW_ART_CATEGORIES as category (category)}
-							{@const enabled = ($preferencesStore.flowCategories ?? []).includes(category)}
+						{#each MARKET_TAGS as tag (tag)}
+							{@const enabled = ($preferencesStore.flowTags ?? []).includes(tag)}
 							<button
 								class="settings-flow-deck-pill"
 								class:is-active={enabled}
 								aria-pressed={enabled}
-								onclick={() => toggleFlowCategory(category)}
+								onclick={() => toggleFlowTag(tag)}
 								type="button"
 							>
 								<span class="settings-flow-deck-pill-dot" aria-hidden="true"></span>
-								{t({ locale: $localeStore, key: categoryLabelKey(category) })}
+								{t({ locale: $localeStore, key: tagLabelKey(tag) })}
 							</button>
 						{/each}
 					</div>

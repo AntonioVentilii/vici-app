@@ -3,8 +3,8 @@
 	import AdminBulkMarketForm from '$lib/components/admin/AdminBulkMarketForm.svelte';
 	import AdminMarketForm from '$lib/components/admin/AdminMarketForm.svelte';
 	import AdminSubPageHeader from '$lib/components/admin/AdminSubPageHeader.svelte';
-	import { associateSeriesWithCategory } from '$lib/services/category.services';
-	import { safeGetIdentityOnce } from '$lib/services/identity.services';
+	import { normalizeMarketTags } from '$lib/constants/market-tags.constants';
+	import { upsertMarketMetadata } from '$lib/services/market-metadata.services';
 	import { createMarket } from '$lib/services/market.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -29,7 +29,7 @@
 			expiryDate: string;
 			balanceDomain?: string;
 			outcomes?: string[];
-			categories?: string[];
+			tags?: string[];
 		}[]
 	) => {
 		bulkInProgress = true;
@@ -38,47 +38,44 @@
 		bulkSuccess = 0;
 		bulkFailed = 0;
 
-		const identity = await safeGetIdentityOnce();
-		const adminPrincipal = identity.getPrincipal().toText();
 		const defaultDomain: RegistryDid.BalanceDomain = { ViciXp: null };
 
 		await Promise.allSettled(
-			bulkMarkets.map(
-				async ({ title, description, expiryDate, outcomes, balanceDomain, categories }) => {
-					try {
-						const result = await createMarket({
-							title,
-							description,
-							expiryDate: BigInt(new Date(expiryDate).getTime()),
-							outcomes,
-							balanceDomain: balanceDomain ? toBalanceDomain(balanceDomain) : defaultDomain
+			bulkMarkets.map(async ({ title, description, expiryDate, outcomes, balanceDomain, tags }) => {
+				try {
+					const result = await createMarket({
+						title,
+						description,
+						expiryDate: BigInt(new Date(expiryDate).getTime()),
+						outcomes,
+						balanceDomain: balanceDomain ? toBalanceDomain(balanceDomain) : defaultDomain
+					});
+
+					const normalizedTags = normalizeMarketTags(
+						(tags ?? []).map((value) => value.toLowerCase())
+					);
+
+					if (normalizedTags.length > 0) {
+						await upsertMarketMetadata({
+							seriesId: result,
+							data: { events: [], tags: normalizedTags, suggested: false }
+						}).catch((err) => {
+							console.error(`Failed to set tags for bulk market: ${title}`, err);
 						});
-
-						if (categories && categories.length > 0) {
-							await Promise.allSettled(
-								categories.map((categoryId) =>
-									associateSeriesWithCategory({
-										seriesId: result,
-										categoryId: categoryId.toLowerCase(),
-										adminPrincipal
-									})
-								)
-							);
-						}
-
-						bulkSuccess++;
-
-						return result;
-					} catch (e: unknown) {
-						console.error(`Failed to create bulk market: ${title}`, e);
-
-						bulkFailed++;
-						throw e;
-					} finally {
-						bulkProgress++;
 					}
+
+					bulkSuccess++;
+
+					return result;
+				} catch (e: unknown) {
+					console.error(`Failed to create bulk market: ${title}`, e);
+
+					bulkFailed++;
+					throw e;
+				} finally {
+					bulkProgress++;
 				}
-			)
+			})
 		);
 
 		bulkInProgress = false;

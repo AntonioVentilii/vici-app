@@ -13,7 +13,6 @@
 		PriorCallSignal
 	} from '$lib/types/market-signals';
 	import type { Position } from '$lib/types/position';
-	import { categoryColor } from '$lib/utils/category-color.utils';
 	import { resolveFlowArtCategory, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import {
 		consensusPercent,
@@ -24,6 +23,7 @@
 	import { formatProbability, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { getExpiryEyebrow } from '$lib/utils/market.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
 		market: Market;
@@ -35,8 +35,9 @@
 		tradeAmount: string;
 		interactive?: boolean;
 		// Generative-artwork category. FlowMode resolves this from the
-		// SeriesCategory mappings; FlowCard treats it as opaque, falls
-		// back to 'macro' if missing or unknown.
+		// market's primary tag (see `primaryMarketTag`); FlowCard treats
+		// it as opaque and falls back to a hash-derived bucket when the
+		// market has no tags.
 		category?: FlowArtCategory | string;
 		// Optional editorial sub-line ("FOMC · rate-cut call"). When
 		// undefined, FlowCard derives a short fallback from the description.
@@ -95,16 +96,15 @@
 	const potentialReturnYes = $derived(amount / (market.yesProbability || 0.1));
 	const potentialReturnNo = $derived(amount / (market.noProbability || 0.1));
 
-	// Single source of truth for category resolution: untagged markets
-	// must hash identically here, in FlowMode, in PositionArtThumb, and
-	// in market-signals — otherwise the same market shows up under
-	// different categories (and palettes / artwork) on different
-	// surfaces. See `resolveFlowArtCategory` for the canonical FNV-1a
-	// derivation.
+	// Single source of truth for tag resolution: untagged markets must
+	// hash identically here, in FlowMode, in PositionArtThumb, and in
+	// market-signals — otherwise the same market shows up under
+	// different tags (and palettes / artwork) on different surfaces.
+	// See `resolveFlowArtCategory` for the canonical FNV-1a derivation.
 	const resolvedCategory: FlowArtCategory = $derived(
 		resolveFlowArtCategory({ categoryId: category, seed: market.id })
 	);
-	const catColor = $derived(categoryColor(resolvedCategory));
+	const catColor = $derived(tagColor(resolvedCategory));
 
 	let startX = 0;
 	let startY = 0;

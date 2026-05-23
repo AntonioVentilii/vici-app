@@ -14,11 +14,11 @@
 	import { checkNicknameAvailability } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { CallSide } from '$lib/types/market';
-	import { categoryColor } from '$lib/utils/category-color.utils';
 	import { FLOW_ART_CATEGORIES, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import { decimalFixedValueToNumber, formatProbability } from '$lib/utils/format.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface OnboardingResult {
 		handle: string;
@@ -562,7 +562,7 @@
 					>
 						<div class="market-head">
 							<div class="market-meta">
-								<span style:color={categoryColor(firstMarket.category)} class="allcaps">
+								<span style:color={tagColor(firstMarket.category)} class="allcaps">
 									{t({ locale: $localeStore, key: categoryLabelKey(firstMarket.category) })}
 								</span>
 								<span class="num muted">{firstMarket.days}d</span>
@@ -737,7 +737,7 @@
 							<div class="card-face front">
 								<div class="market-head">
 									<div class="market-meta">
-										<span style:color={categoryColor(practiceMarket.category)} class="allcaps">
+										<span style:color={tagColor(practiceMarket.category)} class="allcaps">
 											{t({ locale: $localeStore, key: categoryLabelKey(practiceMarket.category) })}
 										</span>
 										<span class="num muted">{practiceMarket.days}d</span>
@@ -779,7 +779,7 @@
 
 							<div class="card-face back" aria-hidden={!practiceFlipped}>
 								<div class="depth-head">
-									<span style:color={categoryColor(practiceMarket.category)} class="allcaps">
+									<span style:color={tagColor(practiceMarket.category)} class="allcaps">
 										{t({ locale: $localeStore, key: categoryLabelKey(practiceMarket.category) })}
 									</span>
 									<span class="eyebrow">
@@ -885,7 +885,7 @@
 					{#each categoryOptions as category (category)}
 						{@const selected = interests.has(category)}
 						<button
-							style:--cat-color={categoryColor(category)}
+							style:--cat-color={tagColor(category)}
 							class={selected ? 'category-tile selected' : 'category-tile'}
 							aria-pressed={selected}
 							data-tid={TestId.OnboardingInterest}

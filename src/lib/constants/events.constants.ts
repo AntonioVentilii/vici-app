@@ -6,5 +6,6 @@ export const VICI_EVENTS = {
 	REFRESH_COLLATERALS: 'viciRefreshCollaterals',
 	REFRESH_TRADE_HISTORY: 'viciRefreshTradeHistory',
 	REFRESH_GLOBAL_ACTIVITIES: 'viciRefreshGlobalActivities',
-	REFRESH_MARKET_COMMENTS: 'viciRefreshMarketComments'
+	REFRESH_MARKET_COMMENTS: 'viciRefreshMarketComments',
+	REFRESH_MARKET_TAGS: 'viciRefreshMarketTags'
 } as const;

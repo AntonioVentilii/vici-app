@@ -37,6 +37,7 @@ export const idlFactory = ({ IDL }) => {
 				updated_by: IDL.Text,
 				suggested: IDL.Bool,
 				series_id: IDL.Text,
+				tags: IDL.Vec(IDL.Text),
 				events: IDL.Vec(
 					IDL.Record({
 						day: IDL.Float64,
@@ -369,6 +370,7 @@ export const idlFactory = ({ IDL }) => {
 	const AppUpsertMarketMetadataArgs = IDL.Record({
 		data: IDL.Record({
 			suggested: IDL.Bool,
+			tags: IDL.Vec(IDL.Text),
 			events: IDL.Vec(
 				IDL.Record({
 					day: IDL.Float64,
@@ -397,6 +399,7 @@ export const idlFactory = ({ IDL }) => {
 			updated_by: IDL.Text,
 			suggested: IDL.Bool,
 			series_id: IDL.Text,
+			tags: IDL.Vec(IDL.Text),
 			events: IDL.Vec(
 				IDL.Record({
 					day: IDL.Float64,

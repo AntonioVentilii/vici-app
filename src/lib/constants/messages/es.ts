@@ -35,11 +35,6 @@ export const esMessages = {
 	'achievement.oracle.name': 'Oráculo',
 	'achievement.toast.message': '{name} desbloqueado · +{xp} XP',
 	'achievement.toast.title': 'Logro desbloqueado',
-	'admin.category.action.associating': 'Asociando...',
-	'admin.category.action.set': 'Asignar categoría',
-	'admin.category.empty': 'No hay categorías definidas. Añádelas en los ajustes de admin.',
-	'admin.category.series_id': 'ID de serie: {id}',
-	'admin.category.title': 'Categoría predictiva',
 	'admin.dashboard.sub':
 		'Gestiona mercados, crea nuevas oportunidades, resuelve predicciones vencidas y administra a los administradores.',
 	'admin.dashboard.title': 'Panel de administración',
@@ -62,10 +57,6 @@ export const esMessages = {
 	'admin.markets.bulk.complete_title': 'Creación masiva completada',
 	'admin.markets.bulk.creating': 'Creando mercados',
 	'admin.markets.bulk.download_template': 'Descargar plantilla',
-	'admin.markets.bulk.error.categories_not_array':
-		'Las categorías deben ser un arreglo para el mercado: {title}',
-	'admin.markets.bulk.error.category_not_string':
-		'Cada categoría debe ser una cadena para el mercado: {title}',
 	'admin.markets.bulk.error.invalid_date': 'Formato de fecha inválido: {date}',
 	'admin.markets.bulk.error.missing_fields':
 		'Cada mercado debe tener un título, descripción y expiryDate.',
@@ -76,6 +67,10 @@ export const esMessages = {
 	'admin.markets.bulk.error.outcomes_not_array':
 		'Los resultados deben ser un arreglo para el mercado: {title}',
 	'admin.markets.bulk.error.parse_failed': 'Error al analizar JSON: {message}',
+	'admin.markets.bulk.error.tag_not_string':
+		'Cada etiqueta debe ser una cadena para el mercado: {title}',
+	'admin.markets.bulk.error.tags_not_array':
+		'Las etiquetas deben ser un arreglo para el mercado: {title}',
 	'admin.markets.bulk.error.too_few_outcomes':
 		'Los mercados categóricos deben tener al menos 2 resultados: {title}',
 	'admin.markets.bulk.failed_label': 'Fallidos',
@@ -465,7 +460,6 @@ export const esMessages = {
 	'market.closes': 'cierra',
 	'market.detail.admin_actions': 'Acciones de administrador',
 	'market.detail.back_to_markets': 'Volver a mercados',
-	'market.detail.category_default': 'Memes',
 	'market.detail.created_by': 'Creado por',
 	'market.detail.fallback_title': 'Mercado',
 	'market.detail.head_suffix': 'Mercados Sociales',

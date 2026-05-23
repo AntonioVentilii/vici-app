@@ -35,11 +35,6 @@ export const itMessages = {
 	'achievement.oracle.name': 'Oracolo',
 	'achievement.toast.message': '{name} sbloccato · +{xp} XP',
 	'achievement.toast.title': 'Obiettivo sbloccato',
-	'admin.category.action.associating': 'Associazione...',
-	'admin.category.action.set': 'Imposta categoria',
-	'admin.category.empty': 'Nessuna categoria definita. Aggiungile nelle impostazioni admin.',
-	'admin.category.series_id': 'ID serie: {id}',
-	'admin.category.title': 'Categoria predittiva',
 	'admin.dashboard.sub':
 		'Gestisci i mercati, crea nuove opportunità, risolvi le previsioni scadute e gestisci gli amministratori.',
 	'admin.dashboard.title': 'Dashboard admin',
@@ -62,10 +57,6 @@ export const itMessages = {
 	'admin.markets.bulk.complete_title': 'Creazione massiva completata',
 	'admin.markets.bulk.creating': 'Creazione mercati',
 	'admin.markets.bulk.download_template': 'Scarica template',
-	'admin.markets.bulk.error.categories_not_array':
-		'Le categorie devono essere un array per il mercato: {title}',
-	'admin.markets.bulk.error.category_not_string':
-		'Ogni categoria deve essere una stringa per il mercato: {title}',
 	'admin.markets.bulk.error.invalid_date': 'Formato data non valido: {date}',
 	'admin.markets.bulk.error.missing_fields':
 		'Ogni mercato deve avere titolo, descrizione e expiryDate.',
@@ -76,6 +67,9 @@ export const itMessages = {
 	'admin.markets.bulk.error.outcomes_not_array':
 		'Gli esiti devono essere un array per il mercato: {title}',
 	'admin.markets.bulk.error.parse_failed': 'Impossibile analizzare il JSON: {message}',
+	'admin.markets.bulk.error.tag_not_string':
+		'Ogni tag deve essere una stringa per il mercato: {title}',
+	'admin.markets.bulk.error.tags_not_array': 'I tag devono essere un array per il mercato: {title}',
 	'admin.markets.bulk.error.too_few_outcomes':
 		'I mercati categorici devono avere almeno 2 esiti: {title}',
 	'admin.markets.bulk.failed_label': 'Falliti',
@@ -466,7 +460,6 @@ export const itMessages = {
 	'market.closes': 'chiude',
 	'market.detail.admin_actions': 'Azioni amministratore',
 	'market.detail.back_to_markets': 'Torna ai mercati',
-	'market.detail.category_default': 'Meme',
 	'market.detail.created_by': 'Creato da',
 	'market.detail.fallback_title': 'Mercato',
 	'market.detail.head_suffix': 'Mercati Sociali',

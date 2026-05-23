@@ -36,12 +36,6 @@ export const deMessages = {
 	'achievement.oracle.name': 'Oracle',
 	'achievement.toast.message': '{name} freigeschaltet · +{xp} XP',
 	'achievement.toast.title': 'Erfolg freigeschaltet',
-	'admin.category.action.associating': 'Wird zugeordnet...',
-	'admin.category.action.set': 'Kategorie setzen',
-	'admin.category.empty':
-		'Keine Kategorien definiert. Bitte in den Admin-Einstellungen hinzufügen.',
-	'admin.category.series_id': 'Series-ID: {id}',
-	'admin.category.title': 'Vorhersage-Kategorie',
 	'admin.dashboard.sub':
 		'Verwalte Märkte, erstelle neue Möglichkeiten, löse abgelaufene Vorhersagen auf und verwalte Administratoren.',
 	'admin.dashboard.title': 'Admin-Dashboard',
@@ -64,10 +58,6 @@ export const deMessages = {
 	'admin.markets.bulk.complete_title': 'Bulk-Erstellung abgeschlossen',
 	'admin.markets.bulk.creating': 'Märkte werden erstellt',
 	'admin.markets.bulk.download_template': 'Vorlage herunterladen',
-	'admin.markets.bulk.error.categories_not_array':
-		'Kategorien müssen ein Array sein für Markt: {title}',
-	'admin.markets.bulk.error.category_not_string':
-		'Jede Kategorie muss ein String sein für Markt: {title}',
 	'admin.markets.bulk.error.invalid_date': 'Ungültiges Datumsformat: {date}',
 	'admin.markets.bulk.error.missing_fields':
 		'Jeder Markt muss einen title, eine description und ein expiryDate haben.',
@@ -78,6 +68,8 @@ export const deMessages = {
 	'admin.markets.bulk.error.outcomes_not_array':
 		'Ergebnisse müssen ein Array sein für Markt: {title}',
 	'admin.markets.bulk.error.parse_failed': 'JSON konnte nicht verarbeitet werden: {message}',
+	'admin.markets.bulk.error.tag_not_string': 'Jeder Tag muss ein String sein für Markt: {title}',
+	'admin.markets.bulk.error.tags_not_array': 'Tags müssen ein Array sein für Markt: {title}',
 	'admin.markets.bulk.error.too_few_outcomes':
 		'Kategoriale Märkte müssen mindestens 2 Ergebnisse haben: {title}',
 	'admin.markets.bulk.failed_label': 'Fehlgeschlagen',
@@ -473,7 +465,6 @@ export const deMessages = {
 	'market.closes': 'schließt',
 	'market.detail.admin_actions': 'Admin-Aktionen',
 	'market.detail.back_to_markets': 'Zurück zu Märkten',
-	'market.detail.category_default': 'Memes',
 	'market.detail.created_by': 'Erstellt von',
 	'market.detail.fallback_title': 'Markt',
 	'market.detail.head_suffix': 'Soziale Märkte',

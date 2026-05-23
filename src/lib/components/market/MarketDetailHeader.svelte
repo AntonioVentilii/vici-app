@@ -5,6 +5,8 @@
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
+	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
+	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import { formatDate } from '$lib/utils/format.utils';
@@ -22,14 +24,17 @@
 	const isFork = $derived(market.forkedFrom !== undefined);
 	const isResolved = $derived(status === 'Resolved');
 	const timeRemaining = $derived(getTimeRemaining(market.expiryDate));
+	const tags = $derived($marketTags[market.id] ?? []);
 </script>
 
 <section class="detail-hero">
 	<div class="detail-hero-top">
 		<div class="detail-chip-row">
-			<span class="detail-chip detail-chip-category">
-				{t({ locale: $localeStore, key: 'market.detail.category_default' })}
-			</span>
+			{#each tags as tag (tag)}
+				<span class="detail-chip detail-chip-category">
+					{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}
+				</span>
+			{/each}
 			<span class="detail-chip detail-chip-status">
 				<OutcomeBadge {status} />
 			</span>
