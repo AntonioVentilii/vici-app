@@ -15,6 +15,7 @@ import {
 } from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 import { applyDailyStreakBump } from '$lib/utils/streak.utils';
+import { fromWireProfile } from '$satellite/utils/wire-format.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { getDoc, setDoc, type Doc, type User } from '@junobuild/core';
@@ -198,7 +199,7 @@ export const upsertProfile = async (
 export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
 	const { items } = await functions.searchProfiles({ queryStr: query });
 
-	return items as UserProfile[];
+	return items.map(fromWireProfile);
 };
 
 /**

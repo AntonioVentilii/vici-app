@@ -1,5 +1,6 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import type { UserProfile } from '$lib/types/profile';
+import { fromWireProfile } from '$satellite/utils/wire-format.utils';
 
 /**
  * Fetches the top profiles ranked by points (XP) from the satellite-side
@@ -17,5 +18,5 @@ import type { UserProfile } from '$lib/types/profile';
 export const getLeaderboard = async (): Promise<UserProfile[]> => {
 	const { items } = await functions.listLeaderboard();
 
-	return items as UserProfile[];
+	return items.map(fromWireProfile);
 };

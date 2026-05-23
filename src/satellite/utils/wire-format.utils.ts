@@ -1,6 +1,8 @@
 import { ProfileVisibility } from '$lib/enums/profile';
 import { RelationCategory, RelationState } from '$lib/enums/relation';
 import { UserRole } from '$lib/enums/user';
+import type { MarketTranslation } from '$lib/types/market-translation';
+import type { UserProfile } from '$lib/types/profile';
 import { j, PrincipalTextSchema } from '@junobuild/schema';
 
 /**
@@ -150,6 +152,79 @@ export const toWireProfile = (profile: AppProfileLike): WireUserProfile => ({
 		: undefined
 });
 
+/**
+ * Wire-format profile as produced by the generated satellite API client
+ * (`src/declarations/satellite/satellite.api.ts`). The codegen emits
+ * `visibility` / `role` as string-literal unions rather than as the
+ * `ProfileVisibility` / `UserRole` enum types used by {@link UserProfileWireSchema},
+ * even though the runtime strings are identical. We mirror that exact
+ * structural shape here so {@link fromWireProfile} can consume both the
+ * generated-API output and any in-process value that satisfies
+ * {@link WireUserProfile}.
+ */
+export interface ApiWireProfile {
+	owner: string;
+	nickname: string;
+	avatar: string;
+	email: string;
+	pnl: number;
+	visibility: `${ProfileVisibility}`;
+	role?: `${UserRole}`;
+	total_trades: number;
+	win_rate: number;
+	daily_streak: number;
+	streak: number;
+	accuracy: number;
+	points: number;
+	level: number;
+	archetype: string;
+	interests: string[];
+	last_active_day?: string;
+	unlocked_achievements: string[];
+	contrarian_wins: number;
+	preferences?: {
+		default_amount: { flow: string; manual: string };
+	};
+}
+
+/**
+ * Inverse of {@link toWireProfile}. Re-camelCases a row coming back from a
+ * satellite query whose `result` schema uses {@link UserProfileWireSchema}
+ * (i.e. every `j.array(UserProfileWireSchema)` endpoint —
+ * `listLeaderboard`, `searchProfiles`, …). Frontend callers should funnel
+ * wire items through this before handing them to UI / stores typed as
+ * {@link UserProfile}.
+ */
+export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
+	owner: profile.owner,
+	nickname: profile.nickname,
+	avatar: profile.avatar,
+	email: profile.email,
+	pnl: profile.pnl,
+	visibility: profile.visibility as ProfileVisibility,
+	role: profile.role as UserRole | undefined,
+	totalTrades: profile.total_trades,
+	winRate: profile.win_rate,
+	dailyStreak: profile.daily_streak,
+	streak: profile.streak,
+	accuracy: profile.accuracy,
+	points: profile.points,
+	level: profile.level,
+	archetype: profile.archetype,
+	interests: profile.interests,
+	lastActiveDay: profile.last_active_day,
+	unlockedAchievements: profile.unlocked_achievements,
+	contrarianWins: profile.contrarian_wins,
+	preferences: profile.preferences
+		? {
+				defaultAmount: {
+					flow: profile.preferences.default_amount.flow,
+					manual: profile.preferences.default_amount.manual
+				}
+			}
+		: undefined
+});
+
 // ─── Relation wire format ────────────────────────────────────────────────
 
 export const RelationWireSchema = j.strictObject({
@@ -220,4 +295,22 @@ export const toWireMarketTranslation = (
 	outcomes: translation.outcomes ?? [],
 	updated_at: translation.updatedAt,
 	updated_by: translation.updatedBy
+});
+
+/**
+ * Inverse of {@link toWireMarketTranslation}. Used by frontend services
+ * consuming `listMarketTranslations` (which returns
+ * `j.array(MarketTranslationWireSchema)`) so the items land typed as
+ * {@link MarketTranslation}.
+ */
+export const fromWireMarketTranslation = (
+	translation: WireMarketTranslation
+): MarketTranslation => ({
+	seriesId: translation.series_id,
+	locale: translation.locale,
+	title: translation.title,
+	description: translation.description,
+	outcomes: translation.outcomes,
+	updatedAt: translation.updated_at,
+	updatedBy: translation.updated_by
 });

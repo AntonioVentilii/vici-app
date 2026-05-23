@@ -1,6 +1,7 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import type { AppLocale } from '$lib/constants/locale.constants';
 import type { MarketTranslation, MarketTranslationInput } from '$lib/types/market-translation';
+import { fromWireMarketTranslation } from '$satellite/utils/wire-format.utils';
 
 export const getMarketTranslation = async ({
 	seriesId,
@@ -17,7 +18,7 @@ export const getMarketTranslation = async ({
 export const listMarketTranslations = async (seriesId: string): Promise<MarketTranslation[]> => {
 	const { items } = await functions.listMarketTranslations({ seriesId });
 
-	return items;
+	return items.map(fromWireMarketTranslation);
 };
 
 export const upsertMarketTranslation = async ({
