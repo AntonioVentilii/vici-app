@@ -2,8 +2,14 @@
 	import { isNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import type { RegistryDid } from '$declarations';
+	import SocialPremiumPicker from '$lib/components/social/SocialPremiumPicker.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
+	import {
+		DEFAULT_SOCIAL_PREMIUM_ID,
+		formatSocialPremium,
+		type SocialPremiumOptionId
+	} from '$lib/constants/social-premium.constants';
 	import { listGroups } from '$lib/services/group.services';
 	import { createMarket } from '$lib/services/market.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -24,6 +30,8 @@
 	let description = $state('');
 	let expiryDate = $state('');
 	let stakes = $state<'vxp' | 'bragging'>('bragging');
+	let socialPremiumId = $state<SocialPremiumOptionId>(DEFAULT_SOCIAL_PREMIUM_ID);
+	let socialPremiumCustom = $state('');
 	let audience = $state<'public' | 'friends' | 'group'>('public');
 	let availableGroups = $state<RegistryDid.Group[]>([]);
 	let selectedGroupIds = $state<string[]>([]);
@@ -41,6 +49,8 @@
 		description = '';
 		expiryDate = '';
 		stakes = 'bragging';
+		socialPremiumId = DEFAULT_SOCIAL_PREMIUM_ID;
+		socialPremiumCustom = '';
 		audience = 'public';
 		selectedGroupIds = [];
 		status = 'enabled';
@@ -72,6 +82,28 @@
 			return;
 		}
 
+		const socialReward =
+			stakes === 'bragging'
+				? formatSocialPremium({
+						optionId: socialPremiumId,
+						customTitle: socialPremiumCustom,
+						locale: $localeStore
+					})
+				: undefined;
+
+		if (stakes === 'bragging' && socialReward === undefined) {
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'challenge.create.error.missing_premium' }),
+				message: t({
+					locale: $localeStore,
+					key: 'challenge.create.error.missing_premium_message'
+				}),
+				type: 'warning'
+			});
+
+			return;
+		}
+
 		status = 'pending';
 
 		const domain: RegistryDid.BalanceDomain =
@@ -88,16 +120,7 @@
 				description: description || title,
 				expiryDate: BigInt(new Date(expiryDate).getTime()),
 				balanceDomain: domain,
-				socialReward:
-					stakes === 'bragging'
-						? {
-								title: t({ locale: $localeStore, key: 'challenge.create.social_reward_title' }),
-								description: t({
-									locale: $localeStore,
-									key: 'challenge.create.social_reward_desc'
-								})
-							}
-						: undefined,
+				socialReward,
 				tradingAccess
 			});
 
@@ -219,6 +242,17 @@
 				</button>
 			</div>
 		</div>
+
+		{#if stakes === 'bragging'}
+			<SocialPremiumPicker
+				customTitle={socialPremiumCustom}
+				onChange={({ optionId, customTitle }) => {
+					socialPremiumId = optionId;
+					socialPremiumCustom = customTitle;
+				}}
+				optionId={socialPremiumId}
+			/>
+		{/if}
 
 		<div class="space-y-3">
 			<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">

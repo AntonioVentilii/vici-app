@@ -198,6 +198,7 @@ Static brand assets that aren't components live in `static/branding/`:
 | `collections.constants`                                                     | Juno datastore collection names — keep in sync with `juno.collections.json` and `juno.config.ts`.                                 |
 | `portfolio.constants`                                                       | Portfolio-page knobs.                                                                                                             |
 | `playground.constants` / `vxp-onboarding.constants` / `vxp-trade.constants` | Playground / VXP flow config.                                                                                                     |
+| `social-premium.constants`                                                  | Curated "Fun Dare" premium list + `formatSocialPremium` helper. Single source of truth for `<SocialPremiumPicker />`.             |
 
 ### Common utils — `$lib/utils/`
 

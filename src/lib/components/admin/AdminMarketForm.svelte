@@ -2,7 +2,13 @@
 	import { isNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import type { RegistryDid } from '$declarations';
+	import SocialPremiumPicker from '$lib/components/social/SocialPremiumPicker.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import {
+		DEFAULT_SOCIAL_PREMIUM_ID,
+		formatSocialPremium,
+		type SocialPremiumOptionId
+	} from '$lib/constants/social-premium.constants';
 	import { listGroups } from '$lib/services/group.services';
 	import { createMarket } from '$lib/services/market.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -24,8 +30,8 @@
 
 	let marketType = $state<'Binary' | 'Categorical'>('Binary');
 	let outcomes = $state<string[]>(['Option A', 'Option B']);
-	let socialRewardTitle = $state('');
-	let socialRewardDescription = $state('');
+	let socialPremiumId = $state<SocialPremiumOptionId>(DEFAULT_SOCIAL_PREMIUM_ID);
+	let socialPremiumCustom = $state('');
 
 	let selectedDomain = $state<'ViciXp' | 'Social'>('ViciXp');
 
@@ -66,6 +72,29 @@
 		const domain: RegistryDid.BalanceDomain =
 			selectedDomain === 'Social' ? { Social: null } : { ViciXp: null };
 
+		const socialReward =
+			selectedDomain === 'Social'
+				? formatSocialPremium({
+						optionId: socialPremiumId,
+						customTitle: socialPremiumCustom,
+						locale: $localeStore
+					})
+				: undefined;
+
+		if (selectedDomain === 'Social' && socialReward === undefined) {
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'challenge.create.error.missing_premium' }),
+				message: t({
+					locale: $localeStore,
+					key: 'challenge.create.error.missing_premium_message'
+				}),
+				type: 'warning'
+			});
+			status = 'enabled';
+
+			return;
+		}
+
 		try {
 			await createMarket({
 				title,
@@ -73,13 +102,7 @@
 				expiryDate: BigInt(new Date(expiryDate).getTime()),
 				outcomes: marketType === 'Categorical' ? outcomes : [],
 				balanceDomain: domain,
-				socialReward:
-					selectedDomain === 'Social'
-						? {
-								title: socialRewardTitle,
-								description: socialRewardDescription
-							}
-						: undefined,
+				socialReward,
 				tradingAccess
 			});
 
@@ -87,8 +110,8 @@
 			description = '';
 			expiryDate = '';
 			outcomes = ['Option A', 'Option B'];
-			socialRewardTitle = '';
-			socialRewardDescription = '';
+			socialPremiumId = DEFAULT_SOCIAL_PREMIUM_ID;
+			socialPremiumCustom = '';
 			marketType = 'Binary';
 			isRestricted = false;
 			selectedGroupIds = [];
@@ -291,40 +314,14 @@
 				<span class="text-primary text-xs font-bold tracking-widest uppercase">
 					{t({ locale: $localeStore, key: 'admin.markets.form.social.section_title' })}
 				</span>
-				<div class="space-y-4">
-					<div class="space-y-2">
-						<label class="text-primary text-[10px] font-bold uppercase" for="reward-title">
-							{t({ locale: $localeStore, key: 'admin.markets.form.social.reward_title' })}
-						</label>
-						<input
-							id="reward-title"
-							class="bg-card text-foreground ring-primary/30 focus:ring-primary w-full rounded-xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
-							oninput={(e) => (socialRewardTitle = e.currentTarget.value)}
-							placeholder={t({
-								locale: $localeStore,
-								key: 'admin.markets.form.social.reward_title_placeholder'
-							})}
-							type="text"
-							value={socialRewardTitle}
-						/>
-					</div>
-					<div class="space-y-2">
-						<label class="text-primary text-[10px] font-bold uppercase" for="reward-desc">
-							{t({ locale: $localeStore, key: 'admin.markets.form.social.reward_description' })}
-						</label>
-						<textarea
-							id="reward-desc"
-							class="bg-card text-foreground ring-primary/30 focus:ring-primary w-full rounded-xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
-							oninput={(e) => (socialRewardDescription = e.currentTarget.value)}
-							placeholder={t({
-								locale: $localeStore,
-								key: 'admin.markets.form.social.reward_description_placeholder'
-							})}
-							rows="2"
-							value={socialRewardDescription}
-						></textarea>
-					</div>
-				</div>
+				<SocialPremiumPicker
+					customTitle={socialPremiumCustom}
+					onChange={({ optionId, customTitle }) => {
+						socialPremiumId = optionId;
+						socialPremiumCustom = customTitle;
+					}}
+					optionId={socialPremiumId}
+				/>
 			</div>
 		{/if}
 
