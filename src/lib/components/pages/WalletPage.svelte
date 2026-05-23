@@ -11,7 +11,10 @@
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
 	import WalletStats from '$lib/components/wallet/WalletStats.svelte';
+	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import { markets } from '$lib/derived/markets.derived';
 	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
+	import { tradeHistory } from '$lib/derived/trade-history.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { sendIc } from '$lib/services/send.services';
 	import {
@@ -23,11 +26,13 @@
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
+	import type { MarketId } from '$lib/types/market';
 	import type { Token } from '$lib/types/token';
 	import type { Transaction } from '$lib/types/wallet';
 	import { emit } from '$lib/utils/events.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
+	import { mapClearingEventToTransaction } from '$lib/utils/transactions.utils';
 
 	let transactions = $state<Transaction[]>([]);
 	let batchSize = $state<bigint>(20n);
@@ -48,10 +53,37 @@
 		{ value: 'receive', label: t({ locale: $localeStore, key: 'wallet.tab.receive' }) }
 	]);
 
+	// Map clearing trade-history events into the same `Transaction` shape as
+	// ICRC ledger rows. The store is populated by `LoaderTradeHistory` and is
+	// scoped to the active balance domain; we only need to pair each event
+	// with its market to resolve the (VXP-denominated) settlement token.
+	const clearingTransactions = $derived.by<Transaction[]>(() => {
+		if ($tradeHistory.length === 0) {
+			return [];
+		}
+
+		const marketById = new Map($markets.map((m) => [m.id, m] as const));
+
+		return $tradeHistory.map((event) => {
+			const market = marketById.get(event.series_id as MarketId);
+			const token = market?.token ?? VXP_TOKEN;
+
+			return mapClearingEventToTransaction({
+				event,
+				token,
+				user: event.user.toText()
+			});
+		});
+	});
+
 	const filteredTransactions = $derived.by(() => {
 		const allowed = new Set($walletUiTokens.map((t) => t.ledgerCanisterId));
 
-		return transactions.filter((tx) => allowed.has(tx.token.ledgerCanisterId));
+		const merged = [...transactions, ...clearingTransactions].filter((tx) =>
+			allowed.has(tx.token.ledgerCanisterId)
+		);
+
+		return sortNewestFirst(merged);
 	});
 
 	const sortNewestFirst = (arr: Transaction[]) =>
