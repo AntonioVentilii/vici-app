@@ -1,3 +1,17 @@
+/**
+ * Regenerate `src/lib/constants/messages/<locale>.ts` from a prototype
+ * source file (typically `VICI_BETA_V1.1/i18n.js`).
+ *
+ * Locales for which the prototype has no entry (e.g. `zh-CN`, which was
+ * authored directly in the repo) are preserved by re-reading their
+ * existing catalog. This means the script is safe to re-run without
+ * losing manually-authored translations.
+ *
+ * After running this, run `npm run check:i18n` to confirm all catalogs
+ * are key-aligned.
+ *
+ * See `docs/ai/frontend/i18n.md`.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -369,7 +383,54 @@ const appKeys = {
 	}
 };
 
-const locales = ['en', 'it', 'es', 'de', 'fr', 'pt'];
+const locales = ['en', 'it', 'es', 'de', 'fr', 'pt', 'zh-CN'];
+
+const catalogPathFor = (loc) => path.resolve(scriptDir, `../src/lib/constants/messages/${loc}.ts`);
+
+// Mirror the convention in `src/lib/utils/i18n.utils.ts`:
+//   'en'    → 'enMessages'
+//   'zh-CN' → 'zhCnMessages'
+const exportNameFor = (loc) => {
+	const camel = loc.toLowerCase().replace(/[^a-z0-9]+(.)/g, (_, c) => c.toUpperCase());
+
+	return `${camel}Messages`;
+};
+
+/**
+ * Read an existing `<locale>.ts` catalog and return its key/value map.
+ * Returns `{}` if the file doesn't exist yet (new locale being added).
+ *
+ * @param {string} loc
+ * @returns {Record<string, string>}
+ */
+const readExistingCatalog = (loc) => {
+	const filePath = catalogPathFor(loc);
+
+	if (!fs.existsSync(filePath)) {
+		return {};
+	}
+
+	const source = fs.readFileSync(filePath, 'utf8');
+	const entries = {};
+	const re = /'([^']+)':\s*("(?:\\"|[^"])*"|'(?:\\'|[^'])*')/g;
+	let match;
+
+	while ((match = re.exec(source)) !== null) {
+		const [, key, raw] = match;
+
+		try {
+			entries[key] = JSON.parse(
+				raw.startsWith("'") ? `"${raw.slice(1, -1).replace(/"/g, '\\"')}"` : raw
+			);
+		} catch {
+			// Fall back to the literal between the quotes — keeps the script
+			// tolerant of legacy escape sequences.
+			entries[key] = raw.slice(1, -1);
+		}
+	}
+
+	return entries;
+};
 
 /** @type {Record<string, string>} */
 let enCatalog = {};
@@ -389,13 +450,21 @@ for (const loc of locales) {
 	}
 
 	const prototype = Object.fromEntries(entries);
-	const merged = { ...appKeys.en, ...prototype, ...appKeys[loc] };
+	const existing = readExistingCatalog(loc);
+	const overrides = appKeys[loc] ?? {};
+	// Precedence (lowest → highest): English defaults, prototype dump,
+	// existing on-disk catalog (preserves hand-authored translations such
+	// as zh-CN), then explicit per-locale appKeys overrides.
+	const merged = { ...appKeys.en, ...prototype, ...existing, ...overrides };
 
 	if (loc === 'en') {
 		enCatalog = merged;
 	}
 
-	if (loc === 'pt') {
+	// Backfill any keys that exist in en but are still missing from the
+	// non-base catalogs with the English value — keeps `npm run check:i18n`
+	// green and gives translators something to overwrite.
+	if (loc !== 'en') {
 		for (const [k, v] of Object.entries(enCatalog)) {
 			if (!(k in merged)) {
 				merged[k] = v;
@@ -407,9 +476,11 @@ for (const loc of locales) {
 		.sort(([a], [b]) => a.localeCompare(b))
 		.map(([k, v]) => `\t'${k}': ${JSON.stringify(v)},`);
 
+	const exportName = exportNameFor(loc);
+
 	fs.writeFileSync(
-		`src/lib/constants/messages/${loc}.ts`,
-		`export const ${loc}Messages = {\n${lines.join('\n')}\n} as const;\n`
+		catalogPathFor(loc),
+		`export const ${exportName} = {\n${lines.join('\n')}\n} as const;\n`
 	);
 
 	console.log(loc, Object.keys(merged).length);

@@ -142,11 +142,12 @@ The local rule `local-rules/no-relative-imports` is **`error`** under
 | `$root`         | repo root                                                                                                     |
 
 ```ts
-import { i18n } from '$lib/stores/i18n.store'; // hypothetical
+import { localeStore } from '$lib/stores/locale.store';
 import type { Market } from '$lib/types/market';
 import { clearingApi } from '$lib/api/clearing.api';
 import { ZERO } from '$lib/constants/app.constants';
 import { syncRoleToEngineOnSet } from '$satellite/services/engine-sync.services';
+import { t } from '$lib/utils/i18n.utils';
 import type { _SERVICE as ClearingService } from '$declarations/clearing/clearing.did';
 ```
 
@@ -162,6 +163,10 @@ import type { _SERVICE as ClearingService } from '$declarations/clearing/clearin
 - `0n` literal — use `ZERO` from `$lib/constants/app.constants` (eslint).
 - `return undefined;` — bare `return;` for early exits, or comment-explain
   in `catch` blocks (eslint).
+- Hardcoded user-visible strings in `.svelte` templates — route through
+  `t({ locale: $localeStore, key })` from `$lib/utils/i18n.utils`. The
+  ESLint rule `local-rules/no-bare-svelte-text` flags this in components
+  that already import `i18n.utils`. See [`i18n.md`](./i18n.md).
 
 ## Where to put new files (decision tree)
 

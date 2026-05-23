@@ -47,15 +47,23 @@ ask) are enforced via CI, eslint, the boundary table in
    If you add a new shared one, extend the catalog in the same PR.
 2. **A11y.** No bare clickable `<div>`s. Real `<button>` / `<a>` elements,
    labelled inputs, decorative icons `aria-hidden`. See
-   [`docs/ai/frontend/a11y.md`](./docs/ai/frontend/a11y.md). (There is no
-   i18n layer yet — keep user copy concentrated where it can later be
-   extracted.)
-3. **The folder taxonomy is closed.** No new top-level folders under
+   [`docs/ai/frontend/a11y.md`](./docs/ai/frontend/a11y.md).
+3. **i18n is non-negotiable.** Every user-visible string goes through
+   `t({ locale: $localeStore, key })` from
+   [`$lib/utils/i18n.utils`](./src/lib/utils/i18n.utils.ts). Add the key to
+   **every** locale catalog under `src/lib/constants/messages/` — never
+   just `en.ts`. The supported locales are declared once in
+   [`$lib/constants/locale.constants`](./src/lib/constants/locale.constants.ts)
+   (`SUPPORTED_LOCALES`). The full workflow lives in
+   [`docs/ai/frontend/i18n.md`](./docs/ai/frontend/i18n.md). Hardcoded
+   English strings in templates are a review-blocking smell, not a
+   stylistic preference.
+4. **The folder taxonomy is closed.** No new top-level folders under
    `src/` or `src/lib/` without explicit ask. New code goes in the folder
    that already owns the concern — see
    [`docs/ai/frontend/structure.md`](./docs/ai/frontend/structure.md) and
    [`docs/ai/satellite/structure.md`](./docs/ai/satellite/structure.md).
-4. **Terminology.** Use **"prediction"**, never "bet" — in code, comments,
+5. **Terminology.** Use **"prediction"**, never "bet" — in code, comments,
    and user-visible copy. Time variables end in `_ms` (milliseconds,
    business logic) or `_ns` (nanoseconds, protocol / idempotency).
    **Never reference temporary or external design source materials** —
@@ -65,12 +73,16 @@ ask) are enforced via CI, eslint, the boundary table in
    design. When a code comment needs to cite a rule, point at
    [`docs/ai/frontend/design.md`](./docs/ai/frontend/design.md) (§ 7 for
    Flow Mode); describe behaviour and intent, not its source.
-5. **Eslint disallowed list is hard policy.** `0n` literal → `ZERO` from
+6. **Eslint disallowed list is hard policy.** `0n` literal → `ZERO` from
    `$lib/constants/app.constants`. `return undefined;` → bare `return;`.
    `local-rules/no-relative-imports` is `error` under `src/**` — use the
    aliases declared in [`svelte.config.js`](./svelte.config.js).
-6. **Run the local gates** ([`pr-and-ci.md`](./docs/ai/pr-and-ci.md#local-quality-gates))
-   before opening a PR.
+   `local-rules/no-bare-svelte-text` flags hardcoded English in any
+   `.svelte` file that already imports `$lib/utils/i18n.utils` — when it
+   fires, route the string through `t(...)` instead of disabling the rule.
+7. **Run the local gates** ([`pr-and-ci.md`](./docs/ai/pr-and-ci.md#local-quality-gates))
+   before opening a PR. Catalog drift across locales is caught by
+   `npm run check:i18n` (auto-runs as part of `npm run lint`).
 
 ---
 
@@ -87,6 +99,7 @@ ask) are enforced via CI, eslint, the boundary table in
 | Add an API call / service / store                  | [`docs/ai/frontend/workflows/new-service.md`](./docs/ai/frontend/workflows/new-service.md)       |
 | Split / refactor a component                       | [`docs/ai/frontend/workflows/refactor-split.md`](./docs/ai/frontend/workflows/refactor-split.md) |
 | Add user-visible text or interactive elements      | [`docs/ai/frontend/a11y.md`](./docs/ai/frontend/a11y.md)                                         |
+| Add or change any user-visible copy / locale       | [`docs/ai/frontend/i18n.md`](./docs/ai/frontend/i18n.md)                                         |
 | Align a screen / token / asset with the app design | [`docs/ai/frontend/design.md`](./docs/ai/frontend/design.md)                                     |
 | Add or change tests                                | [`docs/ai/frontend/testing.md`](./docs/ai/frontend/testing.md)                                   |
 

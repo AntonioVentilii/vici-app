@@ -169,6 +169,7 @@ Static brand assets that aren't components live in `static/branding/`:
 | `trade.store`                                                  | `$lib/stores/`                     | Active-trade UI state.                                                                                                                                                                                                                                                          |
 | `notification.store`                                           | `$lib/stores/`                     | Toasts.                                                                                                                                                                                                                                                                         |
 | `theme.store`                                                  | `$lib/stores/`                     | Light / dark theme.                                                                                                                                                                                                                                                             |
+| `locale.store`                                                 | `$lib/stores/`                     | Active `AppLocale` for i18n. Read as `$localeStore` and feed it to `t({ locale, key })`. Persisted via `LOCALE_STORAGE_KEY`. See [`i18n.md`](./i18n.md).                                                                                                                        |
 | `storage.store`                                                | `$lib/stores/`                     | LocalStorage-backed state.                                                                                                                                                                                                                                                      |
 | `balance-domain.store`                                         | `$lib/stores/`                     | Active balance domain.                                                                                                                                                                                                                                                          |
 | `certified.store`, `certified-setter.store`                    | `$lib/stores/`                     | Certified-state plumbing for IC queries → updates.                                                                                                                                                                                                                              |
@@ -181,52 +182,55 @@ Static brand assets that aren't components live in `static/branding/`:
 
 ### Constants worth knowing — `$lib/constants/`
 
-| File                                                                        | Notes                                                                                             |
-| --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| `app.constants`                                                             | App-wide identifiers, including `ZERO` (use this, not `0n`).                                      |
-| `routes.constants`                                                          | Route paths — never hard-code routes.                                                             |
-| `nav.constants`                                                             | Navigation config (entries, icons, paths).                                                        |
-| `canisters.constants`                                                       | Canister IDs per network.                                                                         |
-| `controllers.constants`                                                     | Satellite controllers / human admins.                                                             |
-| `icdc.constants`                                                            | `VICI_ENGINE_ID` (= `eng_0`) and oracle IDs.                                                      |
-| `tokens/` directory                                                         | Per-token configuration (decimals, symbols, ledger IDs).                                          |
-| `events.constants`                                                          | Custom-event names.                                                                               |
-| `authz.constants`                                                           | Permissions registry.                                                                             |
-| `collections.constants`                                                     | Juno datastore collection names — keep in sync with `juno.collections.json` and `juno.config.ts`. |
-| `portfolio.constants`                                                       | Portfolio-page knobs.                                                                             |
-| `playground.constants` / `vxp-onboarding.constants` / `vxp-trade.constants` | Playground / VXP flow config.                                                                     |
+| File                                                                        | Notes                                                                                                                             |
+| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `app.constants`                                                             | App-wide identifiers, including `ZERO` (use this, not `0n`).                                                                      |
+| `locale.constants`                                                          | `AppLocale`, `SUPPORTED_LOCALES`, `DEFAULT_LOCALE`, `LOCALE_STORAGE_KEY`, and the `Rust`-safe locale bridge for satellite use.    |
+| `messages/{en,it,es,de,fr,pt,zh-CN}.ts`                                     | i18n catalogs. Keys must be aligned across **all** locales — drift fails CI via `npm run check:i18n`. See [`i18n.md`](./i18n.md). |
+| `routes.constants`                                                          | Route paths — never hard-code routes.                                                                                             |
+| `nav.constants`                                                             | Navigation config (entries, icons, paths).                                                                                        |
+| `canisters.constants`                                                       | Canister IDs per network.                                                                                                         |
+| `controllers.constants`                                                     | Satellite controllers / human admins.                                                                                             |
+| `icdc.constants`                                                            | `VICI_ENGINE_ID` (= `eng_0`) and oracle IDs.                                                                                      |
+| `tokens/` directory                                                         | Per-token configuration (decimals, symbols, ledger IDs).                                                                          |
+| `events.constants`                                                          | Custom-event names.                                                                                                               |
+| `authz.constants`                                                           | Permissions registry.                                                                                                             |
+| `collections.constants`                                                     | Juno datastore collection names — keep in sync with `juno.collections.json` and `juno.config.ts`.                                 |
+| `portfolio.constants`                                                       | Portfolio-page knobs.                                                                                                             |
+| `playground.constants` / `vxp-onboarding.constants` / `vxp-trade.constants` | Playground / VXP flow config.                                                                                                     |
 
 ### Common utils — `$lib/utils/`
 
-| Util                                                  | Purpose                                     |
-| ----------------------------------------------------- | ------------------------------------------- |
-| `format.utils`                                        | Number / time / address formatting.         |
-| `parse.utils`                                         | Inverse parsers.                            |
-| `market.utils`                                        | Pure market helpers (status, payoff math).  |
-| `market-filters.utils`                                | Filter predicate composition.               |
-| `market-groups.utils`                                 | Group derivation.                           |
-| `market-token.utils`                                  | Token-aware market helpers.                 |
-| `payoff.utils`                                        | Payoff math.                                |
-| `position.utils`                                      | Position math.                              |
-| `portfolio.utils`                                     | Portfolio aggregation.                      |
-| `trade.utils`                                         | Trade helpers.                              |
-| `transactions.utils`                                  | Transaction formatting.                     |
-| `tokens.utils`                                        | Token lookup / unit conversion.             |
-| `token-ui.utils`                                      | UI-side token helpers (icon resolution, …). |
-| `asset.utils` / `asset-ref.utils`                     | Asset reference helpers.                    |
-| `collateral-ui.utils`                                 | Collateral surfacing helpers.               |
-| `authz.utils`                                         | Authorization predicate helpers.            |
-| `avatar.utils`                                        | Avatar generation.                          |
-| `relation.utils`                                      | Friend / follow helpers.                    |
-| `events.utils`                                        | Custom-event helpers.                       |
-| `clipboard.utils`                                     | Clipboard helpers.                          |
-| `download.utils`                                      | Browser download helpers.                   |
-| `storage.utils`                                       | LocalStorage / sessionStorage helpers.      |
-| `refresh.utils`                                       | Polling / refresh primitives.               |
-| `search.utils`                                        | Search predicates.                          |
-| `playground-display.utils` / `playground-token.utils` | Playground helpers.                         |
-| `balance-domain.utils`                                | Balance-domain helpers.                     |
-| `activity.utils`                                      | Activity-feed helpers.                      |
+| Util                                                  | Purpose                                                                                                                            |
+| ----------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `i18n.utils`                                          | `t({ locale, key, params })` — single entry point for user-visible copy. Catalogs live in `messages/`. See [`i18n.md`](./i18n.md). |
+| `format.utils`                                        | Number / time / address formatting.                                                                                                |
+| `parse.utils`                                         | Inverse parsers.                                                                                                                   |
+| `market.utils`                                        | Pure market helpers (status, payoff math).                                                                                         |
+| `market-filters.utils`                                | Filter predicate composition.                                                                                                      |
+| `market-groups.utils`                                 | Group derivation.                                                                                                                  |
+| `market-token.utils`                                  | Token-aware market helpers.                                                                                                        |
+| `payoff.utils`                                        | Payoff math.                                                                                                                       |
+| `position.utils`                                      | Position math.                                                                                                                     |
+| `portfolio.utils`                                     | Portfolio aggregation.                                                                                                             |
+| `trade.utils`                                         | Trade helpers.                                                                                                                     |
+| `transactions.utils`                                  | Transaction formatting.                                                                                                            |
+| `tokens.utils`                                        | Token lookup / unit conversion.                                                                                                    |
+| `token-ui.utils`                                      | UI-side token helpers (icon resolution, …).                                                                                        |
+| `asset.utils` / `asset-ref.utils`                     | Asset reference helpers.                                                                                                           |
+| `collateral-ui.utils`                                 | Collateral surfacing helpers.                                                                                                      |
+| `authz.utils`                                         | Authorization predicate helpers.                                                                                                   |
+| `avatar.utils`                                        | Avatar generation.                                                                                                                 |
+| `relation.utils`                                      | Friend / follow helpers.                                                                                                           |
+| `events.utils`                                        | Custom-event helpers.                                                                                                              |
+| `clipboard.utils`                                     | Clipboard helpers.                                                                                                                 |
+| `download.utils`                                      | Browser download helpers.                                                                                                          |
+| `storage.utils`                                       | LocalStorage / sessionStorage helpers.                                                                                             |
+| `refresh.utils`                                       | Polling / refresh primitives.                                                                                                      |
+| `search.utils`                                        | Search predicates.                                                                                                                 |
+| `playground-display.utils` / `playground-token.utils` | Playground helpers.                                                                                                                |
+| `balance-domain.utils`                                | Balance-domain helpers.                                                                                                            |
+| `activity.utils`                                      | Activity-feed helpers.                                                                                                             |
 
 ### Schemas — `$lib/schema/`
 
