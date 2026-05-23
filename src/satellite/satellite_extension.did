@@ -35,13 +35,15 @@ type AppListMarketTranslationsArgs = record { series_id : text };
 
 type AppListMarketTranslationsResult = record { items : vec record { series_id : text; locale : text; title : text; description : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
 
-type AppListRejectedFriendshipsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
+type AppListSentFriendRequestsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
 type AppSearchProfilesArgs = record { query_str : text };
 
 type AppSearchProfilesResult = record { items : vec record { owner : text; nickname : text; avatar : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; unlocked_achievements : vec text; contrarian_wins : float64; preferences : opt record { default_amount : record { flow : text; manual : text } } } };
 
 type AppAcceptFriendRequestArgs = record { relation_id : text };
+
+type AppCancelFriendRequestArgs = record { relation_id : text };
 
 type AppFollowUserArgs = record { target : text };
 
@@ -69,9 +71,10 @@ service : {
 	app_list_friends : () -> (AppListFriendsResult) query;
 	app_list_leaderboard : () -> (AppListLeaderboardResult) query;
 	app_list_market_translations : (AppListMarketTranslationsArgs) -> (AppListMarketTranslationsResult) query;
-	app_list_rejected_friendships : () -> (AppListRejectedFriendshipsResult) query;
+	app_list_sent_friend_requests : () -> (AppListSentFriendRequestsResult) query;
 	app_search_profiles : (AppSearchProfilesArgs) -> (AppSearchProfilesResult) query;
 	app_accept_friend_request : (AppAcceptFriendRequestArgs) -> ();
+	app_cancel_friend_request : (AppCancelFriendRequestArgs) -> ();
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_reject_friend_request : (AppRejectFriendRequestArgs) -> ();
 	app_send_friend_request : (AppSendFriendRequestArgs) -> ();

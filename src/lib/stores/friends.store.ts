@@ -1,7 +1,7 @@
 import {
 	getFriendRequests,
 	getFriends,
-	getRejectedFriendships
+	getSentFriendRequests
 } from '$lib/services/relation.services';
 import { userStore } from '$lib/stores/user.store';
 import type { Relation } from '$lib/types/relation';
@@ -19,7 +19,7 @@ import { derived, get, writable, type Readable } from 'svelte/store';
  */
 export const friendsListStore = writable<Relation[]>([]);
 export const friendRequestsStore = writable<Doc<Relation>[]>([]);
-export const rejectedFriendshipsStore = writable<Doc<Relation>[]>([]);
+export const sentFriendRequestsStore = writable<Doc<Relation>[]>([]);
 
 /**
  * Flips to `true` the first time `refreshFriendRelations` completes for the
@@ -39,16 +39,21 @@ export const friendRequestsCountStore: Readable<number> = derived(
 	($requests) => $requests.length
 );
 
+export const sentFriendRequestsCountStore: Readable<number> = derived(
+	sentFriendRequestsStore,
+	($sent) => $sent.length
+);
+
 const collectCounterparts = ({
 	viewer,
 	friends,
 	requests,
-	rejected
+	sent
 }: {
 	viewer: string | undefined;
 	friends: Relation[];
 	requests: Doc<Relation>[];
-	rejected: Doc<Relation>[];
+	sent: Doc<Relation>[];
 }): string[] => {
 	const targets = new Set<string>();
 
@@ -68,7 +73,7 @@ const collectCounterparts = ({
 		push(doc.data);
 	}
 
-	for (const doc of rejected) {
+	for (const doc of sent) {
 		push(doc.data);
 	}
 
@@ -79,15 +84,15 @@ let inFlight: Promise<void> | undefined;
 
 const runRefresh = async (): Promise<void> => {
 	try {
-		const [friends, requests, rejected] = await Promise.all([
+		const [friends, requests, sent] = await Promise.all([
 			getFriends().catch(() => []),
 			getFriendRequests().catch(() => []),
-			getRejectedFriendships().catch(() => [])
+			getSentFriendRequests().catch(() => [])
 		]);
 
 		friendsListStore.set(friends);
 		friendRequestsStore.set(requests);
-		rejectedFriendshipsStore.set(rejected);
+		sentFriendRequestsStore.set(sent);
 		friendsRelationsLoadedStore.set(true);
 
 		// Hydrate the shared `profilesStore` for every counterpart of the
@@ -95,7 +100,7 @@ const runRefresh = async (): Promise<void> => {
 		// profile.services → friends.store → profile.services.
 		const { loadProfilesByPrincipals } = await import('$lib/services/profile.services');
 		const viewer = get(userStore).user?.owner;
-		const principals = collectCounterparts({ viewer, friends, requests, rejected });
+		const principals = collectCounterparts({ viewer, friends, requests, sent });
 		await loadProfilesByPrincipals({ principals });
 	} finally {
 		inFlight = undefined;
@@ -116,6 +121,6 @@ export const refreshFriendRelations = (): Promise<void> => {
 export const clearFriendRelations = (): void => {
 	friendsListStore.set([]);
 	friendRequestsStore.set([]);
-	rejectedFriendshipsStore.set([]);
+	sentFriendRequestsStore.set([]);
 	friendsRelationsLoadedStore.set(false);
 };

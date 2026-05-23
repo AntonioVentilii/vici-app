@@ -8,6 +8,7 @@
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import {
 		acceptFriendRequest,
+		cancelFriendRequest,
 		rejectFriendRequest,
 		sendFriendRequest,
 		unfriendUser
@@ -17,7 +18,7 @@
 		friendsListStore,
 		friendsRelationsLoadedStore,
 		refreshFriendRelations,
-		rejectedFriendshipsStore
+		sentFriendRequestsStore
 	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -30,15 +31,17 @@
 		initialTab?: TabType;
 	}
 
-	type TabType = 'active' | 'requests' | 'rejected';
+	type TabType = 'active' | 'requests';
+	type RequestsSubTab = 'received' | 'sent';
 
 	const { userPrincipal, initialTab = 'active' }: Props = $props();
 
 	let activeTab = $state<TabType>(untrack(() => initialTab));
+	let requestsSubTab = $state<RequestsSubTab>('received');
 
 	const activeFriends = $derived($friendsListStore);
 	const pendingRequests = $derived($friendRequestsStore);
-	const rejectedRelations = $derived($rejectedFriendshipsStore);
+	const sentRequests = $derived($sentFriendRequestsStore);
 	const friendProfiles = $derived($profilesStore);
 
 	// Only show the cold-load spinner when the store has never been
@@ -140,6 +143,35 @@
 		}
 	};
 
+	// Atomicity is guaranteed satellite-side: the cancel is a
+	// version-locked delete of the relation doc, so a race with the
+	// recipient's accept/reject between read and write traps with a
+	// version mismatch. We surface that error verbatim — refreshing the
+	// store afterwards re-syncs the UI with the actual on-chain state
+	// (e.g. the relation now appears under "Active" if accept won the
+	// race).
+	const handleCancel = async (doc: Doc<Relation>) => {
+		processingKey = doc.key;
+
+		try {
+			await cancelFriendRequest({ currentRelation: doc });
+			await refreshFriendRelations();
+		} catch (err: unknown) {
+			console.error(err);
+			notificationsStore.add({
+				title: friendsErrorTitle,
+				message:
+					err instanceof Error && err.message
+						? err.message
+						: t({ locale: $localeStore, key: 'social.friends.error.cancel_failed' }),
+				type: 'error'
+			});
+			await refreshFriendRelations();
+		} finally {
+			processingKey = null;
+		}
+	};
+
 	const handleUnfriend = async (friendId: string) => {
 		unfriendingId = friendId;
 
@@ -188,20 +220,6 @@
 				locale: $localeStore,
 				key: 'social.friends.tab.requests_count',
 				params: { count: pendingRequests.length }
-			})}
-		</button>
-		<button
-			class="friends-tab"
-			class:is-active={activeTab === 'rejected'}
-			aria-selected={activeTab === 'rejected'}
-			onclick={() => (activeTab = 'rejected')}
-			role="tab"
-			type="button"
-		>
-			{t({
-				locale: $localeStore,
-				key: 'social.friends.tab.rejected_count',
-				params: { count: rejectedRelations.length }
 			})}
 		</button>
 	</div>
@@ -326,13 +344,100 @@
 				</ul>
 			{/if}
 		{:else if activeTab === 'requests'}
-			{#if pendingRequests.length === 0}
+			<div class="friends-subtabs" role="tablist">
+				<button
+					class="friends-subtab"
+					class:is-active={requestsSubTab === 'received'}
+					aria-selected={requestsSubTab === 'received'}
+					onclick={() => (requestsSubTab = 'received')}
+					role="tab"
+					type="button"
+				>
+					{t({
+						locale: $localeStore,
+						key: 'social.friends.subtab.received_count',
+						params: { count: pendingRequests.length }
+					})}
+				</button>
+				<button
+					class="friends-subtab"
+					class:is-active={requestsSubTab === 'sent'}
+					aria-selected={requestsSubTab === 'sent'}
+					onclick={() => (requestsSubTab = 'sent')}
+					role="tab"
+					type="button"
+				>
+					{t({
+						locale: $localeStore,
+						key: 'social.friends.subtab.sent_count',
+						params: { count: sentRequests.length }
+					})}
+				</button>
+			</div>
+
+			{#if requestsSubTab === 'received'}
+				{#if pendingRequests.length === 0}
+					<p class="friends-empty">
+						{t({ locale: $localeStore, key: 'social.friends.empty.requests' })}
+					</p>
+				{:else}
+					<ul class="friends-list">
+						{#each pendingRequests as doc (doc.key)}
+							{@const friendId = otherParticipant(doc.data)}
+							{@const profile = friendId ? friendProfiles.get(friendId) : undefined}
+							{@const isProcessing = processingKey === doc.key}
+
+							<li class="friends-row">
+								<span class="friends-avatar">
+									<Avatar
+										class="h-full w-full"
+										avatar={profile?.avatar}
+										nickname={profile?.nickname ??
+											t({ locale: $localeStore, key: 'social.friends.fallback.nickname' })}
+										owner={profile?.owner ?? friendId ?? ''}
+									/>
+								</span>
+								<div class="friends-row-copy">
+									<span class="friends-row-name">
+										@{profile?.nickname ??
+											t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
+									</span>
+									<span class="friends-row-meta num">
+										{#if friendId}
+											<PrincipalText principal={friendId} />
+										{/if}
+									</span>
+								</div>
+								<div class="friends-row-actions">
+									<Button
+										aria-label={t({ locale: $localeStore, key: 'social.friends.action.reject' })}
+										onclick={() => handleReject(doc)}
+										size="sm"
+										status={isProcessing ? 'pending' : 'enabled'}
+										variant="outline"
+									>
+										<X aria-hidden="true" size={14} strokeWidth={1.8} />
+									</Button>
+									<Button
+										aria-label={t({ locale: $localeStore, key: 'social.friends.action.accept' })}
+										onclick={() => handleAccept(doc)}
+										size="sm"
+										status={isProcessing ? 'pending' : 'enabled'}
+									>
+										<Check aria-hidden="true" size={14} strokeWidth={1.8} />
+									</Button>
+								</div>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			{:else if sentRequests.length === 0}
 				<p class="friends-empty">
-					{t({ locale: $localeStore, key: 'social.friends.empty.requests' })}
+					{t({ locale: $localeStore, key: 'social.friends.empty.sent' })}
 				</p>
 			{:else}
 				<ul class="friends-list">
-					{#each pendingRequests as doc (doc.key)}
+					{#each sentRequests as doc (doc.key)}
 						{@const friendId = otherParticipant(doc.data)}
 						{@const profile = friendId ? friendProfiles.get(friendId) : undefined}
 						{@const isProcessing = processingKey === doc.key}
@@ -359,65 +464,22 @@
 								</span>
 							</div>
 							<div class="friends-row-actions">
+								<span class="friends-pending-badge">
+									{t({ locale: $localeStore, key: 'social.friends.pending_badge' })}
+								</span>
 								<Button
-									aria-label={t({ locale: $localeStore, key: 'social.friends.action.reject' })}
-									onclick={() => handleReject(doc)}
+									onclick={() => handleCancel(doc)}
 									size="sm"
 									status={isProcessing ? 'pending' : 'enabled'}
 									variant="outline"
 								>
-									<X aria-hidden="true" size={14} strokeWidth={1.8} />
-								</Button>
-								<Button
-									aria-label={t({ locale: $localeStore, key: 'social.friends.action.accept' })}
-									onclick={() => handleAccept(doc)}
-									size="sm"
-									status={isProcessing ? 'pending' : 'enabled'}
-								>
-									<Check aria-hidden="true" size={14} strokeWidth={1.8} />
+									{t({ locale: $localeStore, key: 'social.friends.action.cancel' })}
 								</Button>
 							</div>
 						</li>
 					{/each}
 				</ul>
 			{/if}
-		{:else if rejectedRelations.length === 0}
-			<p class="friends-empty">
-				{t({ locale: $localeStore, key: 'social.friends.empty.rejected' })}
-			</p>
-		{:else}
-			<ul class="friends-list">
-				{#each rejectedRelations as doc (doc.key)}
-					{@const friendId = otherParticipant(doc.data)}
-					{@const profile = friendId ? friendProfiles.get(friendId) : undefined}
-
-					<li class="friends-row is-rejected">
-						<span class="friends-avatar friends-avatar-muted">
-							<Avatar
-								class="h-full w-full"
-								avatar={profile?.avatar}
-								nickname={profile?.nickname ??
-									t({ locale: $localeStore, key: 'social.friends.fallback.nickname' })}
-								owner={profile?.owner ?? friendId ?? ''}
-							/>
-						</span>
-						<div class="friends-row-copy">
-							<span class="friends-row-name friends-row-name-rejected">
-								@{profile?.nickname ??
-									t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
-							</span>
-							<span class="friends-row-meta num">
-								{#if friendId}
-									<PrincipalText principal={friendId} />
-								{/if}
-							</span>
-						</div>
-						<span class="friends-rejected-badge">
-							{t({ locale: $localeStore, key: 'social.friends.rejected_badge' })}
-						</span>
-					</li>
-				{/each}
-			</ul>
 		{/if}
 	</div>
 </div>
@@ -436,7 +498,7 @@
 
 	.friends-tabs {
 		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: 0.25rem;
 		padding: 0.25rem;
 		border: 1px solid var(--border-base);
@@ -465,6 +527,54 @@
 		background: var(--bg-popover);
 		color: var(--text-base);
 		box-shadow: var(--shadow-card);
+	}
+
+	.friends-subtabs {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.25rem;
+		padding: 0.2rem;
+		margin-bottom: 0.25rem;
+		border: 1px solid var(--border-base);
+		border-radius: 0.7rem;
+		background: var(--bg-surface);
+	}
+
+	.friends-subtab {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.4rem 0.5rem;
+		border: 0;
+		border-radius: 0.5rem;
+		background: transparent;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		font-weight: 600;
+		cursor: pointer;
+		transition:
+			background-color var(--d-hover) var(--ease-vici),
+			color var(--d-hover) var(--ease-vici);
+	}
+
+	.friends-subtab.is-active {
+		background: var(--bg-popover);
+		color: var(--text-base);
+		box-shadow: var(--shadow-card);
+	}
+
+	.friends-pending-badge {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.15rem 0.5rem;
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--text-muted) 18%, transparent);
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
 	}
 
 	.friends-add {
@@ -539,11 +649,6 @@
 		background: var(--bg-surface);
 	}
 
-	.friends-row.is-rejected {
-		background: color-mix(in srgb, var(--color-destructive) 6%, var(--bg-surface));
-		border-color: color-mix(in srgb, var(--color-destructive) 20%, var(--border-base));
-	}
-
 	.friends-avatar {
 		display: flex;
 		overflow: hidden;
@@ -554,11 +659,6 @@
 		justify-content: center;
 		border-radius: 999px;
 		background: var(--bg-popover);
-	}
-
-	.friends-avatar-muted {
-		filter: grayscale(1);
-		opacity: 0.85;
 	}
 
 	.friends-row-copy {
@@ -577,11 +677,6 @@
 		white-space: nowrap;
 	}
 
-	.friends-row-name-rejected {
-		text-decoration: line-through;
-		color: var(--text-muted);
-	}
-
 	.friends-row-meta {
 		color: var(--text-muted);
 		font-size: var(--t-12);
@@ -590,20 +685,6 @@
 	.friends-row-actions {
 		display: inline-flex;
 		gap: 0.4rem;
-	}
-
-	.friends-rejected-badge {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.15rem 0.5rem;
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--color-destructive) 18%, transparent);
-		color: var(--color-destructive);
-		font-family: var(--font-mono);
-		font-size: 0.625rem;
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
 	}
 
 	.friends-confirm {

@@ -34,13 +34,14 @@ import {
 } from '$satellite/services/profile.services';
 import {
 	acceptFriendRequest as acceptFriendRequestFn,
+	cancelFriendRequest as cancelFriendRequestFn,
 	checkFriendship as checkFriendshipFn,
 	followUser as followUserFn,
 	listFollowers as listFollowersFn,
 	listFollowing as listFollowingFn,
 	listFriendRequests as listFriendRequestsFn,
 	listFriends as listFriendsFn,
-	listRejectedFriendships as listRejectedFriendshipsFn,
+	listSentFriendRequests as listSentFriendRequestsFn,
 	rejectFriendRequest as rejectFriendRequestFn,
 	sendFriendRequest as sendFriendRequestFn
 } from '$satellite/services/relation.services';
@@ -234,12 +235,12 @@ export const listFriendRequests = defineQuery({
 	})
 });
 
-export const listRejectedFriendships = defineQuery({
+export const listSentFriendRequests = defineQuery({
 	result: j.strictObject({
 		items: j.array(RelationWireSchema)
 	}),
 	handler: () => ({
-		items: listRejectedFriendshipsFn().map(toWireRelation)
+		items: listSentFriendRequestsFn().map(toWireRelation)
 	})
 });
 
@@ -262,6 +263,13 @@ export const rejectFriendRequest = defineUpdate({
 		relationId: j.string()
 	}),
 	handler: rejectFriendRequestFn
+});
+
+export const cancelFriendRequest = defineUpdate({
+	args: j.strictObject({
+		relationId: j.string()
+	}),
+	handler: cancelFriendRequestFn
 });
 
 export const followUser = defineUpdate({

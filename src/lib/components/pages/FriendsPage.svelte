@@ -9,12 +9,10 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
-	type FriendsTab = 'active' | 'requests' | 'rejected';
+	type FriendsTab = 'active' | 'requests';
 
 	const tabParam = $derived(page.url.searchParams.get('tab'));
-	const initialTab: FriendsTab = $derived(
-		tabParam === 'requests' || tabParam === 'rejected' ? tabParam : 'active'
-	);
+	const initialTab: FriendsTab = $derived(tabParam === 'requests' ? tabParam : 'active');
 </script>
 
 <div class="friends-page">

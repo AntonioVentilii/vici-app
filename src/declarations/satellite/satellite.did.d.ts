@@ -12,6 +12,9 @@ import type { IDL } from '@icp-sdk/core/candid';
 export interface AppAcceptFriendRequestArgs {
 	relation_id: string;
 }
+export interface AppCancelFriendRequestArgs {
+	relation_id: string;
+}
 export interface AppCheckFriendshipArgs {
 	user_a: string;
 	user_b: string;
@@ -201,7 +204,7 @@ export interface AppListMarketTranslationsResult {
 		outcomes: Array<{ id: string; title: string }>;
 	}>;
 }
-export interface AppListRejectedFriendshipsResult {
+export interface AppListSentFriendRequestsResult {
 	items: Array<{
 		viewer_role:
 			| []
@@ -318,6 +321,7 @@ export interface AppUpsertMarketTranslationResult {
 }
 export interface _SERVICE {
 	app_accept_friend_request: ActorMethod<[AppAcceptFriendRequestArgs], undefined>;
+	app_cancel_friend_request: ActorMethod<[AppCancelFriendRequestArgs], undefined>;
 	app_check_friendship: ActorMethod<[AppCheckFriendshipArgs], AppCheckFriendshipResult>;
 	app_check_nickname_availability: ActorMethod<
 		[AppCheckNicknameAvailabilityArgs],
@@ -339,7 +343,7 @@ export interface _SERVICE {
 		[AppListMarketTranslationsArgs],
 		AppListMarketTranslationsResult
 	>;
-	app_list_rejected_friendships: ActorMethod<[], AppListRejectedFriendshipsResult>;
+	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
 	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;

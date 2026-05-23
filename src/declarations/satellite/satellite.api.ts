@@ -336,7 +336,7 @@ const listMarketTranslations = async (
 	return AppListMarketTranslationsResultSchema.parse(result);
 };
 
-const AppListRejectedFriendshipsResultSchema = j.strictObject({
+const AppListSentFriendRequestsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
 			category: j.enum(['FRIEND', 'follow', 'GROUP']),
@@ -349,19 +349,16 @@ const AppListRejectedFriendshipsResultSchema = j.strictObject({
 	)
 });
 
-const listRejectedFriendships = async (): Promise<
-	j.infer<typeof AppListRejectedFriendshipsResultSchema>
+const listSentFriendRequests = async (): Promise<
+	j.infer<typeof AppListSentFriendRequestsResultSchema>
 > => {
-	const { app_list_rejected_friendships } = await getSatelliteExtendedActor<SatelliteActor>({
+	const { app_list_sent_friend_requests } = await getSatelliteExtendedActor<SatelliteActor>({
 		idlFactory
 	});
-	const idlResult = await app_list_rejected_friendships();
+	const idlResult = await app_list_sent_friend_requests();
 
-	const result = schemaFromIdl({
-		schema: AppListRejectedFriendshipsResultSchema,
-		value: idlResult
-	});
-	return AppListRejectedFriendshipsResultSchema.parse(result);
+	const result = schemaFromIdl({ schema: AppListSentFriendRequestsResultSchema, value: idlResult });
+	return AppListSentFriendRequestsResultSchema.parse(result);
 };
 
 const AppSearchProfilesArgsSchema = j.strictObject({ queryStr: j.string() });
@@ -425,6 +422,23 @@ const acceptFriendRequest = async (
 		idlFactory
 	});
 	await app_accept_friend_request(idlArgs);
+};
+
+const AppCancelFriendRequestArgsSchema = j.strictObject({ relationId: j.string() });
+
+const cancelFriendRequest = async (
+	args: j.infer<typeof AppCancelFriendRequestArgsSchema>
+): Promise<void> => {
+	const parsedArgs = AppCancelFriendRequestArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppCancelFriendRequestArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_cancel_friend_request']>[0];
+
+	const { app_cancel_friend_request } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	await app_cancel_friend_request(idlArgs);
 };
 
 const AppFollowUserArgsSchema = j.strictObject({ target: j.string() });
@@ -578,9 +592,10 @@ export const functions = {
 	listFriends,
 	listLeaderboard,
 	listMarketTranslations,
-	listRejectedFriendships,
+	listSentFriendRequests,
 	searchProfiles,
 	acceptFriendRequest,
+	cancelFriendRequest,
 	followUser,
 	rejectFriendRequest,
 	sendFriendRequest,

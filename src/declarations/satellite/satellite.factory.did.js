@@ -8,6 +8,7 @@
 
 export const idlFactory = ({ IDL }) => {
 	const AppAcceptFriendRequestArgs = IDL.Record({ relation_id: IDL.Text });
+	const AppCancelFriendRequestArgs = IDL.Record({ relation_id: IDL.Text });
 	const AppCheckFriendshipArgs = IDL.Record({
 		user_a: IDL.Text,
 		user_b: IDL.Text
@@ -290,7 +291,7 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
-	const AppListRejectedFriendshipsResult = IDL.Record({
+	const AppListSentFriendRequestsResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
 				viewer_role: IDL.Opt(
@@ -440,6 +441,7 @@ export const idlFactory = ({ IDL }) => {
 
 	return IDL.Service({
 		app_accept_friend_request: IDL.Func([AppAcceptFriendRequestArgs], [], []),
+		app_cancel_friend_request: IDL.Func([AppCancelFriendRequestArgs], [], []),
 		app_check_friendship: IDL.Func([AppCheckFriendshipArgs], [AppCheckFriendshipResult], ['query']),
 		app_check_nickname_availability: IDL.Func(
 			[AppCheckNicknameAvailabilityArgs],
@@ -468,7 +470,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppListMarketTranslationsResult],
 			['query']
 		),
-		app_list_rejected_friendships: IDL.Func([], [AppListRejectedFriendshipsResult], ['query']),
+		app_list_sent_friend_requests: IDL.Func([], [AppListSentFriendRequestsResult], ['query']),
 		app_reject_friend_request: IDL.Func([AppRejectFriendRequestArgs], [], []),
 		app_search_profiles: IDL.Func([AppSearchProfilesArgs], [AppSearchProfilesResult], ['query']),
 		app_send_friend_request: IDL.Func([AppSendFriendRequestArgs], [], []),

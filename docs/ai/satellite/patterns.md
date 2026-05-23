@@ -156,7 +156,7 @@ deserializer is happy.
 - **Array results (`j.array(NestedSchema)`)** — always use the wire schema.
   Currently affected: `listLeaderboard`, `searchProfiles`,
   `listMarketTranslations`, `listFriends`, `listFollowers`,
-  `listFollowing`, `listFriendRequests`, `listRejectedFriendships`.
+  `listFollowing`, `listFriendRequests`, `listSentFriendRequests`.
 - **`Option<NestedSchema>` results** (e.g. `getProfile.profile`) — leave
   camelCase as-is. Juno emits `#[json_data(nested)]` on `Option<T>` so
   the camelCase mirror handles it correctly.
@@ -247,6 +247,66 @@ Two rules:
 - When the query exposes an `exclude` parameter (typically the
   editor's principal), wire it through to the assertion's "skip my
   own doc" filter so the two layers can never disagree.
+
+## Atomic cancel via version-locked delete
+
+When an endpoint cancels a pending state-machine doc (e.g. retract a
+friend request the sender just sent), the cancel must not race with the
+counterparty mutating that same doc (e.g. recipient accepting the
+request). The Juno datastore exposes exactly one primitive for this:
+`deleteDocStore` accepts a `doc.version`, and the canister traps if the
+on-chain version moved between read and delete.
+
+```ts
+export const cancelFriendRequest = ({ relationId }: { relationId: string }): void => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+
+	const doc = getDocStore({
+		collection: Collection.RELATIONS,
+		key: relationId,
+		caller
+	});
+
+	if (isNullish(doc)) {
+		throw new Error('Relation does not exist');
+	}
+
+	const relation = decodeDocData<Relation>(doc.data);
+
+	if (relation.participants[0] !== callerText) {
+		throw new Error('Only the sender can cancel a friend request.');
+	}
+
+	if (relation.state !== RelationState.PENDING) {
+		throw new Error(`Cannot cancel a request in state "${relation.state}".`);
+	}
+
+	deleteDocStore({
+		collection: Collection.RELATIONS,
+		key: relationId,
+		doc: { version: doc.version }, // ← version lock = atomicity
+		caller
+	});
+};
+```
+
+Rules:
+
+- **Single write, conflict-detecting.** Do not implement cancel as a
+  "transition to CANCELLED state via `setDocStore`" — that would be a
+  second write that itself races with the recipient's accept. A
+  versioned delete is the only single-write move the datastore exposes
+  that detects mid-flight conflicts.
+- **Validate state in the same handler.** Read → check state &
+  ownership → delete in one canister call. The narrow window between
+  `getDocStore` and `deleteDocStore` is covered by the version lock.
+- **FE refreshes after the catch.** When the trap fires (e.g. the
+  counterparty won the race), the FE should still re-fetch the store so
+  the UI lands on the real on-chain state (e.g. the request now shows
+  under "Active" because accept won). See `handleCancel` in
+  [`src/lib/components/social/FriendsList.svelte`](../../../src/lib/components/social/FriendsList.svelte)
+  for the pattern.
 
 ## Idempotency in hooks
 

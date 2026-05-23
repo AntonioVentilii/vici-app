@@ -32,6 +32,21 @@ export const rejectFriendRequest = async ({
 };
 
 /**
+ * Cancels a friend request previously sent by the caller. The satellite
+ * enforces atomicity via a version-locked delete: if the recipient
+ * accepts or rejects between the FE click and the canister write, the
+ * cancel traps and the user gets an error — there is no race window
+ * where both a cancel and an accept succeed.
+ */
+export const cancelFriendRequest = async ({
+	currentRelation
+}: {
+	currentRelation: Doc<Relation> | { key: string };
+}): Promise<void> => {
+	await functions.cancelFriendRequest({ relationId: currentRelation.key });
+};
+
+/**
  * Removes a friend relation and rebalances group admins so groups don't end up
  * pointing at a no-longer-friend pair.
  */
@@ -83,8 +98,8 @@ export const getFriendRequests = async (): Promise<Doc<Relation>[]> => {
 	});
 };
 
-export const getRejectedFriendships = async (): Promise<Doc<Relation>[]> => {
-	const { items } = await functions.listRejectedFriendships();
+export const getSentFriendRequests = async (): Promise<Doc<Relation>[]> => {
+	const { items } = await functions.listSentFriendRequests();
 
 	return items.map((r) => {
 		const relation = r as Relation;
