@@ -10,7 +10,7 @@
 		formatSocialPremium,
 		type SocialPremiumOptionId
 	} from '$lib/constants/social-premium.constants';
-	import { listGroups } from '$lib/services/group.services';
+	import { getOrCreateFriendsGroup, listGroups } from '$lib/services/group.services';
 	import { createMarket } from '$lib/services/market.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -32,7 +32,11 @@
 	let stakes = $state<'vxp' | 'bragging'>('bragging');
 	let socialPremiumId = $state<SocialPremiumOptionId>(DEFAULT_SOCIAL_PREMIUM_ID);
 	let socialPremiumCustom = $state('');
-	let audience = $state<'public' | 'friends' | 'group'>('public');
+	// `public` is intentionally not a default: the on-chain registry forbids
+	// `Open` trading access on Social markets (`SocialMarketMustBeRestricted`),
+	// and the Public option is shown as "Coming soon" until we wire it through
+	// a follower-graph group on the backend.
+	let audience = $state<'friends' | 'group'>('friends');
 	let availableGroups = $state<RegistryDid.Group[]>([]);
 	let selectedGroupIds = $state<string[]>([]);
 
@@ -51,7 +55,7 @@
 		stakes = 'bragging';
 		socialPremiumId = DEFAULT_SOCIAL_PREMIUM_ID;
 		socialPremiumCustom = '';
-		audience = 'public';
+		audience = 'friends';
 		selectedGroupIds = [];
 		status = 'enabled';
 	};
@@ -104,17 +108,30 @@
 			return;
 		}
 
+		if (audience === 'group' && selectedGroupIds.length === 0) {
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'challenge.create.error.missing_group' }),
+				message: t({ locale: $localeStore, key: 'challenge.create.error.missing_group_message' }),
+				type: 'warning'
+			});
+
+			return;
+		}
+
 		status = 'pending';
 
 		const domain: RegistryDid.BalanceDomain =
 			stakes === 'vxp' ? { ViciXp: null } : { Social: null };
 
-		const tradingAccess: RegistryDid.TradingAccess[] =
-			audience === 'group' && selectedGroupIds.length > 0
-				? [{ Restricted: { groups: selectedGroupIds } }]
-				: [{ Open: null }];
-
 		try {
+			// Both audiences map to `Restricted { groups }` because the registry forbids
+			// `Open` trading access on Social markets. For `friends` we lazily ensure
+			// the caller's auto-managed "My Friends" group exists and is in sync with
+			// the friend graph (see `getOrCreateFriendsGroup`).
+			const groupIds =
+				audience === 'friends' ? [await getOrCreateFriendsGroup()] : selectedGroupIds;
+			const tradingAccess: RegistryDid.TradingAccess[] = [{ Restricted: { groups: groupIds } }];
+
 			await createMarket({
 				title,
 				description: description || title,
@@ -260,14 +277,20 @@
 			</span>
 			<div class="grid grid-cols-3 gap-2">
 				<button
-					class="rounded-xl border-2 px-3 py-2.5 text-xs font-bold transition-all {audience ===
-					'public'
-						? 'border-foreground bg-foreground text-background'
-						: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
-					onclick={() => (audience = 'public')}
+					class="border-border bg-foreground/5 text-muted-foreground relative cursor-not-allowed rounded-xl border-2 px-3 py-2.5 text-xs font-bold opacity-60"
+					aria-label={t({
+						locale: $localeStore,
+						key: 'challenge.create.audience.public_soon_aria'
+					})}
+					disabled
 					type="button"
 				>
 					{t({ locale: $localeStore, key: 'challenge.create.audience.public' })}
+					<span
+						class="bg-primary/20 text-primary absolute -top-1.5 -right-1.5 rounded-full px-1.5 py-0.5 text-[8px] font-black tracking-wider uppercase"
+					>
+						{t({ locale: $localeStore, key: 'challenge.create.audience.public_soon' })}
+					</span>
 				</button>
 				<button
 					class="rounded-xl border-2 px-3 py-2.5 text-xs font-bold transition-all {audience ===

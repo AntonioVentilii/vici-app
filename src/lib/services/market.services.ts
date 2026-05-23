@@ -12,13 +12,13 @@ import {
 import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
 import { ActivityType } from '$lib/enums/social';
 import { UserRole } from '$lib/enums/user';
+import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
-import { listSeriesCategories } from '$lib/services/category.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
+import { listMarketTagsBySeries } from '$lib/services/market-tags.services';
 import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
-import type { SeriesCategory } from '$lib/types/category';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
 import type { Activity } from '$lib/types/social';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
@@ -81,6 +81,20 @@ export const createMarket = async ({
 		throw new Error(
 			'Unauthorized: only admins or creators can create financial markets. ' +
 				'Regular users may only create social (bragging-stakes) challenges.'
+		);
+	}
+
+	// Mirrors the on-chain invariant enforced by the registry (`SocialMarketMustBeRestricted`):
+	// a Social market must have at least one `Restricted` policy and may not contain `Open`.
+	// Catching it here surfaces a deterministic error to callers instead of an opaque
+	// `Failed to add series: {SocialMarketMustBeRestricted: null}` from the canister.
+	if (
+		isSocialMarket &&
+		(tradingAccess.length === 0 || !tradingAccess.every((ta) => 'Restricted' in ta))
+	) {
+		throw new Error(
+			'Social challenges must be restricted to a group (friends or a custom group). ' +
+				'Public social challenges are not supported by the registry.'
 		);
 	}
 
@@ -457,29 +471,31 @@ export const loadMarket = ({
  * Ranks markets by user interest first, then a culture-fallback boost (so users
  * with no declared interests still get a meaningful feed), then activity
  * (volume) and liquidity, with `createdAt` as the final tie-breaker.
+ *
+ * `tagMappings` is the `seriesId → MarketTag[]` projection produced by
+ * {@link listMarketTagsBySeries}; a market matches user interest when
+ * *any* of its tags is in the user's declared interest set. The
+ * `culture` boost is unchanged from the legacy single-category logic —
+ * it now fires when the market carries the `culture` tag and the user
+ * either has no interests or explicitly opted into culture.
  */
 export const rankMarkets = ({
 	markets,
 	userInterests,
-	categoryMappings
+	tagMappings
 }: {
 	markets: Market[];
 	userInterests: Set<string>;
-	categoryMappings: SeriesCategory[];
+	tagMappings: Record<string, MarketTag[]>;
 }): Market[] => {
-	const marketCategoryMap = new Map<string, string>(
-		categoryMappings.map((m) => [m.seriesId, m.categoryId])
-	);
-
 	const computeScore = (m: Market): number => {
-		const categoryId = marketCategoryMap.get(m.id);
+		const tags = tagMappings[m.id] ?? [];
 
-		const interestScore = nonNullish(categoryId) && userInterests.has(categoryId) ? 1000 : 0;
+		const interestScore = tags.some((tag) => userInterests.has(tag)) ? 1000 : 0;
 
+		const hasCultureTag = tags.includes('culture');
 		const cultureScore =
-			categoryId === 'culture' && (userInterests.size === 0 || userInterests.has('culture'))
-				? 500
-				: 0;
+			hasCultureTag && (userInterests.size === 0 || userInterests.has('culture')) ? 500 : 0;
 
 		const volumeScore =
 			m.totalVolume > ZERO
@@ -512,10 +528,10 @@ export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<M
 	const identity = await getIdentityOrAnonymous();
 	const principal = identity.getPrincipal().toText();
 
-	const [markets, profile, categoryMappings] = await Promise.all([
+	const [markets, profile, tagMappings] = await Promise.all([
 		getMarkets(domain),
 		getProfile(principal),
-		listSeriesCategories()
+		listMarketTagsBySeries().catch(() => ({}))
 	]);
 
 	const userInterests = new Set(profile.data.interests ?? []);
@@ -525,7 +541,7 @@ export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<M
 	return rankMarkets({
 		markets: eligibleMarkets,
 		userInterests,
-		categoryMappings
+		tagMappings
 	});
 };
 
