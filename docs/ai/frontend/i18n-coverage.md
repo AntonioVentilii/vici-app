@@ -62,7 +62,7 @@ Routes (thin wrappers around `<XxxPage>` components — usually no copy
 of their own, but check `<svelte:head>` and meta):
 
 - `src/routes/(app)/friends/+page.svelte`
-- `src/routes/(app)/leaderboard/+page.svelte`
+- `src/routes/(app)/social/+page.svelte`
 - `src/routes/(app)/notifications/+page.svelte`
 - `src/routes/(app)/portfolio/+page.svelte`
 - `src/routes/(app)/profile/+page.svelte`

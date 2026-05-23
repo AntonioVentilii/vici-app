@@ -8,7 +8,7 @@ export enum AppPath {
 	AdminMarkets = '/admin/markets',
 	AdminResolutions = '/admin/resolutions',
 	Portfolio = '/portfolio',
-	Leaderboard = '/leaderboard',
+	Social = '/social',
 	Flow = '/flow',
 	Settings = '/settings',
 	Notifications = '/notifications',

@@ -24,7 +24,7 @@
 						>
 					</li>
 					<li>
-						<button onclick={() => goto(AppPath.Leaderboard)} type="button"
+						<button onclick={() => goto(AppPath.Social)} type="button"
 							>{t({ locale: $localeStore, key: 'footer.leaderboard' })}</button
 						>
 					</li>

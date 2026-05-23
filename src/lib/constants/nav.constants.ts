@@ -13,7 +13,7 @@ export const navItems: NavItem[] = [
 	{ labelKey: 'nav.markets', path: AppPath.Home, mobileIcon: House },
 	{ labelKey: 'nav.portfolio', path: AppPath.Portfolio, mobileIcon: Briefcase },
 	{ labelKey: 'nav.flow', path: AppPath.Flow, mobileIcon: Zap, icon: Zap },
-	{ labelKey: 'nav.leaderboard', path: AppPath.Leaderboard, mobileIcon: LayoutDashboard },
+	{ labelKey: 'nav.leaderboard', path: AppPath.Social, mobileIcon: LayoutDashboard },
 	{ labelKey: 'nav.profile', path: AppPath.Profile, mobileIcon: CircleUserRound },
 	{
 		labelKey: 'nav.admin',
