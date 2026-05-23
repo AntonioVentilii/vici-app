@@ -7,7 +7,6 @@
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
 	import CreateChallengeModal from '$lib/components/challenge/CreateChallengeModal.svelte';
-	import Footer from '$lib/components/layout/Footer.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
@@ -243,10 +242,6 @@
 
 		<Loaders />
 	</main>
-
-	<div class="hidden md:block">
-		<Footer />
-	</div>
 
 	{#if !isFlowPage}
 		<MobileNav />
