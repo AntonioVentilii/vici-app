@@ -20,11 +20,19 @@
  * ----------
  * Inside `.svelte` files that import `i18n.utils`, walk the AST and flag
  * any `SvelteText` node whose trimmed value contains 4 or more
- * consecutive letters. That catches words and sentences while ignoring:
+ * consecutive letters AFTER stripping known brand tokens. That catches
+ * words and sentences while ignoring:
  *   - Whitespace / template indentation.
  *   - Numbers, punctuation, currency symbols, emoji.
- *   - Short ticker / brand tokens (`BTC`, `ICP`, `OK`, `GO`, …).
+ *   - Brand / token names declared exempt in `docs/ai/frontend/i18n.md`
+ *     (`Vici`, `Bitcoin`, `Internet Computer`, `BTC`, `ICP`, `ckUSDC`,
+ *     `ETH`, `USDC`, `ICRC`, version strings like `v0.0.7`).
  *   - Anything inside `<script>` / `<style>` blocks.
+ *
+ * "VICI · v0.0.7" → stripped to " · " → no match. ✓
+ * "| Vici Social Markets" → stripped to "| Social Markets" → "Social"
+ *     still matches → flagged. ✓ (Brand + non-brand mix should be
+ *     extracted into a `{brand}` interpolation.)
  *
  * Attribute literals (`aria-label="Close"`) are intentionally NOT
  * flagged by this rule — they live in a different node type
@@ -38,6 +46,39 @@ const I18N_UTILS_PATH = '$lib/utils/i18n.utils';
 const LETTER_RUN = /[A-Za-zÀ-ÖØ-öø-ÿ]{4,}/;
 const SKIP_PARENT_TYPES = new Set(['SvelteScriptElement', 'SvelteStyleElement']);
 
+// Brand / token names that `docs/ai/frontend/i18n.md` declares exempt
+// from translation. Matched case-insensitively as whole words, then
+// stripped before the letter-run check so a literal like "Vici." or
+// "VICI · v0.0.7" no longer fires the rule.
+//
+// Multi-word entries (e.g. `Internet Computer`) must come before any
+// of their prefixes (`Internet`) when both are listed — the longest
+// match wins because `BRAND_TOKENS_RE` is built as a single alternation
+// and ordered explicitly here.
+const BRAND_TOKENS = [
+	'Internet Computer',
+	'Bitcoin',
+	'ckUSDC',
+	'USDC',
+	'BTC',
+	'ETH',
+	'ICP',
+	'ICRC',
+	'VICI',
+	'Vici'
+];
+
+const BRAND_TOKENS_RE = new RegExp(
+	`\\b(?:${BRAND_TOKENS.map((token) => token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|')})\\b`,
+	'gi'
+);
+
+// Version-like fragments (`v0.0.7`, `v1.2.3-beta`). Code-shaped, not
+// user copy — strip alongside brand tokens.
+const VERSION_RE = /\bv\d+(?:\.\d+){1,3}(?:[-+][A-Za-z0-9.]+)?\b/g;
+
+const stripExemptTokens = (text) => text.replace(BRAND_TOKENS_RE, '').replace(VERSION_RE, '');
+
 const walkSvelteText = ({ ast, onMatch }) => {
 	const visit = ({ node, ancestors }) => {
 		if (node === null || typeof node !== 'object' || typeof node.type !== 'string') {
@@ -50,8 +91,9 @@ const walkSvelteText = ({ ast, onMatch }) => {
 
 		if (node.type === 'SvelteText') {
 			const raw = typeof node.value === 'string' ? node.value : '';
+			const stripped = stripExemptTokens(raw);
 
-			if (raw.trim().length > 0 && LETTER_RUN.test(raw)) {
+			if (stripped.trim().length > 0 && LETTER_RUN.test(stripped)) {
 				onMatch({ node, raw });
 			}
 

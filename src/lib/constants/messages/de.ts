@@ -234,6 +234,11 @@ export const deMessages = {
 	'card.challenge': 'Challenge',
 	'card.challenge_friends': 'Freunde herausfordern',
 	'card.limit': 'Limit',
+	'card.position_holding': 'Hältst {amount} {symbol}',
+	'card.prior_call_prefix': 'Dein Tipp:',
+	'card.rail_hint': 'Ziehen zum Bestätigen · Tippen für Details',
+	'card.sharp_predictors': 'Top-Tipper:',
+	'card.skip_stamp': 'SKIP',
 	'card.multiple': 'Mehrfach',
 	'card.predicting': 'sagt voraus',
 	'card.predicting_count': '{count} sagen voraus',
@@ -469,6 +474,7 @@ export const deMessages = {
 	'market.detail.category_default': 'Memes',
 	'market.detail.created_by': 'Erstellt von',
 	'market.detail.fallback_title': 'Markt',
+	'market.detail.head_suffix': 'Soziale Märkte',
 	'market.detail.header.settles': 'Wird abgerechnet am',
 	'market.detail.header.time_left': 'Verbleibende Zeit',
 	'market.detail.not_found.cta': 'Zurück zu Märkten',
@@ -1189,5 +1195,28 @@ export const deMessages = {
 	'welcome.deck.consensus': '74% JA-KONSENS',
 	'welcome.deck.predictors_count': '{count} sagen voraus',
 	'welcome.deck.question': 'Senkt die Fed im Juni die Zinsen?',
-	'welcome.deck.subtitle': 'FOMC · Zinssenkungs-Call'
+	'welcome.deck.subtitle': 'FOMC · Zinssenkungs-Call',
+	'onboarding.handle.checking': 'Verfügbarkeit wird geprüft…',
+	'onboarding.handle.error_check_failed':
+		'Verfügbarkeit konnte nicht geprüft werden. Bitte erneut versuchen.',
+	'onboarding.handle.taken': '@{handle} ist bereits vergeben. Wähle ein anderes.',
+	'onboarding.handle.too_short': 'Das Handle muss mindestens {count} Zeichen lang sein.',
+	'onboarding.handle.available': '@{handle} ist verfügbar.',
+	'onboarding.handoff.account_exists_title': 'Willkommen zurück',
+	'onboarding.handoff.account_exists':
+		'Wir haben dein bestehendes Handle (@{nickname}) beibehalten. Das gerade gewählte wurde verworfen.',
+	'onboarding.handoff.collision_title': 'Handle nicht mehr verfügbar',
+	'onboarding.handoff.collision':
+		'Jemand hat @{handle} während deiner Anmeldung übernommen. Wähle in deinem Profil ein neues aus.',
+	'onboarding.handoff.failed_title': 'Einrichtung konnte nicht abgeschlossen werden',
+	'onboarding.handoff.failed':
+		'Deine Onboarding-Auswahl konnte nicht übernommen werden. Du kannst sie in deinem Profil bearbeiten.',
+	'profile.dashboard.nickname_check_failed':
+		'Verfügbarkeit konnte nicht geprüft werden. Bitte erneut versuchen.',
+	'profile.dashboard.nickname_checking': 'Wird geprüft…',
+	'profile.dashboard.nickname_required': 'Nickname ist erforderlich.',
+	'profile.dashboard.nickname_save_failed_title': 'Nickname konnte nicht gespeichert werden',
+	'profile.dashboard.nickname_save_failed': 'Bitte versuche es gleich noch einmal.',
+	'profile.dashboard.nickname_taken_title': 'Nickname vergeben',
+	'profile.dashboard.nickname_taken': '@{nickname} ist bereits vergeben. Wähle einen anderen.'
 } as const;

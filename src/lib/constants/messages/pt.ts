@@ -231,6 +231,11 @@ export const ptMessages = {
 	'card.challenge': 'Desafio',
 	'card.challenge_friends': 'Desafiar amigos',
 	'card.limit': 'Limite',
+	'card.position_holding': 'Tens {amount} {symbol}',
+	'card.prior_call_prefix': 'Escolheste',
+	'card.rail_hint': 'Arrasta para confirmar · Toca para detalhes',
+	'card.sharp_predictors': 'Previsores experientes:',
+	'card.skip_stamp': 'IGNORAR',
 	'card.multiple': 'Múltiplo',
 	'card.predicting': 'preveem',
 	'card.predicting_count': '{count} preveem',
@@ -462,6 +467,7 @@ export const ptMessages = {
 	'market.detail.category_default': 'Memes',
 	'market.detail.created_by': 'Criado por',
 	'market.detail.fallback_title': 'Mercado',
+	'market.detail.head_suffix': 'Mercados Sociais',
 	'market.detail.header.settles': 'Resolve em',
 	'market.detail.header.time_left': 'Tempo restante',
 	'market.detail.not_found.cta': 'Voltar aos mercados',
@@ -1176,5 +1182,28 @@ export const ptMessages = {
 	'welcome.deck.consensus': '74% CONSENSO YES',
 	'welcome.deck.predictors_count': '{count} prevendo',
 	'welcome.deck.question': 'O Fed cortará juros em junho?',
-	'welcome.deck.subtitle': 'FOMC · corte de juros'
+	'welcome.deck.subtitle': 'FOMC · corte de juros',
+	'onboarding.handle.checking': 'A verificar disponibilidade…',
+	'onboarding.handle.error_check_failed':
+		'Não foi possível verificar a disponibilidade. Tenta novamente.',
+	'onboarding.handle.taken': '@{handle} já está em uso. Tenta outro.',
+	'onboarding.handle.too_short': 'O handle deve ter pelo menos {count} caracteres.',
+	'onboarding.handle.available': '@{handle} está disponível.',
+	'onboarding.handoff.account_exists_title': 'Bem-vindo de volta',
+	'onboarding.handoff.account_exists':
+		'Mantivemos o teu handle existente (@{nickname}). O que acabaste de escolher foi descartado.',
+	'onboarding.handoff.collision_title': 'O handle já não está disponível',
+	'onboarding.handoff.collision':
+		'Alguém ficou com @{handle} enquanto iniciavas sessão. Escolhe um novo no teu perfil.',
+	'onboarding.handoff.failed_title': 'Não foi possível concluir a configuração',
+	'onboarding.handoff.failed':
+		'Não foi possível aplicar as tuas escolhas de configuração. Podes editá-las no teu perfil.',
+	'profile.dashboard.nickname_check_failed':
+		'Não foi possível verificar a disponibilidade. Tenta novamente.',
+	'profile.dashboard.nickname_checking': 'A verificar…',
+	'profile.dashboard.nickname_required': 'O nickname é obrigatório.',
+	'profile.dashboard.nickname_save_failed_title': 'Não foi possível guardar o nickname',
+	'profile.dashboard.nickname_save_failed': 'Tenta novamente daqui a pouco.',
+	'profile.dashboard.nickname_taken_title': 'Nickname em uso',
+	'profile.dashboard.nickname_taken': '@{nickname} já está em uso. Escolhe outro.'
 } as const;

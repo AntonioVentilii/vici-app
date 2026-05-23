@@ -86,8 +86,10 @@
 				</code>{t({ locale: $localeStore, key: 'admin.oracle.sub_driven_by' })}
 				<strong>{t({ locale: $localeStore, key: 'admin.oracle.sub_roles_word' })}</strong>
 				{t({ locale: $localeStore, key: 'admin.oracle.sub_granting' })}
+				<!-- eslint-disable-next-line local-rules/no-bare-svelte-text -- TODO(i18n): code-shaped role identifier sent to the engine, not natural language; promote into the brand allowlist if more role IDs surface here. -->
 				<code class="bg-foreground/5 rounded px-1 py-0.5 font-mono text-xs">ADMIN</code>
 				{t({ locale: $localeStore, key: 'admin.oracle.sub_or' })}
+				<!-- eslint-disable-next-line local-rules/no-bare-svelte-text -- TODO(i18n): see ADMIN above. -->
 				<code class="bg-foreground/5 rounded px-1 py-0.5 font-mono text-xs">SOLVER</code>
 				{t({ locale: $localeStore, key: 'admin.oracle.sub_suffix' })}
 			</p>

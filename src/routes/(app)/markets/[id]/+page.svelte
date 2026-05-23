@@ -159,7 +159,7 @@
 <svelte:head>
 	<title
 		>{market ? market.title : t({ locale: $localeStore, key: 'market.detail.fallback_title' })} | Vici
-		Social Markets</title
+		{t({ locale: $localeStore, key: 'market.detail.head_suffix' })}</title
 	>
 </svelte:head>
 

@@ -234,6 +234,11 @@ export const frMessages = {
 	'card.challenge': 'Défi',
 	'card.challenge_friends': 'Défier des amis',
 	'card.limit': 'Limite',
+	'card.position_holding': 'Détient {amount} {symbol}',
+	'card.prior_call_prefix': 'Votre choix :',
+	'card.rail_hint': 'Glisser pour valider · Toucher pour les détails',
+	'card.sharp_predictors': 'Pronostiqueurs avisés :',
+	'card.skip_stamp': 'PASSER',
 	'card.multiple': 'Multiple',
 	'card.predicting': 'prédisent',
 	'card.predicting_count': '{count} prédisent',
@@ -471,6 +476,7 @@ export const frMessages = {
 	'market.detail.category_default': 'Memes',
 	'market.detail.created_by': 'Créé par',
 	'market.detail.fallback_title': 'Marché',
+	'market.detail.head_suffix': 'Marchés Sociaux',
 	'market.detail.header.settles': 'Règlement',
 	'market.detail.header.time_left': 'Temps restant',
 	'market.detail.not_found.cta': 'Retour aux marchés',
@@ -1187,5 +1193,26 @@ export const frMessages = {
 	'welcome.deck.consensus': '74% YES CONSENSUS',
 	'welcome.deck.predictors_count': '{count} prédisent',
 	'welcome.deck.question': 'La Fed baissera-t-elle les taux en juin ?',
-	'welcome.deck.subtitle': 'FOMC · décision de baisse de taux'
+	'welcome.deck.subtitle': 'FOMC · décision de baisse de taux',
+	'onboarding.handle.checking': 'Vérification de la disponibilité…',
+	'onboarding.handle.error_check_failed': 'Impossible de vérifier la disponibilité. Réessayez.',
+	'onboarding.handle.taken': '@{handle} est déjà pris. Choisissez-en un autre.',
+	'onboarding.handle.too_short': 'Le handle doit comporter au moins {count} caractères.',
+	'onboarding.handle.available': '@{handle} est disponible.',
+	'onboarding.handoff.account_exists_title': 'Heureux de vous revoir',
+	'onboarding.handoff.account_exists':
+		'Nous avons conservé votre handle existant (@{nickname}). Celui que vous venez de choisir a été ignoré.',
+	'onboarding.handoff.collision_title': 'Handle plus disponible',
+	'onboarding.handoff.collision':
+		'Quelqu’un a pris @{handle} pendant votre connexion. Choisissez-en un nouveau depuis votre profil.',
+	'onboarding.handoff.failed_title': 'Impossible de terminer la configuration',
+	'onboarding.handoff.failed':
+		'Impossible d’appliquer vos choix d’intégration. Vous pouvez les modifier depuis votre profil.',
+	'profile.dashboard.nickname_check_failed': 'Impossible de vérifier la disponibilité. Réessayez.',
+	'profile.dashboard.nickname_checking': 'Vérification…',
+	'profile.dashboard.nickname_required': 'Le pseudonyme est obligatoire.',
+	'profile.dashboard.nickname_save_failed_title': 'Impossible d’enregistrer le pseudonyme',
+	'profile.dashboard.nickname_save_failed': 'Réessayez dans un instant.',
+	'profile.dashboard.nickname_taken_title': 'Pseudonyme déjà pris',
+	'profile.dashboard.nickname_taken': '@{nickname} est déjà pris. Choisissez-en un autre.'
 } as const;
