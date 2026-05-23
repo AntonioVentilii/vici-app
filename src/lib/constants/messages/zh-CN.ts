@@ -871,7 +871,7 @@ export const zhCnMessages = {
 	'settings.two_factor': '双重验证',
 	'settings.two_factor.sub': '即将推出 · 验证器应用',
 	'settings.wallet': '钱包',
-	'settings.wallet.sub': '可用 {points} VXP',
+	'settings.wallet.sub': '可用 {amount} VXP',
 	'signin.divider': '或',
 	'signin.email.cta': '发送登录链接',
 	'signin.email.disabled_note': '邮件魔法链接尚未启用。请使用上方任一可用方式登录。',

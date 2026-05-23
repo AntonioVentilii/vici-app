@@ -926,7 +926,7 @@ export const deMessages = {
 	'settings.two_factor': 'Zwei-Faktor-Authentifizierung',
 	'settings.two_factor.sub': 'Demnächst · Authenticator-App',
 	'settings.wallet': 'Wallet',
-	'settings.wallet.sub': '{points} VXP verfügbar',
+	'settings.wallet.sub': '{amount} VXP verfügbar',
 	'signin.divider': 'ODER',
 	'signin.email.cta': 'Anmeldelink senden',
 	'signin.email.disabled_note':

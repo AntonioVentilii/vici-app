@@ -10,6 +10,7 @@
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
+	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
@@ -17,6 +18,8 @@
 	import { listSeriesCategories } from '$lib/services/category.services';
 	import { getPositions } from '$lib/services/position.services';
 	import { getUserTradeHistory } from '$lib/services/trade.services';
+	import { balancesStore } from '$lib/stores/balances.store';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { SeriesCategory } from '$lib/types/category';
 	import type { Position } from '$lib/types/position';
@@ -65,8 +68,15 @@
 
 	const getMarketById = (id: string) => $markets.find((m) => m.id === id);
 
-	const totalPortfolioValue = $derived(
-		positions.reduce(
+	// Open positions are everything that hasn't yet been settled into the
+	// wallet. Resolved markets credit/debit the ICRC ledger at resolution, so
+	// including them here would double-count against the wallet baseline below.
+	const openPositions = $derived(
+		positions.filter((pos) => getMarketById(pos.marketId)?.status !== 'Resolved')
+	);
+
+	const openPositionsValue = $derived(
+		openPositions.reduce(
 			(acc, pos) =>
 				acc + calculatePositionValue({ position: pos, market: getMarketById(pos.marketId) }),
 			ZERO
@@ -74,18 +84,35 @@
 	);
 
 	const totalPnL = $derived(
-		positions.reduce(
+		openPositions.reduce(
 			(acc, pos) =>
 				acc + calculatePositionPnL({ position: pos, market: getMarketById(pos.marketId) }),
 			0
 		)
 	);
 
+	// Net account value: free wallet VXP + collateral locked on clearing +
+	// mark-to-market value of open positions. Realized PnL is already in the
+	// wallet (settlements credit/debit the ledger), so it is not added as a
+	// separate term. Only applied in the VXP/playground domain — the
+	// settlement domain can mix tokens with different decimals/symbols, so
+	// the cash baseline is left out there to avoid summing apples and oranges.
+	const totalPortfolioValue = $derived.by(() => {
+		if (!$playgroundVxpUnitMode) {
+			return openPositionsValue;
+		}
+
+		const walletVxp = $balancesStore?.[VXP_TOKEN.id] ?? ZERO;
+		const collateralVxp = $collateralsStore?.balances[VXP_TOKEN.id] ?? ZERO;
+
+		return walletVxp + collateralVxp + openPositionsValue;
+	});
+
 	const portfolioHoldingsLabel = $derived(
 		formatPortfolioHoldingsStatLine({
 			playground: $playgroundVxpUnitMode,
 			totalPortfolioValue,
-			sampleToken: positions[0] ? getMarketById(positions[0].marketId)?.token : undefined
+			sampleToken: openPositions[0] ? getMarketById(openPositions[0].marketId)?.token : undefined
 		})
 	);
 

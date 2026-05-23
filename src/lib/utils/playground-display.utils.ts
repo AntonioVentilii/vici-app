@@ -13,17 +13,24 @@ import {
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 import type { LockedCapacityDisplayUnit } from '$lib/types/locked-capacity-display.types';
 import type { Token } from '$lib/types/token';
-import { formatAvailableUsd, formatCurrency, formatToken } from '$lib/utils/format.utils';
+import {
+	formatAvailableUsd,
+	formatCurrency,
+	formatToken,
+	groupIntegerPart
+} from '$lib/utils/format.utils';
 
 /**
  * VXP balances render as whole numbers (no fractional part) to reinforce the
  * "points" feel, even though the underlying clearing scale is 6 decimals.
+ * Thousands separators keep large balances readable (e.g. `24,000 VXP`).
  */
 export const formatPlaygroundClearingAsVxp = (value: bigint): string =>
 	`${formatToken({
 		value,
 		unitName: PLAYGROUND_CLEARING_MARGIN_DECIMALS,
-		displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS
+		displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS,
+		useGrouping: true
 	})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
 
 /** @deprecated Use {@link formatPlaygroundClearingAsVxp}. */
@@ -106,7 +113,7 @@ export const formatPortfolioPnLStatLine = ({
 	totalPnL: number;
 	playground: boolean;
 }): string => {
-	const core = `${totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}`;
+	const core = `${totalPnL >= 0 ? '+' : ''}${groupIntegerPart({ formatted: totalPnL.toFixed(2) })}`;
 
 	return playground ? `${core} ${PLAYGROUND_DISPLAY_SYMBOL}` : core;
 };
@@ -124,7 +131,8 @@ export const formatPortfolioHoldingsStatLine = ({
 		return `${formatToken({
 			value: totalPortfolioValue,
 			unitName: VXP_TOKEN.decimals,
-			displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS
+			displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS,
+			useGrouping: true
 		})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
 	}
 
@@ -141,7 +149,7 @@ export const formatPositionPnLWithOptionalUnit = ({
 	pnl: number;
 	playground: boolean;
 }): string => {
-	const core = `${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}`;
+	const core = `${pnl >= 0 ? '+' : ''}${groupIntegerPart({ formatted: pnl.toFixed(2) })}`;
 
 	return playground ? `${core} ${PLAYGROUND_DISPLAY_SYMBOL}` : core;
 };

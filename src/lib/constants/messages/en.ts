@@ -928,7 +928,7 @@ export const enMessages = {
 	'settings.two_factor': 'Two-factor authentication',
 	'settings.two_factor.sub': 'Coming soon · authenticator app',
 	'settings.wallet': 'Wallet',
-	'settings.wallet.sub': '{points} VXP available',
+	'settings.wallet.sub': '{amount} VXP available',
 	'signin.divider': 'OR',
 	'signin.email.cta': 'Send sign-in link',
 	'signin.email.disabled_note': 'Email magic links are not enabled yet. Use a live provider above.',

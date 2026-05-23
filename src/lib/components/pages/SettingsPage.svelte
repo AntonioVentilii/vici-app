@@ -26,18 +26,23 @@
 	import SettingsSection from '$lib/components/settings/SettingsSection.svelte';
 	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import {
 		LOCALE_STORAGE_KEY,
 		SUPPORTED_LOCALES,
 		type AppLocale
 	} from '$lib/constants/locale.constants';
+	import { VXP_BALANCE_DISPLAY_DECIMALS } from '$lib/constants/playground.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { FLOW_SESSION_LENGTH_OPTIONS } from '$lib/constants/settings.constants';
+	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { ProfileVisibility } from '$lib/enums/profile';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { getFriendRequests, getFriends } from '$lib/services/relation.services';
+	import { balancesStore } from '$lib/stores/balances.store';
+	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { theme } from '$lib/stores/theme.store';
@@ -45,6 +50,7 @@
 	import type { ButtonStatus } from '$lib/types/components';
 	import type { FlowSessionLength, SettingsVisibility } from '$lib/types/preferences';
 	import { FLOW_ART_CATEGORIES } from '$lib/utils/flow-art.utils';
+	import { formatToken } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	let confirmingDelete = $state(false);
@@ -52,6 +58,22 @@
 
 	const profile = $derived($userStore.profile);
 	const archetype = $derived(profile?.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
+
+	// "Available" balance shown on the Wallet row: the user's *real*, settled
+	// VXP — free wallet balance plus collateral locked on clearing. Realized
+	// PnL is already reflected in the wallet balance (settlements credit/debit
+	// the ledger), so we don't add it as a separate term. Unrealized PnL is
+	// intentionally excluded — the breakdown lives on the Wallet page.
+	const vxpAvailableLabel = $derived(
+		formatToken({
+			value:
+				($balancesStore?.[VXP_TOKEN.id] ?? ZERO) +
+				($collateralsStore?.balances[VXP_TOKEN.id] ?? ZERO),
+			unitName: VXP_TOKEN.decimals,
+			displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS,
+			useGrouping: true
+		})
+	);
 
 	const notifyOnCount = $derived(Object.values($preferencesStore.notify).filter(Boolean).length);
 	const notifyTotalCount = $derived(Object.values($preferencesStore.notify).length);
@@ -258,7 +280,7 @@
 				sub={t({
 					locale: $localeStore,
 					key: 'settings.wallet.sub',
-					params: { points: (profile?.points ?? 0).toLocaleString($localeStore) }
+					params: { amount: vxpAvailableLabel }
 				})}
 			/>
 

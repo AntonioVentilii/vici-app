@@ -7,6 +7,7 @@
 		PORTFOLIO_DEFAULT_DECIMALS,
 		PORTFOLIO_DEFAULT_SYMBOL
 	} from '$lib/constants/portfolio.constants';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { SeriesCategory } from '$lib/types/category';
@@ -86,7 +87,7 @@
 								<td class="min-w-0 px-6 py-4">
 									<a
 										class="group flex min-w-0 items-center gap-3"
-										href="/(app)/markets/{pos.marketId}"
+										href="{AppPath.Markets}/{pos.marketId}"
 									>
 										<PositionArtThumb {categoryId} marketId={pos.marketId} {result} size={44} />
 										<span class="min-w-0 flex-1">

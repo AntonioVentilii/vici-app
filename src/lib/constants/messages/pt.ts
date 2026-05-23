@@ -916,7 +916,7 @@ export const ptMessages = {
 	'settings.two_factor': 'Autenticação de dois fatores',
 	'settings.two_factor.sub': 'Em breve · app autenticador',
 	'settings.wallet': 'Carteira',
-	'settings.wallet.sub': '{points} VXP disponíveis',
+	'settings.wallet.sub': '{amount} VXP disponíveis',
 	'signin.divider': 'OU',
 	'signin.email.cta': 'Enviar link de entrada',
 	'signin.email.disabled_note':

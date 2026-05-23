@@ -920,7 +920,7 @@ export const esMessages = {
 	'settings.two_factor': 'Autenticación de dos factores',
 	'settings.two_factor.sub': 'Próximamente · app autenticadora',
 	'settings.wallet': 'Cartera',
-	'settings.wallet.sub': '{points} VXP disponibles',
+	'settings.wallet.sub': '{amount} VXP disponibles',
 	'signin.divider': 'O',
 	'signin.email.cta': 'Enviar enlace de acceso',
 	'signin.email.disabled_note':

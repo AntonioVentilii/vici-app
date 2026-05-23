@@ -10,17 +10,41 @@ interface FormatTokenParams {
 	displayDecimals?: number;
 	trailingZeros?: boolean;
 	showPlusSign?: boolean;
+	useGrouping?: boolean;
 }
 
 const DEFAULT_DISPLAY_DECIMALS = 4;
 const MAX_DEFAULT_DISPLAY_DECIMALS = 8;
+
+/**
+ * Adds locale-aware thousands separators to the integer part of a string
+ * already in `[-]?\d+(\.\d+)?` form (the output of `Decimal.toFixed`). The
+ * fractional part — including its precision — is preserved verbatim so we
+ * don't reintroduce rounding on numbers that have already been quantised.
+ */
+export const groupIntegerPart = ({
+	formatted,
+	locale
+}: {
+	formatted: string;
+	locale?: string;
+}): string => {
+	const negative = formatted.startsWith('-');
+	const body = negative ? formatted.slice(1) : formatted;
+	const [intPart, fracPart] = body.split('.');
+	const groupedInt = new Intl.NumberFormat(locale, { useGrouping: true }).format(BigInt(intPart));
+	const grouped = fracPart === undefined ? groupedInt : `${groupedInt}.${fracPart}`;
+
+	return negative ? `-${grouped}` : grouped;
+};
 
 export const formatToken = ({
 	value,
 	unitName,
 	displayDecimals,
 	trailingZeros = false,
-	showPlusSign = false
+	showPlusSign = false,
+	useGrouping = false
 }: FormatTokenParams): string => {
 	const parsedUnitName: BigNumberish =
 		typeof unitName === 'number' || typeof unitName === 'bigint'
@@ -47,7 +71,8 @@ export const formatToken = ({
 	const decDP = dec.toDecimalPlaces(maxDigits);
 	const minDigits = trailingZeros ? Math.max(minFractionDigits, maxDigits) : undefined;
 
-	const formatted = decDP.toFixed(minDigits) as `${number}`;
+	const fixed = decDP.toFixed(minDigits) as `${number}`;
+	const formatted = useGrouping ? groupIntegerPart({ formatted: fixed }) : fixed;
 
 	if (trailingZeros) {
 		return formatted;

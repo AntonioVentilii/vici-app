@@ -914,7 +914,7 @@ export const itMessages = {
 	'settings.two_factor': 'Autenticazione a due fattori',
 	'settings.two_factor.sub': 'In arrivo · app authenticator',
 	'settings.wallet': 'Portafoglio',
-	'settings.wallet.sub': '{points} VXP disponibili',
+	'settings.wallet.sub': '{amount} VXP disponibili',
 	'signin.divider': 'OPPURE',
 	'signin.email.cta': 'Invia link di accesso',
 	'signin.email.disabled_note':

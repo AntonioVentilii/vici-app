@@ -924,7 +924,7 @@ export const frMessages = {
 	'settings.two_factor': 'Authentification à deux facteurs',
 	'settings.two_factor.sub': 'Bientôt · app authenticator',
 	'settings.wallet': 'Portefeuille',
-	'settings.wallet.sub': '{points} VXP disponibles',
+	'settings.wallet.sub': '{amount} VXP disponibles',
 	'signin.divider': 'OU',
 	'signin.email.cta': 'Envoyer le lien de connexion',
 	'signin.email.disabled_note':
