@@ -3,9 +3,7 @@
 	import { getLeaderboard } from '$lib/services/leaderboard.services';
 	import { leaderboardStore } from '$lib/stores/leaderboard.store';
 
-	const LEADERBOARD_LIMIT = 50;
-
-	const onLoad = () => getLeaderboard(LEADERBOARD_LIMIT);
+	const onLoad = () => getLeaderboard();
 </script>
 
 <CachedLoader {onLoad} requireIdentity={false} store={leaderboardStore} />
