@@ -2,6 +2,7 @@
 	import { initSatellite } from '@junobuild/core';
 	import type { Snippet } from 'svelte';
 	import { browser } from '$app/environment';
+	import Authn from '$lib/components/authn/Authn.svelte';
 	import TweaksPanel from '$lib/components/dev/TweaksPanel.svelte';
 	import Notifications from '$lib/components/ui/Notifications.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -49,7 +50,9 @@
 		</div>
 	</div>
 {:else}
-	{@render children()}
+	<Authn>
+		{@render children()}
+	</Authn>
 {/if}
 
 <Notifications />

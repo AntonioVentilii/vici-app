@@ -6,7 +6,6 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import Authn from '$lib/components/authn/Authn.svelte';
 	import CreateChallengeModal from '$lib/components/challenge/CreateChallengeModal.svelte';
 	import Footer from '$lib/components/layout/Footer.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
@@ -229,22 +228,20 @@
 	</div>
 
 	<main class="flex-1 {isFlowPage ? 'md:pb-0' : 'pb-20 md:pb-0'}">
-		<Authn>
-			{#key page.url.pathname}
-				<div
-					class={isFlowPage
-						? 'md:container md:mx-auto md:px-4 md:py-8'
-						: 'container mx-auto px-4 py-4 md:py-8'}
-					data-tid={TestId.AppMain}
-					in:fade={{ duration: 100, delay: 100 }}
-					out:fade={{ duration: 100 }}
-				>
-					{@render children()}
-				</div>
-			{/key}
+		{#key page.url.pathname}
+			<div
+				class={isFlowPage
+					? 'md:container md:mx-auto md:px-4 md:py-8'
+					: 'container mx-auto px-4 py-4 md:py-8'}
+				data-tid={TestId.AppMain}
+				in:fade={{ duration: 100, delay: 100 }}
+				out:fade={{ duration: 100 }}
+			>
+				{@render children()}
+			</div>
+		{/key}
 
-			<Loaders />
-		</Authn>
+		<Loaders />
 	</main>
 
 	<div class="hidden md:block">
