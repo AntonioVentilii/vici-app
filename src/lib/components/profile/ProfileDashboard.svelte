@@ -538,38 +538,6 @@
 		</section>
 	{/if}
 
-	<section class="profile-skill">
-		<h2 class="profile-section-title">
-			{t({ locale: $localeStore, key: 'profile.dashboard.skill' })}
-		</h2>
-		<div class="profile-skill-grid">
-			<div class="profile-stat">
-				<span class="profile-stat-label">
-					{t({ locale: $localeStore, key: 'profile.dashboard.accuracy_short' })}
-				</span>
-				<span class="num profile-stat-value">{accuracyDisplay}</span>
-			</div>
-			<div class="profile-stat">
-				<span class="profile-stat-label">
-					{t({ locale: $localeStore, key: 'profile.dashboard.calls_short' })}
-				</span>
-				<span class="num profile-stat-value">{totalTrades}</span>
-			</div>
-			<div class="profile-stat">
-				<span class="profile-stat-label">
-					{t({ locale: $localeStore, key: 'profile.dashboard.wins' })}
-				</span>
-				<span class="num profile-stat-value">{wins}</span>
-			</div>
-			<div class="profile-stat">
-				<span class="profile-stat-label">
-					{t({ locale: $localeStore, key: 'profile.dashboard.streak_short' })}
-				</span>
-				<span class="num profile-stat-value">{dailyStreak}d</span>
-			</div>
-		</div>
-	</section>
-
 	{#if isOwnProfile}
 		<button
 			class="profile-friends-row"
@@ -605,6 +573,38 @@
 			</span>
 		</button>
 	{/if}
+
+	<section class="profile-skill">
+		<h2 class="profile-section-title">
+			{t({ locale: $localeStore, key: 'profile.dashboard.skill' })}
+		</h2>
+		<div class="profile-skill-grid">
+			<div class="profile-stat">
+				<span class="profile-stat-label">
+					{t({ locale: $localeStore, key: 'profile.dashboard.accuracy_short' })}
+				</span>
+				<span class="num profile-stat-value">{accuracyDisplay}</span>
+			</div>
+			<div class="profile-stat">
+				<span class="profile-stat-label">
+					{t({ locale: $localeStore, key: 'profile.dashboard.calls_short' })}
+				</span>
+				<span class="num profile-stat-value">{totalTrades}</span>
+			</div>
+			<div class="profile-stat">
+				<span class="profile-stat-label">
+					{t({ locale: $localeStore, key: 'profile.dashboard.wins' })}
+				</span>
+				<span class="num profile-stat-value">{wins}</span>
+			</div>
+			<div class="profile-stat">
+				<span class="profile-stat-label">
+					{t({ locale: $localeStore, key: 'profile.dashboard.streak_short' })}
+				</span>
+				<span class="num profile-stat-value">{dailyStreak}d</span>
+			</div>
+		</div>
+	</section>
 
 	<section class="profile-activity">
 		<div class="profile-activity-head">
