@@ -29,12 +29,23 @@ export const UserProfileApiSchema = j.strictObject({
 	level: j.number().default(1),
 	interests: j.array(j.string()).default([]),
 	lastActiveDay: j.string().optional(),
+	// Defaults are intentionally applied at every level (not just on the
+	// outer `preferences`). The outer `.default(...)` only kicks in when
+	// `preferences` is null/undefined; legacy profile docs that have
+	// `preferences: {}` or a partial `preferences` shape would still trap
+	// during JsonData→Candid encoding with `missing field default_amount`
+	// because the inner `strictObject` requires every declared field.
+	// Defaulting `flow` / `manual` and the `defaultAmount` record itself
+	// lets those rows decode cleanly without a data migration. Mirror any
+	// change here in `src/lib/schema/profile.schema.ts`.
 	preferences: j
 		.strictObject({
-			defaultAmount: j.strictObject({
-				flow: j.string(),
-				manual: j.string()
-			})
+			defaultAmount: j
+				.strictObject({
+					flow: j.string().default('0'),
+					manual: j.string().default('0')
+				})
+				.default({ flow: '0', manual: '0' })
 		})
 		.default({ defaultAmount: { flow: '0', manual: '0' } })
 });

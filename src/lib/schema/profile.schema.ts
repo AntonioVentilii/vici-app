@@ -37,12 +37,25 @@ export const UserProfileSchema = j.strictObject({
 	// achievement progress; recomputed from clearing history during
 	// `calculateAndSyncStats`.
 	contrarianWins: j.number().default(0),
+	// `preferences` is optional at the top level, but the inner fields are
+	// also given defaults on purpose. Some profile docs in storage predate
+	// the `defaultAmount` field (or were written with a partial
+	// `preferences` shape from an older client). Without nested defaults,
+	// the satellite-side encoder traps with `missing field default_amount`
+	// the moment `app_list_leaderboard` / `app_get_profile` /
+	// `app_search_profiles` encounter such a row, because `strictObject`
+	// requires every declared field. Defaulting `flow` / `manual` (and the
+	// `defaultAmount` record itself) lets legacy rows decode cleanly without
+	// a data migration. Mirror any change here in
+	// `src/satellite/api-schemas.ts`.
 	preferences: j
 		.strictObject({
-			defaultAmount: j.strictObject({
-				flow: j.string(),
-				manual: j.string()
-			})
+			defaultAmount: j
+				.strictObject({
+					flow: j.string().default('0'),
+					manual: j.string().default('0')
+				})
+				.default({ flow: '0', manual: '0' })
 		})
 		.optional()
 });
