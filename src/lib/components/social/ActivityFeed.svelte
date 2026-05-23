@@ -1,14 +1,15 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import ActivityItem from '$lib/components/social/ActivityItem.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import { getFriendActivities, getGlobalActivities } from '$lib/services/activity.services';
-	import { getProfile } from '$lib/services/profile.services';
-	import { getFollowing } from '$lib/services/relation.services';
-	import type { UserProfile } from '$lib/types/profile';
-	import type { Activity } from '$lib/types/social';
+	import {
+		globalActivities,
+		globalActivitiesNotInitialized
+	} from '$lib/derived/activities.derived';
+	import { following } from '$lib/derived/following.derived';
+	import { profilesStore } from '$lib/stores/profiles.store';
+	import { refreshGlobalActivities } from '$lib/utils/refresh.utils';
 
 	interface Props {
 		userPrincipal?: string;
@@ -17,59 +18,30 @@
 
 	const { userPrincipal, mode = 'global' }: Props = $props();
 
-	let activities = $state<Activity[]>([]);
+	// Cold-load spinner only while the global feed has never been
+	// populated. After the first load every subsequent visit renders the
+	// cached activities while the loader polls in the background.
+	const loading = $derived($globalActivitiesNotInitialized);
 
-	const profiles = $state<Map<string, UserProfile>>(new Map());
+	const activities = $derived.by(() => {
+		if (mode === 'friends' && userPrincipal) {
+			const friendSet = new Set($following);
 
-	let loading = $state(true);
-	let refreshing = $state(false);
+			return $globalActivities.filter((a) => friendSet.has(a.user));
+		}
 
-	onMount(async () => {
-		await loadActivities();
+		if (mode === 'user' && userPrincipal) {
+			return $globalActivities.filter((a) => a.user === userPrincipal);
+		}
+
+		return $globalActivities;
 	});
 
-	const handleRefresh = async () => {
-		refreshing = true;
-
-		try {
-			await loadActivities();
-		} finally {
-			refreshing = false;
-		}
-	};
-
-	const loadActivities = async () => {
-		loading = true;
-
-		try {
-			if (mode === 'friends' && userPrincipal) {
-				const following = await getFollowing();
-				activities = await getFriendActivities({ friends: following });
-			} else if (mode === 'user' && userPrincipal) {
-				// No per-user activity endpoint yet — filter the global feed client-side.
-				const all = await getGlobalActivities();
-				activities = all.filter((a) => a.user === userPrincipal);
-			} else {
-				activities = await getGlobalActivities();
-			}
-
-			for (const activity of activities) {
-				const usersToFetch = [activity.user, activity.targetUser].filter(Boolean) as string[];
-
-				for (const u of usersToFetch) {
-					if (!profiles.has(u)) {
-						const profileDoc = await getProfile(u);
-
-						if (profileDoc) {
-							profiles.set(u, profileDoc.data);
-						}
-					}
-				}
-			}
-		} finally {
-			loading = false;
-		}
-	};
+	// `refreshGlobalActivities` is fire-and-forget — the actual fetch
+	// happens inside `LoaderGlobalActivities`. We don't surface a
+	// `refreshing` state because the cached list keeps rendering during
+	// the background refetch (stale-while-revalidate).
+	const handleRefresh = () => refreshGlobalActivities();
 </script>
 
 <Card padding="lg" variant="glass">
@@ -81,7 +53,6 @@
 			<BaseButton
 				class="text-primary hover:text-primary/80 text-xs font-medium transition-colors"
 				onclick={handleRefresh}
-				status={refreshing ? 'pending' : 'enabled'}
 			>
 				Refresh
 			</BaseButton>
@@ -98,7 +69,7 @@
 				</p>
 			{:else}
 				{#each activities as activity (activity.timestamp + activity.user)}
-					{@const profile = profiles.get(activity.user)}
+					{@const profile = $profilesStore.get(activity.user)}
 
 					<ActivityItem {activity} {profile} />
 				{/each}

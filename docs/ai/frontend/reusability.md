@@ -64,6 +64,22 @@
 | `Tabs`            | Tab strip.                                                  |
 | `YouBadge`        | "You" callout next to a profile.                            |
 
+### Loader shells — `$lib/components/loaders/`
+
+Reusable building blocks for "fetch once, cache in a store, refresh on
+balance-domain change / interval / event". When adding a new screen that
+needs server data, **add a `LoaderXxx.svelte` that wraps one of these and
+mount it inside `Loaders.svelte`** instead of fetching inline from the page.
+Page components read the populated store via a `*.derived.ts` helper.
+
+| Component             | Use it for                                                                                                                                              |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AtomicLoader`        | Lowest level: runs a callback on mount, polls with a fast → slow interval. Use directly only when you don't fit either of the cached shells below.      |
+| `IdentityAwareLoader` | `AtomicLoader` that skips the load when signed out and slows polling when signed in. The base for any authenticated read.                               |
+| `CachedLoader`        | Single-shot fetcher (`getXxx()`-shape) that populates a `Writable<T \| undefined>` store. `requireIdentity` toggles `IdentityAwareLoader` vs anonymous. |
+| `DomainCachedLoader`  | Domain-scoped certified loader (`loadMarkets` / `loadUserOrders` / `loadPositions` / `loadUserTradeHistory` shape). Resets the store on domain switch.  |
+| `Loaders`             | The single mount point for all `LoaderXxx` instances. Lives inside `(app)/+layout.svelte` so caches survive page navigation.                            |
+
 ### Bespoke icons — `$lib/components/icons/`
 
 Use `lucide-svelte` first; these are the project's own SVGs.
@@ -121,7 +137,7 @@ Static brand assets that aren't components live in `static/branding/`:
 | `profile.services`                                          | Read / write user profile via Juno datastore.                                |
 | `relation.services`                                         | Friends / follow / friend requests.                                          |
 | `roles.services`                                            | Read role docs from Juno (mirrored to the engine by the satellite hook).     |
-| `discussion.services` / `chat.services` / `social.services` | Social graph features.                                                       |
+| `discussion.services`                                       | Per-market comment thread (read + write + per-market cache loader).          |
 | `category.services`                                         | Market categories.                                                           |
 | `leaderboard.services`                                      | Leaderboard read paths.                                                      |
 | `activity.services`                                         | User activity feed.                                                          |
@@ -133,25 +149,35 @@ Static brand assets that aren't components live in `static/branding/`:
 
 ### Stores & derived worth knowing
 
-| Module                                      | Where                              | Purpose                                            |
-| ------------------------------------------- | ---------------------------------- | -------------------------------------------------- |
-| `user.store`                                | `$lib/stores/`                     | Authenticated user state.                          |
-| `markets.store`, `markets.derived`          | `$lib/stores/`, `$lib/derived/`    | Market list + derived filters.                     |
-| `balances.store`                            | `$lib/stores/`                     | Token balances.                                    |
-| `collaterals.store`                         | `$lib/stores/`                     | Collateral positions.                              |
-| `orders.store`, `orders.derived`            | `$lib/stores/`, `$lib/derived/`    | Order book + derived view.                         |
-| `order-book.store`                          | `$lib/stores/`                     | Live order book.                                   |
-| `trade.store`                               | `$lib/stores/`                     | Active-trade UI state.                             |
-| `notification.store`                        | `$lib/stores/`                     | Toasts.                                            |
-| `theme.store`                               | `$lib/stores/`                     | Light / dark theme.                                |
-| `storage.store`                             | `$lib/stores/`                     | LocalStorage-backed state.                         |
-| `balance-domain.store`                      | `$lib/stores/`                     | Active balance domain.                             |
-| `certified.store`, `certified-setter.store` | `$lib/stores/`                     | Certified-state plumbing for IC queries → updates. |
-| `nav.derived`, `nav.constants`              | `$lib/derived/`, `$lib/constants/` | Navigation state + config.                         |
-| `tokens.derived`                            | `$lib/derived/`                    | Active / supported tokens.                         |
-| `playground.derived`                        | `$lib/derived/`                    | Playground (test) mode helpers.                    |
-| `page-market.derived`                       | `$lib/derived/`                    | Per-page market selector.                          |
-| `user.derived`                              | `$lib/derived/`                    | Derived user predicates.                           |
+| Module                                                         | Where                              | Purpose                                                                                                                                                                 |
+| -------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `user.store`                                                   | `$lib/stores/`                     | Authenticated user state.                                                                                                                                               |
+| `markets.store`, `markets.derived`                             | `$lib/stores/`, `$lib/derived/`    | Market list + derived filters.                                                                                                                                          |
+| `balances.store`                                               | `$lib/stores/`                     | Token balances.                                                                                                                                                         |
+| `collaterals.store`                                            | `$lib/stores/`                     | Collateral positions.                                                                                                                                                   |
+| `orders.store`, `orders.derived`                               | `$lib/stores/`, `$lib/derived/`    | Order book + derived view.                                                                                                                                              |
+| `positions.store`, `positions.derived`                         | `$lib/stores/`, `$lib/derived/`    | Cached positions for the active balance domain. Populated by `LoaderPositions`; read by Portfolio (and anything else that needs positions).                             |
+| `trade-history.store`, `trade-history.derived`                 | `$lib/stores/`, `$lib/derived/`    | Cached user trade / settlement events for the active balance domain. Populated by `LoaderTradeHistory`.                                                                 |
+| `categories.store`, `categories.derived`                       | `$lib/stores/`, `$lib/derived/`    | Cached series-to-category mappings (public). Populated by `LoaderCategories`; read by Markets feed, Portfolio positions table, anything resolving market categories.    |
+| `leaderboard.store`, `leaderboard.derived`                     | `$lib/stores/`, `$lib/derived/`    | Cached leaderboard ranks (public). Populated by `LoaderLeaderboard`.                                                                                                    |
+| `following.store`, `following.derived`                         | `$lib/stores/`, `$lib/derived/`    | Cached follow list for the viewer. Populated by `LoaderFollowing`; reset on auth transition.                                                                            |
+| `friends.store` (incl. `friendsRelationsLoadedStore`)          | `$lib/stores/`                     | Cached social graph (friends + incoming requests + rejected). `friendsRelationsLoadedStore` gates the cold-load spinner.                                                |
+| `profiles.store`                                               | `$lib/stores/`                     | Shared `principal → UserProfile` cache. Used by every surface that renders a counterpart's name/avatar. Populated via `loadProfilesByPrincipals` (`profile.services`).  |
+| `activities.store`, `activities.derived`                       | `$lib/stores/`, `$lib/derived/`    | Cached global activity feed (last 50, public read). Populated by `LoaderGlobalActivities`; consumed by `ActivityFeed` and `MarketRecentTrades` from the same store.     |
+| `market-comments.store`                                        | `$lib/stores/`                     | Per-market comment cache (`Map<marketId, Comment[]>`). Populated lazily by `loadMarketComments` (`discussion.services`); read by `MarketDiscussion`.                    |
+| `order-book.store`                                             | `$lib/stores/`                     | Live order book.                                                                                                                                                        |
+| `trade.store`                                                  | `$lib/stores/`                     | Active-trade UI state.                                                                                                                                                  |
+| `notification.store`                                           | `$lib/stores/`                     | Toasts.                                                                                                                                                                 |
+| `theme.store`                                                  | `$lib/stores/`                     | Light / dark theme.                                                                                                                                                     |
+| `storage.store`                                                | `$lib/stores/`                     | LocalStorage-backed state.                                                                                                                                              |
+| `balance-domain.store`                                         | `$lib/stores/`                     | Active balance domain.                                                                                                                                                  |
+| `certified.store`, `certified-setter.store`                    | `$lib/stores/`                     | Certified-state plumbing for IC queries → updates.                                                                                                                      |
+| `cached.derived` (`cachedListOrEmpty`, `cachedNotInitialized`) | `$lib/derived/`                    | Tiny helpers for any `Writable<T \| undefined>` cache. Use them when adding a new "loader-populated" store instead of re-rolling the `?? []` / `=== undefined` derived. |
+| `nav.derived`, `nav.constants`                                 | `$lib/derived/`, `$lib/constants/` | Navigation state + config.                                                                                                                                              |
+| `tokens.derived`                                               | `$lib/derived/`                    | Active / supported tokens.                                                                                                                                              |
+| `playground.derived`                                           | `$lib/derived/`                    | Playground (test) mode helpers.                                                                                                                                         |
+| `page-market.derived`                                          | `$lib/derived/`                    | Per-page market selector.                                                                                                                                               |
+| `user.derived`                                                 | `$lib/derived/`                    | Derived user predicates.                                                                                                                                                |
 
 ### Constants worth knowing — `$lib/constants/`
 

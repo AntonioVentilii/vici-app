@@ -1,7 +1,5 @@
 <script lang="ts">
 	import { LineChart } from 'lucide-svelte/icons';
-	import { onMount } from 'svelte';
-	import type { ClearingDid } from '$declarations';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioStats from '$lib/components/portfolio/PortfolioStats.svelte';
@@ -11,60 +9,43 @@
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
-	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { categories } from '$lib/derived/categories.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
-	import { listSeriesCategories } from '$lib/services/category.services';
-	import { getPositions } from '$lib/services/position.services';
-	import { getUserTradeHistory } from '$lib/services/trade.services';
+	import { positions, positionsNotInitialized } from '$lib/derived/positions.derived';
+	import { tradeHistory, tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { SeriesCategory } from '$lib/types/category';
-	import type { Position } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
 	import {
 		formatPortfolioHoldingsStatLine,
 		formatPortfolioPnLStatLine
 	} from '$lib/utils/playground-display.utils';
 	import { calculatePositionPnL, calculatePositionValue } from '$lib/utils/portfolio.utils';
+	import { refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 
-	let positions = $state<Position[]>([]);
-	let tradeHistory = $state<ClearingDid.Event[]>([]);
-	let categoryMappings = $state<SeriesCategory[]>([]);
+	// Cold-load spinner only on the very first visit (when no domain has
+	// finished loading yet). On subsequent visits the cached positions /
+	// trade history / markets / orders are rendered immediately while
+	// `<Loaders />` polls a refresh in the background.
+	const refreshing = $derived(
+		$positionsNotInitialized ||
+			$tradeHistoryNotInitialized ||
+			$marketsNotInitialized ||
+			$ordersNotInitialized
+	);
 
-	let loading = $state(true);
-
-	let refreshing = $derived(loading || $marketsNotInitialized || $ordersNotInitialized);
-
-	const loadData = async () => {
-		loading = true;
-
-		try {
-			const [posRes, historyRes, mappingsRes] = await Promise.all([
-				getPositions($balanceDomain),
-				getUserTradeHistory($balanceDomain),
-				// Failure here only degrades artwork (falls back to a
-				// hash-pick category); never block the whole page.
-				listSeriesCategories().catch(() => [] as SeriesCategory[])
-			]);
-
-			positions = posRes;
-			tradeHistory = historyRes;
-			categoryMappings = mappingsRes;
-		} finally {
-			loading = false;
-		}
+	// `OpenOrdersTable` cancels an order then asks us to refresh. The
+	// loader for orders listens to `viciRefreshOrders` (and emits a
+	// position refresh because cancels free up collateral); we just fan
+	// out via the shared `refresh.utils` events so we don't duplicate
+	// fetch logic in the page.
+	const onOrdersRefresh = () => {
+		refreshOrders();
+		refreshPositions();
 	};
-
-	onMount(() => {
-		const unsubscribe = balanceDomain.subscribe(() => {
-			loadData();
-		});
-
-		return unsubscribe;
-	});
 
 	const getMarketById = (id: string) => $markets.find((m) => m.id === id);
 
@@ -72,7 +53,7 @@
 	// wallet. Resolved markets credit/debit the ICRC ledger at resolution, so
 	// including them here would double-count against the wallet baseline below.
 	const openPositions = $derived(
-		positions.filter((pos) => getMarketById(pos.marketId)?.status !== 'Resolved')
+		$positions.filter((pos) => getMarketById(pos.marketId)?.status !== 'Resolved')
 	);
 
 	const openPositionsValue = $derived(
@@ -133,8 +114,6 @@
 	</span>
 {/snippet}
 
-<svelte:document onviciRefreshPositions={loadData} />
-
 <div class="space-y-7 pb-24">
 	<MobileAppBar
 		align="left"
@@ -154,20 +133,20 @@
 		<LoadingSpinner />
 	{:else}
 		<PortfolioStats
-			activeMarketsCount={positions.length}
+			activeMarketsCount={$positions.length}
 			openOrdersCount={$orders.length}
 			pnlVariant={totalPnL >= 0 ? 'success' : 'warning'}
 			totalHoldings={portfolioHoldingsLabel}
 			totalPnL={portfolioPnLLabel}
-			tradeHistoryCount={tradeHistory.length}
+			tradeHistoryCount={$tradeHistory.length}
 		/>
 
-		<PositionTable {categoryMappings} markets={$markets} {positions} />
+		<PositionTable categoryMappings={$categories} markets={$markets} positions={$positions} />
 
 		<div class="grid grid-cols-1 gap-6 xl:grid-cols-2">
-			<OpenOrdersTable markets={$markets} onRefresh={loadData} orders={$orders} />
+			<OpenOrdersTable markets={$markets} onRefresh={onOrdersRefresh} orders={$orders} />
 
-			<TradeHistoryTable events={tradeHistory} markets={$markets} />
+			<TradeHistoryTable events={$tradeHistory} markets={$markets} />
 		</div>
 	{/if}
 </div>

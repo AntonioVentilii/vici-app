@@ -1,12 +1,9 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import YouBadge from '$lib/components/ui/YouBadge.svelte';
+	import { globalActivities } from '$lib/derived/activities.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import { getGlobalActivities } from '$lib/services/activity.services';
-	import { getProfile } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { UserProfile } from '$lib/types/profile';
-	import type { Activity } from '$lib/types/social';
+	import { profilesStore } from '$lib/stores/profiles.store';
 	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -17,27 +14,14 @@
 
 	const { marketId, isEmbedded = false }: Props = $props();
 
-	let activities = $state<Activity[]>([]);
-	const profiles = $state<Map<string, UserProfile>>(new Map());
-
-	onMount(async () => {
-		const all = await getGlobalActivities({ limit: 20 });
-		activities = all.filter((a) => a.marketId === marketId);
-
-		const uniquePrincipals = Array.from(new Set(activities.map((a) => a.user)));
-		const fetched = await Promise.all(
-			uniquePrincipals.map(async (principal) => [principal, await getProfile(principal)] as const)
-		);
-
-		for (const [principal, doc] of fetched) {
-			if (doc) {
-				profiles.set(principal, doc.data);
-			}
-		}
-	});
+	// Both this component and `ActivityFeed` drink from the same cached
+	// global feed (populated by `LoaderGlobalActivities`). Profiles for
+	// the authors are hydrated by the loader's side-effect, so we just
+	// read them from `profilesStore` without an extra fetch loop.
+	const activities = $derived($globalActivities.filter((a) => a.marketId === marketId));
 
 	const displayNameFor = (principal: string): string => {
-		const nickname = profiles.get(principal)?.nickname;
+		const nickname = $profilesStore.get(principal)?.nickname;
 
 		return nickname && nickname.length > 0
 			? nickname

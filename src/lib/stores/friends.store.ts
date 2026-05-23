@@ -1,11 +1,9 @@
-import { getProfile } from '$lib/services/profile.services';
 import {
 	getFriendRequests,
 	getFriends,
 	getRejectedFriendships
 } from '$lib/services/relation.services';
 import { userStore } from '$lib/stores/user.store';
-import type { UserProfile } from '$lib/types/profile';
 import type { Relation } from '$lib/types/relation';
 import type { Doc } from '@junobuild/core';
 import { derived, get, writable, type Readable } from 'svelte/store';
@@ -24,13 +22,12 @@ export const friendRequestsStore = writable<Doc<Relation>[]>([]);
 export const rejectedFriendshipsStore = writable<Doc<Relation>[]>([]);
 
 /**
- * Cache of `principal → UserProfile` for every counterpart the viewer has
- * a relation with (friends, incoming requests, rejected). Populated as a
- * side-effect of `refreshFriendRelations` so any consumer (Friends list,
- * inbox card, future avatars on the dashboard) can read names/avatars
- * without re-hitting the satellite.
+ * Flips to `true` the first time `refreshFriendRelations` completes for the
+ * current principal, and stays `true` until `clearFriendRelations` runs (i.e.
+ * the principal changes). Lets consumers show a spinner only on the cold
+ * load and switch to stale-while-revalidate on every subsequent visit.
  */
-export const friendProfilesStore = writable<Map<string, UserProfile>>(new Map());
+export const friendsRelationsLoadedStore = writable<boolean>(false);
 
 export const friendsCountStore: Readable<number> = derived(
 	friendsListStore,
@@ -91,32 +88,15 @@ const runRefresh = async (): Promise<void> => {
 		friendsListStore.set(friends);
 		friendRequestsStore.set(requests);
 		rejectedFriendshipsStore.set(rejected);
+		friendsRelationsLoadedStore.set(true);
 
+		// Hydrate the shared `profilesStore` for every counterpart of the
+		// viewer. Lazy import avoids a circular reference between
+		// profile.services → friends.store → profile.services.
+		const { loadProfilesByPrincipals } = await import('$lib/services/profile.services');
 		const viewer = get(userStore).user?.owner;
-		const cached = get(friendProfilesStore);
-		const missing = collectCounterparts({ viewer, friends, requests, rejected }).filter(
-			(principal) => !cached.has(principal)
-		);
-
-		if (missing.length > 0) {
-			const docs = await Promise.all(
-				missing.map((principal) => getProfile(principal).catch(() => undefined))
-			);
-
-			friendProfilesStore.update((current) => {
-				const next = new Map(current);
-
-				for (let i = 0; i < missing.length; i++) {
-					const doc = docs[i];
-
-					if (doc) {
-						next.set(missing[i], doc.data);
-					}
-				}
-
-				return next;
-			});
-		}
+		const principals = collectCounterparts({ viewer, friends, requests, rejected });
+		await loadProfilesByPrincipals({ principals });
 	} finally {
 		inFlight = undefined;
 	}
@@ -137,5 +117,5 @@ export const clearFriendRelations = (): void => {
 	friendsListStore.set([]);
 	friendRequestsStore.set([]);
 	rejectedFriendshipsStore.set([]);
-	friendProfilesStore.set(new Map());
+	friendsRelationsLoadedStore.set(false);
 };

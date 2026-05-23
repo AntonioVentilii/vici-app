@@ -41,13 +41,6 @@ export const WALLET_PAGINATION = 10n;
 export const ORDER_BOOK_POLL_MS = 5_000;
 
 /**
- * In-market chat poll interval. The chat surface long-polls because
- * the satellite doesn't push deltas yet; once it does, this constant
- * (and the consumer's `setInterval`) goes away.
- */
-export const CHAT_POLL_MS = 5_000;
-
-/**
  * Default auto-dismiss duration for global toasts (`notificationsStore`).
  * Per-call overrides still win — this is just the implicit default.
  */

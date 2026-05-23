@@ -13,14 +13,15 @@
 		unfriendUser
 	} from '$lib/services/relation.services';
 	import {
-		friendProfilesStore,
 		friendRequestsStore,
 		friendsListStore,
+		friendsRelationsLoadedStore,
 		refreshFriendRelations,
 		rejectedFriendshipsStore
 	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
+	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { Relation } from '$lib/types/relation';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -38,9 +39,13 @@
 	const activeFriends = $derived($friendsListStore);
 	const pendingRequests = $derived($friendRequestsStore);
 	const rejectedRelations = $derived($rejectedFriendshipsStore);
-	const friendProfiles = $derived($friendProfilesStore);
+	const friendProfiles = $derived($profilesStore);
 
-	let loading = $state(true);
+	// Only show the cold-load spinner when the store has never been
+	// populated for this principal. Subsequent visits to the page render
+	// the cached relations immediately while a background refresh runs —
+	// the standard stale-while-revalidate pattern.
+	const loading = $derived(!$friendsRelationsLoadedStore);
 	let newFriendPrincipal = $state('');
 	let adding = $state(false);
 	let processingKey = $state<string | null>(null);
@@ -53,15 +58,10 @@
 		relation.participants.find((p) => p !== userPrincipal);
 
 	onMount(() => {
-		void (async () => {
-			loading = true;
-
-			try {
-				await refreshFriendRelations();
-			} finally {
-				loading = false;
-			}
-		})();
+		// Fire-and-forget: spinner state is now driven by
+		// `friendsRelationsLoadedStore`, so we don't need to gate UI on
+		// this promise.
+		void refreshFriendRelations();
 	});
 
 	const handleAddFriend = async () => {

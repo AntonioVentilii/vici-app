@@ -6,6 +6,7 @@ import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
+import { profilesStore } from '$lib/stores/profiles.store';
 import type { Nickname, UserProfile } from '$lib/types/profile';
 import {
 	CONTRARIAN_PRICE_THRESHOLD,
@@ -18,6 +19,7 @@ import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { getDoc, setDoc, type Doc, type User } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
+import { get } from 'svelte/store';
 
 /**
  * Loads a user profile from Juno or returns a default shell; merges role from the satellite query.
@@ -60,6 +62,49 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 		key: principal,
 		data: profile as UserProfile
 	};
+};
+
+/**
+ * Populates `profilesStore` with the principals that aren't already cached.
+ * Use this from any surface that renders a counterpart's name/avatar
+ * (activity feed, market recent trades, market discussion, friends list, …)
+ * instead of keeping a per-component `Map` and a per-component fetch loop.
+ *
+ * Failures for individual principals are swallowed: the cache simply won't
+ * have an entry, and the UI is expected to fall back to a shortened
+ * principal. This mirrors what every existing caller was already doing.
+ */
+export const loadProfilesByPrincipals = async ({
+	principals
+}: {
+	principals: PrincipalText[];
+}): Promise<void> => {
+	const cached = get(profilesStore);
+	const unique = Array.from(new Set(principals)).filter(
+		(principal) => principal.length > 0 && !cached.has(principal)
+	);
+
+	if (unique.length === 0) {
+		return;
+	}
+
+	const docs = await Promise.all(
+		unique.map((principal) => getProfile(principal).catch(() => undefined))
+	);
+
+	profilesStore.update((current) => {
+		const next = new Map(current);
+
+		for (let i = 0; i < unique.length; i++) {
+			const doc = docs[i];
+
+			if (doc) {
+				next.set(unique[i], doc.data);
+			}
+		}
+
+		return next;
+	});
 };
 
 export const updateInterests = async ({

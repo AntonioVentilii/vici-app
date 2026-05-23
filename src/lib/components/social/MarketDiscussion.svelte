@@ -9,15 +9,16 @@
 	import { logActivity } from '$lib/services/activity.services';
 	import {
 		addComment,
-		getMarketComments,
-		upvoteComment,
-		downvoteComment
+		downvoteComment,
+		loadMarketComments,
+		upvoteComment
 	} from '$lib/services/discussion.services';
-	import { getProfile } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { marketCommentsStore } from '$lib/stores/market-comments.store';
+	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { Comment } from '$lib/types/comment';
-	import type { UserProfile } from '$lib/types/profile';
 	import { t } from '$lib/utils/i18n.utils';
+	import { refreshGlobalActivities } from '$lib/utils/refresh.utils';
 
 	interface Props {
 		marketId: string;
@@ -26,41 +27,20 @@
 
 	const { marketId, userPrincipal }: Props = $props();
 
-	let comments = $state<Comment[]>([]);
-
-	const profiles = $state<Map<string, UserProfile>>(new Map());
+	// Comments are cached per-market in `marketCommentsStore` so navigating
+	// away and back renders the previous comments instantly while a fresh
+	// fetch runs in the background. `Map.has(marketId)` doubles as the
+	// "loaded at least once" flag.
+	const comments = $derived($marketCommentsStore.get(marketId) ?? []);
+	const loading = $derived(!$marketCommentsStore.has(marketId));
 
 	let newComment = $state('');
-
-	let loading = $state(true);
-
 	let posting = $state(false);
-
 	let voting = $state<Record<string, boolean>>({});
 
-	onMount(async () => {
-		await loadComments();
+	onMount(() => {
+		void loadMarketComments({ marketId });
 	});
-
-	const loadComments = async () => {
-		loading = true;
-
-		try {
-			comments = await getMarketComments(marketId);
-
-			for (const comment of comments) {
-				if (!profiles.has(comment.user)) {
-					const profileDoc = await getProfile(comment.user);
-
-					if (profileDoc) {
-						profiles.set(comment.user, profileDoc.data);
-					}
-				}
-			}
-		} finally {
-			loading = false;
-		}
-	};
 
 	const handlePostComment = async () => {
 		if (!newComment.trim() || posting) {
@@ -85,7 +65,11 @@
 			});
 
 			newComment = '';
-			await loadComments();
+			await loadMarketComments({ marketId });
+			// Logged activity → global feed is now stale; refresh it so
+			// the Leaderboard "Activity" tab and `MarketRecentTrades`
+			// reflect this comment without waiting for the slow poll.
+			refreshGlobalActivities();
 		} finally {
 			posting = false;
 		}
@@ -127,7 +111,8 @@
 				}
 			}
 
-			await loadComments();
+			await loadMarketComments({ marketId });
+			refreshGlobalActivities();
 		} finally {
 			voting[comment.key] = false;
 		}
@@ -169,7 +154,7 @@
 			</div>
 		{:else}
 			{#each comments as comment (comment.key)}
-				{@const profile = profiles.get(comment.user)}
+				{@const profile = $profilesStore.get(comment.user)}
 				{@const upvoted = comment.upvotes?.includes(userPrincipal)}
 				{@const downvoted = comment.downvotes?.includes(userPrincipal)}
 				{@const score = (comment.upvotes?.length ?? 0) - (comment.downvotes?.length ?? 0)}

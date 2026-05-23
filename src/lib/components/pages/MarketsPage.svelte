@@ -1,15 +1,13 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import ForkMarketModal from '$lib/components/challenge/ForkMarketModal.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
+	import { categories } from '$lib/derived/categories.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
-	import { listSeriesCategories } from '$lib/services/category.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
-	import type { SeriesCategory } from '$lib/types/category';
 	import type { Market } from '$lib/types/market';
 	import {
 		DEFAULT_SECONDARY_FILTERS,
@@ -23,7 +21,6 @@
 	let searchTerm = $state('');
 	let activeTab = $state('Active');
 	let filters = $state<MarketSecondaryFilters>({ ...DEFAULT_SECONDARY_FILTERS });
-	let categoryMappings = $state<SeriesCategory[]>([]);
 
 	let forkModalOpen = $state(false);
 	let forkTarget = $state<Market | null>(null);
@@ -32,10 +29,6 @@
 		forkTarget = market;
 		forkModalOpen = true;
 	};
-
-	onMount(async () => {
-		categoryMappings = await listSeriesCategories();
-	});
 
 	const tabs = ['Active', 'Trending', 'Expiring', 'Resolved'] as const;
 
@@ -59,7 +52,7 @@
 			activeTab,
 			filters,
 			userInterests: $userStore.profile?.interests ?? [],
-			categoryMappings
+			categoryMappings: $categories
 		})
 	);
 </script>

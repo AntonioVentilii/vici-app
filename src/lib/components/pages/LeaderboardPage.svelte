@@ -1,15 +1,14 @@
 <script lang="ts">
 	import { Users } from 'lucide-svelte/icons';
-	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import YouBadge from '$lib/components/ui/YouBadge.svelte';
+	import { following } from '$lib/derived/following.derived';
+	import { leaderboard, leaderboardNotInitialized } from '$lib/derived/leaderboard.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import { getLeaderboard } from '$lib/services/leaderboard.services';
-	import { getFollowing } from '$lib/services/relation.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -23,49 +22,22 @@
 		{ id: 'activity', labelKey: 'leaderboard.tab.activity' }
 	];
 
-	let loading = $state(true);
-	let leaderboard = $state<UserProfile[]>([]);
-	let following = $state<string[]>([]);
 	let activeTab = $state<SocialTab>('global');
 	const currentUser = $derived($authPrincipal);
 
-	let intervalId: ReturnType<typeof setInterval> | undefined;
+	// Cold-load spinner only while the leaderboard store has never been
+	// populated. Subsequent navigations to this page render the cached
+	// ranks immediately while `LoaderLeaderboard` polls in the background.
+	const loading = $derived($leaderboardNotInitialized);
 
-	onMount(() => {
-		const fetchLeaderboard = async () => {
-			try {
-				const data = await getLeaderboard(50);
-				leaderboard = data;
-			} finally {
-				loading = false;
-			}
-		};
-
-		const fetchFollowing = async () => {
-			if (!currentUser) {
-				following = [];
-
-				return;
-			}
-
-			following = await getFollowing().catch(() => []);
-		};
-
-		fetchLeaderboard();
-		fetchFollowing();
-		intervalId = setInterval(fetchLeaderboard, 30000);
-
-		return () => clearInterval(intervalId);
-	});
-
-	let rankedUsers = $derived.by(() => {
+	const rankedUsers: UserProfile[] = $derived.by(() => {
 		if (activeTab !== 'friends') {
-			return leaderboard;
+			return $leaderboard;
 		}
 
-		const friendSet = new Set([currentUser, ...following].filter(Boolean));
+		const friendSet = new Set([currentUser, ...$following].filter(Boolean));
 
-		return leaderboard.filter((user) => friendSet.has(user.owner));
+		return $leaderboard.filter((user) => friendSet.has(user.owner));
 	});
 
 	let podium = $derived(rankedUsers.slice(0, 3));
@@ -89,7 +61,7 @@
 	});
 
 	const globalRank = (user: UserProfile) =>
-		leaderboard.findIndex((ranked) => ranked.owner === user.owner) + 1;
+		$leaderboard.findIndex((ranked) => ranked.owner === user.owner) + 1;
 
 	const getPodiumStyle = (indexInDisplay: number) => {
 		const isFirst =

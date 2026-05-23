@@ -1,6 +1,7 @@
 import { AppPath } from '$lib/constants/routes.constants';
-import { friendProfilesStore, friendRequestsStore } from '$lib/stores/friends.store';
+import { friendRequestsStore } from '$lib/stores/friends.store';
 import { localeStore } from '$lib/stores/locale.store';
+import { profilesStore } from '$lib/stores/profiles.store';
 import { initStorageStore } from '$lib/stores/storage.store';
 import { userStore } from '$lib/stores/user.store';
 import type { InboxNotification } from '$lib/types/inbox';
@@ -91,7 +92,7 @@ export const markAllInboxRead = (): void => {
  * out of `friendRequestsStore` and disappear from the inbox automatically.
  */
 const friendRequestInboxStore: Readable<InboxNotification[]> = derived(
-	[friendRequestsStore, friendProfilesStore, userStore, localeStore],
+	[friendRequestsStore, profilesStore, userStore, localeStore],
 	([$requests, $profiles, $user, $locale]) => {
 		const viewer = $user.user?.owner;
 

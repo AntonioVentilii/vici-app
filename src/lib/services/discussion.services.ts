@@ -1,4 +1,6 @@
 import { Collection } from '$lib/constants/collections.constants';
+import { loadProfilesByPrincipals } from '$lib/services/profile.services';
+import { marketCommentsStore } from '$lib/stores/market-comments.store';
 import type { Comment } from '$lib/types/comment';
 import { deleteDoc, getDoc, listDocs, setDoc } from '@junobuild/core';
 
@@ -11,6 +13,27 @@ export const getMarketComments = async (marketId: string): Promise<Comment[]> =>
 		.map(({ key, data }) => ({ ...data, key }))
 		.filter((c) => c.marketId === marketId)
 		.sort((a, b) => a.timestamp - b.timestamp);
+};
+
+/**
+ * Cache-aware comment loader. Fetches comments for `marketId`, writes them
+ * into `marketCommentsStore`, and hydrates the shared `profilesStore` with
+ * the comment authors so the UI can render names/avatars without a second
+ * fetch loop. Consumers (`MarketDiscussion`) call this on mount and after
+ * every mutation. `Map.has(marketId)` on `marketCommentsStore` doubles as
+ * the "loaded at least once" flag for the cold-load spinner.
+ */
+export const loadMarketComments = async ({ marketId }: { marketId: string }): Promise<void> => {
+	const comments = await getMarketComments(marketId);
+
+	marketCommentsStore.update((current) => {
+		const next = new Map(current);
+		next.set(marketId, comments);
+
+		return next;
+	});
+
+	await loadProfilesByPrincipals({ principals: comments.map((c) => c.user) });
 };
 
 export const addComment = async (
