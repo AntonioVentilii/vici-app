@@ -73,7 +73,7 @@
 			<!-- Mobile: stacked card list. The desktop table loses too
 				 much per-row text to truncation below ~720px, so we
 				 swap layouts entirely instead of compressing columns. -->
-			<ul class="divide-border block divide-y md:hidden">
+			<ul class="divide-border block w-full min-w-0 divide-y md:hidden">
 				{#each pagedPositions as pos (`${pos.marketId}::${pos.outcomeId}`)}
 					{@const market = getMarketById(pos.marketId)}
 					{@const pnl = calculatePositionPnL({ position: pos, market })}
@@ -174,19 +174,19 @@
 						<tr
 							class="border-border text-muted-foreground bg-card border-b text-[10px] tracking-widest uppercase"
 						>
-							<th class="px-6 py-4 font-black"
+							<th class="w-[40%] px-6 py-4 font-black"
 								>{t({ locale: $localeStore, key: 'portfolio.positions.col.market' })}</th
 							>
-							<th class="px-6 py-4 font-black"
+							<th class="w-[10%] px-6 py-4 font-black"
 								>{t({ locale: $localeStore, key: 'portfolio.positions.col.side' })}</th
 							>
-							<th class="px-6 py-4 text-right font-black"
+							<th class="w-[15%] px-6 py-4 text-right font-black"
 								>{t({ locale: $localeStore, key: 'portfolio.positions.col.size' })}</th
 							>
-							<th class="px-6 py-4 text-right font-black"
+							<th class="w-[17%] px-6 py-4 text-right font-black"
 								>{t({ locale: $localeStore, key: 'portfolio.positions.col.value' })}</th
 							>
-							<th class="px-6 py-4 text-right font-black"
+							<th class="w-[18%] px-6 py-4 text-right font-black"
 								>{t({ locale: $localeStore, key: 'portfolio.positions.col.pnl' })}</th
 							>
 						</tr>
@@ -209,13 +209,13 @@
 										<PositionArtThumb {categoryId} marketId={pos.marketId} {result} size={44} />
 										<span class="min-w-0 flex-1">
 											<span
-												class="text-foreground group-hover:text-primary block truncate text-sm font-bold transition-colors"
+												class="text-foreground group-hover:text-primary line-clamp-2 block text-sm leading-snug font-bold transition-colors"
 											>
 												{market?.title ??
 													t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 											</span>
 											<span
-												class="text-muted-foreground block truncate text-[10px] leading-none tracking-widest uppercase"
+												class="text-muted-foreground mt-1 block truncate text-[10px] leading-none tracking-widest uppercase"
 											>
 												{t({
 													locale: $localeStore,
