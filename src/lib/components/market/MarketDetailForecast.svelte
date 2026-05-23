@@ -44,9 +44,11 @@
 	const sortedOutcomes = $derived(
 		[...(outcomes ?? [])].sort((a, b) => {
 			const probDiff = (b.probability ?? 0) - (a.probability ?? 0);
+
 			if (probDiff !== 0) {
 				return probDiff;
 			}
+
 			return (a.title ?? '').localeCompare(b.title ?? '');
 		})
 	);

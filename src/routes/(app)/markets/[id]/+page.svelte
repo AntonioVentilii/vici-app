@@ -82,6 +82,12 @@
 		nonNullish(market) && ($userIsAdmin || market.creator === $authPrincipal)
 	);
 
+	const canResolve = $derived(
+		nonNullish(market) && market.status !== 'Resolved' && $userIsAdminOrSolver
+	);
+
+	const showAdminActions = $derived(canEditMetadata || canResolve);
+
 	// Resolution choreography — see `docs/ai/frontend/design.md` §7.6.
 	// On the first time the user views a resolved market they have a
 	// position on:
@@ -207,8 +213,26 @@
 						<MarketInfoPanel {market} />
 					</div>
 
-					{#if canEditMetadata}
-						<MarketMetadataForm canEdit {market} />
+					{#if showAdminActions}
+						<section
+							class="market-detail-admin"
+							aria-label={t({ locale: $localeStore, key: 'market.detail.admin_actions' })}
+						>
+							{#if canEditMetadata}
+								<MarketMetadataForm canEdit {market} />
+							{/if}
+
+							{#if canResolve}
+								<MarketResolutionInterface
+									{market}
+									onSettled={() => {
+										if (nonNullish(market)) {
+											fetchMarket({ id: market.id, silent: true });
+										}
+									}}
+								/>
+							{/if}
+						</section>
 					{/if}
 				</div>
 
@@ -217,19 +241,6 @@
 					<MarketInfoPanel {market} />
 				</aside>
 			</div>
-
-			{#if market.status !== 'Resolved' && $userIsAdminOrSolver}
-				<div class="border-border mx-auto max-w-4xl border-t pt-12">
-					<MarketResolutionInterface
-						{market}
-						onSettled={() => {
-							if (nonNullish(market)) {
-								fetchMarket({ id: market.id, silent: true });
-							}
-						}}
-					/>
-				</div>
-			{/if}
 		</div>
 	{:else}
 		<div class="flex flex-col items-center justify-center py-24 text-center">
@@ -303,6 +314,15 @@
 		flex-direction: column;
 		gap: 1rem;
 		min-width: 0;
+	}
+
+	.market-detail-admin {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+		margin-top: 0.5rem;
+		padding-top: 1.5rem;
+		border-top: 1px solid var(--border-base);
 	}
 
 	.market-detail-aside {
