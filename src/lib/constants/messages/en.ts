@@ -624,6 +624,8 @@ export const enMessages = {
 	'markets.search': 'Search markets...',
 	'markets.sub':
 		'Hundreds of questions across macro, crypto, politics, tech, sports, culture. Every one resolves on public data.',
+	'markets.suggested.eyebrow': "EDITOR'S PICK",
+	'markets.suggested.title': 'Suggested for you',
 	'markets.tab.active': 'Active',
 	'markets.tab.expiring': 'Expiring',
 	'markets.tab.resolved': 'Resolved',

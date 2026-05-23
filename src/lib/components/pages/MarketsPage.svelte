@@ -1,9 +1,11 @@
 <script lang="ts">
 	import ForkMarketModal from '$lib/components/challenge/ForkMarketModal.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import MarketCard from '$lib/components/market/MarketCard.svelte';
 	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
+	import { marketMetadata } from '$lib/derived/market-metadata.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -13,8 +15,11 @@
 		DEFAULT_SECONDARY_FILTERS,
 		type MarketSecondaryFilters
 	} from '$lib/types/market-filters';
+	import { isMarketSuggested } from '$lib/utils/flow-card-display.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { filterAndRankMarkets } from '$lib/utils/market-filters.utils';
+
+	const SUGGESTED_RAIL_LIMIT = 6;
 
 	let loading = $derived($marketsNotInitialized);
 
@@ -52,8 +57,21 @@
 			activeTab,
 			filters,
 			userInterests: $userStore.profile?.interests ?? [],
-			tagMappings: $marketTags
+			tagMappings: $marketTags,
+			metadataBySeries: $marketMetadata
 		})
+	);
+
+	// Editorial rail — only renders when at least one Open market is
+	// currently flagged AND inside its 14-day decay window. Gating
+	// goes through `isMarketSuggested` so the rail can never disagree
+	// with the sort-tier boost: if a market would no longer be
+	// boosted, it never shows up here either. Capped at
+	// `SUGGESTED_RAIL_LIMIT` so the rail stays editorial, not a dump.
+	const suggestedRail = $derived(
+		$markets
+			.filter((market) => isMarketSuggested({ market, metadata: $marketMetadata[market.id] }))
+			.slice(0, SUGGESTED_RAIL_LIMIT)
 	);
 </script>
 
@@ -78,6 +96,29 @@
 	</div>
 
 	<div class="w-full space-y-5">
+		{#if suggestedRail.length > 0}
+			<section
+				class="suggested-rail"
+				aria-label={t({ locale: $localeStore, key: 'markets.suggested.title' })}
+			>
+				<header class="suggested-rail-head">
+					<span class="eyebrow suggested-rail-eyebrow">
+						{t({ locale: $localeStore, key: 'markets.suggested.eyebrow' })}
+					</span>
+					<h2 class="suggested-rail-title">
+						{t({ locale: $localeStore, key: 'markets.suggested.title' })}
+					</h2>
+				</header>
+				<div class="suggested-rail-scroller">
+					{#each suggestedRail as market, index (market.id)}
+						<div class="suggested-rail-card">
+							<MarketCard {index} {market} metadata={$marketMetadata[market.id]} />
+						</div>
+					{/each}
+				</div>
+			</section>
+		{/if}
+
 		<div class="space-y-5">
 			<MarketFilters
 				{activeTab}
@@ -98,6 +139,7 @@
 				emptyMessage={t({ locale: $localeStore, key: 'markets.empty' })}
 				{loading}
 				markets={filteredMarkets}
+				metadataBySeries={$marketMetadata}
 				onChallenge={handleChallenge}
 			/>
 		</div>
@@ -144,5 +186,52 @@
 	.markets-mobile-count {
 		color: var(--text-muted);
 		font-size: var(--t-12);
+	}
+
+	/* Editorial rail — horizontal-scroll row of fixed-width MarketCards.
+	   Sits above the search/filter/tab block so the curated picks are the
+	   first thing users see, without crowding the canonical list below.
+	   The negative margins + padding pattern keeps the scroll-snap edges
+	   flush with the page gutter while letting cards bleed past it. */
+	.suggested-rail {
+		margin: 0 auto;
+		max-width: 56rem;
+		padding: 0 1rem;
+	}
+	.suggested-rail-head {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		margin-bottom: 0.75rem;
+	}
+	.suggested-rail-eyebrow {
+		color: var(--laurel);
+	}
+	.suggested-rail-title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--t-18);
+		font-weight: 600;
+		letter-spacing: var(--tracking-snug);
+		color: var(--text-base);
+	}
+	.suggested-rail-scroller {
+		display: grid;
+		grid-auto-flow: column;
+		grid-auto-columns: minmax(17rem, 17rem);
+		gap: 0.75rem;
+		overflow-x: auto;
+		overflow-y: hidden;
+		scroll-snap-type: x mandatory;
+		scrollbar-width: none;
+		margin: 0 -1rem;
+		padding: 0.25rem 1rem 0.5rem;
+	}
+	.suggested-rail-scroller::-webkit-scrollbar {
+		display: none;
+	}
+	.suggested-rail-card {
+		scroll-snap-align: start;
+		min-width: 0;
 	}
 </style>

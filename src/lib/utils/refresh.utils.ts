@@ -46,3 +46,14 @@ export const refreshAllBalances = () => {
 export const refreshMarketTags = () => {
 	emit({ message: VICI_EVENTS.REFRESH_MARKET_TAGS });
 };
+
+/**
+ * Re-projects every `MarketMetadata` doc into the cached `seriesId →
+ * MarketMetadata` map. Fire this after editing any field on a market's
+ * metadata (whyNow, events, suggested) so the per-card Featured chip,
+ * the suggested-market boost in `rankMarkets`, and the "Suggested for
+ * you" rail pick up the change without a full page reload.
+ */
+export const refreshMarketMetadata = () => {
+	emit({ message: VICI_EVENTS.REFRESH_MARKET_METADATA });
+};

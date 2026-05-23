@@ -15,11 +15,15 @@ import { ActivityType } from '$lib/enums/social';
 import { UserRole } from '$lib/enums/user';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
-import { listMarketTagsBySeries } from '$lib/services/market-tags.services';
+import {
+	listMarketMetadataBySeries,
+	listMarketTagsBySeries
+} from '$lib/services/market-tags.services';
 import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
+import type { MarketMetadata } from '$lib/types/market-metadata';
 import type { Activity } from '$lib/types/social';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
 import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
@@ -468,8 +472,67 @@ export const loadMarket = ({
 	});
 
 /**
- * Ranks markets by user interest first, then a culture-fallback boost (so users
- * with no declared interests still get a meaningful feed), then activity
+ * Editorial-boost magnitude for markets flipped to `suggested = true`.
+ * Sits above the interest tier (1000) and the culture-fallback tier
+ * (500) so a single admin flag dominates every organic ranking signal
+ * — but stays additive, so two suggested markets still order by
+ * volume / liquidity / recency between themselves.
+ */
+const SUGGESTED_BOOST_BASE = 5000;
+
+/**
+ * Linear decay window for the suggested boost. After this many ms the
+ * editorial weight is fully gone and the market falls back to its
+ * organic rank — no admin maintenance required to un-suggest stale
+ * picks. Tracked from `metadata.updatedAt` (set on every metadata
+ * upsert in `market-metadata.services.ts`).
+ */
+const SUGGESTED_DECAY_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * Resolves the editorial-boost score for a market. Returns `0` for any
+ * of the three "should not promote" cases:
+ *   - no metadata, or `suggested === false`
+ *   - the market is no longer Open (auto-drop on `Expired` / `Resolved`)
+ *   - the boost has fully decayed (older than {@link SUGGESTED_DECAY_MS})
+ *
+ * Exported so the "Suggested for you" rail (which only wants markets
+ * with a non-zero current boost) reuses the same gating rules as the
+ * sort tier — single source of truth, no chance of the rail showing a
+ * market that the sort already let fall off the top.
+ */
+export const suggestedScore = ({
+	market,
+	metadata,
+	nowMs = Date.now()
+}: {
+	market: Market;
+	metadata: MarketMetadata | undefined;
+	nowMs?: number;
+}): number => {
+	if (!metadata?.suggested) {
+		return 0;
+	}
+
+	if (market.status !== 'Open') {
+		return 0;
+	}
+
+	const ageMs = Math.max(0, nowMs - metadata.updatedAt);
+	const remaining = 1 - ageMs / SUGGESTED_DECAY_MS;
+
+	if (remaining <= 0) {
+		return 0;
+	}
+
+	return SUGGESTED_BOOST_BASE * remaining;
+};
+
+/**
+ * Ranks markets by editorial signal first (admin-flipped `suggested`,
+ * linearly decayed over 14 days and auto-dropped on resolve), then
+ * user interest, then a culture-fallback boost (so users with no
+ * declared interests still get a meaningful feed), then activity
  * (volume) and liquidity, with `createdAt` as the final tie-breaker.
  *
  * `tagMappings` is the `seriesId → MarketTag[]` projection produced by
@@ -478,18 +541,29 @@ export const loadMarket = ({
  * `culture` boost is unchanged from the legacy single-category logic —
  * it now fires when the market carries the `culture` tag and the user
  * either has no interests or explicitly opted into culture.
+ *
+ * `metadataBySeries` (optional) carries the full `MarketMetadata` doc
+ * keyed by `seriesId`. When omitted, the suggested-market boost
+ * silently no-ops — every other tier behaves identically, so callers
+ * that haven't been migrated to pass metadata see no regression.
  */
 export const rankMarkets = ({
 	markets,
 	userInterests,
-	tagMappings
+	tagMappings,
+	metadataBySeries = {}
 }: {
 	markets: Market[];
 	userInterests: Set<string>;
 	tagMappings: Record<string, MarketTag[]>;
+	metadataBySeries?: Record<string, MarketMetadata>;
 }): Market[] => {
+	const nowMs = Date.now();
+
 	const computeScore = (m: Market): number => {
 		const tags = tagMappings[m.id] ?? [];
+
+		const suggested = suggestedScore({ market: m, metadata: metadataBySeries[m.id], nowMs });
 
 		const interestScore = tags.some((tag) => userInterests.has(tag)) ? 1000 : 0;
 
@@ -512,7 +586,7 @@ export const rankMarkets = ({
 
 		const recencyScore = Number(m.createdAt) / 1e12;
 
-		return interestScore + cultureScore + volumeScore + liquidityScore + recencyScore;
+		return suggested + interestScore + cultureScore + volumeScore + liquidityScore + recencyScore;
 	};
 
 	return markets
@@ -528,10 +602,11 @@ export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<M
 	const identity = await getIdentityOrAnonymous();
 	const principal = identity.getPrincipal().toText();
 
-	const [markets, profile, tagMappings] = await Promise.all([
+	const [markets, profile, tagMappings, metadataBySeries] = await Promise.all([
 		getMarkets(domain),
 		getProfile(principal),
-		listMarketTagsBySeries().catch(() => ({}))
+		listMarketTagsBySeries().catch(() => ({})),
+		listMarketMetadataBySeries().catch(() => ({}))
 	]);
 
 	const userInterests = new Set(profile.data.interests ?? []);
@@ -541,7 +616,8 @@ export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<M
 	return rankMarkets({
 		markets: eligibleMarkets,
 		userInterests,
-		tagMappings
+		tagMappings,
+		metadataBySeries
 	});
 };
 

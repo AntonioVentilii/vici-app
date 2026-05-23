@@ -2,6 +2,7 @@
 	import { Spring } from 'svelte/motion';
 	import FlowArtFrame from '$lib/components/artwork/FlowArtFrame.svelte';
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
+	import SuggestedBadge from '$lib/components/market/SuggestedBadge.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import { playgroundPotentialReturnSuffix } from '$lib/derived/playground.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -18,7 +19,8 @@
 		consensusPercent,
 		consensusSide,
 		formatFlowCallsLabel,
-		formatWhyNowChip
+		formatWhyNowChip,
+		isMarketSuggested
 	} from '$lib/utils/flow-card-display.utils';
 	import { formatProbability, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -90,6 +92,7 @@
 		formatFlowCallsLabel({ volume: market.totalVolume, decimals: market.token.decimals })
 	);
 	const whyNowText = $derived(formatWhyNowChip(metadata?.whyNow));
+	const showSuggested = $derived(isMarketSuggested({ market, metadata }));
 	const showPriorOnFront = $derived(Boolean(priorCall));
 
 	const amount = $derived(parseFloat(tradeAmount) || 0);
@@ -341,6 +344,11 @@
 							{/if}
 							{#if flag}
 								<span class="allcaps flow-flag">{flag}</span>
+							{/if}
+							{#if showSuggested}
+								<span class="flow-suggested-slot">
+									<SuggestedBadge compact />
+								</span>
 							{/if}
 						</div>
 
@@ -602,6 +610,14 @@
 		margin-left: auto;
 		color: var(--laurel);
 		font-size: var(--t-12);
+	}
+	/* Right-anchored editorial slot. Mirrors `.flow-flag`'s right-align
+	   so the Suggested chip lands at the trailing edge of the meta row
+	   when no flag is set — and clings next to the flag when one is. */
+	.flow-suggested-slot {
+		margin-left: auto;
+		display: inline-flex;
+		align-items: center;
 	}
 
 	.flow-card-title {

@@ -639,6 +639,8 @@ export const frMessages = {
 	'markets.search': 'Rechercher des marchés...',
 	'markets.sub':
 		'Des centaines de questions sur macro, crypto, politique, tech, sport, culture. Toutes se résolvent sur des données publiques.',
+	'markets.suggested.eyebrow': 'CHOIX DE LA RÉDACTION',
+	'markets.suggested.title': 'Suggérés pour toi',
 	'markets.tab.active': 'Actifs',
 	'markets.tab.expiring': 'Expirent',
 	'markets.tab.resolved': 'Résolus',

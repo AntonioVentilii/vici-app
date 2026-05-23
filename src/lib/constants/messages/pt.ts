@@ -627,6 +627,8 @@ export const ptMessages = {
 	'markets.search': 'Pesquisar mercados...',
 	'markets.sub':
 		'Centenas de perguntas em macro, cripto, política, tecnologia, esportes e cultura. Cada uma resolve em dados públicos.',
+	'markets.suggested.eyebrow': 'ESCOLHA DO EDITOR',
+	'markets.suggested.title': 'Sugeridos para você',
 	'markets.tab.active': 'Ativos',
 	'markets.tab.expiring': 'Expirando',
 	'markets.tab.resolved': 'Resolvidos',

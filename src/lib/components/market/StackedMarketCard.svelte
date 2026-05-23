@@ -8,6 +8,7 @@
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
+	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import { t } from '$lib/utils/i18n.utils';
 	import type { MarketGroup } from '$lib/utils/market-groups.utils';
 
@@ -16,9 +17,10 @@
 		index?: number;
 		userPrincipal?: string;
 		onChallenge?: (market: Market) => void;
+		metadataBySeries?: Record<string, MarketMetadata>;
 	}
 
-	const { group, index = 0, userPrincipal, onChallenge }: Props = $props();
+	const { group, index = 0, userPrincipal, onChallenge, metadataBySeries }: Props = $props();
 
 	const forks = $derived(group.forks);
 	const ghostLayers = $derived(Math.min(forks.length, 2));
@@ -63,7 +65,12 @@
 		></div>
 	{/if}
 
-	<MarketCard {index} market={group.root} onChallenge={showFaceChallenge} />
+	<MarketCard
+		{index}
+		market={group.root}
+		metadata={metadataBySeries?.[group.root.id]}
+		onChallenge={showFaceChallenge}
+	/>
 
 	{#if forks.length > 0}
 		<div class="absolute top-3 right-3 z-10">

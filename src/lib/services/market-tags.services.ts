@@ -29,3 +29,27 @@ export const listMarketTagsBySeries = async (): Promise<Record<string, MarketTag
 		return acc;
 	}, {});
 };
+
+/**
+ * Full `seriesId → MarketMetadata` projection for the same public
+ * `MARKET_METADATA` collection. Powers surfaces that need the entire
+ * payload (suggested-market boost, the per-card Featured chip, the
+ * "Suggested for you" rail) without forcing a per-card round-trip.
+ *
+ * Tags on each entry are re-normalised on the client for the same
+ * defense-in-depth reason as {@link listMarketTagsBySeries}.
+ */
+export const listMarketMetadataBySeries = async (): Promise<Record<string, MarketMetadata>> => {
+	const { items } = await listDocs<MarketMetadata>({
+		collection: Collection.MARKET_METADATA
+	});
+
+	return items.reduce<Record<string, MarketMetadata>>((acc, { data }) => {
+		acc[data.seriesId] = {
+			...data,
+			tags: normalizeMarketTags(data.tags ?? [])
+		};
+
+		return acc;
+	}, {});
+};

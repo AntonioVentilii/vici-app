@@ -2,6 +2,7 @@ import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { rankMarkets } from '$lib/services/market.services';
 import type { Market } from '$lib/types/market';
 import type { MarketSecondaryFilters } from '$lib/types/market-filters';
+import type { MarketMetadata } from '$lib/types/market-metadata';
 import { isSocial, isViciXp } from '$lib/utils/balance-domain.utils';
 import { getSearchScore } from '$lib/utils/search.utils';
 
@@ -55,7 +56,8 @@ export const filterAndRankMarkets = ({
 	activeTab,
 	filters,
 	userInterests = [],
-	tagMappings = {}
+	tagMappings = {},
+	metadataBySeries = {}
 }: {
 	markets: Market[];
 	searchTerm: string;
@@ -63,6 +65,7 @@ export const filterAndRankMarkets = ({
 	filters: MarketSecondaryFilters;
 	userInterests?: string[];
 	tagMappings?: Record<string, MarketTag[]>;
+	metadataBySeries?: Record<string, MarketMetadata>;
 }): Market[] => {
 	const baseFiltered = markets
 		.map((market) => ({
@@ -88,6 +91,7 @@ export const filterAndRankMarkets = ({
 	return rankMarkets({
 		markets: baseFiltered,
 		userInterests: new Set(userInterests),
-		tagMappings
+		tagMappings,
+		metadataBySeries
 	});
 };

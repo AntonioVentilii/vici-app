@@ -6,6 +6,7 @@
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import type { Market } from '$lib/types/market';
+	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import { groupMarketsByLineage } from '$lib/utils/market-groups.utils';
 
 	interface Props {
@@ -19,6 +20,7 @@
 		hasMore?: boolean;
 		onLoadMore?: () => void;
 		onChallenge?: (market: Market) => void;
+		metadataBySeries?: Record<string, MarketMetadata>;
 	}
 
 	let {
@@ -27,7 +29,8 @@
 		emptyMessage,
 		hasMore = false,
 		onLoadMore,
-		onChallenge
+		onChallenge,
+		metadataBySeries
 	}: Props = $props();
 
 	const groups = $derived(groupMarketsByLineage({ markets, userPrincipal: $authPrincipal }));
@@ -62,7 +65,13 @@
 >
 	{#if groups.length > 0}
 		{#each groups as group, index (group.rootId)}
-			<StackedMarketCard {group} {index} {onChallenge} userPrincipal={$authPrincipal} />
+			<StackedMarketCard
+				{group}
+				{index}
+				{metadataBySeries}
+				{onChallenge}
+				userPrincipal={$authPrincipal}
+			/>
 		{/each}
 
 		{#if loading}

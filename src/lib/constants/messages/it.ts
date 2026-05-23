@@ -629,6 +629,8 @@ export const itMessages = {
 	'markets.search': 'Cerca mercati...',
 	'markets.sub':
 		'Centinaia di domande tra macro, crypto, politica, tech, sport e cultura. Tutte si chiudono su dati pubblici.',
+	'markets.suggested.eyebrow': 'SCELTI DALLA REDAZIONE',
+	'markets.suggested.title': 'Suggeriti per te',
 	'markets.tab.active': 'Attivi',
 	'markets.tab.expiring': 'In scadenza',
 	'markets.tab.resolved': 'Risolti',

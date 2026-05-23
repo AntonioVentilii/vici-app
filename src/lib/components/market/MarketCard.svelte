@@ -7,13 +7,16 @@
 	import BinaryProbabilities from '$lib/components/market/BinaryProbabilities.svelte';
 	import CategoricalProbabilities from '$lib/components/market/CategoricalProbabilities.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
+	import SuggestedBadge from '$lib/components/market/SuggestedBadge.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
+	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import { isSocial } from '$lib/utils/balance-domain.utils';
+	import { isMarketSuggested } from '$lib/utils/flow-card-display.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { getOutcomeVariant, getTimeRemaining } from '$lib/utils/market.utils';
 
@@ -21,14 +24,16 @@
 		market: Market;
 		index?: number;
 		onChallenge?: (market: Market) => void;
+		metadata?: MarketMetadata;
 	}
 
-	const { market, index = 0, onChallenge }: Props = $props();
+	const { market, index = 0, onChallenge, metadata }: Props = $props();
 
 	const isChallenge = $derived(isSocial(market.balanceDomain));
 	const isFork = $derived(market.forkedFrom !== undefined);
 	const isResolved = $derived(market.status === 'Resolved');
 	const showChallengeSlot = $derived(!isFork && !isResolved);
+	const showSuggested = $derived(isMarketSuggested({ market, metadata }));
 
 	const resolvedOutcomeLabel = (outcome: string): string => {
 		if (outcome === 'YES') {
@@ -60,6 +65,9 @@
 			<div class="flex flex-1 flex-col gap-4 p-4 sm:p-5">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div class="flex flex-wrap items-center gap-1.5">
+						{#if showSuggested}
+							<SuggestedBadge />
+						{/if}
 						<OutcomeBadge status={market.status} />
 						{#if isResolved && nonNullish(market.outcome)}
 							<Badge variant={getOutcomeVariant(market.outcome)}>

@@ -637,6 +637,8 @@ export const deMessages = {
 	'markets.search': 'Märkte suchen...',
 	'markets.sub':
 		'Hunderte Fragen aus Makro, Krypto, Politik, Tech, Sport, Kultur. Alle lösen sich über öffentliche Daten auf.',
+	'markets.suggested.eyebrow': 'REDAKTIONSTIPP',
+	'markets.suggested.title': 'Empfehlungen für dich',
 	'markets.tab.active': 'Aktiv',
 	'markets.tab.expiring': 'Läuft ab',
 	'markets.tab.resolved': 'Aufgelöst',

@@ -4,6 +4,7 @@
 	import LoaderFollowing from '$lib/components/loaders/LoaderFollowing.svelte';
 	import LoaderGlobalActivities from '$lib/components/loaders/LoaderGlobalActivities.svelte';
 	import LoaderLeaderboard from '$lib/components/loaders/LoaderLeaderboard.svelte';
+	import LoaderMarketMetadata from '$lib/components/loaders/LoaderMarketMetadata.svelte';
 	import LoaderMarketTags from '$lib/components/loaders/LoaderMarketTags.svelte';
 	import LoaderMarkets from '$lib/components/loaders/LoaderMarkets.svelte';
 	import LoaderOrders from '$lib/components/loaders/LoaderOrders.svelte';
@@ -27,6 +28,8 @@
 <LoaderTradeHistory />
 
 <LoaderMarketTags />
+
+<LoaderMarketMetadata />
 
 <LoaderLeaderboard />
 

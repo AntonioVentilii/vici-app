@@ -15,7 +15,7 @@
 	import type { Market } from '$lib/types/market';
 	import type { MarketEvent, MarketMetadataInput } from '$lib/types/market-metadata';
 	import { t } from '$lib/utils/i18n.utils';
-	import { refreshMarketTags } from '$lib/utils/refresh.utils';
+	import { refreshMarketMetadata, refreshMarketTags } from '$lib/utils/refresh.utils';
 
 	interface Props {
 		market: Market;
@@ -117,6 +117,7 @@
 			({ updatedAt: savedAt, suggested } = metadata);
 			tags = normalizeMarketTags(metadata.tags ?? []);
 			refreshMarketTags();
+			refreshMarketMetadata();
 		} catch (err: unknown) {
 			console.warn('Market metadata save failed:', err);
 			error = t({ locale: $localeStore, key: 'market.metadata.error.save' });
