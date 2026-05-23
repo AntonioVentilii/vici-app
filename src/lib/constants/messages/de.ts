@@ -39,6 +39,16 @@ export const deMessages = {
 	'admin.dashboard.sub':
 		'Verwalte Märkte, erstelle neue Möglichkeiten, löse abgelaufene Vorhersagen auf und verwalte Administratoren.',
 	'admin.dashboard.title': 'Admin-Dashboard',
+	'admin.hub.access.count': '{count} vergebene Rollen',
+	'admin.hub.access.description': 'Admins, Solver, Ersteller und Oracle-Settler verwalten.',
+	'admin.hub.access.title': 'Zugriff & Rollen',
+	'admin.hub.back': 'Zurück zu Admin',
+	'admin.hub.markets.count': '{count} Märkte insgesamt',
+	'admin.hub.markets.description': 'Neue Vorhersagemärkte einzeln oder in Masse erstellen.',
+	'admin.hub.markets.title': 'Märkte',
+	'admin.hub.resolutions.count': '{count} ausstehende Auflösungen',
+	'admin.hub.resolutions.description': 'Abgelaufene Märkte auflösen und den Verlauf prüfen.',
+	'admin.hub.resolutions.title': 'Auflösungen',
 	'admin.markets.bulk.badge': 'JSON-Upload',
 	'admin.markets.bulk.busy':
 		'Bitte warten, während wir deine Vorhersagemärkte auf der Blockchain einrichten...',

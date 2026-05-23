@@ -37,6 +37,16 @@ export const ptMessages = {
 	'admin.dashboard.sub':
 		'Gerencie mercados, crie novas oportunidades, resolva previsões expiradas e administre administradores.',
 	'admin.dashboard.title': 'Painel do Admin',
+	'admin.hub.access.count': '{count} funções atribuídas',
+	'admin.hub.access.description': 'Gerencie admins, solvers, criadores e settlers do oráculo.',
+	'admin.hub.access.title': 'Acesso e funções',
+	'admin.hub.back': 'Voltar para Admin',
+	'admin.hub.markets.count': '{count} mercados no total',
+	'admin.hub.markets.description': 'Crie novos mercados de previsão, individualmente ou em lote.',
+	'admin.hub.markets.title': 'Mercados',
+	'admin.hub.resolutions.count': '{count} aguardando resolução',
+	'admin.hub.resolutions.description': 'Resolva mercados expirados e revise o histórico.',
+	'admin.hub.resolutions.title': 'Resoluções',
 	'admin.markets.bulk.badge': 'Upload JSON',
 	'admin.markets.bulk.busy':
 		'Aguarde enquanto configuramos seus mercados de previsão no blockchain...',

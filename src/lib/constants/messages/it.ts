@@ -37,6 +37,16 @@ export const itMessages = {
 	'admin.dashboard.sub':
 		'Gestisci i mercati, crea nuove opportunità, risolvi le previsioni scadute e gestisci gli amministratori.',
 	'admin.dashboard.title': 'Dashboard admin',
+	'admin.hub.access.count': '{count} ruoli assegnati',
+	'admin.hub.access.description': "Gestisci admin, solver, creatori e settler dell'oracolo.",
+	'admin.hub.access.title': 'Accessi e ruoli',
+	'admin.hub.back': 'Torna ad Admin',
+	'admin.hub.markets.count': '{count} mercati in totale',
+	'admin.hub.markets.description': 'Crea nuovi mercati di previsione, singolarmente o in blocco.',
+	'admin.hub.markets.title': 'Mercati',
+	'admin.hub.resolutions.count': '{count} in attesa di risoluzione',
+	'admin.hub.resolutions.description': 'Risolvi i mercati scaduti e consulta la cronologia.',
+	'admin.hub.resolutions.title': 'Risoluzioni',
 	'admin.markets.bulk.badge': 'Upload JSON',
 	'admin.markets.bulk.busy':
 		'Attendi mentre prepariamo i tuoi mercati di previsione sulla blockchain...',

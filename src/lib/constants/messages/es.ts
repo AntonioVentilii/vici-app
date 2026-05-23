@@ -37,6 +37,16 @@ export const esMessages = {
 	'admin.dashboard.sub':
 		'Gestiona mercados, crea nuevas oportunidades, resuelve predicciones vencidas y administra a los administradores.',
 	'admin.dashboard.title': 'Panel de administración',
+	'admin.hub.access.count': '{count} roles asignados',
+	'admin.hub.access.description': 'Gestiona admins, solvers, creadores y settlers del oráculo.',
+	'admin.hub.access.title': 'Acceso y roles',
+	'admin.hub.back': 'Volver a Admin',
+	'admin.hub.markets.count': '{count} mercados en total',
+	'admin.hub.markets.description': 'Crea nuevos mercados de predicción, individualmente o en lote.',
+	'admin.hub.markets.title': 'Mercados',
+	'admin.hub.resolutions.count': '{count} pendientes de resolución',
+	'admin.hub.resolutions.description': 'Resuelve mercados vencidos y revisa el historial.',
+	'admin.hub.resolutions.title': 'Resoluciones',
 	'admin.markets.bulk.badge': 'Carga JSON',
 	'admin.markets.bulk.busy':
 		'Por favor espera mientras configuramos tus mercados de predicción en la blockchain...',

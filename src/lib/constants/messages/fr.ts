@@ -37,6 +37,18 @@ export const frMessages = {
 	'admin.dashboard.sub':
 		'Gérez les marchés, créez de nouvelles opportunités, résolvez les prédictions expirées et gérez les administrateurs.',
 	'admin.dashboard.title': 'Tableau de bord admin',
+	'admin.hub.access.count': '{count} rôles attribués',
+	'admin.hub.access.description': 'Gérer les administrateurs, solveurs, créateurs et oracles.',
+	'admin.hub.access.title': 'Accès et rôles',
+	'admin.hub.back': "Retour à l'admin",
+	'admin.hub.markets.count': '{count} marchés au total',
+	'admin.hub.markets.description':
+		'Créer de nouveaux marchés de prédiction, individuellement ou en lot.',
+	'admin.hub.markets.title': 'Marchés',
+	'admin.hub.resolutions.count': '{count} en attente de résolution',
+	'admin.hub.resolutions.description':
+		"Résoudre les marchés expirés et consulter l'historique des résolutions.",
+	'admin.hub.resolutions.title': 'Résolutions',
 	'admin.markets.bulk.badge': 'Import JSON',
 	'admin.markets.bulk.busy':
 		'Patientez pendant la configuration de vos marchés de prédiction sur la blockchain...',

@@ -37,6 +37,16 @@ export const enMessages = {
 	'admin.dashboard.sub':
 		'Manage markets, create new opportunities, resolve expired predictions, and manage administrators.',
 	'admin.dashboard.title': 'Admin Dashboard',
+	'admin.hub.access.count': '{count} granted roles',
+	'admin.hub.access.description': 'Manage admins, solvers, creators, and oracle settlers.',
+	'admin.hub.access.title': 'Access & Roles',
+	'admin.hub.back': 'Back to Admin',
+	'admin.hub.markets.count': '{count} markets total',
+	'admin.hub.markets.description': 'Create new prediction markets, individually or in bulk.',
+	'admin.hub.markets.title': 'Markets',
+	'admin.hub.resolutions.count': '{count} awaiting resolution',
+	'admin.hub.resolutions.description': 'Resolve expired markets and review resolution history.',
+	'admin.hub.resolutions.title': 'Resolutions',
 	'admin.markets.bulk.badge': 'JSON Upload',
 	'admin.markets.bulk.busy':
 		'Please wait while we set up your prediction markets on the blockchain...',
