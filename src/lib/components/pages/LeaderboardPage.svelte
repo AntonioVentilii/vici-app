@@ -108,6 +108,10 @@
 
 		return 'leaderboard.scope.global';
 	});
+
+	const activeTabLabelKey: MessageKey = $derived(
+		socialTabs.find((tab) => tab.id === activeTab)?.labelKey ?? 'leaderboard.tab.global'
+	);
 </script>
 
 {#snippet socialAppbarRight()}
@@ -215,13 +219,8 @@
 							{t({ locale: $localeStore, key: 'leaderboard.row.rank' })}
 						</p>
 						<h2 class="text-foreground mt-1 text-xl font-semibold tracking-tight">
-							{t({ locale: $localeStore, key: 'leaderboard.tab.global' })}
+							{t({ locale: $localeStore, key: activeTabLabelKey })}
 						</h2>
-					</div>
-					<div class="border-border bg-background/40 rounded-full border px-3 py-1.5">
-						<span class="text-muted-foreground font-mono text-[10px] font-bold uppercase">
-							{t({ locale: $localeStore, key: 'leaderboard.tab.week' })}
-						</span>
 					</div>
 				</div>
 
