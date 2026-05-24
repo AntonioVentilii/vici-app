@@ -2,7 +2,6 @@ import { Collection } from '$lib/constants/collections.constants';
 import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
-import { redactProfile } from '$satellite/services/privacy.services';
 import { isNullish } from '@dfinity/utils';
 import type { AssertSetDocContext } from '@junobuild/functions';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
@@ -92,12 +91,10 @@ export const getProfile = (principal: PrincipalText): UserProfile | undefined =>
 		caller
 	});
 
-	const profileWithRole = withProfileDefaults({
+	return withProfileDefaults({
 		...profile,
 		role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
 	});
-
-	return redactProfile({ caller, profile: profileWithRole });
 };
 
 export const searchProfiles = (query: string): UserProfile[] => {
@@ -129,8 +126,7 @@ export const searchProfiles = (query: string): UserProfile[] => {
 			const matches = [p.nickname, p.owner].some((val) => val.toLowerCase().includes(lowerQuery));
 
 			return matches;
-		})
-		.map((profile) => redactProfile({ caller, profile }));
+		});
 };
 
 /**

@@ -13,7 +13,6 @@ src/satellite/
 │   ├── engine-sync.services.ts     Mirrors Juno roles → icdc-core Vici engine
 │   ├── leaderboard.services.ts     Server-side leaderboard reads
 │   ├── market-metadata.services.ts Creator/admin market context updates
-│   ├── privacy.services.ts         Privacy / scrub helpers
 │   ├── profile.services.ts         Profile validation + lookups
 │   ├── relation.services.ts        Friend / follow primitives
 │   ├── roles.services.ts           Role doc validation

@@ -315,8 +315,8 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 };
 
 /**
- * Profiles are redacted server-side per visibility rules; this still falls back
- * to a shortened principal so the UI never renders an empty name.
+ * Falls back to a shortened principal so the UI never renders an empty
+ * name when a profile has no nickname set.
  */
 export const getDisplayName = ({
 	profile

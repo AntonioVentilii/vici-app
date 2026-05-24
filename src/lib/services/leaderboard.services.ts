@@ -5,12 +5,12 @@ import { fromWireProfile } from '$satellite/utils/wire-format.utils';
 /**
  * Fetches the top profiles ranked by points (XP) from the satellite-side
  * `listLeaderboard` query. Routing through the satellite (instead of a
- * direct `listDocs` against the profiles collection) is what makes
- * `redactProfile` apply: a viewer who isn't a friend / follower / admin
- * sees a `User <shortened>` placeholder for `FRIENDS_ONLY` and
- * `FRIENDS_AND_FOLLOWERS` rows, matching the visibility rules every other
- * social surface honours. The cap is enforced satellite-side
- * (`LEADERBOARD_LIMIT`).
+ * direct `listDocs` against the profiles collection) keeps the cap
+ * (`LEADERBOARD_LIMIT`) and the ranking authoritative server-side.
+ *
+ * Nicknames are returned as-is for every row the caller is allowed to
+ * see; the broader "who can see whom" gate is owned by the upcoming
+ * user-visibility rework.
  *
  * Points are probability-weighted and enhanced by streaks; the actual
  * sort happens satellite-side too so client and server agree on rank.
