@@ -127,6 +127,7 @@ export const idlFactory = ({ IDL }) => {
 		expiry_ns: IDL.Nat64,
 		banner_url: IDL.Opt(IDL.Text),
 		underlying: IDL.Text,
+		locale: IDL.Opt(IDL.Text),
 		description: Description,
 		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		icon_url: IDL.Opt(IDL.Text),
@@ -148,6 +149,7 @@ export const idlFactory = ({ IDL }) => {
 		Unauthorized: IDL.Null,
 		ForkMustBeRestricted: IDL.Null,
 		UnsupportedPayoutUnit: IDL.Null,
+		InvalidLocale: IDL.Null,
 		SocialRateLimitExceeded: IDL.Null,
 		SeriesAlreadyExists: IDL.Null,
 		SourceSeriesNotFound: IDL.Null,
@@ -168,6 +170,7 @@ export const idlFactory = ({ IDL }) => {
 		source_series_id: IDL.Text,
 		title: IDL.Opt(IDL.Text),
 		engine_id: IDL.Opt(IDL.Text),
+		locale: IDL.Opt(IDL.Text),
 		description: IDL.Opt(Description),
 		trading_access: IDL.Vec(TradingAccess)
 	});
@@ -229,6 +232,7 @@ export const idlFactory = ({ IDL }) => {
 		banner_url: IDL.Opt(IDL.Text),
 		series_id: IDL.Text,
 		underlying: IDL.Text,
+		locale: IDL.Opt(IDL.Text),
 		description: Description,
 		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		created_at_ns: IDL.Nat64,

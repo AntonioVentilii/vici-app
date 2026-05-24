@@ -997,6 +997,23 @@ export interface Series {
 	 */
 	underlying: string;
 	/**
+	 * Optional [BCP 47](https://www.rfc-editor.org/info/bcp47) language tag
+	 * describing the language of `title`, `description`, and any
+	 * `outcomes[].title` / `outcomes[].description`.
+	 *
+	 * Examples: `"en"`, `"en-US"`, `"es"`, `"zh-Hant-HK"`.
+	 *
+	 * `locale` is metadata: it does NOT participate in `series_id` hashing,
+	 * so the same economic contract written in different languages must
+	 * collide on the same id (otherwise liquidity would fragment across
+	 * localized clones of the same market).
+	 *
+	 * When `None`, consumers should assume the default locale `"en"` and are
+	 * responsible for translating into the user's preferred locale — the
+	 * canister never stores translations on-chain.
+	 */
+	locale: [] | [string];
+	/**
 	 * A detailed description of the series.
 	 */
 	description: Description;

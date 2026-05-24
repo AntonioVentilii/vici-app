@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 687b1b852cfe5054f0ba22724f3d7b207c667244 for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit 614bf0ef7c80e09ae58a82a8d9dbb770a8d1fad7 for file 'src/clearing/clearing.did'
 
 // Outcome of a position transfer acceptance.
 type AcceptPositionTransferResult = variant {
@@ -520,6 +520,21 @@ type Series = record {
 	series_id : text;
 	// The underlying asset ticker or identifier (e.g., "ICP/USD").
 	underlying : text;
+	// Optional [BCP 47](https://www.rfc-editor.org/info/bcp47) language tag
+	// describing the language of `title`, `description`, and any
+	// `outcomes[].title` / `outcomes[].description`.
+	//
+	// Examples: `"en"`, `"en-US"`, `"es"`, `"zh-Hant-HK"`.
+	//
+	// `locale` is metadata: it does NOT participate in `series_id` hashing,
+	// so the same economic contract written in different languages must
+	// collide on the same id (otherwise liquidity would fragment across
+	// localized clones of the same market).
+	//
+	// When `None`, consumers should assume the default locale `"en"` and are
+	// responsible for translating into the user's preferred locale — the
+	// canister never stores translations on-chain.
+	locale : opt text;
 	// A detailed description of the series.
 	description : Description;
 	// The defined outcomes for categorical markets (ordered).

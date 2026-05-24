@@ -346,6 +346,7 @@ export const idlFactory = ({ IDL }) => {
 		banner_url: IDL.Opt(IDL.Text),
 		series_id: IDL.Text,
 		underlying: IDL.Text,
+		locale: IDL.Opt(IDL.Text),
 		description: Description,
 		outcomes: IDL.Opt(IDL.Vec(Outcome)),
 		created_at_ns: IDL.Nat64,

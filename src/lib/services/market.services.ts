@@ -10,6 +10,7 @@ import {
 	ZERO
 } from '$lib/constants/app.constants';
 import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
+import type { AppLocale } from '$lib/constants/locale.constants';
 import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { ActivityType } from '$lib/enums/social';
 import { UserRole } from '$lib/enums/user';
@@ -49,7 +50,8 @@ export const createMarket = async ({
 	payoutUnit: payoutUnitOverride,
 	socialReward,
 	balanceDomain,
-	tradingAccess = [{ Open: null }]
+	tradingAccess = [{ Open: null }],
+	locale
 }: {
 	title: string;
 	description: string;
@@ -59,6 +61,14 @@ export const createMarket = async ({
 	socialReward?: { title: string; description?: string; iconUrl?: string };
 	balanceDomain: RegistryDid.BalanceDomain;
 	tradingAccess?: RegistryDid.TradingAccess[];
+	/**
+	 * BCP 47 source language of `title`, `description`, `outcomes`, and
+	 * `socialReward`. Stored as metadata on the registry; the canister never
+	 * stores translations and treats `None` as `"en"` by default. Off-chain
+	 * translations (see `MARKET_TRANSLATIONS` collection) overlay this source
+	 * for each user's preferred locale.
+	 */
+	locale?: AppLocale;
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -141,7 +151,10 @@ export const createMarket = async ({
 		// on `eng_0`. Regular users creating a Social market must send `None` so the
 		// call routes to `CreationTier::Social` instead of being rejected with
 		// `EngineRoleNotHeld`.
-		engine_id: isEngineCreator ? toNullable(VICI_ENGINE_ID) : toNullable()
+		engine_id: isEngineCreator ? toNullable(VICI_ENGINE_ID) : toNullable(),
+		// BCP 47 source language of the human-readable fields above. `undefined`
+		// → `None` on chain, which the canister treats as `"en"`.
+		locale: toNullable(locale)
 	};
 
 	const seriesId = await addSeries({
@@ -636,12 +649,21 @@ export const forkMarket = async ({
 	marketId,
 	groupIds,
 	title,
-	description
+	description,
+	locale
 }: {
 	marketId: MarketId;
 	groupIds: string[];
 	title?: string;
 	description?: string;
+	/**
+	 * Optional BCP 47 source-language override for the forked market's
+	 * `title`/`description`. When omitted, the registry inherits the source
+	 * series' locale, which is what we want for non-translating "Challenge
+	 * your friends" forks. Pass an explicit value only when the fork
+	 * intentionally retitles into a different language.
+	 */
+	locale?: AppLocale;
 }): Promise<string> => {
 	if (groupIds.length === 0) {
 		throw new Error('Fork requires at least one target group');
@@ -656,7 +678,8 @@ export const forkMarket = async ({
 			nonNullish(description) ? { plain: description, html: [], markdown: [] } : undefined
 		),
 		trading_access: [{ Restricted: { groups: groupIds } }],
-		engine_id: toNullable(VICI_ENGINE_ID)
+		engine_id: toNullable(VICI_ENGINE_ID),
+		locale: toNullable(locale)
 	};
 
 	return await forkSeries({ identity, params });

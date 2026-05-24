@@ -108,6 +108,11 @@ for ((i = 0; i < $length; i++)); do
   title=$(jq -r '.title' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
   description=$(jq -r '.description' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
 
+  # BCP 47 locale tag for the market's title/description. Defaults to "en" when
+  # the data file omits it. The icdc-core registry stores this as metadata and
+  # does NOT include it in `series_id` hashing — translations remain off-chain.
+  locale=$(jq -r '.locale // "en"' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
+
   expiration_iso=$(echo "$market" | jq -r '.expiryDate')
 
   underlying=$(slugify "$title")
@@ -142,6 +147,7 @@ for ((i = 0; i < $length; i++)); do
         oracle_source = \"$ORACLE_ID\";
         trading_access = vec { variant { Open } };
         engine_id = opt \"$VICI_ENGINE_ID\";
+        locale = opt \"$locale\";
     })"
 done
 
