@@ -18,7 +18,9 @@
 		retractBout,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
+	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BoutDoc, BoutState } from '$lib/types/bout';
 	import type { LeagueDoc } from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
@@ -77,6 +79,12 @@
 				role: m.role
 			}));
 			bouts = boutList;
+			// Hydrate handles/avatars for the member roster — same
+			// pattern as SocialFeedPage. Fire-and-forget; the derived
+			// `memberHandle` picks up nicknames once the cache lands.
+			void loadProfilesByPrincipals({
+				principals: memberList.items.map((m) => m.member)
+			});
 			loadState = 'ready';
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -138,6 +146,16 @@
 
 	const shortPrincipal = (principal: string): string =>
 		principal.length > 12 ? `${principal.slice(0, 5)}…${principal.slice(-5)}` : principal;
+
+	const memberHandle = (principal: string): string => {
+		const profile = $profilesStore.get(principal);
+
+		if (profile?.nickname && profile.nickname.length > 0) {
+			return `@${profile.nickname}`;
+		}
+
+		return shortPrincipal(principal);
+	};
 
 	// Bouts grouped by state. Order matches V1.2's prototype panel —
 	// active first (in_flight), then near-term (accepted / proposed),
@@ -339,7 +357,7 @@
 			<ul class="league-detail-members">
 				{#each members as member (member.member)}
 					<li class="league-detail-member">
-						<span class="league-detail-member-name num">{shortPrincipal(member.member)}</span>
+						<span class="league-detail-member-name num">{memberHandle(member.member)}</span>
 						<span class="league-detail-member-role allcaps" data-role={member.role}>
 							{t({ locale: $localeStore, key: roleLabelKey(member.role) })}
 						</span>

@@ -2,8 +2,10 @@
 	import { onMount } from 'svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import SocialSubNav from '$lib/components/layout/SocialSubNav.svelte';
+	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 	import { listSocialFeed } from '$lib/services/social-feed.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { SocialFeedEntryDoc, SocialFeedEntryKind } from '$lib/types/social-feed';
 	import { formatDate } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -24,6 +26,12 @@
 	const load = async () => {
 		try {
 			entries = await listSocialFeed({});
+			// Fire-and-forget — `loadProfilesByPrincipals` populates the
+			// shared `profilesStore` cache. Once it lands, the
+			// `actorHandle` derivation below picks up the nicknames so
+			// the page hot-swaps truncated principals for handles
+			// without a full reload.
+			void loadProfilesByPrincipals({ principals: entries.map((e) => e.actor) });
 			loadState = 'ready';
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -32,6 +40,16 @@
 	};
 
 	onMount(load);
+
+	const actorHandle = (principal: string): string => {
+		const profile = $profilesStore.get(principal);
+
+		if (profile?.nickname && profile.nickname.length > 0) {
+			return `@${profile.nickname}`;
+		}
+
+		return shortPrincipal(principal);
+	};
 
 	const kindLabelKey = (kind: SocialFeedEntryKind): MessageKey => {
 		switch (kind) {
@@ -77,7 +95,7 @@
 			{#each entries as entry (`${entry.createdAtMs}/${entry.actor}/${entry.kind}/${entry.refId}`)}
 				<li class="social-feed-entry" data-kind={entry.kind}>
 					<div class="social-feed-entry-head">
-						<span class="num social-feed-entry-actor">{shortPrincipal(entry.actor)}</span>
+						<span class="num social-feed-entry-actor">{actorHandle(entry.actor)}</span>
 						<span class="allcaps social-feed-entry-kind">
 							{t({ locale: $localeStore, key: kindLabelKey(entry.kind) })}
 						</span>
