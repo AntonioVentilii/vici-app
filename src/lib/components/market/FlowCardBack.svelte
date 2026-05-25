@@ -1,6 +1,8 @@
 <script lang="ts">
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
+	import { VXP_STAKE_LADDER, type VxpStake } from '$lib/constants/vxp-economy.constants';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
@@ -9,6 +11,7 @@
 		FollowedLeanSignal,
 		PriorCallSignal
 	} from '$lib/types/market-signals';
+	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import {
 		consensusPercent,
@@ -22,6 +25,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 	import { getTimeRemaining } from '$lib/utils/market.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
+	import { snapToStakeLadder, vxpNetWin } from '$lib/utils/vxp-economy.utils';
 
 	interface Props {
 		market: Market;
@@ -35,6 +39,14 @@
 		// for the tap-to-flip-back gesture so background cards (which
 		// the user can't see) don't react to stray events.
 		interactive?: boolean;
+		// Current stake amount (mirrors FlowCard.tradeAmount as a string
+		// so the FlowMode → FlowCard → FlowCardBack chain shares one
+		// source of truth). When undefined, the stake row is hidden.
+		tradeAmount?: string;
+		// Stake-ladder change callback. Fires when a rung is tapped on
+		// the VXP stake slider; the parent updates its bound state and
+		// passes the new value back on the next render.
+		onStakeChange?: (next: string) => void;
 	}
 
 	const {
@@ -45,7 +57,9 @@
 		priorCall,
 		followedLean,
 		onClose,
-		interactive = true
+		interactive = true,
+		tradeAmount,
+		onStakeChange
 	}: Props = $props();
 
 	// Tap = pointerdown + pointerup with raw movement under this many
@@ -133,6 +147,28 @@
 
 	let rulesOpen = $state(false);
 	const resolutionCondition = $derived(market.description?.trim() ?? '');
+
+	// VXP stake slider — exposed only on the VXP balance domain (the
+	// playground domain uses fractional ICP / ckUSDC stakes via the
+	// FlowMode +/- stepper, not the ladder). Snapping the parent's
+	// free-form `tradeAmount` to the nearest ladder rung also defends
+	// against persisted stake values from before the ladder shipped.
+	const showStakeSlider = $derived(
+		tradeAmount !== undefined && onStakeChange !== undefined && isViciXp($balanceDomain)
+	);
+	const currentStake: VxpStake = $derived(
+		showStakeSlider ? snapToStakeLadder({ value: Number(tradeAmount ?? '0') || 0 }) : 50
+	);
+	const stakeYesWin = $derived(vxpNetWin({ stake: currentStake, pWin: market.yesProbability }));
+	const stakeNoWin = $derived(vxpNetWin({ stake: currentStake, pWin: 1 - market.yesProbability }));
+
+	const selectStake = (rung: VxpStake) => {
+		if (onStakeChange === undefined) {
+			return;
+		}
+
+		onStakeChange(String(rung));
+	};
 </script>
 
 <div class="flow-back">
@@ -234,6 +270,42 @@
 				</p>
 				<p class="flow-back-activity num">{callsLabel}</p>
 			</section>
+
+			{#if showStakeSlider}
+				<section class="flow-back-block flow-stake" data-no-flip-back>
+					<p class="eyebrow flow-back-label">
+						{t({ locale: $localeStore, key: 'card.back.stake_ladder' })}
+					</p>
+					<div class="flow-stake-rungs" role="radiogroup">
+						{#each VXP_STAKE_LADDER as rung (rung)}
+							<button
+								class="flow-stake-rung num"
+								class:is-active={rung === currentStake}
+								aria-checked={rung === currentStake}
+								onclick={() => selectStake(rung)}
+								role="radio"
+								type="button"
+							>
+								{rung}
+							</button>
+						{/each}
+					</div>
+					<div class="flow-stake-preview">
+						<div class="flow-stake-cell">
+							<span class="flow-stake-cell-label allcaps">
+								{t({ locale: $localeStore, key: 'card.back.stake_yes_wins' })}
+							</span>
+							<span class="num text-yes">+{stakeYesWin}</span>
+						</div>
+						<div class="flow-stake-cell">
+							<span class="flow-stake-cell-label allcaps">
+								{t({ locale: $localeStore, key: 'card.back.stake_no_wins' })}
+							</span>
+							<span class="num text-no">+{stakeNoWin}</span>
+						</div>
+					</div>
+				</section>
+			{/if}
 
 			<section class="flow-back-block">
 				<p class="eyebrow flow-back-label">
@@ -513,5 +585,63 @@
 		background:
 			linear-gradient(90deg, color-mix(in srgb, var(--cat-color) 8%, transparent), transparent),
 			color-mix(in srgb, var(--bg-surface) 90%, transparent);
+	}
+
+	.flow-stake {
+		gap: 0.6rem;
+	}
+
+	.flow-stake-rungs {
+		display: grid;
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+		gap: 0.35rem;
+	}
+
+	.flow-stake-rung {
+		appearance: none;
+		padding: 0.45rem 0;
+		font-size: var(--t-12);
+		font-weight: 700;
+		letter-spacing: -0.01em;
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			color 120ms ease,
+			background 120ms ease,
+			border-color 120ms ease;
+	}
+
+	.flow-stake-rung:hover {
+		color: var(--text-base);
+	}
+
+	.flow-stake-rung.is-active {
+		color: var(--cat-color);
+		background: color-mix(in srgb, var(--cat-color) 14%, transparent);
+		border-color: color-mix(in srgb, var(--cat-color) 38%, var(--border-base));
+	}
+
+	.flow-stake-preview {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+	}
+
+	.flow-stake-cell {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		padding: 0.5rem 0.6rem;
+		border-radius: var(--r-12);
+		border: 1px solid var(--border-base);
+		background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+	}
+
+	.flow-stake-cell-label {
+		font-size: var(--t-11, 0.7rem);
+		color: var(--text-muted);
 	}
 </style>

@@ -56,6 +56,9 @@
 		categoryAcc?: CategoryAccuracySignal;
 		priorCall?: PriorCallSignal;
 		followedLean?: FollowedLeanSignal;
+		// Stake-ladder change callback. Wired through to FlowCardBack
+		// so a tap on a rung writes back to FlowMode's bound stake.
+		onStakeChange?: (next: string) => void;
 	}
 
 	const {
@@ -74,7 +77,8 @@
 		metadata,
 		categoryAcc,
 		priorCall,
-		followedLean
+		followedLean,
+		onStakeChange
 	}: Props = $props();
 
 	const isCommitted = $derived(committedAction !== null);
@@ -455,7 +459,9 @@
 					{market}
 					{metadata}
 					onClose={closeBack}
+					{onStakeChange}
 					{priorCall}
+					{tradeAmount}
 				/>
 			</div>
 		</div>

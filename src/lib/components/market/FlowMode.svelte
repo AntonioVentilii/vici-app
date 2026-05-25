@@ -633,6 +633,9 @@
 							{market}
 							{metadata}
 							onAction={handleAction}
+							onStakeChange={(next) => {
+								tradeAmount = next;
+							}}
 							position={positions.find((p) => p.marketId === market.id)}
 							{priorCall}
 							signedIn={nonNullish($userStore.user)}
