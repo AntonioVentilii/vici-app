@@ -328,7 +328,17 @@
 											})}
 										</span>
 										<span class="text-border text-[9px]">•</span>
-										<span class="text-yes font-mono text-[9px] font-bold uppercase">
+										<!-- Match V1.2's accuracy-as-signal treatment: only colour
+										     the stat green when the user is genuinely above-average
+										     (>=78%, the same cut V1.2 uses). Below that the number
+										     is a neutral muted-foreground so the green pops as a
+										     real performance signal, not as page decoration. -->
+										<span
+											class={[
+												'font-mono text-[9px] font-bold uppercase',
+												(user.accuracy ?? 0) >= 78 ? 'text-yes' : 'text-muted-foreground'
+											]}
+										>
 											{t({
 												locale: $localeStore,
 												key: 'leaderboard.row.accuracy',
