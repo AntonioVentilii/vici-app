@@ -2,6 +2,8 @@
 	import { Plus, KeyRound } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import CreateLeagueModal from '$lib/components/leagues/CreateLeagueModal.svelte';
+	import JoinLeagueModal from '$lib/components/leagues/JoinLeagueModal.svelte';
 	import { listMyLeagues, type LeagueWithRole } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { formatDate } from '$lib/utils/format.utils';
@@ -19,8 +21,10 @@
 	let leagues = $state<LeagueWithRole[]>([]);
 	let loadState = $state<'loading' | 'ready' | 'error'>('loading');
 	let errorMessage = $state<string | null>(null);
+	let createOpen = $state(false);
+	let joinOpen = $state(false);
 
-	onMount(async () => {
+	const refresh = async () => {
 		try {
 			leagues = await listMyLeagues();
 			loadState = 'ready';
@@ -28,7 +32,9 @@
 			errorMessage = err instanceof Error ? err.message : 'Unknown error';
 			loadState = 'error';
 		}
-	});
+	};
+
+	onMount(refresh);
 
 	const roleLabelKey = (role: LeagueWithRole['role']): MessageKey =>
 		role === 'owner'
@@ -37,13 +43,20 @@
 				? 'leagues.role.admin'
 				: 'leagues.role.member';
 
-	// Modal triggers are no-ops for FE-1b; FE-1c wires them.
 	const openCreate = () => {
-		// TODO(phase-10-fe-1c): mount CreateLeagueModal
+		createOpen = true;
 	};
 
 	const openJoin = () => {
-		// TODO(phase-10-fe-1c): mount JoinLeagueModal
+		joinOpen = true;
+	};
+
+	// Both modals close themselves on success via the same callback —
+	// they own their reset; this page just hides them and re-fetches.
+	const handleAfterAction = () => {
+		createOpen = false;
+		joinOpen = false;
+		void refresh();
 	};
 </script>
 
@@ -109,6 +122,18 @@
 		</ul>
 	{/if}
 </div>
+
+<CreateLeagueModal
+	isOpen={createOpen}
+	onClose={() => (createOpen = false)}
+	onCreated={handleAfterAction}
+/>
+
+<JoinLeagueModal
+	isOpen={joinOpen}
+	onClose={() => (joinOpen = false)}
+	onJoined={handleAfterAction}
+/>
 
 <style lang="postcss">
 	.leagues-page {
