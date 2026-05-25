@@ -1254,11 +1254,11 @@ const wcFace = ({
 };
 
 // ---- WC — tentpole pitch + editorial backdrops ---------------
-// Renders one of nine variants per seed: five plain backdrops
-// (stands, flag diagonal, flag horizontal, flag vertical, stadium
-// perspective) plus four figure-bearing composites (figure on
-// flag-vert / flag-diag / stands / perspective). Every variant
-// draws into the 280×100 viewBox handled by `renderFlowArt`.
+// Renders one of fourteen variants per seed: ten plain backdrops
+// (stands, flag diag/horiz/vert, perspective, circle, spotlight,
+// bunting, TV, propose) plus four figure-bearing composites
+// (figure on flag-vert / flag-diag / stands / perspective). Every
+// variant draws into the 280×100 viewBox handled by `renderFlowArt`.
 //
 // Flag trios mirror iconic WC nations (Brazil green-yellow-blue,
 // France blue-white-red, Argentina sky-white-sky, etc.) and pair
@@ -1267,9 +1267,14 @@ const wcFace = ({
 // deterministic per seed — the same market always renders the
 // same trio + variant + figure pair.
 //
-// Follow-up commits will port V1.2's remaining backdrops
-// (circle, spotlight, bunting, TV, propose), CSS keyframes for
-// `wc-figure` / `wc-spot` / `wc-cnf-*`, and emotion-tag overlays.
+// `bgSpotlight` and `bgBunting` carry CSS class hooks
+// (`wc-spot wc-spot-left/right` and `wc-cnf wc-cnf-${i}`) plus the
+// figure layer wraps in `<g class="wc-figure">`. Classes are inert
+// until the keyframes commit lands.
+//
+// Follow-up commits will add CSS animation keyframes for
+// `wc-figure` / `wc-spot` / `wc-cnf-*`, emotion-tag overlays, and
+// the editorial focal props (trophy, golden boot, red card).
 const renderWC = ({ rng, p, state }: RenderArgs): string => {
 	const bgStands = (): string => {
 		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
@@ -1347,6 +1352,94 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		return m;
 	};
 
+	// Single accent disc on a base wash — reads as a stadium floodlight
+	// catching the back of the pitch, or a flare on a TV scoreboard.
+	const bgCircle = ({
+		color,
+		cx = 200,
+		cy = 50,
+		r = 60
+	}: {
+		color: string;
+		cx?: number;
+		cy?: number;
+		r?: number;
+	}): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<rect width="280" height="100" fill="${p.base}" opacity="0.55"/>`;
+		m += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.85"/>`;
+		m += `<circle cx="${cx}" cy="${cy}" r="${r + 6}" fill="none" stroke="${color}" stroke-width="0.5" opacity="0.40"/>`;
+
+		return m;
+	};
+
+	// Two cone-shaped spotlight beams from above. Carries `wc-spot`
+	// CSS class hooks that future keyframes will animate (left/right
+	// sweep). Classes are inert until the CSS port lands.
+	const bgSpotlight = ({ c1, c2 }: { c1: string; c2: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<polygon class="wc-spot wc-spot-left" points="50,-10 80,-10 130,100 30,100" fill="${c1}" opacity="0.15"/>`;
+		m += `<polygon class="wc-spot wc-spot-right" points="200,-10 230,-10 250,100 150,100" fill="${c2}" opacity="0.15"/>`;
+		m += `<rect width="280" height="100" fill="${p.base}" opacity="0.35"/>`;
+
+		return m;
+	};
+
+	// Parade bunting — a sagging string with 12 alternating triangle
+	// pennants drawn in the flag trio. Each pennant carries an
+	// `wc-cnf wc-cnf-${i}` CSS class hook for future stagger animation.
+	const bgBunting = ({ c1, c2, c3 }: { c1: string; c2: string; c3: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<rect x="0" y="62" width="280" height="38" fill="${p.base}" opacity="0.55"/>`;
+		m += `<path d="M 0 18 Q 140 26 280 18" fill="none" stroke="${p.fg}" stroke-width="0.4" opacity="0.55"/>`;
+		const cols = [c1, c2, c3];
+
+		for (let i = 0; i < 12; i++) {
+			const t = i / 11;
+			const x = t * 280;
+			const y = 18 + Math.sin(t * Math.PI) * 5;
+			const c = cols[i % cols.length];
+			const op = (0.78 + (i % 2) * 0.15).toFixed(2);
+			m += `<path class="wc-cnf wc-cnf-${i}" d="M ${x - 5} ${y} L ${x + 5} ${y} L ${x} ${y + 10} Z" fill="${c}" opacity="${op}"/>`;
+		}
+
+		return m;
+	};
+
+	// Editorial TV-frame set piece — wide replay screen on the right
+	// with a VAR pill in the corner. Establishes the "broadcast booth"
+	// register for VAR / call-review-style markets.
+	const bgTV = ({ color }: { color: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<rect x="142" y="14" width="124" height="72" rx="3" fill="${p.ink}" opacity="0.92"/>`;
+		m += `<rect x="142" y="14" width="124" height="72" rx="3" fill="none" stroke="${color}" stroke-width="0.6" opacity="0.55"/>`;
+		// Replay grid inside the screen.
+		m += `<line x1="146" y1="64" x2="262" y2="64" stroke="${p.hot}" stroke-width="0.4" opacity="0.55"/>`;
+		m += `<line x1="190" y1="20" x2="190" y2="84" stroke="${color}" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.9"/>`;
+		// VAR pill — fixed-color editorial chip; reads on every theme.
+		m += `<rect x="142" y="14" width="34" height="9" fill="#D04444" opacity="0.95"/>`;
+		m += `<text x="159" y="20.5" text-anchor="middle" font-family="ui-monospace,monospace" font-size="6" font-weight="800" fill="#F2ECDC">VAR</text>`;
+
+		return m;
+	};
+
+	// Floating-hearts set piece — base wash + ground plane + five
+	// hearts drifting along the top half. The "proposal at the
+	// final-whistle" archetype of editorial WC art.
+	const bgPropose = ({ color }: { color: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<rect x="0" y="55" width="280" height="45" fill="${p.base}" opacity="0.6"/>`;
+		m += `<line x1="0" y1="68" x2="280" y2="68" stroke="${p.fg}" stroke-width="0.4" opacity="0.30"/>`;
+
+		for (let i = 0; i < 5; i++) {
+			const x = 30 + i * 56;
+			const y = 24 + (i % 2) * 8;
+			m += `<path d="M ${x} ${y + 4} C ${x - 4} ${y - 2} ${x - 8} ${y + 2} ${x} ${y + 8} C ${x + 8} ${y + 2} ${x + 4} ${y - 2} ${x} ${y + 4} Z" fill="${color}" opacity="0.70"/>`;
+		}
+
+		return m;
+	};
+
 	// Iconic WC nation flag trios paired with each nation's kit
 	// jersey + optional shoulder stripe. Backdrop variants ignore the
 	// kit fields; figure variants read them so the figure's jersey
@@ -1393,7 +1486,7 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 			emotion: rng.pick(WC_EMOTIONS)
 		});
 
-	const variant = rng.int(0, 8);
+	const variant = rng.int(0, 13);
 
 	let s = '';
 
@@ -1423,12 +1516,22 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		// while the head sits above the halfway line.
 		s += bgStands();
 		s += makeFigure({ cx: 200, cy: 36 });
-	} else {
+	} else if (variant === 8) {
 		// Figure on perspective — sits the head just above the
 		// vanishing band (y=40) and lets the body settle into the
 		// perspective floor for a "running toward the camera" beat.
 		s += bgPerspective({ color: p.accent });
 		s += makeFigure({ cx: 140, cy: 42 });
+	} else if (variant === 9) {
+		s += bgCircle({ color: p.accent });
+	} else if (variant === 10) {
+		s += bgSpotlight({ c1: p.fg, c2: p.accent });
+	} else if (variant === 11) {
+		s += bgBunting(flag);
+	} else if (variant === 12) {
+		s += bgTV({ color: p.accent });
+	} else {
+		s += bgPropose({ color: p.accent });
 	}
 
 	// State accent: won → gold spotlight wash; lost → desaturated veil.
