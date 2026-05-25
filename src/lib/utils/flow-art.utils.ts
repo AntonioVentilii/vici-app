@@ -1334,12 +1334,15 @@ const wcFace = ({
 //
 // `bgSpotlight` and `bgBunting` carry CSS class hooks
 // (`wc-spot wc-spot-left/right` and `wc-cnf wc-cnf-${i}`) plus the
-// figure layer wraps in `<g class="wc-figure">`. Classes are inert
-// until the keyframes commit lands.
+// figure layer wraps in `<g class="wc-figure">`. The matching CSS
+// keyframes live in `FlowArtFrame.svelte` and respect
+// `prefers-reduced-motion`.
 //
-// Follow-up commits will add CSS animation keyframes for
-// `wc-figure` / `wc-spot` / `wc-cnf-*` and the editorial focal
-// props (trophy, golden boot, red card).
+// Figure-bearing variants (5–8) also roll a ~35% chance of an
+// editorial focal prop (`wc-prop`): trophy, golden boot, or red
+// card. Each prop is anchored in the figure-complementary lane
+// (left side, since figures sit on the right at cx>=140) and
+// shares the same `wc-prop-pulse` keyframe.
 const renderWC = ({ rng, p, state }: RenderArgs): string => {
 	const bgStands = (): string => {
 		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
@@ -1560,6 +1563,65 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 			emotion
 		});
 
+	// Editorial focal props (trophy / golden boot / red card) — painted
+	// in the top-left lane on figure-bearing variants so the figure (on
+	// the right) and the prop (on the left) read as one composition.
+	// All three carry the `wc-prop` class so the shared `wc-prop-pulse`
+	// keyframe in `FlowArtFrame` animates them. Coordinates are kept in
+	// the 0–60 x-band and 12–48 y-band so they don't collide with the
+	// caption layer (top-right) or the figure (cx >= 140).
+	const propTrophy = ({ cx, cy }: { cx: number; cy: number }): string => {
+		const gold = '#F4C544';
+		const goldHi = '#FFE082';
+		const goldLo = '#A8852D';
+		let m = `<g class="wc-prop" transform="translate(${cx} ${cy})">`;
+		// Cup body — wide rim, narrow waist.
+		m += `<path d="M -10 -10 L 10 -10 L 8 6 Q 0 11 -8 6 Z" fill="${gold}"/>`;
+		m += `<path d="M -10 -10 L 10 -10 L 9 -7 L -9 -7 Z" fill="${goldHi}"/>`;
+		// Handles.
+		m += `<path d="M -10 -7 Q -16 -3 -10 4" fill="none" stroke="${gold}" stroke-width="1.6"/>`;
+		m += `<path d="M 10 -7 Q 16 -3 10 4" fill="none" stroke="${gold}" stroke-width="1.6"/>`;
+		// Stem + base.
+		m += `<rect x="-1.5" y="6" width="3" height="4" fill="${goldLo}"/>`;
+		m += `<rect x="-7" y="10" width="14" height="2.5" fill="${gold}"/>`;
+		m += `</g>`;
+
+		return m;
+	};
+
+	const propGoldenBoot = ({ cx, cy }: { cx: number; cy: number }): string => {
+		const gold = '#F4C544';
+		const goldHi = '#FFE082';
+		const lace = '#A8852D';
+		let m = `<g class="wc-prop" transform="translate(${cx} ${cy}) rotate(-12)">`;
+		// Boot silhouette — heel left, toe right.
+		m += `<path d="M -10 0 L -10 -5 Q -8 -7 -4 -7 L 4 -7 Q 9 -7 11 -4 L 14 1 L 14 4 L -10 4 Z" fill="${gold}"/>`;
+		// Highlight on the heel.
+		m += `<path d="M -10 -4 L -6 -6 L -6 -2 L -10 0 Z" fill="${goldHi}"/>`;
+		// Three lace marks across the top.
+		m += `<line x1="-2" y1="-6" x2="-2" y2="-2" stroke="${lace}" stroke-width="0.6"/>`;
+		m += `<line x1="2" y1="-6" x2="2" y2="-2" stroke="${lace}" stroke-width="0.6"/>`;
+		m += `<line x1="6" y1="-6" x2="6" y2="-2" stroke="${lace}" stroke-width="0.6"/>`;
+		m += `</g>`;
+
+		return m;
+	};
+
+	const propRedCard = ({ cx, cy }: { cx: number; cy: number }): string => {
+		const red = '#D03A3A';
+		const redHi = '#FF6B6B';
+		const edge = '#7A1F1F';
+		let m = `<g class="wc-prop" transform="translate(${cx} ${cy}) rotate(8)">`;
+		m += `<rect x="-7" y="-10" width="14" height="20" rx="0.8" fill="${red}" stroke="${edge}" stroke-width="0.6"/>`;
+		// Top-left specular highlight.
+		m += `<path d="M -6 -9 L -2 -9 L -6 -5 Z" fill="${redHi}" opacity="0.85"/>`;
+		m += `</g>`;
+
+		return m;
+	};
+
+	const PROP_FNS = [propTrophy, propGoldenBoot, propRedCard] as const;
+
 	const variant = rng.int(0, 13);
 
 	let s = '';
@@ -1580,6 +1642,13 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		s += bgFlagVert(flag);
 		s += makeFigure({ cx: 210, cy: 38, emotion });
 		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
+
+		// ~35% chance a focal prop joins the figure. Anchor lives in
+		// the left lane (the c1 stripe) so it doesn't compete with
+		// the figure on c3.
+		if (rng.int(0, 99) < 35) {
+			s += rng.pick(PROP_FNS)({ cx: 32, cy: 50 });
+		}
 	} else if (variant === 6) {
 		// Figure on flag-diag — the dark c1 / c2 polygons stop near
 		// x≈120, so anchoring the figure at cx=210 keeps it cleanly
@@ -1588,6 +1657,12 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		s += bgFlagDiag(flag);
 		s += makeFigure({ cx: 210, cy: 32, emotion });
 		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
+
+		// Prop sits in the bottom-left where the dark polygons run —
+		// gold reads cleanly against c1 / c2.
+		if (rng.int(0, 99) < 35) {
+			s += rng.pick(PROP_FNS)({ cx: 36, cy: 78 });
+		}
 	} else if (variant === 7) {
 		// Figure on stands — pitch closeup with the portrait centred
 		// over the field; the body extends down into the pitch band
@@ -1596,6 +1671,12 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		s += bgStands();
 		s += makeFigure({ cx: 200, cy: 36, emotion });
 		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
+
+		// Prop sits on the pitch in the lower-left — halfway-line
+		// region, where the field band is open.
+		if (rng.int(0, 99) < 35) {
+			s += rng.pick(PROP_FNS)({ cx: 40, cy: 84 });
+		}
 	} else if (variant === 8) {
 		// Figure on perspective — sits the head just above the
 		// vanishing band (y=40) and lets the body settle into the
@@ -1604,6 +1685,12 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		s += bgPerspective({ color: p.accent });
 		s += makeFigure({ cx: 140, cy: 42, emotion });
 		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
+
+		// Prop sits in the top-left on the back wall — keeps the
+		// converging floor lines clear.
+		if (rng.int(0, 99) < 35) {
+			s += rng.pick(PROP_FNS)({ cx: 36, cy: 26 });
+		}
 	} else if (variant === 9) {
 		s += bgCircle({ color: p.accent });
 	} else if (variant === 10) {

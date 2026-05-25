@@ -70,4 +70,136 @@
 		width: 100%;
 		height: 100%;
 	}
+
+	/* ── WC artwork motion ──────────────────────────────────────────
+	   `renderFlowArt` tags three editorial layers in the WC tentpole
+	   register: a faceted figure (`wc-figure`), two spotlight cones
+	   (`wc-spot`, paired left/right), and 0–10 confetti shards
+	   (`wc-cnf` with a per-shard `wc-cnf-${i}` for stagger). These
+	   were inert until now — the prototype's CSS keyframes ship here
+	   so every WC-tagged Flow card animates without changing the
+	   render layer.
+
+	   Motion is gentle and capped at ~6s loop; reduced-motion pauses
+	   it. */
+
+	.flow-art-frame :global(.wc-figure) {
+		transform-box: fill-box;
+		transform-origin: 50% 80%;
+		animation: wc-figure-sway 5.2s ease-in-out infinite;
+	}
+
+	.flow-art-frame :global(.wc-spot) {
+		transform-box: fill-box;
+		transform-origin: 50% 0;
+		animation: wc-spot-sweep 6s ease-in-out infinite;
+	}
+
+	.flow-art-frame :global(.wc-spot-right) {
+		animation-delay: -3s;
+	}
+
+	.flow-art-frame :global(.wc-cnf) {
+		transform-box: fill-box;
+		transform-origin: 50% 50%;
+		animation: wc-cnf-drift 4.8s linear infinite;
+	}
+
+	/* Per-shard stagger — keeps shards from drifting in lockstep. The
+	   modulo-10 dispatcher inside `renderFlowArt` keeps indices in
+	   range, so the 10 hooks below cover every shard. */
+	.flow-art-frame :global(.wc-cnf-0) {
+		animation-delay: 0s;
+	}
+	.flow-art-frame :global(.wc-cnf-1) {
+		animation-delay: -0.4s;
+	}
+	.flow-art-frame :global(.wc-cnf-2) {
+		animation-delay: -0.9s;
+	}
+	.flow-art-frame :global(.wc-cnf-3) {
+		animation-delay: -1.3s;
+	}
+	.flow-art-frame :global(.wc-cnf-4) {
+		animation-delay: -1.8s;
+	}
+	.flow-art-frame :global(.wc-cnf-5) {
+		animation-delay: -2.2s;
+	}
+	.flow-art-frame :global(.wc-cnf-6) {
+		animation-delay: -2.7s;
+	}
+	.flow-art-frame :global(.wc-cnf-7) {
+		animation-delay: -3.1s;
+	}
+	.flow-art-frame :global(.wc-cnf-8) {
+		animation-delay: -3.6s;
+	}
+	.flow-art-frame :global(.wc-cnf-9) {
+		animation-delay: -4s;
+	}
+
+	/* Focal props — trophy / golden boot / red card — get a single
+	   shared "pulse" idle and rely on the same fill-box transform
+	   origin so they don't drift off the seed-positioned anchor. */
+	.flow-art-frame :global(.wc-prop) {
+		transform-box: fill-box;
+		transform-origin: 50% 50%;
+		animation: wc-prop-pulse 3.4s ease-in-out infinite;
+	}
+
+	@keyframes wc-figure-sway {
+		0%,
+		100% {
+			transform: translateY(0) rotate(-0.6deg);
+		}
+		50% {
+			transform: translateY(-1.2px) rotate(0.6deg);
+		}
+	}
+
+	@keyframes wc-spot-sweep {
+		0%,
+		100% {
+			transform: rotate(-3deg);
+			opacity: 0.15;
+		}
+		50% {
+			transform: rotate(3deg);
+			opacity: 0.22;
+		}
+	}
+
+	@keyframes wc-cnf-drift {
+		0% {
+			transform: translateY(0) rotate(0deg);
+			opacity: 0;
+		}
+		15% {
+			opacity: 0.85;
+		}
+		100% {
+			transform: translateY(36px) rotate(180deg);
+			opacity: 0;
+		}
+	}
+
+	@keyframes wc-prop-pulse {
+		0%,
+		100% {
+			transform: scale(1) rotate(-2deg);
+		}
+		50% {
+			transform: scale(1.06) rotate(2deg);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.flow-art-frame :global(.wc-figure),
+		.flow-art-frame :global(.wc-spot),
+		.flow-art-frame :global(.wc-cnf),
+		.flow-art-frame :global(.wc-prop) {
+			animation: none;
+		}
+	}
 </style>
