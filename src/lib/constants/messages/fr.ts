@@ -218,6 +218,8 @@ export const frMessages = {
 	'card.back.settles_line': 'Règlement {date} · {timeRemaining}',
 	'card.back.show_rules': 'Voir les règles complètes',
 	'card.back.stake_ladder': 'Mise (VXP)',
+	'card.back.stake_locked':
+		'Mise figée par défaut. Encore {left} appels et tu choisis ton palier (déblocage à {threshold}).',
 	'card.back.stake_no_wins': 'Si NON gagne',
 	'card.back.stake_yes_wins': 'Si OUI gagne',
 	'card.back.top_accuracy': 'Meilleure précision',

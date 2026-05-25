@@ -2,9 +2,14 @@
 	import ConsensusCompass from '$lib/components/market/ConsensusCompass.svelte';
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
-	import { VXP_STAKE_LADDER, type VxpStake } from '$lib/constants/vxp-economy.constants';
+	import {
+		VXP_STAKE_LADDER,
+		VXP_STAKE_UNLOCK_AT_CALLS,
+		type VxpStake
+	} from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type {
@@ -26,7 +31,11 @@
 	import { t } from '$lib/utils/i18n.utils';
 	import { getTimeRemaining } from '$lib/utils/market.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
-	import { snapToStakeLadder, vxpNetWin } from '$lib/utils/vxp-economy.utils';
+	import {
+		snapToStakeLadder,
+		vxpNetWin,
+		vxpStakeSliderUnlocked
+	} from '$lib/utils/vxp-economy.utils';
 
 	interface Props {
 		market: Market;
@@ -151,12 +160,32 @@
 
 	// VXP stake slider — exposed only on the VXP balance domain (the
 	// playground domain uses fractional ICP / ckUSDC stakes via the
-	// FlowMode +/- stepper, not the ladder). Snapping the parent's
-	// free-form `tradeAmount` to the nearest ladder rung also defends
-	// against persisted stake values from before the ladder shipped.
+	// FlowMode +/- stepper, not the ladder), AND only after the user
+	// has enough lifetime calls to unlock free stake choice (per
+	// `VXP_STAKE_UNLOCK_AT_CALLS`). Pre-unlock the card forces
+	// `VXP_DEFAULT_STAKE` so first-time predictors aren't asked to
+	// pick a ladder rung. Snapping the parent's free-form
+	// `tradeAmount` to the nearest ladder rung also defends against
+	// persisted stake values from before the ladder shipped.
+	const totalTrades = $derived($userStore.profile?.totalTrades ?? 0);
+	const stakeSliderUnlocked = $derived(vxpStakeSliderUnlocked({ calls: totalTrades }));
 	const showStakeSlider = $derived(
-		tradeAmount !== undefined && onStakeChange !== undefined && isViciXp($balanceDomain)
+		tradeAmount !== undefined &&
+			onStakeChange !== undefined &&
+			isViciXp($balanceDomain) &&
+			stakeSliderUnlocked
 	);
+	// Pre-unlock placeholder — shown when the user is on the VXP
+	// domain but still under the calls threshold. Gives them
+	// visibility into the upcoming unlock instead of just hiding the
+	// row.
+	const showStakeSliderLock = $derived(
+		tradeAmount !== undefined &&
+			onStakeChange !== undefined &&
+			isViciXp($balanceDomain) &&
+			!stakeSliderUnlocked
+	);
+	const stakeUnlockCallsLeft = $derived(Math.max(0, VXP_STAKE_UNLOCK_AT_CALLS - totalTrades));
 	const currentStake: VxpStake = $derived(
 		showStakeSlider ? snapToStakeLadder({ value: Number(tradeAmount ?? '0') || 0 }) : 50
 	);
@@ -308,6 +337,19 @@
 							<span class="num text-no">+{stakeNoWin}</span>
 						</div>
 					</div>
+				</section>
+			{:else if showStakeSliderLock}
+				<section class="flow-back-block flow-stake flow-stake-locked" data-no-flip-back>
+					<p class="eyebrow flow-back-label">
+						{t({ locale: $localeStore, key: 'card.back.stake_ladder' })}
+					</p>
+					<p class="flow-stake-locked-hint">
+						{t({
+							locale: $localeStore,
+							key: 'card.back.stake_locked',
+							params: { left: stakeUnlockCallsLeft, threshold: VXP_STAKE_UNLOCK_AT_CALLS }
+						})}
+					</p>
 				</section>
 			{/if}
 
@@ -654,5 +696,15 @@
 	.flow-stake-cell-label {
 		font-size: var(--t-11, 0.7rem);
 		color: var(--text-muted);
+	}
+
+	.flow-stake-locked-hint {
+		margin: 0;
+		padding: 0.55rem 0.7rem;
+		font-size: var(--t-12);
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
 	}
 </style>

@@ -199,6 +199,8 @@ export const zhCnMessages = {
 	'card.back.settles_line': '结算于 {date} · {timeRemaining}',
 	'card.back.show_rules': '显示完整规则',
 	'card.back.stake_ladder': '下注 (VXP)',
+	'card.back.stake_locked':
+		'下注暂为默认值。再来 {left} 次预测即可自由选择档位（{threshold} 次解锁）。',
 	'card.back.stake_no_wins': '若 NO 获胜',
 	'card.back.stake_yes_wins': '若 YES 获胜',
 	'card.back.top_accuracy': '最高准确率',

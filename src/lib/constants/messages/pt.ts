@@ -212,6 +212,8 @@ export const ptMessages = {
 	'card.back.settles_line': 'Resolve em {date} · {timeRemaining}',
 	'card.back.show_rules': 'Mostrar regras completas',
 	'card.back.stake_ladder': 'Aposta (VXP)',
+	'card.back.stake_locked':
+		'Aposta fixa no padrão por enquanto. Mais {left} apostas e você escolhe o nível (libera em {threshold}).',
 	'card.back.stake_no_wins': 'Se NÃO vencer',
 	'card.back.stake_yes_wins': 'Se SIM vencer',
 	'card.back.top_accuracy': 'Maior precisão',

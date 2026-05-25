@@ -212,6 +212,8 @@ export const esMessages = {
 	'card.back.settles_line': 'Se resuelve {date} · {timeRemaining}',
 	'card.back.show_rules': 'Ver reglas completas',
 	'card.back.stake_ladder': 'Apuesta (VXP)',
+	'card.back.stake_locked':
+		'Apuesta fija por ahora. {left} apuestas más y podrás elegir el nivel (se desbloquea a las {threshold}).',
 	'card.back.stake_no_wins': 'Si gana NO',
 	'card.back.stake_yes_wins': 'Si gana SÍ',
 	'card.back.top_accuracy': 'Mejor precisión',

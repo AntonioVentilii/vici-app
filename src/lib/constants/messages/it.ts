@@ -212,6 +212,8 @@ export const itMessages = {
 	'card.back.settles_line': 'Si chiude il {date} · {timeRemaining}',
 	'card.back.show_rules': 'Mostra regole complete',
 	'card.back.stake_ladder': 'Puntata (VXP)',
+	'card.back.stake_locked':
+		'Puntata fissa al valore di default. Ancora {left} chiamate e potrai scegliere il livello (sblocco a {threshold}).',
 	'card.back.stake_no_wins': 'Se vince NO',
 	'card.back.stake_yes_wins': 'Se vince SI',
 	'card.back.top_accuracy': 'Precisione top',
