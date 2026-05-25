@@ -24,8 +24,10 @@ import { assertSetBout } from '$satellite/services/bout.services';
 import {
 	listLeagueBoutsFn,
 	listLeagueMembersFn,
+	listMyAffiliationsFn,
 	listMyBoutsFn,
 	listMyLeaguesFn,
+	listWorldsRosterFn,
 	lookupLeagueByInviteFn
 } from '$satellite/services/cohort.services';
 import {
@@ -85,6 +87,7 @@ import {
 } from '$satellite/services/vxp-onboarding.services';
 import { onProfileSetForStreakAward } from '$satellite/services/vxp-streak-awards.services';
 import {
+	AffiliationWireSchema,
 	BoutWireSchema,
 	LeagueMemberWireSchema,
 	LeagueWireSchema,
@@ -92,6 +95,7 @@ import {
 	MarketTranslationWireSchema,
 	ReferralWireSchema,
 	RelationWireSchema,
+	toWireAffiliation,
 	toWireBout,
 	toWireLeague,
 	toWireLeagueMember,
@@ -415,6 +419,36 @@ export const listMyBouts = defineQuery({
 	}),
 	handler: () => ({
 		items: listMyBoutsFn().map(toWireBout)
+	})
+});
+
+// ─── Worlds affiliations (Phase 10) ──────────────────────────────────────
+
+export const listMyAffiliations = defineQuery({
+	result: j.strictObject({
+		university: j.optional(AffiliationWireSchema),
+		country: j.optional(AffiliationWireSchema)
+	}),
+	handler: () => {
+		const { university, country } = listMyAffiliationsFn();
+
+		return {
+			university: university ? toWireAffiliation(university) : undefined,
+			country: country ? toWireAffiliation(country) : undefined
+		};
+	}
+});
+
+export const listWorldsRoster = defineQuery({
+	args: j.strictObject({
+		kind: j.enum(['university', 'country']),
+		affiliationId: j.string()
+	}),
+	result: j.strictObject({
+		items: j.array(AffiliationWireSchema)
+	}),
+	handler: ({ kind, affiliationId }) => ({
+		items: listWorldsRosterFn({ kind, affiliationId }).map(toWireAffiliation)
 	})
 });
 

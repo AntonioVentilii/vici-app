@@ -347,6 +347,26 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListMyAffiliationsResult = IDL.Record({
+		country: IDL.Opt(
+			IDL.Record({
+				member: IDL.Text,
+				locked_until_ms: IDL.Float64,
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				joined_at_ms: IDL.Float64,
+				affiliation_id: IDL.Text
+			})
+		),
+		university: IDL.Opt(
+			IDL.Record({
+				member: IDL.Text,
+				locked_until_ms: IDL.Float64,
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				joined_at_ms: IDL.Float64,
+				affiliation_id: IDL.Text
+			})
+		)
+	});
 	const AppListMyBoutsResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
@@ -448,6 +468,21 @@ export const idlFactory = ({ IDL }) => {
 					follow: IDL.Null
 				}),
 				viewer_principal: IDL.Opt(IDL.Text)
+			})
+		)
+	});
+	const AppListWorldsRosterArgs = IDL.Record({
+		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+		affiliation_id: IDL.Text
+	});
+	const AppListWorldsRosterResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				member: IDL.Text,
+				locked_until_ms: IDL.Float64,
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				joined_at_ms: IDL.Float64,
+				affiliation_id: IDL.Text
 			})
 		)
 	});
@@ -635,10 +670,16 @@ export const idlFactory = ({ IDL }) => {
 			[AppListMarketTranslationsResult],
 			['query']
 		),
+		app_list_my_affiliations: IDL.Func([], [AppListMyAffiliationsResult], ['query']),
 		app_list_my_bouts: IDL.Func([], [AppListMyBoutsResult], ['query']),
 		app_list_my_leagues: IDL.Func([], [AppListMyLeaguesResult], ['query']),
 		app_list_my_referrals: IDL.Func([], [AppListMyReferralsResult], ['query']),
 		app_list_sent_friend_requests: IDL.Func([], [AppListSentFriendRequestsResult], ['query']),
+		app_list_worlds_roster: IDL.Func(
+			[AppListWorldsRosterArgs],
+			[AppListWorldsRosterResult],
+			['query']
+		),
 		app_lookup_league_by_invite: IDL.Func(
 			[AppLookupLeagueByInviteArgs],
 			[AppLookupLeagueByInviteResult],

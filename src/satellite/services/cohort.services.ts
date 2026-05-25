@@ -1,4 +1,5 @@
 import { Collection } from '$lib/constants/collections.constants';
+import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 import type { BoutDoc } from '$lib/types/bout';
 import type { LeagueDoc } from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
@@ -269,4 +270,91 @@ export const lookupLeagueByInviteFn = ({
 			// skip malformed
 		}
 	}
+};
+
+/**
+ * Caller's current Worlds affiliations — at most one university +
+ * one country per user (the assert key shape allows one of each
+ * kind simultaneously). Returns the pair as `{ university?, country? }`;
+ * when both slots are empty the FE Worlds picker can offer them.
+ *
+ * Single-pass scan filtered to `member === callerText`; per
+ * `AFFILIATION_LOCK_MS` semantics the rows are stable for 90 days
+ * once written.
+ */
+export const listMyAffiliationsFn = (): {
+	university?: AffiliationDoc;
+	country?: AffiliationDoc;
+} => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+
+	const { items } = listDocsStore({
+		collection: Collection.AFFILIATIONS,
+		caller: caller.toUint8Array(),
+		params: {}
+	});
+
+	let university: AffiliationDoc | undefined;
+	let country: AffiliationDoc | undefined;
+
+	for (const [, item] of items) {
+		try {
+			const aff = decodeDocData<AffiliationDoc>(item.data);
+
+			if (aff.member === callerText) {
+				if (aff.kind === 'university') {
+					university = aff;
+				} else if (aff.kind === 'country') {
+					country = aff;
+				}
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	return { university, country };
+};
+
+/**
+ * Roster scan for a Worlds slot — every user affiliated with a given
+ * university or country. Drives the V1.2 Worlds leaderboard / cohort
+ * summary surface.
+ *
+ * Scans the full `affiliations` collection and filters on the
+ * embedded `kind` + `affiliationId`. Sorted by `joinedAtMs`
+ * ascending so the leaderboard reads "earliest joiner first" before
+ * any accuracy-based re-sort the FE layers on top.
+ */
+export const listWorldsRosterFn = ({
+	kind,
+	affiliationId
+}: {
+	kind: AffiliationKind;
+	affiliationId: string;
+}): AffiliationDoc[] => {
+	const caller = msgCaller();
+
+	const { items } = listDocsStore({
+		collection: Collection.AFFILIATIONS,
+		caller: caller.toUint8Array(),
+		params: {}
+	});
+
+	const roster: AffiliationDoc[] = [];
+
+	for (const [, item] of items) {
+		try {
+			const aff = decodeDocData<AffiliationDoc>(item.data);
+
+			if (aff.kind === kind && aff.affiliationId === affiliationId) {
+				roster.push(aff);
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	return roster.sort((a, b) => a.joinedAtMs - b.joinedAtMs);
 };

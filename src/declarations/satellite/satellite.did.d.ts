@@ -253,6 +253,30 @@ export interface AppListMarketTranslationsResult {
 		outcomes: Array<{ id: string; title: string }>;
 	}>;
 }
+export interface AppListMyAffiliationsResult {
+	country:
+		| []
+		| [
+				{
+					member: string;
+					locked_until_ms: number;
+					kind: { country: null } | { university: null };
+					joined_at_ms: number;
+					affiliation_id: string;
+				}
+		  ];
+	university:
+		| []
+		| [
+				{
+					member: string;
+					locked_until_ms: number;
+					kind: { country: null } | { university: null };
+					joined_at_ms: number;
+					affiliation_id: string;
+				}
+		  ];
+}
 export interface AppListMyBoutsResult {
 	items: Array<{
 		id: string;
@@ -314,6 +338,19 @@ export interface AppListSentFriendRequestsResult {
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
 		category: { GROUP: null } | { FRIEND: null } | { follow: null };
 		viewer_principal: [] | [string];
+	}>;
+}
+export interface AppListWorldsRosterArgs {
+	kind: { country: null } | { university: null };
+	affiliation_id: string;
+}
+export interface AppListWorldsRosterResult {
+	items: Array<{
+		member: string;
+		locked_until_ms: number;
+		kind: { country: null } | { university: null };
+		joined_at_ms: number;
+		affiliation_id: string;
 	}>;
 }
 export interface AppLookupLeagueByInviteArgs {
@@ -476,10 +513,12 @@ export interface _SERVICE {
 		[AppListMarketTranslationsArgs],
 		AppListMarketTranslationsResult
 	>;
+	app_list_my_affiliations: ActorMethod<[], AppListMyAffiliationsResult>;
 	app_list_my_bouts: ActorMethod<[], AppListMyBoutsResult>;
 	app_list_my_leagues: ActorMethod<[], AppListMyLeaguesResult>;
 	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
 	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;
+	app_list_worlds_roster: ActorMethod<[AppListWorldsRosterArgs], AppListWorldsRosterResult>;
 	app_lookup_league_by_invite: ActorMethod<
 		[AppLookupLeagueByInviteArgs],
 		AppLookupLeagueByInviteResult

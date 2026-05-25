@@ -414,6 +414,37 @@ const listMarketTranslations = async (
 	return AppListMarketTranslationsResultSchema.parse(result);
 };
 
+const AppListMyAffiliationsResultSchema = j.strictObject({
+	university: j.optional(
+		j.strictObject({
+			member: j.string(),
+			kind: j.enum(['university', 'country']),
+			affiliation_id: j.string(),
+			joined_at_ms: j.number(),
+			locked_until_ms: j.number()
+		})
+	),
+	country: j.optional(
+		j.strictObject({
+			member: j.string(),
+			kind: j.enum(['university', 'country']),
+			affiliation_id: j.string(),
+			joined_at_ms: j.number(),
+			locked_until_ms: j.number()
+		})
+	)
+});
+
+const listMyAffiliations = async (): Promise<j.infer<typeof AppListMyAffiliationsResultSchema>> => {
+	const { app_list_my_affiliations } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_my_affiliations();
+
+	const result = schemaFromIdl({ schema: AppListMyAffiliationsResultSchema, value: idlResult });
+	return AppListMyAffiliationsResultSchema.parse(result);
+};
+
 const AppListMyBoutsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
@@ -521,6 +552,40 @@ const listSentFriendRequests = async (): Promise<
 
 	const result = schemaFromIdl({ schema: AppListSentFriendRequestsResultSchema, value: idlResult });
 	return AppListSentFriendRequestsResultSchema.parse(result);
+};
+
+const AppListWorldsRosterArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country']),
+	affiliationId: j.string()
+});
+const AppListWorldsRosterResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			member: j.string(),
+			kind: j.enum(['university', 'country']),
+			affiliation_id: j.string(),
+			joined_at_ms: j.number(),
+			locked_until_ms: j.number()
+		})
+	)
+});
+
+const listWorldsRoster = async (
+	args: j.infer<typeof AppListWorldsRosterArgsSchema>
+): Promise<j.infer<typeof AppListWorldsRosterResultSchema>> => {
+	const parsedArgs = AppListWorldsRosterArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListWorldsRosterArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_worlds_roster']>[0];
+
+	const { app_list_worlds_roster } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_worlds_roster(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppListWorldsRosterResultSchema, value: idlResult });
+	return AppListWorldsRosterResultSchema.parse(result);
 };
 
 const AppLookupLeagueByInviteArgsSchema = j.strictObject({ inviteCode: j.string() });
@@ -857,10 +922,12 @@ export const functions = {
 	listLeagueBouts,
 	listLeagueMembers,
 	listMarketTranslations,
+	listMyAffiliations,
 	listMyBouts,
 	listMyLeagues,
 	listMyReferrals,
 	listSentFriendRequests,
+	listWorldsRoster,
 	lookupLeagueByInvite,
 	lookupReferralCode,
 	searchProfiles,

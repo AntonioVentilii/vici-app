@@ -522,3 +522,29 @@ export const toWireBout = (bout: {
 	score_b: bout.scoreB,
 	winner: bout.winner
 });
+
+// ─── Affiliations (Phase 10) ─────────────────────────────────────────────
+
+export const AffiliationWireSchema = j.strictObject({
+	member: PrincipalTextSchema,
+	kind: j.enum(['university', 'country']),
+	affiliation_id: j.string(),
+	joined_at_ms: j.number(),
+	locked_until_ms: j.number()
+});
+
+export type WireAffiliation = j.infer<typeof AffiliationWireSchema>;
+
+export const toWireAffiliation = (aff: {
+	member: string;
+	kind: 'university' | 'country';
+	affiliationId: string;
+	joinedAtMs: number;
+	lockedUntilMs: number;
+}): WireAffiliation => ({
+	member: aff.member,
+	kind: aff.kind,
+	affiliation_id: aff.affiliationId,
+	joined_at_ms: aff.joinedAtMs,
+	locked_until_ms: aff.lockedUntilMs
+});
