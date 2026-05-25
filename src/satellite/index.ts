@@ -21,7 +21,10 @@ import {
 	syncRoleToEngineOnSet
 } from '$satellite/services/engine-sync.services';
 import { listLeaderboard as listLeaderboardFn } from '$satellite/services/leaderboard.services';
-import { assertSetLeagueMember } from '$satellite/services/league-member.services';
+import {
+	assertDeleteLeagueMember,
+	assertSetLeagueMember
+} from '$satellite/services/league-member.services';
 import { assertSetLeague } from '$satellite/services/league.services';
 import {
 	getMarketMetadata as getMarketMetadataFn,
@@ -84,6 +87,8 @@ import {
 	defineHook,
 	defineQuery,
 	defineUpdate,
+	type AssertDeleteDoc,
+	type AssertDeleteDocContext,
 	type AssertSetDoc,
 	type AssertSetDocContext,
 	type OnDeleteDoc,
@@ -376,6 +381,21 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.VXP_AWARDS]: assertSetVxpAward,
 			[Collection.LEAGUES]: assertSetLeague,
 			[Collection.LEAGUE_MEMBERS]: assertSetLeagueMember
+		};
+
+		fn[context.data.collection]?.(context);
+	}
+});
+
+const assertDeleteDocCollections = [Collection.LEAGUE_MEMBERS] as const;
+
+type AssertDeleteDocCollection = (typeof assertDeleteDocCollections)[number];
+
+export const assertDeleteDoc = defineAssert<AssertDeleteDoc>({
+	collections: assertDeleteDocCollections,
+	assert: (context) => {
+		const fn: Record<AssertDeleteDocCollection, (ctx: AssertDeleteDocContext) => void> = {
+			[Collection.LEAGUE_MEMBERS]: assertDeleteLeagueMember
 		};
 
 		fn[context.data.collection]?.(context);

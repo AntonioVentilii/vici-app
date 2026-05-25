@@ -7,7 +7,7 @@ import {
 } from '$lib/types/league-member';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
-import type { AssertSetDocContext } from '@junobuild/functions';
+import type { AssertDeleteDocContext, AssertSetDocContext } from '@junobuild/functions';
 import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
 
 /**
@@ -133,6 +133,76 @@ export const assertSetLeagueMember = ({
 	// can re-write the same row (idempotent) but cannot promote oneself.
 	if (currentDoc.role !== proposedDoc.role && !callerIsOwner) {
 		throw new Error('league_members role changes require the league owner.');
+	}
+};
+
+/**
+ * Pre-delete guard for `league_members`. Closes the membership
+ * lifecycle: join (write) → leave / kick (delete).
+ *
+ *  1. **Owner cannot be removed.** A league always has an owner — even
+ *     transferring ownership is a *role change* on the rows, not a
+ *     delete-then-recreate. Deleting the owner row would orphan the
+ *     league.
+ *
+ *  2. **Self-leave OR owner-kick.** Either the member themselves
+ *     (`caller === currentDoc.member`) or the league owner can remove
+ *     a membership row. Admins can't kick — V1.2 reserves the
+ *     remove-other action for owners so a rogue admin can't quietly
+ *     empty a league.
+ *
+ *  3. **Parent league must exist.** Defensive — if the league has
+ *     already been deleted (which would only happen if a future
+ *     `assertDeleteLeague` lands and cascades) the membership is
+ *     orphaned and any caller can clean it up. Until then, this is a
+ *     belt-and-braces guard.
+ */
+export const assertDeleteLeagueMember = ({
+	caller,
+	data: {
+		collection,
+		data: { current }
+	}
+}: AssertDeleteDocContext): void => {
+	if (collection !== Collection.LEAGUE_MEMBERS) {
+		return;
+	}
+
+	// No existing doc → nothing to delete; juno typically won't even
+	// call the assert in this case, but defend against it anyway.
+	if (isNullish(current)) {
+		return;
+	}
+
+	const currentDoc = decodeDocData<LeagueMemberDoc>(current.data);
+
+	// 1. Owner cannot be removed.
+	if (currentDoc.role === 'owner') {
+		throw new Error('league_members owner row cannot be deleted (transfer ownership first).');
+	}
+
+	const leagueDoc = getDocStore({
+		collection: Collection.LEAGUES,
+		key: currentDoc.leagueId,
+		caller
+	});
+
+	// 3. Orphaned membership — parent league missing. Let it through;
+	//    cleanup is harmless and avoids stuck dangling rows.
+	if (isNullish(leagueDoc)) {
+		return;
+	}
+
+	const league = decodeDocData<LeagueDoc>(leagueDoc.data);
+	const callerText = Principal.fromUint8Array(caller).toText();
+	const callerIsSelf = currentDoc.member === callerText;
+	const callerIsOwner = league.owner === callerText;
+
+	// 2. Self-leave OR owner-kick.
+	if (!callerIsSelf && !callerIsOwner) {
+		throw new Error(
+			'league_members may only be removed by the member themselves or the league owner.'
+		);
 	}
 };
 
