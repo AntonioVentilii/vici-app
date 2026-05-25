@@ -31,7 +31,14 @@ export const Collection = {
 	 * the payout state for both sides. Written by `redeemReferralCode`; payout state is updated by
 	 * the satellite referral hook.
 	 */
-	REFERRALS: collections.REFERRALS
+	REFERRALS: collections.REFERRALS,
+	/**
+	 * Social cohorts — V1.2's user-created leagues. One doc per league, keyed by league id. Holds
+	 * name, 6-char alphanumeric invite code (for the join-by-code flow), owner principal, and
+	 * marketing metadata. Members and bouts live in follow-up collections so a league's metadata
+	 * stays cheap to read without joining the membership table.
+	 */
+	LEAGUES: collections.LEAGUES
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

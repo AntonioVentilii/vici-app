@@ -22,7 +22,8 @@ enum JunoDatastoreCollection {
 	VXP_ONBOARDING = 'vxp_onboarding',
 	VXP_AWARDS = 'vxp_awards',
 	REFERRAL_CODES = 'referral_codes',
-	REFERRALS = 'referrals'
+	REFERRALS = 'referrals',
+	LEAGUES = 'leagues'
 }
 
 const delegation = {
@@ -134,6 +135,12 @@ export default defineConfig(({ mode }) => ({
 				},
 				{
 					collection: JunoDatastoreCollection.REFERRALS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.LEAGUES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
