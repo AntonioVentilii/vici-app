@@ -1217,6 +1217,11 @@ export const frMessages = {
 	'social.feed.loading': 'Chargement du feed…',
 	'social.feed.sub': 'Mises à jour live de tes cohortes — ligues, duels, Worlds.',
 	'social.feed.title': 'Feed',
+	'social.subnav.bouts': 'Duels',
+	'social.subnav.feed': 'Feed',
+	'social.subnav.leaderboard': 'Classement',
+	'social.subnav.leagues': 'Ligues',
+	'social.subnav.worlds': 'Worlds',
 	'social.aspire': 'Vous commenceriez au',
 	'social.aspire_line':
 		'Vous commenceriez au {rank}. Les meilleurs prédicteurs atteignent {accuracy}+ le premier mois.',

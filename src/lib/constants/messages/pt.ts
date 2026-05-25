@@ -1204,6 +1204,11 @@ export const ptMessages = {
 	'social.feed.loading': 'Carregando feed…',
 	'social.feed.sub': 'Atualizações ao vivo das cortes que você segue — ligas, duelos, Worlds.',
 	'social.feed.title': 'Feed',
+	'social.subnav.bouts': 'Duelos',
+	'social.subnav.feed': 'Feed',
+	'social.subnav.leaderboard': 'Ranking',
+	'social.subnav.leagues': 'Ligas',
+	'social.subnav.worlds': 'Worlds',
 	'social.aspire': 'Você começaria em',
 	'social.aspire_line':
 		'Você começaria em {rank}. Os melhores previsores atingem {accuracy}+ no primeiro mês.',

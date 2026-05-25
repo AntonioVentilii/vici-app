@@ -1250,6 +1250,11 @@ export const enMessages = {
 	'social.feed.loading': 'Loading feed…',
 	'social.feed.sub': 'Live updates from the cohorts you follow — leagues, bouts, Worlds.',
 	'social.feed.title': 'Feed',
+	'social.subnav.bouts': 'Bouts',
+	'social.subnav.feed': 'Feed',
+	'social.subnav.leaderboard': 'Leaderboard',
+	'social.subnav.leagues': 'Leagues',
+	'social.subnav.worlds': 'Worlds',
 	'social.aspire': 'You’d start at',
 	'social.aspire_line':
 		"You'd start at {rank}. Top predictors hit {accuracy}+ in their first month.",

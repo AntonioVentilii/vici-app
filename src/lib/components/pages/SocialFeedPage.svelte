@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import SocialSubNav from '$lib/components/layout/SocialSubNav.svelte';
 	import { listSocialFeed } from '$lib/services/social-feed.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { SocialFeedEntryDoc, SocialFeedEntryKind } from '$lib/types/social-feed';
@@ -53,6 +54,8 @@
 
 <div class="social-feed">
 	<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'social.feed.title' })} />
+
+	<SocialSubNav />
 
 	<p class="social-feed-sub">{t({ locale: $localeStore, key: 'social.feed.sub' })}</p>
 

@@ -1205,6 +1205,11 @@ export const itMessages = {
 	'social.feed.loading': 'Carico il feed…',
 	'social.feed.sub': 'Aggiornamenti live dalle tue coorti — leghe, scontri, Worlds.',
 	'social.feed.title': 'Feed',
+	'social.subnav.bouts': 'Scontri',
+	'social.subnav.feed': 'Feed',
+	'social.subnav.leaderboard': 'Classifica',
+	'social.subnav.leagues': 'Leghe',
+	'social.subnav.worlds': 'Worlds',
 	'social.aspire': 'Partiresti al',
 	'social.aspire_line':
 		'Partiresti dal {rank}. I top predittori toccano {accuracy}+ già nel primo mese.',

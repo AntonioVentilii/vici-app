@@ -2,6 +2,7 @@
 	import { Users } from 'lucide-svelte/icons';
 	import { fade, fly } from 'svelte/transition';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import SocialSubNav from '$lib/components/layout/SocialSubNav.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import ActivityFeed from '$lib/components/social/ActivityFeed.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
@@ -132,6 +133,10 @@
 		right={socialAppbarRight}
 		title={t({ locale: $localeStore, key: 'leaderboard.title' })}
 	/>
+
+	<div class="px-4 md:hidden">
+		<SocialSubNav />
+	</div>
 
 	<div class="hidden md:block">
 		<SectionHeader

@@ -1217,6 +1217,11 @@ export const deMessages = {
 	'social.feed.loading': 'Lade Feed…',
 	'social.feed.sub': 'Live-Updates aus deinen Cohorts — Ligen, Bouts, Worlds.',
 	'social.feed.title': 'Feed',
+	'social.subnav.bouts': 'Bouts',
+	'social.subnav.feed': 'Feed',
+	'social.subnav.leaderboard': 'Rangliste',
+	'social.subnav.leagues': 'Ligen',
+	'social.subnav.worlds': 'Worlds',
 	'social.aspire': 'Du würdest starten bei',
 	'social.aspire_line':
 		'Du würdest bei {rank} starten. Top-Predictors erreichen {accuracy}+ im ersten Monat.',

@@ -1214,6 +1214,11 @@ export const esMessages = {
 	'social.feed.loading': 'Cargando feed…',
 	'social.feed.sub': 'Actualizaciones en vivo de tus cohortes — ligas, combates, Worlds.',
 	'social.feed.title': 'Feed',
+	'social.subnav.bouts': 'Combates',
+	'social.subnav.feed': 'Feed',
+	'social.subnav.leaderboard': 'Clasificación',
+	'social.subnav.leagues': 'Ligas',
+	'social.subnav.worlds': 'Worlds',
 	'social.aspire': 'Empezarías en',
 	'social.aspire_line':
 		'Empezarías en {rank}. Los mejores predictores alcanzan {accuracy}+ en su primer mes.',
