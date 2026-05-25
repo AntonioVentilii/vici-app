@@ -44,28 +44,28 @@
 		<span class="allcaps ob2-step-label">
 			{t({
 				locale: $localeStore,
-				key: 'onboarding.v2.beat_label',
+				key: 'onboarding.beat_label',
 				params: { current: 3, total: 3 }
 			})}
 		</span>
 	</header>
 
 	<h1 id="ob2-beat3-title" class="ob2-h1">
-		{t({ locale: $localeStore, key: 'onboarding.v2.beat3.title' })}
+		{t({ locale: $localeStore, key: 'onboarding.beat3.title' })}
 	</h1>
 
 	<p class="ob2-sub">
 		<span class="serif-italic ob2-handle-preview">
-			@{handle ?? t({ locale: $localeStore, key: 'onboarding.v2.beat3.handle_placeholder' })}
+			@{handle ?? t({ locale: $localeStore, key: 'onboarding.beat3.handle_placeholder' })}
 		</span>
-		<span>{t({ locale: $localeStore, key: 'onboarding.v2.beat3.sub' })}</span>
+		<span>{t({ locale: $localeStore, key: 'onboarding.beat3.sub' })}</span>
 	</p>
 
 	{#if team}
 		<aside
 			style:--team-color={team.color ?? 'var(--laurel)'}
 			class="ob2-summary"
-			aria-label={t({ locale: $localeStore, key: 'onboarding.v2.beat3.summary_eyebrow' })}
+			aria-label={t({ locale: $localeStore, key: 'onboarding.beat3.summary_eyebrow' })}
 		>
 			<div class="ob2-summary-row">
 				<span class="ob2-summary-flag" aria-hidden="true">{team.glyph ?? ''}</span>
@@ -73,7 +73,7 @@
 					<p class="ob2-summary-q">
 						{t({
 							locale: $localeStore,
-							key: 'onboarding.v2.beat3.summary_backing',
+							key: 'onboarding.beat3.summary_backing',
 							params: { team: team.name }
 						})}
 					</p>
@@ -94,7 +94,7 @@
 	</div>
 
 	<button class="ob2-skip-link" onclick={onBack} type="button">
-		{t({ locale: $localeStore, key: 'onboarding.v2.beat3.back' })}
+		{t({ locale: $localeStore, key: 'onboarding.beat3.back' })}
 	</button>
 </section>
 

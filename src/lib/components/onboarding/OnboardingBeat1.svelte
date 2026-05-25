@@ -67,7 +67,7 @@
 		<span class="allcaps ob2-step-label">
 			{t({
 				locale: $localeStore,
-				key: 'onboarding.v2.beat_label',
+				key: 'onboarding.beat_label',
 				params: { current: 1, total: 3 }
 			})}
 		</span>
@@ -78,14 +78,14 @@
 		<span class="ob2-wc-countdown num">
 			· {t({
 				locale: $localeStore,
-				key: 'onboarding.v2.beat1.kickoff_days',
+				key: 'onboarding.beat1.kickoff_days',
 				params: { days: kickoffDays }
 			})}
 		</span>
 	</div>
 
-	<h1 class="ob2-h1">{t({ locale: $localeStore, key: 'onboarding.v2.beat1.title' })}</h1>
-	<p class="ob2-sub">{t({ locale: $localeStore, key: 'onboarding.v2.beat1.subtitle' })}</p>
+	<h1 class="ob2-h1">{t({ locale: $localeStore, key: 'onboarding.beat1.title' })}</h1>
+	<p class="ob2-sub">{t({ locale: $localeStore, key: 'onboarding.beat1.subtitle' })}</p>
 
 	<div class="ob2-team-grid">
 		{#each favourites as team (team.id)}
@@ -109,14 +109,14 @@
 				<span class="ob2-team-name-lg">
 					{t({
 						locale: $localeStore,
-						key: 'onboarding.v2.beat1.more',
+						key: 'onboarding.beat1.more',
 						params: { count: moreCount }
 					})}
 				</span>
 				<span class="ob2-team-more-sub">
 					{t({
 						locale: $localeStore,
-						key: 'onboarding.v2.beat1.all_teams',
+						key: 'onboarding.beat1.all_teams',
 						params: { total: participants.length }
 					})}
 				</span>
@@ -145,7 +145,7 @@
 	{/if}
 
 	<button class="ob2-skip-team" onclick={skip} type="button">
-		{t({ locale: $localeStore, key: 'onboarding.v2.beat1.skip' })}
+		{t({ locale: $localeStore, key: 'onboarding.beat1.skip' })}
 	</button>
 </section>
 

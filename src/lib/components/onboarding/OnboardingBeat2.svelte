@@ -73,19 +73,19 @@
 		}
 
 		if (name.length < 3) {
-			return { ok: false, reasonKey: 'onboarding.v2.beat2.avail.too_short' };
+			return { ok: false, reasonKey: 'onboarding.beat2.avail.too_short' };
 		}
 
 		if (name.length > 16) {
-			return { ok: false, reasonKey: 'onboarding.v2.beat2.avail.too_long' };
+			return { ok: false, reasonKey: 'onboarding.beat2.avail.too_long' };
 		}
 
 		if (!/^[a-z0-9._-]+$/.test(name)) {
-			return { ok: false, reasonKey: 'onboarding.v2.beat2.avail.invalid' };
+			return { ok: false, reasonKey: 'onboarding.beat2.avail.invalid' };
 		}
 
 		if (RESERVED.has(name)) {
-			return { ok: false, reasonKey: 'onboarding.v2.beat2.avail.taken' };
+			return { ok: false, reasonKey: 'onboarding.beat2.avail.taken' };
 		}
 
 		return { ok: true };
@@ -117,16 +117,16 @@
 		<span class="allcaps ob2-step-label">
 			{t({
 				locale: $localeStore,
-				key: 'onboarding.v2.beat_label',
+				key: 'onboarding.beat_label',
 				params: { current: 2, total: 3 }
 			})}
 		</span>
 	</header>
 
 	<h1 id="ob2-beat2-title" class="ob2-h1">
-		{t({ locale: $localeStore, key: 'onboarding.v2.beat2.title' })}
+		{t({ locale: $localeStore, key: 'onboarding.beat2.title' })}
 	</h1>
-	<p class="ob2-sub">{t({ locale: $localeStore, key: 'onboarding.v2.beat2.sub' })}</p>
+	<p class="ob2-sub">{t({ locale: $localeStore, key: 'onboarding.beat2.sub' })}</p>
 
 	<div class="ob2-mode-tabs" role="tablist">
 		<button
@@ -137,7 +137,7 @@
 			role="tab"
 			type="button"
 		>
-			{t({ locale: $localeStore, key: 'onboarding.v2.beat2.mode_pool' })}
+			{t({ locale: $localeStore, key: 'onboarding.beat2.mode_pool' })}
 		</button>
 		<button
 			class="ob2-mode-tab"
@@ -147,7 +147,7 @@
 			role="tab"
 			type="button"
 		>
-			{t({ locale: $localeStore, key: 'onboarding.v2.beat2.mode_custom' })}
+			{t({ locale: $localeStore, key: 'onboarding.beat2.mode_custom' })}
 		</button>
 	</div>
 
@@ -172,7 +172,7 @@
 				autocapitalize="off"
 				autocomplete="off"
 				maxlength="16"
-				placeholder={t({ locale: $localeStore, key: 'onboarding.v2.beat2.placeholder' })}
+				placeholder={t({ locale: $localeStore, key: 'onboarding.beat2.placeholder' })}
 				spellcheck="false"
 				type="text"
 				bind:value={custom}
@@ -185,7 +185,7 @@
 			{#if availability.ok}
 				{t({
 					locale: $localeStore,
-					key: 'onboarding.v2.beat2.avail_ok',
+					key: 'onboarding.beat2.avail_ok',
 					params: { handle: selectedName }
 				})}
 			{:else if availability.reasonKey}
@@ -203,11 +203,11 @@
 			<span class="ob2-affil-flag" aria-hidden="true">{team.glyph ?? ''}</span>
 			<div class="ob2-affil-text">
 				<span class="allcaps ob2-affil-eyebrow">
-					{t({ locale: $localeStore, key: 'onboarding.v2.beat2.affil_eyebrow' })}
+					{t({ locale: $localeStore, key: 'onboarding.beat2.affil_eyebrow' })}
 				</span>
 				<span class="ob2-affil-name">
 					<span class="serif-italic">
-						@{selectedName || t({ locale: $localeStore, key: 'onboarding.v2.beat2.placeholder' })}
+						@{selectedName || t({ locale: $localeStore, key: 'onboarding.beat2.placeholder' })}
 					</span>
 					<span class="ob2-affil-tag">{team.id}</span>
 				</span>
@@ -217,19 +217,19 @@
 
 	<div class="ob2-actions">
 		<button class="ob2-btn-ghost" onclick={onBack} type="button">
-			{t({ locale: $localeStore, key: 'onboarding.v2.beat2.back' })}
+			{t({ locale: $localeStore, key: 'onboarding.beat2.back' })}
 		</button>
 		<button class="ob2-btn-primary" disabled={!availability.ok} onclick={claim} type="button">
 			{t({
 				locale: $localeStore,
-				key: 'onboarding.v2.beat2.claim',
+				key: 'onboarding.beat2.claim',
 				params: { handle: selectedName || '…' }
 			})}
 		</button>
 	</div>
 
 	<button class="ob2-skip-link" onclick={skip} type="button">
-		{t({ locale: $localeStore, key: 'onboarding.v2.beat2.skip' })}
+		{t({ locale: $localeStore, key: 'onboarding.beat2.skip' })}
 	</button>
 </section>
 

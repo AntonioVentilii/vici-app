@@ -55,9 +55,7 @@
 	// market → "round of 16" framing; picked team without one (long-tail
 	// participant) or skip → "wins the World Cup" framing.
 	const titleKey = $derived(
-		picked && advancement
-			? 'onboarding.v2.beat1b.title_advance'
-			: 'onboarding.v2.beat1b.title_winner'
+		picked && advancement ? 'onboarding.beat1b.title_advance' : 'onboarding.beat1b.title_winner'
 	);
 	const titleTeamName = $derived(picked?.name ?? fallbackFavourite?.name ?? '');
 </script>
@@ -72,7 +70,7 @@
 		<span class="allcaps ob2-step-label">
 			{t({
 				locale: $localeStore,
-				key: 'onboarding.v2.beat_label',
+				key: 'onboarding.beat_label',
 				params: { current: 1, total: 3 }
 			})}
 		</span>
@@ -89,7 +87,7 @@
 				<div class="ob2-wc-eyebrow">
 					<span class="allcaps ob2-wc-tag">{event.title}</span>
 					<span class="ob2-wc-eyebrow-sub allcaps">
-						{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.eyebrow_first_call' })}
+						{t({ locale: $localeStore, key: 'onboarding.beat1b.eyebrow_first_call' })}
 					</span>
 				</div>
 
@@ -102,21 +100,21 @@
 						<span class="ob2-team-glyph" aria-hidden="true">{picked.glyph ?? ''}</span>
 						{t({
 							locale: $localeStore,
-							key: 'onboarding.v2.beat1b.backing',
+							key: 'onboarding.beat1b.backing',
 							params: { team: picked.name }
 						})}
 						<span class="ob2-sub-detail">
-							{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.backing_sub' })}
+							{t({ locale: $localeStore, key: 'onboarding.beat1b.backing_sub' })}
 						</span>
 						<button class="ob2-change-team" onclick={onChangeTeam} type="button">
-							{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.change_team' })}
+							{t({ locale: $localeStore, key: 'onboarding.beat1b.change_team' })}
 						</button>
 					</p>
 				{:else}
 					<p class="ob2-sub">
 						{t({
 							locale: $localeStore,
-							key: 'onboarding.v2.beat1b.skip_sub',
+							key: 'onboarding.beat1b.skip_sub',
 							params: { team: fallbackFavourite?.name ?? '' }
 						})}
 					</p>
@@ -152,7 +150,7 @@
 	</SwipeableMarketCard>
 
 	<p class="allcaps ob2-swipe-hint" aria-hidden="true">
-		{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.swipe_hint' })}
+		{t({ locale: $localeStore, key: 'onboarding.beat1b.swipe_hint' })}
 	</p>
 </section>
 
