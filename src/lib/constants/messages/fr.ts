@@ -771,6 +771,8 @@ export const frMessages = {
 	'onboarding.eyebrow.resolution': 'Résolution',
 	'onboarding.eyebrow.starter_pack': 'Votre pack de départ',
 	'onboarding.eyebrow.two_gestures_learned': 'Deux gestes appris.',
+	'onboarding.featured_event.live': '{event} · en direct',
+	'onboarding.featured_event.upcoming': '{event} · commence dans {days} jours',
 	'onboarding.first_call_badge': 'PREMIER PRONOSTIC',
 	'onboarding.handle.hint': 'a-z, 0-9, point ou tiret bas',
 	'onboarding.handle.placeholder': 'tacitus',

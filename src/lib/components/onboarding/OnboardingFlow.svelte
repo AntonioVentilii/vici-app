@@ -13,6 +13,11 @@
 		type WelcomeMarketPreview
 	} from '$lib/constants/welcome-markets.constants';
 	import {
+		daysToKickoff,
+		featuredEvent,
+		featuredEventActive
+	} from '$lib/derived/featured-event.derived';
+	import {
 		checkNicknameAvailability,
 		loadProfilesByPrincipals
 	} from '$lib/services/profile.services';
@@ -674,6 +679,34 @@
 	<main class="step-frame">
 		{#if step === 0}
 			<section class="step step-first" aria-labelledby="first-call-title">
+				{#if $featuredEventActive}
+					<!-- Featured-event teaser — surfaces the current tentpole
+					     (World Cup 2026 today) at the very top of onboarding so
+					     newcomers see the live moment that the app's deck is
+					     curated around. Reads from the featured-event abstraction
+					     (b9dfb7d) so swapping the next event is a one-export
+					     change. Renders only while the event is `upcoming` /
+					     `live` / `wrap-up`; auto-hides post-archive. -->
+					<div class="featured-event-teaser" role="note">
+						<span class="featured-event-dot" aria-hidden="true"></span>
+						<span class="num">
+							{#if $daysToKickoff !== null && $daysToKickoff > 0}
+								{t({
+									locale: $localeStore,
+									key: 'onboarding.featured_event.upcoming',
+									params: { event: $featuredEvent.title, days: $daysToKickoff }
+								})}
+							{:else}
+								{t({
+									locale: $localeStore,
+									key: 'onboarding.featured_event.live',
+									params: { event: $featuredEvent.title }
+								})}
+							{/if}
+						</span>
+					</div>
+				{/if}
+
 				<div class="step-copy">
 					<p class="eyebrow">
 						{t({ locale: $localeStore, key: 'onboarding.eyebrow.first_call' })}
@@ -1401,6 +1434,31 @@
 		flex: 0 0 auto;
 		flex-direction: column;
 		gap: 0.5rem;
+	}
+
+	.featured-event-teaser {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		align-self: flex-start;
+		margin-bottom: 0.75rem;
+		padding: 0.35rem 0.7rem;
+		border: 1px solid color-mix(in srgb, var(--laurel) 28%, transparent);
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--laurel) 12%, transparent);
+		color: var(--laurel);
+		font-size: var(--t-12);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.featured-event-dot {
+		width: 0.4rem;
+		height: 0.4rem;
+		border-radius: 50%;
+		background: currentColor;
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--laurel) 18%, transparent);
 	}
 
 	.step-copy h1 {

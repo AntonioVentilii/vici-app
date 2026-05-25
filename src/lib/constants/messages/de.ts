@@ -770,6 +770,8 @@ export const deMessages = {
 	'onboarding.eyebrow.resolution': 'Auflösung',
 	'onboarding.eyebrow.starter_pack': 'Dein Starterpaket',
 	'onboarding.eyebrow.two_gestures_learned': 'Zwei Gesten gelernt.',
+	'onboarding.featured_event.live': '{event} · live',
+	'onboarding.featured_event.upcoming': '{event} · startet in {days} Tagen',
 	'onboarding.first_call_badge': 'ERSTER CALL',
 	'onboarding.handle.hint': 'a–z, 0–9, Punkt oder Unterstrich',
 	'onboarding.handle.placeholder': 'tacitus',

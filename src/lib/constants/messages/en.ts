@@ -754,6 +754,8 @@ export const enMessages = {
 	'onboarding.eyebrow.resolution': 'Resolution',
 	'onboarding.eyebrow.starter_pack': 'Your starter pack',
 	'onboarding.eyebrow.two_gestures_learned': 'Two gestures learned.',
+	'onboarding.featured_event.live': '{event} · live now',
+	'onboarding.featured_event.upcoming': '{event} · kicks off in {days} days',
 	'onboarding.first_call_badge': 'FIRST CALL',
 	'onboarding.handle.checking': 'Checking availability…',
 	'onboarding.handle.error_check_failed': 'Could not check availability. Try again.',

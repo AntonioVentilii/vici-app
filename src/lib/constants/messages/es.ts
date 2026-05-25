@@ -765,6 +765,8 @@ export const esMessages = {
 	'onboarding.eyebrow.resolution': 'Resolución',
 	'onboarding.eyebrow.starter_pack': 'Tu pack inicial',
 	'onboarding.eyebrow.two_gestures_learned': 'Dos gestos aprendidos.',
+	'onboarding.featured_event.live': '{event} · en directo',
+	'onboarding.featured_event.upcoming': '{event} · empieza en {days} días',
 	'onboarding.first_call_badge': 'PRIMERA PREDICCIÓN',
 	'onboarding.handle.hint': 'a-z, 0-9, punto o guion bajo',
 	'onboarding.handle.placeholder': 'tacitus',

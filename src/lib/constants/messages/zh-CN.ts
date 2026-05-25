@@ -727,6 +727,8 @@ export const zhCnMessages = {
 	'onboarding.eyebrow.resolution': '裁定',
 	'onboarding.eyebrow.starter_pack': '你的新手礼包',
 	'onboarding.eyebrow.two_gestures_learned': '已学会两种手势。',
+	'onboarding.featured_event.live': '{event} · 正在进行',
+	'onboarding.featured_event.upcoming': '{event} · {days} 天后开赛',
 	'onboarding.first_call_badge': '首次预测',
 	'onboarding.handle.hint': 'a-z、0-9、点或下划线',
 	'onboarding.handle.placeholder': 'tacitus',

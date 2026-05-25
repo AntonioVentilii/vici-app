@@ -759,6 +759,8 @@ export const ptMessages = {
 	'onboarding.eyebrow.resolution': 'Resolução',
 	'onboarding.eyebrow.starter_pack': 'Seu pacote inicial',
 	'onboarding.eyebrow.two_gestures_learned': 'Dois gestos aprendidos.',
+	'onboarding.featured_event.live': '{event} · ao vivo',
+	'onboarding.featured_event.upcoming': '{event} · começa em {days} dias',
 	'onboarding.first_call_badge': 'PRIMEIRA PREVISÃO',
 	'onboarding.handle.hint': 'a-z, 0-9, ponto ou underline',
 	'onboarding.handle.placeholder': 'tacitus',
