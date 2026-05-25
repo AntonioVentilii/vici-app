@@ -190,13 +190,18 @@
 			<!-- V1.2 Markets carries a heart-prefixed "Saved" filter chip
 			     alongside the category chips. We expose it as a toggle next
 			     to the list eyebrow so users can scope the list to their
-			     hearted markets without disturbing the other filters. The
-			     chip is hidden when the user hasn't saved any markets yet
-			     to avoid surfacing a control with nothing to filter. -->
+			     hearted markets without disturbing the other filters.
+			     Visibility rule: the chip is hidden when the user has zero
+			     saves AND isn't already in saved-only view (no control
+			     surfaces when there's nothing to filter). Once `savedOnly`
+			     is on it stays visible regardless of count so users always
+			     have an obvious way back out of the saved view — including
+			     the empty-state surface where they may have unsaved
+			     everything from inside the filter. -->
 			<div class="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-1">
 				<div class="flex items-center gap-3">
 					<h2 class="eyebrow">{tabLabel(activeTab as (typeof tabs)[number])}</h2>
-					{#if savedCount > 0}
+					{#if savedCount > 0 || savedOnly}
 						<div
 							class={[
 								'duration-state ease-vici inline-flex items-center rounded-full border text-[11px] font-bold transition-colors',
