@@ -36,7 +36,7 @@
 	/>
 
 	{#if withChart}
-		<rect x="50" y="56" width="22" height="14" rx="2" fill="#F2ECDC" opacity="0.92" />
+		<rect fill="#F2ECDC" height="14" opacity="0.92" rx="2" width="22" x="50" y="56" />
 		<path
 			class={animate ? 'char-chart' : ''}
 			d="M53 66 L57 60 L61 64 L67 56"
