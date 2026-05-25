@@ -510,6 +510,17 @@ export const frMessages = {
 	'leagues.create.sub': 'Nomme ta cohorte. Tu pourras éditer la description plus tard.',
 	'leagues.create.submitting': 'Création…',
 	'leagues.create.title': 'Lance une ligue.',
+	'leagues.detail.back': 'Retour aux ligues',
+	'leagues.detail.invite_copied': 'Copié',
+	'leagues.detail.invite_copy': 'Copier le code',
+	'leagues.detail.invite_label': 'Invitation',
+	'leagues.detail.leave': 'Quitter la ligue',
+	'leagues.detail.leaving': 'Sortie…',
+	'leagues.detail.loading': 'Chargement de la ligue…',
+	'leagues.detail.members_eyebrow': 'Membres · {count}',
+	'leagues.detail.not_member.sub':
+		'Tu ne vois pas la liste de cette ligue — demande un code au propriétaire.',
+	'leagues.detail.not_member.title': "Tu n'es pas dans cette ligue.",
 	'leagues.empty.cta_create': 'Crée ta ligue',
 	'leagues.empty.cta_join': 'Rejoindre avec un code',
 	'leagues.empty.sub':

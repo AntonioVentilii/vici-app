@@ -500,6 +500,17 @@ export const esMessages = {
 	'leagues.create.sub': 'Pon nombre a tu cohorte. Podrás editar la descripción después.',
 	'leagues.create.submitting': 'Creando…',
 	'leagues.create.title': 'Crea una liga.',
+	'leagues.detail.back': 'Volver a ligas',
+	'leagues.detail.invite_copied': 'Copiado',
+	'leagues.detail.invite_copy': 'Copiar código',
+	'leagues.detail.invite_label': 'Invitación',
+	'leagues.detail.leave': 'Salir de la liga',
+	'leagues.detail.leaving': 'Saliendo…',
+	'leagues.detail.loading': 'Cargando liga…',
+	'leagues.detail.members_eyebrow': 'Miembros · {count}',
+	'leagues.detail.not_member.sub':
+		'No puedes ver la lista de esta liga — pídele al propietario un código de invitación.',
+	'leagues.detail.not_member.title': 'No estás en esta liga.',
 	'leagues.empty.cta_create': 'Crea tu liga',
 	'leagues.empty.cta_join': 'Únete con un código',
 	'leagues.empty.sub':

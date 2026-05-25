@@ -500,6 +500,17 @@ export const itMessages = {
 	'leagues.create.sub': 'Nomina la tua coorte. Puoi modificare la descrizione dopo.',
 	'leagues.create.submitting': 'Creo…',
 	'leagues.create.title': 'Avvia una lega.',
+	'leagues.detail.back': 'Torna alle leghe',
+	'leagues.detail.invite_copied': 'Copiato',
+	'leagues.detail.invite_copy': 'Copia codice',
+	'leagues.detail.invite_label': 'Invito',
+	'leagues.detail.leave': 'Esci dalla lega',
+	'leagues.detail.leaving': 'Esco…',
+	'leagues.detail.loading': 'Carico la lega…',
+	'leagues.detail.members_eyebrow': 'Membri · {count}',
+	'leagues.detail.not_member.sub':
+		'Non puoi vedere il roster di questa lega — chiedi un codice al proprietario.',
+	'leagues.detail.not_member.title': 'Non sei in questa lega.',
 	'leagues.empty.cta_create': 'Crea la tua lega',
 	'leagues.empty.cta_join': 'Entra con un codice',
 	'leagues.empty.sub':

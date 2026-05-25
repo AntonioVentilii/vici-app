@@ -499,6 +499,17 @@ export const ptMessages = {
 	'leagues.create.sub': 'Nomeie sua coorte. A descrição pode ser editada depois.',
 	'leagues.create.submitting': 'Criando…',
 	'leagues.create.title': 'Crie uma liga.',
+	'leagues.detail.back': 'Voltar para ligas',
+	'leagues.detail.invite_copied': 'Copiado',
+	'leagues.detail.invite_copy': 'Copiar código',
+	'leagues.detail.invite_label': 'Convite',
+	'leagues.detail.leave': 'Sair da liga',
+	'leagues.detail.leaving': 'Saindo…',
+	'leagues.detail.loading': 'Carregando liga…',
+	'leagues.detail.members_eyebrow': 'Membros · {count}',
+	'leagues.detail.not_member.sub':
+		'Você não vê a lista desta liga — peça um código de convite ao dono.',
+	'leagues.detail.not_member.title': 'Você não está nesta liga.',
 	'leagues.empty.cta_create': 'Crie sua liga',
 	'leagues.empty.cta_join': 'Entre com um código',
 	'leagues.empty.sub':

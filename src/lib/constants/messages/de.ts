@@ -505,6 +505,17 @@ export const deMessages = {
 	'leagues.create.sub': 'Gib deiner Kohorte einen Namen. Beschreibung kannst du später ändern.',
 	'leagues.create.submitting': 'Erstelle…',
 	'leagues.create.title': 'Liga gründen.',
+	'leagues.detail.back': 'Zurück zu den Ligen',
+	'leagues.detail.invite_copied': 'Kopiert',
+	'leagues.detail.invite_copy': 'Code kopieren',
+	'leagues.detail.invite_label': 'Einladung',
+	'leagues.detail.leave': 'Liga verlassen',
+	'leagues.detail.leaving': 'Verlasse…',
+	'leagues.detail.loading': 'Lade Liga…',
+	'leagues.detail.members_eyebrow': 'Mitglieder · {count}',
+	'leagues.detail.not_member.sub':
+		'Du siehst die Liste dieser Liga nicht — frag den Inhaber nach einem Einladungscode.',
+	'leagues.detail.not_member.title': 'Du bist nicht in dieser Liga.',
 	'leagues.empty.cta_create': 'Eigene Liga gründen',
 	'leagues.empty.cta_join': 'Mit Code beitreten',
 	'leagues.empty.sub':
