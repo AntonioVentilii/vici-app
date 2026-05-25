@@ -471,6 +471,24 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListSocialFeedArgs = IDL.Record({ limit: IDL.Opt(IDL.Float64) });
+	const AppListSocialFeedResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				context: IDL.Opt(IDL.Text),
+				actor: IDL.Text,
+				kind: IDL.Variant({
+					bout_proposed: IDL.Null,
+					bout_accepted: IDL.Null,
+					league_joined: IDL.Null,
+					bout_resolved: IDL.Null,
+					affiliation_set: IDL.Null
+				}),
+				created_at_ms: IDL.Float64,
+				ref_id: IDL.Text
+			})
+		)
+	});
 	const AppListWorldsRosterArgs = IDL.Record({
 		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
 		affiliation_id: IDL.Text
@@ -675,6 +693,7 @@ export const idlFactory = ({ IDL }) => {
 		app_list_my_leagues: IDL.Func([], [AppListMyLeaguesResult], ['query']),
 		app_list_my_referrals: IDL.Func([], [AppListMyReferralsResult], ['query']),
 		app_list_sent_friend_requests: IDL.Func([], [AppListSentFriendRequestsResult], ['query']),
+		app_list_social_feed: IDL.Func([AppListSocialFeedArgs], [AppListSocialFeedResult], ['query']),
 		app_list_worlds_roster: IDL.Func(
 			[AppListWorldsRosterArgs],
 			[AppListWorldsRosterResult],

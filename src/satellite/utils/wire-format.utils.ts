@@ -548,3 +548,35 @@ export const toWireAffiliation = (aff: {
 	joined_at_ms: aff.joinedAtMs,
 	locked_until_ms: aff.lockedUntilMs
 });
+
+// ─── Social feed (Phase 10) ──────────────────────────────────────────────
+
+export const SocialFeedEntryWireSchema = j.strictObject({
+	actor: PrincipalTextSchema,
+	kind: j.enum([
+		'league_joined',
+		'bout_proposed',
+		'bout_accepted',
+		'bout_resolved',
+		'affiliation_set'
+	]),
+	ref_id: j.string(),
+	context: j.string().optional(),
+	created_at_ms: j.number()
+});
+
+export type WireSocialFeedEntry = j.infer<typeof SocialFeedEntryWireSchema>;
+
+export const toWireSocialFeedEntry = (entry: {
+	actor: string;
+	kind: 'league_joined' | 'bout_proposed' | 'bout_accepted' | 'bout_resolved' | 'affiliation_set';
+	refId: string;
+	context?: string;
+	createdAtMs: number;
+}): WireSocialFeedEntry => ({
+	actor: entry.actor,
+	kind: entry.kind,
+	ref_id: entry.refId,
+	context: entry.context,
+	created_at_ms: entry.createdAtMs
+});

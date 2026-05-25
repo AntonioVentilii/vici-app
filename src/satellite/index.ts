@@ -27,6 +27,7 @@ import {
 	listMyAffiliationsFn,
 	listMyBoutsFn,
 	listMyLeaguesFn,
+	listSocialFeedFn,
 	listWorldsRosterFn,
 	lookupLeagueByInviteFn
 } from '$satellite/services/cohort.services';
@@ -96,6 +97,7 @@ import {
 	MarketTranslationWireSchema,
 	ReferralWireSchema,
 	RelationWireSchema,
+	SocialFeedEntryWireSchema,
 	toWireAffiliation,
 	toWireBout,
 	toWireLeague,
@@ -105,6 +107,7 @@ import {
 	toWireProfile,
 	toWireReferral,
 	toWireRelation,
+	toWireSocialFeedEntry,
 	UserProfileWireSchema
 } from '$satellite/utils/wire-format.utils';
 import {
@@ -450,6 +453,20 @@ export const listWorldsRoster = defineQuery({
 	}),
 	handler: ({ kind, affiliationId }) => ({
 		items: listWorldsRosterFn({ kind, affiliationId }).map(toWireAffiliation)
+	})
+});
+
+// ─── Social feed (Phase 10) ──────────────────────────────────────────────
+
+export const listSocialFeed = defineQuery({
+	args: j.strictObject({
+		limit: j.number().optional()
+	}),
+	result: j.strictObject({
+		items: j.array(SocialFeedEntryWireSchema)
+	}),
+	handler: ({ limit }) => ({
+		items: listSocialFeedFn({ limit }).map(toWireSocialFeedEntry)
 	})
 });
 
