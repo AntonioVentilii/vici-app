@@ -1,5 +1,13 @@
 @import 'tailwindcss';
 
+/* TODO(fonts): self-host these. The Google Fonts CDN matches the design
+ * prototype exactly and keeps the visual language honest in the meantime,
+ * but the engineering target is the same self-hosted pattern we already
+ * use for JetBrains Mono below — drop the woff2 files in `static/fonts/`
+ * and replace this @import with `@font-face` rules. Tracked in PR #138
+ * "remodel → V1.2" so the move can happen as a clean follow-up. */
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+
 @font-face {
 	font-family: 'JetBrains Mono';
 	font-style: normal;
@@ -85,6 +93,8 @@
 	--char-vici-deep: #6f66b3;
 	--char-oracle: #e2b842;
 	--char-trickster: #ff8a7a;
+	--char-archivist: #5db6a9;
+	--char-archivist-deep: #2e6e66;
 	--char-flame: #f08a3c;
 
 	/* Motion (--ease-vici lives in `@theme` so Tailwind generates the
