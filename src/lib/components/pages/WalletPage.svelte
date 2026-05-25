@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
+	import { ArrowRight, Search, Zap } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import Card from '$lib/components/ui/Card.svelte';
 	import InfiniteScroll from '$lib/components/ui/InfiniteScroll.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
@@ -11,6 +14,7 @@
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
 	import WalletStats from '$lib/components/wallet/WalletStats.svelte';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { markets } from '$lib/derived/markets.derived';
 	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
@@ -219,6 +223,30 @@
 	</div>
 
 	<CollateralModal isOpen={isCollateralModalOpen} onClose={() => (isCollateralModalOpen = false)} />
+
+	<!-- Dual CTA strip — V1.2 wallets nudge the user to spend VXP rather
+	     than letting it sit. Primary opens Flow; ghost routes to the
+	     markets list so users with an active call in mind can find one
+	     directly. Stacks on mobile, side-by-side from small breakpoint up. -->
+	<div class="flex flex-col gap-2 sm:flex-row">
+		<button
+			class="bg-primary text-primary-foreground duration-state ease-vici inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold transition-colors hover:opacity-90"
+			onclick={() => goto(resolve(AppPath.Flow))}
+			type="button"
+		>
+			<Zap aria-hidden="true" size={16} strokeWidth={2.2} />
+			{t({ locale: $localeStore, key: 'wallet.cta.open_flow' })}
+			<ArrowRight aria-hidden="true" size={14} strokeWidth={2.2} />
+		</button>
+		<button
+			class="border-border bg-card text-foreground hover:border-border-strong hover:bg-card duration-state ease-vici inline-flex flex-1 items-center justify-center gap-2 rounded-xl border px-4 py-3 text-sm font-semibold transition-colors"
+			onclick={() => goto(resolve(AppPath.Home))}
+			type="button"
+		>
+			<Search aria-hidden="true" size={16} strokeWidth={2.2} />
+			{t({ locale: $localeStore, key: 'wallet.cta.browse_markets' })}
+		</button>
+	</div>
 
 	<Card class="bg-card/85 overflow-hidden" padding="none">
 		<div class="border-border border-b p-2">

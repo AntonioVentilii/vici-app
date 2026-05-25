@@ -1225,6 +1225,8 @@ export const deMessages = {
 	'wallet.collateral.value': 'Wert:',
 	'wallet.collateral.withdraw': 'Auszahlen',
 	'wallet.collateral.withdraw_title': 'Collateral auszahlen',
+	'wallet.cta.browse_markets': 'Märkte durchstöbern',
+	'wallet.cta.open_flow': 'Flow öffnen',
 	'wallet.eyebrow': 'TRESOR',
 	'wallet.history.all_caught_up': 'Alles aktuell.',
 	'wallet.history.batch_size': 'Batchgröße',

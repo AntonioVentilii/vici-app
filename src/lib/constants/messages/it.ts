@@ -1210,6 +1210,8 @@ export const itMessages = {
 	'wallet.collateral.value': 'Valore:',
 	'wallet.collateral.withdraw': 'Preleva',
 	'wallet.collateral.withdraw_title': 'Preleva collaterale',
+	'wallet.cta.browse_markets': 'Esplora i mercati',
+	'wallet.cta.open_flow': 'Apri Flow',
 	'wallet.eyebrow': 'TESORERIA',
 	'wallet.history.all_caught_up': 'Tutto aggiornato.',
 	'wallet.history.batch_size': 'Dimensione batch',

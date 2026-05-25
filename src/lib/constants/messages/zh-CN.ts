@@ -1153,6 +1153,8 @@ export const zhCnMessages = {
 	'wallet.collateral.value': '价值：',
 	'wallet.collateral.withdraw': '提取',
 	'wallet.collateral.withdraw_title': '提取抵押品',
+	'wallet.cta.browse_markets': '浏览市场',
+	'wallet.cta.open_flow': '打开 Flow',
 	'wallet.eyebrow': '金库',
 	'wallet.history.all_caught_up': '全部已加载。',
 	'wallet.history.batch_size': '批量大小',

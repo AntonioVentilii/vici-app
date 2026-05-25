@@ -1226,6 +1226,8 @@ export const frMessages = {
 	'wallet.collateral.value': 'Valeur :',
 	'wallet.collateral.withdraw': 'Retirer',
 	'wallet.collateral.withdraw_title': 'Retirer du collatéral',
+	'wallet.cta.browse_markets': 'Parcourir les marchés',
+	'wallet.cta.open_flow': 'Ouvrir Flow',
 	'wallet.eyebrow': 'TRÉSORERIE',
 	'wallet.history.all_caught_up': 'Tout est à jour.',
 	'wallet.history.batch_size': 'Taille du lot',

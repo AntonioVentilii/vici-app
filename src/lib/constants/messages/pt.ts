@@ -1212,6 +1212,8 @@ export const ptMessages = {
 	'wallet.collateral.value': 'Valor:',
 	'wallet.collateral.withdraw': 'Retirar',
 	'wallet.collateral.withdraw_title': 'Retirar colateral',
+	'wallet.cta.browse_markets': 'Explorar mercados',
+	'wallet.cta.open_flow': 'Abrir Flow',
 	'wallet.eyebrow': 'TESOURO',
 	'wallet.history.all_caught_up': 'Tudo em dia.',
 	'wallet.history.batch_size': 'Tamanho do lote',

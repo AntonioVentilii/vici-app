@@ -1257,6 +1257,8 @@ export const enMessages = {
 	'wallet.collateral.value': 'Value:',
 	'wallet.collateral.withdraw': 'Withdraw',
 	'wallet.collateral.withdraw_title': 'Withdraw Collateral',
+	'wallet.cta.browse_markets': 'Browse markets',
+	'wallet.cta.open_flow': 'Open Flow',
 	'wallet.eyebrow': 'TREASURY',
 	'wallet.history.all_caught_up': 'All caught up.',
 	'wallet.history.batch_size': 'Batch size',
