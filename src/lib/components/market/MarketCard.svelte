@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
-	import { Clock, Copy, Heart, Users, UsersRound } from 'lucide-svelte/icons';
+	import { Clock, Copy, Users, UsersRound } from 'lucide-svelte/icons';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -8,17 +8,13 @@
 	import CategoricalProbabilities from '$lib/components/market/CategoricalProbabilities.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import SuggestedBadge from '$lib/components/market/SuggestedBadge.svelte';
+	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
-	import {
-		isMarketSaved,
-		preferencesStore,
-		toggleSavedMarket
-	} from '$lib/stores/preferences.store';
 	import type { Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import { isSocial } from '$lib/utils/balance-domain.utils';
@@ -49,13 +45,6 @@
 	const isResolved = $derived(market.status === 'Resolved');
 	const showChallengeSlot = $derived(!isFork && !isResolved);
 	const showSuggested = $derived(isMarketSuggested({ market, metadata }));
-
-	const saved = $derived(isMarketSaved({ marketId: market.id, prefs: $preferencesStore }));
-
-	const onToggleSave = (e: MouseEvent) => {
-		e.stopPropagation();
-		toggleSavedMarket({ marketId: market.id });
-	};
 
 	const resolvedOutcomeLabel = (outcome: string): string => {
 		if (outcome === 'YES') {
@@ -129,29 +118,7 @@
 					</div>
 
 					<div class="flex items-center gap-2">
-						<button
-							class={[
-								'duration-state ease-vici inline-flex h-7 w-7 items-center justify-center rounded-full border transition-colors',
-								saved
-									? 'border-laurel/40 bg-laurel-glow text-laurel'
-									: 'border-border text-muted-foreground/60 hover:border-laurel/40 hover:text-laurel'
-							]}
-							aria-label={t({
-								locale: $localeStore,
-								key: saved ? 'card.unsave' : 'card.save'
-							})}
-							aria-pressed={saved}
-							onclick={onToggleSave}
-							onkeydown={(e) => e.stopPropagation()}
-							type="button"
-						>
-							<Heart
-								aria-hidden="true"
-								fill={saved ? 'currentColor' : 'none'}
-								size={14}
-								strokeWidth={2}
-							/>
-						</button>
+						<SavedMarketToggle marketId={market.id} size="sm" />
 						<div class="text-muted-foreground/70 flex items-center gap-1.5">
 							<Clock aria-hidden="true" size={13} />
 							<span

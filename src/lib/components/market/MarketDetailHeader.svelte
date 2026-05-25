@@ -1,19 +1,14 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
-	import { Heart } from 'lucide-svelte/icons';
 	import MarketForkModal from '$lib/components/market/MarketForkModal.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
+	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { localeStore } from '$lib/stores/locale.store';
-	import {
-		isMarketSaved,
-		preferencesStore,
-		toggleSavedMarket
-	} from '$lib/stores/preferences.store';
 	import type { Market } from '$lib/types/market';
 	import { formatDate } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -32,7 +27,6 @@
 	const isResolved = $derived(status === 'Resolved');
 	const timeRemaining = $derived(getTimeRemaining(market.expiryDate));
 	const tags = $derived($marketTags[market.id] ?? []);
-	const saved = $derived(isMarketSaved({ marketId: market.id, prefs: $preferencesStore }));
 </script>
 
 <section class="detail-hero">
@@ -69,25 +63,10 @@
 		</div>
 
 		<div class="detail-hero-actions">
-			<!-- Save / unsave on the detail page mirrors the heart toggle
-			     landed on MarketCard in 14827e2. Reads + writes the same
-			     `savedMarketIds` preference, so hearting from either
-			     surface stays in lockstep. -->
-			<button
-				class="detail-save-btn"
-				class:is-saved={saved}
-				aria-label={t({ locale: $localeStore, key: saved ? 'card.unsave' : 'card.save' })}
-				aria-pressed={saved}
-				onclick={() => toggleSavedMarket({ marketId: market.id })}
-				type="button"
-			>
-				<Heart
-					aria-hidden="true"
-					fill={saved ? 'currentColor' : 'none'}
-					size={16}
-					strokeWidth={2}
-				/>
-			</button>
+			<!-- Heart save / unsave — reuses the shared SavedMarketToggle so
+			     the per-card heart and the detail-page heart stay visually
+			     and behaviourally identical. -->
+			<SavedMarketToggle marketId={market.id} size="md" stopPropagation={false} />
 
 			{#if !isFork}
 				<Button onclick={() => (isForkModalOpen = true)} size="sm" variant="outline">
@@ -157,34 +136,6 @@
 		align-items: center;
 		gap: 0.5rem;
 		flex-shrink: 0;
-	}
-
-	.detail-save-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 2.25rem;
-		height: 2.25rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
-		color: var(--text-muted);
-		cursor: pointer;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici),
-			color var(--d-hover) var(--ease-vici);
-	}
-
-	.detail-save-btn:hover {
-		border-color: color-mix(in srgb, var(--laurel) 40%, transparent);
-		color: var(--laurel);
-	}
-
-	.detail-save-btn.is-saved {
-		border-color: color-mix(in srgb, var(--laurel) 40%, transparent);
-		background: var(--laurel-glow);
-		color: var(--laurel);
 	}
 
 	.detail-chip-row {
