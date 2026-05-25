@@ -1254,21 +1254,22 @@ const wcFace = ({
 };
 
 // ---- WC — tentpole pitch + editorial backdrops ---------------
-// Renders one of five backdrops per seed (stands, flag diagonal,
-// flag horizontal, flag vertical, stadium perspective) so each
-// WC-tagged market gets a distinct visual identity even before
-// the figure system lands. Backdrops draw into the 280×100 viewBox
-// handled by `renderFlowArt`.
+// Renders one of nine variants per seed: five plain backdrops
+// (stands, flag diagonal, flag horizontal, flag vertical, stadium
+// perspective) plus four figure-bearing composites (figure on
+// flag-vert / flag-diag / stands / perspective). Every variant
+// draws into the 280×100 viewBox handled by `renderFlowArt`.
 //
 // Flag trios mirror iconic WC nations (Brazil green-yellow-blue,
-// France blue-white-red, Argentina sky-white-sky, Germany
-// black-red-gold, etc.). Selection is deterministic per seed but
-// independent of the backdrop variant — the same seed always
-// renders the same trio + variant pair.
+// France blue-white-red, Argentina sky-white-sky, etc.) and pair
+// with that nation's kit jersey + optional shoulder stripe so
+// figure variants land on a coherent backdrop. Selection is
+// deterministic per seed — the same market always renders the
+// same trio + variant + figure pair.
 //
-// Follow-up commits will port V1.2's faceted figure system,
-// remaining backdrops (spotlight, bunting, TV, propose), and
-// emotion tags.
+// Follow-up commits will port V1.2's remaining backdrops
+// (circle, spotlight, bunting, TV, propose), CSS keyframes for
+// `wc-figure` / `wc-spot` / `wc-cnf-*`, and emotion-tag overlays.
 const renderWC = ({ rng, p, state }: RenderArgs): string => {
 	const bgStands = (): string => {
 		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
@@ -1374,7 +1375,25 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 	];
 
 	const flag = rng.pick(FLAGS);
-	const variant = rng.int(0, 5);
+
+	// Figure spawner — keeps per-seed picks consistent across variants
+	// (each figure-bearing variant pulls one bust portrait with the
+	// same skin / hair / emotion roll). cx and cy are tuned per
+	// backdrop so the figure avoids the backdrop's structural
+	// architecture (perspective vanishing point, halfway line, etc.).
+	const makeFigure = ({ cx, cy }: { cx: number; cy: number }): string =>
+		wcFace({
+			cx,
+			cy,
+			skin: rng.pick(WC_SKIN_KEYS),
+			hair: rng.pick(WC_HAIR_KEYS),
+			hairStyle: rng.pick(WC_HAIR_STYLES),
+			shirt: flag.shirt,
+			stripe: flag.stripe,
+			emotion: rng.pick(WC_EMOTIONS)
+		});
+
+	const variant = rng.int(0, 8);
 
 	let s = '';
 
@@ -1388,22 +1407,28 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		s += bgFlagVert(flag);
 	} else if (variant === 4) {
 		s += bgPerspective({ color: p.accent });
-	} else {
-		// Figure variant — flag-vert backdrop + faceted bust portrait
-		// anchored on the right third. Skin / hair / hair-style /
-		// emotion are picked per seed so every WC market gets a
-		// coherent but distinct portrait.
+	} else if (variant === 5) {
+		// Figure on flag-vert — anchored on the right stripe.
 		s += bgFlagVert(flag);
-		s += wcFace({
-			cx: 210,
-			cy: 38,
-			skin: rng.pick(WC_SKIN_KEYS),
-			hair: rng.pick(WC_HAIR_KEYS),
-			hairStyle: rng.pick(WC_HAIR_STYLES),
-			shirt: flag.shirt,
-			stripe: flag.stripe,
-			emotion: rng.pick(WC_EMOTIONS)
-		});
+		s += makeFigure({ cx: 210, cy: 38 });
+	} else if (variant === 6) {
+		// Figure on flag-diag — the dark c1 / c2 polygons stop near
+		// x≈120, so anchoring the figure at cx=210 keeps it cleanly
+		// inside the lighter c3 region in the top-right.
+		s += bgFlagDiag(flag);
+		s += makeFigure({ cx: 210, cy: 32 });
+	} else if (variant === 7) {
+		// Figure on stands — pitch closeup with the portrait centred
+		// over the field; the body extends down into the pitch band
+		// while the head sits above the halfway line.
+		s += bgStands();
+		s += makeFigure({ cx: 200, cy: 36 });
+	} else {
+		// Figure on perspective — sits the head just above the
+		// vanishing band (y=40) and lets the body settle into the
+		// perspective floor for a "running toward the camera" beat.
+		s += bgPerspective({ color: p.accent });
+		s += makeFigure({ cx: 140, cy: 42 });
 	}
 
 	// State accent: won → gold spotlight wash; lost → desaturated veil.
