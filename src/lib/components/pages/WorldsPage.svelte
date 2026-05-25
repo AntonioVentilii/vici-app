@@ -3,17 +3,12 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
-	import {
-		lookupWorldsAffiliation,
-		WORLDS_COUNTRIES,
-		WORLDS_UNIVERSITIES,
-		type WorldsAffiliationOption
-	} from '$lib/constants/worlds-affiliations.constants';
+	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import {
 		affiliationDaysLeft,
-		joinAffiliation,
 		leaveAffiliation,
 		listMyAffiliations
 	} from '$lib/services/worlds.services';
@@ -37,6 +32,7 @@
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	let pendingKey: string | null = $state(null);
+	let pickerKind: AffiliationKind | null = $state(null);
 
 	const refresh = async () => {
 		try {
@@ -51,31 +47,6 @@
 	};
 
 	onMount(refresh);
-
-	const handleJoin = async ({
-		kind,
-		option
-	}: {
-		kind: AffiliationKind;
-		option: WorldsAffiliationOption;
-	}) => {
-		const pending = `${kind}:${option.id}`;
-
-		if (pendingKey !== null) {
-			return;
-		}
-
-		pendingKey = pending;
-
-		try {
-			await joinAffiliation({ kind, affiliationId: option.id });
-			await refresh();
-		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
-		} finally {
-			pendingKey = null;
-		}
-	};
 
 	const handleLeave = async ({
 		kind,
@@ -149,7 +120,7 @@
 			{errorMessage ?? t({ locale: $localeStore, key: 'worlds.error.generic' })}
 		</p>
 	{:else}
-		{#each [{ kind: 'university' as const, slot: myUni, roster: WORLDS_UNIVERSITIES, eyebrowKey: 'worlds.slot.university' as const, pickKey: 'worlds.empty.pick_university' as const }, { kind: 'country' as const, slot: myCountry, roster: WORLDS_COUNTRIES, eyebrowKey: 'worlds.slot.country' as const, pickKey: 'worlds.empty.pick_country' as const }] as { kind, slot, roster, eyebrowKey, pickKey } (kind)}
+		{#each [{ kind: 'university' as const, slot: myUni, eyebrowKey: 'worlds.slot.university' as const, pickKey: 'worlds.empty.pick_university' as const }, { kind: 'country' as const, slot: myCountry, eyebrowKey: 'worlds.slot.country' as const, pickKey: 'worlds.empty.pick_country' as const }] as { kind, slot, eyebrowKey, pickKey } (kind)}
 			<section class="worlds-slot">
 				<h2 class="eyebrow worlds-slot-eyebrow">
 					{t({ locale: $localeStore, key: eyebrowKey })}
@@ -202,24 +173,29 @@
 					</div>
 				{:else}
 					<p class="worlds-pick-hint">{t({ locale: $localeStore, key: pickKey })}</p>
-					<div class="worlds-grid">
-						{#each roster as option (option.id)}
-							<button
-								class="worlds-tile"
-								disabled={pendingKey === `${kind}:${option.id}`}
-								onclick={() => handleJoin({ kind, option })}
-								type="button"
-							>
-								<span class="worlds-tile-glyph" aria-hidden="true">{option.glyph}</span>
-								<span class="worlds-tile-name">{option.name}</span>
-							</button>
-						{/each}
-					</div>
+					<button class="worlds-pick-cta" onclick={() => (pickerKind = kind)} type="button">
+						{t({
+							locale: $localeStore,
+							key: kind === 'university' ? 'worlds.cta.pick_university' : 'worlds.cta.pick_country'
+						})}
+					</button>
 				{/if}
 			</section>
 		{/each}
 	{/if}
 </div>
+
+{#if pickerKind !== null}
+	<AffiliationPickerModal
+		isOpen={true}
+		kind={pickerKind}
+		onClose={() => (pickerKind = null)}
+		onPicked={() => {
+			pickerKind = null;
+			void refresh();
+		}}
+	/>
+{/if}
 
 <style lang="postcss">
 	.worlds-page {
@@ -354,53 +330,25 @@
 		color: var(--text-muted);
 	}
 
-	.worlds-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(6.5rem, 1fr));
-		gap: 0.5rem;
-	}
-
-	.worlds-tile {
+	.worlds-pick-cta {
 		appearance: none;
-		display: flex;
-		flex-direction: column;
+		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		gap: 0.4rem;
-		padding: 0.8rem 0.5rem;
-		min-height: 5.25rem;
+		padding: 0.85rem 1.25rem;
 		font: inherit;
-		color: var(--text-base);
-		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
+		font-size: var(--t-14);
+		font-weight: 700;
+		color: var(--text-on-accent, #fff);
+		background: var(--laurel);
+		border: 1px solid var(--laurel);
+		border-radius: var(--r-pill);
 		cursor: pointer;
-		transition:
-			transform 140ms ease,
-			border-color 140ms ease,
-			background 140ms ease;
+		transition: background 140ms ease;
 	}
 
-	.worlds-tile:hover:not(:disabled) {
-		transform: translateY(-1px);
-		border-color: color-mix(in srgb, var(--laurel) 35%, var(--border-base));
-	}
-
-	.worlds-tile:disabled {
-		opacity: 0.55;
-		cursor: progress;
-	}
-
-	.worlds-tile-glyph {
-		font-size: 1.65rem;
-		line-height: 1;
-	}
-
-	.worlds-tile-name {
-		font-size: var(--t-12);
-		font-weight: 600;
-		text-align: center;
-		line-height: 1.2;
+	.worlds-pick-cta:hover {
+		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
 	}
 
 	.worlds-locked-card {
