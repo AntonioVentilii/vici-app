@@ -5,6 +5,7 @@
 	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
+	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
@@ -112,7 +113,12 @@
 				<div class="suggested-rail-scroller">
 					{#each suggestedRail as market, index (market.id)}
 						<div class="suggested-rail-card">
-							<MarketCard {index} {market} metadata={$marketMetadata[market.id]} />
+							<MarketCard
+								{index}
+								{market}
+								metadata={$marketMetadata[market.id]}
+								tag={primaryMarketTag($marketTags[market.id])}
+							/>
 						</div>
 					{/each}
 				</div>
@@ -141,6 +147,7 @@
 				markets={filteredMarkets}
 				metadataBySeries={$marketMetadata}
 				onChallenge={handleChallenge}
+				tagsBySeries={$marketTags}
 			/>
 		</div>
 	</div>

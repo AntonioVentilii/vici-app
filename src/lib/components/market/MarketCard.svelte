@@ -10,6 +10,7 @@
 	import SuggestedBadge from '$lib/components/market/SuggestedBadge.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -19,15 +20,24 @@
 	import { isMarketSuggested } from '$lib/utils/flow-card-display.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { getOutcomeVariant, getTimeRemaining } from '$lib/utils/market.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
 		market: Market;
 		index?: number;
 		onChallenge?: (market: Market) => void;
 		metadata?: MarketMetadata;
+		/**
+		 * Primary category tag for this market (e.g. `macro`, `crypto`).
+		 * When supplied, renders a colored category chip at the start of the
+		 * header strip — mirrors V1.2's MarketRow pattern so the category
+		 * accent reads at a glance on the list. Optional so call sites that
+		 * don't have tags hydrated yet stay backward-compatible.
+		 */
+		tag?: MarketTag;
 	}
 
-	const { market, index = 0, onChallenge, metadata }: Props = $props();
+	const { market, index = 0, onChallenge, metadata, tag }: Props = $props();
 
 	const isChallenge = $derived(isSocial(market.balanceDomain));
 	const isFork = $derived(market.forkedFrom !== undefined);
@@ -65,6 +75,16 @@
 			<div class="flex flex-1 flex-col gap-4 p-4 sm:p-5">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div class="flex flex-wrap items-center gap-1.5">
+						{#if tag}
+							<span
+								style:color={tagColor(tag)}
+								style:background-color="color-mix(in srgb, {tagColor(tag)} 12%, transparent)"
+								style:border="1px solid color-mix(in srgb, {tagColor(tag)} 28%, transparent)"
+								class="eyebrow-xs market-card-tag inline-flex items-center rounded px-1.5 py-0.5"
+							>
+								{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}
+							</span>
+						{/if}
 						{#if showSuggested}
 							<SuggestedBadge />
 						{/if}
