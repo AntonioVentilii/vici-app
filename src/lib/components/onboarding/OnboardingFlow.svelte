@@ -1,9 +1,10 @@
 <script lang="ts">
 	import { Check, Sparkles } from 'lucide-svelte';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import FlowArtFrame from '$lib/components/artwork/FlowArtFrame.svelte';
 	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
+	import { REFERRAL_CODE_LENGTH, REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { newUserVxpAmountMilestone1BaseUnits } from '$lib/constants/vxp-onboarding.constants';
@@ -11,27 +12,40 @@
 		ONBOARDING_DEMO_MARKETS,
 		type WelcomeMarketPreview
 	} from '$lib/constants/welcome-markets.constants';
-	import { checkNicknameAvailability } from '$lib/services/profile.services';
+	import {
+		checkNicknameAvailability,
+		loadProfilesByPrincipals
+	} from '$lib/services/profile.services';
+	import { lookupReferralCode } from '$lib/services/referral.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { CallSide } from '$lib/types/market';
 	import { FLOW_ART_CATEGORIES, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import { decimalFixedValueToNumber, formatProbability } from '$lib/utils/format.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface OnboardingResult {
 		handle: string;
 		interests: string[];
 		email?: string;
+		referralCode?: string;
 	}
 
 	interface Props {
 		onComplete: (result: OnboardingResult) => void;
 		onSignIn?: () => void;
+		/**
+		 * Pre-fill the referral-code field. The signup route reads `?ref=CODE` and forwards it
+		 * here so deep links from a referrer's share land with the code already populated. Stays
+		 * editable — users can still clear or change it.
+		 */
+		initialReferralCode?: string;
 	}
 
-	const { onComplete, onSignIn }: Props = $props();
+	const { onComplete, onSignIn, initialReferralCode }: Props = $props();
 
 	const firstCallAdvance_ms = 2_400;
 	const firstCallCelebrate_ms = 280;
@@ -95,8 +109,25 @@
 	const interests = new SvelteSet<FlowArtCategory>();
 	let handle = $state('');
 	let email = $state('');
+	let referralCode = $state('');
 	let submitting = $state(false);
 	let starterXp = $state(0);
+
+	// Referral lookup — debounced behind every keystroke, same pattern as the nickname probe.
+	// `referralStatus === undefined` means "no input or still checking"; the actual UI hint
+	// derives from the combined status + checking state below. Self-referral isn't detected
+	// pre-auth (the user has no principal yet) — the satellite redeem call rejects it cleanly
+	// with a typed error which the post-signin handoff surfaces as a toast.
+	type ReferralStatus = 'valid' | 'invalid' | 'check_failed';
+	let referralStatus = $state<ReferralStatus | undefined>(undefined);
+	let referralChecking = $state(false);
+	let referralOwner = $state<string | undefined>(undefined);
+	let referralCheckToken = 0;
+	let referralCheckTimer: ReturnType<typeof setTimeout> | undefined;
+	const referralCheckDebounce_ms = 350;
+	const referralBonusLabel = formatVxpBalance({
+		value: 500n * 10n ** BigInt(VXP_TOKEN.decimals)
+	});
 
 	// Live nickname availability — debounced behind every keystroke
 	// and against the same satellite validator the assertion uses, so
@@ -200,7 +231,95 @@
 		if (handleErrorShakeTimer) {
 			clearTimeout(handleErrorShakeTimer);
 		}
+
+		if (referralCheckTimer) {
+			clearTimeout(referralCheckTimer);
+		}
 	});
+
+	const scheduleReferralLookup = (value: string) => {
+		if (referralCheckTimer) {
+			clearTimeout(referralCheckTimer);
+		}
+
+		referralCheckToken += 1;
+		const token = referralCheckToken;
+
+		if (value.length === 0) {
+			referralStatus = undefined;
+			referralChecking = false;
+			referralOwner = undefined;
+
+			return;
+		}
+
+		if (!REFERRAL_CODE_REGEX.test(value)) {
+			// Incomplete — wait for the user to finish typing before showing "invalid" so we don't
+			// flash a red hint on every keystroke before they've reached the full length.
+			referralStatus = value.length >= REFERRAL_CODE_LENGTH ? 'invalid' : undefined;
+			referralChecking = false;
+			referralOwner = undefined;
+
+			return;
+		}
+
+		referralChecking = true;
+		referralStatus = undefined;
+
+		referralCheckTimer = setTimeout(() => {
+			void (async () => {
+				try {
+					const owner = await lookupReferralCode({ code: value });
+
+					if (token !== referralCheckToken) {
+						return;
+					}
+
+					referralChecking = false;
+
+					if (!owner) {
+						referralStatus = 'invalid';
+						referralOwner = undefined;
+
+						return;
+					}
+
+					referralOwner = owner;
+					referralStatus = 'valid';
+					// Hydrate the referrer's profile so the inline hint can render `@nickname`
+					// instead of just "Code looks valid".
+					await loadProfilesByPrincipals({ principals: [owner] });
+				} catch (_err: unknown) {
+					if (token !== referralCheckToken) {
+						return;
+					}
+
+					referralChecking = false;
+					referralStatus = 'check_failed';
+					referralOwner = undefined;
+				}
+			})();
+		}, referralCheckDebounce_ms);
+	};
+
+	onMount(() => {
+		// Hydrate the input once from the route prop (`?ref=CODE` deep link). Keeping `$state`
+		// untouched during script init avoids `state_referenced_locally` warnings and the
+		// onMount path runs after the runes scope is ready so the lookup fires cleanly.
+		const initial = (initialReferralCode ?? '')
+			.toUpperCase()
+			.replace(/[^0-9A-Z]/g, '')
+			.slice(0, REFERRAL_CODE_LENGTH);
+
+		if (initial.length > 0) {
+			referralCode = initial;
+			scheduleReferralLookup(initial);
+		}
+	});
+
+	const referrerNickname = $derived(
+		referralOwner ? $profilesStore.get(referralOwner)?.nickname : undefined
+	);
 
 	const scheduleHandleAvailabilityCheck = (value: string) => {
 		if (handleCheckTimer) {
@@ -452,6 +571,19 @@
 		}
 	};
 
+	const sanitizeReferralCode = (raw: string): string =>
+		raw
+			.toUpperCase()
+			.replace(/[^0-9A-Z]/g, '')
+			.slice(0, REFERRAL_CODE_LENGTH);
+
+	const updateReferralCode = (event: Event) => {
+		if (event.currentTarget instanceof HTMLInputElement) {
+			referralCode = sanitizeReferralCode(event.currentTarget.value);
+			scheduleReferralLookup(referralCode);
+		}
+	};
+
 	const flashHandleError = () => {
 		if (handleErrorShakeTimer) {
 			clearTimeout(handleErrorShakeTimer);
@@ -499,6 +631,14 @@
 
 		if (emailLooksValid && cleanEmail.length > 0) {
 			result.email = cleanEmail;
+		}
+
+		// Only forward the referral code when the lookup confirmed it resolves to a non-self
+		// owner. If the user typed something that didn't resolve, we silently drop it — the
+		// inline hint already told them. This keeps the post-signin redeem step from firing on
+		// known-bad input.
+		if (referralStatus === 'valid' && referralCode.length === REFERRAL_CODE_LENGTH) {
+			result.referralCode = referralCode;
 		}
 
 		onComplete(result);
@@ -1083,6 +1223,54 @@
 						{emailLooksValid
 							? t({ locale: $localeStore, key: 'onboarding.email.saved_note' })
 							: t({ locale: $localeStore, key: 'onboarding.email.optional_note' })}
+					</small>
+				</label>
+
+				<label class="field {referralStatus === 'invalid' ? 'field-invalid' : ''}">
+					<span class="eyebrow">
+						{t({ locale: $localeStore, key: 'onboarding.eyebrow.referral' })}
+					</span>
+					<input
+						aria-invalid={referralStatus === 'invalid'}
+						autocapitalize="characters"
+						autocomplete="off"
+						inputmode="text"
+						maxlength={REFERRAL_CODE_LENGTH}
+						oninput={updateReferralCode}
+						placeholder={t({ locale: $localeStore, key: 'onboarding.referral.placeholder' })}
+						spellcheck="false"
+						type="text"
+						value={referralCode}
+					/>
+					<small
+						class={referralStatus === 'valid'
+							? 'num ok'
+							: referralStatus === 'invalid' || referralStatus === 'check_failed'
+								? 'num warning'
+								: 'num'}
+						aria-live="polite"
+					>
+						{#if referralChecking}
+							{t({ locale: $localeStore, key: 'onboarding.referral.checking' })}
+						{:else if referralStatus === 'invalid'}
+							{t({ locale: $localeStore, key: 'onboarding.referral.invalid' })}
+						{:else if referralStatus === 'check_failed'}
+							{t({ locale: $localeStore, key: 'onboarding.handle.error_check_failed' })}
+						{:else if referralStatus === 'valid' && referrerNickname}
+							{t({
+								locale: $localeStore,
+								key: 'onboarding.referral.valid',
+								params: { nickname: referrerNickname }
+							})}
+						{:else if referralStatus === 'valid'}
+							{t({ locale: $localeStore, key: 'onboarding.referral.valid_unknown' })}
+						{:else}
+							{t({
+								locale: $localeStore,
+								key: 'onboarding.referral.hint',
+								params: { amount: referralBonusLabel }
+							})}
+						{/if}
 					</small>
 				</label>
 

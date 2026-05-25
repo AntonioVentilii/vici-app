@@ -12,7 +12,18 @@ export const Collection = {
 	/**
 	 * Server-driven VXP new-user ladder state (owed vs paid); written from satellite hooks.
 	 */
-	VXP_ONBOARDING: collections.VXP_ONBOARDING
+	VXP_ONBOARDING: collections.VXP_ONBOARDING,
+	/**
+	 * Reverse index from referral code (key) to owning principal. One row per user; written by the
+	 * satellite profile hook on first profile create.
+	 */
+	REFERRAL_CODES: collections.REFERRAL_CODES,
+	/**
+	 * Per-referee redemption record (key = referee principal). Tracks the referrer, the code, and
+	 * the payout state for both sides. Written by `redeemReferralCode`; payout state is updated by
+	 * the satellite referral hook.
+	 */
+	REFERRALS: collections.REFERRALS
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

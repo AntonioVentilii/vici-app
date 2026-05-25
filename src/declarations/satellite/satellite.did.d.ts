@@ -86,6 +86,9 @@ export interface AppGetMarketTranslationResult {
 				}
 		  ];
 }
+export interface AppGetMyReferralCodeResult {
+	code: [] | [string];
+}
 export interface AppGetProfileArgs {
 	principal_str: string;
 }
@@ -205,6 +208,27 @@ export interface AppListMarketTranslationsResult {
 		outcomes: Array<{ id: string; title: string }>;
 	}>;
 }
+export interface AppListMyReferralsResult {
+	items: Array<{
+		within_referrer_cap: boolean;
+		referee_payout: {
+			last_error: [] | [string];
+			status: { none: null } | { owed: null } | { paid: null } | { processing: null };
+			block_index: [] | [string];
+			amount_base_units: string;
+		};
+		referrer: string;
+		code: string;
+		redeemed_at_ms: number;
+		referee: string;
+		referrer_payout: {
+			last_error: [] | [string];
+			status: { none: null } | { owed: null } | { paid: null } | { processing: null };
+			block_index: [] | [string];
+			amount_base_units: string;
+		};
+	}>;
+}
 export interface AppListSentFriendRequestsResult {
 	items: Array<{
 		viewer_role:
@@ -216,6 +240,15 @@ export interface AppListSentFriendRequestsResult {
 		category: { GROUP: null } | { FRIEND: null } | { follow: null };
 		viewer_principal: [] | [string];
 	}>;
+}
+export interface AppLookupReferralCodeArgs {
+	code: string;
+}
+export interface AppLookupReferralCodeResult {
+	owner: [] | [string];
+}
+export interface AppRedeemReferralCodeArgs {
+	code: string;
 }
 export interface AppRejectFriendRequestArgs {
 	relation_id: string;
@@ -336,6 +369,7 @@ export interface _SERVICE {
 		[AppGetMarketTranslationArgs],
 		AppGetMarketTranslationResult
 	>;
+	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
 	app_list_followers: ActorMethod<[], AppListFollowersResult>;
 	app_list_following: ActorMethod<[], AppListFollowingResult>;
@@ -346,7 +380,10 @@ export interface _SERVICE {
 		[AppListMarketTranslationsArgs],
 		AppListMarketTranslationsResult
 	>;
+	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
 	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;
+	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
+	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
 	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;

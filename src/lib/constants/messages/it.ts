@@ -704,6 +704,7 @@ export const itMessages = {
 	'onboarding.eyebrow.first_deck': 'Il tuo primo mazzo',
 	'onboarding.eyebrow.gestures': 'Gesti',
 	'onboarding.eyebrow.handle': 'Il tuo handle',
+	'onboarding.eyebrow.referral': 'Codice referral',
 	'onboarding.eyebrow.resolution': 'Risoluzione',
 	'onboarding.eyebrow.starter_pack': 'Il tuo starter pack',
 	'onboarding.eyebrow.two_gestures_learned': 'Due gesti imparati.',
@@ -1218,5 +1219,43 @@ export const itMessages = {
 	'profile.dashboard.nickname_save_failed_title': 'Impossibile salvare il nickname',
 	'profile.dashboard.nickname_save_failed': 'Riprova tra un momento.',
 	'profile.dashboard.nickname_taken_title': 'Nickname già in uso',
-	'profile.dashboard.nickname_taken': '@{nickname} è già in uso. Scegline un altro.'
+	'profile.dashboard.nickname_taken': '@{nickname} è già in uso. Scegline un altro.',
+	'onboarding.handoff.referral_failed_title': 'Codice referral non applicato',
+	'onboarding.handoff.referral_failed': 'Il codice inserito non è stato riscattato: {reason}',
+	'onboarding.handoff.referral_ok_title': 'Referral applicato',
+	'onboarding.handoff.referral_ok': 'Tu e chi ti ha invitato ricevete {amount} VXP ciascuno.',
+	'onboarding.referral.checking': 'Cerco il codice…',
+	'onboarding.referral.hint': 'Opzionale. Ricevete entrambi {amount} VXP al riscatto.',
+	'onboarding.referral.invalid': 'Codice non riconosciuto.',
+	'onboarding.referral.placeholder': 'ABC12345',
+	'onboarding.referral.self': 'Questo è il tuo codice.',
+	'onboarding.referral.valid': 'Invitato da @{nickname}',
+	'onboarding.referral.valid_unknown': 'Il codice sembra valido.',
+	'profile.dashboard.referrals.copy': 'Copia',
+	'profile.dashboard.referrals.code_label': 'Codice referral',
+	'profile.dashboard.referrals.code_pending':
+		'Salva di nuovo il profilo per generare il tuo codice. Basta un tap.',
+	'profile.dashboard.referrals.code_pending_busy': 'Generazione…',
+	'profile.dashboard.referrals.code_pending_cta': 'Genera codice',
+	'profile.dashboard.referrals.code_pending_failed': 'Impossibile generare il tuo codice. Riprova.',
+	'profile.dashboard.referrals.counter': '{paid} di {max} amici stanno guadagnando',
+	'profile.dashboard.referrals.counter_capped':
+		'{paid} di {max} pagati · {extra} extra (monitorati)',
+	'profile.dashboard.referrals.empty_sub':
+		'Condividi il codice con un amico. Ricevete entrambi {amount} VXP all’iscrizione.',
+	'profile.dashboard.referrals.empty_title': 'Nessun referral ancora',
+	'profile.dashboard.referrals.list_title': 'Amici invitati',
+	'profile.dashboard.referrals.load_failed': 'Impossibile caricare i referral.',
+	'profile.dashboard.referrals.row_owed': 'In coda',
+	'profile.dashboard.referrals.row_paid': 'Guadagnato',
+	'profile.dashboard.referrals.row_pending': 'In attesa',
+	'profile.dashboard.referrals.row_processing': 'In pagamento…',
+	'profile.dashboard.referrals.row_uncounted': 'Oltre il limite · monitorato',
+	'profile.dashboard.referrals.share': 'Condividi',
+	'profile.dashboard.referrals.share_text':
+		'Iscriviti a VICI col mio codice {code} — riceviamo entrambi {amount} VXP.',
+	'profile.dashboard.referrals.share_title': 'Unisciti a me su VICI',
+	'profile.dashboard.referrals.tagline':
+		'Tu e un amico guadagnate {amount} VXP a testa. Puoi invitarne quanti vuoi, ma solo i primi {max} pagano.',
+	'profile.dashboard.referrals.title': 'Referral'
 } as const;

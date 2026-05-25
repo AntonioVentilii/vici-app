@@ -13,14 +13,20 @@
 	import Banner from '$lib/components/ui/Banner.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
+	import {
+		REFERRAL_CODE_REGEX,
+		REFERRAL_VXP_BONUS_BASE_UNITS
+	} from '$lib/constants/referral.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
 	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
+	import { redeemReferralCode } from '$lib/services/referral.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
 	interface Props {
 		children: Snippet;
@@ -50,7 +56,7 @@
 
 	const parsePendingOnboarding = (
 		raw: string
-	): { handle: string; interests: string[]; email?: string } | undefined => {
+	): { handle: string; interests: string[]; email?: string; referralCode?: string } | undefined => {
 		let parsed: unknown;
 
 		try {
@@ -76,12 +82,63 @@
 			'email' in parsed && typeof parsed.email === 'string' && parsed.email.trim().length > 0
 				? parsed.email.trim()
 				: undefined;
+		const rawReferral =
+			'referralCode' in parsed && typeof parsed.referralCode === 'string'
+				? parsed.referralCode.toUpperCase().trim()
+				: undefined;
+		const referralCode =
+			rawReferral && REFERRAL_CODE_REGEX.test(rawReferral) ? rawReferral : undefined;
 
 		return {
 			handle: parsed.handle,
 			interests,
-			email
+			email,
+			referralCode
 		};
+	};
+
+	/**
+	 * Best-effort post-signin redemption of the pre-auth referral code. Errors are surfaced as
+	 * toasts (with the satellite-thrown reason when available) but never bounce the user out of
+	 * the app — we've already accepted the profile by the time this fires, and the referral is
+	 * cosmetic relative to the rest of onboarding.
+	 */
+	const redeemPendingReferralIfAny = async (code: string | undefined): Promise<void> => {
+		if (!code) {
+			return;
+		}
+
+		try {
+			await redeemReferralCode({ code });
+
+			notificationsStore.add({
+				title: t({
+					locale: $localeStore,
+					key: 'onboarding.handoff.referral_ok_title'
+				}),
+				message: t({
+					locale: $localeStore,
+					key: 'onboarding.handoff.referral_ok',
+					params: { amount: formatVxpBalance({ value: REFERRAL_VXP_BONUS_BASE_UNITS }) }
+				}),
+				type: 'success'
+			});
+		} catch (err: unknown) {
+			const reason = err instanceof Error ? err.message : '';
+
+			notificationsStore.add({
+				title: t({
+					locale: $localeStore,
+					key: 'onboarding.handoff.referral_failed_title'
+				}),
+				message: t({
+					locale: $localeStore,
+					key: 'onboarding.handoff.referral_failed',
+					params: { reason: reason || code }
+				}),
+				type: 'error'
+			});
+		}
 	};
 
 	$effect(() => {
@@ -175,6 +232,10 @@
 
 					localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
 
+					// Handle collision is independent of the referral redemption — the user is still a
+					// new sign-up and deserves the bonus.
+					void redeemPendingReferralIfAny(pending.referralCode);
+
 					return;
 				}
 
@@ -185,6 +246,11 @@
 
 				userStore.update((curr) => ({ ...curr, profile: updated }));
 				localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
+
+				// Redeem after the profile is in place so the satellite assertion (which requires an
+				// existing profile) passes. Fire-and-forget — the toast inside handles success and
+				// failure, and we don't want to keep the loading state open for the ledger transfer.
+				void redeemPendingReferralIfAny(pending.referralCode);
 			} catch (err: unknown) {
 				const message = err instanceof Error ? err.message : '';
 

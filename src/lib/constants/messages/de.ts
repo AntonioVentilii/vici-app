@@ -1236,5 +1236,46 @@ export const deMessages = {
 	'profile.dashboard.nickname_save_failed_title': 'Nickname konnte nicht gespeichert werden',
 	'profile.dashboard.nickname_save_failed': 'Bitte versuche es gleich noch einmal.',
 	'profile.dashboard.nickname_taken_title': 'Nickname vergeben',
-	'profile.dashboard.nickname_taken': '@{nickname} ist bereits vergeben. Wähle einen anderen.'
+	'profile.dashboard.nickname_taken': '@{nickname} ist bereits vergeben. Wähle einen anderen.',
+	'onboarding.eyebrow.referral': 'Empfehlungscode',
+	'onboarding.handoff.referral_failed_title': 'Empfehlungscode nicht angewendet',
+	'onboarding.handoff.referral_failed':
+		'Der eingegebene Code konnte nicht eingelöst werden: {reason}',
+	'onboarding.handoff.referral_ok_title': 'Empfehlung angewendet',
+	'onboarding.handoff.referral_ok': 'Du und deine Empfehlung erhaltet jeweils {amount} VXP.',
+	'onboarding.referral.checking': 'Code wird gesucht…',
+	'onboarding.referral.hint': 'Optional. Ihr erhaltet beide {amount} VXP beim Einlösen.',
+	'onboarding.referral.invalid': 'Code nicht erkannt.',
+	'onboarding.referral.placeholder': 'ABC12345',
+	'onboarding.referral.self': 'Das ist dein eigener Code.',
+	'onboarding.referral.valid': 'Empfohlen von @{nickname}',
+	'onboarding.referral.valid_unknown': 'Code sieht gültig aus.',
+	'profile.dashboard.referrals.copy': 'Kopieren',
+	'profile.dashboard.referrals.code_label': 'Empfehlungscode',
+	'profile.dashboard.referrals.code_pending':
+		'Speichere dein Profil erneut, um deinen Code zu erstellen. Ein Tipp genügt.',
+	'profile.dashboard.referrals.code_pending_busy': 'Wird erstellt…',
+	'profile.dashboard.referrals.code_pending_cta': 'Code erstellen',
+	'profile.dashboard.referrals.code_pending_failed':
+		'Code konnte nicht erstellt werden. Bitte erneut versuchen.',
+	'profile.dashboard.referrals.counter': '{paid} von {max} Freunden verdienen',
+	'profile.dashboard.referrals.counter_capped':
+		'{paid} von {max} bezahlt · {extra} weitere (beobachtet)',
+	'profile.dashboard.referrals.empty_sub':
+		'Teile deinen Code mit einem Freund. Ihr erhaltet beide {amount} VXP bei der Anmeldung.',
+	'profile.dashboard.referrals.empty_title': 'Noch keine Empfehlungen',
+	'profile.dashboard.referrals.list_title': 'Empfohlene Freunde',
+	'profile.dashboard.referrals.load_failed': 'Empfehlungen konnten nicht geladen werden.',
+	'profile.dashboard.referrals.row_owed': 'In Warteschlange',
+	'profile.dashboard.referrals.row_paid': 'Verdient',
+	'profile.dashboard.referrals.row_pending': 'Ausstehend',
+	'profile.dashboard.referrals.row_processing': 'Wird bezahlt…',
+	'profile.dashboard.referrals.row_uncounted': 'Über Limit · beobachtet',
+	'profile.dashboard.referrals.share': 'Teilen',
+	'profile.dashboard.referrals.share_text':
+		'Melde dich bei VICI mit meinem Code {code} an — wir bekommen beide {amount} VXP.',
+	'profile.dashboard.referrals.share_title': 'Komm zu mir auf VICI',
+	'profile.dashboard.referrals.tagline':
+		'Du und ein Freund verdient jeweils {amount} VXP. Du kannst beliebig viele einladen, aber nur die ersten {max} zahlen aus.',
+	'profile.dashboard.referrals.title': 'Empfehlungen'
 } as const;

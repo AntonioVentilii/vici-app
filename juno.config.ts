@@ -19,7 +19,9 @@ enum JunoDatastoreCollection {
 	MARKET_METADATA = 'market_metadata',
 	MARKET_TRANSLATIONS = 'market_translations',
 	ACTIVITIES = 'activities',
-	VXP_ONBOARDING = 'vxp_onboarding'
+	VXP_ONBOARDING = 'vxp_onboarding',
+	REFERRAL_CODES = 'referral_codes',
+	REFERRALS = 'referrals'
 }
 
 const delegation = {
@@ -113,6 +115,18 @@ export default defineConfig(({ mode }) => ({
 				},
 				{
 					collection: JunoDatastoreCollection.VXP_ONBOARDING,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.REFERRAL_CODES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.REFERRALS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'

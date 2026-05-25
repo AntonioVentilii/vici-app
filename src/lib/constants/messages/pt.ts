@@ -1223,5 +1223,46 @@ export const ptMessages = {
 	'profile.dashboard.nickname_save_failed_title': 'Não foi possível guardar o nickname',
 	'profile.dashboard.nickname_save_failed': 'Tenta novamente daqui a pouco.',
 	'profile.dashboard.nickname_taken_title': 'Nickname em uso',
-	'profile.dashboard.nickname_taken': '@{nickname} já está em uso. Escolhe outro.'
+	'profile.dashboard.nickname_taken': '@{nickname} já está em uso. Escolhe outro.',
+	'onboarding.eyebrow.referral': 'Código de referência',
+	'onboarding.handoff.referral_failed_title': 'Código de referência não aplicado',
+	'onboarding.handoff.referral_failed':
+		'O código que introduziste não pôde ser resgatado: {reason}',
+	'onboarding.handoff.referral_ok_title': 'Referência aplicada',
+	'onboarding.handoff.referral_ok': 'Tu e quem te convidou recebem {amount} VXP cada.',
+	'onboarding.referral.checking': 'A procurar o código…',
+	'onboarding.referral.hint': 'Opcional. Recebem ambos {amount} VXP ao resgatar.',
+	'onboarding.referral.invalid': 'Código não reconhecido.',
+	'onboarding.referral.placeholder': 'ABC12345',
+	'onboarding.referral.self': 'Esse é o teu próprio código.',
+	'onboarding.referral.valid': 'Convidado por @{nickname}',
+	'onboarding.referral.valid_unknown': 'O código parece válido.',
+	'profile.dashboard.referrals.copy': 'Copiar',
+	'profile.dashboard.referrals.code_label': 'Código de referência',
+	'profile.dashboard.referrals.code_pending':
+		'Guarda o teu perfil novamente para gerar o teu código. É só um toque.',
+	'profile.dashboard.referrals.code_pending_busy': 'A gerar…',
+	'profile.dashboard.referrals.code_pending_cta': 'Gerar código',
+	'profile.dashboard.referrals.code_pending_failed':
+		'Não foi possível gerar o teu código. Tenta novamente.',
+	'profile.dashboard.referrals.counter': '{paid} de {max} amigos a ganhar',
+	'profile.dashboard.referrals.counter_capped':
+		'{paid} de {max} pagos · {extra} extra (monitorizados)',
+	'profile.dashboard.referrals.empty_sub':
+		'Partilha o teu código com um amigo. Recebem ambos {amount} VXP quando se inscrever.',
+	'profile.dashboard.referrals.empty_title': 'Sem referências ainda',
+	'profile.dashboard.referrals.list_title': 'Amigos que convidaste',
+	'profile.dashboard.referrals.load_failed': 'Não foi possível carregar as referências.',
+	'profile.dashboard.referrals.row_owed': 'Em fila',
+	'profile.dashboard.referrals.row_paid': 'Ganho',
+	'profile.dashboard.referrals.row_pending': 'Pendente',
+	'profile.dashboard.referrals.row_processing': 'A pagar…',
+	'profile.dashboard.referrals.row_uncounted': 'Acima do limite · monitorizado',
+	'profile.dashboard.referrals.share': 'Partilhar',
+	'profile.dashboard.referrals.share_text':
+		'Junta-te ao VICI com o meu código {code} — recebemos ambos {amount} VXP.',
+	'profile.dashboard.referrals.share_title': 'Junta-te a mim no VICI',
+	'profile.dashboard.referrals.tagline':
+		'Tu e um amigo ganham {amount} VXP cada. Podes convidar quem quiseres, mas só os primeiros {max} pagam.',
+	'profile.dashboard.referrals.title': 'Referências'
 } as const;
