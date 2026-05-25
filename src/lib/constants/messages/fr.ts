@@ -1444,6 +1444,12 @@ export const frMessages = {
 	'worlds.loading': 'Chargement des Worlds…',
 	'worlds.lock_expired': 'Verrou expiré · tu peux changer.',
 	'worlds.locked_until': "Verrouillé jusqu'au {date} · J-{days}",
+	'worlds.podium.bronze': '3e',
+	'worlds.podium.eyebrow': 'Podium mensuel',
+	'worlds.podium.gold': '1er',
+	'worlds.podium.hint':
+		'Les trois Worlds avec la meilleure précision collective chaque mois — chaque membre de ces Worlds empoche le prix.',
+	'worlds.podium.silver': '2e',
 	'worlds.slot.country': 'Pays',
 	'worlds.slot.university': 'Université',
 	'worlds.sub':

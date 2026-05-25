@@ -1474,6 +1474,12 @@ export const enMessages = {
 	'worlds.loading': 'Loading Worlds…',
 	'worlds.lock_expired': 'Lock expired · ready to switch.',
 	'worlds.locked_until': 'Locked until {date} · {days}d left',
+	'worlds.podium.bronze': '3rd',
+	'worlds.podium.eyebrow': 'Monthly podium',
+	'worlds.podium.gold': '1st',
+	'worlds.podium.hint':
+		'Top three Worlds by collective accuracy each month — every member of those Worlds banks the prize.',
+	'worlds.podium.silver': '2nd',
 	'worlds.slot.country': 'Country',
 	'worlds.slot.university': 'University',
 	'worlds.sub':

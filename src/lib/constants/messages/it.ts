@@ -1429,6 +1429,12 @@ export const itMessages = {
 	'worlds.loading': 'Carico i Worlds…',
 	'worlds.lock_expired': 'Blocco scaduto · puoi cambiare.',
 	'worlds.locked_until': 'Bloccato fino al {date} · {days}g rimanenti',
+	'worlds.podium.bronze': '3°',
+	'worlds.podium.eyebrow': 'Podio mensile',
+	'worlds.podium.gold': '1°',
+	'worlds.podium.hint':
+		'I tre Worlds con la migliore precisione collettiva ogni mese — ogni membro di quei Worlds incassa il premio.',
+	'worlds.podium.silver': '2°',
 	'worlds.slot.country': 'Paese',
 	'worlds.slot.university': 'Università',
 	'worlds.sub':

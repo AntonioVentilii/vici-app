@@ -1440,6 +1440,12 @@ export const esMessages = {
 	'worlds.loading': 'Cargando Worlds…',
 	'worlds.lock_expired': 'Bloqueo expirado · puedes cambiar.',
 	'worlds.locked_until': 'Bloqueado hasta {date} · {days}d restantes',
+	'worlds.podium.bronze': '3º',
+	'worlds.podium.eyebrow': 'Podio mensual',
+	'worlds.podium.gold': '1º',
+	'worlds.podium.hint':
+		'Los tres Worlds con mejor precisión colectiva cada mes — cada miembro de esos Worlds se lleva el premio.',
+	'worlds.podium.silver': '2º',
 	'worlds.slot.country': 'País',
 	'worlds.slot.university': 'Universidad',
 	'worlds.sub':

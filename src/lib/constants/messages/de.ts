@@ -1444,6 +1444,12 @@ export const deMessages = {
 	'worlds.loading': 'Lade Worlds…',
 	'worlds.lock_expired': 'Sperre abgelaufen · du kannst wechseln.',
 	'worlds.locked_until': 'Gesperrt bis {date} · noch {days} Tage',
+	'worlds.podium.bronze': '3.',
+	'worlds.podium.eyebrow': 'Monats-Podium',
+	'worlds.podium.gold': '1.',
+	'worlds.podium.hint':
+		'Die drei Worlds mit der besten kollektiven Trefferquote pro Monat — jedes Mitglied dieser Worlds streicht die Prämie ein.',
+	'worlds.podium.silver': '2.',
 	'worlds.slot.country': 'Land',
 	'worlds.slot.university': 'Uni',
 	'worlds.sub':

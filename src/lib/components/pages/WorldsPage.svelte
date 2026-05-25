@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
 	import {
 		lookupWorldsAffiliation,
 		WORLDS_COUNTRIES,
@@ -104,6 +105,38 @@
 
 	<p class="worlds-sub">{t({ locale: $localeStore, key: 'worlds.sub' })}</p>
 
+	<section class="worlds-podium" aria-label="Worlds podium prizes">
+		<h2 class="eyebrow worlds-podium-eyebrow">
+			{t({ locale: $localeStore, key: 'worlds.podium.eyebrow' })}
+		</h2>
+		<div class="worlds-podium-grid">
+			<div class="worlds-podium-rung worlds-podium-gold">
+				<span class="worlds-podium-place allcaps">
+					{t({ locale: $localeStore, key: 'worlds.podium.gold' })}
+				</span>
+				<span class="num worlds-podium-amount">+{VXP_WORLDS_PODIUM.gold}</span>
+				<span class="allcaps worlds-podium-vxp">VXP</span>
+			</div>
+			<div class="worlds-podium-rung worlds-podium-silver">
+				<span class="worlds-podium-place allcaps">
+					{t({ locale: $localeStore, key: 'worlds.podium.silver' })}
+				</span>
+				<span class="num worlds-podium-amount">+{VXP_WORLDS_PODIUM.silver}</span>
+				<span class="allcaps worlds-podium-vxp">VXP</span>
+			</div>
+			<div class="worlds-podium-rung worlds-podium-bronze">
+				<span class="worlds-podium-place allcaps">
+					{t({ locale: $localeStore, key: 'worlds.podium.bronze' })}
+				</span>
+				<span class="num worlds-podium-amount">+{VXP_WORLDS_PODIUM.bronze}</span>
+				<span class="allcaps worlds-podium-vxp">VXP</span>
+			</div>
+		</div>
+		<p class="worlds-podium-hint">
+			{t({ locale: $localeStore, key: 'worlds.podium.hint' })}
+		</p>
+	</section>
+
 	{#if loadState === 'loading'}
 		<p class="worlds-status" aria-busy="true">
 			{t({ locale: $localeStore, key: 'worlds.loading' })}
@@ -187,6 +220,88 @@
 	.worlds-sub {
 		margin: 0;
 		font-size: var(--t-13);
+		color: var(--text-muted);
+	}
+
+	.worlds-podium {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 0.85rem 0.9rem;
+		background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.worlds-podium-eyebrow {
+		margin: 0;
+		color: var(--text-muted);
+	}
+
+	.worlds-podium-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+		gap: 0.5rem;
+	}
+
+	.worlds-podium-rung {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+		padding: 0.55rem 0.45rem;
+		border-radius: var(--r-12);
+		border: 1px solid var(--border-base);
+		background: color-mix(in srgb, var(--bg-surface) 94%, transparent);
+	}
+
+	.worlds-podium-place {
+		font-size: var(--t-10, 0.65rem);
+		color: var(--text-muted);
+		letter-spacing: var(--tracking-allcaps);
+	}
+
+	.worlds-podium-amount {
+		font-size: var(--t-18, 1.2rem);
+		font-weight: 700;
+		color: var(--text-base);
+	}
+
+	.worlds-podium-vxp {
+		font-size: var(--t-10, 0.65rem);
+		color: var(--text-muted);
+	}
+
+	.worlds-podium-gold {
+		border-color: color-mix(in srgb, #f4c544 50%, var(--border-base));
+		background: color-mix(in srgb, #f4c544 8%, var(--bg-surface));
+	}
+
+	.worlds-podium-gold .worlds-podium-amount {
+		color: #a8852d;
+	}
+
+	.worlds-podium-silver {
+		border-color: color-mix(in srgb, #c0c5cc 50%, var(--border-base));
+		background: color-mix(in srgb, #c0c5cc 8%, var(--bg-surface));
+	}
+
+	.worlds-podium-silver .worlds-podium-amount {
+		color: color-mix(in srgb, #768089 80%, var(--text-base));
+	}
+
+	.worlds-podium-bronze {
+		border-color: color-mix(in srgb, #c97c4a 50%, var(--border-base));
+		background: color-mix(in srgb, #c97c4a 8%, var(--bg-surface));
+	}
+
+	.worlds-podium-bronze .worlds-podium-amount {
+		color: #8a4f1f;
+	}
+
+	.worlds-podium-hint {
+		margin: 0;
+		font-size: var(--t-11, 0.7rem);
 		color: var(--text-muted);
 	}
 

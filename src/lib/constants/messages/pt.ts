@@ -1430,6 +1430,12 @@ export const ptMessages = {
 	'worlds.loading': 'Carregando Worlds…',
 	'worlds.lock_expired': 'Trava expirada · você pode trocar.',
 	'worlds.locked_until': 'Travado até {date} · faltam {days}d',
+	'worlds.podium.bronze': '3º',
+	'worlds.podium.eyebrow': 'Pódio mensal',
+	'worlds.podium.gold': '1º',
+	'worlds.podium.hint':
+		'Os três Worlds com melhor precisão coletiva a cada mês — todo membro desses Worlds leva o prêmio.',
+	'worlds.podium.silver': '2º',
 	'worlds.slot.country': 'País',
 	'worlds.slot.university': 'Faculdade',
 	'worlds.sub':
