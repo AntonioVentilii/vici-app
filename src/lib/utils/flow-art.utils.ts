@@ -1058,6 +1058,201 @@ const renderCulture = ({ rng, p, state, uid }: RenderArgs): string => {
 	return s;
 };
 
+// ---- WC figure system — mode-independent constants ----------
+// Per V1.2: figure colors are intentionally NOT palette-derived so
+// the editorial figure layer reads identically across dark / light /
+// peach themes. That's why `boostOpacities` skips WC (it would
+// over-saturate these fixed inks against light backdrops).
+
+const WC_SKIN: Record<string, { base: string; shadow: string; high: string }> = {
+	umber: { base: '#9C6E45', shadow: '#6E4A2A', high: '#C0916A' },
+	olive: { base: '#A78657', shadow: '#7A5E37', high: '#C9A879' },
+	almond: { base: '#B98968', shadow: '#86603F', high: '#D4A988' },
+	mahog: { base: '#6E4A2A', shadow: '#4A2F18', high: '#8E6238' },
+	sand: { base: '#C99F75', shadow: '#9C7250', high: '#E0BC95' },
+	bronze: { base: '#7E5638', shadow: '#553820', high: '#9E7558' }
+};
+
+const WC_SKIN_KEYS: ReadonlyArray<keyof typeof WC_SKIN> = [
+	'umber',
+	'olive',
+	'almond',
+	'mahog',
+	'sand',
+	'bronze'
+] as const;
+
+const WC_HAIR = {
+	jet: '#1A1410',
+	charcoal: '#2A211A',
+	brown: '#3E2C20',
+	auburn: '#5A2F1E',
+	blonde: '#A98E60',
+	gray: '#7E7A75'
+} as const;
+
+const WC_HAIR_KEYS: ReadonlyArray<keyof typeof WC_HAIR> = [
+	'jet',
+	'charcoal',
+	'brown',
+	'auburn',
+	'blonde',
+	'gray'
+] as const;
+
+type WCHairStyle = 'short' | 'curly' | 'mohawk' | 'cap' | 'bun' | 'bald';
+const WC_HAIR_STYLES: ReadonlyArray<WCHairStyle> = [
+	'short',
+	'curly',
+	'mohawk',
+	'cap',
+	'bun',
+	'bald'
+] as const;
+
+type WCEmotion = 'joy' | 'focus' | 'anticipation' | 'dread' | 'defeat' | 'playful';
+const WC_EMOTIONS: ReadonlyArray<WCEmotion> = [
+	'joy',
+	'focus',
+	'anticipation',
+	'dread',
+	'defeat',
+	'playful'
+] as const;
+
+// Cap brim + cap-band reference colors used inside `wcFace` so the
+// hair-style="cap" branch reads naturally.
+const WC_CAP_DARK = '#2A211A';
+const WC_CAP_BAND = WC_HAIR.charcoal;
+
+// Composes a 4–6-plane bust portrait around an anchor (cx, cy).
+// Hair drawn behind face plane for cleaner silhouette; jaw and ears
+// drawn after the face plane. Expression layer (brows + eyes +
+// mouth) reads at small sizes via stroke weights tuned for the
+// 280×100 viewBox. All `<g class="wc-figure">` so future CSS
+// keyframes can target it without per-part selectors.
+const wcFace = ({
+	cx,
+	cy,
+	skin,
+	hair,
+	hairStyle,
+	shirt,
+	shirtShadow = '#1F1A14',
+	stripe,
+	emotion
+}: {
+	cx: number;
+	cy: number;
+	skin: keyof typeof WC_SKIN;
+	hair: keyof typeof WC_HAIR;
+	hairStyle: WCHairStyle;
+	shirt: string;
+	shirtShadow?: string;
+	stripe?: string;
+	emotion: WCEmotion;
+}): string => {
+	const sk = WC_SKIN[skin] ?? WC_SKIN.umber;
+	const hairColor = WC_HAIR[hair] ?? WC_HAIR.brown;
+	const headW = 16;
+	const headH = 14;
+
+	let m = `<g class="wc-figure">`;
+
+	// Shoulders (full bust) — drawn first behind the head, then
+	// shadow plane, optional national-kit shoulder stripe, collar.
+	m += `<polygon points="${cx - 30},${cy + 18} ${cx + 30},${cy + 18} ${cx + 40},${cy + 58} ${cx - 40},${cy + 58}" fill="${shirt}"/>`;
+	m += `<polygon points="${cx},${cy + 18} ${cx + 30},${cy + 18} ${cx + 40},${cy + 58} ${cx},${cy + 58}" fill="${shirtShadow}" opacity="0.45"/>`;
+
+	if (stripe) {
+		m += `<polygon points="${cx - 10},${cy + 18} ${cx - 4},${cy + 18} ${cx - 2},${cy + 58} ${cx - 14},${cy + 58}" fill="${stripe}" opacity="0.85"/>`;
+	}
+
+	m += `<polygon points="${cx - 7},${cy + 16} ${cx + 7},${cy + 16} ${cx + 5},${cy + 22} ${cx - 5},${cy + 22}" fill="${sk.base}"/>`;
+
+	// Hair — six styles; `bald` is intentionally a no-op.
+	if (hairStyle === 'short') {
+		m += `<polygon points="${cx - headW - 1},${cy - headH - 2} ${cx + headW + 1},${cy - headH - 2} ${cx + headW + 2},${cy - 2} ${cx - headW - 2},${cy - 2}" fill="${hairColor}"/>`;
+	} else if (hairStyle === 'curly') {
+		m += `<path d="M ${cx - headW - 3} ${cy - 2} Q ${cx - headW - 3} ${cy - headH - 8} ${cx} ${cy - headH - 6} Q ${cx + headW + 3} ${cy - headH - 8} ${cx + headW + 3} ${cy - 2} Z" fill="${hairColor}"/>`;
+	} else if (hairStyle === 'mohawk') {
+		m += `<polygon points="${cx - headW},${cy - 2} ${cx - headW},${cy - headH - 1} ${cx + headW},${cy - headH - 1} ${cx + headW},${cy - 2}" fill="${hairColor}" opacity="0.85"/>`;
+		m += `<polygon points="${cx - 3},${cy - headH - 1} ${cx + 3},${cy - headH - 1} ${cx + 4},${cy - headH - 8} ${cx - 4},${cy - headH - 8}" fill="${hairColor}"/>`;
+	} else if (hairStyle === 'cap') {
+		m += `<polygon points="${cx - headW - 2},${cy - headH + 2} ${cx + headW + 2},${cy - headH + 2} ${cx + headW + 4},${cy - 3} ${cx - headW - 4},${cy - 3}" fill="${WC_CAP_DARK}"/>`;
+		m += `<rect x="${cx - headW - 6}" y="${cy - 3}" width="${headW * 2 + 12}" height="2" fill="${WC_CAP_BAND}"/>`;
+	} else if (hairStyle === 'bun') {
+		m += `<polygon points="${cx - headW - 1},${cy - headH - 2} ${cx + headW + 1},${cy - headH - 2} ${cx + headW + 2},${cy + 10} ${cx - headW - 2},${cy + 10}" fill="${hairColor}" opacity="0.95"/>`;
+		m += `<circle cx="${cx + headW + 4}" cy="${cy - headH - 4}" r="4" fill="${hairColor}"/>`;
+	}
+
+	// Face plane + shadow (right half) + cheek highlight (left) +
+	// jaw trapezoid + ears.
+	m += `<polygon points="${cx - headW},${cy - headH} ${cx + headW},${cy - headH} ${cx + headW - 1},${cy + headH - 2} ${cx - headW + 1},${cy + headH - 2}" fill="${sk.base}"/>`;
+	m += `<polygon points="${cx},${cy - headH} ${cx + headW},${cy - headH} ${cx + headW - 1},${cy + headH - 2} ${cx},${cy + headH - 2}" fill="${sk.shadow}" opacity="0.55"/>`;
+	m += `<polygon points="${cx - headW},${cy - 2} ${cx - headW + 5},${cy - 2} ${cx - headW + 4},${cy + 8} ${cx - headW},${cy + 8}" fill="${sk.high}" opacity="0.65"/>`;
+	m += `<polygon points="${cx - headW + 1},${cy + headH - 2} ${cx + headW - 1},${cy + headH - 2} ${cx + headW - 3},${cy + headH + 4} ${cx - headW + 3},${cy + headH + 4}" fill="${sk.shadow}"/>`;
+	m += `<rect x="${cx - headW - 1.5}" y="${cy - 1}" width="2" height="5" fill="${sk.shadow}"/>`;
+	m += `<rect x="${cx + headW - 0.5}" y="${cy - 1}" width="2" height="5" fill="${sk.shadow}" opacity="0.7"/>`;
+
+	// Expression layer — brows, eyes, mouth, all in #0E0D0B for max
+	// contrast on the editorial figure regardless of theme.
+	const eyeY = cy - 2;
+	const mouthY = cy + 6;
+	const eyeL = cx - 6;
+	const eyeR = cx + 6;
+	const browInk = '#0E0D0B';
+
+	// Brows
+	if (emotion === 'joy' || emotion === 'playful') {
+		m += `<line x1="${eyeL - 3}" y1="${eyeY - 4}" x2="${eyeL + 3}" y2="${eyeY - 3.5}" stroke="${browInk}" stroke-width="0.9" stroke-linecap="round"/>`;
+		m += `<line x1="${eyeR - 3}" y1="${eyeY - 3.5}" x2="${eyeR + 3}" y2="${eyeY - 4}" stroke="${browInk}" stroke-width="0.9" stroke-linecap="round"/>`;
+	} else if (emotion === 'focus' || emotion === 'anticipation') {
+		m += `<line x1="${eyeL - 3}" y1="${eyeY - 3.5}" x2="${eyeL + 3}" y2="${eyeY - 3.5}" stroke="${browInk}" stroke-width="1" stroke-linecap="round"/>`;
+		m += `<line x1="${eyeR - 3}" y1="${eyeY - 3.5}" x2="${eyeR + 3}" y2="${eyeY - 3.5}" stroke="${browInk}" stroke-width="1" stroke-linecap="round"/>`;
+	} else if (emotion === 'dread' || emotion === 'defeat') {
+		m += `<line x1="${eyeL - 3}" y1="${eyeY - 3}" x2="${eyeL + 3}" y2="${eyeY - 4.5}" stroke="${browInk}" stroke-width="1" stroke-linecap="round"/>`;
+		m += `<line x1="${eyeR - 3}" y1="${eyeY - 4.5}" x2="${eyeR + 3}" y2="${eyeY - 3}" stroke="${browInk}" stroke-width="1" stroke-linecap="round"/>`;
+	}
+
+	// Eyes
+	if (emotion === 'joy') {
+		m += `<path d="M ${eyeL - 2.5} ${eyeY} Q ${eyeL} ${eyeY - 1.5} ${eyeL + 2.5} ${eyeY}" stroke="${browInk}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+		m += `<path d="M ${eyeR - 2.5} ${eyeY} Q ${eyeR} ${eyeY - 1.5} ${eyeR + 2.5} ${eyeY}" stroke="${browInk}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+	} else if (emotion === 'dread') {
+		m += `<ellipse cx="${eyeL}" cy="${eyeY}" rx="1.6" ry="1.8" fill="#F2ECDC"/>`;
+		m += `<ellipse cx="${eyeR}" cy="${eyeY}" rx="1.6" ry="1.8" fill="#F2ECDC"/>`;
+		m += `<circle cx="${eyeL}" cy="${eyeY + 0.2}" r="0.8" fill="${browInk}"/>`;
+		m += `<circle cx="${eyeR}" cy="${eyeY + 0.2}" r="0.8" fill="${browInk}"/>`;
+	} else if (emotion === 'playful') {
+		m += `<path d="M ${eyeL - 2.5} ${eyeY} Q ${eyeL} ${eyeY - 1.5} ${eyeL + 2.5} ${eyeY}" stroke="${browInk}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+		m += `<circle cx="${eyeR}" cy="${eyeY}" r="1.3" fill="${browInk}"/>`;
+	} else if (emotion === 'defeat') {
+		m += `<path d="M ${eyeL - 2.5} ${eyeY + 0.5} Q ${eyeL} ${eyeY + 2} ${eyeL + 2.5} ${eyeY + 0.5}" stroke="${browInk}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+		m += `<path d="M ${eyeR - 2.5} ${eyeY + 0.5} Q ${eyeR} ${eyeY + 2} ${eyeR + 2.5} ${eyeY + 0.5}" stroke="${browInk}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+	} else {
+		m += `<circle cx="${eyeL}" cy="${eyeY}" r="1.1" fill="${browInk}"/>`;
+		m += `<circle cx="${eyeR}" cy="${eyeY}" r="1.1" fill="${browInk}"/>`;
+	}
+
+	// Mouth
+	if (emotion === 'joy') {
+		m += `<path d="M ${cx - 5} ${mouthY} Q ${cx} ${mouthY + 4} ${cx + 5} ${mouthY}" stroke="${browInk}" stroke-width="1.2" fill="none" stroke-linecap="round"/>`;
+	} else if (emotion === 'focus' || emotion === 'anticipation') {
+		m += `<line x1="${cx - 3}" y1="${mouthY + 1}" x2="${cx + 3}" y2="${mouthY + 1}" stroke="${browInk}" stroke-width="1.1" stroke-linecap="round"/>`;
+	} else if (emotion === 'dread') {
+		m += `<ellipse cx="${cx}" cy="${mouthY + 1}" rx="2" ry="2.5" fill="${browInk}"/>`;
+	} else if (emotion === 'defeat') {
+		m += `<path d="M ${cx - 4} ${mouthY + 2} Q ${cx} ${mouthY - 1} ${cx + 4} ${mouthY + 2}" stroke="${browInk}" stroke-width="1.1" fill="none" stroke-linecap="round"/>`;
+	} else if (emotion === 'playful') {
+		m += `<path d="M ${cx - 4} ${mouthY + 1} Q ${cx + 1} ${mouthY + 3} ${cx + 5} ${mouthY - 1}" stroke="${browInk}" stroke-width="1.1" fill="none" stroke-linecap="round"/>`;
+	}
+
+	m += `</g>`;
+
+	return m;
+};
+
 // ---- WC — tentpole pitch + editorial backdrops ---------------
 // Renders one of five backdrops per seed (stands, flag diagonal,
 // flag horizontal, flag vertical, stadium perspective) so each
@@ -1151,21 +1346,35 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		return m;
 	};
 
-	// Iconic WC nation flag trios. Selection is per-seed; the visible
-	// trio is decoupled from the chosen backdrop variant so the same
-	// flag can show up under diag / horiz / vert layouts.
-	const FLAGS: ReadonlyArray<{ c1: string; c2: string; c3: string }> = [
-		{ c1: '#FFD800', c2: '#009C3B', c3: '#002776' }, // BR — gold/green/blue
-		{ c1: '#0055A4', c2: '#FFFFFF', c3: '#EF4135' }, // FR — bleu/blanc/rouge
-		{ c1: '#75AADB', c2: '#FFFFFF', c3: '#75AADB' }, // AR — celeste/white
-		{ c1: '#000000', c2: '#DD0000', c3: '#FFCE00' }, // DE — schwarz/rot/gold
-		{ c1: '#C8102E', c2: '#FFD800', c3: '#C8102E' }, // ES — rojigualda
-		{ c1: '#008C45', c2: '#F4F5F0', c3: '#CD212A' }, // IT — verde/bianco/rosso
-		{ c1: '#C8102E', c2: '#F2ECDC', c3: '#0A3161' } // US — red/cream/navy
+	// Iconic WC nation flag trios paired with each nation's kit
+	// jersey + optional shoulder stripe. Backdrop variants ignore the
+	// kit fields; figure variants read them so the figure's jersey
+	// matches the flag on the backdrop.
+	const FLAGS: ReadonlyArray<{
+		c1: string;
+		c2: string;
+		c3: string;
+		shirt: string;
+		stripe?: string;
+	}> = [
+		// BR — gold/green/blue · canary jersey
+		{ c1: '#FFD800', c2: '#009C3B', c3: '#002776', shirt: '#FFD800', stripe: '#009C3B' },
+		// FR — bleu/blanc/rouge · royal blue jersey
+		{ c1: '#0055A4', c2: '#FFFFFF', c3: '#EF4135', shirt: '#0055A4' },
+		// AR — celeste/white · sky-blue striped jersey
+		{ c1: '#75AADB', c2: '#FFFFFF', c3: '#75AADB', shirt: '#75AADB', stripe: '#FFFFFF' },
+		// DE — schwarz/rot/gold · dark home jersey
+		{ c1: '#000000', c2: '#DD0000', c3: '#FFCE00', shirt: '#2A211A' },
+		// ES — rojigualda · scarlet jersey
+		{ c1: '#C8102E', c2: '#FFD800', c3: '#C8102E', shirt: '#C8102E' },
+		// IT — verde/bianco/rosso · azzurro jersey
+		{ c1: '#008C45', c2: '#F4F5F0', c3: '#CD212A', shirt: '#0055A4' },
+		// US — red/cream/navy · navy stripe-on-white away jersey
+		{ c1: '#C8102E', c2: '#F2ECDC', c3: '#0A3161', shirt: '#F2ECDC', stripe: '#0A3161' }
 	];
 
 	const flag = rng.pick(FLAGS);
-	const variant = rng.int(0, 4);
+	const variant = rng.int(0, 5);
 
 	let s = '';
 
@@ -1177,8 +1386,24 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		s += bgFlagHoriz(flag);
 	} else if (variant === 3) {
 		s += bgFlagVert(flag);
-	} else {
+	} else if (variant === 4) {
 		s += bgPerspective({ color: p.accent });
+	} else {
+		// Figure variant — flag-vert backdrop + faceted bust portrait
+		// anchored on the right third. Skin / hair / hair-style /
+		// emotion are picked per seed so every WC market gets a
+		// coherent but distinct portrait.
+		s += bgFlagVert(flag);
+		s += wcFace({
+			cx: 210,
+			cy: 38,
+			skin: rng.pick(WC_SKIN_KEYS),
+			hair: rng.pick(WC_HAIR_KEYS),
+			hairStyle: rng.pick(WC_HAIR_STYLES),
+			shirt: flag.shirt,
+			stripe: flag.stripe,
+			emotion: rng.pick(WC_EMOTIONS)
+		});
 	}
 
 	// State accent: won → gold spotlight wash; lost → desaturated veil.
