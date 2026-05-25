@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
 	import {
 		lookupWorldsAffiliation,
@@ -157,11 +160,20 @@
 					{@const daysLeft = affiliationDaysLeft({ lockedUntilMs: slot.lockedUntilMs })}
 					{@const canLeave = daysLeft === 0}
 					<div class="worlds-locked-card">
-						<span class="worlds-locked-glyph" aria-hidden="true">
-							{option?.glyph ?? slot.affiliationId}
-						</span>
-						<div class="worlds-locked-text">
+						<button
+							class="worlds-locked-identity"
+							onclick={() => {
+								const path = kind === 'university' ? 'school' : 'country';
+								void goto(`${resolve(AppPath.Social)}/worlds/${path}/${slot.affiliationId}`);
+							}}
+							type="button"
+						>
+							<span class="worlds-locked-glyph" aria-hidden="true">
+								{option?.glyph ?? slot.affiliationId}
+							</span>
 							<span class="worlds-locked-name">{option?.name ?? slot.affiliationId}</span>
+						</button>
+						<div class="worlds-locked-text">
 							<span class="worlds-locked-meta num">
 								{#if canLeave}
 									{t({ locale: $localeStore, key: 'worlds.lock_expired' })}
@@ -401,6 +413,24 @@
 		border: 1px solid var(--border-base);
 		border-left: 3px solid var(--laurel);
 		border-radius: var(--r-12);
+	}
+
+	.worlds-locked-identity {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.6rem;
+		padding: 0;
+		font: inherit;
+		background: none;
+		border: none;
+		color: var(--text-base);
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.worlds-locked-identity:hover .worlds-locked-name {
+		color: var(--laurel);
 	}
 
 	.worlds-locked-glyph {
