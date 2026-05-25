@@ -68,7 +68,14 @@ export const Collection = {
 	 * delta to that user's affiliation rows. The doc tracks both lifetime totals and the current
 	 * month's totals (rolled over lazily on the first hook fire of a new calendar month).
 	 */
-	AFFILIATION_STATS: collections.AFFILIATION_STATS
+	AFFILIATION_STATS: collections.AFFILIATION_STATS,
+	/**
+	 * Append-only churn-feedback log. Each doc records the `reason` + optional free-text `note`
+	 * the user picked from the delete-account flow. Intentionally anonymous — no principal field,
+	 * random UUID key — so the log survives the account it describes. Written exactly once by
+	 * `deleteMyAccount` before the cascade hard-deletes the caller's identity.
+	 */
+	EXIT_SIGNALS: collections.EXIT_SIGNALS
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

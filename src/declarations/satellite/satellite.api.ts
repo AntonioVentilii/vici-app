@@ -5,427 +5,1005 @@
 /* prettier-ignore */
 // @ts-nocheck
 
-import type {_SERVICE as SatelliteActor} from './satellite.did';
-import {idlFactory} from './satellite.factory.did.js';
-import {getSatelliteExtendedActor} from '@junobuild/core';
-import {schemaToIdl, schemaFromIdl} from '@junobuild/schema/utils';
-import {j} from '@junobuild/schema';
+import { getSatelliteExtendedActor } from '@junobuild/core';
+import { j } from '@junobuild/schema';
+import { schemaFromIdl, schemaToIdl } from '@junobuild/schema/utils';
+import type { _SERVICE as SatelliteActor } from './satellite.did';
+import { idlFactory } from './satellite.factory.did.js';
 
-const AppCheckFriendshipArgsSchema = j.strictObject({userA: j.string(), userB: j.string()});
-const AppCheckFriendshipResultSchema = j.strictObject({isFriend: j.boolean()});
+const AppCheckFriendshipArgsSchema = j.strictObject({ userA: j.string(), userB: j.string() });
+const AppCheckFriendshipResultSchema = j.strictObject({ isFriend: j.boolean() });
 
-const checkFriendship = async (args: j.infer<typeof AppCheckFriendshipArgsSchema>): Promise<j.infer<typeof AppCheckFriendshipResultSchema>> => {
+const checkFriendship = async (
+	args: j.infer<typeof AppCheckFriendshipArgsSchema>
+): Promise<j.infer<typeof AppCheckFriendshipResultSchema>> => {
 	const parsedArgs = AppCheckFriendshipArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppCheckFriendshipArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_check_friendship']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppCheckFriendshipArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_check_friendship']>[0];
 
-	const {app_check_friendship} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_check_friendship } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_check_friendship(idlArgs);
 
-	const result = schemaFromIdl({schema: AppCheckFriendshipResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppCheckFriendshipResultSchema, value: idlResult });
 	return AppCheckFriendshipResultSchema.parse(result);
 };
 
-const AppCheckNicknameAvailabilityArgsSchema = j.strictObject({nickname: j.string(), excludePrincipalStr: j.string()});
-const AppCheckNicknameAvailabilityResultSchema = j.strictObject({available: j.boolean(), reason: j.optional(j.enum(['required', 'too_short', 'taken']))});
+const AppCheckNicknameAvailabilityArgsSchema = j.strictObject({
+	nickname: j.string(),
+	excludePrincipalStr: j.string()
+});
+const AppCheckNicknameAvailabilityResultSchema = j.strictObject({
+	available: j.boolean(),
+	reason: j.optional(j.enum(['required', 'too_short', 'taken']))
+});
 
-const checkNicknameAvailability = async (args: j.infer<typeof AppCheckNicknameAvailabilityArgsSchema>): Promise<j.infer<typeof AppCheckNicknameAvailabilityResultSchema>> => {
+const checkNicknameAvailability = async (
+	args: j.infer<typeof AppCheckNicknameAvailabilityArgsSchema>
+): Promise<j.infer<typeof AppCheckNicknameAvailabilityResultSchema>> => {
 	const parsedArgs = AppCheckNicknameAvailabilityArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppCheckNicknameAvailabilityArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_check_nickname_availability']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppCheckNicknameAvailabilityArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_check_nickname_availability']>[0];
 
-	const {app_check_nickname_availability} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_check_nickname_availability } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_check_nickname_availability(idlArgs);
 
-	const result = schemaFromIdl({schema: AppCheckNicknameAvailabilityResultSchema, value: idlResult});
+	const result = schemaFromIdl({
+		schema: AppCheckNicknameAvailabilityResultSchema,
+		value: idlResult
+	});
 	return AppCheckNicknameAvailabilityResultSchema.parse(result);
 };
 
-const AppGetAffiliationStatsArgsSchema = j.strictObject({kind: j.enum(['university', 'country']), affiliationId: j.string()});
-const AppGetAffiliationStatsResultSchema = j.strictObject({stats: j.optional(j.strictObject({affiliation_id: j.string(), kind: j.enum(['university', 'country']), total_calls: j.number(), wins: j.number(), month_anchor: j.string(), month_total_calls: j.number(), month_wins: j.number(), updated_at_ms: j.number()}))});
+const AppGetAffiliationStatsArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country']),
+	affiliationId: j.string()
+});
+const AppGetAffiliationStatsResultSchema = j.strictObject({
+	stats: j.optional(
+		j.strictObject({
+			affiliation_id: j.string(),
+			kind: j.enum(['university', 'country']),
+			total_calls: j.number(),
+			wins: j.number(),
+			month_anchor: j.string(),
+			month_total_calls: j.number(),
+			month_wins: j.number(),
+			updated_at_ms: j.number()
+		})
+	)
+});
 
-const getAffiliationStats = async (args: j.infer<typeof AppGetAffiliationStatsArgsSchema>): Promise<j.infer<typeof AppGetAffiliationStatsResultSchema>> => {
+const getAffiliationStats = async (
+	args: j.infer<typeof AppGetAffiliationStatsArgsSchema>
+): Promise<j.infer<typeof AppGetAffiliationStatsResultSchema>> => {
 	const parsedArgs = AppGetAffiliationStatsArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppGetAffiliationStatsArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_get_affiliation_stats']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppGetAffiliationStatsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_affiliation_stats']>[0];
 
-	const {app_get_affiliation_stats} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_get_affiliation_stats } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_get_affiliation_stats(idlArgs);
 
-	const result = schemaFromIdl({schema: AppGetAffiliationStatsResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppGetAffiliationStatsResultSchema, value: idlResult });
 	return AppGetAffiliationStatsResultSchema.parse(result);
 };
 
-const AppGetMarketMetadataArgsSchema = j.strictObject({seriesId: j.string()});
-const AppGetMarketMetadataResultSchema = j.strictObject({metadata: j.optional(j.strictObject({seriesId: j.string(), whyNow: j.optional(j.strictObject({kind: j.enum(['closing', 'trending', 'new', 'topical', 'social']), text: j.string()})), events: j.array(j.strictObject({day: j.number(), label: j.string(), dir: j.enum(['up', 'down'])})), tags: j.array(j.string()), suggested: j.boolean(), updatedAt: j.number(), updatedBy: j.string()}))});
+const AppGetMarketMetadataArgsSchema = j.strictObject({ seriesId: j.string() });
+const AppGetMarketMetadataResultSchema = j.strictObject({
+	metadata: j.optional(
+		j.strictObject({
+			seriesId: j.string(),
+			whyNow: j.optional(
+				j.strictObject({
+					kind: j.enum(['closing', 'trending', 'new', 'topical', 'social']),
+					text: j.string()
+				})
+			),
+			events: j.array(
+				j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
+			),
+			tags: j.array(j.string()),
+			suggested: j.boolean(),
+			updatedAt: j.number(),
+			updatedBy: j.string()
+		})
+	)
+});
 
-const getMarketMetadata = async (args: j.infer<typeof AppGetMarketMetadataArgsSchema>): Promise<j.infer<typeof AppGetMarketMetadataResultSchema>> => {
+const getMarketMetadata = async (
+	args: j.infer<typeof AppGetMarketMetadataArgsSchema>
+): Promise<j.infer<typeof AppGetMarketMetadataResultSchema>> => {
 	const parsedArgs = AppGetMarketMetadataArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppGetMarketMetadataArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_get_market_metadata']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppGetMarketMetadataArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_market_metadata']>[0];
 
-	const {app_get_market_metadata} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_get_market_metadata } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_get_market_metadata(idlArgs);
 
-	const result = schemaFromIdl({schema: AppGetMarketMetadataResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppGetMarketMetadataResultSchema, value: idlResult });
 	return AppGetMarketMetadataResultSchema.parse(result);
 };
 
-const AppGetMarketTranslationArgsSchema = j.strictObject({seriesId: j.string(), locale: j.string()});
-const AppGetMarketTranslationResultSchema = j.strictObject({translation: j.optional(j.strictObject({seriesId: j.string(), locale: j.string(), title: j.string(), description: j.string(), outcomes: j.array(j.strictObject({id: j.string(), title: j.string()})), updatedAt: j.number(), updatedBy: j.string()}))});
+const AppGetMarketTranslationArgsSchema = j.strictObject({
+	seriesId: j.string(),
+	locale: j.string()
+});
+const AppGetMarketTranslationResultSchema = j.strictObject({
+	translation: j.optional(
+		j.strictObject({
+			seriesId: j.string(),
+			locale: j.string(),
+			title: j.string(),
+			description: j.string(),
+			outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
+			updatedAt: j.number(),
+			updatedBy: j.string()
+		})
+	)
+});
 
-const getMarketTranslation = async (args: j.infer<typeof AppGetMarketTranslationArgsSchema>): Promise<j.infer<typeof AppGetMarketTranslationResultSchema>> => {
+const getMarketTranslation = async (
+	args: j.infer<typeof AppGetMarketTranslationArgsSchema>
+): Promise<j.infer<typeof AppGetMarketTranslationResultSchema>> => {
 	const parsedArgs = AppGetMarketTranslationArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppGetMarketTranslationArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_get_market_translation']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppGetMarketTranslationArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_market_translation']>[0];
 
-	const {app_get_market_translation} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_get_market_translation } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_get_market_translation(idlArgs);
 
-	const result = schemaFromIdl({schema: AppGetMarketTranslationResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppGetMarketTranslationResultSchema, value: idlResult });
 	return AppGetMarketTranslationResultSchema.parse(result);
 };
 
-const AppGetMyReferralCodeResultSchema = j.strictObject({code: j.optional(j.string())});
+const AppGetMyReferralCodeResultSchema = j.strictObject({ code: j.optional(j.string()) });
 
 const getMyReferralCode = async (): Promise<j.infer<typeof AppGetMyReferralCodeResultSchema>> => {
-	const {app_get_my_referral_code} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_get_my_referral_code } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_get_my_referral_code();
 
-	const result = schemaFromIdl({schema: AppGetMyReferralCodeResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppGetMyReferralCodeResultSchema, value: idlResult });
 	return AppGetMyReferralCodeResultSchema.parse(result);
 };
 
-const AppGetProfileArgsSchema = j.strictObject({principalStr: j.string()});
-const AppGetProfileResultSchema = j.strictObject({profile: j.optional(j.strictObject({owner: j.string(), nickname: j.string(), avatar: j.string(), email: j.string(), pnl: j.number(), visibility: j.enum(['public', 'friends_and_followers', 'friends_only']), role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])), totalTrades: j.number(), winRate: j.number(), dailyStreak: j.number(), streak: j.number(), accuracy: j.number(), points: j.number(), level: j.number(), archetype: j.string(), interests: j.array(j.string()), lastActiveDay: j.optional(j.string()), unlockedAchievements: j.array(j.string()), contrarianWins: j.number(), preferences: j.optional(j.strictObject({defaultAmount: j.strictObject({flow: j.string(), manual: j.string()})}))}))});
+const AppGetProfileArgsSchema = j.strictObject({ principalStr: j.string() });
+const AppGetProfileResultSchema = j.strictObject({
+	profile: j.optional(
+		j.strictObject({
+			owner: j.string(),
+			nickname: j.string(),
+			avatar: j.string(),
+			email: j.string(),
+			pnl: j.number(),
+			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
+			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			totalTrades: j.number(),
+			winRate: j.number(),
+			dailyStreak: j.number(),
+			streak: j.number(),
+			accuracy: j.number(),
+			points: j.number(),
+			level: j.number(),
+			archetype: j.string(),
+			interests: j.array(j.string()),
+			lastActiveDay: j.optional(j.string()),
+			unlockedAchievements: j.array(j.string()),
+			contrarianWins: j.number(),
+			preferences: j.optional(
+				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
+			)
+		})
+	)
+});
 
-const getProfile = async (args: j.infer<typeof AppGetProfileArgsSchema>): Promise<j.infer<typeof AppGetProfileResultSchema>> => {
+const getProfile = async (
+	args: j.infer<typeof AppGetProfileArgsSchema>
+): Promise<j.infer<typeof AppGetProfileResultSchema>> => {
 	const parsedArgs = AppGetProfileArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppGetProfileArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_get_profile']>[0];
+	const idlArgs = schemaToIdl({ schema: AppGetProfileArgsSchema, value: parsedArgs }) as Parameters<
+		SatelliteActor['app_get_profile']
+	>[0];
 
-	const {app_get_profile} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_get_profile } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_get_profile(idlArgs);
 
-	const result = schemaFromIdl({schema: AppGetProfileResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppGetProfileResultSchema, value: idlResult });
 	return AppGetProfileResultSchema.parse(result);
 };
 
-const AppListAffiliationStatsArgsSchema = j.strictObject({kind: j.enum(['university', 'country']), limit: j.optional(j.number())});
-const AppListAffiliationStatsResultSchema = j.strictObject({items: j.array(j.strictObject({affiliation_id: j.string(), kind: j.enum(['university', 'country']), total_calls: j.number(), wins: j.number(), month_anchor: j.string(), month_total_calls: j.number(), month_wins: j.number(), updated_at_ms: j.number()}))});
+const AppListAffiliationStatsArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country']),
+	limit: j.optional(j.number())
+});
+const AppListAffiliationStatsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			affiliation_id: j.string(),
+			kind: j.enum(['university', 'country']),
+			total_calls: j.number(),
+			wins: j.number(),
+			month_anchor: j.string(),
+			month_total_calls: j.number(),
+			month_wins: j.number(),
+			updated_at_ms: j.number()
+		})
+	)
+});
 
-const listAffiliationStats = async (args: j.infer<typeof AppListAffiliationStatsArgsSchema>): Promise<j.infer<typeof AppListAffiliationStatsResultSchema>> => {
+const listAffiliationStats = async (
+	args: j.infer<typeof AppListAffiliationStatsArgsSchema>
+): Promise<j.infer<typeof AppListAffiliationStatsResultSchema>> => {
 	const parsedArgs = AppListAffiliationStatsArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppListAffiliationStatsArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_list_affiliation_stats']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppListAffiliationStatsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_affiliation_stats']>[0];
 
-	const {app_list_affiliation_stats} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_affiliation_stats } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_list_affiliation_stats(idlArgs);
 
-	const result = schemaFromIdl({schema: AppListAffiliationStatsResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListAffiliationStatsResultSchema, value: idlResult });
 	return AppListAffiliationStatsResultSchema.parse(result);
 };
 
-const AppListFollowersResultSchema = j.strictObject({items: j.array(j.strictObject({category: j.enum(['FRIEND', 'follow', 'GROUP']), state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']), participants: j.array(j.string()), viewer_principal: j.optional(j.string()), viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])), is_friend: j.optional(j.boolean())}))});
+const AppListFollowersResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			category: j.enum(['FRIEND', 'follow', 'GROUP']),
+			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
+			participants: j.array(j.string()),
+			viewer_principal: j.optional(j.string()),
+			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			is_friend: j.optional(j.boolean())
+		})
+	)
+});
 
 const listFollowers = async (): Promise<j.infer<typeof AppListFollowersResultSchema>> => {
-	const {app_list_followers} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_followers } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_list_followers();
 
-	const result = schemaFromIdl({schema: AppListFollowersResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListFollowersResultSchema, value: idlResult });
 	return AppListFollowersResultSchema.parse(result);
 };
 
-const AppListFollowingResultSchema = j.strictObject({items: j.array(j.strictObject({category: j.enum(['FRIEND', 'follow', 'GROUP']), state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']), participants: j.array(j.string()), viewer_principal: j.optional(j.string()), viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])), is_friend: j.optional(j.boolean())}))});
+const AppListFollowingResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			category: j.enum(['FRIEND', 'follow', 'GROUP']),
+			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
+			participants: j.array(j.string()),
+			viewer_principal: j.optional(j.string()),
+			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			is_friend: j.optional(j.boolean())
+		})
+	)
+});
 
 const listFollowing = async (): Promise<j.infer<typeof AppListFollowingResultSchema>> => {
-	const {app_list_following} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_following } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_list_following();
 
-	const result = schemaFromIdl({schema: AppListFollowingResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListFollowingResultSchema, value: idlResult });
 	return AppListFollowingResultSchema.parse(result);
 };
 
-const AppListFriendRequestsResultSchema = j.strictObject({items: j.array(j.strictObject({category: j.enum(['FRIEND', 'follow', 'GROUP']), state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']), participants: j.array(j.string()), viewer_principal: j.optional(j.string()), viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])), is_friend: j.optional(j.boolean())}))});
+const AppListFriendRequestsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			category: j.enum(['FRIEND', 'follow', 'GROUP']),
+			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
+			participants: j.array(j.string()),
+			viewer_principal: j.optional(j.string()),
+			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			is_friend: j.optional(j.boolean())
+		})
+	)
+});
 
 const listFriendRequests = async (): Promise<j.infer<typeof AppListFriendRequestsResultSchema>> => {
-	const {app_list_friend_requests} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_friend_requests } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_list_friend_requests();
 
-	const result = schemaFromIdl({schema: AppListFriendRequestsResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListFriendRequestsResultSchema, value: idlResult });
 	return AppListFriendRequestsResultSchema.parse(result);
 };
 
-const AppListFriendsResultSchema = j.strictObject({items: j.array(j.strictObject({category: j.enum(['FRIEND', 'follow', 'GROUP']), state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']), participants: j.array(j.string()), viewer_principal: j.optional(j.string()), viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])), is_friend: j.optional(j.boolean())}))});
+const AppListFriendsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			category: j.enum(['FRIEND', 'follow', 'GROUP']),
+			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
+			participants: j.array(j.string()),
+			viewer_principal: j.optional(j.string()),
+			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			is_friend: j.optional(j.boolean())
+		})
+	)
+});
 
 const listFriends = async (): Promise<j.infer<typeof AppListFriendsResultSchema>> => {
-	const {app_list_friends} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_friends } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_list_friends();
 
-	const result = schemaFromIdl({schema: AppListFriendsResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListFriendsResultSchema, value: idlResult });
 	return AppListFriendsResultSchema.parse(result);
 };
 
-const AppListLeaderboardResultSchema = j.strictObject({items: j.array(j.strictObject({owner: j.string(), nickname: j.string(), avatar: j.string(), email: j.string(), pnl: j.number(), visibility: j.enum(['public', 'friends_and_followers', 'friends_only']), role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])), total_trades: j.number(), win_rate: j.number(), daily_streak: j.number(), streak: j.number(), accuracy: j.number(), points: j.number(), level: j.number(), archetype: j.string(), interests: j.array(j.string()), last_active_day: j.optional(j.string()), unlocked_achievements: j.array(j.string()), contrarian_wins: j.number(), preferences: j.optional(j.strictObject({default_amount: j.strictObject({flow: j.string(), manual: j.string()})}))}))});
+const AppListLeaderboardResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			owner: j.string(),
+			nickname: j.string(),
+			avatar: j.string(),
+			email: j.string(),
+			pnl: j.number(),
+			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
+			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			total_trades: j.number(),
+			win_rate: j.number(),
+			daily_streak: j.number(),
+			streak: j.number(),
+			accuracy: j.number(),
+			points: j.number(),
+			level: j.number(),
+			archetype: j.string(),
+			interests: j.array(j.string()),
+			last_active_day: j.optional(j.string()),
+			unlocked_achievements: j.array(j.string()),
+			contrarian_wins: j.number(),
+			preferences: j.optional(
+				j.strictObject({ default_amount: j.strictObject({ flow: j.string(), manual: j.string() }) })
+			)
+		})
+	)
+});
 
 const listLeaderboard = async (): Promise<j.infer<typeof AppListLeaderboardResultSchema>> => {
-	const {app_list_leaderboard} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_leaderboard } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_list_leaderboard();
 
-	const result = schemaFromIdl({schema: AppListLeaderboardResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListLeaderboardResultSchema, value: idlResult });
 	return AppListLeaderboardResultSchema.parse(result);
 };
 
-const AppListLeagueBoutsArgsSchema = j.strictObject({leagueId: j.string()});
-const AppListLeagueBoutsResultSchema = j.strictObject({items: j.array(j.strictObject({id: j.string(), kind: j.enum(['league', 'duel']), side_a: j.string(), side_b: j.string(), proposer: j.string(), state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']), kickoff_ms: j.number(), settle_ms: j.number(), score_a: j.optional(j.number()), score_b: j.optional(j.number()), winner: j.optional(j.enum(['A', 'B', 'draw']))}))});
+const AppListLeagueBoutsArgsSchema = j.strictObject({ leagueId: j.string() });
+const AppListLeagueBoutsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			id: j.string(),
+			kind: j.enum(['league', 'duel']),
+			side_a: j.string(),
+			side_b: j.string(),
+			proposer: j.string(),
+			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+			kickoff_ms: j.number(),
+			settle_ms: j.number(),
+			score_a: j.optional(j.number()),
+			score_b: j.optional(j.number()),
+			winner: j.optional(j.enum(['A', 'B', 'draw']))
+		})
+	)
+});
 
-const listLeagueBouts = async (args: j.infer<typeof AppListLeagueBoutsArgsSchema>): Promise<j.infer<typeof AppListLeagueBoutsResultSchema>> => {
+const listLeagueBouts = async (
+	args: j.infer<typeof AppListLeagueBoutsArgsSchema>
+): Promise<j.infer<typeof AppListLeagueBoutsResultSchema>> => {
 	const parsedArgs = AppListLeagueBoutsArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppListLeagueBoutsArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_list_league_bouts']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppListLeagueBoutsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_league_bouts']>[0];
 
-	const {app_list_league_bouts} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_league_bouts } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_list_league_bouts(idlArgs);
 
-	const result = schemaFromIdl({schema: AppListLeagueBoutsResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListLeagueBoutsResultSchema, value: idlResult });
 	return AppListLeagueBoutsResultSchema.parse(result);
 };
 
-const AppListLeagueMembersArgsSchema = j.strictObject({leagueId: j.string()});
-const AppListLeagueMembersResultSchema = j.strictObject({items: j.array(j.strictObject({league_id: j.string(), member: j.string(), joined_at_ms: j.number(), role: j.enum(['owner', 'admin', 'member'])}))});
+const AppListLeagueMembersArgsSchema = j.strictObject({ leagueId: j.string() });
+const AppListLeagueMembersResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			league_id: j.string(),
+			member: j.string(),
+			joined_at_ms: j.number(),
+			role: j.enum(['owner', 'admin', 'member'])
+		})
+	)
+});
 
-const listLeagueMembers = async (args: j.infer<typeof AppListLeagueMembersArgsSchema>): Promise<j.infer<typeof AppListLeagueMembersResultSchema>> => {
+const listLeagueMembers = async (
+	args: j.infer<typeof AppListLeagueMembersArgsSchema>
+): Promise<j.infer<typeof AppListLeagueMembersResultSchema>> => {
 	const parsedArgs = AppListLeagueMembersArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppListLeagueMembersArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_list_league_members']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppListLeagueMembersArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_league_members']>[0];
 
-	const {app_list_league_members} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_league_members } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_list_league_members(idlArgs);
 
-	const result = schemaFromIdl({schema: AppListLeagueMembersResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListLeagueMembersResultSchema, value: idlResult });
 	return AppListLeagueMembersResultSchema.parse(result);
 };
 
-const AppListMarketTranslationsArgsSchema = j.strictObject({seriesId: j.string()});
-const AppListMarketTranslationsResultSchema = j.strictObject({items: j.array(j.strictObject({series_id: j.string(), locale: j.string(), title: j.string(), description: j.string(), outcomes: j.array(j.strictObject({id: j.string(), title: j.string()})), updated_at: j.number(), updated_by: j.string()}))});
+const AppListMarketTranslationsArgsSchema = j.strictObject({ seriesId: j.string() });
+const AppListMarketTranslationsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			series_id: j.string(),
+			locale: j.string(),
+			title: j.string(),
+			description: j.string(),
+			outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
+			updated_at: j.number(),
+			updated_by: j.string()
+		})
+	)
+});
 
-const listMarketTranslations = async (args: j.infer<typeof AppListMarketTranslationsArgsSchema>): Promise<j.infer<typeof AppListMarketTranslationsResultSchema>> => {
+const listMarketTranslations = async (
+	args: j.infer<typeof AppListMarketTranslationsArgsSchema>
+): Promise<j.infer<typeof AppListMarketTranslationsResultSchema>> => {
 	const parsedArgs = AppListMarketTranslationsArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppListMarketTranslationsArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_list_market_translations']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppListMarketTranslationsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_market_translations']>[0];
 
-	const {app_list_market_translations} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_market_translations } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_list_market_translations(idlArgs);
 
-	const result = schemaFromIdl({schema: AppListMarketTranslationsResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListMarketTranslationsResultSchema, value: idlResult });
 	return AppListMarketTranslationsResultSchema.parse(result);
 };
 
-const AppListMyAffiliationsResultSchema = j.strictObject({university: j.optional(j.strictObject({member: j.string(), kind: j.enum(['university', 'country']), affiliation_id: j.string(), joined_at_ms: j.number(), locked_until_ms: j.number()})), country: j.optional(j.strictObject({member: j.string(), kind: j.enum(['university', 'country']), affiliation_id: j.string(), joined_at_ms: j.number(), locked_until_ms: j.number()}))});
+const AppListMyAffiliationsResultSchema = j.strictObject({
+	university: j.optional(
+		j.strictObject({
+			member: j.string(),
+			kind: j.enum(['university', 'country']),
+			affiliation_id: j.string(),
+			joined_at_ms: j.number(),
+			locked_until_ms: j.number()
+		})
+	),
+	country: j.optional(
+		j.strictObject({
+			member: j.string(),
+			kind: j.enum(['university', 'country']),
+			affiliation_id: j.string(),
+			joined_at_ms: j.number(),
+			locked_until_ms: j.number()
+		})
+	)
+});
 
 const listMyAffiliations = async (): Promise<j.infer<typeof AppListMyAffiliationsResultSchema>> => {
-	const {app_list_my_affiliations} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_my_affiliations } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_list_my_affiliations();
 
-	const result = schemaFromIdl({schema: AppListMyAffiliationsResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListMyAffiliationsResultSchema, value: idlResult });
 	return AppListMyAffiliationsResultSchema.parse(result);
 };
 
-const AppListMyBoutsResultSchema = j.strictObject({items: j.array(j.strictObject({id: j.string(), kind: j.enum(['league', 'duel']), side_a: j.string(), side_b: j.string(), proposer: j.string(), state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']), kickoff_ms: j.number(), settle_ms: j.number(), score_a: j.optional(j.number()), score_b: j.optional(j.number()), winner: j.optional(j.enum(['A', 'B', 'draw']))}))});
+const AppListMyBoutsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			id: j.string(),
+			kind: j.enum(['league', 'duel']),
+			side_a: j.string(),
+			side_b: j.string(),
+			proposer: j.string(),
+			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+			kickoff_ms: j.number(),
+			settle_ms: j.number(),
+			score_a: j.optional(j.number()),
+			score_b: j.optional(j.number()),
+			winner: j.optional(j.enum(['A', 'B', 'draw']))
+		})
+	)
+});
 
 const listMyBouts = async (): Promise<j.infer<typeof AppListMyBoutsResultSchema>> => {
-	const {app_list_my_bouts} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_my_bouts } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_list_my_bouts();
 
-	const result = schemaFromIdl({schema: AppListMyBoutsResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListMyBoutsResultSchema, value: idlResult });
 	return AppListMyBoutsResultSchema.parse(result);
 };
 
-const AppListMyLeaguesResultSchema = j.strictObject({items: j.array(j.strictObject({league: j.strictObject({id: j.string(), name: j.string(), description: j.optional(j.string()), invite_code: j.string(), owner: j.string(), created_at_ms: j.number(), accent_color: j.optional(j.string())}), role: j.enum(['owner', 'admin', 'member']), joined_at_ms: j.number()}))});
+const AppListMyLeaguesResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			league: j.strictObject({
+				id: j.string(),
+				name: j.string(),
+				description: j.optional(j.string()),
+				invite_code: j.string(),
+				owner: j.string(),
+				created_at_ms: j.number(),
+				accent_color: j.optional(j.string())
+			}),
+			role: j.enum(['owner', 'admin', 'member']),
+			joined_at_ms: j.number()
+		})
+	)
+});
 
 const listMyLeagues = async (): Promise<j.infer<typeof AppListMyLeaguesResultSchema>> => {
-	const {app_list_my_leagues} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_my_leagues } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_list_my_leagues();
 
-	const result = schemaFromIdl({schema: AppListMyLeaguesResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListMyLeaguesResultSchema, value: idlResult });
 	return AppListMyLeaguesResultSchema.parse(result);
 };
 
-const AppListMyReferralsResultSchema = j.strictObject({items: j.array(j.strictObject({referee: j.string(), referrer: j.string(), code: j.string(), redeemed_at_ms: j.number(), within_referrer_cap: j.boolean(), referee_payout: j.strictObject({status: j.enum(['none', 'owed', 'processing', 'paid']), amount_base_units: j.string(), block_index: j.optional(j.string()), last_error: j.optional(j.string())}), referrer_payout: j.strictObject({status: j.enum(['none', 'owed', 'processing', 'paid']), amount_base_units: j.string(), block_index: j.optional(j.string()), last_error: j.optional(j.string())})}))});
+const AppListMyReferralsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			referee: j.string(),
+			referrer: j.string(),
+			code: j.string(),
+			redeemed_at_ms: j.number(),
+			within_referrer_cap: j.boolean(),
+			referee_payout: j.strictObject({
+				status: j.enum(['none', 'owed', 'processing', 'paid']),
+				amount_base_units: j.string(),
+				block_index: j.optional(j.string()),
+				last_error: j.optional(j.string())
+			}),
+			referrer_payout: j.strictObject({
+				status: j.enum(['none', 'owed', 'processing', 'paid']),
+				amount_base_units: j.string(),
+				block_index: j.optional(j.string()),
+				last_error: j.optional(j.string())
+			})
+		})
+	)
+});
 
 const listMyReferrals = async (): Promise<j.infer<typeof AppListMyReferralsResultSchema>> => {
-	const {app_list_my_referrals} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_my_referrals } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_list_my_referrals();
 
-	const result = schemaFromIdl({schema: AppListMyReferralsResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListMyReferralsResultSchema, value: idlResult });
 	return AppListMyReferralsResultSchema.parse(result);
 };
 
-const AppListSentFriendRequestsResultSchema = j.strictObject({items: j.array(j.strictObject({category: j.enum(['FRIEND', 'follow', 'GROUP']), state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']), participants: j.array(j.string()), viewer_principal: j.optional(j.string()), viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])), is_friend: j.optional(j.boolean())}))});
+const AppListSentFriendRequestsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			category: j.enum(['FRIEND', 'follow', 'GROUP']),
+			state: j.enum(['PENDING', 'ACTIVE', 'REJECTED', 'BLOCKED']),
+			participants: j.array(j.string()),
+			viewer_principal: j.optional(j.string()),
+			viewer_role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			is_friend: j.optional(j.boolean())
+		})
+	)
+});
 
-const listSentFriendRequests = async (): Promise<j.infer<typeof AppListSentFriendRequestsResultSchema>> => {
-	const {app_list_sent_friend_requests} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+const listSentFriendRequests = async (): Promise<
+	j.infer<typeof AppListSentFriendRequestsResultSchema>
+> => {
+	const { app_list_sent_friend_requests } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_list_sent_friend_requests();
 
-	const result = schemaFromIdl({schema: AppListSentFriendRequestsResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListSentFriendRequestsResultSchema, value: idlResult });
 	return AppListSentFriendRequestsResultSchema.parse(result);
 };
 
-const AppListWorldsRosterArgsSchema = j.strictObject({kind: j.enum(['university', 'country']), affiliationId: j.string()});
-const AppListWorldsRosterResultSchema = j.strictObject({items: j.array(j.strictObject({member: j.string(), kind: j.enum(['university', 'country']), affiliation_id: j.string(), joined_at_ms: j.number(), locked_until_ms: j.number()}))});
+const AppListWorldsRosterArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country']),
+	affiliationId: j.string()
+});
+const AppListWorldsRosterResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			member: j.string(),
+			kind: j.enum(['university', 'country']),
+			affiliation_id: j.string(),
+			joined_at_ms: j.number(),
+			locked_until_ms: j.number()
+		})
+	)
+});
 
-const listWorldsRoster = async (args: j.infer<typeof AppListWorldsRosterArgsSchema>): Promise<j.infer<typeof AppListWorldsRosterResultSchema>> => {
+const listWorldsRoster = async (
+	args: j.infer<typeof AppListWorldsRosterArgsSchema>
+): Promise<j.infer<typeof AppListWorldsRosterResultSchema>> => {
 	const parsedArgs = AppListWorldsRosterArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppListWorldsRosterArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_list_worlds_roster']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppListWorldsRosterArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_worlds_roster']>[0];
 
-	const {app_list_worlds_roster} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_list_worlds_roster } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_list_worlds_roster(idlArgs);
 
-	const result = schemaFromIdl({schema: AppListWorldsRosterResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppListWorldsRosterResultSchema, value: idlResult });
 	return AppListWorldsRosterResultSchema.parse(result);
 };
 
-const AppLookupLeagueByInviteArgsSchema = j.strictObject({inviteCode: j.string()});
-const AppLookupLeagueByInviteResultSchema = j.strictObject({league: j.optional(j.strictObject({id: j.string(), name: j.string(), description: j.optional(j.string()), invite_code: j.string(), owner: j.string(), created_at_ms: j.number(), accent_color: j.optional(j.string())}))});
+const AppLookupLeagueByInviteArgsSchema = j.strictObject({ inviteCode: j.string() });
+const AppLookupLeagueByInviteResultSchema = j.strictObject({
+	league: j.optional(
+		j.strictObject({
+			id: j.string(),
+			name: j.string(),
+			description: j.optional(j.string()),
+			invite_code: j.string(),
+			owner: j.string(),
+			created_at_ms: j.number(),
+			accent_color: j.optional(j.string())
+		})
+	)
+});
 
-const lookupLeagueByInvite = async (args: j.infer<typeof AppLookupLeagueByInviteArgsSchema>): Promise<j.infer<typeof AppLookupLeagueByInviteResultSchema>> => {
+const lookupLeagueByInvite = async (
+	args: j.infer<typeof AppLookupLeagueByInviteArgsSchema>
+): Promise<j.infer<typeof AppLookupLeagueByInviteResultSchema>> => {
 	const parsedArgs = AppLookupLeagueByInviteArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppLookupLeagueByInviteArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_lookup_league_by_invite']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppLookupLeagueByInviteArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_lookup_league_by_invite']>[0];
 
-	const {app_lookup_league_by_invite} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_lookup_league_by_invite } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_lookup_league_by_invite(idlArgs);
 
-	const result = schemaFromIdl({schema: AppLookupLeagueByInviteResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppLookupLeagueByInviteResultSchema, value: idlResult });
 	return AppLookupLeagueByInviteResultSchema.parse(result);
 };
 
-const AppLookupReferralCodeArgsSchema = j.strictObject({code: j.string()});
-const AppLookupReferralCodeResultSchema = j.strictObject({owner: j.optional(j.string())});
+const AppLookupReferralCodeArgsSchema = j.strictObject({ code: j.string() });
+const AppLookupReferralCodeResultSchema = j.strictObject({ owner: j.optional(j.string()) });
 
-const lookupReferralCode = async (args: j.infer<typeof AppLookupReferralCodeArgsSchema>): Promise<j.infer<typeof AppLookupReferralCodeResultSchema>> => {
+const lookupReferralCode = async (
+	args: j.infer<typeof AppLookupReferralCodeArgsSchema>
+): Promise<j.infer<typeof AppLookupReferralCodeResultSchema>> => {
 	const parsedArgs = AppLookupReferralCodeArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppLookupReferralCodeArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_lookup_referral_code']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppLookupReferralCodeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_lookup_referral_code']>[0];
 
-	const {app_lookup_referral_code} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_lookup_referral_code } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_lookup_referral_code(idlArgs);
 
-	const result = schemaFromIdl({schema: AppLookupReferralCodeResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppLookupReferralCodeResultSchema, value: idlResult });
 	return AppLookupReferralCodeResultSchema.parse(result);
 };
 
-const AppSearchProfilesArgsSchema = j.strictObject({queryStr: j.string()});
-const AppSearchProfilesResultSchema = j.strictObject({items: j.array(j.strictObject({owner: j.string(), nickname: j.string(), avatar: j.string(), email: j.string(), pnl: j.number(), visibility: j.enum(['public', 'friends_and_followers', 'friends_only']), role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])), total_trades: j.number(), win_rate: j.number(), daily_streak: j.number(), streak: j.number(), accuracy: j.number(), points: j.number(), level: j.number(), archetype: j.string(), interests: j.array(j.string()), last_active_day: j.optional(j.string()), unlocked_achievements: j.array(j.string()), contrarian_wins: j.number(), preferences: j.optional(j.strictObject({default_amount: j.strictObject({flow: j.string(), manual: j.string()})}))}))});
+const AppSearchProfilesArgsSchema = j.strictObject({ queryStr: j.string() });
+const AppSearchProfilesResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			owner: j.string(),
+			nickname: j.string(),
+			avatar: j.string(),
+			email: j.string(),
+			pnl: j.number(),
+			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
+			role: j.optional(j.enum(['controller', 'admin', 'solver', 'creator'])),
+			total_trades: j.number(),
+			win_rate: j.number(),
+			daily_streak: j.number(),
+			streak: j.number(),
+			accuracy: j.number(),
+			points: j.number(),
+			level: j.number(),
+			archetype: j.string(),
+			interests: j.array(j.string()),
+			last_active_day: j.optional(j.string()),
+			unlocked_achievements: j.array(j.string()),
+			contrarian_wins: j.number(),
+			preferences: j.optional(
+				j.strictObject({ default_amount: j.strictObject({ flow: j.string(), manual: j.string() }) })
+			)
+		})
+	)
+});
 
-const searchProfiles = async (args: j.infer<typeof AppSearchProfilesArgsSchema>): Promise<j.infer<typeof AppSearchProfilesResultSchema>> => {
+const searchProfiles = async (
+	args: j.infer<typeof AppSearchProfilesArgsSchema>
+): Promise<j.infer<typeof AppSearchProfilesResultSchema>> => {
 	const parsedArgs = AppSearchProfilesArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppSearchProfilesArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_search_profiles']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppSearchProfilesArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_search_profiles']>[0];
 
-	const {app_search_profiles} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_search_profiles } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	const idlResult = await app_search_profiles(idlArgs);
 
-	const result = schemaFromIdl({schema: AppSearchProfilesResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppSearchProfilesResultSchema, value: idlResult });
 	return AppSearchProfilesResultSchema.parse(result);
 };
 
-const AppAcceptFriendRequestArgsSchema = j.strictObject({relationId: j.string()});
+const AppAcceptFriendRequestArgsSchema = j.strictObject({ relationId: j.string() });
 
-const acceptFriendRequest = async (args: j.infer<typeof AppAcceptFriendRequestArgsSchema>): Promise<void> => {
+const acceptFriendRequest = async (
+	args: j.infer<typeof AppAcceptFriendRequestArgsSchema>
+): Promise<void> => {
 	const parsedArgs = AppAcceptFriendRequestArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppAcceptFriendRequestArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_accept_friend_request']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppAcceptFriendRequestArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_accept_friend_request']>[0];
 
-	const {app_accept_friend_request} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_accept_friend_request } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	await app_accept_friend_request(idlArgs);
 };
 
-const AppCancelFriendRequestArgsSchema = j.strictObject({relationId: j.string()});
+const AppCancelFriendRequestArgsSchema = j.strictObject({ relationId: j.string() });
 
-const cancelFriendRequest = async (args: j.infer<typeof AppCancelFriendRequestArgsSchema>): Promise<void> => {
+const cancelFriendRequest = async (
+	args: j.infer<typeof AppCancelFriendRequestArgsSchema>
+): Promise<void> => {
 	const parsedArgs = AppCancelFriendRequestArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppCancelFriendRequestArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_cancel_friend_request']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppCancelFriendRequestArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_cancel_friend_request']>[0];
 
-	const {app_cancel_friend_request} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_cancel_friend_request } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	await app_cancel_friend_request(idlArgs);
 };
 
-const AppClaimComebackGrantResultSchema = j.strictObject({paidNow: j.boolean(), previouslyPaid: j.boolean(), blockIndex: j.optional(j.string()), reason: j.optional(j.enum(['already_claimed_paid', 'already_claimed_pending', 'already_claimed_failed', 'balance_not_zero', 'not_engaged_yet', 'transfer_failed'])), errorMessage: j.optional(j.string())});
+const AppClaimComebackGrantResultSchema = j.strictObject({
+	paidNow: j.boolean(),
+	previouslyPaid: j.boolean(),
+	blockIndex: j.optional(j.string()),
+	reason: j.optional(
+		j.enum([
+			'already_claimed_paid',
+			'already_claimed_pending',
+			'already_claimed_failed',
+			'balance_not_zero',
+			'not_engaged_yet',
+			'transfer_failed'
+		])
+	),
+	errorMessage: j.optional(j.string())
+});
 
 const claimComebackGrant = async (): Promise<j.infer<typeof AppClaimComebackGrantResultSchema>> => {
-	const {app_claim_comeback_grant} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_claim_comeback_grant } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_claim_comeback_grant();
 
-	const result = schemaFromIdl({schema: AppClaimComebackGrantResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppClaimComebackGrantResultSchema, value: idlResult });
 	return AppClaimComebackGrantResultSchema.parse(result);
 };
 
-const AppClaimWorldsPodiumPrizeArgsSchema = j.strictObject({monthAnchor: j.string()});
-const AppClaimWorldsPodiumPrizeResultSchema = j.strictObject({monthAnchor: j.string(), awardsCreated: j.number(), awardsAlreadyClaimed: j.number(), notEligible: j.boolean()});
+const AppClaimWorldsPodiumPrizeArgsSchema = j.strictObject({ monthAnchor: j.string() });
+const AppClaimWorldsPodiumPrizeResultSchema = j.strictObject({
+	monthAnchor: j.string(),
+	awardsCreated: j.number(),
+	awardsAlreadyClaimed: j.number(),
+	notEligible: j.boolean()
+});
 
-const claimWorldsPodiumPrize = async (args: j.infer<typeof AppClaimWorldsPodiumPrizeArgsSchema>): Promise<j.infer<typeof AppClaimWorldsPodiumPrizeResultSchema>> => {
+const claimWorldsPodiumPrize = async (
+	args: j.infer<typeof AppClaimWorldsPodiumPrizeArgsSchema>
+): Promise<j.infer<typeof AppClaimWorldsPodiumPrizeResultSchema>> => {
 	const parsedArgs = AppClaimWorldsPodiumPrizeArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppClaimWorldsPodiumPrizeArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_claim_worlds_podium_prize']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppClaimWorldsPodiumPrizeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_claim_worlds_podium_prize']>[0];
 
-	const {app_claim_worlds_podium_prize} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_claim_worlds_podium_prize } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_claim_worlds_podium_prize(idlArgs);
 
-	const result = schemaFromIdl({schema: AppClaimWorldsPodiumPrizeResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppClaimWorldsPodiumPrizeResultSchema, value: idlResult });
 	return AppClaimWorldsPodiumPrizeResultSchema.parse(result);
 };
 
-const AppFollowUserArgsSchema = j.strictObject({target: j.string()});
+const AppFollowUserArgsSchema = j.strictObject({ target: j.string() });
 
 const followUser = async (args: j.infer<typeof AppFollowUserArgsSchema>): Promise<void> => {
 	const parsedArgs = AppFollowUserArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppFollowUserArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_follow_user']>[0];
+	const idlArgs = schemaToIdl({ schema: AppFollowUserArgsSchema, value: parsedArgs }) as Parameters<
+		SatelliteActor['app_follow_user']
+	>[0];
 
-	const {app_follow_user} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_follow_user } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	await app_follow_user(idlArgs);
 };
 
-const AppRedeemReferralCodeArgsSchema = j.strictObject({code: j.string()});
+const AppRedeemReferralCodeArgsSchema = j.strictObject({ code: j.string() });
 
-const redeemReferralCode = async (args: j.infer<typeof AppRedeemReferralCodeArgsSchema>): Promise<void> => {
+const redeemReferralCode = async (
+	args: j.infer<typeof AppRedeemReferralCodeArgsSchema>
+): Promise<void> => {
 	const parsedArgs = AppRedeemReferralCodeArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppRedeemReferralCodeArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_redeem_referral_code']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppRedeemReferralCodeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_redeem_referral_code']>[0];
 
-	const {app_redeem_referral_code} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_redeem_referral_code } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	await app_redeem_referral_code(idlArgs);
 };
 
-const AppRejectFriendRequestArgsSchema = j.strictObject({relationId: j.string()});
+const AppRejectFriendRequestArgsSchema = j.strictObject({ relationId: j.string() });
 
-const rejectFriendRequest = async (args: j.infer<typeof AppRejectFriendRequestArgsSchema>): Promise<void> => {
+const rejectFriendRequest = async (
+	args: j.infer<typeof AppRejectFriendRequestArgsSchema>
+): Promise<void> => {
 	const parsedArgs = AppRejectFriendRequestArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppRejectFriendRequestArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_reject_friend_request']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppRejectFriendRequestArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_reject_friend_request']>[0];
 
-	const {app_reject_friend_request} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_reject_friend_request } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	await app_reject_friend_request(idlArgs);
 };
 
-const AppSendFriendRequestArgsSchema = j.strictObject({target: j.string()});
+const AppSendFriendRequestArgsSchema = j.strictObject({ target: j.string() });
 
-const sendFriendRequest = async (args: j.infer<typeof AppSendFriendRequestArgsSchema>): Promise<void> => {
+const sendFriendRequest = async (
+	args: j.infer<typeof AppSendFriendRequestArgsSchema>
+): Promise<void> => {
 	const parsedArgs = AppSendFriendRequestArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppSendFriendRequestArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_send_friend_request']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppSendFriendRequestArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_send_friend_request']>[0];
 
-	const {app_send_friend_request} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_send_friend_request } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	await app_send_friend_request(idlArgs);
 };
 
-const AppUpsertMarketMetadataArgsSchema = j.strictObject({seriesId: j.string(), data: j.strictObject({whyNow: j.optional(j.strictObject({kind: j.enum(['closing', 'trending', 'new', 'topical', 'social']), text: j.string()})), events: j.array(j.strictObject({day: j.number(), label: j.string(), dir: j.enum(['up', 'down'])})), tags: j.array(j.string()), suggested: j.boolean()})});
-const AppUpsertMarketMetadataResultSchema = j.strictObject({metadata: j.strictObject({seriesId: j.string(), whyNow: j.optional(j.strictObject({kind: j.enum(['closing', 'trending', 'new', 'topical', 'social']), text: j.string()})), events: j.array(j.strictObject({day: j.number(), label: j.string(), dir: j.enum(['up', 'down'])})), tags: j.array(j.string()), suggested: j.boolean(), updatedAt: j.number(), updatedBy: j.string()})});
+const AppUpsertMarketMetadataArgsSchema = j.strictObject({
+	seriesId: j.string(),
+	data: j.strictObject({
+		whyNow: j.optional(
+			j.strictObject({
+				kind: j.enum(['closing', 'trending', 'new', 'topical', 'social']),
+				text: j.string()
+			})
+		),
+		events: j.array(
+			j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
+		),
+		tags: j.array(j.string()),
+		suggested: j.boolean()
+	})
+});
+const AppUpsertMarketMetadataResultSchema = j.strictObject({
+	metadata: j.strictObject({
+		seriesId: j.string(),
+		whyNow: j.optional(
+			j.strictObject({
+				kind: j.enum(['closing', 'trending', 'new', 'topical', 'social']),
+				text: j.string()
+			})
+		),
+		events: j.array(
+			j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
+		),
+		tags: j.array(j.string()),
+		suggested: j.boolean(),
+		updatedAt: j.number(),
+		updatedBy: j.string()
+	})
+});
 
-const upsertMarketMetadata = async (args: j.infer<typeof AppUpsertMarketMetadataArgsSchema>): Promise<j.infer<typeof AppUpsertMarketMetadataResultSchema>> => {
+const upsertMarketMetadata = async (
+	args: j.infer<typeof AppUpsertMarketMetadataArgsSchema>
+): Promise<j.infer<typeof AppUpsertMarketMetadataResultSchema>> => {
 	const parsedArgs = AppUpsertMarketMetadataArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppUpsertMarketMetadataArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_upsert_market_metadata']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppUpsertMarketMetadataArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_upsert_market_metadata']>[0];
 
-	const {app_upsert_market_metadata} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_upsert_market_metadata } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_upsert_market_metadata(idlArgs);
 
-	const result = schemaFromIdl({schema: AppUpsertMarketMetadataResultSchema, value: idlResult});
+	const result = schemaFromIdl({ schema: AppUpsertMarketMetadataResultSchema, value: idlResult });
 	return AppUpsertMarketMetadataResultSchema.parse(result);
 };
 
-const AppUpsertMarketTranslationArgsSchema = j.strictObject({seriesId: j.string(), locale: j.string(), data: j.strictObject({title: j.string(), description: j.string(), outcomes: j.array(j.strictObject({id: j.string(), title: j.string()}))})});
-const AppUpsertMarketTranslationResultSchema = j.strictObject({translation: j.strictObject({seriesId: j.string(), locale: j.string(), title: j.string(), description: j.string(), outcomes: j.array(j.strictObject({id: j.string(), title: j.string()})), updatedAt: j.number(), updatedBy: j.string()})});
+const AppUpsertMarketTranslationArgsSchema = j.strictObject({
+	seriesId: j.string(),
+	locale: j.string(),
+	data: j.strictObject({
+		title: j.string(),
+		description: j.string(),
+		outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() }))
+	})
+});
+const AppUpsertMarketTranslationResultSchema = j.strictObject({
+	translation: j.strictObject({
+		seriesId: j.string(),
+		locale: j.string(),
+		title: j.string(),
+		description: j.string(),
+		outcomes: j.array(j.strictObject({ id: j.string(), title: j.string() })),
+		updatedAt: j.number(),
+		updatedBy: j.string()
+	})
+});
 
-const upsertMarketTranslation = async (args: j.infer<typeof AppUpsertMarketTranslationArgsSchema>): Promise<j.infer<typeof AppUpsertMarketTranslationResultSchema>> => {
+const upsertMarketTranslation = async (
+	args: j.infer<typeof AppUpsertMarketTranslationArgsSchema>
+): Promise<j.infer<typeof AppUpsertMarketTranslationResultSchema>> => {
 	const parsedArgs = AppUpsertMarketTranslationArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({schema: AppUpsertMarketTranslationArgsSchema, value: parsedArgs}) as Parameters<SatelliteActor['app_upsert_market_translation']>[0];
+	const idlArgs = schemaToIdl({
+		schema: AppUpsertMarketTranslationArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_upsert_market_translation']>[0];
 
-	const {app_upsert_market_translation} = await getSatelliteExtendedActor<SatelliteActor>({idlFactory});
+	const { app_upsert_market_translation } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
 	const idlResult = await app_upsert_market_translation(idlArgs);
 
-	const result = schemaFromIdl({schema: AppUpsertMarketTranslationResultSchema, value: idlResult});
+	const result = schemaFromIdl({
+		schema: AppUpsertMarketTranslationResultSchema,
+		value: idlResult
+	});
 	return AppUpsertMarketTranslationResultSchema.parse(result);
 };
 

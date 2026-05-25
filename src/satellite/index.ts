@@ -40,6 +40,7 @@ import {
 	syncRoleToEngineOnDelete,
 	syncRoleToEngineOnSet
 } from '$satellite/services/engine-sync.services';
+import { assertSetExitSignal } from '$satellite/services/exit-signal.services';
 import { listLeaderboard as listLeaderboardFn } from '$satellite/services/leaderboard.services';
 import {
 	assertDeleteLeagueMember,
@@ -549,7 +550,8 @@ const assertSetDocCollections = [
 	Collection.LEAGUE_MEMBERS,
 	Collection.BOUTS,
 	Collection.AFFILIATIONS,
-	Collection.AFFILIATION_STATS
+	Collection.AFFILIATION_STATS,
+	Collection.EXIT_SIGNALS
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -567,7 +569,8 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.LEAGUE_MEMBERS]: assertSetLeagueMember,
 			[Collection.BOUTS]: assertSetBout,
 			[Collection.AFFILIATIONS]: assertSetAffiliation,
-			[Collection.AFFILIATION_STATS]: assertSetAffiliationStats
+			[Collection.AFFILIATION_STATS]: assertSetAffiliationStats,
+			[Collection.EXIT_SIGNALS]: assertSetExitSignal
 		};
 
 		fn[context.data.collection]?.(context);

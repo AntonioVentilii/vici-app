@@ -27,7 +27,8 @@ enum JunoDatastoreCollection {
 	LEAGUE_MEMBERS = 'league_members',
 	BOUTS = 'bouts',
 	AFFILIATIONS = 'affiliations',
-	AFFILIATION_STATS = 'affiliation_stats'
+	AFFILIATION_STATS = 'affiliation_stats',
+	EXIT_SIGNALS = 'exit_signals'
 }
 
 const delegation = {
@@ -169,6 +170,12 @@ export default defineConfig(({ mode }) => ({
 				},
 				{
 					collection: JunoDatastoreCollection.AFFILIATION_STATS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.EXIT_SIGNALS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
