@@ -679,7 +679,9 @@ export const ptMessages = {
 	'markets.sub':
 		'Centenas de perguntas em macro, cripto, política, tecnologia, esportes e cultura. Cada uma resolve em dados públicos.',
 	'markets.suggested.eyebrow': 'ESCOLHA DO EDITOR',
+	'markets.suggested.eyebrow_event': 'EVENTO EM DESTAQUE',
 	'markets.suggested.title': 'Sugeridos para você',
+	'markets.suggested.title_event': 'Em alta em {event}',
 	'markets.tab.active': 'Ativos',
 	'markets.tab.expiring': 'Expirando',
 	'markets.tab.resolved': 'Resolvidos',

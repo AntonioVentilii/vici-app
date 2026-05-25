@@ -684,7 +684,9 @@ export const esMessages = {
 	'markets.sub':
 		'Cientos de preguntas sobre macro, cripto, política, tech, deportes y cultura. Todas se resuelven con datos públicos.',
 	'markets.suggested.eyebrow': 'ELECCIÓN DEL EDITOR',
+	'markets.suggested.eyebrow_event': 'EVENTO DESTACADO',
 	'markets.suggested.title': 'Sugeridos para ti',
+	'markets.suggested.title_event': 'Tendencia en {event}',
 	'markets.tab.active': 'Activos',
 	'markets.tab.expiring': 'Por vencer',
 	'markets.tab.resolved': 'Resueltos',

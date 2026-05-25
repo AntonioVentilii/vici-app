@@ -673,7 +673,9 @@ export const enMessages = {
 	'markets.sub':
 		'Hundreds of questions across macro, crypto, politics, tech, sports, culture. Every one resolves on public data.',
 	'markets.suggested.eyebrow': "EDITOR'S PICK",
+	'markets.suggested.eyebrow_event': 'FEATURED EVENT',
 	'markets.suggested.title': 'Suggested for you',
+	'markets.suggested.title_event': 'Trending in {event}',
 	'markets.tab.active': 'Active',
 	'markets.tab.expiring': 'Expiring',
 	'markets.tab.resolved': 'Resolved',

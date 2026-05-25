@@ -681,7 +681,9 @@ export const itMessages = {
 	'markets.sub':
 		'Centinaia di domande tra macro, crypto, politica, tech, sport e cultura. Tutte si chiudono su dati pubblici.',
 	'markets.suggested.eyebrow': 'SCELTI DALLA REDAZIONE',
+	'markets.suggested.eyebrow_event': 'EVENTO IN EVIDENZA',
 	'markets.suggested.title': 'Suggeriti per te',
+	'markets.suggested.title_event': 'In tendenza su {event}',
 	'markets.tab.active': 'Attivi',
 	'markets.tab.expiring': 'In scadenza',
 	'markets.tab.resolved': 'Risolti',

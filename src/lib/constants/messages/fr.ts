@@ -691,7 +691,9 @@ export const frMessages = {
 	'markets.sub':
 		'Des centaines de questions sur macro, crypto, politique, tech, sport, culture. Toutes se résolvent sur des données publiques.',
 	'markets.suggested.eyebrow': 'CHOIX DE LA RÉDACTION',
+	'markets.suggested.eyebrow_event': 'ÉVÉNEMENT PHARE',
 	'markets.suggested.title': 'Suggérés pour toi',
+	'markets.suggested.title_event': 'Tendance autour de {event}',
 	'markets.tab.active': 'Actifs',
 	'markets.tab.expiring': 'Expirent',
 	'markets.tab.resolved': 'Résolus',

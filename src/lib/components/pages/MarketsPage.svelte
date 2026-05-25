@@ -7,6 +7,7 @@
 	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
+	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
@@ -79,10 +80,30 @@
 	// with the sort-tier boost: if a market would no longer be
 	// boosted, it never shows up here either. Capped at
 	// `SUGGESTED_RAIL_LIMIT` so the rail stays editorial, not a dump.
+	const baseSuggestedRail = $derived(
+		$markets.filter((market) => isMarketSuggested({ market, metadata: $marketMetadata[market.id] }))
+	);
+
+	// When a featured event is running, the rail narrows to markets
+	// carrying the event's category tag so the curated picks track the
+	// live tentpole. If nothing event-tagged is in the suggested set,
+	// fall back to the regular editorial rail so the page never loses
+	// the rail unexpectedly. Same `SUGGESTED_RAIL_LIMIT` cap either way.
+	// `categoryTag` is typed as a free-form `string` on FeaturedEvent so
+	// future tentpoles can use values that aren't in the closed
+	// `MarketTag` enum — widen the per-market tag array to `string[]`
+	// for the membership check rather than narrowing the event tag.
+	const eventTag = $derived($featuredEvent.categoryTag);
+	const eventRailItems = $derived(
+		$featuredEventActive && eventTag !== undefined
+			? baseSuggestedRail.filter((market) =>
+					($marketTags[market.id] ?? []).some((tag) => (tag as string) === eventTag)
+				)
+			: []
+	);
+	const railIsEventScoped = $derived(eventRailItems.length > 0);
 	const suggestedRail = $derived(
-		$markets
-			.filter((market) => isMarketSuggested({ market, metadata: $marketMetadata[market.id] }))
-			.slice(0, SUGGESTED_RAIL_LIMIT)
+		(railIsEventScoped ? eventRailItems : baseSuggestedRail).slice(0, SUGGESTED_RAIL_LIMIT)
 	);
 </script>
 
@@ -110,14 +131,27 @@
 		{#if suggestedRail.length > 0}
 			<section
 				class="suggested-rail"
-				aria-label={t({ locale: $localeStore, key: 'markets.suggested.title' })}
+				aria-label={t({
+					locale: $localeStore,
+					key: railIsEventScoped ? 'markets.suggested.title_event' : 'markets.suggested.title',
+					params: railIsEventScoped ? { event: $featuredEvent.title } : undefined
+				})}
 			>
 				<header class="suggested-rail-head">
 					<span class="eyebrow suggested-rail-eyebrow">
-						{t({ locale: $localeStore, key: 'markets.suggested.eyebrow' })}
+						{t({
+							locale: $localeStore,
+							key: railIsEventScoped
+								? 'markets.suggested.eyebrow_event'
+								: 'markets.suggested.eyebrow'
+						})}
 					</span>
 					<h2 class="suggested-rail-title">
-						{t({ locale: $localeStore, key: 'markets.suggested.title' })}
+						{t({
+							locale: $localeStore,
+							key: railIsEventScoped ? 'markets.suggested.title_event' : 'markets.suggested.title',
+							params: railIsEventScoped ? { event: $featuredEvent.title } : undefined
+						})}
 					</h2>
 				</header>
 				<div class="suggested-rail-scroller">

@@ -689,7 +689,9 @@ export const deMessages = {
 	'markets.sub':
 		'Hunderte Fragen aus Makro, Krypto, Politik, Tech, Sport, Kultur. Alle lösen sich über öffentliche Daten auf.',
 	'markets.suggested.eyebrow': 'REDAKTIONSTIPP',
+	'markets.suggested.eyebrow_event': 'TENTPOLE-EVENT',
 	'markets.suggested.title': 'Empfehlungen für dich',
+	'markets.suggested.title_event': 'Trend bei {event}',
 	'markets.tab.active': 'Aktiv',
 	'markets.tab.expiring': 'Läuft ab',
 	'markets.tab.resolved': 'Aufgelöst',
