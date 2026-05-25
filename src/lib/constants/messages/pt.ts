@@ -702,6 +702,9 @@ export const ptMessages = {
 	'nav.trust': 'Confiança',
 	'nav.vision': 'Visão',
 	'notifications.back_settings': 'Voltar às configurações',
+	'notifications.empty.body':
+		'Resoluções, pedidos de amizade e desafios aparecem aqui. Faça algumas previsões para começar o histórico.',
+	'notifications.empty.title': 'Sem notificações novas.',
 	'notifications.mark_read': 'Marcar como lidas',
 	'notifications.title': 'Notificações',
 	'onboarding.action.continue': 'Continuar',

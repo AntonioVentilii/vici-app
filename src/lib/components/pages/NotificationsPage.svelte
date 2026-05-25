@@ -2,6 +2,7 @@
 	import type { Icon as LucideIcon } from 'lucide-svelte';
 	import {
 		ArrowLeft,
+		Bell,
 		Check,
 		Flame,
 		Sparkles,
@@ -53,42 +54,57 @@
 		</Button>
 	</header>
 
-	<ul class="notifications-list">
-		{#each $combinedInboxStore as notification (notification.id)}
-			{@const KindIcon = kindIcons[notification.kind] ?? TrendingUp}
-			<li class="notification-item" class:is-unread={notification.unread}>
-				{#if notification.href}
-					<a class="notification-card notification-card-link" href={notification.href}>
-						<span class="notification-icon" aria-hidden="true">
-							<KindIcon size={16} strokeWidth={1.8} />
-						</span>
-						<div class="notification-copy">
-							<span class="notification-title">{notification.title}</span>
-							<p class="notification-body">{notification.body}</p>
-							<span class="notification-when num">{notification.when}</span>
+	{#if $combinedInboxStore.length === 0}
+		<!-- V1.2 polished empty state — dashed surface with serif-italic
+		     headline. The bell icon is faint by design (no foreground
+		     attention since there's no event to draw the eye). -->
+		<div class="notifications-empty" aria-live="polite" role="status">
+			<Bell class="notifications-empty-icon" aria-hidden="true" size={28} strokeWidth={1.4} />
+			<p class="notifications-empty-title serif-italic">
+				{t({ locale: $localeStore, key: 'notifications.empty.title' })}
+			</p>
+			<p class="notifications-empty-body">
+				{t({ locale: $localeStore, key: 'notifications.empty.body' })}
+			</p>
+		</div>
+	{:else}
+		<ul class="notifications-list">
+			{#each $combinedInboxStore as notification (notification.id)}
+				{@const KindIcon = kindIcons[notification.kind] ?? TrendingUp}
+				<li class="notification-item" class:is-unread={notification.unread}>
+					{#if notification.href}
+						<a class="notification-card notification-card-link" href={notification.href}>
+							<span class="notification-icon" aria-hidden="true">
+								<KindIcon size={16} strokeWidth={1.8} />
+							</span>
+							<div class="notification-copy">
+								<span class="notification-title">{notification.title}</span>
+								<p class="notification-body">{notification.body}</p>
+								<span class="notification-when num">{notification.when}</span>
+							</div>
+							{#if notification.unread}
+								<span class="notification-dot" aria-hidden="true"></span>
+							{/if}
+						</a>
+					{:else}
+						<div class="notification-card">
+							<span class="notification-icon" aria-hidden="true">
+								<KindIcon size={16} strokeWidth={1.8} />
+							</span>
+							<div class="notification-copy">
+								<span class="notification-title">{notification.title}</span>
+								<p class="notification-body">{notification.body}</p>
+								<span class="notification-when num">{notification.when}</span>
+							</div>
+							{#if notification.unread}
+								<span class="notification-dot" aria-hidden="true"></span>
+							{/if}
 						</div>
-						{#if notification.unread}
-							<span class="notification-dot" aria-hidden="true"></span>
-						{/if}
-					</a>
-				{:else}
-					<div class="notification-card">
-						<span class="notification-icon" aria-hidden="true">
-							<KindIcon size={16} strokeWidth={1.8} />
-						</span>
-						<div class="notification-copy">
-							<span class="notification-title">{notification.title}</span>
-							<p class="notification-body">{notification.body}</p>
-							<span class="notification-when num">{notification.when}</span>
-						</div>
-						{#if notification.unread}
-							<span class="notification-dot" aria-hidden="true"></span>
-						{/if}
-					</div>
-				{/if}
-			</li>
-		{/each}
-	</ul>
+					{/if}
+				</li>
+			{/each}
+		</ul>
+	{/if}
 </div>
 
 <style lang="postcss">
@@ -212,5 +228,36 @@
 		margin-top: 0.375rem;
 		border-radius: 50%;
 		background: var(--color-primary);
+	}
+
+	.notifications-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 2.5rem 1.5rem;
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+		background: transparent;
+		text-align: center;
+	}
+
+	.notifications-empty :global(.notifications-empty-icon) {
+		color: var(--parchment-faint);
+		margin-bottom: 0.25rem;
+	}
+
+	.notifications-empty-title {
+		margin: 0;
+		font-size: var(--t-18);
+		color: var(--text-base);
+	}
+
+	.notifications-empty-body {
+		margin: 0;
+		max-width: 24rem;
+		font-size: var(--t-13);
+		line-height: 1.55;
+		color: var(--text-muted);
 	}
 </style>

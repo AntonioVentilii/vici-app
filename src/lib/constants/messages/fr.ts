@@ -714,6 +714,9 @@ export const frMessages = {
 	'nav.trust': 'Confiance',
 	'nav.vision': 'Vision',
 	'notifications.back_settings': 'Retour aux réglages',
+	'notifications.empty.body':
+		'Résolutions, demandes d’ami et défis arrivent ici. Faites quelques pronostics pour démarrer votre historique.',
+	'notifications.empty.title': 'Aucune nouvelle notification.',
 	'notifications.mark_read': 'Marquer lues',
 	'notifications.title': 'Notifications',
 	'onboarding.action.continue': 'Continuer',

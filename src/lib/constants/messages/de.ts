@@ -712,6 +712,9 @@ export const deMessages = {
 	'nav.trust': 'Vertrauen',
 	'nav.vision': 'Vision',
 	'notifications.back_settings': 'Zurück zu Einstellungen',
+	'notifications.empty.body':
+		'Auflösungen, Freundschaftsanfragen und Challenges landen hier. Mach ein paar Vorhersagen, um deine Bilanz zu starten.',
+	'notifications.empty.title': 'Keine neuen Benachrichtigungen.',
 	'notifications.mark_read': 'Als gelesen markieren',
 	'notifications.title': 'Benachrichtigungen',
 	'onboarding.action.continue': 'Weiter',

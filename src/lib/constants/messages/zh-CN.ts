@@ -671,6 +671,8 @@ export const zhCnMessages = {
 	'nav.trust': '信任',
 	'nav.vision': '愿景',
 	'notifications.back_settings': '返回设置',
+	'notifications.empty.body': '裁决、好友请求和挑战会出现在这里。做几次预测，开始建立你的记录。',
+	'notifications.empty.title': '暂无新通知。',
 	'notifications.mark_read': '标为已读',
 	'notifications.title': '通知',
 	'onboarding.action.continue': '继续',

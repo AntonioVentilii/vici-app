@@ -704,6 +704,9 @@ export const itMessages = {
 	'nav.trust': 'Fiducia',
 	'nav.vision': 'Visione',
 	'notifications.back_settings': 'Torna alle impostazioni',
+	'notifications.empty.body':
+		'Risoluzioni, richieste di amicizia e sfide compaiono qui. Fai qualche previsione per iniziare a costruire la tua bacheca.',
+	'notifications.empty.title': 'Nessuna nuova notifica.',
 	'notifications.mark_read': 'Segna lette',
 	'notifications.title': 'Notifiche',
 	'onboarding.action.continue': 'Continua',

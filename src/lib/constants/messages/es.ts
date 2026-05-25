@@ -707,6 +707,9 @@ export const esMessages = {
 	'nav.trust': 'Confianza',
 	'nav.vision': 'Visión',
 	'notifications.back_settings': 'Volver a ajustes',
+	'notifications.empty.body':
+		'Resoluciones, solicitudes de amistad y desafíos aparecen aquí. Haz algunas predicciones para empezar tu historial.',
+	'notifications.empty.title': 'Sin notificaciones nuevas.',
 	'notifications.mark_read': 'Marcar leídas',
 	'notifications.title': 'Notificaciones',
 	'onboarding.action.continue': 'Continuar',

@@ -696,6 +696,9 @@ export const enMessages = {
 	'nav.trust': 'Trust',
 	'nav.vision': 'Vision',
 	'notifications.back_settings': 'Back to settings',
+	'notifications.empty.body':
+		'Resolutions, friend requests and challenges land here. Make a few calls to start the record.',
+	'notifications.empty.title': 'No new notifications.',
 	'notifications.mark_read': 'Mark read',
 	'notifications.title': 'Notifications',
 	'onboarding.action.continue': 'Continue',
