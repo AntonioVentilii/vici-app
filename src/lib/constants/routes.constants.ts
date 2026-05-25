@@ -27,7 +27,8 @@ export enum AppPath {
 export enum PublicPath {
 	SignIn = '/signin',
 	SignUp = '/signup',
-	Welcome = '/welcome'
+	Welcome = '/welcome',
+	Info = '/info'
 }
 
 /**
@@ -44,6 +45,7 @@ export const PUBLIC_PATH_PREFIXES: readonly string[] = [
 	PublicPath.SignIn,
 	PublicPath.SignUp,
 	PublicPath.Welcome,
+	PublicPath.Info,
 	'/auth'
 ] as const;
 

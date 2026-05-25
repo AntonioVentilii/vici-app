@@ -391,6 +391,12 @@ export const itMessages = {
 	'inbox.friend_request.body': '{user} vuole connettersi.',
 	'inbox.friend_request.title': 'Richiesta di amicizia',
 	'inbox.pending': 'In sospeso',
+	'info.back': 'Indietro',
+	'info.not_found.body':
+		'Nessun documento corrisponde a questo indirizzo. Prova un altro link nel footer o torna alla home.',
+	'info.not_found.title': 'Documento non trovato',
+	'info.placeholder_legal_banner':
+		'Testo segnaposto — questo documento è in attesa di revisione legale e verrà sostituito prima del lancio.',
 	'landing.cta.signup': 'Crea un account',
 	'landing.faq.flow': 'Flow — previsioni rapide su mercati live.',
 	'landing.faq.markets': 'Mercati — profondità, risoluzione e portafoglio.',

@@ -396,6 +396,12 @@ export const deMessages = {
 	'inbox.friend_request.body': '{user} möchte sich verbinden.',
 	'inbox.friend_request.title': 'Freundschaftsanfrage',
 	'inbox.pending': 'Ausstehend',
+	'info.back': 'Zurück',
+	'info.not_found.body':
+		'Zu dieser Adresse passt kein Dokument. Versuche einen anderen Link im Footer oder kehre zur Startseite zurück.',
+	'info.not_found.title': 'Dokument nicht gefunden',
+	'info.placeholder_legal_banner':
+		'Platzhaltertext — dieses Dokument wird derzeit rechtlich geprüft und vor dem Start ersetzt.',
 	'landing.cta.signup': 'Konto erstellen',
 	'landing.faq.flow': 'Flow — schnelle Calls auf Live-Märkten.',
 	'landing.faq.markets': 'Märkte — Tiefe, Auflösung und Portfolio-Tracking.',

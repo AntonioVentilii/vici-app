@@ -401,6 +401,12 @@ export const frMessages = {
 	'inbox.friend_request.body': '{user} veut se connecter.',
 	'inbox.friend_request.title': 'Demande d’ami',
 	'inbox.pending': 'En attente',
+	'info.back': 'Retour',
+	'info.not_found.body':
+		'Aucun document ne correspond à cette adresse. Essayez un autre lien dans le pied de page ou retournez à l’accueil.',
+	'info.not_found.title': 'Document introuvable',
+	'info.placeholder_legal_banner':
+		'Texte provisoire — ce document est en attente de revue juridique et sera remplacé avant le lancement.',
 	'landing.cta.signup': 'Créer un compte',
 	'landing.faq.flow': 'Flow — pronostics rapides sur marchés live.',
 	'landing.faq.markets': 'Marchés — profondeur, résolution et suivi du portefeuille.',

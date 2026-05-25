@@ -391,6 +391,12 @@ export const ptMessages = {
 	'inbox.friend_request.body': '{user} quer se conectar.',
 	'inbox.friend_request.title': 'Pedido de amizade',
 	'inbox.pending': 'Pendente',
+	'info.back': 'Voltar',
+	'info.not_found.body':
+		'Nenhum documento corresponde a esse endereço. Tente outro link no rodapé ou volte para a página inicial.',
+	'info.not_found.title': 'Documento não encontrado',
+	'info.placeholder_legal_banner':
+		'Texto provisório — este documento aguarda revisão jurídica e será substituído antes do lançamento.',
 	'landing.cta.signup': 'Criar conta',
 	'landing.faq.flow': 'Flow — previsões rápidas em mercados ao vivo.',
 	'landing.faq.markets': 'Mercados — profundidade, resolução e acompanhamento de portfólio.',

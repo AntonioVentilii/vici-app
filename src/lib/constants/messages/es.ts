@@ -392,6 +392,12 @@ export const esMessages = {
 	'inbox.friend_request.body': '{user} quiere conectar contigo.',
 	'inbox.friend_request.title': 'Solicitud de amistad',
 	'inbox.pending': 'Pendiente',
+	'info.back': 'Atrás',
+	'info.not_found.body':
+		'Ningún documento coincide con esa dirección. Prueba otro enlace del pie o vuelve a la página principal.',
+	'info.not_found.title': 'Documento no encontrado',
+	'info.placeholder_legal_banner':
+		'Texto provisional — este documento está pendiente de revisión legal y será reemplazado antes del lanzamiento.',
 	'landing.cta.signup': 'Crear cuenta',
 	'landing.faq.flow': 'Flow — predicciones rápidas en mercados en vivo.',
 	'landing.faq.markets': 'Mercados — profundidad, resolución y portafolio.',

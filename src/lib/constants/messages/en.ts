@@ -388,6 +388,12 @@ export const enMessages = {
 	'inbox.friend_request.body': '{user} wants to connect.',
 	'inbox.friend_request.title': 'Friend request',
 	'inbox.pending': 'Pending',
+	'info.back': 'Back',
+	'info.not_found.body':
+		'No document matches that address. Try one of the links in the footer or head back to the home page.',
+	'info.not_found.title': 'Document not found',
+	'info.placeholder_legal_banner':
+		'Placeholder copy — this document is awaiting legal review and will be replaced before launch.',
 	'landing.cta.signup': 'Create account',
 	'landing.faq.flow': 'Flow — rapid-fire calls on live markets.',
 	'landing.faq.markets': 'Markets — depth, resolution, and portfolio tracking.',
