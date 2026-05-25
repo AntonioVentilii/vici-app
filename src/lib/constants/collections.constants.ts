@@ -60,7 +60,14 @@ export const Collection = {
 	 * simultaneously. Server computes `lockedUntilMs = joinedAtMs + 90d` on first write; the delete
 	 * assert hard-rejects until the lock expires.
 	 */
-	AFFILIATIONS: collections.AFFILIATIONS
+	AFFILIATIONS: collections.AFFILIATIONS,
+	/**
+	 * Social feed — chronological event log for cohort activity (someone joined a league, a bout
+	 * was proposed / resolved, an affiliation was taken). Keyed `${ms}/${actor}/${kind}/${refId}`
+	 * so listing the feed newest-first is a reverse alphabetical scan. Entries are immutable after
+	 * write — the feed is an append-only log.
+	 */
+	SOCIAL_FEED: collections.SOCIAL_FEED
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

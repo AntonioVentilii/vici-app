@@ -79,6 +79,7 @@ import {
 	sendFriendRequest as sendFriendRequestFn
 } from '$satellite/services/relation.services';
 import { assertSetRole } from '$satellite/services/roles.services';
+import { assertSetSocialFeedEntry } from '$satellite/services/social-feed.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimComebackGrantFn } from '$satellite/services/vxp-comeback.services';
 import {
@@ -485,7 +486,8 @@ const assertSetDocCollections = [
 	Collection.LEAGUES,
 	Collection.LEAGUE_MEMBERS,
 	Collection.BOUTS,
-	Collection.AFFILIATIONS
+	Collection.AFFILIATIONS,
+	Collection.SOCIAL_FEED
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -502,7 +504,8 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.LEAGUES]: assertSetLeague,
 			[Collection.LEAGUE_MEMBERS]: assertSetLeagueMember,
 			[Collection.BOUTS]: assertSetBout,
-			[Collection.AFFILIATIONS]: assertSetAffiliation
+			[Collection.AFFILIATIONS]: assertSetAffiliation,
+			[Collection.SOCIAL_FEED]: assertSetSocialFeedEntry
 		};
 
 		fn[context.data.collection]?.(context);
