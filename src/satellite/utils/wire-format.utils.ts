@@ -478,3 +478,47 @@ export const toWireLeagueMember = (member: {
 	joined_at_ms: member.joinedAtMs,
 	role: member.role
 });
+
+// ─── Bouts (Phase 10) ────────────────────────────────────────────────────
+
+export const BoutWireSchema = j.strictObject({
+	id: j.string(),
+	kind: j.enum(['league', 'duel']),
+	side_a: j.string(),
+	side_b: j.string(),
+	proposer: PrincipalTextSchema,
+	state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+	kickoff_ms: j.number(),
+	settle_ms: j.number(),
+	score_a: j.number().optional(),
+	score_b: j.number().optional(),
+	winner: j.enum(['A', 'B', 'draw']).optional()
+});
+
+export type WireBout = j.infer<typeof BoutWireSchema>;
+
+export const toWireBout = (bout: {
+	id: string;
+	kind: 'league' | 'duel';
+	sideA: string;
+	sideB: string;
+	proposer: string;
+	state: 'proposed' | 'accepted' | 'in_flight' | 'resolved';
+	kickoffMs: number;
+	settleMs: number;
+	scoreA?: number;
+	scoreB?: number;
+	winner?: 'A' | 'B' | 'draw';
+}): WireBout => ({
+	id: bout.id,
+	kind: bout.kind,
+	side_a: bout.sideA,
+	side_b: bout.sideB,
+	proposer: bout.proposer,
+	state: bout.state,
+	kickoff_ms: bout.kickoffMs,
+	settle_ms: bout.settleMs,
+	score_a: bout.scoreA,
+	score_b: bout.scoreB,
+	winner: bout.winner
+});

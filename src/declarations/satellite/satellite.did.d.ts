@@ -210,6 +210,24 @@ export interface AppListLeaderboardResult {
 		accuracy: number;
 	}>;
 }
+export interface AppListLeagueBoutsArgs {
+	league_id: string;
+}
+export interface AppListLeagueBoutsResult {
+	items: Array<{
+		id: string;
+		kind: { duel: null } | { league: null };
+		winner: [] | [{ A: null } | { B: null } | { draw: null }];
+		score_a: [] | [number];
+		score_b: [] | [number];
+		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
+		side_a: string;
+		side_b: string;
+		proposer: string;
+		kickoff_ms: number;
+		settle_ms: number;
+	}>;
+}
 export interface AppListLeagueMembersArgs {
 	league_id: string;
 }
@@ -233,6 +251,21 @@ export interface AppListMarketTranslationsResult {
 		locale: string;
 		description: string;
 		outcomes: Array<{ id: string; title: string }>;
+	}>;
+}
+export interface AppListMyBoutsResult {
+	items: Array<{
+		id: string;
+		kind: { duel: null } | { league: null };
+		winner: [] | [{ A: null } | { B: null } | { draw: null }];
+		score_a: [] | [number];
+		score_b: [] | [number];
+		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
+		side_a: string;
+		side_b: string;
+		proposer: string;
+		kickoff_ms: number;
+		settle_ms: number;
 	}>;
 }
 export interface AppListMyLeaguesResult {
@@ -437,11 +470,13 @@ export interface _SERVICE {
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
 	app_list_friends: ActorMethod<[], AppListFriendsResult>;
 	app_list_leaderboard: ActorMethod<[], AppListLeaderboardResult>;
+	app_list_league_bouts: ActorMethod<[AppListLeagueBoutsArgs], AppListLeagueBoutsResult>;
 	app_list_league_members: ActorMethod<[AppListLeagueMembersArgs], AppListLeagueMembersResult>;
 	app_list_market_translations: ActorMethod<
 		[AppListMarketTranslationsArgs],
 		AppListMarketTranslationsResult
 	>;
+	app_list_my_bouts: ActorMethod<[], AppListMyBoutsResult>;
 	app_list_my_leagues: ActorMethod<[], AppListMyLeaguesResult>;
 	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
 	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;

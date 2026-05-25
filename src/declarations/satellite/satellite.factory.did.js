@@ -295,6 +295,29 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListLeagueBoutsArgs = IDL.Record({ league_id: IDL.Text });
+	const AppListLeagueBoutsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				id: IDL.Text,
+				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
+				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
+				score_a: IDL.Opt(IDL.Float64),
+				score_b: IDL.Opt(IDL.Float64),
+				state: IDL.Variant({
+					resolved: IDL.Null,
+					proposed: IDL.Null,
+					in_flight: IDL.Null,
+					accepted: IDL.Null
+				}),
+				side_a: IDL.Text,
+				side_b: IDL.Text,
+				proposer: IDL.Text,
+				kickoff_ms: IDL.Float64,
+				settle_ms: IDL.Float64
+			})
+		)
+	});
 	const AppListLeagueMembersArgs = IDL.Record({ league_id: IDL.Text });
 	const AppListLeagueMembersResult = IDL.Record({
 		items: IDL.Vec(
@@ -321,6 +344,28 @@ export const idlFactory = ({ IDL }) => {
 				locale: IDL.Text,
 				description: IDL.Text,
 				outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+			})
+		)
+	});
+	const AppListMyBoutsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				id: IDL.Text,
+				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
+				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
+				score_a: IDL.Opt(IDL.Float64),
+				score_b: IDL.Opt(IDL.Float64),
+				state: IDL.Variant({
+					resolved: IDL.Null,
+					proposed: IDL.Null,
+					in_flight: IDL.Null,
+					accepted: IDL.Null
+				}),
+				side_a: IDL.Text,
+				side_b: IDL.Text,
+				proposer: IDL.Text,
+				kickoff_ms: IDL.Float64,
+				settle_ms: IDL.Float64
 			})
 		)
 	});
@@ -575,6 +620,11 @@ export const idlFactory = ({ IDL }) => {
 		app_list_friend_requests: IDL.Func([], [AppListFriendRequestsResult], ['query']),
 		app_list_friends: IDL.Func([], [AppListFriendsResult], ['query']),
 		app_list_leaderboard: IDL.Func([], [AppListLeaderboardResult], ['query']),
+		app_list_league_bouts: IDL.Func(
+			[AppListLeagueBoutsArgs],
+			[AppListLeagueBoutsResult],
+			['query']
+		),
 		app_list_league_members: IDL.Func(
 			[AppListLeagueMembersArgs],
 			[AppListLeagueMembersResult],
@@ -585,6 +635,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppListMarketTranslationsResult],
 			['query']
 		),
+		app_list_my_bouts: IDL.Func([], [AppListMyBoutsResult], ['query']),
 		app_list_my_leagues: IDL.Func([], [AppListMyLeaguesResult], ['query']),
 		app_list_my_referrals: IDL.Func([], [AppListMyReferralsResult], ['query']),
 		app_list_sent_friend_requests: IDL.Func([], [AppListSentFriendRequestsResult], ['query']),

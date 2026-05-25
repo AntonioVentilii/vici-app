@@ -316,6 +316,41 @@ const listLeaderboard = async (): Promise<j.infer<typeof AppListLeaderboardResul
 	return AppListLeaderboardResultSchema.parse(result);
 };
 
+const AppListLeagueBoutsArgsSchema = j.strictObject({ leagueId: j.string() });
+const AppListLeagueBoutsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			id: j.string(),
+			kind: j.enum(['league', 'duel']),
+			side_a: j.string(),
+			side_b: j.string(),
+			proposer: j.string(),
+			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+			kickoff_ms: j.number(),
+			settle_ms: j.number(),
+			score_a: j.optional(j.number()),
+			score_b: j.optional(j.number()),
+			winner: j.optional(j.enum(['A', 'B', 'draw']))
+		})
+	)
+});
+
+const listLeagueBouts = async (
+	args: j.infer<typeof AppListLeagueBoutsArgsSchema>
+): Promise<j.infer<typeof AppListLeagueBoutsResultSchema>> => {
+	const parsedArgs = AppListLeagueBoutsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListLeagueBoutsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_league_bouts']>[0];
+
+	const { app_list_league_bouts } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_list_league_bouts(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppListLeagueBoutsResultSchema, value: idlResult });
+	return AppListLeagueBoutsResultSchema.parse(result);
+};
+
 const AppListLeagueMembersArgsSchema = j.strictObject({ leagueId: j.string() });
 const AppListLeagueMembersResultSchema = j.strictObject({
 	items: j.array(
@@ -377,6 +412,32 @@ const listMarketTranslations = async (
 
 	const result = schemaFromIdl({ schema: AppListMarketTranslationsResultSchema, value: idlResult });
 	return AppListMarketTranslationsResultSchema.parse(result);
+};
+
+const AppListMyBoutsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			id: j.string(),
+			kind: j.enum(['league', 'duel']),
+			side_a: j.string(),
+			side_b: j.string(),
+			proposer: j.string(),
+			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+			kickoff_ms: j.number(),
+			settle_ms: j.number(),
+			score_a: j.optional(j.number()),
+			score_b: j.optional(j.number()),
+			winner: j.optional(j.enum(['A', 'B', 'draw']))
+		})
+	)
+});
+
+const listMyBouts = async (): Promise<j.infer<typeof AppListMyBoutsResultSchema>> => {
+	const { app_list_my_bouts } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_list_my_bouts();
+
+	const result = schemaFromIdl({ schema: AppListMyBoutsResultSchema, value: idlResult });
+	return AppListMyBoutsResultSchema.parse(result);
 };
 
 const AppListMyLeaguesResultSchema = j.strictObject({
@@ -793,8 +854,10 @@ export const functions = {
 	listFriendRequests,
 	listFriends,
 	listLeaderboard,
+	listLeagueBouts,
 	listLeagueMembers,
 	listMarketTranslations,
+	listMyBouts,
 	listMyLeagues,
 	listMyReferrals,
 	listSentFriendRequests,

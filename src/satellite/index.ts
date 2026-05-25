@@ -18,7 +18,9 @@ import {
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
 import { assertSetBout } from '$satellite/services/bout.services';
 import {
+	listLeagueBoutsFn,
 	listLeagueMembersFn,
+	listMyBoutsFn,
 	listMyLeaguesFn,
 	lookupLeagueByInviteFn
 } from '$satellite/services/cohort.services';
@@ -79,12 +81,14 @@ import {
 } from '$satellite/services/vxp-onboarding.services';
 import { onProfileSetForStreakAward } from '$satellite/services/vxp-streak-awards.services';
 import {
+	BoutWireSchema,
 	LeagueMemberWireSchema,
 	LeagueWireSchema,
 	LeagueWithRoleWireSchema,
 	MarketTranslationWireSchema,
 	ReferralWireSchema,
 	RelationWireSchema,
+	toWireBout,
 	toWireLeague,
 	toWireLeagueMember,
 	toWireLeagueWithRole,
@@ -385,6 +389,29 @@ export const lookupLeagueByInvite = defineQuery({
 
 		return { league: league ? toWireLeague(league) : undefined };
 	}
+});
+
+// ─── Bouts (Phase 10) ────────────────────────────────────────────────────
+
+export const listLeagueBouts = defineQuery({
+	args: j.strictObject({
+		leagueId: j.string()
+	}),
+	result: j.strictObject({
+		items: j.array(BoutWireSchema)
+	}),
+	handler: ({ leagueId }) => ({
+		items: listLeagueBoutsFn({ leagueId }).map(toWireBout)
+	})
+});
+
+export const listMyBouts = defineQuery({
+	result: j.strictObject({
+		items: j.array(BoutWireSchema)
+	}),
+	handler: () => ({
+		items: listMyBoutsFn().map(toWireBout)
+	})
 });
 
 // V1.2 comeback grant — one-shot +1000 VXP fired when a balance hits

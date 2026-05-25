@@ -1,7 +1,8 @@
 import { Collection } from '$lib/constants/collections.constants';
+import type { BoutDoc } from '$lib/types/bout';
 import type { LeagueDoc } from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
-import { nonNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
 
@@ -129,6 +130,104 @@ export const listLeagueMembersFn = ({ leagueId }: { leagueId: string }): LeagueM
 	}
 
 	return members.sort((a, b) => a.joinedAtMs - b.joinedAtMs);
+};
+
+/**
+ * List bouts that reference a specific league — either as sideA or
+ * sideB. Used by the league detail page's "Bouts" panel to render
+ * proposed / accepted / in-flight / resolved competitions involving
+ * this cohort.
+ *
+ * Sorted by `kickoffMs` ascending so in-flight bouts surface before
+ * future ones, then proposed/accepted in chronological order.
+ */
+export const listLeagueBoutsFn = ({ leagueId }: { leagueId: string }): BoutDoc[] => {
+	const caller = msgCaller();
+
+	const { items } = listDocsStore({
+		collection: Collection.BOUTS,
+		caller: caller.toUint8Array(),
+		params: {}
+	});
+
+	const bouts: BoutDoc[] = [];
+
+	for (const [, item] of items) {
+		try {
+			const bout = decodeDocData<BoutDoc>(item.data);
+
+			if (bout.kind === 'league' && (bout.sideA === leagueId || bout.sideB === leagueId)) {
+				bouts.push(bout);
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	return bouts.sort((a, b) => a.kickoffMs - b.kickoffMs);
+};
+
+/**
+ * List every bout that involves the caller — either as a duel
+ * principal (sideA / sideB on kind='duel') OR as the owner of a
+ * league participating in a kind='league' bout.
+ *
+ * League-side resolution is N+1: each kind='league' bout triggers a
+ * `getDocStore` lookup against `LEAGUES` to check ownership. Fine for
+ * the bout volumes we expect on the V1.2 social surface; a reverse
+ * index would only matter past ~100s of bouts per user.
+ *
+ * Sorted by `kickoffMs` ascending.
+ */
+export const listMyBoutsFn = (): BoutDoc[] => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+	const callerBytes = caller.toUint8Array();
+
+	const { items } = listDocsStore({
+		collection: Collection.BOUTS,
+		caller: callerBytes,
+		params: {}
+	});
+
+	const isLeagueOwnedByCaller = (leagueId: string): boolean => {
+		const leagueDoc = getDocStore({
+			collection: Collection.LEAGUES,
+			key: leagueId,
+			caller: callerBytes
+		});
+
+		if (isNullish(leagueDoc)) {
+			return false;
+		}
+
+		try {
+			return decodeDocData<LeagueDoc>(leagueDoc.data).owner === callerText;
+		} catch {
+			return false;
+		}
+	};
+
+	const bouts: BoutDoc[] = [];
+
+	for (const [, item] of items) {
+		try {
+			const bout = decodeDocData<BoutDoc>(item.data);
+
+			const involvesCaller =
+				bout.kind === 'duel'
+					? bout.sideA === callerText || bout.sideB === callerText
+					: isLeagueOwnedByCaller(bout.sideA) || isLeagueOwnedByCaller(bout.sideB);
+
+			if (involvesCaller) {
+				bouts.push(bout);
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	return bouts.sort((a, b) => a.kickoffMs - b.kickoffMs);
 };
 
 /**
