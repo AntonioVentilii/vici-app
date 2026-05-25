@@ -1,5 +1,4 @@
 import { Collection } from '$lib/constants/collections.constants';
-import type { AffiliationDoc } from '$lib/types/affiliation';
 import {
 	EXIT_SIGNAL_NOTE_MAX_LENGTH,
 	EXIT_SIGNAL_REASONS,
@@ -10,10 +9,8 @@ import type { LeagueDoc } from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
 import type { ReferralCodeDoc, ReferralDoc } from '$lib/types/referral';
 import type { Relation } from '$lib/types/relation';
-import { isNullish, nonNullish } from '@dfinity/utils';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
-	countDocsStore,
 	decodeDocData,
 	deleteDocStore,
 	encodeDocData,
@@ -78,9 +75,7 @@ const validateInput = ({
 	}
 
 	if (note.length > EXIT_SIGNAL_NOTE_MAX_LENGTH) {
-		throw new Error(
-			`deleteMyAccount: note exceeds ${EXIT_SIGNAL_NOTE_MAX_LENGTH} characters.`
-		);
+		throw new Error(`deleteMyAccount: note exceeds ${EXIT_SIGNAL_NOTE_MAX_LENGTH} characters.`);
 	}
 
 	return { reason: reason as ExitSignalReason, note };
@@ -215,11 +210,12 @@ const deleteOwnProfile = ({
 }: {
 	callerText: string;
 	callerBytes: Uint8Array;
-}): number => deletePrefixedDocs({
-	collection: Collection.PROFILES,
-	callerText,
-	callerBytes
-});
+}): number =>
+	deletePrefixedDocs({
+		collection: Collection.PROFILES,
+		callerText,
+		callerBytes
+	});
 
 /**
  * Drop the caller's relations (friend / follow rows) — keyed by
@@ -456,50 +452,13 @@ const deleteOwnedEmptyLeagues = ({
 	return deleted;
 };
 
-/**
- * Read the caller's affiliations (zero-to-two rows) before the
- * cascade so the post-delete log line can record whether they had
- * any. Diagnostic only — not used to gate the delete.
- */
-const summariseAffiliations = ({
-	callerText,
-	callerBytes
-}: {
-	callerText: string;
-	callerBytes: Uint8Array;
-}): number => {
-	const { items } = listDocsStore({
-		collection: Collection.AFFILIATIONS,
-		caller: callerBytes,
-		params: {}
-	});
-
-	let count = 0;
-
-	for (const [docKey, item] of items) {
-		if (docKey.startsWith(`${callerText}/`)) {
-			try {
-				const doc = decodeDocData<AffiliationDoc>(item.data);
-
-				if (doc.member === callerText) {
-					count += 1;
-				}
-			} catch {
-				// skip
-			}
-		}
-	}
-
-	return count;
-};
-
-export const deleteMyAccountFn = async ({
+export const deleteMyAccountFn = ({
 	reason,
 	note
 }: {
 	reason: string;
 	note: string;
-}): Promise<DeleteMyAccountResult> => {
+}): DeleteMyAccountResult => {
 	const validated = validateInput({ reason, note });
 	const caller = msgCaller();
 	const callerText = caller.toText();
@@ -517,17 +476,7 @@ export const deleteMyAccountFn = async ({
 		};
 	}
 
-	// Belt-and-braces: confirm the profile collection isn't empty.
-	// A non-onboarded caller can still call this (and we'll still
-	// write their exit-signal), but at least one of the deletion
-	// counters being non-zero confirms the cascade did something.
-	const profileCount = countDocsStore({
-		collection: Collection.PROFILES,
-		caller: callerBytes,
-		params: {}
-	});
-
-	// Step 2 — exit-signal write. Random UUID key, anonymous body.
+	// Step 2 — exit-signal write. Compact base36 key, anonymous body.
 	// The chain timestamp (ns) is the entropy source; we hash it
 	// into a 16-char alphanumeric string to keep the key compact.
 	const nowNs = time();
@@ -551,8 +500,6 @@ export const deleteMyAccountFn = async ({
 	// Step 3 — cascade hard-delete. Order matters only between
 	// league memberships → owned-empty leagues (the latter assumes
 	// the former is done so the membership rows are gone first).
-	const _affiliationCountBefore = summariseAffiliations({ callerText, callerBytes });
-
 	let docsDeleted = 0;
 
 	docsDeleted += deleteOwnProfile({ callerText, callerBytes });
@@ -576,10 +523,6 @@ export const deleteMyAccountFn = async ({
 	docsDeleted += deleteOwnRelations({ callerText, callerBytes });
 	docsDeleted += deleteOwnLeagueMemberships({ callerText, callerBytes });
 	docsDeleted += deleteOwnedEmptyLeagues({ callerText, callerBytes });
-
-	// Suppress "unused" lint warnings for the diagnostic counters.
-	void profileCount;
-	void _affiliationCountBefore;
 
 	return {
 		ok: true,
@@ -616,13 +559,3 @@ export const listMyBlockingLeaguesFn = (): { leagueIds: string[] } => {
 		})
 	};
 };
-
-// Re-export for completeness — the hooks file doesn't currently
-// need these helpers, but a future test harness might.
-export { findOwnedNonEmptyLeagues };
-
-// Silence the unused-import warnings for `isNullish` / `nonNullish`
-// — they're kept because future cascade steps (anonymise comments)
-// will pull them in, and removing-then-re-adding churns the diff.
-void isNullish;
-void nonNullish;

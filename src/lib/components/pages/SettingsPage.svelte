@@ -38,6 +38,7 @@
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { ProfileVisibility } from '$lib/enums/profile';
+	import { deleteMyAccount, listMyBlockingLeagues } from '$lib/services/account.services';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
@@ -46,12 +47,42 @@
 	import { theme } from '$lib/stores/theme.store';
 	import { setAuthBusy, userStore } from '$lib/stores/user.store';
 	import type { ButtonStatus } from '$lib/types/components';
+	import {
+		EXIT_SIGNAL_NOTE_MAX_LENGTH,
+		EXIT_SIGNAL_REASONS,
+		type ExitSignalReason
+	} from '$lib/types/exit-signal';
 	import type { FlowSessionLength, SettingsVisibility } from '$lib/types/preferences';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
-	let confirmingDelete = $state(false);
+	// Delete-account flow state -----------------------------------
+	type DeleteStep = 'idle' | 'reason' | 'confirm';
+
+	let deleteStep = $state<DeleteStep>('idle');
+	let deleteReason = $state<ExitSignalReason | null>(null);
+	let deleteNote = $state('');
+	let deleteError = $state<string | null>(null);
+	let deleteStatus = $state<ButtonStatus>('enabled');
+	let blockingLeagueIds = $state<string[] | null>(null);
 	let signOutStatus = $state<ButtonStatus>('enabled');
+
+	// Reason picker rows match the prototype's six buckets in
+	// `screens.jsx:1962`. Order is intentional — the most common
+	// "soft" reasons sit above the absolute "other".
+	const reasonOptions: ReadonlyArray<{ id: ExitSignalReason; key: MessageKey }> = [
+		{ id: 'not-for-me', key: 'settings.delete.reason.not_for_me' },
+		{ id: 'too-complex', key: 'settings.delete.reason.too_complex' },
+		{ id: 'bored', key: 'settings.delete.reason.bored' },
+		{ id: 'no-friends', key: 'settings.delete.reason.no_friends' },
+		{ id: 'too-noisy', key: 'settings.delete.reason.too_noisy' },
+		{ id: 'other', key: 'settings.delete.reason.other' }
+	];
+
+	// Defensive: keep the typed array referenced even when the
+	// satellite enum drifts so the lint catches mismatches.
+	const _knownReasons = EXIT_SIGNAL_REASONS;
+	void _knownReasons;
 
 	const profile = $derived($userStore.profile);
 	const archetype = $derived(profile?.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
@@ -167,6 +198,78 @@
 			await signOut();
 		} finally {
 			signOutStatus = 'enabled';
+		}
+	};
+
+	const resetDeleteFlow = () => {
+		deleteStep = 'idle';
+		deleteReason = null;
+		deleteNote = '';
+		deleteError = null;
+		blockingLeagueIds = null;
+		deleteStatus = 'enabled';
+	};
+
+	/**
+	 * Open the delete flow. Pre-flight the owned-leagues guard so
+	 * the user sees the transfer-first prompt up-front instead of
+	 * after picking a reason. A network error here drops back to
+	 * `idle` with the generic error message — the alternative is
+	 * showing a half-loaded picker that may then refuse on submit.
+	 */
+	const openDeleteFlow = async () => {
+		deleteError = null;
+
+		try {
+			const ids = await listMyBlockingLeagues();
+
+			if (ids.length > 0) {
+				blockingLeagueIds = ids;
+			}
+		} catch (_err) {
+			deleteError = t({ locale: $localeStore, key: 'settings.delete.error' });
+
+			return;
+		}
+
+		deleteStep = 'reason';
+	};
+
+	const submitDelete = async () => {
+		if (deleteReason === null) {
+			return;
+		}
+
+		deleteStatus = 'pending';
+		deleteError = null;
+
+		try {
+			const result = await deleteMyAccount({
+				reason: deleteReason,
+				note: deleteNote.trim()
+			});
+
+			if (!result.ok) {
+				if (result.reason === 'owns_non_empty_league') {
+					blockingLeagueIds = result.blockingLeagueIds ?? [];
+					deleteStep = 'reason';
+				} else {
+					deleteError = t({ locale: $localeStore, key: 'settings.delete.error' });
+				}
+
+				deleteStatus = 'enabled';
+
+				return;
+			}
+
+			// Deletion succeeded — drop auth so the user lands on the
+			// sign-in screen. `signOut()` clears local stores; `setAuthBusy`
+			// keeps the global busy flag set while it does.
+			setAuthBusy(true);
+			await signOut();
+		} catch (_err) {
+			deleteError = t({ locale: $localeStore, key: 'settings.delete.error' });
+			deleteStatus = 'enabled';
 		}
 	};
 
@@ -442,23 +545,102 @@
 				{t({ locale: $localeStore, key: 'settings.sign_out' })}
 			</Button>
 
-			{#if !confirmingDelete}
-				<button
-					class="settings-delete-link"
-					onclick={() => (confirmingDelete = true)}
-					type="button"
-				>
+			{#if deleteStep === 'idle'}
+				<button class="settings-delete-link" onclick={openDeleteFlow} type="button">
 					{t({ locale: $localeStore, key: 'settings.delete' })}
 				</button>
-			{:else}
-				<div class="settings-confirm">
-					<p>{t({ locale: $localeStore, key: 'settings.delete.confirm' })}</p>
+				{#if deleteError !== null}
+					<p class="settings-delete-error">{deleteError}</p>
+				{/if}
+			{:else if blockingLeagueIds !== null && blockingLeagueIds.length > 0}
+				<div class="settings-confirm settings-delete-flow">
+					<p class="settings-delete-heading">
+						{t({ locale: $localeStore, key: 'settings.delete.blocking_heading' })}
+					</p>
+					<p class="settings-delete-body">
+						{blockingLeagueIds.length === 1
+							? t({ locale: $localeStore, key: 'settings.delete.blocking_body_one' })
+							: t({
+									locale: $localeStore,
+									key: 'settings.delete.blocking_body_many',
+									params: { count: blockingLeagueIds.length }
+								})}
+					</p>
 					<div class="settings-confirm-actions">
-						<Button onclick={() => (confirmingDelete = false)} variant="ghost">
-							{t({ locale: $localeStore, key: 'settings.cancel' })}
+						<Button onclick={resetDeleteFlow} variant="ghost">
+							{t({ locale: $localeStore, key: 'settings.delete.never_mind' })}
 						</Button>
-						<Button onclick={doSignOut} variant="danger">
-							{t({ locale: $localeStore, key: 'settings.delete.forever' })}
+					</div>
+				</div>
+			{:else if deleteStep === 'reason'}
+				<div class="settings-confirm settings-delete-flow">
+					<p class="settings-delete-heading">
+						{t({ locale: $localeStore, key: 'settings.delete.reason_heading' })}
+					</p>
+					<p class="settings-delete-body">
+						{t({ locale: $localeStore, key: 'settings.delete.reason_body' })}
+					</p>
+					<div class="settings-delete-reasons">
+						{#each reasonOptions as opt (opt.id)}
+							<button
+								class="settings-delete-reason"
+								class:is-active={deleteReason === opt.id}
+								onclick={() => (deleteReason = opt.id)}
+								type="button"
+							>
+								{t({ locale: $localeStore, key: opt.key })}
+							</button>
+						{/each}
+					</div>
+					{#if deleteReason !== null}
+						<textarea
+							class="settings-delete-note"
+							maxlength={EXIT_SIGNAL_NOTE_MAX_LENGTH}
+							placeholder={t({ locale: $localeStore, key: 'settings.delete.note_placeholder' })}
+							rows="3"
+							bind:value={deleteNote}
+						></textarea>
+					{/if}
+					<div class="settings-delete-retain">
+						<p class="settings-delete-retain-heading">
+							{t({ locale: $localeStore, key: 'settings.delete.stay_heading' })}
+						</p>
+						<p class="settings-delete-retain-body">
+							{t({ locale: $localeStore, key: 'settings.delete.stay_body' })}
+						</p>
+					</div>
+					<div class="settings-confirm-actions">
+						<Button onclick={resetDeleteFlow} variant="ghost">
+							{t({ locale: $localeStore, key: 'settings.delete.never_mind' })}
+						</Button>
+						<Button
+							onclick={() => (deleteStep = 'confirm')}
+							status={deleteReason === null ? 'disabled' : 'enabled'}
+							variant="danger"
+						>
+							{t({ locale: $localeStore, key: 'settings.delete.continue' })}
+						</Button>
+					</div>
+				</div>
+			{:else}
+				<div class="settings-confirm settings-delete-flow">
+					<p class="settings-delete-heading">
+						{t({ locale: $localeStore, key: 'settings.delete.last_step_heading' })}
+					</p>
+					<p class="settings-delete-body">
+						{t({ locale: $localeStore, key: 'settings.delete.confirm' })}
+					</p>
+					{#if deleteError !== null}
+						<p class="settings-delete-error">{deleteError}</p>
+					{/if}
+					<div class="settings-confirm-actions">
+						<Button onclick={() => (deleteStep = 'reason')} variant="ghost">
+							{t({ locale: $localeStore, key: 'settings.delete.back' })}
+						</Button>
+						<Button onclick={submitDelete} status={deleteStatus} variant="danger">
+							{deleteStatus === 'pending'
+								? t({ locale: $localeStore, key: 'settings.delete.deleting' })
+								: t({ locale: $localeStore, key: 'settings.delete.forever' })}
 						</Button>
 					</div>
 				</div>
@@ -802,5 +984,93 @@
 	.settings-confirm-actions {
 		display: flex;
 		gap: 0.5rem;
+	}
+
+	.settings-delete-flow {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.settings-delete-heading {
+		margin: 0;
+		font-size: var(--t-13);
+		font-weight: 600;
+		color: var(--text-base);
+	}
+
+	.settings-delete-body {
+		margin: 0;
+		font-size: var(--t-12);
+		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
+	.settings-delete-error {
+		margin: 0.25rem 0 0;
+		font-size: var(--t-12);
+		color: var(--color-destructive);
+	}
+
+	.settings-delete-reasons {
+		display: grid;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+		gap: 0.4rem;
+	}
+
+	.settings-delete-reason {
+		padding: 0.55rem 0.65rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-8);
+		background: var(--bg-popover);
+		color: var(--text-base);
+		font-size: var(--t-12);
+		text-align: left;
+		cursor: pointer;
+		transition:
+			border-color var(--d-hover) var(--ease-vici),
+			background-color var(--d-hover) var(--ease-vici);
+	}
+
+	.settings-delete-reason.is-active {
+		border-color: var(--color-destructive);
+		background: color-mix(in srgb, var(--color-destructive) 10%, var(--bg-popover));
+		color: var(--color-destructive);
+	}
+
+	.settings-delete-note {
+		width: 100%;
+		padding: 0.55rem 0.65rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-8);
+		background: var(--bg-popover);
+		color: var(--text-base);
+		font-size: var(--t-12);
+		font-family: inherit;
+		resize: vertical;
+		min-height: 4rem;
+	}
+
+	.settings-delete-retain {
+		padding: 0.6rem 0.7rem;
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-8);
+		background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+	}
+
+	.settings-delete-retain-heading {
+		margin: 0 0 0.25rem;
+		font-size: var(--t-13);
+		font-style: italic;
+		font-weight: 600;
+		font-family: var(--font-serif, serif);
+		color: var(--text-base);
+	}
+
+	.settings-delete-retain-body {
+		margin: 0;
+		font-size: var(--t-12);
+		line-height: 1.5;
+		color: var(--text-muted);
 	}
 </style>

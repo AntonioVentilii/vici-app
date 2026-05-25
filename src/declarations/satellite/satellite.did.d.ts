@@ -55,6 +55,16 @@ export interface AppClaimWorldsPodiumPrizeResult {
 	awards_created: number;
 	awards_already_claimed: number;
 }
+export interface AppDeleteMyAccountArgs {
+	note: string;
+	reason: string;
+}
+export interface AppDeleteMyAccountResult {
+	ok: boolean;
+	blocking_league_ids: [] | [Array<string>];
+	docs_deleted: [] | [number];
+	reason: [] | [{ owns_non_empty_league: null } | { invalid_input: null }];
+}
 export interface AppFollowUserArgs {
 	target: string;
 }
@@ -322,6 +332,9 @@ export interface AppListMyAffiliationsResult {
 				}
 		  ];
 }
+export interface AppListMyBlockingLeaguesResult {
+	league_ids: Array<string>;
+}
 export interface AppListMyBoutsResult {
 	items: Array<{
 		id: string;
@@ -543,6 +556,7 @@ export interface _SERVICE {
 		[AppClaimWorldsPodiumPrizeArgs],
 		AppClaimWorldsPodiumPrizeResult
 	>;
+	app_delete_my_account: ActorMethod<[AppDeleteMyAccountArgs], AppDeleteMyAccountResult>;
 	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;
 	app_get_affiliation_stats: ActorMethod<
 		[AppGetAffiliationStatsArgs],
@@ -571,6 +585,7 @@ export interface _SERVICE {
 		AppListMarketTranslationsResult
 	>;
 	app_list_my_affiliations: ActorMethod<[], AppListMyAffiliationsResult>;
+	app_list_my_blocking_leagues: ActorMethod<[], AppListMyBlockingLeaguesResult>;
 	app_list_my_bouts: ActorMethod<[], AppListMyBoutsResult>;
 	app_list_my_leagues: ActorMethod<[], AppListMyLeaguesResult>;
 	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;

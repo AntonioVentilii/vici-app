@@ -16,6 +16,7 @@ import {
 	RedeemReferralCodeArgsSchema
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
+import { deleteMyAccountFn, listMyBlockingLeaguesFn } from '$satellite/services/account.services';
 import {
 	assertSetAffiliationStats,
 	onProfileSetForAffiliationStats
@@ -538,6 +539,41 @@ export const claimWorldsPodiumPrize = defineUpdate({
 		notEligible: j.boolean()
 	}),
 	handler: claimWorldsPodiumPrizeFn
+});
+
+// Account deletion — Proposal 4. Pre-flight query that surfaces the
+// "you still own this non-empty league" guard so the FE can show
+// the transfer-first prompt before the user even picks a reason.
+export const listMyBlockingLeagues = defineQuery({
+	result: j.strictObject({
+		leagueIds: j.array(j.string())
+	}),
+	handler: listMyBlockingLeaguesFn
+});
+
+// Account deletion — the deletion itself. Writes an anonymous
+// `EXIT_SIGNALS` doc, then cascades hard-deletes for the caller's
+// profile + identity-keyed rows (VXP awards / onboarding, referral
+// code + redemption, affiliations, relations, league memberships,
+// owned-empty leagues). Shared audit rows (activities, bouts,
+// comments) are left in place — the principal is gone so they're
+// orphaned but immutable.
+//
+// Returns `ok: false` with `reason: 'owns_non_empty_league'` when
+// the caller still owns a league with other members; the FE
+// renders a transfer-first guard in that branch.
+export const deleteMyAccount = defineUpdate({
+	args: j.strictObject({
+		reason: j.string(),
+		note: j.string()
+	}),
+	result: j.strictObject({
+		ok: j.boolean(),
+		reason: j.optional(j.enum(['owns_non_empty_league', 'invalid_input'])),
+		blockingLeagueIds: j.optional(j.array(j.string())),
+		docsDeleted: j.optional(j.number())
+	}),
+	handler: deleteMyAccountFn
 });
 
 const assertSetDocCollections = [

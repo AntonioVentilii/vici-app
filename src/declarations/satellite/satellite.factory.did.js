@@ -53,6 +53,21 @@ export const idlFactory = ({ IDL }) => {
 		awards_created: IDL.Float64,
 		awards_already_claimed: IDL.Float64
 	});
+	const AppDeleteMyAccountArgs = IDL.Record({
+		note: IDL.Text,
+		reason: IDL.Text
+	});
+	const AppDeleteMyAccountResult = IDL.Record({
+		ok: IDL.Bool,
+		blocking_league_ids: IDL.Opt(IDL.Vec(IDL.Text)),
+		docs_deleted: IDL.Opt(IDL.Float64),
+		reason: IDL.Opt(
+			IDL.Variant({
+				owns_non_empty_league: IDL.Null,
+				invalid_input: IDL.Null
+			})
+		)
+	});
 	const AppFollowUserArgs = IDL.Record({ target: IDL.Text });
 	const AppGetAffiliationStatsArgs = IDL.Record({
 		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
@@ -412,6 +427,9 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListMyBlockingLeaguesResult = IDL.Record({
+		league_ids: IDL.Vec(IDL.Text)
+	});
 	const AppListMyBoutsResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
@@ -687,6 +705,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppClaimWorldsPodiumPrizeResult],
 			[]
 		),
+		app_delete_my_account: IDL.Func([AppDeleteMyAccountArgs], [AppDeleteMyAccountResult], []),
 		app_follow_user: IDL.Func([AppFollowUserArgs], [], []),
 		app_get_affiliation_stats: IDL.Func(
 			[AppGetAffiliationStatsArgs],
@@ -731,6 +750,7 @@ export const idlFactory = ({ IDL }) => {
 			['query']
 		),
 		app_list_my_affiliations: IDL.Func([], [AppListMyAffiliationsResult], ['query']),
+		app_list_my_blocking_leagues: IDL.Func([], [AppListMyBlockingLeaguesResult], ['query']),
 		app_list_my_bouts: IDL.Func([], [AppListMyBoutsResult], ['query']),
 		app_list_my_leagues: IDL.Func([], [AppListMyLeaguesResult], ['query']),
 		app_list_my_referrals: IDL.Func([], [AppListMyReferralsResult], ['query']),

@@ -519,6 +519,20 @@ const listMyAffiliations = async (): Promise<j.infer<typeof AppListMyAffiliation
 	return AppListMyAffiliationsResultSchema.parse(result);
 };
 
+const AppListMyBlockingLeaguesResultSchema = j.strictObject({ leagueIds: j.array(j.string()) });
+
+const listMyBlockingLeagues = async (): Promise<
+	j.infer<typeof AppListMyBlockingLeaguesResultSchema>
+> => {
+	const { app_list_my_blocking_leagues } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_my_blocking_leagues();
+
+	const result = schemaFromIdl({ schema: AppListMyBlockingLeaguesResultSchema, value: idlResult });
+	return AppListMyBlockingLeaguesResultSchema.parse(result);
+};
+
 const AppListMyBoutsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
@@ -849,6 +863,30 @@ const claimWorldsPodiumPrize = async (
 	return AppClaimWorldsPodiumPrizeResultSchema.parse(result);
 };
 
+const AppDeleteMyAccountArgsSchema = j.strictObject({ reason: j.string(), note: j.string() });
+const AppDeleteMyAccountResultSchema = j.strictObject({
+	ok: j.boolean(),
+	reason: j.optional(j.enum(['owns_non_empty_league', 'invalid_input'])),
+	blockingLeagueIds: j.optional(j.array(j.string())),
+	docsDeleted: j.optional(j.number())
+});
+
+const deleteMyAccount = async (
+	args: j.infer<typeof AppDeleteMyAccountArgsSchema>
+): Promise<j.infer<typeof AppDeleteMyAccountResultSchema>> => {
+	const parsedArgs = AppDeleteMyAccountArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppDeleteMyAccountArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_delete_my_account']>[0];
+
+	const { app_delete_my_account } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_delete_my_account(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppDeleteMyAccountResultSchema, value: idlResult });
+	return AppDeleteMyAccountResultSchema.parse(result);
+};
+
 const AppFollowUserArgsSchema = j.strictObject({ target: j.string() });
 
 const followUser = async (args: j.infer<typeof AppFollowUserArgsSchema>): Promise<void> => {
@@ -1025,6 +1063,7 @@ export const functions = {
 	listLeagueMembers,
 	listMarketTranslations,
 	listMyAffiliations,
+	listMyBlockingLeagues,
 	listMyBouts,
 	listMyLeagues,
 	listMyReferrals,
@@ -1037,6 +1076,7 @@ export const functions = {
 	cancelFriendRequest,
 	claimComebackGrant,
 	claimWorldsPodiumPrize,
+	deleteMyAccount,
 	followUser,
 	redeemReferralCode,
 	rejectFriendRequest,

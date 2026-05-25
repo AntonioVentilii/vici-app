@@ -55,6 +55,8 @@ type AppListMarketTranslationsResult = record { items : vec record { series_id :
 
 type AppListMyAffiliationsResult = record { university : opt record { member : text; kind : variant { university; country }; affiliation_id : text; joined_at_ms : float64; locked_until_ms : float64 }; country : opt record { member : text; kind : variant { university; country }; affiliation_id : text; joined_at_ms : float64; locked_until_ms : float64 } };
 
+type AppListMyBlockingLeaguesResult = record { league_ids : vec text };
+
 type AppListMyBoutsResult = record { items : vec record { id : text; kind : variant { league; duel }; side_a : text; side_b : text; proposer : text; state : variant { proposed; accepted; in_flight; resolved }; kickoff_ms : float64; settle_ms : float64; score_a : opt float64; score_b : opt float64; winner : opt variant { A; B; draw } } };
 
 type AppListMyLeaguesResult = record { items : vec record { league : record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text }; role : variant { owner; admin; member }; joined_at_ms : float64 } };
@@ -88,6 +90,10 @@ type AppClaimComebackGrantResult = record { paid_now : bool; previously_paid : b
 type AppClaimWorldsPodiumPrizeArgs = record { month_anchor : text };
 
 type AppClaimWorldsPodiumPrizeResult = record { month_anchor : text; awards_created : float64; awards_already_claimed : float64; not_eligible : bool };
+
+type AppDeleteMyAccountArgs = record { reason : text; note : text };
+
+type AppDeleteMyAccountResult = record { ok : bool; reason : opt variant { owns_non_empty_league; invalid_input }; blocking_league_ids : opt vec text; docs_deleted : opt float64 };
 
 type AppFollowUserArgs = record { target : text };
 
@@ -123,6 +129,7 @@ service : {
 	app_list_league_members : (AppListLeagueMembersArgs) -> (AppListLeagueMembersResult) query;
 	app_list_market_translations : (AppListMarketTranslationsArgs) -> (AppListMarketTranslationsResult) query;
 	app_list_my_affiliations : () -> (AppListMyAffiliationsResult) query;
+	app_list_my_blocking_leagues : () -> (AppListMyBlockingLeaguesResult) query;
 	app_list_my_bouts : () -> (AppListMyBoutsResult) query;
 	app_list_my_leagues : () -> (AppListMyLeaguesResult) query;
 	app_list_my_referrals : () -> (AppListMyReferralsResult) query;
@@ -135,6 +142,7 @@ service : {
 	app_cancel_friend_request : (AppCancelFriendRequestArgs) -> ();
 	app_claim_comeback_grant : () -> (AppClaimComebackGrantResult);
 	app_claim_worlds_podium_prize : (AppClaimWorldsPodiumPrizeArgs) -> (AppClaimWorldsPodiumPrizeResult);
+	app_delete_my_account : (AppDeleteMyAccountArgs) -> (AppDeleteMyAccountResult);
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_redeem_referral_code : (AppRedeemReferralCodeArgs) -> ();
 	app_reject_friend_request : (AppRejectFriendRequestArgs) -> ();
