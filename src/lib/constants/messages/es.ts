@@ -503,6 +503,8 @@ export const esMessages = {
 	'leagues.bout.action.accepting': 'Aceptando…',
 	'leagues.bout.action.kickoff': 'Empezar',
 	'leagues.bout.action.resolve': 'Resolver',
+	'leagues.bout.action.retract': 'Retirar',
+	'leagues.bout.action.retracting': 'Retirando…',
 	'leagues.bout.action.starting': 'Empezando…',
 	'leagues.bout.resolve.cancel': 'Cancelar',
 	'leagues.bout.resolve.cta': 'Resolver combate',

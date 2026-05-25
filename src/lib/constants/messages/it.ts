@@ -503,6 +503,8 @@ export const itMessages = {
 	'leagues.bout.action.accepting': 'Accetto…',
 	'leagues.bout.action.kickoff': 'Inizia',
 	'leagues.bout.action.resolve': 'Risolvi',
+	'leagues.bout.action.retract': 'Ritira',
+	'leagues.bout.action.retracting': 'Ritiro…',
 	'leagues.bout.action.starting': 'Inizio…',
 	'leagues.bout.resolve.cancel': 'Annulla',
 	'leagues.bout.resolve.cta': 'Risolvi scontro',

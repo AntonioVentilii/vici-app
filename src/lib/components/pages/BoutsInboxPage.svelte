@@ -6,11 +6,13 @@
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
 		acceptBout,
 		kickoffBout,
 		listMyBouts,
 		listMyLeagues,
+		retractBout,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -32,14 +34,20 @@
 
 	let bouts: BoutDoc[] = $state([]);
 	let memberships: LeagueWithRole[] = $state([]);
+	let selfPrincipal: string | undefined = $state();
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 
 	const load = async () => {
 		try {
-			const [boutList, mineList] = await Promise.all([listMyBouts(), listMyLeagues()]);
+			const [boutList, mineList, identity] = await Promise.all([
+				listMyBouts(),
+				listMyLeagues(),
+				safeGetIdentityOnce()
+			]);
 			bouts = boutList;
 			memberships = mineList;
+			selfPrincipal = identity.getPrincipal().toText();
 			loadState = 'ready';
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -131,6 +139,9 @@
 	const canResolveBout = (bout: BoutDoc): boolean =>
 		ownedSide(bout) !== undefined && bout.state === 'in_flight' && Date.now() >= bout.settleMs;
 
+	const canRetractBout = (bout: BoutDoc): boolean =>
+		bout.state === 'proposed' && selfPrincipal !== undefined && bout.proposer === selfPrincipal;
+
 	let actingBoutId = $state<string | null>(null);
 	let resolveBoutTarget = $state<BoutDoc | null>(null);
 	let resolveBoutOurSide = $state<string | null>(null);
@@ -178,6 +189,23 @@
 
 		resolveBoutTarget = bout;
 		resolveBoutOurSide = owned;
+	};
+
+	const handleRetractBout = async (bout: BoutDoc) => {
+		if (actingBoutId !== null) {
+			return;
+		}
+
+		actingBoutId = bout.id;
+
+		try {
+			await retractBout({ bout });
+			await load();
+		} catch (err) {
+			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		} finally {
+			actingBoutId = null;
+		}
 	};
 
 	const handleResolveDone = () => {
@@ -314,6 +342,18 @@
 										type="button"
 									>
 										{t({ locale: $localeStore, key: 'leagues.bout.action.resolve' })}
+									</button>
+								{/if}
+								{#if canRetractBout(bout)}
+									<button
+										class="bouts-inbox-action is-danger"
+										disabled={actingBoutId === bout.id}
+										onclick={() => handleRetractBout(bout)}
+										type="button"
+									>
+										{actingBoutId === bout.id
+											? t({ locale: $localeStore, key: 'leagues.bout.action.retracting' })
+											: t({ locale: $localeStore, key: 'leagues.bout.action.retract' })}
 									</button>
 								{/if}
 							</li>
@@ -542,6 +582,16 @@
 
 	.bouts-inbox-action.is-primary:hover:not(:disabled) {
 		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
+	}
+
+	.bouts-inbox-action.is-danger {
+		color: var(--no);
+		background: color-mix(in srgb, var(--no-wash, var(--no)) 12%, transparent);
+		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
+	}
+
+	.bouts-inbox-action.is-danger:hover:not(:disabled) {
+		background: color-mix(in srgb, var(--no-wash, var(--no)) 20%, transparent);
 	}
 
 	.bouts-inbox-action:disabled {

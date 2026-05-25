@@ -8,12 +8,14 @@
 	import ProposeBoutModal from '$lib/components/leagues/ProposeBoutModal.svelte';
 	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
 		acceptBout,
 		kickoffBout,
 		leaveLeague,
 		listLeagueBouts,
 		listMyLeagues,
+		retractBout,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -41,6 +43,7 @@
 	let myRole: LeagueMemberRole | undefined = $state();
 	let members: LeagueMemberDoc[] = $state([]);
 	let bouts: BoutDoc[] = $state([]);
+	let selfPrincipal: string | undefined = $state();
 	let loadState: 'loading' | 'ready' | 'not_member' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	let copied = $state(false);
@@ -49,11 +52,14 @@
 
 	const load = async () => {
 		try {
-			const [memberships, memberList, boutList] = await Promise.all([
+			const [memberships, memberList, boutList, identity] = await Promise.all([
 				listMyLeagues(),
 				functions.listLeagueMembers({ leagueId }),
-				listLeagueBouts({ leagueId })
+				listLeagueBouts({ leagueId }),
+				safeGetIdentityOnce()
 			]);
+
+			selfPrincipal = identity.getPrincipal().toText();
 
 			const mine: LeagueWithRole | undefined = memberships.find((m) => m.league.id === leagueId);
 
@@ -196,6 +202,26 @@
 		bout.state === 'in_flight' &&
 		(bout.sideA === leagueId || bout.sideB === leagueId) &&
 		Date.now() >= bout.settleMs;
+
+	const canRetractBout = (bout: BoutDoc): boolean =>
+		bout.state === 'proposed' && selfPrincipal !== undefined && bout.proposer === selfPrincipal;
+
+	const handleRetractBout = async (bout: BoutDoc) => {
+		if (actingBoutId !== null) {
+			return;
+		}
+
+		actingBoutId = bout.id;
+
+		try {
+			await retractBout({ bout });
+			await load();
+		} catch (err) {
+			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		} finally {
+			actingBoutId = null;
+		}
+	};
 
 	const handleAcceptBout = async (bout: BoutDoc) => {
 		if (actingBoutId !== null) {
@@ -416,6 +442,18 @@
 												type="button"
 											>
 												{t({ locale: $localeStore, key: 'leagues.bout.action.resolve' })}
+											</button>
+										{/if}
+										{#if canRetractBout(bout)}
+											<button
+												class="league-detail-bout-action is-danger"
+												disabled={actingBoutId === bout.id}
+												onclick={() => handleRetractBout(bout)}
+												type="button"
+											>
+												{actingBoutId === bout.id
+													? t({ locale: $localeStore, key: 'leagues.bout.action.retracting' })
+													: t({ locale: $localeStore, key: 'leagues.bout.action.retract' })}
 											</button>
 										{/if}
 									</li>
@@ -852,6 +890,16 @@
 
 	.league-detail-bout-action.is-primary:hover:not(:disabled) {
 		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
+	}
+
+	.league-detail-bout-action.is-danger {
+		color: var(--no);
+		background: color-mix(in srgb, var(--no-wash, var(--no)) 12%, transparent);
+		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
+	}
+
+	.league-detail-bout-action.is-danger:hover:not(:disabled) {
+		background: color-mix(in srgb, var(--no-wash, var(--no)) 20%, transparent);
 	}
 
 	.league-detail-bout-action:disabled {

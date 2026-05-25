@@ -508,6 +508,8 @@ export const deMessages = {
 	'leagues.bout.action.accepting': 'Nehme an…',
 	'leagues.bout.action.kickoff': 'Anpfiff',
 	'leagues.bout.action.resolve': 'Auswerten',
+	'leagues.bout.action.retract': 'Zurückziehen',
+	'leagues.bout.action.retracting': 'Ziehe zurück…',
 	'leagues.bout.action.starting': 'Starte…',
 	'leagues.bout.resolve.cancel': 'Abbrechen',
 	'leagues.bout.resolve.cta': 'Bout auswerten',

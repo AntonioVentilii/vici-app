@@ -432,6 +432,35 @@ export const kickoffBout = async ({ bout }: { bout: BoutDoc }): Promise<BoutDoc>
 	return next;
 };
 
+/**
+ * Retract a `proposed`-state bout. Only the original proposer can
+ * call this; the satellite assert hard-rejects anyone else and any
+ * bout past `proposed`.
+ */
+export const retractBout = async ({ bout }: { bout: BoutDoc }): Promise<void> => {
+	if (bout.state !== 'proposed') {
+		throw new Error('Only proposed bouts can be retracted.');
+	}
+
+	const existing = await getDoc<BoutDoc>({
+		collection: Collection.BOUTS,
+		key: bout.id
+	});
+
+	if (!existing) {
+		throw new Error('Bout no longer exists.');
+	}
+
+	await deleteDoc<BoutDoc>({
+		collection: Collection.BOUTS,
+		doc: {
+			key: bout.id,
+			data: existing.data,
+			updated_at: existing.updated_at
+		}
+	});
+};
+
 export const resolveBout = async ({
 	bout,
 	scoreA,

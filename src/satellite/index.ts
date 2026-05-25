@@ -20,7 +20,7 @@ import {
 	assertDeleteAffiliation,
 	assertSetAffiliation
 } from '$satellite/services/affiliation.services';
-import { assertSetBout } from '$satellite/services/bout.services';
+import { assertDeleteBout, assertSetBout } from '$satellite/services/bout.services';
 import {
 	listLeagueBoutsFn,
 	listLeagueMembersFn,
@@ -534,7 +534,11 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 	}
 });
 
-const assertDeleteDocCollections = [Collection.LEAGUE_MEMBERS, Collection.AFFILIATIONS] as const;
+const assertDeleteDocCollections = [
+	Collection.LEAGUE_MEMBERS,
+	Collection.AFFILIATIONS,
+	Collection.BOUTS
+] as const;
 
 type AssertDeleteDocCollection = (typeof assertDeleteDocCollections)[number];
 
@@ -543,7 +547,8 @@ export const assertDeleteDoc = defineAssert<AssertDeleteDoc>({
 	assert: (context) => {
 		const fn: Record<AssertDeleteDocCollection, (ctx: AssertDeleteDocContext) => void> = {
 			[Collection.LEAGUE_MEMBERS]: assertDeleteLeagueMember,
-			[Collection.AFFILIATIONS]: assertDeleteAffiliation
+			[Collection.AFFILIATIONS]: assertDeleteAffiliation,
+			[Collection.BOUTS]: assertDeleteBout
 		};
 
 		fn[context.data.collection]?.(context);

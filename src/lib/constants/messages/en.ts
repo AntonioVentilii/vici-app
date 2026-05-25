@@ -496,6 +496,8 @@ export const enMessages = {
 	'leagues.bout.action.accepting': 'Accepting…',
 	'leagues.bout.action.kickoff': 'Kick off',
 	'leagues.bout.action.resolve': 'Resolve',
+	'leagues.bout.action.retract': 'Retract',
+	'leagues.bout.action.retracting': 'Retracting…',
 	'leagues.bout.action.starting': 'Starting…',
 	'leagues.bout.resolve.cancel': 'Cancel',
 	'leagues.bout.resolve.cta': 'Resolve bout',

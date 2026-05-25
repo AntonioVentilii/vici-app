@@ -513,6 +513,8 @@ export const frMessages = {
 	'leagues.bout.action.accepting': 'Acceptation…',
 	'leagues.bout.action.kickoff': "Coup d'envoi",
 	'leagues.bout.action.resolve': 'Clore',
+	'leagues.bout.action.retract': 'Retirer',
+	'leagues.bout.action.retracting': 'Retrait…',
 	'leagues.bout.action.starting': 'Démarrage…',
 	'leagues.bout.resolve.cancel': 'Annuler',
 	'leagues.bout.resolve.cta': 'Clore le duel',

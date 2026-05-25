@@ -477,6 +477,8 @@ export const zhCnMessages = {
 	'leagues.bout.action.accepting': '接受中…',
 	'leagues.bout.action.kickoff': '开战',
 	'leagues.bout.action.resolve': '结算',
+	'leagues.bout.action.retract': '撤回',
+	'leagues.bout.action.retracting': '撤回中…',
 	'leagues.bout.action.starting': '开始中…',
 	'leagues.bout.resolve.cancel': '取消',
 	'leagues.bout.resolve.cta': '结算对战',

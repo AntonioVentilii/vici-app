@@ -502,6 +502,8 @@ export const ptMessages = {
 	'leagues.bout.action.accepting': 'Aceitando…',
 	'leagues.bout.action.kickoff': 'Iniciar',
 	'leagues.bout.action.resolve': 'Encerrar',
+	'leagues.bout.action.retract': 'Retirar',
+	'leagues.bout.action.retracting': 'Retirando…',
 	'leagues.bout.action.starting': 'Iniciando…',
 	'leagues.bout.resolve.cancel': 'Cancelar',
 	'leagues.bout.resolve.cta': 'Encerrar duelo',

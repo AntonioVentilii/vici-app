@@ -9,7 +9,7 @@ import {
 import type { LeagueDoc } from '$lib/types/league';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
-import type { AssertSetDocContext } from '@junobuild/functions';
+import type { AssertDeleteDocContext, AssertSetDocContext } from '@junobuild/functions';
 import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
 
 /**
@@ -242,5 +242,48 @@ export const assertSetBout = ({
 		if (hasScoreFields) {
 			throw new Error('bouts pre-resolved must not carry scoreA / scoreB / winner.');
 		}
+	}
+};
+
+/**
+ * Pre-write guard for `bouts` deletes — proposed-only retract path.
+ *
+ *  1. **Collection scope.** No-op for any non-bouts collection.
+ *  2. **Proposer binds caller.** Only the original proposer can
+ *     retract — neither opponent nor admin gets a delete path.
+ *  3. **Proposed state only.** Once `accepted`, the bout is part of
+ *     both leagues' shared history and becomes immutable (and so
+ *     undeletable). Anything past `proposed` must run the resolved
+ *     terminal transition instead.
+ */
+export const assertDeleteBout = ({
+	caller,
+	data: {
+		collection,
+		data: { current }
+	}
+}: AssertDeleteDocContext): void => {
+	if (collection !== Collection.BOUTS) {
+		return;
+	}
+
+	if (isNullish(current)) {
+		return;
+	}
+
+	const currentDoc = decodeDocData<BoutDoc>(current.data);
+
+	// 2. Proposer binds caller.
+	const callerText = Principal.fromUint8Array(caller).toText();
+
+	if (currentDoc.proposer !== callerText) {
+		throw new Error('bouts may only be retracted by the original proposer.');
+	}
+
+	// 3. Proposed state only.
+	if (currentDoc.state !== 'proposed') {
+		throw new Error(
+			`bouts in state="${currentDoc.state}" are immutable history — retract is only valid while state="proposed".`
+		);
 	}
 };
