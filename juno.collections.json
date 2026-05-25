@@ -12,5 +12,6 @@
 	"REFERRAL_CODES": "referral_codes",
 	"REFERRALS": "referrals",
 	"LEAGUES": "leagues",
-	"LEAGUE_MEMBERS": "league_members"
+	"LEAGUE_MEMBERS": "league_members",
+	"BOUTS": "bouts"
 }

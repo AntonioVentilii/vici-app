@@ -45,7 +45,14 @@ export const Collection = {
 	 * write directly; owner / admin can write rows for other principals (e.g. promote a member
 	 * to admin). Drift between key and embedded fields is rejected by the satellite assert.
 	 */
-	LEAGUE_MEMBERS: collections.LEAGUE_MEMBERS
+	LEAGUE_MEMBERS: collections.LEAGUE_MEMBERS,
+	/**
+	 * Bouts — V1.2's time-bound competitions. Two kinds: 'league' (leagueA vs leagueB) and
+	 * 'duel' (proposer principal vs challenger principal). Doc key is the bout id. State machine
+	 * `proposed → accepted → in_flight → resolved` enforced by the satellite assert; scores write
+	 * once at settle, winner derived from scores.
+	 */
+	BOUTS: collections.BOUTS
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

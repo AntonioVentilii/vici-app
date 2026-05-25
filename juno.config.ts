@@ -24,7 +24,8 @@ enum JunoDatastoreCollection {
 	REFERRAL_CODES = 'referral_codes',
 	REFERRALS = 'referrals',
 	LEAGUES = 'leagues',
-	LEAGUE_MEMBERS = 'league_members'
+	LEAGUE_MEMBERS = 'league_members',
+	BOUTS = 'bouts'
 }
 
 const delegation = {
@@ -148,6 +149,12 @@ export default defineConfig(({ mode }) => ({
 				},
 				{
 					collection: JunoDatastoreCollection.LEAGUE_MEMBERS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.BOUTS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'

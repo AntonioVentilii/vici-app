@@ -16,6 +16,7 @@ import {
 	RedeemReferralCodeArgsSchema
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
+import { assertSetBout } from '$satellite/services/bout.services';
 import {
 	listLeagueMembersFn,
 	listMyLeaguesFn,
@@ -417,7 +418,8 @@ const assertSetDocCollections = [
 	Collection.REFERRALS,
 	Collection.VXP_AWARDS,
 	Collection.LEAGUES,
-	Collection.LEAGUE_MEMBERS
+	Collection.LEAGUE_MEMBERS,
+	Collection.BOUTS
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -432,7 +434,8 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.REFERRALS]: assertSetReferral,
 			[Collection.VXP_AWARDS]: assertSetVxpAward,
 			[Collection.LEAGUES]: assertSetLeague,
-			[Collection.LEAGUE_MEMBERS]: assertSetLeagueMember
+			[Collection.LEAGUE_MEMBERS]: assertSetLeagueMember,
+			[Collection.BOUTS]: assertSetBout
 		};
 
 		fn[context.data.collection]?.(context);
