@@ -16,7 +16,11 @@ import {
 	RedeemReferralCodeArgsSchema
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
-import { listLeagueMembersFn, listMyLeaguesFn } from '$satellite/services/cohort.services';
+import {
+	listLeagueMembersFn,
+	listMyLeaguesFn,
+	lookupLeagueByInviteFn
+} from '$satellite/services/cohort.services';
 import {
 	syncRoleToEngineOnDelete,
 	syncRoleToEngineOnSet
@@ -75,10 +79,12 @@ import {
 import { onProfileSetForStreakAward } from '$satellite/services/vxp-streak-awards.services';
 import {
 	LeagueMemberWireSchema,
+	LeagueWireSchema,
 	LeagueWithRoleWireSchema,
 	MarketTranslationWireSchema,
 	ReferralWireSchema,
 	RelationWireSchema,
+	toWireLeague,
 	toWireLeagueMember,
 	toWireLeagueWithRole,
 	toWireMarketTranslation,
@@ -360,6 +366,24 @@ export const listLeagueMembers = defineQuery({
 	handler: ({ leagueId }) => ({
 		items: listLeagueMembersFn({ leagueId }).map(toWireLeagueMember)
 	})
+});
+
+// Join-by-code resolver. The FE join modal posts the 6-char code,
+// the satellite scans `leagues` for a match, and the FE then
+// derives the leagueId and writes the `league_members` row through
+// the standard set-doc path (which goes through `assertSetLeagueMember`).
+export const lookupLeagueByInvite = defineQuery({
+	args: j.strictObject({
+		inviteCode: j.string()
+	}),
+	result: j.strictObject({
+		league: j.optional(LeagueWireSchema)
+	}),
+	handler: ({ inviteCode }) => {
+		const league = lookupLeagueByInviteFn({ inviteCode });
+
+		return { league: league ? toWireLeague(league) : undefined };
+	}
 });
 
 // V1.2 comeback grant — one-shot +1000 VXP fired when a balance hits

@@ -462,6 +462,39 @@ const listSentFriendRequests = async (): Promise<
 	return AppListSentFriendRequestsResultSchema.parse(result);
 };
 
+const AppLookupLeagueByInviteArgsSchema = j.strictObject({ inviteCode: j.string() });
+const AppLookupLeagueByInviteResultSchema = j.strictObject({
+	league: j.optional(
+		j.strictObject({
+			id: j.string(),
+			name: j.string(),
+			description: j.optional(j.string()),
+			invite_code: j.string(),
+			owner: j.string(),
+			created_at_ms: j.number(),
+			accent_color: j.optional(j.string())
+		})
+	)
+});
+
+const lookupLeagueByInvite = async (
+	args: j.infer<typeof AppLookupLeagueByInviteArgsSchema>
+): Promise<j.infer<typeof AppLookupLeagueByInviteResultSchema>> => {
+	const parsedArgs = AppLookupLeagueByInviteArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppLookupLeagueByInviteArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_lookup_league_by_invite']>[0];
+
+	const { app_lookup_league_by_invite } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_lookup_league_by_invite(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppLookupLeagueByInviteResultSchema, value: idlResult });
+	return AppLookupLeagueByInviteResultSchema.parse(result);
+};
+
 const AppLookupReferralCodeArgsSchema = j.strictObject({ code: j.string() });
 const AppLookupReferralCodeResultSchema = j.strictObject({ owner: j.optional(j.string()) });
 
@@ -765,6 +798,7 @@ export const functions = {
 	listMyLeagues,
 	listMyReferrals,
 	listSentFriendRequests,
+	lookupLeagueByInvite,
 	lookupReferralCode,
 	searchProfiles,
 	acceptFriendRequest,

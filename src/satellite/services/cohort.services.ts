@@ -130,3 +130,44 @@ export const listLeagueMembersFn = ({ leagueId }: { leagueId: string }): LeagueM
 
 	return members.sort((a, b) => a.joinedAtMs - b.joinedAtMs);
 };
+
+/**
+ * Look up a league by its 6-char invite code — the read backing
+ * the join-by-code FE flow. Scans the LEAGUES collection (small —
+ * one row per league, bounded by user creation rate) and returns
+ * the first match.
+ *
+ * Returns `undefined` when no league carries the code. Callers
+ * should treat that as "invalid code" UX, not an error.
+ *
+ * Invite codes are write-once (per `assertSetLeague`), so the
+ * `leagueId → inviteCode` mapping is stable for the lifetime of
+ * the league. A future optimisation could maintain a reverse-index
+ * collection if league count grows past the cost of a scan; until
+ * then this is the canonical join-by-code resolver.
+ */
+export const lookupLeagueByInviteFn = ({
+	inviteCode
+}: {
+	inviteCode: string;
+}): LeagueDoc | undefined => {
+	const caller = msgCaller();
+
+	const { items } = listDocsStore({
+		collection: Collection.LEAGUES,
+		caller: caller.toUint8Array(),
+		params: {}
+	});
+
+	for (const [, item] of items) {
+		try {
+			const league = decodeDocData<LeagueDoc>(item.data);
+
+			if (league.inviteCode === inviteCode) {
+				return league;
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+};

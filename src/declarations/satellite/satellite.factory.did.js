@@ -406,6 +406,20 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppLookupLeagueByInviteArgs = IDL.Record({ invite_code: IDL.Text });
+	const AppLookupLeagueByInviteResult = IDL.Record({
+		league: IDL.Opt(
+			IDL.Record({
+				id: IDL.Text,
+				accent_color: IDL.Opt(IDL.Text),
+				owner: IDL.Text,
+				name: IDL.Text,
+				invite_code: IDL.Text,
+				description: IDL.Opt(IDL.Text),
+				created_at_ms: IDL.Float64
+			})
+		)
+	});
 	const AppLookupReferralCodeArgs = IDL.Record({ code: IDL.Text });
 	const AppLookupReferralCodeResult = IDL.Record({
 		owner: IDL.Opt(IDL.Text)
@@ -574,6 +588,11 @@ export const idlFactory = ({ IDL }) => {
 		app_list_my_leagues: IDL.Func([], [AppListMyLeaguesResult], ['query']),
 		app_list_my_referrals: IDL.Func([], [AppListMyReferralsResult], ['query']),
 		app_list_sent_friend_requests: IDL.Func([], [AppListSentFriendRequestsResult], ['query']),
+		app_lookup_league_by_invite: IDL.Func(
+			[AppLookupLeagueByInviteArgs],
+			[AppLookupLeagueByInviteResult],
+			['query']
+		),
 		app_lookup_referral_code: IDL.Func(
 			[AppLookupReferralCodeArgs],
 			[AppLookupReferralCodeResult],

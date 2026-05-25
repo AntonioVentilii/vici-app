@@ -283,6 +283,24 @@ export interface AppListSentFriendRequestsResult {
 		viewer_principal: [] | [string];
 	}>;
 }
+export interface AppLookupLeagueByInviteArgs {
+	invite_code: string;
+}
+export interface AppLookupLeagueByInviteResult {
+	league:
+		| []
+		| [
+				{
+					id: string;
+					accent_color: [] | [string];
+					owner: string;
+					name: string;
+					invite_code: string;
+					description: [] | [string];
+					created_at_ms: number;
+				}
+		  ];
+}
 export interface AppLookupReferralCodeArgs {
 	code: string;
 }
@@ -427,6 +445,10 @@ export interface _SERVICE {
 	app_list_my_leagues: ActorMethod<[], AppListMyLeaguesResult>;
 	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
 	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;
+	app_lookup_league_by_invite: ActorMethod<
+		[AppLookupLeagueByInviteArgs],
+		AppLookupLeagueByInviteResult
+	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
 	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
