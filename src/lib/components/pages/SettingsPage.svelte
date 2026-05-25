@@ -33,7 +33,7 @@
 		type AppLocale
 	} from '$lib/constants/locale.constants';
 	import { MARKET_TAGS } from '$lib/constants/market-tags.constants';
-	import { AppPath } from '$lib/constants/routes.constants';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { FLOW_SESSION_LENGTH_OPTIONS } from '$lib/constants/settings.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
@@ -403,17 +403,17 @@
 			<SetRow
 				icon={Info}
 				label={t({ locale: $localeStore, key: 'settings.help.resolution' })}
-				onclick={() => {}}
+				onclick={() => goto(resolve(`${PublicPath.Info}/how-resolution-works`))}
 			/>
 			<SetRow
 				icon={Search}
 				label={t({ locale: $localeStore, key: 'settings.help.faq' })}
-				onclick={() => {}}
+				onclick={() => goto(resolve(`${PublicPath.Info}/faq`))}
 			/>
 			<SetRow
 				icon={Share2}
 				label={t({ locale: $localeStore, key: 'settings.help.support' })}
-				onclick={() => {}}
+				onclick={() => goto(resolve(`${PublicPath.Info}/contact`))}
 			/>
 		</SettingsSection>
 
@@ -421,17 +421,17 @@
 			<SetRow
 				icon={Lock}
 				label={t({ locale: $localeStore, key: 'settings.legal.terms' })}
-				onclick={() => {}}
+				onclick={() => goto(resolve(`${PublicPath.Info}/terms`))}
 			/>
 			<SetRow
 				icon={Eye}
 				label={t({ locale: $localeStore, key: 'settings.legal.privacy' })}
-				onclick={() => {}}
+				onclick={() => goto(resolve(`${PublicPath.Info}/privacy`))}
 			/>
 			<SetRow
 				icon={CircleQuestionMark}
 				label={t({ locale: $localeStore, key: 'settings.legal.rules' })}
-				onclick={() => {}}
+				onclick={() => goto(resolve(`${PublicPath.Info}/resolution-rules`))}
 			/>
 		</SettingsSection>
 
