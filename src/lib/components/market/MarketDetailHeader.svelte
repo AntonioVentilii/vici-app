@@ -12,6 +12,7 @@
 	import { formatDate } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { getTimeRemaining } from '$lib/utils/market.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
 		market: Market;
@@ -31,7 +32,17 @@
 	<div class="detail-hero-top">
 		<div class="detail-chip-row">
 			{#each tags as tag (tag)}
-				<span class="detail-chip detail-chip-category">
+				<!-- V1.2 detail header tints the category chip with the
+				     category's brand color so the page reads as
+				     macro/crypto/politics/etc. at a glance. Mirrors the
+				     per-card treatment landed in 7e0edc7; both surfaces
+				     now share the same tagColor() source of truth. -->
+				<span
+					style:color={tagColor(tag)}
+					style:background-color="color-mix(in srgb, {tagColor(tag)} 12%, transparent)"
+					style:border-color="color-mix(in srgb, {tagColor(tag)} 28%, transparent)"
+					class="detail-chip detail-chip-category"
+				>
 					{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}
 				</span>
 			{/each}
@@ -129,7 +140,6 @@
 
 	.detail-chip-category {
 		padding: 0.35rem 0.65rem;
-		color: var(--laurel);
 		font-size: var(--t-12);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
