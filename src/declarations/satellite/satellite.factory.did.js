@@ -28,6 +28,22 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppClaimComebackGrantResult = IDL.Record({
+		block_index: IDL.Opt(IDL.Text),
+		error_message: IDL.Opt(IDL.Text),
+		paid_now: IDL.Bool,
+		previously_paid: IDL.Bool,
+		reason: IDL.Opt(
+			IDL.Variant({
+				already_claimed_failed: IDL.Null,
+				already_claimed_paid: IDL.Null,
+				not_engaged_yet: IDL.Null,
+				transfer_failed: IDL.Null,
+				already_claimed_pending: IDL.Null,
+				balance_not_zero: IDL.Null
+			})
+		)
+	});
 	const AppFollowUserArgs = IDL.Record({ target: IDL.Text });
 	const AppGetMarketMetadataArgs = IDL.Record({ series_id: IDL.Text });
 	const AppGetMarketMetadataResult = IDL.Record({
@@ -490,6 +506,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppCheckNicknameAvailabilityResult],
 			['query']
 		),
+		app_claim_comeback_grant: IDL.Func([], [AppClaimComebackGrantResult], []),
 		app_follow_user: IDL.Func([AppFollowUserArgs], [], []),
 		app_get_market_metadata: IDL.Func(
 			[AppGetMarketMetadataArgs],

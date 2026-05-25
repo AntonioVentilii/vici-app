@@ -30,6 +30,22 @@ export interface AppCheckNicknameAvailabilityResult {
 	available: boolean;
 	reason: [] | [{ taken: null } | { required: null } | { too_short: null }];
 }
+export interface AppClaimComebackGrantResult {
+	block_index: [] | [string];
+	error_message: [] | [string];
+	paid_now: boolean;
+	previously_paid: boolean;
+	reason:
+		| []
+		| [
+				| { already_claimed_failed: null }
+				| { already_claimed_paid: null }
+				| { not_engaged_yet: null }
+				| { transfer_failed: null }
+				| { already_claimed_pending: null }
+				| { balance_not_zero: null }
+		  ];
+}
 export interface AppFollowUserArgs {
 	target: string;
 }
@@ -363,6 +379,7 @@ export interface _SERVICE {
 		[AppCheckNicknameAvailabilityArgs],
 		AppCheckNicknameAvailabilityResult
 	>;
+	app_claim_comeback_grant: ActorMethod<[], AppClaimComebackGrantResult>;
 	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;
 	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
 	app_get_market_translation: ActorMethod<

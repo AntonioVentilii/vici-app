@@ -507,6 +507,33 @@ const cancelFriendRequest = async (
 	await app_cancel_friend_request(idlArgs);
 };
 
+const AppClaimComebackGrantResultSchema = j.strictObject({
+	paidNow: j.boolean(),
+	previouslyPaid: j.boolean(),
+	blockIndex: j.optional(j.string()),
+	reason: j.optional(
+		j.enum([
+			'already_claimed_paid',
+			'already_claimed_pending',
+			'already_claimed_failed',
+			'balance_not_zero',
+			'not_engaged_yet',
+			'transfer_failed'
+		])
+	),
+	errorMessage: j.optional(j.string())
+});
+
+const claimComebackGrant = async (): Promise<j.infer<typeof AppClaimComebackGrantResultSchema>> => {
+	const { app_claim_comeback_grant } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_claim_comeback_grant();
+
+	const result = schemaFromIdl({ schema: AppClaimComebackGrantResultSchema, value: idlResult });
+	return AppClaimComebackGrantResultSchema.parse(result);
+};
+
 const AppFollowUserArgsSchema = j.strictObject({ target: j.string() });
 
 const followUser = async (args: j.infer<typeof AppFollowUserArgsSchema>): Promise<void> => {
@@ -684,6 +711,7 @@ export const functions = {
 	searchProfiles,
 	acceptFriendRequest,
 	cancelFriendRequest,
+	claimComebackGrant,
 	followUser,
 	redeemReferralCode,
 	rejectFriendRequest,

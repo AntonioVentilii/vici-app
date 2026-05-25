@@ -61,6 +61,7 @@ import {
 } from '$satellite/services/relation.services';
 import { assertSetRole } from '$satellite/services/roles.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
+import { claimComebackGrantFn } from '$satellite/services/vxp-comeback.services';
 import {
 	onProfileSetForVxpOnboarding,
 	onTradeActivityForVxpOnboarding
@@ -324,6 +325,30 @@ export const listMyReferrals = defineQuery({
 export const redeemReferralCode = defineUpdate({
 	args: RedeemReferralCodeArgsSchema,
 	handler: redeemReferralCodeFn
+});
+
+// V1.2 comeback grant — one-shot +1000 VXP fired when a balance hits
+// zero on an engaged account. FE detects the zero-balance state and
+// calls this endpoint; server validates engagement + balance and
+// fires the transfer. Idempotency via the `vxp_awards` doc key.
+export const claimComebackGrant = defineUpdate({
+	result: j.strictObject({
+		paidNow: j.boolean(),
+		previouslyPaid: j.boolean(),
+		blockIndex: j.optional(j.string()),
+		reason: j.optional(
+			j.enum([
+				'already_claimed_paid',
+				'already_claimed_pending',
+				'already_claimed_failed',
+				'balance_not_zero',
+				'not_engaged_yet',
+				'transfer_failed'
+			])
+		),
+		errorMessage: j.optional(j.string())
+	}),
+	handler: claimComebackGrantFn
 });
 
 const assertSetDocCollections = [

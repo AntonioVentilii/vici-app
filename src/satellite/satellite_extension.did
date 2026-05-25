@@ -53,6 +53,8 @@ type AppAcceptFriendRequestArgs = record { relation_id : text };
 
 type AppCancelFriendRequestArgs = record { relation_id : text };
 
+type AppClaimComebackGrantResult = record { paid_now : bool; previously_paid : bool; block_index : opt text; reason : opt variant { already_claimed_paid; already_claimed_pending; already_claimed_failed; balance_not_zero; not_engaged_yet; transfer_failed }; error_message : opt text };
+
 type AppFollowUserArgs = record { target : text };
 
 type AppRedeemReferralCodeArgs = record { code : text };
@@ -88,6 +90,7 @@ service : {
 	app_search_profiles : (AppSearchProfilesArgs) -> (AppSearchProfilesResult) query;
 	app_accept_friend_request : (AppAcceptFriendRequestArgs) -> ();
 	app_cancel_friend_request : (AppCancelFriendRequestArgs) -> ();
+	app_claim_comeback_grant : () -> (AppClaimComebackGrantResult);
 	app_follow_user : (AppFollowUserArgs) -> ();
 	app_redeem_referral_code : (AppRedeemReferralCodeArgs) -> ();
 	app_reject_friend_request : (AppRejectFriendRequestArgs) -> ();
