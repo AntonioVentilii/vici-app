@@ -80,6 +80,11 @@ import {
 	sendFriendRequest as sendFriendRequestFn
 } from '$satellite/services/relation.services';
 import { assertSetRole } from '$satellite/services/roles.services';
+import {
+	onAffiliationSetForFeed,
+	onBoutSetForFeed,
+	onLeagueMemberSetForFeed
+} from '$satellite/services/social-feed-hooks.services';
 import { assertSetSocialFeedEntry } from '$satellite/services/social-feed.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimComebackGrantFn } from '$satellite/services/vxp-comeback.services';
@@ -549,7 +554,10 @@ const setDocCollections = [
 	Collection.ACTIVITIES,
 	Collection.PROFILES,
 	Collection.ROLES,
-	Collection.REFERRALS
+	Collection.REFERRALS,
+	Collection.LEAGUE_MEMBERS,
+	Collection.BOUTS,
+	Collection.AFFILIATIONS
 ] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
@@ -573,7 +581,22 @@ export const onSetDoc = defineHook<OnSetDoc>({
 			[Collection.PROFILES]: onProfileSetComposed,
 			[Collection.ACTIVITIES]: onTradeActivityForVxpOnboarding,
 			[Collection.ROLES]: syncRoleToEngineOnSet,
-			[Collection.REFERRALS]: onReferralSetForVxpPayout
+			[Collection.REFERRALS]: onReferralSetForVxpPayout,
+			[Collection.LEAGUE_MEMBERS]: (ctx) => {
+				onLeagueMemberSetForFeed(ctx);
+
+				return Promise.resolve();
+			},
+			[Collection.BOUTS]: (ctx) => {
+				onBoutSetForFeed(ctx);
+
+				return Promise.resolve();
+			},
+			[Collection.AFFILIATIONS]: (ctx) => {
+				onAffiliationSetForFeed(ctx);
+
+				return Promise.resolve();
+			}
 		};
 
 		await fn[context.data.collection]?.(context);
