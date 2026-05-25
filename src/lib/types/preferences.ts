@@ -15,4 +15,8 @@ export interface UserPreferences {
 	hapticsEnabled: boolean;
 	callsPublic: boolean;
 	flowTags: string[];
+	/** Market ids the user has hearted to revisit later. Per-device
+	 *  preference — no backend round-trip. Mirrors V1.2's
+	 *  `localStorage['vici.saved-markets']`. */
+	savedMarketIds: string[];
 }

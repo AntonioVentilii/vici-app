@@ -13,7 +13,8 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 	flowSessionLength: 10,
 	hapticsEnabled: true,
 	callsPublic: true,
-	flowTags: [...MARKET_TAGS]
+	flowTags: [...MARKET_TAGS],
+	savedMarketIds: []
 };
 
 const basePreferencesStore = initStorageStore<UserPreferences>({
@@ -44,7 +45,8 @@ const ensureShape = (current: UserPreferences | undefined): UserPreferences => {
 		...DEFAULT_PREFERENCES,
 		...current,
 		notify: { ...DEFAULT_PREFERENCES.notify, ...(current?.notify ?? {}) },
-		flowTags: inheritedTags
+		flowTags: inheritedTags,
+		savedMarketIds: Array.isArray(current?.savedMarketIds) ? current.savedMarketIds : []
 	};
 };
 
@@ -61,3 +63,25 @@ export const preferencesStore: StorageStore<UserPreferences> = {
 };
 
 export const flowSessionMaxBets = (prefs: UserPreferences): number => prefs.flowSessionLength;
+
+/**
+ * Add or remove a market id from the saved-markets list. Per-device only;
+ * no backend round-trip. Returns nothing — the store mutates in place.
+ */
+export const toggleSavedMarket = ({ marketId }: { marketId: string }): void => {
+	preferencesStore.update((current) => {
+		const ids = current.savedMarketIds;
+		const next = ids.includes(marketId) ? ids.filter((id) => id !== marketId) : [...ids, marketId];
+
+		return { ...current, savedMarketIds: next };
+	});
+};
+
+/** Pure helper: is this market id in the saved list? */
+export const isMarketSaved = ({
+	marketId,
+	prefs
+}: {
+	marketId: string;
+	prefs: UserPreferences;
+}): boolean => prefs.savedMarketIds.includes(marketId);

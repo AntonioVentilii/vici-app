@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Heart } from 'lucide-svelte/icons';
 	import ForkMarketModal from '$lib/components/challenge/ForkMarketModal.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import MarketCard from '$lib/components/market/MarketCard.svelte';
@@ -10,6 +11,7 @@
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import {
@@ -27,9 +29,13 @@
 	let searchTerm = $state('');
 	let activeTab = $state('Active');
 	let filters = $state<MarketSecondaryFilters>({ ...DEFAULT_SECONDARY_FILTERS });
+	let savedOnly = $state(false);
 
 	let forkModalOpen = $state(false);
 	let forkTarget = $state<Market | null>(null);
+
+	const savedSet = $derived(new Set($preferencesStore.savedMarketIds));
+	const savedCount = $derived(savedSet.size);
 
 	const handleChallenge = (market: Market) => {
 		forkTarget = market;
@@ -51,7 +57,7 @@
 		return t({ locale: $localeStore, key });
 	};
 
-	const filteredMarkets = $derived(
+	const baseFilteredMarkets = $derived(
 		filterAndRankMarkets({
 			markets: $markets,
 			searchTerm,
@@ -61,6 +67,10 @@
 			tagMappings: $marketTags,
 			metadataBySeries: $marketMetadata
 		})
+	);
+
+	const filteredMarkets = $derived(
+		savedOnly ? baseFilteredMarkets.filter((m) => savedSet.has(m.id)) : baseFilteredMarkets
 	);
 
 	// Editorial rail — only renders when at least one Open market is
@@ -136,8 +146,41 @@
 				tabs={tabs.map((tab) => ({ id: tab, label: tabLabel(tab) }))}
 			/>
 
-			<div class="mx-auto flex max-w-4xl items-baseline justify-between px-1">
-				<h2 class="eyebrow">{tabLabel(activeTab as (typeof tabs)[number])}</h2>
+			<!-- V1.2 Markets carries a heart-prefixed "Saved" filter chip
+			     alongside the category chips. We expose it as a toggle next
+			     to the list eyebrow so users can scope the list to their
+			     hearted markets without disturbing the other filters. The
+			     chip is hidden when the user hasn't saved any markets yet
+			     to avoid surfacing a control with nothing to filter. -->
+			<div class="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-1">
+				<div class="flex items-center gap-3">
+					<h2 class="eyebrow">{tabLabel(activeTab as (typeof tabs)[number])}</h2>
+					{#if savedCount > 0}
+						<button
+							class={[
+								'duration-state ease-vici inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold transition-colors',
+								savedOnly
+									? 'border-laurel/40 bg-laurel-glow text-laurel'
+									: 'border-border text-muted-foreground hover:border-laurel/40 hover:text-laurel'
+							]}
+							aria-pressed={savedOnly}
+							onclick={() => (savedOnly = !savedOnly)}
+							type="button"
+						>
+							<Heart
+								aria-hidden="true"
+								fill={savedOnly ? 'currentColor' : 'none'}
+								size={11}
+								strokeWidth={2.2}
+							/>
+							{t({
+								locale: $localeStore,
+								key: 'markets.tab.saved',
+								params: { count: savedCount }
+							})}
+						</button>
+					{/if}
+				</div>
 				<span class="num text-muted-foreground text-xs font-bold">{filteredMarkets.length}</span>
 			</div>
 
