@@ -403,3 +403,78 @@ export const fromWireReferral = (referral: ApiWireReferral): ReferralListItem =>
 	refereePayout: fromWireMilestone(referral.referee_payout),
 	referrerPayout: fromWireMilestone(referral.referrer_payout)
 });
+
+// ─── Leagues (Phase 10) ──────────────────────────────────────────────────
+// Wire schemas use snake_case per the juno codegen constraint on
+// `Vec<NestedStruct>` (see UserProfileWireSchema header). FE callers
+// hit `fromWireLeague` / `fromWireLeagueMember` to project back to
+// the camelCase domain types.
+
+export const LeagueWireSchema = j.strictObject({
+	id: j.string(),
+	name: j.string(),
+	description: j.string().optional(),
+	invite_code: j.string(),
+	owner: PrincipalTextSchema,
+	created_at_ms: j.number(),
+	accent_color: j.string().optional()
+});
+
+export type WireLeague = j.infer<typeof LeagueWireSchema>;
+
+export const LeagueWithRoleWireSchema = j.strictObject({
+	league: LeagueWireSchema,
+	role: j.enum(['owner', 'admin', 'member']),
+	joined_at_ms: j.number()
+});
+
+export type WireLeagueWithRole = j.infer<typeof LeagueWithRoleWireSchema>;
+
+export const LeagueMemberWireSchema = j.strictObject({
+	league_id: j.string(),
+	member: PrincipalTextSchema,
+	joined_at_ms: j.number(),
+	role: j.enum(['owner', 'admin', 'member'])
+});
+
+export type WireLeagueMember = j.infer<typeof LeagueMemberWireSchema>;
+
+export const toWireLeague = (league: {
+	id: string;
+	name: string;
+	description?: string;
+	inviteCode: string;
+	owner: string;
+	createdAtMs: number;
+	accentColor?: string;
+}): WireLeague => ({
+	id: league.id,
+	name: league.name,
+	description: league.description,
+	invite_code: league.inviteCode,
+	owner: league.owner,
+	created_at_ms: league.createdAtMs,
+	accent_color: league.accentColor
+});
+
+export const toWireLeagueWithRole = (entry: {
+	league: Parameters<typeof toWireLeague>[0];
+	role: 'owner' | 'admin' | 'member';
+	joinedAtMs: number;
+}): WireLeagueWithRole => ({
+	league: toWireLeague(entry.league),
+	role: entry.role,
+	joined_at_ms: entry.joinedAtMs
+});
+
+export const toWireLeagueMember = (member: {
+	leagueId: string;
+	member: string;
+	joinedAtMs: number;
+	role: 'owner' | 'admin' | 'member';
+}): WireLeagueMember => ({
+	league_id: member.leagueId,
+	member: member.member,
+	joined_at_ms: member.joinedAtMs,
+	role: member.role
+});

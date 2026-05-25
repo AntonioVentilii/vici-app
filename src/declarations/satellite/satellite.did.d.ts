@@ -210,6 +210,17 @@ export interface AppListLeaderboardResult {
 		accuracy: number;
 	}>;
 }
+export interface AppListLeagueMembersArgs {
+	league_id: string;
+}
+export interface AppListLeagueMembersResult {
+	items: Array<{
+		member: string;
+		league_id: string;
+		role: { member: null } | { admin: null } | { owner: null };
+		joined_at_ms: number;
+	}>;
+}
 export interface AppListMarketTranslationsArgs {
 	series_id: string;
 }
@@ -222,6 +233,21 @@ export interface AppListMarketTranslationsResult {
 		locale: string;
 		description: string;
 		outcomes: Array<{ id: string; title: string }>;
+	}>;
+}
+export interface AppListMyLeaguesResult {
+	items: Array<{
+		role: { member: null } | { admin: null } | { owner: null };
+		joined_at_ms: number;
+		league: {
+			id: string;
+			accent_color: [] | [string];
+			owner: string;
+			name: string;
+			invite_code: string;
+			description: [] | [string];
+			created_at_ms: number;
+		};
 	}>;
 }
 export interface AppListMyReferralsResult {
@@ -393,10 +419,12 @@ export interface _SERVICE {
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
 	app_list_friends: ActorMethod<[], AppListFriendsResult>;
 	app_list_leaderboard: ActorMethod<[], AppListLeaderboardResult>;
+	app_list_league_members: ActorMethod<[AppListLeagueMembersArgs], AppListLeagueMembersResult>;
 	app_list_market_translations: ActorMethod<
 		[AppListMarketTranslationsArgs],
 		AppListMarketTranslationsResult
 	>;
+	app_list_my_leagues: ActorMethod<[], AppListMyLeaguesResult>;
 	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
 	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;

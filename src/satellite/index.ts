@@ -16,6 +16,7 @@ import {
 	RedeemReferralCodeArgsSchema
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
+import { listLeagueMembersFn, listMyLeaguesFn } from '$satellite/services/cohort.services';
 import {
 	syncRoleToEngineOnDelete,
 	syncRoleToEngineOnSet
@@ -73,9 +74,13 @@ import {
 } from '$satellite/services/vxp-onboarding.services';
 import { onProfileSetForStreakAward } from '$satellite/services/vxp-streak-awards.services';
 import {
+	LeagueMemberWireSchema,
+	LeagueWithRoleWireSchema,
 	MarketTranslationWireSchema,
 	ReferralWireSchema,
 	RelationWireSchema,
+	toWireLeagueMember,
+	toWireLeagueWithRole,
 	toWireMarketTranslation,
 	toWireProfile,
 	toWireReferral,
@@ -332,6 +337,29 @@ export const listMyReferrals = defineQuery({
 export const redeemReferralCode = defineUpdate({
 	args: RedeemReferralCodeArgsSchema,
 	handler: redeemReferralCodeFn
+});
+
+// ─── Social cohorts (Phase 10) ───────────────────────────────────────────
+
+export const listMyLeagues = defineQuery({
+	result: j.strictObject({
+		items: j.array(LeagueWithRoleWireSchema)
+	}),
+	handler: () => ({
+		items: listMyLeaguesFn().map(toWireLeagueWithRole)
+	})
+});
+
+export const listLeagueMembers = defineQuery({
+	args: j.strictObject({
+		leagueId: j.string()
+	}),
+	result: j.strictObject({
+		items: j.array(LeagueMemberWireSchema)
+	}),
+	handler: ({ leagueId }) => ({
+		items: listLeagueMembersFn({ leagueId }).map(toWireLeagueMember)
+	})
 });
 
 // V1.2 comeback grant — one-shot +1000 VXP fired when a balance hits

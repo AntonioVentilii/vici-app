@@ -295,6 +295,21 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListLeagueMembersArgs = IDL.Record({ league_id: IDL.Text });
+	const AppListLeagueMembersResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				member: IDL.Text,
+				league_id: IDL.Text,
+				role: IDL.Variant({
+					member: IDL.Null,
+					admin: IDL.Null,
+					owner: IDL.Null
+				}),
+				joined_at_ms: IDL.Float64
+			})
+		)
+	});
 	const AppListMarketTranslationsArgs = IDL.Record({ series_id: IDL.Text });
 	const AppListMarketTranslationsResult = IDL.Record({
 		items: IDL.Vec(
@@ -306,6 +321,27 @@ export const idlFactory = ({ IDL }) => {
 				locale: IDL.Text,
 				description: IDL.Text,
 				outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+			})
+		)
+	});
+	const AppListMyLeaguesResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				role: IDL.Variant({
+					member: IDL.Null,
+					admin: IDL.Null,
+					owner: IDL.Null
+				}),
+				joined_at_ms: IDL.Float64,
+				league: IDL.Record({
+					id: IDL.Text,
+					accent_color: IDL.Opt(IDL.Text),
+					owner: IDL.Text,
+					name: IDL.Text,
+					invite_code: IDL.Text,
+					description: IDL.Opt(IDL.Text),
+					created_at_ms: IDL.Float64
+				})
 			})
 		)
 	});
@@ -525,11 +561,17 @@ export const idlFactory = ({ IDL }) => {
 		app_list_friend_requests: IDL.Func([], [AppListFriendRequestsResult], ['query']),
 		app_list_friends: IDL.Func([], [AppListFriendsResult], ['query']),
 		app_list_leaderboard: IDL.Func([], [AppListLeaderboardResult], ['query']),
+		app_list_league_members: IDL.Func(
+			[AppListLeagueMembersArgs],
+			[AppListLeagueMembersResult],
+			['query']
+		),
 		app_list_market_translations: IDL.Func(
 			[AppListMarketTranslationsArgs],
 			[AppListMarketTranslationsResult],
 			['query']
 		),
+		app_list_my_leagues: IDL.Func([], [AppListMyLeaguesResult], ['query']),
 		app_list_my_referrals: IDL.Func([], [AppListMyReferralsResult], ['query']),
 		app_list_sent_friend_requests: IDL.Func([], [AppListSentFriendRequestsResult], ['query']),
 		app_lookup_referral_code: IDL.Func(
