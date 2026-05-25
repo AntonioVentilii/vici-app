@@ -1058,46 +1058,131 @@ const renderCulture = ({ rng, p, state, uid }: RenderArgs): string => {
 	return s;
 };
 
-// ---- WC — tentpole pitch + stadium stands ---------------------
-// First-pass body: editorial stadium background. Follow-up commits
-// will port V1.2's faceted figure system, background variants
-// (flag diagonals, perspective, spotlight, bunting, TV, propose),
-// and emotion tags. Renders into the wider 280×100 viewBox handled
-// by `renderFlowArt`.
+// ---- WC — tentpole pitch + editorial backdrops ---------------
+// Renders one of five backdrops per seed (stands, flag diagonal,
+// flag horizontal, flag vertical, stadium perspective) so each
+// WC-tagged market gets a distinct visual identity even before
+// the figure system lands. Backdrops draw into the 280×100 viewBox
+// handled by `renderFlowArt`.
+//
+// Flag trios mirror iconic WC nations (Brazil green-yellow-blue,
+// France blue-white-red, Argentina sky-white-sky, Germany
+// black-red-gold, etc.). Selection is deterministic per seed but
+// independent of the backdrop variant — the same seed always
+// renders the same trio + variant pair.
+//
+// Follow-up commits will port V1.2's faceted figure system,
+// remaining backdrops (spotlight, bunting, TV, propose), and
+// emotion tags.
 const renderWC = ({ rng, p, state }: RenderArgs): string => {
+	const bgStands = (): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+
+		// Six receding tiers fading out toward the back row.
+		for (let i = 0; i < 6; i++) {
+			m += `<rect x="-4" y="${10 + i * 6}" width="290" height="3" fill="${p.base}" opacity="${(0.55 - i * 0.05).toFixed(2)}"/>`;
+		}
+
+		// Tiny crowd-dot grid in the stands.
+		for (let r = 0; r < 5; r++) {
+			for (let c = 0; c < 28; c++) {
+				m += `<circle cx="${4 + c * 10}" cy="${10.5 + r * 6}" r="0.6" fill="${p.dim}" opacity="${(0.35 + (r % 2) * 0.18).toFixed(2)}"/>`;
+			}
+		}
+
+		// Pitch field — lower band, halfway line, jittered centre circle,
+		// right-side penalty arc fragment.
+		m += `<rect x="0" y="46" width="280" height="54" fill="${p.ink}" opacity="0.30"/>`;
+		m += `<line x1="0" y1="74" x2="280" y2="74" stroke="${p.fg}" stroke-width="0.4" opacity="0.30"/>`;
+
+		const cx = rng.range(120, 160);
+		m += `<circle cx="${cx.toFixed(1)}" cy="74" r="9" fill="none" stroke="${p.fg}" stroke-width="0.4" opacity="0.35"/>`;
+		m += `<circle cx="${cx.toFixed(1)}" cy="74" r="0.8" fill="${p.fg}" opacity="0.55"/>`;
+		m += `<path d="M 240 60 Q 252 74 240 88" fill="none" stroke="${p.fg}" stroke-width="0.4" opacity="0.30"/>`;
+
+		return m;
+	};
+
+	const bgFlagDiag = ({ c1, c2, c3 }: { c1: string; c2: string; c3: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.base}"/>`;
+		m += `<polygon points="-20,120 90,0 120,0 0,120" fill="${c1}" opacity="0.78"/>`;
+		m += `<polygon points="90,0 120,0 30,120 0,120" fill="${c2}" opacity="0.88"/>`;
+		m += `<polygon points="120,0 280,0 280,40 60,40" fill="${c3}" opacity="0.18"/>`;
+
+		return m;
+	};
+
+	const bgFlagHoriz = ({ c1, c2, c3 }: { c1: string; c2: string; c3: string }): string => {
+		let m = `<rect x="0" y="0" width="280" height="33" fill="${c1}" opacity="0.85"/>`;
+		m += `<rect x="0" y="33" width="280" height="34" fill="${c2}" opacity="0.95"/>`;
+		m += `<rect x="0" y="67" width="280" height="33" fill="${c3}" opacity="0.85"/>`;
+
+		return m;
+	};
+
+	const bgFlagVert = ({ c1, c2, c3 }: { c1: string; c2: string; c3: string }): string => {
+		let m = `<rect x="0" y="0" width="93.3" height="100" fill="${c1}" opacity="0.9"/>`;
+		m += `<rect x="93.3" y="0" width="93.4" height="100" fill="${c2}" opacity="0.9"/>`;
+		m += `<rect x="186.7" y="0" width="93.3" height="100" fill="${c3}" opacity="0.9"/>`;
+
+		return m;
+	};
+
+	const bgPerspective = ({ color }: { color: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<polygon points="0,100 280,100 200,40 80,40" fill="${p.base}" opacity="0.65"/>`;
+
+		// Eight floor lines converging toward the back, then four
+		// receding crossbars to anchor depth.
+		for (let i = 0; i < 8; i++) {
+			const t = i / 7;
+			const x1 = t * 280;
+			const x2 = 80 + t * 120;
+			m += `<line x1="${x1.toFixed(1)}" y1="100" x2="${x2.toFixed(1)}" y2="40" stroke="${color}" stroke-width="0.4" opacity="0.35"/>`;
+		}
+
+		for (let i = 0; i < 4; i++) {
+			const y = 50 + i * 12;
+			const xL = 100 - (y - 40) * 0.2;
+			const xR = 180 + (y - 40) * 0.2;
+			m += `<line x1="${xL}" y1="${y}" x2="${xR}" y2="${y}" stroke="${color}" stroke-width="0.3" opacity="0.30"/>`;
+		}
+
+		return m;
+	};
+
+	// Iconic WC nation flag trios. Selection is per-seed; the visible
+	// trio is decoupled from the chosen backdrop variant so the same
+	// flag can show up under diag / horiz / vert layouts.
+	const FLAGS: ReadonlyArray<{ c1: string; c2: string; c3: string }> = [
+		{ c1: '#FFD800', c2: '#009C3B', c3: '#002776' }, // BR — gold/green/blue
+		{ c1: '#0055A4', c2: '#FFFFFF', c3: '#EF4135' }, // FR — bleu/blanc/rouge
+		{ c1: '#75AADB', c2: '#FFFFFF', c3: '#75AADB' }, // AR — celeste/white
+		{ c1: '#000000', c2: '#DD0000', c3: '#FFCE00' }, // DE — schwarz/rot/gold
+		{ c1: '#C8102E', c2: '#FFD800', c3: '#C8102E' }, // ES — rojigualda
+		{ c1: '#008C45', c2: '#F4F5F0', c3: '#CD212A' }, // IT — verde/bianco/rosso
+		{ c1: '#C8102E', c2: '#F2ECDC', c3: '#0A3161' } // US — red/cream/navy
+	];
+
+	const flag = rng.pick(FLAGS);
+	const variant = rng.int(0, 4);
+
 	let s = '';
 
-	// Pitch base — full-bleed green.
-	s += `<rect width="280" height="100" fill="${p.bg}"/>`;
-
-	// Stadium tiers along the upper half — six receding bands, fading
-	// out per row.
-	for (let i = 0; i < 6; i++) {
-		s += `<rect x="-4" y="${10 + i * 6}" width="290" height="3" fill="${p.base}" opacity="${(0.55 - i * 0.05).toFixed(2)}"/>`;
+	if (variant === 0) {
+		s += bgStands();
+	} else if (variant === 1) {
+		s += bgFlagDiag(flag);
+	} else if (variant === 2) {
+		s += bgFlagHoriz(flag);
+	} else if (variant === 3) {
+		s += bgFlagVert(flag);
+	} else {
+		s += bgPerspective({ color: p.accent });
 	}
-
-	// Tiny crowd-dot grid in the stands.
-	for (let r = 0; r < 5; r++) {
-		for (let c = 0; c < 28; c++) {
-			s += `<circle cx="${4 + c * 10}" cy="${10.5 + r * 6}" r="0.6" fill="${p.dim}" opacity="${(0.35 + (r % 2) * 0.18).toFixed(2)}"/>`;
-		}
-	}
-
-	// Pitch field — lower band.
-	s += `<rect x="0" y="46" width="280" height="54" fill="${p.ink}" opacity="0.30"/>`;
-	// Halfway line.
-	s += `<line x1="0" y1="74" x2="280" y2="74" stroke="${p.fg}" stroke-width="0.4" opacity="0.30"/>`;
-
-	// Centre circle on the halfway line, jittered horizontally per seed.
-	const cx = rng.range(120, 160);
-	s += `<circle cx="${cx.toFixed(1)}" cy="74" r="9" fill="none" stroke="${p.fg}" stroke-width="0.4" opacity="0.35"/>`;
-	s += `<circle cx="${cx.toFixed(1)}" cy="74" r="0.8" fill="${p.fg}" opacity="0.55"/>`;
-
-	// Penalty arc fragment on the right — establishes the chalk-line
-	// architecture without committing to a specific match angle.
-	s += `<path d="M 240 60 Q 252 74 240 88" fill="none" stroke="${p.fg}" stroke-width="0.4" opacity="0.30"/>`;
 
 	// State accent: won → gold spotlight wash; lost → desaturated veil.
+	// Painted last so it tints whichever backdrop fired.
 	if (state === 'won') {
 		s += `<rect width="280" height="100" fill="${p.accent}" opacity="0.08"/>`;
 	} else if (state === 'lost') {
