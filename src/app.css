@@ -1,17 +1,44 @@
 @import 'tailwindcss';
 
-/* TODO(fonts): self-host these. The Google Fonts CDN matches the design
- * prototype exactly and keeps the visual language honest in the meantime,
- * but the engineering target is the same self-hosted pattern we already
- * use for JetBrains Mono below — drop the woff2 files in `static/fonts/`
- * and replace this @import with `@font-face` rules. Tracked in PR #138
- * "remodel → V1.2" so the move can happen as a clean follow-up. */
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Hanken+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap');
+/* ─── Self-hosted fonts ────────────────────────────────────────────
+ * All three families are OFL-licensed (same as the prototype). Files
+ * live under `static/fonts/` and are served at `/fonts/*`. Hanken
+ * Grotesk is a variable font — a single woff2 covers all four
+ * weights via `font-weight: 400 700`. Latin subset covers en / it /
+ * es / de / fr / pt; CJK ranges fall back to the system stack in
+ * `--font-display` / `--font-serif`, identical to the Google Fonts
+ * CDN behaviour.
+ */
+
+@font-face {
+	font-family: 'Hanken Grotesk';
+	font-style: normal;
+	font-weight: 400 700;
+	font-display: swap;
+	src: url('/fonts/hanken-grotesk-variable-latin.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Instrument Serif';
+	font-style: normal;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/instrument-serif-regular-latin.woff2') format('woff2');
+}
+
+@font-face {
+	font-family: 'Instrument Serif';
+	font-style: italic;
+	font-weight: 400;
+	font-display: swap;
+	src: url('/fonts/instrument-serif-italic-latin.woff2') format('woff2');
+}
 
 @font-face {
 	font-family: 'JetBrains Mono';
 	font-style: normal;
 	font-weight: 400;
+	font-display: swap;
 	src: url('/fonts/jetbrainsmono-regular.woff2') format('woff2');
 }
 
@@ -19,6 +46,7 @@
 	font-family: 'JetBrains Mono';
 	font-style: normal;
 	font-weight: 800;
+	font-display: swap;
 	src: url('/fonts/jetbrainsmono-bold.woff2') format('woff2');
 }
 
