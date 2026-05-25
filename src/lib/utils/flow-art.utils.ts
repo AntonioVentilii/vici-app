@@ -1120,6 +1120,65 @@ const WC_EMOTIONS: ReadonlyArray<WCEmotion> = [
 	'playful'
 ] as const;
 
+// Emotion-tag pill colors. Paired with an explicit uppercase label
+// in `wcCaptions` so color is never the only signal — keeps the
+// chip readable for users who can't distinguish e.g. JOY's teal
+// from PLAYFUL's gold by hue alone.
+const WC_EMOTION_COLOR: Record<WCEmotion, string> = {
+	joy: '#6FE0B6',
+	focus: '#7EB6FF',
+	anticipation: '#E2B842',
+	dread: '#FF8A4C',
+	defeat: '#FF6B6B',
+	playful: '#FFD06A'
+};
+
+// Editorial foreign-word roster shown top-right on figure-bearing
+// variants. Picked to evoke WC vocabulary without committing to a
+// single language. These are plain ASCII strings inlined into SVG
+// `<text>` — no escaping required.
+const WC_WORDS: readonly string[] = [
+	'GOL',
+	'GOLAZO',
+	'PENALTI',
+	'DERBY',
+	'MAESTRO',
+	'COPA',
+	'DUELO',
+	'CLAVE',
+	'FINAL',
+	'FIASCO'
+] as const;
+
+// Editorial caption layer — foreign word top-right + emotion-color
+// pill (with explicit uppercase label) bottom-right. Only emitted
+// on figure-bearing variants; the layout is what makes the WC card
+// read as an editorial spread rather than just an illustrated
+// thumbnail.
+const wcCaptions = ({
+	word,
+	emotion,
+	fg
+}: {
+	word: string;
+	emotion: WCEmotion;
+	fg: string;
+}): string => {
+	const ec = WC_EMOTION_COLOR[emotion];
+	const label = emotion.toUpperCase();
+	const tagX = 215;
+	const tagY = 86;
+	const tagW = 60;
+	const tagH = 10;
+
+	let m = '';
+	m += `<text x="270" y="14" text-anchor="end" font-family="ui-monospace,monospace" font-size="8" font-weight="700" letter-spacing="0.10em" fill="${fg}" opacity="0.85">${word}</text>`;
+	m += `<rect x="${tagX}" y="${tagY}" width="${tagW}" height="${tagH}" rx="2" fill="${ec}" opacity="0.92"/>`;
+	m += `<text x="${tagX + tagW / 2}" y="${tagY + 7.2}" text-anchor="middle" font-family="ui-monospace,monospace" font-size="6.5" font-weight="800" letter-spacing="0.16em" fill="#0E0D0B">${label}</text>`;
+
+	return m;
+};
+
 // Cap brim + cap-band reference colors used inside `wcFace` so the
 // hair-style="cap" branch reads naturally.
 const WC_CAP_DARK = '#2A211A';
@@ -1267,14 +1326,20 @@ const wcFace = ({
 // deterministic per seed — the same market always renders the
 // same trio + variant + figure pair.
 //
+// Figure-bearing variants also layer an editorial caption pair:
+// a foreign word (`WC_WORDS`) top-right + an emotion-color pill
+// (with explicit uppercase label) bottom-right. The emotion roll
+// is shared between the figure's expression and the pill so the
+// face and the chip agree.
+//
 // `bgSpotlight` and `bgBunting` carry CSS class hooks
 // (`wc-spot wc-spot-left/right` and `wc-cnf wc-cnf-${i}`) plus the
 // figure layer wraps in `<g class="wc-figure">`. Classes are inert
 // until the keyframes commit lands.
 //
 // Follow-up commits will add CSS animation keyframes for
-// `wc-figure` / `wc-spot` / `wc-cnf-*`, emotion-tag overlays, and
-// the editorial focal props (trophy, golden boot, red card).
+// `wc-figure` / `wc-spot` / `wc-cnf-*` and the editorial focal
+// props (trophy, golden boot, red card).
 const renderWC = ({ rng, p, state }: RenderArgs): string => {
 	const bgStands = (): string => {
 		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
@@ -1469,12 +1534,21 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 
 	const flag = rng.pick(FLAGS);
 
-	// Figure spawner — keeps per-seed picks consistent across variants
-	// (each figure-bearing variant pulls one bust portrait with the
-	// same skin / hair / emotion roll). cx and cy are tuned per
-	// backdrop so the figure avoids the backdrop's structural
-	// architecture (perspective vanishing point, halfway line, etc.).
-	const makeFigure = ({ cx, cy }: { cx: number; cy: number }): string =>
+	// Figure spawner — keeps per-seed picks consistent across variants.
+	// Emotion is passed in (not picked here) so the caller can reuse it
+	// for the caption pill; everything else (skin / hair / hair-style)
+	// is rolled fresh. cx and cy are tuned per backdrop so the figure
+	// avoids the backdrop's structural architecture (perspective
+	// vanishing point, halfway line, etc.).
+	const makeFigure = ({
+		cx,
+		cy,
+		emotion
+	}: {
+		cx: number;
+		cy: number;
+		emotion: WCEmotion;
+	}): string =>
 		wcFace({
 			cx,
 			cy,
@@ -1483,7 +1557,7 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 			hairStyle: rng.pick(WC_HAIR_STYLES),
 			shirt: flag.shirt,
 			stripe: flag.stripe,
-			emotion: rng.pick(WC_EMOTIONS)
+			emotion
 		});
 
 	const variant = rng.int(0, 13);
@@ -1502,26 +1576,34 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		s += bgPerspective({ color: p.accent });
 	} else if (variant === 5) {
 		// Figure on flag-vert — anchored on the right stripe.
+		const emotion = rng.pick(WC_EMOTIONS);
 		s += bgFlagVert(flag);
-		s += makeFigure({ cx: 210, cy: 38 });
+		s += makeFigure({ cx: 210, cy: 38, emotion });
+		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
 	} else if (variant === 6) {
 		// Figure on flag-diag — the dark c1 / c2 polygons stop near
 		// x≈120, so anchoring the figure at cx=210 keeps it cleanly
 		// inside the lighter c3 region in the top-right.
+		const emotion = rng.pick(WC_EMOTIONS);
 		s += bgFlagDiag(flag);
-		s += makeFigure({ cx: 210, cy: 32 });
+		s += makeFigure({ cx: 210, cy: 32, emotion });
+		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
 	} else if (variant === 7) {
 		// Figure on stands — pitch closeup with the portrait centred
 		// over the field; the body extends down into the pitch band
 		// while the head sits above the halfway line.
+		const emotion = rng.pick(WC_EMOTIONS);
 		s += bgStands();
-		s += makeFigure({ cx: 200, cy: 36 });
+		s += makeFigure({ cx: 200, cy: 36, emotion });
+		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
 	} else if (variant === 8) {
 		// Figure on perspective — sits the head just above the
 		// vanishing band (y=40) and lets the body settle into the
 		// perspective floor for a "running toward the camera" beat.
+		const emotion = rng.pick(WC_EMOTIONS);
 		s += bgPerspective({ color: p.accent });
-		s += makeFigure({ cx: 140, cy: 42 });
+		s += makeFigure({ cx: 140, cy: 42, emotion });
+		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
 	} else if (variant === 9) {
 		s += bgCircle({ color: p.accent });
 	} else if (variant === 10) {
