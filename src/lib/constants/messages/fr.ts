@@ -1235,5 +1235,46 @@ export const frMessages = {
 	'profile.dashboard.nickname_save_failed_title': 'Impossible d’enregistrer le pseudonyme',
 	'profile.dashboard.nickname_save_failed': 'Réessayez dans un instant.',
 	'profile.dashboard.nickname_taken_title': 'Pseudonyme déjà pris',
-	'profile.dashboard.nickname_taken': '@{nickname} est déjà pris. Choisissez-en un autre.'
+	'profile.dashboard.nickname_taken': '@{nickname} est déjà pris. Choisissez-en un autre.',
+	'onboarding.eyebrow.referral': 'Code de parrainage',
+	'onboarding.handoff.referral_failed_title': 'Code de parrainage non appliqué',
+	'onboarding.handoff.referral_failed':
+		'Le code que vous avez saisi n’a pas pu être utilisé : {reason}',
+	'onboarding.handoff.referral_ok_title': 'Parrainage appliqué',
+	'onboarding.handoff.referral_ok': 'Vous et votre parrain recevez chacun {amount} VXP.',
+	'onboarding.referral.checking': 'Recherche du code…',
+	'onboarding.referral.hint':
+		'Optionnel. Vous gagnez tous deux {amount} VXP lors de l’utilisation.',
+	'onboarding.referral.invalid': 'Code non reconnu.',
+	'onboarding.referral.placeholder': 'ABC12345',
+	'onboarding.referral.self': 'C’est votre propre code.',
+	'onboarding.referral.valid': 'Parrainé par @{nickname}',
+	'onboarding.referral.valid_unknown': 'Le code semble valide.',
+	'profile.dashboard.referrals.copy': 'Copier',
+	'profile.dashboard.referrals.code_label': 'Code de parrainage',
+	'profile.dashboard.referrals.code_pending':
+		'Enregistrez à nouveau votre profil pour générer votre code. Un simple tap suffit.',
+	'profile.dashboard.referrals.code_pending_busy': 'Génération…',
+	'profile.dashboard.referrals.code_pending_cta': 'Générer le code',
+	'profile.dashboard.referrals.code_pending_failed': 'Impossible de générer votre code. Réessayez.',
+	'profile.dashboard.referrals.counter': '{paid} amis sur {max} gagnent',
+	'profile.dashboard.referrals.counter_capped':
+		'{paid} sur {max} payés · {extra} de plus (surveillés)',
+	'profile.dashboard.referrals.empty_sub':
+		'Partagez votre code avec un ami. Vous gagnez tous deux {amount} VXP à son inscription.',
+	'profile.dashboard.referrals.empty_title': 'Aucun parrainage pour l’instant',
+	'profile.dashboard.referrals.list_title': 'Amis parrainés',
+	'profile.dashboard.referrals.load_failed': 'Impossible de charger les parrainages.',
+	'profile.dashboard.referrals.row_owed': 'En file',
+	'profile.dashboard.referrals.row_paid': 'Gagné',
+	'profile.dashboard.referrals.row_pending': 'En attente',
+	'profile.dashboard.referrals.row_processing': 'Paiement…',
+	'profile.dashboard.referrals.row_uncounted': 'Au-delà du plafond · surveillé',
+	'profile.dashboard.referrals.share': 'Partager',
+	'profile.dashboard.referrals.share_text':
+		'Rejoignez VICI avec mon code {code} — on reçoit tous deux {amount} VXP.',
+	'profile.dashboard.referrals.share_title': 'Rejoignez-moi sur VICI',
+	'profile.dashboard.referrals.tagline':
+		'Vous et un ami gagnez chacun {amount} VXP. Vous pouvez en inviter autant que vous voulez, mais seuls les {max} premiers paient.',
+	'profile.dashboard.referrals.title': 'Parrainages'
 } as const;

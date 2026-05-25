@@ -3,6 +3,8 @@ import { RelationCategory, RelationState } from '$lib/enums/relation';
 import { UserRole } from '$lib/enums/user';
 import type { MarketTranslation } from '$lib/types/market-translation';
 import type { UserProfile } from '$lib/types/profile';
+import type { ReferralListItem } from '$lib/types/referral';
+import type { VxpMilestoneState } from '$lib/types/vxp-onboarding';
 import { j, PrincipalTextSchema } from '@junobuild/schema';
 
 /**
@@ -313,4 +315,91 @@ export const fromWireMarketTranslation = (
 	outcomes: translation.outcomes,
 	updatedAt: translation.updated_at,
 	updatedBy: translation.updated_by
+});
+
+// ─── Referral wire format ────────────────────────────────────────────────
+
+const VxpMilestoneStateWireSchema = j.strictObject({
+	status: j.enum(['none', 'owed', 'processing', 'paid']),
+	amount_base_units: j.string(),
+	block_index: j.string().optional(),
+	last_error: j.string().optional()
+});
+
+export const ReferralWireSchema = j.strictObject({
+	referee: PrincipalTextSchema,
+	referrer: PrincipalTextSchema,
+	code: j.string(),
+	redeemed_at_ms: j.number(),
+	within_referrer_cap: j.boolean(),
+	referee_payout: VxpMilestoneStateWireSchema,
+	referrer_payout: VxpMilestoneStateWireSchema
+});
+
+export type WireReferral = j.infer<typeof ReferralWireSchema>;
+export type WireVxpMilestoneState = j.infer<typeof VxpMilestoneStateWireSchema>;
+
+const toWireMilestone = (state: VxpMilestoneState): WireVxpMilestoneState => ({
+	status: state.status,
+	amount_base_units: state.amountBaseUnits,
+	block_index: state.blockIndex,
+	last_error: state.lastError
+});
+
+export const toWireReferral = (referral: ReferralListItem): WireReferral => ({
+	referee: referral.referee,
+	referrer: referral.referrer,
+	code: referral.code,
+	redeemed_at_ms: referral.redeemedAtMs,
+	within_referrer_cap: referral.withinReferrerCap,
+	referee_payout: toWireMilestone(referral.refereePayout),
+	referrer_payout: toWireMilestone(referral.referrerPayout)
+});
+
+/**
+ * Wire-format referral as produced by the generated satellite API client. Mirrors
+ * {@link ReferralWireSchema} structurally but keeps `status` as a string-literal union
+ * (matching the codegen output) so {@link fromWireReferral} accepts both in-process
+ * {@link WireReferral} values and freshly-fetched API rows.
+ */
+export interface ApiWireReferral {
+	referee: string;
+	referrer: string;
+	code: string;
+	redeemed_at_ms: number;
+	within_referrer_cap: boolean;
+	referee_payout: {
+		status: 'none' | 'owed' | 'processing' | 'paid';
+		amount_base_units: string;
+		block_index?: string;
+		last_error?: string;
+	};
+	referrer_payout: {
+		status: 'none' | 'owed' | 'processing' | 'paid';
+		amount_base_units: string;
+		block_index?: string;
+		last_error?: string;
+	};
+}
+
+const fromWireMilestone = (state: ApiWireReferral['referee_payout']): VxpMilestoneState => ({
+	status: state.status,
+	amountBaseUnits: state.amount_base_units,
+	blockIndex: state.block_index,
+	lastError: state.last_error
+});
+
+/**
+ * Inverse of {@link toWireReferral}. Frontend callers funnel `listMyReferrals` items
+ * through this so the UI consumes camelCase {@link ReferralListItem} values.
+ */
+export const fromWireReferral = (referral: ApiWireReferral): ReferralListItem => ({
+	version: 1,
+	referee: referral.referee,
+	referrer: referral.referrer,
+	code: referral.code,
+	redeemedAtMs: referral.redeemed_at_ms,
+	withinReferrerCap: referral.within_referrer_cap,
+	refereePayout: fromWireMilestone(referral.referee_payout),
+	referrerPayout: fromWireMilestone(referral.referrer_payout)
 });

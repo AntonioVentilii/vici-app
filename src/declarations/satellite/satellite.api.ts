@@ -136,6 +136,18 @@ const getMarketTranslation = async (
 	return AppGetMarketTranslationResultSchema.parse(result);
 };
 
+const AppGetMyReferralCodeResultSchema = j.strictObject({ code: j.optional(j.string()) });
+
+const getMyReferralCode = async (): Promise<j.infer<typeof AppGetMyReferralCodeResultSchema>> => {
+	const { app_get_my_referral_code } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_my_referral_code();
+
+	const result = schemaFromIdl({ schema: AppGetMyReferralCodeResultSchema, value: idlResult });
+	return AppGetMyReferralCodeResultSchema.parse(result);
+};
+
 const AppGetProfileArgsSchema = j.strictObject({ principalStr: j.string() });
 const AppGetProfileResultSchema = j.strictObject({
 	profile: j.optional(
@@ -337,6 +349,38 @@ const listMarketTranslations = async (
 	return AppListMarketTranslationsResultSchema.parse(result);
 };
 
+const AppListMyReferralsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			referee: j.string(),
+			referrer: j.string(),
+			code: j.string(),
+			redeemed_at_ms: j.number(),
+			within_referrer_cap: j.boolean(),
+			referee_payout: j.strictObject({
+				status: j.enum(['none', 'owed', 'processing', 'paid']),
+				amount_base_units: j.string(),
+				block_index: j.optional(j.string()),
+				last_error: j.optional(j.string())
+			}),
+			referrer_payout: j.strictObject({
+				status: j.enum(['none', 'owed', 'processing', 'paid']),
+				amount_base_units: j.string(),
+				block_index: j.optional(j.string()),
+				last_error: j.optional(j.string())
+			})
+		})
+	)
+});
+
+const listMyReferrals = async (): Promise<j.infer<typeof AppListMyReferralsResultSchema>> => {
+	const { app_list_my_referrals } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_list_my_referrals();
+
+	const result = schemaFromIdl({ schema: AppListMyReferralsResultSchema, value: idlResult });
+	return AppListMyReferralsResultSchema.parse(result);
+};
+
 const AppListSentFriendRequestsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
@@ -360,6 +404,27 @@ const listSentFriendRequests = async (): Promise<
 
 	const result = schemaFromIdl({ schema: AppListSentFriendRequestsResultSchema, value: idlResult });
 	return AppListSentFriendRequestsResultSchema.parse(result);
+};
+
+const AppLookupReferralCodeArgsSchema = j.strictObject({ code: j.string() });
+const AppLookupReferralCodeResultSchema = j.strictObject({ owner: j.optional(j.string()) });
+
+const lookupReferralCode = async (
+	args: j.infer<typeof AppLookupReferralCodeArgsSchema>
+): Promise<j.infer<typeof AppLookupReferralCodeResultSchema>> => {
+	const parsedArgs = AppLookupReferralCodeArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppLookupReferralCodeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_lookup_referral_code']>[0];
+
+	const { app_lookup_referral_code } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_lookup_referral_code(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppLookupReferralCodeResultSchema, value: idlResult });
+	return AppLookupReferralCodeResultSchema.parse(result);
 };
 
 const AppSearchProfilesArgsSchema = j.strictObject({ queryStr: j.string() });
@@ -452,6 +517,23 @@ const followUser = async (args: j.infer<typeof AppFollowUserArgsSchema>): Promis
 
 	const { app_follow_user } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	await app_follow_user(idlArgs);
+};
+
+const AppRedeemReferralCodeArgsSchema = j.strictObject({ code: j.string() });
+
+const redeemReferralCode = async (
+	args: j.infer<typeof AppRedeemReferralCodeArgsSchema>
+): Promise<void> => {
+	const parsedArgs = AppRedeemReferralCodeArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppRedeemReferralCodeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_redeem_referral_code']>[0];
+
+	const { app_redeem_referral_code } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	await app_redeem_referral_code(idlArgs);
 };
 
 const AppRejectFriendRequestArgsSchema = j.strictObject({ relationId: j.string() });
@@ -588,6 +670,7 @@ export const functions = {
 	checkNicknameAvailability,
 	getMarketMetadata,
 	getMarketTranslation,
+	getMyReferralCode,
 	getProfile,
 	listFollowers,
 	listFollowing,
@@ -595,11 +678,14 @@ export const functions = {
 	listFriends,
 	listLeaderboard,
 	listMarketTranslations,
+	listMyReferrals,
 	listSentFriendRequests,
+	lookupReferralCode,
 	searchProfiles,
 	acceptFriendRequest,
 	cancelFriendRequest,
 	followUser,
+	redeemReferralCode,
 	rejectFriendRequest,
 	sendFriendRequest,
 	upsertMarketMetadata,

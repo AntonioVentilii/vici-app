@@ -17,6 +17,7 @@
 	import { resolve } from '$app/paths';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import ReferralCard from '$lib/components/profile/ReferralCard.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { ACCURACY_GATE_CALLS, isAccuracyUnlocked } from '$lib/constants/flow-rewards.constants';
@@ -572,6 +573,8 @@
 				<ChevronRight size={16} strokeWidth={1.8} />
 			</span>
 		</button>
+
+		<ReferralCard {profile} />
 	{/if}
 
 	<section class="profile-skill">

@@ -77,6 +77,7 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppGetMyReferralCodeResult = IDL.Record({ code: IDL.Opt(IDL.Text) });
 	const AppGetProfileArgs = IDL.Record({ principal_str: IDL.Text });
 	const AppGetProfileResult = IDL.Record({
 		profile: IDL.Opt(
@@ -292,6 +293,39 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListMyReferralsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				within_referrer_cap: IDL.Bool,
+				referee_payout: IDL.Record({
+					last_error: IDL.Opt(IDL.Text),
+					status: IDL.Variant({
+						none: IDL.Null,
+						owed: IDL.Null,
+						paid: IDL.Null,
+						processing: IDL.Null
+					}),
+					block_index: IDL.Opt(IDL.Text),
+					amount_base_units: IDL.Text
+				}),
+				referrer: IDL.Text,
+				code: IDL.Text,
+				redeemed_at_ms: IDL.Float64,
+				referee: IDL.Text,
+				referrer_payout: IDL.Record({
+					last_error: IDL.Opt(IDL.Text),
+					status: IDL.Variant({
+						none: IDL.Null,
+						owed: IDL.Null,
+						paid: IDL.Null,
+						processing: IDL.Null
+					}),
+					block_index: IDL.Opt(IDL.Text),
+					amount_base_units: IDL.Text
+				})
+			})
+		)
+	});
 	const AppListSentFriendRequestsResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
@@ -320,6 +354,11 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppLookupReferralCodeArgs = IDL.Record({ code: IDL.Text });
+	const AppLookupReferralCodeResult = IDL.Record({
+		owner: IDL.Opt(IDL.Text)
+	});
+	const AppRedeemReferralCodeArgs = IDL.Record({ code: IDL.Text });
 	const AppRejectFriendRequestArgs = IDL.Record({ relation_id: IDL.Text });
 	const AppSearchProfilesArgs = IDL.Record({ query_str: IDL.Text });
 	const AppSearchProfilesResult = IDL.Record({
@@ -462,6 +501,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppGetMarketTranslationResult],
 			['query']
 		),
+		app_get_my_referral_code: IDL.Func([], [AppGetMyReferralCodeResult], ['query']),
 		app_get_profile: IDL.Func([AppGetProfileArgs], [AppGetProfileResult], ['query']),
 		app_list_followers: IDL.Func([], [AppListFollowersResult], ['query']),
 		app_list_following: IDL.Func([], [AppListFollowingResult], ['query']),
@@ -473,7 +513,14 @@ export const idlFactory = ({ IDL }) => {
 			[AppListMarketTranslationsResult],
 			['query']
 		),
+		app_list_my_referrals: IDL.Func([], [AppListMyReferralsResult], ['query']),
 		app_list_sent_friend_requests: IDL.Func([], [AppListSentFriendRequestsResult], ['query']),
+		app_lookup_referral_code: IDL.Func(
+			[AppLookupReferralCodeArgs],
+			[AppLookupReferralCodeResult],
+			['query']
+		),
+		app_redeem_referral_code: IDL.Func([AppRedeemReferralCodeArgs], [], []),
 		app_reject_friend_request: IDL.Func([AppRejectFriendRequestArgs], [], []),
 		app_search_profiles: IDL.Func([AppSearchProfilesArgs], [AppSearchProfilesResult], ['query']),
 		app_send_friend_request: IDL.Func([AppSendFriendRequestArgs], [], []),

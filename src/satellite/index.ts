@@ -11,6 +11,10 @@ import {
 	UpsertMarketTranslationArgsSchema
 } from '$lib/schema/market-translation.schema';
 import { UserProfileSchema } from '$lib/schema/profile.schema';
+import {
+	LookupReferralCodeArgsSchema,
+	RedeemReferralCodeArgsSchema
+} from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
 import {
 	syncRoleToEngineOnDelete,
@@ -33,6 +37,16 @@ import {
 	searchProfiles as searchProfilesFn
 } from '$satellite/services/profile.services';
 import {
+	assertSetReferral,
+	assertSetReferralCode,
+	getMyReferralCodeFn,
+	listMyReferralsFn,
+	lookupReferralCodeFn,
+	onProfileSetForReferralCode,
+	onReferralSetForVxpPayout,
+	redeemReferralCodeFn
+} from '$satellite/services/referral.services';
+import {
 	acceptFriendRequest as acceptFriendRequestFn,
 	cancelFriendRequest as cancelFriendRequestFn,
 	checkFriendship as checkFriendshipFn,
@@ -52,9 +66,11 @@ import {
 } from '$satellite/services/vxp-onboarding.services';
 import {
 	MarketTranslationWireSchema,
+	ReferralWireSchema,
 	RelationWireSchema,
 	toWireMarketTranslation,
 	toWireProfile,
+	toWireReferral,
 	toWireRelation,
 	UserProfileWireSchema
 } from '$satellite/utils/wire-format.utils';
@@ -279,7 +295,41 @@ export const followUser = defineUpdate({
 	handler: followUserFn
 });
 
-const assertSetDocCollections = [Collection.PROFILES, Collection.ROLES] as const;
+// ─── Referrals ───────────────────────────────────────────────────────────
+
+export const getMyReferralCode = defineQuery({
+	result: j.strictObject({
+		code: j.string().optional()
+	}),
+	handler: getMyReferralCodeFn
+});
+
+export const lookupReferralCode = defineQuery({
+	args: LookupReferralCodeArgsSchema,
+	result: j.strictObject({
+		owner: PrincipalTextSchema.optional()
+	}),
+	handler: lookupReferralCodeFn
+});
+
+export const listMyReferrals = defineQuery({
+	result: j.strictObject({
+		items: j.array(ReferralWireSchema)
+	}),
+	handler: () => ({ items: listMyReferralsFn().map(toWireReferral) })
+});
+
+export const redeemReferralCode = defineUpdate({
+	args: RedeemReferralCodeArgsSchema,
+	handler: redeemReferralCodeFn
+});
+
+const assertSetDocCollections = [
+	Collection.PROFILES,
+	Collection.ROLES,
+	Collection.REFERRAL_CODES,
+	Collection.REFERRALS
+] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
 
@@ -288,24 +338,43 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 	assert: (context) => {
 		const fn: Record<AssertSetDocCollection, (ctx: AssertSetDocContext) => void> = {
 			[Collection.PROFILES]: assertValidNickname,
-			[Collection.ROLES]: assertSetRole
+			[Collection.ROLES]: assertSetRole,
+			[Collection.REFERRAL_CODES]: assertSetReferralCode,
+			[Collection.REFERRALS]: assertSetReferral
 		};
 
 		fn[context.data.collection]?.(context);
 	}
 });
 
-const setDocCollections = [Collection.ACTIVITIES, Collection.PROFILES, Collection.ROLES] as const;
+const setDocCollections = [
+	Collection.ACTIVITIES,
+	Collection.PROFILES,
+	Collection.ROLES,
+	Collection.REFERRALS
+] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
+
+/**
+ * Composed `profiles` post-write handler. Each sub-hook (`onProfileSetForVxpOnboarding`,
+ * `onProfileSetForReferralCode`) is exported independently from its service so they remain
+ * unit-testable; we compose them here so the dispatch table keeps its one-handler-per-collection
+ * invariant.
+ */
+const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
+	await onProfileSetForVxpOnboarding(context);
+	onProfileSetForReferralCode(context);
+};
 
 export const onSetDoc = defineHook<OnSetDoc>({
 	collections: setDocCollections,
 	run: async (context) => {
 		const fn: Record<OnSetDocCollection, RunFunction<OnSetDocContext>> = {
-			[Collection.PROFILES]: onProfileSetForVxpOnboarding,
+			[Collection.PROFILES]: onProfileSetComposed,
 			[Collection.ACTIVITIES]: onTradeActivityForVxpOnboarding,
-			[Collection.ROLES]: syncRoleToEngineOnSet
+			[Collection.ROLES]: syncRoleToEngineOnSet,
+			[Collection.REFERRALS]: onReferralSetForVxpPayout
 		};
 
 		await fn[context.data.collection]?.(context);
