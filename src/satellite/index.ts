@@ -65,6 +65,7 @@ import {
 	onProfileSetForVxpOnboarding,
 	onTradeActivityForVxpOnboarding
 } from '$satellite/services/vxp-onboarding.services';
+import { onProfileSetForStreakAward } from '$satellite/services/vxp-streak-awards.services';
 import {
 	MarketTranslationWireSchema,
 	ReferralWireSchema,
@@ -368,6 +369,7 @@ type OnSetDocCollection = (typeof setDocCollections)[number];
 const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	await onProfileSetForVxpOnboarding(context);
 	onProfileSetForReferralCode(context);
+	await onProfileSetForStreakAward(context);
 };
 
 export const onSetDoc = defineHook<OnSetDoc>({
