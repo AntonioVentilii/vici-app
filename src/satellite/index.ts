@@ -16,6 +16,10 @@ import {
 	RedeemReferralCodeArgsSchema
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
+import {
+	assertDeleteAffiliation,
+	assertSetAffiliation
+} from '$satellite/services/affiliation.services';
 import { assertSetBout } from '$satellite/services/bout.services';
 import {
 	listLeagueBoutsFn,
@@ -446,7 +450,8 @@ const assertSetDocCollections = [
 	Collection.VXP_AWARDS,
 	Collection.LEAGUES,
 	Collection.LEAGUE_MEMBERS,
-	Collection.BOUTS
+	Collection.BOUTS,
+	Collection.AFFILIATIONS
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -462,14 +467,15 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.VXP_AWARDS]: assertSetVxpAward,
 			[Collection.LEAGUES]: assertSetLeague,
 			[Collection.LEAGUE_MEMBERS]: assertSetLeagueMember,
-			[Collection.BOUTS]: assertSetBout
+			[Collection.BOUTS]: assertSetBout,
+			[Collection.AFFILIATIONS]: assertSetAffiliation
 		};
 
 		fn[context.data.collection]?.(context);
 	}
 });
 
-const assertDeleteDocCollections = [Collection.LEAGUE_MEMBERS] as const;
+const assertDeleteDocCollections = [Collection.LEAGUE_MEMBERS, Collection.AFFILIATIONS] as const;
 
 type AssertDeleteDocCollection = (typeof assertDeleteDocCollections)[number];
 
@@ -477,7 +483,8 @@ export const assertDeleteDoc = defineAssert<AssertDeleteDoc>({
 	collections: assertDeleteDocCollections,
 	assert: (context) => {
 		const fn: Record<AssertDeleteDocCollection, (ctx: AssertDeleteDocContext) => void> = {
-			[Collection.LEAGUE_MEMBERS]: assertDeleteLeagueMember
+			[Collection.LEAGUE_MEMBERS]: assertDeleteLeagueMember,
+			[Collection.AFFILIATIONS]: assertDeleteAffiliation
 		};
 
 		fn[context.data.collection]?.(context);

@@ -1,0 +1,165 @@
+import { Collection } from '$lib/constants/collections.constants';
+import {
+	AFFILIATION_KINDS,
+	AFFILIATION_LOCK_MS,
+	affiliationKey,
+	type AffiliationDoc
+} from '$lib/types/affiliation';
+import { isNullish } from '@dfinity/utils';
+import { Principal } from '@icp-sdk/core/principal';
+import type { AssertDeleteDocContext, AssertSetDocContext } from '@junobuild/functions';
+import { time } from '@junobuild/functions/ic-cdk';
+import { decodeDocData } from '@junobuild/functions/sdk';
+
+/**
+ * Pre-write guard for `affiliations`. Enforces the V1.2 Worlds
+ * 90-day affiliation lock:
+ *
+ *  1. **Key shape.** `${member}/${kind}/${affiliationId}`. Drift
+ *     between key and embedded fields is rejected.
+ *  2. **Member binds caller.** A user can only write their own
+ *     affiliation rows.
+ *  3. **Kind validation.** Must be 'university' or 'country'.
+ *  4. **Server-computed lock.** `lockedUntilMs` must equal
+ *     `joinedAtMs + AFFILIATION_LOCK_MS`. The user can't extend or
+ *     shorten the window — the server arithmetic is the source of
+ *     truth.
+ *  5. **joinedAtMs sanity.** Must be within ±10 minutes of the
+ *     satellite's clock to defend against pre-/post-dated writes
+ *     that would short-circuit the lock.
+ *  6. **Identity fields immutable on edits.** `member`, `kind`,
+ *     `affiliationId`, `joinedAtMs`, `lockedUntilMs` are write-once.
+ *     A row that exists is the affiliation; switching requires
+ *     delete (gated by the lock) then re-create.
+ */
+export const assertSetAffiliation = ({
+	caller,
+	data: {
+		collection,
+		key,
+		data: { current, proposed }
+	}
+}: AssertSetDocContext): void => {
+	if (collection !== Collection.AFFILIATIONS) {
+		return;
+	}
+
+	const proposedDoc = decodeDocData<AffiliationDoc>(proposed.data);
+
+	// 1. Key shape.
+	const expectedKey = affiliationKey({
+		memberPrincipal: proposedDoc.member,
+		kind: proposedDoc.kind,
+		affiliationId: proposedDoc.affiliationId
+	});
+
+	if (key !== expectedKey) {
+		throw new Error(
+			`affiliations key mismatch: expected ${expectedKey}, got ${key} (member/kind/affiliationId must match the doc body).`
+		);
+	}
+
+	// 3. Kind validation.
+	if (!AFFILIATION_KINDS.has(proposedDoc.kind)) {
+		throw new Error(
+			`affiliations kind must be one of ${[...AFFILIATION_KINDS].join(' | ')} (got "${proposedDoc.kind}").`
+		);
+	}
+
+	// 2. Member binds caller.
+	try {
+		Principal.fromText(proposedDoc.member);
+	} catch {
+		throw new Error('affiliations member must be a valid principal text.');
+	}
+
+	const callerText = Principal.fromUint8Array(caller).toText();
+
+	if (proposedDoc.member !== callerText) {
+		throw new Error('affiliations member must match the caller principal.');
+	}
+
+	// 4. Server-computed lock.
+	const expectedLockedUntil = proposedDoc.joinedAtMs + AFFILIATION_LOCK_MS;
+
+	if (proposedDoc.lockedUntilMs !== expectedLockedUntil) {
+		throw new Error(
+			`affiliations lockedUntilMs must equal joinedAtMs + ${AFFILIATION_LOCK_MS}ms (90d); the server computes it.`
+		);
+	}
+
+	// 5. joinedAtMs sanity — within ±10 minutes of the satellite clock.
+	// `time()` returns nanoseconds; convert to ms.
+	const nowMs = Number(time() / 1_000_000n);
+	const driftMs = Math.abs(nowMs - proposedDoc.joinedAtMs);
+	const TEN_MINUTES_MS = 10 * 60 * 1000;
+
+	if (driftMs > TEN_MINUTES_MS) {
+		throw new Error('affiliations joinedAtMs must be within ±10 minutes of the satellite clock.');
+	}
+
+	// Creation path — done.
+	if (isNullish(current)) {
+		return;
+	}
+
+	// 6. Identity fields immutable on edits.
+	const currentDoc = decodeDocData<AffiliationDoc>(current.data);
+
+	if (
+		currentDoc.member !== proposedDoc.member ||
+		currentDoc.kind !== proposedDoc.kind ||
+		currentDoc.affiliationId !== proposedDoc.affiliationId ||
+		currentDoc.joinedAtMs !== proposedDoc.joinedAtMs ||
+		currentDoc.lockedUntilMs !== proposedDoc.lockedUntilMs
+	) {
+		throw new Error(
+			'affiliations identity fields are immutable (member, kind, affiliationId, joinedAtMs, lockedUntilMs).'
+		);
+	}
+};
+
+/**
+ * Pre-delete guard for `affiliations`. Closes the lock-protected
+ * leave path:
+ *
+ *  1. **Caller binds member.** Only the affiliation's owner can
+ *     remove their row — admins / staff don't get a kick path on
+ *     Worlds slots (V1.2 spec: the user owns their identity).
+ *  2. **Lock enforced.** The delete is rejected if
+ *     `Date.now() < currentDoc.lockedUntilMs`. After the lock
+ *     expires, the user can leave (or switch by deleting then
+ *     creating a new row).
+ */
+export const assertDeleteAffiliation = ({
+	caller,
+	data: {
+		collection,
+		data: { current }
+	}
+}: AssertDeleteDocContext): void => {
+	if (collection !== Collection.AFFILIATIONS) {
+		return;
+	}
+
+	if (isNullish(current)) {
+		return;
+	}
+
+	const currentDoc = decodeDocData<AffiliationDoc>(current.data);
+
+	// 1. Caller binds member.
+	const callerText = Principal.fromUint8Array(caller).toText();
+
+	if (currentDoc.member !== callerText) {
+		throw new Error('affiliations may only be removed by the member themselves.');
+	}
+
+	// 2. Lock enforced.
+	const nowMs = Number(time() / 1_000_000n);
+
+	if (nowMs < currentDoc.lockedUntilMs) {
+		const daysLeft = Math.ceil((currentDoc.lockedUntilMs - nowMs) / (24 * 60 * 60 * 1000));
+		throw new Error(`affiliations lock active — cannot leave for another ${daysLeft} day(s).`);
+	}
+};

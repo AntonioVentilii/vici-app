@@ -52,7 +52,15 @@ export const Collection = {
 	 * `proposed → accepted → in_flight → resolved` enforced by the satellite assert; scores write
 	 * once at settle, winner derived from scores.
 	 */
-	BOUTS: collections.BOUTS
+	BOUTS: collections.BOUTS,
+	/**
+	 * Worlds affiliations — a user's chosen university and / or country, used for the V1.2 Worlds
+	 * leaderboard surface (distinct from user-created leagues so the 90-day lock doesn't leak).
+	 * Keyed `${member}/${kind}/${affiliationId}` so a user can carry one university + one country
+	 * simultaneously. Server computes `lockedUntilMs = joinedAtMs + 90d` on first write; the delete
+	 * assert hard-rejects until the lock expires.
+	 */
+	AFFILIATIONS: collections.AFFILIATIONS
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

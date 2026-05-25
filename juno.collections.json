@@ -13,5 +13,6 @@
 	"REFERRALS": "referrals",
 	"LEAGUES": "leagues",
 	"LEAGUE_MEMBERS": "league_members",
-	"BOUTS": "bouts"
+	"BOUTS": "bouts",
+	"AFFILIATIONS": "affiliations"
 }
