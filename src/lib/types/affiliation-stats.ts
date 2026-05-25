@@ -48,9 +48,10 @@ export interface AffiliationStatsDoc {
 }
 
 /**
- * Canonical key builder. Mirrors the affiliations collection's
- * `${kind}/${affiliationId}` prefix scheme so a prefix scan
- * naturally groups schools vs countries.
+ * Canonical key builder for the **rolling** (current-month) doc.
+ * One per `(kind, affiliationId)`. Mirrors the affiliations
+ * collection's `${kind}/${affiliationId}` prefix scheme so a
+ * prefix scan naturally groups schools vs countries.
  */
 export const affiliationStatsKey = ({
 	kind,
@@ -59,6 +60,27 @@ export const affiliationStatsKey = ({
 	kind: AffiliationKind;
 	affiliationId: string;
 }): string => `${kind}/${affiliationId}`;
+
+/**
+ * Canonical key builder for the **frozen** historical snapshot doc.
+ * The hook writes one of these at the moment a stats doc rolls over
+ * to a new month, capturing the just-completed month's totals.
+ * Worlds podium reads these snapshots to compute top-3 for an
+ * already-closed month.
+ *
+ * Key shape `${kind}/${affiliationId}/${monthAnchor}` — three
+ * segments vs the rolling doc's two. The assert distinguishes them
+ * by slash count.
+ */
+export const affiliationStatsSnapshotKey = ({
+	kind,
+	affiliationId,
+	monthAnchor
+}: {
+	kind: AffiliationKind;
+	affiliationId: string;
+	monthAnchor: string;
+}): string => `${kind}/${affiliationId}/${monthAnchor}`;
 
 /**
  * Minimum resolved-call count before an affiliation appears on the

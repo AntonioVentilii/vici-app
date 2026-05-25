@@ -205,3 +205,43 @@ export const listAffiliationStats = async ({
 
 	return items.map(projectStatsWire);
 };
+
+/**
+ * Fire the Worlds podium claim for a closed month. Per backend
+ * Proposal 2: the user calls this themselves (typically when
+ * they first land on the Worlds surface in a new calendar
+ * month), and the satellite credits VXP if their current
+ * affiliation finished top-3 in the snapshot.
+ *
+ * Idempotent: a second call for the same month either reports
+ * `awardsAlreadyClaimed > 0` or `notEligible === true`. Safe to
+ * fire-and-forget on every Worlds load.
+ *
+ * Throws when `monthAnchor` is not a closed month (e.g. the
+ * current calendar month) — callers should always pass a YYYY-MM
+ * strictly before the current one.
+ */
+export const claimWorldsPodiumPrize = ({
+	monthAnchor
+}: {
+	monthAnchor: string;
+}): Promise<{
+	monthAnchor: string;
+	awardsCreated: number;
+	awardsAlreadyClaimed: number;
+	notEligible: boolean;
+}> => functions.claimWorldsPodiumPrize({ monthAnchor });
+
+/**
+ * Compute the YYYY-MM anchor for the calendar month immediately
+ * before the supplied timestamp's month (UTC). Convenience for the
+ * "claim last month's podium on this month's first visit" pattern.
+ */
+export const previousMonthAnchor = (nowMs: number = Date.now()): string => {
+	const d = new Date(nowMs);
+	d.setUTCDate(1);
+	d.setUTCHours(0, 0, 0, 0);
+	d.setUTCMonth(d.getUTCMonth() - 1);
+
+	return `${d.getUTCFullYear()}-${(d.getUTCMonth() + 1).toString().padStart(2, '0')}`;
+};

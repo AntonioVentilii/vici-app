@@ -9,8 +9,10 @@
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import {
 		affiliationDaysLeft,
+		claimWorldsPodiumPrize,
 		leaveAffiliation,
-		listMyAffiliations
+		listMyAffiliations,
+		previousMonthAnchor
 	} from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
@@ -34,6 +36,8 @@
 	let pendingKey: string | null = $state(null);
 	let pickerKind: AffiliationKind | null = $state(null);
 
+	let podiumClaim = $state<{ monthAnchor: string; awardsCreated: number } | null>(null);
+
 	const refresh = async () => {
 		try {
 			const result = await listMyAffiliations();
@@ -46,7 +50,36 @@
 		}
 	};
 
-	onMount(refresh);
+	/**
+	 * On every Worlds mount, fire a claim for the previous calendar
+	 * month's podium. Idempotent: if the user already claimed it
+	 * (or wasn't eligible), the server-side fast-path returns
+	 * cleanly. If new awards landed, we surface a one-shot toast.
+	 *
+	 * This is the "scheduled task without a scheduler" pattern —
+	 * user visits act as the trigger.
+	 */
+	const tryClaimPodium = async () => {
+		try {
+			const monthAnchor = previousMonthAnchor();
+			const result = await claimWorldsPodiumPrize({ monthAnchor });
+
+			if (result.awardsCreated > 0) {
+				podiumClaim = {
+					monthAnchor: result.monthAnchor,
+					awardsCreated: result.awardsCreated
+				};
+			}
+		} catch {
+			// First visit before any closed month exists, or other
+			// transient failure. Silent — claim retries on next mount.
+		}
+	};
+
+	onMount(async () => {
+		await refresh();
+		void tryClaimPodium();
+	});
 
 	const handleLeave = async ({
 		kind,
@@ -78,6 +111,32 @@
 	<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'worlds.title' })} />
 
 	<p class="worlds-sub">{t({ locale: $localeStore, key: 'worlds.sub' })}</p>
+
+	{#if podiumClaim}
+		<aside class="worlds-podium-claim" role="status">
+			<span class="serif-italic worlds-podium-claim-lede">
+				{t({ locale: $localeStore, key: 'worlds.podium.claim.lede' })}
+			</span>
+			<span class="worlds-podium-claim-sub">
+				{t({
+					locale: $localeStore,
+					key: 'worlds.podium.claim.body',
+					params: {
+						month: podiumClaim.monthAnchor,
+						count: podiumClaim.awardsCreated
+					}
+				})}
+			</span>
+			<button
+				class="worlds-podium-claim-dismiss"
+				aria-label={t({ locale: $localeStore, key: 'worlds.podium.claim.dismiss' })}
+				onclick={() => (podiumClaim = null)}
+				type="button"
+			>
+				×
+			</button>
+		</aside>
+	{/if}
 
 	<section class="worlds-podium" aria-label="Worlds podium prizes">
 		<h2 class="eyebrow worlds-podium-eyebrow">
@@ -209,6 +268,44 @@
 		margin: 0;
 		font-size: var(--t-13);
 		color: var(--text-muted);
+	}
+
+	.worlds-podium-claim {
+		display: grid;
+		grid-template-columns: 1fr auto;
+		gap: 0.5rem;
+		align-items: center;
+		padding: 0.85rem 1rem;
+		background: color-mix(in srgb, #f4c544 12%, var(--bg-surface));
+		border: 1px solid color-mix(in srgb, #f4c544 50%, var(--border-base));
+		border-radius: var(--r-12);
+	}
+
+	.worlds-podium-claim-lede {
+		grid-column: 1;
+		font-size: var(--t-15, 1rem);
+		color: var(--text-base);
+	}
+
+	.worlds-podium-claim-sub {
+		grid-column: 1;
+		grid-row: 2;
+		font-size: var(--t-12);
+		color: var(--text-muted);
+	}
+
+	.worlds-podium-claim-dismiss {
+		grid-column: 2;
+		grid-row: 1 / span 2;
+		appearance: none;
+		width: 28px;
+		height: 28px;
+		font-size: 1.25rem;
+		color: var(--text-muted);
+		background: none;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		cursor: pointer;
 	}
 
 	.worlds-podium {

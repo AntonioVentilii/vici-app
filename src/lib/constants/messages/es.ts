@@ -1401,6 +1401,9 @@ export const esMessages = {
 		'Por debajo de {min} apuestas — precisión mostrada pero aún no en la clasificación.',
 	'worlds.locked_until': 'Bloqueado hasta {date} · {days}d restantes',
 	'worlds.podium.bronze': '3º',
+	'worlds.podium.claim.body': '{count} premio(s) de podio acreditado(s) para {month}.',
+	'worlds.podium.claim.dismiss': 'Cerrar',
+	'worlds.podium.claim.lede': 'Tu universidad terminó en el podio.',
 	'worlds.podium.eyebrow': 'Podio mensual',
 	'worlds.podium.gold': '1º',
 	'worlds.podium.hint':

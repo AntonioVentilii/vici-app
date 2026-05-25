@@ -1391,6 +1391,9 @@ export const ptMessages = {
 		'Abaixo de {min} chamadas — precisão visível, mas ainda fora da classificação.',
 	'worlds.locked_until': 'Travado até {date} · faltam {days}d',
 	'worlds.podium.bronze': '3º',
+	'worlds.podium.claim.body': '{count} prêmio(s) de pódio creditado(s) para {month}.',
+	'worlds.podium.claim.dismiss': 'Fechar',
+	'worlds.podium.claim.lede': 'Sua universidade ficou no pódio.',
 	'worlds.podium.eyebrow': 'Pódio mensal',
 	'worlds.podium.gold': '1º',
 	'worlds.podium.hint':

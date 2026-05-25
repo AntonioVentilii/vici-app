@@ -2,6 +2,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { affiliationKey, type AffiliationDoc, type AffiliationKind } from '$lib/types/affiliation';
 import {
 	affiliationStatsKey,
+	affiliationStatsSnapshotKey,
 	monthAnchorFromMs,
 	type AffiliationStatsDoc
 } from '$lib/types/affiliation-stats';
@@ -50,15 +51,33 @@ export const assertSetAffiliationStats = ({
 
 	const proposedDoc = decodeDocData<AffiliationStatsDoc>(proposed.data);
 
-	// 2. Key shape.
-	const expectedKey = affiliationStatsKey({
+	// 2. Key shape — two valid shapes:
+	//    - Rolling (current month): `${kind}/${affiliationId}` — 2 segments
+	//    - Frozen snapshot (past month): `${kind}/${affiliationId}/${monthAnchor}` — 3 segments
+	const rollingKey = affiliationStatsKey({
 		kind: proposedDoc.kind,
 		affiliationId: proposedDoc.affiliationId
 	});
+	const snapshotKey = affiliationStatsSnapshotKey({
+		kind: proposedDoc.kind,
+		affiliationId: proposedDoc.affiliationId,
+		monthAnchor: proposedDoc.monthAnchor
+	});
 
-	if (key !== expectedKey) {
+	const isSnapshot = key === snapshotKey;
+
+	if (key !== rollingKey && !isSnapshot) {
 		throw new Error(
-			`affiliation_stats key mismatch: expected ${expectedKey}, got ${key} (kind/affiliationId must match the doc body).`
+			`affiliation_stats key mismatch: expected ${rollingKey} or ${snapshotKey}, got ${key}.`
+		);
+	}
+
+	// Snapshot docs are write-once. They represent a closed historical
+	// month — any later write would let a malicious member rewrite
+	// history. Reject every non-create write on a snapshot key.
+	if (isSnapshot && nonNullish(current)) {
+		throw new Error(
+			`affiliation_stats snapshot ${key} is write-once; the month has already closed.`
 		);
 	}
 
@@ -304,9 +323,43 @@ const incrementStats = ({
 		: undefined;
 
 	// Lazy month rollover: if the previous doc's anchor is older than
-	// the current month, zero out the monthly counters before adding
-	// the new delta. Lifetime counters are untouched.
+	// the current month, freeze a snapshot of the just-completed
+	// month BEFORE zeroing the rolling doc's monthly counters. Lifetime
+	// counters carry forward. The snapshot is what Worlds podium reads
+	// to compute top-3 for a closed month.
 	const rolledOver = nonNullish(prev) && prev.monthAnchor !== anchor;
+
+	if (rolledOver && nonNullish(prev)) {
+		const snapshotKey = affiliationStatsSnapshotKey({
+			kind,
+			affiliationId,
+			monthAnchor: prev.monthAnchor
+		});
+		const existingSnapshot = getDocStore({
+			collection: Collection.AFFILIATION_STATS,
+			key: snapshotKey,
+			caller
+		});
+
+		// Only write the snapshot if one doesn't already exist for that
+		// month — the first caller of the new month to land here wins;
+		// subsequent rollovers from other users for the same affiliation
+		// in the same hop see the snapshot already in place and skip.
+		if (isNullish(existingSnapshot)) {
+			setDocStore({
+				collection: Collection.AFFILIATION_STATS,
+				key: snapshotKey,
+				caller,
+				doc: {
+					data: encodeDocData({
+						...prev,
+						updatedAtMs: nowMs
+					})
+				}
+			});
+		}
+	}
+
 	const base: AffiliationStatsDoc = nonNullish(prev)
 		? rolledOver
 			? {

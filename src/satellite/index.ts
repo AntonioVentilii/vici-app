@@ -92,6 +92,7 @@ import {
 	onTradeActivityForVxpOnboarding
 } from '$satellite/services/vxp-onboarding.services';
 import { onProfileSetForStreakAward } from '$satellite/services/vxp-streak-awards.services';
+import { claimWorldsPodiumPrizeFn } from '$satellite/services/vxp-worlds-podium.services';
 import {
 	AffiliationStatsWireSchema,
 	AffiliationWireSchema,
@@ -518,6 +519,24 @@ export const claimComebackGrant = defineUpdate({
 		errorMessage: j.optional(j.string())
 	}),
 	handler: claimComebackGrantFn
+});
+
+// Worlds podium monthly payout — user-claim variant. The caller
+// passes `monthAnchor` (YYYY-MM) for a closed month; if their
+// current affiliation finished top-3 in that month's snapshot,
+// VXP_AWARDS docs are created (gold/silver/bronze) and a ledger
+// transfer is fired. Idempotent via the award doc key.
+export const claimWorldsPodiumPrize = defineUpdate({
+	args: j.strictObject({
+		monthAnchor: j.string()
+	}),
+	result: j.strictObject({
+		monthAnchor: j.string(),
+		awardsCreated: j.number(),
+		awardsAlreadyClaimed: j.number(),
+		notEligible: j.boolean()
+	}),
+	handler: claimWorldsPodiumPrizeFn
 });
 
 const assertSetDocCollections = [

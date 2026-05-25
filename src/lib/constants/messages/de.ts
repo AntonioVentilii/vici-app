@@ -1404,6 +1404,9 @@ export const deMessages = {
 		'Unter {min} Calls — Genauigkeit sichtbar, aber noch nicht in der Rangliste.',
 	'worlds.locked_until': 'Gesperrt bis {date} · noch {days} Tage',
 	'worlds.podium.bronze': '3.',
+	'worlds.podium.claim.body': '{count} Podiumsprämie(n) für {month} gutgeschrieben.',
+	'worlds.podium.claim.dismiss': 'Schließen',
+	'worlds.podium.claim.lede': 'Deine Uni ist auf dem Podium.',
 	'worlds.podium.eyebrow': 'Monats-Podium',
 	'worlds.podium.gold': '1.',
 	'worlds.podium.hint':

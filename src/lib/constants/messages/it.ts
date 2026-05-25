@@ -1390,6 +1390,9 @@ export const itMessages = {
 		'Sotto {min} chiamate — precisione visibile ma non ancora in classifica.',
 	'worlds.locked_until': 'Bloccato fino al {date} · {days}g rimanenti',
 	'worlds.podium.bronze': '3°',
+	'worlds.podium.claim.body': '{count} premio/i podio accreditato/i per {month}.',
+	'worlds.podium.claim.dismiss': 'Chiudi',
+	'worlds.podium.claim.lede': 'La tua scuola è sul podio.',
 	'worlds.podium.eyebrow': 'Podio mensile',
 	'worlds.podium.gold': '1°',
 	'worlds.podium.hint':

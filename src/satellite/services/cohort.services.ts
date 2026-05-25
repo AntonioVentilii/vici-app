@@ -423,15 +423,22 @@ export const listAffiliationStatsFn = ({
 
 	const stats: AffiliationStatsDoc[] = [];
 
-	for (const [, item] of items) {
-		try {
-			const doc = decodeDocData<AffiliationStatsDoc>(item.data);
+	for (const [docKey, item] of items) {
+		// Filter out snapshot docs (3-segment keys) — only rolling
+		// (current-month) docs participate in the live leaderboard.
+		// Counting slashes is cheaper than splitting; we just need >1.
+		const isRollingDoc = docKey.indexOf('/') === docKey.lastIndexOf('/');
 
-			if (doc.kind === kind && doc.totalCalls >= MIN_CALLS_FOR_RANK) {
-				stats.push(doc);
+		if (isRollingDoc) {
+			try {
+				const doc = decodeDocData<AffiliationStatsDoc>(item.data);
+
+				if (doc.kind === kind && doc.totalCalls >= MIN_CALLS_FOR_RANK) {
+					stats.push(doc);
+				}
+			} catch {
+				// skip malformed
 			}
-		} catch {
-			// skip malformed
 		}
 	}
 
@@ -453,6 +460,75 @@ export const listAffiliationStatsFn = ({
 	if (nonNullish(limit) && limit > 0) {
 		return stats.slice(0, limit);
 	}
+
+	return stats;
+};
+
+/**
+ * List the frozen snapshot docs for a specific completed month.
+ * Returns affiliation stats for `(kind, *, monthAnchor)` — one row
+ * per affiliation that had any activity in that month.
+ *
+ * Drives the Worlds podium monthly fan-out: pick the top-3 here and
+ * credit VXP to every member of each. Sort key is the same as
+ * `listAffiliationStatsFn` so the leaderboard view and the awards
+ * agree.
+ */
+export const listAffiliationStatsForMonthFn = ({
+	kind,
+	monthAnchor
+}: {
+	kind: AffiliationKind;
+	monthAnchor: string;
+}): AffiliationStatsDoc[] => {
+	const caller = msgCaller();
+	const { items } = listDocsStore({
+		collection: Collection.AFFILIATION_STATS,
+		caller: caller.toUint8Array(),
+		params: {}
+	});
+
+	const expectedSuffix = `/${monthAnchor}`;
+	const stats: AffiliationStatsDoc[] = [];
+
+	for (const [docKey, item] of items) {
+		// Only 3-segment keys ending in `/${monthAnchor}` qualify — these
+		// are the frozen snapshots written at the moment the month
+		// rolled over.
+		const isSnapshotForMonth =
+			docKey.indexOf('/') !== docKey.lastIndexOf('/') && docKey.endsWith(expectedSuffix);
+
+		if (isSnapshotForMonth) {
+			try {
+				const doc = decodeDocData<AffiliationStatsDoc>(item.data);
+
+				if (
+					doc.kind === kind &&
+					doc.monthAnchor === monthAnchor &&
+					doc.monthTotalCalls >= MIN_CALLS_FOR_RANK
+				) {
+					stats.push(doc);
+				}
+			} catch {
+				// skip malformed
+			}
+		}
+	}
+
+	stats.sort((a, b) => {
+		const aAcc = a.monthWins / a.monthTotalCalls;
+		const bAcc = b.monthWins / b.monthTotalCalls;
+
+		if (aAcc !== bAcc) {
+			return bAcc - aAcc;
+		}
+
+		if (a.monthTotalCalls !== b.monthTotalCalls) {
+			return b.monthTotalCalls - a.monthTotalCalls;
+		}
+
+		return a.affiliationId < b.affiliationId ? -1 : a.affiliationId > b.affiliationId ? 1 : 0;
+	});
 
 	return stats;
 };

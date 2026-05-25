@@ -1405,6 +1405,9 @@ export const frMessages = {
 		'Moins de {min} pronos — précision visible, mais pas encore classé.',
 	'worlds.locked_until': "Verrouillé jusqu'au {date} · J-{days}",
 	'worlds.podium.bronze': '3e',
+	'worlds.podium.claim.body': '{count} prime(s) de podium créditée(s) pour {month}.',
+	'worlds.podium.claim.dismiss': 'Fermer',
+	'worlds.podium.claim.lede': 'Ton université est sur le podium.',
 	'worlds.podium.eyebrow': 'Podium mensuel',
 	'worlds.podium.gold': '1er',
 	'worlds.podium.hint':

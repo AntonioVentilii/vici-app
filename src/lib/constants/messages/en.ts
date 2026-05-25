@@ -1422,6 +1422,9 @@ export const enMessages = {
 		'Below {min} calls — accuracy shown but not yet on the ranked leaderboard.',
 	'worlds.locked_until': 'Locked until {date} · {days}d left',
 	'worlds.podium.bronze': '3rd',
+	'worlds.podium.claim.body': '{count} podium award(s) just credited for {month}.',
+	'worlds.podium.claim.dismiss': 'Dismiss',
+	'worlds.podium.claim.lede': 'Your school finished on the podium.',
 	'worlds.podium.eyebrow': 'Monthly podium',
 	'worlds.podium.gold': '1st',
 	'worlds.podium.hint':
