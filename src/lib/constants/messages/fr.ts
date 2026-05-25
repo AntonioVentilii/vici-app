@@ -35,6 +35,13 @@ export const frMessages = {
 	'achievement.oracle.name': 'Oracle',
 	'achievement.toast.message': '{name} débloqué · +{xp} XP',
 	'achievement.toast.title': 'Succès débloqué',
+	'album.awarded': 'Décerné',
+	'album.back': 'Retour au profil',
+	'album.close': 'Fermer',
+	'album.locked': 'Verrouillé',
+	'album.progress_eyebrow': 'Progression',
+	'album.progress_of': 'sur {total} obtenus',
+	'album.title': 'Mon album',
 	'admin.dashboard.sub':
 		'Gérez les marchés, créez de nouvelles opportunités, résolvez les prédictions expirées et gérez les administrateurs.',
 	'admin.dashboard.title': 'Tableau de bord admin',

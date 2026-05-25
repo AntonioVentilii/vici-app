@@ -35,6 +35,13 @@ export const esMessages = {
 	'achievement.oracle.name': 'Oráculo',
 	'achievement.toast.message': '{name} desbloqueado · +{xp} XP',
 	'achievement.toast.title': 'Logro desbloqueado',
+	'album.awarded': 'Conseguido',
+	'album.back': 'Volver al perfil',
+	'album.close': 'Cerrar',
+	'album.locked': 'Bloqueado',
+	'album.progress_eyebrow': 'Progreso',
+	'album.progress_of': 'de {total} obtenidos',
+	'album.title': 'Mi álbum',
 	'admin.dashboard.sub':
 		'Gestiona mercados, crea nuevas oportunidades, resuelve predicciones vencidas y administra a los administradores.',
 	'admin.dashboard.title': 'Panel de administración',

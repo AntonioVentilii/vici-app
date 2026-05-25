@@ -36,6 +36,13 @@ export const deMessages = {
 	'achievement.oracle.name': 'Oracle',
 	'achievement.toast.message': '{name} freigeschaltet · +{xp} XP',
 	'achievement.toast.title': 'Erfolg freigeschaltet',
+	'album.awarded': 'Erworben',
+	'album.back': 'Zurück zum Profil',
+	'album.close': 'Schließen',
+	'album.locked': 'Gesperrt',
+	'album.progress_eyebrow': 'Fortschritt',
+	'album.progress_of': 'von {total} erreicht',
+	'album.title': 'Mein Album',
 	'admin.dashboard.sub':
 		'Verwalte Märkte, erstelle neue Möglichkeiten, löse abgelaufene Vorhersagen auf und verwalte Administratoren.',
 	'admin.dashboard.title': 'Admin-Dashboard',

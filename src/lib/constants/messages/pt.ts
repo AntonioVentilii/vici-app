@@ -35,6 +35,13 @@ export const ptMessages = {
 	'achievement.oracle.name': 'Oráculo',
 	'achievement.toast.message': '{name} desbloqueado · +{xp} XP',
 	'achievement.toast.title': 'Conquista desbloqueada',
+	'album.awarded': 'Conquistado',
+	'album.back': 'Voltar ao perfil',
+	'album.close': 'Fechar',
+	'album.locked': 'Bloqueado',
+	'album.progress_eyebrow': 'Progresso',
+	'album.progress_of': 'de {total} obtidos',
+	'album.title': 'Meu álbum',
 	'admin.dashboard.sub':
 		'Gerencie mercados, crie novas oportunidades, resolva previsões expiradas e administre administradores.',
 	'admin.dashboard.title': 'Painel do Admin',

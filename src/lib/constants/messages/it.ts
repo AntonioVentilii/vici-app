@@ -35,6 +35,13 @@ export const itMessages = {
 	'achievement.oracle.name': 'Oracolo',
 	'achievement.toast.message': '{name} sbloccato · +{xp} XP',
 	'achievement.toast.title': 'Obiettivo sbloccato',
+	'album.awarded': 'Conseguito',
+	'album.back': 'Torna al profilo',
+	'album.close': 'Chiudi',
+	'album.locked': 'Bloccato',
+	'album.progress_eyebrow': 'Progresso',
+	'album.progress_of': 'di {total} ottenuti',
+	'album.title': 'Il mio album',
 	'admin.dashboard.sub':
 		'Gestisci i mercati, crea nuove opportunità, risolvi le previsioni scadute e gestisci gli amministratori.',
 	'admin.dashboard.title': 'Dashboard admin',

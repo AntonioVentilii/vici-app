@@ -35,6 +35,13 @@ export const enMessages = {
 	'achievement.oracle.name': 'Oracle',
 	'achievement.toast.message': '{name} unlocked · +{xp} XP',
 	'achievement.toast.title': 'Achievement unlocked',
+	'album.awarded': 'Awarded',
+	'album.back': 'Back to profile',
+	'album.close': 'Close',
+	'album.locked': 'Locked',
+	'album.progress_eyebrow': 'Progress',
+	'album.progress_of': 'of {total} earned',
+	'album.title': 'My album',
 	'admin.dashboard.sub':
 		'Manage markets, create new opportunities, resolve expired predictions, and manage administrators.',
 	'admin.dashboard.title': 'Admin Dashboard',

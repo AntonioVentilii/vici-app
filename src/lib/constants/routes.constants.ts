@@ -2,6 +2,7 @@ export enum AppPath {
 	Home = '/',
 	Markets = '/markets',
 	Profile = '/profile',
+	Album = '/profile/album',
 	Wallet = '/wallet',
 	Admin = '/admin',
 	AdminAccess = '/admin/access',
