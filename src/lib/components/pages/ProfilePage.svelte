@@ -3,16 +3,12 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import FeaturedEventChip from '$lib/components/featured-event/FeaturedEventChip.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import ProfileDashboard from '$lib/components/profile/ProfileDashboard.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import {
-		daysToKickoff,
-		featuredEvent,
-		featuredEventActive
-	} from '$lib/derived/featured-event.derived';
 	import { authBusy, authPrincipal } from '$lib/derived/user.derived';
 	import { getProfile } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -72,31 +68,10 @@
 		/>
 	</div>
 
-	{#if $featuredEventActive}
-		<!-- Featured-event chip — mirrors the one shipped on onboarding
-		     step 0 (72e62a0). Surfaces the live tentpole context on the
-		     profile page so users see the WC anchor whenever they land
-		     here. Reads from the same FeaturedEvent abstraction (b9dfb7d)
-		     so swapping the next event is still a one-export change. -->
-		<div class="profile-featured-event" role="note">
-			<span class="profile-featured-event-dot" aria-hidden="true"></span>
-			<span class="num">
-				{#if $daysToKickoff !== null && $daysToKickoff > 0}
-					{t({
-						locale: $localeStore,
-						key: 'profile.featured_event.upcoming',
-						params: { event: $featuredEvent.title, days: $daysToKickoff }
-					})}
-				{:else}
-					{t({
-						locale: $localeStore,
-						key: 'profile.featured_event.live',
-						params: { event: $featuredEvent.title }
-					})}
-				{/if}
-			</span>
-		</div>
-	{/if}
+	<FeaturedEventChip
+		liveKey="profile.featured_event.live"
+		upcomingKey="profile.featured_event.upcoming"
+	/>
 
 	{#if $userStore.profile}
 		<ProfileDashboard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
@@ -133,30 +108,6 @@
 </div>
 
 <style lang="postcss">
-	.profile-featured-event {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		align-self: flex-start;
-		padding: 0.35rem 0.7rem;
-		border: 1px solid color-mix(in srgb, var(--laurel) 28%, transparent);
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--laurel) 12%, transparent);
-		color: var(--laurel);
-		font-size: var(--t-12);
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.profile-featured-event-dot {
-		width: 0.4rem;
-		height: 0.4rem;
-		border-radius: 50%;
-		background: currentColor;
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--laurel) 18%, transparent);
-	}
-
 	.profile-mobile-icon-btn {
 		display: inline-flex;
 		width: 2.25rem;
