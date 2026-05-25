@@ -8,6 +8,8 @@
 	import ProposeBoutModal from '$lib/components/leagues/ProposeBoutModal.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
+		acceptBout,
+		kickoffBout,
 		leaveLeague,
 		listLeagueBouts,
 		listMyLeagues,
@@ -173,6 +175,53 @@
 	// accent) would need a batched lookup which we defer.
 	const opponentId = ({ bout, selfId }: { bout: BoutDoc; selfId: string }): string =>
 		bout.sideA === selfId ? bout.sideB : bout.sideA;
+
+	// Per-bout transition affordances. Owner-only — admins can promote
+	// members but not move bouts, per the V1.2 spec.
+	let actingBoutId = $state<string | null>(null);
+
+	const canAcceptBout = (bout: BoutDoc): boolean =>
+		myRole === 'owner' && bout.state === 'proposed' && bout.sideB === leagueId;
+
+	const canKickoffBout = (bout: BoutDoc): boolean =>
+		myRole === 'owner' &&
+		bout.state === 'accepted' &&
+		(bout.sideA === leagueId || bout.sideB === leagueId) &&
+		Date.now() >= bout.kickoffMs;
+
+	const handleAcceptBout = async (bout: BoutDoc) => {
+		if (actingBoutId !== null) {
+			return;
+		}
+
+		actingBoutId = bout.id;
+
+		try {
+			await acceptBout({ bout });
+			await load();
+		} catch (err) {
+			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		} finally {
+			actingBoutId = null;
+		}
+	};
+
+	const handleKickoffBout = async (bout: BoutDoc) => {
+		if (actingBoutId !== null) {
+			return;
+		}
+
+		actingBoutId = bout.id;
+
+		try {
+			await kickoffBout({ bout });
+			await load();
+		} catch (err) {
+			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+		} finally {
+			actingBoutId = null;
+		}
+	};
 </script>
 
 <div class="league-detail">
@@ -324,6 +373,29 @@
 													</span>
 												{/if}
 											</p>
+										{/if}
+										{#if canAcceptBout(bout)}
+											<button
+												class="league-detail-bout-action is-primary"
+												disabled={actingBoutId === bout.id}
+												onclick={() => handleAcceptBout(bout)}
+												type="button"
+											>
+												{actingBoutId === bout.id
+													? t({ locale: $localeStore, key: 'leagues.bout.action.accepting' })
+													: t({ locale: $localeStore, key: 'leagues.bout.action.accept' })}
+											</button>
+										{:else if canKickoffBout(bout)}
+											<button
+												class="league-detail-bout-action is-primary"
+												disabled={actingBoutId === bout.id}
+												onclick={() => handleKickoffBout(bout)}
+												type="button"
+											>
+												{actingBoutId === bout.id
+													? t({ locale: $localeStore, key: 'leagues.bout.action.starting' })
+													: t({ locale: $localeStore, key: 'leagues.bout.action.kickoff' })}
+											</button>
 										{/if}
 									</li>
 								{/each}
@@ -726,5 +798,35 @@
 	.league-detail-bout-score {
 		margin-left: 0.25rem;
 		color: var(--text-base);
+	}
+
+	.league-detail-bout-action {
+		appearance: none;
+		align-self: flex-start;
+		margin-top: 0.3rem;
+		padding: 0.4rem 0.85rem;
+		font: inherit;
+		font-size: var(--t-12);
+		font-weight: 700;
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			background 140ms ease,
+			border-color 140ms ease;
+	}
+
+	.league-detail-bout-action.is-primary {
+		color: var(--text-on-accent, #fff);
+		background: var(--laurel);
+		border: 1px solid var(--laurel);
+	}
+
+	.league-detail-bout-action.is-primary:hover:not(:disabled) {
+		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
+	}
+
+	.league-detail-bout-action:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 </style>

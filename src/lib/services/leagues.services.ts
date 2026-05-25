@@ -383,3 +383,68 @@ export const proposeBout = async ({
 
 	return bout;
 };
+
+/**
+ * Bout state transitions — thin write helpers. The satellite assert
+ * (BE-6) enforces the forward-only state machine + per-transition
+ * authorisation; the FE just packages the doc + signs the call.
+ *
+ * All three reads the existing doc first so we round-trip the
+ * server's `updated_at` token, which `setDoc` needs for the
+ * conflict-free update path.
+ */
+export const acceptBout = async ({ bout }: { bout: BoutDoc }): Promise<BoutDoc> => {
+	const next: BoutDoc = { ...bout, state: 'accepted' };
+	await writeBoutTransition({ bout, next });
+
+	return next;
+};
+
+export const kickoffBout = async ({ bout }: { bout: BoutDoc }): Promise<BoutDoc> => {
+	const next: BoutDoc = { ...bout, state: 'in_flight' };
+	await writeBoutTransition({ bout, next });
+
+	return next;
+};
+
+export const resolveBout = async ({
+	bout,
+	scoreA,
+	scoreB
+}: {
+	bout: BoutDoc;
+	scoreA: number;
+	scoreB: number;
+}): Promise<BoutDoc> => {
+	const winner = scoreA > scoreB ? 'A' : scoreA < scoreB ? 'B' : 'draw';
+	const next: BoutDoc = { ...bout, state: 'resolved', scoreA, scoreB, winner };
+	await writeBoutTransition({ bout, next });
+
+	return next;
+};
+
+const writeBoutTransition = async ({
+	bout,
+	next
+}: {
+	bout: BoutDoc;
+	next: BoutDoc;
+}): Promise<void> => {
+	const existing = await getDoc<BoutDoc>({
+		collection: Collection.BOUTS,
+		key: bout.id
+	});
+
+	if (!existing) {
+		throw new Error('Bout no longer exists.');
+	}
+
+	await setDoc<BoutDoc>({
+		collection: Collection.BOUTS,
+		doc: {
+			key: bout.id,
+			data: next,
+			updated_at: existing.updated_at
+		}
+	});
+};
