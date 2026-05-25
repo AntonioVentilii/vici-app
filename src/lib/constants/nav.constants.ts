@@ -4,16 +4,16 @@ import { CircleUserRound, House, LayoutDashboard, Shield, Users, Zap } from 'luc
 
 /**
  * Bottom-nav structure. The five visible tabs map 1:1 onto the design
- * prototype's pill-nav (Markets · Dash · Flow · Social · Profile) with
+ * pill-nav (Markets · Dash · Flow · Social · Profile) with
  * Flow centered and styled as the primary action. Admin is admin-only
- * and hidden by default per the V1.2 remodel scope decision.
+ * and hidden by default per the prototype remodel scope decision.
  *
  * Routes that don't have their own nav slot cascade active state to a
  * parent tab via `MobileNav.svelte`'s alias table:
  *
  *  - Markets ← /markets/[id]
  *  - Dash    ← /portfolio
- *  - Social  ← (Phase 10) /leagues, /worlds, /bouts, /tournament, leaderboard
+ *  - Social  ← () /leagues, /worlds, /bouts, /tournament, leaderboard
  *  - Profile ← /wallet, /settings, /notifications, /friends
  */
 export const navItems: NavItem[] = [

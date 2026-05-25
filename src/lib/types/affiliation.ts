@@ -1,6 +1,6 @@
 /**
- * V1.2 Worlds affiliations — a user's self-selected university and /
- * or country. Carries the signature 90-day lock from the V1.2 spec:
+ * prototype Worlds affiliations — a user's self-selected university and /
+ * or country. Carries the signature 90-day lock from the prototype spec:
  * once you pick an affiliation, you can't switch for 90 days. This
  * prevents users from chasing the Worlds leaderboard by hopping
  * between schools / nations mid-season.
@@ -41,7 +41,7 @@ export const AFFILIATION_KINDS: ReadonlySet<AffiliationKind> = new Set<Affiliati
 ]);
 
 /**
- * Lock window — V1.2 spec.
+ * Lock window — prototype spec.
  */
 export const AFFILIATION_LOCK_MS = 90 * 24 * 60 * 60 * 1000;
 

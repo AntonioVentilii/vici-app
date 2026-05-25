@@ -12,7 +12,7 @@ import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
 
 /**
  * Pre-write guard for `league_members`. The collection holds the
- * `(league, member, role)` triplet that the V1.2 social surface
+ * `(league, member, role)` triplet that the prototype social surface
  * lists, sorts, and counts against.
  *
  *  1. **Key shape.** The doc key must equal
@@ -147,7 +147,7 @@ export const assertSetLeagueMember = ({
  *
  *  2. **Self-leave OR owner-kick.** Either the member themselves
  *     (`caller === currentDoc.member`) or the league owner can remove
- *     a membership row. Admins can't kick — V1.2 reserves the
+ *     a membership row. Admins can't kick — prototype reserves the
  *     remove-other action for owners so a rogue admin can't quietly
  *     empty a league.
  *

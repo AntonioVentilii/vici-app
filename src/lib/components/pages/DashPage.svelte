@@ -166,9 +166,9 @@
 	</section>
 
 	<!-- Per-category accuracy. Requires per-category call tallying that
-	     the satellite doesn't track yet (V1.2 maps the field as
+	     the satellite doesn't track yet (prototype maps the field as
 	     me.categoryAcc[cat]). Placeholder stays until the category
-	     ledger lands in a later Phase 7 / Phase 11 commit. -->
+	     ledger lands in a later  /  commit. -->
 	<section
 		class="surface border-border bg-card flex flex-col gap-3 rounded-2xl border px-5 py-4"
 		aria-labelledby="dash-category-eyebrow"

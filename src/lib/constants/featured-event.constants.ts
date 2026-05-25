@@ -13,7 +13,7 @@ import type { FeaturedEvent } from '$lib/types/featured-event';
  * the abstraction in `$lib/types/featured-event` and the derivations in
  * `$lib/derived/featured-event.derived`.
  *
- * Source: V1.2 design prototype, `data.js` § WORLD_CUP. Names are kept
+ * Source: prototype design prototype, `data.js` § WORLD_CUP. Names are kept
  * as literal English; the rendering layer should layer i18n on top via
  * the participant `id` (ISO-3166 alpha-2 for football, where applicable).
  */

@@ -9,7 +9,7 @@
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Social — the prototype's three-tab page (Friends / Leagues /
+	 * Social — the three-tab page (Friends / Leagues /
 	 * Bouts) that anchors every cohort surface. Each tab embeds the
 	 * existing page component with `embedded={true}` so their own
 	 * appbars stay quiet; the tabbed parent renders the single

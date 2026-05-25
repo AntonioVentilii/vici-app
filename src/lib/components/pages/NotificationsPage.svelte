@@ -55,7 +55,7 @@
 	</header>
 
 	{#if $combinedInboxStore.length === 0}
-		<!-- V1.2 polished empty state — dashed surface with serif-italic
+		<!-- prototype polished empty state — dashed surface with serif-italic
 		     headline. The bell icon is faint by design (no foreground
 		     attention since there's no event to draw the eye). -->
 		<div class="notifications-empty" aria-live="polite" role="status">

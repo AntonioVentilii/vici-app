@@ -7,7 +7,7 @@
 	/**
 	 * Onboarding V2 orchestrator — the 3-beat sequence wired up.
 	 *
-	 * Beat 1 splits into two micro-phases per the V1.2 prototype:
+	 * Beat 1 splits into two micro-phases per the prototype:
 	 *
 	 *   1.a · team picker            (`pick` selects, `skip` advances null)
 	 *   1.b · derived first call     (`commit` advances side, "change team" returns to 1.a)

@@ -16,7 +16,7 @@ export interface UserPreferences {
 	callsPublic: boolean;
 	flowTags: string[];
 	/** Market ids the user has hearted to revisit later. Per-device
-	 *  preference — no backend round-trip. Mirrors V1.2's
+	 *  preference — no backend round-trip. Mirrors the prototype's
 	 *  `localStorage['vici.saved-markets']`. */
 	savedMarketIds: string[];
 }

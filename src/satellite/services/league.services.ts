@@ -12,7 +12,7 @@ import type { AssertSetDocContext } from '@junobuild/functions';
 import { decodeDocData } from '@junobuild/functions/sdk';
 
 /**
- * Pre-write guard for `leagues`. The collection holds V1.2 social
+ * Pre-write guard for `leagues`. The collection holds prototype social
  * cohorts; the rules here keep league identity stable across the
  * lifetime of the cohort so the join-by-code flow + standings
  * leaderboards can trust the metadata.

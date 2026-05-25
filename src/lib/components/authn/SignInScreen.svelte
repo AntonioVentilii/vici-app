@@ -14,7 +14,7 @@
 	interface Props {
 		// Mode: `signin` for returning users (welcome-back framing),
 		// `signup` for new accounts (currently routes to the onboarding
-		// flow once Phase 2 lands).
+		// flow once  lands).
 		mode?: 'signin' | 'signup';
 		// Callback for after a successful auth handshake. Defaults to
 		// navigating to `AppPath.Home`; routes calling this from a

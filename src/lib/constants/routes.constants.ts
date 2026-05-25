@@ -22,7 +22,7 @@ export enum AppPath {
  * unless they're already on a path in this set.
  *
  * `SignIn` is the canonical landing surface for unauthenticated users;
- * `SignUp` hosts the pre-sign-in onboarding flow (Phase 2). `/auth/...`
+ * `SignUp` hosts the pre-sign-in onboarding flow (). `/auth/...`
  * is the OAuth callback path used by `signInWithGoogle` and friends.
  */
 export enum PublicPath {

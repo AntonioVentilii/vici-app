@@ -215,7 +215,7 @@
 	>
 		<header class="flow-back-head">
 			<span class="allcaps flow-back-cat">{category}</span>
-			<!-- Save / unsave from the swipe deck — V1.2's prototype puts
+			<!-- Save / unsave from the swipe deck — the prototype puts
 			     the heart on the card back face so users can bookmark a
 			     market for later without committing a stake. Uses the
 			     shared SavedMarketToggle so the bookmark state stays in

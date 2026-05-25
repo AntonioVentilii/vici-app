@@ -159,7 +159,7 @@
 			</div>
 		</section>
 
-		<!-- Featured-event section — V1.2 landing has a dedicated tentpole
+		<!-- Featured-event section — prototype landing has a dedicated tentpole
 		     block above LiveMarkets (WC in the prototype). Self-gated on
 		     featuredEventActive so the section disappears post-archive
 		     without a layout change. Reads from the FeaturedEvent

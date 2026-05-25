@@ -131,7 +131,7 @@
 		<!-- When the user has flipped the Saved filter on, the page is a
 		     focused "my saved markets" view — the editorial rail
 		     (suggested / event-scoped) is hidden so the surface matches
-		     V1.2's saved-only mode where the saved cards are the only
+		     the prototype's saved-only mode where the saved cards are the only
 		     thing on screen. Hiding the rail also avoids the visual
 		     tension of an editorial pick competing with the user's own
 		     bookmarks. -->
@@ -187,7 +187,7 @@
 				tabs={tabs.map((tab) => ({ id: tab, label: tabLabel(tab) }))}
 			/>
 
-			<!-- V1.2 Markets carries a heart-prefixed "Saved" filter chip
+			<!-- prototype Markets carries a heart-prefixed "Saved" filter chip
 			     alongside the category chips. We expose it as a toggle next
 			     to the list eyebrow so users can scope the list to their
 			     hearted markets without disturbing the other filters.
@@ -251,7 +251,7 @@
 			</div>
 
 			{#if savedOnly && filteredMarkets.length === 0 && !loading}
-				<!-- V1.2 polished empty state when the user is in saved-only
+				<!-- prototype polished empty state when the user is in saved-only
 				     view and has nothing hearted yet. Same dashed-surface +
 				     serif-italic-headline pattern used by NotificationsPage
 				     (bace2bd). The heart eyebrow keeps the affordance

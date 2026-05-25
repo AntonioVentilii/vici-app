@@ -7,12 +7,12 @@
 	/**
 	 * Onboarding V2 · Beat 3 — lock in the record.
 	 *
-	 * V1.2's final beat surfaces a "narrative summary" of the choices
+	 * the prototype's final beat surfaces a "narrative summary" of the choices
 	 * from Beats 1.a + 1.b + 2 (team / side / handle) right above the
 	 * auth surface so the journey reads as a complete sentence before
 	 * the user authenticates. The auth row itself mounts the existing
 	 * production `SignInActions` (Juno II + Google SSO + Passkey +
-	 * dev), so this beat is a thin V1.2-shaped frame, not a reauth
+	 * dev), so this beat is a thin prototype-shaped frame, not a reauth
 	 * implementation.
 	 *
 	 * Emits `onComplete` once auth resolves. `onBack` returns to

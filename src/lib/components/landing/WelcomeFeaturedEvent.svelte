@@ -13,7 +13,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
-	// Mirrors V1.2's landing WCFeature section — eyebrow + countdown,
+	// Mirrors the prototype's landing WCFeature section — eyebrow + countdown,
 	// big title, CTA, and a small grid of favourite participants. Reads
 	// entirely from the FeaturedEvent abstraction (b9dfb7d) so swapping
 	// the next tentpole (Olympics, election, …) is a one-export change

@@ -32,7 +32,7 @@ import { decodeDocData } from '@junobuild/functions/sdk';
  *  5. **Identity fields are immutable.** `awardType`, `awardKey`,
  *     `amountBaseUnits`, `earnedAtMs`, `recipient` are write-once.
  *
- * The follow-up Phase 7 commits will add the streak / comeback / referral
+ * The follow-up  commits will add the streak / comeback / referral
  * hooks that actually create these docs; this assert is the safety net
  * those hooks rely on.
  */

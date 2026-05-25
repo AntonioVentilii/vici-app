@@ -15,7 +15,7 @@ import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobui
 
 /**
  * Streak-milestone hook. Runs after every `profiles` write; when the
- * user's `dailyStreak` crosses one of the V1.2 milestone boundaries
+ * user's `dailyStreak` crosses one of the prototype milestone boundaries
  * (3 / 7 / 14 / 30), credits the corresponding VXP bonus to their
  * ledger account and persists the payout in `vxp_awards`.
  *

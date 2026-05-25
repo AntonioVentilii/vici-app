@@ -31,7 +31,7 @@
 		/**
 		 * Primary category tag for this market (e.g. `macro`, `crypto`).
 		 * When supplied, renders a colored category chip at the start of the
-		 * header strip — mirrors V1.2's MarketRow pattern so the category
+		 * header strip — mirrors the prototype's MarketRow pattern so the category
 		 * accent reads at a glance on the list. Optional so call sites that
 		 * don't have tags hydrated yet stay backward-compatible.
 		 */

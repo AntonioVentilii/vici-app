@@ -404,7 +404,7 @@ export const fromWireReferral = (referral: ApiWireReferral): ReferralListItem =>
 	referrerPayout: fromWireMilestone(referral.referrer_payout)
 });
 
-// ─── Leagues (Phase 10) ──────────────────────────────────────────────────
+// ─── Leagues () ──────────────────────────────────────────────────
 // Wire schemas use snake_case per the juno codegen constraint on
 // `Vec<NestedStruct>` (see UserProfileWireSchema header). FE callers
 // hit `fromWireLeague` / `fromWireLeagueMember` to project back to
@@ -479,7 +479,7 @@ export const toWireLeagueMember = (member: {
 	role: member.role
 });
 
-// ─── Bouts (Phase 10) ────────────────────────────────────────────────────
+// ─── Bouts () ────────────────────────────────────────────────────
 
 export const BoutWireSchema = j.strictObject({
 	id: j.string(),
@@ -523,7 +523,7 @@ export const toWireBout = (bout: {
 	winner: bout.winner
 });
 
-// ─── Affiliations (Phase 10) ─────────────────────────────────────────────
+// ─── Affiliations () ─────────────────────────────────────────────
 
 export const AffiliationWireSchema = j.strictObject({
 	member: PrincipalTextSchema,

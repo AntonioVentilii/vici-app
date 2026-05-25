@@ -21,7 +21,7 @@
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Phase 10 FE-3e — cross-league bouts inbox.
+	 * cross-league bouts inbox.
 	 *
 	 * Aggregates every bout involving any of the caller's leagues into
 	 * one timeline, grouped by state. Owners can act inline (Accept,

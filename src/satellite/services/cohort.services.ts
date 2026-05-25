@@ -8,7 +8,7 @@ import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
 
 /**
- * Service-layer aggregation for the V1.2 social-cohort surface. Pure
+ * Service-layer aggregation for the prototype social-cohort surface. Pure
  * read helpers over the `leagues` + `league_members` collections;
  * exposed as `defineQuery` endpoints in `satellite/index.ts`.
  *
@@ -98,7 +98,7 @@ export const listMyLeaguesFn = (): LeagueWithRole[] => {
  * that.
  *
  * Sorted by `joinedAtMs` ascending so the league's roster reads
- * "earliest joiner first" — matches V1.2's league-detail member
+ * "earliest joiner first" — matches the prototype's league-detail member
  * panel ordering.
  */
 export const listLeagueMembersFn = ({ leagueId }: { leagueId: string }): LeagueMemberDoc[] => {
@@ -175,7 +175,7 @@ export const listLeagueBoutsFn = ({ leagueId }: { leagueId: string }): BoutDoc[]
  *
  * League-side resolution is N+1: each kind='league' bout triggers a
  * `getDocStore` lookup against `LEAGUES` to check ownership. Fine for
- * the bout volumes we expect on the V1.2 social surface; a reverse
+ * the bout volumes we expect on the prototype social surface; a reverse
  * index would only matter past ~100s of bouts per user.
  *
  * Sorted by `kickoffMs` ascending.
@@ -319,7 +319,7 @@ export const listMyAffiliationsFn = (): {
 
 /**
  * Roster scan for a Worlds slot — every user affiliated with a given
- * university or country. Drives the V1.2 Worlds leaderboard / cohort
+ * university or country. Drives the prototype Worlds leaderboard / cohort
  * summary surface.
  *
  * Scans the full `affiliations` collection and filters on the

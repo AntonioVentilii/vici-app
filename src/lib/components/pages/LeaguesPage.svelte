@@ -10,7 +10,7 @@
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Phase 10 FE-1b — V1.2 social cohorts list page.
+	 * prototype social cohorts list page.
 	 *
 	 * Lists every league the caller is a member of via the satellite
 	 * `listMyLeagues` query. Create + Join CTAs are stubs in this

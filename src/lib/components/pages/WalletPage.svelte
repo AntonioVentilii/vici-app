@@ -224,7 +224,7 @@
 
 	<CollateralModal isOpen={isCollateralModalOpen} onClose={() => (isCollateralModalOpen = false)} />
 
-	<!-- Dual CTA strip — V1.2 wallets nudge the user to spend VXP rather
+	<!-- Dual CTA strip — prototype wallets nudge the user to spend VXP rather
 	     than letting it sit. Primary opens Flow; ghost routes to the
 	     markets list so users with an active call in mind can find one
 	     directly. Stacks on mobile, side-by-side from small breakpoint up. -->

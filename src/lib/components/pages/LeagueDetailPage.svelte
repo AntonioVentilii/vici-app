@@ -28,7 +28,7 @@
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Phase 10 FE-2 — V1.2 league detail page.
+	 * prototype league detail page.
 	 *
 	 * Mounts at `/social/leagues/[id]`. Renders the league header,
 	 * member roster (via `listLeagueMembers`), the invite code for
@@ -157,7 +157,7 @@
 		return shortPrincipal(principal);
 	};
 
-	// Bouts grouped by state. Order matches V1.2's prototype panel —
+	// Bouts grouped by state. Order matches the prototype panel —
 	// active first (in_flight), then near-term (accepted / proposed),
 	// resolved at the bottom.
 	const BOUT_STATE_ORDER: readonly BoutState[] = [
@@ -202,7 +202,7 @@
 		bout.sideA === selfId ? bout.sideB : bout.sideA;
 
 	// Per-bout transition affordances. Owner-only — admins can promote
-	// members but not move bouts, per the V1.2 spec.
+	// members but not move bouts, per the prototype spec.
 	let actingBoutId = $state<string | null>(null);
 	let resolveBoutTarget = $state<BoutDoc | null>(null);
 

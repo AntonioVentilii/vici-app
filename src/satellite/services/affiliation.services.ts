@@ -12,7 +12,7 @@ import { time } from '@junobuild/functions/ic-cdk';
 import { decodeDocData } from '@junobuild/functions/sdk';
 
 /**
- * Pre-write guard for `affiliations`. Enforces the V1.2 Worlds
+ * Pre-write guard for `affiliations`. Enforces the prototype Worlds
  * 90-day affiliation lock:
  *
  *  1. **Key shape.** `${member}/${kind}/${affiliationId}`. Drift
@@ -125,7 +125,7 @@ export const assertSetAffiliation = ({
  *
  *  1. **Caller binds member.** Only the affiliation's owner can
  *     remove their row — admins / staff don't get a kick path on
- *     Worlds slots (V1.2 spec: the user owns their identity).
+ *     Worlds slots (prototype spec: the user owns their identity).
  *  2. **Lock enforced.** The delete is rejected if
  *     `Date.now() < currentDoc.lockedUntilMs`. After the lock
  *     expires, the user can leave (or switch by deleting then

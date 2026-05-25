@@ -8,7 +8,7 @@
 	/**
 	 * Onboarding V2 · Beat 1.b — derived prediction card.
 	 *
-	 * Composes the V1.2 prototype's "first call" card from the picked
+	 * Composes the "first call" card from the picked
 	 * team (or skip path) chosen in Beat 1.a. Two question modes:
 	 *
 	 *   - Picked team → advancement market ("Will X make the round of

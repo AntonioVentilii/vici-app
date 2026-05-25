@@ -7,7 +7,7 @@
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Phase 10 FE-3b — propose-bout modal.
+	 * propose-bout modal.
 	 *
 	 * The user (league owner) types the opponent league's 6-char
 	 * invite code, picks a kickoff + settle date, and submits. The

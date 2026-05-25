@@ -10,7 +10,7 @@ import {
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 
 /**
- * V1.2 Worlds affiliations — thin FE service wrapping the satellite
+ * prototype Worlds affiliations — thin FE service wrapping the satellite
  * read queries + the write / delete primitives via `@junobuild/core`.
  * Mirrors the leagues service shape; consumers (Worlds picker page,
  * Worlds detail / leaderboard) import the camelCase domain types

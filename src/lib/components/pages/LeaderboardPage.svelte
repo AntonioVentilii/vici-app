@@ -328,9 +328,9 @@
 											})}
 										</span>
 										<span class="text-border text-[9px]">•</span>
-										<!-- Match V1.2's accuracy-as-signal treatment: only colour
+										<!-- Match the prototype's accuracy-as-signal treatment: only colour
 										     the stat green when the user is genuinely above-average
-										     (>=78%, the same cut V1.2 uses). Below that the number
+										     (>=78%, the same cut prototype uses). Below that the number
 										     is a neutral muted-foreground so the green pops as a
 										     real performance signal, not as page decoration. -->
 										<span

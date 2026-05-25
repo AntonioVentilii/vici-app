@@ -76,7 +76,7 @@
 	   register: a faceted figure (`wc-figure`), two spotlight cones
 	   (`wc-spot`, paired left/right), and 0–10 confetti shards
 	   (`wc-cnf` with a per-shard `wc-cnf-${i}` for stagger). These
-	   were inert until now — the prototype's CSS keyframes ship here
+	   were inert until now — the CSS keyframes ship here
 	   so every WC-tagged Flow card animates without changing the
 	   render layer.
 

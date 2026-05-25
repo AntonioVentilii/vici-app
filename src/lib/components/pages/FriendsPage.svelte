@@ -42,7 +42,7 @@
 	{/if}
 
 	<div class="friends-body">
-		<!-- V1.2 FriendsScreen leads with the invite hero so the
+		<!-- prototype FriendsScreen leads with the invite hero so the
 		     friends ↔ invite loop is immediately discoverable. We reuse
 		     the same ReferralCard that already lives on the profile
 		     dashboard so the invite copy / referral counter / share

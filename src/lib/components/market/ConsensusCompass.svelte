@@ -6,14 +6,14 @@
 	 * The label under the dial shows the *leading side's* percentage so
 	 * a market with 35% YES reads as "65%" pointing down.
 	 *
-	 * Ported from the Beta V1.2 prototype. Drives semantic colour off the
+	 * Ported from the Beta prototype. Drives semantic colour off the
 	 * leading side (--yes / --no) rather than the category palette so it
 	 * reads as a market-state indicator, not a category accent.
 	 */
 	interface Props {
 		// 0–1 YES-side probability. Clamped defensively to [0, 1].
 		yesProbability: number;
-		// Rendered px size (square). 42 mirrors the V1.2 in-card dial; 56
+		// Rendered px size (square). 42 mirrors the prototype in-card dial; 56
 		// works well on a wider FlowCardBack panel.
 		size?: number;
 	}

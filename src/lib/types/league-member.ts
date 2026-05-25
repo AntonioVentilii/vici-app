@@ -1,5 +1,5 @@
 /**
- * V1.2 social cohorts — league membership.
+ * prototype social cohorts — league membership.
  *
  * One doc per `(league, member)` pair. The doc key is
  * `${leagueId}/${memberPrincipal}` so:
@@ -42,7 +42,7 @@ export const leagueMemberKey = ({
 }): string => `${leagueId}/${memberPrincipal}`;
 
 /**
- * Roles known to the V1.2 surface. Defensive validation in the
+ * Roles known to the prototype surface. Defensive validation in the
  * assert uses this set; future role additions land here first.
  */
 export const LEAGUE_MEMBER_ROLES: ReadonlySet<LeagueMemberRole> = new Set<LeagueMemberRole>([

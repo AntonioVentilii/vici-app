@@ -1,5 +1,5 @@
 /**
- * V1.2 social cohorts — bouts.
+ * prototype social cohorts — bouts.
  *
  * A bout is a time-bound competition between two parties:
  *

@@ -6,7 +6,7 @@
 	/**
 	 * Onboarding V2 · Beat 2 — claim a handle.
 	 *
-	 * Mirrors the V1.2 prototype's two-mode picker: pool (Roman-name
+	 * Mirrors the two-mode picker: pool (Roman-name
 	 * suggestions) and custom (free-form input). Validates against
 	 * length, character set, and a small reserved set. Renders an
 	 * affiliation chip preview showing the picked team beside the
@@ -26,7 +26,7 @@
 
 	const { participantId, onAdvance, onBack }: Props = $props();
 
-	// V1.2 ROMAN_POOL — kept as a literal so the visible roster matches
+	// prototype ROMAN_POOL — kept as a literal so the visible roster matches
 	// the prototype exactly. Reserved set covers the obvious squatters;
 	// real availability would come from a backend lookup but is faked
 	// here to keep the onboarding offline-tolerant.

@@ -1,5 +1,5 @@
 /**
- * V1.2 social cohorts — leagues.
+ * prototype social cohorts — leagues.
  *
  * A league is a user-created cohort with a 6-char alphanumeric invite
  * code that the owner shares to bring members in. Members and bouts

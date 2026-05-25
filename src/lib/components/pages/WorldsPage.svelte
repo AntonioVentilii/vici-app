@@ -20,7 +20,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Phase 10 FE-4b — V1.2 Worlds picker page.
+	 * prototype Worlds picker page.
 	 *
 	 * Two slots — university + country — each in either an empty
 	 * (picker grid) or locked (countdown card) state. The 90-day

@@ -6,7 +6,7 @@
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Phase 10 FE-3d — resolve-bout modal.
+	 * resolve-bout modal.
 	 *
 	 * Both sides' scores are entered manually. Winner is derived from
 	 * the arithmetic and previewed in real time so the user sees the

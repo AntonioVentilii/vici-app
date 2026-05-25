@@ -358,7 +358,7 @@ export const redeemReferralCode = defineUpdate({
 	handler: redeemReferralCodeFn
 });
 
-// ─── Social cohorts (Phase 10) ───────────────────────────────────────────
+// ─── Social cohorts () ───────────────────────────────────────────
 
 export const listMyLeagues = defineQuery({
 	result: j.strictObject({
@@ -399,7 +399,7 @@ export const lookupLeagueByInvite = defineQuery({
 	}
 });
 
-// ─── Bouts (Phase 10) ────────────────────────────────────────────────────
+// ─── Bouts () ────────────────────────────────────────────────────
 
 export const listLeagueBouts = defineQuery({
 	args: j.strictObject({
@@ -422,7 +422,7 @@ export const listMyBouts = defineQuery({
 	})
 });
 
-// ─── Worlds affiliations (Phase 10) ──────────────────────────────────────
+// ─── Worlds affiliations () ──────────────────────────────────────
 
 export const listMyAffiliations = defineQuery({
 	result: j.strictObject({
