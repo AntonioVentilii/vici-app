@@ -129,8 +129,63 @@
 	--r-12: 12px;
 	--r-pill: 999px;
 
+	/* Locked 5-value radii alias set used by V1.2 components — names map
+	 * onto the numeric scale so call-sites can write `var(--r-m)` instead
+	 * of memorising `--r-8`. */
+	--r-s: 4px;
+	--r-m: 8px;
+	--r-l: 12px;
+	--r-xl: 18px;
+
+	/* Spacing scale — 8-point base, no exceptions outside this scale.
+	 * Two parallel naming schemes are exposed because V1.2 components
+	 * use both (`--space-N` is the newer, semantic-rank scale; `--s-N`
+	 * is the wider raw-pixel scale used in dense layouts). */
+	--space-1: 4px;
+	--space-2: 8px;
+	--space-3: 12px;
+	--space-4: 16px;
+	--space-6: 24px;
+	--space-8: 32px;
+	--space-12: 48px;
+
+	--s-2: 2px;
+	--s-4: 4px;
+	--s-8: 8px;
+	--s-12: 12px;
+	--s-16: 16px;
+	--s-24: 24px;
+	--s-32: 32px;
+	--s-48: 48px;
+	--s-64: 64px;
+	--s-96: 96px;
+	--s-128: 128px;
+
+	/* Named font-size tokens — locked role-named set. Sits alongside the
+	 * numeric `--t-*` scale (modular 1.25) so editorial / display moments
+	 * keep the numeric ramp, while UI labels read against the role names
+	 * (eyebrow / sub / body / h*). */
+	--text-micro: 10px;
+	--text-eyebrow: 11px;
+	--text-sub: 12px;
+	--text-body-sm: 13px;
+	--text-body: 14px;
+	--text-h3: 16px;
+	--text-h4: 18px;
+	--text-h2: 22px;
+	--text-display: 32px;
+
+	/* Two-curve animation set used by stagecraft / motion-engine — the
+	 * existing `--ease-vici` curve and `--d-*` durations cover most call
+	 * sites; these aliases match the V1.2 motion language explicitly. */
+	--ease-quick: cubic-bezier(0.2, 0.8, 0.4, 1);
+	--ease-stage: cubic-bezier(0.16, 1, 0.3, 1);
+	--dur-quick: 150ms;
+	--dur-stage: 360ms;
+
 	/* Layout */
 	--content-max: 1280px;
+	--reading-max: 64ch;
 	--header-h: 56px;
 	--ticker-h: 32px;
 	--bottomnav-h: 64px;
