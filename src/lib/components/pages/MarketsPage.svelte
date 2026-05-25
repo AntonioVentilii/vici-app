@@ -225,14 +225,31 @@
 				<span class="num text-muted-foreground text-xs font-bold">{filteredMarkets.length}</span>
 			</div>
 
-			<MarketFeed
-				emptyMessage={t({ locale: $localeStore, key: 'markets.empty' })}
-				{loading}
-				markets={filteredMarkets}
-				metadataBySeries={$marketMetadata}
-				onChallenge={handleChallenge}
-				tagsBySeries={$marketTags}
-			/>
+			{#if savedOnly && filteredMarkets.length === 0 && !loading}
+				<!-- V1.2 polished empty state when the user is in saved-only
+				     view and has nothing hearted yet. Same dashed-surface +
+				     serif-italic-headline pattern used by NotificationsPage
+				     (bace2bd). The heart eyebrow keeps the affordance
+				     visible so the user knows what action they're missing. -->
+				<div class="markets-saved-empty mx-auto max-w-4xl" aria-live="polite" role="status">
+					<Heart class="markets-saved-empty-icon" aria-hidden="true" size={28} strokeWidth={1.4} />
+					<p class="markets-saved-empty-title serif-italic">
+						{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}
+					</p>
+					<p class="markets-saved-empty-body">
+						{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
+					</p>
+				</div>
+			{:else}
+				<MarketFeed
+					emptyMessage={t({ locale: $localeStore, key: 'markets.empty' })}
+					{loading}
+					markets={filteredMarkets}
+					metadataBySeries={$marketMetadata}
+					onChallenge={handleChallenge}
+					tagsBySeries={$marketTags}
+				/>
+			{/if}
 		</div>
 	</div>
 
@@ -244,6 +261,37 @@
 </section>
 
 <style lang="postcss">
+	.markets-saved-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 2.5rem 1.5rem;
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+		background: transparent;
+		text-align: center;
+	}
+
+	.markets-saved-empty :global(.markets-saved-empty-icon) {
+		color: var(--parchment-faint);
+		margin-bottom: 0.25rem;
+	}
+
+	.markets-saved-empty-title {
+		margin: 0;
+		font-size: var(--t-18);
+		color: var(--text-base);
+	}
+
+	.markets-saved-empty-body {
+		margin: 0;
+		max-width: 28rem;
+		font-size: var(--t-13);
+		line-height: 1.55;
+		color: var(--text-muted);
+	}
+
 	.markets-mobile-title {
 		margin: 0;
 		color: var(--text-base);

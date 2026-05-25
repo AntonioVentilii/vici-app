@@ -680,6 +680,9 @@ export const itMessages = {
 	'markets.search': 'Cerca mercati...',
 	'markets.sub':
 		'Centinaia di domande tra macro, crypto, politica, tech, sport e cultura. Tutte si chiudono su dati pubblici.',
+	'markets.saved_empty.body':
+		'Tocca il cuore su un mercato per salvarlo. I tuoi preferiti compaiono qui.',
+	'markets.saved_empty.title': 'Nessun mercato salvato.',
 	'markets.suggested.eyebrow': 'SCELTI DALLA REDAZIONE',
 	'markets.suggested.eyebrow_event': 'EVENTO IN EVIDENZA',
 	'markets.suggested.title': 'Suggeriti per te',

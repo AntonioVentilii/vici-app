@@ -647,6 +647,8 @@ export const zhCnMessages = {
 	'markets.page.title': '选一个问题。',
 	'markets.search': '搜索市场……',
 	'markets.sub': '宏观、加密、政治、科技、体育与文化中的数百个问题。每一个都依据公开数据结算。',
+	'markets.saved_empty.body': '点击任意市场上的心形图标即可保存。你的收藏会出现在这里。',
+	'markets.saved_empty.title': '还没有保存的市场。',
 	'markets.suggested.eyebrow': '编辑精选',
 	'markets.suggested.eyebrow_event': '焦点赛事',
 	'markets.suggested.title': '为你推荐',
