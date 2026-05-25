@@ -1274,6 +1274,13 @@ export const deMessages = {
 	'welcome.deck.predictors_count': '{count} sagen voraus',
 	'welcome.deck.question': 'Senkt die Fed im Juni die Zinsen?',
 	'welcome.deck.subtitle': 'FOMC · Zinssenkungs-Call',
+	'welcome.featured_event.countdown': '{days} Tage bis Kickoff',
+	'welcome.featured_event.countdown_live': 'Live jetzt',
+	'welcome.featured_event.cta': 'Wähle dein Team',
+	'welcome.featured_event.eyebrow': 'Tentpole-Event',
+	'welcome.featured_event.sub':
+		'Wähle deinen Favoriten, mach deinen ersten Call und starte deine Bilanz mit {event}.',
+	'welcome.featured_event.to_win': '{odds}% zum Sieg',
 	'onboarding.handle.checking': 'Verfügbarkeit wird geprüft…',
 	'onboarding.handle.error_check_failed':
 		'Verfügbarkeit konnte nicht geprüft werden. Bitte erneut versuchen.',

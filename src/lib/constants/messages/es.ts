@@ -1270,6 +1270,13 @@ export const esMessages = {
 	'welcome.deck.predictors_count': '{count} prediciendo',
 	'welcome.deck.question': '¿Recortará la Fed las tasas en junio?',
 	'welcome.deck.subtitle': 'FOMC · decisión sobre tasas',
+	'welcome.featured_event.countdown': '{days}d para el inicio',
+	'welcome.featured_event.countdown_live': 'En directo',
+	'welcome.featured_event.cta': 'Elige tu equipo',
+	'welcome.featured_event.eyebrow': 'Evento destacado',
+	'welcome.featured_event.sub':
+		'Elige tu favorito, haz tu primera predicción y empieza tu historial con {event}.',
+	'welcome.featured_event.to_win': '{odds}% para ganar',
 	'onboarding.handle.checking': 'Comprobando disponibilidad…',
 	'onboarding.handle.error_check_failed':
 		'No se pudo comprobar la disponibilidad. Inténtalo de nuevo.',

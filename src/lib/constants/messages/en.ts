@@ -1305,5 +1305,12 @@ export const enMessages = {
 	'welcome.deck.consensus': '74% YES CONSENSUS',
 	'welcome.deck.predictors_count': '{count} predicting',
 	'welcome.deck.question': 'Will the Fed cut rates in June?',
-	'welcome.deck.subtitle': 'FOMC · rate-cut call'
+	'welcome.deck.subtitle': 'FOMC · rate-cut call',
+	'welcome.featured_event.countdown': '{days}d to kickoff',
+	'welcome.featured_event.countdown_live': 'Live now',
+	'welcome.featured_event.cta': 'Pick your team',
+	'welcome.featured_event.eyebrow': 'Featured event',
+	'welcome.featured_event.sub':
+		'Pick your favourite, make your first call, and let your record start with the {event}.',
+	'welcome.featured_event.to_win': '{odds}% to win'
 } as const;

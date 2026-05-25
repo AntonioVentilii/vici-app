@@ -1261,6 +1261,13 @@ export const ptMessages = {
 	'welcome.deck.predictors_count': '{count} prevendo',
 	'welcome.deck.question': 'O Fed cortará juros em junho?',
 	'welcome.deck.subtitle': 'FOMC · corte de juros',
+	'welcome.featured_event.countdown': '{days}d para o início',
+	'welcome.featured_event.countdown_live': 'Ao vivo',
+	'welcome.featured_event.cta': 'Escolha seu time',
+	'welcome.featured_event.eyebrow': 'Evento em destaque',
+	'welcome.featured_event.sub':
+		'Escolha seu favorito, faça sua primeira previsão e comece seu histórico com {event}.',
+	'welcome.featured_event.to_win': '{odds}% para vencer',
 	'onboarding.handle.checking': 'A verificar disponibilidade…',
 	'onboarding.handle.error_check_failed':
 		'Não foi possível verificar a disponibilidade. Tenta novamente.',

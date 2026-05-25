@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
+	import WelcomeFeaturedEvent from '$lib/components/landing/WelcomeFeaturedEvent.svelte';
 	import WelcomeFinalCTA from '$lib/components/landing/WelcomeFinalCTA.svelte';
 	import WelcomeFlowFeature from '$lib/components/landing/WelcomeFlowFeature.svelte';
 	import WelcomeFooter from '$lib/components/landing/WelcomeFooter.svelte';
@@ -156,6 +157,15 @@
 					</div>
 				</div>
 			</div>
+		</section>
+
+		<!-- Featured-event section — V1.2 landing has a dedicated tentpole
+		     block above LiveMarkets (WC in the prototype). Self-gated on
+		     featuredEventActive so the section disappears post-archive
+		     without a layout change. Reads from the FeaturedEvent
+		     abstraction; swapping the next event needs no template edit. -->
+		<section id="featured-event" class="welcome-section">
+			<WelcomeFeaturedEvent />
 		</section>
 
 		<section id="markets" class="welcome-section">

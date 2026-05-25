@@ -1275,6 +1275,13 @@ export const frMessages = {
 	'welcome.deck.predictors_count': '{count} prédisent',
 	'welcome.deck.question': 'La Fed baissera-t-elle les taux en juin ?',
 	'welcome.deck.subtitle': 'FOMC · décision de baisse de taux',
+	'welcome.featured_event.countdown': '{days}j avant le coup d’envoi',
+	'welcome.featured_event.countdown_live': 'En direct',
+	'welcome.featured_event.cta': 'Choisis ton équipe',
+	'welcome.featured_event.eyebrow': 'Événement phare',
+	'welcome.featured_event.sub':
+		'Choisis ta favorite, fais ton premier pronostic, démarre ton historique avec {event}.',
+	'welcome.featured_event.to_win': '{odds}% pour gagner',
 	'onboarding.handle.checking': 'Vérification de la disponibilité…',
 	'onboarding.handle.error_check_failed': 'Impossible de vérifier la disponibilité. Réessayez.',
 	'onboarding.handle.required': 'Choisissez un handle pour continuer.',

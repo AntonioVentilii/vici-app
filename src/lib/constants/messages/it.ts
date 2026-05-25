@@ -1259,6 +1259,13 @@ export const itMessages = {
 	'welcome.deck.predictors_count': '{count} prevedono',
 	'welcome.deck.question': 'La Fed taglierà i tassi a giugno?',
 	'welcome.deck.subtitle': 'FOMC · decisione sui tassi',
+	'welcome.featured_event.countdown': '{days}g al kickoff',
+	'welcome.featured_event.countdown_live': 'In corso',
+	'welcome.featured_event.cta': 'Scegli la tua squadra',
+	'welcome.featured_event.eyebrow': 'Evento in evidenza',
+	'welcome.featured_event.sub':
+		'Scegli la tua favorita, fai la tua prima previsione, fai partire la tua bacheca con {event}.',
+	'welcome.featured_event.to_win': '{odds}% per vincere',
 	'onboarding.handle.checking': 'Verifica disponibilità…',
 	'onboarding.handle.error_check_failed': 'Impossibile verificare la disponibilità. Riprova.',
 	'onboarding.handle.required': 'Scegli uno handle per continuare.',
