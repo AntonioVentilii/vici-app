@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Heart } from 'lucide-svelte/icons';
+	import { Heart, X } from 'lucide-svelte/icons';
 	import ForkMarketModal from '$lib/components/challenge/ForkMarketModal.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import MarketCard from '$lib/components/market/MarketCard.svelte';
@@ -197,29 +197,49 @@
 				<div class="flex items-center gap-3">
 					<h2 class="eyebrow">{tabLabel(activeTab as (typeof tabs)[number])}</h2>
 					{#if savedCount > 0}
-						<button
+						<div
 							class={[
-								'duration-state ease-vici inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-bold transition-colors',
+								'duration-state ease-vici inline-flex items-center rounded-full border text-[11px] font-bold transition-colors',
 								savedOnly
 									? 'border-laurel/40 bg-laurel-glow text-laurel'
 									: 'border-border text-muted-foreground hover:border-laurel/40 hover:text-laurel'
 							]}
-							aria-pressed={savedOnly}
-							onclick={() => (savedOnly = !savedOnly)}
-							type="button"
 						>
-							<Heart
-								aria-hidden="true"
-								fill={savedOnly ? 'currentColor' : 'none'}
-								size={11}
-								strokeWidth={2.2}
-							/>
-							{t({
-								locale: $localeStore,
-								key: 'markets.tab.saved',
-								params: { count: savedCount }
-							})}
-						</button>
+							<button
+								class="duration-hover inline-flex items-center gap-1.5 px-3 py-1 transition-colors"
+								aria-pressed={savedOnly}
+								onclick={() => (savedOnly = !savedOnly)}
+								type="button"
+							>
+								<Heart
+									aria-hidden="true"
+									fill={savedOnly ? 'currentColor' : 'none'}
+									size={11}
+									strokeWidth={2.2}
+								/>
+								{t({
+									locale: $localeStore,
+									key: 'markets.tab.saved',
+									params: { count: savedCount }
+								})}
+							</button>
+							<!-- Clear affordance — only shows once the filter is
+							     active. One-tap exit out of saved view without
+							     having to retap the heart pill. -->
+							{#if savedOnly}
+								<button
+									class="border-laurel/30 hover:bg-laurel/20 duration-hover -my-px -mr-px inline-flex h-[1.625rem] items-center justify-center rounded-full border-l px-1.5 transition-colors"
+									aria-label={t({
+										locale: $localeStore,
+										key: 'markets.saved.clear'
+									})}
+									onclick={() => (savedOnly = false)}
+									type="button"
+								>
+									<X aria-hidden="true" size={10} strokeWidth={2.4} />
+								</button>
+							{/if}
+						</div>
 					{/if}
 				</div>
 				<span class="num text-muted-foreground text-xs font-bold">{filteredMarkets.length}</span>

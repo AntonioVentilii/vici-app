@@ -672,6 +672,7 @@ export const enMessages = {
 	'markets.search': 'Search markets...',
 	'markets.sub':
 		'Hundreds of questions across macro, crypto, politics, tech, sports, culture. Every one resolves on public data.',
+	'markets.saved.clear': 'Clear saved filter',
 	'markets.saved_empty.body':
 		'Tap the heart on any market card to save it for later. Your bookmarks will live here.',
 	'markets.saved_empty.title': 'No saved markets yet.',

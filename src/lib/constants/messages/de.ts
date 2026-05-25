@@ -688,6 +688,7 @@ export const deMessages = {
 	'markets.search': 'Märkte suchen...',
 	'markets.sub':
 		'Hunderte Fragen aus Makro, Krypto, Politik, Tech, Sport, Kultur. Alle lösen sich über öffentliche Daten auf.',
+	'markets.saved.clear': 'Gespeichert-Filter entfernen',
 	'markets.saved_empty.body':
 		'Tippe das Herz auf einer Marktkarte, um sie zu speichern. Deine Markierungen erscheinen hier.',
 	'markets.saved_empty.title': 'Noch keine gespeicherten Märkte.',

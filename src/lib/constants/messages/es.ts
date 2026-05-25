@@ -683,6 +683,7 @@ export const esMessages = {
 	'markets.search': 'Buscar mercados...',
 	'markets.sub':
 		'Cientos de preguntas sobre macro, cripto, política, tech, deportes y cultura. Todas se resuelven con datos públicos.',
+	'markets.saved.clear': 'Quitar filtro de guardados',
 	'markets.saved_empty.body':
 		'Toca el corazón en cualquier mercado para guardarlo. Tus favoritos aparecerán aquí.',
 	'markets.saved_empty.title': 'Aún no hay mercados guardados.',

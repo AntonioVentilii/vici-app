@@ -678,6 +678,7 @@ export const ptMessages = {
 	'markets.search': 'Pesquisar mercados...',
 	'markets.sub':
 		'Centenas de perguntas em macro, cripto, política, tecnologia, esportes e cultura. Cada uma resolve em dados públicos.',
+	'markets.saved.clear': 'Limpar filtro de salvos',
 	'markets.saved_empty.body':
 		'Toque no coração em qualquer mercado para salvá-lo. Seus favoritos aparecerão aqui.',
 	'markets.saved_empty.title': 'Nenhum mercado salvo ainda.',

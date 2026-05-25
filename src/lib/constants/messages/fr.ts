@@ -690,6 +690,7 @@ export const frMessages = {
 	'markets.search': 'Rechercher des marchés...',
 	'markets.sub':
 		'Des centaines de questions sur macro, crypto, politique, tech, sport, culture. Toutes se résolvent sur des données publiques.',
+	'markets.saved.clear': 'Effacer le filtre enregistrés',
 	'markets.saved_empty.body':
 		'Touchez le cœur sur un marché pour l’enregistrer. Vos favoris s’afficheront ici.',
 	'markets.saved_empty.title': 'Aucun marché enregistré.',
