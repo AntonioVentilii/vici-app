@@ -340,23 +340,6 @@ export interface AppListSentFriendRequestsResult {
 		viewer_principal: [] | [string];
 	}>;
 }
-export interface AppListSocialFeedArgs {
-	limit: [] | [number];
-}
-export interface AppListSocialFeedResult {
-	items: Array<{
-		context: [] | [string];
-		actor: string;
-		kind:
-			| { bout_proposed: null }
-			| { bout_accepted: null }
-			| { league_joined: null }
-			| { bout_resolved: null }
-			| { affiliation_set: null };
-		created_at_ms: number;
-		ref_id: string;
-	}>;
-}
 export interface AppListWorldsRosterArgs {
 	kind: { country: null } | { university: null };
 	affiliation_id: string;
@@ -535,7 +518,6 @@ export interface _SERVICE {
 	app_list_my_leagues: ActorMethod<[], AppListMyLeaguesResult>;
 	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
 	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;
-	app_list_social_feed: ActorMethod<[AppListSocialFeedArgs], AppListSocialFeedResult>;
 	app_list_worlds_roster: ActorMethod<[AppListWorldsRosterArgs], AppListWorldsRosterResult>;
 	app_lookup_league_by_invite: ActorMethod<
 		[AppLookupLeagueByInviteArgs],

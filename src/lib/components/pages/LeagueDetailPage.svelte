@@ -79,9 +79,9 @@
 				role: m.role
 			}));
 			bouts = boutList;
-			// Hydrate handles/avatars for the member roster — same
-			// pattern as SocialFeedPage. Fire-and-forget; the derived
-			// `memberHandle` picks up nicknames once the cache lands.
+			// Hydrate handles/avatars for the member roster.
+			// Fire-and-forget; the derived `memberHandle` picks up
+			// nicknames once the cache lands.
 			void loadProfilesByPrincipals({
 				principals: memberList.items.map((m) => m.member)
 			});

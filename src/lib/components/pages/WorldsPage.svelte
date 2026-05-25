@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
-	import SocialSubNav from '$lib/components/layout/SocialSubNav.svelte';
 	import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
 	import {
 		lookupWorldsAffiliation,
@@ -103,8 +102,6 @@
 
 <div class="worlds-page">
 	<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'worlds.title' })} />
-
-	<SocialSubNav />
 
 	<p class="worlds-sub">{t({ locale: $localeStore, key: 'worlds.sub' })}</p>
 

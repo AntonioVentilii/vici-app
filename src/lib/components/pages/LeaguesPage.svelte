@@ -2,7 +2,6 @@
 	import { Plus, KeyRound } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
-	import SocialSubNav from '$lib/components/layout/SocialSubNav.svelte';
 	import CreateLeagueModal from '$lib/components/leagues/CreateLeagueModal.svelte';
 	import JoinLeagueModal from '$lib/components/leagues/JoinLeagueModal.svelte';
 	import { listMyLeagues, type LeagueWithRole } from '$lib/services/leagues.services';
@@ -63,8 +62,6 @@
 
 <div class="leagues-page space-y-6 pb-24">
 	<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'leagues.title' })} />
-
-	<SocialSubNav />
 
 	<div class="leagues-actions">
 		<button class="leagues-cta" onclick={openCreate} type="button">

@@ -4,7 +4,6 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
-	import SocialSubNav from '$lib/components/layout/SocialSubNav.svelte';
 	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
@@ -233,8 +232,6 @@
 		}}
 		title={t({ locale: $localeStore, key: 'leagues.bouts_inbox.title' })}
 	/>
-
-	<SocialSubNav />
 
 	<p class="bouts-inbox-sub">
 		{t({ locale: $localeStore, key: 'leagues.bouts_inbox.sub' })}

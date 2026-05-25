@@ -554,41 +554,6 @@ const listSentFriendRequests = async (): Promise<
 	return AppListSentFriendRequestsResultSchema.parse(result);
 };
 
-const AppListSocialFeedArgsSchema = j.strictObject({ limit: j.optional(j.number()) });
-const AppListSocialFeedResultSchema = j.strictObject({
-	items: j.array(
-		j.strictObject({
-			actor: j.string(),
-			kind: j.enum([
-				'league_joined',
-				'bout_proposed',
-				'bout_accepted',
-				'bout_resolved',
-				'affiliation_set'
-			]),
-			ref_id: j.string(),
-			context: j.optional(j.string()),
-			created_at_ms: j.number()
-		})
-	)
-});
-
-const listSocialFeed = async (
-	args: j.infer<typeof AppListSocialFeedArgsSchema>
-): Promise<j.infer<typeof AppListSocialFeedResultSchema>> => {
-	const parsedArgs = AppListSocialFeedArgsSchema.parse(args);
-	const idlArgs = schemaToIdl({
-		schema: AppListSocialFeedArgsSchema,
-		value: parsedArgs
-	}) as Parameters<SatelliteActor['app_list_social_feed']>[0];
-
-	const { app_list_social_feed } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
-	const idlResult = await app_list_social_feed(idlArgs);
-
-	const result = schemaFromIdl({ schema: AppListSocialFeedResultSchema, value: idlResult });
-	return AppListSocialFeedResultSchema.parse(result);
-};
-
 const AppListWorldsRosterArgsSchema = j.strictObject({
 	kind: j.enum(['university', 'country']),
 	affiliationId: j.string()
@@ -962,7 +927,6 @@ export const functions = {
 	listMyLeagues,
 	listMyReferrals,
 	listSentFriendRequests,
-	listSocialFeed,
 	listWorldsRoster,
 	lookupLeagueByInvite,
 	lookupReferralCode,

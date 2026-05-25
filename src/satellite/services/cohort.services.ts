@@ -3,7 +3,6 @@ import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 import type { BoutDoc } from '$lib/types/bout';
 import type { LeagueDoc } from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
-import type { SocialFeedEntryDoc } from '$lib/types/social-feed';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
@@ -358,47 +357,4 @@ export const listWorldsRosterFn = ({
 	}
 
 	return roster.sort((a, b) => a.joinedAtMs - b.joinedAtMs);
-};
-
-/**
- * Default page size for the social feed. Tuned to fit roughly one
- * screen of cards on mobile + a small over-fetch buffer.
- */
-export const SOCIAL_FEED_DEFAULT_LIMIT = 40;
-export const SOCIAL_FEED_MAX_LIMIT = 200;
-
-/**
- * List the global social-feed entries, newest first.
- *
- * The doc key prefixes a 13-digit zero-padded ms timestamp so the
- * lexical order matches chronological order — `listDocsStore`
- * doesn't expose a sort param, so we scan and sort in-memory then
- * slice to the requested `limit`. Feed read traffic is bounded by
- * the FE page; this is fine until volume outgrows it (low priority
- * given the cohort surface is V1.2).
- */
-export const listSocialFeedFn = ({ limit }: { limit?: number } = {}): SocialFeedEntryDoc[] => {
-	const cap = Math.min(Math.max(1, limit ?? SOCIAL_FEED_DEFAULT_LIMIT), SOCIAL_FEED_MAX_LIMIT);
-	const caller = msgCaller();
-
-	const { items } = listDocsStore({
-		collection: Collection.SOCIAL_FEED,
-		caller: caller.toUint8Array(),
-		params: {}
-	});
-
-	const entries: SocialFeedEntryDoc[] = [];
-
-	for (const [, item] of items) {
-		try {
-			entries.push(decodeDocData<SocialFeedEntryDoc>(item.data));
-		} catch {
-			// skip malformed
-		}
-	}
-
-	// Newest first.
-	entries.sort((a, b) => b.createdAtMs - a.createdAtMs);
-
-	return entries.slice(0, cap);
 };

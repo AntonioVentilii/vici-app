@@ -55,10 +55,6 @@ type AppListMyReferralsResult = record { items : vec record { referee : text; re
 
 type AppListSentFriendRequestsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
-type AppListSocialFeedArgs = record { limit : opt float64 };
-
-type AppListSocialFeedResult = record { items : vec record { actor : text; kind : variant { league_joined; bout_proposed; bout_accepted; bout_resolved; affiliation_set }; ref_id : text; context : opt text; created_at_ms : float64 } };
-
 type AppListWorldsRosterArgs = record { kind : variant { university; country }; affiliation_id : text };
 
 type AppListWorldsRosterResult = record { items : vec record { member : text; kind : variant { university; country }; affiliation_id : text; joined_at_ms : float64; locked_until_ms : float64 } };
@@ -117,7 +113,6 @@ service : {
 	app_list_my_leagues : () -> (AppListMyLeaguesResult) query;
 	app_list_my_referrals : () -> (AppListMyReferralsResult) query;
 	app_list_sent_friend_requests : () -> (AppListSentFriendRequestsResult) query;
-	app_list_social_feed : (AppListSocialFeedArgs) -> (AppListSocialFeedResult) query;
 	app_list_worlds_roster : (AppListWorldsRosterArgs) -> (AppListWorldsRosterResult) query;
 	app_lookup_league_by_invite : (AppLookupLeagueByInviteArgs) -> (AppLookupLeagueByInviteResult) query;
 	app_lookup_referral_code : (AppLookupReferralCodeArgs) -> (AppLookupReferralCodeResult) query;

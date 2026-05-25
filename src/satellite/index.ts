@@ -27,7 +27,6 @@ import {
 	listMyAffiliationsFn,
 	listMyBoutsFn,
 	listMyLeaguesFn,
-	listSocialFeedFn,
 	listWorldsRosterFn,
 	lookupLeagueByInviteFn
 } from '$satellite/services/cohort.services';
@@ -80,12 +79,6 @@ import {
 	sendFriendRequest as sendFriendRequestFn
 } from '$satellite/services/relation.services';
 import { assertSetRole } from '$satellite/services/roles.services';
-import {
-	onAffiliationSetForFeed,
-	onBoutSetForFeed,
-	onLeagueMemberSetForFeed
-} from '$satellite/services/social-feed-hooks.services';
-import { assertSetSocialFeedEntry } from '$satellite/services/social-feed.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimComebackGrantFn } from '$satellite/services/vxp-comeback.services';
 import {
@@ -102,7 +95,6 @@ import {
 	MarketTranslationWireSchema,
 	ReferralWireSchema,
 	RelationWireSchema,
-	SocialFeedEntryWireSchema,
 	toWireAffiliation,
 	toWireBout,
 	toWireLeague,
@@ -112,7 +104,6 @@ import {
 	toWireProfile,
 	toWireReferral,
 	toWireRelation,
-	toWireSocialFeedEntry,
 	UserProfileWireSchema
 } from '$satellite/utils/wire-format.utils';
 import {
@@ -461,21 +452,7 @@ export const listWorldsRoster = defineQuery({
 	})
 });
 
-// ─── Social feed (Phase 10) ──────────────────────────────────────────────
-
-export const listSocialFeed = defineQuery({
-	args: j.strictObject({
-		limit: j.number().optional()
-	}),
-	result: j.strictObject({
-		items: j.array(SocialFeedEntryWireSchema)
-	}),
-	handler: ({ limit }) => ({
-		items: listSocialFeedFn({ limit }).map(toWireSocialFeedEntry)
-	})
-});
-
-// V1.2 comeback grant — one-shot +1000 VXP fired when a balance hits
+// Comeback grant — one-shot +1000 VXP fired when a balance hits
 // zero on an engaged account. FE detects the zero-balance state and
 // calls this endpoint; server validates engagement + balance and
 // fires the transfer. Idempotency via the `vxp_awards` doc key.
@@ -508,8 +485,7 @@ const assertSetDocCollections = [
 	Collection.LEAGUES,
 	Collection.LEAGUE_MEMBERS,
 	Collection.BOUTS,
-	Collection.AFFILIATIONS,
-	Collection.SOCIAL_FEED
+	Collection.AFFILIATIONS
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -526,8 +502,7 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.LEAGUES]: assertSetLeague,
 			[Collection.LEAGUE_MEMBERS]: assertSetLeagueMember,
 			[Collection.BOUTS]: assertSetBout,
-			[Collection.AFFILIATIONS]: assertSetAffiliation,
-			[Collection.SOCIAL_FEED]: assertSetSocialFeedEntry
+			[Collection.AFFILIATIONS]: assertSetAffiliation
 		};
 
 		fn[context.data.collection]?.(context);
@@ -559,10 +534,7 @@ const setDocCollections = [
 	Collection.ACTIVITIES,
 	Collection.PROFILES,
 	Collection.ROLES,
-	Collection.REFERRALS,
-	Collection.LEAGUE_MEMBERS,
-	Collection.BOUTS,
-	Collection.AFFILIATIONS
+	Collection.REFERRALS
 ] as const;
 
 type OnSetDocCollection = (typeof setDocCollections)[number];
@@ -586,22 +558,7 @@ export const onSetDoc = defineHook<OnSetDoc>({
 			[Collection.PROFILES]: onProfileSetComposed,
 			[Collection.ACTIVITIES]: onTradeActivityForVxpOnboarding,
 			[Collection.ROLES]: syncRoleToEngineOnSet,
-			[Collection.REFERRALS]: onReferralSetForVxpPayout,
-			[Collection.LEAGUE_MEMBERS]: (ctx) => {
-				onLeagueMemberSetForFeed(ctx);
-
-				return Promise.resolve();
-			},
-			[Collection.BOUTS]: (ctx) => {
-				onBoutSetForFeed(ctx);
-
-				return Promise.resolve();
-			},
-			[Collection.AFFILIATIONS]: (ctx) => {
-				onAffiliationSetForFeed(ctx);
-
-				return Promise.resolve();
-			}
+			[Collection.REFERRALS]: onReferralSetForVxpPayout
 		};
 
 		await fn[context.data.collection]?.(context);
