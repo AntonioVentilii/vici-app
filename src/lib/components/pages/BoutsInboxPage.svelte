@@ -229,6 +229,10 @@
 
 		void goto(`${resolve(AppPath.Social)}/leagues/${leagueId}`);
 	};
+
+	const goToBoutDetail = (bout: BoutDoc) => {
+		void goto(`${resolve(AppPath.Social)}/bouts/${bout.id}`);
+	};
 </script>
 
 <div class="bouts-inbox">
@@ -298,9 +302,16 @@
 											{sideLabel(bout.sideB)}
 										</button>
 									</div>
-									<span class="allcaps bouts-inbox-state" data-state={bout.state}>
-										{t({ locale: $localeStore, key: boutStateLabelKey(bout.state) })}
-									</span>
+									<button
+										class="bouts-inbox-state-link"
+										onclick={() => goToBoutDetail(bout)}
+										type="button"
+									>
+										<span class="allcaps bouts-inbox-state" data-state={bout.state}>
+											{t({ locale: $localeStore, key: boutStateLabelKey(bout.state) })}
+										</span>
+										<span aria-hidden="true">→</span>
+									</button>
 								</div>
 								<p class="bouts-inbox-window num">
 									{formatDate(bout.kickoffMs)} → {formatDate(bout.settleMs)}
@@ -530,6 +541,23 @@
 	.bouts-inbox-vs {
 		font-size: var(--t-13);
 		color: var(--text-muted);
+	}
+
+	.bouts-inbox-state-link {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0;
+		font: inherit;
+		color: var(--text-muted);
+		background: none;
+		border: none;
+		cursor: pointer;
+	}
+
+	.bouts-inbox-state-link:hover {
+		color: var(--text-base);
 	}
 
 	.bouts-inbox-state {
