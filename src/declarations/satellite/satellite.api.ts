@@ -60,6 +60,43 @@ const checkNicknameAvailability = async (
 	return AppCheckNicknameAvailabilityResultSchema.parse(result);
 };
 
+const AppGetAffiliationStatsArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country']),
+	affiliationId: j.string()
+});
+const AppGetAffiliationStatsResultSchema = j.strictObject({
+	stats: j.optional(
+		j.strictObject({
+			affiliation_id: j.string(),
+			kind: j.enum(['university', 'country']),
+			total_calls: j.number(),
+			wins: j.number(),
+			month_anchor: j.string(),
+			month_total_calls: j.number(),
+			month_wins: j.number(),
+			updated_at_ms: j.number()
+		})
+	)
+});
+
+const getAffiliationStats = async (
+	args: j.infer<typeof AppGetAffiliationStatsArgsSchema>
+): Promise<j.infer<typeof AppGetAffiliationStatsResultSchema>> => {
+	const parsedArgs = AppGetAffiliationStatsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetAffiliationStatsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_affiliation_stats']>[0];
+
+	const { app_get_affiliation_stats } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_affiliation_stats(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetAffiliationStatsResultSchema, value: idlResult });
+	return AppGetAffiliationStatsResultSchema.parse(result);
+};
+
 const AppGetMarketMetadataArgsSchema = j.strictObject({ seriesId: j.string() });
 const AppGetMarketMetadataResultSchema = j.strictObject({
 	metadata: j.optional(
@@ -191,6 +228,43 @@ const getProfile = async (
 
 	const result = schemaFromIdl({ schema: AppGetProfileResultSchema, value: idlResult });
 	return AppGetProfileResultSchema.parse(result);
+};
+
+const AppListAffiliationStatsArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country']),
+	limit: j.optional(j.number())
+});
+const AppListAffiliationStatsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			affiliation_id: j.string(),
+			kind: j.enum(['university', 'country']),
+			total_calls: j.number(),
+			wins: j.number(),
+			month_anchor: j.string(),
+			month_total_calls: j.number(),
+			month_wins: j.number(),
+			updated_at_ms: j.number()
+		})
+	)
+});
+
+const listAffiliationStats = async (
+	args: j.infer<typeof AppListAffiliationStatsArgsSchema>
+): Promise<j.infer<typeof AppListAffiliationStatsResultSchema>> => {
+	const parsedArgs = AppListAffiliationStatsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListAffiliationStatsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_affiliation_stats']>[0];
+
+	const { app_list_affiliation_stats } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_affiliation_stats(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppListAffiliationStatsResultSchema, value: idlResult });
+	return AppListAffiliationStatsResultSchema.parse(result);
 };
 
 const AppListFollowersResultSchema = j.strictObject({
@@ -910,10 +984,12 @@ const upsertMarketTranslation = async (
 export const functions = {
 	checkFriendship,
 	checkNicknameAvailability,
+	getAffiliationStats,
 	getMarketMetadata,
 	getMarketTranslation,
 	getMyReferralCode,
 	getProfile,
+	listAffiliationStats,
 	listFollowers,
 	listFollowing,
 	listFriendRequests,

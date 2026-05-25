@@ -1348,7 +1348,10 @@ export const ptMessages = {
 	'welcome.featured_event.to_win': '{odds}% para vencer',
 	'worlds.cta.leave': 'Sair',
 	'worlds.bout.back': 'Voltar a Worlds',
+	'worlds.bout.empty_ranked':
+		'Nada foi resolvido nesta temporada — todos sem classificação. Seja dos primeiros a fazer uma jogada.',
 	'worlds.bout.list_eyebrow': 'Os {count}',
+	'worlds.bout.ranked_eyebrow': 'Classificação · por precisão',
 	'worlds.bout.title_country': 'Países · WC Bout',
 	'worlds.bout.title_university': 'Universidades · WC Bout',
 	'worlds.cta.joining': 'Entrando…',
@@ -1375,9 +1378,17 @@ export const ptMessages = {
 	'worlds.detail.loading_members': 'Carregando membros…',
 	'worlds.detail.members_count': '{count} membros',
 	'worlds.detail.see_all': 'Ver os {total} →',
-	'worlds.detail.stats_eyebrow': 'Stats · este mês',
+	'worlds.detail.stats_calls_lifetime': '{count} chamadas no total',
+	'worlds.detail.stats_calls_month': '{count} chamadas este mês',
+	'worlds.detail.stats_empty':
+		'Nenhuma chamada resolvida ainda. Quando os membros começarem a pontuar, a precisão aparece aqui.',
+	'worlds.detail.stats_eyebrow': 'Stats',
+	'worlds.detail.stats_lifetime': 'Total',
+	'worlds.detail.stats_month': 'Este mês',
 	'worlds.detail.stats_pending':
 		'Precisão e classificação por afiliação chegam com o backend de agregação. O total de membros está ao vivo.',
+	'worlds.detail.stats_unranked':
+		'Abaixo de {min} chamadas — precisão visível, mas ainda fora da classificação.',
 	'worlds.locked_until': 'Travado até {date} · faltam {days}d',
 	'worlds.podium.bronze': '3º',
 	'worlds.podium.eyebrow': 'Pódio mensal',

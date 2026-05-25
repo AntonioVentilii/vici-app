@@ -45,6 +45,24 @@ export const idlFactory = ({ IDL }) => {
 		)
 	});
 	const AppFollowUserArgs = IDL.Record({ target: IDL.Text });
+	const AppGetAffiliationStatsArgs = IDL.Record({
+		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+		affiliation_id: IDL.Text
+	});
+	const AppGetAffiliationStatsResult = IDL.Record({
+		stats: IDL.Opt(
+			IDL.Record({
+				month_anchor: IDL.Text,
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				wins: IDL.Float64,
+				month_wins: IDL.Float64,
+				updated_at_ms: IDL.Float64,
+				total_calls: IDL.Float64,
+				month_total_calls: IDL.Float64,
+				affiliation_id: IDL.Text
+			})
+		)
+	});
 	const AppGetMarketMetadataArgs = IDL.Record({ series_id: IDL.Text });
 	const AppGetMarketMetadataResult = IDL.Record({
 		metadata: IDL.Opt(
@@ -136,6 +154,24 @@ export const idlFactory = ({ IDL }) => {
 				points: IDL.Float64,
 				avatar: IDL.Text,
 				accuracy: IDL.Float64
+			})
+		)
+	});
+	const AppListAffiliationStatsArgs = IDL.Record({
+		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+		limit: IDL.Opt(IDL.Float64)
+	});
+	const AppListAffiliationStatsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				month_anchor: IDL.Text,
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				wins: IDL.Float64,
+				month_wins: IDL.Float64,
+				updated_at_ms: IDL.Float64,
+				total_calls: IDL.Float64,
+				month_total_calls: IDL.Float64,
+				affiliation_id: IDL.Text
 			})
 		)
 	});
@@ -638,6 +674,11 @@ export const idlFactory = ({ IDL }) => {
 		),
 		app_claim_comeback_grant: IDL.Func([], [AppClaimComebackGrantResult], []),
 		app_follow_user: IDL.Func([AppFollowUserArgs], [], []),
+		app_get_affiliation_stats: IDL.Func(
+			[AppGetAffiliationStatsArgs],
+			[AppGetAffiliationStatsResult],
+			['query']
+		),
 		app_get_market_metadata: IDL.Func(
 			[AppGetMarketMetadataArgs],
 			[AppGetMarketMetadataResult],
@@ -650,6 +691,11 @@ export const idlFactory = ({ IDL }) => {
 		),
 		app_get_my_referral_code: IDL.Func([], [AppGetMyReferralCodeResult], ['query']),
 		app_get_profile: IDL.Func([AppGetProfileArgs], [AppGetProfileResult], ['query']),
+		app_list_affiliation_stats: IDL.Func(
+			[AppListAffiliationStatsArgs],
+			[AppListAffiliationStatsResult],
+			['query']
+		),
 		app_list_followers: IDL.Func([], [AppListFollowersResult], ['query']),
 		app_list_following: IDL.Func([], [AppListFollowingResult], ['query']),
 		app_list_friend_requests: IDL.Func([], [AppListFriendRequestsResult], ['query']),

@@ -1,5 +1,10 @@
 import { Collection } from '$lib/constants/collections.constants';
 import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
+import {
+	affiliationStatsKey,
+	MIN_CALLS_FOR_RANK,
+	type AffiliationStatsDoc
+} from '$lib/types/affiliation-stats';
 import type { BoutDoc } from '$lib/types/bout';
 import type { LeagueDoc } from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
@@ -357,4 +362,97 @@ export const listWorldsRosterFn = ({
 	}
 
 	return roster.sort((a, b) => a.joinedAtMs - b.joinedAtMs);
+};
+
+/**
+ * Single-doc lookup for `affiliation_stats`. Returns `undefined`
+ * when no stats doc exists yet (the affiliation hasn't been the
+ * subject of any settled call). Callers should treat that as
+ * "unranked / no data" rather than as an error.
+ */
+export const getAffiliationStatsFn = ({
+	kind,
+	affiliationId
+}: {
+	kind: AffiliationKind;
+	affiliationId: string;
+}): AffiliationStatsDoc | undefined => {
+	const caller = msgCaller();
+	const key = affiliationStatsKey({ kind, affiliationId });
+	const doc = getDocStore({
+		collection: Collection.AFFILIATION_STATS,
+		key,
+		caller: caller.toUint8Array()
+	});
+
+	if (isNullish(doc)) {
+		return;
+	}
+
+	try {
+		return decodeDocData<AffiliationStatsDoc>(doc.data);
+	} catch {
+		// Malformed payload — treat as "no stats" for callers.
+	}
+};
+
+/**
+ * Ranked leaderboard scan for a Worlds kind. Returns every stats
+ * doc for the requested kind, sorted by accuracy descending.
+ * Affiliations below `MIN_CALLS_FOR_RANK` are filtered out — at
+ * tiny call counts the accuracy is too noisy to rank.
+ *
+ * Sort key: `wins / totalCalls` desc, then `totalCalls` desc
+ * (rewards depth), then `affiliationId` asc (deterministic tie
+ * break across re-runs — same rule the Worlds podium fan-out
+ * uses, so the leaderboard and the awards agree).
+ */
+export const listAffiliationStatsFn = ({
+	kind,
+	limit
+}: {
+	kind: AffiliationKind;
+	limit?: number;
+}): AffiliationStatsDoc[] => {
+	const caller = msgCaller();
+	const { items } = listDocsStore({
+		collection: Collection.AFFILIATION_STATS,
+		caller: caller.toUint8Array(),
+		params: {}
+	});
+
+	const stats: AffiliationStatsDoc[] = [];
+
+	for (const [, item] of items) {
+		try {
+			const doc = decodeDocData<AffiliationStatsDoc>(item.data);
+
+			if (doc.kind === kind && doc.totalCalls >= MIN_CALLS_FOR_RANK) {
+				stats.push(doc);
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	stats.sort((a, b) => {
+		const aAcc = a.wins / a.totalCalls;
+		const bAcc = b.wins / b.totalCalls;
+
+		if (aAcc !== bAcc) {
+			return bAcc - aAcc;
+		}
+
+		if (a.totalCalls !== b.totalCalls) {
+			return b.totalCalls - a.totalCalls;
+		}
+
+		return a.affiliationId < b.affiliationId ? -1 : a.affiliationId > b.affiliationId ? 1 : 0;
+	});
+
+	if (nonNullish(limit) && limit > 0) {
+		return stats.slice(0, limit);
+	}
+
+	return stats;
 };

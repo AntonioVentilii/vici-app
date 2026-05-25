@@ -548,3 +548,38 @@ export const toWireAffiliation = (aff: {
 	joined_at_ms: aff.joinedAtMs,
 	locked_until_ms: aff.lockedUntilMs
 });
+
+// ─── Affiliation stats ──────────────────────────────────────────────
+
+export const AffiliationStatsWireSchema = j.strictObject({
+	affiliation_id: j.string(),
+	kind: j.enum(['university', 'country']),
+	total_calls: j.number(),
+	wins: j.number(),
+	month_anchor: j.string(),
+	month_total_calls: j.number(),
+	month_wins: j.number(),
+	updated_at_ms: j.number()
+});
+
+export type WireAffiliationStats = j.infer<typeof AffiliationStatsWireSchema>;
+
+export const toWireAffiliationStats = (stats: {
+	affiliationId: string;
+	kind: 'university' | 'country';
+	totalCalls: number;
+	wins: number;
+	monthAnchor: string;
+	monthTotalCalls: number;
+	monthWins: number;
+	updatedAtMs: number;
+}): WireAffiliationStats => ({
+	affiliation_id: stats.affiliationId,
+	kind: stats.kind,
+	total_calls: stats.totalCalls,
+	wins: stats.wins,
+	month_anchor: stats.monthAnchor,
+	month_total_calls: stats.monthTotalCalls,
+	month_wins: stats.monthWins,
+	updated_at_ms: stats.updatedAtMs
+});

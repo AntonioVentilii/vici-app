@@ -1362,7 +1362,10 @@ export const frMessages = {
 	'welcome.featured_event.to_win': '{odds}% pour gagner',
 	'worlds.cta.leave': 'Quitter',
 	'worlds.bout.back': 'Retour à Worlds',
+	'worlds.bout.empty_ranked':
+		"Rien n'a été résolu cette saison — tout le monde est sans classement. Sois parmi les premiers à faire un appel.",
 	'worlds.bout.list_eyebrow': 'Les {count}',
+	'worlds.bout.ranked_eyebrow': 'Classement · par précision',
 	'worlds.bout.title_country': 'Pays · WC Bout',
 	'worlds.bout.title_university': 'Universités · WC Bout',
 	'worlds.cta.joining': 'Adhésion…',
@@ -1389,9 +1392,17 @@ export const frMessages = {
 	'worlds.detail.loading_members': 'Chargement des membres…',
 	'worlds.detail.members_count': '{count} membres',
 	'worlds.detail.see_all': 'Voir les {total} →',
-	'worlds.detail.stats_eyebrow': 'Stats · ce mois',
+	'worlds.detail.stats_calls_lifetime': '{count} pronos au total',
+	'worlds.detail.stats_calls_month': '{count} pronos ce mois',
+	'worlds.detail.stats_empty':
+		"Aucun pronostic résolu pour l'instant. Dès que les membres marqueront, la précision apparaîtra ici.",
+	'worlds.detail.stats_eyebrow': 'Stats',
+	'worlds.detail.stats_lifetime': 'Total',
+	'worlds.detail.stats_month': 'Ce mois',
 	'worlds.detail.stats_pending':
 		"La précision et le classement par affiliation arrivent avec le backend d'agrégation. Le nombre de membres est en direct.",
+	'worlds.detail.stats_unranked':
+		'Moins de {min} pronos — précision visible, mais pas encore classé.',
 	'worlds.locked_until': "Verrouillé jusqu'au {date} · J-{days}",
 	'worlds.podium.bronze': '3e',
 	'worlds.podium.eyebrow': 'Podium mensuel',

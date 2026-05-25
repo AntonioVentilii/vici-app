@@ -1347,7 +1347,10 @@ export const itMessages = {
 	'welcome.featured_event.to_win': '{odds}% per vincere',
 	'worlds.cta.leave': 'Esci',
 	'worlds.bout.back': 'Torna a Worlds',
+	'worlds.bout.empty_ranked':
+		'Niente è stato risolto questa stagione — ogni roster è ancora senza classifica. Sii tra i primi a fare una chiamata.',
 	'worlds.bout.list_eyebrow': 'Tutti i {count}',
+	'worlds.bout.ranked_eyebrow': 'Classifica · per precisione',
 	'worlds.bout.title_country': 'Paesi · WC Bout',
 	'worlds.bout.title_university': 'Università · WC Bout',
 	'worlds.cta.joining': 'Mi unisco…',
@@ -1374,9 +1377,17 @@ export const itMessages = {
 	'worlds.detail.loading_members': 'Carico membri…',
 	'worlds.detail.members_count': '{count} membri',
 	'worlds.detail.see_all': 'Vedi tutti i {total} →',
-	'worlds.detail.stats_eyebrow': 'Stat · questo mese',
+	'worlds.detail.stats_calls_lifetime': '{count} chiamate totali',
+	'worlds.detail.stats_calls_month': '{count} chiamate questo mese',
+	'worlds.detail.stats_empty':
+		'Nessuna chiamata risolta ancora. Quando i membri inizieranno a segnare, la precisione apparirà qui.',
+	'worlds.detail.stats_eyebrow': 'Statistiche',
+	'worlds.detail.stats_lifetime': 'Lifetime',
+	'worlds.detail.stats_month': 'Questo mese',
 	'worlds.detail.stats_pending':
 		'Precisione e classifica per affiliazione arrivano con il backend di aggregazione. Il numero di membri è live.',
+	'worlds.detail.stats_unranked':
+		'Sotto {min} chiamate — precisione visibile ma non ancora in classifica.',
 	'worlds.locked_until': 'Bloccato fino al {date} · {days}g rimanenti',
 	'worlds.podium.bronze': '3°',
 	'worlds.podium.eyebrow': 'Podio mensile',

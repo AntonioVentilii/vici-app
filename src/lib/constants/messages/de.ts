@@ -1361,7 +1361,10 @@ export const deMessages = {
 	'welcome.featured_event.to_win': '{odds}% zum Sieg',
 	'worlds.cta.leave': 'Verlassen',
 	'worlds.bout.back': 'Zurück zu Worlds',
+	'worlds.bout.empty_ranked':
+		'Diese Saison wurde noch nichts entschieden — alle Affiliationen sind unranked. Sei eine:r der ersten, der einen Call macht.',
 	'worlds.bout.list_eyebrow': 'Alle {count}',
+	'worlds.bout.ranked_eyebrow': 'Rangliste · nach Genauigkeit',
 	'worlds.bout.title_country': 'Länder · WC Bout',
 	'worlds.bout.title_university': 'Unis · WC Bout',
 	'worlds.cta.joining': 'Trete bei…',
@@ -1388,9 +1391,17 @@ export const deMessages = {
 	'worlds.detail.loading_members': 'Lade Mitglieder…',
 	'worlds.detail.members_count': '{count} Mitglieder',
 	'worlds.detail.see_all': 'Alle {total} ansehen →',
-	'worlds.detail.stats_eyebrow': 'Stats · dieser Monat',
+	'worlds.detail.stats_calls_lifetime': '{count} Calls insgesamt',
+	'worlds.detail.stats_calls_month': '{count} Calls diesen Monat',
+	'worlds.detail.stats_empty':
+		'Noch keine entschiedenen Calls. Sobald Mitglieder Punkte holen, erscheint die Genauigkeit hier.',
+	'worlds.detail.stats_eyebrow': 'Stats',
+	'worlds.detail.stats_lifetime': 'Gesamt',
+	'worlds.detail.stats_month': 'Dieser Monat',
 	'worlds.detail.stats_pending':
 		'Genauigkeit + Rang pro Affiliation kommen mit dem Aggregations-Backend. Die Mitgliederzahl ist live.',
+	'worlds.detail.stats_unranked':
+		'Unter {min} Calls — Genauigkeit sichtbar, aber noch nicht in der Rangliste.',
 	'worlds.locked_until': 'Gesperrt bis {date} · noch {days} Tage',
 	'worlds.podium.bronze': '3.',
 	'worlds.podium.eyebrow': 'Monats-Podium',

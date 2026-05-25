@@ -1,27 +1,35 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
 	import {
+		lookupWorldsAffiliation,
 		WORLDS_COUNTRIES,
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
+	import { listAffiliationStats } from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
+	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Worlds bout — the leaderboard view across every affiliation of
-	 * a given kind (all schools or all countries). Drill-in from
-	 * `WorldsPage` podium / leaderboard CTAs.
+	 * Worlds bout — the ranked leaderboard view across every
+	 * affiliation of a given kind (all schools or all countries).
+	 * Drill-in from `WorldsPage` podium / leaderboard CTAs.
 	 *
-	 * Per-affiliation accuracy + ranks await the aggregation backend
-	 * (same gap the per-affiliation detail page calls out). Until
-	 * that lands, the page renders the roster + podium prizes + a
-	 * "stats pending" hint so the layout is faithful without faking
-	 * the standings.
+	 * Renders three layers stacked:
+	 *  1. Podium prizes preview (top of page) — fixed VXP amounts per
+	 *     `VXP_WORLDS_PODIUM`.
+	 *  2. Ranked stats list (`listAffiliationStats`) — affiliations
+	 *     with ≥ `MIN_CALLS_FOR_RANK` resolved calls, sorted by
+	 *     accuracy.
+	 *  3. Unranked roster — every affiliation the picker offers,
+	 *     whether or not it has stats yet. Lets a brand-new user see
+	 *     their school even before the first resolved call lands.
 	 */
 	interface Props {
 		kind: AffiliationKind;
@@ -35,11 +43,28 @@
 		kind === 'university' ? 'worlds.bout.title_university' : 'worlds.bout.title_country'
 	);
 
+	let stats = $state<AffiliationStatsDoc[]>([]);
+	let loadState = $state<'loading' | 'ready' | 'error'>('loading');
+
+	onMount(async () => {
+		try {
+			stats = await listAffiliationStats({ kind });
+			loadState = 'ready';
+		} catch {
+			loadState = 'error';
+		}
+	});
+
+	const accuracyPct = (s: AffiliationStatsDoc): number =>
+		s.totalCalls > 0 ? Math.round((s.wins / s.totalCalls) * 1000) / 10 : 0;
+
 	const detailPath = (id: string): string => {
 		const segment = kind === 'university' ? 'school' : 'country';
 
 		return `${resolve(AppPath.Social)}/worlds/${segment}/${id}`;
 	};
+
+	const optionFor = (id: string) => lookupWorldsAffiliation({ kind, id });
 </script>
 
 <div class="worlds-bout">
@@ -72,6 +97,35 @@
 		</div>
 	</section>
 
+	{#if loadState === 'ready' && stats.length > 0}
+		<section class="worlds-bout-section">
+			<h2 class="eyebrow worlds-bout-section-eyebrow">
+				{t({ locale: $localeStore, key: 'worlds.bout.ranked_eyebrow' })}
+			</h2>
+			<ul class="worlds-bout-list">
+				{#each stats as s, i (s.affiliationId)}
+					{@const option = optionFor(s.affiliationId)}
+					<li>
+						<a
+							class="worlds-bout-row"
+							class:is-bronze={i === 2}
+							class:is-gold={i === 0}
+							class:is-silver={i === 1}
+							href={detailPath(s.affiliationId)}
+						>
+							<span class="num worlds-bout-rank">#{i + 1}</span>
+							<span class="worlds-bout-glyph" aria-hidden="true">
+								{option?.glyph ?? '?'}
+							</span>
+							<span class="worlds-bout-name">{option?.name ?? s.affiliationId}</span>
+							<span class="num worlds-bout-acc">{accuracyPct(s)}%</span>
+						</a>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
 	<section class="worlds-bout-section">
 		<h2 class="eyebrow worlds-bout-section-eyebrow">
 			{t({
@@ -80,9 +134,11 @@
 				params: { count: roster.length }
 			})}
 		</h2>
-		<p class="worlds-bout-pending">
-			{t({ locale: $localeStore, key: 'worlds.detail.stats_pending' })}
-		</p>
+		{#if loadState === 'ready' && stats.length === 0}
+			<p class="worlds-bout-pending">
+				{t({ locale: $localeStore, key: 'worlds.bout.empty_ranked' })}
+			</p>
+		{/if}
 		<ul class="worlds-bout-list">
 			{#each roster as option (option.id)}
 				<li>
@@ -214,5 +270,45 @@
 		flex: 1;
 		font-size: var(--t-14);
 		font-weight: 500;
+	}
+
+	.worlds-bout-rank {
+		font-size: var(--t-13);
+		font-weight: 700;
+		color: var(--text-muted);
+		min-width: 2.5rem;
+	}
+
+	.worlds-bout-acc {
+		font-size: var(--t-14);
+		font-weight: 700;
+		color: var(--text-base);
+	}
+
+	.worlds-bout-row.is-gold {
+		border-color: color-mix(in srgb, #f4c544 50%, var(--border-base));
+		background: color-mix(in srgb, #f4c544 6%, var(--bg-surface));
+	}
+
+	.worlds-bout-row.is-gold .worlds-bout-rank {
+		color: #f4c544;
+	}
+
+	.worlds-bout-row.is-silver {
+		border-color: color-mix(in srgb, #c0c5cc 50%, var(--border-base));
+		background: color-mix(in srgb, #c0c5cc 6%, var(--bg-surface));
+	}
+
+	.worlds-bout-row.is-silver .worlds-bout-rank {
+		color: #c0c5cc;
+	}
+
+	.worlds-bout-row.is-bronze {
+		border-color: color-mix(in srgb, #c97c4a 50%, var(--border-base));
+		background: color-mix(in srgb, #c97c4a 6%, var(--bg-surface));
+	}
+
+	.worlds-bout-row.is-bronze .worlds-bout-rank {
+		color: #c97c4a;
 	}
 </style>

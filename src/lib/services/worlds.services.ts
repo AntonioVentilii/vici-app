@@ -7,6 +7,7 @@ import {
 	type AffiliationDoc,
 	type AffiliationKind
 } from '$lib/types/affiliation';
+import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 
 /**
@@ -144,4 +145,63 @@ export const affiliationDaysLeft = ({
 	const remaining = lockedUntilMs - nowMs;
 
 	return remaining <= 0 ? 0 : Math.ceil(remaining / (24 * 60 * 60 * 1000));
+};
+
+/**
+ * Project the satellite's snake_case wire schema for affiliation
+ * stats to FE camelCase.
+ */
+const projectStatsWire = (s: {
+	affiliation_id: string;
+	kind: AffiliationKind;
+	total_calls: number;
+	wins: number;
+	month_anchor: string;
+	month_total_calls: number;
+	month_wins: number;
+	updated_at_ms: number;
+}): AffiliationStatsDoc => ({
+	affiliationId: s.affiliation_id,
+	kind: s.kind,
+	totalCalls: s.total_calls,
+	wins: s.wins,
+	monthAnchor: s.month_anchor,
+	monthTotalCalls: s.month_total_calls,
+	monthWins: s.month_wins,
+	updatedAtMs: s.updated_at_ms
+});
+
+/**
+ * Single-affiliation lookup. Returns `undefined` when the
+ * affiliation has no stats doc yet (no member of it has had any
+ * resolved trades). Callers should render as "unranked / no data".
+ */
+export const getAffiliationStats = async ({
+	kind,
+	affiliationId
+}: {
+	kind: AffiliationKind;
+	affiliationId: string;
+}): Promise<AffiliationStatsDoc | undefined> => {
+	const { stats } = await functions.getAffiliationStats({ kind, affiliationId });
+
+	return stats === undefined ? undefined : projectStatsWire(stats);
+};
+
+/**
+ * Ranked leaderboard view of every affiliation of a kind. Sorted
+ * server-side by accuracy desc → totalCalls desc → affiliationId asc.
+ * Affiliations below `MIN_CALLS_FOR_RANK` are filtered out by the
+ * aggregator.
+ */
+export const listAffiliationStats = async ({
+	kind,
+	limit
+}: {
+	kind: AffiliationKind;
+	limit?: number;
+}): Promise<AffiliationStatsDoc[]> => {
+	const { items } = await functions.listAffiliationStats({ kind, limit });
+
+	return items.map(projectStatsWire);
 };

@@ -1378,7 +1378,10 @@ export const enMessages = {
 		'Pick your favourite, make your first call, and let your record start with the {event}.',
 	'welcome.featured_event.to_win': '{odds}% to win',
 	'worlds.bout.back': 'Back to Worlds',
+	'worlds.bout.empty_ranked':
+		"Nothing's resolved yet this season — every roster member is unranked. Be one of the first to make a call.",
 	'worlds.bout.list_eyebrow': 'All {count}',
+	'worlds.bout.ranked_eyebrow': 'Ranked · top accuracy',
 	'worlds.bout.title_country': 'Countries · WC Bout',
 	'worlds.bout.title_university': 'Universities · WC Bout',
 	'worlds.cta.joining': 'Joining…',
@@ -1406,9 +1409,17 @@ export const enMessages = {
 	'worlds.detail.loading_members': 'Loading members…',
 	'worlds.detail.members_count': '{count} members',
 	'worlds.detail.see_all': 'See all {total} →',
-	'worlds.detail.stats_eyebrow': 'Stats · this month',
+	'worlds.detail.stats_calls_lifetime': '{count} lifetime calls',
+	'worlds.detail.stats_calls_month': '{count} calls this month',
+	'worlds.detail.stats_empty':
+		'No resolved calls yet. Once members start scoring, this is where the accuracy lands.',
+	'worlds.detail.stats_eyebrow': 'Stats',
+	'worlds.detail.stats_lifetime': 'Lifetime',
+	'worlds.detail.stats_month': 'This month',
 	'worlds.detail.stats_pending':
 		'Per-affiliation accuracy and rank land with the aggregation backend. Member count is live.',
+	'worlds.detail.stats_unranked':
+		'Below {min} calls — accuracy shown but not yet on the ranked leaderboard.',
 	'worlds.locked_until': 'Locked until {date} · {days}d left',
 	'worlds.podium.bronze': '3rd',
 	'worlds.podium.eyebrow': 'Monthly podium',

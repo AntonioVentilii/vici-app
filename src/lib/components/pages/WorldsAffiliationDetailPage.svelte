@@ -9,21 +9,22 @@
 		WORLDS_COUNTRIES,
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
+	import { getAffiliationStats } from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
+	import { MIN_CALLS_FOR_RANK, type AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
 	 * Worlds affiliation detail — drill-down from `WorldsPage`. Shows
 	 * the identity card (name + glyph), member count from the live
-	 * `listWorldsRoster` query, and a stats panel for the per-period
-	 * accuracy + rank metrics.
+	 * `listWorldsRoster` query, and the per-affiliation accuracy +
+	 * rank stats from `getAffiliationStats`.
 	 *
-	 * The accuracy / rank stats aren't backed by satellite aggregations
-	 * yet (the affiliations collection only stores membership, not
-	 * call-level performance). Surface a "coming soon" stats card
-	 * matching the prototype's structure so the layout is faithful
-	 * even though the numbers are pending the aggregation backend.
+	 * Stats are populated lazily by the satellite hook on `profiles`
+	 * updates — a new affiliation with zero resolved trades returns
+	 * `stats === undefined`, and the panel renders an "unranked"
+	 * placeholder until the first resolution event lands.
 	 */
 	interface Props {
 		kind: AffiliationKind;
@@ -38,19 +39,36 @@
 	);
 
 	let memberCount = $state<number | undefined>();
+	let stats = $state<AffiliationStatsDoc | undefined>();
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 
 	onMount(async () => {
 		try {
-			const { items } = await functions.listWorldsRoster({ kind, affiliationId });
-			memberCount = items.length;
+			const [rosterResp, statsResp] = await Promise.all([
+				functions.listWorldsRoster({ kind, affiliationId }),
+				getAffiliationStats({ kind, affiliationId })
+			]);
+			memberCount = rosterResp.items.length;
+			stats = statsResp;
 			loadState = 'ready';
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Unknown error';
 			loadState = 'error';
 		}
 	});
+
+	const accuracyPctLifetime = $derived(
+		stats && stats.totalCalls > 0 ? Math.round((stats.wins / stats.totalCalls) * 1000) / 10 : 0
+	);
+
+	const accuracyPctMonth = $derived(
+		stats && stats.monthTotalCalls > 0
+			? Math.round((stats.monthWins / stats.monthTotalCalls) * 1000) / 10
+			: 0
+	);
+
+	const ranked = $derived(stats !== undefined && stats.totalCalls >= MIN_CALLS_FOR_RANK);
 
 	const backToWorlds = () => {
 		void goto(`${resolve('/social')}/worlds`);
@@ -93,9 +111,52 @@
 		<h2 class="eyebrow worlds-detail-stats-title">
 			{t({ locale: $localeStore, key: 'worlds.detail.stats_eyebrow' })}
 		</h2>
-		<p class="worlds-detail-stats-hint">
-			{t({ locale: $localeStore, key: 'worlds.detail.stats_pending' })}
-		</p>
+
+		{#if !stats || stats.totalCalls === 0}
+			<p class="worlds-detail-stats-hint">
+				{t({ locale: $localeStore, key: 'worlds.detail.stats_empty' })}
+			</p>
+		{:else}
+			<div class="worlds-detail-stats-grid">
+				<div class="worlds-detail-stats-cell">
+					<span class="num allcaps worlds-detail-stats-label">
+						{t({ locale: $localeStore, key: 'worlds.detail.stats_month' })}
+					</span>
+					<span class="num worlds-detail-stats-value">
+						{stats.monthTotalCalls === 0 ? '—' : `${accuracyPctMonth}%`}
+					</span>
+					<span class="num allcaps worlds-detail-stats-sub">
+						{t({
+							locale: $localeStore,
+							key: 'worlds.detail.stats_calls_month',
+							params: { count: stats.monthTotalCalls }
+						})}
+					</span>
+				</div>
+				<div class="worlds-detail-stats-cell">
+					<span class="num allcaps worlds-detail-stats-label">
+						{t({ locale: $localeStore, key: 'worlds.detail.stats_lifetime' })}
+					</span>
+					<span class="num worlds-detail-stats-value">{accuracyPctLifetime}%</span>
+					<span class="num allcaps worlds-detail-stats-sub">
+						{t({
+							locale: $localeStore,
+							key: 'worlds.detail.stats_calls_lifetime',
+							params: { count: stats.totalCalls }
+						})}
+					</span>
+				</div>
+			</div>
+			{#if !ranked}
+				<p class="num allcaps worlds-detail-stats-unranked">
+					{t({
+						locale: $localeStore,
+						key: 'worlds.detail.stats_unranked',
+						params: { min: MIN_CALLS_FOR_RANK }
+					})}
+				</p>
+			{/if}
+		{/if}
 	</section>
 
 	<button class="worlds-detail-cta" onclick={openFlow} type="button">
@@ -179,10 +240,10 @@
 	.worlds-detail-stats {
 		display: flex;
 		flex-direction: column;
-		gap: 0.4rem;
+		gap: 0.65rem;
 		padding: 0.85rem 1rem;
 		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
-		border: 1px dashed var(--border-base);
+		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
 	}
 
@@ -196,6 +257,50 @@
 		font-size: var(--t-13);
 		color: var(--text-muted);
 		line-height: 1.5;
+	}
+
+	.worlds-detail-stats-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.6rem;
+	}
+
+	.worlds-detail-stats-cell {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		padding: 0.7rem 0.85rem;
+		background: color-mix(in srgb, var(--bg-surface) 96%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.worlds-detail-stats-label {
+		font-size: var(--t-10, 0.65rem);
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+	}
+
+	.worlds-detail-stats-value {
+		font-size: var(--t-22, 1.4rem);
+		font-weight: 700;
+		color: var(--text-base);
+	}
+
+	.worlds-detail-stats-sub {
+		font-size: var(--t-10, 0.65rem);
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+	}
+
+	.worlds-detail-stats-unranked {
+		margin: 0.5rem 0 0;
+		padding: 0.5rem 0.85rem;
+		font-size: var(--t-10, 0.65rem);
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--bg-surface) 96%, transparent);
+		border-radius: var(--r-12);
 	}
 
 	.worlds-detail-cta {

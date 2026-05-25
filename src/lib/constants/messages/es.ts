@@ -1358,7 +1358,10 @@ export const esMessages = {
 	'welcome.featured_event.to_win': '{odds}% para ganar',
 	'worlds.cta.leave': 'Salir',
 	'worlds.bout.back': 'Volver a Worlds',
+	'worlds.bout.empty_ranked':
+		'Nada se ha resuelto esta temporada — todos sin clasificación. Sé de los primeros en hacer una jugada.',
 	'worlds.bout.list_eyebrow': 'Las {count}',
+	'worlds.bout.ranked_eyebrow': 'Clasificación · por precisión',
 	'worlds.bout.title_country': 'Países · WC Bout',
 	'worlds.bout.title_university': 'Universidades · WC Bout',
 	'worlds.cta.joining': 'Uniéndose…',
@@ -1385,9 +1388,17 @@ export const esMessages = {
 	'worlds.detail.loading_members': 'Cargando miembros…',
 	'worlds.detail.members_count': '{count} miembros',
 	'worlds.detail.see_all': 'Ver los {total} →',
-	'worlds.detail.stats_eyebrow': 'Stats · este mes',
+	'worlds.detail.stats_calls_lifetime': '{count} apuestas totales',
+	'worlds.detail.stats_calls_month': '{count} apuestas este mes',
+	'worlds.detail.stats_empty':
+		'Aún no hay apuestas resueltas. Cuando los miembros empiecen a anotar, la precisión aparecerá aquí.',
+	'worlds.detail.stats_eyebrow': 'Stats',
+	'worlds.detail.stats_lifetime': 'Lifetime',
+	'worlds.detail.stats_month': 'Este mes',
 	'worlds.detail.stats_pending':
 		'Precisión y ranking por afiliación llegan con el backend de agregación. El conteo de miembros es en vivo.',
+	'worlds.detail.stats_unranked':
+		'Por debajo de {min} apuestas — precisión mostrada pero aún no en la clasificación.',
 	'worlds.locked_until': 'Bloqueado hasta {date} · {days}d restantes',
 	'worlds.podium.bronze': '3º',
 	'worlds.podium.eyebrow': 'Podio mensual',

@@ -17,11 +17,17 @@ import {
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
 import {
+	assertSetAffiliationStats,
+	onProfileSetForAffiliationStats
+} from '$satellite/services/affiliation-stats.services';
+import {
 	assertDeleteAffiliation,
 	assertSetAffiliation
 } from '$satellite/services/affiliation.services';
 import { assertDeleteBout, assertSetBout } from '$satellite/services/bout.services';
 import {
+	getAffiliationStatsFn,
+	listAffiliationStatsFn,
 	listLeagueBoutsFn,
 	listLeagueMembersFn,
 	listMyAffiliationsFn,
@@ -87,6 +93,7 @@ import {
 } from '$satellite/services/vxp-onboarding.services';
 import { onProfileSetForStreakAward } from '$satellite/services/vxp-streak-awards.services';
 import {
+	AffiliationStatsWireSchema,
 	AffiliationWireSchema,
 	BoutWireSchema,
 	LeagueMemberWireSchema,
@@ -96,6 +103,7 @@ import {
 	ReferralWireSchema,
 	RelationWireSchema,
 	toWireAffiliation,
+	toWireAffiliationStats,
 	toWireBout,
 	toWireLeague,
 	toWireLeagueMember,
@@ -106,6 +114,7 @@ import {
 	toWireRelation,
 	UserProfileWireSchema
 } from '$satellite/utils/wire-format.utils';
+import { nonNullish } from '@dfinity/utils';
 import {
 	defineAssert,
 	defineHook,
@@ -452,6 +461,41 @@ export const listWorldsRoster = defineQuery({
 	})
 });
 
+// Per-affiliation stats (rolling lifetime + monthly counters). The
+// `stats` field is optional because a brand-new affiliation has no
+// resolution events yet and therefore no doc.
+export const getAffiliationStats = defineQuery({
+	args: j.strictObject({
+		kind: j.enum(['university', 'country']),
+		affiliationId: j.string()
+	}),
+	result: j.strictObject({
+		stats: j.optional(AffiliationStatsWireSchema)
+	}),
+	handler: ({ kind, affiliationId }) => {
+		const stats = getAffiliationStatsFn({ kind, affiliationId });
+
+		return {
+			stats: nonNullish(stats) ? toWireAffiliationStats(stats) : undefined
+		};
+	}
+});
+
+// Ranked leaderboard view across every stats doc of a kind.
+// Below MIN_CALLS_FOR_RANK is filtered out by the aggregator.
+export const listAffiliationStats = defineQuery({
+	args: j.strictObject({
+		kind: j.enum(['university', 'country']),
+		limit: j.number().optional()
+	}),
+	result: j.strictObject({
+		items: j.array(AffiliationStatsWireSchema)
+	}),
+	handler: ({ kind, limit }) => ({
+		items: listAffiliationStatsFn({ kind, limit }).map(toWireAffiliationStats)
+	})
+});
+
 // Comeback grant — one-shot +1000 VXP fired when a balance hits
 // zero on an engaged account. FE detects the zero-balance state and
 // calls this endpoint; server validates engagement + balance and
@@ -485,7 +529,8 @@ const assertSetDocCollections = [
 	Collection.LEAGUES,
 	Collection.LEAGUE_MEMBERS,
 	Collection.BOUTS,
-	Collection.AFFILIATIONS
+	Collection.AFFILIATIONS,
+	Collection.AFFILIATION_STATS
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -502,7 +547,8 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.LEAGUES]: assertSetLeague,
 			[Collection.LEAGUE_MEMBERS]: assertSetLeagueMember,
 			[Collection.BOUTS]: assertSetBout,
-			[Collection.AFFILIATIONS]: assertSetAffiliation
+			[Collection.AFFILIATIONS]: assertSetAffiliation,
+			[Collection.AFFILIATION_STATS]: assertSetAffiliationStats
 		};
 
 		fn[context.data.collection]?.(context);
@@ -549,6 +595,7 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	await onProfileSetForVxpOnboarding(context);
 	onProfileSetForReferralCode(context);
 	await onProfileSetForStreakAward(context);
+	onProfileSetForAffiliationStats(context);
 };
 
 export const onSetDoc = defineHook<OnSetDoc>({

@@ -49,6 +49,26 @@ export interface AppClaimComebackGrantResult {
 export interface AppFollowUserArgs {
 	target: string;
 }
+export interface AppGetAffiliationStatsArgs {
+	kind: { country: null } | { university: null };
+	affiliation_id: string;
+}
+export interface AppGetAffiliationStatsResult {
+	stats:
+		| []
+		| [
+				{
+					month_anchor: string;
+					kind: { country: null } | { university: null };
+					wins: number;
+					month_wins: number;
+					updated_at_ms: number;
+					total_calls: number;
+					month_total_calls: number;
+					affiliation_id: string;
+				}
+		  ];
+}
 export interface AppGetMarketMetadataArgs {
 	series_id: string;
 }
@@ -137,6 +157,22 @@ export interface AppGetProfileResult {
 					accuracy: number;
 				}
 		  ];
+}
+export interface AppListAffiliationStatsArgs {
+	kind: { country: null } | { university: null };
+	limit: [] | [number];
+}
+export interface AppListAffiliationStatsResult {
+	items: Array<{
+		month_anchor: string;
+		kind: { country: null } | { university: null };
+		wins: number;
+		month_wins: number;
+		updated_at_ms: number;
+		total_calls: number;
+		month_total_calls: number;
+		affiliation_id: string;
+	}>;
 }
 export interface AppListFollowersResult {
 	items: Array<{
@@ -495,6 +531,10 @@ export interface _SERVICE {
 	>;
 	app_claim_comeback_grant: ActorMethod<[], AppClaimComebackGrantResult>;
 	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;
+	app_get_affiliation_stats: ActorMethod<
+		[AppGetAffiliationStatsArgs],
+		AppGetAffiliationStatsResult
+	>;
 	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
 	app_get_market_translation: ActorMethod<
 		[AppGetMarketTranslationArgs],
@@ -502,6 +542,10 @@ export interface _SERVICE {
 	>;
 	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
+	app_list_affiliation_stats: ActorMethod<
+		[AppListAffiliationStatsArgs],
+		AppListAffiliationStatsResult
+	>;
 	app_list_followers: ActorMethod<[], AppListFollowersResult>;
 	app_list_following: ActorMethod<[], AppListFollowingResult>;
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
