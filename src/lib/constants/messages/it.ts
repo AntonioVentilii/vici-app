@@ -1193,6 +1193,10 @@ export const itMessages = {
 	'signin.title.signin': 'Accedi a {brand}',
 	'signin.title.signup': 'Inizia a prevedere su {brand}',
 	'social.accuracy_value': '{accuracy} di precisione',
+	'social.tabs.bouts': 'Scontri',
+	'social.tabs.friends': 'Amici',
+	'social.tabs.leagues': 'Leghe',
+	'social.title': 'Social',
 	'social.aspire': 'Partiresti al',
 	'social.aspire_line':
 		'Partiresti dal {rank}. I top predittori toccano {accuracy}+ già nel primo mese.',

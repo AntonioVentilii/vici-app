@@ -1193,6 +1193,10 @@ export const ptMessages = {
 	'signin.title.signin': 'Entre na {brand}',
 	'signin.title.signup': 'Comece a prever na {brand}',
 	'social.accuracy_value': '{accuracy} de precisão',
+	'social.tabs.bouts': 'Duelos',
+	'social.tabs.friends': 'Amigos',
+	'social.tabs.leagues': 'Ligas',
+	'social.title': 'Social',
 	'social.aspire': 'Você começaria em',
 	'social.aspire_line':
 		'Você começaria em {rank}. Os melhores previsores atingem {accuracy}+ no primeiro mês.',

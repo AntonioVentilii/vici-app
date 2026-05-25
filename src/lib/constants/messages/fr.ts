@@ -1206,6 +1206,10 @@ export const frMessages = {
 	'signin.title.signin': 'Connectez-vous à {brand}',
 	'signin.title.signup': 'Commencez à prédire sur {brand}',
 	'social.accuracy_value': '{accuracy} de précision',
+	'social.tabs.bouts': 'Duels',
+	'social.tabs.friends': 'Amis',
+	'social.tabs.leagues': 'Ligues',
+	'social.title': 'Social',
 	'social.aspire': 'Vous commenceriez au',
 	'social.aspire_line':
 		'Vous commenceriez au {rank}. Les meilleurs prédicteurs atteignent {accuracy}+ le premier mois.',

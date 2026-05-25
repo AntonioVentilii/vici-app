@@ -13,23 +13,33 @@
 
 	type FriendsTab = 'active' | 'requests';
 
+	interface Props {
+		// When true, hide the page's own appbar — the container is
+		// expected to render one (e.g. the tabbed Social parent).
+		embedded?: boolean;
+	}
+
+	const { embedded = false }: Props = $props();
+
 	const tabParam = $derived(page.url.searchParams.get('tab'));
 	const initialTab: FriendsTab = $derived(tabParam === 'requests' ? tabParam : 'active');
 </script>
 
-<div class="friends-page">
-	<header class="friends-appbar">
-		<button
-			class="friends-back"
-			aria-label={t({ locale: $localeStore, key: 'friends.back_profile' })}
-			onclick={() => goto(resolve(AppPath.Profile))}
-			type="button"
-		>
-			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
-		</button>
-		<h1 class="friends-title">{t({ locale: $localeStore, key: 'social.friends.title' })}</h1>
-		<span class="friends-appbar-spacer" aria-hidden="true"></span>
-	</header>
+<div class="friends-page" class:is-embedded={embedded}>
+	{#if !embedded}
+		<header class="friends-appbar">
+			<button
+				class="friends-back"
+				aria-label={t({ locale: $localeStore, key: 'friends.back_profile' })}
+				onclick={() => goto(resolve(AppPath.Profile))}
+				type="button"
+			>
+				<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
+			</button>
+			<h1 class="friends-title">{t({ locale: $localeStore, key: 'social.friends.title' })}</h1>
+			<span class="friends-appbar-spacer" aria-hidden="true"></span>
+		</header>
+	{/if}
 
 	<div class="friends-body">
 		<!-- V1.2 FriendsScreen leads with the invite hero so the

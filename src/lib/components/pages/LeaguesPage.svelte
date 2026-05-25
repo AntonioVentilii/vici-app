@@ -18,6 +18,14 @@
 	 * `joinLeagueByInvite`).
 	 */
 
+	interface Props {
+		// When true, hide the page's own appbar — the container is
+		// expected to render one (e.g. the tabbed Social parent).
+		embedded?: boolean;
+	}
+
+	const { embedded = false }: Props = $props();
+
 	let leagues = $state<LeagueWithRole[]>([]);
 	let loadState = $state<'loading' | 'ready' | 'error'>('loading');
 	let errorMessage = $state<string | null>(null);
@@ -61,7 +69,9 @@
 </script>
 
 <div class="leagues-page space-y-6 pb-24">
-	<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'leagues.title' })} />
+	{#if !embedded}
+		<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'leagues.title' })} />
+	{/if}
 
 	<div class="leagues-actions">
 		<button class="leagues-cta" onclick={openCreate} type="button">

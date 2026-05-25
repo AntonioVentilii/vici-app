@@ -1206,6 +1206,10 @@ export const deMessages = {
 	'signin.title.signin': 'Bei {brand} anmelden',
 	'signin.title.signup': 'Auf {brand} mit Vorhersagen starten',
 	'social.accuracy_value': '{accuracy} Genauigkeit',
+	'social.tabs.bouts': 'Bouts',
+	'social.tabs.friends': 'Freunde',
+	'social.tabs.leagues': 'Ligen',
+	'social.title': 'Social',
 	'social.aspire': 'Du würdest starten bei',
 	'social.aspire_line':
 		'Du würdest bei {rank} starten. Top-Predictors erreichen {accuracy}+ im ersten Monat.',

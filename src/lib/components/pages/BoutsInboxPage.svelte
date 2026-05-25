@@ -32,6 +32,14 @@
 	 * back to the league id.
 	 */
 
+	interface Props {
+		// When true, hide the page's own appbar — the container is
+		// expected to render one (e.g. the tabbed Social parent).
+		embedded?: boolean;
+	}
+
+	const { embedded = false }: Props = $props();
+
 	let bouts: BoutDoc[] = $state([]);
 	let memberships: LeagueWithRole[] = $state([]);
 	let selfPrincipal: string | undefined = $state();
@@ -224,14 +232,16 @@
 </script>
 
 <div class="bouts-inbox">
-	<MobileAppBar
-		align="left"
-		back={{
-			label: t({ locale: $localeStore, key: 'leagues.bouts_inbox.back' }),
-			onBack: () => void goto(resolve(AppPath.Social))
-		}}
-		title={t({ locale: $localeStore, key: 'leagues.bouts_inbox.title' })}
-	/>
+	{#if !embedded}
+		<MobileAppBar
+			align="left"
+			back={{
+				label: t({ locale: $localeStore, key: 'leagues.bouts_inbox.back' }),
+				onBack: () => void goto(resolve(AppPath.Social))
+			}}
+			title={t({ locale: $localeStore, key: 'leagues.bouts_inbox.title' })}
+		/>
+	{/if}
 
 	<p class="bouts-inbox-sub">
 		{t({ locale: $localeStore, key: 'leagues.bouts_inbox.sub' })}

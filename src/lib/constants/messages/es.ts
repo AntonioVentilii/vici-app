@@ -1202,6 +1202,10 @@ export const esMessages = {
 	'signin.title.signin': 'Inicia sesión en {brand}',
 	'signin.title.signup': 'Empieza a predecir en {brand}',
 	'social.accuracy_value': '{accuracy} de precisión',
+	'social.tabs.bouts': 'Combates',
+	'social.tabs.friends': 'Amigos',
+	'social.tabs.leagues': 'Ligas',
+	'social.title': 'Social',
 	'social.aspire': 'Empezarías en',
 	'social.aspire_line':
 		'Empezarías en {rank}. Los mejores predictores alcanzan {accuracy}+ en su primer mes.',

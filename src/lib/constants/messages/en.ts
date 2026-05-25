@@ -1239,6 +1239,10 @@ export const enMessages = {
 	'signin.title.signin': 'Sign in to {brand}',
 	'signin.title.signup': 'Start predicting on {brand}',
 	'social.accuracy_value': '{accuracy} accuracy',
+	'social.tabs.bouts': 'Bouts',
+	'social.tabs.friends': 'Friends',
+	'social.tabs.leagues': 'Leagues',
+	'social.title': 'Social',
 	'social.aspire': 'You’d start at',
 	'social.aspire_line':
 		"You'd start at {rank}. Top predictors hit {accuracy}+ in their first month.",
