@@ -962,6 +962,8 @@ export const esMessages = {
 		'Inicia sesión o haz tu primera predicción para inicializar tu identidad social.',
 	'profile.empty.title': 'Sin perfil',
 	'profile.eyebrow': 'IDENTIDAD',
+	'profile.featured_event.live': '{event} · en directo',
+	'profile.featured_event.upcoming': '{event} · empieza en {days} días',
 	'profile.loading.sub': 'Cargando tu identidad de rendimiento y grafo social…',
 	'profile.loading.title': 'Cargando perfil…',
 	'profile.sub': 'Identidad de rendimiento, rachas, logros y grafo social.',

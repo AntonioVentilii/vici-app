@@ -1003,6 +1003,8 @@ export const enMessages = {
 	'profile.empty.sub': 'Sign in or place your first prediction to initialize your social identity.',
 	'profile.empty.title': 'No Profile Found',
 	'profile.eyebrow': 'IDENTITY',
+	'profile.featured_event.live': '{event} · live now',
+	'profile.featured_event.upcoming': '{event} · kicks off in {days} days',
 	'profile.loading.sub': 'Fetching your performance identity and social graph…',
 	'profile.loading.title': 'Loading profile…',
 	'profile.sub': 'Performance identity, streaks, achievements, and social graph.',

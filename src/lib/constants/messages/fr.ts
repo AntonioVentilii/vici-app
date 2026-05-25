@@ -968,6 +968,8 @@ export const frMessages = {
 		'Connectez-vous ou faites votre première prédiction pour initialiser votre identité sociale.',
 	'profile.empty.title': 'Profil introuvable',
 	'profile.eyebrow': 'IDENTITÉ',
+	'profile.featured_event.live': '{event} · en direct',
+	'profile.featured_event.upcoming': '{event} · commence dans {days} jours',
 	'profile.loading.sub': 'Chargement de votre identité de performance et de votre graphe social…',
 	'profile.loading.title': 'Chargement du profil…',
 	'profile.sub': 'Identité de performance, séries, succès et graphe social.',

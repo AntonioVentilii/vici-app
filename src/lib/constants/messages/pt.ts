@@ -955,6 +955,8 @@ export const ptMessages = {
 		'Entre ou faça sua primeira previsão para inicializar sua identidade social.',
 	'profile.empty.title': 'Nenhum perfil encontrado',
 	'profile.eyebrow': 'IDENTIDADE',
+	'profile.featured_event.live': '{event} · ao vivo',
+	'profile.featured_event.upcoming': '{event} · começa em {days} dias',
 	'profile.loading.sub': 'Buscando sua identidade de desempenho e grafo social…',
 	'profile.loading.title': 'Carregando perfil…',
 	'profile.sub': 'Identidade de desempenho, sequências, conquistas e grafo social.',

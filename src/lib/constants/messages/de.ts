@@ -966,6 +966,8 @@ export const deMessages = {
 		'Melde dich an oder platziere deine erste Vorhersage, um deine soziale Identität zu initialisieren.',
 	'profile.empty.title': 'Kein Profil gefunden',
 	'profile.eyebrow': 'IDENTITÄT',
+	'profile.featured_event.live': '{event} · live',
+	'profile.featured_event.upcoming': '{event} · startet in {days} Tagen',
 	'profile.loading.sub': 'Lade Performance-Identität und Social Graph…',
 	'profile.loading.title': 'Profil wird geladen…',
 	'profile.sub': 'Performance-Identität, Streaks, Erfolge und Social Graph.',

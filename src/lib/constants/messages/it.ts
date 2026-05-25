@@ -955,6 +955,8 @@ export const itMessages = {
 	'profile.empty.sub': 'Accedi o fai la prima previsione per inizializzare la tua identità social.',
 	'profile.empty.title': 'Profilo non trovato',
 	'profile.eyebrow': 'IDENTITÀ',
+	'profile.featured_event.live': '{event} · in corso',
+	'profile.featured_event.upcoming': '{event} · inizia tra {days} giorni',
 	'profile.loading.sub': 'Caricamento della tua identità di performance e del grafo social…',
 	'profile.loading.title': 'Caricamento profilo…',
 	'profile.sub': 'Identità di performance, serie, traguardi e grafo social.',
