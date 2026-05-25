@@ -24,6 +24,7 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { getMarketMetadata } from '$lib/services/market-metadata.services';
@@ -153,7 +154,29 @@
 				listMarketTagsBySeries().catch(() => ({}))
 			]);
 
-			markets = queue.slice(0, MAX_MARKETS);
+			// When a featured event is running, narrow the Flow queue to
+			// markets carrying the event's category tag so the swipe deck
+			// tracks the live tentpole — mirrors the MarketsPage suggested
+			// rail behaviour (88eaa02). Falls back to the full queue when
+			// the filter would empty the deck, so users always see *some*
+			// content. Same FeaturedEvent abstraction (b9dfb7d), so the
+			// behaviour generalises across future tentpoles automatically.
+			//
+			// `tagMap` is keyed by series id (a string at runtime) and
+			// `event.categoryTag` is typed as a free-form string on the
+			// FeaturedEvent type — widen both sides for the membership
+			// check rather than narrowing the event tag into MarketTag.
+			const tagsByMarket = tagMap as Record<string, string[]>;
+			const eventTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
+			const eventScoped =
+				eventTag !== undefined
+					? queue.filter((market) =>
+							(tagsByMarket[market.id] ?? []).some((tag) => tag === eventTag)
+						)
+					: [];
+			const sourceQueue = eventScoped.length > 0 ? eventScoped : queue;
+
+			markets = sourceQueue.slice(0, MAX_MARKETS);
 			positions = userPositions;
 			marketTagMap = tagMap;
 
