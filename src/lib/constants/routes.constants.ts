@@ -13,6 +13,7 @@ export enum AppPath {
 	Social = '/social',
 	Flow = '/flow',
 	Settings = '/settings',
+	AccountSettings = '/settings/account',
 	Notifications = '/notifications',
 	Friends = '/friends'
 }
