@@ -1,6 +1,7 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import type { BoutDoc } from '$lib/types/bout';
 import {
 	LEAGUE_DESCRIPTION_MAX_LENGTH,
 	LEAGUE_INVITE_CODE_REGEX,
@@ -311,4 +312,29 @@ export const leaveLeague = async ({ leagueId }: { leagueId: string }): Promise<v
 		collection: Collection.LEAGUE_MEMBERS,
 		doc: existing
 	});
+};
+
+// ─── Bouts ───────────────────────────────────────────────────────────────
+
+/**
+ * List every bout involving the given league — both sides scanned.
+ * Projects the satellite's snake_case wire schema to camelCase
+ * `BoutDoc` for the FE.
+ */
+export const listLeagueBouts = async ({ leagueId }: { leagueId: string }): Promise<BoutDoc[]> => {
+	const { items } = await functions.listLeagueBouts({ leagueId });
+
+	return items.map((b) => ({
+		id: b.id,
+		kind: b.kind,
+		sideA: b.side_a,
+		sideB: b.side_b,
+		proposer: b.proposer,
+		state: b.state,
+		kickoffMs: b.kickoff_ms,
+		settleMs: b.settle_ms,
+		scoreA: b.score_a,
+		scoreB: b.score_b,
+		winner: b.winner
+	}));
 };

@@ -6,8 +6,14 @@
 	import { functions } from '$declarations/satellite/satellite.api';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { leaveLeague, listMyLeagues, type LeagueWithRole } from '$lib/services/leagues.services';
+	import {
+		leaveLeague,
+		listLeagueBouts,
+		listMyLeagues,
+		type LeagueWithRole
+	} from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
+	import type { BoutDoc, BoutState } from '$lib/types/bout';
 	import type { LeagueDoc } from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
 	import { formatDate } from '$lib/utils/format.utils';
@@ -30,6 +36,7 @@
 	let league: LeagueDoc | undefined = $state();
 	let myRole: LeagueMemberRole | undefined = $state();
 	let members: LeagueMemberDoc[] = $state([]);
+	let bouts: BoutDoc[] = $state([]);
 	let loadState: 'loading' | 'ready' | 'not_member' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	let copied = $state(false);
@@ -37,9 +44,10 @@
 
 	const load = async () => {
 		try {
-			const [memberships, memberList] = await Promise.all([
+			const [memberships, memberList, boutList] = await Promise.all([
 				listMyLeagues(),
-				functions.listLeagueMembers({ leagueId })
+				functions.listLeagueMembers({ leagueId }),
+				listLeagueBouts({ leagueId })
 			]);
 
 			const mine: LeagueWithRole | undefined = memberships.find((m) => m.league.id === leagueId);
@@ -57,6 +65,7 @@
 				joinedAtMs: m.joined_at_ms,
 				role: m.role
 			}));
+			bouts = boutList;
 			loadState = 'ready';
 		} catch (err) {
 			errorMessage = err instanceof Error ? err.message : 'Unknown error';
@@ -112,6 +121,50 @@
 
 	const shortPrincipal = (principal: string): string =>
 		principal.length > 12 ? `${principal.slice(0, 5)}…${principal.slice(-5)}` : principal;
+
+	// Bouts grouped by state. Order matches V1.2's prototype panel —
+	// active first (in_flight), then near-term (accepted / proposed),
+	// resolved at the bottom.
+	const BOUT_STATE_ORDER: readonly BoutState[] = [
+		'in_flight',
+		'accepted',
+		'proposed',
+		'resolved'
+	] as const;
+
+	const boutsByState = $derived.by(() => {
+		const groups: Record<BoutState, BoutDoc[]> = {
+			in_flight: [],
+			accepted: [],
+			proposed: [],
+			resolved: []
+		};
+
+		for (const bout of bouts) {
+			groups[bout.state].push(bout);
+		}
+
+		return groups;
+	});
+
+	const boutStateLabelKey = (state: BoutState): MessageKey => {
+		switch (state) {
+			case 'proposed':
+				return 'leagues.bout.state.proposed';
+			case 'accepted':
+				return 'leagues.bout.state.accepted';
+			case 'in_flight':
+				return 'leagues.bout.state.in_flight';
+			case 'resolved':
+				return 'leagues.bout.state.resolved';
+		}
+	};
+
+	// Resolve the opponent's league id for a bout — sideA or sideB,
+	// whichever isn't us. Display only; full league hydration (name +
+	// accent) would need a batched lookup which we defer.
+	const opponentId = ({ bout, selfId }: { bout: BoutDoc; selfId: string }): string =>
+		bout.sideA === selfId ? bout.sideB : bout.sideA;
 </script>
 
 <div class="league-detail">
@@ -200,6 +253,69 @@
 					</li>
 				{/each}
 			</ul>
+		</section>
+
+		<section class="league-detail-section">
+			<h2 class="eyebrow league-detail-section-title">
+				{t({
+					locale: $localeStore,
+					key: 'leagues.detail.bouts_eyebrow',
+					params: { count: bouts.length }
+				})}
+			</h2>
+
+			{#if bouts.length === 0}
+				<p class="league-detail-bouts-empty">
+					{t({ locale: $localeStore, key: 'leagues.detail.bouts_empty' })}
+				</p>
+			{:else}
+				{#each BOUT_STATE_ORDER as state (state)}
+					{#if boutsByState[state].length > 0}
+						<div class="league-detail-bouts-group">
+							<h3 class="allcaps league-detail-bouts-group-title" data-state={state}>
+								{t({ locale: $localeStore, key: boutStateLabelKey(state) })}
+								<span class="num">· {boutsByState[state].length}</span>
+							</h3>
+							<ul class="league-detail-bouts">
+								{#each boutsByState[state] as bout (bout.id)}
+									<li class="league-detail-bout" data-state={bout.state}>
+										<div class="league-detail-bout-head">
+											<span class="num league-detail-bout-opponent">
+												vs <span class="serif-italic">{opponentId({ bout, selfId: leagueId })}</span
+												>
+											</span>
+											<span class="allcaps league-detail-bout-state" data-state={bout.state}>
+												{t({ locale: $localeStore, key: boutStateLabelKey(bout.state) })}
+											</span>
+										</div>
+										<p class="league-detail-bout-window num">
+											{formatDate(bout.kickoffMs)} → {formatDate(bout.settleMs)}
+										</p>
+										{#if bout.state === 'resolved' && bout.winner !== undefined}
+											<p class="league-detail-bout-winner allcaps" data-winner={bout.winner}>
+												{#if bout.winner === 'draw'}
+													{t({ locale: $localeStore, key: 'leagues.bout.winner_draw' })}
+												{:else if (bout.winner === 'A' ? bout.sideA : bout.sideB) === leagueId}
+													{t({ locale: $localeStore, key: 'leagues.bout.winner_us' })}
+												{:else}
+													{t({ locale: $localeStore, key: 'leagues.bout.winner_them' })}
+												{/if}
+												{#if bout.scoreA !== undefined && bout.scoreB !== undefined}
+													<span class="num league-detail-bout-score">
+														· {bout.sideA === leagueId
+															? `${bout.scoreA}–${bout.scoreB}`
+															: `${bout.scoreB}–${bout.scoreA}`}
+													</span>
+												{/if}
+											</p>
+										{/if}
+									</li>
+								{/each}
+							</ul>
+						</div>
+					{/if}
+				{/each}
+			{/if}
 		</section>
 
 		{#if canLeave}
@@ -459,5 +575,104 @@
 	.league-detail-leave:disabled {
 		opacity: 0.55;
 		cursor: not-allowed;
+	}
+
+	.league-detail-bouts-empty {
+		margin: 0;
+		padding: 0.75rem 1rem;
+		font-size: var(--t-13);
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.league-detail-bouts-group {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.league-detail-bouts-group-title {
+		margin: 0;
+		font-size: var(--t-11, 0.7rem);
+		color: var(--text-muted);
+		letter-spacing: var(--tracking-allcaps);
+	}
+
+	.league-detail-bouts-group-title[data-state='in_flight'] {
+		color: var(--laurel);
+	}
+
+	.league-detail-bouts {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.league-detail-bout {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.7rem 0.85rem;
+		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.league-detail-bout[data-state='in_flight'] {
+		border-color: color-mix(in srgb, var(--laurel) 38%, var(--border-base));
+	}
+
+	.league-detail-bout-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.league-detail-bout-opponent {
+		font-size: var(--t-13);
+		color: var(--text-base);
+	}
+
+	.league-detail-bout-state {
+		font-size: var(--t-10, 0.65rem);
+		letter-spacing: var(--tracking-allcaps);
+		padding: 0.1rem 0.4rem;
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--text-muted) 18%, transparent);
+		color: var(--text-muted);
+	}
+
+	.league-detail-bout-state[data-state='in_flight'] {
+		background: color-mix(in srgb, var(--laurel) 22%, transparent);
+		color: var(--laurel);
+	}
+
+	.league-detail-bout-state[data-state='resolved'] {
+		background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+		opacity: 0.7;
+	}
+
+	.league-detail-bout-window {
+		margin: 0;
+		font-size: var(--t-11, 0.7rem);
+		color: var(--text-muted);
+	}
+
+	.league-detail-bout-winner {
+		margin: 0;
+		font-size: var(--t-11, 0.7rem);
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+	}
+
+	.league-detail-bout-score {
+		margin-left: 0.25rem;
+		color: var(--text-base);
 	}
 </style>
