@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { theme } from '$lib/stores/theme.store';
 	import {
+		flowArtViewBox,
 		renderFlowArt,
 		type FlowArtCategory,
 		type FlowArtState
@@ -35,11 +36,15 @@
 	}: Props = $props();
 
 	const svg = $derived(renderFlowArt({ category, seed, state, theme: $theme, size, frame }));
+	// `wc` renders into a 280×100 viewBox; default categories are 1:1.
+	// Mirror that aspect on the host so the SVG isn't squished.
+	const viewBox = $derived(flowArtViewBox(category));
+	const heightPx = $derived(Math.round((size * viewBox.height) / viewBox.width));
 </script>
 
 <div
 	style:width="{size}px"
-	style:height="{size}px"
+	style:height="{heightPx}px"
 	class="flow-art-frame {extraClass}"
 	aria-hidden="true"
 >

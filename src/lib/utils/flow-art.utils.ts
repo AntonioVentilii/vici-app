@@ -12,14 +12,27 @@
 import { THEMES, type Theme } from '$lib/stores/theme.store';
 import { fnv1a32 } from '$lib/utils/hash.utils';
 
-export type FlowArtCategory = 'macro' | 'crypto' | 'sports' | 'politics' | 'tech' | 'culture';
+export type FlowArtCategory =
+	| 'macro'
+	| 'crypto'
+	| 'sports'
+	| 'politics'
+	| 'tech'
+	| 'culture'
+	| 'wc';
 
 export type FlowArtState = 'neutral' | 'won' | 'lost';
 // FlowArt's palette dimension is keyed by the app-wide `Theme` union;
 // re-export under a domain alias so existing call sites read naturally.
 export type FlowArtTheme = Theme;
 
-export const FLOW_ART_CATEGORIES: readonly FlowArtCategory[] = [
+/**
+ * Canonical category set used for random category assignment when a
+ * market has no admin-tagged category. `wc` is intentionally excluded
+ * — it's a tentpole-only language and must be opt-in via an explicit
+ * `category: 'wc'` (typically driven by the FeaturedEvent abstraction).
+ */
+export const FLOW_ART_CATEGORIES: readonly Exclude<FlowArtCategory, 'wc'>[] = [
 	'macro',
 	'crypto',
 	'sports',
@@ -29,12 +42,16 @@ export const FLOW_ART_CATEGORIES: readonly FlowArtCategory[] = [
 ] as const;
 
 /**
- * Pre-built lookup set for `FLOW_ART_CATEGORIES`. Three Flow surfaces
- * (FlowCard, FlowMode, market-signals) need to test whether an
- * arbitrary string is a canonical category — exporting the Set once
- * avoids each consumer rebuilding it on module load.
+ * Pre-built lookup set for `FLOW_ART_CATEGORIES` plus the opt-in `wc`
+ * tentpole. Three Flow surfaces (FlowCard, FlowMode, market-signals)
+ * need to test whether an arbitrary string is a known category —
+ * exporting the Set once avoids each consumer rebuilding it on module
+ * load.
  */
-export const FLOW_ART_CATEGORY_SET: ReadonlySet<string> = new Set(FLOW_ART_CATEGORIES);
+export const FLOW_ART_CATEGORY_SET: ReadonlySet<string> = new Set<FlowArtCategory>([
+	...FLOW_ART_CATEGORIES,
+	'wc'
+]);
 
 export const FLOW_ART_STATES: readonly FlowArtState[] = ['neutral', 'won', 'lost'] as const;
 export const FLOW_ART_THEMES: readonly FlowArtTheme[] = THEMES;
@@ -459,6 +476,63 @@ const PAL: Record<FlowArtCategory, ThemePalettes> = {
 				inks: ['#B68B1F', '#C73D60', '#7A48B8', '#C04014', '#642B57', '#7C3D2C']
 			}
 		}
+	},
+	// World Cup — pitch green base with chalk-line architecture + gold
+	// accent. Tentpole-only: emitted exclusively when a market belongs
+	// to the active FeaturedEvent (see `FLOW_ART_CATEGORIES`, which
+	// excludes `wc` so the random fallback never selects it).
+	wc: {
+		dark: {
+			neutral: {
+				bg: '#0E2A1A',
+				base: '#143A24',
+				ink: '#2A6A42',
+				accent: '#E2B842',
+				hot: '#F2ECDC',
+				dim: '#1E4A30',
+				fg: '#F2ECDC'
+			},
+			won: {
+				bg: '#143F26',
+				base: '#1B5532',
+				ink: '#3B8A56',
+				accent: '#FFD06A',
+				hot: '#FFFFFF',
+				dim: '#266A40',
+				fg: '#FFF6E1'
+			},
+			lost: {
+				bg: '#10231A',
+				base: '#1A2E22',
+				ink: '#2A3D30',
+				accent: '#7C7368',
+				hot: '#5C5249',
+				dim: '#1C2A22',
+				fg: '#9C9890'
+			}
+		},
+		light: {
+			neutral: {
+				bg: '#E8F0DC',
+				base: '#D2E0BC',
+				ink: '#1F5F38',
+				accent: '#B68B1F',
+				hot: '#B5462C',
+				dim: '#A6BE8C',
+				fg: '#0E0D0B'
+			}
+		},
+		peach: {
+			neutral: {
+				bg: '#FFE5CC',
+				base: '#F4D5B8',
+				ink: '#1F5F38',
+				accent: '#B68B1F',
+				hot: '#C04014',
+				dim: '#D6B5A0',
+				fg: '#3D2419'
+			}
+		}
 	}
 };
 
@@ -475,6 +549,24 @@ const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
 const svgOpen = (size: number): string =>
 	`<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">`;
+
+// WC uses a wider 280×100 viewBox so the editorial figure system can
+// span the full-bleed artwork band edge-to-edge. `slice` fill keeps
+// the band tight to its container without empty letterboxing.
+const svgOpenWC = (size: number): string => {
+	const h = Math.round((size * 100) / 280);
+
+	return `<svg viewBox="0 0 280 100" width="${size}" height="${h}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" shape-rendering="geometricPrecision">`;
+};
+
+/**
+ * Public viewBox dimensions per category. Default categories render
+ * into a square 100×100 viewBox; `wc` uses a wider 280×100 band so
+ * the figure system spans full-bleed. `FlowArtFrame` reads this to
+ * size its host element with the correct aspect ratio.
+ */
+export const flowArtViewBox = (category: FlowArtCategory): { width: number; height: number } =>
+	category === 'wc' ? { width: 280, height: 100 } : { width: 100, height: 100 };
 
 const svgClose = (): string => `</svg>`;
 
@@ -966,13 +1058,63 @@ const renderCulture = ({ rng, p, state, uid }: RenderArgs): string => {
 	return s;
 };
 
+// ---- WC — tentpole pitch + stadium stands ---------------------
+// First-pass body: editorial stadium background. Follow-up commits
+// will port V1.2's faceted figure system, background variants
+// (flag diagonals, perspective, spotlight, bunting, TV, propose),
+// and emotion tags. Renders into the wider 280×100 viewBox handled
+// by `renderFlowArt`.
+const renderWC = ({ rng, p, state }: RenderArgs): string => {
+	let s = '';
+
+	// Pitch base — full-bleed green.
+	s += `<rect width="280" height="100" fill="${p.bg}"/>`;
+
+	// Stadium tiers along the upper half — six receding bands, fading
+	// out per row.
+	for (let i = 0; i < 6; i++) {
+		s += `<rect x="-4" y="${10 + i * 6}" width="290" height="3" fill="${p.base}" opacity="${(0.55 - i * 0.05).toFixed(2)}"/>`;
+	}
+
+	// Tiny crowd-dot grid in the stands.
+	for (let r = 0; r < 5; r++) {
+		for (let c = 0; c < 28; c++) {
+			s += `<circle cx="${4 + c * 10}" cy="${10.5 + r * 6}" r="0.6" fill="${p.dim}" opacity="${(0.35 + (r % 2) * 0.18).toFixed(2)}"/>`;
+		}
+	}
+
+	// Pitch field — lower band.
+	s += `<rect x="0" y="46" width="280" height="54" fill="${p.ink}" opacity="0.30"/>`;
+	// Halfway line.
+	s += `<line x1="0" y1="74" x2="280" y2="74" stroke="${p.fg}" stroke-width="0.4" opacity="0.30"/>`;
+
+	// Centre circle on the halfway line, jittered horizontally per seed.
+	const cx = rng.range(120, 160);
+	s += `<circle cx="${cx.toFixed(1)}" cy="74" r="9" fill="none" stroke="${p.fg}" stroke-width="0.4" opacity="0.35"/>`;
+	s += `<circle cx="${cx.toFixed(1)}" cy="74" r="0.8" fill="${p.fg}" opacity="0.55"/>`;
+
+	// Penalty arc fragment on the right — establishes the chalk-line
+	// architecture without committing to a specific match angle.
+	s += `<path d="M 240 60 Q 252 74 240 88" fill="none" stroke="${p.fg}" stroke-width="0.4" opacity="0.30"/>`;
+
+	// State accent: won → gold spotlight wash; lost → desaturated veil.
+	if (state === 'won') {
+		s += `<rect width="280" height="100" fill="${p.accent}" opacity="0.08"/>`;
+	} else if (state === 'lost') {
+		s += `<rect width="280" height="100" fill="${p.bg}" opacity="0.35"/>`;
+	}
+
+	return s;
+};
+
 const RENDERERS: Record<FlowArtCategory, (args: RenderArgs) => string> = {
 	macro: renderMacro,
 	crypto: renderCrypto,
 	sports: renderSports,
 	politics: renderPolitics,
 	tech: renderTech,
-	culture: renderCulture
+	culture: renderCulture,
+	wc: renderWC
 };
 
 // =============================================================
@@ -1000,6 +1142,14 @@ export const renderFlowArt = ({
 	// (potentially another card's gradient).
 	const uid = hashStr(seedKey).toString(36);
 	const body = renderer({ rng, p: pal, state, uid });
+
+	if (category === 'wc') {
+		// WC fills its own 280×100 background and is excluded from the
+		// optional inset frame — its full-bleed editorial composition
+		// already supplies the visual containment.
+		return svgOpenWC(size) + body + svgClose();
+	}
+
 	let svg = svgOpen(size) + bgRect(pal) + body;
 
 	if (frame) {

@@ -12,9 +12,14 @@ import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
  * pulls `yesProbability` because it animates the slider; landing pulls
  * `yesPercent` because it shows the static rounded value.
  */
+// Welcome/onboarding demo markets ship hand-curated fixtures across the
+// six default categories. `wc` is tentpole-only and never part of the
+// demo deck, so it's excluded from this fixture type — that lets
+// downstream helpers (e.g. `onboarding.category.<id>.label` keys) stay
+// statically narrowed to the six categories that ship onboarding copy.
 export interface WelcomeMarketPreview {
 	readonly id: string;
-	readonly category: FlowArtCategory;
+	readonly category: Exclude<FlowArtCategory, 'wc'>;
 	readonly question: string;
 	readonly yesProbability: number;
 	readonly yesPercent: number;
@@ -33,7 +38,7 @@ const previewMarket = ({
 	days
 }: {
 	id: string;
-	category: FlowArtCategory;
+	category: Exclude<FlowArtCategory, 'wc'>;
 	question: string;
 	yesProbability: number;
 	closesLabel: string;

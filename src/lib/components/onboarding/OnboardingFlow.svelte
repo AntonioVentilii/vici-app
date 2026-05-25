@@ -72,7 +72,7 @@
 	const markets: readonly WelcomeMarketPreview[] = ONBOARDING_DEMO_MARKETS;
 	const [firstMarket, practiceMarket] = markets;
 
-	const categoryOptions: readonly FlowArtCategory[] = FLOW_ART_CATEGORIES;
+	const categoryOptions = FLOW_ART_CATEGORIES;
 
 	const marketFieldKey = ({
 		id,
@@ -82,9 +82,15 @@
 		field: 'title' | 'subtitle' | 'resolution' | 'source';
 	}): MessageKey => `onboarding.markets.${id.replace(/-/g, '_')}.${field}` as MessageKey;
 
-	const categoryLabelKey = (id: FlowArtCategory): MessageKey => `onboarding.category.${id}.label`;
+	// `wc` is a tentpole-only language (see `FLOW_ART_CATEGORIES`) and
+	// never an onboarding-pickable interest, so the helpers are narrowed
+	// to the six default categories that ship onboarding copy.
+	type OnboardingCategory = Exclude<FlowArtCategory, 'wc'>;
 
-	const categoryFeedKey = (id: FlowArtCategory): MessageKey => `onboarding.category.${id}.feed`;
+	const categoryLabelKey = (id: OnboardingCategory): MessageKey =>
+		`onboarding.category.${id}.label`;
+
+	const categoryFeedKey = (id: OnboardingCategory): MessageKey => `onboarding.category.${id}.feed`;
 
 	let step = $state(0);
 	let firstDragX = $state(0);
