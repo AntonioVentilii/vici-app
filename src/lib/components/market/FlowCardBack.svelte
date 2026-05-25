@@ -1,5 +1,6 @@
 <script lang="ts">
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
+	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
@@ -148,6 +149,14 @@
 	>
 		<header class="flow-back-head">
 			<span class="allcaps flow-back-cat">{category}</span>
+			<!-- Save / unsave from the swipe deck — V1.2's prototype puts
+			     the heart on the card back face so users can bookmark a
+			     market for later without committing a stake. Uses the
+			     shared SavedMarketToggle so the bookmark state stays in
+			     lockstep with MarketCard and MarketDetail. -->
+			<div class="flow-back-actions">
+				<SavedMarketToggle marketId={market.id} size="sm" />
+			</div>
 		</header>
 
 		<div class="flow-back-scroll">
@@ -327,12 +336,21 @@
 	.flow-back-head {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
 		padding: 0.95rem 1.1rem 0.45rem;
 	}
 
 	.flow-back-cat {
 		font-size: var(--t-12);
 		color: var(--cat-color);
+	}
+
+	.flow-back-actions {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		flex-shrink: 0;
 	}
 
 	.flow-back-scroll {
