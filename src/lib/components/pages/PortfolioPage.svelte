@@ -2,6 +2,7 @@
 	import { LineChart } from 'lucide-svelte/icons';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
+	import PortfolioAllocation from '$lib/components/portfolio/PortfolioAllocation.svelte';
 	import PortfolioStats from '$lib/components/portfolio/PortfolioStats.svelte';
 	import PositionTable from '$lib/components/portfolio/PositionTable.svelte';
 	import TradeHistoryTable from '$lib/components/portfolio/TradeHistoryTable.svelte';
@@ -140,6 +141,8 @@
 			totalPnL={portfolioPnLLabel}
 			tradeHistoryCount={$tradeHistory.length}
 		/>
+
+		<PortfolioAllocation markets={$markets} positions={openPositions} tagsBySeries={$marketTags} />
 
 		<PositionTable markets={$markets} positions={$positions} tagMappings={$marketTags} />
 

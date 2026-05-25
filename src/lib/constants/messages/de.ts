@@ -840,6 +840,7 @@ export const deMessages = {
 	'outcome.no_won': 'NO gewonnen',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES gewonnen',
+	'portfolio.allocation.eyebrow': 'Aufteilung',
 	'portfolio.eyebrow': 'PORTFOLIO',
 	'portfolio.id_label': 'ID: {id}',
 	'portfolio.orders.col.action': 'Aktion',

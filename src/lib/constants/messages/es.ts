@@ -834,6 +834,7 @@ export const esMessages = {
 	'outcome.no_won': 'NO ganó',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES ganó',
+	'portfolio.allocation.eyebrow': 'Asignación',
 	'portfolio.eyebrow': 'PORTAFOLIO',
 	'portfolio.id_label': 'ID: {id}',
 	'portfolio.orders.col.action': 'Acción',

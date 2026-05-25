@@ -789,6 +789,7 @@ export const zhCnMessages = {
 	'outcome.no_won': 'NO 获胜',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES 获胜',
+	'portfolio.allocation.eyebrow': '分布',
 	'portfolio.eyebrow': '投资组合',
 	'portfolio.id_label': 'ID：{id}',
 	'portfolio.orders.col.action': '操作',

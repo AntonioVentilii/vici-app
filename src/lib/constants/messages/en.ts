@@ -848,6 +848,7 @@ export const enMessages = {
 	'outcome.no_won': 'NO won',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES won',
+	'portfolio.allocation.eyebrow': 'Allocation',
 	'portfolio.eyebrow': 'PORTFOLIO',
 	'portfolio.id_label': 'ID: {id}',
 	'portfolio.orders.col.action': 'Action',

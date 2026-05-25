@@ -829,6 +829,7 @@ export const ptMessages = {
 	'outcome.no_won': 'NO venceu',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES venceu',
+	'portfolio.allocation.eyebrow': 'Alocação',
 	'portfolio.eyebrow': 'PORTFÓLIO',
 	'portfolio.id_label': 'ID: {id}',
 	'portfolio.orders.col.action': 'Ação',

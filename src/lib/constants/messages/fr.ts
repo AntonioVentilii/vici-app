@@ -842,6 +842,7 @@ export const frMessages = {
 	'outcome.no_won': 'NO a gagné',
 	'outcome.yes': 'YES',
 	'outcome.yes_won': 'YES a gagné',
+	'portfolio.allocation.eyebrow': 'Allocation',
 	'portfolio.eyebrow': 'PORTEFEUILLE',
 	'portfolio.id_label': 'ID : {id}',
 	'portfolio.orders.col.action': 'Action',

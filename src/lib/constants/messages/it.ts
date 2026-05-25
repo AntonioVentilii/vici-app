@@ -830,6 +830,7 @@ export const itMessages = {
 	'outcome.no_won': 'NO ha vinto',
 	'outcome.yes': 'SÌ',
 	'outcome.yes_won': 'SÌ ha vinto',
+	'portfolio.allocation.eyebrow': 'Allocazione',
 	'portfolio.eyebrow': 'PORTAFOGLIO',
 	'portfolio.id_label': 'ID: {id}',
 	'portfolio.orders.col.action': 'Azione',
