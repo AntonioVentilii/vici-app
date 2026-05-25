@@ -1,4 +1,5 @@
 <script lang="ts">
+	import SwipeableMarketCard from '$lib/components/ui/SwipeableMarketCard.svelte';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
@@ -16,11 +17,10 @@
 	 *   - Skipped     → the first favourite's winner market ("Will
 	 *     Brazil win the World Cup?").
 	 *
-	 * Visual-only and button-based for this first commit; swipe
-	 * physics layer onto the same markup in a follow-up. Emits
-	 * `onCommit('YES' | 'NO')` when the user taps a side. `onChangeTeam`
-	 * fires the "Change team" affordance — the orchestrator routes that
-	 * back to Beat 1.a.
+	 * Emits `onCommit('YES' | 'NO')` either via swipe gesture (via the
+	 * shared `SwipeableMarketCard` primitive) or via tap on the
+	 * fallback YES / NO buttons. `onChangeTeam` fires the "Change team"
+	 * affordance — the orchestrator routes that back to Beat 1.a.
 	 */
 	interface Props {
 		// `null` selects the skip path (no team picked); otherwise a
@@ -78,52 +78,82 @@
 		</span>
 	</header>
 
-	<div class="ob2-wc-eyebrow">
-		<span class="allcaps ob2-wc-tag">{event.title}</span>
-		<span class="ob2-wc-eyebrow-sub allcaps">
-			{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.eyebrow_first_call' })}
-		</span>
-	</div>
+	<SwipeableMarketCard onCommit={(side) => onCommit(side)}>
+		{#snippet children(swipe)}
+			<div
+				style:transform="translate3d({swipe.dragX}px, {swipe.dragY * 0.2}px, 0) rotate({swipe.rotation}deg)"
+				class="ob2-swipe-card"
+				class:is-committed={swipe.committed !== null}
+				class:is-dragging={swipe.dragging}
+			>
+				<div class="ob2-wc-eyebrow">
+					<span class="allcaps ob2-wc-tag">{event.title}</span>
+					<span class="ob2-wc-eyebrow-sub allcaps">
+						{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.eyebrow_first_call' })}
+					</span>
+				</div>
 
-	<h1 id="ob2-beat1b-title" class="ob2-h1">
-		{t({ locale: $localeStore, key: titleKey, params: { team: titleTeamName } })}
-	</h1>
+				<h1 id="ob2-beat1b-title" class="ob2-h1">
+					{t({ locale: $localeStore, key: titleKey, params: { team: titleTeamName } })}
+				</h1>
 
-	{#if picked}
-		<p class="ob2-sub">
-			<span class="ob2-team-glyph" aria-hidden="true">{picked.glyph ?? ''}</span>
-			{t({
-				locale: $localeStore,
-				key: 'onboarding.v2.beat1b.backing',
-				params: { team: picked.name }
-			})}
-			<span class="ob2-sub-detail">
-				{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.backing_sub' })}
-			</span>
-			<button class="ob2-change-team" onclick={onChangeTeam} type="button">
-				{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.change_team' })}
-			</button>
-		</p>
-	{:else}
-		<p class="ob2-sub">
-			{t({
-				locale: $localeStore,
-				key: 'onboarding.v2.beat1b.skip_sub',
-				params: { team: fallbackFavourite?.name ?? '' }
-			})}
-		</p>
-	{/if}
+				{#if picked}
+					<p class="ob2-sub">
+						<span class="ob2-team-glyph" aria-hidden="true">{picked.glyph ?? ''}</span>
+						{t({
+							locale: $localeStore,
+							key: 'onboarding.v2.beat1b.backing',
+							params: { team: picked.name }
+						})}
+						<span class="ob2-sub-detail">
+							{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.backing_sub' })}
+						</span>
+						<button class="ob2-change-team" onclick={onChangeTeam} type="button">
+							{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.change_team' })}
+						</button>
+					</p>
+				{:else}
+					<p class="ob2-sub">
+						{t({
+							locale: $localeStore,
+							key: 'onboarding.v2.beat1b.skip_sub',
+							params: { team: fallbackFavourite?.name ?? '' }
+						})}
+					</p>
+				{/if}
 
-	<div class="ob2-prob-grid">
-		<button class="ob2-prob-btn no" onclick={() => onCommit('NO')} type="button">
-			<span>{t({ locale: $localeStore, key: 'outcome.no' })}</span>
-			<strong class="num">{noPct}%</strong>
-		</button>
-		<button class="ob2-prob-btn yes" onclick={() => onCommit('YES')} type="button">
-			<span>{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
-			<strong class="num">{yesPct}%</strong>
-		</button>
-	</div>
+				<div class="ob2-prob-grid">
+					<button class="ob2-prob-btn no" onclick={() => onCommit('NO')} type="button">
+						<span>{t({ locale: $localeStore, key: 'outcome.no' })}</span>
+						<strong class="num">{noPct}%</strong>
+					</button>
+					<button class="ob2-prob-btn yes" onclick={() => onCommit('YES')} type="button">
+						<span>{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
+						<strong class="num">{yesPct}%</strong>
+					</button>
+				</div>
+
+				<span
+					style:opacity={swipe.yesOpacity}
+					class="ob2-swipe-stamp ob2-swipe-stamp-yes allcaps"
+					aria-hidden="true"
+				>
+					{t({ locale: $localeStore, key: 'outcome.yes' })}
+				</span>
+				<span
+					style:opacity={swipe.noOpacity}
+					class="ob2-swipe-stamp ob2-swipe-stamp-no allcaps"
+					aria-hidden="true"
+				>
+					{t({ locale: $localeStore, key: 'outcome.no' })}
+				</span>
+			</div>
+		{/snippet}
+	</SwipeableMarketCard>
+
+	<p class="allcaps ob2-swipe-hint" aria-hidden="true">
+		{t({ locale: $localeStore, key: 'onboarding.v2.beat1b.swipe_hint' })}
+	</p>
 </section>
 
 <style lang="postcss">
@@ -278,5 +308,65 @@
 	.ob2-prob-btn.yes:hover {
 		background: color-mix(in srgb, var(--yes-wash) 22%, var(--bg-surface));
 		transform: translateY(-1px);
+	}
+
+	.ob2-swipe-card {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+		padding: 1rem 1.1rem;
+		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		will-change: transform;
+		transition:
+			transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1),
+			box-shadow 220ms ease;
+	}
+
+	.ob2-swipe-card.is-dragging {
+		transition: none;
+		box-shadow:
+			0 8px 24px rgba(0, 0, 0, 0.18),
+			0 0 0 1px color-mix(in srgb, var(--text-base) 6%, transparent);
+	}
+
+	.ob2-swipe-card.is-committed {
+		transition: transform 360ms cubic-bezier(0.4, 0, 0.8, 0.6);
+		pointer-events: none;
+	}
+
+	.ob2-swipe-stamp {
+		position: absolute;
+		top: 0.9rem;
+		font-family: var(--font-display);
+		font-size: var(--t-22, 1.4rem);
+		letter-spacing: var(--tracking-allcaps);
+		padding: 0.2rem 0.6rem;
+		border-radius: var(--r-pill);
+		pointer-events: none;
+		transition: opacity 80ms linear;
+	}
+
+	.ob2-swipe-stamp-yes {
+		right: 0.9rem;
+		color: var(--yes);
+		border: 2px solid var(--yes);
+		transform: rotate(-12deg);
+	}
+
+	.ob2-swipe-stamp-no {
+		left: 0.9rem;
+		color: var(--no);
+		border: 2px solid var(--no);
+		transform: rotate(12deg);
+	}
+
+	.ob2-swipe-hint {
+		margin: 0;
+		font-size: var(--t-11, 0.7rem);
+		color: var(--text-muted);
+		text-align: center;
 	}
 </style>

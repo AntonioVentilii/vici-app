@@ -961,6 +961,7 @@ export const enMessages = {
 	'onboarding.v2.beat1b.eyebrow_first_call': 'Make your first call',
 	'onboarding.v2.beat1b.skip_sub':
 		'Following the tournament. Swipe YES if you think {team} takes it all.',
+	'onboarding.v2.beat1b.swipe_hint': 'Swipe ← for NO · Swipe → for YES · or tap a side',
 	'onboarding.v2.beat1b.title_advance': 'Will {team} make the round of 16?',
 	'onboarding.v2.beat1b.title_winner': 'Will {team} win the World Cup?',
 	'onboarding.v2.beat2.affil_eyebrow': 'Your profile',

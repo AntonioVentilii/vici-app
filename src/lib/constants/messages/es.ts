@@ -949,6 +949,7 @@ export const esMessages = {
 	'onboarding.v2.beat1b.eyebrow_first_call': 'Tu primera apuesta',
 	'onboarding.v2.beat1b.skip_sub':
 		'Sigues el torneo. Marca SÍ si crees que {team} se lo lleva todo.',
+	'onboarding.v2.beat1b.swipe_hint': 'Desliza ← para NO · Desliza → para SÍ · o toca un lado',
 	'onboarding.v2.beat1b.title_advance': '¿{team} pasará a octavos?',
 	'onboarding.v2.beat1b.title_winner': '¿{team} ganará el Mundial?',
 	'onboarding.v2.beat2.affil_eyebrow': 'Tu perfil',

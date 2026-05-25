@@ -897,6 +897,7 @@ export const zhCnMessages = {
 	'onboarding.v2.beat1b.change_team': '换球队',
 	'onboarding.v2.beat1b.eyebrow_first_call': '你的第一次下注',
 	'onboarding.v2.beat1b.skip_sub': '只看比赛。如果你认为 {team} 能夺冠,滑动 YES。',
+	'onboarding.v2.beat1b.swipe_hint': '左滑选 NO · 右滑选 YES · 或点按某一侧',
 	'onboarding.v2.beat1b.title_advance': '{team} 能进 16 强吗?',
 	'onboarding.v2.beat1b.title_winner': '{team} 能夺得世界杯吗?',
 	'onboarding.v2.beat2.affil_eyebrow': '你的资料',

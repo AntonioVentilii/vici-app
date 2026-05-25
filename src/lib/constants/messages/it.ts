@@ -945,6 +945,7 @@ export const itMessages = {
 	'onboarding.v2.beat1b.eyebrow_first_call': 'La tua prima chiamata',
 	'onboarding.v2.beat1b.skip_sub':
 		'Segui il torneo. Vai su SÌ se pensi che {team} la porti a casa.',
+	'onboarding.v2.beat1b.swipe_hint': 'Swipe ← per NO · Swipe → per SÌ · o tocca un lato',
 	'onboarding.v2.beat1b.title_advance': 'Il {team} passerà agli ottavi?',
 	'onboarding.v2.beat1b.title_winner': 'Il {team} vincerà i Mondiali?',
 	'onboarding.v2.beat2.affil_eyebrow': 'Il tuo profilo',

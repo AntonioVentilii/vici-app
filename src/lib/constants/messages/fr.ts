@@ -956,6 +956,7 @@ export const frMessages = {
 	'onboarding.v2.beat1b.change_team': "Changer d'équipe",
 	'onboarding.v2.beat1b.eyebrow_first_call': 'Ton premier pronostic',
 	'onboarding.v2.beat1b.skip_sub': 'Tu suis le tournoi. Swipe OUI si tu vois {team} tout rafler.',
+	'onboarding.v2.beat1b.swipe_hint': 'Swipe ← pour NON · Swipe → pour OUI · ou tape',
 	'onboarding.v2.beat1b.title_advance': '{team} passera-t-il les huitièmes ?',
 	'onboarding.v2.beat1b.title_winner': '{team} remportera-t-il la Coupe du Monde ?',
 	'onboarding.v2.beat2.affil_eyebrow': 'Ton profil',

@@ -955,6 +955,7 @@ export const deMessages = {
 	'onboarding.v2.beat1b.change_team': 'Mannschaft wechseln',
 	'onboarding.v2.beat1b.eyebrow_first_call': 'Dein erster Tipp',
 	'onboarding.v2.beat1b.skip_sub': 'Du verfolgst das Turnier. Wische JA, wenn {team} alles holt.',
+	'onboarding.v2.beat1b.swipe_hint': 'Wische ← für NEIN · Wische → für JA · oder tippe',
 	'onboarding.v2.beat1b.title_advance': 'Erreicht {team} das Achtelfinale?',
 	'onboarding.v2.beat1b.title_winner': 'Gewinnt {team} die WM?',
 	'onboarding.v2.beat2.affil_eyebrow': 'Dein Profil',

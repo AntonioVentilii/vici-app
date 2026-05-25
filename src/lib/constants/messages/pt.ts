@@ -943,6 +943,7 @@ export const ptMessages = {
 	'onboarding.v2.beat1b.change_team': 'Trocar seleção',
 	'onboarding.v2.beat1b.eyebrow_first_call': 'Sua primeira aposta',
 	'onboarding.v2.beat1b.skip_sub': 'Acompanha o torneio. Marque SIM se acha que {team} leva tudo.',
+	'onboarding.v2.beat1b.swipe_hint': 'Deslize ← para NÃO · Deslize → para SIM · ou toque',
 	'onboarding.v2.beat1b.title_advance': 'A {team} passa para as oitavas?',
 	'onboarding.v2.beat1b.title_winner': 'A {team} vence a Copa do Mundo?',
 	'onboarding.v2.beat2.affil_eyebrow': 'Seu perfil',
