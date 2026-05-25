@@ -6,6 +6,7 @@
 	import { functions } from '$declarations/satellite/satellite.api';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import ProposeBoutModal from '$lib/components/leagues/ProposeBoutModal.svelte';
+	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
 		acceptBout,
@@ -179,6 +180,7 @@
 	// Per-bout transition affordances. Owner-only — admins can promote
 	// members but not move bouts, per the V1.2 spec.
 	let actingBoutId = $state<string | null>(null);
+	let resolveBoutTarget = $state<BoutDoc | null>(null);
 
 	const canAcceptBout = (bout: BoutDoc): boolean =>
 		myRole === 'owner' && bout.state === 'proposed' && bout.sideB === leagueId;
@@ -188,6 +190,12 @@
 		bout.state === 'accepted' &&
 		(bout.sideA === leagueId || bout.sideB === leagueId) &&
 		Date.now() >= bout.kickoffMs;
+
+	const canResolveBout = (bout: BoutDoc): boolean =>
+		myRole === 'owner' &&
+		bout.state === 'in_flight' &&
+		(bout.sideA === leagueId || bout.sideB === leagueId) &&
+		Date.now() >= bout.settleMs;
 
 	const handleAcceptBout = async (bout: BoutDoc) => {
 		if (actingBoutId !== null) {
@@ -221,6 +229,11 @@
 		} finally {
 			actingBoutId = null;
 		}
+	};
+
+	const handleResolveBoutDone = () => {
+		resolveBoutTarget = null;
+		void load();
 	};
 </script>
 
@@ -396,6 +409,14 @@
 													? t({ locale: $localeStore, key: 'leagues.bout.action.starting' })
 													: t({ locale: $localeStore, key: 'leagues.bout.action.kickoff' })}
 											</button>
+										{:else if canResolveBout(bout)}
+											<button
+												class="league-detail-bout-action is-primary"
+												onclick={() => (resolveBoutTarget = bout)}
+												type="button"
+											>
+												{t({ locale: $localeStore, key: 'leagues.bout.action.resolve' })}
+											</button>
 										{/if}
 									</li>
 								{/each}
@@ -427,6 +448,14 @@
 		ourLeagueId={leagueId}
 	/>
 {/if}
+
+<ResolveBoutModal
+	bout={resolveBoutTarget}
+	isOpen={resolveBoutTarget !== null}
+	onClose={() => (resolveBoutTarget = null)}
+	onResolved={handleResolveBoutDone}
+	ourLeagueId={leagueId}
+/>
 
 <style lang="postcss">
 	.league-detail {
