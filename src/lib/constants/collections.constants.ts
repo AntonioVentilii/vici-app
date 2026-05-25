@@ -38,7 +38,14 @@ export const Collection = {
 	 * marketing metadata. Members and bouts live in follow-up collections so a league's metadata
 	 * stays cheap to read without joining the membership table.
 	 */
-	LEAGUES: collections.LEAGUES
+	LEAGUES: collections.LEAGUES,
+	/**
+	 * Per-member membership row, keyed by `${leagueId}/${memberPrincipal}`. Holds the member's
+	 * role inside the league (owner / admin / member) and the joinedAt timestamp. Self-joins
+	 * write directly; owner / admin can write rows for other principals (e.g. promote a member
+	 * to admin). Drift between key and embedded fields is rejected by the satellite assert.
+	 */
+	LEAGUE_MEMBERS: collections.LEAGUE_MEMBERS
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

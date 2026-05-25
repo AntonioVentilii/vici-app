@@ -21,6 +21,7 @@ import {
 	syncRoleToEngineOnSet
 } from '$satellite/services/engine-sync.services';
 import { listLeaderboard as listLeaderboardFn } from '$satellite/services/leaderboard.services';
+import { assertSetLeagueMember } from '$satellite/services/league-member.services';
 import { assertSetLeague } from '$satellite/services/league.services';
 import {
 	getMarketMetadata as getMarketMetadataFn,
@@ -358,7 +359,8 @@ const assertSetDocCollections = [
 	Collection.REFERRAL_CODES,
 	Collection.REFERRALS,
 	Collection.VXP_AWARDS,
-	Collection.LEAGUES
+	Collection.LEAGUES,
+	Collection.LEAGUE_MEMBERS
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -372,7 +374,8 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.REFERRAL_CODES]: assertSetReferralCode,
 			[Collection.REFERRALS]: assertSetReferral,
 			[Collection.VXP_AWARDS]: assertSetVxpAward,
-			[Collection.LEAGUES]: assertSetLeague
+			[Collection.LEAGUES]: assertSetLeague,
+			[Collection.LEAGUE_MEMBERS]: assertSetLeagueMember
 		};
 
 		fn[context.data.collection]?.(context);
