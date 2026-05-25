@@ -1,10 +1,11 @@
 <script lang="ts">
-	import { ArrowLeft, Copy, Check } from 'lucide-svelte/icons';
+	import { ArrowLeft, Copy, Check, Plus } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { functions } from '$declarations/satellite/satellite.api';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import ProposeBoutModal from '$lib/components/leagues/ProposeBoutModal.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
 		leaveLeague,
@@ -41,6 +42,7 @@
 	let errorMessage: string | null = $state(null);
 	let copied = $state(false);
 	let leaving = $state(false);
+	let proposeOpen = $state(false);
 
 	const load = async () => {
 		try {
@@ -77,6 +79,12 @@
 
 	const canSeeInvite = $derived(myRole === 'owner' || myRole === 'admin');
 	const canLeave = $derived(myRole !== 'owner' && myRole !== undefined);
+	const canProposeBout = $derived(myRole === 'owner');
+
+	const handleBoutProposed = () => {
+		proposeOpen = false;
+		void load();
+	};
 
 	const handleCopyInvite = async () => {
 		if (!league) {
@@ -256,13 +264,21 @@
 		</section>
 
 		<section class="league-detail-section">
-			<h2 class="eyebrow league-detail-section-title">
-				{t({
-					locale: $localeStore,
-					key: 'leagues.detail.bouts_eyebrow',
-					params: { count: bouts.length }
-				})}
-			</h2>
+			<div class="league-detail-bouts-head">
+				<h2 class="eyebrow league-detail-section-title">
+					{t({
+						locale: $localeStore,
+						key: 'leagues.detail.bouts_eyebrow',
+						params: { count: bouts.length }
+					})}
+				</h2>
+				{#if canProposeBout}
+					<button class="league-detail-propose" onclick={() => (proposeOpen = true)} type="button">
+						<Plus aria-hidden="true" size={14} strokeWidth={2.4} />
+						<span>{t({ locale: $localeStore, key: 'leagues.bout.propose.cta_open' })}</span>
+					</button>
+				{/if}
+			</div>
 
 			{#if bouts.length === 0}
 				<p class="league-detail-bouts-empty">
@@ -330,6 +346,15 @@
 		{/if}
 	{/if}
 </div>
+
+{#if canProposeBout}
+	<ProposeBoutModal
+		isOpen={proposeOpen}
+		onClose={() => (proposeOpen = false)}
+		onProposed={handleBoutProposed}
+		ourLeagueId={leagueId}
+	/>
+{/if}
 
 <style lang="postcss">
 	.league-detail {
@@ -575,6 +600,33 @@
 	.league-detail-leave:disabled {
 		opacity: 0.55;
 		cursor: not-allowed;
+	}
+
+	.league-detail-bouts-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.league-detail-propose {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.35rem 0.65rem;
+		font: inherit;
+		font-size: var(--t-12);
+		font-weight: 700;
+		color: var(--laurel);
+		background: color-mix(in srgb, var(--laurel) 12%, transparent);
+		border: 1px solid color-mix(in srgb, var(--laurel) 35%, var(--border-base));
+		border-radius: var(--r-pill);
+		cursor: pointer;
+	}
+
+	.league-detail-propose:hover {
+		background: color-mix(in srgb, var(--laurel) 20%, transparent);
 	}
 
 	.league-detail-bouts-empty {

@@ -338,3 +338,48 @@ export const listLeagueBouts = async ({ leagueId }: { leagueId: string }): Promi
 		winner: b.winner
 	}));
 };
+
+/**
+ * Propose a new bout (kind='league'). Caller must own the `sideA`
+ * league; the satellite assert hard-rejects otherwise. The opponent
+ * (sideB) league doesn't need to exist on the satellite for the
+ * proposal to land — accept goes through a separate assert pass
+ * under the opponent owner's caller identity.
+ */
+export const proposeBout = async ({
+	sideA,
+	sideB,
+	kickoffMs,
+	settleMs
+}: {
+	sideA: string;
+	sideB: string;
+	kickoffMs: number;
+	settleMs: number;
+}): Promise<BoutDoc> => {
+	if (kickoffMs >= settleMs) {
+		throw new Error('Kickoff must be strictly before settle.');
+	}
+
+	const identity = await safeGetIdentityOnce();
+	const proposerPrincipal = identity.getPrincipal().toText();
+	const boutId = `${sideA}--vs--${sideB}-${Date.now().toString(36)}`;
+
+	const bout: BoutDoc = {
+		id: boutId,
+		kind: 'league',
+		sideA,
+		sideB,
+		proposer: proposerPrincipal,
+		state: 'proposed',
+		kickoffMs,
+		settleMs
+	};
+
+	await setDoc<BoutDoc>({
+		collection: Collection.BOUTS,
+		doc: { key: boutId, data: bout }
+	});
+
+	return bout;
+};
