@@ -301,6 +301,26 @@ export const deMessages = {
 	'dash.accuracy.signed_in': 'Willkommen zurück, {handle}.',
 	'dash.accuracy.signed_out': 'Melde dich an, um deine Genauigkeit zu sehen.',
 	'dash.categories.eyebrow': 'Kategorien',
+	'dash.comeback.body':
+		'Dein VXP-Guthaben ist leer. Hol dir den einmaligen +{amount}-VXP-Comeback-Bonus und steige wieder ein.',
+	'dash.comeback.cta': 'Einlösen',
+	'dash.comeback.cta_pending': 'Wird eingelöst…',
+	'dash.comeback.dismiss': 'Später',
+	'dash.comeback.title': 'Willkommen zurück',
+	'dash.comeback.toast.already_paid': 'Du hast diesen Bonus bereits eingelöst.',
+	'dash.comeback.toast.not_engaged':
+		'Mach ein paar Vorhersagen, bevor du den Comeback-Bonus freischaltest.',
+	'dash.comeback.toast.not_paid_title': 'Nicht berechtigt',
+	'dash.comeback.toast.not_zero': 'Du hast noch VXP auf deinem Guthaben.',
+	'dash.comeback.toast.paid': '+{amount} VXP deinem Guthaben gutgeschrieben.',
+	'dash.comeback.toast.paid_title': 'Comeback-Bonus eingelöst',
+	'dash.comeback.toast.pending': 'Eine Einlösung läuft bereits — bitte kurz warten.',
+	'dash.comeback.toast.previously_failed':
+		'Eine vorherige Einlösung schlug fehl. Wende dich an den Support.',
+	'dash.comeback.toast.transfer_failed': 'Transfer fehlgeschlagen: {reason}',
+	'dash.comeback.toast.transport_failed_title': 'Verbindung fehlgeschlagen',
+	'dash.comeback.toast.unknown':
+		'Der Bonus konnte nicht eingelöst werden. Versuche es später erneut.',
 	'dash.history.eyebrow': 'Vergangene Vorhersagen',
 	'dash.placeholder.categories':
 		'Die Genauigkeit je Kategorie schaltet frei, sobald du in jeder Domäne genug Calls hast.',

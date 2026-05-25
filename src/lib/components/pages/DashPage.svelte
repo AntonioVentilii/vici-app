@@ -3,6 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
+	import ComebackBanner from '$lib/components/dash/ComebackBanner.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { ACCURACY_GATE_CALLS, isAccuracyUnlocked } from '$lib/constants/flow-rewards.constants';
@@ -49,6 +50,12 @@
 			title={t({ locale: $localeStore, key: 'dash.title' })}
 		/>
 	</header>
+
+	<!-- Comeback grant banner — self-gated on balance == 0 and renders
+	     nothing otherwise. Sits at the top of the dash because the
+	     comeback narrative wants visibility, but disappears once the
+	     user has any positive balance or has dismissed it. -->
+	<ComebackBanner />
 
 	<!-- Accuracy hero. Hidden behind the same call-count gate Flow uses so
 	     a brand-new user doesn't see a noisy "5%" before they've played
