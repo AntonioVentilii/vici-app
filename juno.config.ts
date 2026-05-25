@@ -20,6 +20,7 @@ enum JunoDatastoreCollection {
 	MARKET_TRANSLATIONS = 'market_translations',
 	ACTIVITIES = 'activities',
 	VXP_ONBOARDING = 'vxp_onboarding',
+	VXP_AWARDS = 'vxp_awards',
 	REFERRAL_CODES = 'referral_codes',
 	REFERRALS = 'referrals'
 }
@@ -115,6 +116,12 @@ export default defineConfig(({ mode }) => ({
 				},
 				{
 					collection: JunoDatastoreCollection.VXP_ONBOARDING,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.VXP_AWARDS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'

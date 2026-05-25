@@ -8,393 +8,480 @@
 
 import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
+import type { Principal } from '@icp-sdk/core/principal';
 
-export interface AppAcceptFriendRequestArgs {
-	relation_id: string;
-}
-export interface AppCancelFriendRequestArgs {
-	relation_id: string;
-}
-export interface AppCheckFriendshipArgs {
-	user_a: string;
-	user_b: string;
-}
-export interface AppCheckFriendshipResult {
-	is_friend: boolean;
-}
+export interface AppAcceptFriendRequestArgs { 'relation_id' : string }
+export interface AppCancelFriendRequestArgs { 'relation_id' : string }
+export interface AppCheckFriendshipArgs { 'user_a' : string, 'user_b' : string }
+export interface AppCheckFriendshipResult { 'is_friend' : boolean }
 export interface AppCheckNicknameAvailabilityArgs {
-	nickname: string;
-	exclude_principal_str: string;
+  'nickname' : string,
+  'exclude_principal_str' : string,
 }
 export interface AppCheckNicknameAvailabilityResult {
-	available: boolean;
-	reason: [] | [{ taken: null } | { required: null } | { too_short: null }];
+  'available' : boolean,
+  'reason' : [] | [
+    { 'taken' : null } |
+      { 'required' : null } |
+      { 'too_short' : null }
+  ],
 }
-export interface AppFollowUserArgs {
-	target: string;
-}
-export interface AppGetMarketMetadataArgs {
-	series_id: string;
-}
+export interface AppFollowUserArgs { 'target' : string }
+export interface AppGetMarketMetadataArgs { 'series_id' : string }
 export interface AppGetMarketMetadataResult {
-	metadata:
-		| []
-		| [
-				{
-					updated_at: number;
-					updated_by: string;
-					suggested: boolean;
-					series_id: string;
-					tags: Array<string>;
-					events: Array<{
-						day: number;
-						dir: { up: null } | { down: null };
-						label: string;
-					}>;
-					why_now:
-						| []
-						| [
-								{
-									kind:
-										| { new: null }
-										| { social: null }
-										| { trending: null }
-										| { closing: null }
-										| { topical: null };
-									text: string;
-								}
-						  ];
-				}
-		  ];
+  'metadata' : [] | [
+    {
+      'updated_at' : number,
+      'updated_by' : string,
+      'suggested' : boolean,
+      'series_id' : string,
+      'tags' : Array<string>,
+      'events' : Array<
+        {
+          'day' : number,
+          'dir' : { 'up' : null } |
+            { 'down' : null },
+          'label' : string,
+        }
+      >,
+      'why_now' : [] | [
+        {
+          'kind' : { 'new' : null } |
+            { 'social' : null } |
+            { 'trending' : null } |
+            { 'closing' : null } |
+            { 'topical' : null },
+          'text' : string,
+        }
+      ],
+    }
+  ],
 }
 export interface AppGetMarketTranslationArgs {
-	series_id: string;
-	locale: string;
+  'series_id' : string,
+  'locale' : string,
 }
 export interface AppGetMarketTranslationResult {
-	translation:
-		| []
-		| [
-				{
-					title: string;
-					updated_at: number;
-					updated_by: string;
-					series_id: string;
-					locale: string;
-					description: string;
-					outcomes: Array<{ id: string; title: string }>;
-				}
-		  ];
+  'translation' : [] | [
+    {
+      'title' : string,
+      'updated_at' : number,
+      'updated_by' : string,
+      'series_id' : string,
+      'locale' : string,
+      'description' : string,
+      'outcomes' : Array<{ 'id' : string, 'title' : string }>,
+    }
+  ],
 }
-export interface AppGetMyReferralCodeResult {
-	code: [] | [string];
-}
-export interface AppGetProfileArgs {
-	principal_str: string;
-}
+export interface AppGetMyReferralCodeResult { 'code' : [] | [string] }
+export interface AppGetProfileArgs { 'principal_str' : string }
 export interface AppGetProfileResult {
-	profile:
-		| []
-		| [
-				{
-					pnl: number;
-					streak: number;
-					nickname: string;
-					contrarian_wins: number;
-					owner: string;
-					interests: Array<string>;
-					role:
-						| []
-						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-					email: string;
-					level: number;
-					preferences: [] | [{ default_amount: { flow: string; manual: string } }];
-					archetype: string;
-					last_active_day: [] | [string];
-					total_trades: number;
-					win_rate: number;
-					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
-					daily_streak: number;
-					unlocked_achievements: Array<string>;
-					points: number;
-					avatar: string;
-					accuracy: number;
-				}
-		  ];
+  'profile' : [] | [
+    {
+      'pnl' : number,
+      'streak' : number,
+      'nickname' : string,
+      'contrarian_wins' : number,
+      'owner' : string,
+      'interests' : Array<string>,
+      'role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'email' : string,
+      'level' : number,
+      'preferences' : [] | [
+        { 'default_amount' : { 'flow' : string, 'manual' : string } }
+      ],
+      'archetype' : string,
+      'last_active_day' : [] | [string],
+      'total_trades' : number,
+      'win_rate' : number,
+      'visibility' : { 'friends_and_followers' : null } |
+        { 'public' : null } |
+        { 'friends_only' : null },
+      'daily_streak' : number,
+      'unlocked_achievements' : Array<string>,
+      'points' : number,
+      'avatar' : string,
+      'accuracy' : number,
+    }
+  ],
 }
 export interface AppListFollowersResult {
-	items: Array<{
-		viewer_role:
-			| []
-			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		participants: Array<string>;
-		is_friend: [] | [boolean];
-		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
-		category: { GROUP: null } | { FRIEND: null } | { follow: null };
-		viewer_principal: [] | [string];
-	}>;
+  'items' : Array<
+    {
+      'viewer_role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'participants' : Array<string>,
+      'is_friend' : [] | [boolean],
+      'state' : { 'REJECTED' : null } |
+        { 'PENDING' : null } |
+        { 'BLOCKED' : null } |
+        { 'ACTIVE' : null },
+      'category' : { 'GROUP' : null } |
+        { 'FRIEND' : null } |
+        { 'follow' : null },
+      'viewer_principal' : [] | [string],
+    }
+  >,
 }
 export interface AppListFollowingResult {
-	items: Array<{
-		viewer_role:
-			| []
-			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		participants: Array<string>;
-		is_friend: [] | [boolean];
-		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
-		category: { GROUP: null } | { FRIEND: null } | { follow: null };
-		viewer_principal: [] | [string];
-	}>;
+  'items' : Array<
+    {
+      'viewer_role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'participants' : Array<string>,
+      'is_friend' : [] | [boolean],
+      'state' : { 'REJECTED' : null } |
+        { 'PENDING' : null } |
+        { 'BLOCKED' : null } |
+        { 'ACTIVE' : null },
+      'category' : { 'GROUP' : null } |
+        { 'FRIEND' : null } |
+        { 'follow' : null },
+      'viewer_principal' : [] | [string],
+    }
+  >,
 }
 export interface AppListFriendRequestsResult {
-	items: Array<{
-		viewer_role:
-			| []
-			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		participants: Array<string>;
-		is_friend: [] | [boolean];
-		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
-		category: { GROUP: null } | { FRIEND: null } | { follow: null };
-		viewer_principal: [] | [string];
-	}>;
+  'items' : Array<
+    {
+      'viewer_role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'participants' : Array<string>,
+      'is_friend' : [] | [boolean],
+      'state' : { 'REJECTED' : null } |
+        { 'PENDING' : null } |
+        { 'BLOCKED' : null } |
+        { 'ACTIVE' : null },
+      'category' : { 'GROUP' : null } |
+        { 'FRIEND' : null } |
+        { 'follow' : null },
+      'viewer_principal' : [] | [string],
+    }
+  >,
 }
 export interface AppListFriendsResult {
-	items: Array<{
-		viewer_role:
-			| []
-			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		participants: Array<string>;
-		is_friend: [] | [boolean];
-		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
-		category: { GROUP: null } | { FRIEND: null } | { follow: null };
-		viewer_principal: [] | [string];
-	}>;
+  'items' : Array<
+    {
+      'viewer_role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'participants' : Array<string>,
+      'is_friend' : [] | [boolean],
+      'state' : { 'REJECTED' : null } |
+        { 'PENDING' : null } |
+        { 'BLOCKED' : null } |
+        { 'ACTIVE' : null },
+      'category' : { 'GROUP' : null } |
+        { 'FRIEND' : null } |
+        { 'follow' : null },
+      'viewer_principal' : [] | [string],
+    }
+  >,
 }
 export interface AppListLeaderboardResult {
-	items: Array<{
-		pnl: number;
-		streak: number;
-		nickname: string;
-		contrarian_wins: number;
-		owner: string;
-		interests: Array<string>;
-		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		email: string;
-		level: number;
-		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
-		archetype: string;
-		last_active_day: [] | [string];
-		total_trades: number;
-		win_rate: number;
-		visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
-		daily_streak: number;
-		unlocked_achievements: Array<string>;
-		points: number;
-		avatar: string;
-		accuracy: number;
-	}>;
+  'items' : Array<
+    {
+      'pnl' : number,
+      'streak' : number,
+      'nickname' : string,
+      'contrarian_wins' : number,
+      'owner' : string,
+      'interests' : Array<string>,
+      'role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'email' : string,
+      'level' : number,
+      'preferences' : [] | [
+        { 'default_amount' : { 'flow' : string, 'manual' : string } }
+      ],
+      'archetype' : string,
+      'last_active_day' : [] | [string],
+      'total_trades' : number,
+      'win_rate' : number,
+      'visibility' : { 'friends_and_followers' : null } |
+        { 'public' : null } |
+        { 'friends_only' : null },
+      'daily_streak' : number,
+      'unlocked_achievements' : Array<string>,
+      'points' : number,
+      'avatar' : string,
+      'accuracy' : number,
+    }
+  >,
 }
-export interface AppListMarketTranslationsArgs {
-	series_id: string;
-}
+export interface AppListMarketTranslationsArgs { 'series_id' : string }
 export interface AppListMarketTranslationsResult {
-	items: Array<{
-		title: string;
-		updated_at: number;
-		updated_by: string;
-		series_id: string;
-		locale: string;
-		description: string;
-		outcomes: Array<{ id: string; title: string }>;
-	}>;
+  'items' : Array<
+    {
+      'title' : string,
+      'updated_at' : number,
+      'updated_by' : string,
+      'series_id' : string,
+      'locale' : string,
+      'description' : string,
+      'outcomes' : Array<{ 'id' : string, 'title' : string }>,
+    }
+  >,
 }
 export interface AppListMyReferralsResult {
-	items: Array<{
-		within_referrer_cap: boolean;
-		referee_payout: {
-			last_error: [] | [string];
-			status: { none: null } | { owed: null } | { paid: null } | { processing: null };
-			block_index: [] | [string];
-			amount_base_units: string;
-		};
-		referrer: string;
-		code: string;
-		redeemed_at_ms: number;
-		referee: string;
-		referrer_payout: {
-			last_error: [] | [string];
-			status: { none: null } | { owed: null } | { paid: null } | { processing: null };
-			block_index: [] | [string];
-			amount_base_units: string;
-		};
-	}>;
+  'items' : Array<
+    {
+      'within_referrer_cap' : boolean,
+      'referee_payout' : {
+        'last_error' : [] | [string],
+        'status' : { 'none' : null } |
+          { 'owed' : null } |
+          { 'paid' : null } |
+          { 'processing' : null },
+        'block_index' : [] | [string],
+        'amount_base_units' : string,
+      },
+      'referrer' : string,
+      'code' : string,
+      'redeemed_at_ms' : number,
+      'referee' : string,
+      'referrer_payout' : {
+        'last_error' : [] | [string],
+        'status' : { 'none' : null } |
+          { 'owed' : null } |
+          { 'paid' : null } |
+          { 'processing' : null },
+        'block_index' : [] | [string],
+        'amount_base_units' : string,
+      },
+    }
+  >,
 }
 export interface AppListSentFriendRequestsResult {
-	items: Array<{
-		viewer_role:
-			| []
-			| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		participants: Array<string>;
-		is_friend: [] | [boolean];
-		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
-		category: { GROUP: null } | { FRIEND: null } | { follow: null };
-		viewer_principal: [] | [string];
-	}>;
+  'items' : Array<
+    {
+      'viewer_role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'participants' : Array<string>,
+      'is_friend' : [] | [boolean],
+      'state' : { 'REJECTED' : null } |
+        { 'PENDING' : null } |
+        { 'BLOCKED' : null } |
+        { 'ACTIVE' : null },
+      'category' : { 'GROUP' : null } |
+        { 'FRIEND' : null } |
+        { 'follow' : null },
+      'viewer_principal' : [] | [string],
+    }
+  >,
 }
-export interface AppLookupReferralCodeArgs {
-	code: string;
-}
-export interface AppLookupReferralCodeResult {
-	owner: [] | [string];
-}
-export interface AppRedeemReferralCodeArgs {
-	code: string;
-}
-export interface AppRejectFriendRequestArgs {
-	relation_id: string;
-}
-export interface AppSearchProfilesArgs {
-	query_str: string;
-}
+export interface AppLookupReferralCodeArgs { 'code' : string }
+export interface AppLookupReferralCodeResult { 'owner' : [] | [string] }
+export interface AppRedeemReferralCodeArgs { 'code' : string }
+export interface AppRejectFriendRequestArgs { 'relation_id' : string }
+export interface AppSearchProfilesArgs { 'query_str' : string }
 export interface AppSearchProfilesResult {
-	items: Array<{
-		pnl: number;
-		streak: number;
-		nickname: string;
-		contrarian_wins: number;
-		owner: string;
-		interests: Array<string>;
-		role: [] | [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
-		email: string;
-		level: number;
-		preferences: [] | [{ default_amount: { flow: string; manual: string } }];
-		archetype: string;
-		last_active_day: [] | [string];
-		total_trades: number;
-		win_rate: number;
-		visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
-		daily_streak: number;
-		unlocked_achievements: Array<string>;
-		points: number;
-		avatar: string;
-		accuracy: number;
-	}>;
+  'items' : Array<
+    {
+      'pnl' : number,
+      'streak' : number,
+      'nickname' : string,
+      'contrarian_wins' : number,
+      'owner' : string,
+      'interests' : Array<string>,
+      'role' : [] | [
+        { 'controller' : null } |
+          { 'creator' : null } |
+          { 'admin' : null } |
+          { 'solver' : null }
+      ],
+      'email' : string,
+      'level' : number,
+      'preferences' : [] | [
+        { 'default_amount' : { 'flow' : string, 'manual' : string } }
+      ],
+      'archetype' : string,
+      'last_active_day' : [] | [string],
+      'total_trades' : number,
+      'win_rate' : number,
+      'visibility' : { 'friends_and_followers' : null } |
+        { 'public' : null } |
+        { 'friends_only' : null },
+      'daily_streak' : number,
+      'unlocked_achievements' : Array<string>,
+      'points' : number,
+      'avatar' : string,
+      'accuracy' : number,
+    }
+  >,
 }
-export interface AppSendFriendRequestArgs {
-	target: string;
-}
+export interface AppSendFriendRequestArgs { 'target' : string }
 export interface AppUpsertMarketMetadataArgs {
-	data: {
-		suggested: boolean;
-		tags: Array<string>;
-		events: Array<{
-			day: number;
-			dir: { up: null } | { down: null };
-			label: string;
-		}>;
-		why_now:
-			| []
-			| [
-					{
-						kind:
-							| { new: null }
-							| { social: null }
-							| { trending: null }
-							| { closing: null }
-							| { topical: null };
-						text: string;
-					}
-			  ];
-	};
-	series_id: string;
+  'data' : {
+    'suggested' : boolean,
+    'tags' : Array<string>,
+    'events' : Array<
+      {
+        'day' : number,
+        'dir' : { 'up' : null } |
+          { 'down' : null },
+        'label' : string,
+      }
+    >,
+    'why_now' : [] | [
+      {
+        'kind' : { 'new' : null } |
+          { 'social' : null } |
+          { 'trending' : null } |
+          { 'closing' : null } |
+          { 'topical' : null },
+        'text' : string,
+      }
+    ],
+  },
+  'series_id' : string,
 }
 export interface AppUpsertMarketMetadataResult {
-	metadata: {
-		updated_at: number;
-		updated_by: string;
-		suggested: boolean;
-		series_id: string;
-		tags: Array<string>;
-		events: Array<{
-			day: number;
-			dir: { up: null } | { down: null };
-			label: string;
-		}>;
-		why_now:
-			| []
-			| [
-					{
-						kind:
-							| { new: null }
-							| { social: null }
-							| { trending: null }
-							| { closing: null }
-							| { topical: null };
-						text: string;
-					}
-			  ];
-	};
+  'metadata' : {
+    'updated_at' : number,
+    'updated_by' : string,
+    'suggested' : boolean,
+    'series_id' : string,
+    'tags' : Array<string>,
+    'events' : Array<
+      {
+        'day' : number,
+        'dir' : { 'up' : null } |
+          { 'down' : null },
+        'label' : string,
+      }
+    >,
+    'why_now' : [] | [
+      {
+        'kind' : { 'new' : null } |
+          { 'social' : null } |
+          { 'trending' : null } |
+          { 'closing' : null } |
+          { 'topical' : null },
+        'text' : string,
+      }
+    ],
+  },
 }
 export interface AppUpsertMarketTranslationArgs {
-	data: {
-		title: string;
-		description: string;
-		outcomes: Array<{ id: string; title: string }>;
-	};
-	series_id: string;
-	locale: string;
+  'data' : {
+    'title' : string,
+    'description' : string,
+    'outcomes' : Array<{ 'id' : string, 'title' : string }>,
+  },
+  'series_id' : string,
+  'locale' : string,
 }
 export interface AppUpsertMarketTranslationResult {
-	translation: {
-		title: string;
-		updated_at: number;
-		updated_by: string;
-		series_id: string;
-		locale: string;
-		description: string;
-		outcomes: Array<{ id: string; title: string }>;
-	};
+  'translation' : {
+    'title' : string,
+    'updated_at' : number,
+    'updated_by' : string,
+    'series_id' : string,
+    'locale' : string,
+    'description' : string,
+    'outcomes' : Array<{ 'id' : string, 'title' : string }>,
+  },
 }
 export interface _SERVICE {
-	app_accept_friend_request: ActorMethod<[AppAcceptFriendRequestArgs], undefined>;
-	app_cancel_friend_request: ActorMethod<[AppCancelFriendRequestArgs], undefined>;
-	app_check_friendship: ActorMethod<[AppCheckFriendshipArgs], AppCheckFriendshipResult>;
-	app_check_nickname_availability: ActorMethod<
-		[AppCheckNicknameAvailabilityArgs],
-		AppCheckNicknameAvailabilityResult
-	>;
-	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;
-	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
-	app_get_market_translation: ActorMethod<
-		[AppGetMarketTranslationArgs],
-		AppGetMarketTranslationResult
-	>;
-	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
-	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
-	app_list_followers: ActorMethod<[], AppListFollowersResult>;
-	app_list_following: ActorMethod<[], AppListFollowingResult>;
-	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
-	app_list_friends: ActorMethod<[], AppListFriendsResult>;
-	app_list_leaderboard: ActorMethod<[], AppListLeaderboardResult>;
-	app_list_market_translations: ActorMethod<
-		[AppListMarketTranslationsArgs],
-		AppListMarketTranslationsResult
-	>;
-	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
-	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;
-	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
-	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
-	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
-	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
-	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
-	app_upsert_market_metadata: ActorMethod<
-		[AppUpsertMarketMetadataArgs],
-		AppUpsertMarketMetadataResult
-	>;
-	app_upsert_market_translation: ActorMethod<
-		[AppUpsertMarketTranslationArgs],
-		AppUpsertMarketTranslationResult
-	>;
+  'app_accept_friend_request' : ActorMethod<
+    [AppAcceptFriendRequestArgs],
+    undefined
+  >,
+  'app_cancel_friend_request' : ActorMethod<
+    [AppCancelFriendRequestArgs],
+    undefined
+  >,
+  'app_check_friendship' : ActorMethod<
+    [AppCheckFriendshipArgs],
+    AppCheckFriendshipResult
+  >,
+  'app_check_nickname_availability' : ActorMethod<
+    [AppCheckNicknameAvailabilityArgs],
+    AppCheckNicknameAvailabilityResult
+  >,
+  'app_follow_user' : ActorMethod<[AppFollowUserArgs], undefined>,
+  'app_get_market_metadata' : ActorMethod<
+    [AppGetMarketMetadataArgs],
+    AppGetMarketMetadataResult
+  >,
+  'app_get_market_translation' : ActorMethod<
+    [AppGetMarketTranslationArgs],
+    AppGetMarketTranslationResult
+  >,
+  'app_get_my_referral_code' : ActorMethod<[], AppGetMyReferralCodeResult>,
+  'app_get_profile' : ActorMethod<[AppGetProfileArgs], AppGetProfileResult>,
+  'app_list_followers' : ActorMethod<[], AppListFollowersResult>,
+  'app_list_following' : ActorMethod<[], AppListFollowingResult>,
+  'app_list_friend_requests' : ActorMethod<[], AppListFriendRequestsResult>,
+  'app_list_friends' : ActorMethod<[], AppListFriendsResult>,
+  'app_list_leaderboard' : ActorMethod<[], AppListLeaderboardResult>,
+  'app_list_market_translations' : ActorMethod<
+    [AppListMarketTranslationsArgs],
+    AppListMarketTranslationsResult
+  >,
+  'app_list_my_referrals' : ActorMethod<[], AppListMyReferralsResult>,
+  'app_list_sent_friend_requests' : ActorMethod<
+    [],
+    AppListSentFriendRequestsResult
+  >,
+  'app_lookup_referral_code' : ActorMethod<
+    [AppLookupReferralCodeArgs],
+    AppLookupReferralCodeResult
+  >,
+  'app_redeem_referral_code' : ActorMethod<
+    [AppRedeemReferralCodeArgs],
+    undefined
+  >,
+  'app_reject_friend_request' : ActorMethod<
+    [AppRejectFriendRequestArgs],
+    undefined
+  >,
+  'app_search_profiles' : ActorMethod<
+    [AppSearchProfilesArgs],
+    AppSearchProfilesResult
+  >,
+  'app_send_friend_request' : ActorMethod<
+    [AppSendFriendRequestArgs],
+    undefined
+  >,
+  'app_upsert_market_metadata' : ActorMethod<
+    [AppUpsertMarketMetadataArgs],
+    AppUpsertMarketMetadataResult
+  >,
+  'app_upsert_market_translation' : ActorMethod<
+    [AppUpsertMarketTranslationArgs],
+    AppUpsertMarketTranslationResult
+  >,
 }
 export declare const idlFactory: IDL.InterfaceFactory;
 export declare const init: (args: { IDL: typeof IDL }) => IDL.Type[];

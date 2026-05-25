@@ -60,6 +60,7 @@ import {
 	sendFriendRequest as sendFriendRequestFn
 } from '$satellite/services/relation.services';
 import { assertSetRole } from '$satellite/services/roles.services';
+import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import {
 	onProfileSetForVxpOnboarding,
 	onTradeActivityForVxpOnboarding
@@ -328,7 +329,8 @@ const assertSetDocCollections = [
 	Collection.PROFILES,
 	Collection.ROLES,
 	Collection.REFERRAL_CODES,
-	Collection.REFERRALS
+	Collection.REFERRALS,
+	Collection.VXP_AWARDS
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -340,7 +342,8 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.PROFILES]: assertValidNickname,
 			[Collection.ROLES]: assertSetRole,
 			[Collection.REFERRAL_CODES]: assertSetReferralCode,
-			[Collection.REFERRALS]: assertSetReferral
+			[Collection.REFERRALS]: assertSetReferral,
+			[Collection.VXP_AWARDS]: assertSetVxpAward
 		};
 
 		fn[context.data.collection]?.(context);
