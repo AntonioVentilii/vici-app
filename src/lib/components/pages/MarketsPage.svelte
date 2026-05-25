@@ -128,7 +128,14 @@
 	</div>
 
 	<div class="w-full space-y-5">
-		{#if suggestedRail.length > 0}
+		<!-- When the user has flipped the Saved filter on, the page is a
+		     focused "my saved markets" view — the editorial rail
+		     (suggested / event-scoped) is hidden so the surface matches
+		     V1.2's saved-only mode where the saved cards are the only
+		     thing on screen. Hiding the rail also avoids the visual
+		     tension of an editorial pick competing with the user's own
+		     bookmarks. -->
+		{#if suggestedRail.length > 0 && !savedOnly}
 			<section
 				class="suggested-rail"
 				aria-label={t({
