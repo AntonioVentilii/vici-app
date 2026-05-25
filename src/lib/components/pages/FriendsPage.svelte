@@ -3,10 +3,12 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import ReferralCard from '$lib/components/profile/ReferralCard.svelte';
 	import FriendsList from '$lib/components/social/FriendsList.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { userStore } from '$lib/stores/user.store';
 	import { t } from '$lib/utils/i18n.utils';
 
 	type FriendsTab = 'active' | 'requests';
@@ -30,6 +32,15 @@
 	</header>
 
 	<div class="friends-body">
+		<!-- V1.2 FriendsScreen leads with the invite hero so the
+		     friends ↔ invite loop is immediately discoverable. We reuse
+		     the same ReferralCard that already lives on the profile
+		     dashboard so the invite copy / referral counter / share
+		     affordance stay in lockstep across both surfaces. -->
+		{#if $userStore.profile}
+			<ReferralCard profile={$userStore.profile} />
+		{/if}
+
 		{#if $authPrincipal}
 			<FriendsList {initialTab} userPrincipal={$authPrincipal} />
 		{/if}
