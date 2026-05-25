@@ -1372,6 +1372,19 @@ export const deMessages = {
 	'welcome.featured_event.sub':
 		'Wähle deinen Favoriten, mach deinen ersten Call und starte deine Bilanz mit {event}.',
 	'welcome.featured_event.to_win': '{odds}% zum Sieg',
+	'worlds.cta.leave': 'Verlassen',
+	'worlds.cta.leaving': 'Verlasse…',
+	'worlds.empty.pick_country': 'Wähle dein Land aus.',
+	'worlds.empty.pick_university': 'Wähle die Uni, für die du tippst.',
+	'worlds.error.generic': 'Worlds konnte nicht geladen werden. Versuch es gleich noch einmal.',
+	'worlds.loading': 'Lade Worlds…',
+	'worlds.lock_expired': 'Sperre abgelaufen · du kannst wechseln.',
+	'worlds.locked_until': 'Gesperrt bis {date} · noch {days} Tage',
+	'worlds.slot.country': 'Land',
+	'worlds.slot.university': 'Uni',
+	'worlds.sub':
+		'Zwei Slots — eine Uni, ein Land. Jeder mit 90-Tage-Sperre, damit die Bestenliste fair bleibt.',
+	'worlds.title': 'Worlds',
 	'onboarding.handle.checking': 'Verfügbarkeit wird geprüft…',
 	'onboarding.handle.error_check_failed':
 		'Verfügbarkeit konnte nicht geprüft werden. Bitte erneut versuchen.',

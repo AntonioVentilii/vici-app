@@ -1402,5 +1402,18 @@ export const enMessages = {
 	'welcome.featured_event.eyebrow': 'Featured event',
 	'welcome.featured_event.sub':
 		'Pick your favourite, make your first call, and let your record start with the {event}.',
-	'welcome.featured_event.to_win': '{odds}% to win'
+	'welcome.featured_event.to_win': '{odds}% to win',
+	'worlds.cta.leave': 'Leave',
+	'worlds.cta.leaving': 'Leaving…',
+	'worlds.empty.pick_country': 'Pick the country you call from.',
+	'worlds.empty.pick_university': 'Pick the school you predict for.',
+	'worlds.error.generic': "Couldn't load your Worlds. Try again in a moment.",
+	'worlds.loading': 'Loading Worlds…',
+	'worlds.lock_expired': 'Lock expired · ready to switch.',
+	'worlds.locked_until': 'Locked until {date} · {days}d left',
+	'worlds.slot.country': 'Country',
+	'worlds.slot.university': 'University',
+	'worlds.sub':
+		'Two slots — one school, one country. Each carries a 90-day lock to keep the leaderboard fair.',
+	'worlds.title': 'Worlds'
 } as const;

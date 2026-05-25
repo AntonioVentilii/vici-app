@@ -1368,6 +1368,19 @@ export const esMessages = {
 	'welcome.featured_event.sub':
 		'Elige tu favorito, haz tu primera predicción y empieza tu historial con {event}.',
 	'welcome.featured_event.to_win': '{odds}% para ganar',
+	'worlds.cta.leave': 'Salir',
+	'worlds.cta.leaving': 'Saliendo…',
+	'worlds.empty.pick_country': 'Elige el país desde el que apuestas.',
+	'worlds.empty.pick_university': 'Elige la universidad por la que predices.',
+	'worlds.error.generic': 'No se pudieron cargar tus Worlds. Inténtalo en un momento.',
+	'worlds.loading': 'Cargando Worlds…',
+	'worlds.lock_expired': 'Bloqueo expirado · puedes cambiar.',
+	'worlds.locked_until': 'Bloqueado hasta {date} · {days}d restantes',
+	'worlds.slot.country': 'País',
+	'worlds.slot.university': 'Universidad',
+	'worlds.sub':
+		'Dos ranuras — una escuela, un país. Cada una con bloqueo de 90 días para mantener la clasificación justa.',
+	'worlds.title': 'Worlds',
 	'onboarding.handle.checking': 'Comprobando disponibilidad…',
 	'onboarding.handle.error_check_failed':
 		'No se pudo comprobar la disponibilidad. Inténtalo de nuevo.',

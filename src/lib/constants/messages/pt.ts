@@ -1358,6 +1358,19 @@ export const ptMessages = {
 	'welcome.featured_event.sub':
 		'Escolha seu favorito, faça sua primeira previsão e comece seu histórico com {event}.',
 	'welcome.featured_event.to_win': '{odds}% para vencer',
+	'worlds.cta.leave': 'Sair',
+	'worlds.cta.leaving': 'Saindo…',
+	'worlds.empty.pick_country': 'Escolha o país pelo qual você palpita.',
+	'worlds.empty.pick_university': 'Escolha a faculdade pela qual você palpita.',
+	'worlds.error.generic': 'Não foi possível carregar os Worlds. Tente em instantes.',
+	'worlds.loading': 'Carregando Worlds…',
+	'worlds.lock_expired': 'Trava expirada · você pode trocar.',
+	'worlds.locked_until': 'Travado até {date} · faltam {days}d',
+	'worlds.slot.country': 'País',
+	'worlds.slot.university': 'Faculdade',
+	'worlds.sub':
+		'Dois slots — uma faculdade, um país. Cada um trava por 90 dias para manter o ranking justo.',
+	'worlds.title': 'Worlds',
 	'onboarding.handle.checking': 'A verificar disponibilidade…',
 	'onboarding.handle.error_check_failed':
 		'Não foi possível verificar a disponibilidade. Tenta novamente.',
