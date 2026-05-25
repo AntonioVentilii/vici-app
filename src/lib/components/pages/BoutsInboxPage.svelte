@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
 	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
@@ -233,6 +234,8 @@
 	const goToBoutDetail = (bout: BoutDoc) => {
 		void goto(`${resolve(AppPath.Social)}/bouts/${bout.id}`);
 	};
+
+	let createOpen = $state(false);
 </script>
 
 <div class="bouts-inbox">
@@ -247,9 +250,14 @@
 		/>
 	{/if}
 
-	<p class="bouts-inbox-sub">
-		{t({ locale: $localeStore, key: 'leagues.bouts_inbox.sub' })}
-	</p>
+	<div class="bouts-inbox-head-row">
+		<p class="bouts-inbox-sub">
+			{t({ locale: $localeStore, key: 'leagues.bouts_inbox.sub' })}
+		</p>
+		<button class="bouts-inbox-create" onclick={() => (createOpen = true)} type="button">
+			{t({ locale: $localeStore, key: 'bout.create.cta' })}
+		</button>
+	</div>
 
 	{#if loadState === 'loading'}
 		<p class="bouts-inbox-status" aria-busy="true">
@@ -399,6 +407,8 @@
 	/>
 {/if}
 
+<CreateBoutModal isOpen={createOpen} onClose={() => (createOpen = false)} />
+
 <style lang="postcss">
 	.bouts-inbox {
 		display: flex;
@@ -407,10 +417,40 @@
 		padding: 0 1rem 6rem;
 	}
 
+	.bouts-inbox-head-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.6rem;
+	}
+
 	.bouts-inbox-sub {
 		margin: 0;
 		font-size: var(--t-13);
 		color: var(--text-muted);
+		flex: 1;
+		min-width: 0;
+	}
+
+	.bouts-inbox-create {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.45rem 0.95rem;
+		font: inherit;
+		font-size: var(--t-12);
+		font-weight: 700;
+		color: var(--text-on-accent, #fff);
+		background: var(--laurel);
+		border: 1px solid var(--laurel);
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		white-space: nowrap;
+	}
+
+	.bouts-inbox-create:hover {
+		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
 	}
 
 	.bouts-inbox-status,

@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import { functions } from '$declarations/satellite/satellite.api';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import ProposeBoutModal from '$lib/components/leagues/ProposeBoutModal.svelte';
@@ -93,6 +94,19 @@
 	};
 
 	onMount(load);
+
+	// Deep-link: `?propose=1` from CreateBoutModal opens the propose
+	// flow immediately on load (once auth + membership resolve).
+	$effect(() => {
+		if (
+			loadState === 'ready' &&
+			myRole === 'owner' &&
+			page.url.searchParams.get('propose') === '1' &&
+			!proposeOpen
+		) {
+			proposeOpen = true;
+		}
+	});
 
 	const canSeeInvite = $derived(myRole === 'owner' || myRole === 'admin');
 	const canLeave = $derived(myRole !== 'owner' && myRole !== undefined);
