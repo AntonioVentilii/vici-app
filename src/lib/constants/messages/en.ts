@@ -530,6 +530,13 @@ export const enMessages = {
 	'leagues.bout.winner_draw': 'Draw',
 	'leagues.bout.winner_them': 'They won',
 	'leagues.bout.winner_us': 'We won',
+	'leagues.bouts_inbox.back': 'Back to social',
+	'leagues.bouts_inbox.empty.sub':
+		'When any of your leagues gets challenged, every bout lands here.',
+	'leagues.bouts_inbox.empty.title': 'No bouts in flight.',
+	'leagues.bouts_inbox.loading': 'Loading bouts…',
+	'leagues.bouts_inbox.sub': 'Every bout across your leagues, grouped by state.',
+	'leagues.bouts_inbox.title': 'Bouts',
 	'leagues.create.title': 'Start a league.',
 	'leagues.detail.back': 'Back to leagues',
 	'leagues.detail.bouts_empty': 'No bouts yet. Challenge another league to start one.',

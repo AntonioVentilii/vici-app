@@ -548,6 +548,13 @@ export const frMessages = {
 	'leagues.bout.winner_draw': 'Égalité',
 	'leagues.bout.winner_them': 'Ils ont gagné',
 	'leagues.bout.winner_us': 'On a gagné',
+	'leagues.bouts_inbox.back': 'Retour au social',
+	'leagues.bouts_inbox.empty.sub':
+		"Quand l'une de tes ligues est défiée, chaque duel atterrit ici.",
+	'leagues.bouts_inbox.empty.title': 'Aucun duel en cours.',
+	'leagues.bouts_inbox.loading': 'Chargement des duels…',
+	'leagues.bouts_inbox.sub': 'Tous les duels de tes ligues, regroupés par état.',
+	'leagues.bouts_inbox.title': 'Duels',
 	'leagues.create.title': 'Lance une ligue.',
 	'leagues.detail.back': 'Retour aux ligues',
 	'leagues.detail.bouts_empty': 'Pas encore de duels. Défie une autre ligue pour démarrer.',

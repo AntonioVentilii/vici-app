@@ -543,6 +543,13 @@ export const deMessages = {
 	'leagues.bout.winner_draw': 'Unentschieden',
 	'leagues.bout.winner_them': 'Sie haben gewonnen',
 	'leagues.bout.winner_us': 'Wir haben gewonnen',
+	'leagues.bouts_inbox.back': 'Zurück zu Social',
+	'leagues.bouts_inbox.empty.sub':
+		'Sobald eine deiner Ligen herausgefordert wird, landet jeder Bout hier.',
+	'leagues.bouts_inbox.empty.title': 'Kein Bout im Spiel.',
+	'leagues.bouts_inbox.loading': 'Lade Bouts…',
+	'leagues.bouts_inbox.sub': 'Jeder Bout aus deinen Ligen, nach Status gruppiert.',
+	'leagues.bouts_inbox.title': 'Bouts',
 	'leagues.create.title': 'Liga gründen.',
 	'leagues.detail.back': 'Zurück zu den Ligen',
 	'leagues.detail.bouts_empty': 'Noch keine Bouts. Fordere eine andere Liga heraus.',

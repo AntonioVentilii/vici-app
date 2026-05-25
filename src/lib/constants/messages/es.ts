@@ -538,6 +538,13 @@ export const esMessages = {
 	'leagues.bout.winner_draw': 'Empate',
 	'leagues.bout.winner_them': 'Ganaron ellos',
 	'leagues.bout.winner_us': 'Ganamos',
+	'leagues.bouts_inbox.back': 'Volver a social',
+	'leagues.bouts_inbox.empty.sub':
+		'Cuando alguna de tus ligas sea retada, todos los combates aparecerán aquí.',
+	'leagues.bouts_inbox.empty.title': 'Ningún combate en curso.',
+	'leagues.bouts_inbox.loading': 'Cargando combates…',
+	'leagues.bouts_inbox.sub': 'Todos los combates de tus ligas, agrupados por estado.',
+	'leagues.bouts_inbox.title': 'Combates',
 	'leagues.create.title': 'Crea una liga.',
 	'leagues.detail.back': 'Volver a ligas',
 	'leagues.detail.bouts_empty': 'Aún no hay combates. Desafía a otra liga para empezar.',

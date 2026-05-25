@@ -538,6 +538,13 @@ export const itMessages = {
 	'leagues.bout.winner_draw': 'Pareggio',
 	'leagues.bout.winner_them': 'Hanno vinto',
 	'leagues.bout.winner_us': 'Abbiamo vinto',
+	'leagues.bouts_inbox.back': 'Torna al social',
+	'leagues.bouts_inbox.empty.sub':
+		'Quando una delle tue leghe viene sfidata, ogni scontro atterra qui.',
+	'leagues.bouts_inbox.empty.title': 'Nessuno scontro in corso.',
+	'leagues.bouts_inbox.loading': 'Carico gli scontri…',
+	'leagues.bouts_inbox.sub': 'Tutti gli scontri delle tue leghe, raggruppati per stato.',
+	'leagues.bouts_inbox.title': 'Scontri',
 	'leagues.create.title': 'Avvia una lega.',
 	'leagues.detail.back': 'Torna alle leghe',
 	'leagues.detail.bouts_empty': "Nessuno scontro ancora. Sfida un'altra lega per iniziare.",

@@ -537,6 +537,13 @@ export const ptMessages = {
 	'leagues.bout.winner_draw': 'Empate',
 	'leagues.bout.winner_them': 'Eles venceram',
 	'leagues.bout.winner_us': 'Vencemos',
+	'leagues.bouts_inbox.back': 'Voltar ao social',
+	'leagues.bouts_inbox.empty.sub':
+		'Quando alguma de suas ligas for desafiada, todos os duelos chegam aqui.',
+	'leagues.bouts_inbox.empty.title': 'Nenhum duelo em andamento.',
+	'leagues.bouts_inbox.loading': 'Carregando duelos…',
+	'leagues.bouts_inbox.sub': 'Todos os duelos das suas ligas, agrupados por estado.',
+	'leagues.bouts_inbox.title': 'Duelos',
 	'leagues.create.title': 'Crie uma liga.',
 	'leagues.detail.back': 'Voltar para ligas',
 	'leagues.detail.bouts_empty': 'Sem duelos ainda. Desafie outra liga para começar.',

@@ -316,6 +316,32 @@ export const leaveLeague = async ({ leagueId }: { leagueId: string }): Promise<v
 
 // ─── Bouts ───────────────────────────────────────────────────────────────
 
+const projectBoutWire = (b: {
+	id: string;
+	kind: BoutDoc['kind'];
+	side_a: string;
+	side_b: string;
+	proposer: string;
+	state: BoutDoc['state'];
+	kickoff_ms: number;
+	settle_ms: number;
+	score_a?: number;
+	score_b?: number;
+	winner?: BoutDoc['winner'];
+}): BoutDoc => ({
+	id: b.id,
+	kind: b.kind,
+	sideA: b.side_a,
+	sideB: b.side_b,
+	proposer: b.proposer,
+	state: b.state,
+	kickoffMs: b.kickoff_ms,
+	settleMs: b.settle_ms,
+	scoreA: b.score_a,
+	scoreB: b.score_b,
+	winner: b.winner
+});
+
 /**
  * List every bout involving the given league — both sides scanned.
  * Projects the satellite's snake_case wire schema to camelCase
@@ -324,19 +350,18 @@ export const leaveLeague = async ({ leagueId }: { leagueId: string }): Promise<v
 export const listLeagueBouts = async ({ leagueId }: { leagueId: string }): Promise<BoutDoc[]> => {
 	const { items } = await functions.listLeagueBouts({ leagueId });
 
-	return items.map((b) => ({
-		id: b.id,
-		kind: b.kind,
-		sideA: b.side_a,
-		sideB: b.side_b,
-		proposer: b.proposer,
-		state: b.state,
-		kickoffMs: b.kickoff_ms,
-		settleMs: b.settle_ms,
-		scoreA: b.score_a,
-		scoreB: b.score_b,
-		winner: b.winner
-	}));
+	return items.map(projectBoutWire);
+};
+
+/**
+ * List every bout across every league the caller belongs to. Powers
+ * the `/social/bouts` cross-league inbox. Sorted server-side by
+ * `kickoffMs` ascending.
+ */
+export const listMyBouts = async (): Promise<BoutDoc[]> => {
+	const { items } = await functions.listMyBouts();
+
+	return items.map(projectBoutWire);
 };
 
 /**
