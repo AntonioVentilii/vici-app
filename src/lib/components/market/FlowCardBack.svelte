@@ -1,4 +1,5 @@
 <script lang="ts">
+	import ConsensusCompass from '$lib/components/market/ConsensusCompass.svelte';
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import { VXP_STAKE_LADDER, type VxpStake } from '$lib/constants/vxp-economy.constants';
@@ -244,17 +245,20 @@
 
 			<section class="flow-back-block flow-community">
 				<div class="flow-community-top">
-					<p class="eyebrow flow-back-label">
-						{t({ locale: $localeStore, key: 'card.back.crowd_split' })}
-					</p>
-					<span
-						class="num flow-back-pct"
-						class:text-no={crowdSide === 'NO'}
-						class:text-yes={crowdSide === 'YES'}
-					>
-						{formatProbability(market.yesProbability)}
-						<span class="flow-back-side">{crowdSide}</span>
-					</span>
+					<div class="flow-community-text">
+						<p class="eyebrow flow-back-label">
+							{t({ locale: $localeStore, key: 'card.back.crowd_split' })}
+						</p>
+						<span
+							class="num flow-back-pct"
+							class:text-no={crowdSide === 'NO'}
+							class:text-yes={crowdSide === 'YES'}
+						>
+							{formatProbability(market.yesProbability)}
+							<span class="flow-back-side">{crowdSide}</span>
+						</span>
+					</div>
+					<ConsensusCompass size={56} yesProbability={market.yesProbability} />
 				</div>
 				<FlowCardSparkline
 					accentColor={catColor}
@@ -508,9 +512,16 @@
 
 	.flow-community-top {
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		justify-content: space-between;
 		gap: 0.75rem;
+	}
+
+	.flow-community-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		min-width: 0;
 	}
 
 	.flow-back-pct {
