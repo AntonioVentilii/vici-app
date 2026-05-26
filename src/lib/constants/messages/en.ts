@@ -1708,6 +1708,8 @@ export const enMessages = {
 	'worlds.picker.clear': 'Clear',
 	'worlds.picker.close': 'Close',
 	'worlds.picker.empty': 'No matches. Try a different name.',
+	'worlds.picker.kind_country': 'Country',
+	'worlds.picker.kind_university': 'University',
 	'worlds.picker.lock_hint':
 		"Adds you to that group's leaderboard. Switch later — once per 90 days.",
 	'worlds.picker.search_country': 'Search {count} countries…',

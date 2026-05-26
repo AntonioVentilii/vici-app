@@ -1690,6 +1690,8 @@ export const esMessages = {
 	'worlds.picker.clear': 'Borrar',
 	'worlds.picker.close': 'Cerrar',
 	'worlds.picker.empty': 'Sin resultados. Prueba otro nombre.',
+	'worlds.picker.kind_country': 'País',
+	'worlds.picker.kind_university': 'Universidad',
 	'worlds.picker.lock_hint':
 		'Te suma a la clasificación del grupo. Cambia después — una vez cada 90 días.',
 	'worlds.picker.search_country': 'Buscar entre {count} países…',

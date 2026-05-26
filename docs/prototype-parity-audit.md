@@ -561,15 +561,15 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Eyebrow — primary accent colour + 0.16em letter-spacing
 - ✅ Bonus: custom accent-dot list bullets, mono mailto with faint primary underline, bottom back-to-Welcome divider + ghost button
 
-### Modals (~6 + 1 missing)
+### Modals (~6 + 1 missing) ✅ commit `dc47be9`
 
-- ⬜ CreateLeagueModal — bottom-sheet with grip handle
-- ⬜ JoinLeagueModal — bottom-sheet
-- ⬜ CreateBoutModal — bottom-sheet
-- ⬜ AffiliationPickerModal — bottom-sheet with kind toggle + search
-- ⬜ Add ChallengeLeagueModal (missing entirely)
-- ⬜ Remove ResolveBoutModal? (prototype infers from state)
-- ⬜ Remove TransferOwnershipModal? (tier C — production need check)
+- ✅ CreateLeagueModal — ported to new `BottomSheet` primitive (grip handle, blurred backdrop, safe-area inset, 22px top corners)
+- ✅ JoinLeagueModal — ported to `BottomSheet`
+- ✅ CreateBoutModal — ported to `BottomSheet`; inner padding trimmed so sheet horizontal padding owns the layout
+- ✅ AffiliationPickerModal — ported to `BottomSheet`; added in-sheet kind toggle (Uni / Country segmented control under the title), `kind` prop now seeds the initial tab while letting the user switch in-sheet
+- ✅ ChallengeLeagueModal — already shipped in commit `a3ae2bf`; ported to `BottomSheet` in this pass so it follows the same grip-handle pattern as the other 4
+- ⏭ Remove ResolveBoutModal — KEEP. Used by `LeagueDetailPage`, `BoutDetailPage`, and `BoutsInboxPage`; the explicit scoreboard preview (us / them / draw) is the production resolution surface. Inferring resolution from state would require reworking all three callers; tracked as future C-item, not a parity blocker
+- ⏭ Remove TransferOwnershipModal — KEEP (tier C-21/22 production need); already shipped on this branch (working copy `TransferOwnershipModal.svelte`)
 
 ## Total
 

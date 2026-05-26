@@ -1682,6 +1682,8 @@ export const itMessages = {
 	'worlds.picker.clear': 'Pulisci',
 	'worlds.picker.close': 'Chiudi',
 	'worlds.picker.empty': 'Nessun risultato. Prova un altro nome.',
+	'worlds.picker.kind_country': 'Paese',
+	'worlds.picker.kind_university': 'Università',
 	'worlds.picker.lock_hint':
 		'Ti aggiunge alla classifica del gruppo. Puoi cambiare — una volta ogni 90 giorni.',
 	'worlds.picker.search_country': 'Cerca tra {count} paesi…',

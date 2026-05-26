@@ -1690,6 +1690,8 @@ export const deMessages = {
 	'worlds.picker.clear': 'Löschen',
 	'worlds.picker.close': 'Schließen',
 	'worlds.picker.empty': 'Keine Treffer. Versuche einen anderen Namen.',
+	'worlds.picker.kind_country': 'Land',
+	'worlds.picker.kind_university': 'Universität',
 	'worlds.picker.lock_hint':
 		'Fügt dich zur Rangliste der Gruppe hinzu. Wechseln möglich — einmal pro 90 Tage.',
 	'worlds.picker.search_country': 'Suche {count} Länder…',

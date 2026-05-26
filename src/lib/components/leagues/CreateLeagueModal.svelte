@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Modal from '$lib/components/ui/Modal.svelte';
+	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { createLeague, validateLeagueDraft } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import {
@@ -99,7 +99,7 @@
 	};
 </script>
 
-<Modal {isOpen} onClose={handleClose}>
+<BottomSheet {isOpen} onClose={handleClose}>
 	<form class="league-form" onsubmit={handleSubmit}>
 		<header class="league-form-head">
 			<h2>{t({ locale: $localeStore, key: 'leagues.create.title' })}</h2>
@@ -158,7 +158,7 @@
 			</button>
 		</div>
 	</form>
-</Modal>
+</BottomSheet>
 
 <style lang="postcss">
 	.league-form {

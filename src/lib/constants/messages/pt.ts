@@ -1680,6 +1680,8 @@ export const ptMessages = {
 	'worlds.picker.clear': 'Limpar',
 	'worlds.picker.close': 'Fechar',
 	'worlds.picker.empty': 'Sem resultados. Tente outro nome.',
+	'worlds.picker.kind_country': 'País',
+	'worlds.picker.kind_university': 'Universidade',
 	'worlds.picker.lock_hint':
 		'Você entra no ranking do grupo. Pode trocar — uma vez a cada 90 dias.',
 	'worlds.picker.search_country': 'Buscar entre {count} países…',

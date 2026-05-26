@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { Search, X } from 'lucide-svelte/icons';
-	import Modal from '$lib/components/ui/Modal.svelte';
+	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import {
 		WORLDS_COUNTRIES,
 		WORLDS_UNIVERSITIES,
@@ -30,16 +30,30 @@
 
 	const { isOpen, kind, onClose, onPicked }: Props = $props();
 
+	// Initial kind is bound by the caller (e.g. WorldsPage picks a tab,
+	// ProfileDashboard picks an affiliation tile), but inside the sheet
+	// the user can toggle between University / Country — matches the
+	// prototype's segmented control on the bottom-sheet picker. Callers
+	// gate this component behind `{#if pickerKind !== null}` so the
+	// sheet remounts when reopened — no prop-sync effect needed.
+	//
+	// `override` is `null` until the user taps the segmented control;
+	// `activeKind` falls back to the prop until then. This keeps the
+	// initial-value semantics clean and avoids the `state_referenced_locally`
+	// warning that would fire if we seeded `$state` directly from `kind`.
+	let override = $state<AffiliationKind | null>(null);
+	const activeKind = $derived<AffiliationKind>(override ?? kind);
+
 	const roster = $derived<readonly WorldsAffiliationOption[]>(
-		kind === 'university' ? WORLDS_UNIVERSITIES : WORLDS_COUNTRIES
+		activeKind === 'university' ? WORLDS_UNIVERSITIES : WORLDS_COUNTRIES
 	);
 
 	const titleKey = $derived<MessageKey>(
-		kind === 'university' ? 'worlds.picker.title_university' : 'worlds.picker.title_country'
+		activeKind === 'university' ? 'worlds.picker.title_university' : 'worlds.picker.title_country'
 	);
 	const subKey: MessageKey = 'worlds.picker.lock_hint';
 	const searchPlaceholderKey = $derived<MessageKey>(
-		kind === 'university' ? 'worlds.picker.search_university' : 'worlds.picker.search_country'
+		activeKind === 'university' ? 'worlds.picker.search_university' : 'worlds.picker.search_country'
 	);
 
 	let query = $state('');
@@ -61,6 +75,16 @@
 			.slice(0, 40);
 	});
 
+	const switchKind = (next: AffiliationKind) => {
+		if (next === activeKind) {
+			return;
+		}
+
+		override = next;
+		query = '';
+		errorMessage = null;
+	};
+
 	const handlePick = async (option: WorldsAffiliationOption) => {
 		if (saving !== null) {
 			return;
@@ -70,7 +94,7 @@
 		errorMessage = null;
 
 		try {
-			await joinAffiliation({ kind, affiliationId: option.id });
+			await joinAffiliation({ kind: activeKind, affiliationId: option.id });
 			onPicked?.();
 			onClose();
 		} catch (err) {
@@ -88,7 +112,7 @@
 	};
 </script>
 
-<Modal {isOpen} onClose={handleClose}>
+<BottomSheet {isOpen} onClose={handleClose}>
 	<div class="affil-picker">
 		<header class="affil-picker-head">
 			<h2 class="affil-picker-title">{t({ locale: $localeStore, key: titleKey })}</h2>
@@ -101,6 +125,29 @@
 				<X size={14} strokeWidth={1.8} />
 			</button>
 		</header>
+
+		<div class="affil-picker-kind" role="tablist">
+			<button
+				class="affil-picker-kind-btn"
+				class:is-active={activeKind === 'university'}
+				aria-selected={activeKind === 'university'}
+				onclick={() => switchKind('university')}
+				role="tab"
+				type="button"
+			>
+				{t({ locale: $localeStore, key: 'worlds.picker.kind_university' })}
+			</button>
+			<button
+				class="affil-picker-kind-btn"
+				class:is-active={activeKind === 'country'}
+				aria-selected={activeKind === 'country'}
+				onclick={() => switchKind('country')}
+				role="tab"
+				type="button"
+			>
+				{t({ locale: $localeStore, key: 'worlds.picker.kind_country' })}
+			</button>
+		</div>
 
 		<p class="affil-picker-hint serif-italic">
 			{t({ locale: $localeStore, key: subKey })}
@@ -160,14 +207,14 @@
 			<p class="affil-picker-error" role="alert">{errorMessage}</p>
 		{/if}
 	</div>
-</Modal>
+</BottomSheet>
 
 <style lang="postcss">
 	.affil-picker {
 		display: flex;
 		flex-direction: column;
 		gap: 0.7rem;
-		padding: 1rem 1.1rem;
+		padding: 0.25rem 0 0.5rem;
 	}
 
 	.affil-picker-head {
@@ -197,6 +244,37 @@
 		border-radius: var(--r-pill);
 		color: var(--text-muted);
 		cursor: pointer;
+	}
+
+	.affil-picker-kind {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.25rem;
+		padding: 0.2rem;
+		background: color-mix(in srgb, var(--bg-surface) 80%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+	}
+
+	.affil-picker-kind-btn {
+		appearance: none;
+		padding: 0.45rem 0.9rem;
+		font: inherit;
+		font-size: var(--t-12);
+		font-weight: 600;
+		color: var(--text-muted);
+		background: none;
+		border: none;
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			background 140ms ease,
+			color 140ms ease;
+	}
+
+	.affil-picker-kind-btn.is-active {
+		color: var(--text-on-accent, var(--ink, #fff));
+		background: var(--laurel);
 	}
 
 	.affil-picker-hint {

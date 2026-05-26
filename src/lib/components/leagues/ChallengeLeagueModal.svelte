@@ -1,5 +1,5 @@
 <script lang="ts">
-	import Modal from '$lib/components/ui/Modal.svelte';
+	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { lookupLeagueByInvite, proposeBout } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { BoutDoc } from '$lib/types/bout';
@@ -127,7 +127,7 @@
 	};
 </script>
 
-<Modal {isOpen} onClose={handleClose}>
+<BottomSheet {isOpen} onClose={handleClose}>
 	<form class="challenge-form" onsubmit={handleSubmit}>
 		<header class="challenge-form-head">
 			<h2>{t({ locale: $localeStore, key: 'leagues.challenge.title' })}</h2>
@@ -222,7 +222,7 @@
 			</button>
 		</div>
 	</form>
-</Modal>
+</BottomSheet>
 
 <style lang="postcss">
 	.challenge-form {

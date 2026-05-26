@@ -1693,6 +1693,8 @@ export const frMessages = {
 	'worlds.picker.clear': 'Effacer',
 	'worlds.picker.close': 'Fermer',
 	'worlds.picker.empty': 'Aucun résultat. Essaie un autre nom.',
+	'worlds.picker.kind_country': 'Pays',
+	'worlds.picker.kind_university': 'Université',
 	'worlds.picker.lock_hint':
 		'Tu rejoins le classement du groupe. Tu peux changer — une fois tous les 90 jours.',
 	'worlds.picker.search_country': 'Cherche parmi {count} pays…',

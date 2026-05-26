@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import Modal from '$lib/components/ui/Modal.svelte';
+	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { listMyLeagues, type LeagueWithRole } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -71,7 +71,7 @@
 	};
 </script>
 
-<Modal {isOpen} {onClose}>
+<BottomSheet {isOpen} {onClose}>
 	<div class="create-bout">
 		<h2 class="create-bout-title">
 			{t({ locale: $localeStore, key: 'bout.create.title' })}
@@ -116,14 +116,14 @@
 			</ul>
 		{/if}
 	</div>
-</Modal>
+</BottomSheet>
 
 <style lang="postcss">
 	.create-bout {
 		display: flex;
 		flex-direction: column;
 		gap: 0.8rem;
-		padding: 1rem 1.1rem;
+		padding: 0.25rem 0 0.5rem;
 	}
 
 	.create-bout-title {
