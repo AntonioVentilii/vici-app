@@ -20,8 +20,19 @@ enum JunoDatastoreCollection {
 	MARKET_TRANSLATIONS = 'market_translations',
 	ACTIVITIES = 'activities',
 	VXP_ONBOARDING = 'vxp_onboarding',
+	VXP_AWARDS = 'vxp_awards',
 	REFERRAL_CODES = 'referral_codes',
-	REFERRALS = 'referrals'
+	REFERRALS = 'referrals',
+	LEAGUES = 'leagues',
+	LEAGUE_MEMBERS = 'league_members',
+	BOUTS = 'bouts',
+	AFFILIATIONS = 'affiliations',
+	AFFILIATION_STATS = 'affiliation_stats',
+	EXIT_SIGNALS = 'exit_signals',
+	TOURNAMENTS = 'tournaments',
+	TOURNAMENT_MATCHES = 'tournament_matches',
+	LEAGUE_STATS = 'league_stats',
+	USER_STATS = 'user_stats'
 }
 
 const delegation = {
@@ -120,6 +131,12 @@ export default defineConfig(({ mode }) => ({
 					write: 'public'
 				},
 				{
+					collection: JunoDatastoreCollection.VXP_AWARDS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
 					collection: JunoDatastoreCollection.REFERRAL_CODES,
 					memory: 'stable',
 					read: 'public',
@@ -127,6 +144,66 @@ export default defineConfig(({ mode }) => ({
 				},
 				{
 					collection: JunoDatastoreCollection.REFERRALS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.LEAGUES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.LEAGUE_MEMBERS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.BOUTS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.AFFILIATIONS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.AFFILIATION_STATS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.EXIT_SIGNALS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.TOURNAMENTS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.TOURNAMENT_MATCHES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.LEAGUE_STATS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.USER_STATS,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'

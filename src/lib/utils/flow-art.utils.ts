@@ -12,14 +12,27 @@
 import { THEMES, type Theme } from '$lib/stores/theme.store';
 import { fnv1a32 } from '$lib/utils/hash.utils';
 
-export type FlowArtCategory = 'macro' | 'crypto' | 'sports' | 'politics' | 'tech' | 'culture';
+export type FlowArtCategory =
+	| 'macro'
+	| 'crypto'
+	| 'sports'
+	| 'politics'
+	| 'tech'
+	| 'culture'
+	| 'wc';
 
 export type FlowArtState = 'neutral' | 'won' | 'lost';
 // FlowArt's palette dimension is keyed by the app-wide `Theme` union;
 // re-export under a domain alias so existing call sites read naturally.
 export type FlowArtTheme = Theme;
 
-export const FLOW_ART_CATEGORIES: readonly FlowArtCategory[] = [
+/**
+ * Canonical category set used for random category assignment when a
+ * market has no admin-tagged category. `wc` is intentionally excluded
+ * — it's a tentpole-only language and must be opt-in via an explicit
+ * `category: 'wc'` (typically driven by the FeaturedEvent abstraction).
+ */
+export const FLOW_ART_CATEGORIES: readonly Exclude<FlowArtCategory, 'wc'>[] = [
 	'macro',
 	'crypto',
 	'sports',
@@ -29,12 +42,16 @@ export const FLOW_ART_CATEGORIES: readonly FlowArtCategory[] = [
 ] as const;
 
 /**
- * Pre-built lookup set for `FLOW_ART_CATEGORIES`. Three Flow surfaces
- * (FlowCard, FlowMode, market-signals) need to test whether an
- * arbitrary string is a canonical category — exporting the Set once
- * avoids each consumer rebuilding it on module load.
+ * Pre-built lookup set for `FLOW_ART_CATEGORIES` plus the opt-in `wc`
+ * tentpole. Three Flow surfaces (FlowCard, FlowMode, market-signals)
+ * need to test whether an arbitrary string is a known category —
+ * exporting the Set once avoids each consumer rebuilding it on module
+ * load.
  */
-export const FLOW_ART_CATEGORY_SET: ReadonlySet<string> = new Set(FLOW_ART_CATEGORIES);
+export const FLOW_ART_CATEGORY_SET: ReadonlySet<string> = new Set<FlowArtCategory>([
+	...FLOW_ART_CATEGORIES,
+	'wc'
+]);
 
 export const FLOW_ART_STATES: readonly FlowArtState[] = ['neutral', 'won', 'lost'] as const;
 export const FLOW_ART_THEMES: readonly FlowArtTheme[] = THEMES;
@@ -459,6 +476,63 @@ const PAL: Record<FlowArtCategory, ThemePalettes> = {
 				inks: ['#B68B1F', '#C73D60', '#7A48B8', '#C04014', '#642B57', '#7C3D2C']
 			}
 		}
+	},
+	// World Cup — pitch green base with chalk-line architecture + gold
+	// accent. Tentpole-only: emitted exclusively when a market belongs
+	// to the active FeaturedEvent (see `FLOW_ART_CATEGORIES`, which
+	// excludes `wc` so the random fallback never selects it).
+	wc: {
+		dark: {
+			neutral: {
+				bg: '#0E2A1A',
+				base: '#143A24',
+				ink: '#2A6A42',
+				accent: '#E2B842',
+				hot: '#F2ECDC',
+				dim: '#1E4A30',
+				fg: '#F2ECDC'
+			},
+			won: {
+				bg: '#143F26',
+				base: '#1B5532',
+				ink: '#3B8A56',
+				accent: '#FFD06A',
+				hot: '#FFFFFF',
+				dim: '#266A40',
+				fg: '#FFF6E1'
+			},
+			lost: {
+				bg: '#10231A',
+				base: '#1A2E22',
+				ink: '#2A3D30',
+				accent: '#7C7368',
+				hot: '#5C5249',
+				dim: '#1C2A22',
+				fg: '#9C9890'
+			}
+		},
+		light: {
+			neutral: {
+				bg: '#E8F0DC',
+				base: '#D2E0BC',
+				ink: '#1F5F38',
+				accent: '#B68B1F',
+				hot: '#B5462C',
+				dim: '#A6BE8C',
+				fg: '#0E0D0B'
+			}
+		},
+		peach: {
+			neutral: {
+				bg: '#FFE5CC',
+				base: '#F4D5B8',
+				ink: '#1F5F38',
+				accent: '#B68B1F',
+				hot: '#C04014',
+				dim: '#D6B5A0',
+				fg: '#3D2419'
+			}
+		}
 	}
 };
 
@@ -475,6 +549,24 @@ const lerp = (a: number, b: number, t: number): number => a + (b - a) * t;
 
 const svgOpen = (size: number): string =>
 	`<svg viewBox="0 0 100 100" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet" shape-rendering="geometricPrecision">`;
+
+// WC uses a wider 280×100 viewBox so the editorial figure system can
+// span the full-bleed artwork band edge-to-edge. `slice` fill keeps
+// the band tight to its container without empty letterboxing.
+const svgOpenWC = (size: number): string => {
+	const h = Math.round((size * 100) / 280);
+
+	return `<svg viewBox="0 0 280 100" width="${size}" height="${h}" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid slice" shape-rendering="geometricPrecision">`;
+};
+
+/**
+ * Public viewBox dimensions per category. Default categories render
+ * into a square 100×100 viewBox; `wc` uses a wider 280×100 band so
+ * the figure system spans full-bleed. `FlowArtFrame` reads this to
+ * size its host element with the correct aspect ratio.
+ */
+export const flowArtViewBox = (category: FlowArtCategory): { width: number; height: number } =>
+	category === 'wc' ? { width: 280, height: 100 } : { width: 100, height: 100 };
 
 const svgClose = (): string => `</svg>`;
 
@@ -966,13 +1058,670 @@ const renderCulture = ({ rng, p, state, uid }: RenderArgs): string => {
 	return s;
 };
 
+// ---- WC figure system — mode-independent constants ----------
+// Figure colors are intentionally NOT palette-derived so
+// the editorial figure layer reads identically across dark / light /
+// peach themes. That's why `boostOpacities` skips WC (it would
+// over-saturate these fixed inks against light backdrops).
+
+const WC_SKIN: Record<string, { base: string; shadow: string; high: string }> = {
+	umber: { base: '#9C6E45', shadow: '#6E4A2A', high: '#C0916A' },
+	olive: { base: '#A78657', shadow: '#7A5E37', high: '#C9A879' },
+	almond: { base: '#B98968', shadow: '#86603F', high: '#D4A988' },
+	mahog: { base: '#6E4A2A', shadow: '#4A2F18', high: '#8E6238' },
+	sand: { base: '#C99F75', shadow: '#9C7250', high: '#E0BC95' },
+	bronze: { base: '#7E5638', shadow: '#553820', high: '#9E7558' }
+};
+
+const WC_SKIN_KEYS: ReadonlyArray<keyof typeof WC_SKIN> = [
+	'umber',
+	'olive',
+	'almond',
+	'mahog',
+	'sand',
+	'bronze'
+] as const;
+
+const WC_HAIR = {
+	jet: '#1A1410',
+	charcoal: '#2A211A',
+	brown: '#3E2C20',
+	auburn: '#5A2F1E',
+	blonde: '#A98E60',
+	gray: '#7E7A75'
+} as const;
+
+const WC_HAIR_KEYS: ReadonlyArray<keyof typeof WC_HAIR> = [
+	'jet',
+	'charcoal',
+	'brown',
+	'auburn',
+	'blonde',
+	'gray'
+] as const;
+
+type WCHairStyle = 'short' | 'curly' | 'mohawk' | 'cap' | 'bun' | 'bald';
+const WC_HAIR_STYLES: ReadonlyArray<WCHairStyle> = [
+	'short',
+	'curly',
+	'mohawk',
+	'cap',
+	'bun',
+	'bald'
+] as const;
+
+type WCEmotion = 'joy' | 'focus' | 'anticipation' | 'dread' | 'defeat' | 'playful';
+const WC_EMOTIONS: ReadonlyArray<WCEmotion> = [
+	'joy',
+	'focus',
+	'anticipation',
+	'dread',
+	'defeat',
+	'playful'
+] as const;
+
+// Emotion-tag pill colors. Paired with an explicit uppercase label
+// in `wcCaptions` so color is never the only signal — keeps the
+// chip readable for users who can't distinguish e.g. JOY's teal
+// from PLAYFUL's gold by hue alone.
+const WC_EMOTION_COLOR: Record<WCEmotion, string> = {
+	joy: '#6FE0B6',
+	focus: '#7EB6FF',
+	anticipation: '#E2B842',
+	dread: '#FF8A4C',
+	defeat: '#FF6B6B',
+	playful: '#FFD06A'
+};
+
+// Editorial foreign-word roster shown top-right on figure-bearing
+// variants. Picked to evoke WC vocabulary without committing to a
+// single language. These are plain ASCII strings inlined into SVG
+// `<text>` — no escaping required.
+const WC_WORDS: readonly string[] = [
+	'GOL',
+	'GOLAZO',
+	'PENALTI',
+	'DERBY',
+	'MAESTRO',
+	'COPA',
+	'DUELO',
+	'CLAVE',
+	'FINAL',
+	'FIASCO'
+] as const;
+
+// Editorial caption layer — foreign word top-right + emotion-color
+// pill (with explicit uppercase label) bottom-right. Only emitted
+// on figure-bearing variants; the layout is what makes the WC card
+// read as an editorial spread rather than just an illustrated
+// thumbnail.
+const wcCaptions = ({
+	word,
+	emotion,
+	fg
+}: {
+	word: string;
+	emotion: WCEmotion;
+	fg: string;
+}): string => {
+	const ec = WC_EMOTION_COLOR[emotion];
+	const label = emotion.toUpperCase();
+	const tagX = 215;
+	const tagY = 86;
+	const tagW = 60;
+	const tagH = 10;
+
+	let m = '';
+	m += `<text x="270" y="14" text-anchor="end" font-family="ui-monospace,monospace" font-size="8" font-weight="700" letter-spacing="0.10em" fill="${fg}" opacity="0.85">${word}</text>`;
+	m += `<rect x="${tagX}" y="${tagY}" width="${tagW}" height="${tagH}" rx="2" fill="${ec}" opacity="0.92"/>`;
+	m += `<text x="${tagX + tagW / 2}" y="${tagY + 7.2}" text-anchor="middle" font-family="ui-monospace,monospace" font-size="6.5" font-weight="800" letter-spacing="0.16em" fill="#0E0D0B">${label}</text>`;
+
+	return m;
+};
+
+// Cap brim + cap-band reference colors used inside `wcFace` so the
+// hair-style="cap" branch reads naturally.
+const WC_CAP_DARK = '#2A211A';
+const WC_CAP_BAND = WC_HAIR.charcoal;
+
+// Composes a 4–6-plane bust portrait around an anchor (cx, cy).
+// Hair drawn behind face plane for cleaner silhouette; jaw and ears
+// drawn after the face plane. Expression layer (brows + eyes +
+// mouth) reads at small sizes via stroke weights tuned for the
+// 280×100 viewBox. All `<g class="wc-figure">` so future CSS
+// keyframes can target it without per-part selectors.
+const wcFace = ({
+	cx,
+	cy,
+	skin,
+	hair,
+	hairStyle,
+	shirt,
+	shirtShadow = '#1F1A14',
+	stripe,
+	emotion
+}: {
+	cx: number;
+	cy: number;
+	skin: keyof typeof WC_SKIN;
+	hair: keyof typeof WC_HAIR;
+	hairStyle: WCHairStyle;
+	shirt: string;
+	shirtShadow?: string;
+	stripe?: string;
+	emotion: WCEmotion;
+}): string => {
+	const sk = WC_SKIN[skin] ?? WC_SKIN.umber;
+	const hairColor = WC_HAIR[hair] ?? WC_HAIR.brown;
+	const headW = 16;
+	const headH = 14;
+
+	let m = `<g class="wc-figure">`;
+
+	// Shoulders (full bust) — drawn first behind the head, then
+	// shadow plane, optional national-kit shoulder stripe, collar.
+	m += `<polygon points="${cx - 30},${cy + 18} ${cx + 30},${cy + 18} ${cx + 40},${cy + 58} ${cx - 40},${cy + 58}" fill="${shirt}"/>`;
+	m += `<polygon points="${cx},${cy + 18} ${cx + 30},${cy + 18} ${cx + 40},${cy + 58} ${cx},${cy + 58}" fill="${shirtShadow}" opacity="0.45"/>`;
+
+	if (stripe) {
+		m += `<polygon points="${cx - 10},${cy + 18} ${cx - 4},${cy + 18} ${cx - 2},${cy + 58} ${cx - 14},${cy + 58}" fill="${stripe}" opacity="0.85"/>`;
+	}
+
+	m += `<polygon points="${cx - 7},${cy + 16} ${cx + 7},${cy + 16} ${cx + 5},${cy + 22} ${cx - 5},${cy + 22}" fill="${sk.base}"/>`;
+
+	// Hair — six styles; `bald` is intentionally a no-op.
+	if (hairStyle === 'short') {
+		m += `<polygon points="${cx - headW - 1},${cy - headH - 2} ${cx + headW + 1},${cy - headH - 2} ${cx + headW + 2},${cy - 2} ${cx - headW - 2},${cy - 2}" fill="${hairColor}"/>`;
+	} else if (hairStyle === 'curly') {
+		m += `<path d="M ${cx - headW - 3} ${cy - 2} Q ${cx - headW - 3} ${cy - headH - 8} ${cx} ${cy - headH - 6} Q ${cx + headW + 3} ${cy - headH - 8} ${cx + headW + 3} ${cy - 2} Z" fill="${hairColor}"/>`;
+	} else if (hairStyle === 'mohawk') {
+		m += `<polygon points="${cx - headW},${cy - 2} ${cx - headW},${cy - headH - 1} ${cx + headW},${cy - headH - 1} ${cx + headW},${cy - 2}" fill="${hairColor}" opacity="0.85"/>`;
+		m += `<polygon points="${cx - 3},${cy - headH - 1} ${cx + 3},${cy - headH - 1} ${cx + 4},${cy - headH - 8} ${cx - 4},${cy - headH - 8}" fill="${hairColor}"/>`;
+	} else if (hairStyle === 'cap') {
+		m += `<polygon points="${cx - headW - 2},${cy - headH + 2} ${cx + headW + 2},${cy - headH + 2} ${cx + headW + 4},${cy - 3} ${cx - headW - 4},${cy - 3}" fill="${WC_CAP_DARK}"/>`;
+		m += `<rect x="${cx - headW - 6}" y="${cy - 3}" width="${headW * 2 + 12}" height="2" fill="${WC_CAP_BAND}"/>`;
+	} else if (hairStyle === 'bun') {
+		m += `<polygon points="${cx - headW - 1},${cy - headH - 2} ${cx + headW + 1},${cy - headH - 2} ${cx + headW + 2},${cy + 10} ${cx - headW - 2},${cy + 10}" fill="${hairColor}" opacity="0.95"/>`;
+		m += `<circle cx="${cx + headW + 4}" cy="${cy - headH - 4}" r="4" fill="${hairColor}"/>`;
+	}
+
+	// Face plane + shadow (right half) + cheek highlight (left) +
+	// jaw trapezoid + ears.
+	m += `<polygon points="${cx - headW},${cy - headH} ${cx + headW},${cy - headH} ${cx + headW - 1},${cy + headH - 2} ${cx - headW + 1},${cy + headH - 2}" fill="${sk.base}"/>`;
+	m += `<polygon points="${cx},${cy - headH} ${cx + headW},${cy - headH} ${cx + headW - 1},${cy + headH - 2} ${cx},${cy + headH - 2}" fill="${sk.shadow}" opacity="0.55"/>`;
+	m += `<polygon points="${cx - headW},${cy - 2} ${cx - headW + 5},${cy - 2} ${cx - headW + 4},${cy + 8} ${cx - headW},${cy + 8}" fill="${sk.high}" opacity="0.65"/>`;
+	m += `<polygon points="${cx - headW + 1},${cy + headH - 2} ${cx + headW - 1},${cy + headH - 2} ${cx + headW - 3},${cy + headH + 4} ${cx - headW + 3},${cy + headH + 4}" fill="${sk.shadow}"/>`;
+	m += `<rect x="${cx - headW - 1.5}" y="${cy - 1}" width="2" height="5" fill="${sk.shadow}"/>`;
+	m += `<rect x="${cx + headW - 0.5}" y="${cy - 1}" width="2" height="5" fill="${sk.shadow}" opacity="0.7"/>`;
+
+	// Expression layer — brows, eyes, mouth, all in #0E0D0B for max
+	// contrast on the editorial figure regardless of theme.
+	const eyeY = cy - 2;
+	const mouthY = cy + 6;
+	const eyeL = cx - 6;
+	const eyeR = cx + 6;
+	const browInk = '#0E0D0B';
+
+	// Brows
+	if (emotion === 'joy' || emotion === 'playful') {
+		m += `<line x1="${eyeL - 3}" y1="${eyeY - 4}" x2="${eyeL + 3}" y2="${eyeY - 3.5}" stroke="${browInk}" stroke-width="0.9" stroke-linecap="round"/>`;
+		m += `<line x1="${eyeR - 3}" y1="${eyeY - 3.5}" x2="${eyeR + 3}" y2="${eyeY - 4}" stroke="${browInk}" stroke-width="0.9" stroke-linecap="round"/>`;
+	} else if (emotion === 'focus' || emotion === 'anticipation') {
+		m += `<line x1="${eyeL - 3}" y1="${eyeY - 3.5}" x2="${eyeL + 3}" y2="${eyeY - 3.5}" stroke="${browInk}" stroke-width="1" stroke-linecap="round"/>`;
+		m += `<line x1="${eyeR - 3}" y1="${eyeY - 3.5}" x2="${eyeR + 3}" y2="${eyeY - 3.5}" stroke="${browInk}" stroke-width="1" stroke-linecap="round"/>`;
+	} else if (emotion === 'dread' || emotion === 'defeat') {
+		m += `<line x1="${eyeL - 3}" y1="${eyeY - 3}" x2="${eyeL + 3}" y2="${eyeY - 4.5}" stroke="${browInk}" stroke-width="1" stroke-linecap="round"/>`;
+		m += `<line x1="${eyeR - 3}" y1="${eyeY - 4.5}" x2="${eyeR + 3}" y2="${eyeY - 3}" stroke="${browInk}" stroke-width="1" stroke-linecap="round"/>`;
+	}
+
+	// Eyes
+	if (emotion === 'joy') {
+		m += `<path d="M ${eyeL - 2.5} ${eyeY} Q ${eyeL} ${eyeY - 1.5} ${eyeL + 2.5} ${eyeY}" stroke="${browInk}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+		m += `<path d="M ${eyeR - 2.5} ${eyeY} Q ${eyeR} ${eyeY - 1.5} ${eyeR + 2.5} ${eyeY}" stroke="${browInk}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+	} else if (emotion === 'dread') {
+		m += `<ellipse cx="${eyeL}" cy="${eyeY}" rx="1.6" ry="1.8" fill="#F2ECDC"/>`;
+		m += `<ellipse cx="${eyeR}" cy="${eyeY}" rx="1.6" ry="1.8" fill="#F2ECDC"/>`;
+		m += `<circle cx="${eyeL}" cy="${eyeY + 0.2}" r="0.8" fill="${browInk}"/>`;
+		m += `<circle cx="${eyeR}" cy="${eyeY + 0.2}" r="0.8" fill="${browInk}"/>`;
+	} else if (emotion === 'playful') {
+		m += `<path d="M ${eyeL - 2.5} ${eyeY} Q ${eyeL} ${eyeY - 1.5} ${eyeL + 2.5} ${eyeY}" stroke="${browInk}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+		m += `<circle cx="${eyeR}" cy="${eyeY}" r="1.3" fill="${browInk}"/>`;
+	} else if (emotion === 'defeat') {
+		m += `<path d="M ${eyeL - 2.5} ${eyeY + 0.5} Q ${eyeL} ${eyeY + 2} ${eyeL + 2.5} ${eyeY + 0.5}" stroke="${browInk}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+		m += `<path d="M ${eyeR - 2.5} ${eyeY + 0.5} Q ${eyeR} ${eyeY + 2} ${eyeR + 2.5} ${eyeY + 0.5}" stroke="${browInk}" stroke-width="1" fill="none" stroke-linecap="round"/>`;
+	} else {
+		m += `<circle cx="${eyeL}" cy="${eyeY}" r="1.1" fill="${browInk}"/>`;
+		m += `<circle cx="${eyeR}" cy="${eyeY}" r="1.1" fill="${browInk}"/>`;
+	}
+
+	// Mouth
+	if (emotion === 'joy') {
+		m += `<path d="M ${cx - 5} ${mouthY} Q ${cx} ${mouthY + 4} ${cx + 5} ${mouthY}" stroke="${browInk}" stroke-width="1.2" fill="none" stroke-linecap="round"/>`;
+	} else if (emotion === 'focus' || emotion === 'anticipation') {
+		m += `<line x1="${cx - 3}" y1="${mouthY + 1}" x2="${cx + 3}" y2="${mouthY + 1}" stroke="${browInk}" stroke-width="1.1" stroke-linecap="round"/>`;
+	} else if (emotion === 'dread') {
+		m += `<ellipse cx="${cx}" cy="${mouthY + 1}" rx="2" ry="2.5" fill="${browInk}"/>`;
+	} else if (emotion === 'defeat') {
+		m += `<path d="M ${cx - 4} ${mouthY + 2} Q ${cx} ${mouthY - 1} ${cx + 4} ${mouthY + 2}" stroke="${browInk}" stroke-width="1.1" fill="none" stroke-linecap="round"/>`;
+	} else if (emotion === 'playful') {
+		m += `<path d="M ${cx - 4} ${mouthY + 1} Q ${cx + 1} ${mouthY + 3} ${cx + 5} ${mouthY - 1}" stroke="${browInk}" stroke-width="1.1" fill="none" stroke-linecap="round"/>`;
+	}
+
+	m += `</g>`;
+
+	return m;
+};
+
+// ---- WC — tentpole pitch + editorial backdrops ---------------
+// Renders one of fourteen variants per seed: ten plain backdrops
+// (stands, flag diag/horiz/vert, perspective, circle, spotlight,
+// bunting, TV, propose) plus four figure-bearing composites
+// (figure on flag-vert / flag-diag / stands / perspective). Every
+// variant draws into the 280×100 viewBox handled by `renderFlowArt`.
+//
+// Flag trios mirror iconic WC nations (Brazil green-yellow-blue,
+// France blue-white-red, Argentina sky-white-sky, etc.) and pair
+// with that nation's kit jersey + optional shoulder stripe so
+// figure variants land on a coherent backdrop. Selection is
+// deterministic per seed — the same market always renders the
+// same trio + variant + figure pair.
+//
+// Figure-bearing variants also layer an editorial caption pair:
+// a foreign word (`WC_WORDS`) top-right + an emotion-color pill
+// (with explicit uppercase label) bottom-right. The emotion roll
+// is shared between the figure's expression and the pill so the
+// face and the chip agree.
+//
+// `bgSpotlight` and `bgBunting` carry CSS class hooks
+// (`wc-spot wc-spot-left/right` and `wc-cnf wc-cnf-${i}`) plus the
+// figure layer wraps in `<g class="wc-figure">`. The matching CSS
+// keyframes live in `FlowArtFrame.svelte` and respect
+// `prefers-reduced-motion`.
+//
+// Figure-bearing variants (5–8) also roll a ~35% chance of an
+// editorial focal prop (`wc-prop`): trophy, golden boot, or red
+// card. Each prop is anchored in the figure-complementary lane
+// (left side, since figures sit on the right at cx>=140) and
+// shares the same `wc-prop-pulse` keyframe.
+const renderWC = ({ rng, p, state }: RenderArgs): string => {
+	const bgStands = (): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+
+		// Six receding tiers fading out toward the back row.
+		for (let i = 0; i < 6; i++) {
+			m += `<rect x="-4" y="${10 + i * 6}" width="290" height="3" fill="${p.base}" opacity="${(0.55 - i * 0.05).toFixed(2)}"/>`;
+		}
+
+		// Tiny crowd-dot grid in the stands.
+		for (let r = 0; r < 5; r++) {
+			for (let c = 0; c < 28; c++) {
+				m += `<circle cx="${4 + c * 10}" cy="${10.5 + r * 6}" r="0.6" fill="${p.dim}" opacity="${(0.35 + (r % 2) * 0.18).toFixed(2)}"/>`;
+			}
+		}
+
+		// Pitch field — lower band, halfway line, jittered centre circle,
+		// right-side penalty arc fragment.
+		m += `<rect x="0" y="46" width="280" height="54" fill="${p.ink}" opacity="0.30"/>`;
+		m += `<line x1="0" y1="74" x2="280" y2="74" stroke="${p.fg}" stroke-width="0.4" opacity="0.30"/>`;
+
+		const cx = rng.range(120, 160);
+		m += `<circle cx="${cx.toFixed(1)}" cy="74" r="9" fill="none" stroke="${p.fg}" stroke-width="0.4" opacity="0.35"/>`;
+		m += `<circle cx="${cx.toFixed(1)}" cy="74" r="0.8" fill="${p.fg}" opacity="0.55"/>`;
+		m += `<path d="M 240 60 Q 252 74 240 88" fill="none" stroke="${p.fg}" stroke-width="0.4" opacity="0.30"/>`;
+
+		return m;
+	};
+
+	const bgFlagDiag = ({ c1, c2, c3 }: { c1: string; c2: string; c3: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.base}"/>`;
+		m += `<polygon points="-20,120 90,0 120,0 0,120" fill="${c1}" opacity="0.78"/>`;
+		m += `<polygon points="90,0 120,0 30,120 0,120" fill="${c2}" opacity="0.88"/>`;
+		m += `<polygon points="120,0 280,0 280,40 60,40" fill="${c3}" opacity="0.18"/>`;
+
+		return m;
+	};
+
+	const bgFlagHoriz = ({ c1, c2, c3 }: { c1: string; c2: string; c3: string }): string => {
+		let m = `<rect x="0" y="0" width="280" height="33" fill="${c1}" opacity="0.85"/>`;
+		m += `<rect x="0" y="33" width="280" height="34" fill="${c2}" opacity="0.95"/>`;
+		m += `<rect x="0" y="67" width="280" height="33" fill="${c3}" opacity="0.85"/>`;
+
+		return m;
+	};
+
+	const bgFlagVert = ({ c1, c2, c3 }: { c1: string; c2: string; c3: string }): string => {
+		let m = `<rect x="0" y="0" width="93.3" height="100" fill="${c1}" opacity="0.9"/>`;
+		m += `<rect x="93.3" y="0" width="93.4" height="100" fill="${c2}" opacity="0.9"/>`;
+		m += `<rect x="186.7" y="0" width="93.3" height="100" fill="${c3}" opacity="0.9"/>`;
+
+		return m;
+	};
+
+	const bgPerspective = ({ color }: { color: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<polygon points="0,100 280,100 200,40 80,40" fill="${p.base}" opacity="0.65"/>`;
+
+		// Eight floor lines converging toward the back, then four
+		// receding crossbars to anchor depth.
+		for (let i = 0; i < 8; i++) {
+			const t = i / 7;
+			const x1 = t * 280;
+			const x2 = 80 + t * 120;
+			m += `<line x1="${x1.toFixed(1)}" y1="100" x2="${x2.toFixed(1)}" y2="40" stroke="${color}" stroke-width="0.4" opacity="0.35"/>`;
+		}
+
+		for (let i = 0; i < 4; i++) {
+			const y = 50 + i * 12;
+			const xL = 100 - (y - 40) * 0.2;
+			const xR = 180 + (y - 40) * 0.2;
+			m += `<line x1="${xL}" y1="${y}" x2="${xR}" y2="${y}" stroke="${color}" stroke-width="0.3" opacity="0.30"/>`;
+		}
+
+		return m;
+	};
+
+	// Single accent disc on a base wash — reads as a stadium floodlight
+	// catching the back of the pitch, or a flare on a TV scoreboard.
+	const bgCircle = ({
+		color,
+		cx = 200,
+		cy = 50,
+		r = 60
+	}: {
+		color: string;
+		cx?: number;
+		cy?: number;
+		r?: number;
+	}): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<rect width="280" height="100" fill="${p.base}" opacity="0.55"/>`;
+		m += `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${color}" opacity="0.85"/>`;
+		m += `<circle cx="${cx}" cy="${cy}" r="${r + 6}" fill="none" stroke="${color}" stroke-width="0.5" opacity="0.40"/>`;
+
+		return m;
+	};
+
+	// Two cone-shaped spotlight beams from above. Carries `wc-spot`
+	// CSS class hooks that future keyframes will animate (left/right
+	// sweep). Classes are inert until the CSS port lands.
+	const bgSpotlight = ({ c1, c2 }: { c1: string; c2: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<polygon class="wc-spot wc-spot-left" points="50,-10 80,-10 130,100 30,100" fill="${c1}" opacity="0.15"/>`;
+		m += `<polygon class="wc-spot wc-spot-right" points="200,-10 230,-10 250,100 150,100" fill="${c2}" opacity="0.15"/>`;
+		m += `<rect width="280" height="100" fill="${p.base}" opacity="0.35"/>`;
+
+		return m;
+	};
+
+	// Parade bunting — a sagging string with 12 alternating triangle
+	// pennants drawn in the flag trio. Each pennant carries an
+	// `wc-cnf wc-cnf-${i}` CSS class hook for future stagger animation.
+	const bgBunting = ({ c1, c2, c3 }: { c1: string; c2: string; c3: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<rect x="0" y="62" width="280" height="38" fill="${p.base}" opacity="0.55"/>`;
+		m += `<path d="M 0 18 Q 140 26 280 18" fill="none" stroke="${p.fg}" stroke-width="0.4" opacity="0.55"/>`;
+		const cols = [c1, c2, c3];
+
+		for (let i = 0; i < 12; i++) {
+			const t = i / 11;
+			const x = t * 280;
+			const y = 18 + Math.sin(t * Math.PI) * 5;
+			const c = cols[i % cols.length];
+			const op = (0.78 + (i % 2) * 0.15).toFixed(2);
+			m += `<path class="wc-cnf wc-cnf-${i}" d="M ${x - 5} ${y} L ${x + 5} ${y} L ${x} ${y + 10} Z" fill="${c}" opacity="${op}"/>`;
+		}
+
+		return m;
+	};
+
+	// Editorial TV-frame set piece — wide replay screen on the right
+	// with a VAR pill in the corner. Establishes the "broadcast booth"
+	// register for VAR / call-review-style markets.
+	const bgTV = ({ color }: { color: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<rect x="142" y="14" width="124" height="72" rx="3" fill="${p.ink}" opacity="0.92"/>`;
+		m += `<rect x="142" y="14" width="124" height="72" rx="3" fill="none" stroke="${color}" stroke-width="0.6" opacity="0.55"/>`;
+		// Replay grid inside the screen.
+		m += `<line x1="146" y1="64" x2="262" y2="64" stroke="${p.hot}" stroke-width="0.4" opacity="0.55"/>`;
+		m += `<line x1="190" y1="20" x2="190" y2="84" stroke="${color}" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.9"/>`;
+		// VAR pill — fixed-color editorial chip; reads on every theme.
+		m += `<rect x="142" y="14" width="34" height="9" fill="#D04444" opacity="0.95"/>`;
+		m += `<text x="159" y="20.5" text-anchor="middle" font-family="ui-monospace,monospace" font-size="6" font-weight="800" fill="#F2ECDC">VAR</text>`;
+
+		return m;
+	};
+
+	// Floating-hearts set piece — base wash + ground plane + five
+	// hearts drifting along the top half. The "proposal at the
+	// final-whistle" archetype of editorial WC art.
+	const bgPropose = ({ color }: { color: string }): string => {
+		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
+		m += `<rect x="0" y="55" width="280" height="45" fill="${p.base}" opacity="0.6"/>`;
+		m += `<line x1="0" y1="68" x2="280" y2="68" stroke="${p.fg}" stroke-width="0.4" opacity="0.30"/>`;
+
+		for (let i = 0; i < 5; i++) {
+			const x = 30 + i * 56;
+			const y = 24 + (i % 2) * 8;
+			m += `<path d="M ${x} ${y + 4} C ${x - 4} ${y - 2} ${x - 8} ${y + 2} ${x} ${y + 8} C ${x + 8} ${y + 2} ${x + 4} ${y - 2} ${x} ${y + 4} Z" fill="${color}" opacity="0.70"/>`;
+		}
+
+		return m;
+	};
+
+	// Iconic WC nation flag trios paired with each nation's kit
+	// jersey + optional shoulder stripe. Backdrop variants ignore the
+	// kit fields; figure variants read them so the figure's jersey
+	// matches the flag on the backdrop.
+	const FLAGS: ReadonlyArray<{
+		c1: string;
+		c2: string;
+		c3: string;
+		shirt: string;
+		stripe?: string;
+	}> = [
+		// BR — gold/green/blue · canary jersey
+		{ c1: '#FFD800', c2: '#009C3B', c3: '#002776', shirt: '#FFD800', stripe: '#009C3B' },
+		// FR — bleu/blanc/rouge · royal blue jersey
+		{ c1: '#0055A4', c2: '#FFFFFF', c3: '#EF4135', shirt: '#0055A4' },
+		// AR — celeste/white · sky-blue striped jersey
+		{ c1: '#75AADB', c2: '#FFFFFF', c3: '#75AADB', shirt: '#75AADB', stripe: '#FFFFFF' },
+		// DE — schwarz/rot/gold · dark home jersey
+		{ c1: '#000000', c2: '#DD0000', c3: '#FFCE00', shirt: '#2A211A' },
+		// ES — rojigualda · scarlet jersey
+		{ c1: '#C8102E', c2: '#FFD800', c3: '#C8102E', shirt: '#C8102E' },
+		// IT — verde/bianco/rosso · azzurro jersey
+		{ c1: '#008C45', c2: '#F4F5F0', c3: '#CD212A', shirt: '#0055A4' },
+		// US — red/cream/navy · navy stripe-on-white away jersey
+		{ c1: '#C8102E', c2: '#F2ECDC', c3: '#0A3161', shirt: '#F2ECDC', stripe: '#0A3161' }
+	];
+
+	const flag = rng.pick(FLAGS);
+
+	// Figure spawner — keeps per-seed picks consistent across variants.
+	// Emotion is passed in (not picked here) so the caller can reuse it
+	// for the caption pill; everything else (skin / hair / hair-style)
+	// is rolled fresh. cx and cy are tuned per backdrop so the figure
+	// avoids the backdrop's structural architecture (perspective
+	// vanishing point, halfway line, etc.).
+	const makeFigure = ({
+		cx,
+		cy,
+		emotion
+	}: {
+		cx: number;
+		cy: number;
+		emotion: WCEmotion;
+	}): string =>
+		wcFace({
+			cx,
+			cy,
+			skin: rng.pick(WC_SKIN_KEYS),
+			hair: rng.pick(WC_HAIR_KEYS),
+			hairStyle: rng.pick(WC_HAIR_STYLES),
+			shirt: flag.shirt,
+			stripe: flag.stripe,
+			emotion
+		});
+
+	// Editorial focal props (trophy / golden boot / red card) — painted
+	// in the top-left lane on figure-bearing variants so the figure (on
+	// the right) and the prop (on the left) read as one composition.
+	// All three carry the `wc-prop` class so the shared `wc-prop-pulse`
+	// keyframe in `FlowArtFrame` animates them. Coordinates are kept in
+	// the 0–60 x-band and 12–48 y-band so they don't collide with the
+	// caption layer (top-right) or the figure (cx >= 140).
+	const propTrophy = ({ cx, cy }: { cx: number; cy: number }): string => {
+		const gold = '#F4C544';
+		const goldHi = '#FFE082';
+		const goldLo = '#A8852D';
+		let m = `<g class="wc-prop" transform="translate(${cx} ${cy})">`;
+		// Cup body — wide rim, narrow waist.
+		m += `<path d="M -10 -10 L 10 -10 L 8 6 Q 0 11 -8 6 Z" fill="${gold}"/>`;
+		m += `<path d="M -10 -10 L 10 -10 L 9 -7 L -9 -7 Z" fill="${goldHi}"/>`;
+		// Handles.
+		m += `<path d="M -10 -7 Q -16 -3 -10 4" fill="none" stroke="${gold}" stroke-width="1.6"/>`;
+		m += `<path d="M 10 -7 Q 16 -3 10 4" fill="none" stroke="${gold}" stroke-width="1.6"/>`;
+		// Stem + base.
+		m += `<rect x="-1.5" y="6" width="3" height="4" fill="${goldLo}"/>`;
+		m += `<rect x="-7" y="10" width="14" height="2.5" fill="${gold}"/>`;
+		m += `</g>`;
+
+		return m;
+	};
+
+	const propGoldenBoot = ({ cx, cy }: { cx: number; cy: number }): string => {
+		const gold = '#F4C544';
+		const goldHi = '#FFE082';
+		const lace = '#A8852D';
+		let m = `<g class="wc-prop" transform="translate(${cx} ${cy}) rotate(-12)">`;
+		// Boot silhouette — heel left, toe right.
+		m += `<path d="M -10 0 L -10 -5 Q -8 -7 -4 -7 L 4 -7 Q 9 -7 11 -4 L 14 1 L 14 4 L -10 4 Z" fill="${gold}"/>`;
+		// Highlight on the heel.
+		m += `<path d="M -10 -4 L -6 -6 L -6 -2 L -10 0 Z" fill="${goldHi}"/>`;
+		// Three lace marks across the top.
+		m += `<line x1="-2" y1="-6" x2="-2" y2="-2" stroke="${lace}" stroke-width="0.6"/>`;
+		m += `<line x1="2" y1="-6" x2="2" y2="-2" stroke="${lace}" stroke-width="0.6"/>`;
+		m += `<line x1="6" y1="-6" x2="6" y2="-2" stroke="${lace}" stroke-width="0.6"/>`;
+		m += `</g>`;
+
+		return m;
+	};
+
+	const propRedCard = ({ cx, cy }: { cx: number; cy: number }): string => {
+		const red = '#D03A3A';
+		const redHi = '#FF6B6B';
+		const edge = '#7A1F1F';
+		let m = `<g class="wc-prop" transform="translate(${cx} ${cy}) rotate(8)">`;
+		m += `<rect x="-7" y="-10" width="14" height="20" rx="0.8" fill="${red}" stroke="${edge}" stroke-width="0.6"/>`;
+		// Top-left specular highlight.
+		m += `<path d="M -6 -9 L -2 -9 L -6 -5 Z" fill="${redHi}" opacity="0.85"/>`;
+		m += `</g>`;
+
+		return m;
+	};
+
+	const PROP_FNS = [propTrophy, propGoldenBoot, propRedCard] as const;
+
+	const variant = rng.int(0, 13);
+
+	let s = '';
+
+	if (variant === 0) {
+		s += bgStands();
+	} else if (variant === 1) {
+		s += bgFlagDiag(flag);
+	} else if (variant === 2) {
+		s += bgFlagHoriz(flag);
+	} else if (variant === 3) {
+		s += bgFlagVert(flag);
+	} else if (variant === 4) {
+		s += bgPerspective({ color: p.accent });
+	} else if (variant === 5) {
+		// Figure on flag-vert — anchored on the right stripe.
+		const emotion = rng.pick(WC_EMOTIONS);
+		s += bgFlagVert(flag);
+		s += makeFigure({ cx: 210, cy: 38, emotion });
+		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
+
+		// ~35% chance a focal prop joins the figure. Anchor lives in
+		// the left lane (the c1 stripe) so it doesn't compete with
+		// the figure on c3.
+		if (rng.int(0, 99) < 35) {
+			s += rng.pick(PROP_FNS)({ cx: 32, cy: 50 });
+		}
+	} else if (variant === 6) {
+		// Figure on flag-diag — the dark c1 / c2 polygons stop near
+		// x≈120, so anchoring the figure at cx=210 keeps it cleanly
+		// inside the lighter c3 region in the top-right.
+		const emotion = rng.pick(WC_EMOTIONS);
+		s += bgFlagDiag(flag);
+		s += makeFigure({ cx: 210, cy: 32, emotion });
+		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
+
+		// Prop sits in the bottom-left where the dark polygons run —
+		// gold reads cleanly against c1 / c2.
+		if (rng.int(0, 99) < 35) {
+			s += rng.pick(PROP_FNS)({ cx: 36, cy: 78 });
+		}
+	} else if (variant === 7) {
+		// Figure on stands — pitch closeup with the portrait centred
+		// over the field; the body extends down into the pitch band
+		// while the head sits above the halfway line.
+		const emotion = rng.pick(WC_EMOTIONS);
+		s += bgStands();
+		s += makeFigure({ cx: 200, cy: 36, emotion });
+		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
+
+		// Prop sits on the pitch in the lower-left — halfway-line
+		// region, where the field band is open.
+		if (rng.int(0, 99) < 35) {
+			s += rng.pick(PROP_FNS)({ cx: 40, cy: 84 });
+		}
+	} else if (variant === 8) {
+		// Figure on perspective — sits the head just above the
+		// vanishing band (y=40) and lets the body settle into the
+		// perspective floor for a "running toward the camera" beat.
+		const emotion = rng.pick(WC_EMOTIONS);
+		s += bgPerspective({ color: p.accent });
+		s += makeFigure({ cx: 140, cy: 42, emotion });
+		s += wcCaptions({ word: rng.pick(WC_WORDS), emotion, fg: p.fg });
+
+		// Prop sits in the top-left on the back wall — keeps the
+		// converging floor lines clear.
+		if (rng.int(0, 99) < 35) {
+			s += rng.pick(PROP_FNS)({ cx: 36, cy: 26 });
+		}
+	} else if (variant === 9) {
+		s += bgCircle({ color: p.accent });
+	} else if (variant === 10) {
+		s += bgSpotlight({ c1: p.fg, c2: p.accent });
+	} else if (variant === 11) {
+		s += bgBunting(flag);
+	} else if (variant === 12) {
+		s += bgTV({ color: p.accent });
+	} else {
+		s += bgPropose({ color: p.accent });
+	}
+
+	// State accent: won → gold spotlight wash; lost → desaturated veil.
+	// Painted last so it tints whichever backdrop fired.
+	if (state === 'won') {
+		s += `<rect width="280" height="100" fill="${p.accent}" opacity="0.08"/>`;
+	} else if (state === 'lost') {
+		s += `<rect width="280" height="100" fill="${p.bg}" opacity="0.35"/>`;
+	}
+
+	return s;
+};
+
 const RENDERERS: Record<FlowArtCategory, (args: RenderArgs) => string> = {
 	macro: renderMacro,
 	crypto: renderCrypto,
 	sports: renderSports,
 	politics: renderPolitics,
 	tech: renderTech,
-	culture: renderCulture
+	culture: renderCulture,
+	wc: renderWC
 };
 
 // =============================================================
@@ -1000,6 +1749,14 @@ export const renderFlowArt = ({
 	// (potentially another card's gradient).
 	const uid = hashStr(seedKey).toString(36);
 	const body = renderer({ rng, p: pal, state, uid });
+
+	if (category === 'wc') {
+		// WC fills its own 280×100 background and is excluded from the
+		// optional inset frame — its full-bleed editorial composition
+		// already supplies the visual containment.
+		return svgOpenWC(size) + body + svgClose();
+	}
+
 	let svg = svgOpen(size) + bgRect(pal) + body;
 
 	if (frame) {

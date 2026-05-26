@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import MarketCard from '$lib/components/market/MarketCard.svelte';
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
+	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -16,15 +17,19 @@
 		group: MarketGroup;
 		index?: number;
 		userPrincipal?: string;
-		onChallenge?: (market: Market) => void;
 		metadataBySeries?: Record<string, MarketMetadata>;
+		/** Per-series tag lookup; the root market's primary tag is resolved
+		 *  here and forwarded to the inner MarketCard so the colored
+		 *  category chip renders consistently with the rest of the page. */
+		tagsBySeries?: Record<string, MarketTag[]>;
 	}
 
-	const { group, index = 0, userPrincipal, onChallenge, metadataBySeries }: Props = $props();
+	const { group, index = 0, userPrincipal, metadataBySeries, tagsBySeries }: Props = $props();
+
+	const rootTag = $derived(primaryMarketTag(tagsBySeries?.[group.root.id]));
 
 	const forks = $derived(group.forks);
 	const ghostLayers = $derived(Math.min(forks.length, 2));
-	const showFaceChallenge = $derived(group.root.forkedFrom === undefined ? onChallenge : undefined);
 
 	let popoverOpen = $state(false);
 
@@ -69,7 +74,7 @@
 		{index}
 		market={group.root}
 		metadata={metadataBySeries?.[group.root.id]}
-		onChallenge={showFaceChallenge}
+		tag={rootTag}
 	/>
 
 	{#if forks.length > 0}

@@ -29,15 +29,13 @@ export const UserProfileApiSchema = j.strictObject({
 	level: j.number().default(1),
 	interests: j.array(j.string()).default([]),
 	lastActiveDay: j.string().optional(),
-	// Defaults are intentionally applied at every level (not just on the
-	// outer `preferences`). The outer `.default(...)` only kicks in when
-	// `preferences` is null/undefined; legacy profile docs that have
-	// `preferences: {}` or a partial `preferences` shape would still trap
-	// during JsonData→Candid encoding with `missing field default_amount`
+	// Defaults are intentionally applied at every level. The outer
+	// `.default(...)` only kicks in when `preferences` is null/undefined;
+	// legacy profile docs that have a partial `preferences` shape would
+	// otherwise trap during JsonData→Candid encoding with `missing field`
 	// because the inner `strictObject` requires every declared field.
-	// Defaulting `flow` / `manual` and the `defaultAmount` record itself
-	// lets those rows decode cleanly without a data migration. Mirror any
-	// change here in `src/lib/schema/profile.schema.ts`.
+	// Defaulting every leaf lets those rows decode cleanly without a data
+	// migration. Mirror any change here in `src/lib/schema/profile.schema.ts`.
 	preferences: j
 		.strictObject({
 			defaultAmount: j
@@ -45,9 +43,42 @@ export const UserProfileApiSchema = j.strictObject({
 					flow: j.string().default('0'),
 					manual: j.string().default('0')
 				})
-				.default({ flow: '0', manual: '0' })
+				.default({ flow: '0', manual: '0' }),
+			notify: j
+				.strictObject({
+					streakReminder: j.boolean().default(true),
+					marketAlerts: j.boolean().default(true),
+					friendActivity: j.boolean().default(false),
+					weeklyDigest: j.boolean().default(true)
+				})
+				.default({
+					streakReminder: true,
+					marketAlerts: true,
+					friendActivity: false,
+					weeklyDigest: true
+				}),
+			flowSessionLength: j.number().default(10),
+			hapticsEnabled: j.boolean().default(true),
+			callsPublic: j.boolean().default(true),
+			flowTags: j.array(j.string()).default([]),
+			worldCupMode: j.boolean().default(false),
+			savedMarketIds: j.array(j.string()).default([])
 		})
-		.default({ defaultAmount: { flow: '0', manual: '0' } })
+		.default({
+			defaultAmount: { flow: '0', manual: '0' },
+			notify: {
+				streakReminder: true,
+				marketAlerts: true,
+				friendActivity: false,
+				weeklyDigest: true
+			},
+			flowSessionLength: 10,
+			hapticsEnabled: true,
+			callsPublic: true,
+			flowTags: [],
+			worldCupMode: false,
+			savedMarketIds: []
+		})
 });
 
 export const RelationApiSchema = j.strictObject({

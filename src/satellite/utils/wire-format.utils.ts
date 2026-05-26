@@ -217,14 +217,29 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	lastActiveDay: profile.last_active_day,
 	unlockedAchievements: profile.unlocked_achievements,
 	contrarianWins: profile.contrarian_wins,
-	preferences: profile.preferences
-		? {
-				defaultAmount: {
-					flow: profile.preferences.default_amount.flow,
-					manual: profile.preferences.default_amount.manual
-				}
-			}
-		: undefined
+	// The wire format only carries `default_amount` — the leaderboard /
+	// search endpoints don't read the user-experience preferences
+	// (`notify`, `flowTags`, `savedMarketIds`, etc.), so they're not
+	// round-tripped on this path. Default the rest to the schema's
+	// initial values so the rebuilt UserProfile is fully shaped.
+	preferences: {
+		defaultAmount: {
+			flow: profile.preferences?.default_amount?.flow ?? '0',
+			manual: profile.preferences?.default_amount?.manual ?? '0'
+		},
+		notify: {
+			streakReminder: true,
+			marketAlerts: true,
+			friendActivity: false,
+			weeklyDigest: true
+		},
+		flowSessionLength: 10,
+		hapticsEnabled: true,
+		callsPublic: true,
+		flowTags: [],
+		worldCupMode: false,
+		savedMarketIds: []
+	}
 });
 
 // ─── Relation wire format ────────────────────────────────────────────────
@@ -402,4 +417,267 @@ export const fromWireReferral = (referral: ApiWireReferral): ReferralListItem =>
 	withinReferrerCap: referral.within_referrer_cap,
 	refereePayout: fromWireMilestone(referral.referee_payout),
 	referrerPayout: fromWireMilestone(referral.referrer_payout)
+});
+
+// ─── Leagues ────────────────────────────────────────────────────
+// Wire schemas use snake_case per the juno codegen constraint on
+// `Vec<NestedStruct>` (see UserProfileWireSchema header). FE callers
+// hit `fromWireLeague` / `fromWireLeagueMember` to project back to
+// the camelCase domain types.
+
+export const LeagueWireSchema = j.strictObject({
+	id: j.string(),
+	name: j.string(),
+	description: j.string().optional(),
+	invite_code: j.string(),
+	owner: PrincipalTextSchema,
+	created_at_ms: j.number(),
+	accent_color: j.string().optional()
+});
+
+export type WireLeague = j.infer<typeof LeagueWireSchema>;
+
+export const LeagueWithRoleWireSchema = j.strictObject({
+	league: LeagueWireSchema,
+	role: j.enum(['owner', 'admin', 'member']),
+	joined_at_ms: j.number()
+});
+
+export type WireLeagueWithRole = j.infer<typeof LeagueWithRoleWireSchema>;
+
+export const LeagueMemberWireSchema = j.strictObject({
+	league_id: j.string(),
+	member: PrincipalTextSchema,
+	joined_at_ms: j.number(),
+	role: j.enum(['owner', 'admin', 'member'])
+});
+
+export type WireLeagueMember = j.infer<typeof LeagueMemberWireSchema>;
+
+export const toWireLeague = (league: {
+	id: string;
+	name: string;
+	description?: string;
+	inviteCode: string;
+	owner: string;
+	createdAtMs: number;
+	accentColor?: string;
+}): WireLeague => ({
+	id: league.id,
+	name: league.name,
+	description: league.description,
+	invite_code: league.inviteCode,
+	owner: league.owner,
+	created_at_ms: league.createdAtMs,
+	accent_color: league.accentColor
+});
+
+export const toWireLeagueWithRole = (entry: {
+	league: Parameters<typeof toWireLeague>[0];
+	role: 'owner' | 'admin' | 'member';
+	joinedAtMs: number;
+}): WireLeagueWithRole => ({
+	league: toWireLeague(entry.league),
+	role: entry.role,
+	joined_at_ms: entry.joinedAtMs
+});
+
+export const toWireLeagueMember = (member: {
+	leagueId: string;
+	member: string;
+	joinedAtMs: number;
+	role: 'owner' | 'admin' | 'member';
+}): WireLeagueMember => ({
+	league_id: member.leagueId,
+	member: member.member,
+	joined_at_ms: member.joinedAtMs,
+	role: member.role
+});
+
+// ─── Bouts ──────────────────────────────────────────────────────
+
+export const BoutWireSchema = j.strictObject({
+	id: j.string(),
+	kind: j.enum(['league', 'duel']),
+	side_a: j.string(),
+	side_b: j.string(),
+	proposer: PrincipalTextSchema,
+	state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+	kickoff_ms: j.number(),
+	settle_ms: j.number(),
+	score_a: j.number().optional(),
+	score_b: j.number().optional(),
+	winner: j.enum(['A', 'B', 'draw']).optional()
+});
+
+export type WireBout = j.infer<typeof BoutWireSchema>;
+
+export const toWireBout = (bout: {
+	id: string;
+	kind: 'league' | 'duel';
+	sideA: string;
+	sideB: string;
+	proposer: string;
+	state: 'proposed' | 'accepted' | 'in_flight' | 'resolved';
+	kickoffMs: number;
+	settleMs: number;
+	scoreA?: number;
+	scoreB?: number;
+	winner?: 'A' | 'B' | 'draw';
+}): WireBout => ({
+	id: bout.id,
+	kind: bout.kind,
+	side_a: bout.sideA,
+	side_b: bout.sideB,
+	proposer: bout.proposer,
+	state: bout.state,
+	kickoff_ms: bout.kickoffMs,
+	settle_ms: bout.settleMs,
+	score_a: bout.scoreA,
+	score_b: bout.scoreB,
+	winner: bout.winner
+});
+
+// ─── Affiliations ───────────────────────────────────────────────
+
+export const AffiliationWireSchema = j.strictObject({
+	member: PrincipalTextSchema,
+	kind: j.enum(['university', 'country']),
+	affiliation_id: j.string(),
+	joined_at_ms: j.number(),
+	locked_until_ms: j.number()
+});
+
+export type WireAffiliation = j.infer<typeof AffiliationWireSchema>;
+
+export const toWireAffiliation = (aff: {
+	member: string;
+	kind: 'university' | 'country';
+	affiliationId: string;
+	joinedAtMs: number;
+	lockedUntilMs: number;
+}): WireAffiliation => ({
+	member: aff.member,
+	kind: aff.kind,
+	affiliation_id: aff.affiliationId,
+	joined_at_ms: aff.joinedAtMs,
+	locked_until_ms: aff.lockedUntilMs
+});
+
+// ─── Affiliation stats ──────────────────────────────────────────────
+
+export const AffiliationStatsWireSchema = j.strictObject({
+	affiliation_id: j.string(),
+	kind: j.enum(['university', 'country']),
+	total_calls: j.number(),
+	wins: j.number(),
+	month_anchor: j.string(),
+	month_total_calls: j.number(),
+	month_wins: j.number(),
+	updated_at_ms: j.number()
+});
+
+export type WireAffiliationStats = j.infer<typeof AffiliationStatsWireSchema>;
+
+export const toWireAffiliationStats = (stats: {
+	affiliationId: string;
+	kind: 'university' | 'country';
+	totalCalls: number;
+	wins: number;
+	monthAnchor: string;
+	monthTotalCalls: number;
+	monthWins: number;
+	updatedAtMs: number;
+}): WireAffiliationStats => ({
+	affiliation_id: stats.affiliationId,
+	kind: stats.kind,
+	total_calls: stats.totalCalls,
+	wins: stats.wins,
+	month_anchor: stats.monthAnchor,
+	month_total_calls: stats.monthTotalCalls,
+	month_wins: stats.monthWins,
+	updated_at_ms: stats.updatedAtMs
+});
+
+// ─── Tournament + matches ───────────────────────────────────────────
+
+export const TournamentWireSchema = j.strictObject({
+	id: j.string(),
+	month_start_ms: j.number(),
+	month_end_ms: j.number(),
+	bracket_size: j.number(),
+	state: j.enum(['in_flight', 'concluded']),
+	seeded_league_ids: j.array(j.string()),
+	created_at_ms: j.number()
+});
+
+export type WireTournament = j.infer<typeof TournamentWireSchema>;
+
+export const toWireTournament = (doc: {
+	id: string;
+	monthStartMs: number;
+	monthEndMs: number;
+	bracketSize: number;
+	state: 'in_flight' | 'concluded';
+	seededLeagueIds: string[];
+	createdAtMs: number;
+}): WireTournament => ({
+	id: doc.id,
+	month_start_ms: doc.monthStartMs,
+	month_end_ms: doc.monthEndMs,
+	bracket_size: doc.bracketSize,
+	state: doc.state,
+	seeded_league_ids: doc.seededLeagueIds,
+	created_at_ms: doc.createdAtMs
+});
+
+export const TournamentMatchWireSchema = j.strictObject({
+	tournament_id: j.string(),
+	round: j.enum(['r1', 'quarter', 'semifinal', 'final']),
+	index: j.number(),
+	from_league_id: j.optional(j.string()),
+	to_league_id: j.optional(j.string()),
+	from_start_calls: j.optional(j.number()),
+	from_start_wins: j.optional(j.number()),
+	to_start_calls: j.optional(j.number()),
+	to_start_wins: j.optional(j.number()),
+	from_acc: j.optional(j.number()),
+	to_acc: j.optional(j.number()),
+	winner_league_id: j.optional(j.string()),
+	start_ms: j.number(),
+	end_ms: j.number()
+});
+
+export type WireTournamentMatch = j.infer<typeof TournamentMatchWireSchema>;
+
+export const toWireTournamentMatch = (doc: {
+	tournamentId: string;
+	round: 'r1' | 'quarter' | 'semifinal' | 'final';
+	index: number;
+	fromLeagueId: string | null;
+	toLeagueId: string | null;
+	fromStartCalls: number | null;
+	fromStartWins: number | null;
+	toStartCalls: number | null;
+	toStartWins: number | null;
+	fromAcc: number | null;
+	toAcc: number | null;
+	winnerLeagueId: string | null;
+	startMs: number;
+	endMs: number;
+}): WireTournamentMatch => ({
+	tournament_id: doc.tournamentId,
+	round: doc.round,
+	index: doc.index,
+	from_league_id: doc.fromLeagueId ?? undefined,
+	to_league_id: doc.toLeagueId ?? undefined,
+	from_start_calls: doc.fromStartCalls ?? undefined,
+	from_start_wins: doc.fromStartWins ?? undefined,
+	to_start_calls: doc.toStartCalls ?? undefined,
+	to_start_wins: doc.toStartWins ?? undefined,
+	from_acc: doc.fromAcc ?? undefined,
+	to_acc: doc.toAcc ?? undefined,
+	winner_league_id: doc.winnerLeagueId ?? undefined,
+	start_ms: doc.startMs,
+	end_ms: doc.endMs
 });

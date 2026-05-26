@@ -30,8 +30,110 @@ export interface AppCheckNicknameAvailabilityResult {
 	available: boolean;
 	reason: [] | [{ taken: null } | { required: null } | { too_short: null }];
 }
+export interface AppClaimComebackGrantResult {
+	block_index: [] | [string];
+	error_message: [] | [string];
+	paid_now: boolean;
+	previously_paid: boolean;
+	reason:
+		| []
+		| [
+				| { already_claimed_failed: null }
+				| { already_claimed_paid: null }
+				| { not_engaged_yet: null }
+				| { transfer_failed: null }
+				| { already_claimed_pending: null }
+				| { balance_not_zero: null }
+		  ];
+}
+export interface AppClaimTournamentPrizeArgs {
+	tournament_id: string;
+}
+export interface AppClaimTournamentPrizeResult {
+	ok: boolean;
+	awards_created: [] | [number];
+	awards_already_claimed: [] | [number];
+	total_vxp_credited: [] | [number];
+	reason:
+		| []
+		| [
+				| { tournament_not_found: null }
+				| { tournament_not_concluded: null }
+				| { not_member_of_top_league: null }
+		  ];
+}
+export interface AppClaimWorldsPodiumPrizeArgs {
+	month_anchor: string;
+}
+export interface AppClaimWorldsPodiumPrizeResult {
+	month_anchor: string;
+	not_eligible: boolean;
+	awards_created: number;
+	awards_already_claimed: number;
+}
+export interface AppDeleteMyAccountArgs {
+	note: string;
+	reason: string;
+}
+export interface AppDeleteMyAccountResult {
+	ok: boolean;
+	blocking_league_ids: [] | [Array<string>];
+	docs_deleted: [] | [number];
+	reason: [] | [{ owns_non_empty_league: null } | { invalid_input: null }];
+}
 export interface AppFollowUserArgs {
 	target: string;
+}
+export interface AppGetAffiliationStatsArgs {
+	kind: { country: null } | { university: null };
+	affiliation_id: string;
+}
+export interface AppGetAffiliationStatsResult {
+	stats:
+		| []
+		| [
+				{
+					month_anchor: string;
+					kind: { country: null } | { university: null };
+					wins: number;
+					month_wins: number;
+					updated_at_ms: number;
+					total_calls: number;
+					month_total_calls: number;
+					affiliation_id: string;
+				}
+		  ];
+}
+export interface AppGetCurrentTournamentResult {
+	tournament:
+		| []
+		| [
+				{
+					id: string;
+					seeded_league_ids: Array<string>;
+					month_start_ms: number;
+					created_at_ms: number;
+					state: { concluded: null } | { in_flight: null };
+					bracket_size: number;
+					month_end_ms: number;
+				}
+		  ];
+	matches: Array<{
+		winner_league_id: [] | [string];
+		to_league_id: [] | [string];
+		start_ms: number;
+		to_start_calls: [] | [number];
+		to_start_wins: [] | [number];
+		from_league_id: [] | [string];
+		to_acc: [] | [number];
+		from_start_wins: [] | [number];
+		tournament_id: string;
+		from_acc: [] | [number];
+		from_start_calls: [] | [number];
+		index: number;
+		round: { r1: null } | { final: null } | { semifinal: null } | { quarter: null };
+		end_ms: number;
+	}>;
 }
 export interface AppGetMarketMetadataArgs {
 	series_id: string;
@@ -108,7 +210,21 @@ export interface AppGetProfileResult {
 						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 					email: string;
 					level: number;
-					preferences: [] | [{ default_amount: { flow: string; manual: string } }];
+					preferences: {
+						notify: {
+							market_alerts: boolean;
+							friend_activity: boolean;
+							weekly_digest: boolean;
+							streak_reminder: boolean;
+						};
+						haptics_enabled: boolean;
+						default_amount: { flow: string; manual: string };
+						world_cup_mode: boolean;
+						saved_market_ids: Array<string>;
+						flow_tags: Array<string>;
+						flow_session_length: number;
+						calls_public: boolean;
+					};
 					archetype: string;
 					last_active_day: [] | [string];
 					total_trades: number;
@@ -121,6 +237,22 @@ export interface AppGetProfileResult {
 					accuracy: number;
 				}
 		  ];
+}
+export interface AppListAffiliationStatsArgs {
+	kind: { country: null } | { university: null };
+	limit: [] | [number];
+}
+export interface AppListAffiliationStatsResult {
+	items: Array<{
+		month_anchor: string;
+		kind: { country: null } | { university: null };
+		wins: number;
+		month_wins: number;
+		updated_at_ms: number;
+		total_calls: number;
+		month_total_calls: number;
+		affiliation_id: string;
+	}>;
 }
 export interface AppListFollowersResult {
 	items: Array<{
@@ -194,6 +326,35 @@ export interface AppListLeaderboardResult {
 		accuracy: number;
 	}>;
 }
+export interface AppListLeagueBoutsArgs {
+	league_id: string;
+}
+export interface AppListLeagueBoutsResult {
+	items: Array<{
+		id: string;
+		kind: { duel: null } | { league: null };
+		winner: [] | [{ A: null } | { B: null } | { draw: null }];
+		score_a: [] | [number];
+		score_b: [] | [number];
+		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
+		side_a: string;
+		side_b: string;
+		proposer: string;
+		kickoff_ms: number;
+		settle_ms: number;
+	}>;
+}
+export interface AppListLeagueMembersArgs {
+	league_id: string;
+}
+export interface AppListLeagueMembersResult {
+	items: Array<{
+		member: string;
+		league_id: string;
+		role: { member: null } | { admin: null } | { owner: null };
+		joined_at_ms: number;
+	}>;
+}
 export interface AppListMarketTranslationsArgs {
 	series_id: string;
 }
@@ -206,6 +367,63 @@ export interface AppListMarketTranslationsResult {
 		locale: string;
 		description: string;
 		outcomes: Array<{ id: string; title: string }>;
+	}>;
+}
+export interface AppListMyAffiliationsResult {
+	country:
+		| []
+		| [
+				{
+					member: string;
+					locked_until_ms: number;
+					kind: { country: null } | { university: null };
+					joined_at_ms: number;
+					affiliation_id: string;
+				}
+		  ];
+	university:
+		| []
+		| [
+				{
+					member: string;
+					locked_until_ms: number;
+					kind: { country: null } | { university: null };
+					joined_at_ms: number;
+					affiliation_id: string;
+				}
+		  ];
+}
+export interface AppListMyBlockingLeaguesResult {
+	league_ids: Array<string>;
+}
+export interface AppListMyBoutsResult {
+	items: Array<{
+		id: string;
+		kind: { duel: null } | { league: null };
+		winner: [] | [{ A: null } | { B: null } | { draw: null }];
+		score_a: [] | [number];
+		score_b: [] | [number];
+		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
+		side_a: string;
+		side_b: string;
+		proposer: string;
+		kickoff_ms: number;
+		settle_ms: number;
+	}>;
+}
+export interface AppListMyLeaguesResult {
+	items: Array<{
+		role: { member: null } | { admin: null } | { owner: null };
+		joined_at_ms: number;
+		league: {
+			id: string;
+			accent_color: [] | [string];
+			owner: string;
+			name: string;
+			invite_code: string;
+			description: [] | [string];
+			created_at_ms: number;
+		};
 	}>;
 }
 export interface AppListMyReferralsResult {
@@ -241,6 +459,37 @@ export interface AppListSentFriendRequestsResult {
 		viewer_principal: [] | [string];
 	}>;
 }
+export interface AppListWorldsRosterArgs {
+	kind: { country: null } | { university: null };
+	affiliation_id: string;
+}
+export interface AppListWorldsRosterResult {
+	items: Array<{
+		member: string;
+		locked_until_ms: number;
+		kind: { country: null } | { university: null };
+		joined_at_ms: number;
+		affiliation_id: string;
+	}>;
+}
+export interface AppLookupLeagueByInviteArgs {
+	invite_code: string;
+}
+export interface AppLookupLeagueByInviteResult {
+	league:
+		| []
+		| [
+				{
+					id: string;
+					accent_color: [] | [string];
+					owner: string;
+					name: string;
+					invite_code: string;
+					description: [] | [string];
+					created_at_ms: number;
+				}
+		  ];
+}
 export interface AppLookupReferralCodeArgs {
 	code: string;
 }
@@ -252,6 +501,24 @@ export interface AppRedeemReferralCodeArgs {
 }
 export interface AppRejectFriendRequestArgs {
 	relation_id: string;
+}
+export interface AppResolveTournamentRoundArgs {
+	tournament_id: string;
+	round: string;
+}
+export interface AppResolveTournamentRoundResult {
+	ok: boolean;
+	tournament_concluded: [] | [boolean];
+	matches_resolved: [] | [number];
+	reason:
+		| []
+		| [
+				| { tournament_not_found: null }
+				| { previous_round_not_resolved: null }
+				| { invalid_input: null }
+				| { round_not_yet_closed: null }
+				| { no_matches: null }
+		  ];
 }
 export interface AppSearchProfilesArgs {
 	query_str: string;
@@ -282,6 +549,38 @@ export interface AppSearchProfilesResult {
 }
 export interface AppSendFriendRequestArgs {
 	target: string;
+}
+export interface AppTransferLeagueOwnershipArgs {
+	new_owner_principal: string;
+	league_id: string;
+}
+export interface AppTransferLeagueOwnershipResult {
+	ok: boolean;
+	reason:
+		| []
+		| [
+				| { league_not_found: null }
+				| { new_owner_is_caller: null }
+				| { new_owner_not_member: null }
+				| { not_owner: null }
+				| { invalid_input: null }
+		  ];
+}
+export interface AppTriggerTournamentDrawArgs {
+	month_anchor: string;
+}
+export interface AppTriggerTournamentDrawResult {
+	ok: boolean;
+	available_leagues: [] | [number];
+	tournament_id: [] | [string];
+	reason:
+		| []
+		| [
+				| { insufficient_leagues: null }
+				| { already_drawn: null }
+				| { invalid_input: null }
+				| { month_not_started: null }
+		  ];
 }
 export interface AppUpsertMarketMetadataArgs {
 	data: {
@@ -363,7 +662,22 @@ export interface _SERVICE {
 		[AppCheckNicknameAvailabilityArgs],
 		AppCheckNicknameAvailabilityResult
 	>;
+	app_claim_comeback_grant: ActorMethod<[], AppClaimComebackGrantResult>;
+	app_claim_tournament_prize: ActorMethod<
+		[AppClaimTournamentPrizeArgs],
+		AppClaimTournamentPrizeResult
+	>;
+	app_claim_worlds_podium_prize: ActorMethod<
+		[AppClaimWorldsPodiumPrizeArgs],
+		AppClaimWorldsPodiumPrizeResult
+	>;
+	app_delete_my_account: ActorMethod<[AppDeleteMyAccountArgs], AppDeleteMyAccountResult>;
 	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;
+	app_get_affiliation_stats: ActorMethod<
+		[AppGetAffiliationStatsArgs],
+		AppGetAffiliationStatsResult
+	>;
+	app_get_current_tournament: ActorMethod<[], AppGetCurrentTournamentResult>;
 	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
 	app_get_market_translation: ActorMethod<
 		[AppGetMarketTranslationArgs],
@@ -371,22 +685,49 @@ export interface _SERVICE {
 	>;
 	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
+	app_list_affiliation_stats: ActorMethod<
+		[AppListAffiliationStatsArgs],
+		AppListAffiliationStatsResult
+	>;
 	app_list_followers: ActorMethod<[], AppListFollowersResult>;
 	app_list_following: ActorMethod<[], AppListFollowingResult>;
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
 	app_list_friends: ActorMethod<[], AppListFriendsResult>;
 	app_list_leaderboard: ActorMethod<[], AppListLeaderboardResult>;
+	app_list_league_bouts: ActorMethod<[AppListLeagueBoutsArgs], AppListLeagueBoutsResult>;
+	app_list_league_members: ActorMethod<[AppListLeagueMembersArgs], AppListLeagueMembersResult>;
 	app_list_market_translations: ActorMethod<
 		[AppListMarketTranslationsArgs],
 		AppListMarketTranslationsResult
 	>;
+	app_list_my_affiliations: ActorMethod<[], AppListMyAffiliationsResult>;
+	app_list_my_blocking_leagues: ActorMethod<[], AppListMyBlockingLeaguesResult>;
+	app_list_my_bouts: ActorMethod<[], AppListMyBoutsResult>;
+	app_list_my_leagues: ActorMethod<[], AppListMyLeaguesResult>;
 	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
 	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;
+	app_list_worlds_roster: ActorMethod<[AppListWorldsRosterArgs], AppListWorldsRosterResult>;
+	app_lookup_league_by_invite: ActorMethod<
+		[AppLookupLeagueByInviteArgs],
+		AppLookupLeagueByInviteResult
+	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
 	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
+	app_resolve_tournament_round: ActorMethod<
+		[AppResolveTournamentRoundArgs],
+		AppResolveTournamentRoundResult
+	>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
 	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
+	app_transfer_league_ownership: ActorMethod<
+		[AppTransferLeagueOwnershipArgs],
+		AppTransferLeagueOwnershipResult
+	>;
+	app_trigger_tournament_draw: ActorMethod<
+		[AppTriggerTournamentDrawArgs],
+		AppTriggerTournamentDrawResult
+	>;
 	app_upsert_market_metadata: ActorMethod<
 		[AppUpsertMarketMetadataArgs],
 		AppUpsertMarketMetadataResult

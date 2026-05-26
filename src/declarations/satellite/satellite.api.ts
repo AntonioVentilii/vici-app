@@ -60,6 +60,87 @@ const checkNicknameAvailability = async (
 	return AppCheckNicknameAvailabilityResultSchema.parse(result);
 };
 
+const AppGetAffiliationStatsArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country']),
+	affiliationId: j.string()
+});
+const AppGetAffiliationStatsResultSchema = j.strictObject({
+	stats: j.optional(
+		j.strictObject({
+			affiliation_id: j.string(),
+			kind: j.enum(['university', 'country']),
+			total_calls: j.number(),
+			wins: j.number(),
+			month_anchor: j.string(),
+			month_total_calls: j.number(),
+			month_wins: j.number(),
+			updated_at_ms: j.number()
+		})
+	)
+});
+
+const getAffiliationStats = async (
+	args: j.infer<typeof AppGetAffiliationStatsArgsSchema>
+): Promise<j.infer<typeof AppGetAffiliationStatsResultSchema>> => {
+	const parsedArgs = AppGetAffiliationStatsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetAffiliationStatsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_affiliation_stats']>[0];
+
+	const { app_get_affiliation_stats } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_affiliation_stats(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetAffiliationStatsResultSchema, value: idlResult });
+	return AppGetAffiliationStatsResultSchema.parse(result);
+};
+
+const AppGetCurrentTournamentResultSchema = j.strictObject({
+	tournament: j.optional(
+		j.strictObject({
+			id: j.string(),
+			month_start_ms: j.number(),
+			month_end_ms: j.number(),
+			bracket_size: j.number(),
+			state: j.enum(['in_flight', 'concluded']),
+			seeded_league_ids: j.array(j.string()),
+			created_at_ms: j.number()
+		})
+	),
+	matches: j.array(
+		j.strictObject({
+			tournament_id: j.string(),
+			round: j.enum(['r1', 'quarter', 'semifinal', 'final']),
+			index: j.number(),
+			from_league_id: j.optional(j.string()),
+			to_league_id: j.optional(j.string()),
+			from_start_calls: j.optional(j.number()),
+			from_start_wins: j.optional(j.number()),
+			to_start_calls: j.optional(j.number()),
+			to_start_wins: j.optional(j.number()),
+			from_acc: j.optional(j.number()),
+			to_acc: j.optional(j.number()),
+			winner_league_id: j.optional(j.string()),
+			start_ms: j.number(),
+			end_ms: j.number()
+		})
+	)
+});
+
+const getCurrentTournament = async (): Promise<
+	j.infer<typeof AppGetCurrentTournamentResultSchema>
+> => {
+	const { app_get_current_tournament } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_current_tournament();
+
+	const result = schemaFromIdl({ schema: AppGetCurrentTournamentResultSchema, value: idlResult });
+	return AppGetCurrentTournamentResultSchema.parse(result);
+};
+
 const AppGetMarketMetadataArgsSchema = j.strictObject({ seriesId: j.string() });
 const AppGetMarketMetadataResultSchema = j.strictObject({
 	metadata: j.optional(
@@ -171,9 +252,21 @@ const AppGetProfileResultSchema = j.strictObject({
 			lastActiveDay: j.optional(j.string()),
 			unlockedAchievements: j.array(j.string()),
 			contrarianWins: j.number(),
-			preferences: j.optional(
-				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
-			)
+			preferences: j.strictObject({
+				defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }),
+				notify: j.strictObject({
+					streakReminder: j.boolean(),
+					marketAlerts: j.boolean(),
+					friendActivity: j.boolean(),
+					weeklyDigest: j.boolean()
+				}),
+				flowSessionLength: j.number(),
+				hapticsEnabled: j.boolean(),
+				callsPublic: j.boolean(),
+				flowTags: j.array(j.string()),
+				worldCupMode: j.boolean(),
+				savedMarketIds: j.array(j.string())
+			})
 		})
 	)
 });
@@ -191,6 +284,43 @@ const getProfile = async (
 
 	const result = schemaFromIdl({ schema: AppGetProfileResultSchema, value: idlResult });
 	return AppGetProfileResultSchema.parse(result);
+};
+
+const AppListAffiliationStatsArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country']),
+	limit: j.optional(j.number())
+});
+const AppListAffiliationStatsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			affiliation_id: j.string(),
+			kind: j.enum(['university', 'country']),
+			total_calls: j.number(),
+			wins: j.number(),
+			month_anchor: j.string(),
+			month_total_calls: j.number(),
+			month_wins: j.number(),
+			updated_at_ms: j.number()
+		})
+	)
+});
+
+const listAffiliationStats = async (
+	args: j.infer<typeof AppListAffiliationStatsArgsSchema>
+): Promise<j.infer<typeof AppListAffiliationStatsResultSchema>> => {
+	const parsedArgs = AppListAffiliationStatsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListAffiliationStatsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_affiliation_stats']>[0];
+
+	const { app_list_affiliation_stats } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_affiliation_stats(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppListAffiliationStatsResultSchema, value: idlResult });
+	return AppListAffiliationStatsResultSchema.parse(result);
 };
 
 const AppListFollowersResultSchema = j.strictObject({
@@ -316,6 +446,71 @@ const listLeaderboard = async (): Promise<j.infer<typeof AppListLeaderboardResul
 	return AppListLeaderboardResultSchema.parse(result);
 };
 
+const AppListLeagueBoutsArgsSchema = j.strictObject({ leagueId: j.string() });
+const AppListLeagueBoutsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			id: j.string(),
+			kind: j.enum(['league', 'duel']),
+			side_a: j.string(),
+			side_b: j.string(),
+			proposer: j.string(),
+			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+			kickoff_ms: j.number(),
+			settle_ms: j.number(),
+			score_a: j.optional(j.number()),
+			score_b: j.optional(j.number()),
+			winner: j.optional(j.enum(['A', 'B', 'draw']))
+		})
+	)
+});
+
+const listLeagueBouts = async (
+	args: j.infer<typeof AppListLeagueBoutsArgsSchema>
+): Promise<j.infer<typeof AppListLeagueBoutsResultSchema>> => {
+	const parsedArgs = AppListLeagueBoutsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListLeagueBoutsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_league_bouts']>[0];
+
+	const { app_list_league_bouts } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_list_league_bouts(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppListLeagueBoutsResultSchema, value: idlResult });
+	return AppListLeagueBoutsResultSchema.parse(result);
+};
+
+const AppListLeagueMembersArgsSchema = j.strictObject({ leagueId: j.string() });
+const AppListLeagueMembersResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			league_id: j.string(),
+			member: j.string(),
+			joined_at_ms: j.number(),
+			role: j.enum(['owner', 'admin', 'member'])
+		})
+	)
+});
+
+const listLeagueMembers = async (
+	args: j.infer<typeof AppListLeagueMembersArgsSchema>
+): Promise<j.infer<typeof AppListLeagueMembersResultSchema>> => {
+	const parsedArgs = AppListLeagueMembersArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListLeagueMembersArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_league_members']>[0];
+
+	const { app_list_league_members } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_league_members(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppListLeagueMembersResultSchema, value: idlResult });
+	return AppListLeagueMembersResultSchema.parse(result);
+};
+
 const AppListMarketTranslationsArgsSchema = j.strictObject({ seriesId: j.string() });
 const AppListMarketTranslationsResultSchema = j.strictObject({
 	items: j.array(
@@ -347,6 +542,103 @@ const listMarketTranslations = async (
 
 	const result = schemaFromIdl({ schema: AppListMarketTranslationsResultSchema, value: idlResult });
 	return AppListMarketTranslationsResultSchema.parse(result);
+};
+
+const AppListMyAffiliationsResultSchema = j.strictObject({
+	university: j.optional(
+		j.strictObject({
+			member: j.string(),
+			kind: j.enum(['university', 'country']),
+			affiliation_id: j.string(),
+			joined_at_ms: j.number(),
+			locked_until_ms: j.number()
+		})
+	),
+	country: j.optional(
+		j.strictObject({
+			member: j.string(),
+			kind: j.enum(['university', 'country']),
+			affiliation_id: j.string(),
+			joined_at_ms: j.number(),
+			locked_until_ms: j.number()
+		})
+	)
+});
+
+const listMyAffiliations = async (): Promise<j.infer<typeof AppListMyAffiliationsResultSchema>> => {
+	const { app_list_my_affiliations } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_my_affiliations();
+
+	const result = schemaFromIdl({ schema: AppListMyAffiliationsResultSchema, value: idlResult });
+	return AppListMyAffiliationsResultSchema.parse(result);
+};
+
+const AppListMyBlockingLeaguesResultSchema = j.strictObject({ leagueIds: j.array(j.string()) });
+
+const listMyBlockingLeagues = async (): Promise<
+	j.infer<typeof AppListMyBlockingLeaguesResultSchema>
+> => {
+	const { app_list_my_blocking_leagues } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_my_blocking_leagues();
+
+	const result = schemaFromIdl({ schema: AppListMyBlockingLeaguesResultSchema, value: idlResult });
+	return AppListMyBlockingLeaguesResultSchema.parse(result);
+};
+
+const AppListMyBoutsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			id: j.string(),
+			kind: j.enum(['league', 'duel']),
+			side_a: j.string(),
+			side_b: j.string(),
+			proposer: j.string(),
+			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
+			kickoff_ms: j.number(),
+			settle_ms: j.number(),
+			score_a: j.optional(j.number()),
+			score_b: j.optional(j.number()),
+			winner: j.optional(j.enum(['A', 'B', 'draw']))
+		})
+	)
+});
+
+const listMyBouts = async (): Promise<j.infer<typeof AppListMyBoutsResultSchema>> => {
+	const { app_list_my_bouts } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_list_my_bouts();
+
+	const result = schemaFromIdl({ schema: AppListMyBoutsResultSchema, value: idlResult });
+	return AppListMyBoutsResultSchema.parse(result);
+};
+
+const AppListMyLeaguesResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			league: j.strictObject({
+				id: j.string(),
+				name: j.string(),
+				description: j.optional(j.string()),
+				invite_code: j.string(),
+				owner: j.string(),
+				created_at_ms: j.number(),
+				accent_color: j.optional(j.string())
+			}),
+			role: j.enum(['owner', 'admin', 'member']),
+			joined_at_ms: j.number()
+		})
+	)
+});
+
+const listMyLeagues = async (): Promise<j.infer<typeof AppListMyLeaguesResultSchema>> => {
+	const { app_list_my_leagues } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_list_my_leagues();
+
+	const result = schemaFromIdl({ schema: AppListMyLeaguesResultSchema, value: idlResult });
+	return AppListMyLeaguesResultSchema.parse(result);
 };
 
 const AppListMyReferralsResultSchema = j.strictObject({
@@ -404,6 +696,73 @@ const listSentFriendRequests = async (): Promise<
 
 	const result = schemaFromIdl({ schema: AppListSentFriendRequestsResultSchema, value: idlResult });
 	return AppListSentFriendRequestsResultSchema.parse(result);
+};
+
+const AppListWorldsRosterArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country']),
+	affiliationId: j.string()
+});
+const AppListWorldsRosterResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			member: j.string(),
+			kind: j.enum(['university', 'country']),
+			affiliation_id: j.string(),
+			joined_at_ms: j.number(),
+			locked_until_ms: j.number()
+		})
+	)
+});
+
+const listWorldsRoster = async (
+	args: j.infer<typeof AppListWorldsRosterArgsSchema>
+): Promise<j.infer<typeof AppListWorldsRosterResultSchema>> => {
+	const parsedArgs = AppListWorldsRosterArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListWorldsRosterArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_worlds_roster']>[0];
+
+	const { app_list_worlds_roster } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_worlds_roster(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppListWorldsRosterResultSchema, value: idlResult });
+	return AppListWorldsRosterResultSchema.parse(result);
+};
+
+const AppLookupLeagueByInviteArgsSchema = j.strictObject({ inviteCode: j.string() });
+const AppLookupLeagueByInviteResultSchema = j.strictObject({
+	league: j.optional(
+		j.strictObject({
+			id: j.string(),
+			name: j.string(),
+			description: j.optional(j.string()),
+			invite_code: j.string(),
+			owner: j.string(),
+			created_at_ms: j.number(),
+			accent_color: j.optional(j.string())
+		})
+	)
+});
+
+const lookupLeagueByInvite = async (
+	args: j.infer<typeof AppLookupLeagueByInviteArgsSchema>
+): Promise<j.infer<typeof AppLookupLeagueByInviteResultSchema>> => {
+	const parsedArgs = AppLookupLeagueByInviteArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppLookupLeagueByInviteArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_lookup_league_by_invite']>[0];
+
+	const { app_lookup_league_by_invite } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_lookup_league_by_invite(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppLookupLeagueByInviteResultSchema, value: idlResult });
+	return AppLookupLeagueByInviteResultSchema.parse(result);
 };
 
 const AppLookupReferralCodeArgsSchema = j.strictObject({ code: j.string() });
@@ -507,6 +866,112 @@ const cancelFriendRequest = async (
 	await app_cancel_friend_request(idlArgs);
 };
 
+const AppClaimComebackGrantResultSchema = j.strictObject({
+	paidNow: j.boolean(),
+	previouslyPaid: j.boolean(),
+	blockIndex: j.optional(j.string()),
+	reason: j.optional(
+		j.enum([
+			'already_claimed_paid',
+			'already_claimed_pending',
+			'already_claimed_failed',
+			'balance_not_zero',
+			'not_engaged_yet',
+			'transfer_failed'
+		])
+	),
+	errorMessage: j.optional(j.string())
+});
+
+const claimComebackGrant = async (): Promise<j.infer<typeof AppClaimComebackGrantResultSchema>> => {
+	const { app_claim_comeback_grant } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_claim_comeback_grant();
+
+	const result = schemaFromIdl({ schema: AppClaimComebackGrantResultSchema, value: idlResult });
+	return AppClaimComebackGrantResultSchema.parse(result);
+};
+
+const AppClaimTournamentPrizeArgsSchema = j.strictObject({ tournamentId: j.string() });
+const AppClaimTournamentPrizeResultSchema = j.strictObject({
+	ok: j.boolean(),
+	reason: j.optional(
+		j.enum(['tournament_not_found', 'tournament_not_concluded', 'not_member_of_top_league'])
+	),
+	awardsCreated: j.optional(j.number()),
+	awardsAlreadyClaimed: j.optional(j.number()),
+	totalVxpCredited: j.optional(j.number())
+});
+
+const claimTournamentPrize = async (
+	args: j.infer<typeof AppClaimTournamentPrizeArgsSchema>
+): Promise<j.infer<typeof AppClaimTournamentPrizeResultSchema>> => {
+	const parsedArgs = AppClaimTournamentPrizeArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppClaimTournamentPrizeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_claim_tournament_prize']>[0];
+
+	const { app_claim_tournament_prize } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_claim_tournament_prize(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppClaimTournamentPrizeResultSchema, value: idlResult });
+	return AppClaimTournamentPrizeResultSchema.parse(result);
+};
+
+const AppClaimWorldsPodiumPrizeArgsSchema = j.strictObject({ monthAnchor: j.string() });
+const AppClaimWorldsPodiumPrizeResultSchema = j.strictObject({
+	monthAnchor: j.string(),
+	awardsCreated: j.number(),
+	awardsAlreadyClaimed: j.number(),
+	notEligible: j.boolean()
+});
+
+const claimWorldsPodiumPrize = async (
+	args: j.infer<typeof AppClaimWorldsPodiumPrizeArgsSchema>
+): Promise<j.infer<typeof AppClaimWorldsPodiumPrizeResultSchema>> => {
+	const parsedArgs = AppClaimWorldsPodiumPrizeArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppClaimWorldsPodiumPrizeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_claim_worlds_podium_prize']>[0];
+
+	const { app_claim_worlds_podium_prize } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_claim_worlds_podium_prize(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppClaimWorldsPodiumPrizeResultSchema, value: idlResult });
+	return AppClaimWorldsPodiumPrizeResultSchema.parse(result);
+};
+
+const AppDeleteMyAccountArgsSchema = j.strictObject({ reason: j.string(), note: j.string() });
+const AppDeleteMyAccountResultSchema = j.strictObject({
+	ok: j.boolean(),
+	reason: j.optional(j.enum(['owns_non_empty_league', 'invalid_input'])),
+	blockingLeagueIds: j.optional(j.array(j.string())),
+	docsDeleted: j.optional(j.number())
+});
+
+const deleteMyAccount = async (
+	args: j.infer<typeof AppDeleteMyAccountArgsSchema>
+): Promise<j.infer<typeof AppDeleteMyAccountResultSchema>> => {
+	const parsedArgs = AppDeleteMyAccountArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppDeleteMyAccountArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_delete_my_account']>[0];
+
+	const { app_delete_my_account } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_delete_my_account(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppDeleteMyAccountResultSchema, value: idlResult });
+	return AppDeleteMyAccountResultSchema.parse(result);
+};
+
 const AppFollowUserArgsSchema = j.strictObject({ target: j.string() });
 
 const followUser = async (args: j.infer<typeof AppFollowUserArgsSchema>): Promise<void> => {
@@ -553,6 +1018,43 @@ const rejectFriendRequest = async (
 	await app_reject_friend_request(idlArgs);
 };
 
+const AppResolveTournamentRoundArgsSchema = j.strictObject({
+	tournamentId: j.string(),
+	round: j.string()
+});
+const AppResolveTournamentRoundResultSchema = j.strictObject({
+	ok: j.boolean(),
+	reason: j.optional(
+		j.enum([
+			'tournament_not_found',
+			'round_not_yet_closed',
+			'previous_round_not_resolved',
+			'no_matches',
+			'invalid_input'
+		])
+	),
+	matchesResolved: j.optional(j.number()),
+	tournamentConcluded: j.optional(j.boolean())
+});
+
+const resolveTournamentRound = async (
+	args: j.infer<typeof AppResolveTournamentRoundArgsSchema>
+): Promise<j.infer<typeof AppResolveTournamentRoundResultSchema>> => {
+	const parsedArgs = AppResolveTournamentRoundArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppResolveTournamentRoundArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_resolve_tournament_round']>[0];
+
+	const { app_resolve_tournament_round } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_resolve_tournament_round(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppResolveTournamentRoundResultSchema, value: idlResult });
+	return AppResolveTournamentRoundResultSchema.parse(result);
+};
+
 const AppSendFriendRequestArgsSchema = j.strictObject({ target: j.string() });
 
 const sendFriendRequest = async (
@@ -568,6 +1070,72 @@ const sendFriendRequest = async (
 		idlFactory
 	});
 	await app_send_friend_request(idlArgs);
+};
+
+const AppTransferLeagueOwnershipArgsSchema = j.strictObject({
+	leagueId: j.string(),
+	newOwnerPrincipal: j.string()
+});
+const AppTransferLeagueOwnershipResultSchema = j.strictObject({
+	ok: j.boolean(),
+	reason: j.optional(
+		j.enum([
+			'not_owner',
+			'league_not_found',
+			'new_owner_not_member',
+			'new_owner_is_caller',
+			'invalid_input'
+		])
+	)
+});
+
+const transferLeagueOwnership = async (
+	args: j.infer<typeof AppTransferLeagueOwnershipArgsSchema>
+): Promise<j.infer<typeof AppTransferLeagueOwnershipResultSchema>> => {
+	const parsedArgs = AppTransferLeagueOwnershipArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppTransferLeagueOwnershipArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_transfer_league_ownership']>[0];
+
+	const { app_transfer_league_ownership } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_transfer_league_ownership(idlArgs);
+
+	const result = schemaFromIdl({
+		schema: AppTransferLeagueOwnershipResultSchema,
+		value: idlResult
+	});
+	return AppTransferLeagueOwnershipResultSchema.parse(result);
+};
+
+const AppTriggerTournamentDrawArgsSchema = j.strictObject({ monthAnchor: j.string() });
+const AppTriggerTournamentDrawResultSchema = j.strictObject({
+	ok: j.boolean(),
+	tournamentId: j.optional(j.string()),
+	reason: j.optional(
+		j.enum(['already_drawn', 'month_not_started', 'insufficient_leagues', 'invalid_input'])
+	),
+	availableLeagues: j.optional(j.number())
+});
+
+const triggerTournamentDraw = async (
+	args: j.infer<typeof AppTriggerTournamentDrawArgsSchema>
+): Promise<j.infer<typeof AppTriggerTournamentDrawResultSchema>> => {
+	const parsedArgs = AppTriggerTournamentDrawArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppTriggerTournamentDrawArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_trigger_tournament_draw']>[0];
+
+	const { app_trigger_tournament_draw } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_trigger_tournament_draw(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppTriggerTournamentDrawResultSchema, value: idlResult });
+	return AppTriggerTournamentDrawResultSchema.parse(result);
 };
 
 const AppUpsertMarketMetadataArgsSchema = j.strictObject({
@@ -668,26 +1236,44 @@ const upsertMarketTranslation = async (
 export const functions = {
 	checkFriendship,
 	checkNicknameAvailability,
+	getAffiliationStats,
+	getCurrentTournament,
 	getMarketMetadata,
 	getMarketTranslation,
 	getMyReferralCode,
 	getProfile,
+	listAffiliationStats,
 	listFollowers,
 	listFollowing,
 	listFriendRequests,
 	listFriends,
 	listLeaderboard,
+	listLeagueBouts,
+	listLeagueMembers,
 	listMarketTranslations,
+	listMyAffiliations,
+	listMyBlockingLeagues,
+	listMyBouts,
+	listMyLeagues,
 	listMyReferrals,
 	listSentFriendRequests,
+	listWorldsRoster,
+	lookupLeagueByInvite,
 	lookupReferralCode,
 	searchProfiles,
 	acceptFriendRequest,
 	cancelFriendRequest,
+	claimComebackGrant,
+	claimTournamentPrize,
+	claimWorldsPodiumPrize,
+	deleteMyAccount,
 	followUser,
 	redeemReferralCode,
 	rejectFriendRequest,
+	resolveTournamentRound,
 	sendFriendRequest,
+	transferLeagueOwnership,
+	triggerTournamentDraw,
 	upsertMarketMetadata,
 	upsertMarketTranslation
 };

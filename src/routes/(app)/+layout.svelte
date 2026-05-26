@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { Plus } from 'lucide-svelte/icons';
 	import type { Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import CreateChallengeModal from '$lib/components/challenge/CreateChallengeModal.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
@@ -36,7 +34,15 @@
 
 	const isFlowPage = $derived(page.url.pathname === AppPath.Flow);
 
-	let challengeModalOpen = $state(false);
+	// Market detail (`/markets/[id]`) is rendered as a single linear
+	// mobile-first surface with its own sticky bottom CTA bar — the
+	// global mobile tab bar is hidden on this route so the CTA owns the
+	// bottom slot, and the container padding is dropped so the hero +
+	// chart cards can run edge-to-edge the way the prototype does. The
+	// `'/markets/'` prefix already excludes the bare listing route at
+	// `/markets`, so no extra guard is needed.
+	const isMarketDetailPage = $derived(page.url.pathname.startsWith('/markets/'));
+
 	let applyingPendingOnboarding = $state(false);
 
 	// Auth gate — every (app) route requires a session. We only
@@ -292,12 +298,14 @@
 		<Header />
 	</div>
 
-	<main class="flex-1 {isFlowPage ? 'md:pb-0' : 'pb-20 md:pb-0'}">
+	<main class="flex-1 {isFlowPage || isMarketDetailPage ? 'md:pb-0' : 'pb-20 md:pb-0'}">
 		{#key page.url.pathname}
 			<div
 				class={isFlowPage
 					? 'md:container md:mx-auto md:px-4 md:py-8'
-					: 'container mx-auto px-4 py-4 md:py-8'}
+					: isMarketDetailPage
+						? 'mx-auto w-full max-w-[36rem] md:container md:px-4 md:py-8'
+						: 'container mx-auto px-4 py-4 md:py-8'}
 				data-tid={TestId.AppMain}
 				in:fade={{ duration: 100, delay: 100 }}
 				out:fade={{ duration: 100 }}
@@ -309,21 +317,15 @@
 		<Loaders />
 	</main>
 
-	{#if !isFlowPage}
+	<!--
+		Bottom nav is visible on every signed-in surface including Flow,
+		matching the prototype's BottomNav. Market detail (`/markets/[id]`)
+		is the one exception — it owns the bottom slot with its own
+		sticky YES/NO CTA bar so the tab bar is suppressed there.
+	-->
+	{#if !isMarketDetailPage}
 		<MobileNav />
 	{/if}
-
-	{#if $userSignedIn && !isFlowPage}
-		<button
-			class="bg-primary text-primary-foreground fixed right-6 bottom-24 z-40 hidden h-14 w-14 items-center justify-center rounded-full shadow-[0_8px_24px_-8px_var(--laurel-glow)] transition-all hover:scale-105 active:scale-[0.985] md:bottom-8 md:flex"
-			aria-label={t({ locale: $localeStore, key: 'a11y.create_challenge' })}
-			onclick={() => (challengeModalOpen = true)}
-		>
-			<Plus size={28} strokeWidth={2.5} />
-		</button>
-	{/if}
-
-	<CreateChallengeModal isOpen={challengeModalOpen} onClose={() => (challengeModalOpen = false)} />
 
 	<CompanionOverlay />
 </div>

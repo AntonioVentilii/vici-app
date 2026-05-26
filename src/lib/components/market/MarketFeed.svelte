@@ -3,6 +3,7 @@
 	import MarketCardSkeleton from '$lib/components/market/MarketCardSkeleton.svelte';
 	import StackedMarketCard from '$lib/components/market/StackedMarketCard.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
+	import type { MarketTag } from '$lib/constants/market-tags.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import type { Market } from '$lib/types/market';
@@ -19,8 +20,11 @@
 		emptyMessage: string;
 		hasMore?: boolean;
 		onLoadMore?: () => void;
-		onChallenge?: (market: Market) => void;
 		metadataBySeries?: Record<string, MarketMetadata>;
+		/** Per-series category-tag lookup; forwarded to MarketCard for the
+		 *  colored category chip in the header strip. Optional so a parent
+		 *  page that hasn't hydrated tags yet stays backward-compatible. */
+		tagsBySeries?: Record<string, MarketTag[]>;
 	}
 
 	let {
@@ -29,8 +33,8 @@
 		emptyMessage,
 		hasMore = false,
 		onLoadMore,
-		onChallenge,
-		metadataBySeries
+		metadataBySeries,
+		tagsBySeries
 	}: Props = $props();
 
 	const groups = $derived(groupMarketsByLineage({ markets, userPrincipal: $authPrincipal }));
@@ -69,7 +73,7 @@
 				{group}
 				{index}
 				{metadataBySeries}
-				{onChallenge}
+				{tagsBySeries}
 				userPrincipal={$authPrincipal}
 			/>
 		{/each}

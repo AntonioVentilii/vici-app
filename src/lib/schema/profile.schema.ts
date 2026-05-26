@@ -37,17 +37,19 @@ export const UserProfileSchema = j.strictObject({
 	// achievement progress; recomputed from clearing history during
 	// `calculateAndSyncStats`.
 	contrarianWins: j.number().default(0),
-	// `preferences` is optional at the top level, but the inner fields are
-	// also given defaults on purpose. Some profile docs in storage predate
-	// the `defaultAmount` field (or were written with a partial
-	// `preferences` shape from an older client). Without nested defaults,
-	// the satellite-side encoder traps with `missing field default_amount`
-	// the moment `app_list_leaderboard` / `app_get_profile` /
-	// `app_search_profiles` encounter such a row, because `strictObject`
-	// requires every declared field. Defaulting `flow` / `manual` (and the
-	// `defaultAmount` record itself) lets legacy rows decode cleanly without
-	// a data migration. Mirror any change here in
-	// `src/satellite/api-schemas.ts`.
+	// `preferences` carries every cross-device user setting. Defaults are
+	// applied at every leaf because the satellite-side encoder traps with
+	// `missing field X` the moment `app_list_leaderboard` / `app_get_profile`
+	// / `app_search_profiles` encounter a partial `preferences` shape (the
+	// inner `strictObject` requires every declared field). Defaulting each
+	// leaf lets legacy rows decode cleanly without a data migration. Mirror
+	// every change here in `src/satellite/api-schemas.ts`.
+	//
+	// `defaultAmount` is the wallet-side default-bet preference; the rest
+	// of the fields are the user-experience preferences (notifications,
+	// flow deck, haptics, saved-markets list) — they migrated off
+	// per-device localStorage and now round-trip through the profile so
+	// they sync across devices.
 	preferences: j
 		.strictObject({
 			defaultAmount: j
@@ -55,7 +57,40 @@ export const UserProfileSchema = j.strictObject({
 					flow: j.string().default('0'),
 					manual: j.string().default('0')
 				})
-				.default({ flow: '0', manual: '0' })
+				.default({ flow: '0', manual: '0' }),
+			notify: j
+				.strictObject({
+					streakReminder: j.boolean().default(true),
+					marketAlerts: j.boolean().default(true),
+					friendActivity: j.boolean().default(false),
+					weeklyDigest: j.boolean().default(true)
+				})
+				.default({
+					streakReminder: true,
+					marketAlerts: true,
+					friendActivity: false,
+					weeklyDigest: true
+				}),
+			flowSessionLength: j.number().default(10),
+			hapticsEnabled: j.boolean().default(true),
+			callsPublic: j.boolean().default(true),
+			flowTags: j.array(j.string()).default([]),
+			worldCupMode: j.boolean().default(false),
+			savedMarketIds: j.array(j.string()).default([])
 		})
-		.optional()
+		.default({
+			defaultAmount: { flow: '0', manual: '0' },
+			notify: {
+				streakReminder: true,
+				marketAlerts: true,
+				friendActivity: false,
+				weeklyDigest: true
+			},
+			flowSessionLength: 10,
+			hapticsEnabled: true,
+			callsPublic: true,
+			flowTags: [],
+			worldCupMode: false,
+			savedMarketIds: []
+		})
 });

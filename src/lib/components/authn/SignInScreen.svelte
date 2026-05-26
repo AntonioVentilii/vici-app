@@ -4,8 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import SignInActions from '$lib/components/authn/SignInActions.svelte';
-	import Logo from '$lib/components/layout/Logo.svelte';
+	import SignInProviderStack from '$lib/components/authn/SignInProviderStack.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -14,7 +13,7 @@
 	interface Props {
 		// Mode: `signin` for returning users (welcome-back framing),
 		// `signup` for new accounts (currently routes to the onboarding
-		// flow once Phase 2 lands).
+		// flow once  lands).
 		mode?: 'signin' | 'signup';
 		// Callback for after a successful auth handshake. Defaults to
 		// navigating to `AppPath.Home`; routes calling this from a
@@ -30,7 +29,6 @@
 	}: Props = $props();
 
 	const BRAND_PLACEHOLDER = '{brand}';
-	const welcomeHref = resolve(PublicPath.Welcome);
 	const isSignUp = $derived(mode === 'signup');
 	let hasPendingOnboarding = $state(false);
 
@@ -87,29 +85,56 @@
 		};
 	});
 
+	const termsHref = `${PublicPath.Info}/terms`;
+	const privacyHref = `${PublicPath.Info}/privacy`;
+
 	const handleSwitch = () => {
 		void goto(resolve(isSignUp ? PublicPath.SignIn : PublicPath.SignUp));
 	};
 </script>
 
 <div class="signin-wrap">
-	<div class="signin-orb signin-orb-a" aria-hidden="true"></div>
-	<div class="signin-orb signin-orb-b" aria-hidden="true"></div>
-
 	<div class="signin-card">
 		<header class="signin-head">
-			<div class="signin-brand">
-				<Logo href={welcomeHref} />
-			</div>
+			<svg
+				class="signin-wordmark"
+				aria-label="VICI"
+				fill="currentColor"
+				role="img"
+				viewBox="0 0 262 120"
+				xmlns="http://www.w3.org/2000/svg"
+			>
+				<g>
+					<path d="M 6 14 L 30 14 L 50 88 L 70 14 L 94 14 L 64 106 L 36 106 Z" />
+					<path d="M 102 14 L 124 14 L 124 106 L 102 106 Z" />
+					<path
+						d="M 222 30 C 214 20 200 14 184 14 C 158 14 140 35 140 60 C 140 85 158 106 184 106 C 200 106 214 100 222 90 L 204 78 C 198 84 192 86 184 86 C 170 86 162 76 162 60 C 162 44 170 34 184 34 C 192 34 198 36 204 42 Z"
+					/>
+					<path d="M 234 14 L 256 14 L 256 106 L 234 106 Z" />
+				</g>
+			</svg>
+
 			<p class="allcaps signin-eyebrow">{t({ locale: $localeStore, key: eyebrowKey })}</p>
 			<h1 class="signin-title">
-				{titleParts.before}<span class="serif-italic signin-wordmark">VICI.</span>{titleParts.after}
+				{titleParts.before}<span class="serif-italic">VICI.</span>{titleParts.after}
 			</h1>
 			<p class="signin-sub">{t({ locale: $localeStore, key: subcopyKey })}</p>
+
+			<div class="signin-proof allcaps">
+				<span>
+					<b class="num">{t({ locale: $localeStore, key: 'signin.proof.predictors_count' })}</b>
+					{t({ locale: $localeStore, key: 'signin.proof.predictors_label' })}
+				</span>
+				<span class="signin-proof-dot" aria-hidden="true">·</span>
+				<span>
+					<b class="num">{t({ locale: $localeStore, key: 'signin.proof.calls_count' })}</b>
+					{t({ locale: $localeStore, key: 'signin.proof.calls_label' })}
+				</span>
+			</div>
 		</header>
 
 		<div class="signin-providers">
-			<SignInActions {onSuccess} />
+			<SignInProviderStack {onSuccess} />
 		</div>
 
 		<footer class="signin-foot">
@@ -120,38 +145,40 @@
 		</footer>
 	</div>
 
-	<p class="signin-legal">
-		{t({ locale: $localeStore, key: 'signin.legal' })}
-	</p>
+	<div class="signin-legal">
+		<p class="signin-legal-line">
+			{t({ locale: $localeStore, key: 'signin.legal.line1' })}
+		</p>
+		<p class="signin-legal-line is-dim">
+			{t({ locale: $localeStore, key: 'signin.legal.line2.prefix' })}
+			<a href={termsHref}>{t({ locale: $localeStore, key: 'signin.legal.terms' })}</a>
+			{t({ locale: $localeStore, key: 'signin.legal.line2.and' })}
+			<a href={privacyHref}>{t({ locale: $localeStore, key: 'signin.legal.privacy' })}</a>.
+		</p>
+	</div>
 </div>
 
 <style lang="postcss">
 	.signin-wrap {
 		position: relative;
-		isolation: isolate;
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		justify-content: flex-start;
 		gap: 1.25rem;
 		min-height: 100dvh;
 		overflow-y: auto;
-		padding: max(1.75rem, env(safe-area-inset-top, 0px)) 1.25rem
+		padding: max(1.75rem, env(safe-area-inset-top, 0px)) 1.5rem
 			max(1.5rem, env(safe-area-inset-bottom, 0px));
-		background:
-			radial-gradient(circle at 52% -4rem, var(--laurel-glow), transparent 22rem),
-			radial-gradient(circle at 0% 76%, var(--yes-wash), transparent 16rem), var(--bg-base);
+		background: var(--bg-base);
 	}
 
 	.signin-card {
-		position: relative;
-		z-index: 1;
 		width: 100%;
 		max-width: 26.25rem;
 		display: flex;
 		flex-direction: column;
 		flex: 1 1 auto;
-		gap: 1.45rem;
+		gap: 1.5rem;
 		margin: 0 auto;
 		padding: 0.25rem 0 0;
 	}
@@ -161,34 +188,35 @@
 		flex-direction: column;
 		align-items: flex-start;
 		gap: 0.625rem;
-		padding-top: 0.25rem;
+		padding-top: 0.5rem;
 		text-align: left;
 	}
 
-	.signin-brand {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-height: 2rem;
-		margin-bottom: 1rem;
+	.signin-wordmark {
+		width: auto;
+		height: 3rem;
+		color: var(--laurel);
+		margin-bottom: 0.5rem;
 	}
 
 	.signin-eyebrow {
-		color: var(--laurel);
-		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+		letter-spacing: 0.18em;
 	}
 
 	.signin-title {
 		margin: 0;
 		font-family: var(--font-display);
-		font-size: clamp(var(--t-32), 8.5vw, var(--t-44));
-		line-height: var(--leading-snug);
+		font-size: clamp(var(--t-28), 7.5vw, var(--t-32));
 		font-weight: 600;
-		letter-spacing: var(--tracking-snug);
+		line-height: 1.1;
+		letter-spacing: -0.01em;
 		color: var(--text-base);
 	}
 
-	.signin-wordmark {
+	.signin-title .serif-italic {
 		color: var(--laurel);
 	}
 
@@ -196,18 +224,39 @@
 		margin: 0;
 		max-width: 21rem;
 		font-size: var(--t-14);
-		line-height: var(--leading-relaxed);
+		line-height: 1.45;
 		color: var(--text-muted);
+	}
+
+	.signin-proof {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		letter-spacing: 0.14em;
+	}
+
+	.signin-proof b {
+		color: var(--text-base);
+		font-weight: 700;
+	}
+
+	.signin-proof-dot {
+		color: var(--parchment-faint);
 	}
 
 	.signin-providers {
 		display: flex;
 		flex-direction: column;
 		gap: 0;
-		margin-top: 0.4rem;
+		margin-top: 0.25rem;
 	}
 
-	.signin-providers :global(> div) {
+	.signin-providers :global(> *) {
 		width: 100%;
 	}
 
@@ -218,8 +267,8 @@
 		justify-content: center;
 		gap: 0.4rem;
 		margin-top: auto;
-		padding-top: 0.9rem;
-		font-size: var(--t-13);
+		padding-top: 1rem;
+		font-size: var(--t-14);
 		text-align: center;
 	}
 
@@ -234,52 +283,47 @@
 		font: inherit;
 		font-weight: 600;
 		color: var(--laurel);
-		text-decoration: underline;
-		text-decoration-color: var(--parchment-faint);
-		text-underline-offset: 0.2em;
 		cursor: pointer;
-		transition: text-decoration-color var(--d-hover) var(--ease-vici);
+		transition: color var(--d-hover) var(--ease-vici);
 	}
 
 	.signin-link:hover {
-		text-decoration-color: var(--laurel);
+		color: var(--laurel-deep);
 	}
 
 	.signin-legal {
-		position: relative;
-		z-index: 1;
-		max-width: 25.5rem;
-		margin: auto 0 0;
-		padding: 0 0.5rem;
+		width: 100%;
+		max-width: 26.25rem;
+		margin: 1.25rem auto 0.5rem;
 		text-align: center;
-		font-size: var(--t-12);
-		line-height: var(--leading-normal);
+	}
+
+	.signin-legal-line {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: 0.72rem;
+		line-height: 1.55;
+	}
+
+	.signin-legal-line + .signin-legal-line {
+		margin-top: 0.25rem;
+	}
+
+	.signin-legal-line.is-dim {
 		color: var(--parchment-faint);
 	}
 
-	.signin-orb {
-		position: absolute;
-		z-index: 0;
-		border-radius: 9999px;
-		pointer-events: none;
-		filter: blur(1px);
-		opacity: 0.75;
+	.signin-legal-line a {
+		color: var(--text-muted);
+		text-decoration: underline;
+		text-decoration-color: var(--parchment-faint);
+		text-underline-offset: 0.2em;
+		transition: text-decoration-color var(--d-hover) var(--ease-vici);
 	}
 
-	.signin-orb-a {
-		top: 10%;
-		left: max(-8rem, 2vw);
-		width: 12rem;
-		height: 12rem;
-		background: radial-gradient(circle, var(--yes-wash), transparent 68%);
-	}
-
-	.signin-orb-b {
-		right: max(-10rem, 0vw);
-		bottom: 4%;
-		width: 16rem;
-		height: 16rem;
-		background: radial-gradient(circle, var(--laurel-glow), transparent 68%);
+	.signin-legal-line a:hover {
+		text-decoration-color: var(--laurel);
+		color: var(--text-base);
 	}
 
 	@media (min-width: 48rem) {
@@ -293,15 +337,12 @@
 			padding: 2rem;
 			border: 1px solid var(--border-base);
 			border-radius: var(--r-12);
-			background:
-				linear-gradient(
-					180deg,
-					color-mix(in srgb, var(--bg-surface) 90%, transparent),
-					color-mix(in srgb, var(--bg-base) 96%, transparent)
-				),
-				var(--bg-surface);
+			background: var(--bg-surface);
 			box-shadow: var(--inset-hi-strong), var(--shadow-modal);
-			backdrop-filter: blur(1.5rem);
+		}
+
+		.signin-legal {
+			margin-top: 1.5rem;
 		}
 	}
 </style>

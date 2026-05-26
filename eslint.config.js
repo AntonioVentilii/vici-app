@@ -11,6 +11,16 @@ export default ts.config(
 	},
 
 	{
+		// Build-time globals injected by vite's `define` (see `vite.config.ts`).
+		languageOptions: {
+			globals: {
+				__APP_VERSION__: 'readonly',
+				__BUILD_SHA__: 'readonly'
+			}
+		}
+	},
+
+	{
 		rules: {
 			'svelte/no-navigation-without-resolve': 'off'
 		}

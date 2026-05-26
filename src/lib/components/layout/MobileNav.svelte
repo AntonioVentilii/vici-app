@@ -9,8 +9,15 @@
 
 	// Routes that don't have their own nav slot but should still light
 	// up a parent tab (per `docs/ai/frontend/design.md` §8.4 active-
-	// state cascade). Markets owns the detail-by-id sub-route; Profile
-	// owns the personal-area routes that branch off from it.
+	// state cascade). The cascade table:
+	//
+	//  - Markets ← /markets/[id]
+	//  - Dash    ← /portfolio (Portfolio is the older detail surface
+	//              under the Dash tab)
+	//  - Social  ← /leagues, /worlds, /bouts (Friends now only lives
+	//              inside the Social tab strip; the standalone
+	//              /friends route is gone, see Tier C-27)
+	//  - Profile ← /wallet, /settings, /notifications
 	const isActive = (path: AppPath) => {
 		const current = page.url.pathname;
 
@@ -18,10 +25,11 @@
 			return true;
 		}
 
-		// The Markets nav button is configured as `AppPath.Home` (the
-		// markets feed lives at `/`), so detail pages like
-		// `/markets/[id]` should still light it up.
 		if (path === AppPath.Home && current.startsWith('/markets/')) {
+			return true;
+		}
+
+		if (path === AppPath.Dash && current === AppPath.Portfolio) {
 			return true;
 		}
 

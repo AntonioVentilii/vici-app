@@ -11,7 +11,7 @@ import { derived, get, writable, type Readable } from 'svelte/store';
 /**
  * Reactive cache of the viewer's social graph.
  *
- * Single source of truth shared by `FriendsList`, the Profile dashboard
+ * Single source of truth shared by `FriendsTab`, the Profile dashboard
  * entry, and the inbox so counts/badges and inline UI stay in sync after
  * accept/reject/unfriend mutations. The relation services themselves stay
  * stateless — callers run a mutation, then call `refreshFriendRelations()`

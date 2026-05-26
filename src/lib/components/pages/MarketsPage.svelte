@@ -1,237 +1,286 @@
 <script lang="ts">
-	import ForkMarketModal from '$lib/components/challenge/ForkMarketModal.svelte';
+	import { Heart } from 'lucide-svelte/icons';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
-	import MarketCard from '$lib/components/market/MarketCard.svelte';
-	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
-	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
-	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { marketMetadata } from '$lib/derived/market-metadata.derived';
+	import MarketsCarousel from '$lib/components/market/MarketsCarousel.svelte';
+	import MarketsCategoryChips, {
+		type MarketsCategoryFilter
+	} from '$lib/components/market/MarketsCategoryChips.svelte';
+	import MarketsListRow from '$lib/components/market/MarketsListRow.svelte';
+	import {
+		MARKET_TAG_LABEL_KEYS,
+		primaryMarketTag,
+		type MarketTag
+	} from '$lib/constants/market-tags.constants';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { userStore } from '$lib/stores/user.store';
+	import { preferencesStore } from '$lib/stores/preferences.store';
 	import type { Market } from '$lib/types/market';
-	import {
-		DEFAULT_SECONDARY_FILTERS,
-		type MarketSecondaryFilters
-	} from '$lib/types/market-filters';
-	import { isMarketSuggested } from '$lib/utils/flow-card-display.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { filterAndRankMarkets } from '$lib/utils/market-filters.utils';
 
-	const SUGGESTED_RAIL_LIMIT = 6;
+	const TRENDING_LIMIT = 8;
+	const SAVED_RAIL_LIMIT = 6;
 
-	let loading = $derived($marketsNotInitialized);
+	let cat = $state<MarketsCategoryFilter>('all');
 
-	let searchTerm = $state('');
-	let activeTab = $state('Active');
-	let filters = $state<MarketSecondaryFilters>({ ...DEFAULT_SECONDARY_FILTERS });
+	const loading = $derived($marketsNotInitialized);
 
-	let forkModalOpen = $state(false);
-	let forkTarget = $state<Market | null>(null);
+	const savedSet = $derived(new Set($preferencesStore.savedMarketIds));
+	const savedMarkets = $derived($markets.filter((market) => savedSet.has(market.id)));
+	const savedCount = $derived(savedMarkets.length);
 
-	const handleChallenge = (market: Market) => {
-		forkTarget = market;
-		forkModalOpen = true;
+	const tagsByMarket = $derived($marketTags);
+
+	const matchesTag = ({ market, tag }: { market: Market; tag: MarketTag }): boolean => {
+		const tags = tagsByMarket[market.id];
+
+		return tags?.includes(tag) ?? false;
 	};
 
-	const tabs = ['Active', 'Trending', 'Expiring', 'Resolved'] as const;
+	const list = $derived.by((): Market[] => {
+		const active = cat;
 
-	const tabLabel = (tab: (typeof tabs)[number]) => {
-		const key =
-			tab === 'Active'
-				? 'markets.tab.active'
-				: tab === 'Trending'
-					? 'markets.tab.trending'
-					: tab === 'Expiring'
-						? 'markets.tab.expiring'
-						: 'markets.tab.resolved';
+		if (active === 'saved') {
+			return savedMarkets;
+		}
 
-		return t({ locale: $localeStore, key });
-	};
+		if (active === 'all') {
+			return $markets;
+		}
 
-	const filteredMarkets = $derived(
-		filterAndRankMarkets({
-			markets: $markets,
-			searchTerm,
-			activeTab,
-			filters,
-			userInterests: $userStore.profile?.interests ?? [],
-			tagMappings: $marketTags,
-			metadataBySeries: $marketMetadata
-		})
+		return $markets.filter((market) => matchesTag({ market, tag: active }));
+	});
+
+	/**
+	 * "Trending" rail — `cat === 'all'` only. Prototype filters on a
+	 * `hot` flag; we proxy that by sorting open markets by
+	 * `totalVolume` desc and slicing the top {@link TRENDING_LIMIT}.
+	 * Resolved markets are excluded so the rail tracks live activity.
+	 */
+	const trendingMarkets = $derived(
+		[...$markets]
+			.filter((market) => market.status === 'Open')
+			.sort((a, b) => {
+				if (b.totalVolume === a.totalVolume) {
+					return 0;
+				}
+
+				return b.totalVolume > a.totalVolume ? 1 : -1;
+			})
+			.slice(0, TRENDING_LIMIT)
 	);
 
-	// Editorial rail — only renders when at least one Open market is
-	// currently flagged AND inside its 14-day decay window. Gating
-	// goes through `isMarketSuggested` so the rail can never disagree
-	// with the sort-tier boost: if a market would no longer be
-	// boosted, it never shows up here either. Capped at
-	// `SUGGESTED_RAIL_LIMIT` so the rail stays editorial, not a dump.
-	const suggestedRail = $derived(
-		$markets
-			.filter((market) => isMarketSuggested({ market, metadata: $marketMetadata[market.id] }))
-			.slice(0, SUGGESTED_RAIL_LIMIT)
-	);
+	const sectionTitle = $derived.by((): string => {
+		if (cat === 'all') {
+			return t({ locale: $localeStore, key: 'markets.section.all' });
+		}
+
+		if (cat === 'saved') {
+			return t({ locale: $localeStore, key: 'markets.section.saved' });
+		}
+
+		return t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[cat] });
+	});
 </script>
 
 {#snippet marketsTitle()}
-	<h1 class="markets-mobile-title">{t({ locale: $localeStore, key: 'nav.markets' })}</h1>
-	<span class="markets-mobile-live">{t({ locale: $localeStore, key: 'hero.live' })}</span>
+	<span class="markets-hero-eyebrow eyebrow">{t({ locale: $localeStore, key: 'nav.markets' })}</span
+	>
 {/snippet}
 
-{#snippet marketsCount()}
-	<strong class="markets-mobile-count num">{filteredMarkets.length}</strong>
-{/snippet}
+<section class="markets-root">
+	<MobileAppBar align="left" titleChildren={marketsTitle} />
 
-<section class="space-y-6">
-	<MobileAppBar align="left" right={marketsCount} titleChildren={marketsTitle} />
+	<header class="markets-hero">
+		<h1 class="markets-hero-title serif-italic">
+			{t({ locale: $localeStore, key: 'markets.hero.title' })}
+		</h1>
+	</header>
 
-	<div class="hidden md:block">
-		<SectionHeader
-			description={t({ locale: $localeStore, key: 'markets.page.sub' })}
-			highlight={t({ locale: $localeStore, key: 'markets.eyebrow' })}
-			title={t({ locale: $localeStore, key: 'markets.page.title' })}
+	<MarketsCategoryChips active={cat} onChange={(next) => (cat = next)} {savedCount} />
+
+	{#if cat === 'all' && savedCount > 0}
+		<MarketsCarousel
+			markets={savedMarkets.slice(0, SAVED_RAIL_LIMIT)}
+			moreLabel={t({
+				locale: $localeStore,
+				key: 'markets.see_all_count',
+				params: { count: savedCount }
+			})}
+			onMore={() => (cat = 'saved')}
+			tagsBySeries={tagsByMarket}
+			title={t({ locale: $localeStore, key: 'markets.section.saved' })}
 		/>
-	</div>
+	{/if}
 
-	<div class="w-full space-y-5">
-		{#if suggestedRail.length > 0}
-			<section
-				class="suggested-rail"
-				aria-label={t({ locale: $localeStore, key: 'markets.suggested.title' })}
-			>
-				<header class="suggested-rail-head">
-					<span class="eyebrow suggested-rail-eyebrow">
-						{t({ locale: $localeStore, key: 'markets.suggested.eyebrow' })}
-					</span>
-					<h2 class="suggested-rail-title">
-						{t({ locale: $localeStore, key: 'markets.suggested.title' })}
-					</h2>
-				</header>
-				<div class="suggested-rail-scroller">
-					{#each suggestedRail as market, index (market.id)}
-						<div class="suggested-rail-card">
-							<MarketCard {index} {market} metadata={$marketMetadata[market.id]} />
-						</div>
+	{#if cat === 'all' && trendingMarkets.length > 0}
+		<MarketsCarousel
+			markets={trendingMarkets}
+			tagsBySeries={tagsByMarket}
+			title={t({ locale: $localeStore, key: 'markets.section.trending' })}
+		/>
+	{/if}
+
+	{#if cat === 'saved' && savedMarkets.length === 0 && !loading}
+		<div class="markets-saved-empty" aria-live="polite" role="status">
+			<Heart class="markets-saved-empty-icon" aria-hidden="true" size={28} strokeWidth={1.4} />
+			<p class="markets-saved-empty-title serif-italic">
+				{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}
+			</p>
+			<p class="markets-saved-empty-body">
+				{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
+			</p>
+		</div>
+	{:else}
+		<section class="markets-section">
+			<header class="markets-section-head">
+				<h2 class="markets-section-title">{sectionTitle}</h2>
+				<span class="num markets-section-count">{list.length}</span>
+			</header>
+
+			{#if loading}
+				<div class="markets-list">
+					{#each Array(4) as _, index (index)}
+						<div class="markets-row-skeleton" aria-hidden="true"></div>
 					{/each}
 				</div>
-			</section>
-		{/if}
-
-		<div class="space-y-5">
-			<MarketFilters
-				{activeTab}
-				{filters}
-				onFiltersChange={(f) => (filters = f)}
-				onSearchChange={(term) => (searchTerm = term)}
-				onTabChange={(tab) => (activeTab = tab)}
-				{searchTerm}
-				tabs={tabs.map((tab) => ({ id: tab, label: tabLabel(tab) }))}
-			/>
-
-			<div class="mx-auto flex max-w-4xl items-baseline justify-between px-1">
-				<h2 class="eyebrow">{tabLabel(activeTab as (typeof tabs)[number])}</h2>
-				<span class="num text-muted-foreground text-xs font-bold">{filteredMarkets.length}</span>
-			</div>
-
-			<MarketFeed
-				emptyMessage={t({ locale: $localeStore, key: 'markets.empty' })}
-				{loading}
-				markets={filteredMarkets}
-				metadataBySeries={$marketMetadata}
-				onChallenge={handleChallenge}
-			/>
-		</div>
-	</div>
-
-	<ForkMarketModal
-		isOpen={forkModalOpen}
-		market={forkTarget}
-		onClose={() => (forkModalOpen = false)}
-	/>
+			{:else if list.length === 0}
+				<div class="markets-empty">
+					<p class="markets-empty-body">
+						{t({ locale: $localeStore, key: 'markets.empty' })}
+					</p>
+				</div>
+			{:else}
+				<div class="markets-list">
+					{#each list as market (market.id)}
+						<MarketsListRow {market} tag={primaryMarketTag(tagsByMarket[market.id])} />
+					{/each}
+				</div>
+			{/if}
+		</section>
+	{/if}
 </section>
 
 <style lang="postcss">
-	.markets-mobile-title {
+	.markets-root {
+		display: flex;
+		flex-direction: column;
+		gap: 0.875rem;
+		padding: 0 1rem 5rem;
+	}
+
+	.markets-hero {
+		padding: 0.25rem 0 0.25rem;
+	}
+
+	.markets-hero-eyebrow {
+		color: var(--text-muted);
+	}
+
+	.markets-hero-title {
 		margin: 0;
 		color: var(--text-base);
 		font-size: var(--t-24);
-		font-weight: 700;
+		font-weight: 400;
+		line-height: 1.15;
 		letter-spacing: var(--tracking-tight);
 	}
 
-	.markets-mobile-live {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		border-radius: var(--r-4);
-		background: var(--no-wash);
-		padding: 0.2rem 0.45rem;
-		color: var(--no);
-		font-size: 0.625rem;
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.markets-mobile-live::before {
-		width: 0.3rem;
-		height: 0.3rem;
-		border-radius: var(--r-pill);
-		background: currentColor;
-		content: '';
-	}
-
-	.markets-mobile-count {
-		color: var(--text-muted);
-		font-size: var(--t-12);
-	}
-
-	/* Editorial rail — horizontal-scroll row of fixed-width MarketCards.
-	   Sits above the search/filter/tab block so the curated picks are the
-	   first thing users see, without crowding the canonical list below.
-	   The negative margins + padding pattern keeps the scroll-snap edges
-	   flush with the page gutter while letting cards bleed past it. */
-	.suggested-rail {
-		margin: 0 auto;
-		max-width: 56rem;
-		padding: 0 1rem;
-	}
-	.suggested-rail-head {
+	.markets-saved-empty {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
-		margin-bottom: 0.75rem;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 2rem 1.5rem;
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+		background: transparent;
+		text-align: center;
 	}
-	.suggested-rail-eyebrow {
-		color: var(--laurel);
+
+	.markets-saved-empty :global(.markets-saved-empty-icon) {
+		color: var(--parchment-faint);
+		margin-bottom: 0.25rem;
 	}
-	.suggested-rail-title {
+
+	.markets-saved-empty-title {
 		margin: 0;
-		font-family: var(--font-display);
 		font-size: var(--t-18);
-		font-weight: 600;
-		letter-spacing: var(--tracking-snug);
 		color: var(--text-base);
 	}
-	.suggested-rail-scroller {
-		display: grid;
-		grid-auto-flow: column;
-		grid-auto-columns: minmax(17rem, 17rem);
-		gap: 0.75rem;
-		overflow-x: auto;
-		overflow-y: hidden;
-		scroll-snap-type: x mandatory;
-		scrollbar-width: none;
-		margin: 0 -1rem;
-		padding: 0.25rem 1rem 0.5rem;
+
+	.markets-saved-empty-body {
+		margin: 0;
+		max-width: 28rem;
+		font-size: var(--t-13);
+		line-height: 1.55;
+		color: var(--text-muted);
 	}
-	.suggested-rail-scroller::-webkit-scrollbar {
-		display: none;
+
+	.markets-section {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
-	.suggested-rail-card {
-		scroll-snap-align: start;
-		min-width: 0;
+
+	.markets-section-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.25rem 0 0.25rem;
+	}
+
+	.markets-section-title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--t-15);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		color: var(--text-base);
+	}
+
+	.markets-section-count {
+		color: var(--text-muted);
+		font-size: var(--t-13);
+		font-weight: 700;
+	}
+
+	.markets-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.markets-row-skeleton {
+		height: 5.5rem;
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
+		animation: markets-skel-pulse 1.5s ease-in-out infinite;
+	}
+
+	@keyframes markets-skel-pulse {
+		0%,
+		100% {
+			opacity: 0.55;
+		}
+		50% {
+			opacity: 0.9;
+		}
+	}
+
+	.markets-empty {
+		padding: 2rem 1rem;
+		text-align: center;
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.markets-empty-body {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: var(--t-13);
+		line-height: 1.55;
 	}
 </style>

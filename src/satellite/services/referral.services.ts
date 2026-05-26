@@ -7,6 +7,7 @@ import {
 	REFERRAL_MAX_PAID,
 	REFERRAL_VXP_BONUS_BASE_UNITS
 } from '$lib/constants/referral.constants';
+import { VXP_REFERRAL_MONTHLY_CAP } from '$lib/constants/vxp-economy.constants';
 import type { ReferralCodeDoc, ReferralDoc, ReferralListItem } from '$lib/types/referral';
 import type { VxpMilestoneState } from '$lib/types/vxp-onboarding';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
@@ -514,43 +515,71 @@ const transferReferralBonus = async ({
 
 /**
  * Counts how many redemptions already credited the given referrer — used to enforce
- * {@link REFERRAL_MAX_PAID}. We count every doc whose referrer matches and whose `referrerPayout`
- * is not `none`, _excluding_ the row being processed (`excludeKey`). Anything in flight (`owed` /
- * `processing` / `paid`) counts toward the cap so racing redemptions can't slip past it by being
- * mid-transfer.
+ * {@link REFERRAL_MAX_PAID} (lifetime) and {@link VXP_REFERRAL_MONTHLY_CAP} (per calendar month).
+ *
+ * Returns two parallel tallies so the hook can enforce *both* caps in a single doc scan: the
+ * lifetime cap (every doc whose `referrerPayout` is not `none`) and the current-month cap (same
+ * filter, plus `redeemedAtMs` within the UTC calendar month that contains `referenceMs`). Anything
+ * in flight (`owed` / `processing` / `paid`) counts toward both caps so racing redemptions can't
+ * slip past either by being mid-transfer.
+ *
+ * Both totals exclude the row being processed (`excludeKey`).
  */
 const countReferrerCredits = ({
 	caller,
 	referrer,
-	excludeKey
+	excludeKey,
+	referenceMs
 }: {
 	caller: Uint8Array;
 	referrer: PrincipalText;
 	excludeKey: string;
-}): number => {
+	referenceMs: number;
+}): { lifetime: number; currentMonth: number } => {
 	const { items } = listDocsStore({
 		collection: Collection.REFERRALS,
 		caller,
 		params: {}
 	});
 
-	return items.reduce((acc, [key, item]) => {
-		if (key === excludeKey) {
-			return acc;
-		}
+	const monthStartMs = currentMonthStartUtcMs(referenceMs);
 
-		try {
-			const doc = decodeDocData<ReferralDoc>(item.data);
-
-			if (doc.referrer === referrer && doc.referrerPayout.status !== 'none') {
-				return acc + 1;
+	return items.reduce<{ lifetime: number; currentMonth: number }>(
+		(acc, [key, item]) => {
+			if (key === excludeKey) {
+				return acc;
 			}
-		} catch {
-			// Ignore malformed rows for accounting purposes.
-		}
 
-		return acc;
-	}, ZERO_COUNT);
+			try {
+				const doc = decodeDocData<ReferralDoc>(item.data);
+
+				if (doc.referrer === referrer && doc.referrerPayout.status !== 'none') {
+					const inMonth = doc.redeemedAtMs >= monthStartMs;
+
+					return {
+						lifetime: acc.lifetime + 1,
+						currentMonth: acc.currentMonth + (inMonth ? 1 : 0)
+					};
+				}
+			} catch {
+				// Ignore malformed rows for accounting purposes.
+			}
+
+			return acc;
+		},
+		{ lifetime: ZERO_COUNT, currentMonth: ZERO_COUNT }
+	);
+};
+
+/**
+ * UTC-anchored start of the calendar month containing `referenceMs`. We anchor on UTC instead of
+ * the satellite's local time so the cap reset boundary is deterministic and identical for every
+ * caller — no "did the cap reset for me?" race based on which canister replied.
+ */
+const currentMonthStartUtcMs = (referenceMs: number): number => {
+	const d = new Date(referenceMs);
+
+	return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), 1);
 };
 
 const ZERO_COUNT = 0;
@@ -764,13 +793,16 @@ const armReferrerPayoutIfFirstFire = ({
 		return;
 	}
 
-	const creditsSoFar = countReferrerCredits({
+	const { lifetime: lifetimeCount, currentMonth: monthlyCount } = countReferrerCredits({
 		caller,
 		referrer: snapshotDoc.referrer,
-		excludeKey: refereeKey
+		excludeKey: refereeKey,
+		referenceMs: snapshotDoc.redeemedAtMs
 	});
 
-	const withinCap = creditsSoFar < REFERRAL_MAX_PAID;
+	const withinLifetimeCap = lifetimeCount < REFERRAL_MAX_PAID;
+	const withinMonthlyCap = monthlyCount < VXP_REFERRAL_MONTHLY_CAP;
+	const withinCap = withinLifetimeCap && withinMonthlyCap;
 
 	if (!withinCap) {
 		logInfo({
@@ -778,7 +810,11 @@ const armReferrerPayoutIfFirstFire = ({
 			detail: {
 				referrer: snapshotDoc.referrer,
 				referee: refereeKey,
-				credits_so_far: creditsSoFar
+				lifetime_count: lifetimeCount,
+				monthly_count: monthlyCount,
+				lifetime_cap: REFERRAL_MAX_PAID,
+				monthly_cap: VXP_REFERRAL_MONTHLY_CAP,
+				cap_hit: withinLifetimeCap ? 'monthly' : withinMonthlyCap ? 'lifetime' : 'both'
 			}
 		});
 

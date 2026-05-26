@@ -1,87 +1,256 @@
 <script lang="ts">
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { MarketEvent } from '$lib/types/market-metadata';
-	import { eventMarkerX, sparklinePoints } from '$lib/utils/flow-card-display.utils';
+	import { sparklinePoints } from '$lib/utils/flow-card-display.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
+	/**
+	 * Sparkline on the back of a Flow card — port of the design's
+	 * `Sparkline` component (`flow.jsx:1206`).
+	 *
+	 * Shape:
+	 *  - 240×56 SVG (with extra 8px overflow for the label area)
+	 *  - 14-point random-walk path seeded by `seed`, ending exactly at
+	 *    `yesPercent` so the trailing dot reads as "live"
+	 *  - filled area beneath the line at 8% opacity
+	 *  - line stroke is `--yes` when YES ≥ 50%, else `--no` (not an
+	 *    accent prop) — matches the prototype's `color = yes >= 50 ? …`
+	 *  - trailing 2.5px live-dot at the right edge
+	 *
+	 * Event markers:
+	 *  - All events plotted (not just the first 2)
+	 *  - Each marker is tap-to-reveal: idle pulse → active dotted
+	 *    vertical line + filled dot
+	 *  - When no event is active and the market has events, a hint
+	 *    surfaces below: "N events this week · tap a dot"
+	 *  - When one is active, the prototype's `DAY DOM MONTH · LABEL · ↑/↓`
+	 *    row replaces the hint
+	 *  - Active state resets whenever the events identity changes
+	 *    (handled by Svelte's reactive `$effect` keyed off the seed)
+	 *
+	 * `event.day` is 1..7 where 7 = today and 1 = a week ago — the
+	 * date label is computed live so it stays fresh as the user
+	 * lingers in the app.
+	 */
 	interface Props {
 		seed: string;
 		yesPercent: number;
 		events?: MarketEvent[];
-		accentColor?: string;
 	}
 
-	const { seed, yesPercent, events = [], accentColor = 'var(--laurel)' }: Props = $props();
+	const { seed, yesPercent, events = [] }: Props = $props();
 
-	const width = 280;
-	const height = 48;
-	const padding = 4;
+	const w = 240;
+	const h = 56;
+
 	const points = $derived(sparklinePoints({ yesPercent, seed }));
-	const plottedPoints = $derived(
-		points.map((y, i) => {
-			const x = padding + (i / Math.max(points.length - 1, 1)) * (width - padding * 2);
-			const py = padding + ((100 - y) / 100) * (height - padding * 2);
 
-			return `${x},${py}`;
-		})
+	// Build the line path the same way the prototype does:
+	//   M <x0> <y0> L <x1> <y1> ... L <xN> <yN>
+	// `y = h - (pct/100)*h - 2` matches `flow.jsx:1223`.
+	const linePath = $derived(
+		points
+			.map((p, i) => {
+				const x = (i / Math.max(points.length - 1, 1)) * w;
+				const y = h - (p / 100) * h - 2;
+
+				return `${i === 0 ? 'M' : 'L'}${x} ${y}`;
+			})
+			.join(' ')
 	);
-	const polyline = $derived(plottedPoints.join(' '));
-	const areaPath = $derived(
-		plottedPoints.length > 0
-			? `M ${plottedPoints.join(' L ')} L ${width - padding},${height - padding} L ${padding},${height - padding} Z`
-			: ''
-	);
+
+	// Area path closes the line back to the bottom-left corner —
+	// `M…L… L${w} ${h} L0 ${h} Z`. Matches `flow.jsx:1240`.
+	const areaPath = $derived(linePath.length > 0 ? `${linePath} L${w} ${h} L0 ${h} Z` : '');
+
+	const lineColor = $derived(yesPercent >= 50 ? 'var(--yes)' : 'var(--no)');
+
+	const liveDotY = $derived(h - (yesPercent / 100) * h - 2);
+
+	let activeEvent = $state<number | null>(null);
+
+	// Reset the active marker whenever the market changes (events
+	// identity follows the seed). Mirrors the prototype's
+	// `useEffect(()=>{ setActiveEvent(null); }, [events])`.
+	$effect(() => {
+		// Touch `seed` to take a reactive dep.
+		void seed;
+		activeEvent = null;
+	});
+
+	// Map an event's `day` field (1..7, 7 = today) to its index in the
+	// 15-point `points` array — the prototype uses
+	// `idx = (points.length-1) - (7 - day)` (i.e. the last 7 points are
+	// day 1..7).
+	const eventIndexForDay = (day: number): number =>
+		Math.max(0, Math.min(points.length - 1, points.length - 1 - (7 - day)));
+
+	const eventX = (day: number): number => {
+		const idx = eventIndexForDay(day);
+
+		return (idx / Math.max(points.length - 1, 1)) * w;
+	};
+
+	const eventY = (day: number): number => {
+		const idx = eventIndexForDay(day);
+
+		return h - (points[idx] / 100) * h - 2;
+	};
+
+	const toggleEvent = ({ index, ev }: { index: number; ev: Event }) => {
+		ev.stopPropagation();
+		activeEvent = activeEvent === index ? null : index;
+	};
+
+	// Real-date formatting for the active event's label row. Today is
+	// read live so the labels feel current as the user uses the app.
+	const MONTHS = [
+		'JAN',
+		'FEB',
+		'MAR',
+		'APR',
+		'MAY',
+		'JUN',
+		'JUL',
+		'AUG',
+		'SEP',
+		'OCT',
+		'NOV',
+		'DEC'
+	];
+	const DAY_NAMES = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+
+	const dateForEvent = (day: number): { dayName: string; month: string; dom: number } => {
+		// Compute the date `(7 - day)` days ago without mutating any
+		// Date instance — Svelte's lint flags `setDate` calls because a
+		// mutable Date doesn't trigger reactivity. We build a fresh
+		// Date directly from a millisecond offset instead.
+		const offsetMs = (7 - day) * 24 * 60 * 60 * 1000;
+		const d = new Date(Date.now() - offsetMs);
+
+		return {
+			dayName: DAY_NAMES[d.getDay()],
+			month: MONTHS[d.getMonth()],
+			dom: d.getDate()
+		};
+	};
+
+	const activeEv = $derived(activeEvent !== null ? events[activeEvent] : undefined);
+	const activeDate = $derived(activeEv !== undefined ? dateForEvent(activeEv.day) : undefined);
 </script>
 
-<div class="flow-spark-wrap">
+<div class="flow-spark-wrap" data-no-card-gesture="true">
 	<svg
 		class="flow-spark"
 		aria-label={t({ locale: $localeStore, key: 'a11y.seven_day_lean' })}
 		role="img"
-		viewBox="0 0 {width} {height}"
+		viewBox="0 0 {w} {h + 8}"
 	>
-		<path d={areaPath} fill={accentColor} opacity="0.08" />
-		<polyline
+		<!-- Filled area beneath the line at 8% opacity -->
+		<path d={areaPath} fill={lineColor} opacity="0.08" />
+
+		<!-- Main line -->
+		<path
+			d={linePath}
 			fill="none"
-			opacity="0.95"
-			points={polyline}
-			stroke={accentColor}
+			stroke={lineColor}
 			stroke-linecap="round"
 			stroke-linejoin="round"
-			stroke-width="1.5"
+			stroke-width="1.6"
 		/>
-		{#each events.slice(0, 2) as event, i (event.label + String(event.day))}
-			{@const x = eventMarkerX({ day: event.day, eventCount: points.length, width })}
-			<line
-				stroke="var(--border-base)"
-				stroke-dasharray="2 3"
-				stroke-width="1"
-				x1={x}
-				x2={x}
-				y1={padding}
-				y2={height - padding}
-			/>
-			<circle
-				cx={x}
-				cy={padding +
-					((100 - points[Math.min(i, points.length - 1)]) / 100) * (height - padding * 2)}
-				fill="var(--bg-popover)"
-				r="3"
-				stroke={accentColor}
-				stroke-width="1.2"
-			/>
+
+		<!-- Trailing live dot at the right edge -->
+		<circle cx={w} cy={liveDotY} fill={lineColor} r="2.5" />
+
+		<!-- Event markers — tappable. No inline text; label appears below. -->
+		{#each events as event, i (event.label + String(event.day))}
+			{@const x = eventX(event.day)}
+			{@const y = eventY(event.day)}
+			{@const isActive = activeEvent === i}
+			{@const isPulse = activeEvent === null}
+			<g
+				class="flow-spark-event-dot"
+				class:is-active={isActive}
+				class:is-pulse={isPulse}
+				aria-label={t({
+					locale: $localeStore,
+					key: 'a11y.spark_event',
+					params: { label: event.label }
+				})}
+				onclick={(ev) => toggleEvent({ index: i, ev })}
+				onkeydown={(ev) => {
+					if (ev.key === 'Enter' || ev.key === ' ') {
+						ev.preventDefault();
+						toggleEvent({ index: i, ev });
+					}
+				}}
+				ontouchstart={(ev) => ev.stopPropagation()}
+				role="button"
+				tabindex="0"
+			>
+				<!-- Invisible hit area — larger tap target than the visible dot -->
+				<circle cx={x} cy={y} fill="transparent" r="14" />
+				<!-- Dotted vertical drop — only when active -->
+				{#if isActive}
+					<line
+						opacity="0.5"
+						stroke={lineColor}
+						stroke-dasharray="2 3"
+						stroke-width="0.8"
+						x1={x}
+						x2={x}
+						y1={y}
+						y2={h + 2}
+					/>
+				{/if}
+				<!-- Pulse ring — visible only when none active (invites tap) -->
+				{#if isPulse}
+					<circle
+						class="flow-spark-pulse-ring"
+						cx={x}
+						cy={y}
+						fill="none"
+						opacity="0.5"
+						r="4"
+						stroke={lineColor}
+						stroke-width="1.2"
+					/>
+				{/if}
+				<!-- Visible dot — fills with color when active -->
+				<circle
+					cx={x}
+					cy={y}
+					fill={isActive ? lineColor : 'var(--bg-popover)'}
+					r={isActive ? 5 : 4}
+					stroke={lineColor}
+					stroke-width={isActive ? 1.5 : 1.2}
+				/>
+			</g>
 		{/each}
 	</svg>
-	{#if events.length > 0}
-		<div class="flow-spark-events">
-			{#each events.slice(0, 2) as event (event.label)}
-				<span class="num flow-spark-event">
-					<span class="flow-spark-dir" class:is-up={event.dir === 'up'} aria-hidden="true">
-						{event.dir === 'up' ? '+' : '−'}
-					</span>
-					{event.label}
-				</span>
-			{/each}
+
+	<!-- Active event label, OR hint when events present but none active -->
+	{#if activeEv !== undefined && activeDate !== undefined}
+		<div class="flow-spark-event-row num">
+			<span class="flow-spark-event-day">
+				{activeDate.dayName}
+				{activeDate.dom}
+				{activeDate.month}
+			</span>
+			<span class="flow-spark-event-lbl">· {activeEv.label.toUpperCase()}</span>
+			<span class="flow-spark-event-dir" class:is-up={activeEv.dir === 'up'}>
+				{activeEv.dir === 'up' ? '↑' : '↓'}
+			</span>
+		</div>
+	{:else if events.length > 0}
+		<div class="flow-spark-hint">
+			<span class="num">{events.length}</span>
+			{events.length === 1
+				? t({ locale: $localeStore, key: 'spark.events_one' })
+				: t({ locale: $localeStore, key: 'spark.events_many' })}
+			<span class="flow-spark-hint-cta">
+				· {t({ locale: $localeStore, key: 'spark.tap_a_dot' })}
+			</span>
 		</div>
 	{/if}
 </div>
@@ -90,36 +259,98 @@
 	.flow-spark-wrap {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.35rem;
 		border-radius: var(--r-12);
 	}
 
 	.flow-spark {
 		width: 100%;
-		height: 48px;
+		height: 64px;
 		display: block;
+		margin-top: 6px;
+		overflow: visible;
 	}
 
-	.flow-spark-events {
+	.flow-spark-event-dot {
+		cursor: pointer;
+	}
+
+	/* Idle pulse animation — fires only when no dot is active so the
+	   pulse invites a tap. Mirrors the prototype's
+	   `.flow-spark-pulse-ring` keyframes. */
+	.flow-spark-pulse-ring {
+		animation: flow-spark-pulse 1.8s ease-in-out infinite;
+		transform-origin: center;
+		transform-box: fill-box;
+	}
+
+	@keyframes flow-spark-pulse {
+		0% {
+			transform: scale(1);
+			opacity: 0.5;
+		}
+
+		50% {
+			transform: scale(1.6);
+			opacity: 0.15;
+		}
+
+		100% {
+			transform: scale(1);
+			opacity: 0.5;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.flow-spark-pulse-ring {
+			animation: none;
+		}
+	}
+
+	.flow-spark-event-row {
 		display: flex;
 		flex-wrap: wrap;
-		gap: 0.5rem 1rem;
-	}
-
-	.flow-spark-event {
+		align-items: baseline;
+		gap: 0.25rem;
 		font-size: 10px;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
+		color: var(--text-base);
+	}
+
+	.flow-spark-event-day {
+		font-weight: 700;
+	}
+
+	.flow-spark-event-lbl {
 		color: var(--text-muted);
 	}
 
-	.flow-spark-dir {
-		margin-right: 0.25rem;
+	.flow-spark-event-dir {
+		margin-left: 0.25rem;
 		font-weight: 700;
 		color: var(--no);
 	}
 
-	.flow-spark-dir.is-up {
+	.flow-spark-event-dir.is-up {
 		color: var(--yes);
+	}
+
+	.flow-spark-hint {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem;
+		font-size: 10px;
+		letter-spacing: 0.05em;
+		color: var(--text-muted);
+	}
+
+	.flow-spark-hint .num {
+		color: var(--text-base);
+		font-weight: 700;
+	}
+
+	.flow-spark-hint-cta {
+		color: var(--laurel);
 	}
 </style>
