@@ -330,7 +330,9 @@
 			inset 0 1px 0 rgba(255, 255, 255, 0.45);
 	}
 
-	/* 3px laurel-coloured indicator capsule above the active tab. */
+	/* 3px laurel-coloured indicator capsule above the active tab.
+	   `left` jumps instantly on tab change — no sliding motion next to
+	   the primary CTA row. Color / glow may still cross-fade. */
 	.pillnav-indicator {
 		position: absolute;
 		top: 3px;
@@ -340,23 +342,15 @@
 		background: var(--fg, var(--text-base));
 		opacity: 0.85;
 		transition:
-			left 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
 			background 220ms var(--ease-vici, ease),
 			box-shadow 220ms var(--ease-vici, ease),
 			opacity 220ms var(--ease-vici, ease);
-		will-change: left;
 	}
 
 	.pillnav-indicator.is-flow {
 		background: var(--accent, var(--color-primary));
 		box-shadow: 0 0 8px rgba(226, 184, 66, 0.55);
 		opacity: 1;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.pillnav-indicator {
-			transition: none;
-		}
 	}
 
 	.pillnav-tab {

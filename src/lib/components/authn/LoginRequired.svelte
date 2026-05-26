@@ -3,6 +3,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	interface Props {
 		title?: string;
@@ -17,7 +18,7 @@
 
 <div class="flex min-h-[calc(100vh-10rem)] items-center justify-center px-4" in:fade>
 	<Card class="w-full max-w-md text-center" padding="lg" variant="glass">
-		<div in:fly={{ y: 20, delay: 100 }}>
+		<div in:fly={prefersReducedMotion() ? { duration: 0 } : { y: 20, delay: 100 }}>
 			<div
 				class="bg-primary/10 text-primary mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full"
 			>

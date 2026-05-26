@@ -21,6 +21,7 @@
 	import { isMarketSuggested } from '$lib/utils/flow-card-display.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { getOutcomeVariant, getTimeRemaining } from '$lib/utils/market.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
@@ -60,7 +61,12 @@
 	};
 </script>
 
-<div class="h-full w-full" in:fly={{ y: 12, duration: 320, delay: Math.min(index * 35, 210) }}>
+<div
+	class="h-full w-full"
+	in:fly={prefersReducedMotion()
+		? { duration: 0 }
+		: { y: 12, duration: 320, delay: Math.min(index * 35, 210) }}
+>
 	<Card
 		class="group border-border hover:border-border-strong bg-card/85 shadow-card hover:bg-card h-full w-full overflow-hidden border transition-all hover:-translate-y-0.5"
 		onclick={() => goto(resolve(`${AppPath.Markets}/${market.id}`))}

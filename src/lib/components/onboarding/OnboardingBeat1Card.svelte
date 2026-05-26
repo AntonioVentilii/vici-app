@@ -406,7 +406,7 @@
 		background: color-mix(in srgb, var(--no) 18%, var(--bg-surface));
 		border-color: var(--no);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--no) 28%, transparent);
-		animation: ob2-pulse 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+		animation: ob2-pulse 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
 	.ob2-prob-btn.yes {
@@ -423,7 +423,7 @@
 		background: color-mix(in srgb, var(--yes) 18%, var(--bg-surface));
 		border-color: var(--yes);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--yes) 28%, transparent);
-		animation: ob2-pulse 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+		animation: ob2-pulse 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
 	.ob2-prob-btn.is-dimmed {

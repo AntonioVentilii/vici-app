@@ -2,6 +2,7 @@
 	import type { Snippet } from 'svelte';
 	import { fly } from 'svelte/transition';
 	import { clickOutside } from '$lib/actions/click-outside';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	interface Props {
 		open: boolean;
@@ -35,7 +36,7 @@
 			class="absolute {align === 'right'
 				? 'right-0'
 				: 'left-0'} bg-popover border-border-strong shadow-modal z-50 mt-2 min-w-48 origin-top-right rounded-[8px] border p-2 backdrop-blur-md focus:outline-none"
-			transition:fly={{ y: 8, duration: 200 }}
+			transition:fly={prefersReducedMotion() ? { duration: 0 } : { y: 8, duration: 200 }}
 		>
 			{@render content()}
 		</div>

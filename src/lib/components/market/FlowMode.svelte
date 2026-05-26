@@ -49,6 +49,7 @@
 	import { haptic, type HapticPattern } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { recordMotionSwipe, type MotionBeatPayload } from '$lib/utils/motion-engine.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import {
 		applyDailyStreakBump,
 		FLAME_STAGE_LABEL_KEYS,
@@ -674,10 +675,10 @@
 						style="z-index: {20 - i}; --depth: {i};"
 						class="flow-card-slot"
 						class:is-back={!isCurrent}
-						in:fly={isCurrent && currentIndex === 0
-							? { y: 300, duration: 600, easing: cubicOut }
-							: { y: 30, opacity: 0, duration: 400, easing: cubicOut }}
-						out:fly={{ x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
+						in:fade={{ duration: prefersReducedMotion() ? 0 : 200, easing: cubicOut }}
+						out:fly={prefersReducedMotion()
+							? { duration: 0 }
+							: { x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
 					>
 						<FlowCard
 							category={flowCategory}
@@ -750,6 +751,12 @@
 		flex-direction: column;
 		background:
 			radial-gradient(circle at 50% -10%, var(--laurel-glow), transparent 34%), var(--bg-base);
+		animation: flow-fade-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-shell {
+			animation: none;
+		}
 	}
 
 	.flow-shell.is-active {
