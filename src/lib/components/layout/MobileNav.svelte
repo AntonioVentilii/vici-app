@@ -14,7 +14,9 @@
 	//  - Markets ← /markets/[id]
 	//  - Dash    ← /portfolio (Portfolio is the older detail surface
 	//              under the Dash tab)
-	//  - Social  ← /friends, /leagues, /worlds, /bouts
+	//  - Social  ← /leagues, /worlds, /bouts (Friends now only lives
+	//              inside the Social tab strip; the standalone
+	//              /friends route is gone, see Tier C-27)
 	//  - Profile ← /wallet, /settings, /notifications
 	const isActive = (path: AppPath) => {
 		const current = page.url.pathname;
@@ -28,10 +30,6 @@
 		}
 
 		if (path === AppPath.Dash && current === AppPath.Portfolio) {
-			return true;
-		}
-
-		if (path === AppPath.Social && current === AppPath.Friends) {
 			return true;
 		}
 

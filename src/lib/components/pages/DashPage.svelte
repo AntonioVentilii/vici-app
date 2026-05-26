@@ -397,7 +397,7 @@
 				</div>
 			</div>
 
-			<button class="dash-referral" onclick={() => goto(resolve(AppPath.Friends))} type="button">
+			<button class="dash-referral" onclick={() => goto(resolve(AppPath.Social))} type="button">
 				<span class="dash-referral-left">
 					<span class="dash-referral-gift" aria-hidden="true">
 						<Gift size={12} strokeWidth={1.8} />

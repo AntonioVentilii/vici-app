@@ -115,7 +115,11 @@ const friendRequestInboxStore: Readable<InboxNotification[]> = derived(
 				}),
 				when: t({ locale: $locale, key: 'inbox.pending' }),
 				unread: true,
-				href: `${AppPath.Friends}?tab=requests`
+				// Friends now only live inside the Social tab strip (Tier C-27).
+				// The Social shell restores the last-opened tab from
+				// `vici.social-tab`, which the FriendsTab UI keeps on
+				// `'friends'` after the user accepts/rejects a request.
+				href: AppPath.Social
 			};
 		});
 	}

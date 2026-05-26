@@ -4,8 +4,8 @@
 	import { browser } from '$app/environment';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import BoutsInboxPage from '$lib/components/pages/BoutsInboxPage.svelte';
-	import FriendsPage from '$lib/components/pages/FriendsPage.svelte';
 	import LeaguesPage from '$lib/components/pages/LeaguesPage.svelte';
+	import FriendsTab from '$lib/components/social/FriendsTab.svelte';
 	import { leaguesCreateIntent } from '$lib/stores/leagues-ui.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -105,7 +105,7 @@
 
 	<div class="social-panel" role="tabpanel">
 		{#if activeTab === 'friends'}
-			<FriendsPage embedded />
+			<FriendsTab />
 		{:else if activeTab === 'leagues'}
 			<LeaguesPage embedded />
 		{:else if activeTab === 'bouts'}

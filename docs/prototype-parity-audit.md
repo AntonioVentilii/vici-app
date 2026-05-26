@@ -479,16 +479,16 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Tab persistence — already correct; `$effect` writes `'friends'` back to storage after legacy migration
 - ⏭ Tab-aware `+` — kept the global `leaguesCreateIntent` store pattern (intentional cross-component signal)
 
-### Friends (7+)
+### Friends (7+) ✅ commit `<friends>`
 
-- ⬜ Invite hero card — +500 VXP eyebrow, monthly cap line, social-proof row, Share/Copy row
-- ⬜ Pending invites section
-- ⬜ Friends-ranked list — rank 01,02,…, h2h diff chip, sticky YOU row
-- ⬜ Friends feed list — serif-italic market quotes + 👏 reactions
-- ⬜ Global ranking link with delta
-- ⬜ Friend mini-profile sheet — bottom sheet w/ stats + h2h + Remove
-- ⬜ Add-by-handle bottom sheet — @-prefixed input
-- ⬜ Remove back-arrow appbar (tier C-27)
+- ✅ Invite hero card — `FriendsTab.svelte` opens with a hero section that pulls the viewer's referral code via `getMyReferralCode()`, renders the `+500 VXP` mono eyebrow + `for both of you` suffix, serif-italic title, monthly bonus-cap line, and the Share / Copy row (Share via `navigator.share` with clipboard fallback; Copy swaps to `Copied ✓` for 1.8s via `writeToClipboard`). URL preview strips the scheme to keep the mono `host/signup?ref={code}` glance.
+- ✅ Pending invites section — uses the existing `friendRequestsStore` (received) under a `Pending · waiting for first call` eyebrow; each row expands to inline Accept (`var(--yes)`-tinted) / Reject buttons, wired to the same `acceptFriendRequest` / `rejectFriendRequest` services. A separate `Awaiting reply` section surfaces `sentFriendRequestsStore` (lower-priority, no expand) with an inline Cancel.
+- ✅ Friends-ranked list — `rankedFriends` $derived sorts the friend roster by accuracy desc; each row renders the `01`/`02`/… padded mono rank, avatar, `@{nickname}`, `{acc}% · {streak}d` meta, and the h2h delta chip (`var(--yes)` wash when the viewer leads, `var(--no)` wash otherwise). A sticky `YOU` row pinned via `position: sticky; bottom: 5rem` sits below; tapping a row opens the friend mini-profile sheet.
+- ⏭ Friends feed list — Deferred: no `getFriendsFeed` service today; the surface renders the prototype's `Recent activity` eyebrow + the serif-italic quiet copy as a placeholder. 👏 reactions also deferred (no per-event reaction model yet). Tracked with an in-line `TODO:` so the next pass picks it up when the satellite ships an activity stream.
+- ✅ Global ranking link with delta — bottom CTA card derives `myRank` from the cached `$leaderboard` derived store (`indexOf` viewer's principal + 1) and links to `/social/leaderboard`. ⏭ The week-over-week `↑ N` delta is deferred — no `previousRank` snapshot exists satellite-side; an in-code comment documents the gap.
+- ✅ Friend mini-profile sheet — inline bottom-sheet pattern (custom scrim + sheet, since the shared `Modal` is a centered dialog only). Surfaces `Accuracy / Streak / VXP` stat tiles, the h2h `You lead by {delta} pts` / `Behind by {delta} pts` line tinted yes/no, and a destructive `Remove friend` button wired to `unfriendUser` + `refreshFriendRelations`.
+- ✅ Add-by-handle bottom sheet — `@`-prefixed pill input with a "Find by handle or principal" blurb and an invite-by-link footnote (`No matches yet. Invite by link gets both of you {amount} VXP.`). Submits through to `sendFriendRequest`; the satellite still keys by principal text today (nickname resolution lands in a follow-up), so the visual `@` is the UX cue while the input accepts either form.
+- ✅ (Tier C-27) Standalone `/friends` route dropped — `src/routes/(app)/friends/+page.svelte` + `FriendsPage.svelte` + `FriendsList.svelte` deleted, `AppPath.Friends` removed from the enum, `MobileNav`'s cascade table tightened (Social no longer aliases `/friends`), the inbox bell's `friend_request` action item now points at `AppPath.Social` so the Friends tab restores from `vici.social-tab`, and `DashPage`'s referral CTA jumps straight to `/social`.
 
 ### Leagues list (~10) ✅ commit `<leagues-list>`
 

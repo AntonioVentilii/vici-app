@@ -14,7 +14,7 @@ import { CircleUserRound, House, LayoutDashboard, Shield, Users, Zap } from 'luc
  *  - Markets ← /markets/[id]
  *  - Dash    ← /portfolio
  *  - Social  ← () /leagues, /worlds, /bouts, /tournament, leaderboard
- *  - Profile ← /wallet, /settings, /notifications, /friends
+ *  - Profile ← /wallet, /settings, /notifications
  */
 export const navItems: NavItem[] = [
 	{ labelKey: 'nav.markets', path: AppPath.Home, mobileIcon: House },
