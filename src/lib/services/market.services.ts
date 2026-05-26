@@ -609,17 +609,32 @@ export const rankMarkets = ({
 };
 
 /**
- * Open binary markets ranked for the prediction flow UI using profile interests and categories.
+ * Open binary markets ranked for the prediction flow UI using profile
+ * interests and categories.
+ *
+ * `tagMappings` and `metadataBySeries` are optional pre-fetched
+ * inputs: callers that already hold these (e.g. `prepareFlow`, which
+ * shares them with the signals derivation) can pass them in to avoid
+ * a duplicate satellite round-trip. Plain values, promises, or
+ * promise-wrapped results all work — `Promise.all` collapses them.
  */
-export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
+export const getFlowQueue = async ({
+	domain,
+	tagMappings,
+	metadataBySeries
+}: {
+	domain: RegistryDid.BalanceDomain;
+	tagMappings?: Record<string, MarketTag[]> | Promise<Record<string, MarketTag[]>>;
+	metadataBySeries?: Record<string, MarketMetadata> | Promise<Record<string, MarketMetadata>>;
+}): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 	const principal = identity.getPrincipal().toText();
 
-	const [markets, profile, tagMappings, metadataBySeries] = await Promise.all([
+	const [markets, profile, resolvedTags, resolvedMeta] = await Promise.all([
 		getMarkets(domain),
 		getProfile(principal),
-		listMarketTagsBySeries().catch(() => ({})),
-		listMarketMetadataBySeries().catch(() => ({}))
+		tagMappings ?? listMarketTagsBySeries().catch(() => ({})),
+		metadataBySeries ?? listMarketMetadataBySeries().catch(() => ({}))
 	]);
 
 	const userInterests = new Set(profile.data.interests ?? []);
@@ -629,8 +644,8 @@ export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<M
 	return rankMarkets({
 		markets: eligibleMarkets,
 		userInterests,
-		tagMappings,
-		metadataBySeries
+		tagMappings: resolvedTags,
+		metadataBySeries: resolvedMeta
 	});
 };
 

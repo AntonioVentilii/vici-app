@@ -3,6 +3,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	interface Props {
 		count: number;
@@ -13,8 +14,8 @@
 
 <div
 	class="combo-banner"
-	in:fly={{ y: -8, duration: 300, easing: backOut }}
-	out:fade={{ duration: 250 }}
+	in:fly={prefersReducedMotion() ? { duration: 0 } : { y: -8, duration: 300, easing: backOut }}
+	out:fade={{ duration: prefersReducedMotion() ? 0 : 250 }}
 >
 	<span>
 		{t({

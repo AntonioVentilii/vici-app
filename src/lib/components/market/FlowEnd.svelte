@@ -5,6 +5,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import type { FlameStage } from '$lib/utils/streak.utils';
 
 	interface Props {
@@ -36,7 +37,10 @@
      copy). No confetti / no green-check celebration; the
      accomplishment is the laurel + the numbers, not noise. -->
 <div class="flow-end">
-	<div class="flow-end-inner" in:fly={{ y: 20, duration: 500 }}>
+	<div
+		class="flow-end-inner"
+		in:fly={prefersReducedMotion() ? { duration: 0 } : { y: 20, duration: 500 }}
+	>
 		<h2 class="flow-end-title display">Vici.</h2>
 		<p class="flow-end-sub">
 			{#if betsCount === 0}

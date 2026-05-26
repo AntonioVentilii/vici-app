@@ -23,7 +23,13 @@ export type HapticPattern =
 	| 'soft-hum'
 	| 'firm-tap'
 	| 'low-thud'
-	| 'celebration';
+	| 'celebration'
+	| 'milestone-tap'
+	| 'oracle-tap'
+	| 'oracle-roll'
+	| 'centurion'
+	| 'vici-fanfare'
+	| 'streak-ramp';
 
 type HapticValue = number | readonly number[];
 
@@ -55,7 +61,21 @@ const HAPTIC_PATTERNS: Record<HapticPattern, HapticValue> = {
 	// Session complete celebration — distinct envelope from the
 	// within-session beats. Lives in the same vocabulary so call
 	// sites stay consistent.
-	celebration: [14, 30, 20, 30, 40]
+	celebration: [14, 30, 20, 30, 40],
+	// Mid-tier milestone beat — used at 10 / 250 / 500 swipes + streak
+	// tier-up. Matches the prototype motion-engine `[25, 30, 25]`.
+	'milestone-tap': [25, 30, 25],
+	// Oracle's first-leaderboard arrival — `[40, 60, 40]`.
+	'oracle-tap': [40, 60, 40],
+	// Oracle's 50-swipe roll — `[25, 30, 25, 40, 60]`.
+	'oracle-roll': [25, 30, 25, 40, 60],
+	// Centurion (100 swipes) — `[12, 30, 12, 30, 12, 30, 60]`.
+	centurion: [12, 30, 12, 30, 12, 30, 60],
+	// Vici 1000 fanfare — `[40, 30, 40, 30, 80]`.
+	'vici-fanfare': [40, 30, 40, 30, 80],
+	// Streak ramp-up beat (multi-stage flame escalation) —
+	// `[40, 60, 40, 60, 80]`.
+	'streak-ramp': [40, 60, 40, 60, 80]
 };
 
 /**

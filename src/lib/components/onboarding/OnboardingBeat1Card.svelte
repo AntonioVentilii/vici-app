@@ -4,6 +4,7 @@
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
+	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -44,6 +45,10 @@
 		if (committing !== null) {
 			return;
 		}
+
+		// Firm tap on first-call commit (prototype: `onboarding.jsx:74,
+		// 79` fires `navigator.vibrate(12)`).
+		haptic('firm-tap');
 
 		committing = side;
 		setTimeout(() => onCommit(side), COMMIT_FEEDBACK_MS);
@@ -401,7 +406,7 @@
 		background: color-mix(in srgb, var(--no) 18%, var(--bg-surface));
 		border-color: var(--no);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--no) 28%, transparent);
-		animation: ob2-pulse 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+		animation: ob2-pulse 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
 	.ob2-prob-btn.yes {
@@ -418,7 +423,7 @@
 		background: color-mix(in srgb, var(--yes) 18%, var(--bg-surface));
 		border-color: var(--yes);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--yes) 28%, transparent);
-		animation: ob2-pulse 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+		animation: ob2-pulse 220ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
 	.ob2-prob-btn.is-dimmed {

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import type { Snippet } from 'svelte';
+	import { onMount, type Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
@@ -20,6 +20,7 @@
 	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
 	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
 	import { redeemReferralCode } from '$lib/services/referral.services';
+	import { initFlowPrewarm } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -31,6 +32,12 @@
 	}
 
 	const { children }: Props = $props();
+
+	// Pre-warm the Flow deck so opening `/flow` is instantaneous.
+	// Subscriptions inside re-warm in the background on sign-in,
+	// balance-domain switch, featured-event toggle, or interest
+	// edits — components never block on the rebuild.
+	onMount(() => initFlowPrewarm());
 
 	const isFlowPage = $derived(page.url.pathname === AppPath.Flow);
 

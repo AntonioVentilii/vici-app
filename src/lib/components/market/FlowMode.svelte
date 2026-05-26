@@ -25,14 +25,12 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
+	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
-	import { getMarketMetadata } from '$lib/services/market-metadata.services';
-	import { getUserMarketSignals } from '$lib/services/market-signals.services';
-	import { listMarketTagsBySeries } from '$lib/services/market-tags.services';
-	import { getFlowQueue } from '$lib/services/market.services';
 	import { getPositions } from '$lib/services/position.services';
 	import { persistDailyStreak } from '$lib/services/profile.services';
 	import { showCompanion } from '$lib/stores/companion.store';
+	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { flowSessionMaxBets, preferencesStore } from '$lib/stores/preferences.store';
@@ -48,9 +46,10 @@
 		resolveFlowArtCategory,
 		type FlowArtCategory
 	} from '$lib/utils/flow-art.utils';
-	import { haptic } from '$lib/utils/haptics.utils';
+	import { haptic, type HapticPattern } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { recordMotionSwipe, type MotionBeatPayload } from '$lib/utils/motion-engine.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import {
 		applyDailyStreakBump,
 		FLAME_STAGE_LABEL_KEYS,
@@ -62,7 +61,6 @@
 		resolveOutcomeExecutionPriceForSizing
 	} from '$lib/utils/trade.utils';
 
-	const MAX_MARKETS = 20;
 	const maxBets = $derived(flowSessionMaxBets($preferencesStore));
 
 	const resolveFlowCategory = ({
@@ -141,64 +139,99 @@
 	// sites read the same way.
 	const vibrate = haptic;
 
+	// Per-beat haptic envelope. Mirrors the prototype's motion-engine
+	// table verbatim:
+	//   milestone-1            → triple-tap   ([12,30,12,30,12])
+	//   milestone-3 / 5 / 25   → firm-tap     (12ms)
+	//   milestone-10 / 250/500 → milestone-tap ([25,30,25])
+	//   milestone-50           → oracle-roll  ([25,30,25,40,60])
+	//   milestone-100          → centurion    ([12,30,12,30,12,30,60])
+	//   milestone-1000         → vici-fanfare ([40,30,40,30,80])
+	//   first-yes / first-no   → triple-tap
+	//   first-contrarian       → mischief     ([10,40,10,40,10])
+	//   first-leaderboard      → oracle-tap   ([40,60,40])
+	//   streak-tier-up         → milestone-tap
+	//   acc-threshold          → milestone-tap
+	//   ambient-10             → firm-tap
+	const MILESTONE_HAPTIC: Record<number, HapticPattern> = {
+		1: 'triple-tap',
+		3: 'firm-tap',
+		5: 'firm-tap',
+		10: 'milestone-tap',
+		25: 'firm-tap',
+		50: 'oracle-roll',
+		100: 'centurion',
+		250: 'milestone-tap',
+		500: 'milestone-tap',
+		1000: 'vici-fanfare'
+	};
+
+	const hapticForBeat = (beatKind: string | undefined): HapticPattern | null => {
+		if (!beatKind) {
+			return null;
+		}
+
+		if (beatKind.startsWith('milestone-')) {
+			const n = Number(beatKind.slice('milestone-'.length));
+
+			return MILESTONE_HAPTIC[n] ?? 'double-pulse';
+		}
+
+		switch (beatKind) {
+			case 'first-yes':
+			case 'first-no':
+				return 'triple-tap';
+			case 'first-contrarian':
+				return 'mischief';
+			case 'first-leaderboard':
+				return 'oracle-tap';
+			case 'streak-tier-up':
+			case 'acc-threshold':
+				return 'milestone-tap';
+			case 'ambient-10':
+				return 'firm-tap';
+			default:
+				return 'double-pulse';
+		}
+	};
+
 	onMount(async () => {
 		document.body.classList.add('overflow-hidden');
 
 		flowTradeService.startSession();
 
 		try {
-			const [queue, userPositions, tagMap] = await Promise.all([
-				getFlowQueue($balanceDomain),
-				nonNullish($userStore.user) ? getPositions($balanceDomain) : Promise.resolve([]),
-				listMarketTagsBySeries().catch(() => ({}))
-			]);
+			// Pre-warmed deck from `flow.store` — populated on app
+			// init and refreshed in the background on input changes.
+			// `peekFlow` validates the cached payload against the
+			// session's current balance domain and featured-event
+			// scope; a mismatch (a rebuild for the new inputs is
+			// still in flight) or a cold start falls through to an
+			// on-demand build so the user never sees markets from
+			// the previous scope.
+			const expectedTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
+			const cached = peekFlow({
+				domain: $balanceDomain,
+				featuredEventTag: expectedTag
+			});
+			const prepared: PreparedFlow = nonNullish(cached)
+				? cached
+				: await prepareFlow({
+						domain: $balanceDomain,
+						featuredEventTag: expectedTag,
+						signedIn: nonNullish($userStore.user)
+					});
 
-			// When a featured event is running, narrow the Flow queue to
-			// markets carrying the event's category tag so the swipe deck
-			// tracks the live tentpole — mirrors the MarketsPage suggested
-			// rail behaviour (88eaa02). Falls back to the full queue when
-			// the filter would empty the deck, so users always see *some*
-			// content. Same FeaturedEvent abstraction (b9dfb7d), so the
-			// behaviour generalises across future tentpoles automatically.
-			//
-			// `tagMap` is keyed by series id (a string at runtime) and
-			// `event.categoryTag` is typed as a free-form string on the
-			// FeaturedEvent type — widen both sides for the membership
-			// check rather than narrowing the event tag into MarketTag.
-			const tagsByMarket = tagMap as Record<string, string[]>;
-			const eventTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
-			const eventScoped =
-				eventTag !== undefined
-					? queue.filter((market) =>
-							(tagsByMarket[market.id] ?? []).some((tag) => tag === eventTag)
-						)
-					: [];
-			const sourceQueue = eventScoped.length > 0 ? eventScoped : queue;
+			({
+				markets,
+				tagMap: marketTagMap,
+				metadataById: marketMetadataMap,
+				signals: userSignals
+			} = prepared);
 
-			markets = sourceQueue.slice(0, MAX_MARKETS);
-			positions = userPositions;
-			marketTagMap = tagMap;
-
-			const metadataEntries: [MarketId, MarketMetadata][] = [];
-
-			await Promise.all(
-				markets.map(async (m) => {
-					const doc = await getMarketMetadata(m.id).catch(() => undefined);
-
-					if (doc) {
-						metadataEntries.push([m.id, doc]);
-					}
-				})
-			);
-			marketMetadataMap = new Map(metadataEntries);
-
-			if (nonNullish($userStore.user)) {
-				userSignals = await getUserMarketSignals($balanceDomain).catch(() => ({
-					categoryAcc: {},
-					priorCalls: {},
-					followedLean: {}
-				}));
-			}
+			positions = nonNullish($userStore.user)
+				? await getPositions($balanceDomain).catch(() => [])
+				: [];
 
 			const { profile } = $userStore;
 
@@ -233,6 +266,10 @@
 	onDestroy(() => {
 		document.body.classList.remove('overflow-hidden');
 		void flowTradeService.endSession();
+		// Promote the pre-built follow-up deck and rebuild a fresh
+		// `next` excluding the markets just shown — re-entering /flow
+		// opens on an unseen deck without a network round-trip.
+		advanceFlow();
 	});
 
 	const spawnXpPop = ({
@@ -464,13 +501,23 @@
 				kind: 'bonus',
 				copy: popCopy
 			});
-			vibrate(motion.beat?.kind === 'milestone-1' ? 'triple-tap' : 'double-pulse');
+		}
+
+		// Single beat-aware vibrate — fires once per beat, with the
+		// envelope mapped from `beat.kind`. Skips milestone-1's
+		// preceding `triple-tap` here only because the `firm-tap` swipe
+		// commit haptic already fired at line ~300; the milestone-1
+		// envelope is itself the triple-tap, so the commit + milestone
+		// firing back-to-back is intentional (matches the prototype).
+		const beatHaptic = hapticForBeat(motion.beat?.kind);
+
+		if (beatHaptic) {
+			vibrate(beatHaptic);
 		}
 
 		if (motion.beat?.hardPause) {
 			activeMotionBeat = motion.beat;
 			flowPaused = true;
-			vibrate('double-pulse');
 
 			return;
 		}
@@ -628,10 +675,10 @@
 						style="z-index: {20 - i}; --depth: {i};"
 						class="flow-card-slot"
 						class:is-back={!isCurrent}
-						in:fly={isCurrent && currentIndex === 0
-							? { y: 300, duration: 600, easing: cubicOut }
-							: { y: 30, opacity: 0, duration: 400, easing: cubicOut }}
-						out:fly={{ x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
+						in:fade={{ duration: prefersReducedMotion() ? 0 : 200, easing: cubicOut }}
+						out:fly={prefersReducedMotion()
+							? { duration: 0 }
+							: { x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
 					>
 						<FlowCard
 							category={flowCategory}
@@ -704,6 +751,12 @@
 		flex-direction: column;
 		background:
 			radial-gradient(circle at 50% -10%, var(--laurel-glow), transparent 34%), var(--bg-base);
+		animation: flow-fade-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-shell {
+			animation: none;
+		}
 	}
 
 	.flow-shell.is-active {

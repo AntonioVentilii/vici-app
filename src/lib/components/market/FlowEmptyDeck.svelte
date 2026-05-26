@@ -4,6 +4,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	interface Props {
 		onBackToMarkets: () => void;
@@ -15,7 +16,10 @@
 <!-- Empty-deck state. VICI in `thinking` mood holds the canvas,
      single-line copy, no escalation, no celebration. -->
 <div class="empty-deck flex h-full w-full flex-col items-center justify-center px-6">
-	<div class="relative z-10 max-w-md text-center" in:fly={{ y: 20, duration: 500 }}>
+	<div
+		class="relative z-10 max-w-md text-center"
+		in:fly={prefersReducedMotion() ? { duration: 0 } : { y: 20, duration: 500 }}
+	>
 		<div class="empty-deck-char">
 			<ViciChar mood="thinking" size={96} />
 		</div>

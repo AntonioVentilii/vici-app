@@ -60,12 +60,14 @@
 	onkeydown={onKeydown}
 	type="button"
 >
-	<Heart
-		aria-hidden="true"
-		fill={saved ? 'currentColor' : 'none'}
-		size={size === 'md' ? 16 : 14}
-		strokeWidth={2}
-	/>
+	<span class="saved-market-icon">
+		<Heart
+			aria-hidden="true"
+			fill={saved ? 'currentColor' : 'none'}
+			size={size === 'md' ? 16 : 14}
+			strokeWidth={2}
+		/>
+	</span>
 </button>
 
 <style lang="postcss">
@@ -104,5 +106,27 @@
 		height: 2.25rem;
 		background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
 		color: var(--text-muted);
+	}
+
+	/* Heart-pop envelope on save toggle — visual punch that
+	   substitutes for the haptic on iOS Safari (Vibration API
+	   absent there). Mirrors prototype `app.css:486-490`. */
+	.saved-market-icon {
+		display: inline-flex;
+	}
+	.saved-market-toggle.is-saved .saved-market-icon {
+		animation: heart-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+	.saved-market-toggle:active {
+		transform: scale(0.92);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.saved-market-toggle.is-saved .saved-market-icon {
+			animation: none;
+		}
+		.saved-market-toggle:active {
+			transform: none;
+		}
 	}
 </style>

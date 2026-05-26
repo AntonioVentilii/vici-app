@@ -8,6 +8,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
 	 * Global leaderboard — port of the design source's
@@ -105,7 +106,7 @@
 					class="leaderboard-podium-tile"
 					class:is-first={i === 0}
 					class:is-you={user.owner === currentUser}
-					in:fly={{ y: 24, delay: i * 100 }}
+					in:fly={prefersReducedMotion() ? { duration: 0 } : { y: 24, delay: i * 100 }}
 				>
 					<div class="leaderboard-podium-rank num allcaps">#{i + 1}</div>
 					<div class="leaderboard-podium-avatar-wrap">

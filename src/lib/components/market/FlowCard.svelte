@@ -1,7 +1,7 @@
 <script lang="ts">
-	import FlowArtFrame from '$lib/components/artwork/FlowArtFrame.svelte';
 	import ConsensusCompass from '$lib/components/market/ConsensusCompass.svelte';
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
+	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { daysToKickoff } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -533,8 +533,8 @@
 				     frame — extends across the card body (prototype
 				     `bleed` mode). -->
 				<div class="flow-art-bleed">
-					<FlowArtFrame
-						class="flow-art"
+					<MarketArtwork
+						bleed
 						category={resolvedCategory}
 						seed={market.id}
 						size={420}
@@ -791,6 +791,12 @@
 	.flow-days.is-urgent {
 		color: var(--no);
 		border-color: color-mix(in srgb, var(--no) 30%, var(--border-base));
+		animation: flow-days-pulse 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-days.is-urgent {
+			animation: none;
+		}
 	}
 
 	.flow-whynow {
