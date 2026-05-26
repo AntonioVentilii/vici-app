@@ -351,7 +351,7 @@ outcome…"` with the date formatted in the active locale via
 - ⬜ Remove Send/Receive tabs (tier C-24 — confirm production-needed first)
 - ⬜ Remove CollateralStats secondary card
 
-### Settings (24) ✅ commit `<settings>`
+### Settings (24) ✅ commit `f521246`
 
 - ✅ Identity row — added "Joined {date}" line from Juno doc `created_at`; archetype chip removed
 - ✅ Account section — "Sign-in method" + "Email" rows added (route to `/settings/account`)
