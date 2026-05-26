@@ -142,21 +142,65 @@ These need a per-item decision before deletion. Default = remove.
 - ✅ Reset active state on market change
 - ✅ Marker Y coordinate uses event day index, not iteration index
 
-### Markets list (14)
+### Markets list (14) ✅ commit `<markets-list>`
 
-- ⬜ Category chips at top (prepend ♥ Saved chip)
-- ⬜ Replace status tabs with category-driven filtering (tier C-1 lock)
-- ⬜ Move saved toggle from below filters to prepended chip
-- ⬜ Add Trending horizontal carousel (when cat='all')
-- ⬜ Add Saved horizontal carousel (when cat='all' + saves > 0)
-- ⬜ FeaturedCard vs MarketRow split (different cards for rail vs list)
-- ⬜ Volume + close eyebrow on list cards
-- ⬜ Section heading "All markets / Saved / {label}" with count
-- ⬜ List gap density (8px not 12px)
-- ⬜ Empty-state copy + "Tap the heart…" instruction
-- ⬜ Page header style (24px, no LIVE pill, no count badge)
-- ⬜ Tag chip styling (no bg, just colored text)
-- C-3, C-4, C-5 decisions
+- ✅ Category chips at top — `MarketsCategoryChips` with the ♥ Saved
+  chip prepended, then `All`, then the 6 `MARKET_TAGS` categories.
+  Per-tag accent driven by `var(--cat-{id})` via the `tagColor`
+  helper. Per-category glyphs via `lucide-svelte` icons
+  (LandPlot / Bitcoin / Landmark / Wand2 / Trophy / Sparkles).
+- ✅ Status tabs removed — `MarketFilters` no longer mounted on the
+  Markets list page; the page is now driven entirely by category
+  chip state. (Tier C-1.)
+- ✅ Saved toggle relocated to a first-class category chip — the
+  legacy inline "saved-only" pill is gone; saved view enters via
+  the heart chip and exits via any other chip.
+- ✅ Trending horizontal carousel — `MarketsCarousel` rail on
+  `cat === 'all'`. Sorted by `totalVolume` desc (open markets only)
+  and capped at 8. Reuses `MarketsFeaturedCard`.
+- ✅ Saved horizontal carousel — `MarketsCarousel` rail on
+  `cat === 'all'` when `savedCount > 0`, capped at 6. "See all N →"
+  CTA jumps straight to the saved chip view.
+- ✅ FeaturedCard vs ListRow split — `MarketsFeaturedCard` for
+  carousels (column layout, 17.5rem fixed width, 3-line title clamp,
+  YES%+pair chips) vs `MarketsListRow` for the list (row layout,
+  inline tag · volume · close meta, bar+pct foot).
+- ✅ Volume + close eyebrow on list cards — `MarketsListRow` head
+  renders `"{volume} · {timeLeft}"` via `formatVolume` +
+  `getTimeRemaining`.
+- ✅ Section heading "All markets / Saved / {label}" with count —
+  `.markets-section-head` renders the active category label (via
+  `MARKET_TAG_LABEL_KEYS`) and the list length in the trailing
+  `num` count.
+- ✅ List gap density tightened — `.markets-list` is `gap: 0.5rem`
+  (8px) and `.markets-root` runs `0.875rem` between top-level
+  sections, replacing the previous `space-y-5/space-y-6` 20-24px
+  scaffold.
+- ✅ Empty-state copy — kept "No saved markets yet." + "Tap the
+  heart on any market card…" body; the heart eyebrow stays so the
+  affordance is discoverable in 7 locales.
+- ✅ Page header — appbar shows only the `MARKETS` allcaps eyebrow;
+  the LIVE pill and count badge are gone. Beneath, a single
+  serif-italic display h1 carries `markets.hero.title`
+  ("What will the world do?") at `--t-24`, `tracking-tight`.
+- ✅ Tag chip styling — list-row + featured-card tags render as
+  bare colored text (no bg / no border), via `style:color` from
+  `tagColor`. Matches prototype's `<span className="tag">` style.
+- ✅ Per-category icon glyphs in the chip strip (Item 11).
+- ✅ Skeletons for loading — `.markets-row-skeleton` × 4 while
+  `marketsNotInitialized` is `true`; matches the list-row height
+  + dashed border + animated pulse.
+- ✅ No settings/notification icons in the appbar (Item 14) —
+  prototype's appbar carries only the title; we honor that.
+- ✅ (Tier C-3) "Suggested for you" rail removed — replaced by
+  Trending; the previous `suggestedRail` /
+  `eventRailItems` derived block on `MarketsPage` is gone.
+- ✅ (Tier C-4) "LIVE" pulsing pill removed from the appbar —
+  `markets-mobile-live` and its `count` slot were cut alongside the
+  page-header rewrite.
+- ✅ (Tier C-5) Hover-lift removed — `MarketsListRow` /
+  `MarketsFeaturedCard` use border-color + background-color
+  transitions on hover only, no `hover:-translate-y-0.5`.
 
 ### Market detail (16) ✅ commit `19c8441`
 

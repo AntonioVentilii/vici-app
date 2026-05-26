@@ -1,280 +1,197 @@
 <script lang="ts">
-	import { Heart, X } from 'lucide-svelte/icons';
+	import { Heart } from 'lucide-svelte/icons';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
-	import MarketCard from '$lib/components/market/MarketCard.svelte';
-	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
-	import MarketFilters from '$lib/components/market/MarketFilters.svelte';
-	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
-	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
-	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
-	import { marketMetadata } from '$lib/derived/market-metadata.derived';
+	import MarketsCarousel from '$lib/components/market/MarketsCarousel.svelte';
+	import MarketsCategoryChips, {
+		type MarketsCategoryFilter
+	} from '$lib/components/market/MarketsCategoryChips.svelte';
+	import MarketsListRow from '$lib/components/market/MarketsListRow.svelte';
+	import {
+		MARKET_TAG_LABEL_KEYS,
+		primaryMarketTag,
+		type MarketTag
+	} from '$lib/constants/market-tags.constants';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
-	import { userStore } from '$lib/stores/user.store';
-	import {
-		DEFAULT_SECONDARY_FILTERS,
-		type MarketSecondaryFilters
-	} from '$lib/types/market-filters';
-	import { isMarketSuggested } from '$lib/utils/flow-card-display.utils';
+	import type { Market } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
-	import { filterAndRankMarkets } from '$lib/utils/market-filters.utils';
 
-	const SUGGESTED_RAIL_LIMIT = 6;
+	const TRENDING_LIMIT = 8;
+	const SAVED_RAIL_LIMIT = 6;
 
-	let loading = $derived($marketsNotInitialized);
+	let cat = $state<MarketsCategoryFilter>('all');
 
-	let searchTerm = $state('');
-	let activeTab = $state('Active');
-	let filters = $state<MarketSecondaryFilters>({ ...DEFAULT_SECONDARY_FILTERS });
-	let savedOnly = $state(false);
+	const loading = $derived($marketsNotInitialized);
 
 	const savedSet = $derived(new Set($preferencesStore.savedMarketIds));
-	const savedCount = $derived(savedSet.size);
+	const savedMarkets = $derived($markets.filter((market) => savedSet.has(market.id)));
+	const savedCount = $derived(savedMarkets.length);
 
-	const tabs = ['Active', 'Trending', 'Expiring', 'Resolved'] as const;
+	const tagsByMarket = $derived($marketTags);
 
-	const tabLabel = (tab: (typeof tabs)[number]) => {
-		const key =
-			tab === 'Active'
-				? 'markets.tab.active'
-				: tab === 'Trending'
-					? 'markets.tab.trending'
-					: tab === 'Expiring'
-						? 'markets.tab.expiring'
-						: 'markets.tab.resolved';
+	const matchesTag = ({ market, tag }: { market: Market; tag: MarketTag }): boolean => {
+		const tags = tagsByMarket[market.id];
 
-		return t({ locale: $localeStore, key });
+		return tags?.includes(tag) ?? false;
 	};
 
-	const baseFilteredMarkets = $derived(
-		filterAndRankMarkets({
-			markets: $markets,
-			searchTerm,
-			activeTab,
-			filters,
-			userInterests: $userStore.profile?.interests ?? [],
-			tagMappings: $marketTags,
-			metadataBySeries: $marketMetadata
-		})
+	const list = $derived.by((): Market[] => {
+		const active = cat;
+
+		if (active === 'saved') {
+			return savedMarkets;
+		}
+
+		if (active === 'all') {
+			return $markets;
+		}
+
+		return $markets.filter((market) => matchesTag({ market, tag: active }));
+	});
+
+	/**
+	 * "Trending" rail — `cat === 'all'` only. Prototype filters on a
+	 * `hot` flag; we proxy that by sorting open markets by
+	 * `totalVolume` desc and slicing the top {@link TRENDING_LIMIT}.
+	 * Resolved markets are excluded so the rail tracks live activity.
+	 */
+	const trendingMarkets = $derived(
+		[...$markets]
+			.filter((market) => market.status === 'Open')
+			.sort((a, b) => {
+				if (b.totalVolume === a.totalVolume) {
+					return 0;
+				}
+
+				return b.totalVolume > a.totalVolume ? 1 : -1;
+			})
+			.slice(0, TRENDING_LIMIT)
 	);
 
-	const filteredMarkets = $derived(
-		savedOnly ? baseFilteredMarkets.filter((m) => savedSet.has(m.id)) : baseFilteredMarkets
-	);
+	const sectionTitle = $derived.by((): string => {
+		if (cat === 'all') {
+			return t({ locale: $localeStore, key: 'markets.section.all' });
+		}
 
-	// Editorial rail — only renders when at least one Open market is
-	// currently flagged AND inside its 14-day decay window. Gating
-	// goes through `isMarketSuggested` so the rail can never disagree
-	// with the sort-tier boost: if a market would no longer be
-	// boosted, it never shows up here either. Capped at
-	// `SUGGESTED_RAIL_LIMIT` so the rail stays editorial, not a dump.
-	const baseSuggestedRail = $derived(
-		$markets.filter((market) => isMarketSuggested({ market, metadata: $marketMetadata[market.id] }))
-	);
+		if (cat === 'saved') {
+			return t({ locale: $localeStore, key: 'markets.section.saved' });
+		}
 
-	// When a featured event is running, the rail narrows to markets
-	// carrying the event's category tag so the curated picks track the
-	// live tentpole. If nothing event-tagged is in the suggested set,
-	// fall back to the regular editorial rail so the page never loses
-	// the rail unexpectedly. Same `SUGGESTED_RAIL_LIMIT` cap either way.
-	// `categoryTag` is typed as a free-form `string` on FeaturedEvent so
-	// future tentpoles can use values that aren't in the closed
-	// `MarketTag` enum — widen the per-market tag array to `string[]`
-	// for the membership check rather than narrowing the event tag.
-	const eventTag = $derived($featuredEvent.categoryTag);
-	const eventRailItems = $derived(
-		$featuredEventActive && eventTag !== undefined
-			? baseSuggestedRail.filter((market) =>
-					($marketTags[market.id] ?? []).some((tag) => (tag as string) === eventTag)
-				)
-			: []
-	);
-	const railIsEventScoped = $derived(eventRailItems.length > 0);
-	const suggestedRail = $derived(
-		(railIsEventScoped ? eventRailItems : baseSuggestedRail).slice(0, SUGGESTED_RAIL_LIMIT)
-	);
+		return t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[cat] });
+	});
 </script>
 
 {#snippet marketsTitle()}
-	<h1 class="markets-mobile-title">{t({ locale: $localeStore, key: 'nav.markets' })}</h1>
-	<span class="markets-mobile-live">{t({ locale: $localeStore, key: 'hero.live' })}</span>
+	<span class="markets-hero-eyebrow eyebrow">{t({ locale: $localeStore, key: 'nav.markets' })}</span
+	>
 {/snippet}
 
-{#snippet marketsCount()}
-	<strong class="markets-mobile-count num">{filteredMarkets.length}</strong>
-{/snippet}
+<section class="markets-root">
+	<MobileAppBar align="left" titleChildren={marketsTitle} />
 
-<section class="space-y-6">
-	<MobileAppBar align="left" right={marketsCount} titleChildren={marketsTitle} />
+	<header class="markets-hero">
+		<h1 class="markets-hero-title serif-italic">
+			{t({ locale: $localeStore, key: 'markets.hero.title' })}
+		</h1>
+	</header>
 
-	<div class="hidden md:block">
-		<SectionHeader
-			description={t({ locale: $localeStore, key: 'markets.page.sub' })}
-			highlight={t({ locale: $localeStore, key: 'markets.eyebrow' })}
-			title={t({ locale: $localeStore, key: 'markets.page.title' })}
+	<MarketsCategoryChips active={cat} onChange={(next) => (cat = next)} {savedCount} />
+
+	{#if cat === 'all' && savedCount > 0}
+		<MarketsCarousel
+			markets={savedMarkets.slice(0, SAVED_RAIL_LIMIT)}
+			moreLabel={t({
+				locale: $localeStore,
+				key: 'markets.see_all_count',
+				params: { count: savedCount }
+			})}
+			onMore={() => (cat = 'saved')}
+			tagsBySeries={tagsByMarket}
+			title={t({ locale: $localeStore, key: 'markets.section.saved' })}
 		/>
-	</div>
+	{/if}
 
-	<div class="w-full space-y-5">
-		<!-- When the user has flipped the Saved filter on, the page is a
-		     focused "my saved markets" view — the editorial rail
-		     (suggested / event-scoped) is hidden so the surface matches
-		     the saved-only mode where the saved cards are the only
-		     thing on screen. Hiding the rail also avoids the visual
-		     tension of an editorial pick competing with the user's own
-		     bookmarks. -->
-		{#if suggestedRail.length > 0 && !savedOnly}
-			<section
-				class="suggested-rail"
-				aria-label={t({
-					locale: $localeStore,
-					key: railIsEventScoped ? 'markets.suggested.title_event' : 'markets.suggested.title',
-					params: railIsEventScoped ? { event: $featuredEvent.title } : undefined
-				})}
-			>
-				<header class="suggested-rail-head">
-					<span class="eyebrow suggested-rail-eyebrow">
-						{t({
-							locale: $localeStore,
-							key: railIsEventScoped
-								? 'markets.suggested.eyebrow_event'
-								: 'markets.suggested.eyebrow'
-						})}
-					</span>
-					<h2 class="suggested-rail-title">
-						{t({
-							locale: $localeStore,
-							key: railIsEventScoped ? 'markets.suggested.title_event' : 'markets.suggested.title',
-							params: railIsEventScoped ? { event: $featuredEvent.title } : undefined
-						})}
-					</h2>
-				</header>
-				<div class="suggested-rail-scroller">
-					{#each suggestedRail as market, index (market.id)}
-						<div class="suggested-rail-card">
-							<MarketCard
-								{index}
-								{market}
-								metadata={$marketMetadata[market.id]}
-								tag={primaryMarketTag($marketTags[market.id])}
-							/>
-						</div>
+	{#if cat === 'all' && trendingMarkets.length > 0}
+		<MarketsCarousel
+			markets={trendingMarkets}
+			tagsBySeries={tagsByMarket}
+			title={t({ locale: $localeStore, key: 'markets.section.trending' })}
+		/>
+	{/if}
+
+	{#if cat === 'saved' && savedMarkets.length === 0 && !loading}
+		<div class="markets-saved-empty" aria-live="polite" role="status">
+			<Heart class="markets-saved-empty-icon" aria-hidden="true" size={28} strokeWidth={1.4} />
+			<p class="markets-saved-empty-title serif-italic">
+				{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}
+			</p>
+			<p class="markets-saved-empty-body">
+				{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
+			</p>
+		</div>
+	{:else}
+		<section class="markets-section">
+			<header class="markets-section-head">
+				<h2 class="markets-section-title">{sectionTitle}</h2>
+				<span class="num markets-section-count">{list.length}</span>
+			</header>
+
+			{#if loading}
+				<div class="markets-list">
+					{#each Array(4) as _, index (index)}
+						<div class="markets-row-skeleton" aria-hidden="true"></div>
 					{/each}
 				</div>
-			</section>
-		{/if}
-
-		<div class="space-y-5">
-			<MarketFilters
-				{activeTab}
-				{filters}
-				onFiltersChange={(f) => (filters = f)}
-				onSearchChange={(term) => (searchTerm = term)}
-				onTabChange={(tab) => (activeTab = tab)}
-				{searchTerm}
-				tabs={tabs.map((tab) => ({ id: tab, label: tabLabel(tab) }))}
-			/>
-
-			<!-- Markets carries a heart-prefixed "Saved" filter chip
-			     alongside the category chips. We expose it as a toggle next
-			     to the list eyebrow so users can scope the list to their
-			     hearted markets without disturbing the other filters.
-			     Visibility rule: the chip is hidden when the user has zero
-			     saves AND isn't already in saved-only view (no control
-			     surfaces when there's nothing to filter). Once `savedOnly`
-			     is on it stays visible regardless of count so users always
-			     have an obvious way back out of the saved view — including
-			     the empty-state surface where they may have unsaved
-			     everything from inside the filter. -->
-			<div class="mx-auto flex max-w-4xl flex-wrap items-center justify-between gap-2 px-1">
-				<div class="flex items-center gap-3">
-					<h2 class="eyebrow">{tabLabel(activeTab as (typeof tabs)[number])}</h2>
-					{#if savedCount > 0 || savedOnly}
-						<div
-							class={[
-								'duration-state ease-vici inline-flex items-center rounded-full border text-[11px] font-bold transition-colors',
-								savedOnly
-									? 'border-laurel/40 bg-laurel-glow text-laurel'
-									: 'border-border text-muted-foreground hover:border-laurel/40 hover:text-laurel'
-							]}
-						>
-							<button
-								class="duration-hover inline-flex items-center gap-1.5 px-3 py-1 transition-colors"
-								aria-pressed={savedOnly}
-								onclick={() => (savedOnly = !savedOnly)}
-								type="button"
-							>
-								<Heart
-									aria-hidden="true"
-									fill={savedOnly ? 'currentColor' : 'none'}
-									size={11}
-									strokeWidth={2.2}
-								/>
-								{t({
-									locale: $localeStore,
-									key: 'markets.tab.saved',
-									params: { count: savedCount }
-								})}
-							</button>
-							<!-- Clear affordance — only shows once the filter is
-							     active. One-tap exit out of saved view without
-							     having to retap the heart pill. -->
-							{#if savedOnly}
-								<button
-									class="border-laurel/30 hover:bg-laurel/20 duration-hover -my-px -mr-px inline-flex h-[1.625rem] items-center justify-center rounded-full border-l px-1.5 transition-colors"
-									aria-label={t({
-										locale: $localeStore,
-										key: 'markets.saved.clear'
-									})}
-									onclick={() => (savedOnly = false)}
-									type="button"
-								>
-									<X aria-hidden="true" size={10} strokeWidth={2.4} />
-								</button>
-							{/if}
-						</div>
-					{/if}
-				</div>
-				<span class="num text-muted-foreground text-xs font-bold">{filteredMarkets.length}</span>
-			</div>
-
-			{#if savedOnly && filteredMarkets.length === 0 && !loading}
-				<!-- Polished empty state when the user is in saved-only
-				     view and has nothing hearted yet. Same dashed-surface +
-				     serif-italic-headline pattern used by NotificationsPage
-				     (bace2bd). The heart eyebrow keeps the affordance
-				     visible so the user knows what action they're missing. -->
-				<div class="markets-saved-empty mx-auto max-w-4xl" aria-live="polite" role="status">
-					<Heart class="markets-saved-empty-icon" aria-hidden="true" size={28} strokeWidth={1.4} />
-					<p class="markets-saved-empty-title serif-italic">
-						{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}
-					</p>
-					<p class="markets-saved-empty-body">
-						{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
+			{:else if list.length === 0}
+				<div class="markets-empty">
+					<p class="markets-empty-body">
+						{t({ locale: $localeStore, key: 'markets.empty' })}
 					</p>
 				</div>
 			{:else}
-				<MarketFeed
-					emptyMessage={t({ locale: $localeStore, key: 'markets.empty' })}
-					{loading}
-					markets={filteredMarkets}
-					metadataBySeries={$marketMetadata}
-					tagsBySeries={$marketTags}
-				/>
+				<div class="markets-list">
+					{#each list as market (market.id)}
+						<MarketsListRow {market} tag={primaryMarketTag(tagsByMarket[market.id])} />
+					{/each}
+				</div>
 			{/if}
-		</div>
-	</div>
+		</section>
+	{/if}
 </section>
 
 <style lang="postcss">
+	.markets-root {
+		display: flex;
+		flex-direction: column;
+		gap: 0.875rem;
+		padding: 0 1rem 5rem;
+	}
+
+	.markets-hero {
+		padding: 0.25rem 0 0.25rem;
+	}
+
+	.markets-hero-eyebrow {
+		color: var(--text-muted);
+	}
+
+	.markets-hero-title {
+		margin: 0;
+		color: var(--text-base);
+		font-size: var(--t-24);
+		font-weight: 400;
+		line-height: 1.15;
+		letter-spacing: var(--tracking-tight);
+	}
+
 	.markets-saved-empty {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 2.5rem 1.5rem;
+		padding: 2rem 1.5rem;
 		border: 1px dashed var(--border-base);
 		border-radius: var(--r-12);
 		background: transparent;
@@ -300,85 +217,70 @@
 		color: var(--text-muted);
 	}
 
-	.markets-mobile-title {
-		margin: 0;
-		color: var(--text-base);
-		font-size: var(--t-24);
-		font-weight: 700;
-		letter-spacing: var(--tracking-tight);
-	}
-
-	.markets-mobile-live {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.35rem;
-		border-radius: var(--r-4);
-		background: var(--no-wash);
-		padding: 0.2rem 0.45rem;
-		color: var(--no);
-		font-size: 0.625rem;
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.markets-mobile-live::before {
-		width: 0.3rem;
-		height: 0.3rem;
-		border-radius: var(--r-pill);
-		background: currentColor;
-		content: '';
-	}
-
-	.markets-mobile-count {
-		color: var(--text-muted);
-		font-size: var(--t-12);
-	}
-
-	/* Editorial rail — horizontal-scroll row of fixed-width MarketCards.
-	   Sits above the search/filter/tab block so the curated picks are the
-	   first thing users see, without crowding the canonical list below.
-	   The negative margins + padding pattern keeps the scroll-snap edges
-	   flush with the page gutter while letting cards bleed past it. */
-	.suggested-rail {
-		margin: 0 auto;
-		max-width: 56rem;
-		padding: 0 1rem;
-	}
-	.suggested-rail-head {
+	.markets-section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
-		margin-bottom: 0.75rem;
+		gap: 0.5rem;
 	}
-	.suggested-rail-eyebrow {
-		color: var(--laurel);
+
+	.markets-section-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.25rem 0 0.25rem;
 	}
-	.suggested-rail-title {
+
+	.markets-section-title {
 		margin: 0;
 		font-family: var(--font-display);
-		font-size: var(--t-18);
+		font-size: var(--t-15);
 		font-weight: 600;
-		letter-spacing: var(--tracking-snug);
+		letter-spacing: -0.01em;
 		color: var(--text-base);
 	}
-	.suggested-rail-scroller {
-		display: grid;
-		grid-auto-flow: column;
-		grid-auto-columns: minmax(17rem, 17rem);
-		gap: 0.75rem;
-		overflow-x: auto;
-		overflow-y: hidden;
-		scroll-snap-type: x mandatory;
-		scrollbar-width: none;
-		margin: 0 -1rem;
-		padding: 0.25rem 1rem 0.5rem;
+
+	.markets-section-count {
+		color: var(--text-muted);
+		font-size: var(--t-13);
+		font-weight: 700;
 	}
-	.suggested-rail-scroller::-webkit-scrollbar {
-		display: none;
+
+	.markets-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
 	}
-	.suggested-rail-card {
-		scroll-snap-align: start;
-		min-width: 0;
+
+	.markets-row-skeleton {
+		height: 5.5rem;
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
+		animation: markets-skel-pulse 1.5s ease-in-out infinite;
+	}
+
+	@keyframes markets-skel-pulse {
+		0%,
+		100% {
+			opacity: 0.55;
+		}
+		50% {
+			opacity: 0.9;
+		}
+	}
+
+	.markets-empty {
+		padding: 2rem 1rem;
+		text-align: center;
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.markets-empty-body {
+		margin: 0;
+		color: var(--text-muted);
+		font-size: var(--t-13);
+		line-height: 1.55;
 	}
 </style>
