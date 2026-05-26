@@ -83,17 +83,66 @@ Third-party marks keep their own colours in every theme (see §2).
 
 ## 2. Brand assets
 
-| Asset                                | App target                                                                                                    | Status                                                                                                                                                                       |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Wordmark SVG                         | `static/branding/vici-wordmark.svg` + [`Logo.svelte`](../../../src/lib/components/layout/Logo.svelte)         | ✅ Done. `Logo.svelte` inlines the wordmark paths and themes via `currentColor` (`text-primary`); the hover glow is preserved as a `drop-shadow` on the SVG.                 |
-| Monogram SVG                         | `static/branding/vici-monogram.svg`                                                                           | ✅ Done. Wrap in `IconViciMonogram.svelte` if a reusable consumer appears.                                                                                                   |
-| App icon SVG                         | `static/branding/vici-app-icon.svg` (PWA / favicon)                                                           | ✅ Done. Wired in [`app.html`](../../../src/app.html) as the SVG favicon, iOS touch icon, web manifest icon, and link-preview image set. PNG favicons are kept as fallbacks. |
-| Signal icons (`yes` / `no` / `hold`) | [`IconSignalYes`](../../../src/lib/components/icons/IconSignalYes.svelte) / `IconSignalNo` / `IconSignalHold` | ✅ Done. Audit + swap into the prediction interface as a separate `style(market)` commit if the bespoke vectors render better small.                                         |
-| Streak-flame icon                    | [`IconStreakFlame`](../../../src/lib/components/icons/IconStreakFlame.svelte)                                 | ✅ Done. Distinct from `FlameChar.svelte` (the animated character).                                                                                                          |
-| Laurel icon                          | [`IconLaurel`](../../../src/lib/components/icons/IconLaurel.svelte)                                           | ✅ Done. Non-square (200×120); pass `size` as the height.                                                                                                                    |
-| XP chevron                           | [`IconXpChevron`](../../../src/lib/components/icons/IconXpChevron.svelte)                                     | ✅ Done.                                                                                                                                                                     |
-| Grain texture                        | `static/branding/grain.svg` (use as a CSS `background-image`)                                                 | ✅ Done. Layered into [`Background.svelte`](../../../src/lib/components/layout/Background.svelte) as a 200×200 tiled overlay with `mix-blend-mode: overlay` and 5% opacity.  |
-| Laurel watermark                     | `static/branding/laurel-watermark.svg`                                                                        | ✅ Done.                                                                                                                                                                     |
+This section is the in-repo source of truth for the VICI mark, palette,
+and asset wiring. The rules below are mirrored from the upstream brand
+book — when the two diverge, this file is the one that ships, and the
+divergence is a bug to reconcile.
+
+### 2.1 Logo rules
+
+The wordmark is **type-set**, not custom letterforms: Hanken Grotesk
+weight 700, ALL CAPS, `letter-spacing: 0.18em`. It travels as text,
+which is why the in-product mark in
+[`Logo.svelte`](../../../src/lib/components/layout/Logo.svelte) is a
+`<span>` and not an SVG.
+
+**Colour variants.** Only two:
+
+| Variant   | Use on         | Token         | Hex       |
+| --------- | -------------- | ------------- | --------- |
+| Black     | Light surfaces | `--ink`       | `#0E0D0B` |
+| Parchment | Dark surfaces  | `--parchment` | `#F2ECDC` |
+
+Pure `#FFFFFF` and pure `#000000` are **not** used — the warm ink and
+parchment are part of the brand. The in-product `Logo.svelte` resolves
+this automatically via `text-foreground` (`--text-base`), which swaps
+parchment → ink between dark and light themes.
+
+**Monogram (V).** Use when the wordmark won't fit — under 24 px tall on
+screen, under 12 mm in print. Same colour rules as the wordmark.
+
+**App icon.** Encapsulated mark — gold V on an ink tile, 14 px corner
+radius (proportional). **Laurel gold (`#E2B842`) is reserved for the
+app-icon tile.** Do not apply it to the wordmark or monogram.
+
+**Clear space & minimum size.**
+
+- Clear space = the height of the **I** stem on all four sides.
+- Minimum digital height: 24 px (wordmark) · 16 px (monogram).
+- Minimum print height: 12 mm (wordmark) · 8 mm (monogram).
+
+**Don't.**
+
+- Don't italicize, skew, stretch, or rotate the mark.
+- Don't apply gradients, glow, drop shadow, or bevel.
+- Don't recolour outside Black or Parchment (laurel gold is app-icon-only).
+- Don't lock up the mark with a tagline.
+- Don't typeset the wordmark with a different font or tracking — Hanken
+  Grotesk Bold + 0.18em or use the SVG/PNG files.
+
+### 2.2 Asset wiring
+
+| Asset             | App target                                                                                                                                                                                                               | Status                                                                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wordmark          | [`Logo.svelte`](../../../src/lib/components/layout/Logo.svelte) (type-set, live) · `static/branding/vici-wordmark-{black,parchment}.{svg,png}` (locked artwork for OG / partner / print use)                             | ✅ Done. In-product mark is type-set per §2.1 — no SVG, no `drop-shadow`. The static SVG/PNG variants are for surfaces where typesetting isn't possible (link previews, partner assets).            |
+| Monogram          | `static/branding/vici-monogram-{black,parchment}.{svg,png}`                                                                                                                                                              | ✅ Done. Wrap in `IconViciMonogram.svelte` if a reusable in-product consumer appears (`≤ 24 px` tall placements per §2.1).                                                                          |
+| App icon          | `static/branding/vici-favicon.svg` (favicon) · `vici-favicon-32.png` (legacy favicon) · `vici-favicon-192.png` (PWA / Android home-screen) · `vici-app-icon-{512,1024}.{svg,png}` (master) · `apple-touch-icon.png` 180² | ✅ Done. Wired in [`app.html`](../../../src/app.html) and [`manifest.webmanifest`](../../../static/manifest.webmanifest). Gold V on ink tile per §2.1; `apple-touch-icon.png` is derived from 512². |
+| Signal icons      | [`IconSignalYes`](../../../src/lib/components/icons/IconSignalYes.svelte) / `IconSignalNo` / `IconSignalHold`                                                                                                            | ✅ Done.                                                                                                                                                                                            |
+| Streak-flame icon | [`IconStreakFlame`](../../../src/lib/components/icons/IconStreakFlame.svelte)                                                                                                                                            | ✅ Done. Distinct from `FlameChar.svelte` (the animated character).                                                                                                                                 |
+| Laurel icon       | [`IconLaurel`](../../../src/lib/components/icons/IconLaurel.svelte)                                                                                                                                                      | ✅ Done. Non-square (200×120); pass `size` as the height.                                                                                                                                           |
+| XP chevron        | [`IconXpChevron`](../../../src/lib/components/icons/IconXpChevron.svelte)                                                                                                                                                | ✅ Done.                                                                                                                                                                                            |
+| Grain texture     | `static/branding/grain.svg`                                                                                                                                                                                              | ✅ Done. Layered into [`Background.svelte`](../../../src/lib/components/layout/Background.svelte) as a 200×200 tiled overlay with `mix-blend-mode: overlay` and 5% opacity.                         |
+| Laurel watermark  | `static/branding/laurel-watermark.svg`                                                                                                                                                                                   | ✅ Done.                                                                                                                                                                                            |
 
 When adding bespoke icons, register them in
 [`reusability.md`](./reusability.md) so the next agent finds them.

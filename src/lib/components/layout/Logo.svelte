@@ -14,10 +14,13 @@
 		goto(path);
 	};
 
-	// Brand-book wordmark: Hanken Grotesk Bold, ALL CAPS, 0.18em tracking.
-	// Type-set live in product (no SVG) per brand-book/logo-assets/README.md.
+	// Type-set live in product per the brand book — Hanken Grotesk Bold,
+	// ALL CAPS, 0.18em tracking. Colour resolves to parchment on dark
+	// surfaces and ink on light via `text-foreground`; laurel gold is
+	// reserved for the app-icon tile and must not appear on the mark.
+	// No drop-shadow / glow / gradient hover effects on the mark itself.
 	const wordmarkClass =
-		'text-primary inline-block leading-none uppercase font-bold text-[1.25rem] tracking-[0.18em] transition-[filter] duration-200 group-hover:[filter:drop-shadow(0_0_12px_var(--laurel-glow))]';
+		'text-foreground inline-block font-bold uppercase leading-none text-2xl tracking-[0.18em] transition-opacity duration-200 group-hover:opacity-80';
 </script>
 
 {#snippet wordmark()}
