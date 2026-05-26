@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { fade } from 'svelte/transition';
 	import OnboardingBeat1 from '$lib/components/onboarding/OnboardingBeat1.svelte';
 	import OnboardingBeat1Card from '$lib/components/onboarding/OnboardingBeat1Card.svelte';
 	import OnboardingBeat2 from '$lib/components/onboarding/OnboardingBeat2.svelte';
@@ -6,6 +7,11 @@
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
+
+	// Crossfade duration between beats. Keep this in sync with the
+	// per-beat feedback delays in OnboardingBeat1/1b/2 so the visual
+	// confirmation finishes before the next beat fades in.
+	const BEAT_FADE_MS = 200;
 
 	/**
 	 * Onboarding orchestrator — the 3-beat sequence wired up.
@@ -82,21 +88,35 @@
 		</span>
 	</a>
 
-	{#if beat === '1a'}
-		<OnboardingBeat1 onPick={handlePick} />
-	{:else if beat === '1b'}
-		<OnboardingBeat1Card onChangeTeam={handleChangeTeam} onCommit={handleCommit} {participantId} />
-	{:else if beat === '2'}
-		<OnboardingBeat2 onAdvance={handleHandle} onBack={handleHandleBack} {participantId} />
-	{:else}
-		<OnboardingBeat3
-			{handle}
-			onBack={handleAuthBack}
-			onComplete={handleAuthComplete}
-			{participantId}
-			{side}
-		/>
-	{/if}
+	<div class="ob2-beat-stage">
+		{#key beat}
+			<div
+				class="ob2-beat-slot"
+				in:fade={{ duration: BEAT_FADE_MS, delay: BEAT_FADE_MS }}
+				out:fade={{ duration: BEAT_FADE_MS }}
+			>
+				{#if beat === '1a'}
+					<OnboardingBeat1 onPick={handlePick} />
+				{:else if beat === '1b'}
+					<OnboardingBeat1Card
+						onChangeTeam={handleChangeTeam}
+						onCommit={handleCommit}
+						{participantId}
+					/>
+				{:else if beat === '2'}
+					<OnboardingBeat2 onAdvance={handleHandle} onBack={handleHandleBack} {participantId} />
+				{:else}
+					<OnboardingBeat3
+						{handle}
+						onBack={handleAuthBack}
+						onComplete={handleAuthComplete}
+						{participantId}
+						{side}
+					/>
+				{/if}
+			</div>
+		{/key}
+	</div>
 </div>
 
 <style lang="postcss">
@@ -123,5 +143,19 @@
 		color: var(--laurel);
 		text-decoration: underline;
 		text-underline-offset: 0.18em;
+	}
+
+	/* Stage stacks the outgoing and incoming beat slots in the same grid
+	   cell so the fade transitions overlap without pushing content
+	   around. */
+	.ob2-beat-stage {
+		display: grid;
+		grid-template-areas: 'slot';
+		flex: 1 1 auto;
+	}
+
+	.ob2-beat-slot {
+		grid-area: slot;
+		min-width: 0;
 	}
 </style>

@@ -96,18 +96,28 @@
 	);
 
 	const pick = (participantId: string) => {
-		if (pickedId !== null) return;
+		if (pickedId !== null) {
+			return;
+		}
+
 		pickedId = participantId;
 		setTimeout(() => onPick(participantId), PICK_FEEDBACK_MS);
 	};
 
 	const skip = () => {
-		if (pickedId !== null) return;
+		if (pickedId !== null) {
+			return;
+		}
+
 		onPick(null);
 	};
 </script>
 
-<section class="ob2-beat ob2-beat-1" class:is-committing={pickedId !== null} aria-busy={pickedId !== null}>
+<section
+	class="ob2-beat ob2-beat-1"
+	class:is-committing={pickedId !== null}
+	aria-busy={pickedId !== null}
+>
 	<div class="ob2-wc-eyebrow">
 		<span class="allcaps ob2-wc-tag">{event.title}</span>
 		<span class="ob2-wc-countdown num">
@@ -132,8 +142,8 @@
 			<button
 				style:--team-color={team.color ?? 'var(--border-strong)'}
 				class="ob2-team-tile"
-				class:is-picked={pickedId === team.id}
 				class:is-dimmed={pickedId !== null && pickedId !== team.id}
+				class:is-picked={pickedId === team.id}
 				disabled={pickedId !== null}
 				onclick={() => pick(team.id)}
 				type="button"
@@ -173,8 +183,8 @@
 				{#each otherTeams as team (team.id)}
 					<button
 						class="ob2-team-chip"
-						class:is-picked={pickedId === team.id}
 						class:is-dimmed={pickedId !== null && pickedId !== team.id}
+						class:is-picked={pickedId === team.id}
 						disabled={pickedId !== null}
 						onclick={() => {
 							pick(team.id);
@@ -260,13 +270,42 @@
 			background 160ms ease;
 	}
 
-	.ob2-team-tile:hover {
+	.ob2-team-tile:hover:not(:disabled) {
 		transform: translateY(-1px);
 		border-color: color-mix(
 			in srgb,
 			var(--team-color, var(--border-strong)) 55%,
 			var(--border-base)
 		);
+	}
+
+	.ob2-team-tile.is-picked {
+		transform: scale(1.03);
+		border-color: color-mix(in srgb, var(--team-color, var(--laurel)) 85%, var(--border-base));
+		background: color-mix(in srgb, var(--team-color, var(--laurel)) 14%, var(--bg-surface));
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--team-color, var(--laurel)) 28%, transparent);
+		animation: ob2-pulse 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+
+	.ob2-team-tile.is-dimmed {
+		opacity: 0.45;
+		transform: scale(0.98);
+	}
+
+	.ob2-team-tile:disabled {
+		cursor: default;
+	}
+
+	@keyframes ob2-pulse {
+		0% {
+			transform: scale(1);
+		}
+		50% {
+			transform: scale(1.06);
+		}
+		100% {
+			transform: scale(1.03);
+		}
 	}
 
 	.ob2-team-flag-lg {
@@ -315,8 +354,23 @@
 		transition: background 140ms ease;
 	}
 
-	.ob2-team-chip:hover {
+	.ob2-team-chip:hover:not(:disabled) {
 		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
+	}
+
+	.ob2-team-chip.is-picked {
+		color: var(--laurel);
+		border-color: color-mix(in srgb, var(--laurel) 70%, var(--border-base));
+		background: color-mix(in srgb, var(--laurel) 14%, var(--bg-surface));
+		animation: ob2-pulse 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+
+	.ob2-team-chip.is-dimmed {
+		opacity: 0.45;
+	}
+
+	.ob2-team-chip:disabled {
+		cursor: default;
 	}
 
 	.ob2-team-flag {
@@ -341,7 +395,12 @@
 		cursor: pointer;
 	}
 
-	.ob2-skip-team:hover {
+	.ob2-skip-team:hover:not(:disabled) {
 		color: var(--text-base);
+	}
+
+	.ob2-skip-team:disabled {
+		opacity: 0.4;
+		cursor: default;
 	}
 </style>

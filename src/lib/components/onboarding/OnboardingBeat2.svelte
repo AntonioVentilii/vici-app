@@ -131,13 +131,28 @@
 		participantId === null ? undefined : event.participants.find((p) => p.id === participantId)
 	);
 
+	// Delay between the user clicking Claim and advancing to Beat 3 so
+	// the button can show a brief "claiming" pulse before the next beat.
+	const CLAIM_FEEDBACK_MS = 320;
+
+	let claiming = $state(false);
+
 	const claim = () => {
+		if (claiming) {
+			return;
+		}
+
 		if (availability.ok && selectedName) {
-			onAdvance(selectedName);
+			claiming = true;
+			setTimeout(() => onAdvance(selectedName), CLAIM_FEEDBACK_MS);
 		}
 	};
 
 	const skip = () => {
+		if (claiming) {
+			return;
+		}
+
 		onAdvance(null);
 	};
 </script>
@@ -266,10 +281,16 @@
 	{/if}
 
 	<div class="ob2-actions">
-		<button class="ob2-btn-ghost" onclick={onBack} type="button">
+		<button class="ob2-btn-ghost" disabled={claiming} onclick={onBack} type="button">
 			{t({ locale: $localeStore, key: 'onboarding.beat2.back' })}
 		</button>
-		<button class="ob2-btn-primary" disabled={!availability.ok} onclick={claim} type="button">
+		<button
+			class="ob2-btn-primary"
+			class:is-claiming={claiming}
+			disabled={!availability.ok || claiming}
+			onclick={claim}
+			type="button"
+		>
 			{t({
 				locale: $localeStore,
 				key: 'onboarding.beat2.claim',
@@ -278,7 +299,7 @@
 		</button>
 	</div>
 
-	<button class="ob2-skip-link" onclick={skip} type="button">
+	<button class="ob2-skip-link" disabled={claiming} onclick={skip} type="button">
 		{t({ locale: $localeStore, key: 'onboarding.beat2.skip' })}
 	</button>
 </section>
@@ -558,6 +579,25 @@
 	.ob2-btn-primary:disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
+	}
+
+	.ob2-btn-primary.is-claiming {
+		opacity: 1;
+		background: color-mix(in srgb, var(--laurel) 80%, var(--text-base));
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--laurel) 30%, transparent);
+		animation: ob2-claim-pulse 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+
+	@keyframes ob2-claim-pulse {
+		0% {
+			transform: scale(1);
+		}
+		55% {
+			transform: scale(1.025);
+		}
+		100% {
+			transform: scale(1.01);
+		}
 	}
 
 	.ob2-skip-link {

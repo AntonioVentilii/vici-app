@@ -33,6 +33,22 @@
 
 	const { participantId, onCommit, onChangeTeam }: Props = $props();
 
+	// Delay between the user committing a side and advancing to Beat 2 so
+	// the swipe-card animation (or the tapped YES/NO button highlight) has
+	// time to play.
+	const COMMIT_FEEDBACK_MS = 360;
+
+	let committing: 'YES' | 'NO' | null = $state(null);
+
+	const commit = (side: 'YES' | 'NO') => {
+		if (committing !== null) {
+			return;
+		}
+
+		committing = side;
+		setTimeout(() => onCommit(side), COMMIT_FEEDBACK_MS);
+	};
+
 	const event = $derived($featuredEvent);
 
 	const picked: FeaturedEventParticipant | undefined = $derived(
@@ -99,7 +115,7 @@
 	{/if}
 
 	<div class="ob2-card-stage">
-		<SwipeableMarketCard onCommit={(side) => onCommit(side)}>
+		<SwipeableMarketCard onCommit={(side) => commit(side)}>
 			{#snippet children(swipe)}
 				<div
 					style:transform="translate3d({swipe.dragX}px, {swipe.dragY * 0.2}px, 0) rotate({swipe.rotation}deg)"
@@ -139,11 +155,25 @@
 					</div>
 
 					<div class="ob2-prob-grid">
-						<button class="ob2-prob-btn no" onclick={() => onCommit('NO')} type="button">
+						<button
+							class="ob2-prob-btn no"
+							class:is-dimmed={committing !== null && committing !== 'NO'}
+							class:is-picked={committing === 'NO'}
+							disabled={committing !== null}
+							onclick={() => commit('NO')}
+							type="button"
+						>
 							<span>{t({ locale: $localeStore, key: 'outcome.no' })}</span>
 							<strong class="num">{noPct}%</strong>
 						</button>
-						<button class="ob2-prob-btn yes" onclick={() => onCommit('YES')} type="button">
+						<button
+							class="ob2-prob-btn yes"
+							class:is-dimmed={committing !== null && committing !== 'YES'}
+							class:is-picked={committing === 'YES'}
+							disabled={committing !== null}
+							onclick={() => commit('YES')}
+							type="button"
+						>
 							<span>{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
 							<strong class="num">{yesPct}%</strong>
 						</button>
@@ -362,9 +392,16 @@
 		color: var(--no);
 	}
 
-	.ob2-prob-btn.no:hover {
+	.ob2-prob-btn.no:hover:not(:disabled) {
 		background: color-mix(in srgb, var(--no-wash) 22%, var(--bg-surface));
 		transform: translateY(-1px);
+	}
+
+	.ob2-prob-btn.no.is-picked {
+		background: color-mix(in srgb, var(--no) 18%, var(--bg-surface));
+		border-color: var(--no);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--no) 28%, transparent);
+		animation: ob2-pulse 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
 	}
 
 	.ob2-prob-btn.yes {
@@ -372,9 +409,36 @@
 		color: var(--yes);
 	}
 
-	.ob2-prob-btn.yes:hover {
+	.ob2-prob-btn.yes:hover:not(:disabled) {
 		background: color-mix(in srgb, var(--yes-wash) 22%, var(--bg-surface));
 		transform: translateY(-1px);
+	}
+
+	.ob2-prob-btn.yes.is-picked {
+		background: color-mix(in srgb, var(--yes) 18%, var(--bg-surface));
+		border-color: var(--yes);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--yes) 28%, transparent);
+		animation: ob2-pulse 360ms cubic-bezier(0.2, 0.8, 0.2, 1);
+	}
+
+	.ob2-prob-btn.is-dimmed {
+		opacity: 0.4;
+	}
+
+	.ob2-prob-btn:disabled {
+		cursor: default;
+	}
+
+	@keyframes ob2-pulse {
+		0% {
+			transform: scale(1);
+		}
+		55% {
+			transform: scale(1.04);
+		}
+		100% {
+			transform: scale(1.02);
+		}
 	}
 
 	.ob2-swipe-card {
