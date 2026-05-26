@@ -23,6 +23,8 @@ export const deMessages = {
 	'a11y.toggle_switch': 'Umschalter',
 	'a11y.user_profile': 'Benutzerprofil',
 	'achievement.contrarian.description': '10 Treffer bei <30% Konsens',
+	'achievement.contrarian.detail':
+		'Gewinne zehn Calls auf der richtigen Seite, bei denen der Konsens zum Zeitpunkt des Calls für deine gewählte Seite bei 30% oder darunter lag. Selten. Verdient durch Urteilsvermögen, nicht durch Masse.',
 	'bout.create.cta': '+ Neuer Bout',
 	'bout.create.empty.cta': 'Zu den Ligen →',
 	'bout.create.empty.lede': '"Bouts sind Liga gegen Liga."',
@@ -40,14 +42,24 @@ export const deMessages = {
 	'bout.detail.title': 'Bout',
 	'achievement.contrarian.name': 'Contrarian',
 	'achievement.first_blood.description': 'Mache deine erste Vorhersage',
+	'achievement.first_blood.detail':
+		'Wird in dem Moment vergeben, in dem du dich für deine erste Vorhersage entscheidest. Es ist der einzige Erfolg, den man nicht zweimal verdienen kann.',
 	'achievement.first_blood.name': 'Erster Call',
 	'achievement.lvl_25.description': 'Erreiche Level 25',
+	'achievement.lvl_25.detail':
+		'Erreiche Level 25. Verdiene XP für jeden aufgelösten Call, Streak-Bonus und Meilenstein — sobald dein Level 25 überschreitet, gehört dir der Sticker für immer.',
 	'achievement.lvl_25.name': 'Level 25',
 	'achievement.marathon.description': '30-Tage-Streak',
+	'achievement.marathon.detail':
+		'Erreiche eine 30-Tage-Prognose-Streak. Mindestens ein aufgelöster oder offener Call pro Tag, keine Unterbrechungen. Ein Tag mit ausschließlich übersprungenen Calls zählt nicht.',
 	'achievement.marathon.name': 'Marathon',
 	'achievement.on_fire.description': '10 richtige in Folge',
+	'achievement.on_fire.detail':
+		'Gewinne zehn aufeinanderfolgende Calls. Eine einzige Niederlage unterbricht die Kette. Übersprungene Calls zählen weder dafür noch dagegen.',
 	'achievement.on_fire.name': 'Auf Feuer',
 	'achievement.oracle.description': '80% Genauigkeit über 50 Calls',
+	'achievement.oracle.detail':
+		'Halte mindestens 80% Genauigkeit über deine letzten 50 aufgelösten Calls. Der Oracle-Titel wird täglich neu berechnet; verlierst du an Genauigkeit, bleibt der Sticker — aber der Titel geht an denjenigen, der ihn aktuell hält.',
 	'achievement.oracle.name': 'Oracle',
 	'achievement.toast.message': '{name} freigeschaltet · +{xp} XP',
 	'achievement.toast.title': 'Erfolg freigeschaltet',

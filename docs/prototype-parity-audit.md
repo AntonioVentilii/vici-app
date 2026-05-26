@@ -273,17 +273,18 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Empty filter for zero-call users
 - ⬜ Tap routing — kind-driven (dash/flow/social/profile/market)
 
-### Album (9)
+### Album (9) ✅ commit `<album>`
 
-- ⬜ App bar — "My album" title
-- ⬜ Progress card — accent tokens, not laurel
-- ⬜ Awards — use glyph emblems (◎ ★ ⚡ ⌬ ⊿ ✦ ◐ ⧖ ⌘) not lucide icons
-- ⬜ Tier classes — gold/silver/bronze styling
-- ⬜ Award definitions — add missing (sharpest-eye/bold-caller/league-founder/top-decile)
-- ⬜ Bottom-sheet modal — 64×64 tier-styled emblem tile
-- ⬜ Detail copy — rich multi-sentence prose (not `+XP · sub`)
-- ⬜ Remove `+XP VXP` prefix on detail
-- ⬜ Position absolute within screen (not fixed inset)
+- ✅ App bar — "My album" title (existing `album.title` key)
+- ✅ Progress card — accent tokens (`var(--color-primary)`)
+- ✅ Awards — glyph emblems (◎ ★ ⚡ ⧖ ◐ ⌘) replace lucide icons
+- ✅ Tier classes — gold/silver/bronze CSS washes
+- ⏭ Award definitions — sharpest-eye/bold-caller/league-founder/top-decile NOT added (requires `evaluateAchievements` extension; tracked as follow-up)
+- ✅ Bottom-sheet modal — 64×64 tier-styled emblem tile
+- ✅ Detail copy — rich multi-sentence prose (new `.detail` i18n key per achievement, 6 keys × 7 locales)
+- ✅ Remove `+XP VXP` prefix on detail
+- ✅ Position absolute within screen (not fixed inset)
+- ✅ Knock-on: `ProfileDashboard` achievement-rail tiles also use glyph emblems + tier classes (replacing lucide icons)
 
 ### Social tabs container (3)
 

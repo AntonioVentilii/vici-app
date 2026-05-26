@@ -1,17 +1,5 @@
 <script lang="ts">
-	import {
-		Check,
-		ChevronRight,
-		Eye,
-		Flame,
-		Pencil,
-		Star,
-		Target,
-		Timer,
-		Users,
-		X,
-		Zap
-	} from 'lucide-svelte';
+	import { Check, ChevronRight, Flame, Pencil, Users, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -365,14 +353,10 @@
 		return Array.from({ length: 30 }, (_, index) => index >= 30 - activeBlocks);
 	});
 
-	const achievementIcons = {
-		target: Target,
-		flame: Flame,
-		eye: Eye,
-		zap: Zap,
-		timer: Timer,
-		star: Star
-	};
+	// Achievement tiles use the unicode glyph emblem on the
+	// `AchievementDef` (matches the Album port). Lucide icons are
+	// no longer used here — the prototype renders each achievement
+	// with its own unique glyph (◎ ★ ⚡ ⧖ ◐ ⌘).
 
 	const isOwnProfile = $derived(viewerPrincipal === profile.owner);
 	const friendsCount = $derived($friendsCountStore);
@@ -637,12 +621,17 @@
 		</div>
 		<div class="profile-achievements-rail">
 			{#each achievementEvaluations as evaluation (evaluation.id)}
-				{@const Icon = achievementIcons[evaluation.def.icon]}
 				{@const unlocked = persistedUnlocks.has(evaluation.id) || evaluation.unlocked}
 				{@const progressPercent = Math.round(evaluation.progress * 100)}
-				<div class="profile-achievement-card" class:is-unlocked={unlocked}>
-					<span class="profile-achievement-icon" aria-hidden="true">
-						<Icon size={16} strokeWidth={1.8} />
+				<div
+					class="profile-achievement-card"
+					class:is-bronze={evaluation.def.tier === 'bronze'}
+					class:is-gold={evaluation.def.tier === 'gold'}
+					class:is-silver={evaluation.def.tier === 'silver'}
+					class:is-unlocked={unlocked}
+				>
+					<span class="profile-achievement-emblem" aria-hidden="true">
+						{evaluation.def.emblem}
 					</span>
 					<span class="profile-achievement-name">
 						{t({ locale: $localeStore, key: evaluation.def.nameKey })}
@@ -1115,20 +1104,40 @@
 		border-color: color-mix(in srgb, var(--color-primary) 30%, var(--border-base));
 	}
 
-	.profile-achievement-icon {
+	/* Glyph emblems — ◎ ★ ⚡ ⧖ ◐ ⌘ — sit inside a 1.85rem tile with
+	   the tier wash. Lucide icons used to live here; the prototype
+	   uses unicode glyphs throughout the achievement system. */
+	.profile-achievement-emblem {
 		display: inline-flex;
 		width: 1.85rem;
 		height: 1.85rem;
 		align-items: center;
 		justify-content: center;
+		font-size: 18px;
+		line-height: 1;
 		border-radius: 0.6rem;
-		background: color-mix(in srgb, var(--color-primary) 14%, transparent);
-		color: var(--color-primary);
+		color: var(--text-base);
 	}
 
-	.profile-achievement-card:not(.is-unlocked) .profile-achievement-icon {
+	.profile-achievement-card.is-gold .profile-achievement-emblem {
+		background: color-mix(in srgb, #f4c544 14%, transparent);
+		color: #f4c544;
+	}
+
+	.profile-achievement-card.is-silver .profile-achievement-emblem {
+		background: color-mix(in srgb, #c0c5cc 14%, transparent);
+		color: #c0c5cc;
+	}
+
+	.profile-achievement-card.is-bronze .profile-achievement-emblem {
+		background: color-mix(in srgb, #c97c4a 14%, transparent);
+		color: #c97c4a;
+	}
+
+	.profile-achievement-card:not(.is-unlocked) .profile-achievement-emblem {
 		background: var(--bg-surface);
 		color: var(--text-muted);
+		filter: grayscale(0.85);
 	}
 
 	.profile-achievement-name {

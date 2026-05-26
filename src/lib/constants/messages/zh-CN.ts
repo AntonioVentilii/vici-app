@@ -22,6 +22,8 @@ export const zhCnMessages = {
 	'a11y.toggle_switch': '切换开关',
 	'a11y.user_profile': '用户资料',
 	'achievement.contrarian.description': '在共识 <30% 时赢得 10 次',
+	'achievement.contrarian.detail':
+		'在下注时所选一方共识不超过 30% 的情况下，赢得十次预测。稀有。靠判断力赢得，而非靠数量。',
 	'bout.create.cta': '+ 新对决',
 	'bout.create.empty.cta': '前往联赛 →',
 	'bout.create.empty.lede': '"对决是联赛对联赛。"',
@@ -38,14 +40,23 @@ export const zhCnMessages = {
 	'bout.detail.title': '对决',
 	'achievement.contrarian.name': '逆行者',
 	'achievement.first_blood.description': '完成你的第一次预测',
+	'achievement.first_blood.detail': '在你确认第一次预测的那一刻颁发。这是唯一无法重复获得的成就。',
 	'achievement.first_blood.name': '首次预测',
 	'achievement.lvl_25.description': '达到 25 级',
+	'achievement.lvl_25.detail':
+		'达到 25 级。每次预测结算、连胜奖励和里程碑都可获得 XP — 一旦等级越过 25，贴纸将永久归你所有。',
 	'achievement.lvl_25.name': '25 级',
 	'achievement.marathon.description': '连续 30 天',
+	'achievement.marathon.detail':
+		'达成 30 天的预测连续记录。每天至少完成一次已结算或进行中的预测，不可中断。仅跳过的日子不计入。',
 	'achievement.marathon.name': '马拉松',
 	'achievement.on_fire.description': '连续正确 10 次',
+	'achievement.on_fire.detail':
+		'连续赢得十次预测。一次失败就会中断连胜。被跳过的预测既不算正面也不算负面。',
 	'achievement.on_fire.name': '势如破竹',
 	'achievement.oracle.description': '50 次预测中达到 80% 准确率',
+	'achievement.oracle.detail':
+		'在最近 50 次已结算的预测中保持至少 80% 的准确率。神谕称号每日重新计算；若准确率下降，贴纸仍归你所有 — 但称号会转交给当前持有者。',
 	'achievement.oracle.name': '神谕',
 	'achievement.toast.message': '已解锁 {name} · +{xp} XP',
 	'achievement.toast.title': '成就解锁',

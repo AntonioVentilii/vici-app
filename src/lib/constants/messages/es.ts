@@ -22,6 +22,8 @@ export const esMessages = {
 	'a11y.toggle_switch': 'Interruptor',
 	'a11y.user_profile': 'Perfil de usuario',
 	'achievement.contrarian.description': '10 aciertos con consenso <30%',
+	'achievement.contrarian.detail':
+		'Resuelve diez predicciones acertadas en las que el consenso al momento del call era del 30% o menos para tu lado elegido. Rara. Se gana con criterio, no con volumen.',
 	'bout.create.cta': '+ Nuevo combate',
 	'bout.create.empty.cta': 'Ir a Ligas →',
 	'bout.create.empty.lede': '"Los combates son liga contra liga."',
@@ -39,14 +41,24 @@ export const esMessages = {
 	'bout.detail.title': 'Combate',
 	'achievement.contrarian.name': 'Contrario',
 	'achievement.first_blood.description': 'Haz tu primera predicción',
+	'achievement.first_blood.detail':
+		'Se otorga en el momento en que te comprometes con tu primera predicción. Es el único logro que no se puede ganar dos veces.',
 	'achievement.first_blood.name': 'Primera predicción',
 	'achievement.lvl_25.description': 'Alcanza el nivel 25',
+	'achievement.lvl_25.detail':
+		'Alcanza el nivel 25. Gana XP con cada predicción resuelta, bono de racha e hito — una vez que tu nivel supere el 25, el sticker es tuyo para siempre.',
 	'achievement.lvl_25.name': 'Nivel 25',
 	'achievement.marathon.description': 'Racha de 30 días',
+	'achievement.marathon.detail':
+		'Alcanza una racha de predicciones de 30 días. Al menos una predicción resuelta o abierta por día, sin interrupciones. Un día con solo predicciones omitidas no cuenta.',
 	'achievement.marathon.name': 'Maratón',
 	'achievement.on_fire.description': '10 aciertos seguidos',
+	'achievement.on_fire.detail':
+		'Resuelve diez predicciones consecutivas acertadas. Una sola derrota rompe la cadena. Las predicciones omitidas no cuentan ni a favor ni en contra.',
 	'achievement.on_fire.name': 'En racha',
 	'achievement.oracle.description': '80% de precisión en 50 predicciones',
+	'achievement.oracle.detail':
+		'Mantén al menos el 80% de precisión en tus últimas 50 predicciones resueltas. El título Oracle se recalcula a diario; si pierdes precisión, el sticker se queda — pero el título pasa a quien lo ostente en ese momento.',
 	'achievement.oracle.name': 'Oráculo',
 	'achievement.toast.message': '{name} desbloqueado · +{xp} XP',
 	'achievement.toast.title': 'Logro desbloqueado',

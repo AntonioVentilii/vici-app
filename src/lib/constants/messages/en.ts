@@ -22,6 +22,8 @@ export const enMessages = {
 	'a11y.toggle_switch': 'Toggle switch',
 	'a11y.user_profile': 'User profile',
 	'achievement.contrarian.description': '10 wins on <30% consensus',
+	'achievement.contrarian.detail':
+		'Resolve ten calls on the winning side where the consensus at time of call was 30% or lower for your chosen side. Rare. Earned by judgment, not volume.',
 	'bout.create.cta': '+ New bout',
 	'bout.create.empty.cta': 'Go to Leagues →',
 	'bout.create.empty.lede': '“Bouts are league against league.”',
@@ -39,14 +41,24 @@ export const enMessages = {
 	'bout.detail.title': 'Bout',
 	'achievement.contrarian.name': 'Contrarian',
 	'achievement.first_blood.description': 'Make your first prediction',
+	'achievement.first_blood.detail':
+		'Awarded the moment you committed to your first prediction. It is the only achievement that cannot be earned twice.',
 	'achievement.first_blood.name': 'First call',
 	'achievement.lvl_25.description': 'Reach level 25',
+	'achievement.lvl_25.detail':
+		'Reach level 25. Earn XP from every resolved call, streak bonus, and milestone — once your level crosses 25 the sticker is yours forever.',
 	'achievement.lvl_25.name': 'Level 25',
 	'achievement.marathon.description': '30-day streak',
+	'achievement.marathon.detail':
+		'Reach a 30-day prediction streak. At least one resolved or open call per day, no breaks. A skip-only day does not count.',
 	'achievement.marathon.name': 'Marathon',
 	'achievement.on_fire.description': '10 correct in a row',
+	'achievement.on_fire.detail':
+		'Resolve ten consecutive calls on the winning side. A single loss breaks the chain. Skipped calls do not count for or against.',
 	'achievement.on_fire.name': 'On fire',
 	'achievement.oracle.description': '80% accuracy over 50 calls',
+	'achievement.oracle.detail':
+		'Maintain at least 80% accuracy over your last 50 resolved calls. The Oracle title is recomputed daily; lose accuracy and the sticker stays — but the title moves to whoever currently holds it.',
 	'achievement.oracle.name': 'Oracle',
 	'achievement.toast.message': '{name} unlocked · +{xp} XP',
 	'achievement.toast.title': 'Achievement unlocked',

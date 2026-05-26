@@ -22,6 +22,8 @@ export const itMessages = {
 	'a11y.toggle_switch': 'Interruttore',
 	'a11y.user_profile': 'Profilo utente',
 	'achievement.contrarian.description': '10 vittorie con consenso <30%',
+	'achievement.contrarian.detail':
+		'Vinci dieci previsioni dal lato giusto quando il consenso al momento della call era pari o inferiore al 30% per la tua scelta. Raro. Si guadagna col giudizio, non col volume.',
 	'bout.create.cta': '+ Nuovo scontro',
 	'bout.create.empty.cta': 'Vai alle Leghe →',
 	'bout.create.empty.lede': '"Gli scontri sono lega contro lega."',
@@ -39,14 +41,24 @@ export const itMessages = {
 	'bout.detail.title': 'Scontro',
 	'achievement.contrarian.name': 'Contrarian',
 	'achievement.first_blood.description': 'Fai la tua prima previsione',
+	'achievement.first_blood.detail':
+		'Assegnato nel momento in cui confermi la tua prima previsione. È l’unico obiettivo che non si può guadagnare due volte.',
 	'achievement.first_blood.name': 'Prima previsione',
 	'achievement.lvl_25.description': 'Raggiungi il livello 25',
+	'achievement.lvl_25.detail':
+		'Raggiungi il livello 25. Guadagna XP da ogni previsione risolta, bonus streak e traguardo — una volta superato il livello 25, lo sticker è tuo per sempre.',
 	'achievement.lvl_25.name': 'Livello 25',
 	'achievement.marathon.description': 'Serie di 30 giorni',
+	'achievement.marathon.detail':
+		'Raggiungi una serie di previsioni di 30 giorni. Almeno una previsione risolta o aperta al giorno, senza interruzioni. Una giornata con sole previsioni saltate non conta.',
 	'achievement.marathon.name': 'Maratona',
 	'achievement.on_fire.description': '10 corrette di fila',
+	'achievement.on_fire.detail':
+		'Vinci dieci previsioni consecutive dal lato giusto. Una sola sconfitta spezza la catena. Le previsioni saltate non contano né a favore né contro.',
 	'achievement.on_fire.name': 'In fiamme',
 	'achievement.oracle.description': '80% di precisione su 50 previsioni',
+	'achievement.oracle.detail':
+		'Mantieni almeno l’80% di precisione sulle tue ultime 50 previsioni risolte. Il titolo Oracolo viene ricalcolato ogni giorno; se perdi precisione lo sticker resta — ma il titolo passa a chi lo detiene in quel momento.',
 	'achievement.oracle.name': 'Oracolo',
 	'achievement.toast.message': '{name} sbloccato · +{xp} XP',
 	'achievement.toast.title': 'Obiettivo sbloccato',

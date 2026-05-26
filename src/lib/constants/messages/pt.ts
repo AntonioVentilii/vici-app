@@ -22,6 +22,8 @@ export const ptMessages = {
 	'a11y.toggle_switch': 'Alternar',
 	'a11y.user_profile': 'Perfil do usuário',
 	'achievement.contrarian.description': '10 vitórias com consenso <30%',
+	'achievement.contrarian.detail':
+		'Vença dez previsões no lado certo quando o consenso no momento da call estava em 30% ou menos para o lado escolhido. Raro. Conquistado pelo julgamento, não pelo volume.',
 	'bout.create.cta': '+ Novo duelo',
 	'bout.create.empty.cta': 'Ir para Ligas →',
 	'bout.create.empty.lede': '"Os duelos são liga contra liga."',
@@ -39,14 +41,24 @@ export const ptMessages = {
 	'bout.detail.title': 'Duelo',
 	'achievement.contrarian.name': 'Contrarian',
 	'achievement.first_blood.description': 'Faça sua primeira previsão',
+	'achievement.first_blood.detail':
+		'Concedida no momento em que você confirma sua primeira previsão. É a única conquista que não pode ser ganha duas vezes.',
 	'achievement.first_blood.name': 'Primeira previsão',
 	'achievement.lvl_25.description': 'Alcance o nível 25',
+	'achievement.lvl_25.detail':
+		'Alcance o nível 25. Ganhe XP em cada previsão resolvida, bônus de sequência e marco — assim que seu nível ultrapassar 25, o sticker é seu para sempre.',
 	'achievement.lvl_25.name': 'Nível 25',
 	'achievement.marathon.description': 'Sequência de 30 dias',
+	'achievement.marathon.detail':
+		'Alcance uma sequência de 30 dias de previsões. Pelo menos uma previsão resolvida ou aberta por dia, sem interrupções. Um dia só com previsões puladas não conta.',
 	'achievement.marathon.name': 'Maratona',
 	'achievement.on_fire.description': '10 acertos seguidos',
+	'achievement.on_fire.detail':
+		'Vença dez previsões consecutivas no lado certo. Uma única derrota quebra a corrente. Previsões puladas não contam a favor nem contra.',
 	'achievement.on_fire.name': 'Pegando fogo',
 	'achievement.oracle.description': '80% de precisão em 50 previsões',
+	'achievement.oracle.detail':
+		'Mantenha pelo menos 80% de precisão em suas últimas 50 previsões resolvidas. O título Oráculo é recalculado diariamente; se a precisão cair, o sticker fica — mas o título vai para quem o detiver no momento.',
 	'achievement.oracle.name': 'Oráculo',
 	'achievement.toast.message': '{name} desbloqueado · +{xp} XP',
 	'achievement.toast.title': 'Conquista desbloqueada',
