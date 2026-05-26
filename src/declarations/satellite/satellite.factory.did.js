@@ -211,14 +211,24 @@ export const idlFactory = ({ IDL }) => {
 				),
 				email: IDL.Text,
 				level: IDL.Float64,
-				preferences: IDL.Opt(
-					IDL.Record({
-						default_amount: IDL.Record({
-							flow: IDL.Text,
-							manual: IDL.Text
-						})
-					})
-				),
+				preferences: IDL.Record({
+					notify: IDL.Record({
+						market_alerts: IDL.Bool,
+						friend_activity: IDL.Bool,
+						weekly_digest: IDL.Bool,
+						streak_reminder: IDL.Bool
+					}),
+					haptics_enabled: IDL.Bool,
+					default_amount: IDL.Record({
+						flow: IDL.Text,
+						manual: IDL.Text
+					}),
+					world_cup_mode: IDL.Bool,
+					saved_market_ids: IDL.Vec(IDL.Text),
+					flow_tags: IDL.Vec(IDL.Text),
+					flow_session_length: IDL.Float64,
+					calls_public: IDL.Bool
+				}),
 				archetype: IDL.Text,
 				last_active_day: IDL.Opt(IDL.Text),
 				total_trades: IDL.Float64,

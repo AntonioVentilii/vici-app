@@ -53,7 +53,19 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 					defaultAmount: {
 						flow: '1.0',
 						manual: '1.0'
-					}
+					},
+					notify: {
+						streakReminder: true,
+						marketAlerts: true,
+						friendActivity: false,
+						weeklyDigest: true
+					},
+					flowSessionLength: 10,
+					hapticsEnabled: true,
+					callsPublic: true,
+					flowTags: [],
+					worldCupMode: false,
+					savedMarketIds: []
 				}
 			}
 		};

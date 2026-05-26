@@ -37,14 +37,25 @@ import type { PrincipalText } from '@junobuild/schema';
  * (`src/lib/schema/profile.schema.ts`).
  */
 export const withProfileDefaults = (profile: UserProfile): UserProfile => {
-	const sanitizedPreferences = profile.preferences
-		? {
-				defaultAmount: {
-					flow: profile.preferences.defaultAmount?.flow ?? '0',
-					manual: profile.preferences.defaultAmount?.manual ?? '0'
-				}
-			}
-		: undefined;
+	const incoming = profile.preferences;
+	const sanitizedPreferences: UserProfile['preferences'] = {
+		defaultAmount: {
+			flow: incoming?.defaultAmount?.flow ?? '0',
+			manual: incoming?.defaultAmount?.manual ?? '0'
+		},
+		notify: {
+			streakReminder: incoming?.notify?.streakReminder ?? true,
+			marketAlerts: incoming?.notify?.marketAlerts ?? true,
+			friendActivity: incoming?.notify?.friendActivity ?? false,
+			weeklyDigest: incoming?.notify?.weeklyDigest ?? true
+		},
+		flowSessionLength: incoming?.flowSessionLength ?? 10,
+		hapticsEnabled: incoming?.hapticsEnabled ?? true,
+		callsPublic: incoming?.callsPublic ?? true,
+		flowTags: Array.isArray(incoming?.flowTags) ? incoming.flowTags : [],
+		worldCupMode: incoming?.worldCupMode ?? false,
+		savedMarketIds: Array.isArray(incoming?.savedMarketIds) ? incoming.savedMarketIds : []
+	};
 
 	return {
 		owner: profile.owner,

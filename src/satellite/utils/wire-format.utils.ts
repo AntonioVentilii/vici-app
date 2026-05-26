@@ -217,14 +217,29 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	lastActiveDay: profile.last_active_day,
 	unlockedAchievements: profile.unlocked_achievements,
 	contrarianWins: profile.contrarian_wins,
-	preferences: profile.preferences
-		? {
-				defaultAmount: {
-					flow: profile.preferences.default_amount.flow,
-					manual: profile.preferences.default_amount.manual
-				}
-			}
-		: undefined
+	// The wire format only carries `default_amount` — the leaderboard /
+	// search endpoints don't read the user-experience preferences
+	// (`notify`, `flowTags`, `savedMarketIds`, etc.), so they're not
+	// round-tripped on this path. Default the rest to the schema's
+	// initial values so the rebuilt UserProfile is fully shaped.
+	preferences: {
+		defaultAmount: {
+			flow: profile.preferences?.default_amount?.flow ?? '0',
+			manual: profile.preferences?.default_amount?.manual ?? '0'
+		},
+		notify: {
+			streakReminder: true,
+			marketAlerts: true,
+			friendActivity: false,
+			weeklyDigest: true
+		},
+		flowSessionLength: 10,
+		hapticsEnabled: true,
+		callsPublic: true,
+		flowTags: [],
+		worldCupMode: false,
+		savedMarketIds: []
+	}
 });
 
 // ─── Relation wire format ────────────────────────────────────────────────

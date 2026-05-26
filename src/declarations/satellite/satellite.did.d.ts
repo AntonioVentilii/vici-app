@@ -210,7 +210,21 @@ export interface AppGetProfileResult {
 						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
 					email: string;
 					level: number;
-					preferences: [] | [{ default_amount: { flow: string; manual: string } }];
+					preferences: {
+						notify: {
+							market_alerts: boolean;
+							friend_activity: boolean;
+							weekly_digest: boolean;
+							streak_reminder: boolean;
+						};
+						haptics_enabled: boolean;
+						default_amount: { flow: string; manual: string };
+						world_cup_mode: boolean;
+						saved_market_ids: Array<string>;
+						flow_tags: Array<string>;
+						flow_session_length: number;
+						calls_public: boolean;
+					};
 					archetype: string;
 					last_active_day: [] | [string];
 					total_trades: number;

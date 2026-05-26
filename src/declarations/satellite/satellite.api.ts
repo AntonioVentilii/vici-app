@@ -252,9 +252,21 @@ const AppGetProfileResultSchema = j.strictObject({
 			lastActiveDay: j.optional(j.string()),
 			unlockedAchievements: j.array(j.string()),
 			contrarianWins: j.number(),
-			preferences: j.optional(
-				j.strictObject({ defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }) })
-			)
+			preferences: j.strictObject({
+				defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }),
+				notify: j.strictObject({
+					streakReminder: j.boolean(),
+					marketAlerts: j.boolean(),
+					friendActivity: j.boolean(),
+					weeklyDigest: j.boolean()
+				}),
+				flowSessionLength: j.number(),
+				hapticsEnabled: j.boolean(),
+				callsPublic: j.boolean(),
+				flowTags: j.array(j.string()),
+				worldCupMode: j.boolean(),
+				savedMarketIds: j.array(j.string())
+			})
 		})
 	)
 });
