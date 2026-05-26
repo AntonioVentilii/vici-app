@@ -479,7 +479,7 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Tab persistence — already correct; `$effect` writes `'friends'` back to storage after legacy migration
 - ⏭ Tab-aware `+` — kept the global `leaguesCreateIntent` store pattern (intentional cross-component signal)
 
-### Friends (7+) ✅ commit `<friends>`
+### Friends (7+) ✅ commit `c69ecfd`
 
 - ✅ Invite hero card — `FriendsTab.svelte` opens with a hero section that pulls the viewer's referral code via `getMyReferralCode()`, renders the `+500 VXP` mono eyebrow + `for both of you` suffix, serif-italic title, monthly bonus-cap line, and the Share / Copy row (Share via `navigator.share` with clipboard fallback; Copy swaps to `Copied ✓` for 1.8s via `writeToClipboard`). URL preview strips the scheme to keep the mono `host/signup?ref={code}` glance.
 - ✅ Pending invites section — uses the existing `friendRequestsStore` (received) under a `Pending · waiting for first call` eyebrow; each row expands to inline Accept (`var(--yes)`-tinted) / Reject buttons, wired to the same `acceptFriendRequest` / `rejectFriendRequest` services. A separate `Awaiting reply` section surfaces `sentFriendRequestsStore` (lower-priority, no expand) with an inline Cancel.
