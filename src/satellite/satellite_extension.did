@@ -105,6 +105,10 @@ type AppRejectFriendRequestArgs = record { relation_id : text };
 
 type AppSendFriendRequestArgs = record { target : text };
 
+type AppTransferLeagueOwnershipArgs = record { league_id : text; new_owner_principal : text };
+
+type AppTransferLeagueOwnershipResult = record { ok : bool; reason : opt variant { not_owner; league_not_found; new_owner_not_member; new_owner_is_caller; invalid_input } };
+
 type AppTriggerTournamentDrawArgs = record { month_anchor : text };
 
 type AppTriggerTournamentDrawResult = record { ok : bool; tournament_id : opt text; reason : opt variant { already_drawn; month_not_started; insufficient_leagues; invalid_input }; available_leagues : opt float64 };
@@ -154,6 +158,7 @@ service : {
 	app_redeem_referral_code : (AppRedeemReferralCodeArgs) -> ();
 	app_reject_friend_request : (AppRejectFriendRequestArgs) -> ();
 	app_send_friend_request : (AppSendFriendRequestArgs) -> ();
+	app_transfer_league_ownership : (AppTransferLeagueOwnershipArgs) -> (AppTransferLeagueOwnershipResult);
 	app_trigger_tournament_draw : (AppTriggerTournamentDrawArgs) -> (AppTriggerTournamentDrawResult);
 	app_upsert_market_metadata : (AppUpsertMarketMetadataArgs) -> (AppUpsertMarketMetadataResult);
 	app_upsert_market_translation : (AppUpsertMarketTranslationArgs) -> (AppUpsertMarketTranslationResult);

@@ -314,6 +314,35 @@ export const leaveLeague = async ({ leagueId }: { leagueId: string }): Promise<v
 	});
 };
 
+/**
+ * Transfer league ownership to another member. The current owner
+ * calls this; the satellite swaps `LEAGUES.owner` and the matching
+ * `LEAGUE_MEMBERS` role rows (old owner → admin, new owner → owner).
+ *
+ * The call surfaces structured refusal reasons so the FE can render
+ * a meaningful error: `not_owner`, `league_not_found`,
+ * `new_owner_not_member`, `new_owner_is_caller`, `invalid_input`.
+ * On success returns `{ ok: true }`.
+ */
+export interface TransferLeagueOwnershipResult {
+	ok: boolean;
+	reason?:
+		| 'not_owner'
+		| 'league_not_found'
+		| 'new_owner_not_member'
+		| 'new_owner_is_caller'
+		| 'invalid_input';
+}
+
+export const transferLeagueOwnership = ({
+	leagueId,
+	newOwnerPrincipal
+}: {
+	leagueId: string;
+	newOwnerPrincipal: string;
+}): Promise<TransferLeagueOwnershipResult> =>
+	functions.transferLeagueOwnership({ leagueId, newOwnerPrincipal });
+
 // ─── Bouts ───────────────────────────────────────────────────────────────
 
 const projectBoutWire = (b: {

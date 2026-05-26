@@ -47,7 +47,7 @@ import {
 	assertDeleteLeagueMember,
 	assertSetLeagueMember
 } from '$satellite/services/league-member.services';
-import { assertSetLeague } from '$satellite/services/league.services';
+import { assertSetLeague, transferLeagueOwnershipFn } from '$satellite/services/league.services';
 import {
 	getMarketMetadata as getMarketMetadataFn,
 	upsertMarketMetadata as upsertMarketMetadataFn
@@ -605,6 +605,39 @@ export const triggerTournamentDraw = defineUpdate({
 		availableLeagues: j.optional(j.number())
 	}),
 	handler: triggerTournamentDrawFn
+});
+
+// League ownership transfer — used by the league-detail "transfer
+// ownership" CTA and surfaced from the account-delete owner guard
+// so the user can resolve the blocking guard in one click.
+//
+// Refusal reasons:
+//  - `not_owner` — caller isn't the current owner.
+//  - `league_not_found` — leagueId resolves to nothing.
+//  - `new_owner_not_member` — target principal isn't a member of
+//    the league.
+//  - `new_owner_is_caller` — no-op self-transfer rejected
+//    explicitly so the FE can render a clear error.
+//  - `invalid_input` — `newOwnerPrincipal` is not a valid principal
+//    text.
+export const transferLeagueOwnership = defineUpdate({
+	args: j.strictObject({
+		leagueId: j.string(),
+		newOwnerPrincipal: PrincipalTextSchema
+	}),
+	result: j.strictObject({
+		ok: j.boolean(),
+		reason: j.optional(
+			j.enum([
+				'not_owner',
+				'league_not_found',
+				'new_owner_not_member',
+				'new_owner_is_caller',
+				'invalid_input'
+			])
+		)
+	}),
+	handler: transferLeagueOwnershipFn
 });
 
 export const getCurrentTournament = defineQuery({
