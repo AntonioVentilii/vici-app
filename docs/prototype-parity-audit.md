@@ -534,14 +534,15 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Round chip color (#b49cff) — hero current-round tag + live-match border + live-meta text all use the tournament accent
 - ✅ Live timer — days-left chip in hero head when a round is in flight; re-ticks every minute via `$effect` interval
 
-### Worlds (~7)
+### Worlds (~7) ✅ commit `3176e84`
 
-- ⬜ Hero event card — `FIFA WORLD CUP · Live` tags + podium tiles
-- ⬜ Scope toggle — "May season · all calls" / "WC Bout · {N}d left"
-- ⬜ Top-6 leaderboard with school glyph + members·calls eyebrow + sticky YOU row
-- ⬜ Affiliation prompt — "Where did you study?" card
-- ⬜ Remove worlds-podium prize card (tier C-29 — production need check)
-- ⬜ Remove locked-card UI (prototype has different leave flow)
+- ✅ Hero event card — `FIFA WORLD CUP · Live` tags + WC Bout title + top-3 podium tiles (`.worlds-event` + `.worlds-pod-tile.is-gold/silver/bronze`); top-3 driven by lifetime accuracy on `listAffiliationStats({ kind: 'university' })`
+- ✅ Scope toggle — `{month} season · all calls` / `WC Bout · {N}d left` (`.worlds-scope`); `{N}d left` reads new `daysToFinal` derived off `featuredEvent.finalAt_ms`, falls back to `archived` copy when the event has wrapped
+- ✅ Top-6 leaderboard with school glyph + `{calls} calls` eyebrow + sticky YOU row — sticky `.worlds-you-sticky` row pins to bottom when the user's affiliation is outside the visible window; expand/collapse via `See all {N} schools →`. Members count omitted (no aggregated `members` on `AffiliationStatsDoc` — defer until per-affiliation roster aggregator lands)
+- ✅ Affiliation prompt — "Where did you study?" card (`.worlds-affil-prompt`) shown only when the user has no `university` affiliation; opens `AffiliationPickerModal` (school kind)
+- ✅ Removed worlds-podium prize card (legacy `+gold/silver/bronze` prize-tiles preview block deleted from `WorldsPage`; still rendered on `WorldsBoutDetailPage` where the editorial moment belongs)
+- ✅ Removed locked-card UI — old per-slot `.worlds-locked-card` with leave CTA gone; the lock is now invisible to the user (still enforced by the satellite assert) and switching happens via the picker after expiry. Country slot picker entry retained for Profile (no Worlds-page surface)
+- ✅ (Tier C-29 keep) Podium prize claim banner retained — `tryClaimPodium` fires on every mount, surfaces the `.worlds-podium-claim` toast when `awardsCreated > 0`. Re-skinned to laurel-tone to match the prototype palette without inventing a parallel claim flow
 
 ### Leaderboard (~5) ✅ commit `<leaderboard>`
 

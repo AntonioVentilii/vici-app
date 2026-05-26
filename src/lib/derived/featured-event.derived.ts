@@ -81,6 +81,25 @@ export const daysToKickoff: Readable<number | null> = derived(
 	}
 );
 
+/**
+ * Whole days remaining until the event's final (`finalAt_ms`), clamped
+ * at 0. Used by surfaces that frame the active event as a bout with a
+ * "{N}d left" timer (e.g. the Worlds hero card / scope toggle). `null`
+ * once the event has wrapped — UI should switch to archival copy.
+ */
+export const daysToFinal: Readable<number | null> = derived(
+	[featuredEvent, now_ms],
+	([event, t]) => {
+		if (t >= event.finalAt_ms) {
+			return null;
+		}
+
+		const delta_ms = event.finalAt_ms - t;
+
+		return Math.max(0, Math.ceil(delta_ms / 86_400_000));
+	}
+);
+
 const statusFor = ({
 	event,
 	now_ms
