@@ -503,7 +503,7 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ⏭ Recommendations section ("Friends are in") — Deferred: the satellite has no listing for leagues the caller isn't already in, so the "friends here, you're not" overlap can't be computed without a new query endpoint. Strings + card variant are scaffolded; UI ships when discovery lands.
 - ✅ Empty-state — `LeaguesPage` empty branch renders serif-italic accent quote ("Leagues are private.") + dim body + a centered two-button row (primary "Create a league" + ghost "Join with code"). Replaces the previous title + sub + ctas stack.
 
-### League detail (~10) ✅ commit `103682a`
+### League detail (~10) ✅ commit `a3ae2bf`
 
 - ✅ Head card gradient logo + emblem + N° corner badge — `LeagueDetailPage` head renders an 88px `--accent-grad` tile with the league emblem (derived from the first code-point of `league.name`) and a `N°{NN}` mono corner pinned to the caller's roster index.
 - ✅ "{memberCount} members · {size} LEAGUE" line — head meta uses `leagues.detail.head_meta_one/many` interpolated with `{count}` + a derived size token (`size_xs/s/m/l` bucketed by roster headcount, since no server-side tier field exists yet).
