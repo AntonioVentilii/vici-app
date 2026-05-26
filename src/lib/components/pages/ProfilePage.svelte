@@ -68,9 +68,9 @@
 	});
 </script>
 
-{#snippet profileAppbarRight()}
+{#snippet profileSettingsBtn()}
 	<button
-		class="profile-mobile-icon-btn"
+		class="profile-settings-btn"
 		aria-label={t({ locale: $localeStore, key: 'settings.title' })}
 		onclick={handleOpenSettings}
 		type="button"
@@ -79,27 +79,16 @@
 	</button>
 {/snippet}
 
-{#snippet profileDesktopRight()}
-	<button
-		class="profile-desktop-icon-btn"
-		aria-label={t({ locale: $localeStore, key: 'settings.title' })}
-		onclick={handleOpenSettings}
-		type="button"
-	>
-		<Settings aria-hidden="true" size={22} strokeWidth={1.6} />
-	</button>
-{/snippet}
-
 <div class="profile-page space-y-10 pb-24">
 	<MobileAppBar
 		align="left"
-		right={profileAppbarRight}
+		right={profileSettingsBtn}
 		title={t({ locale: $localeStore, key: 'profile.title' })}
 	/>
 
 	<div class="hidden md:block">
 		<SectionHeader
-			right={profileDesktopRight}
+			right={profileSettingsBtn}
 			title={t({ locale: $localeStore, key: 'profile.title' })}
 		/>
 	</div>
@@ -147,12 +136,14 @@
 		position: relative;
 	}
 
-	.profile-mobile-icon-btn {
+	/* Mirrors prototype `.btn.btn-ghost` (`screens.jsx:886`,
+	   `app.css:128,140,5454`): pill radius, 1px border, ghost surface,
+	   inline padding 8px 10px sized for an 18px icon. */
+	.profile-settings-btn {
 		display: inline-flex;
-		width: 2.25rem;
-		height: 2.25rem;
 		align-items: center;
 		justify-content: center;
+		padding: 8px 10px;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-pill);
 		background: var(--bg-surface);
@@ -163,28 +154,7 @@
 			border-color var(--d-hover) var(--ease-vici);
 	}
 
-	.profile-mobile-icon-btn:hover {
-		border-color: var(--border-strong);
-		background: var(--bg-popover);
-	}
-
-	.profile-desktop-icon-btn {
-		display: inline-flex;
-		width: 2.75rem;
-		height: 2.75rem;
-		align-items: center;
-		justify-content: center;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-		color: var(--text-base);
-		cursor: pointer;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici);
-	}
-
-	.profile-desktop-icon-btn:hover {
+	.profile-settings-btn:hover {
 		border-color: var(--border-strong);
 		background: var(--bg-popover);
 	}
