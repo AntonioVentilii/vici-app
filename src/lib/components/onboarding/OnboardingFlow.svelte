@@ -3,6 +3,9 @@
 	import OnboardingBeat1Card from '$lib/components/onboarding/OnboardingBeat1Card.svelte';
 	import OnboardingBeat2 from '$lib/components/onboarding/OnboardingBeat2.svelte';
 	import OnboardingBeat3 from '$lib/components/onboarding/OnboardingBeat3.svelte';
+	import { PublicPath } from '$lib/constants/routes.constants';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
 	/**
 	 * Onboarding orchestrator — the 3-beat sequence wired up.
@@ -72,6 +75,13 @@
 </script>
 
 <div class="ob2-orchestrator">
+	<a class="ob2-switch-link" href={PublicPath.SignIn}>
+		{t({ locale: $localeStore, key: 'onboarding.switch.prefix' })}
+		<span class="ob2-switch-link-accent">
+			{t({ locale: $localeStore, key: 'onboarding.switch.signin' })}
+		</span>
+	</a>
+
 	{#if beat === '1a'}
 		<OnboardingBeat1 onPick={handlePick} />
 	{:else if beat === '1b'}
@@ -94,5 +104,24 @@
 		display: flex;
 		flex-direction: column;
 		min-height: 100%;
+	}
+
+	.ob2-switch-link {
+		align-self: flex-end;
+		padding: 0.75rem 1rem 0.25rem;
+		font-size: var(--t-13);
+		color: var(--text-muted);
+		text-decoration: none;
+		transition: color 140ms ease;
+	}
+
+	.ob2-switch-link:hover {
+		color: var(--text-base);
+	}
+
+	.ob2-switch-link-accent {
+		color: var(--laurel);
+		text-decoration: underline;
+		text-underline-offset: 0.18em;
 	}
 </style>

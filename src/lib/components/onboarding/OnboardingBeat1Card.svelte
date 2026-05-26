@@ -1,4 +1,5 @@
 <script lang="ts">
+	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import SwipeableMarketCard from '$lib/components/ui/SwipeableMarketCard.svelte';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -61,93 +62,112 @@
 </script>
 
 <section class="ob2-beat ob2-beat-1b" aria-labelledby="ob2-beat1b-title">
-	<header class="ob2-beat-header">
-		<span class="ob2-progress" aria-hidden="true">
-			<span class="ob2-progress-dot is-filled"></span>
-			<span class="ob2-progress-dot"></span>
-			<span class="ob2-progress-dot"></span>
+	<div class="ob2-wc-eyebrow">
+		<span class="allcaps ob2-wc-tag">{event.title}</span>
+		<span class="ob2-wc-eyebrow-sub allcaps">
+			{t({ locale: $localeStore, key: 'onboarding.beat1b.eyebrow_first_call' })}
 		</span>
-		<span class="allcaps ob2-step-label">
+	</div>
+
+	<h1 id="ob2-beat1b-title" class="ob2-h1">
+		{t({ locale: $localeStore, key: 'onboarding.beat1b.headline' })}
+	</h1>
+
+	{#if picked}
+		<p class="ob2-sub">
+			<span class="ob2-team-glyph" aria-hidden="true">{picked.glyph ?? ''}</span>
 			{t({
 				locale: $localeStore,
-				key: 'onboarding.beat_label',
-				params: { current: 1, total: 3 }
+				key: 'onboarding.beat1b.backing',
+				params: { team: picked.name }
 			})}
-		</span>
-	</header>
+			<span class="ob2-sub-detail">
+				{t({ locale: $localeStore, key: 'onboarding.beat1b.backing_sub' })}
+			</span>
+			<button class="ob2-change-team" onclick={onChangeTeam} type="button">
+				{t({ locale: $localeStore, key: 'onboarding.beat1b.change_team' })}
+			</button>
+		</p>
+	{:else}
+		<p class="ob2-sub">
+			{t({
+				locale: $localeStore,
+				key: 'onboarding.beat1b.skip_sub',
+				params: { team: fallbackFavourite?.name ?? '' }
+			})}
+		</p>
+	{/if}
 
-	<SwipeableMarketCard onCommit={(side) => onCommit(side)}>
-		{#snippet children(swipe)}
-			<div
-				style:transform="translate3d({swipe.dragX}px, {swipe.dragY * 0.2}px, 0) rotate({swipe.rotation}deg)"
-				class="ob2-swipe-card"
-				class:is-committed={swipe.committed !== null}
-				class:is-dragging={swipe.dragging}
-			>
-				<div class="ob2-wc-eyebrow">
-					<span class="allcaps ob2-wc-tag">{event.title}</span>
-					<span class="ob2-wc-eyebrow-sub allcaps">
-						{t({ locale: $localeStore, key: 'onboarding.beat1b.eyebrow_first_call' })}
+	<div class="ob2-card-stage">
+		<SwipeableMarketCard onCommit={(side) => onCommit(side)}>
+			{#snippet children(swipe)}
+				<div
+					style:transform="translate3d({swipe.dragX}px, {swipe.dragY * 0.2}px, 0) rotate({swipe.rotation}deg)"
+					class="ob2-swipe-card"
+					class:is-committed={swipe.committed !== null}
+					class:is-dragging={swipe.dragging}
+				>
+					<h2 class="ob2-card-question">
+						{t({ locale: $localeStore, key: titleKey, params: { team: titleTeamName } })}
+					</h2>
+
+					<div class="ob2-card-probs">
+						<div class="ob2-card-probs-row">
+							<div class="ob2-card-probs-side ob2-card-probs-side-no">
+								<span class="ob2-card-probs-pct num">{noPct}%</span>
+								<span class="ob2-card-probs-label allcaps">
+									{t({ locale: $localeStore, key: 'outcome.no' })}
+								</span>
+							</div>
+							<div class="ob2-card-probs-track" aria-hidden="true">
+								<div
+									style:width="{noPct}%"
+									class="ob2-card-probs-fill ob2-card-probs-fill-no"
+								></div>
+								<div
+									style:width="{yesPct}%"
+									class="ob2-card-probs-fill ob2-card-probs-fill-yes"
+								></div>
+							</div>
+							<div class="ob2-card-probs-side ob2-card-probs-side-yes">
+								<span class="ob2-card-probs-label allcaps">
+									{t({ locale: $localeStore, key: 'outcome.yes' })}
+								</span>
+								<span class="ob2-card-probs-pct num">{yesPct}%</span>
+							</div>
+						</div>
+					</div>
+
+					<div class="ob2-prob-grid">
+						<button class="ob2-prob-btn no" onclick={() => onCommit('NO')} type="button">
+							<span>{t({ locale: $localeStore, key: 'outcome.no' })}</span>
+							<strong class="num">{noPct}%</strong>
+						</button>
+						<button class="ob2-prob-btn yes" onclick={() => onCommit('YES')} type="button">
+							<span>{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
+							<strong class="num">{yesPct}%</strong>
+						</button>
+					</div>
+
+					<span
+						style:opacity={swipe.yesOpacity}
+						class="ob2-swipe-stamp ob2-swipe-stamp-yes allcaps"
+						aria-hidden="true"
+					>
+						{t({ locale: $localeStore, key: 'outcome.yes' })}
+					</span>
+					<span
+						style:opacity={swipe.noOpacity}
+						class="ob2-swipe-stamp ob2-swipe-stamp-no allcaps"
+						aria-hidden="true"
+					>
+						{t({ locale: $localeStore, key: 'outcome.no' })}
 					</span>
 				</div>
-
-				<h1 id="ob2-beat1b-title" class="ob2-h1">
-					{t({ locale: $localeStore, key: titleKey, params: { team: titleTeamName } })}
-				</h1>
-
-				{#if picked}
-					<p class="ob2-sub">
-						<span class="ob2-team-glyph" aria-hidden="true">{picked.glyph ?? ''}</span>
-						{t({
-							locale: $localeStore,
-							key: 'onboarding.beat1b.backing',
-							params: { team: picked.name }
-						})}
-						<span class="ob2-sub-detail">
-							{t({ locale: $localeStore, key: 'onboarding.beat1b.backing_sub' })}
-						</span>
-						<button class="ob2-change-team" onclick={onChangeTeam} type="button">
-							{t({ locale: $localeStore, key: 'onboarding.beat1b.change_team' })}
-						</button>
-					</p>
-				{:else}
-					<p class="ob2-sub">
-						{t({
-							locale: $localeStore,
-							key: 'onboarding.beat1b.skip_sub',
-							params: { team: fallbackFavourite?.name ?? '' }
-						})}
-					</p>
-				{/if}
-
-				<div class="ob2-prob-grid">
-					<button class="ob2-prob-btn no" onclick={() => onCommit('NO')} type="button">
-						<span>{t({ locale: $localeStore, key: 'outcome.no' })}</span>
-						<strong class="num">{noPct}%</strong>
-					</button>
-					<button class="ob2-prob-btn yes" onclick={() => onCommit('YES')} type="button">
-						<span>{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
-						<strong class="num">{yesPct}%</strong>
-					</button>
-				</div>
-
-				<span
-					style:opacity={swipe.yesOpacity}
-					class="ob2-swipe-stamp ob2-swipe-stamp-yes allcaps"
-					aria-hidden="true"
-				>
-					{t({ locale: $localeStore, key: 'outcome.yes' })}
-				</span>
-				<span
-					style:opacity={swipe.noOpacity}
-					class="ob2-swipe-stamp ob2-swipe-stamp-no allcaps"
-					aria-hidden="true"
-				>
-					{t({ locale: $localeStore, key: 'outcome.no' })}
-				</span>
-			</div>
-		{/snippet}
-	</SwipeableMarketCard>
+			{/snippet}
+		</SwipeableMarketCard>
+		<FlowCoach />
+	</div>
 
 	<p class="allcaps ob2-swipe-hint" aria-hidden="true">
 		{t({ locale: $localeStore, key: 'onboarding.beat1b.swipe_hint' })}
@@ -163,33 +183,82 @@
 		color: var(--text-base);
 	}
 
-	.ob2-beat-header {
+	.ob2-card-stage {
+		position: relative;
+	}
+
+	.ob2-card-question {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: clamp(1.1rem, 4vw, 1.35rem);
+		font-weight: 700;
+		line-height: 1.18;
+		letter-spacing: -0.02em;
+		color: var(--text-base);
+		text-wrap: balance;
+	}
+
+	.ob2-card-probs {
 		display: flex;
+		flex-direction: column;
+		gap: 0.55rem;
+	}
+
+	.ob2-card-probs-row {
+		display: grid;
+		grid-template-columns: auto 1fr auto;
 		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
+		gap: 0.6rem;
 	}
 
-	.ob2-progress {
+	.ob2-card-probs-side {
 		display: inline-flex;
-		gap: 6px;
+		align-items: baseline;
+		gap: 0.35rem;
+		font-family: var(--font-display);
 	}
 
-	.ob2-progress-dot {
-		width: 6px;
+	.ob2-card-probs-side-no {
+		color: var(--no);
+	}
+
+	.ob2-card-probs-side-yes {
+		color: var(--yes);
+	}
+
+	.ob2-card-probs-pct {
+		font-size: var(--t-20, 1.25rem);
+		font-weight: 700;
+	}
+
+	.ob2-card-probs-label {
+		font-size: var(--t-12);
+		font-weight: 700;
+	}
+
+	.ob2-card-probs-track {
+		position: relative;
 		height: 6px;
-		border-radius: 50%;
-		background: var(--border-base);
-		transition: background 160ms ease;
+		border-radius: 999px;
+		background: var(--no-wash);
+		overflow: hidden;
 	}
 
-	.ob2-progress-dot.is-filled {
-		background: var(--laurel);
+	.ob2-card-probs-fill {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		border-radius: 999px;
 	}
 
-	.ob2-step-label {
-		font-size: var(--t-11, 0.7rem);
-		color: var(--text-muted);
+	.ob2-card-probs-fill-no {
+		left: 0;
+		background: linear-gradient(90deg, var(--no), color-mix(in srgb, var(--no) 65%, transparent));
+	}
+
+	.ob2-card-probs-fill-yes {
+		right: 0;
+		background: linear-gradient(90deg, color-mix(in srgb, var(--yes) 65%, transparent), var(--yes));
 	}
 
 	.ob2-wc-eyebrow {

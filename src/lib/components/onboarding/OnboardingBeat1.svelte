@@ -3,6 +3,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
 	import { t } from '$lib/utils/i18n.utils';
+	import { detectUserCountryCode } from '$lib/utils/locale-country.utils';
 
 	/**
 	 * Onboarding · Beat 1.a — team picker.
@@ -31,15 +32,46 @@
 	const favouriteIds = $derived(event.favouriteIds ?? []);
 	const participants = $derived(event.participants ?? []);
 
+	// Auto-detect the visitor's country from `navigator.languages` and
+	// promote a matching participant into position 1 of the favourites
+	// grid — Brazilian visitor sees Brazil first, US visitor sees USA
+	// first, etc. We only promote when the local team is NOT already
+	// visible (the curated favourites grid stays intact for the typical
+	// case). Falls back to the raw favourites list on the server or when
+	// no region tag matches.
+	const localCountryCode: string | null = detectUserCountryCode();
+
 	// Favourites surface as 4 large tiles. Stable order from
 	// `favouriteIds`. Filtering then mapping over the participant list
 	// keeps the tiles in the curated order even if the participant array
-	// is sorted by odds.
-	const favourites: FeaturedEventParticipant[] = $derived(
+	// is sorted by odds. The localised pass below may then promote the
+	// visitor's country into slot 1.
+	const baseFavourites: FeaturedEventParticipant[] = $derived(
 		favouriteIds
 			.map((id) => participants.find((p) => p.id === id))
 			.filter((p): p is FeaturedEventParticipant => p !== undefined)
 	);
+
+	const favourites: FeaturedEventParticipant[] = $derived.by(() => {
+		if (localCountryCode === null) {
+			return baseFavourites;
+		}
+
+		// Already in the curated grid — no promotion needed.
+		if (baseFavourites.some((p) => p.id === localCountryCode)) {
+			return baseFavourites;
+		}
+
+		const local = participants.find((p) => p.id === localCountryCode);
+
+		if (!local) {
+			return baseFavourites;
+		}
+
+		// Insert in slot 1, drop the tail entry so the grid stays the
+		// same size (4 tiles).
+		return [local, ...baseFavourites.slice(0, Math.max(0, baseFavourites.length - 1))];
+	});
 
 	const moreCount = $derived(Math.max(0, participants.length - favourites.length));
 
@@ -58,21 +90,6 @@
 </script>
 
 <section class="ob2-beat ob2-beat-1">
-	<header class="ob2-beat-header">
-		<span class="ob2-progress" aria-hidden="true">
-			<span class="ob2-progress-dot is-filled"></span>
-			<span class="ob2-progress-dot"></span>
-			<span class="ob2-progress-dot"></span>
-		</span>
-		<span class="allcaps ob2-step-label">
-			{t({
-				locale: $localeStore,
-				key: 'onboarding.beat_label',
-				params: { current: 1, total: 3 }
-			})}
-		</span>
-	</header>
-
 	<div class="ob2-wc-eyebrow">
 		<span class="allcaps ob2-wc-tag">{event.title}</span>
 		<span class="ob2-wc-countdown num">
@@ -85,7 +102,12 @@
 	</div>
 
 	<h1 class="ob2-h1">{t({ locale: $localeStore, key: 'onboarding.beat1.title' })}</h1>
-	<p class="ob2-sub">{t({ locale: $localeStore, key: 'onboarding.beat1.subtitle' })}</p>
+	<p class="ob2-sub">
+		{t({ locale: $localeStore, key: 'onboarding.beat1.subtitle_a' })}
+		<span class="serif-italic acc">
+			{t({ locale: $localeStore, key: 'onboarding.beat1.subtitle_b' })}
+		</span>
+	</p>
 
 	<div class="ob2-team-grid">
 		{#each favourites as team (team.id)}
@@ -156,35 +178,6 @@
 		gap: 1rem;
 		padding: 1.25rem 1.1rem 1.5rem;
 		color: var(--text-base);
-	}
-
-	.ob2-beat-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.ob2-progress {
-		display: inline-flex;
-		gap: 6px;
-	}
-
-	.ob2-progress-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--border-base);
-		transition: background 160ms ease;
-	}
-
-	.ob2-progress-dot.is-filled {
-		background: var(--laurel);
-	}
-
-	.ob2-step-label {
-		font-size: var(--t-11, 0.7rem);
-		color: var(--text-muted);
 	}
 
 	.ob2-wc-eyebrow {
@@ -322,7 +315,6 @@
 		background: none;
 		border: none;
 		cursor: pointer;
-		text-decoration: underline;
 	}
 
 	.ob2-skip-team:hover {

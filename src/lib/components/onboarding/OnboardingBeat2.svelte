@@ -1,5 +1,8 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
+	import { getLeaderboard } from '$lib/services/leaderboard.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
@@ -53,10 +56,42 @@
 
 	const RESERVED: ReadonlySet<string> = new Set(['vici', 'admin', 'satoshi', 'oracle']);
 
+	// Cap the live "taken handles" probe at the top N leaderboard rows —
+	// this is a UI hint, not a transactional uniqueness check (the
+	// satellite still enforces uniqueness at claim time). Capping keeps
+	// the pool-chip and custom-input checks O(1) and avoids hammering
+	// the leaderboard endpoint during onboarding.
+	const TAKEN_HANDLES_PROBE_LIMIT = 50;
+
 	type Mode = 'pool' | 'custom';
 	let mode: Mode = $state('pool');
 	let poolPick: string | null = $state(null);
 	let custom: string = $state('');
+
+	// Reactive handle set seeded from the top leaderboard rows so the
+	// chips re-render once the async fetch resolves. Falls back to
+	// RESERVED-only on error — onboarding must remain offline-tolerant.
+	const takenHandles = new SvelteSet<string>(RESERVED);
+
+	onMount(() => {
+		void (async () => {
+			try {
+				const rows = await getLeaderboard();
+
+				for (const row of rows.slice(0, TAKEN_HANDLES_PROBE_LIMIT)) {
+					const nickname = row.nickname?.toLowerCase().trim();
+
+					if (nickname) {
+						takenHandles.add(nickname);
+					}
+				}
+			} catch (err) {
+				console.warn('Could not seed taken-handle hints from leaderboard:', err);
+			}
+		})();
+	});
+
+	const isHandleTaken = (name: string): boolean => takenHandles.has(name.toLowerCase());
 
 	const selectedName = $derived(mode === 'pool' ? (poolPick ?? '') : custom.trim().toLowerCase());
 
@@ -84,7 +119,7 @@
 			return { ok: false, reasonKey: 'onboarding.beat2.avail.invalid' };
 		}
 
-		if (RESERVED.has(name)) {
+		if (isHandleTaken(name)) {
 			return { ok: false, reasonKey: 'onboarding.beat2.avail.taken' };
 		}
 
@@ -154,13 +189,21 @@
 	{#if mode === 'pool'}
 		<div class="ob2-pool-grid">
 			{#each ROMAN_POOL as name (name)}
+				{@const taken = isHandleTaken(name)}
 				<button
 					class="ob2-pool-chip"
 					class:is-picked={poolPick === name}
-					onclick={() => (poolPick = name)}
+					class:is-taken={taken}
+					disabled={taken}
+					onclick={() => !taken && (poolPick = name)}
 					type="button"
 				>
 					<span class="ob2-at">@</span>{name}
+					{#if taken}
+						<span class="ob2-pool-taken allcaps">
+							{t({ locale: $localeStore, key: 'onboarding.beat2.pool_taken' })}
+						</span>
+					{/if}
 				</button>
 			{/each}
 		</div>
@@ -183,11 +226,8 @@
 	{#if selectedName}
 		<p class="ob2-avail" class:is-ok={availability.ok} aria-live="polite">
 			{#if availability.ok}
-				{t({
-					locale: $localeStore,
-					key: 'onboarding.beat2.avail_ok',
-					params: { handle: selectedName }
-				})}
+				<span>{t({ locale: $localeStore, key: 'onboarding.beat2.avail_ok_prefix' })}</span>
+				<span class="serif-italic acc">@{selectedName}</span>
 			{:else if availability.reasonKey}
 				{t({ locale: $localeStore, key: availability.reasonKey })}
 			{/if}
@@ -195,21 +235,31 @@
 	{/if}
 
 	{#if team}
+		{@const teamColor = team.color ?? 'var(--laurel)'}
 		<aside
-			style:--team-color={team.color ?? 'var(--laurel)'}
+			style:--team-color={teamColor}
 			class="ob2-affil-preview"
-			aria-label="Profile preview"
+			aria-label={t({ locale: $localeStore, key: 'onboarding.beat2.affil_eyebrow' })}
 		>
-			<span class="ob2-affil-flag" aria-hidden="true">{team.glyph ?? ''}</span>
+			<span
+				style:background="color-mix(in srgb, {teamColor} 13%, transparent)"
+				style:color={teamColor}
+				class="ob2-affil-flag"
+				aria-hidden="true"
+			>
+				{team.glyph ?? ''}
+			</span>
 			<div class="ob2-affil-text">
 				<span class="allcaps ob2-affil-eyebrow">
 					{t({ locale: $localeStore, key: 'onboarding.beat2.affil_eyebrow' })}
 				</span>
 				<span class="ob2-affil-name">
-					<span class="serif-italic">
+					<span class="serif-italic acc">
 						@{selectedName || t({ locale: $localeStore, key: 'onboarding.beat2.placeholder' })}
 					</span>
-					<span class="ob2-affil-tag">{team.id}</span>
+					<span style:background={teamColor} class="ob2-affil-tag allcaps">
+						{team.id}
+					</span>
 				</span>
 			</div>
 		</aside>
@@ -353,6 +403,25 @@
 		background: color-mix(in srgb, var(--laurel) 12%, var(--bg-surface));
 	}
 
+	.ob2-pool-chip.is-taken {
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+		border-style: dashed;
+		cursor: not-allowed;
+		opacity: 0.55;
+	}
+
+	.ob2-pool-chip.is-taken:hover {
+		border-color: var(--border-base);
+	}
+
+	.ob2-pool-taken {
+		margin-left: 0.35rem;
+		font-size: var(--t-11, 0.7rem);
+		font-weight: 700;
+		color: var(--text-muted);
+	}
+
 	.ob2-at {
 		color: var(--text-muted);
 		margin-right: 1px;
@@ -413,7 +482,6 @@
 		line-height: 1;
 		padding: 0.35rem 0.55rem;
 		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--team-color) 14%, transparent);
 	}
 
 	.ob2-affil-text {
@@ -438,10 +506,8 @@
 	.ob2-affil-tag {
 		font-size: var(--t-11, 0.7rem);
 		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
 		padding: 0.15rem 0.4rem;
 		border-radius: var(--r-pill);
-		background: var(--team-color);
 		color: var(--text-on-accent, #fff);
 	}
 

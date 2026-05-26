@@ -107,28 +107,67 @@ These need a per-item decision before deletion. Default = remove.
   need) and re-rendered with the same `signin-provider-btn` shape +
   per-provider loading state.
 
-### Onboarding (22)
+### Onboarding (22) ✅ commit `<onboarding>`
 
-- ⬜ Beat 1 — no progress dots header (prototype omits BeatV2Header on Beat 1)
-- ⬜ Beat 1 — inline italic accent on "Your call comes next"
-- ⬜ Beat 1 — localised team promotion (auto-detect country)
-- ⬜ Beat 1 — skip CTA copy + styling (no underline)
-- ⬜ **Beat 1.b — entire card** is a stub; needs real OnboardingFirstCallCard (FlowCard port)
-- ⬜ Beat 1.b — static "Make your first call." heading above card
-- ⬜ Beat 1.b — no progress dots
-- ⬜ Beat 1.b — FlowCoach overlay
-- ⬜ Beat 2 — "taken" state on pool chips (drive from real leaderboard handles)
-- ⬜ Beat 2 — italic accent on `@{name}` in "Available · @handle"
-- ⬜ Beat 2 — validation error strings parity
-- ⬜ Beat 2 — affiliation chip uses `team.code` + `team.color` direct
-- ⬜ Beat 2 — affiliation flag style (`color+'22'` bg + flag emoji)
-- ⬜ Beat 3 — heading + subcopy include resolution date + email promise
-- ⬜ Beat 3 — summary meta line includes resolves date
-- ⬜ Beat 3 — auth row replaces SignInActions with prototype's 3-button stack
-- ⬜ Beat 3 — TOS fine-print
-- ⬜ Beat 3 — back affordance copy
-- ⬜ Sign-in switch link ("Already a member? Sign in") above flow
-- ⬜ Beat 2 skip-link copy
+- ✅ Beat 1 — progress-dots header removed (`OnboardingBeat1` no longer
+  renders the dot row + step label; markup drops straight to the WC
+  eyebrow).
+- ✅ Beat 1 — inline italic accent on "Your call comes next" via
+  `subtitle_a` + `subtitle_b` split with `<span class="serif-italic acc">`
+  wrapping the accent half (mirrors the landing pattern).
+- ✅ Beat 1 — localised team promotion: new
+  `detectUserCountryCode` helper in
+  `$lib/utils/locale-country.utils.ts` reads `navigator.languages`,
+  Beat 1.a promotes the matching participant into slot 1 of the
+  favourites grid when not already visible.
+- ✅ Beat 1 — skip CTA: `.ob2-skip-team` no longer underlines (kept the
+  prototype's "Skip — just following the tournament →" copy).
+- ✅ Beat 1.b — card body upgraded: question heading +
+  prob-bar split (NO%/track/YES%) shipped inline on the swipe card
+  (mirrors `WelcomeHeroFlowCard`). The YES/NO tap fallback buttons stay
+  for accessibility. Kept the existing `SwipeableMarketCard` primitive
+  for swipe physics.
+- ✅ Beat 1.b — static "Make your first call." heading hoisted above the
+  card via `onboarding.beat1b.headline`.
+- ✅ Beat 1.b — progress-dots header dropped.
+- ✅ Beat 1.b — `FlowCoach.svelte` overlay (laurel-tinted YES/NO
+  coach-marks + italic instruction) mounted inside a new
+  `.ob2-card-stage` wrapper; tap-anywhere dismiss.
+- ✅ Beat 2 — "taken" state on pool chips: live probe of the top 50
+  leaderboard rows via `getLeaderboard()`, seeded into a
+  `SvelteSet<string>` (case-insensitive); chips render the inline
+  "taken" tag and disable, custom input maps to the same `avail.taken`
+  reason key.
+- ✅ Beat 2 — italic accent on `@handle` in the availability message
+  via new `avail_ok_prefix` split + `<span class="serif-italic acc">`.
+- ✅ Beat 2 — validation error strings: parity verified — all four
+  reasons (`too_short`, `too_long`, `invalid`, `taken`) match the
+  prototype copy across all 7 locales.
+- ✅ Beat 2 — affiliation chip uses `team.id` (event participant code)
+  - `team.color` direct via inline `style:background` on the tag.
+- ✅ Beat 2 — affiliation flag style: `color-mix(... 13%, transparent)`
+  bg + `team.color` foreground applied inline (matches prototype's
+  `color+'22'` recipe in computed-token form).
+- ✅ Beat 3 — heading + subcopy: subtitle now renders
+  `"@handle, your call resolves {resolves}. We'll email you the
+outcome…"` with the date formatted in the active locale via
+  `Intl.DateTimeFormat` over `event.finalAt_ms`.
+- ✅ Beat 3 — summary meta line includes resolves date: two parallel
+  keys (`summary_meta` / `summary_meta_side`) so the `side` token
+  collapses cleanly when the user skipped the swipe.
+- ✅ Beat 3 — auth row swapped from `SignInActions` to the
+  `SignInProviderStack` shipped in the Sign-in commit (Apple / Google /
+  Email / II / Passkey / Dev; same provider order + sent-state).
+- ✅ Beat 3 — TOS fine-print: new `tos.*` keys with anchor links to
+  `/info/terms` and `/info/privacy`, "VICI is free." middle, italic
+  serif tail ("Resolution on public data.").
+- ✅ Beat 3 — back affordance copy: kept the prototype's
+  "← Back to handle" wording (already in catalog as `beat3.back`).
+- ✅ Sign-in switch link ("Already a member? Sign in") rendered at the
+  top of `OnboardingFlow` via `onboarding.switch.prefix` +
+  `onboarding.switch.signin`, anchored to `PublicPath.SignIn`.
+- ✅ Beat 2 skip-link copy: "Pick later — keep placeholder"
+  matches the prototype.
 
 ### Flow (28)
 

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import SignInActions from '$lib/components/authn/SignInActions.svelte';
+	import SignInProviderStack from '$lib/components/authn/SignInProviderStack.svelte';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -31,6 +31,16 @@
 	const team = $derived(
 		participantId === null ? undefined : event.participants.find((p) => p.id === participantId)
 	);
+
+	// Final / resolution date formatted in the active locale. We avoid
+	// locale-specific date strings in the catalogues by computing the
+	// label here and injecting it as a parameter — `Jul 19` in English,
+	// `19 jul.` in Spanish, `19 lug.` in Italian, etc.
+	const resolvesLabel = $derived(
+		new Intl.DateTimeFormat($localeStore, { month: 'short', day: 'numeric' }).format(
+			new Date(event.finalAt_ms)
+		)
+	);
 </script>
 
 <section class="ob2-beat ob2-beat-3" aria-labelledby="ob2-beat3-title">
@@ -57,17 +67,31 @@
 		<span class="serif-italic ob2-handle-preview">
 			@{handle ?? t({ locale: $localeStore, key: 'onboarding.beat3.handle_placeholder' })}
 		</span>
-		<span>{t({ locale: $localeStore, key: 'onboarding.beat3.sub' })}</span>
+		<span>
+			{t({
+				locale: $localeStore,
+				key: 'onboarding.beat3.sub',
+				params: { resolves: resolvesLabel }
+			})}
+		</span>
 	</p>
 
 	{#if team}
+		{@const teamColor = team.color ?? 'var(--laurel)'}
 		<aside
-			style:--team-color={team.color ?? 'var(--laurel)'}
+			style:--team-color={teamColor}
 			class="ob2-summary"
 			aria-label={t({ locale: $localeStore, key: 'onboarding.beat3.summary_eyebrow' })}
 		>
 			<div class="ob2-summary-row">
-				<span class="ob2-summary-flag" aria-hidden="true">{team.glyph ?? ''}</span>
+				<span
+					style:background="color-mix(in srgb, {teamColor} 13%, transparent)"
+					style:color={teamColor}
+					class="ob2-summary-flag"
+					aria-hidden="true"
+				>
+					{team.glyph ?? ''}
+				</span>
 				<div class="ob2-summary-text">
 					<p class="ob2-summary-q">
 						{t({
@@ -78,9 +102,17 @@
 					</p>
 					<p class="ob2-summary-meta num">
 						{#if side !== null}
-							{side} · {event.title}
+							{t({
+								locale: $localeStore,
+								key: 'onboarding.beat3.summary_meta_side',
+								params: { side, event: event.title, resolves: resolvesLabel }
+							})}
 						{:else}
-							{event.title}
+							{t({
+								locale: $localeStore,
+								key: 'onboarding.beat3.summary_meta',
+								params: { event: event.title, resolves: resolvesLabel }
+							})}
 						{/if}
 					</p>
 				</div>
@@ -89,8 +121,22 @@
 	{/if}
 
 	<div class="ob2-auth-slot">
-		<SignInActions onSuccess={onComplete} />
+		<SignInProviderStack onSuccess={onComplete} />
 	</div>
+
+	<p class="ob2-tos">
+		{t({ locale: $localeStore, key: 'onboarding.beat3.tos.prefix' })}
+		<a class="ob2-tos-link" href="/info/terms" rel="noopener" target="_blank">
+			{t({ locale: $localeStore, key: 'onboarding.beat3.tos.terms' })}
+		</a>
+		{t({ locale: $localeStore, key: 'onboarding.beat3.tos.and' })}
+		<a class="ob2-tos-link" href="/info/privacy" rel="noopener" target="_blank">
+			{t({ locale: $localeStore, key: 'onboarding.beat3.tos.privacy' })}
+		</a>{t({ locale: $localeStore, key: 'onboarding.beat3.tos.suffix' })}
+		<span class="serif-italic">
+			{t({ locale: $localeStore, key: 'onboarding.beat3.tos.tail' })}
+		</span>
+	</p>
 
 	<button class="ob2-skip-link" onclick={onBack} type="button">
 		{t({ locale: $localeStore, key: 'onboarding.beat3.back' })}
@@ -176,8 +222,6 @@
 		line-height: 1;
 		padding: 0.4rem 0.6rem;
 		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--team-color) 14%, transparent);
-		color: var(--team-color);
 	}
 
 	.ob2-summary-text {
@@ -200,6 +244,24 @@
 
 	.ob2-auth-slot {
 		margin-top: 0.5rem;
+	}
+
+	.ob2-tos {
+		margin: 0.5rem 0 0;
+		font-size: var(--t-11, 0.7rem);
+		line-height: var(--leading-relaxed);
+		color: var(--text-muted);
+		text-align: center;
+	}
+
+	.ob2-tos-link {
+		color: var(--text-base);
+		text-decoration: underline;
+		text-underline-offset: 0.18em;
+	}
+
+	.ob2-tos-link:hover {
+		color: var(--laurel);
 	}
 
 	.ob2-skip-link {
