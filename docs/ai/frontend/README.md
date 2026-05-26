@@ -24,6 +24,11 @@ What is specific to Vici:
 - [ ] **Design rule:** I did **not** reference any temporary or external
       design source material (folder name, file name, section number) in
       code, comments, commit message, or PR body.
+- [ ] **Brand:** copy reads in the VICI register (terse, declarative,
+      no emoji, imperative on buttons) and any new colour / type / glyph
+      is sourced from the tokens in [`brand.md`](./brand.md). See
+      [voice & tone](./brand.md#2-voice--tone) and
+      [no emoji ever](./brand.md#23-no-emoji-ever).
 - [ ] **Meta-update:** if I introduced a new pattern / shared component /
       shared type / workflow, I updated `docs/ai/**` in the same PR
       ([meta-update rule](../governance.md#meta-update-rule)).

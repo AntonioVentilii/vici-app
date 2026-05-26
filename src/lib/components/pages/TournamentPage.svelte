@@ -125,21 +125,12 @@
 		value === null ? '—' : `${Math.round(value * 100)}%`;
 
 	/**
-	 * Medal glyph for a prize-tier place. Matches the prototype's
-	 * `TournamentBoutDetail` prize rows, which split the medal emoji
-	 * off the label (`screens.jsx:3741`). 🥇/🥈/🥉 only.
+	 * Rank glyph for a prize-tier place. Brand: no emoji medals —
+	 * tabular numeral on a laurel-toned tile carries the same rank
+	 * signal without the pictograph. See
+	 * `docs/ai/frontend/brand.md §2.3`.
 	 */
-	const placeGlyph = (place: 1 | 2 | 3): string => {
-		if (place === 1) {
-			return '🥇';
-		}
-
-		if (place === 2) {
-			return '🥈';
-		}
-
-		return '🥉';
-	};
+	const placeGlyph = (place: 1 | 2 | 3): string => `${place}`;
 
 	const fmtDate = (ms: number): string => {
 		const d = new Date(ms);
@@ -706,13 +697,25 @@
 		background: color-mix(in srgb, #c97c4a 6%, var(--bg-surface));
 	}
 
-	/* Medal glyph — large emoji at h2-ish scale to mirror the
-	   prototype's `t-h2` size on the prize-tier row. */
+	/* Rank numeral — tabular mono on a tinted disc. Reads as an
+	   intentional rank tile, not a fallback character. The tile
+	   colour comes from the parent `.is-{gold,silver,bronze}`
+	   border/background mix. */
 	.tournament-prize-place {
-		font-size: 1.5rem;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.75rem;
+		height: 1.75rem;
+		min-width: 1.75rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, currentColor 8%, transparent);
+		font-family: var(--font-mono);
+		font-feature-settings: 'tnum', 'zero';
+		font-variant-numeric: tabular-nums slashed-zero;
+		font-size: var(--t-14);
+		font-weight: 600;
 		line-height: 1;
-		min-width: 2.25rem;
-		text-align: center;
 	}
 
 	.tournament-prize-label {

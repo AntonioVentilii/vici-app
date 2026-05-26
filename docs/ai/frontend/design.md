@@ -22,6 +22,9 @@ govern Flow Mode (§7). Tick rows off as PRs land.
 
 The companion guidance lives in:
 
+- [`brand.md`](./brand.md) — palette, typography triad, voice & tone,
+  iconography, character cast, copy patterns. The brand book lives
+  there; this file is the surface roster.
 - [`reusability.md`](./reusability.md) — extend existing components before
   adding new ones.
 - [`stack-and-patterns.md`](./stack-and-patterns.md) — Tailwind v4 token
