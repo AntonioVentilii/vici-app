@@ -19,16 +19,13 @@
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { WELCOME_MARKET_PREVIEWS } from '$lib/constants/welcome-markets.constants';
 	import { WORLD_CUP_KICKOFF } from '$lib/constants/world-cup-kickoff.constants';
-	import { userSignedIn } from '$lib/derived/user.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
-	$effect(() => {
-		if ($userSignedIn) {
-			void goto(AppPath.Home, { replaceState: true });
-		}
-	});
-
+	// Sign-in redirect for the root `/` landing is handled by the route
+	// wrapper at `src/routes/+page.svelte`. This component is also
+	// rendered on `/about` (the share-able marketing URL), where signed-
+	// in visitors deliberately stay put.
 	onMount(() => {
 		document.title = 'VICI';
 	});

@@ -2,6 +2,7 @@
 	import { isNullish } from '@dfinity/utils';
 	import { onAuthStateChange, type User } from '@junobuild/core';
 	import { onMount, type Snippet } from 'svelte';
+	import { browser } from '$app/environment';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { ensureProfile, calculateAndSyncStats } from '$lib/services/profile.services';
@@ -11,6 +12,35 @@
 	import { setCachedProfile } from '$lib/stores/profiles.store';
 	import { tradeHistoryStore } from '$lib/stores/trade-history.store';
 	import { userStore } from '$lib/stores/user.store';
+
+	/**
+	 * Persistent hint that the user has an authenticated session on this
+	 * device. Read by the inline `<head>` script in `app.html` to do a
+	 * no-flash redirect from `/` to `/app` for signed-in cold loads (so
+	 * the marketing surface never paints before SvelteKit hydrates and
+	 * the real auth state resolves). Wrapped in try/catch for SSR /
+	 * private-mode safety — a missing flag just means the regular
+	 * in-page gate handles the redirect.
+	 */
+	const SIGNED_IN_FLAG_KEY = 'vici.signed-in';
+
+	const setSignedInFlag = (signedIn: boolean): void => {
+		if (!browser) {
+			return;
+		}
+
+		try {
+			if (signedIn) {
+				localStorage.setItem(SIGNED_IN_FLAG_KEY, '1');
+			} else {
+				localStorage.removeItem(SIGNED_IN_FLAG_KEY);
+			}
+		} catch {
+			// localStorage may throw in private mode or when storage is
+			// disabled. Silently degrade — the no-flash hint is purely
+			// an optimisation.
+		}
+	};
 
 	interface Props {
 		children: Snippet;
@@ -34,6 +64,8 @@
 
 		try {
 			if (isNullish(user)) {
+				setSignedInFlag(false);
+
 				userStore.set({
 					user: undefined,
 					profile: undefined,
@@ -47,6 +79,8 @@
 			const { key: userText } = user;
 
 			if (isNullish(userText)) {
+				setSignedInFlag(false);
+
 				userStore.set({
 					user: undefined,
 					profile: undefined,
@@ -58,6 +92,8 @@
 			}
 
 			const { profile, existed } = await ensureProfile(user);
+
+			setSignedInFlag(true);
 
 			userStore.set({ user, profile, authBusy: false, profileExisted: existed });
 

@@ -25,7 +25,7 @@
 			return true;
 		}
 
-		if (path === AppPath.Home && current.startsWith('/markets/')) {
+		if (path === AppPath.Home && (current === '/app' || current.startsWith('/markets/'))) {
 			return true;
 		}
 

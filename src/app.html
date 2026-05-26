@@ -68,6 +68,29 @@
 		<meta name="twitter:image" content="https://vici.app/branding/og-image.png" />
 		<meta name="twitter:image:alt" content="VICI — Predict at the speed of thought." />
 
+		<!--
+			No-flash redirect for signed-in cold loads.
+			Reads the `vici.signed-in` localStorage hint written by
+			`Authn.svelte` on every auth-state transition. If we're hitting
+			the marketing root `/` and the hint says we have a session,
+			bounce to `/app` synchronously before SvelteKit hydrates so
+			the landing surface never paints. The in-page gate at
+			`src/routes/+page.svelte` is the source of truth — this is
+			purely a paint-time optimisation, so a stale or missing flag
+			just falls through to the regular gate.
+		-->
+		<script>
+			(function () {
+				try {
+					var signedIn = localStorage.getItem('vici.signed-in') === '1';
+					var p = location.pathname;
+					if (signedIn && p === '/') {
+						location.replace('/app');
+					}
+				} catch (e) {}
+			})();
+		</script>
+
 		%sveltekit.head%
 
 		<title>VICI</title>
