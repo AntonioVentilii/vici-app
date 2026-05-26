@@ -19,5 +19,6 @@
 	"EXIT_SIGNALS": "exit_signals",
 	"TOURNAMENTS": "tournaments",
 	"TOURNAMENT_MATCHES": "tournament_matches",
-	"LEAGUE_STATS": "league_stats"
+	"LEAGUE_STATS": "league_stats",
+	"USER_STATS": "user_stats"
 }

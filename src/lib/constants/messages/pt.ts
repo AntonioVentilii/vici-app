@@ -362,6 +362,7 @@ export const ptMessages = {
 	'dash.accuracy.signed_in': 'Bem-vindo de volta, {handle}.',
 	'dash.accuracy.signed_out': 'Entre para ver sua precisão.',
 	'dash.categories.eyebrow': 'Categorias',
+	'dash.categories.no_calls': 'Sem previsões ainda',
 	'dash.comeback.body':
 		'Seu saldo VXP está zerado. Resgate seu bônus único de +{amount} VXP e volte ao jogo.',
 	'dash.comeback.cta': 'Resgatar',
@@ -380,7 +381,13 @@ export const ptMessages = {
 	'dash.comeback.toast.transfer_failed': 'Transferência falhou: {reason}',
 	'dash.comeback.toast.transport_failed_title': 'Conexão falhou',
 	'dash.comeback.toast.unknown': 'Não foi possível resgatar o bônus. Tente novamente mais tarde.',
+	'dash.history.days_ago': 'há {count}d',
 	'dash.history.eyebrow': 'Previsões passadas',
+	'dash.history.hours_ago': 'há {count}h',
+	'dash.history.just_now': 'agora mesmo',
+	'dash.history.loss': 'Erro',
+	'dash.history.minutes_ago': 'há {count}min',
+	'dash.history.win': 'Acerto',
 	'dash.placeholder.categories':
 		'A precisão por categoria desbloqueia após previsões suficientes em cada domínio.',
 	'dash.placeholder.history':

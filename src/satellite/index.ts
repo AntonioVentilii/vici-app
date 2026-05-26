@@ -99,6 +99,7 @@ import {
 	resolveTournamentRoundFn,
 	triggerTournamentDrawFn
 } from '$satellite/services/tournament.services';
+import { assertSetUserStats } from '$satellite/services/user-stats.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimComebackGrantFn } from '$satellite/services/vxp-comeback.services';
 import {
@@ -736,7 +737,8 @@ const assertSetDocCollections = [
 	Collection.EXIT_SIGNALS,
 	Collection.TOURNAMENTS,
 	Collection.TOURNAMENT_MATCHES,
-	Collection.LEAGUE_STATS
+	Collection.LEAGUE_STATS,
+	Collection.USER_STATS
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -758,7 +760,8 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.EXIT_SIGNALS]: assertSetExitSignal,
 			[Collection.TOURNAMENTS]: assertSetTournament,
 			[Collection.TOURNAMENT_MATCHES]: assertSetTournamentMatch,
-			[Collection.LEAGUE_STATS]: assertSetLeagueStats
+			[Collection.LEAGUE_STATS]: assertSetLeagueStats,
+			[Collection.USER_STATS]: assertSetUserStats
 		};
 
 		fn[context.data.collection]?.(context);

@@ -363,6 +363,7 @@ export const esMessages = {
 	'dash.accuracy.signed_in': 'Bienvenido de nuevo, {handle}.',
 	'dash.accuracy.signed_out': 'Inicia sesión para ver tu precisión.',
 	'dash.categories.eyebrow': 'Categorías',
+	'dash.categories.no_calls': 'Aún sin predicciones',
 	'dash.comeback.body':
 		'Tu saldo VXP está vacío. Reclama tu bonificación única de +{amount} VXP y vuelve al juego.',
 	'dash.comeback.cta': 'Reclamar',
@@ -381,7 +382,13 @@ export const esMessages = {
 	'dash.comeback.toast.transfer_failed': 'Transferencia fallida: {reason}',
 	'dash.comeback.toast.transport_failed_title': 'Conexión fallida',
 	'dash.comeback.toast.unknown': 'No se pudo reclamar la bonificación. Inténtalo más tarde.',
+	'dash.history.days_ago': 'hace {count}d',
 	'dash.history.eyebrow': 'Predicciones pasadas',
+	'dash.history.hours_ago': 'hace {count}h',
+	'dash.history.just_now': 'ahora mismo',
+	'dash.history.loss': 'Fallo',
+	'dash.history.minutes_ago': 'hace {count}min',
+	'dash.history.win': 'Acierto',
 	'dash.placeholder.categories':
 		'La precisión por categoría se desbloquea tras suficientes predicciones en cada dominio.',
 	'dash.placeholder.history':

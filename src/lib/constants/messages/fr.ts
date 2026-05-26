@@ -372,6 +372,7 @@ export const frMessages = {
 	'dash.accuracy.signed_in': 'Bon retour, {handle}.',
 	'dash.accuracy.signed_out': 'Connectez-vous pour voir votre précision.',
 	'dash.categories.eyebrow': 'Catégories',
+	'dash.categories.no_calls': 'Aucun pronostic',
 	'dash.comeback.body':
 		'Votre solde VXP est vide. Réclamez votre bonus de retour unique de +{amount} VXP et reprenez le jeu.',
 	'dash.comeback.cta': 'Réclamer',
@@ -390,7 +391,13 @@ export const frMessages = {
 	'dash.comeback.toast.transfer_failed': 'Transfert échoué : {reason}',
 	'dash.comeback.toast.transport_failed_title': 'Connexion échouée',
 	'dash.comeback.toast.unknown': 'Impossible de réclamer le bonus. Réessayez plus tard.',
+	'dash.history.days_ago': 'il y a {count}j',
 	'dash.history.eyebrow': 'Pronostics passés',
+	'dash.history.hours_ago': 'il y a {count}h',
+	'dash.history.just_now': "à l'instant",
+	'dash.history.loss': 'Raté',
+	'dash.history.minutes_ago': 'il y a {count}min',
+	'dash.history.win': 'Réussi',
 	'dash.placeholder.categories':
 		'La précision par catégorie se débloque après suffisamment de pronostics dans chaque domaine.',
 	'dash.placeholder.history':

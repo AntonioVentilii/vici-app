@@ -362,6 +362,7 @@ export const itMessages = {
 	'dash.accuracy.signed_in': 'Bentornato, {handle}.',
 	'dash.accuracy.signed_out': 'Accedi per vedere la tua accuratezza.',
 	'dash.categories.eyebrow': 'Categorie',
+	'dash.categories.no_calls': 'Ancora nessuna previsione',
 	'dash.comeback.body':
 		'Il tuo saldo VXP è vuoto. Riscatta la tua bonifica una tantum di +{amount} VXP e torna in gioco.',
 	'dash.comeback.cta': 'Riscatta',
@@ -380,7 +381,13 @@ export const itMessages = {
 	'dash.comeback.toast.transfer_failed': 'Trasferimento fallito: {reason}',
 	'dash.comeback.toast.transport_failed_title': 'Connessione fallita',
 	'dash.comeback.toast.unknown': 'Impossibile riscattare la bonifica. Riprova più tardi.',
+	'dash.history.days_ago': '{count}g fa',
 	'dash.history.eyebrow': 'Previsioni passate',
+	'dash.history.hours_ago': '{count}h fa',
+	'dash.history.just_now': 'proprio ora',
+	'dash.history.loss': 'Mancato',
+	'dash.history.minutes_ago': '{count}m fa',
+	'dash.history.win': 'Successo',
 	'dash.placeholder.categories':
 		'L’accuratezza per categoria si sblocca dopo abbastanza previsioni in ciascun ambito.',
 	'dash.placeholder.history':

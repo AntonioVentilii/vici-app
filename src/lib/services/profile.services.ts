@@ -6,6 +6,8 @@ import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
+import { computeUserStatsSnapshot, persistMyUserStats } from '$lib/services/user-stats.services';
+import { marketMetadataStore } from '$lib/stores/market-metadata.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import type { Nickname, UserProfile } from '$lib/types/profile';
 import {
@@ -494,6 +496,24 @@ export const calculateAndSyncStats = async ({
 			unlockedAchievements: unlocked
 		}
 	});
+
+	// Persist the per-user dashboard cache alongside the profile
+	// write. The Dash page reads `USER_STATS[principal]` on mount;
+	// keeping the snapshot fresh here means the categories tile +
+	// recent-history tile stay in sync with the user's last
+	// resolution event. Failures are logged but don't block the
+	// profile write — the cache will be rebuilt on the next sync.
+	try {
+		const snapshot = computeUserStatsSnapshot({
+			owner: principal,
+			history,
+			metadata: get(marketMetadataStore),
+			nowMs: Date.now()
+		});
+		await persistMyUserStats(snapshot);
+	} catch (err) {
+		console.error('calculateAndSyncStats: failed to persist user_stats', err);
+	}
 
 	notifyAchievementsUnlocked(newlyUnlocked);
 };

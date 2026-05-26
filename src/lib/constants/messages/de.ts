@@ -367,6 +367,7 @@ export const deMessages = {
 	'dash.accuracy.signed_in': 'Willkommen zurück, {handle}.',
 	'dash.accuracy.signed_out': 'Melde dich an, um deine Genauigkeit zu sehen.',
 	'dash.categories.eyebrow': 'Kategorien',
+	'dash.categories.no_calls': 'Noch keine Calls',
 	'dash.comeback.body':
 		'Dein VXP-Guthaben ist leer. Hol dir den einmaligen +{amount}-VXP-Comeback-Bonus und steige wieder ein.',
 	'dash.comeback.cta': 'Einlösen',
@@ -387,7 +388,13 @@ export const deMessages = {
 	'dash.comeback.toast.transport_failed_title': 'Verbindung fehlgeschlagen',
 	'dash.comeback.toast.unknown':
 		'Der Bonus konnte nicht eingelöst werden. Versuche es später erneut.',
+	'dash.history.days_ago': 'vor {count}T',
 	'dash.history.eyebrow': 'Vergangene Vorhersagen',
+	'dash.history.hours_ago': 'vor {count}Std',
+	'dash.history.just_now': 'gerade eben',
+	'dash.history.loss': 'Daneben',
+	'dash.history.minutes_ago': 'vor {count}Min',
+	'dash.history.win': 'Treffer',
 	'dash.placeholder.categories':
 		'Die Genauigkeit je Kategorie schaltet frei, sobald du in jeder Domäne genug Calls hast.',
 	'dash.placeholder.history': 'Aufgelöste Calls erscheinen hier, sobald die Märkte abrechnen.',

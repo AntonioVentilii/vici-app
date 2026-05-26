@@ -358,6 +358,7 @@ export const enMessages = {
 	'dash.accuracy.signed_in': 'Welcome back, {handle}.',
 	'dash.accuracy.signed_out': 'Sign in to see your accuracy.',
 	'dash.categories.eyebrow': 'Categories',
+	'dash.categories.no_calls': 'No calls yet',
 	'dash.comeback.body':
 		'Your VXP balance is empty. Claim your one-time +{amount} VXP comeback grant and get back in the game.',
 	'dash.comeback.cta': 'Claim',
@@ -375,7 +376,13 @@ export const enMessages = {
 	'dash.comeback.toast.transfer_failed': 'Transfer failed: {reason}',
 	'dash.comeback.toast.transport_failed_title': 'Connection failed',
 	'dash.comeback.toast.unknown': 'Could not claim the grant. Try again later.',
+	'dash.history.days_ago': '{count}d ago',
 	'dash.history.eyebrow': 'Past predictions',
+	'dash.history.hours_ago': '{count}h ago',
+	'dash.history.just_now': 'just now',
+	'dash.history.loss': 'Miss',
+	'dash.history.minutes_ago': '{count}m ago',
+	'dash.history.win': 'Hit',
 	'dash.placeholder.categories':
 		'Per-category accuracy unlocks after you’ve made enough calls in each domain.',
 	'dash.placeholder.history': 'Resolved calls will appear here as the markets settle.',

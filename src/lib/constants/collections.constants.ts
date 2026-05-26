@@ -98,7 +98,14 @@ export const Collection = {
 	 * accuracy as the delta between the round's start-of-window snapshot (frozen on the
 	 * match doc) and the current rolling counter.
 	 */
-	LEAGUE_STATS: collections.LEAGUE_STATS
+	LEAGUE_STATS: collections.LEAGUE_STATS,
+	/**
+	 * Per-user dashboard cache — one doc per principal. Holds the per-category breakdown
+	 * (calls / wins per market tag) and a small recent-settlement list that drive the
+	 * DashPage tiles. The FE re-syncs it from the user's clearing history on every Dash
+	 * mount; the satellite assert restricts writes to the user themselves.
+	 */
+	USER_STATS: collections.USER_STATS
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];
