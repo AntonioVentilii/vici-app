@@ -26,7 +26,13 @@
 
 	const { onPick }: Props = $props();
 
+	// Delay between the user tapping a team tile and advancing to Beat 1.b
+	// so the picked tile can pulse and the choice registers visually.
+	// Tuned to feel responsive while still confirming the action.
+	const PICK_FEEDBACK_MS = 280;
+
 	let showAllTeams = $state(false);
+	let pickedId: string | null = $state(null);
 
 	const event = $derived($featuredEvent);
 	const favouriteIds = $derived(event.favouriteIds ?? []);
@@ -73,7 +79,16 @@
 		return [local, ...baseFavourites.slice(0, Math.max(0, baseFavourites.length - 1))];
 	});
 
-	const moreCount = $derived(Math.max(0, participants.length - favourites.length));
+	// Teams shown when the user expands "+N more" — exclude the
+	// favourites already rendered as big tiles above so the expanded
+	// grid only surfaces the *other* teams.
+	const otherTeams: FeaturedEventParticipant[] = $derived.by(() => {
+		const favouriteIdSet = new Set(favourites.map((p) => p.id));
+
+		return participants.filter((p) => !favouriteIdSet.has(p.id));
+	});
+
+	const moreCount = $derived(otherTeams.length);
 
 	// "FIFA WORLD CUP 2026 · 27d to kickoff" eyebrow.
 	const kickoffDays = $derived(
@@ -81,15 +96,18 @@
 	);
 
 	const pick = (participantId: string) => {
-		onPick(participantId);
+		if (pickedId !== null) return;
+		pickedId = participantId;
+		setTimeout(() => onPick(participantId), PICK_FEEDBACK_MS);
 	};
 
 	const skip = () => {
+		if (pickedId !== null) return;
 		onPick(null);
 	};
 </script>
 
-<section class="ob2-beat ob2-beat-1">
+<section class="ob2-beat ob2-beat-1" class:is-committing={pickedId !== null} aria-busy={pickedId !== null}>
 	<div class="ob2-wc-eyebrow">
 		<span class="allcaps ob2-wc-tag">{event.title}</span>
 		<span class="ob2-wc-countdown num">
@@ -114,6 +132,9 @@
 			<button
 				style:--team-color={team.color ?? 'var(--border-strong)'}
 				class="ob2-team-tile"
+				class:is-picked={pickedId === team.id}
+				class:is-dimmed={pickedId !== null && pickedId !== team.id}
+				disabled={pickedId !== null}
 				onclick={() => pick(team.id)}
 				type="button"
 			>
@@ -149,9 +170,12 @@
 	{#if showAllTeams}
 		<div class="ob2-all-teams">
 			<div class="ob2-all-teams-grid">
-				{#each participants as team (team.id)}
+				{#each otherTeams as team (team.id)}
 					<button
 						class="ob2-team-chip"
+						class:is-picked={pickedId === team.id}
+						class:is-dimmed={pickedId !== null && pickedId !== team.id}
+						disabled={pickedId !== null}
 						onclick={() => {
 							pick(team.id);
 							showAllTeams = false;
@@ -166,7 +190,7 @@
 		</div>
 	{/if}
 
-	<button class="ob2-skip-team" onclick={skip} type="button">
+	<button class="ob2-skip-team" disabled={pickedId !== null} onclick={skip} type="button">
 		{t({ locale: $localeStore, key: 'onboarding.beat1.skip' })}
 	</button>
 </section>
