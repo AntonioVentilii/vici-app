@@ -411,13 +411,13 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ (Tier C-18) 30-day streak heatmap removed
 - ⏭ Full AvatarEditor (skin / hair / mood / crown / held / toga / backdrop tabs) — stub sheet today; full editor depends on the avatar-library port (tracked follow-up)
 
-### Wallet (5 — full reconceptualization)
+### Wallet (5 — full reconceptualization) ✅ commit `<wallet>`
 
-- ⬜ Header — back + title + history icon (no SectionHeader)
-- ⬜ Single centered hero card with VXP eyebrow + 48px num + weekly delta + Open Flow/Back a call row
-- ⬜ Recent activity list (6 mock rows in prototype; we'd source from real activity)
-- ⬜ Remove Send/Receive tabs (tier C-24 — confirm production-needed first)
-- ⬜ Remove CollateralStats secondary card
+- ✅ Header — `MobileAppBar` back to `/profile` + centered title + History icon right slot (`SectionHeader` retired)
+- ✅ Centered hero card — `VXP BALANCE` eyebrow, 48px num balance from `balancesStore[VXP]`, weekly delta (`+/−` laurel / no-red) computed from VXP settlements / trades in the last 7 days, dual Open Flow / Back a call CTA row
+- ✅ Recent activity list — top 6 rows from the unified `filteredTransactions` feed (real history, not mock); renders title + market subtitle + `formatNanosecondsToDate` timestamp + signed amount
+- ⏭ (C-24 keep) Send / Receive / History tabs retained — production need; restyled inside a single tone-down card under the hero / activity
+- ✅ Remove `CollateralStats` secondary card + its modal (`CollateralModal`, `CollateralTokenRow` deleted as orphans; `WalletStats` also removed since the prototype hero supersedes it)
 
 ### Settings (24) ✅ commit `f521246`
 
