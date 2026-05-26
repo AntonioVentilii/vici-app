@@ -397,10 +397,11 @@
 		shell now hosts the same `MobileAppBar` pattern at every viewport
 		width; each page mounts its own appbar.
 	-->
-	<main class="screen-scroll" data-tid={TestId.AppMain}>
+	<main class="screen-scroll">
 		{#key page.url.pathname}
 			<div
 				class="mx-auto w-full max-w-[28rem]"
+				data-tid={TestId.AppMain}
 				in:fade={{ duration: 100, delay: 100 }}
 				out:fade={{ duration: 100 }}
 			>

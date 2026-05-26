@@ -159,7 +159,8 @@
 	--tracking-wide: 0.04em;
 	--tracking-allcaps: 0.12em;
 
-	/* Radii — the standard scale. Buttons 4, cards 8, swipe-card 12.
+	/* Radii — the standard scale. Buttons 4, cards 8, swipe-card 16
+	 * (was 12 before prototype parity).
 	 * Pills (999) are rare. Don't deviate.
 	 *
 	 * Note: `--r-12` is the canonical card radius and is set to 16px
@@ -543,7 +544,7 @@ html[data-app='1'] body {
 	overflow-x: hidden;
 	overflow-y: auto;
 	-webkit-overflow-scrolling: touch;
-	padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+	padding-bottom: var(--bn-clear);
 }
 
 /* Custom Scrollbar */
