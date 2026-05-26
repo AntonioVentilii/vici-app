@@ -12,7 +12,6 @@
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
 	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
 	import FlowStreakBreakBanner from '$lib/components/market/FlowStreakBreakBanner.svelte';
-	import FlowTopBar from '$lib/components/market/FlowTopBar.svelte';
 	import FlowXpPops from '$lib/components/market/FlowXpPops.svelte';
 	import MotionBeat from '$lib/components/market/MotionBeat.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -578,15 +577,27 @@
 			{xp}
 		/>
 	{:else}
-		<FlowTopBar
-			{betsCount}
-			{dailyStreak}
-			{flameLabel}
-			{flameStage}
-			{maxBets}
-			onExit={backToMarkets}
-			{xp}
-		/>
+		<!-- Per-prototype: no persistent Flow header. Streak + XP are
+		     surfaced as transient banners (FlowComboBanner /
+		     FlowStreakBreakBanner) and as XP pops on commit; the close
+		     action is implicit (browser back / bottom-bar action). A
+		     compact floating exit chip is kept in the top-right for
+		     mouse / desktop users where back-gesture isn't natural. -->
+		<button
+			class="flow-exit-chip"
+			aria-label={t({ locale: $localeStore, key: 'flow.exit_aria' })}
+			onclick={backToMarkets}
+			type="button"
+		>
+			<svg fill="none" height="14" stroke="currentColor" viewBox="0 0 24 24" width="14">
+				<path
+					d="M6 18L18 6M6 6l12 12"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2.5"
+				/>
+			</svg>
+		</button>
 
 		{#if lastStreakShown > 0}
 			{#key lastStreakShown}
@@ -628,8 +639,6 @@
 							committedAction={market.id === committedMarketId ? committedAction : null}
 							{followedLean}
 							interactive={isCurrent && !flowPaused}
-							isLimitOrderNo={isNullish(market.bestBid)}
-							isLimitOrderYes={isNullish(market.bestAsk)}
 							{market}
 							{metadata}
 							onAction={handleAction}
@@ -710,8 +719,41 @@
 		display: flex;
 		align-items: center;
 		justify-content: center;
-		padding: 0.35rem 1rem 0.5rem;
+		padding: 0.65rem 1rem 0.5rem;
 		min-height: 0;
+	}
+
+	/* Floating exit chip — replaces the persistent FlowTopBar. Sits in
+	   the top-right so it doesn't compete with the card header. The
+	   matching gesture (browser back / bottom-bar) covers the primary
+	   path on mobile. */
+	.flow-exit-chip {
+		position: absolute;
+		top: calc(env(safe-area-inset-top, 0px) + 0.65rem);
+		right: 0.75rem;
+		z-index: 70;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.85rem;
+		height: 1.85rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+		color: var(--text-muted);
+		border: 1px solid var(--border-base);
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		transition:
+			color 160ms ease,
+			background-color 160ms ease,
+			transform 160ms ease;
+	}
+	.flow-exit-chip:hover {
+		color: var(--text-base);
+		background: var(--bg-surface);
+	}
+	.flow-exit-chip:active {
+		transform: scale(0.94);
 	}
 
 	.flow-card-wrap {
@@ -720,10 +762,10 @@
 		max-width: min(25.5rem, calc(100vw - 2rem));
 		height: 100%;
 		max-height: min(
-			650px,
-			calc(100dvh - 13.75rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
+			700px,
+			calc(100dvh - 9.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
 		);
-		min-height: min(34rem, calc(100dvh - 14.75rem));
+		min-height: min(36rem, calc(100dvh - 10.5rem));
 	}
 
 	.flow-card-slot {

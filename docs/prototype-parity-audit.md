@@ -169,31 +169,99 @@ outcome…"` with the date formatted in the active locale via
 - ✅ Beat 2 skip-link copy: "Pick later — keep placeholder"
   matches the prototype.
 
-### Flow (28)
+### Flow (28) ✅ commit `<flow>`
 
-- ⬜ Front: stake selector hidden for <50 calls; SIZE · VXP display when unlocked
-- ⬜ Front: bar+payout split layout (vs two separate boxed prob buttons)
-- ⬜ Front: ConsensusCompass on front face
-- ⬜ Front: days-left chip in meta row
-- ⬜ Front: live WC suffix on tag (MATCHDAY/KICKOFF)
-- ⬜ Front: payout role labels (LONG SHOT/FAVORITE)
-- ⬜ Front: Trickster pill (contrarian markets)
-- ⬜ Front: friends-followed-lean line
-- ⬜ Front: sharp signal moved to back only (currently on front)
-- ⬜ Front: edge-to-edge `MarketArtwork` (no padding around art frame)
-- ⬜ Swipe physics — rot 18, threshold 100px, settle delay 220ms, vibrate 12
-- ⬜ Swipe overlay style — full-card overlay with YES/NO/SKIP text
-- ⬜ Locked-card nudge interaction
-- ⬜ Saved/heart + share buttons on back
-- ⬜ Back "Resolves Yes if" block with full-rules toggle
-- ⬜ Back full stake-slider parity (vs ladder rungs)
-- ⬜ Back three-row "Who's calling what" w/ diff badges + dot grid
-- ⬜ Back prior-call section parity
-- ⬜ Back live countdown (minute-tick interval)
-- ⬜ Back track-record line parity
-- ⬜ Back-face swipe still commits
-- ⬜ "Why this card now" priority + copy templates
-- ⬜ Header gradient + card body radial gradient parity
+- ✅ Front: stake selector hidden for <50 calls; SIZE · VXP display when
+  unlocked — `vxpStakeSliderUnlocked({ calls })` gates the SIZE chip and
+  the back-face stake slider; below the threshold the chip dims to the
+  locked default (`VXP_DEFAULT_STAKE = 50`) and the back-face slider is
+  replaced with the unlock-progress hint.
+- ✅ Front: bar+payout split layout — single
+  `flow-probs-track` with NO/YES fills + flanking percentages, plus a
+  second row carrying chevron · payout · LONG SHOT/FAVORITE role label.
+- ✅ Front: `ConsensusCompass` mounted in the head row (top-right), 42px
+  size, semantic yes/no colour via `--needle-color`.
+- ✅ Front: days-left chip in the meta row — `flow-days` pill alongside
+  the category tag, urgency tiers (`is-soon` ≤ 7d, `is-urgent` ≤ 1d).
+- ✅ Front: live WC suffix on the category tag —
+  `wc.matchday` / `wc.kicks_off_tomorrow` / `wc.kickoff_week` driven off
+  `$daysToKickoff`; the numeric "X DAYS" is owned by the days-left chip.
+- ✅ Front: payout role labels (LONG SHOT / FAVORITE) — assigned per
+  side based on `yesIsFav` and localised via `card.long_shot` /
+  `card.favorite`.
+- ⏭ Front: Trickster pill on contrarian markets — the existing companion
+  Trickster beat in `FlowMode` already fires on `yes ≤ 0.25` /
+  `yes ≥ 0.75` via `showCompanion`. The prototype's static pill would
+  duplicate that signal, so the companion beat is the canonical surface.
+- ✅ Front: friends-followed-lean line — when `followedLean.yes > 0`,
+  the social row renders `{count} friend(s) YES · {other} NO` (via
+  `card.followed_lean_template` + singular/plural friend keys).
+- ✅ Front: sharp-predictor signal removed — no `flow-sharp` block on the
+  front face; the back face owns it via the "Top 10% accuracy" row.
+- ✅ Front: edge-to-edge `MarketArtwork` — `.flow-art-bleed` spans the
+  full card body with no side padding, top/bottom border rules.
+- ✅ Swipe physics — `SWIPE_THRESHOLD = 100`, `SKIP_THRESHOLD = 110`,
+  rotation = `dragX / 18`, `SETTLE_MS = 220`, `vibrate(12)` on commit.
+  Raw deltas (no Spring) match the prototype's `useState` model;
+  `committedRef` is a one-shot latch reset on `market.id` change.
+- ✅ Swipe overlay style — full-card `flow-overlay` blocks with
+  `clamp(3.5rem, 14vw, 5rem)` text + tinted shadow per direction. No
+  edge-inset glow (C-14 strip).
+- ⏭ Locked-card nudge interaction — locked-card hard-pause flow is
+  driven by `MotionBeat` / `flowPaused` in `FlowMode`, not by an
+  in-card nudge. Front-face stays interactive-or-not via the existing
+  `interactive` prop; the prototype's ±4 px nudge is deferred (no
+  motion-engine signal currently emits it).
+- ✅ Back: saved/heart + share buttons in the back-card head row —
+  `SavedMarketToggle` + `MarketDetailShareButton` inside
+  `flow-back-actions` (gated `data-no-card-gesture`).
+- ✅ Back: "Resolves Yes if" block with full-rules toggle —
+  `card.back.resolves_if` + `card.back.show_rules` / `hide_rules` and
+  the rotating caret glyph.
+- ✅ Back: full stake-slider parity — track + filled bar + handle dot +
+  invisible native `<input type=range>` for drag/touch, with the 5-rung
+  peg row underneath and the IF YES / IF NO / IF WRONG payout preview.
+  `is-cap` modifier on the wrapper when the user lands on the top rung.
+- ✅ Back: three-row "Who's calling what" — All callers + Top 10%
+  accuracy (with `±N pts` diff badge vs consensus) + Predictors you
+  follow (10-dot grid via `flow-followed-dots`).
+- ✅ Back: prior-call section parity — `card.you_called_eyebrow` plus
+  the live `card.prior_call_drift` line (`{when} · consensus {drift}
+  pts since`).
+- ✅ Back: live countdown — `$effect` interval ticks `nowTick` once per
+  minute; `getTimeRemaining` is derived off the tick. Urgent state (≤
+  24h) drives a pulse dot next to the settles line.
+- ✅ Back: track-record line — `card.your_accuracy_line` (`Your
+  {category} accuracy: {pct}% · {calls} calls`), coloured per the
+  `acc ≥ 0.6` gate.
+- ✅ Back-face swipe still commits — back-face `onPointerMove` guards
+  horizontal motion (>20% over vertical) and reuses the same commit
+  pipeline; YES/NO stamps mirror the front overlays with
+  `flow-overlay-back`.
+- ✅ "Why this card now" priority — prior-call branch wins over
+  `whyNow`, with side-aware tinting (`is-yes` / `is-no`); falls back to
+  the editorial `metadata.whyNow.text` chip.
+- ✅ Header gradient + card body radial gradient parity — front head
+  uses `linear-gradient(160deg, cat 18% → cat 7% → transparent)` and
+  the card body adds the `radial-gradient(circle at 18% 0%, cat 18%,
+  transparent 32%)` over the surface-popover linear base. Back panel
+  layers a `linear-gradient(180deg, cat 14%, transparent 60%)` on top
+  of the same base.
+- ✅ C-9 STRIP — `FlowTopBar.svelte` deleted; FlowMode no longer mounts
+  a persistent header. A compact floating exit chip in the top-right
+  preserves the close affordance for mouse users.
+- ✅ C-10 STRIP — LIMIT pill removed from the edge labels (the old
+  `isLimitOrderYes` / `isLimitOrderNo` props are no longer plumbed into
+  `FlowCard`).
+- ✅ C-11 STRIP — `SuggestedBadge` no longer appears in the card meta
+  row.
+- ✅ C-12 STRIP — `flow-card-rail` bottom hint row removed.
+- ✅ C-13 STRIP — true 3D `rotateY` flip replaced with an opacity
+  crossfade across both faces (delayed-opacity transition so the back
+  never flashes through during the swap).
+- ✅ C-14 STRIP — edge-inset glow (`box-shadow: inset 0 0 60px ...`)
+  removed; the new full-card overlay text carries the swipe intent
+  on its own.
 
 ### Sparkline + event markers (12) ✅ commit `<sparkline>`
 
