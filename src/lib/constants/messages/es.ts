@@ -834,7 +834,7 @@ export const esMessages = {
 	'nav.social': 'Social',
 	'nav.trust': 'Confianza',
 	'nav.vision': 'Visión',
-	'notifications.back_settings': 'Volver a ajustes',
+	'notifications.back_flow': 'Volver a Flow',
 	'notifications.empty.body':
 		'Resoluciones, solicitudes de amistad y desafíos aparecen aquí. Haz algunas predicciones para empezar tu historial.',
 	'notifications.empty.title': 'Sin notificaciones nuevas.',

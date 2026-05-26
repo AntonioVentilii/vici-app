@@ -821,7 +821,7 @@ export const enMessages = {
 	'nav.social': 'Social',
 	'nav.trust': 'Trust',
 	'nav.vision': 'Vision',
-	'notifications.back_settings': 'Back to settings',
+	'notifications.back_flow': 'Back to Flow',
 	'notifications.empty.body':
 		'Resolutions, friend requests and challenges land here. Make a few calls to start the record.',
 	'notifications.empty.title': 'No new notifications.',

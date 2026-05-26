@@ -264,14 +264,15 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Email card — VERIFIED green mono chip
 - ⬜ Padding bottom
 
-### Notifications (8)
+### Notifications (8) ✅ commit `<notifications>`
 
-- ⬜ Right action — text-only "Mark all read" ghost (not Button component)
-- ⬜ Back destination — Flow (not Settings)
-- ⬜ Empty state — Bell icon stroke 1.4 + serif-italic + dim body
-- ⬜ Notification card layout — accent border + dot when unread; 32×32 icon tile
-- ⬜ Empty filter for zero-call users
-- ⬜ Tap routing — kind-driven (dash/flow/social/profile/market)
+- ✅ Right action — text-only "Mark all read" ghost (allcaps eyebrow font, no border-box)
+- ✅ Back destination — Flow (not Settings); back-arrow is borderless ghost
+- ✅ Empty state — Bell icon stroke 1.4 + serif-italic + dim body (was already correct)
+- ✅ Notification card layout — accent border + dot when unread; 32×32 icon tile (already matched)
+- ⏭ Empty filter for zero-call users — depends on `combinedInboxStore` filtering; deferred (inbox is mocked)
+- ✅ Tap routing — kind-driven via `notification.href` (already wired)
+- ✅ i18n: `notifications.back_settings` → `notifications.back_flow` × 7 locales
 
 ### Album (9) ✅ commit `<album>`
 

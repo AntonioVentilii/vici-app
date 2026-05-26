@@ -830,7 +830,7 @@ export const ptMessages = {
 	'nav.social': 'Social',
 	'nav.trust': 'Confiança',
 	'nav.vision': 'Visão',
-	'notifications.back_settings': 'Voltar às configurações',
+	'notifications.back_flow': 'Voltar para Flow',
 	'notifications.empty.body':
 		'Resoluções, pedidos de amizade e desafios aparecem aqui. Faça algumas previsões para começar o histórico.',
 	'notifications.empty.title': 'Sem notificações novas.',

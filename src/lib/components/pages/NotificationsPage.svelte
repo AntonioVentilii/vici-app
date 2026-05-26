@@ -15,7 +15,6 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import Button from '$lib/components/ui/Button.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { refreshFriendRelations } from '$lib/stores/friends.store';
 	import { combinedInboxStore, markAllInboxRead } from '$lib/stores/inbox.store';
@@ -40,18 +39,31 @@
 
 <div class="notifications-page">
 	<header class="notifications-appbar">
+		<!--
+			Back destination is Flow (matching `screens.jsx:1390` which
+			calls `navigate('flow')`). The back-arrow is a text-only
+			ghost icon button — no border box — to match the prototype's
+			`.btn.btn-ghost`. The Mark-all-read on the right is also a
+			plain ghost text button, not the Button component, so the
+			padding + typography reads as `t-eyebrow` instead of a
+			sized control.
+		-->
 		<button
 			class="notifications-back"
-			aria-label={t({ locale: $localeStore, key: 'notifications.back_settings' })}
-			onclick={() => goto(resolve(AppPath.Settings))}
+			aria-label={t({ locale: $localeStore, key: 'notifications.back_flow' })}
+			onclick={() => goto(resolve(AppPath.Flow))}
 			type="button"
 		>
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 		</button>
 		<h1 class="notifications-title">{t({ locale: $localeStore, key: 'notifications.title' })}</h1>
-		<Button onclick={markAllInboxRead} size="sm" variant="ghost">
-			{t({ locale: $localeStore, key: 'notifications.mark_read' })}
-		</Button>
+		{#if $combinedInboxStore.length > 0}
+			<button class="notifications-mark-read allcaps" onclick={markAllInboxRead} type="button">
+				{t({ locale: $localeStore, key: 'notifications.mark_read' })}
+			</button>
+		{:else}
+			<span class="notifications-appbar-spacer" aria-hidden="true"></span>
+		{/if}
 	</header>
 
 	{#if $combinedInboxStore.length === 0}
@@ -122,16 +134,21 @@
 		padding: 0.25rem 0 1rem;
 	}
 
+	/* Borderless ghost icon button — matches the design's
+	   `.btn.btn-ghost.t-h4` left appbar control. */
 	.notifications-back {
 		display: flex;
 		align-items: center;
 		justify-content: center;
 		padding: 0.5rem 0.625rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		border: 0;
+		background: transparent;
 		color: var(--text-base);
 		cursor: pointer;
+	}
+
+	.notifications-back:hover {
+		color: var(--color-primary);
 	}
 
 	.notifications-title {
@@ -140,6 +157,30 @@
 		font-weight: 600;
 		text-align: center;
 		color: var(--text-base);
+	}
+
+	/* Text-only ghost — matches `<button className="btn btn-ghost
+	   t-eyebrow">` in the prototype's appbar right slot. */
+	.notifications-mark-read {
+		appearance: none;
+		padding: 0.375rem 0.625rem;
+		border: 0;
+		background: transparent;
+		font: inherit;
+		font-size: var(--t-10, 0.65rem);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+		cursor: pointer;
+		transition: color var(--d-hover) var(--ease-vici);
+	}
+
+	.notifications-mark-read:hover {
+		color: var(--text-base);
+	}
+
+	.notifications-appbar-spacer {
+		width: 2.125rem;
 	}
 
 	.notifications-list {

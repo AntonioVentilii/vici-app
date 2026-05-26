@@ -834,7 +834,7 @@ export const itMessages = {
 	'nav.social': 'Social',
 	'nav.trust': 'Fiducia',
 	'nav.vision': 'Visione',
-	'notifications.back_settings': 'Torna alle impostazioni',
+	'notifications.back_flow': 'Torna a Flow',
 	'notifications.empty.body':
 		'Risoluzioni, richieste di amicizia e sfide compaiono qui. Fai qualche previsione per iniziare a costruire la tua bacheca.',
 	'notifications.empty.title': 'Nessuna nuova notifica.',

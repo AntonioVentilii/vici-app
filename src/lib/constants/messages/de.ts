@@ -839,7 +839,7 @@ export const deMessages = {
 	'nav.social': 'Social',
 	'nav.trust': 'Vertrauen',
 	'nav.vision': 'Vision',
-	'notifications.back_settings': 'Zurück zu Einstellungen',
+	'notifications.back_flow': 'Zurück zu Flow',
 	'notifications.empty.body':
 		'Auflösungen, Freundschaftsanfragen und Challenges landen hier. Mach ein paar Vorhersagen, um deine Bilanz zu starten.',
 	'notifications.empty.title': 'Keine neuen Benachrichtigungen.',
