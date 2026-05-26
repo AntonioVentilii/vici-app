@@ -376,16 +376,18 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Remove ComebackBanner — banner no longer mounted on Dash (kept the file + i18n keys; banner is now unused, candidate for sweep)
 - ✅ Streak placement inline with accuracy — `.dash-streak-row` inside `.dash-hero` (flame + days + sub + progress bar), no separate card
 
-### Portfolio (10)
+### Portfolio (10) ✅ commit `36adf14`
 
-- ⬜ Header right action — chart icon only, ghost
-- ⬜ Holdings hero card (TOTAL HOLDINGS num + weekly delta + 3-col P&L/accuracy/rank)
-- ⬜ Performance chart card with 30d sparkline + +18.4% delta
-- ⬜ Allocation card — 5 fixed categories with progress bars
-- ⬜ Active positions — entry → current + colored P&L
-- ⬜ Recent history — list with WIN/LOSS pill + VXP earned
-- ⬜ Section header w/ count
-- ⬜ Remove cold-load spinner (prototype seeds data)
+- ✅ Single-page hero balance + 3-col stats — `PortfolioPage` now mounts the hero card (eyebrow + 48px VXP num + weekly delta) plus the 3-col mini stats grid; the legacy `PortfolioStats` 6-tile holdings + `PortfolioAllocation` + dual `PositionTable`/`TradeHistoryTable` split is gone
+- ✅ Hero VXP balance — 48px num pulled from `balancesStore[VXP]` with the weekly delta line inline (`+/−` laurel / no-red), mirroring the Wallet hero pattern shipped in `2b48623`
+- ✅ 3-col stats grid — `Active calls` / `Resolved` / `Lifetime VXP` chips under the hero (`portfolio.stat.active` / `.resolved` / `.lifetime_vxp`); Lifetime VXP reads the same VXP balance as the hero so the surface stays in lock-step
+- ✅ Open positions list — flat `.portfolio-list` rows with `PositionArtThumb` · market title · YES/NO side pill · payout-at-prob meta · signed PnL (positive `--yes`, negative `--no`); rows link to `/markets/[id]`
+- ✅ Resolved positions list — separate flat list with a `W` / `L` / `—` glyph tile (laurel / no-red / muted), market title, and signed PnL via `positionResolvedResult` + `calculatePositionPnL`
+- ✅ Remove `SectionHeader`, use `MobileAppBar` — left-aligned `MobileAppBar` (title + ghost `LineChart` right slot); the desktop `SectionHeader` + description blob deleted along with `portfolio.sub`
+- ⏭ (C-25 keep) `OpenOrdersTable` retained for limit-order cancellation; mounted under a `.portfolio-orders` section only when `$orders.length > 0` so it stays out of the hero when empty
+- ✅ Empty state — `serif-italic` quote + body line + primary `Open Flow` CTA (`portfolio.empty.quote` / `.body` / `.cta`), replacing the old per-table `EmptyState` cards
+- ✅ Drop redundant filter chips — the legacy `PortfolioStats` activity tiles + filter chip row are gone; the 3-col mini stats supersedes them
+- ✅ Drop cumulative-PnL chart — never shipped; the prototype has no `PerfChart` either, so nothing to remove on this side
 
 ### Profile (16) ✅ commit `dfa444a`
 
