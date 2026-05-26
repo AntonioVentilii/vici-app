@@ -658,7 +658,7 @@
 					})}
 				</p>
 
-				<!-- Row 4: inline streak + calls (🔥 N · M calls) -->
+				<!-- Row 4: inline streak + calls (Flame N · M calls) -->
 				<p class="profile-streak-line">
 					{#if dailyStreak > 0}
 						<span class="profile-streak-inline" aria-label="streak">

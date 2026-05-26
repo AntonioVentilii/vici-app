@@ -18,7 +18,12 @@
 <div
 	class="group bg-foreground/5 hover:bg-foreground/10 relative flex gap-3 rounded-2xl p-3 transition-all"
 >
-	<div class="text-xl">{getActivityIcon(activity.type)}</div>
+	<div
+		class="bg-foreground/5 text-foreground/70 flex h-8 w-8 shrink-0 items-center justify-center rounded-full font-mono text-sm leading-none"
+		aria-hidden="true"
+	>
+		{getActivityIcon(activity.type)}
+	</div>
 	<div class="flex-1 overflow-hidden">
 		<div class="flex items-center justify-between gap-2">
 			<div class="flex min-w-0 items-center gap-1.5">

@@ -27,6 +27,18 @@
 			? nickname
 			: shortenWithMiddleEllipsis({ text: principal });
 	};
+
+	// First character of the display name, in caps. Brand: no emoji
+	// avatar fallback — initials in a tinted disc instead. See
+	// `docs/ai/frontend/brand.md §2.3`. `charAt(0)` is UTF-16-unit
+	// based, which is fine here: nicknames the satellite accepts are
+	// ASCII/Latin, and the principal shortener fallback is hex.
+	const initialFor = (principal: string): string => {
+		const name = displayNameFor(principal).trim();
+		const first = name.charAt(0);
+
+		return first ? first.toUpperCase() : '·';
+	};
 </script>
 
 <div
@@ -47,9 +59,10 @@
 			{#each activities as activity (activity.timestamp + activity.user)}
 				<div class="flex items-start gap-3">
 					<div
-						class="bg-foreground/5 flex h-8 w-8 items-center justify-center rounded-full text-xs"
+						class="bg-foreground/5 text-foreground/70 flex h-8 w-8 items-center justify-center rounded-full font-mono text-xs leading-none"
+						aria-hidden="true"
 					>
-						👤
+						{initialFor(activity.user)}
 					</div>
 					<div class="min-w-0 flex-1">
 						<div class="flex items-center justify-between gap-2">
