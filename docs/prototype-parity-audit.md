@@ -528,7 +528,7 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Side chip style — emblem-tinted (`color-mix(in srgb, var(--side-accent) 13%, transparent)` background, 30% accent border) so each league's `accentColor` reads on the chip.
 - ✅ Group items end with "see all →" / "see full standings →" affordance — Worlds monthly cards close with `See full standings →`, Tournament card closes with `Open bracket →`, and the league-bout list collapses to 4 items with a `See all {n} →` toggle.
 
-### Tournament (~3) ✅ commit `<tournament>` · re-audit commit `<tournament-reaudit>` (C-26)
+### Tournament (~3) ✅ commit `<tournament>` · re-audit commit `cc6b2cb` (C-26)
 
 - ✅ Bracket diagram styling — match-meta row now has three branches (concluded → date + winner →; live → "LIVE · ends {date}" in purple; upcoming → "upcoming · {date}" muted)
 - ✅ Round chip color (#b49cff) — hero current-round tag + live-match border + live-meta text all use the tournament accent
