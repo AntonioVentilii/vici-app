@@ -107,7 +107,7 @@
 			</div>
 
 			<div class="forecast-spark-card">
-				<FlowCardSparkline accentColor="var(--laurel)" seed={market.id} {yesPercent} />
+				<FlowCardSparkline seed={market.id} {yesPercent} />
 			</div>
 
 			<div class="forecast-split-bar" role="presentation">

@@ -18,42 +18,43 @@ Each is being addressed in its own commit on the
 
 These need a per-item decision before deletion. Default = remove.
 
-| ID | Surface | Feature | Decision | Note |
-|---|---|---|---|---|
-| C-1 | Markets list | Status tabs (`Active / Trending / Expiring / Resolved`) | ✅ Remove | Locked in earlier wave |
-| C-2 | Markets list | Global search box | ✅ Remove | Locked in earlier wave |
-| C-3 | Markets list | "Suggested for you" rail | ⬜ Ask |  |
-| C-4 | Markets list | "LIVE" pulsing pill in appbar | ⬜ Ask |  |
-| C-5 | Markets list | Hover lift on cards (`hover:-translate-y-0.5`) | ⬜ Ask |  |
-| C-6 | Sign-in | Decorative orb radial gradients | ⬜ Ask |  |
-| C-7 | Sign-in | `or` divider between providers | ⬜ Ask |  |
-| C-8 | Sign-in | Internet Identity + Passkey + Dev buttons | ⬜ Ask | Production-needed; might keep with prototype-aligned styling |
-| C-9 | Flow | FlowTopBar (persistent close/progress/streak header) | ⬜ Ask |  |
-| C-10 | Flow | LIMIT pill on edge labels (limit-order indicator) | ⬜ Ask |  |
-| C-11 | Flow | Suggested badge in meta row | ⬜ Ask |  |
-| C-12 | Flow | flow-card-rail bottom hint row | ⬜ Ask |  |
-| C-13 | Flow card | True 3D rotateY flip (vs prototype's opacity crossfade) | ⬜ Ask |  |
-| C-14 | Flow card | Edge-inset glow on swipe (`box-shadow inset 0 0 60px`) | ⬜ Ask |  |
-| C-15 | Profile | Friends row (count + pending badge) | ⬜ Ask |  |
-| C-16 | Profile | ReferralCard | ⬜ Ask |  |
-| C-17 | Profile | Skill grid (Accuracy/Calls/Wins/Streak) | ⬜ Ask |  |
-| C-18 | Profile | 30-day streak activity heatmap | ⬜ Ask |  |
-| C-19 | Settings | Language selector segmented control | ⬜ Ask | Prototype is English-only by design |
-| C-20 | Settings | Inline blocking-leagues link list in delete flow | ⬜ Ask | Production need (transfer ownership) |
-| C-21 | Settings | Transfer ownership UI in delete flow | ⬜ Ask | Production need |
-| C-22 | League detail | Transfer ownership CTA + modal | ⬜ Ask | Production need |
-| C-23 | Account settings | Different intro copy / no provider-specific glyphs | ⬜ Ask |  |
-| C-24 | Wallet | Multi-tab production wallet (Send / Receive / History tabs) | ⬜ Ask | Production-needed — but prototype is a simple mocked view |
-| C-25 | Portfolio | OpenOrders table | ⬜ Ask | Production need (limit orders) |
-| C-26 | Tournament | (additive UI from us — TBD list) | ⬜ Ask |  |
-| C-27 | Friends | Back-arrow appbar to Profile | ⬜ Ask | Prototype assumes Social tab parent |
-| C-28 | Layout | 200ms cross-fade between routes | ⏭ Keep | Confirmed earlier as intentional |
-| C-29 | Worlds | Podium prize claim banner | ⬜ Ask | Production need (real claim flow) |
-| C-30 | Layout | DomainSwitch | ✅ Hidden in prod | Locked earlier |
+| ID   | Surface          | Feature                                                     | Decision          | Note                                                         |
+| ---- | ---------------- | ----------------------------------------------------------- | ----------------- | ------------------------------------------------------------ |
+| C-1  | Markets list     | Status tabs (`Active / Trending / Expiring / Resolved`)     | ✅ Remove         | Locked in earlier wave                                       |
+| C-2  | Markets list     | Global search box                                           | ✅ Remove         | Locked in earlier wave                                       |
+| C-3  | Markets list     | "Suggested for you" rail                                    | ⬜ Ask            |                                                              |
+| C-4  | Markets list     | "LIVE" pulsing pill in appbar                               | ⬜ Ask            |                                                              |
+| C-5  | Markets list     | Hover lift on cards (`hover:-translate-y-0.5`)              | ⬜ Ask            |                                                              |
+| C-6  | Sign-in          | Decorative orb radial gradients                             | ⬜ Ask            |                                                              |
+| C-7  | Sign-in          | `or` divider between providers                              | ⬜ Ask            |                                                              |
+| C-8  | Sign-in          | Internet Identity + Passkey + Dev buttons                   | ⬜ Ask            | Production-needed; might keep with prototype-aligned styling |
+| C-9  | Flow             | FlowTopBar (persistent close/progress/streak header)        | ⬜ Ask            |                                                              |
+| C-10 | Flow             | LIMIT pill on edge labels (limit-order indicator)           | ⬜ Ask            |                                                              |
+| C-11 | Flow             | Suggested badge in meta row                                 | ⬜ Ask            |                                                              |
+| C-12 | Flow             | flow-card-rail bottom hint row                              | ⬜ Ask            |                                                              |
+| C-13 | Flow card        | True 3D rotateY flip (vs prototype's opacity crossfade)     | ⬜ Ask            |                                                              |
+| C-14 | Flow card        | Edge-inset glow on swipe (`box-shadow inset 0 0 60px`)      | ⬜ Ask            |                                                              |
+| C-15 | Profile          | Friends row (count + pending badge)                         | ⬜ Ask            |                                                              |
+| C-16 | Profile          | ReferralCard                                                | ⬜ Ask            |                                                              |
+| C-17 | Profile          | Skill grid (Accuracy/Calls/Wins/Streak)                     | ⬜ Ask            |                                                              |
+| C-18 | Profile          | 30-day streak activity heatmap                              | ⬜ Ask            |                                                              |
+| C-19 | Settings         | Language selector segmented control                         | ⬜ Ask            | Prototype is English-only by design                          |
+| C-20 | Settings         | Inline blocking-leagues link list in delete flow            | ⬜ Ask            | Production need (transfer ownership)                         |
+| C-21 | Settings         | Transfer ownership UI in delete flow                        | ⬜ Ask            | Production need                                              |
+| C-22 | League detail    | Transfer ownership CTA + modal                              | ⬜ Ask            | Production need                                              |
+| C-23 | Account settings | Different intro copy / no provider-specific glyphs          | ⬜ Ask            |                                                              |
+| C-24 | Wallet           | Multi-tab production wallet (Send / Receive / History tabs) | ⬜ Ask            | Production-needed — but prototype is a simple mocked view    |
+| C-25 | Portfolio        | OpenOrders table                                            | ⬜ Ask            | Production need (limit orders)                               |
+| C-26 | Tournament       | (additive UI from us — TBD list)                            | ⬜ Ask            |                                                              |
+| C-27 | Friends          | Back-arrow appbar to Profile                                | ⬜ Ask            | Prototype assumes Social tab parent                          |
+| C-28 | Layout           | 200ms cross-fade between routes                             | ⏭ Keep           | Confirmed earlier as intentional                             |
+| C-29 | Worlds           | Podium prize claim banner                                   | ⬜ Ask            | Production need (real claim flow)                            |
+| C-30 | Layout           | DomainSwitch                                                | ✅ Hidden in prod | Locked earlier                                               |
 
 ## Surface checklist — A-tier divergences (must-fix)
 
 ### Welcome / Landing (8)
+
 - ⬜ Hero LIVE tag pill (uses tokens, not custom CSS pulse)
 - ⬜ Missing WC kickoff chip in hero meta row
 - ⬜ Hero stats: prototype uses `<span class="num">`; we use `<strong>`
@@ -64,6 +65,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Italic accent application on subtitle / lede spans
 
 ### Sign-in (14)
+
 - ⬜ Title template / wordmark size + accent color
 - ⬜ Missing predictor proof line (`184,000 PREDICTORS · 1,240 CALLS THIS HOUR`)
 - ⬜ Sent-state UI ("Check your inbox" with check-mark + Continue + use different email)
@@ -77,6 +79,7 @@ These need a per-item decision before deletion. Default = remove.
 - C-7 / C-6 decisions resolve the rest
 
 ### Onboarding (22)
+
 - ⬜ Beat 1 — no progress dots header (prototype omits BeatV2Header on Beat 1)
 - ⬜ Beat 1 — inline italic accent on "Your call comes next"
 - ⬜ Beat 1 — localised team promotion (auto-detect country)
@@ -99,6 +102,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Beat 2 skip-link copy
 
 ### Flow (28)
+
 - ⬜ Front: stake selector hidden for <50 calls; SIZE · VXP display when unlocked
 - ⬜ Front: bar+payout split layout (vs two separate boxed prob buttons)
 - ⬜ Front: ConsensusCompass on front face
@@ -123,21 +127,23 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ "Why this card now" priority + copy templates
 - ⬜ Header gradient + card body radial gradient parity
 
-### Sparkline + event markers (12)
-- ⬜ SVG dimensions (w=240, h=56, +8 overflow)
-- ⬜ Line + filled area beneath
-- ⬜ Trailing "Live" dot at right edge
-- ⬜ Tap-to-reveal event markers (idle pulse → active dotted vertical)
-- ⬜ Real-date event labels (DAY DOM MONTH · LABEL · ↑/↓)
-- ⬜ Hint copy when events present but none active
-- ⬜ All events plotted (not slice(0,2))
-- ⬜ Stroke color lean-aware (YES/NO)
-- ⬜ Event `dir` field: `'+'` / `'-'` (not `'up'` / `'down'`)
-- ⬜ Pulse animation on dots when idle
-- ⬜ Reset active state on market change
-- ⬜ Marker Y coordinate uses event day index, not iteration index
+### Sparkline + event markers (12) ✅ commit `<sparkline>`
+
+- ✅ SVG dimensions (w=240, h=56, +8 overflow)
+- ✅ Line + filled area beneath
+- ✅ Trailing "Live" dot at right edge
+- ✅ Tap-to-reveal event markers (idle pulse → active dotted vertical)
+- ✅ Real-date event labels (DAY DOM MONTH · LABEL · ↑/↓)
+- ✅ Hint copy when events present but none active
+- ✅ All events plotted (not slice(0,2))
+- ✅ Stroke color lean-aware (YES/NO)
+- ⏭ Event `dir` field: kept `'up' / 'down'` (FE enum stays; only the rendered glyph matches prototype's `↑/↓`)
+- ✅ Pulse animation on dots when idle
+- ✅ Reset active state on market change
+- ✅ Marker Y coordinate uses event day index, not iteration index
 
 ### Markets list (14)
+
 - ⬜ Category chips at top (prepend ♥ Saved chip)
 - ⬜ Replace status tabs with category-driven filtering (tier C-1 lock)
 - ⬜ Move saved toggle from below filters to prepended chip
@@ -153,6 +159,7 @@ These need a per-item decision before deletion. Default = remove.
 - C-3, C-4, C-5 decisions
 
 ### Market detail (16)
+
 - ⬜ Appbar share + watch buttons
 - ⬜ LIVE pulsing pill next to category tag
 - ⬜ Hero probability layout (48px YES + 24px NO baseline-aligned + ProbBar)
@@ -172,6 +179,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Desktop split column (keep or strip?)
 
 ### Dash (15)
+
 - ⬜ Title "Dashboard" not "Dash"; no right action
 - ⬜ Hero accuracy block — session-delta + 30d global anchor + streak inline
 - ⬜ Time-window chip strip (7d/30d/90d/All)
@@ -189,6 +197,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Streak placement inline with accuracy (not separate card)
 
 ### Portfolio (10)
+
 - ⬜ Header right action — chart icon only, ghost
 - ⬜ Holdings hero card (TOTAL HOLDINGS num + weekly delta + 3-col P&L/accuracy/rank)
 - ⬜ Performance chart card with 30d sparkline + +18.4% delta
@@ -199,6 +208,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Remove cold-load spinner (prototype seeds data)
 
 ### Profile (16)
+
 - ⬜ Appbar — back + settings cog only; no description; no FeaturedEventChip
 - ⬜ Identity card archetype-coloured blur halo (140×140 circle, opacity 0.10, blur 20px)
 - ⬜ Editable avatar (`<Avatar editable onEdit>` opens shuffle modal)
@@ -216,6 +226,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Remove Friends row, ReferralCard, Skill grid, 30-day heatmap (tier C)
 
 ### Wallet (5 — full reconceptualization)
+
 - ⬜ Header — back + title + history icon (no SectionHeader)
 - ⬜ Single centered hero card with VXP eyebrow + 48px num + weekly delta + Open Flow/Back a call row
 - ⬜ Recent activity list (6 mock rows in prototype; we'd source from real activity)
@@ -223,6 +234,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Remove CollateralStats secondary card
 
 ### Settings (24)
+
 - ⬜ Identity row — add Joined date line; remove archetype chip
 - ⬜ Account section — add "Sign-in method" row + "Email" row
 - ⬜ Account section — remove Wallet row
@@ -245,6 +257,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Remove transfer-ownership UI (tier C-21)
 
 ### Account settings (8)
+
 - ⬜ Current sign-in method — provider-specific glyph (44×44 tile)
 - ⬜ Switch method — 3 ghost buttons (Apple / Google / magic-link), not single signout button
 - ⬜ Email card — edit flow (input + "Send magic link" + sent confirmation)
@@ -252,6 +265,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Padding bottom
 
 ### Notifications (8)
+
 - ⬜ Right action — text-only "Mark all read" ghost (not Button component)
 - ⬜ Back destination — Flow (not Settings)
 - ⬜ Empty state — Bell icon stroke 1.4 + serif-italic + dim body
@@ -260,6 +274,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Tap routing — kind-driven (dash/flow/social/profile/market)
 
 ### Album (9)
+
 - ⬜ App bar — "My album" title
 - ⬜ Progress card — accent tokens, not laurel
 - ⬜ Awards — use glyph emblems (◎ ★ ⚡ ⌬ ⊿ ✦ ◐ ⧖ ⌘) not lucide icons
@@ -271,11 +286,13 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Position absolute within screen (not fixed inset)
 
 ### Social tabs container (3)
+
 - ⬜ Tab strip — underline style (not pill chips)
 - ⬜ Tab persistence — write `'friends'` to storage on legacy migration
-- ⬜ Tab-aware `+` — local state (not global store) — *or accept current as cleaner*
+- ⬜ Tab-aware `+` — local state (not global store) — _or accept current as cleaner_
 
 ### Friends (7+)
+
 - ⬜ Invite hero card — +500 VXP eyebrow, monthly cap line, social-proof row, Share/Copy row
 - ⬜ Pending invites section
 - ⬜ Friends-ranked list — rank 01,02,…, h2h diff chip, sticky YOU row
@@ -286,6 +303,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Remove back-arrow appbar (tier C-27)
 
 ### Leagues list (~10)
+
 - ⬜ Appbar `+` only (not Create/Join pill row above list)
 - ⬜ Founded/Joined card classification
 - ⬜ League-logo-sm gradient + emblem character on each card
@@ -298,6 +316,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Empty-state — quote + body + two-button row
 
 ### League detail (~10)
+
 - ⬜ Head card gradient logo + emblem + N° corner badge
 - ⬜ "{memberCount} members · {tier} LEAGUE" line
 - ⬜ Inline Invite + Predict buttons in head card
@@ -309,6 +328,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Settings cog in appbar
 
 ### Bouts inbox (~8)
+
 - ⬜ "What's a bout?" intro card (dismissible)
 - ⬜ Worlds Universities grouped card (podium tiles)
 - ⬜ Worlds Countries grouped card
@@ -318,11 +338,13 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Side chip style — emblem-tinted, not pill color-mix
 
 ### Tournament (~3)
+
 - ⬜ Bracket diagram styling
 - ⬜ Round chip color (#B49CFF)
 - ⬜ Live timer
 
 ### Worlds (~7)
+
 - ⬜ Hero event card — `FIFA WORLD CUP · Live` tags + podium tiles
 - ⬜ Scope toggle — "May season · all calls" / "WC Bout · {N}d left"
 - ⬜ Top-6 leaderboard with school glyph + members·calls eyebrow + sticky YOU row
@@ -331,16 +353,19 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Remove locked-card UI (prototype has different leave flow)
 
 ### Leaderboard (~5)
+
 - ⬜ Scoped tabs (global / friends / league / school)
 - ⬜ Rank stripes (gold/silver/bronze classes)
 - ⬜ Sticky YOU row
 
 ### Info / legal (~3)
+
 - ⬜ Typography (serif vs sans)
 - ⬜ TOC sidebar
 - ⬜ Eyebrow styling
 
 ### Modals (~6 + 1 missing)
+
 - ⬜ CreateLeagueModal — bottom-sheet with grip handle
 - ⬜ JoinLeagueModal — bottom-sheet
 - ⬜ CreateBoutModal — bottom-sheet

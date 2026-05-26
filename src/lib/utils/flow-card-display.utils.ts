@@ -133,20 +133,6 @@ export const sparklinePoints = ({
 	return points;
 };
 
-export const eventMarkerX = ({
-	day,
-	eventCount,
-	width
-}: {
-	day: number;
-	eventCount: number;
-	width: number;
-}): number => {
-	const maxDay = Math.max(...Array.from({ length: eventCount }, (_, i) => i + 1), day, 1);
-
-	return (day / maxDay) * width;
-};
-
 export interface FlowCardContext {
 	metadata?: MarketMetadata;
 	categoryAcc?: CategoryAccuracySignal;

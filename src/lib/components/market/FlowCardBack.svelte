@@ -289,12 +289,7 @@
 					</div>
 					<ConsensusCompass size={56} yesProbability={market.yesProbability} />
 				</div>
-				<FlowCardSparkline
-					accentColor={catColor}
-					events={metadata?.events}
-					seed={market.id}
-					yesPercent={yesPct}
-				/>
+				<FlowCardSparkline events={metadata?.events} seed={market.id} yesPercent={yesPct} />
 			</section>
 
 			<section class="flow-back-block flow-activity">
