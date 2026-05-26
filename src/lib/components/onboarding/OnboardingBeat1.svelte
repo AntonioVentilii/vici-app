@@ -47,15 +47,15 @@
 	// no region tag matches.
 	const localCountryCode: string | null = detectUserCountryCode();
 
-	// Favourites surface as 4 large tiles. Stable order from
-	// `favouriteIds`. Filtering then mapping over the participant list
-	// keeps the tiles in the curated order even if the participant array
-	// is sorted by odds. The localised pass below may then promote the
-	// visitor's country into slot 1.
+	// Favourites surface as 4 large tiles, sorted by `odds` descending so
+	// the team most likely to win renders first. `odds` is implied
+	// probability %, so higher = stronger favourite. The localised pass
+	// below may then promote the visitor's country into slot 1.
 	const baseFavourites: FeaturedEventParticipant[] = $derived(
 		favouriteIds
 			.map((id) => participants.find((p) => p.id === id))
 			.filter((p): p is FeaturedEventParticipant => p !== undefined)
+			.sort((a, b) => (b.odds ?? -Infinity) - (a.odds ?? -Infinity))
 	);
 
 	const favourites: FeaturedEventParticipant[] = $derived.by(() => {

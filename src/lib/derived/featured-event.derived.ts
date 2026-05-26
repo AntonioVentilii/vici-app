@@ -45,9 +45,13 @@ export const featuredEventActive: Readable<boolean> = derived(
 );
 
 /**
- * The favourites list resolved to full participant objects, in the order
- * declared by `event.favouriteIds`. Returns `[]` if the event is archived
- * (callers shouldn't be rendering the hero in that state, but be safe).
+ * The favourites list resolved to full participant objects, sorted by
+ * `odds` descending so the team most likely to win renders first. Returns
+ * `[]` if the event is archived (callers shouldn't be rendering the hero
+ * in that state, but be safe).
+ *
+ * `odds` is implied probability %, so higher = stronger favourite.
+ * Participants without an `odds` value sort last.
  */
 export const featuredEventFavourites: Readable<FeaturedEventParticipant[]> = derived(
 	[featuredEvent, featuredEventActive],
@@ -60,7 +64,8 @@ export const featuredEventFavourites: Readable<FeaturedEventParticipant[]> = der
 
 		return event.favouriteIds
 			.map((id) => byId.get(id))
-			.filter((p): p is FeaturedEventParticipant => p !== undefined);
+			.filter((p): p is FeaturedEventParticipant => p !== undefined)
+			.sort((a, b) => (b.odds ?? -Infinity) - (a.odds ?? -Infinity));
 	}
 );
 
