@@ -49,6 +49,59 @@
 		totalVxpCredited: number;
 	} | null>(null);
 
+	// Re-tick every minute so the days-left countdown + the "LIVE"
+	// branch refresh without a full re-render of the bracket.
+	let nowMs = $state(Date.now());
+	$effect(() => {
+		const handle = setInterval(() => {
+			nowMs = Date.now();
+		}, 60_000);
+
+		return () => clearInterval(handle);
+	});
+
+	/**
+	 * The current "in-flight" round — the lowest-index round whose
+	 * `endMs` is in the future and at least one match still unresolved.
+	 * Used to tag the first match in that round as `LIVE`.
+	 */
+	const currentRound = $derived.by((): TournamentRound | null => {
+		for (const round of TOURNAMENT_ROUNDS) {
+			const ms = matches.filter((m) => m.round === round);
+
+			if (ms.length > 0) {
+				const allDone = ms.every((m) => m.winnerLeagueId !== null);
+				const someOpen = ms.some((m) => m.endMs > nowMs);
+
+				if (!allDone && someOpen) {
+					return round;
+				}
+			}
+		}
+
+		return null;
+	});
+
+	const daysLeft = $derived.by((): number | null => {
+		if (currentRound === null) {
+			return null;
+		}
+
+		const liveMatch = matchesByRound[currentRound]?.[0];
+
+		if (liveMatch === undefined) {
+			return null;
+		}
+
+		const deltaMs = liveMatch.endMs - nowMs;
+
+		if (deltaMs <= 0) {
+			return 0;
+		}
+
+		return Math.ceil(deltaMs / (24 * 60 * 60 * 1000));
+	});
+
 	const matchesByRound = $derived.by((): Record<TournamentRound, TournamentMatchDoc[]> => {
 		const grouped: Record<TournamentRound, TournamentMatchDoc[]> = {
 			r1: [],
@@ -227,9 +280,33 @@
 	/>
 
 	<section class="tournament-hero">
-		<span class="allcaps tournament-tag">
-			{t({ locale: $localeStore, key: 'tournament.eyebrow' })}
-		</span>
+		<!--
+			Hero matches `screens.jsx:3680-3692`. When a round is in
+			flight we surface the current round tag + days-left
+			countdown along the top, and a "bracket" headline with
+			the live-leagues-remaining sub. The eyebrow is the muted
+			"MONTHLY TOURNAMENT" label when nothing is in flight.
+		-->
+		<div class="tournament-hero-head">
+			{#if currentRound !== null}
+				<span class="tournament-round-tag allcaps">
+					{t({ locale: $localeStore, key: roundLabelKey(currentRound) })}
+				</span>
+				{#if daysLeft !== null}
+					<span class="tournament-days-left num allcaps">
+						{t({
+							locale: $localeStore,
+							key: 'tournament.days_left',
+							params: { count: daysLeft }
+						})}
+					</span>
+				{/if}
+			{:else}
+				<span class="allcaps tournament-tag">
+					{t({ locale: $localeStore, key: 'tournament.eyebrow' })}
+				</span>
+			{/if}
+		</div>
 		<h1 class="tournament-headline">
 			{t({ locale: $localeStore, key: 'tournament.headline' })}
 		</h1>
@@ -292,9 +369,10 @@
 							{t({ locale: $localeStore, key: roundLabelKey(round) })}
 						</div>
 						<div class="tournament-round-matches">
-							{#each roundMatches as match (match.index)}
+							{#each roundMatches as match, matchIdx (match.index)}
 								{@const concluded = match.winnerLeagueId !== null}
-								<div class="tournament-match" class:is-concluded={concluded}>
+								{@const isLive = !concluded && matchIdx === 0 && round === currentRound}
+								<div class="tournament-match" class:is-concluded={concluded} class:is-live={isLive}>
 									<div
 										class="tournament-team"
 										class:is-loser={concluded && match.winnerLeagueId !== match.fromLeagueId}
@@ -311,7 +389,30 @@
 										<span class="tournament-team-name">{match.toLeagueId ?? 'TBD'}</span>
 										<span class="tournament-team-acc num">{fmtAccuracy(match.toAcc)}</span>
 									</div>
-									<div class="tournament-match-meta num">{fmtDate(match.endMs)}</div>
+									<div class="tournament-match-meta num">
+										{#if concluded}
+											<span class="tournament-match-date">{fmtDate(match.endMs)}</span>
+											<span class="tournament-match-winner">
+												{match.winnerLeagueId} →
+											</span>
+										{:else if isLive}
+											<span class="tournament-match-live allcaps">
+												{t({
+													locale: $localeStore,
+													key: 'tournament.match.live',
+													params: { date: fmtDate(match.endMs) }
+												})}
+											</span>
+										{:else}
+											<span class="tournament-match-upcoming allcaps">
+												{t({
+													locale: $localeStore,
+													key: 'tournament.match.upcoming',
+													params: { date: fmtDate(match.endMs) }
+												})}
+											</span>
+										{/if}
+									</div>
 								</div>
 							{/each}
 						</div>
@@ -481,10 +582,67 @@
 	}
 
 	.tournament-match-meta {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.4rem;
+		padding-top: 0.2rem;
 		font-size: var(--t-10, 0.65rem);
 		letter-spacing: 0.1em;
 		color: var(--text-muted);
-		padding-top: 0.2rem;
+	}
+
+	.tournament-match-date {
+		color: var(--text-muted);
+	}
+
+	.tournament-match-winner {
+		color: var(--yes);
+		font-weight: 700;
+	}
+
+	/* Live indicator on the first match of the current round —
+	   purple `#b49cff` matches the prototype's tournament accent. */
+	.tournament-match-live {
+		color: #b49cff;
+		font-weight: 700;
+		font-size: 0.65rem;
+	}
+
+	.tournament-match-upcoming {
+		color: var(--text-muted);
+	}
+
+	.tournament-match.is-live {
+		border-color: color-mix(in srgb, #b49cff 35%, var(--border-base));
+		background: color-mix(in srgb, #b49cff 6%, var(--bg-surface));
+	}
+
+	/* Hero head — when the bracket is in flight, the current-round
+	   chip + days-left countdown surface here above the headline. */
+	.tournament-hero-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.tournament-round-tag {
+		display: inline-block;
+		padding: 0.15rem 0.55rem;
+		border-radius: var(--r-pill);
+		font-size: 0.65rem;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		color: #b49cff;
+		background: color-mix(in srgb, #b49cff 18%, transparent);
+		border: 1px solid color-mix(in srgb, #b49cff 30%, transparent);
+	}
+
+	.tournament-days-left {
+		font-size: 0.6875rem;
+		color: var(--text-muted);
+		letter-spacing: 0.08em;
 	}
 
 	.tournament-prizes {

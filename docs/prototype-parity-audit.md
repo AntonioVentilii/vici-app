@@ -339,11 +339,11 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Remove "Create bout" pill at top (prototype puts it elsewhere)
 - ⬜ Side chip style — emblem-tinted, not pill color-mix
 
-### Tournament (~3)
+### Tournament (~3) ✅ commit `<tournament>`
 
-- ⬜ Bracket diagram styling
-- ⬜ Round chip color (#B49CFF)
-- ⬜ Live timer
+- ✅ Bracket diagram styling — match-meta row now has three branches (concluded → date + winner →; live → "LIVE · ends {date}" in purple; upcoming → "upcoming · {date}" muted)
+- ✅ Round chip color (#b49cff) — hero current-round tag + live-match border + live-meta text all use the tournament accent
+- ✅ Live timer — days-left chip in hero head when a round is in flight; re-ticks every minute via `$effect` interval
 
 ### Worlds (~7)
 
