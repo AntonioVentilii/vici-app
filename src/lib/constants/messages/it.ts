@@ -89,10 +89,13 @@ export const itMessages = {
 	'account.email.empty': 'Nessuna email registrata.',
 	'account.email.eyebrow': 'INDIRIZZO EMAIL',
 	'account.email.pending': "La gestione dell'email arriva con l'aggiornamento backend.",
+	'account.email.verified': 'Verificato',
 	'account.intro':
 		'VICI usa Internet Identity o Google. Nessuna password. Cambia metodo in qualsiasi momento — i tuoi dati restano.',
 	'account.method.current': 'Metodo di accesso attuale',
 	'account.method.eyebrow': 'METODO DI ACCESSO',
+	'account.method.google': 'Google',
+	'account.method.ii': 'Internet Identity',
 	'account.switch.cta': 'Esci per cambiare metodo',
 	'account.switch.hint':
 		'Cambiando metodo verrai disconnesso. Rientra col nuovo metodo per continuare.',

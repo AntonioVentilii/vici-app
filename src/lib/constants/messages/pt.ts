@@ -89,10 +89,13 @@ export const ptMessages = {
 	'account.email.empty': 'Sem email cadastrado.',
 	'account.email.eyebrow': 'ENDEREÇO DE EMAIL',
 	'account.email.pending': 'Gestão de email chega com a atualização do backend.',
+	'account.email.verified': 'Verificado',
 	'account.intro':
 		'VICI usa Internet Identity ou Google. Sem senhas. Troque a qualquer momento — seus dados continuam.',
 	'account.method.current': 'Método de acesso atual',
 	'account.method.eyebrow': 'MÉTODO DE ACESSO',
+	'account.method.google': 'Google',
+	'account.method.ii': 'Internet Identity',
 	'account.switch.cta': 'Sair para trocar de método',
 	'account.switch.hint':
 		'Trocar de método desconecta a sessão. Entre com o novo método para continuar.',

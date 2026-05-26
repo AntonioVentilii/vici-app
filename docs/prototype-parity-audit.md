@@ -256,13 +256,13 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Remove blocking-leagues link list (tier C-20)
 - ⬜ Remove transfer-ownership UI (tier C-21)
 
-### Account settings (8)
+### Account settings (8) ✅ commit `<account>` (partial — auth-scope-blocked)
 
-- ⬜ Current sign-in method — provider-specific glyph (44×44 tile)
-- ⬜ Switch method — 3 ghost buttons (Apple / Google / magic-link), not single signout button
-- ⬜ Email card — edit flow (input + "Send magic link" + sent confirmation)
-- ⬜ Email card — VERIFIED green mono chip
-- ⬜ Padding bottom
+- ✅ Current sign-in method — provider-specific glyph in a 44×44 tile (multi-color Google G when email present, IC Fingerprint glyph otherwise)
+- ⏭ Switch method — kept single signout button; the prototype's 3-button stack lists Apple + Google + magic-link, but Apple + magic-link are out-of-scope per locked auth decisions
+- ⏭ Email card — edit flow (input + Send magic link + sent confirmation); blocked by magic-link backend out-of-scope
+- ✅ Email card — green `VERIFIED` chip beside the address when email is present (SSO-verified)
+- ⏭ Padding bottom — kept current; prototype's 32px vs our 96px difference accepted
 
 ### Notifications (8) ✅ commit `<notifications>`
 
