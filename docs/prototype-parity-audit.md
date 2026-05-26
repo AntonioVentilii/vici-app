@@ -169,7 +169,7 @@ outcome…"` with the date formatted in the active locale via
 - ✅ Beat 2 skip-link copy: "Pick later — keep placeholder"
   matches the prototype.
 
-### Flow (28) ✅ commit `<flow>`
+### Flow (28) ✅ commit `0322f7b`
 
 - ✅ Front: stake selector hidden for <50 calls; SIZE · VXP display when
   unlocked — `vxpStakeSliderUnlocked({ calls })` gates the SIZE chip and
