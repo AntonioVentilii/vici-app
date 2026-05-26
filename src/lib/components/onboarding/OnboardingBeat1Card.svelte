@@ -4,6 +4,7 @@
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
+	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -44,6 +45,10 @@
 		if (committing !== null) {
 			return;
 		}
+
+		// Firm tap on first-call commit (prototype: `onboarding.jsx:74,
+		// 79` fires `navigator.vibrate(12)`).
+		haptic('firm-tap');
 
 		committing = side;
 		setTimeout(() => onCommit(side), COMMIT_FEEDBACK_MS);

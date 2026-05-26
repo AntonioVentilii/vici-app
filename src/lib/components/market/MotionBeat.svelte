@@ -98,6 +98,31 @@
 		background: var(--bg-popover);
 		box-shadow: var(--shadow-card);
 		max-width: 100%;
+		/* Entrance envelope — drops in from below with a slight
+		   overshoot, mirrors the prototype's `motion-beat-in` shape
+		   (app.css:436-441) adapted for a bottom-anchored beat. */
+		animation: motion-beat-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	@keyframes motion-beat-rise {
+		0% {
+			opacity: 0;
+			transform: translateY(22px) scale(0.86);
+		}
+		60% {
+			opacity: 1;
+			transform: translateY(-2px) scale(1.04);
+		}
+		100% {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.motion-beat-inner {
+			animation: none;
+		}
 	}
 
 	.motion-beat-copy {

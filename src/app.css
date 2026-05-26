@@ -805,3 +805,101 @@ body {
 .char-pop {
 	animation: char-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
+
+/* Optical-feedback keyframes — ports of the prototype's motion CSS
+   so swipe / award / save micro-interactions have a visible envelope
+   on iOS Safari (where `navigator.vibrate` is a no-op and haptics
+   silently swallow). See `app.css:349-490` in the prototype source. */
+
+@keyframes motion-beat-in {
+	0% {
+		opacity: 0;
+		transform: translate(-50%, -22px) scale(0.86);
+	}
+	60% {
+		opacity: 1;
+		transform: translate(-50%, 2px) scale(1.04);
+	}
+	100% {
+		opacity: 1;
+		transform: translate(-50%, 0) scale(1);
+	}
+}
+@keyframes motion-beat-out {
+	to {
+		opacity: 0;
+		transform: translate(-50%, -10px) scale(0.96);
+	}
+}
+
+@keyframes motion-beat-in-right {
+	0% {
+		opacity: 0;
+		transform: translate(8px, -10px) scale(0.86);
+	}
+	60% {
+		opacity: 1;
+		transform: translate(-2px, 0) scale(1.04);
+	}
+	100% {
+		opacity: 1;
+		transform: translate(0, 0) scale(1);
+	}
+}
+@keyframes motion-beat-out-right {
+	to {
+		opacity: 0;
+		transform: translate(6px, -6px) scale(0.96);
+	}
+}
+
+@keyframes motion-beat-in-left {
+	0% {
+		opacity: 0;
+		transform: translate(-8px, -10px) scale(0.86);
+	}
+	60% {
+		opacity: 1;
+		transform: translate(2px, 0) scale(1.04);
+	}
+	100% {
+		opacity: 1;
+		transform: translate(0, 0) scale(1);
+	}
+}
+@keyframes motion-beat-out-left {
+	to {
+		opacity: 0;
+		transform: translate(-6px, -6px) scale(0.96);
+	}
+}
+
+/* XP-award toast envelope — rises from the swipe-exit edge,
+   overshoots, settles. */
+@keyframes xp-toast-pop {
+	0% {
+		opacity: 0;
+		transform: translateY(0) scale(0.6);
+	}
+	18% {
+		opacity: 1;
+		transform: translateY(-8px) scale(1.08);
+	}
+	100% {
+		opacity: 0;
+		transform: translateY(-42px) scale(1);
+	}
+}
+
+/* Saved-market / favourite toggle envelope. */
+@keyframes heart-pop {
+	0% {
+		transform: scale(0.6);
+	}
+	55% {
+		transform: scale(1.18);
+	}
+	100% {
+		transform: scale(1);
+	}
+}

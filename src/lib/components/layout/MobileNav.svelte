@@ -5,6 +5,7 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { userIsAdmin } from '$lib/derived/user.derived';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -73,6 +74,10 @@
 	const isFlowActive = $derived(activeIndex >= 0 && isFlowPath(visibleNavItems[activeIndex].path));
 
 	const handleNav = (path: AppPath) => {
+		// Light tap on tab change. Prototype intent — its own
+		// `if (window.haptic)` shim was a permanent no-op
+		// (`app.jsx:647`); we wire the real Vibration API here.
+		haptic('light-tap');
 		goto(path);
 	};
 
