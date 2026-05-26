@@ -160,19 +160,25 @@
 	--tracking-allcaps: 0.12em;
 
 	/* Radii — the standard scale. Buttons 4, cards 8, swipe-card 12.
-	 * Pills (999) are rare. Don't deviate. */
+	 * Pills (999) are rare. Don't deviate.
+	 *
+	 * Note: `--r-12` is the canonical card radius and is set to 16px
+	 * (prototype parity — `app.css:172`). The token name keeps "12" for
+	 * historical reasons; call-sites should read it as "card radius",
+	 * not as a literal 12px value. */
 	--r-2: 2px;
 	--r-4: 4px;
 	--r-8: 8px;
-	--r-12: 12px;
+	--r-12: 16px;
 	--r-pill: 999px;
 
 	/* Locked 5-value radii alias set used by V1.2 components — names map
 	 * onto the numeric scale so call-sites can write `var(--r-m)` instead
-	 * of memorising `--r-8`. */
+	 * of memorising `--r-8`. `--r-l` shares the canonical card radius
+	 * (16px) with `--r-12`. */
 	--r-s: 4px;
 	--r-m: 8px;
-	--r-l: 12px;
+	--r-l: 16px;
 	--r-xl: 18px;
 
 	/* Spacing scale — 8-point base, no exceptions outside this scale.
@@ -227,6 +233,10 @@
 	--header-h: 56px;
 	--ticker-h: 32px;
 	--bottomnav-h: 64px;
+	/* Floating pillnav clearance — every surface that wants to avoid
+	 * sliding under the floating tab bar reads this token. Prototype
+	 * parity: 96px pill + `env(safe-area-inset-bottom)`. */
+	--bn-clear: calc(96px + env(safe-area-inset-bottom, 0px));
 
 	/* Shadows (dark theme: inner highlights). The dark/light values get
 	 * picked up by `--shadow-inset-hi` / `--shadow-inset-hi-strong` in
@@ -507,6 +517,33 @@ html {
 body {
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+}
+
+/* Authenticated `(app)` shell viewport architecture — matches the
+ * prototype where the document doesn't scroll; instead a single
+ * `.screen-scroll` viewport inside the app shell hosts all page
+ * scrolling and reserves clearance for the floating pillnav. Gated on
+ * `data-app="1"` on <html> so the marketing routes (`/`, `/about`,
+ * `/welcome`, `/signin`, `/signup`, `/info/*`) keep their natural
+ * body-scroll. The `(app)` layout flips this attribute on mount and
+ * restores on unmount.
+ */
+html[data-app='1'],
+html[data-app='1'] body {
+	height: 100%;
+	margin: 0;
+}
+
+html[data-app='1'] body {
+	overflow: hidden;
+}
+
+.screen-scroll {
+	flex: 1 1 auto;
+	overflow-x: hidden;
+	overflow-y: auto;
+	-webkit-overflow-scrolling: touch;
+	padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
 }
 
 /* Custom Scrollbar */
