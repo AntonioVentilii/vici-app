@@ -54,7 +54,13 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		callsPublic: incoming?.callsPublic ?? true,
 		flowTags: Array.isArray(incoming?.flowTags) ? incoming.flowTags : [],
 		worldCupMode: incoming?.worldCupMode ?? false,
-		savedMarketIds: Array.isArray(incoming?.savedMarketIds) ? incoming.savedMarketIds : []
+		savedMarketIds: Array.isArray(incoming?.savedMarketIds) ? incoming.savedMarketIds : [],
+		favoriteParticipantId: incoming?.favoriteParticipantId ?? '',
+		favoriteSide:
+			incoming?.favoriteSide === 'YES' || incoming?.favoriteSide === 'NO'
+				? incoming.favoriteSide
+				: '',
+		onboardingCompleted: incoming?.onboardingCompleted ?? false
 	};
 
 	return {

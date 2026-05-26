@@ -1022,6 +1022,7 @@ export const frMessages = {
 	'onboarding.beat2.sub': 'On saura qui a misé. Gagné, non donné.',
 	'onboarding.beat2.title': 'Réserve ton pseudo.',
 	'onboarding.beat3.back': '← Retour au pseudo',
+	'onboarding.beat3.finish_cta': 'Terminer la configuration',
 	'onboarding.beat3.handle_placeholder': 'predictor',
 	'onboarding.beat3.sub':
 		'ton pronostic se clôt le {resolves}. On te tient au courant par email — garde ton dossier.',

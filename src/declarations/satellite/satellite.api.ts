@@ -265,7 +265,10 @@ const AppGetProfileResultSchema = j.strictObject({
 				callsPublic: j.boolean(),
 				flowTags: j.array(j.string()),
 				worldCupMode: j.boolean(),
-				savedMarketIds: j.array(j.string())
+				savedMarketIds: j.array(j.string()),
+				favoriteParticipantId: j.string(),
+				favoriteSide: j.string(),
+				onboardingCompleted: j.boolean()
 			})
 		})
 	)

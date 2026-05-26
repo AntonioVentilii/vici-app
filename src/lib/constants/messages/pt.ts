@@ -1011,6 +1011,7 @@ export const ptMessages = {
 	'onboarding.beat2.sub': 'Sabem quem fez a aposta. Conquistado, não dado.',
 	'onboarding.beat2.title': 'Reserve um nick.',
 	'onboarding.beat3.back': '← Voltar ao nick',
+	'onboarding.beat3.finish_cta': 'Concluir configuração',
 	'onboarding.beat3.handle_placeholder': 'predictor',
 	'onboarding.beat3.sub':
 		'sua aposta encerra em {resolves}. Enviaremos o resultado por email — mantenha seu registro.',

@@ -962,6 +962,7 @@ export const zhCnMessages = {
 	'onboarding.beat2.sub': '大家会知道是谁押的。凭努力赢得,而非赠予。',
 	'onboarding.beat2.title': '认领一个昵称。',
 	'onboarding.beat3.back': '← 返回昵称',
+	'onboarding.beat3.finish_cta': '完成设置',
 	'onboarding.beat3.handle_placeholder': 'predictor',
 	'onboarding.beat3.sub': '你的下注将在 {resolves} 揭晓。我们会通过邮件通知你 — 保留你的记录。',
 	'onboarding.beat3.summary_backing': '支持 {team}',

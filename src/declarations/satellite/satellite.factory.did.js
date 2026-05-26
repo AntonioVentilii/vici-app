@@ -212,6 +212,8 @@ export const idlFactory = ({ IDL }) => {
 				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Record({
+					favorite_participant_id: IDL.Text,
+					favorite_side: IDL.Text,
 					notify: IDL.Record({
 						market_alerts: IDL.Bool,
 						friend_activity: IDL.Bool,
@@ -219,6 +221,7 @@ export const idlFactory = ({ IDL }) => {
 						streak_reminder: IDL.Bool
 					}),
 					haptics_enabled: IDL.Bool,
+					onboarding_completed: IDL.Bool,
 					default_amount: IDL.Record({
 						flow: IDL.Text,
 						manual: IDL.Text

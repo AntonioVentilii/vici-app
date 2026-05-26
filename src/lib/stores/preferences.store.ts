@@ -42,7 +42,10 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 	callsPublic: true,
 	flowTags: [...MARKET_TAGS],
 	worldCupMode: false,
-	savedMarketIds: []
+	savedMarketIds: [],
+	favoriteParticipantId: '',
+	favoriteSide: '',
+	onboardingCompleted: false
 };
 
 /**
@@ -59,6 +62,9 @@ interface PartialPrefsInput {
 	flowTags?: string[];
 	worldCupMode?: boolean;
 	savedMarketIds?: string[];
+	favoriteParticipantId?: string;
+	favoriteSide?: string;
+	onboardingCompleted?: boolean;
 }
 
 const coerceFlowSessionLength = (
@@ -93,7 +99,12 @@ const hydrateShape = (partial: PartialPrefsInput | undefined): UserPreferences =
 			? partial.flowTags
 			: [...MARKET_TAGS],
 	worldCupMode: partial?.worldCupMode ?? DEFAULT_PREFERENCES.worldCupMode,
-	savedMarketIds: Array.isArray(partial?.savedMarketIds) ? partial.savedMarketIds : []
+	savedMarketIds: Array.isArray(partial?.savedMarketIds) ? partial.savedMarketIds : [],
+	favoriteParticipantId:
+		partial?.favoriteParticipantId ?? DEFAULT_PREFERENCES.favoriteParticipantId,
+	favoriteSide:
+		partial?.favoriteSide === 'YES' || partial?.favoriteSide === 'NO' ? partial.favoriteSide : '',
+	onboardingCompleted: partial?.onboardingCompleted ?? DEFAULT_PREFERENCES.onboardingCompleted
 });
 
 /**
