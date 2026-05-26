@@ -411,7 +411,7 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ (Tier C-18) 30-day streak heatmap removed
 - ⏭ Full AvatarEditor (skin / hair / mood / crown / held / toga / backdrop tabs) — stub sheet today; full editor depends on the avatar-library port (tracked follow-up)
 
-### Wallet (5 — full reconceptualization) ✅ commit `<wallet>`
+### Wallet (5 — full reconceptualization) ✅ commit `2b48623`
 
 - ✅ Header — `MobileAppBar` back to `/profile` + centered title + History icon right slot (`SectionHeader` retired)
 - ✅ Centered hero card — `VXP BALANCE` eyebrow, 48px num balance from `balancesStore[VXP]`, weekly delta (`+/−` laurel / no-red) computed from VXP settlements / trades in the last 7 days, dual Open Flow / Back a call CTA row
