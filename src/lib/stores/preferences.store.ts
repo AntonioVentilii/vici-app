@@ -14,6 +14,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 	hapticsEnabled: true,
 	callsPublic: true,
 	flowTags: [...MARKET_TAGS],
+	worldCupMode: false,
 	savedMarketIds: []
 };
 

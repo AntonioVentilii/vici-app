@@ -146,23 +146,30 @@
 	const themeLabel = $derived($theme.charAt(0).toUpperCase() + $theme.slice(1));
 
 	// Flow deck card --------------------------------------------------
-	type FlowDeckTab = 'all' | 'single';
+	// Two-way segmented control: `all` shows the category-pill grid,
+	// `wc` flips the deck to World Cup markets only. Mirrors the
+	// SetSegmented on the SettingsScreen — when `wc` is selected the
+	// pill grid is hidden and a single explanatory line surfaces.
+	type FlowDeckMode = 'all' | 'wc';
 
-	let flowDeckTab = $state<FlowDeckTab>('all');
+	const flowDeckMode = $derived<FlowDeckMode>($preferencesStore.worldCupMode ? 'wc' : 'all');
+
 	const flowDeckTabOptions = $derived([
 		{ value: 'all', label: t({ locale: $localeStore, key: 'settings.flow_deck.tab.all' }) },
-		{ value: 'single', label: t({ locale: $localeStore, key: 'settings.flow_deck.tab.single' }) }
+		{ value: 'wc', label: t({ locale: $localeStore, key: 'settings.flow_deck.tab.wc' }) }
 	]);
 
 	const flowTagsEnabled = $derived(($preferencesStore.flowTags ?? []).length);
 	const flowDeckSub = $derived(
-		flowTagsEnabled <= 1
-			? t({ locale: $localeStore, key: 'settings.flow_deck.sub_one' })
-			: t({
-					locale: $localeStore,
-					key: 'settings.flow_deck.sub',
-					params: { enabled: flowTagsEnabled, total: MARKET_TAGS.length }
-				})
+		flowDeckMode === 'wc'
+			? t({ locale: $localeStore, key: 'settings.flow_deck.sub_wc' })
+			: flowTagsEnabled <= 1
+				? t({ locale: $localeStore, key: 'settings.flow_deck.sub_one' })
+				: t({
+						locale: $localeStore,
+						key: 'settings.flow_deck.sub',
+						params: { enabled: flowTagsEnabled, total: MARKET_TAGS.length }
+					})
 	);
 
 	const tagLabelKey = (tag: string): MessageKey =>
@@ -175,6 +182,10 @@
 
 			return { ...prefs, flowTags: next.length === 0 ? [tag] : next };
 		});
+	};
+
+	const setFlowDeckMode = (mode: FlowDeckMode) => {
+		preferencesStore.update((prefs) => ({ ...prefs, worldCupMode: mode === 'wc' }));
 	};
 
 	const persistVisibility = async (value: SettingsVisibility) => {
@@ -390,9 +401,9 @@
 					{#each flowDeckTabOptions as tab (tab.value)}
 						<button
 							class="settings-flow-deck-tab"
-							class:is-active={flowDeckTab === tab.value}
-							aria-selected={flowDeckTab === tab.value}
-							onclick={() => (flowDeckTab = tab.value as FlowDeckTab)}
+							class:is-active={flowDeckMode === tab.value}
+							aria-selected={flowDeckMode === tab.value}
+							onclick={() => setFlowDeckMode(tab.value as FlowDeckMode)}
 							role="tab"
 							type="button"
 						>
@@ -401,7 +412,7 @@
 					{/each}
 				</div>
 
-				{#if flowDeckTab === 'all'}
+				{#if flowDeckMode === 'all'}
 					<div class="settings-flow-deck-grid" role="group">
 						{#each MARKET_TAGS as tag (tag)}
 							{@const enabled = ($preferencesStore.flowTags ?? []).includes(tag)}
@@ -419,7 +430,7 @@
 					</div>
 				{:else}
 					<p class="settings-flow-deck-hint">
-						{t({ locale: $localeStore, key: 'settings.flow_deck.single_soon' })}
+						{t({ locale: $localeStore, key: 'settings.flow_deck.wc_only' })}
 					</p>
 				{/if}
 			</div>
