@@ -561,7 +561,7 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Eyebrow — primary accent colour + 0.16em letter-spacing
 - ✅ Bonus: custom accent-dot list bullets, mono mailto with faint primary underline, bottom back-to-Welcome divider + ghost button
 
-### Modals (~6 + 1 missing) ✅ commit `dc47be9`
+### Modals (~6 + 1 missing) ✅ commit `059736c`
 
 - ✅ CreateLeagueModal — ported to new `BottomSheet` primitive (grip handle, blurred backdrop, safe-area inset, 22px top corners)
 - ✅ JoinLeagueModal — ported to `BottomSheet`
