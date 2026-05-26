@@ -2,7 +2,6 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import MarketDetailChartCard from '$lib/components/market/MarketDetailChartCard.svelte';
@@ -31,6 +30,7 @@
 	import type { Market, MarketId, OutcomeId } from '$lib/types/market';
 	import type { Position } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 	import { positionResolvedResult } from '$lib/utils/position.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
@@ -229,7 +229,7 @@
 		<MobileAppBar
 			back={{
 				label: t({ locale: $localeStore, key: 'market.detail.back_to_markets' }),
-				onBack: () => void goto(resolve(AppPath.Home))
+				onBack: () => goBack(resolve(AppPath.Home))
 			}}
 			right={detailRight}
 		/>

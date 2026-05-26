@@ -54,6 +54,7 @@
 	import type { FlowSessionLength, SettingsVisibility } from '$lib/types/preferences';
 	import type { UserProfile } from '$lib/types/profile';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	// Delete-account flow state -----------------------------------
 	type DeleteStep = 'idle' | 'reason' | 'confirm';
@@ -385,7 +386,7 @@
 		<button
 			class="settings-back"
 			aria-label={t({ locale: $localeStore, key: 'settings.back_profile' })}
-			onclick={() => goto(resolve(AppPath.Profile))}
+			onclick={() => goBack(resolve(AppPath.Profile))}
 			type="button"
 		>
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />

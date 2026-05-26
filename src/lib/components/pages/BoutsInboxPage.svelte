@@ -37,6 +37,7 @@
 	} from '$lib/types/tournament';
 	import { formatDate } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Bouts inbox — the prototype's `BoutsScreen` (screens.jsx:3088).
@@ -559,7 +560,7 @@
 			align="left"
 			back={{
 				label: t({ locale: $localeStore, key: 'leagues.bouts_inbox.back' }),
-				onBack: () => void goto(resolve(AppPath.Social))
+				onBack: () => goBack(resolve(AppPath.Social))
 			}}
 			title={t({ locale: $localeStore, key: 'leagues.bouts_inbox.title' })}
 		/>

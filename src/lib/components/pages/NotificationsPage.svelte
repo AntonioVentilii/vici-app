@@ -13,7 +13,6 @@
 		Users
 	} from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { refreshFriendRelations } from '$lib/stores/friends.store';
@@ -21,6 +20,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { InboxNotificationKind } from '$lib/types/inbox';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	const kindIcons: Record<InboxNotificationKind, typeof LucideIcon> = {
 		resolve: Check,
@@ -51,7 +51,7 @@
 		<button
 			class="notifications-back"
 			aria-label={t({ locale: $localeStore, key: 'notifications.back_flow' })}
-			onclick={() => goto(resolve(AppPath.Flow))}
+			onclick={() => goBack(resolve(AppPath.Flow))}
 			type="button"
 		>
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />

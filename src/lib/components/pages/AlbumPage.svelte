@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte/icons';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -8,6 +7,7 @@
 	import { userStore } from '$lib/stores/user.store';
 	import { evaluateAchievements, type AchievementEvaluation } from '$lib/utils/achievements.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Album — milestone awards / stickers gallery, port of the design
@@ -52,7 +52,7 @@
 		align="left"
 		back={{
 			label: t({ locale: $localeStore, key: 'album.back' }),
-			onBack: () => void goto(resolve(AppPath.Profile))
+			onBack: () => goBack(resolve(AppPath.Profile))
 		}}
 		title={t({ locale: $localeStore, key: 'album.title' })}
 	/>

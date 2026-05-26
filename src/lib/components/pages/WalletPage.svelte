@@ -33,6 +33,7 @@
 	import { emit } from '$lib/utils/events.utils';
 	import { formatNanosecondsToDate, formatToken } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
 	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 	import { mapClearingEventToTransaction } from '$lib/utils/transactions.utils';
@@ -391,7 +392,7 @@
 		align="center"
 		back={{
 			label: t({ locale: $localeStore, key: 'wallet.back.label' }),
-			onBack: () => void goto(resolve(AppPath.Profile))
+			onBack: () => goBack(resolve(AppPath.Profile))
 		}}
 		right={appbarRight as Snippet}
 		title={t({ locale: $localeStore, key: 'wallet.title' })}

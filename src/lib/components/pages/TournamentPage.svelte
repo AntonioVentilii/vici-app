@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -21,6 +20,7 @@
 		type TournamentRound
 	} from '$lib/types/tournament';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Tournament detail — the `TournamentBoutDetail` surface.
@@ -292,7 +292,7 @@
 		align="left"
 		back={{
 			label: t({ locale: $localeStore, key: 'tournament.back' }),
-			onBack: () => void goto(resolve(AppPath.Social))
+			onBack: () => goBack(resolve(AppPath.Social))
 		}}
 		title={t({ locale: $localeStore, key: 'tournament.title' })}
 	/>

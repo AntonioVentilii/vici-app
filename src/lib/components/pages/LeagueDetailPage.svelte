@@ -29,6 +29,7 @@
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
 	import { formatDate } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * League detail page.
@@ -502,7 +503,7 @@
 		align="left"
 		back={{
 			label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
-			onBack: () => void goto(`${resolve(AppPath.Social)}/leagues`)
+			onBack: () => goBack(`${resolve(AppPath.Social)}/leagues`)
 		}}
 		right={appbarRight as Snippet}
 		title={league?.name ?? t({ locale: $localeStore, key: 'leagues.title' })}

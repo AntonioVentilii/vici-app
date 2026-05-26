@@ -8,6 +8,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Account settings — sign-in method + email. Two-card layout
@@ -51,7 +52,7 @@
 		align="left"
 		back={{
 			label: t({ locale: $localeStore, key: 'account.back' }),
-			onBack: () => void goto(resolve(AppPath.Settings))
+			onBack: () => goBack(resolve(AppPath.Settings))
 		}}
 		title={t({ locale: $localeStore, key: 'account.title' })}
 	/>

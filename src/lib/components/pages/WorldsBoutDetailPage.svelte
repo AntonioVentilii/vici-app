@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -15,6 +14,7 @@
 	import type { AffiliationKind } from '$lib/types/affiliation';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Worlds bout — the ranked leaderboard view across every
@@ -72,7 +72,7 @@
 		align="left"
 		back={{
 			label: t({ locale: $localeStore, key: 'worlds.bout.back' }),
-			onBack: () => void goto(`${resolve(AppPath.Social)}/worlds`)
+			onBack: () => goBack(`${resolve(AppPath.Social)}/worlds`)
 		}}
 		title={t({ locale: $localeStore, key: titleKey })}
 	/>

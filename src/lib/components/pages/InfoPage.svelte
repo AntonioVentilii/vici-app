@@ -5,6 +5,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { InfoDoc } from '$lib/types/info-doc';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
 	 * Info / legal doc page — port of the design source's
@@ -37,6 +38,8 @@
 	let { doc }: Props = $props();
 
 	const isLegalDoc = $derived(doc.eyebrow.toLowerCase().startsWith('legal'));
+
+	const handleBack = () => goBack(resolve(PublicPath.Welcome));
 </script>
 
 <svelte:head>
@@ -45,10 +48,10 @@
 
 <div class="info-page">
 	<header class="info-appbar">
-		<a class="info-back" href={resolve(PublicPath.Welcome)}>
+		<button class="info-back" onclick={handleBack} type="button">
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 			<span class="sr-only">{t({ locale: $localeStore, key: 'info.back' })}</span>
-		</a>
+		</button>
 		<h1 class="info-title">{doc.title}</h1>
 		<span class="info-appbar-spacer" aria-hidden="true"></span>
 	</header>
@@ -91,10 +94,10 @@
 			assume the user is signed in).
 		-->
 		<div class="info-foot">
-			<a class="info-foot-back" href={resolve(PublicPath.Welcome)}>
+			<button class="info-foot-back" onclick={handleBack} type="button">
 				<ArrowLeft aria-hidden="true" size={14} strokeWidth={1.8} />
 				<span>{t({ locale: $localeStore, key: 'info.back' })}</span>
-			</a>
+			</button>
 		</div>
 	</div>
 </div>
