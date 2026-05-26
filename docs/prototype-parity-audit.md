@@ -376,7 +376,7 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Remove ComebackBanner — banner no longer mounted on Dash (kept the file + i18n keys; banner is now unused, candidate for sweep)
 - ✅ Streak placement inline with accuracy — `.dash-streak-row` inside `.dash-hero` (flame + days + sub + progress bar), no separate card
 
-### Portfolio (10) ✅ commit `36adf14`
+### Portfolio (10) ✅ commit `9a430e4`
 
 - ✅ Single-page hero balance + 3-col stats — `PortfolioPage` now mounts the hero card (eyebrow + 48px VXP num + weekly delta) plus the 3-col mini stats grid; the legacy `PortfolioStats` 6-tile holdings + `PortfolioAllocation` + dual `PositionTable`/`TradeHistoryTable` split is gone
 - ✅ Hero VXP balance — 48px num pulled from `balancesStore[VXP]` with the weekly delta line inline (`+/−` laurel / no-red), mirroring the Wallet hero pattern shipped in `2b48623`
