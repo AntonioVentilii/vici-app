@@ -351,28 +351,28 @@ outcome…"` with the date formatted in the active locale via
 - ⬜ Remove Send/Receive tabs (tier C-24 — confirm production-needed first)
 - ⬜ Remove CollateralStats secondary card
 
-### Settings (24)
+### Settings (24) ✅ commit `<settings>`
 
-- ⬜ Identity row — add Joined date line; remove archetype chip
-- ⬜ Account section — add "Sign-in method" row + "Email" row
-- ⬜ Account section — remove Wallet row
-- ⬜ Preferences ordering — Appearance → Flow deck → Notifications → Session length → Haptics
-- ⬜ Remove Language row (tier C-19)
-- ⬜ Appearance picker — 3 swatch tiles (dark/light/peach)
-- ⬜ Flow deck segmented control matches prototype shape
-- ⬜ Flow deck sub-copy parity
-- ⬜ Haptics sub-copy: "Subtle taps on YES/NO commit"
-- ⬜ Privacy & security section — re-title (currently just "Privacy")
-- ⬜ Add duplicate Privacy section (3 toggles)
-- ⬜ Add "Your data" section (Export predictions / Download album)
-- ⬜ Legal section — `info` icon for rules (vs CircleQuestionMark)
-- ⬜ Toast widget at bottom
-- ⬜ About line — version + build number
-- ⬜ Sign-out inline confirm (question + Cancel/Sign out)
-- ⬜ Delete flow — "Continue →" arrow glyph
-- ⬜ Delete flow — Pause 30 days / Contact us mini-buttons in retain block
-- ⬜ Remove blocking-leagues link list (tier C-20)
-- ⬜ Remove transfer-ownership UI (tier C-21)
+- ✅ Identity row — added "Joined {date}" line from Juno doc `created_at`; archetype chip removed
+- ✅ Account section — "Sign-in method" + "Email" rows added (route to `/settings/account`)
+- ✅ Account section — Wallet row removed (and `settings.wallet*` keys retired in all 7 locales)
+- ✅ Preferences ordering — Appearance → Flow deck → Notifications → Session length → Haptics → Language
+- ⏭ (C-19 keep) Language row retained — production-need (7 locales shipped); placed last per ordering
+- ✅ Appearance picker — 3 swatch tiles (dark/light/peach) via `AppearancePicker variant="tiles"`
+- ✅ Flow deck segmented control — 2-up `all / wc` tab strip matches prototype shape
+- ✅ Flow deck sub-copy parity — `{enabled} of {total} categories enabled` / one-category / world-cup variants
+- ✅ Haptics sub-copy: "Subtle taps on YES/NO commit"
+- ✅ Privacy & security section — title is "Privacy & security" (`settings.privacy` key)
+- ✅ Duplicate Privacy section added — 3 toggles (Public profile / Global leaderboard / Worlds Universities); flashes local "Saved" toast (sharing slice on `preferences` is tracked follow-up)
+- ✅ "Your data" section added (Export predictions / Download album) — both flash a "coming soon" toast until export pipelines land
+- ✅ Legal section — Resolution rules row uses `Info` icon (`CircleQuestionMark` retired)
+- ✅ Local transient toast pill pinned to the bottom of the page (mirrors `screens.jsx:1919-1923`)
+- ✅ About line — `VICI · v{version} · Build {sha}` driven by `__APP_VERSION__` + `__BUILD_SHA__` injected via vite `define`
+- ✅ Sign-out inline confirm — replaces the bare Sign out button with a confirm card (question + Cancel / Sign out)
+- ✅ Delete flow — "Continue →" arrow glyph on the reason → confirm step
+- ✅ Delete flow — Pause 30 days / Contact us mini-buttons wired in the retain block; both close the flow with their respective side-effects (toast / `/info/contact` route)
+- ⏭ (C-20 keep) Blocking-leagues link list retained — production safety (transfer ownership before delete)
+- ⏭ (C-21 keep) Transfer-ownership UI retained — production need; backend shipped via `transferLeagueOwnership`
 
 ### Account settings (8) ✅ commit `<account>` (partial — auth-scope-blocked)
 
