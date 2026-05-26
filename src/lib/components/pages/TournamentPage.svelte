@@ -13,6 +13,7 @@
 	} from '$lib/services/tournament.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import {
+		TOURNAMENT_BRACKET_SIZE,
 		TOURNAMENT_PRIZE_TIERS,
 		TOURNAMENT_ROUNDS,
 		type TournamentDoc,
@@ -122,6 +123,23 @@
 
 	const fmtAccuracy = (value: number | null): string =>
 		value === null ? '—' : `${Math.round(value * 100)}%`;
+
+	/**
+	 * Medal glyph for a prize-tier place. Matches the prototype's
+	 * `TournamentBoutDetail` prize rows, which split the medal emoji
+	 * off the label (`screens.jsx:3741`). 🥇/🥈/🥉 only.
+	 */
+	const placeGlyph = (place: 1 | 2 | 3): string => {
+		if (place === 1) {
+			return '🥇';
+		}
+
+		if (place === 2) {
+			return '🥈';
+		}
+
+		return '🥉';
+	};
 
 	const fmtDate = (ms: number): string => {
 		const d = new Date(ms);
@@ -308,7 +326,11 @@
 			{/if}
 		</div>
 		<h1 class="tournament-headline">
-			{t({ locale: $localeStore, key: 'tournament.headline' })}
+			{t({
+				locale: $localeStore,
+				key: 'tournament.headline',
+				params: { size: tournament?.bracketSize ?? TOURNAMENT_BRACKET_SIZE }
+			})}
 		</h1>
 		<p class="tournament-sub">
 			{t({ locale: $localeStore, key: 'tournament.sub' })}
@@ -434,7 +456,7 @@
 					class:is-gold={tier.place === 1}
 					class:is-silver={tier.place === 2}
 				>
-					<span class="num tournament-prize-place">{tier.place}</span>
+					<span class="tournament-prize-place" aria-hidden="true">{placeGlyph(tier.place)}</span>
 					<span class="tournament-prize-label">
 						{t({
 							locale: $localeStore,
@@ -456,12 +478,17 @@
 		padding: 0 1.25rem 6rem;
 	}
 
+	/* Hero — top-down purple fade, matching the prototype's
+	   `linear-gradient(180deg, rgba(180,156,255,0.10), transparent 70%)`
+	   over `var(--bg-surface)`. */
 	.tournament-hero {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
 		padding: 1.2rem 1.1rem;
-		background: color-mix(in srgb, #b49cff 10%, var(--bg-surface));
+		background:
+			linear-gradient(180deg, color-mix(in srgb, #b49cff 14%, transparent) 0%, transparent 70%),
+			var(--bg-surface);
 		border: 1px solid color-mix(in srgb, #b49cff 30%, var(--border-base));
 		border-radius: var(--r-12);
 	}
@@ -679,10 +706,13 @@
 		background: color-mix(in srgb, #c97c4a 6%, var(--bg-surface));
 	}
 
+	/* Medal glyph — large emoji at h2-ish scale to mirror the
+	   prototype's `t-h2` size on the prize-tier row. */
 	.tournament-prize-place {
-		font-size: var(--t-18, 1.2rem);
-		font-weight: 700;
-		min-width: 2.5rem;
+		font-size: 1.5rem;
+		line-height: 1;
+		min-width: 2.25rem;
+		text-align: center;
 	}
 
 	.tournament-prize-label {

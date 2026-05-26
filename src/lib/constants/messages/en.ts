@@ -108,7 +108,7 @@ export const enMessages = {
 	'tournament.eyebrow': 'MONTHLY TOURNAMENT',
 	'tournament.match.live': 'LIVE · ends {date}',
 	'tournament.match.upcoming': 'upcoming · {date}',
-	'tournament.headline': '16-league single-elimination bracket',
+	'tournament.headline': '{size}-league single-elimination bracket',
 	'tournament.loading': 'Loading the bracket…',
 	'tournament.prize.place_1': 'Champion',
 	'tournament.prize.place_2': 'Finalist',

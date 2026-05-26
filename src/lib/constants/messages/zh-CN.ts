@@ -104,7 +104,7 @@ export const zhCnMessages = {
 	'tournament.days_left': '剩 {count}天',
 	'tournament.match.live': '直播中 · 截止 {date}',
 	'tournament.match.upcoming': '即将开始 · {date}',
-	'tournament.headline': '16 联赛单淘汰赛',
+	'tournament.headline': '{size} 联赛单淘汰赛',
 	'tournament.loading': '正在加载赛程…',
 	'tournament.prize.place_1': '冠军',
 	'tournament.prize.place_2': '亚军',

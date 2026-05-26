@@ -108,7 +108,7 @@ export const deMessages = {
 	'tournament.days_left': 'noch {count}d',
 	'tournament.match.live': 'LIVE · endet {date}',
 	'tournament.match.upcoming': 'bevorstehend · {date}',
-	'tournament.headline': '16-Ligen-K.o.-Turnier',
+	'tournament.headline': '{size}-Ligen-K.o.-Turnier',
 	'tournament.loading': 'Tabelle wird geladen…',
 	'tournament.prize.place_1': 'Champion',
 	'tournament.prize.place_2': 'Finalist',

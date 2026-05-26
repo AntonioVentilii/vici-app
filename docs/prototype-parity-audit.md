@@ -18,38 +18,38 @@ Each is being addressed in its own commit on the
 
 These need a per-item decision before deletion. Default = remove.
 
-| ID   | Surface          | Feature                                                     | Decision          | Note                                                                                |
-| ---- | ---------------- | ----------------------------------------------------------- | ----------------- | ----------------------------------------------------------------------------------- |
-| C-1  | Markets list     | Status tabs (`Active / Trending / Expiring / Resolved`)     | ✅ Remove         | Locked in earlier wave                                                              |
-| C-2  | Markets list     | Global search box                                           | ✅ Remove         | Locked in earlier wave                                                              |
-| C-3  | Markets list     | "Suggested for you" rail                                    | ✅ Remove         | Prototype is truth                                                                  |
-| C-4  | Markets list     | "LIVE" pulsing pill in appbar                               | ✅ Remove         | Prototype is truth                                                                  |
-| C-5  | Markets list     | Hover lift on cards (`hover:-translate-y-0.5`)              | ✅ Remove         | Prototype is truth                                                                  |
-| C-6  | Sign-in          | Decorative orb radial gradients                             | ✅ Remove         | Prototype is truth                                                                  |
-| C-7  | Sign-in          | `or` divider between providers                              | ✅ Remove         | Prototype is truth                                                                  |
-| C-8  | Sign-in          | Internet Identity + Passkey + Dev buttons                   | ⏭ Keep           | Production-needed; style to match prototype tone                                    |
-| C-9  | Flow             | FlowTopBar (persistent close/progress/streak header)        | ✅ Remove         | Prototype is truth                                                                  |
-| C-10 | Flow             | LIMIT pill on edge labels (limit-order indicator)           | ✅ Remove         | Prototype is truth                                                                  |
-| C-11 | Flow             | Suggested badge in meta row                                 | ✅ Remove         | Prototype is truth                                                                  |
-| C-12 | Flow             | flow-card-rail bottom hint row                              | ✅ Remove         | Prototype is truth                                                                  |
-| C-13 | Flow card        | True 3D rotateY flip (vs prototype's opacity crossfade)     | ✅ Remove         | Use opacity crossfade per prototype                                                 |
-| C-14 | Flow card        | Edge-inset glow on swipe (`box-shadow inset 0 0 60px`)      | ✅ Remove         | Prototype is truth                                                                  |
-| C-15 | Profile          | Friends row (count + pending badge)                         | ✅ Remove         | Prototype is truth                                                                  |
-| C-16 | Profile          | ReferralCard                                                | ✅ Remove         | Prototype is truth                                                                  |
-| C-17 | Profile          | Skill grid (Accuracy/Calls/Wins/Streak)                     | ✅ Remove         | Prototype is truth                                                                  |
-| C-18 | Profile          | 30-day streak activity heatmap                              | ✅ Remove         | Prototype is truth                                                                  |
-| C-19 | Settings         | Language selector segmented control                         | ⏭ Keep           | Production-need (7 locales shipped)                                                 |
-| C-20 | Settings         | Inline blocking-leagues link list in delete flow            | ⏭ Keep           | Production safety                                                                   |
-| C-21 | Settings         | Transfer ownership UI in delete flow                        | ⏭ Keep           | Production need; backend shipped                                                    |
-| C-22 | League detail    | Transfer ownership CTA + modal                              | ⏭ Keep           | Production need; backend shipped                                                    |
-| C-23 | Account settings | Different intro copy / no provider-specific glyphs          | ✅ Strip glyphs   | Stripped; reverted provider-glyph tile + VERIFIED chip in commit `<account-revert>` |
-| C-24 | Wallet           | Multi-tab production wallet (Send / Receive / History tabs) | ⏭ Keep           | Production need                                                                     |
-| C-25 | Portfolio        | OpenOrders table                                            | ⏭ Keep           | Production need (limit orders)                                                      |
-| C-26 | Tournament       | (additive UI from us — TBD list)                            | ⬜ Re-audit       | Spawn focused audit to catch hidden divergences                                     |
-| C-27 | Friends          | Back-arrow appbar to Profile                                | ✅ Remove         | Drop standalone `/friends` route; Friends only inside Social                        |
-| C-28 | Layout           | 200ms cross-fade between routes                             | ⏭ Keep           | Confirmed earlier as intentional                                                    |
-| C-29 | Worlds           | Podium prize claim banner                                   | ⏭ Keep           | Production need (real claim flow)                                                   |
-| C-30 | Layout           | DomainSwitch                                                | ✅ Hidden in prod | Locked earlier                                                                      |
+| ID   | Surface          | Feature                                                     | Decision          | Note                                                                       |
+| ---- | ---------------- | ----------------------------------------------------------- | ----------------- | -------------------------------------------------------------------------- |
+| C-1  | Markets list     | Status tabs (`Active / Trending / Expiring / Resolved`)     | ✅ Remove         | Locked in earlier wave                                                     |
+| C-2  | Markets list     | Global search box                                           | ✅ Remove         | Locked in earlier wave                                                     |
+| C-3  | Markets list     | "Suggested for you" rail                                    | ✅ Remove         | Prototype is truth                                                         |
+| C-4  | Markets list     | "LIVE" pulsing pill in appbar                               | ✅ Remove         | Prototype is truth                                                         |
+| C-5  | Markets list     | Hover lift on cards (`hover:-translate-y-0.5`)              | ✅ Remove         | Prototype is truth                                                         |
+| C-6  | Sign-in          | Decorative orb radial gradients                             | ✅ Remove         | Prototype is truth                                                         |
+| C-7  | Sign-in          | `or` divider between providers                              | ✅ Remove         | Prototype is truth                                                         |
+| C-8  | Sign-in          | Internet Identity + Passkey + Dev buttons                   | ⏭ Keep           | Production-needed; style to match prototype tone                           |
+| C-9  | Flow             | FlowTopBar (persistent close/progress/streak header)        | ✅ Remove         | Prototype is truth                                                         |
+| C-10 | Flow             | LIMIT pill on edge labels (limit-order indicator)           | ✅ Remove         | Prototype is truth                                                         |
+| C-11 | Flow             | Suggested badge in meta row                                 | ✅ Remove         | Prototype is truth                                                         |
+| C-12 | Flow             | flow-card-rail bottom hint row                              | ✅ Remove         | Prototype is truth                                                         |
+| C-13 | Flow card        | True 3D rotateY flip (vs prototype's opacity crossfade)     | ✅ Remove         | Use opacity crossfade per prototype                                        |
+| C-14 | Flow card        | Edge-inset glow on swipe (`box-shadow inset 0 0 60px`)      | ✅ Remove         | Prototype is truth                                                         |
+| C-15 | Profile          | Friends row (count + pending badge)                         | ✅ Remove         | Prototype is truth                                                         |
+| C-16 | Profile          | ReferralCard                                                | ✅ Remove         | Prototype is truth                                                         |
+| C-17 | Profile          | Skill grid (Accuracy/Calls/Wins/Streak)                     | ✅ Remove         | Prototype is truth                                                         |
+| C-18 | Profile          | 30-day streak activity heatmap                              | ✅ Remove         | Prototype is truth                                                         |
+| C-19 | Settings         | Language selector segmented control                         | ⏭ Keep           | Production-need (7 locales shipped)                                        |
+| C-20 | Settings         | Inline blocking-leagues link list in delete flow            | ⏭ Keep           | Production safety                                                          |
+| C-21 | Settings         | Transfer ownership UI in delete flow                        | ⏭ Keep           | Production need; backend shipped                                           |
+| C-22 | League detail    | Transfer ownership CTA + modal                              | ⏭ Keep           | Production need; backend shipped                                           |
+| C-23 | Account settings | Different intro copy / no provider-specific glyphs          | ✅ Strip glyphs   | Stripped; reverted provider-glyph tile + VERIFIED chip in commit `ac6dcc8` |
+| C-24 | Wallet           | Multi-tab production wallet (Send / Receive / History tabs) | ⏭ Keep           | Production need                                                            |
+| C-25 | Portfolio        | OpenOrders table                                            | ⏭ Keep           | Production need (limit orders)                                             |
+| C-26 | Tournament       | (additive UI from us — TBD list)                            | ✅ Re-audited     | Findings in Tournament re-audit sub-section; 3 shipped, 6 deferred         |
+| C-27 | Friends          | Back-arrow appbar to Profile                                | ✅ Remove         | Drop standalone `/friends` route; Friends only inside Social               |
+| C-28 | Layout           | 200ms cross-fade between routes                             | ⏭ Keep           | Confirmed earlier as intentional                                           |
+| C-29 | Worlds           | Podium prize claim banner                                   | ⏭ Keep           | Production need (real claim flow)                                          |
+| C-30 | Layout           | DomainSwitch                                                | ✅ Hidden in prod | Locked earlier                                                             |
 
 ## Surface checklist — A-tier divergences (must-fix)
 
@@ -444,7 +444,7 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ⏭ (C-20 keep) Blocking-leagues link list retained — production safety (transfer ownership before delete)
 - ⏭ (C-21 keep) Transfer-ownership UI retained — production need; backend shipped via `transferLeagueOwnership`
 
-### Account settings (8) ✅ commit `<account>` (partial — auth-scope-blocked) · revert commit `<account-revert>` (C-23)
+### Account settings (8) ✅ commit `<account>` (partial — auth-scope-blocked) · revert commit `ac6dcc8` (C-23)
 
 - ✅ C-23 STRIP — provider-specific 44×44 glyph tile (multi-color Google G / IC Fingerprint) reverted to a bare intro row. The green `VERIFIED` chip beside the email was also stripped. Locked decision: prototype-parity intro is bare; SSO-verified state is implicit. The three keys `account.method.google`, `account.method.ii`, `account.email.verified` were removed from all 7 locales.
 - ⏭ Switch method — kept single signout button; the prototype's 3-button stack lists Apple + Google + magic-link, but Apple + magic-link are out-of-scope per locked auth decisions
@@ -528,11 +528,63 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Side chip style — emblem-tinted (`color-mix(in srgb, var(--side-accent) 13%, transparent)` background, 30% accent border) so each league's `accentColor` reads on the chip.
 - ✅ Group items end with "see all →" / "see full standings →" affordance — Worlds monthly cards close with `See full standings →`, Tournament card closes with `Open bracket →`, and the league-bout list collapses to 4 items with a `See all {n} →` toggle.
 
-### Tournament (~3) ✅ commit `<tournament>`
+### Tournament (~3) ✅ commit `<tournament>` · re-audit commit `<tournament-reaudit>` (C-26)
 
 - ✅ Bracket diagram styling — match-meta row now has three branches (concluded → date + winner →; live → "LIVE · ends {date}" in purple; upcoming → "upcoming · {date}" muted)
 - ✅ Round chip color (#b49cff) — hero current-round tag + live-match border + live-meta text all use the tournament accent
 - ✅ Live timer — days-left chip in hero head when a round is in flight; re-ticks every minute via `$effect` interval
+
+#### Re-audit findings (C-26)
+
+Surveyed `TournamentPage.svelte` against `screens.jsx:3657-3752`
+(`TournamentBoutDetail`) to catch hidden divergences after the
+initial port. Findings:
+
+- ✅ Hero gradient — was a flat tinted background; now a top-down
+  `linear-gradient(180deg, rgba(180,156,255,0.14), transparent 70%)` over
+  `var(--bg-surface)`, mirroring the prototype's `card-elevated`
+  inline gradient (`screens.jsx:3681`).
+- ✅ Headline bracket size dynamic — was a hard-coded `"16-league
+single-elimination bracket"`; now reads `tournament.bracketSize`
+  from the loaded `TournamentDoc` (falls back to
+  `TOURNAMENT_BRACKET_SIZE` when nothing is loaded yet). 7-locale
+  `tournament.headline` strings re-parameterised with `{size}`.
+- ✅ Prize-tier place glyph — was the numeric `1`/`2`/`3` in mono;
+  now the medal emoji 🥇/🥈/🥉 at h2-scale, matching the prototype's
+  `{p.label.split(' ')[0]}` t-h2 glyph (`screens.jsx:3741`). The
+  numeric place is now `aria-hidden` to keep the surface clean.
+- ⏭ App-bar title — prototype shows `T.name` ("May Tournament Bout",
+  dynamic month). We render the static `tournament.title` key. The
+  month-name surface isn't on `TournamentDoc` (only `id` / `monthMs`)
+  — a follow-up could derive it from `monthMs` via `localeStore`.
+- ⏭ Title alignment — prototype centers the app-bar title at
+  `fontSize: 17, letterSpacing: -0.01em`. `MobileAppBar` is always
+  `align="left"`. Different appbar pattern; treat as accepted
+  cross-app divergence.
+- ⏭ Headline serif-italic accent on "bracket" — prototype splits
+  the headline so `bracket` renders in `serif-italic acc`. Skipped
+  because the equivalent end-word differs per locale ("directa" /
+  "directe" / "diretta" / "simples" / "Ligen" / "单淘汰赛"), and a
+  forced split would read awkward.
+- ⏭ Dynamic personalised hero sub — prototype shows
+  `{remaining} leagues remain. {myLeagueName} is alive at #{yourLeagueRank}.`
+  or "Your league did not enter this month." We surface a static
+  evergreen sub (`tournament.sub`). Wiring the my-league derivation
+  - remaining-count needs new selectors over `matches`; tracked as
+    a follow-up.
+- ⏭ `is-mine` styling — prototype tags any match containing the
+  viewer's league with `is-mine` for emphasis. Needs the same
+  my-league context as the dynamic sub; deferred together.
+- ⏭ Prize tiers — sticker sub-line ("Exclusive {sticker} sticker")
+  not shown. We don't have a sticker model in the satellite; the
+  visual moment is deferred until the album surface gets a per-tier
+  sticker registry.
+- ⏭ Section headers — prototype uses `section-h h3` blocks for
+  "Bracket" and "Prizes"; we use the existing `eyebrow h2` pattern
+  used elsewhere in the app for cross-surface coherence. Treat as
+  accepted cross-app pattern.
+- ⏭ Bottom padding — kept at `6rem` for the mobile nav; prototype's
+  `24px` would clip under the mobile tab bar.
 
 ### Worlds (~7) ✅ commit `d80bf4b`
 

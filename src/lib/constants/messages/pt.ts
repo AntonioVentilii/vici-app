@@ -108,7 +108,7 @@ export const ptMessages = {
 	'tournament.days_left': '{count}d restantes',
 	'tournament.match.live': 'AO VIVO · termina {date}',
 	'tournament.match.upcoming': 'em breve · {date}',
-	'tournament.headline': '16 ligas — eliminação simples',
+	'tournament.headline': '{size} ligas — eliminação simples',
 	'tournament.loading': 'Carregando o chaveamento…',
 	'tournament.prize.place_1': 'Campeão',
 	'tournament.prize.place_2': 'Finalista',

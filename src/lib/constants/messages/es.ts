@@ -108,7 +108,7 @@ export const esMessages = {
 	'tournament.days_left': 'quedan {count}d',
 	'tournament.match.live': 'EN VIVO · termina {date}',
 	'tournament.match.upcoming': 'próximo · {date}',
-	'tournament.headline': 'Cuadro de 16 ligas — eliminación directa',
+	'tournament.headline': 'Cuadro de {size} ligas — eliminación directa',
 	'tournament.loading': 'Cargando el cuadro…',
 	'tournament.prize.place_1': 'Campeón',
 	'tournament.prize.place_2': 'Finalista',

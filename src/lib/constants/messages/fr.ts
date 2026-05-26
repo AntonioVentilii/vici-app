@@ -108,7 +108,7 @@ export const frMessages = {
 	'tournament.days_left': '{count}j restants',
 	'tournament.match.live': 'EN DIRECT · fin {date}',
 	'tournament.match.upcoming': 'à venir · {date}',
-	'tournament.headline': '16 ligues — élimination directe',
+	'tournament.headline': '{size} ligues — élimination directe',
 	'tournament.loading': 'Chargement du tableau…',
 	'tournament.prize.place_1': 'Champion',
 	'tournament.prize.place_2': 'Finaliste',

@@ -108,7 +108,7 @@ export const itMessages = {
 	'tournament.days_left': '{count}g rimasti',
 	'tournament.match.live': 'IN DIRETTA · fine {date}',
 	'tournament.match.upcoming': 'in arrivo · {date}',
-	'tournament.headline': 'Tabellone a 16 leghe — eliminazione diretta',
+	'tournament.headline': 'Tabellone a {size} leghe — eliminazione diretta',
 	'tournament.loading': 'Caricamento del tabellone…',
 	'tournament.prize.place_1': 'Campione',
 	'tournament.prize.place_2': 'Finalista',
