@@ -178,7 +178,7 @@ These need a per-item decision before deletion. Default = remove.
 - ✅ Removed heart toggle from hero — relocated to appbar right (functional equivalent of prototype's eye)
 - ✅ Desktop split column stripped — single column mobile-first, capped at 36rem max-width on ≥md per "prototype is truth"
 
-### Dash (15) ✅ commit `<dash>`
+### Dash (15) ✅ commit `f78e042`
 
 - ✅ Title "Dashboard" not "Dash"; no right action (`DashPage.svelte` appbar — title only, no Briefcase button)
 - ✅ Hero accuracy block — session-delta line + 30d global anchor + streak row inline under the big number
