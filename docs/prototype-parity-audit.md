@@ -207,23 +207,29 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Section header w/ count
 - ⬜ Remove cold-load spinner (prototype seeds data)
 
-### Profile (16)
+### Profile (16) ✅ commit `<profile>`
 
-- ⬜ Appbar — back + settings cog only; no description; no FeaturedEventChip
-- ⬜ Identity card archetype-coloured blur halo (140×140 circle, opacity 0.10, blur 20px)
-- ⬜ Editable avatar (`<Avatar editable onEdit>` opens shuffle modal)
-- ⬜ Inline XP chip with handle
-- ⬜ School + country chips inline with handle
-- ⬜ Stats line: Lvl + #rank global + accuracy on one row
-- ⬜ Streak row: StreakFlame component + week delta
-- ⬜ Level bar gradient `archetype.accent → var(--accent)`
-- ⬜ Level row in VXP units, not XP
-- ⬜ **Affiliations grid (4 slots)** — Uni / Country / City (locked) / Company (locked)
-- ⬜ Achievement card content — 36×36 tile, `accent-glow` bg when earned, opacity 0.6 when locked
-- ⬜ Achievement sort by progress desc
-- ⬜ Oracle weekly insight card — yellow tint, eyebrow + serif-italic + body sub
-- ⬜ AvatarEditor modal (full-screen shuffle/save)
-- ⬜ Remove Friends row, ReferralCard, Skill grid, 30-day heatmap (tier C)
+- ✅ Appbar — Settings cog opens a trailing menu (Settings + Sign out); description + FeaturedEventChip stripped
+- ✅ Identity card archetype-coloured blur halo (140×140 circle, opacity 0.10, blur 20px) — `.profile-halo` driven by `--archetype-accent`
+- ✅ Editable avatar — tap opens an avatar-editor sheet stub (TODO: full shuffle flow ports with the avatar library; affordance discoverable today)
+- ✅ Bio under handle in serif italic (FE-only `localStorage` source, mirrors prototype; full schema field deferred to avoid satellite redeploy in this PR)
+- ✅ Session VXP delta inline (today, derived from `recentSettlements` window over 24h × VXP_PER_CALL = 240; green/red depending on sign)
+- ✅ Streak flame inline at name level (`.profile-streak-inline` pill with `Flame` + day count)
+- ✅ Joined date line — derived from Juno `Doc.created_at` (ns), formatted via `Intl.DateTimeFormat` for the active locale
+- ✅ Stats line "X calls · Y% accuracy" — `profile.dashboard.lifetime_stats` with thousands-rounded `K/M` formatter
+- ✅ Achievement rail — 36×36 emblem tile, `accent-glow` bg when earned, `opacity 0.6` when locked, sort by `(unlocked desc, progress desc)`
+- ✅ Past calls preview — 3 rows above achievements, each row links to its market; section "All" button → `AppPath.Album`
+- ✅ Level bar gradient `archetype.accent → var(--color-primary)`; level row labeled "VXP" not "XP"
+- ✅ Affiliations grid (4 slots) — Uni / Country active via `lookupWorldsAffiliation` + `listMyAffiliations`; City + Company locked with `Lock` glyph + "Soon" copy
+- ✅ Affiliations card tap → opens `AffiliationPickerModal` (same modal Worlds uses; refresh on pick)
+- ✅ Edit-profile sheet (Modal) — handle + bio inputs with nickname availability inline hint, 140-char bio counter, Save/Cancel actions
+- ✅ Sign-out entry point in trailing menu (uses `@junobuild/core` `signOut`); Settings entry point alongside
+- ✅ Oracle weekly insight retained — laurel-washed card, eyebrow + serif-italic body
+- ✅ (Tier C-15) Friends row removed
+- ✅ (Tier C-16) ReferralCard removed from Profile (still mounted on Friends page)
+- ✅ (Tier C-17) Skill grid removed
+- ✅ (Tier C-18) 30-day streak heatmap removed
+- ⏭ Full AvatarEditor (skin / hair / mood / crown / held / toga / backdrop tabs) — stub sheet today; full editor depends on the avatar-library port (tracked follow-up)
 
 ### Wallet (5 — full reconceptualization)
 
