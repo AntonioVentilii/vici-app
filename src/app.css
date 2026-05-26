@@ -903,3 +903,522 @@ body {
 		transform: scale(1);
 	}
 }
+
+/* ============================================================
+   Prototype animation parity — per-category card breathers,
+   World-Cup figure motion, Flow micro-motion, sheet/toast
+   envelopes, landing entrance fades, and assorted utilities.
+   Sourced verbatim from the VICI prototype `app.css` and
+   `landing.css` (Beta V1.2). Kept in one block so the visual
+   parity story is greppable. All loops cap at ~9s and respect
+   `prefers-reduced-motion: reduce`.
+   ============================================================ */
+
+/* ── A. Per-category Flow card breathers ────────────────────── */
+.art-macro {
+	animation: macro-breathe 7s ease-in-out infinite alternate;
+}
+@keyframes macro-breathe {
+	0% {
+		transform: scale(1);
+	}
+	100% {
+		transform: scale(1.04);
+	}
+}
+
+.art-crypto {
+	animation: crypto-pulse 4.5s ease-in-out infinite alternate;
+}
+@keyframes crypto-pulse {
+	0% {
+		opacity: 0.92;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+.art-sports {
+	animation: sports-drift 6s ease-in-out infinite alternate;
+}
+@keyframes sports-drift {
+	0% {
+		transform: translateX(-2px);
+	}
+	100% {
+		transform: translateX(2px);
+	}
+}
+
+.art-politics {
+	animation: politics-glow 8s ease-in-out infinite alternate;
+}
+@keyframes politics-glow {
+	0% {
+		opacity: 0.92;
+		transform: scale(1);
+	}
+	100% {
+		opacity: 1;
+		transform: scale(1.02);
+	}
+}
+
+.art-tech {
+	animation: tech-ripple 5s ease-in-out infinite alternate;
+}
+@keyframes tech-ripple {
+	0% {
+		opacity: 0.94;
+	}
+	100% {
+		opacity: 1;
+	}
+}
+
+.art-culture {
+	animation: culture-morph 9s ease-in-out infinite alternate;
+}
+@keyframes culture-morph {
+	0% {
+		transform: scale(1) rotate(-0.3deg);
+	}
+	100% {
+		transform: scale(1.03) rotate(0.3deg);
+	}
+}
+
+/* ── B. World Cup per-market figure animations ──────────────── */
+@keyframes wc-bob {
+	0% {
+		transform: translateY(0);
+	}
+	100% {
+		transform: translateY(-2px);
+	}
+}
+
+@keyframes wc-lift {
+	0% {
+		transform: translateY(0) scale(1);
+	}
+	100% {
+		transform: translateY(-3px) scale(1.02);
+	}
+}
+
+@keyframes wc-cheer {
+	0% {
+		transform: translateY(0) rotate(-1deg);
+	}
+	100% {
+		transform: translateY(-4px) rotate(1deg);
+	}
+}
+
+@keyframes wc-shake {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	25% {
+		transform: translateX(-1.5px);
+	}
+	75% {
+		transform: translateX(1.5px);
+	}
+}
+
+@keyframes wc-slump {
+	0% {
+		transform: translateY(0) rotate(0deg);
+	}
+	100% {
+		transform: translateY(2px) rotate(-1.5deg);
+	}
+}
+
+@keyframes wc-tumble {
+	0%,
+	100% {
+		transform: rotate(-2deg) translateX(-2px);
+	}
+	50% {
+		transform: rotate(8deg) translateX(4px) translateY(2px);
+	}
+}
+
+@keyframes wc-playful {
+	0% {
+		transform: rotate(-1deg) translateY(0);
+	}
+	100% {
+		transform: rotate(1deg) translateY(-2px);
+	}
+}
+
+@keyframes wc-rage {
+	0% {
+		transform: translateX(-1.5px) skewX(-1.5deg);
+	}
+	100% {
+		transform: translateX(1.5px) skewX(1.5deg);
+	}
+}
+
+@keyframes wc-joy-bounce {
+	0% {
+		transform: translateY(0) scale(1);
+	}
+	100% {
+		transform: translateY(-3px) scale(1.02);
+	}
+}
+
+@keyframes wc-focus {
+	0% {
+		transform: scale(1);
+	}
+	100% {
+		transform: scale(1.01);
+	}
+}
+
+@keyframes wc-dance {
+	0%,
+	100% {
+		transform: translateX(-3px) rotate(-2deg);
+	}
+	50% {
+		transform: translateX(3px) rotate(2deg);
+	}
+}
+
+@keyframes wc-cnf-fall {
+	0% {
+		transform: translateY(-12px) rotate(0);
+		opacity: 0;
+	}
+	10% {
+		opacity: 0.9;
+	}
+	85% {
+		opacity: 0.9;
+	}
+	100% {
+		transform: translateY(80px) rotate(720deg);
+		opacity: 0;
+	}
+}
+
+/* Default WC figure breath — every WC card breathes via the
+   `.wc-figure` group emitted by `renderFlowArt`. Per-market
+   variants override via the seed-specific selectors below. */
+.art-wc .wc-figure {
+	transform-origin: 140px 76px;
+	animation: wc-bob 3.6s ease-in-out infinite alternate;
+}
+.art-seed-wc-winner-brazil .wc-figure,
+.art-seed-wc-winner-spain .wc-figure,
+.art-seed-wc-winner-france .wc-figure,
+.art-seed-wc-winner-argentina .wc-figure {
+	animation: wc-lift 2.6s ease-in-out infinite alternate;
+}
+.art-seed-wc-golden-boot .wc-figure {
+	animation: wc-bob 4s ease-in-out infinite alternate;
+}
+.art-seed-wc-usa-quarter .wc-figure {
+	transform-origin: 190px 90px;
+	animation: wc-cheer 1.2s ease-in-out infinite alternate;
+}
+.art-seed-wc-over-3-final .wc-figure {
+	animation: wc-shake 2.4s ease-in-out infinite;
+}
+.art-seed-wc-german-out-group .wc-figure {
+	transform-origin: 140px 102px;
+	animation: wc-slump 5s ease-in-out infinite alternate;
+}
+.art-seed-wc-neymar-dive .wc-figure {
+	transform-origin: 140px 76px;
+	animation: wc-tumble 2.4s ease-in-out infinite;
+}
+.art-seed-wc-player-haircut .wc-figure {
+	transform-origin: 160px 76px;
+	animation: wc-playful 2s ease-in-out infinite alternate;
+}
+.art-seed-wc-trophy-drop .wc-figure {
+	animation: wc-shake 1.8s ease-in-out infinite;
+}
+.art-seed-wc-coach-stands .wc-figure {
+	animation: wc-rage 0.32s ease-in-out infinite alternate;
+}
+.art-seed-wc-pitch-propose .wc-figure {
+	animation: wc-joy-bounce 1.4s ease-in-out infinite alternate;
+}
+.art-seed-wc-var-final .wc-figure {
+	animation: wc-focus 6s ease-in-out infinite alternate;
+}
+.art-seed-wc-celebration .wc-figure {
+	transform-origin: 140px 90px;
+	animation: wc-dance 1.6s ease-in-out infinite;
+}
+.art-seed-wc-celebration .wc-cnf {
+	transform-box: fill-box;
+	transform-origin: center;
+	animation: wc-cnf-fall 2.8s linear infinite;
+}
+
+/* ── C. Flow micro-motion ───────────────────────────────────── */
+@keyframes flow-fade-in {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Sparkline event-marker entrance (tap reveal). */
+@keyframes flow-spark-event-in {
+	from {
+		opacity: 0;
+		transform: translateY(-2px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* Days-left chip urgency pulse. Bound to `.flow-days.is-urgent`
+   inside FlowCard. */
+@keyframes flow-days-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.55;
+	}
+}
+
+/* Flow coach choreography — full prototype set. */
+@keyframes flow-coach-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@keyframes flow-coach-tap-pulse {
+	0%,
+	100% {
+		transform: scale(1);
+		opacity: 0.95;
+	}
+	50% {
+		transform: scale(0.92);
+		opacity: 1;
+	}
+}
+@keyframes flow-coach-pulse-y {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-4px);
+	}
+}
+@keyframes flow-coach-pulse-x-left {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	50% {
+		transform: translateX(-4px);
+	}
+}
+@keyframes flow-coach-pulse-x-right {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	50% {
+		transform: translateX(4px);
+	}
+}
+
+/* ── D. Bottom-sheet + toast envelopes ──────────────────────── */
+@keyframes friend-sheet-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@keyframes friend-sheet-slide-up {
+	from {
+		transform: translateY(100%);
+	}
+	to {
+		transform: translateY(0);
+	}
+}
+@keyframes toast-in {
+	from {
+		opacity: 0;
+		transform: translateX(-50%) translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(-50%) translateY(0);
+	}
+}
+@keyframes invite-toast-in {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+/* ── E. Landing-page entrance fades ─────────────────────────── */
+@keyframes lp-fade-down {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes lp-fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+@keyframes lp-lang-in {
+	from {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes lp-link-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes lp-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.3;
+	}
+}
+@keyframes lp-pulse-dot {
+	0%,
+	100% {
+		opacity: 1;
+		transform: scale(1);
+	}
+	50% {
+		opacity: 0.4;
+		transform: scale(0.85);
+	}
+}
+
+/* Scroll-reveal helper. WelcomePage flips `data-reveal="on"` on the
+   shell once `onMount` has wired the IntersectionObserver — sections
+   then start hidden and animate in as each scrolls into view. When
+   JS is disabled (no shell flag), sections stay fully visible: no
+   blank flash before hydration. */
+.welcome-shell[data-reveal='on'] .welcome-section {
+	opacity: 0;
+}
+.welcome-shell[data-reveal='on'] .welcome-section.is-in-view {
+	animation: lp-fade-in 480ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+	.welcome-shell[data-reveal='on'] .welcome-section,
+	.welcome-shell[data-reveal='on'] .welcome-section.is-in-view {
+		opacity: 1;
+		animation: none;
+	}
+}
+
+/* ── F. Misc utility keyframes ──────────────────────────────── */
+@keyframes signin-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+@keyframes pop-in {
+	from {
+		transform: scale(0.6);
+		opacity: 0;
+	}
+	to {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+@keyframes fade-up {
+	from {
+		opacity: 0;
+		transform: translateY(8px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+@keyframes slide-up {
+	from {
+		transform: translateY(100%);
+	}
+	to {
+		transform: translateY(0);
+	}
+}
+
+/* `vxp-award-in` is intentionally NOT added: our `xpPop` /
+   `xpPopBonus` envelopes already cover the VXP award entrance
+   with a richer arc. Flagged here so the prototype-parity audit
+   doesn't refile this as a gap. */
+
+/* Reduced-motion guard — keep the visual structure but disable
+   the looping kinetic envelopes from this block. */
+@media (prefers-reduced-motion: reduce) {
+	.art-macro,
+	.art-crypto,
+	.art-sports,
+	.art-politics,
+	.art-tech,
+	.art-culture {
+		animation: none;
+	}
+}

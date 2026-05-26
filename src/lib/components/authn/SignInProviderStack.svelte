@@ -172,11 +172,15 @@
 			type="button"
 		>
 			<span class="signin-provider-icon" aria-hidden="true">
-				<svg fill="currentColor" height="18" viewBox="0 0 24 24" width="18">
-					<path
-						d="M16.365 1.43c0 1.14-.49 2.27-1.29 3.08-.87.9-2.28 1.59-3.43 1.5-.14-1.11.42-2.27 1.22-3.05.88-.88 2.32-1.55 3.5-1.53zM20.5 17.27c-.61 1.4-.9 2.04-1.69 3.28-1.1 1.73-2.66 3.88-4.59 3.9-1.72.02-2.16-1.12-4.49-1.1-2.32.01-2.81 1.12-4.53 1.1-1.93-.02-3.41-1.97-4.51-3.7C-.1 18.1-.18 13.32 1.5 11.1c1.18-1.56 3.05-2.48 4.81-2.48 1.79 0 2.92 1.01 4.4 1.01 1.43 0 2.31-1.01 4.39-1.01 1.57 0 3.24.86 4.42 2.34-3.89 2.13-3.26 7.69 1 6.31z"
-					/>
-				</svg>
+				{#if signingIn === 'apple'}
+					<span class="signin-spinner"></span>
+				{:else}
+					<svg fill="currentColor" height="18" viewBox="0 0 24 24" width="18">
+						<path
+							d="M16.365 1.43c0 1.14-.49 2.27-1.29 3.08-.87.9-2.28 1.59-3.43 1.5-.14-1.11.42-2.27 1.22-3.05.88-.88 2.32-1.55 3.5-1.53zM20.5 17.27c-.61 1.4-.9 2.04-1.69 3.28-1.1 1.73-2.66 3.88-4.59 3.9-1.72.02-2.16-1.12-4.49-1.1-2.32.01-2.81 1.12-4.53 1.1-1.93-.02-3.41-1.97-4.51-3.7C-.1 18.1-.18 13.32 1.5 11.1c1.18-1.56 3.05-2.48 4.81-2.48 1.79 0 2.92 1.01 4.4 1.01 1.43 0 2.31-1.01 4.39-1.01 1.57 0 3.24.86 4.42 2.34-3.89 2.13-3.26 7.69 1 6.31z"
+						/>
+					</svg>
+				{/if}
 			</span>
 			<span class="signin-provider-label">
 				{signingIn === 'apple'
@@ -200,7 +204,11 @@
 			type="button"
 		>
 			<span class="signin-provider-icon" aria-hidden="true">
-				<IconGoogle size="18px" />
+				{#if signingIn === 'google'}
+					<span class="signin-spinner"></span>
+				{:else}
+					<IconGoogle size="18px" />
+				{/if}
 			</span>
 			<span class="signin-provider-label">
 				{signingIn === 'google'
@@ -280,7 +288,11 @@
 			type="button"
 		>
 			<span class="signin-provider-icon" aria-hidden="true">
-				<IconIc size="18px" />
+				{#if signingIn === 'ii'}
+					<span class="signin-spinner"></span>
+				{:else}
+					<IconIc size="18px" />
+				{/if}
 			</span>
 			<span class="signin-provider-label">
 				{signingIn === 'ii'
@@ -299,7 +311,11 @@
 			type="button"
 		>
 			<span class="signin-provider-icon" aria-hidden="true">
-				<IconPasskey size="18px" />
+				{#if signingIn === 'passkey'}
+					<span class="signin-spinner"></span>
+				{:else}
+					<IconPasskey size="18px" />
+				{/if}
 			</span>
 			<span class="signin-provider-label">
 				{signingIn === 'passkey'
@@ -320,7 +336,11 @@
 				type="button"
 			>
 				<span class="signin-provider-icon" aria-hidden="true">
-					<IconRobot size="18px" />
+					{#if signingIn === 'dev'}
+						<span class="signin-spinner"></span>
+					{:else}
+						<IconRobot size="18px" />
+					{/if}
 				</span>
 				<span class="signin-provider-label">
 					{signingIn === 'dev'
@@ -396,6 +416,24 @@
 		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
+	}
+
+	/* Per-provider loading spinner — replaces the brand icon while the
+	   sign-in is in flight, mirroring the prototype's `.signin-spinner`
+	   ring. Drives `signin-spin` (defined in app.css). */
+	.signin-spinner {
+		width: 14px;
+		height: 14px;
+		border: 2px solid color-mix(in srgb, var(--text-base) 20%, transparent);
+		border-top-color: var(--color-accent);
+		border-radius: 50%;
+		animation: signin-spin 720ms linear infinite;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.signin-spinner {
+			animation: none;
+		}
 	}
 
 	.signin-provider-label {

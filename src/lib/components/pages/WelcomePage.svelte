@@ -23,14 +23,43 @@
 	// wrapper at `src/routes/+page.svelte`. This component is also
 	// rendered on `/about` (the share-able marketing URL), where signed-
 	// in visitors deliberately stay put.
+	let shellEl = $state<HTMLDivElement | null>(null);
+
 	onMount(() => {
 		document.title = 'VICI';
+
+		// Scroll-reveal: flip `data-reveal="on"` so app.css hides each
+		// `.welcome-section` (opacity: 0). The IntersectionObserver
+		// then adds `is-in-view` as each section enters the viewport,
+		// running the `lp-fade-in` keyframe once. SSR / no-IO paths
+		// leave the shell flagless so sections stay fully visible.
+		if (!shellEl || typeof IntersectionObserver === 'undefined') {
+			return;
+		}
+
+		shellEl.dataset.reveal = 'on';
+
+		const io = new IntersectionObserver(
+			(entries) => {
+				entries.forEach((entry) => {
+					if (entry.isIntersecting) {
+						entry.target.classList.add('is-in-view');
+						io.unobserve(entry.target);
+					}
+				});
+			},
+			{ threshold: 0.08, rootMargin: '0px 0px -8% 0px' }
+		);
+
+		shellEl.querySelectorAll('.welcome-section').forEach((el) => io.observe(el));
+
+		return () => io.disconnect();
 	});
 
 	const wcDays = WORLD_CUP_KICKOFF.daysToKickoff;
 </script>
 
-<div class="welcome-shell">
+<div bind:this={shellEl} class="welcome-shell">
 	<WelcomeNav />
 	<!-- Ticker stays at the TOP per user request — intentional, locked
 	     divergence from the prototype (which places the ticker between
@@ -170,6 +199,12 @@
 		background:
 			linear-gradient(180deg, color-mix(in srgb, var(--laurel) 5%, transparent), transparent 58%),
 			color-mix(in srgb, var(--background) 94%, var(--laurel) 6%);
+		animation: lp-fade-down 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.welcome-hero {
+			animation: none;
+		}
 	}
 
 	.welcome-hero-inner {
