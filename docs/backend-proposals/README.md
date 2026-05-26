@@ -309,6 +309,53 @@ itself is anonymous (the principal is gone after).
 
 ---
 
+## Shipped vs deferred (Proposal 3)
+
+The data foundation, draw, and read-side surface ship in the rollout
+that closes this doc. Round resolution + prize claim are deferred —
+they need a per-window accuracy aggregation pipeline that doesn't
+exist yet.
+
+### Shipped
+
+- `TOURNAMENTS` collection + `assertSetTournament` (system + state
+  machine `in_flight → concluded`).
+- `TOURNAMENT_MATCHES` collection + `assertSetTournamentMatch`
+  (key shape, write-once invariants on team / accuracy / winner
+  fields).
+- `triggerTournamentDraw({ monthAnchor })` — anyone can call;
+  idempotent via doc-key collision on the month anchor. Scans
+  `LEAGUE_MEMBERS`, counts members per league, seeds the top-16
+  into Round 1 + creates TBD slots for the later rounds so the FE
+  bracket renders the skeleton immediately.
+- `getCurrentTournament()` — returns the latest tournament + its
+  matches, sorted by round then index.
+- FE wiring: `TournamentPage` fires the draw on mount and renders
+  the bracket; "waiting on more leagues" hint when fewer than 16
+  qualify.
+
+### Deferred (follow-ups)
+
+- **Round resolution.** Computing per-league accuracy in the round
+  window needs a `LEAGUE_STATS` collection on the same shape as
+  `AFFILIATION_STATS` — one doc per `(leagueId)` with rolling +
+  monthly counters, updated lazily by the profile hook (mirror of
+  `onProfileSetForAffiliationStats`). Once those land, a
+  `resolveTournamentRound({ tournamentId, round })` user-claim
+  endpoint can read each league's `monthWins / monthTotalCalls`
+  for the window and pick the winner.
+- **Prize claim.** Same user-claim pattern as Worlds podium —
+  `claimTournamentPrize({ tournamentId })` writes a `VXP_AWARDS`
+  doc keyed `${caller}/tournament_prize/${tournamentId}_${place}`
+  if the caller is a member of a top-4 league at conclusion.
+  Forfeit rule (decision 3.4) lands in `resolveTournamentRound`,
+  not here.
+
+The deferred pieces are tracked in code as TODO blocks pointing
+back to this section.
+
+---
+
 ## Open questions summary (decisions needed before code)
 
 | #   | Decision                     | Default if not specified                           |

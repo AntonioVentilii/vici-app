@@ -75,7 +75,21 @@ export const Collection = {
 	 * random UUID key — so the log survives the account it describes. Written exactly once by
 	 * `deleteMyAccount` before the cascade hard-deletes the caller's identity.
 	 */
-	EXIT_SIGNALS: collections.EXIT_SIGNALS
+	EXIT_SIGNALS: collections.EXIT_SIGNALS,
+	/**
+	 * Monthly single-elimination tournament metadata. One doc per month, keyed by month anchor
+	 * (`YYYY-MM`). Holds the seeded league ids (top-16 by member count), bracket size, lifecycle
+	 * state. Written by `triggerTournamentDraw` (idempotent — doc key collision rejects a second
+	 * draw for the same month).
+	 */
+	TOURNAMENTS: collections.TOURNAMENTS,
+	/**
+	 * Per-match docs of every tournament. Keyed `${tournamentId}/${round}/${index}` so the
+	 * bracket reads as a single prefix scan. Holds the two competing league ids, per-league
+	 * accuracy (filled in by the round-resolution job), and the winning league. Written by
+	 * `triggerTournamentDraw` (round 1 matches) and the not-yet-shipped round-resolution flow.
+	 */
+	TOURNAMENT_MATCHES: collections.TOURNAMENT_MATCHES
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

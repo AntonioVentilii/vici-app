@@ -87,6 +87,41 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppGetCurrentTournamentResult = IDL.Record({
+		tournament: IDL.Opt(
+			IDL.Record({
+				id: IDL.Text,
+				seeded_league_ids: IDL.Vec(IDL.Text),
+				month_start_ms: IDL.Float64,
+				created_at_ms: IDL.Float64,
+				state: IDL.Variant({
+					concluded: IDL.Null,
+					in_flight: IDL.Null
+				}),
+				bracket_size: IDL.Float64,
+				month_end_ms: IDL.Float64
+			})
+		),
+		matches: IDL.Vec(
+			IDL.Record({
+				winner_league_id: IDL.Opt(IDL.Text),
+				to_league_id: IDL.Opt(IDL.Text),
+				start_ms: IDL.Float64,
+				from_league_id: IDL.Opt(IDL.Text),
+				to_acc: IDL.Opt(IDL.Float64),
+				tournament_id: IDL.Text,
+				from_acc: IDL.Opt(IDL.Float64),
+				index: IDL.Float64,
+				round: IDL.Variant({
+					r1: IDL.Null,
+					final: IDL.Null,
+					semifinal: IDL.Null,
+					quarter: IDL.Null
+				}),
+				end_ms: IDL.Float64
+			})
+		)
+	});
 	const AppGetMarketMetadataArgs = IDL.Record({ series_id: IDL.Text });
 	const AppGetMarketMetadataResult = IDL.Record({
 		metadata: IDL.Opt(
@@ -615,6 +650,22 @@ export const idlFactory = ({ IDL }) => {
 		)
 	});
 	const AppSendFriendRequestArgs = IDL.Record({ target: IDL.Text });
+	const AppTriggerTournamentDrawArgs = IDL.Record({
+		month_anchor: IDL.Text
+	});
+	const AppTriggerTournamentDrawResult = IDL.Record({
+		ok: IDL.Bool,
+		available_leagues: IDL.Opt(IDL.Float64),
+		tournament_id: IDL.Opt(IDL.Text),
+		reason: IDL.Opt(
+			IDL.Variant({
+				insufficient_leagues: IDL.Null,
+				already_drawn: IDL.Null,
+				invalid_input: IDL.Null,
+				month_not_started: IDL.Null
+			})
+		)
+	});
 	const AppUpsertMarketMetadataArgs = IDL.Record({
 		data: IDL.Record({
 			suggested: IDL.Bool,
@@ -712,6 +763,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppGetAffiliationStatsResult],
 			['query']
 		),
+		app_get_current_tournament: IDL.Func([], [AppGetCurrentTournamentResult], ['query']),
 		app_get_market_metadata: IDL.Func(
 			[AppGetMarketMetadataArgs],
 			[AppGetMarketMetadataResult],
@@ -774,6 +826,11 @@ export const idlFactory = ({ IDL }) => {
 		app_reject_friend_request: IDL.Func([AppRejectFriendRequestArgs], [], []),
 		app_search_profiles: IDL.Func([AppSearchProfilesArgs], [AppSearchProfilesResult], ['query']),
 		app_send_friend_request: IDL.Func([AppSendFriendRequestArgs], [], []),
+		app_trigger_tournament_draw: IDL.Func(
+			[AppTriggerTournamentDrawArgs],
+			[AppTriggerTournamentDrawResult],
+			[]
+		),
 		app_upsert_market_metadata: IDL.Func(
 			[AppUpsertMarketMetadataArgs],
 			[AppUpsertMarketMetadataResult],

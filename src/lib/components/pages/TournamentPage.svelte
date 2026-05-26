@@ -1,22 +1,111 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import {
+		currentMonthAnchor,
+		getCurrentTournament,
+		triggerTournamentDraw
+	} from '$lib/services/tournament.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { t } from '$lib/utils/i18n.utils';
+	import {
+		TOURNAMENT_PRIZE_TIERS,
+		TOURNAMENT_ROUNDS,
+		type TournamentDoc,
+		type TournamentMatchDoc,
+		type TournamentRound
+	} from '$lib/types/tournament';
+	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Tournament detail — port of the prototype's `TournamentBoutDetail`
-	 * (16-league single-elimination bracket + prize tiers).
+	 * Tournament detail — port of the prototype's `TournamentBoutDetail`.
 	 *
-	 * The bracket is heavily mocked data in the prototype: rounds,
-	 * matches, league standings per round. Our backend has no
-	 * tournament collection yet — leagues + bouts are real but there's
-	 * no "monthly bracket" concept. This page surfaces the prototype's
-	 * structure with a "backend pending" hint so the route exists and
-	 * users see what's coming, without faking the standings.
+	 * Fires `triggerTournamentDraw` for the current month on mount as
+	 * a fire-and-forget (idempotent via the satellite's doc-key
+	 * collision), then reads `getCurrentTournament` to render the
+	 * bracket. The draw refuses with `insufficient_leagues` when
+	 * fewer than 16 leagues exist; the FE renders that as a "waiting
+	 * on more leagues" hint instead of an error.
+	 *
+	 * Round resolution + prize claim are documented Proposal 3
+	 * follow-ups — see `src/satellite/services/tournament.services.ts`
+	 * for the design — so accuracy fields render as "—" and the
+	 * bracket structure shows TBD slots beyond Round 1.
 	 */
+
+	let tournament = $state<TournamentDoc | null>(null);
+	let matches = $state<TournamentMatchDoc[]>([]);
+	let loaded = $state(false);
+	let drawHint = $state<'available_leagues' | null>(null);
+	let availableLeagues = $state<number>(0);
+
+	const matchesByRound = $derived.by((): Record<TournamentRound, TournamentMatchDoc[]> => {
+		const grouped: Record<TournamentRound, TournamentMatchDoc[]> = {
+			r1: [],
+			quarter: [],
+			semifinal: [],
+			final: []
+		};
+
+		for (const m of matches) {
+			grouped[m.round].push(m);
+		}
+
+		return grouped;
+	});
+
+	const roundLabelKey = (round: TournamentRound): MessageKey =>
+		`tournament.round.${round.replace('r1', 'round1')}` as MessageKey;
+
+	const fmtAccuracy = (value: number | null): string =>
+		value === null ? '—' : `${Math.round(value * 100)}%`;
+
+	const fmtDate = (ms: number): string => {
+		const d = new Date(ms);
+		const year = d.getUTCFullYear();
+		const month = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+		const day = d.getUTCDate().toString().padStart(2, '0');
+
+		return `${year}-${month}-${day}`;
+	};
+
+	const refresh = async () => {
+		try {
+			const { tournament: t_, matches: m_ } = await getCurrentTournament();
+			tournament = t_;
+			matches = m_;
+		} catch {
+			// Defensive — the page renders the empty state on read failure.
+			tournament = null;
+			matches = [];
+		} finally {
+			loaded = true;
+		}
+	};
+
+	const tryDraw = async () => {
+		try {
+			const result = await triggerTournamentDraw({
+				monthAnchor: currentMonthAnchor()
+			});
+
+			if (!result.ok && result.reason === 'insufficient_leagues') {
+				drawHint = 'available_leagues';
+				availableLeagues = result.availableLeagues ?? 0;
+			}
+
+			// On success or `already_drawn` — read the now-current tournament.
+			await refresh();
+		} catch {
+			await refresh();
+		}
+	};
+
+	onMount(() => {
+		void tryDraw();
+	});
 </script>
 
 <div class="tournament-page">
@@ -45,9 +134,61 @@
 		<h2 class="eyebrow tournament-section-eyebrow">
 			{t({ locale: $localeStore, key: 'tournament.bracket_eyebrow' })}
 		</h2>
-		<div class="tournament-pending">
-			<p>{t({ locale: $localeStore, key: 'tournament.bracket_pending' })}</p>
-		</div>
+
+		{#if !loaded}
+			<div class="tournament-pending">
+				<p>{t({ locale: $localeStore, key: 'tournament.loading' })}</p>
+			</div>
+		{:else if tournament === null}
+			<div class="tournament-pending">
+				<p>
+					{#if drawHint === 'available_leagues'}
+						{t({
+							locale: $localeStore,
+							key: 'tournament.waiting_leagues',
+							params: { available: availableLeagues, required: 16 }
+						})}
+					{:else}
+						{t({ locale: $localeStore, key: 'tournament.bracket_pending' })}
+					{/if}
+				</p>
+			</div>
+		{:else}
+			<div class="tournament-bracket">
+				{#each TOURNAMENT_ROUNDS as round (round)}
+					{@const roundMatches = matchesByRound[round]}
+					<div class="tournament-round">
+						<div class="tournament-round-eyebrow">
+							{t({ locale: $localeStore, key: roundLabelKey(round) })}
+						</div>
+						<div class="tournament-round-matches">
+							{#each roundMatches as match (match.index)}
+								{@const concluded = match.winnerLeagueId !== null}
+								<div class="tournament-match" class:is-concluded={concluded}>
+									<div
+										class="tournament-team"
+										class:is-loser={concluded && match.winnerLeagueId !== match.fromLeagueId}
+										class:is-winner={concluded && match.winnerLeagueId === match.fromLeagueId}
+									>
+										<span class="tournament-team-name">{match.fromLeagueId ?? 'TBD'}</span>
+										<span class="tournament-team-acc num">{fmtAccuracy(match.fromAcc)}</span>
+									</div>
+									<div
+										class="tournament-team"
+										class:is-loser={concluded && match.winnerLeagueId !== match.toLeagueId}
+										class:is-winner={concluded && match.winnerLeagueId === match.toLeagueId}
+									>
+										<span class="tournament-team-name">{match.toLeagueId ?? 'TBD'}</span>
+										<span class="tournament-team-acc num">{fmtAccuracy(match.toAcc)}</span>
+									</div>
+									<div class="tournament-match-meta num">{fmtDate(match.endMs)}</div>
+								</div>
+							{/each}
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
 	</section>
 
 	<section class="tournament-section">
@@ -55,27 +196,23 @@
 			{t({ locale: $localeStore, key: 'tournament.prizes_eyebrow' })}
 		</h2>
 		<ul class="tournament-prizes">
-			<li class="tournament-prize is-gold">
-				<span class="num tournament-prize-place">1st</span>
-				<span class="tournament-prize-label">
-					{t({ locale: $localeStore, key: 'tournament.prize.gold' })}
-				</span>
-				<span class="num tournament-prize-amount">+5,000</span>
-			</li>
-			<li class="tournament-prize is-silver">
-				<span class="num tournament-prize-place">2nd</span>
-				<span class="tournament-prize-label">
-					{t({ locale: $localeStore, key: 'tournament.prize.silver' })}
-				</span>
-				<span class="num tournament-prize-amount">+2,500</span>
-			</li>
-			<li class="tournament-prize is-bronze">
-				<span class="num tournament-prize-place">3rd</span>
-				<span class="tournament-prize-label">
-					{t({ locale: $localeStore, key: 'tournament.prize.bronze' })}
-				</span>
-				<span class="num tournament-prize-amount">+1,000</span>
-			</li>
+			{#each TOURNAMENT_PRIZE_TIERS as tier (tier.place)}
+				<li
+					class="tournament-prize"
+					class:is-bronze={tier.place === 3}
+					class:is-gold={tier.place === 1}
+					class:is-silver={tier.place === 2}
+				>
+					<span class="num tournament-prize-place">{tier.place}</span>
+					<span class="tournament-prize-label">
+						{t({
+							locale: $localeStore,
+							key: `tournament.prize.place_${tier.place}`
+						})}
+					</span>
+					<span class="num tournament-prize-amount">+{tier.vxp.toLocaleString('en-US')}</span>
+				</li>
+			{/each}
 		</ul>
 	</section>
 </div>
@@ -143,6 +280,81 @@
 		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
 		border: 1px dashed var(--border-base);
 		border-radius: var(--r-12);
+	}
+
+	.tournament-bracket {
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+	}
+
+	.tournament-round {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.tournament-round-eyebrow {
+		font-size: var(--t-11, 0.7rem);
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.tournament-round-matches {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+	}
+
+	.tournament-match {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		padding: 0.65rem 0.85rem;
+		background: var(--bg-surface);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.tournament-match.is-concluded {
+		border-color: color-mix(in srgb, var(--laurel) 35%, var(--border-base));
+	}
+
+	.tournament-team {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		font-size: var(--t-13);
+	}
+
+	.tournament-team.is-winner {
+		color: var(--laurel);
+		font-weight: 600;
+	}
+
+	.tournament-team.is-loser {
+		color: var(--text-muted);
+	}
+
+	.tournament-team-name {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.tournament-team-acc {
+		font-weight: 600;
+	}
+
+	.tournament-match-meta {
+		font-size: var(--t-10, 0.65rem);
+		letter-spacing: 0.1em;
+		color: var(--text-muted);
+		padding-top: 0.2rem;
 	}
 
 	.tournament-prizes {

@@ -13,6 +13,8 @@ type AppGetAffiliationStatsArgs = record { kind : variant { university; country 
 
 type AppGetAffiliationStatsResult = record { stats : opt record { affiliation_id : text; kind : variant { university; country }; total_calls : float64; wins : float64; month_anchor : text; month_total_calls : float64; month_wins : float64; updated_at_ms : float64 } };
 
+type AppGetCurrentTournamentResult = record { tournament : opt record { id : text; month_start_ms : float64; month_end_ms : float64; bracket_size : float64; state : variant { in_flight; concluded }; seeded_league_ids : vec text; created_at_ms : float64 }; matches : vec record { tournament_id : text; round : variant { r1; quarter; semifinal; final }; index : float64; from_league_id : opt text; to_league_id : opt text; from_acc : opt float64; to_acc : opt float64; winner_league_id : opt text; start_ms : float64; end_ms : float64 } };
+
 type AppGetMarketMetadataArgs = record { series_id : text };
 
 type AppGetMarketMetadataResult = record { metadata : opt record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool; updated_at : float64; updated_by : text } };
@@ -103,6 +105,10 @@ type AppRejectFriendRequestArgs = record { relation_id : text };
 
 type AppSendFriendRequestArgs = record { target : text };
 
+type AppTriggerTournamentDrawArgs = record { month_anchor : text };
+
+type AppTriggerTournamentDrawResult = record { ok : bool; tournament_id : opt text; reason : opt variant { already_drawn; month_not_started; insufficient_leagues; invalid_input }; available_leagues : opt float64 };
+
 type AppUpsertMarketMetadataArgs = record { series_id : text; data : record { why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool } };
 
 type AppUpsertMarketMetadataResult = record { metadata : record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool; updated_at : float64; updated_by : text } };
@@ -115,6 +121,7 @@ service : {
 	app_check_friendship : (AppCheckFriendshipArgs) -> (AppCheckFriendshipResult) query;
 	app_check_nickname_availability : (AppCheckNicknameAvailabilityArgs) -> (AppCheckNicknameAvailabilityResult) query;
 	app_get_affiliation_stats : (AppGetAffiliationStatsArgs) -> (AppGetAffiliationStatsResult) query;
+	app_get_current_tournament : () -> (AppGetCurrentTournamentResult) query;
 	app_get_market_metadata : (AppGetMarketMetadataArgs) -> (AppGetMarketMetadataResult) query;
 	app_get_market_translation : (AppGetMarketTranslationArgs) -> (AppGetMarketTranslationResult) query;
 	app_get_my_referral_code : () -> (AppGetMyReferralCodeResult) query;
@@ -147,6 +154,7 @@ service : {
 	app_redeem_referral_code : (AppRedeemReferralCodeArgs) -> ();
 	app_reject_friend_request : (AppRejectFriendRequestArgs) -> ();
 	app_send_friend_request : (AppSendFriendRequestArgs) -> ();
+	app_trigger_tournament_draw : (AppTriggerTournamentDrawArgs) -> (AppTriggerTournamentDrawResult);
 	app_upsert_market_metadata : (AppUpsertMarketMetadataArgs) -> (AppUpsertMarketMetadataResult);
 	app_upsert_market_translation : (AppUpsertMarketTranslationArgs) -> (AppUpsertMarketTranslationResult);
 };

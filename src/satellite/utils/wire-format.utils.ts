@@ -583,3 +583,74 @@ export const toWireAffiliationStats = (stats: {
 	month_wins: stats.monthWins,
 	updated_at_ms: stats.updatedAtMs
 });
+
+// ─── Tournament + matches ───────────────────────────────────────────
+
+export const TournamentWireSchema = j.strictObject({
+	id: j.string(),
+	month_start_ms: j.number(),
+	month_end_ms: j.number(),
+	bracket_size: j.number(),
+	state: j.enum(['in_flight', 'concluded']),
+	seeded_league_ids: j.array(j.string()),
+	created_at_ms: j.number()
+});
+
+export type WireTournament = j.infer<typeof TournamentWireSchema>;
+
+export const toWireTournament = (doc: {
+	id: string;
+	monthStartMs: number;
+	monthEndMs: number;
+	bracketSize: number;
+	state: 'in_flight' | 'concluded';
+	seededLeagueIds: string[];
+	createdAtMs: number;
+}): WireTournament => ({
+	id: doc.id,
+	month_start_ms: doc.monthStartMs,
+	month_end_ms: doc.monthEndMs,
+	bracket_size: doc.bracketSize,
+	state: doc.state,
+	seeded_league_ids: doc.seededLeagueIds,
+	created_at_ms: doc.createdAtMs
+});
+
+export const TournamentMatchWireSchema = j.strictObject({
+	tournament_id: j.string(),
+	round: j.enum(['r1', 'quarter', 'semifinal', 'final']),
+	index: j.number(),
+	from_league_id: j.optional(j.string()),
+	to_league_id: j.optional(j.string()),
+	from_acc: j.optional(j.number()),
+	to_acc: j.optional(j.number()),
+	winner_league_id: j.optional(j.string()),
+	start_ms: j.number(),
+	end_ms: j.number()
+});
+
+export type WireTournamentMatch = j.infer<typeof TournamentMatchWireSchema>;
+
+export const toWireTournamentMatch = (doc: {
+	tournamentId: string;
+	round: 'r1' | 'quarter' | 'semifinal' | 'final';
+	index: number;
+	fromLeagueId: string | null;
+	toLeagueId: string | null;
+	fromAcc: number | null;
+	toAcc: number | null;
+	winnerLeagueId: string | null;
+	startMs: number;
+	endMs: number;
+}): WireTournamentMatch => ({
+	tournament_id: doc.tournamentId,
+	round: doc.round,
+	index: doc.index,
+	from_league_id: doc.fromLeagueId ?? undefined,
+	to_league_id: doc.toLeagueId ?? undefined,
+	from_acc: doc.fromAcc ?? undefined,
+	to_acc: doc.toAcc ?? undefined,
+	winner_league_id: doc.winnerLeagueId ?? undefined,
+	start_ms: doc.startMs,
+	end_ms: doc.endMs
+});

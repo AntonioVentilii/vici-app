@@ -16,5 +16,7 @@
 	"BOUTS": "bouts",
 	"AFFILIATIONS": "affiliations",
 	"AFFILIATION_STATS": "affiliation_stats",
-	"EXIT_SIGNALS": "exit_signals"
+	"EXIT_SIGNALS": "exit_signals",
+	"TOURNAMENTS": "tournaments",
+	"TOURNAMENT_MATCHES": "tournament_matches"
 }

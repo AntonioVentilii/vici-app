@@ -87,6 +87,12 @@ import {
 	sendFriendRequest as sendFriendRequestFn
 } from '$satellite/services/relation.services';
 import { assertSetRole } from '$satellite/services/roles.services';
+import {
+	assertSetTournament,
+	assertSetTournamentMatch,
+	getCurrentTournamentFn,
+	triggerTournamentDrawFn
+} from '$satellite/services/tournament.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimComebackGrantFn } from '$satellite/services/vxp-comeback.services';
 import {
@@ -105,6 +111,8 @@ import {
 	MarketTranslationWireSchema,
 	ReferralWireSchema,
 	RelationWireSchema,
+	TournamentMatchWireSchema,
+	TournamentWireSchema,
 	toWireAffiliation,
 	toWireAffiliationStats,
 	toWireBout,
@@ -115,6 +123,8 @@ import {
 	toWireProfile,
 	toWireReferral,
 	toWireRelation,
+	toWireTournament,
+	toWireTournamentMatch,
 	UserProfileWireSchema
 } from '$satellite/utils/wire-format.utils';
 import { nonNullish } from '@dfinity/utils';
@@ -576,6 +586,42 @@ export const deleteMyAccount = defineUpdate({
 	handler: deleteMyAccountFn
 });
 
+// Monthly tournament — Proposal 3. The draw is fire-and-forget on
+// every Tournament-page mount: idempotent via doc-key collision on
+// the month anchor (a second call returns `already_drawn` cleanly).
+// Round resolution + prize claim are documented Proposal 3 follow-ups
+// — they need a per-window accuracy aggregation pipeline that
+// doesn't exist yet, so the bracket structure ships first.
+export const triggerTournamentDraw = defineUpdate({
+	args: j.strictObject({
+		monthAnchor: j.string()
+	}),
+	result: j.strictObject({
+		ok: j.boolean(),
+		tournamentId: j.optional(j.string()),
+		reason: j.optional(
+			j.enum(['already_drawn', 'month_not_started', 'insufficient_leagues', 'invalid_input'])
+		),
+		availableLeagues: j.optional(j.number())
+	}),
+	handler: triggerTournamentDrawFn
+});
+
+export const getCurrentTournament = defineQuery({
+	result: j.strictObject({
+		tournament: j.optional(TournamentWireSchema),
+		matches: j.array(TournamentMatchWireSchema)
+	}),
+	handler: () => {
+		const { tournament, matches } = getCurrentTournamentFn();
+
+		return {
+			tournament: tournament === null ? undefined : toWireTournament(tournament),
+			matches: matches.map(toWireTournamentMatch)
+		};
+	}
+});
+
 const assertSetDocCollections = [
 	Collection.PROFILES,
 	Collection.ROLES,
@@ -587,7 +633,9 @@ const assertSetDocCollections = [
 	Collection.BOUTS,
 	Collection.AFFILIATIONS,
 	Collection.AFFILIATION_STATS,
-	Collection.EXIT_SIGNALS
+	Collection.EXIT_SIGNALS,
+	Collection.TOURNAMENTS,
+	Collection.TOURNAMENT_MATCHES
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -606,7 +654,9 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.BOUTS]: assertSetBout,
 			[Collection.AFFILIATIONS]: assertSetAffiliation,
 			[Collection.AFFILIATION_STATS]: assertSetAffiliationStats,
-			[Collection.EXIT_SIGNALS]: assertSetExitSignal
+			[Collection.EXIT_SIGNALS]: assertSetExitSignal,
+			[Collection.TOURNAMENTS]: assertSetTournament,
+			[Collection.TOURNAMENT_MATCHES]: assertSetTournamentMatch
 		};
 
 		fn[context.data.collection]?.(context);

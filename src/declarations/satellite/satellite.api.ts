@@ -97,6 +97,46 @@ const getAffiliationStats = async (
 	return AppGetAffiliationStatsResultSchema.parse(result);
 };
 
+const AppGetCurrentTournamentResultSchema = j.strictObject({
+	tournament: j.optional(
+		j.strictObject({
+			id: j.string(),
+			month_start_ms: j.number(),
+			month_end_ms: j.number(),
+			bracket_size: j.number(),
+			state: j.enum(['in_flight', 'concluded']),
+			seeded_league_ids: j.array(j.string()),
+			created_at_ms: j.number()
+		})
+	),
+	matches: j.array(
+		j.strictObject({
+			tournament_id: j.string(),
+			round: j.enum(['r1', 'quarter', 'semifinal', 'final']),
+			index: j.number(),
+			from_league_id: j.optional(j.string()),
+			to_league_id: j.optional(j.string()),
+			from_acc: j.optional(j.number()),
+			to_acc: j.optional(j.number()),
+			winner_league_id: j.optional(j.string()),
+			start_ms: j.number(),
+			end_ms: j.number()
+		})
+	)
+});
+
+const getCurrentTournament = async (): Promise<
+	j.infer<typeof AppGetCurrentTournamentResultSchema>
+> => {
+	const { app_get_current_tournament } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_current_tournament();
+
+	const result = schemaFromIdl({ schema: AppGetCurrentTournamentResultSchema, value: idlResult });
+	return AppGetCurrentTournamentResultSchema.parse(result);
+};
+
 const AppGetMarketMetadataArgsSchema = j.strictObject({ seriesId: j.string() });
 const AppGetMarketMetadataResultSchema = j.strictObject({
 	metadata: j.optional(
@@ -950,6 +990,34 @@ const sendFriendRequest = async (
 	await app_send_friend_request(idlArgs);
 };
 
+const AppTriggerTournamentDrawArgsSchema = j.strictObject({ monthAnchor: j.string() });
+const AppTriggerTournamentDrawResultSchema = j.strictObject({
+	ok: j.boolean(),
+	tournamentId: j.optional(j.string()),
+	reason: j.optional(
+		j.enum(['already_drawn', 'month_not_started', 'insufficient_leagues', 'invalid_input'])
+	),
+	availableLeagues: j.optional(j.number())
+});
+
+const triggerTournamentDraw = async (
+	args: j.infer<typeof AppTriggerTournamentDrawArgsSchema>
+): Promise<j.infer<typeof AppTriggerTournamentDrawResultSchema>> => {
+	const parsedArgs = AppTriggerTournamentDrawArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppTriggerTournamentDrawArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_trigger_tournament_draw']>[0];
+
+	const { app_trigger_tournament_draw } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_trigger_tournament_draw(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppTriggerTournamentDrawResultSchema, value: idlResult });
+	return AppTriggerTournamentDrawResultSchema.parse(result);
+};
+
 const AppUpsertMarketMetadataArgsSchema = j.strictObject({
 	seriesId: j.string(),
 	data: j.strictObject({
@@ -1049,6 +1117,7 @@ export const functions = {
 	checkFriendship,
 	checkNicknameAvailability,
 	getAffiliationStats,
+	getCurrentTournament,
 	getMarketMetadata,
 	getMarketTranslation,
 	getMyReferralCode,
@@ -1081,6 +1150,7 @@ export const functions = {
 	redeemReferralCode,
 	rejectFriendRequest,
 	sendFriendRequest,
+	triggerTournamentDraw,
 	upsertMarketMetadata,
 	upsertMarketTranslation
 };

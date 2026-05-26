@@ -88,6 +88,33 @@ export interface AppGetAffiliationStatsResult {
 				}
 		  ];
 }
+export interface AppGetCurrentTournamentResult {
+	tournament:
+		| []
+		| [
+				{
+					id: string;
+					seeded_league_ids: Array<string>;
+					month_start_ms: number;
+					created_at_ms: number;
+					state: { concluded: null } | { in_flight: null };
+					bracket_size: number;
+					month_end_ms: number;
+				}
+		  ];
+	matches: Array<{
+		winner_league_id: [] | [string];
+		to_league_id: [] | [string];
+		start_ms: number;
+		from_league_id: [] | [string];
+		to_acc: [] | [number];
+		tournament_id: string;
+		from_acc: [] | [number];
+		index: number;
+		round: { r1: null } | { final: null } | { semifinal: null } | { quarter: null };
+		end_ms: number;
+	}>;
+}
 export interface AppGetMarketMetadataArgs {
 	series_id: string;
 }
@@ -471,6 +498,22 @@ export interface AppSearchProfilesResult {
 export interface AppSendFriendRequestArgs {
 	target: string;
 }
+export interface AppTriggerTournamentDrawArgs {
+	month_anchor: string;
+}
+export interface AppTriggerTournamentDrawResult {
+	ok: boolean;
+	available_leagues: [] | [number];
+	tournament_id: [] | [string];
+	reason:
+		| []
+		| [
+				| { insufficient_leagues: null }
+				| { already_drawn: null }
+				| { invalid_input: null }
+				| { month_not_started: null }
+		  ];
+}
 export interface AppUpsertMarketMetadataArgs {
 	data: {
 		suggested: boolean;
@@ -562,6 +605,7 @@ export interface _SERVICE {
 		[AppGetAffiliationStatsArgs],
 		AppGetAffiliationStatsResult
 	>;
+	app_get_current_tournament: ActorMethod<[], AppGetCurrentTournamentResult>;
 	app_get_market_metadata: ActorMethod<[AppGetMarketMetadataArgs], AppGetMarketMetadataResult>;
 	app_get_market_translation: ActorMethod<
 		[AppGetMarketTranslationArgs],
@@ -600,6 +644,10 @@ export interface _SERVICE {
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
 	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
+	app_trigger_tournament_draw: ActorMethod<
+		[AppTriggerTournamentDrawArgs],
+		AppTriggerTournamentDrawResult
+	>;
 	app_upsert_market_metadata: ActorMethod<
 		[AppUpsertMarketMetadataArgs],
 		AppUpsertMarketMetadataResult
