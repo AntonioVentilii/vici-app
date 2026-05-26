@@ -62,7 +62,16 @@
 
 	const parsePendingOnboarding = (
 		raw: string
-	): { handle: string; interests: string[]; email?: string; referralCode?: string } | undefined => {
+	):
+		| {
+				handle: string | null;
+				participantId: string | null;
+				side: 'YES' | 'NO' | null;
+				interests: string[];
+				email?: string;
+				referralCode?: string;
+		  }
+		| undefined => {
 		let parsed: unknown;
 
 		try {
@@ -71,12 +80,29 @@
 			parsed = null;
 		}
 
-		if (
-			typeof parsed !== 'object' ||
-			parsed === null ||
-			!('handle' in parsed) ||
-			typeof parsed.handle !== 'string'
-		) {
+		if (typeof parsed !== 'object' || parsed === null) {
+			return;
+		}
+
+		// Tolerate legacy payloads — older clients wrote `handle` as the
+		// only required field. New clients also serialize team + side, but
+		// any combination of {handle, participantId, side} may be null.
+		const handle =
+			'handle' in parsed && typeof parsed.handle === 'string' && parsed.handle.length > 0
+				? parsed.handle
+				: null;
+		const participantId =
+			'participantId' in parsed &&
+			typeof parsed.participantId === 'string' &&
+			parsed.participantId.length > 0
+				? parsed.participantId
+				: null;
+		const rawSide = 'side' in parsed && typeof parsed.side === 'string' ? parsed.side : null;
+		const side: 'YES' | 'NO' | null = rawSide === 'YES' || rawSide === 'NO' ? rawSide : null;
+
+		// At least one signal is required for the payload to be useful;
+		// otherwise discard so the caller can clear the slot.
+		if (handle === null && participantId === null && side === null) {
 			return;
 		}
 
@@ -96,7 +122,9 @@
 			rawReferral && REFERRAL_CODE_REGEX.test(rawReferral) ? rawReferral : undefined;
 
 		return {
-			handle: parsed.handle,
+			handle,
+			participantId,
+			side,
 			interests,
 			email,
 			referralCode
@@ -190,67 +218,84 @@
 		applyingPendingOnboarding = true;
 
 		const currentProfile = $userStore.profile;
-		const updated = {
+
+		// Onboarding picks live under `preferences`. Always apply
+		// team/side/onboardingCompleted on the new-user path — the user
+		// just finished the 3-beat flow, so completion is recorded even
+		// when they skipped the picks. Preserve everything else under
+		// `preferences` so the seed defaults stay intact.
+		const sidePreference = pending.side ?? '';
+		const participantPreference = pending.participantId ?? '';
+		const baseUpdated = {
 			...currentProfile,
-			nickname: pending.handle,
 			interests: pending.interests,
-			...(pending.email && { email: pending.email })
+			...(pending.email && { email: pending.email }),
+			preferences: {
+				...currentProfile.preferences,
+				favoriteParticipantId: participantPreference,
+				favoriteSide: sidePreference,
+				onboardingCompleted: true
+			}
 		};
 
 		void (async () => {
 			try {
-				// Pre-flight: a brand-new user can still collide if
-				// the handle was claimed in the window between
-				// onboarding step 4 and sign-in landing. Probe first
-				// so we can keep the pending payload around (so the
-				// user has the chance to pick a new handle from their
-				// profile) instead of letting the `setDoc` throw.
-				const probe = await checkNicknameAvailability({
-					nickname: pending.handle,
-					principal: currentProfile.owner
-				});
+				let nextProfile = baseUpdated;
 
-				if (!probe.available && probe.reason === 'taken') {
-					notificationsStore.add({
-						title: t({
-							locale: $localeStore,
-							key: 'onboarding.handoff.collision_title'
-						}),
-						message: t({
-							locale: $localeStore,
-							key: 'onboarding.handoff.collision',
-							params: { handle: pending.handle }
-						}),
-						type: 'error'
+				if (pending.handle !== null) {
+					// Pre-flight: a brand-new user can still collide if
+					// the handle was claimed in the window between
+					// onboarding step 4 and sign-in landing. Probe first
+					// so we can keep team/side/onboardingCompleted (which
+					// are independent of the handle) and let the user
+					// rename later from their profile.
+					const probe = await checkNicknameAvailability({
+						nickname: pending.handle,
+						principal: currentProfile.owner
 					});
 
-					// Apply interests + email even when the handle
-					// collides — they're independently useful and
-					// the user can rename later.
-					await upsertProfile({
-						key: currentProfile.owner,
-						data: {
-							...currentProfile,
-							interests: pending.interests,
-							...(pending.email && { email: pending.email })
-						}
-					});
+					if (!probe.available && probe.reason === 'taken') {
+						notificationsStore.add({
+							title: t({
+								locale: $localeStore,
+								key: 'onboarding.handoff.collision_title'
+							}),
+							message: t({
+								locale: $localeStore,
+								key: 'onboarding.handoff.collision',
+								params: { handle: pending.handle }
+							}),
+							type: 'error'
+						});
 
-					localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
+						// Apply interests + email + team/side/completion
+						// even when the handle collides — they're
+						// independently useful and the user can rename
+						// later.
+						await upsertProfile({
+							key: currentProfile.owner,
+							data: baseUpdated
+						});
 
-					// Handle collision is independent of the referral redemption — the user is still a
-					// new sign-up and deserves the bonus.
-					void redeemPendingReferralIfAny(pending.referralCode);
+						userStore.update((curr) => ({ ...curr, profile: baseUpdated }));
+						localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
 
-					return;
+						// Handle collision is independent of the referral redemption — the user is still a
+						// new sign-up and deserves the bonus.
+						void redeemPendingReferralIfAny(pending.referralCode);
+
+						return;
+					}
+
+					nextProfile = { ...baseUpdated, nickname: pending.handle };
 				}
 
 				await upsertProfile({
-					key: updated.owner,
-					data: updated
+					key: nextProfile.owner,
+					data: nextProfile
 				});
 
-				userStore.update((curr) => ({ ...curr, profile: updated }));
+				userStore.update((curr) => ({ ...curr, profile: nextProfile }));
 				localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
 
 				// Redeem after the profile is in place so the satellite assertion (which requires an
@@ -269,7 +314,7 @@
 						message: t({
 							locale: $localeStore,
 							key: 'onboarding.handoff.collision',
-							params: { handle: pending.handle }
+							params: { handle: pending.handle ?? '' }
 						}),
 						type: 'error'
 					});
@@ -286,6 +331,44 @@
 				applyingPendingOnboarding = false;
 			}
 		})();
+	});
+
+	// Brand-new signed-in users who skipped `/signup` (signed in via
+	// `/signin` or via the auth landing flow) end up with a fresh
+	// profile whose `preferences.onboardingCompleted === false`. Route
+	// them to the 3-beat onboarding (which renders in authenticated mode
+	// — Beat 3 swaps the provider stack for a Finish button). We gate on
+	// `!profileExisted` so returning users whose legacy profiles default
+	// `onboardingCompleted` to `false` are NOT re-prompted; their
+	// existing satellite-side profile wins.
+	$effect(() => {
+		if (
+			!browser ||
+			applyingPendingOnboarding ||
+			!$userSignedIn ||
+			!$userStore.profile ||
+			$userStore.profileExisted
+		) {
+			return;
+		}
+
+		if ($userStore.profile.preferences?.onboardingCompleted === true) {
+			return;
+		}
+
+		if (page.url.pathname === PublicPath.SignUp) {
+			return;
+		}
+
+		// If a pending payload is still being applied in the same tick,
+		// let that path finish — it will set `onboardingCompleted: true`.
+		const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
+
+		if (raw !== null) {
+			return;
+		}
+
+		void goto(resolve(PublicPath.SignUp), { replaceState: true });
 	});
 </script>
 

@@ -7,9 +7,24 @@
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
+	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { notificationsStore } from '$lib/stores/notification.store';
+	import { userStore } from '$lib/stores/user.store';
+	import { t } from '$lib/utils/i18n.utils';
+
+	// Signed-in routing: a brand-new authenticated user who landed on
+	// `/signup` (typically routed here by the (app) layout because their
+	// profile has `onboardingCompleted: false`) goes through the same
+	// 3-beat flow but with Beat 3's provider stack swapped for a Finish
+	// button — they already have a session. A returning user whose
+	// profile already says onboarding is complete is bounced to Home.
+	const authenticated = $derived(
+		$userSignedIn && $userStore.profile?.preferences?.onboardingCompleted !== true
+	);
 
 	$effect(() => {
-		if ($userSignedIn) {
+		if ($userSignedIn && $userStore.profile?.preferences?.onboardingCompleted === true) {
 			void goto(resolve(AppPath.Flow), { replaceState: true });
 		}
 	});
@@ -18,20 +33,23 @@
 		document.title = 'Create account · VICI';
 	});
 
-	// Onboarding completes pre-auth — we persist the user's picks
-	// (handle is the only one the layout currently knows how to
-	// apply; interests / email aren't picked in the 3-beat flow) to
-	// `PENDING_ONBOARDING_STORAGE_KEY` so the
-	// post-sign-in layout effect can upsert the new profile with
-	// them. The auth tap itself happens inside Beat 3 via
-	// `SignInActions`; after it succeeds, `$userSignedIn` flips and
-	// the top-level effect above redirects to Home.
-	const handleComplete = (result: {
+	// Pre-auth completion (signed-out) — we persist the picks to
+	// `PENDING_ONBOARDING_STORAGE_KEY` so the post-sign-in layout effect
+	// can upsert them into the new profile. The auth tap itself happens
+	// inside Beat 3 via `SignInProviderStack`; after it succeeds,
+	// `$userSignedIn` flips and the (app) layout drains the payload.
+	const handleCompletePreAuth = (result: {
 		participantId: string | null;
 		side: 'YES' | 'NO' | null;
 		handle: string | null;
 	}) => {
-		if (!browser || result.handle === null) {
+		if (!browser) {
+			return;
+		}
+
+		// Skip the write if the user bailed before making any pick —
+		// nothing to hand off.
+		if (result.handle === null && result.participantId === null && result.side === null) {
 			return;
 		}
 
@@ -40,6 +58,8 @@
 				PENDING_ONBOARDING_STORAGE_KEY,
 				JSON.stringify({
 					handle: result.handle,
+					participantId: result.participantId,
+					side: result.side,
 					interests: [],
 					completedAt: new Date().toISOString()
 				})
@@ -48,6 +68,124 @@
 			console.warn('Onboarding handoff could not be stored:', err);
 		}
 	};
+
+	// Post-auth completion (already signed-in) — write the picks
+	// directly to the profile and route into the app. We reuse the same
+	// collision-aware pattern as `(app)/+layout.svelte`: probe nickname
+	// availability first when a handle was picked; on collision, still
+	// persist team/side/onboardingCompleted (those are independent of
+	// the handle).
+	let applyingAuthenticatedHandoff = $state(false);
+
+	const handleCompleteAuthenticated = async (result: {
+		participantId: string | null;
+		side: 'YES' | 'NO' | null;
+		handle: string | null;
+	}) => {
+		if (!browser || applyingAuthenticatedHandoff) {
+			return;
+		}
+
+		const currentProfile = $userStore.profile;
+
+		if (!currentProfile) {
+			return;
+		}
+
+		applyingAuthenticatedHandoff = true;
+
+		const sidePreference = result.side ?? '';
+		const participantPreference = result.participantId ?? '';
+
+		const baseUpdated = {
+			...currentProfile,
+			preferences: {
+				...currentProfile.preferences,
+				favoriteParticipantId: participantPreference,
+				favoriteSide: sidePreference,
+				onboardingCompleted: true
+			}
+		};
+
+		try {
+			let nextProfile = baseUpdated;
+
+			if (result.handle !== null) {
+				const probe = await checkNicknameAvailability({
+					nickname: result.handle,
+					principal: currentProfile.owner
+				});
+
+				if (!probe.available && probe.reason === 'taken') {
+					notificationsStore.add({
+						title: t({
+							locale: $localeStore,
+							key: 'onboarding.handoff.collision_title'
+						}),
+						message: t({
+							locale: $localeStore,
+							key: 'onboarding.handoff.collision',
+							params: { handle: result.handle }
+						}),
+						type: 'error'
+					});
+				} else {
+					nextProfile = { ...baseUpdated, nickname: result.handle };
+				}
+			}
+
+			await upsertProfile({
+				key: nextProfile.owner,
+				data: nextProfile
+			});
+
+			// Bake the new profile into the store so the (app) layout's
+			// redirect effect sees `onboardingCompleted: true` immediately
+			// and doesn't bounce us back to /signup.
+			userStore.update((curr) => ({ ...curr, profile: nextProfile }));
+
+			void goto(resolve(AppPath.Flow), { replaceState: true });
+		} catch (err: unknown) {
+			const message = err instanceof Error ? err.message : '';
+
+			if (message.includes('already taken')) {
+				notificationsStore.add({
+					title: t({
+						locale: $localeStore,
+						key: 'onboarding.handoff.collision_title'
+					}),
+					message: t({
+						locale: $localeStore,
+						key: 'onboarding.handoff.collision',
+						params: { handle: result.handle ?? '' }
+					}),
+					type: 'error'
+				});
+			} else {
+				notificationsStore.add({
+					title: t({ locale: $localeStore, key: 'onboarding.handoff.failed_title' }),
+					message: t({ locale: $localeStore, key: 'onboarding.handoff.failed' }),
+					type: 'error'
+				});
+			}
+		} finally {
+			applyingAuthenticatedHandoff = false;
+		}
+	};
+
+	const handleComplete = (result: {
+		participantId: string | null;
+		side: 'YES' | 'NO' | null;
+		handle: string | null;
+	}) => {
+		if (authenticated) {
+			void handleCompleteAuthenticated(result);
+
+			return;
+		}
+
+		handleCompletePreAuth(result);
+	};
 </script>
 
-<OnboardingFlow onComplete={handleComplete} />
+<OnboardingFlow {authenticated} onComplete={handleComplete} />
