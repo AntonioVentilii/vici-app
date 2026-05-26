@@ -518,15 +518,16 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Settings cog in appbar — `MobileAppBar` `right` snippet renders a ghost cog that routes to `/settings`, matching the prototype's appbar right-edge icon.
 - ⏭ (Tier C-22) Transfer ownership CTA + modal — kept; production safety net, backend shipped. Restyled inline with the new controls row alongside the leave-league CTA, but the surface remains.
 
-### Bouts inbox (~8)
+### Bouts inbox (~8) ✅ commit `<bouts-inbox>`
 
-- ⬜ "What's a bout?" intro card (dismissible)
-- ⬜ Worlds Universities grouped card (podium tiles)
-- ⬜ Worlds Countries grouped card
-- ⬜ Monthly Tournament curated card
-- ⬜ Group by surface (Worlds / Tournament / your-league) not by state
-- ⬜ Remove "Create bout" pill at top (prototype puts it elsewhere)
-- ⬜ Side chip style — emblem-tinted, not pill color-mix
+- ⏭ "What's a bout?" intro card (dismissible) — shipped with the prototype's `localStorage['vici.bouts-intro-seen']` flag rather than cross-device `preferences`. Migration to the profile `preferences` blob requires extending the satellite Candid + Rust binding (a new field on `app_get_profile`'s strict preferences record), which is out of scope for the parity pass. The dismissible UI is live; the flag carrier is the deferred portion.
+- ✅ Worlds Universities grouped card — featured WC podium (top-3 by lifetime accuracy off `listAffiliationStats({ kind: 'university' })`) + monthly compact card. Deep-links into `/social/worlds/schools` and `/social/worlds/schools?scope=month`.
+- ✅ Worlds Countries grouped card — same shape, sourced off `listAffiliationStats({ kind: 'country' })`. Glyph + flag rendered from `WORLDS_COUNTRIES`. Deep-links into `/social/worlds/countries`.
+- ✅ Monthly Tournament curated card — pulls from `getCurrentTournament` + `TOURNAMENT_ROUNDS`. Renders only when at least one round has unresolved matches whose window is still open (`tournamentLiveRound !== null`). Surfaces the live round chip (`Round 1` / `Quarterfinal` / `Semifinal` / `Final`) plus a "your league is in" row when the caller's league is still in the bracket.
+- ✅ Group by surface (Worlds Universities / Worlds Countries / Tournament / your league bouts) — state grouping (`in_flight`/`accepted`/`proposed`/`resolved`) removed. League bouts now render in a single state-sorted list (in_flight → accepted → proposed → resolved) inside the `Your league bouts` section.
+- ✅ Removed top-level "Create bout" pill — the page header now only carries the sub-copy. The CTA lives on the right of the `Your league bouts` section eyebrow as a `+ Challenge` pill, matching `BoutsScreen.bouts-section-head-secondary`.
+- ✅ Side chip style — emblem-tinted (`color-mix(in srgb, var(--side-accent) 13%, transparent)` background, 30% accent border) so each league's `accentColor` reads on the chip.
+- ✅ Group items end with "see all →" / "see full standings →" affordance — Worlds monthly cards close with `See full standings →`, Tournament card closes with `Open bracket →`, and the league-bout list collapses to 4 items with a `See all {n} →` toggle.
 
 ### Tournament (~3) ✅ commit `<tournament>`
 
