@@ -107,7 +107,7 @@ These need a per-item decision before deletion. Default = remove.
   need) and re-rendered with the same `signin-provider-btn` shape +
   per-provider loading state.
 
-### Onboarding (22) ✅ commit `<onboarding>`
+### Onboarding (22) ✅ commit `a7e04d1`
 
 - ✅ Beat 1 — progress-dots header removed (`OnboardingBeat1` no longer
   renders the dot row + step label; markup drops straight to the WC
