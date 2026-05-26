@@ -534,7 +534,7 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Round chip color (#b49cff) — hero current-round tag + live-match border + live-meta text all use the tournament accent
 - ✅ Live timer — days-left chip in hero head when a round is in flight; re-ticks every minute via `$effect` interval
 
-### Worlds (~7) ✅ commit `3176e84`
+### Worlds (~7) ✅ commit `d80bf4b`
 
 - ✅ Hero event card — `FIFA WORLD CUP · Live` tags + WC Bout title + top-3 podium tiles (`.worlds-event` + `.worlds-pod-tile.is-gold/silver/bronze`); top-3 driven by lifetime accuracy on `listAffiliationStats({ kind: 'university' })`
 - ✅ Scope toggle — `{month} season · all calls` / `WC Bout · {N}d left` (`.worlds-scope`); `{N}d left` reads new `daysToFinal` derived off `featuredEvent.finalAt_ms`, falls back to `archived` copy when the event has wrapped
