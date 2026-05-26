@@ -686,6 +686,7 @@
 							committedAction={market.id === committedMarketId ? committedAction : null}
 							{followedLean}
 							interactive={isCurrent && !flowPaused}
+							locked={isCurrent && flowPaused}
 							{market}
 							{metadata}
 							onAction={handleAction}
@@ -814,11 +815,11 @@
 		width: 100%;
 		max-width: min(25.5rem, calc(100vw - 2rem));
 		height: 100%;
-		max-height: min(
-			700px,
-			calc(100dvh - 9.5rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
-		);
-		min-height: min(36rem, calc(100dvh - 10.5rem));
+		/* `--bn-clear` reserves room for the floating pillnav so the
+		 * card slot never tucks under it (prototype parity —
+		 * `app.css:2853-2861`). */
+		max-height: min(700px, calc(100dvh - 9.5rem - var(--bn-clear) - env(safe-area-inset-top, 0px)));
+		min-height: min(30rem, calc(100dvh - 10.5rem - var(--bn-clear)));
 	}
 
 	.flow-card-slot {
