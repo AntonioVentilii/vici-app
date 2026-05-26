@@ -4,11 +4,13 @@
 
 	/**
 	 * Coach-marks overlay shown above the first-call prediction card in
-	 * Beat 1.b. Two arrows fan out from the card centre toward YES (right)
-	 * and NO (left) with a one-line "swipe or tap" instruction. The overlay
-	 * dismisses on first tap anywhere — by then the user has either swiped
-	 * or read the hint, and the card itself is what they should be
-	 * interacting with.
+	 * Beat 1.b. Three directional cues fan out from the centre — NO
+	 * (left arrow), TAP (centre pulse), YES (right arrow) — with a
+	 * one-line "swipe or tap" instruction underneath. Each arrow pulses
+	 * on its own axis via the prototype `flow-coach-pulse-x-left`,
+	 * `flow-coach-pulse-x-right`, and `flow-coach-pulse-y` keyframes;
+	 * the centre tap glyph rides `flow-coach-tap-pulse`. The overlay
+	 * envelope fades in with `flow-coach-fade-in`.
 	 *
 	 * Self-contained: owns its own visible state, opt-out via local
 	 * dismiss. The parent only needs to mount it once inside the card
@@ -28,17 +30,42 @@
 		onclick={dismiss}
 		type="button"
 	>
-		<span class="flow-coach-mark flow-coach-mark-no" aria-hidden="true">
-			<span class="flow-coach-arrow">←</span>
-			<span class="flow-coach-label">
-				{t({ locale: $localeStore, key: 'outcome.no' })}
+		<span class="flow-coach-row" aria-hidden="true">
+			<span class="flow-coach-side no">
+				<span class="flow-coach-arrow left">←</span>
+				<span class="flow-coach-label">
+					{t({ locale: $localeStore, key: 'outcome.no' })}
+				</span>
 			</span>
-		</span>
-		<span class="flow-coach-mark flow-coach-mark-yes" aria-hidden="true">
-			<span class="flow-coach-label">
-				{t({ locale: $localeStore, key: 'outcome.yes' })}
+			<span class="flow-coach-center">
+				<span class="flow-coach-tap">
+					<svg
+						aria-hidden="true"
+						fill="none"
+						height="28"
+						stroke="currentColor"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						stroke-width="1.8"
+						viewBox="0 0 24 24"
+						width="28"
+					>
+						<path d="M9 11V6.5a2.5 2.5 0 0 1 5 0V12" />
+						<path
+							d="M9 11V8.5a2.5 2.5 0 0 0-5 0v6a7 7 0 0 0 7 7h2a7 7 0 0 0 7-7v-2a2.5 2.5 0 0 0-5 0v-1a2.5 2.5 0 0 0-5 0"
+						/>
+					</svg>
+				</span>
+				<span class="flow-coach-label center">
+					{t({ locale: $localeStore, key: 'card.tap_depth' })}
+				</span>
 			</span>
-			<span class="flow-coach-arrow">→</span>
+			<span class="flow-coach-side yes">
+				<span class="flow-coach-arrow right">→</span>
+				<span class="flow-coach-label">
+					{t({ locale: $localeStore, key: 'outcome.yes' })}
+				</span>
+			</span>
 		</span>
 		<span class="flow-coach-hint serif-italic">
 			{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.hint' })}
@@ -54,7 +81,7 @@
 		flex-direction: column;
 		align-items: center;
 		justify-content: center;
-		gap: 0.75rem;
+		gap: 0.85rem;
 		padding: 1rem;
 		appearance: none;
 		font: inherit;
@@ -65,45 +92,80 @@
 		border-radius: var(--r-12);
 		cursor: pointer;
 		z-index: 5;
-		animation: flow-coach-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+		animation: flow-coach-fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
 	}
 
-	.flow-coach-mark {
+	.flow-coach-row {
+		display: grid;
+		grid-template-columns: 1fr 1.2fr 1fr;
+		align-items: center;
+		gap: 0.65rem;
+		width: 100%;
+		max-width: 18rem;
+	}
+
+	.flow-coach-side {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+	}
+
+	.flow-coach-center {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.2rem;
+	}
+
+	.flow-coach-tap {
+		color: var(--color-accent);
 		display: inline-flex;
 		align-items: center;
-		gap: 0.45rem;
-		padding: 0.4rem 0.85rem;
-		font-family: var(--font-display);
-		font-size: var(--t-13);
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-		border-radius: var(--r-pill);
+		justify-content: center;
 	}
 
-	.flow-coach-mark-no {
-		color: var(--no);
-		background: color-mix(in srgb, var(--no) 14%, transparent);
-		border: 1px solid color-mix(in srgb, var(--no) 28%, transparent);
-		align-self: flex-start;
-		animation: flow-coach-nudge-left 1.6s ease-in-out infinite;
-	}
-
-	.flow-coach-mark-yes {
-		color: var(--yes);
-		background: color-mix(in srgb, var(--yes) 14%, transparent);
-		border: 1px solid color-mix(in srgb, var(--yes) 28%, transparent);
-		align-self: flex-end;
-		animation: flow-coach-nudge-right 1.6s ease-in-out infinite;
+	.flow-coach-tap :global(svg) {
+		animation: flow-coach-tap-pulse 1.8s ease-in-out infinite;
 	}
 
 	.flow-coach-arrow {
-		font-size: 1.2rem;
+		font-family: var(--font-mono);
+		font-size: 1.65rem;
+		font-weight: 700;
 		line-height: 1;
+		display: inline-block;
+	}
+
+	.flow-coach-arrow.left {
+		color: var(--no);
+		animation: flow-coach-pulse-x-left 1.6s ease-in-out infinite;
+	}
+
+	.flow-coach-arrow.right {
+		color: var(--yes);
+		animation: flow-coach-pulse-x-right 1.6s ease-in-out infinite;
 	}
 
 	.flow-coach-label {
+		font-family: var(--font-mono);
+		font-size: var(--t-12);
 		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+		font-weight: 700;
+		color: var(--text-base);
+	}
+
+	.flow-coach-side.no .flow-coach-label {
+		color: var(--no);
+	}
+
+	.flow-coach-side.yes .flow-coach-label {
+		color: var(--yes);
+	}
+
+	.flow-coach-label.center {
+		color: var(--color-accent);
 	}
 
 	.flow-coach-hint {
@@ -113,32 +175,12 @@
 		max-width: 16rem;
 	}
 
-	@keyframes flow-coach-in {
-		from {
-			opacity: 0;
-		}
-		to {
-			opacity: 1;
-		}
-	}
-
-	@keyframes flow-coach-nudge-left {
-		0%,
-		100% {
-			transform: translateX(0);
-		}
-		50% {
-			transform: translateX(-6px);
-		}
-	}
-
-	@keyframes flow-coach-nudge-right {
-		0%,
-		100% {
-			transform: translateX(0);
-		}
-		50% {
-			transform: translateX(6px);
+	@media (prefers-reduced-motion: reduce) {
+		.flow-coach,
+		.flow-coach-arrow.left,
+		.flow-coach-arrow.right,
+		.flow-coach-tap :global(svg) {
+			animation: none;
 		}
 	}
 </style>

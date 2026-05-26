@@ -75,6 +75,7 @@
 		background: rgba(14, 13, 11, 0.62);
 		backdrop-filter: blur(10px);
 		-webkit-backdrop-filter: blur(10px);
+		animation: friend-sheet-fade-in 200ms ease-out both;
 	}
 
 	.sheet {
@@ -89,7 +90,14 @@
 		border-top-left-radius: 22px;
 		border-top-right-radius: 22px;
 		box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
-		animation: sheet-rise 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+		animation: friend-sheet-slide-up 280ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.sheet-scrim,
+		.sheet {
+			animation: none;
+		}
 	}
 
 	.sheet-grip {

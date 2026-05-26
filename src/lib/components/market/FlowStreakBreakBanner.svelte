@@ -3,6 +3,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import { FLAME_STAGE_LABEL_KEYS, type FlameStage } from '$lib/utils/streak.utils';
 
 	interface Props {
@@ -15,7 +16,11 @@
 <!-- Streak-break choreography: single low thud (haptic fires in
      handleAction), banner names the stage that ended, fresh start
      at SPARK. No rescues, no second chances. -->
-<div class="streak-break" in:fly={{ y: -8, duration: 300, easing: backOut }} out:fade>
+<div
+	class="streak-break"
+	in:fly={prefersReducedMotion() ? { duration: 0 } : { y: -8, duration: 300, easing: backOut }}
+	out:fade
+>
 	<span class="serif-italic">
 		{t({
 			locale: $localeStore,
