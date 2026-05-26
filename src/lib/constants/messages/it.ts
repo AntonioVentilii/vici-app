@@ -60,6 +60,10 @@ export const itMessages = {
 	'tournament.prize.place_2': 'Finalista',
 	'tournament.prize.place_3': 'Semifinalista',
 	'tournament.prize.place_4': 'Semifinalista',
+	'tournament.prize_claim_body':
+		"La tua lega è arrivata nella top 3 dell'ultimo torneo. +{amount} VXP accreditati.",
+	'tournament.prize_claim_dismiss': 'Chiudi',
+	'tournament.prize_claim_eyebrow': 'PREMIO RISCOSSO',
 	'tournament.prizes_eyebrow': 'PREMI',
 	'tournament.round.final': 'Finale',
 	'tournament.round.quarter': 'Quarti di finale',

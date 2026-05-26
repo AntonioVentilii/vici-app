@@ -309,50 +309,60 @@ itself is anonymous (the principal is gone after).
 
 ---
 
-## Shipped vs deferred (Proposal 3)
+## Shipped (Proposal 3)
 
-The data foundation, draw, and read-side surface ship in the rollout
-that closes this doc. Round resolution + prize claim are deferred —
-they need a per-window accuracy aggregation pipeline that doesn't
-exist yet.
+The full tournament chain has landed.
 
-### Shipped
+### Foundation
 
 - `TOURNAMENTS` collection + `assertSetTournament` (system + state
   machine `in_flight → concluded`).
 - `TOURNAMENT_MATCHES` collection + `assertSetTournamentMatch`
-  (key shape, write-once invariants on team / accuracy / winner
-  fields).
+  (key shape, write-once invariants on team / accuracy / winner /
+  start-snapshot fields).
 - `triggerTournamentDraw({ monthAnchor })` — anyone can call;
   idempotent via doc-key collision on the month anchor. Scans
   `LEAGUE_MEMBERS`, counts members per league, seeds the top-16
   into Round 1 + creates TBD slots for the later rounds so the FE
-  bracket renders the skeleton immediately.
+  bracket renders the skeleton immediately. Snapshots each seeded
+  league's `(totalCalls, wins)` into the match doc as a
+  start-of-window baseline.
 - `getCurrentTournament()` — returns the latest tournament + its
   matches, sorted by round then index.
-- FE wiring: `TournamentPage` fires the draw on mount and renders
-  the bracket; "waiting on more leagues" hint when fewer than 16
-  qualify.
 
-### Deferred (follow-ups)
+### Resolution + claim
 
-- **Round resolution.** Computing per-league accuracy in the round
-  window needs a `LEAGUE_STATS` collection on the same shape as
-  `AFFILIATION_STATS` — one doc per `(leagueId)` with rolling +
-  monthly counters, updated lazily by the profile hook (mirror of
-  `onProfileSetForAffiliationStats`). Once those land, a
-  `resolveTournamentRound({ tournamentId, round })` user-claim
-  endpoint can read each league's `monthWins / monthTotalCalls`
-  for the window and pick the winner.
-- **Prize claim.** Same user-claim pattern as Worlds podium —
-  `claimTournamentPrize({ tournamentId })` writes a `VXP_AWARDS`
-  doc keyed `${caller}/tournament_prize/${tournamentId}_${place}`
-  if the caller is a member of a top-4 league at conclusion.
-  Forfeit rule (decision 3.4) lands in `resolveTournamentRound`,
-  not here.
-
-The deferred pieces are tracked in code as TODO blocks pointing
-back to this section.
+- `LEAGUE_STATS` collection (`assertSetLeagueStats`) — rolling
+  lifetime counters per league. One doc per `leagueId`. Updated
+  lazily by `onProfileSetForLeagueStats` on every profile write
+  where `totalTrades` advanced; the hook fans the delta out to
+  every league the writer belongs to.
+- `resolveTournamentRound({ tournamentId, round })` — anyone can
+  call once the round window has closed. For each match in the
+  round, reads the live `LEAGUE_STATS` for both leagues, computes
+  the window delta against the match doc's start-snapshot, applies
+  the 50-call forfeit rule (decision 3.3), and picks a winner —
+  higher accuracy wins; ties + double-forfeits resolved by
+  lower-`leagueId` advance (decision 3.4). Writes the winner +
+  accuracies onto the match doc and populates the next round's
+  matching slot (with its own start-snapshot frozen on write).
+  Idempotent via the match doc's `winnerLeagueId` write-once
+  invariant. Auto-flips the tournament to `concluded` when the
+  final settles.
+- `claimTournamentPrize({ tournamentId })` — user-claim per
+  caller. Reads the bracket's winning + losing finalists and the
+  semifinal losers; checks the caller's league memberships;
+  credits a single `VXP_AWARDS` doc keyed
+  `${caller}/tournament_prize/${tournamentId}_place_${1|2|3}`
+  per the prize tier table (5000 / 2500 / 1000 VXP). Idempotent
+  via the award doc key — a second call returns
+  `awardsAlreadyClaimed > 0`. Members of multiple winning leagues
+  get only their highest-tier award.
+- FE wiring: `TournamentPage` fires the draw on mount, then
+  walks forward through the bracket and fires
+  `resolveTournamentRound` for each round whose `endMs <= now`.
+  Once the tournament concludes, fires `claimTournamentPrize`
+  and surfaces a `+N VXP credited` banner on first claim.
 
 ---
 

@@ -119,8 +119,20 @@ export interface TournamentMatchDoc {
 	fromLeagueId: string | null;
 	toLeagueId: string | null;
 	/**
-	 * Per-league accuracy in the round window. `null` until the
-	 * round resolution job runs (see Proposal 3 follow-ups).
+	 * Per-league `(totalCalls, wins)` snapshot at the moment the
+	 * league was assigned to this slot. Frozen at draw-time for R1,
+	 * frozen at previous-round resolution for later rounds. The
+	 * round-resolution endpoint reads the current rolling
+	 * `LEAGUE_STATS` doc and computes the window delta as
+	 * `current - start`. `null` until the slot has a league assigned.
+	 */
+	fromStartCalls: number | null;
+	fromStartWins: number | null;
+	toStartCalls: number | null;
+	toStartWins: number | null;
+	/**
+	 * Per-league accuracy in the round window — populated by the
+	 * round-resolution endpoint as `(deltaWins / deltaCalls)`.
 	 */
 	fromAcc: number | null;
 	toAcc: number | null;

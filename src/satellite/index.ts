@@ -47,6 +47,10 @@ import {
 	assertDeleteLeagueMember,
 	assertSetLeagueMember
 } from '$satellite/services/league-member.services';
+import {
+	assertSetLeagueStats,
+	onProfileSetForLeagueStats
+} from '$satellite/services/league-stats.services';
 import { assertSetLeague, transferLeagueOwnershipFn } from '$satellite/services/league.services';
 import {
 	getMarketMetadata as getMarketMetadataFn,
@@ -90,7 +94,9 @@ import { assertSetRole } from '$satellite/services/roles.services';
 import {
 	assertSetTournament,
 	assertSetTournamentMatch,
+	claimTournamentPrizeFn,
 	getCurrentTournamentFn,
+	resolveTournamentRoundFn,
 	triggerTournamentDrawFn
 } from '$satellite/services/tournament.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
@@ -655,6 +661,67 @@ export const getCurrentTournament = defineQuery({
 	}
 });
 
+// Round resolution — user-claim; idempotent via the `winnerLeagueId`
+// write-once invariant on match docs. Anyone can call when a round
+// has closed; the FE fires this on every Tournament-page mount for
+// each round whose `endMs <= now` and which still has unresolved
+// matches.
+//
+// Refusal reasons:
+//  - `tournament_not_found` — tournamentId resolves to nothing.
+//  - `round_not_yet_closed` — the round's `endMs` is still in the future.
+//  - `previous_round_not_resolved` — an earlier round has unresolved
+//    matches; the bracket has to advance in order.
+//  - `no_matches` — no match docs for the round (shouldn't happen).
+//  - `invalid_input` — `round` is not one of `r1|quarter|semifinal|final`.
+export const resolveTournamentRound = defineUpdate({
+	args: j.strictObject({
+		tournamentId: j.string(),
+		round: j.string()
+	}),
+	result: j.strictObject({
+		ok: j.boolean(),
+		reason: j.optional(
+			j.enum([
+				'tournament_not_found',
+				'round_not_yet_closed',
+				'previous_round_not_resolved',
+				'no_matches',
+				'invalid_input'
+			])
+		),
+		matchesResolved: j.optional(j.number()),
+		tournamentConcluded: j.optional(j.boolean())
+	}),
+	handler: resolveTournamentRoundFn
+});
+
+// Prize claim — user-claim; idempotent via the VXP_AWARDS doc key.
+// Caller computes their highest-tier placement (1 / 2 / 3) by
+// checking membership in the bracket's winning leagues; the
+// satellite writes a VXP_AWARDS doc and returns the credited amount.
+//
+// Refusal reasons:
+//  - `tournament_not_found` — tournamentId resolves to nothing.
+//  - `tournament_not_concluded` — bracket is still in flight.
+//  - `not_member_of_top_league` — caller isn't a member of any
+//    top-3 league.
+export const claimTournamentPrize = defineUpdate({
+	args: j.strictObject({
+		tournamentId: j.string()
+	}),
+	result: j.strictObject({
+		ok: j.boolean(),
+		reason: j.optional(
+			j.enum(['tournament_not_found', 'tournament_not_concluded', 'not_member_of_top_league'])
+		),
+		awardsCreated: j.optional(j.number()),
+		awardsAlreadyClaimed: j.optional(j.number()),
+		totalVxpCredited: j.optional(j.number())
+	}),
+	handler: claimTournamentPrizeFn
+});
+
 const assertSetDocCollections = [
 	Collection.PROFILES,
 	Collection.ROLES,
@@ -668,7 +735,8 @@ const assertSetDocCollections = [
 	Collection.AFFILIATION_STATS,
 	Collection.EXIT_SIGNALS,
 	Collection.TOURNAMENTS,
-	Collection.TOURNAMENT_MATCHES
+	Collection.TOURNAMENT_MATCHES,
+	Collection.LEAGUE_STATS
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -689,7 +757,8 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.AFFILIATION_STATS]: assertSetAffiliationStats,
 			[Collection.EXIT_SIGNALS]: assertSetExitSignal,
 			[Collection.TOURNAMENTS]: assertSetTournament,
-			[Collection.TOURNAMENT_MATCHES]: assertSetTournamentMatch
+			[Collection.TOURNAMENT_MATCHES]: assertSetTournamentMatch,
+			[Collection.LEAGUE_STATS]: assertSetLeagueStats
 		};
 
 		fn[context.data.collection]?.(context);
@@ -737,6 +806,7 @@ const onProfileSetComposed: RunFunction<OnSetDocContext> = async (context) => {
 	onProfileSetForReferralCode(context);
 	await onProfileSetForStreakAward(context);
 	onProfileSetForAffiliationStats(context);
+	onProfileSetForLeagueStats(context);
 };
 
 export const onSetDoc = defineHook<OnSetDoc>({

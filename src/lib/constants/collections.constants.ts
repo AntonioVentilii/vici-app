@@ -87,9 +87,18 @@ export const Collection = {
 	 * Per-match docs of every tournament. Keyed `${tournamentId}/${round}/${index}` so the
 	 * bracket reads as a single prefix scan. Holds the two competing league ids, per-league
 	 * accuracy (filled in by the round-resolution job), and the winning league. Written by
-	 * `triggerTournamentDraw` (round 1 matches) and the not-yet-shipped round-resolution flow.
+	 * `triggerTournamentDraw` (round 1 matches) and `resolveTournamentRound`.
 	 */
-	TOURNAMENT_MATCHES: collections.TOURNAMENT_MATCHES
+	TOURNAMENT_MATCHES: collections.TOURNAMENT_MATCHES,
+	/**
+	 * Per-league rolling stats — lifetime resolved-call count + wins. One doc per league
+	 * keyed by `leagueId`. Written exclusively by the satellite hook on `profiles` updates:
+	 * when a user's `totalTrades` increments, the hook scans their league memberships and
+	 * fans the delta out. Used by the tournament round-resolution flow to compute per-window
+	 * accuracy as the delta between the round's start-of-window snapshot (frozen on the
+	 * match doc) and the current rolling counter.
+	 */
+	LEAGUE_STATS: collections.LEAGUE_STATS
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

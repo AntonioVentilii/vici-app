@@ -60,6 +60,10 @@ export const ptMessages = {
 	'tournament.prize.place_2': 'Finalista',
 	'tournament.prize.place_3': 'Semifinalista',
 	'tournament.prize.place_4': 'Semifinalista',
+	'tournament.prize_claim_body':
+		'Sua liga terminou no top 3 do último torneio. +{amount} VXP creditados.',
+	'tournament.prize_claim_dismiss': 'Dispensar',
+	'tournament.prize_claim_eyebrow': 'PRÊMIO RESGATADO',
 	'tournament.prizes_eyebrow': 'PRÊMIOS',
 	'tournament.round.final': 'Final',
 	'tournament.round.quarter': 'Quartas de final',

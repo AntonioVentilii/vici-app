@@ -15,7 +15,12 @@ import type { Principal } from '@icp-sdk/core/principal';
  *
  * See `docs/economy.md` in the design prototype for the full spec.
  */
-export type VxpAwardType = 'streak' | 'comeback' | 'referral' | 'worlds_podium';
+export type VxpAwardType =
+	| 'streak'
+	| 'comeback'
+	| 'referral'
+	| 'worlds_podium'
+	| 'tournament_prize';
 
 /**
  * Payout lifecycle for a single award. Once `paid`, the doc is immutable

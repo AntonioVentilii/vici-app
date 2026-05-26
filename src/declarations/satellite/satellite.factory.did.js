@@ -44,6 +44,22 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppClaimTournamentPrizeArgs = IDL.Record({
+		tournament_id: IDL.Text
+	});
+	const AppClaimTournamentPrizeResult = IDL.Record({
+		ok: IDL.Bool,
+		awards_created: IDL.Opt(IDL.Float64),
+		awards_already_claimed: IDL.Opt(IDL.Float64),
+		total_vxp_credited: IDL.Opt(IDL.Float64),
+		reason: IDL.Opt(
+			IDL.Variant({
+				tournament_not_found: IDL.Null,
+				tournament_not_concluded: IDL.Null,
+				not_member_of_top_league: IDL.Null
+			})
+		)
+	});
 	const AppClaimWorldsPodiumPrizeArgs = IDL.Record({
 		month_anchor: IDL.Text
 	});
@@ -107,10 +123,14 @@ export const idlFactory = ({ IDL }) => {
 				winner_league_id: IDL.Opt(IDL.Text),
 				to_league_id: IDL.Opt(IDL.Text),
 				start_ms: IDL.Float64,
+				to_start_calls: IDL.Opt(IDL.Float64),
+				to_start_wins: IDL.Opt(IDL.Float64),
 				from_league_id: IDL.Opt(IDL.Text),
 				to_acc: IDL.Opt(IDL.Float64),
+				from_start_wins: IDL.Opt(IDL.Float64),
 				tournament_id: IDL.Text,
 				from_acc: IDL.Opt(IDL.Float64),
+				from_start_calls: IDL.Opt(IDL.Float64),
 				index: IDL.Float64,
 				round: IDL.Variant({
 					r1: IDL.Null,
@@ -604,6 +624,24 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AppRedeemReferralCodeArgs = IDL.Record({ code: IDL.Text });
 	const AppRejectFriendRequestArgs = IDL.Record({ relation_id: IDL.Text });
+	const AppResolveTournamentRoundArgs = IDL.Record({
+		tournament_id: IDL.Text,
+		round: IDL.Text
+	});
+	const AppResolveTournamentRoundResult = IDL.Record({
+		ok: IDL.Bool,
+		tournament_concluded: IDL.Opt(IDL.Bool),
+		matches_resolved: IDL.Opt(IDL.Float64),
+		reason: IDL.Opt(
+			IDL.Variant({
+				tournament_not_found: IDL.Null,
+				previous_round_not_resolved: IDL.Null,
+				invalid_input: IDL.Null,
+				round_not_yet_closed: IDL.Null,
+				no_matches: IDL.Null
+			})
+		)
+	});
 	const AppSearchProfilesArgs = IDL.Record({ query_str: IDL.Text });
 	const AppSearchProfilesResult = IDL.Record({
 		items: IDL.Vec(
@@ -767,6 +805,11 @@ export const idlFactory = ({ IDL }) => {
 			['query']
 		),
 		app_claim_comeback_grant: IDL.Func([], [AppClaimComebackGrantResult], []),
+		app_claim_tournament_prize: IDL.Func(
+			[AppClaimTournamentPrizeArgs],
+			[AppClaimTournamentPrizeResult],
+			[]
+		),
 		app_claim_worlds_podium_prize: IDL.Func(
 			[AppClaimWorldsPodiumPrizeArgs],
 			[AppClaimWorldsPodiumPrizeResult],
@@ -840,6 +883,11 @@ export const idlFactory = ({ IDL }) => {
 		),
 		app_redeem_referral_code: IDL.Func([AppRedeemReferralCodeArgs], [], []),
 		app_reject_friend_request: IDL.Func([AppRejectFriendRequestArgs], [], []),
+		app_resolve_tournament_round: IDL.Func(
+			[AppResolveTournamentRoundArgs],
+			[AppResolveTournamentRoundResult],
+			[]
+		),
 		app_search_profiles: IDL.Func([AppSearchProfilesArgs], [AppSearchProfilesResult], ['query']),
 		app_send_friend_request: IDL.Func([AppSendFriendRequestArgs], [], []),
 		app_transfer_league_ownership: IDL.Func(

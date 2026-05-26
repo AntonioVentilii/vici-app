@@ -5,8 +5,10 @@
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
+		claimTournamentPrize,
 		currentMonthAnchor,
 		getCurrentTournament,
+		resolveTournamentRound,
 		triggerTournamentDraw
 	} from '$lib/services/tournament.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -29,10 +31,12 @@
 	 * fewer than 16 leagues exist; the FE renders that as a "waiting
 	 * on more leagues" hint instead of an error.
 	 *
-	 * Round resolution + prize claim are documented Proposal 3
-	 * follow-ups — see `src/satellite/services/tournament.services.ts`
-	 * for the design — so accuracy fields render as "—" and the
-	 * bracket structure shows TBD slots beyond Round 1.
+	 * After the draw + read, the page walks forward through the
+	 * bracket and fires `resolveTournamentRound` for each round whose
+	 * `endMs <= now` (idempotent via the match doc's `winnerLeagueId`
+	 * write-once invariant). When the tournament flips to
+	 * `concluded` the page also fires `claimTournamentPrize` to
+	 * credit the caller's VXP if their league finished top-3.
 	 */
 
 	let tournament = $state<TournamentDoc | null>(null);
@@ -40,6 +44,10 @@
 	let loaded = $state(false);
 	let drawHint = $state<'available_leagues' | null>(null);
 	let availableLeagues = $state<number>(0);
+	let prizeClaim = $state<{
+		awardsCreated: number;
+		totalVxpCredited: number;
+	} | null>(null);
 
 	const matchesByRound = $derived.by((): Record<TournamentRound, TournamentMatchDoc[]> => {
 		const grouped: Record<TournamentRound, TournamentMatchDoc[]> = {
@@ -103,8 +111,108 @@
 		}
 	};
 
-	onMount(() => {
-		void tryDraw();
+	/**
+	 * Walk forward through the bracket and fire round resolution for
+	 * every round whose window has closed. The endpoint is idempotent
+	 * (the assert's `winnerLeagueId` write-once rule rejects re-runs
+	 * cleanly), so this is safe to fire on every page mount.
+	 *
+	 * Returns whether any round actually settled during this call —
+	 * used by the caller to decide if a refresh is needed.
+	 */
+	const tryResolveRounds = async (): Promise<boolean> => {
+		if (tournament === null) {
+			return false;
+		}
+
+		const nowMs = Date.now();
+		let settledAny = false;
+
+		// Walk forward; we short-circuit on the first round that hasn't
+		// closed (`endMs > now`) or that the satellite refuses. Empty
+		// rounds and already-fully-resolved rounds fall through without
+		// an explicit `continue`.
+		let stop = false;
+
+		for (const round of TOURNAMENT_ROUNDS) {
+			if (stop) {
+				break;
+			}
+
+			const roundMatches = matchesByRound[round];
+			const closed = roundMatches.length > 0 && roundMatches[0].endMs <= nowMs;
+			const hasOpen = roundMatches.some((m) => m.winnerLeagueId === null);
+
+			if (closed && hasOpen) {
+				try {
+					const result = await resolveTournamentRound({
+						tournamentId: tournament.id,
+						round
+					});
+
+					if (result.ok && (result.matchesResolved ?? 0) > 0) {
+						settledAny = true;
+					}
+
+					// If this round refuses with `previous_round_not_resolved`
+					// it means an earlier round's resolution write hasn't
+					// been picked up yet; stop and let the next page mount
+					// catch up.
+					if (!result.ok) {
+						stop = true;
+					}
+				} catch {
+					stop = true;
+				}
+			} else if (roundMatches.length === 0 || roundMatches[0].endMs > nowMs) {
+				// No matches yet or the next round hasn't closed — nothing
+				// past this point can resolve either.
+				stop = !hasOpen || roundMatches[0].endMs > nowMs;
+			}
+		}
+
+		return settledAny;
+	};
+
+	/**
+	 * Fire the prize-claim endpoint for the current tournament if it
+	 * has concluded. Idempotent — a second call returns
+	 * `awardsAlreadyClaimed > 0` and we show no banner. The first
+	 * successful claim populates the `prizeClaim` banner with the
+	 * VXP credited.
+	 */
+	const tryClaimPrize = async () => {
+		if (tournament === null || tournament.state !== 'concluded') {
+			return;
+		}
+
+		try {
+			const result = await claimTournamentPrize({ tournamentId: tournament.id });
+
+			if (result.ok && (result.awardsCreated ?? 0) > 0) {
+				prizeClaim = {
+					awardsCreated: result.awardsCreated ?? 0,
+					totalVxpCredited: result.totalVxpCredited ?? 0
+				};
+			}
+		} catch {
+			// Silent — the claim is a nice-to-have; failure shouldn't
+			// disrupt the bracket render.
+		}
+	};
+
+	onMount(async () => {
+		await tryDraw();
+
+		// Walk the bracket forward; if anything settled, re-read so the
+		// UI shows the new winners + accuracies + propagated slots.
+		const settled = await tryResolveRounds();
+
+		if (settled) {
+			await refresh();
+		}
+
+		await tryClaimPrize();
 	});
 </script>
 
@@ -129,6 +237,28 @@
 			{t({ locale: $localeStore, key: 'tournament.sub' })}
 		</p>
 	</section>
+
+	{#if prizeClaim !== null}
+		<aside class="tournament-prize-claim">
+			<p class="tournament-prize-claim-eyebrow allcaps">
+				{t({ locale: $localeStore, key: 'tournament.prize_claim_eyebrow' })}
+			</p>
+			<p class="tournament-prize-claim-body">
+				{t({
+					locale: $localeStore,
+					key: 'tournament.prize_claim_body',
+					params: { amount: prizeClaim.totalVxpCredited.toLocaleString('en-US') }
+				})}
+			</p>
+			<button
+				class="tournament-prize-claim-dismiss"
+				onclick={() => (prizeClaim = null)}
+				type="button"
+			>
+				{t({ locale: $localeStore, key: 'tournament.prize_claim_dismiss' })}
+			</button>
+		</aside>
+	{/if}
 
 	<section class="tournament-section">
 		<h2 class="eyebrow tournament-section-eyebrow">
@@ -408,5 +538,43 @@
 		font-size: var(--t-14);
 		font-weight: 700;
 		color: var(--laurel);
+	}
+
+	.tournament-prize-claim {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+		padding: 0.85rem 1rem;
+		background: color-mix(in srgb, #f4c544 14%, var(--bg-surface));
+		border: 1px solid color-mix(in srgb, #f4c544 45%, var(--border-base));
+		border-radius: var(--r-12);
+	}
+
+	.tournament-prize-claim-eyebrow {
+		margin: 0;
+		font-size: var(--t-10, 0.65rem);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		color: color-mix(in srgb, #f4c544 70%, var(--text-base));
+	}
+
+	.tournament-prize-claim-body {
+		margin: 0;
+		font-size: var(--t-13);
+		line-height: 1.5;
+		color: var(--text-base);
+	}
+
+	.tournament-prize-claim-dismiss {
+		align-self: flex-start;
+		appearance: none;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		font: inherit;
+		font-size: var(--t-12);
+		color: var(--text-muted);
+		cursor: pointer;
+		text-decoration: underline;
 	}
 </style>

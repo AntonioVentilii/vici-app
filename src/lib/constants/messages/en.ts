@@ -60,6 +60,10 @@ export const enMessages = {
 	'tournament.prize.place_2': 'Finalist',
 	'tournament.prize.place_3': 'Semifinalist',
 	'tournament.prize.place_4': 'Semifinalist',
+	'tournament.prize_claim_body':
+		'Your league finished top-3 in the latest tournament. +{amount} VXP credited.',
+	'tournament.prize_claim_dismiss': 'Dismiss',
+	'tournament.prize_claim_eyebrow': 'PRIZE CLAIMED',
 	'tournament.prizes_eyebrow': 'PRIZES',
 	'tournament.round.final': 'Final',
 	'tournament.round.quarter': 'Quarterfinal',

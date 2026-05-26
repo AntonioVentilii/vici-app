@@ -116,6 +116,10 @@ const AppGetCurrentTournamentResultSchema = j.strictObject({
 			index: j.number(),
 			from_league_id: j.optional(j.string()),
 			to_league_id: j.optional(j.string()),
+			from_start_calls: j.optional(j.number()),
+			from_start_wins: j.optional(j.number()),
+			to_start_calls: j.optional(j.number()),
+			to_start_wins: j.optional(j.number()),
 			from_acc: j.optional(j.number()),
 			to_acc: j.optional(j.number()),
 			winner_league_id: j.optional(j.string()),
@@ -877,6 +881,35 @@ const claimComebackGrant = async (): Promise<j.infer<typeof AppClaimComebackGran
 	return AppClaimComebackGrantResultSchema.parse(result);
 };
 
+const AppClaimTournamentPrizeArgsSchema = j.strictObject({ tournamentId: j.string() });
+const AppClaimTournamentPrizeResultSchema = j.strictObject({
+	ok: j.boolean(),
+	reason: j.optional(
+		j.enum(['tournament_not_found', 'tournament_not_concluded', 'not_member_of_top_league'])
+	),
+	awardsCreated: j.optional(j.number()),
+	awardsAlreadyClaimed: j.optional(j.number()),
+	totalVxpCredited: j.optional(j.number())
+});
+
+const claimTournamentPrize = async (
+	args: j.infer<typeof AppClaimTournamentPrizeArgsSchema>
+): Promise<j.infer<typeof AppClaimTournamentPrizeResultSchema>> => {
+	const parsedArgs = AppClaimTournamentPrizeArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppClaimTournamentPrizeArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_claim_tournament_prize']>[0];
+
+	const { app_claim_tournament_prize } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_claim_tournament_prize(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppClaimTournamentPrizeResultSchema, value: idlResult });
+	return AppClaimTournamentPrizeResultSchema.parse(result);
+};
+
 const AppClaimWorldsPodiumPrizeArgsSchema = j.strictObject({ monthAnchor: j.string() });
 const AppClaimWorldsPodiumPrizeResultSchema = j.strictObject({
 	monthAnchor: j.string(),
@@ -971,6 +1004,43 @@ const rejectFriendRequest = async (
 		idlFactory
 	});
 	await app_reject_friend_request(idlArgs);
+};
+
+const AppResolveTournamentRoundArgsSchema = j.strictObject({
+	tournamentId: j.string(),
+	round: j.string()
+});
+const AppResolveTournamentRoundResultSchema = j.strictObject({
+	ok: j.boolean(),
+	reason: j.optional(
+		j.enum([
+			'tournament_not_found',
+			'round_not_yet_closed',
+			'previous_round_not_resolved',
+			'no_matches',
+			'invalid_input'
+		])
+	),
+	matchesResolved: j.optional(j.number()),
+	tournamentConcluded: j.optional(j.boolean())
+});
+
+const resolveTournamentRound = async (
+	args: j.infer<typeof AppResolveTournamentRoundArgsSchema>
+): Promise<j.infer<typeof AppResolveTournamentRoundResultSchema>> => {
+	const parsedArgs = AppResolveTournamentRoundArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppResolveTournamentRoundArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_resolve_tournament_round']>[0];
+
+	const { app_resolve_tournament_round } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_resolve_tournament_round(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppResolveTournamentRoundResultSchema, value: idlResult });
+	return AppResolveTournamentRoundResultSchema.parse(result);
 };
 
 const AppSendFriendRequestArgsSchema = j.strictObject({ target: j.string() });
@@ -1182,11 +1252,13 @@ export const functions = {
 	acceptFriendRequest,
 	cancelFriendRequest,
 	claimComebackGrant,
+	claimTournamentPrize,
 	claimWorldsPodiumPrize,
 	deleteMyAccount,
 	followUser,
 	redeemReferralCode,
 	rejectFriendRequest,
+	resolveTournamentRound,
 	sendFriendRequest,
 	transferLeagueOwnership,
 	triggerTournamentDraw,

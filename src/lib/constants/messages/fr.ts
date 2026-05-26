@@ -60,6 +60,10 @@ export const frMessages = {
 	'tournament.prize.place_2': 'Finaliste',
 	'tournament.prize.place_3': 'Demi-finaliste',
 	'tournament.prize.place_4': 'Demi-finaliste',
+	'tournament.prize_claim_body':
+		'Votre ligue a terminé dans le top 3 du dernier tournoi. +{amount} VXP crédités.',
+	'tournament.prize_claim_dismiss': 'Fermer',
+	'tournament.prize_claim_eyebrow': 'PRIX RÉCLAMÉ',
 	'tournament.prizes_eyebrow': 'PRIX',
 	'tournament.round.final': 'Finale',
 	'tournament.round.quarter': 'Quart de finale',

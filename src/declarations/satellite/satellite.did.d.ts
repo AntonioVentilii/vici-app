@@ -46,6 +46,22 @@ export interface AppClaimComebackGrantResult {
 				| { balance_not_zero: null }
 		  ];
 }
+export interface AppClaimTournamentPrizeArgs {
+	tournament_id: string;
+}
+export interface AppClaimTournamentPrizeResult {
+	ok: boolean;
+	awards_created: [] | [number];
+	awards_already_claimed: [] | [number];
+	total_vxp_credited: [] | [number];
+	reason:
+		| []
+		| [
+				| { tournament_not_found: null }
+				| { tournament_not_concluded: null }
+				| { not_member_of_top_league: null }
+		  ];
+}
 export interface AppClaimWorldsPodiumPrizeArgs {
 	month_anchor: string;
 }
@@ -106,10 +122,14 @@ export interface AppGetCurrentTournamentResult {
 		winner_league_id: [] | [string];
 		to_league_id: [] | [string];
 		start_ms: number;
+		to_start_calls: [] | [number];
+		to_start_wins: [] | [number];
 		from_league_id: [] | [string];
 		to_acc: [] | [number];
+		from_start_wins: [] | [number];
 		tournament_id: string;
 		from_acc: [] | [number];
+		from_start_calls: [] | [number];
 		index: number;
 		round: { r1: null } | { final: null } | { semifinal: null } | { quarter: null };
 		end_ms: number;
@@ -468,6 +488,24 @@ export interface AppRedeemReferralCodeArgs {
 export interface AppRejectFriendRequestArgs {
 	relation_id: string;
 }
+export interface AppResolveTournamentRoundArgs {
+	tournament_id: string;
+	round: string;
+}
+export interface AppResolveTournamentRoundResult {
+	ok: boolean;
+	tournament_concluded: [] | [boolean];
+	matches_resolved: [] | [number];
+	reason:
+		| []
+		| [
+				| { tournament_not_found: null }
+				| { previous_round_not_resolved: null }
+				| { invalid_input: null }
+				| { round_not_yet_closed: null }
+				| { no_matches: null }
+		  ];
+}
 export interface AppSearchProfilesArgs {
 	query_str: string;
 }
@@ -611,6 +649,10 @@ export interface _SERVICE {
 		AppCheckNicknameAvailabilityResult
 	>;
 	app_claim_comeback_grant: ActorMethod<[], AppClaimComebackGrantResult>;
+	app_claim_tournament_prize: ActorMethod<
+		[AppClaimTournamentPrizeArgs],
+		AppClaimTournamentPrizeResult
+	>;
 	app_claim_worlds_podium_prize: ActorMethod<
 		[AppClaimWorldsPodiumPrizeArgs],
 		AppClaimWorldsPodiumPrizeResult
@@ -658,6 +700,10 @@ export interface _SERVICE {
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
 	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
+	app_resolve_tournament_round: ActorMethod<
+		[AppResolveTournamentRoundArgs],
+		AppResolveTournamentRoundResult
+	>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
 	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
 	app_transfer_league_ownership: ActorMethod<

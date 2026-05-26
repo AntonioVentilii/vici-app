@@ -49,6 +49,10 @@ const projectMatchWire = (wire: {
 	index: number;
 	from_league_id?: string;
 	to_league_id?: string;
+	from_start_calls?: number;
+	from_start_wins?: number;
+	to_start_calls?: number;
+	to_start_wins?: number;
 	from_acc?: number;
 	to_acc?: number;
 	winner_league_id?: string;
@@ -60,6 +64,10 @@ const projectMatchWire = (wire: {
 	index: wire.index,
 	fromLeagueId: wire.from_league_id ?? null,
 	toLeagueId: wire.to_league_id ?? null,
+	fromStartCalls: wire.from_start_calls ?? null,
+	fromStartWins: wire.from_start_wins ?? null,
+	toStartCalls: wire.to_start_calls ?? null,
+	toStartWins: wire.to_start_wins ?? null,
 	fromAcc: wire.from_acc ?? null,
 	toAcc: wire.to_acc ?? null,
 	winnerLeagueId: wire.winner_league_id ?? null,
@@ -101,6 +109,62 @@ export const triggerTournamentDraw = ({
 }: {
 	monthAnchor: string;
 }): Promise<TriggerTournamentDrawResult> => functions.triggerTournamentDraw({ monthAnchor });
+
+export interface ResolveTournamentRoundResult {
+	ok: boolean;
+	reason?:
+		| 'tournament_not_found'
+		| 'round_not_yet_closed'
+		| 'previous_round_not_resolved'
+		| 'no_matches'
+		| 'invalid_input';
+	matchesResolved?: number;
+	tournamentConcluded?: boolean;
+}
+
+/**
+ * Resolve every match in a closed round. Idempotent via the match
+ * doc's `winnerLeagueId` write-once invariant — already-resolved
+ * matches are skipped. Returns the number of matches settled in
+ * this call + whether the tournament has concluded.
+ *
+ * The FE fires this on every Tournament-page mount for each round
+ * whose `endMs <= now`, walking forward through the bracket.
+ */
+export const resolveTournamentRound = ({
+	tournamentId,
+	round
+}: {
+	tournamentId: string;
+	round: TournamentRound;
+}): Promise<ResolveTournamentRoundResult> =>
+	functions.resolveTournamentRound({ tournamentId, round });
+
+export interface ClaimTournamentPrizeResult {
+	ok: boolean;
+	reason?: 'tournament_not_found' | 'tournament_not_concluded' | 'not_member_of_top_league';
+	awardsCreated?: number;
+	awardsAlreadyClaimed?: number;
+	totalVxpCredited?: number;
+}
+
+/**
+ * Fire the per-user prize claim for a concluded tournament. Caller
+ * computes their highest-tier placement (1 / 2 / 3) by membership
+ * in the bracket's winning leagues; the satellite writes a single
+ * `VXP_AWARDS` doc + reports the VXP credited.
+ *
+ * Idempotent via the award doc key — a second call returns
+ * `awardsAlreadyClaimed > 0` and `awardsCreated === 0`.
+ *
+ * The FE fires this on every Tournament-page mount once the
+ * tournament's state has flipped to `concluded`.
+ */
+export const claimTournamentPrize = ({
+	tournamentId
+}: {
+	tournamentId: string;
+}): Promise<ClaimTournamentPrizeResult> => functions.claimTournamentPrize({ tournamentId });
 
 /**
  * Convenience: the current calendar month's anchor (UTC). Used by

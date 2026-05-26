@@ -622,6 +622,10 @@ export const TournamentMatchWireSchema = j.strictObject({
 	index: j.number(),
 	from_league_id: j.optional(j.string()),
 	to_league_id: j.optional(j.string()),
+	from_start_calls: j.optional(j.number()),
+	from_start_wins: j.optional(j.number()),
+	to_start_calls: j.optional(j.number()),
+	to_start_wins: j.optional(j.number()),
 	from_acc: j.optional(j.number()),
 	to_acc: j.optional(j.number()),
 	winner_league_id: j.optional(j.string()),
@@ -637,6 +641,10 @@ export const toWireTournamentMatch = (doc: {
 	index: number;
 	fromLeagueId: string | null;
 	toLeagueId: string | null;
+	fromStartCalls: number | null;
+	fromStartWins: number | null;
+	toStartCalls: number | null;
+	toStartWins: number | null;
 	fromAcc: number | null;
 	toAcc: number | null;
 	winnerLeagueId: string | null;
@@ -648,6 +656,10 @@ export const toWireTournamentMatch = (doc: {
 	index: doc.index,
 	from_league_id: doc.fromLeagueId ?? undefined,
 	to_league_id: doc.toLeagueId ?? undefined,
+	from_start_calls: doc.fromStartCalls ?? undefined,
+	from_start_wins: doc.fromStartWins ?? undefined,
+	to_start_calls: doc.toStartCalls ?? undefined,
+	to_start_wins: doc.toStartWins ?? undefined,
 	from_acc: doc.fromAcc ?? undefined,
 	to_acc: doc.toAcc ?? undefined,
 	winner_league_id: doc.winnerLeagueId ?? undefined,
