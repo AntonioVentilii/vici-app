@@ -345,6 +345,7 @@ export const enMessages = {
 	'challenge.fork.success.title': 'Challenge Sent!',
 	'challenge.fork.title': 'Challenge Your Friends',
 	'chip.day_streak': 'DAY STREAK',
+	'common.error.generic': 'Something went wrong. Please try again.',
 	'companion.oracle.called_it': 'Called it.',
 	'companion.trickster.bold': 'Only {percent}% disagree. Bold.',
 	'cta.browse': 'Browse markets',

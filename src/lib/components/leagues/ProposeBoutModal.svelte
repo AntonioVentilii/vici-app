@@ -126,7 +126,8 @@
 			onProposed(bout);
 			reset();
 		} catch (err) {
-			submitError = err instanceof Error ? err.message : 'Unknown error';
+			console.error('ProposeBoutModal: proposeBout failed', err);
+			submitError = 'common.error.generic';
 		} finally {
 			submitting = false;
 		}

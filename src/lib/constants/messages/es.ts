@@ -350,6 +350,7 @@ export const esMessages = {
 	'challenge.fork.success.title': '¡Desafío enviado!',
 	'challenge.fork.title': 'Desafía a tus amigos',
 	'chip.day_streak': 'DÍAS DE RACHA',
+	'common.error.generic': 'Algo salió mal. Inténtalo de nuevo.',
 	'companion.oracle.called_it': 'Acertaste.',
 	'companion.trickster.bold': 'Solo {percent}% discrepan. Audaz.',
 	'cta.browse': 'Explorar mercados',

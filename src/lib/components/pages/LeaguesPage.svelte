@@ -37,7 +37,8 @@
 			leagues = await listMyLeagues();
 			loadState = 'ready';
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('LeaguesPage: listMyLeagues failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 			loadState = 'error';
 		}
 	};

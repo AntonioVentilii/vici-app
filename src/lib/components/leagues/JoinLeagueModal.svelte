@@ -47,16 +47,17 @@
 			onJoined(league);
 			reset();
 		} catch (err) {
-			const message = err instanceof Error ? err.message : 'Unknown error';
+			const message = err instanceof Error ? err.message : '';
 
-			// Map known error strings to localised keys; fall through to the
-			// raw message for anything else.
+			// Map known error strings to localised keys; fall back to the
+			// generic message for anything else (raw error logged below).
 			if (message === 'No league found for that invite code.') {
 				submitError = 'leagues.join.error_not_found';
 			} else if (message === 'Already a member of this league.') {
 				submitError = 'leagues.join.error_already_member';
 			} else {
-				submitError = message;
+				console.error('JoinLeagueModal: joinLeagueByInvite failed', err);
+				submitError = 'common.error.generic';
 			}
 		} finally {
 			submitting = false;

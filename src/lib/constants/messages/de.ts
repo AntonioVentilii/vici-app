@@ -354,6 +354,7 @@ export const deMessages = {
 	'challenge.fork.success.title': 'Challenge gesendet!',
 	'challenge.fork.title': 'Fordere deine Freunde heraus',
 	'chip.day_streak': 'TAGE-STREAK',
+	'common.error.generic': 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
 	'companion.oracle.called_it': 'Genau richtig.',
 	'companion.trickster.bold': 'Nur {percent}% sind anderer Meinung. Kühn.',
 	'cta.browse': 'Märkte durchsuchen',

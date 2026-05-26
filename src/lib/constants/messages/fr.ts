@@ -359,6 +359,7 @@ export const frMessages = {
 	'challenge.fork.success.title': 'Défi envoyé !',
 	'challenge.fork.title': 'Défiez vos amis',
 	'chip.day_streak': 'JOURS DE SUITE',
+	'common.error.generic': 'Une erreur est survenue. Veuillez réessayer.',
 	'companion.oracle.called_it': 'Bien vu.',
 	'companion.trickster.bold': 'Seuls {percent}% sont en désaccord. Audacieux.',
 	'cta.browse': 'Parcourir les marchés',

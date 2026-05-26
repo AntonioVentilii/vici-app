@@ -90,7 +90,8 @@
 			});
 			loadState = 'ready';
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('LeagueDetailPage: load failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 			loadState = 'error';
 		}
 	};
@@ -161,7 +162,8 @@
 			await leaveLeague({ leagueId: league.id });
 			void goto(`${resolve(AppPath.Social)}/leagues`);
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('LeagueDetailPage: leaveLeague failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			leaving = false;
 		}
@@ -265,7 +267,8 @@
 			await retractBout({ bout });
 			await load();
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('LeagueDetailPage: retractBout failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBoutId = null;
 		}
@@ -282,7 +285,8 @@
 			await acceptBout({ bout });
 			await load();
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('LeagueDetailPage: acceptBout failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBoutId = null;
 		}
@@ -299,7 +303,8 @@
 			await kickoffBout({ bout });
 			await load();
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('LeagueDetailPage: kickoffBout failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBoutId = null;
 		}

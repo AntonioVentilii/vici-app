@@ -91,7 +91,8 @@
 			onCreated(league);
 			reset();
 		} catch (err) {
-			submitError = err instanceof Error ? err.message : 'Unknown error';
+			console.error('CreateLeagueModal: createLeague failed', err);
+			submitError = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			submitting = false;
 		}

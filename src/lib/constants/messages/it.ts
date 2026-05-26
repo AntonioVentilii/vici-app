@@ -349,6 +349,7 @@ export const itMessages = {
 	'challenge.fork.success.title': 'Sfida inviata!',
 	'challenge.fork.title': 'Sfida i tuoi amici',
 	'chip.day_streak': 'GIORNI DI SERIE',
+	'common.error.generic': 'Qualcosa è andato storto. Riprova.',
 	'companion.oracle.called_it': 'Ci hai visto giusto.',
 	'companion.trickster.bold': 'Solo il {percent}% non è d’accordo. Audace.',
 	'cta.browse': 'Esplora i mercati',

@@ -59,7 +59,8 @@
 			selfPrincipal = identity.getPrincipal().toText();
 			loadState = 'ready';
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('BoutsInboxPage: load failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 			loadState = 'error';
 		}
 	};
@@ -166,7 +167,8 @@
 			await acceptBout({ bout });
 			await load();
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('BoutsInboxPage: acceptBout failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBoutId = null;
 		}
@@ -183,7 +185,8 @@
 			await kickoffBout({ bout });
 			await load();
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('BoutsInboxPage: kickoffBout failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBoutId = null;
 		}
@@ -211,7 +214,8 @@
 			await retractBout({ bout });
 			await load();
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('BoutsInboxPage: retractBout failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBoutId = null;
 		}

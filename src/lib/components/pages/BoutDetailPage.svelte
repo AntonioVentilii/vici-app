@@ -58,7 +58,8 @@
 			selfPrincipal = identity.getPrincipal().toText();
 			loadState = bouts.some((b) => b.id === boutId) ? 'ready' : 'not_found';
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('BoutDetailPage: load failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 			loadState = 'error';
 		}
 	};
@@ -137,7 +138,8 @@
 			await acceptBout({ bout });
 			await load();
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('BoutDetailPage: acceptBout failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBoutId = null;
 		}
@@ -154,7 +156,8 @@
 			await kickoffBout({ bout });
 			await load();
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('BoutDetailPage: kickoffBout failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBoutId = null;
 		}
@@ -171,7 +174,8 @@
 			await retractBout({ bout });
 			await load();
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('BoutDetailPage: retractBout failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			actingBoutId = null;
 		}

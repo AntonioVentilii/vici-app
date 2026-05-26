@@ -329,6 +329,7 @@ export const zhCnMessages = {
 	'challenge.fork.success.title': '挑战已发送！',
 	'challenge.fork.title': '挑战你的好友',
 	'chip.day_streak': '连续天数',
+	'common.error.generic': '出了点问题。请重试。',
 	'companion.oracle.called_it': '说中了。',
 	'companion.trickster.bold': '只有 {percent}% 不同意。够果敢。',
 	'cta.browse': '浏览市场',

@@ -349,6 +349,7 @@ export const ptMessages = {
 	'challenge.fork.success.title': 'Desafio enviado!',
 	'challenge.fork.title': 'Desafie seus amigos',
 	'chip.day_streak': 'DIAS SEGUIDOS',
+	'common.error.generic': 'Algo deu errado. Tente novamente.',
 	'companion.oracle.called_it': 'Acertou em cheio.',
 	'companion.trickster.bold': 'Só {percent}% discordam. Audaz.',
 	'cta.browse': 'Explorar mercados',

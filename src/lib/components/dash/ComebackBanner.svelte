@@ -81,11 +81,11 @@
 				dismissed.value = true;
 			}
 		} catch (err: unknown) {
-			const message = err instanceof Error ? err.message : String(err);
+			console.error('ComebackBanner: claim failed', err);
 
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'dash.comeback.toast.transport_failed_title' }),
-				message,
+				message: t({ locale: $localeStore, key: 'common.error.generic' }),
 				type: 'error'
 			});
 		} finally {

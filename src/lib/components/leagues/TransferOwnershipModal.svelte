@@ -77,7 +77,8 @@
 			onTransferred();
 			reset();
 		} catch (err) {
-			submitError = err instanceof Error ? err.message : 'Unknown error';
+			console.error('TransferOwnershipModal: transferLeagueOwnership failed', err);
+			submitError = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			submitting = false;
 		}

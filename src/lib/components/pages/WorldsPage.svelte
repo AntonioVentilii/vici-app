@@ -45,7 +45,8 @@
 			myCountry = result.country;
 			loadState = 'ready';
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('WorldsPage: listMyAffiliations failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 			loadState = 'error';
 		}
 	};
@@ -100,7 +101,8 @@
 			await leaveAffiliation({ kind, affiliationId });
 			await refresh();
 		} catch (err) {
-			errorMessage = err instanceof Error ? err.message : 'Unknown error';
+			console.error('WorldsPage: leaveAffiliation failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			pendingKey = null;
 		}
