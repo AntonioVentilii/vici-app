@@ -1128,7 +1128,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1.1rem;
-		padding: 0 1rem 6rem;
+		padding: 0 1.25rem 6rem;
 	}
 
 	/* ─── intro card ─────────────────────────────────────────── */

@@ -768,7 +768,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0;
-		padding: 0 0 0.5rem;
+		padding: 0 1.25rem 0.5rem;
 	}
 
 	.dash-appbar-desk {

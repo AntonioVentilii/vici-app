@@ -978,6 +978,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+		padding: 0 1.25rem;
 	}
 
 	.profile-section-title {

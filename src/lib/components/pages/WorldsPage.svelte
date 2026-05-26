@@ -487,7 +487,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-		padding: 0 0 6rem;
+		padding: 0 1.25rem 6rem;
 	}
 
 	.worlds-status,

@@ -166,7 +166,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.875rem;
-		padding: 0 1rem 5rem;
+		padding: 0 1.25rem 6rem;
 	}
 
 	.markets-hero {
