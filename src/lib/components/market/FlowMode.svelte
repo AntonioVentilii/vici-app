@@ -25,14 +25,12 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
+	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
-	import { getMarketMetadata } from '$lib/services/market-metadata.services';
-	import { getUserMarketSignals } from '$lib/services/market-signals.services';
-	import { listMarketTagsBySeries } from '$lib/services/market-tags.services';
-	import { getFlowQueue } from '$lib/services/market.services';
 	import { getPositions } from '$lib/services/position.services';
 	import { persistDailyStreak } from '$lib/services/profile.services';
 	import { showCompanion } from '$lib/stores/companion.store';
+	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { flowSessionMaxBets, preferencesStore } from '$lib/stores/preferences.store';
@@ -62,7 +60,6 @@
 		resolveOutcomeExecutionPriceForSizing
 	} from '$lib/utils/trade.utils';
 
-	const MAX_MARKETS = 20;
 	const maxBets = $derived(flowSessionMaxBets($preferencesStore));
 
 	const resolveFlowCategory = ({
@@ -147,58 +144,29 @@
 		flowTradeService.startSession();
 
 		try {
-			const [queue, userPositions, tagMap] = await Promise.all([
-				getFlowQueue($balanceDomain),
-				nonNullish($userStore.user) ? getPositions($balanceDomain) : Promise.resolve([]),
-				listMarketTagsBySeries().catch(() => ({}))
-			]);
+			// Pre-warmed deck from `flow.store` — populated on app
+			// init and refreshed in the background on input changes.
+			// Falls back to an on-demand build when the first warm is
+			// still in flight (rare).
+			const cached = peekFlow();
+			const prepared: PreparedFlow = nonNullish(cached)
+				? cached
+				: await prepareFlow({
+						domain: $balanceDomain,
+						featuredEventTag: $featuredEventActive ? $featuredEvent.categoryTag : undefined,
+						signedIn: nonNullish($userStore.user)
+					});
 
-			// When a featured event is running, narrow the Flow queue to
-			// markets carrying the event's category tag so the swipe deck
-			// tracks the live tentpole — mirrors the MarketsPage suggested
-			// rail behaviour (88eaa02). Falls back to the full queue when
-			// the filter would empty the deck, so users always see *some*
-			// content. Same FeaturedEvent abstraction (b9dfb7d), so the
-			// behaviour generalises across future tentpoles automatically.
-			//
-			// `tagMap` is keyed by series id (a string at runtime) and
-			// `event.categoryTag` is typed as a free-form string on the
-			// FeaturedEvent type — widen both sides for the membership
-			// check rather than narrowing the event tag into MarketTag.
-			const tagsByMarket = tagMap as Record<string, string[]>;
-			const eventTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
-			const eventScoped =
-				eventTag !== undefined
-					? queue.filter((market) =>
-							(tagsByMarket[market.id] ?? []).some((tag) => tag === eventTag)
-						)
-					: [];
-			const sourceQueue = eventScoped.length > 0 ? eventScoped : queue;
+			({
+				markets,
+				tagMap: marketTagMap,
+				metadataById: marketMetadataMap,
+				signals: userSignals
+			} = prepared);
 
-			markets = sourceQueue.slice(0, MAX_MARKETS);
-			positions = userPositions;
-			marketTagMap = tagMap;
-
-			const metadataEntries: [MarketId, MarketMetadata][] = [];
-
-			await Promise.all(
-				markets.map(async (m) => {
-					const doc = await getMarketMetadata(m.id).catch(() => undefined);
-
-					if (doc) {
-						metadataEntries.push([m.id, doc]);
-					}
-				})
-			);
-			marketMetadataMap = new Map(metadataEntries);
-
-			if (nonNullish($userStore.user)) {
-				userSignals = await getUserMarketSignals($balanceDomain).catch(() => ({
-					categoryAcc: {},
-					priorCalls: {},
-					followedLean: {}
-				}));
-			}
+			positions = nonNullish($userStore.user)
+				? await getPositions($balanceDomain).catch(() => [])
+				: [];
 
 			const { profile } = $userStore;
 
@@ -233,6 +201,10 @@
 	onDestroy(() => {
 		document.body.classList.remove('overflow-hidden');
 		void flowTradeService.endSession();
+		// Promote the pre-built follow-up deck and rebuild a fresh
+		// `next` excluding the markets just shown — re-entering /flow
+		// opens on an unseen deck without a network round-trip.
+		advanceFlow();
 	});
 
 	const spawnXpPop = ({
