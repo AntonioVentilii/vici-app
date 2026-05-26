@@ -52,6 +52,7 @@ const ensureShape = (current: UserPreferences | undefined): UserPreferences => {
 
 export const preferencesStore: StorageStore<UserPreferences> = {
 	...basePreferencesStore,
+	subscribe: (run) => basePreferencesStore.subscribe((value) => run(ensureShape(value))),
 	update: (updater) => {
 		basePreferencesStore.update((current) => {
 			const next = updater(ensureShape(current));
