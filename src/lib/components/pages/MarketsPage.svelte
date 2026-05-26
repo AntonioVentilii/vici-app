@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { Heart, X } from 'lucide-svelte/icons';
-	import ForkMarketModal from '$lib/components/challenge/ForkMarketModal.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import MarketCard from '$lib/components/market/MarketCard.svelte';
 	import MarketFeed from '$lib/components/market/MarketFeed.svelte';
@@ -14,7 +13,6 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
-	import type { Market } from '$lib/types/market';
 	import {
 		DEFAULT_SECONDARY_FILTERS,
 		type MarketSecondaryFilters
@@ -32,16 +30,8 @@
 	let filters = $state<MarketSecondaryFilters>({ ...DEFAULT_SECONDARY_FILTERS });
 	let savedOnly = $state(false);
 
-	let forkModalOpen = $state(false);
-	let forkTarget = $state<Market | null>(null);
-
 	const savedSet = $derived(new Set($preferencesStore.savedMarketIds));
 	const savedCount = $derived(savedSet.size);
-
-	const handleChallenge = (market: Market) => {
-		forkTarget = market;
-		forkModalOpen = true;
-	};
 
 	const tabs = ['Active', 'Trending', 'Expiring', 'Resolved'] as const;
 
@@ -271,18 +261,11 @@
 					{loading}
 					markets={filteredMarkets}
 					metadataBySeries={$marketMetadata}
-					onChallenge={handleChallenge}
 					tagsBySeries={$marketTags}
 				/>
 			{/if}
 		</div>
 	</div>
-
-	<ForkMarketModal
-		isOpen={forkModalOpen}
-		market={forkTarget}
-		onClose={() => (forkModalOpen = false)}
-	/>
 </section>
 
 <style lang="postcss">

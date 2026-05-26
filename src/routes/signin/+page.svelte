@@ -10,7 +10,7 @@
 	// link semantics from the canonical phase router.
 	$effect(() => {
 		if ($userSignedIn) {
-			void goto(AppPath.Home, { replaceState: true });
+			void goto(AppPath.Flow, { replaceState: true });
 		}
 	});
 
@@ -22,6 +22,6 @@
 <SignInScreen
 	mode="signin"
 	onSuccess={() => {
-		void goto(AppPath.Home);
+		void goto(AppPath.Flow);
 	}}
 />

@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { Plus } from 'lucide-svelte/icons';
 	import type { Snippet } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import CreateChallengeModal from '$lib/components/challenge/CreateChallengeModal.svelte';
 	import Header from '$lib/components/layout/Header.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
@@ -36,7 +34,6 @@
 
 	const isFlowPage = $derived(page.url.pathname === AppPath.Flow);
 
-	let challengeModalOpen = $state(false);
 	let applyingPendingOnboarding = $state(false);
 
 	// Auth gate — every (app) route requires a session. We only
@@ -309,21 +306,13 @@
 		<Loaders />
 	</main>
 
-	{#if !isFlowPage}
-		<MobileNav />
-	{/if}
-
-	{#if $userSignedIn && !isFlowPage}
-		<button
-			class="bg-primary text-primary-foreground fixed right-6 bottom-24 z-40 hidden h-14 w-14 items-center justify-center rounded-full shadow-[0_8px_24px_-8px_var(--laurel-glow)] transition-all hover:scale-105 active:scale-[0.985] md:bottom-8 md:flex"
-			aria-label={t({ locale: $localeStore, key: 'a11y.create_challenge' })}
-			onclick={() => (challengeModalOpen = true)}
-		>
-			<Plus size={28} strokeWidth={2.5} />
-		</button>
-	{/if}
-
-	<CreateChallengeModal isOpen={challengeModalOpen} onClose={() => (challengeModalOpen = false)} />
+	<!--
+		Bottom nav is visible on every signed-in surface including Flow,
+		matching the prototype's BottomNav (always rendered inside
+		`AppShell`). The immersive-deck variant that hid it on Flow has
+		been removed.
+	-->
+	<MobileNav />
 
 	<CompanionOverlay />
 </div>

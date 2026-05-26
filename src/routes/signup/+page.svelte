@@ -10,7 +10,7 @@
 
 	$effect(() => {
 		if ($userSignedIn) {
-			void goto(resolve(AppPath.Home), { replaceState: true });
+			void goto(resolve(AppPath.Flow), { replaceState: true });
 		}
 	});
 

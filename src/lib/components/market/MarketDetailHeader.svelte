@@ -1,10 +1,8 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
-	import MarketForkModal from '$lib/components/market/MarketForkModal.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
 	import PrincipalText from '$lib/components/ui/PrincipalText.svelte';
 	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { marketTags } from '$lib/derived/market-tags.derived';
@@ -20,10 +18,8 @@
 	}
 
 	const { market }: Props = $props();
-	let isForkModalOpen = $state(false);
 
 	const { title, status, outcome } = $derived(market);
-	const isFork = $derived(market.forkedFrom !== undefined);
 	const isResolved = $derived(status === 'Resolved');
 	const timeRemaining = $derived(getTimeRemaining(market.expiryDate));
 	const tags = $derived($marketTags[market.id] ?? []);
@@ -67,12 +63,6 @@
 			     the per-card heart and the detail-page heart stay visually
 			     and behaviourally identical. -->
 			<SavedMarketToggle marketId={market.id} size="md" stopPropagation={false} />
-
-			{#if !isFork}
-				<Button onclick={() => (isForkModalOpen = true)} size="sm" variant="outline">
-					{t({ locale: $localeStore, key: 'card.challenge_friends' })}
-				</Button>
-			{/if}
 		</div>
 	</div>
 
@@ -103,10 +93,6 @@
 	</div>
 </section>
 
-{#if !isFork}
-	<MarketForkModal isOpen={isForkModalOpen} {market} onClose={() => (isForkModalOpen = false)} />
-{/if}
-
 <style lang="postcss">
 	.detail-hero {
 		position: relative;
@@ -125,10 +111,6 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.75rem;
-	}
-
-	.detail-hero-top :global(.btn) {
-		display: none;
 	}
 
 	.detail-hero-actions {
@@ -221,10 +203,6 @@
 	@media (min-width: 768px) {
 		.detail-hero {
 			padding: 1.35rem;
-		}
-
-		.detail-hero-top :global(.btn) {
-			display: inline-flex;
 		}
 
 		.detail-hero-copy h1 {

@@ -1,10 +1,12 @@
 <script lang="ts">
+	import { Plus } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import BoutsInboxPage from '$lib/components/pages/BoutsInboxPage.svelte';
 	import FriendsPage from '$lib/components/pages/FriendsPage.svelte';
 	import LeaguesPage from '$lib/components/pages/LeaguesPage.svelte';
+	import { leaguesCreateIntent } from '$lib/stores/leagues-ui.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
@@ -66,8 +68,25 @@
 	const TABS: readonly Tab[] = ['friends', 'leagues', 'bouts'] as const;
 </script>
 
+{#snippet socialAppbarRight()}
+	{#if activeTab === 'leagues'}
+		<button
+			class="social-appbar-cta"
+			aria-label={t({ locale: $localeStore, key: 'leagues.create.cta' })}
+			onclick={() => leaguesCreateIntent.set(true)}
+			type="button"
+		>
+			<Plus aria-hidden="true" size={18} strokeWidth={1.8} />
+		</button>
+	{/if}
+{/snippet}
+
 <div class="social-page">
-	<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'social.title' })} />
+	<MobileAppBar
+		align="left"
+		right={socialAppbarRight}
+		title={t({ locale: $localeStore, key: 'social.title' })}
+	/>
 
 	<div class="social-tabs" aria-label="Social sections" role="tablist">
 		{#each TABS as tab (tab)}
@@ -101,6 +120,26 @@
 		flex-direction: column;
 		gap: 0.85rem;
 		padding-bottom: 6rem;
+	}
+
+	.social-appbar-cta {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.45rem 0.55rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-8);
+		background: var(--bg-surface);
+		color: var(--text-base);
+		cursor: pointer;
+		transition:
+			background-color var(--d-hover) var(--ease-vici),
+			border-color var(--d-hover) var(--ease-vici);
+	}
+
+	.social-appbar-cta:hover {
+		background: var(--bg-popover);
+		border-color: var(--border-strong);
 	}
 
 	.social-tabs {

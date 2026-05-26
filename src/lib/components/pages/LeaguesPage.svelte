@@ -5,6 +5,7 @@
 	import CreateLeagueModal from '$lib/components/leagues/CreateLeagueModal.svelte';
 	import JoinLeagueModal from '$lib/components/leagues/JoinLeagueModal.svelte';
 	import { listMyLeagues, type LeagueWithRole } from '$lib/services/leagues.services';
+	import { leaguesCreateIntent } from '$lib/stores/leagues-ui.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { formatDate } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -44,6 +45,16 @@
 	};
 
 	onMount(refresh);
+
+	// Listen for the parent Social appbar's "+" create-league button:
+	// when the intent flips to `true`, open our modal and reset the
+	// intent so a navigation away/back doesn't re-trigger.
+	$effect(() => {
+		if ($leaguesCreateIntent) {
+			createOpen = true;
+			leaguesCreateIntent.set(false);
+		}
+	});
 
 	const roleLabelKey = (role: LeagueWithRole['role']): MessageKey =>
 		role === 'owner'

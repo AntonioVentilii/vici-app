@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
-	import { Clock, Copy, Users, UsersRound } from 'lucide-svelte/icons';
+	import { Clock, Users } from 'lucide-svelte/icons';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -26,7 +26,6 @@
 	interface Props {
 		market: Market;
 		index?: number;
-		onChallenge?: (market: Market) => void;
 		metadata?: MarketMetadata;
 		/**
 		 * Primary category tag for this market (e.g. `macro`, `crypto`).
@@ -38,12 +37,10 @@
 		tag?: MarketTag;
 	}
 
-	const { market, index = 0, onChallenge, metadata, tag }: Props = $props();
+	const { market, index = 0, metadata, tag }: Props = $props();
 
 	const isChallenge = $derived(isSocial(market.balanceDomain));
-	const isFork = $derived(market.forkedFrom !== undefined);
 	const isResolved = $derived(market.status === 'Resolved');
-	const showChallengeSlot = $derived(!isFork && !isResolved);
 	const showSuggested = $derived(isMarketSuggested({ market, metadata }));
 
 	const resolvedOutcomeLabel = (outcome: string): string => {
@@ -155,34 +152,6 @@
 								outcomes={market.outcomes ?? []}
 								winningOutcomeId={isResolved ? market.outcome : undefined}
 							/>
-						{/if}
-					</div>
-
-					<div class="border-border flex min-h-8 items-center justify-end border-t pt-3">
-						{#if showChallengeSlot}
-							{#if onChallenge}
-								<button
-									class="text-muted-foreground/50 hover:text-primary hover:bg-laurel-glow flex items-center gap-1 rounded-lg px-2 py-1 transition-colors"
-									aria-label={t({ locale: $localeStore, key: 'card.challenge_friends' })}
-									onclick={(e) => {
-										e.stopPropagation();
-										onChallenge(market);
-									}}
-									onkeydown={(e) => e.stopPropagation()}
-									title={t({ locale: $localeStore, key: 'card.challenge_friends' })}
-								>
-									<Copy aria-hidden="true" size={14} />
-									<UsersRound aria-hidden="true" size={18} />
-								</button>
-							{:else}
-								<div
-									class="text-muted-foreground/40 group-hover:text-primary/50 flex items-center gap-1 px-2 py-1 transition-colors"
-									title={t({ locale: $localeStore, key: 'card.challenge_friends' })}
-								>
-									<Copy aria-hidden="true" size={14} />
-									<UsersRound aria-hidden="true" size={18} />
-								</div>
-							{/if}
 						{/if}
 					</div>
 				</div>

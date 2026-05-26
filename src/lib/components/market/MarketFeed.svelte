@@ -20,7 +20,6 @@
 		emptyMessage: string;
 		hasMore?: boolean;
 		onLoadMore?: () => void;
-		onChallenge?: (market: Market) => void;
 		metadataBySeries?: Record<string, MarketMetadata>;
 		/** Per-series category-tag lookup; forwarded to MarketCard for the
 		 *  colored category chip in the header strip. Optional so a parent
@@ -34,7 +33,6 @@
 		emptyMessage,
 		hasMore = false,
 		onLoadMore,
-		onChallenge,
 		metadataBySeries,
 		tagsBySeries
 	}: Props = $props();
@@ -75,7 +73,6 @@
 				{group}
 				{index}
 				{metadataBySeries}
-				{onChallenge}
 				{tagsBySeries}
 				userPrincipal={$authPrincipal}
 			/>

@@ -17,7 +17,6 @@
 		group: MarketGroup;
 		index?: number;
 		userPrincipal?: string;
-		onChallenge?: (market: Market) => void;
 		metadataBySeries?: Record<string, MarketMetadata>;
 		/** Per-series tag lookup; the root market's primary tag is resolved
 		 *  here and forwarded to the inner MarketCard so the colored
@@ -25,20 +24,12 @@
 		tagsBySeries?: Record<string, MarketTag[]>;
 	}
 
-	const {
-		group,
-		index = 0,
-		userPrincipal,
-		onChallenge,
-		metadataBySeries,
-		tagsBySeries
-	}: Props = $props();
+	const { group, index = 0, userPrincipal, metadataBySeries, tagsBySeries }: Props = $props();
 
 	const rootTag = $derived(primaryMarketTag(tagsBySeries?.[group.root.id]));
 
 	const forks = $derived(group.forks);
 	const ghostLayers = $derived(Math.min(forks.length, 2));
-	const showFaceChallenge = $derived(group.root.forkedFrom === undefined ? onChallenge : undefined);
 
 	let popoverOpen = $state(false);
 
@@ -83,7 +74,6 @@
 		{index}
 		market={group.root}
 		metadata={metadataBySeries?.[group.root.id]}
-		onChallenge={showFaceChallenge}
 		tag={rootTag}
 	/>
 
