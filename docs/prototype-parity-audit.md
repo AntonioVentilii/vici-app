@@ -22,33 +22,33 @@ These need a per-item decision before deletion. Default = remove.
 | ---- | ---------------- | ----------------------------------------------------------- | ----------------- | ------------------------------------------------------------ |
 | C-1  | Markets list     | Status tabs (`Active / Trending / Expiring / Resolved`)     | ✅ Remove         | Locked in earlier wave                                       |
 | C-2  | Markets list     | Global search box                                           | ✅ Remove         | Locked in earlier wave                                       |
-| C-3  | Markets list     | "Suggested for you" rail                                    | ⬜ Ask            |                                                              |
-| C-4  | Markets list     | "LIVE" pulsing pill in appbar                               | ⬜ Ask            |                                                              |
-| C-5  | Markets list     | Hover lift on cards (`hover:-translate-y-0.5`)              | ⬜ Ask            |                                                              |
-| C-6  | Sign-in          | Decorative orb radial gradients                             | ⬜ Ask            |                                                              |
-| C-7  | Sign-in          | `or` divider between providers                              | ⬜ Ask            |                                                              |
-| C-8  | Sign-in          | Internet Identity + Passkey + Dev buttons                   | ⬜ Ask            | Production-needed; might keep with prototype-aligned styling |
-| C-9  | Flow             | FlowTopBar (persistent close/progress/streak header)        | ⬜ Ask            |                                                              |
-| C-10 | Flow             | LIMIT pill on edge labels (limit-order indicator)           | ⬜ Ask            |                                                              |
-| C-11 | Flow             | Suggested badge in meta row                                 | ⬜ Ask            |                                                              |
-| C-12 | Flow             | flow-card-rail bottom hint row                              | ⬜ Ask            |                                                              |
-| C-13 | Flow card        | True 3D rotateY flip (vs prototype's opacity crossfade)     | ⬜ Ask            |                                                              |
-| C-14 | Flow card        | Edge-inset glow on swipe (`box-shadow inset 0 0 60px`)      | ⬜ Ask            |                                                              |
-| C-15 | Profile          | Friends row (count + pending badge)                         | ⬜ Ask            |                                                              |
-| C-16 | Profile          | ReferralCard                                                | ⬜ Ask            |                                                              |
-| C-17 | Profile          | Skill grid (Accuracy/Calls/Wins/Streak)                     | ⬜ Ask            |                                                              |
-| C-18 | Profile          | 30-day streak activity heatmap                              | ⬜ Ask            |                                                              |
-| C-19 | Settings         | Language selector segmented control                         | ⬜ Ask            | Prototype is English-only by design                          |
-| C-20 | Settings         | Inline blocking-leagues link list in delete flow            | ⬜ Ask            | Production need (transfer ownership)                         |
-| C-21 | Settings         | Transfer ownership UI in delete flow                        | ⬜ Ask            | Production need                                              |
-| C-22 | League detail    | Transfer ownership CTA + modal                              | ⬜ Ask            | Production need                                              |
-| C-23 | Account settings | Different intro copy / no provider-specific glyphs          | ⬜ Ask            |                                                              |
-| C-24 | Wallet           | Multi-tab production wallet (Send / Receive / History tabs) | ⬜ Ask            | Production-needed — but prototype is a simple mocked view    |
-| C-25 | Portfolio        | OpenOrders table                                            | ⬜ Ask            | Production need (limit orders)                               |
-| C-26 | Tournament       | (additive UI from us — TBD list)                            | ⬜ Ask            |                                                              |
-| C-27 | Friends          | Back-arrow appbar to Profile                                | ⬜ Ask            | Prototype assumes Social tab parent                          |
+| C-3  | Markets list     | "Suggested for you" rail                                    | ✅ Remove         | Prototype is truth                                           |
+| C-4  | Markets list     | "LIVE" pulsing pill in appbar                               | ✅ Remove         | Prototype is truth                                           |
+| C-5  | Markets list     | Hover lift on cards (`hover:-translate-y-0.5`)              | ✅ Remove         | Prototype is truth                                           |
+| C-6  | Sign-in          | Decorative orb radial gradients                             | ✅ Remove         | Prototype is truth                                           |
+| C-7  | Sign-in          | `or` divider between providers                              | ✅ Remove         | Prototype is truth                                           |
+| C-8  | Sign-in          | Internet Identity + Passkey + Dev buttons                   | ⏭ Keep           | Production-needed; style to match prototype tone             |
+| C-9  | Flow             | FlowTopBar (persistent close/progress/streak header)        | ✅ Remove         | Prototype is truth                                           |
+| C-10 | Flow             | LIMIT pill on edge labels (limit-order indicator)           | ✅ Remove         | Prototype is truth                                           |
+| C-11 | Flow             | Suggested badge in meta row                                 | ✅ Remove         | Prototype is truth                                           |
+| C-12 | Flow             | flow-card-rail bottom hint row                              | ✅ Remove         | Prototype is truth                                           |
+| C-13 | Flow card        | True 3D rotateY flip (vs prototype's opacity crossfade)     | ✅ Remove         | Use opacity crossfade per prototype                          |
+| C-14 | Flow card        | Edge-inset glow on swipe (`box-shadow inset 0 0 60px`)      | ✅ Remove         | Prototype is truth                                           |
+| C-15 | Profile          | Friends row (count + pending badge)                         | ✅ Remove         | Prototype is truth                                           |
+| C-16 | Profile          | ReferralCard                                                | ✅ Remove         | Prototype is truth                                           |
+| C-17 | Profile          | Skill grid (Accuracy/Calls/Wins/Streak)                     | ✅ Remove         | Prototype is truth                                           |
+| C-18 | Profile          | 30-day streak activity heatmap                              | ✅ Remove         | Prototype is truth                                           |
+| C-19 | Settings         | Language selector segmented control                         | ⏭ Keep           | Production-need (7 locales shipped)                          |
+| C-20 | Settings         | Inline blocking-leagues link list in delete flow            | ⏭ Keep           | Production safety                                            |
+| C-21 | Settings         | Transfer ownership UI in delete flow                        | ⏭ Keep           | Production need; backend shipped                             |
+| C-22 | League detail    | Transfer ownership CTA + modal                              | ⏭ Keep           | Production need; backend shipped                             |
+| C-23 | Account settings | Different intro copy / no provider-specific glyphs          | ✅ Strip glyphs   | Revert provider-glyph tile shipped in commit `<account>`     |
+| C-24 | Wallet           | Multi-tab production wallet (Send / Receive / History tabs) | ⏭ Keep           | Production need                                              |
+| C-25 | Portfolio        | OpenOrders table                                            | ⏭ Keep           | Production need (limit orders)                               |
+| C-26 | Tournament       | (additive UI from us — TBD list)                            | ⬜ Re-audit       | Spawn focused audit to catch hidden divergences              |
+| C-27 | Friends          | Back-arrow appbar to Profile                                | ✅ Remove         | Drop standalone `/friends` route; Friends only inside Social |
 | C-28 | Layout           | 200ms cross-fade between routes                             | ⏭ Keep           | Confirmed earlier as intentional                             |
-| C-29 | Worlds           | Podium prize claim banner                                   | ⬜ Ask            | Production need (real claim flow)                            |
+| C-29 | Worlds           | Podium prize claim banner                                   | ⏭ Keep           | Production need (real claim flow)                            |
 | C-30 | Layout           | DomainSwitch                                                | ✅ Hidden in prod | Locked earlier                                               |
 
 ## Surface checklist — A-tier divergences (must-fix)
