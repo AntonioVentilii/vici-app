@@ -178,23 +178,23 @@ These need a per-item decision before deletion. Default = remove.
 - ✅ Removed heart toggle from hero — relocated to appbar right (functional equivalent of prototype's eye)
 - ✅ Desktop split column stripped — single column mobile-first, capped at 36rem max-width on ≥md per "prototype is truth"
 
-### Dash (15)
+### Dash (15) ✅ commit `<dash>`
 
-- ⬜ Title "Dashboard" not "Dash"; no right action
-- ⬜ Hero accuracy block — session-delta + 30d global anchor + streak inline
-- ⬜ Time-window chip strip (7d/30d/90d/All)
-- ⬜ Holdings card (VXP balance + Backed/Lifetime/This-session + invite-friend CTA)
-- ⬜ Accuracy trend sparkline chart
-- ⬜ Active calls section — list with urgency timers
-- ⬜ By-category breakdown — horizontal bars + pct, sorted desc, only categories with calls
-- ⬜ Where you stand grid — Global rank / League rank / Top cat tile
-- ⬜ Oracle insight callout
-- ⬜ Past predictions — filter chips (All/Won/Lost), 8 rows w/ glyphs + ctx + VXP delta
-- ⬜ Next-unlock achievement card
-- ⬜ Three disclosure foldouts at bottom
-- ⬜ Full-width container (not max-w-64ch)
-- ⬜ Remove ComebackBanner (or wire to prototype's auto-grant pattern)
-- ⬜ Streak placement inline with accuracy (not separate card)
+- ✅ Title "Dashboard" not "Dash"; no right action (`DashPage.svelte` appbar — title only, no Briefcase button)
+- ✅ Hero accuracy block — session-delta line + 30d global anchor + streak row inline under the big number
+- ✅ Time-window chip strip (7d/30d/90d/All) — `dash-window` chips, visual switch until per-window aggregator lands
+- ✅ Holdings card (VXP balance + Backed/Lifetime/This-session + invite-friend CTA → `/friends`)
+- ✅ Accuracy trend sparkline chart — new `DashAccuracySparkline.svelte` (laurel area + accent line + trailing dot, no tap markers)
+- ✅ Active calls section — list with urgency timers (red "Xh left" when ≤24h to expiry)
+- ✅ By-category breakdown — horizontal bars + pct, sorted desc, only categories with calls
+- ✅ Where you stand grid — Global / League / Top-category tile (League tile navigates to `/social`)
+- ✅ Oracle insight callout — laurel-tinted card; copy is data-driven (best-win title → strongest-category → empty-state)
+- ✅ Past predictions — filter chips (All/Won/Lost with counts), 8 rows w/ check/X glyphs + relative-time ctx + ±VXP delta
+- ✅ Next-unlock achievement card — picks first locked from `ACHIEVEMENTS`, emblem in laurel-wash tile, progress bar
+- ✅ Three disclosure foldouts at bottom — "How accuracy is calculated" / "About VXP" / "About leagues" (CTA → `/social`)
+- ✅ Full-width container — removed `max-w-[var(--reading-max,64ch)]` wrapper; `dash-root` is full-bleed with section padding
+- ✅ Remove ComebackBanner — banner no longer mounted on Dash (kept the file + i18n keys; banner is now unused, candidate for sweep)
+- ✅ Streak placement inline with accuracy — `.dash-streak-row` inside `.dash-hero` (flame + days + sub + progress bar), no separate card
 
 ### Portfolio (10)
 
