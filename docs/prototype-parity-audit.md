@@ -287,11 +287,11 @@ These need a per-item decision before deletion. Default = remove.
 - ✅ Position absolute within screen (not fixed inset)
 - ✅ Knock-on: `ProfileDashboard` achievement-rail tiles also use glyph emblems + tier classes (replacing lucide icons)
 
-### Social tabs container (3)
+### Social tabs container (3) ✅ commit `<social-tabs>`
 
-- ⬜ Tab strip — underline style (not pill chips)
-- ⬜ Tab persistence — write `'friends'` to storage on legacy migration
-- ⬜ Tab-aware `+` — local state (not global store) — _or accept current as cleaner_
+- ✅ Tab strip — underline-active style (2px primary underline, no pill background)
+- ✅ Tab persistence — already correct; `$effect` writes `'friends'` back to storage after legacy migration
+- ⏭ Tab-aware `+` — kept the global `leaguesCreateIntent` store pattern (intentional cross-component signal)
 
 ### Friends (7+)
 

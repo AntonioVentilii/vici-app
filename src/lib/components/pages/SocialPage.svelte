@@ -142,10 +142,15 @@
 		border-color: var(--border-strong);
 	}
 
+	/* Underline-active tab strip — matches the design source's
+	   `.social-tabs` (`screens.jsx:2523-2533`). Tabs are
+	   border-less labels; the active one carries a 2px accent
+	   underline below the text. No pill background, no border ring. */
 	.social-tabs {
 		display: inline-flex;
-		gap: 0.4rem;
-		padding: 0.1rem 1rem 0.4rem;
+		gap: 1.25rem;
+		padding: 0 1rem 0;
+		border-bottom: 1px solid var(--border-base);
 		overflow-x: auto;
 		scrollbar-width: none;
 	}
@@ -156,31 +161,26 @@
 
 	.social-tab {
 		appearance: none;
-		padding: 0.45rem 0.95rem;
+		padding: 0.55rem 0.1rem 0.65rem;
 		font: inherit;
 		font-size: var(--t-13);
 		font-weight: 600;
 		color: var(--text-muted);
-		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
+		background: transparent;
+		border: 0;
+		border-bottom: 2px solid transparent;
 		cursor: pointer;
 		white-space: nowrap;
-		transition:
-			color 140ms ease,
-			border-color 140ms ease,
-			background 140ms ease;
+		transition: color 140ms ease;
 	}
 
 	.social-tab:hover {
 		color: var(--text-base);
-		border-color: color-mix(in srgb, var(--laurel) 30%, var(--border-base));
 	}
 
 	.social-tab.is-active {
 		color: var(--text-base);
-		background: color-mix(in srgb, var(--laurel) 18%, var(--bg-surface));
-		border-color: color-mix(in srgb, var(--laurel) 50%, var(--border-base));
+		border-bottom-color: var(--color-primary);
 	}
 
 	.social-panel {
