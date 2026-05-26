@@ -158,25 +158,25 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Tag chip styling (no bg, just colored text)
 - C-3, C-4, C-5 decisions
 
-### Market detail (16)
+### Market detail (16) ✅ commit `8ce9ac1`
 
-- ⬜ Appbar share + watch buttons
-- ⬜ LIVE pulsing pill next to category tag
-- ⬜ Hero probability layout (48px YES + 24px NO baseline-aligned + ProbBar)
-- ⬜ 7-day chart card w/ period chips (1d/7d/30d/ALL)
-- ⬜ Stats grid 2×2 (VOLUME / LIQUIDITY / CLOSES / MY CALL)
-- ⬜ Resolution card position (directly below stats, not in tab)
-- ⬜ "Top predictors here" mini-leaderboard section
-- ⬜ Sticky bottom YES/NO CTA bar
-- ⬜ Sheet sizing UX (slider 10-500 step 10 + payout + Lock-in CTA)
-- ⬜ Done-state confirmation overlay (blurred + check + "Locked in.")
-- ⬜ Category chip in hero (no bg, colored text only)
-- ⬜ Hero title size + family
-- ⬜ Remove meta grid (settles / time_left / created_by)
-- ⬜ Remove duplicate description (hero vs Description tab)
-- ⬜ Single linear page (no tabs)
-- ⬜ Remove heart toggle from detail hero (prototype has none)
-- ⬜ Desktop split column (keep or strip?)
+- ✅ Appbar share + watch buttons (`MarketDetailShareButton` + `SavedMarketToggle` in appbar right slot)
+- ✅ LIVE pulsing pill next to category tag (`MarketDetailLivePill`)
+- ✅ Hero probability layout — 48px YES + 24px NO baseline-aligned + split bar (`MarketDetailProbHero`)
+- ✅ 7-day chart card with period chips 1d/7d/30d/ALL (`MarketDetailChartCard`, reuses `FlowCardSparkline`)
+- ✅ Stats grid 2×2 — VOLUME / LIQUIDITY / CLOSES / MY CALL (`MarketDetailStatsGrid`)
+- ✅ Resolution card position — directly below stats (`MarketDetailResolutionCard`)
+- ✅ "Top predictors here" mini-leaderboard (`MarketDetailTopPredictors`, reads `leaderboard` derived)
+- ✅ Sticky bottom YES/NO CTA bar (`MarketDetailCtaBar`; MobileNav suppressed on this route)
+- ⏭ Sheet sizing UX (slider 10-500 step 10 + payout + Lock-in CTA): trigger is the new CTA bar but the sheet body still renders the production `TradeModal` → `PredictionInterface` (VXP balance gating, order-book sizing, decimals, market/limit toggle, error surfaces). Re-skinning the sheet itself with the prototype's 10–500 slider would either (a) break VXP economy guards or (b) require porting them into a parallel surface. Tracked as substantive C-item for a dedicated commit.
+- ✅ Done-state confirmation overlay — blurred + check + "Locked in." (`MarketDetailLockedToast`)
+- ✅ Category chip in hero — colored text only, no bg / no border
+- ✅ Hero title size + family — display font, 1.5rem mobile / 1.75rem ≥md, -0.02em tracking, 1.22 line-height
+- ✅ Removed meta grid (settles / time_left / created_by) — gone with `MarketDetailHeader` deletion
+- ✅ Removed duplicate description from hero — only the resolution card carries it now
+- ✅ Single linear page, no tabs (`MarketDetailTabs` deleted)
+- ✅ Removed heart toggle from hero — relocated to appbar right (functional equivalent of prototype's eye)
+- ✅ Desktop split column stripped — single column mobile-first, capped at 36rem max-width on ≥md per "prototype is truth"
 
 ### Dash (15)
 

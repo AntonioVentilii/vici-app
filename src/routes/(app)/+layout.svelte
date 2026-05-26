@@ -34,6 +34,15 @@
 
 	const isFlowPage = $derived(page.url.pathname === AppPath.Flow);
 
+	// Market detail (`/markets/[id]`) is rendered as a single linear
+	// mobile-first surface with its own sticky bottom CTA bar — the
+	// global mobile tab bar is hidden on this route so the CTA owns the
+	// bottom slot, and the container padding is dropped so the hero +
+	// chart cards can run edge-to-edge the way the prototype does. The
+	// `'/markets/'` prefix already excludes the bare listing route at
+	// `/markets`, so no extra guard is needed.
+	const isMarketDetailPage = $derived(page.url.pathname.startsWith('/markets/'));
+
 	let applyingPendingOnboarding = $state(false);
 
 	// Auth gate — every (app) route requires a session. We only
@@ -289,12 +298,14 @@
 		<Header />
 	</div>
 
-	<main class="flex-1 {isFlowPage ? 'md:pb-0' : 'pb-20 md:pb-0'}">
+	<main class="flex-1 {isFlowPage || isMarketDetailPage ? 'md:pb-0' : 'pb-20 md:pb-0'}">
 		{#key page.url.pathname}
 			<div
 				class={isFlowPage
 					? 'md:container md:mx-auto md:px-4 md:py-8'
-					: 'container mx-auto px-4 py-4 md:py-8'}
+					: isMarketDetailPage
+						? 'mx-auto w-full max-w-[36rem] md:container md:px-4 md:py-8'
+						: 'container mx-auto px-4 py-4 md:py-8'}
 				data-tid={TestId.AppMain}
 				in:fade={{ duration: 100, delay: 100 }}
 				out:fade={{ duration: 100 }}
@@ -308,11 +319,13 @@
 
 	<!--
 		Bottom nav is visible on every signed-in surface including Flow,
-		matching the prototype's BottomNav (always rendered inside
-		`AppShell`). The immersive-deck variant that hid it on Flow has
-		been removed.
+		matching the prototype's BottomNav. Market detail (`/markets/[id]`)
+		is the one exception — it owns the bottom slot with its own
+		sticky YES/NO CTA bar so the tab bar is suppressed there.
 	-->
-	<MobileNav />
+	{#if !isMarketDetailPage}
+		<MobileNav />
+	{/if}
 
 	<CompanionOverlay />
 </div>
