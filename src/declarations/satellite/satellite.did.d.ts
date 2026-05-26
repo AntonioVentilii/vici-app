@@ -211,6 +211,8 @@ export interface AppGetProfileResult {
 					email: string;
 					level: number;
 					preferences: {
+						favorite_participant_id: string;
+						favorite_side: string;
 						notify: {
 							market_alerts: boolean;
 							friend_activity: boolean;
@@ -218,6 +220,7 @@ export interface AppGetProfileResult {
 							streak_reminder: boolean;
 						};
 						haptics_enabled: boolean;
+						onboarding_completed: boolean;
 						default_amount: { flow: string; manual: string };
 						world_cup_mode: boolean;
 						saved_market_ids: Array<string>;

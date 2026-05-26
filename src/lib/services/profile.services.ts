@@ -67,7 +67,10 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 					callsPublic: true,
 					flowTags: [],
 					worldCupMode: false,
-					savedMarketIds: []
+					savedMarketIds: [],
+					favoriteParticipantId: '',
+					favoriteSide: '',
+					onboardingCompleted: false
 				}
 			}
 		};

@@ -238,7 +238,10 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 		callsPublic: true,
 		flowTags: [],
 		worldCupMode: false,
-		savedMarketIds: []
+		savedMarketIds: [],
+		favoriteParticipantId: '',
+		favoriteSide: '',
+		onboardingCompleted: false
 	}
 });
 

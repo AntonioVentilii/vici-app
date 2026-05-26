@@ -23,9 +23,21 @@
 		side: 'YES' | 'NO' | null;
 		onBack: () => void;
 		onComplete: () => void;
+		// When `true`, the user is already signed in — the auth provider
+		// stack and the ToS paragraph are both redundant. We render a
+		// "Finish setup" CTA in the auth slot that calls `onComplete`
+		// directly so the parent can persist the picks to their profile.
+		authenticated?: boolean;
 	}
 
-	const { participantId, handle, side, onBack, onComplete }: Props = $props();
+	const {
+		participantId,
+		handle,
+		side,
+		onBack,
+		onComplete,
+		authenticated = false
+	}: Props = $props();
 
 	const event = $derived($featuredEvent);
 	const team = $derived(
@@ -121,22 +133,30 @@
 	{/if}
 
 	<div class="ob2-auth-slot">
-		<SignInProviderStack onSuccess={onComplete} />
+		{#if authenticated}
+			<button class="ob2-btn-primary" onclick={onComplete} type="button">
+				{t({ locale: $localeStore, key: 'onboarding.beat3.finish_cta' })}
+			</button>
+		{:else}
+			<SignInProviderStack onSuccess={onComplete} />
+		{/if}
 	</div>
 
-	<p class="ob2-tos">
-		{t({ locale: $localeStore, key: 'onboarding.beat3.tos.prefix' })}
-		<a class="ob2-tos-link" href="/info/terms" rel="noopener" target="_blank">
-			{t({ locale: $localeStore, key: 'onboarding.beat3.tos.terms' })}
-		</a>
-		{t({ locale: $localeStore, key: 'onboarding.beat3.tos.and' })}
-		<a class="ob2-tos-link" href="/info/privacy" rel="noopener" target="_blank">
-			{t({ locale: $localeStore, key: 'onboarding.beat3.tos.privacy' })}
-		</a>{t({ locale: $localeStore, key: 'onboarding.beat3.tos.suffix' })}
-		<span class="serif-italic">
-			{t({ locale: $localeStore, key: 'onboarding.beat3.tos.tail' })}
-		</span>
-	</p>
+	{#if !authenticated}
+		<p class="ob2-tos">
+			{t({ locale: $localeStore, key: 'onboarding.beat3.tos.prefix' })}
+			<a class="ob2-tos-link" href="/info/terms" rel="noopener" target="_blank">
+				{t({ locale: $localeStore, key: 'onboarding.beat3.tos.terms' })}
+			</a>
+			{t({ locale: $localeStore, key: 'onboarding.beat3.tos.and' })}
+			<a class="ob2-tos-link" href="/info/privacy" rel="noopener" target="_blank">
+				{t({ locale: $localeStore, key: 'onboarding.beat3.tos.privacy' })}
+			</a>{t({ locale: $localeStore, key: 'onboarding.beat3.tos.suffix' })}
+			<span class="serif-italic">
+				{t({ locale: $localeStore, key: 'onboarding.beat3.tos.tail' })}
+			</span>
+		</p>
+	{/if}
 
 	<button class="ob2-skip-link" onclick={onBack} type="button">
 		{t({ locale: $localeStore, key: 'onboarding.beat3.back' })}
@@ -244,6 +264,33 @@
 
 	.ob2-auth-slot {
 		margin-top: 0.5rem;
+	}
+
+	.ob2-btn-primary {
+		appearance: none;
+		width: 100%;
+		padding: 0.85rem 1rem;
+		font: inherit;
+		font-size: var(--t-14);
+		font-weight: 700;
+		color: var(--text-on-accent, #fff);
+		background: var(--laurel);
+		border: 1px solid var(--laurel);
+		border-radius: var(--r-12);
+		cursor: pointer;
+		transition:
+			background 140ms ease,
+			color 140ms ease,
+			border-color 140ms ease;
+	}
+
+	.ob2-btn-primary:hover:not(:disabled) {
+		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
+	}
+
+	.ob2-btn-primary:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
 	}
 
 	.ob2-tos {

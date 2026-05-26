@@ -35,9 +35,13 @@
 			side: 'YES' | 'NO' | null;
 			handle: string | null;
 		}) => void;
+		// True when the user is already signed in (post-signin onboarding
+		// path). Beat 3 swaps its provider stack for a Finish button, and
+		// the "Already a member? Sign in" affordance is hidden.
+		authenticated?: boolean;
 	}
 
-	const { onComplete }: Props = $props();
+	const { onComplete, authenticated = false }: Props = $props();
 
 	type Beat = '1a' | '1b' | '2' | '3';
 
@@ -81,12 +85,14 @@
 </script>
 
 <div class="ob2-orchestrator">
-	<a class="ob2-switch-link" href={PublicPath.SignIn}>
-		{t({ locale: $localeStore, key: 'onboarding.switch.prefix' })}
-		<span class="ob2-switch-link-accent">
-			{t({ locale: $localeStore, key: 'onboarding.switch.signin' })}
-		</span>
-	</a>
+	{#if !authenticated}
+		<a class="ob2-switch-link" href={PublicPath.SignIn}>
+			{t({ locale: $localeStore, key: 'onboarding.switch.prefix' })}
+			<span class="ob2-switch-link-accent">
+				{t({ locale: $localeStore, key: 'onboarding.switch.signin' })}
+			</span>
+		</a>
+	{/if}
 
 	<div class="ob2-beat-stage">
 		{#key beat}
@@ -107,6 +113,7 @@
 					<OnboardingBeat2 onAdvance={handleHandle} onBack={handleHandleBack} {participantId} />
 				{:else}
 					<OnboardingBeat3
+						{authenticated}
 						{handle}
 						onBack={handleAuthBack}
 						onComplete={handleAuthComplete}

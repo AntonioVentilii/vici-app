@@ -44,4 +44,20 @@ export interface UserPreferences {
 	 * through the profile so the list survives device swaps.
 	 */
 	savedMarketIds: string[];
+	/**
+	 * Featured-event participant id picked during Beat 1.a of onboarding.
+	 * Empty string means the user skipped the team pick.
+	 */
+	favoriteParticipantId: string;
+	/**
+	 * YES/NO commitment locked in during Beat 1.b of onboarding. Empty
+	 * string means no commitment was made (skip path).
+	 */
+	favoriteSide: '' | 'YES' | 'NO';
+	/**
+	 * Flips to `true` once the 3-beat onboarding flow finishes,
+	 * regardless of which picks were ultimately persisted. Source of
+	 * truth for whether to re-prompt a signed-in user on next visit.
+	 */
+	onboardingCompleted: boolean;
 }

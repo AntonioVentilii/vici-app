@@ -1021,6 +1021,7 @@ export const deMessages = {
 	'onboarding.beat2.sub': 'Man weiß, wer den Tipp abgegeben hat. Verdient, nicht geschenkt.',
 	'onboarding.beat2.title': 'Sichere dir einen Namen.',
 	'onboarding.beat3.back': '← Zurück zum Namen',
+	'onboarding.beat3.finish_cta': 'Einrichtung abschließen',
 	'onboarding.beat3.handle_placeholder': 'predictor',
 	'onboarding.beat3.sub':
 		'dein Tipp schließt am {resolves}. Wir mailen dir das Ergebnis — behalte deinen Eintrag.',

@@ -1016,6 +1016,7 @@ export const itMessages = {
 	'onboarding.beat2.sub': 'Si saprà chi ha fatto la chiamata. Guadagnato, non regalato.',
 	'onboarding.beat2.title': 'Prendi un nome.',
 	'onboarding.beat3.back': '← Torna al nome',
+	'onboarding.beat3.finish_cta': 'Completa configurazione',
 	'onboarding.beat3.handle_placeholder': 'predictor',
 	'onboarding.beat3.sub':
 		'la tua chiamata si chiude il {resolves}. Ti scriviamo via email — conserva il tuo record.',
