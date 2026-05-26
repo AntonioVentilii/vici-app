@@ -131,13 +131,10 @@ export const esMessages = {
 	'account.email.empty': 'Sin email registrado.',
 	'account.email.eyebrow': 'CORREO ELECTRÓNICO',
 	'account.email.pending': 'La gestión del email llega con la actualización del backend.',
-	'account.email.verified': 'Verificado',
 	'account.intro':
 		'VICI usa Internet Identity o Google. Sin contraseñas. Cambia cuando quieras — tus datos siguen contigo.',
 	'account.method.current': 'Método de acceso actual',
 	'account.method.eyebrow': 'MÉTODO DE ACCESO',
-	'account.method.google': 'Google',
-	'account.method.ii': 'Internet Identity',
 	'account.switch.cta': 'Cerrar sesión para cambiar',
 	'account.switch.hint':
 		'Cambiar de método cierra la sesión. Inicia sesión con el nuevo método para continuar.',

@@ -131,13 +131,10 @@ export const frMessages = {
 	'account.email.empty': 'Aucune adresse e-mail.',
 	'account.email.eyebrow': 'ADRESSE E-MAIL',
 	'account.email.pending': "La gestion de l'e-mail arrive avec la mise à jour backend.",
-	'account.email.verified': 'Vérifié',
 	'account.intro':
 		'VICI utilise Internet Identity ou Google. Pas de mot de passe. Change de méthode à tout moment — tes données restent.',
 	'account.method.current': 'Méthode de connexion actuelle',
 	'account.method.eyebrow': 'MÉTHODE DE CONNEXION',
-	'account.method.google': 'Google',
-	'account.method.ii': 'Internet Identity',
 	'account.switch.cta': 'Se déconnecter pour changer',
 	'account.switch.hint':
 		'Changer de méthode te déconnecte. Reconnecte-toi avec la nouvelle méthode pour continuer.',

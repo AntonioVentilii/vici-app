@@ -131,13 +131,10 @@ export const deMessages = {
 	'account.email.empty': 'Keine E-Mail hinterlegt.',
 	'account.email.eyebrow': 'E-MAIL-ADRESSE',
 	'account.email.pending': 'E-Mail-Verwaltung kommt mit dem Backend-Update.',
-	'account.email.verified': 'Verifiziert',
 	'account.intro':
 		'VICI nutzt Internet Identity oder Google. Keine Passwörter. Methode jederzeit wechseln — deine Daten bleiben.',
 	'account.method.current': 'Aktuelle Anmeldemethode',
 	'account.method.eyebrow': 'AKTUELLE ANMELDEMETHODE',
-	'account.method.google': 'Google',
-	'account.method.ii': 'Internet Identity',
 	'account.switch.cta': 'Abmelden zum Wechseln',
 	'account.switch.hint':
 		'Ein Methodenwechsel meldet dich ab. Melde dich mit der neuen Methode wieder an.',

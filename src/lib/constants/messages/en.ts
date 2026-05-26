@@ -131,13 +131,10 @@ export const enMessages = {
 	'account.email.empty': 'No email on file.',
 	'account.email.eyebrow': 'EMAIL ADDRESS',
 	'account.email.pending': 'Email management lands with the backend update.',
-	'account.email.verified': 'Verified',
 	'account.intro':
 		'VICI uses Internet Identity or Google. No passwords. Switch any time — your record stays.',
 	'account.method.current': 'Current sign-in method',
 	'account.method.eyebrow': 'CURRENT SIGN-IN METHOD',
-	'account.method.google': 'Google',
-	'account.method.ii': 'Internet Identity',
 	'account.switch.cta': 'Sign out to switch method',
 	'account.switch.hint': 'Switching signs you out. Sign back in with the new method to continue.',
 	'account.switch.signing_out': 'Signing out…',
