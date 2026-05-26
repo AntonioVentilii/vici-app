@@ -146,14 +146,22 @@
 		try {
 			// Pre-warmed deck from `flow.store` — populated on app
 			// init and refreshed in the background on input changes.
-			// Falls back to an on-demand build when the first warm is
-			// still in flight (rare).
-			const cached = peekFlow();
+			// `peekFlow` validates the cached payload against the
+			// session's current balance domain and featured-event
+			// scope; a mismatch (a rebuild for the new inputs is
+			// still in flight) or a cold start falls through to an
+			// on-demand build so the user never sees markets from
+			// the previous scope.
+			const expectedTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
+			const cached = peekFlow({
+				domain: $balanceDomain,
+				featuredEventTag: expectedTag
+			});
 			const prepared: PreparedFlow = nonNullish(cached)
 				? cached
 				: await prepareFlow({
 						domain: $balanceDomain,
-						featuredEventTag: $featuredEventActive ? $featuredEvent.categoryTag : undefined,
+						featuredEventTag: expectedTag,
 						signedIn: nonNullish($userStore.user)
 					});
 

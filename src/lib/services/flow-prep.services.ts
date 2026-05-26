@@ -56,13 +56,26 @@ export const prepareFlow = async ({
 	signedIn,
 	exclude = []
 }: PrepareFlowOpts): Promise<PreparedFlow> => {
-	const [queue, tagMap, metadataBySeries, signals] = await Promise.all([
-		getFlowQueue(domain),
-		listMarketTagsBySeries().catch(() => ({})),
-		listMarketMetadataBySeries().catch(() => ({})),
+	// Share the tag and metadata fetches across `getFlowQueue` and
+	// `getUserMarketSignals` so we don't pay for them three times per
+	// warm. The promises are awaited in parallel inside each callee
+	// via `Promise.all`, so the dependent calls still overlap with
+	// the rest of their fetches (markets, profile, trade history,
+	// follows) — only the duplicate I/O is removed.
+	const tagsPromise = listMarketTagsBySeries().catch(() => ({}));
+	const metadataPromise = listMarketMetadataBySeries().catch(() => ({}));
+
+	const [queue, signals, tagMap, metadataBySeries] = await Promise.all([
+		getFlowQueue({
+			domain,
+			tagMappings: tagsPromise,
+			metadataBySeries: metadataPromise
+		}),
 		signedIn
-			? getUserMarketSignals(domain).catch(() => EMPTY_SIGNALS)
-			: Promise.resolve(EMPTY_SIGNALS)
+			? getUserMarketSignals({ domain, tagMappings: tagsPromise }).catch(() => EMPTY_SIGNALS)
+			: Promise.resolve(EMPTY_SIGNALS),
+		tagsPromise,
+		metadataPromise
 	]);
 
 	const tagsByMarket = tagMap as Record<string, string[]>;

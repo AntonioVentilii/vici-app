@@ -1,9 +1,11 @@
 import { browser } from '$app/environment';
+import type { ClearingDid } from '$declarations';
 import { balanceDomain } from '$lib/derived/balance-domain.derived';
 import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 import { userSignedIn } from '$lib/derived/user.derived';
 import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 import { userStore } from '$lib/stores/user.store';
+import { compareBalanceDomains } from '$lib/utils/balance-domain.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { derived, get, writable, type Readable } from 'svelte/store';
 
@@ -77,11 +79,22 @@ const warm = async (): Promise<void> => {
 		return;
 	}
 
-	internal.update((s) => ({ ...s, status: 'building' }));
+	// Drop `next` at the start of the warm: it was built off the
+	// previous `current` and is no longer guaranteed to match the
+	// inputs we're about to rebuild from. The new `next` is set at
+	// the end of this function.
+	internal.update((s) => ({ ...s, next: undefined, status: 'building' }));
 
 	const { result: current, token } = await runBuild([]);
 
-	if (token !== buildToken || isNullish(current)) {
+	// If a newer build started while ours was in flight, let it own
+	// the next status transition — touching state here could flip
+	// status back to `ready` while a fresh build is still running.
+	if (token !== buildToken) {
+		return;
+	}
+
+	if (isNullish(current)) {
 		internal.update((s) => ({
 			...s,
 			status: nonNullish(s.current) ? 'ready' : 'idle'
@@ -101,8 +114,11 @@ const warm = async (): Promise<void> => {
 
 /**
  * Mark the cache as stale and rebuild in the background. The
- * previous deck stays visible to consumers until the rebuild lands
- * so the UI never blocks on the refresh.
+ * previous `current` deck stays visible to consumers until the
+ * rebuild lands so the UI never blocks on the refresh. `next` is
+ * always cleared, however — it was paired with the now-stale
+ * inputs and would otherwise let `advanceFlow()` promote a
+ * follow-up deck built for the wrong domain / event / interests.
  */
 export const invalidateFlow = (): void => {
 	if (!browser) {
@@ -111,6 +127,7 @@ export const invalidateFlow = (): void => {
 
 	internal.update((s) => ({
 		...s,
+		next: undefined,
 		status: nonNullish(s.current) ? 'stale' : 'idle'
 	}));
 
@@ -158,13 +175,37 @@ export const advanceFlow = (): void => {
 
 /**
  * Returns the prepared current Flow without removing it from the
- * store. FlowMode reads this synchronously on mount; the payload
- * stays in `current` until `advanceFlow()` promotes `next` over
- * it. Returns `undefined` while the first warm is still in flight
- * — the component should fall back to an on-demand `prepareFlow()`
- * call in that race.
+ * store, but only when the cached payload matches the caller's
+ * expected inputs (balance domain + featured-event tag). A mismatch
+ * means a background rebuild for the new inputs is in flight and
+ * the cached deck would surface markets from the previous scope,
+ * so the caller should fall back to an on-demand `prepareFlow()`
+ * call. Returns `undefined` while the first warm is still in
+ * flight too.
  */
-export const peekFlow = (): PreparedFlow | undefined => get(internal).current;
+export const peekFlow = ({
+	domain,
+	featuredEventTag
+}: {
+	domain: ClearingDid.BalanceDomain;
+	featuredEventTag: string | undefined;
+}): PreparedFlow | undefined => {
+	const cached = get(internal).current;
+
+	if (isNullish(cached)) {
+		return;
+	}
+
+	if (!compareBalanceDomains(cached.domain, domain)) {
+		return;
+	}
+
+	if (cached.featuredEventTag !== featuredEventTag) {
+		return;
+	}
+
+	return cached;
+};
 
 /**
  * Subscribes to the inputs that affect the prepared deck and kicks
