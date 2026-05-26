@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { getDoc, signOut } from '@junobuild/core';
-	import { LogOut, Settings, User } from 'lucide-svelte/icons';
+	import { getDoc } from '@junobuild/core';
+	import { Settings, User } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -27,7 +27,6 @@
 	 * to render the "Joined" line.
 	 */
 	let joinedAtNs = $state<bigint | undefined>(undefined);
-	let trailingMenuOpen = $state(false);
 
 	const loadJoinedAt = async (principal: string) => {
 		try {
@@ -43,18 +42,12 @@
 		}
 	};
 
-	const handleSignOut = async () => {
-		trailingMenuOpen = false;
-
-		try {
-			await signOut();
-		} catch (err) {
-			console.error('ProfilePage: signOut failed', err);
-		}
-	};
-
+	/**
+	 * Appbar gear navigates straight to Settings — the prototype
+	 * (`screens.jsx:884`) has no trailing menu; sign-out lives only on
+	 * the Settings page.
+	 */
 	const handleOpenSettings = () => {
-		trailingMenuOpen = false;
 		void goto(resolve(AppPath.Settings));
 	};
 
@@ -78,10 +71,8 @@
 {#snippet profileAppbarRight()}
 	<button
 		class="profile-mobile-icon-btn"
-		aria-expanded={trailingMenuOpen}
-		aria-haspopup="menu"
 		aria-label={t({ locale: $localeStore, key: 'settings.title' })}
-		onclick={() => (trailingMenuOpen = !trailingMenuOpen)}
+		onclick={handleOpenSettings}
 		type="button"
 	>
 		<Settings aria-hidden="true" size={18} strokeWidth={1.8} />
@@ -91,10 +82,8 @@
 {#snippet profileDesktopRight()}
 	<button
 		class="profile-desktop-icon-btn"
-		aria-expanded={trailingMenuOpen}
-		aria-haspopup="menu"
 		aria-label={t({ locale: $localeStore, key: 'settings.title' })}
-		onclick={() => (trailingMenuOpen = !trailingMenuOpen)}
+		onclick={handleOpenSettings}
 		type="button"
 	>
 		<Settings aria-hidden="true" size={22} strokeWidth={1.6} />
@@ -114,29 +103,6 @@
 			title={t({ locale: $localeStore, key: 'profile.title' })}
 		/>
 	</div>
-
-	{#if trailingMenuOpen}
-		<div class="profile-trailing-menu" role="menu">
-			<button
-				class="profile-trailing-item"
-				onclick={handleOpenSettings}
-				role="menuitem"
-				type="button"
-			>
-				<Settings aria-hidden="true" size={14} strokeWidth={1.8} />
-				<span>{t({ locale: $localeStore, key: 'settings.title' })}</span>
-			</button>
-			<button
-				class="profile-trailing-item is-danger"
-				onclick={handleSignOut}
-				role="menuitem"
-				type="button"
-			>
-				<LogOut aria-hidden="true" size={14} strokeWidth={1.8} />
-				<span>{t({ locale: $localeStore, key: 'settings.sign_out' })}</span>
-			</button>
-		</div>
-	{/if}
 
 	{#if $userStore.profile}
 		<ProfileDashboard
@@ -179,47 +145,6 @@
 <style lang="postcss">
 	.profile-page {
 		position: relative;
-	}
-
-	.profile-trailing-menu {
-		position: absolute;
-		top: 3.25rem;
-		right: 0.5rem;
-		z-index: 30;
-		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-		min-width: 11rem;
-		padding: 0.4rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-popover);
-		box-shadow: var(--shadow-card);
-	}
-
-	.profile-trailing-item {
-		display: flex;
-		align-items: center;
-		gap: 0.55rem;
-		padding: 0.5rem 0.6rem;
-		border: 0;
-		border-radius: var(--r-8);
-		background: transparent;
-		color: var(--text-base);
-		font: inherit;
-		font-size: var(--t-13);
-		font-weight: 600;
-		text-align: left;
-		cursor: pointer;
-		transition: background-color var(--d-hover) var(--ease-vici);
-	}
-
-	.profile-trailing-item:hover {
-		background: color-mix(in srgb, var(--color-primary) 6%, transparent);
-	}
-
-	.profile-trailing-item.is-danger {
-		color: var(--no);
 	}
 
 	.profile-mobile-icon-btn {

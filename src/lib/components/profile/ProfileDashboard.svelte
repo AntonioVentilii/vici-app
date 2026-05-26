@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Check, Flame, Lock, Pencil, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
@@ -48,7 +47,6 @@
 
 	let editProfileOpen = $state(false);
 	let editedNickname = $state('');
-	let editedBio = $state('');
 	let pending = $state(false);
 	type NicknameEditStatus = 'available' | 'taken' | 'too_short' | 'required' | 'check_failed';
 	let nicknameStatus = $state<NicknameEditStatus | undefined>(undefined);
@@ -56,36 +54,6 @@
 	let nicknameCheckToken = 0;
 	let nicknameCheckTimer: ReturnType<typeof setTimeout> | undefined;
 	const nicknameCheckDebounce_ms = 350;
-
-	/* Bio is FE-only (localStorage). The profile schema does not carry a
-	   bio field yet; adding one requires a satellite redeploy. Keeping the
-	   bio device-local mirrors the prototype's behaviour and unblocks the
-	   parity surface without touching the wire schema. */
-	const BIO_KEY = 'vici.profile.bio';
-
-	let bio = $state('');
-
-	onMount(() => {
-		if (browser) {
-			try {
-				bio = localStorage.getItem(BIO_KEY) ?? '';
-			} catch {
-				bio = '';
-			}
-		}
-	});
-
-	const saveBio = (value: string) => {
-		bio = value;
-
-		if (browser) {
-			try {
-				localStorage.setItem(BIO_KEY, value);
-			} catch {
-				// quota / private mode — non-fatal
-			}
-		}
-	};
 
 	const scheduleNicknameAvailabilityCheck = (value: string) => {
 		if (nicknameCheckTimer) {
@@ -149,7 +117,6 @@
 
 	const openEditProfile = () => {
 		editedNickname = profile.nickname;
-		editedBio = bio;
 		nicknameStatus = 'available';
 		nicknameChecking = false;
 		editProfileOpen = true;
@@ -172,15 +139,8 @@
 		}
 	};
 
-	const onBioInput = (event: Event) => {
-		if (event.currentTarget instanceof HTMLTextAreaElement) {
-			editedBio = event.currentTarget.value;
-		}
-	};
-
 	const handleSaveProfile = async () => {
 		const trimmed = editedNickname.trim();
-		const trimmedBio = editedBio.trim();
 
 		if (trimmed.length < MIN_NICKNAME_LENGTH) {
 			return;
@@ -234,7 +194,6 @@
 				userStore.update((curr) => ({ ...curr, profile: updatedData }));
 			}
 
-			saveBio(trimmedBio);
 			editProfileOpen = false;
 		} catch (err: unknown) {
 			const message = err instanceof Error ? err.message : '';
@@ -318,6 +277,17 @@
 	const totalTrades = $derived(profile.totalTrades ?? 0);
 	const archetype = $derived(profile.archetype ? ARCHETYPE_MAP.get(profile.archetype) : undefined);
 	const archetypeAccent = $derived(archetype?.accent ?? 'var(--color-primary)');
+
+	/**
+	 * VXP balance — for now equal to lifetime points. The prototype
+	 * (`screens.jsx:894`) renders this as a small laurel-accent chip
+	 * next to the handle ("1,000 VXP"). Locale-aware separators via
+	 * `toLocaleString`.
+	 */
+	const vxpBalance = $derived(points);
+	const vxpBalanceLabel = $derived(`${vxpBalance.toLocaleString($localeStore)} VXP`);
+
+	const accuracyDisplay = $derived((Math.round(accuracy * 10) / 10).toFixed(0));
 
 	/**
 	 * Joined date — derived from the Juno doc's `created_at` (ns).
@@ -631,19 +601,12 @@
 			</button>
 
 			<div class="profile-identity-meta">
+				<!-- Row 1: handle · VXP balance chip · edit pencil -->
 				<div class="profile-handle-row">
 					<h1 class="profile-handle">@{profile.nickname}</h1>
-					{#if archetype}
-						<span class="profile-archetype-chip">
-							{t({ locale: $localeStore, key: archetype.tagKey })}
-						</span>
-					{/if}
-					{#if dailyStreak > 0}
-						<span class="profile-streak-inline" aria-label="streak">
-							<Flame aria-hidden="true" size={12} strokeWidth={2} />
-							<span class="num">{dailyStreak}</span>
-						</span>
-					{/if}
+					<span class="num profile-vxp-chip" aria-label={vxpBalanceLabel}>
+						{vxpBalanceLabel}
+					</span>
 					{#if isOwnProfile}
 						<button
 							class="profile-edit-btn"
@@ -656,30 +619,73 @@
 					{/if}
 				</div>
 
-				{#if bio.length > 0}
-					<p class="profile-bio serif-italic">{bio}</p>
+				<!-- Row 2: school / archetype chip(s) BELOW the handle. The
+				     prototype renders the active university chip in the
+				     school's own accent ("STANFORD" red) — we don't carry
+				     per-school colors yet, so we use the laurel accent as a
+				     stand-in. Falls back to the archetype tag when no
+				     university affiliation is set. -->
+				{#if myUni}
+					{@const uniOption = lookupWorldsAffiliation({
+						kind: 'university',
+						id: myUni.affiliationId
+					})}
+					<div class="profile-affil-chip-row">
+						<span class="profile-school-chip">
+							<span class="profile-school-chip-dot" aria-hidden="true"></span>
+							{(uniOption?.name ?? '').toUpperCase()}
+						</span>
+						{#if archetype}
+							<span class="profile-archetype-chip">
+								{t({ locale: $localeStore, key: archetype.tagKey })}
+							</span>
+						{/if}
+					</div>
+				{:else if archetype}
+					<div class="profile-affil-chip-row">
+						<span class="profile-archetype-chip">
+							{t({ locale: $localeStore, key: archetype.tagKey })}
+						</span>
+					</div>
 				{/if}
 
+				<!-- Row 3: compact identity stats — Lvl · accuracy -->
 				<p class="profile-stats-line">
 					{t({
 						locale: $localeStore,
-						key: 'profile.dashboard.lifetime_stats',
-						params: { calls: statsLineCalls, accuracy: (Math.round(accuracy * 10) / 10).toFixed(0) }
+						key: 'profile.dashboard.identity_meta',
+						params: { level, accuracy: accuracyDisplay }
 					})}
 				</p>
 
-				{#if sessionVxpDelta.count > 0}
-					<p
-						class="profile-session-line"
-						class:is-down={sessionVxpDelta.delta < 0}
-						class:is-up={sessionVxpDelta.delta > 0}
-					>
-						<span class="num">
-							{sessionVxpDelta.delta >= 0 ? '+' : ''}{sessionVxpDelta.delta}
+				<!-- Row 4: inline streak + calls (🔥 N · M calls) -->
+				<p class="profile-streak-line">
+					{#if dailyStreak > 0}
+						<span class="profile-streak-inline" aria-label="streak">
+							<Flame aria-hidden="true" size={12} strokeWidth={2} />
+							<span class="num">{dailyStreak}</span>
 						</span>
-						<span>{t({ locale: $localeStore, key: 'profile.dashboard.session_today' })}</span>
-					</p>
-				{/if}
+						<span class="profile-stats-sep" aria-hidden="true">·</span>
+					{/if}
+					<span class="num">
+						{t({
+							locale: $localeStore,
+							key: 'profile.dashboard.calls_count',
+							params: { calls: statsLineCalls }
+						})}
+					</span>
+					{#if sessionVxpDelta.count > 0}
+						<span class="profile-stats-sep" aria-hidden="true">·</span>
+						<span
+							class="num profile-session-inline"
+							class:is-down={sessionVxpDelta.delta < 0}
+							class:is-up={sessionVxpDelta.delta > 0}
+						>
+							{sessionVxpDelta.delta >= 0 ? '+' : ''}{sessionVxpDelta.delta}
+							{t({ locale: $localeStore, key: 'profile.dashboard.session_today' })}
+						</span>
+					{/if}
+				</p>
 
 				{#if joinedLabel !== null}
 					<p class="profile-joined-line">
@@ -693,12 +699,15 @@
 			</div>
 		</div>
 
+		<!-- Level progress — explicit "LEVEL" eyebrow + "{xp} / {target} VXP"
+		     numbers, mirroring the prototype's level row. -->
 		<div class="profile-level-row">
 			<span class="profile-level-label">
-				{t({ locale: $localeStore, key: 'profile.dashboard.level_badge', params: { level } })}
+				{t({ locale: $localeStore, key: 'profile.dashboard.level_label' })}
+				{level}
 			</span>
 			<span class="num profile-level-target">
-				{points.toLocaleString()} / {nextLevelTarget.toLocaleString()} VXP
+				{points.toLocaleString($localeStore)} / {nextLevelTarget.toLocaleString($localeStore)} VXP
 			</span>
 		</div>
 		<div class="profile-level-bar" role="presentation">
@@ -821,12 +830,14 @@
 					<span class="profile-achievement-emblem" aria-hidden="true">
 						{evaluation.def.emblem}
 					</span>
-					<span class="profile-achievement-name">
-						{t({ locale: $localeStore, key: evaluation.def.nameKey })}
-					</span>
-					<span class="profile-achievement-sub">
-						{t({ locale: $localeStore, key: evaluation.def.descriptionKey })}
-					</span>
+					<div class="profile-achievement-text">
+						<span class="profile-achievement-name">
+							{t({ locale: $localeStore, key: evaluation.def.nameKey })}
+						</span>
+						<span class="profile-achievement-sub">
+							{t({ locale: $localeStore, key: evaluation.def.descriptionKey })}
+						</span>
+					</div>
 					{#if !unlocked && evaluation.progress > 0}
 						<div
 							class="profile-achievement-progress"
@@ -911,21 +922,6 @@
 						})}
 					</p>
 				{/if}
-			</label>
-
-			<label class="profile-edit-field">
-				<span class="profile-edit-label">
-					{t({ locale: $localeStore, key: 'profile.dashboard.bio_label' })}
-				</span>
-				<textarea
-					disabled={pending}
-					maxlength="140"
-					oninput={onBioInput}
-					placeholder={t({ locale: $localeStore, key: 'profile.dashboard.bio_placeholder' })}
-					rows="3"
-					value={editedBio}
-				></textarea>
-				<span class="profile-edit-counter num">{editedBio.length} / 140</span>
 			</label>
 
 			<div class="profile-edit-actions">
@@ -1100,16 +1096,100 @@
 		text-transform: uppercase;
 	}
 
+	/* VXP balance chip — small laurel pill next to the handle (mirrors
+	   the prototype's inline xp chip, screens.jsx:894). */
+	.profile-vxp-chip {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.15rem 0.5rem;
+		border-radius: var(--r-4);
+		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
+		border: 1px solid color-mix(in srgb, var(--color-primary) 25%, transparent);
+		color: var(--color-primary);
+		font-family: var(--font-mono);
+		font-size: 0.65rem;
+		font-weight: 700;
+		letter-spacing: 0.04em;
+	}
+
+	/* Affiliation chip row sits below the handle row. */
+	.profile-affil-chip-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.4rem;
+		margin-top: 0.1rem;
+	}
+
+	/* School chip — laurel-accent stand-in for the prototype's
+	   per-school colored chip (no per-school palette in our data yet). */
+	.profile-school-chip {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.18rem 0.55rem;
+		border-radius: var(--r-4);
+		background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+		color: var(--color-primary);
+		font-family: var(--font-mono);
+		font-size: 0.6rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+	}
+
+	.profile-school-chip-dot {
+		display: inline-block;
+		width: 5px;
+		height: 5px;
+		border-radius: 999px;
+		background: currentColor;
+		opacity: 0.85;
+	}
+
 	.profile-streak-inline {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.2rem;
-		padding: 0.15rem 0.4rem;
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--char-flame) 14%, transparent);
 		color: var(--char-flame);
 		font-size: var(--t-12);
 		font-weight: 700;
+	}
+
+	.profile-streak-line {
+		margin: 0;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.35rem;
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: var(--t-12);
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.profile-streak-line :global(.num) {
+		color: var(--text-base);
+		font-weight: 600;
+	}
+
+	.profile-streak-line .profile-streak-inline :global(.num) {
+		color: var(--char-flame);
+	}
+
+	.profile-stats-sep {
+		color: var(--text-muted);
+		opacity: 0.6;
+	}
+
+	.profile-session-inline.is-up {
+		color: var(--yes);
+	}
+
+	.profile-session-inline.is-down {
+		color: var(--no);
 	}
 
 	.profile-edit-btn {
@@ -1129,17 +1209,8 @@
 		color: var(--color-primary);
 	}
 
-	.profile-bio {
-		margin: 0.15rem 0 0;
-		color: var(--text-base);
-		font-size: var(--t-13);
-		line-height: var(--leading-snug);
-		opacity: 0.92;
-	}
-
 	.profile-stats-line,
-	.profile-joined-line,
-	.profile-session-line {
+	.profile-joined-line {
 		margin: 0;
 		display: flex;
 		align-items: center;
@@ -1149,14 +1220,6 @@
 		font-size: var(--t-12);
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
-	}
-
-	.profile-session-line.is-up {
-		color: var(--yes);
-	}
-
-	.profile-session-line.is-down {
-		color: var(--no);
 	}
 
 	.profile-level-row {
@@ -1440,25 +1503,44 @@
 		display: none;
 	}
 
+	/* Bigger card (~140px in the prototype) — emblem sits TOP-LEFT in
+	   its own row, with title + sub stacked below. An always-on
+	   underbar shows progress, going fully gold when unlocked. */
 	.profile-achievement-card {
+		position: relative;
 		display: flex;
-		min-width: 8.5rem;
+		min-width: 9rem;
+		min-height: 6rem;
 		flex-direction: column;
 		flex-shrink: 0;
-		gap: 0.35rem;
-		padding: 0.85rem;
+		align-items: flex-start;
+		gap: 0.5rem;
+		padding: 0.85rem 0.9rem 0.95rem;
 		border: 1px solid var(--border-base);
 		border-radius: 1rem;
 		background: var(--bg-popover);
 		scroll-snap-align: start;
+		overflow: hidden;
 	}
 
 	.profile-achievement-card:not(.is-unlocked) {
-		opacity: 0.6;
+		opacity: 0.65;
 	}
 
 	.profile-achievement-card.is-unlocked {
-		border-color: color-mix(in srgb, var(--color-primary) 30%, var(--border-base));
+		border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
+	}
+
+	/* Full-width gold underbar for unlocked tiles (mirrors the
+	   prototype's "fully gold filled" earned state). */
+	.profile-achievement-card.is-unlocked::after {
+		content: '';
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: 0;
+		height: 3px;
+		background: var(--color-primary);
 	}
 
 	.profile-achievement-emblem {
@@ -1471,6 +1553,13 @@
 		color: var(--text-base);
 		font-size: 18px;
 		line-height: 1;
+		align-self: flex-start;
+	}
+
+	.profile-achievement-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
 	}
 
 	.profile-achievement-card.is-unlocked .profile-achievement-emblem {
@@ -1607,8 +1696,7 @@
 		text-transform: uppercase;
 	}
 
-	.profile-edit-field input,
-	.profile-edit-field textarea {
+	.profile-edit-field input {
 		min-width: 0;
 		flex: 1;
 		border: 1px solid var(--border-base);
@@ -1619,7 +1707,6 @@
 		font: inherit;
 		font-weight: 600;
 		font-size: var(--t-14);
-		resize: vertical;
 	}
 
 	.profile-edit-hint {
@@ -1631,13 +1718,6 @@
 
 	.profile-edit-hint.is-warning {
 		color: var(--no);
-	}
-
-	.profile-edit-counter {
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: 0.65rem;
-		text-align: right;
 	}
 
 	.profile-edit-actions {

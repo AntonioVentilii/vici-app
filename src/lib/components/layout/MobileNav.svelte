@@ -7,17 +7,34 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
-	// Routes that don't have their own nav slot but should still light
-	// up a parent tab (per `docs/ai/frontend/design.md` §8.4 active-
-	// state cascade). The cascade table:
-	//
-	//  - Markets ← /markets/[id]
-	//  - Dash    ← /portfolio (Portfolio is the older detail surface
-	//              under the Dash tab)
-	//  - Social  ← /leagues, /worlds, /bouts (Friends now only lives
-	//              inside the Social tab strip; the standalone
-	//              /friends route is gone, see Tier C-27)
-	//  - Profile ← /wallet, /settings, /notifications
+	/**
+	 * Floating "pillnav" bottom nav — ports the prototype's `BottomNav`
+	 * (app.jsx:536-659 + app.css:2709-2848).
+	 *
+	 * Five tabs (Markets / Dash / Flow / Social / Profile) in a centred,
+	 * floating pill with a 3px laurel indicator that slides between
+	 * active tabs. Flow gets a permanent faint laurel halo behind its
+	 * icon and the indicator turns laurel when Flow is the active tab.
+	 *
+	 * Active-state aliasing — paths that don't have their own slot but
+	 * should still highlight a parent tab:
+	 *
+	 *  - Markets ← /app, /markets, /markets/*
+	 *  - Dash    ← /dash, /portfolio
+	 *  - Social  ← /social/*
+	 *  - Profile ← /profile, /profile/album, /settings, /wallet,
+	 *              /notifications
+	 *
+	 * Icons are inline `<svg>` (stroke 1.6 outline ↔ filled) instead of
+	 * lucide so we can match the prototype's outline-to-filled swap
+	 * exactly; this is the convention chosen in the prototype's
+	 * `ICONS` table (app.jsx:539-595).
+	 */
+
+	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
+
+	const isFlowPath = (path: AppPath) => path === AppPath.Flow;
+
 	const isActive = (path: AppPath) => {
 		const current = page.url.pathname;
 
@@ -25,18 +42,28 @@
 			return true;
 		}
 
-		if (path === AppPath.Home && (current === '/app' || current.startsWith('/markets/'))) {
+		if (
+			path === AppPath.Home &&
+			(current === '/app' || current.startsWith('/markets'))
+		) {
 			return true;
 		}
 
-		if (path === AppPath.Dash && current === AppPath.Portfolio) {
+		if (path === AppPath.Dash && (current === AppPath.Dash || current === AppPath.Portfolio)) {
+			return true;
+		}
+
+		if (path === AppPath.Social && current.startsWith('/social')) {
 			return true;
 		}
 
 		if (
 			path === AppPath.Profile &&
-			(current === AppPath.Wallet ||
+			(current === AppPath.Profile ||
+				current === AppPath.Album ||
+				current === AppPath.Wallet ||
 				current === AppPath.Settings ||
+				current.startsWith(`${AppPath.Settings}/`) ||
 				current === AppPath.Notifications)
 		) {
 			return true;
@@ -45,42 +72,411 @@
 		return false;
 	};
 
+	const activeIndex = $derived(visibleNavItems.findIndex(({ path }) => isActive(path)));
+	const isFlowActive = $derived(activeIndex >= 0 && isFlowPath(visibleNavItems[activeIndex].path));
+
 	const handleNav = (path: AppPath) => {
 		goto(path);
 	};
 
-	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
+	/* ------------------------------------------------------------------
+	 * Sliding indicator — measure the active tab and centre a 28px pill
+	 * over it. Recomputed via ResizeObserver so the indicator tracks
+	 * orientation changes / nav-width shifts (mirrors the prototype's
+	 * `useEffect` + `ResizeObserver` in app.jsx:613-632).
+	 * ------------------------------------------------------------------ */
+	let navEl: HTMLElement | null = $state(null);
+	let indicatorLeft = $state(0);
+	let indicatorOpacity = $state(0);
 
-	const mobileNavColumns = $derived(
-		`repeat(${Math.max(visibleNavItems.length, 1)}, minmax(0, 1fr))`
-	);
+	$effect(() => {
+		// Re-read on activeIndex change so the indicator slides over.
+		void activeIndex;
+
+		if (!navEl || activeIndex < 0) {
+			indicatorOpacity = 0;
+
+			return;
+		}
+
+		const update = () => {
+			if (!navEl) {
+				return;
+			}
+
+			const tabs = navEl.querySelectorAll<HTMLElement>('.pillnav-tab');
+			const tab = tabs[activeIndex];
+
+			if (!tab) {
+				return;
+			}
+
+			const tabRect = tab.getBoundingClientRect();
+			const navRect = navEl.getBoundingClientRect();
+			const centre = tabRect.left + tabRect.width / 2 - navRect.left;
+
+			indicatorLeft = centre - 14;
+			indicatorOpacity = 1;
+		};
+
+		update();
+
+		const ro = new ResizeObserver(update);
+		ro.observe(navEl);
+
+		return () => ro.disconnect();
+	});
 </script>
 
-<nav
-	style:grid-template-columns={mobileNavColumns}
-	class="border-border bg-background/90 shadow-card fixed bottom-0 left-0 z-50 grid w-full border-t px-2 pt-2 pb-[calc(env(safe-area-inset-bottom,0px)+18px)] backdrop-blur-2xl md:hidden"
->
-	{#each visibleNavItems as { labelKey, path, mobileIcon: Icon } (path)}
-		{@const isFlow = labelKey === 'nav.flow'}
-		<button
-			class="ease-vici duration-state relative flex flex-col items-center justify-center gap-1 transition-colors
-				{isFlow
-				? 'bg-primary text-primary-foreground shadow-mobilenav-active mx-1 -mt-2.5 rounded-2xl px-1 py-3'
-				: isActive(path)
-					? 'text-foreground py-2'
-					: 'text-muted-foreground hover:text-foreground py-2'}"
-			onclick={() => handleNav(path)}
-		>
-			{#if !isFlow && isActive(path)}
-				<span class="bg-primary absolute -top-px left-1/2 h-0.5 w-6 -translate-x-1/2 rounded-full"
-				></span>
-			{/if}
-			<Icon size={isFlow ? 22 : 20} strokeWidth={isActive(path) ? 2.5 : 1.6} />
-			<span style="letter-spacing: 0.06em;" class="text-center text-[10px] font-semibold uppercase">
-				{t({ locale: $localeStore, key: labelKey })}
-			</span>
-		</button>
-	{/each}
-</nav>
+<div class="pillnav-wrap md:hidden">
+	<nav bind:this={navEl} class="pillnav" aria-label="Primary">
+		<span
+			style:left="{indicatorLeft}px"
+			style:opacity={indicatorOpacity}
+			class="pillnav-indicator"
+			class:is-flow={isFlowActive}
+			aria-hidden="true"
+		></span>
+		{#each visibleNavItems as item, i (item.path)}
+			{@const active = i === activeIndex}
+			{@const flow = isFlowPath(item.path)}
+			<button
+				class="pillnav-tab"
+				class:active
+				class:flow-tab={flow}
+				aria-current={active ? 'page' : undefined}
+				onclick={() => handleNav(item.path)}
+				type="button"
+			>
+				<span class="pillnav-icon-wrap">
+					<span class="pillnav-icon-bg" aria-hidden="true"></span>
+					<span class="pillnav-icon" aria-hidden="true">
+						{#if item.labelKey === 'nav.markets'}
+							{#if active}
+								<svg fill="currentColor" viewBox="0 0 24 24">
+									<rect height="10" rx="1" width="3" x="4" y="10" />
+									<rect height="16" rx="1" width="3" x="11" y="4" />
+									<rect height="6" rx="1" width="3" x="18" y="14" />
+								</svg>
+							{:else}
+								<svg
+									fill="none"
+									stroke="currentColor"
+									stroke-linecap="round"
+									stroke-width="1.6"
+									viewBox="0 0 24 24"
+								>
+									<path d="M5 20V10" />
+									<path d="M12 20V4" />
+									<path d="M19 20V14" />
+								</svg>
+							{/if}
+						{:else if item.labelKey === 'nav.dash'}
+							{#if active}
+								<svg fill="currentColor" viewBox="0 0 24 24">
+									<rect height="9" rx="1.5" width="7" x="3" y="3" />
+									<rect height="5" rx="1.5" width="7" x="14" y="3" />
+									<rect height="9" rx="1.5" width="7" x="14" y="12" />
+									<rect height="5" rx="1.5" width="7" x="3" y="16" />
+								</svg>
+							{:else}
+								<svg
+									fill="none"
+									stroke="currentColor"
+									stroke-linejoin="round"
+									stroke-width="1.6"
+									viewBox="0 0 24 24"
+								>
+									<rect height="9" rx="1.5" width="7" x="3" y="3" />
+									<rect height="5" rx="1.5" width="7" x="14" y="3" />
+									<rect height="9" rx="1.5" width="7" x="14" y="12" />
+									<rect height="5" rx="1.5" width="7" x="3" y="16" />
+								</svg>
+							{/if}
+						{:else if item.labelKey === 'nav.flow'}
+							{#if active}
+								<svg fill="currentColor" viewBox="0 0 24 24">
+									<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" />
+								</svg>
+							{:else}
+								<svg
+									fill="none"
+									stroke="currentColor"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="1.6"
+									viewBox="0 0 24 24"
+								>
+									<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" />
+								</svg>
+							{/if}
+						{:else if item.labelKey === 'nav.social'}
+							{#if active}
+								<svg fill="currentColor" viewBox="0 0 24 24">
+									<circle cx="7" cy="10" r="3" />
+									<circle cx="17" cy="10" r="3" />
+									<circle cx="12" cy="17" r="3" />
+								</svg>
+							{:else}
+								<svg
+									fill="none"
+									stroke="currentColor"
+									stroke-linejoin="round"
+									stroke-width="1.6"
+									viewBox="0 0 24 24"
+								>
+									<circle cx="7" cy="10" r="3" />
+									<circle cx="17" cy="10" r="3" />
+									<circle cx="12" cy="17" r="3" />
+								</svg>
+							{/if}
+						{:else if item.labelKey === 'nav.profile'}
+							{#if active}
+								<svg viewBox="0 0 24 24">
+									<circle
+										cx="12"
+										cy="12"
+										fill="none"
+										r="9"
+										stroke="currentColor"
+										stroke-width="1.6"
+									/>
+									<circle cx="12" cy="10" fill="currentColor" r="3" />
+									<path d="M5.5 19.5c1.5-3 4-4 6.5-4s5 1 6.5 4" fill="currentColor" />
+								</svg>
+							{:else}
+								<svg
+									fill="none"
+									stroke="currentColor"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									stroke-width="1.6"
+									viewBox="0 0 24 24"
+								>
+									<circle cx="12" cy="12" r="9" />
+									<circle cx="12" cy="10" r="3" />
+									<path d="M6 19c1.5-2.5 3.6-3.5 6-3.5s4.5 1 6 3.5" />
+								</svg>
+							{/if}
+						{:else if item.mobileIcon}
+							{@const Icon = item.mobileIcon}
+							<Icon size={22} strokeWidth={active ? 2 : 1.6} />
+						{/if}
+					</span>
+				</span>
+				<span class="pillnav-label">
+					{t({ locale: $localeStore, key: item.labelKey })}
+				</span>
+			</button>
+		{/each}
+	</nav>
+</div>
 
-<div class="h-20 md:hidden"></div>
+<!-- Spacer so scrollable content clears the floating pill. -->
+<div class="pillnav-spacer md:hidden" aria-hidden="true"></div>
+
+<style lang="postcss">
+	.pillnav-wrap {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		padding: 0 14px calc(env(safe-area-inset-bottom, 0px) + 12px);
+		display: flex;
+		justify-content: center;
+		pointer-events: none;
+		z-index: 50;
+	}
+
+	.pillnav-spacer {
+		height: calc(env(safe-area-inset-bottom, 0px) + 88px);
+	}
+
+	.pillnav {
+		pointer-events: auto;
+		position: relative;
+		width: 100%;
+		display: grid;
+		grid-template-columns: repeat(5, 1fr);
+		padding: 6px;
+		border: 1px solid rgba(242, 236, 220, 0.12);
+		border-radius: 28px;
+		background: rgba(20, 18, 15, 0.74);
+		-webkit-backdrop-filter: blur(16px);
+		backdrop-filter: blur(16px);
+		box-shadow:
+			0 18px 32px -16px rgba(0, 0, 0, 0.55),
+			0 -6px 24px -16px rgba(0, 0, 0, 0.22),
+			inset 0 1px 0 rgba(242, 236, 220, 0.06);
+	}
+
+	:global([data-theme='light']) .pillnav {
+		background: rgba(250, 247, 235, 0.78);
+		border-color: rgba(14, 13, 11, 0.1);
+		box-shadow:
+			0 18px 32px -16px rgba(14, 13, 11, 0.18),
+			0 -6px 24px -16px rgba(14, 13, 11, 0.08),
+			inset 0 1px 0 rgba(255, 255, 255, 0.55);
+	}
+
+	:global([data-theme='peach']) .pillnav {
+		background: rgba(255, 243, 232, 0.78);
+		border-color: rgba(61, 36, 25, 0.12);
+		box-shadow:
+			0 18px 32px -16px rgba(61, 36, 25, 0.2),
+			0 -6px 24px -16px rgba(61, 36, 25, 0.1),
+			inset 0 1px 0 rgba(255, 255, 255, 0.45);
+	}
+
+	/* 3px laurel-coloured indicator capsule above the active tab. */
+	.pillnav-indicator {
+		position: absolute;
+		top: 3px;
+		width: 28px;
+		height: 3px;
+		border-radius: 999px;
+		background: var(--fg, var(--text-base));
+		opacity: 0.85;
+		transition:
+			left 280ms cubic-bezier(0.2, 0.7, 0.2, 1),
+			background 220ms var(--ease-vici, ease),
+			box-shadow 220ms var(--ease-vici, ease),
+			opacity 220ms var(--ease-vici, ease);
+		will-change: left;
+	}
+
+	.pillnav-indicator.is-flow {
+		background: var(--accent, var(--color-primary));
+		box-shadow: 0 0 8px rgba(226, 184, 66, 0.55);
+		opacity: 1;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.pillnav-indicator {
+			transition: none;
+		}
+	}
+
+	.pillnav-tab {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		padding: 8px 4px 6px;
+		min-height: 52px;
+		appearance: none;
+		border: 0;
+		border-radius: 20px;
+		background: transparent;
+		color: var(--fg-faint, var(--text-muted));
+		cursor: pointer;
+		font-family: var(--font-mono);
+		font-size: 9px;
+		font-weight: 500;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		transition:
+			color 180ms var(--ease-vici, ease),
+			transform 100ms var(--ease-vici, ease);
+	}
+
+	:global([data-theme='light']) .pillnav-tab,
+	:global([data-theme='peach']) .pillnav-tab {
+		color: rgba(14, 13, 11, 0.45);
+	}
+
+	.pillnav-tab:active {
+		transform: scale(0.95);
+	}
+
+	.pillnav-tab:focus-visible {
+		outline: 2px solid var(--accent, var(--color-primary));
+		outline-offset: 2px;
+	}
+
+	.pillnav-icon-wrap {
+		position: relative;
+		display: flex;
+		width: 40px;
+		height: 26px;
+		align-items: center;
+		justify-content: center;
+	}
+
+	/* Background pill behind icon — scales in on active. */
+	.pillnav-icon-bg {
+		position: absolute;
+		inset: -1px 6px;
+		border-radius: 14px;
+		background: rgba(242, 236, 220, 0.1);
+		opacity: 0;
+		transform: scaleX(0.6);
+		transform-origin: center;
+		transition:
+			background 200ms var(--ease-vici, ease),
+			opacity 200ms var(--ease-vici, ease),
+			transform 200ms var(--ease-vici, ease);
+	}
+
+	:global([data-theme='light']) .pillnav-icon-bg,
+	:global([data-theme='peach']) .pillnav-icon-bg {
+		background: rgba(14, 13, 11, 0.08);
+	}
+
+	.pillnav-tab.active .pillnav-icon-bg {
+		opacity: 1;
+		transform: scaleX(1);
+	}
+
+	.pillnav-tab.flow-tab.active .pillnav-icon-bg {
+		background: rgba(226, 184, 66, 0.18);
+	}
+
+	.pillnav-icon {
+		position: relative;
+		z-index: 1;
+		display: inline-flex;
+		width: 22px;
+		height: 22px;
+		align-items: center;
+		justify-content: center;
+		color: inherit;
+	}
+
+	.pillnav-icon :global(svg) {
+		width: 100%;
+		height: 100%;
+	}
+
+	.pillnav-tab.active {
+		color: var(--fg, var(--text-base));
+	}
+
+	.pillnav-tab.flow-tab.active {
+		color: var(--accent, var(--color-primary));
+	}
+
+	.pillnav-tab.active .pillnav-label {
+		font-weight: 600;
+	}
+
+	/* Flow tab — always laurel-tinted with a faint ever-on halo. */
+	.pillnav-tab.flow-tab {
+		color: var(--accent, var(--color-primary));
+	}
+
+	.pillnav-tab.flow-tab .pillnav-icon-wrap::before {
+		content: '';
+		position: absolute;
+		inset: 2px 8px;
+		border-radius: 14px;
+		background: rgba(226, 184, 66, 0.06);
+		pointer-events: none;
+		z-index: 0;
+	}
+
+	.pillnav-tab.flow-tab:not(.active) .pillnav-icon {
+		filter: drop-shadow(0 0 5px rgba(226, 184, 66, 0.32));
+	}
+</style>

@@ -1,23 +1,20 @@
 <script lang="ts">
-	import { Clock } from 'lucide-svelte/icons';
+	import { ChevronRight, Clock } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import WelcomeFAQ from '$lib/components/landing/WelcomeFAQ.svelte';
 	import WelcomeFeaturedEvent from '$lib/components/landing/WelcomeFeaturedEvent.svelte';
-	import WelcomeFinalCTA from '$lib/components/landing/WelcomeFinalCTA.svelte';
 	import WelcomeFlowFeature from '$lib/components/landing/WelcomeFlowFeature.svelte';
 	import WelcomeFooter from '$lib/components/landing/WelcomeFooter.svelte';
-	import WelcomeHeroFlowCard from '$lib/components/landing/WelcomeHeroFlowCard.svelte';
+	import WelcomeHeroDeck from '$lib/components/landing/WelcomeHeroDeck.svelte';
 	import WelcomeLiveMarkets from '$lib/components/landing/WelcomeLiveMarkets.svelte';
 	import WelcomeLoop from '$lib/components/landing/WelcomeLoop.svelte';
 	import WelcomeSocialProof from '$lib/components/landing/WelcomeSocialProof.svelte';
-	import WelcomeTrust from '$lib/components/landing/WelcomeTrust.svelte';
-	import WelcomeUseCases from '$lib/components/landing/WelcomeUseCases.svelte';
+	import WelcomeTrustAndClose from '$lib/components/landing/WelcomeTrustAndClose.svelte';
 	import Ticker from '$lib/components/layout/Ticker.svelte';
 	import WelcomeNav from '$lib/components/layout/WelcomeNav.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
-	import { WELCOME_MARKET_PREVIEWS } from '$lib/constants/welcome-markets.constants';
 	import { WORLD_CUP_KICKOFF } from '$lib/constants/world-cup-kickoff.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -30,12 +27,14 @@
 		document.title = 'VICI';
 	});
 
-	const [heroMarket] = WELCOME_MARKET_PREVIEWS;
 	const wcDays = WORLD_CUP_KICKOFF.daysToKickoff;
 </script>
 
 <div class="welcome-shell">
 	<WelcomeNav />
+	<!-- Ticker stays at the TOP per user request — intentional, locked
+	     divergence from the prototype (which places the ticker between
+	     Hero and the WC feature block). -->
 	<Ticker />
 
 	<main class="welcome-page">
@@ -68,7 +67,10 @@
 					</p>
 					<div class="welcome-actions">
 						<Button onclick={() => goto(PublicPath.SignUp)} size="lg">
-							{t({ locale: $localeStore, key: 'cta.primary' })}
+							<span class="welcome-cta-label">
+								{t({ locale: $localeStore, key: 'cta.primary' })}
+								<ChevronRight aria-hidden="true" size={16} strokeWidth={2} />
+							</span>
 						</Button>
 						<Button onclick={() => goto(AppPath.Markets)} size="lg" variant="outline">
 							{t({ locale: $localeStore, key: 'cta.see_markets' })}
@@ -91,9 +93,7 @@
 					</div>
 				</div>
 				<div class="welcome-hero-visual">
-					<div class="welcome-hero-card-frame">
-						<WelcomeHeroFlowCard market={heroMarket} />
-					</div>
+					<WelcomeHeroDeck />
 				</div>
 			</div>
 		</section>
@@ -123,20 +123,16 @@
 			<WelcomeLoop />
 		</section>
 
-		<section id="vision" class="welcome-section">
-			<WelcomeUseCases />
-		</section>
-
-		<section id="trust" class="welcome-section welcome-section--trust">
-			<WelcomeTrust />
-		</section>
-
+		<!-- FAQ sits between Loop and the combined Trust+Close, matching
+		     the prototype's `<FAQ />` → `<TrustAndClose />` ordering. -->
 		<section id="faq" class="welcome-section">
 			<WelcomeFAQ />
 		</section>
 
-		<section class="welcome-final">
-			<WelcomeFinalCTA />
+		<!-- Combined Trust + Close — credibility wall + final CTA in one
+		     closing surface (prototype: `<TrustAndClose />`). -->
+		<section id="trust" class="welcome-section welcome-section--trust">
+			<WelcomeTrustAndClose />
 		</section>
 	</main>
 
@@ -266,6 +262,14 @@
 		margin-top: 1.25rem;
 	}
 
+	/* Trailing chevron sits inline with the CTA label — matches the
+	   prototype's `<Icon name="chevron" />` after `cta.primary`. */
+	.welcome-cta-label {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
 	.welcome-micro {
 		margin: 0.75rem 0 0;
 		font-size: var(--t-12);
@@ -298,19 +302,11 @@
 		padding: clamp(1.5rem, 4vw, 2.75rem) 0;
 	}
 
-	.welcome-hero-card-frame {
-		width: min(100%, 26rem);
-	}
-
 	.welcome-section {
 		padding: clamp(4rem, 8vw, 6rem) clamp(1.25rem, 4vw, 2rem);
 	}
 
 	.welcome-section--trust {
 		background: color-mix(in srgb, var(--foreground) 2%, transparent);
-	}
-
-	.welcome-final {
-		padding: 4rem clamp(1.25rem, 4vw, 2rem) 2rem;
 	}
 </style>
