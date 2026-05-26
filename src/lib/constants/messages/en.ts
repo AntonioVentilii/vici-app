@@ -1015,6 +1015,7 @@ export const enMessages = {
 	'onboarding.beat2.sub': 'People know who made the call. Earned, not given.',
 	'onboarding.beat2.title': 'Claim a handle.',
 	'onboarding.beat3.back': '← Back to handle',
+	'onboarding.beat3.finish_cta': 'Finish setup',
 	'onboarding.beat3.handle_placeholder': 'predictor',
 	'onboarding.beat3.sub':
 		"your call resolves {resolves}. We'll email you the outcome — keep your record.",

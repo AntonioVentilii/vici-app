@@ -1017,6 +1017,7 @@ export const esMessages = {
 	'onboarding.beat2.sub': 'Se sabrá quién hizo la apuesta. Ganado, no regalado.',
 	'onboarding.beat2.title': 'Elige un nombre.',
 	'onboarding.beat3.back': '← Volver al nombre',
+	'onboarding.beat3.finish_cta': 'Finalizar configuración',
 	'onboarding.beat3.handle_placeholder': 'predictor',
 	'onboarding.beat3.sub':
 		'tu apuesta cierra el {resolves}. Te avisaremos por email — conserva tu registro.',
