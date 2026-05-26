@@ -26,7 +26,7 @@
 
 <header class="mobile-appbar" data-align={resolvedAlign}>
 	{#if back}
-		<button class="mobile-appbar-back" aria-label={back.label} onclick={handleBack} type="button">
+		<button class="appbar-icon-btn" aria-label={back.label} onclick={handleBack} type="button">
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 		</button>
 	{:else}
@@ -53,7 +53,7 @@
 <style lang="postcss">
 	.mobile-appbar {
 		display: grid;
-		grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.25rem 0.25rem 0.5rem;
@@ -73,31 +73,13 @@
 		display: none;
 	}
 
+	/* Width matches the `.appbar-icon-btn` outer footprint (18px icon
+	   + padding 8/10 + 1px border = 40w × 36h) so the title remains
+	   visually centered when only one side has a control. */
 	.mobile-appbar-spacer {
 		display: inline-block;
-		width: 2.25rem;
+		width: 2.5rem;
 		height: 2.25rem;
-	}
-
-	.mobile-appbar-back {
-		display: inline-flex;
-		width: 2.25rem;
-		height: 2.25rem;
-		align-items: center;
-		justify-content: center;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
-		color: var(--text-base);
-		cursor: pointer;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici);
-	}
-
-	.mobile-appbar-back:hover {
-		border-color: var(--border-strong);
-		background: var(--bg-popover);
 	}
 
 	.mobile-appbar-title-slot {

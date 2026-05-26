@@ -384,7 +384,7 @@
 <div class="settings-page">
 	<header class="settings-appbar">
 		<button
-			class="settings-back"
+			class="appbar-icon-btn"
 			aria-label={t({ locale: $localeStore, key: 'settings.back_profile' })}
 			onclick={() => goBack(resolve(AppPath.Profile))}
 			type="button"
@@ -878,18 +878,6 @@
 		padding: 0.25rem 0 1rem;
 	}
 
-	.settings-back {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.5rem 0.625rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--text-base) 6%, transparent);
-		color: var(--text-base);
-		cursor: pointer;
-	}
-
 	.settings-title {
 		margin: 0;
 		font-size: var(--t-18);
@@ -899,7 +887,7 @@
 	}
 
 	.settings-appbar-spacer {
-		width: 2.125rem;
+		width: 2.5rem;
 	}
 
 	.settings-body {

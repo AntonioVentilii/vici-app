@@ -54,7 +54,7 @@
 
 {#snippet leaderboardAppbarRight()}
 	<button
-		class="leaderboard-appbar-cta"
+		class="appbar-icon-btn"
 		aria-label={t({ locale: $localeStore, key: 'leaderboard.friends_aria' })}
 		type="button"
 	>
@@ -172,21 +172,6 @@
 		flex-direction: column;
 		gap: 0.25rem;
 		padding: 0 1.25rem 6rem;
-	}
-
-	.leaderboard-appbar-cta {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.45rem 0.625rem;
-		border: 0;
-		background: transparent;
-		color: var(--text-base);
-		cursor: pointer;
-	}
-
-	.leaderboard-appbar-cta:hover {
-		color: var(--color-primary);
 	}
 
 	/* Scope chip strip — matches `screens.jsx:1205-1208`. */

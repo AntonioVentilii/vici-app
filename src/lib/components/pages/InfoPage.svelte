@@ -48,7 +48,7 @@
 
 <div class="info-page">
 	<header class="info-appbar">
-		<button class="info-back" onclick={handleBack} type="button">
+		<button class="appbar-icon-btn" onclick={handleBack} type="button">
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 			<span class="sr-only">{t({ locale: $localeStore, key: 'info.back' })}</span>
 		</button>
@@ -118,21 +118,6 @@
 		padding: 0.25rem 1rem;
 	}
 
-	.info-back {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.5rem 0.625rem;
-		border: 0;
-		background: transparent;
-		color: var(--text-base);
-		cursor: pointer;
-	}
-
-	.info-back:hover {
-		color: var(--color-primary);
-	}
-
 	.info-title {
 		margin: 0;
 		font-size: var(--t-18);
@@ -142,7 +127,7 @@
 	}
 
 	.info-appbar-spacer {
-		width: 2.125rem;
+		width: 2.5rem;
 	}
 
 	.info-body {

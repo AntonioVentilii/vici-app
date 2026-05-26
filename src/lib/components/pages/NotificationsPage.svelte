@@ -49,7 +49,7 @@
 			sized control.
 		-->
 		<button
-			class="notifications-back"
+			class="appbar-icon-btn"
 			aria-label={t({ locale: $localeStore, key: 'notifications.back_flow' })}
 			onclick={() => goBack(resolve(AppPath.Flow))}
 			type="button"
@@ -134,23 +134,6 @@
 		padding: 0.25rem 0 1rem;
 	}
 
-	/* Borderless ghost icon button — matches the design's
-	   `.btn.btn-ghost.t-h4` left appbar control. */
-	.notifications-back {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.5rem 0.625rem;
-		border: 0;
-		background: transparent;
-		color: var(--text-base);
-		cursor: pointer;
-	}
-
-	.notifications-back:hover {
-		color: var(--color-primary);
-	}
-
 	.notifications-title {
 		margin: 0;
 		font-size: var(--t-18);
@@ -180,7 +163,7 @@
 	}
 
 	.notifications-appbar-spacer {
-		width: 2.125rem;
+		width: 2.5rem;
 	}
 
 	.notifications-list {

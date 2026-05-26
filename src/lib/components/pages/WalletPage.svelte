@@ -378,7 +378,7 @@
 
 {#snippet appbarRight()}
 	<button
-		class="wallet-appbar-icon"
+		class="appbar-icon-btn"
 		aria-label={t({ locale: $localeStore, key: 'wallet.history.icon_label' })}
 		onclick={handleHistoryShortcut}
 		type="button"
@@ -655,28 +655,6 @@
 
 	.wallet-hero-cta.is-ghost:hover {
 		border-color: var(--border-strong);
-	}
-
-	/* ── Appbar icon button ──────────────────────────────────── */
-	.wallet-appbar-icon {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 2.25rem;
-		height: 2.25rem;
-		color: var(--text-base);
-		background: var(--bg-surface);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		cursor: pointer;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici);
-	}
-
-	.wallet-appbar-icon:hover {
-		border-color: var(--border-strong);
-		background: var(--bg-popover);
 	}
 
 	/* ── Recent activity ─────────────────────────────────────── */

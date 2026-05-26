@@ -172,7 +172,7 @@
 </script>
 
 {#snippet portfolioAppbarRight()}
-	<span class="portfolio-appbar-icon" aria-hidden="true">
+	<span class="appbar-icon-btn portfolio-appbar-icon" aria-hidden="true">
 		<LineChart size={18} strokeWidth={1.8} />
 	</span>
 {/snippet}
@@ -383,16 +383,15 @@
 	}
 
 	/* ── Appbar icon ─────────────────────────────────────────────── */
+	/* Decorative icon (not interactive) — disable the hover affordance
+	   inherited from `.appbar-icon-btn` and unset cursor. */
 	.portfolio-appbar-icon {
-		display: inline-flex;
-		width: 2.25rem;
-		height: 2.25rem;
-		align-items: center;
-		justify-content: center;
-		color: var(--text-base);
+		cursor: default;
+	}
+
+	.portfolio-appbar-icon:hover {
+		border-color: var(--border-base);
 		background: var(--bg-surface);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
 	}
 
 	/* ── Hero card ───────────────────────────────────────────────── */

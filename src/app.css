@@ -633,6 +633,32 @@ body {
 	box-shadow: var(--inset-hi-strong), var(--shadow-modal);
 }
 
+/* Appbar icon button — single source of truth for every header-edge
+ * icon control (back arrow, settings cog, history, plus, chart, etc.).
+ * Mirrors the prototype's `.btn.btn-ghost` shape with the icon-only
+ * `padding: 8px 10px` inline override used at every appbar in
+ * `screens.jsx` / `app.jsx`: pill radius, 1px border, ghost surface,
+ * sized for an 18px icon. */
+.appbar-icon-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 8px 10px;
+	border: 1px solid var(--border-base);
+	border-radius: var(--r-pill);
+	background: var(--bg-surface);
+	color: var(--text-base);
+	cursor: pointer;
+	transition:
+		background-color var(--d-hover) var(--ease-vici),
+		border-color var(--d-hover) var(--ease-vici);
+}
+
+.appbar-icon-btn:hover {
+	border-color: var(--border-strong);
+	background: var(--bg-popover);
+}
+
 /* Hairline — top divider. Minimal so it can't get any thicker. */
 .hairline {
 	border-top: 1px solid var(--border-base);
