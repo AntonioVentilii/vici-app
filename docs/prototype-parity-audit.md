@@ -64,19 +64,48 @@ These need a per-item decision before deletion. Default = remove.
 - ✅ Hardcoded deck values disappeared with the FlowCard port — now driven from `WELCOME_MARKET_PREVIEWS`
 - ✅ Italic accent: `.serif-italic.acc` spans unchanged (already in use across landing components; not visibly broken)
 
-### Sign-in (14)
+### Sign-in (14) ✅ commit `<signin>`
 
-- ⬜ Title template / wordmark size + accent color
-- ⬜ Missing predictor proof line (`184,000 PREDICTORS · 1,240 CALLS THIS HOUR`)
-- ⬜ Sent-state UI ("Check your inbox" with check-mark + Continue + use different email)
-- ⬜ Email provider functional vs disabled placeholder (depends on backend scope)
-- ⬜ Apple provider functional vs disabled placeholder (depends on backend scope)
-- ⬜ Provider button order (Apple / Google / Email per prototype)
-- ⬜ Faded "other" providers when email open
-- ⬜ Loading state per provider ("Opening Apple…")
-- ⬜ "Create an account" CTA copy + routing
-- ⬜ Legal block content (2-line w/ links)
-- C-7 / C-6 decisions resolve the rest
+- ✅ Title template / wordmark size + accent color — `Logo` swapped for
+  an inline 3rem laurel-coloured VICI wordmark; `serif-italic` accent
+  on the brand token inside `signin-title`.
+- ✅ Missing predictor proof line — `signin-proof` row renders
+  `184,000 PREDICTORS · 1,240 CALLS THIS HOUR` via new
+  `signin.proof.*` keys (locale-aware separators).
+- ✅ Sent-state UI — `SignInProviderStack` swaps to a check-mark +
+  "Check your inbox" + Continue + "Use a different email" stack via
+  `phase === 'sent'`.
+- ⏭ Email provider functional — kept as disabled placeholder behind
+  `EMAIL_ENABLED = false` until the satellite magic-link endpoint
+  ships. Sent-state code path is wired so swap is one constant.
+- ⏭ Apple provider functional — kept as disabled placeholder behind
+  `APPLE_ENABLED = false` (no SIWA backend yet); "Coming soon"
+  micro-label rendered.
+- ✅ Provider button order — Apple / Google / Email / IC / Passkey /
+  Dev top-to-bottom per prototype.
+- ✅ Faded "other" providers when email open — `is-faded` modifier
+  driven by `emailOpen && phase === 'idle' && signingIn === null`
+  toggles `opacity: 0.4` on the sibling provider buttons.
+- ✅ Loading state per provider — single `signingIn: ProviderId | null`
+  drives the swap between provider label and `signin.loading.<id>`
+  ("Opening Apple…", "Opening Google…", "Sending sign-in link…", …)
+  plus the `is-loading` opacity dim.
+- ✅ "Create an account" CTA copy + routing — bottom-of-page link
+  reads "Don't have an account yet? Create one →" and routes to
+  `PublicPath.SignUp`.
+- ✅ Legal block content — two-line layout with anchor links to
+  `/info/terms` and `/info/privacy`, copy split across
+  `signin.legal.line1` and `signin.legal.line2.*`.
+- ✅ C-6 — decorative orb radial gradients stripped (no
+  `.signin-orb-a` / `.signin-orb-b`, no `--laurel-glow` /
+  `--yes-wash` radial fills on `.signin-wrap`).
+- ✅ C-7 — `or` divider removed from the Sign-in page provider stack
+  (`signin.divider` key kept for now since `SignInActions` still
+  renders it inside `LoginRequired` / `SignInModal` /
+  `OnboardingBeat3` — those surfaces are separate audit items).
+- ⏭ C-8 — Internet Identity, Passkey, and Dev buttons kept (production
+  need) and re-rendered with the same `signin-provider-btn` shape +
+  per-provider loading state.
 
 ### Onboarding (22)
 
@@ -189,7 +218,7 @@ These need a per-item decision before deletion. Default = remove.
 - ✅ Per-category icon glyphs in the chip strip (Item 11).
 - ✅ Skeletons for loading — `.markets-row-skeleton` × 4 while
   `marketsNotInitialized` is `true`; matches the list-row height
-  + dashed border + animated pulse.
+  - dashed border + animated pulse.
 - ✅ No settings/notification icons in the appbar (Item 14) —
   prototype's appbar carries only the title; we honor that.
 - ✅ (Tier C-3) "Suggested for you" rail removed — replaced by
