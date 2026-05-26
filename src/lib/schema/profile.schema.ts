@@ -76,7 +76,17 @@ export const UserProfileSchema = j.strictObject({
 			callsPublic: j.boolean().default(true),
 			flowTags: j.array(j.string()).default([]),
 			worldCupMode: j.boolean().default(false),
-			savedMarketIds: j.array(j.string()).default([])
+			savedMarketIds: j.array(j.string()).default([]),
+			// Onboarding picks (Beat 1.a + 1.b). Empty string for
+			// `favoriteParticipantId` means the user skipped the team
+			// pick; empty string for `favoriteSide` means no YES/NO
+			// commitment was made. `onboardingCompleted` flips to true
+			// once the 3-beat flow finishes, regardless of which picks
+			// were ultimately persisted — it's the source of truth for
+			// whether to re-prompt the user on next sign-in.
+			favoriteParticipantId: j.string().default(''),
+			favoriteSide: j.string().default(''),
+			onboardingCompleted: j.boolean().default(false)
 		})
 		.default({
 			defaultAmount: { flow: '0', manual: '0' },
@@ -91,6 +101,9 @@ export const UserProfileSchema = j.strictObject({
 			callsPublic: true,
 			flowTags: [],
 			worldCupMode: false,
-			savedMarketIds: []
+			savedMarketIds: [],
+			favoriteParticipantId: '',
+			favoriteSide: '',
+			onboardingCompleted: false
 		})
 });
