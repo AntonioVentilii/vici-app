@@ -503,17 +503,18 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ⏭ Recommendations section ("Friends are in") — Deferred: the satellite has no listing for leagues the caller isn't already in, so the "friends here, you're not" overlap can't be computed without a new query endpoint. Strings + card variant are scaffolded; UI ships when discovery lands.
 - ✅ Empty-state — `LeaguesPage` empty branch renders serif-italic accent quote ("Leagues are private.") + dim body + a centered two-button row (primary "Create a league" + ghost "Join with code"). Replaces the previous title + sub + ctas stack.
 
-### League detail (~10)
+### League detail (~10) ✅ commit `103682a`
 
-- ⬜ Head card gradient logo + emblem + N° corner badge
-- ⬜ "{memberCount} members · {tier} LEAGUE" line
-- ⬜ Inline Invite + Predict buttons in head card
-- ⬜ LeagueBoutSection — eyebrow + active-bout card or "Challenge another league →"
-- ⬜ Members sticker grid (`<MemberSticker>` tiles)
-- ⬜ Leaderboard card w/ This week / All time tabs + top-6 + sticky YOU
-- ⬜ Activity feed card
-- ⬜ ChallengeLeagueModal (prototype-only modal we're missing)
-- ⬜ Settings cog in appbar
+- ✅ Head card gradient logo + emblem + N° corner badge — `LeagueDetailPage` head renders an 88px `--accent-grad` tile with the league emblem (derived from the first code-point of `league.name`) and a `N°{NN}` mono corner pinned to the caller's roster index.
+- ✅ "{memberCount} members · {size} LEAGUE" line — head meta uses `leagues.detail.head_meta_one/many` interpolated with `{count}` + a derived size token (`size_xs/s/m/l` bucketed by roster headcount, since no server-side tier field exists yet).
+- ✅ Inline Invite + Predict buttons in head card — ghost "Invite" pill (writes `vici.markets/league/{inviteCode}` to clipboard, swaps to "Copied" for 1.6s) + primary "Predict ›" button that routes to Flow.
+- ✅ LeagueBoutSection — eyebrow + active-bout card (in_flight / accepted / proposed picked in that priority) with inline state chip, kickoff→settle window, and the owner's accept / kickoff / resolve / retract affordances inlined. Empty state renders the dashed "No active bout." card with a "Challenge another league →" CTA for owners.
+- ✅ Members sticker grid — new `MemberSticker.svelte` (3-up, 3:4 aspect, deterministic gradient swatch seeded from the principal, role chip, `N°{NN}` rank badge tinted gold/silver/bronze/you). Roster sorted self → owner → admin → member, join-asc within bands.
+- ✅ Leaderboard card w/ This week / All time tabs + top-6 + sticky YOU — segmented tabs styled to match the prototype's `lb-tabs` shape; top-6 rows render the deterministic avatar + handle + role chip with gold/silver/bronze rank colors on positions 1–3; a sticky YOU row drops below when the caller's outside the top-6. Tab state is wired (both views render the same roster projection today; per-period stats can drop in once the satellite carries them).
+- ✅ Activity feed card — derived from `bouts` (newest first by kickoff/settle, capped at 6). Each row interpolates a verb key (`activity_verb_proposed/accepted/in_flight/resolved`) with the opponent league id, then trails a state chip + relative date.
+- ✅ ChallengeLeagueModal — new `ChallengeLeagueModal.svelte`. Invite-code-driven opponent picker (we don't expose a public league directory yet) → 7 / 14 / 30-day duration segmented control → wraps `lookupLeagueByInvite` + `proposeBout`, the same services `ProposeBoutModal` uses. Wires the legacy `?propose=1` deep-link onto the new sheet so older shares still land.
+- ✅ Settings cog in appbar — `MobileAppBar` `right` snippet renders a ghost cog that routes to `/settings`, matching the prototype's appbar right-edge icon.
+- ⏭ (Tier C-22) Transfer ownership CTA + modal — kept; production safety net, backend shipped. Restyled inline with the new controls row alongside the leave-league CTA, but the surface remains.
 
 ### Bouts inbox (~8)
 
