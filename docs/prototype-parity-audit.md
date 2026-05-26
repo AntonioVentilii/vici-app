@@ -354,11 +354,14 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Remove worlds-podium prize card (tier C-29 — production need check)
 - ⬜ Remove locked-card UI (prototype has different leave flow)
 
-### Leaderboard (~5)
+### Leaderboard (~5) ✅ commit `<leaderboard>`
 
-- ⬜ Scoped tabs (global / friends / league / school)
-- ⬜ Rank stripes (gold/silver/bronze classes)
-- ⬜ Sticky YOU row
+- ✅ Scope tabs — `This week / This month / All time` (3 tabs, chip-style) replace `Global / Week / Friends / Activity` (4 tabs, pill-bg)
+- ✅ Drop ActivityFeed sub-component (not in prototype)
+- ✅ Drop friends-only filter (lives in Friends tab inside Social per the prototype)
+- ✅ Single-column layout — podium row + flat list (vs split-column with right activity rail)
+- ✅ Rank stripes — `is-first` (gold halo on #1), `is-you` (primary accent on viewer's row), both on podium tiles + rest rows
+- ⏭ Mini-profile sheet on row tap (prototype's `screens.jsx:1246-1269`) deferred — friends-add backend wiring for non-friends needed
 
 ### Info / legal (~3) ✅ commit `<info>`
 
