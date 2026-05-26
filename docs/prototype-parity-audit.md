@@ -227,12 +227,12 @@ outcome…"` with the date formatted in the active locale via
   follow (10-dot grid via `flow-followed-dots`).
 - ✅ Back: prior-call section parity — `card.you_called_eyebrow` plus
   the live `card.prior_call_drift` line (`{when} · consensus {drift}
-  pts since`).
+pts since`).
 - ✅ Back: live countdown — `$effect` interval ticks `nowTick` once per
   minute; `getTimeRemaining` is derived off the tick. Urgent state (≤
   24h) drives a pulse dot next to the settles line.
 - ✅ Back: track-record line — `card.your_accuracy_line` (`Your
-  {category} accuracy: {pct}% · {calls} calls`), coloured per the
+{category} accuracy: {pct}% · {calls} calls`), coloured per the
   `acc ≥ 0.6` gate.
 - ✅ Back-face swipe still commits — back-face `onPointerMove` guards
   horizontal motion (>20% over vertical) and reuses the same commit
@@ -244,7 +244,7 @@ outcome…"` with the date formatted in the active locale via
 - ✅ Header gradient + card body radial gradient parity — front head
   uses `linear-gradient(160deg, cat 18% → cat 7% → transparent)` and
   the card body adds the `radial-gradient(circle at 18% 0%, cat 18%,
-  transparent 32%)` over the surface-popover linear base. Back panel
+transparent 32%)` over the surface-popover linear base. Back panel
   layers a `linear-gradient(180deg, cat 14%, transparent 60%)` on top
   of the same base.
 - ✅ C-9 STRIP — `FlowTopBar.svelte` deleted; FlowMode no longer mounts
@@ -490,18 +490,18 @@ outcome…"` with the date formatted in the active locale via
 - ⬜ Add-by-handle bottom sheet — @-prefixed input
 - ⬜ Remove back-arrow appbar (tier C-27)
 
-### Leagues list (~10)
+### Leagues list (~10) ✅ commit `<leagues-list>`
 
-- ⬜ Appbar `+` only (not Create/Join pill row above list)
-- ⬜ Founded/Joined card classification
-- ⬜ League-logo-sm gradient + emblem character on each card
-- ⬜ Friend overlap row — stacked avatars + "@friend + N more"
-- ⬜ Latest-activity preview
-- ⬜ Trend chip (↑/↓ rank delta)
-- ⬜ Inline copy-invite pill on each card
-- ⬜ Trailing "Create a league" + "Join with code" CTA cards
-- ⬜ Recommendations section ("FRIENDS ARE IN")
-- ⬜ Empty-state — quote + body + two-button row
+- ✅ Appbar `+` only — `LeaguesPage` no longer renders the Create/Join pill row above the list; the Social shell's appbar `+` is the only top-of-page entry point, with trailing CTA cards picking up the slack at the end of the list.
+- ✅ Founded/Joined card classification — rows are partitioned by `role === 'owner'` into two sections ("Your leagues · Admin" / "Leagues you're in") via `$derived` filters in `LeaguesPage.svelte`.
+- ✅ League-logo-sm gradient + emblem character — new `LeagueListCard.svelte` renders a 2.5rem tile with `linear-gradient(160deg, {accent}33, {accent}11, var(--bg-surface))` and an emblem derived from the league name's first code point (uppercased; falls back to `◆` for non-alphabetic names).
+- ✅ Friend overlap row — `friendOverlapFor` intersects each league's `listLeagueMembers` roster with `friendsListStore.participants` and the row renders an avatar dot + `@{handle} + N friends` line (singular/plural keys, profile-cache hydrated via `loadProfilesByPrincipals`).
+- ✅ Latest-activity preview — derived from `listLeagueBouts`: trailing non-resolved bout's `{state}: bout vs {opponent}` (opponent resolved against the caller's own membership list when possible; truncated id otherwise). Bouts have no `created_at` on the wire schema, so sort is by `kickoffMs`.
+- ⏭ Trend chip (↑/↓ rank delta) — Deferred: no historic rank-delta storage on the satellite. The chip needs a `previousRank` snapshot we don't capture today, and synthesizing one from a deterministic seed would lie about real data. Tracked as follow-up requiring a satellite write.
+- ✅ Inline copy-invite pill — `LeagueListCard` ships a copy pill on the trailing edge that writes `vici.markets/league/{inviteCode}` to the clipboard, swaps to a `Check` glyph + "Copied" for 1.5s, and uses `role="button"` + key handler to stay accessible inside the parent button row without nesting buttons.
+- ✅ Trailing "Create a league" + "Join with code" CTA cards — new `LeagueCtaCard.svelte` renders the two end-of-list entries (Plus glyph for create, JOIN mono badge for join), tile-styled to match the league-row shape.
+- ⏭ Recommendations section ("Friends are in") — Deferred: the satellite has no listing for leagues the caller isn't already in, so the "friends here, you're not" overlap can't be computed without a new query endpoint. Strings + card variant are scaffolded; UI ships when discovery lands.
+- ✅ Empty-state — `LeaguesPage` empty branch renders serif-italic accent quote ("Leagues are private.") + dim body + a centered two-button row (primary "Create a league" + ghost "Join with code"). Replaces the previous title + sub + ctas stack.
 
 ### League detail (~10)
 
