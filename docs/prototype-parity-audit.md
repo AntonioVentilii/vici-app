@@ -518,7 +518,7 @@ transparent 32%)` over the surface-popover linear base. Back panel
 - ✅ Settings cog in appbar — `MobileAppBar` `right` snippet renders a ghost cog that routes to `/settings`, matching the prototype's appbar right-edge icon.
 - ⏭ (Tier C-22) Transfer ownership CTA + modal — kept; production safety net, backend shipped. Restyled inline with the new controls row alongside the leave-league CTA, but the surface remains.
 
-### Bouts inbox (~8) ✅ commit `<bouts-inbox>`
+### Bouts inbox (~8) ✅ commit `dcf514d`
 
 - ⏭ "What's a bout?" intro card (dismissible) — shipped with the prototype's `localStorage['vici.bouts-intro-seen']` flag rather than cross-device `preferences`. Migration to the profile `preferences` blob requires extending the satellite Candid + Rust binding (a new field on `app_get_profile`'s strict preferences record), which is out of scope for the parity pass. The dismissible UI is live; the flag carrier is the deferred portion.
 - ✅ Worlds Universities grouped card — featured WC podium (top-3 by lifetime accuracy off `listAffiliationStats({ kind: 'university' })`) + monthly compact card. Deep-links into `/social/worlds/schools` and `/social/worlds/schools?scope=month`.
