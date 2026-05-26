@@ -683,24 +683,27 @@
 	}
 
 	.tournament-prize.is-gold {
-		border-color: color-mix(in srgb, #f4c544 45%, var(--border-base));
-		background: color-mix(in srgb, #f4c544 6%, var(--bg-surface));
+		--prize-tier: #f4c544;
+		border-color: color-mix(in srgb, var(--prize-tier) 45%, var(--border-base));
+		background: color-mix(in srgb, var(--prize-tier) 6%, var(--bg-surface));
 	}
 
 	.tournament-prize.is-silver {
-		border-color: color-mix(in srgb, #c0c5cc 45%, var(--border-base));
-		background: color-mix(in srgb, #c0c5cc 6%, var(--bg-surface));
+		--prize-tier: #c0c5cc;
+		border-color: color-mix(in srgb, var(--prize-tier) 45%, var(--border-base));
+		background: color-mix(in srgb, var(--prize-tier) 6%, var(--bg-surface));
 	}
 
 	.tournament-prize.is-bronze {
-		border-color: color-mix(in srgb, #c97c4a 45%, var(--border-base));
-		background: color-mix(in srgb, #c97c4a 6%, var(--bg-surface));
+		--prize-tier: #c97c4a;
+		border-color: color-mix(in srgb, var(--prize-tier) 45%, var(--border-base));
+		background: color-mix(in srgb, var(--prize-tier) 6%, var(--bg-surface));
 	}
 
-	/* Rank numeral — tabular mono on a tinted disc. Reads as an
-	   intentional rank tile, not a fallback character. The tile
-	   colour comes from the parent `.is-{gold,silver,bronze}`
-	   border/background mix. */
+	/* Rank numeral — tabular mono on a tinted disc. The disc tint
+	   reads from `--prize-tier`, the per-tier accent set on the
+	   parent `.is-{gold,silver,bronze}` rule, so gold / silver /
+	   bronze each get a distinct disc colour. */
 	.tournament-prize-place {
 		display: inline-flex;
 		align-items: center;
@@ -709,7 +712,8 @@
 		height: 1.75rem;
 		min-width: 1.75rem;
 		border-radius: 999px;
-		background: color-mix(in srgb, currentColor 8%, transparent);
+		background: color-mix(in srgb, var(--prize-tier, var(--text-base)) 18%, transparent);
+		color: color-mix(in srgb, var(--prize-tier, var(--text-base)) 85%, var(--text-base));
 		font-family: var(--font-mono);
 		font-feature-settings: 'tnum', 'zero';
 		font-variant-numeric: tabular-nums slashed-zero;

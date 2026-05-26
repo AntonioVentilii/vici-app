@@ -2,11 +2,10 @@
 
 Canonical Claude/agent reference for the VICI visual identity — palette,
 typography, voice & tone, iconography, character cast, and copy patterns.
-Distilled from the source brand book (`VICI_VI_Guide.pdf`, ed. 2026.05,
-"Visual Identity · Guideline · MMXXVI").
+Distilled from the off-repo brand book.
 
-> **Per the source book:** when an in-repo rule disagrees with this
-> document, **this document wins** (and the divergence is a bug to
+> **Per the off-repo brand book:** when an in-repo rule disagrees with
+> this document, **this document wins** (and the divergence is a bug to
 > reconcile). When this document disagrees with what the implementation
 > ships, treat the implementation as the deviation, not the spec.
 >
@@ -85,8 +84,8 @@ small icon. The brand carries weight by what it omits."_
 
 - 🔥 → use [`IconStreakFlame`](../../../src/lib/components/icons/IconStreakFlame.svelte)
   or `FlameChar.svelte` (the animated character).
-- 🥇🥈🥉 → use ordinal numerals (`1·` `2·` `3·`) on a laurel chip, or
-  [`IconLaurel`](../../../src/lib/components/icons/IconLaurel.svelte).
+- 🥇🥈🥉 → use a tabular rank numeral (`1` / `2` / `3`) on a tinted
+  chip, or [`IconLaurel`](../../../src/lib/components/icons/IconLaurel.svelte).
 - 📈 → use `↑` glyph or an icon component.
 - 👤 → use the user's initials in an avatar tile, or
   [`IconRobot`](../../../src/lib/components/icons/IconRobot.svelte) for
@@ -387,7 +386,7 @@ them by name, never by raw ms.
 | Generative artwork    | [`flow-art.utils.ts`](../../../src/lib/utils/flow-art.utils.ts) · [`FlowArtFrame.svelte`](../../../src/lib/components/artwork/FlowArtFrame.svelte) |
 | Haptics               | [`haptics.utils.ts`](../../../src/lib/utils/haptics.utils.ts)                                                                                      |
 | Flow Mode rules       | [`design.md §7`](./design.md#7-flow-mode--rules)                                                                                                   |
-| Brand book (source)   | `VICI_VI_Guide.pdf` (off-repo)                                                                                                                     |
+| Brand book (source)   | off-repo · request from the brand owner                                                                                                            |
 
 ---
 

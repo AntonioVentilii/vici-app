@@ -56,7 +56,7 @@
 			onclick={() => selectPreset(SOCIAL_PREMIUM_OTHER_ID)}
 			type="button"
 		>
-			<span class="font-serif text-2xl italic" aria-hidden="true">+</span>
+			<span class="text-2xl" aria-hidden="true">✦</span>
 			<span class="text-sm font-bold">
 				{t({ locale: $localeStore, key: 'social.premium.other.label' })}
 			</span>

@@ -28,9 +28,11 @@
 			: shortenWithMiddleEllipsis({ text: principal });
 	};
 
-	// First grapheme of the display name, in caps. Brand: no emoji
+	// First character of the display name, in caps. Brand: no emoji
 	// avatar fallback — initials in a tinted disc instead. See
-	// `docs/ai/frontend/brand.md §2.3`.
+	// `docs/ai/frontend/brand.md §2.3`. `charAt(0)` is UTF-16-unit
+	// based, which is fine here: nicknames the satellite accepts are
+	// ASCII/Latin, and the principal shortener fallback is hex.
 	const initialFor = (principal: string): string => {
 		const name = displayNameFor(principal).trim();
 		const first = name.charAt(0);

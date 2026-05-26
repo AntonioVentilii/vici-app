@@ -17,8 +17,11 @@ govern Flow Mode (§7). Tick rows off as PRs land.
 >    messages, PR bodies). Temporary scratch is temporary; the
 >    product reflects **the** design. When a code comment needs to
 >    cite a rule, point at this file (`docs/ai/frontend/design.md`)
->    and the relevant section. Don't qualify the design as "new",
->    "old", "redesigned", or "previous" — there is only one.
+>    for surface / Flow / component rules, or
+>    [`brand.md`](./brand.md) for brand / voice / palette / type /
+>    iconography rules — never at the off-repo brand book by name.
+>    Don't qualify the design as "new", "old", "redesigned", or
+>    "previous" — there is only one.
 
 The companion guidance lives in:
 
