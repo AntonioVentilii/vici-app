@@ -70,7 +70,7 @@
 
 {#snippet profileSettingsBtn()}
 	<button
-		class="profile-settings-btn"
+		class="appbar-icon-btn"
 		aria-label={t({ locale: $localeStore, key: 'settings.title' })}
 		onclick={handleOpenSettings}
 		type="button"
@@ -134,28 +134,5 @@
 <style lang="postcss">
 	.profile-page {
 		position: relative;
-	}
-
-	/* Mirrors prototype `.btn.btn-ghost` (`screens.jsx:886`,
-	   `app.css:128,140,5454`): pill radius, 1px border, ghost surface,
-	   inline padding 8px 10px sized for an 18px icon. */
-	.profile-settings-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 8px 10px;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-		color: var(--text-base);
-		cursor: pointer;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici);
-	}
-
-	.profile-settings-btn:hover {
-		border-color: var(--border-strong);
-		background: var(--bg-popover);
 	}
 </style>

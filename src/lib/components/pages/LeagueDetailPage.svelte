@@ -489,7 +489,7 @@
 
 {#snippet appbarRight()}
 	<button
-		class="league-detail-cog"
+		class="appbar-icon-btn"
 		aria-label={t({ locale: $localeStore, key: 'settings.title' })}
 		onclick={handleSettings}
 		type="button"
@@ -858,26 +858,6 @@
 		flex-direction: column;
 		gap: 1.1rem;
 		padding: 0 1rem 6rem;
-	}
-
-	.league-detail-cog {
-		appearance: none;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		font: inherit;
-		color: var(--text-muted);
-		background: none;
-		border: 0;
-		border-radius: var(--r-pill);
-		cursor: pointer;
-		transition: color 140ms ease;
-	}
-
-	.league-detail-cog:hover {
-		color: var(--text-base);
 	}
 
 	.league-detail-status,

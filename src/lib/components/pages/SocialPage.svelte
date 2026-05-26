@@ -71,7 +71,7 @@
 {#snippet socialAppbarRight()}
 	{#if activeTab === 'leagues'}
 		<button
-			class="social-appbar-cta"
+			class="appbar-icon-btn"
 			aria-label={t({ locale: $localeStore, key: 'leagues.create.cta' })}
 			onclick={() => leaguesCreateIntent.set(true)}
 			type="button"
@@ -120,26 +120,6 @@
 		flex-direction: column;
 		gap: 0.85rem;
 		padding-bottom: 6rem;
-	}
-
-	.social-appbar-cta {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.45rem 0.55rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
-		background: var(--bg-surface);
-		color: var(--text-base);
-		cursor: pointer;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici);
-	}
-
-	.social-appbar-cta:hover {
-		background: var(--bg-popover);
-		border-color: var(--border-strong);
 	}
 
 	/* Underline-active tab strip — matches the design source's
