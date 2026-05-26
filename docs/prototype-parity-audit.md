@@ -158,7 +158,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Tag chip styling (no bg, just colored text)
 - C-3, C-4, C-5 decisions
 
-### Market detail (16) ✅ commit `8ce9ac1`
+### Market detail (16) ✅ commit `19c8441`
 
 - ✅ Appbar share + watch buttons (`MarketDetailShareButton` + `SavedMarketToggle` in appbar right slot)
 - ✅ LIVE pulsing pill next to category tag (`MarketDetailLivePill`)
