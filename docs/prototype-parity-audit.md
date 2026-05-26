@@ -207,7 +207,7 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Section header w/ count
 - ⬜ Remove cold-load spinner (prototype seeds data)
 
-### Profile (16) ✅ commit `<profile>`
+### Profile (16) ✅ commit `dfa444a`
 
 - ✅ Appbar — Settings cog opens a trailing menu (Settings + Sign out); description + FeaturedEventChip stripped
 - ✅ Identity card archetype-coloured blur halo (140×140 circle, opacity 0.10, blur 20px) — `.profile-halo` driven by `--archetype-accent`
