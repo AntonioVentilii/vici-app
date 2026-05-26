@@ -360,11 +360,12 @@ These need a per-item decision before deletion. Default = remove.
 - ⬜ Rank stripes (gold/silver/bronze classes)
 - ⬜ Sticky YOU row
 
-### Info / legal (~3)
+### Info / legal (~3) ✅ commit `<info>`
 
-- ⬜ Typography (serif vs sans)
-- ⬜ TOC sidebar
-- ⬜ Eyebrow styling
+- ✅ Typography — serif-italic lede + sans body @ 1.65 line-height + 600-weight inline headings
+- ⏭ TOC sidebar — prototype has no TOC sidebar; accept current flat scroll
+- ✅ Eyebrow — primary accent colour + 0.16em letter-spacing
+- ✅ Bonus: custom accent-dot list bullets, mono mailto with faint primary underline, bottom back-to-Welcome divider + ghost button
 
 ### Modals (~6 + 1 missing)
 
