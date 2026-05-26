@@ -6,937 +6,865 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { IDL } from '@icp-sdk/core/candid';
-
 export const idlFactory = ({ IDL }) => {
-  const AppAcceptFriendRequestArgs = IDL.Record({ 'relation_id' : IDL.Text });
-  const AppCancelFriendRequestArgs = IDL.Record({ 'relation_id' : IDL.Text });
-  const AppCheckFriendshipArgs = IDL.Record({
-    'user_a' : IDL.Text,
-    'user_b' : IDL.Text,
-  });
-  const AppCheckFriendshipResult = IDL.Record({ 'is_friend' : IDL.Bool });
-  const AppCheckNicknameAvailabilityArgs = IDL.Record({
-    'nickname' : IDL.Text,
-    'exclude_principal_str' : IDL.Text,
-  });
-  const AppCheckNicknameAvailabilityResult = IDL.Record({
-    'available' : IDL.Bool,
-    'reason' : IDL.Opt(
-      IDL.Variant({
-        'taken' : IDL.Null,
-        'required' : IDL.Null,
-        'too_short' : IDL.Null,
-      })
-    ),
-  });
-  const AppClaimComebackGrantResult = IDL.Record({
-    'block_index' : IDL.Opt(IDL.Text),
-    'error_message' : IDL.Opt(IDL.Text),
-    'paid_now' : IDL.Bool,
-    'previously_paid' : IDL.Bool,
-    'reason' : IDL.Opt(
-      IDL.Variant({
-        'already_claimed_failed' : IDL.Null,
-        'already_claimed_paid' : IDL.Null,
-        'not_engaged_yet' : IDL.Null,
-        'transfer_failed' : IDL.Null,
-        'already_claimed_pending' : IDL.Null,
-        'balance_not_zero' : IDL.Null,
-      })
-    ),
-  });
-  const AppClaimWorldsPodiumPrizeArgs = IDL.Record({
-    'month_anchor' : IDL.Text,
-  });
-  const AppClaimWorldsPodiumPrizeResult = IDL.Record({
-    'month_anchor' : IDL.Text,
-    'not_eligible' : IDL.Bool,
-    'awards_created' : IDL.Float64,
-    'awards_already_claimed' : IDL.Float64,
-  });
-  const AppDeleteMyAccountArgs = IDL.Record({
-    'note' : IDL.Text,
-    'reason' : IDL.Text,
-  });
-  const AppDeleteMyAccountResult = IDL.Record({
-    'ok' : IDL.Bool,
-    'blocking_league_ids' : IDL.Opt(IDL.Vec(IDL.Text)),
-    'docs_deleted' : IDL.Opt(IDL.Float64),
-    'reason' : IDL.Opt(
-      IDL.Variant({
-        'owns_non_empty_league' : IDL.Null,
-        'invalid_input' : IDL.Null,
-      })
-    ),
-  });
-  const AppFollowUserArgs = IDL.Record({ 'target' : IDL.Text });
-  const AppGetAffiliationStatsArgs = IDL.Record({
-    'kind' : IDL.Variant({ 'country' : IDL.Null, 'university' : IDL.Null }),
-    'affiliation_id' : IDL.Text,
-  });
-  const AppGetAffiliationStatsResult = IDL.Record({
-    'stats' : IDL.Opt(
-      IDL.Record({
-        'month_anchor' : IDL.Text,
-        'kind' : IDL.Variant({ 'country' : IDL.Null, 'university' : IDL.Null }),
-        'wins' : IDL.Float64,
-        'month_wins' : IDL.Float64,
-        'updated_at_ms' : IDL.Float64,
-        'total_calls' : IDL.Float64,
-        'month_total_calls' : IDL.Float64,
-        'affiliation_id' : IDL.Text,
-      })
-    ),
-  });
-  const AppGetCurrentTournamentResult = IDL.Record({
-    'tournament' : IDL.Opt(
-      IDL.Record({
-        'id' : IDL.Text,
-        'seeded_league_ids' : IDL.Vec(IDL.Text),
-        'month_start_ms' : IDL.Float64,
-        'created_at_ms' : IDL.Float64,
-        'state' : IDL.Variant({
-          'concluded' : IDL.Null,
-          'in_flight' : IDL.Null,
-        }),
-        'bracket_size' : IDL.Float64,
-        'month_end_ms' : IDL.Float64,
-      })
-    ),
-    'matches' : IDL.Vec(
-      IDL.Record({
-        'winner_league_id' : IDL.Opt(IDL.Text),
-        'to_league_id' : IDL.Opt(IDL.Text),
-        'start_ms' : IDL.Float64,
-        'from_league_id' : IDL.Opt(IDL.Text),
-        'to_acc' : IDL.Opt(IDL.Float64),
-        'tournament_id' : IDL.Text,
-        'from_acc' : IDL.Opt(IDL.Float64),
-        'index' : IDL.Float64,
-        'round' : IDL.Variant({
-          'r1' : IDL.Null,
-          'final' : IDL.Null,
-          'semifinal' : IDL.Null,
-          'quarter' : IDL.Null,
-        }),
-        'end_ms' : IDL.Float64,
-      })
-    ),
-  });
-  const AppGetMarketMetadataArgs = IDL.Record({ 'series_id' : IDL.Text });
-  const AppGetMarketMetadataResult = IDL.Record({
-    'metadata' : IDL.Opt(
-      IDL.Record({
-        'updated_at' : IDL.Float64,
-        'updated_by' : IDL.Text,
-        'suggested' : IDL.Bool,
-        'series_id' : IDL.Text,
-        'tags' : IDL.Vec(IDL.Text),
-        'events' : IDL.Vec(
-          IDL.Record({
-            'day' : IDL.Float64,
-            'dir' : IDL.Variant({ 'up' : IDL.Null, 'down' : IDL.Null }),
-            'label' : IDL.Text,
-          })
-        ),
-        'why_now' : IDL.Opt(
-          IDL.Record({
-            'kind' : IDL.Variant({
-              'new' : IDL.Null,
-              'social' : IDL.Null,
-              'trending' : IDL.Null,
-              'closing' : IDL.Null,
-              'topical' : IDL.Null,
-            }),
-            'text' : IDL.Text,
-          })
-        ),
-      })
-    ),
-  });
-  const AppGetMarketTranslationArgs = IDL.Record({
-    'series_id' : IDL.Text,
-    'locale' : IDL.Text,
-  });
-  const AppGetMarketTranslationResult = IDL.Record({
-    'translation' : IDL.Opt(
-      IDL.Record({
-        'title' : IDL.Text,
-        'updated_at' : IDL.Float64,
-        'updated_by' : IDL.Text,
-        'series_id' : IDL.Text,
-        'locale' : IDL.Text,
-        'description' : IDL.Text,
-        'outcomes' : IDL.Vec(
-          IDL.Record({ 'id' : IDL.Text, 'title' : IDL.Text })
-        ),
-      })
-    ),
-  });
-  const AppGetMyReferralCodeResult = IDL.Record({ 'code' : IDL.Opt(IDL.Text) });
-  const AppGetProfileArgs = IDL.Record({ 'principal_str' : IDL.Text });
-  const AppGetProfileResult = IDL.Record({
-    'profile' : IDL.Opt(
-      IDL.Record({
-        'pnl' : IDL.Float64,
-        'streak' : IDL.Float64,
-        'nickname' : IDL.Text,
-        'contrarian_wins' : IDL.Float64,
-        'owner' : IDL.Text,
-        'interests' : IDL.Vec(IDL.Text),
-        'role' : IDL.Opt(
-          IDL.Variant({
-            'controller' : IDL.Null,
-            'creator' : IDL.Null,
-            'admin' : IDL.Null,
-            'solver' : IDL.Null,
-          })
-        ),
-        'email' : IDL.Text,
-        'level' : IDL.Float64,
-        'preferences' : IDL.Opt(
-          IDL.Record({
-            'default_amount' : IDL.Record({
-              'flow' : IDL.Text,
-              'manual' : IDL.Text,
-            }),
-          })
-        ),
-        'archetype' : IDL.Text,
-        'last_active_day' : IDL.Opt(IDL.Text),
-        'total_trades' : IDL.Float64,
-        'win_rate' : IDL.Float64,
-        'visibility' : IDL.Variant({
-          'friends_and_followers' : IDL.Null,
-          'public' : IDL.Null,
-          'friends_only' : IDL.Null,
-        }),
-        'daily_streak' : IDL.Float64,
-        'unlocked_achievements' : IDL.Vec(IDL.Text),
-        'points' : IDL.Float64,
-        'avatar' : IDL.Text,
-        'accuracy' : IDL.Float64,
-      })
-    ),
-  });
-  const AppListAffiliationStatsArgs = IDL.Record({
-    'kind' : IDL.Variant({ 'country' : IDL.Null, 'university' : IDL.Null }),
-    'limit' : IDL.Opt(IDL.Float64),
-  });
-  const AppListAffiliationStatsResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'month_anchor' : IDL.Text,
-        'kind' : IDL.Variant({ 'country' : IDL.Null, 'university' : IDL.Null }),
-        'wins' : IDL.Float64,
-        'month_wins' : IDL.Float64,
-        'updated_at_ms' : IDL.Float64,
-        'total_calls' : IDL.Float64,
-        'month_total_calls' : IDL.Float64,
-        'affiliation_id' : IDL.Text,
-      })
-    ),
-  });
-  const AppListFollowersResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'viewer_role' : IDL.Opt(
-          IDL.Variant({
-            'controller' : IDL.Null,
-            'creator' : IDL.Null,
-            'admin' : IDL.Null,
-            'solver' : IDL.Null,
-          })
-        ),
-        'participants' : IDL.Vec(IDL.Text),
-        'is_friend' : IDL.Opt(IDL.Bool),
-        'state' : IDL.Variant({
-          'REJECTED' : IDL.Null,
-          'PENDING' : IDL.Null,
-          'BLOCKED' : IDL.Null,
-          'ACTIVE' : IDL.Null,
-        }),
-        'category' : IDL.Variant({
-          'GROUP' : IDL.Null,
-          'FRIEND' : IDL.Null,
-          'follow' : IDL.Null,
-        }),
-        'viewer_principal' : IDL.Opt(IDL.Text),
-      })
-    ),
-  });
-  const AppListFollowingResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'viewer_role' : IDL.Opt(
-          IDL.Variant({
-            'controller' : IDL.Null,
-            'creator' : IDL.Null,
-            'admin' : IDL.Null,
-            'solver' : IDL.Null,
-          })
-        ),
-        'participants' : IDL.Vec(IDL.Text),
-        'is_friend' : IDL.Opt(IDL.Bool),
-        'state' : IDL.Variant({
-          'REJECTED' : IDL.Null,
-          'PENDING' : IDL.Null,
-          'BLOCKED' : IDL.Null,
-          'ACTIVE' : IDL.Null,
-        }),
-        'category' : IDL.Variant({
-          'GROUP' : IDL.Null,
-          'FRIEND' : IDL.Null,
-          'follow' : IDL.Null,
-        }),
-        'viewer_principal' : IDL.Opt(IDL.Text),
-      })
-    ),
-  });
-  const AppListFriendRequestsResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'viewer_role' : IDL.Opt(
-          IDL.Variant({
-            'controller' : IDL.Null,
-            'creator' : IDL.Null,
-            'admin' : IDL.Null,
-            'solver' : IDL.Null,
-          })
-        ),
-        'participants' : IDL.Vec(IDL.Text),
-        'is_friend' : IDL.Opt(IDL.Bool),
-        'state' : IDL.Variant({
-          'REJECTED' : IDL.Null,
-          'PENDING' : IDL.Null,
-          'BLOCKED' : IDL.Null,
-          'ACTIVE' : IDL.Null,
-        }),
-        'category' : IDL.Variant({
-          'GROUP' : IDL.Null,
-          'FRIEND' : IDL.Null,
-          'follow' : IDL.Null,
-        }),
-        'viewer_principal' : IDL.Opt(IDL.Text),
-      })
-    ),
-  });
-  const AppListFriendsResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'viewer_role' : IDL.Opt(
-          IDL.Variant({
-            'controller' : IDL.Null,
-            'creator' : IDL.Null,
-            'admin' : IDL.Null,
-            'solver' : IDL.Null,
-          })
-        ),
-        'participants' : IDL.Vec(IDL.Text),
-        'is_friend' : IDL.Opt(IDL.Bool),
-        'state' : IDL.Variant({
-          'REJECTED' : IDL.Null,
-          'PENDING' : IDL.Null,
-          'BLOCKED' : IDL.Null,
-          'ACTIVE' : IDL.Null,
-        }),
-        'category' : IDL.Variant({
-          'GROUP' : IDL.Null,
-          'FRIEND' : IDL.Null,
-          'follow' : IDL.Null,
-        }),
-        'viewer_principal' : IDL.Opt(IDL.Text),
-      })
-    ),
-  });
-  const AppListLeaderboardResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'pnl' : IDL.Float64,
-        'streak' : IDL.Float64,
-        'nickname' : IDL.Text,
-        'contrarian_wins' : IDL.Float64,
-        'owner' : IDL.Text,
-        'interests' : IDL.Vec(IDL.Text),
-        'role' : IDL.Opt(
-          IDL.Variant({
-            'controller' : IDL.Null,
-            'creator' : IDL.Null,
-            'admin' : IDL.Null,
-            'solver' : IDL.Null,
-          })
-        ),
-        'email' : IDL.Text,
-        'level' : IDL.Float64,
-        'preferences' : IDL.Opt(
-          IDL.Record({
-            'default_amount' : IDL.Record({
-              'flow' : IDL.Text,
-              'manual' : IDL.Text,
-            }),
-          })
-        ),
-        'archetype' : IDL.Text,
-        'last_active_day' : IDL.Opt(IDL.Text),
-        'total_trades' : IDL.Float64,
-        'win_rate' : IDL.Float64,
-        'visibility' : IDL.Variant({
-          'friends_and_followers' : IDL.Null,
-          'public' : IDL.Null,
-          'friends_only' : IDL.Null,
-        }),
-        'daily_streak' : IDL.Float64,
-        'unlocked_achievements' : IDL.Vec(IDL.Text),
-        'points' : IDL.Float64,
-        'avatar' : IDL.Text,
-        'accuracy' : IDL.Float64,
-      })
-    ),
-  });
-  const AppListLeagueBoutsArgs = IDL.Record({ 'league_id' : IDL.Text });
-  const AppListLeagueBoutsResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'id' : IDL.Text,
-        'kind' : IDL.Variant({ 'duel' : IDL.Null, 'league' : IDL.Null }),
-        'winner' : IDL.Opt(
-          IDL.Variant({ 'A' : IDL.Null, 'B' : IDL.Null, 'draw' : IDL.Null })
-        ),
-        'score_a' : IDL.Opt(IDL.Float64),
-        'score_b' : IDL.Opt(IDL.Float64),
-        'state' : IDL.Variant({
-          'resolved' : IDL.Null,
-          'proposed' : IDL.Null,
-          'in_flight' : IDL.Null,
-          'accepted' : IDL.Null,
-        }),
-        'side_a' : IDL.Text,
-        'side_b' : IDL.Text,
-        'proposer' : IDL.Text,
-        'kickoff_ms' : IDL.Float64,
-        'settle_ms' : IDL.Float64,
-      })
-    ),
-  });
-  const AppListLeagueMembersArgs = IDL.Record({ 'league_id' : IDL.Text });
-  const AppListLeagueMembersResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'member' : IDL.Text,
-        'league_id' : IDL.Text,
-        'role' : IDL.Variant({
-          'member' : IDL.Null,
-          'admin' : IDL.Null,
-          'owner' : IDL.Null,
-        }),
-        'joined_at_ms' : IDL.Float64,
-      })
-    ),
-  });
-  const AppListMarketTranslationsArgs = IDL.Record({ 'series_id' : IDL.Text });
-  const AppListMarketTranslationsResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'title' : IDL.Text,
-        'updated_at' : IDL.Float64,
-        'updated_by' : IDL.Text,
-        'series_id' : IDL.Text,
-        'locale' : IDL.Text,
-        'description' : IDL.Text,
-        'outcomes' : IDL.Vec(
-          IDL.Record({ 'id' : IDL.Text, 'title' : IDL.Text })
-        ),
-      })
-    ),
-  });
-  const AppListMyAffiliationsResult = IDL.Record({
-    'country' : IDL.Opt(
-      IDL.Record({
-        'member' : IDL.Text,
-        'locked_until_ms' : IDL.Float64,
-        'kind' : IDL.Variant({ 'country' : IDL.Null, 'university' : IDL.Null }),
-        'joined_at_ms' : IDL.Float64,
-        'affiliation_id' : IDL.Text,
-      })
-    ),
-    'university' : IDL.Opt(
-      IDL.Record({
-        'member' : IDL.Text,
-        'locked_until_ms' : IDL.Float64,
-        'kind' : IDL.Variant({ 'country' : IDL.Null, 'university' : IDL.Null }),
-        'joined_at_ms' : IDL.Float64,
-        'affiliation_id' : IDL.Text,
-      })
-    ),
-  });
-  const AppListMyBlockingLeaguesResult = IDL.Record({
-    'league_ids' : IDL.Vec(IDL.Text),
-  });
-  const AppListMyBoutsResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'id' : IDL.Text,
-        'kind' : IDL.Variant({ 'duel' : IDL.Null, 'league' : IDL.Null }),
-        'winner' : IDL.Opt(
-          IDL.Variant({ 'A' : IDL.Null, 'B' : IDL.Null, 'draw' : IDL.Null })
-        ),
-        'score_a' : IDL.Opt(IDL.Float64),
-        'score_b' : IDL.Opt(IDL.Float64),
-        'state' : IDL.Variant({
-          'resolved' : IDL.Null,
-          'proposed' : IDL.Null,
-          'in_flight' : IDL.Null,
-          'accepted' : IDL.Null,
-        }),
-        'side_a' : IDL.Text,
-        'side_b' : IDL.Text,
-        'proposer' : IDL.Text,
-        'kickoff_ms' : IDL.Float64,
-        'settle_ms' : IDL.Float64,
-      })
-    ),
-  });
-  const AppListMyLeaguesResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'role' : IDL.Variant({
-          'member' : IDL.Null,
-          'admin' : IDL.Null,
-          'owner' : IDL.Null,
-        }),
-        'joined_at_ms' : IDL.Float64,
-        'league' : IDL.Record({
-          'id' : IDL.Text,
-          'accent_color' : IDL.Opt(IDL.Text),
-          'owner' : IDL.Text,
-          'name' : IDL.Text,
-          'invite_code' : IDL.Text,
-          'description' : IDL.Opt(IDL.Text),
-          'created_at_ms' : IDL.Float64,
-        }),
-      })
-    ),
-  });
-  const AppListMyReferralsResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'within_referrer_cap' : IDL.Bool,
-        'referee_payout' : IDL.Record({
-          'last_error' : IDL.Opt(IDL.Text),
-          'status' : IDL.Variant({
-            'none' : IDL.Null,
-            'owed' : IDL.Null,
-            'paid' : IDL.Null,
-            'processing' : IDL.Null,
-          }),
-          'block_index' : IDL.Opt(IDL.Text),
-          'amount_base_units' : IDL.Text,
-        }),
-        'referrer' : IDL.Text,
-        'code' : IDL.Text,
-        'redeemed_at_ms' : IDL.Float64,
-        'referee' : IDL.Text,
-        'referrer_payout' : IDL.Record({
-          'last_error' : IDL.Opt(IDL.Text),
-          'status' : IDL.Variant({
-            'none' : IDL.Null,
-            'owed' : IDL.Null,
-            'paid' : IDL.Null,
-            'processing' : IDL.Null,
-          }),
-          'block_index' : IDL.Opt(IDL.Text),
-          'amount_base_units' : IDL.Text,
-        }),
-      })
-    ),
-  });
-  const AppListSentFriendRequestsResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'viewer_role' : IDL.Opt(
-          IDL.Variant({
-            'controller' : IDL.Null,
-            'creator' : IDL.Null,
-            'admin' : IDL.Null,
-            'solver' : IDL.Null,
-          })
-        ),
-        'participants' : IDL.Vec(IDL.Text),
-        'is_friend' : IDL.Opt(IDL.Bool),
-        'state' : IDL.Variant({
-          'REJECTED' : IDL.Null,
-          'PENDING' : IDL.Null,
-          'BLOCKED' : IDL.Null,
-          'ACTIVE' : IDL.Null,
-        }),
-        'category' : IDL.Variant({
-          'GROUP' : IDL.Null,
-          'FRIEND' : IDL.Null,
-          'follow' : IDL.Null,
-        }),
-        'viewer_principal' : IDL.Opt(IDL.Text),
-      })
-    ),
-  });
-  const AppListWorldsRosterArgs = IDL.Record({
-    'kind' : IDL.Variant({ 'country' : IDL.Null, 'university' : IDL.Null }),
-    'affiliation_id' : IDL.Text,
-  });
-  const AppListWorldsRosterResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'member' : IDL.Text,
-        'locked_until_ms' : IDL.Float64,
-        'kind' : IDL.Variant({ 'country' : IDL.Null, 'university' : IDL.Null }),
-        'joined_at_ms' : IDL.Float64,
-        'affiliation_id' : IDL.Text,
-      })
-    ),
-  });
-  const AppLookupLeagueByInviteArgs = IDL.Record({ 'invite_code' : IDL.Text });
-  const AppLookupLeagueByInviteResult = IDL.Record({
-    'league' : IDL.Opt(
-      IDL.Record({
-        'id' : IDL.Text,
-        'accent_color' : IDL.Opt(IDL.Text),
-        'owner' : IDL.Text,
-        'name' : IDL.Text,
-        'invite_code' : IDL.Text,
-        'description' : IDL.Opt(IDL.Text),
-        'created_at_ms' : IDL.Float64,
-      })
-    ),
-  });
-  const AppLookupReferralCodeArgs = IDL.Record({ 'code' : IDL.Text });
-  const AppLookupReferralCodeResult = IDL.Record({
-    'owner' : IDL.Opt(IDL.Text),
-  });
-  const AppRedeemReferralCodeArgs = IDL.Record({ 'code' : IDL.Text });
-  const AppRejectFriendRequestArgs = IDL.Record({ 'relation_id' : IDL.Text });
-  const AppSearchProfilesArgs = IDL.Record({ 'query_str' : IDL.Text });
-  const AppSearchProfilesResult = IDL.Record({
-    'items' : IDL.Vec(
-      IDL.Record({
-        'pnl' : IDL.Float64,
-        'streak' : IDL.Float64,
-        'nickname' : IDL.Text,
-        'contrarian_wins' : IDL.Float64,
-        'owner' : IDL.Text,
-        'interests' : IDL.Vec(IDL.Text),
-        'role' : IDL.Opt(
-          IDL.Variant({
-            'controller' : IDL.Null,
-            'creator' : IDL.Null,
-            'admin' : IDL.Null,
-            'solver' : IDL.Null,
-          })
-        ),
-        'email' : IDL.Text,
-        'level' : IDL.Float64,
-        'preferences' : IDL.Opt(
-          IDL.Record({
-            'default_amount' : IDL.Record({
-              'flow' : IDL.Text,
-              'manual' : IDL.Text,
-            }),
-          })
-        ),
-        'archetype' : IDL.Text,
-        'last_active_day' : IDL.Opt(IDL.Text),
-        'total_trades' : IDL.Float64,
-        'win_rate' : IDL.Float64,
-        'visibility' : IDL.Variant({
-          'friends_and_followers' : IDL.Null,
-          'public' : IDL.Null,
-          'friends_only' : IDL.Null,
-        }),
-        'daily_streak' : IDL.Float64,
-        'unlocked_achievements' : IDL.Vec(IDL.Text),
-        'points' : IDL.Float64,
-        'avatar' : IDL.Text,
-        'accuracy' : IDL.Float64,
-      })
-    ),
-  });
-  const AppSendFriendRequestArgs = IDL.Record({ 'target' : IDL.Text });
-  const AppTransferLeagueOwnershipArgs = IDL.Record({
-    'new_owner_principal' : IDL.Text,
-    'league_id' : IDL.Text,
-  });
-  const AppTransferLeagueOwnershipResult = IDL.Record({
-    'ok' : IDL.Bool,
-    'reason' : IDL.Opt(
-      IDL.Variant({
-        'league_not_found' : IDL.Null,
-        'new_owner_is_caller' : IDL.Null,
-        'new_owner_not_member' : IDL.Null,
-        'not_owner' : IDL.Null,
-        'invalid_input' : IDL.Null,
-      })
-    ),
-  });
-  const AppTriggerTournamentDrawArgs = IDL.Record({
-    'month_anchor' : IDL.Text,
-  });
-  const AppTriggerTournamentDrawResult = IDL.Record({
-    'ok' : IDL.Bool,
-    'available_leagues' : IDL.Opt(IDL.Float64),
-    'tournament_id' : IDL.Opt(IDL.Text),
-    'reason' : IDL.Opt(
-      IDL.Variant({
-        'insufficient_leagues' : IDL.Null,
-        'already_drawn' : IDL.Null,
-        'invalid_input' : IDL.Null,
-        'month_not_started' : IDL.Null,
-      })
-    ),
-  });
-  const AppUpsertMarketMetadataArgs = IDL.Record({
-    'data' : IDL.Record({
-      'suggested' : IDL.Bool,
-      'tags' : IDL.Vec(IDL.Text),
-      'events' : IDL.Vec(
-        IDL.Record({
-          'day' : IDL.Float64,
-          'dir' : IDL.Variant({ 'up' : IDL.Null, 'down' : IDL.Null }),
-          'label' : IDL.Text,
-        })
-      ),
-      'why_now' : IDL.Opt(
-        IDL.Record({
-          'kind' : IDL.Variant({
-            'new' : IDL.Null,
-            'social' : IDL.Null,
-            'trending' : IDL.Null,
-            'closing' : IDL.Null,
-            'topical' : IDL.Null,
-          }),
-          'text' : IDL.Text,
-        })
-      ),
-    }),
-    'series_id' : IDL.Text,
-  });
-  const AppUpsertMarketMetadataResult = IDL.Record({
-    'metadata' : IDL.Record({
-      'updated_at' : IDL.Float64,
-      'updated_by' : IDL.Text,
-      'suggested' : IDL.Bool,
-      'series_id' : IDL.Text,
-      'tags' : IDL.Vec(IDL.Text),
-      'events' : IDL.Vec(
-        IDL.Record({
-          'day' : IDL.Float64,
-          'dir' : IDL.Variant({ 'up' : IDL.Null, 'down' : IDL.Null }),
-          'label' : IDL.Text,
-        })
-      ),
-      'why_now' : IDL.Opt(
-        IDL.Record({
-          'kind' : IDL.Variant({
-            'new' : IDL.Null,
-            'social' : IDL.Null,
-            'trending' : IDL.Null,
-            'closing' : IDL.Null,
-            'topical' : IDL.Null,
-          }),
-          'text' : IDL.Text,
-        })
-      ),
-    }),
-  });
-  const AppUpsertMarketTranslationArgs = IDL.Record({
-    'data' : IDL.Record({
-      'title' : IDL.Text,
-      'description' : IDL.Text,
-      'outcomes' : IDL.Vec(IDL.Record({ 'id' : IDL.Text, 'title' : IDL.Text })),
-    }),
-    'series_id' : IDL.Text,
-    'locale' : IDL.Text,
-  });
-  const AppUpsertMarketTranslationResult = IDL.Record({
-    'translation' : IDL.Record({
-      'title' : IDL.Text,
-      'updated_at' : IDL.Float64,
-      'updated_by' : IDL.Text,
-      'series_id' : IDL.Text,
-      'locale' : IDL.Text,
-      'description' : IDL.Text,
-      'outcomes' : IDL.Vec(IDL.Record({ 'id' : IDL.Text, 'title' : IDL.Text })),
-    }),
-  });
-  
-  return IDL.Service({
-    'app_accept_friend_request' : IDL.Func(
-        [AppAcceptFriendRequestArgs],
-        [],
-        [],
-      ),
-    'app_cancel_friend_request' : IDL.Func(
-        [AppCancelFriendRequestArgs],
-        [],
-        [],
-      ),
-    'app_check_friendship' : IDL.Func(
-        [AppCheckFriendshipArgs],
-        [AppCheckFriendshipResult],
-        ['query'],
-      ),
-    'app_check_nickname_availability' : IDL.Func(
-        [AppCheckNicknameAvailabilityArgs],
-        [AppCheckNicknameAvailabilityResult],
-        ['query'],
-      ),
-    'app_claim_comeback_grant' : IDL.Func(
-        [],
-        [AppClaimComebackGrantResult],
-        [],
-      ),
-    'app_claim_worlds_podium_prize' : IDL.Func(
-        [AppClaimWorldsPodiumPrizeArgs],
-        [AppClaimWorldsPodiumPrizeResult],
-        [],
-      ),
-    'app_delete_my_account' : IDL.Func(
-        [AppDeleteMyAccountArgs],
-        [AppDeleteMyAccountResult],
-        [],
-      ),
-    'app_follow_user' : IDL.Func([AppFollowUserArgs], [], []),
-    'app_get_affiliation_stats' : IDL.Func(
-        [AppGetAffiliationStatsArgs],
-        [AppGetAffiliationStatsResult],
-        ['query'],
-      ),
-    'app_get_current_tournament' : IDL.Func(
-        [],
-        [AppGetCurrentTournamentResult],
-        ['query'],
-      ),
-    'app_get_market_metadata' : IDL.Func(
-        [AppGetMarketMetadataArgs],
-        [AppGetMarketMetadataResult],
-        ['query'],
-      ),
-    'app_get_market_translation' : IDL.Func(
-        [AppGetMarketTranslationArgs],
-        [AppGetMarketTranslationResult],
-        ['query'],
-      ),
-    'app_get_my_referral_code' : IDL.Func(
-        [],
-        [AppGetMyReferralCodeResult],
-        ['query'],
-      ),
-    'app_get_profile' : IDL.Func(
-        [AppGetProfileArgs],
-        [AppGetProfileResult],
-        ['query'],
-      ),
-    'app_list_affiliation_stats' : IDL.Func(
-        [AppListAffiliationStatsArgs],
-        [AppListAffiliationStatsResult],
-        ['query'],
-      ),
-    'app_list_followers' : IDL.Func([], [AppListFollowersResult], ['query']),
-    'app_list_following' : IDL.Func([], [AppListFollowingResult], ['query']),
-    'app_list_friend_requests' : IDL.Func(
-        [],
-        [AppListFriendRequestsResult],
-        ['query'],
-      ),
-    'app_list_friends' : IDL.Func([], [AppListFriendsResult], ['query']),
-    'app_list_leaderboard' : IDL.Func(
-        [],
-        [AppListLeaderboardResult],
-        ['query'],
-      ),
-    'app_list_league_bouts' : IDL.Func(
-        [AppListLeagueBoutsArgs],
-        [AppListLeagueBoutsResult],
-        ['query'],
-      ),
-    'app_list_league_members' : IDL.Func(
-        [AppListLeagueMembersArgs],
-        [AppListLeagueMembersResult],
-        ['query'],
-      ),
-    'app_list_market_translations' : IDL.Func(
-        [AppListMarketTranslationsArgs],
-        [AppListMarketTranslationsResult],
-        ['query'],
-      ),
-    'app_list_my_affiliations' : IDL.Func(
-        [],
-        [AppListMyAffiliationsResult],
-        ['query'],
-      ),
-    'app_list_my_blocking_leagues' : IDL.Func(
-        [],
-        [AppListMyBlockingLeaguesResult],
-        ['query'],
-      ),
-    'app_list_my_bouts' : IDL.Func([], [AppListMyBoutsResult], ['query']),
-    'app_list_my_leagues' : IDL.Func([], [AppListMyLeaguesResult], ['query']),
-    'app_list_my_referrals' : IDL.Func(
-        [],
-        [AppListMyReferralsResult],
-        ['query'],
-      ),
-    'app_list_sent_friend_requests' : IDL.Func(
-        [],
-        [AppListSentFriendRequestsResult],
-        ['query'],
-      ),
-    'app_list_worlds_roster' : IDL.Func(
-        [AppListWorldsRosterArgs],
-        [AppListWorldsRosterResult],
-        ['query'],
-      ),
-    'app_lookup_league_by_invite' : IDL.Func(
-        [AppLookupLeagueByInviteArgs],
-        [AppLookupLeagueByInviteResult],
-        ['query'],
-      ),
-    'app_lookup_referral_code' : IDL.Func(
-        [AppLookupReferralCodeArgs],
-        [AppLookupReferralCodeResult],
-        ['query'],
-      ),
-    'app_redeem_referral_code' : IDL.Func([AppRedeemReferralCodeArgs], [], []),
-    'app_reject_friend_request' : IDL.Func(
-        [AppRejectFriendRequestArgs],
-        [],
-        [],
-      ),
-    'app_search_profiles' : IDL.Func(
-        [AppSearchProfilesArgs],
-        [AppSearchProfilesResult],
-        ['query'],
-      ),
-    'app_send_friend_request' : IDL.Func([AppSendFriendRequestArgs], [], []),
-    'app_transfer_league_ownership' : IDL.Func(
-        [AppTransferLeagueOwnershipArgs],
-        [AppTransferLeagueOwnershipResult],
-        [],
-      ),
-    'app_trigger_tournament_draw' : IDL.Func(
-        [AppTriggerTournamentDrawArgs],
-        [AppTriggerTournamentDrawResult],
-        [],
-      ),
-    'app_upsert_market_metadata' : IDL.Func(
-        [AppUpsertMarketMetadataArgs],
-        [AppUpsertMarketMetadataResult],
-        [],
-      ),
-    'app_upsert_market_translation' : IDL.Func(
-        [AppUpsertMarketTranslationArgs],
-        [AppUpsertMarketTranslationResult],
-        [],
-      ),
-  });
+	const AppAcceptFriendRequestArgs = IDL.Record({ relation_id: IDL.Text });
+	const AppCancelFriendRequestArgs = IDL.Record({ relation_id: IDL.Text });
+	const AppCheckFriendshipArgs = IDL.Record({
+		user_a: IDL.Text,
+		user_b: IDL.Text
+	});
+	const AppCheckFriendshipResult = IDL.Record({ is_friend: IDL.Bool });
+	const AppCheckNicknameAvailabilityArgs = IDL.Record({
+		nickname: IDL.Text,
+		exclude_principal_str: IDL.Text
+	});
+	const AppCheckNicknameAvailabilityResult = IDL.Record({
+		available: IDL.Bool,
+		reason: IDL.Opt(
+			IDL.Variant({
+				taken: IDL.Null,
+				required: IDL.Null,
+				too_short: IDL.Null
+			})
+		)
+	});
+	const AppClaimComebackGrantResult = IDL.Record({
+		block_index: IDL.Opt(IDL.Text),
+		error_message: IDL.Opt(IDL.Text),
+		paid_now: IDL.Bool,
+		previously_paid: IDL.Bool,
+		reason: IDL.Opt(
+			IDL.Variant({
+				already_claimed_failed: IDL.Null,
+				already_claimed_paid: IDL.Null,
+				not_engaged_yet: IDL.Null,
+				transfer_failed: IDL.Null,
+				already_claimed_pending: IDL.Null,
+				balance_not_zero: IDL.Null
+			})
+		)
+	});
+	const AppClaimWorldsPodiumPrizeArgs = IDL.Record({
+		month_anchor: IDL.Text
+	});
+	const AppClaimWorldsPodiumPrizeResult = IDL.Record({
+		month_anchor: IDL.Text,
+		not_eligible: IDL.Bool,
+		awards_created: IDL.Float64,
+		awards_already_claimed: IDL.Float64
+	});
+	const AppDeleteMyAccountArgs = IDL.Record({
+		note: IDL.Text,
+		reason: IDL.Text
+	});
+	const AppDeleteMyAccountResult = IDL.Record({
+		ok: IDL.Bool,
+		blocking_league_ids: IDL.Opt(IDL.Vec(IDL.Text)),
+		docs_deleted: IDL.Opt(IDL.Float64),
+		reason: IDL.Opt(
+			IDL.Variant({
+				owns_non_empty_league: IDL.Null,
+				invalid_input: IDL.Null
+			})
+		)
+	});
+	const AppFollowUserArgs = IDL.Record({ target: IDL.Text });
+	const AppGetAffiliationStatsArgs = IDL.Record({
+		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+		affiliation_id: IDL.Text
+	});
+	const AppGetAffiliationStatsResult = IDL.Record({
+		stats: IDL.Opt(
+			IDL.Record({
+				month_anchor: IDL.Text,
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				wins: IDL.Float64,
+				month_wins: IDL.Float64,
+				updated_at_ms: IDL.Float64,
+				total_calls: IDL.Float64,
+				month_total_calls: IDL.Float64,
+				affiliation_id: IDL.Text
+			})
+		)
+	});
+	const AppGetCurrentTournamentResult = IDL.Record({
+		tournament: IDL.Opt(
+			IDL.Record({
+				id: IDL.Text,
+				seeded_league_ids: IDL.Vec(IDL.Text),
+				month_start_ms: IDL.Float64,
+				created_at_ms: IDL.Float64,
+				state: IDL.Variant({
+					concluded: IDL.Null,
+					in_flight: IDL.Null
+				}),
+				bracket_size: IDL.Float64,
+				month_end_ms: IDL.Float64
+			})
+		),
+		matches: IDL.Vec(
+			IDL.Record({
+				winner_league_id: IDL.Opt(IDL.Text),
+				to_league_id: IDL.Opt(IDL.Text),
+				start_ms: IDL.Float64,
+				from_league_id: IDL.Opt(IDL.Text),
+				to_acc: IDL.Opt(IDL.Float64),
+				tournament_id: IDL.Text,
+				from_acc: IDL.Opt(IDL.Float64),
+				index: IDL.Float64,
+				round: IDL.Variant({
+					r1: IDL.Null,
+					final: IDL.Null,
+					semifinal: IDL.Null,
+					quarter: IDL.Null
+				}),
+				end_ms: IDL.Float64
+			})
+		)
+	});
+	const AppGetMarketMetadataArgs = IDL.Record({ series_id: IDL.Text });
+	const AppGetMarketMetadataResult = IDL.Record({
+		metadata: IDL.Opt(
+			IDL.Record({
+				updated_at: IDL.Float64,
+				updated_by: IDL.Text,
+				suggested: IDL.Bool,
+				series_id: IDL.Text,
+				tags: IDL.Vec(IDL.Text),
+				events: IDL.Vec(
+					IDL.Record({
+						day: IDL.Float64,
+						dir: IDL.Variant({ up: IDL.Null, down: IDL.Null }),
+						label: IDL.Text
+					})
+				),
+				why_now: IDL.Opt(
+					IDL.Record({
+						kind: IDL.Variant({
+							new: IDL.Null,
+							social: IDL.Null,
+							trending: IDL.Null,
+							closing: IDL.Null,
+							topical: IDL.Null
+						}),
+						text: IDL.Text
+					})
+				)
+			})
+		)
+	});
+	const AppGetMarketTranslationArgs = IDL.Record({
+		series_id: IDL.Text,
+		locale: IDL.Text
+	});
+	const AppGetMarketTranslationResult = IDL.Record({
+		translation: IDL.Opt(
+			IDL.Record({
+				title: IDL.Text,
+				updated_at: IDL.Float64,
+				updated_by: IDL.Text,
+				series_id: IDL.Text,
+				locale: IDL.Text,
+				description: IDL.Text,
+				outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+			})
+		)
+	});
+	const AppGetMyReferralCodeResult = IDL.Record({ code: IDL.Opt(IDL.Text) });
+	const AppGetProfileArgs = IDL.Record({ principal_str: IDL.Text });
+	const AppGetProfileResult = IDL.Record({
+		profile: IDL.Opt(
+			IDL.Record({
+				pnl: IDL.Float64,
+				streak: IDL.Float64,
+				nickname: IDL.Text,
+				contrarian_wins: IDL.Float64,
+				owner: IDL.Text,
+				interests: IDL.Vec(IDL.Text),
+				role: IDL.Opt(
+					IDL.Variant({
+						controller: IDL.Null,
+						creator: IDL.Null,
+						admin: IDL.Null,
+						solver: IDL.Null
+					})
+				),
+				email: IDL.Text,
+				level: IDL.Float64,
+				preferences: IDL.Opt(
+					IDL.Record({
+						default_amount: IDL.Record({
+							flow: IDL.Text,
+							manual: IDL.Text
+						})
+					})
+				),
+				archetype: IDL.Text,
+				last_active_day: IDL.Opt(IDL.Text),
+				total_trades: IDL.Float64,
+				win_rate: IDL.Float64,
+				visibility: IDL.Variant({
+					friends_and_followers: IDL.Null,
+					public: IDL.Null,
+					friends_only: IDL.Null
+				}),
+				daily_streak: IDL.Float64,
+				unlocked_achievements: IDL.Vec(IDL.Text),
+				points: IDL.Float64,
+				avatar: IDL.Text,
+				accuracy: IDL.Float64
+			})
+		)
+	});
+	const AppListAffiliationStatsArgs = IDL.Record({
+		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+		limit: IDL.Opt(IDL.Float64)
+	});
+	const AppListAffiliationStatsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				month_anchor: IDL.Text,
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				wins: IDL.Float64,
+				month_wins: IDL.Float64,
+				updated_at_ms: IDL.Float64,
+				total_calls: IDL.Float64,
+				month_total_calls: IDL.Float64,
+				affiliation_id: IDL.Text
+			})
+		)
+	});
+	const AppListFollowersResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				viewer_role: IDL.Opt(
+					IDL.Variant({
+						controller: IDL.Null,
+						creator: IDL.Null,
+						admin: IDL.Null,
+						solver: IDL.Null
+					})
+				),
+				participants: IDL.Vec(IDL.Text),
+				is_friend: IDL.Opt(IDL.Bool),
+				state: IDL.Variant({
+					REJECTED: IDL.Null,
+					PENDING: IDL.Null,
+					BLOCKED: IDL.Null,
+					ACTIVE: IDL.Null
+				}),
+				category: IDL.Variant({
+					GROUP: IDL.Null,
+					FRIEND: IDL.Null,
+					follow: IDL.Null
+				}),
+				viewer_principal: IDL.Opt(IDL.Text)
+			})
+		)
+	});
+	const AppListFollowingResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				viewer_role: IDL.Opt(
+					IDL.Variant({
+						controller: IDL.Null,
+						creator: IDL.Null,
+						admin: IDL.Null,
+						solver: IDL.Null
+					})
+				),
+				participants: IDL.Vec(IDL.Text),
+				is_friend: IDL.Opt(IDL.Bool),
+				state: IDL.Variant({
+					REJECTED: IDL.Null,
+					PENDING: IDL.Null,
+					BLOCKED: IDL.Null,
+					ACTIVE: IDL.Null
+				}),
+				category: IDL.Variant({
+					GROUP: IDL.Null,
+					FRIEND: IDL.Null,
+					follow: IDL.Null
+				}),
+				viewer_principal: IDL.Opt(IDL.Text)
+			})
+		)
+	});
+	const AppListFriendRequestsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				viewer_role: IDL.Opt(
+					IDL.Variant({
+						controller: IDL.Null,
+						creator: IDL.Null,
+						admin: IDL.Null,
+						solver: IDL.Null
+					})
+				),
+				participants: IDL.Vec(IDL.Text),
+				is_friend: IDL.Opt(IDL.Bool),
+				state: IDL.Variant({
+					REJECTED: IDL.Null,
+					PENDING: IDL.Null,
+					BLOCKED: IDL.Null,
+					ACTIVE: IDL.Null
+				}),
+				category: IDL.Variant({
+					GROUP: IDL.Null,
+					FRIEND: IDL.Null,
+					follow: IDL.Null
+				}),
+				viewer_principal: IDL.Opt(IDL.Text)
+			})
+		)
+	});
+	const AppListFriendsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				viewer_role: IDL.Opt(
+					IDL.Variant({
+						controller: IDL.Null,
+						creator: IDL.Null,
+						admin: IDL.Null,
+						solver: IDL.Null
+					})
+				),
+				participants: IDL.Vec(IDL.Text),
+				is_friend: IDL.Opt(IDL.Bool),
+				state: IDL.Variant({
+					REJECTED: IDL.Null,
+					PENDING: IDL.Null,
+					BLOCKED: IDL.Null,
+					ACTIVE: IDL.Null
+				}),
+				category: IDL.Variant({
+					GROUP: IDL.Null,
+					FRIEND: IDL.Null,
+					follow: IDL.Null
+				}),
+				viewer_principal: IDL.Opt(IDL.Text)
+			})
+		)
+	});
+	const AppListLeaderboardResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				pnl: IDL.Float64,
+				streak: IDL.Float64,
+				nickname: IDL.Text,
+				contrarian_wins: IDL.Float64,
+				owner: IDL.Text,
+				interests: IDL.Vec(IDL.Text),
+				role: IDL.Opt(
+					IDL.Variant({
+						controller: IDL.Null,
+						creator: IDL.Null,
+						admin: IDL.Null,
+						solver: IDL.Null
+					})
+				),
+				email: IDL.Text,
+				level: IDL.Float64,
+				preferences: IDL.Opt(
+					IDL.Record({
+						default_amount: IDL.Record({
+							flow: IDL.Text,
+							manual: IDL.Text
+						})
+					})
+				),
+				archetype: IDL.Text,
+				last_active_day: IDL.Opt(IDL.Text),
+				total_trades: IDL.Float64,
+				win_rate: IDL.Float64,
+				visibility: IDL.Variant({
+					friends_and_followers: IDL.Null,
+					public: IDL.Null,
+					friends_only: IDL.Null
+				}),
+				daily_streak: IDL.Float64,
+				unlocked_achievements: IDL.Vec(IDL.Text),
+				points: IDL.Float64,
+				avatar: IDL.Text,
+				accuracy: IDL.Float64
+			})
+		)
+	});
+	const AppListLeagueBoutsArgs = IDL.Record({ league_id: IDL.Text });
+	const AppListLeagueBoutsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				id: IDL.Text,
+				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
+				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
+				score_a: IDL.Opt(IDL.Float64),
+				score_b: IDL.Opt(IDL.Float64),
+				state: IDL.Variant({
+					resolved: IDL.Null,
+					proposed: IDL.Null,
+					in_flight: IDL.Null,
+					accepted: IDL.Null
+				}),
+				side_a: IDL.Text,
+				side_b: IDL.Text,
+				proposer: IDL.Text,
+				kickoff_ms: IDL.Float64,
+				settle_ms: IDL.Float64
+			})
+		)
+	});
+	const AppListLeagueMembersArgs = IDL.Record({ league_id: IDL.Text });
+	const AppListLeagueMembersResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				member: IDL.Text,
+				league_id: IDL.Text,
+				role: IDL.Variant({
+					member: IDL.Null,
+					admin: IDL.Null,
+					owner: IDL.Null
+				}),
+				joined_at_ms: IDL.Float64
+			})
+		)
+	});
+	const AppListMarketTranslationsArgs = IDL.Record({ series_id: IDL.Text });
+	const AppListMarketTranslationsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				title: IDL.Text,
+				updated_at: IDL.Float64,
+				updated_by: IDL.Text,
+				series_id: IDL.Text,
+				locale: IDL.Text,
+				description: IDL.Text,
+				outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+			})
+		)
+	});
+	const AppListMyAffiliationsResult = IDL.Record({
+		country: IDL.Opt(
+			IDL.Record({
+				member: IDL.Text,
+				locked_until_ms: IDL.Float64,
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				joined_at_ms: IDL.Float64,
+				affiliation_id: IDL.Text
+			})
+		),
+		university: IDL.Opt(
+			IDL.Record({
+				member: IDL.Text,
+				locked_until_ms: IDL.Float64,
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				joined_at_ms: IDL.Float64,
+				affiliation_id: IDL.Text
+			})
+		)
+	});
+	const AppListMyBlockingLeaguesResult = IDL.Record({
+		league_ids: IDL.Vec(IDL.Text)
+	});
+	const AppListMyBoutsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				id: IDL.Text,
+				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
+				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
+				score_a: IDL.Opt(IDL.Float64),
+				score_b: IDL.Opt(IDL.Float64),
+				state: IDL.Variant({
+					resolved: IDL.Null,
+					proposed: IDL.Null,
+					in_flight: IDL.Null,
+					accepted: IDL.Null
+				}),
+				side_a: IDL.Text,
+				side_b: IDL.Text,
+				proposer: IDL.Text,
+				kickoff_ms: IDL.Float64,
+				settle_ms: IDL.Float64
+			})
+		)
+	});
+	const AppListMyLeaguesResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				role: IDL.Variant({
+					member: IDL.Null,
+					admin: IDL.Null,
+					owner: IDL.Null
+				}),
+				joined_at_ms: IDL.Float64,
+				league: IDL.Record({
+					id: IDL.Text,
+					accent_color: IDL.Opt(IDL.Text),
+					owner: IDL.Text,
+					name: IDL.Text,
+					invite_code: IDL.Text,
+					description: IDL.Opt(IDL.Text),
+					created_at_ms: IDL.Float64
+				})
+			})
+		)
+	});
+	const AppListMyReferralsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				within_referrer_cap: IDL.Bool,
+				referee_payout: IDL.Record({
+					last_error: IDL.Opt(IDL.Text),
+					status: IDL.Variant({
+						none: IDL.Null,
+						owed: IDL.Null,
+						paid: IDL.Null,
+						processing: IDL.Null
+					}),
+					block_index: IDL.Opt(IDL.Text),
+					amount_base_units: IDL.Text
+				}),
+				referrer: IDL.Text,
+				code: IDL.Text,
+				redeemed_at_ms: IDL.Float64,
+				referee: IDL.Text,
+				referrer_payout: IDL.Record({
+					last_error: IDL.Opt(IDL.Text),
+					status: IDL.Variant({
+						none: IDL.Null,
+						owed: IDL.Null,
+						paid: IDL.Null,
+						processing: IDL.Null
+					}),
+					block_index: IDL.Opt(IDL.Text),
+					amount_base_units: IDL.Text
+				})
+			})
+		)
+	});
+	const AppListSentFriendRequestsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				viewer_role: IDL.Opt(
+					IDL.Variant({
+						controller: IDL.Null,
+						creator: IDL.Null,
+						admin: IDL.Null,
+						solver: IDL.Null
+					})
+				),
+				participants: IDL.Vec(IDL.Text),
+				is_friend: IDL.Opt(IDL.Bool),
+				state: IDL.Variant({
+					REJECTED: IDL.Null,
+					PENDING: IDL.Null,
+					BLOCKED: IDL.Null,
+					ACTIVE: IDL.Null
+				}),
+				category: IDL.Variant({
+					GROUP: IDL.Null,
+					FRIEND: IDL.Null,
+					follow: IDL.Null
+				}),
+				viewer_principal: IDL.Opt(IDL.Text)
+			})
+		)
+	});
+	const AppListWorldsRosterArgs = IDL.Record({
+		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+		affiliation_id: IDL.Text
+	});
+	const AppListWorldsRosterResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				member: IDL.Text,
+				locked_until_ms: IDL.Float64,
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				joined_at_ms: IDL.Float64,
+				affiliation_id: IDL.Text
+			})
+		)
+	});
+	const AppLookupLeagueByInviteArgs = IDL.Record({ invite_code: IDL.Text });
+	const AppLookupLeagueByInviteResult = IDL.Record({
+		league: IDL.Opt(
+			IDL.Record({
+				id: IDL.Text,
+				accent_color: IDL.Opt(IDL.Text),
+				owner: IDL.Text,
+				name: IDL.Text,
+				invite_code: IDL.Text,
+				description: IDL.Opt(IDL.Text),
+				created_at_ms: IDL.Float64
+			})
+		)
+	});
+	const AppLookupReferralCodeArgs = IDL.Record({ code: IDL.Text });
+	const AppLookupReferralCodeResult = IDL.Record({
+		owner: IDL.Opt(IDL.Text)
+	});
+	const AppRedeemReferralCodeArgs = IDL.Record({ code: IDL.Text });
+	const AppRejectFriendRequestArgs = IDL.Record({ relation_id: IDL.Text });
+	const AppSearchProfilesArgs = IDL.Record({ query_str: IDL.Text });
+	const AppSearchProfilesResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				pnl: IDL.Float64,
+				streak: IDL.Float64,
+				nickname: IDL.Text,
+				contrarian_wins: IDL.Float64,
+				owner: IDL.Text,
+				interests: IDL.Vec(IDL.Text),
+				role: IDL.Opt(
+					IDL.Variant({
+						controller: IDL.Null,
+						creator: IDL.Null,
+						admin: IDL.Null,
+						solver: IDL.Null
+					})
+				),
+				email: IDL.Text,
+				level: IDL.Float64,
+				preferences: IDL.Opt(
+					IDL.Record({
+						default_amount: IDL.Record({
+							flow: IDL.Text,
+							manual: IDL.Text
+						})
+					})
+				),
+				archetype: IDL.Text,
+				last_active_day: IDL.Opt(IDL.Text),
+				total_trades: IDL.Float64,
+				win_rate: IDL.Float64,
+				visibility: IDL.Variant({
+					friends_and_followers: IDL.Null,
+					public: IDL.Null,
+					friends_only: IDL.Null
+				}),
+				daily_streak: IDL.Float64,
+				unlocked_achievements: IDL.Vec(IDL.Text),
+				points: IDL.Float64,
+				avatar: IDL.Text,
+				accuracy: IDL.Float64
+			})
+		)
+	});
+	const AppSendFriendRequestArgs = IDL.Record({ target: IDL.Text });
+	const AppTransferLeagueOwnershipArgs = IDL.Record({
+		new_owner_principal: IDL.Text,
+		league_id: IDL.Text
+	});
+	const AppTransferLeagueOwnershipResult = IDL.Record({
+		ok: IDL.Bool,
+		reason: IDL.Opt(
+			IDL.Variant({
+				league_not_found: IDL.Null,
+				new_owner_is_caller: IDL.Null,
+				new_owner_not_member: IDL.Null,
+				not_owner: IDL.Null,
+				invalid_input: IDL.Null
+			})
+		)
+	});
+	const AppTriggerTournamentDrawArgs = IDL.Record({
+		month_anchor: IDL.Text
+	});
+	const AppTriggerTournamentDrawResult = IDL.Record({
+		ok: IDL.Bool,
+		available_leagues: IDL.Opt(IDL.Float64),
+		tournament_id: IDL.Opt(IDL.Text),
+		reason: IDL.Opt(
+			IDL.Variant({
+				insufficient_leagues: IDL.Null,
+				already_drawn: IDL.Null,
+				invalid_input: IDL.Null,
+				month_not_started: IDL.Null
+			})
+		)
+	});
+	const AppUpsertMarketMetadataArgs = IDL.Record({
+		data: IDL.Record({
+			suggested: IDL.Bool,
+			tags: IDL.Vec(IDL.Text),
+			events: IDL.Vec(
+				IDL.Record({
+					day: IDL.Float64,
+					dir: IDL.Variant({ up: IDL.Null, down: IDL.Null }),
+					label: IDL.Text
+				})
+			),
+			why_now: IDL.Opt(
+				IDL.Record({
+					kind: IDL.Variant({
+						new: IDL.Null,
+						social: IDL.Null,
+						trending: IDL.Null,
+						closing: IDL.Null,
+						topical: IDL.Null
+					}),
+					text: IDL.Text
+				})
+			)
+		}),
+		series_id: IDL.Text
+	});
+	const AppUpsertMarketMetadataResult = IDL.Record({
+		metadata: IDL.Record({
+			updated_at: IDL.Float64,
+			updated_by: IDL.Text,
+			suggested: IDL.Bool,
+			series_id: IDL.Text,
+			tags: IDL.Vec(IDL.Text),
+			events: IDL.Vec(
+				IDL.Record({
+					day: IDL.Float64,
+					dir: IDL.Variant({ up: IDL.Null, down: IDL.Null }),
+					label: IDL.Text
+				})
+			),
+			why_now: IDL.Opt(
+				IDL.Record({
+					kind: IDL.Variant({
+						new: IDL.Null,
+						social: IDL.Null,
+						trending: IDL.Null,
+						closing: IDL.Null,
+						topical: IDL.Null
+					}),
+					text: IDL.Text
+				})
+			)
+		})
+	});
+	const AppUpsertMarketTranslationArgs = IDL.Record({
+		data: IDL.Record({
+			title: IDL.Text,
+			description: IDL.Text,
+			outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+		}),
+		series_id: IDL.Text,
+		locale: IDL.Text
+	});
+	const AppUpsertMarketTranslationResult = IDL.Record({
+		translation: IDL.Record({
+			title: IDL.Text,
+			updated_at: IDL.Float64,
+			updated_by: IDL.Text,
+			series_id: IDL.Text,
+			locale: IDL.Text,
+			description: IDL.Text,
+			outcomes: IDL.Vec(IDL.Record({ id: IDL.Text, title: IDL.Text }))
+		})
+	});
+
+	return IDL.Service({
+		app_accept_friend_request: IDL.Func([AppAcceptFriendRequestArgs], [], []),
+		app_cancel_friend_request: IDL.Func([AppCancelFriendRequestArgs], [], []),
+		app_check_friendship: IDL.Func([AppCheckFriendshipArgs], [AppCheckFriendshipResult], ['query']),
+		app_check_nickname_availability: IDL.Func(
+			[AppCheckNicknameAvailabilityArgs],
+			[AppCheckNicknameAvailabilityResult],
+			['query']
+		),
+		app_claim_comeback_grant: IDL.Func([], [AppClaimComebackGrantResult], []),
+		app_claim_worlds_podium_prize: IDL.Func(
+			[AppClaimWorldsPodiumPrizeArgs],
+			[AppClaimWorldsPodiumPrizeResult],
+			[]
+		),
+		app_delete_my_account: IDL.Func([AppDeleteMyAccountArgs], [AppDeleteMyAccountResult], []),
+		app_follow_user: IDL.Func([AppFollowUserArgs], [], []),
+		app_get_affiliation_stats: IDL.Func(
+			[AppGetAffiliationStatsArgs],
+			[AppGetAffiliationStatsResult],
+			['query']
+		),
+		app_get_current_tournament: IDL.Func([], [AppGetCurrentTournamentResult], ['query']),
+		app_get_market_metadata: IDL.Func(
+			[AppGetMarketMetadataArgs],
+			[AppGetMarketMetadataResult],
+			['query']
+		),
+		app_get_market_translation: IDL.Func(
+			[AppGetMarketTranslationArgs],
+			[AppGetMarketTranslationResult],
+			['query']
+		),
+		app_get_my_referral_code: IDL.Func([], [AppGetMyReferralCodeResult], ['query']),
+		app_get_profile: IDL.Func([AppGetProfileArgs], [AppGetProfileResult], ['query']),
+		app_list_affiliation_stats: IDL.Func(
+			[AppListAffiliationStatsArgs],
+			[AppListAffiliationStatsResult],
+			['query']
+		),
+		app_list_followers: IDL.Func([], [AppListFollowersResult], ['query']),
+		app_list_following: IDL.Func([], [AppListFollowingResult], ['query']),
+		app_list_friend_requests: IDL.Func([], [AppListFriendRequestsResult], ['query']),
+		app_list_friends: IDL.Func([], [AppListFriendsResult], ['query']),
+		app_list_leaderboard: IDL.Func([], [AppListLeaderboardResult], ['query']),
+		app_list_league_bouts: IDL.Func(
+			[AppListLeagueBoutsArgs],
+			[AppListLeagueBoutsResult],
+			['query']
+		),
+		app_list_league_members: IDL.Func(
+			[AppListLeagueMembersArgs],
+			[AppListLeagueMembersResult],
+			['query']
+		),
+		app_list_market_translations: IDL.Func(
+			[AppListMarketTranslationsArgs],
+			[AppListMarketTranslationsResult],
+			['query']
+		),
+		app_list_my_affiliations: IDL.Func([], [AppListMyAffiliationsResult], ['query']),
+		app_list_my_blocking_leagues: IDL.Func([], [AppListMyBlockingLeaguesResult], ['query']),
+		app_list_my_bouts: IDL.Func([], [AppListMyBoutsResult], ['query']),
+		app_list_my_leagues: IDL.Func([], [AppListMyLeaguesResult], ['query']),
+		app_list_my_referrals: IDL.Func([], [AppListMyReferralsResult], ['query']),
+		app_list_sent_friend_requests: IDL.Func([], [AppListSentFriendRequestsResult], ['query']),
+		app_list_worlds_roster: IDL.Func(
+			[AppListWorldsRosterArgs],
+			[AppListWorldsRosterResult],
+			['query']
+		),
+		app_lookup_league_by_invite: IDL.Func(
+			[AppLookupLeagueByInviteArgs],
+			[AppLookupLeagueByInviteResult],
+			['query']
+		),
+		app_lookup_referral_code: IDL.Func(
+			[AppLookupReferralCodeArgs],
+			[AppLookupReferralCodeResult],
+			['query']
+		),
+		app_redeem_referral_code: IDL.Func([AppRedeemReferralCodeArgs], [], []),
+		app_reject_friend_request: IDL.Func([AppRejectFriendRequestArgs], [], []),
+		app_search_profiles: IDL.Func([AppSearchProfilesArgs], [AppSearchProfilesResult], ['query']),
+		app_send_friend_request: IDL.Func([AppSendFriendRequestArgs], [], []),
+		app_transfer_league_ownership: IDL.Func(
+			[AppTransferLeagueOwnershipArgs],
+			[AppTransferLeagueOwnershipResult],
+			[]
+		),
+		app_trigger_tournament_draw: IDL.Func(
+			[AppTriggerTournamentDrawArgs],
+			[AppTriggerTournamentDrawResult],
+			[]
+		),
+		app_upsert_market_metadata: IDL.Func(
+			[AppUpsertMarketMetadataArgs],
+			[AppUpsertMarketMetadataResult],
+			[]
+		),
+		app_upsert_market_translation: IDL.Func(
+			[AppUpsertMarketTranslationArgs],
+			[AppUpsertMarketTranslationResult],
+			[]
+		)
+	});
 };
 
-export const init = ({ IDL }) => { return []; };
+export const init = ({ IDL }) => {
+	return [];
+};

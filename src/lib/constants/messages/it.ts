@@ -637,6 +637,20 @@ export const itMessages = {
 	'leagues.role.member': 'Membro',
 	'leagues.role.owner': 'Proprietario',
 	'leagues.title': 'Leghe',
+	'leagues.transfer.cta': 'Trasferisci proprietà',
+	'leagues.transfer.empty':
+		'Nessun altro membro ancora. Invita prima qualcuno, poi potrai cedere la proprietà.',
+	'leagues.transfer.error_generic': 'Qualcosa è andato storto. Riprova.',
+	'leagues.transfer.error_league_not_found': 'Questa lega non esiste più.',
+	'leagues.transfer.error_new_owner_is_caller':
+		'Scegli un altro membro a cui passare il testimone.',
+	'leagues.transfer.error_new_owner_not_member': 'Quel membro non è più nella lega.',
+	'leagues.transfer.error_not_owner': 'Non sei il proprietario attuale di questa lega.',
+	'leagues.transfer.sub':
+		'Scegli un membro per diventare il nuovo proprietario. Sarai retrocesso ad admin.',
+	'leagues.transfer.submit': 'Passa il testimone',
+	'leagues.transfer.submitting': 'Trasferimento…',
+	'leagues.transfer.title': 'Trasferisci proprietà',
 	'loop.eyebrow': 'IL CICLO',
 	'loop.flow_body': 'Scorri le domande. Allena il muscolo della previsione.',
 	'loop.flow_eyebrow': '01 · FLOW',
@@ -1089,6 +1103,7 @@ export const itMessages = {
 	'settings.delete.stay_contact': 'Contattaci',
 	'settings.delete.stay_heading': 'Vuoi restare?',
 	'settings.delete.stay_pause': 'Pausa 30 giorni',
+	'settings.delete.transfer_cta': 'Apri lega per trasferire',
 	'settings.flow_deck': 'Flow deck',
 	'settings.flow_deck.category.crypto': 'Crypto',
 	'settings.flow_deck.category.culture': 'Cultura',

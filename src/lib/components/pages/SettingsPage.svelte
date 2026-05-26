@@ -566,6 +566,21 @@
 									params: { count: blockingLeagueIds.length }
 								})}
 					</p>
+					<ul class="settings-delete-blocking-list">
+						{#each blockingLeagueIds as blockingId (blockingId)}
+							<li>
+								<a
+									class="settings-delete-blocking-link"
+									href={resolve(`${AppPath.Social}/leagues/${blockingId}`)}
+								>
+									<span class="settings-delete-blocking-id">{blockingId}</span>
+									<span class="settings-delete-blocking-cta">
+										{t({ locale: $localeStore, key: 'settings.delete.transfer_cta' })}
+									</span>
+								</a>
+							</li>
+						{/each}
+					</ul>
 					<div class="settings-confirm-actions">
 						<Button onclick={resetDeleteFlow} variant="ghost">
 							{t({ locale: $localeStore, key: 'settings.delete.never_mind' })}
@@ -1072,5 +1087,42 @@
 		font-size: var(--t-12);
 		line-height: 1.5;
 		color: var(--text-muted);
+	}
+
+	.settings-delete-blocking-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		list-style: none;
+		padding: 0;
+		margin: 0;
+	}
+
+	.settings-delete-blocking-link {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		padding: 0.55rem 0.7rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-8);
+		background: var(--bg-popover);
+		color: var(--text-base);
+		font-size: var(--t-12);
+		text-decoration: none;
+	}
+
+	.settings-delete-blocking-link:hover {
+		border-color: var(--color-primary);
+	}
+
+	.settings-delete-blocking-id {
+		font-family: var(--font-mono);
+		color: var(--text-base);
+	}
+
+	.settings-delete-blocking-cta {
+		color: var(--color-primary);
+		font-weight: 600;
 	}
 </style>

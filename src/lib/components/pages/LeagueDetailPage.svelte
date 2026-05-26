@@ -8,6 +8,7 @@
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import ProposeBoutModal from '$lib/components/leagues/ProposeBoutModal.svelte';
 	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
+	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
@@ -52,6 +53,7 @@
 	let copied = $state(false);
 	let leaving = $state(false);
 	let proposeOpen = $state(false);
+	let transferOpen = $state(false);
 
 	const load = async () => {
 		try {
@@ -111,6 +113,20 @@
 	const canSeeInvite = $derived(myRole === 'owner' || myRole === 'admin');
 	const canLeave = $derived(myRole !== 'owner' && myRole !== undefined);
 	const canProposeBout = $derived(myRole === 'owner');
+	const canTransfer = $derived(
+		myRole === 'owner' && members.filter((m) => m.role !== 'owner').length > 0
+	);
+
+	const handleTransferred = () => {
+		transferOpen = false;
+		// The transfer has flipped owner + role rows; reload everything
+		// so the user's role drops to 'admin' and the leave / transfer
+		// CTAs update accordingly. Falling back to the league list is
+		// also reasonable — the owner just gave up authority — but
+		// keeping them on the detail page makes the change feel less
+		// abrupt and lets them confirm the swap landed.
+		void load();
+	};
 
 	const handleBoutProposed = () => {
 		proposeOpen = false;
@@ -507,6 +523,14 @@
 				</button>
 			</div>
 		{/if}
+
+		{#if canTransfer}
+			<div class="league-detail-actions">
+				<button class="league-detail-transfer" onclick={() => (transferOpen = true)} type="button">
+					{t({ locale: $localeStore, key: 'leagues.transfer.cta' })}
+				</button>
+			</div>
+		{/if}
 	{/if}
 </div>
 
@@ -516,6 +540,17 @@
 		onClose={() => (proposeOpen = false)}
 		onProposed={handleBoutProposed}
 		ourLeagueId={leagueId}
+	/>
+{/if}
+
+{#if league !== undefined && myRole === 'owner'}
+	<TransferOwnershipModal
+		currentOwnerPrincipal={league.owner}
+		isOpen={transferOpen}
+		leagueId={league.id}
+		{members}
+		onClose={() => (transferOpen = false)}
+		onTransferred={handleTransferred}
 	/>
 {/if}
 
@@ -771,6 +806,23 @@
 	.league-detail-leave:disabled {
 		opacity: 0.55;
 		cursor: not-allowed;
+	}
+
+	.league-detail-transfer {
+		appearance: none;
+		padding: 0.65rem 1rem;
+		font: inherit;
+		font-size: var(--t-13);
+		font-weight: 700;
+		color: var(--color-primary);
+		background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+		border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--border-base));
+		border-radius: var(--r-12);
+		cursor: pointer;
+	}
+
+	.league-detail-transfer:hover {
+		background: color-mix(in srgb, var(--color-primary) 14%, transparent);
 	}
 
 	.league-detail-bouts-head {
