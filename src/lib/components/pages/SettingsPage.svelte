@@ -67,7 +67,7 @@
 	let blockingLeagueIds = $state<string[] | null>(null);
 	let signOutStatus = $state<ButtonStatus>('enabled');
 
-	// Reason picker rows match the prototype's six buckets in
+	// Reason picker rows match the six buckets in
 	// `screens.jsx:1962`. Order is intentional — the most common
 	// "soft" reasons sit above the absolute "other".
 	const reasonOptions: ReadonlyArray<{ id: ExitSignalReason; key: MessageKey }> = [

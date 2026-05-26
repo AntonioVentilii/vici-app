@@ -14,8 +14,8 @@ import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobuild/functions/sdk';
 
 /**
- * Pre-write guard for `leagues`. The collection holds prototype social
- * cohorts; the rules here keep league identity stable across the
+ * Pre-write guard for `leagues`. The collection holds social cohorts;
+ * the rules here keep league identity stable across the
  * lifetime of the cohort so the join-by-code flow + standings
  * leaderboards can trust the metadata.
  *
@@ -154,8 +154,7 @@ export const assertSetLeague = ({
  *  - `not_owner` — caller is not the current owner.
  *  - `league_not_found` — leagueId has no doc.
  *  - `new_owner_not_member` — target principal isn't a member of the
- *    league. (Required by the prototype's social model — only a
- *    current member can become owner.)
+ *    league. (Only a current member can become owner.)
  *  - `new_owner_is_caller` — caller is trying to transfer to
  *    themselves; a no-op we reject explicitly so the FE can render
  *    a clearer error than a silent success.

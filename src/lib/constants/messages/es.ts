@@ -58,8 +58,7 @@ export const esMessages = {
 	'tournament.loading': 'Cargando el cuadro…',
 	'tournament.prize.place_1': 'Campeón',
 	'tournament.prize.place_2': 'Finalista',
-	'tournament.prize.place_3': 'Semifinalista',
-	'tournament.prize.place_4': 'Semifinalista',
+	'tournament.prize.place_3': 'Bronce',
 	'tournament.prize_claim_body':
 		'Tu liga terminó en el top 3 del último torneo. +{amount} VXP acreditados.',
 	'tournament.prize_claim_dismiss': 'Descartar',

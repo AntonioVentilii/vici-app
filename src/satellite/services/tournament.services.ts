@@ -29,32 +29,31 @@ import {
 } from '@junobuild/functions/sdk';
 
 /**
- * Monthly tournament — Proposal 3 in `docs/backend-proposals/README.md`.
+ * Monthly tournament — the full chain.
  *
- * **What's shipped here:**
- *  - Asserts for both collections (key shape, write-once invariants,
- *    forward-only state).
+ *  - Asserts for both collections (key shape, write-once invariants
+ *    on team / accuracy / winner / start-snapshot fields, forward-only
+ *    state machine `in_flight → concluded`).
  *  - `triggerTournamentDrawFn` — anyone can call; idempotent via
  *    doc-key collision on the month anchor. Scans LEAGUE_MEMBERS,
- *    counts members per league, seeds the top-16 into Round 1.
+ *    counts members per league, seeds the top-16 into Round 1, and
+ *    snapshots each seeded league's `(totalCalls, wins)` for the
+ *    per-window accuracy computation in resolution.
  *  - `getCurrentTournamentFn` — returns the latest tournament + its
- *    matches for the FE.
+ *    matches for the FE bracket.
+ *  - `resolveTournamentRoundFn` — anyone can call once a round has
+ *    closed; reads live LEAGUE_STATS, computes per-side window
+ *    accuracy as `(currentStats - startSnapshot) / deltaCalls`,
+ *    applies the 50-call forfeit rule, writes the winner + propagates
+ *    them into the next round's slot. Idempotent via the match
+ *    doc's `winnerLeagueId` write-once invariant.
+ *  - `claimTournamentPrizeFn` — per-user claim once the tournament
+ *    concludes; credits a single VXP_AWARDS doc per the caller's
+ *    highest-tier placement.
  *
- * **What's deferred (documented as Proposal 3 follow-ups):**
- *  - Round resolution: computing per-league accuracy in the round
- *    window requires a per-window aggregation pipeline that doesn't
- *    exist yet. Once `AFFILIATION_STATS` gains a leagues counterpart
- *    (LEAGUE_STATS — same shape, prefix-keyed by leagueId), the
- *    resolution can read each league's `monthWins / monthTotalCalls`
- *    for the round window and pick the winner.
- *  - Prize claim: a user-claim variant of the same pattern as
- *    Worlds podium (`VXP_AWARDS` key + ledger transfer), gated by
- *    membership in the winning league at tournament close.
- *
- * Forfeit rule (decision 3.4): when round-resolution lands, a league
- * with fewer than 50 calls in the window forfeits. If both sides
- * forfeit, the lower-seed advances — keeps the bracket deterministic
- * without needing a coin-flip RNG in the satellite.
+ * Forfeit rule: a league with fewer than 50 calls in the window
+ * forfeits. If both sides forfeit, the lower-leagueId advances —
+ * keeps the bracket deterministic without needing a coin-flip RNG.
  */
 
 const ASSERT_PREFIX = 'tournament';
@@ -356,8 +355,8 @@ export const triggerTournamentDrawFn = ({
 	}
 
 	// Compute the month's window. The draw can be triggered for any
-	// month that has *started*; the prototype's lazy-on-mount pattern
-	// would trigger the draw on the first day of a new month.
+	// month that has *started*; the lazy-on-mount pattern triggers
+	// the draw on the first day of a new month.
 	const nowMs = Number(time() / 1_000_000n);
 	const [year, monthStr] = monthAnchor.split('-');
 	const monthDate = new Date(Date.UTC(Number(year), Number(monthStr) - 1, 1, 0, 0, 0, 0));
@@ -1079,8 +1078,8 @@ export interface ClaimTournamentPrizeResult {
  * Place 1: member of the final-winner league.
  * Place 2: member of the final-loser league (= the other finalist).
  * Place 3: member of *either* semifinal loser league (semifinal
- *          losers split the bronze tier evenly per the prototype's
- *          single bronze placement).
+ *          losers split the bronze tier evenly under the single
+ *          bronze placement).
  *
  * A user who's a member of multiple eligible leagues only gets the
  * highest-tier award (place 1 trumps place 3, etc.) — the doc-key
@@ -1176,8 +1175,8 @@ export const claimTournamentPrizeFn = ({
 	const tier = TOURNAMENT_PRIZE_TIERS.find((t) => t.place === myPlace);
 
 	if (isNullish(tier)) {
-		// Defensive — TOURNAMENT_PRIZE_TIERS may have a 4th tier the
-		// caller doesn't qualify for. Treat as no-op.
+		// Defensive — should never happen since `myPlace` was just
+		// derived from the same enum, but guard anyway.
 		return { ok: false, reason: 'not_member_of_top_league' };
 	}
 

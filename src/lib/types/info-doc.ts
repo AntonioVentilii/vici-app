@@ -7,7 +7,7 @@
  * a raw HTML string) keeps each block trivially translatable and styles
  * the renderer applies consistently across documents.
  *
- * The current copy is **placeholder** taken from the design prototype.
+ * The current copy is **placeholder**.
  * Legal sign-off is required before launch — see the banner in
  * `InfoPage.svelte`.
  */

@@ -58,8 +58,7 @@ export const frMessages = {
 	'tournament.loading': 'Chargement du tableau…',
 	'tournament.prize.place_1': 'Champion',
 	'tournament.prize.place_2': 'Finaliste',
-	'tournament.prize.place_3': 'Demi-finaliste',
-	'tournament.prize.place_4': 'Demi-finaliste',
+	'tournament.prize.place_3': 'Bronze',
 	'tournament.prize_claim_body':
 		'Votre ligue a terminé dans le top 3 du dernier tournoi. +{amount} VXP crédités.',
 	'tournament.prize_claim_dismiss': 'Fermer',

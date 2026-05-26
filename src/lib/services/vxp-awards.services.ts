@@ -38,7 +38,7 @@ export interface VxpComebackClaim {
 }
 
 /**
- * Trigger the prototype comeback grant. The server validates engagement
+ * Trigger the comeback grant. The server validates engagement
  * (≥1 paid VXP-onboarding milestone) + balance (must be zero) +
  * idempotency (no prior award doc) before transferring 1,000 VXP.
  *

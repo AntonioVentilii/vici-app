@@ -21,9 +21,9 @@ export interface WorldsAffiliationOption {
 }
 
 /**
- * prototype university roster — kept small for the prototype launch. The list is
- * curated against the universities that surface in the prototype's
- * Worlds leaderboard mocks plus a few flagship additions.
+ * University roster — kept small for launch. The list is curated
+ * against the universities that surface in the Worlds leaderboard
+ * mocks plus a few flagship additions.
  */
 export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 	{ id: 'mit', name: 'MIT', glyph: 'MIT' },
@@ -45,7 +45,7 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 ] as const;
 
 /**
- * prototype country roster — ISO-3166 alpha-2 ids, emoji flags. Tracks the
+ * Country roster — ISO-3166 alpha-2 ids, emoji flags. Tracks the
  * top ~24 countries by predicted active-user volume; future expansion
  * is an additions-only change (no satellite migration needed).
  */

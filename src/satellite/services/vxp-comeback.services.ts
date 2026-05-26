@@ -16,7 +16,7 @@ import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobuild/functions/sdk';
 
 /**
- * prototype "comeback grant" — a one-shot +1000 VXP payout fired the first
+ * "Comeback grant" — a one-shot +1000 VXP payout fired the first
  * time a user's balance hits zero, provided they've actually engaged
  * with the app (≥1 paid VXP-onboarding milestone). Without the
  * engagement gate a brand-new account would claim the grant before
@@ -186,7 +186,7 @@ export const claimComebackGrantFn = async (): Promise<ComebackClaimResult> => {
 		};
 	}
 
-	// 3. Balance gate — must be exactly zero (the prototype: "balance hits 0").
+	// 3. Balance gate — must be exactly zero ("balance hits 0").
 	const ledger = new IcrcLedgerCanister({
 		canisterId: Principal.fromText(VXP_LEDGER_CANISTER_ID)
 	});

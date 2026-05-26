@@ -22,7 +22,7 @@
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Tournament detail — port of the prototype's `TournamentBoutDetail`.
+	 * Tournament detail — the `TournamentBoutDetail` surface.
 	 *
 	 * Fires `triggerTournamentDraw` for the current month on mount as
 	 * a fire-and-forget (idempotent via the satellite's doc-key

@@ -4,8 +4,8 @@ import type { InfoDoc } from '$lib/types/info-doc';
  * Public information documents — Terms, Privacy, Resolution Rules,
  * FAQ, Contact, "How resolution works".
  *
- * **PLACEHOLDER COPY.** Sourced verbatim from the design prototype
- * (`screens.jsx` § INFO_DOCS). Legal sign-off is required before
+ * **PLACEHOLDER COPY.** Sourced verbatim from `screens.jsx` § INFO_DOCS.
+ * Legal sign-off is required before
  * launch; the `InfoPage` renderer surfaces a banner to that effect
  * for any doc marked `placeholder: true`. The structure (blocks,
  * eyebrow + title, slug paths) is production-shaped — only the words

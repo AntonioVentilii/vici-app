@@ -1,7 +1,7 @@
 /**
  * Monthly tournament — Proposal 3 in `docs/backend-proposals/README.md`.
  *
- * The prototype's TournamentBoutDetail surfaces a 16-league single-
+ * The TournamentBoutDetail surface presents a 16-league single-
  * elimination bracket with per-match accuracy. We model the structure
  * as two collections:
  *
@@ -26,16 +26,14 @@
  *
  * Bracket seeding follows standard single-elim where seed 1 plays
  * seed 16, seed 2 plays seed 15, etc. This produces the
- * conventional "highest seed meets lowest seed" first-round matchup
- * the prototype renders.
+ * conventional "highest seed meets lowest seed" first-round matchup.
  */
 
 import type { PrincipalText } from '@junobuild/schema';
 
 /**
  * Standard 16-league single-elimination has four rounds. The
- * labels match the prototype's `ROUND_LABELS` map
- * (`screens.jsx:3665`).
+ * labels match the `ROUND_LABELS` map (`screens.jsx:3665`).
  */
 export const TOURNAMENT_ROUNDS = ['r1', 'quarter', 'semifinal', 'final'] as const;
 
@@ -50,9 +48,9 @@ export type TournamentRound = (typeof TOURNAMENT_ROUNDS)[number];
 export const TOURNAMENT_BRACKET_SIZE = 16;
 
 /**
- * Round duration. The prototype shows 7-day windows ("DAY 3 OF 7")
- * for every round (`screens.jsx:3683` round eyebrow); the locked
- * decision 3.2 confirms 7/7/7/7.
+ * Round duration. 7-day windows ("DAY 3 OF 7") for every round
+ * (`screens.jsx:3683` round eyebrow); the locked decision 3.2
+ * confirms 7/7/7/7.
  */
 export const TOURNAMENT_ROUND_DURATION_DAYS = 7;
 export const TOURNAMENT_ROUND_DURATION_MS = TOURNAMENT_ROUND_DURATION_DAYS * 24 * 60 * 60 * 1000;
@@ -69,19 +67,17 @@ export const TOURNAMENT_MIN_CALLS_PER_MATCH = 50;
 
 /**
  * Prize VXP per place. Top-4 each get an award — matches the
- * prototype's `prizeTiers` (`data.js:618`). Gold / Silver / Bronze
- * are 5000 / 2500 / 1000 VXP; the proposal added a 500-VXP
- * semifinalist tier for the unsuccessful finalist so the
- * "you-made-the-bracket" gradient stays smooth.
+ * Three tiers — Gold / Silver / Bronze at 5000 / 2500 / 1000 VXP.
+ * Both semifinal losers share the bronze tier: each is credited
+ * 1000 VXP independently when they call `claimTournamentPrize`.
  */
 export const TOURNAMENT_PRIZE_TIERS: ReadonlyArray<{
-	place: 1 | 2 | 3 | 4;
+	place: 1 | 2 | 3;
 	vxp: number;
 }> = [
 	{ place: 1, vxp: 5000 },
 	{ place: 2, vxp: 2500 },
-	{ place: 3, vxp: 1000 },
-	{ place: 4, vxp: 500 }
+	{ place: 3, vxp: 1000 }
 ] as const;
 
 /** Lifecycle state machine. */

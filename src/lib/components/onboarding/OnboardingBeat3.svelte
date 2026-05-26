@@ -5,15 +5,14 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Onboarding V2 · Beat 3 — lock in the record.
+	 * Onboarding · Beat 3 — lock in the record.
 	 *
-	 * the prototype's final beat surfaces a "narrative summary" of the choices
+	 * The final beat surfaces a "narrative summary" of the choices
 	 * from Beats 1.a + 1.b + 2 (team / side / handle) right above the
 	 * auth surface so the journey reads as a complete sentence before
 	 * the user authenticates. The auth row itself mounts the existing
 	 * production `SignInActions` (Juno II + Google SSO + Passkey +
-	 * dev), so this beat is a thin prototype-shaped frame, not a reauth
-	 * implementation.
+	 * dev), so this beat is a thin frame, not a reauth implementation.
 	 *
 	 * Emits `onComplete` once auth resolves. `onBack` returns to
 	 * Beat 2 — the handle picker.

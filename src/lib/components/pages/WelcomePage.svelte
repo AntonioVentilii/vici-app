@@ -159,8 +159,8 @@
 			</div>
 		</section>
 
-		<!-- Featured-event section — prototype landing has a dedicated tentpole
-		     block above LiveMarkets (WC in the prototype). Self-gated on
+		<!-- Featured-event section — landing has a dedicated tentpole
+		     block above LiveMarkets (WC). Self-gated on
 		     featuredEventActive so the section disappears post-archive
 		     without a layout change. Reads from the FeaturedEvent
 		     abstraction; swapping the next event needs no template edit. -->

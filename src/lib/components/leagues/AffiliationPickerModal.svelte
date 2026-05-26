@@ -12,8 +12,7 @@
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Affiliation picker modal — port of the prototype's
-	 * `AffiliationPickerModal`. Searchable list of either universities
+	 * Affiliation picker modal. Searchable list of either universities
 	 * or countries, with a 90-day-lock heads-up on top. Selecting an
 	 * option commits via `joinAffiliation` (which server-validates the
 	 * lock + binds the caller).

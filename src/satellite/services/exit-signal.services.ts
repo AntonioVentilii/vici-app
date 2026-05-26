@@ -18,7 +18,7 @@ import { decodeDocData } from '@junobuild/functions/sdk';
  *     once and never touched again — there's no edit flow, and a
  *     blocked edit attempt is a clearer error than a silent data race.
  *  2. **Shape.** `reason` must be one of the six picker buckets the
- *     prototype's UI exposes (mirrored in `EXIT_SIGNAL_REASONS`).
+ *     UI exposes (mirrored in `EXIT_SIGNAL_REASONS`).
  *     `note` must be a string ≤ {@link EXIT_SIGNAL_NOTE_MAX_LENGTH}.
  *     `createdAtMs` must be finite + positive.
  *  3. **Anonymous shape.** We don't validate any principal field — the

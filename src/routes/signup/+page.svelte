@@ -20,8 +20,8 @@
 
 	// Onboarding completes pre-auth — we persist the user's picks
 	// (handle is the only one the layout currently knows how to
-	// apply; interests / email aren't picked in the prototype's
-	// 3-beat flow) to `PENDING_ONBOARDING_STORAGE_KEY` so the
+	// apply; interests / email aren't picked in the 3-beat flow) to
+	// `PENDING_ONBOARDING_STORAGE_KEY` so the
 	// post-sign-in layout effect can upsert the new profile with
 	// them. The auth tap itself happens inside Beat 3 via
 	// `SignInActions`; after it succeeds, `$userSignedIn` flips and

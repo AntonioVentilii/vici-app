@@ -58,8 +58,7 @@ export const itMessages = {
 	'tournament.loading': 'Caricamento del tabellone…',
 	'tournament.prize.place_1': 'Campione',
 	'tournament.prize.place_2': 'Finalista',
-	'tournament.prize.place_3': 'Semifinalista',
-	'tournament.prize.place_4': 'Semifinalista',
+	'tournament.prize.place_3': 'Bronzo',
 	'tournament.prize_claim_body':
 		"La tua lega è arrivata nella top 3 dell'ultimo torneo. +{amount} VXP accreditati.",
 	'tournament.prize_claim_dismiss': 'Chiudi',

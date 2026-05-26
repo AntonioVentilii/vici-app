@@ -33,7 +33,7 @@
 	<div class="detail-hero-top">
 		<div class="detail-chip-row">
 			{#each tags as tag (tag)}
-				<!-- prototype detail header tints the category chip with the
+				<!-- The detail header tints the category chip with the
 				     category's brand color so the page reads as
 				     macro/crypto/politics/etc. at a glance. Mirrors the
 				     per-card treatment landed in 7e0edc7; both surfaces

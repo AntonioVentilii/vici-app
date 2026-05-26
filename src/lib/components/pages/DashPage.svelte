@@ -166,7 +166,7 @@
 	</section>
 
 	<!-- Per-category accuracy. Requires per-category call tallying that
-	     the satellite doesn't track yet (prototype maps the field as
+	     the satellite doesn't track yet (maps the field as
 	     me.categoryAcc[cat]). Placeholder stays until the category
 	     ledger lands in a later  /  commit. -->
 	<section

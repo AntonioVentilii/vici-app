@@ -1,7 +1,7 @@
 /**
  * Churn-feedback log written when a user deletes their account.
  *
- * The prototype's delete-account flow asks the leaving user to pick
+ * The delete-account flow asks the leaving user to pick
  * one of six reasons and optionally leave a short note. We persist
  * those signals so the team can read churn trends without keeping
  * any handle on who left — the doc has **no principal field** and
@@ -18,9 +18,9 @@
  */
 
 /**
- * The six reason buckets the FE picker exposes. Matches the
- * prototype verbatim (`screens.jsx` line 1962-1968) so the catalog
- * a future analytics consumer reads agrees with what the user saw.
+ * The six reason buckets the FE picker exposes. Sourced verbatim
+ * from `screens.jsx` line 1962-1968 so the catalog a future
+ * analytics consumer reads agrees with what the user saw.
  */
 export const EXIT_SIGNAL_REASONS = [
 	'not-for-me',
@@ -35,7 +35,7 @@ export type ExitSignalReason = (typeof EXIT_SIGNAL_REASONS)[number];
 
 /**
  * 240-char cap on the optional free-text note. Matches the
- * `maxLength={240}` the prototype's textarea uses (`screens.jsx`
+ * `maxLength={240}` the textarea uses (`screens.jsx`
  * line 1982). Long enough for a Tweet-style explanation; short
  * enough to keep the log payload bounded.
  */

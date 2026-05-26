@@ -18,8 +18,8 @@
 	/**
 	 * Shared swipe-physics primitive for prediction-card surfaces.
 	 *
-	 * Powers the swipe-left-NO / swipe-right-YES gesture used in V1's
-	 * `OnboardingFlow` first-call card and V2's `Beat1bCard`. The
+	 * Powers the swipe-left-NO / swipe-right-YES gesture used in
+	 * `OnboardingFlow` first-call card and `Beat1bCard`. The
 	 * primitive owns the pointer lifecycle + the kinematic state
 	 * (`dragX`, `dragging`, `committed`) and yields a `SwipeState`
 	 * snippet argument so the consumer can wire the same drift /

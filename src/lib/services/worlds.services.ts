@@ -11,7 +11,7 @@ import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 
 /**
- * prototype Worlds affiliations — thin FE service wrapping the satellite
+ * Worlds affiliations — thin FE service wrapping the satellite
  * read queries + the write / delete primitives via `@junobuild/core`.
  * Mirrors the leagues service shape; consumers (Worlds picker page,
  * Worlds detail / leaderboard) import the camelCase domain types

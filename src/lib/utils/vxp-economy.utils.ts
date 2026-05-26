@@ -10,7 +10,7 @@ import {
 /**
  * Compute the *net* VXP a user would gain on a winning call.
  *
- * Formula (prototype `docs/economy.md` §1):
+ * Formula (`docs/economy.md` §1):
  *
  *   payout_on_win = stake / max(P_WIN_FLOOR, p_win)
  *   net_win       = payout_on_win − stake

@@ -13,8 +13,8 @@ import type { AssertDeleteDocContext, AssertSetDocContext } from '@junobuild/fun
 import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
 
 /**
- * Pre-write guard for `bouts`. Enforces the prototype time-bound
- * competition state machine + the per-state authorisation model.
+ * Pre-write guard for `bouts`. Enforces the time-bound competition
+ * state machine + the per-state authorisation model.
  *
  *  1. **Key shape.** Doc key equals the embedded `id`.
  *

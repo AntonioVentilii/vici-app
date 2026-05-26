@@ -4,7 +4,7 @@
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Onboarding V2 · Beat 2 — claim a handle.
+	 * Onboarding · Beat 2 — claim a handle.
 	 *
 	 * Mirrors the two-mode picker: pool (Roman-name
 	 * suggestions) and custom (free-form input). Validates against
@@ -26,8 +26,8 @@
 
 	const { participantId, onAdvance, onBack }: Props = $props();
 
-	// prototype ROMAN_POOL — kept as a literal so the visible roster matches
-	// the prototype exactly. Reserved set covers the obvious squatters;
+	// ROMAN_POOL — kept as a literal so the visible roster stays
+	// stable. Reserved set covers the obvious squatters;
 	// real availability would come from a backend lookup but is faked
 	// here to keep the onboarding offline-tolerant.
 	const ROMAN_POOL: readonly string[] = [

@@ -1,5 +1,5 @@
 /**
- * VXP economy constants — the client-side portion of the prototype gameplay
+ * VXP economy constants — the client-side portion of the gameplay
  * currency model. These values are authoritative for the *expected*
  * payout shown in UI; the server is authoritative for the *actual*
  * credit on settlement (same pattern as any prediction market).
@@ -9,12 +9,12 @@
  * own backend design proposal before any implementation lands.
  *
  * See `vxp-economy.utils.ts` for the payout formula and
- * `docs/economy.md` in the design prototype for the full economy spec.
+ * `docs/economy.md` for the full economy spec.
  */
 
 /**
  * Per-call stake ladder, smallest → largest. The shape is curated, not
- * arithmetic — see prototype `docs/economy.md` §2 for the psychology behind
+ * arithmetic — see `docs/economy.md` §2 for the psychology behind
  * the non-uniform step from 300 to 500.
  *
  * Frozen so call sites can rely on the literal indexing without worrying

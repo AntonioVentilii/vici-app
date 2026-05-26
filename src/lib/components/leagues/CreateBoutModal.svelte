@@ -21,9 +21,8 @@
 	 *    auto-magically with that league as `ourLeagueId`. Keeps the
 	 *    propose form in one place.
 	 *
-	 * Matches the prototype's `CreateBoutModal` empty + picker flow,
-	 * minus the per-bout configuration screen — that lives in
-	 * `ProposeBoutModal` already.
+	 * Empty + picker flow, minus the per-bout configuration screen —
+	 * that lives in `ProposeBoutModal` already.
 	 */
 	interface Props {
 		isOpen: boolean;

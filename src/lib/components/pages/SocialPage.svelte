@@ -15,10 +15,10 @@
 	 * appbars stay quiet; the tabbed parent renders the single
 	 * "Social" appbar above the tab strip.
 	 *
-	 * Tab state persists in localStorage under `vici.social-tab` —
-	 * same key the prototype uses, so a user returning to /social
-	 * lands on the tab they last looked at. Legacy values (`worlds`,
-	 * `global`) fall through to the new `friends` default.
+	 * Tab state persists in localStorage under `vici.social-tab`,
+	 * so a user returning to /social lands on the tab they last
+	 * looked at. Legacy values (`worlds`, `global`) fall through to
+	 * the new `friends` default.
 	 */
 
 	const STORAGE_KEY = 'vici.social-tab';

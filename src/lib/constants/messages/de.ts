@@ -59,8 +59,7 @@ export const deMessages = {
 	'tournament.loading': 'Tabelle wird geladen…',
 	'tournament.prize.place_1': 'Champion',
 	'tournament.prize.place_2': 'Finalist',
-	'tournament.prize.place_3': 'Halbfinalist',
-	'tournament.prize.place_4': 'Halbfinalist',
+	'tournament.prize.place_3': 'Bronze',
 	'tournament.prize_claim_body':
 		'Deine Liga hat im letzten Turnier die Top 3 erreicht. +{amount} VXP gutgeschrieben.',
 	'tournament.prize_claim_dismiss': 'Schließen',

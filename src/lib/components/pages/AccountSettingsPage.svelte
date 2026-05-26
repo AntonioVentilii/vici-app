@@ -10,19 +10,18 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Account settings — sign-in method + email. Mirrors the prototype's
-	 * `AccountSettingsScreen` two-card layout.
+	 * Account settings — sign-in method + email. Two-card layout
+	 * matching `AccountSettingsScreen`.
 	 *
 	 * Auth providers supported here are Internet Identity + Google
-	 * (per the AGENTS auth scope). The prototype shows
+	 * (per the AGENTS auth scope). The original surface listed
 	 * Apple / Google / magic-link — we render the two we actually wire
 	 * up. "Switch method" signs out and redirects to /signin, where
 	 * the user picks again.
 	 *
 	 * Email shown is the profile's `email` field. Editing it is not
-	 * wired yet — the prototype's change-email flow assumes a magic-
-	 * link backend we don't have. Surfaced as a non-editable
-	 * "verified" row for now.
+	 * wired yet — the change-email flow assumes a magic-link backend
+	 * we don't have. Surfaced as a non-editable "verified" row for now.
 	 */
 
 	const email = $derived($userStore.profile?.email ?? '');

@@ -6,7 +6,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Onboarding V2 · Beat 1.b — derived prediction card.
+	 * Onboarding · Beat 1.b — derived prediction card.
 	 *
 	 * Composes the "first call" card from the picked
 	 * team (or skip path) chosen in Beat 1.a. Two question modes:

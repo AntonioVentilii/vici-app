@@ -58,8 +58,7 @@ export const ptMessages = {
 	'tournament.loading': 'Carregando o chaveamento…',
 	'tournament.prize.place_1': 'Campeão',
 	'tournament.prize.place_2': 'Finalista',
-	'tournament.prize.place_3': 'Semifinalista',
-	'tournament.prize.place_4': 'Semifinalista',
+	'tournament.prize.place_3': 'Bronze',
 	'tournament.prize_claim_body':
 		'Sua liga terminou no top 3 do último torneio. +{amount} VXP creditados.',
 	'tournament.prize_claim_dismiss': 'Dispensar',

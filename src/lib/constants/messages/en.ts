@@ -58,8 +58,7 @@ export const enMessages = {
 	'tournament.loading': 'Loading the bracket…',
 	'tournament.prize.place_1': 'Champion',
 	'tournament.prize.place_2': 'Finalist',
-	'tournament.prize.place_3': 'Semifinalist',
-	'tournament.prize.place_4': 'Semifinalist',
+	'tournament.prize.place_3': 'Bronze',
 	'tournament.prize_claim_body':
 		'Your league finished top-3 in the latest tournament. +{amount} VXP credited.',
 	'tournament.prize_claim_dismiss': 'Dismiss',

@@ -20,7 +20,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * prototype Worlds picker page.
+	 * Worlds picker page.
 	 *
 	 * Two slots — university + country — each in either an empty
 	 * (picker grid) or locked (countdown card) state. The 90-day

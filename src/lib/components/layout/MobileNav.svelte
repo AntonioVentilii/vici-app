@@ -9,13 +9,13 @@
 
 	// Routes that don't have their own nav slot but should still light
 	// up a parent tab (per `docs/ai/frontend/design.md` §8.4 active-
-	// state cascade). The cascade table mirrors the prototype:
+	// state cascade). The cascade table:
 	//
 	//  - Markets ← /markets/[id]
 	//  - Dash    ← /portfolio (Portfolio is the older detail surface
-	//              under the Dash tab in the prototype's nav)
-	//  - Social  ← /friends and () /leagues / /worlds / /bouts
-	//  - Profile ← /wallet / /settings / /notifications
+	//              under the Dash tab)
+	//  - Social  ← /friends, /leagues, /worlds, /bouts
+	//  - Profile ← /wallet, /settings, /notifications
 	const isActive = (path: AppPath) => {
 		const current = page.url.pathname;
 

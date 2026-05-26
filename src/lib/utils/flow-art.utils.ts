@@ -1059,7 +1059,7 @@ const renderCulture = ({ rng, p, state, uid }: RenderArgs): string => {
 };
 
 // ---- WC figure system — mode-independent constants ----------
-// Per the prototype: figure colors are intentionally NOT palette-derived so
+// Figure colors are intentionally NOT palette-derived so
 // the editorial figure layer reads identically across dark / light /
 // peach themes. That's why `boostOpacities` skips WC (it would
 // over-saturate these fixed inks against light backdrops).

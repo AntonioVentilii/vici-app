@@ -25,7 +25,7 @@ import {
  * Worlds podium monthly payout — user-claim variant
  * (Proposal 2 in `docs/backend-proposals/README.md`).
  *
- * The prototype's economy fires monthly podium awards (400/200/100
+ * The economy fires monthly podium awards (400/200/100
  * VXP for top-3 affiliations of each kind × every member). Juno
  * doesn't expose a scheduled-task primitive yet, so we model the
  * payout as a **user-claim** rather than an admin fan-out:

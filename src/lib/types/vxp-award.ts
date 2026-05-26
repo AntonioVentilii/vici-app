@@ -13,7 +13,7 @@ import type { Principal } from '@icp-sdk/core/principal';
  *  - `worlds_podium` — recipient's school finished top-3 in the monthly
  *                      bout. Awarded at month rollover.
  *
- * See `docs/economy.md` in the design prototype for the full spec.
+ * See `docs/economy.md` for the full spec.
  */
 export type VxpAwardType =
 	| 'streak'

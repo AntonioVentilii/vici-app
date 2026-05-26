@@ -5,10 +5,10 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Onboarding V2 · Beat 1.a — team picker.
+	 * Onboarding · Beat 1.a — team picker.
 	 *
-	 * the prototype splits Beat 1 into two micro-phases: 1.a "pick your
-	 * team" (or skip) and 1.b "swipe the prediction card derived from your
+	 * Beat 1 splits into two micro-phases: 1.a "pick your team" (or
+	 * skip) and 1.b "swipe the prediction card derived from your
 	 * pick." This component owns 1.a only — emitting the picked
 	 * `participantId` (ISO-3166 alpha-2) or `null` for the skip path.
 	 *
@@ -43,7 +43,7 @@
 
 	const moreCount = $derived(Math.max(0, participants.length - favourites.length));
 
-	// Per the prototype's "FIFA WORLD CUP 2026 · 27d to kickoff" eyebrow.
+	// "FIFA WORLD CUP 2026 · 27d to kickoff" eyebrow.
 	const kickoffDays = $derived(
 		Math.max(0, Math.ceil((event.kickoffAt_ms - Date.now()) / (24 * 60 * 60 * 1000)))
 	);
