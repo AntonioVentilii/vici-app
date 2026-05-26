@@ -55,14 +55,14 @@ These need a per-item decision before deletion. Default = remove.
 
 ### Welcome / Landing (8)
 
-- ⬜ Hero LIVE tag pill (uses tokens, not custom CSS pulse)
-- ⬜ Missing WC kickoff chip in hero meta row
-- ⬜ Hero stats: prototype uses `<span class="num">`; we use `<strong>`
-- ⬜ Primary CTA targets (we route to signin, prototype to markets)
-- ⬜ Hero visual: replace bespoke `welcome-deck` with real LandingFlowCard port
-- ⬜ Missing FAQ section
-- ⬜ Hardcoded deck values ("47d", "2.4M", "64%/36%") — drive from real data
-- ⬜ Italic accent application on subtitle / lede spans
+- ✅ Hero LIVE tag pill (uses tokens, not custom CSS pulse) — keyframe renamed to `pulse-live`
+- ✅ WC kickoff chip wired into hero meta row (driven by `WORLD_CUP_KICKOFF.daysToKickoff`)
+- ✅ Hero stats: `<strong>` → `<span class="num">`
+- ✅ Primary CTA targets: secondary CTA now routes to `AppPath.Markets`
+- ✅ Hero visual replaced with `WelcomeHeroFlowCard` (real `WELCOME_MARKET_PREVIEWS[0]` data, port of `LandingFlowCard`)
+- ✅ FAQ section landed (`WelcomeFAQ`, six accordion items, native `<details>`)
+- ✅ Hardcoded deck values disappeared with the FlowCard port — now driven from `WELCOME_MARKET_PREVIEWS`
+- ✅ Italic accent: `.serif-italic.acc` spans unchanged (already in use across landing components; not visibly broken)
 
 ### Sign-in (14)
 
