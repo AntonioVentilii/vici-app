@@ -991,25 +991,21 @@
 		overflow: hidden;
 	}
 
+	/* Card stack: relative flex:1 container with the card absolutely
+	   positioned inside so it fills the stage flush against the topbar
+	   (no vertical centering, no max-height cap). */
 	.flow-stage {
 		position: relative;
 		flex: 1 1 auto;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.65rem 1rem 0.5rem;
+		padding: 0.5rem 1rem 0.75rem;
 		min-height: 0;
 	}
 
 	.flow-card-wrap {
-		position: relative;
-		width: 100%;
+		position: absolute;
+		inset: 0.5rem 0.5rem 0.75rem 0.5rem;
 		max-width: min(25.5rem, calc(100vw - 2rem));
-		height: 100%;
-		/* `--bn-clear` reserves room for the floating pillnav so the
-		 * card slot never tucks under it. */
-		max-height: min(700px, calc(100dvh - 9.5rem - var(--bn-clear) - env(safe-area-inset-top, 0px)));
-		min-height: min(30rem, calc(100dvh - 10.5rem - var(--bn-clear)));
+		margin-inline: auto;
 	}
 
 	.flow-card-slot {
@@ -1024,13 +1020,6 @@
 		transform: translateY(calc(var(--depth) * 9px)) scale(calc(1 - var(--depth) * 0.035));
 		opacity: calc(1 - var(--depth) * 0.28);
 		filter: saturate(calc(1 - var(--depth) * 0.12));
-	}
-
-	@media (min-width: 640px) {
-		.flow-card-wrap {
-			max-height: 660px;
-			min-height: 36rem;
-		}
 	}
 
 	:global([data-theme='light']) .flow-card-slot.is-back,

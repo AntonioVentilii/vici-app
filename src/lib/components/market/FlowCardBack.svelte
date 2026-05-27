@@ -3,15 +3,10 @@
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
 	import SharePopover from '$lib/components/market/SharePopover.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
-	import {
-		VXP_STAKE_LADDER,
-		VXP_STAKE_UNLOCK_AT_CALLS,
-		type VxpStake
-	} from '$lib/constants/vxp-economy.constants';
+	import { VXP_STAKE_LADDER, type VxpStake } from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
-	import { userStore } from '$lib/stores/user.store';
 	import type { CallSide, Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type {
@@ -24,11 +19,7 @@
 	import { formatProbability } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
-	import {
-		snapToStakeLadder,
-		vxpNetWin,
-		vxpStakeSliderUnlocked
-	} from '$lib/utils/vxp-economy.utils';
+	import { snapToStakeLadder, vxpNetWin } from '$lib/utils/vxp-economy.utils';
 
 	interface Props {
 		market: Market;
@@ -101,7 +92,7 @@
 	// `getTimeRemaining` already produces "Xd Yh remaining" / "Xh Ym
 	// remaining" / "Xm remaining" / "Expired"; we strip the trailing
 	// noun and swap to the shorter "Nd left" / "Nh left" / "Nm left"
-	// form that matches the prototype's compact meta row.
+	// form for the compact meta row.
 	const liveCountdown = $derived.by(() => {
 		nowTick; // touch so the derived re-runs on tick
 		const ms = Number(market.expiryDate) - Date.now();
@@ -155,21 +146,12 @@
 	const resolutionCondition = $derived(market.description?.trim() ?? '');
 	let rulesOpen = $state(false);
 
-	// VXP stake slider — exposed only on the VXP balance domain (the
+	// VXP stake slider — exposed on the VXP balance domain only (the
 	// playground domain uses fractional ICP / ckUSDC stakes via the
-	// FlowMode stepper, not the ladder), AND only after the user has
-	// enough lifetime calls to unlock free stake choice. Pre-unlock the
-	// stake row is hidden entirely (front-face SIZE chip already shows
-	// the locked default).
-	const totalTrades = $derived($userStore.profile?.totalTrades ?? 0);
-	const stakeSliderUnlocked = $derived(vxpStakeSliderUnlocked({ calls: totalTrades }));
+	// FlowMode stepper, not the ladder).
 	const showStakeSlider = $derived(
-		tradeAmount !== undefined &&
-			onStakeChange !== undefined &&
-			isViciXp($balanceDomain) &&
-			stakeSliderUnlocked
+		tradeAmount !== undefined && onStakeChange !== undefined && isViciXp($balanceDomain)
 	);
-	const stakeUnlockCallsLeft = $derived(Math.max(0, VXP_STAKE_UNLOCK_AT_CALLS - totalTrades));
 	const currentStake: VxpStake = $derived(
 		showStakeSlider ? snapToStakeLadder({ value: Number(tradeAmount ?? '0') || 0 }) : 50
 	);
@@ -414,19 +396,6 @@
 						<span class="num text-no">−{currentStake} VXP</span>
 					</div>
 				</div>
-			</section>
-		{:else if isViciXp($balanceDomain) && tradeAmount !== undefined}
-			<section class="flow-back-block flow-stake flow-stake-locked" data-no-card-gesture="true">
-				<p class="eyebrow flow-back-label">
-					{t({ locale: $localeStore, key: 'card.call_size' })}
-				</p>
-				<p class="flow-stake-locked-hint">
-					{t({
-						locale: $localeStore,
-						key: 'card.back.stake_locked',
-						params: { left: stakeUnlockCallsLeft, threshold: VXP_STAKE_UNLOCK_AT_CALLS }
-					})}
-				</p>
 			</section>
 		{/if}
 
@@ -903,15 +872,6 @@
 		color: var(--text-muted);
 		font-size: 10px;
 		letter-spacing: 0.1em;
-	}
-
-	.flow-stake-locked {
-		border-style: dashed;
-	}
-	.flow-stake-locked-hint {
-		margin: 0;
-		font-size: var(--t-12);
-		color: var(--text-muted);
 	}
 
 	.flow-split-row {

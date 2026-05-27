@@ -7,7 +7,6 @@
 	import { lookupWcMarketSubtitle } from '$lib/constants/wc-market-subtitles.constants';
 	import { daysToKickoff } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { userStore } from '$lib/stores/user.store';
 	import type { FlowAction, Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type {
@@ -23,7 +22,6 @@
 	} from '$lib/utils/flow-card-display.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
-	import { vxpStakeSliderUnlocked } from '$lib/utils/vxp-economy.utils';
 
 	interface Props {
 		market: Market;
@@ -127,14 +125,7 @@
 	const winYes = $derived(Math.max(1, Math.round(stakeNum / probMyYes) - stakeNum));
 	const winNo = $derived(Math.max(1, Math.round(stakeNum / probMyNo) - stakeNum));
 
-	// Stake selector unlock — hide the SIZE chip and the back-face stake
-	// slider for first-time predictors (<50 calls). Below the threshold
-	// the card forces `VXP_DEFAULT_STAKE` so they never see a number.
-	const totalTrades = $derived($userStore.profile?.totalTrades ?? 0);
-	const stakingUnlocked = $derived(vxpStakeSliderUnlocked({ calls: totalTrades }));
-	const sizeStake = $derived(
-		stakingUnlocked ? Math.max(VXP_DEFAULT_STAKE, stakeNum) : VXP_DEFAULT_STAKE
-	);
+	const sizeStake = $derived(Math.max(VXP_DEFAULT_STAKE, stakeNum));
 
 	// Live countdown — days until expiry, displayed as a chip in the
 	// meta row. Computed off `expiryDate` (ms). Urgency tiers:
@@ -641,27 +632,15 @@
 					</div>
 				</div>
 
-				<!-- Foot — SIZE · VXP (when staking is unlocked) + tap hint.
-				     For first-time predictors the SIZE chip is hidden so
-				     they never see the stake number on the front face. -->
+				<!-- Foot — SIZE · VXP chip + tap hint. -->
 				<div class="flow-foot num">
-					{#if stakingUnlocked}
-						<span class="flow-foot-size">
-							{t({
-								locale: $localeStore,
-								key: 'card.size_vxp',
-								params: { stake: sizeStake }
-							})}
-						</span>
-					{:else}
-						<span class="flow-foot-size flow-foot-size-locked">
-							{t({
-								locale: $localeStore,
-								key: 'card.size_vxp',
-								params: { stake: VXP_DEFAULT_STAKE }
-							})}
-						</span>
-					{/if}
+					<span class="flow-foot-size">
+						{t({
+							locale: $localeStore,
+							key: 'card.size_vxp',
+							params: { stake: sizeStake }
+						})}
+					</span>
 					<span class="flow-foot-hint allcaps">
 						{t({ locale: $localeStore, key: 'card.tap_depth' })}
 					</span>
@@ -1148,9 +1127,6 @@
 	.flow-foot-size {
 		font-weight: 700;
 		letter-spacing: 0.1em;
-	}
-	.flow-foot-size-locked {
-		opacity: 0.55;
 	}
 	.flow-foot-hint {
 		letter-spacing: 0.14em;
