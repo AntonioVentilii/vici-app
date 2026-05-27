@@ -1831,6 +1831,7 @@ export const esMessages = {
 	'worlds.picker.clear': 'Borrar',
 	'worlds.picker.close': 'Cerrar',
 	'worlds.picker.empty': 'Sin resultados. Prueba otro nombre.',
+	'worlds.picker.error_timeout': 'No se completó. Revisa tu conexión y vuelve a intentarlo.',
 	'worlds.picker.kind_country': 'País',
 	'worlds.picker.kind_university': 'Universidad',
 	'worlds.picker.lock_hint':

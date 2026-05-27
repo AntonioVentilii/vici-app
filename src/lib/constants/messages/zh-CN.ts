@@ -1736,6 +1736,7 @@ export const zhCnMessages = {
 	'worlds.picker.clear': '清除',
 	'worlds.picker.close': '关闭',
 	'worlds.picker.empty': '没有结果。换个名字试试。',
+	'worlds.picker.error_timeout': '没有提交成功。检查网络后再试一次。',
 	'worlds.picker.kind_country': '国家',
 	'worlds.picker.kind_university': '大学',
 	'worlds.picker.lock_hint': '将你加入该组的排行榜。可切换 — 每 90 天一次。',

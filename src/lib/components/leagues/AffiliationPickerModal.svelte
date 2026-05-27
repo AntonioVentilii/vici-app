@@ -99,8 +99,17 @@
 			onPicked?.();
 			onClose();
 		} catch (err) {
+			// Service-layer timeout surfaces as `<label> timed out after Nms`.
+			// Surface a retry-friendly message in that case so the user knows
+			// the pick didn't go through (vs the previously unbounded
+			// "joining…" hang) and the underlying cause is captured in the
+			// console for debugging.
+			const isTimeout = err instanceof Error && err.message.includes('timed out');
 			console.error('AffiliationPickerModal: joinAffiliation failed', err);
-			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+			errorMessage = t({
+				locale: $localeStore,
+				key: isTimeout ? 'worlds.picker.error_timeout' : 'common.error.generic'
+			});
 		} finally {
 			saving = null;
 		}

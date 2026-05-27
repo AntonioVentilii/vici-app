@@ -1821,6 +1821,7 @@ export const ptMessages = {
 	'worlds.picker.clear': 'Limpar',
 	'worlds.picker.close': 'Fechar',
 	'worlds.picker.empty': 'Sem resultados. Tente outro nome.',
+	'worlds.picker.error_timeout': 'Não foi enviado. Verifique sua conexão e tente novamente.',
 	'worlds.picker.kind_country': 'País',
 	'worlds.picker.kind_university': 'Universidade',
 	'worlds.picker.lock_hint':

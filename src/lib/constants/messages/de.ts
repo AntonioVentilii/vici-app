@@ -1829,6 +1829,8 @@ export const deMessages = {
 	'worlds.picker.clear': 'Löschen',
 	'worlds.picker.close': 'Schließen',
 	'worlds.picker.empty': 'Keine Treffer. Versuche einen anderen Namen.',
+	'worlds.picker.error_timeout':
+		'Hat nicht geklappt. Prüfe deine Verbindung und versuche es erneut.',
 	'worlds.picker.kind_country': 'Land',
 	'worlds.picker.kind_university': 'Universität',
 	'worlds.picker.lock_hint':

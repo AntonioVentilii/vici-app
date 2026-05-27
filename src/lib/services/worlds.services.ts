@@ -11,6 +11,32 @@ import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 
 /**
+ * Hard timeout for the affiliation write path. Generous enough to cover
+ * a slow IC update call (typical ~2s, occasionally longer), tight
+ * enough that the picker's "joining…" spinner doesn't hang indefinitely
+ * — which is what Giova observed on 2026-05-27 when a country pick
+ * never resolved and never rejected, leaving the row stuck and the
+ * `finally { saving = null }` branch unreachable.
+ */
+const AFFILIATION_WRITE_TIMEOUT_MS = 15_000;
+
+const withTimeout = <T>({
+	operation,
+	timeoutMs,
+	label
+}: {
+	operation: Promise<T>;
+	timeoutMs: number;
+	label: string;
+}): Promise<T> =>
+	Promise.race<T>([
+		operation,
+		new Promise<T>((_, reject) => {
+			setTimeout(() => reject(new Error(`${label} timed out after ${timeoutMs}ms`)), timeoutMs);
+		})
+	]);
+
+/**
  * Worlds affiliations — thin FE service wrapping the satellite
  * read queries + the write / delete primitives via `@junobuild/core`.
  * Mirrors the leagues service shape; consumers (Worlds picker page,
@@ -73,9 +99,13 @@ export const joinAffiliation = async ({
 	// keyed differently (different id) for a fresh switch — but checking
 	// any-row-for-the-kind needs a scan; defer that to the picker UI
 	// which derives state from `listMyAffiliations`.
-	const existing = await getDoc<AffiliationDoc>({
-		collection: Collection.AFFILIATIONS,
-		key
+	const existing = await withTimeout({
+		operation: getDoc<AffiliationDoc>({
+			collection: Collection.AFFILIATIONS,
+			key
+		}),
+		timeoutMs: AFFILIATION_WRITE_TIMEOUT_MS,
+		label: 'joinAffiliation:getDoc'
 	});
 
 	if (existing) {
@@ -90,9 +120,13 @@ export const joinAffiliation = async ({
 		lockedUntilMs
 	};
 
-	await setDoc<AffiliationDoc>({
-		collection: Collection.AFFILIATIONS,
-		doc: { key, data: doc }
+	await withTimeout({
+		operation: setDoc<AffiliationDoc>({
+			collection: Collection.AFFILIATIONS,
+			doc: { key, data: doc }
+		}),
+		timeoutMs: AFFILIATION_WRITE_TIMEOUT_MS,
+		label: 'joinAffiliation:setDoc'
 	});
 
 	return doc;
@@ -115,9 +149,13 @@ export const leaveAffiliation = async ({
 	const memberPrincipal = identity.getPrincipal().toText();
 	const key = affiliationKey({ memberPrincipal, kind, affiliationId });
 
-	const existing = await getDoc<AffiliationDoc>({
-		collection: Collection.AFFILIATIONS,
-		key
+	const existing = await withTimeout({
+		operation: getDoc<AffiliationDoc>({
+			collection: Collection.AFFILIATIONS,
+			key
+		}),
+		timeoutMs: AFFILIATION_WRITE_TIMEOUT_MS,
+		label: 'leaveAffiliation:getDoc'
 	});
 
 	if (!existing) {
@@ -125,9 +163,13 @@ export const leaveAffiliation = async ({
 		return;
 	}
 
-	await deleteDoc<AffiliationDoc>({
-		collection: Collection.AFFILIATIONS,
-		doc: existing
+	await withTimeout({
+		operation: deleteDoc<AffiliationDoc>({
+			collection: Collection.AFFILIATIONS,
+			doc: existing
+		}),
+		timeoutMs: AFFILIATION_WRITE_TIMEOUT_MS,
+		label: 'leaveAffiliation:deleteDoc'
 	});
 };
 
