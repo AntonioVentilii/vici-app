@@ -79,8 +79,9 @@
 	// Sort comparator for the main list. `trending` mirrors the
 	// homepage carousel's totalVolume DESC sort; `closing` surfaces the
 	// soonest-expiring Open markets first (Resolved/Expired sink to
-	// the bottom); `newest` uses expiryDate DESC as a stable proxy for
-	// "freshest created" since we don't carry createdAt today.
+	// the bottom); `newest` sorts by `Market.createdAt` DESC — same
+	// field the recommendation ranker uses as its recency signal
+	// (`market.services.ts:600`).
 	const sortList = ({ items, mode }: { items: Market[]; mode: MarketsSort }): Market[] => {
 		const copy = [...items];
 
@@ -110,11 +111,11 @@
 				});
 			case 'newest':
 				return copy.sort((a, b) => {
-					if (a.expiryDate === b.expiryDate) {
+					if (a.createdAt === b.createdAt) {
 						return 0;
 					}
 
-					return b.expiryDate > a.expiryDate ? 1 : -1;
+					return b.createdAt > a.createdAt ? 1 : -1;
 				});
 		}
 	};
