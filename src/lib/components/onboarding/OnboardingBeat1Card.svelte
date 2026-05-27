@@ -141,7 +141,7 @@
 				</div>
 			{/snippet}
 		</SwipeableMarketCard>
-		<FlowCoach />
+		<FlowCoach surface="onboarding" />
 	</div>
 </div>
 

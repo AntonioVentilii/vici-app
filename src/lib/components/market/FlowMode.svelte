@@ -11,10 +11,13 @@
 	import FlowComboBanner from '$lib/components/market/FlowComboBanner.svelte';
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
 	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
+	import FlowFeedback from '$lib/components/market/FlowFeedback.svelte';
 	import FlowStreakBreakBanner from '$lib/components/market/FlowStreakBreakBanner.svelte';
 	import FlowTopBar from '$lib/components/market/FlowTopBar.svelte';
 	import FlowXpPops from '$lib/components/market/FlowXpPops.svelte';
 	import MotionBeat from '$lib/components/market/MotionBeat.svelte';
+	import SwipeHint from '$lib/components/market/SwipeHint.svelte';
+	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import {
 		BASE_XP_PER_PREDICTION,
@@ -127,6 +130,23 @@
 	let streakBreakBanner = $state<{ stage: FlameStage } | null>(null);
 	let flowPaused = $state(false);
 	let activeMotionBeat = $state<MotionBeatPayload | null>(null);
+
+	// Ambient post-swipe Oracle pop — used for the non-hard-pause path
+	// where the user gets a brief "Nice call · +N VXP" affirmation that
+	// fades on its own ~1.3 s later. Skip commits get the shorter 520 ms
+	// "SKIPPED" chip variant. Hard-pause beats (`motion.beat.hardPause`)
+	// still go through `MotionBeat` so we don't double-stack overlays.
+	// Prototype source: `flow.jsx:1297-1353`.
+	interface ActiveFeedback {
+		result: FlowAction;
+		xp: number;
+		correct: boolean;
+		streakHit: boolean;
+		// monotonic key so consecutive commits remount the component.
+		key: number;
+	}
+	let activeFeedback = $state<ActiveFeedback | null>(null);
+	let feedbackKeySeq = 0;
 	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
 	const flameLabel = $derived(t({ locale: $localeStore, key: FLAME_STAGE_LABEL_KEYS[flameStage] }));
 
@@ -402,6 +422,14 @@
 			// bumps via `applyDailyStreakBump` above; streak progresses
 			// on any swipe, YES / NO / SKIP all count at that layer.
 			recordMotionSwipe({ side: 'SKIP', dailyStreak });
+			feedbackKeySeq += 1;
+			activeFeedback = {
+				result: 'SKIP',
+				xp: 0,
+				correct: false,
+				streakHit: false,
+				key: feedbackKeySeq
+			};
 			finishCommitAdvance();
 
 			return;
@@ -526,6 +554,18 @@
 		if (motion.beat) {
 			activeMotionBeat = motion.beat;
 		}
+
+		// Ambient post-swipe feedback — only spawned on the non-hard-pause
+		// path so we don't double-stack overlays with `MotionBeat`. The
+		// pop self-dismisses in 1.3 s (520 ms for skip, handled above).
+		feedbackKeySeq += 1;
+		activeFeedback = {
+			result: action,
+			xp: awarded + motion.bonusXp,
+			correct: alignedWithCrowd,
+			streakHit: motion.bonusXp > 0 && motion.beat?.kind === 'streak-tier-up',
+			key: feedbackKeySeq
+		};
 
 		finishCommitAdvance();
 	};
@@ -727,6 +767,13 @@
 
 			<FlowXpPops pops={xpPops} />
 
+			<!-- Gesture coach — first-run only. Cycles through NO / YES /
+			     SKIP / TAP / IDLE phases while the cards drift in
+			     sympathy via the `data-coach-phase` CSS in app.css.
+			     Self-dismisses on any pointer-down; persists dismissal
+			     in localStorage. Prototype: `flow.jsx:1055-1121`. -->
+			<FlowCoach surface="flow" />
+
 			{#if activeMotionBeat}
 				<MotionBeat
 					beat={activeMotionBeat}
@@ -734,7 +781,25 @@
 					onDone={onMotionBeatDone}
 				/>
 			{/if}
+
+			{#if activeFeedback}
+				{#key activeFeedback.key}
+					<FlowFeedback
+						correct={activeFeedback.correct}
+						onDone={() => (activeFeedback = null)}
+						result={activeFeedback.result}
+						streakHit={activeFeedback.streakHit}
+						xp={activeFeedback.xp}
+					/>
+				{/key}
+			{/if}
 		</main>
+
+		<!-- Bottom-of-deck affordance rail — chevrons drift outward on a
+		     1.7 s ping cycle while the TAP / SKIP labels call out the
+		     non-swipe gestures. Pure visual sugar; gestures are wired in
+		     FlowCard. Prototype source: `flow.jsx:1124-1163`. -->
+		<SwipeHint />
 
 		<FlowBottomBar
 			min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}

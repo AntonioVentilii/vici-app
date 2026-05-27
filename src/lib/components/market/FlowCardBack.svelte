@@ -1,6 +1,7 @@
 <script lang="ts">
+	import { Share2 } from 'lucide-svelte/icons';
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
-	import MarketDetailShareButton from '$lib/components/market/MarketDetailShareButton.svelte';
+	import SharePopover from '$lib/components/market/SharePopover.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import {
 		VXP_STAKE_LADDER,
@@ -9,6 +10,7 @@
 	} from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { CallSide, Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
@@ -174,6 +176,25 @@
 
 		return Math.round(yesPct - Math.round(priorCall.consensusThen * 100));
 	});
+
+	// Share popover toggle — anchored above the share button. The
+	// popover handles native / clipboard / channel paths itself; this
+	// component owns just the open/close state and the toast we show on
+	// successful clipboard copy. Prototype source: `flow.jsx:228-361`
+	// (the share popover is consumed by the FlowCard back face).
+	let shareOpen = $state(false);
+
+	const toggleShare = () => {
+		shareOpen = !shareOpen;
+	};
+
+	const onCopied = () => {
+		notificationsStore.add({
+			title: t({ locale: $localeStore, key: 'market.detail.share.copied_title' }),
+			message: t({ locale: $localeStore, key: 'market.detail.share.copied' }),
+			type: 'success'
+		});
+	};
 </script>
 
 <div style:--cat-color={catColor} class="flow-back">
@@ -181,7 +202,22 @@
 		<span class="allcaps flow-back-cat">{category}</span>
 		<div class="flow-back-actions" data-no-card-gesture="true">
 			<SavedMarketToggle marketId={market.id} size="sm" />
-			<MarketDetailShareButton title={market.title} />
+			<button
+				class="flow-back-share"
+				aria-label={t({ locale: $localeStore, key: 'market.detail.share.label' })}
+				onclick={toggleShare}
+				type="button"
+			>
+				<Share2 aria-hidden="true" size={16} strokeWidth={1.8} />
+			</button>
+			{#if shareOpen}
+				<SharePopover
+					{market}
+					onClose={() => (shareOpen = false)}
+					{onCopied}
+					priorCall={priorCall ? { side: priorCall.side } : null}
+				/>
+			{/if}
 		</div>
 	</header>
 
@@ -508,10 +544,37 @@
 	}
 
 	.flow-back-actions {
+		position: relative;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.4rem;
 		flex-shrink: 0;
+	}
+
+	/* Share-pop anchor button — mirrors `MarketDetailShareButton` but
+	   stays inline here because the popover is anchored relative to
+	   `.flow-back-actions`, so the button can't take its own offset
+	   parent. Prototype source: `flow.jsx:228-361`. */
+	.flow-back-share {
+		display: inline-flex;
+		width: 2.25rem;
+		height: 2.25rem;
+		align-items: center;
+		justify-content: center;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: var(--bg-surface);
+		color: var(--text-muted);
+		cursor: pointer;
+		transition:
+			background-color var(--d-hover) var(--ease-vici),
+			border-color var(--d-hover) var(--ease-vici),
+			color var(--d-hover) var(--ease-vici);
+	}
+	.flow-back-share:hover {
+		border-color: var(--border-strong);
+		background: var(--bg-popover);
+		color: var(--text-base);
 	}
 
 	.flow-back-scroll {
