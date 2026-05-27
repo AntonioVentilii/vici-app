@@ -11,7 +11,10 @@
 	import { MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { positions } from '$lib/derived/positions.derived';
+	import { safeGetIdentityOnce } from '$lib/services/identity.services';
+	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -35,10 +38,10 @@
 	const streakDays = $derived(profile?.dailyStreak ?? 0);
 	const callsToUnlock = $derived(Math.max(0, ACCURACY_GATE_CALLS - totalTrades));
 
-	// Per-user dash cache. Loaded once on mount; refreshed whenever
-	// `calculateAndSyncStats` runs server-side. Slight refresh delay
-	// is acceptable — a freshly-settled market may not show up until
-	// the next sync.
+	// Per-user dash cache. Recomputed on mount so accuracy + category
+	// breakdown reflect any markets that resolved since the user signed
+	// in — the rest of the app already keeps positions/orders/history
+	// fresh on a 30s poll, so the Dash needs to match.
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
 
 	let timeWindow = $state<TimeWindow>('30d');
@@ -254,6 +257,15 @@
 	onMount(async () => {
 		if (profile === undefined) {
 			return;
+		}
+
+		try {
+			const identity = await safeGetIdentityOnce();
+			await calculateAndSyncStats({ identity, domain: $balanceDomain });
+			const profileDoc = await getProfile(profile.owner);
+			userStore.update((s) => ({ ...s, profile: profileDoc.data }));
+		} catch (err) {
+			console.error('DashPage: failed to recompute stats', err);
 		}
 
 		try {
