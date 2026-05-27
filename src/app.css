@@ -547,47 +547,45 @@ html[data-app='1'] body {
 	padding-bottom: var(--bn-clear);
 }
 
-/* Phone-frame decoration for desktop viewports — the prototype is
- * mobile-only by design, but on a wide desktop window the bare 28rem
- * column floating in a black void reads as broken rather than
- * intentional. At ≥640px we wrap the (app) shell in a phone-bezel
- * surround so the void is contextualised as off-screen canvas.
- * Marketing routes (`/`, `/about`, …) keep their natural body-scroll
- * because the gate runs only on `data-app="1"`. */
-@media (min-width: 640px) {
-	html[data-app='1'] body {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background:
-			radial-gradient(
-				1600px 800px at 50% -10%,
-				color-mix(in srgb, var(--laurel) 4%, transparent),
-				transparent 60%
-			),
-			var(--bg-base);
+/* Desktop adaptation for the (app) shell — the prototype renders
+ * authenticated screens at mobile width only (interest of time), but
+ * our desktop should pick up the LANDING page's responsive treatment:
+ * a top-nav shell hosts the chrome, the mobile pillnav is hidden, and
+ * page content centers in a comfortable reading column. Marketing
+ * routes (`/`, `/about`, …) keep their own natural full-bleed layout
+ * because the `data-app="1"` gate only fires inside the (app) group.
+ *
+ * The desktop top-nav lives in `(app)/+layout.svelte` as
+ * `<DesktopAppNav>` and is hidden at <56rem; the pillnav is hidden at
+ * ≥56rem. The body stays scroll-locked at all widths (the inner
+ * `.screen-scroll` owns page scroll), but at desktop we drop the
+ * `--bn-clear` padding-bottom since the pillnav is gone. */
+
+.app-shell-content {
+	width: 100%;
+	max-width: 28rem;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+@media (min-width: 56rem) {
+	html[data-app='1'] .screen-scroll {
+		padding-bottom: 2rem;
 	}
 
-	/* SvelteKit's `app.html` wraps the rendered tree in
-	 * `<div style="display: contents">` for hydration, so the layout
-	 * root is not a direct child of <body>. Use a descendant selector
-	 * rather than `body >` so the phone-bezel + pillnav anchoring still
-	 * match. `display: contents` keeps the wrapper layout-transparent,
-	 * so `body { display: flex }` above still centers this column. */
-	html[data-app='1'] div.relative.isolate {
-		width: 100%;
-		max-width: 28rem;
-		height: min(100%, 932px);
-		border: 1px solid var(--border-strong);
-		border-radius: 36px;
-		overflow: hidden;
-		box-shadow:
-			0 30px 80px -30px rgba(0, 0, 0, 0.55),
-			inset 0 1px 0 rgba(242, 236, 220, 0.06);
+	html[data-app='1'] .pillnav-wrap {
+		display: none;
 	}
 
-	html[data-app='1'] div.relative.isolate .pillnav-wrap {
-		position: absolute;
+	/* On desktop the content column grows from the mobile 28rem to a
+	 * reading-comfortable 64rem so pages like Markets / Dash / Social
+	 * use the desktop canvas instead of hugging the centre as a
+	 * fake-mobile column. Individual surfaces can opt back into the
+	 * narrower 28rem with `.app-shell-content--narrow`. */
+	.app-shell-content {
+		max-width: 64rem;
+		padding-left: clamp(1.25rem, 4vw, 2rem);
+		padding-right: clamp(1.25rem, 4vw, 2rem);
 	}
 }
 
@@ -1503,4 +1501,971 @@ html[data-app='1'] body {
 	.art-culture {
 		animation: none;
 	}
+}
+
+/* ============================================================
+ * Prototype-faithful primitives — verbatim ports from the
+ * VICI WebApp Beta V1.2 `app.css` (lines 85-205, 287-288,
+ * 851-853). These power the Markets / Dash / Flow / Social /
+ * Profile surfaces and intentionally reuse the prototype's CSS
+ * class names so the JSX → Svelte port stays a 1:1 translation.
+ * Tokens are mapped to our renamed equivalents
+ * (--bg-raised → --bg-surface, --border → --border-base,
+ * --fg-* → --text-*, --accent → --laurel, --ease → --ease-vici).
+ * ============================================================ */
+
+/* Appbar (prototype app.css:85) */
+.appbar {
+	flex: 0 0 auto;
+	padding: 8px 20px 12px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+/* Pills + chips (prototype app.css:146) */
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px;
+	border-radius: 999px;
+	background: rgba(242, 236, 220, 0.06);
+	color: var(--text-muted);
+	border: 1px solid var(--border-base);
+	font-size: var(--t-12);
+	font-weight: 500;
+	white-space: nowrap;
+	cursor: pointer;
+	appearance: none;
+	font-family: inherit;
+	transition:
+		background-color 200ms var(--ease-vici),
+		color 200ms var(--ease-vici),
+		border-color 200ms var(--ease-vici);
+}
+
+.chip.active {
+	background: var(--laurel-glow);
+	color: var(--laurel);
+	border-color: rgba(226, 184, 66, 0.3);
+}
+
+/* Tag chips (prototype app.css:156) */
+.tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 7px;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	background: rgba(242, 236, 220, 0.08);
+	color: var(--text-muted);
+}
+
+.tag.yes {
+	background: var(--yes-wash);
+	color: var(--yes);
+}
+
+.tag.no {
+	background: var(--no-wash);
+	color: var(--no);
+}
+
+/* Cards (prototype app.css:169) */
+.card {
+	background: var(--bg-surface);
+	border: 1px solid var(--border-base);
+	border-radius: 16px;
+	padding: 16px;
+	box-shadow: inset 0 1px 0 rgba(242, 236, 220, 0.04);
+}
+
+/* Text helpers (prototype app.css:187-192) */
+.dim {
+	color: var(--text-base);
+	opacity: 0.78;
+}
+
+.mute {
+	color: var(--text-muted);
+}
+
+.acc {
+	color: var(--laurel);
+}
+
+/* Section labels (prototype app.css:200) */
+.section-h {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	padding: 8px 20px 8px;
+}
+
+.section-h h3 {
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	margin: 0;
+}
+
+.section-h .more {
+	font-size: var(--t-12);
+	color: var(--laurel);
+	cursor: pointer;
+	background: none;
+	border: 0;
+	padding: 0;
+	font-family: inherit;
+}
+
+/* Hide scrollbars on inner panels (prototype app.css:287) */
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+
+.no-scrollbar {
+	scrollbar-width: none;
+}
+
+/* Layout helpers (prototype app.css:851-853) */
+.row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.row.between {
+	justify-content: space-between;
+}
+
+.col {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+/* Type scale aliases used inline by the prototype's screens */
+.t-display {
+	font-size: 40px;
+	line-height: 1;
+}
+
+.t-h4 {
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.t-body {
+	font-size: 14px;
+}
+
+.t-body-sm {
+	font-size: 13px;
+}
+
+.t-sub {
+	font-size: 12px;
+}
+
+.t-eyebrow {
+	font-size: 10px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.fw-600 {
+	font-weight: 600;
+}
+
+/* ============================================================
+ * DASH · Stats dashboard
+ * Verbatim port of `app.css` prototype rules (lines 2200-2702),
+ * rewritten with Vici design tokens (`--laurel` for `--accent`,
+ * `--text-base` for `--fg`, `--text-muted` for `--fg-mute`,
+ * `--bg-surface` for `--bg-raised`, …). Class names and visual
+ * structure mirror the prototype 1:1 so the DashPage Svelte
+ * markup can be a straight JSX→Svelte translation.
+ * ============================================================ */
+.dash-ey {
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.dash-section {
+	padding: 18px 18px 4px;
+}
+.dash-section-eyebrow {
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin-bottom: 10px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+.dash-section-eyebrow .see-all {
+	color: var(--laurel);
+	text-decoration: none;
+	cursor: pointer;
+}
+.dash-section-eyebrow .delta-pos {
+	font-family: var(--font-mono);
+	font-size: var(--text-eyebrow);
+	font-weight: 700;
+	color: var(--yes);
+	letter-spacing: 0.04em;
+}
+
+/* ─── Hero ─── */
+.dash-hero {
+	padding: 22px 18px 18px;
+	border-bottom: 1px solid var(--border-base);
+}
+.dash-big {
+	font-family: var(--font-mono);
+	font-weight: 700;
+	font-size: 56px;
+	line-height: 1;
+	letter-spacing: -0.04em;
+	color: var(--text-base);
+	font-feature-settings: 'tnum';
+	margin-top: 6px;
+	display: inline-flex;
+	align-items: baseline;
+	gap: 8px;
+}
+.dash-big .dash-unit {
+	font-family: var(--font-mono);
+	font-weight: 600;
+	font-size: var(--text-h4);
+	color: var(--text-muted);
+	letter-spacing: -0.005em;
+}
+.dash-meta-row {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	margin-top: 12px;
+	flex-wrap: wrap;
+}
+.dash-delta {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	font-family: var(--font-mono);
+	font-size: var(--text-eyebrow);
+	font-weight: 600;
+	color: var(--yes);
+	letter-spacing: 0.02em;
+}
+.dash-anchor {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	font-size: 12.5px;
+	color: var(--text-muted);
+}
+.dash-streak-row {
+	margin-top: 16px;
+	padding: 12px 14px;
+	background: color-mix(in srgb, var(--laurel) 5%, transparent);
+	border: 1px solid color-mix(in srgb, var(--laurel) 18%, transparent);
+	border-radius: 12px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.dash-streak-pair {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+.dash-streak-pair .dash-flame {
+	color: var(--laurel);
+	display: inline-flex;
+	flex-shrink: 0;
+}
+.dash-streak-big {
+	display: block;
+	font-family: var(--font-mono);
+	font-weight: 700;
+	font-size: 17px;
+	color: var(--text-base);
+	letter-spacing: -0.01em;
+}
+.dash-streak-sub {
+	display: block;
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	color: var(--text-muted);
+	letter-spacing: 0.04em;
+	margin-top: 2px;
+}
+.dash-streak-bar {
+	height: 4px;
+	background: color-mix(in srgb, var(--laurel) 10%, transparent);
+	border-radius: 999px;
+	overflow: hidden;
+}
+.dash-streak-bar .fill {
+	display: block;
+	height: 100%;
+	background: linear-gradient(90deg, var(--laurel), #ffd27a);
+	border-radius: 999px;
+}
+
+/* ─── Time window ─── */
+.dash-window {
+	display: flex;
+	gap: 2px;
+	padding: 3px;
+	background: color-mix(in srgb, var(--parchment) 4%, transparent);
+	border: 1px solid var(--border-base);
+	border-radius: 8px;
+	margin: 14px 18px 0;
+}
+.dash-window button {
+	appearance: none;
+	border: 0;
+	flex: 1;
+	background: transparent;
+	color: var(--text-muted);
+	cursor: pointer;
+	padding: 6px;
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	letter-spacing: 0.08em;
+	border-radius: 6px;
+	transition:
+		background 180ms var(--ease-vici),
+		color 180ms var(--ease-vici);
+}
+.dash-window button.active {
+	background: var(--bg-elevated, var(--bg-surface));
+	color: var(--text-base);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+/* ─── Holdings card ─── */
+.dash-holdings {
+	background:
+		linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--laurel) 10%, transparent),
+			color-mix(in srgb, var(--laurel) 2%, transparent) 60%,
+			transparent 100%
+		),
+		var(--bg-surface);
+	border: 1px solid var(--border-base);
+	border-radius: 14px;
+	overflow: hidden;
+	position: relative;
+}
+.dash-holdings::after {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background: radial-gradient(
+		280px 200px at 100% 0%,
+		color-mix(in srgb, var(--laurel) 12%, transparent),
+		transparent 60%
+	);
+	pointer-events: none;
+}
+.dash-holdings-top {
+	position: relative;
+	padding: 14px 16px 14px;
+}
+.dash-purpose {
+	display: block;
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	font-size: var(--text-sub);
+	color: var(--text-muted);
+	margin-top: 4px;
+}
+.dash-balance {
+	font-family: var(--font-mono);
+	font-weight: 700;
+	font-size: var(--text-display);
+	line-height: 1;
+	letter-spacing: -0.025em;
+	color: var(--laurel);
+	font-feature-settings: 'tnum';
+	margin: 8px 0 4px;
+	display: inline-flex;
+	align-items: baseline;
+	gap: 6px;
+}
+.dash-balance .unit {
+	font-family: var(--font-mono);
+	font-size: var(--text-body);
+	font-weight: 600;
+	color: var(--laurel);
+	opacity: 0.6;
+	letter-spacing: 0.06em;
+}
+.dash-sub-stats {
+	display: flex;
+	gap: 18px;
+	align-items: baseline;
+	margin-top: 10px;
+	flex-wrap: wrap;
+}
+.dash-sub-stat .lbl {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	display: block;
+}
+.dash-sub-stat .val {
+	font-family: var(--font-mono);
+	font-size: var(--text-body-sm);
+	font-weight: 700;
+	color: var(--text-base);
+	margin-top: 2px;
+	display: block;
+}
+.dash-referral {
+	position: relative;
+	margin: 4px 12px 12px;
+	padding: 10px 14px;
+	background: color-mix(in srgb, var(--laurel) 8%, transparent);
+	border: 1px solid color-mix(in srgb, var(--laurel) 22%, transparent);
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+	text-decoration: none;
+	color: inherit;
+	transition:
+		background 180ms var(--ease-vici),
+		border-color 180ms var(--ease-vici);
+}
+.dash-referral:hover {
+	background: color-mix(in srgb, var(--laurel) 14%, transparent);
+	border-color: color-mix(in srgb, var(--laurel) 40%, transparent);
+}
+.dash-referral .left {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+}
+.dash-referral .gift {
+	width: 26px;
+	height: 26px;
+	border-radius: 999px;
+	background: color-mix(in srgb, var(--laurel) 18%, transparent);
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--laurel);
+	flex-shrink: 0;
+}
+.dash-referral .text {
+	display: flex;
+	flex-direction: column;
+	min-width: 0;
+}
+.dash-referral .text .h {
+	font-size: var(--text-sub);
+	font-weight: 600;
+	color: var(--text-base);
+	letter-spacing: -0.005em;
+}
+.dash-referral .text .s {
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	color: var(--text-muted);
+	letter-spacing: 0.05em;
+	margin-top: 2px;
+}
+.dash-referral .arrow {
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	font-weight: 700;
+	color: var(--laurel);
+	letter-spacing: 0.12em;
+	text-transform: uppercase;
+	flex-shrink: 0;
+}
+
+/* ─── Chart card ─── */
+.dash-chart-card {
+	padding: 12px 14px 14px;
+	background: var(--bg-surface);
+	border: 1px solid var(--border-base);
+	border-radius: 12px;
+}
+.dash-spark {
+	display: block;
+	width: 100%;
+	height: 60px;
+}
+
+/* ─── Active positions ─── */
+.dash-urgency {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	padding: 2px 7px;
+	border-radius: 4px;
+	background: color-mix(in srgb, var(--laurel) 12%, transparent);
+	color: var(--laurel);
+	font-family: var(--font-mono);
+	font-size: 9px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	margin-left: 6px;
+}
+.dash-pos-row {
+	appearance: none;
+	border: 1px solid var(--border-base);
+	background: var(--bg-surface);
+	width: 100%;
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 10px;
+	padding: 12px 14px;
+	border-radius: 10px;
+	margin-bottom: 8px;
+	cursor: pointer;
+	text-align: left;
+	color: var(--text-base);
+	transition:
+		border-color 180ms var(--ease-vici),
+		transform 100ms var(--ease-vici);
+	font-family: inherit;
+}
+.dash-pos-row:hover {
+	border-color: var(--border-strong);
+}
+.dash-pos-row:active {
+	transform: scale(0.99);
+}
+.dash-pos-row .q {
+	font-size: var(--text-body-sm);
+	font-weight: 500;
+	color: var(--text-base);
+	line-height: 1.32;
+}
+.dash-pos-row .ctx {
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+	margin-top: 4px;
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+.dash-pos-row .side {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	font-weight: 800;
+	letter-spacing: 0.12em;
+	padding: 2px 6px;
+	border-radius: 3px;
+}
+.dash-pos-row .side.yes {
+	background: color-mix(in srgb, var(--yes) 16%, transparent);
+	color: var(--yes);
+}
+.dash-pos-row .side.no {
+	background: color-mix(in srgb, var(--no) 16%, transparent);
+	color: var(--no);
+}
+.dash-pos-row .right-col {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 4px;
+	text-align: right;
+}
+.dash-pos-row .pct {
+	font-family: var(--font-mono);
+	font-size: var(--text-h3);
+	font-weight: 700;
+	color: var(--laurel);
+	line-height: 1;
+}
+.dash-pos-row .timer {
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	color: var(--text-muted);
+	letter-spacing: 0.04em;
+}
+.dash-pos-row .timer.urgent {
+	color: var(--no);
+}
+
+/* ─── Past predictions ─── */
+.dash-filter-chips {
+	display: flex;
+	gap: 6px;
+	margin-bottom: 10px;
+}
+.dash-filter-chips button {
+	appearance: none;
+	padding: 5px 10px;
+	background: color-mix(in srgb, var(--parchment) 4%, transparent);
+	border: 1px solid var(--border-base);
+	color: var(--text-muted);
+	border-radius: 999px;
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	cursor: pointer;
+}
+.dash-filter-chips button.active {
+	background: color-mix(in srgb, var(--laurel) 10%, transparent);
+	color: var(--laurel);
+	border-color: color-mix(in srgb, var(--laurel) 30%, transparent);
+}
+.dash-past-row {
+	display: grid;
+	grid-template-columns: auto 1fr auto;
+	gap: 12px;
+	padding: 10px 0;
+	border-bottom: 1px solid var(--border-base);
+	align-items: center;
+}
+.dash-past-row:last-child {
+	border-bottom: 0;
+}
+.dash-past-row .res {
+	width: 22px;
+	height: 22px;
+	border-radius: 999px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+.dash-past-row .res.won {
+	background: color-mix(in srgb, var(--yes) 16%, transparent);
+	color: var(--yes);
+}
+.dash-past-row .res.lost {
+	background: color-mix(in srgb, var(--no) 16%, transparent);
+	color: var(--no);
+}
+.dash-past-row .q {
+	font-size: 12.5px;
+	font-weight: 500;
+	color: var(--text-base);
+}
+.dash-past-row .ctx {
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	color: var(--text-muted);
+	letter-spacing: 0.04em;
+	margin-top: 2px;
+}
+.dash-past-row .delta-pct {
+	font-family: var(--font-mono);
+	font-size: var(--text-sub);
+	font-weight: 700;
+}
+.dash-empty {
+	font-family: var(--font-mono);
+	font-size: var(--text-eyebrow);
+	color: var(--text-muted);
+	padding: 16px 0;
+	text-align: center;
+}
+
+/* ─── By category ─── */
+.dash-cat-row {
+	display: grid;
+	grid-template-columns: 64px 1fr 38px;
+	gap: 8px;
+	align-items: center;
+	padding: 6px 0;
+}
+.dash-cat-row .name {
+	font-family: var(--font-sans, inherit);
+	font-size: var(--text-sub);
+	color: var(--text-base);
+}
+.dash-cat-row .bar {
+	height: 4px;
+	background: color-mix(in srgb, var(--parchment) 6%, transparent);
+	border-radius: 999px;
+	position: relative;
+	overflow: hidden;
+}
+.dash-cat-row .bar .fill {
+	position: absolute;
+	inset: 0;
+	right: auto;
+	background: linear-gradient(90deg, var(--laurel), #ffd27a);
+	border-radius: 999px;
+}
+.dash-cat-row .pct {
+	font-family: var(--font-mono);
+	font-size: var(--text-eyebrow);
+	font-weight: 700;
+	color: var(--laurel);
+	text-align: right;
+}
+
+/* ─── Rank context ─── */
+.dash-rank-grid {
+	display: grid;
+	grid-template-columns: repeat(3, 1fr);
+	gap: 8px;
+}
+.dash-rank-tile {
+	appearance: none;
+	border: 1px solid var(--border-base);
+	background: var(--bg-surface);
+	padding: 10px 12px;
+	border-radius: 10px;
+	color: var(--text-base);
+	font-family: inherit;
+}
+.dash-rank-tile .lbl {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	display: block;
+}
+.dash-rank-tile .v {
+	font-family: var(--font-mono);
+	font-size: 17px;
+	font-weight: 700;
+	color: var(--text-base);
+	letter-spacing: -0.01em;
+	margin-top: 2px;
+	display: block;
+}
+.dash-rank-tile .v.acc {
+	color: var(--laurel);
+}
+.dash-rank-tile .sub {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	color: var(--text-muted);
+	letter-spacing: 0.02em;
+	margin-top: 2px;
+	display: block;
+}
+
+/* ─── Oracle insight ─── */
+.dash-oracle {
+	padding: 14px 14px;
+	background: color-mix(in srgb, var(--laurel) 4%, transparent);
+	border: 1px solid color-mix(in srgb, var(--laurel) 18%, transparent);
+	border-radius: 12px;
+}
+.dash-oracle .lbl {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--laurel);
+	margin-bottom: 6px;
+	display: block;
+}
+.dash-oracle .q {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	font-size: var(--text-h3);
+	line-height: 1.3;
+	color: var(--text-base);
+	margin: 0;
+}
+.dash-oracle .sub {
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	color: var(--text-muted);
+	margin-top: 6px;
+	display: block;
+}
+
+/* ─── Achievement ─── */
+.dash-achv {
+	appearance: none;
+	border: 1px solid var(--border-base);
+	background: var(--bg-surface);
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 10px 12px;
+	border-radius: 12px;
+	cursor: pointer;
+	font-family: inherit;
+	color: var(--text-base);
+	text-align: left;
+}
+.dash-achv:hover {
+	border-color: var(--border-strong);
+}
+.dash-achv .em {
+	width: 36px;
+	height: 36px;
+	border-radius: 50%;
+	background: radial-gradient(circle at 30% 30%, rgba(80, 80, 86, 0.85), rgba(28, 28, 32, 0.95));
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-size: var(--text-h3);
+	color: rgba(242, 236, 220, 0.55);
+	flex-shrink: 0;
+}
+.dash-achv .body {
+	flex: 1;
+	min-width: 0;
+}
+.dash-achv .name {
+	font-size: var(--text-body-sm);
+	font-weight: 600;
+	color: var(--text-base);
+}
+.dash-achv .progress {
+	height: 4px;
+	background: color-mix(in srgb, var(--parchment) 6%, transparent);
+	border-radius: 999px;
+	margin-top: 5px;
+	position: relative;
+	overflow: hidden;
+}
+.dash-achv .progress .fill {
+	position: absolute;
+	inset: 0;
+	right: auto;
+	background: var(--laurel);
+	border-radius: 999px;
+}
+.dash-achv .pct {
+	font-family: var(--font-mono);
+	font-size: var(--text-eyebrow);
+	color: var(--text-muted);
+	margin-top: 4px;
+	letter-spacing: 0.05em;
+}
+
+/* ─── Disclosure foldouts ─── */
+.dash-disclosure {
+	margin-top: 14px;
+	border-top: 1px solid var(--border-base);
+}
+.dash-disclosure summary {
+	list-style: none;
+	cursor: pointer;
+	padding: 14px 18px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.dash-disclosure summary::-webkit-details-marker {
+	display: none;
+}
+.dash-disclosure summary svg {
+	transition: transform 180ms var(--ease-vici);
+}
+.dash-disclosure[open] summary svg {
+	transform: rotate(90deg);
+}
+.dash-disclosure summary:hover {
+	color: var(--text-base);
+}
+.dash-disclosure-body {
+	padding: 6px 18px 16px;
+}
+
+.dash-rival {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px;
+	background: var(--bg-surface);
+	border: 1px solid var(--border-base);
+	border-radius: 12px;
+}
+.dash-rival .av {
+	width: 36px;
+	height: 36px;
+	border-radius: 999px;
+	background: linear-gradient(135deg, oklch(0.48 0.1 60), oklch(0.3 0.06 60));
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	font-family: var(--font-sans, inherit);
+	font-size: var(--text-eyebrow);
+	font-weight: 700;
+	color: var(--parchment);
+	flex-shrink: 0;
+}
+.dash-rival .meta {
+	flex: 1;
+	min-width: 0;
+}
+.dash-rival .name {
+	font-size: var(--text-body-sm);
+	font-weight: 600;
+	color: var(--text-base);
+}
+.dash-rival .gap {
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	color: var(--text-muted);
+	margin-top: 2px;
+	display: block;
+}
+.dash-rival .acc-num {
+	font-family: var(--font-mono);
+	font-size: var(--text-h3);
+	font-weight: 700;
+	color: var(--laurel);
+}
+
+.dash-suggest-q {
+	font-size: var(--text-body-sm);
+	color: var(--text-base);
+	margin: 0 0 10px;
+	line-height: 1.5;
+}
+.dash-suggest-cta {
+	appearance: none;
+	border: 1px solid var(--border-base);
+	background: color-mix(in srgb, var(--laurel) 6%, transparent);
+	color: var(--laurel);
+	padding: 8px 14px;
+	border-radius: 999px;
+	font-family: inherit;
+	font-size: var(--text-sub);
+	font-weight: 600;
+	cursor: pointer;
+}
+.dash-suggest-cta:hover {
+	background: color-mix(in srgb, var(--laurel) 12%, transparent);
 }
