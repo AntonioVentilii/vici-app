@@ -87,8 +87,10 @@
 	);
 	const catColor = $derived(tagColor(resolvedCategory));
 
-	// Both faces are always rendered; an opacity crossfade swaps which
-	// is visible (no true-3D `rotateY` flip).
+	// Both faces are always rendered; a 3D `rotateY(180deg)` on the
+	// flipper element swaps which face is visible. `.flow-face` has
+	// `backface-visibility: hidden` so the hidden face is culled mid-
+	// rotation.
 	let flipped = $state(false);
 
 	// Drag state — raw deltas, no Spring. Plain `{x, y, dragging}`
@@ -461,254 +463,252 @@
 		ontouchmove={onPointerMove}
 		ontouchstart={onPointerDown}
 	>
-		<!-- ── FRONT FACE ─────────────────────────────────────── -->
-		<div
-			style:opacity={flipped ? 0 : 1}
-			style:pointer-events={flipped ? 'none' : 'auto'}
-			style:transition={`opacity 180ms cubic-bezier(0.22, 1, 0.36, 1) ${flipped ? '0ms' : '180ms'}`}
-			style:--cat-color={catColor}
-			class="flow-face flow-face-front"
-			aria-hidden={flipped}
-		>
-			<header
-				style:background={headBackground}
-				style:border-bottom-color={headBorder}
-				class="flow-head"
+		<div class="flow-flipper" class:is-flipped={flipped}>
+			<!-- ── FRONT FACE ─────────────────────────────────────── -->
+			<div
+				style:pointer-events={flipped ? 'none' : 'auto'}
+				style:--cat-color={catColor}
+				class="flow-face flow-face-front"
+				aria-hidden={flipped}
 			>
-				<div class="flow-head-row">
-					<div class="flow-head-tags">
-						<span style:color={catColor} class="flow-cat-tag allcaps">
-							{resolvedCategory}
-							{#if wcSuffixKey}
-								<span class="flow-cat-live">
-									· {t({ locale: $localeStore, key: wcSuffixKey })}
+				<header
+					style:background={headBackground}
+					style:border-bottom-color={headBorder}
+					class="flow-head"
+				>
+					<div class="flow-head-row">
+						<div class="flow-head-tags">
+							<span style:color={catColor} class="flow-cat-tag allcaps">
+								{resolvedCategory}
+								{#if wcSuffixKey}
+									<span class="flow-cat-live">
+										· {t({ locale: $localeStore, key: wcSuffixKey })}
+									</span>
+								{/if}
+							</span>
+							{#if daysLeft > 0}
+								<span
+									class="flow-days num"
+									class:is-soon={daysLeftUrgency === 'soon'}
+									class:is-urgent={daysLeftUrgency === 'urgent'}
+									aria-label={t({
+										locale: $localeStore,
+										key: 'card.days_left_aria',
+										params: { days: daysLeft }
+									})}
+								>
+									{daysLeft}d
 								</span>
 							{/if}
-						</span>
-						{#if daysLeft > 0}
-							<span
-								class="flow-days num"
-								class:is-soon={daysLeftUrgency === 'soon'}
-								class:is-urgent={daysLeftUrgency === 'urgent'}
-								aria-label={t({
-									locale: $localeStore,
-									key: 'card.days_left_aria',
-									params: { days: daysLeft }
-								})}
-							>
-								{daysLeft}d
-							</span>
-						{/if}
+						</div>
+						<ConsensusCompass size={42} yesProbability={market.yesProbability} />
 					</div>
-					<ConsensusCompass size={42} yesProbability={market.yesProbability} />
-				</div>
 
-				{#if showPriorOnFront && priorCall}
-					<p
-						class="flow-whynow flow-whynow-prior"
-						class:is-no={priorCall.side === 'NO'}
-						class:is-yes={priorCall.side === 'YES'}
-					>
-						<span class="flow-whynow-dot" aria-hidden="true"></span>
-						{t({ locale: $localeStore, key: 'card.you_called_eyebrow' })}
-						<strong>{priorCall.side}</strong> · {priorCall.when}
-					</p>
-				{:else if whyNowText}
-					<p class="flow-whynow">
-						<span class="flow-whynow-dot" aria-hidden="true"></span>
-						{whyNowText}
-					</p>
-				{/if}
+					{#if showPriorOnFront && priorCall}
+						<p
+							class="flow-whynow flow-whynow-prior"
+							class:is-no={priorCall.side === 'NO'}
+							class:is-yes={priorCall.side === 'YES'}
+						>
+							<span class="flow-whynow-dot" aria-hidden="true"></span>
+							{t({ locale: $localeStore, key: 'card.you_called_eyebrow' })}
+							<strong>{priorCall.side}</strong> · {priorCall.when}
+						</p>
+					{:else if whyNowText}
+						<p class="flow-whynow">
+							<span class="flow-whynow-dot" aria-hidden="true"></span>
+							{whyNowText}
+						</p>
+					{/if}
 
-				<h2 class="flow-card-title">{market.title}</h2>
-				{#if subtitleText}
-					<p class="flow-card-sub serif-italic acc">{subtitleText}</p>
-				{/if}
+					<h2 class="flow-card-title">{market.title}</h2>
+					{#if subtitleText}
+						<p class="flow-card-sub serif-italic acc">{subtitleText}</p>
+					{/if}
 
-				<!-- Live callers pill — green-dot live indicator + dynamic
+					<!-- Live callers pill — green-dot live indicator + dynamic
 				     count. Suppressed when a `priorCall` eyebrow or a
 				     curated `metadata.whyNow` line already occupies the
 				     same beat above the title. Until a live presence
 				     service ships, the count is a deterministic
 				     placeholder hashed off `market.id` so the value is
 				     stable across renders. -->
-				{#if !showPriorOnFront && !whyNowText}
-					<span class="flow-callers-live num">
-						<span class="flow-callers-dot" aria-hidden="true"></span>
-						{t({
-							locale: $localeStore,
-							key: 'card.callers_last_hour',
-							params: { count: callersLastHour }
-						})}
-					</span>
-				{/if}
-			</header>
+					{#if !showPriorOnFront && !whyNowText}
+						<span class="flow-callers-live num">
+							<span class="flow-callers-dot" aria-hidden="true"></span>
+							{t({
+								locale: $localeStore,
+								key: 'card.callers_last_hour',
+								params: { count: callersLastHour }
+							})}
+						</span>
+					{/if}
+				</header>
 
-			<div class="flow-body">
-				<!-- Friends social proof + live momentum. The avatar
+				<div class="flow-body">
+					<!-- Friends social proof + live momentum. The avatar
 				     stack always renders (4 seeded decorative circles);
 				     the trailing text swaps between
 				       (a) `N friends YES · M NO`        — followedLean
 				       (b) `K predicting · +D today`      — predictors-count fallback
 				       (c) empty                          — neither available -->
-				<div class="flow-social num">
-					<SeededAvatarStack borderColor="var(--bg-popover)" size={18} />
-					{#if followedYes !== undefined && followedYes > 0}
-						<span class="flow-followed-lean">{followedLeanText}</span>
-					{:else if predictorsCount > 0}
-						<span>
-							{t({
-								locale: $localeStore,
-								key: 'card.predicting_count',
-								params: { count: predictorsCount.toLocaleString() }
-							})}
-							<span class="flow-momentum-sep" aria-hidden="true">·</span>
-							<span class="flow-momentum-delta text-yes">
+					<div class="flow-social num">
+						<SeededAvatarStack borderColor="var(--bg-popover)" size={18} />
+						{#if followedYes !== undefined && followedYes > 0}
+							<span class="flow-followed-lean">{followedLeanText}</span>
+						{:else if predictorsCount > 0}
+							<span>
 								{t({
 									locale: $localeStore,
-									key: 'card.momentum_delta',
-									params: { count: momentumDelta }
+									key: 'card.predicting_count',
+									params: { count: predictorsCount.toLocaleString() }
 								})}
+								<span class="flow-momentum-sep" aria-hidden="true">·</span>
+								<span class="flow-momentum-delta text-yes">
+									{t({
+										locale: $localeStore,
+										key: 'card.momentum_delta',
+										params: { count: momentumDelta }
+									})}
+								</span>
 							</span>
-						</span>
-					{/if}
-				</div>
+						{/if}
+					</div>
 
-				<!-- Edge-to-edge market artwork. No padding around the
+					<!-- Edge-to-edge market artwork. No padding around the
 				     frame — extends across the card body (`bleed` mode). -->
-				<div class="flow-art-bleed">
-					<MarketArtwork
-						bleed
-						category={resolvedCategory}
-						seed={market.id}
-						size={420}
-						state="neutral"
-					/>
-				</div>
+					<div class="flow-art-bleed">
+						<MarketArtwork
+							bleed
+							category={resolvedCategory}
+							seed={market.id}
+							size={420}
+							state="neutral"
+						/>
+					</div>
 
-				<!-- Probability split — single bar with payout labels.
+					<!-- Probability split — single bar with payout labels.
 				     Replaces the dual-box layout to compress space and
 				     surface upside without the misleading red 85% box. -->
-				<div class="flow-probs">
-					<div class="flow-probs-row">
-						<div class="flow-probs-side flow-probs-side-no">
-							<span class="flow-probs-pct num">{noPct}%</span>
-							<span class="flow-probs-label text-no">NO</span>
+					<div class="flow-probs">
+						<div class="flow-probs-row">
+							<div class="flow-probs-side flow-probs-side-no">
+								<span class="flow-probs-pct num">{noPct}%</span>
+								<span class="flow-probs-label text-no">NO</span>
+							</div>
+							<div class="flow-probs-track" aria-hidden="true">
+								<div style:width="{noPct}%" class="flow-probs-fill-no"></div>
+								<div style:width="{crowdPct}%" class="flow-probs-fill-yes"></div>
+							</div>
+							<div class="flow-probs-side flow-probs-side-yes">
+								<span class="flow-probs-label text-yes">YES</span>
+								<span class="flow-probs-pct num">{crowdPct}%</span>
+							</div>
 						</div>
-						<div class="flow-probs-track" aria-hidden="true">
-							<div style:width="{noPct}%" class="flow-probs-fill-no"></div>
-							<div style:width="{crowdPct}%" class="flow-probs-fill-yes"></div>
-						</div>
-						<div class="flow-probs-side flow-probs-side-yes">
-							<span class="flow-probs-label text-yes">YES</span>
-							<span class="flow-probs-pct num">{crowdPct}%</span>
+						<div class="flow-probs-action-row">
+							<div class="flow-probs-action flow-probs-action-no">
+								<span class="flow-probs-arrow text-no" aria-hidden="true">←</span>
+								<span class="flow-probs-payout num">
+									+{winNo}
+									<span class="flow-probs-payout-unit">VXP</span>
+								</span>
+								<span class="flow-probs-role allcaps">
+									{yesIsFav
+										? t({ locale: $localeStore, key: 'card.long_shot' })
+										: t({ locale: $localeStore, key: 'card.favorite' })}
+								</span>
+							</div>
+							<div class="flow-probs-action flow-probs-action-yes">
+								<span class="flow-probs-role allcaps">
+									{yesIsFav
+										? t({ locale: $localeStore, key: 'card.favorite' })
+										: t({ locale: $localeStore, key: 'card.long_shot' })}
+								</span>
+								<span class="flow-probs-payout num">
+									+{winYes}
+									<span class="flow-probs-payout-unit">VXP</span>
+								</span>
+								<span class="flow-probs-arrow text-yes" aria-hidden="true">→</span>
+							</div>
 						</div>
 					</div>
-					<div class="flow-probs-action-row">
-						<div class="flow-probs-action flow-probs-action-no">
-							<span class="flow-probs-arrow text-no" aria-hidden="true">←</span>
-							<span class="flow-probs-payout num">
-								+{winNo}
-								<span class="flow-probs-payout-unit">VXP</span>
-							</span>
-							<span class="flow-probs-role allcaps">
-								{yesIsFav
-									? t({ locale: $localeStore, key: 'card.long_shot' })
-									: t({ locale: $localeStore, key: 'card.favorite' })}
-							</span>
-						</div>
-						<div class="flow-probs-action flow-probs-action-yes">
-							<span class="flow-probs-role allcaps">
-								{yesIsFav
-									? t({ locale: $localeStore, key: 'card.favorite' })
-									: t({ locale: $localeStore, key: 'card.long_shot' })}
-							</span>
-							<span class="flow-probs-payout num">
-								+{winYes}
-								<span class="flow-probs-payout-unit">VXP</span>
-							</span>
-							<span class="flow-probs-arrow text-yes" aria-hidden="true">→</span>
-						</div>
+
+					<!-- Foot — SIZE · VXP chip + tap hint. -->
+					<div class="flow-foot num">
+						<span class="flow-foot-size">
+							{t({
+								locale: $localeStore,
+								key: 'card.size_vxp',
+								params: { stake: sizeStake }
+							})}
+						</span>
+						<span class="flow-foot-hint allcaps">
+							{t({ locale: $localeStore, key: 'card.tap_depth' })}
+						</span>
 					</div>
 				</div>
 
-				<!-- Foot — SIZE · VXP chip + tap hint. -->
-				<div class="flow-foot num">
-					<span class="flow-foot-size">
-						{t({
-							locale: $localeStore,
-							key: 'card.size_vxp',
-							params: { stake: sizeStake }
-						})}
-					</span>
-					<span class="flow-foot-hint allcaps">
-						{t({ locale: $localeStore, key: 'card.tap_depth' })}
-					</span>
-				</div>
-			</div>
-
-			<!-- Full-card swipe overlays — large YES/NO/SKIP text
+				<!-- Full-card swipe overlays — large YES/NO/SKIP text
 			     overlays that fade in with drag progress. -->
-			<div
-				style:opacity={signedIn ? overlayYes : overlayYes * 0.5}
-				class="flow-overlay flow-overlay-yes"
-				aria-hidden="true"
-			>
-				{t({ locale: $localeStore, key: 'flow.action.yes' })}
+				<div
+					style:opacity={signedIn ? overlayYes : overlayYes * 0.5}
+					class="flow-overlay flow-overlay-yes"
+					aria-hidden="true"
+				>
+					{t({ locale: $localeStore, key: 'flow.action.yes' })}
+				</div>
+				<div
+					style:opacity={signedIn ? overlayNo : overlayNo * 0.5}
+					class="flow-overlay flow-overlay-no"
+					aria-hidden="true"
+				>
+					{t({ locale: $localeStore, key: 'flow.action.no' })}
+				</div>
+				<div style:opacity={overlaySkip} class="flow-overlay flow-overlay-skip" aria-hidden="true">
+					{t({ locale: $localeStore, key: 'flow.action.skip' })}
+				</div>
 			</div>
-			<div
-				style:opacity={signedIn ? overlayNo : overlayNo * 0.5}
-				class="flow-overlay flow-overlay-no"
-				aria-hidden="true"
-			>
-				{t({ locale: $localeStore, key: 'flow.action.no' })}
-			</div>
-			<div style:opacity={overlaySkip} class="flow-overlay flow-overlay-skip" aria-hidden="true">
-				{t({ locale: $localeStore, key: 'flow.action.skip' })}
-			</div>
-		</div>
 
-		<!-- ── BACK FACE ─────────────────────────────────────── -->
-		<div
-			style:opacity={flipped ? 1 : 0}
-			style:pointer-events={flipped ? 'auto' : 'none'}
-			style:transition={`opacity 180ms cubic-bezier(0.22, 1, 0.36, 1) ${flipped ? '180ms' : '0ms'}`}
-			style:background={backBackground}
-			style:--cat-color={catColor}
-			class="flow-face flow-face-back"
-			aria-hidden={!flipped}
-			onclick={closeBackOnTap}
-		>
-			<FlowCardBack
-				category={resolvedCategory}
-				{categoryAcc}
-				{crowdPct}
-				{crowdSide}
-				{followedLean}
-				interactive={flipped}
-				{market}
-				{metadata}
-				onClose={closeBack}
-				{onStakeChange}
-				{priorCall}
-				{tradeAmount}
-			/>
+			<!-- ── BACK FACE ─────────────────────────────────────── -->
+			<div
+				style:pointer-events={flipped ? 'auto' : 'none'}
+				style:background={backBackground}
+				style:--cat-color={catColor}
+				class="flow-face flow-face-back"
+				aria-hidden={!flipped}
+				onclick={closeBackOnTap}
+			>
+				<FlowCardBack
+					category={resolvedCategory}
+					{categoryAcc}
+					{crowdPct}
+					{crowdSide}
+					{followedLean}
+					interactive={flipped}
+					{market}
+					{metadata}
+					onClose={closeBack}
+					{onStakeChange}
+					{priorCall}
+					{tradeAmount}
+				/>
 
-			<!-- Back-face swipe still commits a call — horizontal stamps
+				<!-- Back-face swipe still commits a call — horizontal stamps
 			     mirror the front overlays. -->
-			<div
-				style:opacity={signedIn ? overlayYes : overlayYes * 0.5}
-				class="flow-overlay flow-overlay-yes flow-overlay-back"
-				aria-hidden="true"
-			>
-				{t({ locale: $localeStore, key: 'flow.action.yes' })}
-			</div>
-			<div
-				style:opacity={signedIn ? overlayNo : overlayNo * 0.5}
-				class="flow-overlay flow-overlay-no flow-overlay-back"
-				aria-hidden="true"
-			>
-				{t({ locale: $localeStore, key: 'flow.action.no' })}
+				<div
+					style:opacity={signedIn ? overlayYes : overlayYes * 0.5}
+					class="flow-overlay flow-overlay-yes flow-overlay-back"
+					aria-hidden="true"
+				>
+					{t({ locale: $localeStore, key: 'flow.action.yes' })}
+				</div>
+				<div
+					style:opacity={signedIn ? overlayNo : overlayNo * 0.5}
+					class="flow-overlay flow-overlay-no flow-overlay-back"
+					aria-hidden="true"
+				>
+					{t({ locale: $localeStore, key: 'flow.action.no' })}
+				</div>
 			</div>
 		</div>
 	</div>
@@ -722,10 +722,7 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
-		/* The 3D context the inner faces render against. We don't
-		   apply a `rotateY` (the flip is opacity-only) but the
-		   perspective still subtly affects subpixel rendering during
-		   the crossfade — without it the swap can read flatter. */
+		/* Depth context for the 3D rotateY on `.flow-flipper`. */
 		perspective: 1400px;
 	}
 
@@ -760,16 +757,28 @@
 		transition: filter 280ms var(--ease-vici);
 	}
 
-	/* Both faces share the same absolutely-positioned slot. Opacity
-	   drives which is visible — no `rotateY`. The delayed-opacity
-	   pattern keeps the back from flashing through the front during
-	   the swap (see inline `transition` on each face). The
-	   wrapper's `perspective` above keeps the swap rendering with
-	   the same depth context as a true 3D flip. */
+	/* 3D flip container — front and back faces share the same slot;
+	   rotating the flipper 180° on Y reveals the back. `preserve-3d`
+	   keeps the children in the same 3D space so backface-visibility
+	   on the faces actually culls the hidden one. */
+	.flow-flipper {
+		position: absolute;
+		inset: 0;
+		transform-style: preserve-3d;
+		transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.flow-flipper.is-flipped {
+		transform: rotateY(180deg);
+	}
+
 	.flow-face {
 		position: absolute;
 		inset: 0;
 		overflow: hidden;
+		/* Cull the away-facing side mid-rotation so the front doesn't
+		   ghost through the back (and vice versa). */
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
 		/* 22 px corner radius — softer than the default card radius
 		   for the swipeable Flow surface. */
 		border-radius: 22px;
@@ -1171,9 +1180,17 @@
 	.flow-face-back {
 		display: flex;
 		flex-direction: column;
+		/* Pre-rotated so the flipper's 180° rotateY brings it face-on. */
+		transform: rotateY(180deg);
 		border: 1px solid var(--border-strong);
 		box-shadow:
 			0 24px 52px rgba(0, 0, 0, 0.24),
 			0 12px 24px rgba(0, 0, 0, 0.18);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.flow-flipper {
+			transition: none;
+		}
 	}
 </style>
