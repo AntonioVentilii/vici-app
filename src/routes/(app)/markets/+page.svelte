@@ -84,7 +84,10 @@
 	<title>{t({ locale: $localeStore, key: 'nav.markets' })} · VICI</title>
 </svelte:head>
 
-<div class="markets-page screen-scroll">
+<!-- The scroll viewport is owned by `(app)/+layout.svelte`'s
+     `<main class="screen-scroll">` — adding `screen-scroll` here would
+     nest a second scroller and double-stack the bottom-nav clearance. -->
+<div class="markets-page">
 	<header class="markets-appbar">
 		<h2 class="markets-title">{t({ locale: $localeStore, key: 'nav.markets' })}</h2>
 	</header>

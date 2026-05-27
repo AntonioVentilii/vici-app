@@ -36,7 +36,17 @@
 	// Subscriptions inside re-warm in the background on sign-in,
 	// balance-domain switch, featured-event toggle, or interest
 	// edits — components never block on the rebuild.
-	onMount(() => initFlowPrewarm());
+	//
+	// Gated on `$userSignedIn` so anonymous visitors on the public
+	// `/markets` browse surface don't kick off Flow's tag / metadata /
+	// queue fetches. `initFlowPrewarm` is idempotent (guarded by an
+	// internal `initialized` flag) so re-firing on the signed-out →
+	// signed-in transition is a no-op past the first call.
+	$effect(() => {
+		if ($userSignedIn) {
+			initFlowPrewarm();
+		}
+	});
 
 	// Viewport architecture parity with the prototype: inside the
 	// authenticated `(app)` shell the document doesn't scroll. We tag
