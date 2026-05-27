@@ -5,17 +5,15 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import Header from '$lib/components/layout/Header.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
-	import Banner from '$lib/components/ui/Banner.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import {
 		REFERRAL_CODE_REGEX,
 		REFERRAL_VXP_BONUS_BASE_UNITS
 	} from '$lib/constants/referral.constants';
-	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
 	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
@@ -39,7 +37,20 @@
 	// edits — components never block on the rebuild.
 	onMount(() => initFlowPrewarm());
 
-	const isFlowPage = $derived(page.url.pathname === AppPath.Flow);
+	// Viewport architecture parity with the prototype: inside the
+	// authenticated `(app)` shell the document doesn't scroll. We tag
+	// <html> with `data-app="1"` so `app.css` can lock `html`/`body`
+	// height + `body { overflow: hidden }` only for these routes. The
+	// scroll viewport is the `.screen-scroll` `<main>` below. Marketing
+	// routes (`/`, `/about`, `/welcome`, `/signin`, `/signup`,
+	// `/info/*`) live outside this layout and keep natural body scroll.
+	onMount(() => {
+		document.documentElement.dataset.app = '1';
+
+		return () => {
+			delete document.documentElement.dataset.app;
+		};
+	});
 
 	// Market detail (`/markets/[id]`) is rendered as a single linear
 	// mobile-first surface with its own sticky bottom CTA bar — the
@@ -379,23 +390,17 @@
 	});
 </script>
 
-<div class="relative isolate flex min-h-dvh flex-col">
-	<div class="hidden md:block">
-		<Banner />
-	</div>
-
-	<div class="hidden md:block">
-		<Header />
-	</div>
-
-	<main class="flex-1 {isFlowPage || isMarketDetailPage ? 'md:pb-0' : 'pb-20 md:pb-0'}">
+<div class="relative isolate flex h-full flex-col">
+	<!--
+		Desktop sidebar / banner are intentionally dropped — prototype is
+		mobile-only and the user has locked layout parity for this PR. The
+		shell now hosts the same `MobileAppBar` pattern at every viewport
+		width; each page mounts its own appbar.
+	-->
+	<main class="screen-scroll">
 		{#key page.url.pathname}
 			<div
-				class={isFlowPage
-					? 'md:container md:mx-auto md:px-4 md:py-8'
-					: isMarketDetailPage
-						? 'mx-auto w-full max-w-[36rem] md:container md:px-4 md:py-8'
-						: 'container mx-auto px-4 py-4 md:py-8'}
+				class="mx-auto w-full max-w-[28rem]"
 				data-tid={TestId.AppMain}
 				in:fade={{ duration: 100, delay: 100 }}
 				out:fade={{ duration: 100 }}

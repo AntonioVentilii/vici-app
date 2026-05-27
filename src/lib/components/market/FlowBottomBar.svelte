@@ -118,7 +118,10 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.6rem;
-		padding: 0.55rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.65rem);
+		/* Reserve clearance for the floating pillnav (prototype parity
+		 * — `app.css:2853-2861`). `--bn-clear` resolves to
+		 * `96px + safe-area-inset-bottom`. */
+		padding: 0.55rem 1rem var(--bn-clear);
 		background: linear-gradient(
 			to top,
 			color-mix(in srgb, var(--bg-base) 98%, transparent) 56%,

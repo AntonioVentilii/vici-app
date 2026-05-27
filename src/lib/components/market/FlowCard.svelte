@@ -31,6 +31,10 @@
 		position?: Position;
 		tradeAmount: string;
 		interactive?: boolean;
+		// When true, the parent has paused the deck (e.g. a sheet is
+		// open) and the card desaturates / dims its faces — prototype
+		// parity (`app.css:362-370`).
+		locked?: boolean;
 		// Generative-artwork category. FlowMode resolves this from the
 		// market's primary tag; FlowCard treats it as opaque and falls back
 		// to a hash-derived bucket when the market has no tags.
@@ -58,6 +62,7 @@
 		position,
 		tradeAmount,
 		interactive = true,
+		locked = false,
 		category,
 		subtitle,
 		committedAction = null,
@@ -426,6 +431,7 @@
 		class:is-committed={isCommitted}
 		class:is-flipped={flipped}
 		class:is-grabbing={dragging}
+		class:is-locked={locked}
 		class:is-static={!interactive}
 		onmousedown={onPointerDown}
 		onmouseleave={onPointerUp}
@@ -703,6 +709,14 @@
 	.flow-card.is-committed {
 		cursor: default;
 		pointer-events: none;
+	}
+
+	/* Locked state — parent (e.g. FlowMode) flips `locked` when a sheet
+	   is open and gestures should pause. Both faces desaturate / dim
+	   per the prototype (`app.css:362-370`). */
+	.flow-card.is-locked .flow-face {
+		filter: brightness(0.92) saturate(0.9);
+		transition: filter 280ms var(--ease-vici);
 	}
 
 	/* Both faces share the same absolutely-positioned slot. Opacity

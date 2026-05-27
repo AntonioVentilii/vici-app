@@ -369,7 +369,7 @@
 
 <style lang="postcss">
 	.leagues-page {
-		padding: 0 1rem;
+		padding: 0 1.25rem;
 	}
 
 	.leagues-section {

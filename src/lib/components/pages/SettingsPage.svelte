@@ -865,9 +865,7 @@
 
 <style lang="postcss">
 	.settings-page {
-		max-width: 40rem;
-		margin: 0 auto;
-		padding-bottom: 5rem;
+		padding: 0 1.25rem 6rem;
 	}
 
 	.settings-appbar {

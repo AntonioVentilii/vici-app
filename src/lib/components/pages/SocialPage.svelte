@@ -119,7 +119,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.85rem;
-		padding-bottom: 6rem;
+		padding: 0 1.25rem 6rem;
 	}
 
 	/* Underline-active tab strip — matches the design source's
