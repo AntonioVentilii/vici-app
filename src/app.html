@@ -20,7 +20,17 @@
 		/>
 		<link rel="manifest" href="%sveltekit.assets%/manifest.webmanifest" />
 
-		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<!--
+			`minimum-scale=1` blocks pinch-zoom-OUT below device width — the app
+			is tuned to device-width and zooming out just exposes background
+			chrome. We intentionally do NOT set `maximum-scale` or
+			`user-scalable=no` so users with low vision can still zoom IN on
+			text content (Terms, Privacy, etc.).
+		-->
+		<meta
+			name="viewport"
+			content="width=device-width, initial-scale=1, minimum-scale=1, viewport-fit=cover"
+		/>
 		<meta name="application-name" content="VICI" />
 		<meta name="apple-mobile-web-app-title" content="VICI" />
 		<meta name="apple-mobile-web-app-capable" content="yes" />
