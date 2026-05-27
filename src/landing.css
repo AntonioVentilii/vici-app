@@ -1030,6 +1030,12 @@
 	background: rgba(20, 18, 15, 0.92);
 	box-shadow: 0 14px 32px -16px rgba(0, 0, 0, 0.55);
 }
+[data-theme='light'] .lp-nav.is-scrolled .lp-pill {
+	background: rgba(242, 236, 220, 0.92);
+}
+[data-theme='peach'] .lp-nav.is-scrolled .lp-pill {
+	background: rgba(250, 224, 204, 0.95);
+}
 .lp-pill.open {
 	border-radius: 28px;
 	max-width: 460px;

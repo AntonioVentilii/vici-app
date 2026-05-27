@@ -19,6 +19,7 @@
 	} from '$lib/constants/locale.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { theme } from '$lib/stores/theme.store';
 	import { t } from '$lib/utils/i18n.utils';
 
 	const sections = ['markets', 'flow', 'leaderboard', 'trust'] as const;
@@ -33,7 +34,6 @@
 	let menuOpen = $state(false);
 	let langOpen = $state(false);
 	let dnavLangOpen = $state(false);
-	let theme = $state<'dark' | 'light' | 'peach'>('dark');
 	let langRef: HTMLDivElement | null = $state(null);
 	let langPopRef: HTMLUListElement | null = $state(null);
 	let dnavLangRef: HTMLDivElement | null = $state(null);
@@ -43,14 +43,10 @@
 
 	onMount(() => {
 		if (typeof document !== 'undefined') {
-			try {
-				theme = (localStorage.getItem('vici.theme') as 'dark' | 'light' | 'peach') ?? 'dark';
-			} catch {
-				theme = 'dark';
-			}
-
+			// `data-theme` is owned by the canonical theme store + the
+			// no-FOUC inline script in `app.html`; we only stamp the brand
+			// accent here.
 			document.documentElement.setAttribute('data-accent', 'laurel');
-			document.documentElement.setAttribute('data-theme', theme);
 		}
 
 		const onScroll = () => {
@@ -89,20 +85,6 @@
 				io.disconnect();
 			}
 		};
-	});
-
-	$effect(() => {
-		if (typeof document === 'undefined') {
-			return;
-		}
-
-		document.documentElement.setAttribute('data-theme', theme);
-
-		try {
-			localStorage.setItem('vici.theme', theme);
-		} catch {
-			// ignore
-		}
 	});
 
 	$effect(() => {
@@ -303,11 +285,11 @@
 				{#each themeOpts as o (o.id)}
 					<button
 						class="dnav-theme-dot dnav-app-{o.id}"
-						class:active={theme === o.id}
-						aria-checked={theme === o.id}
+						class:active={$theme === o.id}
+						aria-checked={$theme === o.id}
 						aria-label={o.label}
 						data-tooltip={o.label.toUpperCase()}
-						onclick={() => (theme = o.id)}
+						onclick={() => theme.set(o.id)}
 						role="radio"
 						type="button"
 					>
@@ -412,11 +394,11 @@
 							{#each themeOpts as o (o.id)}
 								<button
 									class="lp-appearance-dot lp-app-{o.id}"
-									class:active={theme === o.id}
-									aria-checked={theme === o.id}
+									class:active={$theme === o.id}
+									aria-checked={$theme === o.id}
 									aria-label={o.label}
 									data-tooltip={o.label.toUpperCase()}
-									onclick={() => (theme = o.id)}
+									onclick={() => theme.set(o.id)}
 									role="radio"
 									type="button"
 								>
