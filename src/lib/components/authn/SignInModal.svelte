@@ -26,9 +26,9 @@
 			>
 				V
 			</div>
-			<h1 class="font-display text-foreground text-3xl font-semibold tracking-tight">
+			<h2 class="font-display text-foreground text-3xl font-semibold tracking-tight">
 				VENI. VIDI. <span class="text-primary">VICI.</span>
-			</h1>
+			</h2>
 		</div>
 
 		<div class="border-border bg-card w-full max-w-sm rounded-2xl border p-6">
