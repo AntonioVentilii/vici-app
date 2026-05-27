@@ -1483,6 +1483,14 @@
 		backdrop-filter: blur(6px);
 	}
 
+	/* Hide the floating mobile pill-nav while a friends sheet is open —
+	 * it sits at the same lower edge as the sheet and clips the close /
+	 * primary CTA on short viewports (e.g. with the soft keyboard
+	 * open). Matches the behaviour of the shared `BottomSheet`. */
+	:global(body:has(.friends-sheet-scrim) .pillnav-wrap) {
+		display: none;
+	}
+
 	.friends-sheet {
 		display: flex;
 		flex-direction: column;
