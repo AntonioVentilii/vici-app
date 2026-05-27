@@ -38,6 +38,7 @@
 	let whyText = $state('');
 	let tags = $state<MarketTag[]>([]);
 	let suggested = $state(false);
+	let subtitle = $state('');
 	let eventOne = $state<EventRow>({ day: '', dir: MarketEventDirection.UP, label: '' });
 	let eventTwo = $state<EventRow>({ day: '', dir: MarketEventDirection.UP, label: '' });
 	let status = $state<ButtonStatus>('enabled');
@@ -93,12 +94,14 @@
 
 	const buildInput = (): MarketMetadataInput => {
 		const why = whyText.trim();
+		const trimmedSubtitle = subtitle.trim();
 		const events = [eventFromFields(eventOne), eventFromFields(eventTwo)].filter(
 			(event): event is MarketEvent => event !== undefined
 		);
 
 		return {
 			...(why.length > 0 && { whyNow: { kind: whyKind, text: why } }),
+			...(trimmedSubtitle.length > 0 && { subtitle: trimmedSubtitle }),
 			events,
 			tags,
 			suggested
@@ -136,6 +139,7 @@
 			}
 
 			suggested = metadata?.suggested ?? false;
+			subtitle = metadata?.subtitle ?? '';
 			tags = normalizeMarketTags(metadata?.tags ?? []);
 
 			const [first, second] = metadata?.events ?? [];
@@ -190,10 +194,12 @@
 			{#if activeTab === 'showcase'}
 				<MetadataShowcaseTab
 					isAdmin={$userIsAdmin}
+					onSubtitleChange={(value) => (subtitle = value)}
 					onSuggestedChange={(value) => (suggested = value)}
 					onTagsChange={(value) => (tags = value)}
 					onWhyKindChange={(value) => (whyKind = value)}
 					onWhyTextChange={(value) => (whyText = value)}
+					{subtitle}
 					{suggested}
 					{tags}
 					{whyKind}

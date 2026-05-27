@@ -1,27 +1,11 @@
 <script lang="ts">
 	/**
 	 * Four overlapping circles seeded from
-	 * `augustus / cassandra / nero / livia`.
+	 * `augustus / cassandra / nero / livia`. Thin wrapper around
+	 * `SeededAvatarStack` so the landing markup keeps its existing
+	 * name while the actual rendering lives in the shared component.
 	 */
-	const seeds = ['augustus', 'cassandra', 'nero', 'livia'] as const;
-
-	const hueFor = (s: string): number => (s.charCodeAt(0) * 31 + s.charCodeAt(1)) % 360;
+	import SeededAvatarStack from '$lib/components/ui/SeededAvatarStack.svelte';
 </script>
 
-<div style="display:inline-flex;">
-	{#each seeds as s, i (s)}
-		<span
-			style="
-				margin-left: {i === 0 ? '0' : '-8px'};
-				z-index: {4 - i};
-				width: 22px; height: 22px; border-radius: 999px;
-				display: inline-flex; align-items: center; justify-content: center;
-				font-size: 9px; font-weight: 700; color: var(--fg);
-				border: 1.5px solid var(--bg-elevated);
-				background: linear-gradient(135deg, oklch(0.32 0.06 {hueFor(s)}), oklch(0.18 0.04 {hueFor(s)}));
-			"
-		>
-			{s.slice(0, 2).toUpperCase()}
-		</span>
-	{/each}
-</div>
+<SeededAvatarStack />

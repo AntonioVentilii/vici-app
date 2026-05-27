@@ -92,6 +92,12 @@
 	// stat on FlowEnd.
 	const sessionStartMs = Date.now();
 	let correctCallsThisSession = $state(0);
+	// Per-category call counter for this session. Drives the
+	// data-driven Oracle line on FlowEnd ("You were early on {category}")
+	// by surfacing the category the user leaned hardest into. Keyed by
+	// resolved `FlowArtCategory` so `wc` markets are counted under
+	// `wc`, not the underlying tag.
+	let sessionCategoryCalls = $state<Partial<Record<FlowArtCategory, number>>>({});
 	// `nowMs` ticks once per second while the session is in flight so
 	// the duration label updates live before the user finishes.
 	let nowMs = $state(Date.now());
@@ -246,6 +252,28 @@
 	});
 
 	const sessionAccuracy = $derived(betsCount > 0 ? correctCallsThisSession / betsCount : 0);
+
+	// Top category by call count this session. Drives the FlowEnd
+	// Oracle line ("You were early on {category}"). Ties resolve to
+	// the first key the user committed in — `Object.entries` preserves
+	// insertion order on the plain object we mutate via spread. Returns
+	// undefined when the user hasn't placed any calls yet so FlowEnd
+	// can fall back to the locale-default accent.
+	const topSessionCategory = $derived.by<FlowArtCategory | undefined>(() => {
+		let best: FlowArtCategory | undefined;
+		let bestCount = 0;
+
+		for (const [cat, count] of Object.entries(sessionCategoryCalls) as Array<
+			[FlowArtCategory, number]
+		>) {
+			if (count > bestCount) {
+				best = cat;
+				bestCount = count;
+			}
+		}
+
+		return best;
+	});
 
 	// Daily goal heuristic — until the satellite exposes a per-user
 	// daily target, default to 10 predictions/day. Progress is capped
@@ -510,6 +538,20 @@
 		betsCount += 1;
 		streak += 1;
 
+		// Tally this market under its resolved category so the FlowEnd
+		// Oracle line can spotlight whichever category the user leaned
+		// hardest into ("You were early on crypto", etc.).
+		const cat = resolveFlowCategory({
+			categoryId: primaryMarketTag(
+				(marketTagMap[currentMarket.id] ?? []) as ReadonlyArray<MarketTag>
+			),
+			marketId: currentMarket.id
+		});
+		sessionCategoryCalls = {
+			...sessionCategoryCalls,
+			[cat]: (sessionCategoryCalls[cat] ?? 0) + 1
+		};
+
 		const awarded = BASE_XP_PER_PREDICTION * comboMultiplier;
 		xp += awarded;
 		spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
@@ -649,6 +691,7 @@
 			currentIndex = 0;
 			betsCount = 0;
 			correctCallsThisSession = 0;
+			sessionCategoryCalls = {};
 			xp = 0;
 			streak = 0;
 			lastStreakShown = 0;
@@ -774,6 +817,7 @@
 			onSeePortfolio={handleSeePortfolio}
 			{sessionAccuracy}
 			{sessionDurationLabel}
+			{topSessionCategory}
 			{xp}
 		/>
 	{:else}

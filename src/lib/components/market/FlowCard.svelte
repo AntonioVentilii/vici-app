@@ -2,6 +2,7 @@
 	import ConsensusCompass from '$lib/components/market/ConsensusCompass.svelte';
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
+	import SeededAvatarStack from '$lib/components/ui/SeededAvatarStack.svelte';
 	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { lookupWcMarketSubtitle } from '$lib/constants/wc-market-subtitles.constants';
 	import { daysToKickoff } from '$lib/derived/featured-event.derived';
@@ -236,20 +237,14 @@
 		return 200 + (Math.abs(hash) % 700);
 	});
 
-	// Friends-lean avatar stack — four decorative overlapping circles.
-	// Always renders (regardless of followedLean data) as social proof.
-	// Colour seeds come from a fixed palette so the stack reads as a
-	// crowd without exposing real user data.
-	const FRIEND_AVATAR_PALETTE = ['#7E6BFF', '#FFB23C', '#4FD3A1', '#FF6B7A'] as const;
-
 	const showPriorOnFront = $derived(Boolean(priorCall));
 	const whyNowText = $derived(formatWhyNowChip(metadata?.whyNow));
 
 	// Subtitle resolution order:
 	//   1. Explicit `subtitle` prop (parent override)
-	//   2. Curated WC-market lookup (`wc-market-subtitles.constants.ts`)
-	//   3. (future) `metadata.subtitle` from the satellite once the
-	//      field ships on `MarketMetadata`
+	//   2. `metadata.subtitle` from the satellite (admin-curated)
+	//   3. Curated WC-market lookup (`wc-market-subtitles.constants.ts`)
+	//      — fallback for the tentpole markets the deck ships with
 	//   4. undefined → row is hidden
 	//
 	// The raw `market.description` is intentionally NOT used as a
@@ -258,7 +253,9 @@
 	// truncated italic ("YES if that date is the hottest daily
 	// maximum tem…") reads as a snippet rather than an editorial
 	// accent.
-	const subtitleText = $derived(subtitle ?? lookupWcMarketSubtitle(market.id));
+	const subtitleText = $derived(
+		subtitle ?? metadata?.subtitle ?? lookupWcMarketSubtitle(market.id)
+	);
 
 	// Per-card reset: clear flip + latch + drag whenever the market
 	// underneath changes (parent re-uses the slot during deck shuffle).
@@ -564,15 +561,7 @@
 				       (b) `K predicting · +D today`      — predictors-count fallback
 				       (c) empty                          — neither available -->
 				<div class="flow-social num">
-					<span class="flow-avatar-stack" aria-hidden="true">
-						{#each Array(4) as _, i (i)}
-							<span
-								style:background={FRIEND_AVATAR_PALETTE[i % FRIEND_AVATAR_PALETTE.length]}
-								style:z-index={4 - i}
-								class="flow-avatar-stack-item"
-							></span>
-						{/each}
-					</span>
+					<SeededAvatarStack borderColor="var(--bg-popover)" size={18} />
 					{#if followedYes !== undefined && followedYes > 0}
 						<span class="flow-followed-lean">{followedLeanText}</span>
 					{:else if predictorsCount > 0}
@@ -1012,22 +1001,6 @@
 		font-size: var(--t-12);
 		color: var(--text-muted);
 		letter-spacing: 0.02em;
-	}
-
-	.flow-avatar-stack {
-		display: inline-flex;
-		align-items: center;
-	}
-	.flow-avatar-stack-item {
-		display: inline-block;
-		width: 18px;
-		height: 18px;
-		border-radius: 999px;
-		border: 1.5px solid var(--bg-popover);
-		margin-left: -6px;
-	}
-	.flow-avatar-stack-item:first-child {
-		margin-left: 0;
 	}
 
 	.flow-followed-lean {

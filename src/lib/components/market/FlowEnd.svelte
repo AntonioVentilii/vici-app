@@ -6,9 +6,23 @@
 	import FlowInviteCard from '$lib/components/market/FlowInviteCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { t } from '$lib/utils/i18n.utils';
+	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
+	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import type { FlameStage } from '$lib/utils/streak.utils';
+
+	// `market.tag.{category}` keys exist across all 7 locales —
+	// reused here for the Oracle line ("You were early on {category}").
+	// Falls back to `macro` when no category dominated this session.
+	const CATEGORY_LABEL_KEYS: Record<FlowArtCategory, MessageKey> = {
+		macro: 'market.tag.macro',
+		crypto: 'market.tag.crypto',
+		sports: 'market.tag.sports',
+		politics: 'market.tag.politics',
+		tech: 'market.tag.tech',
+		culture: 'market.tag.culture',
+		wc: 'market.tag.wc'
+	};
 
 	interface Props {
 		betsCount: number;
@@ -31,6 +45,10 @@
 		// Profile archetype id — used by the SMART NUDGE card. When
 		// undefined the card falls back to a generic line.
 		archetype: string | undefined;
+		// Category the user leaned hardest into this session. Drives
+		// the Oracle line ("You were early on {category}"). Undefined
+		// when the user closed the session without placing any calls.
+		topSessionCategory?: FlowArtCategory;
 		// CTA wiring.
 		onBackToMarkets: () => void;
 		onContinueSession: () => void;
@@ -52,6 +70,7 @@
 		dailyGoalTarget,
 		dailyGoalFraction,
 		archetype,
+		topSessionCategory,
 		onBackToMarkets,
 		onContinueSession,
 		onSeePortfolio
@@ -59,6 +78,16 @@
 
 	const sessionAccPct = $derived(Math.round(sessionAccuracy * 100));
 	const dailyGoalPct = $derived(Math.round(dailyGoalFraction * 100));
+
+	// Oracle accent — name the category the user leaned hardest into
+	// this session. Falls back to "macro" when no calls were placed
+	// (zero-bet sessions still see FlowEnd via the "0 of 10" copy).
+	const oracleCategoryLabel = $derived(
+		t({
+			locale: $localeStore,
+			key: CATEGORY_LABEL_KEYS[topSessionCategory ?? 'macro']
+		})
+	);
 
 	// Smart-nudge percentile is a placeholder until the satellite
 	// surfaces a live leaderboard delta. Hardcoded as "72%" in the
@@ -113,7 +142,11 @@
 						params: { pct: sessionAccPct }
 					})}
 					<span class="serif-italic">
-						{t({ locale: $localeStore, key: 'flow.end.oracle_line_accent' })}
+						{t({
+							locale: $localeStore,
+							key: 'flow.end.oracle_line_accent',
+							params: { category: oracleCategoryLabel }
+						})}
 					</span>
 					{t({ locale: $localeStore, key: 'flow.end.oracle_line_post' })}
 				</p>
