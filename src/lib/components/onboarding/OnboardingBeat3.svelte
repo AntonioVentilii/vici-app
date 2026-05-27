@@ -1,5 +1,6 @@
 <script lang="ts">
 	import SignInProviderStack from '$lib/components/authn/SignInProviderStack.svelte';
+	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -83,13 +84,8 @@
 		{@const teamColor = team.color ?? 'var(--laurel)'}
 		<div class="ob2-summary">
 			<div class="ob2-summary-row">
-				<span
-					style:background="{teamColor}22"
-					style:color={teamColor}
-					style:font-size="18px"
-					class="ob2-summary-flag"
-				>
-					{team.glyph ?? ''}
+				<span style:background="{teamColor}22" style:color={teamColor} class="ob2-summary-flag">
+					<CountryFlag class="ob2-summary-flag-img" countryCode={team.id} />
 				</span>
 				<div>
 					<div class="ob2-summary-q">

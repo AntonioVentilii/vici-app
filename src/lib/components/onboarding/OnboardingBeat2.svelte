@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
+	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { getLeaderboard } from '$lib/services/leaderboard.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -219,7 +220,7 @@
 		{@const teamColor = team.color ?? 'var(--laurel)'}
 		<div class="ob2-affil-preview">
 			<div style:background="{teamColor}22" style:color={teamColor} class="ob2-affil-flag">
-				{team.glyph ?? ''}
+				<CountryFlag class="ob2-affil-flag-img" countryCode={team.id} />
 			</div>
 			<div class="ob2-affil-text">
 				<span class="ob2-affil-eyebrow">
