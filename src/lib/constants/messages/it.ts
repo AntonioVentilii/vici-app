@@ -1503,7 +1503,7 @@ export const itMessages = {
 	'social.friends.global.eyebrow': 'Classifica globale',
 	'social.friends.global.unranked': 'Non classificato',
 	'social.friends.invite.cap_remaining': '{max} inviti bonus/mese',
-	'social.friends.invite.copied': 'Copiato ✓',
+	'social.friends.invite.copied': 'Copiato',
 	'social.friends.invite.copy': 'Copia link',
 	'social.friends.invite.eyebrow_suffix': 'per entrambi',
 	'social.friends.invite.proof_earned': 'VXP guadagnati',

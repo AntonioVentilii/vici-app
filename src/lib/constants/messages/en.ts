@@ -1528,7 +1528,7 @@ export const enMessages = {
 	'social.friends.global.eyebrow': 'Global ranking',
 	'social.friends.global.unranked': 'Unranked',
 	'social.friends.invite.cap_remaining': '{max} bonus invites/month',
-	'social.friends.invite.copied': 'Copied ✓',
+	'social.friends.invite.copied': 'Copied',
 	'social.friends.invite.copy': 'Copy link',
 	'social.friends.invite.eyebrow_suffix': 'for both of you',
 	'social.friends.invite.proof_earned': 'VXP earned',

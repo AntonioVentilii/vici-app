@@ -1499,7 +1499,7 @@ export const ptMessages = {
 	'social.friends.global.eyebrow': 'Ranking global',
 	'social.friends.global.unranked': 'Sem classificação',
 	'social.friends.invite.cap_remaining': '{max} convites bonus/mês',
-	'social.friends.invite.copied': 'Copiado ✓',
+	'social.friends.invite.copied': 'Copiado',
 	'social.friends.invite.copy': 'Copiar link',
 	'social.friends.invite.eyebrow_suffix': 'para os dois',
 	'social.friends.invite.proof_earned': 'VXP ganhos',

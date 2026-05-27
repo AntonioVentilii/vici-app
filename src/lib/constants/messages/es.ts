@@ -1509,7 +1509,7 @@ export const esMessages = {
 	'social.friends.global.eyebrow': 'Ranking global',
 	'social.friends.global.unranked': 'Sin clasificar',
 	'social.friends.invite.cap_remaining': '{max} invitaciones bonus/mes',
-	'social.friends.invite.copied': 'Copiado ✓',
+	'social.friends.invite.copied': 'Copiado',
 	'social.friends.invite.copy': 'Copiar enlace',
 	'social.friends.invite.eyebrow_suffix': 'para ambos',
 	'social.friends.invite.proof_earned': 'VXP ganados',

@@ -1427,7 +1427,7 @@ export const zhCnMessages = {
 	'social.friends.global.eyebrow': '全球排名',
 	'social.friends.global.unranked': '未排名',
 	'social.friends.invite.cap_remaining': '每月 {max} 次奖励邀请',
-	'social.friends.invite.copied': '已复制 ✓',
+	'social.friends.invite.copied': '已复制',
 	'social.friends.invite.copy': '复制链接',
 	'social.friends.invite.eyebrow_suffix': '双方都能获得',
 	'social.friends.invite.proof_earned': 'VXP 已赚取',

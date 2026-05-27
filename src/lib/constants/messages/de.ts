@@ -1507,7 +1507,7 @@ export const deMessages = {
 	'social.friends.global.eyebrow': 'Globales Ranking',
 	'social.friends.global.unranked': 'Unplatziert',
 	'social.friends.invite.cap_remaining': '{max} Bonus-Einladungen/Monat',
-	'social.friends.invite.copied': 'Kopiert ✓',
+	'social.friends.invite.copied': 'Kopiert',
 	'social.friends.invite.copy': 'Link kopieren',
 	'social.friends.invite.eyebrow_suffix': 'für euch beide',
 	'social.friends.invite.proof_earned': 'VXP verdient',
