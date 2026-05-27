@@ -64,14 +64,16 @@
 	);
 	const titleTeamName = $derived(picked?.name ?? fallbackFavourite?.name ?? '');
 
-	// Stable seed for the FlowArt figure: advancement market id when a
-	// team is picked, else the fallback favourite's winner-market id.
-	// Falls back to the participant id so the SVG always renders
-	// deterministically (same input → same composition).
+	// Stable seed for the FlowArt figure. Picked team's identifiers take
+	// precedence so a participant with no advancement market (reachable
+	// via the "+N more" list) still seeds off its own id rather than the
+	// favourite's — otherwise the figure contradicts the "Backing X"
+	// copy. Falls through to the fallback favourite for the skip path.
 	const artworkSeed = $derived(
 		advancement?.id ??
-			fallbackFavourite?.marketId ??
+			picked?.marketId ??
 			picked?.id ??
+			fallbackFavourite?.marketId ??
 			fallbackFavourite?.id ??
 			event.id
 	);
