@@ -84,18 +84,11 @@
 </script>
 
 {#snippet marketsTitle()}
-	<span class="markets-hero-eyebrow eyebrow">{t({ locale: $localeStore, key: 'nav.markets' })}</span
-	>
+	<h2 class="markets-hero-title">{t({ locale: $localeStore, key: 'nav.markets' })}</h2>
 {/snippet}
 
 <section class="markets-root">
 	<MobileAppBar align="left" titleChildren={marketsTitle} />
-
-	<header class="markets-hero">
-		<h1 class="markets-hero-title serif-italic">
-			{t({ locale: $localeStore, key: 'markets.hero.title' })}
-		</h1>
-	</header>
 
 	<MarketsCategoryChips active={cat} onChange={(next) => (cat = next)} {savedCount} />
 
@@ -169,19 +162,12 @@
 		padding: 0 1.25rem 6rem;
 	}
 
-	.markets-hero {
-		padding: 0.25rem 0 0.25rem;
-	}
-
-	.markets-hero-eyebrow {
-		color: var(--text-muted);
-	}
-
 	.markets-hero-title {
 		margin: 0;
 		color: var(--text-base);
+		font-family: var(--font-display, inherit);
 		font-size: var(--t-24);
-		font-weight: 400;
+		font-weight: 700;
 		line-height: 1.15;
 		letter-spacing: var(--tracking-tight);
 	}

@@ -5,9 +5,8 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
-	import { formatVolume } from '$lib/utils/format.utils';
+	import { formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { getTimeRemaining } from '$lib/utils/market.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
@@ -18,14 +17,20 @@
 	const { market, tag }: Props = $props();
 
 	const yesPct = $derived(Math.round(market.yesProbability * 100));
+	// Prototype meta format: "{compact_vol} vol · {close_date}"
+	// (`screens.jsx:186`). Volume is the raw token amount formatted
+	// without a unit suffix (the "vol" label carries the meaning);
+	// closes is a localised absolute date, not a time-remaining string.
 	const volume = $derived(
-		formatVolume({
-			volume: market.totalVolume,
-			decimals: market.token.decimals,
-			symbol: market.token.symbol
+		formatToken({ value: market.totalVolume, unitName: market.token.decimals })
+	);
+	const closes = $derived(
+		new Date(Number(market.expiryDate)).toLocaleDateString($localeStore, {
+			month: 'short',
+			day: 'numeric',
+			year: 'numeric'
 		})
 	);
-	const closes = $derived(getTimeRemaining(market.expiryDate));
 	const goDetail = () => goto(resolve(`${AppPath.Markets}/${market.id}`));
 </script>
 
@@ -36,7 +41,9 @@
 				{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}
 			</span>
 		{/if}
-		<span class="num markets-list-row-meta">{volume} · {closes}</span>
+		<span class="num markets-list-row-meta"
+			>{volume} {t({ locale: $localeStore, key: 'market.vol_suffix' })} · {closes}</span
+		>
 	</div>
 
 	<p class="markets-list-row-q">{market.title}</p>

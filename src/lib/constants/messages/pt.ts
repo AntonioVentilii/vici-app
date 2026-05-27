@@ -909,6 +909,7 @@ export const ptMessages = {
 	'market.user_position.locked': 'Bloqueado: {amount}',
 	'market.user_position.qty_value': '{value} Qtd',
 	'market.user_position.title': 'Sua posição',
+	'market.vol_suffix': 'vol',
 	'markets.chip.all': 'Todos',
 	'markets.empty': 'Nenhum mercado nesta categoria.',
 	'markets.eyebrow': 'PERGUNTAS AO VIVO',

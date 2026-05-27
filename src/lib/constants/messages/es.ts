@@ -914,6 +914,7 @@ export const esMessages = {
 	'market.user_position.locked': 'Bloqueado: {amount}',
 	'market.user_position.qty_value': '{value} cant.',
 	'market.user_position.title': 'Tu posición',
+	'market.vol_suffix': 'vol',
 	'markets.chip.all': 'Todos',
 	'markets.empty': 'No hay mercados en esta categoría.',
 	'markets.eyebrow': 'PREGUNTAS EN VIVO',

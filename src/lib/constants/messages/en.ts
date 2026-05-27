@@ -899,6 +899,7 @@ export const enMessages = {
 	'market.user_position.locked': 'Locked: {amount}',
 	'market.user_position.qty_value': '{value} Qty',
 	'market.user_position.title': 'Your Position',
+	'market.vol_suffix': 'vol',
 	'markets.chip.all': 'All',
 	'markets.empty': 'No markets found in this category.',
 	'markets.eyebrow': 'LIVE QUESTIONS',

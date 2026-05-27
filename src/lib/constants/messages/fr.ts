@@ -919,6 +919,7 @@ export const frMessages = {
 	'market.user_position.locked': 'Verrouillé : {amount}',
 	'market.user_position.qty_value': '{value} qté',
 	'market.user_position.title': 'Votre position',
+	'market.vol_suffix': 'vol',
 	'markets.chip.all': 'Tous',
 	'markets.empty': 'Aucun marché dans cette catégorie.',
 	'markets.eyebrow': 'QUESTIONS EN DIRECT',

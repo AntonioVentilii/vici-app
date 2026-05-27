@@ -863,6 +863,7 @@ export const zhCnMessages = {
 	'market.user_position.locked': '已锁定：{amount}',
 	'market.user_position.qty_value': '{value} 数量',
 	'market.user_position.title': '你的仓位',
+	'market.vol_suffix': '量',
 	'markets.chip.all': '全部',
 	'markets.empty': '此分类下暂无市场。',
 	'markets.eyebrow': '实时问题',

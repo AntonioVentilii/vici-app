@@ -919,6 +919,7 @@ export const deMessages = {
 	'market.user_position.locked': 'Gesperrt: {amount}',
 	'market.user_position.qty_value': '{value} Menge',
 	'market.user_position.title': 'Deine Position',
+	'market.vol_suffix': 'Vol.',
 	'markets.chip.all': 'Alle',
 	'markets.empty': 'Keine Märkte in dieser Kategorie.',
 	'markets.eyebrow': 'LIVE-FRAGEN',

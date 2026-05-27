@@ -130,7 +130,7 @@
 	});
 </script>
 
-<div class="pillnav-wrap md:hidden">
+<div class="pillnav-wrap">
 	<nav bind:this={navEl} class="pillnav" aria-label="Primary">
 		<span
 			style:left="{indicatorLeft}px"
@@ -275,7 +275,7 @@
 </div>
 
 <!-- Spacer so scrollable content clears the floating pill. -->
-<div class="pillnav-spacer md:hidden" aria-hidden="true"></div>
+<div class="pillnav-spacer" aria-hidden="true"></div>
 
 <style lang="postcss">
 	.pillnav-wrap {
