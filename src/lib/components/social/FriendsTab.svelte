@@ -654,7 +654,7 @@
 						</button>
 					</li>
 				{/if}
-				<li>
+				<li class="ranked-li-you">
 					<div class="ranked-row ranked-row-you">
 						<span class="num ranked-num is-you">
 							{t({ locale: $localeStore, key: 'social.friends.ranked.you' })}
@@ -960,15 +960,23 @@
 	}
 
 	/* ── Invite hero ────────────────────────────────────────── */
+	/* Mirrors prototype's `.friends-invite-hero` (app.css:4234) —
+	   accent gradient wash over the raised surface, gold-tinted border. */
 	.invite-hero {
 		display: flex;
 		flex-direction: column;
-		gap: 0.55rem;
-		padding: 1rem;
-		border: 1px solid var(--border-base);
-		border-radius: 1.25rem;
-		background: color-mix(in srgb, var(--color-primary) 6%, transparent), var(--bg-popover);
-		box-shadow: var(--shadow-card);
+		gap: 0.6rem;
+		padding: 1.1rem 1.1rem 1rem;
+		border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--border-base));
+		border-radius: var(--r-12);
+		background:
+			linear-gradient(
+				180deg,
+				color-mix(in srgb, var(--color-primary) 10%, transparent),
+				color-mix(in srgb, var(--color-primary) 2%, transparent) 70%,
+				transparent
+			),
+			var(--bg-popover);
 	}
 
 	.invite-eyebrow {
@@ -1081,7 +1089,13 @@
 		gap: 0.35rem;
 	}
 
+	/* Dashed-border pill at the bottom of the hero — proto's
+	   `.friends-invite-url` (app.css:4264). */
 	.invite-url {
+		padding: 0.45rem 0.6rem;
+		border: 1px dashed var(--border-base);
+		border-radius: 0.5rem;
+		background: color-mix(in srgb, var(--text-base) 3%, transparent);
 		color: var(--text-muted);
 		font-family: var(--font-mono);
 		font-size: var(--t-12);
@@ -1117,35 +1131,50 @@
 		gap: 0.5rem;
 	}
 
+	/* Accent-tinted chip — proto `.friends-add-btn` (app.css:4424-4435). */
 	.ranked-add {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
-		padding: 0.25rem 0.55rem;
-		border: 1px solid var(--border-base);
+		padding: 0.25rem 0.6rem;
+		border: 1px solid color-mix(in srgb, var(--color-primary) 25%, var(--border-base));
 		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-		color: var(--text-base);
+		background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+		color: var(--color-primary);
 		font-family: var(--font-mono);
 		font-size: 0.625rem;
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		cursor: pointer;
+		transition:
+			background 140ms ease,
+			border-color 140ms ease;
 	}
 
 	.ranked-add:hover {
-		border-color: var(--border-strong);
+		background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+		border-color: color-mix(in srgb, var(--color-primary) 40%, var(--border-base));
 	}
 
 	/* ── Pending list ──────────────────────────────────────── */
+	/* Single unified card with internal dividers — proto pattern
+	   (`.friends-pending-list`, app.css:4285-4311). Per-row borders
+	   are replaced by a `border-bottom` on each `<li>` except last. */
 	.pending-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
 		margin: 0;
 		padding: 0;
 		list-style: none;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: var(--bg-popover);
+		overflow: hidden;
+	}
+
+	.pending-list > li + li {
+		border-top: 1px solid var(--border-base);
 	}
 
 	.pending-row {
@@ -1154,20 +1183,28 @@
 		align-items: center;
 		gap: 0.65rem;
 		width: 100%;
-		padding: 0.65rem 0.85rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
+		padding: 0.7rem 0.85rem;
+		border: 0;
+		background: transparent;
 		text-align: left;
 		cursor: pointer;
+		transition: background 140ms ease;
+	}
+
+	.pending-row:hover {
+		background: color-mix(in srgb, var(--text-base) 3%, transparent);
 	}
 
 	.pending-row.is-open {
-		border-color: var(--border-strong);
+		background: color-mix(in srgb, var(--color-primary) 5%, transparent);
 	}
 
 	.pending-row-sent {
 		cursor: default;
+	}
+
+	.pending-row-sent:hover {
+		background: transparent;
 	}
 
 	.pending-avatar {
@@ -1213,7 +1250,8 @@
 	.pending-actions {
 		display: flex;
 		gap: 0.4rem;
-		margin-top: 0.4rem;
+		padding: 0.5rem 0.85rem 0.7rem;
+		background: color-mix(in srgb, var(--color-primary) 3%, transparent);
 	}
 
 	:global(.pending-action) {
@@ -1250,13 +1288,28 @@
 	}
 
 	/* ── Ranked list ───────────────────────────────────────── */
+	/* Single unified card with internal dividers — proto pattern
+	   (`.friends-rank-list`, app.css:4285-4311 + 4407-4411). The
+	   list is its own internal-scroll container (`overflow: auto;
+	   max-height: 60vh`) so the YOU `<li>` can stick to the bottom
+	   of the card on scroll, instead of being trapped by the page
+	   scroll context. */
 	.ranked-list {
+		position: relative;
 		display: flex;
 		flex-direction: column;
-		gap: 0.4rem;
 		margin: 0;
 		padding: 0;
 		list-style: none;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: var(--bg-popover);
+		overflow: auto;
+		max-height: 60vh;
+	}
+
+	.ranked-list > li + li {
+		border-top: 1px solid var(--border-base);
 	}
 
 	.ranked-row {
@@ -1266,24 +1319,42 @@
 		align-items: center;
 		width: 100%;
 		padding: 0.7rem 0.85rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
+		border: 0;
+		background: transparent;
 		text-align: left;
 		cursor: pointer;
+		transition: background 140ms ease;
 	}
 
 	.ranked-row:hover {
-		border-color: var(--border-strong);
+		background: color-mix(in srgb, var(--text-base) 3%, transparent);
+	}
+
+	/* Sticky YOU row — pinned to the bottom edge of the rank list
+	   with a gold-tinted backdrop blur. Mirrors proto's
+	   `.friends-rank-row-you` (app.css:4396-4406).
+	   `position: sticky` lives on the `<li>` wrapper (not the
+	   inner `<div>`): a sticky element is constrained by its
+	   containing block, and the `<li>` is a direct child of the
+	   scrollable `.ranked-list` — putting sticky on the inner
+	   `<div>` would constrain it to the `<li>`'s own height, which
+	   is the row itself, so no visible sticking. */
+	.ranked-li-you {
+		position: sticky;
+		bottom: 0;
+		z-index: 2;
 	}
 
 	.ranked-row-you {
-		position: sticky;
-		bottom: 5rem;
-		z-index: 1;
-		border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
-		background: color-mix(in srgb, var(--color-primary) 8%, var(--bg-surface));
+		background: color-mix(in srgb, var(--color-primary) 10%, var(--bg-popover));
+		backdrop-filter: blur(8px);
+		-webkit-backdrop-filter: blur(8px);
+		box-shadow: 0 -6px 16px -8px rgba(0, 0, 0, 0.3);
 		cursor: default;
+	}
+
+	.ranked-row-you:hover {
+		background: color-mix(in srgb, var(--color-primary) 10%, var(--bg-popover));
 	}
 
 	.ranked-num {
@@ -1357,22 +1428,27 @@
 		font-weight: 700;
 	}
 
+	/* "See all N →" sits as the last divider-separated row inside
+	   the unified ranked card. Accent text, no border (border-top
+	   comes from the shared `li + li` divider rule). Mirrors proto
+	   `.friends-see-all` (app.css:4445-4456). */
 	.ranked-see-all {
 		width: 100%;
-		padding: 0.55rem;
-		border: 1px dashed var(--border-base);
-		border-radius: var(--r-12);
+		padding: 0.7rem 0.85rem;
+		border: 0;
 		background: transparent;
-		color: var(--text-muted);
+		color: var(--color-primary);
 		font-family: var(--font-mono);
 		font-size: var(--t-12);
 		font-weight: 700;
+		letter-spacing: 0.04em;
 		cursor: pointer;
+		text-align: center;
+		transition: background 140ms ease;
 	}
 
 	.ranked-see-all:hover {
-		color: var(--text-base);
-		border-color: var(--border-strong);
+		background: color-mix(in srgb, var(--color-primary) 5%, transparent);
 	}
 
 	/* ── Empty ─────────────────────────────────────────────── */
