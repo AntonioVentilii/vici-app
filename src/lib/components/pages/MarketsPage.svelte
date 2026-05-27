@@ -10,7 +10,7 @@
 		primaryMarketTag,
 		type MarketTag
 	} from '$lib/constants/market-tags.constants';
-	import { marketTags } from '$lib/derived/market-tags.derived';
+	import { marketTags, marketTagsNotInitialized } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
@@ -81,7 +81,15 @@
 	// chip rail so we don't surface categories that would render the empty
 	// state — the user can't filter into a dead end. Markets without
 	// metadata contribute nothing here (the lookup returns `undefined`).
-	const availableTags = $derived.by((): SvelteSet<MarketTag> => {
+	//
+	// Returns `undefined` while the tag store is still uninitialized so the
+	// chip rail falls back to the full taxonomy rather than collapsing to a
+	// single "All" chip during the first paint.
+	const availableTags = $derived.by((): SvelteSet<MarketTag> | undefined => {
+		if ($marketTagsNotInitialized) {
+			return;
+		}
+
 		const set = new SvelteSet<MarketTag>();
 
 		for (const m of $markets) {
