@@ -93,8 +93,19 @@ small icon. The brand carries weight by what it omits."_
 - 🎉 ✨ 🏆 etc. → no celebratory pictographs. Let XP, copy, and motion
   carry the moment.
 
-Country/flag glyphs in market data (e.g. `featured-event.constants.ts`)
-are data, not UI chrome — they ship with the dataset and stay.
+Country flags **now render via
+[`CountryFlag.svelte`](../../../src/lib/components/ui/CountryFlag.svelte)**
+— a `<img>` backed by the lipis/flag-icons 4x3 SVG set shipped under
+[`$lib/assets/flags/`](../../../src/lib/assets/flags/) and indexed
+through [`COUNTRY_FLAGS`](../../../src/lib/constants/country-flags.constants.ts).
+Same pattern as the `control-panel` repo. Pass the ISO-3166 alpha-2
+code (e.g. `<CountryFlag countryCode={team.id} />`). The emoji `glyph`
+strings still on country records in
+[`worlds-affiliations.constants.ts`](../../../src/lib/constants/worlds-affiliations.constants.ts)
+and
+[`featured-event.constants.ts`](../../../src/lib/constants/featured-event.constants.ts)
+are now unused at render time and can be stripped on the next data
+migration.
 Achievement emblems (`◎ ★ ⚡ ⌬ ⊿ ✦ ◐ ⧖ ⌘` in
 [`achievements.constants.ts`](../../../src/lib/constants/achievements.constants.ts))
 are part of the approved glyph set and stay.

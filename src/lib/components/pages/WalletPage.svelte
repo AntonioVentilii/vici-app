@@ -247,6 +247,10 @@
 	const selectedTokenForSend = $derived(selectedToken ?? $defaultSupportedToken);
 
 	const handleSend = async () => {
+		if (sending) {
+			return;
+		}
+
 		if (isNullish(recipient) || isNullish(amount) || isNullish(selectedTokenForSend)) {
 			return;
 		}

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
@@ -111,7 +112,9 @@
 				onclick={() => onPick(team.id)}
 				type="button"
 			>
-				<span class="ob2-team-flag-lg">{team.glyph ?? ''}</span>
+				<span class="ob2-team-flag-lg">
+					<CountryFlag class="ob2-team-flag-img" countryCode={team.id} />
+				</span>
 				<span class="ob2-team-name-lg">{team.name}</span>
 			</button>
 		{/each}
@@ -151,7 +154,9 @@
 						}}
 						type="button"
 					>
-						<span class="ob2-team-flag">{team.glyph ?? ''}</span>
+						<span class="ob2-team-flag">
+							<CountryFlag class="ob2-team-flag-img" countryCode={team.id} />
+						</span>
 						<span class="ob2-team-name">{team.name}</span>
 					</button>
 				{/each}

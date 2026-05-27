@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Search, X } from 'lucide-svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import {
 		WORLDS_COUNTRIES,
 		WORLDS_UNIVERSITIES,
@@ -190,7 +191,13 @@
 							onclick={() => handlePick(option)}
 							type="button"
 						>
-							<span class="affil-picker-glyph" aria-hidden="true">{option.glyph}</span>
+							<span class="affil-picker-glyph" aria-hidden="true">
+								{#if activeKind === 'country'}
+									<CountryFlag class="affil-picker-flag" countryCode={option.id} />
+								{:else}
+									{option.glyph}
+								{/if}
+							</span>
 							<span class="affil-picker-name">{option.name}</span>
 							{#if saving === option.id}
 								<span class="num allcaps affil-picker-saving">

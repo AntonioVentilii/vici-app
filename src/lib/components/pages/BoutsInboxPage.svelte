@@ -7,6 +7,7 @@
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
 	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
+	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
 		lookupWorldsAffiliation,
@@ -749,7 +750,7 @@
 				{#if myCountry}
 					{@const opt = countryOption(myCountry.affiliationId)}
 					<span class="bouts-section-head-meta num allcaps">
-						{opt?.glyph ?? ''}
+						{#if opt}<CountryFlag class="bouts-section-flag" countryCode={opt.id} />{/if}
 						{(opt?.name ?? myCountry.affiliationId).toUpperCase()}
 					</span>
 				{/if}
@@ -797,7 +798,7 @@
 							<div class="bouts-pod-tile is-silver">
 								<div class="num bouts-pod-place">02</div>
 								<div class="bouts-pod-name">
-									{opt?.glyph ?? ''}
+									{#if opt}<CountryFlag class="bouts-pod-flag" countryCode={opt.id} />{/if}
 									{opt?.name ?? countryWcTop3[1].affiliationId}
 								</div>
 								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(countryWcTop3[1]))}</div>
@@ -808,7 +809,7 @@
 							<div class="bouts-pod-tile is-gold">
 								<div class="num bouts-pod-place">01</div>
 								<div class="bouts-pod-name">
-									{opt?.glyph ?? ''}
+									{#if opt}<CountryFlag class="bouts-pod-flag" countryCode={opt.id} />{/if}
 									{opt?.name ?? countryWcTop3[0].affiliationId}
 								</div>
 								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(countryWcTop3[0]))}</div>
@@ -819,7 +820,7 @@
 							<div class="bouts-pod-tile is-bronze">
 								<div class="num bouts-pod-place">03</div>
 								<div class="bouts-pod-name">
-									{opt?.glyph ?? ''}
+									{#if opt}<CountryFlag class="bouts-pod-flag" countryCode={opt.id} />{/if}
 									{opt?.name ?? countryWcTop3[2].affiliationId}
 								</div>
 								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(countryWcTop3[2]))}</div>
@@ -831,7 +832,9 @@
 				{#if myCountry && myCountryStats}
 					{@const opt = countryOption(myCountry.affiliationId)}
 					<div class="bouts-your-row">
-						<span class="bouts-your-em" aria-hidden="true">{opt?.glyph ?? ''}</span>
+						<span class="bouts-your-em" aria-hidden="true">
+							{#if opt}<CountryFlag class="bouts-your-flag" countryCode={opt.id} />{/if}
+						</span>
 						<span class="bouts-your-text">
 							<b>{opt?.name ?? myCountry.affiliationId}</b>
 							·
@@ -855,7 +858,9 @@
 				{#if myCountry && myCountryStats}
 					{@const opt = countryOption(myCountry.affiliationId)}
 					<div class="bouts-your-row is-tight">
-						<span class="bouts-your-em" aria-hidden="true">{opt?.glyph ?? ''}</span>
+						<span class="bouts-your-em" aria-hidden="true">
+							{#if opt}<CountryFlag class="bouts-your-flag" countryCode={opt.id} />{/if}
+						</span>
 						<span class="bouts-your-text">
 							<b>{opt?.name ?? myCountry.affiliationId}</b>
 							·

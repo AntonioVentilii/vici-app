@@ -52,4 +52,18 @@ if (browser) {
 		localStorage.setItem(THEME_KEY, value);
 		document.documentElement.setAttribute('data-theme', value);
 	});
+
+	// Multi-tab sync. When another tab toggles the theme, the `storage`
+	// event fires on the document with the new key/value pair. Mirror
+	// the change into the local writable so all open tabs render the
+	// same theme without a reload.
+	window.addEventListener('storage', (event) => {
+		if (event.key !== THEME_KEY || event.newValue === null) {
+			return;
+		}
+
+		if (THEMES.includes(event.newValue as Theme)) {
+			theme.set(event.newValue as Theme);
+		}
+	});
 }

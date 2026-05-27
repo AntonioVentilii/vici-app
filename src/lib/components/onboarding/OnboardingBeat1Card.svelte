@@ -1,5 +1,6 @@
 <script lang="ts">
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
+	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import SwipeableMarketCard from '$lib/components/ui/SwipeableMarketCard.svelte';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -78,7 +79,7 @@
 	<h1 class="ob2-h1">{t({ locale: $localeStore, key: 'onboarding.beat1b.headline' })}</h1>
 	{#if picked}
 		<p class="ob2-sub">
-			<span style="font-size: 18px; margin-right: 4px;">{picked.glyph ?? ''}</span>
+			<CountryFlag class="ob2-picked-flag" countryCode={picked.id} />
 			{t({ locale: $localeStore, key: 'onboarding.beat1b.backing_prefix' })}
 			<b style:color={picked.color ?? 'var(--laurel)'}>{picked.name}</b>
 			· {t({ locale: $localeStore, key: 'onboarding.beat1b.backing_sub' })}
