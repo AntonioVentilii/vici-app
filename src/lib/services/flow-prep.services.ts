@@ -4,7 +4,7 @@ import {
 	listMarketMetadataBySeries,
 	listMarketTagsBySeries
 } from '$lib/services/market-tags.services';
-import { getFlowQueue } from '$lib/services/market.services';
+import { enrichFlowMarketsWithOrderBook, getFlowQueue } from '$lib/services/market.services';
 import type { Market, MarketId } from '$lib/types/market';
 import type { MarketMetadata } from '$lib/types/market-metadata';
 import type { UserMarketSignals } from '$lib/types/market-signals';
@@ -93,7 +93,13 @@ export const prepareFlow = async ({
 	const sourceQueue = eventScoped.length > 0 ? eventScoped : queue;
 	const filtered =
 		excludeSet.size > 0 ? sourceQueue.filter((m) => !excludeSet.has(m.id)) : sourceQueue;
-	const markets = filtered.slice(0, MAX_MARKETS);
+	// Slice to the deck cap *before* enrichment so the order-book
+	// fan-out is bounded by `MAX_MARKETS` instead of by the total
+	// number of open series. The ranker doesn't need book data
+	// (see `getFlowQueue`), so the lite list is sufficient to pick
+	// the top-N — we only pay the round-trips for what we display.
+	const top = filtered.slice(0, MAX_MARKETS);
+	const markets = await enrichFlowMarketsWithOrderBook(top);
 
 	const metadataById = new Map<MarketId, MarketMetadata>();
 	const metadataByRaw = metadataBySeries as Record<string, MarketMetadata>;
