@@ -514,6 +514,20 @@ html {
 	summary:not([aria-disabled='true']) {
 		cursor: pointer;
 	}
+
+	/* Tailwind v4 preflight also strips the UA focus ring without
+	 * replacing it, so keyboard users get no visible cue. Restore a
+	 * brand-aligned focus-visible ring on every interactive element:
+	 * a 2px laurel halo (`--color-primary` resolves to `--laurel` in
+	 * dark/light and `--laurel-deep` in peach via theme overrides),
+	 * offset 2px from the element to read against any surface. Sites
+	 * that need a custom focus shape opt out by overriding
+	 * `:focus-visible` on their own selectors. */
+	:focus-visible {
+		outline: 2px solid var(--color-primary, var(--laurel));
+		outline-offset: 2px;
+		border-radius: 2px;
+	}
 }
 
 body {
