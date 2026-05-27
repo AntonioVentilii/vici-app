@@ -1,6 +1,4 @@
 <script lang="ts">
-	import { Heart } from 'lucide-svelte/icons';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import MarketsCarousel from '$lib/components/market/MarketsCarousel.svelte';
 	import MarketsCategoryChips, {
 		type MarketsCategoryFilter
@@ -18,6 +16,16 @@
 	import type { Market } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
 
+	/**
+	 * Verbatim port of the prototype `MarketsScreen`
+	 * (screens.jsx:82-159). Structure, class names, and inline
+	 * pixel values mirror the JSX 1:1; the data source is swapped
+	 * from `window.VICI_DATA.MARKETS` to our `$markets` derived
+	 * store and `$preferencesStore.savedMarketIds` (the saved-ids
+	 * persistence already mirrors the prototype's
+	 * `vici.saved-markets` localStorage key, just behind a Svelte
+	 * store rather than an ad-hoc CustomEvent).
+	 */
 	const TRENDING_LIMIT = 8;
 	const SAVED_RAIL_LIMIT = 6;
 
@@ -26,40 +34,35 @@
 	const loading = $derived($marketsNotInitialized);
 
 	const savedSet = $derived(new Set($preferencesStore.savedMarketIds));
-	const savedMarkets = $derived($markets.filter((market) => savedSet.has(market.id)));
-	const savedCount = $derived(savedMarkets.length);
+	const savedMarkets = $derived($markets.filter((m) => savedSet.has(m.id)));
 
 	const tagsByMarket = $derived($marketTags);
 
-	const matchesTag = ({ market, tag }: { market: Market; tag: MarketTag }): boolean => {
-		const tags = tagsByMarket[market.id];
+	const matchesTag = ({ market, tag }: { market: Market; tag: MarketTag }): boolean =>
+		tagsByMarket[market.id]?.includes(tag) ?? false;
 
-		return tags?.includes(tag) ?? false;
-	};
-
+	// Prototype line 94-96:
+	//   const list = cat === 'saved'
+	//     ? savedMarkets
+	//     : window.VICI_DATA.MARKETS.filter((m) => cat === 'all' || m.cat === cat);
 	const list = $derived.by((): Market[] => {
-		const active = cat;
-
-		if (active === 'saved') {
+		if (cat === 'saved') {
 			return savedMarkets;
 		}
 
-		if (active === 'all') {
+		if (cat === 'all') {
 			return $markets;
 		}
 
-		return $markets.filter((market) => matchesTag({ market, tag: active }));
+		const tag = cat as MarketTag;
+		return $markets.filter((m) => matchesTag({ market: m, tag }));
 	});
 
-	/**
-	 * "Trending" rail — `cat === 'all'` only. Prototype filters on a
-	 * `hot` flag; we proxy that by sorting open markets by
-	 * `totalVolume` desc and slicing the top {@link TRENDING_LIMIT}.
-	 * Resolved markets are excluded so the rail tracks live activity.
-	 */
+	// Prototype `m.hot` is a hand-curated flag we don't carry in our
+	// backend; proxy by sorting open markets by `totalVolume` desc.
 	const trendingMarkets = $derived(
 		[...$markets]
-			.filter((market) => market.status === 'Open')
+			.filter((m) => m.status === 'Open')
 			.sort((a, b) => {
 				if (b.totalVolume === a.totalVolume) {
 					return 0;
@@ -70,6 +73,10 @@
 			.slice(0, TRENDING_LIMIT)
 	);
 
+	// Prototype line 149:
+	//   {cat === 'all' ? 'All markets'
+	//      : cat === 'saved' ? 'Saved'
+	//      : window.VICI_DATA.CATS.find((c) => c.id === cat).label}
 	const sectionTitle = $derived.by((): string => {
 		if (cat === 'all') {
 			return t({ locale: $localeStore, key: 'markets.section.all' });
@@ -83,22 +90,28 @@
 	});
 </script>
 
-{#snippet marketsTitle()}
-	<h2 class="markets-hero-title">{t({ locale: $localeStore, key: 'nav.markets' })}</h2>
-{/snippet}
+<div class="screen-scroll">
+	<div class="appbar">
+		<h2 style="font-size: 24px; letter-spacing: -0.02em;">
+			{t({ locale: $localeStore, key: 'nav.markets' })}
+		</h2>
+	</div>
 
-<section class="markets-root">
-	<MobileAppBar align="left" titleChildren={marketsTitle} />
+	<!-- Category chips with Saved filter prepended -->
+	<MarketsCategoryChips
+		active={cat}
+		onChange={(next) => (cat = next)}
+		savedCount={savedMarkets.length}
+	/>
 
-	<MarketsCategoryChips active={cat} onChange={(next) => (cat = next)} {savedCount} />
-
-	{#if cat === 'all' && savedCount > 0}
+	<!-- Saved carousel only visible on All view -->
+	{#if cat === 'all' && savedMarkets.length > 0}
 		<MarketsCarousel
 			markets={savedMarkets.slice(0, SAVED_RAIL_LIMIT)}
 			moreLabel={t({
 				locale: $localeStore,
 				key: 'markets.see_all_count',
-				params: { count: savedCount }
+				params: { count: savedMarkets.length }
 			})}
 			onMore={() => (cat = 'saved')}
 			tagsBySeries={tagsByMarket}
@@ -106,6 +119,7 @@
 		/>
 	{/if}
 
+	<!-- Trending on All view -->
 	{#if cat === 'all' && trendingMarkets.length > 0}
 		<MarketsCarousel
 			markets={trendingMarkets}
@@ -115,159 +129,47 @@
 		/>
 	{/if}
 
-	{#if cat === 'saved' && savedMarkets.length === 0 && !loading}
-		<div class="markets-saved-empty" aria-live="polite" role="status">
-			<Heart class="markets-saved-empty-icon" aria-hidden="true" size={28} strokeWidth={1.4} />
-			<p class="markets-saved-empty-title serif-italic">
-				{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}
-			</p>
-			<p class="markets-saved-empty-body">
+	<!-- Main list with Saved empty state -->
+	{#if cat === 'saved' && list.length === 0 && !loading}
+		<div
+			style="margin: 20px 20px 24px; padding: 32px 22px; background: rgba(242,236,220,0.02); border: 1px dashed var(--border-base); border-radius: 14px; text-align: center;"
+		>
+			<div style="opacity: 0.4; margin-bottom: 8px;" class="t-display" aria-hidden="true">♥</div>
+			<div style="font-size: 17px; margin-bottom: 6px;" class="serif-italic acc">
+				"{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}"
+			</div>
+			<p style="line-height: 1.5; margin: 0;" class="dim t-body-sm">
 				{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
 			</p>
 		</div>
 	{:else}
-		<section class="markets-section">
-			<header class="markets-section-head">
-				<h2 class="markets-section-title">{sectionTitle}</h2>
-				<span class="num markets-section-count">{list.length}</span>
-			</header>
-
-			{#if loading}
-				<div class="markets-list">
-					{#each Array(4) as _, index (index)}
-						<div class="markets-row-skeleton" aria-hidden="true"></div>
-					{/each}
-				</div>
-			{:else if list.length === 0}
-				<div class="markets-empty">
-					<p class="markets-empty-body">
-						{t({ locale: $localeStore, key: 'markets.empty' })}
-					</p>
-				</div>
-			{:else}
-				<div class="markets-list">
-					{#each list as market (market.id)}
-						<MarketsListRow {market} tag={primaryMarketTag(tagsByMarket[market.id])} />
-					{/each}
-				</div>
-			{/if}
-		</section>
+		<div class="section-h">
+			<h3>{sectionTitle}</h3>
+			<span class="mute t-sub">{list.length}</span>
+		</div>
+		{#if loading}
+			<div style="gap: 8px; padding: 0 20px 20px;" class="col">
+				{#each Array(4) as _, index (index)}
+					<div
+						style="height: 88px; border: 1px dashed var(--border-base); border-radius: 12px; opacity: 0.7;"
+						aria-hidden="true"
+					></div>
+				{/each}
+			</div>
+		{:else if list.length === 0}
+			<div
+				style="margin: 0 20px 20px; padding: 32px 22px; border: 1px dashed var(--border-base); border-radius: 14px; text-align: center;"
+			>
+				<p style="margin: 0;" class="dim t-body-sm">
+					{t({ locale: $localeStore, key: 'markets.empty' })}
+				</p>
+			</div>
+		{:else}
+			<div style="gap: 8px; padding: 0 20px 20px;" class="col">
+				{#each list as m (m.id)}
+					<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
+				{/each}
+			</div>
+		{/if}
 	{/if}
-</section>
-
-<style lang="postcss">
-	.markets-root {
-		display: flex;
-		flex-direction: column;
-		gap: 0.875rem;
-		padding: 0 1.25rem 6rem;
-	}
-
-	.markets-hero-title {
-		margin: 0;
-		color: var(--text-base);
-		font-family: var(--font-display, inherit);
-		font-size: var(--t-24);
-		font-weight: 700;
-		line-height: 1.15;
-		letter-spacing: var(--tracking-tight);
-	}
-
-	.markets-saved-empty {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.5rem;
-		padding: 2rem 1.5rem;
-		border: 1px dashed var(--border-base);
-		border-radius: var(--r-12);
-		background: transparent;
-		text-align: center;
-	}
-
-	.markets-saved-empty :global(.markets-saved-empty-icon) {
-		color: var(--parchment-faint);
-		margin-bottom: 0.25rem;
-	}
-
-	.markets-saved-empty-title {
-		margin: 0;
-		font-size: var(--t-18);
-		color: var(--text-base);
-	}
-
-	.markets-saved-empty-body {
-		margin: 0;
-		max-width: 28rem;
-		font-size: var(--t-13);
-		line-height: 1.55;
-		color: var(--text-muted);
-	}
-
-	.markets-section {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.markets-section-head {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.5rem;
-		padding: 0.25rem 0 0.25rem;
-	}
-
-	.markets-section-title {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: var(--t-15);
-		font-weight: 600;
-		letter-spacing: -0.01em;
-		color: var(--text-base);
-	}
-
-	.markets-section-count {
-		color: var(--text-muted);
-		font-size: var(--t-13);
-		font-weight: 700;
-	}
-
-	.markets-list {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.markets-row-skeleton {
-		height: 5.5rem;
-		border: 1px dashed var(--border-base);
-		border-radius: var(--r-12);
-		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
-		animation: markets-skel-pulse 1.5s ease-in-out infinite;
-	}
-
-	@keyframes markets-skel-pulse {
-		0%,
-		100% {
-			opacity: 0.55;
-		}
-		50% {
-			opacity: 0.9;
-		}
-	}
-
-	.markets-empty {
-		padding: 2rem 1rem;
-		text-align: center;
-		border: 1px dashed var(--border-base);
-		border-radius: var(--r-12);
-	}
-
-	.markets-empty-body {
-		margin: 0;
-		color: var(--text-muted);
-		font-size: var(--t-13);
-		line-height: 1.55;
-	}
-</style>
+</div>
