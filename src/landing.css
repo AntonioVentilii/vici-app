@@ -108,6 +108,8 @@
 }
 .lp-root .tag {
 	display: inline-flex;
+	align-items: center;
+	gap: 4px;
 	padding: 3px 7px;
 	border-radius: 4px;
 	font-size: 10px;
@@ -120,6 +122,10 @@
 .lp-root .tag.live {
 	background: rgba(255, 107, 107, 0.1);
 	color: var(--no);
+}
+.lp-root .tag.countdown {
+	background: rgba(226, 184, 66, 0.1);
+	color: var(--accent);
 }
 .lp-root .tag.live::before {
 	content: '';
