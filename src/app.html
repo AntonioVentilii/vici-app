@@ -83,6 +83,22 @@
 					}
 				} catch (e) {}
 			})();
+
+			// No-FOUC theme bootstrap. Read the saved theme synchronously
+			// before the first paint and stamp `data-theme` on <html> so
+			// the per-theme tokens in app.css cascade immediately. The
+			// theme.store will re-set the same attribute on hydrate; the
+			// idempotent write is a no-op. Falls through to the `:root`
+			// (dark) defaults when no value is stored or storage is
+			// blocked.
+			(function () {
+				try {
+					var t = localStorage.getItem('vici-theme');
+					if (t === 'dark' || t === 'light' || t === 'peach') {
+						document.documentElement.setAttribute('data-theme', t);
+					}
+				} catch (e) {}
+			})();
 		</script>
 
 		%sveltekit.head%
