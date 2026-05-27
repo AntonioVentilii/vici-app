@@ -352,7 +352,7 @@ export const frMessages = {
 	'authn.checking.aria': 'Vérification de la connexion',
 	'authn.passkey.create_button': 'Créer une passkey',
 	'authn.passkey.enter_nickname': 'Saisissez un pseudo...',
-	'authn.passkey.fallback_displayname': 'Utilisateur Vici',
+	'authn.passkey.fallback_displayname': 'Utilisateur VICI',
 	'authn.passkey.signin_button': 'Se connecter avec une passkey',
 	'authn.passkey.toggle_signin': 'Vous avez déjà une passkey ? Se connecter',
 	'authn.passkey.toggle_signup': 'Première fois ? Créer une passkey',
@@ -1279,7 +1279,7 @@ export const frMessages = {
 	'resolution.winner': 'Gagnant',
 	'seo.home.description':
 		'Tradez sur des marchés à résultat binaire avec des fonctionnalités sociales sur l’Internet Computer.',
-	'seo.home.title': 'Vici Social Markets | Prédire. Trader. Gagner.',
+	'seo.home.title': 'VICI Social Markets | Prédire. Trader. Gagner.',
 	'settings.about': 'VICI · v{version} · Build {build}',
 	'settings.account': 'Compte',
 	'settings.account.email': 'Email',

@@ -346,7 +346,7 @@ export const ptMessages = {
 	'authn.checking.aria': 'Verificando status de login',
 	'authn.passkey.create_button': 'Criar Passkey',
 	'authn.passkey.enter_nickname': 'Digite um apelido...',
-	'authn.passkey.fallback_displayname': 'Usuário Vici',
+	'authn.passkey.fallback_displayname': 'Usuário VICI',
 	'authn.passkey.signin_button': 'Entrar com Passkey',
 	'authn.passkey.toggle_signin': 'Já tem um passkey? Entrar',
 	'authn.passkey.toggle_signup': 'Primeira vez? Crie um passkey',
@@ -1267,7 +1267,7 @@ export const ptMessages = {
 	'resolution.winner': 'Vencedor',
 	'seo.home.description':
 		'Negocie em mercados de resultado binário com recursos sociais no Internet Computer.',
-	'seo.home.title': 'Vici Social Markets | Preveja. Negocie. Vença.',
+	'seo.home.title': 'VICI Social Markets | Preveja. Negocie. Vença.',
 	'settings.about': 'VICI · v{version} · Build {build}',
 	'settings.account': 'Conta',
 	'settings.account.email': 'E-mail',

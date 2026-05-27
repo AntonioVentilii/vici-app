@@ -347,7 +347,7 @@ export const deMessages = {
 	'authn.checking.aria': 'Anmeldestatus wird geprüft',
 	'authn.passkey.create_button': 'Passkey erstellen',
 	'authn.passkey.enter_nickname': 'Nickname eingeben...',
-	'authn.passkey.fallback_displayname': 'Vici-Nutzer',
+	'authn.passkey.fallback_displayname': 'VICI-Nutzer',
 	'authn.passkey.signin_button': 'Mit Passkey anmelden',
 	'authn.passkey.toggle_signin': 'Hast du schon einen Passkey? Anmelden',
 	'authn.passkey.toggle_signup': 'Zum ersten Mal hier? Passkey erstellen',
@@ -1277,7 +1277,7 @@ export const deMessages = {
 	'resolution.winner': 'Gewinner',
 	'seo.home.description':
 		'Handle auf binären Ergebnismärkten mit sozialen Features auf dem Internet Computer.',
-	'seo.home.title': 'Vici Social Markets | Vorhersagen. Handeln. Gewinnen.',
+	'seo.home.title': 'VICI Social Markets | Vorhersagen. Handeln. Gewinnen.',
 	'settings.about': 'VICI · v{version} · Build {build}',
 	'settings.account': 'Konto',
 	'settings.account.email': 'E-Mail',

@@ -342,7 +342,7 @@ export const enMessages = {
 	'authn.checking.aria': 'Checking sign-in status',
 	'authn.passkey.create_button': 'Create Passkey',
 	'authn.passkey.enter_nickname': 'Enter a nickname...',
-	'authn.passkey.fallback_displayname': 'Vici User',
+	'authn.passkey.fallback_displayname': 'VICI User',
 	'authn.passkey.signin_button': 'Sign in with Passkey',
 	'authn.passkey.toggle_signin': 'Already have a passkey? Sign in',
 	'authn.passkey.toggle_signup': 'First time? Create a passkey',
@@ -1300,7 +1300,7 @@ export const enMessages = {
 	'resolution.winner': 'Winner',
 	'seo.home.description':
 		'Trade on binary outcome markets with social features on the Internet Computer.',
-	'seo.home.title': 'Vici Social Markets | Predict. Trade. Win.',
+	'seo.home.title': 'VICI Social Markets | Predict. Trade. Win.',
 	'settings.about': 'VICI · v{version} · Build {build}',
 	'settings.account': 'Account',
 	'settings.account.email': 'Email',
