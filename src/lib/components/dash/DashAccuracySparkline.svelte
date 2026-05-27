@@ -2,7 +2,6 @@
 	/**
 	 * Compact accuracy-trend sparkline for the Dash.
 	 *
-	 * Mirrors the prototype's static SVG in `screens.jsx` DashScreen:
 	 *  - filled area at 32 % laurel-tint at the top, fading to 0
 	 *  - line stroke `--accent`
 	 *  - trailing dot at the right edge

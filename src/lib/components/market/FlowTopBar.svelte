@@ -11,13 +11,10 @@
 	/**
 	 * FlowTopBar — sticky header for Flow Mode.
 	 *
-	 * Reinstated per prototype `app.jsx:805-836`: VICI wordmark + category
-	 * deck badge ("WORLD CUP" / "N CATS") + bolt streak chip on the
-	 * left, bell on the right. A secondary row carries
-	 * `idx / total` + `+xp VXP this session` and a thin progress bar.
-	 *
-	 * Replaces the floating exit chip (C-9 strip) — the close button
-	 * (X) is owned by FlowMode and rendered separately above the card.
+	 * Layout: VICI wordmark + category deck badge ("WORLD CUP" /
+	 * "N CATS") + bolt streak chip on the left, bell on the right. A
+	 * secondary row carries `idx / total` + `+xp VXP this session`
+	 * and a thin progress bar. Tapping the wordmark exits Flow.
 	 */
 	interface Props {
 		maxBets: number;

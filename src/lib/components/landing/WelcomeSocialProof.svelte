@@ -1,10 +1,8 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `SocialProof`
-	 * (`landing.jsx:845-863`). Section eyebrow + h2 + lede + 3-panel
-	 * grid (LeagueShowcase + BoutShowcase + WorldsUniversitiesBout).
-	 * Auto-fit `minmax(280px, 1fr)` so the panels stack on narrow
-	 * viewports — same breakpoint behaviour as the prototype.
+	 * Section eyebrow + h2 + lede + 3-panel grid (LeagueShowcase +
+	 * BoutShowcase + WorldsUniversitiesBout). Auto-fit
+	 * `minmax(280px, 1fr)` stacks the panels on narrow viewports.
 	 */
 	import WelcomeBoutShowcase from '$lib/components/landing/WelcomeBoutShowcase.svelte';
 	import WelcomeLeagueShowcase from '$lib/components/landing/WelcomeLeagueShowcase.svelte';

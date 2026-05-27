@@ -1,9 +1,7 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `WorldsUniversitiesBout`
-	 * (`landing.jsx:1097-1189`). Featured tentpole panel — eyebrow +
-	 * live FIFA tag + h3 + sub + podium (silver / gold / bronze, gold
-	 * center, taller).
+	 * Featured tentpole panel — eyebrow + live FIFA tag + h3 + sub +
+	 * podium (silver / gold / bronze, gold centred and taller).
 	 */
 	import { ChevronRight } from 'lucide-svelte/icons';
 	import {

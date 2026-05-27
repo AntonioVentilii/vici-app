@@ -21,8 +21,7 @@
 
 	/**
 	 * Worlds bout — the full leaderboard surface across every
-	 * affiliation of a given `kind` (`university` or `country`). Mirrors
-	 * the prototype's `WorldsBoutDetail` (`screens.jsx:3757`).
+	 * affiliation of a given `kind` (`university` or `country`).
 	 *
 	 * Layers in order:
 	 *
@@ -43,11 +42,10 @@
 	 *     surface as an eyebrow card at the bottom so users learn what
 	 *     they're playing for.
 	 *
-	 * Unlike the prototype's mocked rankings, our roster ordering is
-	 * driven off `listAffiliationStats`. Affiliations without a stats
-	 * doc (no resolved calls yet) don't appear in the ranked list — the
-	 * affiliation detail page is the place to land before your first
-	 * call resolves.
+	 * Roster ordering is driven off `listAffiliationStats`.
+	 * Affiliations without a stats doc (no resolved calls yet) don't
+	 * appear in the ranked list — the affiliation detail page is the
+	 * place to land before your first call resolves.
 	 */
 	interface Props {
 		kind: AffiliationKind;

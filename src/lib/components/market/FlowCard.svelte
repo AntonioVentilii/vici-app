@@ -30,8 +30,7 @@
 		tradeAmount: string;
 		interactive?: boolean;
 		// When true, the parent has paused the deck (e.g. a sheet is
-		// open) and the card desaturates / dims its faces — prototype
-		// parity (`app.css:362-370`).
+		// open) and the card desaturates / dims its faces.
 		locked?: boolean;
 		// Generative-artwork category. FlowMode resolves this from the
 		// market's primary tag; FlowCard treats it as opaque and falls back
@@ -72,10 +71,9 @@
 
 	const isCommitted = $derived(committedAction !== null);
 
-	// Swipe physics — match the prototype FlowCard exactly: rotation
-	// damping of 18 (drag.x / 18), commit threshold of 100 px, settle
-	// delay of 220 ms after pointer-up before the trade fires, vibrate
-	// 12 ms on commit.
+	// Swipe physics — rotation damping of 18 (drag.x / 18), commit
+	// threshold of 100 px, settle delay of 220 ms after pointer-up
+	// before the trade fires, vibrate 12 ms on commit.
 	const SWIPE_THRESHOLD = 100;
 	const SKIP_THRESHOLD = 110;
 	const SETTLE_MS = 220;
@@ -89,13 +87,13 @@
 	);
 	const catColor = $derived(tagColor(resolvedCategory));
 
-	// Both faces are always rendered; an opacity crossfade swaps which is
-	// visible. Replaces the old true-3D `rotateY` flip per the prototype.
+	// Both faces are always rendered; an opacity crossfade swaps which
+	// is visible (no true-3D `rotateY` flip).
 	let flipped = $state(false);
 
-	// Drag state — raw deltas, no Spring. Matches the prototype's
-	// `useState({x, y, dragging})` model and the same `committedRef`
-	// one-shot latch reset on market change.
+	// Drag state — raw deltas, no Spring. Plain `{x, y, dragging}`
+	// model with a `committedRef` one-shot latch reset on market
+	// change so a fast double-swipe can't fire twice.
 	let dragX = $state(0);
 	let dragY = $state(0);
 	let dragging = $state(false);
@@ -119,9 +117,8 @@
 	const yesIsFav = $derived(crowdPct >= 50);
 	const noPct = $derived(100 - crowdPct);
 
-	// Payout preview — stake/(probability) − stake, clamped at p=0.05 to
-	// keep long-shots from rendering pathological numbers. Matches the
-	// prototype's FlowCard payout formula on the front face.
+	// Payout preview — stake/(probability) − stake, clamped at p=0.05
+	// to keep long-shots from rendering pathological numbers.
 	const stakeNum = $derived(Math.max(0, Number(tradeAmount) || 0));
 	const probMyYes = $derived(Math.max(0.05, market.yesProbability));
 	const probMyNo = $derived(Math.max(0.05, 1 - market.yesProbability));
@@ -138,8 +135,8 @@
 	);
 
 	// Live countdown — days until expiry, displayed as a chip in the
-	// meta row. Computed off `expiryDate` (ms). Urgency tiers mirror
-	// the prototype: ≤ 1 day = urgent, ≤ 7 = soon.
+	// meta row. Computed off `expiryDate` (ms). Urgency tiers:
+	// ≤ 1 day = urgent, ≤ 7 = soon.
 	const daysLeft = $derived.by(() => {
 		const ms = Number(market.expiryDate) - Date.now();
 
@@ -207,11 +204,10 @@
 		market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0
 	);
 
-	// Per-market momentum delta — deterministic per market.id, drives the
-	// "+N today" fallback line shown when the user has no followed-friends
-	// data on this market. Range ~10..99 keeps the number plausible without
-	// requiring a live aggregator. Mirrors the prototype's
-	// `seedFromId(market.id)` fallback in `flow.jsx:718-726`.
+	// Per-market momentum delta — deterministic per market.id, drives
+	// the "+N today" fallback line shown when the user has no
+	// followed-friends data on this market. Range ~10..99 keeps the
+	// number plausible without requiring a live aggregator.
 	const momentumDelta = $derived.by(() => {
 		const id = String(market.id);
 		let hash = 0;
@@ -319,8 +315,7 @@
 
 		if (flipped) {
 			// Back of card: only react to clearly horizontal motion —
-			// vertical scroll belongs to the panel body. Mirrors the
-			// prototype's back-face drag guard.
+			// vertical scroll belongs to the panel body.
 			if (Math.abs(dx) > Math.abs(dy) * 1.2 && Math.abs(dx) > 8) {
 				dragX = dx;
 				dragY = 0;
@@ -360,8 +355,8 @@
 
 		if (flipped) {
 			// Back of card: tap returns to front; horizontal swipe still
-			// commits a call (prototype back-face parity); vertical
-			// motion (a scroll attempt) just snaps the card back.
+			// commits a call; vertical motion (a scroll attempt) just
+			// snaps the card back.
 			if (movedDist < TAP_PX) {
 				dragX = 0;
 				dragY = 0;
@@ -533,9 +528,8 @@
 				<!-- Friends social proof + live momentum. When the user
 				     follows predictors who've called this market, surface
 				     the YES/NO split alongside an overlapping avatar
-				     stack (prototype `flow.jsx:702-728`). Falls back to a
-				     predictors-count line, then to the user's own position
-				     when nothing else is available. -->
+				     stack. Falls back to a predictors-count + momentum
+				     delta line. -->
 				<div class="flow-social num">
 					{#if followedYes !== undefined && followedYes > 0}
 						{#if friendAvatarCount > 0}
@@ -567,8 +561,7 @@
 				</div>
 
 				<!-- Edge-to-edge market artwork. No padding around the
-				     frame — extends across the card body (prototype
-				     `bleed` mode). -->
+				     frame — extends across the card body (`bleed` mode). -->
 				<div class="flow-art-bleed">
 					<MarketArtwork
 						bleed
@@ -653,7 +646,7 @@
 			</div>
 
 			<!-- Full-card swipe overlays — large YES/NO/SKIP text
-			     overlays per the prototype `overlay` block. -->
+			     overlays that fade in with drag progress. -->
 			<div
 				style:opacity={signedIn ? overlayYes : overlayYes * 0.5}
 				class="flow-overlay flow-overlay-yes"
@@ -749,8 +742,7 @@
 	}
 
 	/* Locked state — parent (e.g. FlowMode) flips `locked` when a sheet
-	   is open and gestures should pause. Both faces desaturate / dim
-	   per the prototype (`app.css:362-370`). */
+	   is open and gestures should pause. Both faces desaturate / dim. */
 	.flow-card.is-locked .flow-face {
 		filter: brightness(0.92) saturate(0.9);
 		transition: filter 280ms var(--ease-vici);
@@ -900,10 +892,10 @@
 		font-size: var(--t-14);
 		line-height: var(--leading-normal);
 		color: var(--text-muted);
-		/* Serif-italic accent — prototype's editorial sub-row (`.flow-ctx-editorial`).
-		   The global `.serif-italic` utility class also sets font-family +
-		   weight; this duplicates a few props so the typography still reads
-		   when the utility class is overridden by parent context. */
+		/* Serif-italic accent — editorial sub-row. The global
+		   `.serif-italic` utility also sets font-family + weight; this
+		   duplicates a few props so the typography still reads when the
+		   utility class is overridden by parent context. */
 		font-family: var(--font-serif);
 		font-style: italic;
 		font-weight: 400;
@@ -957,8 +949,8 @@
 	}
 	/* Edge-to-edge artwork frame — the FlowArtFrame's own rounded
 	   corners come off so the body of the card hosts the art with no
-	   side padding (prototype `bleed`). The frame's height is fixed
-	   so the title / probs row never reflow on layout changes. */
+	   side padding (`bleed` mode). The frame's height is fixed so the
+	   title / probs row never reflow on layout changes. */
 	.flow-art-bleed {
 		position: relative;
 		width: 100%;
@@ -1107,9 +1099,9 @@
 		opacity: 0.7;
 	}
 
-	/* Full-card swipe overlays — large directional labels per the
-	   prototype `.overlay`. No edge-inset glow (C-14 strip): the
-	   overlay text alone carries the swipe intent. */
+	/* Full-card swipe overlays — large directional YES / NO / SKIP
+	   labels that fade in with drag progress. The overlay text alone
+	   carries the swipe intent; no edge-inset glow. */
 	.flow-overlay {
 		position: absolute;
 		inset: 0;

@@ -1,14 +1,12 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `Landing` component
-	 * (`landing.jsx:20-46`). Renders WelcomeNav (desktop+mobile),
-	 * Ticker (locked at top per user request — the only intentional
-	 * divergence), Hero, WCFeature, LiveMarkets, FlowFeature,
-	 * SocialProof, Loop, FAQ, TrustAndClose, Footer.
+	 * Landing surface. Renders WelcomeNav (desktop + mobile), Ticker
+	 * (locked at the top per user request), Hero, WCFeature,
+	 * LiveMarkets, FlowFeature, SocialProof, Loop, FAQ, TrustAndClose,
+	 * Footer.
 	 *
 	 * The hero copy + visual is inlined here (rather than extracted)
-	 * to mirror the prototype's `<Hero>` (`landing.jsx:384-426`),
-	 * which is also a single inline JSX block.
+	 * because it's a single editorial block.
 	 */
 	import { ChevronRight, Clock } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
@@ -39,9 +37,7 @@
 <div class="lp-root">
 	<WelcomeNav />
 
-	<!-- Ticker stays at the TOP per user request — intentional, locked
-	     divergence from the prototype (which places the ticker between
-	     Hero and the WC feature block, landing.jsx:36). -->
+	<!-- Ticker stays at the TOP per user request (locked). -->
 	<Ticker />
 
 	<main id="main">
@@ -139,9 +135,9 @@
 </div>
 
 <style lang="postcss">
-	/* Background ambient gradients — the prototype lives on `body`,
-	   but we scope to the landing root so non-landing routes (sign-in
-	   modals, etc.) aren't tinted by the same wash. */
+	/* Background ambient gradients — scoped to the landing root so
+	   non-landing routes (sign-in modals, etc.) aren't tinted by the
+	   same wash. */
 	.lp-root {
 		min-height: 100dvh;
 		background:

@@ -5,9 +5,8 @@
  * statically excludes the `wc` category), so these stay isolated to
  * the public hero surface.
  *
- * The shape mirrors the prototype's `data.js` World Cup fixtures: a
- * favourite team probability + total volume + close date drive the
- * faithful Trickster pill, callers pulse, predictors+delta, and
+ * Shape: a favourite-team probability + total volume + close date
+ * drive the Trickster pill, callers pulse, predictors + delta, and
  * probability split rendered by `WelcomeHeroFlowCard.svelte`.
  *
  * `yesProbability` is the source of truth (0–1). `yesPercent` is the
@@ -35,8 +34,8 @@ export interface WelcomeHeroWcMarket {
 	// "412 callers in last hour" rendered below the Trickster pill.
 	readonly callersLastHour: number;
 	// Serif-italic accent line beneath the question. Editorial copy —
-	// keep it short, evocative; mirrors the prototype's "Hex contenders
-	// · {favoritePct}% favorite" treatment.
+	// keep it short, evocative (e.g. "Hex contenders · {favoritePct}%
+	// favorite").
 	readonly accentCtx: string;
 	// Brazil-specific figure flag. The hero card renders the rich
 	// player SVG only when `hasFigure === true`; back cards (Spain /

@@ -50,10 +50,10 @@
 </div>
 
 <style lang="postcss">
-	/* Prototype-parity entrance envelope. The prototype's `toast-in`
-	   uses `translateX(-50%)` for the singleton centered toast; our
-	   notifications stack inside an already-centered column, so we
-	   apply the matching `fade-up` keyframe (same 8px lift, same
+	/* Entrance envelope. The shared `toast-in` keyframe uses
+	   `translateX(-50%)` for the singleton centred toast; our
+	   notifications stack inside an already-centred column, so we
+	   apply the matching `fade-up` keyframe (same 8 px lift, same
 	   timing) without re-translating each button. */
 	.vici-toast {
 		animation: fade-up 280ms cubic-bezier(0.16, 1, 0.3, 1) both;

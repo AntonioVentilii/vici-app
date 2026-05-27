@@ -1,9 +1,7 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `TrustAndClose`
-	 * (`landing.jsx:1323-1353`). Combined closer section: credibility
-	 * wall (3 pillars) → hairline divider → final CTA with Latin
-	 * sign-off.
+	 * Closer section on the landing page: credibility wall (3 pillars)
+	 * → hairline divider → final CTA with Latin sign-off.
 	 */
 	import { ChevronRight } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';

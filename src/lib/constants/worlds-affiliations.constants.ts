@@ -23,9 +23,7 @@ export interface WorldsAffiliationOption {
 /**
  * University roster — covers the global flagship set plus regional
  * top tiers (US Ivies + UC + Big Ten, UK Russell Group, Europe
- * grandes écoles + ETH-tier, Asia top-tier, LATAM flagships). The
- * list is curated against the universities that surface in the
- * Worlds leaderboard mocks plus the prototype's top-160 roster.
+ * grandes écoles + ETH-tier, Asia top-tier, LATAM flagships).
  * Future additions are append-only (no satellite migration needed).
  */
 export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [

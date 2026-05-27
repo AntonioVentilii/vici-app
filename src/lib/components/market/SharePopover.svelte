@@ -12,8 +12,6 @@
 	 * Reddit / LinkedIn / Copy link) takes its place. A live preview
 	 * shows exactly the text + URL that goes out. Footer surfaces the
 	 * 500-VXP referral incentive.
-	 *
-	 * Prototype source: `VICI WebApp Beta V1.2/flow.jsx:228-361`.
 	 */
 	interface PriorCallLite {
 		side: 'YES' | 'NO';

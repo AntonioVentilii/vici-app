@@ -1,10 +1,9 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `FAQ`
-	 * (`landing.jsx:1256-1314`). Six visitor-stage questions. Native
-	 * <details>/<summary> would also work, but the prototype uses
-	 * `useState` to mirror an "only one open at a time" UX with the
-	 * first question expanded by default — we port that.
+	 * Six visitor-stage questions in an "only one open at a time"
+	 * accordion, with the first question expanded by default. Uses
+	 * local `$state` rather than native <details>/<summary> so we
+	 * keep the single-expanded invariant.
 	 */
 	import { ChevronDown } from 'lucide-svelte/icons';
 

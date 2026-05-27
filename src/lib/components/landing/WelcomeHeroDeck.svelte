@@ -1,11 +1,9 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `HeroVisual`
-	 * (`landing.jsx:660-680`). Three LANDING_MARKETS rendered as a
-	 * stacked deck — `slice().reverse()` so the top card is the FIRST
-	 * market (`wc-winner-brazil`, which is `hot: true` in the
-	 * prototype's data, so its minority<25% triggers the Trickster
-	 * pill).
+	 * Hero visual on the landing page — three `LANDING_MARKETS`
+	 * rendered as a stacked deck. `slice().reverse()` keeps the top
+	 * card as the FIRST market (`wc-winner-brazil`, `hot: true`, so
+	 * its minority<25% triggers the Trickster pill).
 	 */
 	import LandingFlowCard from '$lib/components/landing/LandingFlowCard.svelte';
 	import { LANDING_MARKETS } from '$lib/constants/landing-data.constants';

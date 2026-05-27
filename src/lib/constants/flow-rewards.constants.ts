@@ -37,9 +37,8 @@ export interface FlowMilestone {
 
 /**
  * Swipe-count milestones. Hit when the *committed* swipe count
- * (`betsCount`) reaches `swipeCount` exactly. Mirrors the prototype's
- * `motion-engine.js` MILESTONES table (1/3/5/10/25/50/100/250/500/1000)
- * with the same bonus XP ladder and copy.
+ * (`betsCount`) reaches `swipeCount` exactly — 1 / 3 / 5 / 10 / 25 /
+ * 50 / 100 / 250 / 500 / 1000.
  */
 export const FLOW_MILESTONES: readonly FlowMilestone[] = [
 	{ id: 'first-call', swipeCount: 1, bonusXp: 50, copyKey: 'flow.milestone.first_call' },

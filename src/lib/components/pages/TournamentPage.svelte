@@ -474,7 +474,7 @@
 		padding: 0 1.25rem 6rem;
 	}
 
-	/* Hero — top-down purple fade, matching the prototype's
+	/* Hero — top-down purple fade:
 	   `linear-gradient(180deg, rgba(180,156,255,0.10), transparent 70%)`
 	   over `var(--bg-surface)`. */
 	.tournament-hero {
@@ -625,7 +625,7 @@
 	}
 
 	/* Live indicator on the first match of the current round —
-	   purple `#b49cff` matches the prototype's tournament accent. */
+	   purple `#b49cff` is the tournament accent. */
 	.tournament-match-live {
 		color: #b49cff;
 		font-weight: 700;

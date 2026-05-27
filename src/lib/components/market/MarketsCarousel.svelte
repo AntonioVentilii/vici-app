@@ -4,18 +4,8 @@
 	import type { Market } from '$lib/types/market';
 
 	/**
-	 * Verbatim port of the prototype's inline carousel block
-	 * (screens.jsx:116-124 — Saved rail; screens.jsx:129-135 —
-	 * Trending rail):
-	 *
-	 *   <div className="section-h">
-	 *     <h3>{title}</h3>
-	 *     <span className="more" style={...} onClick={onMore}>{moreLabel}</span>
-	 *   </div>
-	 *   <div className="no-scrollbar"
-	 *        style={{ display: 'flex', gap: 12, padding: '4px 20px 12px', overflowX: 'auto' }}>
-	 *     {items.map((m) => <FeaturedCard key={m.id} m={m} onClick={...} />)}
-	 *   </div>
+	 * Section header + horizontally-scrolling row of `MarketsFeaturedCard`s.
+	 * Used by the Saved and Trending rails on the markets page.
 	 */
 	interface Props {
 		title: string;

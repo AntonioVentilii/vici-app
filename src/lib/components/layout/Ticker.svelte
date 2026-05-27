@@ -1,7 +1,6 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `Ticker` (`landing.jsx:682-699`).
-	 * Renders the first 8 LANDING_MARKETS doubled-up (so the seamless
+	 * Renders the first 8 `LANDING_MARKETS` doubled-up (so the seamless
 	 * scroll loops without a visible cut) inside the `.lp-ticker`
 	 * frame defined in `src/landing.css`.
 	 */

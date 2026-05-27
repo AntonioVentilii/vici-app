@@ -10,26 +10,10 @@
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	/**
-	 * Verbatim port of prototype `FeaturedCard` (screens.jsx:161-179).
-	 *
-	 *   <div onClick={onClick} className="card" style={{
-	 *     flex: '0 0 280px', cursor: 'pointer', padding: 14,
-	 *     background: 'linear-gradient(180deg, var(--bg-raised), var(--bg))'
-	 *   }}>
-	 *     <div className="row between">
-	 *       <span className="tag" style={{ color: catColor(m.cat) }}>{m.cat.toUpperCase()}</span>
-	 *       <span className="num mute t-eyebrow">{m.vol}</span>
-	 *     </div>
-	 *     <div style={{ marginTop: 12, fontSize: 15, fontWeight: 600, lineHeight: 1.3, minHeight: 58 }}>{m.q}</div>
-	 *     <div className="row between" style={{ marginTop: 14 }}>
-	 *       <span className="num yes t-h4" style={{ fontWeight: 600 }}>{m.yes}%</span>
-	 *       <span className="row" style={{ gap: 4 }}>
-	 *         <span className="tag yes">YES</span>
-	 *         <span className="tag no">NO</span>
-	 *       </span>
-	 *     </div>
-	 *     <div style={{ marginTop: 8 }}><ProbBar yes={m.yes} /></div>
-	 *   </div>
+	 * Fixed-width (280 px) market card used in the Saved / Trending
+	 * rails on the markets page. Header row carries the category tag
+	 * + volume; body is the question; footer pairs the YES % with
+	 * `YES / NO` mini-tags above a `ProbBar`.
 	 */
 	interface Props {
 		market: Market;

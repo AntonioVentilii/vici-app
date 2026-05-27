@@ -36,8 +36,7 @@
 	const productionAvailable = $derived(isProd() && isNotSkylab());
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
 	const isBusy = $derived(signingIn !== null);
-	// Mirrors the prototype's `otherFaded` — when the email row is
-	// expanded the other providers dim to 0.4.
+	// When the email row is expanded the other providers dim to 0.4.
 	const isFaded = $derived(emailOpen && phase === 'idle' && signingIn === null);
 
 	const startSignIn = async ({
@@ -281,8 +280,8 @@
 			</form>
 		{/if}
 
-		<!-- Internet Identity — production-need (C-8 keep). Styled to
-			 match the prototype's `signin-provider-btn` pattern. -->
+		<!-- Internet Identity — production-need. Uses the shared
+			 `signin-provider-btn` style. -->
 		<button
 			class="signin-provider-btn"
 			class:is-faded={isFaded}

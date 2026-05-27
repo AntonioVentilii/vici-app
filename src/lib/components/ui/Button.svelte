@@ -35,8 +35,7 @@
 		danger: 'bg-destructive text-destructive-foreground shadow-inset-hi hover:bg-no-deep'
 	};
 
-	// Padding + radius scale ports the prototype's `.btn` / `.btn-lg`
-	// rules (`app.css:128-143`): default = `14px 20px / radius 12px`,
+	// Padding + radius scale: default = `14px 20px / radius 12px`,
 	// large = `16px 22px / radius 14px`, small scales down
 	// proportionally. The base radius (`rounded-xl` = 12px) is set on
 	// the wrapper below; the `lg` variant overrides to 14px.

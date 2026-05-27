@@ -1,9 +1,7 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `Trickster` character SVG
-	 * (`characters.jsx:56-78`). Fox silhouette with optional lightning
-	 * bolts. Used on the LandingFlowCard's contrarian (minority<25%)
-	 * markets.
+	 * Fox silhouette with optional lightning bolts. Used on the
+	 * LandingFlowCard's contrarian (minority < 25 %) markets.
 	 */
 	interface Props {
 		size?: number;

@@ -97,7 +97,7 @@
 
 	// The handle is rendered as a separate emphasised span; the suffix
 	// covers the "+ N friends" tail. For a single friend the suffix is
-	// empty, matching the prototype's "<b>@handle</b>" layout.
+	// empty — `<b>@handle</b>` stands on its own.
 	const friendOverlapSuffix = $derived.by(() => {
 		if (!friendOverlap || friendOverlap.count <= 1) {
 			return;

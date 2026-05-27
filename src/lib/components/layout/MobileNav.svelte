@@ -9,8 +9,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Floating "pillnav" bottom nav — ports the prototype's `BottomNav`
-	 * (app.jsx:536-659 + app.css:2709-2848).
+	 * Floating "pillnav" bottom nav.
 	 *
 	 * Five tabs (Markets / Dash / Flow / Social / Profile) in a centred,
 	 * floating pill with a 3px laurel indicator that slides between
@@ -26,10 +25,9 @@
 	 *  - Profile ← /profile, /profile/album, /settings, /wallet,
 	 *              /notifications
 	 *
-	 * Icons are inline `<svg>` (stroke 1.6 outline ↔ filled) instead of
-	 * lucide so we can match the prototype's outline-to-filled swap
-	 * exactly; this is the convention chosen in the prototype's
-	 * `ICONS` table (app.jsx:539-595).
+	 * Icons are inline `<svg>` (stroke 1.6 outline ↔ filled) rather
+	 * than lucide so the outline-to-filled swap on the active tab
+	 * lands exactly.
 	 */
 
 	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
@@ -74,9 +72,7 @@
 	const isFlowActive = $derived(activeIndex >= 0 && isFlowPath(visibleNavItems[activeIndex].path));
 
 	const handleNav = (path: AppPath) => {
-		// Light tap on tab change. Prototype intent — its own
-		// `if (window.haptic)` shim was a permanent no-op
-		// (`app.jsx:647`); we wire the real Vibration API here.
+		// Light tap on tab change — wired through the real Vibration API.
 		haptic('light-tap');
 		goto(path);
 	};
@@ -84,8 +80,7 @@
 	/* ------------------------------------------------------------------
 	 * Sliding indicator — measure the active tab and centre a 28px pill
 	 * over it. Recomputed via ResizeObserver so the indicator tracks
-	 * orientation changes / nav-width shifts (mirrors the prototype's
-	 * `useEffect` + `ResizeObserver` in app.jsx:613-632).
+	 * orientation changes / nav-width shifts.
 	 * ------------------------------------------------------------------ */
 	let navEl: HTMLElement | null = $state(null);
 	let indicatorLeft = $state(0);

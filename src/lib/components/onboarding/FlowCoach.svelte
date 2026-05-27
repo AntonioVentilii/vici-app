@@ -8,14 +8,13 @@
 	 * FlowCoach — first-run gesture coach overlay shown above the deck.
 	 * Cycles through five hints (NO / YES / SKIP / TAP / IDLE) on a
 	 * timer-driven phase machine. Every phase tags `.flow-card` and
-	 * `.ob-card` elements with `data-coach-phase` so the cards drift in
-	 * sympathy via the prototype CSS in `app.css` (`.flow-card[data-
-	 * coach-phase]`). Phase 3 flips the card to its back face by toggling
-	 * `is-flipped`; phase 4 cleans up and returns control. Dismisses on
-	 * any pointer-down; persists dismissal in `localStorage` so the coach
-	 * is shown at most once per surface per device.
-	 *
-	 * Prototype source: `VICI WebApp Beta V1.2/flow.jsx:1055-1121`.
+	 * `.ob-card` elements with `data-coach-phase` so the cards drift
+	 * in sympathy via the matching CSS in `app.css`
+	 * (`.flow-card[data-coach-phase]`). Phase 3 flips the card to its
+	 * back face by toggling `is-flipped`; phase 4 cleans up and returns
+	 * control. Dismisses on any pointer-down; persists dismissal in
+	 * `localStorage` so the coach is shown at most once per surface per
+	 * device.
 	 */
 	interface Props {
 		surface?: 'flow' | 'onboarding';

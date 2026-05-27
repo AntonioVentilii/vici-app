@@ -34,8 +34,8 @@
 	const accent = $derived(accentColor ?? '#7e9b6a');
 
 	// Deterministic per-principal gradient. We bucket the principal
-	// text into the same Panini-style palette the prototype uses so
-	// repeat visits land on the same swatch.
+	// text into a Panini-style palette so repeat visits land on the
+	// same swatch.
 	const PALETTE = [
 		['#9C6E45', '#6E4A2A'],
 		['#A78657', '#7A5E37'],

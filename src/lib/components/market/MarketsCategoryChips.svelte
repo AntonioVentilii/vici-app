@@ -19,23 +19,9 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Verbatim port of prototype `MarketsScreen` chip rail
-	 * (screens.jsx:101-112):
-	 *
-	 *   <div className="no-scrollbar"
-	 *        style={{ display: 'flex', gap: 6, padding: '4px 20px 14px', overflowX: 'auto' }}>
-	 *     <button onClick={() => setCat('saved')}
-	 *       className={"chip " + (cat === 'saved' ? 'active' : '')}>
-	 *       <span style={{ marginRight: 4 }}>♥</span>
-	 *       Saved{savedMarkets.length > 0 && ` · ${savedMarkets.length}`}
-	 *     </button>
-	 *     {window.VICI_DATA.CATS.map((c) =>
-	 *       <button key={c.id} onClick={() => setCat(c.id)}
-	 *         className={"chip " + (cat === c.id ? 'active' : '')}>
-	 *         {c.label}
-	 *       </button>
-	 *     )}
-	 *   </div>
+	 * Horizontally-scrolling chip rail for the Markets page: a leading
+	 * "♥ Saved · N" chip followed by one chip per category. Active
+	 * filter is highlighted; tapping a chip fires `onChange`.
 	 */
 	interface Props {
 		active: MarketsCategoryFilter;

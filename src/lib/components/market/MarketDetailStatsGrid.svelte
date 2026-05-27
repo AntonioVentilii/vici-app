@@ -17,9 +17,9 @@
 
 	// Liquidity proxy = the smaller of the two book sides — that's the
 	// depth a counter-trade can hit before pushing the other side. The
-	// satellite doesn't expose a separate liquidity field today; this
-	// mirrors how the prototype reads the same value (it just labels
-	// `vol`/`liq` separately on the same shape).
+	// satellite doesn't expose a separate liquidity field today; until
+	// it does we surface `min(yesVolume, noVolume)` under the `vol`
+	// and `liq` labels.
 	const liquidity = $derived(yesVolume < noVolume ? yesVolume : noVolume);
 
 	const userActivePosition = $derived(

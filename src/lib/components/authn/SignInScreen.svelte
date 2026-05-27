@@ -12,8 +12,7 @@
 
 	interface Props {
 		// Mode: `signin` for returning users (welcome-back framing),
-		// `signup` for new accounts. Verbatim port of the prototype
-		// `SignIn` surface (`VICI WebApp Beta V1.2/signin.jsx`).
+		// `signup` for new accounts.
 		mode?: 'signin' | 'signup';
 		// Callback for after a successful auth handshake. Defaults to
 		// navigating to `AppPath.Home`; routes calling this from a

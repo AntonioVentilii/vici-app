@@ -1,14 +1,10 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `LandingFlowCard`
-	 * (`landing.jsx:498-637`). Renders the canonical Flow-front face
-	 * with header tint, days chip, optional Trickster pill on
-	 * minority<25%, ConsensusCompass, editorial italic context line,
-	 * predictor stack + delta-today, probability split bar with
-	 * payouts + roles, size/swipe footer.
-	 *
-	 * Class names match the prototype 1:1 so the markup is portable
-	 * with `src/landing.css`.
+	 * Renders the canonical Flow-front face for landing surfaces:
+	 * header tint, days chip, optional Trickster pill on minority<25%,
+	 * ConsensusCompass, editorial italic context line, predictor stack
+	 * + delta-today, probability split bar with payouts + roles, and
+	 * the size / swipe footer. Class names align with `src/landing.css`.
 	 */
 
 	import LandingAvatarStack from '$lib/components/landing/LandingAvatarStack.svelte';
@@ -39,8 +35,8 @@
 	const daysLeft = $derived(market.days);
 	const daysClass = $derived(daysLeft <= 1 ? 'urgent' : daysLeft <= 7 ? 'soon' : '');
 	const predictors = $derived(market.predictors ?? 1240);
-	// Deterministic synthetic delta from market id, mirrors prototype's
-	// `seedFromId(market.id) % 90 + 10`.
+	// Deterministic synthetic delta from market id —
+	// `seedFromId(market.id) % 90 + 10` produces a stable ~10..99 value.
 	const seed = $derived([...market.id].reduce((acc, ch) => acc + ch.charCodeAt(0), 0));
 	const delta = $derived((seed % 90) + 10);
 </script>

@@ -2,9 +2,7 @@
  * Mock data for the landing-page Social Proof trio
  * (LeagueShowcase / BoutShowcase / WorldsUniversitiesBout).
  *
- * Faithfully mirrors the prototype values in
- * `VICI WebApp Beta V1.2/landing.jsx` (Panel 01/02/03). These are
- * landing visuals only — not wired to real data. Keep the shapes
+ * Landing visuals only — not wired to real data. Keep the shapes
  * minimal so the three Svelte panels render without pulling in the
  * full app's data layer.
  */

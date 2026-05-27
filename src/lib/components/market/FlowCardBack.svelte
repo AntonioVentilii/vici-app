@@ -101,8 +101,8 @@
 		return ms > 0 && ms <= 86_400_000;
 	});
 
-	// Sharp-predictor lean — leans 10pp further than consensus, capped
-	// at 95. Mirrors the prototype's `sharpPct = min(95, yes + 10)`.
+	// Sharp-predictor lean — `sharpPct = min(95, yes + 10)` keeps the
+	// top-decile band leaning 10pp further than consensus, capped at 95.
 	const sharpPct = $derived(Math.min(95, yesPct + 10));
 	const sharpDiff = $derived(sharpPct - yesPct);
 
@@ -179,9 +179,8 @@
 
 	// Share popover toggle — anchored above the share button. The
 	// popover handles native / clipboard / channel paths itself; this
-	// component owns just the open/close state and the toast we show on
-	// successful clipboard copy. Prototype source: `flow.jsx:228-361`
-	// (the share popover is consumed by the FlowCard back face).
+	// component owns just the open/close state and the toast we show
+	// on successful clipboard copy.
 	let shareOpen = $state(false);
 
 	const toggleShare = () => {
@@ -557,7 +556,7 @@
 	/* Share-pop anchor button — mirrors `MarketDetailShareButton` but
 	   stays inline here because the popover is anchored relative to
 	   `.flow-back-actions`, so the button can't take its own offset
-	   parent. Prototype source: `flow.jsx:228-361`. */
+	   parent. */
 	.flow-back-share {
 		display: inline-flex;
 		width: 2.25rem;

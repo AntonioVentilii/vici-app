@@ -6,12 +6,11 @@
 
 	/**
 	 * FlowXpPops — multi-pop manager. Each entry in `pops` renders
-	 * either an inline laurel/yes/no pop (the rich Svelte envelope with
-	 * combo + bonus copy line — no prototype analogue) or, for the
-	 * plain "+N VXP" ambient case, falls back to the standalone
-	 * `<XpToast>` (the prototype's single pill in `flow.jsx:1569-1582`).
-	 * The aggregator owns position + fan-out; `XpToast` owns the pill
-	 * envelope when the simpler shape is enough.
+	 * either an inline laurel/yes/no pop (the rich envelope with combo
+	 * + bonus copy line) or, for the plain "+N VXP" ambient case,
+	 * falls back to the standalone `<XpToast>` pill. The aggregator
+	 * owns position + fan-out; `XpToast` owns the pill envelope when
+	 * the simpler shape is enough.
 	 */
 	interface Props {
 		pops: XpPop[];
@@ -19,9 +18,9 @@
 
 	const { pops }: Props = $props();
 
-	// A pop routes to `<XpToast>` (the standalone prototype pill) when
-	// it's a plain ambient award — no combo multiplier, no milestone
-	// copy, no bonus envelope. Everything else takes the rich inline
+	// A pop routes to `<XpToast>` (the standalone pill) when it's a
+	// plain ambient award — no combo multiplier, no milestone copy,
+	// no bonus envelope. Everything else takes the rich inline
 	// envelope below so we keep combo + serif-italic milestone copy +
 	// laurel ring on the cases that need them.
 	const isPlainToast = (pop: XpPop): boolean =>

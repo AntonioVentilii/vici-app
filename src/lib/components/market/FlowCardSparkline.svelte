@@ -5,8 +5,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Sparkline on the back of a Flow card — port of the design's
-	 * `Sparkline` component (`flow.jsx:1206`).
+	 * Sparkline on the back of a Flow card.
 	 *
 	 * Shape:
 	 *  - 240×56 SVG (with extra 8px overflow for the label area)
@@ -14,7 +13,7 @@
 	 *    `yesPercent` so the trailing dot reads as "live"
 	 *  - filled area beneath the line at 8% opacity
 	 *  - line stroke is `--yes` when YES ≥ 50%, else `--no` (not an
-	 *    accent prop) — matches the prototype's `color = yes >= 50 ? …`
+	 *    accent prop)
 	 *  - trailing 2.5px live-dot at the right edge
 	 *
 	 * Event markers:
@@ -23,8 +22,8 @@
 	 *    vertical line + filled dot
 	 *  - When no event is active and the market has events, a hint
 	 *    surfaces below: "N events this week · tap a dot"
-	 *  - When one is active, the prototype's `DAY DOM MONTH · LABEL · ↑/↓`
-	 *    row replaces the hint
+	 *  - When one is active, a `DAY DOM MONTH · LABEL · ↑/↓` row
+	 *    replaces the hint
 	 *  - Active state resets whenever the events identity changes
 	 *    (handled by Svelte's reactive `$effect` keyed off the seed)
 	 *
@@ -45,9 +44,8 @@
 
 	const points = $derived(sparklinePoints({ yesPercent, seed }));
 
-	// Build the line path the same way the prototype does:
-	//   M <x0> <y0> L <x1> <y1> ... L <xN> <yN>
-	// `y = h - (pct/100)*h - 2` matches `flow.jsx:1223`.
+	// Build the line path: `M <x0> <y0> L <x1> <y1> ... L <xN> <yN>`
+	// with `y = h - (pct/100)*h - 2` so 100 % sits 2 px below the top.
 	const linePath = $derived(
 		points
 			.map((p, i) => {
@@ -60,7 +58,7 @@
 	);
 
 	// Area path closes the line back to the bottom-left corner —
-	// `M…L… L${w} ${h} L0 ${h} Z`. Matches `flow.jsx:1240`.
+	// `M…L… L${w} ${h} L0 ${h} Z`.
 	const areaPath = $derived(linePath.length > 0 ? `${linePath} L${w} ${h} L0 ${h} Z` : '');
 
 	const lineColor = $derived(yesPercent >= 50 ? 'var(--yes)' : 'var(--no)');
@@ -70,8 +68,7 @@
 	let activeEvent = $state<number | null>(null);
 
 	// Reset the active marker whenever the market changes (events
-	// identity follows the seed). Mirrors the prototype's
-	// `useEffect(()=>{ setActiveEvent(null); }, [events])`.
+	// identity follows the seed).
 	$effect(() => {
 		// Touch `seed` to take a reactive dep.
 		void seed;
@@ -79,9 +76,8 @@
 	});
 
 	// Map an event's `day` field (1..7, 7 = today) to its index in the
-	// 15-point `points` array — the prototype uses
-	// `idx = (points.length-1) - (7 - day)` (i.e. the last 7 points are
-	// day 1..7).
+	// 15-point `points` array: `idx = (points.length-1) - (7 - day)` —
+	// i.e. the last 7 points are day 1..7.
 	const eventIndexForDay = (day: number): number =>
 		Math.max(0, Math.min(points.length - 1, points.length - 1 - (7 - day)));
 
@@ -276,8 +272,7 @@
 	}
 
 	/* Idle pulse animation — fires only when no dot is active so the
-	   pulse invites a tap. Mirrors the prototype's
-	   `.flow-spark-pulse-ring` keyframes. */
+	   pulse invites a tap. */
 	.flow-spark-pulse-ring {
 		animation: flow-spark-pulse 1.8s ease-in-out infinite;
 		transform-origin: center;

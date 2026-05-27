@@ -1,9 +1,7 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `LandingAvatarStack`
-	 * (`landing.jsx:639-658`). Four overlapping circles seeded from
-	 * `augustus / cassandra / nero / livia` — same seeds as the
-	 * prototype.
+	 * Four overlapping circles seeded from
+	 * `augustus / cassandra / nero / livia`.
 	 */
 	const seeds = ['augustus', 'cassandra', 'nero', 'livia'] as const;
 

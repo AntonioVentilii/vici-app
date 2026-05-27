@@ -25,13 +25,11 @@
 	 *  - flat list of rest rows (rank, avatar, handle + VXP + streak,
 	 *    accuracy on the right)
 	 *
-	 * The viewer's own row carries an accent border + tinted bg —
-	 * matches the prototype's `.row.you` treatment.
+	 * The viewer's own row carries an accent border + tinted bg.
 	 *
-	 * Activity feed and friends-only filter (which our earlier
-	 * version added as extra tabs) are gone — neither is in the
-	 * design source's leaderboard. Friends rankings live on the
-	 * Friends tab inside Social per the design.
+	 * Activity feed and friends-only filter (extra tabs the earlier
+	 * version added) are not part of this surface — friends rankings
+	 * live on the Friends tab inside Social.
 	 */
 
 	type Scope = 'week' | 'month' | 'all';

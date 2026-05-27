@@ -30,8 +30,7 @@
 
 	const { participantId, onAdvance, onBack }: Props = $props();
 
-	// Number of suggestion chips rendered per draw — matches the
-	// prototype roster size (`onboarding-v2.jsx:27-30`).
+	// Number of suggestion chips rendered per draw.
 	const SUGGESTIONS_PER_DRAW = 18;
 	// Over-sample multiplier — draw 2× the target count and keep the
 	// first N that come back available, so a handful of collisions

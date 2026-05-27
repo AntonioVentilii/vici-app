@@ -1,9 +1,8 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `WCFeature`
-	 * (`landing.jsx:434-488`). Wedge surface mirroring onboarding-v2:
-	 * editorial left column (eyebrow + countdown + h2 + sub + CTA),
-	 * 2×2 favourite-flag grid on the right.
+	 * World Cup featured-event landing section. Editorial left column
+	 * (eyebrow + countdown + h2 + sub + CTA) paired with a 2×2
+	 * favourite-flag grid on the right.
 	 */
 	import { ChevronRight, Clock } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
@@ -15,8 +14,9 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	const wcDays = WORLD_CUP_KICKOFF.daysToKickoff;
-	// Hours-to-kickoff isn't tracked in the constant; the prototype shows
-	// "{days}d {hours}h" so we leave hours at 0 until the constant grows.
+	// Hours-to-kickoff isn't tracked in the constant; the surface
+	// shows "{days}d {hours}h" so we leave hours at 0 until the
+	// constant grows.
 	const wcHours = 0;
 	const favorites = LANDING_WC_FAVORITES;
 </script>

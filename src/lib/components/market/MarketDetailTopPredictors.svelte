@@ -12,23 +12,21 @@
 	const { market }: Props = $props();
 
 	// We don't yet have a "top predictors *on this market*" satellite
-	// query — the prototype simply slices the global leaderboard to
-	// approximate it (`screens.jsx:272`). Same shape here: top 4 by
-	// points until we wire a per-market aggregate (tracked in the
+	// query — slice the global leaderboard to approximate it. Top 4
+	// by points until we wire a per-market aggregate (tracked in the
 	// follow-up backlog).
 	const top = $derived($leaderboard.slice(0, 4));
 
-	// Crowd lean drives the side-pill on each row — the prototype hard-
-	// coded `YES` because every mock leaderboard row was bullish; we
-	// instead tag each row with the actual crowd-favoured side so the
-	// rows feel grounded in the live market.
+	// Crowd lean drives the side-pill on each row — tag each row with
+	// the actual crowd-favoured side so the rows feel grounded in the
+	// live market.
 	const crowdSide = $derived(market.yesProbability >= market.noProbability ? 'YES' : 'NO');
 </script>
 
-<!-- "Top predictors here" mini-leaderboard — port of `screens.jsx:270-284`.
-     Reads from the cached global leaderboard store (already populated
-     by `LoaderLeaderboard` on app boot) so the section paints instantly
-     without a fresh fetch. -->
+<!-- "Top predictors here" mini-leaderboard. Reads from the cached
+     global leaderboard store (already populated by `LoaderLeaderboard`
+     on app boot) so the section paints instantly without a fresh
+     fetch. -->
 <section class="market-top-predictors" aria-labelledby="market-top-predictors-h">
 	<header class="market-top-predictors-head">
 		<h3 id="market-top-predictors-h" class="market-top-predictors-title">

@@ -51,11 +51,11 @@
 	 *   weekly delta sums signed deltas from clearing settlements in
 	 *   the last 7 days.
 	 * - Recent activity (6 rows) — derived from the same merged
-	 *   `filteredTransactions` source as the History tab; the
-	 *   prototype shows 6 mock rows, we surface real history.
-	 * - C-24 (production keep) — Send / Receive / History tabs remain
-	 *   below for actual wallet operations. Visually toned-down to
-	 *   match the rest of the prototype surface.
+	 *   `filteredTransactions` source as the History tab, surfacing
+	 *   real history.
+	 * - Send / Receive / History tabs remain below for actual wallet
+	 *   operations. Visually toned-down to read as a secondary
+	 *   surface.
 	 *
 	 * The `CollateralStats` secondary card + its modal are intentionally
 	 * gone — collateral lives inside the History "Clearing" tagged rows
@@ -115,7 +115,7 @@
 		return sortNewestFirst(merged);
 	});
 
-	// First 6 rows for the prototype's "Recent activity" block.
+	// First 6 rows powering the "Recent activity" block.
 	const recentActivity = $derived(filteredTransactions.slice(0, 6));
 
 	const sortNewestFirst = (arr: Transaction[]) =>
@@ -132,10 +132,9 @@
 	// Weekly VXP delta — sums signed amounts on clearing settlements
 	// from the last 7 days. Settlements credit a winning call; losing
 	// calls realize on the `Trade` debit side (entry stake never
-	// refunded). The prototype's `recentCalls` model has no direct
-	// 1:1 in production, so we approximate by walking the unified
-	// transaction feed and summing Settlement (in) minus Trade (out)
-	// flows on VXP-denominated markets.
+	// refunded). We approximate by walking the unified transaction
+	// feed and summing Settlement (in) minus Trade (out) flows on
+	// VXP-denominated markets.
 	const weeklyVxpDelta = $derived.by((): bigint => {
 		const cutoffNs = BigInt(Date.now() - 7 * 24 * 60 * 60 * 1000) * 1_000_000n;
 		let delta = ZERO;
@@ -488,9 +487,8 @@
 	</section>
 
 	<!--
-		C-24 (production keep) — Send / Receive / History tabs.
-		Visually toned-down to match the rest of the prototype surface
-		(no big "TREASURY" eyebrow, no `CollateralStats` secondary card).
+		Send / Receive / History tabs. Visually toned-down — no big
+		"TREASURY" eyebrow and no `CollateralStats` secondary card.
 	-->
 	<Card class="wallet-tabs-card bg-card/85 overflow-hidden" padding="none">
 		<div class="border-border border-b p-2">

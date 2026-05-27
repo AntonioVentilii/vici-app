@@ -17,14 +17,11 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Verbatim port of the prototype `MarketsScreen`
-	 * (screens.jsx:82-159). Structure, class names, and inline
-	 * pixel values mirror the JSX 1:1; the data source is swapped
-	 * from `window.VICI_DATA.MARKETS` to our `$markets` derived
-	 * store and `$preferencesStore.savedMarketIds` (the saved-ids
-	 * persistence already mirrors the prototype's
-	 * `vici.saved-markets` localStorage key, just behind a Svelte
-	 * store rather than an ad-hoc CustomEvent).
+	 * Markets screen — chip rail (Saved + per-category) above a
+	 * Trending carousel and a sortable list. Data comes from the
+	 * `$markets` derived store plus
+	 * `$preferencesStore.savedMarketIds`; the saved-ids persistence
+	 * is keyed under `vici.saved-markets` in localStorage.
 	 */
 	const TRENDING_LIMIT = 8;
 	const SAVED_RAIL_LIMIT = 6;
@@ -120,10 +117,9 @@
 		}
 	};
 
-	// Prototype line 94-96:
-	//   const list = cat === 'saved'
-	//     ? savedMarkets
-	//     : window.VICI_DATA.MARKETS.filter((m) => cat === 'all' || m.cat === cat);
+	// Filter the deck: saved-only when the saved chip is active,
+	// otherwise either all open markets or those carrying the active
+	// category tag. The result is sorted via `sortList` below.
 	const list = $derived.by((): Market[] => {
 		const base = ((): Market[] => {
 			if (cat === 'saved') {
@@ -142,8 +138,9 @@
 		return sortList({ items: base, mode: sort });
 	});
 
-	// Prototype `m.hot` is a hand-curated flag we don't carry in our
-	// backend; proxy by sorting open markets by `totalVolume` desc.
+	// Our backend doesn't carry a hand-curated "hot" flag, so the
+	// trending carousel proxies by sorting open markets by
+	// `totalVolume` desc.
 	const trendingMarkets = $derived(
 		[...$markets]
 			.filter((m) => m.status === 'Open')
@@ -157,10 +154,8 @@
 			.slice(0, TRENDING_LIMIT)
 	);
 
-	// Prototype line 149:
-	//   {cat === 'all' ? 'All markets'
-	//      : cat === 'saved' ? 'Saved'
-	//      : window.VICI_DATA.CATS.find((c) => c.id === cat).label}
+	// Section title — "All markets" / "Saved" / the active category's
+	// label.
 	const sectionTitle = $derived.by((): string => {
 		if (cat === 'all') {
 			return t({ locale: $localeStore, key: 'markets.section.all' });

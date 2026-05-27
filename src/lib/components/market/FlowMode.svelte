@@ -131,7 +131,6 @@
 	// fades on its own ~1.3 s later. Skip commits get the shorter 520 ms
 	// "SKIPPED" chip variant. Hard-pause beats (`motion.beat.hardPause`)
 	// still go through `MotionBeat` so we don't double-stack overlays.
-	// Prototype source: `flow.jsx:1297-1353`.
 	interface ActiveFeedback {
 		result: FlowAction;
 		xp: number;
@@ -155,8 +154,7 @@
 	// sites read the same way.
 	const vibrate = haptic;
 
-	// Per-beat haptic envelope. Mirrors the prototype's motion-engine
-	// table verbatim:
+	// Per-beat haptic envelope:
 	//   milestone-1            → triple-tap   ([12,30,12,30,12])
 	//   milestone-3 / 5 / 25   → firm-tap     (12ms)
 	//   milestone-10 / 250/500 → milestone-tap ([25,30,25])
@@ -524,11 +522,10 @@
 		}
 
 		// Single beat-aware vibrate — fires once per beat, with the
-		// envelope mapped from `beat.kind`. Skips milestone-1's
-		// preceding `triple-tap` here only because the `firm-tap` swipe
-		// commit haptic already fired at line ~300; the milestone-1
-		// envelope is itself the triple-tap, so the commit + milestone
-		// firing back-to-back is intentional (matches the prototype).
+		// envelope mapped from `beat.kind`. On milestone-1 the
+		// `firm-tap` swipe-commit haptic has already fired upstream;
+		// the milestone-1 envelope is itself a `triple-tap`, so the
+		// commit + milestone firing back-to-back is intentional.
 		const beatHaptic = hapticForBeat(motion.beat?.kind);
 
 		if (beatHaptic) {
@@ -621,9 +618,9 @@
 	const accuracyUnlocked = $derived(isAccuracyUnlocked(lifetimeTotalTrades));
 
 	// Top bar deck-scope label: when the featured event is active the
-	// deck is filtered to it (the prototype shows "WORLD CUP"); otherwise
-	// fall back to a neutral all-markets label. Title is uppercased to
-	// match the chip's allcaps tracking.
+	// deck is filtered to it (e.g. "WORLD CUP"); otherwise fall back to
+	// a neutral all-markets label. Title is uppercased to match the
+	// chip's allcaps tracking.
 	const topBarCategoryLabel = $derived.by(() => {
 		if ($featuredEventActive) {
 			return $featuredEvent.title.toUpperCase();
@@ -660,12 +657,10 @@
 			{xp}
 		/>
 	{:else}
-		<!-- Persistent Flow header (prototype `app.jsx:805-836`). VICI
-		     wordmark + deck-scope chip + bolt streak chip on the left;
-		     bell on the right. Secondary row carries `idx / total` and
-		     `+xp VXP this session` over a thin progress bar. Tapping the
-		     wordmark exits Flow. A floating close X is also rendered for
-		     desktop affordance. -->
+		<!-- Persistent Flow header: VICI wordmark + deck-scope chip +
+		     bolt streak chip on the left; bell on the right. Secondary
+		     row carries `idx / total` and `+xp VXP this session` over a
+		     thin progress bar. Tapping the wordmark exits Flow. -->
 		<FlowTopBar
 			{betsCount}
 			categoryLabel={topBarCategoryLabel}
@@ -738,7 +733,7 @@
 			     SKIP / TAP / IDLE phases while the cards drift in
 			     sympathy via the `data-coach-phase` CSS in app.css.
 			     Self-dismisses on any pointer-down; persists dismissal
-			     in localStorage. Prototype: `flow.jsx:1055-1121`. -->
+			     in localStorage. -->
 			<FlowCoach surface="flow" />
 
 			{#if activeMotionBeat}
@@ -765,7 +760,7 @@
 		<!-- Bottom-of-deck affordance rail — chevrons drift outward on a
 		     1.7 s ping cycle while the TAP / SKIP labels call out the
 		     non-swipe gestures. Pure visual sugar; gestures are wired in
-		     FlowCard. Prototype source: `flow.jsx:1124-1163`. -->
+		     FlowCard. -->
 		<SwipeHint />
 	{/if}
 </div>
@@ -829,8 +824,7 @@
 		max-width: min(25.5rem, calc(100vw - 2rem));
 		height: 100%;
 		/* `--bn-clear` reserves room for the floating pillnav so the
-		 * card slot never tucks under it (prototype parity —
-		 * `app.css:2853-2861`). */
+		 * card slot never tucks under it. */
 		max-height: min(700px, calc(100dvh - 9.5rem - var(--bn-clear) - env(safe-area-inset-top, 0px)));
 		min-height: min(30rem, calc(100dvh - 10.5rem - var(--bn-clear)));
 	}

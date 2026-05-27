@@ -7,11 +7,11 @@ export type AchievementTier = 'gold' | 'silver' | 'bronze';
  *
  * On the profile + album surfaces the canonical render is the lucide
  * `Trophy` outline glyph with the tier-tinted wash (every award shows
- * the same trophy mark, matching the prototype's AlbumScreen).
- * `emblem` is kept as a single unicode fallback glyph for surfaces
- * that render the def out-of-band (Dash next-up rail) and for
- * screen-reader / plain-text contexts. The catalogue uses the brand's
- * approved glyph set (`◎ ★ ⚡ ⧖ ◐ ⌘` — see `docs/ai/frontend/brand.md`).
+ * the same trophy mark on the AlbumScreen). `emblem` is kept as a
+ * single unicode fallback glyph for surfaces that render the def
+ * out-of-band (Dash next-up rail) and for screen-reader / plain-text
+ * contexts. The catalogue uses the brand's approved glyph set
+ * (`◎ ★ ⚡ ⧖ ◐ ⌘` — see `docs/ai/frontend/brand.md`).
  *
  * `tier` decides the wash colour (gold = laurel-tinted; silver /
  * bronze are reserved for monthly-leaderboard achievements once they
@@ -23,8 +23,7 @@ export type AchievementTier = 'gold' | 'silver' | 'bronze';
  *
  * The order in this array is the default render order for the
  * profile achievement rail before progress-sorting kicks in: it leads
- * with the prototype's first-render trio (`lvl-25`, `contrarian`,
- * `marathon`).
+ * with `lvl-25`, `contrarian`, `marathon`.
  */
 export interface AchievementDef {
 	id: string;

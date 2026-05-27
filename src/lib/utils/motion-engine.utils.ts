@@ -124,11 +124,10 @@ const saveState = (state: MotionState): void => {
 	}
 };
 
-// Per-milestone duration ladder — mirrors the prototype's
-// `motion-engine.js` MILESTONES table verbatim. The shorter timings (700,
-// 500) keep low-milestone beats from feeling like punctuation; the longer
-// timings (1500, 1700, 2000) give the high-milestone Oracle / Vici beats
-// room to land.
+// Per-milestone duration ladder. The shorter timings (700, 500) keep
+// low-milestone beats from feeling like punctuation; the longer
+// timings (1500, 1700, 2000) give the high-milestone Oracle / Vici
+// beats room to land.
 const MILESTONE_DURATION_MS: Record<number, number> = {
 	1: 1300,
 	3: 700,

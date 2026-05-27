@@ -25,11 +25,10 @@
 	/**
 	 * Worlds — institutional bout surface.
 	 *
-	 * Layout matches the prototype `WorldsScreen` (screens.jsx:2546):
+	 * Layout:
 	 *
-	 *  1. Optional podium-claim banner (production tier C-29 keep) —
-	 *     surfaces VXP credits when the previous month's snapshot
-	 *     awarded the user.
+	 *  1. Optional podium-claim banner — surfaces VXP credits when the
+	 *     previous month's snapshot awarded the user.
 	 *  2. Affiliation prompt — "Where did you study?" card, shown only
 	 *     when the user has no school affiliation. Opens
 	 *     `AffiliationPickerModal` on tap.
@@ -124,7 +123,6 @@
 
 	/**
 	 * Format a 0..1 accuracy as a one-decimal percentage string.
-	 * Mirrors the prototype's `fmtPct1`.
 	 */
 	const fmtPct1 = (acc: number): string => `${(acc * 100).toFixed(1)}%`;
 
@@ -154,7 +152,7 @@
 	/**
 	 * Top three by WC (lifetime) accuracy — driven by the same data
 	 * regardless of the visible scope toggle, because the hero card
-	 * always frames the World Cup bout in the prototype.
+	 * always frames the World Cup bout.
 	 */
 	const wcTop3 = $derived.by(() => {
 		const list = [...stats];

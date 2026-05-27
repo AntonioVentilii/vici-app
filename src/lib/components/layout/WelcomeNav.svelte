@@ -1,7 +1,6 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `DesktopNav` + `Nav`
-	 * (`landing.jsx:124-381`). Two nav variants: `.dnav` (≥1024px,
+	 * Two nav variants on the landing surface: `.dnav` (≥1024px,
 	 * horizontal pattern with scroll-spy + smooth scroll) and
 	 * `.lp-nav` / `.lp-pill` (<1024px, pill morph + slide-down sheet).
 	 * CSS in `src/landing.css` flips visibility at the 1024px

@@ -68,10 +68,10 @@
 	let signOutStatus = $state<ButtonStatus>('enabled');
 	let confirmingSignOut = $state(false);
 
-	// Local transient toast pill — mirrors the SettingsScreen's local toast
-	// (screens.jsx:1919-1923). Kept page-local instead of routing through
-	// `notificationsStore` because the prototype renders a compact pill
-	// pinned to the bottom of the page, not a full-stack notification.
+	// Local transient toast pill. Kept page-local instead of routing
+	// through `notificationsStore` because the surface wants a compact
+	// pill pinned to the bottom of the page, not a full-stack
+	// notification.
 	let toastMessage = $state<string | null>(null);
 	let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -145,10 +145,9 @@
 	const email = $derived(profile?.email ?? '');
 	const hasEmail = $derived(email.length > 0);
 
-	// Sign-in method sub — `{provider_account} · {method_label}`.
-	// Mirrors the prototype (`screens.jsx:1815`) which shows e.g.
-	// `tacitus@vici.markets · magic link`. For Internet Identity
-	// accounts (no email on file) we fall back to a friendly
+	// Sign-in method sub — `{provider_account} · {method_label}`
+	// (e.g. `tacitus@vici.markets · magic link`). For Internet
+	// Identity accounts (no email on file) we fall back to a friendly
 	// "Internet Identity" label.
 	const signinMethodSub = $derived(
 		hasEmail
@@ -161,8 +160,7 @@
 	);
 
 	// Email row sub — just the address; the "verified" affordance is
-	// rendered as a separate green badge to match the prototype
-	// (`screens.jsx:1819`).
+	// rendered as a separate green badge.
 	const emailSub = $derived(
 		hasEmail ? email : t({ locale: $localeStore, key: 'settings.account.email.empty' })
 	);
@@ -401,9 +399,8 @@
 	</header>
 
 	<!-- Display-font hero title below the back-arrow row.
-	     Mirrors the prototype's hero treatment — the title in the
-	     appbar slot read as too small for a top-level settings
-	     surface. -->
+	     The title in the appbar slot read as too small for a
+	     top-level settings surface. -->
 	<h1 class="settings-hero-title display">
 		{t({ locale: $localeStore, key: 'settings.title' })}
 	</h1>
@@ -622,11 +619,11 @@
 		</SettingsSection>
 
 		<!--
-			Secondary Privacy section — the prototype renders a duplicate
-			"Privacy" card holding three share toggles distinct from the
-			privacy-and-security set above. The fields are not yet wired to
-			the profile schema; they round-trip a flash-toast confirmation
-			for parity until a `sharing` slice lands on `preferences`.
+			Secondary Privacy section — a "Privacy" card holding three
+			share toggles distinct from the privacy-and-security set
+			above. The fields are not yet wired to the profile schema;
+			they round-trip a flash-toast confirmation until a `sharing`
+			slice lands on `preferences`.
 		-->
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.privacy_share' })}>
 			<SetToggle
@@ -873,10 +870,10 @@
 
 	{#if toastMessage !== null}
 		<!--
-			Pill-shaped transient toast pinned to the bottom of the page,
-			mirroring `screens.jsx:1919-1923`. Local to this surface because
-			the prototype uses it for parity confirmations (Saved / coming
-			soon) that don't warrant a global notification entry.
+			Pill-shaped transient toast pinned to the bottom of the page.
+			Local to this surface — used for low-stakes confirmations
+			(Saved / coming soon) that don't warrant a global
+			notification entry.
 		-->
 		<div class="settings-toast t-eyebrow" aria-live="polite" role="status">
 			{toastMessage}
@@ -899,7 +896,7 @@
 
 	/* Display-font hero title — sits below the back-arrow row and
 	   reads as a primary surface heading instead of a compact appbar
-	   label. Sized to match the prototype's ~40px serif/italic beat. */
+	   label. Sized to a ~40 px serif/italic beat. */
 	.settings-hero-title {
 		margin: 0.25rem 0 1rem;
 		padding: 0 0.25rem;

@@ -9,7 +9,7 @@
 	 * Bottom-sheet primitive — full-width sheet docked at the bottom of
 	 * the viewport with a grip handle, blurred backdrop, and safe-area
 	 * inset. Used by the leagues / worlds / bouts surfaces in place of
-	 * the centered {@link Modal} when the prototype calls for a sheet.
+	 * the centred {@link Modal} when a sheet treatment fits better.
 	 *
 	 * The component manages chrome only (scrim, grip, close affordance
 	 * via `Escape` + backdrop click). Children own their own header

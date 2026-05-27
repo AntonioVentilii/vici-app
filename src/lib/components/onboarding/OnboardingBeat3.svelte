@@ -8,16 +8,13 @@
 	/**
 	 * Onboarding · Beat 3 — lock in the record.
 	 *
-	 * Verbatim port of `Beat3Auth` from `onboarding-v2.jsx` (lines
-	 * 280-346). Renders the `BeatV2Header` (progress dots + "BEAT 3 OF
-	 * 3"), the narrative subtitle, the affiliation summary card, the
-	 * auth surface, the ToS paragraph, and the "Back to handle" link.
+	 * Renders the `BeatV2Header` (progress dots + "BEAT 3 OF 3"), the
+	 * narrative subtitle, the affiliation summary card, the auth
+	 * surface, the ToS paragraph, and the "Back to handle" link.
 	 *
 	 * The real auth providers (Juno II + Google + Passkey + dev) are
-	 * mounted inside `.ob2-auth-buttons` via `SignInProviderStack` —
-	 * the wiring is real, the styling matches the prototype's
-	 * `.ob2-auth-apple` / `.ob2-auth-google` / `.ob2-auth-email`
-	 * affordances.
+	 * mounted inside `.ob2-auth-buttons` via `SignInProviderStack`
+	 * (`.ob2-auth-apple` / `.ob2-auth-google` / `.ob2-auth-email`).
 	 */
 	interface Props {
 		participantId: string | null;

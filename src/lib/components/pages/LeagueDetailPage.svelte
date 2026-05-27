@@ -304,8 +304,8 @@
 	});
 
 	// Active bout (in_flight first, else accepted / proposed).
-	// Resolved bouts are excluded; the prototype's "active card" only
-	// shows a live or near-live match-up.
+	// Resolved bouts are excluded — the active card only shows a live
+	// or near-live match-up.
 	const activeBout = $derived.by(() => {
 		const live = bouts.find((b) => b.state === 'in_flight');
 
@@ -350,10 +350,10 @@
 	const shortLeagueId = (id: string): string =>
 		id.length > 14 ? `${id.slice(0, 6)}…${id.slice(-5)}` : id;
 
-	// Meta line under the active bout headline.
-	// - Proposed: "Awaiting acceptance from {opponent}".
-	// - Accepted / in-flight: "Day {day} of {days} · accuracy face-off".
-	// Matches the prototype's `LeagueBoutSection` copy.
+	// Meta line under the active bout headline:
+	//   Proposed         → "Awaiting acceptance from {opponent}".
+	//   Accepted /
+	//   in-flight        → "Day {day} of {days} · accuracy face-off".
 	const activeBoutMetaLine = $derived.by((): string | undefined => {
 		if (!activeBout || !activeBoutOpponentId) {
 			return;
@@ -789,9 +789,9 @@
 					{/each}
 				</ul>
 
-				<!-- Sticky YOU row — mirrors the prototype's `lb-you-row`
-				     which renders the caller's stats regardless of
-				     whether they already appear in the top-6 above. -->
+				<!-- Sticky YOU row — renders the caller's stats
+				     regardless of whether they already appear in the
+				     top-6 above. -->
 				{#if youMember}
 					<div class="league-detail-lb-you-row">
 						<span class="league-detail-lb-rank num">

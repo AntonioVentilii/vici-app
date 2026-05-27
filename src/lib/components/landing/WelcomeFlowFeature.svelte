@@ -1,11 +1,10 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `FlowFeature` + `FlowDemo`
-	 * (`landing.jsx:744-843`). Two-column layout: editorial copy on
-	 * the left, animated swipe-demo on the right.
+	 * Two-column "Flow Feature" landing section: editorial copy on the
+	 * left, animated swipe-demo on the right.
 	 *
-	 * `tick` cycles 0→3 every 1300ms: 0=at rest, 1=mid-swipe,
-	 * 2=swiped out + xp burst, 3=next sliding up.
+	 * `tick` cycles 0→3 every 1300 ms — 0 = at rest, 1 = mid-swipe,
+	 * 2 = swiped out + xp burst, 3 = next card sliding up.
 	 */
 	import { Flame, Zap } from 'lucide-svelte/icons';
 	import { onDestroy, onMount } from 'svelte';

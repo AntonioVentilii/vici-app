@@ -1,9 +1,8 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `BoutShowcase`
-	 * (`landing.jsx:981-1094`). Mock head-to-head between two leagues
-	 * (`office-hex` vs `lupercal`) with two accuracy bars facing each
-	 * other across a `VS` / day-counter divider.
+	 * Mock head-to-head bout between two leagues (`office-hex` vs
+	 * `lupercal`) — two accuracy bars facing each other across a
+	 * `VS` / day-counter divider.
 	 */
 	import { ChevronRight } from 'lucide-svelte/icons';
 	import { LANDING_LEAGUES, type LandingLeague } from '$lib/constants/landing-data.constants';

@@ -15,9 +15,8 @@
 
 	// The sparkline currently only resolves a single window (the
 	// satellite-side aggregator hasn't been promoted yet) — the chips
-	// surface as a visual switch so the surface matches the prototype
-	// today, and the period picker becomes the wiring point when the
-	// aggregator lands (tracked in `docs/prototype-parity-audit.md`).
+	// surface as a visual switch today, and the period picker becomes
+	// the wiring point when the aggregator lands.
 	const periods: { id: PeriodId; label: MessageKey }[] = [
 		{ id: '1d', label: 'market.detail.chart.period.1d' },
 		{ id: '7d', label: 'market.detail.chart.period.7d' },

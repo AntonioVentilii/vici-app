@@ -7,11 +7,9 @@
 	/**
 	 * XpToast — single VXP-award pill that rises from the swipe-exit
 	 * edge of the deck. Renders nothing for SKIP commits or zero-XP
-	 * awards. The `bonus` flag adds the "milestone" annotation tag the
-	 * prototype shows on milestone awards. Self-dismisses on a 900 ms
-	 * timer aligned to the `xp-toast-pop` keyframe.
-	 *
-	 * Prototype source: `VICI WebApp Beta V1.2/flow.jsx:1569-1582`.
+	 * awards. The `bonus` flag adds the "milestone" annotation tag on
+	 * milestone awards. Self-dismisses on a 900 ms timer aligned to
+	 * the `xp-toast-pop` keyframe.
 	 *
 	 * `FlowXpPops` is the multi-pop manager; it composes a list of
 	 * `XpToast`s with per-pop animation envelopes. This component is

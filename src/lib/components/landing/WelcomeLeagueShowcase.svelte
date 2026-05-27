@@ -1,9 +1,8 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `LeagueShowcase`
-	 * (`landing.jsx:871-974`). Mini league leaderboard mock (Office
-	 * Hex) — top 3 members + the user's row highlighted, demonstrating
-	 * the private cohort competition layer.
+	 * Mini league leaderboard mock (Office Hex) — top 3 members + the
+	 * user's row highlighted, illustrating the private cohort
+	 * competition layer.
 	 */
 	import { ChevronRight } from 'lucide-svelte/icons';
 	import { LANDING_LEAGUES } from '$lib/constants/landing-data.constants';

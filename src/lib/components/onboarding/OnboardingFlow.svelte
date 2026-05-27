@@ -8,9 +8,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Onboarding orchestrator — verbatim port of the prototype's
-	 * `OnboardingFlowV2` shell (`onboarding-v2.jsx`). The DOM mirrors
-	 * the prototype: an outer `.ob.ob-v2` envelope, the inline
+	 * Onboarding orchestrator. Outer `.ob.ob-v2` envelope, inline
 	 * "Already a member? Sign in" affordance, and a `.ob-wrap >
 	 * .ob-body-wrap` content slot that swaps the active beat.
 	 *
