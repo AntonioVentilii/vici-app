@@ -116,7 +116,7 @@
 
 			<p class="allcaps signin-eyebrow">{t({ locale: $localeStore, key: eyebrowKey })}</p>
 			<h1 class="signin-title">
-				{titleParts.before}<span class="serif-italic">VICI.</span>{titleParts.after}
+				{titleParts.before}<span class="serif-italic acc">VICI.</span>{titleParts.after}
 			</h1>
 			<p class="signin-sub">{t({ locale: $localeStore, key: subcopyKey })}</p>
 

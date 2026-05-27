@@ -176,7 +176,12 @@
 	<h1 id="ob2-beat2-title" class="ob2-h1">
 		{t({ locale: $localeStore, key: 'onboarding.beat2.title' })}
 	</h1>
-	<p class="ob2-sub">{t({ locale: $localeStore, key: 'onboarding.beat2.sub' })}</p>
+	<p class="ob2-sub">
+		{t({ locale: $localeStore, key: 'onboarding.beat2.sub' })}
+		<span class="serif-italic acc">
+			{t({ locale: $localeStore, key: 'onboarding.beat2.sub_accent' })}
+		</span>
+	</p>
 
 	<div class="ob2-mode-tabs" role="tablist">
 		<button
@@ -270,7 +275,8 @@
 				</span>
 				<span class="ob2-affil-name">
 					<span class="serif-italic acc">
-						@{selectedName || t({ locale: $localeStore, key: 'onboarding.beat2.placeholder' })}
+						@{selectedName ||
+							t({ locale: $localeStore, key: 'onboarding.beat2.affil_placeholder' })}
 					</span>
 					<span style:background={teamColor} class="ob2-affil-tag allcaps">
 						{team.id}

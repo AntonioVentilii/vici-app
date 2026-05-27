@@ -244,10 +244,12 @@
 					<span class="signin-email-icon" aria-hidden="true">
 						<Mail size={16} strokeWidth={1.8} />
 					</span>
+					<!-- svelte-ignore a11y_autofocus -->
 					<input
 						class="signin-email-input num"
 						autocapitalize="off"
 						autocomplete="email"
+						autofocus
 						disabled={!EMAIL_ENABLED || isBusy}
 						inputmode="email"
 						placeholder={t({ locale: $localeStore, key: 'signin.email.placeholder' })}

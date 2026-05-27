@@ -56,6 +56,11 @@
 
 	const event = $derived($featuredEvent);
 
+	// "FIFA WORLD CUP 2026 · 27d to kickoff" eyebrow — mirrors Beat 1.a.
+	const kickoffDays = $derived(
+		Math.max(0, Math.ceil((event.kickoffAt_ms - Date.now()) / (24 * 60 * 60 * 1000)))
+	);
+
 	const picked: FeaturedEventParticipant | undefined = $derived(
 		participantId === null ? undefined : event.participants.find((p) => p.id === participantId)
 	);
@@ -85,8 +90,12 @@
 <section class="ob2-beat ob2-beat-1b" aria-labelledby="ob2-beat1b-title">
 	<div class="ob2-wc-eyebrow">
 		<span class="allcaps ob2-wc-tag">{event.title}</span>
-		<span class="ob2-wc-eyebrow-sub allcaps">
-			{t({ locale: $localeStore, key: 'onboarding.beat1b.eyebrow_first_call' })}
+		<span class="ob2-wc-countdown num">
+			· {t({
+				locale: $localeStore,
+				key: 'onboarding.beat1.kickoff_days',
+				params: { days: kickoffDays }
+			})}
 		</span>
 	</div>
 
@@ -95,16 +104,13 @@
 	</h1>
 
 	{#if picked}
+		{@const pickedColor = picked.color ?? 'var(--laurel)'}
 		<p class="ob2-sub">
 			<span class="ob2-team-glyph" aria-hidden="true">{picked.glyph ?? ''}</span>
-			{t({
-				locale: $localeStore,
-				key: 'onboarding.beat1b.backing',
-				params: { team: picked.name }
-			})}
-			<span class="ob2-sub-detail">
-				{t({ locale: $localeStore, key: 'onboarding.beat1b.backing_sub' })}
-			</span>
+			{t({ locale: $localeStore, key: 'onboarding.beat1b.backing_prefix' })}
+			<b style:color={pickedColor} class="ob2-backing-team">{picked.name}</b>
+			<span class="ob2-backing-sep" aria-hidden="true">·</span>
+			{t({ locale: $localeStore, key: 'onboarding.beat1b.backing_sub' })}
 			<button class="ob2-change-team" onclick={onChangeTeam} type="button">
 				{t({ locale: $localeStore, key: 'onboarding.beat1b.change_team' })}
 			</button>
@@ -203,10 +209,6 @@
 		</SwipeableMarketCard>
 		<FlowCoach />
 	</div>
-
-	<p class="allcaps ob2-swipe-hint" aria-hidden="true">
-		{t({ locale: $localeStore, key: 'onboarding.beat1b.swipe_hint' })}
-	</p>
 </section>
 
 <style lang="postcss">
@@ -310,8 +312,10 @@
 		font-weight: 700;
 	}
 
-	.ob2-wc-eyebrow-sub {
-		font-weight: 600;
+	.ob2-wc-countdown {
+		font-size: var(--t-11, 0.7rem);
+		color: var(--text-muted);
+		letter-spacing: 0.06em;
 	}
 
 	.ob2-h1 {
@@ -337,8 +341,13 @@
 		line-height: 1;
 	}
 
-	.ob2-sub-detail {
+	.ob2-backing-team {
 		color: var(--text-base);
+		font-weight: 700;
+	}
+
+	.ob2-backing-sep {
+		color: var(--parchment-faint);
 	}
 
 	.ob2-change-team {
@@ -497,12 +506,5 @@
 		color: var(--no);
 		border: 2px solid var(--no);
 		transform: rotate(12deg);
-	}
-
-	.ob2-swipe-hint {
-		margin: 0;
-		font-size: var(--t-11, 0.7rem);
-		color: var(--text-muted);
-		text-align: center;
 	}
 </style>
