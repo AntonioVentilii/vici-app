@@ -52,12 +52,15 @@
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 			<span class="sr-only">{t({ locale: $localeStore, key: 'info.back' })}</span>
 		</button>
-		<h1 class="info-title">{doc.title}</h1>
 		<span class="info-appbar-spacer" aria-hidden="true"></span>
 	</header>
 
 	<div class="info-body">
 		<div class="info-eyebrow allcaps">{doc.eyebrow}</div>
+		<!-- Massive display h1 — prototype renders the title at hero
+		     scale (~44-56px serif/italic, multi-line wraps) instead of
+		     the cramped appbar treatment. (`screens.jsx:1685`). -->
+		<h1 class="info-hero-title display">{doc.title}</h1>
 
 		{#if isLegalDoc}
 			<aside class="info-legal-banner" role="note">
@@ -118,12 +121,18 @@
 		padding: 0.25rem 1rem;
 	}
 
-	.info-title {
-		margin: 0;
-		font-size: var(--t-18);
-		font-weight: 600;
-		text-align: center;
+	/* Hero h1 — replaces the appbar's tight title. Display-font scale,
+	   serif italic, generous line-height for multi-line wraps. */
+	.info-hero-title {
+		margin: 0.5rem 0 1.25rem;
+		font-family: var(--font-serif, var(--font-display, serif));
+		font-style: italic;
+		font-weight: 400;
+		font-size: clamp(2.25rem, 8.5vw, 3.5rem);
+		line-height: 1.05;
+		letter-spacing: -0.015em;
 		color: var(--text-base);
+		text-wrap: balance;
 	}
 
 	.info-appbar-spacer {
@@ -179,12 +188,14 @@
 	}
 
 	/* Serif-italic lede paragraph — sets the editorial tone before
-	   the body copy. Prototype uses `serif-italic t-h4` (~22-24px). */
+	   the body copy. Prototype renders this as a gold-tinted accent
+	   beat to read as the editorial pull-quote that frames the doc.
+	   See `screens.jsx:1693-1696`. */
 	.info-lede {
 		margin: 0 0 1.5rem;
-		font-size: clamp(1.1rem, 4vw, 1.35rem);
+		font-size: clamp(1.15rem, 4.2vw, 1.5rem);
 		line-height: 1.45;
-		color: var(--text-base);
+		color: var(--color-primary);
 		text-wrap: balance;
 	}
 
