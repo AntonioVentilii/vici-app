@@ -21,9 +21,8 @@
 	} from '$lib/types/market-signals';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
-	import { formatDate, formatProbability } from '$lib/utils/format.utils';
+	import { formatProbability } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { getTimeRemaining } from '$lib/utils/market.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 	import {
 		snapToStakeLadder,
@@ -86,13 +85,56 @@
 		return () => clearInterval(id);
 	});
 
-	// Computed *live* countdown — recomputes on each minute tick. The
-	// existing `getTimeRemaining` helper produces "Xd Yh" / "Xh Ym" /
-	// "Xm remaining" / "Expired" — perfect for the back-card row.
+	// Long-form settlement date — "July 19, 2026", locale-aware via
+	// `toLocaleDateString({ month: 'long', day: 'numeric', year:
+	// 'numeric' })`. Replaces the default short `MM/DD/YYYY` format
+	// so the meta row reads as editorial copy rather than a stamp.
+	const longSettleDate = $derived(
+		new Date(Number(market.expiryDate)).toLocaleDateString($localeStore, {
+			month: 'long',
+			day: 'numeric',
+			year: 'numeric'
+		})
+	);
+
+	// Computed *live* countdown — recomputes on each minute tick.
+	// `getTimeRemaining` already produces "Xd Yh remaining" / "Xh Ym
+	// remaining" / "Xm remaining" / "Expired"; we strip the trailing
+	// noun and swap to the shorter "Nd left" / "Nh left" / "Nm left"
+	// form that matches the prototype's compact meta row.
 	const liveCountdown = $derived.by(() => {
 		nowTick; // touch so the derived re-runs on tick
+		const ms = Number(market.expiryDate) - Date.now();
 
-		return getTimeRemaining(market.expiryDate);
+		if (!Number.isFinite(ms) || ms <= 0) {
+			return t({ locale: $localeStore, key: 'card.back.countdown_closing' });
+		}
+
+		const days = Math.floor(ms / 86_400_000);
+		const hours = Math.floor((ms % 86_400_000) / 3_600_000);
+		const mins = Math.floor((ms % 3_600_000) / 60_000);
+
+		if (days >= 1) {
+			return t({
+				locale: $localeStore,
+				key: 'card.back.countdown_days_left',
+				params: { count: days }
+			});
+		}
+
+		if (hours >= 1) {
+			return t({
+				locale: $localeStore,
+				key: 'card.back.countdown_hours_left',
+				params: { count: hours }
+			});
+		}
+
+		return t({
+			locale: $localeStore,
+			key: 'card.back.countdown_minutes_left',
+			params: { count: mins }
+		});
 	});
 	const countdownUrgent = $derived.by(() => {
 		nowTick;
@@ -228,7 +270,7 @@
 					locale: $localeStore,
 					key: 'card.back.settles_line',
 					params: {
-						date: formatDate(market.expiryDate),
+						date: longSettleDate,
 						timeRemaining: liveCountdown
 					}
 				})}
@@ -236,17 +278,16 @@
 			{#if countdownUrgent}
 				<span class="flow-back-countdown-pulse" aria-hidden="true"></span>
 			{/if}
-			{#if predictorsCount > 0}
-				<span class="flow-back-meta-sep">·</span>
-				<span>
-					{t({
-						locale: $localeStore,
-						key: 'card.predicting_count',
-						params: { count: predictorsCount.toLocaleString() }
-					})}
-				</span>
-			{/if}
 		</div>
+		{#if predictorsCount > 0}
+			<p class="flow-back-predicting num">
+				{t({
+					locale: $localeStore,
+					key: 'card.predicting_count',
+					params: { count: predictorsCount.toLocaleString() }
+				})}
+			</p>
+		{/if}
 
 		{#if resolutionCondition.length > 0}
 			<section class="flow-back-block flow-resolution">
@@ -423,7 +464,11 @@
 							class:is-negative={sharpDiff < 0}
 							class:is-positive={sharpDiff > 0}
 						>
-							{sharpDiff > 0 ? '+' : ''}{sharpDiff} pts
+							{t({
+								locale: $localeStore,
+								key: sharpDiff > 0 ? 'card.back.sharp_diff_ahead' : 'card.back.sharp_diff_behind',
+								params: { count: Math.abs(sharpDiff) }
+							})}
 						</span>
 					{/if}
 				</div>
@@ -608,6 +653,16 @@
 	}
 	.flow-back-meta-sep {
 		opacity: 0.55;
+	}
+
+	/* Predictors count — its own row below `flow-back-meta` so the
+	   meta line stays just `Settles {date} · {countdown}` (matches
+	   the editorial rhythm where settlement and headcount are
+	   distinct beats). */
+	.flow-back-predicting {
+		margin: 0;
+		font-size: var(--t-12);
+		color: var(--text-muted);
 	}
 	.flow-back-countdown-pulse {
 		width: 6px;
