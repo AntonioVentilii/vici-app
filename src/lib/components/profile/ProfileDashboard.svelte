@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, Flame, Lock, Pencil, Trophy, X } from 'lucide-svelte';
+	import { Check, Eye, Flame, Lock, Pencil, Target, Trophy, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -570,6 +570,34 @@
 		});
 	});
 
+	/**
+	 * Achievement glyph mapping — mirrors the prototype's per-id lucide
+	 * picker at `screens.jsx:1022`:
+	 *   - `oracle`  → eye
+	 *   - `on-fire` → flame
+	 *   - `marathon`→ target
+	 *   - default   → trophy
+	 *
+	 * Every other tile (first-blood, contrarian, lvl-25, …) falls
+	 * through to Trophy. The prototype's Album rendering uses the same
+	 * mapping, so the affordance carries across surfaces.
+	 */
+	const iconForAchievement = (id: string): typeof Trophy => {
+		if (id === 'oracle') {
+			return Eye;
+		}
+
+		if (id === 'on-fire') {
+			return Flame;
+		}
+
+		if (id === 'marathon') {
+			return Target;
+		}
+
+		return Trophy;
+	};
+
 	/* Past calls preview ---------------------------------------------- */
 
 	const pastCallsPreview = $derived(recentSettlements.slice(0, 3));
@@ -637,25 +665,33 @@
 					{/if}
 				</div>
 
-				<!-- Row 2: school / archetype chip(s) BELOW the handle. The
-				     prototype renders the active university chip in the
-				     school's own accent ("STANFORD" red) — we don't carry
-				     per-school colors yet, so we use the laurel accent as a
-				     stand-in. Falls back to the archetype tag when no
-				     university affiliation is set. -->
-				{#if myUni}
-					{@const uniOption = lookupWorldsAffiliation({
-						kind: 'university',
-						id: myUni.affiliationId
-					})}
+				<!-- Row 2: school + country chip(s) BELOW the handle, mirroring
+				     the prototype's inline chip row at screens.jsx:900-926.
+				     The prototype renders each chip in its affiliation's own
+				     accent ("STANFORD" red, country flag tint) — we don't
+				     carry per-school / per-country colors yet, so we use a
+				     laurel-accent stand-in (school) and a muted pill
+				     (country). Archetype tag trails behind when no
+				     affiliations are set, preserving the "you're an
+				     archetype" affordance. -->
+				{#if myUni !== undefined || myCountry !== undefined}
+					{@const uniOption = myUni
+						? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationId })
+						: undefined}
+					{@const countryOption = myCountry
+						? lookupWorldsAffiliation({ kind: 'country', id: myCountry.affiliationId })
+						: undefined}
 					<div class="profile-affil-chip-row">
-						<span class="profile-school-chip">
-							<span class="profile-school-chip-dot" aria-hidden="true"></span>
-							{(uniOption?.name ?? '').toUpperCase()}
-						</span>
-						{#if archetype}
-							<span class="profile-archetype-chip">
-								{t({ locale: $localeStore, key: archetype.tagKey })}
+						{#if uniOption}
+							<span class="school-chip">
+								<span class="school-chip-dot" aria-hidden="true"></span>
+								{uniOption.name.toUpperCase()}
+							</span>
+						{/if}
+						{#if countryOption}
+							<span class="country-chip">
+								<span aria-hidden="true">{countryOption.glyph}</span>
+								{countryOption.name.toUpperCase()}
 							</span>
 						{/if}
 					</div>
@@ -751,7 +787,7 @@
 		<div class="profile-affiliations-grid">
 			{#each slots as slot (slot.key)}
 				<button
-					class="profile-affil-slot"
+					class="affil-slot"
 					class:is-empty={!slot.filled && !slot.locked}
 					class:is-filled={slot.filled}
 					class:is-locked={slot.locked}
@@ -762,17 +798,17 @@
 					onclick={() => handleSlotClick(slot)}
 					type="button"
 				>
-					<span class="profile-affil-glyph" aria-hidden="true">
+					<span class="affil-slot-icon" aria-hidden="true">
 						{#if slot.locked}
 							<Lock size={14} strokeWidth={1.8} />
 						{:else}
 							{slot.glyph}
 						{/if}
 					</span>
-					<span class="profile-affil-label">
+					<span class="affil-slot-label">
 						{t({ locale: $localeStore, key: slot.labelKey })}
 					</span>
-					<span class="profile-affil-value" class:dim={!slot.filled}>
+					<span class="affil-slot-value" class:dim={!slot.filled}>
 						{#if slot.filled}
 							{slot.value}
 						{:else if slot.locked}
@@ -839,6 +875,7 @@
 			{#each sortedAchievements as evaluation (evaluation.id)}
 				{@const unlocked = persistedUnlocks.has(evaluation.id) || evaluation.unlocked}
 				{@const progressPercent = Math.round(evaluation.progress * 100)}
+				{@const AchIcon = iconForAchievement(evaluation.id)}
 				<div
 					class="profile-achievement-card"
 					class:is-bronze={evaluation.def.tier === 'bronze'}
@@ -847,7 +884,7 @@
 					class:is-unlocked={unlocked}
 				>
 					<span class="profile-achievement-emblem" aria-hidden="true">
-						<Trophy size={18} strokeWidth={1.8} />
+						<AchIcon size={18} strokeWidth={1.8} />
 					</span>
 					<div class="profile-achievement-text">
 						<span class="profile-achievement-name">
@@ -1149,16 +1186,19 @@
 		margin-top: 0.1rem;
 	}
 
-	/* School chip — laurel-accent stand-in for the prototype's
-	   per-school colored chip (no per-school palette in our data yet). */
-	.profile-school-chip {
+	/* School + country chips — laurel-accent / muted stand-ins for the
+	   prototype's per-affiliation colored pills (screens.jsx:908-925).
+	   Per-school and per-country palettes don't exist in our data yet,
+	   so school chips use the laurel accent and country chips use a
+	   neutral surface tint. Both share the prototype's small uppercase
+	   mono geometry. */
+	.school-chip,
+	.country-chip {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.3rem;
 		padding: 0.18rem 0.55rem;
 		border-radius: var(--r-4);
-		background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-		color: var(--color-primary);
 		font-family: var(--font-mono);
 		font-size: 0.6rem;
 		font-weight: 700;
@@ -1167,7 +1207,19 @@
 		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
 	}
 
-	.profile-school-chip-dot {
+	.school-chip {
+		background: color-mix(in srgb, var(--color-primary) 18%, transparent);
+		color: var(--color-primary);
+	}
+
+	.country-chip {
+		background: var(--bg-surface);
+		color: var(--text-base);
+		border: 1px solid var(--border-base);
+		box-shadow: none;
+	}
+
+	.school-chip-dot {
 		display: inline-block;
 		width: 5px;
 		height: 5px;
@@ -1336,7 +1388,7 @@
 		gap: 0.5rem;
 	}
 
-	.profile-affil-slot {
+	.affil-slot {
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
@@ -1352,21 +1404,21 @@
 			border-color var(--d-hover) var(--ease-vici);
 	}
 
-	.profile-affil-slot.is-empty:hover {
+	.affil-slot.is-empty:hover {
 		border-color: var(--border-strong);
 		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-popover));
 	}
 
-	.profile-affil-slot.is-locked {
+	.affil-slot.is-locked {
 		cursor: not-allowed;
 		opacity: 0.55;
 	}
 
-	.profile-affil-slot:disabled {
+	.affil-slot:disabled {
 		cursor: default;
 	}
 
-	.profile-affil-glyph {
+	.affil-slot-icon {
 		display: inline-flex;
 		width: 1.6rem;
 		height: 1.6rem;
@@ -1380,12 +1432,12 @@
 		font-weight: 700;
 	}
 
-	.profile-affil-slot.is-filled .profile-affil-glyph {
+	.affil-slot.is-filled .affil-slot-icon {
 		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 		color: var(--color-primary);
 	}
 
-	.profile-affil-label {
+	.affil-slot-label {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
 		font-size: 0.6rem;
@@ -1394,7 +1446,7 @@
 		text-transform: uppercase;
 	}
 
-	.profile-affil-value {
+	.affil-slot-value {
 		overflow: hidden;
 		color: var(--text-base);
 		font-size: var(--t-13);
@@ -1403,7 +1455,7 @@
 		white-space: nowrap;
 	}
 
-	.profile-affil-value.dim {
+	.affil-slot-value.dim {
 		color: var(--text-muted);
 		font-weight: 500;
 	}
