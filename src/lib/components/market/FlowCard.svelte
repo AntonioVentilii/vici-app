@@ -527,9 +527,10 @@
 			<div class="flow-body">
 				<!-- Friends social proof + live momentum. When the user
 				     follows predictors who've called this market, surface
-				     the YES/NO split alongside an overlapping avatar
-				     stack. Falls back to a predictors-count + momentum
-				     delta line. -->
+				     the YES / NO split alongside an overlapping avatar
+				     stack; otherwise fall back to a `N predicting · +M
+				     today` line. When neither signal is available the
+				     row stays empty. -->
 				<div class="flow-social num">
 					{#if followedYes !== undefined && followedYes > 0}
 						{#if friendAvatarCount > 0}
@@ -553,8 +554,11 @@
 							})}
 							<span class="flow-momentum-sep" aria-hidden="true">·</span>
 							<span class="flow-momentum-delta text-yes">
-								+{momentumDelta}
-								{t({ locale: $localeStore, key: 'card.today' })}
+								{t({
+									locale: $localeStore,
+									key: 'card.momentum_delta',
+									params: { count: momentumDelta }
+								})}
 							</span>
 						</span>
 					{/if}

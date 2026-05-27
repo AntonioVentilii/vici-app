@@ -413,8 +413,8 @@ export const enMessages = {
 	'card.predicting_count': '{count} predicting',
 	'card.sharp': 'Sharp predictors:',
 	'card.sharp_signal': 'Sharp predictors: {percent}% {side}',
+	'card.momentum_delta': '+{count} today',
 	'card.tap_depth': 'TAP FOR DEPTH',
-	'card.today': 'today',
 	'challenge.create.error.missing_premium': 'Missing Premium',
 	'challenge.create.error.missing_premium_message':
 		'Pick a dare from the list, or describe a custom one.',

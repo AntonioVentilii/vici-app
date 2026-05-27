@@ -6,6 +6,7 @@
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import FlowBottomBar from '$lib/components/market/FlowBottomBar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import FlowComboBanner from '$lib/components/market/FlowComboBanner.svelte';
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
@@ -27,6 +28,7 @@
 	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
+	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { persistDailyStreak } from '$lib/services/profile.services';
@@ -571,6 +573,21 @@
 		goto(resolve(AppPath.Home));
 	};
 
+	// The back-face peg-rail owns stake selection on the VXP balance
+	// domain. The playground domains (USD / ICP) use fractional amounts
+	// that the peg-rail doesn't cover, so we keep a small bottom-bar
+	// stepper for those — see `playgroundOnly` gate around `FlowBottomBar`
+	// in the template.
+	const playgroundOnly = $derived(!isViciXp($balanceDomain));
+
+	const incrementAmount = (direction: 1 | -1) => {
+		const step = 0.1;
+		const min = 0.1;
+		const current = Number(tradeAmount) || 0;
+		const next = Math.max(min, Number((current + direction * step).toFixed(2)));
+		tradeAmount = String(next);
+	};
+
 	const visibleCards = $derived(markets.slice(currentIndex, currentIndex + 3));
 
 	// Trickster appears on the active card when the YES probability is
@@ -762,6 +779,19 @@
 		     non-swipe gestures. Pure visual sugar; gestures are wired in
 		     FlowCard. -->
 		<SwipeHint />
+
+		{#if playgroundOnly}
+			<!-- Playground (USD / ICP) stake stepper. VXP uses the
+			     back-face peg-rail and renders no bottom bar. -->
+			<FlowBottomBar
+				min={0.1}
+				onAction={handleAction}
+				onIncrement={incrementAmount}
+				step={0.1}
+				unitLabel={$playgroundFlowTradeUnitLabel}
+				bind:tradeAmount
+			/>
+		{/if}
 	{/if}
 </div>
 
