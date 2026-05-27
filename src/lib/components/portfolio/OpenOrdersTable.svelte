@@ -62,8 +62,11 @@
 		{#if orders.length === 0}
 			<EmptyState message={t({ locale: $localeStore, key: 'portfolio.orders.empty' })} />
 		{:else}
-			<!-- Mobile: stacked card list -->
-			<ul class="divide-border block divide-y md:hidden">
+			<!-- Mobile: stacked card list. `w-full` is load-bearing — `Card`
+			     is a `flex flex-col items-start` container, so children are
+			     content-sized by default and the inner `truncate` /
+			     `line-clamp-2` would never have a width to clip against. -->
+			<ul class="divide-border block w-full divide-y md:hidden">
 				{#each pagedOrders as order (order.order_id)}
 					{@const market = getMarketById(order.series_id)}
 					{@const isBuy = isBuyOrder(order)}
