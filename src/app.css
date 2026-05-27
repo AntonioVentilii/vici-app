@@ -547,47 +547,45 @@ html[data-app='1'] body {
 	padding-bottom: var(--bn-clear);
 }
 
-/* Phone-frame decoration for desktop viewports — the prototype is
- * mobile-only by design, but on a wide desktop window the bare 28rem
- * column floating in a black void reads as broken rather than
- * intentional. At ≥640px we wrap the (app) shell in a phone-bezel
- * surround so the void is contextualised as off-screen canvas.
- * Marketing routes (`/`, `/about`, …) keep their natural body-scroll
- * because the gate runs only on `data-app="1"`. */
-@media (min-width: 640px) {
-	html[data-app='1'] body {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		background:
-			radial-gradient(
-				1600px 800px at 50% -10%,
-				color-mix(in srgb, var(--laurel) 4%, transparent),
-				transparent 60%
-			),
-			var(--bg-base);
+/* Desktop adaptation for the (app) shell — the prototype renders
+ * authenticated screens at mobile width only (interest of time), but
+ * our desktop should pick up the LANDING page's responsive treatment:
+ * a top-nav shell hosts the chrome, the mobile pillnav is hidden, and
+ * page content centers in a comfortable reading column. Marketing
+ * routes (`/`, `/about`, …) keep their own natural full-bleed layout
+ * because the `data-app="1"` gate only fires inside the (app) group.
+ *
+ * The desktop top-nav lives in `(app)/+layout.svelte` as
+ * `<DesktopAppNav>` and is hidden at <56rem; the pillnav is hidden at
+ * ≥56rem. The body stays scroll-locked at all widths (the inner
+ * `.screen-scroll` owns page scroll), but at desktop we drop the
+ * `--bn-clear` padding-bottom since the pillnav is gone. */
+
+.app-shell-content {
+	width: 100%;
+	max-width: 28rem;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+@media (min-width: 56rem) {
+	html[data-app='1'] .screen-scroll {
+		padding-bottom: 2rem;
 	}
 
-	/* SvelteKit's `app.html` wraps the rendered tree in
-	 * `<div style="display: contents">` for hydration, so the layout
-	 * root is not a direct child of <body>. Use a descendant selector
-	 * rather than `body >` so the phone-bezel + pillnav anchoring still
-	 * match. `display: contents` keeps the wrapper layout-transparent,
-	 * so `body { display: flex }` above still centers this column. */
-	html[data-app='1'] div.relative.isolate {
-		width: 100%;
-		max-width: 28rem;
-		height: min(100%, 932px);
-		border: 1px solid var(--border-strong);
-		border-radius: 36px;
-		overflow: hidden;
-		box-shadow:
-			0 30px 80px -30px rgba(0, 0, 0, 0.55),
-			inset 0 1px 0 rgba(242, 236, 220, 0.06);
+	html[data-app='1'] .pillnav-wrap {
+		display: none;
 	}
 
-	html[data-app='1'] div.relative.isolate .pillnav-wrap {
-		position: absolute;
+	/* On desktop the content column grows from the mobile 28rem to a
+	 * reading-comfortable 64rem so pages like Markets / Dash / Social
+	 * use the desktop canvas instead of hugging the centre as a
+	 * fake-mobile column. Individual surfaces can opt back into the
+	 * narrower 28rem with `.app-shell-content--narrow`. */
+	.app-shell-content {
+		max-width: 64rem;
+		padding-left: clamp(1.25rem, 4vw, 2rem);
+		padding-right: clamp(1.25rem, 4vw, 2rem);
 	}
 }
 
@@ -1503,4 +1501,185 @@ html[data-app='1'] body {
 	.art-culture {
 		animation: none;
 	}
+}
+
+/* ============================================================
+ * Prototype-faithful primitives — verbatim ports from the
+ * VICI WebApp Beta V1.2 `app.css` (lines 85-205, 287-288,
+ * 851-853). These power the Markets / Dash / Flow / Social /
+ * Profile surfaces and intentionally reuse the prototype's CSS
+ * class names so the JSX → Svelte port stays a 1:1 translation.
+ * Tokens are mapped to our renamed equivalents
+ * (--bg-raised → --bg-surface, --border → --border-base,
+ * --fg-* → --text-*, --accent → --laurel, --ease → --ease-vici).
+ * ============================================================ */
+
+/* Appbar (prototype app.css:85) */
+.appbar {
+	flex: 0 0 auto;
+	padding: 8px 20px 12px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 12px;
+}
+
+/* Pills + chips (prototype app.css:146) */
+.chip {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 6px 10px;
+	border-radius: 999px;
+	background: rgba(242, 236, 220, 0.06);
+	color: var(--text-muted);
+	border: 1px solid var(--border-base);
+	font-size: var(--t-12);
+	font-weight: 500;
+	white-space: nowrap;
+	cursor: pointer;
+	appearance: none;
+	font-family: inherit;
+	transition:
+		background-color 200ms var(--ease-vici),
+		color 200ms var(--ease-vici),
+		border-color 200ms var(--ease-vici);
+}
+
+.chip.active {
+	background: var(--laurel-glow);
+	color: var(--laurel);
+	border-color: rgba(226, 184, 66, 0.3);
+}
+
+/* Tag chips (prototype app.css:156) */
+.tag {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 3px 7px;
+	border-radius: 4px;
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	background: rgba(242, 236, 220, 0.08);
+	color: var(--text-muted);
+}
+
+.tag.yes {
+	background: var(--yes-wash);
+	color: var(--yes);
+}
+
+.tag.no {
+	background: var(--no-wash);
+	color: var(--no);
+}
+
+/* Cards (prototype app.css:169) */
+.card {
+	background: var(--bg-surface);
+	border: 1px solid var(--border-base);
+	border-radius: 16px;
+	padding: 16px;
+	box-shadow: inset 0 1px 0 rgba(242, 236, 220, 0.04);
+}
+
+/* Text helpers (prototype app.css:187-192) */
+.dim {
+	color: var(--text-base);
+	opacity: 0.78;
+}
+
+.mute {
+	color: var(--text-muted);
+}
+
+.acc {
+	color: var(--laurel);
+}
+
+/* Section labels (prototype app.css:200) */
+.section-h {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	padding: 8px 20px 8px;
+}
+
+.section-h h3 {
+	font-size: 15px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	margin: 0;
+}
+
+.section-h .more {
+	font-size: var(--t-12);
+	color: var(--laurel);
+	cursor: pointer;
+	background: none;
+	border: 0;
+	padding: 0;
+	font-family: inherit;
+}
+
+/* Hide scrollbars on inner panels (prototype app.css:287) */
+.no-scrollbar::-webkit-scrollbar {
+	display: none;
+}
+
+.no-scrollbar {
+	scrollbar-width: none;
+}
+
+/* Layout helpers (prototype app.css:851-853) */
+.row {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.row.between {
+	justify-content: space-between;
+}
+
+.col {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+/* Type scale aliases used inline by the prototype's screens */
+.t-display {
+	font-size: 40px;
+	line-height: 1;
+}
+
+.t-h4 {
+	font-size: 18px;
+	font-weight: 600;
+}
+
+.t-body {
+	font-size: 14px;
+}
+
+.t-body-sm {
+	font-size: 13px;
+}
+
+.t-sub {
+	font-size: 12px;
+}
+
+.t-eyebrow {
+	font-size: 10px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+}
+
+.fw-600 {
+	font-weight: 600;
 }

@@ -5,6 +5,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
+	import DesktopAppNav from '$lib/components/layout/DesktopAppNav.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
@@ -399,15 +400,21 @@
 
 <div class="relative isolate flex h-full flex-col">
 	<!--
-		Desktop sidebar / banner are intentionally dropped — prototype is
-		mobile-only and the user has locked layout parity for this PR. The
-		shell now hosts the same `MobileAppBar` pattern at every viewport
-		width; each page mounts its own appbar.
+		Desktop chrome — landing-style top nav. Hidden at <56rem; the
+		mobile floating pillnav (rendered below as `<MobileNav>`) owns
+		the chrome at narrower viewports.
+
+		The prototype renders authenticated screens at mobile width only
+		(interest of time per the design source). Our desktop adapts the
+		mobile design to a proper desktop layout: top-nav header + wider
+		content column, NOT a fake-mobile phone bezel.
 	-->
+	<DesktopAppNav />
+
 	<main class="screen-scroll">
 		{#key page.url.pathname}
 			<div
-				class="mx-auto w-full max-w-[28rem]"
+				class="app-shell-content"
 				data-tid={TestId.AppMain}
 				in:fade={{ duration: 100, delay: 100 }}
 				out:fade={{ duration: 100 }}
