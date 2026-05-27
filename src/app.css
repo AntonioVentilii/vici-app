@@ -1502,6 +1502,28 @@ html[data-app='1'] body {
 	}
 }
 
+/* Staggered entrance envelopes — FlowEnd (and any future surface
+   that wants a top-to-bottom unveil) tags sequential sections with
+   `.anim-in` / `.anim-in-2` / `.anim-in-3` to land them on a 0 /
+   90 / 180 ms delay against the shared `fade-up` keyframe. Pure
+   visual sugar; respects `prefers-reduced-motion`. */
+.anim-in {
+	animation: fade-up 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-in-2 {
+	animation: fade-up 380ms cubic-bezier(0.16, 1, 0.3, 1) 90ms both;
+}
+.anim-in-3 {
+	animation: fade-up 380ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+}
+@media (prefers-reduced-motion: reduce) {
+	.anim-in,
+	.anim-in-2,
+	.anim-in-3 {
+		animation: none;
+	}
+}
+
 /* `vxp-award-in` is intentionally NOT added: our `xpPop` /
    `xpPopBonus` envelopes already cover the VXP award entrance
    with a richer arc. */

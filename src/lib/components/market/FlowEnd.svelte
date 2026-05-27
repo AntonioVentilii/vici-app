@@ -453,6 +453,7 @@
 	}
 
 	/* Entrance staggers — `anim-in` / `anim-in-2` / `anim-in-3` are
-	   defined globally in app.css. Respect reduced-motion via the
-	   keyframe definitions there. */
+	   defined in `app.css` (top-to-bottom 0 / 90 / 180 ms delays
+	   against the shared `fade-up` keyframe). Reduced-motion guard
+	   lives there too. */
 </style>

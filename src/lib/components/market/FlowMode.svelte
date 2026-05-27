@@ -85,12 +85,14 @@
 	let tradeAmount = $state('1.0');
 	let betsCount = $state(0);
 	let completed = $state(false);
-	// Session-summary metrics. `sessionStartMs` is stamped at mount;
-	// `correctCallsThisSession` increments each time `alignedWithCrowd`
-	// is true on a committed YES / NO swipe. Together they drive the
-	// `You called N markets in 1m 18s.` line and the SESSION ACC.
-	// stat on FlowEnd.
-	const sessionStartMs = Date.now();
+	// Session-summary metrics. `sessionStartMs` is stamped at mount
+	// AND on every "Predict 10 more" continuation — `const` here would
+	// leak the time the user spent reading the previous FlowEnd into
+	// the next session's duration label. `correctCallsThisSession`
+	// increments each time `alignedWithCrowd` is true on a committed
+	// YES / NO swipe. Together they drive the `You called N markets
+	// in 1m 18s.` line and the SESSION ACC. stat on FlowEnd.
+	let sessionStartMs = $state(Date.now());
 	let correctCallsThisSession = $state(0);
 	// Per-category call counter for this session. Drives the
 	// data-driven Oracle line on FlowEnd ("You were early on {category}")
@@ -695,7 +697,11 @@
 			xp = 0;
 			streak = 0;
 			lastStreakShown = 0;
-			nowMs = Date.now();
+			// Reset BOTH the start and the now-tick — otherwise the next
+			// FlowEnd's duration_line measures from the original mount,
+			// including the time spent reading the previous FlowEnd.
+			sessionStartMs = Date.now();
+			nowMs = sessionStartMs;
 		} catch (e: unknown) {
 			console.error('Failed to refresh Flow deck', e);
 		} finally {
