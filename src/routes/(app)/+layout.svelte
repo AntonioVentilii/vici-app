@@ -68,12 +68,19 @@
 	// initial auth handshake has completed. Reacting to `authBusy`
 	// directly would bounce users to /signin during a normal page
 	// load. See `docs/ai/frontend/design.md` §8.1.
+	//
+	// Belt-and-braces: also require `!$userSignedIn` so a transient
+	// `authBusy` flip during a hot in-app navigation (e.g. just after
+	// `signIn()` resolves but before the userStore has finished
+	// hydrating the new principal's profile) doesn't briefly bounce a
+	// signed-in user back to /signin — the visible "double sign-in"
+	// flash the user reported on 2026-05-27.
 	$effect(() => {
 		if (!browser) {
 			return;
 		}
 
-		if ($userSignedOutResolved) {
+		if ($userSignedOutResolved && !$userSignedIn) {
 			void goto(resolve(PublicPath.SignIn), { replaceState: true });
 		}
 	});

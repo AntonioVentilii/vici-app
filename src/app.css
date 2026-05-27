@@ -547,6 +547,44 @@ html[data-app='1'] body {
 	padding-bottom: var(--bn-clear);
 }
 
+/* Phone-frame decoration for desktop viewports — the prototype is
+ * mobile-only by design, but on a wide desktop window the bare 28rem
+ * column floating in a black void reads as broken rather than
+ * intentional. At ≥640px we wrap the (app) shell in a phone-bezel
+ * surround so the void is contextualised as off-screen canvas.
+ * Marketing routes (`/`, `/about`, …) keep their natural body-scroll
+ * because the gate runs only on `data-app="1"`. */
+@media (min-width: 640px) {
+	html[data-app='1'] body {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		background:
+			radial-gradient(
+				1600px 800px at 50% -10%,
+				color-mix(in srgb, var(--laurel) 4%, transparent),
+				transparent 60%
+			),
+			var(--bg-base);
+	}
+
+	html[data-app='1'] body > div.relative.isolate {
+		width: 100%;
+		max-width: 28rem;
+		height: min(100%, 932px);
+		border: 1px solid var(--border-strong);
+		border-radius: 36px;
+		overflow: hidden;
+		box-shadow:
+			0 30px 80px -30px rgba(0, 0, 0, 0.55),
+			inset 0 1px 0 rgba(242, 236, 220, 0.06);
+	}
+
+	html[data-app='1'] body > div.relative.isolate .pillnav-wrap {
+		position: absolute;
+	}
+}
+
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
 	width: 8px;
