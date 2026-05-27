@@ -41,9 +41,23 @@
 		active: MarketsCategoryFilter;
 		savedCount: number;
 		onChange: (filter: MarketsCategoryFilter) => void;
+		/**
+		 * Tags that resolve to at least one market right now. Chips for tags
+		 * outside this set are hidden so users don't pick a category that
+		 * would render an empty list — except the currently-active chip,
+		 * which we always keep visible to avoid the rail jumping when the
+		 * user toggles filters.
+		 */
+		availableTags?: ReadonlySet<MarketTag>;
 	}
 
-	const { active, savedCount, onChange }: Props = $props();
+	const { active, savedCount, onChange, availableTags }: Props = $props();
+
+	const visibleTags = $derived(
+		availableTags === undefined
+			? MARKET_TAGS
+			: MARKET_TAGS.filter((tag) => availableTags.has(tag) || active === tag)
+	);
 </script>
 
 <div
@@ -67,7 +81,7 @@
 		onclick={() => onChange('all')}
 		type="button">{t({ locale: $localeStore, key: 'markets.chip.all' })}</button
 	>
-	{#each MARKET_TAGS as tag (tag)}
+	{#each visibleTags as tag (tag)}
 		<button
 			class={`chip ${active === tag ? 'active' : ''}`}
 			onclick={() => onChange(tag)}
