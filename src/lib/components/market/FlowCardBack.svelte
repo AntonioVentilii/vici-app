@@ -255,23 +255,28 @@
 					{t({ locale: $localeStore, key: 'card.back.resolves_if' })}
 				</p>
 				<p class="flow-back-copy">{resolutionCondition}</p>
-				<button
-					class="flow-back-toggle"
-					aria-expanded={rulesOpen}
-					data-no-card-gesture="true"
-					onclick={(e) => {
-						e.stopPropagation();
-						rulesOpen = !rulesOpen;
-					}}
-					type="button"
-				>
-					{rulesOpen
-						? t({ locale: $localeStore, key: 'card.back.hide_rules' })
-						: t({ locale: $localeStore, key: 'card.back.show_rules' })}
-					<span class="flow-back-toggle-caret" class:is-open={rulesOpen} aria-hidden="true">
-						▾
+				<div class="flow-res-foot">
+					<span class="flow-res-source">
+						{t({ locale: $localeStore, key: 'card.back.source_official' })}
 					</span>
-				</button>
+					<button
+						class="flow-back-toggle"
+						aria-expanded={rulesOpen}
+						data-no-card-gesture="true"
+						onclick={(e) => {
+							e.stopPropagation();
+							rulesOpen = !rulesOpen;
+						}}
+						type="button"
+					>
+						{rulesOpen
+							? t({ locale: $localeStore, key: 'card.back.hide_rules' })
+							: t({ locale: $localeStore, key: 'card.back.show_rules' })}
+						<span class="flow-back-toggle-caret" class:is-open={rulesOpen} aria-hidden="true">
+							▾
+						</span>
+					</button>
+				</div>
 				{#if rulesOpen}
 					<p class="flow-back-rules">
 						{t({ locale: $localeStore, key: 'card.back.rules_body' })}
@@ -282,20 +287,18 @@
 
 		<section class="flow-back-block flow-community">
 			<div class="flow-community-top">
-				<p class="eyebrow flow-back-label">
-					{t({ locale: $localeStore, key: 'card.back.crowd_split' })}
-				</p>
+				<span class={`num flow-community-pct ${crowdSide === 'YES' ? 'text-yes' : 'text-no'}`}>
+					{formatProbability(market.yesProbability)}
+					<span class="flow-community-side">{crowdSide}</span>
+				</span>
 				<span
 					class={`flow-community-delta num ${yesPct >= 50 ? 'flow-delta-yes' : 'flow-delta-no'}`}
 				>
 					{yesPct >= 50 ? '▲' : '▼'}
-					{Math.abs(yesPct - Math.max(5, yesPct - 12))}%
-				</span>
-			</div>
-			<div class="flow-community-row">
-				<span class={`num flow-community-pct ${crowdSide === 'YES' ? 'text-yes' : 'text-no'}`}>
-					{formatProbability(market.yesProbability)}
-					<span class="flow-community-side">{crowdSide}</span>
+					{Math.abs(yesPct - Math.max(5, yesPct - 12))}% {t({
+						locale: $localeStore,
+						key: 'card.back.this_week'
+					})}
 				</span>
 			</div>
 			<FlowCardSparkline events={metadata?.events} seed={market.id} yesPercent={yesPct} />
@@ -667,6 +670,19 @@
 		margin-top: 0.4rem;
 	}
 
+	.flow-res-foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-top: 0.35rem;
+	}
+	.flow-res-source {
+		font-size: var(--t-12);
+		color: var(--text-muted);
+		opacity: 0.85;
+	}
+
 	.flow-back-toggle {
 		align-self: flex-start;
 		display: inline-flex;
@@ -693,12 +709,8 @@
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
-		gap: 0.5rem;
-	}
-	.flow-community-row {
-		display: flex;
-		align-items: baseline;
-		gap: 0.5rem;
+		gap: 0.75rem;
+		flex-wrap: wrap;
 	}
 	.flow-community-pct {
 		font-size: 2.05rem;

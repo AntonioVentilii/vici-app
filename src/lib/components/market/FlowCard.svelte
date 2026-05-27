@@ -2,7 +2,6 @@
 	import ConsensusCompass from '$lib/components/market/ConsensusCompass.svelte';
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
-	import Trickster from '$lib/components/market/Trickster.svelte';
 	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { daysToKickoff } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -14,7 +13,6 @@
 		FollowedLeanSignal,
 		PriorCallSignal
 	} from '$lib/types/market-signals';
-	import type { Position } from '$lib/types/position';
 	import { resolveFlowArtCategory, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import {
 		consensusPercent,
@@ -29,7 +27,6 @@
 		market: Market;
 		onAction: (action: FlowAction) => void;
 		signedIn: boolean;
-		position?: Position;
 		tradeAmount: string;
 		interactive?: boolean;
 		// When true, the parent has paused the deck (e.g. a sheet is
@@ -60,7 +57,6 @@
 		market,
 		onAction,
 		signedIn,
-		position,
 		tradeAmount,
 		interactive = true,
 		locked = false,
@@ -122,13 +118,6 @@
 	const crowdSide = $derived(consensusSide(market));
 	const yesIsFav = $derived(crowdPct >= 50);
 	const noPct = $derived(100 - crowdPct);
-
-	// Trickster pill — contrarian markets only (minority side under 25%).
-	// The pill replaces the ConsensusCompass in the card header for these
-	// markets so the dissent signal lands first. Prototype source:
-	// `VICI WebApp Beta V1.2/flow.jsx:567-568` + `landing.jsx:519-545`.
-	const minorityPct = $derived(Math.min(crowdPct, noPct));
-	const showTrickster = $derived(minorityPct < 25);
 
 	// Payout preview — stake/(probability) − stake, clamped at p=0.05 to
 	// keep long-shots from rendering pathological numbers. Matches the
@@ -218,12 +207,12 @@
 		market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0
 	);
 
-	// Callers-in-last-hour placeholder — deterministic per market.id so
-	// the number is stable across renders without a live presence service.
-	// Replaced when the real live-counter API ships. Range ~200..900 keeps
-	// the pill plausible at low-traffic moments without going below the
-	// "live activity" feel.
-	const callersLastHour = $derived.by(() => {
+	// Per-market momentum delta — deterministic per market.id, drives the
+	// "+N today" fallback line shown when the user has no followed-friends
+	// data on this market. Range ~10..99 keeps the number plausible without
+	// requiring a live aggregator. Mirrors the prototype's
+	// `seedFromId(market.id)` fallback in `flow.jsx:718-726`.
+	const momentumDelta = $derived.by(() => {
 		const id = String(market.id);
 		let hash = 0;
 
@@ -231,7 +220,7 @@
 			hash = (hash * 31 + id.charCodeAt(i)) | 0;
 		}
 
-		return 200 + (Math.abs(hash) % 700);
+		return (Math.abs(hash) % 90) + 10;
 	});
 
 	// Friends-lean avatar stack — decorative overlapping circles next to
@@ -514,16 +503,7 @@
 							</span>
 						{/if}
 					</div>
-					{#if showTrickster}
-						<span class="flow-trickster-pill">
-							<Trickster lightning size={26} />
-							<span class="flow-trickster-pill-text">
-								{minorityPct}% {t({ locale: $localeStore, key: 'flow.companion.trickster.short' })}
-							</span>
-						</span>
-					{:else}
-						<ConsensusCompass size={42} yesProbability={market.yesProbability} />
-					{/if}
+					<ConsensusCompass size={42} yesProbability={market.yesProbability} />
 				</div>
 
 				{#if showPriorOnFront && priorCall}
@@ -547,20 +527,6 @@
 				{#if subtitleText}
 					<p class="flow-card-sub serif-italic acc">{subtitleText}</p>
 				{/if}
-				<!-- Live callers pill — green-dot live indicator + dynamic
-				     count. Mirrors the prototype's `· {N} callers in last
-				     hour` accent under the editorial sub-row. Real number
-				     wiring lands when the live presence service ships; we
-				     surface a deterministic per-market placeholder so the
-				     pill renders today. -->
-				<span class="flow-callers-live num">
-					<span class="flow-callers-dot" aria-hidden="true"></span>
-					{t({
-						locale: $localeStore,
-						key: 'card.callers_last_hour',
-						params: { count: callersLastHour }
-					})}
-				</span>
 			</header>
 
 			<div class="flow-body">
@@ -591,17 +557,11 @@
 								key: 'card.predicting_count',
 								params: { count: predictorsCount.toLocaleString() }
 							})}
-						</span>
-					{:else if position}
-						<span>
-							{t({
-								locale: $localeStore,
-								key: 'card.position_holding',
-								params: {
-									amount: position.netQty.toString(),
-									symbol: market.token.symbol
-								}
-							})}
+							<span class="flow-momentum-sep" aria-hidden="true">·</span>
+							<span class="flow-momentum-delta text-yes">
+								+{momentumDelta}
+								{t({ locale: $localeStore, key: 'card.today' })}
+							</span>
 						</span>
 					{/if}
 				</div>
@@ -845,29 +805,6 @@
 		flex-wrap: wrap;
 	}
 
-	/* Trickster pill — contrarian markets only. Prototype parity:
-	   `landing.jsx:531-545` inline-style block. Replaces the compass
-	   in the header on minority calls so the dissent signal lands
-	   first. Lives here (component-scoped) so the styles are
-	   colocated with the only consumer. */
-	.flow-trickster-pill {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 6px 10px 6px 6px;
-		border-radius: 999px;
-		background: rgba(255, 138, 122, 0.14);
-		border: 1px solid rgba(255, 138, 122, 0.35);
-	}
-	.flow-trickster-pill-text {
-		font-family: var(--font-mono);
-		font-size: 10px;
-		color: #ff8a7a;
-		text-transform: uppercase;
-		letter-spacing: 0.12em;
-		font-weight: 600;
-	}
-
 	.flow-cat-tag {
 		display: inline-flex;
 		align-items: center;
@@ -972,37 +909,12 @@
 		font-weight: 400;
 	}
 
-	.flow-callers-live {
-		display: inline-flex;
-		align-items: center;
-		gap: 5px;
-		margin: 4px 0 0;
-		font-size: var(--t-11, 0.7rem);
-		font-weight: 600;
-		color: var(--yes);
-		letter-spacing: 0.02em;
+	.flow-momentum-sep {
+		margin: 0 5px;
+		opacity: 0.55;
 	}
-	.flow-callers-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: var(--r-pill);
-		background: var(--yes);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--yes) 22%, transparent);
-		animation: flow-callers-pulse 1.6s ease-in-out infinite;
-	}
-	@keyframes flow-callers-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.45;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.flow-callers-dot {
-			animation: none;
-		}
+	.flow-momentum-delta {
+		font-weight: 700;
 	}
 
 	.flow-body {

@@ -6,7 +6,6 @@
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import FlowBottomBar from '$lib/components/market/FlowBottomBar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import FlowComboBanner from '$lib/components/market/FlowComboBanner.svelte';
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
@@ -28,8 +27,6 @@
 	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
-	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
-	import { positions as positionsDerived } from '$lib/derived/positions.derived';
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { persistDailyStreak } from '$lib/services/profile.services';
@@ -86,11 +83,6 @@
 	let tradeAmount = $state('1.0');
 	let betsCount = $state(0);
 	let completed = $state(false);
-	// Positions stream in from the global `positionsStore` — kept warm
-	// by `LoaderPositions` in `(app)/+layout.svelte`. FlowMode reads
-	// the derived list directly so deck render never blocks on a
-	// per-mount certified fetch.
-	const positions = $derived($positionsDerived);
 	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
 	// the FlowCard render loop to drive the per-card generative artwork
 	// (which uses the *primary* tag — see `primaryMarketTag`).
@@ -582,14 +574,6 @@
 		goto(resolve(AppPath.Home));
 	};
 
-	const incrementAmount = (direction: 1 | -1) => {
-		const step = isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1;
-		const min = isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1;
-		const current = Number(tradeAmount) || 0;
-		const next = Math.max(min, Number((current + direction * step).toFixed(2)));
-		tradeAmount = String(next);
-	};
-
 	const visibleCards = $derived(markets.slice(currentIndex, currentIndex + 3));
 
 	// Trickster appears on the active card when the YES probability is
@@ -692,21 +676,6 @@
 			onExit={backToMarkets}
 			{xp}
 		/>
-		<button
-			class="flow-exit-chip"
-			aria-label={t({ locale: $localeStore, key: 'flow.exit_aria' })}
-			onclick={backToMarkets}
-			type="button"
-		>
-			<svg fill="none" height="14" stroke="currentColor" viewBox="0 0 24 24" width="14">
-				<path
-					d="M6 18L18 6M6 6l12 12"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2.5"
-				/>
-			</svg>
-		</button>
 
 		{#if lastStreakShown > 0}
 			{#key lastStreakShown}
@@ -755,7 +724,6 @@
 							onStakeChange={(next) => {
 								tradeAmount = next;
 							}}
-							position={positions.find((p) => p.marketId === market.id)}
 							{priorCall}
 							signedIn={nonNullish($userStore.user)}
 							{tradeAmount}
@@ -799,15 +767,6 @@
 		     non-swipe gestures. Pure visual sugar; gestures are wired in
 		     FlowCard. Prototype source: `flow.jsx:1124-1163`. -->
 		<SwipeHint />
-
-		<FlowBottomBar
-			min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
-			onAction={handleAction}
-			onIncrement={incrementAmount}
-			step={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
-			unitLabel={$playgroundFlowTradeUnitLabel}
-			bind:tradeAmount
-		/>
 	{/if}
 </div>
 
@@ -862,39 +821,6 @@
 		justify-content: center;
 		padding: 0.65rem 1rem 0.5rem;
 		min-height: 0;
-	}
-
-	/* Floating exit chip — replaces the persistent FlowTopBar. Sits in
-	   the top-right so it doesn't compete with the card header. The
-	   matching gesture (browser back / bottom-bar) covers the primary
-	   path on mobile. */
-	.flow-exit-chip {
-		position: absolute;
-		top: calc(env(safe-area-inset-top, 0px) + 0.65rem);
-		right: 0.75rem;
-		z-index: 70;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.85rem;
-		height: 1.85rem;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
-		color: var(--text-muted);
-		border: 1px solid var(--border-base);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		transition:
-			color 160ms ease,
-			background-color 160ms ease,
-			transform 160ms ease;
-	}
-	.flow-exit-chip:hover {
-		color: var(--text-base);
-		background: var(--bg-surface);
-	}
-	.flow-exit-chip:active {
-		transform: scale(0.94);
 	}
 
 	.flow-card-wrap {

@@ -369,11 +369,13 @@ export const enMessages = {
 		"Resolution is final when predictions close. Edge cases follow the source's official wording.",
 	'card.back.settles_line': 'Settles {date} · {timeRemaining}',
 	'card.back.show_rules': 'Show full rules',
+	'card.back.source_official': 'Source: official record',
 	'card.back.stake_ladder': 'Stake (VXP)',
 	'card.back.stake_locked':
 		'Stake locked at the default for now. {left} more calls and you can choose your rung (unlocks at {threshold}).',
 	'card.back.stake_no_wins': 'If NO wins',
 	'card.back.stake_yes_wins': 'If YES wins',
+	'card.back.this_week': 'this week',
 	'card.back.top_accuracy': 'Top accuracy',
 	'card.back.who_calling': "Who's calling what",
 	'card.back.your_context': 'Your context',
@@ -412,6 +414,7 @@ export const enMessages = {
 	'card.sharp': 'Sharp predictors:',
 	'card.sharp_signal': 'Sharp predictors: {percent}% {side}',
 	'card.tap_depth': 'TAP FOR DEPTH',
+	'card.today': 'today',
 	'challenge.create.error.missing_premium': 'Missing Premium',
 	'challenge.create.error.missing_premium_message':
 		'Pick a dare from the list, or describe a custom one.',
