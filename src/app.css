@@ -3680,6 +3680,77 @@ html[data-app='1'] body {
 	margin-right: 1px;
 }
 
+.ob2-pool-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+	margin-bottom: 6px;
+}
+.ob2-pool-eyebrow {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--parchment-mute);
+}
+.ob2-pool-refresh {
+	appearance: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 26px;
+	height: 26px;
+	padding: 0;
+	border: 1px solid var(--ink-line);
+	border-radius: 999px;
+	background: var(--ink-raised);
+	color: var(--parchment-mute);
+	cursor: pointer;
+	transition:
+		border-color 180ms var(--ease-vici),
+		color 180ms var(--ease-vici),
+		background 180ms var(--ease-vici);
+}
+.ob2-pool-refresh:hover:not(:disabled) {
+	border-color: var(--laurel);
+	color: var(--laurel);
+}
+.ob2-pool-refresh:disabled {
+	cursor: not-allowed;
+	opacity: 0.7;
+}
+.ob2-pool-refresh.spinning :global(svg) {
+	animation: ob2-spin 800ms linear infinite;
+}
+@keyframes ob2-spin {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+.ob2-pool-chip-skeleton {
+	display: block;
+	min-height: 38px;
+	background: linear-gradient(
+		90deg,
+		var(--ink-raised) 0%,
+		var(--ink-elevated) 50%,
+		var(--ink-raised) 100%
+	);
+	background-size: 200% 100%;
+	animation: ob2-shimmer 1.2s ease-in-out infinite;
+	cursor: default;
+}
+@keyframes ob2-shimmer {
+	0% {
+		background-position: 200% 0;
+	}
+	100% {
+		background-position: -200% 0;
+	}
+}
+
 .ob2-custom-input-wrap {
 	display: flex;
 	align-items: center;
