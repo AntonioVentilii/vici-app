@@ -1091,9 +1091,11 @@
 	position: relative;
 }
 .lp-lang-pop {
-	position: absolute;
-	top: calc(100% + 8px);
-	right: 0;
+	/* Mobile lang popover is rendered as a sibling of `.lp-pill` and
+	   positioned via inline `top`/`right` computed from the globe button's
+	   viewport rect, so it escapes the pill's `overflow: hidden` +
+	   `backdrop-filter` containing block. */
+	position: fixed;
 	z-index: 60;
 	min-width: 180px;
 	margin: 0;
