@@ -145,20 +145,26 @@
 	const email = $derived(profile?.email ?? '');
 	const hasEmail = $derived(email.length > 0);
 
+	// Sign-in method sub — `{provider_account} · {method_label}`.
+	// Mirrors the prototype (`screens.jsx:1815`) which shows e.g.
+	// `tacitus@vici.markets · magic link`. For Internet Identity
+	// accounts (no email on file) we fall back to a friendly
+	// "Internet Identity" label.
 	const signinMethodSub = $derived(
 		hasEmail
 			? t({
 					locale: $localeStore,
-					key: 'settings.account.signin_method.google',
+					key: 'settings.account.signin_method.magic_link',
 					params: { email }
 				})
 			: t({ locale: $localeStore, key: 'settings.account.signin_method.ii' })
 	);
 
+	// Email row sub — just the address; the "verified" affordance is
+	// rendered as a separate green badge to match the prototype
+	// (`screens.jsx:1819`).
 	const emailSub = $derived(
-		hasEmail
-			? t({ locale: $localeStore, key: 'settings.account.email.sub', params: { email } })
-			: t({ locale: $localeStore, key: 'settings.account.email.empty' })
+		hasEmail ? email : t({ locale: $localeStore, key: 'settings.account.email.empty' })
 	);
 
 	const notifyOnCount = $derived(Object.values($preferencesStore.notify).filter(Boolean).length);
@@ -391,9 +397,16 @@
 		>
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 		</button>
-		<h1 class="settings-title">{t({ locale: $localeStore, key: 'settings.title' })}</h1>
 		<span class="settings-appbar-spacer" aria-hidden="true"></span>
 	</header>
+
+	<!-- Display-font hero title below the back-arrow row.
+	     Mirrors the prototype's hero treatment — the title in the
+	     appbar slot read as too small for a top-level settings
+	     surface. -->
+	<h1 class="settings-hero-title display">
+		{t({ locale: $localeStore, key: 'settings.title' })}
+	</h1>
 
 	<div class="settings-body">
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.account' })}>
@@ -452,7 +465,15 @@
 				label={t({ locale: $localeStore, key: 'settings.account.email' })}
 				onclick={() => goto(resolve(AppPath.AccountSettings))}
 				sub={emailSub}
-			/>
+			>
+				{#snippet right()}
+					{#if hasEmail}
+						<span class="settings-verified-pill">
+							{t({ locale: $localeStore, key: 'settings.account.email.verified' })}
+						</span>
+					{/if}
+				{/snippet}
+			</SetRow>
 		</SettingsSection>
 
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.preferences' })}>
@@ -876,16 +897,41 @@
 		padding: 0.25rem 0 1rem;
 	}
 
-	.settings-title {
-		margin: 0;
-		font-size: var(--t-18);
-		font-weight: 600;
-		text-align: center;
+	/* Display-font hero title — sits below the back-arrow row and
+	   reads as a primary surface heading instead of a compact appbar
+	   label. Sized to match the prototype's ~40px serif/italic beat. */
+	.settings-hero-title {
+		margin: 0.25rem 0 1rem;
+		padding: 0 0.25rem;
+		font-size: clamp(2rem, 8vw, 2.75rem);
+		font-weight: 400;
+		font-style: italic;
+		font-family: var(--font-serif, var(--font-display, serif));
+		letter-spacing: -0.01em;
+		line-height: 1.1;
 		color: var(--text-base);
+		text-align: left;
 	}
 
 	.settings-appbar-spacer {
 		width: 2.5rem;
+	}
+
+	/* Verified email pill — small green badge rendered in the SetRow
+	   `right` snippet. Uses YES (green) tokens to read as a positive
+	   verification affordance, distinct from the laurel-gold default
+	   badge slot. */
+	.settings-verified-pill {
+		flex-shrink: 0;
+		padding: 0.125rem 0.5rem;
+		border-radius: var(--r-pill);
+		background: color-mix(in srgb, var(--yes) 14%, transparent);
+		color: var(--yes);
+		font-family: var(--font-mono);
+		font-size: 0.625rem;
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
 	}
 
 	.settings-body {
