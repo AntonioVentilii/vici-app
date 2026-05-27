@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { SvelteSet } from 'svelte/reactivity';
 	import MarketsCarousel from '$lib/components/market/MarketsCarousel.svelte';
 	import MarketsCategoryChips, {
 		type MarketsCategoryFilter
@@ -75,6 +76,26 @@
 
 	const matchesTag = ({ market, tag }: { market: Market; tag: MarketTag }): boolean =>
 		tagsByMarket[market.id]?.includes(tag) ?? false;
+
+	// Tags that currently resolve to at least one loaded market. Drives the
+	// chip rail so we don't surface categories that would render the empty
+	// state — the user can't filter into a dead end. Markets without
+	// metadata contribute nothing here (the lookup returns `undefined`).
+	const availableTags = $derived.by((): SvelteSet<MarketTag> => {
+		const set = new SvelteSet<MarketTag>();
+
+		for (const m of $markets) {
+			const tags = tagsByMarket[m.id];
+
+			if (tags !== undefined) {
+				for (const tag of tags) {
+					set.add(tag);
+				}
+			}
+		}
+
+		return set;
+	});
 
 	// Sort comparator for the main list. `trending` mirrors the
 	// homepage carousel's totalVolume DESC sort; `closing` surfaces the
@@ -184,6 +205,7 @@
 	<!-- Category chips with Saved filter prepended -->
 	<MarketsCategoryChips
 		active={cat}
+		{availableTags}
 		onChange={(next) => (cat = next)}
 		savedCount={savedMarkets.length}
 	/>
