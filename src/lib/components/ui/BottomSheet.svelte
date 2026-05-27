@@ -97,6 +97,15 @@
 		overflow: hidden;
 	}
 
+	/* Hide the floating mobile pill-nav (`.pillnav-wrap`, fixed bottom,
+	 * z-index 50) whenever a sheet is open. It sits at the same lower
+	 * edge as the sheet and clips the actions row on short viewports
+	 * (e.g. with the soft keyboard open) — and isn't usable from inside
+	 * a modal flow anyway. */
+	:global(body:has(.sheet) .pillnav-wrap) {
+		display: none;
+	}
+
 	.sheet-scrim {
 		position: fixed;
 		inset: 0;
