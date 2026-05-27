@@ -31,6 +31,24 @@
 
 	onMount(() => {
 		document.title = 'VICI';
+
+		// Lock the viewport on the marketing surface — the landing layout is
+		// tuned to device-width and pinch-zoom-out exposes the page chrome
+		// (background bleeds, off-canvas blocks). Restore on unmount so the
+		// in-app surface keeps the default, accessible viewport.
+		const meta = document.querySelector<HTMLMetaElement>('meta[name="viewport"]');
+
+		if (meta === null) {
+			return;
+		}
+
+		const previous = meta.content;
+		meta.content =
+			'width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover';
+
+		return () => {
+			meta.content = previous;
+		};
 	});
 
 	const wcDays = WORLD_CUP_KICKOFF.daysToKickoff;
