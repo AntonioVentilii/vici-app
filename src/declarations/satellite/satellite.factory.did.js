@@ -169,7 +169,8 @@ export const idlFactory = ({ IDL }) => {
 						}),
 						text: IDL.Text
 					})
-				)
+				),
+				subtitle: IDL.Opt(IDL.Text)
 			})
 		)
 	});
@@ -755,7 +756,8 @@ export const idlFactory = ({ IDL }) => {
 					}),
 					text: IDL.Text
 				})
-			)
+			),
+			subtitle: IDL.Opt(IDL.Text)
 		}),
 		series_id: IDL.Text
 	});
@@ -784,7 +786,8 @@ export const idlFactory = ({ IDL }) => {
 					}),
 					text: IDL.Text
 				})
-			)
+			),
+			subtitle: IDL.Opt(IDL.Text)
 		})
 	});
 	const AppUpsertMarketTranslationArgs = IDL.Record({

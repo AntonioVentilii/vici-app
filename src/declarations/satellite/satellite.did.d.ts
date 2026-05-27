@@ -166,6 +166,7 @@ export interface AppGetMarketMetadataResult {
 									text: string;
 								}
 						  ];
+					subtitle: [] | [string];
 				}
 		  ];
 }
@@ -607,6 +608,7 @@ export interface AppUpsertMarketMetadataArgs {
 						text: string;
 					}
 			  ];
+		subtitle: [] | [string];
 	};
 	series_id: string;
 }
@@ -635,6 +637,7 @@ export interface AppUpsertMarketMetadataResult {
 						text: string;
 					}
 			  ];
+		subtitle: [] | [string];
 	};
 }
 export interface AppUpsertMarketTranslationArgs {

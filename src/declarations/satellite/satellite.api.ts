@@ -157,6 +157,7 @@ const AppGetMarketMetadataResultSchema = j.strictObject({
 			),
 			tags: j.array(j.string()),
 			suggested: j.boolean(),
+			subtitle: j.optional(j.string()),
 			updatedAt: j.number(),
 			updatedBy: j.string()
 		})
@@ -1154,7 +1155,8 @@ const AppUpsertMarketMetadataArgsSchema = j.strictObject({
 			j.strictObject({ day: j.number(), label: j.string(), dir: j.enum(['up', 'down']) })
 		),
 		tags: j.array(j.string()),
-		suggested: j.boolean()
+		suggested: j.boolean(),
+		subtitle: j.optional(j.string())
 	})
 });
 const AppUpsertMarketMetadataResultSchema = j.strictObject({
@@ -1171,6 +1173,7 @@ const AppUpsertMarketMetadataResultSchema = j.strictObject({
 		),
 		tags: j.array(j.string()),
 		suggested: j.boolean(),
+		subtitle: j.optional(j.string()),
 		updatedAt: j.number(),
 		updatedBy: j.string()
 	})
