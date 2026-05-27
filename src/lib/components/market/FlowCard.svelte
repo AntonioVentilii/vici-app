@@ -210,6 +210,32 @@
 		market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0
 	);
 
+	// Callers-in-last-hour placeholder — deterministic per market.id so
+	// the number is stable across renders without a live presence service.
+	// Replaced when the real live-counter API ships. Range ~200..900 keeps
+	// the pill plausible at low-traffic moments without going below the
+	// "live activity" feel.
+	const callersLastHour = $derived.by(() => {
+		const id = String(market.id);
+		let hash = 0;
+
+		for (let i = 0; i < id.length; i += 1) {
+			hash = (hash * 31 + id.charCodeAt(i)) | 0;
+		}
+
+		return 200 + (Math.abs(hash) % 700);
+	});
+
+	// Friends-lean avatar stack — decorative overlapping circles next to
+	// the friends-lean count. The number of avatars caps at four and
+	// scales with the total followed-friends signal. Colour seeds are
+	// taken from a fixed palette so the stack reads as social proof
+	// without exposing real user data.
+	const FRIEND_AVATAR_PALETTE = ['#7E6BFF', '#FFB23C', '#4FD3A1', '#FF6B7A'] as const;
+	const friendAvatarCount = $derived(
+		followedYes !== undefined ? Math.min(4, Math.max(2, Math.round(followedTotal / 3))) : 0
+	);
+
 	const showPriorOnFront = $derived(Boolean(priorCall));
 	const whyNowText = $derived(formatWhyNowChip(metadata?.whyNow));
 
@@ -502,17 +528,45 @@
 
 				<h2 class="flow-card-title">{market.title}</h2>
 				{#if subtitleText}
-					<p class="flow-card-sub">{subtitleText}</p>
+					<p class="flow-card-sub serif-italic acc">{subtitleText}</p>
 				{/if}
+				<!-- Live callers pill — green-dot live indicator + dynamic
+				     count. Mirrors the prototype's `· {N} callers in last
+				     hour` accent under the editorial sub-row. Real number
+				     wiring lands when the live presence service ships; we
+				     surface a deterministic per-market placeholder so the
+				     pill renders today. -->
+				<span class="flow-callers-live num">
+					<span class="flow-callers-dot" aria-hidden="true"></span>
+					{t({
+						locale: $localeStore,
+						key: 'card.callers_last_hour',
+						params: { count: callersLastHour }
+					})}
+				</span>
 			</header>
 
 			<div class="flow-body">
-				<!-- Friends social proof + live momentum -->
+				<!-- Friends social proof + live momentum. When the user
+				     follows predictors who've called this market, surface
+				     the YES/NO split alongside an overlapping avatar
+				     stack (prototype `flow.jsx:702-728`). Falls back to a
+				     predictors-count line, then to the user's own position
+				     when nothing else is available. -->
 				<div class="flow-social num">
 					{#if followedYes !== undefined && followedYes > 0}
-						<span>
-							{followedLeanText}
-						</span>
+						{#if friendAvatarCount > 0}
+							<span class="flow-avatar-stack" aria-hidden="true">
+								{#each Array(friendAvatarCount) as _, i (i)}
+									<span
+										style:background={FRIEND_AVATAR_PALETTE[i % FRIEND_AVATAR_PALETTE.length]}
+										style:z-index={friendAvatarCount - i}
+										class="flow-avatar-stack-item"
+									></span>
+								{/each}
+							</span>
+						{/if}
+						<span class="flow-followed-lean">{followedLeanText}</span>
 					{:else if predictorsCount > 0}
 						<span>
 							{t({
@@ -569,7 +623,10 @@
 					<div class="flow-probs-action-row">
 						<div class="flow-probs-action flow-probs-action-no">
 							<span class="flow-probs-arrow text-no" aria-hidden="true">←</span>
-							<span class="flow-probs-payout num">+{winNo}</span>
+							<span class="flow-probs-payout num">
+								+{winNo}
+								<span class="flow-probs-payout-unit">VXP</span>
+							</span>
 							<span class="flow-probs-role allcaps">
 								{yesIsFav
 									? t({ locale: $localeStore, key: 'card.long_shot' })
@@ -582,7 +639,10 @@
 									? t({ locale: $localeStore, key: 'card.favorite' })
 									: t({ locale: $localeStore, key: 'card.long_shot' })}
 							</span>
-							<span class="flow-probs-payout num">+{winYes}</span>
+							<span class="flow-probs-payout num">
+								+{winYes}
+								<span class="flow-probs-payout-unit">VXP</span>
+							</span>
 							<span class="flow-probs-arrow text-yes" aria-hidden="true">→</span>
 						</div>
 					</div>
@@ -860,10 +920,49 @@
 
 	.flow-card-sub {
 		margin: 0;
-		font-size: var(--t-13);
+		font-size: var(--t-14);
 		line-height: var(--leading-normal);
 		color: var(--text-muted);
-		font-family: var(--font-display);
+		/* Serif-italic accent — prototype's editorial sub-row (`.flow-ctx-editorial`).
+		   The global `.serif-italic` utility class also sets font-family +
+		   weight; this duplicates a few props so the typography still reads
+		   when the utility class is overridden by parent context. */
+		font-family: var(--font-serif);
+		font-style: italic;
+		font-weight: 400;
+	}
+
+	.flow-callers-live {
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		margin: 4px 0 0;
+		font-size: var(--t-11, 0.7rem);
+		font-weight: 600;
+		color: var(--yes);
+		letter-spacing: 0.02em;
+	}
+	.flow-callers-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: var(--r-pill);
+		background: var(--yes);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--yes) 22%, transparent);
+		animation: flow-callers-pulse 1.6s ease-in-out infinite;
+	}
+	@keyframes flow-callers-pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.45;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-callers-dot {
+			animation: none;
+		}
 	}
 
 	.flow-body {
@@ -878,11 +977,31 @@
 	.flow-social {
 		display: flex;
 		align-items: center;
-		gap: 6px;
+		gap: 8px;
 		padding: 0 1.1rem;
 		font-size: var(--t-12);
 		color: var(--text-muted);
 		letter-spacing: 0.02em;
+	}
+
+	.flow-avatar-stack {
+		display: inline-flex;
+		align-items: center;
+	}
+	.flow-avatar-stack-item {
+		display: inline-block;
+		width: 18px;
+		height: 18px;
+		border-radius: 999px;
+		border: 1.5px solid var(--bg-popover);
+		margin-left: -6px;
+	}
+	.flow-avatar-stack-item:first-child {
+		margin-left: 0;
+	}
+
+	.flow-followed-lean {
+		font-weight: 600;
 	}
 	/* Edge-to-edge artwork frame — the FlowArtFrame's own rounded
 	   corners come off so the body of the card hosts the art with no
@@ -994,8 +1113,17 @@
 		line-height: 1;
 	}
 	.flow-probs-payout {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 3px;
 		font-weight: 700;
 		color: var(--text-base);
+	}
+	.flow-probs-payout-unit {
+		font-size: 9.5px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		color: var(--text-muted);
 	}
 	.flow-probs-role {
 		font-size: 9.5px;

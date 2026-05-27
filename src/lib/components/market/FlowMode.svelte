@@ -12,6 +12,7 @@
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
 	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
 	import FlowStreakBreakBanner from '$lib/components/market/FlowStreakBreakBanner.svelte';
+	import FlowTopBar from '$lib/components/market/FlowTopBar.svelte';
 	import FlowXpPops from '$lib/components/market/FlowXpPops.svelte';
 	import MotionBeat from '$lib/components/market/MotionBeat.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
@@ -595,6 +596,18 @@
 	const lifetimeTotalTrades = $derived($userStore.profile?.totalTrades ?? 0);
 	const lifetimeAccuracy = $derived($userStore.profile?.accuracy ?? 0);
 	const accuracyUnlocked = $derived(isAccuracyUnlocked(lifetimeTotalTrades));
+
+	// Top bar deck-scope label: when the featured event is active the
+	// deck is filtered to it (the prototype shows "WORLD CUP"); otherwise
+	// fall back to a neutral all-markets label. Title is uppercased to
+	// match the chip's allcaps tracking.
+	const topBarCategoryLabel = $derived.by(() => {
+		if ($featuredEventActive) {
+			return $featuredEvent.title.toUpperCase();
+		}
+
+		return t({ locale: $localeStore, key: 'flow.deck.all_markets' });
+	});
 </script>
 
 <div
@@ -624,12 +637,22 @@
 			{xp}
 		/>
 	{:else}
-		<!-- Per-prototype: no persistent Flow header. Streak + XP are
-		     surfaced as transient banners (FlowComboBanner /
-		     FlowStreakBreakBanner) and as XP pops on commit; the close
-		     action is implicit (browser back / bottom-bar action). A
-		     compact floating exit chip is kept in the top-right for
-		     mouse / desktop users where back-gesture isn't natural. -->
+		<!-- Persistent Flow header (prototype `app.jsx:805-836`). VICI
+		     wordmark + deck-scope chip + bolt streak chip on the left;
+		     bell on the right. Secondary row carries `idx / total` and
+		     `+xp VXP this session` over a thin progress bar. Tapping the
+		     wordmark exits Flow. A floating close X is also rendered for
+		     desktop affordance. -->
+		<FlowTopBar
+			{betsCount}
+			categoryLabel={topBarCategoryLabel}
+			{dailyStreak}
+			{flameLabel}
+			{flameStage}
+			{maxBets}
+			onExit={backToMarkets}
+			{xp}
+		/>
 		<button
 			class="flow-exit-chip"
 			aria-label={t({ locale: $localeStore, key: 'flow.exit_aria' })}

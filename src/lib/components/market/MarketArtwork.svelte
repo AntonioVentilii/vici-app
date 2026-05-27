@@ -42,9 +42,22 @@
 			.replace(/[^a-z0-9-]/gi, '-')
 			.toLowerCase()
 	);
-	const seedClass = $derived(
-		category === 'wc' ? `art-seed-wc-${seedSlug}` : `art-seed-${seedSlug}`
-	);
+	// WC market ids in the prototype always carry a `wc-` prefix
+	// (e.g. `wc-neymar-dive`, `wc-winner-brazil`); the per-seed CSS
+	// selectors in `app.css` use that bare suffix
+	// (`.art-seed-wc-neymar-dive .wc-figure { ... }`). Strip the
+	// duplicate prefix when composing the class so the seed-specific
+	// breather binds to the right `.wc-figure` group rather than
+	// emitting `art-seed-wc-wc-neymar-dive` which matches nothing.
+	const seedClass = $derived.by(() => {
+		if (category === 'wc') {
+			const stripped = seedSlug.startsWith('wc-') ? seedSlug.slice(3) : seedSlug;
+
+			return `art-seed-wc-${stripped}`;
+		}
+
+		return `art-seed-${seedSlug}`;
+	});
 </script>
 
 <div class="market-artwork {artClass} {seedClass} {extraClass}" class:is-bleed={bleed}>
