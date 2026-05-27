@@ -344,6 +344,43 @@
 		}
 	});
 
+	// Friendly opponent label inside the active bout headline. The
+	// satellite hands us a raw league id; we trim long slugs so the
+	// headline stays on one visual line.
+	const shortLeagueId = (id: string): string =>
+		id.length > 14 ? `${id.slice(0, 6)}…${id.slice(-5)}` : id;
+
+	// Meta line under the active bout headline.
+	// - Proposed: "Awaiting acceptance from {opponent}".
+	// - Accepted / in-flight: "Day {day} of {days} · accuracy face-off".
+	// Matches the prototype's `LeagueBoutSection` copy.
+	const activeBoutMetaLine = $derived.by((): string | undefined => {
+		if (!activeBout || !activeBoutOpponentId) {
+			return;
+		}
+
+		if (activeBout.state === 'proposed') {
+			return t({
+				locale: $localeStore,
+				key: 'leagues.detail.bout_meta_awaiting',
+				params: { opponent: shortLeagueId(activeBoutOpponentId) }
+			});
+		}
+
+		const dayMs = 86_400_000;
+		const totalDays = Math.max(1, Math.round((activeBout.settleMs - activeBout.kickoffMs) / dayMs));
+		const elapsedDays = Math.max(
+			1,
+			Math.min(totalDays, Math.ceil((Date.now() - activeBout.kickoffMs) / dayMs))
+		);
+
+		return t({
+			locale: $localeStore,
+			key: 'leagues.detail.bout_meta_day_of',
+			params: { day: elapsedDays, days: totalDays }
+		});
+	});
+
 	// Per-bout transition affordances. Owner-only.
 	let actingBoutId = $state<string | null>(null);
 	let resolveBoutTarget = $state<BoutDoc | null>(null);
@@ -601,11 +638,11 @@
 					<div class="league-detail-bout-headline">
 						<span>{league.name}</span>
 						<span class="serif-italic league-detail-bout-vs">vs</span>
-						<span class="num">{activeBoutOpponentId}</span>
+						<span class="num">{shortLeagueId(activeBoutOpponentId)}</span>
 					</div>
-					<p class="league-detail-bout-meta num">
-						{formatDate(activeBout.kickoffMs)} → {formatDate(activeBout.settleMs)}
-					</p>
+					{#if activeBoutMetaLine}
+						<p class="league-detail-bout-meta num">{activeBoutMetaLine}</p>
+					{/if}
 
 					{#if canAcceptBout(activeBout)}
 						<button
@@ -752,7 +789,10 @@
 					{/each}
 				</ul>
 
-				{#if youMember && !leaderboardTop.some((m) => m.member === selfPrincipal)}
+				<!-- Sticky YOU row — mirrors the prototype's `lb-you-row`
+				     which renders the caller's stats regardless of
+				     whether they already appear in the top-6 above. -->
+				{#if youMember}
 					<div class="league-detail-lb-you-row">
 						<span class="league-detail-lb-rank num">
 							{String(yourRank).padStart(2, '0')}
@@ -856,7 +896,7 @@
 	.league-detail {
 		display: flex;
 		flex-direction: column;
-		gap: 1.1rem;
+		gap: 0.875rem;
 		padding: 0 1.25rem 6rem;
 	}
 

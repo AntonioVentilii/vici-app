@@ -192,7 +192,10 @@
 		const [first] = overlap;
 		const profile = $profilesStore.get(first);
 		const nickname = profile?.nickname?.trim();
-		const handle = nickname && nickname.length > 0 ? nickname : `${first.slice(0, 6)}…`;
+		// Prototype prefixes the highlighted handle with `@` ("<b>@handle</b> +
+		// N friends"); we mirror that here for nicknamed members. Anonymous
+		// principals stay un-prefixed.
+		const handle = nickname && nickname.length > 0 ? `@${nickname}` : `${first.slice(0, 6)}…`;
 
 		return { handle, count: overlap.length };
 	};
@@ -251,7 +254,7 @@
 	};
 </script>
 
-<div class="leagues-page space-y-5 pb-24">
+<div class="leagues-page pb-24">
 	{#if !embedded}
 		<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'leagues.title' })} />
 	{/if}
@@ -369,13 +372,16 @@
 
 <style lang="postcss">
 	.leagues-page {
-		padding: 0 1.25rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+		padding: 0.25rem 1.25rem 1.5rem;
 	}
 
 	.leagues-section {
 		display: flex;
 		flex-direction: column;
-		gap: 0.55rem;
+		gap: 0.5rem;
 	}
 
 	.leagues-eyebrow {
@@ -389,7 +395,7 @@
 	.leagues-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.55rem;
+		gap: 0.5rem;
 		list-style: none;
 		padding: 0;
 		margin: 0;
