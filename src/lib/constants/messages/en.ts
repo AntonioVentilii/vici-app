@@ -1122,7 +1122,7 @@ export const enMessages = {
 	'onboarding.beat2.avail.just_taken': 'Just claimed — pick another',
 	'onboarding.beat2.avail.taken': 'Taken — try a variant',
 	'onboarding.beat2.avail.too_long': 'Too long — 16 chars max',
-	'onboarding.beat2.avail.too_short': 'Too short — 3 chars minimum',
+	'onboarding.beat2.avail.too_short': 'Too short — 2 chars minimum',
 	'onboarding.beat2.avail_ok_prefix': 'Available ·',
 	'onboarding.beat2.back': '← Back',
 	'onboarding.beat2.claim': 'Claim @{handle} →',

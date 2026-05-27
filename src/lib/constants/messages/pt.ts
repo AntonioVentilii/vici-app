@@ -1118,7 +1118,7 @@ export const ptMessages = {
 	'onboarding.beat2.avail.just_taken': 'Acabaram de pegar — escolha outro',
 	'onboarding.beat2.avail.taken': 'Já em uso — tente uma variante',
 	'onboarding.beat2.avail.too_long': 'Longo demais — 16 caracteres no máx.',
-	'onboarding.beat2.avail.too_short': 'Curto demais — 3 caracteres no mín.',
+	'onboarding.beat2.avail.too_short': 'Curto demais — 2 caracteres no mín.',
 	'onboarding.beat2.avail_ok_prefix': 'Disponível ·',
 	'onboarding.beat2.back': '← Voltar',
 	'onboarding.beat2.claim': 'Reservar @{handle} →',

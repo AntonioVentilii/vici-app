@@ -1124,7 +1124,7 @@ export const esMessages = {
 	'onboarding.beat2.avail.just_taken': 'Acaban de cogerlo — elige otro',
 	'onboarding.beat2.avail.taken': 'Ya está cogido — prueba una variante',
 	'onboarding.beat2.avail.too_long': 'Demasiado largo — máximo 16 caracteres',
-	'onboarding.beat2.avail.too_short': 'Demasiado corto — mínimo 3 caracteres',
+	'onboarding.beat2.avail.too_short': 'Demasiado corto — mínimo 2 caracteres',
 	'onboarding.beat2.avail_ok_prefix': 'Disponible ·',
 	'onboarding.beat2.back': '← Atrás',
 	'onboarding.beat2.claim': 'Coger @{handle} →',

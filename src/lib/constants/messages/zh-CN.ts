@@ -1067,7 +1067,7 @@ export const zhCnMessages = {
 	'onboarding.beat2.avail.just_taken': '刚被占用 — 换一个',
 	'onboarding.beat2.avail.taken': '已被使用 — 换一个变体',
 	'onboarding.beat2.avail.too_long': '太长 — 最多 16 个字符',
-	'onboarding.beat2.avail.too_short': '太短 — 至少 3 个字符',
+	'onboarding.beat2.avail.too_short': '太短 — 至少 2 个字符',
 	'onboarding.beat2.avail_ok_prefix': '可用 ·',
 	'onboarding.beat2.back': '← 返回',
 	'onboarding.beat2.claim': '认领 @{handle} →',

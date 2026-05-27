@@ -1128,7 +1128,7 @@ export const deMessages = {
 	'onboarding.beat2.avail.just_taken': 'Gerade vergeben — wähle einen anderen',
 	'onboarding.beat2.avail.taken': 'Schon vergeben — probier eine Variante',
 	'onboarding.beat2.avail.too_long': 'Zu lang — höchstens 16 Zeichen',
-	'onboarding.beat2.avail.too_short': 'Zu kurz — mindestens 3 Zeichen',
+	'onboarding.beat2.avail.too_short': 'Zu kurz — mindestens 2 Zeichen',
 	'onboarding.beat2.avail_ok_prefix': 'Frei ·',
 	'onboarding.beat2.back': '← Zurück',
 	'onboarding.beat2.claim': '@{handle} sichern →',

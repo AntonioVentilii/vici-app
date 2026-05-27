@@ -1129,7 +1129,7 @@ export const frMessages = {
 	'onboarding.beat2.avail.just_taken': 'Tout juste pris — choisis-en un autre',
 	'onboarding.beat2.avail.taken': 'Déjà pris — essaie une variante',
 	'onboarding.beat2.avail.too_long': 'Trop long — 16 caractères max',
-	'onboarding.beat2.avail.too_short': 'Trop court — 3 caractères minimum',
+	'onboarding.beat2.avail.too_short': 'Trop court — 2 caractères minimum',
 	'onboarding.beat2.avail_ok_prefix': 'Disponible ·',
 	'onboarding.beat2.back': '← Retour',
 	'onboarding.beat2.claim': 'Réserver @{handle} →',

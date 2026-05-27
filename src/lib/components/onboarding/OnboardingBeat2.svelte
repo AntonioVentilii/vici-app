@@ -4,6 +4,7 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { HANDLE_POOL } from '$lib/constants/handle-pool.constants';
+	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { checkNicknameAvailability } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -174,7 +175,7 @@
 			return { ok: false };
 		}
 
-		if (name.length < 3) {
+		if (name.length < MIN_NICKNAME_LENGTH) {
 			return { ok: false, reasonKey: 'onboarding.beat2.avail.too_short' };
 		}
 

@@ -3,7 +3,7 @@
  * picker (Beat 2). The list is the canonical 2048-word vocabulary
  * defined in BIP-39 (bitcoin/bips, public domain). Every word is
  * 3–8 lowercase ASCII letters, so the list passes the onboarding
- * handle validator (`^[a-z0-9._-]+$`, 3–16 chars) without filtering.
+ * handle validator (`^[a-z0-9._-]+$`, 2–16 chars) without filtering.
  *
  * Source: https://github.com/bitcoin/bips/blob/master/bip-0039/english.txt
  *

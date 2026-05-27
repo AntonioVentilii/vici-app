@@ -1123,7 +1123,7 @@ export const itMessages = {
 	'onboarding.beat2.avail.just_taken': 'Appena preso — scegline un altro',
 	'onboarding.beat2.avail.taken': 'Già preso — prova una variante',
 	'onboarding.beat2.avail.too_long': 'Troppo lungo — massimo 16 caratteri',
-	'onboarding.beat2.avail.too_short': 'Troppo corto — minimo 3 caratteri',
+	'onboarding.beat2.avail.too_short': 'Troppo corto — minimo 2 caratteri',
 	'onboarding.beat2.avail_ok_prefix': 'Disponibile ·',
 	'onboarding.beat2.back': '← Indietro',
 	'onboarding.beat2.claim': 'Prendi @{handle} →',
