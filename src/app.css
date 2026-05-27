@@ -1646,6 +1646,11 @@ html[data-app='1'] body {
 }
 
 .col {
+	display: flex;
+	flex-direction: column;
+}
+
+/* ============================================================
    VICI — Sign in screen (verbatim port from prototype)
    Source: VICI WebApp Beta V1.2/onboarding.css + app.css
    ============================================================ */
