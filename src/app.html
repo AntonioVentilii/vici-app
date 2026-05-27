@@ -113,6 +113,38 @@
 		/>
 	</head>
 	<body data-sveltekit-preload-data="hover">
+		<noscript>
+			<div
+				style="
+					background: #0e0d0b;
+					color: #f2ecdc;
+					min-height: 100vh;
+					display: flex;
+					align-items: center;
+					justify-content: center;
+					padding: 2rem;
+					font-family: 'Hanken Grotesk', system-ui, sans-serif;
+					text-align: center;
+				"
+			>
+				<div style="max-width: 28rem">
+					<div
+						style="
+							font-weight: 700;
+							letter-spacing: 0.18em;
+							font-size: 1.5rem;
+							color: #e2b842;
+							margin-bottom: 1rem;
+						"
+					>
+						VICI
+					</div>
+					<p style="line-height: 1.5; margin: 0">
+						VICI requires JavaScript to run. Enable JavaScript in your browser and reload the page.
+					</p>
+				</div>
+			</div>
+		</noscript>
 		<div style="display: contents">%sveltekit.body%</div>
 	</body>
 </html>
