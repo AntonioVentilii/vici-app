@@ -1,24 +1,21 @@
-/* VICI Landing — verbatim port of prototype landing.css.
+/* VICI Landing styles.
  *
- * Source of truth: /Users/antonio.ventilii/projects/VICI WebApp Beta V1.2/landing.css
- *
- * This file is intentionally NOT scoped — the landing components below
- * reference the `.lp-*` / `.flow-*` / `.dnav-*` / `.lp-pill*` class
- * names exactly as the prototype does, so the markup ports across one
- * for one. Token names are bridged at the top of this file: the
- * prototype uses `--accent`, `--bg`, `--fg`, `--border`, `--font-sans`,
- * `--ease` etc.; the Svelte app exposes `--laurel`, `--background`,
- * `--foreground`, `--border-base`, `--font-display`, `--ease-vici`.
- * Bridging once here keeps the verbatim port readable and avoids
- * touching every selector.
+ * This file is intentionally NOT scoped — the landing components
+ * below reference the `.lp-*` / `.flow-*` / `.dnav-*` / `.lp-pill*`
+ * class names directly so the markup stays one-to-one with the
+ * stylesheet. Token names are bridged at the top of this file:
+ * `.lp-*` markup expects `--accent`, `--bg`, `--fg`, `--border`,
+ * `--font-sans`, `--ease` etc.; the Svelte app exposes `--laurel`,
+ * `--background`, `--foreground`, `--border-base`, `--font-display`,
+ * `--ease-vici`. Bridging once here keeps the stylesheet readable
+ * and avoids touching every selector.
  */
 
 /* ─── Token bridge ─── */
 :root {
-	/* Prototype names → repo names (no-op aliases when the repo
-	   already exposes the same variable; otherwise alias the closest
-	   token). Kept in one block so swapping tokens later is a single
-	   edit. */
+	/* Aliases (no-ops when the repo already exposes the same
+	   variable; otherwise alias the closest token). Kept in one
+	   block so swapping tokens later is a single edit. */
 	--accent: var(--laurel);
 	--accent-deep: var(--laurel-deep);
 	--accent-glow: var(--laurel-glow);
