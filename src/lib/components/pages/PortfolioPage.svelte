@@ -4,7 +4,6 @@
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
-	import PositionArtThumb from '$lib/components/portfolio/PositionArtThumb.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -17,6 +16,7 @@
 	import { tradeHistory, tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { userStore } from '$lib/stores/user.store';
 	import type { Position } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
 	import {
@@ -33,32 +33,27 @@
 	 *
 	 * Layout
 	 * - `MobileAppBar` with title "Portfolio" and a chart icon on the
-	 *   right slot (replaces the legacy `SectionHeader` + description).
-	 * - Hero card (centered) — `LIFETIME VXP` eyebrow, 48px VXP balance
-	 *   from `balancesStore[VXP]`, weekly delta line in laurel / no-red
-	 *   (matches the Wallet hero pattern shipped in `2b48623`).
-	 * - 3-col mini-stats: Active calls / Resolved / Lifetime VXP (the
-	 *   audit's chosen interpretation; replaces the legacy
-	 *   `PortfolioStats` 6-tile holdings card).
-	 * - Open positions — flat list, each row: category tag · side ·
-	 *   market title · entry → current %· signed PnL. Tap routes to the
-	 *   market detail.
+	 *   right slot (matches the prototype's appbar).
+	 * - Hero card (centered, gradient surface) — `TOTAL HOLDINGS` eyebrow,
+	 *   38px VXP balance + "VXP" suffix, weekly delta line in laurel /
+	 *   no-red. Mirrors the prototype's `card-elevated` styling.
+	 * - 3-col mini-stats: Unrealized P&L · 7D Accuracy · Active (the
+	 *   prototype's third tile is RANK; our backend has no rank field,
+	 *   so we substitute open-position count). Replaces the legacy
+	 *   `PortfolioStats` 6-tile holdings card.
+	 * - Open positions — flat list, each row: category tag (top-left) ·
+	 *   side tag (top-right) · 2-line market title · "Payout at X%" ·
+	 *   signed PnL. Tap routes to the market detail.
 	 * - Resolved positions — flat list, each row: W/L glyph · market
 	 *   title · signed PnL.
 	 * - C-25 (production keep) — `OpenOrdersTable` retained for limit
 	 *   orders.
 	 *
-	 * Removed in this pass: `PortfolioStats` (replaced by the hero + 3-
-	 * col mini-stats), `PortfolioAllocation` (the prototype's 5-bucket
-	 * allocation grid is editorial and not part of the new hero spec),
-	 * `PositionTable` (split into the open / resolved flat lists),
-	 * `TradeHistoryTable` (clearing-event view lives on Wallet's history
-	 * tab; portfolio surface keeps its scope to positions + orders).
+	 * Deferred from the prototype: PerfChart (30-day sparkline) and
+	 * Allocation (5-bucket category bars) — both would require new
+	 * derived stores beyond the constraint zone for this pass.
 	 */
 
-	// Cold-load spinner replaced by an inline empty / loading shimmer —
-	// the prototype renders immediately and `<Loaders />` polls in the
-	// background; this matches the Wallet hero behaviour.
 	const refreshing = $derived(
 		$positionsNotInitialized ||
 			$tradeHistoryNotInitialized ||
@@ -73,9 +68,6 @@
 
 	const getMarketById = (id: string) => $markets.find((m) => m.id === id);
 
-	const getCategoryId = (marketId: string): string | null =>
-		primaryMarketTag($marketTags[marketId]) ?? null;
-
 	const openPositions = $derived(
 		$positions.filter((pos) => getMarketById(pos.marketId)?.status !== 'Resolved')
 	);
@@ -84,7 +76,7 @@
 		$positions.filter((pos) => getMarketById(pos.marketId)?.status === 'Resolved')
 	);
 
-	// ── Hero VXP balance + weekly delta (Wallet pattern) ─────────────
+	// ── Hero VXP balance + weekly delta ──────────────────────────────
 
 	const vxpBalance = $derived.by((): bigint => $balancesStore?.[VXP_TOKEN.id] ?? ZERO);
 
@@ -92,13 +84,6 @@
 		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
 	);
 
-	// Weekly VXP delta — sums realized PnL across resolved positions whose
-	// settlement event landed in the last 7 days. The clearing `Event`
-	// type doesn't carry the user's entry, so we approximate by walking
-	// `Settled` events in the window, joining each to the matching
-	// position by `series_id`, and accumulating the cached PnL via
-	// {@link calculatePositionPnL}. Only VXP-denominated markets
-	// contribute to the VXP hero delta.
 	const weeklyVxpDelta = $derived.by((): number => {
 		const cutoffNs = BigInt(Date.now() - 7 * 24 * 60 * 60 * 1000) * 1_000_000n;
 
@@ -147,11 +132,49 @@
 		return `${sign}${abs.toFixed(0)} VXP`;
 	});
 
-	// ── 3-col mini stats ─────────────────────────────────────────────
+	// ── 3-col mini stats (Unrealized P&L · 7D Accuracy · Active) ─────
 
-	const lifetimeVxpDisplay = $derived(vxpBalanceDisplay);
+	const unrealizedPnl = $derived.by((): number =>
+		openPositions.reduce<number>((acc, pos) => {
+			const market = getMarketById(pos.marketId);
 
-	// ── Helpers for the open / resolved row PnL renderers ────────────
+			if (market === undefined || market.token.symbol !== VXP_TOKEN.symbol) {
+				return acc;
+			}
+
+			return acc + calculatePositionPnL({ position: pos, market });
+		}, 0)
+	);
+
+	const unrealizedPnlDirection = $derived.by((): 'positive' | 'negative' | 'flat' => {
+		if (unrealizedPnl > 0) {
+			return 'positive';
+		}
+
+		if (unrealizedPnl < 0) {
+			return 'negative';
+		}
+
+		return 'flat';
+	});
+
+	const unrealizedPnlDisplay = $derived.by((): string => {
+		if (unrealizedPnl === 0) {
+			return '0 VXP';
+		}
+
+		const positive = unrealizedPnl > 0;
+		const sign = positive ? '+' : '−';
+		const abs = positive ? unrealizedPnl : -unrealizedPnl;
+
+		return `${sign}${abs.toFixed(0)} VXP`;
+	});
+
+	const accuracyValue = $derived($userStore.profile?.accuracy ?? 0);
+
+	const accuracyDisplay = $derived(`${(accuracyValue * 100).toFixed(1)}%`);
+
+	// ── Helpers ──────────────────────────────────────────────────────
 
 	const positionPnl = (pos: Position): number =>
 		calculatePositionPnL({ position: pos, market: getMarketById(pos.marketId) });
@@ -169,6 +192,12 @@
 
 		return market?.outcomes?.find((o) => o.id === pos.outcomeId)?.title ?? pos.outcomeId;
 	};
+
+	const categoryLabel = (marketId: string): string | null => {
+		const tag = primaryMarketTag($marketTags[marketId]);
+
+		return tag ? tag.toUpperCase() : null;
+	};
 </script>
 
 {#snippet portfolioAppbarRight()}
@@ -184,12 +213,16 @@
 		title={t({ locale: $localeStore, key: 'portfolio.title' })}
 	/>
 
-	<!-- Hero: VXP eyebrow + 48px num + weekly delta + 3-col mini stats. -->
 	<section class="portfolio-hero">
 		<p class="eyebrow portfolio-hero-eyebrow">
 			{t({ locale: $localeStore, key: 'portfolio.hero.eyebrow' })}
 		</p>
-		<p class="num portfolio-hero-num">{vxpBalanceDisplay}</p>
+		<div class="portfolio-hero-balance">
+			<span class="num portfolio-hero-num">{vxpBalanceDisplay}</span>
+			<span class="eyebrow portfolio-hero-num-unit">
+				{t({ locale: $localeStore, key: 'portfolio.hero.unit' })}
+			</span>
+		</div>
 
 		{#if weeklyDeltaDirection === 'flat'}
 			<p class="num portfolio-hero-delta is-flat">
@@ -211,30 +244,37 @@
 
 		<dl class="portfolio-hero-stats">
 			<div class="portfolio-hero-stat">
+				<dt class="eyebrow">
+					{t({ locale: $localeStore, key: 'portfolio.stat.unrealized_pnl' })}
+				</dt>
+				<dd
+					class="num"
+					class:is-negative={unrealizedPnlDirection === 'negative'}
+					class:is-positive={unrealizedPnlDirection === 'positive'}
+				>
+					{unrealizedPnlDisplay}
+				</dd>
+			</div>
+			<div class="portfolio-hero-stat">
+				<dt class="eyebrow">
+					{t({ locale: $localeStore, key: 'portfolio.stat.accuracy_7d' })}
+				</dt>
+				<dd class="num">{accuracyDisplay}</dd>
+			</div>
+			<div class="portfolio-hero-stat">
 				<dt class="eyebrow">{t({ locale: $localeStore, key: 'portfolio.stat.active' })}</dt>
 				<dd class="num">{openPositions.length}</dd>
-			</div>
-			<div class="portfolio-hero-stat">
-				<dt class="eyebrow">{t({ locale: $localeStore, key: 'portfolio.stat.resolved' })}</dt>
-				<dd class="num">{resolvedPositions.length}</dd>
-			</div>
-			<div class="portfolio-hero-stat">
-				<dt class="eyebrow">{t({ locale: $localeStore, key: 'portfolio.stat.lifetime_vxp' })}</dt>
-				<dd class="num">{lifetimeVxpDisplay}</dd>
 			</div>
 		</dl>
 	</section>
 
 	{#if refreshing && openPositions.length === 0 && resolvedPositions.length === 0 && $orders.length === 0}
-		<!-- Inline loading skeleton — the hero renders synchronously above
-			 and `<Loaders />` polls in the background. -->
 		<section class="portfolio-section">
 			<div class="portfolio-skeleton"></div>
 			<div class="portfolio-skeleton"></div>
 			<div class="portfolio-skeleton"></div>
 		</section>
 	{:else if openPositions.length === 0 && resolvedPositions.length === 0 && $orders.length === 0}
-		<!-- Empty state — quote · body · Open Flow CTA. -->
 		<section class="portfolio-empty">
 			<p class="portfolio-empty-quote serif-italic">
 				{t({ locale: $localeStore, key: 'portfolio.empty.quote' })}
@@ -251,7 +291,6 @@
 			</button>
 		</section>
 	{:else}
-		<!-- Active calls — flat list. -->
 		{#if openPositions.length > 0}
 			<section class="portfolio-section">
 				<header class="portfolio-section-head">
@@ -265,46 +304,47 @@
 					{#each openPositions as pos (`${pos.marketId}::${pos.outcomeId}`)}
 						{@const market = getMarketById(pos.marketId)}
 						{@const pnl = positionPnl(pos)}
-						{@const categoryId = getCategoryId(pos.marketId)}
 						{@const sideKey =
 							pos.outcomeId === 'YES' ? 'yes' : pos.outcomeId === 'NO' ? 'no' : 'hold'}
 						{@const yesProb = market?.yesProbability ?? 0}
 						{@const sideProb = pos.outcomeId === 'YES' ? yesProb : 1 - yesProb}
+						{@const catLabel = categoryLabel(pos.marketId)}
 
 						<li>
 							<a
-								class="portfolio-row"
+								class="portfolio-row portfolio-row-card"
 								aria-label={market?.title ??
 									t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 								href="{AppPath.Markets}/{pos.marketId}"
 							>
-								<PositionArtThumb {categoryId} marketId={pos.marketId} result="neutral" size={40} />
-								<div class="portfolio-row-body">
-									<div class="portfolio-row-head">
-										<span class="portfolio-row-title">
-											{market?.title ??
-												t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
-										</span>
-										<span class="portfolio-row-side portfolio-row-side-{sideKey}">
-											{sideLabel(pos)}
-										</span>
-									</div>
-									<div class="portfolio-row-meta">
-										<span class="num portfolio-row-prob">
-											{t({
-												locale: $localeStore,
-												key: 'portfolio.row.payout_at',
-												params: { prob: formatProb(sideProb) }
-											})}
-										</span>
-										<span
-											class="num portfolio-row-pnl"
-											class:is-negative={pnl < 0}
-											class:is-positive={pnl >= 0}
-										>
-											{formatRowPnl(pos)}
-										</span>
-									</div>
+								<div class="portfolio-row-tags">
+									{#if catLabel}
+										<span class="portfolio-row-cat">{catLabel}</span>
+									{:else}
+										<span class="portfolio-row-cat is-dim">—</span>
+									{/if}
+									<span class="portfolio-row-side portfolio-row-side-{sideKey}">
+										{sideLabel(pos)}
+									</span>
+								</div>
+								<div class="portfolio-row-title">
+									{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+								</div>
+								<div class="portfolio-row-meta">
+									<span class="num portfolio-row-prob">
+										{t({
+											locale: $localeStore,
+											key: 'portfolio.row.payout_at',
+											params: { prob: formatProb(sideProb) }
+										})}
+									</span>
+									<span
+										class="num portfolio-row-pnl"
+										class:is-negative={pnl < 0}
+										class:is-positive={pnl >= 0}
+									>
+										{formatRowPnl(pos)}
+									</span>
 								</div>
 							</a>
 						</li>
@@ -313,7 +353,6 @@
 			</section>
 		{/if}
 
-		<!-- Resolved — flat list with W/L glyph. -->
 		{#if resolvedPositions.length > 0}
 			<section class="portfolio-section">
 				<header class="portfolio-section-head">
@@ -343,7 +382,7 @@
 								</span>
 								<div class="portfolio-row-body">
 									<div class="portfolio-row-head">
-										<span class="portfolio-row-title">
+										<span class="portfolio-row-title-inline">
 											{market?.title ??
 												t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 										</span>
@@ -365,7 +404,6 @@
 			</section>
 		{/if}
 
-		<!-- C-25 (production keep) — Open orders table for limit orders. -->
 		{#if $orders.length > 0}
 			<section class="portfolio-section portfolio-orders">
 				<OpenOrdersTable markets={$markets} onRefresh={onOrdersRefresh} orders={$orders} />
@@ -382,9 +420,6 @@
 		padding: 0 1.25rem 6rem;
 	}
 
-	/* ── Appbar icon ─────────────────────────────────────────────── */
-	/* Decorative icon (not interactive) — disable the hover affordance
-	   inherited from `.appbar-icon-btn` and unset cursor. */
 	.portfolio-appbar-icon {
 		cursor: default;
 	}
@@ -394,15 +429,18 @@
 		background: var(--bg-surface);
 	}
 
-	/* ── Hero card ───────────────────────────────────────────────── */
 	.portfolio-hero {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 1.5rem 1.25rem 1.5rem;
+		gap: 0.375rem;
+		padding: 1.25rem;
 		text-align: center;
-		background: var(--bg-surface);
+		background: linear-gradient(
+			180deg,
+			var(--bg-elevated, var(--bg-surface)),
+			var(--bg-raised, var(--bg-popover))
+		);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-16, 16px);
 	}
@@ -412,17 +450,27 @@
 		color: var(--text-muted);
 	}
 
+	.portfolio-hero-balance {
+		display: flex;
+		align-items: baseline;
+		gap: 0.5rem;
+		margin-top: 0.25rem;
+	}
+
 	.portfolio-hero-num {
-		margin: 0.25rem 0 0;
-		font-size: 48px;
+		font-size: 38px;
 		font-weight: 600;
-		letter-spacing: -0.04em;
+		letter-spacing: -0.03em;
 		color: var(--text-base);
 		line-height: 1;
 	}
 
+	.portfolio-hero-num-unit {
+		color: var(--text-muted);
+	}
+
 	.portfolio-hero-delta {
-		margin: 0.25rem 0 0;
+		margin: 0.125rem 0 0;
 		font-size: var(--t-13);
 		font-weight: 600;
 		color: var(--text-muted);
@@ -445,7 +493,7 @@
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: 0.5rem;
 		width: 100%;
-		margin: 1rem 0 0;
+		margin: 0.875rem 0 0;
 	}
 
 	.portfolio-hero-stat {
@@ -453,10 +501,7 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.25rem;
-		padding: 0.625rem 0.5rem;
-		background: var(--bg-popover);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
+		padding: 0.5rem 0.375rem;
 	}
 
 	.portfolio-hero-stat dt {
@@ -472,7 +517,14 @@
 		letter-spacing: -0.01em;
 	}
 
-	/* ── Section header (replaces SectionHeader / counts row) ────── */
+	.portfolio-hero-stat dd.is-positive {
+		color: var(--yes);
+	}
+
+	.portfolio-hero-stat dd.is-negative {
+		color: var(--no);
+	}
+
 	.portfolio-section {
 		display: flex;
 		flex-direction: column;
@@ -498,11 +550,10 @@
 		color: var(--text-muted);
 	}
 
-	/* ── List rows ───────────────────────────────────────────────── */
 	.portfolio-list {
 		display: flex;
 		flex-direction: column;
-		gap: 0.375rem;
+		gap: 0.5rem;
 		margin: 0;
 		padding: 0;
 		list-style: none;
@@ -525,6 +576,33 @@
 		border-color: var(--border-strong);
 	}
 
+	.portfolio-row-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.875rem;
+	}
+
+	.portfolio-row-tags {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.portfolio-row-cat {
+		font-family: var(--font-mono);
+		font-size: 9.5px;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.portfolio-row-cat.is-dim {
+		opacity: 0.5;
+	}
+
 	.portfolio-row-body {
 		display: flex;
 		flex-direction: column;
@@ -541,6 +619,17 @@
 	}
 
 	.portfolio-row-title {
+		font-size: var(--t-13);
+		font-weight: 600;
+		line-height: 1.4;
+		color: var(--text-base);
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+	}
+
+	.portfolio-row-title-inline {
 		flex: 1;
 		font-size: var(--t-13);
 		font-weight: 600;
@@ -608,7 +697,6 @@
 		color: var(--no);
 	}
 
-	/* ── Resolved row glyph (W / L / —) ──────────────────────────── */
 	.portfolio-row-glyph {
 		display: inline-flex;
 		width: 2.5rem;
@@ -636,7 +724,6 @@
 		background: var(--no-wash);
 	}
 
-	/* ── Empty state ─────────────────────────────────────────────── */
 	.portfolio-empty {
 		display: flex;
 		flex-direction: column;
@@ -680,7 +767,6 @@
 		opacity: 0.9;
 	}
 
-	/* ── Loading skeleton ────────────────────────────────────────── */
 	.portfolio-skeleton {
 		height: 4rem;
 		background: var(--bg-popover);
@@ -689,7 +775,6 @@
 		opacity: 0.6;
 	}
 
-	/* ── Orders section spacing override (C-25 retain) ───────────── */
 	:global(.portfolio-orders) {
 		margin-top: 0.25rem;
 	}
