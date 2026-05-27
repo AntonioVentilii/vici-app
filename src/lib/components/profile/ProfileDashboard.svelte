@@ -6,6 +6,7 @@
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
@@ -430,6 +431,10 @@
 		labelKey: MessageKey;
 		filled: boolean;
 		value: string | null;
+		/** Stored affiliation id — ISO-2 for countries, slug for unis.
+		 *  Needed at render time so the country slot can pass an ID to
+		 *  `<CountryFlag>` rather than the display `value` (name). */
+		affiliationId: string | null;
 		glyph: string;
 		locked: boolean;
 	}
@@ -449,6 +454,7 @@
 				labelKey: 'profile.dashboard.affiliations.university',
 				filled: uniOption !== undefined,
 				value: uniOption?.name ?? null,
+				affiliationId: uniOption?.id ?? null,
 				glyph: uniOption?.glyph ?? '+',
 				locked: false
 			},
@@ -458,6 +464,7 @@
 				labelKey: 'profile.dashboard.affiliations.country',
 				filled: countryOption !== undefined,
 				value: countryOption?.name ?? null,
+				affiliationId: countryOption?.id ?? null,
 				glyph: countryOption?.glyph ?? '+',
 				locked: false
 			},
@@ -467,6 +474,7 @@
 				labelKey: 'profile.dashboard.affiliations.city',
 				filled: false,
 				value: null,
+				affiliationId: null,
 				glyph: '+',
 				locked: true
 			},
@@ -476,6 +484,7 @@
 				labelKey: 'profile.dashboard.affiliations.company',
 				filled: false,
 				value: null,
+				affiliationId: null,
 				glyph: '+',
 				locked: true
 			}
@@ -690,7 +699,7 @@
 						{/if}
 						{#if countryOption}
 							<span class="country-chip">
-								<span aria-hidden="true">{countryOption.glyph}</span>
+								<CountryFlag class="profile-country-flag" countryCode={countryOption.id} />
 								{countryOption.name.toUpperCase()}
 							</span>
 						{/if}
@@ -801,6 +810,8 @@
 					<span class="affil-slot-icon" aria-hidden="true">
 						{#if slot.locked}
 							<Lock size={14} strokeWidth={1.8} />
+						{:else if slot.kind === 'country' && slot.affiliationId !== null}
+							<CountryFlag class="affil-slot-flag" countryCode={slot.affiliationId} />
 						{:else}
 							{slot.glyph}
 						{/if}

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Doc } from '@junobuild/core';
-	import { ChevronRight, Copy, Plus, Share2 } from 'lucide-svelte/icons';
+	import { Check, ChevronRight, Copy, Plus, Share2 } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
@@ -497,7 +497,8 @@
 				status={inviteUrl ? 'enabled' : 'disabled'}
 			>
 				{#if copied}
-					<span in:fade={{ duration: 150 }}>
+					<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
+						<Check aria-hidden="true" size={13} strokeWidth={1.8} />
 						{t({ locale: $localeStore, key: 'social.friends.invite.copied' })}
 					</span>
 				{:else}

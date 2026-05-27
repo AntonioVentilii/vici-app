@@ -32,9 +32,11 @@
 				</div>
 				<div>
 					<div class="eyebrow mute">{t({ locale: $localeStore, key: 'footer.legal' })}</div>
-					<a href="#info-terms">{t({ locale: $localeStore, key: 'footer.terms' })}</a>
-					<a href="#info-privacy">{t({ locale: $localeStore, key: 'footer.privacy' })}</a>
-					<a href="#info-resolution-rules">
+					<a href="{PublicPath.Info}/terms">{t({ locale: $localeStore, key: 'footer.terms' })}</a>
+					<a href="{PublicPath.Info}/privacy">
+						{t({ locale: $localeStore, key: 'footer.privacy' })}
+					</a>
+					<a href="{PublicPath.Info}/resolution-rules">
 						{t({ locale: $localeStore, key: 'footer.rules' })}
 					</a>
 				</div>

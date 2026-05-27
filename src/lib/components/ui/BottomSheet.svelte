@@ -1,6 +1,8 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { browser } from '$app/environment';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { createFocusTrap, type FocusTrap } from '$lib/utils/focus-trap.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -13,6 +15,12 @@
 	 * via `Escape` + backdrop click). Children own their own header
 	 * copy + body layout — keep them short enough that the sheet doesn't
 	 * exceed `max-height: 92vh`.
+	 *
+	 * Custom (non-native-dialog) sheet, so focus management is manual:
+	 * `createFocusTrap` moves initial focus into the sheet on open,
+	 * cycles Tab/Shift+Tab inside, and returns focus to the trigger on
+	 * close. Native `<dialog>` users (see `Dialog.svelte`) get the same
+	 * behaviour from the browser.
 	 */
 	interface Props {
 		isOpen: boolean;
@@ -21,6 +29,9 @@
 	}
 
 	const { isOpen, children, onClose }: Props = $props();
+
+	let sheetEl = $state<HTMLDivElement | undefined>();
+	let trap: FocusTrap | null = null;
 
 	const close = () => {
 		onClose();
@@ -31,6 +42,27 @@
 			close();
 		}
 	};
+
+	$effect(() => {
+		if (!browser) {
+			return;
+		}
+
+		if (isOpen && sheetEl) {
+			trap = createFocusTrap(sheetEl);
+			trap.activate();
+		} else if (trap) {
+			trap.deactivate();
+			trap = null;
+		}
+
+		return () => {
+			if (trap) {
+				trap.deactivate();
+				trap = null;
+			}
+		};
+	});
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
@@ -44,6 +76,7 @@
 		role="presentation"
 	>
 		<div
+			bind:this={sheetEl}
 			class="sheet"
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
