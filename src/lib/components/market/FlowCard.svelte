@@ -754,9 +754,6 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
-	}
-
-	.flow-card-root {
 		/* The 3D context the inner faces render against. We don't
 		   apply a `rotateY` (the flip is opacity-only) but the
 		   perspective still subtly affects subpixel rendering during
