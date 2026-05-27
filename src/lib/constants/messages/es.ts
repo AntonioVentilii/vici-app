@@ -1016,6 +1016,10 @@ export const esMessages = {
 	'markets.page.sub': 'Explora y predice mercados.',
 	'markets.page.title': 'Elige una pregunta.',
 	'markets.search': 'Buscar mercados...',
+	'markets.sort.closing': 'Cierre próximo',
+	'markets.sort.label': 'Ordenar',
+	'markets.sort.newest': 'Más recientes',
+	'markets.sort.trending': 'Trending',
 	'markets.sub':
 		'Cientos de preguntas sobre macro, cripto, política, tech, deportes y cultura. Todas se resuelven con datos públicos.',
 	'markets.saved.clear': 'Quitar filtro de guardados',

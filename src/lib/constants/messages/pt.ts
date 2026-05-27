@@ -1011,6 +1011,10 @@ export const ptMessages = {
 	'markets.page.sub': 'Explore e preveja mercados.',
 	'markets.page.title': 'Escolha uma pergunta.',
 	'markets.search': 'Pesquisar mercados...',
+	'markets.sort.closing': 'Encerrando',
+	'markets.sort.label': 'Ordenar',
+	'markets.sort.newest': 'Mais recentes',
+	'markets.sort.trending': 'Trending',
 	'markets.sub':
 		'Centenas de perguntas em macro, cripto, política, tecnologia, esportes e cultura. Cada uma resolve em dados públicos.',
 	'markets.saved.clear': 'Limpar filtro de salvos',

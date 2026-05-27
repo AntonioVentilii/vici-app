@@ -1021,6 +1021,10 @@ export const deMessages = {
 	'markets.page.sub': 'Märkte erkunden und vorhersagen.',
 	'markets.page.title': 'Wähl eine Frage.',
 	'markets.search': 'Märkte suchen...',
+	'markets.sort.closing': 'Bald schließend',
+	'markets.sort.label': 'Sortieren',
+	'markets.sort.newest': 'Neueste',
+	'markets.sort.trending': 'Trending',
 	'markets.sub':
 		'Hunderte Fragen aus Makro, Krypto, Politik, Tech, Sport, Kultur. Alle lösen sich über öffentliche Daten auf.',
 	'markets.saved.clear': 'Gespeichert-Filter entfernen',

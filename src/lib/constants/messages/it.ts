@@ -1016,6 +1016,10 @@ export const itMessages = {
 	'markets.page.sub': 'Esplora e prevedi i mercati.',
 	'markets.page.title': 'Scegli una domanda.',
 	'markets.search': 'Cerca mercati...',
+	'markets.sort.closing': 'In chiusura',
+	'markets.sort.label': 'Ordina',
+	'markets.sort.newest': 'Più recenti',
+	'markets.sort.trending': 'Trending',
 	'markets.sub':
 		'Centinaia di domande tra macro, crypto, politica, tech, sport e cultura. Tutte si chiudono su dati pubblici.',
 	'markets.saved.clear': 'Rimuovi filtro salvati',
