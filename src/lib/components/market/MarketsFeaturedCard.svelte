@@ -102,8 +102,11 @@
 	}
 
 	.markets-featured-q {
+		/* Prototype FeaturedCard (screens.jsx:170) pins min-height to 58px
+		   so the YES/NO row sits at the same baseline across the trending
+		   rail regardless of question length. */
 		margin: 0;
-		min-height: 3.25rem;
+		min-height: 3.625rem;
 		color: var(--text-base);
 		font-size: var(--t-15);
 		font-weight: 600;
