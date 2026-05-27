@@ -1849,6 +1849,7 @@ export const enMessages = {
 	'worlds.picker.clear': 'Clear',
 	'worlds.picker.close': 'Close',
 	'worlds.picker.empty': 'No matches. Try a different name.',
+	'worlds.picker.error_timeout': "That didn't go through. Check your connection and tap again.",
 	'worlds.picker.kind_country': 'Country',
 	'worlds.picker.kind_university': 'University',
 	'worlds.picker.lock_hint':

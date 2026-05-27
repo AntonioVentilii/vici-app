@@ -58,20 +58,8 @@
 							})}
 						</span>
 						{#if wcDays !== null}
-							<span
-								style="
-									color:var(--accent); background:rgba(226,184,66,0.10);
-									border:1px solid rgba(226,184,66,0.30);
-									padding:3px 8px; border-radius:999px;
-									letter-spacing:0.12em;
-								"
-								class="eyebrow"
-							>
-								<Clock
-									style="vertical-align: middle; margin-right: 4px;"
-									size={11}
-									strokeWidth={2}
-								/>
+							<span class="tag countdown">
+								<Clock size={10} strokeWidth={2.5} />
 								{t({
 									locale: $localeStore,
 									key: 'wc.kickoff_chip',

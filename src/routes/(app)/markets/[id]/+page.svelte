@@ -2,6 +2,7 @@
 	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import MarketDetailChartCard from '$lib/components/market/MarketDetailChartCard.svelte';
@@ -19,10 +20,15 @@
 	import TradeModal from '$lib/components/market/TradeModal.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
-	import { AppPath } from '$lib/constants/routes.constants';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
-	import { authPrincipal, userIsAdmin, userIsAdminOrSolver } from '$lib/derived/user.derived';
+	import {
+		authPrincipal,
+		userIsAdmin,
+		userIsAdminOrSolver,
+		userSignedIn
+	} from '$lib/derived/user.derived';
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
 	import { showCompanion } from '$lib/stores/companion.store';
@@ -194,6 +200,17 @@
 
 	const handlePick = (side: 'YES' | 'NO') => {
 		if (isResolved) {
+			return;
+		}
+
+		// Public market browse — `/markets/[id]` is exempted from the
+		// (app)/+layout auth gate so signed-out visitors can preview a
+		// market. Placing a call still requires a session, so we bounce
+		// to /signin here at the point of action instead of opening the
+		// TradeModal against a missing identity.
+		if (!$userSignedIn) {
+			void goto(resolve(PublicPath.SignIn));
+
 			return;
 		}
 

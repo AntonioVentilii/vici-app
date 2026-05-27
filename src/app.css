@@ -2547,8 +2547,17 @@ html[data-app='1'] body {
 	border-color: var(--ink-line-strong);
 }
 .ob2-team-flag-lg {
-	font-size: 36px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 36px;
 	line-height: 1;
+}
+.ob2-team-flag-lg img {
+	display: block;
+	height: 100%;
+	width: auto;
+	border-radius: 3px;
 }
 .ob2-team-name-lg {
 	font-family: var(--font-mono);
@@ -2640,13 +2649,32 @@ html[data-app='1'] body {
 	min-height: 0;
 }
 
-/* ─── Team rail (expanded all-teams) ────────────────────── */
+/* ─── Team rail (expanded all-teams) ──────────────────────
+ * Mini-tile variant of `.ob2-team-tile` — same flag-on-top, name-below
+ * structure so the favourites grid and the expanded all-teams grid
+ * share a single visual language. */
 .ob2-team-chip {
 	appearance: none;
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 10px 6px 8px;
+	min-height: 64px;
 	border: 1px solid var(--ink-line);
+	border-radius: 10px;
 	background: var(--ink-raised);
+	color: var(--parchment);
+	font-family: inherit;
 	text-transform: none;
-	font-size: var(--text-h2);
+	transition:
+		border-color 180ms var(--ease-vici),
+		transform 80ms var(--ease-vici);
+}
+.ob2-team-chip:active {
+	transform: scale(0.96);
 }
 
 /* Card drift demo — driven by data-coach-phase. Uses !important to
@@ -2834,8 +2862,17 @@ html[data-app='1'] body {
 	border-color: var(--ink-line-strong);
 }
 .ob2-team-flag {
-	font-size: 22px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	height: 22px;
 	line-height: 1;
+}
+.ob2-team-flag img {
+	display: block;
+	height: 100%;
+	width: auto;
+	border-radius: 2px;
 }
 .ob2-team-name {
 	font-family: var(--font-mono);
@@ -2844,7 +2881,7 @@ html[data-app='1'] body {
 	text-transform: uppercase;
 	color: var(--parchment-dim);
 	font-weight: 600;
-	max-width: 70px;
+	max-width: 100%;
 	overflow: hidden;
 	white-space: nowrap;
 	text-overflow: ellipsis;

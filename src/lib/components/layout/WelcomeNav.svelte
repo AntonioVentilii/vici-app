@@ -19,6 +19,7 @@
 	} from '$lib/constants/locale.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { theme } from '$lib/stores/theme.store';
 	import { t } from '$lib/utils/i18n.utils';
 
 	const sections = ['markets', 'flow', 'leaderboard', 'trust'] as const;
@@ -33,22 +34,19 @@
 	let menuOpen = $state(false);
 	let langOpen = $state(false);
 	let dnavLangOpen = $state(false);
-	let theme = $state<'dark' | 'light' | 'peach'>('dark');
 	let langRef: HTMLDivElement | null = $state(null);
+	let langPopRef: HTMLUListElement | null = $state(null);
 	let dnavLangRef: HTMLDivElement | null = $state(null);
+	let langPopPos = $state<{ top: number; right: number } | null>(null);
 
 	const LOCALES = SUPPORTED_LOCALES;
 
 	onMount(() => {
 		if (typeof document !== 'undefined') {
-			try {
-				theme = (localStorage.getItem('vici.theme') as 'dark' | 'light' | 'peach') ?? 'dark';
-			} catch {
-				theme = 'dark';
-			}
-
+			// `data-theme` is owned by the canonical theme store + the
+			// no-FOUC inline script in `app.html`; we only stamp the brand
+			// accent here.
 			document.documentElement.setAttribute('data-accent', 'laurel');
-			document.documentElement.setAttribute('data-theme', theme);
 		}
 
 		const onScroll = () => {
@@ -94,20 +92,6 @@
 			return;
 		}
 
-		document.documentElement.setAttribute('data-theme', theme);
-
-		try {
-			localStorage.setItem('vici.theme', theme);
-		} catch {
-			// ignore
-		}
-	});
-
-	$effect(() => {
-		if (typeof document === 'undefined') {
-			return;
-		}
-
 		document.body.style.overflow = menuOpen ? 'hidden' : '';
 
 		return () => {
@@ -140,7 +124,16 @@
 		const onDoc = (e: MouseEvent) => {
 			const target = e.target as Node | null;
 
-			if (langOpen && langRef && target && !langRef.contains(target)) {
+			// The mobile popover lives outside `.lp-pill` to escape its
+			// `overflow: hidden` + `backdrop-filter` containing block, so
+			// "inside the popover" is checked separately from the globe ref.
+			if (
+				langOpen &&
+				langRef &&
+				target &&
+				!langRef.contains(target) &&
+				!(langPopRef && langPopRef.contains(target))
+			) {
 				langOpen = false;
 			}
 
@@ -162,6 +155,35 @@
 		return () => {
 			document.removeEventListener('mousedown', onDoc);
 			window.removeEventListener('keydown', onKey);
+		};
+	});
+
+	// Track the globe's viewport rect so the mobile lang popover — which
+	// is rendered outside `.lp-pill` to escape the pill's clipping — can
+	// anchor itself under the globe via `position: fixed`.
+	$effect(() => {
+		if (!langOpen || typeof window === 'undefined') {
+			langPopPos = null;
+
+			return;
+		}
+
+		const update = () => {
+			if (!langRef) {
+				return;
+			}
+
+			const r = langRef.getBoundingClientRect();
+			langPopPos = { top: r.bottom + 8, right: window.innerWidth - r.right };
+		};
+
+		update();
+		window.addEventListener('scroll', update, { passive: true });
+		window.addEventListener('resize', update, { passive: true });
+
+		return () => {
+			window.removeEventListener('scroll', update);
+			window.removeEventListener('resize', update);
 		};
 	});
 
@@ -263,11 +285,11 @@
 				{#each themeOpts as o (o.id)}
 					<button
 						class="dnav-theme-dot dnav-app-{o.id}"
-						class:active={theme === o.id}
-						aria-checked={theme === o.id}
+						class:active={$theme === o.id}
+						aria-checked={$theme === o.id}
 						aria-label={o.label}
 						data-tooltip={o.label.toUpperCase()}
-						onclick={() => (theme = o.id)}
+						onclick={() => theme.set(o.id)}
 						role="radio"
 						type="button"
 					>
@@ -311,29 +333,6 @@
 						>
 							<Globe aria-hidden="true" />
 						</button>
-						{#if langOpen}
-							<ul
-								class="lp-lang-pop"
-								aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
-								role="listbox"
-							>
-								{#each LOCALES as l (l.id)}
-									<li>
-										<button
-											class="lp-lang-item"
-											class:active={$localeStore === l.id}
-											aria-selected={$localeStore === l.id}
-											onclick={() => setLocaleAndClose(l.id)}
-											role="option"
-											type="button"
-										>
-											<span class="num lp-lang-short">{l.short}</span>
-											<span class="lp-lang-label">{l.label}</span>
-										</button>
-									</li>
-								{/each}
-							</ul>
-						{/if}
 					</div>
 					<button
 						class="btn btn-primary lp-cta"
@@ -395,11 +394,11 @@
 							{#each themeOpts as o (o.id)}
 								<button
 									class="lp-appearance-dot lp-app-{o.id}"
-									class:active={theme === o.id}
-									aria-checked={theme === o.id}
+									class:active={$theme === o.id}
+									aria-checked={$theme === o.id}
 									aria-label={o.label}
 									data-tooltip={o.label.toUpperCase()}
-									onclick={() => (theme = o.id)}
+									onclick={() => theme.set(o.id)}
 									role="radio"
 									type="button"
 								>
@@ -422,6 +421,37 @@
 				</div>
 			{/if}
 		</div>
+
+		<!-- Lang popover lives outside `.lp-pill` so it isn't clipped by
+		     the pill's `overflow: hidden` + `backdrop-filter` containing
+		     block. Anchored under the globe via `position: fixed` using
+		     the rect tracked in `langPopPos`. -->
+		{#if langOpen && langPopPos}
+			<ul
+				bind:this={langPopRef}
+				style:top="{langPopPos.top}px"
+				style:right="{langPopPos.right}px"
+				class="lp-lang-pop"
+				aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
+				role="listbox"
+			>
+				{#each LOCALES as l (l.id)}
+					<li>
+						<button
+							class="lp-lang-item"
+							class:active={$localeStore === l.id}
+							aria-selected={$localeStore === l.id}
+							onclick={() => setLocaleAndClose(l.id)}
+							role="option"
+							type="button"
+						>
+							<span class="num lp-lang-short">{l.short}</span>
+							<span class="lp-lang-label">{l.label}</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
 	</div>
 </nav>
 

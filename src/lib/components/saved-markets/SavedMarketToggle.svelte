@@ -1,5 +1,9 @@
 <script lang="ts">
 	import { Heart } from 'lucide-svelte/icons';
+	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
+	import { PublicPath } from '$lib/constants/routes.constants';
+	import { userSignedIn } from '$lib/derived/user.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import {
 		isMarketSaved,
@@ -35,6 +39,16 @@
 	const onClick = (e: MouseEvent) => {
 		if (stopPropagation) {
 			e.stopPropagation();
+		}
+
+		// `/markets` and `/markets/[id]` are public surfaces; an anonymous
+		// visitor tapping the heart should be routed to signin instead of
+		// writing to an unattached `preferencesStore` whose value can't
+		// persist back to a profile.
+		if (!$userSignedIn) {
+			void goto(resolve(PublicPath.SignIn));
+
+			return;
 		}
 
 		toggleSavedMarket({ marketId });

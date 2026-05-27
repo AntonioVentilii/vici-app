@@ -1824,6 +1824,7 @@ export const itMessages = {
 	'worlds.picker.clear': 'Pulisci',
 	'worlds.picker.close': 'Chiudi',
 	'worlds.picker.empty': 'Nessun risultato. Prova un altro nome.',
+	'worlds.picker.error_timeout': 'Non è andato a buon fine. Controlla la connessione e riprova.',
 	'worlds.picker.kind_country': 'Paese',
 	'worlds.picker.kind_university': 'Università',
 	'worlds.picker.lock_hint':

@@ -1833,6 +1833,7 @@ export const frMessages = {
 	'worlds.picker.clear': 'Effacer',
 	'worlds.picker.close': 'Fermer',
 	'worlds.picker.empty': 'Aucun résultat. Essaie un autre nom.',
+	'worlds.picker.error_timeout': "Ça n'est pas passé. Vérifie ta connexion et retente.",
 	'worlds.picker.kind_country': 'Pays',
 	'worlds.picker.kind_university': 'Université',
 	'worlds.picker.lock_hint':
