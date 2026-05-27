@@ -322,11 +322,20 @@ const fetchOpenBinaryMarketsLite = async ({
 		.filter((s) => {
 			const isResolved = nonNullish(resolutionMap[s.series_id]);
 			const isExpired = s.expiry_ns <= nowNs;
-			const isBinary = !('Categorical' in s.payoff_type);
+			// Flow only shows Binary markets. Check the variant
+			// explicitly so Call / Put / future payoff types stay out.
+			const isBinary = 'Binary' in s.payoff_type;
 
 			return !isResolved && !isExpired && isBinary;
 		})
-		.map((s) => mapMarketData({ series: s, status: 'Open' }))
+		// Lite mapping: seed `yesProbability`/`noProbability` at 0.5 (vs
+		// `mapMarketData`'s default of 0) so a card that misses
+		// enrichment — e.g. its order-book fetch fails in
+		// `enrichMarketsWithOrderBook` — still renders the neutral
+		// consensus instead of 0%/100%.
+		.map((s) =>
+			mapMarketData({ series: s, status: 'Open', yesProbability: 0.5, noProbability: 0.5 })
+		)
 		.filter(nonNullish);
 
 	return filterByPlaygroundExpandedDomain({ items: markets, targetDomain: domain });
@@ -638,8 +647,18 @@ export const suggestedScore = ({
  * Ranks markets by editorial signal first (admin-flipped `suggested`,
  * linearly decayed over 14 days and auto-dropped on resolve), then
  * user interest, then a culture-fallback boost (so users with no
- * declared interests still get a meaningful feed), then activity
- * (volume) and liquidity, with `createdAt` as the final tie-breaker.
+ * declared interests still get a meaningful feed), with `createdAt`
+ * as the final tie-breaker.
+ *
+ * Earlier revisions also weighted `volumeScore` and `liquidityScore`.
+ * Both were removed: `volumeScore` keyed off `Market.totalVolume`,
+ * which `mapMarketData` hardcodes to `ZERO` (the field is never
+ * populated upstream), so it never contributed. `liquidityScore`
+ * needed `bestBid` / `bestAsk`, which the Flow path no longer fetches
+ * until *after* ranking — see `getFlowQueue` +
+ * `enrichFlowMarketsWithOrderBook`. The dropped tier was a 100-point
+ * flag dwarfed by the interest (1000) and suggested (~5000) tiers, so
+ * the top-N ordering is effectively unchanged.
  *
  * `tagMappings` is the `seriesId → MarketTag[]` projection produced by
  * {@link listMarketTagsBySeries}; a market matches user interest when
