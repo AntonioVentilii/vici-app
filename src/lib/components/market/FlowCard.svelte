@@ -754,12 +754,25 @@
 		height: 100%;
 	}
 
+	.flow-card-root {
+		/* The 3D context the inner faces render against. We don't
+		   apply a `rotateY` (the flip is opacity-only) but the
+		   perspective still subtly affects subpixel rendering during
+		   the crossfade — without it the swap can read flatter. */
+		perspective: 1400px;
+	}
+
 	.flow-card {
 		position: relative;
 		width: 100%;
 		height: 100%;
 		user-select: none;
-		touch-action: pan-y;
+		/* `touch-action: none` keeps tap detection snappy: the browser
+		   doesn't wait for a scroll-intent threshold before firing the
+		   pointer events that drive drag / tap-to-flip. The back face's
+		   own scrollable body sets its own `touch-action: pan-y` so
+		   vertical scroll there still works. */
+		touch-action: none;
 		will-change: transform;
 	}
 	.flow-card.is-grabbing {
@@ -781,14 +794,18 @@
 	}
 
 	/* Both faces share the same absolutely-positioned slot. Opacity
-	   drives which is visible — no `rotateY`, no `perspective`. The
-	   delayed-opacity pattern keeps the back from flashing through the
-	   front during the swap (see inline `transition` on each face). */
+	   drives which is visible — no `rotateY`. The delayed-opacity
+	   pattern keeps the back from flashing through the front during
+	   the swap (see inline `transition` on each face). The
+	   wrapper's `perspective` above keeps the swap rendering with
+	   the same depth context as a true 3D flip. */
 	.flow-face {
 		position: absolute;
 		inset: 0;
 		overflow: hidden;
-		border-radius: var(--r-12);
+		/* 22 px corner radius — softer than the default card radius
+		   for the swipeable Flow surface. */
+		border-radius: 22px;
 	}
 
 	.flow-face-front {

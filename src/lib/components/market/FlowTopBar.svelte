@@ -4,6 +4,7 @@
 	import { resolve } from '$app/paths';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { combinedInboxUnreadCount } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 	import type { FlameStage } from '$lib/utils/streak.utils';
@@ -88,17 +89,9 @@
 					class="flow-flame-chip"
 					aria-label={t({ locale: $localeStore, key: 'flow.daily_streak_aria' })}
 				>
-					<FlameChar animate size={18} stage={flameStage} />
-					<span class="flow-flame-meta">
-						<span class="flow-flame-label allcaps">{flameLabel}</span>
-						<span class="num flow-flame-count">
-							{t({
-								locale: $localeStore,
-								key: 'flow.streak_days',
-								params: { count: dailyStreak }
-							})}
-						</span>
-					</span>
+					<FlameChar animate size={16} stage={flameStage} />
+					<span class="flow-flame-label allcaps">{flameLabel}</span>
+					<span class="num flow-flame-count">{dailyStreak}d</span>
 				</span>
 			{/if}
 			<button
@@ -123,6 +116,11 @@
 					/>
 					<path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-linecap="round" stroke-linejoin="round" />
 				</svg>
+				{#if $combinedInboxUnreadCount > 0}
+					<span class="flow-bell-badge num" aria-hidden="true">
+						{$combinedInboxUnreadCount > 9 ? '9+' : $combinedInboxUnreadCount}
+					</span>
+				{/if}
 			</button>
 		</div>
 	</div>
@@ -255,32 +253,29 @@
 	.flow-flame-chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
-		padding: 4px 9px 4px 6px;
+		gap: 5px;
+		padding: 3px 9px 3px 5px;
 		border-radius: var(--r-pill);
 		background: var(--bg-surface);
 		color: var(--text-muted);
-	}
-
-	.flow-flame-meta {
-		display: inline-flex;
-		flex-direction: column;
-		align-items: flex-start;
-		line-height: 1;
+		border: 1px solid var(--border-base);
 	}
 
 	.flow-flame-label {
-		font-size: 9px;
+		font-size: 10px;
 		font-weight: 700;
-		opacity: 0.85;
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-base);
 	}
 
 	.flow-flame-count {
-		font-size: 11px;
-		font-weight: 600;
+		font-size: 10px;
+		font-weight: 700;
+		color: var(--color-primary);
 	}
 
 	.flow-bell-btn {
+		position: relative;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
@@ -300,6 +295,27 @@
 	}
 	.flow-bell-btn:active {
 		transform: scale(0.94);
+	}
+
+	/* Unread-count badge — top-right corner pip on the bell. Tracks
+	   `combinedInboxUnreadCount`; collapses to `9+` past nine to keep
+	   the bubble from stretching the bar. */
+	.flow-bell-badge {
+		position: absolute;
+		top: 2px;
+		right: 2px;
+		min-width: 14px;
+		height: 14px;
+		padding: 0 4px;
+		border-radius: 999px;
+		background: var(--no);
+		color: var(--background, #fff);
+		font-size: 9px;
+		font-weight: 700;
+		line-height: 14px;
+		text-align: center;
+		letter-spacing: 0;
+		box-shadow: 0 0 0 2px var(--bg-base);
 	}
 
 	.flow-progress-row {

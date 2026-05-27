@@ -58,6 +58,10 @@ export interface FeaturedEvent {
 	/** Display title, e.g. "2026 FIFA World Cup". UI should look up
 	 *  `event.<id>.title` via i18n first. */
 	title: string;
+	/** Short / compact title used by surfaces with very limited width
+	 *  (top-bar deck chip, ticker), e.g. "World Cup". Falls back to
+	 *  `title` when omitted. */
+	shortTitle?: string;
 	/** Optional subtitle. Same i18n fallback rule as `title`. */
 	subtitle?: string;
 

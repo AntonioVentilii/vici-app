@@ -726,12 +726,16 @@
 	const accuracyUnlocked = $derived(isAccuracyUnlocked(lifetimeTotalTrades));
 
 	// Top bar deck-scope label: when the featured event is active the
-	// deck is filtered to it (e.g. "WORLD CUP"); otherwise fall back to
-	// a neutral all-markets label. Title is uppercased to match the
-	// chip's allcaps tracking.
+	// deck is filtered to it (e.g. "WORLD CUP"); otherwise fall back
+	// to a neutral all-markets label. Prefers `shortTitle` over
+	// `title` so the chip stays narrow (a full "2026 FIFA WORLD CUP"
+	// crowds the streak chip out of the row). Uppercased to match
+	// the chip's allcaps tracking.
 	const topBarCategoryLabel = $derived.by(() => {
 		if ($featuredEventActive) {
-			return $featuredEvent.title.toUpperCase();
+			const e = $featuredEvent;
+
+			return (e.shortTitle ?? e.title).toUpperCase();
 		}
 
 		return t({ locale: $localeStore, key: 'flow.deck.all_markets' });
