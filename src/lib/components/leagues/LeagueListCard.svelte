@@ -95,23 +95,23 @@
 		})
 	);
 
-	const friendOverlapLabel = $derived.by(() => {
-		if (!friendOverlap) {
+	// The handle is rendered as a separate emphasised span; the suffix
+	// covers the "+ N friends" tail. For a single friend the suffix is
+	// empty, matching the prototype's "<b>@handle</b>" layout.
+	const friendOverlapSuffix = $derived.by(() => {
+		if (!friendOverlap || friendOverlap.count <= 1) {
 			return;
 		}
 
-		if (friendOverlap.count === 1) {
-			return t({
-				locale: $localeStore,
-				key: 'leagues.card.friend_overlap_one',
-				params: { handle: friendOverlap.handle }
-			});
-		}
+		const others = friendOverlap.count - 1;
 
 		return t({
 			locale: $localeStore,
-			key: 'leagues.card.friend_overlap_many',
-			params: { handle: friendOverlap.handle, count: friendOverlap.count - 1 }
+			key:
+				others === 1
+					? 'leagues.card.friend_overlap_suffix_one'
+					: 'leagues.card.friend_overlap_suffix_many',
+			params: { count: others }
 		});
 	});
 
@@ -162,12 +162,19 @@
 
 		<span class="meta num">{memberCountLabel}</span>
 
-		{#if friendOverlapLabel}
+		{#if friendOverlap}
 			<span class="friend-overlap">
 				<span class="friend-avatars" aria-hidden="true">
-					<span class="friend-avatar-dot"></span>
+					{#each Array.from({ length: Math.min(friendOverlap.count, 3) }) as _, i (i)}
+						<span style:--i={i} class="friend-avatar-dot"></span>
+					{/each}
 				</span>
-				<span class="friend-overlap-text num">{friendOverlapLabel}</span>
+				<span class="friend-overlap-text num">
+					<b class="friend-overlap-handle">{friendOverlap.handle}</b>
+					{#if friendOverlapSuffix}
+						<span class="friend-overlap-suffix">{friendOverlapSuffix}</span>
+					{/if}
+				</span>
 			</span>
 		{/if}
 
@@ -334,6 +341,11 @@
 			color-mix(in srgb, var(--accent) 55%, transparent)
 		);
 		border: 1px solid color-mix(in srgb, var(--bg-surface) 50%, var(--border-base));
+		margin-left: -0.35rem;
+	}
+
+	.friend-avatar-dot:first-child {
+		margin-left: 0;
 	}
 
 	.friend-overlap-text {
@@ -342,9 +354,13 @@
 		letter-spacing: 0.04em;
 	}
 
-	.friend-overlap-text :global(b) {
+	.friend-overlap-handle {
 		color: var(--color-primary);
 		font-weight: 700;
+	}
+
+	.friend-overlap-suffix {
+		margin-left: 0.2rem;
 	}
 
 	.activity-preview {
