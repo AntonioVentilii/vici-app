@@ -271,11 +271,6 @@
 <MobileAppBar title={t({ locale: $localeStore, key: 'dash.title' })} />
 
 <div class="screen-scroll">
-	<!-- Appbar -->
-	<div class="appbar dash-appbar">
-		<h2 class="dash-appbar-h">{t({ locale: $localeStore, key: 'dash.title' })}</h2>
-	</div>
-
 	<!-- ─── HERO · accuracy ─── -->
 	<div class="dash-hero">
 		<span class="dash-ey">{t({ locale: $localeStore, key: 'dash.accuracy.eyebrow' })}</span>
@@ -766,19 +761,7 @@
 <style lang="postcss">
 	/* DashPage local hooks. Most class names live in app.css so the
 	   prototype's CSS structure ports cleanly; this block only carries
-	   small Svelte-only tweaks (delta-pct color modifiers and the
-	   appbar reset, since Dash uses a different appbar from the rest
-	   of the app). */
-
-	.dash-appbar {
-		padding: 18px 18px 4px;
-	}
-
-	.dash-appbar-h {
-		font-size: 24px;
-		letter-spacing: -0.02em;
-		margin: 0;
-	}
+	   small Svelte-only tweaks (delta-pct color modifiers). */
 
 	:global(.dash-delta.dash-delta-pos) {
 		color: var(--yes);
