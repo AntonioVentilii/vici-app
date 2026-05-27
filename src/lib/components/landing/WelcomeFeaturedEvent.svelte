@@ -6,7 +6,6 @@
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import {
 		daysToKickoff,
-		featuredEvent,
 		featuredEventActive,
 		featuredEventFavourites
 	} from '$lib/derived/featured-event.derived';
@@ -15,9 +14,11 @@
 
 	// Landing WCFeature section — eyebrow + countdown,
 	// big title, CTA, and a small grid of favourite participants. Reads
-	// entirely from the FeaturedEvent abstraction (b9dfb7d) so swapping
-	// the next tentpole (Olympics, election, …) is a one-export change
-	// in the constants file. Hidden when the event is archived.
+	// favourite data from the FeaturedEvent abstraction (b9dfb7d) so
+	// swapping the next tentpole (Olympics, election, …) is a one-export
+	// change in the constants file. Copy is sourced from the static
+	// `wc.*` i18n keys to match the prototype's namespace exactly.
+	// Hidden when the event is archived.
 </script>
 
 {#if $featuredEventActive}
@@ -27,17 +28,10 @@
 				<div class="welcome-featured-copy">
 					<div class="welcome-featured-meta">
 						<LandingSectionHeader
-							eyebrow={t({
-								locale: $localeStore,
-								key: 'welcome.featured_event.eyebrow'
-							})}
-							sub={t({
-								locale: $localeStore,
-								key: 'welcome.featured_event.sub',
-								params: { event: $featuredEvent.title }
-							})}
-							title={$featuredEvent.title}
-							titleSuffix={$featuredEvent.subtitle}
+							eyebrow={t({ locale: $localeStore, key: 'wc.eyebrow' })}
+							sub={t({ locale: $localeStore, key: 'wc.sub' })}
+							title={t({ locale: $localeStore, key: 'wc.title_a' })}
+							titleAccent={t({ locale: $localeStore, key: 'wc.title_b' })}
 						/>
 
 						<div class="welcome-featured-countdown">
@@ -61,7 +55,7 @@
 						onclick={() => goto(resolve(PublicPath.SignUp))}
 						type="button"
 					>
-						{t({ locale: $localeStore, key: 'welcome.featured_event.cta' })}
+						{t({ locale: $localeStore, key: 'wc.cta' })}
 						<ChevronRight aria-hidden="true" size={16} strokeWidth={2} />
 					</button>
 				</div>
