@@ -2512,6 +2512,20 @@ html[data-app='1'] body {
 	color: var(--parchment);
 	font-weight: 600;
 }
+/* Inline flag chip next to "Backing <team>". The CountryFlag default
+   class is replaced by `ob2-picked-flag`, so the size has to be set
+   here — without it the lipis SVG renders at its intrinsic 4×3 ratio
+   and dominates the screen. Matches the emoji height (~18px) the
+   prototype uses (`onboarding-v2.jsx:104`). */
+.ob2-sub .ob2-picked-flag {
+	display: inline-block;
+	width: 22px;
+	height: 16px;
+	margin-right: 4px;
+	vertical-align: -3px;
+	border-radius: 2px;
+	object-fit: cover;
+}
 
 /* ─── Beat 1 · Phase 1.a · Team picker grid ──────────────── */
 .ob2-beat-pick {
