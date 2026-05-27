@@ -1720,6 +1720,7 @@ export const frMessages = {
 		'Coup d’envoi le 11 juin. Choisissez un côté maintenant — les marchés de la phase de groupes sont ouverts, les éliminatoires démarrent au tirage.',
 	'wc.title_a': 'Les favoris donnent',
 	'wc.title_b': 'le ton.',
+	'welcome.bout.members': 'MEMBRES',
 	'welcome.deck.callers_last_hour': '{count} callers dans la dernière heure',
 	'welcome.deck.category': 'MACRO',
 	'welcome.deck.closing_soon': 'Clôture imminente',
@@ -1762,6 +1763,14 @@ export const frMessages = {
 	'welcome.featured_event.sub':
 		'Choisis ta favorite, fais ton premier pronostic, démarre ton historique avec {event}.',
 	'welcome.featured_event.to_win': '{odds}% pour gagner',
+	'welcome.nav.already_member': 'Déjà membre ?',
+	'welcome.nav.explore': 'Explorer',
+	'welcome.nav.free_prefix': 'VICI est gratuit -',
+	'welcome.nav.latin_motto': 'Veni · Vidi ·',
+	'welcome.nav.public_data': 'résolution sur données publiques',
+	'welcome.nav.skip_to_content': 'Aller au contenu',
+	'welcome.trust.tagline': 'Veni. Vidi. Vici.',
+	'welcome.universities.fifa_tag': 'COUPE DU MONDE FIFA',
 	'worlds.affil_prompt.body':
 		'Choisis ton université pour rejoindre le classement. Honor system, verrouillée 90 jours après la sélection.',
 	'worlds.affil_prompt.title': 'Où as-tu étudié ?',

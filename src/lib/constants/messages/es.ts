@@ -1718,6 +1718,7 @@ export const esMessages = {
 		'Pitazo inicial el 11 de junio. Elige un lado ahora — los mercados de fase de grupos están abiertos, los de eliminación abren al sorteo.',
 	'wc.title_a': 'Los favoritos marcan',
 	'wc.title_b': 'la línea.',
+	'welcome.bout.members': 'MIEMBROS',
 	'welcome.deck.callers_last_hour': '{count} callers en la última hora',
 	'welcome.deck.category': 'MACRO',
 	'welcome.deck.closing_soon': 'Cierra pronto',
@@ -1760,6 +1761,14 @@ export const esMessages = {
 	'welcome.featured_event.sub':
 		'Elige tu favorito, haz tu primera predicción y empieza tu historial con {event}.',
 	'welcome.featured_event.to_win': '{odds}% para ganar',
+	'welcome.nav.already_member': '¿Ya eres miembro?',
+	'welcome.nav.explore': 'Explorar',
+	'welcome.nav.free_prefix': 'VICI es gratis -',
+	'welcome.nav.latin_motto': 'Veni · Vidi ·',
+	'welcome.nav.public_data': 'resolución con datos públicos',
+	'welcome.nav.skip_to_content': 'Ir al contenido',
+	'welcome.trust.tagline': 'Veni. Vidi. Vici.',
+	'welcome.universities.fifa_tag': 'COPA MUNDIAL FIFA',
 	'worlds.affil_prompt.body':
 		'Elige tu universidad para entrar en la clasificación. Honor system, bloqueada 90 días tras la elección.',
 	'worlds.affil_prompt.title': '¿Dónde estudiaste?',

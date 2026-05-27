@@ -1716,6 +1716,7 @@ export const deMessages = {
 		'Anstoß am 11. Juni. Wähle jetzt eine Seite — Gruppenphasen-Märkte sind offen, K.O.-Märkte starten zur Auslosung.',
 	'wc.title_a': 'Die Favoriten setzen',
 	'wc.title_b': 'die Linie.',
+	'welcome.bout.members': 'MITGLIEDER',
 	'welcome.deck.callers_last_hour': '{count} Caller in der letzten Stunde',
 	'welcome.deck.category': 'MAKRO',
 	'welcome.deck.closing_soon': 'Schließt bald',
@@ -1758,6 +1759,14 @@ export const deMessages = {
 	'welcome.featured_event.sub':
 		'Wähle deinen Favoriten, mach deinen ersten Call und starte deine Bilanz mit {event}.',
 	'welcome.featured_event.to_win': '{odds}% zum Sieg',
+	'welcome.nav.already_member': 'Schon Mitglied?',
+	'welcome.nav.explore': 'Entdecken',
+	'welcome.nav.free_prefix': 'VICI ist kostenlos -',
+	'welcome.nav.latin_motto': 'Veni · Vidi ·',
+	'welcome.nav.public_data': 'Auflösung anhand öffentlicher Daten',
+	'welcome.nav.skip_to_content': 'Zum Inhalt springen',
+	'welcome.trust.tagline': 'Veni. Vidi. Vici.',
+	'welcome.universities.fifa_tag': 'FIFA WELTMEISTERSCHAFT',
 	'worlds.affil_prompt.body':
 		'Wähle deine Uni, um an der Rangliste teilzunehmen. Ehrensache, 90 Tage gesperrt nach der Wahl.',
 	'worlds.affil_prompt.title': 'Wo hast du studiert?',

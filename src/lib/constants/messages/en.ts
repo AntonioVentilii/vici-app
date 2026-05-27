@@ -1736,6 +1736,7 @@ export const enMessages = {
 		'June 11 kickoff. Pick a side now — group stage advancement markets open, knockout markets seed at the bracket reveal.',
 	'wc.title_a': 'The favorites are setting',
 	'wc.title_b': 'the line.',
+	'welcome.bout.members': 'MEMBERS',
 	'welcome.deck.callers_last_hour': '{count} callers in last hour',
 	'welcome.deck.category': 'MACRO',
 	'welcome.deck.closing_soon': 'Closing soon',
@@ -1778,6 +1779,14 @@ export const enMessages = {
 	'welcome.featured_event.sub':
 		'Pick your favourite, make your first call, and let your record start with the {event}.',
 	'welcome.featured_event.to_win': '{odds}% to win',
+	'welcome.nav.already_member': 'Already a member?',
+	'welcome.nav.explore': 'Explore',
+	'welcome.nav.free_prefix': 'VICI is free -',
+	'welcome.nav.latin_motto': 'Veni · Vidi ·',
+	'welcome.nav.public_data': 'resolution on public data',
+	'welcome.nav.skip_to_content': 'Skip to content',
+	'welcome.trust.tagline': 'Veni. Vidi. Vici.',
+	'welcome.universities.fifa_tag': 'FIFA WORLD CUP',
 	'worlds.affil_prompt.body':
 		'Pick your university to join the leaderboard. Honor system, locked for 90 days after selection.',
 	'worlds.affil_prompt.title': 'Where did you study?',
