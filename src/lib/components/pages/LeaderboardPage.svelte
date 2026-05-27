@@ -149,8 +149,8 @@
 									? t({ locale: $localeStore, key: 'leaderboard.you' })
 									: user.nickname}
 							</span>
-							<span class="leaderboard-row-meta num allcaps">
-								{Math.floor(user.points ?? 0)} VXP · {t({
+							<span class="leaderboard-row-meta num">
+								{Math.floor(user.points ?? 0).toLocaleString('en-US')} VXP · {t({
 									locale: $localeStore,
 									key: 'leaderboard.row.streak',
 									params: { count: user.dailyStreak ?? 0 }

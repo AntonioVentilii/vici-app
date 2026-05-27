@@ -626,9 +626,9 @@ export const frMessages = {
 	'leaderboard.scope.week': 'Cette semaine',
 	'leaderboard.you': 'Toi',
 	'leaderboard.loading': 'Calcul des alphas...',
-	'leaderboard.row.streak': 'Série : {count}j',
+	'leaderboard.row.streak': '{count}j de série',
 	'leaderboard.sub': 'Classement, amis et activité pour ceux qui construisent un historique.',
-	'leaderboard.title': 'Social',
+	'leaderboard.title': 'Classement',
 	'leagues.action.create': 'Créer une ligue',
 	'leagues.action.join': 'Rejoindre via code',
 	'leagues.create.cancel': 'Annuler',
@@ -992,9 +992,9 @@ export const frMessages = {
 	'nav.vision': 'Vision',
 	'notifications.back_flow': 'Retour à Flow',
 	'notifications.empty.body':
-		'Résolutions, demandes d’ami et défis arrivent ici. Faites quelques pronostics pour démarrer votre historique.',
+		'Résolutions, invitations de ligue et défis arrivent ici. Faites quelques pronostics pour démarrer votre historique.',
 	'notifications.empty.title': 'Aucune nouvelle notification.',
-	'notifications.mark_read': 'Marquer lues',
+	'notifications.mark_read': 'Tout marquer comme lu',
 	'notifications.title': 'Notifications',
 	'onboarding.featured_event.upcoming': '{event} · commence dans {days} jours',
 	'onboarding.markets.taylor_tour.title':
