@@ -116,6 +116,32 @@
 		}
 	};
 
+	/**
+	 * "Day X of Y" countdown when the bout is in flight — mirrors the
+	 * prototype's `DAY {day} OF {days}` eyebrow on `LeagueBoutDetail`.
+	 * Day 1 starts at kickoff; the total floors to at least one day.
+	 */
+	const totalDays = $derived.by((): number => {
+		if (!bout) {
+			return 1;
+		}
+
+		const span = bout.settleMs - bout.kickoffMs;
+
+		return Math.max(1, Math.ceil(span / 86_400_000));
+	});
+
+	const dayOf = $derived.by((): number => {
+		if (!bout) {
+			return 1;
+		}
+
+		const elapsed = Date.now() - bout.kickoffMs;
+		const days = Math.floor(elapsed / 86_400_000) + 1;
+
+		return Math.max(1, Math.min(totalDays, days));
+	});
+
 	const canAccept = $derived(bout?.state === 'proposed' && ownedSide === bout.sideB);
 	const canKickoff = $derived(
 		bout?.state === 'accepted' && ownedSide !== undefined && Date.now() >= bout.kickoffMs
@@ -230,9 +256,23 @@
 				<span class="allcaps bout-detail-eyebrow" data-state={bout.state}>
 					{t({ locale: $localeStore, key: stateLabelKey(bout.state) })}
 				</span>
-				<span class="num allcaps bout-detail-window">
-					{formatDate(bout.kickoffMs)} → {formatDate(bout.settleMs)}
-				</span>
+				{#if bout.state === 'in_flight'}
+					<span class="num allcaps bout-detail-window">
+						{t({
+							locale: $localeStore,
+							key: 'bout.detail.day_of',
+							params: { day: dayOf, total: totalDays }
+						})}
+					</span>
+				{:else if bout.state === 'proposed'}
+					<span class="num allcaps bout-detail-window">
+						{t({ locale: $localeStore, key: 'bout.detail.awaiting_acceptance' })}
+					</span>
+				{:else}
+					<span class="num allcaps bout-detail-window">
+						{formatDate(bout.kickoffMs)} → {formatDate(bout.settleMs)}
+					</span>
+				{/if}
 			</header>
 
 			<div class="bout-detail-stage">
@@ -270,6 +310,10 @@
 			{#if bout.state === 'resolved' && bout.winner === 'draw'}
 				<p class="allcaps bout-detail-winner">
 					{t({ locale: $localeStore, key: 'leagues.bout.winner_draw' })}
+				</p>
+			{:else if bout.state === 'proposed'}
+				<p class="serif-italic bout-detail-pending-foot">
+					{t({ locale: $localeStore, key: 'bout.detail.pending_foot' })}
 				</p>
 			{/if}
 		</section>
@@ -500,6 +544,14 @@
 		margin: 0;
 		font-size: var(--t-11, 0.7rem);
 		letter-spacing: var(--tracking-allcaps);
+		text-align: center;
+		color: var(--text-muted);
+	}
+
+	.bout-detail-pending-foot {
+		margin: 0;
+		font-size: var(--t-13);
+		line-height: 1.45;
 		text-align: center;
 		color: var(--text-muted);
 	}

@@ -975,11 +975,14 @@
 			{#if bouts.length === 0}
 				<div class="bouts-empty">
 					<p class="serif-italic bouts-empty-lede">
-						{t({ locale: $localeStore, key: 'leagues.bouts_inbox.empty.title' })}
+						{t({ locale: $localeStore, key: 'bouts.empty.lede' })}
 					</p>
 					<p class="bouts-empty-sub">
-						{t({ locale: $localeStore, key: 'leagues.bouts_inbox.empty.sub' })}
+						{t({ locale: $localeStore, key: 'bouts.empty.sub' })}
 					</p>
+					<button class="bouts-empty-cta" onclick={() => (createOpen = true)} type="button">
+						+ {t({ locale: $localeStore, key: 'bouts.empty.cta' })}
+					</button>
 				</div>
 			{:else}
 				<ul class="bouts-list">
@@ -1545,6 +1548,25 @@
 		margin: 0;
 		font-size: var(--t-12);
 		color: var(--text-muted);
+	}
+
+	.bouts-empty-cta {
+		appearance: none;
+		margin-top: 0.55rem;
+		padding: 0.45rem 0.95rem;
+		font: inherit;
+		font-size: var(--t-12);
+		font-weight: 700;
+		color: var(--laurel);
+		background: color-mix(in srgb, var(--laurel) 8%, transparent);
+		border: 1px solid color-mix(in srgb, var(--laurel) 25%, var(--border-base));
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition: background 140ms ease;
+	}
+
+	.bouts-empty-cta:hover {
+		background: color-mix(in srgb, var(--laurel) 14%, transparent);
 	}
 
 	.bouts-list {
