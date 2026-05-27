@@ -6,8 +6,7 @@ import {
 	PAYOFF_TYPE,
 	PRICE_DECIMALS,
 	STRIKE,
-	VICI_ORACLE_V1,
-	ZERO
+	VICI_ORACLE_V1
 } from '$lib/constants/app.constants';
 import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
 import type { AppLocale } from '$lib/constants/locale.constants';
@@ -27,7 +26,6 @@ import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market'
 import type { MarketMetadata } from '$lib/types/market-metadata';
 import type { Activity } from '$lib/types/social';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
-import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import {
 	calculateCategoricalProbabilities,
 	calculateMarketStats,
@@ -292,6 +290,110 @@ const fetchMarkets = async ({
 };
 
 /**
+ * Cheap variant of {@link fetchMarkets} used by the Flow ranking path:
+ * builds `Market` view-models straight from the series list + activity
+ * resolution map, *without* a per-market `getOrderBook` call. Resolved-
+ * only series (present in activities but no longer in `listSeries`) are
+ * also skipped — Flow filters them out anyway.
+ *
+ * This is what kills the N+1 fan-out on `/flow` entry: ranking only
+ * needs tags / metadata / interests, so the orderbook stays unfetched
+ * until {@link enrichMarketsWithOrderBook} is called on the top-N
+ * winners after the rank.
+ */
+const fetchOpenBinaryMarketsLite = async ({
+	identity,
+	certified,
+	domain
+}: {
+	identity: Identity;
+	certified: boolean;
+	domain: RegistryDid.BalanceDomain;
+}): Promise<Market[]> => {
+	const [seriesList, activities] = await Promise.all([
+		listSeries({ identity, certified }),
+		getGlobalActivities({ certified })
+	]);
+
+	const resolutionMap = buildResolutionMap(activities);
+	const nowNs = BigInt(Date.now()) * MILLISECOND_IN_NANOSECONDS;
+
+	const markets = seriesList
+		.filter((s) => {
+			const isResolved = nonNullish(resolutionMap[s.series_id]);
+			const isExpired = s.expiry_ns <= nowNs;
+			// Flow only shows Binary markets. Check the variant
+			// explicitly so Call / Put / future payoff types stay out.
+			const isBinary = 'Binary' in s.payoff_type;
+
+			return !isResolved && !isExpired && isBinary;
+		})
+		// Lite mapping: seed `yesProbability`/`noProbability` at 0.5 (vs
+		// `mapMarketData`'s default of 0) so a card that misses
+		// enrichment — e.g. its order-book fetch fails in
+		// `enrichMarketsWithOrderBook` — still renders the neutral
+		// consensus instead of 0%/100%.
+		.map((s) =>
+			mapMarketData({ series: s, status: 'Open', yesProbability: 0.5, noProbability: 0.5 })
+		)
+		.filter(nonNullish);
+
+	return filterByPlaygroundExpandedDomain({ items: markets, targetDomain: domain });
+};
+
+/**
+ * Adds book-derived fields (`yesProbability`, `noProbability`,
+ * `bestBid`/`bestAsk`) to lite `Market` objects produced by
+ * {@link fetchOpenBinaryMarketsLite}. Called by the Flow path on just
+ * the top-N ranked markets so we pay for at most `MAX_MARKETS` round-
+ * trips instead of one per open series.
+ */
+const enrichMarketsWithOrderBook = ({
+	markets,
+	identity,
+	certified
+}: {
+	markets: Market[];
+	identity: Identity;
+	certified: boolean;
+}): Promise<Market[]> =>
+	Promise.all(
+		markets.map(async (market) => {
+			const orders = await getOrderBook({
+				marketId: market.id,
+				domain: market.balanceDomain,
+				identity,
+				certified
+			}).catch((e: unknown) => {
+				// A single failed book read should not collapse the whole deck —
+				// fall back to the neutral 0.5 prob the lite mapper assigned and
+				// let the rest of the cards render. The failing market still
+				// shows with no liquidity indicator.
+				console.error('Failed to fetch order book for flow market', market.id, e);
+
+				return [] as Awaited<ReturnType<typeof getOrderBook>>;
+			});
+
+			const { midPrice, bids, asks } = calculateMarketStats({
+				orders,
+				outcome: 'YES'
+			});
+
+			const yesProb = midPrice ?? 0.5;
+
+			return {
+				...market,
+				yesProbability: yesProb,
+				noProbability: 1 - yesProb,
+				bestBid: bids[0]?.price,
+				bestAsk: asks[0]?.price,
+				bestBidQty: bids[0]?.totalQty,
+				bestAskQty: asks[0]?.totalQty
+			};
+		})
+	);
+
+/**
  * Extracts a `seriesId -> { outcome }` map from Juno settlement activities.
  * Details are expected to be stringified JSON (`{ outcome, price }`); malformed
  * entries are skipped so they do not block the rest of the market list.
@@ -545,8 +647,18 @@ export const suggestedScore = ({
  * Ranks markets by editorial signal first (admin-flipped `suggested`,
  * linearly decayed over 14 days and auto-dropped on resolve), then
  * user interest, then a culture-fallback boost (so users with no
- * declared interests still get a meaningful feed), then activity
- * (volume) and liquidity, with `createdAt` as the final tie-breaker.
+ * declared interests still get a meaningful feed), with `createdAt`
+ * as the final tie-breaker.
+ *
+ * Earlier revisions also weighted `volumeScore` and `liquidityScore`.
+ * Both were removed: `volumeScore` keyed off `Market.totalVolume`,
+ * which `mapMarketData` hardcodes to `ZERO` (the field is never
+ * populated upstream), so it never contributed. `liquidityScore`
+ * needed `bestBid` / `bestAsk`, which the Flow path no longer fetches
+ * until *after* ranking — see `getFlowQueue` +
+ * `enrichFlowMarketsWithOrderBook`. The dropped tier was a 100-point
+ * flag dwarfed by the interest (1000) and suggested (~5000) tiers, so
+ * the top-N ordering is effectively unchanged.
  *
  * `tagMappings` is the `seriesId → MarketTag[]` projection produced by
  * {@link listMarketTagsBySeries}; a market matches user interest when
@@ -584,22 +696,15 @@ export const rankMarkets = ({
 		const cultureScore =
 			hasCultureTag && (userInterests.size === 0 || userInterests.has('culture')) ? 500 : 0;
 
-		const volumeScore =
-			m.totalVolume > ZERO
-				? Math.min(
-						decimalFixedValueToNumber({
-							value: m.totalVolume,
-							decimals: Number(m.token.decimals)
-						}) * 2,
-						200
-					)
-				: 0;
-
-		const liquidityScore = nonNullish(m.bestBid) && nonNullish(m.bestAsk) ? 100 : 0;
-
+		// `liquidityScore` and `volumeScore` used to live here but were
+		// dropped: `volumeScore` keyed off `Market.totalVolume`, which
+		// `mapMarketData` hardcodes to `ZERO`, so it never fired. And
+		// the Flow ranking path now ranks before fetching order books
+		// (see `getFlowQueue` + `enrichMarketsWithOrderBook`), so
+		// `bestBid`/`bestAsk` aren't populated at sort time anyway.
 		const recencyScore = Number(m.createdAt) / 1e12;
 
-		return suggested + interestScore + cultureScore + volumeScore + liquidityScore + recencyScore;
+		return suggested + interestScore + cultureScore + recencyScore;
 	};
 
 	return markets
@@ -611,6 +716,14 @@ export const rankMarkets = ({
 /**
  * Open binary markets ranked for the prediction flow UI using profile
  * interests and categories.
+ *
+ * The returned markets are *lite*: ranking only needs tags + metadata
+ * + interests, so no `getOrderBook` calls are issued here. Callers
+ * that want book-derived fields (`yesProbability`, `bestBid`/`bestAsk`)
+ * for the cards they actually render should call
+ * {@link enrichFlowMarketsWithOrderBook} on the final slice. This is
+ * what cuts `/flow` entry from "N order-book fetches over every open
+ * series" to "≤MAX_MARKETS book fetches over the top-N winners".
  *
  * `tagMappings` and `metadataBySeries` are optional pre-fetched
  * inputs: callers that already hold these (e.g. `prepareFlow`, which
@@ -631,7 +744,7 @@ export const getFlowQueue = async ({
 	const principal = identity.getPrincipal().toText();
 
 	const [markets, profile, resolvedTags, resolvedMeta] = await Promise.all([
-		getMarkets(domain),
+		fetchOpenBinaryMarketsLite({ identity, certified: true, domain }),
 		getProfile(principal),
 		tagMappings ?? listMarketTagsBySeries().catch(() => ({})),
 		metadataBySeries ?? listMarketMetadataBySeries().catch(() => ({}))
@@ -639,14 +752,29 @@ export const getFlowQueue = async ({
 
 	const userInterests = new Set(profile.data.interests ?? []);
 
-	const eligibleMarkets = markets.filter((m) => m.status === 'Open' && m.payoffType === 'Binary');
-
 	return rankMarkets({
-		markets: eligibleMarkets,
+		markets,
 		userInterests,
 		tagMappings: resolvedTags,
 		metadataBySeries: resolvedMeta
 	});
+};
+
+/**
+ * Public wrapper around {@link enrichMarketsWithOrderBook} for the Flow
+ * pipeline. Resolves the identity once and fans out one parallel book
+ * fetch per market — meant to be called with the already-sliced top-N
+ * (see `MAX_MARKETS` in `flow-prep.services.ts`), so the network cost
+ * is bounded by deck size instead of the number of open series.
+ */
+export const enrichFlowMarketsWithOrderBook = async (markets: Market[]): Promise<Market[]> => {
+	if (markets.length === 0) {
+		return markets;
+	}
+
+	const identity = await getIdentityOrAnonymous();
+
+	return enrichMarketsWithOrderBook({ markets, identity, certified: true });
 };
 
 /**
