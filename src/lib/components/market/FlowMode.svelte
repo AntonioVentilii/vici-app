@@ -29,9 +29,9 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
+	import { positions as positionsDerived } from '$lib/derived/positions.derived';
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
-	import { getPositions } from '$lib/services/position.services';
 	import { persistDailyStreak } from '$lib/services/profile.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
@@ -43,7 +43,6 @@
 	import type { CallSide, FlowAction, Market, MarketId } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type { UserMarketSignals } from '$lib/types/market-signals';
-	import type { Position } from '$lib/types/position';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import {
 		FLOW_ART_CATEGORY_SET,
@@ -87,7 +86,11 @@
 	let tradeAmount = $state('1.0');
 	let betsCount = $state(0);
 	let completed = $state(false);
-	let positions = $state<Position[]>([]);
+	// Positions stream in from the global `positionsStore` — kept warm
+	// by `LoaderPositions` in `(app)/+layout.svelte`. FlowMode reads
+	// the derived list directly so deck render never blocks on a
+	// per-mount certified fetch.
+	const positions = $derived($positionsDerived);
 	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
 	// the FlowCard render loop to drive the per-card generative artwork
 	// (which uses the *primary* tag — see `primaryMarketTag`).
@@ -249,10 +252,6 @@
 				metadataById: marketMetadataMap,
 				signals: userSignals
 			} = prepared);
-
-			positions = nonNullish($userStore.user)
-				? await getPositions($balanceDomain).catch(() => [])
-				: [];
 
 			const { profile } = $userStore;
 
