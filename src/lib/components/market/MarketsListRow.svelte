@@ -9,6 +9,21 @@
 	import { t } from '$lib/utils/i18n.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
+	/**
+	 * Verbatim port of prototype `MarketRow` (screens.jsx:182-193).
+	 *
+	 *   <div onClick={onClick} className="card" style={{ padding: 14, cursor: 'pointer' }}>
+	 *     <div className="row between">
+	 *       <span className="tag" style={{ color: catColor(m.cat) }}>{m.cat.toUpperCase()}</span>
+	 *       <span className="num mute t-eyebrow">{m.vol} vol · {m.closes}</span>
+	 *     </div>
+	 *     <div className="t-body" style={{ marginTop: 8, fontWeight: 600, lineHeight: 1.35 }}>{m.q}</div>
+	 *     <div className="row between" style={{ marginTop: 12, gap: 12 }}>
+	 *       <div style={{ flex: 1 }}><ProbBar yes={m.yes} /></div>
+	 *       <span className="num t-body fw-600" style={{ color: m.yes >= 50 ? 'var(--yes)' : 'var(--no)' }}>{m.yes}%</span>
+	 *     </div>
+	 *   </div>
+	 */
 	interface Props {
 		market: Market;
 		tag?: MarketTag;
@@ -16,14 +31,8 @@
 
 	const { market, tag }: Props = $props();
 
-	const yesPct = $derived(Math.round(market.yesProbability * 100));
-	// Prototype meta format: "{compact_vol} vol · {close_date}"
-	// (`screens.jsx:186`). Volume is the raw token amount formatted
-	// without a unit suffix (the "vol" label carries the meaning);
-	// closes is a localised absolute date, not a time-remaining string.
-	const volume = $derived(
-		formatToken({ value: market.totalVolume, unitName: market.token.decimals })
-	);
+	const yes = $derived(Math.round(market.yesProbability * 100));
+	const vol = $derived(formatToken({ value: market.totalVolume, unitName: market.token.decimals }));
 	const closes = $derived(
 		new Date(Number(market.expiryDate)).toLocaleDateString($localeStore, {
 			month: 'short',
@@ -31,110 +40,51 @@
 			year: 'numeric'
 		})
 	);
-	const goDetail = () => goto(resolve(`${AppPath.Markets}/${market.id}`));
+
+	const onClick = () => goto(resolve(`${AppPath.Markets}/${market.id}`));
 </script>
 
-<button class="markets-list-row" onclick={goDetail} type="button">
-	<div class="markets-list-row-head">
+<div
+	style="padding: 14px; cursor: pointer;"
+	class="card"
+	onclick={onClick}
+	onkeydown={(event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			onClick();
+		}
+	}}
+	role="button"
+	tabindex="0"
+>
+	<div class="row between">
 		{#if tag}
-			<span style:color={tagColor(tag)} class="markets-list-row-tag eyebrow-xs">
-				{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}
-			</span>
+			<span style:color={tagColor(tag)} class="tag"
+				>{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }).toUpperCase()}</span
+			>
+		{:else}
+			<span class="tag">&nbsp;</span>
 		{/if}
-		<span class="num markets-list-row-meta"
-			>{volume} {t({ locale: $localeStore, key: 'market.vol_suffix' })} · {closes}</span
+		<span class="num mute t-eyebrow"
+			>{vol} {t({ locale: $localeStore, key: 'market.vol_suffix' })} · {closes}</span
 		>
 	</div>
-
-	<p class="markets-list-row-q">{market.title}</p>
-
-	<div class="markets-list-row-foot">
-		<div class="markets-list-row-bar" aria-hidden="true">
-			<span style:width="{yesPct}%" class="markets-list-row-bar-fill"></span>
-		</div>
-		<span class="num markets-list-row-pct" class:is-no={yesPct < 50}>{yesPct}%</span>
+	<div style="margin-top: 8px; font-weight: 600; line-height: 1.35;" class="t-body">
+		{market.title}
 	</div>
-</button>
-
-<style lang="postcss">
-	.markets-list-row {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		width: 100%;
-		text-align: left;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
-		padding: 0.875rem;
-		cursor: pointer;
-		box-shadow: inset 0 1px 0 color-mix(in srgb, var(--parchment) 3%, transparent);
-		transition:
-			border-color var(--d-hover) var(--ease-vici),
-			background-color var(--d-hover) var(--ease-vici);
-	}
-
-	.markets-list-row:hover {
-		border-color: var(--border-strong);
-		background: color-mix(in srgb, var(--bg-surface) 92%, var(--parchment) 8%);
-	}
-
-	.markets-list-row-head {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.markets-list-row-tag {
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.markets-list-row-meta {
-		color: var(--text-muted);
-		font-size: var(--t-11);
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-	}
-
-	.markets-list-row-q {
-		margin: 0;
-		color: var(--text-base);
-		font-size: var(--t-15);
-		font-weight: 600;
-		line-height: 1.35;
-	}
-
-	.markets-list-row-foot {
-		display: flex;
-		align-items: center;
-		gap: 0.75rem;
-	}
-
-	.markets-list-row-bar {
-		position: relative;
-		flex: 1;
-		height: 0.5rem;
-		border-radius: var(--r-pill);
-		background: var(--no-wash);
-		overflow: hidden;
-	}
-
-	.markets-list-row-bar-fill {
-		display: block;
-		height: 100%;
-		background: linear-gradient(90deg, color-mix(in srgb, var(--yes) 70%, black), var(--yes));
-	}
-
-	.markets-list-row-pct {
-		color: var(--yes);
-		font-size: var(--t-14);
-		font-weight: 600;
-	}
-
-	.markets-list-row-pct.is-no {
-		color: var(--no);
-	}
-</style>
+	<div style="margin-top: 12px; gap: 12px;" class="row between">
+		<div style="flex: 1;">
+			<div class="probbar">
+				<i
+					style:width="{yes}%"
+					style:background={yes >= 50
+						? undefined
+						: 'linear-gradient(90deg, var(--no-deep), var(--no))'}
+				></i>
+			</div>
+		</div>
+		<span style:color={yes >= 50 ? 'var(--yes)' : 'var(--no)'} class="num t-body fw-600"
+			>{yes}%</span
+		>
+	</div>
+</div>
