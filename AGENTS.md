@@ -157,6 +157,9 @@ backend conventions is `../icdc-core/`.
   shared component, shared type, workflow, or policy, the agent **MUST**
   update the relevant `docs/ai/**` file in the same PR. See
   [`docs/ai/governance.md#meta-update-rule`](./docs/ai/governance.md#meta-update-rule).
+  When editing `docs/ai/**` itself, follow the
+  [writing-for-agents rules](./docs/ai/governance.md#writing-for-agents--meta-rules-for-docsai)
+  — only non-discoverable signal goes in, tool-specific layers stay thin.
 
 ---
 
