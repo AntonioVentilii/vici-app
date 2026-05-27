@@ -3736,7 +3736,7 @@ html[data-app='1'] body {
 	cursor: not-allowed;
 	opacity: 0.7;
 }
-.ob2-pool-refresh.spinning :global(svg) {
+.ob2-pool-refresh.spinning svg {
 	animation: ob2-spin 800ms linear infinite;
 }
 @keyframes ob2-spin {
@@ -3764,6 +3764,15 @@ html[data-app='1'] body {
 	}
 	100% {
 		background-position: -200% 0;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.ob2-pool-refresh.spinning svg {
+		animation: none;
+	}
+	.ob2-pool-chip-skeleton {
+		animation: none;
+		background: var(--ink-raised);
 	}
 }
 
