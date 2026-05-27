@@ -55,6 +55,7 @@
 		}
 
 		const tag = cat as MarketTag;
+
 		return $markets.filter((m) => matchesTag({ market: m, tag }));
 	});
 

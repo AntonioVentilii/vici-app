@@ -9,6 +9,28 @@
 	import { t } from '$lib/utils/i18n.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
+	/**
+	 * Verbatim port of prototype `FeaturedCard` (screens.jsx:161-179).
+	 *
+	 *   <div onClick={onClick} className="card" style={{
+	 *     flex: '0 0 280px', cursor: 'pointer', padding: 14,
+	 *     background: 'linear-gradient(180deg, var(--bg-raised), var(--bg))'
+	 *   }}>
+	 *     <div className="row between">
+	 *       <span className="tag" style={{ color: catColor(m.cat) }}>{m.cat.toUpperCase()}</span>
+	 *       <span className="num mute t-eyebrow">{m.vol}</span>
+	 *     </div>
+	 *     <div style={{ marginTop: 12, fontSize: 15, fontWeight: 600, lineHeight: 1.3, minHeight: 58 }}>{m.q}</div>
+	 *     <div className="row between" style={{ marginTop: 14 }}>
+	 *       <span className="num yes t-h4" style={{ fontWeight: 600 }}>{m.yes}%</span>
+	 *       <span className="row" style={{ gap: 4 }}>
+	 *         <span className="tag yes">YES</span>
+	 *         <span className="tag no">NO</span>
+	 *       </span>
+	 *     </div>
+	 *     <div style={{ marginTop: 8 }}><ProbBar yes={m.yes} /></div>
+	 *   </div>
+	 */
 	interface Props {
 		market: Market;
 		tag?: MarketTag;
@@ -16,9 +38,8 @@
 
 	const { market, tag }: Props = $props();
 
-	const yesPct = $derived(Math.round(market.yesProbability * 100));
-	const noPct = $derived(Math.max(0, 100 - yesPct));
-	const volume = $derived(
+	const yes = $derived(Math.round(market.yesProbability * 100));
+	const vol = $derived(
 		formatVolume({
 			volume: market.totalVolume,
 			decimals: market.token.decimals,
@@ -26,151 +47,52 @@
 		})
 	);
 
-	const onActivate = () => goto(resolve(`${AppPath.Markets}/${market.id}`));
+	const onClick = () => goto(resolve(`${AppPath.Markets}/${market.id}`));
 </script>
 
-<button class="markets-featured-card" onclick={onActivate} type="button">
-	<div class="markets-featured-head">
+<div
+	style="flex: 0 0 280px; cursor: pointer; padding: 14px; background: linear-gradient(180deg, var(--bg-popover), var(--bg-base));"
+	class="card"
+	onclick={onClick}
+	onkeydown={(event) => {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			onClick();
+		}
+	}}
+	role="button"
+	tabindex="0"
+>
+	<div class="row between">
 		{#if tag}
-			<span style:color={tagColor(tag)} class="markets-featured-tag eyebrow-xs">
-				{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}
-			</span>
+			<span style:color={tagColor(tag)} class="tag"
+				>{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }).toUpperCase()}</span
+			>
 		{:else}
-			<span class="markets-featured-tag eyebrow-xs">&nbsp;</span>
+			<span class="tag">&nbsp;</span>
 		{/if}
-		<span class="num markets-featured-vol">{volume}</span>
+		<span class="num mute t-eyebrow">{vol}</span>
 	</div>
-
-	<p class="markets-featured-q">{market.title}</p>
-
-	<div class="markets-featured-foot">
-		<span class="num markets-featured-yes" class:is-no={yesPct < 50}>{yesPct}%</span>
-		<div class="markets-featured-pair">
-			<span class="tag-yes eyebrow-xs">{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
-			<span class="tag-no eyebrow-xs">{t({ locale: $localeStore, key: 'outcome.no' })}</span>
+	<div
+		style="margin-top: 12px; font-size: 15px; font-weight: 600; line-height: 1.3; min-height: 58px;"
+	>
+		{market.title}
+	</div>
+	<div style="margin-top: 14px;" class="row between">
+		<span style:color="var(--yes)" style:font-weight="600" class="num yes t-h4">{yes}%</span>
+		<span style="gap: 4px;" class="row">
+			<span class="tag yes">{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
+			<span class="tag no">{t({ locale: $localeStore, key: 'outcome.no' })}</span>
+		</span>
+	</div>
+	<div style="margin-top: 8px;">
+		<div class="probbar">
+			<i
+				style:width="{yes}%"
+				style:background={yes >= 50
+					? undefined
+					: 'linear-gradient(90deg, var(--no-deep), var(--no))'}
+			></i>
 		</div>
 	</div>
-
-	<div class="markets-featured-bar" aria-hidden="true">
-		<span style:width="{yesPct}%" class="markets-featured-bar-fill"></span>
-	</div>
-	<span class="sr-only">YES {yesPct}% · NO {noPct}%</span>
-</button>
-
-<style lang="postcss">
-	.markets-featured-card {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		width: 17.5rem;
-		flex-shrink: 0;
-		scroll-snap-align: start;
-		text-align: left;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-16);
-		background: linear-gradient(180deg, var(--bg-elevated, var(--bg-surface)), var(--bg-surface));
-		padding: 0.875rem;
-		box-shadow: inset 0 1px 0 color-mix(in srgb, var(--parchment) 4%, transparent);
-		cursor: pointer;
-		transition:
-			border-color var(--d-hover) var(--ease-vici),
-			background-color var(--d-hover) var(--ease-vici);
-	}
-
-	.markets-featured-card:hover {
-		border-color: var(--border-strong);
-	}
-
-	.markets-featured-head {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.markets-featured-tag {
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.markets-featured-vol {
-		color: var(--text-muted);
-		font-size: var(--t-11);
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-	}
-
-	.markets-featured-q {
-		/* Prototype FeaturedCard (screens.jsx:170) pins min-height to 58px
-		   so the YES/NO row sits at the same baseline across the trending
-		   rail regardless of question length. */
-		margin: 0;
-		min-height: 3.625rem;
-		color: var(--text-base);
-		font-size: var(--t-15);
-		font-weight: 600;
-		line-height: 1.3;
-		display: -webkit-box;
-		-webkit-line-clamp: 3;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-
-	.markets-featured-foot {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.markets-featured-yes {
-		color: var(--yes);
-		font-size: var(--t-18);
-		font-weight: 600;
-	}
-
-	.markets-featured-yes.is-no {
-		color: var(--no);
-	}
-
-	.markets-featured-pair {
-		display: inline-flex;
-		gap: 0.25rem;
-	}
-
-	.tag-yes,
-	.tag-no {
-		display: inline-flex;
-		align-items: center;
-		border-radius: 4px;
-		padding: 0.15rem 0.4rem;
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.tag-yes {
-		background: var(--yes-wash);
-		color: var(--yes);
-	}
-
-	.tag-no {
-		background: var(--no-wash);
-		color: var(--no);
-	}
-
-	.markets-featured-bar {
-		position: relative;
-		height: 0.5rem;
-		border-radius: var(--r-pill);
-		background: var(--no-wash);
-		overflow: hidden;
-	}
-
-	.markets-featured-bar-fill {
-		display: block;
-		height: 100%;
-		background: linear-gradient(90deg, color-mix(in srgb, var(--yes) 70%, black), var(--yes));
-	}
-</style>
+</div>
