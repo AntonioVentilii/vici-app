@@ -85,6 +85,16 @@
 	let tradeAmount = $state('1.0');
 	let betsCount = $state(0);
 	let completed = $state(false);
+	// Session-summary metrics. `sessionStartMs` is stamped at mount;
+	// `correctCallsThisSession` increments each time `alignedWithCrowd`
+	// is true on a committed YES / NO swipe. Together they drive the
+	// `You called N markets in 1m 18s.` line and the SESSION ACC.
+	// stat on FlowEnd.
+	const sessionStartMs = Date.now();
+	let correctCallsThisSession = $state(0);
+	// `nowMs` ticks once per second while the session is in flight so
+	// the duration label updates live before the user finishes.
+	let nowMs = $state(Date.now());
 	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
 	// the FlowCard render loop to drive the per-card generative artwork
 	// (which uses the *primary* tag — see `primaryMarketTag`).
@@ -210,6 +220,39 @@
 				return 'double-pulse';
 		}
 	};
+
+	// Session duration ticker. 1 s cadence is plenty — the duration
+	// label renders to seconds (`Xm Ys` / `Ys`) and the user never sees
+	// sub-second precision. Stops when `completed` flips true so the
+	// FlowEnd label freezes at the final value.
+	$effect(() => {
+		if (completed) {
+			return;
+		}
+
+		const id = setInterval(() => {
+			nowMs = Date.now();
+		}, 1000);
+
+		return () => clearInterval(id);
+	});
+
+	const sessionDurationLabel = $derived.by(() => {
+		const secs = Math.max(0, Math.floor((nowMs - sessionStartMs) / 1000));
+		const m = Math.floor(secs / 60);
+		const s = secs % 60;
+
+		return m > 0 ? `${m}m ${s}s` : `${s}s`;
+	});
+
+	const sessionAccuracy = $derived(betsCount > 0 ? correctCallsThisSession / betsCount : 0);
+
+	// Daily goal heuristic — until the satellite exposes a per-user
+	// daily target, default to 10 predictions/day. Progress is capped
+	// at 100 % so the bar / percent never overflows mid-session.
+	const DAILY_GOAL_TARGET = 10;
+	const dailyGoalDone = $derived(Math.min(betsCount, DAILY_GOAL_TARGET));
+	const dailyGoalFraction = $derived(dailyGoalDone / DAILY_GOAL_TARGET);
 
 	onMount(async () => {
 		document.body.classList.add('overflow-hidden');
@@ -487,6 +530,10 @@
 		const alignedWithCrowd =
 			(action === 'YES' && yesProb >= 0.5) || (action === 'NO' && yesProb < 0.5);
 
+		if (alignedWithCrowd) {
+			correctCallsThisSession += 1;
+		}
+
 		const motion = recordMotionSwipe({
 			side: action,
 			isContrarian,
@@ -571,6 +618,50 @@
 
 	const backToMarkets = () => {
 		goto(resolve(AppPath.Home));
+	};
+
+	// "Predict 10 more" CTA on FlowEnd — rebuilds a fresh deck and
+	// zeroes the in-session counters. The lifetime / motion-engine
+	// state stays untouched (it tracks across sessions). XP earned in
+	// the prior session has already been credited via the trade flow,
+	// so we don't re-award it.
+	const handleContinueSession = async () => {
+		const expectedTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
+		const excluded = markets.slice(0, currentIndex + 1).map((m) => m.id);
+
+		completed = false;
+		loading = true;
+
+		try {
+			const prepared = await prepareFlow({
+				domain: $balanceDomain,
+				featuredEventTag: expectedTag,
+				signedIn: nonNullish($userStore.user),
+				exclude: excluded
+			});
+
+			({
+				markets,
+				tagMap: marketTagMap,
+				metadataById: marketMetadataMap,
+				signals: userSignals
+			} = prepared);
+			currentIndex = 0;
+			betsCount = 0;
+			correctCallsThisSession = 0;
+			xp = 0;
+			streak = 0;
+			lastStreakShown = 0;
+			nowMs = Date.now();
+		} catch (e: unknown) {
+			console.error('Failed to refresh Flow deck', e);
+		} finally {
+			loading = false;
+		}
+	};
+
+	const handleSeePortfolio = () => {
+		goto(resolve(AppPath.Portfolio));
 	};
 
 	// The back-face peg-rail owns stake selection on the VXP balance
@@ -664,13 +755,21 @@
 	{:else if completed}
 		<FlowEnd
 			{accuracyUnlocked}
+			archetype={$userStore.profile?.archetype}
 			{betsCount}
+			{dailyGoalDone}
+			{dailyGoalFraction}
+			dailyGoalTarget={DAILY_GOAL_TARGET}
 			{dailyStreak}
 			{flameLabel}
 			{flameStage}
 			{lifetimeAccuracy}
 			{lifetimeTotalTrades}
 			onBackToMarkets={backToMarkets}
+			onContinueSession={handleContinueSession}
+			onSeePortfolio={handleSeePortfolio}
+			{sessionAccuracy}
+			{sessionDurationLabel}
 			{xp}
 		/>
 	{:else}
