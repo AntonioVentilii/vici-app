@@ -5,16 +5,26 @@ export type AchievementTier = 'gold' | 'silver' | 'bronze';
 /**
  * Achievement definition — drives the Album tile + the unlock toast.
  *
- * `emblem` is a single unicode glyph rendered in the centre of the
- * tile. Matches the design source's AlbumScreen exactly
- * (`screens.jsx:4650`): each award has its own emblem
- * (`◎ ★ ⚡ ⌬ ⊿ ✦ ◐ ⧖ ⌘`). `tier` decides the wash colour
- * (gold = laurel-tinted, silver / bronze for monthly-leaderboard
- * achievements once they ship).
+ * On the profile + album surfaces the canonical render is the lucide
+ * `Trophy` outline glyph with the tier-tinted wash (every award shows
+ * the same trophy mark, matching the prototype's AlbumScreen).
+ * `emblem` is kept as a single unicode fallback glyph for surfaces
+ * that render the def out-of-band (Dash next-up rail) and for
+ * screen-reader / plain-text contexts. The catalogue uses the brand's
+ * approved glyph set (`◎ ★ ⚡ ⧖ ◐ ⌘` — see `docs/ai/frontend/brand.md`).
+ *
+ * `tier` decides the wash colour (gold = laurel-tinted; silver /
+ * bronze are reserved for monthly-leaderboard achievements once they
+ * ship).
  *
  * `detailKey` is the rich multi-sentence prose surfaced in the
  * bottom-sheet modal — distinct from the short `descriptionKey`
  * sub-line on the tile.
+ *
+ * The order in this array is the default render order for the
+ * profile achievement rail before progress-sorting kicks in: it leads
+ * with the prototype's first-render trio (`lvl-25`, `contrarian`,
+ * `marathon`).
  */
 export interface AchievementDef {
 	id: string;
@@ -27,6 +37,33 @@ export interface AchievementDef {
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
+	{
+		id: 'lvl-25',
+		nameKey: 'achievement.lvl_25.name',
+		descriptionKey: 'achievement.lvl_25.description',
+		detailKey: 'achievement.lvl_25.detail',
+		emblem: '⌘',
+		tier: 'gold',
+		xp: 1000
+	},
+	{
+		id: 'contrarian',
+		nameKey: 'achievement.contrarian.name',
+		descriptionKey: 'achievement.contrarian.description',
+		detailKey: 'achievement.contrarian.detail',
+		emblem: '⧖',
+		tier: 'gold',
+		xp: 400
+	},
+	{
+		id: 'marathon',
+		nameKey: 'achievement.marathon.name',
+		descriptionKey: 'achievement.marathon.description',
+		detailKey: 'achievement.marathon.detail',
+		emblem: '◐',
+		tier: 'gold',
+		xp: 800
+	},
 	{
 		id: 'first-blood',
 		nameKey: 'achievement.first_blood.name',
@@ -53,33 +90,6 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 		emblem: '★',
 		tier: 'gold',
 		xp: 500
-	},
-	{
-		id: 'contrarian',
-		nameKey: 'achievement.contrarian.name',
-		descriptionKey: 'achievement.contrarian.description',
-		detailKey: 'achievement.contrarian.detail',
-		emblem: '⧖',
-		tier: 'gold',
-		xp: 400
-	},
-	{
-		id: 'marathon',
-		nameKey: 'achievement.marathon.name',
-		descriptionKey: 'achievement.marathon.description',
-		detailKey: 'achievement.marathon.detail',
-		emblem: '◐',
-		tier: 'gold',
-		xp: 800
-	},
-	{
-		id: 'lvl-25',
-		nameKey: 'achievement.lvl_25.name',
-		descriptionKey: 'achievement.lvl_25.description',
-		detailKey: 'achievement.lvl_25.detail',
-		emblem: '⌘',
-		tier: 'gold',
-		xp: 1000
 	}
 ];
 

@@ -1068,7 +1068,7 @@ export const zhCnMessages = {
 	'profile.dashboard.handle_label': '昵称',
 	'profile.dashboard.joined': '加入于 {date}',
 	'profile.dashboard.lifetime_stats': '{calls} 次预测 · {accuracy}% 准确率',
-	'profile.dashboard.identity_meta': '等级 {level} · {accuracy}% 准确率',
+	'profile.dashboard.identity_meta': '等级 {level} · 全球 {rank} · {accuracy}% 准确率',
 	'profile.dashboard.calls_count': '{calls} 次预测',
 	'profile.dashboard.level_label': '等级',
 	'profile.dashboard.fire_line': '{streak} · {trades} 次预测',

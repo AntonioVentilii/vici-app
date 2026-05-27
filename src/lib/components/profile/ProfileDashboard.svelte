@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, Flame, Lock, Pencil, X } from 'lucide-svelte';
+	import { Check, Flame, Lock, Pencil, Trophy, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -11,6 +11,7 @@
 	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
+	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { listMyAffiliations } from '$lib/services/worlds.services';
@@ -288,6 +289,23 @@
 	const vxpBalanceLabel = $derived(`${vxpBalance.toLocaleString($localeStore)} VXP`);
 
 	const accuracyDisplay = $derived((Math.round(accuracy * 10) / 10).toFixed(0));
+
+	/**
+	 * Global rank — viewer's 1-based index in the cached leaderboard.
+	 * The leaderboard is populated lazily by `LoaderLeaderboard` on app
+	 * boot; when the slice hasn't resolved yet (or the viewer isn't in
+	 * it), we render an em-dash placeholder rather than omitting the
+	 * chip entirely, so the stats-line layout stays stable across
+	 * loads. Mirrors the prototype's `#{me.rank} global` slot at
+	 * `screens.jsx:928`.
+	 */
+	const globalRank = $derived.by<number | undefined>(() => {
+		const idx = $leaderboard.findIndex((entry) => entry.owner === profile.owner);
+
+		return idx === -1 ? undefined : idx + 1;
+	});
+
+	const globalRankDisplay = $derived(globalRank === undefined ? '—' : `#${globalRank}`);
 
 	/**
 	 * Joined date — derived from the Juno doc's `created_at` (ns).
@@ -654,19 +672,20 @@
 					{t({
 						locale: $localeStore,
 						key: 'profile.dashboard.identity_meta',
-						params: { level, accuracy: accuracyDisplay }
+						params: { level, rank: globalRankDisplay, accuracy: accuracyDisplay }
 					})}
 				</p>
 
-				<!-- Row 4: inline streak + calls (Flame N · M calls) -->
+				<!-- Row 4: inline streak + calls (Flame N · M calls).
+				     Always rendered — the flame stays visible even at
+				     streak=0 to match the prototype's persistent
+				     row at screens.jsx:929-932. -->
 				<p class="profile-streak-line">
-					{#if dailyStreak > 0}
-						<span class="profile-streak-inline" aria-label="streak">
-							<Flame aria-hidden="true" size={12} strokeWidth={2} />
-							<span class="num">{dailyStreak}</span>
-						</span>
-						<span class="profile-stats-sep" aria-hidden="true">·</span>
-					{/if}
+					<span class="profile-streak-inline" aria-label="streak">
+						<Flame aria-hidden="true" size={12} strokeWidth={2} />
+						<span class="num">{dailyStreak}</span>
+					</span>
+					<span class="profile-stats-sep" aria-hidden="true">·</span>
 					<span class="num">
 						{t({
 							locale: $localeStore,
@@ -828,7 +847,7 @@
 					class:is-unlocked={unlocked}
 				>
 					<span class="profile-achievement-emblem" aria-hidden="true">
-						{evaluation.def.emblem}
+						<Trophy size={18} strokeWidth={1.8} />
 					</span>
 					<div class="profile-achievement-text">
 						<span class="profile-achievement-name">
@@ -1003,17 +1022,25 @@
 		box-shadow: var(--shadow-card);
 	}
 
-	/* Radial gradient ring tinted by the user's archetype accent. */
+	/* Radial gradient halo tinted by the user's archetype accent.
+	   Anchored under the avatar quadrant (top-left) and sized large
+	   enough to visibly tint the surrounding area — mirrors the
+	   prototype's archetype-tinted backdrop behind the pixel-art
+	   character. */
 	.profile-halo {
 		position: absolute;
-		top: -30px;
-		right: -30px;
-		width: 140px;
-		height: 140px;
+		top: -60px;
+		left: -40px;
+		width: 220px;
+		height: 220px;
 		border-radius: 50%;
-		background: var(--archetype-accent, var(--color-primary));
-		opacity: 0.1;
-		filter: blur(20px);
+		background: radial-gradient(
+			circle at 50% 50%,
+			var(--archetype-accent, var(--color-primary)) 0%,
+			transparent 65%
+		);
+		opacity: 0.28;
+		filter: blur(14px);
 		pointer-events: none;
 	}
 
@@ -1167,8 +1194,7 @@
 		color: var(--text-muted);
 		font-family: var(--font-mono);
 		font-size: var(--t-12);
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
+		letter-spacing: 0.02em;
 	}
 
 	.profile-streak-line :global(.num) {
@@ -1210,7 +1236,17 @@
 		color: var(--color-primary);
 	}
 
-	.profile-stats-line,
+	.profile-stats-line {
+		margin: 0;
+		display: flex;
+		align-items: center;
+		gap: 0.35rem;
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: var(--t-12);
+		letter-spacing: 0.02em;
+	}
+
 	.profile-joined-line {
 		margin: 0;
 		display: flex;

@@ -1117,7 +1117,7 @@ export const ptMessages = {
 	'profile.dashboard.handle_label': 'Usuário',
 	'profile.dashboard.joined': 'Entrou em {date}',
 	'profile.dashboard.lifetime_stats': '{calls} previsões · {accuracy}% de precisão',
-	'profile.dashboard.identity_meta': 'Nv {level} · {accuracy}% de precisão',
+	'profile.dashboard.identity_meta': 'Nv {level} · {rank} global · {accuracy}% de precisão',
 	'profile.dashboard.calls_count': '{calls} previsões',
 	'profile.dashboard.level_label': 'NÍVEL',
 	'profile.dashboard.fire_line': '{streak} · {trades} previsões',
