@@ -1,38 +1,85 @@
 <script lang="ts">
+	/**
+	 * Verbatim port of the prototype's `LeagueShowcase`
+	 * (`landing.jsx:871-974`). Mini league leaderboard mock (Office
+	 * Hex) — top 3 members + the user's row highlighted, demonstrating
+	 * the private cohort competition layer.
+	 */
 	import { ChevronRight } from 'lucide-svelte/icons';
-	import { WELCOME_LEAGUE_SHOWCASE } from '$lib/constants/welcome-social-panels.constants';
+	import { LANDING_LEAGUES } from '$lib/constants/landing-data.constants';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { formatLocalePercent as formatAccuracy } from '$lib/utils/format.utils';
+	import { formatLocalePercent } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
-	/**
-	 * Panel 01 — Your League. Mini league leaderboard mock (Office Hex)
-	 * showing the top 3 + the user's row highlighted. Mirrors the
-	 * prototype's `<LeagueShowcase>` in landing.jsx:871.
-	 */
-	const league = WELCOME_LEAGUE_SHOWCASE;
+	const league = LANDING_LEAGUES.find((l) => l.id === 'office-hex') ?? LANDING_LEAGUES[0];
+	const ranked = [...league.members].sort((a, b) => a.rank - b.rank);
+	const top3 = ranked.slice(0, 3);
+	const youRow = ranked.find((m) => m.kls === 'you');
+	const youInTop = youRow ? top3.some((m) => m.handle === youRow.handle) : false;
+	const rows = youInTop ? top3 : youRow ? [...top3, youRow] : top3;
+
+	const fmtAcc = (acc: number): string =>
+		formatLocalePercent({ value: acc, locale: $localeStore, maximumFractionDigits: 1 });
 </script>
 
-<article class="welcome-panel welcome-panel--league">
-	<header class="welcome-panel-head">
-		<span class="eyebrow acc welcome-panel-eyebrow">
+<div
+	style="
+		padding:20px; position:relative; overflow:hidden;
+		display:flex; flex-direction:column;
+		background:linear-gradient(180deg, rgba(226,184,66,0.08), rgba(226,184,66,0.02) 60%, transparent);
+	"
+	class="card-elevated lp-root"
+>
+	<div
+		style="margin-bottom:8px; align-items:baseline; flex-wrap:wrap; gap:8px;"
+		class="row between"
+	>
+		<span style="letter-spacing:0.12em;" class="eyebrow acc">
 			{t({ locale: $localeStore, key: 'social.l_eyebrow' })}
 		</span>
-	</header>
-
-	<h3 class="welcome-panel-title">
+	</div>
+	<h3 style="margin-top:4px;" class="lp-h3">
 		{t({ locale: $localeStore, key: 'social.l_title_a' })}
 		<span class="serif-italic acc">{t({ locale: $localeStore, key: 'social.l_title_b' })}</span>
 	</h3>
-	<p class="welcome-panel-sub">{t({ locale: $localeStore, key: 'social.l_sub' })}</p>
+	<p style="margin-top:10px; line-height:1.5;" class="dim t-body-sm">
+		{t({ locale: $localeStore, key: 'social.l_sub' })}
+	</p>
 
-	<div class="welcome-league-card">
-		<div style:--league-color={league.color} class="welcome-league-header">
-			<div class="welcome-league-brand">
-				<span style:background={league.color} class="welcome-league-emblem">{league.emblem}</span>
-				<span class="welcome-league-name">{league.name}</span>
+	<div
+		style="
+			margin-top:18px; border-radius:10px; overflow:hidden;
+			background:rgba(14,13,11,0.20); border:1px solid var(--border);
+		"
+	>
+		<div
+			style="
+				padding:10px 14px;
+				display:flex; align-items:center; justify-content:space-between;
+				border-bottom:1px solid var(--border);
+				background:linear-gradient(180deg, {league.color}26, transparent);
+			"
+		>
+			<div style="gap:8px; align-items:center; min-width:0;" class="row">
+				<span
+					style="
+						width:24px; height:24px; border-radius:6px;
+						display:inline-flex; align-items:center; justify-content:center;
+						background:{league.color}; color:#0E0D0B; flex:none;
+						font-family:var(--font-serif); font-style:italic;
+						font-size:14px; line-height:1; font-weight:400;
+					"
+				>
+					{league.emblem}
+				</span>
+				<span
+					style="color:var(--fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
+					class="t-body-sm fw-600"
+				>
+					{league.name}
+				</span>
 			</div>
-			<span class="num welcome-league-meta">
+			<span style="letter-spacing:0.10em; flex-shrink:0;" class="num mute t-micro">
 				{t({
 					locale: $localeStore,
 					key: 'social.l_members',
@@ -40,262 +87,82 @@
 				})}
 			</span>
 		</div>
-
-		<ul class="welcome-league-rows">
-			{#each league.members as member, idx (member.handle)}
-				{@const isYou = member.kind === 'you'}
-				{@const isGold = member.kind === 'gold'}
-				<li
-					class="welcome-league-row"
-					class:is-divider={idx === 3}
-					class:is-first={idx === 0}
-					class:is-you={isYou}
+		{#each rows as m, i (m.handle)}
+			{@const isYou = m.kls === 'you'}
+			{@const skipDivider = i === 3 && !youInTop}
+			<div
+				style="
+					padding:8px 14px;
+					display:grid; grid-template-columns:26px 1fr auto; gap:10px;
+					align-items:center;
+					border-top:{skipDivider
+					? '1px dashed var(--border-strong)'
+					: i === 0
+						? 'none'
+						: '1px solid var(--border)'};
+					background:{isYou ? 'rgba(226,184,66,0.06)' : 'transparent'};
+				"
+			>
+				<span
+					style="
+						color:{isYou ? 'var(--accent)' : m.rank <= 3 ? 'var(--fg)' : 'var(--fg-mute)'};
+						font-weight:{m.rank <= 3 || isYou ? 700 : 500}; font-size:12px;
+					"
+					class="num"
 				>
-					<span class="num welcome-league-rank" class:is-top={member.rank <= 3 || isYou}>
-						#{member.rank}
+					#{m.rank}
+				</span>
+				<div style="gap:8px; align-items:center; min-width:0;" class="row">
+					<span
+						style="
+							width:20px; height:20px; border-radius:999px; flex:none;
+							background:{m.shirt}; display:inline-flex;
+							align-items:center; justify-content:center;
+							font-size:9px; font-weight:700;
+							color:#0E0D0B; text-transform:uppercase;
+							border:1.5px solid var(--bg-raised);
+						"
+						aria-hidden="true"
+					>
+						{m.handle.charAt(0)}
 					</span>
-					<span class="welcome-league-handle">
-						<span style:background={member.shirt} class="welcome-league-avatar" aria-hidden="true">
-							{member.handle.charAt(0).toUpperCase()}
-						</span>
-						<span class="welcome-league-name-row">
-							@{member.handle}{#if isYou}<span class="eyebrow welcome-league-you-suffix">
-									· {t({ locale: $localeStore, key: 'social.l_you' })}
-								</span>{/if}
-						</span>
+					<span
+						style="
+							color:{isYou ? 'var(--accent)' : 'var(--fg)'};
+							overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+							min-width:0;
+						"
+						class="t-body-sm fw-600"
+					>
+						@{m.handle}{#if isYou}
+							<span style="margin-left:4px; letter-spacing:0.08em;" class="t-eyebrow mute">
+								· {t({ locale: $localeStore, key: 'social.l_you' })}
+							</span>
+						{/if}
 					</span>
-					<span class="num welcome-league-accuracy" class:is-gold={isGold} class:is-you={isYou}>
-						{formatAccuracy({ value: member.accuracy, locale: $localeStore })}
-					</span>
-				</li>
-			{/each}
-		</ul>
+				</div>
+				<span
+					style="
+						color:{isYou ? 'var(--accent)' : m.kls === 'gold' ? 'var(--accent)' : 'var(--fg)'};
+						font-weight:700; font-size:12px;
+					"
+					class="num"
+				>
+					{fmtAcc(m.acc)}
+				</span>
+			</div>
+		{/each}
 	</div>
 
-	<a class="welcome-panel-cta" href="#leagues">
+	<a
+		style="
+			display:inline-flex; align-items:center; gap:6px; margin-top:auto; padding-top:16px;
+			color:var(--accent); text-decoration:none; font-weight:600; font-size:14px;
+		"
+		class="lp-social-cta"
+		href="#leagues"
+	>
 		{t({ locale: $localeStore, key: 'social.l_cta' })}
-		<ChevronRight aria-hidden="true" size={14} />
+		<ChevronRight size={14} />
 	</a>
-</article>
-
-<style lang="postcss">
-	.welcome-panel--league {
-		background: linear-gradient(
-			180deg,
-			color-mix(in srgb, var(--laurel) 8%, transparent),
-			color-mix(in srgb, var(--laurel) 2%, transparent) 60%,
-			transparent
-		);
-	}
-
-	.welcome-panel {
-		display: flex;
-		flex-direction: column;
-		gap: 0.625rem;
-		padding: 1.25rem;
-		border: 1px solid var(--border);
-		border-radius: 18px;
-		background-color: var(--card);
-		box-shadow: var(--shadow-card);
-		position: relative;
-		overflow: hidden;
-	}
-
-	.welcome-panel-head {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.5rem;
-		flex-wrap: wrap;
-	}
-
-	.welcome-panel-eyebrow {
-		letter-spacing: 0.12em;
-	}
-
-	.welcome-panel-title {
-		margin: 0.25rem 0 0;
-		color: var(--foreground);
-		font-size: clamp(1.25rem, 2.2vw, 1.5rem);
-		font-weight: 700;
-		line-height: 1.15;
-		letter-spacing: -0.015em;
-	}
-
-	.welcome-panel-sub {
-		margin: 0.5rem 0 0;
-		color: var(--muted-foreground);
-		font-size: var(--t-13);
-		line-height: 1.5;
-	}
-
-	.welcome-league-card {
-		margin-top: 1.125rem;
-		overflow: hidden;
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		background: color-mix(in srgb, var(--foreground) 6%, transparent);
-	}
-
-	.welcome-league-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		padding: 0.625rem 0.875rem;
-		border-bottom: 1px solid var(--border);
-		background: linear-gradient(
-			180deg,
-			color-mix(in srgb, var(--league-color) 18%, transparent),
-			transparent
-		);
-	}
-
-	.welcome-league-brand {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		min-width: 0;
-	}
-
-	.welcome-league-emblem {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.5rem;
-		height: 1.5rem;
-		flex: 0 0 auto;
-		border-radius: 6px;
-		color: var(--ink);
-		font-family: var(--font-serif);
-		font-size: 0.75rem;
-		font-style: italic;
-		font-weight: 400;
-		line-height: 1;
-	}
-
-	.welcome-league-name {
-		overflow: hidden;
-		color: var(--foreground);
-		font-size: var(--t-13);
-		font-weight: 700;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.welcome-league-meta {
-		flex-shrink: 0;
-		color: var(--muted-foreground);
-		font-size: 11px;
-		letter-spacing: 0.1em;
-	}
-
-	.welcome-league-rows {
-		margin: 0;
-		padding: 0;
-		list-style: none;
-	}
-
-	.welcome-league-row {
-		display: grid;
-		grid-template-columns: 1.625rem 1fr auto;
-		gap: 0.625rem;
-		align-items: center;
-		padding: 0.5rem 0.875rem;
-		border-top: 1px solid var(--border);
-	}
-
-	.welcome-league-row.is-first {
-		border-top: none;
-	}
-
-	.welcome-league-row.is-divider {
-		border-top: 1px dashed color-mix(in srgb, var(--foreground) 25%, transparent);
-	}
-
-	.welcome-league-row.is-you {
-		background: color-mix(in srgb, var(--laurel) 6%, transparent);
-	}
-
-	.welcome-league-rank {
-		color: var(--muted-foreground);
-		font-size: 12px;
-		font-weight: 500;
-	}
-
-	.welcome-league-rank.is-top {
-		color: var(--foreground);
-		font-weight: 700;
-	}
-
-	.welcome-league-row.is-you .welcome-league-rank {
-		color: var(--color-accent);
-	}
-
-	.welcome-league-handle {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.5rem;
-		min-width: 0;
-	}
-
-	.welcome-league-avatar {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.25rem;
-		height: 1.25rem;
-		flex: 0 0 auto;
-		border: 1.5px solid var(--background);
-		border-radius: 999px;
-		color: var(--ink);
-		font-size: 9px;
-		font-weight: 700;
-		text-transform: uppercase;
-	}
-
-	.welcome-league-name-row {
-		overflow: hidden;
-		color: var(--foreground);
-		font-size: var(--t-13);
-		font-weight: 700;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.welcome-league-row.is-you .welcome-league-name-row {
-		color: var(--color-accent);
-	}
-
-	.welcome-league-you-suffix {
-		margin-left: 0.25rem;
-		color: var(--muted-foreground);
-		letter-spacing: 0.08em;
-	}
-
-	.welcome-league-accuracy {
-		color: var(--foreground);
-		font-size: 12px;
-		font-weight: 700;
-	}
-
-	.welcome-league-accuracy.is-gold,
-	.welcome-league-accuracy.is-you {
-		color: var(--color-accent);
-	}
-
-	.welcome-panel-cta {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.375rem;
-		margin-top: auto;
-		padding-top: 1rem;
-		color: var(--color-accent);
-		font-size: var(--t-14);
-		font-weight: 600;
-		text-decoration: none;
-	}
-
-	.welcome-panel-cta:hover {
-		color: var(--laurel-deep);
-	}
-</style>
+</div>

@@ -1,4 +1,15 @@
 <script lang="ts">
+	/**
+	 * Verbatim port of the prototype's `Landing` component
+	 * (`landing.jsx:20-46`). Renders WelcomeNav (desktop+mobile),
+	 * Ticker (locked at top per user request — the only intentional
+	 * divergence), Hero, WCFeature, LiveMarkets, FlowFeature,
+	 * SocialProof, Loop, FAQ, TrustAndClose, Footer.
+	 *
+	 * The hero copy + visual is inlined here (rather than extracted)
+	 * to mirror the prototype's `<Hero>` (`landing.jsx:384-426`),
+	 * which is also a single inline JSX block.
+	 */
 	import { ChevronRight, Clock } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
@@ -13,71 +24,54 @@
 	import WelcomeTrustAndClose from '$lib/components/landing/WelcomeTrustAndClose.svelte';
 	import Ticker from '$lib/components/layout/Ticker.svelte';
 	import WelcomeNav from '$lib/components/layout/WelcomeNav.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { WORLD_CUP_KICKOFF } from '$lib/constants/world-cup-kickoff.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
-	// Sign-in redirect for the root `/` landing is handled by the route
-	// wrapper at `src/routes/+page.svelte`. This component is also
-	// rendered on `/about` (the share-able marketing URL), where signed-
-	// in visitors deliberately stay put.
-	let shellEl = $state<HTMLDivElement | null>(null);
-
 	onMount(() => {
 		document.title = 'VICI';
-
-		// Scroll-reveal: flip `data-reveal="on"` so app.css hides each
-		// `.welcome-section` (opacity: 0). The IntersectionObserver
-		// then adds `is-in-view` as each section enters the viewport,
-		// running the `lp-fade-in` keyframe once. SSR / no-IO paths
-		// leave the shell flagless so sections stay fully visible.
-		if (!shellEl || typeof IntersectionObserver === 'undefined') {
-			return;
-		}
-
-		shellEl.dataset.reveal = 'on';
-
-		const io = new IntersectionObserver(
-			(entries) => {
-				entries.forEach((entry) => {
-					if (entry.isIntersecting) {
-						entry.target.classList.add('is-in-view');
-						io.unobserve(entry.target);
-					}
-				});
-			},
-			{ threshold: 0.08, rootMargin: '0px 0px -8% 0px' }
-		);
-
-		shellEl.querySelectorAll('.welcome-section').forEach((el) => io.observe(el));
-
-		return () => io.disconnect();
 	});
 
 	const wcDays = WORLD_CUP_KICKOFF.daysToKickoff;
 </script>
 
-<div bind:this={shellEl} class="welcome-shell">
+<div class="lp-root">
 	<WelcomeNav />
+
 	<!-- Ticker stays at the TOP per user request — intentional, locked
 	     divergence from the prototype (which places the ticker between
-	     Hero and the WC feature block). -->
+	     Hero and the WC feature block, landing.jsx:36). -->
 	<Ticker />
 
-	<main class="welcome-page">
-		<section class="welcome-hero">
-			<div class="welcome-hero-inner">
-				<div class="welcome-hero-copy">
-					<div class="welcome-hero-meta">
-						<span class="welcome-live-tag">{t({ locale: $localeStore, key: 'hero.live' })}</span>
+	<main id="main">
+		<section class="lp-hero">
+			<div class="lp-hero-inner">
+				<div class="lp-hero-copy">
+					<div style="gap:8px; margin-bottom:14px; flex-wrap:wrap;" class="row">
+						<span class="tag live">{t({ locale: $localeStore, key: 'hero.live' })}</span>
 						<span class="eyebrow acc">
-							{t({ locale: $localeStore, key: 'hero.predictors', params: { count: '184,210' } })}
+							{t({
+								locale: $localeStore,
+								key: 'hero.predictors',
+								params: { count: '184,210' }
+							})}
 						</span>
 						{#if wcDays !== null}
-							<span class="welcome-wc-chip eyebrow acc">
-								<Clock aria-hidden="true" size={11} strokeWidth={2} />
+							<span
+								style="
+									color:var(--accent); background:rgba(226,184,66,0.10);
+									border:1px solid rgba(226,184,66,0.30);
+									padding:3px 8px; border-radius:999px;
+									letter-spacing:0.12em;
+								"
+								class="eyebrow"
+							>
+								<Clock
+									style="vertical-align: middle; margin-right: 4px;"
+									size={11}
+									strokeWidth={2}
+								/>
 								{t({
 									locale: $localeStore,
 									key: 'wc.kickoff_chip',
@@ -86,262 +80,92 @@
 							</span>
 						{/if}
 					</div>
-					<h1 class="welcome-headline display">
+					<h1 class="lp-h1">
 						{t({ locale: $localeStore, key: 'hero.title_a' })}
-						<span class="serif-italic acc">{t({ locale: $localeStore, key: 'hero.title_b' })}</span>
+						<span class="serif-italic acc">
+							{t({ locale: $localeStore, key: 'hero.title_b' })}
+						</span>
 					</h1>
-					<p class="welcome-lede lede">
+					<p class="lp-lede">
 						{t({ locale: $localeStore, key: 'hero.lede_a' })}
-						<span class="serif-italic acc">{t({ locale: $localeStore, key: 'hero.lede_b' })}</span>
+						<span class="serif-italic acc">
+							{t({ locale: $localeStore, key: 'hero.lede_b' })}
+						</span>
 					</p>
-					<div class="welcome-actions">
-						<Button onclick={() => goto(PublicPath.SignUp)} size="lg">
-							<span class="welcome-cta-label">
+					<div class="lp-cta-block">
+						<div style="gap:10px; flex-wrap:wrap;" class="row">
+							<button
+								class="btn btn-primary btn-lg"
+								onclick={() => goto(PublicPath.SignUp)}
+								type="button"
+							>
 								{t({ locale: $localeStore, key: 'cta.primary' })}
-								<ChevronRight aria-hidden="true" size={16} strokeWidth={2} />
-							</span>
-						</Button>
-						<Button onclick={() => goto(AppPath.Markets)} size="lg" variant="outline">
-							{t({ locale: $localeStore, key: 'cta.see_markets' })}
-						</Button>
+								<ChevronRight size={16} />
+							</button>
+							<button
+								class="btn btn-ghost btn-lg"
+								onclick={() => goto(AppPath.Markets)}
+								type="button"
+							>
+								{t({ locale: $localeStore, key: 'cta.see_markets' })}
+							</button>
+						</div>
+						<p class="num mute lp-cta-micro">
+							{t({ locale: $localeStore, key: 'hero.micro' })}
+						</p>
 					</div>
-					<p class="welcome-micro num">{t({ locale: $localeStore, key: 'hero.micro' })}</p>
-					<div class="welcome-stats num">
-						<span
-							><span class="num">184K</span>
-							{t({ locale: $localeStore, key: 'hero.stat_active' })}</span
-						>
-						<span
-							><span class="num">2.1M</span>
-							{t({ locale: $localeStore, key: 'hero.stat_calls' })}</span
-						>
-						<span class="text-yes"
-							><span class="num">74%</span>
-							{t({ locale: $localeStore, key: 'hero.stat_top' })}</span
-						>
+					<div
+						style="gap:24px; margin-top:32px; color:var(--fg-mute); flex-wrap:wrap;"
+						class="row t-body-sm"
+					>
+						<span>
+							<span style="color:var(--fg); font-weight:600;" class="num">184K</span>
+							{t({ locale: $localeStore, key: 'hero.stat_active' })}
+						</span>
+						<span>
+							<span style="color:var(--fg); font-weight:600;" class="num">2.1M</span>
+							{t({ locale: $localeStore, key: 'hero.stat_calls' })}
+						</span>
+						<span>
+							<span style="font-weight:600;" class="num yes">74%</span>
+							{t({ locale: $localeStore, key: 'hero.stat_top' })}
+						</span>
 					</div>
 				</div>
-				<div class="welcome-hero-visual">
+				<div class="lp-hero-visual">
 					<WelcomeHeroDeck />
 				</div>
 			</div>
 		</section>
 
-		<!-- Featured-event section — landing has a dedicated tentpole
-		     block above LiveMarkets (WC). Self-gated on
-		     featuredEventActive so the section disappears post-archive
-		     without a layout change. Reads from the FeaturedEvent
-		     abstraction; swapping the next event needs no template edit. -->
-		<section id="featured-event" class="welcome-section">
-			<WelcomeFeaturedEvent />
-		</section>
-
-		<section id="markets" class="welcome-section">
-			<WelcomeLiveMarkets />
-		</section>
-
-		<section id="flow" class="welcome-section">
-			<WelcomeFlowFeature />
-		</section>
-
-		<section id="leaderboard" class="welcome-section">
-			<WelcomeSocialProof />
-		</section>
-
-		<section id="loop" class="welcome-section">
-			<WelcomeLoop />
-		</section>
-
-		<!-- FAQ sits between Loop and the combined Trust+Close, matching
-		     the prototype's `<FAQ />` → `<TrustAndClose />` ordering. -->
-		<section id="faq" class="welcome-section">
-			<WelcomeFAQ />
-		</section>
-
-		<!-- Combined Trust + Close — credibility wall + final CTA in one
-		     closing surface (prototype: `<TrustAndClose />`). -->
-		<section id="trust" class="welcome-section welcome-section--trust">
-			<WelcomeTrustAndClose />
-		</section>
+		<WelcomeFeaturedEvent />
+		<WelcomeLiveMarkets />
+		<WelcomeFlowFeature />
+		<WelcomeSocialProof />
+		<WelcomeLoop />
+		<WelcomeFAQ />
+		<WelcomeTrustAndClose />
 	</main>
 
 	<WelcomeFooter />
 </div>
 
 <style lang="postcss">
-	.welcome-shell {
+	/* Background ambient gradients — the prototype lives on `body`,
+	   but we scope to the landing root so non-landing routes (sign-in
+	   modals, etc.) aren't tinted by the same wash. */
+	.lp-root {
 		min-height: 100dvh;
 		background:
-			radial-gradient(
-				1200px 600px at 80% -20%,
-				color-mix(in srgb, var(--laurel) 8%, transparent),
-				transparent 60%
-			),
-			radial-gradient(
-				1000px 700px at -10% 30%,
-				color-mix(in srgb, var(--primary) 4%, transparent),
-				transparent 60%
-			),
+			radial-gradient(1200px 600px at 80% -20%, rgba(226, 184, 66, 0.08), transparent 60%),
+			radial-gradient(1000px 700px at -10% 30%, rgba(107, 159, 255, 0.04), transparent 60%),
 			var(--background);
 	}
-
-	.welcome-page {
-		display: flex;
-		flex-direction: column;
-		gap: 0;
-	}
-
-	.welcome-hero {
-		position: relative;
-		overflow: hidden;
-		padding: clamp(3rem, 7vw, 5rem) clamp(1.25rem, 4vw, 2rem) clamp(3.5rem, 6vw, 4.75rem);
-		border-bottom: 1px solid var(--border);
+	:global([data-theme='light']) .lp-root,
+	:global([data-theme='peach']) .lp-root {
 		background:
-			linear-gradient(180deg, color-mix(in srgb, var(--laurel) 5%, transparent), transparent 58%),
-			color-mix(in srgb, var(--background) 94%, var(--laurel) 6%);
-		animation: lp-fade-down 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.welcome-hero {
-			animation: none;
-		}
-	}
-
-	.welcome-hero-inner {
-		max-width: 80rem;
-		margin: 0 auto;
-		display: grid;
-		gap: clamp(2.5rem, 6vw, 4rem);
-		align-items: center;
-	}
-
-	@media (min-width: 56rem) {
-		.welcome-hero-inner {
-			grid-template-columns: 1fr 1fr;
-		}
-	}
-
-	.welcome-hero-meta {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.5rem;
-		margin-bottom: 0.875rem;
-	}
-
-	.welcome-live-tag {
-		display: inline-flex;
-		align-items: center;
-		padding: 0.2rem 0.45rem;
-		border-radius: 4px;
-		font-size: 10px;
-		font-weight: 700;
-		letter-spacing: 0.08em;
-		text-transform: uppercase;
-		background: color-mix(in srgb, var(--no) 10%, transparent);
-		color: var(--no);
-	}
-
-	.welcome-live-tag::before {
-		content: '';
-		display: inline-block;
-		width: 5px;
-		height: 5px;
-		margin-right: 6px;
-		border-radius: 999px;
-		background: var(--no);
-		animation: pulse-live 1.6s infinite;
-	}
-
-	@keyframes pulse-live {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.3;
-		}
-	}
-
-	/* World Cup kickoff chip — accent-tinted pill mirroring the
-	   prototype's inline-styled chip beside the LIVE tag. */
-	.welcome-wc-chip {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		padding: 3px 8px;
-		border-radius: 999px;
-		color: var(--color-accent);
-		background: color-mix(in srgb, var(--color-accent) 10%, transparent);
-		border: 1px solid color-mix(in srgb, var(--color-accent) 30%, transparent);
-		letter-spacing: 0.12em;
-	}
-
-	.welcome-headline {
-		margin: 0;
-		font-size: clamp(2.5rem, 6.5vw, 5rem);
-		line-height: 1.02;
-		letter-spacing: -0.04em;
-		color: var(--foreground);
-	}
-
-	.welcome-lede {
-		margin: 1rem 0 0;
-		max-width: 32rem;
-	}
-
-	.welcome-actions {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.75rem;
-		margin-top: 1.25rem;
-	}
-
-	/* Trailing chevron sits inline with the CTA label — matches the
-	   prototype's `<Icon name="chevron" />` after `cta.primary`. */
-	.welcome-cta-label {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-	}
-
-	.welcome-micro {
-		margin: 0.75rem 0 0;
-		font-size: var(--t-12);
-		color: var(--muted-foreground);
-	}
-
-	.welcome-stats {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 1.5rem;
-		margin-top: 2rem;
-		font-size: var(--t-13);
-		color: var(--muted-foreground);
-	}
-
-	.welcome-stats :global(.num) {
-		color: var(--foreground);
-		font-weight: 600;
-	}
-
-	.welcome-stats .text-yes :global(.num) {
-		color: var(--yes);
-	}
-
-	.welcome-hero-visual {
-		position: relative;
-		display: flex;
-		justify-content: center;
-		align-items: flex-start;
-		padding: clamp(1.5rem, 4vw, 2.75rem) 0;
-	}
-
-	.welcome-section {
-		padding: clamp(4rem, 8vw, 6rem) clamp(1.25rem, 4vw, 2rem);
-	}
-
-	.welcome-section--trust {
-		background: color-mix(in srgb, var(--foreground) 2%, transparent);
+			radial-gradient(1200px 600px at 80% -20%, rgba(226, 184, 66, 0.1), transparent 60%),
+			radial-gradient(1000px 700px at -10% 30%, rgba(181, 70, 44, 0.04), transparent 60%),
+			var(--background);
 	}
 </style>

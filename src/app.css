@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './landing.css';
 
 /* ─── Self-hosted fonts ────────────────────────────────────────────
  * All three families are OFL-licensed (same as the prototype). Files

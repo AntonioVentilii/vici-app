@@ -572,6 +572,10 @@ export const deMessages = {
 	'footer.blog': 'Blog',
 	'footer.bottom': '© 2026 VICI · Gemacht für Menschen, die meinen, sie haben recht.',
 	'footer.company': 'UNTERNEHMEN',
+	'footer.contact': 'Kontakt',
+	'footer.faq': 'FAQ',
+	'footer.help': 'HILFE',
+	'footer.signin': 'Anmelden',
 	'footer.disclosure':
 		'Die Verwahrung, sobald eingeführt, lebt in geprüften Stablecoin-Verträgen. Der VICI-Token koordiniert, er verwahrt nicht.',
 	'footer.leaderboard': 'Rangliste',
