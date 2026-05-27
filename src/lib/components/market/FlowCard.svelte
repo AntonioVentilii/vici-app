@@ -3,6 +3,7 @@
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
+	import { lookupWcMarketSubtitle } from '$lib/constants/wc-market-subtitles.constants';
 	import { daysToKickoff } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -244,19 +245,20 @@
 	const showPriorOnFront = $derived(Boolean(priorCall));
 	const whyNowText = $derived(formatWhyNowChip(metadata?.whyNow));
 
-	// First clause of description (up to ~52 chars) — only used when no
-	// explicit `subtitle` is passed by the parent.
-	const fallbackSubtitle = $derived.by(() => {
-		const desc = market.description ?? '';
-		const head = desc.split(/[.!?]\s/)[0]?.trim() ?? '';
-
-		if (head.length <= 52) {
-			return head;
-		}
-
-		return `${head.slice(0, 49).trimEnd()}…`;
-	});
-	const subtitleText = $derived(subtitle ?? fallbackSubtitle);
+	// Subtitle resolution order:
+	//   1. Explicit `subtitle` prop (parent override)
+	//   2. Curated WC-market lookup (`wc-market-subtitles.constants.ts`)
+	//   3. (future) `metadata.subtitle` from the satellite once the
+	//      field ships on `MarketMetadata`
+	//   4. undefined → row is hidden
+	//
+	// The raw `market.description` is intentionally NOT used as a
+	// fallback. It's long, prose-shaped, and belongs under
+	// RESOLVES YES IF on the back card. Surfacing it here as
+	// truncated italic ("YES if that date is the hottest daily
+	// maximum tem…") reads as a snippet rather than an editorial
+	// accent.
+	const subtitleText = $derived(subtitle ?? lookupWcMarketSubtitle(market.id));
 
 	// Per-card reset: clear flip + latch + drag whenever the market
 	// underneath changes (parent re-uses the slot during deck shuffle).
