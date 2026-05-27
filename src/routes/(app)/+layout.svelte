@@ -62,6 +62,16 @@
 	// `/markets`, so no extra guard is needed.
 	const isMarketDetailPage = $derived(page.url.pathname.startsWith('/markets/'));
 
+	// Public markets surface — matches the prototype's `App.html#markets`
+	// behaviour where any visitor can browse the list and open a market's
+	// detail before signing up. The market list (`/markets`) and the
+	// detail (`/markets/[id]`) are exempted from the auth gate below;
+	// auth-requiring affordances on those pages (placing a call, saving,
+	// resolving) bounce to /signin at the point of action.
+	const isPublicMarketsRoute = $derived(
+		page.url.pathname === '/markets' || page.url.pathname.startsWith('/markets/')
+	);
+
 	let applyingPendingOnboarding = $state(false);
 
 	// Auth gate — every (app) route requires a session. We only
@@ -78,6 +88,10 @@
 	// flash the user reported on 2026-05-27.
 	$effect(() => {
 		if (!browser) {
+			return;
+		}
+
+		if (isPublicMarketsRoute) {
 			return;
 		}
 
