@@ -17,6 +17,7 @@
 	 *  - filtered list with a counter, or a saved-empty state when the
 	 *    Saved chip is active and there are no saves
 	 */
+	import { SvelteSet } from 'svelte/reactivity';
 	import MarketCard from '$lib/components/market/MarketCard.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import {
@@ -24,7 +25,7 @@
 		MARKET_TAG_LABEL_KEYS,
 		type MarketTag
 	} from '$lib/constants/market-tags.constants';
-	import { marketTags } from '$lib/derived/market-tags.derived';
+	import { marketTags, marketTagsNotInitialized } from '$lib/derived/market-tags.derived';
 	import { markets } from '$lib/derived/markets.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
@@ -56,6 +57,31 @@
 	};
 
 	const filteredList = $derived($markets.filter((m) => matchesCat({ market: m, c: cat })));
+
+	// Tags that currently resolve to at least one loaded market. While the
+	// tag store is still uninitialized we fall back to the full taxonomy so
+	// the rail doesn't collapse to a single chip on first paint. The
+	// active tag is always kept visible to avoid jumping when filters
+	// toggle. See `MarketsPage.svelte` for the in-app twin of this rail.
+	const visibleTags = $derived.by((): readonly MarketTag[] => {
+		if ($marketTagsNotInitialized) {
+			return MARKET_TAGS;
+		}
+
+		const set = new SvelteSet<MarketTag>();
+
+		for (const m of $markets) {
+			const tags = tagsBySeries[m.id];
+
+			if (tags !== undefined) {
+				for (const tag of tags) {
+					set.add(tag);
+				}
+			}
+		}
+
+		return MARKET_TAGS.filter((tag) => set.has(tag) || cat === tag);
+	});
 
 	// Trending heuristic — top-N by `totalVolume`. Real market docs
 	// don't carry a curated `hot` boolean, so we surface activity as
@@ -115,7 +141,7 @@
 		>
 			{t({ locale: $localeStore, key: 'markets.chip.all' })}
 		</button>
-		{#each MARKET_TAGS as tag (tag)}
+		{#each visibleTags as tag (tag)}
 			<button
 				class="markets-chip"
 				class:is-active={cat === tag}
