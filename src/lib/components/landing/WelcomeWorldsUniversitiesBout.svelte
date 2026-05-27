@@ -52,7 +52,7 @@
 			"
 			class="tag live"
 		>
-			FIFA WORLD CUP
+			{t({ locale: $localeStore, key: 'welcome.universities.fifa_tag' })}
 		</span>
 	</div>
 	<h3 style="margin-top:4px;" class="lp-h3">

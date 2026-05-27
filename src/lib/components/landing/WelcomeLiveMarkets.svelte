@@ -15,7 +15,8 @@
 	const formatCallers = (id: string): string =>
 		(1200 + ((id.charCodeAt(0) * 173) % 8500)).toLocaleString();
 
-	const isTrendingUp = (yes: number, i: number): boolean => (yes + i * 3) % 7 < 3;
+	const isTrendingUp = ({ yes, index }: { yes: number; index: number }): boolean =>
+		(yes + index * 3) % 7 < 3;
 </script>
 
 <section id="markets" class="lp-section lp-root">
@@ -36,7 +37,7 @@
 		<div style="margin-top:56px;" class="lp-grid-3 lp-market-grid">
 			{#each items as m, i (m.id)}
 				{@const callers = formatCallers(m.id)}
-				{@const trendingUp = isTrendingUp(m.yes, i)}
+				{@const trendingUp = isTrendingUp({ yes: m.yes, index: i })}
 				<a class="card lp-market-card" href="#{m.id}">
 					<div class="row between">
 						<span style="color:{LANDING_CAT_COLORS[m.cat]};" class="tag">

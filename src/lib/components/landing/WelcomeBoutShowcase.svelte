@@ -50,7 +50,8 @@
 					{league.name}
 				</span>
 				<span style="letter-spacing:0.08em;" class="num mute t-micro">
-					{league.memberCount} MEMBERS
+					{league.memberCount}
+					{t({ locale: $localeStore, key: 'welcome.bout.members' })}
 				</span>
 			</div>
 		</div>

@@ -40,8 +40,9 @@
 		}
 	});
 
-	const visible = side !== 'SKIP' && amount > 0;
-	const sideClass = side === 'YES' ? 'is-yes' : 'is-no';
+	const visible = $derived(side !== 'SKIP' && amount > 0);
+
+	const sideClass = $derived(side === 'YES' ? 'is-yes' : 'is-no');
 </script>
 
 {#if visible}

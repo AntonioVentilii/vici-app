@@ -119,8 +119,6 @@
 				''
 			);
 		}
-
-		return undefined;
 	});
 	const inviteUrlDisplay = $derived(inviteHandle ? `vici.markets/i/${inviteHandle}` : undefined);
 	// Share payload keeps the `?ref=` query so the satellite attributes

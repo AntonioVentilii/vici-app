@@ -26,7 +26,7 @@
 
 	const { result, xp, correct = true, streakHit = false, onDone }: Props = $props();
 
-	const isSkip = result === 'SKIP';
+	const isSkip = $derived(result === 'SKIP');
 
 	let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -40,25 +40,24 @@
 		}
 	});
 
-	// Deterministic-ish phrase pick — re-seeded per mount so consecutive
-	// commits don't always echo the same line. We pick once at mount.
-	const phraseKey = (() => {
-		const idx = Math.floor(Math.random() * 3);
+	// Random index picked once per mount so consecutive commits don't
+	// always echo the same line; the right/wrong list is selected
+	// reactively from `correct` so a late prop flip (rare but possible)
+	// updates the rendered phrase.
+	const phraseIdx = Math.floor(Math.random() * 3);
+	const phraseKey = $derived(
+		(correct
+			? (['flow.feedback.right_1', 'flow.feedback.right_2', 'flow.feedback.right_3'] as const)
+			: (['flow.feedback.wrong_1', 'flow.feedback.wrong_2', 'flow.feedback.wrong_3'] as const))[
+			phraseIdx
+		]
+	);
 
-		if (correct) {
-			return (['flow.feedback.right_1', 'flow.feedback.right_2', 'flow.feedback.right_3'] as const)[
-				idx
-			];
-		}
+	const sideLabelKey: 'outcome.yes' | 'outcome.no' = $derived(
+		result === 'YES' ? 'outcome.yes' : 'outcome.no'
+	);
 
-		return (['flow.feedback.wrong_1', 'flow.feedback.wrong_2', 'flow.feedback.wrong_3'] as const)[
-			idx
-		];
-	})();
-
-	const sideLabelKey: 'outcome.yes' | 'outcome.no' =
-		result === 'YES' ? 'outcome.yes' : 'outcome.no';
-	const sideClass = result === 'YES' ? 'yes' : 'no';
+	const sideClass = $derived(result === 'YES' ? 'yes' : 'no');
 </script>
 
 {#if isSkip}

@@ -201,7 +201,9 @@
 	class:is-scrolled={scrolled}
 	aria-label={t({ locale: $localeStore, key: 'a11y.landing' })}
 >
-	<a class="dnav-skip" href="#main">Skip to content</a>
+	<a class="dnav-skip" href="#main">
+		{t({ locale: $localeStore, key: 'welcome.nav.skip_to_content' })}
+	</a>
 	<div class="dnav-inner">
 		<span class="dnav-logo"><Logo href={PublicPath.Welcome} /></span>
 		<div class="dnav-links">
@@ -362,10 +364,15 @@
 				<div class="lp-pill-body">
 					<div class="lp-trust lp-trust-hero">
 						<Lock size={14} strokeWidth={1.8} />
-						<span>VICI is free - <b>resolution on public data</b></span>
+						<span>
+							{t({ locale: $localeStore, key: 'welcome.nav.free_prefix' })}
+							<b>{t({ locale: $localeStore, key: 'welcome.nav.public_data' })}</b>
+						</span>
 					</div>
 
-					<div class="lp-eyebrow-bridge">Explore</div>
+					<div class="lp-eyebrow-bridge">
+						{t({ locale: $localeStore, key: 'welcome.nav.explore' })}
+					</div>
 
 					<nav class="lp-menu-links">
 						{#each sections as id, i (id)}
@@ -404,11 +411,12 @@
 
 					<div class="lp-pill-footer">
 						<a class="lp-signin-link" href={PublicPath.SignIn} onclick={closeMenu}>
-							Already a member?
+							{t({ locale: $localeStore, key: 'welcome.nav.already_member' })}
 							<span class="em">{t({ locale: $localeStore, key: 'nav.signin' })}</span>
 						</a>
 						<span class="lp-latin">
-							Veni · Vidi · <span class="acc">Vici.</span>
+							{t({ locale: $localeStore, key: 'welcome.nav.latin_motto' })}
+							<span class="acc">Vici.</span>
 						</span>
 					</div>
 				</div>

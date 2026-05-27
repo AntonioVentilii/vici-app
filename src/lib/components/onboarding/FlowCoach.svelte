@@ -23,7 +23,9 @@
 
 	const { surface = 'flow' }: Props = $props();
 
-	const storageKey = `vici.coach-${surface === 'onboarding' ? 'onboarding-seen' : 'flow-seen'}`;
+	const storageKey = $derived(
+		`vici.coach-${surface === 'onboarding' ? 'onboarding-seen' : 'flow-seen'}`
+	);
 
 	const readSeen = (): boolean => {
 		if (!browser) {

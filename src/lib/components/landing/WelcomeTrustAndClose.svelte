@@ -54,7 +54,7 @@
 
 		<div style="text-align:center; max-width:620px; margin:0 auto;">
 			<div style="font-size:26px; margin-bottom:18px;" class="serif-italic acc">
-				Veni. Vidi. Vici.
+				{t({ locale: $localeStore, key: 'welcome.trust.tagline' })}
 			</div>
 			<h2 class="lp-h2">{t({ locale: $localeStore, key: 'final.title' })}</h2>
 			<p style="margin-top:14px; margin-inline:auto;" class="lp-lede">

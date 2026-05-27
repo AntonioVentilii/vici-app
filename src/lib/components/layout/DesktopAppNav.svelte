@@ -62,19 +62,15 @@
 	<div class="app-desktop-nav-inner">
 		<a
 			class="app-desktop-nav-brand"
-			href={AppPath.Home}
 			aria-label={t({ locale: $localeStore, key: 'a11y.landing' })}
+			href={AppPath.Home}
 		>
 			VICI
 		</a>
 
 		<nav class="app-desktop-nav-links" aria-label="Primary">
 			{#each visibleNavItems as item (item.path)}
-				<a
-					class="app-desktop-nav-link"
-					class:is-active={isActive(item.path)}
-					href={item.path}
-				>
+				<a class="app-desktop-nav-link" class:is-active={isActive(item.path)} href={item.path}>
 					{t({ locale: $localeStore, key: item.labelKey })}
 				</a>
 			{/each}
@@ -84,8 +80,8 @@
 			{#if $userSignedIn}
 				<a
 					class="app-desktop-nav-icon-btn"
-					href={AppPath.Settings}
 					aria-label={t({ locale: $localeStore, key: 'settings.title' })}
+					href={AppPath.Settings}
 				>
 					<Settings aria-hidden="true" size={18} strokeWidth={1.8} />
 				</a>

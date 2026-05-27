@@ -156,14 +156,14 @@
 		}
 	};
 
-	const stop = (event: MouseEvent) => {
+	const stop = (event: Event) => {
 		event.stopPropagation();
 	};
 </script>
 
 <!-- eslint-disable-next-line svelte/valid-compile -- the click is intentional;
      bubble-stop keeps an outer dismiss-on-click handler from firing. -->
-<div class="share-pop" onclick={stop} role="dialog">
+<div class="share-pop" onclick={stop} onkeydown={stop} role="dialog" tabindex="-1">
 	<span class="eyebrow share-pop-eyebrow">
 		{t({ locale: $localeStore, key: 'flow.share.eyebrow' })}
 	</span>
