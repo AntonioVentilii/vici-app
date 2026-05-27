@@ -1646,6 +1646,93 @@ html[data-app='1'] body {
 }
 
 .col {
+   VICI — Sign in screen (verbatim port from prototype)
+   Source: VICI WebApp Beta V1.2/onboarding.css + app.css
+   ============================================================ */
+.signin-wrap {
+	position: absolute;
+	inset: 0;
+	background: var(--bg-base);
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	padding: 28px 24px 24px;
+	overflow-y: auto;
+}
+.signin-card {
+	flex: 1 1 auto;
+	display: flex;
+	flex-direction: column;
+	max-width: 420px;
+	width: 100%;
+	margin: 0 auto;
+}
+.signin-head {
+	text-align: left;
+	padding-top: 12px;
+	margin-bottom: 28px;
+}
+.signin-wordmark {
+	display: inline-flex;
+	align-items: baseline;
+	gap: 1px;
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	letter-spacing: -0.02em;
+	font-size: 24px;
+	line-height: 1;
+	color: var(--laurel);
+}
+.signin-wordmark .signin-wordmark-letters {
+	font-family: var(--font-sans);
+	font-style: normal;
+	font-weight: 700;
+	letter-spacing: 0.18em;
+	font-size: 18.72px;
+}
+.signin-eyebrow {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.18em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin-top: 28px;
+	margin-bottom: 8px;
+}
+.signin-title {
+	font-family: var(--font-sans);
+	font-size: 32px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.1;
+	color: var(--text-base);
+	margin: 0 0 10px;
+}
+.signin-title .serif-italic {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	letter-spacing: 0;
+}
+.signin-title .acc {
+	color: var(--laurel);
+}
+.signin-sub {
+	font-size: 14px;
+	line-height: 1.45;
+	color: var(--text-muted);
+	margin: 0;
+}
+
+/* Providers ------------------------------------------------------- */
+.signin-providers {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-bottom: 22px;
+}
+.signin-providers-equal {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
@@ -1682,4 +1769,290 @@ html[data-app='1'] body {
 
 .fw-600 {
 	font-weight: 600;
+}
+
+.signin-provider-btn {
+	appearance: none;
+	cursor: pointer;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 14px 16px;
+	background: var(--bg-surface);
+	border: 1px solid var(--border-base);
+	border-radius: 12px;
+	font-family: inherit;
+	font-size: 15px;
+	font-weight: 600;
+	color: var(--text-base);
+	transition:
+		opacity 200ms var(--ease-vici),
+		border-color 200ms var(--ease-vici),
+		background 200ms var(--ease-vici),
+		transform 80ms var(--ease-vici);
+	position: relative;
+}
+.signin-provider-btn:hover:not(:disabled) {
+	border-color: var(--border-strong);
+	background: rgba(242, 236, 220, 0.06);
+}
+[data-theme='light'] .signin-provider-btn:hover:not(:disabled),
+[data-theme='peach'] .signin-provider-btn:hover:not(:disabled) {
+	background: rgba(14, 13, 11, 0.04);
+}
+.signin-provider-btn:active:not(:disabled) {
+	transform: scale(0.99);
+}
+.signin-provider-btn:disabled {
+	cursor: not-allowed;
+}
+.signin-provider-btn.is-faded {
+	opacity: 0.4;
+}
+.signin-provider-btn.is-loading {
+	opacity: 0.7;
+}
+.signin-provider-btn.email {
+	background: rgba(226, 184, 66, 0.04);
+	border-color: rgba(226, 184, 66, 0.22);
+	color: var(--laurel);
+}
+.signin-provider-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 24px;
+	height: 24px;
+	flex-shrink: 0;
+}
+.signin-provider-label {
+	flex: 1;
+	text-align: center;
+	padding-right: 24px;
+}
+.signin-provider-soon {
+	position: absolute;
+	right: 14px;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.signin-spinner {
+	width: 14px;
+	height: 14px;
+	border: 2px solid rgba(242, 236, 220, 0.2);
+	border-top-color: var(--laurel);
+	border-radius: 50%;
+	animation: signin-spin 720ms linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+	.signin-spinner {
+		animation: none;
+	}
+}
+
+/* Proof line --------------------------------------------------- */
+.signin-proof {
+	display: flex;
+	gap: 8px;
+	justify-content: center;
+	align-items: baseline;
+	margin-top: 10px;
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.signin-proof b {
+	color: var(--text-base);
+	font-weight: 700;
+}
+.signin-proof .dim {
+	color: var(--parchment-faint);
+}
+
+/* Inline email form -------------------------------------------- */
+.signin-email-inline {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	margin-top: 0;
+}
+.signin-email-row {
+	position: relative;
+	display: flex;
+	align-items: center;
+}
+.signin-email-icon {
+	position: absolute;
+	left: 14px;
+	color: var(--text-muted);
+	pointer-events: none;
+}
+.signin-email-input {
+	width: 100%;
+	padding: 14px 14px 14px 42px;
+	background: var(--bg-surface);
+	border: 1px solid var(--border-strong);
+	border-radius: 12px;
+	font-family: var(--font-mono);
+	font-size: 14px;
+	color: var(--text-base);
+	outline: 0;
+	transition: border-color 160ms var(--ease-vici);
+}
+.signin-email-input:focus {
+	border-color: var(--laurel);
+}
+.signin-email-input:disabled {
+	opacity: 0.6;
+}
+.signin-fineprint {
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	text-align: center;
+	margin: 4px 0 0;
+}
+
+/* Sent state ---------------------------------------------------- */
+.signin-sent {
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 12px;
+	padding: 8px 0 4px;
+}
+.signin-sent-mark {
+	width: 44px;
+	height: 44px;
+	border-radius: 999px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(79, 211, 161, 0.12);
+	color: var(--yes);
+	margin-bottom: 4px;
+}
+.signin-sent-title {
+	font-family: var(--font-sans);
+	font-size: 22px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	margin: 0;
+	color: var(--text-base);
+}
+.signin-sent-body {
+	font-size: 14px;
+	line-height: 1.5;
+	color: var(--text-muted);
+	margin: 0 0 8px;
+}
+.signin-sent-body .num {
+	color: var(--text-base);
+}
+
+/* Footer / cross-link ------------------------------------------ */
+.signin-foot {
+	margin-top: 26px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	font-size: 14px;
+}
+.signin-foot .mute {
+	color: var(--text-muted);
+}
+.signin-link {
+	background: none;
+	border: none;
+	padding: 0;
+	font-family: inherit;
+	font-size: inherit;
+	color: var(--laurel);
+	cursor: pointer;
+	text-decoration: none;
+	transition: color 200ms var(--ease-vici);
+}
+.signin-link:hover {
+	color: var(--laurel-deep);
+}
+
+/* Legal copy · two-line layout */
+.signin-legal {
+	margin-top: 22px;
+	text-align: center;
+}
+.signin-legal-line {
+	margin: 0;
+	font-size: 11.5px;
+	line-height: 1.5;
+	color: var(--text-muted);
+}
+.signin-legal-line + .signin-legal-line {
+	margin-top: 4px;
+}
+.signin-legal-line.dim {
+	color: var(--parchment-faint);
+}
+.signin-legal-line a {
+	color: var(--text-base);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+	text-decoration-color: rgba(242, 236, 220, 0.3);
+}
+.signin-legal-line a:hover {
+	text-decoration-color: var(--laurel);
+}
+
+/* Primary CTA used inside the sent state — mirrors prototype's
+   btn-primary block-large. Lives in app.css so component styles
+   stay free of duplication. */
+.signin-sent-continue {
+	display: inline-flex;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 14px 16px;
+	border: 0;
+	border-radius: 12px;
+	background: var(--laurel);
+	color: var(--ink);
+	font: inherit;
+	font-weight: 700;
+	font-size: 15px;
+	cursor: pointer;
+	transition: opacity 200ms var(--ease-vici);
+}
+.signin-sent-continue:hover {
+	opacity: 0.92;
+}
+.signin-email-submit {
+	display: inline-flex;
+	width: 100%;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	padding: 14px 16px;
+	border: 0;
+	border-radius: 12px;
+	background: var(--laurel);
+	color: var(--ink);
+	font: inherit;
+	font-weight: 700;
+	font-size: 15px;
+	cursor: pointer;
+	transition: opacity 200ms var(--ease-vici);
+}
+.signin-email-submit:disabled {
+	opacity: 0.48;
+	cursor: not-allowed;
 }

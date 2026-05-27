@@ -36,6 +36,8 @@
 	const productionAvailable = $derived(isProd() && isNotSkylab());
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
 	const isBusy = $derived(signingIn !== null);
+	// Mirrors the prototype's `otherFaded` — when the email row is
+	// expanded the other providers dim to 0.4.
 	const isFaded = $derived(emailOpen && phase === 'idle' && signingIn === null);
 
 	const startSignIn = async ({
@@ -144,23 +146,23 @@
 {#if phase === 'sent'}
 	<div class="signin-sent">
 		<div class="signin-sent-mark" aria-hidden="true">
-			<Check size={22} strokeWidth={2.4} />
+			<Check size={22} strokeWidth={2} />
 		</div>
 		<h2 class="signin-sent-title">{t({ locale: $localeStore, key: 'signin.sent.title' })}</h2>
 		<p class="signin-sent-body">
-			{t({ locale: $localeStore, key: 'signin.sent.body.prefix' })}
-			<span class="num">{email}</span>{t({ locale: $localeStore, key: 'signin.sent.body.suffix' })}
+			{t({ locale: $localeStore, key: 'signin.sent.body.prefix' })}<span class="num">{email}</span
+			>{t({ locale: $localeStore, key: 'signin.sent.body.suffix' })}
 		</p>
 		<button class="signin-sent-continue" onclick={onSentContinue} type="button">
-			<span>{t({ locale: $localeStore, key: 'signin.sent.continue' })}</span>
+			{t({ locale: $localeStore, key: 'signin.sent.continue' })}
 			<ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
 		</button>
-		<button class="signin-sent-link" onclick={onEmailReset} type="button">
+		<button class="signin-link" onclick={onEmailReset} type="button">
 			{t({ locale: $localeStore, key: 'signin.sent.use_different' })}
 		</button>
 	</div>
 {:else}
-	<div class="signin-stack" class:is-email-open={emailOpen}>
+	<div class="signin-providers signin-providers-equal">
 		<!-- Apple — disabled placeholder until backend ships. -->
 		<button
 			class="signin-provider-btn apple"
@@ -217,7 +219,7 @@
 			</span>
 		</button>
 
-		<!-- Email — disabled placeholder + progressive disclosure. -->
+		<!-- Email — progressive disclosure. -->
 		{#if !emailOpen}
 			<button
 				class="signin-provider-btn email"
@@ -246,6 +248,7 @@
 					</span>
 					<!-- svelte-ignore a11y_autofocus -->
 					<input
+						id="signin-email-input"
 						class="signin-email-input num"
 						autocapitalize="off"
 						autocomplete="email"
@@ -263,11 +266,9 @@
 					disabled={!EMAIL_ENABLED || !emailValid || isBusy}
 					type="submit"
 				>
-					<span>
-						{signingIn === 'email'
-							? t({ locale: $localeStore, key: 'signin.loading.email' })
-							: t({ locale: $localeStore, key: 'signin.email.cta' })}
-					</span>
+					{signingIn === 'email'
+						? t({ locale: $localeStore, key: 'signin.loading.email' })
+						: t({ locale: $localeStore, key: 'signin.email.cta' })}
 					{#if signingIn !== 'email'}
 						<ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
 					{/if}
@@ -280,7 +281,8 @@
 			</form>
 		{/if}
 
-		<!-- Internet Identity — production-need (C-8 keep). -->
+		<!-- Internet Identity — production-need (C-8 keep). Styled to
+			 match the prototype's `signin-provider-btn` pattern. -->
 		<button
 			class="signin-provider-btn"
 			class:is-faded={isFaded}
@@ -353,257 +355,3 @@
 		{/if}
 	</div>
 {/if}
-
-<style lang="postcss">
-	.signin-stack {
-		display: flex;
-		width: 100%;
-		flex-direction: column;
-		gap: 0.5rem;
-	}
-
-	.signin-provider-btn {
-		position: relative;
-		display: flex;
-		width: 100%;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 0.875rem 1rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
-		color: var(--text-base);
-		font: inherit;
-		font-size: var(--t-15);
-		font-weight: 600;
-		cursor: pointer;
-		transition:
-			opacity var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici),
-			background var(--d-hover) var(--ease-vici),
-			transform 80ms var(--ease-vici);
-	}
-
-	.signin-provider-btn:hover:not(:disabled) {
-		border-color: var(--border-strong);
-		background: color-mix(in srgb, var(--text-base) 6%, transparent);
-	}
-
-	.signin-provider-btn:active:not(:disabled) {
-		transform: scale(0.99);
-	}
-
-	.signin-provider-btn:disabled {
-		cursor: not-allowed;
-	}
-
-	.signin-provider-btn.is-faded {
-		opacity: 0.4;
-	}
-
-	.signin-provider-btn.is-loading {
-		opacity: 0.75;
-	}
-
-	.signin-provider-btn.email {
-		background: color-mix(in srgb, var(--laurel) 4%, transparent);
-		border-color: color-mix(in srgb, var(--laurel) 22%, transparent);
-		color: var(--laurel);
-	}
-
-	.signin-provider-icon {
-		display: inline-flex;
-		width: 1.5rem;
-		height: 1.5rem;
-		flex-shrink: 0;
-		align-items: center;
-		justify-content: center;
-	}
-
-	/* Per-provider loading spinner — replaces the brand icon while the
-	   sign-in is in flight, mirroring the prototype's `.signin-spinner`
-	   ring. Drives `signin-spin` (defined in app.css). */
-	.signin-spinner {
-		width: 14px;
-		height: 14px;
-		border: 2px solid color-mix(in srgb, var(--text-base) 20%, transparent);
-		border-top-color: var(--color-accent);
-		border-radius: 50%;
-		animation: signin-spin 720ms linear infinite;
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		.signin-spinner {
-			animation: none;
-		}
-	}
-
-	.signin-provider-label {
-		flex: 1;
-		padding-right: 1.5rem;
-		text-align: center;
-	}
-
-	.signin-provider-soon {
-		position: absolute;
-		right: 1rem;
-		font-family: var(--font-mono);
-		font-size: 0.625rem;
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-		color: var(--text-muted);
-	}
-
-	.signin-email-inline {
-		display: flex;
-		flex-direction: column;
-		gap: 0.625rem;
-		margin: 0.25rem 0 0.25rem;
-	}
-
-	.signin-email-row {
-		position: relative;
-		display: flex;
-		align-items: center;
-	}
-
-	.signin-email-icon {
-		position: absolute;
-		left: 0.875rem;
-		display: inline-flex;
-		color: var(--text-muted);
-		pointer-events: none;
-	}
-
-	.signin-email-input {
-		width: 100%;
-		padding: 0.875rem 0.875rem 0.875rem 2.625rem;
-		border: 1px solid var(--border-strong);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
-		color: var(--text-base);
-		font-family: var(--font-mono);
-		font-size: var(--t-14);
-		outline: 0;
-		transition: border-color 160ms var(--ease-vici);
-	}
-
-	.signin-email-input:focus {
-		border-color: var(--laurel);
-	}
-
-	.signin-email-input:disabled {
-		opacity: 0.62;
-	}
-
-	.signin-email-input::placeholder {
-		color: var(--text-muted);
-	}
-
-	.signin-email-submit {
-		display: inline-flex;
-		width: 100%;
-		align-items: center;
-		justify-content: center;
-		gap: 0.4rem;
-		padding: 0.875rem 1rem;
-		border: 0;
-		border-radius: var(--r-12);
-		background: var(--laurel);
-		color: var(--ink);
-		font: inherit;
-		font-weight: 750;
-		cursor: pointer;
-		transition: opacity var(--d-hover) var(--ease-vici);
-	}
-
-	.signin-email-submit:disabled {
-		opacity: 0.48;
-		cursor: not-allowed;
-	}
-
-	.signin-fineprint {
-		margin: 0.25rem 0 0;
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: 0.66rem;
-		letter-spacing: 0.04em;
-		line-height: var(--leading-normal);
-		text-align: center;
-	}
-
-	.signin-sent {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-		padding: 0.5rem 0 0.25rem;
-	}
-
-	.signin-sent-mark {
-		display: inline-flex;
-		width: 2.75rem;
-		height: 2.75rem;
-		align-items: center;
-		justify-content: center;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--yes) 12%, transparent);
-		color: var(--yes);
-		margin-bottom: 0.25rem;
-	}
-
-	.signin-sent-title {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: var(--t-22);
-		font-weight: 600;
-		letter-spacing: var(--tracking-snug);
-		color: var(--text-base);
-	}
-
-	.signin-sent-body {
-		margin: 0 0 0.5rem;
-		font-size: var(--t-14);
-		line-height: var(--leading-relaxed);
-		color: var(--text-muted);
-	}
-
-	.signin-sent-body .num {
-		color: var(--text-base);
-	}
-
-	.signin-sent-continue {
-		display: inline-flex;
-		width: 100%;
-		align-items: center;
-		justify-content: center;
-		gap: 0.4rem;
-		padding: 0.875rem 1rem;
-		border: 0;
-		border-radius: var(--r-12);
-		background: var(--laurel);
-		color: var(--ink);
-		font: inherit;
-		font-weight: 750;
-		cursor: pointer;
-	}
-
-	.signin-sent-link {
-		align-self: center;
-		border: 0;
-		background: transparent;
-		padding: 0.1rem 0;
-		color: var(--laurel);
-		font: inherit;
-		font-size: var(--t-13);
-		text-decoration: underline;
-		text-decoration-color: var(--parchment-faint);
-		text-underline-offset: 0.2em;
-		cursor: pointer;
-		transition: text-decoration-color var(--d-hover) var(--ease-vici);
-	}
-
-	.signin-sent-link:hover {
-		text-decoration-color: var(--laurel);
-	}
-</style>
