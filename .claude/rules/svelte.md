@@ -25,6 +25,10 @@
   the `.svelte` file for better encapsulation and visibility.
 - **Two-way binding:** avoid `$bindable` unless explicitly required —
   prefer a callback prop (`onChange`).
+- **No hidden reactive captures:** module-scope `const x = (() => { …
+  reads a prop or `$state` … })()` freezes the value at init. Use
+  `$derived` / `$derived.by`. See
+  [Reactive reads — no hidden captures](../../docs/ai/frontend/stack-and-patterns.md#reactive-reads--no-hidden-captures).
 
 For event handling, snippets, derived stores, and the full anti-pattern
 list, read
