@@ -128,6 +128,11 @@ interface RenderArgs {
 	p: FlowArtPalette;
 	state: FlowArtState;
 	uid: string;
+	// Original render seed (typically a market id). Renderers that
+	// need to pin specific markets to specific outputs (e.g. WC kits
+	// per nation) read this; everything else stays seed-derived via
+	// `rng`.
+	seed: string | number;
 }
 
 const makeRng = (seed: string | number): Rng => {
@@ -1343,7 +1348,28 @@ const wcFace = ({
 // card. Each prop is anchored in the figure-complementary lane
 // (left side, since figures sit on the right at cx>=140) and
 // shares the same `wc-prop-pulse` keyframe.
-const renderWC = ({ rng, p, state }: RenderArgs): string => {
+// Map known nation-specific WC market ids to their flag index in
+// the `FLAGS` array below. Without this, a Brazil-winner market
+// would draw a random kit (e.g. red Spain shirt) because the flag
+// pick was purely seed-hashed. Patterns that don't name a nation
+// (`wc-golden-boot`, `wc-trophy-drop`, etc.) stay random.
+const WC_FLAG_PINS: Readonly<Record<string, number>> = {
+	// BR — Brazil
+	'wc-winner-brazil': 0,
+	'wc-neymar-dive': 0,
+	// FR — France
+	'wc-winner-france': 1,
+	// AR — Argentina
+	'wc-winner-argentina': 2,
+	// DE — Germany
+	'wc-german-out-group': 3,
+	// ES — Spain
+	'wc-winner-spain': 4,
+	// US — USA
+	'wc-usa-quarter': 6
+};
+
+const renderWC = ({ rng, p, state, seed }: RenderArgs): string => {
 	const bgStands = (): string => {
 		let m = `<rect width="280" height="100" fill="${p.bg}"/>`;
 
@@ -1535,7 +1561,12 @@ const renderWC = ({ rng, p, state }: RenderArgs): string => {
 		{ c1: '#C8102E', c2: '#F2ECDC', c3: '#0A3161', shirt: '#F2ECDC', stripe: '#0A3161' }
 	];
 
-	const flag = rng.pick(FLAGS);
+	// Honour the nation pin first so e.g. `wc-winner-brazil` always
+	// draws the canary-yellow kit, not a random hash-derived one.
+	const seedKey = typeof seed === 'string' ? seed : String(seed);
+	const pinnedIdx = WC_FLAG_PINS[seedKey];
+	const flag =
+		pinnedIdx !== undefined && FLAGS[pinnedIdx] !== undefined ? FLAGS[pinnedIdx] : rng.pick(FLAGS);
 
 	// Figure spawner — keeps per-seed picks consistent across variants.
 	// Emotion is passed in (not picked here) so the caller can reuse it
@@ -1748,7 +1779,7 @@ export const renderFlowArt = ({
 	// `url(#mwash)` would resolve to the first match in the document
 	// (potentially another card's gradient).
 	const uid = hashStr(seedKey).toString(36);
-	const body = renderer({ rng, p: pal, state, uid });
+	const body = renderer({ rng, p: pal, state, uid, seed });
 
 	if (category === 'wc') {
 		// WC fills its own 280×100 background and is excluded from the
