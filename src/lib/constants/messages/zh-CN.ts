@@ -1568,12 +1568,17 @@ export const zhCnMessages = {
 	'wc.sub': '6 月 11 日开赛。现在就站队 —— 小组赛晋级市场已开放,淘汰赛市场将在抽签时上线。',
 	'wc.title_a': '热门球队正在',
 	'wc.title_b': '划线。',
+	'welcome.deck.callers_last_hour': '过去一小时 {count} 位预测者',
 	'welcome.deck.category': '宏观',
 	'welcome.deck.closing_soon': '即将关闭',
 	'welcome.deck.consensus': '74% YES 共识',
+	'welcome.deck.delta_today': '今日 +{count}',
+	'welcome.deck.favorite': '热门',
+	'welcome.deck.long_shot': '冷门',
 	'welcome.deck.predictors_count': '{count} 人在预测',
 	'welcome.deck.question': '美联储会在六月降息吗？',
 	'welcome.deck.subtitle': 'FOMC · 降息预测',
+	'welcome.deck.trickster_label': '赞同 · 2× XP',
 	'welcome.faq.a1':
 		'是的。游戏模式完全免费——无需绑卡、无需充值、无需订阅。VXP 是用于衡量准确率的纯游戏货币；不可兑现，也不是真钱。如果将来推出真钱市场，将完全可选并明确标注。',
 	'welcome.faq.a2':

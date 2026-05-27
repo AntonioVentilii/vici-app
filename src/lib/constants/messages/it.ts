@@ -1650,12 +1650,17 @@ export const itMessages = {
 		'Calcio d’inizio l’11 giugno. Scegli un lato ora — i mercati della fase a gironi sono aperti, gli ad eliminazione si attivano al sorteggio.',
 	'wc.title_a': 'I favoriti danno',
 	'wc.title_b': 'il ritmo.',
+	'welcome.deck.callers_last_hour': '{count} caller nell’ultima ora',
 	'welcome.deck.category': 'MACRO',
 	'welcome.deck.closing_soon': 'In chiusura',
 	'welcome.deck.consensus': '74% SÌ CONSENSO',
+	'welcome.deck.delta_today': '+{count} oggi',
+	'welcome.deck.favorite': 'FAVORITO',
+	'welcome.deck.long_shot': 'OUTSIDER',
 	'welcome.deck.predictors_count': '{count} prevedono',
 	'welcome.deck.question': 'La Fed taglierà i tassi a giugno?',
 	'welcome.deck.subtitle': 'FOMC · decisione sui tassi',
+	'welcome.deck.trickster_label': 'CONCORDO · 2× XP',
 	'welcome.faq.a1':
 		'Sì. La modalità gioco è completamente gratuita — nessuna carta, nessun deposito, nessun abbonamento. I VXP sono una valuta di gioco pura che misura la precisione; non sono riscattabili e non sono denaro. I mercati in denaro reale, se introdotti, saranno opzionali e chiaramente etichettati.',
 	'welcome.faq.a2':

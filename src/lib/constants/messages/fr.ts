@@ -1659,12 +1659,17 @@ export const frMessages = {
 		'Coup d’envoi le 11 juin. Choisissez un côté maintenant — les marchés de la phase de groupes sont ouverts, les éliminatoires démarrent au tirage.',
 	'wc.title_a': 'Les favoris donnent',
 	'wc.title_b': 'le ton.',
+	'welcome.deck.callers_last_hour': '{count} callers dans la dernière heure',
 	'welcome.deck.category': 'MACRO',
 	'welcome.deck.closing_soon': 'Clôture imminente',
 	'welcome.deck.consensus': '74% YES CONSENSUS',
+	'welcome.deck.delta_today': "+{count} aujourd'hui",
+	'welcome.deck.favorite': 'FAVORI',
+	'welcome.deck.long_shot': 'OUTSIDER',
 	'welcome.deck.predictors_count': '{count} prédisent',
 	'welcome.deck.question': 'La Fed baissera-t-elle les taux en juin ?',
 	'welcome.deck.subtitle': 'FOMC · décision de baisse de taux',
+	'welcome.deck.trickster_label': "D'ACCORD · 2× XP",
 	'welcome.faq.a1':
 		"Oui. Le mode jeu est entièrement gratuit — pas de carte, pas de dépôt, pas d'abonnement. Les VXP sont une monnaie de jeu qui mesure la précision ; ils ne sont ni convertibles ni de l'argent. Les marchés en argent réel, s'ils sont introduits, seront optionnels et clairement identifiés.",
 	'welcome.faq.a2':

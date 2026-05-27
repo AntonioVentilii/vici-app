@@ -1675,12 +1675,17 @@ export const enMessages = {
 		'June 11 kickoff. Pick a side now — group stage advancement markets open, knockout markets seed at the bracket reveal.',
 	'wc.title_a': 'The favorites are setting',
 	'wc.title_b': 'the line.',
+	'welcome.deck.callers_last_hour': '{count} callers in last hour',
 	'welcome.deck.category': 'MACRO',
 	'welcome.deck.closing_soon': 'Closing soon',
 	'welcome.deck.consensus': '74% YES CONSENSUS',
+	'welcome.deck.delta_today': '+{count} today',
+	'welcome.deck.favorite': 'FAVORITE',
+	'welcome.deck.long_shot': 'LONG SHOT',
 	'welcome.deck.predictors_count': '{count} predicting',
 	'welcome.deck.question': 'Will the Fed cut rates in June?',
 	'welcome.deck.subtitle': 'FOMC · rate-cut call',
+	'welcome.deck.trickster_label': 'AGREE · 2× XP',
 	'welcome.faq.a1':
 		'Yes. The game mode is fully free — no card, no deposit, no subscription. VXP is a pure gameplay currency that tracks accuracy; it can’t be redeemed and isn’t money. Real-money markets, when introduced, will be optional and clearly labelled.',
 	'welcome.faq.a2':

@@ -1,19 +1,19 @@
 <script lang="ts">
 	import WelcomeHeroFlowCard from '$lib/components/landing/WelcomeHeroFlowCard.svelte';
-	import { WELCOME_MARKET_PREVIEWS } from '$lib/constants/welcome-markets.constants';
+	import { WELCOME_HERO_WC_MARKETS } from '$lib/constants/welcome-hero-wc.constants';
 
 	/**
-	 * 3-card stacked deck for the hero visual — ports the prototype's
-	 * `HeroVisual` (landing.jsx:660-680). Renders the first three demo
-	 * markets behind one another with progressive translate / rotate +
-	 * opacity falloff so the hero reads as "a deck of upcoming calls"
-	 * rather than a single isolated card.
+	 * 3-card stacked deck for the hero visual — faithful port of the
+	 * prototype's `HeroVisual` (landing.jsx:660-680). Renders the three
+	 * World Cup hero fixtures behind one another with progressive
+	 * translate / rotate + opacity falloff so the hero reads as "a deck
+	 * of upcoming calls" rather than a single isolated card.
 	 *
-	 * Indexing mirrors the prototype: `.slice().reverse()` so the
-	 * front-most card (depth 0) is the FIRST market — the same card
-	 * that used to render as the lone hero flow card.
+	 * The front-most card (depth 0) is the Brazil tentpole — the only
+	 * fixture flagged `hasFigure: true`, so the rich player SVG renders
+	 * exclusively on top. Spain + France sit behind it as visual depth.
 	 */
-	const cards = WELCOME_MARKET_PREVIEWS.slice(0, 3);
+	const cards = WELCOME_HERO_WC_MARKETS.slice(0, 3);
 	const stacked = [...cards].reverse(); // back → front
 </script>
 

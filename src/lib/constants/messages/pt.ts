@@ -1647,12 +1647,17 @@ export const ptMessages = {
 		'Pontapé inicial em 11 de junho. Escolha um lado agora — os mercados de fase de grupos estão abertos, os de eliminação abrem no sorteio.',
 	'wc.title_a': 'Os favoritos marcam',
 	'wc.title_b': 'o ritmo.',
+	'welcome.deck.callers_last_hour': '{count} callers na última hora',
 	'welcome.deck.category': 'MACRO',
 	'welcome.deck.closing_soon': 'Fecha em breve',
 	'welcome.deck.consensus': '74% CONSENSO YES',
+	'welcome.deck.delta_today': '+{count} hoje',
+	'welcome.deck.favorite': 'FAVORITO',
+	'welcome.deck.long_shot': 'AZARÃO',
 	'welcome.deck.predictors_count': '{count} prevendo',
 	'welcome.deck.question': 'O Fed cortará juros em junho?',
 	'welcome.deck.subtitle': 'FOMC · corte de juros',
+	'welcome.deck.trickster_label': 'CONCORDAR · 2× XP',
 	'welcome.faq.a1':
 		'Sim. O modo de jogo é totalmente grátis — sem cartão, sem depósito, sem assinatura. VXP é uma moeda de jogo pura que mede precisão; não pode ser resgatada e não é dinheiro. Mercados em dinheiro real, quando introduzidos, serão opcionais e claramente identificados.',
 	'welcome.faq.a2':

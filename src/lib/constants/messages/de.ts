@@ -1655,12 +1655,17 @@ export const deMessages = {
 		'Anstoß am 11. Juni. Wähle jetzt eine Seite — Gruppenphasen-Märkte sind offen, K.O.-Märkte starten zur Auslosung.',
 	'wc.title_a': 'Die Favoriten setzen',
 	'wc.title_b': 'die Linie.',
+	'welcome.deck.callers_last_hour': '{count} Caller in der letzten Stunde',
 	'welcome.deck.category': 'MAKRO',
 	'welcome.deck.closing_soon': 'Schließt bald',
 	'welcome.deck.consensus': '74% JA-KONSENS',
+	'welcome.deck.delta_today': '+{count} heute',
+	'welcome.deck.favorite': 'FAVORIT',
+	'welcome.deck.long_shot': 'AUSSENSEITER',
 	'welcome.deck.predictors_count': '{count} sagen voraus',
 	'welcome.deck.question': 'Senkt die Fed im Juni die Zinsen?',
 	'welcome.deck.subtitle': 'FOMC · Zinssenkungs-Call',
+	'welcome.deck.trickster_label': 'ZUSTIMMEN · 2× XP',
 	'welcome.faq.a1':
 		'Ja. Der Spielmodus ist vollständig kostenlos — keine Karte, keine Einzahlung, kein Abo. VXP ist eine reine Spielwährung, die deine Genauigkeit verfolgt; nicht einlösbar und kein Geld. Echtgeld-Märkte werden, falls eingeführt, optional und klar gekennzeichnet sein.',
 	'welcome.faq.a2':
