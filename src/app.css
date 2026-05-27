@@ -657,6 +657,14 @@ html[data-app='1'] body {
 	letter-spacing: 0;
 }
 
+/* Brand accent inline — used in editorial copy alongside `.serif-italic`
+ * for the "*Your call comes next.*" / "*Earned, not given.*" beats. The
+ * prototype defines `.acc { color: var(--accent); }` in `landing.css`;
+ * mirrored here so onboarding-v2 picks it up. */
+.acc {
+	color: var(--laurel);
+}
+
 /* Editorial display — italic serif at hero scale. Used for first-launch
  * "Veni." moments, FlowEnd headlines, "Identity, *not information.*"
  * type beats. Pairs with sans body copy. */
@@ -1503,4 +1511,663 @@ html[data-app='1'] body {
 	.art-culture {
 		animation: none;
 	}
+}
+
+/* ============================================================
+   VICI Onboarding v2 — verbatim port of prototype
+   `onboarding-v2.css`. Class prefix `ob2-*`. Token mapping:
+     --fg         → --parchment        (text-base)
+     --fg-dim     → --parchment-dim
+     --fg-mute    → --parchment-mute
+     --fg-faint   → --parchment-faint
+     --accent     → --laurel
+     --bg-raised  → --ink-raised
+     --bg-elevated→ --ink-elevated
+     --border     → --ink-line         (border-base)
+     --border-strong → --ink-line-strong
+     --ease       → --ease-vici
+   Inline pixel values kept verbatim per prototype.
+   ============================================================ */
+
+.ob.ob-v2 {
+	background: var(--ink);
+	color: var(--parchment);
+}
+
+.ob-wrap {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.ob-body-wrap {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+.ob-switch-link {
+	appearance: none;
+	align-self: flex-end;
+	border: 0;
+	background: transparent;
+	color: var(--parchment-mute);
+	font-family: inherit;
+	font-size: 13px;
+	padding: 12px 16px 4px;
+	cursor: pointer;
+	text-decoration: none;
+	transition: color 160ms var(--ease-vici);
+}
+.ob-switch-link:hover {
+	color: var(--parchment);
+}
+.ob-switch-link .acc {
+	color: var(--laurel);
+	text-decoration: underline;
+	text-underline-offset: 3px;
+}
+
+/* ─── Beat header ─────────────────────────────────────────── */
+.ob2-header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 0 20px;
+	flex-shrink: 0;
+}
+.ob2-progress {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+}
+.ob2-progress-dot {
+	width: 24px;
+	height: 3px;
+	border-radius: 999px;
+	background: rgba(242, 236, 220, 0.1);
+	transition: background 240ms var(--ease-vici);
+}
+.ob2-progress-dot.filled {
+	background: var(--laurel);
+}
+.ob2-step-label {
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--parchment-mute);
+}
+
+/* ─── Beat container ──────────────────────────────────────── */
+.ob2-beat {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
+	padding: 16px 22px 22px;
+	overflow-y: auto;
+}
+.ob2-h1 {
+	font-size: 26px;
+	line-height: 1.05;
+	letter-spacing: -0.025em;
+	font-weight: 600;
+	margin: 0 0 4px;
+	flex-shrink: 0;
+}
+.ob2-sub {
+	font-size: 13.5px;
+	line-height: 1.45;
+	color: var(--parchment-dim);
+	margin: 0 0 14px;
+	flex-shrink: 0;
+}
+.ob2-sub b {
+	color: var(--parchment);
+	font-weight: 600;
+}
+
+/* ─── Beat 1 · Phase 1.a · Team picker grid ──────────────── */
+.ob2-beat-pick {
+	justify-content: flex-start;
+}
+.ob2-team-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 8px;
+	margin-bottom: 14px;
+}
+.ob2-team-tile {
+	appearance: none;
+	cursor: pointer;
+	background: var(--ink-raised);
+	border: 1.5px solid var(--ink-line);
+	border-radius: 14px;
+	padding: 16px 12px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	color: var(--parchment);
+	font-family: inherit;
+	transition:
+		border-color 180ms var(--ease-vici),
+		transform 80ms var(--ease-vici);
+}
+.ob2-team-tile:active {
+	transform: scale(0.98);
+}
+.ob2-team-tile:hover {
+	border-color: var(--ink-line-strong);
+}
+.ob2-team-flag-lg {
+	font-size: 36px;
+	line-height: 1;
+}
+.ob2-team-name-lg {
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	letter-spacing: 0.08em;
+	text-transform: uppercase;
+	color: var(--parchment);
+	font-weight: 600;
+}
+.ob2-team-more-tile {
+	background: rgba(242, 236, 220, 0.04);
+	border-style: dashed;
+}
+.ob2-team-more-sub {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	color: var(--parchment-mute);
+	letter-spacing: 0.06em;
+}
+.ob2-skip-team {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	width: 100%;
+	margin-top: 4px;
+	padding: 14px;
+	color: var(--parchment-mute);
+	font-family: inherit;
+	font-size: 13px;
+	cursor: pointer;
+	transition: color 160ms var(--ease-vici);
+	flex-shrink: 0;
+}
+.ob2-skip-team:hover {
+	color: var(--parchment);
+}
+
+/* "Change team" link inline with sub copy */
+.ob2-change-team {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: var(--laurel);
+	cursor: pointer;
+	font-family: inherit;
+	font-size: 12px;
+	margin-left: 8px;
+	text-decoration: underline;
+	text-underline-offset: 3px;
+	text-decoration-color: rgba(226, 184, 66, 0.4);
+}
+.ob2-change-team:hover {
+	text-decoration-color: var(--laurel);
+}
+
+/* ─── Beat 1 · WC framing (compact eyebrow) ──────────────── */
+.ob2-wc-eyebrow {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 8px;
+	flex-shrink: 0;
+}
+.ob2-wc-tag {
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--laurel);
+	font-weight: 700;
+}
+.ob2-wc-countdown {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.06em;
+	color: var(--parchment-mute);
+}
+
+.ob2-card-stage {
+	position: relative;
+	flex: 1 1 auto;
+	min-height: 380px;
+	margin-bottom: 12px;
+	display: flex;
+	flex-direction: column;
+}
+.ob2-card-stage > .ob-stage {
+	flex: 1 1 auto;
+	min-height: 0;
+}
+
+/* ─── Team rail (expanded all-teams) ────────────────────── */
+.ob2-team-chip {
+	appearance: none;
+	border: 1px solid var(--ink-line);
+	background: var(--ink-raised);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 8px 12px;
+	border-radius: 10px;
+	min-width: 64px;
+	cursor: pointer;
+	color: var(--parchment);
+	font-family: inherit;
+	transition:
+		border-color 180ms var(--ease-vici),
+		background 180ms var(--ease-vici);
+	flex-shrink: 0;
+}
+.ob2-team-chip:hover {
+	border-color: var(--ink-line-strong);
+}
+.ob2-team-flag {
+	font-size: 22px;
+	line-height: 1;
+}
+.ob2-team-name {
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--parchment-dim);
+	font-weight: 600;
+	max-width: 70px;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+}
+
+.ob2-all-teams {
+	margin-top: 8px;
+	padding: 12px;
+	background: var(--ink-elevated);
+	border: 1px solid var(--ink-line);
+	border-radius: 12px;
+	max-height: 280px;
+	overflow-y: auto;
+}
+.ob2-all-teams-grid {
+	display: grid;
+	grid-template-columns: repeat(4, 1fr);
+	gap: 6px;
+}
+
+/* ─── Beat 2 · Handle claim ───────────────────────────────── */
+.ob2-mode-tabs {
+	display: flex;
+	gap: 2px;
+	padding: 3px;
+	background: rgba(242, 236, 220, 0.04);
+	border: 1px solid var(--ink-line);
+	border-radius: 10px;
+	margin-bottom: 16px;
+}
+.ob2-mode-tab {
+	appearance: none;
+	border: 0;
+	flex: 1;
+	background: transparent;
+	color: var(--parchment-mute);
+	cursor: pointer;
+	padding: 8px;
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 500;
+	border-radius: 7px;
+	transition:
+		background 200ms var(--ease-vici),
+		color 200ms var(--ease-vici);
+}
+.ob2-mode-tab.active {
+	background: var(--ink-elevated);
+	color: var(--parchment);
+	box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
+}
+
+.ob2-pool-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 6px;
+	margin-bottom: 14px;
+}
+.ob2-pool-chip {
+	appearance: none;
+	border: 1px solid var(--ink-line);
+	background: var(--ink-raised);
+	padding: 10px 12px;
+	border-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 6px;
+	font-family: var(--font-mono);
+	font-size: 12.5px;
+	color: var(--parchment);
+	cursor: pointer;
+	letter-spacing: 0.02em;
+	transition:
+		border-color 180ms var(--ease-vici),
+		background 180ms var(--ease-vici);
+}
+.ob2-pool-chip:hover:not(:disabled) {
+	border-color: var(--laurel);
+}
+.ob2-pool-chip.picked {
+	border-color: var(--laurel);
+	background: rgba(226, 184, 66, 0.06);
+	color: var(--laurel);
+}
+.ob2-pool-chip.taken {
+	opacity: 0.4;
+	cursor: not-allowed;
+	text-decoration: line-through;
+}
+.ob2-pool-taken {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	letter-spacing: 0.1em;
+	color: var(--no);
+	text-transform: uppercase;
+	text-decoration: none;
+}
+.ob2-at {
+	color: var(--parchment-mute);
+	font-weight: 600;
+	margin-right: 1px;
+}
+
+.ob2-custom-input-wrap {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 14px 18px;
+	background: var(--ink-elevated);
+	border: 1px solid var(--ink-line);
+	border-radius: 12px;
+	margin-bottom: 14px;
+}
+.ob2-at-large {
+	font-family: var(--font-mono);
+	font-size: 22px;
+	color: var(--parchment-mute);
+	font-weight: 600;
+}
+.ob2-custom-input {
+	flex: 1;
+	appearance: none;
+	background: transparent;
+	border: 0;
+	outline: 0;
+	color: var(--parchment);
+	font-family: var(--font-mono);
+	font-size: 18px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+}
+.ob2-custom-input::placeholder {
+	color: var(--parchment-faint);
+}
+
+.ob2-avail {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.08em;
+	padding: 6px 12px;
+	border-radius: 6px;
+	margin-bottom: 14px;
+	text-transform: uppercase;
+}
+.ob2-avail.ok {
+	color: var(--yes);
+	background: rgba(79, 211, 161, 0.08);
+	border: 1px solid rgba(79, 211, 161, 0.2);
+}
+.ob2-avail.no {
+	color: var(--no);
+	background: rgba(255, 107, 107, 0.08);
+	border: 1px solid rgba(255, 107, 107, 0.2);
+}
+
+.ob2-affil-preview {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 12px 14px;
+	background: var(--ink-elevated);
+	border: 1px solid var(--ink-line);
+	border-radius: 12px;
+	margin-bottom: 18px;
+}
+.ob2-affil-flag {
+	width: 44px;
+	height: 44px;
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 22px;
+	flex-shrink: 0;
+}
+.ob2-affil-text {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	min-width: 0;
+}
+.ob2-affil-eyebrow {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--parchment-mute);
+}
+.ob2-affil-name {
+	font-size: 13.5px;
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+.ob2-affil-name .serif-italic {
+	font-size: 14px;
+}
+.ob2-affil-tag {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	letter-spacing: 0.1em;
+	font-weight: 700;
+	padding: 2px 5px;
+	border-radius: 3px;
+}
+
+/* ─── Action row ──────────────────────────────────────────── */
+.ob2-actions {
+	display: flex;
+	gap: 8px;
+	margin-top: auto;
+	flex-shrink: 0;
+}
+.ob2-btn-primary {
+	flex: 1;
+	appearance: none;
+	border: 0;
+	cursor: pointer;
+	background: var(--laurel);
+	color: var(--ink);
+	padding: 12px 16px;
+	font-family: inherit;
+	font-weight: 600;
+	font-size: 14px;
+	border-radius: 999px;
+	transition: opacity 180ms;
+}
+.ob2-btn-primary:disabled {
+	opacity: 0.4;
+	cursor: not-allowed;
+}
+.ob2-btn-ghost {
+	appearance: none;
+	border: 1px solid var(--ink-line);
+	background: rgba(242, 236, 220, 0.04);
+	color: var(--parchment);
+	cursor: pointer;
+	padding: 12px 16px;
+	font-family: inherit;
+	font-weight: 500;
+	font-size: 13px;
+	border-radius: 999px;
+	transition: background 180ms;
+}
+.ob2-btn-ghost:hover {
+	background: rgba(242, 236, 220, 0.08);
+}
+
+.ob2-skip-link {
+	appearance: none;
+	border: 0;
+	background: transparent;
+	color: var(--parchment-mute);
+	font-family: inherit;
+	font-size: 12px;
+	padding: 12px;
+	cursor: pointer;
+	text-align: center;
+	width: 100%;
+	margin-top: 8px;
+	flex-shrink: 0;
+}
+.ob2-skip-link:hover {
+	color: var(--parchment);
+}
+
+/* ─── Beat 3 · Auth ───────────────────────────────────────── */
+.ob2-summary {
+	padding: 14px;
+	background: var(--ink-elevated);
+	border: 1px solid var(--ink-line);
+	border-radius: 12px;
+	margin-bottom: 18px;
+}
+.ob2-summary-row {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+.ob2-summary-flag {
+	width: 44px;
+	height: 44px;
+	border-radius: 10px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+}
+.ob2-summary-q {
+	font-size: 14px;
+	font-weight: 600;
+}
+.ob2-summary-q b {
+	color: var(--laurel);
+}
+.ob2-summary-meta {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.06em;
+	color: var(--parchment-mute);
+	margin-top: 2px;
+}
+
+.ob2-auth-buttons {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+.ob2-auth-btn {
+	appearance: none;
+	border: 1px solid var(--ink-line);
+	padding: 13px 16px;
+	border-radius: 999px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+	transition: background 180ms;
+}
+.ob2-auth-apple {
+	background: #0e0d0b;
+	color: #f2ecdc;
+	border-color: rgba(255, 255, 255, 0.1);
+}
+.ob2-auth-apple:hover {
+	background: #1a1815;
+}
+.ob2-auth-google {
+	background: #f2ecdc;
+	color: #0e0d0b;
+}
+.ob2-auth-google:hover {
+	background: #ffffff;
+}
+.ob2-auth-email {
+	background: rgba(242, 236, 220, 0.06);
+	color: var(--parchment);
+}
+.ob2-auth-email:hover {
+	background: rgba(242, 236, 220, 0.1);
+}
+
+.ob2-email-flow {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+.ob2-email-input {
+	appearance: none;
+	border: 1px solid var(--ink-line);
+	background: var(--ink-elevated);
+	color: var(--parchment);
+	padding: 14px 18px;
+	border-radius: 12px;
+	font-family: var(--font-mono);
+	font-size: 15px;
+	outline: 0;
+}
+
+.ob2-tos {
+	font-size: 11px;
+	line-height: 1.55;
+	color: var(--parchment-mute);
+	margin-top: 18px;
+	text-align: center;
+}
+.ob2-tos a {
+	color: var(--laurel);
+	text-decoration: underline;
+	text-underline-offset: 2px;
+}
+.ob2-tos .serif-italic {
+	color: var(--parchment-dim);
 }

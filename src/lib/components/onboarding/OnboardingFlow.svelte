@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
 	import OnboardingBeat1 from '$lib/components/onboarding/OnboardingBeat1.svelte';
 	import OnboardingBeat1Card from '$lib/components/onboarding/OnboardingBeat1Card.svelte';
 	import OnboardingBeat2 from '$lib/components/onboarding/OnboardingBeat2.svelte';
@@ -8,13 +7,12 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
-	// Crossfade duration between beats. Keep this in sync with the
-	// per-beat feedback delays in OnboardingBeat1/1b/2 so the visual
-	// confirmation finishes before the next beat fades in.
-	const BEAT_FADE_MS = 200;
-
 	/**
-	 * Onboarding orchestrator — the 3-beat sequence wired up.
+	 * Onboarding orchestrator — verbatim port of the prototype's
+	 * `OnboardingFlowV2` shell (`onboarding-v2.jsx`). The DOM mirrors
+	 * the prototype: an outer `.ob.ob-v2` envelope, the inline
+	 * "Already a member? Sign in" affordance, and a `.ob-wrap >
+	 * .ob-body-wrap` content slot that swaps the active beat.
 	 *
 	 * Beat 1 splits into two micro-phases:
 	 *
@@ -22,22 +20,15 @@
 	 *   1.b · derived first call     (`commit` advances side, "change team" returns to 1.a)
 	 *   2   · handle picker          (`advance` advances handle | null, `back` returns to 1.b)
 	 *   3   · auth — locks the record. Final `onComplete` is bubbled to the parent.
-	 *
-	 * Each beat is a standalone component; the orchestrator owns the
-	 * cross-beat state and decides which to render.
 	 */
 	interface Props {
-		// Fires after Beat 3's SignInActions resolves. The parent route
-		// owns the post-auth handoff (persisting team/side/handle into
-		// the profile, routing into the app).
+		// Fires after Beat 3's auth provider stack resolves.
 		onComplete: (result: {
 			participantId: string | null;
 			side: 'YES' | 'NO' | null;
 			handle: string | null;
 		}) => void;
-		// True when the user is already signed in (post-signin onboarding
-		// path). Beat 3 swaps its provider stack for a Finish button, and
-		// the "Already a member? Sign in" affordance is hidden.
+		// True when the user is already signed in (post-signin onboarding path).
 		authenticated?: boolean;
 	}
 
@@ -84,85 +75,36 @@
 	};
 </script>
 
-<div class="ob2-orchestrator">
+<div class="ob ob-v2">
 	{#if !authenticated}
-		<a class="ob2-switch-link" href={PublicPath.SignIn}>
+		<a class="ob-switch-link" aria-label="Sign in" href={PublicPath.SignIn}>
 			{t({ locale: $localeStore, key: 'onboarding.switch.prefix' })}
-			<span class="ob2-switch-link-accent">
-				{t({ locale: $localeStore, key: 'onboarding.switch.signin' })}
-			</span>
+			<span class="acc">{t({ locale: $localeStore, key: 'onboarding.switch.signin' })}</span>
 		</a>
 	{/if}
 
-	<div class="ob2-beat-stage">
-		{#key beat}
-			<div
-				class="ob2-beat-slot"
-				in:fade={{ duration: BEAT_FADE_MS, delay: BEAT_FADE_MS }}
-				out:fade={{ duration: BEAT_FADE_MS }}
-			>
-				{#if beat === '1a'}
-					<OnboardingBeat1 onPick={handlePick} />
-				{:else if beat === '1b'}
-					<OnboardingBeat1Card
-						onChangeTeam={handleChangeTeam}
-						onCommit={handleCommit}
-						{participantId}
-					/>
-				{:else if beat === '2'}
-					<OnboardingBeat2 onAdvance={handleHandle} onBack={handleHandleBack} {participantId} />
-				{:else}
-					<OnboardingBeat3
-						{authenticated}
-						{handle}
-						onBack={handleAuthBack}
-						onComplete={handleAuthComplete}
-						{participantId}
-						{side}
-					/>
-				{/if}
-			</div>
-		{/key}
+	<div class="ob-wrap">
+		<div class="ob-body-wrap">
+			{#if beat === '1a'}
+				<OnboardingBeat1 onPick={handlePick} />
+			{:else if beat === '1b'}
+				<OnboardingBeat1Card
+					onChangeTeam={handleChangeTeam}
+					onCommit={handleCommit}
+					{participantId}
+				/>
+			{:else if beat === '2'}
+				<OnboardingBeat2 onAdvance={handleHandle} onBack={handleHandleBack} {participantId} />
+			{:else}
+				<OnboardingBeat3
+					{authenticated}
+					{handle}
+					onBack={handleAuthBack}
+					onComplete={handleAuthComplete}
+					{participantId}
+					{side}
+				/>
+			{/if}
+		</div>
 	</div>
 </div>
-
-<style lang="postcss">
-	.ob2-orchestrator {
-		display: flex;
-		flex-direction: column;
-		min-height: 100%;
-	}
-
-	.ob2-switch-link {
-		align-self: flex-end;
-		padding: 0.75rem 1rem 0.25rem;
-		font-size: var(--t-13);
-		color: var(--text-muted);
-		text-decoration: none;
-		transition: color 140ms ease;
-	}
-
-	.ob2-switch-link:hover {
-		color: var(--text-base);
-	}
-
-	.ob2-switch-link-accent {
-		color: var(--laurel);
-		text-decoration: underline;
-		text-underline-offset: 0.18em;
-	}
-
-	/* Stage stacks the outgoing and incoming beat slots in the same grid
-	   cell so the fade transitions overlap without pushing content
-	   around. */
-	.ob2-beat-stage {
-		display: grid;
-		grid-template-areas: 'slot';
-		flex: 1 1 auto;
-	}
-
-	.ob2-beat-slot {
-		grid-area: slot;
-		min-width: 0;
-	}
-</style>
