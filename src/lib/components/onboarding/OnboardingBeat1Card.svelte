@@ -1,4 +1,5 @@
 <script lang="ts">
+	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import SwipeableMarketCard from '$lib/components/ui/SwipeableMarketCard.svelte';
@@ -62,6 +63,20 @@
 		picked && advancement ? 'onboarding.beat1b.title_advance' : 'onboarding.beat1b.title_winner'
 	);
 	const titleTeamName = $derived(picked?.name ?? fallbackFavourite?.name ?? '');
+
+	// Stable seed for the FlowArt figure. Picked team's identifiers take
+	// precedence so a participant with no advancement market (reachable
+	// via the "+N more" list) still seeds off its own id rather than the
+	// favourite's — otherwise the figure contradicts the "Backing X"
+	// copy. Falls through to the fallback favourite for the skip path.
+	const artworkSeed = $derived(
+		advancement?.id ??
+			picked?.marketId ??
+			picked?.id ??
+			fallbackFavourite?.marketId ??
+			fallbackFavourite?.id ??
+			event.id
+	);
 </script>
 
 <div class="ob2-beat ob2-beat-1">
@@ -109,6 +124,10 @@
 					<h2 class="ob2-card-question">
 						{t({ locale: $localeStore, key: titleKey, params: { team: titleTeamName } })}
 					</h2>
+
+					<div class="ob2-card-art">
+						<MarketArtwork bleed category="wc" seed={artworkSeed} size={420} state="neutral" />
+					</div>
 
 					<div class="ob2-card-probs">
 						<div class="ob2-card-prob no">
@@ -176,6 +195,33 @@
 		line-height: 1.18;
 		letter-spacing: -0.02em;
 		color: var(--parchment);
+	}
+	/* Edge-to-edge FlowArt — cancels the swipe card's 22px padding so
+	   the WC figure / spots / confetti span the body, matching the
+	   prototype's `ob-art` bleed (`onboarding.jsx:128-129`). */
+	.ob2-card-art {
+		position: relative;
+		width: calc(100% + 44px);
+		height: 150px;
+		margin: 0 -22px;
+		overflow: hidden;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		border-top: 1px solid var(--ink-line);
+		border-bottom: 1px solid var(--ink-line);
+	}
+	.ob2-card-art :global(.market-artwork),
+	.ob2-card-art :global(.flow-art) {
+		width: 100%;
+		height: 100%;
+		max-width: none;
+		border-radius: 0;
+		box-shadow: none;
+	}
+	.ob2-card-art :global(.flow-art svg) {
+		width: 100%;
+		height: 100%;
 	}
 	.ob2-card-probs {
 		display: grid;
