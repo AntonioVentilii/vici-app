@@ -7,7 +7,14 @@ export default ts.config(
 	...svelteConfig,
 
 	{
-		ignores: ['build/', '.svelte-kit/', 'dist/', 'static/', 'src/declarations/']
+		ignores: [
+			'build/',
+			'.svelte-kit/',
+			'dist/',
+			'static/',
+			'src/declarations/',
+			'.claude/worktrees/'
+		]
 	},
 
 	{
