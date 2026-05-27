@@ -8,15 +8,15 @@
 	/**
 	 * Onboarding · Beat 1.a — team picker.
 	 *
+	 * Verbatim port of `Beat1WC` phase 1.a from `onboarding-v2.jsx`
+	 * (lines 127-174). Renders the favourites grid with the `+N more`
+	 * tile inline, an optional all-teams panel below, and a single
+	 * "Skip — just following the tournament" link.
+	 *
 	 * Beat 1 splits into two micro-phases: 1.a "pick your team" (or
 	 * skip) and 1.b "swipe the prediction card derived from your
 	 * pick." This component owns 1.a only — emitting the picked
 	 * `participantId` (ISO-3166 alpha-2) or `null` for the skip path.
-	 *
-	 * The card-swipe sequel (1.b) is a follow-up component.
-	 *
-	 * Reads the active featured event so swapping the tentpole in
-	 * `featured-event.constants.ts` automatically rewires the picker.
 	 */
 	interface Props {
 		// Fires when the user picks a team. Pass `null` for the "Skip — just
@@ -26,13 +26,7 @@
 
 	const { onPick }: Props = $props();
 
-	// Delay between the user tapping a team tile and advancing to Beat 1.b
-	// so the picked tile can pulse and the choice registers visually.
-	// Tuned to feel responsive while still confirming the action.
-	const PICK_FEEDBACK_MS = 280;
-
 	let showAllTeams = $state(false);
-	let pickedId: string | null = $state(null);
 
 	const event = $derived($featuredEvent);
 	const favouriteIds = $derived(event.favouriteIds ?? []);
@@ -42,15 +36,11 @@
 	// promote a matching participant into position 1 of the favourites
 	// grid — Brazilian visitor sees Brazil first, US visitor sees USA
 	// first, etc. We only promote when the local team is NOT already
-	// visible (the curated favourites grid stays intact for the typical
-	// case). Falls back to the raw favourites list on the server or when
-	// no region tag matches.
+	// visible.
 	const localCountryCode: string | null = detectUserCountryCode();
 
 	// Favourites surface as 4 large tiles, sorted by `odds` descending so
-	// the team most likely to win renders first. `odds` is implied
-	// probability %, so higher = stronger favourite. The localised pass
-	// below may then promote the visitor's country into slot 1.
+	// the team most likely to win renders first.
 	const baseFavourites: FeaturedEventParticipant[] = $derived(
 		favouriteIds
 			.map((id) => participants.find((p) => p.id === id))
@@ -63,7 +53,6 @@
 			return baseFavourites;
 		}
 
-		// Already in the curated grid — no promotion needed.
 		if (baseFavourites.some((p) => p.id === localCountryCode)) {
 			return baseFavourites;
 		}
@@ -74,8 +63,6 @@
 			return baseFavourites;
 		}
 
-		// Insert in slot 1, drop the tail entry so the grid stays the
-		// same size (4 tiles).
 		return [local, ...baseFavourites.slice(0, Math.max(0, baseFavourites.length - 1))];
 	});
 
@@ -94,33 +81,12 @@
 	const kickoffDays = $derived(
 		Math.max(0, Math.ceil((event.kickoffAt_ms - Date.now()) / (24 * 60 * 60 * 1000)))
 	);
-
-	const pick = (participantId: string) => {
-		if (pickedId !== null) {
-			return;
-		}
-
-		pickedId = participantId;
-		setTimeout(() => onPick(participantId), PICK_FEEDBACK_MS);
-	};
-
-	const skip = () => {
-		if (pickedId !== null) {
-			return;
-		}
-
-		onPick(null);
-	};
 </script>
 
-<section
-	class="ob2-beat ob2-beat-1"
-	class:is-committing={pickedId !== null}
-	aria-busy={pickedId !== null}
->
+<div class="ob2-beat ob2-beat-1 ob2-beat-pick">
 	<div class="ob2-wc-eyebrow">
-		<span class="allcaps ob2-wc-tag">{event.title}</span>
-		<span class="ob2-wc-countdown num">
+		<span class="ob2-wc-tag">{event.title}</span>
+		<span class="ob2-wc-countdown">
 			· {t({
 				locale: $localeStore,
 				key: 'onboarding.beat1.kickoff_days',
@@ -140,22 +106,18 @@
 	<div class="ob2-team-grid">
 		{#each favourites as team (team.id)}
 			<button
-				style:--team-color={team.color ?? 'var(--border-strong)'}
+				style:border-color="{team.color ?? 'var(--ink-line)'}55"
 				class="ob2-team-tile"
-				class:is-dimmed={pickedId !== null && pickedId !== team.id}
-				class:is-picked={pickedId === team.id}
-				disabled={pickedId !== null}
-				onclick={() => pick(team.id)}
+				onclick={() => onPick(team.id)}
 				type="button"
 			>
-				<span class="ob2-team-flag-lg" aria-hidden="true">{team.glyph ?? ''}</span>
+				<span class="ob2-team-flag-lg">{team.glyph ?? ''}</span>
 				<span class="ob2-team-name-lg">{team.name}</span>
 			</button>
 		{/each}
 		{#if moreCount > 0}
 			<button
-				class="ob2-team-tile ob2-team-more"
-				aria-expanded={showAllTeams}
+				class="ob2-team-tile ob2-team-more-tile"
 				onclick={() => (showAllTeams = !showAllTeams)}
 				type="button"
 			>
@@ -183,16 +145,13 @@
 				{#each otherTeams as team (team.id)}
 					<button
 						class="ob2-team-chip"
-						class:is-dimmed={pickedId !== null && pickedId !== team.id}
-						class:is-picked={pickedId === team.id}
-						disabled={pickedId !== null}
 						onclick={() => {
-							pick(team.id);
+							onPick(team.id);
 							showAllTeams = false;
 						}}
 						type="button"
 					>
-						<span class="ob2-team-flag" aria-hidden="true">{team.glyph ?? ''}</span>
+						<span class="ob2-team-flag">{team.glyph ?? ''}</span>
 						<span class="ob2-team-name">{team.name}</span>
 					</button>
 				{/each}
@@ -200,207 +159,7 @@
 		</div>
 	{/if}
 
-	<button class="ob2-skip-team" disabled={pickedId !== null} onclick={skip} type="button">
+	<button class="ob2-skip-team" onclick={() => onPick(null)} type="button">
 		{t({ locale: $localeStore, key: 'onboarding.beat1.skip' })}
 	</button>
-</section>
-
-<style lang="postcss">
-	.ob2-beat {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		padding: 1.25rem 1.1rem 1.5rem;
-		color: var(--text-base);
-	}
-
-	.ob2-wc-eyebrow {
-		display: flex;
-		align-items: baseline;
-		gap: 0.45rem;
-		font-size: var(--t-12);
-		color: var(--text-muted);
-	}
-
-	.ob2-wc-tag {
-		color: var(--laurel);
-		font-weight: 700;
-	}
-
-	.ob2-h1 {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: clamp(1.5rem, 6vw, 2rem);
-		line-height: var(--leading-tight);
-		color: var(--text-base);
-	}
-
-	.ob2-sub {
-		margin: 0;
-		font-size: var(--t-14);
-		color: var(--text-muted);
-	}
-
-	.ob2-team-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
-		gap: 0.65rem;
-		margin-top: 0.35rem;
-	}
-
-	.ob2-team-tile {
-		appearance: none;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 0.4rem;
-		padding: 1rem 0.5rem;
-		min-height: 6rem;
-		font: inherit;
-		color: var(--text-base);
-		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
-		border: 1px solid
-			color-mix(in srgb, var(--team-color, var(--border-strong)) 33%, var(--border-base));
-		border-radius: var(--r-12);
-		cursor: pointer;
-		transition:
-			transform 160ms ease,
-			border-color 160ms ease,
-			background 160ms ease;
-	}
-
-	.ob2-team-tile:hover:not(:disabled) {
-		transform: translateY(-1px);
-		border-color: color-mix(
-			in srgb,
-			var(--team-color, var(--border-strong)) 55%,
-			var(--border-base)
-		);
-	}
-
-	.ob2-team-tile.is-picked {
-		transform: scale(1.03);
-		border-color: color-mix(in srgb, var(--team-color, var(--laurel)) 85%, var(--border-base));
-		background: color-mix(in srgb, var(--team-color, var(--laurel)) 14%, var(--bg-surface));
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--team-color, var(--laurel)) 28%, transparent);
-		animation: ob2-pulse 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
-	}
-
-	.ob2-team-tile.is-dimmed {
-		opacity: 0.45;
-		transform: scale(0.98);
-	}
-
-	.ob2-team-tile:disabled {
-		cursor: default;
-	}
-
-	@keyframes ob2-pulse {
-		0% {
-			transform: scale(1);
-		}
-		50% {
-			transform: scale(1.06);
-		}
-		100% {
-			transform: scale(1.03);
-		}
-	}
-
-	.ob2-team-flag-lg {
-		font-size: 2.25rem;
-		line-height: 1;
-	}
-
-	.ob2-team-name-lg {
-		font-size: var(--t-13);
-		font-weight: 600;
-	}
-
-	.ob2-team-more {
-		--team-color: var(--border-strong);
-		gap: 0.15rem;
-	}
-
-	.ob2-team-more-sub {
-		font-size: var(--t-11, 0.7rem);
-		color: var(--text-muted);
-	}
-
-	.ob2-all-teams {
-		border-top: 1px solid var(--border-base);
-		padding-top: 0.85rem;
-	}
-
-	.ob2-all-teams-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
-		gap: 0.45rem;
-	}
-
-	.ob2-team-chip {
-		appearance: none;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		padding: 0.45rem 0.65rem;
-		font: inherit;
-		color: var(--text-base);
-		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		cursor: pointer;
-		transition: background 140ms ease;
-	}
-
-	.ob2-team-chip:hover:not(:disabled) {
-		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
-	}
-
-	.ob2-team-chip.is-picked {
-		color: var(--laurel);
-		border-color: color-mix(in srgb, var(--laurel) 70%, var(--border-base));
-		background: color-mix(in srgb, var(--laurel) 14%, var(--bg-surface));
-		animation: ob2-pulse 280ms cubic-bezier(0.2, 0.8, 0.2, 1);
-	}
-
-	.ob2-team-chip.is-dimmed {
-		opacity: 0.45;
-	}
-
-	.ob2-team-chip:disabled {
-		cursor: default;
-	}
-
-	.ob2-team-flag {
-		font-size: 1rem;
-		line-height: 1;
-	}
-
-	.ob2-team-name {
-		font-size: var(--t-12);
-	}
-
-	.ob2-skip-team {
-		appearance: none;
-		align-self: center;
-		margin-top: 0.5rem;
-		padding: 0.55rem 0.85rem;
-		font: inherit;
-		font-size: var(--t-13);
-		color: var(--text-muted);
-		background: none;
-		border: none;
-		cursor: pointer;
-	}
-
-	.ob2-skip-team:hover:not(:disabled) {
-		color: var(--text-base);
-	}
-
-	.ob2-skip-team:disabled {
-		opacity: 0.4;
-		cursor: default;
-	}
-</style>
+</div>

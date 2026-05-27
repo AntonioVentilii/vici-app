@@ -9,19 +9,16 @@
 	/**
 	 * Onboarding · Beat 2 — claim a handle.
 	 *
-	 * Mirrors the two-mode picker: pool (Roman-name
-	 * suggestions) and custom (free-form input). Validates against
-	 * length, character set, and a small reserved set. Renders an
-	 * affiliation chip preview showing the picked team beside the
-	 * tentative handle so the user sees their forming identity before
-	 * committing.
+	 * Verbatim port of `Beat2Handle` from `onboarding-v2.jsx` (lines
+	 * 179-277). Renders the `BeatV2Header` (progress dots + "BEAT 2 OF
+	 * 3"), the two-mode picker (pool / custom), the availability strip,
+	 * the affiliation preview chip, the primary / ghost action row, and
+	 * the "Pick later" skip link.
 	 *
 	 * Emits `onAdvance(handle | null)` — `null` covers the "Pick later"
-	 * skip path; the orchestrator can later prompt the user again.
+	 * skip path.
 	 */
 	interface Props {
-		// Picked team id from Beat 1.a (`null` for the skip path). Drives
-		// the affiliation chip preview.
 		participantId: string | null;
 		onAdvance: (handle: string | null) => void;
 		onBack: () => void;
@@ -29,10 +26,7 @@
 
 	const { participantId, onAdvance, onBack }: Props = $props();
 
-	// ROMAN_POOL — kept as a literal so the visible roster stays
-	// stable. Reserved set covers the obvious squatters;
-	// real availability would come from a backend lookup but is faked
-	// here to keep the onboarding offline-tolerant.
+	// Roman handle pool — kept verbatim with the prototype (`onboarding-v2.jsx:27-30`).
 	const ROMAN_POOL: readonly string[] = [
 		'augur',
 		'augustus',
@@ -56,11 +50,7 @@
 
 	const RESERVED: ReadonlySet<string> = new Set(['vici', 'admin', 'satoshi', 'oracle']);
 
-	// Cap the live "taken handles" probe at the top N leaderboard rows —
-	// this is a UI hint, not a transactional uniqueness check (the
-	// satellite still enforces uniqueness at claim time). Capping keeps
-	// the pool-chip and custom-input checks O(1) and avoids hammering
-	// the leaderboard endpoint during onboarding.
+	// Cap the live "taken handles" probe at the top N leaderboard rows.
 	const TAKEN_HANDLES_PROBE_LIMIT = 50;
 
 	type Mode = 'pool' | 'custom';
@@ -68,9 +58,6 @@
 	let poolPick: string | null = $state(null);
 	let custom: string = $state('');
 
-	// Reactive handle set seeded from the top leaderboard rows so the
-	// chips re-render once the async fetch resolves. Falls back to
-	// RESERVED-only on error — onboarding must remain offline-tolerant.
 	const takenHandles = new SvelteSet<string>(RESERVED);
 
 	onMount(() => {
@@ -126,56 +113,31 @@
 		return { ok: true };
 	});
 
+	const canClaim = $derived(availability.ok);
+
 	const event = $derived($featuredEvent);
 	const team = $derived(
 		participantId === null ? undefined : event.participants.find((p) => p.id === participantId)
 	);
-
-	// Delay between the user clicking Claim and advancing to Beat 3 so
-	// the button can show a brief "claiming" pulse before the next beat.
-	const CLAIM_FEEDBACK_MS = 320;
-
-	let claiming = $state(false);
-
-	const claim = () => {
-		if (claiming) {
-			return;
-		}
-
-		if (availability.ok && selectedName) {
-			claiming = true;
-			setTimeout(() => onAdvance(selectedName), CLAIM_FEEDBACK_MS);
-		}
-	};
-
-	const skip = () => {
-		if (claiming) {
-			return;
-		}
-
-		onAdvance(null);
-	};
 </script>
 
-<section class="ob2-beat ob2-beat-2" aria-labelledby="ob2-beat2-title">
-	<header class="ob2-beat-header">
-		<span class="ob2-progress" aria-hidden="true">
-			<span class="ob2-progress-dot is-filled"></span>
-			<span class="ob2-progress-dot is-filled"></span>
+<div class="ob2-beat ob2-beat-2">
+	<div class="ob2-header">
+		<span class="ob2-progress">
+			<span class="ob2-progress-dot filled"></span>
+			<span class="ob2-progress-dot filled"></span>
 			<span class="ob2-progress-dot"></span>
 		</span>
-		<span class="allcaps ob2-step-label">
+		<span class="ob2-step-label">
 			{t({
 				locale: $localeStore,
 				key: 'onboarding.beat_label',
 				params: { current: 2, total: 3 }
 			})}
 		</span>
-	</header>
+	</div>
 
-	<h1 id="ob2-beat2-title" class="ob2-h1">
-		{t({ locale: $localeStore, key: 'onboarding.beat2.title' })}
-	</h1>
+	<h1 class="ob2-h1">{t({ locale: $localeStore, key: 'onboarding.beat2.title' })}</h1>
 	<p class="ob2-sub">
 		{t({ locale: $localeStore, key: 'onboarding.beat2.sub' })}
 		<span class="serif-italic acc">
@@ -183,23 +145,19 @@
 		</span>
 	</p>
 
-	<div class="ob2-mode-tabs" role="tablist">
+	<div class="ob2-mode-tabs">
 		<button
 			class="ob2-mode-tab"
-			class:is-active={mode === 'pool'}
-			aria-selected={mode === 'pool'}
+			class:active={mode === 'pool'}
 			onclick={() => (mode = 'pool')}
-			role="tab"
 			type="button"
 		>
 			{t({ locale: $localeStore, key: 'onboarding.beat2.mode_pool' })}
 		</button>
 		<button
 			class="ob2-mode-tab"
-			class:is-active={mode === 'custom'}
-			aria-selected={mode === 'custom'}
+			class:active={mode === 'custom'}
 			onclick={() => (mode = 'custom')}
-			role="tab"
 			type="button"
 		>
 			{t({ locale: $localeStore, key: 'onboarding.beat2.mode_custom' })}
@@ -210,17 +168,18 @@
 		<div class="ob2-pool-grid">
 			{#each ROMAN_POOL as name (name)}
 				{@const taken = isHandleTaken(name)}
+				{@const picked = poolPick === name}
 				<button
 					class="ob2-pool-chip"
-					class:is-picked={poolPick === name}
-					class:is-taken={taken}
+					class:picked
+					class:taken
 					disabled={taken}
 					onclick={() => !taken && (poolPick = name)}
 					type="button"
 				>
-					<span class="ob2-at">@</span>{name}
+					<span><span class="ob2-at">@</span>{name}</span>
 					{#if taken}
-						<span class="ob2-pool-taken allcaps">
+						<span class="ob2-pool-taken">
 							{t({ locale: $localeStore, key: 'onboarding.beat2.pool_taken' })}
 						</span>
 					{/if}
@@ -228,399 +187,79 @@
 			{/each}
 		</div>
 	{:else}
-		<label class="ob2-custom-input-wrap">
-			<span class="ob2-at-large" aria-hidden="true">@</span>
+		<div class="ob2-custom-input-wrap">
+			<span class="ob2-at-large">@</span>
+			<!-- svelte-ignore a11y_autofocus -->
 			<input
-				class="ob2-custom-input num"
+				class="ob2-custom-input"
 				autocapitalize="off"
 				autocomplete="off"
+				autofocus
 				maxlength="16"
 				placeholder={t({ locale: $localeStore, key: 'onboarding.beat2.placeholder' })}
 				spellcheck="false"
 				type="text"
 				bind:value={custom}
 			/>
-		</label>
+		</div>
 	{/if}
 
 	{#if selectedName}
-		<p class="ob2-avail" class:is-ok={availability.ok} aria-live="polite">
+		<div class="ob2-avail" class:no={!availability.ok} class:ok={availability.ok}>
 			{#if availability.ok}
-				<span>{t({ locale: $localeStore, key: 'onboarding.beat2.avail_ok_prefix' })}</span>
-				<span class="serif-italic acc">@{selectedName}</span>
+				{t({ locale: $localeStore, key: 'onboarding.beat2.avail_ok_prefix' })}
+				<span class="serif-italic">@{selectedName}</span>
 			{:else if availability.reasonKey}
 				{t({ locale: $localeStore, key: availability.reasonKey })}
 			{/if}
-		</p>
+		</div>
 	{/if}
 
 	{#if team}
 		{@const teamColor = team.color ?? 'var(--laurel)'}
-		<aside
-			style:--team-color={teamColor}
-			class="ob2-affil-preview"
-			aria-label={t({ locale: $localeStore, key: 'onboarding.beat2.affil_eyebrow' })}
-		>
-			<span
-				style:background="color-mix(in srgb, {teamColor} 13%, transparent)"
-				style:color={teamColor}
-				class="ob2-affil-flag"
-				aria-hidden="true"
-			>
+		<div class="ob2-affil-preview">
+			<div style:background="{teamColor}22" style:color={teamColor} class="ob2-affil-flag">
 				{team.glyph ?? ''}
-			</span>
+			</div>
 			<div class="ob2-affil-text">
-				<span class="allcaps ob2-affil-eyebrow">
+				<span class="ob2-affil-eyebrow">
 					{t({ locale: $localeStore, key: 'onboarding.beat2.affil_eyebrow' })}
 				</span>
 				<span class="ob2-affil-name">
 					<span class="serif-italic acc">
-						@{selectedName ||
-							t({ locale: $localeStore, key: 'onboarding.beat2.affil_placeholder' })}
+						{#if selectedName}
+							@{selectedName}
+						{:else}
+							@{t({ locale: $localeStore, key: 'onboarding.beat2.affil_placeholder' })}
+						{/if}
 					</span>
-					<span style:background={teamColor} class="ob2-affil-tag allcaps">
+					<span style:background={teamColor} style:color="#fff" class="ob2-affil-tag">
 						{team.id}
 					</span>
 				</span>
 			</div>
-		</aside>
+		</div>
 	{/if}
 
 	<div class="ob2-actions">
-		<button class="ob2-btn-ghost" disabled={claiming} onclick={onBack} type="button">
+		<button class="ob2-btn-ghost" onclick={onBack} type="button">
 			{t({ locale: $localeStore, key: 'onboarding.beat2.back' })}
 		</button>
 		<button
 			class="ob2-btn-primary"
-			class:is-claiming={claiming}
-			disabled={!availability.ok || claiming}
-			onclick={claim}
+			disabled={!canClaim}
+			onclick={() => onAdvance(selectedName)}
 			type="button"
 		>
 			{t({
 				locale: $localeStore,
 				key: 'onboarding.beat2.claim',
-				params: { handle: selectedName || '…' }
+				params: { handle: selectedName || '...' }
 			})}
 		</button>
 	</div>
 
-	<button class="ob2-skip-link" disabled={claiming} onclick={skip} type="button">
+	<button class="ob2-skip-link" onclick={() => onAdvance(null)} type="button">
 		{t({ locale: $localeStore, key: 'onboarding.beat2.skip' })}
 	</button>
-</section>
-
-<style lang="postcss">
-	.ob2-beat {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-		padding: 1.25rem 1.1rem 1.5rem;
-		color: var(--text-base);
-	}
-
-	.ob2-beat-header {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.ob2-progress {
-		display: inline-flex;
-		gap: 6px;
-	}
-
-	.ob2-progress-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: 50%;
-		background: var(--border-base);
-		transition: background 160ms ease;
-	}
-
-	.ob2-progress-dot.is-filled {
-		background: var(--laurel);
-	}
-
-	.ob2-step-label {
-		font-size: var(--t-11, 0.7rem);
-		color: var(--text-muted);
-	}
-
-	.ob2-h1 {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: clamp(1.5rem, 6vw, 2rem);
-		line-height: var(--leading-tight);
-		color: var(--text-base);
-	}
-
-	.ob2-sub {
-		margin: 0;
-		font-size: var(--t-14);
-		color: var(--text-muted);
-	}
-
-	.ob2-mode-tabs {
-		display: inline-flex;
-		gap: 0.35rem;
-		padding: 0.2rem;
-		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		align-self: flex-start;
-	}
-
-	.ob2-mode-tab {
-		appearance: none;
-		padding: 0.4rem 0.85rem;
-		font: inherit;
-		font-size: var(--t-12);
-		font-weight: 600;
-		color: var(--text-muted);
-		background: none;
-		border: none;
-		border-radius: var(--r-pill);
-		cursor: pointer;
-		transition:
-			color 140ms ease,
-			background 140ms ease;
-	}
-
-	.ob2-mode-tab.is-active {
-		color: var(--text-base);
-		background: var(--bg-surface);
-		box-shadow: var(--inset-hi);
-	}
-
-	.ob2-pool-grid {
-		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(7rem, 1fr));
-		gap: 0.4rem;
-	}
-
-	.ob2-pool-chip {
-		appearance: none;
-		display: inline-flex;
-		align-items: baseline;
-		justify-content: center;
-		gap: 0.05rem;
-		padding: 0.55rem 0.5rem;
-		font: inherit;
-		font-size: var(--t-13);
-		font-weight: 600;
-		color: var(--text-base);
-		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		cursor: pointer;
-		transition:
-			border-color 140ms ease,
-			background 140ms ease;
-	}
-
-	.ob2-pool-chip:hover {
-		border-color: color-mix(in srgb, var(--laurel) 30%, var(--border-base));
-	}
-
-	.ob2-pool-chip.is-picked {
-		color: var(--laurel);
-		border-color: color-mix(in srgb, var(--laurel) 55%, var(--border-base));
-		background: color-mix(in srgb, var(--laurel) 12%, var(--bg-surface));
-	}
-
-	.ob2-pool-chip.is-taken {
-		color: var(--text-muted);
-		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
-		border-style: dashed;
-		cursor: not-allowed;
-		opacity: 0.55;
-	}
-
-	.ob2-pool-chip.is-taken:hover {
-		border-color: var(--border-base);
-	}
-
-	.ob2-pool-taken {
-		margin-left: 0.35rem;
-		font-size: var(--t-11, 0.7rem);
-		font-weight: 700;
-		color: var(--text-muted);
-	}
-
-	.ob2-at {
-		color: var(--text-muted);
-		margin-right: 1px;
-	}
-
-	.ob2-custom-input-wrap {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		padding: 0.65rem 0.85rem;
-		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-	}
-
-	.ob2-at-large {
-		font-family: var(--font-display);
-		font-size: 1.5rem;
-		color: var(--laurel);
-		line-height: 1;
-	}
-
-	.ob2-custom-input {
-		appearance: none;
-		flex: 1 1 auto;
-		min-width: 0;
-		font: inherit;
-		font-size: var(--t-15, 0.95rem);
-		font-weight: 600;
-		color: var(--text-base);
-		background: none;
-		border: none;
-		outline: none;
-	}
-
-	.ob2-avail {
-		margin: 0;
-		font-size: var(--t-13);
-		color: var(--no);
-	}
-
-	.ob2-avail.is-ok {
-		color: var(--yes);
-	}
-
-	.ob2-affil-preview {
-		display: flex;
-		align-items: center;
-		gap: 0.7rem;
-		padding: 0.7rem 0.85rem;
-		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
-		border: 1px solid color-mix(in srgb, var(--team-color) 28%, var(--border-base));
-		border-radius: var(--r-12);
-	}
-
-	.ob2-affil-flag {
-		font-size: 1.5rem;
-		line-height: 1;
-		padding: 0.35rem 0.55rem;
-		border-radius: var(--r-pill);
-	}
-
-	.ob2-affil-text {
-		display: flex;
-		flex-direction: column;
-		gap: 0.15rem;
-	}
-
-	.ob2-affil-eyebrow {
-		font-size: var(--t-11, 0.7rem);
-		color: var(--text-muted);
-	}
-
-	.ob2-affil-name {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		font-size: var(--t-15, 0.95rem);
-		color: var(--text-base);
-	}
-
-	.ob2-affil-tag {
-		font-size: var(--t-11, 0.7rem);
-		font-weight: 700;
-		padding: 0.15rem 0.4rem;
-		border-radius: var(--r-pill);
-		color: var(--text-on-accent, #fff);
-	}
-
-	.ob2-actions {
-		display: flex;
-		gap: 0.5rem;
-		margin-top: 0.25rem;
-	}
-
-	.ob2-btn-ghost,
-	.ob2-btn-primary {
-		appearance: none;
-		flex: 1 1 auto;
-		padding: 0.85rem 1rem;
-		font: inherit;
-		font-size: var(--t-14);
-		font-weight: 700;
-		border-radius: var(--r-12);
-		cursor: pointer;
-		transition:
-			background 140ms ease,
-			color 140ms ease,
-			border-color 140ms ease;
-	}
-
-	.ob2-btn-ghost {
-		color: var(--text-muted);
-		background: none;
-		border: 1px solid var(--border-base);
-		flex: 0 0 auto;
-	}
-
-	.ob2-btn-ghost:hover {
-		color: var(--text-base);
-		border-color: var(--border-strong);
-	}
-
-	.ob2-btn-primary {
-		color: var(--text-on-accent, #fff);
-		background: var(--laurel);
-		border: 1px solid var(--laurel);
-	}
-
-	.ob2-btn-primary:hover:not(:disabled) {
-		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
-	}
-
-	.ob2-btn-primary:disabled {
-		opacity: 0.45;
-		cursor: not-allowed;
-	}
-
-	.ob2-btn-primary.is-claiming {
-		opacity: 1;
-		background: color-mix(in srgb, var(--laurel) 80%, var(--text-base));
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--laurel) 30%, transparent);
-		animation: ob2-claim-pulse 320ms cubic-bezier(0.2, 0.8, 0.2, 1);
-	}
-
-	@keyframes ob2-claim-pulse {
-		0% {
-			transform: scale(1);
-		}
-		55% {
-			transform: scale(1.025);
-		}
-		100% {
-			transform: scale(1.01);
-		}
-	}
-
-	.ob2-skip-link {
-		appearance: none;
-		align-self: center;
-		margin-top: 0.25rem;
-		padding: 0.4rem 0.7rem;
-		font: inherit;
-		font-size: var(--t-12);
-		color: var(--text-muted);
-		background: none;
-		border: none;
-		cursor: pointer;
-		text-decoration: underline;
-	}
-
-	.ob2-skip-link:hover {
-		color: var(--text-base);
-	}
-</style>
+</div>
