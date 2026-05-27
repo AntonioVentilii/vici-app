@@ -13,8 +13,8 @@ substantive, read the canonical doc.
 - This is Svelte 5 with **runes** — no `export let`, no `$:`.
 - Props: named `interface Props` + destructure (no inline type literals,
   no `$bindable` unless required).
-- **No hidden reactive captures:** a module-scope `const x = (() => { …
-reads a prop or `$state` … })()` freezes the value at init —
-  `svelte-check` does **not** catch this. Use `$derived`/`$derived.by`.
-  See
+- **No hidden reactive captures:** a top-level IIFE whose body reads a
+  `$props()` value or `$state` binding freezes that value at init —
+  `svelte-check` does **not** catch this. Use `$derived` /
+  `$derived.by`. See
   [Reactive reads — no hidden captures](../../docs/ai/frontend/stack-and-patterns.md#reactive-reads--no-hidden-captures).
