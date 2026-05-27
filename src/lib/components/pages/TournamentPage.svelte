@@ -448,12 +448,17 @@
 					class:is-silver={tier.place === 2}
 				>
 					<span class="tournament-prize-place" aria-hidden="true">{placeGlyph(tier.place)}</span>
-					<span class="tournament-prize-label">
-						{t({
-							locale: $localeStore,
-							key: `tournament.prize.place_${tier.place}`
-						})}
-					</span>
+					<div class="tournament-prize-text">
+						<span class="tournament-prize-label">
+							{t({
+								locale: $localeStore,
+								key: `tournament.prize.place_${tier.place}`
+							})}
+						</span>
+						<span class="num allcaps tournament-prize-sticker">
+							{t({ locale: $localeStore, key: 'tournament.prize.sticker_sub' })}
+						</span>
+					</div>
 					<span class="num tournament-prize-amount">+{tier.vxp.toLocaleString('en-US')}</span>
 				</li>
 			{/each}
@@ -722,11 +727,24 @@
 		line-height: 1;
 	}
 
-	.tournament-prize-label {
+	.tournament-prize-text {
+		display: flex;
 		flex: 1;
+		flex-direction: column;
+		gap: 0.15rem;
+		min-width: 0;
+	}
+
+	.tournament-prize-label {
 		font-size: var(--t-13);
 		font-weight: 600;
 		color: var(--text-base);
+	}
+
+	.tournament-prize-sticker {
+		font-size: var(--t-10, 0.65rem);
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
 	}
 
 	.tournament-prize-amount {

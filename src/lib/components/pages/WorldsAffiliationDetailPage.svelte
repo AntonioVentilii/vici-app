@@ -9,7 +9,7 @@
 		WORLDS_COUNTRIES,
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
-	import { getAffiliationStats } from '$lib/services/worlds.services';
+	import { getAffiliationStats, listAffiliationStats } from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
 	import { MIN_CALLS_FOR_RANK, type AffiliationStatsDoc } from '$lib/types/affiliation-stats';
@@ -40,17 +40,20 @@
 
 	let memberCount = $state<number | undefined>();
 	let stats = $state<AffiliationStatsDoc | undefined>();
+	let allStats = $state<AffiliationStatsDoc[]>([]);
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 
 	onMount(async () => {
 		try {
-			const [rosterResp, statsResp] = await Promise.all([
+			const [rosterResp, statsResp, allResp] = await Promise.all([
 				functions.listWorldsRoster({ kind, affiliationId }),
-				getAffiliationStats({ kind, affiliationId })
+				getAffiliationStats({ kind, affiliationId }),
+				listAffiliationStats({ kind })
 			]);
 			memberCount = rosterResp.items.length;
 			stats = statsResp;
+			allStats = allResp;
 			loadState = 'ready';
 		} catch (err) {
 			console.error('WorldsAffiliationDetailPage: load failed', err);
@@ -70,6 +73,49 @@
 	);
 
 	const ranked = $derived(stats !== undefined && stats.totalCalls >= MIN_CALLS_FOR_RANK);
+
+	const accLifetime = (s: AffiliationStatsDoc): number =>
+		s.totalCalls > 0 ? s.wins / s.totalCalls : 0;
+
+	const accMonth = (s: AffiliationStatsDoc): number =>
+		s.monthTotalCalls > 0 ? s.monthWins / s.monthTotalCalls : 0;
+
+	/**
+	 * Position of this affiliation in the lifetime-accuracy and
+	 * month-accuracy rankings — mirrors the prototype's `wcRank` /
+	 * `monthRank` fields. Returns `0` when this affiliation has no
+	 * stats doc (unranked / first-call pending).
+	 */
+	const rankBy = ({ key }: { key: 'lifetime' | 'month' }): number => {
+		if (allStats.length === 0) {
+			return 0;
+		}
+
+		const score = (s: AffiliationStatsDoc): number =>
+			key === 'lifetime' ? accLifetime(s) : accMonth(s);
+
+		const sorted = [...allStats].sort((a, b) => {
+			const da = score(a);
+			const db = score(b);
+
+			if (da !== db) {
+				return db - da;
+			}
+
+			if (a.totalCalls !== b.totalCalls) {
+				return b.totalCalls - a.totalCalls;
+			}
+
+			return a.affiliationId.localeCompare(b.affiliationId);
+		});
+
+		const idx = sorted.findIndex((s) => s.affiliationId === affiliationId);
+
+		return idx === -1 ? 0 : idx + 1;
+	};
+
+	const wcRank = $derived(rankBy({ key: 'lifetime' }));
+	const monthRank = $derived(rankBy({ key: 'month' }));
 
 	const backToWorlds = () => {
 		void goto(`${resolve('/social')}/worlds`);
@@ -107,6 +153,33 @@
 			</span>
 		</div>
 	</section>
+
+	{#if stats && stats.totalCalls > 0}
+		<div class="worlds-detail-rank-row">
+			<div class="worlds-detail-rank-cell">
+				<span class="num allcaps worlds-detail-rank-label">
+					{t({ locale: $localeStore, key: 'worlds.detail.rank_month' })}
+				</span>
+				<span class="num worlds-detail-rank-value">
+					{monthRank > 0 ? `#${monthRank}` : '—'}
+				</span>
+			</div>
+			<div class="worlds-detail-rank-cell is-wc">
+				<span class="num allcaps worlds-detail-rank-label">
+					{t({ locale: $localeStore, key: 'worlds.detail.rank_wc' })}
+				</span>
+				<span class="num worlds-detail-rank-value">
+					{wcRank > 0 ? `#${wcRank}` : '—'}
+				</span>
+			</div>
+			<div class="worlds-detail-rank-cell">
+				<span class="num allcaps worlds-detail-rank-label">
+					{t({ locale: $localeStore, key: 'worlds.detail.rank_acc' })}
+				</span>
+				<span class="num worlds-detail-rank-value">{accuracyPctLifetime}%</span>
+			</div>
+		</div>
+	{/if}
 
 	<section class="worlds-detail-stats">
 		<h2 class="eyebrow worlds-detail-stats-title">
@@ -236,6 +309,49 @@
 	.worlds-detail-identity-meta {
 		font-size: var(--t-11, 0.7rem);
 		color: var(--text-muted);
+	}
+
+	.worlds-detail-rank-row {
+		display: grid;
+		grid-template-columns: repeat(3, 1fr);
+		gap: 0.5rem;
+	}
+
+	.worlds-detail-rank-cell {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.25rem;
+		padding: 0.6rem 0.4rem;
+		background: color-mix(in srgb, var(--bg-surface) 96%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		text-align: center;
+	}
+
+	.worlds-detail-rank-cell.is-wc {
+		background: color-mix(in srgb, var(--laurel) 6%, var(--bg-surface));
+		border-color: color-mix(in srgb, var(--laurel) 30%, var(--border-base));
+	}
+
+	.worlds-detail-rank-label {
+		font-size: var(--t-10, 0.6rem);
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+	}
+
+	.worlds-detail-rank-cell.is-wc .worlds-detail-rank-label {
+		color: var(--laurel);
+	}
+
+	.worlds-detail-rank-value {
+		font-size: var(--t-16, 1.05rem);
+		font-weight: 700;
+		color: var(--text-base);
+	}
+
+	.worlds-detail-rank-cell.is-wc .worlds-detail-rank-value {
+		color: var(--laurel);
 	}
 
 	.worlds-detail-stats {
