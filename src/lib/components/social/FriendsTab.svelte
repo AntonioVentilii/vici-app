@@ -393,24 +393,29 @@
 		adding = true;
 
 		try {
-			// The satellite side currently keys friend requests by principal
-			// text — the visual `@`-handle prefix is the prototype's UX, but
-			// the backend doesn't yet resolve nickname → principal. We send
-			// the input verbatim so users can paste either; the service
-			// surfaces a typed error if the value isn't a valid principal,
-			// which the notification below reports.
+			// The Friends UI accepts either `@handle` (nickname) or a raw
+			// principal text; the service resolves a handle to a principal
+			// via `searchProfiles` before calling the satellite, which only
+			// accepts principal text. Typed errors (`not_found` / `self`)
+			// are mapped to i18n strings below.
 			await sendFriendRequest({ target: trimmed, sender: userPrincipal });
 			await refreshFriendRelations();
 			addSheetOpen = false;
 			addInput = '';
 		} catch (err: unknown) {
 			console.error(err);
+
+			const code = err instanceof Error ? err.message : '';
+			const messageKey =
+				code === 'not_found'
+					? 'social.friends.error.not_found'
+					: code === 'self'
+						? 'social.friends.error.self'
+						: 'social.friends.error.send_failed';
+
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'social.friends.title' }),
-				message:
-					err instanceof Error && err.message
-						? err.message
-						: t({ locale: $localeStore, key: 'social.friends.error.send_failed' }),
+				message: t({ locale: $localeStore, key: messageKey }),
 				type: 'error'
 			});
 		} finally {

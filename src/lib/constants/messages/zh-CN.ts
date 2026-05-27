@@ -1426,6 +1426,8 @@ export const zhCnMessages = {
 	'social.friends.empty.quote': '「当朋友与你同场竞技，预测会更锐利。」',
 	'social.friends.empty.sub': '邀请一位朋友 — 双方各得 500 VXP 起步。',
 	'social.friends.error.cancel_failed': '取消请求失败',
+	'social.friends.error.not_found': '未找到该 handle 的用户。检查拼写，或发送邀请链接。',
+	'social.friends.error.self': '这就是你 — 换一个 handle。',
 	'social.friends.error.send_failed': '发送请求失败',
 	'social.friends.error.unfriend_failed': '解除好友失败',
 	'social.friends.fallback.nickname': '好友',
