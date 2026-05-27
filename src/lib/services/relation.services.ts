@@ -3,16 +3,77 @@ import { Collection } from '$lib/constants/collections.constants';
 import type { Relation } from '$lib/types/relation';
 import { toRelationId } from '$lib/utils/relation.utils';
 import { isNullish } from '@dfinity/utils';
+import { Principal } from '@icp-sdk/core/principal';
 import { deleteDoc, getDoc, type Doc } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
 
-export const sendFriendRequest = async ({
-	target
+/**
+ * Resolves the add-friend input to a principal text. The Friends UI accepts
+ * either a raw principal or an `@handle` (nickname); the satellite's
+ * `sendFriendRequest` only accepts principal text and otherwise traps with
+ * "Invalid textual representation of a Principal". So we resolve here before
+ * calling through.
+ *
+ * Throws a typed `Error` with one of these codes on the message — the caller
+ * is expected to map them to i18n strings:
+ *   - `not_found`    — nickname didn't match any profile
+ *   - `self`         — input resolves to the caller
+ */
+const resolveTargetPrincipal = async ({
+	input,
+	sender
 }: {
-	target: PrincipalText;
+	input: string;
+	sender: PrincipalText;
+}): Promise<PrincipalText> => {
+	const stripped = input.replace(/^@+/, '').trim();
+
+	// An input of just `@` (or whitespace) would otherwise fall through to
+	// `searchProfiles({ queryStr: '' })`, which matches every profile in the
+	// datastore — a needlessly heavy canister query from one malformed click.
+	if (stripped === '') {
+		throw new Error('not_found');
+	}
+
+	try {
+		const asPrincipal = Principal.fromText(stripped).toText();
+
+		if (asPrincipal === sender) {
+			throw new Error('self');
+		}
+
+		return asPrincipal;
+	} catch (err: unknown) {
+		if (err instanceof Error && err.message === 'self') {
+			throw err;
+		}
+	}
+
+	const normalized = stripped.toLowerCase();
+	const { items } = await functions.searchProfiles({ queryStr: normalized });
+	const match = items.find((p) => p.nickname.trim().toLowerCase() === normalized);
+
+	if (!match) {
+		throw new Error('not_found');
+	}
+
+	if (match.owner === sender) {
+		throw new Error('self');
+	}
+
+	return match.owner;
+};
+
+export const sendFriendRequest = async ({
+	target,
+	sender
+}: {
+	target: string;
 	sender: PrincipalText;
 }): Promise<void> => {
-	await functions.sendFriendRequest({ target });
+	const resolved = await resolveTargetPrincipal({ input: target, sender });
+
+	await functions.sendFriendRequest({ target: resolved });
 };
 
 export const acceptFriendRequest = async ({

@@ -1510,6 +1510,9 @@ export const frMessages = {
 	'social.friends.empty.quote': '« Les prédictions s’affûtent quand tes amis t’affrontent. »',
 	'social.friends.empty.sub': 'Invite quelqu’un — vous démarrez tous les deux avec 500 VXP.',
 	'social.friends.error.cancel_failed': 'Échec de l’annulation de la demande',
+	'social.friends.error.not_found':
+		'Aucun utilisateur avec ce handle. Vérifie l’orthographe ou envoie-lui un lien d’invitation.',
+	'social.friends.error.self': 'C’est toi — choisis un autre handle.',
 	'social.friends.error.send_failed': 'Échec de l’envoi de la demande',
 	'social.friends.error.unfriend_failed': 'Échec du retrait de l’ami',
 	'social.friends.fallback.nickname': 'Ami',

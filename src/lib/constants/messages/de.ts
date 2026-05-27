@@ -1506,6 +1506,9 @@ export const deMessages = {
 	'social.friends.empty.quote': '„Vorhersagen werden schärfer, wenn Freunde mit dir antreten."',
 	'social.friends.empty.sub': 'Lade jemanden ein — beide starten mit 500 VXP.',
 	'social.friends.error.cancel_failed': 'Anfrage konnte nicht abgebrochen werden',
+	'social.friends.error.not_found':
+		'Kein Nutzer mit diesem Handle gefunden. Überprüfe die Schreibweise oder lade ihn per Link ein.',
+	'social.friends.error.self': 'Das bist du selbst — wähle ein anderes Handle.',
 	'social.friends.error.send_failed': 'Anfrage konnte nicht gesendet werden',
 	'social.friends.error.unfriend_failed': 'Freundschaft konnte nicht beendet werden',
 	'social.friends.fallback.nickname': 'Freund',

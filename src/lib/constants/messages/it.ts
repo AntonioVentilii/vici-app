@@ -1502,6 +1502,9 @@ export const itMessages = {
 		'«Le predizioni sono più affilate quando gli amici competono con te.»',
 	'social.friends.empty.sub': 'Invita qualcuno — partite entrambi con 500 VXP.',
 	'social.friends.error.cancel_failed': 'Annullamento della richiesta fallito',
+	'social.friends.error.not_found':
+		'Nessun utente trovato con quell’handle. Controlla lo spelling o mandagli un link di invito.',
+	'social.friends.error.self': 'Sei tu — scegli un altro handle.',
 	'social.friends.error.send_failed': 'Invio della richiesta fallito',
 	'social.friends.error.unfriend_failed': 'Rimozione dell’amico fallita',
 	'social.friends.fallback.nickname': 'Amico',

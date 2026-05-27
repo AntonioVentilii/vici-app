@@ -1498,6 +1498,9 @@ export const ptMessages = {
 		'"As previsões ficam mais afiadas quando seus amigos competem com você."',
 	'social.friends.empty.sub': 'Convide alguém — os dois começam com 500 VXP.',
 	'social.friends.error.cancel_failed': 'Falha ao cancelar pedido',
+	'social.friends.error.not_found':
+		'Nenhum usuário encontrado com esse handle. Confira a ortografia ou envie um link de convite.',
+	'social.friends.error.self': 'Esse é você — escolha outro handle.',
 	'social.friends.error.send_failed': 'Falha ao enviar pedido',
 	'social.friends.error.unfriend_failed': 'Falha ao desfazer amizade',
 	'social.friends.fallback.nickname': 'Amigo',

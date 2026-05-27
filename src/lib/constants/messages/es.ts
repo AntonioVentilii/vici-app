@@ -1508,6 +1508,9 @@ export const esMessages = {
 		'«Las predicciones son más afiladas cuando tus amigos compiten contigo.»',
 	'social.friends.empty.sub': 'Invita a alguien — ambos empezáis con 500 VXP.',
 	'social.friends.error.cancel_failed': 'Error al cancelar la solicitud',
+	'social.friends.error.not_found':
+		'No se encontró ningún usuario con ese handle. Revisa la ortografía o envíale un enlace de invitación.',
+	'social.friends.error.self': 'Eres tú — elige otro handle.',
 	'social.friends.error.send_failed': 'Error al enviar la solicitud',
 	'social.friends.error.unfriend_failed': 'Error al eliminar amistad',
 	'social.friends.fallback.nickname': 'Amigo',

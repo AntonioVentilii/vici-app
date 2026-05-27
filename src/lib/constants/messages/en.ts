@@ -1527,6 +1527,9 @@ export const enMessages = {
 	'social.friends.empty.quote': '"Predictions are sharper when your friends compete with you."',
 	'social.friends.empty.sub': 'Invite someone — both of you start with 500 VXP.',
 	'social.friends.error.cancel_failed': 'Failed to cancel request',
+	'social.friends.error.not_found':
+		'No user found with that handle. Double-check the spelling, or send them an invite link.',
+	'social.friends.error.self': "That's you — pick another handle.",
 	'social.friends.error.send_failed': 'Failed to send request',
 	'social.friends.error.unfriend_failed': 'Failed to unfriend',
 	'social.friends.fallback.nickname': 'Friend',
