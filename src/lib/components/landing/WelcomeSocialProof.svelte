@@ -1,51 +1,45 @@
 <script lang="ts">
-	import LandingSectionHeader from '$lib/components/landing/LandingSectionHeader.svelte';
+	/**
+	 * Verbatim port of the prototype's `SocialProof`
+	 * (`landing.jsx:845-863`). Section eyebrow + h2 + lede + 3-panel
+	 * grid (LeagueShowcase + BoutShowcase + WorldsUniversitiesBout).
+	 * Auto-fit `minmax(280px, 1fr)` so the panels stack on narrow
+	 * viewports — same breakpoint behaviour as the prototype.
+	 */
 	import WelcomeBoutShowcase from '$lib/components/landing/WelcomeBoutShowcase.svelte';
 	import WelcomeLeagueShowcase from '$lib/components/landing/WelcomeLeagueShowcase.svelte';
 	import WelcomeWorldsUniversitiesBout from '$lib/components/landing/WelcomeWorldsUniversitiesBout.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
-
-	/**
-	 * Social Proof — three side-by-side feature panels (L9 → L10 of the
-	 * prototype). Demonstrates the three layers of competition:
-	 *   01 · Your League        (private cohort)
-	 *   02 · Active Bout        (league vs league)
-	 *   03 · Worlds Universities (tentpole tournament)
-	 *
-	 * Mirrors `<SocialProof>` in landing.jsx:845. Each panel is built
-	 * from inline mock data — these are landing visuals, not real-data
-	 * surfaces. At desktop the three sit in one row via auto-fit grid;
-	 * narrower viewports auto-stack at `minmax(280px, 1fr)`.
-	 */
 </script>
 
-<div class="welcome-section-inner">
-	<LandingSectionHeader
-		eyebrow={t({ locale: $localeStore, key: 'social.eyebrow' })}
-		sub={t({ locale: $localeStore, key: 'social.sub' })}
-		title={t({ locale: $localeStore, key: 'social.title_a' })}
-		titleAccent={t({ locale: $localeStore, key: 'social.title_b' })}
-	/>
+<section id="leaderboard" style="background:rgba(242,236,220,0.02);" class="lp-section lp-root">
+	<div class="lp-section-inner">
+		<div style="gap:14px; max-width:680px;" class="col">
+			<span class="eyebrow acc">{t({ locale: $localeStore, key: 'social.eyebrow' })}</span>
+			<h2 class="lp-h2">
+				{t({ locale: $localeStore, key: 'social.title_a' })}
+				<span class="serif-italic acc">
+					{t({ locale: $localeStore, key: 'social.title_b' })}
+				</span>
+			</h2>
+			<p style="color:var(--fg-dim);" class="lp-lede">
+				{t({ locale: $localeStore, key: 'social.sub' })}
+			</p>
+		</div>
 
-	<div class="welcome-social-grid">
-		<WelcomeLeagueShowcase />
-		<WelcomeBoutShowcase />
-		<WelcomeWorldsUniversitiesBout />
+		<div
+			style="
+				margin-top:56px;
+				display:grid;
+				grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+				gap:16px;
+				align-items:stretch;
+			"
+		>
+			<WelcomeLeagueShowcase />
+			<WelcomeBoutShowcase />
+			<WelcomeWorldsUniversitiesBout />
+		</div>
 	</div>
-</div>
-
-<style lang="postcss">
-	.welcome-section-inner {
-		max-width: 80rem;
-		margin: 0 auto;
-	}
-
-	.welcome-social-grid {
-		display: grid;
-		gap: 1rem;
-		align-items: stretch;
-		margin-top: 3.5rem;
-		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-	}
-</style>
+</section>

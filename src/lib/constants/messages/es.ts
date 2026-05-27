@@ -586,6 +586,10 @@ export const esMessages = {
 	'footer.blog': 'Blog',
 	'footer.bottom': '© 2026 VICI · Hecho para quien cree tener razón.',
 	'footer.company': 'EMPRESA',
+	'footer.contact': 'Contacto',
+	'footer.faq': 'FAQ',
+	'footer.help': 'AYUDA',
+	'footer.signin': 'Iniciar sesión',
 	'footer.disclosure':
 		'La custodia, cuando se introduzca, vive en contratos stablecoin auditados. El token VICI coordina, no custodia.',
 	'footer.leaderboard': 'Clasificación',

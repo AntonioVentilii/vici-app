@@ -1,210 +1,82 @@
 <script lang="ts">
+	/**
+	 * Verbatim port of the prototype's `WCFeature`
+	 * (`landing.jsx:434-488`). Wedge surface mirroring onboarding-v2:
+	 * editorial left column (eyebrow + countdown + h2 + sub + CTA),
+	 * 2×2 favourite-flag grid on the right.
+	 */
 	import { ChevronRight, Clock } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
-	import LandingSectionHeader from '$lib/components/landing/LandingSectionHeader.svelte';
+	import { LANDING_WC_FAVORITES } from '$lib/constants/landing-data.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
-	import {
-		daysToKickoff,
-		featuredEventActive,
-		featuredEventFavourites
-	} from '$lib/derived/featured-event.derived';
+	import { WORLD_CUP_KICKOFF } from '$lib/constants/world-cup-kickoff.constants';
+	import { featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
-	// Landing WCFeature section — eyebrow + countdown,
-	// big title, CTA, and a small grid of favourite participants. Reads
-	// favourite data from the FeaturedEvent abstraction (b9dfb7d) so
-	// swapping the next tentpole (Olympics, election, …) is a one-export
-	// change in the constants file. Copy is sourced from the static
-	// `wc.*` i18n keys to match the prototype's namespace exactly.
-	// Hidden when the event is archived.
+	const wcDays = WORLD_CUP_KICKOFF.daysToKickoff;
+	// Hours-to-kickoff isn't tracked in the constant; the prototype shows
+	// "{days}d {hours}h" so we leave hours at 0 until the constant grows.
+	const wcHours = 0;
+	const favorites = LANDING_WC_FAVORITES;
 </script>
 
 {#if $featuredEventActive}
-	<section class="welcome-featured-event">
-		<div class="welcome-section-inner">
-			<div class="welcome-featured-grid">
-				<div class="welcome-featured-copy">
-					<div class="welcome-featured-meta">
-						<LandingSectionHeader
-							eyebrow={t({ locale: $localeStore, key: 'wc.eyebrow' })}
-							sub={t({ locale: $localeStore, key: 'wc.sub' })}
-							title={t({ locale: $localeStore, key: 'wc.title_a' })}
-							titleAccent={t({ locale: $localeStore, key: 'wc.title_b' })}
-						/>
-
-						<div class="welcome-featured-countdown">
-							<Clock aria-hidden="true" size={12} strokeWidth={2} />
-							<span class="num">
-								{#if $daysToKickoff !== null && $daysToKickoff > 0}
-									{t({
-										locale: $localeStore,
-										key: 'welcome.featured_event.countdown',
-										params: { days: $daysToKickoff }
-									})}
-								{:else}
-									{t({ locale: $localeStore, key: 'welcome.featured_event.countdown_live' })}
-								{/if}
-							</span>
-						</div>
+	<section id="worldcup" class="lp-section lp-root">
+		<div class="lp-section-inner">
+			<div class="lp-feature-grid">
+				<div>
+					<div style="gap:8px; margin-bottom:14px; align-items:center; flex-wrap:wrap;" class="row">
+						<span class="eyebrow acc">{t({ locale: $localeStore, key: 'wc.eyebrow' })}</span>
+						<span style="letter-spacing:0.10em;" class="num mute t-eyebrow">
+							<Clock style="vertical-align: middle; margin-right: 3px;" size={11} strokeWidth={2} />
+							{wcDays ?? 0}d {wcHours}h
+						</span>
 					</div>
-
+					<h2 class="lp-h2">
+						{t({ locale: $localeStore, key: 'wc.title_a' })}
+						<span class="serif-italic acc">
+							{t({ locale: $localeStore, key: 'wc.title_b' })}
+						</span>
+					</h2>
+					<p style="margin-top:18px;" class="lp-lede">
+						{t({ locale: $localeStore, key: 'wc.sub' })}
+					</p>
 					<button
-						class="welcome-featured-cta"
-						onclick={() => goto(resolve(PublicPath.SignUp))}
+						style="margin-top:28px;"
+						class="btn btn-primary btn-lg"
+						onclick={() => goto(PublicPath.SignUp)}
 						type="button"
 					>
 						{t({ locale: $localeStore, key: 'wc.cta' })}
-						<ChevronRight aria-hidden="true" size={16} strokeWidth={2} />
+						<ChevronRight size={16} />
 					</button>
 				</div>
 
-				<div class="welcome-featured-favourites">
-					{#each $featuredEventFavourites as favourite (favourite.id)}
-						{@const accent = favourite.color ?? 'var(--laurel)'}
-						<button
-							style:background="linear-gradient(160deg, {accent}1A, transparent 70%)"
-							style:border="1px solid {accent}33"
-							class="welcome-favourite-tile"
-							onclick={() => goto(resolve(PublicPath.SignUp))}
-							type="button"
+				<div
+					style="display:grid; grid-template-columns:1fr 1fr; gap:12px; align-content:start;"
+					class="lp-wc-grid"
+				>
+					{#each favorites as f (f.code)}
+						<a
+							style="
+								padding:20px 18px; text-decoration:none;
+								display:flex; flex-direction:column; gap:6px;
+								background:linear-gradient(160deg, {f.color}1A, transparent 70%);
+								border:1px solid {f.color}33;
+							"
+							class="card"
+							href="#wc-{f.code}"
 						>
-							{#if favourite.glyph}
-								<span class="welcome-favourite-glyph" aria-hidden="true">{favourite.glyph}</span>
-							{/if}
-							<span class="welcome-favourite-name">{favourite.name}</span>
-							{#if favourite.odds !== undefined}
-								<span style:color={accent} class="welcome-favourite-odds num">
-									{t({
-										locale: $localeStore,
-										key: 'welcome.featured_event.to_win',
-										params: { odds: favourite.odds.toFixed(1) }
-									})}
-								</span>
-							{/if}
-						</button>
+							<span style="font-size:32px; line-height:1;" aria-hidden="true">{f.flag}</span>
+							<span style="color:var(--fg);" class="t-body fw-600">{f.team}</span>
+							<span style="color:{f.color}; letter-spacing:0.04em;" class="num t-eyebrow">
+								{f.odds.toFixed(1)}% TO WIN
+							</span>
+						</a>
 					{/each}
 				</div>
 			</div>
 		</div>
 	</section>
 {/if}
-
-<style lang="postcss">
-	.welcome-featured-event {
-		padding: 3rem 0;
-	}
-
-	.welcome-section-inner {
-		max-width: var(--content-max);
-		margin: 0 auto;
-		padding: 0 1.25rem;
-	}
-
-	.welcome-featured-grid {
-		display: grid;
-		gap: 2rem;
-		align-items: start;
-	}
-
-	@media (min-width: 768px) {
-		.welcome-featured-grid {
-			grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
-			gap: 3rem;
-		}
-	}
-
-	.welcome-featured-copy {
-		display: flex;
-		flex-direction: column;
-		gap: 1.75rem;
-	}
-
-	.welcome-featured-meta {
-		display: flex;
-		flex-direction: column;
-		gap: 0.75rem;
-	}
-
-	.welcome-featured-countdown {
-		display: inline-flex;
-		align-items: center;
-		gap: 0.4rem;
-		align-self: flex-start;
-		padding: 0.3rem 0.6rem;
-		border: 1px solid color-mix(in srgb, var(--laurel) 28%, transparent);
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--laurel) 12%, transparent);
-		color: var(--laurel);
-		font-size: var(--t-12);
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.welcome-featured-cta {
-		display: inline-flex;
-		align-self: flex-start;
-		align-items: center;
-		gap: 0.4rem;
-		padding: 0.85rem 1.4rem;
-		border: 0;
-		border-radius: var(--r-pill);
-		background: var(--laurel);
-		color: var(--ink);
-		font-size: var(--t-14);
-		font-weight: 700;
-		letter-spacing: 0;
-		cursor: pointer;
-		transition:
-			transform var(--d-hover) var(--ease-vici),
-			background-color var(--d-hover) var(--ease-vici);
-	}
-
-	.welcome-featured-cta:hover {
-		background: var(--laurel-deep);
-		transform: translateY(-1px);
-	}
-
-	.welcome-featured-favourites {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.75rem;
-	}
-
-	.welcome-favourite-tile {
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
-		padding: 1.25rem 1.1rem;
-		border-radius: var(--r-12);
-		text-align: left;
-		cursor: pointer;
-		appearance: none;
-		font: inherit;
-		color: inherit;
-		transition: transform var(--d-hover) var(--ease-vici);
-	}
-
-	.welcome-favourite-tile:hover {
-		transform: translateY(-2px);
-	}
-
-	.welcome-favourite-glyph {
-		font-size: 1.85rem;
-		line-height: 1;
-	}
-
-	.welcome-favourite-name {
-		color: var(--text-base);
-		font-size: var(--t-14);
-		font-weight: 600;
-	}
-
-	.welcome-favourite-odds {
-		font-size: var(--t-12);
-		font-weight: 600;
-		letter-spacing: 0.04em;
-	}
-</style>

@@ -592,6 +592,10 @@ export const frMessages = {
 	'footer.blog': 'Blog',
 	'footer.bottom': '© 2026 VICI · Fait pour les gens qui pensent avoir raison.',
 	'footer.company': 'SOCIÉTÉ',
+	'footer.contact': 'Contact',
+	'footer.faq': 'FAQ',
+	'footer.help': 'AIDE',
+	'footer.signin': 'Se connecter',
 	'footer.disclosure':
 		'La garde, lorsqu’elle sera introduite, vivra dans des contrats stablecoin audités. Le token VICI coordonne, ne garde pas.',
 	'footer.leaderboard': 'Classement',

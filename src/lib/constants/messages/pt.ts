@@ -586,6 +586,10 @@ export const ptMessages = {
 	'footer.blog': 'Blog',
 	'footer.bottom': '© 2026 VICI · Feito para quem acha que está certo.',
 	'footer.company': 'EMPRESA',
+	'footer.contact': 'Contato',
+	'footer.faq': 'FAQ',
+	'footer.help': 'AJUDA',
+	'footer.signin': 'Entrar',
 	'footer.disclosure':
 		'A custódia, quando introduzida, fica em contratos de stablecoin auditados. O token VICI coordena, não custodia.',
 	'footer.leaderboard': 'Classificação',

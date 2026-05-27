@@ -1,19 +1,56 @@
 <script lang="ts">
-	import { Menu, X } from 'lucide-svelte/icons';
+	/**
+	 * Verbatim port of the prototype's `DesktopNav` + `Nav`
+	 * (`landing.jsx:124-381`). Two nav variants: `.dnav` (≥1024px,
+	 * horizontal pattern with scroll-spy + smooth scroll) and
+	 * `.lp-nav` / `.lp-pill` (<1024px, pill morph + slide-down sheet).
+	 * CSS in `src/landing.css` flips visibility at the 1024px
+	 * breakpoint so both render in the markup and the right one
+	 * shows.
+	 */
+	import { Globe, Lock } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import LanguagePicker from '$lib/components/layout/LanguagePicker.svelte';
 	import Logo from '$lib/components/layout/Logo.svelte';
-	import WelcomeThemePicker from '$lib/components/layout/WelcomeThemePicker.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
+	import {
+		LOCALE_STORAGE_KEY,
+		SUPPORTED_LOCALES,
+		type AppLocale
+	} from '$lib/constants/locale.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
+	const sections = ['markets', 'flow', 'leaderboard', 'trust'] as const;
+	const themeOpts: ReadonlyArray<{ id: 'dark' | 'light' | 'peach'; label: string }> = [
+		{ id: 'dark', label: 'Dark mode' },
+		{ id: 'light', label: 'Light mode' },
+		{ id: 'peach', label: 'Peach mode' }
+	];
+
 	let scrolled = $state(false);
+	let active = $state<string>('');
 	let menuOpen = $state(false);
+	let langOpen = $state(false);
+	let dnavLangOpen = $state(false);
+	let theme = $state<'dark' | 'light' | 'peach'>('dark');
+	let langRef: HTMLDivElement | null = $state(null);
+	let dnavLangRef: HTMLDivElement | null = $state(null);
+
+	const LOCALES = SUPPORTED_LOCALES;
 
 	onMount(() => {
+		if (typeof document !== 'undefined') {
+			try {
+				theme = (localStorage.getItem('vici.theme') as 'dark' | 'light' | 'peach') ?? 'dark';
+			} catch {
+				theme = 'dark';
+			}
+
+			document.documentElement.setAttribute('data-accent', 'laurel');
+			document.documentElement.setAttribute('data-theme', theme);
+		}
+
 		const onScroll = () => {
 			scrolled = window.scrollY > 8;
 		};
@@ -21,7 +58,49 @@
 		onScroll();
 		window.addEventListener('scroll', onScroll, { passive: true });
 
-		return () => window.removeEventListener('scroll', onScroll);
+		// Scroll spy
+		const els = sections
+			.map((id) => document.getElementById(id))
+			.filter((el): el is HTMLElement => Boolean(el));
+		const io =
+			els.length === 0
+				? null
+				: new IntersectionObserver(
+						(entries) => {
+							entries.forEach((e) => {
+								if (e.isIntersecting && e.intersectionRatio > 0.3) {
+									active = e.target.id;
+								}
+							});
+						},
+						{ rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.3, 0.6] }
+					);
+
+		if (io) {
+			els.forEach((el) => io.observe(el));
+		}
+
+		return () => {
+			window.removeEventListener('scroll', onScroll);
+
+			if (io) {
+				io.disconnect();
+			}
+		};
+	});
+
+	$effect(() => {
+		if (typeof document === 'undefined') {
+			return;
+		}
+
+		document.documentElement.setAttribute('data-theme', theme);
+
+		try {
+			localStorage.setItem('vici.theme', theme);
+		} catch {
+			// ignore
+		}
 	});
 
 	$effect(() => {
@@ -41,8 +120,8 @@
 			return;
 		}
 
-		const onKey = (event: KeyboardEvent) => {
-			if (event.key === 'Escape') {
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
 				menuOpen = false;
 			}
 		};
@@ -52,287 +131,298 @@
 		return () => window.removeEventListener('keydown', onKey);
 	});
 
+	// Outside-click for the lang popovers
+	$effect(() => {
+		if (!langOpen && !dnavLangOpen) {
+			return;
+		}
+
+		const onDoc = (e: MouseEvent) => {
+			const target = e.target as Node | null;
+
+			if (langOpen && langRef && target && !langRef.contains(target)) {
+				langOpen = false;
+			}
+
+			if (dnavLangOpen && dnavLangRef && target && !dnavLangRef.contains(target)) {
+				dnavLangOpen = false;
+			}
+		};
+
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				langOpen = false;
+				dnavLangOpen = false;
+			}
+		};
+
+		document.addEventListener('mousedown', onDoc);
+		window.addEventListener('keydown', onKey);
+
+		return () => {
+			document.removeEventListener('mousedown', onDoc);
+			window.removeEventListener('keydown', onKey);
+		};
+	});
+
 	const closeMenu = () => {
 		menuOpen = false;
 	};
+
+	const onLinkClick =
+		(id: string) =>
+		(e: MouseEvent): void => {
+			if (typeof document === 'undefined') {
+				return;
+			}
+
+			const el = document.getElementById(id);
+
+			if (!el) {
+				return;
+			}
+
+			e.preventDefault();
+			const y = el.getBoundingClientRect().top + window.scrollY - 72;
+			window.scrollTo({ top: y, behavior: 'smooth' });
+			history.replaceState(null, '', `#${id}`);
+		};
+
+	const setLocaleAndClose = (loc: AppLocale) => {
+		localeStore.set({ key: LOCALE_STORAGE_KEY, value: loc });
+		langOpen = false;
+		dnavLangOpen = false;
+	};
 </script>
 
+<!-- ─── Desktop nav (≥1024px) ─── -->
 <nav
-	class="welcome-nav"
+	class="dnav"
+	class:is-scrolled={scrolled}
+	aria-label={t({ locale: $localeStore, key: 'a11y.landing' })}
+>
+	<a class="dnav-skip" href="#main">Skip to content</a>
+	<div class="dnav-inner">
+		<span class="dnav-logo"><Logo href={PublicPath.Welcome} /></span>
+		<div class="dnav-links">
+			{#each sections as id (id)}
+				<a
+					class:is-active={active === id}
+					aria-current={active === id ? 'page' : undefined}
+					href="#{id}"
+					onclick={onLinkClick(id)}
+				>
+					<span class="ltext">{t({ locale: $localeStore, key: `nav.${id}` as const })}</span>
+					<span class="dot" aria-hidden="true"></span>
+				</a>
+			{/each}
+		</div>
+		<div class="dnav-right">
+			<div bind:this={dnavLangRef} class="dnav-lang-wrap">
+				<button
+					class="dnav-globe"
+					aria-expanded={dnavLangOpen}
+					aria-haspopup="listbox"
+					aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
+					onclick={() => (dnavLangOpen = !dnavLangOpen)}
+					type="button"
+				>
+					<Globe aria-hidden="true" />
+				</button>
+				{#if dnavLangOpen}
+					<ul
+						class="dnav-lang-pop"
+						aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
+						role="listbox"
+					>
+						{#each LOCALES as l (l.id)}
+							<li>
+								<button
+									class="dnav-lang-item"
+									class:active={$localeStore === l.id}
+									aria-selected={$localeStore === l.id}
+									onclick={() => setLocaleAndClose(l.id)}
+									role="option"
+									type="button"
+								>
+									<span class="num dnav-lang-short">{l.short}</span>
+									<span class="dnav-lang-label">{l.label}</span>
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+			<div
+				class="dnav-theme"
+				aria-label={t({ locale: $localeStore, key: 'a11y.appearance' })}
+				role="radiogroup"
+			>
+				{#each themeOpts as o (o.id)}
+					<button
+						class="dnav-theme-dot dnav-app-{o.id}"
+						class:active={theme === o.id}
+						aria-checked={theme === o.id}
+						aria-label={o.label}
+						data-tooltip={o.label.toUpperCase()}
+						onclick={() => (theme = o.id)}
+						role="radio"
+						type="button"
+					>
+						<span class="inner" aria-hidden="true"></span>
+					</button>
+				{/each}
+			</div>
+			<span class="dnav-divider" aria-hidden="true"></span>
+			<a class="dnav-signin" href={PublicPath.SignIn}>
+				{t({ locale: $localeStore, key: 'nav.signin' })}
+			</a>
+			<a class="btn btn-primary dnav-cta" href={PublicPath.SignUp}>
+				{t({ locale: $localeStore, key: 'nav.cta' })}
+			</a>
+		</div>
+	</div>
+</nav>
+
+<!-- ─── Pill nav (mobile/tablet, <1024px) ─── -->
+<nav
+	class="lp-nav lp-root"
 	class:is-open={menuOpen}
 	class:is-scrolled={scrolled}
 	aria-label={t({ locale: $localeStore, key: 'a11y.landing' })}
 >
-	<div class="welcome-nav-inner">
-		<div class="welcome-nav-logo">
-			<Logo href={PublicPath.Welcome} />
-		</div>
-
-		<div class="welcome-nav-links">
-			<a href="#markets">{t({ locale: $localeStore, key: 'nav.markets' })}</a>
-			<a href="#flow">{t({ locale: $localeStore, key: 'nav.flow' })}</a>
-			<a href="#leaderboard">{t({ locale: $localeStore, key: 'nav.leaderboard' })}</a>
-			<a href="#trust">{t({ locale: $localeStore, key: 'nav.trust' })}</a>
-		</div>
-
-		<div class="welcome-nav-cta">
-			<div class="welcome-nav-pickers">
-				<LanguagePicker />
-				<WelcomeThemePicker />
-				<span class="welcome-nav-divider" aria-hidden="true"></span>
-				<Button onclick={() => goto(PublicPath.SignIn)} size="sm" variant="ghost">
-					{t({ locale: $localeStore, key: 'nav.signin' })}
-				</Button>
+	<div class="lp-nav-inner">
+		<div class="lp-pill" class:open={menuOpen}>
+			<div class="lp-pill-topline">
+				<span class="lp-logo">
+					<Logo href={PublicPath.Welcome} />
+				</span>
+				<div class="lp-pill-right">
+					<div bind:this={langRef} class="lp-lang-wrap">
+						<button
+							class="lp-globe"
+							aria-expanded={langOpen}
+							aria-haspopup="listbox"
+							aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
+							onclick={() => (langOpen = !langOpen)}
+							type="button"
+						>
+							<Globe aria-hidden="true" />
+						</button>
+						{#if langOpen}
+							<ul
+								class="lp-lang-pop"
+								aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
+								role="listbox"
+							>
+								{#each LOCALES as l (l.id)}
+									<li>
+										<button
+											class="lp-lang-item"
+											class:active={$localeStore === l.id}
+											aria-selected={$localeStore === l.id}
+											onclick={() => setLocaleAndClose(l.id)}
+											role="option"
+											type="button"
+										>
+											<span class="num lp-lang-short">{l.short}</span>
+											<span class="lp-lang-label">{l.label}</span>
+										</button>
+									</li>
+								{/each}
+							</ul>
+						{/if}
+					</div>
+					<button
+						class="btn btn-primary lp-cta"
+						onclick={() => goto(PublicPath.SignUp)}
+						type="button"
+					>
+						{t({ locale: $localeStore, key: 'nav.cta' })}
+					</button>
+					<button
+						class="lp-ham"
+						class:open={menuOpen}
+						aria-expanded={menuOpen}
+						aria-label={menuOpen
+							? t({ locale: $localeStore, key: 'a11y.close' })
+							: t({ locale: $localeStore, key: 'a11y.language' })}
+						onclick={() => (menuOpen = !menuOpen)}
+						type="button"
+					>
+						<svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+							<line class="t" x1="6" x2="18" y1="12" y2="12" />
+							<line class="b" x1="6" x2="18" y1="12" y2="12" />
+						</svg>
+					</button>
+				</div>
 			</div>
-			<Button onclick={() => goto(PublicPath.SignUp)} size="sm">
-				{t({ locale: $localeStore, key: 'nav.cta' })}
-			</Button>
-			<button
-				class="welcome-nav-ham"
-				aria-expanded={menuOpen}
-				aria-label={menuOpen
-					? t({ locale: $localeStore, key: 'a11y.close' })
-					: t({ locale: $localeStore, key: 'a11y.language' })}
-				onclick={() => (menuOpen = !menuOpen)}
-				type="button"
-			>
-				{#if menuOpen}
-					<X aria-hidden="true" size={20} strokeWidth={2} />
-				{:else}
-					<Menu aria-hidden="true" size={20} strokeWidth={2} />
-				{/if}
-			</button>
+
+			{#if menuOpen}
+				<div class="lp-pill-body">
+					<div class="lp-trust lp-trust-hero">
+						<Lock size={14} strokeWidth={1.8} />
+						<span>VICI is free - <b>resolution on public data</b></span>
+					</div>
+
+					<div class="lp-eyebrow-bridge">Explore</div>
+
+					<nav class="lp-menu-links">
+						{#each sections as id, i (id)}
+							<a href="#{id}" onclick={closeMenu}>
+								<span class="ix">0{i + 1}</span>
+								<span class="ltext">{t({ locale: $localeStore, key: `nav.${id}` as const })}</span>
+							</a>
+						{/each}
+					</nav>
+
+					<div class="lp-appearance">
+						<span class="lp-appearance-lbl">
+							{t({ locale: $localeStore, key: 'a11y.appearance' })}
+						</span>
+						<div
+							class="lp-appearance-dots"
+							aria-label={t({ locale: $localeStore, key: 'a11y.appearance' })}
+							role="radiogroup"
+						>
+							{#each themeOpts as o (o.id)}
+								<button
+									class="lp-appearance-dot lp-app-{o.id}"
+									class:active={theme === o.id}
+									aria-checked={theme === o.id}
+									aria-label={o.label}
+									data-tooltip={o.label.toUpperCase()}
+									onclick={() => (theme = o.id)}
+									role="radio"
+									type="button"
+								>
+									<span class="inner" aria-hidden="true"></span>
+								</button>
+							{/each}
+						</div>
+					</div>
+
+					<div class="lp-pill-footer">
+						<a class="lp-signin-link" href={PublicPath.SignIn} onclick={closeMenu}>
+							Already a member?
+							<span class="em">{t({ locale: $localeStore, key: 'nav.signin' })}</span>
+						</a>
+						<span class="lp-latin">
+							Veni · Vidi · <span class="acc">Vici.</span>
+						</span>
+					</div>
+				</div>
+			{/if}
 		</div>
 	</div>
-
-	{#if menuOpen}
-		<div id="welcome-nav-sheet" class="welcome-nav-sheet">
-			<nav class="welcome-nav-sheet-links" aria-label="Mobile primary">
-				<a href="#markets" onclick={closeMenu}>
-					<span class="num">01</span>
-					<span>{t({ locale: $localeStore, key: 'nav.markets' })}</span>
-				</a>
-				<a href="#flow" onclick={closeMenu}>
-					<span class="num">02</span>
-					<span>{t({ locale: $localeStore, key: 'nav.flow' })}</span>
-				</a>
-				<a href="#leaderboard" onclick={closeMenu}>
-					<span class="num">03</span>
-					<span>{t({ locale: $localeStore, key: 'nav.leaderboard' })}</span>
-				</a>
-				<a href="#trust" onclick={closeMenu}>
-					<span class="num">04</span>
-					<span>{t({ locale: $localeStore, key: 'nav.trust' })}</span>
-				</a>
-			</nav>
-
-			<div class="welcome-nav-sheet-controls">
-				<LanguagePicker />
-				<WelcomeThemePicker />
-			</div>
-
-			<div class="welcome-nav-sheet-foot">
-				<Button
-					onclick={() => {
-						closeMenu();
-						goto(PublicPath.SignIn);
-					}}
-					variant="ghost"
-				>
-					{t({ locale: $localeStore, key: 'nav.signin' })}
-				</Button>
-				<Button
-					onclick={() => {
-						closeMenu();
-						goto(PublicPath.SignUp);
-					}}
-				>
-					{t({ locale: $localeStore, key: 'nav.cta' })}
-				</Button>
-			</div>
-		</div>
-	{/if}
 </nav>
 
 {#if menuOpen}
 	<button
-		class="welcome-nav-scrim"
+		class="lp-scrim"
 		aria-hidden="true"
-		onclick={closeMenu}
+		onclick={() => (menuOpen = false)}
 		tabindex={-1}
 		type="button"
 	></button>
 {/if}
-
-<style lang="postcss">
-	.welcome-nav {
-		position: sticky;
-		top: 0;
-		z-index: 50;
-		background: color-mix(in srgb, var(--background) 40%, transparent);
-		backdrop-filter: blur(16px);
-		border-bottom: 1px solid transparent;
-		transition:
-			background 200ms var(--ease-vici),
-			border-color 200ms var(--ease-vici),
-			box-shadow 200ms var(--ease-vici);
-	}
-
-	.welcome-nav.is-scrolled,
-	.welcome-nav.is-open {
-		background: color-mix(in srgb, var(--background) 78%, transparent);
-		border-bottom-color: var(--border);
-		box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.4);
-	}
-
-	.welcome-nav-inner {
-		max-width: 80rem;
-		margin: 0 auto;
-		padding: 0.75rem clamp(1.25rem, 4vw, 2rem);
-		display: flex;
-		align-items: center;
-		gap: 1rem;
-	}
-
-	.welcome-nav-logo {
-		display: inline-flex;
-		flex-shrink: 0;
-	}
-
-	.welcome-nav-links {
-		display: none;
-		flex: 1;
-		justify-content: center;
-		gap: 1.75rem;
-		font-size: var(--t-14);
-		font-weight: 600;
-		color: var(--muted-foreground);
-	}
-
-	.welcome-nav-links a:hover {
-		color: var(--foreground);
-	}
-
-	.welcome-nav-cta {
-		margin-left: auto;
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.welcome-nav-pickers {
-		display: none;
-		align-items: center;
-		gap: 0.5rem;
-	}
-
-	.welcome-nav-divider {
-		width: 1px;
-		height: 1.25rem;
-		background: var(--border);
-		margin: 0 0.15rem;
-	}
-
-	.welcome-nav-ham {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 2.25rem;
-		height: 2.25rem;
-		padding: 0;
-		border: 1px solid var(--border);
-		border-radius: 10px;
-		background: color-mix(in srgb, var(--foreground) 4%, transparent);
-		color: var(--foreground);
-		cursor: pointer;
-		transition:
-			background 200ms var(--ease-vici),
-			border-color 200ms var(--ease-vici);
-	}
-
-	.welcome-nav-ham:hover {
-		background: color-mix(in srgb, var(--foreground) 8%, transparent);
-		border-color: color-mix(in srgb, var(--foreground) 25%, transparent);
-	}
-
-	.welcome-nav-sheet {
-		position: absolute;
-		top: 100%;
-		left: 0;
-		right: 0;
-		z-index: 60;
-		display: flex;
-		flex-direction: column;
-		gap: 1.5rem;
-		padding: 1.5rem clamp(1.25rem, 4vw, 2rem) 2rem;
-		border-top: 1px solid var(--border);
-		background: color-mix(in srgb, var(--background) 96%, transparent);
-		backdrop-filter: blur(20px);
-		box-shadow: 0 24px 48px -24px rgba(0, 0, 0, 0.45);
-	}
-
-	.welcome-nav-sheet-links {
-		display: flex;
-		flex-direction: column;
-	}
-
-	.welcome-nav-sheet-links a {
-		display: flex;
-		align-items: baseline;
-		gap: 0.875rem;
-		padding: 0.75rem 0;
-		border-bottom: 1px solid var(--border);
-		color: var(--foreground);
-		font-size: var(--t-18);
-		font-weight: 600;
-		text-decoration: none;
-	}
-
-	.welcome-nav-sheet-links a .num {
-		flex: 0 0 1.75rem;
-		color: var(--muted-foreground);
-		font-size: var(--t-12);
-		font-weight: 700;
-		letter-spacing: 0.08em;
-	}
-
-	.welcome-nav-sheet-controls {
-		display: flex;
-		flex-wrap: wrap;
-		align-items: center;
-		gap: 0.75rem;
-	}
-
-	.welcome-nav-sheet-foot {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 0.5rem;
-	}
-
-	.welcome-nav-scrim {
-		position: fixed;
-		inset: 0;
-		z-index: 40;
-		padding: 0;
-		border: 0;
-		background: color-mix(in srgb, var(--background) 35%, transparent);
-		appearance: none;
-		cursor: default;
-	}
-
-	@media (min-width: 48rem) {
-		.welcome-nav-pickers {
-			display: inline-flex;
-		}
-
-		.welcome-nav-ham {
-			display: none;
-		}
-	}
-
-	@media (min-width: 64rem) {
-		.welcome-nav-links {
-			display: flex;
-		}
-	}
-</style>

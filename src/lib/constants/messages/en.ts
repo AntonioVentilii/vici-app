@@ -579,6 +579,10 @@ export const enMessages = {
 	'footer.blog': 'Blog',
 	'footer.bottom': '© 2026 VICI · Made for people who think they’re right.',
 	'footer.company': 'COMPANY',
+	'footer.contact': 'Contact us',
+	'footer.faq': 'FAQ',
+	'footer.help': 'HELP',
+	'footer.signin': 'Sign in',
 	'footer.disclosure':
 		'Custody, when introduced, lives in audited stablecoin contracts. The VICI token coordinates, not custodies.',
 	'footer.leaderboard': 'Leaderboard',

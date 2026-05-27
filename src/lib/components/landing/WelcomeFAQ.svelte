@@ -1,135 +1,124 @@
 <script lang="ts">
-	import { ChevronDown } from 'lucide-svelte/icons';
-	import LandingSectionHeader from '$lib/components/landing/LandingSectionHeader.svelte';
-	import { localeStore } from '$lib/stores/locale.store';
-	import { t } from '$lib/utils/i18n.utils';
-
 	/**
-	 * Six visitor-stage questions. Uses native `<details>` / `<summary>`
-	 * for built-in accessibility + zero-JS expand behaviour. First item
-	 * opens by default so the section reads as content rather than a
-	 * closed list.
+	 * Verbatim port of the prototype's `FAQ`
+	 * (`landing.jsx:1256-1314`). Six visitor-stage questions. Native
+	 * <details>/<summary> would also work, but the prototype uses
+	 * `useState` to mirror an "only one open at a time" UX with the
+	 * first question expanded by default — we port that.
 	 */
-	const FAQ_ITEM_KEYS = [
-		{ q: 'welcome.faq.q1', a: 'welcome.faq.a1' },
-		{ q: 'welcome.faq.q2', a: 'welcome.faq.a2' },
-		{ q: 'welcome.faq.q3', a: 'welcome.faq.a3' },
-		{ q: 'welcome.faq.q4', a: 'welcome.faq.a4' },
-		{ q: 'welcome.faq.q5', a: 'welcome.faq.a5' },
-		{ q: 'welcome.faq.q6', a: 'welcome.faq.a6' }
-	] as const;
+	import { ChevronDown } from 'lucide-svelte/icons';
 
-	const SUPPORT_EMAIL = 'support@vici.markets';
+	interface FaqItem {
+		q: string;
+		a: string;
+	}
+
+	const FAQ_ITEMS: readonly FaqItem[] = [
+		{
+			q: 'Is VICI free?',
+			a: 'Yes. The game mode is fully free — no card, no deposit, no subscription. VXP is a pure gameplay currency that tracks accuracy; it can’t be redeemed and isn’t money. Real-money markets, when introduced, will be optional and clearly labelled.'
+		},
+		{
+			q: 'What can I predict on?',
+			a: 'Hundreds of questions across macro, crypto, politics, tech, sports, and culture. Plus live tournament markets — the 2026 World Cup runs through July with per-team advancement, knockout, and final-winner markets. Every question resolves on a public source.'
+		},
+		{
+			q: 'How is my accuracy ranked?',
+			a: 'Resolved calls divided by total resolved calls. Open calls don’t count until a market settles. Accuracy is the unit of your reputation — across the global leaderboard, your private league, and any bouts you opt into.'
+		},
+		{
+			q: 'Do you make money from my predictions?',
+			a: 'Not in the game mode. VICI is free to use. The platform earns from real-money markets (when introduced), league sponsorships, and tournament partnerships. Your accuracy data is yours — we don’t sell it.'
+		},
+		{
+			q: 'Where does my data live?',
+			a: 'Servers in the European Union. Encrypted at rest and in transit. We store a session token; we don’t use tracking cookies. You can export or delete your data at any time — see the privacy policy for details.'
+		},
+		{
+			q: 'What’s a bout?',
+			a: 'A timed accuracy face-off between two leagues, or between universities in a tournament. Seven-day window, both sides need a minimum number of calls to qualify, the league with the higher average accuracy wins. The current Worlds Universities bout runs through the World Cup final.'
+		}
+	];
+
+	let openIdx = $state(0);
 </script>
 
-<div class="welcome-faq-inner">
-	<LandingSectionHeader
-		eyebrow={t({ locale: $localeStore, key: 'welcome.faq.eyebrow' })}
-		sub={t({ locale: $localeStore, key: 'welcome.faq.sub' })}
-		title={t({ locale: $localeStore, key: 'welcome.faq.title_a' })}
-		titleAccent={t({ locale: $localeStore, key: 'welcome.faq.title_b' })}
-	/>
+<section id="faq" class="lp-section lp-root">
+	<div class="lp-section-inner">
+		<div style="gap:14px; max-width:680px;" class="col">
+			<span class="eyebrow acc">FAQ</span>
+			<h2 class="lp-h2">
+				Questions <span class="serif-italic acc">worth asking.</span>
+			</h2>
+			<p style="color:var(--fg-dim);" class="lp-lede">
+				What every new caller asks before their first prediction.
+			</p>
+		</div>
 
-	<div class="welcome-faq-list">
-		{#each FAQ_ITEM_KEYS as item, idx (item.q)}
-			<details class="welcome-faq-item" open={idx === 0}>
-				<summary class="welcome-faq-q">
-					<span class="welcome-faq-q-text">
-						{t({ locale: $localeStore, key: item.q })}
-					</span>
-					<span class="welcome-faq-q-chev" aria-hidden="true">
-						<ChevronDown size={18} strokeWidth={1.8} />
-					</span>
-				</summary>
-				<div class="welcome-faq-a">
-					{t({ locale: $localeStore, key: item.a })}
+		<div
+			style="
+				margin-top:48px; max-width:760px; margin-left:auto; margin-right:auto;
+				display:flex; flex-direction:column; gap:2px;
+			"
+		>
+			{#each FAQ_ITEMS as item, i (item.q)}
+				{@const isOpen = openIdx === i}
+				<div
+					style="
+						border-bottom:1px solid var(--border);
+						border-top:{i === 0 ? '1px solid var(--border)' : 'none'};
+					"
+				>
+					<button
+						style="
+							appearance:none; background:transparent; border:0;
+							width:100%; padding:20px 4px; text-align:left; cursor:pointer;
+							display:flex; align-items:center; justify-content:space-between; gap:16px;
+							color:var(--fg); font:inherit;
+						"
+						class="lp-faq-q"
+						aria-expanded={isOpen}
+						onclick={() => (openIdx = isOpen ? -1 : i)}
+						type="button"
+					>
+						<span
+							style="color:{isOpen ? 'var(--accent)' : 'var(--fg)'}; line-height:1.3;"
+							class="t-h4 fw-600"
+						>
+							{item.q}
+						</span>
+						<span
+							style="
+								flex-shrink:0;
+								transition:transform 200ms var(--ease);
+								transform:{isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
+								color:var(--fg-mute); display:inline-flex;
+							"
+							aria-hidden="true"
+						>
+							<ChevronDown size={18} strokeWidth={1.8} />
+						</span>
+					</button>
+					{#if isOpen}
+						<div
+							style="padding:0 4px 22px; line-height:1.6; max-width:64ch; text-wrap:pretty;"
+							class="dim t-body"
+						>
+							{item.a}
+						</div>
+					{/if}
 				</div>
-			</details>
-		{/each}
+			{/each}
+		</div>
+
+		<p
+			style="margin-top:28px; text-align:center; max-width:520px; margin-left:auto; margin-right:auto;"
+			class="dim t-body-sm"
+		>
+			More questions? Write to <a
+				style="color:var(--accent); font-weight:600;"
+				href="mailto:support@vici.markets">support@vici.markets</a
+			> — we answer within two business days.
+		</p>
 	</div>
-
-	<p class="welcome-faq-contact">
-		{t({ locale: $localeStore, key: 'welcome.faq.contact_prefix' })}
-		<a href="mailto:{SUPPORT_EMAIL}">{SUPPORT_EMAIL}</a>
-		{t({ locale: $localeStore, key: 'welcome.faq.contact_suffix' })}
-	</p>
-</div>
-
-<style lang="postcss">
-	.welcome-faq-inner {
-		max-width: 80rem;
-		margin: 0 auto;
-	}
-
-	.welcome-faq-list {
-		display: flex;
-		flex-direction: column;
-		margin-top: 3rem;
-		max-width: 47.5rem;
-		margin-left: auto;
-		margin-right: auto;
-		border-top: 1px solid var(--border);
-	}
-
-	.welcome-faq-item {
-		border-bottom: 1px solid var(--border);
-	}
-
-	.welcome-faq-q {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-		padding: 1.25rem 0.25rem;
-		cursor: pointer;
-		color: var(--foreground);
-		font-size: var(--t-18);
-		font-weight: 600;
-		line-height: 1.3;
-		list-style: none;
-	}
-
-	.welcome-faq-q::-webkit-details-marker {
-		display: none;
-	}
-
-	.welcome-faq-item[open] .welcome-faq-q {
-		color: var(--color-accent);
-	}
-
-	.welcome-faq-q-text {
-		text-wrap: balance;
-	}
-
-	.welcome-faq-q-chev {
-		flex-shrink: 0;
-		display: inline-flex;
-		color: var(--muted-foreground);
-		transition: transform 200ms cubic-bezier(0.2, 0.7, 0.2, 1);
-	}
-
-	.welcome-faq-item[open] .welcome-faq-q-chev {
-		transform: rotate(180deg);
-	}
-
-	.welcome-faq-a {
-		padding: 0 0.25rem 1.4rem;
-		line-height: 1.6;
-		max-width: 64ch;
-		color: var(--muted-foreground);
-		text-wrap: pretty;
-	}
-
-	.welcome-faq-contact {
-		margin: 1.75rem auto 0;
-		max-width: 32.5rem;
-		text-align: center;
-		font-size: var(--t-13);
-		color: var(--muted-foreground);
-	}
-
-	.welcome-faq-contact a {
-		color: var(--color-accent);
-		font-weight: 600;
-	}
-</style>
+</section>
