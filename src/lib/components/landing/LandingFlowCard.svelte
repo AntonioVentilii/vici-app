@@ -14,6 +14,7 @@
 	import LandingAvatarStack from '$lib/components/landing/LandingAvatarStack.svelte';
 	import LandingConsensusCompass from '$lib/components/landing/LandingConsensusCompass.svelte';
 	import LandingTrickster from '$lib/components/landing/LandingTrickster.svelte';
+	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import {
 		LANDING_CAT_COLORS,
 		LANDING_CAT_LABELS,
@@ -90,6 +91,10 @@
 					<span style="color:var(--yes); font-weight:700;">+{delta} today</span>
 				</span>
 			</div>
+		</div>
+
+		<div class="flow-art-bleed">
+			<MarketArtwork bleed category={market.cat} seed={market.id} size={420} state="neutral" />
 		</div>
 
 		<div class="flow-probs">
