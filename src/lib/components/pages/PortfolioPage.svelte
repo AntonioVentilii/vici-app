@@ -28,30 +28,27 @@
 	import { refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 
 	/**
-	 * Portfolio — single-page hero + flat lists, matching `PortfolioScreen`
-	 * in `screens.jsx:716`.
+	 * Portfolio — single-page hero + flat lists.
 	 *
 	 * Layout
 	 * - `MobileAppBar` with title "Portfolio" and a chart icon on the
-	 *   right slot (matches the prototype's appbar).
-	 * - Hero card (centered, gradient surface) — `TOTAL HOLDINGS` eyebrow,
-	 *   38px VXP balance + "VXP" suffix, weekly delta line in laurel /
-	 *   no-red. Mirrors the prototype's `card-elevated` styling.
-	 * - 3-col mini-stats: Unrealized P&L · 7D Accuracy · Active (the
-	 *   prototype's third tile is RANK; our backend has no rank field,
-	 *   so we substitute open-position count). Replaces the legacy
-	 *   `PortfolioStats` 6-tile holdings card.
+	 *   right slot.
+	 * - Hero card (centred, gradient surface) — `TOTAL HOLDINGS`
+	 *   eyebrow, 38 px VXP balance + "VXP" suffix, weekly delta line
+	 *   in laurel / no-red.
+	 * - 3-col mini-stats: Unrealized P&L · 7D Accuracy · Active. Our
+	 *   backend has no rank field, so the third tile shows
+	 *   open-position count.
 	 * - Open positions — flat list, each row: category tag (top-left) ·
-	 *   side tag (top-right) · 2-line market title · "Payout at X%" ·
+	 *   side tag (top-right) · 2-line market title · "Payout at X %" ·
 	 *   signed PnL. Tap routes to the market detail.
 	 * - Resolved positions — flat list, each row: W/L glyph · market
 	 *   title · signed PnL.
-	 * - C-25 (production keep) — `OpenOrdersTable` retained for limit
-	 *   orders.
+	 * - `OpenOrdersTable` retained for limit orders.
 	 *
-	 * Deferred from the prototype: PerfChart (30-day sparkline) and
-	 * Allocation (5-bucket category bars) — both would require new
-	 * derived stores beyond the constraint zone for this pass.
+	 * Deferred: PerfChart (30-day sparkline) and Allocation (5-bucket
+	 * category bars) — both would require new derived stores beyond
+	 * the constraint zone for this pass.
 	 */
 
 	const refreshing = $derived(

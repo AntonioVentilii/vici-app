@@ -17,7 +17,7 @@ type AppGetCurrentTournamentResult = record { tournament : opt record { id : tex
 
 type AppGetMarketMetadataArgs = record { series_id : text };
 
-type AppGetMarketMetadataResult = record { metadata : opt record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool; updated_at : float64; updated_by : text } };
+type AppGetMarketMetadataResult = record { metadata : opt record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool; subtitle : opt text; updated_at : float64; updated_by : text } };
 
 type AppGetMarketTranslationArgs = record { series_id : text; locale : text };
 
@@ -121,9 +121,9 @@ type AppTriggerTournamentDrawArgs = record { month_anchor : text };
 
 type AppTriggerTournamentDrawResult = record { ok : bool; tournament_id : opt text; reason : opt variant { already_drawn; month_not_started; insufficient_leagues; invalid_input }; available_leagues : opt float64 };
 
-type AppUpsertMarketMetadataArgs = record { series_id : text; data : record { why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool } };
+type AppUpsertMarketMetadataArgs = record { series_id : text; data : record { why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool; subtitle : opt text } };
 
-type AppUpsertMarketMetadataResult = record { metadata : record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool; updated_at : float64; updated_by : text } };
+type AppUpsertMarketMetadataResult = record { metadata : record { series_id : text; why_now : opt record { kind : variant { closing; trending; new; topical; social }; text : text }; events : vec record { day : float64; label : text; dir : variant { up; down } }; tags : vec text; suggested : bool; subtitle : opt text; updated_at : float64; updated_by : text } };
 
 type AppUpsertMarketTranslationArgs = record { series_id : text; locale : text; data : record { title : text; description : text; outcomes : vec record { id : text; title : text } } };
 

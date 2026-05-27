@@ -10,8 +10,6 @@
 	 * (NO ↔ YES) drift outward on a ~1.7 s ping cycle while the centre
 	 * dot pair calls out TAP / SKIP. Pure visual sugar — the actual
 	 * gestures are wired in `FlowCard`.
-	 *
-	 * Prototype source: `VICI WebApp Beta V1.2/flow.jsx:1124-1163`.
 	 */
 	let t0 = $state(0);
 	let raf: number | null = null;

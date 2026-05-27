@@ -1,7 +1,6 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `Footer`
-	 * (`landing.jsx:1356-1394`). Wordmark + tagline + three columns
+	 * Landing footer — wordmark + tagline + three columns
 	 * (Product / Help / Legal) + disclosure line.
 	 */
 	import Logo from '$lib/components/layout/Logo.svelte';

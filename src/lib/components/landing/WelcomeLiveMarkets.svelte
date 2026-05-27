@@ -1,9 +1,9 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `LiveMarkets`
-	 * (`landing.jsx:701-742`). 6-card grid pulled from LANDING_MARKETS;
-	 * synthetic but deterministic `callers` + `trending` per card to
-	 * match the prototype's `m.id.charCodeAt(0) * 173 % 8500` seed.
+	 * 6-card grid pulled from `LANDING_MARKETS`; synthetic but
+	 * deterministic `callers` + `trending` per card via
+	 * `m.id.charCodeAt(0) * 173 % 8500` so the numbers stay stable
+	 * across renders.
 	 */
 	import { ChevronRight } from 'lucide-svelte/icons';
 	import { LANDING_CAT_COLORS, LANDING_MARKETS } from '$lib/constants/landing-data.constants';

@@ -1,13 +1,9 @@
 /**
- * Landing-only mock data, ported verbatim from the prototype's
- * `data.js` (`window.VICI_DATA.MARKETS` + `WORLD_CUP` favorites).
+ * Landing-only mock data — markets + World Cup favourites.
  *
- * Source of truth: /Users/antonio.ventilii/projects/VICI WebApp Beta V1.2/data.js
- *
- * The landing surface is a pre-sign-in marketing page; it does NOT
- * read live markets from the canister. These fixtures match the
- * prototype's shape so the ported sections render the exact cards
- * the prototype designers signed off on.
+ * The landing surface is a pre-sign-in marketing page and does NOT
+ * read live markets from the canister. These fixtures shape the
+ * sections that render the curated marketing cards.
  */
 
 export type LandingMarketCategory =
@@ -34,11 +30,10 @@ export interface LandingMarket {
 }
 
 /**
- * Prototype `MARKETS` deck — first three drive the Hero deck + Flow
- * demo, first six the Live Markets grid, first eight the ticker. The
- * top card (`wc-winner-brazil`) is `hot: true` in the prototype's
- * data and triggers the "trickster pill" on the Hero card because
- * `min(yes, no) < 25`.
+ * Markets deck — first three drive the Hero deck + Flow demo, first
+ * six the Live Markets grid, first eight the ticker. The top card
+ * (`wc-winner-brazil`) is `hot: true` and triggers the "trickster
+ * pill" on the Hero card because `min(yes, no) < 25`.
  */
 export const LANDING_MARKETS: readonly LandingMarket[] = [
 	{
@@ -143,10 +138,10 @@ export const LANDING_MARKETS: readonly LandingMarket[] = [
 ] as const;
 
 /**
- * Prototype `WORLD_CUP.favorites` — used by the WCFeature section's
- * 2×2 flag grid. `daysToKickoff` is derived from the repo's
- * `WORLD_CUP_KICKOFF` constant so the landing always shows the same
- * countdown the rest of the app uses.
+ * World Cup favourites — used by the WCFeature section's 2×2 flag
+ * grid. `daysToKickoff` is derived from the repo's `WORLD_CUP_KICKOFF`
+ * constant so the landing always shows the same countdown the rest of
+ * the app uses.
  */
 export interface LandingWcFavorite {
 	readonly code: string;
@@ -164,9 +159,8 @@ export const LANDING_WC_FAVORITES: readonly LandingWcFavorite[] = [
 ] as const;
 
 /**
- * Category → label map used by the ticker + cards. Mirrors the
- * prototype's `CATS` table; only the categories that appear in
- * `LANDING_MARKETS` are listed.
+ * Category → label map used by the ticker + cards. Only the
+ * categories that appear in `LANDING_MARKETS` are listed.
  */
 export const LANDING_CAT_LABELS: Record<LandingMarketCategory, string> = {
 	wc: 'World Cup',
@@ -179,8 +173,7 @@ export const LANDING_CAT_LABELS: Record<LandingMarketCategory, string> = {
 };
 
 /**
- * Category → accent color used by the FlowCard header tint. Pulled
- * from the prototype's `catColor` helper (see `app.jsx`).
+ * Category → accent color used by the FlowCard header tint.
  */
 export const LANDING_CAT_COLORS: Record<LandingMarketCategory, string> = {
 	wc: '#E2B842',
@@ -193,8 +186,7 @@ export const LANDING_CAT_COLORS: Record<LandingMarketCategory, string> = {
 };
 
 /**
- * League rows used by the LeagueShowcase panel. Mirrors the
- * `office-hex` league members from the prototype's data.js.
+ * League rows used by the LeagueShowcase panel — `office-hex` members.
  */
 export interface LandingLeagueMember {
 	readonly rank: number;
@@ -245,7 +237,6 @@ export const LANDING_LEAGUES: readonly LandingLeague[] = [
 
 /**
  * Worlds Universities — top 3 by `accWC` for the podium mini-panel.
- * Sourced from the prototype's `WORLDS_UNIVERSITIES` table.
  */
 export interface LandingUniversity {
 	readonly id: string;

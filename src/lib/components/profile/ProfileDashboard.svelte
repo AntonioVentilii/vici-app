@@ -281,10 +281,9 @@
 	const archetypeAccent = $derived(archetype?.accent ?? 'var(--color-primary)');
 
 	/**
-	 * VXP balance — for now equal to lifetime points. The prototype
-	 * (`screens.jsx:894`) renders this as a small laurel-accent chip
-	 * next to the handle ("1,000 VXP"). Locale-aware separators via
-	 * `toLocaleString`.
+	 * VXP balance — for now equal to lifetime points. Rendered as a
+	 * small laurel-accent chip next to the handle ("1,000 VXP").
+	 * Locale-aware separators via `toLocaleString`.
 	 */
 	const vxpBalance = $derived(points);
 	const vxpBalanceLabel = $derived(`${vxpBalance.toLocaleString($localeStore)} VXP`);
@@ -296,9 +295,7 @@
 	 * The leaderboard is populated lazily by `LoaderLeaderboard` on app
 	 * boot; when the slice hasn't resolved yet (or the viewer isn't in
 	 * it), we render an em-dash placeholder rather than omitting the
-	 * chip entirely, so the stats-line layout stays stable across
-	 * loads. Mirrors the prototype's `#{me.rank} global` slot at
-	 * `screens.jsx:928`.
+	 * chip entirely, so the stats-line layout stays stable across loads.
 	 */
 	const globalRank = $derived.by<number | undefined>(() => {
 		const idx = $leaderboard.findIndex((entry) => entry.owner === profile.owner);
@@ -423,7 +420,7 @@
 	/**
 	 * Four-slot affiliation grid — Uni / Country / City / Company.
 	 * Only the first two are wired; City + Company are locked
-	 * placeholders mirroring the prototype's "coming soon" state.
+	 * placeholders ("coming soon").
 	 */
 	interface AffilSlot {
 		key: 'university' | 'country' | 'city' | 'company';
@@ -561,9 +558,8 @@
 		})
 	);
 
-	// Sort: closest-to-unlock locked first → earned → far-locked. Mirrors
-	// the prototype's `b.prog - a.prog` ordering with the earned bucket
-	// folded behind.
+	// Sort: closest-to-unlock locked first → earned → far-locked.
+	// `b.prog - a.prog` ordering with the earned bucket folded behind.
 	const sortedAchievements = $derived.by(() => {
 		const items = [...achievementEvaluations];
 
@@ -580,16 +576,15 @@
 	});
 
 	/**
-	 * Achievement glyph mapping — mirrors the prototype's per-id lucide
-	 * picker at `screens.jsx:1022`:
+	 * Achievement glyph mapping (per-id lucide picker):
 	 *   - `oracle`  → eye
 	 *   - `on-fire` → flame
 	 *   - `marathon`→ target
 	 *   - default   → trophy
 	 *
 	 * Every other tile (first-blood, contrarian, lvl-25, …) falls
-	 * through to Trophy. The prototype's Album rendering uses the same
-	 * mapping, so the affordance carries across surfaces.
+	 * through to Trophy. The Album surface uses the same mapping so
+	 * the affordance carries across surfaces.
 	 */
 	const iconForAchievement = (id: string): typeof Trophy => {
 		if (id === 'oracle') {
@@ -674,15 +669,14 @@
 					{/if}
 				</div>
 
-				<!-- Row 2: school + country chip(s) BELOW the handle, mirroring
-				     the prototype's inline chip row at screens.jsx:900-926.
-				     The prototype renders each chip in its affiliation's own
-				     accent ("STANFORD" red, country flag tint) — we don't
-				     carry per-school / per-country colors yet, so we use a
-				     laurel-accent stand-in (school) and a muted pill
-				     (country). Archetype tag trails behind when no
-				     affiliations are set, preserving the "you're an
-				     archetype" affordance. -->
+				<!-- Row 2: school + country chip(s) BELOW the handle.
+				     Each chip would ideally render in its affiliation's
+				     own accent ("STANFORD" red, country flag tint) —
+				     we don't carry per-school / per-country colours
+				     yet, so we use a laurel-accent stand-in (school)
+				     and a muted pill (country). Archetype tag trails
+				     behind when no affiliations are set, preserving the
+				     "you're an archetype" affordance. -->
 				{#if myUni !== undefined || myCountry !== undefined}
 					{@const uniOption = myUni
 						? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationId })
@@ -723,8 +717,7 @@
 
 				<!-- Row 4: inline streak + calls (Flame N · M calls).
 				     Always rendered — the flame stays visible even at
-				     streak=0 to match the prototype's persistent
-				     row at screens.jsx:929-932. -->
+				     streak=0 so the row reads as persistent. -->
 				<p class="profile-streak-line">
 					<span class="profile-streak-inline" aria-label="streak">
 						<Flame aria-hidden="true" size={12} strokeWidth={2} />
@@ -763,8 +756,8 @@
 			</div>
 		</div>
 
-		<!-- Level progress — explicit "LEVEL" eyebrow + "{xp} / {target} VXP"
-		     numbers, mirroring the prototype's level row. -->
+		<!-- Level progress — explicit "LEVEL" eyebrow + "{xp} / {target}
+		     VXP" numbers. -->
 		<div class="profile-level-row">
 			<span class="profile-level-label">
 				{t({ locale: $localeStore, key: 'profile.dashboard.level_label' })}
@@ -1072,9 +1065,8 @@
 
 	/* Radial gradient halo tinted by the user's archetype accent.
 	   Anchored under the avatar quadrant (top-left) and sized large
-	   enough to visibly tint the surrounding area — mirrors the
-	   prototype's archetype-tinted backdrop behind the pixel-art
-	   character. */
+	   enough to visibly tint the surrounding area behind the
+	   pixel-art character. */
 	.profile-halo {
 		position: absolute;
 		top: -60px;
@@ -1172,8 +1164,7 @@
 		text-transform: uppercase;
 	}
 
-	/* VXP balance chip — small laurel pill next to the handle (mirrors
-	   the prototype's inline xp chip, screens.jsx:894). */
+	/* VXP balance chip — small laurel pill next to the handle. */
 	.profile-vxp-chip {
 		display: inline-flex;
 		align-items: center;
@@ -1197,12 +1188,11 @@
 		margin-top: 0.1rem;
 	}
 
-	/* School + country chips — laurel-accent / muted stand-ins for the
-	   prototype's per-affiliation colored pills (screens.jsx:908-925).
-	   Per-school and per-country palettes don't exist in our data yet,
-	   so school chips use the laurel accent and country chips use a
-	   neutral surface tint. Both share the prototype's small uppercase
-	   mono geometry. */
+	/* School + country chips — laurel-accent / muted stand-ins.
+	   Per-school and per-country palettes don't exist in our data
+	   yet, so school chips use the laurel accent and country chips
+	   use a neutral surface tint. Both share the same small
+	   uppercase mono geometry. */
 	.school-chip,
 	.country-chip {
 		display: inline-flex;
@@ -1603,9 +1593,9 @@
 		display: none;
 	}
 
-	/* Bigger card (~140px in the prototype) — emblem sits TOP-LEFT in
-	   its own row, with title + sub stacked below. An always-on
-	   underbar shows progress, going fully gold when unlocked. */
+	/* ~140 px card — emblem sits TOP-LEFT in its own row, with title +
+	   sub stacked below. An always-on underbar shows progress, going
+	   fully gold when unlocked. */
 	.profile-achievement-card {
 		position: relative;
 		display: flex;
@@ -1631,8 +1621,8 @@
 		border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
 	}
 
-	/* Full-width gold underbar for unlocked tiles (mirrors the
-	   prototype's "fully gold filled" earned state). */
+	/* Full-width gold underbar for unlocked tiles (the "fully gold
+	   filled" earned state). */
 	.profile-achievement-card.is-unlocked::after {
 		content: '';
 		position: absolute;

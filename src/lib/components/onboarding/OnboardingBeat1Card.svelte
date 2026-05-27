@@ -35,7 +35,7 @@
 	const { participantId, onCommit, onChangeTeam }: Props = $props();
 
 	const commit = (side: 'YES' | 'NO') => {
-		// Firm tap on first-call commit (prototype `onboarding.jsx:74`).
+		// Firm tap on first-call commit.
 		haptic('firm-tap');
 		onCommit(side);
 	};
@@ -166,10 +166,9 @@
 </div>
 
 <style lang="postcss">
-	/* Inner card markup mirrors the prototype's `ob-card` structure but
-	   uses local `ob2-swipe-card` namespacing to avoid clashing with the
-	   broader `ob-*` legacy stylesheet. The outer `ob2-card-stage` and
-	   `ob2-beat-1` containers live in `app.css`. */
+	/* Inner card uses local `ob2-swipe-card` namespacing to avoid
+	   clashing with the broader `ob-*` stylesheet. The outer
+	   `ob2-card-stage` and `ob2-beat-1` containers live in `app.css`. */
 	.ob2-swipe-card {
 		position: relative;
 		display: flex;

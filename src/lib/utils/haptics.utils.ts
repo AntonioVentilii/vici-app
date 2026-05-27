@@ -63,7 +63,7 @@ const HAPTIC_PATTERNS: Record<HapticPattern, HapticValue> = {
 	// sites stay consistent.
 	celebration: [14, 30, 20, 30, 40],
 	// Mid-tier milestone beat — used at 10 / 250 / 500 swipes + streak
-	// tier-up. Matches the prototype motion-engine `[25, 30, 25]`.
+	// tier-up. `[25, 30, 25]`.
 	'milestone-tap': [25, 30, 25],
 	// Oracle's first-leaderboard arrival — `[40, 60, 40]`.
 	'oracle-tap': [40, 60, 40],

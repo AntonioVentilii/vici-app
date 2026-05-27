@@ -41,17 +41,16 @@
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
-	 * Bouts inbox — the prototype's `BoutsScreen` (screens.jsx:3088).
+	 * Bouts inbox.
 	 *
-	 * The page is composed of four surface-grouped sections (the
-	 * prototype groups by **surface**, never by bout state):
+	 * The page is composed of four surface-grouped sections (grouped
+	 * by **surface**, never by bout state):
 	 *
 	 *  1. Optional "What's a bout?" intro card — dismissible, persists
-	 *     via `localStorage['vici.bouts-intro-seen']` to match the
-	 *     prototype. The locked design calls for cross-device
-	 *     `preferences` storage; that's deferred until the satellite
-	 *     `preferences` schema can be migrated without a Candid + Rust
-	 *     binding regen (see audit doc — Bouts inbox).
+	 *     via `localStorage['vici.bouts-intro-seen']`. The locked
+	 *     design calls for cross-device `preferences` storage; that
+	 *     is deferred until the satellite `preferences` schema can be
+	 *     migrated without a Candid + Rust binding regen.
 	 *
 	 *  2. Worlds Universities — featured WC podium card (top 3 by
 	 *     lifetime accuracy) + monthly compact card linking to the
@@ -64,13 +63,11 @@
 	 *     current tournament has unresolved rounds in flight.
 	 *
 	 *  5. Your league bouts — the cross-league inbox, with a
-	 *     `Challenge` pill on the right of the section eyebrow (the
-	 *     prototype moved the create-bout CTA out of the page header
-	 *     into the league-bouts section header).
+	 *     `Challenge` pill on the right of the section eyebrow.
 	 *
-	 * Side chips use the league's `accentColor` directly (13% opacity
-	 * background, 30% border) so each league's emblem tone reads on the
-	 * card surface rather than the generic laurel.
+	 * Side chips use the league's `accentColor` directly (13 % opacity
+	 * background, 30 % border) so each league's emblem tone reads on
+	 * the card surface rather than the generic laurel.
 	 */
 
 	interface Props {
@@ -99,11 +96,10 @@
 	let matches = $state<TournamentMatchDoc[]>([]);
 
 	// ─── Intro card dismissal ───────────────────────────────────────
-	// Matches the prototype's `localStorage['vici.bouts-intro-seen']`
-	// flag. Future migration to cross-device preferences is tracked in
-	// the audit doc (Bouts inbox surface) — adding a new field to the
-	// satellite preferences schema requires a Candid + Rust binding
-	// regen scoped outside this parity pass.
+	// Persisted via the `vici.bouts-intro-seen` localStorage flag.
+	// Future migration to cross-device preferences is deferred — adding
+	// a new field to the satellite preferences schema requires a
+	// Candid + Rust binding regen scoped outside this work.
 	const BOUTS_INTRO_KEY = 'vici.bouts-intro-seen';
 	let boutsIntroSeen = $state(false);
 
@@ -431,11 +427,10 @@
 
 	// ─── Tournament card derivations ────────────────────────────────
 	/**
-	 * Surface the tournament card only when the current bracket has at
-	 * least one round in flight (a match whose window hasn't closed
-	 * and that has unresolved matches). Mirrors the prototype's
-	 * `T.status !== 'completed'` gate, but tied to live data rather
-	 * than mocked status.
+	 * Surface the tournament card only when the current bracket has
+	 * at least one round in flight (a match whose window hasn't
+	 * closed and that has unresolved matches). Tied to live data
+	 * rather than a mocked status flag.
 	 */
 	const tournamentLiveRound = $derived.by((): TournamentRound | null => {
 		if (tournament === null) {
@@ -1612,10 +1607,9 @@
 		min-width: 0;
 	}
 
-	/* Side chip — emblem-tinted: direct accentColor background at 13%
-	   opacity with a 30% border. Mirrors the prototype's
-	   `worlds-tag` palette where the chip wears the school / league
-	   tone instead of the generic laurel. */
+	/* Side chip — emblem-tinted: direct accentColor background at 13 %
+	   opacity with a 30 % border, so the chip wears the school /
+	   league tone instead of the generic laurel. */
 	.bouts-side {
 		appearance: none;
 		padding: 0.2rem 0.5rem;

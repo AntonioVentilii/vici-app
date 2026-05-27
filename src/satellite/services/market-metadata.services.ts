@@ -175,6 +175,7 @@ export const upsertMarketMetadata = async ({
 		events: data.events ?? [],
 		tags: normalizeMarketTags(data.tags ?? []),
 		suggested,
+		subtitle: data.subtitle,
 		updatedAt: Number(time() / 1_000_000n),
 		updatedBy: callerText()
 	};

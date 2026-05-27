@@ -1,11 +1,9 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype `DashScreen` (screens.jsx line 371).
-	 *
-	 * Structure, class names and copy mirror the prototype 1:1; backend
-	 * fields that don't yet exist on the canister (rival, contrarian
-	 * count, lifetime VXP, global rank, …) fall back to an em-dash
-	 * placeholder rather than an approximation.
+	 * Dash screen — the user's at-a-glance accuracy + streak + recent
+	 * activity surface. Backend fields that don't yet exist on the
+	 * canister (rival, contrarian count, lifetime VXP, global rank, …)
+	 * fall back to an em-dash placeholder rather than an approximation.
 	 */
 	import {
 		ArrowDown,
@@ -47,9 +45,9 @@
 	type TimeWindow = '7d' | '30d' | '90d' | 'All';
 	type PastFilter = 'all' | 'won' | 'lost';
 
-	// — em-dash placeholder used everywhere a real backend number isn't
-	// yet available. Keeps the surface aligned with the prototype while
-	// signalling "unknown" rather than fabricating data.
+	// — em-dash placeholder used everywhere a real backend number
+	// isn't yet available — signals "unknown" rather than fabricating
+	// data.
 	const EM_DASH = '—';
 	const MARATHON_DAYS = 30;
 
@@ -117,7 +115,7 @@
 	const wins = $derived(Math.round((profile?.accuracy ?? 0) * totalTrades));
 	const losses = $derived(Math.max(0, totalTrades - wins));
 
-	// Live session delta — prior accuracy reconstruction (prototype L410).
+	// Live session delta — prior accuracy reconstruction.
 	const sessionDelta = $derived.by<number | null>(() => {
 		const session = recentSettlements;
 		const sc = session.length;
@@ -167,7 +165,7 @@
 	// settlement with a `contrarian` flag.
 	const contrarianWins = $derived(recentSettlements.filter((s) => s.win).slice(0, 3));
 
-	// Next-unlock achievement (Marathon by default per prototype).
+	// Next-unlock achievement (Marathon by default).
 	const unlocked = $derived(new Set<string>(profile?.unlockedAchievements ?? []));
 	const nextAchievement = $derived(
 		ACHIEVEMENTS.find((a) => !unlocked.has(a.id)) ?? ACHIEVEMENTS[ACHIEVEMENTS.length - 1]
@@ -176,8 +174,7 @@
 	const daysToMarathon = $derived(Math.max(0, MARATHON_DAYS - streak));
 
 	// Markets the user hasn't tried — pick the first category with
-	// zero calls. Mirrors prototype suggesting `Culture` for empty
-	// taxonomies.
+	// zero calls (falls back to `Culture` when the taxonomy is empty).
 	const untriedCategory = $derived<MarketTag | undefined>(
 		MARKET_TAGS.filter((tag) => tag !== 'wc').find(
 			(tag) => (userStats?.categoryStats?.[tag]?.calls ?? 0) === 0
@@ -759,9 +756,9 @@
 </div>
 
 <style lang="postcss">
-	/* DashPage local hooks. Most class names live in app.css so the
-	   prototype's CSS structure ports cleanly; this block only carries
-	   small Svelte-only tweaks (delta-pct color modifiers). */
+	/* DashPage local hooks. Most class names live in `app.css`; this
+	   block only carries small Svelte-only tweaks (delta-pct colour
+	   modifiers). */
 
 	:global(.dash-delta.dash-delta-pos) {
 		color: var(--yes);

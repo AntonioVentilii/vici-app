@@ -256,11 +256,9 @@
 		gap: 0.65rem;
 	}
 
-	/* The tile is the prototype's `.award` — a square card with a
-	   glyph emblem centered above the title + sub. Tier classes wash
-	   the emblem in their accent colour; .is-locked drops opacity to
-	   0.5 (matches `screens.jsx:4708` `${a.tier} ${a.got ? '' : 'locked'}`).
-	*/
+	/* Award tile — a square card with a glyph emblem centred above
+	   the title + sub. Tier classes wash the emblem in their accent
+	   colour; .is-locked drops opacity to 0.5. */
 	.album-award {
 		appearance: none;
 		display: flex;
@@ -313,9 +311,7 @@
 	}
 
 	/* Tier washes — gold uses the laurel-accent (our `--color-primary`),
-	   silver + bronze keep their canonical metallic tones. These map
-	   to the prototype's `.award.gold`, `.award.silver`, `.award.bronze`
-	   classes. */
+	   silver + bronze keep their canonical metallic tones. */
 	.album-award.is-gold {
 		border-color: color-mix(in srgb, #f4c544 35%, var(--border-base));
 		background: color-mix(in srgb, #f4c544 5%, var(--bg-surface));

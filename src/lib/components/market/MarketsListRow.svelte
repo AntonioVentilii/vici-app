@@ -10,19 +10,9 @@
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	/**
-	 * Verbatim port of prototype `MarketRow` (screens.jsx:182-193).
-	 *
-	 *   <div onClick={onClick} className="card" style={{ padding: 14, cursor: 'pointer' }}>
-	 *     <div className="row between">
-	 *       <span className="tag" style={{ color: catColor(m.cat) }}>{m.cat.toUpperCase()}</span>
-	 *       <span className="num mute t-eyebrow">{m.vol} vol · {m.closes}</span>
-	 *     </div>
-	 *     <div className="t-body" style={{ marginTop: 8, fontWeight: 600, lineHeight: 1.35 }}>{m.q}</div>
-	 *     <div className="row between" style={{ marginTop: 12, gap: 12 }}>
-	 *       <div style={{ flex: 1 }}><ProbBar yes={m.yes} /></div>
-	 *       <span className="num t-body fw-600" style={{ color: m.yes >= 50 ? 'var(--yes)' : 'var(--no)' }}>{m.yes}%</span>
-	 *     </div>
-	 *   </div>
+	 * Full-width market row for the All markets list. Header pairs the
+	 * category tag with `vol · closes`; body is the question; footer
+	 * sits a `ProbBar` next to the YES %, tinted YES / NO by side.
 	 */
 	interface Props {
 		market: Market;

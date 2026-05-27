@@ -192,9 +192,9 @@
 		const [first] = overlap;
 		const profile = $profilesStore.get(first);
 		const nickname = profile?.nickname?.trim();
-		// Prototype prefixes the highlighted handle with `@` ("<b>@handle</b> +
-		// N friends"); we mirror that here for nicknamed members. Anonymous
-		// principals stay un-prefixed.
+		// Prefix the highlighted handle with `@` ("<b>@handle</b> +
+		// N friends") for nicknamed members. Anonymous principals
+		// stay un-prefixed.
 		const handle = nickname && nickname.length > 0 ? `@${nickname}` : `${first.slice(0, 6)}…`;
 
 		return { handle, count: overlap.length };

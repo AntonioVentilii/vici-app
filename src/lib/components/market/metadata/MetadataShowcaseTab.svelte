@@ -13,11 +13,13 @@
 		whyText: string;
 		tags: MarketTag[];
 		suggested: boolean;
+		subtitle: string;
 		isAdmin: boolean;
 		onWhyKindChange: (value: MarketWhyNowKind) => void;
 		onWhyTextChange: (value: string) => void;
 		onTagsChange: (value: MarketTag[]) => void;
 		onSuggestedChange: (value: boolean) => void;
+		onSubtitleChange: (value: string) => void;
 	}
 
 	const {
@@ -25,11 +27,13 @@
 		whyText,
 		tags,
 		suggested,
+		subtitle,
 		isAdmin,
 		onWhyKindChange,
 		onWhyTextChange,
 		onTagsChange,
-		onSuggestedChange
+		onSuggestedChange,
+		onSubtitleChange
 	}: Props = $props();
 
 	const toggleTag = (tag: MarketTag) => {
@@ -57,6 +61,19 @@
 				key: 'market.metadata.placeholder.closing_soon'
 			})}
 			value={whyText}
+		/>
+	</label>
+
+	<label>
+		<span>{t({ locale: $localeStore, key: 'market.metadata.subtitle' })}</span>
+		<input
+			maxlength="60"
+			oninput={(e) => onSubtitleChange(e.currentTarget.value)}
+			placeholder={t({
+				locale: $localeStore,
+				key: 'market.metadata.placeholder.subtitle'
+			})}
+			value={subtitle}
 		/>
 	</label>
 

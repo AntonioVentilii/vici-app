@@ -40,20 +40,19 @@
 	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
 	/**
-	 * Friends — the Social tab port of the prototype's `FriendsScreen`
-	 * (`screens.jsx:2216-2495`). Lives only inside Social; the
-	 * standalone `/friends` route is gone (Tier C-27).
+	 * Friends — the Social tab. Lives only inside Social; there is no
+	 * standalone `/friends` route.
 	 *
 	 * Sections (top → bottom):
 	 *  1. Invite hero — +500 VXP eyebrow, monthly cap line, social-proof
 	 *     row when referrals are paid, Share + Copy CTA row.
 	 *  2. Pending invites — received requests, each expandable to
-	 *     Accept/Reject. (Sent requests sit under "Awaiting reply" further
-	 *     down — they're a strictly weaker signal than received.)
+	 *     Accept/Reject. (Sent requests sit under "Awaiting reply"
+	 *     further down — they're a strictly weaker signal than received.)
 	 *  3. Friends-ranked list — rank 01, 02, …, h2h accuracy delta chip,
 	 *     sticky YOU row pinned at the bottom of the rank list.
 	 *  4. Friends feed — placeholder until a friend activity service
-	 *     lands; today renders the prototype's serif-italic quiet copy.
+	 *     lands; today renders quiet serif-italic copy.
 	 *  5. Global ranking link — viewer's leaderboard rank with chevron;
 	 *     delta chip ⏭ deferred (no historical rank snapshot satellite-side).
 	 *  6. Friend mini-profile bottom sheet — opens on row tap; surfaces
@@ -102,10 +101,9 @@
 	});
 
 	// ── Invite hero ──────────────────────────────────────────────────
-	// Canonical, handle-based public URL. Matches the prototype
-	// (`screens.jsx:2226`: `https://vici.markets/i/${handle}`). When
-	// the viewer has no nickname yet we fall back to a short principal
-	// slug so the preview is still readable.
+	// Canonical, handle-based public URL — `https://vici.markets/i/${handle}`.
+	// When the viewer has no nickname yet we fall back to a short
+	// principal slug so the preview is still readable.
 	const inviteHandle = $derived.by(() => {
 		const nickname = myProfile?.nickname?.trim();
 
@@ -133,8 +131,8 @@
 	// Social-proof line above the invite buttons —
 	// `{N} friends joined · +{N*500} VXP earned`. The satellite doesn't
 	// yet expose a "referral redemptions" counter, so we approximate
-	// using the visible friends count as a reasonable lower-bound for
-	// the prototype parity; the bonus per redemption is fixed at 500 VXP.
+	// using the visible friends count as a reasonable lower-bound;
+	// the bonus per redemption is fixed at 500 VXP.
 	const referralFriendsCount = $derived(activeRelations.length);
 	const referralVxpEarned = $derived(referralFriendsCount * 500);
 	let copied = $state(false);
@@ -247,8 +245,7 @@
 	const formatPct = (value: number): string => {
 		// `value` is a 0..1 probability/accuracy fraction (matches the
 		// satellite-side `points` accuracy contract; see `profile.schema.ts`).
-		// Render as a 1-decimal percent — `48.4%` — to keep the prototype's
-		// `fmtPct1` numeric density.
+		// Render as a 1-decimal percent — `48.4%`.
 		const pct = Math.round(value * 1000) / 10;
 
 		return `${pct}%`;
@@ -749,7 +746,7 @@
 	<!--
 		TODO: Wire a `getFriendsFeed` service once the satellite exposes a
 		recent-activity stream scoped to the viewer's social graph. Until
-		then we render the prototype's quiet copy so the surface stays
+		then we render a quiet copy block so the surface stays
 		discoverable without faking data.
 	-->
 	{#if !loading && rankedFriends.length > 0}

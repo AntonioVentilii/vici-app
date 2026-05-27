@@ -92,10 +92,9 @@
 	});
 
 	const onPredictionPlaced = () => {
-		// Confirmation overlay (`Locked in.`) — matches the prototype's
-		// done-state choreography (`screens.jsx:323-333`). Held for
-		// 1100ms so the user sees the acknowledgement, then we dismiss
-		// the sheet and refetch the market silently.
+		// Confirmation overlay (`Locked in.`) — done-state choreography.
+		// Held for 1100 ms so the user sees the acknowledgement, then
+		// we dismiss the sheet and refetch the market silently.
 		lockedToastOpen = true;
 		selectedSide = undefined;
 
@@ -236,10 +235,10 @@
 		{@const m = market}
 		{#snippet detailRight()}
 			<MarketDetailShareButton title={m.title} />
-			<!-- Save / "watch" — the prototype's eye glyph is functionally a
-			     bookmark; we reuse the shared heart toggle so this surface
-			     stays in lockstep with the per-card heart in the markets
-			     list (`MarketCard`). -->
+			<!-- Save / "watch" — functionally a bookmark. We reuse the
+			     shared heart toggle so this surface stays in lockstep
+			     with the per-card heart in the markets list
+			     (`MarketCard`). -->
 			<SavedMarketToggle marketId={m.id} size="md" stopPropagation={false} />
 		{/snippet}
 
@@ -355,9 +354,8 @@
 		gap: 0.375rem;
 	}
 
-	/* Category tag: no background, no border — just colored text. The
-	   prototype renders categories on the detail hero as a bare text
-	   chip so the title gets all the visual weight. */
+	/* Category tag: no background, no border — just coloured text.
+	   A bare text chip so the title gets all the visual weight. */
 	.market-detail-tag {
 		font-size: 11px;
 		font-weight: 700;

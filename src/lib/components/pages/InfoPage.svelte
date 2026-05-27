@@ -20,15 +20,13 @@
 	 *  - mono-font mailto links underlined in faint laurel
 	 *  - bottom "Back to settings" affordance below a 1px divider
 	 *
-	 * Lists in the prototype carry a 4px accent dot positioned
-	 * absolutely at the left of each item — not the default
-	 * `list-disc`. Mail links use the mono font + accent underline +
-	 * 3px text-underline-offset for the "Tweet-style" reference look
-	 * the design system favours.
+	 * Lists carry a 4px accent dot positioned absolutely at the left
+	 * of each item — not the default `list-disc`. Mail links use the
+	 * mono font + accent underline + 3px text-underline-offset for the
+	 * "Tweet-style" reference look the design system favours.
 	 *
-	 * Legal docs surface a pending-review banner (kept from the
-	 * legacy state — the prototype has no equivalent, but the legal
-	 * copy is still awaiting sign-off so users see that we know).
+	 * Legal docs surface a pending-review banner so users know the
+	 * copy is still awaiting sign-off.
 	 */
 
 	interface Props {
@@ -57,9 +55,9 @@
 
 	<div class="info-body">
 		<div class="info-eyebrow allcaps">{doc.eyebrow}</div>
-		<!-- Massive display h1 — prototype renders the title at hero
-		     scale (~44-56px serif/italic, multi-line wraps) instead of
-		     the cramped appbar treatment. (`screens.jsx:1685`). -->
+		<!-- Massive display h1 — title at hero scale (~44-56 px
+		     serif/italic, multi-line wraps) rather than a cramped
+		     appbar treatment. -->
 		<h1 class="info-hero-title display">{doc.title}</h1>
 
 		{#if isLegalDoc}
@@ -90,11 +88,10 @@
 		</article>
 
 		<!--
-			Bottom back-to-settings affordance — matches the
-			`screens.jsx:1727-1731` divider + ghost button. Lands at the
-			Welcome route in our app (the prototype's `settings` page
-			lives behind the auth wall; the public info routes can't
-			assume the user is signed in).
+			Bottom back-to-settings affordance — divider + ghost button.
+			Lands at the Welcome route in our app; the `settings` page
+			lives behind the auth wall and the public info routes can't
+			assume the user is signed in.
 		-->
 		<div class="info-foot">
 			<button class="info-foot-back" onclick={handleBack} type="button">
@@ -149,8 +146,8 @@
 		width: 100%;
 	}
 
-	/* Eyebrow uses the primary accent + 0.16em letter-spacing to
-	   match the prototype's editorial eyebrow style. */
+	/* Eyebrow uses the primary accent + 0.16em letter-spacing for the
+	   editorial eyebrow look. */
 	.info-eyebrow {
 		margin-bottom: 0.875rem;
 		font-size: var(--t-11, 0.7rem);
@@ -188,9 +185,8 @@
 	}
 
 	/* Serif-italic lede paragraph — sets the editorial tone before
-	   the body copy. Prototype renders this as a gold-tinted accent
-	   beat to read as the editorial pull-quote that frames the doc.
-	   See `screens.jsx:1693-1696`. */
+	   the body copy. Gold-tinted accent reads as the pull-quote that
+	   frames the doc. */
 	.info-lede {
 		margin: 0 0 1.5rem;
 		font-size: clamp(1.15rem, 4.2vw, 1.5rem);

@@ -124,7 +124,7 @@
 
 	/* Heart-pop envelope on save toggle — visual punch that
 	   substitutes for the haptic on iOS Safari (Vibration API
-	   absent there). Mirrors prototype `app.css:486-490`. */
+	   absent there). */
 	.saved-market-icon {
 		display: inline-flex;
 	}

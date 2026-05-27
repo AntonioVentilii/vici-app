@@ -1,8 +1,7 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `Loop`
-	 * (`landing.jsx:1192-1221`). Three cards (Flow / Market /
-	 * Portfolio) connected by arrows + return-arc SVG at the bottom.
+	 * Three cards (Flow / Market / Portfolio) connected by arrows +
+	 * a return-arc SVG at the bottom.
 	 */
 	import { Wallet, Zap, TrendingUp } from 'lucide-svelte/icons';
 	import { localeStore } from '$lib/stores/locale.store';

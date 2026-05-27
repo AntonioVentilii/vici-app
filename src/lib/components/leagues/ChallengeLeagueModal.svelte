@@ -9,11 +9,10 @@
 	/**
 	 * Challenge another league to a bout — opener for owners.
 	 *
-	 * The prototype hands an admin a curated list of candidate
-	 * leagues to pick from. We don't expose a public league
-	 * directory yet, so the picker is invite-code driven: the
-	 * caller pastes the opponent's 6-char code, we resolve it, then
-	 * pick a duration (7 / 14 / 30 days) and propose the bout.
+	 * We don't expose a public league directory yet, so the picker
+	 * is invite-code driven: the caller pastes the opponent's 6-char
+	 * code, we resolve it, then pick a duration (7 / 14 / 30 days)
+	 * and propose the bout.
 	 *
 	 * Wraps `lookupLeagueByInvite` + `proposeBout` — the same
 	 * services `ProposeBoutModal` uses — so the satellite contract

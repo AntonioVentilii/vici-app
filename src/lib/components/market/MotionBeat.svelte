@@ -99,8 +99,7 @@
 		box-shadow: var(--shadow-card);
 		max-width: 100%;
 		/* Entrance envelope — drops in from below with a slight
-		   overshoot, mirrors the prototype's `motion-beat-in` shape
-		   (app.css:436-441) adapted for a bottom-anchored beat. */
+		   overshoot, anchored to the bottom of the deck. */
 		animation: motion-beat-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
 	}
 

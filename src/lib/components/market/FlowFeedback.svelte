@@ -13,8 +13,6 @@
 	 * predicted side and, on streak milestones, the Flame character
 	 * pill. Self-dismissing — the parent only needs to mount it and
 	 * react to `onDone`.
-	 *
-	 * Prototype source: `VICI WebApp Beta V1.2/flow.jsx:1297-1353`.
 	 */
 	interface Props {
 		result: FlowAction;
@@ -98,10 +96,10 @@
 {/if}
 
 <style lang="postcss">
-	/* Layer rules — sized + animated inline-fashion via the shared
-	   `.flow-feedback` block in `app.css`. We add only the local rules
-	   the prototype declared inline-style: the bolt-burst envelope, the
-	   serif phrase, the side-chip colours, the streak pill. */
+	/* Layer rules — sized + animated via the shared `.flow-feedback`
+	   block in `app.css`. We add only the local rules for the
+	   bolt-burst envelope, the serif phrase, the side-chip colours,
+	   and the streak pill. */
 
 	.flow-feedback-amount {
 		color: var(--fg);

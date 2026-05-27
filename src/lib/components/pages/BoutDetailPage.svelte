@@ -117,9 +117,8 @@
 	};
 
 	/**
-	 * "Day X of Y" countdown when the bout is in flight — mirrors the
-	 * prototype's `DAY {day} OF {days}` eyebrow on `LeagueBoutDetail`.
-	 * Day 1 starts at kickoff; the total floors to at least one day.
+	 * "Day X of Y" countdown when the bout is in flight. Day 1 starts
+	 * at kickoff; the total floors to at least one day.
 	 */
 	const totalDays = $derived.by((): number => {
 		if (!bout) {

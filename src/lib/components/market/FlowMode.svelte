@@ -29,7 +29,6 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
-	import { positions as positionsDerived } from '$lib/derived/positions.derived';
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
 	import { persistDailyStreak } from '$lib/services/profile.services';
@@ -86,11 +85,24 @@
 	let tradeAmount = $state('1.0');
 	let betsCount = $state(0);
 	let completed = $state(false);
-	// Positions stream in from the global `positionsStore` — kept warm
-	// by `LoaderPositions` in `(app)/+layout.svelte`. FlowMode reads
-	// the derived list directly so deck render never blocks on a
-	// per-mount certified fetch.
-	const positions = $derived($positionsDerived);
+	// Session-summary metrics. `sessionStartMs` is stamped at mount
+	// AND on every "Predict 10 more" continuation — `const` here would
+	// leak the time the user spent reading the previous FlowEnd into
+	// the next session's duration label. `correctCallsThisSession`
+	// increments each time `alignedWithCrowd` is true on a committed
+	// YES / NO swipe. Together they drive the `You called N markets
+	// in 1m 18s.` line and the SESSION ACC. stat on FlowEnd.
+	let sessionStartMs = $state(Date.now());
+	let correctCallsThisSession = $state(0);
+	// Per-category call counter for this session. Drives the
+	// data-driven Oracle line on FlowEnd ("You were early on {category}")
+	// by surfacing the category the user leaned hardest into. Keyed by
+	// resolved `FlowArtCategory` so `wc` markets are counted under
+	// `wc`, not the underlying tag.
+	let sessionCategoryCalls = $state<Partial<Record<FlowArtCategory, number>>>({});
+	// `nowMs` ticks once per second while the session is in flight so
+	// the duration label updates live before the user finishes.
+	let nowMs = $state(Date.now());
 	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
 	// the FlowCard render loop to drive the per-card generative artwork
 	// (which uses the *primary* tag — see `primaryMarketTag`).
@@ -139,7 +151,6 @@
 	// fades on its own ~1.3 s later. Skip commits get the shorter 520 ms
 	// "SKIPPED" chip variant. Hard-pause beats (`motion.beat.hardPause`)
 	// still go through `MotionBeat` so we don't double-stack overlays.
-	// Prototype source: `flow.jsx:1297-1353`.
 	interface ActiveFeedback {
 		result: FlowAction;
 		xp: number;
@@ -163,8 +174,7 @@
 	// sites read the same way.
 	const vibrate = haptic;
 
-	// Per-beat haptic envelope. Mirrors the prototype's motion-engine
-	// table verbatim:
+	// Per-beat haptic envelope:
 	//   milestone-1            → triple-tap   ([12,30,12,30,12])
 	//   milestone-3 / 5 / 25   → firm-tap     (12ms)
 	//   milestone-10 / 250/500 → milestone-tap ([25,30,25])
@@ -218,6 +228,61 @@
 				return 'double-pulse';
 		}
 	};
+
+	// Session duration ticker. 1 s cadence is plenty — the duration
+	// label renders to seconds (`Xm Ys` / `Ys`) and the user never sees
+	// sub-second precision. Stops when `completed` flips true so the
+	// FlowEnd label freezes at the final value.
+	$effect(() => {
+		if (completed) {
+			return;
+		}
+
+		const id = setInterval(() => {
+			nowMs = Date.now();
+		}, 1000);
+
+		return () => clearInterval(id);
+	});
+
+	const sessionDurationLabel = $derived.by(() => {
+		const secs = Math.max(0, Math.floor((nowMs - sessionStartMs) / 1000));
+		const m = Math.floor(secs / 60);
+		const s = secs % 60;
+
+		return m > 0 ? `${m}m ${s}s` : `${s}s`;
+	});
+
+	const sessionAccuracy = $derived(betsCount > 0 ? correctCallsThisSession / betsCount : 0);
+
+	// Top category by call count this session. Drives the FlowEnd
+	// Oracle line ("You were early on {category}"). Ties resolve to
+	// the first key the user committed in — `Object.entries` preserves
+	// insertion order on the plain object we mutate via spread. Returns
+	// undefined when the user hasn't placed any calls yet so FlowEnd
+	// can fall back to the locale-default accent.
+	const topSessionCategory = $derived.by<FlowArtCategory | undefined>(() => {
+		let best: FlowArtCategory | undefined;
+		let bestCount = 0;
+
+		for (const [cat, count] of Object.entries(sessionCategoryCalls) as Array<
+			[FlowArtCategory, number]
+		>) {
+			if (count > bestCount) {
+				best = cat;
+				bestCount = count;
+			}
+		}
+
+		return best;
+	});
+
+	// Daily goal heuristic — until the satellite exposes a per-user
+	// daily target, default to 10 predictions/day. Progress is capped
+	// at 100 % so the bar / percent never overflows mid-session.
+	const DAILY_GOAL_TARGET = 10;
+	const dailyGoalDone = $derived(Math.min(betsCount, DAILY_GOAL_TARGET));
+	const dailyGoalFraction = $derived(dailyGoalDone / DAILY_GOAL_TARGET);
 
 	onMount(async () => {
 		document.body.classList.add('overflow-hidden');
@@ -475,6 +540,20 @@
 		betsCount += 1;
 		streak += 1;
 
+		// Tally this market under its resolved category so the FlowEnd
+		// Oracle line can spotlight whichever category the user leaned
+		// hardest into ("You were early on crypto", etc.).
+		const cat = resolveFlowCategory({
+			categoryId: primaryMarketTag(
+				(marketTagMap[currentMarket.id] ?? []) as ReadonlyArray<MarketTag>
+			),
+			marketId: currentMarket.id
+		});
+		sessionCategoryCalls = {
+			...sessionCategoryCalls,
+			[cat]: (sessionCategoryCalls[cat] ?? 0) + 1
+		};
+
 		const awarded = BASE_XP_PER_PREDICTION * comboMultiplier;
 		xp += awarded;
 		spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
@@ -494,6 +573,10 @@
 		const isContrarian = yesProb <= 0.25 || yesProb >= 0.75;
 		const alignedWithCrowd =
 			(action === 'YES' && yesProb >= 0.5) || (action === 'NO' && yesProb < 0.5);
+
+		if (alignedWithCrowd) {
+			correctCallsThisSession += 1;
+		}
 
 		const motion = recordMotionSwipe({
 			side: action,
@@ -532,11 +615,10 @@
 		}
 
 		// Single beat-aware vibrate — fires once per beat, with the
-		// envelope mapped from `beat.kind`. Skips milestone-1's
-		// preceding `triple-tap` here only because the `firm-tap` swipe
-		// commit haptic already fired at line ~300; the milestone-1
-		// envelope is itself the triple-tap, so the commit + milestone
-		// firing back-to-back is intentional (matches the prototype).
+		// envelope mapped from `beat.kind`. On milestone-1 the
+		// `firm-tap` swipe-commit haptic has already fired upstream;
+		// the milestone-1 envelope is itself a `triple-tap`, so the
+		// commit + milestone firing back-to-back is intentional.
 		const beatHaptic = hapticForBeat(motion.beat?.kind);
 
 		if (beatHaptic) {
@@ -582,9 +664,65 @@
 		goto(resolve(AppPath.Home));
 	};
 
+	// "Predict 10 more" CTA on FlowEnd — rebuilds a fresh deck and
+	// zeroes the in-session counters. The lifetime / motion-engine
+	// state stays untouched (it tracks across sessions). XP earned in
+	// the prior session has already been credited via the trade flow,
+	// so we don't re-award it.
+	const handleContinueSession = async () => {
+		const expectedTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
+		const excluded = markets.slice(0, currentIndex + 1).map((m) => m.id);
+
+		completed = false;
+		loading = true;
+
+		try {
+			const prepared = await prepareFlow({
+				domain: $balanceDomain,
+				featuredEventTag: expectedTag,
+				signedIn: nonNullish($userStore.user),
+				exclude: excluded
+			});
+
+			({
+				markets,
+				tagMap: marketTagMap,
+				metadataById: marketMetadataMap,
+				signals: userSignals
+			} = prepared);
+			currentIndex = 0;
+			betsCount = 0;
+			correctCallsThisSession = 0;
+			sessionCategoryCalls = {};
+			xp = 0;
+			streak = 0;
+			lastStreakShown = 0;
+			// Reset BOTH the start and the now-tick — otherwise the next
+			// FlowEnd's duration_line measures from the original mount,
+			// including the time spent reading the previous FlowEnd.
+			sessionStartMs = Date.now();
+			nowMs = sessionStartMs;
+		} catch (e: unknown) {
+			console.error('Failed to refresh Flow deck', e);
+		} finally {
+			loading = false;
+		}
+	};
+
+	const handleSeePortfolio = () => {
+		goto(resolve(AppPath.Portfolio));
+	};
+
+	// The back-face peg-rail owns stake selection on the VXP balance
+	// domain. The playground domains (USD / ICP) use fractional amounts
+	// that the peg-rail doesn't cover, so we keep a small bottom-bar
+	// stepper for those — see `playgroundOnly` gate around `FlowBottomBar`
+	// in the template.
+	const playgroundOnly = $derived(!isViciXp($balanceDomain));
+
 	const incrementAmount = (direction: 1 | -1) => {
-		const step = isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1;
-		const min = isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1;
+		const step = 0.1;
+		const min = 0.1;
 		const current = Number(tradeAmount) || 0;
 		const next = Math.max(min, Number((current + direction * step).toFixed(2)));
 		tradeAmount = String(next);
@@ -637,12 +775,16 @@
 	const accuracyUnlocked = $derived(isAccuracyUnlocked(lifetimeTotalTrades));
 
 	// Top bar deck-scope label: when the featured event is active the
-	// deck is filtered to it (the prototype shows "WORLD CUP"); otherwise
-	// fall back to a neutral all-markets label. Title is uppercased to
-	// match the chip's allcaps tracking.
+	// deck is filtered to it (e.g. "WORLD CUP"); otherwise fall back
+	// to a neutral all-markets label. Prefers `shortTitle` over
+	// `title` so the chip stays narrow (a full "2026 FIFA WORLD CUP"
+	// crowds the streak chip out of the row). Uppercased to match
+	// the chip's allcaps tracking.
 	const topBarCategoryLabel = $derived.by(() => {
 		if ($featuredEventActive) {
-			return $featuredEvent.title.toUpperCase();
+			const e = $featuredEvent;
+
+			return (e.shortTitle ?? e.title).toUpperCase();
 		}
 
 		return t({ locale: $localeStore, key: 'flow.deck.all_markets' });
@@ -666,22 +808,29 @@
 	{:else if completed}
 		<FlowEnd
 			{accuracyUnlocked}
+			archetype={$userStore.profile?.archetype}
 			{betsCount}
+			{dailyGoalDone}
+			{dailyGoalFraction}
+			dailyGoalTarget={DAILY_GOAL_TARGET}
 			{dailyStreak}
 			{flameLabel}
 			{flameStage}
 			{lifetimeAccuracy}
 			{lifetimeTotalTrades}
 			onBackToMarkets={backToMarkets}
+			onContinueSession={handleContinueSession}
+			onSeePortfolio={handleSeePortfolio}
+			{sessionAccuracy}
+			{sessionDurationLabel}
+			{topSessionCategory}
 			{xp}
 		/>
 	{:else}
-		<!-- Persistent Flow header (prototype `app.jsx:805-836`). VICI
-		     wordmark + deck-scope chip + bolt streak chip on the left;
-		     bell on the right. Secondary row carries `idx / total` and
-		     `+xp VXP this session` over a thin progress bar. Tapping the
-		     wordmark exits Flow. A floating close X is also rendered for
-		     desktop affordance. -->
+		<!-- Persistent Flow header: VICI wordmark + deck-scope chip +
+		     bolt streak chip on the left; bell on the right. Secondary
+		     row carries `idx / total` and `+xp VXP this session` over a
+		     thin progress bar. Tapping the wordmark exits Flow. -->
 		<FlowTopBar
 			{betsCount}
 			categoryLabel={topBarCategoryLabel}
@@ -692,21 +841,6 @@
 			onExit={backToMarkets}
 			{xp}
 		/>
-		<button
-			class="flow-exit-chip"
-			aria-label={t({ locale: $localeStore, key: 'flow.exit_aria' })}
-			onclick={backToMarkets}
-			type="button"
-		>
-			<svg fill="none" height="14" stroke="currentColor" viewBox="0 0 24 24" width="14">
-				<path
-					d="M6 18L18 6M6 6l12 12"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2.5"
-				/>
-			</svg>
-		</button>
 
 		{#if lastStreakShown > 0}
 			{#key lastStreakShown}
@@ -755,7 +889,6 @@
 							onStakeChange={(next) => {
 								tradeAmount = next;
 							}}
-							position={positions.find((p) => p.marketId === market.id)}
 							{priorCall}
 							signedIn={nonNullish($userStore.user)}
 							{tradeAmount}
@@ -770,7 +903,7 @@
 			     SKIP / TAP / IDLE phases while the cards drift in
 			     sympathy via the `data-coach-phase` CSS in app.css.
 			     Self-dismisses on any pointer-down; persists dismissal
-			     in localStorage. Prototype: `flow.jsx:1055-1121`. -->
+			     in localStorage. -->
 			<FlowCoach surface="flow" />
 
 			{#if activeMotionBeat}
@@ -797,17 +930,21 @@
 		<!-- Bottom-of-deck affordance rail — chevrons drift outward on a
 		     1.7 s ping cycle while the TAP / SKIP labels call out the
 		     non-swipe gestures. Pure visual sugar; gestures are wired in
-		     FlowCard. Prototype source: `flow.jsx:1124-1163`. -->
+		     FlowCard. -->
 		<SwipeHint />
 
-		<FlowBottomBar
-			min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
-			onAction={handleAction}
-			onIncrement={incrementAmount}
-			step={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
-			unitLabel={$playgroundFlowTradeUnitLabel}
-			bind:tradeAmount
-		/>
+		{#if playgroundOnly}
+			<!-- Playground (USD / ICP) stake stepper. VXP uses the
+			     back-face peg-rail and renders no bottom bar. -->
+			<FlowBottomBar
+				min={0.1}
+				onAction={handleAction}
+				onIncrement={incrementAmount}
+				step={0.1}
+				unitLabel={$playgroundFlowTradeUnitLabel}
+				bind:tradeAmount
+			/>
+		{/if}
 	{/if}
 </div>
 
@@ -864,47 +1001,13 @@
 		min-height: 0;
 	}
 
-	/* Floating exit chip — replaces the persistent FlowTopBar. Sits in
-	   the top-right so it doesn't compete with the card header. The
-	   matching gesture (browser back / bottom-bar) covers the primary
-	   path on mobile. */
-	.flow-exit-chip {
-		position: absolute;
-		top: calc(env(safe-area-inset-top, 0px) + 0.65rem);
-		right: 0.75rem;
-		z-index: 70;
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.85rem;
-		height: 1.85rem;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
-		color: var(--text-muted);
-		border: 1px solid var(--border-base);
-		backdrop-filter: blur(8px);
-		-webkit-backdrop-filter: blur(8px);
-		transition:
-			color 160ms ease,
-			background-color 160ms ease,
-			transform 160ms ease;
-	}
-	.flow-exit-chip:hover {
-		color: var(--text-base);
-		background: var(--bg-surface);
-	}
-	.flow-exit-chip:active {
-		transform: scale(0.94);
-	}
-
 	.flow-card-wrap {
 		position: relative;
 		width: 100%;
 		max-width: min(25.5rem, calc(100vw - 2rem));
 		height: 100%;
 		/* `--bn-clear` reserves room for the floating pillnav so the
-		 * card slot never tucks under it (prototype parity —
-		 * `app.css:2853-2861`). */
+		 * card slot never tucks under it. */
 		max-height: min(700px, calc(100dvh - 9.5rem - var(--bn-clear) - env(safe-area-inset-top, 0px)));
 		min-height: min(30rem, calc(100dvh - 10.5rem - var(--bn-clear)));
 	}

@@ -2,13 +2,12 @@
 @import './landing.css';
 
 /* ─── Self-hosted fonts ────────────────────────────────────────────
- * All three families are OFL-licensed (same as the prototype). Files
- * live under `static/fonts/` and are served at `/fonts/*`. Hanken
- * Grotesk is a variable font — a single woff2 covers all four
- * weights via `font-weight: 400 700`. Latin subset covers en / it /
- * es / de / fr / pt; CJK ranges fall back to the system stack in
- * `--font-display` / `--font-serif`, identical to the Google Fonts
- * CDN behaviour.
+ * All three families are OFL-licensed. Files live under
+ * `static/fonts/` and are served at `/fonts/*`. Hanken Grotesk is a
+ * variable font — a single woff2 covers all four weights via
+ * `font-weight: 400 700`. Latin subset covers en / it / es / de / fr
+ * / pt; CJK ranges fall back to the system stack in `--font-display`
+ * / `--font-serif`, identical to the Google Fonts CDN behaviour.
  */
 
 @font-face {
@@ -160,33 +159,31 @@
 	--tracking-wide: 0.04em;
 	--tracking-allcaps: 0.12em;
 
-	/* Radii — the standard scale. Buttons 4, cards 8, swipe-card 16
-	 * (was 12 before prototype parity).
+	/* Radii — the standard scale. Buttons 4, cards 8, swipe-card 16.
 	 * Pills (999) are rare. Don't deviate.
 	 *
-	 * Note: `--r-12` is the canonical card radius and is set to 16px
-	 * (prototype parity — `app.css:172`). The token name keeps "12" for
-	 * historical reasons; call-sites should read it as "card radius",
-	 * not as a literal 12px value. */
+	 * Note: `--r-12` is the canonical card radius and is set to 16px.
+	 * The token name keeps "12" for historical reasons; call-sites
+	 * should read it as "card radius", not as a literal 12 px value. */
 	--r-2: 2px;
 	--r-4: 4px;
 	--r-8: 8px;
 	--r-12: 16px;
 	--r-pill: 999px;
 
-	/* Locked 5-value radii alias set used by V1.2 components — names map
-	 * onto the numeric scale so call-sites can write `var(--r-m)` instead
-	 * of memorising `--r-8`. `--r-l` shares the canonical card radius
-	 * (16px) with `--r-12`. */
+	/* Role-named alias set for radii — names map onto the numeric
+	 * scale so call-sites can write `var(--r-m)` instead of memorising
+	 * `--r-8`. `--r-l` shares the canonical card radius (16 px) with
+	 * `--r-12`. */
 	--r-s: 4px;
 	--r-m: 8px;
 	--r-l: 16px;
 	--r-xl: 18px;
 
 	/* Spacing scale — 8-point base, no exceptions outside this scale.
-	 * Two parallel naming schemes are exposed because V1.2 components
-	 * use both (`--space-N` is the newer, semantic-rank scale; `--s-N`
-	 * is the wider raw-pixel scale used in dense layouts). */
+	 * Two parallel naming schemes are exposed: `--space-N` is the
+	 * semantic-rank scale; `--s-N` is the wider raw-pixel scale used
+	 * in dense layouts. */
 	--space-1: 4px;
 	--space-2: 8px;
 	--space-3: 12px;
@@ -221,9 +218,10 @@
 	--text-h2: 22px;
 	--text-display: 32px;
 
-	/* Two-curve animation set used by stagecraft / motion-engine — the
-	 * existing `--ease-vici` curve and `--d-*` durations cover most call
-	 * sites; these aliases match the V1.2 motion language explicitly. */
+	/* Two-curve animation set used by stagecraft / motion-engine —
+	 * the existing `--ease-vici` curve and `--d-*` durations cover
+	 * most call sites; these aliases name the motion language
+	 * explicitly. */
 	--ease-quick: cubic-bezier(0.2, 0.8, 0.4, 1);
 	--ease-stage: cubic-bezier(0.16, 1, 0.3, 1);
 	--dur-quick: 150ms;
@@ -236,8 +234,8 @@
 	--ticker-h: 32px;
 	--bottomnav-h: 64px;
 	/* Floating pillnav clearance — every surface that wants to avoid
-	 * sliding under the floating tab bar reads this token. Prototype
-	 * parity: 96px pill + `env(safe-area-inset-bottom)`. */
+	 * sliding under the floating tab bar reads this token. 96 px pill
+	 * + `env(safe-area-inset-bottom)`. */
 	--bn-clear: calc(96px + env(safe-area-inset-bottom, 0px));
 
 	/* Shadows (dark theme: inner highlights). The dark/light values get
@@ -537,14 +535,13 @@ body {
 	-moz-osx-font-smoothing: grayscale;
 }
 
-/* Authenticated `(app)` shell viewport architecture — matches the
- * prototype where the document doesn't scroll; instead a single
- * `.screen-scroll` viewport inside the app shell hosts all page
- * scrolling and reserves clearance for the floating pillnav. Gated on
- * `data-app="1"` on <html> so the marketing routes (`/`, `/about`,
- * `/welcome`, `/signin`, `/signup`, `/info/*`) keep their natural
- * body-scroll. The `(app)` layout flips this attribute on mount and
- * restores on unmount.
+/* Authenticated `(app)` shell viewport architecture — the document
+ * doesn't scroll; instead a single `.screen-scroll` viewport inside
+ * the app shell hosts all page scrolling and reserves clearance for
+ * the floating pillnav. Gated on `data-app="1"` on <html> so the
+ * marketing routes (`/`, `/about`, `/welcome`, `/signin`, `/signup`,
+ * `/info/*`) keep their natural body-scroll. The `(app)` layout
+ * flips this attribute on mount and restores on unmount.
  */
 html[data-app='1'],
 html[data-app='1'] body {
@@ -564,13 +561,12 @@ html[data-app='1'] body {
 	padding-bottom: var(--bn-clear);
 }
 
-/* Desktop adaptation for the (app) shell — the prototype renders
- * authenticated screens at mobile width only (interest of time), but
- * our desktop should pick up the LANDING page's responsive treatment:
- * a top-nav shell hosts the chrome, the mobile pillnav is hidden, and
- * page content centers in a comfortable reading column. Marketing
- * routes (`/`, `/about`, …) keep their own natural full-bleed layout
- * because the `data-app="1"` gate only fires inside the (app) group.
+/* Desktop adaptation for the (app) shell — desktop picks up the
+ * landing page's responsive treatment: a top-nav shell hosts the
+ * chrome, the mobile pillnav is hidden, and page content centres in
+ * a comfortable reading column. Marketing routes (`/`, `/about`, …)
+ * keep their own natural full-bleed layout because the `data-app="1"`
+ * gate only fires inside the (app) group.
  *
  * The desktop top-nav lives in `(app)/+layout.svelte` as
  * `<DesktopAppNav>` and is hidden at <56rem; the pillnav is hidden at
@@ -673,9 +669,9 @@ html[data-app='1'] body {
 }
 
 /* Brand accent inline — used in editorial copy alongside `.serif-italic`
- * for the "*Your call comes next.*" / "*Earned, not given.*" beats. The
- * prototype defines `.acc { color: var(--accent); }` in `landing.css`;
- * mirrored here so onboarding-v2 picks it up. */
+ * for the "*Your call comes next.*" / "*Earned, not given.*" beats.
+ * `landing.css` defines the same `.acc { color: var(--accent); }`
+ * rule; mirrored here so onboarding-v2 picks it up. */
 .acc {
 	color: var(--laurel);
 }
@@ -739,11 +735,10 @@ html[data-app='1'] body {
 }
 
 /* Appbar icon button — single source of truth for every header-edge
- * icon control (back arrow, settings cog, history, plus, chart, etc.).
- * Mirrors the prototype's `.btn.btn-ghost` shape with the icon-only
- * `padding: 8px 10px` inline override used at every appbar in
- * `screens.jsx` / `app.jsx`: pill radius, 1px border, ghost surface,
- * sized for an 18px icon. */
+ * icon control (back arrow, settings cog, history, plus, chart,
+ * etc.). `.btn.btn-ghost` shape with the icon-only `padding: 8px 10px`
+ * override: pill radius, 1 px border, ghost surface, sized for an
+ * 18 px icon. */
 .appbar-icon-btn {
 	display: inline-flex;
 	align-items: center;
@@ -911,10 +906,9 @@ html[data-app='1'] body {
 	animation: char-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-/* Optical-feedback keyframes — ports of the prototype's motion CSS
-   so swipe / award / save micro-interactions have a visible envelope
-   on iOS Safari (where `navigator.vibrate` is a no-op and haptics
-   silently swallow). See `app.css:349-490` in the prototype source. */
+/* Optical-feedback keyframes — give swipe / award / save
+   micro-interactions a visible envelope on iOS Safari (where
+   `navigator.vibrate` is a no-op and haptics silently swallow). */
 
 @keyframes motion-beat-in {
 	0% {
@@ -1010,13 +1004,11 @@ html[data-app='1'] body {
 }
 
 /* ============================================================
-   Prototype animation parity — per-category card breathers,
-   World-Cup figure motion, Flow micro-motion, sheet/toast
-   envelopes, landing entrance fades, and assorted utilities.
-   Sourced verbatim from the VICI prototype `app.css` and
-   `landing.css` (Beta V1.2). Kept in one block so the visual
-   parity story is greppable. All loops cap at ~9s and respect
-   `prefers-reduced-motion: reduce`.
+   Animation set — per-category card breathers, World-Cup figure
+   motion, Flow micro-motion, sheet/toast envelopes, landing
+   entrance fades, and assorted utilities. Kept in one block so
+   the visual catalogue is greppable. All loops cap at ~9 s and
+   respect `prefers-reduced-motion: reduce`.
    ============================================================ */
 
 /* ── A. Per-category Flow card breathers ────────────────────── */
@@ -1310,7 +1302,7 @@ html[data-app='1'] body {
 	}
 }
 
-/* Flow coach choreography — full prototype set. */
+/* Flow coach choreography — full keyframe set. */
 @keyframes flow-coach-fade-in {
 	from {
 		opacity: 0;
@@ -1510,10 +1502,31 @@ html[data-app='1'] body {
 	}
 }
 
+/* Staggered entrance envelopes — FlowEnd (and any future surface
+   that wants a top-to-bottom unveil) tags sequential sections with
+   `.anim-in` / `.anim-in-2` / `.anim-in-3` to land them on a 0 /
+   90 / 180 ms delay against the shared `fade-up` keyframe. Pure
+   visual sugar; respects `prefers-reduced-motion`. */
+.anim-in {
+	animation: fade-up 380ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.anim-in-2 {
+	animation: fade-up 380ms cubic-bezier(0.16, 1, 0.3, 1) 90ms both;
+}
+.anim-in-3 {
+	animation: fade-up 380ms cubic-bezier(0.16, 1, 0.3, 1) 180ms both;
+}
+@media (prefers-reduced-motion: reduce) {
+	.anim-in,
+	.anim-in-2,
+	.anim-in-3 {
+		animation: none;
+	}
+}
+
 /* `vxp-award-in` is intentionally NOT added: our `xpPop` /
    `xpPopBonus` envelopes already cover the VXP award entrance
-   with a richer arc. Flagged here so the prototype-parity audit
-   doesn't refile this as a gap. */
+   with a richer arc. */
 
 /* Reduced-motion guard — keep the visual structure but disable
    the looping kinetic envelopes from this block. */
@@ -1529,17 +1542,13 @@ html[data-app='1'] body {
 }
 
 /* ============================================================
- * Prototype-faithful primitives — verbatim ports from the
- * VICI WebApp Beta V1.2 `app.css` (lines 85-205, 287-288,
- * 851-853). These power the Markets / Dash / Flow / Social /
- * Profile surfaces and intentionally reuse the prototype's CSS
- * class names so the JSX → Svelte port stays a 1:1 translation.
- * Tokens are mapped to our renamed equivalents
- * (--bg-raised → --bg-surface, --border → --border-base,
- * --fg-* → --text-*, --accent → --laurel, --ease → --ease-vici).
+ * Shared primitives — power the Markets / Dash / Flow / Social /
+ * Profile surfaces. Tokens use the repo's renamed scale
+ * (`--bg-surface`, `--border-base`, `--text-*`, `--laurel`,
+ * `--ease-vici`).
  * ============================================================ */
 
-/* Appbar (prototype app.css:85) */
+/* Appbar */
 .appbar {
 	flex: 0 0 auto;
 	padding: 8px 20px 12px;
@@ -1549,7 +1558,7 @@ html[data-app='1'] body {
 	gap: 12px;
 }
 
-/* Pills + chips (prototype app.css:146) */
+/* Pills + chips */
 .chip {
 	display: inline-flex;
 	align-items: center;
@@ -1577,7 +1586,7 @@ html[data-app='1'] body {
 	border-color: rgba(226, 184, 66, 0.3);
 }
 
-/* Tag chips (prototype app.css:156) */
+/* Tag chips */
 .tag {
 	display: inline-flex;
 	align-items: center;
@@ -1602,7 +1611,7 @@ html[data-app='1'] body {
 	color: var(--no);
 }
 
-/* Cards (prototype app.css:169) */
+/* Cards */
 .card {
 	background: var(--bg-surface);
 	border: 1px solid var(--border-base);
@@ -1611,7 +1620,7 @@ html[data-app='1'] body {
 	box-shadow: inset 0 1px 0 rgba(242, 236, 220, 0.04);
 }
 
-/* Text helpers (prototype app.css:187-192) */
+/* Text helpers */
 .dim {
 	color: var(--text-base);
 	opacity: 0.78;
@@ -1625,7 +1634,7 @@ html[data-app='1'] body {
 	color: var(--laurel);
 }
 
-/* Section labels (prototype app.css:200) */
+/* Section labels */
 .section-h {
 	display: flex;
 	align-items: baseline;
@@ -1650,7 +1659,7 @@ html[data-app='1'] body {
 	font-family: inherit;
 }
 
-/* Hide scrollbars on inner panels (prototype app.css:287) */
+/* Hide scrollbars on inner panels */
 .no-scrollbar::-webkit-scrollbar {
 	display: none;
 }
@@ -1659,7 +1668,7 @@ html[data-app='1'] body {
 	scrollbar-width: none;
 }
 
-/* Layout helpers (prototype app.css:851-853) */
+/* Layout helpers */
 .row {
 	display: flex;
 	align-items: center;
@@ -1676,8 +1685,7 @@ html[data-app='1'] body {
 }
 
 /* ============================================================
-   VICI — Sign in screen (verbatim port from prototype)
-   Source: VICI WebApp Beta V1.2/onboarding.css + app.css
+   VICI — Sign-in screen styles
    ============================================================ */
 .signin-wrap {
 	position: absolute;
@@ -1747,14 +1755,12 @@ html[data-app='1'] body {
 }
 
 /* ============================================================
-   Flow sub-component rules — verbatim port of the prototype's
-   `.flow-coach` / `.flow-feedback` / `.xp-toast` / `.swipe-hint`
-   / `.share-pop` blocks (VICI Beta V1.2 `app.css` 446-848, 2851-
-   2862, 3700-3842, 5079-5326), retargeted onto the live token
-   names (`--text-base` / `--text-muted` / `--color-accent` /
-   `--bg-popover` / `--bg-surface` / `--border-base` /
-   `--border-strong` / `--ease-vici`). Keep this block all-in-
-   one so the visual parity story is greppable.
+   Flow sub-component rules — `.flow-coach` / `.flow-feedback` /
+   `.xp-toast` / `.swipe-hint` / `.share-pop` blocks. Built on the
+   shared token set (`--text-base` / `--text-muted` /
+   `--color-accent` / `--bg-popover` / `--bg-surface` /
+   `--border-base` / `--border-strong` / `--ease-vici`). Kept in
+   one block so the visual catalogue is greppable.
    ============================================================ */
 
 /* Plain envelope used by FlowFeedback for the dim-in backdrop. */
@@ -2042,7 +2048,7 @@ html[data-app='1'] body {
 	gap: 8px;
 }
 
-/* Type scale aliases used inline by the prototype's screens */
+/* Type scale aliases used inline by surface markup. */
 .t-display {
 	font-size: 40px;
 	line-height: 1;
@@ -2240,12 +2246,8 @@ html[data-app='1'] body {
 
 /* ============================================================
  * DASH · Stats dashboard
- * Verbatim port of `app.css` prototype rules (lines 2200-2702),
- * rewritten with Vici design tokens (`--laurel` for `--accent`,
- * `--text-base` for `--fg`, `--text-muted` for `--fg-mute`,
- * `--bg-surface` for `--bg-raised`, …). Class names and visual
- * structure mirror the prototype 1:1 so the DashPage Svelte
- * markup can be a straight JSX→Svelte translation.
+ * Uses the Vici design tokens (`--laurel`, `--text-base`,
+ * `--text-muted`, `--bg-surface`, …).
  * ============================================================ */
 .dash-ey {
 	font-family: var(--font-mono);
@@ -2398,8 +2400,8 @@ html[data-app='1'] body {
 }
 
 /* ============================================================
-   VICI Onboarding v2 — verbatim port of prototype
-   `onboarding-v2.css`. Class prefix `ob2-*`. Token mapping:
+   VICI Onboarding v2 styles. Class prefix `ob2-*`. Token aliases
+   in use:
      --fg         → --parchment        (text-base)
      --fg-dim     → --parchment-dim
      --fg-mute    → --parchment-mute
@@ -2410,7 +2412,6 @@ html[data-app='1'] body {
      --border     → --ink-line         (border-base)
      --border-strong → --ink-line-strong
      --ease       → --ease-vici
-   Inline pixel values kept verbatim per prototype.
    ============================================================ */
 
 .ob.ob-v2 {
@@ -3325,9 +3326,9 @@ html[data-app='1'] body {
 	text-decoration-color: var(--laurel);
 }
 
-/* Primary CTA used inside the sent state — mirrors prototype's
-   btn-primary block-large. Lives in app.css so component styles
-   stay free of duplication. */
+/* Primary CTA used inside the sent state — `btn-primary` block-
+   large shape. Lives in app.css so component styles stay free of
+   duplication. */
 .signin-sent-continue {
 	display: inline-flex;
 	width: 100%;

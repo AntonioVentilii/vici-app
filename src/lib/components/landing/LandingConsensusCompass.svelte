@@ -1,9 +1,8 @@
 <script lang="ts">
 	/**
-	 * Verbatim port of the prototype's `ConsensusCompass`
-	 * (`flow.jsx:394-420`). Needle points up at strong YES, horizontal
-	 * at 50/50, down at strong NO. Used inside the FlowCard header
-	 * when the market isn't a contrarian/Trickster call.
+	 * Directional dial that points up at strong YES, horizontal at
+	 * 50/50, down at strong NO. Used inside the FlowCard header when
+	 * the market isn't a contrarian / Trickster call.
 	 */
 	interface Props {
 		yes: number;

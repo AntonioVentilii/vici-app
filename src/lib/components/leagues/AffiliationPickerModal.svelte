@@ -33,10 +33,10 @@
 
 	// Initial kind is bound by the caller (e.g. WorldsPage picks a tab,
 	// ProfileDashboard picks an affiliation tile), but inside the sheet
-	// the user can toggle between University / Country — matches the
-	// prototype's segmented control on the bottom-sheet picker. Callers
-	// gate this component behind `{#if pickerKind !== null}` so the
-	// sheet remounts when reopened — no prop-sync effect needed.
+	// the user can toggle between University / Country via the
+	// segmented control. Callers gate this component behind
+	// `{#if pickerKind !== null}` so the sheet remounts when reopened
+	// — no prop-sync effect needed.
 	//
 	// `override` is `null` until the user taps the segmented control;
 	// `activeKind` falls back to the prop until then. This keeps the

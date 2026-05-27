@@ -21,9 +21,8 @@
 	} from '$lib/types/market-signals';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
-	import { formatDate, formatProbability } from '$lib/utils/format.utils';
+	import { formatProbability } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { getTimeRemaining } from '$lib/utils/market.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 	import {
 		snapToStakeLadder,
@@ -86,13 +85,56 @@
 		return () => clearInterval(id);
 	});
 
-	// Computed *live* countdown — recomputes on each minute tick. The
-	// existing `getTimeRemaining` helper produces "Xd Yh" / "Xh Ym" /
-	// "Xm remaining" / "Expired" — perfect for the back-card row.
+	// Long-form settlement date — "July 19, 2026", locale-aware via
+	// `toLocaleDateString({ month: 'long', day: 'numeric', year:
+	// 'numeric' })`. Replaces the default short `MM/DD/YYYY` format
+	// so the meta row reads as editorial copy rather than a stamp.
+	const longSettleDate = $derived(
+		new Date(Number(market.expiryDate)).toLocaleDateString($localeStore, {
+			month: 'long',
+			day: 'numeric',
+			year: 'numeric'
+		})
+	);
+
+	// Computed *live* countdown — recomputes on each minute tick.
+	// `getTimeRemaining` already produces "Xd Yh remaining" / "Xh Ym
+	// remaining" / "Xm remaining" / "Expired"; we strip the trailing
+	// noun and swap to the shorter "Nd left" / "Nh left" / "Nm left"
+	// form that matches the prototype's compact meta row.
 	const liveCountdown = $derived.by(() => {
 		nowTick; // touch so the derived re-runs on tick
+		const ms = Number(market.expiryDate) - Date.now();
 
-		return getTimeRemaining(market.expiryDate);
+		if (!Number.isFinite(ms) || ms <= 0) {
+			return t({ locale: $localeStore, key: 'card.back.countdown_closing' });
+		}
+
+		const days = Math.floor(ms / 86_400_000);
+		const hours = Math.floor((ms % 86_400_000) / 3_600_000);
+		const mins = Math.floor((ms % 3_600_000) / 60_000);
+
+		if (days >= 1) {
+			return t({
+				locale: $localeStore,
+				key: 'card.back.countdown_days_left',
+				params: { count: days }
+			});
+		}
+
+		if (hours >= 1) {
+			return t({
+				locale: $localeStore,
+				key: 'card.back.countdown_hours_left',
+				params: { count: hours }
+			});
+		}
+
+		return t({
+			locale: $localeStore,
+			key: 'card.back.countdown_minutes_left',
+			params: { count: mins }
+		});
 	});
 	const countdownUrgent = $derived.by(() => {
 		nowTick;
@@ -101,8 +143,8 @@
 		return ms > 0 && ms <= 86_400_000;
 	});
 
-	// Sharp-predictor lean — leans 10pp further than consensus, capped
-	// at 95. Mirrors the prototype's `sharpPct = min(95, yes + 10)`.
+	// Sharp-predictor lean — `sharpPct = min(95, yes + 10)` keeps the
+	// top-decile band leaning 10pp further than consensus, capped at 95.
 	const sharpPct = $derived(Math.min(95, yesPct + 10));
 	const sharpDiff = $derived(sharpPct - yesPct);
 
@@ -179,9 +221,8 @@
 
 	// Share popover toggle — anchored above the share button. The
 	// popover handles native / clipboard / channel paths itself; this
-	// component owns just the open/close state and the toast we show on
-	// successful clipboard copy. Prototype source: `flow.jsx:228-361`
-	// (the share popover is consumed by the FlowCard back face).
+	// component owns just the open/close state and the toast we show
+	// on successful clipboard copy.
 	let shareOpen = $state(false);
 
 	const toggleShare = () => {
@@ -229,7 +270,7 @@
 					locale: $localeStore,
 					key: 'card.back.settles_line',
 					params: {
-						date: formatDate(market.expiryDate),
+						date: longSettleDate,
 						timeRemaining: liveCountdown
 					}
 				})}
@@ -237,17 +278,16 @@
 			{#if countdownUrgent}
 				<span class="flow-back-countdown-pulse" aria-hidden="true"></span>
 			{/if}
-			{#if predictorsCount > 0}
-				<span class="flow-back-meta-sep">·</span>
-				<span>
-					{t({
-						locale: $localeStore,
-						key: 'card.predicting_count',
-						params: { count: predictorsCount.toLocaleString() }
-					})}
-				</span>
-			{/if}
 		</div>
+		{#if predictorsCount > 0}
+			<p class="flow-back-predicting num">
+				{t({
+					locale: $localeStore,
+					key: 'card.predicting_count',
+					params: { count: predictorsCount.toLocaleString() }
+				})}
+			</p>
+		{/if}
 
 		{#if resolutionCondition.length > 0}
 			<section class="flow-back-block flow-resolution">
@@ -255,23 +295,28 @@
 					{t({ locale: $localeStore, key: 'card.back.resolves_if' })}
 				</p>
 				<p class="flow-back-copy">{resolutionCondition}</p>
-				<button
-					class="flow-back-toggle"
-					aria-expanded={rulesOpen}
-					data-no-card-gesture="true"
-					onclick={(e) => {
-						e.stopPropagation();
-						rulesOpen = !rulesOpen;
-					}}
-					type="button"
-				>
-					{rulesOpen
-						? t({ locale: $localeStore, key: 'card.back.hide_rules' })
-						: t({ locale: $localeStore, key: 'card.back.show_rules' })}
-					<span class="flow-back-toggle-caret" class:is-open={rulesOpen} aria-hidden="true">
-						▾
+				<div class="flow-res-foot">
+					<span class="flow-res-source">
+						{t({ locale: $localeStore, key: 'card.back.source_official' })}
 					</span>
-				</button>
+					<button
+						class="flow-back-toggle"
+						aria-expanded={rulesOpen}
+						data-no-card-gesture="true"
+						onclick={(e) => {
+							e.stopPropagation();
+							rulesOpen = !rulesOpen;
+						}}
+						type="button"
+					>
+						{rulesOpen
+							? t({ locale: $localeStore, key: 'card.back.hide_rules' })
+							: t({ locale: $localeStore, key: 'card.back.show_rules' })}
+						<span class="flow-back-toggle-caret" class:is-open={rulesOpen} aria-hidden="true">
+							▾
+						</span>
+					</button>
+				</div>
 				{#if rulesOpen}
 					<p class="flow-back-rules">
 						{t({ locale: $localeStore, key: 'card.back.rules_body' })}
@@ -282,20 +327,18 @@
 
 		<section class="flow-back-block flow-community">
 			<div class="flow-community-top">
-				<p class="eyebrow flow-back-label">
-					{t({ locale: $localeStore, key: 'card.back.crowd_split' })}
-				</p>
+				<span class={`num flow-community-pct ${crowdSide === 'YES' ? 'text-yes' : 'text-no'}`}>
+					{formatProbability(market.yesProbability)}
+					<span class="flow-community-side">{crowdSide}</span>
+				</span>
 				<span
 					class={`flow-community-delta num ${yesPct >= 50 ? 'flow-delta-yes' : 'flow-delta-no'}`}
 				>
 					{yesPct >= 50 ? '▲' : '▼'}
-					{Math.abs(yesPct - Math.max(5, yesPct - 12))}%
-				</span>
-			</div>
-			<div class="flow-community-row">
-				<span class={`num flow-community-pct ${crowdSide === 'YES' ? 'text-yes' : 'text-no'}`}>
-					{formatProbability(market.yesProbability)}
-					<span class="flow-community-side">{crowdSide}</span>
+					{Math.abs(yesPct - Math.max(5, yesPct - 12))}% {t({
+						locale: $localeStore,
+						key: 'card.back.this_week'
+					})}
 				</span>
 			</div>
 			<FlowCardSparkline events={metadata?.events} seed={market.id} yesPercent={yesPct} />
@@ -421,7 +464,11 @@
 							class:is-negative={sharpDiff < 0}
 							class:is-positive={sharpDiff > 0}
 						>
-							{sharpDiff > 0 ? '+' : ''}{sharpDiff} pts
+							{t({
+								locale: $localeStore,
+								key: sharpDiff > 0 ? 'card.back.sharp_diff_ahead' : 'card.back.sharp_diff_behind',
+								params: { count: Math.abs(sharpDiff) }
+							})}
 						</span>
 					{/if}
 				</div>
@@ -554,7 +601,7 @@
 	/* Share-pop anchor button — mirrors `MarketDetailShareButton` but
 	   stays inline here because the popover is anchored relative to
 	   `.flow-back-actions`, so the button can't take its own offset
-	   parent. Prototype source: `flow.jsx:228-361`. */
+	   parent. */
 	.flow-back-share {
 		display: inline-flex;
 		width: 2.25rem;
@@ -606,6 +653,16 @@
 	}
 	.flow-back-meta-sep {
 		opacity: 0.55;
+	}
+
+	/* Predictors count — its own row below `flow-back-meta` so the
+	   meta line stays just `Settles {date} · {countdown}` (matches
+	   the editorial rhythm where settlement and headcount are
+	   distinct beats). */
+	.flow-back-predicting {
+		margin: 0;
+		font-size: var(--t-12);
+		color: var(--text-muted);
 	}
 	.flow-back-countdown-pulse {
 		width: 6px;
@@ -667,6 +724,19 @@
 		margin-top: 0.4rem;
 	}
 
+	.flow-res-foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		margin-top: 0.35rem;
+	}
+	.flow-res-source {
+		font-size: var(--t-12);
+		color: var(--text-muted);
+		opacity: 0.85;
+	}
+
 	.flow-back-toggle {
 		align-self: flex-start;
 		display: inline-flex;
@@ -693,12 +763,8 @@
 		display: flex;
 		align-items: baseline;
 		justify-content: space-between;
-		gap: 0.5rem;
-	}
-	.flow-community-row {
-		display: flex;
-		align-items: baseline;
-		gap: 0.5rem;
+		gap: 0.75rem;
+		flex-wrap: wrap;
 	}
 	.flow-community-pct {
 		font-size: 2.05rem;

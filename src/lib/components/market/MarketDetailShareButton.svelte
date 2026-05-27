@@ -49,9 +49,9 @@
 </script>
 
 <!-- Share button on the Market detail appbar — prefers the native Web
-     Share sheet (mobile), falls back to clipboard copy on desktop with a
-     toast acknowledgement. Visually mirrors the prototype's ghost icon
-     button next to the back chevron. -->
+     Share sheet (mobile), falls back to clipboard copy on desktop with
+     a toast acknowledgement. Ghost icon button rendered next to the
+     back chevron. -->
 <button
 	class="market-detail-share"
 	aria-label={t({ locale: $localeStore, key: 'market.detail.share.label' })}

@@ -43,9 +43,8 @@
 	};
 
 	/**
-	 * Appbar gear navigates straight to Settings — the prototype
-	 * (`screens.jsx:884`) has no trailing menu; sign-out lives only on
-	 * the Settings page.
+	 * Appbar gear navigates straight to Settings — no trailing menu;
+	 * sign-out lives only on the Settings page.
 	 */
 	const handleOpenSettings = () => {
 		void goto(resolve(AppPath.Settings));

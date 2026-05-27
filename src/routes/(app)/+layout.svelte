@@ -48,13 +48,13 @@
 		}
 	});
 
-	// Viewport architecture parity with the prototype: inside the
-	// authenticated `(app)` shell the document doesn't scroll. We tag
-	// <html> with `data-app="1"` so `app.css` can lock `html`/`body`
-	// height + `body { overflow: hidden }` only for these routes. The
-	// scroll viewport is the `.screen-scroll` `<main>` below. Marketing
-	// routes (`/`, `/about`, `/welcome`, `/signin`, `/signup`,
-	// `/info/*`) live outside this layout and keep natural body scroll.
+	// Viewport architecture: inside the authenticated `(app)` shell
+	// the document doesn't scroll. We tag <html> with `data-app="1"`
+	// so `app.css` can lock `html`/`body` height + `body { overflow:
+	// hidden }` only for these routes. The scroll viewport is the
+	// `.screen-scroll` `<main>` below. Marketing routes (`/`, `/about`,
+	// `/welcome`, `/signin`, `/signup`, `/info/*`) live outside this
+	// layout and keep natural body scroll.
 	onMount(() => {
 		document.documentElement.dataset.app = '1';
 
@@ -65,19 +65,19 @@
 
 	// Market detail (`/markets/[id]`) is rendered as a single linear
 	// mobile-first surface with its own sticky bottom CTA bar — the
-	// global mobile tab bar is hidden on this route so the CTA owns the
-	// bottom slot, and the container padding is dropped so the hero +
-	// chart cards can run edge-to-edge the way the prototype does. The
-	// `'/markets/'` prefix already excludes the bare listing route at
-	// `/markets`, so no extra guard is needed.
+	// global mobile tab bar is hidden on this route so the CTA owns
+	// the bottom slot, and the container padding is dropped so the
+	// hero + chart cards can run edge-to-edge. The `'/markets/'`
+	// prefix already excludes the bare listing route at `/markets`,
+	// so no extra guard is needed.
 	const isMarketDetailPage = $derived(page.url.pathname.startsWith('/markets/'));
 
-	// Public markets surface — matches the prototype's `App.html#markets`
-	// behaviour where any visitor can browse the list and open a market's
-	// detail before signing up. The market list (`/markets`) and the
-	// detail (`/markets/[id]`) are exempted from the auth gate below;
-	// auth-requiring affordances on those pages (placing a call, saving,
-	// resolving) bounce to /signin at the point of action.
+	// Public markets surface — any visitor can browse the list and
+	// open a market's detail before signing up. The market list
+	// (`/markets`) and the detail (`/markets/[id]`) are exempted from
+	// the auth gate below; auth-requiring affordances on those pages
+	// (placing a call, saving, resolving) bounce to `/signin` at the
+	// point of action.
 	const isPublicMarketsRoute = $derived(
 		page.url.pathname === '/markets' || page.url.pathname.startsWith('/markets/')
 	);
@@ -428,10 +428,9 @@
 		mobile floating pillnav (rendered below as `<MobileNav>`) owns
 		the chrome at narrower viewports.
 
-		The prototype renders authenticated screens at mobile width only
-		(interest of time per the design source). Our desktop adapts the
-		mobile design to a proper desktop layout: top-nav header + wider
-		content column, NOT a fake-mobile phone bezel.
+		The desktop layout adapts the mobile design to a proper
+		desktop chrome: top-nav header + wider content column, NOT
+		a fake-mobile phone bezel.
 	-->
 	<DesktopAppNav />
 
@@ -451,10 +450,10 @@
 	</main>
 
 	<!--
-		Bottom nav is visible on every signed-in surface including Flow,
-		matching the prototype's BottomNav. Market detail (`/markets/[id]`)
-		is the one exception — it owns the bottom slot with its own
-		sticky YES/NO CTA bar so the tab bar is suppressed there.
+		Bottom nav is visible on every signed-in surface including
+		Flow. Market detail (`/markets/[id]`) is the one exception —
+		it owns the bottom slot with its own sticky YES/NO CTA bar so
+		the tab bar is suppressed there.
 	-->
 	{#if !isMarketDetailPage}
 		<MobileNav />

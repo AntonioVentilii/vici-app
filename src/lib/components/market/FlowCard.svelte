@@ -2,8 +2,9 @@
 	import ConsensusCompass from '$lib/components/market/ConsensusCompass.svelte';
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
-	import Trickster from '$lib/components/market/Trickster.svelte';
+	import SeededAvatarStack from '$lib/components/ui/SeededAvatarStack.svelte';
 	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
+	import { lookupWcMarketSubtitle } from '$lib/constants/wc-market-subtitles.constants';
 	import { daysToKickoff } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -14,7 +15,6 @@
 		FollowedLeanSignal,
 		PriorCallSignal
 	} from '$lib/types/market-signals';
-	import type { Position } from '$lib/types/position';
 	import { resolveFlowArtCategory, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import {
 		consensusPercent,
@@ -29,12 +29,10 @@
 		market: Market;
 		onAction: (action: FlowAction) => void;
 		signedIn: boolean;
-		position?: Position;
 		tradeAmount: string;
 		interactive?: boolean;
 		// When true, the parent has paused the deck (e.g. a sheet is
-		// open) and the card desaturates / dims its faces — prototype
-		// parity (`app.css:362-370`).
+		// open) and the card desaturates / dims its faces.
 		locked?: boolean;
 		// Generative-artwork category. FlowMode resolves this from the
 		// market's primary tag; FlowCard treats it as opaque and falls back
@@ -60,7 +58,6 @@
 		market,
 		onAction,
 		signedIn,
-		position,
 		tradeAmount,
 		interactive = true,
 		locked = false,
@@ -76,10 +73,9 @@
 
 	const isCommitted = $derived(committedAction !== null);
 
-	// Swipe physics — match the prototype FlowCard exactly: rotation
-	// damping of 18 (drag.x / 18), commit threshold of 100 px, settle
-	// delay of 220 ms after pointer-up before the trade fires, vibrate
-	// 12 ms on commit.
+	// Swipe physics — rotation damping of 18 (drag.x / 18), commit
+	// threshold of 100 px, settle delay of 220 ms after pointer-up
+	// before the trade fires, vibrate 12 ms on commit.
 	const SWIPE_THRESHOLD = 100;
 	const SKIP_THRESHOLD = 110;
 	const SETTLE_MS = 220;
@@ -93,13 +89,13 @@
 	);
 	const catColor = $derived(tagColor(resolvedCategory));
 
-	// Both faces are always rendered; an opacity crossfade swaps which is
-	// visible. Replaces the old true-3D `rotateY` flip per the prototype.
+	// Both faces are always rendered; an opacity crossfade swaps which
+	// is visible (no true-3D `rotateY` flip).
 	let flipped = $state(false);
 
-	// Drag state — raw deltas, no Spring. Matches the prototype's
-	// `useState({x, y, dragging})` model and the same `committedRef`
-	// one-shot latch reset on market change.
+	// Drag state — raw deltas, no Spring. Plain `{x, y, dragging}`
+	// model with a `committedRef` one-shot latch reset on market
+	// change so a fast double-swipe can't fire twice.
 	let dragX = $state(0);
 	let dragY = $state(0);
 	let dragging = $state(false);
@@ -123,16 +119,8 @@
 	const yesIsFav = $derived(crowdPct >= 50);
 	const noPct = $derived(100 - crowdPct);
 
-	// Trickster pill — contrarian markets only (minority side under 25%).
-	// The pill replaces the ConsensusCompass in the card header for these
-	// markets so the dissent signal lands first. Prototype source:
-	// `VICI WebApp Beta V1.2/flow.jsx:567-568` + `landing.jsx:519-545`.
-	const minorityPct = $derived(Math.min(crowdPct, noPct));
-	const showTrickster = $derived(minorityPct < 25);
-
-	// Payout preview — stake/(probability) − stake, clamped at p=0.05 to
-	// keep long-shots from rendering pathological numbers. Matches the
-	// prototype's FlowCard payout formula on the front face.
+	// Payout preview — stake/(probability) − stake, clamped at p=0.05
+	// to keep long-shots from rendering pathological numbers.
 	const stakeNum = $derived(Math.max(0, Number(tradeAmount) || 0));
 	const probMyYes = $derived(Math.max(0.05, market.yesProbability));
 	const probMyNo = $derived(Math.max(0.05, 1 - market.yesProbability));
@@ -149,8 +137,8 @@
 	);
 
 	// Live countdown — days until expiry, displayed as a chip in the
-	// meta row. Computed off `expiryDate` (ms). Urgency tiers mirror
-	// the prototype: ≤ 1 day = urgent, ≤ 7 = soon.
+	// meta row. Computed off `expiryDate` (ms). Urgency tiers:
+	// ≤ 1 day = urgent, ≤ 7 = soon.
 	const daysLeft = $derived.by(() => {
 		const ms = Number(market.expiryDate) - Date.now();
 
@@ -218,11 +206,26 @@
 		market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0
 	);
 
+	// Per-market momentum delta — deterministic per market.id, drives
+	// the "+N today" fallback line shown when the user has no
+	// followed-friends data on this market. Range ~10..99 keeps the
+	// number plausible without requiring a live aggregator.
+	const momentumDelta = $derived.by(() => {
+		const id = String(market.id);
+		let hash = 0;
+
+		for (let i = 0; i < id.length; i += 1) {
+			hash = (hash * 31 + id.charCodeAt(i)) | 0;
+		}
+
+		return (Math.abs(hash) % 90) + 10;
+	});
+
 	// Callers-in-last-hour placeholder — deterministic per market.id so
-	// the number is stable across renders without a live presence service.
-	// Replaced when the real live-counter API ships. Range ~200..900 keeps
-	// the pill plausible at low-traffic moments without going below the
-	// "live activity" feel.
+	// the count is stable across renders without a live presence service.
+	// Range ~200..900 keeps the pill plausible at low-traffic moments
+	// without feeling padded. Suppressed when a curated `metadata.whyNow`
+	// already supplies a richer line.
 	const callersLastHour = $derived.by(() => {
 		const id = String(market.id);
 		let hash = 0;
@@ -234,32 +237,25 @@
 		return 200 + (Math.abs(hash) % 700);
 	});
 
-	// Friends-lean avatar stack — decorative overlapping circles next to
-	// the friends-lean count. The number of avatars caps at four and
-	// scales with the total followed-friends signal. Colour seeds are
-	// taken from a fixed palette so the stack reads as social proof
-	// without exposing real user data.
-	const FRIEND_AVATAR_PALETTE = ['#7E6BFF', '#FFB23C', '#4FD3A1', '#FF6B7A'] as const;
-	const friendAvatarCount = $derived(
-		followedYes !== undefined ? Math.min(4, Math.max(2, Math.round(followedTotal / 3))) : 0
-	);
-
 	const showPriorOnFront = $derived(Boolean(priorCall));
 	const whyNowText = $derived(formatWhyNowChip(metadata?.whyNow));
 
-	// First clause of description (up to ~52 chars) — only used when no
-	// explicit `subtitle` is passed by the parent.
-	const fallbackSubtitle = $derived.by(() => {
-		const desc = market.description ?? '';
-		const head = desc.split(/[.!?]\s/)[0]?.trim() ?? '';
-
-		if (head.length <= 52) {
-			return head;
-		}
-
-		return `${head.slice(0, 49).trimEnd()}…`;
-	});
-	const subtitleText = $derived(subtitle ?? fallbackSubtitle);
+	// Subtitle resolution order:
+	//   1. Explicit `subtitle` prop (parent override)
+	//   2. `metadata.subtitle` from the satellite (admin-curated)
+	//   3. Curated WC-market lookup (`wc-market-subtitles.constants.ts`)
+	//      — fallback for the tentpole markets the deck ships with
+	//   4. undefined → row is hidden
+	//
+	// The raw `market.description` is intentionally NOT used as a
+	// fallback. It's long, prose-shaped, and belongs under
+	// RESOLVES YES IF on the back card. Surfacing it here as
+	// truncated italic ("YES if that date is the hottest daily
+	// maximum tem…") reads as a snippet rather than an editorial
+	// accent.
+	const subtitleText = $derived(
+		subtitle ?? metadata?.subtitle ?? lookupWcMarketSubtitle(market.id)
+	);
 
 	// Per-card reset: clear flip + latch + drag whenever the market
 	// underneath changes (parent re-uses the slot during deck shuffle).
@@ -330,8 +326,7 @@
 
 		if (flipped) {
 			// Back of card: only react to clearly horizontal motion —
-			// vertical scroll belongs to the panel body. Mirrors the
-			// prototype's back-face drag guard.
+			// vertical scroll belongs to the panel body.
 			if (Math.abs(dx) > Math.abs(dy) * 1.2 && Math.abs(dx) > 8) {
 				dragX = dx;
 				dragY = 0;
@@ -371,8 +366,8 @@
 
 		if (flipped) {
 			// Back of card: tap returns to front; horizontal swipe still
-			// commits a call (prototype back-face parity); vertical
-			// motion (a scroll attempt) just snaps the card back.
+			// commits a call; vertical motion (a scroll attempt) just
+			// snaps the card back.
 			if (movedDist < TAP_PX) {
 				dragX = 0;
 				dragY = 0;
@@ -514,16 +509,7 @@
 							</span>
 						{/if}
 					</div>
-					{#if showTrickster}
-						<span class="flow-trickster-pill">
-							<Trickster lightning size={26} />
-							<span class="flow-trickster-pill-text">
-								{minorityPct}% {t({ locale: $localeStore, key: 'flow.companion.trickster.short' })}
-							</span>
-						</span>
-					{:else}
-						<ConsensusCompass size={42} yesProbability={market.yesProbability} />
-					{/if}
+					<ConsensusCompass size={42} yesProbability={market.yesProbability} />
 				</div>
 
 				{#if showPriorOnFront && priorCall}
@@ -547,42 +533,36 @@
 				{#if subtitleText}
 					<p class="flow-card-sub serif-italic acc">{subtitleText}</p>
 				{/if}
+
 				<!-- Live callers pill — green-dot live indicator + dynamic
-				     count. Mirrors the prototype's `· {N} callers in last
-				     hour` accent under the editorial sub-row. Real number
-				     wiring lands when the live presence service ships; we
-				     surface a deterministic per-market placeholder so the
-				     pill renders today. -->
-				<span class="flow-callers-live num">
-					<span class="flow-callers-dot" aria-hidden="true"></span>
-					{t({
-						locale: $localeStore,
-						key: 'card.callers_last_hour',
-						params: { count: callersLastHour }
-					})}
-				</span>
+				     count. Suppressed when a `priorCall` eyebrow or a
+				     curated `metadata.whyNow` line already occupies the
+				     same beat above the title. Until a live presence
+				     service ships, the count is a deterministic
+				     placeholder hashed off `market.id` so the value is
+				     stable across renders. -->
+				{#if !showPriorOnFront && !whyNowText}
+					<span class="flow-callers-live num">
+						<span class="flow-callers-dot" aria-hidden="true"></span>
+						{t({
+							locale: $localeStore,
+							key: 'card.callers_last_hour',
+							params: { count: callersLastHour }
+						})}
+					</span>
+				{/if}
 			</header>
 
 			<div class="flow-body">
-				<!-- Friends social proof + live momentum. When the user
-				     follows predictors who've called this market, surface
-				     the YES/NO split alongside an overlapping avatar
-				     stack (prototype `flow.jsx:702-728`). Falls back to a
-				     predictors-count line, then to the user's own position
-				     when nothing else is available. -->
+				<!-- Friends social proof + live momentum. The avatar
+				     stack always renders (4 seeded decorative circles);
+				     the trailing text swaps between
+				       (a) `N friends YES · M NO`        — followedLean
+				       (b) `K predicting · +D today`      — predictors-count fallback
+				       (c) empty                          — neither available -->
 				<div class="flow-social num">
+					<SeededAvatarStack borderColor="var(--bg-popover)" size={18} />
 					{#if followedYes !== undefined && followedYes > 0}
-						{#if friendAvatarCount > 0}
-							<span class="flow-avatar-stack" aria-hidden="true">
-								{#each Array(friendAvatarCount) as _, i (i)}
-									<span
-										style:background={FRIEND_AVATAR_PALETTE[i % FRIEND_AVATAR_PALETTE.length]}
-										style:z-index={friendAvatarCount - i}
-										class="flow-avatar-stack-item"
-									></span>
-								{/each}
-							</span>
-						{/if}
 						<span class="flow-followed-lean">{followedLeanText}</span>
 					{:else if predictorsCount > 0}
 						<span>
@@ -591,24 +571,20 @@
 								key: 'card.predicting_count',
 								params: { count: predictorsCount.toLocaleString() }
 							})}
-						</span>
-					{:else if position}
-						<span>
-							{t({
-								locale: $localeStore,
-								key: 'card.position_holding',
-								params: {
-									amount: position.netQty.toString(),
-									symbol: market.token.symbol
-								}
-							})}
+							<span class="flow-momentum-sep" aria-hidden="true">·</span>
+							<span class="flow-momentum-delta text-yes">
+								{t({
+									locale: $localeStore,
+									key: 'card.momentum_delta',
+									params: { count: momentumDelta }
+								})}
+							</span>
 						</span>
 					{/if}
 				</div>
 
 				<!-- Edge-to-edge market artwork. No padding around the
-				     frame — extends across the card body (prototype
-				     `bleed` mode). -->
+				     frame — extends across the card body (`bleed` mode). -->
 				<div class="flow-art-bleed">
 					<MarketArtwork
 						bleed
@@ -693,7 +669,7 @@
 			</div>
 
 			<!-- Full-card swipe overlays — large YES/NO/SKIP text
-			     overlays per the prototype `overlay` block. -->
+			     overlays that fade in with drag progress. -->
 			<div
 				style:opacity={signedIn ? overlayYes : overlayYes * 0.5}
 				class="flow-overlay flow-overlay-yes"
@@ -767,6 +743,11 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
+		/* The 3D context the inner faces render against. We don't
+		   apply a `rotateY` (the flip is opacity-only) but the
+		   perspective still subtly affects subpixel rendering during
+		   the crossfade — without it the swap can read flatter. */
+		perspective: 1400px;
 	}
 
 	.flow-card {
@@ -774,7 +755,12 @@
 		width: 100%;
 		height: 100%;
 		user-select: none;
-		touch-action: pan-y;
+		/* `touch-action: none` keeps tap detection snappy: the browser
+		   doesn't wait for a scroll-intent threshold before firing the
+		   pointer events that drive drag / tap-to-flip. The back face's
+		   own scrollable body sets its own `touch-action: pan-y` so
+		   vertical scroll there still works. */
+		touch-action: none;
 		will-change: transform;
 	}
 	.flow-card.is-grabbing {
@@ -789,22 +775,25 @@
 	}
 
 	/* Locked state — parent (e.g. FlowMode) flips `locked` when a sheet
-	   is open and gestures should pause. Both faces desaturate / dim
-	   per the prototype (`app.css:362-370`). */
+	   is open and gestures should pause. Both faces desaturate / dim. */
 	.flow-card.is-locked .flow-face {
 		filter: brightness(0.92) saturate(0.9);
 		transition: filter 280ms var(--ease-vici);
 	}
 
 	/* Both faces share the same absolutely-positioned slot. Opacity
-	   drives which is visible — no `rotateY`, no `perspective`. The
-	   delayed-opacity pattern keeps the back from flashing through the
-	   front during the swap (see inline `transition` on each face). */
+	   drives which is visible — no `rotateY`. The delayed-opacity
+	   pattern keeps the back from flashing through the front during
+	   the swap (see inline `transition` on each face). The
+	   wrapper's `perspective` above keeps the swap rendering with
+	   the same depth context as a true 3D flip. */
 	.flow-face {
 		position: absolute;
 		inset: 0;
 		overflow: hidden;
-		border-radius: var(--r-12);
+		/* 22 px corner radius — softer than the default card radius
+		   for the swipeable Flow surface. */
+		border-radius: 22px;
 	}
 
 	.flow-face-front {
@@ -843,29 +832,6 @@
 		align-items: center;
 		gap: 0.4rem;
 		flex-wrap: wrap;
-	}
-
-	/* Trickster pill — contrarian markets only. Prototype parity:
-	   `landing.jsx:531-545` inline-style block. Replaces the compass
-	   in the header on minority calls so the dissent signal lands
-	   first. Lives here (component-scoped) so the styles are
-	   colocated with the only consumer. */
-	.flow-trickster-pill {
-		display: inline-flex;
-		align-items: center;
-		gap: 8px;
-		padding: 6px 10px 6px 6px;
-		border-radius: 999px;
-		background: rgba(255, 138, 122, 0.14);
-		border: 1px solid rgba(255, 138, 122, 0.35);
-	}
-	.flow-trickster-pill-text {
-		font-family: var(--font-mono);
-		font-size: 10px;
-		color: #ff8a7a;
-		text-transform: uppercase;
-		letter-spacing: 0.12em;
-		font-weight: 600;
 	}
 
 	.flow-cat-tag {
@@ -963,17 +929,30 @@
 		font-size: var(--t-14);
 		line-height: var(--leading-normal);
 		color: var(--text-muted);
-		/* Serif-italic accent — prototype's editorial sub-row (`.flow-ctx-editorial`).
-		   The global `.serif-italic` utility class also sets font-family +
-		   weight; this duplicates a few props so the typography still reads
-		   when the utility class is overridden by parent context. */
+		/* Serif-italic accent — editorial sub-row. The global
+		   `.serif-italic` utility also sets font-family + weight; this
+		   duplicates a few props so the typography still reads when the
+		   utility class is overridden by parent context. */
 		font-family: var(--font-serif);
 		font-style: italic;
 		font-weight: 400;
 	}
 
+	.flow-momentum-sep {
+		margin: 0 5px;
+		opacity: 0.55;
+	}
+	.flow-momentum-delta {
+		font-weight: 700;
+	}
+
+	/* Live callers pill — green-dot live indicator + dynamic count.
+	   Sits below the title/subtitle as the "why this card now" beat
+	   when no curated whyNow or priorCall has already claimed that
+	   slot. */
 	.flow-callers-live {
 		display: inline-flex;
+		align-self: flex-start;
 		align-items: center;
 		gap: 5px;
 		margin: 4px 0 0;
@@ -1024,29 +1003,13 @@
 		letter-spacing: 0.02em;
 	}
 
-	.flow-avatar-stack {
-		display: inline-flex;
-		align-items: center;
-	}
-	.flow-avatar-stack-item {
-		display: inline-block;
-		width: 18px;
-		height: 18px;
-		border-radius: 999px;
-		border: 1.5px solid var(--bg-popover);
-		margin-left: -6px;
-	}
-	.flow-avatar-stack-item:first-child {
-		margin-left: 0;
-	}
-
 	.flow-followed-lean {
 		font-weight: 600;
 	}
 	/* Edge-to-edge artwork frame — the FlowArtFrame's own rounded
 	   corners come off so the body of the card hosts the art with no
-	   side padding (prototype `bleed`). The frame's height is fixed
-	   so the title / probs row never reflow on layout changes. */
+	   side padding (`bleed` mode). The frame's height is fixed so the
+	   title / probs row never reflow on layout changes. */
 	.flow-art-bleed {
 		position: relative;
 		width: 100%;
@@ -1195,9 +1158,9 @@
 		opacity: 0.7;
 	}
 
-	/* Full-card swipe overlays — large directional labels per the
-	   prototype `.overlay`. No edge-inset glow (C-14 strip): the
-	   overlay text alone carries the swipe intent. */
+	/* Full-card swipe overlays — large directional YES / NO / SKIP
+	   labels that fade in with drag progress. The overlay text alone
+	   carries the swipe intent; no edge-inset glow. */
 	.flow-overlay {
 		position: absolute;
 		inset: 0;

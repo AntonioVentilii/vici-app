@@ -1,20 +1,19 @@
 <script lang="ts">
 	/**
-	 * Markets browse page — port of the prototype's `MarketsScreen`
-	 * (`screens.jsx:82-159`). Public route: any visitor (signed in or
+	 * Markets browse page. Public route: any visitor (signed in or
 	 * not) can browse the list and open a market's detail; the
-	 * (app)/+layout auth gate exempts `/markets` + `/markets/[id]` from
-	 * the signin bounce. Auth-requiring affordances (placing a call,
-	 * saving long-term) bounce to /signin at the point of action.
+	 * `(app)/+layout` auth gate exempts `/markets` + `/markets/[id]`
+	 * from the signin bounce. Auth-requiring affordances (placing a
+	 * call, saving long-term) bounce to `/signin` at the point of
+	 * action.
 	 *
-	 * Layout mirrors the prototype:
+	 * Layout:
 	 *  - appbar with the page title
 	 *  - horizontal category chips, led by a `Saved` chip with a count,
 	 *    then `All`, then every `MarketTag` from the closed taxonomy
 	 *  - on the "All" view only: a Saved carousel (when the user has
-	 *    saves) and a Trending carousel (top-N by `totalVolume` — the
-	 *    prototype uses a curated `m.hot` flag we don't carry on real
-	 *    market docs, so volume is the closest live signal)
+	 *    saves) and a Trending carousel (top-N by `totalVolume`, the
+	 *    closest live signal we have without a curated "hot" flag)
 	 *  - filtered list with a counter, or a saved-empty state when the
 	 *    Saved chip is active and there are no saves
 	 */
@@ -84,9 +83,9 @@
 		return MARKET_TAGS.filter((tag) => set.has(tag) || cat === tag);
 	});
 
-	// Trending heuristic — top-N by totalVolume. The prototype's data
-	// carries a curated `hot` boolean; real market docs don't, so we
-	// surface activity as the next-best signal.
+	// Trending heuristic — top-N by `totalVolume`. Real market docs
+	// don't carry a curated `hot` boolean, so we surface activity as
+	// the next-best signal.
 	const trending = $derived(
 		[...$markets]
 			.sort((a, b) => {
@@ -118,8 +117,8 @@
 		<h2 class="markets-title">{t({ locale: $localeStore, key: 'nav.markets' })}</h2>
 	</header>
 
-	<!-- Category chips. `Saved` leads (prototype parity), then `All`,
-	     then every tag in the closed taxonomy. -->
+	<!-- Category chips. `Saved` leads, then `All`, then every tag in
+	     the closed taxonomy. -->
 	<div class="markets-chips no-scrollbar">
 		<button
 			class="markets-chip"

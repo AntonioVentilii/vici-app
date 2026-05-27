@@ -39,13 +39,11 @@
 <div class="notifications-page">
 	<header class="notifications-appbar">
 		<!--
-			Back destination is Flow (matching `screens.jsx:1390` which
-			calls `navigate('flow')`). The back-arrow is a text-only
-			ghost icon button — no border box — to match the prototype's
-			`.btn.btn-ghost`. The Mark-all-read on the right is also a
-			plain ghost text button, not the Button component, so the
-			padding + typography reads as `t-eyebrow` instead of a
-			sized control.
+			Back destination is Flow. The back-arrow is a text-only
+			ghost icon button — no border box. The Mark-all-read on
+			the right is also a plain ghost text button (not the
+			`Button` component) so the padding + typography read as
+			`t-eyebrow` instead of a sized control.
 		-->
 		<button
 			class="appbar-icon-btn"
@@ -57,10 +55,9 @@
 		</button>
 		<h1 class="notifications-title">{t({ locale: $localeStore, key: 'notifications.title' })}</h1>
 		<!--
-			Mark-all-read is rendered unconditionally — matches the
-			prototype's appbar right slot (`screens.jsx:1392`). It is a
-			no-op when the inbox is empty, kept visible so the layout
-			doesn't reflow as notifications arrive.
+			Mark-all-read is rendered unconditionally. It is a no-op
+			when the inbox is empty, kept visible so the layout doesn't
+			reflow as notifications arrive.
 		-->
 		<button
 			class="notifications-mark-read allcaps"
@@ -146,8 +143,7 @@
 		color: var(--text-base);
 	}
 
-	/* Text-only ghost — matches `<button className="btn btn-ghost
-	   t-eyebrow">` in the prototype's appbar right slot. */
+	/* Text-only ghost — `btn btn-ghost t-eyebrow` appbar variant. */
 	.notifications-mark-read {
 		appearance: none;
 		padding: 0.375rem 0.625rem;

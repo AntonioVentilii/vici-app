@@ -82,9 +82,8 @@
 
 	/**
 	 * Position of this affiliation in the lifetime-accuracy and
-	 * month-accuracy rankings — mirrors the prototype's `wcRank` /
-	 * `monthRank` fields. Returns `0` when this affiliation has no
-	 * stats doc (unranked / first-call pending).
+	 * month-accuracy rankings. Returns `0` when this affiliation has
+	 * no stats doc (unranked / first-call pending).
 	 */
 	const rankBy = ({ key }: { key: 'lifetime' | 'month' }): number => {
 		if (allStats.length === 0) {
