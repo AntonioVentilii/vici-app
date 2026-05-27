@@ -11,6 +11,9 @@
 // only happy accident is macro (`#7EB6FF` in both).
 
 const TAG_COLORS: Record<string, string> = {
+	// World Cup — laurel-gold, stays inside the brand accent family;
+	// the FIFA-themed Flow deck uses the same accent for the WC tag pill.
+	wc: '#E2B842',
 	macro: '#7EB6FF',
 	crypto: '#F7931A',
 	politics: '#FF6B6B',

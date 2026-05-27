@@ -109,6 +109,7 @@
 	{#if cat === 'all' && trendingMarkets.length > 0}
 		<MarketsCarousel
 			markets={trendingMarkets}
+			moreLabel={t({ locale: $localeStore, key: 'markets.see_all' })}
 			tagsBySeries={tagsByMarket}
 			title={t({ locale: $localeStore, key: 'markets.section.trending' })}
 		/>

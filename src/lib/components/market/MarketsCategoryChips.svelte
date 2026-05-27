@@ -1,5 +1,14 @@
 <script lang="ts">
-	import { Bitcoin, Heart, LandPlot, Landmark, Sparkles, Trophy, Wand2 } from 'lucide-svelte/icons';
+	import {
+		Bitcoin,
+		Globe,
+		Heart,
+		LandPlot,
+		Landmark,
+		Sparkles,
+		Trophy,
+		Wand2
+	} from 'lucide-svelte/icons';
 	import { MARKET_TAGS, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -25,6 +34,7 @@
 	// bespoke flow-art marks — keep the visual cue but stay inside the
 	// existing icon system so stroke / size are uniform across surfaces.
 	const TAG_ICONS: Record<MarketTag, typeof LandPlot> = {
+		wc: Globe,
 		macro: LandPlot,
 		crypto: Bitcoin,
 		politics: Landmark,

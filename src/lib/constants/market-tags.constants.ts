@@ -10,11 +10,20 @@ import type { MessageKey } from '$lib/utils/i18n.utils';
  * `$lib/utils/tag-color.utils.ts`, and add `market.tag.<id>` to every
  * locale catalog under `src/lib/constants/messages/`.
  */
-export const MARKET_TAGS = ['macro', 'crypto', 'politics', 'tech', 'sports', 'culture'] as const;
+export const MARKET_TAGS = [
+	'wc',
+	'macro',
+	'crypto',
+	'politics',
+	'tech',
+	'sports',
+	'culture'
+] as const;
 
 export type MarketTag = (typeof MARKET_TAGS)[number];
 
 export const MARKET_TAG_LABEL_KEYS: Record<MarketTag, MessageKey> = {
+	wc: 'market.tag.wc',
 	macro: 'market.tag.macro',
 	crypto: 'market.tag.crypto',
 	politics: 'market.tag.politics',

@@ -23,6 +23,8 @@
 		<h2 class="markets-carousel-title">{title}</h2>
 		{#if moreLabel && onMore}
 			<button class="markets-carousel-more" onclick={onMore} type="button">{moreLabel}</button>
+		{:else if moreLabel}
+			<span class="markets-carousel-more is-static">{moreLabel}</span>
 		{/if}
 	</header>
 	<div class="markets-carousel-scroller no-scrollbar">
@@ -65,6 +67,12 @@
 
 	.markets-carousel-more:hover {
 		opacity: 0.8;
+	}
+
+	/* Static (non-button) variant — matches prototype's `<span class="more">`
+	   label on Trending where the link is purely visual. */
+	.markets-carousel-more.is-static {
+		cursor: default;
 	}
 
 	.markets-carousel-scroller {
