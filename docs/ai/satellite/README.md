@@ -63,6 +63,21 @@ What the code will not tell you:
 
 Full taxonomy: [`structure.md`](./structure.md). Idioms: [`patterns.md`](./patterns.md).
 
+## Local development
+
+- **Replica:** `juno emulator start` — the Juno emulator is the only
+  local replica (never `dfx start`, see
+  [`AGENTS.md`](../../../AGENTS.md)).
+- **Local Console:** [http://localhost:5866](http://localhost:5866).
+- **Vite plugin:** [`@junobuild/vite-plugin`](../../../vite.config.ts)
+  injects the satellite ID / container URL into the FE env.
+- **Build hooks:** `npm run juno:functions:build` compiles the
+  TypeScript hooks/asserts/endpoints into the satellite extension
+  Wasm.
+- **Satellite IDs:** pinned in [`juno.config.ts`](../../../juno.config.ts)
+  (dev + prod). That file is the source of truth — don't copy them
+  elsewhere.
+
 ## Where to look
 
 | You're about to…                               | Read first                                                                                                     |

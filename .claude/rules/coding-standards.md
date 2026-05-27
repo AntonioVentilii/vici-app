@@ -1,91 +1,35 @@
-# Coding Standards (Claude quick-reference)
+# Coding standards (Claude pointer)
 
-> **Authoritative sources:**
->
-> - Folder taxonomy + naming: [`docs/ai/frontend/structure.md`](../../docs/ai/frontend/structure.md)
-> - Patterns: [`docs/ai/frontend/stack-and-patterns.md`](../../docs/ai/frontend/stack-and-patterns.md)
-> - Reusability catalog: [`docs/ai/frontend/reusability.md`](../../docs/ai/frontend/reusability.md)
-> - Project-specific commandments: [`AGENTS.md`](../../AGENTS.md#2-project-specific-commandments)
->
-> This card is a Claude-only summary. If it disagrees with the docs
-> above, the docs above win.
+`docs/ai/` is the source of truth. This card only surfaces a few
+high-violation reminders so they land in Claude's prompt — for anything
+substantive, read the canonical docs.
 
-## Code philosophy
+**Read first:**
 
-- **Idiomatic.** Write code that is native to the framework / language used.
-- **DRY.** Aim for zero code duplication. Extract shared logic into utility
-  functions or services.
-- **Modularity.** Components and services are small, focused, decoupled.
-- **UI library:** prioritise reusing components from `$lib/components/ui/`
-  (`Button`, `Card`, `Modal`, `Table`, `Tabs`, …) — see the catalog in
-  [`reusability.md`](../../docs/ai/frontend/reusability.md).
-- **Theme variables:** use design tokens defined in
-  [`src/app.css`](../../src/app.css) via Tailwind utilities (`bg-card`,
-  `text-card-foreground`, `border-card-border`) — never hard-coded hex.
-- **State management:** for cross-view state, follow the patterns in
-  `$lib/stores/` (e.g. `certified.store`).
-- **File size:** avoid gigantic files. Refactor large components — see
-  [`workflows/refactor-split.md`](../../docs/ai/frontend/workflows/refactor-split.md).
-- **Coherence:** keep style, pattern, and logic consistent across the
-  codebase.
+- Folder taxonomy + file naming + decision tree →
+  [`docs/ai/frontend/structure.md`](../../docs/ai/frontend/structure.md)
+- Svelte / TS / Tailwind / routing / identity idioms →
+  [`docs/ai/frontend/stack-and-patterns.md`](../../docs/ai/frontend/stack-and-patterns.md)
+- Reusability catalog (`$lib/components/ui/`, shared utils / stores /
+  services) →
+  [`docs/ai/frontend/reusability.md`](../../docs/ai/frontend/reusability.md)
+- Project commandments →
+  [`AGENTS.md`](../../AGENTS.md#2-project-specific-commandments)
+- Quality gates + PR conventions →
+  [`docs/ai/pr-and-ci.md`](../../docs/ai/pr-and-ci.md)
+- i18n catalogs + lint rule →
+  [`docs/ai/frontend/i18n.md`](../../docs/ai/frontend/i18n.md)
 
-## File naming & namespacing
+**Easy-to-miss rules:**
 
-### Svelte components
-
-- Convention: `PascalCase.svelte` (e.g. `MarketCard.svelte`).
-- Location: UI primitives in `$lib/components/ui/`; feature components in
-  `$lib/components/<feature>/`.
-
-### Logical files (TypeScript)
-
-Use **kebab-case** with a functional dot-suffix:
-
-- **Services:** `name.services.ts`
-- **Stores:** `name.store.ts`
-- **Derived:** `name.derived.ts`
-- **API:** `name.api.ts` (canister wrappers)
-- **Constants:** `name.constants.ts`
-- **Utils:** `name.utils.ts`
-- **Schemas:** `name.schema.ts`
-- **Types:** `name.ts` in `$lib/types/`
-
-## Documentation & testing
-
-- Every method / function should have a clear docstring when its name
-  isn't enough.
-- Documentation updates ride along with the code they describe — see the
-  [meta-update rule](../../docs/ai/governance.md#meta-update-rule).
-- Testing is currently opt-in — see
-  [`docs/ai/frontend/testing.md`](../../docs/ai/frontend/testing.md) for
-  the forward-looking contract.
-
-## Compliance
-
-- Run `npm run format` and `npm run lint` before completing tasks.
-- Keep the eslint disallowed list intact: no `0n` (use `ZERO`),
-  no `return undefined;` (use bare `return;`), no relative imports
-  across folders under `src/**`.
-
-## Naming conventions
-
-- **Timestamps:**
-  - `_ms` — milliseconds (default for business logic).
-  - `_ns` — nanoseconds (protocol level, idempotency keys).
-- **Terminology:** always **"prediction"** — never "bet" — in
-  user-visible text and code identifiers.
-
-## Identity & auth
-
-- Principal source of truth: `src/lib/services/identity.services.ts`.
-- Use `getIdentityOrAnonymous` for public views, `safeGetIdentityOnce`
-  for authenticated actions.
-
-## Routing
-
-- SvelteKit file-based routes under `src/routes/(app)/` (`/`,
-  `/flow`, `/markets/[id]`, …).
-- The mobile tab bar (`src/lib/components/layout/MobileNav.svelte`)
-  compares `page.url.pathname` to `AppPath` from
-  `src/lib/constants/routes.constants.ts`; visible nav items are
-  configured in `src/lib/constants/nav.constants.ts`.
+- **Run `npm run quality`** (format + lint + i18n check) before
+  declaring done. `npm run check` for svelte-check.
+- **ESLint landmines:** no `0n` (use `ZERO` from
+  `$lib/constants/app.constants`); no `return undefined;` (bare
+  `return;`); no relative imports across folders under `src/**`.
+- **Time variables:** `_ms` (milliseconds, default) / `_ns`
+  (nanoseconds, protocol-level).
+- **Terminology:** always **"prediction"**, never "bet".
+- **Reuse first:** check
+  [`reusability.md`](../../docs/ai/frontend/reusability.md) before
+  creating a new component / util / store / service.
