@@ -2,6 +2,7 @@
 	import ConsensusCompass from '$lib/components/market/ConsensusCompass.svelte';
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
+	import Trickster from '$lib/components/market/Trickster.svelte';
 	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { daysToKickoff } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -121,6 +122,13 @@
 	const crowdSide = $derived(consensusSide(market));
 	const yesIsFav = $derived(crowdPct >= 50);
 	const noPct = $derived(100 - crowdPct);
+
+	// Trickster pill — contrarian markets only (minority side under 25%).
+	// The pill replaces the ConsensusCompass in the card header for these
+	// markets so the dissent signal lands first. Prototype source:
+	// `VICI WebApp Beta V1.2/flow.jsx:567-568` + `landing.jsx:519-545`.
+	const minorityPct = $derived(Math.min(crowdPct, noPct));
+	const showTrickster = $derived(minorityPct < 25);
 
 	// Payout preview — stake/(probability) − stake, clamped at p=0.05 to
 	// keep long-shots from rendering pathological numbers. Matches the
@@ -506,7 +514,16 @@
 							</span>
 						{/if}
 					</div>
-					<ConsensusCompass size={42} yesProbability={market.yesProbability} />
+					{#if showTrickster}
+						<span class="flow-trickster-pill">
+							<Trickster lightning size={26} />
+							<span class="flow-trickster-pill-text">
+								{minorityPct}% {t({ locale: $localeStore, key: 'flow.companion.trickster.short' })}
+							</span>
+						</span>
+					{:else}
+						<ConsensusCompass size={42} yesProbability={market.yesProbability} />
+					{/if}
 				</div>
 
 				{#if showPriorOnFront && priorCall}
@@ -826,6 +843,29 @@
 		align-items: center;
 		gap: 0.4rem;
 		flex-wrap: wrap;
+	}
+
+	/* Trickster pill — contrarian markets only. Prototype parity:
+	   `landing.jsx:531-545` inline-style block. Replaces the compass
+	   in the header on minority calls so the dissent signal lands
+	   first. Lives here (component-scoped) so the styles are
+	   colocated with the only consumer. */
+	.flow-trickster-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 10px 6px 6px;
+		border-radius: 999px;
+		background: rgba(255, 138, 122, 0.14);
+		border: 1px solid rgba(255, 138, 122, 0.35);
+	}
+	.flow-trickster-pill-text {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		color: #ff8a7a;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		font-weight: 600;
 	}
 
 	.flow-cat-tag {

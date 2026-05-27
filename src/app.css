@@ -1504,3 +1504,507 @@ html[data-app='1'] body {
 		animation: none;
 	}
 }
+
+/* ============================================================
+   Flow sub-component rules — verbatim port of the prototype's
+   `.flow-coach` / `.flow-feedback` / `.xp-toast` / `.swipe-hint`
+   / `.share-pop` blocks (VICI Beta V1.2 `app.css` 446-848, 2851-
+   2862, 3700-3842, 5079-5326), retargeted onto the live token
+   names (`--text-base` / `--text-muted` / `--color-accent` /
+   `--bg-popover` / `--bg-surface` / `--border-base` /
+   `--border-strong` / `--ease-vici`). Keep this block all-in-
+   one so the visual parity story is greppable.
+   ============================================================ */
+
+/* Plain envelope used by FlowFeedback for the dim-in backdrop. */
+@keyframes fade-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+/* ── XP toast — standalone pill (used by XpToast.svelte) ───── */
+.xp-toast {
+	position: absolute;
+	top: 92px;
+	z-index: 20;
+	display: inline-flex;
+	align-items: baseline;
+	gap: 4px;
+	padding: 5px 11px 4px;
+	border-radius: 999px;
+	background: var(--laurel);
+	color: var(--ink);
+	font-family: var(--font-mono);
+	font-weight: 700;
+	pointer-events: none;
+	box-shadow:
+		0 0 0 4px rgba(226, 184, 66, 0.18),
+		0 6px 18px -6px rgba(226, 184, 66, 0.55);
+	animation: xp-toast-pop 900ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+.xp-toast .num {
+	font-size: var(--text-body);
+}
+.xp-toast small {
+	font-size: 9px;
+	letter-spacing: 0.14em;
+	opacity: 0.8;
+}
+.xp-toast em {
+	font-style: normal;
+	font-size: 9px;
+	letter-spacing: 0.14em;
+	opacity: 0.85;
+	text-transform: uppercase;
+	padding-left: 6px;
+	border-left: 1px solid rgba(14, 13, 11, 0.25);
+	margin-left: 2px;
+}
+.xp-toast.is-yes {
+	right: 22px;
+}
+.xp-toast.is-no {
+	left: 22px;
+}
+
+/* ── Swipe hint rail ──────────────────────────────────────── */
+.swipe-hint {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 4px 22px 14px;
+	gap: 14px;
+}
+.swipe-hint-side {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex: 1;
+}
+.swipe-hint-side.no {
+	justify-content: flex-start;
+}
+.swipe-hint-side.yes {
+	justify-content: flex-end;
+}
+.swipe-hint-mid {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 0 4px;
+}
+.swipe-hint .eyebrow {
+	font-size: var(--text-micro);
+	letter-spacing: 0.14em;
+	font-weight: 700;
+}
+.swipe-hint .eyebrow.no {
+	color: rgba(255, 107, 107, 0.7);
+}
+.swipe-hint .eyebrow.yes {
+	color: rgba(79, 211, 161, 0.7);
+}
+.swipe-hint .eyebrow.mute {
+	color: var(--text-muted);
+	opacity: 0.55;
+}
+
+/* ── Flow feedback overlay — Oracle pop after a swipe ───── */
+.flow-feedback {
+	position: absolute;
+	inset: 0;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	flex-direction: column;
+	gap: 14px;
+	background: rgba(14, 13, 11, 0.62);
+	backdrop-filter: blur(10px);
+	animation: fade-in 200ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+	z-index: 30;
+	bottom: var(--bn-clear, calc(96px + env(safe-area-inset-bottom, 0px))) !important;
+}
+.flow-feedback-skip {
+	gap: 8px;
+	background: rgba(14, 13, 11, 0.42);
+	backdrop-filter: blur(6px);
+	animation: fade-in 160ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.flow-feedback-skip-chip {
+	padding: 8px 18px;
+	border-radius: 999px;
+	border: 1px solid rgba(242, 236, 220, 0.18);
+	background: rgba(242, 236, 220, 0.04);
+	font-family: var(--font-mono);
+	letter-spacing: 0.16em;
+	color: var(--text-muted);
+	animation: fade-up 220ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.flow-feedback .bolt-burst {
+	width: 72px;
+	height: 72px;
+	border-radius: 50%;
+	background: var(--laurel);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--ink);
+	box-shadow:
+		0 0 0 8px var(--laurel-glow),
+		0 0 60px var(--laurel-glow);
+	animation: pop-in 320ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.flow-feedback-phrase {
+	font-size: 34px;
+	font-family: var(--font-serif);
+	font-style: italic;
+	color: var(--laurel);
+	animation: fade-up 320ms cubic-bezier(0.2, 0.7, 0.2, 1) 80ms both;
+}
+
+/* ── Flow coach overlay — phase machine ─────────────────── */
+.flow-coach {
+	position: absolute;
+	inset: 0;
+	z-index: 40;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	pointer-events: none;
+	animation: flow-coach-fade-in 320ms cubic-bezier(0.16, 1, 0.3, 1);
+	border-radius: inherit;
+}
+
+.flow-coach-center {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0 28px;
+	pointer-events: auto;
+	text-align: center;
+	text-wrap: balance;
+	max-width: 80%;
+	animation: coach-line-in 360ms cubic-bezier(0.16, 1, 0.3, 1);
+	text-shadow:
+		0 2px 12px rgba(14, 13, 11, 0.85),
+		0 0 24px rgba(14, 13, 11, 0.7),
+		0 0 6px rgba(14, 13, 11, 0.5);
+}
+:global([data-theme='light']) .flow-coach-center,
+:global([data-theme='peach']) .flow-coach-center {
+	text-shadow:
+		0 2px 12px rgba(242, 236, 220, 0.95),
+		0 0 24px rgba(242, 236, 220, 0.9),
+		0 0 6px rgba(242, 236, 220, 0.85),
+		0 0 2px rgba(14, 13, 11, 0.2);
+}
+@keyframes coach-line-in {
+	from {
+		opacity: 0;
+		transform: translateY(6px) scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+.flow-coach-line {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-size: var(--text-h2);
+	line-height: 1.3;
+	color: var(--text-base);
+	display: inline-flex;
+	align-items: baseline;
+	gap: 6px;
+	flex-wrap: wrap;
+	justify-content: center;
+}
+.flow-coach-accent {
+	font-family: var(--font-mono);
+	font-style: normal;
+	font-weight: 700;
+	font-size: 20px;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	padding: 2px 10px;
+	border-radius: 6px;
+}
+.flow-coach-center.is-no .flow-coach-accent {
+	color: var(--no);
+	background: rgba(255, 107, 107, 0.14);
+}
+.flow-coach-center.is-yes .flow-coach-accent {
+	color: var(--yes);
+	background: rgba(79, 211, 161, 0.14);
+}
+.flow-coach-center.is-skip .flow-coach-accent {
+	color: var(--color-accent);
+	background: rgba(226, 184, 66, 0.14);
+}
+.flow-coach-center.is-idle .flow-coach-accent {
+	color: var(--color-accent);
+	background: transparent;
+	font-family: 'Söhne', system-ui, sans-serif;
+	font-style: normal;
+	font-weight: 700;
+	font-size: 24px;
+	padding: 0 2px;
+	text-transform: none;
+	letter-spacing: 0;
+	animation: coach-idle-pulse 1.4s ease-in-out infinite;
+}
+@keyframes coach-idle-pulse {
+	0%,
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(1.1);
+		opacity: 0.85;
+	}
+}
+.flow-coach-center.is-tap .flow-coach-accent {
+	color: var(--color-accent);
+	background: rgba(226, 184, 66, 0.1);
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	letter-spacing: 0;
+	text-transform: none;
+	font-size: var(--text-h2);
+}
+
+/* Card drift demo — driven by data-coach-phase. Uses !important to
+   override FlowCard's inline drag transform. */
+:global(.flow-card[data-coach-phase]),
+:global(.ob-card[data-coach-phase]) {
+	transition:
+		transform 480ms cubic-bezier(0.16, 1, 0.3, 1),
+		filter 240ms ease !important;
+	filter: blur(1.4px) saturate(0.92) brightness(0.86);
+	pointer-events: none;
+}
+:global(.flow-card[data-coach-phase='0']),
+:global(.ob-card[data-coach-phase='0']) {
+	transform: translate(-22px, 0) rotate(-2deg) !important;
+}
+:global(.flow-card[data-coach-phase='1']),
+:global(.ob-card[data-coach-phase='1']) {
+	transform: translate(22px, 0) rotate(2deg) !important;
+}
+:global(.flow-card[data-coach-phase='2']),
+:global(.ob-card[data-coach-phase='2']) {
+	transform: translate(0, -22px) !important;
+}
+:global(.flow-card[data-coach-phase='3']),
+:global(.ob-card[data-coach-phase='3']) {
+	animation: coach-tap-pulse 0.9s ease-in-out infinite;
+	filter: none !important;
+	transform: scale(1.01) !important;
+	pointer-events: none;
+}
+@keyframes coach-tap-pulse {
+	0%,
+	100% {
+		transform: scale(1.02) !important;
+	}
+	50% {
+		transform: scale(0.98) !important;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	:global(.flow-card[data-coach-phase]),
+	:global(.ob-card[data-coach-phase]) {
+		transform: none !important;
+		animation: none !important;
+	}
+}
+
+/* Coach-driven flip · CSS-level override of FlowCard's inline opacity */
+:global(.flow-card.is-flipped .flow-face-front),
+:global(.ob-card.is-flipped .flow-face-front) {
+	opacity: 0 !important;
+	pointer-events: none !important;
+}
+:global(.flow-card.is-flipped .flow-face-back),
+:global(.ob-card.is-flipped .flow-face-back) {
+	opacity: 1 !important;
+	pointer-events: auto !important;
+}
+
+/* ── Share popover — capability-aware ─────────────────── */
+.share-pop {
+	position: absolute;
+	top: 50px;
+	right: 14px;
+	width: 304px;
+	max-width: calc(100vw - 40px);
+	background: var(--bg-popover);
+	border: 1px solid var(--border-strong);
+	border-radius: 14px;
+	padding: 14px;
+	box-shadow: 0 18px 50px -12px rgba(0, 0, 0, 0.5);
+	z-index: 30;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+.share-pop-eyebrow {
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+}
+.share-pop-preview {
+	padding: 10px 12px;
+	background: rgba(226, 184, 66, 0.04);
+	border: 1px solid rgba(226, 184, 66, 0.18);
+	border-radius: 10px;
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+}
+.share-preview-text {
+	margin: 0;
+	font-size: 12.5px;
+	line-height: 1.4;
+	color: var(--text-base);
+	font-style: italic;
+	font-family: var(--font-serif);
+}
+.share-preview-url {
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	letter-spacing: 0.02em;
+	color: var(--text-muted);
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+.share-native-btn {
+	appearance: none;
+	border: 0;
+	cursor: pointer;
+	background: var(--color-accent);
+	color: var(--ink);
+	padding: 11px;
+	border-radius: 999px;
+	font-family: inherit;
+	font-weight: 700;
+	font-size: var(--text-body-sm);
+	letter-spacing: 0.02em;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+	transition:
+		transform 80ms cubic-bezier(0.2, 0.7, 0.2, 1),
+		box-shadow 160ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+.share-native-btn:active {
+	transform: scale(0.98);
+}
+.share-native-icon {
+	font-size: var(--text-h3);
+	font-weight: 700;
+	line-height: 1;
+}
+.share-or {
+	display: flex;
+	align-items: center;
+	font-family: var(--font-mono);
+	font-size: var(--text-micro);
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	gap: 8px;
+	margin: 2px 0;
+}
+.share-or::before,
+.share-or::after {
+	content: '';
+	flex: 1;
+	height: 1px;
+	background: var(--border-base);
+}
+.share-pop-grid {
+	display: grid;
+	gap: 6px;
+}
+.share-pop-grid.compact,
+.share-pop-grid.expanded {
+	grid-template-columns: repeat(4, 1fr);
+}
+.share-chan {
+	appearance: none;
+	cursor: pointer;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	padding: 10px 6px;
+	background: rgba(242, 236, 220, 0.04);
+	border: 1px solid var(--border-base);
+	border-radius: 8px;
+	color: var(--text-base);
+	text-decoration: none;
+	transition:
+		border-color 160ms cubic-bezier(0.2, 0.7, 0.2, 1),
+		background 160ms cubic-bezier(0.2, 0.7, 0.2, 1);
+	min-height: 56px;
+	font-family: inherit;
+}
+:global([data-theme='light']) .share-chan,
+:global([data-theme='peach']) .share-chan {
+	background: rgba(14, 13, 11, 0.04);
+}
+.share-chan:hover {
+	border-color: var(--border-strong);
+	background: rgba(242, 236, 220, 0.06);
+}
+.share-chan-icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 22px;
+}
+.share-chan-label {
+	font-family: var(--font-mono);
+	font-size: 9.5px;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	font-weight: 600;
+}
+.share-pop-referral {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 9px 11px;
+	background: linear-gradient(90deg, rgba(79, 211, 161, 0.1), rgba(79, 211, 161, 0.04));
+	border: 1px solid rgba(79, 211, 161, 0.3);
+	border-radius: 10px;
+	font-size: var(--text-sub);
+	line-height: 1.4;
+	color: var(--text-muted);
+}
+.share-pop-referral b {
+	color: var(--yes);
+	font-weight: 700;
+}
+.share-referral-icon {
+	color: var(--yes);
+	font-size: var(--text-body);
+	line-height: 1;
+	flex-shrink: 0;
+}

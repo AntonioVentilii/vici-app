@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Trickster from '$lib/components/market/Trickster.svelte';
 	import type { WelcomeMarketPreview } from '$lib/constants/welcome-markets.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -14,9 +15,11 @@
 	 * (see `src/lib/components/market/FlowCard.svelte`). The header tint is
 	 * driven by the category accent token (`--cat-{category}`); the body
 	 * mirrors the canonical predictor stack + probability split + payout
-	 * roles + size/swipe footer. We deliberately omit Trickster /
-	 * ConsensusCompass / MarketArtwork — those depend on Flow surface
-	 * primitives that don't ship on the public landing yet.
+	 * roles + size/swipe footer. Surfaces the Trickster contrarian pill
+	 * when the minority side is under 25% (prototype parity —
+	 * `landing.jsx:520-545`). ConsensusCompass / MarketArtwork stay out
+	 * of this card — those depend on Flow-surface primitives that don't
+	 * ship on the public landing yet.
 	 */
 	const STAKE = 50;
 
@@ -27,6 +30,9 @@
 	const winNo = $derived(Math.max(1, Math.round(STAKE / Math.max(0.05, no / 100)) - STAKE));
 	const categoryLabelKey = $derived(`market.tag.${market.category}` as const);
 	const daysUrgency = $derived(market.days <= 1 ? 'urgent' : market.days <= 7 ? 'soon' : 'normal');
+
+	const minority = $derived(Math.min(yes, no));
+	const showTrickster = $derived(minority < 25);
 </script>
 
 <article
@@ -34,6 +40,17 @@
 	class="welcome-flow-card"
 	aria-hidden="true"
 >
+	{#if showTrickster}
+		<!-- Trickster pill — minority side under 25%. Absolute-positioned
+		     so it sits over the tinted header on contrarian calls.
+		     Prototype source: `landing.jsx:531-545`. -->
+		<span class="welcome-flow-trickster">
+			<Trickster lightning size={26} />
+			<span class="welcome-flow-trickster-text">
+				{minority}% {t({ locale: $localeStore, key: 'flow.companion.trickster.short' })}
+			</span>
+		</span>
+	{/if}
 	<!-- Tinted header — category-tinted gradient mirrors the in-product
 	     FlowCard. -->
 	<header class="welcome-flow-head">
@@ -128,6 +145,31 @@
 			var(--inset-hi),
 			var(--shadow-card),
 			0 26px 60px -34px color-mix(in srgb, var(--ink) 55%, transparent);
+	}
+
+	/* Trickster pill — landing-card parity with FlowCard. Absolute so it
+	   sits over the tinted header on contrarian (minority < 25%) calls.
+	   Prototype source: `landing.jsx:531-545`. */
+	.welcome-flow-trickster {
+		position: absolute;
+		top: 14px;
+		right: 14px;
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		padding: 6px 10px 6px 6px;
+		border-radius: 999px;
+		background: rgba(255, 138, 122, 0.14);
+		border: 1px solid rgba(255, 138, 122, 0.35);
+		z-index: 3;
+	}
+	.welcome-flow-trickster-text {
+		font-family: var(--font-mono);
+		font-size: 10px;
+		color: #ff8a7a;
+		text-transform: uppercase;
+		letter-spacing: 0.12em;
+		font-weight: 600;
 	}
 
 	.welcome-flow-head {
