@@ -102,12 +102,43 @@
 	});
 
 	// ── Invite hero ──────────────────────────────────────────────────
+	// Canonical, handle-based public URL. Matches the prototype
+	// (`screens.jsx:2226`: `https://vici.markets/i/${handle}`). When
+	// the viewer has no nickname yet we fall back to a short principal
+	// slug so the preview is still readable.
+	const inviteHandle = $derived.by(() => {
+		const nickname = myProfile?.nickname?.trim();
+
+		if (nickname) {
+			return nickname.replace(/[^a-z0-9_.-]/gi, '').toLowerCase();
+		}
+
+		if (userPrincipal) {
+			return shortenWithMiddleEllipsis({ text: userPrincipal, splitLength: 4 }).replace(
+				/[^a-z0-9]/gi,
+				''
+			);
+		}
+
+		return undefined;
+	});
+	const inviteUrlDisplay = $derived(inviteHandle ? `vici.markets/i/${inviteHandle}` : undefined);
+	// Share payload keeps the `?ref=` query so the satellite attributes
+	// the bonus; only the on-screen preview uses the short canonical form.
 	const inviteUrl = $derived(
 		inviteCode && typeof window !== 'undefined'
 			? `${window.location.origin}/signup?ref=${inviteCode}`
 			: undefined
 	);
 	const bonusLabel = $derived(formatVxpBalance({ value: REFERRAL_BONUS_VXP }));
+
+	// Social-proof line above the invite buttons —
+	// `{N} friends joined · +{N*500} VXP earned`. The satellite doesn't
+	// yet expose a "referral redemptions" counter, so we approximate
+	// using the visible friends count as a reasonable lower-bound for
+	// the prototype parity; the bonus per redemption is fixed at 500 VXP.
+	const referralFriendsCount = $derived(activeRelations.length);
+	const referralVxpEarned = $derived(referralFriendsCount * 500);
 	let copied = $state(false);
 	let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -431,6 +462,26 @@
 			</span>
 		</p>
 
+		{#if referralFriendsCount > 0}
+			<div class="invite-proof num">
+				<span>
+					<b>{referralFriendsCount}</b>
+					{t({
+						locale: $localeStore,
+						key:
+							referralFriendsCount === 1
+								? 'social.friends.invite.proof_one'
+								: 'social.friends.invite.proof_many'
+					})}
+				</span>
+				<span class="invite-proof-dot" aria-hidden="true">·</span>
+				<span class="invite-proof-earned">
+					<b>+{referralVxpEarned.toLocaleString()}</b>
+					{t({ locale: $localeStore, key: 'social.friends.invite.proof_earned' })}
+				</span>
+			</div>
+		{/if}
+
 		<div class="invite-row">
 			<BaseButton
 				class="invite-share"
@@ -460,11 +511,12 @@
 			</BaseButton>
 		</div>
 
-		{#if inviteUrl}
+		{#if inviteUrlDisplay}
 			<div class="invite-url">
-				<!-- Plain mono URL preview — not user copy, just the
-				     link being shared. Stays untranslated. -->
-				<span class="num">{inviteUrl.replace(/^https?:\/\//, '')}</span>
+				<!-- Short canonical preview — `vici.markets/i/{handle}`.
+				     The actual shared payload still carries the `?ref=`
+				     query (`inviteUrl`) so attribution works. -->
+				<span class="num">{inviteUrlDisplay}</span>
 			</div>
 		{/if}
 	</section>
@@ -958,6 +1010,32 @@
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
+	}
+
+	.invite-proof {
+		display: inline-flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.4rem;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+	}
+
+	.invite-proof b {
+		color: var(--text-base);
+		font-weight: 700;
+	}
+
+	.invite-proof-dot {
+		color: var(--text-muted);
+	}
+
+	.invite-proof-earned {
+		color: var(--color-primary);
+	}
+
+	.invite-proof-earned b {
+		color: var(--color-primary);
 	}
 
 	.invite-row {
