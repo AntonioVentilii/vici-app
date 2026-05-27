@@ -28,6 +28,13 @@ const resolveTargetPrincipal = async ({
 }): Promise<PrincipalText> => {
 	const stripped = input.replace(/^@+/, '').trim();
 
+	// An input of just `@` (or whitespace) would otherwise fall through to
+	// `searchProfiles({ queryStr: '' })`, which matches every profile in the
+	// datastore — a needlessly heavy canister query from one malformed click.
+	if (stripped === '') {
+		throw new Error('not_found');
+	}
+
 	try {
 		const asPrincipal = Principal.fromText(stripped).toText();
 
