@@ -1,5 +1,14 @@
 <script lang="ts">
-	import { ArrowUp, Check, ChevronDown, Flame, Gift, Sparkles, X } from 'lucide-svelte/icons';
+	import {
+		ArrowDown,
+		ArrowUp,
+		Check,
+		ChevronDown,
+		Flame,
+		Gift,
+		Sparkles,
+		X
+	} from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -23,6 +32,7 @@
 	import type { Market } from '$lib/types/market';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { stageForStreak } from '$lib/utils/streak.utils';
 
 	type TimeWindow = '7d' | '30d' | '90d' | 'all';
 	type PastFilter = 'all' | 'won' | 'lost';
@@ -32,11 +42,39 @@
 	const totalTrades = $derived(profile?.totalTrades ?? 0);
 	const accuracyUnlocked = $derived(isAccuracyUnlocked(totalTrades));
 	const accuracyValue = $derived(profile?.accuracy ?? 0);
-	const accuracyPct = $derived(
-		profile && accuracyUnlocked ? Math.round(accuracyValue * 1000) / 10 : null
+	// Display percentage — always rendered. Users with 0 calls or
+	// pre-unlock see `0.0%` instead of an em-dash so the hero stays
+	// numeric per the prototype.
+	const accuracyPctDisplay = $derived(
+		profile && accuracyUnlocked ? Math.round(accuracyValue * 1000) / 10 : 0
 	);
 	const streakDays = $derived(profile?.dailyStreak ?? 0);
-	const callsToUnlock = $derived(Math.max(0, ACCURACY_GATE_CALLS - totalTrades));
+
+	// Marathon target (first achievement that requires a 30-day
+	// inferno streak). The streak card uses the next-stage threshold
+	// from `stageForStreak` for the progress bar — stages cap at
+	// `inferno` (30+ days), so the bar fills against 30.
+	const MARATHON_DAYS = 30;
+	const nextStageThreshold = $derived.by(() => {
+		const stage = stageForStreak(streakDays);
+
+		switch (stage) {
+			case 'spark':
+				return 3;
+			case 'ember':
+				return 7;
+			case 'flame':
+				return 15;
+			case 'blaze':
+				return 30;
+			default:
+				return MARATHON_DAYS;
+		}
+	});
+	const streakProgressPct = $derived(
+		Math.min(100, Math.round((streakDays / nextStageThreshold) * 100))
+	);
+	const daysToMarathon = $derived(Math.max(0, MARATHON_DAYS - streakDays));
 
 	// Per-user dash cache. Recomputed on mount so accuracy + category
 	// breakdown reflect any markets that resolved since the user signed
@@ -88,6 +126,31 @@
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
 	const totalWins = $derived(recentSettlements.filter((s) => s.win).length);
 	const totalLosses = $derived(recentSettlements.length - totalWins);
+
+	// Live session delta — accuracy points gained/lost vs the
+	// pre-session baseline. Mirrors the prototype: subtract the
+	// session's wins/calls from the lifetime totals to reconstruct
+	// the prior accuracy, then diff. Returns `null` when we can't
+	// compute a meaningful prior (no prior calls or no session).
+	const sessionDelta = $derived.by<number | null>(() => {
+		const sessionCount = recentSettlements.length;
+
+		if (sessionCount === 0) {
+			return null;
+		}
+
+		const sessionWins = recentSettlements.filter((s) => s.win).length;
+		const priorCalls = totalTrades - sessionCount;
+
+		if (priorCalls < 1) {
+			return null;
+		}
+
+		const priorWins = Math.max(0, Math.round(accuracyValue * totalTrades) - sessionWins);
+		const priorAcc = priorWins / priorCalls;
+
+		return Math.round((accuracyValue - priorAcc) * 1000) / 10;
+	});
 
 	const filteredHistory = $derived(
 		recentSettlements.filter((s) => {
@@ -283,16 +346,44 @@
 		<h2 class="dash-title">{t({ locale: $localeStore, key: 'dash.title' })}</h2>
 	</header>
 
-	<!-- Accuracy hero: big number + session delta + 30d anchor + streak inline. -->
+	<!-- Accuracy hero: big number + session delta + 30d anchor. The
+	     percentage always renders (0.0% for empty state) per the
+	     prototype; the eyebrow stays below the figure baseline-aligned. -->
 	<section class="dash-hero" aria-labelledby="dash-accuracy-eyebrow">
-		<span id="dash-accuracy-eyebrow" class="allcaps dash-ey">
-			{t({ locale: $localeStore, key: 'dash.accuracy.eyebrow' })}
-		</span>
-		{#if accuracyPct !== null}
+		<div class="dash-hero-num-row">
 			<div class="display-num dash-big">
-				{accuracyPct}<span class="dash-unit">%</span>
+				{accuracyPctDisplay.toFixed(1)}<span class="dash-unit">%</span>
 			</div>
-			<div class="dash-meta-row">
+			<span id="dash-accuracy-eyebrow" class="allcaps dash-ey dash-ey-hero">
+				{t({ locale: $localeStore, key: 'dash.accuracy.eyebrow' })}
+			</span>
+		</div>
+		<div class="dash-meta-row">
+			{#if !accuracyUnlocked || totalTrades === 0}
+				<span class="dash-first-session">
+					{t({ locale: $localeStore, key: 'dash.accuracy.first_session' })}
+				</span>
+				<span class="dash-anchor">
+					{t({ locale: $localeStore, key: 'dash.accuracy.global_anchor' })}
+				</span>
+			{:else if sessionDelta !== null}
+				{@const isPos = sessionDelta >= 0}
+				<span class="dash-delta" class:dash-delta-neg={!isPos} class:dash-delta-pos={isPos}>
+					{#if isPos}
+						<ArrowUp aria-hidden="true" size={10} strokeWidth={2.5} />
+					{:else}
+						<ArrowDown aria-hidden="true" size={10} strokeWidth={2.5} />
+					{/if}
+					{t({
+						locale: $localeStore,
+						key: isPos ? 'dash.accuracy.session_delta_pos' : 'dash.accuracy.session_delta_neg',
+						params: { value: isPos ? sessionDelta : Math.abs(sessionDelta) }
+					})}
+				</span>
+				<span class="dash-anchor">
+					{t({ locale: $localeStore, key: 'dash.accuracy.global_anchor' })}
+				</span>
+			{:else}
 				<span class="dash-delta dash-delta-neutral">
 					<Sparkles aria-hidden="true" size={10} strokeWidth={2} />
 					{nickname
@@ -306,46 +397,34 @@
 				<span class="dash-anchor">
 					{t({ locale: $localeStore, key: 'dash.accuracy.global_anchor' })}
 				</span>
-			</div>
-		{:else}
-			<div class="display-num dash-big dash-big-muted">
-				—<span class="dash-unit">%</span>
-			</div>
-			<div class="dash-meta-row">
-				<span class="dash-delta dash-delta-neutral">
-					{t({
-						locale: $localeStore,
-						key: 'dash.accuracy.locked',
-						params: { count: callsToUnlock }
-					})}
-				</span>
-			</div>
-		{/if}
+			{/if}
+		</div>
 
-		<div class="dash-streak-row">
-			<span class="dash-flame" aria-hidden="true">
-				<Flame size={20} strokeWidth={2} />
-			</span>
-			<div class="dash-streak-text">
-				<span class="dash-streak-big num">
-					{streakDays}
-					<span class="dash-streak-unit">
-						{streakDays === 1
-							? t({ locale: $localeStore, key: 'dash.streak.day_one' })
-							: t({ locale: $localeStore, key: 'dash.streak.day_many' })}
+		<div class="dash-streak-card">
+			<div class="dash-streak-pair">
+				<span class="dash-flame" aria-hidden="true">
+					<Flame size={20} strokeWidth={2} />
+				</span>
+				<div class="dash-streak-text">
+					<span class="dash-streak-big num">
+						{streakDays}
+						<span class="dash-streak-unit">
+							{streakDays === 1
+								? t({ locale: $localeStore, key: 'dash.streak.day_one' })
+								: t({ locale: $localeStore, key: 'dash.streak.day_many' })}
+						</span>
 					</span>
-				</span>
-				<span class="dash-streak-sub">
-					{t({
-						locale: $localeStore,
-						key: 'dash.streak.to_marathon',
-						params: { count: Math.max(0, 30 - streakDays) }
-					})}
-				</span>
+					<span class="dash-streak-sub">
+						{t({
+							locale: $localeStore,
+							key: 'dash.streak.longest_to_marathon',
+							params: { longest: streakDays, count: daysToMarathon }
+						})}
+					</span>
+				</div>
 			</div>
 			<div class="dash-streak-bar" aria-hidden="true">
-				<span style:width="{Math.min(100, (streakDays / 30) * 100)}%" class="dash-streak-fill"
-				></span>
+				<span style:width="{streakProgressPct}%" class="dash-streak-fill"></span>
 			</div>
 		</div>
 	</section>
@@ -439,7 +518,7 @@
 					key: `dash.window.${timeWindow}`
 				})}
 			</span>
-			<span class="dash-delta-pos">
+			<span class="dash-trend-pill">
 				<ArrowUp aria-hidden="true" size={10} strokeWidth={2.5} />
 				{t({ locale: $localeStore, key: 'dash.trend.delta' })}
 			</span>
@@ -817,11 +896,19 @@
 		padding: 1.5rem 1.25rem 1.25rem;
 	}
 
+	.dash-hero-num-row {
+		display: flex;
+		align-items: baseline;
+		gap: 0.625rem;
+		flex-wrap: wrap;
+	}
+
 	.dash-big {
 		display: flex;
 		align-items: baseline;
 		gap: 0.25rem;
 		font-size: 3.5rem;
+		font-weight: 700;
 		line-height: 1;
 		letter-spacing: -0.04em;
 		color: var(--text-base);
@@ -833,8 +920,8 @@
 		}
 	}
 
-	.dash-big-muted {
-		color: var(--text-muted);
+	.dash-ey-hero {
+		align-self: baseline;
 	}
 
 	.dash-unit {
@@ -858,7 +945,22 @@
 		font-weight: 600;
 	}
 
+	.dash-delta-pos {
+		color: var(--yes);
+	}
+
+	.dash-delta-neg {
+		color: var(--no);
+	}
+
 	.dash-delta-neutral {
+		color: var(--text-muted);
+	}
+
+	.dash-first-session {
+		font-family: var(--font-display, 'Tiempos Headline', Georgia, serif);
+		font-style: italic;
+		font-size: 0.8125rem;
 		color: var(--text-muted);
 	}
 
@@ -867,14 +969,21 @@
 		font-size: 11px;
 	}
 
-	.dash-streak-row {
-		display: grid;
-		grid-template-columns: auto 1fr auto;
+	.dash-streak-card {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-top: 0.75rem;
+		padding: 0.75rem;
+		border: 1px solid color-mix(in srgb, var(--laurel) 22%, transparent);
+		border-radius: 0.625rem;
+		background: color-mix(in srgb, var(--laurel) 6%, transparent);
+	}
+
+	.dash-streak-pair {
+		display: flex;
 		align-items: center;
 		gap: 0.75rem;
-		margin-top: 0.5rem;
-		padding: 0.625rem 0;
-		border-top: 1px solid var(--border-base);
 	}
 
 	.dash-flame {
@@ -890,14 +999,15 @@
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
+		flex: 1;
 	}
 
 	.dash-streak-big {
 		display: inline-flex;
 		align-items: baseline;
 		gap: 0.25rem;
-		font-size: 1.125rem;
-		font-weight: 600;
+		font-size: 1.25rem;
+		font-weight: 700;
 		color: var(--text-base);
 	}
 
@@ -913,7 +1023,7 @@
 	}
 
 	.dash-streak-bar {
-		width: 80px;
+		width: 100%;
 		height: 4px;
 		border-radius: 999px;
 		background: color-mix(in srgb, var(--text-muted) 18%, transparent);
@@ -1007,11 +1117,14 @@
 		color: var(--text-muted);
 	}
 
-	.dash-delta-pos {
+	.dash-trend-pill {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.25rem;
-		color: var(--yes);
+		padding: 2px 7px;
+		border-radius: var(--r-pill, 999px);
+		background: color-mix(in srgb, var(--laurel) 14%, transparent);
+		color: var(--laurel);
 		font-size: 11px;
 		font-weight: 600;
 		text-transform: none;
@@ -1036,21 +1149,26 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
+		background:
+			linear-gradient(180deg, color-mix(in srgb, var(--laurel) 9%, transparent), transparent 70%),
+			color-mix(in srgb, var(--bg-surface) 90%, transparent);
 	}
 
 	.dash-purpose {
+		font-family: var(--font-display, 'Tiempos Headline', Georgia, serif);
+		font-style: italic;
+		font-size: 0.8125rem;
 		color: var(--text-muted);
-		font-size: 11px;
 	}
 
 	.dash-balance {
 		display: flex;
 		align-items: baseline;
 		gap: 0.375rem;
-		font-size: 2rem;
-		font-weight: 600;
+		font-size: 2.25rem;
+		font-weight: 700;
 		letter-spacing: -0.03em;
-		color: var(--text-base);
+		color: var(--laurel);
 	}
 
 	.dash-balance-unit {
