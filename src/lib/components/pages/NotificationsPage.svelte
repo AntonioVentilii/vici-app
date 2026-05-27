@@ -8,7 +8,6 @@
 		Sparkles,
 		Swords,
 		Target,
-		TrendingUp,
 		UserPlus,
 		Users
 	} from 'lucide-svelte/icons';
@@ -57,13 +56,20 @@
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 		</button>
 		<h1 class="notifications-title">{t({ locale: $localeStore, key: 'notifications.title' })}</h1>
-		{#if $combinedInboxStore.length > 0}
-			<button class="notifications-mark-read allcaps" onclick={markAllInboxRead} type="button">
-				{t({ locale: $localeStore, key: 'notifications.mark_read' })}
-			</button>
-		{:else}
-			<span class="notifications-appbar-spacer" aria-hidden="true"></span>
-		{/if}
+		<!--
+			Mark-all-read is rendered unconditionally — matches the
+			prototype's appbar right slot (`screens.jsx:1392`). It is a
+			no-op when the inbox is empty, kept visible so the layout
+			doesn't reflow as notifications arrive.
+		-->
+		<button
+			class="notifications-mark-read allcaps"
+			disabled={$combinedInboxStore.length === 0}
+			onclick={markAllInboxRead}
+			type="button"
+		>
+			{t({ locale: $localeStore, key: 'notifications.mark_read' })}
+		</button>
 	</header>
 
 	{#if $combinedInboxStore.length === 0}
@@ -82,7 +88,7 @@
 	{:else}
 		<ul class="notifications-list">
 			{#each $combinedInboxStore as notification (notification.id)}
-				{@const KindIcon = kindIcons[notification.kind] ?? TrendingUp}
+				{@const KindIcon = kindIcons[notification.kind] ?? Target}
 				<li class="notification-item" class:is-unread={notification.unread}>
 					{#if notification.href}
 						<a class="notification-card notification-card-link" href={notification.href}>
@@ -156,12 +162,13 @@
 		transition: color var(--d-hover) var(--ease-vici);
 	}
 
-	.notifications-mark-read:hover {
+	.notifications-mark-read:not(:disabled):hover {
 		color: var(--text-base);
 	}
 
-	.notifications-appbar-spacer {
-		width: 2.5rem;
+	.notifications-mark-read:disabled {
+		cursor: default;
+		opacity: 0.4;
 	}
 
 	.notifications-list {

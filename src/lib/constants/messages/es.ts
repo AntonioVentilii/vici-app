@@ -612,9 +612,9 @@ export const esMessages = {
 	'leaderboard.scope.week': 'Esta semana',
 	'leaderboard.you': 'Tú',
 	'leaderboard.loading': 'Calculando alfas...',
-	'leaderboard.row.streak': 'Racha: {count}d',
+	'leaderboard.row.streak': '{count}d de racha',
 	'leaderboard.sub': 'Ranking, amigos y actividad para quienes construyen un historial.',
-	'leaderboard.title': 'Social',
+	'leaderboard.title': 'Clasificación',
 	'leagues.action.create': 'Crear liga',
 	'leagues.action.join': 'Unirse por código',
 	'leagues.create.cancel': 'Cancelar',
@@ -979,9 +979,9 @@ export const esMessages = {
 	'nav.vision': 'Visión',
 	'notifications.back_flow': 'Volver a Flow',
 	'notifications.empty.body':
-		'Resoluciones, solicitudes de amistad y desafíos aparecen aquí. Haz algunas predicciones para empezar tu historial.',
+		'Resoluciones, invitaciones de liga y desafíos aparecen aquí. Haz algunas predicciones para empezar tu historial.',
 	'notifications.empty.title': 'Sin notificaciones nuevas.',
-	'notifications.mark_read': 'Marcar leídas',
+	'notifications.mark_read': 'Marcar todas como leídas',
 	'notifications.title': 'Notificaciones',
 	'onboarding.featured_event.upcoming': '{event} · empieza en {days} días',
 	'onboarding.markets.taylor_tour.title':
