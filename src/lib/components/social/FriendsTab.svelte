@@ -654,7 +654,7 @@
 						</button>
 					</li>
 				{/if}
-				<li>
+				<li class="ranked-li-you">
 					<div class="ranked-row ranked-row-you">
 						<span class="num ranked-num is-you">
 							{t({ locale: $localeStore, key: 'social.friends.ranked.you' })}
@@ -1290,8 +1290,12 @@
 	/* ── Ranked list ───────────────────────────────────────── */
 	/* Single unified card with internal dividers — proto pattern
 	   (`.friends-rank-list`, app.css:4285-4311 + 4407-4411). The
-	   sticky YOU row sits inside as the last `<li>`. */
+	   list is its own internal-scroll container (`overflow: auto;
+	   max-height: 60vh`) so the YOU `<li>` can stick to the bottom
+	   of the card on scroll, instead of being trapped by the page
+	   scroll context. */
 	.ranked-list {
+		position: relative;
 		display: flex;
 		flex-direction: column;
 		margin: 0;
@@ -1300,7 +1304,8 @@
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
 		background: var(--bg-popover);
-		overflow: hidden;
+		overflow: auto;
+		max-height: 60vh;
 	}
 
 	.ranked-list > li + li {
@@ -1327,11 +1332,20 @@
 
 	/* Sticky YOU row — pinned to the bottom edge of the rank list
 	   with a gold-tinted backdrop blur. Mirrors proto's
-	   `.friends-rank-row-you` (app.css:4396-4406). */
-	.ranked-row-you {
+	   `.friends-rank-row-you` (app.css:4396-4406).
+	   `position: sticky` lives on the `<li>` wrapper (not the
+	   inner `<div>`): a sticky element is constrained by its
+	   containing block, and the `<li>` is a direct child of the
+	   scrollable `.ranked-list` — putting sticky on the inner
+	   `<div>` would constrain it to the `<li>`'s own height, which
+	   is the row itself, so no visible sticking. */
+	.ranked-li-you {
 		position: sticky;
 		bottom: 0;
 		z-index: 2;
+	}
+
+	.ranked-row-you {
 		background: color-mix(in srgb, var(--color-primary) 10%, var(--bg-popover));
 		backdrop-filter: blur(8px);
 		-webkit-backdrop-filter: blur(8px);
