@@ -230,16 +230,19 @@
 	const hiddenRankedCount = $derived(Math.max(0, rankedFriends.length - visibleRanked.length));
 
 	const formatPct = (value: number): string => {
-		// `value` is a 0..1 probability/accuracy fraction (matches the
-		// satellite-side `points` accuracy contract; see `profile.schema.ts`).
-		// Render as a 1-decimal percent — `48.4%`.
-		const pct = Math.round(value * 1000) / 10;
+		// `value` is a 0..100 accuracy percentage — see
+		// `profile.services.ts` `calculateAndSyncStats`, which writes
+		// `(wins / settledCount) * 100`. Render with one decimal —
+		// `48.4%`.
+		const pct = Math.round(value * 10) / 10;
 
 		return `${pct}%`;
 	};
 
 	const formatH2h = (friendAccuracy: number): { value: string; ahead: boolean } => {
-		const diff = Math.round((myAccuracy - friendAccuracy) * 1000) / 10;
+		// Inputs are 0..100 percentages, so the diff is in
+		// percentage-point units already. One-decimal output.
+		const diff = Math.round((myAccuracy - friendAccuracy) * 10) / 10;
 		const ahead = diff >= 0;
 		const sign = ahead && diff !== 0 ? '+' : '';
 

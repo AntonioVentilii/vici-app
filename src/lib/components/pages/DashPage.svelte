@@ -59,8 +59,11 @@
 	const profile = $derived($userStore.profile);
 	const nickname = $derived(profile?.nickname ?? '');
 	const totalTrades = $derived(profile?.totalTrades ?? 0);
+	// `profile.accuracy` is persisted as a 0..100 percentage (see
+	// `profile.services.ts` `calculateAndSyncStats`). Render directly —
+	// multiplying by 100 here gave 10000% for a fully-accurate user.
 	const accuracyValue = $derived(profile?.accuracy ?? 0);
-	const accuracyPct = $derived((accuracyValue * 100).toFixed(1));
+	const accuracyPct = $derived(accuracyValue.toFixed(1));
 	const streak = $derived(profile?.dailyStreak ?? 0);
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);

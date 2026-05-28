@@ -139,9 +139,12 @@
 		return `${sign}${abs.toFixed(0)} ${VXP_TOKEN.symbol}`;
 	});
 
+	// `profile.accuracy` is persisted as a 0..100 percentage (see
+	// `profile.services.ts` `calculateAndSyncStats`). Render directly —
+	// multiplying by 100 here gave 10000% for a fully-accurate user.
 	const accuracyValue = $derived($userStore.profile?.accuracy ?? 0);
 
-	const accuracyDisplay = $derived(`${(accuracyValue * 100).toFixed(1)}%`);
+	const accuracyDisplay = $derived(`${accuracyValue.toFixed(1)}%`);
 
 	// ── Active-call row helpers ──────────────────────────────────────
 
