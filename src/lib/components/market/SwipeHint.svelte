@@ -73,6 +73,19 @@
 </div>
 
 <style lang="postcss">
+	/* Hide the affordance rail on small screens — the gestures it
+	   labels (swipe left/right, tap, swipe up) eat vertical room that's
+	   scarce on phones, and the labels are noise once the cards are the
+	   only thing on screen. Desktop / wider viewports keep the rail as
+	   a discoverability cue. Breakpoint mirrors the FlowMode card-wrap
+	   sm breakpoint (640px) so the rail appears at the same width that
+	   the card layout switches modes. */
+	@media (max-width: 639px) {
+		:global(.swipe-hint) {
+			display: none;
+		}
+	}
+
 	/* Chevrons inherit from `app.css .swipe-hint*` — local rules below
 	   handle just the per-side rotation of the `lucide-svelte` icons so
 	   the down-chevron points outward (NO ⇒ left, YES ⇒ right) and the
