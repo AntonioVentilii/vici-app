@@ -188,8 +188,11 @@
 		rawTotal: 'get_trade_history RAW total',
 		rawSettled: 'get_trade_history RAW Settled',
 		resolvedCount: '$resolvedPositions',
-		marketsTotal: '$markets total'
+		marketsTotal: '$markets total',
+		marketsResolved: 'markets w/ status=Resolved'
 	} as const;
+
+	const debugResolvedMarkets = $derived($markets.filter((m) => m.status === 'Resolved'));
 
 	// Direct, unfiltered call to the clearing canister so we can tell
 	// whether Settled events are simply not coming back vs. being
@@ -399,11 +402,20 @@
 			<dd>{$resolvedPositions.length}</dd>
 			<dt>{DEBUG_LABELS.marketsTotal}</dt>
 			<dd>{$markets.length}</dd>
+			<dt>{DEBUG_LABELS.marketsResolved}</dt>
+			<dd>{debugResolvedMarkets.length}</dd>
 		</dl>
 		{#if debugRawSettled.length > 0}
 			<ul>
 				{#each debugRawSettled.slice(0, 5) as e (e.event_id)}
 					<li>{e.series_id} · qty {e.qty.toString()}</li>
+				{/each}
+			</ul>
+		{/if}
+		{#if debugResolvedMarkets.length > 0}
+			<ul>
+				{#each debugResolvedMarkets.slice(0, 5) as m (m.id)}
+					<li>resolved → {m.id} · outcome {m.outcome ?? '(none)'}</li>
 				{/each}
 			</ul>
 		{/if}
