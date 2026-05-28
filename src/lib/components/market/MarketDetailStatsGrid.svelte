@@ -5,6 +5,7 @@
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { formatDate, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
 	interface Props {
 		market: Market;
@@ -36,32 +37,22 @@
 
 	/**
 	 * Recover the user's side from the resolution event stream when the
-	 * live position is gone. Winners are direct: their side matches
-	 * `market.outcome`. For binary losers the side is the opposite
-	 * (well-defined: YES/NO is exclusive). Categorical losers stay
-	 * unknown because a single Settled event can't disambiguate which
-	 * losing outcome the user actually held.
+	 * live position is gone. Inference rules — winners' exact side,
+	 * binary losers' opposite side, categorical losers unknown — live
+	 * in `inferResolvedOutcomeId` so they stay aligned with the
+	 * Portfolio row helpers.
 	 */
 	const resolvedMyCall = $derived.by((): string | null => {
 		if (resolvedForMarket.length === 0) {
 			return null;
 		}
 
-		const winner = resolvedForMarket.find((r) => r.result === 'won');
+		// Prefer a winner (they carry the exact outcomeId) so the helper
+		// returns immediately; otherwise any entry works since the
+		// binary-loser fallback only depends on `market.outcome`.
+		const seed = resolvedForMarket.find((r) => r.result === 'won') ?? resolvedForMarket[0];
 
-		if (winner !== undefined && winner.outcomeId !== undefined) {
-			return winner.outcomeId;
-		}
-
-		if (market.payoffType === 'Binary' && market.outcome === 'YES') {
-			return 'NO';
-		}
-
-		if (market.payoffType === 'Binary' && market.outcome === 'NO') {
-			return 'YES';
-		}
-
-		return null;
+		return inferResolvedOutcomeId({ resolved: seed, market }) ?? null;
 	});
 
 	const myCall = $derived(userActivePosition?.outcomeId ?? resolvedMyCall);

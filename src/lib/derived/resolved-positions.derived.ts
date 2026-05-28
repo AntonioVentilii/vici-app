@@ -22,12 +22,17 @@ export const resolvedPositions: Readable<ResolvedPosition[]> = derived(
 
 		return $tradeHistory
 			.filter(isSettledEvent)
-			.map((event) =>
-				settledEventToResolvedPosition({
+			.map((event) => {
+				// Parse once and pass both pieces into the mapper so the
+				// validation cost is paid exactly once per event.
+				const marketId = parseMarketId(event.series_id);
+
+				return settledEventToResolvedPosition({
 					event,
-					market: marketById.get(parseMarketId(event.series_id))
-				})
-			)
+					marketId,
+					market: marketById.get(marketId)
+				});
+			})
 			.sort((a, b) => {
 				// bigint compare without losing precision through Number.
 				if (a.timestampNs === b.timestampNs) {

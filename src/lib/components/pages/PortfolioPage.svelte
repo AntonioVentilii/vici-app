@@ -32,6 +32,7 @@
 	} from '$lib/utils/playground-display.utils';
 	import { calculatePositionPnL, positionEntryProbability } from '$lib/utils/portfolio.utils';
 	import { refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
+	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
 	/**
 	 * Portfolio — visual parity with the V1.2 prototype's PortfolioScreen.
@@ -205,21 +206,14 @@
 		});
 
 	/**
-	 * Display side label for a resolved row. Winners have a recoverable
-	 * `outcomeId`; binary losers' side is deterministically the opposite
-	 * of `market.outcome`; categorical losers can't be disambiguated from
-	 * a single event so they render as the em-dash.
+	 * Display side label for a resolved row. Side-inference rules live in
+	 * `inferResolvedOutcomeId` — see that helper for the per-payoff-type
+	 * fallback behavior (binary losers map to the opposite outcome,
+	 * categorical losers stay unknown).
 	 */
 	const resolvedSideLabel = (resolved: ResolvedPosition): string => {
 		const market = getMarketById(resolved.marketId);
-
-		const outcomeId =
-			resolved.outcomeId ??
-			(market?.payoffType === 'Binary' && market.outcome === 'YES'
-				? 'NO'
-				: market?.payoffType === 'Binary' && market.outcome === 'NO'
-					? 'YES'
-					: undefined);
+		const outcomeId = inferResolvedOutcomeId({ resolved, market });
 
 		if (outcomeId === undefined) {
 			return EM_DASH;
@@ -229,19 +223,12 @@
 	};
 
 	/**
-	 * Maps a resolved-position outcomeId to the visual side-tag bucket
-	 * (yes / no / hold) used by the row chip styles.
+	 * Maps the inferred outcome to the visual side-tag bucket (yes / no /
+	 * hold) used by the row chip styles.
 	 */
 	const resolvedSideKey = (resolved: ResolvedPosition): 'yes' | 'no' | 'hold' => {
 		const market = getMarketById(resolved.marketId);
-
-		const outcomeId =
-			resolved.outcomeId ??
-			(market?.payoffType === 'Binary' && market.outcome === 'YES'
-				? 'NO'
-				: market?.payoffType === 'Binary' && market.outcome === 'NO'
-					? 'YES'
-					: undefined);
+		const outcomeId = inferResolvedOutcomeId({ resolved, market });
 
 		if (outcomeId === 'YES') {
 			return 'yes';

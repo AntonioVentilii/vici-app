@@ -11,7 +11,7 @@ import type { InboxNotification } from '$lib/types/inbox';
 import type { Relation } from '$lib/types/relation';
 import {
 	decimalFixedValueToNumber,
-	formatNanosecondsToDate,
+	formatRelativeAgoFromNs,
 	shortenWithMiddleEllipsis
 } from '$lib/utils/format.utils';
 import { t } from '$lib/utils/i18n.utils';
@@ -214,7 +214,7 @@ const settledInboxStore: Readable<InboxNotification[]> = derived(
 					key: bodyKey,
 					params: { amount, market: marketTitle }
 				}),
-				when: formatNanosecondsToDate({ nanoseconds: entry.timestampNs }),
+				when: formatRelativeAgoFromNs({ timestampNs: entry.timestampNs, locale: $locale }),
 				unread: !$read.has(entry.eventId),
 				href: `${AppPath.Markets}/${entry.marketId}`
 			};
@@ -240,11 +240,11 @@ export const combinedInboxUnreadCount: Readable<number> = derived(
 );
 
 /**
- * Override of the locally-defined `markAllInboxRead` declared above:
- * extend it so it also marks every currently-visible settled-event
- * card as read. We can't re-declare the constant, so the augmentation
- * happens by replacing the persisted/in-memory state for both the
- * seed-store side and the per-event side.
+ * Marks every currently-visible settled-event card as read by adding
+ * its `event_id` to the persisted per-event read set. Paired with
+ * `markAllSeedInboxRead` (which clears the seed/history layer) — see
+ * the `markAllInboxRead` public entry point further below for the
+ * combined behavior.
  */
 const markAllSettledRead = (): void => {
 	const visible = getStore(settledInboxStore);
