@@ -122,36 +122,35 @@
 		padding: 0 1.25rem 6rem;
 	}
 
-	/* Underline-active tab strip — matches the design source's
-	   `.social-tabs` (`screens.jsx:2523-2533`). Tabs are
-	   border-less labels; the active one carries a 2px accent
-	   underline below the text. No pill background, no border ring. */
+	/* Segmented-control tab strip: the container carries a tinted
+	   surface + border + radius; each tab flexes to share the row;
+	   the active one looks like a raised pill (bg-elevated + soft
+	   inset highlight + shadow). */
 	.social-tabs {
-		display: inline-flex;
-		gap: 1.25rem;
-		padding: 0 1rem 0;
-		border-bottom: 1px solid var(--border-base);
-		overflow-x: auto;
-		scrollbar-width: none;
-	}
-
-	.social-tabs::-webkit-scrollbar {
-		display: none;
+		display: flex;
+		gap: 4px;
+		padding: 3px;
+		background: color-mix(in srgb, var(--text-base) 5%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: 10px;
 	}
 
 	.social-tab {
 		appearance: none;
-		padding: 0.55rem 0.1rem 0.65rem;
+		flex: 1;
+		padding: 0.55rem 0.75rem;
 		font: inherit;
 		font-size: var(--t-13);
-		font-weight: 600;
+		font-weight: 500;
 		color: var(--text-muted);
 		background: transparent;
 		border: 0;
-		border-bottom: 2px solid transparent;
+		border-radius: 7px;
 		cursor: pointer;
 		white-space: nowrap;
-		transition: color 140ms ease;
+		transition:
+			background-color 200ms cubic-bezier(0.22, 1, 0.36, 1),
+			color 200ms cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	.social-tab:hover {
@@ -160,7 +159,15 @@
 
 	.social-tab.is-active {
 		color: var(--text-base);
-		border-bottom-color: var(--color-primary);
+		background: var(--bg-popover);
+		box-shadow:
+			0 1px 0 color-mix(in srgb, var(--text-base) 4%, transparent) inset,
+			0 1px 2px rgba(0, 0, 0, 0.16);
+	}
+
+	.social-tab:focus-visible {
+		outline: 2px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
+		outline-offset: 2px;
 	}
 
 	.social-panel {

@@ -44,20 +44,21 @@
 	 * standalone `/friends` route.
 	 *
 	 * Sections (top → bottom):
-	 *  1. Invite hero — +500 VXP eyebrow, monthly cap line, social-proof
-	 *     row when referrals are paid, Share + Copy CTA row.
-	 *  2. Pending invites — received requests, each expandable to
-	 *     Accept/Reject. (Sent requests sit under "Awaiting reply"
-	 *     further down — they're a strictly weaker signal than received.)
-	 *  3. Friends-ranked list — rank 01, 02, …, h2h accuracy delta chip,
+	 *  1. Invite hero — +500 VXP eyebrow, remaining-invites cap line,
+	 *     social-proof row when referrals are paid, Share + Copy CTA row.
+	 *  2. Outgoing invites — friend requests this user has sent that
+	 *     are still pending the recipient's first call.
+	 *  3. Incoming friend requests — each expandable to Accept / Reject.
+	 *  4. Friends-ranked list — rank 01, 02, …, h2h accuracy delta chip,
 	 *     sticky YOU row pinned at the bottom of the rank list.
-	 *  4. Friends feed — placeholder until a friend activity service
+	 *  5. Friends feed — placeholder until a friend activity service
 	 *     lands; today renders quiet serif-italic copy.
-	 *  5. Global ranking link — viewer's leaderboard rank with chevron;
-	 *     delta chip ⏭ deferred (no historical rank snapshot satellite-side).
-	 *  6. Friend mini-profile bottom sheet — opens on row tap; surfaces
+	 *  6. Global ranking link — viewer's leaderboard rank with chevron;
+	 *     rank-delta chip deferred until the satellite ships a
+	 *     historical-rank snapshot.
+	 *  7. Friend mini-profile bottom sheet — opens on row tap; surfaces
 	 *     stats + h2h accuracy delta + Remove.
-	 *  7. Add-by-handle bottom sheet — `@`-prefixed input. Today writes
+	 *  8. Add-by-handle bottom sheet — `@`-prefixed input. Today writes
 	 *     through to `sendFriendRequest` which expects a principal text;
 	 *     the visual handle prefix is the user-facing affordance until
 	 *     the satellite gains nickname-based lookup.
@@ -135,6 +136,7 @@
 	// the bonus per redemption is fixed at 500 VXP.
 	const referralFriendsCount = $derived(activeRelations.length);
 	const referralVxpEarned = $derived(referralFriendsCount * 500);
+	const referralsRemaining = $derived(Math.max(0, REFERRAL_MAX_PAID - referralFriendsCount));
 	let copied = $state(false);
 	let copyResetTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -457,7 +459,7 @@
 				{t({
 					locale: $localeStore,
 					key: 'social.friends.invite.cap_remaining',
-					params: { max: REFERRAL_MAX_PAID }
+					params: { remaining: referralsRemaining }
 				})}
 			</span>
 		</p>
@@ -522,7 +524,53 @@
 		{/if}
 	</section>
 
-	<!-- Pending received ───────────────────────────────────────── -->
+	<!-- Pending sent — outgoing invites still waiting on the recipient's
+	     first call. Sits directly under the invite hero. -->
+	{#if pendingSent.length > 0}
+		<section class="friends-section">
+			<header class="section-eyebrow">
+				<span>{t({ locale: $localeStore, key: 'social.friends.sent.eyebrow' })}</span>
+				<span class="num section-count">{pendingSent.length}</span>
+			</header>
+			<ul class="pending-list">
+				{#each pendingSent as doc (doc.key)}
+					{@const friendId = otherParticipant(doc.data)}
+					{@const profile = friendId ? friendProfiles.get(friendId) : undefined}
+					{@const isProcessing = processingKey === doc.key}
+					<li>
+						<div class="pending-row pending-row-sent">
+							<span class="pending-avatar">
+								<Avatar
+									class="h-full w-full"
+									avatar={profile?.avatar}
+									nickname={profile?.nickname}
+									owner={profile?.owner ?? friendId ?? ''}
+								/>
+							</span>
+							<span class="pending-copy">
+								<span class="pending-name">
+									@{profile?.nickname ??
+										t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
+								</span>
+								<span class="num pending-meta">
+									{friendId ? shortenWithMiddleEllipsis({ text: friendId, splitLength: 5 }) : ''}
+								</span>
+							</span>
+							<BaseButton
+								class="pending-cancel"
+								onclick={() => handleCancelSent(doc)}
+								status={isProcessing ? 'pending' : 'enabled'}
+							>
+								{t({ locale: $localeStore, key: 'social.friends.action.cancel' })}
+							</BaseButton>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{/if}
+
+	<!-- Incoming friend requests ────────────────────────────────── -->
 	{#if pendingReceived.length > 0}
 		<section class="friends-section">
 			<header class="section-eyebrow">
@@ -690,55 +738,6 @@
 			<p class="friends-empty-sub">
 				{t({ locale: $localeStore, key: 'social.friends.empty.sub' })}
 			</p>
-			<button class="ranked-add" onclick={openAddSheet} type="button">
-				<Plus size={12} strokeWidth={2} />
-				{t({ locale: $localeStore, key: 'social.friends.add.cta' })}
-			</button>
-		</section>
-	{/if}
-
-	<!-- Pending sent (less prominent than received) ─────────────── -->
-	{#if pendingSent.length > 0}
-		<section class="friends-section">
-			<header class="section-eyebrow">
-				<span>{t({ locale: $localeStore, key: 'social.friends.sent.eyebrow' })}</span>
-				<span class="num section-count">{pendingSent.length}</span>
-			</header>
-			<ul class="pending-list">
-				{#each pendingSent as doc (doc.key)}
-					{@const friendId = otherParticipant(doc.data)}
-					{@const profile = friendId ? friendProfiles.get(friendId) : undefined}
-					{@const isProcessing = processingKey === doc.key}
-					<li>
-						<div class="pending-row pending-row-sent">
-							<span class="pending-avatar">
-								<Avatar
-									class="h-full w-full"
-									avatar={profile?.avatar}
-									nickname={profile?.nickname}
-									owner={profile?.owner ?? friendId ?? ''}
-								/>
-							</span>
-							<span class="pending-copy">
-								<span class="pending-name">
-									@{profile?.nickname ??
-										t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
-								</span>
-								<span class="num pending-meta">
-									{friendId ? shortenWithMiddleEllipsis({ text: friendId, splitLength: 5 }) : ''}
-								</span>
-							</span>
-							<BaseButton
-								class="pending-cancel"
-								onclick={() => handleCancelSent(doc)}
-								status={isProcessing ? 'pending' : 'enabled'}
-							>
-								{t({ locale: $localeStore, key: 'social.friends.action.cancel' })}
-							</BaseButton>
-						</div>
-					</li>
-				{/each}
-			</ul>
 		</section>
 	{/if}
 
@@ -777,9 +776,8 @@
 						? `#${myRank}`
 						: t({ locale: $localeStore, key: 'social.friends.global.unranked' })}
 				</span>
-				<!-- ⏭ Rank delta deferred: no historical-rank snapshot on the
-				     satellite. When we land a `previousRank` field we'll
-				     surface ↑/↓ here. -->
+				<!-- Rank delta (↑/↓ N this week) deferred until the satellite
+				     ships a `previousRank` snapshot. -->
 			</span>
 		</span>
 		<ChevronRight aria-hidden="true" size={18} strokeWidth={1.6} />
@@ -957,8 +955,8 @@
 	}
 
 	/* ── Invite hero ────────────────────────────────────────── */
-	/* Mirrors prototype's `.friends-invite-hero` (app.css:4234) —
-	   accent gradient wash over the raised surface, gold-tinted border. */
+	/* Invite hero — accent gradient wash over the raised surface,
+	   gold-tinted border. */
 	.invite-hero {
 		display: flex;
 		flex-direction: column;
