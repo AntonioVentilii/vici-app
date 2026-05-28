@@ -697,6 +697,12 @@ export const itMessages = {
 	'inbox.friend_request.body': '{user} vuole connettersi.',
 	'inbox.friend_request.title': 'Richiesta di amicizia',
 	'inbox.pending': 'In sospeso',
+	'inbox.resolve.body.lost': 'Hai perso {amount} su "{market}".',
+	'inbox.resolve.body.neutral': 'La tua call su "{market}" si è risolta.',
+	'inbox.resolve.body.won': 'Hai vinto {amount} su "{market}".',
+	'inbox.resolve.title.lost': 'Mercato perso',
+	'inbox.resolve.title.neutral': 'Mercato risolto',
+	'inbox.resolve.title.won': 'Mercato vinto',
 	'info.back': 'Indietro',
 	'info.not_found.body':
 		'Nessun documento corrisponde a questo indirizzo. Prova un altro link nel footer o torna alla home.',

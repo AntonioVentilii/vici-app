@@ -1,28 +1,32 @@
 <script lang="ts">
-	import type { ClearingDid } from '$declarations';
+	import { USD_DECIMALS } from '$lib/constants/app.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
-	import type { Position } from '$lib/types/position';
+	import type { ResolvedPosition } from '$lib/types/position';
+	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { calculatePositionPnL } from '$lib/utils/portfolio.utils';
 
 	/**
 	 * Portfolio · Performance · 30D
 	 *
-	 * Builds a 30-day cumulative realised-PnL sparkline from `tradeHistory`
-	 * settled events on VXP markets, plus a header percentage delta
-	 * relative to the current VXP balance.
+	 * Builds a 30-day cumulative realised-PnL sparkline from the user's
+	 * `Settled` event stream on VXP markets, plus a header percentage
+	 * delta relative to the current VXP balance.
 	 *
-	 * Caller is responsible for passing only events that belong to the
-	 * signed-in user — `tradeHistory` derived store already scopes them.
+	 * Reads from `resolvedPositions` rather than joining `tradeHistory`
+	 * against live `positions`, because the clearing canister deletes
+	 * positions at settlement — joining there would silently drop every
+	 * historical resolution. Each `ResolvedPosition` already carries the
+	 * realized PnL (`realizedPnlUsd`, signed `cashflow_usd` in clearing
+	 * USD units) and the settlement timestamp, so we can attribute each
+	 * one directly to a day bucket.
 	 *
-	 * Renders nothing when there are no settled events in the window,
-	 * which keeps the Portfolio page tidy for new users.
+	 * Renders nothing when there are no settled VXP positions in the
+	 * window, which keeps the Portfolio page tidy for new users.
 	 */
 	interface Props {
-		tradeHistory: ClearingDid.Event[];
-		positions: Position[];
+		resolvedPositions: ResolvedPosition[];
 		markets: Market[];
 		vxpBalance: number;
 	}
@@ -33,65 +37,46 @@
 	const W = 320;
 	const H = 72;
 
-	const { tradeHistory, positions, markets, vxpBalance }: Props = $props();
+	const { resolvedPositions, markets, vxpBalance }: Props = $props();
 
 	const getMarketById = (id: string) => markets.find((m) => m.id === id);
 
 	/**
 	 * Per-day realised PnL across the 30-day window. Index 0 = today − 29,
-	 * index 29 = today.
-	 *
-	 * We iterate over Resolved positions (not over Settled events) and
-	 * attribute each position's `calculatePositionPnL` once, at the day of
-	 * its latest Settled event. This dedupes partial-settlement events that
-	 * the clearing engine may emit for the same series and avoids the
-	 * double-counting that "one PnL contribution per event" would produce.
-	 *
-	 * Trade-off: a position pruned from the store after settling will not
-	 * contribute. The clearing event payload doesn't carry cost basis, so
-	 * we can't recover historical PnL from events alone without it.
+	 * index 29 = today. One `ResolvedPosition` contributes once to the
+	 * day bucket of its settlement timestamp.
 	 */
 	const dailyPnl = $derived.by((): number[] => {
 		const buckets = new Array<number>(WINDOW_DAYS).fill(0);
 		const cutoffMs = Date.now() - WINDOW_DAYS * DAY_MS;
 		const todayStartMs = Math.floor(Date.now() / DAY_MS) * DAY_MS;
 
-		// Pre-index latest Settled event timestamp (ms) per series_id.
-		const latestSettledMsBySeries: Record<string, number> = {};
+		resolvedPositions.forEach((resolved) => {
+			const market = getMarketById(resolved.marketId);
+			const isVxpMarket = market !== undefined && market.token.symbol === VXP_TOKEN.symbol;
 
-		for (const event of tradeHistory) {
-			if ('Settled' in event.event_type) {
-				const tsMs = Number(event.timestamp / NS_PER_MS);
-				const current = latestSettledMsBySeries[event.series_id];
-
-				if (current === undefined || tsMs > current) {
-					latestSettledMsBySeries[event.series_id] = tsMs;
-				}
+			if (!isVxpMarket) {
+				return;
 			}
-		}
 
-		for (const position of positions) {
-			const market = getMarketById(position.marketId);
+			const tsMs = Number(resolved.timestampNs / NS_PER_MS);
 
-			if (
-				market !== undefined &&
-				market.status === 'Resolved' &&
-				market.token.symbol === VXP_TOKEN.symbol
-			) {
-				const tsMs = latestSettledMsBySeries[position.marketId];
-
-				if (tsMs !== undefined && tsMs >= cutoffMs) {
-					const dayIndex =
-						WINDOW_DAYS -
-						1 -
-						Math.floor((todayStartMs - Math.floor(tsMs / DAY_MS) * DAY_MS) / DAY_MS);
-
-					if (dayIndex >= 0 && dayIndex < WINDOW_DAYS) {
-						buckets[dayIndex] += calculatePositionPnL({ position, market });
-					}
-				}
+			if (tsMs < cutoffMs) {
+				return;
 			}
-		}
+
+			const dayIndex =
+				WINDOW_DAYS - 1 - Math.floor((todayStartMs - Math.floor(tsMs / DAY_MS) * DAY_MS) / DAY_MS);
+
+			if (dayIndex < 0 || dayIndex >= WINDOW_DAYS) {
+				return;
+			}
+
+			buckets[dayIndex] += decimalFixedValueToNumber({
+				value: resolved.realizedPnlUsd,
+				decimals: USD_DECIMALS
+			});
+		});
 
 		return buckets;
 	});

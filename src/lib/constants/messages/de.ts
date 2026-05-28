@@ -700,6 +700,12 @@ export const deMessages = {
 	'inbox.friend_request.body': '{user} möchte sich verbinden.',
 	'inbox.friend_request.title': 'Freundschaftsanfrage',
 	'inbox.pending': 'Ausstehend',
+	'inbox.resolve.body.lost': 'Du hast {amount} bei "{market}" verloren.',
+	'inbox.resolve.body.neutral': 'Deine Vorhersage zu "{market}" wurde aufgelöst.',
+	'inbox.resolve.body.won': 'Du hast {amount} bei "{market}" gewonnen.',
+	'inbox.resolve.title.lost': 'Markt verloren',
+	'inbox.resolve.title.neutral': 'Markt aufgelöst',
+	'inbox.resolve.title.won': 'Markt gewonnen',
 	'info.back': 'Zurück',
 	'info.not_found.body':
 		'Zu dieser Adresse passt kein Dokument. Versuche einen anderen Link im Footer oder kehre zur Startseite zurück.',

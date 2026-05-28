@@ -704,6 +704,12 @@ export const frMessages = {
 	'inbox.friend_request.body': '{user} veut se connecter.',
 	'inbox.friend_request.title': 'Demande d’ami',
 	'inbox.pending': 'En attente',
+	'inbox.resolve.body.lost': 'Vous avez perdu {amount} sur "{market}".',
+	'inbox.resolve.body.neutral': 'Votre prédiction sur "{market}" est résolue.',
+	'inbox.resolve.body.won': 'Vous avez gagné {amount} sur "{market}".',
+	'inbox.resolve.title.lost': 'Marché perdu',
+	'inbox.resolve.title.neutral': 'Marché résolu',
+	'inbox.resolve.title.won': 'Marché gagné',
 	'info.back': 'Retour',
 	'info.not_found.body':
 		'Aucun document ne correspond à cette adresse. Essayez un autre lien dans le pied de page ou retournez à l’accueil.',

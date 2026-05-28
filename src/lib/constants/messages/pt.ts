@@ -699,6 +699,12 @@ export const ptMessages = {
 	'inbox.friend_request.body': '{user} quer se conectar.',
 	'inbox.friend_request.title': 'Pedido de amizade',
 	'inbox.pending': 'Pendente',
+	'inbox.resolve.body.lost': 'Você perdeu {amount} em "{market}".',
+	'inbox.resolve.body.neutral': 'Sua previsão sobre "{market}" foi resolvida.',
+	'inbox.resolve.body.won': 'Você ganhou {amount} em "{market}".',
+	'inbox.resolve.title.lost': 'Mercado perdido',
+	'inbox.resolve.title.neutral': 'Mercado resolvido',
+	'inbox.resolve.title.won': 'Mercado ganho',
 	'info.back': 'Voltar',
 	'info.not_found.body':
 		'Nenhum documento corresponde a esse endereço. Tente outro link no rodapé ou volte para a página inicial.',

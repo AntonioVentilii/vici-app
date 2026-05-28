@@ -6,7 +6,7 @@
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
 	import PortfolioPerformanceCard from '$lib/components/portfolio/PortfolioPerformanceCard.svelte';
-	import { MILLISECOND_IN_NANOSECONDS, ZERO } from '$lib/constants/app.constants';
+	import { MILLISECOND_IN_NANOSECONDS, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
@@ -15,11 +15,15 @@
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { positions, positionsNotInitialized } from '$lib/derived/positions.derived';
-	import { tradeHistory, tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
+	import {
+		resolvedPositions,
+		resolvedPositionsNotInitialized
+	} from '$lib/derived/resolved-positions.derived';
+	import { tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
-	import type { Position } from '$lib/types/position';
+	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import {
@@ -27,7 +31,6 @@
 		formatVxpBalance
 	} from '$lib/utils/playground-display.utils';
 	import { calculatePositionPnL, positionEntryProbability } from '$lib/utils/portfolio.utils';
-	import { positionResolvedResult } from '$lib/utils/position.utils';
 	import { refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 
 	/**
@@ -62,7 +65,8 @@
 		$positionsNotInitialized ||
 			$tradeHistoryNotInitialized ||
 			$marketsNotInitialized ||
-			$ordersNotInitialized
+			$ordersNotInitialized ||
+			$resolvedPositionsNotInitialized
 	);
 
 	const onOrdersRefresh = () => {
@@ -72,12 +76,13 @@
 
 	const getMarketById = (id: string) => $markets.find((m) => m.id === id);
 
+	// Live positions whose market hasn't resolved yet. The clearing canister
+	// deletes positions on settlement, so anything still in `$positions` is
+	// by definition unresolved — but keep the explicit filter so a brief
+	// staleness window (positions seen before the market list catches up)
+	// can't show a settled row in the Active section.
 	const openPositions = $derived(
 		$positions.filter((pos) => getMarketById(pos.marketId)?.status !== 'Resolved')
-	);
-
-	const resolvedPositions = $derived(
-		$positions.filter((pos) => getMarketById(pos.marketId)?.status === 'Resolved')
 	);
 
 	// ── Hero VXP balance ─────────────────────────────────────────────
@@ -186,21 +191,77 @@
 	// ── Recent-history row helpers ───────────────────────────────────
 
 	/**
-	 * Approximate "Xd ago" / "Xh ago" timestamp for the Recent-history
-	 * block. We look up the most recent Settled event for the position's
-	 * market and format the gap from now. Falls back to a dash when no
-	 * settlement timestamp is available.
+	 * Realized PnL in VXP units (clearing-USD scale → number) for a
+	 * settled-event-derived row. Matches `formatPositionPnLWithOptionalUnit`
+	 * shape so the row formatter can stay symmetric with the Active list.
 	 */
-	const positionAgoDisplay = (pos: Position): string => {
-		const [event] = $tradeHistory
-			.filter((e) => 'Settled' in e.event_type && e.series_id === pos.marketId)
-			.sort((a, b) => Number(b.timestamp - a.timestamp));
+	const resolvedPnlNumber = (resolved: ResolvedPosition): number =>
+		decimalFixedValueToNumber({ value: resolved.realizedPnlUsd, decimals: USD_DECIMALS });
 
-		if (event === undefined) {
+	const formatResolvedRowPnl = (resolved: ResolvedPosition): string =>
+		formatPositionPnLWithOptionalUnit({
+			pnl: resolvedPnlNumber(resolved),
+			playground: $playgroundVxpUnitMode
+		});
+
+	/**
+	 * Display side label for a resolved row. Winners have a recoverable
+	 * `outcomeId`; binary losers' side is deterministically the opposite
+	 * of `market.outcome`; categorical losers can't be disambiguated from
+	 * a single event so they render as the em-dash.
+	 */
+	const resolvedSideLabel = (resolved: ResolvedPosition): string => {
+		const market = getMarketById(resolved.marketId);
+
+		const outcomeId =
+			resolved.outcomeId ??
+			(market?.payoffType === 'Binary' && market.outcome === 'YES'
+				? 'NO'
+				: market?.payoffType === 'Binary' && market.outcome === 'NO'
+					? 'YES'
+					: undefined);
+
+		if (outcomeId === undefined) {
 			return EM_DASH;
 		}
 
-		const tsMs = Number(event.timestamp / MILLISECOND_IN_NANOSECONDS);
+		return market?.outcomes?.find((o) => o.id === outcomeId)?.title ?? outcomeId;
+	};
+
+	/**
+	 * Maps a resolved-position outcomeId to the visual side-tag bucket
+	 * (yes / no / hold) used by the row chip styles.
+	 */
+	const resolvedSideKey = (resolved: ResolvedPosition): 'yes' | 'no' | 'hold' => {
+		const market = getMarketById(resolved.marketId);
+
+		const outcomeId =
+			resolved.outcomeId ??
+			(market?.payoffType === 'Binary' && market.outcome === 'YES'
+				? 'NO'
+				: market?.payoffType === 'Binary' && market.outcome === 'NO'
+					? 'YES'
+					: undefined);
+
+		if (outcomeId === 'YES') {
+			return 'yes';
+		}
+
+		if (outcomeId === 'NO') {
+			return 'no';
+		}
+
+		return 'hold';
+	};
+
+	/**
+	 * Approximate "Xd ago" / "Xh ago" timestamp for the Recent-history
+	 * block. Uses the Settled event's own `timestampNs` carried on the
+	 * `ResolvedPosition`; no fallback needed because the record exists
+	 * iff a Settled event produced it.
+	 */
+	const resolvedAgoDisplay = (resolved: ResolvedPosition): string => {
+		const tsMs = Number(resolved.timestampNs / MILLISECOND_IN_NANOSECONDS);
 		const diffMs = Date.now() - tsMs;
 		const HOUR_MS = 60 * 60 * 1000;
 		const DAY_MS = 24 * HOUR_MS;
@@ -281,20 +342,19 @@
 
 	<PortfolioPerformanceCard
 		markets={$markets}
-		positions={$positions}
-		tradeHistory={$tradeHistory}
+		resolvedPositions={$resolvedPositions}
 		vxpBalance={vxpBalanceNumber}
 	/>
 
 	<PortfolioAllocationCard marketTags={$marketTags} markets={$markets} positions={openPositions} />
 
-	{#if refreshing && openPositions.length === 0 && resolvedPositions.length === 0 && $orders.length === 0}
+	{#if refreshing && openPositions.length === 0 && $resolvedPositions.length === 0 && $orders.length === 0}
 		<section class="portfolio-section">
 			<div class="portfolio-skeleton"></div>
 			<div class="portfolio-skeleton"></div>
 			<div class="portfolio-skeleton"></div>
 		</section>
-	{:else if openPositions.length === 0 && resolvedPositions.length === 0 && $orders.length === 0}
+	{:else if openPositions.length === 0 && $resolvedPositions.length === 0 && $orders.length === 0}
 		<section class="portfolio-empty">
 			<p class="portfolio-empty-quote serif-italic">
 				{t({ locale: $localeStore, key: 'portfolio.empty.quote' })}
@@ -384,7 +444,7 @@
 			</section>
 		{/if}
 
-		{#if resolvedPositions.length > 0}
+		{#if $resolvedPositions.length > 0}
 			<section class="portfolio-section">
 				<header class="portfolio-section-head">
 					<h2 class="portfolio-section-title">
@@ -396,34 +456,31 @@
 				</header>
 
 				<ul class="portfolio-list">
-					{#each resolvedPositions as pos (`${pos.marketId}::${pos.outcomeId}`)}
-						{@const market = getMarketById(pos.marketId)}
-						{@const result = market
-							? (positionResolvedResult({ market, position: pos }) ?? 'neutral')
-							: 'neutral'}
-						{@const pnl = positionPnl(pos)}
-						{@const sideKey =
-							pos.outcomeId === 'YES' ? 'yes' : pos.outcomeId === 'NO' ? 'no' : 'hold'}
-						{@const resultKey = result === 'won' ? 'win' : result === 'lost' ? 'loss' : 'neutral'}
+					{#each $resolvedPositions as resolved (resolved.eventId)}
+						{@const market = getMarketById(resolved.marketId)}
+						{@const pnl = resolvedPnlNumber(resolved)}
+						{@const sideKey = resolvedSideKey(resolved)}
+						{@const resultKey =
+							resolved.result === 'won' ? 'win' : resolved.result === 'lost' ? 'loss' : 'neutral'}
 
 						<li>
-							<a class="portfolio-history-row" href="{AppPath.Markets}/{pos.marketId}">
+							<a class="portfolio-history-row" href="{AppPath.Markets}/{resolved.marketId}">
 								<div class="portfolio-history-body">
 									<div class="portfolio-history-title">
 										{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 									</div>
 									<div class="portfolio-history-meta">
 										<span class="portfolio-row-side portfolio-row-side-{sideKey}">
-											{sideLabel(pos)}
+											{resolvedSideLabel(resolved)}
 										</span>
-										<span class="num portfolio-history-ago">{positionAgoDisplay(pos)}</span>
+										<span class="num portfolio-history-ago">{resolvedAgoDisplay(resolved)}</span>
 									</div>
 								</div>
 								<div class="portfolio-history-end">
 									<span class="portfolio-history-result portfolio-history-result-{resultKey}">
-										{#if result === 'won'}
+										{#if resolved.result === 'won'}
 											{t({ locale: $localeStore, key: 'portfolio.row.win' })}
-										{:else if result === 'lost'}
+										{:else if resolved.result === 'lost'}
 											{t({ locale: $localeStore, key: 'portfolio.row.loss' })}
 										{:else}
 											{EM_DASH}
@@ -434,7 +491,7 @@
 										class:is-negative={pnl < 0}
 										class:is-positive={pnl >= 0}
 									>
-										{formatRowPnl(pos)}
+										{formatResolvedRowPnl(resolved)}
 									</span>
 								</div>
 							</a>

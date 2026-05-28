@@ -690,6 +690,12 @@ export const enMessages = {
 	'inbox.friend_request.body': '{user} wants to connect.',
 	'inbox.friend_request.title': 'Friend request',
 	'inbox.pending': 'Pending',
+	'inbox.resolve.body.lost': 'You lost {amount} on "{market}".',
+	'inbox.resolve.body.neutral': 'Your call on "{market}" resolved.',
+	'inbox.resolve.body.won': 'You won {amount} on "{market}".',
+	'inbox.resolve.title.lost': 'Market lost',
+	'inbox.resolve.title.neutral': 'Market resolved',
+	'inbox.resolve.title.won': 'Market won',
 	'info.back': 'Back',
 	'info.not_found.body':
 		'No document matches that address. Try one of the links in the footer or head back to the home page.',
