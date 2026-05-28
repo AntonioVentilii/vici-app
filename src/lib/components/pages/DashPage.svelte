@@ -44,6 +44,7 @@
 	import type { UserStatsDoc } from '$lib/types/user-stats';
 	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
 	type TimeWindow = '7d' | '30d' | '90d' | 'All';
@@ -71,9 +72,38 @@
 	let tw = $state<TimeWindow>('30d');
 	let pastFilter = $state<PastFilter>('all');
 
-	// VXP balance — drives the holdings hero number.
+	// VXP balance — drives the holdings hero number. The raw ICRC
+	// balance is in `VXP_TOKEN.decimals` micro-units; `formatVxpBalance`
+	// applies the decimals and the grouped-display convention so 1,234
+	// VXP doesn't render as "12,340,000".
 	const vxpBalance = $derived($balancesStore?.[VXP_TOKEN.id] ?? ZERO);
-	const balance = $derived(Number(vxpBalance));
+	const balanceDisplay = $derived(
+		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
+	);
+
+	// Backed = sum of locked collateral across the user's active positions
+	// on VXP-denominated markets. `lockedCollateral` is in clearing-USD
+	// micro-units (USD_DECIMALS = 4), which matches VXP_TOKEN.decimals,
+	// so the same `formatVxpBalance` helper renders them at the right
+	// scale without an extra conversion.
+	const backedRaw = $derived.by((): bigint =>
+		$positions.reduce<bigint>((acc, pos) => {
+			const market = marketById.get(pos.marketId);
+
+			if (market === undefined || market.token.symbol !== VXP_TOKEN.symbol) {
+				return acc;
+			}
+
+			return acc + pos.lockedCollateral;
+		}, ZERO)
+	);
+	const backedDisplay = $derived(formatVxpBalance({ value: backedRaw, decimals: USD_DECIMALS }));
+
+	// Lifetime = `profile.points`, the running XP/VXP accumulator the
+	// satellite credits per win + streak bonus. Stored as a whole number
+	// already; no decimal conversion needed.
+	const lifetimeRaw = $derived(profile?.points ?? 0);
+	const lifetimeDisplay = $derived(lifetimeRaw.toLocaleString());
 
 	// Positions + markets — used by the Active calls block. The
 	// "See all" count combines filled positions and resting limit
@@ -421,20 +451,20 @@
 					{t({ locale: $localeStore, key: 'dash.holdings.purpose' })}
 				</span>
 				<div class="dash-balance">
-					{balance.toLocaleString()}<span class="unit">VXP</span>
+					{balanceDisplay}<span class="unit">VXP</span>
 				</div>
 				<div class="dash-sub-stats">
 					<div class="dash-sub-stat">
 						<span class="lbl">
 							{t({ locale: $localeStore, key: 'dash.holdings.backed' })}
 						</span>
-						<span class="val">{EM_DASH}</span>
+						<span class="val">{backedDisplay}</span>
 					</div>
 					<div class="dash-sub-stat">
 						<span class="lbl">
 							{t({ locale: $localeStore, key: 'dash.holdings.lifetime' })}
 						</span>
-						<span class="val">{EM_DASH}</span>
+						<span class="val">{lifetimeDisplay}</span>
 					</div>
 					<div class="dash-sub-stat">
 						<span class="lbl">
