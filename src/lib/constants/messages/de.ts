@@ -1891,6 +1891,8 @@ export const deMessages = {
 	'worlds.picker.already_joined': 'Beigetreten',
 	'worlds.picker.clear': 'Löschen',
 	'worlds.picker.close': 'Schließen',
+	'worlds.picker.cta_country': 'Land wählen',
+	'worlds.picker.cta_university': 'Uni wählen',
 	'worlds.picker.empty': 'Keine Treffer. Versuche einen anderen Namen.',
 	'worlds.picker.error_already_affiliated': 'Du bist bereits auf dieser Bestenliste.',
 	'worlds.picker.error_timeout':

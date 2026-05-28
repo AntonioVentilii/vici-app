@@ -1885,6 +1885,8 @@ export const itMessages = {
 	'worlds.picker.already_joined': 'Già iscritto',
 	'worlds.picker.clear': 'Pulisci',
 	'worlds.picker.close': 'Chiudi',
+	'worlds.picker.cta_country': 'Scegli un paese',
+	'worlds.picker.cta_university': 'Scegli una scuola',
 	'worlds.picker.empty': 'Nessun risultato. Prova un altro nome.',
 	'worlds.picker.error_already_affiliated': 'Sei già in questa classifica.',
 	'worlds.picker.error_timeout': 'Non è andato a buon fine. Controlla la connessione e riprova.',

@@ -1893,6 +1893,8 @@ export const esMessages = {
 	'worlds.picker.already_joined': 'Ya inscrito',
 	'worlds.picker.clear': 'Borrar',
 	'worlds.picker.close': 'Cerrar',
+	'worlds.picker.cta_country': 'Elegir un país',
+	'worlds.picker.cta_university': 'Elegir una escuela',
 	'worlds.picker.empty': 'Sin resultados. Prueba otro nombre.',
 	'worlds.picker.error_already_affiliated': 'Ya estás en esta clasificación.',
 	'worlds.picker.error_timeout': 'No se completó. Revisa tu conexión y vuelve a intentarlo.',

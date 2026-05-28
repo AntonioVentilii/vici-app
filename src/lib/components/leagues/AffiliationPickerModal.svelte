@@ -13,23 +13,23 @@
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Affiliation picker modal. Searchable list of either universities
-	 * or countries, with a 90-day-lock heads-up on top. Selecting an
-	 * option commits via `joinAffiliation` (which server-validates the
-	 * lock + binds the caller).
+	 * Affiliation picker — full-bleed bottom sheet with a large
+	 * display-font title, a searchable roster, and a bottom-anchored
+	 * CTA pill. The caller chooses the `kind` (one sheet per
+	 * affiliation slot) — there's no in-sheet toggle.
 	 *
-	 * The inline grid on `WorldsPage` is fine for short rosters; this
-	 * modal is the canonical picker once the affiliation roster grows
-	 * past one screen.
+	 * Selection is a two-step gesture: tap a row to mark it, then tap
+	 * the CTA to commit via `joinAffiliation`. Same satellite path as
+	 * the inline grid on `WorldsPage`.
 	 */
 	interface Props {
 		isOpen: boolean;
 		kind: AffiliationKind;
 		/** Caller's currently-joined affiliations (best-effort). Used to
-		 *  mark the matching row as "Joined" and skip the satellite
-		 *  round-trip when the user taps it. The catch path still
-		 *  defends against stale state by detecting the
-		 *  `already-affiliated` reject from `joinAffiliation`. */
+		 *  surface the "you're already on this leaderboard" message
+		 *  without round-tripping when the user taps their current
+		 *  affiliation. The catch path still defends against stale state
+		 *  via the `already-affiliated` reject from `joinAffiliation`. */
 		current?: { university?: string; country?: string };
 		onClose: () => void;
 		onPicked?: () => void;
@@ -37,37 +37,27 @@
 
 	const { isOpen, kind, current, onClose, onPicked }: Props = $props();
 
-	// Initial kind is bound by the caller (e.g. WorldsPage picks a tab,
-	// ProfileDashboard picks an affiliation tile), but inside the sheet
-	// the user can toggle between University / Country via the
-	// segmented control. Callers gate this component behind
-	// `{#if pickerKind !== null}` so the sheet remounts when reopened
-	// — no prop-sync effect needed.
-	//
-	// `override` is `null` until the user taps the segmented control;
-	// `activeKind` falls back to the prop until then. This keeps the
-	// initial-value semantics clean and avoids the `state_referenced_locally`
-	// warning that would fire if we seeded `$state` directly from `kind`.
-	let override = $state<AffiliationKind | null>(null);
-	const activeKind = $derived<AffiliationKind>(override ?? kind);
-
 	const roster = $derived<readonly WorldsAffiliationOption[]>(
-		activeKind === 'university' ? WORLDS_UNIVERSITIES : WORLDS_COUNTRIES
+		kind === 'university' ? WORLDS_UNIVERSITIES : WORLDS_COUNTRIES
 	);
 
 	const titleKey = $derived<MessageKey>(
-		activeKind === 'university' ? 'worlds.picker.title_university' : 'worlds.picker.title_country'
+		kind === 'university' ? 'worlds.picker.title_university' : 'worlds.picker.title_country'
 	);
 	const subKey: MessageKey = 'worlds.picker.lock_hint';
 	const searchPlaceholderKey = $derived<MessageKey>(
-		activeKind === 'university' ? 'worlds.picker.search_university' : 'worlds.picker.search_country'
+		kind === 'university' ? 'worlds.picker.search_university' : 'worlds.picker.search_country'
+	);
+	const ctaKey = $derived<MessageKey>(
+		kind === 'university' ? 'worlds.picker.cta_university' : 'worlds.picker.cta_country'
 	);
 
 	let query = $state('');
-	let saving = $state<string | null>(null);
+	let selected = $state<string | null>(null);
+	let saving = $state(false);
 	let errorMessage = $state<string | null>(null);
 
-	const currentForKind = $derived<string | undefined>(current?.[activeKind]);
+	const currentForKind = $derived<string | undefined>(current?.[kind]);
 
 	const filtered = $derived.by(() => {
 		const trimmed = query.trim().toLowerCase();
@@ -84,27 +74,16 @@
 			.slice(0, 40);
 	});
 
-	const switchKind = (next: AffiliationKind) => {
-		if (next === activeKind) {
-			return;
-		}
-
-		override = next;
-		query = '';
+	const handleSelect = (option: WorldsAffiliationOption) => {
 		errorMessage = null;
-	};
-
-	const handlePick = async (option: WorldsAffiliationOption) => {
-		if (saving !== null) {
-			return;
-		}
 
 		// Tap on the already-joined row: surface the friendly "you're
-		// already on this leaderboard" message instead of round-tripping
-		// to the satellite just to throw `already-affiliated`. Defense
-		// in depth — the catch branch below handles the case where
-		// `current` is stale and the server is the one telling us.
+		// already on this leaderboard" message instead of letting the
+		// user commit and get rejected at the satellite. Defence in
+		// depth — `handleCommit` still catches the server `already-
+		// affiliated` reject for stale-state cases.
 		if (currentForKind !== undefined && currentForKind === option.id) {
+			selected = null;
 			errorMessage = t({
 				locale: $localeStore,
 				key: 'worlds.picker.error_already_affiliated'
@@ -113,20 +92,28 @@
 			return;
 		}
 
-		saving = option.id;
+		selected = selected === option.id ? null : option.id;
+	};
+
+	const handleCommit = async () => {
+		if (selected === null || saving) {
+			return;
+		}
+
+		saving = true;
 		errorMessage = null;
 
 		try {
-			await joinAffiliation({ kind: activeKind, affiliationIdentifier: option.id });
+			await joinAffiliation({ kind, affiliationIdentifier: selected });
 			onPicked?.();
 			onClose();
 		} catch (err) {
 			// Three branches that need distinct UI:
-			//  - "Already affiliated" — user double-tapped, or `current`
-			//    was stale and the server rejected. Show the friendly
-			//    "you're already on this leaderboard" copy.
-			//  - Timeout — service wrapped `getDoc`/`setDoc` in a 15s
-			//    race; the pick may or may not have committed.
+			//  - "Already affiliated" — `current` was stale and the
+			//    server rejected. Show the friendly "you're already on
+			//    this leaderboard" copy.
+			//  - Timeout — `joinAffiliation` wrapped the round-trip in a
+			//    15s race; the pick may or may not have committed.
 			//  - Anything else — generic fallback, error logged.
 			const message = err instanceof Error ? err.message : '';
 			const isAlreadyAffiliated = message.includes('Already affiliated');
@@ -141,12 +128,13 @@
 						: 'common.error.generic'
 			});
 		} finally {
-			saving = null;
+			saving = false;
 		}
 	};
 
 	const handleClose = () => {
 		query = '';
+		selected = null;
 		errorMessage = null;
 		onClose();
 	};
@@ -165,29 +153,6 @@
 				<X size={14} strokeWidth={1.8} />
 			</button>
 		</header>
-
-		<div class="affil-picker-kind" role="tablist">
-			<button
-				class="affil-picker-kind-btn"
-				class:is-active={activeKind === 'university'}
-				aria-selected={activeKind === 'university'}
-				onclick={() => switchKind('university')}
-				role="tab"
-				type="button"
-			>
-				{t({ locale: $localeStore, key: 'worlds.picker.kind_university' })}
-			</button>
-			<button
-				class="affil-picker-kind-btn"
-				class:is-active={activeKind === 'country'}
-				aria-selected={activeKind === 'country'}
-				onclick={() => switchKind('country')}
-				role="tab"
-				type="button"
-			>
-				{t({ locale: $localeStore, key: 'worlds.picker.kind_country' })}
-			</button>
-		</div>
 
 		<p class="affil-picker-hint serif-italic">
 			{t({ locale: $localeStore, key: subKey })}
@@ -224,28 +189,26 @@
 			{:else}
 				{#each filtered as option (option.id)}
 					{@const isJoined = currentForKind === option.id}
+					{@const isSelected = selected === option.id}
 					<li>
 						<button
 							class="affil-picker-row"
 							class:is-joined={isJoined}
+							class:is-selected={isSelected}
 							aria-current={isJoined ? 'true' : undefined}
-							disabled={saving === option.id}
-							onclick={() => handlePick(option)}
+							aria-pressed={isSelected}
+							onclick={() => handleSelect(option)}
 							type="button"
 						>
 							<span class="affil-picker-glyph" aria-hidden="true">
-								{#if activeKind === 'country'}
+								{#if kind === 'country'}
 									<CountryFlag class="affil-picker-flag" countryCode={option.id} />
 								{:else}
 									{option.glyph}
 								{/if}
 							</span>
 							<span class="affil-picker-name">{option.name}</span>
-							{#if saving === option.id}
-								<span class="num allcaps affil-picker-saving">
-									{t({ locale: $localeStore, key: 'worlds.cta.joining' })}
-								</span>
-							{:else if isJoined}
+							{#if isJoined}
 								<span class="num allcaps affil-picker-joined">
 									{t({ locale: $localeStore, key: 'worlds.picker.already_joined' })}
 								</span>
@@ -259,6 +222,19 @@
 		{#if errorMessage}
 			<p class="affil-picker-error" role="alert">{errorMessage}</p>
 		{/if}
+
+		<button
+			class="affil-picker-cta"
+			disabled={selected === null || saving}
+			onclick={handleCommit}
+			type="button"
+		>
+			{#if saving}
+				{t({ locale: $localeStore, key: 'worlds.cta.joining' })}
+			{:else}
+				{t({ locale: $localeStore, key: ctaKey })}
+			{/if}
+		</button>
 	</div>
 </BottomSheet>
 
@@ -272,7 +248,7 @@
 
 	.affil-picker-head {
 		display: flex;
-		align-items: baseline;
+		align-items: flex-start;
 		justify-content: space-between;
 		gap: 0.6rem;
 	}
@@ -280,8 +256,10 @@
 	.affil-picker-title {
 		margin: 0;
 		font-family: var(--font-display);
-		font-size: var(--t-18, 1.15rem);
+		font-size: var(--t-32, 2rem);
 		font-weight: 600;
+		line-height: 1.1;
+		letter-spacing: var(--tracking-tight);
 		color: var(--text-base);
 	}
 
@@ -290,44 +268,14 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 28px;
-		height: 28px;
-		background: none;
+		width: 32px;
+		height: 32px;
+		flex-shrink: 0;
+		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-pill);
 		color: var(--text-muted);
 		cursor: pointer;
-	}
-
-	.affil-picker-kind {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.25rem;
-		padding: 0.2rem;
-		background: color-mix(in srgb, var(--bg-surface) 80%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-	}
-
-	.affil-picker-kind-btn {
-		appearance: none;
-		padding: 0.45rem 0.9rem;
-		font: inherit;
-		font-size: var(--t-12);
-		font-weight: 600;
-		color: var(--text-muted);
-		background: none;
-		border: none;
-		border-radius: var(--r-pill);
-		cursor: pointer;
-		transition:
-			background 140ms ease,
-			color 140ms ease;
-	}
-
-	.affil-picker-kind-btn.is-active {
-		color: var(--text-on-accent, var(--ink, #fff));
-		background: var(--laurel);
 	}
 
 	.affil-picker-hint {
@@ -372,64 +320,68 @@
 	}
 
 	.affil-picker-list {
-		max-height: 40vh;
+		max-height: 38vh;
 		overflow-y: auto;
 		list-style: none;
 		padding: 0;
 		margin: 0;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-	}
-
-	.affil-picker-list > li + li {
-		border-top: 1px solid color-mix(in srgb, var(--border-base) 60%, transparent);
 	}
 
 	.affil-picker-row {
 		appearance: none;
 		display: flex;
 		align-items: center;
-		gap: 0.7rem;
+		gap: 0.75rem;
 		width: 100%;
-		padding: 0.7rem 0.85rem;
+		padding: 0.7rem 0.5rem;
 		font: inherit;
 		text-align: left;
 		color: var(--text-base);
 		background: none;
 		border: none;
+		border-bottom: 1px solid color-mix(in srgb, var(--border-base) 60%, transparent);
 		cursor: pointer;
 		transition: background 140ms ease;
 	}
 
-	.affil-picker-row:hover:not(:disabled) {
+	.affil-picker-row:hover {
 		background: color-mix(in srgb, var(--laurel) 8%, var(--bg-surface));
+	}
+
+	.affil-picker-row.is-selected {
+		background: color-mix(in srgb, var(--laurel) 14%, var(--bg-surface));
 	}
 
 	.affil-picker-row.is-joined {
 		background: color-mix(in srgb, var(--laurel) 10%, var(--bg-surface));
 	}
 
-	.affil-picker-row:disabled {
-		opacity: 0.55;
-		cursor: not-allowed;
+	.affil-picker-glyph {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 36px;
+		height: 36px;
+		flex-shrink: 0;
+		border-radius: var(--r-8);
+		background: var(--bg-surface);
+		font-family: var(--font-mono);
+		font-size: 0.85rem;
+		font-weight: 700;
+		overflow: hidden;
 	}
 
-	.affil-picker-glyph {
-		font-size: 1.15rem;
-		min-width: 36px;
-		text-align: center;
-		font-weight: 700;
+	.affil-picker :global(.affil-picker-flag) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
 	}
 
 	.affil-picker-name {
 		flex: 1;
 		font-size: var(--t-14);
-		font-weight: 500;
-	}
-
-	.affil-picker-saving {
-		font-size: var(--t-10, 0.65rem);
-		color: var(--text-muted);
+		font-weight: 600;
 	}
 
 	.affil-picker-joined {
@@ -452,5 +404,25 @@
 		background: color-mix(in srgb, var(--no-wash, var(--no)) 14%, transparent);
 		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
 		border-radius: var(--r-12);
+	}
+
+	.affil-picker-cta {
+		appearance: none;
+		width: 100%;
+		padding: 0.95rem 1rem;
+		font: inherit;
+		font-size: var(--t-14);
+		font-weight: 700;
+		color: var(--ink, #0e0d0b);
+		background: var(--color-primary);
+		border: 0;
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition: opacity 140ms ease;
+	}
+
+	.affil-picker-cta:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
 	}
 </style>

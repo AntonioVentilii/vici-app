@@ -1883,6 +1883,8 @@ export const ptMessages = {
 	'worlds.picker.already_joined': 'Já inscrito',
 	'worlds.picker.clear': 'Limpar',
 	'worlds.picker.close': 'Fechar',
+	'worlds.picker.cta_country': 'Escolher um país',
+	'worlds.picker.cta_university': 'Escolher uma escola',
 	'worlds.picker.empty': 'Sem resultados. Tente outro nome.',
 	'worlds.picker.error_already_affiliated': 'Você já está neste ranking.',
 	'worlds.picker.error_timeout': 'Não foi enviado. Verifique sua conexão e tente novamente.',

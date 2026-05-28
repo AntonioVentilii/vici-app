@@ -1792,6 +1792,8 @@ export const zhCnMessages = {
 	'worlds.picker.already_joined': '已加入',
 	'worlds.picker.clear': '清除',
 	'worlds.picker.close': '关闭',
+	'worlds.picker.cta_country': '选一个国家',
+	'worlds.picker.cta_university': '选一所学校',
 	'worlds.picker.empty': '没有结果。换个名字试试。',
 	'worlds.picker.error_already_affiliated': '你已经在这个排行榜上了。',
 	'worlds.picker.error_timeout': '没有提交成功。检查网络后再试一次。',

@@ -1912,6 +1912,8 @@ export const enMessages = {
 	'worlds.picker.already_joined': 'Joined',
 	'worlds.picker.clear': 'Clear',
 	'worlds.picker.close': 'Close',
+	'worlds.picker.cta_country': 'Pick a country',
+	'worlds.picker.cta_university': 'Pick a school',
 	'worlds.picker.empty': 'No matches. Try a different name.',
 	'worlds.picker.error_already_affiliated': "You're already on this leaderboard.",
 	'worlds.picker.error_timeout': "That didn't go through. Check your connection and tap again.",

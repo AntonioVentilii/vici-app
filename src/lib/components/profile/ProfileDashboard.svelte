@@ -30,18 +30,9 @@
 	interface Props {
 		profile: UserProfile;
 		viewerPrincipal?: string;
-		/**
-		 * Profile doc creation timestamp in nanoseconds (the Juno `Doc.created_at`).
-		 * When provided, the dashboard renders a "Joined" line. The page-level
-		 * loader is responsible for reading the raw doc via Juno's SDK and
-		 * passing this through; we keep the dashboard ignorant of the satellite
-		 * surface so the same component can be rendered against a synthetic
-		 * shell (no doc yet) without crashing.
-		 */
-		joinedAtNs?: bigint;
 	}
 
-	const { profile, viewerPrincipal, joinedAtNs }: Props = $props();
+	const { profile, viewerPrincipal }: Props = $props();
 
 	const isOwnProfile = $derived(viewerPrincipal === profile.owner);
 
@@ -304,30 +295,6 @@
 	});
 
 	const globalRankDisplay = $derived(globalRank === undefined ? '—' : `#${globalRank}`);
-
-	/**
-	 * Joined date — derived from the Juno doc's `created_at` (ns).
-	 * Hidden when the profile is a synthetic shell (no persisted doc yet).
-	 */
-	const joinedLabel = $derived.by(() => {
-		if (joinedAtNs === undefined) {
-			return null;
-		}
-
-		const ms = Number(joinedAtNs / 1_000_000n);
-		const date = new Date(ms);
-
-		try {
-			const formatter = new Intl.DateTimeFormat($localeStore, {
-				month: 'short',
-				year: 'numeric'
-			});
-
-			return formatter.format(date);
-		} catch {
-			return date.toISOString().slice(0, 7);
-		}
-	});
 
 	/**
 	 * Compact lifetime stats line — "{calls} calls · {accuracy}% accuracy".
@@ -651,22 +618,26 @@
 			</button>
 
 			<div class="profile-identity-meta">
-				<!-- Row 1: handle · VXP balance chip · edit pencil -->
+				<!-- Row 1: handle · VXP balance chip.
+				     The handle doubles as the rename affordance (own
+				     profile only); the avatar carries the pencil glyph,
+				     so a second inline pencil was redundant noise. -->
 				<div class="profile-handle-row">
-					<h1 class="profile-handle">@{profile.nickname}</h1>
-					<span class="num profile-vxp-chip" aria-label={vxpBalanceLabel}>
-						{vxpBalanceLabel}
-					</span>
 					{#if isOwnProfile}
 						<button
-							class="profile-edit-btn"
+							class="profile-handle profile-handle-btn"
 							aria-label={t({ locale: $localeStore, key: 'profile.dashboard.edit_profile' })}
 							onclick={openEditProfile}
 							type="button"
 						>
-							<Pencil aria-hidden="true" size={14} strokeWidth={1.8} />
+							@{profile.nickname}
 						</button>
+					{:else}
+						<h1 class="profile-handle">@{profile.nickname}</h1>
 					{/if}
+					<span class="num profile-vxp-chip" aria-label={vxpBalanceLabel}>
+						{vxpBalanceLabel}
+					</span>
 				</div>
 
 				<!-- Row 2: school + country chip(s) BELOW the handle.
@@ -743,16 +714,6 @@
 						</span>
 					{/if}
 				</p>
-
-				{#if joinedLabel !== null}
-					<p class="profile-joined-line">
-						{t({
-							locale: $localeStore,
-							key: 'profile.dashboard.joined',
-							params: { date: joinedLabel }
-						})}
-					</p>
-				{/if}
 			</div>
 		</div>
 
@@ -1154,6 +1115,23 @@
 		white-space: nowrap;
 	}
 
+	.profile-handle-btn {
+		appearance: none;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		text-align: left;
+		cursor: pointer;
+		font: inherit;
+		font-size: var(--t-18);
+		font-weight: 700;
+		letter-spacing: var(--tracking-tight);
+	}
+
+	.profile-handle-btn:hover {
+		color: var(--color-primary);
+	}
+
 	.profile-archetype-chip {
 		display: inline-flex;
 		align-items: center;
@@ -1233,6 +1211,26 @@
 		opacity: 0.85;
 	}
 
+	/* Country-flag SVG inside the inline chip — keep it pill-height so the
+	   chip reads at the same scale as the school chip. Without this rule
+	   the flag falls back to its native SVG size and explodes the row. */
+	.profile-dashboard :global(.profile-country-flag) {
+		display: inline-block;
+		width: 14px;
+		height: 10px;
+		border-radius: 2px;
+		object-fit: cover;
+	}
+
+	/* Country-flag SVG inside the four-slot tile — fills the same 1.6rem
+	   square as the alphabetic glyph so the row geometry is stable. */
+	.profile-dashboard :global(.affil-slot-flag) {
+		width: 100%;
+		height: 100%;
+		border-radius: var(--r-8);
+		object-fit: cover;
+	}
+
 	.profile-streak-inline {
 		display: inline-flex;
 		align-items: center;
@@ -1276,23 +1274,6 @@
 		color: var(--no);
 	}
 
-	.profile-edit-btn {
-		display: inline-flex;
-		width: 1.5rem;
-		height: 1.5rem;
-		align-items: center;
-		justify-content: center;
-		border: 0;
-		border-radius: 999px;
-		background: transparent;
-		color: var(--text-muted);
-		cursor: pointer;
-	}
-
-	.profile-edit-btn:hover {
-		color: var(--color-primary);
-	}
-
 	.profile-stats-line {
 		margin: 0;
 		display: flex;
@@ -1302,18 +1283,6 @@
 		font-family: var(--font-mono);
 		font-size: var(--t-12);
 		letter-spacing: 0.02em;
-	}
-
-	.profile-joined-line {
-		margin: 0;
-		display: flex;
-		align-items: center;
-		gap: 0.35rem;
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-12);
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
 	}
 
 	.profile-level-row {
