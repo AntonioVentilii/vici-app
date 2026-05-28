@@ -395,15 +395,11 @@
 		>
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 		</button>
+		<h1 class="settings-appbar-title">
+			{t({ locale: $localeStore, key: 'settings.title' })}
+		</h1>
 		<span class="settings-appbar-spacer" aria-hidden="true"></span>
 	</header>
-
-	<!-- Display-font hero title below the back-arrow row.
-	     The title in the appbar slot read as too small for a
-	     top-level settings surface. -->
-	<h1 class="settings-hero-title display">
-		{t({ locale: $localeStore, key: 'settings.title' })}
-	</h1>
 
 	<div class="settings-body">
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.account' })}>
@@ -891,23 +887,20 @@
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.25rem 0 1rem;
+		padding: 1.25rem 0 1rem;
 	}
 
-	/* Display-font hero title — sits below the back-arrow row and
-	   reads as a primary surface heading instead of a compact appbar
-	   label. Sized to a ~40 px serif/italic beat. */
-	.settings-hero-title {
-		margin: 0.25rem 0 1rem;
-		padding: 0 0.25rem;
-		font-size: clamp(2rem, 8vw, 2.75rem);
-		font-weight: 400;
-		font-style: italic;
-		font-family: var(--font-serif, var(--font-display, serif));
-		letter-spacing: -0.01em;
-		line-height: 1.1;
+	.settings-appbar-title {
+		margin: 0;
+		font-size: var(--t-44);
+		font-weight: 600;
+		line-height: 1;
+		letter-spacing: var(--tracking-tight);
 		color: var(--text-base);
-		text-align: left;
+		text-align: center;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.settings-appbar-spacer {

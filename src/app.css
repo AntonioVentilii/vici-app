@@ -597,6 +597,7 @@ html[data-app='1'] body {
 	 * narrower 28rem with `.app-shell-content--narrow`. */
 	.app-shell-content {
 		max-width: 64rem;
+		padding-top: clamp(1.5rem, 3vw, 2.5rem);
 		padding-left: clamp(1.25rem, 4vw, 2rem);
 		padding-right: clamp(1.25rem, 4vw, 2rem);
 	}
@@ -1551,7 +1552,7 @@ html[data-app='1'] body {
 /* Appbar */
 .appbar {
 	flex: 0 0 auto;
-	padding: 8px 20px 12px;
+	padding: 20px 20px 12px;
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -2285,7 +2286,7 @@ html[data-app='1'] body {
 
 /* ─── Hero ─── */
 .dash-hero {
-	padding: 22px 18px 18px;
+	padding: 22px 20px 18px;
 	border-bottom: 1px solid var(--border-base);
 }
 .dash-big {

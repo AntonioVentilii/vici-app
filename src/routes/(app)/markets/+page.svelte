@@ -230,7 +230,7 @@
 	}
 
 	.markets-appbar {
-		padding: 1rem 1.25rem 0.25rem;
+		padding: 1.5rem 1.25rem 0.25rem;
 	}
 
 	.markets-title {
