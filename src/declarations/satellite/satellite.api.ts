@@ -67,14 +67,14 @@ const AppGetAffiliationStatsArgsSchema = j.strictObject({
 const AppGetAffiliationStatsResultSchema = j.strictObject({
 	stats: j.optional(
 		j.strictObject({
-			affiliation_identifier: j.string(),
+			affiliationIdentifier: j.string(),
 			kind: j.enum(['university', 'country']),
-			total_calls: j.number(),
+			totalCalls: j.number(),
 			wins: j.number(),
-			month_anchor: j.string(),
-			month_total_calls: j.number(),
-			month_wins: j.number(),
-			updated_at_ms: j.number()
+			monthAnchor: j.string(),
+			monthTotalCalls: j.number(),
+			monthWins: j.number(),
+			updatedAtMs: j.number()
 		})
 	)
 });
@@ -553,18 +553,18 @@ const AppListMyAffiliationsResultSchema = j.strictObject({
 		j.strictObject({
 			member: j.string(),
 			kind: j.enum(['university', 'country']),
-			affiliation_identifier: j.string(),
-			joined_at_ms: j.number(),
-			locked_until_ms: j.number()
+			affiliationIdentifier: j.string(),
+			joinedAtMs: j.number(),
+			lockedUntilMs: j.number()
 		})
 	),
 	country: j.optional(
 		j.strictObject({
 			member: j.string(),
 			kind: j.enum(['university', 'country']),
-			affiliation_identifier: j.string(),
-			joined_at_ms: j.number(),
-			locked_until_ms: j.number()
+			affiliationIdentifier: j.string(),
+			joinedAtMs: j.number(),
+			lockedUntilMs: j.number()
 		})
 	)
 });

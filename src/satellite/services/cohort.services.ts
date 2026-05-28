@@ -285,6 +285,16 @@ export const lookupLeagueByInviteFn = ({
  * Single-pass scan filtered to `member === callerText`; per
  * `AFFILIATION_LOCK_MS` semantics the rows are stable for 90 days
  * once written.
+ *
+ * Backwards-compat: rows written before the
+ * `affiliationId` → `affiliationIdentifier` rename still live in
+ * stable memory with the old field key. `decodeDocData` returns the
+ * raw msgpack shape (the TS type is a compile-time assertion), so a
+ * pre-rename doc decodes with `aff.affiliationIdentifier === undefined`
+ * and `aff.affiliationId` populated. Reading both and dropping the
+ * row when neither is present keeps `listMyAffiliations` from
+ * trapping at the JsonData → Candid boundary (the inner Option
+ * struct requires `affiliationIdentifier`).
  */
 export const listMyAffiliationsFn = (): {
 	university?: AffiliationDoc;
@@ -304,9 +314,9 @@ export const listMyAffiliationsFn = (): {
 
 	for (const [, item] of items) {
 		try {
-			const aff = decodeDocData<AffiliationDoc>(item.data);
+			const aff = readAffiliationDoc(item.data);
 
-			if (aff.member === callerText) {
+			if (nonNullish(aff) && aff.member === callerText) {
 				if (aff.kind === 'university') {
 					university = aff;
 				} else if (aff.kind === 'country') {
@@ -319,6 +329,30 @@ export const listMyAffiliationsFn = (): {
 	}
 
 	return { university, country };
+};
+
+/**
+ * Tolerant `AffiliationDoc` reader. Coerces the legacy
+ * `affiliationId` field to `affiliationIdentifier` so pre-rename
+ * rows decode cleanly. Returns `undefined` when the row is
+ * unrecoverable (no identifier under either name) so callers can
+ * skip it rather than emit a malformed wire shape.
+ */
+export const readAffiliationDoc = (data: Uint8Array): AffiliationDoc | undefined => {
+	const raw = decodeDocData<AffiliationDoc & { affiliationId?: string }>(data);
+	const identifier = raw.affiliationIdentifier ?? raw.affiliationId;
+
+	if (typeof identifier !== 'string' || identifier.length === 0) {
+		return;
+	}
+
+	return {
+		member: raw.member,
+		kind: raw.kind,
+		affiliationIdentifier: identifier,
+		joinedAtMs: raw.joinedAtMs,
+		lockedUntilMs: raw.lockedUntilMs
+	};
 };
 
 /**
@@ -350,9 +384,13 @@ export const listWorldsRosterFn = ({
 
 	for (const [, item] of items) {
 		try {
-			const aff = decodeDocData<AffiliationDoc>(item.data);
+			const aff = readAffiliationDoc(item.data);
 
-			if (aff.kind === kind && aff.affiliationIdentifier === affiliationIdentifier) {
+			if (
+				nonNullish(aff) &&
+				aff.kind === kind &&
+				aff.affiliationIdentifier === affiliationIdentifier
+			) {
 				roster.push(aff);
 			}
 		} catch {
