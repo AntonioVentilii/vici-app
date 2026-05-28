@@ -3,7 +3,10 @@ import { Collection } from '$lib/constants/collections.constants';
 import { VXP_WORLDS_PODIUM } from '$lib/constants/vxp-economy.constants';
 import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
-import { listAffiliationStatsForMonthFn } from '$satellite/services/cohort.services';
+import {
+	listAffiliationStatsForMonthFn,
+	readAffiliationDoc
+} from '$satellite/services/cohort.services';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
 import { isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
@@ -13,13 +16,7 @@ import {
 	type TransferError
 } from '@junobuild/functions/canisters/ledger/icrc';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
-import {
-	decodeDocData,
-	encodeDocData,
-	getDocStore,
-	listDocsStore,
-	setDocStore
-} from '@junobuild/functions/sdk';
+import { encodeDocData, getDocStore, listDocsStore, setDocStore } from '@junobuild/functions/sdk';
 
 /**
  * Worlds podium monthly payout — user-claim variant
@@ -330,9 +327,9 @@ const readMyAffiliation = ({
 	for (const [docKey, item] of items) {
 		if (docKey.startsWith(prefix)) {
 			try {
-				const doc = decodeDocData<AffiliationDoc>(item.data);
+				const doc = readAffiliationDoc(item.data);
 
-				if (doc.kind === kind && doc.member === callerText) {
+				if (nonNullish(doc) && doc.kind === kind && doc.member === callerText) {
 					return doc;
 				}
 			} catch {

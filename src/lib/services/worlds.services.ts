@@ -57,20 +57,13 @@ export const listMyAffiliations = async (): Promise<{
 	university?: AffiliationDoc;
 	country?: AffiliationDoc;
 }> => {
+	// The `Option<NestedStruct>` endpoint emits camelCase keys (see
+	// `AffiliationOptionWireSchema`), so the wire shape already
+	// matches `AffiliationDoc` and no snake-case → camel-case
+	// projection is needed.
 	const { university, country } = await functions.listMyAffiliations();
 
-	const project = (wire: NonNullable<typeof university>): AffiliationDoc => ({
-		member: wire.member,
-		kind: wire.kind,
-		affiliationIdentifier: wire.affiliation_identifier,
-		joinedAtMs: wire.joined_at_ms,
-		lockedUntilMs: wire.locked_until_ms
-	});
-
-	return {
-		university: university ? project(university) : undefined,
-		country: country ? project(country) : undefined
-	};
+	return { university, country };
 };
 
 /**
@@ -217,6 +210,12 @@ const projectStatsWire = (s: {
  * Single-affiliation lookup. Returns `undefined` when the
  * affiliation has no stats doc yet (no member of it has had any
  * resolved trades). Callers should render as "unranked / no data".
+ *
+ * `getAffiliationStats` is the `Option<NestedStruct>` endpoint, so
+ * the wire shape is already camelCase (matches `AffiliationStatsDoc`)
+ * — no projection needed. `listAffiliationStats` below stays on the
+ * snake_case `projectStatsWire` because it's a `Vec<NestedStruct>`
+ * (Vec items aren't `#[json_data(nested)]`-wrapped).
  */
 export const getAffiliationStats = async ({
 	kind,
@@ -227,7 +226,7 @@ export const getAffiliationStats = async ({
 }): Promise<AffiliationStatsDoc | undefined> => {
 	const { stats } = await functions.getAffiliationStats({ kind, affiliationIdentifier });
 
-	return stats === undefined ? undefined : projectStatsWire(stats);
+	return stats;
 };
 
 /**

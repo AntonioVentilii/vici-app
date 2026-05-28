@@ -7,6 +7,7 @@ import {
 	type AffiliationStatsDoc
 } from '$lib/types/affiliation-stats';
 import type { UserProfile } from '$lib/types/profile';
+import { readAffiliationDoc } from '$satellite/services/cohort.services';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext, OnSetDocContext } from '@junobuild/functions';
@@ -267,7 +268,7 @@ export const onProfileSetForAffiliationStats = (ctx: OnSetDocContext): void => {
 			let memberDoc: AffiliationDoc | undefined;
 
 			try {
-				memberDoc = decodeDocData<AffiliationDoc>(item.data);
+				memberDoc = readAffiliationDoc(item.data);
 			} catch {
 				// Malformed payload — skip this row.
 				memberDoc = undefined;

@@ -285,6 +285,16 @@ export const lookupLeagueByInviteFn = ({
  * Single-pass scan filtered to `member === callerText`; per
  * `AFFILIATION_LOCK_MS` semantics the rows are stable for 90 days
  * once written.
+ *
+ * Backwards-compat: rows written before the
+ * `affiliationId` → `affiliationIdentifier` rename still live in
+ * stable memory with the old field key. `decodeDocData` returns the
+ * raw msgpack shape (the TS type is a compile-time assertion), so a
+ * pre-rename doc decodes with `aff.affiliationIdentifier === undefined`
+ * and `aff.affiliationId` populated. Reading both and dropping the
+ * row when neither is present keeps `listMyAffiliations` from
+ * trapping at the JsonData → Candid boundary (the inner Option
+ * struct requires `affiliationIdentifier`).
  */
 export const listMyAffiliationsFn = (): {
 	university?: AffiliationDoc;
@@ -304,9 +314,9 @@ export const listMyAffiliationsFn = (): {
 
 	for (const [, item] of items) {
 		try {
-			const aff = decodeDocData<AffiliationDoc>(item.data);
+			const aff = readAffiliationDoc(item.data);
 
-			if (aff.member === callerText) {
+			if (nonNullish(aff) && aff.member === callerText) {
 				if (aff.kind === 'university') {
 					university = aff;
 				} else if (aff.kind === 'country') {
@@ -319,6 +329,60 @@ export const listMyAffiliationsFn = (): {
 	}
 
 	return { university, country };
+};
+
+/**
+ * Tolerant `AffiliationDoc` reader. Coerces the legacy
+ * `affiliationId` field to `affiliationIdentifier` so pre-rename
+ * rows decode cleanly, AND fully validates the remaining required
+ * fields so every call site can rely on a well-formed shape.
+ *
+ * Returns `undefined` when any required field is missing or
+ * structurally invalid:
+ *
+ *  - `affiliationIdentifier` (or legacy `affiliationId`) — non-empty string
+ *  - `member` — non-empty string (a real principal-text check costs more
+ *    than it's worth here; the write-time assert already enforced it)
+ *  - `kind` — `'university' | 'country'`
+ *  - `joinedAtMs` / `lockedUntilMs` — finite numbers (guards against
+ *    `NaN` flowing into the Option-schema parse and into roster sort
+ *    comparisons in `listWorldsRosterFn`)
+ *
+ * Callers skip the row rather than emit a malformed wire shape that
+ * would trap the `j.optional(AffiliationOptionWireSchema)` parse or
+ * the JsonData → Candid conversion.
+ */
+export const readAffiliationDoc = (data: Uint8Array): AffiliationDoc | undefined => {
+	const raw = decodeDocData<AffiliationDoc & { affiliationId?: string }>(data);
+	const identifier = raw.affiliationIdentifier ?? raw.affiliationId;
+
+	if (typeof identifier !== 'string' || identifier.length === 0) {
+		return;
+	}
+
+	if (typeof raw.member !== 'string' || raw.member.length === 0) {
+		return;
+	}
+
+	if (raw.kind !== 'university' && raw.kind !== 'country') {
+		return;
+	}
+
+	if (typeof raw.joinedAtMs !== 'number' || !Number.isFinite(raw.joinedAtMs)) {
+		return;
+	}
+
+	if (typeof raw.lockedUntilMs !== 'number' || !Number.isFinite(raw.lockedUntilMs)) {
+		return;
+	}
+
+	return {
+		member: raw.member,
+		kind: raw.kind,
+		affiliationIdentifier: identifier,
+		joinedAtMs: raw.joinedAtMs,
+		lockedUntilMs: raw.lockedUntilMs
+	};
 };
 
 /**
@@ -350,9 +414,13 @@ export const listWorldsRosterFn = ({
 
 	for (const [, item] of items) {
 		try {
-			const aff = decodeDocData<AffiliationDoc>(item.data);
+			const aff = readAffiliationDoc(item.data);
 
-			if (aff.kind === kind && aff.affiliationIdentifier === affiliationIdentifier) {
+			if (
+				nonNullish(aff) &&
+				aff.kind === kind &&
+				aff.affiliationIdentifier === affiliationIdentifier
+			) {
 				roster.push(aff);
 			}
 		} catch {
