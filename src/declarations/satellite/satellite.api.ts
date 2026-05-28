@@ -897,6 +897,23 @@ const claimComebackGrant = async (): Promise<j.infer<typeof AppClaimComebackGran
 	return AppClaimComebackGrantResultSchema.parse(result);
 };
 
+const AppClaimReferralFriendshipArgsSchema = j.strictObject({ code: j.string() });
+
+const claimReferralFriendship = async (
+	args: j.infer<typeof AppClaimReferralFriendshipArgsSchema>
+): Promise<void> => {
+	const parsedArgs = AppClaimReferralFriendshipArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppClaimReferralFriendshipArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_claim_referral_friendship']>[0];
+
+	const { app_claim_referral_friendship } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	await app_claim_referral_friendship(idlArgs);
+};
+
 const AppClaimTournamentPrizeArgsSchema = j.strictObject({ tournamentId: j.string() });
 const AppClaimTournamentPrizeResultSchema = j.strictObject({
 	ok: j.boolean(),
@@ -1270,6 +1287,7 @@ export const functions = {
 	acceptFriendRequest,
 	cancelFriendRequest,
 	claimComebackGrant,
+	claimReferralFriendship,
 	claimTournamentPrize,
 	claimWorldsPodiumPrize,
 	deleteMyAccount,

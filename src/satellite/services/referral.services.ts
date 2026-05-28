@@ -4,11 +4,15 @@ import {
 	REFERRAL_CODE_ALPHABET,
 	REFERRAL_CODE_LENGTH,
 	REFERRAL_CODE_REGEX,
+	REFERRAL_EXISTING_USER_REASON,
 	REFERRAL_MAX_PAID,
+	REFERRAL_SIGNUP_WINDOW_MS,
 	REFERRAL_VXP_BONUS_BASE_UNITS
 } from '$lib/constants/referral.constants';
 import { VXP_REFERRAL_MONTHLY_CAP } from '$lib/constants/vxp-economy.constants';
+import { RelationCategory, RelationState } from '$lib/enums/relation';
 import type { ReferralCodeDoc, ReferralDoc, ReferralListItem } from '$lib/types/referral';
+import type { Relation } from '$lib/types/relation';
 import type { VxpMilestoneState } from '$lib/types/vxp-onboarding';
 import { logError, logInfo } from '$satellite/utils/logger.utils';
 import { isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
@@ -283,6 +287,52 @@ const initialUnpaidPayout = (): VxpMilestoneState => ({
 	amountBaseUnits: REFERRAL_VXP_BONUS_BASE_UNITS.toString()
 });
 
+/**
+ * Idempotently writes a confirmed bilateral friendship between two principals. Used by the
+ * referral flow to auto-friend referrer and referee on redemption (and by
+ * {@link claimReferralFriendshipFn} for the existing-user friendship-only path).
+ *
+ * No-op if a friendship already exists in any state — never downgrades an existing relation.
+ */
+const writeConfirmedFriendship = ({
+	caller,
+	sender,
+	target
+}: {
+	caller: Uint8Array;
+	sender: PrincipalText;
+	target: PrincipalText;
+}): void => {
+	const relationId = [sender, target].sort().join('#');
+
+	const existing = getDocStore({
+		collection: Collection.RELATIONS,
+		key: relationId,
+		caller
+	});
+
+	if (nonNullish(existing)) {
+		// Already friends / pending / blocked — never overwrite. The whole point of the
+		// referral-friendship is to bootstrap a new connection; if one already exists, leave it.
+		return;
+	}
+
+	const relation: Relation = {
+		category: RelationCategory.FRIEND,
+		state: RelationState.ACTIVE,
+		participants: [sender, target]
+	};
+
+	setDocStore({
+		collection: Collection.RELATIONS,
+		key: relationId,
+		caller,
+		doc: {
+			data: encodeDocData(relation)
+		}
+	});
+};
+
 export const redeemReferralCodeFn = ({ code }: { code: string }): void => {
 	const caller = msgCaller();
 	const callerBytes = caller.toUint8Array();
@@ -311,6 +361,18 @@ export const redeemReferralCodeFn = ({ code }: { code: string }): void => {
 
 	if (isNullish(profileDoc)) {
 		throw new Error('Create your profile before redeeming a referral code.');
+	}
+
+	// Signup-window gate — only fresh sign-ups earn the VXP bonus. Existing users who use a
+	// referral link land in {@link claimReferralFriendshipFn} instead (friendship only, no VXP).
+	// `created_at` is the Juno-managed nanosecond timestamp on the profile doc.
+	const nowMs = Number(time() / 1_000_000n);
+	const profileCreatedAtMs = nonNullish(profileDoc.created_at)
+		? Number(profileDoc.created_at / 1_000_000n)
+		: 0;
+
+	if (nowMs - profileCreatedAtMs > REFERRAL_SIGNUP_WINDOW_MS) {
+		throw new Error(REFERRAL_EXISTING_USER_REASON);
 	}
 
 	const codeDoc = getDocStore({
@@ -350,9 +412,62 @@ export const redeemReferralCodeFn = ({ code }: { code: string }): void => {
 		}
 	});
 
+	// Bilateral auto-confirmed friendship — both parties already consented (one shared an invite
+	// link, the other clicked it). No request/accept dance needed.
+	writeConfirmedFriendship({
+		caller: callerBytes,
+		sender: referrer,
+		target: callerText
+	});
+
 	logInfo({
 		message: 'referral_redeemed',
 		detail: { referee: callerText, referrer, code: normalized }
+	});
+};
+
+/**
+ * Friendship-only path for users who use a referral link but aren't eligible for the VXP bonus
+ * (account older than {@link REFERRAL_SIGNUP_WINDOW_MS}, or already redeemed). Looks up the code,
+ * refuses self-referral, and writes a bilateral confirmed friendship between caller and referrer.
+ *
+ * Idempotent: returns silently if a relation already exists in any state.
+ */
+export const claimReferralFriendshipFn = ({ code }: { code: string }): void => {
+	const caller = msgCaller();
+	const callerBytes = caller.toUint8Array();
+	const callerText = caller.toText();
+	const normalized = code.trim().toUpperCase();
+
+	if (!REFERRAL_CODE_REGEX.test(normalized)) {
+		throw new Error('Invalid referral code format.');
+	}
+
+	const codeDoc = getDocStore({
+		collection: Collection.REFERRAL_CODES,
+		key: normalized,
+		caller: callerBytes
+	});
+
+	if (isNullish(codeDoc)) {
+		throw new Error('Unknown referral code.');
+	}
+
+	const { owner: referrer } = decodeDocData<ReferralCodeDoc>(codeDoc.data);
+
+	if (referrer === callerText) {
+		throw new Error('You cannot use your own referral link.');
+	}
+
+	writeConfirmedFriendship({
+		caller: callerBytes,
+		sender: referrer,
+		target: callerText
+	});
+
+	logInfo({
+		message: 'referral_friendship_claimed',
+		detail: { caller: callerText, referrer, code: normalized }
 	});
 };
 

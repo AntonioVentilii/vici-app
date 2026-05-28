@@ -12,6 +12,7 @@ import {
 } from '$lib/schema/market-translation.schema';
 import { UserProfileSchema } from '$lib/schema/profile.schema';
 import {
+	ClaimReferralFriendshipArgsSchema,
 	LookupReferralCodeArgsSchema,
 	RedeemReferralCodeArgsSchema
 } from '$lib/schema/referral.schema';
@@ -70,6 +71,7 @@ import {
 import {
 	assertSetReferral,
 	assertSetReferralCode,
+	claimReferralFriendshipFn,
 	getMyReferralCodeFn,
 	listMyReferralsFn,
 	lookupReferralCodeFn,
@@ -385,6 +387,16 @@ export const listMyReferrals = defineQuery({
 export const redeemReferralCode = defineUpdate({
 	args: RedeemReferralCodeArgsSchema,
 	handler: redeemReferralCodeFn
+});
+
+/**
+ * Friendship-only path for users who use an invite link past the signup grace period (or who
+ * have already redeemed). No VXP transfer fires; only a bilateral confirmed friendship is
+ * written between the caller and the code owner. Idempotent for an existing relation.
+ */
+export const claimReferralFriendship = defineUpdate({
+	args: ClaimReferralFriendshipArgsSchema,
+	handler: claimReferralFriendshipFn
 });
 
 // ─── Social cohorts ─────────────────────────────────────────────

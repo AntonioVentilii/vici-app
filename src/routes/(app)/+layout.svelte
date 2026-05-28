@@ -12,13 +12,14 @@
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import {
 		REFERRAL_CODE_REGEX,
+		REFERRAL_EXISTING_USER_REASON,
 		REFERRAL_VXP_BONUS_BASE_UNITS
 	} from '$lib/constants/referral.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
 	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
-	import { redeemReferralCode } from '$lib/services/referral.services';
+	import { claimReferralFriendship, redeemReferralCode } from '$lib/services/referral.services';
 	import { initFlowPrewarm } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -157,12 +158,6 @@
 		const rawSide = 'side' in parsed && typeof parsed.side === 'string' ? parsed.side : null;
 		const side: 'YES' | 'NO' | null = rawSide === 'YES' || rawSide === 'NO' ? rawSide : null;
 
-		// At least one signal is required for the payload to be useful;
-		// otherwise discard so the caller can clear the slot.
-		if (handle === null && participantId === null && side === null) {
-			return;
-		}
-
 		const interests =
 			'interests' in parsed && Array.isArray(parsed.interests)
 				? parsed.interests.filter((interest): interest is string => typeof interest === 'string')
@@ -177,6 +172,14 @@
 				: undefined;
 		const referralCode =
 			rawReferral && REFERRAL_CODE_REGEX.test(rawReferral) ? rawReferral : undefined;
+
+		// At least one actionable signal is required for the payload to be useful — onboarding
+		// picks (handle / participantId / side) drive the profile upsert, and `referralCode`
+		// drives the redeem-or-friendship flow. A bare payload with none of those is dropped
+		// so the caller can clear the slot.
+		if (handle === null && participantId === null && side === null && referralCode === undefined) {
+			return;
+		}
 
 		return {
 			handle,
@@ -217,6 +220,37 @@
 		} catch (err: unknown) {
 			const reason = err instanceof Error ? err.message : '';
 
+			// Signup-window grace period elapsed (clicked the invite, took >24h to finish
+			// signing up). The VXP bonus is forfeited, but we still want the friendship to
+			// land — otherwise the click attribution was wasted. Fire-and-forget; the
+			// satellite is idempotent if a relation already exists.
+			if (reason === REFERRAL_EXISTING_USER_REASON) {
+				try {
+					await claimReferralFriendship({ code });
+
+					notificationsStore.add({
+						title: t({
+							locale: $localeStore,
+							key: 'onboarding.handoff.referral_late_title'
+						}),
+						message: t({
+							locale: $localeStore,
+							key: 'onboarding.handoff.referral_late'
+						}),
+						type: 'info'
+					});
+				} catch (friendErr: unknown) {
+					// Swallow — we surfaced the late-redemption fallback intent; the
+					// friendship is best-effort.
+					console.warn(
+						'claimReferralFriendship fallback failed',
+						friendErr instanceof Error ? friendErr.message : friendErr
+					);
+				}
+
+				return;
+			}
+
 			notificationsStore.add({
 				title: t({
 					locale: $localeStore,
@@ -256,6 +290,13 @@
 		// pre-auth, while signed-out) belongs to a different intent;
 		// silently overwriting their saved nickname / interests / email
 		// is destructive. Preserve the existing profile and tell them.
+		//
+		// A stashed `referralCode` is the one piece of the payload that
+		// *is* still actionable for a returning user: they can't redeem
+		// the VXP bonus (they're not a fresh signup), but they can still
+		// land in the inviter's friends list. Fire `claimReferralFriendship`
+		// before clearing the payload — fire-and-forget so a transient
+		// failure never blocks the account-exists message.
 		if ($userStore.profileExisted) {
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'onboarding.handoff.account_exists_title' }),
@@ -266,6 +307,33 @@
 				}),
 				type: 'info'
 			});
+
+			if (pending.referralCode !== undefined) {
+				const friendshipCode = pending.referralCode;
+
+				void (async () => {
+					try {
+						await claimReferralFriendship({ code: friendshipCode });
+
+						notificationsStore.add({
+							title: t({
+								locale: $localeStore,
+								key: 'onboarding.handoff.referral_late_title'
+							}),
+							message: t({
+								locale: $localeStore,
+								key: 'onboarding.handoff.referral_late'
+							}),
+							type: 'info'
+						});
+					} catch (err: unknown) {
+						console.warn(
+							'claimReferralFriendship (returning user) failed',
+							err instanceof Error ? err.message : err
+						);
+					}
+				})();
+			}
 
 			localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
 

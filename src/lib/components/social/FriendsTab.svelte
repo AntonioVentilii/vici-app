@@ -88,10 +88,10 @@
 	onMount(() => {
 		void refreshFriendRelations();
 
-		// Fetch the viewer's referral code so the hero can render
-		// `vici.markets/signup?ref={code}`. The code is assigned by the
-		// satellite profile hook on first profile create; if missing today
-		// the next profile save backfills it (see `referral.services.ts`).
+		// Fetch the viewer's referral code so the hero can render the canonical
+		// `vici.market/i/{code}` URL. The code is assigned by the satellite profile hook
+		// on first profile create; if missing today the next profile save backfills it
+		// (see `referral.services.ts`).
 		void (async () => {
 			try {
 				inviteCode = await getMyReferralCode();
@@ -102,30 +102,15 @@
 	});
 
 	// ── Invite hero ──────────────────────────────────────────────────
-	// Canonical, handle-based public URL — `https://vici.markets/i/${handle}`.
-	// When the viewer has no nickname yet we fall back to a short
-	// principal slug so the preview is still readable.
-	const inviteHandle = $derived.by(() => {
-		const nickname = myProfile?.nickname?.trim();
-
-		if (nickname) {
-			return nickname.replace(/[^a-z0-9_.-]/gi, '').toLowerCase();
-		}
-
-		if (userPrincipal) {
-			return shortenWithMiddleEllipsis({ text: userPrincipal, splitLength: 4 }).replace(
-				/[^a-z0-9]/gi,
-				''
-			);
-		}
-	});
-	const inviteUrlDisplay = $derived(inviteHandle ? `vici.markets/i/${inviteHandle}` : undefined);
-	// Share payload keeps the `?ref=` query so the satellite attributes
-	// the bonus; only the on-screen preview uses the short canonical form.
+	// Single canonical URL — `https://{origin}/i/{code}`. Same string for preview, copy,
+	// and native-share so what the user sees is exactly what gets pasted.
 	const inviteUrl = $derived(
-		inviteCode && typeof window !== 'undefined'
-			? `${window.location.origin}/signup?ref=${inviteCode}`
+		inviteCode !== undefined && typeof window !== 'undefined'
+			? `${window.location.origin}/i/${inviteCode}`
 			: undefined
+	);
+	const inviteUrlDisplay = $derived(
+		inviteUrl !== undefined ? inviteUrl.replace(/^https?:\/\//, '') : undefined
 	);
 	const bonusLabel = $derived(formatVxpBalance({ value: REFERRAL_BONUS_VXP }));
 
@@ -516,9 +501,8 @@
 
 		{#if inviteUrlDisplay}
 			<div class="invite-url">
-				<!-- Short canonical preview — `vici.markets/i/{handle}`.
-				     The actual shared payload still carries the `?ref=`
-				     query (`inviteUrl`) so attribution works. -->
+				<!-- Canonical share URL — exactly the string copy/share emits. The `/i/{code}`
+				     path is resolved by `src/routes/i/[code]/+page.svelte`. -->
 				<span class="num">{inviteUrlDisplay}</span>
 			</div>
 		{/if}

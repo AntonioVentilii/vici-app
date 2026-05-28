@@ -696,6 +696,32 @@ export const esMessages = {
 	'info.not_found.title': 'Documento no encontrado',
 	'info.placeholder_legal_banner':
 		'Texto provisional — este documento está pendiente de revisión legal y será reemplazado antes del lanzamiento.',
+	'invite.friend_added_body':
+		'Puedes encontrarlo en tu lista de Amigos. También te verá desde su lado.',
+	'invite.friend_added_title': 'Amigo añadido',
+	'invite.friend_failed_body':
+		'No pudimos completar la amistad desde ese enlace. Inténtalo más tarde.',
+	'invite.friend_failed_title': 'No se pudo añadir al amigo',
+	'invite.generic_error_body': 'Algo salió mal al resolver la invitación. Inténtalo más tarde.',
+	'invite.generic_error_title': 'Invitación no disponible',
+	'invite.invalid_body': 'Ese enlace de invitación no parece válido. Pide uno nuevo.',
+	'invite.invalid_title': 'Enlace de invitación inválido',
+	'invite.resolving': 'Resolviendo invitación…',
+	'invite.self_body': 'No puedes usar tu propio enlace de invitación.',
+	'invite.self_title': 'Ese es tu enlace',
+	'invite.sheet.body':
+		'Ya eres miembro de VICI, por lo que la invitación de {handle} no puede otorgar bono VXP. Aún puedes añadirlo como amigo para comparar predicciones y respaldar las decisiones del otro.',
+	'invite.sheet.bullet_friendship': 'Aparecerán en la lista de Amigos del otro al instante.',
+	'invite.sheet.bullet_no_bonus':
+		'Sin bono VXP — los +500 VXP están reservados para nuevos registros.',
+	'invite.sheet.cta_add': 'Añadir a {handle} como amigo',
+	'invite.sheet.cta_skip': 'Ahora no',
+	'invite.sheet.eyebrow': 'Invitación de',
+	'invite.sheet.tag': 'quiere añadirte como amigo',
+	'invite.sheet.title': 'Ya eres miembro',
+	'invite.unknown_body':
+		'Ese código de invitación no figura en nuestros registros. Pide un enlace nuevo al remitente.',
+	'invite.unknown_title': 'Invitación desconocida',
 	'landing.cta.signup': 'Crear cuenta',
 	'landing.faq.flow': 'Flow — predicciones rápidas en mercados en vivo.',
 	'landing.faq.markets': 'Mercados — profundidad, resolución y portafolio.',
@@ -1912,6 +1938,9 @@ export const esMessages = {
 	'profile.dashboard.nickname_taken': '@{nickname} ya está en uso. Elige otro.',
 	'onboarding.handoff.referral_failed_title': 'Código de referido no aplicado',
 	'onboarding.handoff.referral_failed': 'El código que ingresaste no se pudo canjear: {reason}',
+	'onboarding.handoff.referral_late_title': 'Ventana de bono cerrada',
+	'onboarding.handoff.referral_late':
+		'Te registraste más de 24 horas después de hacer clic en el enlace — sin bono VXP, pero aún así añadimos a quien te invitó como amigo.',
 	'onboarding.handoff.referral_ok_title': 'Referido aplicado',
 	'onboarding.handoff.referral_ok': 'Tú y quien te invitó reciben {amount} VXP cada uno.',
 	'profile.dashboard.referrals.copy': 'Copiar',

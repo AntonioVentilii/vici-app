@@ -38,6 +38,29 @@
 	// can upsert them into the new profile. The auth tap itself happens
 	// inside Beat 3 via `SignInProviderStack`; after it succeeds,
 	// `$userSignedIn` flips and the (app) layout drains the payload.
+	//
+	// Reads any prior payload first so a `referralCode` stashed by
+	// `/i/[code]` (the invite-link landing) survives this overwrite. The
+	// drain in `(app)/+layout.svelte` picks the referral up regardless of
+	// whether the user made any onboarding picks.
+	const readExistingPending = (): Record<string, unknown> => {
+		try {
+			const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
+
+			if (raw === null) {
+				return {};
+			}
+
+			const parsed: unknown = JSON.parse(raw);
+
+			return typeof parsed === 'object' && parsed !== null
+				? (parsed as Record<string, unknown>)
+				: {};
+		} catch {
+			return {};
+		}
+	};
+
 	const handleCompletePreAuth = (result: {
 		participantId: string | null;
 		side: 'YES' | 'NO' | null;
@@ -47,9 +70,18 @@
 			return;
 		}
 
-		// Skip the write if the user bailed before making any pick —
-		// nothing to hand off.
-		if (result.handle === null && result.participantId === null && result.side === null) {
+		const existing = readExistingPending();
+		const existingReferralCode =
+			typeof existing.referralCode === 'string' ? existing.referralCode : undefined;
+
+		// Skip the write if the user bailed before making any pick **and** there's no
+		// stashed referral code to carry forward — nothing to hand off.
+		if (
+			result.handle === null &&
+			result.participantId === null &&
+			result.side === null &&
+			existingReferralCode === undefined
+		) {
 			return;
 		}
 
@@ -61,7 +93,8 @@
 					participantId: result.participantId,
 					side: result.side,
 					interests: [],
-					completedAt: new Date().toISOString()
+					completedAt: new Date().toISOString(),
+					...(existingReferralCode !== undefined && { referralCode: existingReferralCode })
 				})
 			);
 		} catch (err: unknown) {
