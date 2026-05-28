@@ -30,6 +30,7 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { orders } from '$lib/derived/orders.derived';
 	import { positions } from '$lib/derived/positions.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
@@ -68,9 +69,12 @@
 	const vxpBalance = $derived($balancesStore?.[VXP_TOKEN.id] ?? ZERO);
 	const balance = $derived(Number(vxpBalance));
 
-	// Positions + markets — used by the Active calls block.
+	// Positions + markets — used by the Active calls block. The
+	// "See all" count combines filled positions and resting limit
+	// orders, since the Portfolio surface lists both.
 	const activePositionsAll = $derived($positions);
-	const totalActive = $derived(activePositionsAll.length);
+	const openOrdersAll = $derived($orders);
+	const totalActive = $derived(activePositionsAll.length + openOrdersAll.length);
 	const marketById = $derived(new Map<string, Market>(($marketsStore ?? []).map((m) => [m.id, m])));
 
 	const activePositions = $derived(
