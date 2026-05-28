@@ -461,6 +461,8 @@ export const deMessages = {
 	'dash.active.eyebrow': 'Aktive Calls',
 	'dash.active.hours_left': 'Noch {count}Std',
 	'dash.active.see_all': 'Alle {count} ansehen',
+	'dash.categories.calls_many': '{count} Calls',
+	'dash.categories.calls_one': '1 Call',
 	'dash.categories.eyebrow': 'Nach Kategorie',
 	'dash.categories.no_calls': 'Noch keine Calls',
 	'dash.disclosure.accuracy_body':

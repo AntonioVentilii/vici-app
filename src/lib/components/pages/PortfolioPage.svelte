@@ -91,14 +91,40 @@
 
 	// ── Hero VXP balance ─────────────────────────────────────────────
 
+	// Free balance in the user's VXP ICRC ledger account. Drops toward
+	// zero as VXP is moved into the clearing canister as collateral, so
+	// the "Total Holdings" hero must combine this with the locked
+	// portion below — otherwise a user with all VXP in open positions
+	// shows "0 VXP" despite owning plenty.
 	const vxpBalance = $derived.by((): bigint => $balancesStore?.[VXP_TOKEN.id] ?? ZERO);
 
-	const vxpBalanceDisplay = $derived(
-		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
+	// Locked-as-collateral portion across active positions on VXP
+	// markets. Same shape + scale as the matching sum on Dash.
+	const backedRaw = $derived.by((): bigint =>
+		$positions.reduce<bigint>((acc, pos) => {
+			const market = $markets.find((m) => m.id === pos.marketId);
+
+			if (market === undefined || market.token.symbol !== VXP_TOKEN.symbol) {
+				return acc;
+			}
+
+			return acc + pos.lockedCollateral;
+		}, ZERO)
 	);
 
+	// Total = free + backed. Both legs share a 4-decimal scale
+	// (`VXP_TOKEN.decimals` == `USD_DECIMALS`), so we add raw bigints
+	// before formatting.
+	const holdingsTotalRaw = $derived(vxpBalance + backedRaw);
+
+	const vxpBalanceDisplay = $derived(
+		formatVxpBalance({ value: holdingsTotalRaw, decimals: VXP_TOKEN.decimals })
+	);
+
+	// Performance card uses the *total* holdings as its denominator so
+	// the % delta tracks the same number the hero shows.
 	const vxpBalanceNumber = $derived(
-		decimalFixedValueToNumber({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
+		decimalFixedValueToNumber({ value: holdingsTotalRaw, decimals: VXP_TOKEN.decimals })
 	);
 
 	// ── 3-col mini stats (Unrealized P&L · 7D Accuracy · Rank) ───────

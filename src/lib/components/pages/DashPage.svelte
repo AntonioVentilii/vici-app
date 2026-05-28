@@ -74,14 +74,12 @@
 	let tw = $state<TimeWindow>('30d');
 	let pastFilter = $state<PastFilter>('all');
 
-	// VXP balance — drives the holdings hero number. The raw ICRC
-	// balance is in `VXP_TOKEN.decimals` micro-units; `formatVxpBalance`
-	// applies the decimals and the grouped-display convention so 1,234
-	// VXP doesn't render as "12,340,000".
+	// Free VXP balance in the user's ICRC ledger account. Note this
+	// drops to ~0 once VXP is moved into the clearing canister as
+	// collateral, so a user with many active positions can show 0 here
+	// despite owning plenty of VXP — see `holdingsTotal` below for the
+	// combined free + backed number that the "Total Holdings" hero shows.
 	const vxpBalance = $derived($balancesStore?.[VXP_TOKEN.id] ?? ZERO);
-	const balanceDisplay = $derived(
-		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
-	);
 
 	// Backed = sum of locked collateral across the user's active positions
 	// on VXP-denominated markets. `lockedCollateral` is in clearing-USD
@@ -100,6 +98,18 @@
 		}, ZERO)
 	);
 	const backedDisplay = $derived(formatVxpBalance({ value: backedRaw, decimals: USD_DECIMALS }));
+
+	// Total holdings = free wallet balance + backed collateral. Both legs
+	// already share a 4-decimal scale (`VXP_TOKEN.decimals` ==
+	// `USD_DECIMALS`), so we can add raw bigints before formatting.
+	// Without this, a user with all their VXP locked in active positions
+	// would see "0 VXP" as their Total Holdings while "Backed" reads in
+	// the thousands — the headline number must reflect everything they
+	// own, not just the free portion.
+	const holdingsTotalRaw = $derived(vxpBalance + backedRaw);
+	const balanceDisplay = $derived(
+		formatVxpBalance({ value: holdingsTotalRaw, decimals: VXP_TOKEN.decimals })
+	);
 
 	// Lifetime = `profile.points`, the running XP/VXP accumulator the
 	// satellite credits per win + streak bonus. Stored as a whole number
@@ -649,7 +659,18 @@
 							<span style:width="{pct}%" class="fill"></span>
 						{/if}
 					</div>
-					<span class="pct">{pct === null ? EM_DASH : `${pct}%`}</span>
+					<span class="pct">
+						{#if pct !== null}
+							{pct}%
+						{:else}
+							{t({
+								locale: $localeStore,
+								key:
+									r.totalCalls === 1 ? 'dash.categories.calls_one' : 'dash.categories.calls_many',
+								params: { count: r.totalCalls }
+							})}
+						{/if}
+					</span>
 				</div>
 			{/each}
 		{/if}

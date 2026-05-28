@@ -458,6 +458,8 @@ export const itMessages = {
 	'dash.active.eyebrow': 'Previsioni attive',
 	'dash.active.hours_left': '{count}h rimaste',
 	'dash.active.see_all': 'Vedi tutte le {count}',
+	'dash.categories.calls_many': '{count} call',
+	'dash.categories.calls_one': '1 call',
 	'dash.categories.eyebrow': 'Per categoria',
 	'dash.categories.no_calls': 'Ancora nessuna previsione',
 	'dash.disclosure.accuracy_body':

@@ -454,6 +454,8 @@ export const enMessages = {
 	'dash.active.eyebrow': 'Active calls',
 	'dash.active.hours_left': '{count}h left',
 	'dash.active.see_all': 'See all {count}',
+	'dash.categories.calls_many': '{count} calls',
+	'dash.categories.calls_one': '1 call',
 	'dash.categories.eyebrow': 'By category',
 	'dash.categories.no_calls': 'No calls yet',
 	'dash.disclosure.accuracy_body':

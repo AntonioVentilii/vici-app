@@ -434,6 +434,8 @@ export const zhCnMessages = {
 	'dash.active.eyebrow': '进行中的预测',
 	'dash.active.hours_left': '剩 {count} 小时',
 	'dash.active.see_all': '查看全部 {count}',
+	'dash.categories.calls_many': '{count} 次预测',
+	'dash.categories.calls_one': '1 次预测',
 	'dash.categories.eyebrow': '按分类',
 	'dash.categories.no_calls': '暂无预测',
 	'dash.disclosure.accuracy_body':
