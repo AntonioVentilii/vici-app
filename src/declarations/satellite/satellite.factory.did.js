@@ -44,6 +44,7 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppClaimReferralFriendshipArgs = IDL.Record({ code: IDL.Text });
 	const AppClaimTournamentPrizeArgs = IDL.Record({
 		tournament_id: IDL.Text
 	});
@@ -821,6 +822,7 @@ export const idlFactory = ({ IDL }) => {
 			['query']
 		),
 		app_claim_comeback_grant: IDL.Func([], [AppClaimComebackGrantResult], []),
+		app_claim_referral_friendship: IDL.Func([AppClaimReferralFriendshipArgs], [], []),
 		app_claim_tournament_prize: IDL.Func(
 			[AppClaimTournamentPrizeArgs],
 			[AppClaimTournamentPrizeResult],

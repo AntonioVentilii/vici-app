@@ -696,6 +696,31 @@ export const itMessages = {
 	'info.not_found.title': 'Documento non trovato',
 	'info.placeholder_legal_banner':
 		'Testo segnaposto — questo documento è in attesa di revisione legale e verrà sostituito prima del lancio.',
+	'invite.friend_added_body': 'Lo trovi nella tua lista Amici. Anche lui ti vede dalla sua parte.',
+	'invite.friend_added_title': 'Amico aggiunto',
+	'invite.friend_failed_body':
+		'Non siamo riusciti a completare l’amicizia da quel link. Riprova più tardi.',
+	'invite.friend_failed_title': 'Impossibile aggiungere l’amico',
+	'invite.generic_error_body':
+		'Qualcosa è andato storto nel risolvere l’invito. Riprova più tardi.',
+	'invite.generic_error_title': 'Invito non disponibile',
+	'invite.invalid_body': 'Quel link d’invito non sembra valido. Chiedine uno nuovo.',
+	'invite.invalid_title': 'Link d’invito non valido',
+	'invite.resolving': 'Risoluzione invito…',
+	'invite.self_body': 'Non puoi usare il tuo stesso link d’invito.',
+	'invite.self_title': 'È il tuo link',
+	'invite.sheet.body':
+		'Sei già un utente VICI, quindi l’invito di {handle} non può pagare un bonus VXP. Puoi comunque aggiungerlo come amico per confrontare le previsioni e seguirvi a vicenda.',
+	'invite.sheet.bullet_friendship': 'Comparirete nella lista Amici l’uno dell’altro, subito.',
+	'invite.sheet.bullet_no_bonus':
+		'Nessun bonus VXP — i +500 VXP sono riservati alle nuove iscrizioni.',
+	'invite.sheet.cta_add': 'Aggiungi {handle} come amico',
+	'invite.sheet.cta_skip': 'Non ora',
+	'invite.sheet.eyebrow': 'Invito da',
+	'invite.sheet.tag': 'vuole aggiungerti come amico',
+	'invite.sheet.title': 'Sei già un utente',
+	'invite.unknown_body': 'Quel codice d’invito non risulta. Chiedi al mittente un link nuovo.',
+	'invite.unknown_title': 'Invito sconosciuto',
 	'landing.cta.signup': 'Crea un account',
 	'landing.faq.flow': 'Flow — previsioni rapide su mercati live.',
 	'landing.faq.markets': 'Mercati — profondità, risoluzione e portafoglio.',
@@ -1904,6 +1929,9 @@ export const itMessages = {
 	'profile.dashboard.nickname_taken': '@{nickname} è già in uso. Scegline un altro.',
 	'onboarding.handoff.referral_failed_title': 'Codice referral non applicato',
 	'onboarding.handoff.referral_failed': 'Il codice inserito non è stato riscattato: {reason}',
+	'onboarding.handoff.referral_late_title': 'Finestra bonus chiusa',
+	'onboarding.handoff.referral_late':
+		'Ti sei iscritto più di 24 ore dopo aver cliccato il link — niente bonus VXP, ma abbiamo comunque aggiunto chi ti ha invitato come amico.',
 	'onboarding.handoff.referral_ok_title': 'Referral applicato',
 	'onboarding.handoff.referral_ok': 'Tu e chi ti ha invitato ricevete {amount} VXP ciascuno.',
 	'profile.dashboard.referrals.copy': 'Copia',

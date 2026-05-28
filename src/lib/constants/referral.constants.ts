@@ -37,3 +37,21 @@ export const REFERRAL_CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 export const REFERRAL_CODE_REGEX = new RegExp(
 	`^[${REFERRAL_CODE_ALPHABET}]{${REFERRAL_CODE_LENGTH}}$`
 );
+
+/**
+ * How long after profile creation a user is still considered "newly signed up" for referral
+ * redemption purposes. After this window elapses, `redeemReferralCodeFn` refuses with
+ * `existing_user_no_bonus` — the user can still use the code via `claimReferralFriendshipFn`
+ * to add the referrer as a friend, but no VXP bonus is paid.
+ *
+ * Sized so a user who clicks an invite, gets interrupted, and comes back the next morning
+ * still gets the bonus; longer-delayed signups fall back to the friendship-only path.
+ */
+export const REFERRAL_SIGNUP_WINDOW_MS = 24 * 60 * 60 * 1000;
+
+/**
+ * Wire-level error reason returned by `redeemReferralCodeFn` when the caller's profile is older
+ * than {@link REFERRAL_SIGNUP_WINDOW_MS}. The FE matches on this exact string to branch into the
+ * friendship-only flow.
+ */
+export const REFERRAL_EXISTING_USER_REASON = 'existing_user_no_bonus';

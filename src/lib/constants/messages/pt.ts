@@ -696,6 +696,32 @@ export const ptMessages = {
 	'info.not_found.title': 'Documento não encontrado',
 	'info.placeholder_legal_banner':
 		'Texto provisório — este documento aguarda revisão jurídica e será substituído antes do lançamento.',
+	'invite.friend_added_body':
+		'Podes encontrá-lo na tua lista de Amigos. Ele também te verá do lado dele.',
+	'invite.friend_added_title': 'Amigo adicionado',
+	'invite.friend_failed_body':
+		'Não foi possível concluir a amizade a partir desse link. Tenta novamente mais tarde.',
+	'invite.friend_failed_title': 'Não foi possível adicionar o amigo',
+	'invite.generic_error_body': 'Algo correu mal ao resolver o convite. Tenta novamente mais tarde.',
+	'invite.generic_error_title': 'Convite indisponível',
+	'invite.invalid_body': 'Esse link de convite não parece válido. Pede um novo.',
+	'invite.invalid_title': 'Link de convite inválido',
+	'invite.resolving': 'A resolver convite…',
+	'invite.self_body': 'Não podes usar o teu próprio link de convite.',
+	'invite.self_title': 'Esse é o teu link',
+	'invite.sheet.body':
+		'Já és membro do VICI, por isso o convite de {handle} não pode pagar bónus de VXP. Mesmo assim, podes adicioná-lo como amigo para comparar previsões e apoiar as decisões um do outro.',
+	'invite.sheet.bullet_friendship': 'Vão aparecer instantaneamente na lista de Amigos um do outro.',
+	'invite.sheet.bullet_no_bonus':
+		'Sem bónus de VXP — os +500 VXP estão reservados para novos registos.',
+	'invite.sheet.cta_add': 'Adicionar {handle} como amigo',
+	'invite.sheet.cta_skip': 'Agora não',
+	'invite.sheet.eyebrow': 'Convite de',
+	'invite.sheet.tag': 'quer adicionar-te como amigo',
+	'invite.sheet.title': 'Já és membro',
+	'invite.unknown_body':
+		'Esse código de convite não consta dos registos. Pede ao remetente um link novo.',
+	'invite.unknown_title': 'Convite desconhecido',
 	'landing.cta.signup': 'Criar conta',
 	'landing.faq.flow': 'Flow — previsões rápidas em mercados ao vivo.',
 	'landing.faq.markets': 'Mercados — profundidade, resolução e acompanhamento de portfólio.',
@@ -1903,6 +1929,9 @@ export const ptMessages = {
 	'onboarding.handoff.referral_failed_title': 'Código de referência não aplicado',
 	'onboarding.handoff.referral_failed':
 		'O código que introduziste não pôde ser resgatado: {reason}',
+	'onboarding.handoff.referral_late_title': 'Janela de bónus fechada',
+	'onboarding.handoff.referral_late':
+		'Registaste-te mais de 24 horas depois de clicar no link — sem bónus VXP, mas mesmo assim adicionámos quem te convidou como amigo.',
 	'onboarding.handoff.referral_ok_title': 'Referência aplicada',
 	'onboarding.handoff.referral_ok': 'Tu e quem te convidou recebem {amount} VXP cada.',
 	'profile.dashboard.referrals.copy': 'Copiar',

@@ -702,6 +702,33 @@ export const frMessages = {
 	'info.not_found.title': 'Document introuvable',
 	'info.placeholder_legal_banner':
 		'Texte provisoire — ce document est en attente de revue juridique et sera remplacé avant le lancement.',
+	'invite.friend_added_body': 'Tu le retrouves dans ta liste d’Amis. Il te voit aussi de son côté.',
+	'invite.friend_added_title': 'Ami ajouté',
+	'invite.friend_failed_body':
+		'Impossible de finaliser l’amitié depuis ce lien. Réessaie plus tard.',
+	'invite.friend_failed_title': 'Impossible d’ajouter l’ami',
+	'invite.generic_error_body':
+		'Une erreur est survenue en résolvant l’invitation. Réessaie plus tard.',
+	'invite.generic_error_title': 'Invitation indisponible',
+	'invite.invalid_body': 'Ce lien d’invitation ne semble pas valide. Demande-en un nouveau.',
+	'invite.invalid_title': 'Lien d’invitation invalide',
+	'invite.resolving': 'Résolution de l’invitation…',
+	'invite.self_body': 'Tu ne peux pas utiliser ton propre lien d’invitation.',
+	'invite.self_title': 'C’est ton lien',
+	'invite.sheet.body':
+		'Tu es déjà membre VICI, donc l’invitation de {handle} ne peut pas donner de bonus VXP. Tu peux quand même l’ajouter comme ami pour comparer vos prédictions et soutenir vos choix.',
+	'invite.sheet.bullet_friendship':
+		'Vous apparaîtrez instantanément dans la liste d’Amis l’un de l’autre.',
+	'invite.sheet.bullet_no_bonus':
+		'Pas de bonus VXP — les +500 VXP sont réservés aux nouvelles inscriptions.',
+	'invite.sheet.cta_add': 'Ajouter {handle} comme ami',
+	'invite.sheet.cta_skip': 'Plus tard',
+	'invite.sheet.eyebrow': 'Invitation de',
+	'invite.sheet.tag': 'veut t’ajouter comme ami',
+	'invite.sheet.title': 'Déjà membre',
+	'invite.unknown_body':
+		'Ce code d’invitation est introuvable. Demande un nouveau lien à l’expéditeur.',
+	'invite.unknown_title': 'Invitation inconnue',
 	'landing.cta.signup': 'Créer un compte',
 	'landing.faq.flow': 'Flow — pronostics rapides sur marchés live.',
 	'landing.faq.markets': 'Marchés — profondeur, résolution et suivi du portefeuille.',
@@ -1914,6 +1941,9 @@ export const frMessages = {
 	'onboarding.handoff.referral_failed_title': 'Code de parrainage non appliqué',
 	'onboarding.handoff.referral_failed':
 		'Le code que vous avez saisi n’a pas pu être utilisé : {reason}',
+	'onboarding.handoff.referral_late_title': 'Fenêtre de bonus fermée',
+	'onboarding.handoff.referral_late':
+		'Tu t’es inscrit plus de 24 heures après avoir cliqué sur le lien — pas de bonus VXP, mais nous avons quand même ajouté ton parrain comme ami.',
 	'onboarding.handoff.referral_ok_title': 'Parrainage appliqué',
 	'onboarding.handoff.referral_ok': 'Vous et votre parrain recevez chacun {amount} VXP.',
 	'profile.dashboard.referrals.copy': 'Copier',

@@ -46,6 +46,9 @@ export interface AppClaimComebackGrantResult {
 				| { balance_not_zero: null }
 		  ];
 }
+export interface AppClaimReferralFriendshipArgs {
+	code: string;
+}
 export interface AppClaimTournamentPrizeArgs {
 	tournament_id: string;
 }
@@ -669,6 +672,7 @@ export interface _SERVICE {
 		AppCheckNicknameAvailabilityResult
 	>;
 	app_claim_comeback_grant: ActorMethod<[], AppClaimComebackGrantResult>;
+	app_claim_referral_friendship: ActorMethod<[AppClaimReferralFriendshipArgs], undefined>;
 	app_claim_tournament_prize: ActorMethod<
 		[AppClaimTournamentPrizeArgs],
 		AppClaimTournamentPrizeResult

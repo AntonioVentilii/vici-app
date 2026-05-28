@@ -15,3 +15,12 @@ export const RedeemReferralCodeArgsSchema = j.strictObject({
 export const LookupReferralCodeArgsSchema = j.strictObject({
 	code: j.string()
 });
+
+/**
+ * Args for {@link claimReferralFriendship}. Same shape as the redeem call — code-only — but the
+ * outcome is a friendship write, never a VXP payout. Used by existing users who use an invite
+ * link past the signup-window grace period.
+ */
+export const ClaimReferralFriendshipArgsSchema = j.strictObject({
+	code: j.string()
+});

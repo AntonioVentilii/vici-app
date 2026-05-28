@@ -12,13 +12,14 @@
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import {
 		REFERRAL_CODE_REGEX,
+		REFERRAL_EXISTING_USER_REASON,
 		REFERRAL_VXP_BONUS_BASE_UNITS
 	} from '$lib/constants/referral.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
 	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
-	import { redeemReferralCode } from '$lib/services/referral.services';
+	import { claimReferralFriendship, redeemReferralCode } from '$lib/services/referral.services';
 	import { initFlowPrewarm } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -216,6 +217,37 @@
 			});
 		} catch (err: unknown) {
 			const reason = err instanceof Error ? err.message : '';
+
+			// Signup-window grace period elapsed (clicked the invite, took >24h to finish
+			// signing up). The VXP bonus is forfeited, but we still want the friendship to
+			// land — otherwise the click attribution was wasted. Fire-and-forget; the
+			// satellite is idempotent if a relation already exists.
+			if (reason === REFERRAL_EXISTING_USER_REASON) {
+				try {
+					await claimReferralFriendship({ code });
+
+					notificationsStore.add({
+						title: t({
+							locale: $localeStore,
+							key: 'onboarding.handoff.referral_late_title'
+						}),
+						message: t({
+							locale: $localeStore,
+							key: 'onboarding.handoff.referral_late'
+						}),
+						type: 'info'
+					});
+				} catch (friendErr: unknown) {
+					// Swallow — we surfaced the late-redemption fallback intent; the
+					// friendship is best-effort.
+					console.warn(
+						'claimReferralFriendship fallback failed',
+						friendErr instanceof Error ? friendErr.message : friendErr
+					);
+				}
+
+				return;
+			}
 
 			notificationsStore.add({
 				title: t({

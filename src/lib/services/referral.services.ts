@@ -39,13 +39,28 @@ export const lookupReferralCode = async ({
  * Submits a referral code redemption for the current caller. The satellite enforces:
  * - one-time per referee (the call traps on a second invocation),
  * - the caller must have a profile,
+ * - the profile must be younger than {@link REFERRAL_SIGNUP_WINDOW_MS} — older accounts trap
+ *   with {@link REFERRAL_EXISTING_USER_REASON} and should fall back to
+ *   {@link claimReferralFriendship},
  * - self-referrals are rejected,
  * - the code must exist.
  *
- * Both VXP bonuses are paid out asynchronously by the satellite hook after this resolves.
+ * On success the satellite also writes a bilateral confirmed friendship between referrer and
+ * referee. Both VXP bonuses are paid out asynchronously by the post-write hook.
  */
 export const redeemReferralCode = async ({ code }: { code: string }): Promise<void> => {
 	await functions.redeemReferralCode({ code });
+};
+
+/**
+ * Friendship-only path for users who use a referral link past the signup grace period or who
+ * have already redeemed a different code. No VXP transfer; only writes a bilateral confirmed
+ * friendship between the caller and the code owner. Idempotent if a relation already exists.
+ *
+ * The satellite still validates the code shape, looks up the owner, and rejects self-referrals.
+ */
+export const claimReferralFriendship = async ({ code }: { code: string }): Promise<void> => {
+	await functions.claimReferralFriendship({ code });
 };
 
 /**

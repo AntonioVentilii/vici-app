@@ -697,6 +697,32 @@ export const deMessages = {
 	'info.not_found.title': 'Dokument nicht gefunden',
 	'info.placeholder_legal_banner':
 		'Platzhaltertext — dieses Dokument wird derzeit rechtlich geprüft und vor dem Start ersetzt.',
+	'invite.friend_added_body':
+		'Du findest die Person in deiner Freundesliste. Auf ihrer Seite wird das Gleiche angezeigt.',
+	'invite.friend_added_title': 'Freund hinzugefügt',
+	'invite.friend_failed_body':
+		'Die Freundschaft über diesen Link konnte nicht abgeschlossen werden. Versuche es später erneut.',
+	'invite.friend_failed_title': 'Freund konnte nicht hinzugefügt werden',
+	'invite.generic_error_body':
+		'Beim Auflösen der Einladung ist etwas schiefgelaufen. Versuche es später erneut.',
+	'invite.generic_error_title': 'Einladung nicht verfügbar',
+	'invite.invalid_body': 'Dieser Einladungslink sieht nicht richtig aus. Frage nach einem neuen.',
+	'invite.invalid_title': 'Ungültiger Einladungslink',
+	'invite.resolving': 'Einladung wird aufgelöst…',
+	'invite.self_body': 'Du kannst deinen eigenen Einladungslink nicht verwenden.',
+	'invite.self_title': 'Das ist dein Link',
+	'invite.sheet.body':
+		'Du bist bereits VICI-Mitglied, daher kann die Einladung von {handle} keinen VXP-Bonus auszahlen. Du kannst die Person trotzdem als Freund hinzufügen, um eure Calls zu vergleichen und euch gegenseitig zu unterstützen.',
+	'invite.sheet.bullet_friendship': 'Ihr erscheint sofort in den Freundeslisten des anderen.',
+	'invite.sheet.bullet_no_bonus': 'Kein VXP-Bonus — die +500 VXP sind Neuanmeldungen vorbehalten.',
+	'invite.sheet.cta_add': '{handle} als Freund hinzufügen',
+	'invite.sheet.cta_skip': 'Jetzt nicht',
+	'invite.sheet.eyebrow': 'Einladung von',
+	'invite.sheet.tag': 'möchte dich als Freund hinzufügen',
+	'invite.sheet.title': 'Bereits Mitglied',
+	'invite.unknown_body':
+		'Dieser Einladungscode ist nicht bekannt. Frage den Absender nach einem neuen Link.',
+	'invite.unknown_title': 'Unbekannte Einladung',
 	'landing.cta.signup': 'Konto erstellen',
 	'landing.faq.flow': 'Flow — schnelle Calls auf Live-Märkten.',
 	'landing.faq.markets': 'Märkte — Tiefe, Auflösung und Portfolio-Tracking.',
@@ -1912,6 +1938,9 @@ export const deMessages = {
 	'onboarding.handoff.referral_failed_title': 'Empfehlungscode nicht angewendet',
 	'onboarding.handoff.referral_failed':
 		'Der eingegebene Code konnte nicht eingelöst werden: {reason}',
+	'onboarding.handoff.referral_late_title': 'Bonus-Fenster geschlossen',
+	'onboarding.handoff.referral_late':
+		'Du hast dich mehr als 24 Stunden nach dem Klick auf den Link registriert — kein VXP-Bonus, aber wir haben den Einladenden trotzdem als Freund hinzugefügt.',
 	'onboarding.handoff.referral_ok_title': 'Empfehlung angewendet',
 	'onboarding.handoff.referral_ok': 'Du und deine Empfehlung erhaltet jeweils {amount} VXP.',
 	'profile.dashboard.referrals.copy': 'Kopieren',

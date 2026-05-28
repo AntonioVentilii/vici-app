@@ -89,6 +89,8 @@ type AppCancelFriendRequestArgs = record { relation_id : text };
 
 type AppClaimComebackGrantResult = record { paid_now : bool; previously_paid : bool; block_index : opt text; reason : opt variant { already_claimed_paid; already_claimed_pending; already_claimed_failed; balance_not_zero; not_engaged_yet; transfer_failed }; error_message : opt text };
 
+type AppClaimReferralFriendshipArgs = record { code : text };
+
 type AppClaimTournamentPrizeArgs = record { tournament_id : text };
 
 type AppClaimTournamentPrizeResult = record { ok : bool; reason : opt variant { tournament_not_found; tournament_not_concluded; not_member_of_top_league }; awards_created : opt float64; awards_already_claimed : opt float64; total_vxp_credited : opt float64 };
@@ -160,6 +162,7 @@ service : {
 	app_accept_friend_request : (AppAcceptFriendRequestArgs) -> ();
 	app_cancel_friend_request : (AppCancelFriendRequestArgs) -> ();
 	app_claim_comeback_grant : () -> (AppClaimComebackGrantResult);
+	app_claim_referral_friendship : (AppClaimReferralFriendshipArgs) -> ();
 	app_claim_tournament_prize : (AppClaimTournamentPrizeArgs) -> (AppClaimTournamentPrizeResult);
 	app_claim_worlds_podium_prize : (AppClaimWorldsPodiumPrizeArgs) -> (AppClaimWorldsPodiumPrizeResult);
 	app_delete_my_account : (AppDeleteMyAccountArgs) -> (AppDeleteMyAccountResult);
