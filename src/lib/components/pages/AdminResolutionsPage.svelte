@@ -34,7 +34,7 @@
 	};
 </script>
 
-<div class="space-y-12">
+<div class="space-y-12 px-4 py-6 sm:py-8 lg:py-10">
 	<AdminSubPageHeader
 		description={t({ locale: $localeStore, key: 'admin.hub.resolutions.description' })}
 		title={t({ locale: $localeStore, key: 'admin.hub.resolutions.title' })}
