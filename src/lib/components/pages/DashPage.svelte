@@ -25,11 +25,13 @@
 	import {
 		MARKET_TAG_LABEL_KEYS,
 		MARKET_TAGS,
+		primaryMarketTag,
 		type MarketTag
 	} from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { orders } from '$lib/derived/orders.derived';
 	import { positions } from '$lib/derived/positions.derived';
 	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
@@ -128,27 +130,67 @@
 	interface CategoryRow {
 		id: MarketTag;
 		label: string;
-		acc: number;
+		/** `null` when the user has calls in this category but none have
+		 *  settled yet — distinct from "0% accuracy", which is rendered
+		 *  by the template as `EM_DASH` rather than a hard "0%". */
+		acc: number | null;
+		totalCalls: number;
 	}
 
+	/**
+	 * Per-category breakdown of the user's calls. Reads from the FE-side
+	 * `$positions` (active) and `$resolvedPositions` (settled) directly,
+	 * rather than the satellite-cached `userStats.categoryStats` snapshot
+	 * which only counted settled events and therefore hid every category
+	 * where the user had calls outstanding but no resolutions yet.
+	 *
+	 * Filter rules:
+	 *  - hide categories with no calls at all
+	 *  - hide categories whose accuracy is exactly 0% (every settled call
+	 *    in the category lost — kept off the surface so a single bad
+	 *    sample doesn't paint the whole category red)
+	 * Sort: highest accuracy first; categories with no settled outcomes
+	 * yet (`acc === null`) sit beneath the resolved ones, ordered by
+	 * total call count descending so the most-active uncertainty is on
+	 * top of the pending bucket.
+	 */
 	const catRows = $derived<CategoryRow[]>(
-		(() => {
-			const stats = userStats?.categoryStats ?? {};
+		MARKET_TAGS.filter((tag) => tag !== 'wc')
+			.map((tag): CategoryRow => {
+				const activeCount = $positions.filter(
+					(p) => primaryMarketTag($marketTags[p.marketId]) === tag
+				).length;
 
-			return MARKET_TAGS.filter((tag) => tag !== 'wc')
-				.map((tag) => {
-					const bucket = stats[tag] ?? { calls: 0, wins: 0 };
-					const acc = bucket.calls > 0 ? bucket.wins / bucket.calls : 0;
+				const settled = $resolvedPositions.filter(
+					(r) => primaryMarketTag($marketTags[r.marketId]) === tag
+				);
 
-					return {
-						id: tag,
-						label: t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }),
-						acc
-					};
-				})
-				.filter((row) => (userStats?.categoryStats?.[row.id]?.calls ?? 0) > 0)
-				.sort((a, b) => b.acc - a.acc);
-		})()
+				const wins = settled.filter((r) => r.result === 'won').length;
+				const acc = settled.length > 0 ? wins / settled.length : null;
+
+				return {
+					id: tag,
+					label: t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }),
+					acc,
+					totalCalls: activeCount + settled.length
+				};
+			})
+			.filter((row) => row.totalCalls > 0 && row.acc !== 0)
+			.sort((a, b) => {
+				if (a.acc === null && b.acc === null) {
+					return b.totalCalls - a.totalCalls;
+				}
+
+				if (a.acc === null) {
+					return 1;
+				}
+
+				if (b.acc === null) {
+					return -1;
+				}
+
+				return b.acc - a.acc;
+			})
 	);
 
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
@@ -250,13 +292,17 @@
 	const streakBarPct = $derived(Math.min(100, (streak / MARATHON_DAYS) * 100));
 	const daysToMarathon = $derived(Math.max(0, MARATHON_DAYS - streak));
 
-	// Markets the user hasn't tried — pick the first category with
-	// zero calls (falls back to `Culture` when the taxonomy is empty).
+	// Markets the user hasn't tried — pick the first category that
+	// doesn't appear in the FE-derived `catRows` (which counts every
+	// active position + every settled event, so a category is
+	// genuinely "untried" iff it has zero of either).
+	const triedCategoryIds = $derived(new Set<MarketTag>(catRows.map((row) => row.id)));
 	const untriedCategory = $derived<MarketTag | undefined>(
-		MARKET_TAGS.filter((tag) => tag !== 'wc').find(
-			(tag) => (userStats?.categoryStats?.[tag]?.calls ?? 0) === 0
-		)
+		MARKET_TAGS.filter((tag) => tag !== 'wc').find((tag) => !triedCategoryIds.has(tag))
 	);
+
+	/** Highest-accuracy category with at least one settled outcome. */
+	const bestCategory = $derived(catRows.find((r) => r.acc !== null));
 
 	// ─── Formatters ────────────────────────────────────────────────────
 	const fmtRelativeShort = (ms: number): string => {
@@ -595,11 +641,15 @@
 			</div>
 		{:else}
 			{#each catRows as r (r.id)}
-				{@const pct = Math.round(r.acc * 100)}
+				{@const pct = r.acc === null ? null : Math.round(r.acc * 100)}
 				<div class="dash-cat-row">
 					<span class="name">{r.label}</span>
-					<div class="bar"><span style:width="{pct}%" class="fill"></span></div>
-					<span class="pct">{pct}%</span>
+					<div class="bar">
+						{#if pct !== null}
+							<span style:width="{pct}%" class="fill"></span>
+						{/if}
+					</div>
+					<span class="pct">{pct === null ? EM_DASH : `${pct}%`}</span>
 				</div>
 			{/each}
 		{/if}
@@ -627,13 +677,17 @@
 			</button>
 			<div class="dash-rank-tile">
 				<span class="lbl">
-					{#if catRows[0]}{catRows[0].label}{:else}{t({
+					{#if bestCategory}{bestCategory.label}{:else}{t({
 							locale: $localeStore,
 							key: 'dash.rank.top_cat'
 						})}{/if}
 				</span>
 				<span class="v acc">
-					{#if catRows[0]}{Math.round(catRows[0].acc * 100)}%{:else}{EM_DASH}{/if}
+					{#if bestCategory && bestCategory.acc !== null}
+						{Math.round(bestCategory.acc * 100)}%
+					{:else}
+						{EM_DASH}
+					{/if}
 				</span>
 				<span class="sub">{t({ locale: $localeStore, key: 'dash.rank.top_cat_sub' })}</span>
 			</div>
