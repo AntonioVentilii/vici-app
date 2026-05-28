@@ -82,6 +82,13 @@
 		page.url.pathname === '/markets' || page.url.pathname.startsWith('/markets/')
 	);
 
+	// Info / legal docs (`/info/[slug]`) sit inside the (app) shell so
+	// signed-in users get the navpill while reading them, but they
+	// must also stay reachable from pre-auth surfaces (the signup
+	// terms / privacy links in `OnboardingBeat3`). Treat them as a
+	// public route alongside the markets exemption above.
+	const isPublicInfoRoute = $derived(page.url.pathname.startsWith('/info/'));
+
 	let applyingPendingOnboarding = $state(false);
 
 	// Auth gate — every (app) route requires a session. We only
@@ -101,7 +108,7 @@
 			return;
 		}
 
-		if (isPublicMarketsRoute) {
+		if (isPublicMarketsRoute || isPublicInfoRoute) {
 			return;
 		}
 
@@ -451,11 +458,14 @@
 
 	<!--
 		Bottom nav is visible on every signed-in surface including
-		Flow. Market detail (`/markets/[id]`) is the one exception —
-		it owns the bottom slot with its own sticky YES/NO CTA bar so
-		the tab bar is suppressed there.
+		Flow. Two exceptions:
+		- Anonymous visitors on public routes (`/markets`, `/markets/*`,
+		  `/info/*`) — the navpill's tabs all point at auth-gated areas,
+		  so showing it to a signed-out user is a dead-end.
+		- Market detail (`/markets/[id]`) — owns the bottom slot with
+		  its own sticky YES/NO CTA bar.
 	-->
-	{#if !isMarketDetailPage}
+	{#if $userSignedIn && !isMarketDetailPage}
 		<MobileNav />
 	{/if}
 

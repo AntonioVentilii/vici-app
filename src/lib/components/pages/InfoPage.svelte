@@ -1,32 +1,26 @@
 <script lang="ts">
 	import { ArrowLeft } from 'lucide-svelte/icons';
 	import { resolve } from '$app/paths';
-	import { PublicPath } from '$lib/constants/routes.constants';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { userSignedIn } from '$lib/derived/user.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { InfoDoc } from '$lib/types/info-doc';
 	import { t } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
-	 * Info / legal doc page — port of the design source's
-	 * `InfoScreen` (`screens.jsx:1677-1735`).
-	 *
-	 * Layout is a single-column reading view with:
-	 *  - top back arrow (borderless ghost)
-	 *  - laurel-accented eyebrow at 0.16em letter-spacing
+	 * Info / legal doc page — single-column reading view with:
+	 *  - top-left circular back arrow + the doc title flowing alongside it
+	 *  - small accent-coloured eyebrow under the title
 	 *  - serif-italic lede paragraph
 	 *  - sans-serif body paragraphs at 1.65 line-height
 	 *  - custom accent-dot bulleted lists
 	 *  - mono-font mailto links underlined in faint laurel
 	 *  - bottom "Back to settings" affordance below a 1px divider
 	 *
-	 * Lists carry a 4px accent dot positioned absolutely at the left
-	 * of each item — not the default `list-disc`. Mail links use the
-	 * mono font + accent underline + 3px text-underline-offset for the
-	 * "Tweet-style" reference look the design system favours.
-	 *
-	 * Legal docs surface a pending-review banner so users know the
-	 * copy is still awaiting sign-off.
+	 * Lists carry a 4px accent dot positioned absolutely at the left of
+	 * each item — not the default `list-disc`. Mail links use the mono
+	 * font + accent underline + 3px text-underline-offset.
 	 */
 
 	interface Props {
@@ -35,9 +29,10 @@
 
 	let { doc }: Props = $props();
 
-	const isLegalDoc = $derived(doc.eyebrow.toLowerCase().startsWith('legal'));
-
-	const handleBack = () => goBack(resolve(PublicPath.Welcome));
+	// Back target: signed-in users came from Settings; signed-out
+	// (pre-onboarding) users came from the Welcome / signup flow.
+	const backTarget = $derived($userSignedIn ? AppPath.Settings : PublicPath.Welcome);
+	const handleBack = () => goBack(resolve(backTarget));
 </script>
 
 <svelte:head>
@@ -46,26 +41,15 @@
 
 <div class="info-page">
 	<header class="info-appbar">
-		<button class="appbar-icon-btn" onclick={handleBack} type="button">
+		<button class="appbar-icon-btn info-back" onclick={handleBack} type="button">
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 			<span class="sr-only">{t({ locale: $localeStore, key: 'info.back' })}</span>
 		</button>
-		<span class="info-appbar-spacer" aria-hidden="true"></span>
+		<h1 class="info-hero-title">{doc.title}</h1>
 	</header>
 
 	<div class="info-body">
 		<div class="info-eyebrow allcaps">{doc.eyebrow}</div>
-		<!-- Massive display h1 — title at hero scale (~44-56 px
-		     serif/italic, multi-line wraps) rather than a cramped
-		     appbar treatment. -->
-		<h1 class="info-hero-title display">{doc.title}</h1>
-
-		{#if isLegalDoc}
-			<aside class="info-legal-banner" role="note">
-				<span class="info-legal-banner-dot" aria-hidden="true"></span>
-				<span>{t({ locale: $localeStore, key: 'info.placeholder_legal_banner' })}</span>
-			</aside>
-		{/if}
 
 		<article class="info-article">
 			{#each doc.blocks as block, i (i)}
@@ -89,9 +73,7 @@
 
 		<!--
 			Bottom back-to-settings affordance — divider + ghost button.
-			Lands at the Welcome route in our app; the `settings` page
-			lives behind the auth wall and the public info routes can't
-			assume the user is signed in.
+			Lands on Settings for signed-in users, Welcome otherwise.
 		-->
 		<div class="info-foot">
 			<button class="info-foot-back" onclick={handleBack} type="button">
@@ -106,34 +88,40 @@
 	.info-page {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
 		padding: 0.5rem 0 2rem;
 	}
 
+	/* Back arrow + title on the same row: the arrow is vertically
+	   centred against the (possibly multi-line) title block so it
+	   tracks the title's mass rather than its top edge. */
 	.info-appbar {
-		display: grid;
-		grid-template-columns: auto 1fr auto;
+		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0.25rem 1rem;
+		gap: 0.85rem;
+		padding: 0.5rem 1.25rem 0.25rem;
+		max-width: 40rem;
+		margin: 0 auto;
+		width: 100%;
 	}
 
-	/* Hero h1 — replaces the appbar's tight title. Display-font scale,
-	   serif italic, generous line-height for multi-line wraps. */
+	.info-back {
+		flex: 0 0 auto;
+	}
+
+	/* Matches the design system's base `h2` size (44 px / weight 600 /
+	   tight leading + tracking). Held at a flat 2.75 rem so it lines up
+	   with the proto on every mobile width — the proto doesn't clamp
+	   this title either, even at 320 px. */
 	.info-hero-title {
-		margin: 0.5rem 0 1.25rem;
-		font-family: var(--font-serif, var(--font-display, serif));
-		font-style: italic;
-		font-weight: 400;
-		font-size: clamp(2.25rem, 8.5vw, 3.5rem);
-		line-height: 1.05;
-		letter-spacing: -0.015em;
+		flex: 1 1 auto;
+		min-width: 0;
+		margin: 0;
 		color: var(--text-base);
+		font-size: 2.75rem;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		line-height: 1.05;
 		text-wrap: balance;
-	}
-
-	.info-appbar-spacer {
-		width: 2.5rem;
 	}
 
 	.info-body {
@@ -146,37 +134,14 @@
 		width: 100%;
 	}
 
-	/* Eyebrow uses the primary accent + 0.16em letter-spacing for the
-	   editorial eyebrow look. */
+	/* Editorial eyebrow under the title — accent colour + 0.16em
+	   tracking. */
 	.info-eyebrow {
-		margin-bottom: 0.875rem;
+		margin: 0.75rem 0 1rem;
 		font-size: var(--t-11, 0.7rem);
 		font-weight: 700;
 		letter-spacing: 0.16em;
 		color: var(--color-primary);
-	}
-
-	.info-legal-banner {
-		display: flex;
-		align-items: flex-start;
-		gap: 0.5rem;
-		padding: 0.55rem 0.75rem;
-		margin-bottom: 1rem;
-		font-size: var(--t-13);
-		color: color-mix(in srgb, var(--text-base) 85%, transparent);
-		background: color-mix(in srgb, var(--color-primary) 8%, transparent);
-		border: 1px solid color-mix(in srgb, var(--color-primary) 25%, var(--border-base));
-		border-radius: var(--r-8);
-	}
-
-	.info-legal-banner-dot {
-		display: inline-block;
-		width: 0.4rem;
-		height: 0.4rem;
-		margin-top: 0.45rem;
-		border-radius: 999px;
-		background: var(--color-primary);
-		flex-shrink: 0;
 	}
 
 	.info-article {
@@ -184,14 +149,12 @@
 		flex-direction: column;
 	}
 
-	/* Serif-italic lede paragraph — sets the editorial tone before
-	   the body copy. Gold-tinted accent reads as the pull-quote that
-	   frames the doc. */
+	/* Serif-italic lede — sets the editorial tone before the body. */
 	.info-lede {
 		margin: 0 0 1.5rem;
 		font-size: clamp(1.15rem, 4.2vw, 1.5rem);
 		line-height: 1.45;
-		color: var(--color-primary);
+		color: var(--text-base);
 		text-wrap: balance;
 	}
 
@@ -210,8 +173,7 @@
 		color: var(--text-muted);
 	}
 
-	/* Custom accent-dot list — matches `screens.jsx:1710-1716`:
-	   absolutely-positioned 4px primary-coloured dot at the left of
+	/* Custom accent-dot list — 4px primary-coloured dot at the left of
 	   each item, no default `list-disc` bullet. */
 	.info-list {
 		margin: 0 0 0.875rem;
