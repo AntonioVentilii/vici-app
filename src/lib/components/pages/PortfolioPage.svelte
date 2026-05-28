@@ -1,7 +1,10 @@
 <script lang="ts">
 	import { LineChart } from 'lucide-svelte/icons';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import type { ClearingDid } from '$declarations';
+	import { getTradeHistory as getTradeHistoryRaw } from '$lib/api/clearing.api';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
@@ -22,6 +25,7 @@
 	} from '$lib/derived/resolved-positions.derived';
 	import { tradeHistory, tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
+	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -179,11 +183,30 @@
 		summary: 'debug · settled events',
 		principal: 'principal',
 		domain: 'balance domain',
-		tradeTotal: 'tradeHistory total',
-		settledCount: 'Settled events',
+		tradeTotal: 'tradeHistory total (filtered)',
+		settledCount: 'Settled events (filtered)',
+		rawTotal: 'get_trade_history RAW total',
+		rawSettled: 'get_trade_history RAW Settled',
 		resolvedCount: '$resolvedPositions',
 		marketsTotal: '$markets total'
 	} as const;
+
+	// Direct, unfiltered call to the clearing canister so we can tell
+	// whether Settled events are simply not coming back vs. being
+	// dropped by the FE `filterByMarketIds` step.
+	let rawTradeHistory = $state<ClearingDid.Event[] | undefined>(undefined);
+	let rawTradeHistoryError = $state<string | undefined>(undefined);
+
+	onMount(async () => {
+		try {
+			const identity = await safeGetIdentityOnce();
+			rawTradeHistory = await getTradeHistoryRaw({ identity, certified: true });
+		} catch (err) {
+			rawTradeHistoryError = String(err);
+		}
+	});
+
+	const debugRawSettled = $derived(rawTradeHistory?.filter((e) => 'Settled' in e.event_type) ?? []);
 
 	// ── Active-call row helpers ──────────────────────────────────────
 
@@ -358,14 +381,28 @@
 			<dd>{$tradeHistory.length}</dd>
 			<dt>{DEBUG_LABELS.settledCount}</dt>
 			<dd>{debugSettledEvents.length}</dd>
+			<dt>{DEBUG_LABELS.rawTotal}</dt>
+			<dd>
+				{#if rawTradeHistoryError !== undefined}
+					ERR · {rawTradeHistoryError}
+				{:else if rawTradeHistory === undefined}
+					…
+				{:else}
+					{rawTradeHistory.length}
+				{/if}
+			</dd>
+			<dt>{DEBUG_LABELS.rawSettled}</dt>
+			<dd>
+				{#if rawTradeHistory === undefined}…{:else}{debugRawSettled.length}{/if}
+			</dd>
 			<dt>{DEBUG_LABELS.resolvedCount}</dt>
 			<dd>{$resolvedPositions.length}</dd>
 			<dt>{DEBUG_LABELS.marketsTotal}</dt>
 			<dd>{$markets.length}</dd>
 		</dl>
-		{#if debugSettledEvents.length > 0}
+		{#if debugRawSettled.length > 0}
 			<ul>
-				{#each debugSettledEvents.slice(0, 5) as e (e.event_id)}
+				{#each debugRawSettled.slice(0, 5) as e (e.event_id)}
 					<li>{e.series_id} · qty {e.qty.toString()}</li>
 				{/each}
 			</ul>
