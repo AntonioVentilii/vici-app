@@ -669,6 +669,12 @@
 	.portfolio-row-card {
 		display: flex;
 		flex-direction: column;
+		/* Reset the `align-items: center` inherited from `.portfolio-row`
+		   (which is set for the side-by-side resolved row). On the
+		   column-layout card we need children to stretch full width so
+		   the inner `.portfolio-row-tags` / `.portfolio-row-meta` rows
+		   can put their `justify-content: space-between` to use. */
+		align-items: stretch;
 		gap: 0.5rem;
 		padding: 0.875rem;
 	}
