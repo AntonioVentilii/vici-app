@@ -277,6 +277,7 @@ export const frMessages = {
 	'admin.markets.resolution_failed': 'Échec de la résolution',
 	'admin.markets.resolved.message': 'Marché {marketId} résolu comme {outcome}',
 	'admin.markets.resolved.title': 'Marché résolu',
+	'admin.oracle.action.reconcile': 'Réconcilier depuis les rôles',
 	'admin.oracle.action.refresh': 'Rafraîchir',
 	'admin.oracle.action.retry': 'Réessayer',
 	'admin.oracle.authorized_count': 'Autorisés ({count})',
@@ -289,6 +290,13 @@ export const frMessages = {
 	'admin.oracle.missing.title': 'Oracle non enregistré',
 	'admin.oracle.no_authorized':
 		'Aucun principal autorisé pour le moment. Attribuez le rôle ADMIN ou SOLVER à un utilisateur ci-dessus ; le hook satellite les synchronisera ici.',
+	'admin.oracle.reconcile.failed': 'Échec de la réconciliation',
+	'admin.oracle.reconcile.hint':
+		'Re-synchronise les régleurs avec la liste des rôles ci-dessus. À utiliser lorsque des rôles ont été accordés avant l’existence de l’oracle, ou si le hook satellite a journalisé oracle_settler_skipped_missing_oracle.',
+	'admin.oracle.reconcile.in_sync':
+		'Les régleurs correspondent déjà à la liste des rôles — rien à faire.',
+	'admin.oracle.reconcile.success': 'Régleurs mis à jour : {added} ajoutés, {removed} supprimés.',
+	'admin.oracle.reconcile.title': 'Régleurs réconciliés',
 	'admin.oracle.registered.message':
 		'{oracle} créé avec votre principal autorisé. Les régleurs suivants sont synchronisés automatiquement depuis la liste des rôles ci-dessus.',
 	'admin.oracle.registered.title': 'Oracle enregistré',

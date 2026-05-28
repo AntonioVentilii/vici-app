@@ -272,6 +272,7 @@ export const ptMessages = {
 	'admin.markets.resolution_failed': 'Falha na resolução',
 	'admin.markets.resolved.message': 'Mercado {marketId} resolvido como {outcome}',
 	'admin.markets.resolved.title': 'Mercado resolvido',
+	'admin.oracle.action.reconcile': 'Reconciliar a partir dos Papéis',
 	'admin.oracle.action.refresh': 'Atualizar',
 	'admin.oracle.action.retry': 'Tentar novamente',
 	'admin.oracle.authorized_count': 'Autorizados ({count})',
@@ -284,6 +285,14 @@ export const ptMessages = {
 	'admin.oracle.missing.title': 'Oráculo não registrado',
 	'admin.oracle.no_authorized':
 		'Nenhum principal autorizado ainda. Atribua o papel ADMIN ou SOLVER a um usuário acima; o hook do satellite irá sincronizá-los aqui.',
+	'admin.oracle.reconcile.failed': 'Falha na reconciliação',
+	'admin.oracle.reconcile.hint':
+		'Re-sincroniza os liquidantes com a lista de Papéis acima. Use quando papéis foram concedidos antes do oráculo existir, ou se o hook do satellite registrou oracle_settler_skipped_missing_oracle.',
+	'admin.oracle.reconcile.in_sync':
+		'Os liquidantes já correspondem à lista de Papéis — nada a fazer.',
+	'admin.oracle.reconcile.success':
+		'Liquidantes atualizados: {added} adicionados, {removed} removidos.',
+	'admin.oracle.reconcile.title': 'Liquidantes reconciliados',
 	'admin.oracle.registered.message':
 		'{oracle} criado com seu principal autorizado. Liquidantes subsequentes são sincronizados automaticamente a partir da lista de Papéis acima.',
 	'admin.oracle.registered.title': 'Oráculo registrado',

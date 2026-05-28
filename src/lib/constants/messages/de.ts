@@ -272,6 +272,7 @@ export const deMessages = {
 	'admin.markets.resolution_failed': 'Auflösung fehlgeschlagen',
 	'admin.markets.resolved.message': 'Markt {marketId} aufgelöst als {outcome}',
 	'admin.markets.resolved.title': 'Markt aufgelöst',
+	'admin.oracle.action.reconcile': 'Aus Rollen abgleichen',
 	'admin.oracle.action.refresh': 'Aktualisieren',
 	'admin.oracle.action.retry': 'Erneut versuchen',
 	'admin.oracle.authorized_count': 'Autorisiert ({count})',
@@ -284,6 +285,14 @@ export const deMessages = {
 	'admin.oracle.missing.title': 'Oracle nicht registriert',
 	'admin.oracle.no_authorized':
 		'Noch keine Principals autorisiert. Weise oben einem Nutzer die Rolle ADMIN oder SOLVER zu; der Satellite-Hook synchronisiert sie dann hier.',
+	'admin.oracle.reconcile.failed': 'Abgleich fehlgeschlagen',
+	'admin.oracle.reconcile.hint':
+		'Gleicht die Settler erneut mit der Rollenliste oben ab. Nutze dies, wenn Rollen vor der Oracle-Registrierung vergeben wurden oder der Satellite-Hook oracle_settler_skipped_missing_oracle geloggt hat.',
+	'admin.oracle.reconcile.in_sync':
+		'Settler stimmen bereits mit der Rollenliste überein — nichts zu tun.',
+	'admin.oracle.reconcile.success':
+		'Settler aktualisiert: {added} hinzugefügt, {removed} entfernt.',
+	'admin.oracle.reconcile.title': 'Settler abgeglichen',
 	'admin.oracle.registered.message':
 		'{oracle} mit deinem autorisierten Principal erstellt. Weitere Settler werden automatisch aus der oben gelisteten Roles-Liste synchronisiert.',
 	'admin.oracle.registered.title': 'Oracle registriert',
