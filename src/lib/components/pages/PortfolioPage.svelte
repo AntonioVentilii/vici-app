@@ -20,6 +20,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { Position } from '$lib/types/position';
+	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import {
 		formatPositionPnLWithOptionalUnit,
@@ -87,12 +88,9 @@
 		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
 	);
 
-	const vxpBalanceNumber = $derived.by((): number => {
-		const decimals = BigInt(VXP_TOKEN.decimals);
-		const denom = 10n ** decimals;
-
-		return Number(vxpBalance) / Number(denom);
-	});
+	const vxpBalanceNumber = $derived(
+		decimalFixedValueToNumber({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
+	);
 
 	// ── 3-col mini stats (Unrealized P&L · 7D Accuracy · Rank) ───────
 
@@ -204,13 +202,14 @@
 
 		const tsMs = Number(event.timestamp / MILLISECOND_IN_NANOSECONDS);
 		const diffMs = Date.now() - tsMs;
+		const HOUR_MS = 60 * 60 * 1000;
+		const DAY_MS = 24 * HOUR_MS;
 
-		if (diffMs < 0) {
+		if (diffMs < HOUR_MS) {
 			return t({ locale: $localeStore, key: 'portfolio.row.ago_just_now' });
 		}
 
-		const hours = Math.floor(diffMs / (60 * 60 * 1000));
-		const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+		const days = Math.floor(diffMs / DAY_MS);
 
 		if (days >= 1) {
 			return t({
@@ -220,10 +219,12 @@
 			});
 		}
 
+		const hours = Math.floor(diffMs / HOUR_MS);
+
 		return t({
 			locale: $localeStore,
 			key: 'portfolio.row.ago_hours',
-			params: { hours: String(Math.max(1, hours)) }
+			params: { hours: String(hours) }
 		});
 	};
 </script>

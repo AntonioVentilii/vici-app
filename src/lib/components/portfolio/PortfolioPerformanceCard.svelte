@@ -39,35 +39,55 @@
 
 	/**
 	 * Per-day realised PnL across the 30-day window. Index 0 = today − 29,
-	 * index 29 = today. Each settled event contributes its position PnL
-	 * (computed at resolution; `calculatePositionPnL` already returns the
-	 * settled value − cost basis on Resolved markets).
+	 * index 29 = today.
+	 *
+	 * We iterate over Resolved positions (not over Settled events) and
+	 * attribute each position's `calculatePositionPnL` once, at the day of
+	 * its latest Settled event. This dedupes partial-settlement events that
+	 * the clearing engine may emit for the same series and avoids the
+	 * double-counting that "one PnL contribution per event" would produce.
+	 *
+	 * Trade-off: a position pruned from the store after settling will not
+	 * contribute. The clearing event payload doesn't carry cost basis, so
+	 * we can't recover historical PnL from events alone without it.
 	 */
 	const dailyPnl = $derived.by((): number[] => {
 		const buckets = new Array<number>(WINDOW_DAYS).fill(0);
 		const cutoffMs = Date.now() - WINDOW_DAYS * DAY_MS;
 		const todayStartMs = Math.floor(Date.now() / DAY_MS) * DAY_MS;
 
+		// Pre-index latest Settled event timestamp (ms) per series_id.
+		const latestSettledMsBySeries: Record<string, number> = {};
+
 		for (const event of tradeHistory) {
 			if ('Settled' in event.event_type) {
 				const tsMs = Number(event.timestamp / NS_PER_MS);
+				const current = latestSettledMsBySeries[event.series_id];
 
-				if (tsMs >= cutoffMs) {
-					const market = getMarketById(event.series_id);
+				if (current === undefined || tsMs > current) {
+					latestSettledMsBySeries[event.series_id] = tsMs;
+				}
+			}
+		}
 
-					if (market !== undefined && market.token.symbol === VXP_TOKEN.symbol) {
-						const position = positions.find((p) => p.marketId === event.series_id);
+		for (const position of positions) {
+			const market = getMarketById(position.marketId);
 
-						if (position !== undefined) {
-							const dayIndex =
-								WINDOW_DAYS -
-								1 -
-								Math.floor((todayStartMs - Math.floor(tsMs / DAY_MS) * DAY_MS) / DAY_MS);
+			if (
+				market !== undefined &&
+				market.status === 'Resolved' &&
+				market.token.symbol === VXP_TOKEN.symbol
+			) {
+				const tsMs = latestSettledMsBySeries[position.marketId];
 
-							if (dayIndex >= 0 && dayIndex < WINDOW_DAYS) {
-								buckets[dayIndex] += calculatePositionPnL({ position, market });
-							}
-						}
+				if (tsMs !== undefined && tsMs >= cutoffMs) {
+					const dayIndex =
+						WINDOW_DAYS -
+						1 -
+						Math.floor((todayStartMs - Math.floor(tsMs / DAY_MS) * DAY_MS) / DAY_MS);
+
+					if (dayIndex >= 0 && dayIndex < WINDOW_DAYS) {
+						buckets[dayIndex] += calculatePositionPnL({ position, market });
 					}
 				}
 			}

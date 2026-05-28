@@ -1,6 +1,11 @@
 <script lang="ts">
 	import { USD_DECIMALS } from '$lib/constants/app.constants';
-	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
+	import {
+		isMarketTag,
+		MARKET_TAG_LABEL_KEYS,
+		primaryMarketTag,
+		type MarketTag
+	} from '$lib/constants/market-tags.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
@@ -27,6 +32,11 @@
 	}
 
 	const TOP_N = 5;
+
+	// Neutral colour for the synthetic "Other" bucket so it never collides
+	// with a real tag accent (notably `wc` and the `tagColor` default both
+	// resolve to `#E2B842`).
+	const OTHER_COLOR = 'var(--text-muted)';
 
 	const { positions, markets, marketTags }: Props = $props();
 
@@ -74,17 +84,20 @@
 			rows.push({
 				tag: 'other',
 				share: otherTotal / total,
-				color: tagColor('other')
+				color: OTHER_COLOR
 			});
 		}
 
 		return rows;
 	});
 
-	const tagLabel = (tag: string): string =>
-		tag === 'other'
-			? t({ locale: $localeStore, key: 'portfolio.allocation.other' })
-			: tag.charAt(0).toUpperCase() + tag.slice(1);
+	const tagLabel = (tag: string): string => {
+		if (isMarketTag(tag)) {
+			return t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] });
+		}
+
+		return t({ locale: $localeStore, key: 'portfolio.allocation.other' });
+	};
 </script>
 
 {#if buckets.length > 0}
