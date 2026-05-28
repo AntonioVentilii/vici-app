@@ -21,7 +21,7 @@
 	import DashAccuracySparkline from '$lib/components/dash/DashAccuracySparkline.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
-	import { ZERO } from '$lib/constants/app.constants';
+	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import {
 		MARKET_TAG_LABEL_KEYS,
 		MARKET_TAGS,
@@ -42,7 +42,9 @@
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
+	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
 	type TimeWindow = '7d' | '30d' | '90d' | 'All';
 	type PastFilter = 'all' | 'won' | 'lost';
@@ -170,11 +172,22 @@
 
 				return row.result !== 'neutral';
 			})
-			.map((row) => ({
-				marketId: row.marketId,
-				settledAtMs: Number(row.timestampNs / 1_000_000n),
-				win: row.result === 'won'
-			}))
+			.map((row) => {
+				const market = marketById.get(row.marketId);
+				const outcomeId = inferResolvedOutcomeId({ resolved: row, market });
+				const sideLabel =
+					outcomeId === undefined
+						? null
+						: (market?.outcomes?.find((o) => o.id === outcomeId)?.title ?? outcomeId);
+
+				return {
+					marketId: row.marketId,
+					settledAtMs: Number(row.timestampNs / 1_000_000n),
+					win: row.result === 'won',
+					sideLabel,
+					realizedPnlUsd: row.realizedPnlUsd
+				};
+			})
 	);
 
 	// `recentSettlements` (capped at `USER_STATS_RECENT_LIMIT`) used to be
@@ -230,6 +243,19 @@
 		const days = Math.floor(hours / 24);
 
 		return `${days}d`;
+	};
+
+	/**
+	 * Past-prediction row PnL → "+240 VXP" / "−180 VXP". `pnlUsdMicroUnits`
+	 * is the signed `cashflow_usd` carried on the `Settled` event in
+	 * `USD_DECIMALS` units; converted via `decimalFixedValueToNumber` and
+	 * rounded to whole VXP for the row chip.
+	 */
+	const fmtPastRowAmount = (pnlUsdMicroUnits: bigint): string => {
+		const n = decimalFixedValueToNumber({ value: pnlUsdMicroUnits, decimals: USD_DECIMALS });
+		const sign = n >= 0 ? '+' : '−';
+
+		return `${sign}${Math.round(Math.abs(n))} VXP`;
 	};
 
 	const fmtTimeLeft = (expiryMs: number): { label: string; urgent: boolean } => {
@@ -648,6 +674,7 @@
 			{:else}
 				{#each filteredHistory.slice(0, 8) as h (h.marketId + h.settledAtMs)}
 					{@const won = h.win}
+					{@const pnlPositive = h.realizedPnlUsd >= ZERO}
 					<div class="dash-past-row">
 						<span class="res" class:lost={!won} class:won>
 							{#if won}
@@ -659,15 +686,26 @@
 						<div>
 							<div class="q">{marketTitle(h.marketId)}</div>
 							<div class="ctx">
-								{t({
-									locale: $localeStore,
-									key: 'dash.past.row_ctx_when',
-									params: { when: fmtRelativeShort(h.settledAtMs) }
-								})}
+								{#if h.sideLabel !== null}
+									{t({
+										locale: $localeStore,
+										key: 'dash.past.row_ctx_side_when',
+										params: {
+											side: h.sideLabel,
+											when: fmtRelativeShort(h.settledAtMs)
+										}
+									})}
+								{:else}
+									{t({
+										locale: $localeStore,
+										key: 'dash.past.row_ctx_when',
+										params: { when: fmtRelativeShort(h.settledAtMs) }
+									})}
+								{/if}
 							</div>
 						</div>
-						<span class="delta-pct" class:delta-lost={!won} class:delta-won={won}>
-							{won ? '+' : '−'}{EM_DASH} VXP
+						<span class="delta-pct" class:delta-lost={!pnlPositive} class:delta-won={pnlPositive}>
+							{fmtPastRowAmount(h.realizedPnlUsd)}
 						</span>
 					</div>
 				{/each}

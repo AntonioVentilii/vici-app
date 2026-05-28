@@ -576,6 +576,7 @@ export const frMessages = {
 	'dash.disclosure.untried_empty': 'Vous avez essayé toutes les catégories — bravo.',
 	'dash.disclosure.untried_title': 'Marchés que vous n’avez pas essayés',
 	'dash.next.streak_progress': '{current}/{target} jours · {count} à venir',
+	'dash.past.row_ctx_side_when': '{side} · il y a {when}',
 	'dash.past.row_ctx_when': 'il y a {when}',
 	'final.lede': '1 000 VXP, dix marchés de démarrage, sans carte. Prédisez, c’est tout.',
 	'final.mark': 'Veni. Vidi. Vici.',

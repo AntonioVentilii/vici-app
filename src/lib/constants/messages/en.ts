@@ -562,6 +562,7 @@ export const enMessages = {
 	'dash.disclosure.untried_empty': 'You’ve tried every category — nice.',
 	'dash.disclosure.untried_title': 'Markets you haven’t tried',
 	'dash.next.streak_progress': '{current}/{target} day streak · {count} to go',
+	'dash.past.row_ctx_side_when': '{side} · {when} ago',
 	'dash.past.row_ctx_when': '{when} ago',
 	'final.lede': '1,000 VXP, ten starter markets, no card. Just predict.',
 	'final.mark': 'Veni. Vidi. Vici.',

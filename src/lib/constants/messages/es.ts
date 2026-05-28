@@ -571,6 +571,7 @@ export const esMessages = {
 	'dash.disclosure.untried_empty': 'Has probado todas las categorías — bien.',
 	'dash.disclosure.untried_title': 'Mercados que no has probado',
 	'dash.next.streak_progress': '{current}/{target} días · faltan {count}',
+	'dash.past.row_ctx_side_when': '{side} · hace {when}',
 	'dash.past.row_ctx_when': 'hace {when}',
 	'final.lede': '1.000 VXP, diez mercados iniciales, sin tarjeta. Solo predicciones.',
 	'final.mark': 'Veni. Vidi. Vici.',

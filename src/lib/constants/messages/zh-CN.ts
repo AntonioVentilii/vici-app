@@ -538,6 +538,7 @@ export const zhCnMessages = {
 	'dash.disclosure.untried_empty': '所有分类都尝试过了 — 真棒。',
 	'dash.disclosure.untried_title': '你尚未尝试的市场',
 	'dash.next.streak_progress': '{current}/{target} 天 · 还差 {count}',
+	'dash.past.row_ctx_side_when': '{side} · {when} 前',
 	'dash.past.row_ctx_when': '{when} 前',
 	'final.lede': '1,000 VXP，十个入门市场,无需信用卡。只管预测。',
 	'final.mark': 'Veni. Vidi. Vici.',

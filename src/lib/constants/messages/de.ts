@@ -572,6 +572,7 @@ export const deMessages = {
 	'dash.disclosure.untried_empty': 'Du hast alle Kategorien probiert — top.',
 	'dash.disclosure.untried_title': 'Märkte, die du noch nicht versucht hast',
 	'dash.next.streak_progress': '{current}/{target} Tage · noch {count}',
+	'dash.past.row_ctx_side_when': '{side} · vor {when}',
 	'dash.past.row_ctx_when': 'vor {when}',
 	'final.lede': '1.000 VXP, zehn Starter-Märkte, keine Karte. Einfach vorhersagen.',
 	'final.mark': 'Veni. Vidi. Vici.',

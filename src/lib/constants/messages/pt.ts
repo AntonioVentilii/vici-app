@@ -571,6 +571,7 @@ export const ptMessages = {
 	'dash.disclosure.untried_empty': 'Você já tentou todas as categorias — boa.',
 	'dash.disclosure.untried_title': 'Mercados que você não tentou',
 	'dash.next.streak_progress': '{current}/{target} dias · {count} restantes',
+	'dash.past.row_ctx_side_when': '{side} · há {when}',
 	'dash.past.row_ctx_when': 'há {when}',
 	'final.lede': '1.000 VXP, dez mercados iniciais, sem cartão. Apenas preveja.',
 	'final.mark': 'Veni. Vidi. Vici.',
