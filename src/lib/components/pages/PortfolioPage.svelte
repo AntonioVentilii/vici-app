@@ -4,7 +4,9 @@
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
+	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
+	import PortfolioPerformanceCard from '$lib/components/portfolio/PortfolioPerformanceCard.svelte';
+	import { MILLISECOND_IN_NANOSECONDS, ZERO } from '$lib/constants/app.constants';
 	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
@@ -23,33 +25,37 @@
 		formatPositionPnLWithOptionalUnit,
 		formatVxpBalance
 	} from '$lib/utils/playground-display.utils';
-	import { calculatePositionPnL } from '$lib/utils/portfolio.utils';
+	import { calculatePositionPnL, positionEntryProbability } from '$lib/utils/portfolio.utils';
 	import { positionResolvedResult } from '$lib/utils/position.utils';
 	import { refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 
 	/**
-	 * Portfolio — single-page hero + flat lists.
+	 * Portfolio — visual parity with the V1.2 prototype's PortfolioScreen.
 	 *
-	 * Layout
-	 * - `MobileAppBar` with title "Portfolio" and a chart icon on the
-	 *   right slot.
-	 * - Hero card (centred, gradient surface) — `TOTAL HOLDINGS`
-	 *   eyebrow, 38 px VXP balance + "VXP" suffix, weekly delta line
-	 *   in laurel / no-red.
-	 * - 3-col mini-stats: Unrealized P&L · 7D Accuracy · Active. Our
-	 *   backend has no rank field, so the third tile shows
-	 *   open-position count.
-	 * - Open positions — flat list, each row: category tag (top-left) ·
-	 *   side tag (top-right) · 2-line market title · "Payout at X %" ·
-	 *   signed PnL. Tap routes to the market detail.
-	 * - Resolved positions — flat list, each row: W/L glyph · market
-	 *   title · signed PnL.
-	 * - `OpenOrdersTable` retained for limit orders.
+	 * Layout (top → bottom)
+	 * - `MobileAppBar`, title "Portfolio", chart icon right.
+	 * - Hero card (left-aligned, gradient surface) — TOTAL HOLDINGS
+	 *   eyebrow, 38 px VXP balance + unit, 3-col stat row
+	 *   (Unrealized P&L · 7D Accuracy · Rank).
+	 * - Performance · 30D card with signed % delta and sparkline of
+	 *   cumulative realised PnL over 30 days. Hidden when the user has
+	 *   no settled VXP events in window.
+	 * - Allocation card — per-tag share of open VXP capital, top 5 +
+	 *   Other, sorted by descending share. Hidden when no open VXP
+	 *   positions.
+	 * - Active calls — flat list with category tag + side tag, market
+	 *   title, "Entry X% → Y%" entry-to-current probability, and signed
+	 *   "+N VXP · +M%" PnL (delta also expressed as price-move %).
+	 * - Recent history — flat resolved rows: title, side tag, "Xd ago",
+	 *   WIN/LOSS label, signed +VXP.
+	 * - `OpenOrdersTable` retained for limit orders (no prototype
+	 *   parallel — kept as a current-only feature).
 	 *
-	 * Deferred: PerfChart (30-day sparkline) and Allocation (5-bucket
-	 * category bars) — both would require new derived stores beyond
-	 * the constraint zone for this pass.
+	 * Rank: not yet served by the satellite — rendered as `EM_DASH`
+	 * placeholder, mirroring the Dash page treatment.
 	 */
+
+	const EM_DASH = '—';
 
 	const refreshing = $derived(
 		$positionsNotInitialized ||
@@ -73,7 +79,7 @@
 		$positions.filter((pos) => getMarketById(pos.marketId)?.status === 'Resolved')
 	);
 
-	// ── Hero VXP balance + weekly delta ──────────────────────────────
+	// ── Hero VXP balance ─────────────────────────────────────────────
 
 	const vxpBalance = $derived.by((): bigint => $balancesStore?.[VXP_TOKEN.id] ?? ZERO);
 
@@ -81,55 +87,14 @@
 		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
 	);
 
-	const weeklyVxpDelta = $derived.by((): number => {
-		const cutoffNs = BigInt(Date.now() - 7 * 24 * 60 * 60 * 1000) * 1_000_000n;
+	const vxpBalanceNumber = $derived.by((): number => {
+		const decimals = BigInt(VXP_TOKEN.decimals);
+		const denom = 10n ** decimals;
 
-		const recentSettlements = $tradeHistory.filter(
-			(event) => event.timestamp >= cutoffNs && 'Settled' in event.event_type
-		);
-
-		return recentSettlements.reduce<number>((acc, event) => {
-			const market = getMarketById(event.series_id);
-
-			if (market === undefined || market.token.symbol !== VXP_TOKEN.symbol) {
-				return acc;
-			}
-
-			const position = $positions.find((p) => p.marketId === event.series_id);
-
-			if (position === undefined) {
-				return acc;
-			}
-
-			return acc + calculatePositionPnL({ position, market });
-		}, 0);
+		return Number(vxpBalance) / Number(denom);
 	});
 
-	const weeklyDeltaDirection = $derived.by((): 'positive' | 'negative' | 'flat' => {
-		if (weeklyVxpDelta > 0) {
-			return 'positive';
-		}
-
-		if (weeklyVxpDelta < 0) {
-			return 'negative';
-		}
-
-		return 'flat';
-	});
-
-	const weeklyDeltaDisplay = $derived.by((): string => {
-		if (weeklyDeltaDirection === 'flat') {
-			return '';
-		}
-
-		const positive = weeklyDeltaDirection === 'positive';
-		const sign = positive ? '+' : '−';
-		const abs = positive ? weeklyVxpDelta : -weeklyVxpDelta;
-
-		return `${sign}${abs.toFixed(0)} VXP`;
-	});
-
-	// ── 3-col mini stats (Unrealized P&L · 7D Accuracy · Active) ─────
+	// ── 3-col mini stats (Unrealized P&L · 7D Accuracy · Rank) ───────
 
 	const unrealizedPnl = $derived.by((): number =>
 		openPositions.reduce<number>((acc, pos) => {
@@ -157,21 +122,21 @@
 
 	const unrealizedPnlDisplay = $derived.by((): string => {
 		if (unrealizedPnl === 0) {
-			return '0 VXP';
+			return `0 ${VXP_TOKEN.symbol}`;
 		}
 
 		const positive = unrealizedPnl > 0;
 		const sign = positive ? '+' : '−';
 		const abs = positive ? unrealizedPnl : -unrealizedPnl;
 
-		return `${sign}${abs.toFixed(0)} VXP`;
+		return `${sign}${abs.toFixed(0)} ${VXP_TOKEN.symbol}`;
 	});
 
 	const accuracyValue = $derived($userStore.profile?.accuracy ?? 0);
 
 	const accuracyDisplay = $derived(`${(accuracyValue * 100).toFixed(1)}%`);
 
-	// ── Helpers ──────────────────────────────────────────────────────
+	// ── Active-call row helpers ──────────────────────────────────────
 
 	const positionPnl = (pos: Position): number =>
 		calculatePositionPnL({ position: pos, market: getMarketById(pos.marketId) });
@@ -194,6 +159,72 @@
 		const tag = primaryMarketTag($marketTags[marketId]);
 
 		return tag ? tag.toUpperCase() : null;
+	};
+
+	const positionSideProb = (pos: Position): number => {
+		const market = getMarketById(pos.marketId);
+		const yesProb = market?.yesProbability ?? 0;
+
+		return pos.outcomeId === 'YES' ? yesProb : 1 - yesProb;
+	};
+
+	const positionEntryProb = (pos: Position): number | undefined =>
+		positionEntryProbability({ position: pos, market: getMarketById(pos.marketId) });
+
+	const positionMoveDisplay = (pos: Position): string | undefined => {
+		const entry = positionEntryProb(pos);
+
+		if (entry === undefined) {
+			return;
+		}
+
+		const current = positionSideProb(pos);
+		const pctMove = (current - entry) * 100;
+		const sign = pctMove >= 0 ? '+' : '−';
+
+		return `${sign}${Math.abs(pctMove).toFixed(1)}%`;
+	};
+
+	// ── Recent-history row helpers ───────────────────────────────────
+
+	/**
+	 * Approximate "Xd ago" / "Xh ago" timestamp for the Recent-history
+	 * block. We look up the most recent Settled event for the position's
+	 * market and format the gap from now. Falls back to a dash when no
+	 * settlement timestamp is available.
+	 */
+	const positionAgoDisplay = (pos: Position): string => {
+		const [event] = $tradeHistory
+			.filter((e) => 'Settled' in e.event_type && e.series_id === pos.marketId)
+			.sort((a, b) => Number(b.timestamp - a.timestamp));
+
+		if (event === undefined) {
+			return EM_DASH;
+		}
+
+		const tsMs = Number(event.timestamp / MILLISECOND_IN_NANOSECONDS);
+		const diffMs = Date.now() - tsMs;
+
+		if (diffMs < 0) {
+			return t({ locale: $localeStore, key: 'portfolio.row.ago_just_now' });
+		}
+
+		const hours = Math.floor(diffMs / (60 * 60 * 1000));
+		const days = Math.floor(diffMs / (24 * 60 * 60 * 1000));
+
+		if (days >= 1) {
+			return t({
+				locale: $localeStore,
+				key: 'portfolio.row.ago_days',
+				params: { days: String(days) }
+			});
+		}
+
+		return t({
+			locale: $localeStore,
+			key: 'portfolio.row.ago_hours',
+			params: { hours: String(Math.max(1, hours)) }
+		});
 	};
 </script>
 
@@ -221,24 +252,6 @@
 			</span>
 		</div>
 
-		{#if weeklyDeltaDirection === 'flat'}
-			<p class="num portfolio-hero-delta is-flat">
-				{t({ locale: $localeStore, key: 'portfolio.hero.no_activity_week' })}
-			</p>
-		{:else}
-			<p
-				class="num portfolio-hero-delta"
-				class:is-negative={weeklyDeltaDirection === 'negative'}
-				class:is-positive={weeklyDeltaDirection === 'positive'}
-			>
-				{t({
-					locale: $localeStore,
-					key: 'portfolio.hero.delta_this_week',
-					params: { amount: weeklyDeltaDisplay }
-				})}
-			</p>
-		{/if}
-
 		<dl class="portfolio-hero-stats">
 			<div class="portfolio-hero-stat">
 				<dt class="eyebrow">
@@ -259,11 +272,20 @@
 				<dd class="num">{accuracyDisplay}</dd>
 			</div>
 			<div class="portfolio-hero-stat">
-				<dt class="eyebrow">{t({ locale: $localeStore, key: 'portfolio.stat.active' })}</dt>
-				<dd class="num">{openPositions.length}</dd>
+				<dt class="eyebrow">{t({ locale: $localeStore, key: 'portfolio.stat.rank' })}</dt>
+				<dd class="num">{EM_DASH}</dd>
 			</div>
 		</dl>
 	</section>
+
+	<PortfolioPerformanceCard
+		markets={$markets}
+		positions={$positions}
+		tradeHistory={$tradeHistory}
+		vxpBalance={vxpBalanceNumber}
+	/>
+
+	<PortfolioAllocationCard marketTags={$marketTags} markets={$markets} positions={openPositions} />
 
 	{#if refreshing && openPositions.length === 0 && resolvedPositions.length === 0 && $orders.length === 0}
 		<section class="portfolio-section">
@@ -303,8 +325,9 @@
 						{@const pnl = positionPnl(pos)}
 						{@const sideKey =
 							pos.outcomeId === 'YES' ? 'yes' : pos.outcomeId === 'NO' ? 'no' : 'hold'}
-						{@const yesProb = market?.yesProbability ?? 0}
-						{@const sideProb = pos.outcomeId === 'YES' ? yesProb : 1 - yesProb}
+						{@const entry = positionEntryProb(pos)}
+						{@const current = positionSideProb(pos)}
+						{@const move = positionMoveDisplay(pos)}
 						{@const catLabel = categoryLabel(pos.marketId)}
 
 						<li>
@@ -318,7 +341,7 @@
 									{#if catLabel}
 										<span class="portfolio-row-cat">{catLabel}</span>
 									{:else}
-										<span class="portfolio-row-cat is-dim">—</span>
+										<span class="portfolio-row-cat is-dim">{EM_DASH}</span>
 									{/if}
 									<span class="portfolio-row-side portfolio-row-side-{sideKey}">
 										{sideLabel(pos)}
@@ -329,18 +352,28 @@
 								</div>
 								<div class="portfolio-row-meta">
 									<span class="num portfolio-row-prob">
-										{t({
-											locale: $localeStore,
-											key: 'portfolio.row.payout_at',
-											params: { prob: formatProb(sideProb) }
-										})}
+										{#if entry !== undefined}
+											{t({
+												locale: $localeStore,
+												key: 'portfolio.row.entry_to_current',
+												params: { entry: formatProb(entry), current: formatProb(current) }
+											})}
+										{:else}
+											{t({
+												locale: $localeStore,
+												key: 'portfolio.row.payout_at',
+												params: { prob: formatProb(current) }
+											})}
+										{/if}
 									</span>
 									<span
 										class="num portfolio-row-pnl"
 										class:is-negative={pnl < 0}
 										class:is-positive={pnl >= 0}
 									>
-										{formatRowPnl(pos)}
+										{formatRowPnl(pos)}{#if move !== undefined}<span class="portfolio-row-move">
+												· {move}</span
+											>{/if}
 									</span>
 								</div>
 							</a>
@@ -354,9 +387,11 @@
 			<section class="portfolio-section">
 				<header class="portfolio-section-head">
 					<h2 class="portfolio-section-title">
-						{t({ locale: $localeStore, key: 'portfolio.section.resolved' })}
+						{t({ locale: $localeStore, key: 'portfolio.section.recent_history' })}
 					</h2>
-					<span class="num portfolio-section-count">{resolvedPositions.length}</span>
+					<span class="portfolio-section-more">
+						{t({ locale: $localeStore, key: 'portfolio.section.see_all' })}
+					</span>
 				</header>
 
 				<ul class="portfolio-list">
@@ -366,33 +401,40 @@
 							? (positionResolvedResult({ market, position: pos }) ?? 'neutral')
 							: 'neutral'}
 						{@const pnl = positionPnl(pos)}
+						{@const sideKey =
+							pos.outcomeId === 'YES' ? 'yes' : pos.outcomeId === 'NO' ? 'no' : 'hold'}
+						{@const resultKey = result === 'won' ? 'win' : result === 'lost' ? 'loss' : 'neutral'}
 
 						<li>
-							<a class="portfolio-row" href="{AppPath.Markets}/{pos.marketId}">
-								<span
-									class="portfolio-row-glyph"
-									class:is-lost={result === 'lost'}
-									class:is-won={result === 'won'}
-									aria-hidden="true"
-								>
-									{result === 'won' ? 'W' : result === 'lost' ? 'L' : '—'}
-								</span>
-								<div class="portfolio-row-body">
-									<div class="portfolio-row-head">
-										<span class="portfolio-row-title-inline">
-											{market?.title ??
-												t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
-										</span>
+							<a class="portfolio-history-row" href="{AppPath.Markets}/{pos.marketId}">
+								<div class="portfolio-history-body">
+									<div class="portfolio-history-title">
+										{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 									</div>
-									<div class="portfolio-row-meta">
-										<span
-											class="num portfolio-row-pnl"
-											class:is-negative={pnl < 0}
-											class:is-positive={pnl >= 0}
-										>
-											{formatRowPnl(pos)}
+									<div class="portfolio-history-meta">
+										<span class="portfolio-row-side portfolio-row-side-{sideKey}">
+											{sideLabel(pos)}
 										</span>
+										<span class="num portfolio-history-ago">{positionAgoDisplay(pos)}</span>
 									</div>
+								</div>
+								<div class="portfolio-history-end">
+									<span class="portfolio-history-result portfolio-history-result-{resultKey}">
+										{#if result === 'won'}
+											{t({ locale: $localeStore, key: 'portfolio.row.win' })}
+										{:else if result === 'lost'}
+											{t({ locale: $localeStore, key: 'portfolio.row.loss' })}
+										{:else}
+											{EM_DASH}
+										{/if}
+									</span>
+									<span
+										class="num portfolio-history-pnl"
+										class:is-negative={pnl < 0}
+										class:is-positive={pnl >= 0}
+									>
+										{formatRowPnl(pos)}
+									</span>
 								</div>
 							</a>
 						</li>
@@ -429,10 +471,8 @@
 	.portfolio-hero {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
 		gap: 0.375rem;
 		padding: 1.25rem;
-		text-align: center;
 		background: linear-gradient(
 			180deg,
 			var(--bg-elevated, var(--bg-surface)),
@@ -466,29 +506,11 @@
 		color: var(--text-muted);
 	}
 
-	.portfolio-hero-delta {
-		margin: 0.125rem 0 0;
-		font-size: var(--t-13);
-		font-weight: 600;
-		color: var(--text-muted);
-	}
-
-	.portfolio-hero-delta.is-positive {
-		color: var(--yes);
-	}
-
-	.portfolio-hero-delta.is-negative {
-		color: var(--no);
-	}
-
-	.portfolio-hero-delta.is-flat {
-		color: var(--text-muted);
-	}
-
 	.portfolio-hero-stats {
-		display: grid;
-		grid-template-columns: repeat(3, minmax(0, 1fr));
-		gap: 0.5rem;
+		display: flex;
+		justify-content: space-between;
+		align-items: flex-start;
+		gap: 1rem;
 		width: 100%;
 		margin: 0.875rem 0 0;
 	}
@@ -496,9 +518,8 @@
 	.portfolio-hero-stat {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
+		align-items: flex-start;
 		gap: 0.25rem;
-		padding: 0.5rem 0.375rem;
 	}
 
 	.portfolio-hero-stat dt {
@@ -544,6 +565,12 @@
 
 	.portfolio-section-count {
 		font-size: var(--t-13);
+		color: var(--text-muted);
+	}
+
+	.portfolio-section-more {
+		font-size: var(--t-13);
+		font-weight: 600;
 		color: var(--text-muted);
 	}
 
@@ -600,37 +627,10 @@
 		opacity: 0.5;
 	}
 
-	.portfolio-row-body {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		min-width: 0;
-		flex: 1;
-	}
-
-	.portfolio-row-head {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
 	.portfolio-row-title {
 		font-size: var(--t-13);
 		font-weight: 600;
 		line-height: 1.4;
-		color: var(--text-base);
-		display: -webkit-box;
-		-webkit-box-orient: vertical;
-		-webkit-line-clamp: 2;
-		overflow: hidden;
-	}
-
-	.portfolio-row-title-inline {
-		flex: 1;
-		font-size: var(--t-13);
-		font-weight: 600;
-		line-height: 1.35;
 		color: var(--text-base);
 		display: -webkit-box;
 		-webkit-box-orient: vertical;
@@ -694,31 +694,93 @@
 		color: var(--no);
 	}
 
-	.portfolio-row-glyph {
-		display: inline-flex;
-		width: 2.5rem;
-		height: 2.5rem;
+	.portfolio-row-move {
+		font-weight: 500;
+		opacity: 0.85;
+	}
+
+	.portfolio-history-row {
+		display: flex;
 		align-items: center;
-		justify-content: center;
-		font-family: var(--font-mono);
-		font-size: 0.875rem;
-		font-weight: 700;
-		color: var(--text-muted);
-		background: var(--bg-surface);
+		gap: 0.75rem;
+		padding: 0.625rem 0.75rem;
+		text-decoration: none;
+		color: inherit;
+		background: var(--bg-raised, var(--bg-popover));
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
+		transition: border-color var(--d-hover) var(--ease-vici);
 	}
 
-	.portfolio-row-glyph.is-won {
+	.portfolio-history-row:hover {
+		border-color: var(--border-strong);
+	}
+
+	.portfolio-history-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		flex: 1;
+		min-width: 0;
+	}
+
+	.portfolio-history-title {
+		font-size: var(--t-13);
+		font-weight: 500;
+		color: var(--text-base);
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	.portfolio-history-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+	}
+
+	.portfolio-history-ago {
+		font-size: var(--text-eyebrow, 11px);
+		letter-spacing: 0.04em;
+		color: var(--text-muted);
+	}
+
+	.portfolio-history-end {
+		display: flex;
+		flex-direction: column;
+		align-items: flex-end;
+		gap: 0.125rem;
+	}
+
+	.portfolio-history-result {
+		font-family: var(--font-mono);
+		font-size: 9.5px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.portfolio-history-result-win {
 		color: var(--yes);
-		border-color: var(--yes);
-		background: var(--yes-wash);
 	}
 
-	.portfolio-row-glyph.is-lost {
+	.portfolio-history-result-loss {
 		color: var(--no);
-		border-color: var(--no);
-		background: var(--no-wash);
+	}
+
+	.portfolio-history-pnl {
+		font-size: var(--text-eyebrow, 11px);
+		font-weight: 600;
+		color: var(--text-muted);
+	}
+
+	.portfolio-history-pnl.is-positive {
+		color: var(--yes);
+	}
+
+	.portfolio-history-pnl.is-negative {
+		color: var(--no);
 	}
 
 	.portfolio-empty {
