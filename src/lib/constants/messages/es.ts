@@ -274,6 +274,7 @@ export const esMessages = {
 	'admin.markets.resolution_failed': 'Resolución fallida',
 	'admin.markets.resolved.message': 'Mercado {marketId} resuelto como {outcome}',
 	'admin.markets.resolved.title': 'Mercado resuelto',
+	'admin.oracle.action.reconcile': 'Reconciliar desde Roles',
 	'admin.oracle.action.refresh': 'Actualizar',
 	'admin.oracle.action.retry': 'Reintentar',
 	'admin.oracle.authorized_count': 'Autorizados ({count})',
@@ -286,6 +287,14 @@ export const esMessages = {
 	'admin.oracle.missing.title': 'Oráculo no registrado',
 	'admin.oracle.no_authorized':
 		'Aún no hay principales autorizados. Asigna el rol ADMIN o SOLVER a un usuario arriba; el hook del satélite los sincronizará aquí.',
+	'admin.oracle.reconcile.failed': 'Reconciliación fallida',
+	'admin.oracle.reconcile.hint':
+		'Re-sincroniza los liquidadores con la lista de Roles de arriba. Úsalo cuando se hayan otorgado roles antes de existir el oráculo, o si el hook del satélite registró oracle_settler_skipped_missing_oracle.',
+	'admin.oracle.reconcile.in_sync':
+		'Los liquidadores ya coinciden con la lista de Roles — nada que hacer.',
+	'admin.oracle.reconcile.success':
+		'Liquidadores actualizados: {added} añadidos, {removed} eliminados.',
+	'admin.oracle.reconcile.title': 'Liquidadores reconciliados',
 	'admin.oracle.registered.message':
 		'{oracle} creado con tu principal autorizado. Los liquidadores posteriores se sincronizan automáticamente desde la lista de Roles de arriba.',
 	'admin.oracle.registered.title': 'Oráculo registrado',

@@ -269,6 +269,7 @@ export const enMessages = {
 	'admin.markets.resolution_failed': 'Resolution Failed',
 	'admin.markets.resolved.message': 'Market {marketId} resolved as {outcome}',
 	'admin.markets.resolved.title': 'Market Resolved',
+	'admin.oracle.action.reconcile': 'Reconcile from Roles',
 	'admin.oracle.action.refresh': 'Refresh',
 	'admin.oracle.action.retry': 'Retry',
 	'admin.oracle.authorized_count': 'Authorized ({count})',
@@ -281,6 +282,12 @@ export const enMessages = {
 	'admin.oracle.missing.title': 'Oracle not registered',
 	'admin.oracle.no_authorized':
 		'No principals authorized yet. Assign the ADMIN or SOLVER role to a user above; the satellite hook will sync them here.',
+	'admin.oracle.reconcile.failed': 'Reconcile Failed',
+	'admin.oracle.reconcile.hint':
+		'Re-syncs settlers against the Roles list above. Use after roles were granted before the oracle existed, or if the satellite hook logged oracle_settler_skipped_missing_oracle.',
+	'admin.oracle.reconcile.in_sync': 'Settlers already match the Roles list — nothing to do.',
+	'admin.oracle.reconcile.success': 'Settlers updated: added {added}, removed {removed}.',
+	'admin.oracle.reconcile.title': 'Settlers Reconciled',
 	'admin.oracle.registered.message':
 		'{oracle} created with your principal authorized. Subsequent settlers are synced automatically from the Roles list above.',
 	'admin.oracle.registered.title': 'Oracle Registered',
