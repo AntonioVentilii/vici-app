@@ -423,7 +423,41 @@
 		flipped = false;
 	};
 
+	// Touch-end timestamp guard against the ghost-click chain. On mobile,
+	// `touchend` is followed ~300 ms later by synthetic `mousedown` /
+	// `mouseup` / `click` at the same coordinates. Without this guard the
+	// touch-driven flip-to-back fires, the back-face's `onclick` then
+	// catches the ghost-click and flips straight back to front — making
+	// tap-to-flip look like a no-op on phones.
+	let lastTouchEndAtMs = 0;
+	const GHOST_CLICK_WINDOW_MS = 500;
+
+	const onTouchEnd = (e: TouchEvent) => {
+		// `preventDefault` on touchend is the canonical way to suppress
+		// the synthetic mouse chain, but only works on non-passive
+		// listeners and is sometimes ignored by mobile browsers when the
+		// gesture wasn't claimed. Belt-and-braces: latch a timestamp and
+		// drop ghost-clicks inside `closeBackOnTap` (below).
+		if (e.cancelable) {
+			e.preventDefault();
+		}
+
+		lastTouchEndAtMs = performance.now();
+		onPointerUp();
+	};
+
 	const closeBackOnTap = (e: MouseEvent) => {
+		// Suppress the ghost-click that follows a touch-driven flip.
+		// The back face's `pointer-events` flips to `auto` the moment
+		// `flipped = true`, so the synthetic click would otherwise land
+		// here and immediately revert the state.
+		if (performance.now() - lastTouchEndAtMs < GHOST_CLICK_WINDOW_MS) {
+			e.preventDefault();
+			e.stopPropagation();
+
+			return;
+		}
+
 		// Tap anywhere on the back panel returns to the front, except
 		// when the tap lands on an interactive control (those use
 		// `stopPropagation` or `[data-no-card-gesture]`).
@@ -459,7 +493,7 @@
 		onmouseleave={onPointerUp}
 		onmousemove={onPointerMove}
 		onmouseup={onPointerUp}
-		ontouchend={onPointerUp}
+		ontouchend={onTouchEnd}
 		ontouchmove={onPointerMove}
 		ontouchstart={onPointerDown}
 	>
