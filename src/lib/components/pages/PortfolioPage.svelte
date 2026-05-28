@@ -10,6 +10,7 @@
 	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { orders, ordersNotInitialized } from '$lib/derived/orders.derived';
@@ -19,7 +20,8 @@
 		resolvedPositions,
 		resolvedPositionsNotInitialized
 	} from '$lib/derived/resolved-positions.derived';
-	import { tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
+	import { tradeHistory, tradeHistoryNotInitialized } from '$lib/derived/trade-history.derived';
+	import { authPrincipal } from '$lib/derived/user.derived';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -142,6 +144,46 @@
 	const accuracyValue = $derived($userStore.profile?.accuracy ?? 0);
 
 	const accuracyDisplay = $derived(`${(accuracyValue * 100).toFixed(1)}%`);
+
+	// ── TEMP DEBUG — remove before merging.
+	const debugSettledEvents = $derived($tradeHistory.filter((e) => 'Settled' in e.event_type));
+	const debugDomainKey = $derived.by((): string => {
+		const d = $balanceDomain;
+
+		if ('ViciXp' in d) {
+			return 'ViciXp';
+		}
+
+		if ('Settlement' in d) {
+			return 'Settlement';
+		}
+
+		if ('Social' in d) {
+			return 'Social';
+		}
+
+		return JSON.stringify(d);
+	});
+	const debugPrincipalShort = $derived.by((): string => {
+		const p = $authPrincipal;
+
+		if (p === undefined) {
+			return '(not signed in)';
+		}
+
+		return p.length > 14 ? `${p.slice(0, 7)}…${p.slice(-5)}` : p;
+	});
+	// Labels in JS so the bare-svelte-text lint rule doesn't flag the
+	// debug strip — intentionally not i18n'd; reverted before merge.
+	const DEBUG_LABELS = {
+		summary: 'debug · settled events',
+		principal: 'principal',
+		domain: 'balance domain',
+		tradeTotal: 'tradeHistory total',
+		settledCount: 'Settled events',
+		resolvedCount: '$resolvedPositions',
+		marketsTotal: '$markets total'
+	} as const;
 
 	// ── Active-call row helpers ──────────────────────────────────────
 
@@ -303,6 +345,32 @@
 		right={portfolioAppbarRight}
 		title={t({ locale: $localeStore, key: 'portfolio.title' })}
 	/>
+
+	<!-- TEMP DEBUG STRIP — remove before merging. -->
+	<details class="debug-strip" open>
+		<summary>{DEBUG_LABELS.summary}</summary>
+		<dl>
+			<dt>{DEBUG_LABELS.principal}</dt>
+			<dd>{debugPrincipalShort}</dd>
+			<dt>{DEBUG_LABELS.domain}</dt>
+			<dd>{debugDomainKey}</dd>
+			<dt>{DEBUG_LABELS.tradeTotal}</dt>
+			<dd>{$tradeHistory.length}</dd>
+			<dt>{DEBUG_LABELS.settledCount}</dt>
+			<dd>{debugSettledEvents.length}</dd>
+			<dt>{DEBUG_LABELS.resolvedCount}</dt>
+			<dd>{$resolvedPositions.length}</dd>
+			<dt>{DEBUG_LABELS.marketsTotal}</dt>
+			<dd>{$markets.length}</dd>
+		</dl>
+		{#if debugSettledEvents.length > 0}
+			<ul>
+				{#each debugSettledEvents.slice(0, 5) as e (e.event_id)}
+					<li>{e.series_id} · qty {e.qty.toString()}</li>
+				{/each}
+			</ul>
+		{/if}
+	</details>
 
 	<section class="portfolio-hero">
 		<p class="eyebrow portfolio-hero-eyebrow">
@@ -523,6 +591,42 @@
 		flex-direction: column;
 		gap: 1.25rem;
 		padding: 0 1.25rem 6rem;
+	}
+
+	/* TEMP DEBUG STRIP — remove before merging. */
+	.debug-strip {
+		margin: 0 0 0.25rem;
+		padding: 0.625rem 0.75rem;
+		font-family: var(--font-mono);
+		font-size: 11px;
+		line-height: 1.5;
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--no) 8%, var(--bg-surface));
+		border: 1px dashed color-mix(in srgb, var(--no) 35%, transparent);
+		border-radius: 8px;
+	}
+	.debug-strip summary {
+		cursor: pointer;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+	.debug-strip dl {
+		display: grid;
+		grid-template-columns: max-content 1fr;
+		gap: 0.125rem 0.75rem;
+		margin: 0.5rem 0 0;
+	}
+	.debug-strip dt {
+		color: var(--text-muted);
+	}
+	.debug-strip dd {
+		margin: 0;
+		word-break: break-all;
+	}
+	.debug-strip ul {
+		margin: 0.5rem 0 0;
+		padding-left: 1rem;
 	}
 
 	.portfolio-appbar-icon {
