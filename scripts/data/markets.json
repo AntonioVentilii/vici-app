@@ -3,7 +3,7 @@
 		"title": "Will US inflation (CPI) for March be above 3.4%?",
 		"description": "Traders speculate on whether the US Consumer Price Index report for March will exceed 3.4%.",
 		"expiryDate": "2026-04-15T21:59:59.000Z",
-		"categories": ["Economics", "Inflation", "Macroeconomics"],
+		"categories": ["macro"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -12,7 +12,7 @@
 		"title": "Will the S&P 500 close above 5,500 on 30 June?",
 		"description": "Settlement depends on the S&P 500’s official closing value on that date.",
 		"expiryDate": "2026-06-30T21:59:59.000Z",
-		"categories": ["Finance", "Equities", "Market Indices"],
+		"categories": ["macro"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -21,7 +21,7 @@
 		"title": "Will Bitcoin trade above $100,000 at any point in 2026?",
 		"description": "The contract resolves YES if BTC/USD touches or exceeds $100k at any time before end of year.",
 		"expiryDate": "2026-12-31T22:59:59.000Z",
-		"categories": ["Crypto Markets", "Finance", "Digital Assets"],
+		"categories": ["crypto", "macro"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -30,7 +30,7 @@
 		"title": "Will the Labour Party win more than 330 seats in the next UK general election?",
 		"description": "Outcome determined by the official results issued by the Electoral Commission.",
 		"expiryDate": "2026-05-05T21:59:59.000Z",
-		"categories": ["Politics", "Elections", "United Kingdom"],
+		"categories": ["politics"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -39,7 +39,7 @@
 		"title": "Will the US Congress pass a federal data-privacy bill by year-end?",
 		"description": "Settles YES if a bill becomes law before expiry.",
 		"expiryDate": "2026-12-31T22:59:59.000Z",
-		"categories": ["Politics", "Legislation", "Technology Policy"],
+		"categories": ["politics", "tech"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -48,7 +48,7 @@
 		"title": "Will New York record more than 2 inches of snow this January?",
 		"description": "Based on official NOAA snowfall measurements for the month.",
 		"expiryDate": "2026-02-01T22:59:59.000Z",
-		"categories": ["Weather", "Climate"],
+		"categories": ["culture"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -57,7 +57,7 @@
 		"title": "Will there be a named hurricane landfall in Florida during the 2026 season?",
 		"description": "Requires at least one named storm making landfall, per the National Hurricane Center.",
 		"expiryDate": "2026-11-30T22:59:59.000Z",
-		"categories": ["Weather", "Natural Hazards"],
+		"categories": ["culture"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -66,7 +66,7 @@
 		"title": "Will “Dune: Part 3” be officially announced by 1 October 2026?",
 		"description": "YES if the studio or director confirms the film publicly via official channels.",
 		"expiryDate": "2026-10-01T21:59:59.000Z",
-		"categories": ["Entertainment", "Film"],
+		"categories": ["culture"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -75,7 +75,7 @@
 		"title": "Will a UK artist reach #1 on the Billboard Hot 100 before 2027?",
 		"description": "Verification uses Billboard’s official weekly chart records.",
 		"expiryDate": "2026-12-31T22:59:59.000Z",
-		"categories": ["Entertainment", "Music"],
+		"categories": ["culture"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -84,7 +84,7 @@
 		"title": "Will Tesla deliver more than 2 million vehicles in 2026?",
 		"description": "Based on Tesla’s end-of-year delivery report.",
 		"expiryDate": "2027-01-15T22:59:59.000Z",
-		"categories": ["Business", "Automotive", "Technology"],
+		"categories": ["tech", "macro"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -93,7 +93,7 @@
 		"title": "Will Apple release a foldable iPhone by December 2026?",
 		"description": "YES if Apple publicly launches or announces a foldable iPhone model.",
 		"expiryDate": "2026-12-31T22:59:59.000Z",
-		"categories": ["Technology", "Consumer Electronics"],
+		"categories": ["tech"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -102,7 +102,7 @@
 		"title": "Will Manchester City win the 2025–26 Premier League season?",
 		"description": "Outcome follows the Premier League’s official final table.",
 		"expiryDate": "2026-05-20T21:59:59.000Z",
-		"categories": ["Sports", "Football"],
+		"categories": ["sports"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -111,7 +111,7 @@
 		"title": "Will Nadal play at least one match at Roland Garros in 2026?",
 		"description": "YES if he appears in the first-round draw and plays.",
 		"expiryDate": "2026-05-25T21:59:59.000Z",
-		"categories": ["Sports", "Tennis"],
+		"categories": ["sports"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -120,7 +120,7 @@
 		"title": "Will a pigeon land on the Wimbledon Centre Court roof during the 2026 men’s final?",
 		"description": "Settles on publicly verifiable video evidence during the match.",
 		"expiryDate": "2026-07-12T21:59:59.000Z",
-		"categories": ["Random Events", "Sports"],
+		"categories": ["sports", "culture"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -129,7 +129,7 @@
 		"title": "Will the Met Office declare 25 July 2026 the hottest day of the year in the UK?",
 		"description": "YES if that date is the hottest daily maximum temperature in Met Office records.",
 		"expiryDate": "2026-12-31T22:59:59.000Z",
-		"categories": ["Weather", "Climate"],
+		"categories": ["culture"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -138,7 +138,7 @@
 		"title": "Will a new prime number larger than 10^30 be discovered before 2028?",
 		"description": "Verified via public mathematical registries.",
 		"expiryDate": "2027-12-31T22:59:59.000Z",
-		"categories": ["Science", "Mathematics"],
+		"categories": ["tech"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -147,7 +147,7 @@
 		"title": "Will the London Underground experience a system-wide outage of more than one hour in November 2026?",
 		"description": "Requires an official TfL report confirming a full-network disruption.",
 		"expiryDate": "2026-12-01T22:59:59.000Z",
-		"categories": ["Transport", "Infrastructure"],
+		"categories": ["culture"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -156,7 +156,7 @@
 		"title": "Will SpaceX reach orbit on its first launch attempt of 2026?",
 		"description": "YES if the first 2026 launch results in a confirmed orbital insertion.",
 		"expiryDate": "2026-03-31T21:59:59.000Z",
-		"categories": ["Space", "Technology"],
+		"categories": ["tech"],
 		"inviteOnly": false,
 		"balanceDomain": "ViciXp",
 		"locale": "en"
@@ -165,7 +165,7 @@
 		"title": "Who will win the 2026 FIFA World Cup?",
 		"description": "Prediction on the champion of the 2026 FIFA World Cup.",
 		"expiryDate": "2026-07-20T21:59:59.000Z",
-		"categories": ["Sports", "Football", "World Cup"],
+		"categories": ["wc", "sports"],
 		"inviteOnly": false,
 		"outcomes": [
 			"Italy",
@@ -185,7 +185,7 @@
 		"title": "Who will be cast as the next James Bond?",
 		"description": "Speculation on the actor officially announced to lead the next 007 film.",
 		"expiryDate": "2026-12-31T22:59:59.000Z",
-		"categories": ["Entertainment", "Film"],
+		"categories": ["culture"],
 		"inviteOnly": false,
 		"outcomes": [
 			"Aaron Taylor-Johnson",
