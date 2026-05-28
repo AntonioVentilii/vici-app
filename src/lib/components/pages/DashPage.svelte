@@ -141,16 +141,18 @@
 		id: MarketTag;
 		label: string;
 		acc: number;
+		/** `true` if at least one call in this category has settled. The
+		 *  template uses this to gate whether a row appears; a row with
+		 *  no settled calls would always render at 0% which isn't useful. */
+		hasSettled: boolean;
 	}
 
 	/**
 	 * Per-category accuracy breakdown. One row per tag with at least one
-	 * settled call. Sourced from `$resolvedPositions` (the FE-side
-	 * Settled-event stream) so it stays in lock-step with the chip
-	 * counts in the "Past predictions" block above.
-	 *
-	 * 0%-accuracy rows are hidden — a single early loss shouldn't paint
-	 * the whole category red while the user has no signal yet.
+	 * settled call, including ones currently at 0% — a losing settled
+	 * call is real signal, not noise. Sourced from `$resolvedPositions`
+	 * (the FE-side Settled-event stream) so it stays in lock-step with
+	 * the chip counts in the "Past predictions" block above.
 	 */
 	const catRows = $derived<CategoryRow[]>(
 		MARKET_TAGS.filter((tag) => tag !== 'wc')
@@ -165,10 +167,11 @@
 				return {
 					id: tag,
 					label: t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }),
-					acc
+					acc,
+					hasSettled: settled.length > 0
 				};
 			})
-			.filter((row) => row.acc > 0)
+			.filter((row) => row.hasSettled)
 			.sort((a, b) => b.acc - a.acc)
 	);
 
