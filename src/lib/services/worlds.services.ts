@@ -172,6 +172,19 @@ export const leaveAffiliation = async ({
  * leg; if `currentLockedUntilMs` is still in the future the helper
  * throws synchronously so the picker can render a lock-active CTA
  * without firing a doomed round-trip.
+ *
+ * **Atomicity caveat.** Switching isn't a single satellite hook — the
+ * delete and the join are independent round-trips. If the join leg
+ * fails (timeout / transient), we make a best-effort attempt to
+ * re-create the previous affiliation so the user isn't stranded with
+ * an empty slot. The rollback creates a fresh row at `Date.now()`,
+ * which means the lock window resets — undesirable but strictly
+ * better than no affiliation. When both the join and the rollback
+ * fail (network gone / satellite down), the original error is
+ * re-thrown so the caller surfaces a clear "switch didn't go
+ * through" hint and the next refresh sees an empty slot the user
+ * can re-pick. A canonical fix would be a server-side atomic switch
+ * hook; tracked separately.
  */
 export const switchAffiliation = async ({
 	kind,
@@ -195,7 +208,24 @@ export const switchAffiliation = async ({
 		affiliationIdentifier: currentAffiliationIdentifier
 	});
 
-	return joinAffiliation({ kind, affiliationIdentifier: nextAffiliationIdentifier });
+	try {
+		return await joinAffiliation({ kind, affiliationIdentifier: nextAffiliationIdentifier });
+	} catch (joinErr) {
+		// Best-effort rollback — re-join the previous affiliation so the
+		// user has *something* on the leaderboard. If the rollback also
+		// fails we swallow it (logging) and surface the original error,
+		// since the user's primary action ("switch to X") is what failed.
+		try {
+			await joinAffiliation({
+				kind,
+				affiliationIdentifier: currentAffiliationIdentifier
+			});
+		} catch (rollbackErr) {
+			console.error('switchAffiliation: rollback also failed', rollbackErr);
+		}
+
+		throw joinErr;
+	}
 };
 
 /**

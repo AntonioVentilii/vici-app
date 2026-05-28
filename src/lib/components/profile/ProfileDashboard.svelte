@@ -624,10 +624,15 @@
 				     so a second inline pencil was redundant noise. -->
 				<div class="profile-handle-row">
 					{#if isOwnProfile}
+						<!-- The button's visible text is the accessible name
+						     (no `aria-label` override), so screen readers
+						     still hear the handle. `title` surfaces the
+						     edit affordance on hover / supplementary
+						     announcement. -->
 						<button
 							class="profile-handle profile-handle-btn"
-							aria-label={t({ locale: $localeStore, key: 'profile.dashboard.edit_profile' })}
 							onclick={openEditProfile}
+							title={t({ locale: $localeStore, key: 'profile.dashboard.edit_profile' })}
 							type="button"
 						>
 							@{profile.nickname}
