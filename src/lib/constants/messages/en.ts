@@ -706,7 +706,7 @@ export const enMessages = {
 		'You’re already a VICI member, so the {handle} invite can’t pay out a VXP bonus. You can still add them as a friend to compare calls and back each other’s decks.',
 	'invite.sheet.bullet_friendship': 'You’ll show up in each other’s Friends list, instantly.',
 	'invite.sheet.bullet_no_bonus': 'No VXP bonus — the +500 VXP is reserved for new signups.',
-	'invite.sheet.cta_add': 'Add {handle} as friend',
+	'invite.sheet.cta_add': 'Add {handle} as a friend',
 	'invite.sheet.cta_skip': 'Not now',
 	'invite.sheet.eyebrow': 'Invite from',
 	'invite.sheet.tag': 'wants to add you as a friend',

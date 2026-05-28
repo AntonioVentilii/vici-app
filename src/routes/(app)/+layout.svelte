@@ -158,12 +158,6 @@
 		const rawSide = 'side' in parsed && typeof parsed.side === 'string' ? parsed.side : null;
 		const side: 'YES' | 'NO' | null = rawSide === 'YES' || rawSide === 'NO' ? rawSide : null;
 
-		// At least one signal is required for the payload to be useful;
-		// otherwise discard so the caller can clear the slot.
-		if (handle === null && participantId === null && side === null) {
-			return;
-		}
-
 		const interests =
 			'interests' in parsed && Array.isArray(parsed.interests)
 				? parsed.interests.filter((interest): interest is string => typeof interest === 'string')
@@ -178,6 +172,14 @@
 				: undefined;
 		const referralCode =
 			rawReferral && REFERRAL_CODE_REGEX.test(rawReferral) ? rawReferral : undefined;
+
+		// At least one actionable signal is required for the payload to be useful — onboarding
+		// picks (handle / participantId / side) drive the profile upsert, and `referralCode`
+		// drives the redeem-or-friendship flow. A bare payload with none of those is dropped
+		// so the caller can clear the slot.
+		if (handle === null && participantId === null && side === null && referralCode === undefined) {
+			return;
+		}
 
 		return {
 			handle,
@@ -288,6 +290,13 @@
 		// pre-auth, while signed-out) belongs to a different intent;
 		// silently overwriting their saved nickname / interests / email
 		// is destructive. Preserve the existing profile and tell them.
+		//
+		// A stashed `referralCode` is the one piece of the payload that
+		// *is* still actionable for a returning user: they can't redeem
+		// the VXP bonus (they're not a fresh signup), but they can still
+		// land in the inviter's friends list. Fire `claimReferralFriendship`
+		// before clearing the payload — fire-and-forget so a transient
+		// failure never blocks the account-exists message.
 		if ($userStore.profileExisted) {
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'onboarding.handoff.account_exists_title' }),
@@ -298,6 +307,33 @@
 				}),
 				type: 'info'
 			});
+
+			if (pending.referralCode !== undefined) {
+				const friendshipCode = pending.referralCode;
+
+				void (async () => {
+					try {
+						await claimReferralFriendship({ code: friendshipCode });
+
+						notificationsStore.add({
+							title: t({
+								locale: $localeStore,
+								key: 'onboarding.handoff.referral_late_title'
+							}),
+							message: t({
+								locale: $localeStore,
+								key: 'onboarding.handoff.referral_late'
+							}),
+							type: 'info'
+						});
+					} catch (err: unknown) {
+						console.warn(
+							'claimReferralFriendship (returning user) failed',
+							err instanceof Error ? err.message : err
+						);
+					}
+				})();
+			}
 
 			localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
 
