@@ -273,6 +273,7 @@ export const itMessages = {
 	'admin.markets.resolution_failed': 'Risoluzione fallita',
 	'admin.markets.resolved.message': 'Mercato {marketId} risolto come {outcome}',
 	'admin.markets.resolved.title': 'Mercato risolto',
+	'admin.oracle.action.reconcile': 'Riconcilia dai Ruoli',
 	'admin.oracle.action.refresh': 'Aggiorna',
 	'admin.oracle.action.retry': 'Riprova',
 	'admin.oracle.authorized_count': 'Autorizzati ({count})',
@@ -285,6 +286,12 @@ export const itMessages = {
 	'admin.oracle.missing.title': 'Oracolo non registrato',
 	'admin.oracle.no_authorized':
 		'Nessun principal autorizzato. Assegna il ruolo ADMIN o SOLVER a un utente qui sopra; l’hook satellite li sincronizzerà qui.',
+	'admin.oracle.reconcile.failed': 'Riconciliazione fallita',
+	'admin.oracle.reconcile.hint':
+		'Risincronizza i settler con la lista Ruoli qui sopra. Usalo quando i ruoli sono stati assegnati prima che l’oracolo esistesse, o se l’hook satellite ha loggato oracle_settler_skipped_missing_oracle.',
+	'admin.oracle.reconcile.in_sync': 'I settler corrispondono già alla lista Ruoli — nulla da fare.',
+	'admin.oracle.reconcile.success': 'Settler aggiornati: {added} aggiunti, {removed} rimossi.',
+	'admin.oracle.reconcile.title': 'Settler riconciliati',
 	'admin.oracle.registered.message':
 		'{oracle} creato con il tuo principal autorizzato. I settler successivi vengono sincronizzati automaticamente dalla lista Ruoli qui sopra.',
 	'admin.oracle.registered.title': 'Oracolo registrato',
