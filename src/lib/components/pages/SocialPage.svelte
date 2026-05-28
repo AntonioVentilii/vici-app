@@ -122,6 +122,16 @@
 		padding: 0 1.25rem 6rem;
 	}
 
+	/* The MobileAppBar already carries its own 1.25rem horizontal
+	   padding so the title would otherwise sit at 2.5rem from the
+	   screen edge while the tabs/content below align at 1.25rem.
+	   Pull the appbar back to the edge so its title lines up with
+	   the rest of the page. */
+	.social-page :global(.mobile-appbar) {
+		margin-left: -1.25rem;
+		margin-right: -1.25rem;
+	}
+
 	/* Segmented-control tab strip: the container carries a tinted
 	   surface + border + radius; each tab flexes to share the row;
 	   the active one looks like a raised pill (bg-elevated + soft

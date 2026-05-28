@@ -56,10 +56,12 @@
 		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.5rem 1.25rem 0.75rem;
+		padding: 1.25rem 1.25rem 0.75rem;
 	}
 
-	@media (min-width: 768px) {
+	/* Aligned with `DesktopAppNav`'s 56rem (896px) breakpoint so there
+	   isn't an intermediate viewport range with no header at all. */
+	@media (min-width: 56rem) {
 		.mobile-appbar {
 			display: none;
 		}
