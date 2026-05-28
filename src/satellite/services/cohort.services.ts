@@ -334,15 +334,45 @@ export const listMyAffiliationsFn = (): {
 /**
  * Tolerant `AffiliationDoc` reader. Coerces the legacy
  * `affiliationId` field to `affiliationIdentifier` so pre-rename
- * rows decode cleanly. Returns `undefined` when the row is
- * unrecoverable (no identifier under either name) so callers can
- * skip it rather than emit a malformed wire shape.
+ * rows decode cleanly, AND fully validates the remaining required
+ * fields so every call site can rely on a well-formed shape.
+ *
+ * Returns `undefined` when any required field is missing or
+ * structurally invalid:
+ *
+ *  - `affiliationIdentifier` (or legacy `affiliationId`) — non-empty string
+ *  - `member` — non-empty string (a real principal-text check costs more
+ *    than it's worth here; the write-time assert already enforced it)
+ *  - `kind` — `'university' | 'country'`
+ *  - `joinedAtMs` / `lockedUntilMs` — finite numbers (guards against
+ *    `NaN` flowing into the Option-schema parse and into roster sort
+ *    comparisons in `listWorldsRosterFn`)
+ *
+ * Callers skip the row rather than emit a malformed wire shape that
+ * would trap the `j.optional(AffiliationOptionWireSchema)` parse or
+ * the JsonData → Candid conversion.
  */
 export const readAffiliationDoc = (data: Uint8Array): AffiliationDoc | undefined => {
 	const raw = decodeDocData<AffiliationDoc & { affiliationId?: string }>(data);
 	const identifier = raw.affiliationIdentifier ?? raw.affiliationId;
 
 	if (typeof identifier !== 'string' || identifier.length === 0) {
+		return;
+	}
+
+	if (typeof raw.member !== 'string' || raw.member.length === 0) {
+		return;
+	}
+
+	if (raw.kind !== 'university' && raw.kind !== 'country') {
+		return;
+	}
+
+	if (typeof raw.joinedAtMs !== 'number' || !Number.isFinite(raw.joinedAtMs)) {
+		return;
+	}
+
+	if (typeof raw.lockedUntilMs !== 'number' || !Number.isFinite(raw.lockedUntilMs)) {
 		return;
 	}
 
