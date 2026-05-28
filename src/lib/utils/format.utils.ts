@@ -122,6 +122,59 @@ export const formatNanosecondsToDate = ({ nanoseconds }: { nanoseconds: bigint }
 	return date.toLocaleDateString('en', DATE_TIME_FORMAT_OPTIONS);
 };
 
+/**
+ * Buckets for `Intl.RelativeTimeFormat` largest-fit selection. Ordered
+ * largest → smallest so the picker stops at the first unit whose
+ * absolute count is `>= 1`.
+ */
+const RELATIVE_TIME_UNITS: ReadonlyArray<{ unit: Intl.RelativeTimeFormatUnit; ms: number }> = [
+	{ unit: 'year', ms: 365 * 24 * 60 * 60 * 1000 },
+	{ unit: 'month', ms: 30 * 24 * 60 * 60 * 1000 },
+	{ unit: 'week', ms: 7 * 24 * 60 * 60 * 1000 },
+	{ unit: 'day', ms: 24 * 60 * 60 * 1000 },
+	{ unit: 'hour', ms: 60 * 60 * 1000 },
+	{ unit: 'minute', ms: 60 * 1000 }
+];
+
+/**
+ * Locale-aware "X minutes / hours / days ago" formatter. Returns the
+ * largest unit whose count is `>= 1`, falling back to "just now" when
+ * the delta is under a minute. Use this for any human-readable
+ * timestamp that's part of an i18n'd surface (inbox, history rows,
+ * activity feed) — `formatNanosecondsToDate` always renders in
+ * English and is reserved for log-style timestamps.
+ */
+export const formatRelativeAgoFromNs = ({
+	timestampNs,
+	locale,
+	nowMs = Date.now()
+}: {
+	timestampNs: bigint;
+	locale: string;
+	nowMs?: number;
+}): string => {
+	const tsMs = Number(timestampNs / MILLISECOND_IN_NANOSECONDS);
+	const diffMs = nowMs - tsMs;
+	const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+
+	if (diffMs < RELATIVE_TIME_UNITS[RELATIVE_TIME_UNITS.length - 1].ms) {
+		// Sub-minute: ask the formatter for "now" so locales that have a
+		// dedicated phrase (e.g. "just now") get it for free.
+		return rtf.format(0, 'second');
+	}
+
+	for (const { unit, ms } of RELATIVE_TIME_UNITS) {
+		const value = Math.floor(diffMs / ms);
+
+		if (value >= 1) {
+			return rtf.format(-value, unit);
+		}
+	}
+
+	// Unreachable — the loop covers all positive deltas above one minute.
+	return rtf.format(0, 'second');
+};
+
 export const decimalFixedValueToNumber = ({
 	value,
 	decimals

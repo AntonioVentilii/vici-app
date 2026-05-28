@@ -429,7 +429,10 @@
 							key: 'settings.identity.meta',
 							params: {
 								level: profile?.level ?? 1,
-								accuracy: ((profile?.accuracy ?? 0) * 100).toFixed(1),
+								// `profile.accuracy` is already a 0..100 percentage
+								// (see `profile.services.ts`); render directly without
+								// re-multiplying by 100.
+								accuracy: (profile?.accuracy ?? 0).toFixed(1),
 								calls: profile?.totalTrades ?? 0
 							}
 						})}

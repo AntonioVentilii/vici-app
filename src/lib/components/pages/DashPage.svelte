@@ -21,7 +21,7 @@
 	import DashAccuracySparkline from '$lib/components/dash/DashAccuracySparkline.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
-	import { ZERO } from '$lib/constants/app.constants';
+	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import {
 		MARKET_TAG_LABEL_KEYS,
 		MARKET_TAGS,
@@ -32,6 +32,7 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { orders } from '$lib/derived/orders.derived';
 	import { positions } from '$lib/derived/positions.derived';
+	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
@@ -41,7 +42,10 @@
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
+	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
+	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
 	type TimeWindow = '7d' | '30d' | '90d' | 'All';
 	type PastFilter = 'all' | 'won' | 'lost';
@@ -56,8 +60,11 @@
 	const profile = $derived($userStore.profile);
 	const nickname = $derived(profile?.nickname ?? '');
 	const totalTrades = $derived(profile?.totalTrades ?? 0);
+	// `profile.accuracy` is persisted as a 0..100 percentage (see
+	// `profile.services.ts` `calculateAndSyncStats`). Render directly —
+	// multiplying by 100 here gave 10000% for a fully-accurate user.
 	const accuracyValue = $derived(profile?.accuracy ?? 0);
-	const accuracyPct = $derived((accuracyValue * 100).toFixed(1));
+	const accuracyPct = $derived(accuracyValue.toFixed(1));
 	const streak = $derived(profile?.dailyStreak ?? 0);
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
@@ -65,9 +72,48 @@
 	let tw = $state<TimeWindow>('30d');
 	let pastFilter = $state<PastFilter>('all');
 
-	// VXP balance — drives the holdings hero number.
+	// Free VXP balance in the user's ICRC ledger account. Note this
+	// drops to ~0 once VXP is moved into the clearing canister as
+	// collateral, so a user with many active positions can show 0 here
+	// despite owning plenty of VXP — see `holdingsTotal` below for the
+	// combined free + backed number that the "Total Holdings" hero shows.
 	const vxpBalance = $derived($balancesStore?.[VXP_TOKEN.id] ?? ZERO);
-	const balance = $derived(Number(vxpBalance));
+
+	// Backed = sum of locked collateral across the user's active positions
+	// on VXP-denominated markets. `lockedCollateral` is in clearing-USD
+	// micro-units (USD_DECIMALS = 4), which matches VXP_TOKEN.decimals,
+	// so the same `formatVxpBalance` helper renders them at the right
+	// scale without an extra conversion.
+	const backedRaw = $derived.by((): bigint =>
+		$positions.reduce<bigint>((acc, pos) => {
+			const market = marketById.get(pos.marketId);
+
+			if (market === undefined || market.token.symbol !== VXP_TOKEN.symbol) {
+				return acc;
+			}
+
+			return acc + pos.lockedCollateral;
+		}, ZERO)
+	);
+	const backedDisplay = $derived(formatVxpBalance({ value: backedRaw, decimals: USD_DECIMALS }));
+
+	// Total holdings = free wallet balance + backed collateral. Both legs
+	// already share a 4-decimal scale (`VXP_TOKEN.decimals` ==
+	// `USD_DECIMALS`), so we can add raw bigints before formatting.
+	// Without this, a user with all their VXP locked in active positions
+	// would see "0 VXP" as their Total Holdings while "Backed" reads in
+	// the thousands — the headline number must reflect everything they
+	// own, not just the free portion.
+	const holdingsTotalRaw = $derived(vxpBalance + backedRaw);
+	const balanceDisplay = $derived(
+		formatVxpBalance({ value: holdingsTotalRaw, decimals: VXP_TOKEN.decimals })
+	);
+
+	// Lifetime = `profile.points`, the running XP/VXP accumulator the
+	// satellite credits per win + streak bonus. Stored as a whole number
+	// already; no decimal conversion needed.
+	const lifetimeRaw = $derived(profile?.points ?? 0);
+	const lifetimeDisplay = $derived(lifetimeRaw.toLocaleString());
 
 	// Positions + markets — used by the Active calls block. The
 	// "See all" count combines filled positions and resting limit
@@ -95,29 +141,38 @@
 		acc: number;
 	}
 
-	const catRows = $derived<CategoryRow[]>(
-		(() => {
-			const stats = userStats?.categoryStats ?? {};
+	const catRows = $derived.by<CategoryRow[]>(() => {
+		const stats = userStats?.categoryStats ?? {};
 
-			return MARKET_TAGS.filter((tag) => tag !== 'wc')
-				.map((tag) => {
-					const bucket = stats[tag] ?? { calls: 0, wins: 0 };
-					const acc = bucket.calls > 0 ? bucket.wins / bucket.calls : 0;
+		return MARKET_TAGS.filter((tag) => tag !== 'wc')
+			.map((tag) => {
+				const bucket = stats[tag] ?? { calls: 0, wins: 0 };
+				const acc = bucket.calls > 0 ? bucket.wins / bucket.calls : 0;
 
-					return {
-						id: tag,
-						label: t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }),
-						acc
-					};
-				})
-				.filter((row) => (userStats?.categoryStats?.[row.id]?.calls ?? 0) > 0)
-				.sort((a, b) => b.acc - a.acc);
-		})()
-	);
+				return {
+					id: tag,
+					label: t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }),
+					acc
+				};
+			})
+			.filter((row) => (stats[row.id]?.calls ?? 0) > 0)
+			.sort((a, b) => b.acc - a.acc);
+	});
 
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
-	const wins = $derived(Math.round((profile?.accuracy ?? 0) * totalTrades));
-	const losses = $derived(Math.max(0, totalTrades - wins));
+
+	// Win / loss tallies for the "Past predictions" filter chips. We count
+	// settled markets from the clearing canister's `Settled` event stream
+	// rather than deriving `losses = totalTrades − wins`, which used to
+	// treat every Executed event as a settled trade and ended up counting
+	// still-open positions as losses (e.g. "16 Executed events with 0
+	// wins" was reported as 16 losses even when only 1 market had
+	// resolved). The new store is uncapped — `userStats.recentSettlements`
+	// is capped at `USER_STATS_RECENT_LIMIT`, so we deliberately do not
+	// read these chip counts from there.
+	const wins = $derived($resolvedPositions.filter((r) => r.result === 'won').length);
+	const losses = $derived($resolvedPositions.filter((r) => r.result === 'lost').length);
+	const settledTotal = $derived(wins + losses);
 
 	// Live session delta — prior accuracy reconstruction.
 	const sessionDelta = $derived.by<number | null>(() => {
@@ -141,22 +196,48 @@
 		return Math.round((accuracyValue - priorAcc) * 1000) / 10;
 	});
 
+	// "Past predictions" row list. Reads from `$resolvedPositions` (the
+	// uncapped clearing-event stream) and shapes each entry to the row
+	// template's expected fields. Stays consistent with the chip counts
+	// further up — same source, same scope.
 	const filteredHistory = $derived(
-		recentSettlements.filter((row) => {
-			if (pastFilter === 'won') {
-				return row.win;
-			}
+		$resolvedPositions
+			.filter((row) => {
+				if (pastFilter === 'won') {
+					return row.result === 'won';
+				}
 
-			if (pastFilter === 'lost') {
-				return !row.win;
-			}
+				if (pastFilter === 'lost') {
+					return row.result === 'lost';
+				}
 
-			return true;
-		})
+				return row.result !== 'neutral';
+			})
+			.map((row) => {
+				const market = marketById.get(row.marketId);
+				const outcomeId = inferResolvedOutcomeId({ resolved: row, market });
+				const sideLabel =
+					outcomeId === undefined
+						? null
+						: (market?.outcomes?.find((o) => o.id === outcomeId)?.title ?? outcomeId);
+
+				return {
+					marketId: row.marketId,
+					settledAtMs: Number(row.timestampNs / 1_000_000n),
+					win: row.result === 'won',
+					sideLabel,
+					realizedPnlUsd: row.realizedPnlUsd
+				};
+			})
 	);
 
-	const sessionWins = $derived(recentSettlements.filter((s) => s.win).length);
-	const sessionLosses = $derived(recentSettlements.length - sessionWins);
+	// `recentSettlements` (capped at `USER_STATS_RECENT_LIMIT`) used to be
+	// combined with the broken lifetime `wins`/`losses` to render the
+	// chip counts. Now that `wins`/`losses` are sourced from the
+	// uncapped `$resolvedPositions` directly they're already complete,
+	// so the separate "session" tallies are gone. The variable is kept
+	// for the `sessionDelta` insight further up the file, which is a
+	// distinct concept (accuracy delta in the recent window).
 
 	// Best win for the Oracle insight — first WIN in recent
 	// settlements, otherwise the first row, otherwise undefined.
@@ -178,7 +259,9 @@
 	const daysToMarathon = $derived(Math.max(0, MARATHON_DAYS - streak));
 
 	// Markets the user hasn't tried — pick the first category with
-	// zero calls (falls back to `Culture` when the taxonomy is empty).
+	// zero settled calls (falls back to `Culture` when the taxonomy
+	// is empty). Same satellite-cached source as `catRows` so the two
+	// surfaces agree on what counts as "tried".
 	const untriedCategory = $derived<MarketTag | undefined>(
 		MARKET_TAGS.filter((tag) => tag !== 'wc').find(
 			(tag) => (userStats?.categoryStats?.[tag]?.calls ?? 0) === 0
@@ -203,6 +286,19 @@
 		const days = Math.floor(hours / 24);
 
 		return `${days}d`;
+	};
+
+	/**
+	 * Past-prediction row PnL → "+240 VXP" / "−180 VXP". `pnlUsdMicroUnits`
+	 * is the signed `cashflow_usd` carried on the `Settled` event in
+	 * `USD_DECIMALS` units; converted via `decimalFixedValueToNumber` and
+	 * rounded to whole VXP for the row chip.
+	 */
+	const fmtPastRowAmount = (pnlUsdMicroUnits: bigint): string => {
+		const n = decimalFixedValueToNumber({ value: pnlUsdMicroUnits, decimals: USD_DECIMALS });
+		const sign = n >= 0 ? '+' : '−';
+
+		return `${sign}${Math.round(Math.abs(n))} VXP`;
 	};
 
 	const fmtTimeLeft = (expiryMs: number): { label: string; urgent: boolean } => {
@@ -365,20 +461,20 @@
 					{t({ locale: $localeStore, key: 'dash.holdings.purpose' })}
 				</span>
 				<div class="dash-balance">
-					{balance.toLocaleString()}<span class="unit">VXP</span>
+					{balanceDisplay}<span class="unit">VXP</span>
 				</div>
 				<div class="dash-sub-stats">
 					<div class="dash-sub-stat">
 						<span class="lbl">
 							{t({ locale: $localeStore, key: 'dash.holdings.backed' })}
 						</span>
-						<span class="val">{EM_DASH}</span>
+						<span class="val">{backedDisplay}</span>
 					</div>
 					<div class="dash-sub-stat">
 						<span class="lbl">
 							{t({ locale: $localeStore, key: 'dash.holdings.lifetime' })}
 						</span>
-						<span class="val">{EM_DASH}</span>
+						<span class="val">{lifetimeDisplay}</span>
 					</div>
 					<div class="dash-sub-stat">
 						<span class="lbl">
@@ -581,7 +677,7 @@
 		<div class="dash-section-eyebrow">
 			<span>{t({ locale: $localeStore, key: 'dash.past.eyebrow' })}</span>
 			<span class="see-all">
-				{t({ locale: $localeStore, key: 'dash.past.total', params: { count: totalTrades } })}
+				{t({ locale: $localeStore, key: 'dash.past.total', params: { count: settledTotal } })}
 			</span>
 		</div>
 		<div class="dash-filter-chips">
@@ -600,7 +696,7 @@
 				{t({
 					locale: $localeStore,
 					key: 'dash.past.filter_won',
-					params: { count: wins + sessionWins }
+					params: { count: wins }
 				})}
 			</button>
 			<button
@@ -611,7 +707,7 @@
 				{t({
 					locale: $localeStore,
 					key: 'dash.past.filter_lost',
-					params: { count: losses + sessionLosses }
+					params: { count: losses }
 				})}
 			</button>
 		</div>
@@ -621,6 +717,7 @@
 			{:else}
 				{#each filteredHistory.slice(0, 8) as h (h.marketId + h.settledAtMs)}
 					{@const won = h.win}
+					{@const pnlPositive = h.realizedPnlUsd >= ZERO}
 					<div class="dash-past-row">
 						<span class="res" class:lost={!won} class:won>
 							{#if won}
@@ -632,15 +729,26 @@
 						<div>
 							<div class="q">{marketTitle(h.marketId)}</div>
 							<div class="ctx">
-								{t({
-									locale: $localeStore,
-									key: 'dash.past.row_ctx_when',
-									params: { when: fmtRelativeShort(h.settledAtMs) }
-								})}
+								{#if h.sideLabel !== null}
+									{t({
+										locale: $localeStore,
+										key: 'dash.past.row_ctx_side_when',
+										params: {
+											side: h.sideLabel,
+											when: fmtRelativeShort(h.settledAtMs)
+										}
+									})}
+								{:else}
+									{t({
+										locale: $localeStore,
+										key: 'dash.past.row_ctx_when',
+										params: { when: fmtRelativeShort(h.settledAtMs) }
+									})}
+								{/if}
 							</div>
 						</div>
-						<span class="delta-pct" class:delta-lost={!won} class:delta-won={won}>
-							{won ? '+' : '−'}{EM_DASH} VXP
+						<span class="delta-pct" class:delta-lost={!pnlPositive} class:delta-won={pnlPositive}>
+							{fmtPastRowAmount(h.realizedPnlUsd)}
 						</span>
 					</div>
 				{/each}

@@ -23,6 +23,7 @@
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
+	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
 	import {
 		authPrincipal,
 		userIsAdmin,
@@ -34,7 +35,7 @@
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market, MarketId, OutcomeId } from '$lib/types/market';
-	import type { Position } from '$lib/types/position';
+	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { positionResolvedResult } from '$lib/utils/position.utils';
@@ -118,6 +119,22 @@
 	const isResolved = $derived(market?.status === 'Resolved');
 	const isLive = $derived(market?.status === 'Open');
 
+	// Resolved entries from the user's `Settled` event stream that match
+	// this market. Used to keep the resolution UX (MY CALL stat,
+	// "Called it." beat) working after the clearing canister removes the
+	// live `Position` row at settlement.
+	const resolvedForMarket = $derived.by<ResolvedPosition[]>(() => {
+		const m = market;
+
+		if (isNullish(m)) {
+			return [];
+		}
+
+		return $resolvedPositions.filter((r) => r.marketId === m.id);
+	});
+
+	const wonThisMarket = $derived(resolvedForMarket.some((r) => r.result === 'won'));
+
 	const canEditMetadata = $derived(
 		nonNullish(market) && ($userIsAdmin || market.creator === $authPrincipal)
 	);
@@ -147,7 +164,7 @@
 
 		const m = market;
 
-		if (isNullish(m) || m.status !== 'Resolved' || positions.length === 0) {
+		if (isNullish(m) || m.status !== 'Resolved') {
 			return;
 		}
 
@@ -155,9 +172,16 @@
 			return;
 		}
 
-		const wonAny = positions.some(
+		// Win is detected from either source so the beat keeps firing
+		// after the clearing canister removes the live `Position`:
+		//   - `positions` is fresh during the brief window between trade
+		//     and settlement (used for the immediate post-resolve refresh).
+		//   - `resolvedForMarket` is the durable record sourced from the
+		//     `Settled` event stream.
+		const wonLive = positions.some(
 			(p) => positionResolvedResult({ market: m, position: p }) === 'won'
 		);
+		const wonAny = wonLive || wonThisMarket;
 
 		if (!wonAny) {
 			return;
@@ -273,7 +297,7 @@
 
 		<MarketDetailChartCard marketId={market.id} {yesPercent} />
 
-		<MarketDetailStatsGrid {market} {positions} />
+		<MarketDetailStatsGrid {market} {positions} {resolvedForMarket} />
 
 		<MarketDetailResolutionCard {market} />
 

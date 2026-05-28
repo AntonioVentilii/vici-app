@@ -90,6 +90,15 @@ export const idlFactory = ({ IDL }) => {
 		Ok: IDL.Bool,
 		Err: TradeError
 	});
+	const BackfillSettlementEventsParams = IDL.Record({
+		start_after: IDL.Opt(IDL.Text)
+	});
+	const BackfillSettlementEventsResult = IDL.Record({
+		plans_scanned: IDL.Nat64,
+		events_emitted: IDL.Nat64,
+		events_skipped: IDL.Nat64,
+		next_cursor: IDL.Opt(IDL.Text)
+	});
 	const CancelFundWithdrawalParams = IDL.Record({ request_id: IDL.Text });
 	const CancelFundWithdrawalError = IDL.Variant({
 		PlanNotFound: IDL.Null,
@@ -536,6 +545,11 @@ export const idlFactory = ({ IDL }) => {
 
 	return IDL.Service({
 		accept_position_transfer: IDL.Func([PositionProof], [AcceptPositionTransferResult], []),
+		backfill_settlement_events: IDL.Func(
+			[BackfillSettlementEventsParams],
+			[BackfillSettlementEventsResult],
+			[]
+		),
 		cancel_fund_withdrawal: IDL.Func(
 			[CancelFundWithdrawalParams],
 			[CancelFundWithdrawalResult],

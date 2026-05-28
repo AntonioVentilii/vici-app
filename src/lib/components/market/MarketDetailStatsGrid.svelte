@@ -2,16 +2,25 @@
 	import { ZERO } from '$lib/constants/app.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
-	import type { Position } from '$lib/types/position';
+	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { formatDate, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
 	interface Props {
 		market: Market;
 		positions: Position[];
+		/**
+		 * Resolved-position records for this market, sourced from the user's
+		 * `Settled` event stream. Used as a fallback for "MY CALL" once the
+		 * clearing canister has removed the live `Position` row at
+		 * settlement. Optional so non-resolved-market call sites don't have
+		 * to thread it through.
+		 */
+		resolvedForMarket?: ResolvedPosition[];
 	}
 
-	const { market, positions }: Props = $props();
+	const { market, positions, resolvedForMarket = [] }: Props = $props();
 
 	const { totalVolume, yesVolume, noVolume, expiryDate, token } = $derived(market);
 
@@ -26,7 +35,27 @@
 		positions.find((p) => p.marketId === market.id && p.netQty !== ZERO)
 	);
 
-	const myCall = $derived(userActivePosition?.outcomeId ?? null);
+	/**
+	 * Recover the user's side from the resolution event stream when the
+	 * live position is gone. Inference rules — winners' exact side,
+	 * binary losers' opposite side, categorical losers unknown — live
+	 * in `inferResolvedOutcomeId` so they stay aligned with the
+	 * Portfolio row helpers.
+	 */
+	const resolvedMyCall = $derived.by((): string | null => {
+		if (resolvedForMarket.length === 0) {
+			return null;
+		}
+
+		// Prefer a winner (they carry the exact outcomeId) so the helper
+		// returns immediately; otherwise any entry works since the
+		// binary-loser fallback only depends on `market.outcome`.
+		const seed = resolvedForMarket.find((r) => r.result === 'won') ?? resolvedForMarket[0];
+
+		return inferResolvedOutcomeId({ resolved: seed, market }) ?? null;
+	});
+
+	const myCall = $derived(userActivePosition?.outcomeId ?? resolvedMyCall);
 
 	const stats = $derived([
 		{
