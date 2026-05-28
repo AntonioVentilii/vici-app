@@ -884,13 +884,14 @@
 
 	.settings-appbar {
 		display: grid;
-		grid-template-columns: auto 1fr auto;
+		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
 		gap: 0.5rem;
 		padding: 1.25rem 0 1rem;
 	}
 
 	.settings-appbar-title {
+		min-width: 0;
 		margin: 0;
 		font-size: var(--t-44);
 		font-weight: 600;

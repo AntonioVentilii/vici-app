@@ -1003,9 +1003,17 @@
 
 	.flow-card-wrap {
 		position: absolute;
-		inset: 0.5rem 0.5rem 0.75rem 0.5rem;
+		inset: 0.5rem 0.5rem var(--bn-clear) 0.5rem;
 		max-width: min(25.5rem, calc(100vw - 2rem));
 		margin-inline: auto;
+	}
+
+	/* Desktop drops the floating pill, so the card no longer needs to
+	   reserve `--bn-clear` clearance. */
+	@media (min-width: 56rem) {
+		.flow-card-wrap {
+			inset: 0.5rem 0.5rem 0.75rem 0.5rem;
+		}
 	}
 
 	.flow-card-slot {

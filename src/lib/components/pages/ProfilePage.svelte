@@ -74,7 +74,7 @@
 		title={t({ locale: $localeStore, key: 'profile.title' })}
 	/>
 
-	<div class="hidden md:block">
+	<div class="hidden min-[56rem]:block">
 		<SectionHeader
 			right={profileSettingsBtn}
 			title={t({ locale: $localeStore, key: 'profile.title' })}

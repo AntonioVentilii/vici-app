@@ -59,7 +59,9 @@
 		padding: 1.25rem 1.25rem 0.75rem;
 	}
 
-	@media (min-width: 768px) {
+	/* Aligned with `DesktopAppNav`'s 56rem (896px) breakpoint so there
+	   isn't an intermediate viewport range with no header at all. */
+	@media (min-width: 56rem) {
 		.mobile-appbar {
 			display: none;
 		}
