@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getDoc } from '@junobuild/core';
-	import { Settings, User } from 'lucide-svelte/icons';
+	import { Settings, Shield, User } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -10,7 +10,7 @@
 	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { Collection } from '$lib/constants/collections.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { authBusy, authPrincipal } from '$lib/derived/user.derived';
+	import { authBusy, authPrincipal, userIsAdmin } from '$lib/derived/user.derived';
 	import { getProfile } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -50,6 +50,10 @@
 		void goto(resolve(AppPath.Settings));
 	};
 
+	const handleOpenAdmin = () => {
+		void goto(resolve(AppPath.Admin));
+	};
+
 	onMount(() => {
 		const refreshProfile = async () => {
 			if ($authPrincipal) {
@@ -68,14 +72,26 @@
 </script>
 
 {#snippet profileSettingsBtn()}
-	<button
-		class="appbar-icon-btn"
-		aria-label={t({ locale: $localeStore, key: 'settings.title' })}
-		onclick={handleOpenSettings}
-		type="button"
-	>
-		<Settings aria-hidden="true" size={18} strokeWidth={1.8} />
-	</button>
+	<div class="profile-appbar-actions">
+		{#if $userIsAdmin}
+			<button
+				class="appbar-icon-btn"
+				aria-label={t({ locale: $localeStore, key: 'nav.admin' })}
+				onclick={handleOpenAdmin}
+				type="button"
+			>
+				<Shield aria-hidden="true" size={18} strokeWidth={1.8} />
+			</button>
+		{/if}
+		<button
+			class="appbar-icon-btn"
+			aria-label={t({ locale: $localeStore, key: 'settings.title' })}
+			onclick={handleOpenSettings}
+			type="button"
+		>
+			<Settings aria-hidden="true" size={18} strokeWidth={1.8} />
+		</button>
+	</div>
 {/snippet}
 
 <div class="profile-page space-y-10 pb-24">
@@ -133,5 +149,11 @@
 <style lang="postcss">
 	.profile-page {
 		position: relative;
+	}
+
+	.profile-appbar-actions {
+		display: inline-flex;
+		align-items: center;
+		gap: 4px;
 	}
 </style>
