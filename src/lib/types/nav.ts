@@ -1,13 +1,6 @@
 import type { AppPath } from '$lib/constants/routes.constants';
 import type { MessageKey } from '$lib/utils/i18n.utils';
-import type {
-	Briefcase,
-	CircleUserRound,
-	House,
-	LayoutDashboard,
-	Shield,
-	Zap
-} from 'lucide-svelte/icons';
+import type { Briefcase, CircleUserRound, House, LayoutDashboard, Zap } from 'lucide-svelte/icons';
 
 export interface NavItem {
 	labelKey: MessageKey;
@@ -17,8 +10,6 @@ export interface NavItem {
 		| typeof Zap
 		| typeof LayoutDashboard
 		| typeof Briefcase
-		| typeof Shield
 		| typeof CircleUserRound;
-	icon?: typeof Zap | typeof Shield;
-	adminOnly?: boolean;
+	icon?: typeof Zap;
 }
