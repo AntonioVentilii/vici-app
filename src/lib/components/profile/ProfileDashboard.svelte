@@ -1396,8 +1396,9 @@
 	.affil-slot {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
-		padding: 0.7rem 0.85rem;
+		gap: 0.55rem;
+		min-height: 6.2rem;
+		padding: 0.85rem;
 		border: 1px solid var(--border-base);
 		border-radius: 1rem;
 		background: var(--bg-popover);
@@ -1414,6 +1415,11 @@
 		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-popover));
 	}
 
+	.affil-slot.is-filled {
+		border-color: color-mix(in srgb, var(--laurel) 45%, var(--border-base));
+		background: color-mix(in srgb, var(--laurel) 6%, var(--bg-popover));
+	}
+
 	.affil-slot.is-locked {
 		cursor: not-allowed;
 		opacity: 0.55;
@@ -1425,21 +1431,28 @@
 
 	.affil-slot-icon {
 		display: inline-flex;
-		width: 1.6rem;
-		height: 1.6rem;
+		width: 2.4rem;
+		height: 2.4rem;
 		align-items: center;
 		justify-content: center;
-		border-radius: var(--r-8);
+		border-radius: var(--r-10, 0.625rem);
 		background: var(--bg-surface);
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.9rem;
+		font-size: 1.1rem;
 		font-weight: 700;
 	}
 
+	.affil-slot.is-empty .affil-slot-icon,
+	.affil-slot.is-locked .affil-slot-icon {
+		width: 1.7rem;
+		height: 1.7rem;
+		font-size: 0.95rem;
+	}
+
 	.affil-slot.is-filled .affil-slot-icon {
-		background: color-mix(in srgb, var(--color-primary) 12%, transparent);
-		color: var(--color-primary);
+		background: color-mix(in srgb, var(--laurel) 18%, var(--bg-surface));
+		color: var(--laurel);
 	}
 
 	.affil-slot-label {

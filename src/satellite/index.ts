@@ -111,6 +111,8 @@ import {
 import { onProfileSetForStreakAward } from '$satellite/services/vxp-streak-awards.services';
 import { claimWorldsPodiumPrizeFn } from '$satellite/services/vxp-worlds-podium.services';
 import {
+	AffiliationOptionWireSchema,
+	AffiliationStatsOptionWireSchema,
 	AffiliationStatsWireSchema,
 	AffiliationWireSchema,
 	BoutWireSchema,
@@ -136,7 +138,6 @@ import {
 	toWireTournamentMatch,
 	UserProfileWireSchema
 } from '$satellite/utils/wire-format.utils';
-import { nonNullish } from '@dfinity/utils';
 import {
 	defineAssert,
 	defineHook,
@@ -467,17 +468,15 @@ export const listMyBouts = defineQuery({
 
 export const listMyAffiliations = defineQuery({
 	result: j.strictObject({
-		university: j.optional(AffiliationWireSchema),
-		country: j.optional(AffiliationWireSchema)
+		university: j.optional(AffiliationOptionWireSchema),
+		country: j.optional(AffiliationOptionWireSchema)
 	}),
-	handler: () => {
-		const { university, country } = listMyAffiliationsFn();
-
-		return {
-			university: university ? toWireAffiliation(university) : undefined,
-			country: country ? toWireAffiliation(country) : undefined
-		};
-	}
+	// `AffiliationDoc` is already the camelCase shape required by the
+	// JsonData mirror for `Option<NestedStruct>`. Returning it directly
+	// (no `toWireAffiliation`) keeps the handoff in the case the macro
+	// expects. Wrapping in `toWire…` re-introduces snake_case keys and
+	// traps with `missing field 'affiliationIdentifier'`.
+	handler: () => listMyAffiliationsFn()
 });
 
 export const listWorldsRoster = defineQuery({
@@ -502,15 +501,17 @@ export const getAffiliationStats = defineQuery({
 		affiliationIdentifier: j.string()
 	}),
 	result: j.strictObject({
-		stats: j.optional(AffiliationStatsWireSchema)
+		stats: j.optional(AffiliationStatsOptionWireSchema)
 	}),
-	handler: ({ kind, affiliationIdentifier }) => {
-		const stats = getAffiliationStatsFn({ kind, affiliationIdentifier });
-
-		return {
-			stats: nonNullish(stats) ? toWireAffiliationStats(stats) : undefined
-		};
-	}
+	// `Option<NestedStruct>` ⇒ camelCase JS via the JsonData mirror.
+	// Returning the `AffiliationStatsDoc` shape directly matches the
+	// mirror's `rename_all = "camelCase"` expectation; the snake_case
+	// `toWireAffiliationStats` is reserved for the `j.array(...)`
+	// (`listAffiliationStats`) endpoint below where Vec items
+	// deserialize via the literal Rust field names.
+	handler: ({ kind, affiliationIdentifier }) => ({
+		stats: getAffiliationStatsFn({ kind, affiliationIdentifier })
+	})
 });
 
 // Ranked leaderboard view across every stats doc of a kind.

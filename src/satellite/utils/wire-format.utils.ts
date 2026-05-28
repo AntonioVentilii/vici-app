@@ -543,6 +543,10 @@ export const toWireBout = (bout: {
 
 // ─── Affiliations ───────────────────────────────────────────────
 
+// Snake_case shape used for `j.array(...)` endpoints
+// (`listWorldsRoster`). Vec items don't get the `#[json_data(nested)]`
+// wrapper, so the inner JSON deserializer reads the Rust struct's
+// literal (snake_case) field names — see the file-level docstring.
 export const AffiliationWireSchema = j.strictObject({
 	member: PrincipalTextSchema,
 	kind: j.enum(['university', 'country']),
@@ -567,8 +571,29 @@ export const toWireAffiliation = (aff: {
 	locked_until_ms: aff.lockedUntilMs
 });
 
+// camelCase shape required by `j.optional(...)` endpoints
+// (`listMyAffiliations`). Option nested structs get
+// `#[json_data(nested)]` which routes through the JsonData mirror
+// — that mirror is generated with `#[serde(rename_all = "camelCase")]`,
+// so the JS payload must use camelCase keys or
+// `from_json_data` traps with `missing field <camelCaseName>`. The
+// schema field names match the in-memory `AffiliationDoc` shape so
+// handlers can return the projected doc directly without a `toWire`
+// step.
+export const AffiliationOptionWireSchema = j.strictObject({
+	member: PrincipalTextSchema,
+	kind: j.enum(['university', 'country']),
+	affiliationIdentifier: j.string(),
+	joinedAtMs: j.number(),
+	lockedUntilMs: j.number()
+});
+
+export type OptionWireAffiliation = j.infer<typeof AffiliationOptionWireSchema>;
+
 // ─── Affiliation stats ──────────────────────────────────────────────
 
+// Snake_case shape for `j.array(...)` endpoints
+// (`listAffiliationStats`).
 export const AffiliationStatsWireSchema = j.strictObject({
 	affiliation_identifier: j.string(),
 	kind: j.enum(['university', 'country']),
@@ -601,6 +626,20 @@ export const toWireAffiliationStats = (stats: {
 	month_wins: stats.monthWins,
 	updated_at_ms: stats.updatedAtMs
 });
+
+// camelCase shape for `j.optional(...)` (`getAffiliationStats`).
+export const AffiliationStatsOptionWireSchema = j.strictObject({
+	affiliationIdentifier: j.string(),
+	kind: j.enum(['university', 'country']),
+	totalCalls: j.number(),
+	wins: j.number(),
+	monthAnchor: j.string(),
+	monthTotalCalls: j.number(),
+	monthWins: j.number(),
+	updatedAtMs: j.number()
+});
+
+export type OptionWireAffiliationStats = j.infer<typeof AffiliationStatsOptionWireSchema>;
 
 // ─── Tournament + matches ───────────────────────────────────────────
 
