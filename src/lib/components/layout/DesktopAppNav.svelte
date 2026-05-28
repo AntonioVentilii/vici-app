@@ -4,7 +4,7 @@
 	import { page } from '$app/state';
 	import { navItems } from '$lib/constants/nav.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
-	import { userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
+	import { userSignedIn } from '$lib/derived/user.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -24,8 +24,6 @@
 	 * `/markets/[id]` → Markets tab; `/settings` → Profile tab) light
 	 * up the right item.
 	 */
-
-	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
 
 	const isActive = (path: AppPath) => {
 		const current = page.url.pathname;
@@ -69,7 +67,7 @@
 		</a>
 
 		<nav class="app-desktop-nav-links" aria-label="Primary">
-			{#each visibleNavItems as item (item.path)}
+			{#each navItems as item (item.path)}
 				<a class="app-desktop-nav-link" class:is-active={isActive(item.path)} href={item.path}>
 					{t({ locale: $localeStore, key: item.labelKey })}
 				</a>

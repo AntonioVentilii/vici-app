@@ -3,7 +3,6 @@
 	import { page } from '$app/state';
 	import { navItems } from '$lib/constants/nav.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { userIsAdmin } from '$lib/derived/user.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
@@ -29,8 +28,6 @@
 	 * than lucide so the outline-to-filled swap on the active tab
 	 * lands exactly.
 	 */
-
-	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
 
 	const isFlowPath = (path: AppPath) => path === AppPath.Flow;
 
@@ -68,8 +65,8 @@
 		return false;
 	};
 
-	const activeIndex = $derived(visibleNavItems.findIndex(({ path }) => isActive(path)));
-	const isFlowActive = $derived(activeIndex >= 0 && isFlowPath(visibleNavItems[activeIndex].path));
+	const activeIndex = $derived(navItems.findIndex(({ path }) => isActive(path)));
+	const isFlowActive = $derived(activeIndex >= 0 && isFlowPath(navItems[activeIndex].path));
 
 	const handleNav = (path: AppPath) => {
 		// Light tap on tab change — wired through the real Vibration API.
@@ -134,7 +131,7 @@
 			class:is-flow={isFlowActive}
 			aria-hidden="true"
 		></span>
-		{#each visibleNavItems as item, i (item.path)}
+		{#each navItems as item, i (item.path)}
 			{@const active = i === activeIndex}
 			{@const flow = isFlowPath(item.path)}
 			<button

@@ -12,7 +12,7 @@
 	import { navItems } from '$lib/constants/nav.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
-	import { authBusy, userIsAdmin, userSignedIn } from '$lib/derived/user.derived';
+	import { authBusy, userSignedIn } from '$lib/derived/user.derived';
 	import { balancesStore } from '$lib/stores/balances.store';
 	import { collateralsStore } from '$lib/stores/collaterals.store';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -51,21 +51,15 @@
 	const openSignInModal = () => {
 		showSignInModal = true;
 	};
-
-	const visibleNavItems = $derived(navItems.filter(({ adminOnly }) => !adminOnly || $userIsAdmin));
 </script>
 
-{#snippet navButton({ labelKey, path, icon: Icon, adminOnly = false }: NavItem)}
+{#snippet navButton({ labelKey, path, icon: Icon }: NavItem)}
 	<BaseButton
 		class="ease-vici duration-hover relative rounded-full px-4 py-2 text-sm leading-none font-medium transition-all {isActive(
 			path
 		)
-			? adminOnly
-				? 'bg-laurel-glow text-primary'
-				: 'bg-foreground/6 text-foreground shadow-inset-hi'
-			: adminOnly
-				? 'text-primary/60 hover:bg-laurel-glow hover:text-primary'
-				: 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'}"
+			? 'bg-foreground/6 text-foreground shadow-inset-hi'
+			: 'text-muted-foreground hover:bg-foreground/5 hover:text-foreground'}"
 		onclick={() => handleNav(path)}
 	>
 		<span class="inline-flex items-center gap-1 whitespace-nowrap">
@@ -88,7 +82,7 @@
 		<Logo />
 
 		<nav class="hidden items-center gap-1 md:flex">
-			{#each visibleNavItems as item (item.path)}
+			{#each navItems as item (item.path)}
 				{@render navButton(item)}
 			{/each}
 		</nav>
