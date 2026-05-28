@@ -460,8 +460,6 @@ export const ptMessages = {
 	'dash.active.eyebrow': 'Previsões ativas',
 	'dash.active.hours_left': '{count}h restantes',
 	'dash.active.see_all': 'Ver todas as {count}',
-	'dash.categories.calls_many': '{count} previsões',
-	'dash.categories.calls_one': '1 previsão',
 	'dash.categories.eyebrow': 'Por categoria',
 	'dash.categories.no_calls': 'Sem previsões ainda',
 	'dash.disclosure.accuracy_body':

@@ -460,8 +460,6 @@ export const esMessages = {
 	'dash.active.eyebrow': 'Predicciones activas',
 	'dash.active.hours_left': '{count}h restantes',
 	'dash.active.see_all': 'Ver las {count}',
-	'dash.categories.calls_many': '{count} predicciones',
-	'dash.categories.calls_one': '1 predicción',
 	'dash.categories.eyebrow': 'Por categoría',
 	'dash.categories.no_calls': 'Aún sin predicciones',
 	'dash.disclosure.accuracy_body':

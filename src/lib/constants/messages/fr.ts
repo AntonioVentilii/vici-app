@@ -465,8 +465,6 @@ export const frMessages = {
 	'dash.active.eyebrow': 'Prédictions actives',
 	'dash.active.hours_left': '{count}h restantes',
 	'dash.active.see_all': 'Voir les {count}',
-	'dash.categories.calls_many': '{count} pronostics',
-	'dash.categories.calls_one': '1 pronostic',
 	'dash.categories.eyebrow': 'Par catégorie',
 	'dash.categories.no_calls': 'Aucun pronostic',
 	'dash.disclosure.accuracy_body':
