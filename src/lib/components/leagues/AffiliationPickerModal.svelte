@@ -7,9 +7,13 @@
 		WORLDS_UNIVERSITIES,
 		type WorldsAffiliationOption
 	} from '$lib/constants/worlds-affiliations.constants';
-	import { joinAffiliation } from '$lib/services/worlds.services';
+	import {
+		affiliationDaysLeft,
+		joinAffiliation,
+		switchAffiliation
+	} from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { AffiliationKind } from '$lib/types/affiliation';
+	import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
@@ -19,18 +23,21 @@
 	 * affiliation slot) — there's no in-sheet toggle.
 	 *
 	 * Selection is a two-step gesture: tap a row to mark it, then tap
-	 * the CTA to commit via `joinAffiliation`. Same satellite path as
-	 * the inline grid on `WorldsPage`.
+	 * the CTA to commit. When the user already holds an affiliation of
+	 * this kind, the picker commits via {@link switchAffiliation}
+	 * (delete + re-join); otherwise it goes through
+	 * {@link joinAffiliation} directly. The 90-day lock is enforced on
+	 * the delete leg — when it's still active the CTA shows a
+	 * "Locked for N days" disabled state instead of firing a doomed
+	 * round-trip.
 	 */
 	interface Props {
 		isOpen: boolean;
 		kind: AffiliationKind;
-		/** Caller's currently-joined affiliations (best-effort). Used to
-		 *  surface the "you're already on this leaderboard" message
-		 *  without round-tripping when the user taps their current
-		 *  affiliation. The catch path still defends against stale state
-		 *  via the `already-affiliated` reject from `joinAffiliation`. */
-		current?: { university?: string; country?: string };
+		/** Caller's currently-joined affiliations (best-effort). The
+		 *  picker reads the row of `kind` to drive switch vs join, the
+		 *  "Joined" row badge, and the 90-day lock state. */
+		current?: { university?: AffiliationDoc; country?: AffiliationDoc };
 		onClose: () => void;
 		onPicked?: () => void;
 	}
@@ -48,16 +55,55 @@
 	const searchPlaceholderKey = $derived<MessageKey>(
 		kind === 'university' ? 'worlds.picker.search_university' : 'worlds.picker.search_country'
 	);
-	const ctaKey = $derived<MessageKey>(
-		kind === 'university' ? 'worlds.picker.cta_university' : 'worlds.picker.cta_country'
-	);
 
 	let query = $state('');
 	let selected = $state<string | null>(null);
 	let saving = $state(false);
 	let errorMessage = $state<string | null>(null);
 
-	const currentForKind = $derived<string | undefined>(current?.[kind]);
+	const currentDoc = $derived<AffiliationDoc | undefined>(current?.[kind]);
+	const currentForKind = $derived<string | undefined>(currentDoc?.affiliationIdentifier);
+	const lockDaysLeft = $derived(
+		currentDoc ? affiliationDaysLeft({ lockedUntilMs: currentDoc.lockedUntilMs }) : 0
+	);
+	const isLocked = $derived(lockDaysLeft > 0);
+	const isSwitching = $derived(
+		currentForKind !== undefined && selected !== null && selected !== currentForKind
+	);
+
+	/**
+	 * CTA copy follows the action being committed: "Switch to {name}"
+	 * when a different row is selected over an existing affiliation,
+	 * "Locked for N days" when the 90-day lock blocks the switch,
+	 * "Pick a school/country" otherwise. Returns the resolved string,
+	 * not a key — so all branches can pass through one i18n call.
+	 */
+	const ctaLabel = $derived.by<string>(() => {
+		if (isSwitching && isLocked) {
+			return t({
+				locale: $localeStore,
+				key: 'worlds.picker.cta_locked',
+				params: { count: lockDaysLeft }
+			});
+		}
+
+		if (isSwitching && selected !== null) {
+			const option = roster.find((o) => o.id === selected);
+
+			return t({
+				locale: $localeStore,
+				key: 'worlds.picker.cta_switch',
+				params: { name: option?.name ?? '' }
+			});
+		}
+
+		return t({
+			locale: $localeStore,
+			key: kind === 'university' ? 'worlds.picker.cta_university' : 'worlds.picker.cta_country'
+		});
+	});
+
+	const ctaDisabled = $derived(selected === null || saving || (isSwitching && isLocked));
 
 	const filtered = $derived.by(() => {
 		const trimmed = query.trim().toLowerCase();
@@ -77,11 +123,10 @@
 	const handleSelect = (option: WorldsAffiliationOption) => {
 		errorMessage = null;
 
-		// Tap on the already-joined row: surface the friendly "you're
-		// already on this leaderboard" message instead of letting the
-		// user commit and get rejected at the satellite. Defence in
-		// depth — `handleCommit` still catches the server `already-
-		// affiliated` reject for stale-state cases.
+		// Tap on the already-joined row: don't queue it as a selection
+		// (there's nothing to commit). Surface the friendly hint and
+		// clear any prior selection so the CTA returns to its idle
+		// state.
 		if (currentForKind !== undefined && currentForKind === option.id) {
 			selected = null;
 			errorMessage = t({
@@ -104,28 +149,44 @@
 		errorMessage = null;
 
 		try {
-			await joinAffiliation({ kind, affiliationIdentifier: selected });
+			if (isSwitching && currentDoc !== undefined) {
+				await switchAffiliation({
+					kind,
+					currentAffiliationIdentifier: currentDoc.affiliationIdentifier,
+					currentLockedUntilMs: currentDoc.lockedUntilMs,
+					nextAffiliationIdentifier: selected
+				});
+			} else {
+				await joinAffiliation({ kind, affiliationIdentifier: selected });
+			}
+
 			onPicked?.();
 			onClose();
 		} catch (err) {
-			// Three branches that need distinct UI:
+			// Four branches that need distinct UI:
+			//  - Lock active — switch attempted while still inside the
+			//    90-day window. `switchAffiliation` throws synchronously
+			//    so this also covers a clock-skew race.
 			//  - "Already affiliated" — `current` was stale and the
-			//    server rejected. Show the friendly "you're already on
-			//    this leaderboard" copy.
-			//  - Timeout — `joinAffiliation` wrapped the round-trip in a
-			//    15s race; the pick may or may not have committed.
+			//    server rejected on the join leg.
+			//  - Timeout — `joinAffiliation` / `leaveAffiliation` wrap
+			//    each round-trip in a 15s race; the pick may or may not
+			//    have committed.
 			//  - Anything else — generic fallback, error logged.
 			const message = err instanceof Error ? err.message : '';
+			const isLockActive = message.includes('lock active');
 			const isAlreadyAffiliated = message.includes('Already affiliated');
 			const isTimeout = message.includes('timed out');
-			console.error('AffiliationPickerModal: joinAffiliation failed', err);
+			console.error('AffiliationPickerModal: commit failed', err);
 			errorMessage = t({
 				locale: $localeStore,
-				key: isAlreadyAffiliated
-					? 'worlds.picker.error_already_affiliated'
-					: isTimeout
-						? 'worlds.picker.error_timeout'
-						: 'common.error.generic'
+				key: isLockActive
+					? 'worlds.picker.error_locked'
+					: isAlreadyAffiliated
+						? 'worlds.picker.error_already_affiliated'
+						: isTimeout
+							? 'worlds.picker.error_timeout'
+							: 'common.error.generic'
 			});
 		} finally {
 			saving = false;
@@ -223,16 +284,11 @@
 			<p class="affil-picker-error" role="alert">{errorMessage}</p>
 		{/if}
 
-		<button
-			class="affil-picker-cta"
-			disabled={selected === null || saving}
-			onclick={handleCommit}
-			type="button"
-		>
+		<button class="affil-picker-cta" disabled={ctaDisabled} onclick={handleCommit} type="button">
 			{#if saving}
 				{t({ locale: $localeStore, key: 'worlds.cta.joining' })}
 			{:else}
-				{t({ locale: $localeStore, key: ctaKey })}
+				{ctaLabel}
 			{/if}
 		</button>
 	</div>

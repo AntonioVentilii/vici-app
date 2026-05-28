@@ -174,6 +174,38 @@ export const leaveAffiliation = async ({
 };
 
 /**
+ * Switch affiliations within a kind — leave the current row, then join
+ * the new one. The satellite enforces the 90-day lock on the delete
+ * leg; if `currentLockedUntilMs` is still in the future the helper
+ * throws synchronously so the picker can render a lock-active CTA
+ * without firing a doomed round-trip.
+ */
+export const switchAffiliation = async ({
+	kind,
+	currentAffiliationIdentifier,
+	currentLockedUntilMs,
+	nextAffiliationIdentifier
+}: {
+	kind: AffiliationKind;
+	currentAffiliationIdentifier: string;
+	currentLockedUntilMs: number;
+	nextAffiliationIdentifier: string;
+}): Promise<AffiliationDoc> => {
+	if (Date.now() < currentLockedUntilMs) {
+		const daysLeft = Math.ceil((currentLockedUntilMs - Date.now()) / (24 * 60 * 60 * 1000));
+
+		throw new Error(`affiliations lock active — cannot switch for another ${daysLeft} day(s).`);
+	}
+
+	await leaveAffiliation({
+		kind,
+		affiliationIdentifier: currentAffiliationIdentifier
+	});
+
+	return joinAffiliation({ kind, affiliationIdentifier: nextAffiliationIdentifier });
+};
+
+/**
  * Pure helper for the UI — days remaining on a lock. Returns 0 once
  * the lock has expired so the FE can flip the CTA to "Leave".
  */

@@ -1892,9 +1892,12 @@ export const deMessages = {
 	'worlds.picker.clear': 'Löschen',
 	'worlds.picker.close': 'Schließen',
 	'worlds.picker.cta_country': 'Land wählen',
+	'worlds.picker.cta_locked': 'Gesperrt für {count} Tag(e)',
+	'worlds.picker.cta_switch': 'Zu {name} wechseln',
 	'worlds.picker.cta_university': 'Uni wählen',
 	'worlds.picker.empty': 'Keine Treffer. Versuche einen anderen Namen.',
 	'worlds.picker.error_already_affiliated': 'Du bist bereits auf dieser Bestenliste.',
+	'worlds.picker.error_locked': 'Wechsel noch nicht möglich — die 90-Tage-Sperre läuft.',
 	'worlds.picker.error_timeout':
 		'Hat nicht geklappt. Prüfe deine Verbindung und versuche es erneut.',
 	'worlds.picker.kind_country': 'Land',
