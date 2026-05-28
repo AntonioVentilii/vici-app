@@ -478,10 +478,7 @@
 
 {#if pickerKind !== null}
 	<AffiliationPickerModal
-		current={{
-			university: myUni?.affiliationIdentifier,
-			country: myCountry?.affiliationIdentifier
-		}}
+		current={{ university: myUni, country: myCountry }}
 		isOpen={true}
 		kind={pickerKind}
 		onClose={() => (pickerKind = null)}

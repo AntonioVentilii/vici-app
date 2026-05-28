@@ -167,6 +167,68 @@ export const leaveAffiliation = async ({
 };
 
 /**
+ * Switch affiliations within a kind — leave the current row, then join
+ * the new one. The satellite enforces the 90-day lock on the delete
+ * leg; if `currentLockedUntilMs` is still in the future the helper
+ * throws synchronously so the picker can render a lock-active CTA
+ * without firing a doomed round-trip.
+ *
+ * **Atomicity caveat.** Switching isn't a single satellite hook — the
+ * delete and the join are independent round-trips. If the join leg
+ * fails (timeout / transient), we make a best-effort attempt to
+ * re-create the previous affiliation so the user isn't stranded with
+ * an empty slot. The rollback creates a fresh row at `Date.now()`,
+ * which means the lock window resets — undesirable but strictly
+ * better than no affiliation. When both the join and the rollback
+ * fail (network gone / satellite down), the original error is
+ * re-thrown so the caller surfaces a clear "switch didn't go
+ * through" hint and the next refresh sees an empty slot the user
+ * can re-pick. A canonical fix would be a server-side atomic switch
+ * hook; tracked separately.
+ */
+export const switchAffiliation = async ({
+	kind,
+	currentAffiliationIdentifier,
+	currentLockedUntilMs,
+	nextAffiliationIdentifier
+}: {
+	kind: AffiliationKind;
+	currentAffiliationIdentifier: string;
+	currentLockedUntilMs: number;
+	nextAffiliationIdentifier: string;
+}): Promise<AffiliationDoc> => {
+	if (Date.now() < currentLockedUntilMs) {
+		const daysLeft = Math.ceil((currentLockedUntilMs - Date.now()) / (24 * 60 * 60 * 1000));
+
+		throw new Error(`affiliations lock active — cannot switch for another ${daysLeft} day(s).`);
+	}
+
+	await leaveAffiliation({
+		kind,
+		affiliationIdentifier: currentAffiliationIdentifier
+	});
+
+	try {
+		return await joinAffiliation({ kind, affiliationIdentifier: nextAffiliationIdentifier });
+	} catch (joinErr) {
+		// Best-effort rollback — re-join the previous affiliation so the
+		// user has *something* on the leaderboard. If the rollback also
+		// fails we swallow it (logging) and surface the original error,
+		// since the user's primary action ("switch to X") is what failed.
+		try {
+			await joinAffiliation({
+				kind,
+				affiliationIdentifier: currentAffiliationIdentifier
+			});
+		} catch (rollbackErr) {
+			console.error('switchAffiliation: rollback also failed', rollbackErr);
+		}
+
+		throw joinErr;
+	}
+};
+
+/**
  * Pure helper for the UI — days remaining on a lock. Returns 0 once
  * the lock has expired so the FE can flip the CTA to "Leave".
  */
