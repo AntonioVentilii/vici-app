@@ -39,6 +39,45 @@
 
 	const { seed, yesPercent, events = [] }: Props = $props();
 
+	// One dot per day on the sparkline. Multiple events landing on the
+	// same day (production data, unlike the curated 1-per-day test data
+	// the design source assumes) would otherwise stack on the same X
+	// coordinate and read as a black blob. Group by day, keep the first
+	// event's metadata for the dot itself, and track the extras count so
+	// the marker can carry a `+N` badge when needed.
+	interface DayMarker {
+		day: number;
+		label: string;
+		dir: MarketEvent['dir'];
+		extras: number;
+		// Index of this marker's primary event in the original `events`
+		// array — kept so the active-event sheet still maps back to the
+		// original event payload.
+		primaryIndex: number;
+	}
+
+	const dayMarkers = $derived.by<DayMarker[]>(() => {
+		const byDay: Record<number, DayMarker> = {};
+
+		events.forEach((e, i) => {
+			const existing = byDay[e.day];
+
+			if (existing === undefined) {
+				byDay[e.day] = {
+					day: e.day,
+					label: e.label,
+					dir: e.dir,
+					extras: 0,
+					primaryIndex: i
+				};
+			} else {
+				existing.extras += 1;
+			}
+		});
+
+		return Object.values(byDay).sort((a, b) => a.day - b.day);
+	});
+
 	const w = 240;
 	const h = 56;
 
@@ -158,11 +197,12 @@
 		<!-- Trailing live dot at the right edge -->
 		<circle cx={w} cy={liveDotY} fill={lineColor} r="2.5" />
 
-		<!-- Event markers — tappable. No inline text; label appears below. -->
-		{#each events as event, i (event.label + String(event.day))}
-			{@const x = eventX(event.day)}
-			{@const y = eventY(event.day)}
-			{@const isActive = activeEvent === i}
+		<!-- Event markers — tappable. One dot per day; same-day extras
+		     collapse into a `+N` badge on the dot. -->
+		{#each dayMarkers as marker (marker.day)}
+			{@const x = eventX(marker.day)}
+			{@const y = eventY(marker.day)}
+			{@const isActive = activeEvent === marker.primaryIndex}
 			{@const isPulse = activeEvent === null}
 			<g
 				class="flow-spark-event-dot"
@@ -171,13 +211,13 @@
 				aria-label={t({
 					locale: $localeStore,
 					key: 'a11y.spark_event',
-					params: { label: event.label }
+					params: { label: marker.label }
 				})}
-				onclick={(ev) => toggleEvent({ index: i, ev })}
+				onclick={(ev) => toggleEvent({ index: marker.primaryIndex, ev })}
 				onkeydown={(ev) => {
 					if (ev.key === 'Enter' || ev.key === ' ') {
 						ev.preventDefault();
-						toggleEvent({ index: i, ev });
+						toggleEvent({ index: marker.primaryIndex, ev });
 					}
 				}}
 				ontouchstart={(ev) => ev.stopPropagation()}
@@ -212,15 +252,41 @@
 						stroke-width="1.2"
 					/>
 				{/if}
-				<!-- Visible dot — fills with color when active -->
+				<!-- Visible dot — fills with section bg so the ring reads clean
+				     on every theme; ink fill when active. -->
 				<circle
 					cx={x}
 					cy={y}
-					fill={isActive ? lineColor : 'var(--bg-popover)'}
+					fill={isActive ? lineColor : 'var(--bg-surface)'}
 					r={isActive ? 5 : 4}
 					stroke={lineColor}
 					stroke-width={isActive ? 1.5 : 1.2}
 				/>
+				<!-- Extras badge — surfaces when the same day carries
+				     more than one event. -->
+				{#if marker.extras > 0}
+					<g class="flow-spark-event-extras">
+						<circle
+							cx={x + 5}
+							cy={y - 5}
+							fill={lineColor}
+							r="5"
+							stroke="var(--bg-surface)"
+							stroke-width="0.8"
+						/>
+						<text
+							fill="var(--bg-surface)"
+							font-family="var(--font-mono)"
+							font-size="6"
+							font-weight="700"
+							text-anchor="middle"
+							x={x + 5}
+							y={y - 5 + 2.4}
+						>
+							+{marker.extras}
+						</text>
+					</g>
+				{/if}
 			</g>
 		{/each}
 	</svg>

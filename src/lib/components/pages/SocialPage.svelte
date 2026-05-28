@@ -118,7 +118,7 @@
 	.social-page {
 		display: flex;
 		flex-direction: column;
-		gap: 0.85rem;
+		gap: 0.25rem;
 		padding: 0 1.25rem 6rem;
 	}
 

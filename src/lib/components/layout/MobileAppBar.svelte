@@ -73,13 +73,15 @@
 		display: none;
 	}
 
-	/* Width matches the `.appbar-icon-btn` outer footprint (18px icon
-	   + padding 8/10 + 1px border = 40w × 36h) so the title remains
-	   visually centered when only one side has a control. */
+	/* Width matches the `.appbar-icon-btn` outer footprint so the title
+	   stays visually centered when only one side has a control. Height
+	   is left to the row (align-items: center on .mobile-appbar) so the
+	   spacer never inflates the bar above the title's own line-box —
+	   that extra height pushed the first content section ~7px further
+	   down than the proto. */
 	.mobile-appbar-spacer {
 		display: inline-block;
 		width: 2.5rem;
-		height: 2.25rem;
 	}
 
 	.mobile-appbar-title-slot {

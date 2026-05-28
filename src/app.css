@@ -2393,10 +2393,19 @@ html[data-app='1'] body {
 }
 .dash-window button {
 	appearance: none;
+	flex: 1;
 	border: 0;
+	padding: 6px;
 	background: transparent;
 	color: var(--text-muted);
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	letter-spacing: 0.08em;
+	border-radius: 6px;
 	cursor: pointer;
+	transition:
+		background 180ms var(--ease-vici),
+		color 180ms var(--ease-vici);
 }
 
 /* ============================================================
