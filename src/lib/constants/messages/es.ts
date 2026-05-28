@@ -1221,6 +1221,7 @@ export const esMessages = {
 	'portfolio.orders.col.qty': 'Cant.',
 	'portfolio.orders.col.side': 'Lado',
 	'portfolio.orders.empty': 'No hay órdenes abiertas.',
+	'portfolio.orders.row.price_qty': 'Límite {price} · {qty}',
 	'portfolio.orders.side.buy': 'COMPRA',
 	'portfolio.orders.side.sell': 'VENTA',
 	'portfolio.orders.title': 'Órdenes abiertas',

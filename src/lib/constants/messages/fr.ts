@@ -1226,6 +1226,7 @@ export const frMessages = {
 	'portfolio.orders.col.qty': 'Qté',
 	'portfolio.orders.col.side': 'Côté',
 	'portfolio.orders.empty': 'Aucun ordre ouvert.',
+	'portfolio.orders.row.price_qty': 'Limite {price} · {qty}',
 	'portfolio.orders.side.buy': 'ACHAT',
 	'portfolio.orders.side.sell': 'VENTE',
 	'portfolio.orders.title': 'Ordres ouverts',

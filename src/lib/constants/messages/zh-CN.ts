@@ -1155,6 +1155,7 @@ export const zhCnMessages = {
 	'portfolio.orders.col.qty': '数量',
 	'portfolio.orders.col.side': '方向',
 	'portfolio.orders.empty': '没有未平仓订单。',
+	'portfolio.orders.row.price_qty': '限价 {price} · {qty}',
 	'portfolio.orders.side.buy': '买入',
 	'portfolio.orders.side.sell': '卖出',
 	'portfolio.orders.title': '未平仓订单',

@@ -33,9 +33,10 @@
 	import { calculatePositionPnL, positionEntryProbability } from '$lib/utils/portfolio.utils';
 	import { refreshOrders, refreshPositions } from '$lib/utils/refresh.utils';
 	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	/**
-	 * Portfolio — visual parity with the V1.2 prototype's PortfolioScreen.
+	 * Portfolio page — single-page hero + flat lists.
 	 *
 	 * Layout (top → bottom)
 	 * - `MobileAppBar`, title "Portfolio", chart icon right.
@@ -48,13 +49,15 @@
 	 * - Allocation card — per-tag share of open VXP capital, top 5 +
 	 *   Other, sorted by descending share. Hidden when no open VXP
 	 *   positions.
-	 * - Active calls — flat list with category tag + side tag, market
-	 *   title, "Entry X% → Y%" entry-to-current probability, and signed
-	 *   "+N VXP · +M%" PnL (delta also expressed as price-move %).
+	 * - Active calls — flat list with per-category accent tag + side
+	 *   tag, market title, "Entry X% → Y%" entry-to-current probability,
+	 *   and signed "+N VXP · +M%" PnL (delta also expressed as
+	 *   price-move %).
 	 * - Recent history — flat resolved rows: title, side tag, "Xd ago",
 	 *   WIN/LOSS label, signed +VXP.
-	 * - `OpenOrdersTable` retained for limit orders (no prototype
-	 *   parallel — kept as a current-only feature).
+	 * - Open orders — same card shape as active calls, with the order's
+	 *   limit price + qty in place of the entry → current strip, plus
+	 *   an inline cancel button.
 	 *
 	 * Rank: not yet served by the satellite — rendered as `EM_DASH`
 	 * placeholder, mirroring the Dash page treatment.
@@ -163,6 +166,17 @@
 		const tag = primaryMarketTag($marketTags[marketId]);
 
 		return tag ? tag.toUpperCase() : null;
+	};
+
+	/**
+	 * Per-category accent for the row tag chip. Falls back to the
+	 * laurel-gold default when the market has no recognised tag — same
+	 * fallback `tagColor()` uses internally.
+	 */
+	const categoryAccent = (marketId: string): string => {
+		const tag = primaryMarketTag($marketTags[marketId]);
+
+		return tagColor(tag ?? '');
 	};
 
 	const positionSideProb = (pos: Position): number => {
@@ -377,6 +391,7 @@
 						{@const current = positionSideProb(pos)}
 						{@const move = positionMoveDisplay(pos)}
 						{@const catLabel = categoryLabel(pos.marketId)}
+						{@const catAccent = categoryAccent(pos.marketId)}
 
 						<li>
 							<a
@@ -387,7 +402,7 @@
 							>
 								<div class="portfolio-row-tags">
 									{#if catLabel}
-										<span class="portfolio-row-cat">{catLabel}</span>
+										<span style:color={catAccent} class="portfolio-row-cat">{catLabel}</span>
 									{:else}
 										<span class="portfolio-row-cat is-dim">{EM_DASH}</span>
 									{/if}
@@ -489,7 +504,13 @@
 		{/if}
 
 		{#if $orders.length > 0}
-			<section class="portfolio-section portfolio-orders">
+			<section class="portfolio-section">
+				<header class="portfolio-section-head">
+					<h2 class="portfolio-section-title">
+						{t({ locale: $localeStore, key: 'portfolio.orders.title' })}
+					</h2>
+					<span class="num portfolio-section-count">{$orders.length}</span>
+				</header>
 				<OpenOrdersTable markets={$markets} onRefresh={onOrdersRefresh} orders={$orders} />
 			</section>
 		{/if}
@@ -660,12 +681,17 @@
 	}
 
 	.portfolio-row-cat {
+		display: inline-flex;
+		align-items: center;
+		padding: 3px 7px;
 		font-family: var(--font-mono);
 		font-size: 9.5px;
 		font-weight: 700;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--text-muted);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		border-radius: 4px;
 	}
 
 	.portfolio-row-cat.is-dim {
@@ -684,26 +710,27 @@
 	}
 
 	.portfolio-row-side {
+		display: inline-flex;
 		flex: 0 0 auto;
-		padding: 0.125rem 0.4rem;
+		align-items: center;
+		padding: 3px 7px;
 		font-family: var(--font-mono);
 		font-size: 9.5px;
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		border-radius: 4px;
-		border: 1px solid var(--border-base);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		color: var(--text-muted);
 	}
 
 	.portfolio-row-side-yes {
 		color: var(--yes);
-		border-color: var(--yes);
 		background: var(--yes-wash);
 	}
 
 	.portfolio-row-side-no {
 		color: var(--no);
-		border-color: var(--no);
 		background: var(--no-wash);
 	}
 

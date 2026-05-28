@@ -1214,6 +1214,7 @@ export const ptMessages = {
 	'portfolio.orders.col.qty': 'Qtd',
 	'portfolio.orders.col.side': 'Lado',
 	'portfolio.orders.empty': 'Nenhuma ordem aberta encontrada.',
+	'portfolio.orders.row.price_qty': 'Limite {price} · {qty}',
 	'portfolio.orders.side.buy': 'COMPRAR',
 	'portfolio.orders.side.sell': 'VENDER',
 	'portfolio.orders.title': 'Ordens abertas',

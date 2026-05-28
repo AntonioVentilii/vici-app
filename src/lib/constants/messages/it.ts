@@ -1216,6 +1216,7 @@ export const itMessages = {
 	'portfolio.orders.col.qty': 'Q.tà',
 	'portfolio.orders.col.side': 'Lato',
 	'portfolio.orders.empty': 'Nessun ordine aperto trovato.',
+	'portfolio.orders.row.price_qty': 'Limite {price} · {qty}',
 	'portfolio.orders.side.buy': 'COMPRA',
 	'portfolio.orders.side.sell': 'VENDI',
 	'portfolio.orders.title': 'Ordini aperti',
