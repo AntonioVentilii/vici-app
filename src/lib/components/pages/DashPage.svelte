@@ -25,13 +25,11 @@
 	import {
 		MARKET_TAG_LABEL_KEYS,
 		MARKET_TAGS,
-		primaryMarketTag,
 		type MarketTag
 	} from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
-	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { orders } from '$lib/derived/orders.derived';
 	import { positions } from '$lib/derived/positions.derived';
 	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
@@ -141,38 +139,26 @@
 		id: MarketTag;
 		label: string;
 		acc: number;
-		/** `true` if at least one call in this category has settled. The
-		 *  template uses this to gate whether a row appears; a row with
-		 *  no settled calls would always render at 0% which isn't useful. */
-		hasSettled: boolean;
 	}
 
-	/**
-	 * Per-category accuracy breakdown. One row per tag with at least one
-	 * settled call, including ones currently at 0% — a losing settled
-	 * call is real signal, not noise. Sourced from `$resolvedPositions`
-	 * (the FE-side Settled-event stream) so it stays in lock-step with
-	 * the chip counts in the "Past predictions" block above.
-	 */
 	const catRows = $derived<CategoryRow[]>(
-		MARKET_TAGS.filter((tag) => tag !== 'wc')
-			.map((tag): CategoryRow => {
-				const settled = $resolvedPositions.filter(
-					(r) => primaryMarketTag($marketTags[r.marketId]) === tag
-				);
+		(() => {
+			const stats = userStats?.categoryStats ?? {};
 
-				const wins = settled.filter((r) => r.result === 'won').length;
-				const acc = settled.length > 0 ? wins / settled.length : 0;
+			return MARKET_TAGS.filter((tag) => tag !== 'wc')
+				.map((tag) => {
+					const bucket = stats[tag] ?? { calls: 0, wins: 0 };
+					const acc = bucket.calls > 0 ? bucket.wins / bucket.calls : 0;
 
-				return {
-					id: tag,
-					label: t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }),
-					acc,
-					hasSettled: settled.length > 0
-				};
-			})
-			.filter((row) => row.hasSettled)
-			.sort((a, b) => b.acc - a.acc)
+					return {
+						id: tag,
+						label: t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }),
+						acc
+					};
+				})
+				.filter((row) => (userStats?.categoryStats?.[row.id]?.calls ?? 0) > 0)
+				.sort((a, b) => b.acc - a.acc);
+		})()
 	);
 
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
@@ -274,39 +260,15 @@
 	const streakBarPct = $derived(Math.min(100, (streak / MARATHON_DAYS) * 100));
 	const daysToMarathon = $derived(Math.max(0, MARATHON_DAYS - streak));
 
-	// Markets the user hasn't tried — pick the first category that the
-	// user has zero positions in (active or settled). Sourced directly
-	// from `$positions` + `$resolvedPositions` so a category counts as
-	// "tried" even when nothing's resolved in it yet (the By-category
-	// block doesn't surface those, but they shouldn't show up as
-	// untried suggestions either).
-	const triedCategoryIds = $derived.by<readonly MarketTag[]>(() => {
-		const tags: MarketTag[] = [];
-
-		const collect = (marketId: string) => {
-			const tag = primaryMarketTag($marketTags[marketId]);
-
-			if (tag !== undefined && tag !== 'wc' && !tags.includes(tag)) {
-				tags.push(tag);
-			}
-		};
-
-		for (const p of $positions) {
-			collect(p.marketId);
-		}
-
-		for (const r of $resolvedPositions) {
-			collect(r.marketId);
-		}
-
-		return tags;
-	});
+	// Markets the user hasn't tried — pick the first category with
+	// zero settled calls (falls back to `Culture` when the taxonomy
+	// is empty). Same satellite-cached source as `catRows` so the two
+	// surfaces agree on what counts as "tried".
 	const untriedCategory = $derived<MarketTag | undefined>(
-		MARKET_TAGS.filter((tag) => tag !== 'wc').find((tag) => !triedCategoryIds.includes(tag))
+		MARKET_TAGS.filter((tag) => tag !== 'wc').find(
+			(tag) => (userStats?.categoryStats?.[tag]?.calls ?? 0) === 0
+		)
 	);
-
-	/** Highest-accuracy category — first row of the already-sorted list. */
-	const bestCategory = $derived(catRows[0]);
 
 	// ─── Formatters ────────────────────────────────────────────────────
 	const fmtRelativeShort = (ms: number): string => {
@@ -677,17 +639,13 @@
 			</button>
 			<div class="dash-rank-tile">
 				<span class="lbl">
-					{#if bestCategory}{bestCategory.label}{:else}{t({
+					{#if catRows[0]}{catRows[0].label}{:else}{t({
 							locale: $localeStore,
 							key: 'dash.rank.top_cat'
 						})}{/if}
 				</span>
 				<span class="v acc">
-					{#if bestCategory}
-						{Math.round(bestCategory.acc * 100)}%
-					{:else}
-						{EM_DASH}
-					{/if}
+					{#if catRows[0]}{Math.round(catRows[0].acc * 100)}%{:else}{EM_DASH}{/if}
 				</span>
 				<span class="sub">{t({ locale: $localeStore, key: 'dash.rank.top_cat_sub' })}</span>
 			</div>
