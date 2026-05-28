@@ -337,7 +337,7 @@
 	display: flex;
 	gap: 48px;
 	white-space: nowrap;
-	animation: lp-ticker 90s linear infinite;
+	animation: lp-ticker 12s linear infinite;
 }
 .lp-ticker-item {
 	display: inline-flex;
