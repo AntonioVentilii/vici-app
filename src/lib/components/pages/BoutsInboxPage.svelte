@@ -330,7 +330,7 @@
 				return b.totalCalls - a.totalCalls;
 			}
 
-			return a.affiliationId.localeCompare(b.affiliationId);
+			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
 		});
 
 		return list.slice(0, 3);
@@ -346,12 +346,12 @@
 	 */
 	const rankIn = ({
 		stats,
-		affiliationId
+		affiliationIdentifier
 	}: {
 		stats: AffiliationStatsDoc[];
-		affiliationId: string | undefined;
+		affiliationIdentifier: string | undefined;
 	}): number => {
-		if (affiliationId === undefined) {
+		if (affiliationIdentifier === undefined) {
 			return 0;
 		}
 
@@ -367,10 +367,10 @@
 				return b.totalCalls - a.totalCalls;
 			}
 
-			return a.affiliationId.localeCompare(b.affiliationId);
+			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
 		});
 
-		const idx = sorted.findIndex((s) => s.affiliationId === affiliationId);
+		const idx = sorted.findIndex((s) => s.affiliationIdentifier === affiliationIdentifier);
 
 		return idx === -1 ? 0 : idx + 1;
 	};
@@ -378,21 +378,25 @@
 	const myUniStats = $derived.by(() => {
 		const uni = myUni;
 
-		return uni ? uniStats.find((s) => s.affiliationId === uni.affiliationId) : undefined;
+		return uni
+			? uniStats.find((s) => s.affiliationIdentifier === uni.affiliationIdentifier)
+			: undefined;
 	});
 
-	const myUniRank = $derived(rankIn({ stats: uniStats, affiliationId: myUni?.affiliationId }));
+	const myUniRank = $derived(
+		rankIn({ stats: uniStats, affiliationIdentifier: myUni?.affiliationIdentifier })
+	);
 
 	const myCountryStats = $derived.by(() => {
 		const country = myCountry;
 
 		return country
-			? countryStats.find((s) => s.affiliationId === country.affiliationId)
+			? countryStats.find((s) => s.affiliationIdentifier === country.affiliationIdentifier)
 			: undefined;
 	});
 
 	const myCountryRank = $derived(
-		rankIn({ stats: countryStats, affiliationId: myCountry?.affiliationId })
+		rankIn({ stats: countryStats, affiliationIdentifier: myCountry?.affiliationIdentifier })
 	);
 
 	const universityCount = WORLDS_UNIVERSITIES.length;
@@ -597,12 +601,12 @@
 					{t({ locale: $localeStore, key: 'bouts.section.worlds_universities' })}
 				</span>
 				{#if myUni}
-					{@const opt = uniOption(myUni.affiliationId)}
+					{@const opt = uniOption(myUni.affiliationIdentifier)}
 					<span class="bouts-section-head-meta num allcaps">
 						{t({
 							locale: $localeStore,
 							key: 'bouts.your_school',
-							params: { name: opt?.name ?? myUni.affiliationId }
+							params: { name: opt?.name ?? myUni.affiliationIdentifier }
 						})}
 					</span>
 				{/if}
@@ -646,31 +650,31 @@
 				{#if uniWcTop3.length > 0}
 					<div class="bouts-podium">
 						{#if uniWcTop3[1]}
-							{@const opt = uniOption(uniWcTop3[1].affiliationId)}
+							{@const opt = uniOption(uniWcTop3[1].affiliationIdentifier)}
 							<div class="bouts-pod-tile is-silver">
 								<div class="num bouts-pod-place">02</div>
 								<div class="bouts-pod-name">
-									{opt?.name ?? uniWcTop3[1].affiliationId}
+									{opt?.name ?? uniWcTop3[1].affiliationIdentifier}
 								</div>
 								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(uniWcTop3[1]))}</div>
 							</div>
 						{/if}
 						{#if uniWcTop3[0]}
-							{@const opt = uniOption(uniWcTop3[0].affiliationId)}
+							{@const opt = uniOption(uniWcTop3[0].affiliationIdentifier)}
 							<div class="bouts-pod-tile is-gold">
 								<div class="num bouts-pod-place">01</div>
 								<div class="bouts-pod-name">
-									{opt?.name ?? uniWcTop3[0].affiliationId}
+									{opt?.name ?? uniWcTop3[0].affiliationIdentifier}
 								</div>
 								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(uniWcTop3[0]))}</div>
 							</div>
 						{/if}
 						{#if uniWcTop3[2]}
-							{@const opt = uniOption(uniWcTop3[2].affiliationId)}
+							{@const opt = uniOption(uniWcTop3[2].affiliationIdentifier)}
 							<div class="bouts-pod-tile is-bronze">
 								<div class="num bouts-pod-place">03</div>
 								<div class="bouts-pod-name">
-									{opt?.name ?? uniWcTop3[2].affiliationId}
+									{opt?.name ?? uniWcTop3[2].affiliationIdentifier}
 								</div>
 								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(uniWcTop3[2]))}</div>
 							</div>
@@ -679,13 +683,13 @@
 				{/if}
 
 				{#if myUni && myUniStats}
-					{@const opt = uniOption(myUni.affiliationId)}
+					{@const opt = uniOption(myUni.affiliationIdentifier)}
 					<div class="bouts-your-row">
 						<span class="bouts-your-em" aria-hidden="true">
-							{(opt?.name ?? myUni.affiliationId).charAt(0)}
+							{(opt?.name ?? myUni.affiliationIdentifier).charAt(0)}
 						</span>
 						<span class="bouts-your-text">
-							<b>{opt?.name ?? myUni.affiliationId}</b>
+							<b>{opt?.name ?? myUni.affiliationIdentifier}</b>
 							·
 							{t({
 								locale: $localeStore,
@@ -705,13 +709,13 @@
 					</span>
 				</div>
 				{#if myUni && myUniStats}
-					{@const opt = uniOption(myUni.affiliationId)}
+					{@const opt = uniOption(myUni.affiliationIdentifier)}
 					<div class="bouts-your-row is-tight">
 						<span class="bouts-your-em" aria-hidden="true">
-							{(opt?.name ?? myUni.affiliationId).charAt(0)}
+							{(opt?.name ?? myUni.affiliationIdentifier).charAt(0)}
 						</span>
 						<span class="bouts-your-text">
-							<b>{opt?.name ?? myUni.affiliationId}</b>
+							<b>{opt?.name ?? myUni.affiliationIdentifier}</b>
 							·
 							{t({
 								locale: $localeStore,
@@ -743,10 +747,10 @@
 					{t({ locale: $localeStore, key: 'bouts.section.worlds_countries' })}
 				</span>
 				{#if myCountry}
-					{@const opt = countryOption(myCountry.affiliationId)}
+					{@const opt = countryOption(myCountry.affiliationIdentifier)}
 					<span class="bouts-section-head-meta num allcaps">
 						{#if opt}<CountryFlag class="bouts-section-flag" countryCode={opt.id} />{/if}
-						{(opt?.name ?? myCountry.affiliationId).toUpperCase()}
+						{(opt?.name ?? myCountry.affiliationIdentifier).toUpperCase()}
 					</span>
 				{/if}
 			</header>
@@ -789,34 +793,34 @@
 				{#if countryWcTop3.length > 0}
 					<div class="bouts-podium">
 						{#if countryWcTop3[1]}
-							{@const opt = countryOption(countryWcTop3[1].affiliationId)}
+							{@const opt = countryOption(countryWcTop3[1].affiliationIdentifier)}
 							<div class="bouts-pod-tile is-silver">
 								<div class="num bouts-pod-place">02</div>
 								<div class="bouts-pod-name">
 									{#if opt}<CountryFlag class="bouts-pod-flag" countryCode={opt.id} />{/if}
-									{opt?.name ?? countryWcTop3[1].affiliationId}
+									{opt?.name ?? countryWcTop3[1].affiliationIdentifier}
 								</div>
 								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(countryWcTop3[1]))}</div>
 							</div>
 						{/if}
 						{#if countryWcTop3[0]}
-							{@const opt = countryOption(countryWcTop3[0].affiliationId)}
+							{@const opt = countryOption(countryWcTop3[0].affiliationIdentifier)}
 							<div class="bouts-pod-tile is-gold">
 								<div class="num bouts-pod-place">01</div>
 								<div class="bouts-pod-name">
 									{#if opt}<CountryFlag class="bouts-pod-flag" countryCode={opt.id} />{/if}
-									{opt?.name ?? countryWcTop3[0].affiliationId}
+									{opt?.name ?? countryWcTop3[0].affiliationIdentifier}
 								</div>
 								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(countryWcTop3[0]))}</div>
 							</div>
 						{/if}
 						{#if countryWcTop3[2]}
-							{@const opt = countryOption(countryWcTop3[2].affiliationId)}
+							{@const opt = countryOption(countryWcTop3[2].affiliationIdentifier)}
 							<div class="bouts-pod-tile is-bronze">
 								<div class="num bouts-pod-place">03</div>
 								<div class="bouts-pod-name">
 									{#if opt}<CountryFlag class="bouts-pod-flag" countryCode={opt.id} />{/if}
-									{opt?.name ?? countryWcTop3[2].affiliationId}
+									{opt?.name ?? countryWcTop3[2].affiliationIdentifier}
 								</div>
 								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(countryWcTop3[2]))}</div>
 							</div>
@@ -825,13 +829,13 @@
 				{/if}
 
 				{#if myCountry && myCountryStats}
-					{@const opt = countryOption(myCountry.affiliationId)}
+					{@const opt = countryOption(myCountry.affiliationIdentifier)}
 					<div class="bouts-your-row">
 						<span class="bouts-your-em" aria-hidden="true">
 							{#if opt}<CountryFlag class="bouts-your-flag" countryCode={opt.id} />{/if}
 						</span>
 						<span class="bouts-your-text">
-							<b>{opt?.name ?? myCountry.affiliationId}</b>
+							<b>{opt?.name ?? myCountry.affiliationIdentifier}</b>
 							·
 							{t({
 								locale: $localeStore,
@@ -851,13 +855,13 @@
 					</span>
 				</div>
 				{#if myCountry && myCountryStats}
-					{@const opt = countryOption(myCountry.affiliationId)}
+					{@const opt = countryOption(myCountry.affiliationIdentifier)}
 					<div class="bouts-your-row is-tight">
 						<span class="bouts-your-em" aria-hidden="true">
 							{#if opt}<CountryFlag class="bouts-your-flag" countryCode={opt.id} />{/if}
 						</span>
 						<span class="bouts-your-text">
-							<b>{opt?.name ?? myCountry.affiliationId}</b>
+							<b>{opt?.name ?? myCountry.affiliationIdentifier}</b>
 							·
 							{t({
 								locale: $localeStore,

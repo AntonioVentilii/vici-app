@@ -88,7 +88,7 @@ export const idlFactory = ({ IDL }) => {
 	const AppFollowUserArgs = IDL.Record({ target: IDL.Text });
 	const AppGetAffiliationStatsArgs = IDL.Record({
 		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
-		affiliation_id: IDL.Text
+		affiliation_identifier: IDL.Text
 	});
 	const AppGetAffiliationStatsResult = IDL.Record({
 		stats: IDL.Opt(
@@ -100,7 +100,7 @@ export const idlFactory = ({ IDL }) => {
 				updated_at_ms: IDL.Float64,
 				total_calls: IDL.Float64,
 				month_total_calls: IDL.Float64,
-				affiliation_id: IDL.Text
+				affiliation_identifier: IDL.Text
 			})
 		)
 	});
@@ -265,7 +265,7 @@ export const idlFactory = ({ IDL }) => {
 				updated_at_ms: IDL.Float64,
 				total_calls: IDL.Float64,
 				month_total_calls: IDL.Float64,
-				affiliation_id: IDL.Text
+				affiliation_identifier: IDL.Text
 			})
 		)
 	});
@@ -484,7 +484,7 @@ export const idlFactory = ({ IDL }) => {
 				locked_until_ms: IDL.Float64,
 				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
 				joined_at_ms: IDL.Float64,
-				affiliation_id: IDL.Text
+				affiliation_identifier: IDL.Text
 			})
 		),
 		university: IDL.Opt(
@@ -493,7 +493,7 @@ export const idlFactory = ({ IDL }) => {
 				locked_until_ms: IDL.Float64,
 				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
 				joined_at_ms: IDL.Float64,
-				affiliation_id: IDL.Text
+				affiliation_identifier: IDL.Text
 			})
 		)
 	});
@@ -606,7 +606,7 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AppListWorldsRosterArgs = IDL.Record({
 		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
-		affiliation_id: IDL.Text
+		affiliation_identifier: IDL.Text
 	});
 	const AppListWorldsRosterResult = IDL.Record({
 		items: IDL.Vec(
@@ -615,7 +615,7 @@ export const idlFactory = ({ IDL }) => {
 				locked_until_ms: IDL.Float64,
 				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
 				joined_at_ms: IDL.Float64,
-				affiliation_id: IDL.Text
+				affiliation_identifier: IDL.Text
 			})
 		)
 	});

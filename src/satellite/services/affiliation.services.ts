@@ -15,7 +15,7 @@ import { decodeDocData } from '@junobuild/functions/sdk';
  * Pre-write guard for `affiliations`. Enforces the Worlds
  * 90-day affiliation lock:
  *
- *  1. **Key shape.** `${member}/${kind}/${affiliationId}`. Drift
+ *  1. **Key shape.** `${member}/${kind}/${affiliationIdentifier}`. Drift
  *     between key and embedded fields is rejected.
  *  2. **Member binds caller.** A user can only write their own
  *     affiliation rows.
@@ -28,7 +28,7 @@ import { decodeDocData } from '@junobuild/functions/sdk';
  *     satellite's clock to defend against pre-/post-dated writes
  *     that would short-circuit the lock.
  *  6. **Identity fields immutable on edits.** `member`, `kind`,
- *     `affiliationId`, `joinedAtMs`, `lockedUntilMs` are write-once.
+ *     `affiliationIdentifier`, `joinedAtMs`, `lockedUntilMs` are write-once.
  *     A row that exists is the affiliation; switching requires
  *     delete (gated by the lock) then re-create.
  */
@@ -50,12 +50,12 @@ export const assertSetAffiliation = ({
 	const expectedKey = affiliationKey({
 		memberPrincipal: proposedDoc.member,
 		kind: proposedDoc.kind,
-		affiliationId: proposedDoc.affiliationId
+		affiliationIdentifier: proposedDoc.affiliationIdentifier
 	});
 
 	if (key !== expectedKey) {
 		throw new Error(
-			`affiliations key mismatch: expected ${expectedKey}, got ${key} (member/kind/affiliationId must match the doc body).`
+			`affiliations key mismatch: expected ${expectedKey}, got ${key} (member/kind/affiliationIdentifier must match the doc body).`
 		);
 	}
 
@@ -109,12 +109,12 @@ export const assertSetAffiliation = ({
 	if (
 		currentDoc.member !== proposedDoc.member ||
 		currentDoc.kind !== proposedDoc.kind ||
-		currentDoc.affiliationId !== proposedDoc.affiliationId ||
+		currentDoc.affiliationIdentifier !== proposedDoc.affiliationIdentifier ||
 		currentDoc.joinedAtMs !== proposedDoc.joinedAtMs ||
 		currentDoc.lockedUntilMs !== proposedDoc.lockedUntilMs
 	) {
 		throw new Error(
-			'affiliations identity fields are immutable (member, kind, affiliationId, joinedAtMs, lockedUntilMs).'
+			'affiliations identity fields are immutable (member, kind, affiliationIdentifier, joinedAtMs, lockedUntilMs).'
 		);
 	}
 };

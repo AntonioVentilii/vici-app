@@ -62,12 +62,12 @@ const checkNicknameAvailability = async (
 
 const AppGetAffiliationStatsArgsSchema = j.strictObject({
 	kind: j.enum(['university', 'country']),
-	affiliationId: j.string()
+	affiliationIdentifier: j.string()
 });
 const AppGetAffiliationStatsResultSchema = j.strictObject({
 	stats: j.optional(
 		j.strictObject({
-			affiliation_id: j.string(),
+			affiliation_identifier: j.string(),
 			kind: j.enum(['university', 'country']),
 			total_calls: j.number(),
 			wins: j.number(),
@@ -297,7 +297,7 @@ const AppListAffiliationStatsArgsSchema = j.strictObject({
 const AppListAffiliationStatsResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
-			affiliation_id: j.string(),
+			affiliation_identifier: j.string(),
 			kind: j.enum(['university', 'country']),
 			total_calls: j.number(),
 			wins: j.number(),
@@ -553,7 +553,7 @@ const AppListMyAffiliationsResultSchema = j.strictObject({
 		j.strictObject({
 			member: j.string(),
 			kind: j.enum(['university', 'country']),
-			affiliation_id: j.string(),
+			affiliation_identifier: j.string(),
 			joined_at_ms: j.number(),
 			locked_until_ms: j.number()
 		})
@@ -562,7 +562,7 @@ const AppListMyAffiliationsResultSchema = j.strictObject({
 		j.strictObject({
 			member: j.string(),
 			kind: j.enum(['university', 'country']),
-			affiliation_id: j.string(),
+			affiliation_identifier: j.string(),
 			joined_at_ms: j.number(),
 			locked_until_ms: j.number()
 		})
@@ -704,14 +704,14 @@ const listSentFriendRequests = async (): Promise<
 
 const AppListWorldsRosterArgsSchema = j.strictObject({
 	kind: j.enum(['university', 'country']),
-	affiliationId: j.string()
+	affiliationIdentifier: j.string()
 });
 const AppListWorldsRosterResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
 			member: j.string(),
 			kind: j.enum(['university', 'country']),
-			affiliation_id: j.string(),
+			affiliation_identifier: j.string(),
 			joined_at_ms: j.number(),
 			locked_until_ms: j.number()
 		})

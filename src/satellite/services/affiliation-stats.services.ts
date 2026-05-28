@@ -24,10 +24,10 @@ import {
  *
  *  1. **Collection scope.** No-op for any non-stats collection.
  *  2. **Key shape.** The doc key must equal
- *     `${kind}/${affiliationId}` and match the doc body's
- *     `(kind, affiliationId)`.
+ *     `${kind}/${affiliationIdentifier}` and match the doc body's
+ *     `(kind, affiliationIdentifier)`.
  *  3. **Caller is a member.** The caller must have a row in
- *     `affiliations` for the same `(kind, affiliationId)`. This binds
+ *     `affiliations` for the same `(kind, affiliationIdentifier)`. This binds
  *     the assert to legitimate hook writes — only a hook signing on
  *     behalf of an actual affiliate can write the stats doc, which
  *     means random users can't inflate a rival school's numbers.
@@ -52,15 +52,15 @@ export const assertSetAffiliationStats = ({
 	const proposedDoc = decodeDocData<AffiliationStatsDoc>(proposed.data);
 
 	// 2. Key shape — two valid shapes:
-	//    - Rolling (current month): `${kind}/${affiliationId}` — 2 segments
-	//    - Frozen snapshot (past month): `${kind}/${affiliationId}/${monthAnchor}` — 3 segments
+	//    - Rolling (current month): `${kind}/${affiliationIdentifier}` — 2 segments
+	//    - Frozen snapshot (past month): `${kind}/${affiliationIdentifier}/${monthAnchor}` — 3 segments
 	const rollingKey = affiliationStatsKey({
 		kind: proposedDoc.kind,
-		affiliationId: proposedDoc.affiliationId
+		affiliationIdentifier: proposedDoc.affiliationIdentifier
 	});
 	const snapshotKey = affiliationStatsSnapshotKey({
 		kind: proposedDoc.kind,
-		affiliationId: proposedDoc.affiliationId,
+		affiliationIdentifier: proposedDoc.affiliationIdentifier,
 		monthAnchor: proposedDoc.monthAnchor
 	});
 
@@ -86,7 +86,7 @@ export const assertSetAffiliationStats = ({
 	const membershipKey = affiliationKey({
 		memberPrincipal: callerText,
 		kind: proposedDoc.kind,
-		affiliationId: proposedDoc.affiliationId
+		affiliationIdentifier: proposedDoc.affiliationIdentifier
 	});
 	const membershipDoc = getDocStore({
 		collection: Collection.AFFILIATIONS,
@@ -96,7 +96,7 @@ export const assertSetAffiliationStats = ({
 
 	if (isNullish(membershipDoc)) {
 		throw new Error(
-			`affiliation_stats writes require the caller to be a member of ${proposedDoc.kind}/${proposedDoc.affiliationId}.`
+			`affiliation_stats writes require the caller to be a member of ${proposedDoc.kind}/${proposedDoc.affiliationIdentifier}.`
 		);
 	}
 
@@ -150,9 +150,9 @@ export const assertSetAffiliationStats = ({
 		// Identity fields are immutable.
 		if (
 			currentDoc.kind !== proposedDoc.kind ||
-			currentDoc.affiliationId !== proposedDoc.affiliationId
+			currentDoc.affiliationIdentifier !== proposedDoc.affiliationIdentifier
 		) {
-			throw new Error('affiliation_stats kind / affiliationId are immutable.');
+			throw new Error('affiliation_stats kind / affiliationIdentifier are immutable.');
 		}
 	}
 };
@@ -240,7 +240,7 @@ export const onProfileSetForAffiliationStats = (ctx: OnSetDocContext): void => {
 	const deltaWins = Math.max(0, Math.min(deltaTrades, afterWins - beforeWins));
 
 	// Caller is the user whose profile just updated. Their
-	// affiliations are keyed `${caller}/${kind}/${affiliationId}` — at
+	// affiliations are keyed `${caller}/${kind}/${affiliationIdentifier}` — at
 	// most two rows (one per kind). We try both possibilities; if a
 	// row is missing the kind, we skip.
 	const callerText = Principal.fromUint8Array(caller).toText();
@@ -249,7 +249,7 @@ export const onProfileSetForAffiliationStats = (ctx: OnSetDocContext): void => {
 	const anchor = monthAnchorFromMs(nowMs);
 
 	// Scan the affiliations collection once and bucket by kind. We
-	// can't keyed-lookup without knowing the affiliationId, so this
+	// can't keyed-lookup without knowing the affiliationIdentifier, so this
 	// scan is N=members + filter; for the satellite's expected volume
 	// this is bounded by the active membership total.
 	const { items } = listDocsStore({
@@ -277,7 +277,7 @@ export const onProfileSetForAffiliationStats = (ctx: OnSetDocContext): void => {
 				incrementStats({
 					caller,
 					kind: matchingKind,
-					affiliationId: memberDoc.affiliationId,
+					affiliationIdentifier: memberDoc.affiliationIdentifier,
 					deltaTrades,
 					deltaWins,
 					anchor,
@@ -291,7 +291,7 @@ export const onProfileSetForAffiliationStats = (ctx: OnSetDocContext): void => {
 const incrementStats = ({
 	caller,
 	kind,
-	affiliationId,
+	affiliationIdentifier,
 	deltaTrades,
 	deltaWins,
 	anchor,
@@ -299,13 +299,13 @@ const incrementStats = ({
 }: {
 	caller: Uint8Array;
 	kind: AffiliationKind;
-	affiliationId: string;
+	affiliationIdentifier: string;
 	deltaTrades: number;
 	deltaWins: number;
 	anchor: string;
 	nowMs: number;
 }): void => {
-	const key = affiliationStatsKey({ kind, affiliationId });
+	const key = affiliationStatsKey({ kind, affiliationIdentifier });
 	const existing = getDocStore({
 		collection: Collection.AFFILIATION_STATS,
 		key,
@@ -332,7 +332,7 @@ const incrementStats = ({
 	if (rolledOver && nonNullish(prev)) {
 		const snapshotKey = affiliationStatsSnapshotKey({
 			kind,
-			affiliationId,
+			affiliationIdentifier,
 			monthAnchor: prev.monthAnchor
 		});
 		const existingSnapshot = getDocStore({
@@ -370,7 +370,7 @@ const incrementStats = ({
 				}
 			: prev
 		: {
-				affiliationId,
+				affiliationIdentifier,
 				kind,
 				totalCalls: 0,
 				wins: 0,

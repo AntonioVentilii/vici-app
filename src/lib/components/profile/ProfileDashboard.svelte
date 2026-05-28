@@ -431,17 +431,17 @@
 		/** Stored affiliation id — ISO-2 for countries, slug for unis.
 		 *  Needed at render time so the country slot can pass an ID to
 		 *  `<CountryFlag>` rather than the display `value` (name). */
-		affiliationId: string | null;
+		affiliationIdentifier: string | null;
 		glyph: string;
 		locked: boolean;
 	}
 
 	const slots = $derived.by<AffilSlot[]>(() => {
 		const uniOption = myUni
-			? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationId })
+			? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationIdentifier })
 			: undefined;
 		const countryOption = myCountry
-			? lookupWorldsAffiliation({ kind: 'country', id: myCountry.affiliationId })
+			? lookupWorldsAffiliation({ kind: 'country', id: myCountry.affiliationIdentifier })
 			: undefined;
 
 		return [
@@ -451,7 +451,7 @@
 				labelKey: 'profile.dashboard.affiliations.university',
 				filled: uniOption !== undefined,
 				value: uniOption?.name ?? null,
-				affiliationId: uniOption?.id ?? null,
+				affiliationIdentifier: uniOption?.id ?? null,
 				glyph: uniOption?.glyph ?? '+',
 				locked: false
 			},
@@ -461,7 +461,7 @@
 				labelKey: 'profile.dashboard.affiliations.country',
 				filled: countryOption !== undefined,
 				value: countryOption?.name ?? null,
-				affiliationId: countryOption?.id ?? null,
+				affiliationIdentifier: countryOption?.id ?? null,
 				glyph: countryOption?.glyph ?? '+',
 				locked: false
 			},
@@ -471,7 +471,7 @@
 				labelKey: 'profile.dashboard.affiliations.city',
 				filled: false,
 				value: null,
-				affiliationId: null,
+				affiliationIdentifier: null,
 				glyph: '+',
 				locked: true
 			},
@@ -481,7 +481,7 @@
 				labelKey: 'profile.dashboard.affiliations.company',
 				filled: false,
 				value: null,
-				affiliationId: null,
+				affiliationIdentifier: null,
 				glyph: '+',
 				locked: true
 			}
@@ -679,10 +679,10 @@
 				     "you're an archetype" affordance. -->
 				{#if myUni !== undefined || myCountry !== undefined}
 					{@const uniOption = myUni
-						? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationId })
+						? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationIdentifier })
 						: undefined}
 					{@const countryOption = myCountry
-						? lookupWorldsAffiliation({ kind: 'country', id: myCountry.affiliationId })
+						? lookupWorldsAffiliation({ kind: 'country', id: myCountry.affiliationIdentifier })
 						: undefined}
 					<div class="profile-affil-chip-row">
 						{#if uniOption}
@@ -803,8 +803,8 @@
 					<span class="affil-slot-icon" aria-hidden="true">
 						{#if slot.locked}
 							<Lock size={14} strokeWidth={1.8} />
-						{:else if slot.kind === 'country' && slot.affiliationId !== null}
-							<CountryFlag class="affil-slot-flag" countryCode={slot.affiliationId} />
+						{:else if slot.kind === 'country' && slot.affiliationIdentifier !== null}
+							<CountryFlag class="affil-slot-flag" countryCode={slot.affiliationIdentifier} />
 						{:else}
 							{slot.glyph}
 						{/if}
@@ -932,6 +932,10 @@
 
 {#if pickerKind !== null}
 	<AffiliationPickerModal
+		current={{
+			university: myUni?.affiliationIdentifier,
+			country: myCountry?.affiliationIdentifier
+		}}
 		isOpen={true}
 		kind={pickerKind}
 		onClose={() => (pickerKind = null)}

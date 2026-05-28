@@ -25,11 +25,17 @@
 	interface Props {
 		isOpen: boolean;
 		kind: AffiliationKind;
+		/** Caller's currently-joined affiliations (best-effort). Used to
+		 *  mark the matching row as "Joined" and skip the satellite
+		 *  round-trip when the user taps it. The catch path still
+		 *  defends against stale state by detecting the
+		 *  `already-affiliated` reject from `joinAffiliation`. */
+		current?: { university?: string; country?: string };
 		onClose: () => void;
 		onPicked?: () => void;
 	}
 
-	const { isOpen, kind, onClose, onPicked }: Props = $props();
+	const { isOpen, kind, current, onClose, onPicked }: Props = $props();
 
 	// Initial kind is bound by the caller (e.g. WorldsPage picks a tab,
 	// ProfileDashboard picks an affiliation tile), but inside the sheet
@@ -61,6 +67,8 @@
 	let saving = $state<string | null>(null);
 	let errorMessage = $state<string | null>(null);
 
+	const currentForKind = $derived<string | undefined>(current?.[activeKind]);
+
 	const filtered = $derived.by(() => {
 		const trimmed = query.trim().toLowerCase();
 
@@ -91,24 +99,46 @@
 			return;
 		}
 
+		// Tap on the already-joined row: surface the friendly "you're
+		// already on this leaderboard" message instead of round-tripping
+		// to the satellite just to throw `already-affiliated`. Defense
+		// in depth — the catch branch below handles the case where
+		// `current` is stale and the server is the one telling us.
+		if (currentForKind !== undefined && currentForKind === option.id) {
+			errorMessage = t({
+				locale: $localeStore,
+				key: 'worlds.picker.error_already_affiliated'
+			});
+
+			return;
+		}
+
 		saving = option.id;
 		errorMessage = null;
 
 		try {
-			await joinAffiliation({ kind: activeKind, affiliationId: option.id });
+			await joinAffiliation({ kind: activeKind, affiliationIdentifier: option.id });
 			onPicked?.();
 			onClose();
 		} catch (err) {
-			// Service-layer timeout surfaces as `<label> timed out after Nms`.
-			// Surface a retry-friendly message in that case so the user knows
-			// the pick didn't go through (vs the previously unbounded
-			// "joining…" hang) and the underlying cause is captured in the
-			// console for debugging.
-			const isTimeout = err instanceof Error && err.message.includes('timed out');
+			// Three branches that need distinct UI:
+			//  - "Already affiliated" — user double-tapped, or `current`
+			//    was stale and the server rejected. Show the friendly
+			//    "you're already on this leaderboard" copy.
+			//  - Timeout — service wrapped `getDoc`/`setDoc` in a 15s
+			//    race; the pick may or may not have committed.
+			//  - Anything else — generic fallback, error logged.
+			const message = err instanceof Error ? err.message : '';
+			const isAlreadyAffiliated = message.includes('Already affiliated');
+			const isTimeout = message.includes('timed out');
 			console.error('AffiliationPickerModal: joinAffiliation failed', err);
 			errorMessage = t({
 				locale: $localeStore,
-				key: isTimeout ? 'worlds.picker.error_timeout' : 'common.error.generic'
+				key: isAlreadyAffiliated
+					? 'worlds.picker.error_already_affiliated'
+					: isTimeout
+						? 'worlds.picker.error_timeout'
+						: 'common.error.generic'
 			});
 		} finally {
 			saving = null;
@@ -193,9 +223,12 @@
 				</li>
 			{:else}
 				{#each filtered as option (option.id)}
+					{@const isJoined = currentForKind === option.id}
 					<li>
 						<button
 							class="affil-picker-row"
+							class:is-joined={isJoined}
+							aria-current={isJoined ? 'true' : undefined}
 							disabled={saving === option.id}
 							onclick={() => handlePick(option)}
 							type="button"
@@ -211,6 +244,10 @@
 							{#if saving === option.id}
 								<span class="num allcaps affil-picker-saving">
 									{t({ locale: $localeStore, key: 'worlds.cta.joining' })}
+								</span>
+							{:else if isJoined}
+								<span class="num allcaps affil-picker-joined">
+									{t({ locale: $localeStore, key: 'worlds.picker.already_joined' })}
 								</span>
 							{/if}
 						</button>
@@ -368,6 +405,10 @@
 		background: color-mix(in srgb, var(--laurel) 8%, var(--bg-surface));
 	}
 
+	.affil-picker-row.is-joined {
+		background: color-mix(in srgb, var(--laurel) 10%, var(--bg-surface));
+	}
+
 	.affil-picker-row:disabled {
 		opacity: 0.55;
 		cursor: not-allowed;
@@ -389,6 +430,11 @@
 	.affil-picker-saving {
 		font-size: var(--t-10, 0.65rem);
 		color: var(--text-muted);
+	}
+
+	.affil-picker-joined {
+		font-size: var(--t-10, 0.65rem);
+		color: var(--laurel);
 	}
 
 	.affil-picker-empty {

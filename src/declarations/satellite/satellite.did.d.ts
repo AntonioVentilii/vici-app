@@ -89,7 +89,7 @@ export interface AppFollowUserArgs {
 }
 export interface AppGetAffiliationStatsArgs {
 	kind: { country: null } | { university: null };
-	affiliation_id: string;
+	affiliation_identifier: string;
 }
 export interface AppGetAffiliationStatsResult {
 	stats:
@@ -103,7 +103,7 @@ export interface AppGetAffiliationStatsResult {
 					updated_at_ms: number;
 					total_calls: number;
 					month_total_calls: number;
-					affiliation_id: string;
+					affiliation_identifier: string;
 				}
 		  ];
 }
@@ -258,7 +258,7 @@ export interface AppListAffiliationStatsResult {
 		updated_at_ms: number;
 		total_calls: number;
 		month_total_calls: number;
-		affiliation_id: string;
+		affiliation_identifier: string;
 	}>;
 }
 export interface AppListFollowersResult {
@@ -385,7 +385,7 @@ export interface AppListMyAffiliationsResult {
 					locked_until_ms: number;
 					kind: { country: null } | { university: null };
 					joined_at_ms: number;
-					affiliation_id: string;
+					affiliation_identifier: string;
 				}
 		  ];
 	university:
@@ -396,7 +396,7 @@ export interface AppListMyAffiliationsResult {
 					locked_until_ms: number;
 					kind: { country: null } | { university: null };
 					joined_at_ms: number;
-					affiliation_id: string;
+					affiliation_identifier: string;
 				}
 		  ];
 }
@@ -468,7 +468,7 @@ export interface AppListSentFriendRequestsResult {
 }
 export interface AppListWorldsRosterArgs {
 	kind: { country: null } | { university: null };
-	affiliation_id: string;
+	affiliation_identifier: string;
 }
 export interface AppListWorldsRosterResult {
 	items: Array<{
@@ -476,7 +476,7 @@ export interface AppListWorldsRosterResult {
 		locked_until_ms: number;
 		kind: { country: null } | { university: null };
 		joined_at_ms: number;
-		affiliation_id: string;
+		affiliation_identifier: string;
 	}>;
 }
 export interface AppLookupLeagueByInviteArgs {

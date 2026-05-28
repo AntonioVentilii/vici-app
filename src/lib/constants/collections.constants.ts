@@ -56,14 +56,14 @@ export const Collection = {
 	/**
 	 * Worlds affiliations — a user's chosen university and / or country, used for the Worlds
 	 * leaderboard surface (distinct from user-created leagues so the 90-day lock doesn't leak).
-	 * Keyed `${member}/${kind}/${affiliationId}` so a user can carry one university + one country
+	 * Keyed `${member}/${kind}/${affiliationIdentifier}` so a user can carry one university + one country
 	 * simultaneously. Server computes `lockedUntilMs = joinedAtMs + 90d` on first write; the delete
 	 * assert hard-rejects until the lock expires.
 	 */
 	AFFILIATIONS: collections.AFFILIATIONS,
 	/**
-	 * Per-affiliation rolling stats for the Worlds leaderboard. One doc per `(kind, affiliationId)`
-	 * keyed `${kind}/${affiliationId}`. Written exclusively by the satellite hook on
+	 * Per-affiliation rolling stats for the Worlds leaderboard. One doc per `(kind, affiliationIdentifier)`
+	 * keyed `${kind}/${affiliationIdentifier}`. Written exclusively by the satellite hook on
 	 * `profiles` updates — when a user's `totalTrades` increments, the hook fans out the win/loss
 	 * delta to that user's affiliation rows. The doc tracks both lifetime totals and the current
 	 * month's totals (rolled over lazily on the first hook fire of a new calendar month).

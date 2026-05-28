@@ -483,13 +483,13 @@ export const listMyAffiliations = defineQuery({
 export const listWorldsRoster = defineQuery({
 	args: j.strictObject({
 		kind: j.enum(['university', 'country']),
-		affiliationId: j.string()
+		affiliationIdentifier: j.string()
 	}),
 	result: j.strictObject({
 		items: j.array(AffiliationWireSchema)
 	}),
-	handler: ({ kind, affiliationId }) => ({
-		items: listWorldsRosterFn({ kind, affiliationId }).map(toWireAffiliation)
+	handler: ({ kind, affiliationIdentifier }) => ({
+		items: listWorldsRosterFn({ kind, affiliationIdentifier }).map(toWireAffiliation)
 	})
 });
 
@@ -499,13 +499,13 @@ export const listWorldsRoster = defineQuery({
 export const getAffiliationStats = defineQuery({
 	args: j.strictObject({
 		kind: j.enum(['university', 'country']),
-		affiliationId: j.string()
+		affiliationIdentifier: j.string()
 	}),
 	result: j.strictObject({
 		stats: j.optional(AffiliationStatsWireSchema)
 	}),
-	handler: ({ kind, affiliationId }) => {
-		const stats = getAffiliationStatsFn({ kind, affiliationId });
+	handler: ({ kind, affiliationIdentifier }) => {
+		const stats = getAffiliationStatsFn({ kind, affiliationIdentifier });
 
 		return {
 			stats: nonNullish(stats) ? toWireAffiliationStats(stats) : undefined

@@ -28,12 +28,12 @@
 	 */
 	interface Props {
 		kind: AffiliationKind;
-		affiliationId: string;
+		affiliationIdentifier: string;
 	}
 
-	const { kind, affiliationId }: Props = $props();
+	const { kind, affiliationIdentifier }: Props = $props();
 
-	const option = $derived(lookupWorldsAffiliation({ kind, id: affiliationId }));
+	const option = $derived(lookupWorldsAffiliation({ kind, id: affiliationIdentifier }));
 	const rosterSize = $derived(
 		kind === 'university' ? WORLDS_UNIVERSITIES.length : WORLDS_COUNTRIES.length
 	);
@@ -47,8 +47,8 @@
 	onMount(async () => {
 		try {
 			const [rosterResp, statsResp, allResp] = await Promise.all([
-				functions.listWorldsRoster({ kind, affiliationId }),
-				getAffiliationStats({ kind, affiliationId }),
+				functions.listWorldsRoster({ kind, affiliationIdentifier }),
+				getAffiliationStats({ kind, affiliationIdentifier }),
 				listAffiliationStats({ kind })
 			]);
 			memberCount = rosterResp.items.length;
@@ -105,10 +105,10 @@
 				return b.totalCalls - a.totalCalls;
 			}
 
-			return a.affiliationId.localeCompare(b.affiliationId);
+			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
 		});
 
-		const idx = sorted.findIndex((s) => s.affiliationId === affiliationId);
+		const idx = sorted.findIndex((s) => s.affiliationIdentifier === affiliationIdentifier);
 
 		return idx === -1 ? 0 : idx + 1;
 	};
@@ -132,13 +132,13 @@
 			label: t({ locale: $localeStore, key: 'worlds.detail.back' }),
 			onBack: backToWorlds
 		}}
-		title={option?.name ?? affiliationId}
+		title={option?.name ?? affiliationIdentifier}
 	/>
 
 	<section class="worlds-detail-identity">
 		<span class="worlds-detail-glyph" aria-hidden="true">{option?.glyph ?? '?'}</span>
 		<div class="worlds-detail-identity-text">
-			<span class="worlds-detail-identity-name">{option?.name ?? affiliationId}</span>
+			<span class="worlds-detail-identity-name">{option?.name ?? affiliationIdentifier}</span>
 			<span class="num allcaps worlds-detail-identity-meta">
 				{#if loadState === 'loading'}
 					{t({ locale: $localeStore, key: 'worlds.detail.loading_members' })}

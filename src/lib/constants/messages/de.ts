@@ -1888,9 +1888,11 @@ export const deMessages = {
 	'worlds.event.title_lede': 'Worlds Universitäten',
 	'worlds.event.title_tail': 'Bout',
 	'worlds.loading': 'Lade Worlds…',
+	'worlds.picker.already_joined': 'Beigetreten',
 	'worlds.picker.clear': 'Löschen',
 	'worlds.picker.close': 'Schließen',
 	'worlds.picker.empty': 'Keine Treffer. Versuche einen anderen Namen.',
+	'worlds.picker.error_already_affiliated': 'Du bist bereits auf dieser Bestenliste.',
 	'worlds.picker.error_timeout':
 		'Hat nicht geklappt. Prüfe deine Verbindung und versuche es erneut.',
 	'worlds.picker.kind_country': 'Land',

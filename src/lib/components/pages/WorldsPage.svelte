@@ -54,6 +54,7 @@
 	type Scope = 'month' | 'wc';
 
 	let myUni = $state<AffiliationDoc | undefined>();
+	let myCountry = $state<AffiliationDoc | undefined>();
 	let stats = $state<AffiliationStatsDoc[]>([]);
 	let loadState = $state<'loading' | 'ready' | 'error'>('loading');
 	let errorMessage = $state<string | null>(null);
@@ -71,6 +72,7 @@
 				listAffiliationStats({ kind: 'university' })
 			]);
 			myUni = affils.university;
+			myCountry = affils.country;
 			stats = schools;
 			loadState = 'ready';
 		} catch (err) {
@@ -143,7 +145,7 @@
 				return b.totalCalls - a.totalCalls;
 			}
 
-			return a.affiliationId.localeCompare(b.affiliationId);
+			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
 		});
 
 		return list;
@@ -169,7 +171,7 @@
 				return b.totalCalls - a.totalCalls;
 			}
 
-			return a.affiliationId.localeCompare(b.affiliationId);
+			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
 		});
 
 		return list.slice(0, PODIUM_SIZE);
@@ -177,22 +179,28 @@
 
 	const visibleRows = $derived(expanded ? sortedForScope : sortedForScope.slice(0, TOP_N));
 
-	const myAffiliationId = $derived(myUni?.affiliationId);
+	const myAffiliationId = $derived(myUni?.affiliationIdentifier);
 
 	const myRankInScope = $derived(
-		myAffiliationId ? sortedForScope.findIndex((s) => s.affiliationId === myAffiliationId) + 1 : 0
+		myAffiliationId
+			? sortedForScope.findIndex((s) => s.affiliationIdentifier === myAffiliationId) + 1
+			: 0
 	);
 
 	const myStatsRow = $derived(
-		myAffiliationId ? sortedForScope.find((s) => s.affiliationId === myAffiliationId) : undefined
+		myAffiliationId
+			? sortedForScope.find((s) => s.affiliationIdentifier === myAffiliationId)
+			: undefined
 	);
 
 	const isMyRowInVisible = $derived(
-		myAffiliationId ? visibleRows.some((s) => s.affiliationId === myAffiliationId) : false
+		myAffiliationId ? visibleRows.some((s) => s.affiliationIdentifier === myAffiliationId) : false
 	);
 
 	const myUniOption = $derived<WorldsAffiliationOption | undefined>(
-		myUni ? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationId }) : undefined
+		myUni
+			? lookupWorldsAffiliation({ kind: 'university', id: myUni.affiliationIdentifier })
+			: undefined
 	);
 
 	const optionFor = (id: string): WorldsAffiliationOption | undefined =>
@@ -300,38 +308,38 @@
 			</div>
 			<div class="worlds-podium">
 				{#if wcTop3[1]}
-					{@const opt = optionFor(wcTop3[1].affiliationId)}
+					{@const opt = optionFor(wcTop3[1].affiliationIdentifier)}
 					<button
 						class="worlds-pod-tile is-silver"
-						onclick={() => handleRowNav(wcTop3[1].affiliationId)}
+						onclick={() => handleRowNav(wcTop3[1].affiliationIdentifier)}
 						type="button"
 					>
 						<div class="num worlds-pod-place">02</div>
-						<div class="worlds-pod-name">{opt?.name ?? wcTop3[1].affiliationId}</div>
+						<div class="worlds-pod-name">{opt?.name ?? wcTop3[1].affiliationIdentifier}</div>
 						<div class="num worlds-pod-pct">{fmtPct1(accLifetime(wcTop3[1]))}</div>
 					</button>
 				{/if}
 				{#if wcTop3[0]}
-					{@const opt = optionFor(wcTop3[0].affiliationId)}
+					{@const opt = optionFor(wcTop3[0].affiliationIdentifier)}
 					<button
 						class="worlds-pod-tile is-gold"
-						onclick={() => handleRowNav(wcTop3[0].affiliationId)}
+						onclick={() => handleRowNav(wcTop3[0].affiliationIdentifier)}
 						type="button"
 					>
 						<div class="num worlds-pod-place">01</div>
-						<div class="worlds-pod-name">{opt?.name ?? wcTop3[0].affiliationId}</div>
+						<div class="worlds-pod-name">{opt?.name ?? wcTop3[0].affiliationIdentifier}</div>
 						<div class="num worlds-pod-pct">{fmtPct1(accLifetime(wcTop3[0]))}</div>
 					</button>
 				{/if}
 				{#if wcTop3[2]}
-					{@const opt = optionFor(wcTop3[2].affiliationId)}
+					{@const opt = optionFor(wcTop3[2].affiliationIdentifier)}
 					<button
 						class="worlds-pod-tile is-bronze"
-						onclick={() => handleRowNav(wcTop3[2].affiliationId)}
+						onclick={() => handleRowNav(wcTop3[2].affiliationIdentifier)}
 						type="button"
 					>
 						<div class="num worlds-pod-place">03</div>
-						<div class="worlds-pod-name">{opt?.name ?? wcTop3[2].affiliationId}</div>
+						<div class="worlds-pod-name">{opt?.name ?? wcTop3[2].affiliationIdentifier}</div>
 						<div class="num worlds-pod-pct">{fmtPct1(accLifetime(wcTop3[2]))}</div>
 					</button>
 				{/if}
@@ -383,25 +391,25 @@
 					{t({ locale: $localeStore, key: 'worlds.bout.empty_ranked' })}
 				</p>
 			{:else}
-				{#each visibleRows as row, i (row.affiliationId)}
-					{@const opt = optionFor(row.affiliationId)}
-					{@const isYou = myUni?.affiliationId === row.affiliationId}
+				{#each visibleRows as row, i (row.affiliationIdentifier)}
+					{@const opt = optionFor(row.affiliationIdentifier)}
+					{@const isYou = myUni?.affiliationIdentifier === row.affiliationIdentifier}
 					<button
 						class="worlds-row"
 						class:is-you={isYou}
 						class:rank-1={i === 0}
 						class:rank-2={i === 1}
 						class:rank-3={i === 2}
-						onclick={() => handleRowNav(row.affiliationId)}
+						onclick={() => handleRowNav(row.affiliationIdentifier)}
 						type="button"
 					>
 						<span class="num worlds-row-rk">{(i + 1).toString().padStart(2, '0')}</span>
 						<span class="worlds-row-em" aria-hidden="true">
-							{(opt?.name ?? row.affiliationId).charAt(0)}
+							{(opt?.name ?? row.affiliationIdentifier).charAt(0)}
 						</span>
 						<div class="worlds-row-meta">
 							<div class="worlds-row-nm">
-								{opt?.name ?? row.affiliationId}
+								{opt?.name ?? row.affiliationIdentifier}
 								{#if isYou}
 									· <span class="worlds-row-you">
 										{t({ locale: $localeStore, key: 'worlds.you.suffix' })}
@@ -441,11 +449,11 @@
 						{myRankInScope.toString().padStart(2, '0')}
 					</span>
 					<span class="worlds-row-em is-you" aria-hidden="true">
-						{(myUniOption?.name ?? myUni.affiliationId).charAt(0)}
+						{(myUniOption?.name ?? myUni.affiliationIdentifier).charAt(0)}
 					</span>
 					<div class="worlds-row-meta">
 						<div class="worlds-row-nm worlds-row-nm-you">
-							{myUniOption?.name ?? myUni.affiliationId}
+							{myUniOption?.name ?? myUni.affiliationIdentifier}
 							·
 							<span class="worlds-row-you">
 								{t({ locale: $localeStore, key: 'worlds.you.suffix' })}
@@ -470,6 +478,10 @@
 
 {#if pickerKind !== null}
 	<AffiliationPickerModal
+		current={{
+			university: myUni?.affiliationIdentifier,
+			country: myCountry?.affiliationIdentifier
+		}}
 		isOpen={true}
 		kind={pickerKind}
 		onClose={() => (pickerKind = null)}

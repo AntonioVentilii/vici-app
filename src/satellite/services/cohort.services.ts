@@ -327,16 +327,16 @@ export const listMyAffiliationsFn = (): {
  * summary surface.
  *
  * Scans the full `affiliations` collection and filters on the
- * embedded `kind` + `affiliationId`. Sorted by `joinedAtMs`
+ * embedded `kind` + `affiliationIdentifier`. Sorted by `joinedAtMs`
  * ascending so the leaderboard reads "earliest joiner first" before
  * any accuracy-based re-sort the FE layers on top.
  */
 export const listWorldsRosterFn = ({
 	kind,
-	affiliationId
+	affiliationIdentifier
 }: {
 	kind: AffiliationKind;
-	affiliationId: string;
+	affiliationIdentifier: string;
 }): AffiliationDoc[] => {
 	const caller = msgCaller();
 
@@ -352,7 +352,7 @@ export const listWorldsRosterFn = ({
 		try {
 			const aff = decodeDocData<AffiliationDoc>(item.data);
 
-			if (aff.kind === kind && aff.affiliationId === affiliationId) {
+			if (aff.kind === kind && aff.affiliationIdentifier === affiliationIdentifier) {
 				roster.push(aff);
 			}
 		} catch {
@@ -371,13 +371,13 @@ export const listWorldsRosterFn = ({
  */
 export const getAffiliationStatsFn = ({
 	kind,
-	affiliationId
+	affiliationIdentifier
 }: {
 	kind: AffiliationKind;
-	affiliationId: string;
+	affiliationIdentifier: string;
 }): AffiliationStatsDoc | undefined => {
 	const caller = msgCaller();
-	const key = affiliationStatsKey({ kind, affiliationId });
+	const key = affiliationStatsKey({ kind, affiliationIdentifier });
 	const doc = getDocStore({
 		collection: Collection.AFFILIATION_STATS,
 		key,
@@ -402,7 +402,7 @@ export const getAffiliationStatsFn = ({
  * tiny call counts the accuracy is too noisy to rank.
  *
  * Sort key: `wins / totalCalls` desc, then `totalCalls` desc
- * (rewards depth), then `affiliationId` asc (deterministic tie
+ * (rewards depth), then `affiliationIdentifier` asc (deterministic tie
  * break across re-runs — same rule the Worlds podium fan-out
  * uses, so the leaderboard and the awards agree).
  */
@@ -453,7 +453,11 @@ export const listAffiliationStatsFn = ({
 			return b.totalCalls - a.totalCalls;
 		}
 
-		return a.affiliationId < b.affiliationId ? -1 : a.affiliationId > b.affiliationId ? 1 : 0;
+		return a.affiliationIdentifier < b.affiliationIdentifier
+			? -1
+			: a.affiliationIdentifier > b.affiliationIdentifier
+				? 1
+				: 0;
 	});
 
 	if (nonNullish(limit) && limit > 0) {
@@ -526,7 +530,11 @@ export const listAffiliationStatsForMonthFn = ({
 			return b.monthTotalCalls - a.monthTotalCalls;
 		}
 
-		return a.affiliationId < b.affiliationId ? -1 : a.affiliationId > b.affiliationId ? 1 : 0;
+		return a.affiliationIdentifier < b.affiliationIdentifier
+			? -1
+			: a.affiliationIdentifier > b.affiliationIdentifier
+				? 1
+				: 0;
 	});
 
 	return stats;

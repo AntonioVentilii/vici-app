@@ -352,7 +352,7 @@ const deleteOwnReferralRedemption = ({
 };
 
 /**
- * Drop affiliation rows (`${member}/${kind}/${affiliationId}` —
+ * Drop affiliation rows (`${member}/${kind}/${affiliationIdentifier}` —
  * prefix-keyed). The 90-day lock assert is bypassed in this code
  * path because we delete via the satellite caller with no app-side
  * `assertDeleteAffiliation` re-entry on raw datastore drops; if

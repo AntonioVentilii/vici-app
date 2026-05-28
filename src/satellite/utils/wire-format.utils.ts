@@ -546,7 +546,7 @@ export const toWireBout = (bout: {
 export const AffiliationWireSchema = j.strictObject({
 	member: PrincipalTextSchema,
 	kind: j.enum(['university', 'country']),
-	affiliation_id: j.string(),
+	affiliation_identifier: j.string(),
 	joined_at_ms: j.number(),
 	locked_until_ms: j.number()
 });
@@ -556,13 +556,13 @@ export type WireAffiliation = j.infer<typeof AffiliationWireSchema>;
 export const toWireAffiliation = (aff: {
 	member: string;
 	kind: 'university' | 'country';
-	affiliationId: string;
+	affiliationIdentifier: string;
 	joinedAtMs: number;
 	lockedUntilMs: number;
 }): WireAffiliation => ({
 	member: aff.member,
 	kind: aff.kind,
-	affiliation_id: aff.affiliationId,
+	affiliation_identifier: aff.affiliationIdentifier,
 	joined_at_ms: aff.joinedAtMs,
 	locked_until_ms: aff.lockedUntilMs
 });
@@ -570,7 +570,7 @@ export const toWireAffiliation = (aff: {
 // ─── Affiliation stats ──────────────────────────────────────────────
 
 export const AffiliationStatsWireSchema = j.strictObject({
-	affiliation_id: j.string(),
+	affiliation_identifier: j.string(),
 	kind: j.enum(['university', 'country']),
 	total_calls: j.number(),
 	wins: j.number(),
@@ -583,7 +583,7 @@ export const AffiliationStatsWireSchema = j.strictObject({
 export type WireAffiliationStats = j.infer<typeof AffiliationStatsWireSchema>;
 
 export const toWireAffiliationStats = (stats: {
-	affiliationId: string;
+	affiliationIdentifier: string;
 	kind: 'university' | 'country';
 	totalCalls: number;
 	wins: number;
@@ -592,7 +592,7 @@ export const toWireAffiliationStats = (stats: {
 	monthWins: number;
 	updatedAtMs: number;
 }): WireAffiliationStats => ({
-	affiliation_id: stats.affiliationId,
+	affiliation_identifier: stats.affiliationIdentifier,
 	kind: stats.kind,
 	total_calls: stats.totalCalls,
 	wins: stats.wins,

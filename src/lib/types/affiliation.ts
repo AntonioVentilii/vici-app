@@ -8,12 +8,21 @@
  * Distinct collection from `league_members` so the lock doesn't
  * leak into user-created leagues (those have free leave + kick).
  *
- * Doc key: `${memberPrincipal}/${kind}/${affiliationId}` so a user
- * can hold one university + one country row simultaneously. A
- * second write at the same `(member, kind)` after the lock expires
- * is a valid update (the user picks a new school); during the lock
- * window the delete-assert blocks the implicit "leave-then-rejoin"
- * path.
+ * Doc key: `${memberPrincipal}/${kind}/${affiliationIdentifier}`
+ * so a user can hold one university + one country row
+ * simultaneously. A second write at the same `(member, kind)` after
+ * the lock expires is a valid update (the user picks a new school);
+ * during the lock window the delete-assert blocks the implicit
+ * "leave-then-rejoin" path.
+ *
+ * Field naming note: `affiliationIdentifier` (not `affiliationId`).
+ * Juno's `JsonData` derive macro auto-wraps `Option<NestedStruct>`
+ * fields in a `#[serde(rename_all = "camelCase")]` mirror, but the
+ * serde camelCase rename + something about the `Id` tail produced a
+ * Candid type whose field name didn't round-trip back to the
+ * snake_case wire — every `listMyAffiliations` call trapped with
+ * `missing field 'affiliationId'`. Spelling it out as `*Identifier`
+ * sidesteps the rename quirk.
  */
 
 export type AffiliationKind = 'university' | 'country';
@@ -26,7 +35,7 @@ export interface AffiliationDoc {
 	kind: AffiliationKind;
 	/** External identifier — university slug (`mit`, `usp`) or
 	 *  ISO-3166 alpha-2 country code. */
-	affiliationId: string;
+	affiliationIdentifier: string;
 	/** Join timestamp (ms since epoch). Immutable. */
 	joinedAtMs: number;
 	/** Server-computed `joinedAtMs + AFFILIATION_LOCK_MS`. Defended
@@ -52,9 +61,9 @@ export const AFFILIATION_LOCK_MS = 90 * 24 * 60 * 60 * 1000;
 export const affiliationKey = ({
 	memberPrincipal,
 	kind,
-	affiliationId
+	affiliationIdentifier
 }: {
 	memberPrincipal: string;
 	kind: AffiliationKind;
-	affiliationId: string;
-}): string => `${memberPrincipal}/${kind}/${affiliationId}`;
+	affiliationIdentifier: string;
+}): string => `${memberPrincipal}/${kind}/${affiliationIdentifier}`;

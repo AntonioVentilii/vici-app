@@ -116,7 +116,7 @@
 				return b.totalCalls - a.totalCalls;
 			}
 
-			return a.affiliationId.localeCompare(b.affiliationId);
+			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
 		});
 
 		return list;
@@ -129,19 +129,25 @@
 	const myStatsRow = $derived.by(() => {
 		const mine = myAffil;
 
-		return mine ? sortedForScope.find((s) => s.affiliationId === mine.affiliationId) : undefined;
+		return mine
+			? sortedForScope.find((s) => s.affiliationIdentifier === mine.affiliationIdentifier)
+			: undefined;
 	});
 
 	const myRank = $derived.by(() => {
 		const mine = myAffil;
 
-		return mine ? sortedForScope.findIndex((s) => s.affiliationId === mine.affiliationId) + 1 : 0;
+		return mine
+			? sortedForScope.findIndex((s) => s.affiliationIdentifier === mine.affiliationIdentifier) + 1
+			: 0;
 	});
 
 	const isMyRowVisible = $derived.by(() => {
 		const mine = myAffil;
 
-		return mine ? visibleRows.some((s) => s.affiliationId === mine.affiliationId) : false;
+		return mine
+			? visibleRows.some((s) => s.affiliationIdentifier === mine.affiliationIdentifier)
+			: false;
 	});
 
 	const optionFor = (id: string) => lookupWorldsAffiliation({ kind, id });
@@ -255,27 +261,27 @@
 					{t({ locale: $localeStore, key: 'worlds.bout.empty_ranked' })}
 				</p>
 			{:else}
-				{#each visibleRows as row, i (row.affiliationId)}
-					{@const option = optionFor(row.affiliationId)}
-					{@const isYou = myAffil?.affiliationId === row.affiliationId}
+				{#each visibleRows as row, i (row.affiliationIdentifier)}
+					{@const option = optionFor(row.affiliationIdentifier)}
+					{@const isYou = myAffil?.affiliationIdentifier === row.affiliationIdentifier}
 					<button
 						class="worlds-bout-row"
 						class:is-you={isYou}
 						class:rank-1={i === 0}
 						class:rank-2={i === 1}
 						class:rank-3={i === 2}
-						onclick={() => handleRowNav(row.affiliationId)}
+						onclick={() => handleRowNav(row.affiliationIdentifier)}
 						type="button"
 					>
 						<span class="num worlds-bout-rank">{(i + 1).toString().padStart(2, '0')}</span>
 						<span class="worlds-bout-glyph" aria-hidden="true">
 							{kind === 'country'
 								? (option?.glyph ?? '?')
-								: (option?.name ?? row.affiliationId).charAt(0)}
+								: (option?.name ?? row.affiliationIdentifier).charAt(0)}
 						</span>
 						<div class="worlds-bout-meta">
 							<div class="worlds-bout-name">
-								{option?.name ?? row.affiliationId}
+								{option?.name ?? row.affiliationIdentifier}
 								{#if isYou}
 									·
 									<span class="worlds-bout-you">
@@ -314,7 +320,7 @@
 			{/if}
 
 			{#if myAffil && myStatsRow && !isMyRowVisible}
-				{@const myOption = optionFor(myAffil.affiliationId)}
+				{@const myOption = optionFor(myAffil.affiliationIdentifier)}
 				<div class="worlds-bout-you-sticky" role="status">
 					<span class="num worlds-bout-rank">
 						{myRank.toString().padStart(2, '0')}
@@ -322,11 +328,11 @@
 					<span class="worlds-bout-glyph is-you" aria-hidden="true">
 						{kind === 'country'
 							? (myOption?.glyph ?? '?')
-							: (myOption?.name ?? myAffil.affiliationId).charAt(0)}
+							: (myOption?.name ?? myAffil.affiliationIdentifier).charAt(0)}
 					</span>
 					<div class="worlds-bout-meta">
 						<div class="worlds-bout-name worlds-bout-name-you">
-							{myOption?.name ?? myAffil.affiliationId}
+							{myOption?.name ?? myAffil.affiliationIdentifier}
 							·
 							<span class="worlds-bout-you">
 								{t({ locale: $localeStore, key: 'worlds.you.suffix' })}

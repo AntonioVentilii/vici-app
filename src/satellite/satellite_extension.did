@@ -9,9 +9,9 @@ type AppCheckNicknameAvailabilityArgs = record { nickname : text; exclude_princi
 
 type AppCheckNicknameAvailabilityResult = record { available : bool; reason : opt variant { required; too_short; taken } };
 
-type AppGetAffiliationStatsArgs = record { kind : variant { university; country }; affiliation_id : text };
+type AppGetAffiliationStatsArgs = record { kind : variant { university; country }; affiliation_identifier : text };
 
-type AppGetAffiliationStatsResult = record { stats : opt record { affiliation_id : text; kind : variant { university; country }; total_calls : float64; wins : float64; month_anchor : text; month_total_calls : float64; month_wins : float64; updated_at_ms : float64 } };
+type AppGetAffiliationStatsResult = record { stats : opt record { affiliation_identifier : text; kind : variant { university; country }; total_calls : float64; wins : float64; month_anchor : text; month_total_calls : float64; month_wins : float64; updated_at_ms : float64 } };
 
 type AppGetCurrentTournamentResult = record { tournament : opt record { id : text; month_start_ms : float64; month_end_ms : float64; bracket_size : float64; state : variant { in_flight; concluded }; seeded_league_ids : vec text; created_at_ms : float64 }; matches : vec record { tournament_id : text; round : variant { r1; quarter; semifinal; final }; index : float64; from_league_id : opt text; to_league_id : opt text; from_start_calls : opt float64; from_start_wins : opt float64; to_start_calls : opt float64; to_start_wins : opt float64; from_acc : opt float64; to_acc : opt float64; winner_league_id : opt text; start_ms : float64; end_ms : float64 } };
 
@@ -31,7 +31,7 @@ type AppGetProfileResult = record { profile : opt record { owner : text; nicknam
 
 type AppListAffiliationStatsArgs = record { kind : variant { university; country }; limit : opt float64 };
 
-type AppListAffiliationStatsResult = record { items : vec record { affiliation_id : text; kind : variant { university; country }; total_calls : float64; wins : float64; month_anchor : text; month_total_calls : float64; month_wins : float64; updated_at_ms : float64 } };
+type AppListAffiliationStatsResult = record { items : vec record { affiliation_identifier : text; kind : variant { university; country }; total_calls : float64; wins : float64; month_anchor : text; month_total_calls : float64; month_wins : float64; updated_at_ms : float64 } };
 
 type AppListFollowersResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
@@ -55,7 +55,7 @@ type AppListMarketTranslationsArgs = record { series_id : text };
 
 type AppListMarketTranslationsResult = record { items : vec record { series_id : text; locale : text; title : text; description : text; outcomes : vec record { id : text; title : text }; updated_at : float64; updated_by : text } };
 
-type AppListMyAffiliationsResult = record { university : opt record { member : text; kind : variant { university; country }; affiliation_id : text; joined_at_ms : float64; locked_until_ms : float64 }; country : opt record { member : text; kind : variant { university; country }; affiliation_id : text; joined_at_ms : float64; locked_until_ms : float64 } };
+type AppListMyAffiliationsResult = record { university : opt record { member : text; kind : variant { university; country }; affiliation_identifier : text; joined_at_ms : float64; locked_until_ms : float64 }; country : opt record { member : text; kind : variant { university; country }; affiliation_identifier : text; joined_at_ms : float64; locked_until_ms : float64 } };
 
 type AppListMyBlockingLeaguesResult = record { league_ids : vec text };
 
@@ -67,9 +67,9 @@ type AppListMyReferralsResult = record { items : vec record { referee : text; re
 
 type AppListSentFriendRequestsResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
-type AppListWorldsRosterArgs = record { kind : variant { university; country }; affiliation_id : text };
+type AppListWorldsRosterArgs = record { kind : variant { university; country }; affiliation_identifier : text };
 
-type AppListWorldsRosterResult = record { items : vec record { member : text; kind : variant { university; country }; affiliation_id : text; joined_at_ms : float64; locked_until_ms : float64 } };
+type AppListWorldsRosterResult = record { items : vec record { member : text; kind : variant { university; country }; affiliation_identifier : text; joined_at_ms : float64; locked_until_ms : float64 } };
 
 type AppLookupLeagueByInviteArgs = record { invite_code : text };
 

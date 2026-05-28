@@ -51,7 +51,7 @@ import {
  * in for the next quarter, which is the engagement-incentive
  * trade-off the user signed up for.
  *
- * Tie-break per §2.2 — accuracy → totalCalls → affiliationId asc.
+ * Tie-break per §2.2 — accuracy → totalCalls → affiliationIdentifier asc.
  * `listAffiliationStatsForMonthFn` already sorts this way, so the
  * leaderboard and the claim agree on who's gold/silver/bronze.
  */
@@ -134,7 +134,9 @@ export const claimWorldsPodiumPrizeFn = async ({
 		} else {
 			// Top-3 for the requested month (snapshot docs only).
 			const top3 = listAffiliationStatsForMonthFn({ kind, monthAnchor }).slice(0, 3);
-			const placeIndex = top3.findIndex((s) => s.affiliationId === myAffiliation.affiliationId);
+			const placeIndex = top3.findIndex(
+				(s) => s.affiliationIdentifier === myAffiliation.affiliationIdentifier
+			);
 
 			if (placeIndex === -1) {
 				// Not on the podium for this kind.
@@ -311,8 +313,8 @@ const readMyAffiliation = ({
 	callerBytes: Uint8Array;
 	kind: AffiliationKind;
 }): AffiliationDoc | undefined => {
-	// The affiliation doc key is `${memberPrincipal}/${kind}/${affiliationId}`
-	// — we don't know `affiliationId` yet, so we scan and filter. Two
+	// The affiliation doc key is `${memberPrincipal}/${kind}/${affiliationIdentifier}`
+	// — we don't know `affiliationIdentifier` yet, so we scan and filter. Two
 	// max possibilities per user (one per kind), so the bound is tight.
 	// Skipping the scan entirely is hard without a reverse-index doc.
 	const prefix = `${callerText}/${kind}/`;

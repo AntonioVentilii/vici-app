@@ -2,7 +2,7 @@ import type { AffiliationKind } from '$lib/types/affiliation';
 
 /**
  * Static rosters for the FE Worlds picker. The satellite keys
- * affiliations by `(kind, affiliationId)` without validating against
+ * affiliations by `(kind, affiliationIdentifier)` without validating against
  * an external list, so the FE owns the curated set of choices.
  *
  * Future: an admin-curated registry collection can replace these
@@ -11,7 +11,7 @@ import type { AffiliationKind } from '$lib/types/affiliation';
  */
 
 export interface WorldsAffiliationOption {
-	/** External id stored on `AffiliationDoc.affiliationId`. */
+	/** External id stored on `AffiliationDoc.affiliationIdentifier`. */
 	id: string;
 	/** Display name. */
 	name: string;
@@ -145,7 +145,7 @@ export const WORLDS_COUNTRIES: readonly WorldsAffiliationOption[] = [
 ] as const;
 
 /**
- * Indexed lookup for the FE — given a stored `affiliationId` + kind,
+ * Indexed lookup for the FE — given a stored `affiliationIdentifier` + kind,
  * resolve to the display option. Returns `undefined` for ids no longer
  * in the static roster (e.g. an option was removed but a user still
  * carries the affiliation; the FE falls back to showing the id).

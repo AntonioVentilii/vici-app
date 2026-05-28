@@ -1,9 +1,9 @@
 import type { AffiliationKind } from '$lib/types/affiliation';
 
 /**
- * Per-affiliation rolling stats. One doc per `(kind, affiliationId)`
+ * Per-affiliation rolling stats. One doc per `(kind, affiliationIdentifier)`
  * pair under the `AFFILIATION_STATS` collection, keyed
- * `${kind}/${affiliationId}`.
+ * `${kind}/${affiliationIdentifier}`.
  *
  * The doc tracks two parallel counters:
  *
@@ -17,7 +17,7 @@ import type { AffiliationKind } from '$lib/types/affiliation';
  *    job and is naturally idempotent.
  *
  * Featured-event-scoped counters (e.g. "WC bout accuracy") live in
- * separate docs keyed `${kind}/${affiliationId}/${featuredEventTag}`
+ * separate docs keyed `${kind}/${affiliationIdentifier}/${featuredEventTag}`
  * — same collection, structurally distinct. The lifetime / monthly
  * fields on those docs have the same semantics, just filtered to the
  * event's tagged markets. (Implemented when the activity-level
@@ -29,8 +29,8 @@ import type { AffiliationKind } from '$lib/types/affiliation';
  * only against affiliations the caller is a member of.
  */
 export interface AffiliationStatsDoc {
-	/** External id — matches `AffiliationDoc.affiliationId`. */
-	affiliationId: string;
+	/** External id — matches `AffiliationDoc.affiliationIdentifier`. */
+	affiliationIdentifier: string;
 	/** `university` | `country` — same enum as `AffiliationDoc.kind`. */
 	kind: AffiliationKind;
 	/** Lifetime resolved-call count across all members. */
@@ -49,17 +49,17 @@ export interface AffiliationStatsDoc {
 
 /**
  * Canonical key builder for the **rolling** (current-month) doc.
- * One per `(kind, affiliationId)`. Mirrors the affiliations
- * collection's `${kind}/${affiliationId}` prefix scheme so a
+ * One per `(kind, affiliationIdentifier)`. Mirrors the affiliations
+ * collection's `${kind}/${affiliationIdentifier}` prefix scheme so a
  * prefix scan naturally groups schools vs countries.
  */
 export const affiliationStatsKey = ({
 	kind,
-	affiliationId
+	affiliationIdentifier
 }: {
 	kind: AffiliationKind;
-	affiliationId: string;
-}): string => `${kind}/${affiliationId}`;
+	affiliationIdentifier: string;
+}): string => `${kind}/${affiliationIdentifier}`;
 
 /**
  * Canonical key builder for the **frozen** historical snapshot doc.
@@ -68,19 +68,19 @@ export const affiliationStatsKey = ({
  * Worlds podium reads these snapshots to compute top-3 for an
  * already-closed month.
  *
- * Key shape `${kind}/${affiliationId}/${monthAnchor}` — three
+ * Key shape `${kind}/${affiliationIdentifier}/${monthAnchor}` — three
  * segments vs the rolling doc's two. The assert distinguishes them
  * by slash count.
  */
 export const affiliationStatsSnapshotKey = ({
 	kind,
-	affiliationId,
+	affiliationIdentifier,
 	monthAnchor
 }: {
 	kind: AffiliationKind;
-	affiliationId: string;
+	affiliationIdentifier: string;
 	monthAnchor: string;
-}): string => `${kind}/${affiliationId}/${monthAnchor}`;
+}): string => `${kind}/${affiliationIdentifier}/${monthAnchor}`;
 
 /**
  * Minimum resolved-call count before an affiliation appears on the

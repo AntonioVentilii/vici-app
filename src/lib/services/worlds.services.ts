@@ -62,7 +62,7 @@ export const listMyAffiliations = async (): Promise<{
 	const project = (wire: NonNullable<typeof university>): AffiliationDoc => ({
 		member: wire.member,
 		kind: wire.kind,
-		affiliationId: wire.affiliation_id,
+		affiliationIdentifier: wire.affiliation_identifier,
 		joinedAtMs: wire.joined_at_ms,
 		lockedUntilMs: wire.locked_until_ms
 	});
@@ -83,16 +83,16 @@ export const listMyAffiliations = async (): Promise<{
  */
 export const joinAffiliation = async ({
 	kind,
-	affiliationId
+	affiliationIdentifier
 }: {
 	kind: AffiliationKind;
-	affiliationId: string;
+	affiliationIdentifier: string;
 }): Promise<AffiliationDoc> => {
 	const identity = await safeGetIdentityOnce();
 	const memberPrincipal = identity.getPrincipal().toText();
 	const joinedAtMs = Date.now();
 	const lockedUntilMs = joinedAtMs + AFFILIATION_LOCK_MS;
-	const key = affiliationKey({ memberPrincipal, kind, affiliationId });
+	const key = affiliationKey({ memberPrincipal, kind, affiliationIdentifier });
 
 	// Pre-empt the "second slot of same kind" branch with a getDoc.
 	// The doc key carries `${kind}/${id}` so the existing row would be
@@ -115,7 +115,7 @@ export const joinAffiliation = async ({
 	const doc: AffiliationDoc = {
 		member: memberPrincipal,
 		kind,
-		affiliationId,
+		affiliationIdentifier,
 		joinedAtMs,
 		lockedUntilMs
 	};
@@ -140,14 +140,14 @@ export const joinAffiliation = async ({
  */
 export const leaveAffiliation = async ({
 	kind,
-	affiliationId
+	affiliationIdentifier
 }: {
 	kind: AffiliationKind;
-	affiliationId: string;
+	affiliationIdentifier: string;
 }): Promise<void> => {
 	const identity = await safeGetIdentityOnce();
 	const memberPrincipal = identity.getPrincipal().toText();
-	const key = affiliationKey({ memberPrincipal, kind, affiliationId });
+	const key = affiliationKey({ memberPrincipal, kind, affiliationIdentifier });
 
 	const existing = await withTimeout({
 		operation: getDoc<AffiliationDoc>({
@@ -194,7 +194,7 @@ export const affiliationDaysLeft = ({
  * stats to FE camelCase.
  */
 const projectStatsWire = (s: {
-	affiliation_id: string;
+	affiliation_identifier: string;
 	kind: AffiliationKind;
 	total_calls: number;
 	wins: number;
@@ -203,7 +203,7 @@ const projectStatsWire = (s: {
 	month_wins: number;
 	updated_at_ms: number;
 }): AffiliationStatsDoc => ({
-	affiliationId: s.affiliation_id,
+	affiliationIdentifier: s.affiliation_identifier,
 	kind: s.kind,
 	totalCalls: s.total_calls,
 	wins: s.wins,
@@ -220,19 +220,19 @@ const projectStatsWire = (s: {
  */
 export const getAffiliationStats = async ({
 	kind,
-	affiliationId
+	affiliationIdentifier
 }: {
 	kind: AffiliationKind;
-	affiliationId: string;
+	affiliationIdentifier: string;
 }): Promise<AffiliationStatsDoc | undefined> => {
-	const { stats } = await functions.getAffiliationStats({ kind, affiliationId });
+	const { stats } = await functions.getAffiliationStats({ kind, affiliationIdentifier });
 
 	return stats === undefined ? undefined : projectStatsWire(stats);
 };
 
 /**
  * Ranked leaderboard view of every affiliation of a kind. Sorted
- * server-side by accuracy desc → totalCalls desc → affiliationId asc.
+ * server-side by accuracy desc → totalCalls desc → affiliationIdentifier asc.
  * Affiliations below `MIN_CALLS_FOR_RANK` are filtered out by the
  * aggregator.
  */
