@@ -141,25 +141,23 @@
 		acc: number;
 	}
 
-	const catRows = $derived<CategoryRow[]>(
-		(() => {
-			const stats = userStats?.categoryStats ?? {};
+	const catRows = $derived.by<CategoryRow[]>(() => {
+		const stats = userStats?.categoryStats ?? {};
 
-			return MARKET_TAGS.filter((tag) => tag !== 'wc')
-				.map((tag) => {
-					const bucket = stats[tag] ?? { calls: 0, wins: 0 };
-					const acc = bucket.calls > 0 ? bucket.wins / bucket.calls : 0;
+		return MARKET_TAGS.filter((tag) => tag !== 'wc')
+			.map((tag) => {
+				const bucket = stats[tag] ?? { calls: 0, wins: 0 };
+				const acc = bucket.calls > 0 ? bucket.wins / bucket.calls : 0;
 
-					return {
-						id: tag,
-						label: t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }),
-						acc
-					};
-				})
-				.filter((row) => (userStats?.categoryStats?.[row.id]?.calls ?? 0) > 0)
-				.sort((a, b) => b.acc - a.acc);
-		})()
-	);
+				return {
+					id: tag,
+					label: t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }),
+					acc
+				};
+			})
+			.filter((row) => (stats[row.id]?.calls ?? 0) > 0)
+			.sort((a, b) => b.acc - a.acc);
+	});
 
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
 
