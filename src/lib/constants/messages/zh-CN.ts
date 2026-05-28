@@ -254,6 +254,7 @@ export const zhCnMessages = {
 	'admin.markets.resolution_failed': '裁定失败',
 	'admin.markets.resolved.message': '市场 {marketId} 已裁定为 {outcome}',
 	'admin.markets.resolved.title': '市场已裁定',
+	'admin.oracle.action.reconcile': '从角色同步',
 	'admin.oracle.action.refresh': '刷新',
 	'admin.oracle.action.retry': '重试',
 	'admin.oracle.authorized_count': '已授权（{count}）',
@@ -266,6 +267,12 @@ export const zhCnMessages = {
 	'admin.oracle.missing.title': '预言机未注册',
 	'admin.oracle.no_authorized':
 		'尚无任何已授权的 Principal。请在上方为用户分配 ADMIN 或 SOLVER 角色;卫星钩子会自动同步到此处。',
+	'admin.oracle.reconcile.failed': '同步失败',
+	'admin.oracle.reconcile.hint':
+		'根据上方的角色列表重新同步结算者。当角色在预言机存在之前被授予,或卫星钩子记录了 oracle_settler_skipped_missing_oracle 时使用此项。',
+	'admin.oracle.reconcile.in_sync': '结算者已与角色列表一致 — 无需操作。',
+	'admin.oracle.reconcile.success': '结算者已更新：新增 {added},移除 {removed}。',
+	'admin.oracle.reconcile.title': '结算者已同步',
 	'admin.oracle.registered.message':
 		'{oracle} 已创建,你的 Principal 已被授权。后续结算者会从上方角色列表自动同步。',
 	'admin.oracle.registered.title': '预言机已注册',
