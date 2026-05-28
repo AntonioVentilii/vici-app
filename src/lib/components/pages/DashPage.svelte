@@ -32,6 +32,7 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { orders } from '$lib/derived/orders.derived';
 	import { positions } from '$lib/derived/positions.derived';
+	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
@@ -116,8 +117,19 @@
 	);
 
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
-	const wins = $derived(Math.round((profile?.accuracy ?? 0) * totalTrades));
-	const losses = $derived(Math.max(0, totalTrades - wins));
+
+	// Win / loss tallies for the "Past predictions" filter chips. We count
+	// settled markets from the clearing canister's `Settled` event stream
+	// rather than deriving `losses = totalTrades − wins`, which used to
+	// treat every Executed event as a settled trade and ended up counting
+	// still-open positions as losses (e.g. "16 Executed events with 0
+	// wins" was reported as 16 losses even when only 1 market had
+	// resolved). The new store is uncapped — `userStats.recentSettlements`
+	// is capped at `USER_STATS_RECENT_LIMIT`, so we deliberately do not
+	// read these chip counts from there.
+	const wins = $derived($resolvedPositions.filter((r) => r.result === 'won').length);
+	const losses = $derived($resolvedPositions.filter((r) => r.result === 'lost').length);
+	const settledTotal = $derived(wins + losses);
 
 	// Live session delta — prior accuracy reconstruction.
 	const sessionDelta = $derived.by<number | null>(() => {
@@ -141,22 +153,37 @@
 		return Math.round((accuracyValue - priorAcc) * 1000) / 10;
 	});
 
+	// "Past predictions" row list. Reads from `$resolvedPositions` (the
+	// uncapped clearing-event stream) and shapes each entry to the row
+	// template's expected fields. Stays consistent with the chip counts
+	// further up — same source, same scope.
 	const filteredHistory = $derived(
-		recentSettlements.filter((row) => {
-			if (pastFilter === 'won') {
-				return row.win;
-			}
+		$resolvedPositions
+			.filter((row) => {
+				if (pastFilter === 'won') {
+					return row.result === 'won';
+				}
 
-			if (pastFilter === 'lost') {
-				return !row.win;
-			}
+				if (pastFilter === 'lost') {
+					return row.result === 'lost';
+				}
 
-			return true;
-		})
+				return row.result !== 'neutral';
+			})
+			.map((row) => ({
+				marketId: row.marketId,
+				settledAtMs: Number(row.timestampNs / 1_000_000n),
+				win: row.result === 'won'
+			}))
 	);
 
-	const sessionWins = $derived(recentSettlements.filter((s) => s.win).length);
-	const sessionLosses = $derived(recentSettlements.length - sessionWins);
+	// `recentSettlements` (capped at `USER_STATS_RECENT_LIMIT`) used to be
+	// combined with the broken lifetime `wins`/`losses` to render the
+	// chip counts. Now that `wins`/`losses` are sourced from the
+	// uncapped `$resolvedPositions` directly they're already complete,
+	// so the separate "session" tallies are gone. The variable is kept
+	// for the `sessionDelta` insight further up the file, which is a
+	// distinct concept (accuracy delta in the recent window).
 
 	// Best win for the Oracle insight — first WIN in recent
 	// settlements, otherwise the first row, otherwise undefined.
@@ -581,7 +608,7 @@
 		<div class="dash-section-eyebrow">
 			<span>{t({ locale: $localeStore, key: 'dash.past.eyebrow' })}</span>
 			<span class="see-all">
-				{t({ locale: $localeStore, key: 'dash.past.total', params: { count: totalTrades } })}
+				{t({ locale: $localeStore, key: 'dash.past.total', params: { count: settledTotal } })}
 			</span>
 		</div>
 		<div class="dash-filter-chips">
@@ -600,7 +627,7 @@
 				{t({
 					locale: $localeStore,
 					key: 'dash.past.filter_won',
-					params: { count: wins + sessionWins }
+					params: { count: wins }
 				})}
 			</button>
 			<button
@@ -611,7 +638,7 @@
 				{t({
 					locale: $localeStore,
 					key: 'dash.past.filter_lost',
-					params: { count: losses + sessionLosses }
+					params: { count: losses }
 				})}
 			</button>
 		</div>
