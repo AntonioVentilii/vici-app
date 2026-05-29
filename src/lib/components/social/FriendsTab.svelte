@@ -6,6 +6,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import FriendsEmptyState from '$lib/components/social/FriendsEmptyState.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { REFERRAL_MAX_PAID } from '$lib/constants/referral.constants';
@@ -718,14 +719,7 @@
 			</ul>
 		</section>
 	{:else}
-		<section class="friends-empty">
-			<p class="friends-empty-quote">
-				{t({ locale: $localeStore, key: 'social.friends.empty.quote' })}
-			</p>
-			<p class="friends-empty-sub">
-				{t({ locale: $localeStore, key: 'social.friends.empty.sub' })}
-			</p>
-		</section>
+		<FriendsEmptyState />
 	{/if}
 
 	<!-- Friends feed ──────────────────────────────────────────── -->
@@ -1439,33 +1433,6 @@
 	}
 
 	/* ── Empty ─────────────────────────────────────────────── */
-	.friends-empty {
-		display: flex;
-		flex-direction: column;
-		gap: 0.5rem;
-		align-items: center;
-		padding: 1.25rem 1rem;
-		border: 1px dashed var(--border-base);
-		border-radius: var(--r-16, 1rem);
-		background: var(--bg-surface);
-		text-align: center;
-	}
-
-	.friends-empty-quote {
-		margin: 0;
-		color: var(--color-primary);
-		font-family: var(--font-serif, var(--font-display, serif));
-		font-style: italic;
-		font-size: var(--t-16);
-	}
-
-	.friends-empty-sub {
-		margin: 0;
-		color: var(--text-muted);
-		font-size: var(--t-13);
-		line-height: var(--leading-snug);
-	}
-
 	.friends-loading {
 		display: flex;
 		justify-content: center;
