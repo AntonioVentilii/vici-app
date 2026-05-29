@@ -72,7 +72,7 @@
 		align-items: baseline;
 		gap: 0.4rem;
 		padding: 10px 16px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		font-family: var(--font-mono);
 		font-size: 22px;
 		font-weight: 900;

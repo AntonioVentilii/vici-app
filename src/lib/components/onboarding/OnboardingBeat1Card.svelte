@@ -267,7 +267,7 @@
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		padding: 4px 10px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		pointer-events: none;
 		transition: opacity 80ms linear;
 	}

@@ -147,7 +147,7 @@
 		width: 36px;
 		height: 4px;
 		margin: 0.25rem 0 0.7rem;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--text-muted) 50%, transparent);
 	}
 

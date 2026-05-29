@@ -64,7 +64,7 @@
 			>
 				<div
 					style="
-						width:40px; height:40px; border-radius:999px;
+						width:40px; height:40px; border-radius:var(--r-pill);
 						display:inline-flex; align-items:center; justify-content:center;
 						background:{p.s.color}; color:{p.s.text};
 						font-family:var(--font-serif); font-style:italic;

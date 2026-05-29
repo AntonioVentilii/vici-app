@@ -175,7 +175,7 @@
 	.market-top-predictors-side {
 		flex-shrink: 0;
 		padding: 0.2rem 0.5rem;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--yes) 12%, transparent);
 		color: var(--yes);
 		font-size: 10px;

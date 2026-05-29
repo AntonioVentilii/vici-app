@@ -717,7 +717,7 @@
 		width: 1.75rem;
 		height: 1.75rem;
 		min-width: 1.75rem;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--prize-tier, var(--text-base)) 18%, transparent);
 		color: color-mix(in srgb, var(--prize-tier, var(--text-base)) 85%, var(--text-base));
 		font-family: var(--font-mono);

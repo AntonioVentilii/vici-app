@@ -18,7 +18,7 @@
 		display: inline-flex;
 		align-items: center;
 		padding: 0.2rem 0.45rem;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		font-size: 10px;
 		font-weight: 700;
 		letter-spacing: 0.08em;
@@ -33,7 +33,7 @@
 		width: 5px;
 		height: 5px;
 		margin-right: 6px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--no);
 		animation: market-live-pulse 1.6s infinite;
 	}

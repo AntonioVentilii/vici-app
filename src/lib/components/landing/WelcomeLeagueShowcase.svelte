@@ -100,7 +100,7 @@
 				<div style="gap:8px; align-items:center; min-width:0;" class="row">
 					<span
 						style="
-							width:20px; height:20px; border-radius:999px; flex:none;
+							width:20px; height:20px; border-radius:var(--r-pill); flex:none;
 							background:{m.shirt}; display:inline-flex;
 							align-items:center; justify-content:center;
 							font-size:9px; font-weight:700;

@@ -45,7 +45,7 @@
 <div style="position:absolute; inset:0;" class="flow-face flow-front">
 	{#if showTrickster}
 		<div
-			style="position:absolute; top:14px; right:14px; display:inline-flex; align-items:center; gap:8px; padding:6px 10px 6px 6px; border-radius:999px; background:rgba(255,138,122,0.14); border:1px solid rgba(255,138,122,0.35); z-index:3;"
+			style="position:absolute; top:14px; right:14px; display:inline-flex; align-items:center; gap:8px; padding:6px 10px 6px 6px; border-radius:var(--r-pill); background:rgba(255,138,122,0.14); border:1px solid rgba(255,138,122,0.35); z-index:3;"
 		>
 			<LandingTrickster lightning size={26} />
 			<span

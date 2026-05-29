@@ -1194,7 +1194,7 @@
 		width: 2rem;
 		height: 2rem;
 		flex-shrink: 0;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--bg-popover);
 	}
 
@@ -1357,7 +1357,7 @@
 		width: 2rem;
 		height: 2rem;
 		flex-shrink: 0;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--bg-popover);
 	}
 
@@ -1544,7 +1544,7 @@
 		width: 2.5rem;
 		height: 0.25rem;
 		margin: 0.25rem 0 0.85rem;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--text-muted) 35%, transparent);
 	}
 
@@ -1561,7 +1561,7 @@
 		width: 3rem;
 		height: 3rem;
 		flex-shrink: 0;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--bg-surface);
 	}
 

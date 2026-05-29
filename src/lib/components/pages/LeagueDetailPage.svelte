@@ -1348,7 +1348,7 @@
 			color-mix(in srgb, var(--accent) 14%, transparent)
 		);
 		border: 1px solid var(--border-base);
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 	}
 
 	.league-detail-lb-name {
