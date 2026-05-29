@@ -7,12 +7,10 @@
 		Download,
 		Eye,
 		Info,
-		KeyRound,
 		Lock,
-		Mail,
+		Moon,
 		Search,
 		Share2,
-		Sun,
 		Target,
 		Trophy,
 		Users,
@@ -450,14 +448,12 @@
 			</button>
 
 			<SetRow
-				icon={KeyRound}
 				label={t({ locale: $localeStore, key: 'settings.account.signin_method' })}
 				onclick={() => goto(resolve(AppPath.AccountSettings))}
 				sub={signinMethodSub}
 			/>
 
 			<SetRow
-				icon={Mail}
 				label={t({ locale: $localeStore, key: 'settings.account.email' })}
 				onclick={() => goto(resolve(AppPath.AccountSettings))}
 				sub={emailSub}
@@ -476,7 +472,7 @@
 			<div class="settings-appearance">
 				<div class="settings-appearance-head">
 					<span class="settings-appearance-icon" aria-hidden="true">
-						<Sun size={16} strokeWidth={1.8} />
+						<Moon size={16} strokeWidth={1.8} />
 					</span>
 					<div class="settings-appearance-titles">
 						<p class="settings-appearance-label">
@@ -1147,8 +1143,8 @@
 	}
 
 	.settings-flow-deck-pill.is-active {
-		border-color: color-mix(in srgb, var(--color-primary) 35%, var(--border-base));
-		background: color-mix(in srgb, var(--color-primary) 12%, var(--bg-popover));
+		border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
+		background: color-mix(in srgb, var(--color-primary) 22%, var(--bg-popover));
 		color: var(--color-primary);
 	}
 
@@ -1190,6 +1186,17 @@
 
 	:global(.settings-signout) {
 		width: 100%;
+		padding: 0.75rem 1.25rem;
+		border: 1px solid color-mix(in srgb, var(--color-destructive) 55%, var(--border-base));
+		border-radius: var(--r-pill);
+		background: transparent;
+		color: var(--color-destructive);
+		font-weight: 700;
+	}
+
+	:global(.settings-signout):hover {
+		background: color-mix(in srgb, var(--color-destructive) 8%, transparent);
+		border-color: var(--color-destructive);
 	}
 
 	.settings-signout-confirm p {
@@ -1204,6 +1211,13 @@
 		color: var(--color-destructive);
 		cursor: pointer;
 		text-align: center;
+		text-decoration: underline;
+		text-decoration-color: color-mix(in srgb, var(--color-destructive) 55%, transparent);
+		text-underline-offset: 3px;
+	}
+
+	.settings-delete-link:hover {
+		text-decoration-color: var(--color-destructive);
 	}
 
 	.settings-confirm {

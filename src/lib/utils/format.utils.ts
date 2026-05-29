@@ -196,6 +196,20 @@ export const formatProbability = (prob: number): string => `${Math.round(prob * 
 export const formatDate = (date: bigint | number): string =>
 	new Date(Number(date)).toLocaleDateString();
 
+const LONG_DATE_FORMAT = new Intl.DateTimeFormat('en-US', {
+	year: 'numeric',
+	month: 'long',
+	day: 'numeric'
+});
+
+/**
+ * Long date — e.g. `June 11, 2026`. Used on surfaces where the closes
+ * date sits inline with prose and reads as a sentence (Market detail
+ * CLOSES stat) rather than as a compact data row.
+ */
+export const formatLongDate = (date: bigint | number): string =>
+	LONG_DATE_FORMAT.format(new Date(Number(date)));
+
 export const formatVolume = ({
 	volume,
 	decimals,

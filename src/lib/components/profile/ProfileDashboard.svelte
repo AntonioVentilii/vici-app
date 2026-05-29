@@ -727,7 +727,6 @@
 		<div class="profile-level-row">
 			<span class="profile-level-label">
 				{t({ locale: $localeStore, key: 'profile.dashboard.level_label' })}
-				{level}
 			</span>
 			<span class="num profile-level-target">
 				{points.toLocaleString($localeStore)} / {nextLevelTarget.toLocaleString($localeStore)} VXP
@@ -1229,7 +1228,7 @@
 	.profile-dashboard :global(.affil-slot-flag) {
 		width: 100%;
 		height: 100%;
-		border-radius: var(--r-8);
+		border-radius: 999px;
 		object-fit: cover;
 	}
 
@@ -1402,15 +1401,16 @@
 
 	.affil-slot-icon {
 		display: inline-flex;
+		overflow: hidden;
 		width: 2.4rem;
 		height: 2.4rem;
 		align-items: center;
 		justify-content: center;
-		border-radius: var(--r-10, 0.625rem);
+		border-radius: 999px;
 		background: var(--bg-surface);
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 1.1rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 	}
 

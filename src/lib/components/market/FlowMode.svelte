@@ -814,7 +814,6 @@
 			{dailyGoalFraction}
 			dailyGoalTarget={DAILY_GOAL_TARGET}
 			{dailyStreak}
-			{flameLabel}
 			{flameStage}
 			{lifetimeAccuracy}
 			{lifetimeTotalTrades}

@@ -418,7 +418,7 @@
 	}
 
 	.pillnav-tab.flow-tab.active .pillnav-icon-bg {
-		background: rgba(226, 184, 66, 0.18);
+		background: rgba(226, 184, 66, 0.3);
 	}
 
 	.pillnav-icon {

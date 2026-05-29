@@ -698,6 +698,7 @@ export const enMessages = {
 	'inbox.resolve.title.neutral': 'Market resolved',
 	'inbox.resolve.title.won': 'Market won',
 	'info.back': 'Back',
+	'info.back_to_settings': 'Back to settings',
 	'info.not_found.body':
 		'No document matches that address. Try one of the links in the footer or head back to the home page.',
 	'info.not_found.title': 'Document not found',

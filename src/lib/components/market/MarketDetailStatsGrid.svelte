@@ -3,7 +3,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
-	import { formatDate, formatToken } from '$lib/utils/format.utils';
+	import { formatLongDate, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
@@ -72,7 +72,7 @@
 		},
 		{
 			labelKey: 'market.detail.stats.closes' as const,
-			value: formatDate(expiryDate),
+			value: formatLongDate(expiryDate),
 			suffix: '',
 			mute: false
 		},

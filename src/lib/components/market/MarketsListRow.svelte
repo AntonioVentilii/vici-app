@@ -26,8 +26,7 @@
 	const closes = $derived(
 		new Date(Number(market.expiryDate)).toLocaleDateString($localeStore, {
 			month: 'short',
-			day: 'numeric',
-			year: 'numeric'
+			day: 'numeric'
 		})
 	);
 
@@ -55,7 +54,7 @@
 		{:else}
 			<span class="tag">&nbsp;</span>
 		{/if}
-		<span class="num mute t-eyebrow"
+		<span class="num mute markets-row-meta"
 			>{vol} {t({ locale: $localeStore, key: 'market.vol_suffix' })} · {closes}</span
 		>
 	</div>
@@ -78,3 +77,11 @@
 		>
 	</div>
 </div>
+
+<style lang="postcss">
+	.markets-row-meta {
+		font-size: 11px;
+		font-weight: 600;
+		letter-spacing: 0.02em;
+	}
+</style>

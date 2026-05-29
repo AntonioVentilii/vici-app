@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Share2 } from 'lucide-svelte/icons';
+	import { Share } from 'lucide-svelte/icons';
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
 	import SharePopover from '$lib/components/market/SharePopover.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
@@ -231,7 +231,7 @@
 				onclick={toggleShare}
 				type="button"
 			>
-				<Share2 aria-hidden="true" size={16} strokeWidth={1.8} />
+				<Share aria-hidden="true" size={16} strokeWidth={1.8} />
 			</button>
 			{#if shareOpen}
 				<SharePopover
@@ -772,7 +772,7 @@
 	.flow-stake-value {
 		font-size: var(--t-16);
 		font-weight: 700;
-		color: var(--text-base);
+		color: var(--laurel);
 	}
 	.flow-stake-unit {
 		font-size: 9.5px;
@@ -834,24 +834,20 @@
 		appearance: none;
 		padding: 0.4rem 0;
 		font-size: var(--t-12);
-		font-weight: 700;
+		font-weight: 600;
 		color: var(--text-muted);
-		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
-		border: 1px solid var(--border-base);
+		background: transparent;
+		border: 0;
 		border-radius: var(--r-pill);
 		cursor: pointer;
-		transition:
-			color 120ms ease,
-			background 120ms ease,
-			border-color 120ms ease;
+		transition: color 120ms ease;
 	}
 	.flow-stake-peg:hover {
 		color: var(--text-base);
 	}
 	.flow-stake-peg.is-active {
-		color: var(--cat-color);
-		background: color-mix(in srgb, var(--cat-color) 14%, transparent);
-		border-color: color-mix(in srgb, var(--cat-color) 38%, var(--border-base));
+		color: var(--laurel);
+		font-weight: 700;
 	}
 
 	.flow-stake-payout {

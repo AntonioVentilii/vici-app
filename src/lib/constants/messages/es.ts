@@ -707,6 +707,7 @@ export const esMessages = {
 	'inbox.resolve.title.neutral': 'Mercado resuelto',
 	'inbox.resolve.title.won': 'Mercado ganado',
 	'info.back': 'Atrás',
+	'info.back_to_settings': 'Volver a ajustes',
 	'info.not_found.body':
 		'Ningún documento coincide con esa dirección. Prueba otro enlace del pie o vuelve a la página principal.',
 	'info.not_found.title': 'Documento no encontrado',
