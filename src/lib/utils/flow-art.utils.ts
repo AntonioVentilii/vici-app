@@ -1383,7 +1383,11 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 			const x = t * 280;
 			const y = 18 + Math.sin(t * Math.PI) * 5;
 			const c = cols[i % cols.length];
-			m += `<path class="wc-cnf wc-cnf-${i}" d="M ${x - 5} ${y} L ${x + 5} ${y} L ${x} ${y + 10} Z" fill="${c}" opacity="${0.78 + (i % 2) * 0.15}"/>`;
+			// `% 10` keeps the stagger class in range — `FlowArtFrame`
+			// only defines `.wc-cnf-0`…`.wc-cnf-9` delay hooks, so the
+			// 11th/12th shards reuse an existing offset rather than
+			// falling back to the unstaggered base animation.
+			m += `<path class="wc-cnf wc-cnf-${i % 10}" d="M ${x - 5} ${y} L ${x + 5} ${y} L ${x} ${y + 10} Z" fill="${c}" opacity="${0.78 + (i % 2) * 0.15}"/>`;
 		}
 
 		return m;

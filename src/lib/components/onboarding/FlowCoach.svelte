@@ -12,9 +12,13 @@
 	 * in sympathy via the matching CSS in `app.css`
 	 * (`.flow-card[data-coach-phase]`). Phase 3 flips the card to its
 	 * back face by toggling `is-flipped`; phase 4 cleans up and returns
-	 * control. Dismisses on any pointer-down; persists dismissal in
-	 * `localStorage` so the coach is shown at most once per surface per
-	 * device.
+	 * control. Dismisses on any pointer-down.
+	 *
+	 * The `flow` surface persists dismissal in `localStorage` so the
+	 * coach is shown at most once per device. The `onboarding` surface
+	 * is intentionally **always shown** — onboarding is a one-shot
+	 * funnel and the gesture hints are core to it, so it never reads or
+	 * writes the seen flag.
 	 */
 	interface Props {
 		surface?: 'flow' | 'onboarding';
@@ -22,12 +26,14 @@
 
 	const { surface = 'flow' }: Props = $props();
 
-	const storageKey = $derived(
-		`vici.coach-${surface === 'onboarding' ? 'onboarding-seen' : 'flow-seen'}`
-	);
+	// Onboarding always coaches; only the persistent `flow` surface caches
+	// a per-device "seen" flag. Onboarding never reads or writes it.
+	const persistSeen = $derived(surface !== 'onboarding');
+
+	const storageKey = 'vici.coach-flow-seen';
 
 	const readSeen = (): boolean => {
-		if (!browser) {
+		if (!browser || !persistSeen) {
 			return false;
 		}
 
@@ -87,7 +93,7 @@
 	};
 
 	const dismiss = () => {
-		if (browser) {
+		if (browser && persistSeen) {
 			try {
 				localStorage.setItem(storageKey, '1');
 			} catch {
