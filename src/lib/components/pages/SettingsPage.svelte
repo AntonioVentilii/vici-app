@@ -234,7 +234,13 @@
 		{ value: 'wc', label: t({ locale: $localeStore, key: 'settings.flow_deck.tab.wc' }) }
 	]);
 
-	const flowTagsEnabled = $derived(($preferencesStore.flowTags ?? []).length);
+	// `wc` lives on its own tab next to "All categories"; the grid only
+	// surfaces the other tags so the user doesn't see the same control in
+	// two places.
+	const settingsCategoryTags = $derived(MARKET_TAGS.filter((tag) => tag !== 'wc'));
+	const flowTagsEnabled = $derived(
+		($preferencesStore.flowTags ?? []).filter((tag) => tag !== 'wc').length
+	);
 	const flowDeckSub = $derived(
 		flowDeckMode === 'wc'
 			? t({ locale: $localeStore, key: 'settings.flow_deck.sub_wc' })
@@ -243,7 +249,7 @@
 				: t({
 						locale: $localeStore,
 						key: 'settings.flow_deck.sub',
-						params: { enabled: flowTagsEnabled, total: MARKET_TAGS.length }
+						params: { enabled: flowTagsEnabled, total: settingsCategoryTags.length }
 					})
 	);
 
@@ -514,7 +520,7 @@
 
 				{#if flowDeckMode === 'all'}
 					<div class="settings-flow-deck-grid" role="group">
-						{#each MARKET_TAGS as tag (tag)}
+						{#each settingsCategoryTags as tag (tag)}
 							{@const enabled = ($preferencesStore.flowTags ?? []).includes(tag)}
 							<button
 								class="settings-flow-deck-pill"
@@ -1124,36 +1130,60 @@
 		gap: 0.5rem;
 	}
 
+	/* Mirrors `.set-cat-chip` in the design source
+	   (`../VICI WebApp Beta V1.2/app.css:1784-1822`): rounded-rectangle
+	   chip (8 px radius, not pill), neutral surface + neutral border
+	   off-state, laurel-glow fill + accent border + accent text in the
+	   on-state, 8 px dot tinted with the same colour. */
 	.settings-flow-deck-pill {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.55rem;
-		padding: 0.65rem 0.8rem;
+		gap: 10px;
+		padding: 10px 12px;
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--color-primary) 5%, var(--bg-popover));
+		border-radius: 8px;
+		background: rgba(242, 236, 220, 0.04);
 		color: var(--text-muted);
 		font-size: var(--t-13);
-		font-weight: 600;
+		font-weight: 500;
 		cursor: pointer;
+		text-align: left;
 		transition:
 			border-color var(--d-hover) var(--ease-vici),
 			background-color var(--d-hover) var(--ease-vici),
 			color var(--d-hover) var(--ease-vici);
 	}
 
+	.settings-flow-deck-pill:hover {
+		background: rgba(242, 236, 220, 0.07);
+		border-color: var(--border-strong);
+		color: var(--text-base);
+	}
+
+	:global([data-theme='light']) .settings-flow-deck-pill,
+	:global([data-theme='peach']) .settings-flow-deck-pill {
+		background: rgba(14, 13, 11, 0.03);
+	}
+
+	:global([data-theme='light']) .settings-flow-deck-pill:hover,
+	:global([data-theme='peach']) .settings-flow-deck-pill:hover {
+		background: rgba(14, 13, 11, 0.06);
+	}
+
 	.settings-flow-deck-pill.is-active {
-		border-color: color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
-		background: color-mix(in srgb, var(--color-primary) 22%, var(--bg-popover));
+		background: var(--laurel-glow);
+		border-color: var(--color-primary);
 		color: var(--color-primary);
 	}
 
 	.settings-flow-deck-pill-dot {
 		display: inline-block;
-		width: 0.4rem;
-		height: 0.4rem;
+		width: 8px;
+		height: 8px;
 		border-radius: 999px;
-		background: var(--text-muted);
+		background: color-mix(in srgb, var(--text-muted) 60%, transparent);
+		flex-shrink: 0;
+		transition: background var(--d-hover) var(--ease-vici);
 	}
 
 	.settings-flow-deck-pill.is-active .settings-flow-deck-pill-dot {
@@ -1184,19 +1214,26 @@
 		margin-top: 0.25rem;
 	}
 
+	/* Mirrors `.btn.btn-ghost.btn-block.set-signout` in the design source
+	   (`../VICI WebApp Beta V1.2/app.css:128-142, 1440-1447`): rounded
+	   rectangle (12 px radius, not full pill), red text + red-tinted
+	   border on top of the same subtle ghost-button surface, hover lifts
+	   the red wash. */
 	:global(.settings-signout) {
 		width: 100%;
-		padding: 0.75rem 1.25rem;
-		border: 1px solid color-mix(in srgb, var(--color-destructive) 55%, var(--border-base));
-		border-radius: var(--r-pill);
-		background: transparent;
-		color: var(--color-destructive);
-		font-weight: 700;
+		padding: 14px 20px;
+		border: 1px solid rgba(255, 107, 107, 0.25);
+		border-radius: 12px;
+		background: rgba(242, 236, 220, 0.06);
+		color: var(--no);
+		font-size: 15px;
+		font-weight: 600;
+		letter-spacing: -0.005em;
 	}
 
 	:global(.settings-signout):hover {
-		background: color-mix(in srgb, var(--color-destructive) 8%, transparent);
-		border-color: var(--color-destructive);
+		background: rgba(255, 107, 107, 0.08);
+		border-color: rgba(255, 107, 107, 0.45);
 	}
 
 	.settings-signout-confirm p {
@@ -1204,20 +1241,24 @@
 		color: var(--text-base);
 	}
 
+	/* Mirrors `.set-delete-link` (`app.css:1448-1459`): muted grey
+	   underlined link, faint underline, red on hover only. */
 	.settings-delete-link {
+		align-self: center;
 		border: none;
 		background: none;
+		padding: 6px;
 		font-size: var(--t-12);
-		color: var(--color-destructive);
+		color: var(--text-muted);
 		cursor: pointer;
-		text-align: center;
 		text-decoration: underline;
-		text-decoration-color: color-mix(in srgb, var(--color-destructive) 55%, transparent);
-		text-underline-offset: 3px;
+		text-decoration-color: color-mix(in srgb, var(--text-muted) 35%, transparent);
+		text-underline-offset: 2px;
 	}
 
 	.settings-delete-link:hover {
-		text-decoration-color: var(--color-destructive);
+		color: var(--no);
+		text-decoration-color: color-mix(in srgb, var(--no) 55%, transparent);
 	}
 
 	.settings-confirm {
