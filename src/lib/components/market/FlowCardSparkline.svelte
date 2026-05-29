@@ -382,7 +382,7 @@
 		flex-wrap: wrap;
 		align-items: baseline;
 		gap: 0.25rem;
-		font-size: 10px;
+		font-size: var(--t-10);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--text-base);
@@ -416,7 +416,7 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 0.25rem;
-		font-size: 10px;
+		font-size: var(--t-10);
 		letter-spacing: 0.05em;
 		color: var(--text-muted);
 	}

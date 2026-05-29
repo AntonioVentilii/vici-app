@@ -73,7 +73,7 @@
 	.flow-compass-pct {
 		margin-top: 2px;
 		font-size: 9.5px;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		font-weight: 700;
 		color: var(--text-muted);
 		line-height: 1;

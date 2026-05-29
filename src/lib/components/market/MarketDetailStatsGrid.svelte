@@ -129,7 +129,7 @@
 
 	.market-stats-eyebrow {
 		color: var(--text-muted);
-		font-size: 10px;
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -146,7 +146,7 @@
 		color: var(--text-base);
 		font-size: var(--t-16);
 		font-weight: 600;
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 		/* Long values (e.g. `December 31, 2026` in the CLOSES tile)
 		   wrap to multiple lines instead of truncating with an
 		   ellipsis. Earlier `white-space: nowrap` + `text-overflow:

@@ -116,7 +116,7 @@
 		font-size: var(--t-14);
 		font-weight: 600;
 		color: var(--text-base);
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 	}
 
 	.portfolio-hero-stat dd.is-positive {

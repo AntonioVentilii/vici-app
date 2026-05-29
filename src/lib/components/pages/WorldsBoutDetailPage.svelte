@@ -435,7 +435,7 @@
 		gap: 0.3rem;
 		padding: 0.18rem 0.45rem;
 		font-family: var(--font-mono, var(--font-sans));
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -471,7 +471,7 @@
 		font-weight: 600;
 		font-size: var(--t-17, 1.05rem);
 		line-height: 1.2;
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 		color: var(--text-base);
 	}
 
@@ -482,7 +482,7 @@
 
 	.worlds-bout-hero-meta {
 		margin: 0;
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: 0.06em;
 		color: var(--text-muted);
 	}
@@ -609,8 +609,8 @@
 
 	.worlds-bout-sub {
 		margin-top: 0.05rem;
-		font-size: var(--t-10, 0.6rem);
-		letter-spacing: 0.04em;
+		font-size: var(--t-10);
+		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
 
@@ -645,7 +645,7 @@
 		padding: 0.85rem 1rem;
 		font: inherit;
 		font-family: var(--font-mono, var(--font-sans));
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: 0.14em;
 		text-transform: uppercase;

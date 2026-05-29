@@ -340,7 +340,7 @@
 		margin: 0;
 		font-size: clamp(1.75rem, 7vw, 2.25rem);
 		font-weight: 600;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 		line-height: 1.05;
 		color: var(--text-base);
 	}

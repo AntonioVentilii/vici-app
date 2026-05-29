@@ -235,7 +235,7 @@
 		border-radius: var(--r-pill);
 		background: var(--bg-surface);
 		color: var(--color-primary);
-		font-size: 11px;
+		font-size: var(--t-11);
 		font-weight: 700;
 		border: 1px solid var(--border-base);
 	}
@@ -256,7 +256,7 @@
 	}
 
 	.flow-flame-count {
-		font-size: 10px;
+		font-size: var(--t-10);
 		font-weight: 700;
 		color: var(--color-primary);
 	}
@@ -315,9 +315,9 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 600;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 	}
 
 	.flow-progress-count {

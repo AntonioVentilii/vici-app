@@ -76,14 +76,14 @@
 		font-family: var(--font-mono);
 		font-size: 22px;
 		font-weight: 900;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 		background: var(--bg-popover);
 		color: var(--laurel);
 		box-shadow: var(--shadow-card);
 		animation: xpPop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 	}
 	.xp-pop-label {
-		font-size: 11px;
+		font-size: var(--t-11);
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		opacity: 0.7;

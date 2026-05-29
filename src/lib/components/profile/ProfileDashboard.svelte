@@ -1129,7 +1129,7 @@
 		background: color-mix(in srgb, var(--archetype-accent, var(--color-primary)) 14%, transparent);
 		color: var(--archetype-accent, var(--color-primary));
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1147,7 +1147,7 @@
 		font-family: var(--font-mono);
 		font-size: 0.65rem;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 	}
 
 	/* Affiliation chip row sits below the handle row. */
@@ -1207,7 +1207,7 @@
 		display: inline-block;
 		width: 14px;
 		height: 10px;
-		border-radius: 2px;
+		border-radius: var(--r-2);
 		object-fit: cover;
 	}
 
@@ -1332,7 +1332,7 @@
 	.profile-affiliations-eyebrow {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1341,7 +1341,7 @@
 	.profile-affiliations-count {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		letter-spacing: 0.1em;
 	}
 
@@ -1398,7 +1398,7 @@
 		background: var(--bg-surface);
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: var(--t-12);
 		font-weight: 700;
 	}
 
@@ -1529,7 +1529,7 @@
 	.profile-past-ctx {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}
@@ -1710,7 +1710,7 @@
 	.profile-edit-label {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;

@@ -875,7 +875,7 @@
 		padding: 2px 7px;
 		font-size: 10.5px;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 		background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
 		border: 1px solid var(--border-base);
@@ -973,7 +973,7 @@
 		align-items: center;
 		gap: 5px;
 		margin: 4px 0 0;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 600;
 		color: var(--yes);
 		letter-spacing: 0.02em;
@@ -1094,12 +1094,12 @@
 	.flow-probs-pct {
 		font-size: 1.45rem;
 		font-weight: 700;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 		line-height: 1;
 		color: var(--text-base);
 	}
 	.flow-probs-label {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;

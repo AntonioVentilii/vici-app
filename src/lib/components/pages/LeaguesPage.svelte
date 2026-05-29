@@ -386,7 +386,7 @@
 
 	.leagues-eyebrow {
 		margin: 0;
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		font-weight: 600;
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);

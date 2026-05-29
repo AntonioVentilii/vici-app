@@ -178,7 +178,7 @@
 		padding: 22px;
 		background: var(--ink-raised);
 		border: 1px solid var(--ink-line);
-		border-radius: 16px;
+		border-radius: var(--r-12);
 		will-change: transform;
 		transition: transform 360ms var(--ease-vici);
 	}
@@ -194,7 +194,7 @@
 		font-size: 20px;
 		font-weight: 700;
 		line-height: 1.18;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 		color: var(--parchment);
 	}
 	/* Edge-to-edge FlowArt — cancels the swipe card's 22px padding so
@@ -247,7 +247,7 @@
 	}
 	.ob2-card-prob-label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		font-weight: 700;
@@ -256,7 +256,7 @@
 		font-family: var(--font-display);
 		font-size: 22px;
 		font-weight: 700;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 	}
 	.ob2-swipe-stamp {
 		position: absolute;

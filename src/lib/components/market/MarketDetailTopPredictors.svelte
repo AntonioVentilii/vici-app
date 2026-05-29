@@ -95,7 +95,7 @@
 		color: var(--text-base);
 		font-size: var(--t-16);
 		font-weight: 600;
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 	}
 
 	.market-top-predictors-more {
@@ -166,7 +166,7 @@
 
 	.market-top-predictors-sub {
 		color: var(--text-muted);
-		font-size: 10px;
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -178,7 +178,7 @@
 		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--yes) 12%, transparent);
 		color: var(--yes);
-		font-size: 10px;
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;

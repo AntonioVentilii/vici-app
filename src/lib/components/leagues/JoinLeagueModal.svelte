@@ -139,7 +139,7 @@
 	}
 
 	.league-field-label {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 

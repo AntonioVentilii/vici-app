@@ -266,7 +266,7 @@
 	}
 	.flow-stake-payout-lbl {
 		color: var(--text-muted);
-		font-size: 10px;
+		font-size: var(--t-10);
 		letter-spacing: 0.1em;
 	}
 </style>

@@ -252,7 +252,7 @@
 	}
 
 	.challenge-field-label {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
@@ -316,7 +316,7 @@
 	}
 
 	.challenge-resolved-eyebrow {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		color: var(--text-muted);
 		letter-spacing: var(--tracking-allcaps);
 	}

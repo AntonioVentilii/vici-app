@@ -185,7 +185,7 @@
 	}
 
 	.account-method-email {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
@@ -224,7 +224,7 @@
 	.account-method-hint,
 	.account-email-hint {
 		margin: 0;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		color: var(--text-muted);
 		line-height: 1.5;
 	}

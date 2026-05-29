@@ -123,7 +123,7 @@
 		color: var(--text-base);
 		font-size: 2.75rem;
 		font-weight: 600;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 		line-height: 1.05;
 		text-wrap: balance;
 	}
@@ -142,7 +142,7 @@
 	   tracking. */
 	.info-eyebrow {
 		margin: 0.75rem 0 1rem;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 700;
 		letter-spacing: 0.16em;
 		color: var(--color-primary);

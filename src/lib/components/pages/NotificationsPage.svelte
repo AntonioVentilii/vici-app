@@ -150,7 +150,7 @@
 		border: 0;
 		background: transparent;
 		font: inherit;
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
@@ -243,7 +243,7 @@
 
 	.notification-when {
 		margin-top: 0.125rem;
-		font-size: 0.6875rem;
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 

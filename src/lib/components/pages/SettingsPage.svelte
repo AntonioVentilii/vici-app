@@ -861,7 +861,7 @@
 		background: color-mix(in srgb, var(--yes) 14%, transparent);
 		color: var(--yes);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1019,7 +1019,7 @@
 		gap: 10px;
 		padding: 10px 12px;
 		border: 1px solid var(--border-base);
-		border-radius: 8px;
+		border-radius: var(--r-8);
 		background: rgba(242, 236, 220, 0.04);
 		color: var(--text-muted);
 		font-size: var(--t-13);
@@ -1078,7 +1078,7 @@
 
 	.settings-about {
 		margin: 0.25rem 0 0;
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		text-align: center;
@@ -1324,7 +1324,7 @@
 		font-family: var(--font-mono);
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.5);
 		transform: translateX(-50%);
 		pointer-events: none;

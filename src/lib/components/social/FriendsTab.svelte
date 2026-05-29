@@ -961,7 +961,7 @@
 		gap: 0.35rem;
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -970,7 +970,7 @@
 	.invite-bonus {
 		color: var(--color-primary);
 		font-size: var(--t-12);
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 	}
 
 	/* Invite headline: display sans-serif, 20 px, weight 600, slight
@@ -999,7 +999,7 @@
 		margin-left: 0.35rem;
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1096,7 +1096,7 @@
 		gap: 0.5rem;
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1123,7 +1123,7 @@
 		background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 		color: var(--color-primary);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1222,7 +1222,7 @@
 	.pending-state {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1344,7 +1344,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--t-12);
 		font-weight: 800;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 	}
 
 	.ranked-num.is-you {
@@ -1422,7 +1422,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--t-12);
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		cursor: pointer;
 		text-align: center;
 		transition: background 140ms ease;
@@ -1488,7 +1488,7 @@
 	.global-link-eyebrow {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1581,7 +1581,7 @@
 	.friends-sheet-sub {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1718,7 +1718,7 @@
 		margin: 0.55rem 0 0.85rem;
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;

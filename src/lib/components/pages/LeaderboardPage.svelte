@@ -245,7 +245,7 @@
 	}
 
 	.leaderboard-podium-rank {
-		font-size: 0.6875rem;
+		font-size: var(--t-11);
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		color: var(--text-muted);

@@ -463,7 +463,7 @@
 	}
 
 	.bout-detail-eyebrow {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		padding: 0.1rem 0.5rem;
 		border-radius: var(--r-pill);
@@ -477,7 +477,7 @@
 	}
 
 	.bout-detail-window {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		color: var(--text-muted);
 	}
 
@@ -542,7 +542,7 @@
 
 	.bout-detail-winner {
 		margin: 0;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		letter-spacing: var(--tracking-allcaps);
 		text-align: center;
 		color: var(--text-muted);

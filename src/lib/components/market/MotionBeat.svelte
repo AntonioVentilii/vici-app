@@ -132,14 +132,14 @@
 	}
 
 	.motion-beat-badge {
-		font-size: 10px;
+		font-size: var(--t-10);
 		color: var(--laurel);
 		letter-spacing: var(--tracking-allcaps);
 	}
 
 	.motion-beat-line {
 		margin: 0;
-		font-size: 1rem;
+		font-size: var(--t-16);
 		line-height: var(--leading-snug);
 		color: var(--text-base);
 	}
