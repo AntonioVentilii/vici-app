@@ -132,7 +132,7 @@
 		border-top-left-radius: 22px;
 		border-top-right-radius: 22px;
 		box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4);
-		animation: friend-sheet-slide-up 280ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+		animation: friend-sheet-slide-up 280ms var(--ease-vici) both;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
