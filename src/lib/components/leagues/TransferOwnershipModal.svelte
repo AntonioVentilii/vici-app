@@ -6,6 +6,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { LeagueMemberDoc } from '$lib/types/league-member';
+	import { shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	interface Props {
@@ -99,9 +100,6 @@
 		}
 	};
 
-	const shortPrincipal = (principal: string): string =>
-		principal.length > 12 ? `${principal.slice(0, 5)}…${principal.slice(-5)}` : principal;
-
 	const memberHandle = (principal: string): string => {
 		const profile = $profilesStore.get(principal);
 
@@ -109,7 +107,7 @@
 			return `@${profile.nickname}`;
 		}
 
-		return shortPrincipal(principal);
+		return shortenPrincipal(principal);
 	};
 
 	onMount(() => {

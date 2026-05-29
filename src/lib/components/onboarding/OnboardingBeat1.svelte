@@ -1,5 +1,6 @@
 <script lang="ts">
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
@@ -80,7 +81,7 @@
 
 	// "FIFA WORLD CUP 2026 · 27d to kickoff" eyebrow.
 	const kickoffDays = $derived(
-		Math.max(0, Math.ceil((event.kickoffAt_ms - Date.now()) / (24 * 60 * 60 * 1000)))
+		Math.max(0, Math.ceil((event.kickoffAt_ms - Date.now()) / DAY_IN_MS))
 	);
 </script>
 

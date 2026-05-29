@@ -1,5 +1,6 @@
 <script lang="ts">
 	import Modal from '$lib/components/ui/Modal.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { lookupLeagueByInvite, proposeBout } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { BoutDoc } from '$lib/types/bout';
@@ -51,8 +52,8 @@
 	// `<input type="date">` accepts it.
 	$effect(() => {
 		if (isOpen && kickoffDate === '' && settleDate === '') {
-			const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000);
-			const nextWeek = new Date(Date.now() + 8 * 24 * 60 * 60 * 1000);
+			const tomorrow = new Date(Date.now() + DAY_IN_MS);
+			const nextWeek = new Date(Date.now() + 8 * DAY_IN_MS);
 			kickoffDate = tomorrow.toISOString().slice(0, 10);
 			settleDate = nextWeek.toISOString().slice(0, 10);
 		}

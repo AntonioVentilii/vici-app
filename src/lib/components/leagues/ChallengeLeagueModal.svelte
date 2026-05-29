@@ -1,5 +1,6 @@
 <script lang="ts">
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { lookupLeagueByInvite, proposeBout } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { BoutDoc } from '$lib/types/bout';
@@ -104,9 +105,8 @@
 		submitError = null;
 
 		try {
-			const dayMs = 24 * 60 * 60 * 1000;
-			const kickoffMs = Date.now() + dayMs;
-			const settleMs = kickoffMs + duration * dayMs;
+			const kickoffMs = Date.now() + DAY_IN_MS;
+			const settleMs = kickoffMs + duration * DAY_IN_MS;
 
 			const bout = await proposeBout({
 				sideA: fromLeague.id,

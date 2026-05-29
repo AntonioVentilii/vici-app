@@ -37,7 +37,6 @@
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { FLOW_SESSION_LENGTH_OPTIONS } from '$lib/constants/settings.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import { ProfileVisibility } from '$lib/enums/profile';
 	import { deleteMyAccount, listMyBlockingLeagues } from '$lib/services/account.services';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -54,6 +53,7 @@
 	import type { UserProfile } from '$lib/types/profile';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
+	import { visibilityFromProfile, visibilityToProfile } from '$lib/utils/visibility.utils';
 
 	// Delete-account flow state -----------------------------------
 	type DeleteStep = 'idle' | 'reason' | 'confirm';
@@ -180,30 +180,6 @@
 			label: t({ locale: $localeStore, key: 'settings.profile_visibility.private' })
 		}
 	]);
-
-	const visibilityFromProfile = (value: ProfileVisibility | undefined): SettingsVisibility => {
-		if (value === ProfileVisibility.PUBLIC) {
-			return 'public';
-		}
-
-		if (value === ProfileVisibility.FRIENDS_AND_FOLLOWERS) {
-			return 'friends';
-		}
-
-		return 'private';
-	};
-
-	const visibilityToProfile = (value: SettingsVisibility): ProfileVisibility => {
-		if (value === 'public') {
-			return ProfileVisibility.PUBLIC;
-		}
-
-		if (value === 'friends') {
-			return ProfileVisibility.FRIENDS_AND_FOLLOWERS;
-		}
-
-		return ProfileVisibility.FRIENDS_ONLY;
-	};
 
 	const settingsVisibility = $derived(visibilityFromProfile(profile?.visibility));
 

@@ -13,6 +13,10 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
 	import { MIN_CALLS_FOR_RANK, type AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+	import {
+		affiliationLifetimeAccuracy,
+		affiliationMonthlyAccuracy
+	} from '$lib/utils/affiliation-stats.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -74,12 +78,6 @@
 
 	const ranked = $derived(stats !== undefined && stats.totalCalls >= MIN_CALLS_FOR_RANK);
 
-	const accLifetime = (s: AffiliationStatsDoc): number =>
-		s.totalCalls > 0 ? s.wins / s.totalCalls : 0;
-
-	const accMonth = (s: AffiliationStatsDoc): number =>
-		s.monthTotalCalls > 0 ? s.monthWins / s.monthTotalCalls : 0;
-
 	/**
 	 * Position of this affiliation in the lifetime-accuracy and
 	 * month-accuracy rankings. Returns `0` when this affiliation has
@@ -91,7 +89,7 @@
 		}
 
 		const score = (s: AffiliationStatsDoc): number =>
-			key === 'lifetime' ? accLifetime(s) : accMonth(s);
+			key === 'lifetime' ? affiliationLifetimeAccuracy(s) : affiliationMonthlyAccuracy(s);
 
 		const sorted = [...allStats].sort((a, b) => {
 			const da = score(a);

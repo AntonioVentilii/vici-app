@@ -253,6 +253,15 @@ export const shortenWithMiddleEllipsis = ({
 		: text;
 };
 
+/**
+ * Compact principal for inline display: `abcde…wxyz`, keeping the
+ * leading and trailing 5 characters. Short principals (≤ 12 chars)
+ * are returned untouched. Uses a single-glyph ellipsis (`…`) rather
+ * than `...` — distinct from {@link shortenWithMiddleEllipsis}.
+ */
+export const shortenPrincipal = (principal: string): string =>
+	principal.length > 12 ? `${principal.slice(0, 5)}…${principal.slice(-5)}` : principal;
+
 // =============================================================
 //  Locale-aware Intl wrappers
 // =============================================================

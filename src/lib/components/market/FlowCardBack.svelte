@@ -3,6 +3,7 @@
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
 	import SharePopover from '$lib/components/market/SharePopover.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { VXP_STAKE_LADDER, type VxpStake } from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -101,8 +102,8 @@
 			return t({ locale: $localeStore, key: 'card.back.countdown_closing' });
 		}
 
-		const days = Math.floor(ms / 86_400_000);
-		const hours = Math.floor((ms % 86_400_000) / 3_600_000);
+		const days = Math.floor(ms / DAY_IN_MS);
+		const hours = Math.floor((ms % DAY_IN_MS) / 3_600_000);
 		const mins = Math.floor((ms % 3_600_000) / 60_000);
 
 		if (days >= 1) {
@@ -131,7 +132,7 @@
 		nowTick;
 		const ms = Number(market.expiryDate) - Date.now();
 
-		return ms > 0 && ms <= 86_400_000;
+		return ms > 0 && ms <= DAY_IN_MS;
 	});
 
 	// Sharp-predictor lean — `sharpPct = min(95, yes + 10)` keeps the

@@ -6,7 +6,12 @@
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
 	import PortfolioPerformanceCard from '$lib/components/portfolio/PortfolioPerformanceCard.svelte';
-	import { MILLISECOND_IN_NANOSECONDS, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
+	import {
+		EM_DASH,
+		MILLISECOND_IN_NANOSECONDS,
+		USD_DECIMALS,
+		ZERO
+	} from '$lib/constants/app.constants';
 	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
@@ -62,8 +67,6 @@
 	 * Rank: not yet served by the satellite — rendered as `EM_DASH`
 	 * placeholder, mirroring the Dash page treatment.
 	 */
-
-	const EM_DASH = '—';
 
 	const refreshing = $derived(
 		$positionsNotInitialized ||

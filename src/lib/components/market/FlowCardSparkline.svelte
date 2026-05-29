@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { MarketEvent } from '$lib/types/market-metadata';
 	import { sparklinePoints } from '$lib/utils/flow-card-display.utils';
@@ -168,7 +169,7 @@
 		// Date instance — Svelte's lint flags `setDate` calls because a
 		// mutable Date doesn't trigger reactivity. We build a fresh
 		// Date directly from a millisecond offset instead.
-		const offsetMs = (7 - day) * 24 * 60 * 60 * 1000;
+		const offsetMs = (7 - day) * DAY_IN_MS;
 		const d = new Date(Date.now() - offsetMs);
 
 		return {

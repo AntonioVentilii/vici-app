@@ -11,7 +11,7 @@
 	import WalletHistory from '$lib/components/wallet/WalletHistory.svelte';
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
-	import { ZERO } from '$lib/constants/app.constants';
+	import { DAY_IN_MS, ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { markets } from '$lib/derived/markets.derived';
@@ -136,7 +136,7 @@
 	// feed and summing Settlement (in) minus Trade (out) flows on
 	// VXP-denominated markets.
 	const weeklyVxpDelta = $derived.by((): bigint => {
-		const cutoffNs = BigInt(Date.now() - 7 * 24 * 60 * 60 * 1000) * 1_000_000n;
+		const cutoffNs = BigInt(Date.now() - 7 * DAY_IN_MS) * 1_000_000n;
 		let delta = ZERO;
 
 		const recentVxpTx = filteredTransactions.filter(

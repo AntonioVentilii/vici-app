@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
 		claimTournamentPrize,
@@ -100,7 +101,7 @@
 			return 0;
 		}
 
-		return Math.ceil(deltaMs / (24 * 60 * 60 * 1000));
+		return Math.ceil(deltaMs / DAY_IN_MS);
 	});
 
 	const matchesByRound = $derived.by((): Record<TournamentRound, TournamentMatchDoc[]> => {

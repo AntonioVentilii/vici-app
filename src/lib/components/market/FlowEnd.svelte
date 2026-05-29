@@ -5,24 +5,12 @@
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import FlowInviteCard from '$lib/components/market/FlowInviteCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
-	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { t } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import type { FlameStage } from '$lib/utils/streak.utils';
-
-	// `market.tag.{category}` keys exist across all 7 locales —
-	// reused here for the Oracle line ("You were early on {category}").
-	// Falls back to `macro` when no category dominated this session.
-	const CATEGORY_LABEL_KEYS: Record<FlowArtCategory, MessageKey> = {
-		macro: 'market.tag.macro',
-		crypto: 'market.tag.crypto',
-		sports: 'market.tag.sports',
-		politics: 'market.tag.politics',
-		tech: 'market.tag.tech',
-		culture: 'market.tag.culture',
-		wc: 'market.tag.wc'
-	};
 
 	interface Props {
 		betsCount: number;
@@ -83,7 +71,7 @@
 	const oracleCategoryLabel = $derived(
 		t({
 			locale: $localeStore,
-			key: CATEGORY_LABEL_KEYS[topSessionCategory ?? 'macro']
+			key: MARKET_TAG_LABEL_KEYS[topSessionCategory ?? 'macro']
 		})
 	);
 

@@ -16,6 +16,11 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+	import {
+		affiliationLifetimeAccuracy,
+		affiliationMonthlyAccuracy,
+		formatAccuracyPercent
+	} from '$lib/utils/affiliation-stats.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
@@ -90,16 +95,8 @@
 		}
 	});
 
-	const accLifetime = (s: AffiliationStatsDoc): number =>
-		s.totalCalls > 0 ? s.wins / s.totalCalls : 0;
-
-	const accMonth = (s: AffiliationStatsDoc): number =>
-		s.monthTotalCalls > 0 ? s.monthWins / s.monthTotalCalls : 0;
-
 	const accForScope = ({ row, scope: sc }: { row: AffiliationStatsDoc; scope: Scope }): number =>
-		sc === 'wc' ? accLifetime(row) : accMonth(row);
-
-	const fmtPct1 = (acc: number): string => `${(acc * 100).toFixed(1)}%`;
+		sc === 'wc' ? affiliationLifetimeAccuracy(row) : affiliationMonthlyAccuracy(row);
 
 	const sortedForScope = $derived.by(() => {
 		const list = [...stats];
@@ -297,7 +294,9 @@
 								})}
 							</span>
 						</div>
-						<span class="num worlds-bout-pct">{fmtPct1(accForScope({ row, scope }))}</span>
+						<span class="num worlds-bout-pct"
+							>{formatAccuracyPercent(accForScope({ row, scope }))}</span
+						>
 					</button>
 				{/each}
 			{/if}
@@ -347,7 +346,7 @@
 						</span>
 					</div>
 					<span class="num worlds-bout-pct worlds-bout-pct-you">
-						{fmtPct1(accForScope({ row: myStatsRow, scope }))}
+						{formatAccuracyPercent(accForScope({ row: myStatsRow, scope }))}
 					</span>
 				</div>
 			{/if}
