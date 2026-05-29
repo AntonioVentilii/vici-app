@@ -1,6 +1,7 @@
 <script lang="ts">
 	import ConsensusCompass from '$lib/components/market/ConsensusCompass.svelte';
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
+	import FlowCardFooter from '$lib/components/market/FlowCardFooter.svelte';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import SeededAvatarStack from '$lib/components/ui/SeededAvatarStack.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
@@ -673,18 +674,7 @@
 					</div>
 
 					<!-- Foot — SIZE · VXP chip + tap hint. -->
-					<div class="flow-foot num">
-						<span class="flow-foot-size">
-							{t({
-								locale: $localeStore,
-								key: 'card.size_vxp',
-								params: { stake: sizeStake }
-							})}
-						</span>
-						<span class="flow-foot-hint allcaps">
-							{t({ locale: $localeStore, key: 'card.tap_depth' })}
-						</span>
-					</div>
+					<FlowCardFooter {sizeStake} />
 				</div>
 
 				<!-- Full-card swipe overlays — large YES/NO/SKIP text
@@ -1173,26 +1163,6 @@
 		font-weight: 700;
 		letter-spacing: 0.12em;
 		opacity: 0.75;
-	}
-
-	.flow-foot {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin: auto 1.1rem 1.1rem;
-		padding-top: 0.5rem;
-		font-size: var(--t-12);
-		color: var(--text-muted);
-		letter-spacing: 0.06em;
-	}
-	.flow-foot-size {
-		font-weight: 700;
-		letter-spacing: 0.1em;
-	}
-	.flow-foot-hint {
-		letter-spacing: 0.14em;
-		font-size: 10.5px;
-		opacity: 0.7;
 	}
 
 	/* Full-card swipe overlays — large directional YES / NO / SKIP
