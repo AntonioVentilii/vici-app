@@ -138,7 +138,7 @@
 
 <button
 	style:--accent={accent}
-	style:--accent-grad={`linear-gradient(160deg, ${accent}33 0%, ${accent}11 40%, var(--bg-surface) 100%)`}
+	style:--accent-grad={`linear-gradient(160deg, ${accent}33 0%, ${accent}11 40%, rgba(20, 18, 15, 0.95) 100%)`}
 	class="league-list-card"
 	class:is-recommendation={isRecommendation}
 	{onclick}
@@ -152,11 +152,11 @@
 		<span class="head">
 			<span class="name">{league.name}</span>
 			{#if isRecommendation}
-				<span class="role-chip is-recommendation allcaps">
-					{t({ locale: $localeStore, key: 'leagues.card.recommend_chip' })}
+				<span class="role-chip is-recommendation">
+					{t({ locale: $localeStore, key: 'leagues.card.recommend_chip' }).toUpperCase()}
 				</span>
 			{:else if roleLabel && role !== 'member'}
-				<span class="role-chip allcaps" data-role={role}>{roleLabel}</span>
+				<span class="role-chip" data-role={role}>{roleLabel.toUpperCase()}</span>
 			{/if}
 		</span>
 
@@ -190,7 +190,7 @@
 			     invalid HTML; we use a `<span role="button">` so the
 			     copy pill stays accessible without nesting buttons. -->
 			<span
-				class="copy-pill allcaps"
+				class="copy-pill"
 				class:is-copied={copied}
 				aria-label={t({
 					locale: $localeStore,
@@ -218,50 +218,79 @@
 </button>
 
 <style lang="postcss">
+	/* Mirrors `.league-list-card` in the design source
+	   (`../VICI WebApp Beta V1.2/app.css:1854-1873`): 3-col grid (56 px
+	   icon · body · trailing meta column), 12 px radius, raised surface,
+	   neutral border with a -1 px hover lift. */
 	.league-list-card {
-		display: flex;
-		align-items: flex-start;
-		gap: 0.75rem;
+		display: grid;
+		grid-template-columns: 56px 1fr auto;
+		gap: 12px;
+		align-items: center;
 		width: 100%;
-		padding: 0.85rem 0.95rem;
+		padding: 14px;
 		font: inherit;
 		text-align: left;
 		color: var(--text-base);
-		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		background: var(--bg-popover);
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
+		border-radius: 12px;
 		cursor: pointer;
 		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici);
+			background-color 180ms var(--ease-vici),
+			border-color 180ms var(--ease-vici),
+			transform 100ms var(--ease-vici);
 	}
 
 	.league-list-card:hover {
-		background: color-mix(in srgb, var(--bg-surface) 75%, transparent);
-		border-color: color-mix(in srgb, var(--accent) 45%, var(--border-base));
+		background: var(--bg-surface);
+		border-color: var(--border-strong);
+		transform: translateY(-1px);
 	}
 
 	.league-list-card.is-recommendation {
 		border-style: dashed;
-		opacity: 0.95;
+		opacity: 0.85;
 	}
 
+	/* Mirrors `.league-logo-sm` (`app.css:1876-1899`): 56 px square,
+	   10 px radius, accent-tinted gradient + 30 % accent border, with a
+	   diagonal sheen pseudo. The serif-italic emblem sits above the
+	   sheen at z-index 2. */
 	.league-logo {
-		display: inline-flex;
+		position: relative;
+		display: flex;
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
-		width: 2.5rem;
-		height: 2.5rem;
+		width: 56px;
+		height: 56px;
+		border-radius: 10px;
+		border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 		background: var(--accent-grad);
-		border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
-		border-radius: var(--r-8);
+	}
+
+	.league-logo::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			120deg,
+			transparent 35%,
+			rgba(242, 236, 220, 0.1) 50%,
+			transparent 65%
+		);
+		border-radius: inherit;
+		pointer-events: none;
 	}
 
 	.league-logo .emblem {
-		font-family: var(--font-display);
-		font-size: 1.2rem;
-		font-weight: 600;
+		position: relative;
+		z-index: 2;
+		font-family: var(--font-serif, var(--font-display, serif));
+		font-style: italic;
+		font-size: 24px;
+		font-weight: 500;
 		color: var(--accent);
 		line-height: 1;
 	}
@@ -269,22 +298,22 @@
 	.body {
 		display: flex;
 		flex-direction: column;
-		gap: 0.18rem;
-		flex: 1;
+		gap: 4px;
 		min-width: 0;
 	}
 
 	.head {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.4rem;
+		gap: 6px;
 		min-width: 0;
 	}
 
+	/* Mirrors `.league-name` (`app.css:1901-1904`). */
 	.name {
-		font-family: var(--font-display);
-		font-size: var(--t-15, 0.9375rem);
+		font-size: 15px;
 		font-weight: 600;
+		letter-spacing: -0.005em;
 		color: var(--text-base);
 		white-space: nowrap;
 		overflow: hidden;
@@ -292,55 +321,65 @@
 		min-width: 0;
 	}
 
+	/* Mirrors `.league-role-chip` (`app.css:4642-4656`).
+	   `--laurel` (not `--accent`) so the chip stays on the global
+	   laurel even though the outer button overrides `--accent` to the
+	   per-league colour for the logo tile. */
 	.role-chip {
 		flex-shrink: 0;
-		font-size: var(--t-10, 0.6rem);
-		letter-spacing: var(--tracking-allcaps);
-		padding: 0.1rem 0.4rem;
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--accent) 18%, transparent);
-		color: var(--accent);
+		display: inline-flex;
+		align-items: center;
+		padding: 2px 7px;
+		border-radius: 4px;
+		font-family: var(--font-mono);
+		font-size: 9px;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		background: rgba(226, 184, 66, 0.14);
+		color: var(--laurel);
 	}
 
 	.role-chip[data-role='owner'] {
-		background: color-mix(in srgb, var(--laurel) 22%, transparent);
+		background: rgba(226, 184, 66, 0.14);
 		color: var(--laurel);
 	}
 
 	.role-chip.is-recommendation {
-		background: color-mix(in srgb, var(--color-primary) 18%, transparent);
-		color: var(--color-primary);
+		background: rgba(79, 211, 161, 0.12);
+		color: var(--yes);
 	}
 
 	.meta {
-		font-size: var(--t-11, 0.7rem);
+		font-size: 10.5px;
 		color: var(--text-muted);
 		letter-spacing: 0.04em;
 	}
 
+	/* Mirrors `.league-friend-overlap` (`app.css:4658-4669`). */
 	.friend-overlap {
-		display: inline-flex;
+		display: flex;
 		align-items: center;
-		gap: 0.35rem;
-		margin-top: 0.15rem;
+		gap: 8px;
+		margin-top: 2px;
 	}
 
 	.friend-avatars {
-		display: inline-flex;
+		display: flex;
+		align-items: center;
 	}
 
 	.friend-avatar-dot {
 		display: inline-block;
 		width: 1rem;
 		height: 1rem;
-		border-radius: 999px;
+		border-radius: 50%;
+		outline: 1.5px solid var(--bg-popover);
 		background: linear-gradient(
 			135deg,
 			color-mix(in srgb, var(--color-primary) 65%, transparent),
 			color-mix(in srgb, var(--accent) 55%, transparent)
 		);
-		border: 1px solid color-mix(in srgb, var(--bg-surface) 50%, var(--border-base));
-		margin-left: -0.35rem;
+		margin-left: -6px;
 	}
 
 	.friend-avatar-dot:first-child {
@@ -348,13 +387,14 @@
 	}
 
 	.friend-overlap-text {
-		font-size: var(--t-10, 0.6rem);
+		font-size: 10px;
 		color: var(--text-muted);
-		letter-spacing: 0.04em;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
 	}
 
 	.friend-overlap-handle {
-		color: var(--color-primary);
+		color: var(--laurel);
 		font-weight: 700;
 	}
 
@@ -362,48 +402,53 @@
 		margin-left: 0.2rem;
 	}
 
+	/* Mirrors `.league-activity-preview` (`app.css:4671-4673`). */
 	.activity-preview {
-		font-size: var(--t-11, 0.7rem);
+		margin-top: 2px;
+		font-size: 10.5px;
 		color: var(--text-muted);
-		line-height: 1.35;
-		font-style: italic;
+		line-height: 1.3;
 	}
 
 	.trailing {
 		display: flex;
 		flex-direction: column;
 		align-items: flex-end;
-		gap: 0.4rem;
+		gap: 6px;
 		flex-shrink: 0;
 		color: var(--text-muted);
 	}
 
+	/* Mirrors `.league-copy-pill` (`app.css:4675-4686`): tiny accent-
+	   tinted chip in mono with a 4 px radius.
+	   `--laurel` (not `--accent`) — the outer button sets `--accent` to
+	   the league's per-card colour for the logo tile gradient, so using
+	   `--accent` here would tint the copy pill green / red / etc.
+	   Prototype keeps the per-league colour inline on just the logo and
+	   leaves the copy pill on the global laurel accent. */
 	.copy-pill {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.2rem;
-		padding: 0.18rem 0.55rem;
-		font-size: var(--t-10, 0.6rem);
+		padding: 3px 6px;
+		border-radius: 4px;
+		font-family: var(--font-mono);
+		font-size: 9px;
 		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		color: var(--text-base);
-		background: transparent;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
+		letter-spacing: 0.08em;
+		color: var(--laurel);
+		background: rgba(226, 184, 66, 0.06);
+		border: 1px solid rgba(226, 184, 66, 0.22);
 		cursor: pointer;
 		user-select: none;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici);
+		transition: background-color 160ms var(--ease-vici);
 	}
 
 	.copy-pill:hover {
-		background: color-mix(in srgb, var(--bg-surface) 30%, transparent);
-		border-color: var(--border-strong);
+		background: rgba(226, 184, 66, 0.14);
 	}
 
 	.copy-pill.is-copied {
-		color: var(--color-primary);
-		border-color: color-mix(in srgb, var(--color-primary) 55%, var(--border-base));
+		color: var(--laurel);
 	}
 </style>

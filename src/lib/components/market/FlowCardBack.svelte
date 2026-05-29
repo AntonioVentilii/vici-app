@@ -717,8 +717,7 @@
 		font-size: var(--t-12);
 		color: var(--laurel);
 		cursor: pointer;
-		text-decoration: underline;
-		text-underline-offset: 3px;
+		text-decoration: none;
 	}
 	.flow-back-toggle-caret {
 		font-size: 11px;
@@ -758,8 +757,19 @@
 		color: var(--no);
 	}
 
+	/* Mirrors `.flow-stake.is-cap` in the design source
+	   (`../VICI WebApp Beta V1.2/app.css:3411-3414, 3424, 3431, 3452,
+	   3466, 3489`): cap-state shifts every accent surface — wash, border,
+	   label, value, slider fill, handle, active peg — from laurel to
+	   `--no` red so the user feels the upper bound visually. */
 	.flow-stake.is-cap {
-		border-color: color-mix(in srgb, var(--cat-color) 40%, var(--border-base));
+		background: linear-gradient(
+			180deg,
+			rgba(255, 107, 107, 0.06),
+			rgba(226, 184, 66, 0.02) 70%,
+			transparent
+		);
+		border-color: rgba(255, 107, 107, 0.3);
 	}
 	.flow-stake-head {
 		display: flex;
@@ -769,10 +779,16 @@
 	.flow-stake-label {
 		color: var(--text-muted);
 	}
+	.flow-stake.is-cap .flow-stake-label {
+		color: var(--no);
+	}
 	.flow-stake-value {
 		font-size: var(--t-16);
 		font-weight: 700;
 		color: var(--laurel);
+	}
+	.flow-stake.is-cap .flow-stake-value {
+		color: var(--no);
 	}
 	.flow-stake-unit {
 		font-size: 9.5px;
@@ -800,8 +816,12 @@
 	}
 	.flow-stake-fill {
 		height: 100%;
-		background: linear-gradient(90deg, var(--cat-color), var(--laurel));
+		background: linear-gradient(90deg, var(--laurel), #ffd27a);
 		border-radius: inherit;
+		transition: width 220ms var(--ease-vici);
+	}
+	.flow-stake.is-cap .flow-stake-fill {
+		background: linear-gradient(90deg, var(--laurel), var(--no));
 	}
 	.flow-stake-handle {
 		position: absolute;
@@ -810,10 +830,21 @@
 		height: 14px;
 		border-radius: var(--r-pill);
 		background: var(--bg-surface);
-		border: 2px solid var(--cat-color);
+		border: 2px solid var(--laurel);
 		transform: translate(-50%, -50%);
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 		pointer-events: none;
+		transition:
+			background 220ms var(--ease-vici),
+			border-color 220ms var(--ease-vici),
+			box-shadow 220ms var(--ease-vici);
+	}
+	.flow-stake.is-cap .flow-stake-handle {
+		background: var(--no);
+		border-color: var(--no);
+		box-shadow:
+			0 0 0 1px var(--no),
+			0 3px 8px rgba(255, 107, 107, 0.4);
 	}
 	.flow-stake-range {
 		position: absolute;
@@ -840,14 +871,22 @@
 		border: 0;
 		border-radius: var(--r-pill);
 		cursor: pointer;
-		transition: color 120ms ease;
+		transition:
+			color 120ms ease,
+			background 120ms ease;
 	}
 	.flow-stake-peg:hover {
 		color: var(--text-base);
 	}
+	.flow-stake-peg:active {
+		background: rgba(242, 236, 220, 0.05);
+	}
 	.flow-stake-peg.is-active {
 		color: var(--laurel);
 		font-weight: 700;
+	}
+	.flow-stake.is-cap .flow-stake-peg.is-active {
+		color: var(--no);
 	}
 
 	.flow-stake-payout {

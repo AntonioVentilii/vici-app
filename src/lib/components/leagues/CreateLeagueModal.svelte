@@ -218,21 +218,24 @@
 		color: var(--no);
 	}
 
+	/* Two-column grid so the buttons split the sheet width evenly and
+	   never crowd the right edge on narrow viewports. */
 	.league-form-actions {
-		display: flex;
-		justify-content: flex-end;
+		display: grid;
+		grid-template-columns: 1fr 1fr;
 		gap: 0.5rem;
 		margin-top: 0.35rem;
 	}
 
 	.league-btn {
 		appearance: none;
-		padding: 0.65rem 1rem;
+		padding: 0.75rem 1rem;
 		font: inherit;
 		font-size: var(--t-13);
 		font-weight: 700;
 		border-radius: var(--r-12);
 		cursor: pointer;
+		text-align: center;
 		transition:
 			background 140ms ease,
 			color 140ms ease,

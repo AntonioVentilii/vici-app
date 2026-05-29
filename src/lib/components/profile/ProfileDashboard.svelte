@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
+	import StreakFlame from '$lib/components/characters/StreakFlame.svelte';
 	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
@@ -696,7 +697,7 @@
 				     streak=0 so the row reads as persistent. -->
 				<p class="profile-streak-line">
 					<span class="profile-streak-inline" aria-label="streak">
-						<Flame aria-hidden="true" size={12} strokeWidth={2} />
+						<StreakFlame count={dailyStreak} size={14} />
 						<span class="num">{dailyStreak}</span>
 					</span>
 					<span class="profile-stats-sep" aria-hidden="true">·</span>
@@ -1029,24 +1030,20 @@
 		box-shadow: var(--shadow-card);
 	}
 
-	/* Radial gradient halo tinted by the user's archetype accent.
-	   Anchored under the avatar quadrant (top-left) and sized large
-	   enough to visibly tint the surrounding area behind the
-	   pixel-art character. */
+	/* Top-right archetype-accent blur disc — mirrors the inline halo
+	   on the prototype's identity card (`screens.jsx:891`): -30 px
+	   inset on the right + top, 140 px diameter, 0.10 opacity, 20 px
+	   blur. Subtle warmth, not a yellow wash. */
 	.profile-halo {
 		position: absolute;
-		top: -60px;
-		left: -40px;
-		width: 220px;
-		height: 220px;
+		top: -30px;
+		right: -30px;
+		width: 140px;
+		height: 140px;
 		border-radius: 50%;
-		background: radial-gradient(
-			circle at 50% 50%,
-			var(--archetype-accent, var(--color-primary)) 0%,
-			transparent 65%
-		);
-		opacity: 0.28;
-		filter: blur(14px);
+		background: var(--archetype-accent, var(--color-primary));
+		opacity: 0.1;
+		filter: blur(20px);
 		pointer-events: none;
 	}
 

@@ -11,6 +11,7 @@
 		Moon,
 		Search,
 		Share2,
+		Sun,
 		Target,
 		Trophy,
 		Users,
@@ -478,7 +479,11 @@
 			<div class="settings-appearance">
 				<div class="settings-appearance-head">
 					<span class="settings-appearance-icon" aria-hidden="true">
-						<Moon size={16} strokeWidth={1.8} />
+						{#if $theme === 'dark'}
+							<Moon size={16} strokeWidth={1.8} />
+						{:else}
+							<Sun size={16} strokeWidth={1.8} />
+						{/if}
 					</span>
 					<div class="settings-appearance-titles">
 						<p class="settings-appearance-label">

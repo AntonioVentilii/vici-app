@@ -162,7 +162,6 @@
 	let activeFeedback = $state<ActiveFeedback | null>(null);
 	let feedbackKeySeq = 0;
 	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
-	const flameLabel = $derived(t({ locale: $localeStore, key: FLAME_STAGE_LABEL_KEYS[flameStage] }));
 
 	let xpPops = $state<XpPop[]>([]);
 	let popCounter = 0;
@@ -834,7 +833,6 @@
 			{betsCount}
 			categoryLabel={topBarCategoryLabel}
 			{dailyStreak}
-			{flameLabel}
 			{flameStage}
 			{maxBets}
 			onExit={backToMarkets}

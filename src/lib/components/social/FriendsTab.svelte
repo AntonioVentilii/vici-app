@@ -979,14 +979,18 @@
 		letter-spacing: 0.04em;
 	}
 
+	/* Mirrors `.friends-invite-title` in the design source
+	   (`../VICI WebApp Beta V1.2/app.css:4250-4254`): display sans-serif
+	   (inherited), 20 px, weight 600, slight negative tracking. No
+	   serif or italic — the earlier styling was a misread of the
+	   surrounding hero card's tone. */
 	.invite-title {
-		margin: 0;
+		margin: 0 0 4px;
 		color: var(--text-base);
-		font-family: var(--font-serif, var(--font-display, serif));
-		font-style: italic;
-		font-size: var(--t-20);
+		font-family: var(--font-display);
+		font-size: 20px;
 		font-weight: 600;
-		letter-spacing: -0.01em;
+		letter-spacing: -0.015em;
 	}
 
 	.invite-sub {

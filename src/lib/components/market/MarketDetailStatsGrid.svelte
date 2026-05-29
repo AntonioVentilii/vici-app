@@ -143,13 +143,15 @@
 	}
 
 	.market-stats-value {
-		overflow: hidden;
 		color: var(--text-base);
 		font-size: var(--t-16);
 		font-weight: 600;
 		letter-spacing: -0.01em;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		/* Long values (e.g. `December 31, 2026` in the CLOSES tile)
+		   wrap to multiple lines instead of truncating with an
+		   ellipsis — matches the prototype's `t-h4` stat, which has no
+		   overflow guard. */
+		overflow-wrap: anywhere;
 	}
 
 	.market-stats-value.is-mute {

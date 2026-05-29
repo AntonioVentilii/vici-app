@@ -537,7 +537,6 @@
 
 <div class="league-detail">
 	<MobileAppBar
-		align="left"
 		back={{
 			label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
 			onBack: () => goBack(`${resolve(AppPath.Social)}/leagues`)
@@ -622,7 +621,7 @@
 					{t({ locale: $localeStore, key: 'leagues.detail.bout_eyebrow' })}
 				</span>
 				{#if canChallenge && !activeBout}
-					<span class="num league-detail-section-side allcaps">
+					<span class="num league-detail-section-side">
 						{t({ locale: $localeStore, key: 'leagues.detail.bout_admin_chip' })}
 					</span>
 				{/if}
