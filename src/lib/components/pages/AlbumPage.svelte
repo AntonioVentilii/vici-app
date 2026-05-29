@@ -305,7 +305,7 @@
 	}
 
 	.album-award-sub {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
 	}
@@ -451,7 +451,7 @@
 	}
 
 	.album-sheet-sub {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		letter-spacing: 0.06em;
 		text-transform: uppercase;
 		color: var(--text-muted);
@@ -477,7 +477,7 @@
 	}
 
 	.album-sheet-progress-value {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		color: var(--color-primary);
 		letter-spacing: 0.06em;
 		text-transform: uppercase;

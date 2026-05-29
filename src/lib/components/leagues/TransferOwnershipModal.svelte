@@ -242,7 +242,7 @@
 	}
 
 	.league-transfer-row-role {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		color: var(--text-muted);
 		letter-spacing: var(--tracking-allcaps);
 	}

@@ -25,7 +25,7 @@
 
 	.settings-section-title {
 		margin: 0;
-		font-size: 0.6875rem;
+		font-size: var(--t-11);
 		font-weight: 600;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;

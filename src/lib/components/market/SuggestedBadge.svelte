@@ -38,6 +38,6 @@
 
 	.suggested-chip.compact {
 		padding: 0.15rem 0.4rem;
-		font-size: 10px;
+		font-size: var(--t-10);
 	}
 </style>

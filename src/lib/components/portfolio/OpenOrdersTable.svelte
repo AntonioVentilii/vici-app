@@ -260,7 +260,7 @@
 	:global(.portfolio-row-cancel) {
 		flex: 0 0 auto;
 		padding: 0.25rem 0.625rem;
-		font-size: 10px;
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: var(--tracking-wide);
 		text-transform: uppercase;

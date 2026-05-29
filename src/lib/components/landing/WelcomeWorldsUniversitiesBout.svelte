@@ -99,7 +99,7 @@
 					<span
 						style="
 							margin-top:4px; color:var(--fg);
-							font-size:11px; letter-spacing:0.06em;
+							font-size:var(--t-11); letter-spacing:0.06em;
 							overflow:hidden; text-overflow:ellipsis;
 							white-space:nowrap; max-width:100%;
 						"

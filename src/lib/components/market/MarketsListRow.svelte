@@ -80,7 +80,7 @@
 
 <style lang="postcss">
 	.markets-row-meta {
-		font-size: 11px;
+		font-size: var(--t-11);
 		font-weight: 600;
 		letter-spacing: 0.02em;
 	}

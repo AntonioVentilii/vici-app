@@ -389,7 +389,7 @@
 	}
 
 	.friend-overlap-text {
-		font-size: 10px;
+		font-size: var(--t-10);
 		color: var(--text-muted);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;

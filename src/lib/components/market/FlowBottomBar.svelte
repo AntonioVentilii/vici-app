@@ -178,7 +178,7 @@
 		margin: 0;
 	}
 	.flow-amount-unit {
-		font-size: 10px;
+		font-size: var(--t-10);
 		font-weight: 900;
 		letter-spacing: 0.08em;
 		color: var(--text-muted);
@@ -242,7 +242,7 @@
 		display: none;
 		align-items: center;
 		gap: 8px;
-		font-size: 10px;
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: 0.14em;
 		color: var(--text-muted);
@@ -261,7 +261,7 @@
 		background: var(--bg-surface);
 		color: var(--text-base);
 		font-family: inherit;
-		font-size: 11px;
+		font-size: var(--t-11);
 		line-height: 1;
 	}
 

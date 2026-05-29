@@ -170,7 +170,7 @@
 	}
 
 	.tweaks-label {
-		font-size: 10px;
+		font-size: var(--t-10);
 		color: var(--text-muted);
 	}
 
@@ -214,7 +214,7 @@
 		margin: 0;
 		padding-top: 0.5rem;
 		border-top: 1px solid var(--border-base);
-		font-size: 11px;
+		font-size: var(--t-11);
 		color: var(--parchment-faint);
 		font-family: var(--font-display);
 	}

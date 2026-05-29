@@ -973,7 +973,7 @@
 		align-items: center;
 		gap: 5px;
 		margin: 4px 0 0;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 600;
 		color: var(--yes);
 		letter-spacing: 0.02em;
@@ -1099,7 +1099,7 @@
 		color: var(--text-base);
 	}
 	.flow-probs-label {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;

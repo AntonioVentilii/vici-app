@@ -663,7 +663,7 @@
 		text-decoration: none;
 	}
 	.flow-back-toggle-caret {
-		font-size: 11px;
+		font-size: var(--t-11);
 		transition: transform 160ms ease;
 	}
 	.flow-back-toggle-caret.is-open {

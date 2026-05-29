@@ -135,6 +135,8 @@
 	/* Type scale — modular 1.250 (major third), tuned at top end. The
 	 * Tailwind text utilities still cover most copy; these tokens are
 	 * for hand-tuned editorial moments (display, hero numeric). */
+	--t-10: 0.625rem;
+	--t-11: 0.6875rem;
 	--t-12: 0.75rem;
 	--t-13: 0.8125rem;
 	--t-14: 0.875rem;

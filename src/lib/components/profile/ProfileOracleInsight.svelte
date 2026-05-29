@@ -57,7 +57,7 @@
 		margin: 0;
 		color: var(--char-oracle);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
