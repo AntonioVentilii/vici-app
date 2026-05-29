@@ -4,7 +4,7 @@
 	 * `lupercal`) — two accuracy bars facing each other across a
 	 * `VS` / day-counter divider.
 	 */
-	import { ChevronRight } from 'lucide-svelte/icons';
+	import WelcomeShowcaseCard from '$lib/components/landing/WelcomeShowcaseCard.svelte';
 	import { LANDING_LEAGUES, type LandingLeague } from '$lib/constants/landing-data.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { formatLocalePercent } from '$lib/utils/format.utils';
@@ -66,21 +66,17 @@
 	</div>
 {/snippet}
 
-<div
-	style="
-		padding:20px; position:relative; overflow:hidden;
-		display:flex; flex-direction:column;
-		background:linear-gradient(180deg, rgba(181,70,44,0.08), rgba(181,70,44,0.02) 60%, transparent);
-	"
-	class="card-elevated lp-root"
+<WelcomeShowcaseCard
+	ctaHref="#bouts"
+	ctaKey="social.b_cta"
+	eyebrowColor="var(--terracotta, #B5462C)"
+	eyebrowKey="social.b_eyebrow"
+	rootGradient="linear-gradient(180deg, rgba(181,70,44,0.08), rgba(181,70,44,0.02) 60%, transparent)"
+	subKey="social.b_sub"
+	titleAKey="social.b_title_a"
+	titleBKey="social.b_title_b"
 >
-	<div
-		style="margin-bottom:8px; align-items:baseline; flex-wrap:wrap; gap:8px;"
-		class="row between"
-	>
-		<span style="color:var(--terracotta, #B5462C); letter-spacing:0.12em;" class="eyebrow">
-			{t({ locale: $localeStore, key: 'social.b_eyebrow' })}
-		</span>
+	{#snippet badge()}
 		<span
 			style="
 				background:rgba(181,70,44,0.14);
@@ -95,14 +91,7 @@
 				params: { n: day, total: totalDays }
 			})}
 		</span>
-	</div>
-	<h3 style="margin-top:4px;" class="lp-h3">
-		{t({ locale: $localeStore, key: 'social.b_title_a' })}
-		<span class="serif-italic acc">{t({ locale: $localeStore, key: 'social.b_title_b' })}</span>
-	</h3>
-	<p style="margin-top:10px; line-height:1.5;" class="dim t-body-sm">
-		{t({ locale: $localeStore, key: 'social.b_sub' })}
-	</p>
+	{/snippet}
 
 	<div
 		style="
@@ -153,16 +142,4 @@
 			></div>
 		</div>
 	</div>
-
-	<a
-		style="
-			display:inline-flex; align-items:center; gap:6px; margin-top:auto; padding-top:16px;
-			color:var(--accent); text-decoration:none; font-weight:600; font-size:14px;
-		"
-		class="lp-social-cta"
-		href="#bouts"
-	>
-		{t({ locale: $localeStore, key: 'social.b_cta' })}
-		<ChevronRight size={14} />
-	</a>
-</div>
+</WelcomeShowcaseCard>

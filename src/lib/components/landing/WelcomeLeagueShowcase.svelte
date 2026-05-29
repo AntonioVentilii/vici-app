@@ -4,7 +4,7 @@
 	 * user's row highlighted, illustrating the private cohort
 	 * competition layer.
 	 */
-	import { ChevronRight } from 'lucide-svelte/icons';
+	import WelcomeShowcaseCard from '$lib/components/landing/WelcomeShowcaseCard.svelte';
 	import { LANDING_LEAGUES } from '$lib/constants/landing-data.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { formatLocalePercent } from '$lib/utils/format.utils';
@@ -21,30 +21,16 @@
 		formatLocalePercent({ value: acc, locale: $localeStore, maximumFractionDigits: 1 });
 </script>
 
-<div
-	style="
-		padding:20px; position:relative; overflow:hidden;
-		display:flex; flex-direction:column;
-		background:linear-gradient(180deg, rgba(226,184,66,0.08), rgba(226,184,66,0.02) 60%, transparent);
-	"
-	class="card-elevated lp-root"
+<WelcomeShowcaseCard
+	ctaHref="#leagues"
+	ctaKey="social.l_cta"
+	eyebrowClass="acc"
+	eyebrowKey="social.l_eyebrow"
+	rootGradient="linear-gradient(180deg, rgba(226,184,66,0.08), rgba(226,184,66,0.02) 60%, transparent)"
+	subKey="social.l_sub"
+	titleAKey="social.l_title_a"
+	titleBKey="social.l_title_b"
 >
-	<div
-		style="margin-bottom:8px; align-items:baseline; flex-wrap:wrap; gap:8px;"
-		class="row between"
-	>
-		<span style="letter-spacing:0.12em;" class="eyebrow acc">
-			{t({ locale: $localeStore, key: 'social.l_eyebrow' })}
-		</span>
-	</div>
-	<h3 style="margin-top:4px;" class="lp-h3">
-		{t({ locale: $localeStore, key: 'social.l_title_a' })}
-		<span class="serif-italic acc">{t({ locale: $localeStore, key: 'social.l_title_b' })}</span>
-	</h3>
-	<p style="margin-top:10px; line-height:1.5;" class="dim t-body-sm">
-		{t({ locale: $localeStore, key: 'social.l_sub' })}
-	</p>
-
 	<div
 		style="
 			margin-top:18px; border-radius:10px; overflow:hidden;
@@ -152,16 +138,4 @@
 			</div>
 		{/each}
 	</div>
-
-	<a
-		style="
-			display:inline-flex; align-items:center; gap:6px; margin-top:auto; padding-top:16px;
-			color:var(--accent); text-decoration:none; font-weight:600; font-size:14px;
-		"
-		class="lp-social-cta"
-		href="#leagues"
-	>
-		{t({ locale: $localeStore, key: 'social.l_cta' })}
-		<ChevronRight size={14} />
-	</a>
-</div>
+</WelcomeShowcaseCard>

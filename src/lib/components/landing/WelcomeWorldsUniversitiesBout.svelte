@@ -3,7 +3,7 @@
 	 * Featured tentpole panel — eyebrow + live FIFA tag + h3 + sub +
 	 * podium (silver / gold / bronze, gold centred and taller).
 	 */
-	import { ChevronRight } from 'lucide-svelte/icons';
+	import WelcomeShowcaseCard from '$lib/components/landing/WelcomeShowcaseCard.svelte';
 	import {
 		LANDING_WORLDS_UNIVERSITIES,
 		LANDING_WORLDS_UNIVERSITIES_COUNT
@@ -27,21 +27,18 @@
 		formatLocalePercent({ value: acc, locale: $localeStore, maximumFractionDigits: 1 });
 </script>
 
-<div
-	style="
-		padding:20px; position:relative; overflow:hidden;
-		display:flex; flex-direction:column;
-		background:linear-gradient(180deg, rgba(180,156,255,0.10), rgba(180,156,255,0.02) 70%, transparent);
-	"
-	class="card-elevated lp-root"
+<WelcomeShowcaseCard
+	ctaHref="#bouts"
+	ctaKey="social.wcbout_cta"
+	eyebrowColor="#B49CFF"
+	eyebrowKey="social.w_eyebrow"
+	rootGradient="linear-gradient(180deg, rgba(180,156,255,0.10), rgba(180,156,255,0.02) 70%, transparent)"
+	subKey="social.wcbout_sub"
+	subParams={{ count: total }}
+	titleAKey="social.wcbout_title_a"
+	titleBKey="social.wcbout_title_b"
 >
-	<div
-		style="margin-bottom:8px; align-items:baseline; flex-wrap:wrap; gap:8px;"
-		class="row between"
-	>
-		<span style="color:#B49CFF; letter-spacing:0.12em;" class="eyebrow">
-			{t({ locale: $localeStore, key: 'social.w_eyebrow' })}
-		</span>
+	{#snippet badge()}
 		<span
 			style="
 				background:rgba(180,156,255,0.14);
@@ -52,16 +49,7 @@
 		>
 			{t({ locale: $localeStore, key: 'welcome.universities.fifa_tag' })}
 		</span>
-	</div>
-	<h3 style="margin-top:4px;" class="lp-h3">
-		{t({ locale: $localeStore, key: 'social.wcbout_title_a' })}
-		<span class="serif-italic acc">
-			{t({ locale: $localeStore, key: 'social.wcbout_title_b' })}
-		</span>
-	</h3>
-	<p style="margin-top:10px; line-height:1.5;" class="dim t-body-sm">
-		{t({ locale: $localeStore, key: 'social.wcbout_sub', params: { count: total } })}
-	</p>
+	{/snippet}
 
 	<div
 		style="
@@ -133,16 +121,4 @@
 			</div>
 		{/each}
 	</div>
-
-	<a
-		style="
-			display:inline-flex; align-items:center; gap:6px; margin-top:auto; padding-top:16px;
-			color:var(--accent); text-decoration:none; font-weight:600; font-size:14px;
-		"
-		class="lp-social-cta"
-		href="#bouts"
-	>
-		{t({ locale: $localeStore, key: 'social.wcbout_cta' })}
-		<ChevronRight size={14} />
-	</a>
-</div>
+</WelcomeShowcaseCard>
