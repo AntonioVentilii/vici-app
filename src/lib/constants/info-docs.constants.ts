@@ -18,8 +18,6 @@ import type { InfoDoc } from '$lib/types/info-doc';
  * per locale.
  */
 
-export const INFO_DOC_PLACEHOLDER_TAG = 'placeholder' as const;
-
 const TERMS: InfoDoc = {
 	slug: 'terms',
 	title: 'Terms of service',
@@ -293,13 +291,3 @@ export const INFO_DOCS: Readonly<Record<string, InfoDoc>> = Object.freeze({
 	faq: FAQ,
 	contact: CONTACT
 });
-
-/** Order in which docs surface in any footer / index UI. */
-export const INFO_DOC_ORDER: readonly string[] = [
-	'faq',
-	'how-resolution-works',
-	'resolution-rules',
-	'terms',
-	'privacy',
-	'contact'
-] as const;

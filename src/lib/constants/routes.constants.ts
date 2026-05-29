@@ -56,25 +56,3 @@ export enum PublicPath {
 	Welcome = '/welcome',
 	Info = '/info'
 }
-
-/**
- * Path prefixes that can be reached without a session — covers
- * `PublicPath` plus the OAuth callback paths under `/auth/`.
- *
- * Each entry is the prefix *without* a trailing slash; `isPublicPath`
- * checks both exact-match and `startsWith(prefix + '/')`, so e.g.
- * `'/auth'` matches `/auth/callback/google` while `'/auth/'` would
- * collapse the `startsWith` to `'/auth//'` and never match real
- * callback paths.
- */
-export const PUBLIC_PATH_PREFIXES: readonly string[] = [
-	PublicPath.SignIn,
-	PublicPath.SignUp,
-	PublicPath.About,
-	PublicPath.Welcome,
-	PublicPath.Info,
-	'/auth'
-] as const;
-
-export const isPublicPath = (pathname: string): boolean =>
-	PUBLIC_PATH_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));

@@ -124,28 +124,3 @@ export const WELCOME_MARKET_PREVIEWS: readonly WelcomeMarketPreview[] = [
 		days: 410
 	})
 ] as const;
-
-/**
- * Subset of `WELCOME_MARKET_PREVIEWS` consumed by `OnboardingFlow`:
- * exactly one fixture per `FlowArtCategory`, in canonical category
- * order. The first two entries (`fed-jun`, `btc-150k`) drive the
- * "first call" and "practice tap" stages by position, so this list
- * MUST start with macro + crypto. Filtering through the shared
- * preview list (instead of declaring a parallel array) guarantees
- * the two surfaces stay in lock-step on ids, categories, and
- * yes-probabilities; the extra `eth-flip` crypto entry is only
- * surfaced on the landing grid.
- */
-export const ONBOARDING_DEMO_MARKETS: readonly WelcomeMarketPreview[] = (() => {
-	const seen = new Set<string>();
-
-	return WELCOME_MARKET_PREVIEWS.filter((m) => {
-		if (seen.has(m.category)) {
-			return false;
-		}
-
-		seen.add(m.category);
-
-		return true;
-	});
-})();
