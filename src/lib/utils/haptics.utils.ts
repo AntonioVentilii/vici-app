@@ -118,18 +118,21 @@ const MILESTONE_HAPTIC: Record<number, HapticPattern> = {
 };
 
 /**
- * Maps a Flow-Mode beat kind to its haptic pattern. Returns `null`
- * for an absent beat. The per-beat envelope:
+ * Maps a Flow-Mode beat kind to its haptic pattern name. Returns
+ * `null` for an absent beat. The pattern names below resolve to their
+ * ms envelopes via `HAPTIC_PATTERNS` above — the single source of
+ * truth — so this mapping intentionally names patterns only and never
+ * restates the ms arrays.
  *
- *   milestone-1            → triple-tap   ([12,30,12,30,12])
- *   milestone-3 / 5 / 25   → firm-tap     (12ms)
- *   milestone-10 / 250/500 → milestone-tap ([25,30,25])
- *   milestone-50           → oracle-roll  ([25,30,25,40,60])
- *   milestone-100          → centurion    ([12,30,12,30,12,30,60])
- *   milestone-1000         → vici-fanfare ([40,30,40,30,80])
+ *   milestone-1            → triple-tap
+ *   milestone-3 / 5 / 25   → firm-tap
+ *   milestone-10 / 250/500 → milestone-tap
+ *   milestone-50           → oracle-roll
+ *   milestone-100          → centurion
+ *   milestone-1000         → vici-fanfare
  *   first-yes / first-no   → triple-tap
- *   first-contrarian       → mischief     ([10,40,10,40,10])
- *   first-leaderboard      → oracle-tap   ([40,60,40])
+ *   first-contrarian       → mischief
+ *   first-leaderboard      → oracle-tap
  *   streak-tier-up         → milestone-tap
  *   acc-threshold          → milestone-tap
  *   ambient-10             → firm-tap
