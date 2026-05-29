@@ -99,7 +99,7 @@
 	}
 
 	.market-top-predictors-more {
-		color: var(--text-muted);
+		color: var(--laurel);
 		font-size: var(--t-12);
 		font-weight: 600;
 		letter-spacing: 0.02em;

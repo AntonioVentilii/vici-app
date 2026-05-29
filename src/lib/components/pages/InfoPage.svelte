@@ -33,6 +33,10 @@
 	// (pre-onboarding) users came from the Welcome / signup flow.
 	const backTarget = $derived($userSignedIn ? AppPath.Settings : PublicPath.Welcome);
 	const handleBack = () => goBack(resolve(backTarget));
+
+	const footBackKey = $derived<'info.back_to_settings' | 'info.back'>(
+		$userSignedIn ? 'info.back_to_settings' : 'info.back'
+	);
 </script>
 
 <svelte:head>
@@ -78,7 +82,7 @@
 		<div class="info-foot">
 			<button class="info-foot-back" onclick={handleBack} type="button">
 				<ArrowLeft aria-hidden="true" size={14} strokeWidth={1.8} />
-				<span>{t({ locale: $localeStore, key: 'info.back' })}</span>
+				<span>{t({ locale: $localeStore, key: footBackKey })}</span>
 			</button>
 		</div>
 	</div>
@@ -228,18 +232,24 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.45rem;
-		padding: 0.5rem 0.875rem;
+		padding: 0.55rem 1rem;
 		font-size: var(--t-13);
-		color: var(--text-muted);
+		font-weight: 600;
+		color: var(--text-base);
 		text-decoration: none;
-		border: 0;
+		border: 1px solid var(--border-base);
 		background: transparent;
-		border-radius: var(--r-8);
+		border-radius: var(--r-pill);
 		cursor: pointer;
+		transition:
+			background-color var(--d-hover) var(--ease-vici),
+			border-color var(--d-hover) var(--ease-vici);
 	}
 
 	.info-foot-back:hover {
 		color: var(--text-base);
+		border-color: var(--border-strong);
+		background: color-mix(in srgb, var(--text-base) 4%, transparent);
 	}
 
 	.sr-only {

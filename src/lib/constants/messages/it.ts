@@ -705,6 +705,7 @@ export const itMessages = {
 	'inbox.resolve.title.neutral': 'Mercato risolto',
 	'inbox.resolve.title.won': 'Mercato vinto',
 	'info.back': 'Indietro',
+	'info.back_to_settings': 'Torna alle impostazioni',
 	'info.not_found.body':
 		'Nessun documento corrisponde a questo indirizzo. Prova un altro link nel footer o torna alla home.',
 	'info.not_found.title': 'Documento non trovato',

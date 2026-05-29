@@ -49,7 +49,7 @@
 
 <div class="album-page">
 	<MobileAppBar
-		align="left"
+		align="center"
 		back={{
 			label: t({ locale: $localeStore, key: 'album.back' }),
 			onBack: () => goBack(resolve(AppPath.Profile))

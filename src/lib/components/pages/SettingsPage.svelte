@@ -7,9 +7,8 @@
 		Download,
 		Eye,
 		Info,
-		KeyRound,
 		Lock,
-		Mail,
+		Moon,
 		Search,
 		Share2,
 		Sun,
@@ -236,7 +235,13 @@
 		{ value: 'wc', label: t({ locale: $localeStore, key: 'settings.flow_deck.tab.wc' }) }
 	]);
 
-	const flowTagsEnabled = $derived(($preferencesStore.flowTags ?? []).length);
+	// `wc` lives on its own tab next to "All categories"; the grid only
+	// surfaces the other tags so the user doesn't see the same control in
+	// two places.
+	const settingsCategoryTags = $derived(MARKET_TAGS.filter((tag) => tag !== 'wc'));
+	const flowTagsEnabled = $derived(
+		($preferencesStore.flowTags ?? []).filter((tag) => tag !== 'wc').length
+	);
 	const flowDeckSub = $derived(
 		flowDeckMode === 'wc'
 			? t({ locale: $localeStore, key: 'settings.flow_deck.sub_wc' })
@@ -245,7 +250,7 @@
 				: t({
 						locale: $localeStore,
 						key: 'settings.flow_deck.sub',
-						params: { enabled: flowTagsEnabled, total: MARKET_TAGS.length }
+						params: { enabled: flowTagsEnabled, total: settingsCategoryTags.length }
 					})
 	);
 
@@ -450,14 +455,12 @@
 			</button>
 
 			<SetRow
-				icon={KeyRound}
 				label={t({ locale: $localeStore, key: 'settings.account.signin_method' })}
 				onclick={() => goto(resolve(AppPath.AccountSettings))}
 				sub={signinMethodSub}
 			/>
 
 			<SetRow
-				icon={Mail}
 				label={t({ locale: $localeStore, key: 'settings.account.email' })}
 				onclick={() => goto(resolve(AppPath.AccountSettings))}
 				sub={emailSub}
@@ -476,7 +479,11 @@
 			<div class="settings-appearance">
 				<div class="settings-appearance-head">
 					<span class="settings-appearance-icon" aria-hidden="true">
-						<Sun size={16} strokeWidth={1.8} />
+						{#if $theme === 'dark'}
+							<Moon size={16} strokeWidth={1.8} />
+						{:else}
+							<Sun size={16} strokeWidth={1.8} />
+						{/if}
 					</span>
 					<div class="settings-appearance-titles">
 						<p class="settings-appearance-label">
@@ -518,7 +525,7 @@
 
 				{#if flowDeckMode === 'all'}
 					<div class="settings-flow-deck-grid" role="group">
-						{#each MARKET_TAGS as tag (tag)}
+						{#each settingsCategoryTags as tag (tag)}
 							{@const enabled = ($preferencesStore.flowTags ?? []).includes(tag)}
 							<button
 								class="settings-flow-deck-pill"
@@ -1128,36 +1135,61 @@
 		gap: 0.5rem;
 	}
 
+	/* Category toggle chip. 8-px rounded rectangle (intentionally
+	   NOT a pill — the squarer geometry pairs better with the dense
+	   2-col grid of categories). Off-state is a neutral wash + base
+	   border; on-state lifts to `--laurel-glow` fill + accent border
+	   + accent text + accent-tinted dot. Light / peach theme
+	   overrides below swap the off-state to a darker ink wash. */
 	.settings-flow-deck-pill {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.55rem;
-		padding: 0.65rem 0.8rem;
+		gap: 10px;
+		padding: 10px 12px;
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--color-primary) 5%, var(--bg-popover));
+		border-radius: 8px;
+		background: rgba(242, 236, 220, 0.04);
 		color: var(--text-muted);
 		font-size: var(--t-13);
-		font-weight: 600;
+		font-weight: 500;
 		cursor: pointer;
+		text-align: left;
 		transition:
 			border-color var(--d-hover) var(--ease-vici),
 			background-color var(--d-hover) var(--ease-vici),
 			color var(--d-hover) var(--ease-vici);
 	}
 
+	.settings-flow-deck-pill:hover {
+		background: rgba(242, 236, 220, 0.07);
+		border-color: var(--border-strong);
+		color: var(--text-base);
+	}
+
+	:global([data-theme='light']) .settings-flow-deck-pill,
+	:global([data-theme='peach']) .settings-flow-deck-pill {
+		background: rgba(14, 13, 11, 0.03);
+	}
+
+	:global([data-theme='light']) .settings-flow-deck-pill:hover,
+	:global([data-theme='peach']) .settings-flow-deck-pill:hover {
+		background: rgba(14, 13, 11, 0.06);
+	}
+
 	.settings-flow-deck-pill.is-active {
-		border-color: color-mix(in srgb, var(--color-primary) 35%, var(--border-base));
-		background: color-mix(in srgb, var(--color-primary) 12%, var(--bg-popover));
+		background: var(--laurel-glow);
+		border-color: var(--color-primary);
 		color: var(--color-primary);
 	}
 
 	.settings-flow-deck-pill-dot {
 		display: inline-block;
-		width: 0.4rem;
-		height: 0.4rem;
+		width: 8px;
+		height: 8px;
 		border-radius: 999px;
-		background: var(--text-muted);
+		background: color-mix(in srgb, var(--text-muted) 60%, transparent);
+		flex-shrink: 0;
+		transition: background var(--d-hover) var(--ease-vici);
 	}
 
 	.settings-flow-deck-pill.is-active .settings-flow-deck-pill-dot {
@@ -1188,8 +1220,27 @@
 		margin-top: 0.25rem;
 	}
 
+	/* Sign-out as a 12-px rounded rectangle (intentionally NOT a
+	   full pill — pairs with the destructive band below). Red text
+	   + red-tinted border on top of a subtle ghost-button surface;
+	   hover lifts the red wash without flipping to a fully filled
+	   destructive button so the action still requires the explicit
+	   confirm step beneath it. */
 	:global(.settings-signout) {
 		width: 100%;
+		padding: 14px 20px;
+		border: 1px solid rgba(255, 107, 107, 0.25);
+		border-radius: 12px;
+		background: rgba(242, 236, 220, 0.06);
+		color: var(--no);
+		font-size: 15px;
+		font-weight: 600;
+		letter-spacing: -0.005em;
+	}
+
+	:global(.settings-signout):hover {
+		background: rgba(255, 107, 107, 0.08);
+		border-color: rgba(255, 107, 107, 0.45);
 	}
 
 	.settings-signout-confirm p {
@@ -1197,13 +1248,26 @@
 		color: var(--text-base);
 	}
 
+	/* Delete-account link sits one tier below Sign out in the
+	   destructive hierarchy: just a muted-grey underlined text link.
+	   The colour only flips to red on hover so the resting state
+	   never visually competes with the Sign-out CTA above. */
 	.settings-delete-link {
+		align-self: center;
 		border: none;
 		background: none;
+		padding: 6px;
 		font-size: var(--t-12);
-		color: var(--color-destructive);
+		color: var(--text-muted);
 		cursor: pointer;
-		text-align: center;
+		text-decoration: underline;
+		text-decoration-color: color-mix(in srgb, var(--text-muted) 35%, transparent);
+		text-underline-offset: 2px;
+	}
+
+	.settings-delete-link:hover {
+		color: var(--no);
+		text-decoration-color: color-mix(in srgb, var(--no) 55%, transparent);
 	}
 
 	.settings-confirm {

@@ -712,6 +712,7 @@ export const frMessages = {
 	'inbox.resolve.title.neutral': 'Marché résolu',
 	'inbox.resolve.title.won': 'Marché gagné',
 	'info.back': 'Retour',
+	'info.back_to_settings': 'Retour aux paramètres',
 	'info.not_found.body':
 		'Aucun document ne correspond à cette adresse. Essayez un autre lien dans le pied de page ou retournez à l’accueil.',
 	'info.not_found.title': 'Document introuvable',

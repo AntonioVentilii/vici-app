@@ -55,7 +55,7 @@
 	</div>
 
 	<div class="market-chart-spark">
-		<FlowCardSparkline {events} seed={marketId} {yesPercent} />
+		<FlowCardSparkline {events} lineColor="var(--laurel)" seed={marketId} {yesPercent} />
 	</div>
 </div>
 

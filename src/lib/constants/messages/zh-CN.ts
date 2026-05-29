@@ -670,6 +670,7 @@ export const zhCnMessages = {
 	'inbox.resolve.title.neutral': '市场已结算',
 	'inbox.resolve.title.won': '市场胜出',
 	'info.back': '返回',
+	'info.back_to_settings': '返回设置',
 	'info.not_found.body': '没有匹配该地址的文档。试试页脚的其他链接，或返回首页。',
 	'info.not_found.title': '未找到文档',
 	'info.placeholder_legal_banner': '占位文本 — 本文档正在等待法律审核，将在发布前替换。',

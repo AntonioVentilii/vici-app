@@ -3,7 +3,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
-	import { formatDate, formatToken } from '$lib/utils/format.utils';
+	import { formatLongDate, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 
@@ -72,7 +72,7 @@
 		},
 		{
 			labelKey: 'market.detail.stats.closes' as const,
-			value: formatDate(expiryDate),
+			value: formatLongDate({ date: expiryDate, locale: $localeStore }),
 			suffix: '',
 			mute: false
 		},
@@ -143,13 +143,16 @@
 	}
 
 	.market-stats-value {
-		overflow: hidden;
 		color: var(--text-base);
 		font-size: var(--t-16);
 		font-weight: 600;
 		letter-spacing: -0.01em;
-		text-overflow: ellipsis;
-		white-space: nowrap;
+		/* Long values (e.g. `December 31, 2026` in the CLOSES tile)
+		   wrap to multiple lines instead of truncating with an
+		   ellipsis. Earlier `white-space: nowrap` + `text-overflow:
+		   ellipsis` ate the year on every locale that produces a
+		   double-digit day. */
+		overflow-wrap: anywhere;
 	}
 
 	.market-stats-value.is-mute {

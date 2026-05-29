@@ -708,6 +708,7 @@ export const deMessages = {
 	'inbox.resolve.title.neutral': 'Markt aufgelöst',
 	'inbox.resolve.title.won': 'Markt gewonnen',
 	'info.back': 'Zurück',
+	'info.back_to_settings': 'Zurück zu den Einstellungen',
 	'info.not_found.body':
 		'Zu dieser Adresse passt kein Dokument. Versuche einen anderen Link im Footer oder kehre zur Startseite zurück.',
 	'info.not_found.title': 'Dokument nicht gefunden',

@@ -29,7 +29,6 @@
 		xp: number;
 		dailyStreak: number;
 		flameStage: FlameStage;
-		flameLabel: string;
 		accuracyUnlocked: boolean;
 		lifetimeAccuracy: number;
 		lifetimeTotalTrades: number;
@@ -60,7 +59,6 @@
 		xp,
 		dailyStreak,
 		flameStage,
-		flameLabel,
 		accuracyUnlocked,
 		lifetimeAccuracy,
 		lifetimeTotalTrades,
@@ -170,7 +168,6 @@
 					<FlameChar animate={dailyStreak >= 1} size={22} stage={flameStage} />
 					<span class="num flow-end-tile-value">{dailyStreak}</span>
 				</div>
-				<p class="flow-end-tile-foot">{flameLabel}</p>
 			</div>
 			<div class="flow-end-tile">
 				<p class="eyebrow flow-end-tile-label">
@@ -372,13 +369,6 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 6px;
-	}
-	.flow-end-tile-foot {
-		margin: 0;
-		font-size: 9.5px;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-		color: var(--text-muted);
 	}
 
 	/* 4 · Smart Nudge */

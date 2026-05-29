@@ -21,7 +21,7 @@
 <button class="league-cta-card" {onclick} type="button">
 	<span class="league-cta-logo" aria-hidden="true">
 		{#if variant === 'create'}
-			<Plus aria-hidden="true" size={18} strokeWidth={2} />
+			<Plus aria-hidden="true" size={20} strokeWidth={2} />
 		{:else}
 			<span class="join-glyph">JOIN</span>
 		{/if}
@@ -59,24 +59,50 @@
 		border-color: var(--border-strong);
 	}
 
+	/* Empty logo tile shared by the Create and Join CTAs. 56-px square
+	   with a muted dashed border + near-transparent surface so the
+	   tile reads as a slot waiting to be filled, with a faint diagonal
+	   sheen pseudo behind the laurel-coloured glyph / text. Same
+	   geometry as the populated league-list-card logo so the rows
+	   line up visually. */
 	.league-cta-logo {
+		position: relative;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
-		width: 2.5rem;
-		height: 2.5rem;
+		width: 3.5rem;
+		height: 3.5rem;
 		color: var(--color-primary);
-		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
-		border: 1px dashed color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
-		border-radius: var(--r-8);
+		background: rgba(242, 236, 220, 0.03);
+		border: 1px dashed var(--border-strong);
+		border-radius: 10px;
+	}
+
+	.league-cta-logo::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			120deg,
+			transparent 35%,
+			rgba(242, 236, 220, 0.1) 50%,
+			transparent 65%
+		);
+		border-radius: inherit;
+		pointer-events: none;
+	}
+
+	.league-cta-logo > * {
+		position: relative;
+		z-index: 1;
 	}
 
 	.join-glyph {
 		font-family: var(--font-mono, monospace);
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-13, 0.8125rem);
 		font-weight: 700;
-		letter-spacing: 0.1em;
+		letter-spacing: 0.08em;
 		color: var(--color-primary);
 	}
 

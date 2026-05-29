@@ -707,6 +707,7 @@ export const ptMessages = {
 	'inbox.resolve.title.neutral': 'Mercado resolvido',
 	'inbox.resolve.title.won': 'Mercado ganho',
 	'info.back': 'Voltar',
+	'info.back_to_settings': 'Voltar aos ajustes',
 	'info.not_found.body':
 		'Nenhum documento corresponde a esse endereço. Tente outro link no rodapé ou volte para a página inicial.',
 	'info.not_found.title': 'Documento não encontrado',

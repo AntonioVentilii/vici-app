@@ -35,9 +35,17 @@
 		seed: string;
 		yesPercent: number;
 		events?: MarketEvent[];
+		/**
+		 * Optional override for the sparkline stroke + fill colour. When
+		 * omitted the line follows the YES/NO lean (`--yes` ≥ 50 %, else
+		 * `--no`). The market-detail surface passes the laurel accent so
+		 * the chart reads as a neutral "history" rather than a side
+		 * signal.
+		 */
+		lineColor?: string;
 	}
 
-	const { seed, yesPercent, events = [] }: Props = $props();
+	const { seed, yesPercent, events = [], lineColor: lineColorProp }: Props = $props();
 
 	// One dot per day on the sparkline. Multiple events landing on the
 	// same day (production data, unlike the curated 1-per-day test data
@@ -100,7 +108,7 @@
 	// `M…L… L${w} ${h} L0 ${h} Z`.
 	const areaPath = $derived(linePath.length > 0 ? `${linePath} L${w} ${h} L0 ${h} Z` : '');
 
-	const lineColor = $derived(yesPercent >= 50 ? 'var(--yes)' : 'var(--no)');
+	const lineColor = $derived(lineColorProp ?? (yesPercent >= 50 ? 'var(--yes)' : 'var(--no)'));
 
 	const liveDotY = $derived(h - (yesPercent / 100) * h - 2);
 

@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ChevronRight, Copy, Users } from 'lucide-svelte/icons';
 	import { browser } from '$app/environment';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -94,6 +95,9 @@
 				{t({ locale: $localeStore, key: 'flow.invite.copy_tail' })}
 			</p>
 		</div>
+		<span class="flow-invite-head-icon" aria-hidden="true">
+			<Users size={16} strokeWidth={1.8} />
+		</span>
 	</div>
 
 	<div class="flow-invite-actions">
@@ -103,11 +107,17 @@
 			onclick={copyCode}
 			type="button"
 		>
-			<span class="eyebrow">{t({ locale: $localeStore, key: 'flow.invite.code_label' })}</span>
-			<span class="num flow-invite-code-value">{inviteCode}</span>
+			<span class="flow-invite-code-text">
+				<span class="eyebrow">{t({ locale: $localeStore, key: 'flow.invite.code_label' })}</span>
+				<span class="num flow-invite-code-value">{inviteCode}</span>
+			</span>
+			<Copy class="flow-invite-code-copy" aria-hidden="true" size={14} strokeWidth={1.8} />
 		</button>
 		<Button class="flow-invite-share" onclick={shareInvite}>
-			{t({ locale: $localeStore, key: 'flow.invite.share' })}
+			<span class="flow-invite-share-inner">
+				{t({ locale: $localeStore, key: 'flow.invite.share' })}
+				<ChevronRight aria-hidden="true" size={14} strokeWidth={2} />
+			</span>
 		</Button>
 	</div>
 
@@ -123,6 +133,25 @@
 		border-radius: var(--r-12);
 		border: 1px solid var(--border-base);
 		background: var(--bg-surface);
+	}
+
+	.flow-invite-head {
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.65rem;
+	}
+
+	.flow-invite-head-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 1.75rem;
+		height: 1.75rem;
+		border-radius: 999px;
+		color: var(--laurel);
+		background: color-mix(in srgb, var(--laurel) 12%, transparent);
 	}
 
 	.flow-invite-label {
@@ -146,15 +175,33 @@
 	.flow-invite-code {
 		flex: 1 1 auto;
 		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 0.15rem;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
 		padding: 0.5rem 0.75rem;
 		border-radius: var(--r-8);
 		border: 1px solid var(--border-base);
 		background: var(--bg-popover);
 		cursor: pointer;
 		text-align: left;
+	}
+
+	.flow-invite-code-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		min-width: 0;
+	}
+
+	:global(.flow-invite-code-copy) {
+		flex-shrink: 0;
+		color: var(--text-muted);
+	}
+
+	.flow-invite-share-inner {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
 	}
 
 	.flow-invite-code-value {

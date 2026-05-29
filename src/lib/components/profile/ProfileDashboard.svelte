@@ -4,6 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
+	import StreakFlame from '$lib/components/characters/StreakFlame.svelte';
 	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
@@ -696,7 +697,7 @@
 				     streak=0 so the row reads as persistent. -->
 				<p class="profile-streak-line">
 					<span class="profile-streak-inline" aria-label="streak">
-						<Flame aria-hidden="true" size={12} strokeWidth={2} />
+						<StreakFlame count={dailyStreak} size={14} />
 						<span class="num">{dailyStreak}</span>
 					</span>
 					<span class="profile-stats-sep" aria-hidden="true">·</span>
@@ -727,7 +728,6 @@
 		<div class="profile-level-row">
 			<span class="profile-level-label">
 				{t({ locale: $localeStore, key: 'profile.dashboard.level_label' })}
-				{level}
 			</span>
 			<span class="num profile-level-target">
 				{points.toLocaleString($localeStore)} / {nextLevelTarget.toLocaleString($localeStore)} VXP
@@ -1030,24 +1030,21 @@
 		box-shadow: var(--shadow-card);
 	}
 
-	/* Radial gradient halo tinted by the user's archetype accent.
-	   Anchored under the avatar quadrant (top-left) and sized large
-	   enough to visibly tint the surrounding area behind the
-	   pixel-art character. */
+	/* Top-right archetype-accent blur disc. Sized + opacity tuned so
+	   it reads as a subtle warm halo behind the avatar quadrant — not
+	   a yellow wash. Earlier values (220 px / 0.28 opacity / left-
+	   anchored) flooded the entire card with accent colour and made
+	   the surrounding text look tinted. */
 	.profile-halo {
 		position: absolute;
-		top: -60px;
-		left: -40px;
-		width: 220px;
-		height: 220px;
+		top: -30px;
+		right: -30px;
+		width: 140px;
+		height: 140px;
 		border-radius: 50%;
-		background: radial-gradient(
-			circle at 50% 50%,
-			var(--archetype-accent, var(--color-primary)) 0%,
-			transparent 65%
-		);
-		opacity: 0.28;
-		filter: blur(14px);
+		background: var(--archetype-accent, var(--color-primary));
+		opacity: 0.1;
+		filter: blur(20px);
 		pointer-events: none;
 	}
 
@@ -1229,7 +1226,7 @@
 	.profile-dashboard :global(.affil-slot-flag) {
 		width: 100%;
 		height: 100%;
-		border-radius: var(--r-8);
+		border-radius: 999px;
 		object-fit: cover;
 	}
 
@@ -1402,15 +1399,16 @@
 
 	.affil-slot-icon {
 		display: inline-flex;
+		overflow: hidden;
 		width: 2.4rem;
 		height: 2.4rem;
 		align-items: center;
 		justify-content: center;
-		border-radius: var(--r-10, 0.625rem);
+		border-radius: 999px;
 		background: var(--bg-surface);
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 1.1rem;
+		font-size: 0.75rem;
 		font-weight: 700;
 	}
 

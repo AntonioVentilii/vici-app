@@ -10,7 +10,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ORDER_BOOK_POLL_MS, ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
+	import { VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { routeSide } from '$lib/derived/nav.derived';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
@@ -176,9 +176,7 @@
 			const pref = $userStore.profile.preferences.defaultAmount.manual;
 
 			amount =
-				get(playgroundVxpUnitMode) && Number(pref) < VXP_STAKE_STEP_VXP
-					? String(VXP_STAKE_STEP_VXP)
-					: pref;
+				get(playgroundVxpUnitMode) && Number(pref) < VXP_MIN_STAKE ? String(VXP_MIN_STAKE) : pref;
 		}
 
 		const interval = setInterval(fetchOrderBook, ORDER_BOOK_POLL_MS);
@@ -585,9 +583,9 @@
 						id="amount"
 						class="bg-foreground/5 text-foreground ring-border focus:bg-card focus:ring-primary w-full rounded-2xl border-none py-4 pr-16 pl-6 text-xl font-bold ring-1 transition-all ring-inset focus:ring-2"
 						max="10000000"
-						min={$playgroundVxpUnitMode ? VXP_STAKE_STEP_VXP : 0}
+						min={$playgroundVxpUnitMode ? VXP_MIN_STAKE : 0}
 						placeholder="0"
-						step={$playgroundVxpUnitMode ? VXP_STAKE_STEP_VXP : 1}
+						step={$playgroundVxpUnitMode ? VXP_MIN_STAKE : 1}
 						type="number"
 						bind:value={amount}
 					/>

@@ -2,7 +2,7 @@
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import FlameChar from '$lib/components/characters/FlameChar.svelte';
+	import StreakFlame from '$lib/components/characters/StreakFlame.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { combinedInboxUnreadCount } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -22,22 +22,13 @@
 		betsCount: number;
 		dailyStreak: number;
 		flameStage: FlameStage;
-		flameLabel: string;
 		xp: number;
 		categoryLabel: string;
 		onExit: () => void;
 	}
 
-	const {
-		maxBets,
-		betsCount,
-		dailyStreak,
-		flameStage,
-		flameLabel,
-		xp,
-		categoryLabel,
-		onExit
-	}: Props = $props();
+	const { maxBets, betsCount, dailyStreak, flameStage, xp, categoryLabel, onExit }: Props =
+		$props();
 
 	const progressPct = $derived(maxBets > 0 ? Math.min(100, (betsCount / maxBets) * 100) : 0);
 
@@ -84,16 +75,19 @@
 		</div>
 
 		<div class="flow-topbar-right">
-			{#if dailyStreak >= 1}
-				<span
-					class="flow-flame-chip"
-					aria-label={t({ locale: $localeStore, key: 'flow.daily_streak_aria' })}
-				>
-					<FlameChar animate size={16} stage={flameStage} />
-					<span class="flow-flame-label allcaps">{flameLabel}</span>
-					<span class="num flow-flame-count">{dailyStreak}d</span>
-				</span>
-			{/if}
+			<!-- Streak chip: just the flame icon + the day count. We
+			     intentionally drop the `flameStage` label (SPARK / EMBER /
+			     etc.) and the `d` suffix — the stage colour is already
+			     encoded in the flame gradient and the number reads as
+			     "days" in context. Chip stays mounted at streak 0 so the
+			     top-bar row geometry never reflows. -->
+			<span
+				class="flow-flame-chip"
+				aria-label={t({ locale: $localeStore, key: 'flow.daily_streak_aria' })}
+			>
+				<StreakFlame count={dailyStreak} size={14} stage={flameStage} />
+				<span class="num flow-flame-count">{dailyStreak}</span>
+			</span>
 			<button
 				class="flow-bell-btn"
 				aria-label={t({ locale: $localeStore, key: 'a11y.notifications' })}
@@ -259,13 +253,6 @@
 		background: var(--bg-surface);
 		color: var(--text-muted);
 		border: 1px solid var(--border-base);
-	}
-
-	.flow-flame-label {
-		font-size: 10px;
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		color: var(--text-base);
 	}
 
 	.flow-flame-count {

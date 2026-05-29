@@ -41,6 +41,13 @@
 	let visible = $state(!readSeen());
 	let phase = $state(0);
 
+	// Phase timeline (ms): 0 = mount, 2200 NO, 4400 YES, 6400 TAP-flip,
+	// 8800 IDLE. The IDLE beat lingers `IDLE_LINGER_MS` then auto-
+	// dismisses so the surface never sits there blocked. Tweak this if
+	// the coach feels rushed or sticky.
+	const IDLE_LINGER_MS = 2200;
+	const IDLE_AUTO_DISMISS_MS = 8800 + IDLE_LINGER_MS;
+
 	const hints = [
 		{ key: 'flow.coach.hint_no', cls: 'no' },
 		{ key: 'flow.coach.hint_yes', cls: 'yes' },
@@ -116,6 +123,11 @@
 					phase = 4;
 				}, 8800)
 			);
+			// Auto-dismiss the IDLE ("your turn ⚡") hint after a short
+			// lingering beat so the coach overlay never sits there blocking
+			// the surface indefinitely. The user can also dismiss earlier
+			// via any pointer-down (see handler below).
+			timers.push(setTimeout(() => dismiss(), IDLE_AUTO_DISMISS_MS));
 		});
 
 		pointerHandler = () => dismiss();

@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Share2 } from 'lucide-svelte/icons';
+	import { Share } from 'lucide-svelte/icons';
 	import FlowCardSparkline from '$lib/components/market/FlowCardSparkline.svelte';
 	import SharePopover from '$lib/components/market/SharePopover.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
@@ -231,7 +231,7 @@
 				onclick={toggleShare}
 				type="button"
 			>
-				<Share2 aria-hidden="true" size={16} strokeWidth={1.8} />
+				<Share aria-hidden="true" size={16} strokeWidth={1.8} />
 			</button>
 			{#if shareOpen}
 				<SharePopover
@@ -717,8 +717,7 @@
 		font-size: var(--t-12);
 		color: var(--laurel);
 		cursor: pointer;
-		text-decoration: underline;
-		text-underline-offset: 3px;
+		text-decoration: none;
 	}
 	.flow-back-toggle-caret {
 		font-size: 11px;
@@ -758,8 +757,19 @@
 		color: var(--no);
 	}
 
+	/* Cap state: when the user hits the top rung of the stake ladder
+	   we flip every accent surface — wash, border, label, value,
+	   slider fill, handle, active peg — from laurel to `--no` red so
+	   the user feels the upper bound visually instead of having to
+	   read it. */
 	.flow-stake.is-cap {
-		border-color: color-mix(in srgb, var(--cat-color) 40%, var(--border-base));
+		background: linear-gradient(
+			180deg,
+			rgba(255, 107, 107, 0.06),
+			rgba(226, 184, 66, 0.02) 70%,
+			transparent
+		);
+		border-color: rgba(255, 107, 107, 0.3);
 	}
 	.flow-stake-head {
 		display: flex;
@@ -769,10 +779,16 @@
 	.flow-stake-label {
 		color: var(--text-muted);
 	}
+	.flow-stake.is-cap .flow-stake-label {
+		color: var(--no);
+	}
 	.flow-stake-value {
 		font-size: var(--t-16);
 		font-weight: 700;
-		color: var(--text-base);
+		color: var(--laurel);
+	}
+	.flow-stake.is-cap .flow-stake-value {
+		color: var(--no);
 	}
 	.flow-stake-unit {
 		font-size: 9.5px;
@@ -800,8 +816,12 @@
 	}
 	.flow-stake-fill {
 		height: 100%;
-		background: linear-gradient(90deg, var(--cat-color), var(--laurel));
+		background: linear-gradient(90deg, var(--laurel), #ffd27a);
 		border-radius: inherit;
+		transition: width 220ms var(--ease-vici);
+	}
+	.flow-stake.is-cap .flow-stake-fill {
+		background: linear-gradient(90deg, var(--laurel), var(--no));
 	}
 	.flow-stake-handle {
 		position: absolute;
@@ -810,10 +830,21 @@
 		height: 14px;
 		border-radius: var(--r-pill);
 		background: var(--bg-surface);
-		border: 2px solid var(--cat-color);
+		border: 2px solid var(--laurel);
 		transform: translate(-50%, -50%);
 		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 		pointer-events: none;
+		transition:
+			background 220ms var(--ease-vici),
+			border-color 220ms var(--ease-vici),
+			box-shadow 220ms var(--ease-vici);
+	}
+	.flow-stake.is-cap .flow-stake-handle {
+		background: var(--no);
+		border-color: var(--no);
+		box-shadow:
+			0 0 0 1px var(--no),
+			0 3px 8px rgba(255, 107, 107, 0.4);
 	}
 	.flow-stake-range {
 		position: absolute;
@@ -834,24 +865,28 @@
 		appearance: none;
 		padding: 0.4rem 0;
 		font-size: var(--t-12);
-		font-weight: 700;
+		font-weight: 600;
 		color: var(--text-muted);
-		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
-		border: 1px solid var(--border-base);
+		background: transparent;
+		border: 0;
 		border-radius: var(--r-pill);
 		cursor: pointer;
 		transition:
 			color 120ms ease,
-			background 120ms ease,
-			border-color 120ms ease;
+			background 120ms ease;
 	}
 	.flow-stake-peg:hover {
 		color: var(--text-base);
 	}
+	.flow-stake-peg:active {
+		background: rgba(242, 236, 220, 0.05);
+	}
 	.flow-stake-peg.is-active {
-		color: var(--cat-color);
-		background: color-mix(in srgb, var(--cat-color) 14%, transparent);
-		border-color: color-mix(in srgb, var(--cat-color) 38%, var(--border-base));
+		color: var(--laurel);
+		font-weight: 700;
+	}
+	.flow-stake.is-cap .flow-stake-peg.is-active {
+		color: var(--no);
 	}
 
 	.flow-stake-payout {

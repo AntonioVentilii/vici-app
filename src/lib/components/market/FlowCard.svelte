@@ -434,11 +434,15 @@
 
 	const onTouchEnd = (e: TouchEvent) => {
 		// `preventDefault` on touchend is the canonical way to suppress
-		// the synthetic mouse chain, but only works on non-passive
-		// listeners and is sometimes ignored by mobile browsers when the
-		// gesture wasn't claimed. Belt-and-braces: latch a timestamp and
-		// drop ghost-clicks inside `closeBackOnTap` (below).
-		if (e.cancelable) {
+		// the synthetic mouse chain that would otherwise fire after a
+		// gesture we just claimed. But blanket-preventing it ALSO kills
+		// legitimate clicks on interactive children (back-face pegs,
+		// share button, etc.) — onPointerDown skips them, dragging stays
+		// false, and the synthetic click would have been the only signal
+		// they ever received. Gate the preventDefault on `dragging`: we
+		// only suppress the synthetic chain when we actually drove a
+		// swipe / tap-to-flip gesture.
+		if (dragging && e.cancelable) {
 			e.preventDefault();
 		}
 
@@ -1006,13 +1010,17 @@
 		}
 	}
 
+	/* 14 px gap between the friends row / artwork / probs split bar.
+	   `.flow-probs` further down sets `margin-top: auto`, which parks
+	   the probability split at the bottom of the card body regardless
+	   of artwork height. */
 	.flow-body {
 		display: flex;
 		flex-direction: column;
-		gap: 0.65rem;
+		gap: 14px;
 		flex: 1 1 auto;
 		min-height: 0;
-		padding: 0.7rem 0 0;
+		padding: 14px 0 16px;
 	}
 
 	.flow-social {
@@ -1032,10 +1040,15 @@
 	   corners come off so the body of the card hosts the art with no
 	   side padding (`bleed` mode). The frame's height is fixed so the
 	   title / probs row never reflow on layout changes. */
+	/* Fixed 172 px artwork frame. The earlier
+	   `clamp(140px, 22vw, 172px)` shrank the art on narrow viewports,
+	   which made the card body collapse on phones and the probs row
+	   crowd against the title. A constant height keeps the card
+	   silhouette stable across breakpoints. */
 	.flow-art-bleed {
 		position: relative;
 		width: 100%;
-		height: clamp(140px, 22vw, 172px);
+		height: 172px;
 		overflow: hidden;
 		border-top: 1px solid var(--border-base);
 		border-bottom: 1px solid var(--border-base);
@@ -1057,11 +1070,15 @@
 		height: 100%;
 	}
 
+	/* `margin-top: auto` parks the split bar at the bottom edge of
+	   the card body so it stays anchored to the foot regardless of
+	   how tall the artwork frame ends up. */
 	.flow-probs {
 		display: flex;
 		flex-direction: column;
-		gap: 0.45rem;
-		margin: 0 1.1rem;
+		gap: 8px;
+		margin: auto 1.1rem 0;
+		padding: 0 2px;
 	}
 
 	.flow-probs-row {
