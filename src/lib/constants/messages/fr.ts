@@ -947,11 +947,11 @@ export const frMessages = {
 	'loop.market_name': 'Marché',
 	'loop.port_body':
 		'Voyez ce que vous avez prédit. Voyez ce qui s’est résolu. Apprenez ce que vous avez manqué.',
-	'loop.port_eyebrow': '03 · PORTEFEUILLE',
+	'loop.port_eyebrow': '03 · DASH',
 	'loop.port_italic': 'Voyez si vous aviez vu juste.',
-	'loop.port_name': 'Portefeuille',
+	'loop.port_name': 'Dash',
 	'loop.sub':
-		'Flow pour la vitesse. Marché pour la profondeur. Portefeuille pour la vérité. Bougez entre eux naturellement — le système récompense le mouvement.',
+		'Flow pour la vitesse. Marché pour la profondeur. Dash pour la vérité. Bougez entre eux naturellement — le système récompense le mouvement.',
 	'loop.title_a': 'Trois états.',
 	'loop.title_b': 'Une boucle.',
 	'market.chart.ago_24h': 'Il y a 24h',

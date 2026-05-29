@@ -942,11 +942,11 @@ export const deMessages = {
 	'loop.market_name': 'Markt',
 	'loop.port_body':
 		'Sieh, was du gecallt hast. Sieh, was sich aufgelöst hat. Lern, was du verpasst hast.',
-	'loop.port_eyebrow': '03 · PORTFOLIO',
+	'loop.port_eyebrow': '03 · DASH',
 	'loop.port_italic': 'Sieh, ob du recht hattest.',
-	'loop.port_name': 'Portfolio',
+	'loop.port_name': 'Dash',
 	'loop.sub':
-		'Flow für Tempo. Markt für Tiefe. Portfolio für Wahrheit. Beweg dich natürlich dazwischen — das System belohnt Bewegung.',
+		'Flow für Tempo. Markt für Tiefe. Dash für Wahrheit. Beweg dich natürlich dazwischen — das System belohnt Bewegung.',
 	'loop.title_a': 'Drei Zustände.',
 	'loop.title_b': 'Ein Kreislauf.',
 	'market.chart.ago_24h': 'vor 24 h',
