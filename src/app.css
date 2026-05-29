@@ -2427,6 +2427,14 @@ html[data-app='1'] body {
    ============================================================ */
 
 .ob.ob-v2 {
+	display: flex;
+	flex-direction: column;
+	/* Viewport-relative rather than `height: 100%` — the SvelteKit page
+	   mounts inside a `display: contents` wrapper, through which a
+	   percentage height doesn't resolve, leaving the flex chain (and the
+	   card stage) collapsed to content height. `100dvh` fills the frame
+	   regardless. */
+	min-height: 100dvh;
 	background: var(--ink);
 	color: var(--parchment);
 }
@@ -2502,8 +2510,12 @@ html[data-app='1'] body {
 .ob2-beat {
 	display: flex;
 	flex-direction: column;
-	height: 100%;
-	padding: 16px 22px 22px;
+	/* Grow to fill the flex column rather than `height: 100%` so the
+	   card stage expands reliably without depending on percentage-height
+	   resolution up the chain. */
+	flex: 1 1 auto;
+	min-height: 0;
+	padding: 16px 26px 22px;
 	overflow-y: auto;
 }
 .ob2-h1 {
@@ -2511,7 +2523,7 @@ html[data-app='1'] body {
 	line-height: 1.05;
 	letter-spacing: -0.025em;
 	font-weight: 600;
-	margin: 0 0 4px;
+	margin: 0 0 8px;
 	flex-shrink: 0;
 }
 .ob2-sub {

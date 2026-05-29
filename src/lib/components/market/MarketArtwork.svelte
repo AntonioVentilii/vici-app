@@ -22,6 +22,11 @@
 		state?: FlowArtState;
 		size?: number;
 		bleed?: boolean;
+		// When true, the art frame fills its host (100% × 100%) instead
+		// of the fixed `size`, cropping via the `slice` viewBox. Use for
+		// tall bleed bands (e.g. the onboarding first-call card) where a
+		// fixed-aspect frame would letterbox in the middle.
+		fill?: boolean;
 		class?: string;
 	}
 
@@ -31,6 +36,7 @@
 		state = 'neutral',
 		size = 420,
 		bleed = false,
+		fill = false,
 		class: extraClass = ''
 	}: Props = $props();
 
@@ -59,7 +65,7 @@
 </script>
 
 <div class="market-artwork {artClass} {seedClass} {extraClass}" class:is-bleed={bleed}>
-	<FlowArtFrame class="flow-art" {category} {seed} {size} {state} />
+	<FlowArtFrame class="flow-art" {category} {fill} {seed} {size} {state} />
 </div>
 
 <style lang="postcss">
