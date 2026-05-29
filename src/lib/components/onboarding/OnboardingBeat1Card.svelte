@@ -194,7 +194,7 @@
 		font-size: 20px;
 		font-weight: 700;
 		line-height: 1.18;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 		color: var(--parchment);
 	}
 	/* Edge-to-edge FlowArt — cancels the swipe card's 22px padding so
@@ -256,7 +256,7 @@
 		font-family: var(--font-display);
 		font-size: 22px;
 		font-weight: 700;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 	}
 	.ob2-swipe-stamp {
 		position: absolute;

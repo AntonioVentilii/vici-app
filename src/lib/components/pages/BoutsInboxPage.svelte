@@ -1310,7 +1310,7 @@
 		font-weight: 600;
 		font-size: var(--t-15, 0.95rem);
 		line-height: 1.25;
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 		color: var(--text-base);
 		text-wrap: balance;
 	}
@@ -1328,7 +1328,7 @@
 		margin: 0 0 0.6rem;
 		font-size: var(--t-11, 0.7rem);
 		color: var(--text-muted);
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 	}
 
 	/* ─── podium ─────────────────────────────────────────────── */
@@ -1399,7 +1399,7 @@
 	.bouts-pod-pct {
 		margin-top: 0.1rem;
 		font-size: var(--t-10, 0.6rem);
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
 

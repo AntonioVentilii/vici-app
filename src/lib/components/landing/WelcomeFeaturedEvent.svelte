@@ -70,7 +70,10 @@
 						>
 							<span style="font-size:32px; line-height:1;" aria-hidden="true">{f.flag}</span>
 							<span style="color:var(--fg);" class="t-body fw-600">{f.team}</span>
-							<span style="color:{f.color}; letter-spacing:0.04em;" class="num t-eyebrow">
+							<span
+								style="color:{f.color}; letter-spacing:var(--tracking-wide);"
+								class="num t-eyebrow"
+							>
 								{f.odds.toFixed(1)}% TO WIN
 							</span>
 						</a>

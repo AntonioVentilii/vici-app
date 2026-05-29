@@ -333,7 +333,7 @@
 		display: inline-flex;
 		align-items: center;
 		padding: 2px 7px;
-		border-radius: 4px;
+		border-radius: var(--r-4);
 		font-family: var(--font-mono);
 		font-size: 9px;
 		font-weight: 700;
@@ -355,7 +355,7 @@
 	.meta {
 		font-size: 10.5px;
 		color: var(--text-muted);
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 	}
 
 	.friend-overlap {
@@ -431,7 +431,7 @@
 		align-items: center;
 		gap: 0.2rem;
 		padding: 3px 6px;
-		border-radius: 4px;
+		border-radius: var(--r-4);
 		font-family: var(--font-mono);
 		font-size: 9px;
 		font-weight: 700;

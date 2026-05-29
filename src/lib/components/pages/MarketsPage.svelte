@@ -200,7 +200,7 @@
 
 <div class="screen-scroll">
 	<div class="appbar">
-		<h2 style="font-size: 24px; letter-spacing: -0.02em;">
+		<h2 style="font-size: 24px; letter-spacing: var(--tracking-tight);">
 			{t({ locale: $localeStore, key: 'nav.markets' })}
 		</h2>
 	</div>

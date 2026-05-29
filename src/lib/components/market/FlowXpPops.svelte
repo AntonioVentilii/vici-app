@@ -76,7 +76,7 @@
 		font-family: var(--font-mono);
 		font-size: 22px;
 		font-weight: 900;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 		background: var(--bg-popover);
 		color: var(--laurel);
 		box-shadow: var(--shadow-card);

@@ -610,7 +610,7 @@
 		text-transform: uppercase;
 		color: var(--text-muted);
 		background: color-mix(in srgb, var(--text-base) 6%, transparent);
-		border-radius: 4px;
+		border-radius: var(--r-4);
 	}
 
 	.portfolio-row-cat.is-dim {
@@ -638,7 +638,7 @@
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		border-radius: 4px;
+		border-radius: var(--r-4);
 		background: color-mix(in srgb, var(--text-base) 6%, transparent);
 		color: var(--text-muted);
 	}
@@ -732,7 +732,7 @@
 
 	.portfolio-history-ago {
 		font-size: var(--text-eyebrow, 11px);
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
 

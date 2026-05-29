@@ -146,7 +146,7 @@
 		color: var(--text-base);
 		font-size: var(--t-16);
 		font-weight: 600;
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 		/* Long values (e.g. `December 31, 2026` in the CLOSES tile)
 		   wrap to multiple lines instead of truncating with an
 		   ellipsis. Earlier `white-space: nowrap` + `text-overflow:

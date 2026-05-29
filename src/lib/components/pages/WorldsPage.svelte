@@ -576,7 +576,7 @@
 		font-weight: 600;
 		font-size: var(--t-17, 1.05rem);
 		line-height: 1.2;
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 		text-wrap: balance;
 		color: var(--text-base);
 	}
@@ -644,7 +644,7 @@
 	.worlds-pod-place {
 		font-size: var(--t-16, 1rem);
 		font-weight: 700;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 		color: var(--text-muted);
 	}
 
@@ -671,7 +671,7 @@
 	.worlds-pod-pct {
 		margin-top: 0.1rem;
 		font-size: var(--t-10, 0.6rem);
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
 
@@ -810,7 +810,7 @@
 	.worlds-row-sub {
 		margin-top: 0.05rem;
 		font-size: var(--t-10, 0.6rem);
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
 

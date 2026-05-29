@@ -82,7 +82,7 @@
 						? 'linear-gradient(180deg, rgba(226,184,66,0.18), rgba(226,184,66,0.05))'
 						: 'rgba(242,236,220,0.05)'};
 						border:1px solid {p.rank === 1 ? 'rgba(226,184,66,0.30)' : 'var(--border)'};
-						border-radius:8px;
+						border-radius:var(--r-8);
 						display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
 						padding:10px 6px; text-align:center;
 					"
