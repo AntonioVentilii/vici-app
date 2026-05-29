@@ -4,6 +4,8 @@
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
+	import WorldsAffiliationPrompt from '$lib/components/worlds/WorldsAffiliationPrompt.svelte';
+	import WorldsPodiumClaim from '$lib/components/worlds/WorldsPodiumClaim.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
 		lookupWorldsAffiliation,
@@ -221,29 +223,11 @@
 	<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'worlds.title' })} />
 
 	{#if podiumClaim}
-		<aside class="worlds-podium-claim" role="status">
-			<span class="serif-italic worlds-podium-claim-lede">
-				{t({ locale: $localeStore, key: 'worlds.podium.claim.lede' })}
-			</span>
-			<span class="worlds-podium-claim-sub">
-				{t({
-					locale: $localeStore,
-					key: 'worlds.podium.claim.body',
-					params: {
-						month: podiumClaim.monthAnchor,
-						count: podiumClaim.awardsCreated
-					}
-				})}
-			</span>
-			<button
-				class="worlds-podium-claim-dismiss"
-				aria-label={t({ locale: $localeStore, key: 'worlds.podium.claim.dismiss' })}
-				onclick={() => (podiumClaim = null)}
-				type="button"
-			>
-				×
-			</button>
-		</aside>
+		<WorldsPodiumClaim
+			awardsCreated={podiumClaim.awardsCreated}
+			monthAnchor={podiumClaim.monthAnchor}
+			onDismiss={() => (podiumClaim = null)}
+		/>
 	{/if}
 
 	{#if loadState === 'loading'}
@@ -256,17 +240,7 @@
 		</p>
 	{:else}
 		{#if !myUni}
-			<div class="worlds-affil-prompt">
-				<h4>{t({ locale: $localeStore, key: 'worlds.affil_prompt.title' })}</h4>
-				<p>{t({ locale: $localeStore, key: 'worlds.affil_prompt.body' })}</p>
-				<button
-					class="worlds-affil-prompt-cta"
-					onclick={() => (pickerKind = 'university')}
-					type="button"
-				>
-					{t({ locale: $localeStore, key: 'worlds.cta.pick_university' })}
-				</button>
-			</div>
+			<WorldsAffiliationPrompt onPick={() => (pickerKind = 'university')} />
 		{/if}
 
 		<section class="worlds-event" aria-label="World Cup bout">
@@ -520,89 +494,6 @@
 	}
 
 	/* ─────────────────────────── claim banner (C-29 keep) */
-	.worlds-podium-claim {
-		display: grid;
-		grid-template-columns: 1fr auto;
-		gap: 0.5rem;
-		align-items: center;
-		margin: 0 1rem;
-		padding: 0.85rem 1rem;
-		background: color-mix(in srgb, var(--laurel) 8%, var(--bg-surface));
-		border: 1px solid color-mix(in srgb, var(--laurel) 40%, var(--border-base));
-		border-radius: var(--r-12);
-	}
-
-	.worlds-podium-claim-lede {
-		grid-column: 1;
-		font-size: var(--t-15, 1rem);
-		color: var(--text-base);
-	}
-
-	.worlds-podium-claim-sub {
-		grid-column: 1;
-		grid-row: 2;
-		font-size: var(--t-12);
-		color: var(--text-muted);
-	}
-
-	.worlds-podium-claim-dismiss {
-		grid-column: 2;
-		grid-row: 1 / span 2;
-		appearance: none;
-		width: 28px;
-		height: 28px;
-		font-size: 1.25rem;
-		color: var(--text-muted);
-		background: none;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		cursor: pointer;
-	}
-
-	/* ─────────────────────────── affiliation prompt */
-	.worlds-affil-prompt {
-		margin: 0.25rem 1rem 0.5rem;
-		padding: 1.1rem 1rem;
-		background: color-mix(in srgb, var(--laurel) 6%, var(--bg-surface));
-		border: 1px dashed color-mix(in srgb, var(--laurel) 35%, var(--border-base));
-		border-radius: var(--r-12);
-		text-align: center;
-	}
-
-	.worlds-affil-prompt h4 {
-		margin: 0 0 0.4rem;
-		font-family: var(--font-display);
-		font-style: italic;
-		font-weight: 400;
-		font-size: var(--t-17, 1.05rem);
-		color: var(--laurel);
-	}
-
-	.worlds-affil-prompt p {
-		margin: 0 0 0.75rem;
-		font-size: var(--t-13);
-		line-height: 1.5;
-		color: var(--text-muted);
-	}
-
-	.worlds-affil-prompt-cta {
-		appearance: none;
-		padding: 0.6rem 1.1rem;
-		font: inherit;
-		font-size: var(--t-13);
-		font-weight: 700;
-		color: var(--text-on-accent, #fff);
-		background: var(--laurel);
-		border: 1px solid var(--laurel);
-		border-radius: var(--r-pill);
-		cursor: pointer;
-		transition: background 140ms ease;
-	}
-
-	.worlds-affil-prompt-cta:hover {
-		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
-	}
-
 	/* ─────────────────────────── hero event card */
 	.worlds-event {
 		position: relative;
