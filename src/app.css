@@ -2506,7 +2506,7 @@ html[data-app='1'] body {
 	display: flex;
 	flex-direction: column;
 	height: 100%;
-	padding: 16px 22px 22px;
+	padding: 16px 26px 22px;
 	overflow-y: auto;
 }
 .ob2-h1 {
@@ -2514,7 +2514,7 @@ html[data-app='1'] body {
 	line-height: 1.05;
 	letter-spacing: -0.025em;
 	font-weight: 600;
-	margin: 0 0 4px;
+	margin: 0 0 8px;
 	flex-shrink: 0;
 }
 .ob2-sub {
