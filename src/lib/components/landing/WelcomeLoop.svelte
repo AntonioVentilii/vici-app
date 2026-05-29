@@ -1,9 +1,9 @@
 <script lang="ts">
 	/**
-	 * Three cards (Flow / Market / Portfolio) connected by arrows +
+	 * Three cards (Flow / Market / Dash) connected by arrows +
 	 * a return-arc SVG at the bottom.
 	 */
-	import { Wallet, Zap, TrendingUp } from 'lucide-svelte/icons';
+	import { Activity, LineChart, Wallet } from 'lucide-svelte/icons';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
@@ -12,7 +12,7 @@
 		name: MessageKey;
 		italic: MessageKey;
 		body: MessageKey;
-		Icon: typeof Zap;
+		Icon: typeof Activity;
 	}
 
 	const cards: readonly LoopCard[] = [
@@ -21,14 +21,14 @@
 			name: 'loop.flow_name',
 			italic: 'loop.flow_italic',
 			body: 'loop.flow_body',
-			Icon: Zap
+			Icon: Activity
 		},
 		{
 			eyebrow: 'loop.market_eyebrow',
 			name: 'loop.market_name',
 			italic: 'loop.market_italic',
 			body: 'loop.market_body',
-			Icon: TrendingUp
+			Icon: LineChart
 		},
 		{
 			eyebrow: 'loop.port_eyebrow',

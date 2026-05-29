@@ -58,10 +58,7 @@
 		stageForStreak,
 		type FlameStage
 	} from '$lib/utils/streak.utils';
-	import {
-		assertViciXpHumanPremiumAndPayout,
-		resolveOutcomeExecutionPriceForSizing
-	} from '$lib/utils/trade.utils';
+	import { assertViciXpHumanPremium } from '$lib/utils/trade.utils';
 
 	const maxBets = $derived(flowSessionMaxBets($preferencesStore));
 
@@ -443,16 +440,7 @@
 		const executeTrade = async () => {
 			try {
 				if (isViciXp(currentMarket.balanceDomain)) {
-					const executionPrice = resolveOutcomeExecutionPriceForSizing({
-						market: currentMarket,
-						action,
-						orderType: 'MARKET'
-					});
-
-					assertViciXpHumanPremiumAndPayout({
-						amountStr: tradeAmount,
-						executionPrice
-					});
+					assertViciXpHumanPremium({ amountStr: tradeAmount });
 				}
 
 				await flowTradeService.executeTrade({

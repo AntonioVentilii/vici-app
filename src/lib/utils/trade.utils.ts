@@ -1,5 +1,4 @@
 import { isVxpLadderStake, VXP_STAKE_LADDER } from '$lib/constants/vxp-economy.constants';
-import { VXP_MIN_MAX_PAYOUT_VXP } from '$lib/constants/vxp-trade.constants';
 import { placeOrder } from '$lib/services/order.services';
 import type { Market } from '$lib/types/market';
 import type { OrderType } from '$lib/types/order';
@@ -12,29 +11,20 @@ import {
 import { nonNullish } from '@dfinity/utils';
 
 /**
- * @throws Error when premium or implied max payout breaks ViciXp sizing rules.
+ * @throws Error when the premium isn't a valid ViciXp stake-ladder rung.
+ *
+ * No max-payout floor is enforced: a winning call already nets at least
+ * 1 VXP via `vxpNetWin`, so gating on gross payout (`stake / price`) added
+ * nothing — it only made any side priced above 0.5 unplaceable at the
+ * smallest stake, e.g. a 50-VXP premium on a 50/50 market, which left
+ * first-call users (locked to the smallest rung, market orders) with no
+ * placeable side at all.
  */
-export const assertViciXpHumanPremiumAndPayout = ({
-	amountStr,
-	executionPrice
-}: {
-	amountStr: string;
-	executionPrice: number;
-}): void => {
-	const finalPrice = Math.max(executionPrice, 0.01);
-
+export const assertViciXpHumanPremium = ({ amountStr }: { amountStr: string }): void => {
 	const premiumHuman = Number(String(amountStr).trim());
 
 	if (!isVxpLadderStake(premiumHuman)) {
 		throw new Error(`VXP premium must be one of ${VXP_STAKE_LADDER.join(', ')}`);
-	}
-
-	const maxPayoutHuman = premiumHuman / finalPrice;
-
-	if (!Number.isFinite(maxPayoutHuman) || maxPayoutHuman < VXP_MIN_MAX_PAYOUT_VXP) {
-		throw new Error(
-			`Potential payout if you win must be at least ${VXP_MIN_MAX_PAYOUT_VXP} VXP — raise the premium or adjust the price`
-		);
 	}
 };
 
@@ -53,10 +43,10 @@ export interface TradeParams {
 }
 
 /**
- * Resolves execution probability (price of the bought outcome) for margin and VXP sizing checks.
- * Matches the path used by {@link executeOutcomeTrade} before `placeOrder` adjusts binary NO prices.
+ * Resolves execution probability (price of the bought outcome) used to size the order
+ * (clearing margin and quantity) before `placeOrder` adjusts binary NO prices.
  */
-export const resolveOutcomeExecutionPriceForSizing = ({
+const resolveOutcomeExecutionPriceForSizing = ({
 	market,
 	action,
 	orderType = 'MARKET',
@@ -124,7 +114,7 @@ export const executeOutcomeTrade = async ({
 	});
 
 	if (isViciXp(market.balanceDomain)) {
-		assertViciXpHumanPremiumAndPayout({ amountStr: String(amount), executionPrice: finalPrice });
+		assertViciXpHumanPremium({ amountStr: String(amount) });
 	}
 
 	// Clearing margin is `qty * price` in USD `USD_DECIMALS` (see `get_required_margin`). Convert
