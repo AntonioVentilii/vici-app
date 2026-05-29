@@ -3,22 +3,10 @@ import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import {
 	PLAYGROUND_CLEARING_MARGIN_DECIMALS,
 	PLAYGROUND_DISPLAY_SYMBOL,
-	SETTLEMENT_LOCKED_CAPACITY_LABEL,
 	VXP_BALANCE_DISPLAY_DECIMALS
 } from '$lib/constants/playground.constants';
-import {
-	PORTFOLIO_DEFAULT_DECIMALS,
-	PORTFOLIO_DEFAULT_SYMBOL
-} from '$lib/constants/portfolio.constants';
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
-import type { LockedCapacityDisplayUnit } from '$lib/types/locked-capacity-display.types';
-import type { Token } from '$lib/types/token';
-import {
-	formatAvailableUsd,
-	formatCurrency,
-	formatToken,
-	groupIntegerPart
-} from '$lib/utils/format.utils';
+import { formatAvailableUsd, formatToken, groupIntegerPart } from '$lib/utils/format.utils';
 
 /**
  * Plain VXP balance — whole-number "points" feel with thousands separators
@@ -47,9 +35,6 @@ export const formatVxpBalance = ({
  */
 export const formatPlaygroundClearingAsVxp = (value: bigint): string =>
 	`${formatVxpBalance({ value, decimals: PLAYGROUND_CLEARING_MARGIN_DECIMALS })} ${PLAYGROUND_DISPLAY_SYMBOL}`;
-
-/** @deprecated Use {@link formatPlaygroundClearingAsVxp}. */
-export const formatPlaygroundVxpAmount = formatPlaygroundClearingAsVxp;
 
 export const formatAvailableMarginForUi = ({
 	value,
@@ -114,43 +99,6 @@ export const quickBetChipLabel = ({
 
 export const flowTradeDenominationLabel = (playground: boolean): 'VXP' | 'USD' =>
 	playground ? PLAYGROUND_DISPLAY_SYMBOL : 'USD';
-
-export const lockedCapacityDenominationLabel = (playground: boolean): LockedCapacityDisplayUnit =>
-	playground ? PLAYGROUND_DISPLAY_SYMBOL : SETTLEMENT_LOCKED_CAPACITY_LABEL;
-
-export const potentialReturnUnitSuffix = (playground: boolean): string =>
-	playground ? ` ${PLAYGROUND_DISPLAY_SYMBOL}` : '';
-
-export const formatPortfolioPnLStatLine = ({
-	totalPnL,
-	playground
-}: {
-	totalPnL: number;
-	playground: boolean;
-}): string => {
-	const core = `${totalPnL >= 0 ? '+' : ''}${groupIntegerPart({ formatted: totalPnL.toFixed(2) })}`;
-
-	return playground ? `${core} ${PLAYGROUND_DISPLAY_SYMBOL}` : core;
-};
-
-export const formatPortfolioHoldingsStatLine = ({
-	playground,
-	totalPortfolioValue,
-	sampleToken
-}: {
-	playground: boolean;
-	totalPortfolioValue: bigint;
-	sampleToken?: Token;
-}): string => {
-	if (playground) {
-		return `${formatVxpBalance({ value: totalPortfolioValue })} ${PLAYGROUND_DISPLAY_SYMBOL}`;
-	}
-
-	const dec = sampleToken?.decimals ?? PORTFOLIO_DEFAULT_DECIMALS;
-	const sym = sampleToken?.symbol ?? PORTFOLIO_DEFAULT_SYMBOL;
-
-	return formatCurrency({ value: totalPortfolioValue, decimals: dec, symbol: sym });
-};
 
 export const formatPositionPnLWithOptionalUnit = ({
 	pnl,

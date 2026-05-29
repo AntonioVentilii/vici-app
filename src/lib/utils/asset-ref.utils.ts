@@ -3,56 +3,6 @@ import type { Token } from '$lib/types/token';
 import { Principal } from '@icp-sdk/core/principal';
 
 /**
- * Canonical asset identity for cross-network use. Extend with `family: 'evm'` (chain + contract),
- * Solana mint, etc., when those clearings are wired.
- */
-export type NetworkAssetRef =
-	| {
-			family: 'internet_computer';
-			kind: 'icrc';
-			ledgerCanisterId: string;
-	  }
-	| {
-			family: 'evm';
-			chainId: number;
-			contract: `0x${string}`;
-	  };
-
-/**
- * Returns true when two refs denote the same underlying asset.
- */
-export const networkAssetRefsEqual = ({
-	left,
-	right
-}: {
-	left: NetworkAssetRef;
-	right: NetworkAssetRef;
-}): boolean => {
-	if (left.family !== right.family) {
-		return false;
-	}
-
-	if (left.family === 'internet_computer' && right.family === 'internet_computer') {
-		return (
-			left.kind === 'icrc' &&
-			right.kind === 'icrc' &&
-			icrcLedgerIdsEqual({
-				first: left.ledgerCanisterId,
-				second: right.ledgerCanisterId
-			})
-		);
-	}
-
-	if (left.family === 'evm' && right.family === 'evm') {
-		return (
-			left.chainId === right.chainId && left.contract.toLowerCase() === right.contract.toLowerCase()
-		);
-	}
-
-	return false;
-};
-
-/**
  * Principal text in canonical form for stable string comparison.
  */
 export const normalizeIcrcLedgerId = (ledgerCanisterId: string): string =>
@@ -112,29 +62,6 @@ export const icrcLedgerDecimalsFromCollateralConfig = ({
 	const info = findCollateralInfoByIcrcLedger({ assetsConfig, ledgerCanisterId });
 
 	return info?.config.decimals ?? fallbackDecimals;
-};
-
-/**
- * Account `AssetWorth` row for a token identified by ICRC ledger (via clearing config).
- */
-export const findAssetWorthForIcrcLedger = ({
-	assets,
-	ledgerCanisterId,
-	assetsConfig
-}: {
-	assets: ClearingDid.AssetWorth[] | undefined;
-	ledgerCanisterId: string;
-	assetsConfig: Record<string, ClearingDid.CollateralAssetInfo>;
-}): ClearingDid.AssetWorth | undefined => {
-	const info = findCollateralInfoByIcrcLedger({ assetsConfig, ledgerCanisterId });
-
-	if (!info) {
-		return;
-	}
-
-	const canonicalId = info.config.asset_id;
-
-	return assets?.find((w) => w.asset_id === canonicalId);
 };
 
 /**

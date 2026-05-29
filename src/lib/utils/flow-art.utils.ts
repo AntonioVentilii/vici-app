@@ -9,7 +9,7 @@
 // Returns SVG strings — components mount via {@html ...}. No DOM
 // access, no I/O — pure helper.
 
-import { THEMES, type Theme } from '$lib/stores/theme.store';
+import type { Theme } from '$lib/stores/theme.store';
 import { fnv1a32 } from '$lib/utils/hash.utils';
 
 export type FlowArtCategory =
@@ -52,9 +52,6 @@ export const FLOW_ART_CATEGORY_SET: ReadonlySet<string> = new Set<FlowArtCategor
 	...FLOW_ART_CATEGORIES,
 	'wc'
 ]);
-
-export const FLOW_ART_STATES: readonly FlowArtState[] = ['neutral', 'won', 'lost'] as const;
-export const FLOW_ART_THEMES: readonly FlowArtTheme[] = THEMES;
 
 export interface FlowArtPalette {
 	bg: string;
@@ -1686,21 +1683,6 @@ export const renderFlowArt = ({
 	svg += svgClose();
 
 	return svg;
-};
-
-export const flowArtPalette = ({
-	category,
-	state = 'neutral',
-	theme = 'dark'
-}: {
-	category: FlowArtCategory;
-	state?: FlowArtState;
-	theme?: FlowArtTheme;
-}): FlowArtPalette => {
-	const categoryPalettes = PAL[category] ?? PAL.macro;
-	const themePalettes = categoryPalettes[theme] ?? categoryPalettes.dark;
-
-	return themePalettes[state] ?? themePalettes.neutral;
 };
 
 /**

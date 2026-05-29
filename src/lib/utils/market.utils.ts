@@ -224,28 +224,6 @@ export const getTimeRemaining = (expiry: bigint): string => {
 };
 
 /**
- * Compact "eyebrow"-style time-to-expiry label for FlowCard / preview
- * surfaces where there's only space for ~4 chars. Returns `TODAY` for
- * the active day, `Td` for sub-year horizons, `Ty` for far-out markets.
- * Expiry is consumed as nanoseconds (ICP convention) and rounded up so
- * a market expiring later today still reads as `TODAY`.
- */
-export const getExpiryEyebrow = (expiryNs: bigint): string => {
-	const expiryMs = Number(expiryNs) / 1_000_000;
-	const days = Math.max(0, Math.ceil((expiryMs - Date.now()) / MS_PER_DAY));
-
-	if (days === 0) {
-		return 'TODAY';
-	}
-
-	if (days >= 365) {
-		return `${Math.round(days / 365)}y`;
-	}
-
-	return `${days}d`;
-};
-
-/**
  * Normalized implied probabilities per categorical outcome from order book top of book.
  */
 export const calculateCategoricalProbabilities = ({

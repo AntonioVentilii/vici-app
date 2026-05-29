@@ -26,14 +26,6 @@ const initial: FlowStoreData = {
 const internal = writable<FlowStoreData>(initial);
 
 /**
- * Read-only handle for components: the prepared payload for the
- * active Flow session (`current`), the pre-built follow-up
- * (`next`), and a coarse status reflecting whether a build is in
- * flight.
- */
-export const flowStore: Readable<FlowStoreData> = { subscribe: internal.subscribe };
-
-/**
  * Monotonic token used to drop stale builds that resolve after a
  * newer invalidate. Bumped at the start of every build attempt —
  * any in-flight call older than the latest token is discarded on

@@ -2,8 +2,6 @@ import {
 	VXP_DEFAULT_STAKE,
 	VXP_P_WIN_FLOOR,
 	VXP_STAKE_LADDER,
-	VXP_STAKE_UNLOCK_AT_CALLS,
-	VXP_STREAK_BONUSES,
 	type VxpStake
 } from '$lib/constants/vxp-economy.constants';
 
@@ -37,21 +35,6 @@ export const vxpNetWin = ({
 };
 
 /**
- * What the user forfeits on a losing call — always exactly `−stake`.
- * Surfaced as a helper so call sites don't have to remember whether to
- * negate at the formatting layer.
- */
-export const vxpLoss = ({ stake }: { stake: number }): number => -Math.abs(stake);
-
-/**
- * Whether the stake slider should be exposed to the user. Below the
- * unlock threshold, `VXP_DEFAULT_STAKE` is the only option shown — no
- * decision paralysis on first calls.
- */
-export const vxpStakeSliderUnlocked = ({ calls }: { calls: number }): boolean =>
-	calls >= VXP_STAKE_UNLOCK_AT_CALLS;
-
-/**
  * Snap an arbitrary numeric stake to the nearest valid ladder rung. Used
  * defensively when consuming server / persisted stake values that may
  * have been written before a ladder change.
@@ -75,31 +58,4 @@ export const snapToStakeLadder = ({ value }: { value: number }): VxpStake => {
 	}
 
 	return best;
-};
-
-/**
- * Streak milestone the user is on track to hit next. Returns `null` once
- * the user is past the highest milestone (`30`). Used by Flow's coach
- * copy ("3 to go for the +150 bonus").
- */
-export const nextStreakMilestone = ({
-	streak
-}: {
-	streak: number;
-}): { milestone: number; bonus: number; daysToGo: number } | null => {
-	const milestones = Object.keys(VXP_STREAK_BONUSES)
-		.map((k) => Number(k))
-		.sort((a, b) => a - b);
-
-	for (const milestone of milestones) {
-		if (streak < milestone) {
-			return {
-				milestone,
-				bonus: VXP_STREAK_BONUSES[milestone],
-				daysToGo: milestone - streak
-			};
-		}
-	}
-
-	return null;
 };

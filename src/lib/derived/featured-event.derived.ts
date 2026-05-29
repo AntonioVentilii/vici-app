@@ -1,9 +1,5 @@
 import { CURRENT_FEATURED_EVENT } from '$lib/constants/featured-event.constants';
-import type {
-	FeaturedEvent,
-	FeaturedEventParticipant,
-	FeaturedEventStatus
-} from '$lib/types/featured-event';
+import type { FeaturedEvent, FeaturedEventStatus } from '$lib/types/featured-event';
 import { derived, readable, type Readable } from 'svelte/store';
 
 /**
@@ -42,31 +38,6 @@ export const featuredEventStatus: Readable<FeaturedEventStatus> = derived(
 export const featuredEventActive: Readable<boolean> = derived(
 	featuredEventStatus,
 	(status) => status !== 'archived'
-);
-
-/**
- * The favourites list resolved to full participant objects, sorted by
- * `odds` descending so the team most likely to win renders first. Returns
- * `[]` if the event is archived (callers shouldn't be rendering the hero
- * in that state, but be safe).
- *
- * `odds` is implied probability %, so higher = stronger favourite.
- * Participants without an `odds` value sort last.
- */
-export const featuredEventFavourites: Readable<FeaturedEventParticipant[]> = derived(
-	[featuredEvent, featuredEventActive],
-	([event, active]) => {
-		if (!active) {
-			return [];
-		}
-
-		const byId = new Map(event.participants.map((p) => [p.id, p]));
-
-		return event.favouriteIds
-			.map((id) => byId.get(id))
-			.filter((p): p is FeaturedEventParticipant => p !== undefined)
-			.sort((a, b) => (b.odds ?? -Infinity) - (a.odds ?? -Infinity));
-	}
 );
 
 /**
