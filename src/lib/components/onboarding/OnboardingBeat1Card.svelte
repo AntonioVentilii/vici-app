@@ -148,7 +148,7 @@
 
 					<!-- Full-bleed artwork band. -->
 					<div class="ob2-card-art">
-						<MarketArtwork bleed category="wc" seed={artworkSeed} size={420} state="neutral" />
+						<MarketArtwork bleed fill category="wc" seed={artworkSeed} size={420} state="neutral" />
 					</div>
 
 					<!-- Body — probability tiles + footer. -->
