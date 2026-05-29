@@ -83,7 +83,7 @@
 		justify-content: center;
 		padding: 0;
 		border: 1px solid var(--border-base);
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		cursor: pointer;
 		transition:
 			box-shadow var(--d-hover) var(--ease-vici),
@@ -110,7 +110,7 @@
 		display: block;
 		width: 0.4rem;
 		height: 0.4rem;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 	}
 
 	/* Tiles variant — settings preferences */
@@ -166,7 +166,7 @@
 		display: block;
 		width: 0.5rem;
 		height: 0.5rem;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 	}
 
 	.appearance-tile-label {

@@ -133,14 +133,14 @@
 		align-items: center;
 		gap: 4px;
 		padding: 3px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--bg-surface);
 		box-shadow: inset 0 0 0 1px var(--border-base);
 	}
 	.flow-amount-btn {
 		width: 2rem;
 		height: 2rem;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--bg-popover);
 		color: var(--text-base);
 		font-size: 18px;
@@ -196,7 +196,7 @@
 		align-items: center;
 		justify-content: center;
 		gap: 0;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--bg-surface);
 		transition:
 			transform 0.12s ease,

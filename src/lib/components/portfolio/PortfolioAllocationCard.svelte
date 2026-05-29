@@ -179,7 +179,7 @@
 
 	.allocation-bar {
 		height: 4px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: rgba(242, 236, 220, 0.06);
 		overflow: hidden;
 	}
@@ -187,6 +187,6 @@
 	.allocation-bar-fill {
 		display: block;
 		height: 100%;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 	}
 </style>

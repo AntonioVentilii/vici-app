@@ -121,7 +121,7 @@
 
 		<div
 			style="
-				margin-top:6px; height:6px; border-radius:999px;
+				margin-top:6px; height:6px; border-radius:var(--r-pill);
 				background:var(--border-strong); overflow:hidden;
 				position:relative; display:flex;
 			"
