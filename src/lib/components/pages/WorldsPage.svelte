@@ -535,7 +535,7 @@
 		font-family: var(--font-mono, var(--font-sans));
 		font-size: var(--t-10, 0.6rem);
 		font-weight: 700;
-		letter-spacing: 0.12em;
+		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		border-radius: var(--r-4, 0.25rem);
 	}

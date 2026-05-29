@@ -49,7 +49,7 @@
 		>
 			<LandingTrickster lightning size={26} />
 			<span
-				style="font-family:var(--font-mono); font-size:10px; color:#FF8A7A; text-transform:uppercase; letter-spacing:0.12em; font-weight:600;"
+				style="font-family:var(--font-mono); font-size:10px; color:#FF8A7A; text-transform:uppercase; letter-spacing:var(--tracking-allcaps); font-weight:600;"
 			>
 				{minority}% agree · 2× XP
 			</span>

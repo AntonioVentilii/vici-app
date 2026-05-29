@@ -865,7 +865,7 @@
 	.flow-cat-live {
 		margin-left: 4px;
 		font-size: 9.5px;
-		letter-spacing: 0.12em;
+		letter-spacing: var(--tracking-allcaps);
 		opacity: 0.85;
 	}
 
@@ -1161,7 +1161,7 @@
 	.flow-probs-role {
 		font-size: 9.5px;
 		font-weight: 700;
-		letter-spacing: 0.12em;
+		letter-spacing: var(--tracking-allcaps);
 		opacity: 0.75;
 	}
 

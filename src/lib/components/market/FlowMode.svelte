@@ -915,7 +915,7 @@
 		flex-direction: column;
 		background:
 			radial-gradient(circle at 50% -10%, var(--laurel-glow), transparent 34%), var(--bg-base);
-		animation: flow-fade-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+		animation: flow-fade-in 220ms var(--ease-stage) both;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.flow-shell {

@@ -56,7 +56,7 @@
 	   apply the matching `fade-up` keyframe (same 8 px lift, same
 	   timing) without re-translating each button. */
 	.vici-toast {
-		animation: fade-up 280ms cubic-bezier(0.16, 1, 0.3, 1) both;
+		animation: fade-up 280ms var(--ease-stage) both;
 	}
 
 	@media (prefers-reduced-motion: reduce) {

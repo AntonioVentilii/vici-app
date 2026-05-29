@@ -386,7 +386,7 @@
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--text-base);
-		animation: flow-spark-event-in 220ms cubic-bezier(0.16, 1, 0.3, 1) both;
+		animation: flow-spark-event-in 220ms var(--ease-stage) both;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.flow-spark-event-row {

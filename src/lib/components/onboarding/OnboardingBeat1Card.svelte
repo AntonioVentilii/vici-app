@@ -180,7 +180,7 @@
 		border: 1px solid var(--ink-line);
 		border-radius: 16px;
 		will-change: transform;
-		transition: transform 360ms cubic-bezier(0.2, 0.7, 0.2, 1);
+		transition: transform 360ms var(--ease-vici);
 	}
 	.ob2-swipe-card.is-dragging {
 		transition: none;
@@ -248,7 +248,7 @@
 	.ob2-card-prob-label {
 		font-family: var(--font-mono);
 		font-size: 10px;
-		letter-spacing: 0.12em;
+		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		font-weight: 700;
 	}
@@ -264,7 +264,7 @@
 		font-family: var(--font-display);
 		font-size: 22px;
 		font-weight: 700;
-		letter-spacing: 0.12em;
+		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		padding: 4px 10px;
 		border-radius: var(--r-pill);
