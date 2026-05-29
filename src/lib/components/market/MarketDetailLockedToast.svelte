@@ -58,6 +58,6 @@
 		font-style: italic;
 		font-size: var(--t-32);
 		line-height: 1;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 	}
 </style>

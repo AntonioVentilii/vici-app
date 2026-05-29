@@ -95,7 +95,7 @@
 		color: var(--text-base);
 		font-size: var(--t-16);
 		font-weight: 600;
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 	}
 
 	.market-top-predictors-more {

@@ -132,7 +132,7 @@
 	.app-desktop-nav-brand {
 		font-family: var(--font-display);
 		font-weight: 600;
-		font-size: 1.25rem;
+		font-size: var(--t-20);
 		letter-spacing: 0.18em;
 		color: var(--text-base);
 		text-decoration: none;
@@ -145,7 +145,7 @@
 	}
 
 	.app-desktop-nav-link {
-		font-size: 0.875rem;
+		font-size: var(--t-14);
 		font-weight: 500;
 		color: var(--text-muted);
 		text-decoration: none;
@@ -196,7 +196,7 @@
 		gap: 0.4rem;
 		padding: 0.4rem 0.85rem;
 		border-radius: var(--r-pill);
-		font-size: 0.8125rem;
+		font-size: var(--t-13);
 		font-weight: 600;
 		color: var(--text-base);
 		background: color-mix(in srgb, var(--bg-surface) 80%, transparent);
@@ -215,7 +215,7 @@
 		padding: 0.5rem 1rem;
 		border-radius: var(--r-pill);
 		font: inherit;
-		font-size: 0.8125rem;
+		font-size: var(--t-13);
 		font-weight: 600;
 		color: var(--color-primary-foreground, var(--ink));
 		background: var(--color-primary, var(--laurel));

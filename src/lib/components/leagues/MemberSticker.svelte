@@ -184,9 +184,9 @@
 
 	.member-sticker-initials {
 		font-family: var(--font-display);
-		font-size: 1.5rem;
+		font-size: var(--t-24);
 		font-weight: 700;
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 		color: var(--text-on-accent, #fff);
 		text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 		z-index: 1;
@@ -203,7 +203,7 @@
 		letter-spacing: 0.06em;
 		color: var(--ink, #1a1410);
 		background: var(--accent);
-		border-radius: 2px;
+		border-radius: var(--r-2);
 	}
 
 	.member-sticker-rank[data-tone='silver'] {

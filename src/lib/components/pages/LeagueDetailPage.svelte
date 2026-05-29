@@ -1022,7 +1022,7 @@
 
 	.league-detail-head-meta {
 		font-size: var(--t-11, 0.7rem);
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
 

@@ -1147,7 +1147,7 @@
 		font-family: var(--font-mono);
 		font-size: 0.65rem;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 	}
 
 	/* Affiliation chip row sits below the handle row. */
@@ -1207,7 +1207,7 @@
 		display: inline-block;
 		width: 14px;
 		height: 10px;
-		border-radius: 2px;
+		border-radius: var(--r-2);
 		object-fit: cover;
 	}
 
@@ -1398,7 +1398,7 @@
 		background: var(--bg-surface);
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.75rem;
+		font-size: var(--t-12);
 		font-weight: 700;
 	}
 

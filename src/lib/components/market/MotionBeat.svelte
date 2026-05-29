@@ -139,7 +139,7 @@
 
 	.motion-beat-line {
 		margin: 0;
-		font-size: 1rem;
+		font-size: var(--t-16);
 		line-height: var(--leading-snug);
 		color: var(--text-base);
 	}

@@ -317,7 +317,7 @@
 		justify-content: space-between;
 		font-size: var(--t-11, 0.7rem);
 		font-weight: 600;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 	}
 
 	.flow-progress-count {

@@ -970,7 +970,7 @@
 	.invite-bonus {
 		color: var(--color-primary);
 		font-size: var(--t-12);
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 	}
 
 	/* Invite headline: display sans-serif, 20 px, weight 600, slight
@@ -1344,7 +1344,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--t-12);
 		font-weight: 800;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 	}
 
 	.ranked-num.is-you {
@@ -1422,7 +1422,7 @@
 		font-family: var(--font-mono);
 		font-size: var(--t-12);
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		cursor: pointer;
 		text-align: center;
 		transition: background 140ms ease;

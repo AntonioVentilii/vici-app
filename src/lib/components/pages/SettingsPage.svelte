@@ -1019,7 +1019,7 @@
 		gap: 10px;
 		padding: 10px 12px;
 		border: 1px solid var(--border-base);
-		border-radius: 8px;
+		border-radius: var(--r-8);
 		background: rgba(242, 236, 220, 0.04);
 		color: var(--text-muted);
 		font-size: var(--t-13);

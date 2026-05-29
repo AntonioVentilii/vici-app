@@ -446,7 +446,7 @@
 	.album-sheet-title {
 		font-size: 19px;
 		font-weight: 600;
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 		color: var(--text-base);
 	}
 

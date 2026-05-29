@@ -299,7 +299,7 @@
 	.worlds-detail-identity-name {
 		font-size: var(--t-20, 1.25rem);
 		font-weight: 600;
-		letter-spacing: -0.01em;
+		letter-spacing: var(--tracking-snug);
 		color: var(--text-base);
 	}
 

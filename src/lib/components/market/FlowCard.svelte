@@ -875,7 +875,7 @@
 		padding: 2px 7px;
 		font-size: 10.5px;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 		background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
 		border: 1px solid var(--border-base);
@@ -1094,7 +1094,7 @@
 	.flow-probs-pct {
 		font-size: 1.45rem;
 		font-weight: 700;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 		line-height: 1;
 		color: var(--text-base);
 	}

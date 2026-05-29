@@ -200,7 +200,7 @@
 		text-transform: uppercase;
 		color: var(--text-muted);
 		background: color-mix(in srgb, var(--text-base) 6%, transparent);
-		border-radius: 4px;
+		border-radius: var(--r-4);
 	}
 
 	.portfolio-row-cat.is-dim {
@@ -228,7 +228,7 @@
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
-		border-radius: 4px;
+		border-radius: var(--r-4);
 		background: color-mix(in srgb, var(--text-base) 6%, transparent);
 		color: var(--text-muted);
 	}
@@ -262,7 +262,7 @@
 		padding: 0.25rem 0.625rem;
 		font-size: 10px;
 		font-weight: 700;
-		letter-spacing: 0.04em;
+		letter-spacing: var(--tracking-wide);
 		text-transform: uppercase;
 		color: var(--no);
 		background: var(--no-wash);

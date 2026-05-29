@@ -123,7 +123,7 @@
 		color: var(--text-base);
 		font-size: 2.75rem;
 		font-weight: 600;
-		letter-spacing: -0.02em;
+		letter-spacing: var(--tracking-tight);
 		line-height: 1.05;
 		text-wrap: balance;
 	}

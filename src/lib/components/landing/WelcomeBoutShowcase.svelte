@@ -31,7 +31,7 @@
 		<div style="gap:10px; align-items:center; min-width:0; flex:1;" class="row">
 			<span
 				style="
-					width:30px; height:30px; border-radius:8px; flex:none;
+					width:30px; height:30px; border-radius:var(--r-8); flex:none;
 					background:{league.color}; color:#0E0D0B;
 					display:inline-flex; align-items:center; justify-content:center;
 					font-family:var(--font-serif); font-style:italic;
@@ -56,7 +56,7 @@
 		</div>
 		<span
 			style="
-				font-size:20px; font-weight:700; letter-spacing:-0.02em;
+				font-size:20px; font-weight:700; letter-spacing:var(--tracking-tight);
 				color:{isLeading ? 'var(--accent)' : 'var(--fg)'}; flex-shrink:0;
 			"
 			class="num"
@@ -107,7 +107,7 @@
 			<span
 				style="
 					font-size:16px; color:var(--fg-mute);
-					letter-spacing:0.04em; font-weight:400;
+					letter-spacing:var(--tracking-wide); font-weight:400;
 					line-height:1; padding:0 2px;
 				"
 				class="serif-italic"

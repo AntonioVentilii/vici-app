@@ -67,7 +67,7 @@
 		appearance: none;
 		width: 28px;
 		height: 28px;
-		font-size: 1.25rem;
+		font-size: var(--t-20);
 		color: var(--text-muted);
 		background: none;
 		border: 1px solid var(--border-base);
