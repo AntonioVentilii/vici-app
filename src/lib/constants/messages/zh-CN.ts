@@ -1092,6 +1092,7 @@ export const zhCnMessages = {
 	'onboarding.beat1b.backing_prefix': '支持',
 	'onboarding.beat1b.backing_sub': '你看好他们能出线吗?',
 	'onboarding.beat1b.change_team': '换球队',
+	'onboarding.beat1b.first_call': '首次预测',
 	'onboarding.beat1b.coach.dismiss': '知道了',
 	'onboarding.beat1b.coach.hint': '向一侧滑动 — 或点按。没有错误答案。',
 	'onboarding.beat1b.headline': '做出你的第一次下注。',

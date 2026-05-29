@@ -62,6 +62,10 @@ export interface FeaturedEvent {
 	 *  (top-bar deck chip, ticker), e.g. "World Cup". Falls back to
 	 *  `title` when omitted. */
 	shortTitle?: string;
+	/** Title formatted for the onboarding countdown eyebrow, e.g.
+	 *  "FIFA World Cup 2026" (event name first, year last). Rendered
+	 *  uppercase by the eyebrow. Falls back to `title` when omitted. */
+	badgeTitle?: string;
 	/** Optional subtitle. Same i18n fallback rule as `title`. */
 	subtitle?: string;
 

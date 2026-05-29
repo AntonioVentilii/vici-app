@@ -13,10 +13,12 @@
 	/**
 	 * Onboarding · Beat 1.b — derived prediction card.
 	 *
-	 * Verbatim port of `Beat1WC` phase 1.b from `onboarding-v2.jsx`
-	 * (lines 92-125). Wraps the shared swipeable card in the same
-	 * `.ob2-card-stage` envelope and mounts the FlowCoach overlay
-	 * above it.
+	 * Wraps the shared swipeable card in the `.ob2-card-stage`
+	 * envelope and mounts the FlowCoach overlay above it. The card is
+	 * a sectioned editorial layout: a gold-tinted header (category +
+	 * first-call badges, question, "Backing X" context), a full-bleed
+	 * WC artwork band, and a body with the NO/YES probability tiles
+	 * and footer.
 	 *
 	 * Two question modes:
 	 *   - Picked team → advancement market ("Will X make the round of
@@ -82,7 +84,7 @@
 
 <div class="ob2-beat ob2-beat-1">
 	<div class="ob2-wc-eyebrow">
-		<span class="ob2-wc-tag">{event.title}</span>
+		<span class="ob2-wc-tag">{event.badgeTitle ?? event.title}</span>
 		<span class="ob2-wc-countdown">
 			· {t({
 				locale: $localeStore,
@@ -114,6 +116,10 @@
 	{/if}
 
 	<div class="ob2-card-stage">
+		<!-- Behind-card shadow — tilted slightly so the live card reads as
+		     the top of a stack. -->
+		<div class="ob2-card-shadow" aria-hidden="true"></div>
+
 		<SwipeableMarketCard onCommit={(side) => commit(side)}>
 			{#snippet children(swipe)}
 				<div
@@ -122,29 +128,68 @@
 					class:is-committed={swipe.committed !== null}
 					class:is-dragging={swipe.dragging}
 				>
-					<h2 class="ob2-card-question">
-						{t({ locale: $localeStore, key: titleKey, params: { team: titleTeamName } })}
-					</h2>
+					<!-- Tinted header — category + first-call badges, question,
+					     and the "Backing X" context line. -->
+					<div class="ob2-card-head">
+						<div class="ob2-card-head-row">
+							<span class="ob2-card-tag">{event.shortTitle ?? event.title}</span>
+							<span class="ob2-card-flag"
+								>{t({ locale: $localeStore, key: 'onboarding.beat1b.first_call' })}</span
+							>
+						</div>
+						<h2 class="ob2-card-question">
+							{t({ locale: $localeStore, key: titleKey, params: { team: titleTeamName } })}
+						</h2>
+						<p class="ob2-card-ctx">
+							{t({ locale: $localeStore, key: 'onboarding.beat1b.backing_prefix' })}
+							{titleTeamName}
+						</p>
+					</div>
 
+					<!-- Full-bleed artwork band. -->
 					<div class="ob2-card-art">
 						<MarketArtwork bleed category="wc" seed={artworkSeed} size={420} state="neutral" />
 					</div>
 
-					<div class="ob2-card-probs">
-						<div class="ob2-card-prob no">
-							<span class="ob2-card-prob-label"
-								>{t({ locale: $localeStore, key: 'outcome.no' })}</span
-							>
-							<span class="ob2-card-prob-pct">{noPct}%</span>
+					<!-- Body — probability tiles + footer. -->
+					<div class="ob2-card-body">
+						<div class="ob2-card-probs">
+							<div class="ob2-card-prob no">
+								<span class="ob2-card-prob-label"
+									>{t({ locale: $localeStore, key: 'outcome.no' })}</span
+								>
+								<span class="ob2-card-prob-pct">{noPct}%</span>
+							</div>
+							<div class="ob2-card-prob yes">
+								<span class="ob2-card-prob-label"
+									>{t({ locale: $localeStore, key: 'outcome.yes' })}</span
+								>
+								<span class="ob2-card-prob-pct">{yesPct}%</span>
+							</div>
 						</div>
-						<div class="ob2-card-prob yes">
-							<span class="ob2-card-prob-label"
-								>{t({ locale: $localeStore, key: 'outcome.yes' })}</span
+						<div class="ob2-card-foot">
+							<span class="ob2-card-foot-calls"
+								>— {t({ locale: $localeStore, key: 'card.calls' })}</span
 							>
-							<span class="ob2-card-prob-pct">{yesPct}%</span>
+							<span class="ob2-card-foot-swipe"
+								>{t({ locale: $localeStore, key: 'card.swipe_to_call' })}</span
+							>
 						</div>
 					</div>
 
+					<!-- Edge tints — light up the chosen side as the card is dragged. -->
+					<div
+						style:opacity={Math.min(1, Math.max(0, swipe.dragX / 100)) * 0.55}
+						class="ob2-card-edge yes"
+						aria-hidden="true"
+					></div>
+					<div
+						style:opacity={Math.min(1, Math.max(0, -swipe.dragX / 100)) * 0.55}
+						class="ob2-card-edge no"
+						aria-hidden="true"
+					></div>
+
+					<!-- Swipe stamps. -->
 					<span
 						style:opacity={swipe.yesOpacity}
 						class="ob2-swipe-stamp ob2-swipe-stamp-yes"
@@ -167,18 +212,48 @@
 </div>
 
 <style lang="postcss">
-	/* Inner card uses local `ob2-swipe-card` namespacing to avoid
-	   clashing with the broader `ob-*` stylesheet. The outer
-	   `ob2-card-stage` and `ob2-beat-1` containers live in `app.css`. */
-	.ob2-swipe-card {
+	/* Sectioned card — tinted header, full-bleed art, body — that
+	   fills the stage and sits over a slightly tilted shadow card.
+	   Local `ob2-*` namespacing avoids clashing with the broader `ob-*`
+	   stylesheet; the outer `ob2-card-stage` / `ob2-beat-1` containers
+	   live in `app.css`. */
+
+	/* The swipe host (from SwipeableMarketCard) is the flex child that
+	   fills the stage; the card inside is absolutely positioned so it
+	   overlaps the shadow card cleanly. */
+	.ob2-card-stage :global(.swipe-host) {
 		position: relative;
-		display: flex;
-		flex-direction: column;
-		gap: 18px;
-		padding: 22px;
-		background: var(--ink-raised);
+		z-index: 2;
+		flex: 1 1 auto;
+		min-height: 0;
+	}
+
+	.ob2-card-shadow {
+		position: absolute;
+		right: 12px;
+		bottom: -2px;
+		left: 12px;
+		top: 14px;
+		z-index: 1;
+		background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
 		border: 1px solid var(--ink-line);
 		border-radius: var(--r-12);
+		transform: rotate(-2deg);
+		opacity: 0.45;
+	}
+
+	.ob2-swipe-card {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+		background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
+		border: 1px solid var(--ink-line-strong);
+		border-radius: var(--r-12);
+		box-shadow:
+			0 18px 50px -16px rgba(0, 0, 0, 0.6),
+			inset 0 1px 0 rgba(242, 236, 220, 0.08);
 		will-change: transform;
 		transition: transform 360ms var(--ease-vici);
 	}
@@ -188,23 +263,66 @@
 	.ob2-swipe-card.is-committed {
 		pointer-events: none;
 	}
+
+	/* Tinted header — gold wash + hairline divider. */
+	.ob2-card-head {
+		flex-shrink: 0;
+		padding: 16px 18px 12px;
+		background: linear-gradient(
+			160deg,
+			rgba(226, 184, 66, 0.15) 0%,
+			rgba(226, 184, 66, 0.06) 60%,
+			transparent 100%
+		);
+		border-bottom: 1px solid rgba(226, 184, 66, 0.12);
+	}
+	.ob2-card-head-row {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+	.ob2-card-tag {
+		display: inline-flex;
+		padding: 3px 7px;
+		border-radius: 4px;
+		background: rgba(242, 236, 220, 0.06);
+		color: var(--laurel);
+		font-family: var(--font-display);
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+	}
+	.ob2-card-flag {
+		color: var(--laurel);
+		font-family: var(--font-mono);
+		font-size: 9px;
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
+	}
 	.ob2-card-question {
-		margin: 0;
+		margin: 10px 0 4px;
 		font-family: var(--font-display);
 		font-size: 20px;
-		font-weight: 700;
+		font-weight: 600;
 		line-height: 1.18;
 		letter-spacing: var(--tracking-tight);
 		color: var(--parchment);
+		text-wrap: balance;
 	}
-	/* Edge-to-edge FlowArt — cancels the swipe card's 22px padding so
-	   the WC figure / spots / confetti span the body, matching the
-	   prototype's `ob-art` bleed (`onboarding.jsx:128-129`). */
+	.ob2-card-ctx {
+		margin: 0;
+		font-size: var(--t-13);
+		line-height: 1.4;
+		color: var(--parchment-dim);
+	}
+
+	/* Full-bleed art band — grows to fill the card height. */
 	.ob2-card-art {
 		position: relative;
-		width: calc(100% + 44px);
-		height: 150px;
-		margin: 0 -22px;
+		flex: 1;
+		min-height: 120px;
 		overflow: hidden;
 		display: flex;
 		align-items: center;
@@ -224,25 +342,34 @@
 		width: 100%;
 		height: 100%;
 	}
+
+	.ob2-card-body {
+		flex-shrink: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 10px;
+		padding: 12px 18px 14px;
+	}
 	.ob2-card-probs {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 12px;
+		gap: 8px;
 	}
 	.ob2-card-prob {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		gap: 4px;
-		padding: 14px 8px;
-		background: rgba(242, 236, 220, 0.04);
+		gap: 2px;
+		padding: 10px 14px;
+		background: rgba(242, 236, 220, 0.02);
 		border: 1px solid var(--ink-line);
-		border-radius: 10px;
+		border-radius: 11px;
 	}
 	.ob2-card-prob.no {
+		align-items: flex-start;
 		color: var(--no);
 	}
 	.ob2-card-prob.yes {
+		align-items: flex-end;
 		color: var(--yes);
 	}
 	.ob2-card-prob-label {
@@ -253,34 +380,67 @@
 		font-weight: 700;
 	}
 	.ob2-card-prob-pct {
-		font-family: var(--font-display);
-		font-size: 22px;
-		font-weight: 700;
+		font-family: var(--font-mono);
+		font-size: 26px;
+		font-weight: 600;
 		letter-spacing: var(--tracking-tight);
 	}
+
+	.ob2-card-foot {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+	.ob2-card-foot-calls {
+		font-family: var(--font-mono);
+		font-size: var(--t-11);
+		color: var(--parchment-mute);
+	}
+	.ob2-card-foot-swipe {
+		font-family: var(--font-mono);
+		font-size: var(--t-10);
+		letter-spacing: 0.14em;
+		color: var(--parchment-mute);
+	}
+
+	/* Edge tints — fade in toward the swiped side. */
+	.ob2-card-edge {
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		pointer-events: none;
+		transition: opacity 100ms linear;
+	}
+	.ob2-card-edge.yes {
+		background: linear-gradient(270deg, rgba(79, 211, 161, 0.55), transparent 55%);
+	}
+	.ob2-card-edge.no {
+		background: linear-gradient(90deg, rgba(255, 107, 107, 0.55), transparent 55%);
+	}
+
 	.ob2-swipe-stamp {
 		position: absolute;
 		top: 22px;
 		font-family: var(--font-display);
-		font-size: 22px;
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
+		font-size: 16px;
+		font-weight: 800;
+		letter-spacing: 0.18em;
 		text-transform: uppercase;
-		padding: 4px 10px;
-		border-radius: var(--r-pill);
+		padding: 6px 12px;
+		border-radius: 6px;
 		pointer-events: none;
-		transition: opacity 80ms linear;
+		transition: opacity 100ms linear;
 	}
 	.ob2-swipe-stamp-yes {
 		right: 22px;
 		color: var(--yes);
 		border: 2px solid var(--yes);
-		transform: rotate(-12deg);
+		transform: rotate(8deg);
 	}
 	.ob2-swipe-stamp-no {
 		left: 22px;
 		color: var(--no);
 		border: 2px solid var(--no);
-		transform: rotate(12deg);
+		transform: rotate(-8deg);
 	}
 </style>

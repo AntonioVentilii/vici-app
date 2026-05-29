@@ -139,15 +139,6 @@
 		animation-delay: -4s;
 	}
 
-	/* Focal props — trophy / golden boot / red card — get a single
-	   shared "pulse" idle and rely on the same fill-box transform
-	   origin so they don't drift off the seed-positioned anchor. */
-	.flow-art-frame :global(.wc-prop) {
-		transform-box: fill-box;
-		transform-origin: 50% 50%;
-		animation: wc-prop-pulse 3.4s ease-in-out infinite;
-	}
-
 	@keyframes wc-figure-sway {
 		0%,
 		100% {
@@ -184,21 +175,10 @@
 		}
 	}
 
-	@keyframes wc-prop-pulse {
-		0%,
-		100% {
-			transform: scale(1) rotate(-2deg);
-		}
-		50% {
-			transform: scale(1.06) rotate(2deg);
-		}
-	}
-
 	@media (prefers-reduced-motion: reduce) {
 		.flow-art-frame :global(.wc-figure),
 		.flow-art-frame :global(.wc-spot),
-		.flow-art-frame :global(.wc-cnf),
-		.flow-art-frame :global(.wc-prop) {
+		.flow-art-frame :global(.wc-cnf) {
 			animation: none;
 		}
 	}

@@ -22,6 +22,7 @@ export const WORLD_CUP_2026: FeaturedEvent = {
 	kind: 'tournament',
 	title: '2026 FIFA World Cup',
 	shortTitle: 'World Cup',
+	badgeTitle: 'FIFA World Cup 2026',
 	subtitle: 'USA · Canada · Mexico · 48 teams',
 	kickoffAt_ms: Date.UTC(2026, 5, 11, 0, 0, 0), // June 11, 2026
 	finalAt_ms: Date.UTC(2026, 6, 19, 0, 0, 0), // July 19, 2026
