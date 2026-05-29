@@ -1,6 +1,6 @@
 <script lang="ts">
 	import type { Doc } from '@junobuild/core';
-	import { Check, ChevronRight, Plus, Share2 } from 'lucide-svelte/icons';
+	import { Check, ChevronRight, Copy, Plus, Share2 } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
@@ -495,6 +495,7 @@
 					</span>
 				{:else}
 					<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
+						<Copy aria-hidden="true" size={13} strokeWidth={1.8} />
 						{t({ locale: $localeStore, key: 'social.friends.invite.copy' })}
 					</span>
 				{/if}
@@ -1058,7 +1059,7 @@
 		padding: 0.6rem 0.9rem;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-pill);
-		background: transparent;
+		background: var(--bg-surface);
 		color: var(--text-base);
 		font-size: var(--t-13);
 		font-weight: 700;
