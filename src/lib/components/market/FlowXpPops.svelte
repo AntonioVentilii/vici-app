@@ -72,7 +72,7 @@
 		align-items: baseline;
 		gap: 0.4rem;
 		padding: 10px 16px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		font-family: var(--font-mono);
 		font-size: 22px;
 		font-weight: 900;
@@ -84,7 +84,7 @@
 	}
 	.xp-pop-label {
 		font-size: 11px;
-		letter-spacing: 0.12em;
+		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		opacity: 0.7;
 	}

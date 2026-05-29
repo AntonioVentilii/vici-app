@@ -330,7 +330,7 @@
 		top: 3px;
 		width: 28px;
 		height: 3px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--fg, var(--text-base));
 		opacity: 0.85;
 		transition:

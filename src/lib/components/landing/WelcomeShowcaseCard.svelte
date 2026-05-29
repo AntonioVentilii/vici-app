@@ -66,7 +66,7 @@
 		class="row between"
 	>
 		<span
-			style="{eyebrowColor ? `color:${eyebrowColor}; ` : ''}letter-spacing:0.12em;"
+			style="{eyebrowColor ? `color:${eyebrowColor}; ` : ''}letter-spacing:var(--tracking-allcaps);"
 			class="eyebrow {eyebrowClass}"
 		>
 			{t({ locale: $localeStore, key: eyebrowKey })}

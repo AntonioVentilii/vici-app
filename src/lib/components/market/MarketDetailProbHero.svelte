@@ -88,7 +88,7 @@
 		height: 0.5rem;
 		margin-top: 0.625rem;
 		overflow: hidden;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--bg-surface);
 	}
 

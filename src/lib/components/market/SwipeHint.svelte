@@ -111,7 +111,7 @@
 	.swipe-hint-dot {
 		width: 4px;
 		height: 4px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--fg-mute);
 		opacity: 0.5;
 	}

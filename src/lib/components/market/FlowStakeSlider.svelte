@@ -153,7 +153,7 @@
 	}
 	.flow-stake-unit {
 		font-size: 9.5px;
-		letter-spacing: 0.12em;
+		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
 		font-weight: 700;
 		margin-left: 3px;

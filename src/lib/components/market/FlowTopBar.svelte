@@ -221,7 +221,7 @@
 	.flow-deck-dot {
 		width: 6px;
 		height: 6px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--yes);
 		box-shadow: 0 0 0 3px color-mix(in srgb, var(--yes) 22%, transparent);
 		animation: flow-topbar-pulse 1.8s ease-in-out infinite;
@@ -268,7 +268,7 @@
 		justify-content: center;
 		width: 2rem;
 		height: 2rem;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		color: var(--text-muted);
 		background: transparent;
 		transition:
@@ -294,7 +294,7 @@
 		min-width: 14px;
 		height: 14px;
 		padding: 0 4px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--no);
 		color: var(--background, #fff);
 		font-size: 9px;
@@ -332,7 +332,7 @@
 	.flow-progress-track {
 		height: 3px;
 		width: 100%;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 		overflow: hidden;
 	}

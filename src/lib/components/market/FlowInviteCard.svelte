@@ -149,7 +149,7 @@
 		flex-shrink: 0;
 		width: 1.75rem;
 		height: 1.75rem;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		color: var(--laurel);
 		background: color-mix(in srgb, var(--laurel) 12%, transparent);
 	}

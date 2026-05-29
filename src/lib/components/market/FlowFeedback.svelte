@@ -121,7 +121,7 @@
 		gap: 8px;
 		margin-top: 8px;
 		padding: 6px 12px 6px 6px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: rgba(240, 138, 60, 0.08);
 		border: 1px solid rgba(240, 138, 60, 0.28);
 		animation: fade-up var(--d-enter) var(--ease) 280ms both;

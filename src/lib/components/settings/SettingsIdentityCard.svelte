@@ -80,7 +80,7 @@
 		width: 2.5rem;
 		height: 2.5rem;
 		flex-shrink: 0;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--bg-popover);
 	}
 
