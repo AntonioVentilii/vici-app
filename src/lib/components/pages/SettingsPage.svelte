@@ -1058,7 +1058,7 @@
 		display: inline-block;
 		width: 8px;
 		height: 8px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--text-muted) 60%, transparent);
 		flex-shrink: 0;
 		transition: background var(--d-hover) var(--ease-vici);
@@ -1318,7 +1318,7 @@
 		z-index: 80;
 		padding: 0.625rem 1rem;
 		border: 1px solid var(--border-base);
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--bg-popover);
 		color: var(--text-base);
 		font-family: var(--font-mono);

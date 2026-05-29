@@ -318,7 +318,7 @@
 		background: transparent;
 		border: 1px solid var(--border-base);
 		color: var(--text-mute);
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		font: inherit;
 		font-size: 12px;
 		letter-spacing: 0.02em;

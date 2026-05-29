@@ -411,7 +411,7 @@
 	.flow-end-goal-bar {
 		margin-top: 0.625rem;
 		height: 4px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: rgba(226, 184, 66, 0.18);
 		overflow: hidden;
 	}

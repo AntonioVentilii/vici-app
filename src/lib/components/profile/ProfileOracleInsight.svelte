@@ -41,7 +41,7 @@
 		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--char-oracle) 18%, transparent);
 	}
 

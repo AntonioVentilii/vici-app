@@ -44,7 +44,7 @@
 		align-items: center;
 		gap: 0.75rem;
 		padding: 10px 16px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: linear-gradient(135deg, var(--color-primary), var(--laurel));
 		color: var(--color-primary-foreground);
 		font-size: 13px;
@@ -55,7 +55,7 @@
 	}
 	.combo-banner-xp {
 		padding: 3px 8px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--color-primary-foreground) 16%, transparent);
 		font-size: 11px;
 	}

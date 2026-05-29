@@ -92,7 +92,7 @@
 	.market-chart-chip {
 		padding: 2px 8px;
 		border: 0;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: transparent;
 		color: var(--text-muted);
 		font-size: 10px;

@@ -37,7 +37,7 @@
 		width: 1.5rem;
 		height: 1.5rem;
 		padding: 0;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		border: 2px solid transparent;
 		background: var(--swatch-bg);
 		cursor: pointer;
@@ -53,7 +53,7 @@
 		width: 0.4rem;
 		height: 0.4rem;
 		margin: 0.4rem auto;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--swatch-dot);
 	}
 </style>

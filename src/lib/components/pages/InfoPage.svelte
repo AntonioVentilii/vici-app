@@ -201,7 +201,7 @@
 		top: 0.6rem;
 		width: 4px;
 		height: 4px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: var(--color-primary);
 	}
 
