@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Sparkles } from 'lucide-svelte/icons';
 	import { fly } from 'svelte/transition';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
@@ -84,6 +83,21 @@
 	// Archetype label — falls back to "Strategist" when the user
 	// hasn't been assigned one yet, matching the proto copy.
 	const archetypeLabel = $derived(archetype ?? 'Strategist');
+
+	// Smart-nudge copy with the percentile highlighted in the accent
+	// tint. Rather than fork the sentence into per-locale fragments, we
+	// render the catalog string whole and split it on the interpolated
+	// "{pct}%" token so the number can carry its own span — every locale
+	// keeps the placeholder inline, so the split holds across all of them.
+	const nudgePctToken = $derived(`${SMART_NUDGE_PCT}%`);
+	const nudgeCopy = $derived(
+		t({
+			locale: $localeStore,
+			key: 'flow.end.smart_nudge_copy',
+			params: { pct: SMART_NUDGE_PCT, archetype: archetypeLabel }
+		})
+	);
+	const nudgeParts = $derived(nudgeCopy.split(nudgePctToken));
 
 	const reducedMotion = prefersReducedMotion();
 </script>
@@ -174,17 +188,29 @@
 		<!-- 4 · Smart Nudge — archetype-driven editorial copy. -->
 		<section class="flow-end-card flow-end-nudge anim-in-3">
 			<div class="flow-end-nudge-head">
-				<Sparkles aria-hidden="true" size={16} strokeWidth={2} />
+				<svg
+					aria-hidden="true"
+					fill="none"
+					height="16"
+					stroke="currentColor"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					stroke-width="2"
+					viewBox="0 0 24 24"
+					width="16"
+				>
+					<path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4" />
+				</svg>
 				<p class="eyebrow">
 					{t({ locale: $localeStore, key: 'flow.end.smart_nudge_eyebrow' })}
 				</p>
 			</div>
 			<p class="flow-end-nudge-copy">
-				{t({
-					locale: $localeStore,
-					key: 'flow.end.smart_nudge_copy',
-					params: { pct: SMART_NUDGE_PCT, archetype: archetypeLabel }
-				})}
+				{#if nudgeParts.length === 2}
+					{nudgeParts[0]}<span class="num flow-end-nudge-pct">{nudgePctToken}</span>{nudgeParts[1]}
+				{:else}
+					{nudgeCopy}
+				{/if}
 			</p>
 		</section>
 
@@ -380,6 +406,9 @@
 		font-size: var(--t-14);
 		line-height: 1.5;
 		color: var(--text-base);
+	}
+	.flow-end-nudge-pct {
+		color: var(--laurel);
 	}
 
 	/* 5 · Daily Goal */
