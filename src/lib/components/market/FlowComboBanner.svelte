@@ -57,6 +57,6 @@
 		padding: 3px 8px;
 		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--color-primary-foreground) 16%, transparent);
-		font-size: 11px;
+		font-size: var(--t-11);
 	}
 </style>

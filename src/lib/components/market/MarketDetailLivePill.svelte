@@ -19,7 +19,7 @@
 		align-items: center;
 		padding: 0.2rem 0.45rem;
 		border-radius: var(--r-pill);
-		font-size: 10px;
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;

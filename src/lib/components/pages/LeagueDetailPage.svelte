@@ -1007,7 +1007,7 @@
 
 	.league-detail-role {
 		flex-shrink: 0;
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		padding: 0.15rem 0.45rem;
 		border-radius: var(--r-pill);
@@ -1021,7 +1021,7 @@
 	}
 
 	.league-detail-head-meta {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
@@ -1097,7 +1097,7 @@
 	}
 
 	.league-detail-section-side {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		font-weight: 600;
 		letter-spacing: 0.06em;
 		color: var(--text-muted);
@@ -1125,7 +1125,7 @@
 	}
 
 	.league-detail-bout-tag {
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		padding: 0.1rem 0.4rem;
 		border-radius: var(--r-pill);
@@ -1154,7 +1154,7 @@
 	}
 
 	.league-detail-bout-meta {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
@@ -1267,7 +1267,7 @@
 		flex: 1;
 		padding: 0.4rem 0.5rem;
 		font: inherit;
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		font-weight: 600;
 		letter-spacing: 0.1em;
 		color: var(--text-muted);
@@ -1422,7 +1422,7 @@
 	}
 
 	.league-detail-activity-when {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		color: var(--text-muted);
 	}
 

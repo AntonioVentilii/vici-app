@@ -304,7 +304,7 @@
 	}
 
 	.worlds-detail-identity-meta {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
@@ -332,7 +332,7 @@
 	}
 
 	.worlds-detail-rank-label {
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
 	}
@@ -390,7 +390,7 @@
 	}
 
 	.worlds-detail-stats-label {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
 	}
@@ -402,7 +402,7 @@
 	}
 
 	.worlds-detail-stats-sub {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
 	}
@@ -410,7 +410,7 @@
 	.worlds-detail-stats-unranked {
 		margin: 0.5rem 0 0;
 		padding: 0.5rem 0.85rem;
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
 		background: color-mix(in srgb, var(--bg-surface) 96%, transparent);

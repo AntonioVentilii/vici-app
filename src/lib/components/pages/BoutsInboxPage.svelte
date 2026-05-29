@@ -1180,13 +1180,13 @@
 	}
 
 	.bouts-eyebrow {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
 	}
 
 	.bouts-section-head-meta {
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		letter-spacing: 0.08em;
 		color: var(--text-muted);
 	}
@@ -1198,7 +1198,7 @@
 		gap: 0.25rem;
 		padding: 0.3rem 0.7rem;
 		font: inherit;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 700;
 		color: var(--laurel);
 		background: color-mix(in srgb, var(--laurel) 8%, transparent);
@@ -1263,7 +1263,7 @@
 		gap: 0.25rem;
 		padding: 0.15rem 0.4rem;
 		font-family: var(--font-mono, var(--font-sans));
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
@@ -1300,7 +1300,7 @@
 	}
 
 	.bouts-card-timer {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
@@ -1326,7 +1326,7 @@
 
 	.bouts-card-meta {
 		margin: 0 0 0.6rem;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		color: var(--text-muted);
 		letter-spacing: var(--tracking-wide);
 	}
@@ -1386,7 +1386,7 @@
 
 	.bouts-pod-name {
 		margin-top: 0.18rem;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 600;
 		line-height: 1.2;
 		overflow: hidden;
@@ -1398,7 +1398,7 @@
 
 	.bouts-pod-pct {
 		margin-top: 0.1rem;
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
@@ -1464,7 +1464,7 @@
 
 	.bouts-your-pct.is-tournament {
 		color: #b49cff;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 	}
@@ -1474,7 +1474,7 @@
 		display: block;
 		margin-top: 0.55rem;
 		font-family: var(--font-mono, var(--font-sans));
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: 0.14em;
 		text-transform: uppercase;
@@ -1628,7 +1628,7 @@
 	}
 
 	.bouts-state {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		padding: 0.1rem 0.4rem;
 		border-radius: var(--r-pill);
@@ -1648,13 +1648,13 @@
 
 	.bouts-window {
 		margin: 0;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
 	.bouts-winner {
 		margin: 0;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
 	}

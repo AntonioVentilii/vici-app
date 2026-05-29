@@ -142,7 +142,7 @@
 	   tracking. */
 	.info-eyebrow {
 		margin: 0.75rem 0 1rem;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 700;
 		letter-spacing: 0.16em;
 		color: var(--color-primary);

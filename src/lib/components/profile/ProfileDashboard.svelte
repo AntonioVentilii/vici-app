@@ -1129,7 +1129,7 @@
 		background: color-mix(in srgb, var(--archetype-accent, var(--color-primary)) 14%, transparent);
 		color: var(--archetype-accent, var(--color-primary));
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1332,7 +1332,7 @@
 	.profile-affiliations-eyebrow {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -1341,7 +1341,7 @@
 	.profile-affiliations-count {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		letter-spacing: 0.1em;
 	}
 
@@ -1529,7 +1529,7 @@
 	.profile-past-ctx {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 	}
@@ -1710,7 +1710,7 @@
 	.profile-edit-label {
 		color: var(--text-muted);
 		font-family: var(--font-mono);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;

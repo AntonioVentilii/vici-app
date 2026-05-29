@@ -491,7 +491,7 @@
 	}
 
 	.tournament-tag {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		padding: 0.15rem 0.55rem;
 		border-radius: var(--r-pill);
@@ -550,7 +550,7 @@
 	}
 
 	.tournament-round-eyebrow {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		color: var(--text-muted);
@@ -611,7 +611,7 @@
 		justify-content: space-between;
 		gap: 0.4rem;
 		padding-top: 0.2rem;
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: 0.1em;
 		color: var(--text-muted);
 	}
@@ -664,7 +664,7 @@
 	}
 
 	.tournament-days-left {
-		font-size: 0.6875rem;
+		font-size: var(--t-11);
 		color: var(--text-muted);
 		letter-spacing: 0.08em;
 	}
@@ -743,7 +743,7 @@
 	}
 
 	.tournament-prize-sticker {
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
 	}
@@ -766,7 +766,7 @@
 
 	.tournament-prize-claim-eyebrow {
 		margin: 0;
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		color: color-mix(in srgb, #f4c544 70%, var(--text-base));

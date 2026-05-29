@@ -178,7 +178,7 @@
 		padding: 22px;
 		background: var(--ink-raised);
 		border: 1px solid var(--ink-line);
-		border-radius: 16px;
+		border-radius: var(--r-12);
 		will-change: transform;
 		transition: transform 360ms var(--ease-vici);
 	}
@@ -247,7 +247,7 @@
 	}
 	.ob2-card-prob-label {
 		font-family: var(--font-mono);
-		font-size: 10px;
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		font-weight: 700;

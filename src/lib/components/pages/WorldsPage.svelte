@@ -533,7 +533,7 @@
 		gap: 0.3rem;
 		padding: 0.18rem 0.45rem;
 		font-family: var(--font-mono, var(--font-sans));
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
@@ -589,7 +589,7 @@
 	.worlds-event-meta {
 		position: relative;
 		margin-bottom: 0.75rem;
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		color: var(--text-muted);
 		letter-spacing: 0.06em;
 		text-transform: none;
@@ -662,7 +662,7 @@
 
 	.worlds-pod-name {
 		margin-top: 0.2rem;
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 600;
 		line-height: 1.2;
 		letter-spacing: -0.005em;
@@ -670,7 +670,7 @@
 
 	.worlds-pod-pct {
 		margin-top: 0.1rem;
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
@@ -809,7 +809,7 @@
 
 	.worlds-row-sub {
 		margin-top: 0.05rem;
-		font-size: var(--t-10, 0.6rem);
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
@@ -851,7 +851,7 @@
 		padding: 0.85rem 1rem;
 		font: inherit;
 		font-family: var(--font-mono, var(--font-sans));
-		font-size: var(--t-10, 0.65rem);
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: 0.14em;
 		text-transform: uppercase;

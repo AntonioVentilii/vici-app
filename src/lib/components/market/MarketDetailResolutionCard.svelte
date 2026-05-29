@@ -50,7 +50,7 @@
 	.market-resolution-eyebrow {
 		display: block;
 		color: var(--text-muted);
-		font-size: 10px;
+		font-size: var(--t-10);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;

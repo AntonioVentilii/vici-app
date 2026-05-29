@@ -83,7 +83,7 @@
 		animation: xpPop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 	}
 	.xp-pop-label {
-		font-size: 11px;
+		font-size: var(--t-11);
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		opacity: 0.7;

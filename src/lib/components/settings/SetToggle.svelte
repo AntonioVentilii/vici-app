@@ -91,7 +91,7 @@
 	}
 
 	.set-toggle-sub {
-		font-size: 0.6875rem;
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 

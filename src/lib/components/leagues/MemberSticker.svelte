@@ -224,7 +224,7 @@
 	}
 
 	.member-sticker-name {
-		font-size: var(--t-11, 0.7rem);
+		font-size: var(--t-11);
 		font-weight: 600;
 		letter-spacing: -0.005em;
 		color: var(--text-base);

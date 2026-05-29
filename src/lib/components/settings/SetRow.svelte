@@ -100,7 +100,7 @@
 	}
 
 	.set-row-sub {
-		font-size: 0.6875rem;
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
@@ -108,7 +108,7 @@
 		flex-shrink: 0;
 		padding: 0.125rem 0.375rem;
 		border-radius: var(--r-pill);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 600;
 		background: var(--laurel-glow);
 		color: var(--color-primary);
