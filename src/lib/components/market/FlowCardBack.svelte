@@ -18,7 +18,6 @@
 	} from '$lib/types/market-signals';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
-	import { formatProbability } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { tagColor } from '$lib/utils/tag-color.utils';
 	import { snapToStakeLadder, vxpNetWin } from '$lib/utils/vxp-economy.utils';
@@ -65,6 +64,10 @@
 	const catColor = $derived(tagColor(category));
 	const yesPct = $derived(crowdPct);
 	const noPct = $derived(100 - yesPct);
+	// Headline number must read off `crowdSide` — the majority side the
+	// label shows. `crowdPct` is always the YES share, so a NO-leaning
+	// market needs `noPct` here or the figure contradicts its own label.
+	const crowdSidePct = $derived(crowdSide === 'YES' ? yesPct : noPct);
 
 	// Live countdown — minute-tick interval. Only runs while this back
 	// panel is mounted (Svelte cleans up the timer on destroy). 60 s is
@@ -312,7 +315,7 @@
 		<section class="flow-back-block flow-community">
 			<div class="flow-community-top">
 				<span class={`num flow-community-pct ${crowdSide === 'YES' ? 'text-yes' : 'text-no'}`}>
-					{formatProbability(market.yesProbability)}
+					{crowdSidePct}%
 					<span class="flow-community-side">{crowdSide}</span>
 				</span>
 				<span
