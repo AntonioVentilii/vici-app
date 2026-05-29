@@ -11,9 +11,3 @@
  * synchronized from the Juno `roles` collection via the `syncRoleToEngine` satellite hook.
  */
 export const VICI_ENGINE_ID = 'eng_0';
-
-/**
- * Human-readable engine name. Used by the init scripts to detect whether the engine is
- * already registered and to prevent duplicate registration.
- */
-export const VICI_ENGINE_NAME = 'Vici';

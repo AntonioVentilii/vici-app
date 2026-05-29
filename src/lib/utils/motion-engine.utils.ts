@@ -317,7 +317,3 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 		beat
 	};
 };
-
-export const resetMotionEngineState = (): void => {
-	saveState(defaultState());
-};

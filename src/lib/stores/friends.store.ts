@@ -6,7 +6,7 @@ import {
 import { userStore } from '$lib/stores/user.store';
 import type { Relation } from '$lib/types/relation';
 import type { Doc } from '@junobuild/core';
-import { derived, get, writable, type Readable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 
 /**
  * Reactive cache of the viewer's social graph.
@@ -28,21 +28,6 @@ export const sentFriendRequestsStore = writable<Doc<Relation>[]>([]);
  * load and switch to stale-while-revalidate on every subsequent visit.
  */
 export const friendsRelationsLoadedStore = writable<boolean>(false);
-
-export const friendsCountStore: Readable<number> = derived(
-	friendsListStore,
-	($friends) => $friends.length
-);
-
-export const friendRequestsCountStore: Readable<number> = derived(
-	friendRequestsStore,
-	($requests) => $requests.length
-);
-
-export const sentFriendRequestsCountStore: Readable<number> = derived(
-	sentFriendRequestsStore,
-	($sent) => $sent.length
-);
 
 const collectCounterparts = ({
 	viewer,

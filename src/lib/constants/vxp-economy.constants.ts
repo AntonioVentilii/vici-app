@@ -44,8 +44,7 @@ export const isVxpLadderStake = (n: number): n is VxpStake =>
 
 /**
  * Default stake for new and low-activity users. Renders as the only
- * surfaced option until the user crosses `VXP_STAKE_UNLOCK_AT_CALLS` —
- * no decision paralysis on first-call.
+ * surfaced option for first-call users — no decision paralysis.
  */
 export const VXP_DEFAULT_STAKE: VxpStake = 50;
 
@@ -55,12 +54,6 @@ export const VXP_DEFAULT_STAKE: VxpStake = 50;
  * economy. 5% caps long-shot payouts at ~20× stake.
  */
 export const VXP_P_WIN_FLOOR = 0.05;
-
-/**
- * Number of completed calls before the stake slider is exposed to the
- * user. Below this threshold, `VXP_DEFAULT_STAKE` is the only option.
- */
-export const VXP_STAKE_UNLOCK_AT_CALLS = 50;
 
 /**
  * Streak-milestone bonuses, in VXP. Granted when the user's daily streak
@@ -79,13 +72,6 @@ export const VXP_STREAK_BONUSES: Readonly<Record<number, number>> = Object.freez
  * (the "comeback" mechanic). Fires once per account, server-tracked.
  */
 export const VXP_COMEBACK_GRANT = 1000;
-
-/**
- * Per-signup VXP credited to the referrer when a referee completes
- * onboarding. Capped at `VXP_REFERRAL_MONTHLY_CAP` referrals per
- * calendar month.
- */
-export const VXP_REFERRAL_REWARD = 500;
 
 /**
  * Maximum number of referral payouts the referrer can receive within a

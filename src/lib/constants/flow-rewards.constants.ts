@@ -54,13 +54,6 @@ export const FLOW_MILESTONES: readonly FlowMilestone[] = [
 ] as const;
 
 /**
- * Lookup the milestone (if any) hit by an exact swipe count. Returns
- * `null` if `swipeCount` doesn't match a milestone threshold.
- */
-export const findFlowMilestone = (swipeCount: number): FlowMilestone | null =>
-	FLOW_MILESTONES.find((m) => m.swipeCount === swipeCount) ?? null;
-
-/**
  * Lifetime-call threshold below which accuracy is *not* surfaced in
  * the UI. Below the gate, calls + streak are the visible stats; the
  * accuracy percentage unlocks once the sample is large enough to be

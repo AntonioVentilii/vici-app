@@ -13,21 +13,8 @@ export const refreshOrders = () => {
 	emit({ message: VICI_EVENTS.REFRESH_ORDERS });
 };
 
-export const refreshTradeHistory = () => {
-	emit({ message: VICI_EVENTS.REFRESH_TRADE_HISTORY });
-};
-
 export const refreshGlobalActivities = () => {
 	emit({ message: VICI_EVENTS.REFRESH_GLOBAL_ACTIVITIES });
-};
-
-/**
- * Tell the comment cache to drop the cached entry for `marketId` so the
- * next render fetches fresh comments. The detail (the market id) is read
- * by `LoaderMarketComments` to know which entry to invalidate.
- */
-export const refreshMarketComments = (marketId: string) => {
-	emit({ message: VICI_EVENTS.REFRESH_MARKET_COMMENTS, detail: marketId });
 };
 
 export const refreshAllBalances = () => {

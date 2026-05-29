@@ -7,7 +7,7 @@ import { userStore } from '$lib/stores/user.store';
 import type { UserPreferences } from '$lib/types/preferences';
 import type { UserProfile } from '$lib/types/profile';
 import { isNullish, nonNullish } from '@dfinity/utils';
-import { derived, get, writable } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 
 /**
  * Cross-device user preferences store.
@@ -286,12 +286,3 @@ export const isMarketSaved = ({
 	marketId: string;
 	prefs: UserPreferences;
 }): boolean => prefs.savedMarketIds.includes(marketId);
-
-/**
- * Convenience: a `Set` of saved market ids derived from the store.
- * Useful for `O(1)` membership checks in render loops.
- */
-export const savedMarketIdsSet = derived(
-	preferencesStore,
-	($prefs) => new Set($prefs.savedMarketIds)
-);
