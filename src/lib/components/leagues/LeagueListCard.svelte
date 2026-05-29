@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Check, ChevronRight } from 'lucide-svelte/icons';
+	import { Check, ChevronRight, Copy } from 'lucide-svelte/icons';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { LeagueDoc } from '$lib/types/league';
@@ -210,6 +210,7 @@
 					<Check aria-hidden="true" size={11} strokeWidth={2.4} />
 					{t({ locale: $localeStore, key: 'leagues.card.copy_done' })}
 				{:else}
+					<Copy aria-hidden="true" size={11} strokeWidth={2} />
 					{t({ locale: $localeStore, key: 'leagues.card.copy' })}
 				{/if}
 			</span>
@@ -382,12 +383,12 @@
 		display: inline-flex;
 		align-items: center;
 		gap: 0.2rem;
-		padding: 0.18rem 0.55rem;
+		padding: 0.18rem 0.45rem;
 		font-size: var(--t-10, 0.6rem);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-base);
-		background: transparent;
+		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-pill);
 		cursor: pointer;
