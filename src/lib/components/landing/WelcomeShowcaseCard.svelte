@@ -92,6 +92,6 @@
 		href={ctaHref}
 	>
 		{t({ locale: $localeStore, key: ctaKey })}
-		<ChevronRight size={14} />
+		<ChevronRight aria-hidden="true" size={14} />
 	</a>
 </div>
