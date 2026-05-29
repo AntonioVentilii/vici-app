@@ -20,7 +20,7 @@
 				transform: translate({depth * -16}px, {depth * -12}px) rotate({depth * -2.2}deg);
 				z-index: {10 + i};
 				opacity: {1 - depth * 0.16};
-				transition: transform 320ms var(--ease);
+				transition: transform var(--d-enter) var(--ease);
 			"
 			class="flow-card"
 		>

@@ -402,9 +402,9 @@
 		transform: scaleX(0.6);
 		transform-origin: center;
 		transition:
-			background 200ms var(--ease-vici, ease),
-			opacity 200ms var(--ease-vici, ease),
-			transform 200ms var(--ease-vici, ease);
+			background var(--d-state) var(--ease-vici, ease),
+			opacity var(--d-state) var(--ease-vici, ease),
+			transform var(--d-state) var(--ease-vici, ease);
 	}
 
 	:global([data-theme='light']) .pillnav-icon-bg,

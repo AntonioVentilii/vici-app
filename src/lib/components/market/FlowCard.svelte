@@ -487,7 +487,7 @@
 	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
 		style:transform="translate3d({dragX}px, {dragY}px, 0) rotate({rotation}deg)"
-		style:transition={settling ? 'transform 320ms cubic-bezier(0.22, 1, 0.36, 1)' : 'none'}
+		style:transition={settling ? 'transform var(--d-enter) cubic-bezier(0.22, 1, 0.36, 1)' : 'none'}
 		style:cursor={interactive ? (flipped ? 'default' : 'grab') : 'default'}
 		class="flow-card"
 		class:is-committed={isCommitted}

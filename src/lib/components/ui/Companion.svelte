@@ -82,7 +82,7 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		transition: opacity 200ms var(--ease-vici);
+		transition: opacity var(--d-state) var(--ease-vici);
 	}
 
 	.companion-inline {

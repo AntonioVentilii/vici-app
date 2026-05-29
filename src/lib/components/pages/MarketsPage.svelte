@@ -325,9 +325,9 @@
 		padding: 0.35rem 0.85rem;
 		cursor: pointer;
 		transition:
-			color 120ms ease,
-			border-color 120ms ease,
-			background-color 120ms ease;
+			color var(--d-hover) ease,
+			border-color var(--d-hover) ease,
+			background-color var(--d-hover) ease;
 	}
 
 	.markets-sort-chip:hover {

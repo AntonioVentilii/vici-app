@@ -129,7 +129,7 @@
 		display: inline-flex;
 	}
 	.saved-market-toggle.is-saved .saved-market-icon {
-		animation: heart-pop 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+		animation: heart-pop var(--d-enter) cubic-bezier(0.22, 1, 0.36, 1) both;
 	}
 	.saved-market-toggle:active {
 		transform: scale(0.92);

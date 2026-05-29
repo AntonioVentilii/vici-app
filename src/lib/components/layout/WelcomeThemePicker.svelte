@@ -41,7 +41,7 @@
 		border: 2px solid transparent;
 		background: var(--swatch-bg);
 		cursor: pointer;
-		transition: border-color 200ms var(--ease-vici);
+		transition: border-color var(--d-state) var(--ease-vici);
 	}
 
 	.welcome-theme-dot.active {

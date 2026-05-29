@@ -117,7 +117,7 @@
 		background: rgba(14, 13, 11, 0.62);
 		backdrop-filter: blur(10px);
 		-webkit-backdrop-filter: blur(10px);
-		animation: friend-sheet-fade-in 200ms ease-out both;
+		animation: friend-sheet-fade-in var(--d-state) ease-out both;
 	}
 
 	.sheet {

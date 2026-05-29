@@ -100,7 +100,7 @@
 		max-width: 100%;
 		/* Entrance envelope — drops in from below with a slight
 		   overshoot, anchored to the bottom of the deck. */
-		animation: motion-beat-rise 320ms cubic-bezier(0.22, 1, 0.36, 1) both;
+		animation: motion-beat-rise var(--d-enter) cubic-bezier(0.22, 1, 0.36, 1) both;
 	}
 
 	@keyframes motion-beat-rise {
