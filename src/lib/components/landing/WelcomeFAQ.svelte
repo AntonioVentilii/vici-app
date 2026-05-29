@@ -89,7 +89,7 @@
 						<span
 							style="
 								flex-shrink:0;
-								transition:transform 200ms var(--ease);
+								transition:transform var(--d-state) var(--ease);
 								transform:{isOpen ? 'rotate(180deg)' : 'rotate(0deg)'};
 								color:var(--fg-mute); display:inline-flex;
 							"

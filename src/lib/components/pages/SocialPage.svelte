@@ -159,8 +159,8 @@
 		cursor: pointer;
 		white-space: nowrap;
 		transition:
-			background-color 200ms cubic-bezier(0.22, 1, 0.36, 1),
-			color 200ms cubic-bezier(0.22, 1, 0.36, 1);
+			background-color var(--d-state) cubic-bezier(0.22, 1, 0.36, 1),
+			color var(--d-state) cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	.social-tab:hover {

@@ -341,7 +341,7 @@
 		height: 100%;
 		background: var(--color-primary);
 		border-radius: inherit;
-		transition: width 320ms cubic-bezier(0.22, 1, 0.36, 1);
+		transition: width var(--d-enter) cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
 	@keyframes flow-topbar-pulse {

@@ -103,11 +103,11 @@
 
 	.flow-feedback-amount {
 		color: var(--fg);
-		animation: fade-up 320ms var(--ease) 140ms both;
+		animation: fade-up var(--d-enter) var(--ease) 140ms both;
 	}
 	.flow-feedback-row {
 		gap: 6px;
-		animation: fade-up 320ms var(--ease) 200ms both;
+		animation: fade-up var(--d-enter) var(--ease) var(--d-state) both;
 	}
 	.flow-feedback-row .eyebrow.is-yes {
 		color: var(--yes);
@@ -124,7 +124,7 @@
 		border-radius: 999px;
 		background: rgba(240, 138, 60, 0.08);
 		border: 1px solid rgba(240, 138, 60, 0.28);
-		animation: fade-up 320ms var(--ease) 280ms both;
+		animation: fade-up var(--d-enter) var(--ease) 280ms both;
 	}
 	.flow-feedback-streak-label {
 		color: var(--char-flame, #f08a3c);

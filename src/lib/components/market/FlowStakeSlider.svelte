@@ -233,8 +233,8 @@
 		border-radius: var(--r-pill);
 		cursor: pointer;
 		transition:
-			color 120ms ease,
-			background 120ms ease;
+			color var(--d-hover) ease,
+			background var(--d-hover) ease;
 	}
 	.flow-stake-peg:hover {
 		color: var(--text-base);

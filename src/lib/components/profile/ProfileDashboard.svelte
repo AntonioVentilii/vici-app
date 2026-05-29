@@ -1681,7 +1681,7 @@
 		height: 100%;
 		border-radius: inherit;
 		background: var(--color-primary);
-		transition: width 320ms ease;
+		transition: width var(--d-enter) ease;
 	}
 
 	/* Oracle insight --------------------------------------------------- */
