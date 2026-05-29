@@ -39,11 +39,7 @@
 		nativeToClearingMarginUnits,
 		quickBetChipLabel
 	} from '$lib/utils/playground-display.utils';
-	import {
-		assertViciXpHumanPremiumAndPayout,
-		executeOutcomeTrade,
-		resolveOutcomeExecutionPriceForSizing
-	} from '$lib/utils/trade.utils';
+	import { assertViciXpHumanPremium, executeOutcomeTrade } from '$lib/utils/trade.utils';
 
 	interface Props {
 		market: Market;
@@ -292,16 +288,7 @@
 
 		if (isViciXp(market.balanceDomain)) {
 			try {
-				const limitPrice = orderType === 'LIMIT' ? parseFloat(price) / 100 : undefined;
-				assertViciXpHumanPremiumAndPayout({
-					amountStr: String(amount),
-					executionPrice: resolveOutcomeExecutionPriceForSizing({
-						market,
-						action: selectedType,
-						orderType,
-						limitPrice
-					})
-				});
+				assertViciXpHumanPremium({ amountStr: String(amount) });
 			} catch (e: unknown) {
 				error = (e as Error).message ?? tr({ key: 'prediction.error.invalid_vxp' });
 
