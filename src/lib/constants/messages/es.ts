@@ -1489,9 +1489,9 @@ export const esMessages = {
 	'signin.eyebrow.signin': 'BIENVENIDO DE NUEVO',
 	'signin.eyebrow.signup': 'BIENVENIDO',
 	'signin.footer.cta.signin': 'Iniciar sesión →',
-	'signin.footer.cta.signup': 'Crear una →',
+	'signin.footer.cta.signup': 'Crear una cuenta →',
 	'signin.footer.prompt.signin': '¿Ya tienes una cuenta?',
-	'signin.footer.prompt.signup': '¿Aún no tienes cuenta?',
+	'signin.footer.prompt.signup': '¿Nuevo en VICI?',
 	'signin.legal':
 		'Al continuar aceptas los Términos y la Política de privacidad. VICI usa dinero ficticio durante la vista previa. No es asesoramiento financiero.',
 	'signin.legal.line1': 'VICI es gratis. VXP es dinero ficticio. No es asesoramiento financiero.',

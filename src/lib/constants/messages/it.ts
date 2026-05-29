@@ -1481,9 +1481,9 @@ export const itMessages = {
 	'signin.eyebrow.signin': 'BENTORNATO',
 	'signin.eyebrow.signup': 'BENVENUTO',
 	'signin.footer.cta.signin': 'Accedi →',
-	'signin.footer.cta.signup': 'Creane uno →',
+	'signin.footer.cta.signup': 'Crea un account →',
 	'signin.footer.prompt.signin': 'Hai già un account?',
-	'signin.footer.prompt.signup': 'Non hai ancora un account?',
+	'signin.footer.prompt.signup': 'Nuovo su VICI?',
 	'signin.legal':
 		'Continuando accetti i Termini e la Privacy Policy. VICI usa denaro fittizio durante la preview. Non è consulenza finanziaria.',
 	'signin.legal.line1': 'VICI è gratis. VXP è denaro fittizio. Non è consulenza finanziaria.',

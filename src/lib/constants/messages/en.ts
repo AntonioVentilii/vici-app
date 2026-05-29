@@ -1511,9 +1511,9 @@ export const enMessages = {
 	'signin.eyebrow.signin': 'WELCOME BACK',
 	'signin.eyebrow.signup': 'WELCOME',
 	'signin.footer.cta.signin': 'Sign in →',
-	'signin.footer.cta.signup': 'Create one →',
+	'signin.footer.cta.signup': 'Create an account →',
 	'signin.footer.prompt.signin': 'Already have an account?',
-	'signin.footer.prompt.signup': "Don't have an account yet?",
+	'signin.footer.prompt.signup': 'New to VICI?',
 	'signin.legal':
 		'By continuing you agree to the Terms and Privacy Policy. VICI is play-money during preview. No financial advice.',
 	'signin.legal.line1': 'VICI is free. VXP is play-money. No financial advice.',

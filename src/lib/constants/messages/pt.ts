@@ -1479,9 +1479,9 @@ export const ptMessages = {
 	'signin.eyebrow.signin': 'BEM-VINDO DE VOLTA',
 	'signin.eyebrow.signup': 'BEM-VINDO',
 	'signin.footer.cta.signin': 'Entrar →',
-	'signin.footer.cta.signup': 'Crie uma →',
+	'signin.footer.cta.signup': 'Criar uma conta →',
 	'signin.footer.prompt.signin': 'Já tem uma conta?',
-	'signin.footer.prompt.signup': 'Ainda não tem conta?',
+	'signin.footer.prompt.signup': 'Novo na VICI?',
 	'signin.legal':
 		'Ao continuar, você aceita os Termos e a Política de Privacidade. A VICI usa dinheiro fictício durante a prévia. Não é aconselhamento financeiro.',
 	'signin.legal.line1':

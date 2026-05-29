@@ -1492,9 +1492,9 @@ export const frMessages = {
 	'signin.eyebrow.signin': 'BON RETOUR',
 	'signin.eyebrow.signup': 'BIENVENUE',
 	'signin.footer.cta.signin': 'Se connecter →',
-	'signin.footer.cta.signup': 'En créer un →',
+	'signin.footer.cta.signup': 'Créer un compte →',
 	'signin.footer.prompt.signin': 'Vous avez déjà un compte ?',
-	'signin.footer.prompt.signup': 'Pas encore de compte ?',
+	'signin.footer.prompt.signup': 'Nouveau sur VICI ?',
 	'signin.legal':
 		'En continuant, vous acceptez les Conditions et la Politique de confidentialité. VICI utilise de l’argent fictif pendant la préversion. Ceci n’est pas un conseil financier.',
 	'signin.legal.line1':
