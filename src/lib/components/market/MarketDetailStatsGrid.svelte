@@ -72,7 +72,7 @@
 		},
 		{
 			labelKey: 'market.detail.stats.closes' as const,
-			value: formatLongDate(expiryDate),
+			value: formatLongDate({ date: expiryDate, locale: $localeStore }),
 			suffix: '',
 			mute: false
 		},
