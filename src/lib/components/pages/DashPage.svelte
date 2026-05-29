@@ -5,20 +5,17 @@
 	 * canister (rival, contrarian count, lifetime VXP, global rank, …)
 	 * fall back to an em-dash placeholder rather than an approximation.
 	 */
-	import {
-		ArrowDown,
-		ArrowUp,
-		Check,
-		ChevronRight,
-		Flame,
-		Gift,
-		Sparkles,
-		X
-	} from 'lucide-svelte/icons';
+	import { Check, ChevronRight, X } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DashAccuracySparkline from '$lib/components/dash/DashAccuracySparkline.svelte';
+	import DashCategoryBreakdown from '$lib/components/dash/DashCategoryBreakdown.svelte';
+	import DashHeroAccuracy from '$lib/components/dash/DashHeroAccuracy.svelte';
+	import DashHoldingsCard from '$lib/components/dash/DashHoldingsCard.svelte';
+	import DashNextUnlock from '$lib/components/dash/DashNextUnlock.svelte';
+	import DashOracleInsight from '$lib/components/dash/DashOracleInsight.svelte';
+	import DashRankContext from '$lib/components/dash/DashRankContext.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
 	import { EM_DASH, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
@@ -328,9 +325,6 @@
 		};
 	};
 
-	const stripWillPrefix = (title: string): string =>
-		title.replace(/^Will\s+/i, '').replace(/\?\s*$/, '');
-
 	const marketTitle = (marketId: string): string => marketById.get(marketId)?.title ?? marketId;
 	const marketVolumeCalls = (m: Market): number => Number(m.totalVolume ?? ZERO);
 
@@ -368,69 +362,14 @@
 
 <div class="screen-scroll">
 	<!-- ─── HERO · accuracy ─── -->
-	<div class="dash-hero">
-		<span class="dash-ey">{t({ locale: $localeStore, key: 'dash.accuracy.eyebrow' })}</span>
-		<div class="dash-big">
-			{accuracyPct}<span class="dash-unit">%</span>
-		</div>
-		<div class="dash-meta-row">
-			{#if sessionDelta != null}
-				{@const isPos = sessionDelta >= 0}
-				<span class="dash-delta" class:dash-delta-neg={!isPos} class:dash-delta-pos={isPos}>
-					{#if isPos}
-						<ArrowUp aria-hidden="true" size={10} strokeWidth={2.5} />
-					{:else}
-						<ArrowDown aria-hidden="true" size={10} strokeWidth={2.5} />
-					{/if}
-					{t({
-						locale: $localeStore,
-						key: isPos ? 'dash.accuracy.session_delta_pos' : 'dash.accuracy.session_delta_neg',
-						params: { value: isPos ? sessionDelta : Math.abs(sessionDelta) }
-					})}
-				</span>
-			{:else}
-				<span class="dash-delta dash-delta-neutral">
-					<Sparkles aria-hidden="true" size={10} strokeWidth={2} />
-					{nickname
-						? t({
-								locale: $localeStore,
-								key: 'dash.accuracy.signed_in_short',
-								params: { handle: nickname }
-							})
-						: t({ locale: $localeStore, key: 'dash.accuracy.first_session' })}
-				</span>
-			{/if}
-			<span class="dash-anchor">
-				{t({ locale: $localeStore, key: 'dash.accuracy.global_anchor' })}
-			</span>
-		</div>
-		<div class="dash-streak-row">
-			<div class="dash-streak-pair">
-				<span class="dash-flame" aria-hidden="true">
-					<Flame size={20} strokeWidth={2} />
-				</span>
-				<div>
-					<span class="dash-streak-big">
-						{t({
-							locale: $localeStore,
-							key: 'dash.streak.days',
-							params: { count: streak }
-						})}
-					</span>
-					<span class="dash-streak-sub">
-						{t({
-							locale: $localeStore,
-							key: 'dash.streak.longest_to_marathon_em',
-							params: { count: daysToMarathon }
-						})}
-					</span>
-				</div>
-			</div>
-			<div class="dash-streak-bar">
-				<span style:width="{streakBarPct}%" class="fill"></span>
-			</div>
-		</div>
-	</div>
+	<DashHeroAccuracy
+		{accuracyPct}
+		{daysToMarathon}
+		{nickname}
+		{sessionDelta}
+		{streak}
+		{streakBarPct}
+	/>
 
 	<!-- ─── Time window ─── -->
 	<div
@@ -452,73 +391,12 @@
 	</div>
 
 	<!-- ─── HOLDINGS card ─── -->
-	<div class="dash-section">
-		<div class="dash-holdings">
-			<div class="dash-holdings-top">
-				<span class="dash-ey">{t({ locale: $localeStore, key: 'dash.holdings.eyebrow' })}</span>
-				<span class="dash-purpose">
-					{t({ locale: $localeStore, key: 'dash.holdings.purpose' })}
-				</span>
-				<div class="dash-balance">
-					{balanceDisplay}<span class="unit">VXP</span>
-				</div>
-				<div class="dash-sub-stats">
-					<div class="dash-sub-stat">
-						<span class="lbl">
-							{t({ locale: $localeStore, key: 'dash.holdings.backed' })}
-						</span>
-						<span class="val">{backedDisplay}</span>
-					</div>
-					<div class="dash-sub-stat">
-						<span class="lbl">
-							{t({ locale: $localeStore, key: 'dash.holdings.lifetime' })}
-						</span>
-						<span class="val">{lifetimeDisplay}</span>
-					</div>
-					<div class="dash-sub-stat">
-						<span class="lbl">
-							{t({ locale: $localeStore, key: 'dash.holdings.session' })}
-						</span>
-						<span class="val">
-							{t({
-								locale: $localeStore,
-								key:
-									recentSettlements.length === 1
-										? 'dash.holdings.session_one'
-										: 'dash.holdings.session_many',
-								params: { count: recentSettlements.length }
-							})}
-						</span>
-					</div>
-				</div>
-			</div>
-			<a
-				class="dash-referral"
-				href={resolve(AppPath.Social)}
-				onclick={(e) => {
-					e.preventDefault();
-					goto(resolve(AppPath.Social));
-				}}
-			>
-				<div class="left">
-					<span class="gift" aria-hidden="true">
-						<Gift size={12} strokeWidth={1.8} />
-					</span>
-					<div class="text">
-						<span class="h">
-							{t({ locale: $localeStore, key: 'dash.holdings.invite_title' })}
-						</span>
-						<span class="s">
-							{t({ locale: $localeStore, key: 'dash.holdings.invite_sub' })}
-						</span>
-					</div>
-				</div>
-				<span class="arrow">
-					{t({ locale: $localeStore, key: 'dash.holdings.invite_cta' })}
-				</span>
-			</a>
-		</div>
-	</div>
+	<DashHoldingsCard
+		{backedDisplay}
+		{balanceDisplay}
+		{lifetimeDisplay}
+		recentSettlementsCount={recentSettlements.length}
+	/>
 
 	<!-- ─── ACCURACY TREND chart ─── -->
 	<div class="dash-section">
@@ -594,82 +472,13 @@
 	</div>
 
 	<!-- ─── BY CATEGORY breakdown ─── -->
-	<div class="dash-section">
-		<div class="dash-section-eyebrow">
-			<span>{t({ locale: $localeStore, key: 'dash.categories.eyebrow' })}</span>
-		</div>
-		{#if catRows.length === 0}
-			<div class="dash-empty">
-				{t({ locale: $localeStore, key: 'dash.placeholder.categories' })}
-			</div>
-		{:else}
-			{#each catRows as r (r.id)}
-				{@const pct = Math.round(r.acc * 100)}
-				<div class="dash-cat-row">
-					<span class="name">{r.label}</span>
-					<div class="bar"><span style:width="{pct}%" class="fill"></span></div>
-					<span class="pct">{pct}%</span>
-				</div>
-			{/each}
-		{/if}
-	</div>
+	<DashCategoryBreakdown {catRows} />
 
 	<!-- ─── RANK CONTEXT ─── -->
-	<div class="dash-section">
-		<div class="dash-section-eyebrow">
-			<span>{t({ locale: $localeStore, key: 'dash.rank.eyebrow' })}</span>
-		</div>
-		<div class="dash-rank-grid">
-			<div class="dash-rank-tile">
-				<span class="lbl">{t({ locale: $localeStore, key: 'dash.rank.global' })}</span>
-				<span class="v">{EM_DASH}</span>
-				<span class="sub">{t({ locale: $localeStore, key: 'dash.rank.global_sub' })}</span>
-			</div>
-			<button
-				class="dash-rank-tile dash-rank-tile-btn"
-				onclick={() => goto(resolve(AppPath.Social))}
-				type="button"
-			>
-				<span class="lbl">{t({ locale: $localeStore, key: 'dash.rank.league' })}</span>
-				<span class="v">{EM_DASH}</span>
-				<span class="sub">{t({ locale: $localeStore, key: 'dash.rank.league_sub' })}</span>
-			</button>
-			<div class="dash-rank-tile">
-				<span class="lbl">
-					{#if catRows[0]}{catRows[0].label}{:else}{t({
-							locale: $localeStore,
-							key: 'dash.rank.top_cat'
-						})}{/if}
-				</span>
-				<span class="v acc">
-					{#if catRows[0]}{Math.round(catRows[0].acc * 100)}%{:else}{EM_DASH}{/if}
-				</span>
-				<span class="sub">{t({ locale: $localeStore, key: 'dash.rank.top_cat_sub' })}</span>
-			</div>
-		</div>
-	</div>
+	<DashRankContext topCategory={catRows[0]} />
 
 	<!-- ─── ORACLE INSIGHT ─── -->
-	<div class="dash-section">
-		<div class="dash-oracle">
-			<span class="lbl">{t({ locale: $localeStore, key: 'dash.oracle.eyebrow' })}</span>
-			{#if bestWin}
-				<p class="q">
-					{t({
-						locale: $localeStore,
-						key: 'dash.oracle.best_call',
-						params: { title: stripWillPrefix(bestWinTitle) }
-					})}
-				</p>
-				<span class="sub">
-					{t({ locale: $localeStore, key: 'dash.oracle.best_call_sub' })}
-				</span>
-			{:else}
-				<p class="q">{t({ locale: $localeStore, key: 'dash.oracle.empty' })}</p>
-				<span class="sub">{t({ locale: $localeStore, key: 'dash.oracle.empty_sub' })}</span>
-			{/if}
-		</div>
-	</div>
+	<DashOracleInsight {bestWinTitle} hasBestWin={Boolean(bestWin)} />
 
 	<!-- ─── PAST predictions ─── -->
 	<div class="dash-section">
@@ -757,25 +566,14 @@
 
 	<!-- ─── NEXT UNLOCK ─── -->
 	{#if nextAchievement}
-		<div class="dash-section">
-			<div class="dash-section-eyebrow">
-				<span>{t({ locale: $localeStore, key: 'dash.next.eyebrow' })}</span>
-			</div>
-			<button class="dash-achv" onclick={() => goto(resolve(AppPath.Album))} type="button">
-				<span class="em" aria-hidden="true">{nextAchievement.emblem}</span>
-				<div class="body">
-					<div class="name">{t({ locale: $localeStore, key: nextAchievement.nameKey })}</div>
-					<div class="progress"><span style:width="{streakBarPct}%" class="fill"></span></div>
-					<div class="pct">
-						{t({
-							locale: $localeStore,
-							key: 'dash.next.streak_progress',
-							params: { current: streak, target: MARATHON_DAYS, count: daysToMarathon }
-						})}
-					</div>
-				</div>
-			</button>
-		</div>
+		<DashNextUnlock
+			{daysToMarathon}
+			emblem={nextAchievement.emblem}
+			nameKey={nextAchievement.nameKey}
+			{streak}
+			{streakBarPct}
+			target={MARATHON_DAYS}
+		/>
 	{/if}
 
 	<!-- ─── DISCLOSURE foldouts ─── -->
