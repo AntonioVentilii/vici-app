@@ -2427,6 +2427,9 @@ html[data-app='1'] body {
    ============================================================ */
 
 .ob.ob-v2 {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
 	background: var(--ink);
 	color: var(--parchment);
 }
