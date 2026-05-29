@@ -4,8 +4,9 @@
 	import { get } from 'svelte/store';
 	import { resolve } from '$app/paths';
 	import SignInActions from '$lib/components/authn/SignInActions.svelte';
-	import IconSignalNo from '$lib/components/icons/IconSignalNo.svelte';
-	import IconSignalYes from '$lib/components/icons/IconSignalYes.svelte';
+	import PredictionOrderToggle from '$lib/components/prediction/PredictionOrderToggle.svelte';
+	import PredictionOutcomeSelector from '$lib/components/prediction/PredictionOutcomeSelector.svelte';
+	import PredictionSummary from '$lib/components/prediction/PredictionSummary.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ORDER_BOOK_POLL_MS, ZERO } from '$lib/constants/app.constants';
@@ -437,94 +438,18 @@
 </script>
 
 <div class="prediction-panel">
-	<div class="prediction-order-toggle">
-		<BaseButton
-			class="flex-1 rounded-lg py-2 text-xs font-bold {orderType === 'MARKET'
-				? 'bg-card text-primary shadow-sm'
-				: 'text-muted-foreground hover:text-foreground'}"
-			onclick={() => (orderType = 'MARKET')}
-			status={hasMarketDepth ? 'enabled' : 'disabled'}
-			title={!hasMarketDepth ? tr({ key: 'prediction.no_liquidity_title' }) : ''}
-		>
-			{tr({ key: 'prediction.order.instant' })}
-		</BaseButton>
-
-		<BaseButton
-			class="flex-1 rounded-lg py-2 text-xs font-bold {orderType === 'LIMIT'
-				? 'bg-card text-primary shadow-sm'
-				: 'text-muted-foreground hover:text-foreground'}"
-			onclick={() => (orderType = 'LIMIT')}
-		>
-			{tr({ key: 'prediction.order.set_price' })}
-		</BaseButton>
-	</div>
+	<PredictionOrderToggle {hasMarketDepth} onSelect={(type) => (orderType = type)} {orderType} />
 
 	<div class="mt-6 space-y-6">
 		{#if !hideSelector}
-			<div class="grid grid-cols-2 gap-4">
-				{#if market.payoffType === 'Binary'}
-					<BaseButton
-						class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
-						'YES'
-							? 'border-yes bg-yes-wash text-yes'
-							: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
-						onclick={() => handleOutcomeSelect({ outcomeId: 'YES', probability: yesProbability })}
-					>
-						<div class="relative z-10 flex flex-col items-center gap-1">
-							<IconSignalYes size="22px" />
-							<span class="eyebrow-xs">
-								{tr({ key: 'prediction.choice.label' })}
-							</span>
-							<span class="text-xl font-black">{tr({ key: 'outcome.yes' })}</span>
-							{#if orderType === 'MARKET'}
-								<span class="text-[10px] font-medium opacity-60">
-									{(yesProbability * 100).toFixed(1)}%
-								</span>
-							{/if}
-						</div>
-					</BaseButton>
-
-					<BaseButton
-						class="group relative overflow-hidden rounded-2xl border-2 px-6 py-4 {selectedType ===
-						'NO'
-							? 'border-destructive bg-destructive/10 text-destructive'
-							: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
-						onclick={() => handleOutcomeSelect({ outcomeId: 'NO', probability: noProbability })}
-					>
-						<div class="relative z-10 flex flex-col items-center gap-1">
-							<IconSignalNo size="22px" />
-							<span class="eyebrow-xs">
-								{tr({ key: 'prediction.choice.label' })}
-							</span>
-							<span class="text-xl font-black">{tr({ key: 'outcome.no' })}</span>
-							{#if orderType === 'MARKET'}
-								<span class="text-[10px] font-medium opacity-60">
-									{(noProbability * 100).toFixed(1)}%
-								</span>
-							{/if}
-						</div>
-					</BaseButton>
-				{:else}
-					<div class="col-span-2 grid grid-cols-2 gap-3">
-						{#each market.outcomes ?? [] as outcome (outcome.id)}
-							<BaseButton
-								class="group relative overflow-hidden rounded-2xl border-2 px-4 py-4 {selectedType ===
-								outcome.id
-									? 'border-primary bg-primary/10 text-primary'
-									: 'border-border bg-foreground/5 text-muted-foreground hover:border-foreground/10'}"
-								onclick={() => handleOutcomeSelect({ outcomeId: outcome.id })}
-							>
-								<div class="relative z-10 flex flex-col items-center gap-0.5">
-									<span class="eyebrow-xs">
-										{tr({ key: 'prediction.choice.label' })}
-									</span>
-									<span class="text-center text-sm font-black">{outcome.title}</span>
-								</div>
-							</BaseButton>
-						{/each}
-					</div>
-				{/if}
-			</div>
+			<PredictionOutcomeSelector
+				{market}
+				{noProbability}
+				onSelect={handleOutcomeSelect}
+				{orderType}
+				{selectedType}
+				{yesProbability}
+			/>
 		{/if}
 
 		<div class="space-y-4">
@@ -635,25 +560,7 @@
 			</div>
 		{/if}
 
-		<div class="bg-foreground/5 space-y-3 rounded-2xl p-5">
-			<div class="flex justify-between text-xs">
-				<span class="text-muted-foreground font-medium"
-					>{tr({ key: 'prediction.estimated_cost' })}</span
-				>
-
-				<span class="text-foreground font-bold">{estimatedCost}</span>
-			</div>
-
-			<div class="flex justify-between text-xs">
-				<span class="text-muted-foreground font-medium"
-					>{tr({ key: 'prediction.potential_return' })}</span
-				>
-
-				<span class="text-yes font-bold">
-					{estimatedPayout} ({potentialReturnPercent.toFixed(1)}%)
-				</span>
-			</div>
-		</div>
+		<PredictionSummary {estimatedCost} {estimatedPayout} {potentialReturnPercent} />
 
 		{#if $userSignedIn}
 			<Button
@@ -688,14 +595,6 @@
 			linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
 		box-shadow: var(--shadow-card);
 		padding: 1rem;
-	}
-
-	.prediction-order-toggle {
-		display: flex;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
-		padding: 0.25rem;
 	}
 
 	@media (min-width: 640px) {
