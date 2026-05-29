@@ -1,10 +1,10 @@
 <script lang="ts">
 	import { LineChart } from 'lucide-svelte/icons';
-	import { goto } from '$app/navigation';
-	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import OpenOrdersTable from '$lib/components/portfolio/OpenOrdersTable.svelte';
 	import PortfolioAllocationCard from '$lib/components/portfolio/PortfolioAllocationCard.svelte';
+	import PortfolioEmptyState from '$lib/components/portfolio/PortfolioEmptyState.svelte';
+	import PortfolioHero from '$lib/components/portfolio/PortfolioHero.svelte';
 	import PortfolioPerformanceCard from '$lib/components/portfolio/PortfolioPerformanceCard.svelte';
 	import {
 		EM_DASH,
@@ -336,42 +336,12 @@
 		title={t({ locale: $localeStore, key: 'portfolio.title' })}
 	/>
 
-	<section class="portfolio-hero">
-		<p class="eyebrow portfolio-hero-eyebrow">
-			{t({ locale: $localeStore, key: 'portfolio.hero.eyebrow' })}
-		</p>
-		<div class="portfolio-hero-balance">
-			<span class="num portfolio-hero-num">{vxpBalanceDisplay}</span>
-			<span class="eyebrow portfolio-hero-num-unit">
-				{t({ locale: $localeStore, key: 'portfolio.hero.unit' })}
-			</span>
-		</div>
-
-		<dl class="portfolio-hero-stats">
-			<div class="portfolio-hero-stat">
-				<dt class="eyebrow">
-					{t({ locale: $localeStore, key: 'portfolio.stat.unrealized_pnl' })}
-				</dt>
-				<dd
-					class="num"
-					class:is-negative={unrealizedPnlDirection === 'negative'}
-					class:is-positive={unrealizedPnlDirection === 'positive'}
-				>
-					{unrealizedPnlDisplay}
-				</dd>
-			</div>
-			<div class="portfolio-hero-stat">
-				<dt class="eyebrow">
-					{t({ locale: $localeStore, key: 'portfolio.stat.accuracy_7d' })}
-				</dt>
-				<dd class="num">{accuracyDisplay}</dd>
-			</div>
-			<div class="portfolio-hero-stat">
-				<dt class="eyebrow">{t({ locale: $localeStore, key: 'portfolio.stat.rank' })}</dt>
-				<dd class="num">{EM_DASH}</dd>
-			</div>
-		</dl>
-	</section>
+	<PortfolioHero
+		{accuracyDisplay}
+		{unrealizedPnlDirection}
+		{unrealizedPnlDisplay}
+		{vxpBalanceDisplay}
+	/>
 
 	<PortfolioPerformanceCard
 		markets={$markets}
@@ -388,21 +358,7 @@
 			<div class="portfolio-skeleton"></div>
 		</section>
 	{:else if openPositions.length === 0 && $resolvedPositions.length === 0 && $orders.length === 0}
-		<section class="portfolio-empty">
-			<p class="portfolio-empty-quote serif-italic">
-				{t({ locale: $localeStore, key: 'portfolio.empty.quote' })}
-			</p>
-			<p class="portfolio-empty-body">
-				{t({ locale: $localeStore, key: 'portfolio.empty.body' })}
-			</p>
-			<button
-				class="portfolio-empty-cta"
-				onclick={() => void goto(resolve(AppPath.Flow))}
-				type="button"
-			>
-				{t({ locale: $localeStore, key: 'portfolio.empty.cta' })}
-			</button>
-		</section>
+		<PortfolioEmptyState />
 	{:else}
 		{#if openPositions.length > 0}
 			<section class="portfolio-section">
@@ -564,81 +520,6 @@
 	.portfolio-appbar-icon:hover {
 		border-color: var(--border-base);
 		background: var(--bg-surface);
-	}
-
-	.portfolio-hero {
-		display: flex;
-		flex-direction: column;
-		gap: 0.375rem;
-		padding: 1.25rem;
-		background: linear-gradient(
-			180deg,
-			var(--bg-elevated, var(--bg-surface)),
-			var(--bg-raised, var(--bg-popover))
-		);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-16, 16px);
-	}
-
-	.portfolio-hero-eyebrow {
-		margin: 0;
-		color: var(--text-muted);
-	}
-
-	.portfolio-hero-balance {
-		display: flex;
-		align-items: baseline;
-		gap: 0.5rem;
-		margin-top: 0.25rem;
-	}
-
-	.portfolio-hero-num {
-		font-size: 38px;
-		font-weight: 600;
-		letter-spacing: -0.03em;
-		color: var(--text-base);
-		line-height: 1;
-	}
-
-	.portfolio-hero-num-unit {
-		color: var(--text-muted);
-	}
-
-	.portfolio-hero-stats {
-		display: flex;
-		justify-content: space-between;
-		align-items: flex-start;
-		gap: 1rem;
-		width: 100%;
-		margin: 0.875rem 0 0;
-	}
-
-	.portfolio-hero-stat {
-		display: flex;
-		flex-direction: column;
-		align-items: flex-start;
-		gap: 0.25rem;
-	}
-
-	.portfolio-hero-stat dt {
-		margin: 0;
-		color: var(--text-muted);
-	}
-
-	.portfolio-hero-stat dd {
-		margin: 0;
-		font-size: var(--t-14);
-		font-weight: 600;
-		color: var(--text-base);
-		letter-spacing: -0.01em;
-	}
-
-	.portfolio-hero-stat dd.is-positive {
-		color: var(--yes);
-	}
-
-	.portfolio-hero-stat dd.is-negative {
-		color: var(--no);
 	}
 
 	.portfolio-section {
@@ -891,49 +772,6 @@
 
 	.portfolio-history-pnl.is-negative {
 		color: var(--no);
-	}
-
-	.portfolio-empty {
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.875rem;
-		padding: 2rem 1rem;
-		text-align: center;
-	}
-
-	.portfolio-empty-quote {
-		margin: 0;
-		max-width: 28ch;
-		font-size: var(--t-16, 1rem);
-		color: var(--text-base);
-	}
-
-	.portfolio-empty-body {
-		margin: 0;
-		max-width: 32ch;
-		font-size: var(--t-13);
-		color: var(--text-muted);
-		line-height: 1.5;
-	}
-
-	.portfolio-empty-cta {
-		margin-top: 0.5rem;
-		appearance: none;
-		padding: 0.75rem 1.25rem;
-		font: inherit;
-		font-size: var(--t-13);
-		font-weight: 600;
-		color: var(--bg-base);
-		background: var(--text-base);
-		border: 1px solid var(--text-base);
-		border-radius: var(--r-12);
-		cursor: pointer;
-		transition: opacity var(--d-hover) var(--ease-vici);
-	}
-
-	.portfolio-empty-cta:hover {
-		opacity: 0.9;
 	}
 
 	.portfolio-skeleton {
