@@ -116,6 +116,18 @@
 	const overlayNo = $derived(committedAction === 'NO' ? 1 : noOpacity);
 	const overlaySkip = $derived(committedAction === 'SKIP' ? 1 : skipOpacity);
 
+	// Swipe overlays live on both faces but share one set of drag-driven
+	// opacities. Gate each face's overlays to whichever side is showing
+	// so the hidden face's big YES/NO words can't ghost through a dropped
+	// `backface-visibility` frame on iOS (the mirrored-glyph garble seen
+	// mid-flip). Signed-out users keep the existing half-strength dim.
+	const overlayDim = $derived(signedIn ? 1 : 0.5);
+	const frontOverlayYes = $derived(flipped ? 0 : overlayYes * overlayDim);
+	const frontOverlayNo = $derived(flipped ? 0 : overlayNo * overlayDim);
+	const frontOverlaySkip = $derived(flipped ? 0 : overlaySkip);
+	const backOverlayYes = $derived(flipped ? overlayYes * overlayDim : 0);
+	const backOverlayNo = $derived(flipped ? overlayNo * overlayDim : 0);
+
 	const crowdPct = $derived(consensusPercent(market));
 	const crowdSide = $derived(consensusSide(market));
 	const yesIsFav = $derived(crowdPct >= 50);
@@ -680,20 +692,20 @@
 				<!-- Full-card swipe overlays — large YES/NO/SKIP text
 			     overlays that fade in with drag progress. -->
 				<div
-					style:opacity={signedIn ? overlayYes : overlayYes * 0.5}
+					style:opacity={frontOverlayYes}
 					class="flow-overlay flow-overlay-yes"
 					aria-hidden="true"
 				>
 					{t({ locale: $localeStore, key: 'flow.action.yes' })}
 				</div>
-				<div
-					style:opacity={signedIn ? overlayNo : overlayNo * 0.5}
-					class="flow-overlay flow-overlay-no"
-					aria-hidden="true"
-				>
+				<div style:opacity={frontOverlayNo} class="flow-overlay flow-overlay-no" aria-hidden="true">
 					{t({ locale: $localeStore, key: 'flow.action.no' })}
 				</div>
-				<div style:opacity={overlaySkip} class="flow-overlay flow-overlay-skip" aria-hidden="true">
+				<div
+					style:opacity={frontOverlaySkip}
+					class="flow-overlay flow-overlay-skip"
+					aria-hidden="true"
+				>
 					{t({ locale: $localeStore, key: 'flow.action.skip' })}
 				</div>
 			</div>
@@ -725,14 +737,14 @@
 				<!-- Back-face swipe still commits a call — horizontal stamps
 			     mirror the front overlays. -->
 				<div
-					style:opacity={signedIn ? overlayYes : overlayYes * 0.5}
+					style:opacity={backOverlayYes}
 					class="flow-overlay flow-overlay-yes flow-overlay-back"
 					aria-hidden="true"
 				>
 					{t({ locale: $localeStore, key: 'flow.action.yes' })}
 				</div>
 				<div
-					style:opacity={signedIn ? overlayNo : overlayNo * 0.5}
+					style:opacity={backOverlayNo}
 					class="flow-overlay flow-overlay-no flow-overlay-back"
 					aria-hidden="true"
 				>
