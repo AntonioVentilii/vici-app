@@ -1,4 +1,5 @@
-import { VXP_MIN_MAX_PAYOUT_VXP, VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
+import { isVxpLadderStake, VXP_STAKE_LADDER } from '$lib/constants/vxp-economy.constants';
+import { VXP_MIN_MAX_PAYOUT_VXP } from '$lib/constants/vxp-trade.constants';
 import { placeOrder } from '$lib/services/order.services';
 import type { Market } from '$lib/types/market';
 import type { OrderType } from '$lib/types/order';
@@ -24,15 +25,8 @@ export const assertViciXpHumanPremiumAndPayout = ({
 
 	const premiumHuman = Number(String(amountStr).trim());
 
-	if (
-		!Number.isFinite(premiumHuman) ||
-		premiumHuman < VXP_STAKE_STEP_VXP ||
-		premiumHuman % VXP_STAKE_STEP_VXP !== 0 ||
-		!Number.isInteger(premiumHuman)
-	) {
-		throw new Error(
-			`VXP premium must be a whole amount of at least ${VXP_STAKE_STEP_VXP} in steps of ${VXP_STAKE_STEP_VXP}`
-		);
+	if (!isVxpLadderStake(premiumHuman)) {
+		throw new Error(`VXP premium must be one of ${VXP_STAKE_LADDER.join(', ')}`);
 	}
 
 	const maxPayoutHuman = premiumHuman / finalPrice;

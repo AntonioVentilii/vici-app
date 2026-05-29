@@ -25,6 +25,24 @@ export const VXP_STAKE_LADDER = [50, 100, 200, 300, 500] as const;
 export type VxpStake = (typeof VXP_STAKE_LADDER)[number];
 
 /**
+ * Smallest rung on the ladder. Surfaced as a named export so callers
+ * don't have to reach into `VXP_STAKE_LADDER[0]` and pick up a tuple
+ * literal type at every call site.
+ */
+export const [VXP_MIN_STAKE] = VXP_STAKE_LADDER;
+
+/**
+ * Membership-style validator for a candidate stake — the single
+ * source of truth for "is this premium a valid ladder rung". Used by
+ * the trade-utility premium guard and by deck-restore paths that
+ * sanity-check a previously-persisted stake before re-binding it to
+ * the UI. Doubles as a TS type-narrowing predicate so downstream
+ * code can rely on `VxpStake` once past the guard.
+ */
+export const isVxpLadderStake = (n: number): n is VxpStake =>
+	Number.isInteger(n) && (VXP_STAKE_LADDER as readonly number[]).includes(n);
+
+/**
  * Default stake for new and low-activity users. Renders as the only
  * surfaced option until the user crosses `VXP_STAKE_UNLOCK_AT_CALLS` —
  * no decision paralysis on first-call.

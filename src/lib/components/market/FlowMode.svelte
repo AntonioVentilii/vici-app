@@ -25,7 +25,7 @@
 	} from '$lib/constants/flow-rewards.constants';
 	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
+	import { isVxpLadderStake, VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
@@ -327,16 +327,13 @@
 			const fromProfile = $userStore.profile?.preferences?.defaultAmount?.flow;
 
 			if (isViciXp($balanceDomain)) {
-				const candidate = fromProfile ?? String(VXP_STAKE_STEP_VXP);
-				const n = Number(candidate);
+				// Restore the user's last Flow stake from their profile,
+				// but reject it (and fall back to `VXP_MIN_STAKE`) if it
+				// isn't a current ladder rung — the ladder may have been
+				// reshuffled since the value was persisted.
+				const candidate = Number(fromProfile);
 
-				tradeAmount =
-					Number.isFinite(n) &&
-					n >= VXP_STAKE_STEP_VXP &&
-					n % VXP_STAKE_STEP_VXP === 0 &&
-					Number.isInteger(n)
-						? String(n)
-						: String(VXP_STAKE_STEP_VXP);
+				tradeAmount = isVxpLadderStake(candidate) ? String(candidate) : String(VXP_MIN_STAKE);
 			} else if (fromProfile) {
 				tradeAmount = fromProfile;
 			}
