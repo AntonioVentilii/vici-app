@@ -65,7 +65,7 @@
 </script>
 
 <div class="market-artwork {artClass} {seedClass} {extraClass}" class:is-bleed={bleed}>
-	<FlowArtFrame class="flow-art" {category} {seed} {size} {state} {fill} />
+	<FlowArtFrame class="flow-art" {category} {fill} {seed} {size} {state} />
 </div>
 
 <style lang="postcss">
