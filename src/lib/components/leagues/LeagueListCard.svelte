@@ -218,10 +218,12 @@
 </button>
 
 <style lang="postcss">
-	/* Mirrors `.league-list-card` in the design source
-	   (`../VICI WebApp Beta V1.2/app.css:1854-1873`): 3-col grid (56 px
-	   icon · body · trailing meta column), 12 px radius, raised surface,
-	   neutral border with a -1 px hover lift. */
+	/* 3-col grid (56 px icon · 1fr body · auto trailing meta column)
+	   with the same 56-px tile dimensions as the Create / Join CTA
+	   tiles so the leagues list reads as a single uniform column
+	   regardless of whether the row is a real league or a CTA. 12 px
+	   radius + raised surface + a -1 px hover lift mark interactive
+	   rows. */
 	.league-list-card {
 		display: grid;
 		grid-template-columns: 56px 1fr auto;
@@ -253,10 +255,11 @@
 		opacity: 0.85;
 	}
 
-	/* Mirrors `.league-logo-sm` (`app.css:1876-1899`): 56 px square,
-	   10 px radius, accent-tinted gradient + 30 % accent border, with a
-	   diagonal sheen pseudo. The serif-italic emblem sits above the
-	   sheen at z-index 2. */
+	/* 56 px square, 10 px radius, per-league-accent-tinted gradient +
+	   30 % accent border. The diagonal sheen pseudo adds a soft gloss
+	   so a flat colour fill doesn't read as a placeholder; the serif-
+	   italic emblem sits above the sheen at z-index 2 so the gloss
+	   never washes it out. */
 	.league-logo {
 		position: relative;
 		display: flex;
@@ -309,7 +312,6 @@
 		min-width: 0;
 	}
 
-	/* Mirrors `.league-name` (`app.css:1901-1904`). */
 	.name {
 		font-size: 15px;
 		font-weight: 600;
@@ -321,10 +323,11 @@
 		min-width: 0;
 	}
 
-	/* Mirrors `.league-role-chip` (`app.css:4642-4656`).
-	   `--laurel` (not `--accent`) so the chip stays on the global
-	   laurel even though the outer button overrides `--accent` to the
-	   per-league colour for the logo tile. */
+	/* Role chip explicitly references `--laurel` (NOT `--accent`):
+	   the outer button overrides `--accent` to the per-league colour
+	   for the logo tile gradient, so a bare `var(--accent)` here
+	   would tint owner / admin chips with the league's accent
+	   (sage / red / etc.) instead of the global laurel. */
 	.role-chip {
 		flex-shrink: 0;
 		display: inline-flex;
@@ -355,7 +358,6 @@
 		letter-spacing: 0.04em;
 	}
 
-	/* Mirrors `.league-friend-overlap` (`app.css:4658-4669`). */
 	.friend-overlap {
 		display: flex;
 		align-items: center;
@@ -402,7 +404,6 @@
 		margin-left: 0.2rem;
 	}
 
-	/* Mirrors `.league-activity-preview` (`app.css:4671-4673`). */
 	.activity-preview {
 		margin-top: 2px;
 		font-size: 10.5px;
@@ -419,13 +420,12 @@
 		color: var(--text-muted);
 	}
 
-	/* Mirrors `.league-copy-pill` (`app.css:4675-4686`): tiny accent-
-	   tinted chip in mono with a 4 px radius.
-	   `--laurel` (not `--accent`) — the outer button sets `--accent` to
-	   the league's per-card colour for the logo tile gradient, so using
-	   `--accent` here would tint the copy pill green / red / etc.
-	   Prototype keeps the per-league colour inline on just the logo and
-	   leaves the copy pill on the global laurel accent. */
+	/* Tiny laurel-tinted chip in mono with a 4 px radius.
+	   `--laurel` (NOT `--accent`) for the same reason as `.role-chip`
+	   above: the outer button overrides `--accent` to the league's
+	   per-card colour for the logo tile gradient, and a bare
+	   `var(--accent)` here would tint the copy pill with that per-
+	   league colour instead of the global laurel. */
 	.copy-pill {
 		display: inline-flex;
 		align-items: center;

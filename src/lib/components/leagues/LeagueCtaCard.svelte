@@ -59,10 +59,12 @@
 		border-color: var(--border-strong);
 	}
 
-	/* Mirrors `.league-logo-sm.league-logo-empty` in the design source
-	   (`../VICI WebApp Beta V1.2/app.css:1876-1899`): a 56-px square with
-	   a muted dashed border, an almost-transparent surface, and a faint
-	   diagonal sheen layered behind the laurel-coloured glyph/text. */
+	/* Empty logo tile shared by the Create and Join CTAs. 56-px square
+	   with a muted dashed border + near-transparent surface so the
+	   tile reads as a slot waiting to be filled, with a faint diagonal
+	   sheen pseudo behind the laurel-coloured glyph / text. Same
+	   geometry as the populated league-list-card logo so the rows
+	   line up visually. */
 	.league-cta-logo {
 		position: relative;
 		display: inline-flex;

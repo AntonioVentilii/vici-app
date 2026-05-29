@@ -149,8 +149,9 @@
 		letter-spacing: -0.01em;
 		/* Long values (e.g. `December 31, 2026` in the CLOSES tile)
 		   wrap to multiple lines instead of truncating with an
-		   ellipsis — matches the prototype's `t-h4` stat, which has no
-		   overflow guard. */
+		   ellipsis. Earlier `white-space: nowrap` + `text-overflow:
+		   ellipsis` ate the year on every locale that produces a
+		   double-digit day. */
 		overflow-wrap: anywhere;
 	}
 

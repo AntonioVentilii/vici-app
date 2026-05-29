@@ -2,14 +2,14 @@
 	import { stageForStreak, type FlameStage } from '$lib/utils/streak.utils';
 
 	/**
-	 * Tiny inline streak-flame icon. Mirrors the prototype's
-	 * `StreakFlame` primitive 1-to-1
-	 * (`../VICI WebApp Beta V1.2/primitives.jsx:163-180`): a 16-px SVG
-	 * with a stage-coloured vertical linear gradient. Designed for stat
-	 * rows (Profile identity, Flow top bar, Dash header) where the
-	 * full-character `FlameChar` would be too heavy.
+	 * Tiny inline streak-flame icon — a 16-px SVG flame filled with a
+	 * stage-keyed vertical linear gradient (`spark` → `inferno` shift
+	 * the palette from cool orange to laurel-yellow). Used in stat
+	 * rows where the full-character {@link FlameChar} would be too
+	 * heavy: Profile identity, Flow top bar, Dash header, etc.
 	 *
-	 * Pass either `count` (we derive the stage) or an explicit `stage`.
+	 * Pass either `count` (we derive the stage via
+	 * {@link stageForStreak}) or an explicit `stage`.
 	 */
 	interface Props {
 		count?: number;

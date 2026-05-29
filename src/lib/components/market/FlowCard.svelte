@@ -1010,10 +1010,10 @@
 		}
 	}
 
-	/* Mirrors `.flow-body` in the design source
-	   (`../VICI WebApp Beta V1.2/app.css:530-533`): 14 px gap between
-	   friends / artwork / probs, `margin-top: auto` on `.flow-probs`
-	   parks the split bar at the bottom regardless of artwork height. */
+	/* 14 px gap between the friends row / artwork / probs split bar.
+	   `.flow-probs` further down sets `margin-top: auto`, which parks
+	   the probability split at the bottom of the card body regardless
+	   of artwork height. */
 	.flow-body {
 		display: flex;
 		flex-direction: column;
@@ -1040,10 +1040,11 @@
 	   corners come off so the body of the card hosts the art with no
 	   side padding (`bleed` mode). The frame's height is fixed so the
 	   title / probs row never reflow on layout changes. */
-	/* Fixed at 172 px to match the prototype's `MarketArtwork
-	   height={172}` (`../VICI WebApp Beta V1.2/flow.jsx:734`). The
-	   earlier `clamp(140px, 22vw, 172px)` shrank the art on narrow
-	   viewports — the prototype keeps the frame at a constant height. */
+	/* Fixed 172 px artwork frame. The earlier
+	   `clamp(140px, 22vw, 172px)` shrank the art on narrow viewports,
+	   which made the card body collapse on phones and the probs row
+	   crowd against the title. A constant height keeps the card
+	   silhouette stable across breakpoints. */
 	.flow-art-bleed {
 		position: relative;
 		width: 100%;
@@ -1069,9 +1070,9 @@
 		height: 100%;
 	}
 
-	/* `margin-top: auto` pushes the split bar to the bottom of the card
-	   body, matching `.flow-probs` in the prototype
-	   (`../VICI WebApp Beta V1.2/app.css:534-538`). */
+	/* `margin-top: auto` parks the split bar at the bottom edge of
+	   the card body so it stays anchored to the foot regardless of
+	   how tall the artwork frame ends up. */
 	.flow-probs {
 		display: flex;
 		flex-direction: column;

@@ -979,11 +979,12 @@
 		letter-spacing: 0.04em;
 	}
 
-	/* Mirrors `.friends-invite-title` in the design source
-	   (`../VICI WebApp Beta V1.2/app.css:4250-4254`): display sans-serif
-	   (inherited), 20 px, weight 600, slight negative tracking. No
-	   serif or italic — the earlier styling was a misread of the
-	   surrounding hero card's tone. */
+	/* Invite headline: display sans-serif, 20 px, weight 600, slight
+	   negative tracking. NO serif-italic — the surrounding card uses
+	   serif-italic for the *editorial* `Invite a friend.` lede in
+	   other surfaces, but this hero block leads with a structural
+	   prompt, not an editorial accent, so it stays on the display
+	   stack to read as a clear call to action. */
 	.invite-title {
 		margin: 0 0 4px;
 		color: var(--text-base);

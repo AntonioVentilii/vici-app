@@ -1030,10 +1030,11 @@
 		box-shadow: var(--shadow-card);
 	}
 
-	/* Top-right archetype-accent blur disc — mirrors the inline halo
-	   on the prototype's identity card (`screens.jsx:891`): -30 px
-	   inset on the right + top, 140 px diameter, 0.10 opacity, 20 px
-	   blur. Subtle warmth, not a yellow wash. */
+	/* Top-right archetype-accent blur disc. Sized + opacity tuned so
+	   it reads as a subtle warm halo behind the avatar quadrant — not
+	   a yellow wash. Earlier values (220 px / 0.28 opacity / left-
+	   anchored) flooded the entire card with accent colour and made
+	   the surrounding text look tinted. */
 	.profile-halo {
 		position: absolute;
 		top: -30px;

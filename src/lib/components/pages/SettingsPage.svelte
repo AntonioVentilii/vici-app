@@ -1135,11 +1135,12 @@
 		gap: 0.5rem;
 	}
 
-	/* Mirrors `.set-cat-chip` in the design source
-	   (`../VICI WebApp Beta V1.2/app.css:1784-1822`): rounded-rectangle
-	   chip (8 px radius, not pill), neutral surface + neutral border
-	   off-state, laurel-glow fill + accent border + accent text in the
-	   on-state, 8 px dot tinted with the same colour. */
+	/* Category toggle chip. 8-px rounded rectangle (intentionally
+	   NOT a pill — the squarer geometry pairs better with the dense
+	   2-col grid of categories). Off-state is a neutral wash + base
+	   border; on-state lifts to `--laurel-glow` fill + accent border
+	   + accent text + accent-tinted dot. Light / peach theme
+	   overrides below swap the off-state to a darker ink wash. */
 	.settings-flow-deck-pill {
 		display: inline-flex;
 		align-items: center;
@@ -1219,11 +1220,12 @@
 		margin-top: 0.25rem;
 	}
 
-	/* Mirrors `.btn.btn-ghost.btn-block.set-signout` in the design source
-	   (`../VICI WebApp Beta V1.2/app.css:128-142, 1440-1447`): rounded
-	   rectangle (12 px radius, not full pill), red text + red-tinted
-	   border on top of the same subtle ghost-button surface, hover lifts
-	   the red wash. */
+	/* Sign-out as a 12-px rounded rectangle (intentionally NOT a
+	   full pill — pairs with the destructive band below). Red text
+	   + red-tinted border on top of a subtle ghost-button surface;
+	   hover lifts the red wash without flipping to a fully filled
+	   destructive button so the action still requires the explicit
+	   confirm step beneath it. */
 	:global(.settings-signout) {
 		width: 100%;
 		padding: 14px 20px;
@@ -1246,8 +1248,10 @@
 		color: var(--text-base);
 	}
 
-	/* Mirrors `.set-delete-link` (`app.css:1448-1459`): muted grey
-	   underlined link, faint underline, red on hover only. */
+	/* Delete-account link sits one tier below Sign out in the
+	   destructive hierarchy: just a muted-grey underlined text link.
+	   The colour only flips to red on hover so the resting state
+	   never visually competes with the Sign-out CTA above. */
 	.settings-delete-link {
 		align-self: center;
 		border: none;

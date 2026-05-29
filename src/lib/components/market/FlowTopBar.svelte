@@ -75,11 +75,12 @@
 		</div>
 
 		<div class="flow-topbar-right">
-			<!-- Mirrors prototype top-bar streak pill
-			     (`../VICI WebApp Beta V1.2/app.jsx:821`): a `kpi` pill
-			     hosting just `<StreakFlame count={streak}/>` — no SPARK /
-			     EMBER label, no `d` suffix, always visible (even at 0
-			     streak). -->
+			<!-- Streak chip: just the flame icon + the day count. We
+			     intentionally drop the `flameStage` label (SPARK / EMBER /
+			     etc.) and the `d` suffix — the stage colour is already
+			     encoded in the flame gradient and the number reads as
+			     "days" in context. Chip stays mounted at streak 0 so the
+			     top-bar row geometry never reflows. -->
 			<span
 				class="flow-flame-chip"
 				aria-label={t({ locale: $localeStore, key: 'flow.daily_streak_aria' })}

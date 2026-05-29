@@ -757,11 +757,11 @@
 		color: var(--no);
 	}
 
-	/* Mirrors `.flow-stake.is-cap` in the design source
-	   (`../VICI WebApp Beta V1.2/app.css:3411-3414, 3424, 3431, 3452,
-	   3466, 3489`): cap-state shifts every accent surface — wash, border,
-	   label, value, slider fill, handle, active peg — from laurel to
-	   `--no` red so the user feels the upper bound visually. */
+	/* Cap state: when the user hits the top rung of the stake ladder
+	   we flip every accent surface — wash, border, label, value,
+	   slider fill, handle, active peg — from laurel to `--no` red so
+	   the user feels the upper bound visually instead of having to
+	   read it. */
 	.flow-stake.is-cap {
 		background: linear-gradient(
 			180deg,
