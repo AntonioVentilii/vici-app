@@ -5,6 +5,7 @@
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
@@ -127,7 +128,7 @@
 
 		const span = bout.settleMs - bout.kickoffMs;
 
-		return Math.max(1, Math.ceil(span / 86_400_000));
+		return Math.max(1, Math.ceil(span / DAY_IN_MS));
 	});
 
 	const dayOf = $derived.by((): number => {
@@ -136,7 +137,7 @@
 		}
 
 		const elapsed = Date.now() - bout.kickoffMs;
-		const days = Math.floor(elapsed / 86_400_000) + 1;
+		const days = Math.floor(elapsed / DAY_IN_MS) + 1;
 
 		return Math.max(1, Math.min(totalDays, days));
 	});

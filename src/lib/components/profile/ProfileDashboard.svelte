@@ -9,6 +9,7 @@
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -323,7 +324,7 @@
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
 
 	const sessionVxpDelta = $derived.by(() => {
-		const since = Date.now() - 24 * 60 * 60 * 1000;
+		const since = Date.now() - DAY_IN_MS;
 		const today = recentSettlements.filter((s) => s.settledAtMs >= since);
 
 		// `RecentSettlementSnapshot` does not carry per-call VXP; we estimate

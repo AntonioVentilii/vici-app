@@ -21,7 +21,7 @@
 	import DashAccuracySparkline from '$lib/components/dash/DashAccuracySparkline.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
-	import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
+	import { EM_DASH, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import {
 		MARKET_TAG_LABEL_KEYS,
 		MARKET_TAGS,
@@ -53,7 +53,6 @@
 	// — em-dash placeholder used everywhere a real backend number
 	// isn't yet available — signals "unknown" rather than fabricating
 	// data.
-	const EM_DASH = '—';
 	const MARATHON_DAYS = 30;
 
 	// ─── Reactive backend reads ────────────────────────────────────────

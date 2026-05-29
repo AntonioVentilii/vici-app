@@ -20,6 +20,11 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationDoc } from '$lib/types/affiliation';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+	import {
+		affiliationLifetimeAccuracy,
+		affiliationMonthlyAccuracy,
+		formatAccuracyPercent
+	} from '$lib/utils/affiliation-stats.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -114,19 +119,8 @@
 		void tryClaimPodium();
 	});
 
-	const accLifetime = (s: AffiliationStatsDoc): number =>
-		s.totalCalls > 0 ? s.wins / s.totalCalls : 0;
-
-	const accMonth = (s: AffiliationStatsDoc): number =>
-		s.monthTotalCalls > 0 ? s.monthWins / s.monthTotalCalls : 0;
-
 	const accForScope = ({ row, scope }: { row: AffiliationStatsDoc; scope: Scope }): number =>
-		scope === 'wc' ? accLifetime(row) : accMonth(row);
-
-	/**
-	 * Format a 0..1 accuracy as a one-decimal percentage string.
-	 */
-	const fmtPct1 = (acc: number): string => `${(acc * 100).toFixed(1)}%`;
+		scope === 'wc' ? affiliationLifetimeAccuracy(row) : affiliationMonthlyAccuracy(row);
 
 	const sortedForScope = $derived.by(() => {
 		const list = [...stats];
@@ -160,8 +154,8 @@
 		const list = [...stats];
 
 		list.sort((a, b) => {
-			const da = accLifetime(a);
-			const db = accLifetime(b);
+			const da = affiliationLifetimeAccuracy(a);
+			const db = affiliationLifetimeAccuracy(b);
 
 			if (da !== db) {
 				return db - da;
@@ -316,7 +310,9 @@
 					>
 						<div class="num worlds-pod-place">02</div>
 						<div class="worlds-pod-name">{opt?.name ?? wcTop3[1].affiliationIdentifier}</div>
-						<div class="num worlds-pod-pct">{fmtPct1(accLifetime(wcTop3[1]))}</div>
+						<div class="num worlds-pod-pct">
+							{formatAccuracyPercent(affiliationLifetimeAccuracy(wcTop3[1]))}
+						</div>
 					</button>
 				{/if}
 				{#if wcTop3[0]}
@@ -328,7 +324,9 @@
 					>
 						<div class="num worlds-pod-place">01</div>
 						<div class="worlds-pod-name">{opt?.name ?? wcTop3[0].affiliationIdentifier}</div>
-						<div class="num worlds-pod-pct">{fmtPct1(accLifetime(wcTop3[0]))}</div>
+						<div class="num worlds-pod-pct">
+							{formatAccuracyPercent(affiliationLifetimeAccuracy(wcTop3[0]))}
+						</div>
 					</button>
 				{/if}
 				{#if wcTop3[2]}
@@ -340,7 +338,9 @@
 					>
 						<div class="num worlds-pod-place">03</div>
 						<div class="worlds-pod-name">{opt?.name ?? wcTop3[2].affiliationIdentifier}</div>
-						<div class="num worlds-pod-pct">{fmtPct1(accLifetime(wcTop3[2]))}</div>
+						<div class="num worlds-pod-pct">
+							{formatAccuracyPercent(affiliationLifetimeAccuracy(wcTop3[2]))}
+						</div>
 					</button>
 				{/if}
 			</div>
@@ -424,7 +424,9 @@
 								})}
 							</span>
 						</div>
-						<span class="num worlds-row-pct">{fmtPct1(accForScope({ row, scope }))}</span>
+						<span class="num worlds-row-pct"
+							>{formatAccuracyPercent(accForScope({ row, scope }))}</span
+						>
 					</button>
 				{/each}
 			{/if}
@@ -468,7 +470,7 @@
 						</span>
 					</div>
 					<span class="num worlds-row-pct worlds-row-pct-you">
-						{fmtPct1(accForScope({ row: myStatsRow, scope }))}
+						{formatAccuracyPercent(accForScope({ row: myStatsRow, scope }))}
 					</span>
 				</div>
 			{/if}

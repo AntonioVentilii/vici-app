@@ -101,3 +101,67 @@ export const haptic = (pattern: HapticPattern): void => {
 		// in-app browsers). The feedback is non-essential — swallow.
 	}
 };
+
+// Swipe-count milestone → haptic pattern. Keyed by the exact
+// committed-swipe count that triggers a `milestone-<n>` beat.
+const MILESTONE_HAPTIC: Record<number, HapticPattern> = {
+	1: 'triple-tap',
+	3: 'firm-tap',
+	5: 'firm-tap',
+	10: 'milestone-tap',
+	25: 'firm-tap',
+	50: 'oracle-roll',
+	100: 'centurion',
+	250: 'milestone-tap',
+	500: 'milestone-tap',
+	1000: 'vici-fanfare'
+};
+
+/**
+ * Maps a Flow-Mode beat kind to its haptic pattern name. Returns
+ * `null` for an absent beat. The pattern names below resolve to their
+ * ms envelopes via `HAPTIC_PATTERNS` above — the single source of
+ * truth — so this mapping intentionally names patterns only and never
+ * restates the ms arrays.
+ *
+ *   milestone-1            → triple-tap
+ *   milestone-3 / 5 / 25   → firm-tap
+ *   milestone-10 / 250/500 → milestone-tap
+ *   milestone-50           → oracle-roll
+ *   milestone-100          → centurion
+ *   milestone-1000         → vici-fanfare
+ *   first-yes / first-no   → triple-tap
+ *   first-contrarian       → mischief
+ *   first-leaderboard      → oracle-tap
+ *   streak-tier-up         → milestone-tap
+ *   acc-threshold          → milestone-tap
+ *   ambient-10             → firm-tap
+ */
+export const hapticForBeat = (beatKind: string | undefined): HapticPattern | null => {
+	if (!beatKind) {
+		return null;
+	}
+
+	if (beatKind.startsWith('milestone-')) {
+		const n = Number(beatKind.slice('milestone-'.length));
+
+		return MILESTONE_HAPTIC[n] ?? 'double-pulse';
+	}
+
+	switch (beatKind) {
+		case 'first-yes':
+		case 'first-no':
+			return 'triple-tap';
+		case 'first-contrarian':
+			return 'mischief';
+		case 'first-leaderboard':
+			return 'oracle-tap';
+		case 'streak-tier-up':
+		case 'acc-threshold':
+			return 'milestone-tap';
+		case 'ambient-10':
+			return 'firm-tap';
+		default:
+			return 'double-pulse';
+	}
+};

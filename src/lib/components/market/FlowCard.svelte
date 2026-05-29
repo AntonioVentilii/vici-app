@@ -3,6 +3,7 @@
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import SeededAvatarStack from '$lib/components/ui/SeededAvatarStack.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { lookupWcMarketSubtitle } from '$lib/constants/wc-market-subtitles.constants';
 	import { daysToKickoff } from '$lib/derived/featured-event.derived';
@@ -139,7 +140,7 @@
 			return 0;
 		}
 
-		return Math.max(0, Math.ceil(ms / 86_400_000));
+		return Math.max(0, Math.ceil(ms / DAY_IN_MS));
 	});
 	const daysLeftUrgency = $derived(daysLeft <= 1 ? 'urgent' : daysLeft <= 7 ? 'soon' : '');
 

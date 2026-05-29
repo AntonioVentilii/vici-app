@@ -8,6 +8,7 @@
 	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
 	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
 		lookupWorldsAffiliation,
@@ -36,6 +37,11 @@
 		type TournamentMatchDoc,
 		type TournamentRound
 	} from '$lib/types/tournament';
+	import {
+		affiliationLifetimeAccuracy,
+		affiliationMonthlyAccuracy,
+		formatAccuracyPercent
+	} from '$lib/utils/affiliation-stats.utils';
 	import { formatDate } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
@@ -304,12 +310,6 @@
 	};
 
 	// ─── Worlds podium helpers ──────────────────────────────────────
-	const accLifetime = (s: AffiliationStatsDoc): number =>
-		s.totalCalls > 0 ? s.wins / s.totalCalls : 0;
-
-	const accMonth = (s: AffiliationStatsDoc): number =>
-		s.monthTotalCalls > 0 ? s.monthWins / s.monthTotalCalls : 0;
-
 	/**
 	 * Top-3 by WC (lifetime) accuracy for a roster. The featured
 	 * podium always frames the World Cup bout — same shape as
@@ -319,8 +319,8 @@
 		const list = [...stats];
 
 		list.sort((a, b) => {
-			const da = accLifetime(a);
-			const db = accLifetime(b);
+			const da = affiliationLifetimeAccuracy(a);
+			const db = affiliationLifetimeAccuracy(b);
 
 			if (da !== db) {
 				return db - da;
@@ -356,8 +356,8 @@
 		}
 
 		const sorted = [...stats].sort((a, b) => {
-			const da = accLifetime(a);
-			const db = accLifetime(b);
+			const da = affiliationLifetimeAccuracy(a);
+			const db = affiliationLifetimeAccuracy(b);
 
 			if (da !== db) {
 				return db - da;
@@ -403,8 +403,6 @@
 	const countryCount = WORLDS_COUNTRIES.length;
 
 	const eventDaysLeft = $derived($daysToFinal);
-
-	const fmtPct1 = (acc: number): string => `${(acc * 100).toFixed(1)}%`;
 
 	const uniOption = (id: string) => lookupWorldsAffiliation({ kind: 'university', id });
 	const countryOption = (id: string) => lookupWorldsAffiliation({ kind: 'country', id });
@@ -473,7 +471,7 @@
 		const earliestEnd = Math.min(...ms.filter((m) => m.endMs > Date.now()).map((m) => m.endMs));
 		const delta = earliestEnd - Date.now();
 
-		return delta <= 0 ? 0 : Math.ceil(delta / 86_400_000);
+		return delta <= 0 ? 0 : Math.ceil(delta / DAY_IN_MS);
 	});
 
 	const tournamentRoundKey = (round: TournamentRound): MessageKey => {
@@ -656,7 +654,9 @@
 								<div class="bouts-pod-name">
 									{opt?.name ?? uniWcTop3[1].affiliationIdentifier}
 								</div>
-								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(uniWcTop3[1]))}</div>
+								<div class="num bouts-pod-pct">
+									{formatAccuracyPercent(affiliationLifetimeAccuracy(uniWcTop3[1]))}
+								</div>
 							</div>
 						{/if}
 						{#if uniWcTop3[0]}
@@ -666,7 +666,9 @@
 								<div class="bouts-pod-name">
 									{opt?.name ?? uniWcTop3[0].affiliationIdentifier}
 								</div>
-								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(uniWcTop3[0]))}</div>
+								<div class="num bouts-pod-pct">
+									{formatAccuracyPercent(affiliationLifetimeAccuracy(uniWcTop3[0]))}
+								</div>
 							</div>
 						{/if}
 						{#if uniWcTop3[2]}
@@ -676,7 +678,9 @@
 								<div class="bouts-pod-name">
 									{opt?.name ?? uniWcTop3[2].affiliationIdentifier}
 								</div>
-								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(uniWcTop3[2]))}</div>
+								<div class="num bouts-pod-pct">
+									{formatAccuracyPercent(affiliationLifetimeAccuracy(uniWcTop3[2]))}
+								</div>
 							</div>
 						{/if}
 					</div>
@@ -697,7 +701,9 @@
 								params: { rank: myUniRank, total: universityCount }
 							})}
 						</span>
-						<span class="num bouts-your-pct">{fmtPct1(accLifetime(myUniStats))}</span>
+						<span class="num bouts-your-pct"
+							>{formatAccuracyPercent(affiliationLifetimeAccuracy(myUniStats))}</span
+						>
 					</div>
 				{/if}
 			</button>
@@ -723,7 +729,9 @@
 								params: { rank: myUniRank, total: universityCount }
 							})}
 						</span>
-						<span class="num bouts-your-pct">{fmtPct1(accMonth(myUniStats))}</span>
+						<span class="num bouts-your-pct"
+							>{formatAccuracyPercent(affiliationMonthlyAccuracy(myUniStats))}</span
+						>
 					</div>
 				{:else}
 					<p class="bouts-card-meta">
@@ -800,7 +808,9 @@
 									{#if opt}<CountryFlag class="bouts-pod-flag" countryCode={opt.id} />{/if}
 									{opt?.name ?? countryWcTop3[1].affiliationIdentifier}
 								</div>
-								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(countryWcTop3[1]))}</div>
+								<div class="num bouts-pod-pct">
+									{formatAccuracyPercent(affiliationLifetimeAccuracy(countryWcTop3[1]))}
+								</div>
 							</div>
 						{/if}
 						{#if countryWcTop3[0]}
@@ -811,7 +821,9 @@
 									{#if opt}<CountryFlag class="bouts-pod-flag" countryCode={opt.id} />{/if}
 									{opt?.name ?? countryWcTop3[0].affiliationIdentifier}
 								</div>
-								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(countryWcTop3[0]))}</div>
+								<div class="num bouts-pod-pct">
+									{formatAccuracyPercent(affiliationLifetimeAccuracy(countryWcTop3[0]))}
+								</div>
 							</div>
 						{/if}
 						{#if countryWcTop3[2]}
@@ -822,7 +834,9 @@
 									{#if opt}<CountryFlag class="bouts-pod-flag" countryCode={opt.id} />{/if}
 									{opt?.name ?? countryWcTop3[2].affiliationIdentifier}
 								</div>
-								<div class="num bouts-pod-pct">{fmtPct1(accLifetime(countryWcTop3[2]))}</div>
+								<div class="num bouts-pod-pct">
+									{formatAccuracyPercent(affiliationLifetimeAccuracy(countryWcTop3[2]))}
+								</div>
 							</div>
 						{/if}
 					</div>
@@ -843,7 +857,9 @@
 								params: { rank: myCountryRank, total: countryCount }
 							})}
 						</span>
-						<span class="num bouts-your-pct">{fmtPct1(accLifetime(myCountryStats))}</span>
+						<span class="num bouts-your-pct"
+							>{formatAccuracyPercent(affiliationLifetimeAccuracy(myCountryStats))}</span
+						>
 					</div>
 				{/if}
 			</button>
@@ -869,7 +885,9 @@
 								params: { rank: myCountryRank, total: countryCount }
 							})}
 						</span>
-						<span class="num bouts-your-pct">{fmtPct1(accMonth(myCountryStats))}</span>
+						<span class="num bouts-your-pct"
+							>{formatAccuracyPercent(affiliationMonthlyAccuracy(myCountryStats))}</span
+						>
 					</div>
 				{:else}
 					<p class="bouts-card-meta">

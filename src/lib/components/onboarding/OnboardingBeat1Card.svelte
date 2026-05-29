@@ -3,6 +3,7 @@
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import SwipeableMarketCard from '$lib/components/ui/SwipeableMarketCard.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
@@ -43,7 +44,7 @@
 	const event = $derived($featuredEvent);
 
 	const kickoffDays = $derived(
-		Math.max(0, Math.ceil((event.kickoffAt_ms - Date.now()) / (24 * 60 * 60 * 1000)))
+		Math.max(0, Math.ceil((event.kickoffAt_ms - Date.now()) / DAY_IN_MS))
 	);
 
 	const picked: FeaturedEventParticipant | undefined = $derived(

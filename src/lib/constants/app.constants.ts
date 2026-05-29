@@ -17,8 +17,14 @@ export const USD_DECIMALS = 4;
 
 export const VICI_ORACLE_V1 = 'VICI_ORACLE_V1';
 
+/** Em-dash placeholder for an absent / not-yet-served value in the UI. */
+export const EM_DASH = '—';
+
 export const SECOND_IN_NANOSECONDS = 1_000_000_000n;
 export const MILLISECOND_IN_NANOSECONDS = 1_000_000n;
+
+/** One day in milliseconds — `24 × 60 × 60 × 1000`. */
+export const DAY_IN_MS = 24 * 60 * 60 * 1000;
 export const MINUTE_IN_SECONDS = 60n;
 export const HOUR_IN_SECONDS = 60n * MINUTE_IN_SECONDS;
 export const DAY_IN_SECONDS = 24n * HOUR_IN_SECONDS;

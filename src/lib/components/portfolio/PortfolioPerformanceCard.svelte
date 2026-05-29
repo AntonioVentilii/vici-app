@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { USD_DECIMALS } from '$lib/constants/app.constants';
+	import { DAY_IN_MS, USD_DECIMALS } from '$lib/constants/app.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
@@ -31,7 +31,6 @@
 		vxpBalance: number;
 	}
 
-	const DAY_MS = 24 * 60 * 60 * 1000;
 	const WINDOW_DAYS = 30;
 	const NS_PER_MS = 1_000_000n;
 	const W = 320;
@@ -48,8 +47,8 @@
 	 */
 	const dailyPnl = $derived.by((): number[] => {
 		const buckets = new Array<number>(WINDOW_DAYS).fill(0);
-		const cutoffMs = Date.now() - WINDOW_DAYS * DAY_MS;
-		const todayStartMs = Math.floor(Date.now() / DAY_MS) * DAY_MS;
+		const cutoffMs = Date.now() - WINDOW_DAYS * DAY_IN_MS;
+		const todayStartMs = Math.floor(Date.now() / DAY_IN_MS) * DAY_IN_MS;
 
 		resolvedPositions.forEach((resolved) => {
 			const market = getMarketById(resolved.marketId);
@@ -66,7 +65,9 @@
 			}
 
 			const dayIndex =
-				WINDOW_DAYS - 1 - Math.floor((todayStartMs - Math.floor(tsMs / DAY_MS) * DAY_MS) / DAY_MS);
+				WINDOW_DAYS -
+				1 -
+				Math.floor((todayStartMs - Math.floor(tsMs / DAY_IN_MS) * DAY_IN_MS) / DAY_IN_MS);
 
 			if (dayIndex < 0 || dayIndex >= WINDOW_DAYS) {
 				return;

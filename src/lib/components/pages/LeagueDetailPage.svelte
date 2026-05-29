@@ -10,6 +10,7 @@
 	import MemberSticker from '$lib/components/leagues/MemberSticker.svelte';
 	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
@@ -27,7 +28,7 @@
 	import type { BoutDoc, BoutState } from '$lib/types/bout';
 	import type { LeagueDoc } from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
-	import { formatDate } from '$lib/utils/format.utils';
+	import { formatDate, shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
@@ -248,9 +249,6 @@
 				? 'leagues.role.admin'
 				: 'leagues.role.member';
 
-	const shortPrincipal = (principal: string): string =>
-		principal.length > 12 ? `${principal.slice(0, 5)}…${principal.slice(-5)}` : principal;
-
 	const memberHandle = (principal: string): string => {
 		const profile = $profilesStore.get(principal);
 
@@ -258,7 +256,7 @@
 			return `@${profile.nickname}`;
 		}
 
-		return shortPrincipal(principal);
+		return shortenPrincipal(principal);
 	};
 
 	const memberInitials = (principal: string): string => {
@@ -367,11 +365,13 @@
 			});
 		}
 
-		const dayMs = 86_400_000;
-		const totalDays = Math.max(1, Math.round((activeBout.settleMs - activeBout.kickoffMs) / dayMs));
+		const totalDays = Math.max(
+			1,
+			Math.round((activeBout.settleMs - activeBout.kickoffMs) / DAY_IN_MS)
+		);
 		const elapsedDays = Math.max(
 			1,
-			Math.min(totalDays, Math.ceil((Date.now() - activeBout.kickoffMs) / dayMs))
+			Math.min(totalDays, Math.ceil((Date.now() - activeBout.kickoffMs) / DAY_IN_MS))
 		);
 
 		return t({

@@ -48,7 +48,7 @@
 		resolveFlowArtCategory,
 		type FlowArtCategory
 	} from '$lib/utils/flow-art.utils';
-	import { haptic, type HapticPattern } from '$lib/utils/haptics.utils';
+	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { recordMotionSwipe, type MotionBeatPayload } from '$lib/utils/motion-engine.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
@@ -172,61 +172,6 @@
 	// from `haptics.utils.ts`. Naming kept minimal so existing call
 	// sites read the same way.
 	const vibrate = haptic;
-
-	// Per-beat haptic envelope:
-	//   milestone-1            → triple-tap   ([12,30,12,30,12])
-	//   milestone-3 / 5 / 25   → firm-tap     (12ms)
-	//   milestone-10 / 250/500 → milestone-tap ([25,30,25])
-	//   milestone-50           → oracle-roll  ([25,30,25,40,60])
-	//   milestone-100          → centurion    ([12,30,12,30,12,30,60])
-	//   milestone-1000         → vici-fanfare ([40,30,40,30,80])
-	//   first-yes / first-no   → triple-tap
-	//   first-contrarian       → mischief     ([10,40,10,40,10])
-	//   first-leaderboard      → oracle-tap   ([40,60,40])
-	//   streak-tier-up         → milestone-tap
-	//   acc-threshold          → milestone-tap
-	//   ambient-10             → firm-tap
-	const MILESTONE_HAPTIC: Record<number, HapticPattern> = {
-		1: 'triple-tap',
-		3: 'firm-tap',
-		5: 'firm-tap',
-		10: 'milestone-tap',
-		25: 'firm-tap',
-		50: 'oracle-roll',
-		100: 'centurion',
-		250: 'milestone-tap',
-		500: 'milestone-tap',
-		1000: 'vici-fanfare'
-	};
-
-	const hapticForBeat = (beatKind: string | undefined): HapticPattern | null => {
-		if (!beatKind) {
-			return null;
-		}
-
-		if (beatKind.startsWith('milestone-')) {
-			const n = Number(beatKind.slice('milestone-'.length));
-
-			return MILESTONE_HAPTIC[n] ?? 'double-pulse';
-		}
-
-		switch (beatKind) {
-			case 'first-yes':
-			case 'first-no':
-				return 'triple-tap';
-			case 'first-contrarian':
-				return 'mischief';
-			case 'first-leaderboard':
-				return 'oracle-tap';
-			case 'streak-tier-up':
-			case 'acc-threshold':
-				return 'milestone-tap';
-			case 'ambient-10':
-				return 'firm-tap';
-			default:
-				return 'double-pulse';
-		}
-	};
 
 	// Session duration ticker. 1 s cadence is plenty — the duration
 	// label renders to seconds (`Xm Ys` / `Ys`) and the user never sees
