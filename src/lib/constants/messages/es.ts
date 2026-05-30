@@ -921,6 +921,7 @@ export const esMessages = {
 	'leagues.role.admin': 'Admin',
 	'leagues.role.member': 'Miembro',
 	'leagues.role.owner': 'Propietario',
+	'leagues.share_text': '¡Únete a mi liga {name} en VICI!',
 	'leagues.title': 'Ligas',
 	'leagues.transfer.cta': 'Transferir propiedad',
 	'leagues.transfer.empty':

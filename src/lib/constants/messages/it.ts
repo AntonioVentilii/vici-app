@@ -920,6 +920,7 @@ export const itMessages = {
 	'leagues.role.admin': 'Admin',
 	'leagues.role.member': 'Membro',
 	'leagues.role.owner': 'Proprietario',
+	'leagues.share_text': 'Unisciti alla mia lega {name} su VICI!',
 	'leagues.title': 'Leghe',
 	'leagues.transfer.cta': 'Trasferisci proprietà',
 	'leagues.transfer.empty':
