@@ -22,11 +22,16 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	const sections = ['markets', 'flow', 'leaderboard', 'trust'] as const;
-	const themeOpts: ReadonlyArray<{ id: 'dark' | 'light' | 'peach'; label: string }> = [
-		{ id: 'dark', label: 'Dark mode' },
-		{ id: 'light', label: 'Light mode' },
-		{ id: 'peach', label: 'Coral mode' }
-	];
+	// Theme labels resolve from the canonical `ui.theme.*` catalog — the
+	// same source AppearancePicker uses — so the appearance tooltips/aria
+	// stay localized and in sync rather than hardcoded English.
+	const THEME_IDS = ['dark', 'light', 'peach'] as const;
+	const themeOpts = $derived(
+		THEME_IDS.map((id) => ({
+			id,
+			label: t({ locale: $localeStore, key: `ui.theme.${id}` as const })
+		}))
+	);
 
 	let scrolled = $state(false);
 	let active = $state<string>('');
