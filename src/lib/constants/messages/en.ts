@@ -498,6 +498,7 @@ export const enMessages = {
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': 'Top category',
 	'dash.rank.top_cat_sub': 'best cat.',
+	'dash.rank.wc_sub': 'accuracy',
 	'dash.streak.longest_to_marathon': 'Longest {longest} · {count} to Marathon',
 	'dash.streak.to_marathon': '{count} days to Marathon',
 	'dash.trend.delta': '+2.1 pts',

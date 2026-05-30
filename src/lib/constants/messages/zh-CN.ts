@@ -477,6 +477,7 @@ export const zhCnMessages = {
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': '最佳分类',
 	'dash.rank.top_cat_sub': '最佳分类',
+	'dash.rank.wc_sub': '准确率',
 	'dash.streak.longest_to_marathon': '最长 {longest} · 距 Marathon 还差 {count}',
 	'dash.streak.to_marathon': '距 Marathon 还差 {count} 天',
 	'dash.trend.delta': '+2.1 分',

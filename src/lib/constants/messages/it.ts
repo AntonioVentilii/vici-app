@@ -502,6 +502,7 @@ export const itMessages = {
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': 'Top categoria',
 	'dash.rank.top_cat_sub': 'miglior cat.',
+	'dash.rank.wc_sub': 'precisione',
 	'dash.streak.longest_to_marathon': 'Più lunga {longest} · {count} a Marathon',
 	'dash.streak.to_marathon': '{count} giorni a Marathon',
 	'dash.trend.delta': '+2,1 pt',
