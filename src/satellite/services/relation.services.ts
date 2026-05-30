@@ -164,6 +164,32 @@ export const sendFriendRequest = ({ target }: { target: PrincipalText }): void =
 
 	if (!isNullish(existingDoc)) {
 		const existing = decodeDocData<Relation>(existingDoc.data);
+
+		// The other user already sent us a pending friend request: rather than
+		// surfacing an error, treat our outgoing request as an acceptance of
+		// theirs. The recipient of the existing request is `participants[1]`,
+		// so this only applies when the caller is on the receiving end.
+		if (
+			existing.category === RelationCategory.FRIEND &&
+			existing.state === RelationState.PENDING &&
+			existing.participants[1] === sender
+		) {
+			setDocStore({
+				collection: Collection.RELATIONS,
+				key: relationId,
+				doc: {
+					version: existingDoc.version,
+					data: encodeDocData({
+						...existing,
+						state: RelationState.ACTIVE
+					})
+				},
+				caller
+			});
+
+			return;
+		}
+
 		throw new Error(`Friend request already exists with state: ${existing.state}`);
 	}
 
