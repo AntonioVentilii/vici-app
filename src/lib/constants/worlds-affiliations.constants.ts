@@ -49,7 +49,7 @@ export interface WorldsAffiliationOption {
  * `affiliation_stats`, not this list — so editing it drops no data.
  */
 export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
-	// North America
+	// North America · United States
 	{
 		id: 'mit',
 		name: 'MIT',
@@ -2994,7 +2994,7 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 		color: '#115C26',
 		text: '#F2ECDC'
 	},
-	// North America
+	// North America · Canada
 	{
 		id: 'toronto',
 		name: 'Toronto',
