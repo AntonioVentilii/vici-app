@@ -849,8 +849,8 @@
 	.flow-head {
 		display: flex;
 		flex-direction: column;
-		gap: 0.55rem;
-		padding: 1.1rem 1.1rem 1rem;
+		gap: 10px;
+		padding: 18px 20px 16px;
 		border-bottom: 1px solid var(--border-base);
 	}
 
@@ -871,12 +871,13 @@
 	.flow-cat-tag {
 		display: inline-flex;
 		align-items: center;
-		padding: 2px 8px;
-		border-radius: var(--r-pill);
+		gap: 4px;
+		padding: 3px 7px;
+		border-radius: 4px;
 		background: rgba(242, 236, 220, 0.06);
-		font-size: var(--t-12);
+		font-size: var(--text-micro);
 		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
+		letter-spacing: 0.08em;
 	}
 
 	.flow-cat-live {
@@ -889,22 +890,20 @@
 	.flow-days {
 		display: inline-flex;
 		align-items: center;
-		padding: 2px 7px;
-		font-size: 10.5px;
+		padding: 2px 8px;
+		font-size: var(--text-eyebrow);
 		font-weight: 700;
 		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
-		background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
-		border: 1px solid var(--border-base);
+		background: rgba(242, 236, 220, 0.05);
+		border: 1px solid rgba(242, 236, 220, 0.1);
 		border-radius: var(--r-pill);
 	}
 	.flow-days.is-soon {
-		color: var(--cat-color);
-		border-color: color-mix(in srgb, var(--cat-color) 30%, var(--border-base));
+		color: var(--laurel);
 	}
 	.flow-days.is-urgent {
 		color: var(--no);
-		border-color: color-mix(in srgb, var(--no) 30%, var(--border-base));
 		animation: flow-days-pulse 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 	}
 	@media (prefers-reduced-motion: reduce) {
@@ -917,52 +916,72 @@
 		align-self: flex-start;
 		display: inline-flex;
 		align-items: center;
-		gap: 5px;
+		gap: 6px;
 		margin: 0;
-		padding: 0.3rem 0.55rem;
+		padding: 3px 9px 3px 8px;
 		border-radius: var(--r-pill);
-		border: 1px solid color-mix(in srgb, var(--cat-color) 22%, var(--border-base));
-		background: color-mix(in srgb, var(--cat-color) 10%, var(--bg-surface));
-		font-size: var(--t-12);
-		color: var(--laurel);
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
+		border: 1px solid rgba(242, 236, 220, 0.07);
+		background: rgba(242, 236, 220, 0.04);
+		font-size: var(--text-eyebrow);
+		font-weight: 500;
+		color: var(--parchment-dim);
+		letter-spacing: 0;
 	}
 	.flow-whynow strong {
 		font-weight: 700;
 	}
+	/* Prior-call eyebrow — a stronger, monospaced signal than the
+	   curated why-now cue, tinted with the called side's color. */
+	.flow-whynow-prior {
+		font-family: var(--font-mono);
+		font-size: var(--text-micro);
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		padding: 3px 10px 3px 9px;
+	}
 	.flow-whynow-prior.is-yes {
 		color: var(--yes);
-		border-color: color-mix(in srgb, var(--yes) 30%, var(--border-base));
+		background: rgba(79, 211, 161, 0.1);
+		border-color: rgba(79, 211, 161, 0.32);
 	}
 	.flow-whynow-prior.is-no {
 		color: var(--no);
-		border-color: color-mix(in srgb, var(--no) 30%, var(--border-base));
+		background: rgba(255, 107, 107, 0.1);
+		border-color: rgba(255, 107, 107, 0.32);
+	}
+	.flow-whynow-prior.is-yes .flow-whynow-dot {
+		box-shadow: 0 0 6px rgba(79, 211, 161, 0.5);
+	}
+	.flow-whynow-prior.is-no .flow-whynow-dot {
+		box-shadow: 0 0 6px rgba(255, 107, 107, 0.5);
 	}
 	.flow-whynow-dot {
-		width: 6px;
-		height: 6px;
+		width: 5px;
+		height: 5px;
 		border-radius: var(--r-pill);
 		background: currentColor;
 		flex-shrink: 0;
 	}
 
 	.flow-card-title {
-		margin: 0;
+		margin: 6px 0 0;
 		font-family: var(--font-display);
-		font-size: clamp(1.35rem, 5.6vw, 1.75rem);
+		font-size: var(--text-h2);
 		line-height: var(--leading-snug);
 		font-weight: 600;
 		letter-spacing: var(--tracking-snug);
 		color: var(--text-base);
+		text-wrap: balance;
 		overflow-wrap: anywhere;
 	}
 
 	.flow-card-sub {
-		margin: 0;
-		font-size: var(--t-14);
-		line-height: var(--leading-normal);
-		color: var(--text-muted);
+		margin: 6px 0 0;
+		font-size: 13.5px;
+		line-height: 1.35;
+		letter-spacing: 0;
+		color: var(--parchment-dim);
 		/* Serif-italic accent — editorial sub-row. The global
 		   `.serif-italic` utility also sets font-family + weight; this
 		   duplicates a few props so the typography still reads when the
