@@ -1,9 +1,8 @@
 <script lang="ts">
 	/**
-	 * Landing surface. Renders WelcomeNav (desktop + mobile), Ticker
-	 * (locked at the top per user request), Hero, WCFeature,
-	 * LiveMarkets, FlowFeature, SocialProof, Loop, FAQ, TrustAndClose,
-	 * Footer.
+	 * Landing surface. Renders WelcomeNav (desktop + mobile), Hero,
+	 * Ticker, WCFeature, LiveMarkets, FlowFeature, SocialProof, Loop,
+	 * FAQ, TrustAndClose, Footer.
 	 *
 	 * The hero copy + visual is inlined here (rather than extracted)
 	 * because it's a single editorial block.
@@ -36,9 +35,6 @@
 
 <div class="lp-root">
 	<WelcomeNav />
-
-	<!-- Ticker stays at the TOP per user request (locked). -->
-	<Ticker />
 
 	<main id="main">
 		<section class="lp-hero">
@@ -121,6 +117,8 @@
 				</div>
 			</div>
 		</section>
+
+		<Ticker />
 
 		<WelcomeFeaturedEvent />
 		<WelcomeLiveMarkets />
