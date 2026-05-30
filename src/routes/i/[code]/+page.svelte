@@ -23,19 +23,20 @@
 	 * `REFERRAL_CODE_REGEX`). Branches on the caller's auth state:
 	 *
 	 *   1. **Invalid code shape** — bail to home with an error toast.
-	 *   2. **Signed-out (or mid-onboarding)** — stash the code into the existing
-	 *      `vici:pending-onboarding` payload (merged with whatever Beat-1/2 picks are
-	 *      already there) and route to `/signup`. The (app) layout's pending-onboarding
-	 *      drain then calls `redeemReferralCode` post-signin.
-	 *   3. **Signed-in & onboarding complete** — the user is past the signup window
+	 *   2. **Signed-out (or a brand-new account still mid-onboarding)** — stash the code
+	 *      into the existing `vici:pending-onboarding` payload (merged with whatever
+	 *      Beat-1/2 picks are already there) and route to `/signup`. The (app) layout's
+	 *      pending-onboarding drain then calls `redeemReferralCode` post-signin.
+	 *   3. **Signed-in & past onboarding** — the user is past the signup window
 	 *      (or in any case ineligible for the FE-driven redemption path). Look up the
 	 *      referrer principal and render the friendship-only explainer sheet. The sheet's
 	 *      CTA calls `claimReferralFriendship` (no VXP, just a confirmed bilateral
 	 *      friendship).
 	 *
-	 * Note: a signed-in user with `onboardingCompleted: false` still has an unfinished
-	 * onboarding flow; we treat them the same as signed-out — stash the code and route to
-	 * `/signup` so the existing drain can pick it up.
+	 * Note: only a brand-new account (no profile existed at sign-in) still has an unfinished
+	 * onboarding flow; we treat that case the same as signed-out — stash the code and route
+	 * to `/signup` so the existing drain can pick it up. A returning user whose legacy profile
+	 * never flipped `onboardingCompleted` to `true` is treated as onboarded.
 	 */
 
 	type Mode = 'loading' | 'redirecting' | 'friendship';
@@ -49,6 +50,11 @@
 	const onboardingCompleted = $derived(
 		$userStore.profile?.preferences?.onboardingCompleted === true
 	);
+	// A returning user (the satellite already held a profile at sign-in) is
+	// past onboarding even if their legacy profile still defaults
+	// `onboardingCompleted` to `false` — only a brand-new account needs the
+	// signup drain. Mirrors the (app) layout's onboarding gate.
+	const needsOnboarding = $derived(!onboardingCompleted && !$userStore.profileExisted);
 
 	onMount(() => {
 		document.title = 'Invite · VICI';
@@ -123,8 +129,10 @@
 			return;
 		}
 
-		// Signed-out OR signed-in but mid-onboarding → stash + route to signup.
-		if (!$userSignedIn || !onboardingCompleted) {
+		// Signed-out OR a brand-new account still mid-onboarding → stash + route
+		// to signup. Returning users fall through to the friendship sheet (see
+		// `needsOnboarding`).
+		if (!$userSignedIn || needsOnboarding) {
 			stashCodeForSignup();
 			mode = 'redirecting';
 			goSignup();
