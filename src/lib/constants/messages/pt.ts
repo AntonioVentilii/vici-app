@@ -919,7 +919,7 @@ export const ptMessages = {
 	'leagues.role.admin': 'Admin',
 	'leagues.role.member': 'Membro',
 	'leagues.role.owner': 'Dono',
-	'leagues.share_text': 'Junte-se à minha liga {name} na VICI — preveja, compita e suba na tabela.',
+	'leagues.share_text': 'Junte-se à minha liga {name} na VICI!',
 	'leagues.title': 'Ligas',
 	'leagues.transfer.cta': 'Transferir propriedade',
 	'leagues.transfer.empty':

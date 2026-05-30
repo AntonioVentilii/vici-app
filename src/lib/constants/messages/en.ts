@@ -908,7 +908,7 @@ export const enMessages = {
 	'leagues.role.admin': 'Admin',
 	'leagues.role.member': 'Member',
 	'leagues.role.owner': 'Owner',
-	'leagues.share_text': 'Join my league {name} on VICI — predict, compete, climb the table.',
+	'leagues.share_text': 'Join my league {name} on VICI!',
 	'leagues.title': 'Leagues',
 	'leagues.transfer.cta': 'Transfer ownership',
 	'leagues.transfer.empty':
