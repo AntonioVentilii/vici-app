@@ -294,10 +294,20 @@
 	onDestroy(() => {
 		document.body.classList.remove('overflow-hidden');
 		void flowTradeService.endSession();
+
 		// Promote the pre-built follow-up deck and rebuild a fresh
 		// `next` excluding the markets just shown — re-entering /flow
 		// opens on an unseen deck without a network round-trip.
-		advanceFlow();
+		//
+		// Only on a session that made progress. A no-op visit (open
+		// /flow, swipe nothing, leave) must not advance: `advanceFlow`
+		// promotes a `next` deck that excludes the entire current deck,
+		// so burning it here would surface markets the user never saw —
+		// or, on a small inventory, an empty follow-up deck — the next
+		// time they enter Flow.
+		if (betsCount > 0) {
+			advanceFlow();
+		}
 	});
 
 	const spawnXpPop = ({
