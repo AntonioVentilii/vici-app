@@ -30,6 +30,7 @@
 	import { orders } from '$lib/derived/orders.derived';
 	import { positions } from '$lib/derived/positions.derived';
 	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
+	import { worldCupActive } from '$lib/derived/world-cup.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
@@ -153,6 +154,15 @@
 			})
 			.filter((row) => (stats[row.id]?.calls ?? 0) > 0)
 			.sort((a, b) => b.acc - a.acc);
+	});
+
+	// World-Cup accuracy for the rank tile's WC variant — the `wc` bucket
+	// is excluded from `catRows` (it's the event, not an evergreen
+	// category), so derive it on its own. `undefined` until there's a call.
+	const wcAccuracy = $derived.by(() => {
+		const bucket = userStats?.categoryStats?.wc;
+
+		return bucket && bucket.calls > 0 ? bucket.wins / bucket.calls : undefined;
 	});
 
 	const recentSettlements = $derived(userStats?.recentSettlements ?? []);
@@ -471,10 +481,14 @@
 		</div>
 
 		<!-- ─── BY CATEGORY breakdown ─── -->
-		<DashCategoryBreakdown {catRows} />
+		<!-- Hidden during World-Cup mode: per-category accuracy is empty
+		     when play is scoped to the event. -->
+		{#if !$worldCupActive}
+			<DashCategoryBreakdown {catRows} />
+		{/if}
 
 		<!-- ─── RANK CONTEXT ─── -->
-		<DashRankContext topCategory={catRows[0]} />
+		<DashRankContext topCategory={catRows[0]} {wcAccuracy} worldCupActive={$worldCupActive} />
 
 		<!-- ─── ORACLE INSIGHT ─── -->
 		<DashOracleInsight {bestWinTitle} hasBestWin={Boolean(bestWin)} />

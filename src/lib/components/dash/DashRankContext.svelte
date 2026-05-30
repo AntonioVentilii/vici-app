@@ -9,9 +9,13 @@
 
 	interface Props {
 		topCategory: { id: MarketTag; label: string; acc: number } | undefined;
+		// When World-Cup mode is active the third tile shows WC accuracy
+		// instead of the best evergreen category.
+		worldCupActive?: boolean;
+		wcAccuracy?: number;
 	}
 
-	let { topCategory }: Props = $props();
+	let { topCategory, worldCupActive = false, wcAccuracy }: Props = $props();
 </script>
 
 <div class="dash-section">
@@ -33,17 +37,27 @@
 			<span class="v">{EM_DASH}</span>
 			<span class="sub">{t({ locale: $localeStore, key: 'dash.rank.league_sub' })}</span>
 		</button>
-		<div class="dash-rank-tile">
-			<span class="lbl">
-				{#if topCategory}{topCategory.label}{:else}{t({
-						locale: $localeStore,
-						key: 'dash.rank.top_cat'
-					})}{/if}
-			</span>
-			<span class="v acc">
-				{#if topCategory}{Math.round(topCategory.acc * 100)}%{:else}{EM_DASH}{/if}
-			</span>
-			<span class="sub">{t({ locale: $localeStore, key: 'dash.rank.top_cat_sub' })}</span>
-		</div>
+		{#if worldCupActive}
+			<div class="dash-rank-tile">
+				<span class="lbl">{t({ locale: $localeStore, key: 'market.tag.wc' })}</span>
+				<span class="v acc">
+					{#if wcAccuracy !== undefined}{Math.round(wcAccuracy * 100)}%{:else}{EM_DASH}{/if}
+				</span>
+				<span class="sub">{t({ locale: $localeStore, key: 'dash.rank.wc_sub' })}</span>
+			</div>
+		{:else}
+			<div class="dash-rank-tile">
+				<span class="lbl">
+					{#if topCategory}{topCategory.label}{:else}{t({
+							locale: $localeStore,
+							key: 'dash.rank.top_cat'
+						})}{/if}
+				</span>
+				<span class="v acc">
+					{#if topCategory}{Math.round(topCategory.acc * 100)}%{:else}{EM_DASH}{/if}
+				</span>
+				<span class="sub">{t({ locale: $localeStore, key: 'dash.rank.top_cat_sub' })}</span>
+			</div>
+		{/if}
 	</div>
 </div>
