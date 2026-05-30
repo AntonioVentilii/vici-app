@@ -1410,18 +1410,47 @@ export const deMessages = {
 	'settings.data.export.sub': 'Als CSV herunterladen',
 	'settings.delete': 'Konto löschen',
 	'settings.delete.back': 'Zurück',
-	'settings.delete.blocking_body_many':
-		'Du besitzt noch {count} Ligen mit aktiven Mitgliedern. Übertrage die Eigentümerschaft oder entferne die anderen Mitglieder, bevor du dein Konto löschst.',
-	'settings.delete.blocking_body_one':
-		'Du besitzt noch 1 Liga mit aktiven Mitgliedern. Übertrage die Eigentümerschaft oder entferne die anderen Mitglieder, bevor du dein Konto löschst.',
-	'settings.delete.blocking_heading': 'Zuerst Eigentümerschaft übertragen',
 	'settings.delete.confirm':
 		'Dies löscht deinen Handle, deine Historie und VXP unwiderruflich. Kann nicht rückgängig gemacht werden.',
+	'settings.delete.confirm_heading': 'Letzter Schritt.',
+	'settings.delete.confirm_mismatch': 'Das stimmt nicht mit deinem Handle überein.',
+	'settings.delete.confirm_type': 'Tippe {handle} zum Bestätigen',
 	'settings.delete.continue': 'Weiter',
 	'settings.delete.deleting': 'Wird gelöscht…',
 	'settings.delete.error': 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
+	'settings.delete.error_handoff': '{league} konnte nicht übergeben werden. Versuche es erneut.',
+	'settings.delete.error_orders':
+		'Deine offenen Orders konnten nicht storniert werden. Nichts wurde gelöscht — versuche es erneut.',
 	'settings.delete.forever': 'Endgültig löschen',
-	'settings.delete.last_step_heading': 'Letzter Schritt.',
+	'settings.delete.gone_body':
+		'Aktive Trades bleiben offen und werden bei Fälligkeit abgerechnet — das Löschen deines Kontos beendet sie nicht.',
+	'settings.delete.gone_heading': 'Vale.',
+	'settings.delete.gone_recover':
+		'Anders überlegt? Melde dich innerhalb von 30 Tagen wieder an, und dein Verlauf kehrt zurück.',
+	'settings.delete.gone_return': 'Zurück ({seconds})',
+	'settings.delete.happens_heading': 'Das passiert jetzt.',
+	'settings.delete.happens_leagues_label': 'Eigene Ligen · {count}',
+	'settings.delete.happens_leagues_sub': 'Übertrage oder lösche jede, bevor du fortfährst.',
+	'settings.delete.happens_orders_label': 'Offene Orders · {count} · {value} VXP',
+	'settings.delete.happens_orders_sub':
+		'Storniert, sobald du bestätigst; der Wert kehrt auf dein Guthaben zurück.',
+	'settings.delete.happens_profile_label': 'Profil, Handle und Statistiken',
+	'settings.delete.happens_profile_sub':
+		'Jetzt gelöscht, 30 Tage lang durch erneutes Anmelden wiederherstellbar, dann endgültig weg.',
+	'settings.delete.happens_trades_label': 'Aktive Trades · {count} · {value} VXP',
+	'settings.delete.happens_trades_sub':
+		'Bleiben offen und werden bei Fälligkeit abgerechnet — Löschen beendet sie nicht.',
+	'settings.delete.leagues_body':
+		'Übergib jede Liga an ein anderes Mitglied oder lösche sie für alle.',
+	'settings.delete.leagues_delete': 'Liga löschen',
+	'settings.delete.leagues_delete_armed': 'Wird für alle Mitglieder gelöscht',
+	'settings.delete.leagues_delete_confirm': 'Für alle {count} Mitglieder löschen?',
+	'settings.delete.leagues_heading': 'Kläre deine Ligen.',
+	'settings.delete.leagues_no_members':
+		'Keine anderen Mitglieder zum Übertragen. Lösche sie stattdessen.',
+	'settings.delete.leagues_select_member': 'Mitglied wählen…',
+	'settings.delete.leagues_transfer': 'Übertragen an…',
+	'settings.delete.leagues_transfer_to': 'Neuer Eigentümer',
 	'settings.delete.never_mind': 'Doch nicht',
 	'settings.delete.note_placeholder': 'Erzähl uns mehr (optional)',
 	'settings.delete.reason.bored': 'Gelangweilt oder Interesse verloren',
@@ -1438,7 +1467,8 @@ export const deMessages = {
 	'settings.delete.stay_contact': 'Kontakt',
 	'settings.delete.stay_heading': 'Möchtest du bleiben?',
 	'settings.delete.stay_pause': '30 Tage pausieren',
-	'settings.delete.transfer_cta': 'Liga zur Übertragung öffnen',
+	'settings.delete.try_again': 'Erneut versuchen',
+	'settings.delete.understand': 'Ich verstehe',
 	'settings.flow_deck': 'Flow-Deck',
 	'settings.flow_deck.category.crypto': 'Krypto',
 	'settings.flow_deck.category.culture': 'Kultur',
@@ -1494,7 +1524,6 @@ export const deMessages = {
 	'settings.title': 'Einstellungen',
 	'settings.toast.download_coming': 'Download bald verfügbar',
 	'settings.toast.export_coming': 'Export bald verfügbar',
-	'settings.toast.notifications_paused': 'Benachrichtigungen für 30 Tage pausiert',
 	'settings.toast.saved': 'Gespeichert',
 	'settings.two_factor': 'Zwei-Faktor-Authentifizierung',
 	'settings.two_factor.sub': 'Demnächst · Authenticator-App',

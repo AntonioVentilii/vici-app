@@ -81,3 +81,30 @@ export const deleteMyAccount = ({
 		note,
 		leagueResolutions
 	});
+
+export interface HibernateMyAccountResult {
+	ok: boolean;
+	reason?: 'no_profile' | 'deleted';
+}
+
+/**
+ * Pause the caller's account for 30 days. The satellite flips the
+ * profile into a hibernated state — the user can resume any time by
+ * signing back in, and nothing is erased. The retention off-ramp on
+ * the delete flow calls this instead of deleting so a user who only
+ * wants a break never loses their record.
+ */
+export const hibernateMyAccount = (): Promise<HibernateMyAccountResult> =>
+	functions.hibernateMyAccount();
+
+export interface ResumeMyAccountResult {
+	ok: boolean;
+	resumed: boolean;
+}
+
+/**
+ * Lift a hibernation, restoring the caller's account to active. The
+ * counterpart to {@link hibernateMyAccount}; the satellite no-ops
+ * (`resumed: false`) when the account was never paused.
+ */
+export const resumeMyAccount = (): Promise<ResumeMyAccountResult> => functions.resumeMyAccount();
