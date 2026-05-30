@@ -19,10 +19,11 @@
 	// `/signup` (typically routed here by the (app) layout because their
 	// profile has `onboardingCompleted: false`) goes through the same
 	// 3-beat flow but with Beat 3's provider stack swapped for a Finish
-	// button — they already have a session. A returning user is bounced to
-	// Home — either because onboarding is already complete, or because the
-	// satellite already held a profile at sign-in (`profileExisted`), in
-	// which case a legacy `onboardingCompleted: false` must not re-prompt.
+	// button — they already have a session. A returning user is bounced into
+	// the app (`AppPath.Flow`) — either because onboarding is already
+	// complete, or because the satellite already held a profile at sign-in
+	// (`profileExisted`), in which case a legacy `onboardingCompleted: false`
+	// must not re-prompt.
 	const authenticated = $derived(
 		$userSignedIn &&
 			$userStore.profile?.preferences?.onboardingCompleted !== true &&
