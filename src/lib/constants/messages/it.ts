@@ -577,6 +577,7 @@ export const itMessages = {
 	'flow.back_to_markets': 'Torna ai mercati',
 	'flow.caption': 'SWIPE → DECIDE · TAP PER DETTAGLI · ↑ PER SALTARE',
 	'flow.companion.trickster': 'Solo il {pct}% non è d’accordo. Audace.',
+	'flow.daily_goal_aria': 'Obiettivo giornaliero',
 	'flow.daily_streak_aria': 'Serie giornaliera',
 	'flow.deck.all_markets': 'TUTTI I MERCATI',
 	'flow.empty.sub': 'VICI sta preparando altri mercati.',

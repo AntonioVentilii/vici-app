@@ -584,6 +584,7 @@ export const frMessages = {
 	'flow.back_to_markets': 'Retour aux marchés',
 	'flow.caption': 'SWIPE → ENGAGE · TAP POUR DÉTAIL · ↑ POUR PASSER',
 	'flow.companion.trickster': 'Seuls {pct}% sont en désaccord. Audacieux.',
+	'flow.daily_goal_aria': 'Objectif quotidien',
 	'flow.daily_streak_aria': 'Série quotidienne',
 	'flow.deck.all_markets': 'TOUS LES MARCHÉS',
 	'flow.empty.sub': 'VICI met d’autres marchés en file.',

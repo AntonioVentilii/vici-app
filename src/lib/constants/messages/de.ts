@@ -579,6 +579,7 @@ export const deMessages = {
 	'flow.back_to_markets': 'Zurück zu Märkten',
 	'flow.caption': 'SWIPE → COMMITS · TAP DREHT FÜR DETAILS · ↑ ZUM SKIP',
 	'flow.companion.trickster': 'Nur {pct}% sind anderer Meinung. Kühn.',
+	'flow.daily_goal_aria': 'Tagesziel',
 	'flow.daily_streak_aria': 'Tages-Streak',
 	'flow.deck.all_markets': 'ALLE MÄRKTE',
 	'flow.empty.sub': 'VICI stellt weitere Märkte in die Warteschlange.',
