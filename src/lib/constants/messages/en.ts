@@ -1059,6 +1059,7 @@ export const enMessages = {
 	'markets.empty': 'No markets found in this category.',
 	'markets.eyebrow': 'LIVE QUESTIONS',
 	'markets.hero.title': 'What will the world do?',
+	'markets.more': 'More markets',
 	'markets.filter.access': 'Filter by access',
 	'markets.filter.access.all': 'All access',
 	'markets.filter.access.closed': 'Closed Circle',

@@ -200,7 +200,7 @@ Already implemented. **No work needed.**
 | Screen            | App equivalent                                                                                                                                                                                                                                                                                | Status  | Notes                                                                                                                                                                                                                                                                                                                                                             |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Flow Mode         | [`src/lib/components/market/FlowMode.svelte`](../../../src/lib/components/market/FlowMode.svelte) + [`FlowCard.svelte`](../../../src/lib/components/market/FlowCard.svelte)                                                                                                                   | ✅ Done | Swipe deck with brand-aligned typography, generative artwork in-card, top session chrome, footer hint rail, 80 ms commit-feedback beat, named haptic patterns, daily-streak Flame chip, reward ladder, character bubbles (priority-resolved), and a brand-voice FlowEnd. Buttons + keyboard shortcuts kept as accessibility fallback. See §7 below for the rules. |
-| Markets list      | [`MarketsPage.svelte`](../../../src/lib/components/pages/MarketsPage.svelte)                                                                                                                                                                                                                  | ✅ Done | Compact editorial discovery list, tab labels, filter chrome, probability blocks, skeletons, and empty state wired through `t()` (EN · IT · ES · DE · FR · PT).                                                                                                                                                                                                    |
+| Markets list      | [`MarketsPage.svelte`](../../../src/lib/components/pages/MarketsPage.svelte)                                                                                                                                                                                                                  | ✅ Done | Compact editorial discovery list, tab labels, filter chrome, probability blocks, skeletons, and empty state wired through `t()` (EN · IT · ES · DE · FR · PT). WC-focus when `worldCupActive` — see §11.                                                                                                                                                          |
 | Market detail     | [`MarketDetailHeader.svelte`](../../../src/lib/components/market/MarketDetailHeader.svelte) + [`MarketDetailForecast.svelte`](../../../src/lib/components/market/MarketDetailForecast.svelte) + [`PredictionInterface.svelte`](../../../src/lib/components/market/PredictionInterface.svelte) | ✅ Done | Detail header, resolution/crowd modules, sparkline, branded YES/NO signal icons, token colour classes, and decorative icon hiding while preserving trade handlers, order-book polling, and sizing math.                                                                                                                                                           |
 | Dashboard         | [`DashPage.svelte`](../../../src/lib/components/pages/DashPage.svelte)                                                                                                                                                                                                                        | ✅ Done | `/dash`; performance stats, daily streak, by-category accuracy, holdings, rank context.                                                                                                                                                                                                                                                                           |
 | Portfolio         | [`PortfolioPage.svelte`](../../../src/lib/components/pages/PortfolioPage.svelte)                                                                                                                                                                                                              | ✅ Done | `/portfolio`; open and resolved positions.                                                                                                                                                                                                                                                                                                                        |
@@ -641,6 +641,30 @@ swaps from best-category to a **World Cup · accuracy** tile
 (`market.tag.wc` + `dash.rank.wc_sub`, value from the `wc` category
 bucket). The Dash rank grid otherwise stays Global / League / (this
 tile).
+
+### 11.1 Markets WC-focus
+
+When `worldCupActive` is `true`, the Markets list
+([`MarketsPage.svelte`](../../../src/lib/components/pages/MarketsPage.svelte))
+opens **laser-focused on the World Cup** rather than its evergreen
+all-categories shape:
+
+- **Default filter** is the `wc` tag (not `all`). Read once at init via
+  `get(worldCupActive)` — tying it to a live `$derived` would fight the
+  user once they pick another chip.
+- **Collapsed chip rail**: `MarketsCategoryChips` takes a `wcFocus` prop.
+  In focus mode it leads with the World Cup chip and hides Saved · All ·
+  the other categories behind a single **"More markets →"** control
+  (`markets.more`) that expands them in place. No separate toggle, banner,
+  or phase scrubber.
+- **Two-tier header**: the featured event's `title` renders as a small
+  uppercase eyebrow above the "Markets" title. Threaded through
+  `PageScaffold` → `MobileAppBar` / `SectionHeader` via an optional
+  `eyebrow` prop; the copy comes from `featuredEvent` (never hardcoded).
+
+Outside focus mode every one of these falls back to today's behavior, and
+the sort rail / carousels / skeletons / empty states are unchanged in both
+modes.
 
 The richer World-Cup → bridge → open retention **arc** (gradually
 widening the deck back to all categories as the event winds down) is a

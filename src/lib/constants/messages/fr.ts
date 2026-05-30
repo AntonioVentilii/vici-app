@@ -1082,6 +1082,7 @@ export const frMessages = {
 	'markets.empty': 'Aucun marché dans cette catégorie.',
 	'markets.eyebrow': 'QUESTIONS EN DIRECT',
 	'markets.hero.title': 'Que va faire le monde ?',
+	'markets.more': 'Plus de marchés',
 	'markets.filter.access': 'Filtrer par accès',
 	'markets.filter.access.all': 'Tous les accès',
 	'markets.filter.access.closed': 'Cercle fermé',

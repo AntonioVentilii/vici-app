@@ -1071,6 +1071,7 @@ export const ptMessages = {
 	'markets.empty': 'Nenhum mercado nesta categoria.',
 	'markets.eyebrow': 'PERGUNTAS AO VIVO',
 	'markets.hero.title': 'O que o mundo vai fazer?',
+	'markets.more': 'Mais mercados',
 	'markets.filter.access': 'Filtrar por acesso',
 	'markets.filter.access.all': 'Todo o acesso',
 	'markets.filter.access.closed': 'Círculo fechado',

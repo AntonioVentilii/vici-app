@@ -1018,6 +1018,7 @@ export const zhCnMessages = {
 	'markets.empty': '此分类下暂无市场。',
 	'markets.eyebrow': '实时问题',
 	'markets.hero.title': '世界会怎么走？',
+	'markets.more': '更多市场',
 	'markets.filter.access': '按访问筛选',
 	'markets.filter.access.all': '全部访问',
 	'markets.filter.access.closed': '封闭圈',

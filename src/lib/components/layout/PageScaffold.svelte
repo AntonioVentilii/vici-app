@@ -18,17 +18,21 @@
 	 */
 	interface Props {
 		title: string;
+		/** Optional small uppercase line rendered above `title`, forming a
+		 *  two-tier header (e.g. the featured-event name on WC-focused
+		 *  Markets). Threaded to both the mobile appbar and desktop header. */
+		eyebrow?: string;
 		right?: Snippet;
 		children: Snippet;
 	}
 
-	const { title, right, children }: Props = $props();
+	const { title, eyebrow, right, children }: Props = $props();
 </script>
 
-<MobileAppBar align="left" {right} {title} />
+<MobileAppBar align="left" {eyebrow} {right} {title} />
 
 <div class="hidden min-[56rem]:block">
-	<SectionHeader {right} {title} />
+	<SectionHeader {eyebrow} {right} {title} />
 </div>
 
 {@render children()}
