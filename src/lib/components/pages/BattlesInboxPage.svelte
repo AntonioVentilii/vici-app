@@ -372,7 +372,7 @@
 	{/if}
 
 	{#if !battlesIntroSeen}
-		<BattlesIntroCard onDismiss={dismissIntro} />
+		<BattlesIntroCard onDismiss={dismissIntro} onStartBattle={goToLeagues} />
 	{/if}
 
 	{#if loadState === 'loading'}

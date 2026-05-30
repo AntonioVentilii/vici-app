@@ -44,6 +44,7 @@ export const esMessages = {
 		'Un cara a cara de precisión con cronómetro. Escuela contra escuela, país contra país, además del torneo mensual. Los combates liga contra liga están en tus ligas.',
 	'battles.intro.dismiss': 'Cerrar',
 	'battles.intro.lede': '«¿Qué es un combate?»',
+	'battles.intro.start': 'Iniciar una batalla',
 	'battles.leagues_link.cta': 'Ir a Ligas',
 	'battles.leagues_link.lede': '«¿Quieres un combate de liga?»',
 	'battles.leagues_link.sub': 'Reta a otra liga desde la página de tu liga.',

@@ -44,6 +44,7 @@ export const enMessages = {
 		'A timed accuracy face-off. School vs. school, country vs. country, plus the monthly tournament. League-vs-league battles live in your leagues.',
 	'battles.intro.dismiss': 'Dismiss',
 	'battles.intro.lede': '“What’s a battle?”',
+	'battles.intro.start': 'Start a battle',
 	'battles.leagues_link.cta': 'Go to Leagues',
 	'battles.leagues_link.lede': '“Want a league battle?”',
 	'battles.leagues_link.sub': 'Challenge another league from your league’s page.',

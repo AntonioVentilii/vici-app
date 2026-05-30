@@ -45,6 +45,7 @@ export const deMessages = {
 		'Ein Genauigkeits-Duell auf Zeit. Schule gegen Schule, Land gegen Land, plus das monatliche Turnier. Liga-gegen-Liga-Battles findest du in deinen Ligen.',
 	'battles.intro.dismiss': 'Schließen',
 	'battles.intro.lede': '„Was ist ein Battle?“',
+	'battles.intro.start': 'Battle starten',
 	'battles.leagues_link.cta': 'Zu den Ligen',
 	'battles.leagues_link.lede': '„Willst du einen Liga-Battle?“',
 	'battles.leagues_link.sub': 'Fordere eine andere Liga von der Seite deiner Liga aus heraus.',

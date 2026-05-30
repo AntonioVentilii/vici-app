@@ -44,6 +44,7 @@ export const zhCnMessages = {
 		'一场限时准确度对决。学校对学校、国家对国家，外加每月锦标赛。联盟对联盟的对决在你的联盟里。',
 	'battles.intro.dismiss': '关闭',
 	'battles.intro.lede': '"什么是对决？"',
+	'battles.intro.start': '发起对决',
 	'battles.leagues_link.cta': '前往联赛',
 	'battles.leagues_link.lede': '"想要一场联盟对决？"',
 	'battles.leagues_link.sub': '在你的联盟页面挑战另一个联盟。',
