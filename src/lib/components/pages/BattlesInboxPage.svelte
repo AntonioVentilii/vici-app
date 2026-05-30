@@ -359,7 +359,7 @@
 	});
 </script>
 
-<div class="battles-inbox">
+<div class="battles-inbox" class:embedded>
 	{#if !embedded}
 		<MobileAppBar
 			align="left"
@@ -798,6 +798,14 @@
 		flex-direction: column;
 		gap: 1.1rem;
 		padding: 0 1.25rem 6rem;
+	}
+
+	/* Embedded in the Arena tab panel, the horizontal inset is already
+	   supplied by the Arena page wrapper; drop ours so the content
+	   aligns with the tab strip instead of sitting doubly indented. */
+	.battles-inbox.embedded {
+		padding-left: 0;
+		padding-right: 0;
 	}
 
 	/* ─── intro card ─────────────────────────────────────────── */

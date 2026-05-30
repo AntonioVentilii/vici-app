@@ -2,8 +2,8 @@
 	import { getDoc, signOut } from '@junobuild/core';
 	import {
 		Activity,
-		ArrowLeft,
 		Bell,
+		ChevronLeft,
 		Download,
 		Eye,
 		Info,
@@ -374,7 +374,7 @@
 			onclick={() => goBack(resolve(AppPath.Profile))}
 			type="button"
 		>
-			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
+			<ChevronLeft aria-hidden="true" size={18} strokeWidth={1.6} />
 		</button>
 		<h1 class="settings-appbar-title">
 			{t({ locale: $localeStore, key: 'settings.title' })}
@@ -835,10 +835,10 @@
 	.settings-appbar-title {
 		min-width: 0;
 		margin: 0;
-		font-size: var(--t-44);
+		font-size: var(--t-20);
 		font-weight: 600;
-		line-height: 1;
-		letter-spacing: var(--tracking-tight);
+		line-height: 1.2;
+		letter-spacing: var(--tracking-snug);
 		color: var(--text-base);
 		text-align: center;
 		overflow: hidden;
