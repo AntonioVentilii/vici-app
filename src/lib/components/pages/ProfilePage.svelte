@@ -3,10 +3,9 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import ProfileDashboard from '$lib/components/profile/ProfileDashboard.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
-	import SectionHeader from '$lib/components/ui/SectionHeader.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authBusy, authPrincipal, userIsAdmin } from '$lib/derived/user.derived';
 	import { getProfile } from '$lib/services/profile.services';
@@ -68,51 +67,43 @@
 {/snippet}
 
 <div class="profile-page space-y-10 pb-24">
-	<MobileAppBar
-		align="left"
+	<PageScaffold
 		right={profileSettingsBtn}
 		title={t({ locale: $localeStore, key: 'profile.title' })}
-	/>
-
-	<div class="hidden min-[56rem]:block">
-		<SectionHeader
-			right={profileSettingsBtn}
-			title={t({ locale: $localeStore, key: 'profile.title' })}
-		/>
-	</div>
-
-	{#if $userStore.profile}
-		<ProfileDashboard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
-	{:else if $authBusy}
-		<div
-			class="border-border bg-card flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center"
-			aria-label={t({ locale: $localeStore, key: 'profile.loading.title' })}
-			aria-live="polite"
-			role="status"
-		>
-			<LoadingSpinner center={false} size="md" />
-			<h2 class="font-display text-foreground mt-6 text-2xl font-semibold">
-				{t({ locale: $localeStore, key: 'profile.loading.title' })}
-			</h2>
-			<p class="text-muted-foreground mt-2 max-w-xs">
-				{t({ locale: $localeStore, key: 'profile.loading.sub' })}
-			</p>
-		</div>
-	{:else}
-		<div
-			class="border-border bg-card flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center"
-		>
-			<div class="bg-card mb-6 rounded-full p-6">
-				<User class="text-muted-foreground" aria-hidden="true" size={40} strokeWidth={1.6} />
+	>
+		{#if $userStore.profile}
+			<ProfileDashboard profile={$userStore.profile} viewerPrincipal={$authPrincipal ?? ''} />
+		{:else if $authBusy}
+			<div
+				class="border-border bg-card flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center"
+				aria-label={t({ locale: $localeStore, key: 'profile.loading.title' })}
+				aria-live="polite"
+				role="status"
+			>
+				<LoadingSpinner center={false} size="md" />
+				<h2 class="font-display text-foreground mt-6 text-2xl font-semibold">
+					{t({ locale: $localeStore, key: 'profile.loading.title' })}
+				</h2>
+				<p class="text-muted-foreground mt-2 max-w-xs">
+					{t({ locale: $localeStore, key: 'profile.loading.sub' })}
+				</p>
 			</div>
-			<h2 class="font-display text-foreground text-2xl font-semibold">
-				{t({ locale: $localeStore, key: 'profile.empty.title' })}
-			</h2>
-			<p class="text-muted-foreground mt-2 max-w-xs">
-				{t({ locale: $localeStore, key: 'profile.empty.sub' })}
-			</p>
-		</div>
-	{/if}
+		{:else}
+			<div
+				class="border-border bg-card flex flex-col items-center justify-center rounded-lg border-2 border-dashed py-24 text-center"
+			>
+				<div class="bg-card mb-6 rounded-full p-6">
+					<User class="text-muted-foreground" aria-hidden="true" size={40} strokeWidth={1.6} />
+				</div>
+				<h2 class="font-display text-foreground text-2xl font-semibold">
+					{t({ locale: $localeStore, key: 'profile.empty.title' })}
+				</h2>
+				<p class="text-muted-foreground mt-2 max-w-xs">
+					{t({ locale: $localeStore, key: 'profile.empty.sub' })}
+				</p>
+			</div>
+		{/if}
+	</PageScaffold>
 </div>
 
 <style lang="postcss">

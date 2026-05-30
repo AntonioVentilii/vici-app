@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
+	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import MarketsCarousel from '$lib/components/market/MarketsCarousel.svelte';
 	import MarketsCategoryChips, {
 		type MarketsCategoryFilter
@@ -199,110 +200,106 @@
 </script>
 
 <div class="screen-scroll">
-	<div class="appbar">
-		<h2 style="font-size: 24px; letter-spacing: var(--tracking-tight);">
-			{t({ locale: $localeStore, key: 'nav.markets' })}
-		</h2>
-	</div>
-
-	<!-- Category chips with Saved filter prepended -->
-	<MarketsCategoryChips
-		active={cat}
-		{availableTags}
-		onChange={(next) => (cat = next)}
-		savedCount={savedMarkets.length}
-	/>
-
-	<!-- Saved carousel only visible on All view -->
-	{#if cat === 'all' && savedMarkets.length > 0}
-		<MarketsCarousel
-			markets={savedMarkets.slice(0, SAVED_RAIL_LIMIT)}
-			moreLabel={t({
-				locale: $localeStore,
-				key: 'markets.see_all_count',
-				params: { count: savedMarkets.length }
-			})}
-			onMore={() => (cat = 'saved')}
-			tagsBySeries={tagsByMarket}
-			title={t({ locale: $localeStore, key: 'markets.section.saved' })}
+	<PageScaffold title={t({ locale: $localeStore, key: 'nav.markets' })}>
+		<!-- Category chips with Saved filter prepended -->
+		<MarketsCategoryChips
+			active={cat}
+			{availableTags}
+			onChange={(next) => (cat = next)}
+			savedCount={savedMarkets.length}
 		/>
-	{/if}
 
-	<!-- Trending on All view -->
-	{#if cat === 'all' && trendingMarkets.length > 0}
-		<MarketsCarousel
-			markets={trendingMarkets}
-			moreLabel={t({ locale: $localeStore, key: 'markets.see_all' })}
-			tagsBySeries={tagsByMarket}
-			title={t({ locale: $localeStore, key: 'markets.section.trending' })}
-		/>
-	{/if}
+		<!-- Saved carousel only visible on All view -->
+		{#if cat === 'all' && savedMarkets.length > 0}
+			<MarketsCarousel
+				markets={savedMarkets.slice(0, SAVED_RAIL_LIMIT)}
+				moreLabel={t({
+					locale: $localeStore,
+					key: 'markets.see_all_count',
+					params: { count: savedMarkets.length }
+				})}
+				onMore={() => (cat = 'saved')}
+				tagsBySeries={tagsByMarket}
+				title={t({ locale: $localeStore, key: 'markets.section.saved' })}
+			/>
+		{/if}
 
-	<!-- Main list with Saved empty state -->
-	{#if cat === 'saved' && list.length === 0 && !loading}
-		<div
-			style="margin: 20px 20px 24px; padding: 32px 22px; background: rgba(242,236,220,0.02); border: 1px dashed var(--border-base); border-radius: 14px; text-align: center;"
-		>
-			<div style="opacity: 0.4; margin-bottom: 8px;" class="t-display" aria-hidden="true">♥</div>
-			<div style="font-size: 17px; margin-bottom: 6px;" class="serif-italic acc">
-				"{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}"
-			</div>
-			<p style="line-height: 1.5; margin: 0;" class="dim t-body-sm">
-				{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
-			</p>
-		</div>
-	{:else}
-		<div class="section-h">
-			<h3>{sectionTitle}</h3>
-			<span class="mute t-sub">{list.length}</span>
-		</div>
+		<!-- Trending on All view -->
+		{#if cat === 'all' && trendingMarkets.length > 0}
+			<MarketsCarousel
+				markets={trendingMarkets}
+				moreLabel={t({ locale: $localeStore, key: 'markets.see_all' })}
+				tagsBySeries={tagsByMarket}
+				title={t({ locale: $localeStore, key: 'markets.section.trending' })}
+			/>
+		{/if}
 
-		<!-- Sort chips — Trending (default, volume DESC) · Closing soon
-		     (Open-first, expiry ASC) · Newest (expiry DESC as a freshness
-		     proxy). Persisted under `vici.markets-sort`. -->
-		<div
-			class="markets-sort"
-			aria-label={t({ locale: $localeStore, key: 'markets.sort.label' })}
-			role="tablist"
-		>
-			{#each SORT_OPTIONS as option (option)}
-				<button
-					class="markets-sort-chip"
-					class:is-active={sort === option}
-					aria-selected={sort === option}
-					onclick={() => setSort(option)}
-					role="tab"
-					type="button"
-				>
-					{t({ locale: $localeStore, key: `markets.sort.${option}` })}
-				</button>
-			{/each}
-		</div>
-		{#if loading}
-			<div style="gap: 8px; padding: 0 20px 20px;" class="col">
-				{#each Array(4) as _, index (index)}
-					<div
-						style="height: 88px; border: 1px dashed var(--border-base); border-radius: 12px; opacity: 0.7;"
-						aria-hidden="true"
-					></div>
-				{/each}
-			</div>
-		{:else if list.length === 0}
+		<!-- Main list with Saved empty state -->
+		{#if cat === 'saved' && list.length === 0 && !loading}
 			<div
-				style="margin: 0 20px 20px; padding: 32px 22px; border: 1px dashed var(--border-base); border-radius: 14px; text-align: center;"
+				style="margin: 20px 20px 24px; padding: 32px 22px; background: rgba(242,236,220,0.02); border: 1px dashed var(--border-base); border-radius: 14px; text-align: center;"
 			>
-				<p style="margin: 0;" class="dim t-body-sm">
-					{t({ locale: $localeStore, key: 'markets.empty' })}
+				<div style="opacity: 0.4; margin-bottom: 8px;" class="t-display" aria-hidden="true">♥</div>
+				<div style="font-size: 17px; margin-bottom: 6px;" class="serif-italic acc">
+					"{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}"
+				</div>
+				<p style="line-height: 1.5; margin: 0;" class="dim t-body-sm">
+					{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
 				</p>
 			</div>
 		{:else}
-			<div style="gap: 8px; padding: 0 20px 20px;" class="col">
-				{#each list as m (m.id)}
-					<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
+			<div class="section-h">
+				<h3>{sectionTitle}</h3>
+				<span class="mute t-sub">{list.length}</span>
+			</div>
+
+			<!-- Sort chips — Trending (default, volume DESC) · Closing soon
+		     (Open-first, expiry ASC) · Newest (expiry DESC as a freshness
+		     proxy). Persisted under `vici.markets-sort`. -->
+			<div
+				class="markets-sort"
+				aria-label={t({ locale: $localeStore, key: 'markets.sort.label' })}
+				role="tablist"
+			>
+				{#each SORT_OPTIONS as option (option)}
+					<button
+						class="markets-sort-chip"
+						class:is-active={sort === option}
+						aria-selected={sort === option}
+						onclick={() => setSort(option)}
+						role="tab"
+						type="button"
+					>
+						{t({ locale: $localeStore, key: `markets.sort.${option}` })}
+					</button>
 				{/each}
 			</div>
+			{#if loading}
+				<div style="gap: 8px; padding: 0 20px 20px;" class="col">
+					{#each Array(4) as _, index (index)}
+						<div
+							style="height: 88px; border: 1px dashed var(--border-base); border-radius: 12px; opacity: 0.7;"
+							aria-hidden="true"
+						></div>
+					{/each}
+				</div>
+			{:else if list.length === 0}
+				<div
+					style="margin: 0 20px 20px; padding: 32px 22px; border: 1px dashed var(--border-base); border-radius: 14px; text-align: center;"
+				>
+					<p style="margin: 0;" class="dim t-body-sm">
+						{t({ locale: $localeStore, key: 'markets.empty' })}
+					</p>
+				</div>
+			{:else}
+				<div style="gap: 8px; padding: 0 20px 20px;" class="col">
+					{#each list as m (m.id)}
+						<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
+					{/each}
+				</div>
+			{/if}
 		{/if}
-	{/if}
+	</PageScaffold>
 </div>
 
 <style lang="postcss">
