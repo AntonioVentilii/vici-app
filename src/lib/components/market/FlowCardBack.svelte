@@ -8,6 +8,7 @@
 	import {
 		isStakeLadderUnlocked,
 		STAKE_LADDER_UNLOCK_CALLS,
+		VXP_DEFAULT_STAKE,
 		VXP_STAKE_LADDER,
 		type VxpStake
 	} from '$lib/constants/vxp-economy.constants';
@@ -178,7 +179,9 @@
 	const showStakeLocked = $derived(stakeControlActive && !stakeLadderUnlocked);
 	const stakeCallsLeft = $derived(Math.max(0, STAKE_LADDER_UNLOCK_CALLS - lifetimeCalls));
 	const currentStake: VxpStake = $derived(
-		showStakeSlider ? snapToStakeLadder({ value: Number(tradeAmount ?? '0') || 0 }) : 50
+		showStakeSlider
+			? snapToStakeLadder({ value: Number(tradeAmount ?? '0') || 0 })
+			: VXP_DEFAULT_STAKE
 	);
 	const stakeIdx = $derived(VXP_STAKE_LADDER.indexOf(currentStake));
 	const stakePct = $derived(stakeIdx >= 0 ? (stakeIdx / (VXP_STAKE_LADDER.length - 1)) * 100 : 0);
