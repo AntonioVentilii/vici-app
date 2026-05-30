@@ -1075,6 +1075,9 @@ export const deMessages = {
 	'market.user_position.qty_value': '{value} Menge',
 	'market.user_position.title': 'Deine Position',
 	'market.vol_suffix': 'Vol.',
+	'markets.beyond.line':
+		'Das Turnier endet bald. Ein paar Fragen für deinen Tipp nach dem Schlusspfiff.',
+	'markets.beyond.title': 'Über das Turnier hinaus',
 	'markets.chip.all': 'Alle',
 	'markets.empty': 'Keine Märkte in dieser Kategorie.',
 	'markets.eyebrow': 'LIVE-FRAGEN',
@@ -1124,6 +1127,12 @@ export const deMessages = {
 	'markets.tab.trending': 'Trend',
 	'markets.title_a': 'Wähl eine Frage.',
 	'markets.title_b': 'Sag’s an.',
+	'markets.wc_recap.accuracy': 'Trefferquote',
+	'markets.wc_recap.calls': 'Tipps abgegeben',
+	'markets.wc_recap.cta': 'Alle Märkte erkunden',
+	'markets.wc_recap.eyebrow': '{event} · dein Lauf',
+	'markets.wc_recap.line':
+		'Das Turnier ist entschieden. Die Welt dreht sich weiter — das Board auch.',
 	'motion.acc_threshold': 'Top-{label}%-Genauigkeit.',
 	'motion.first_contrarian': 'Gegen den Strom.',
 	'motion.first_no': 'Abgelegt.',

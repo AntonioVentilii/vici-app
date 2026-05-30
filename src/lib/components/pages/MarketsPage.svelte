@@ -7,6 +7,7 @@
 		type MarketsCategoryFilter
 	} from '$lib/components/market/MarketsCategoryChips.svelte';
 	import MarketsListRow from '$lib/components/market/MarketsListRow.svelte';
+	import WorldCupRecapCard from '$lib/components/market/WorldCupRecapCard.svelte';
 	import {
 		MARKET_TAG_LABEL_KEYS,
 		primaryMarketTag,
@@ -15,7 +16,7 @@
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { marketTags, marketTagsNotInitialized } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
-	import { worldCupActive } from '$lib/derived/world-cup.derived';
+	import { worldCupPhase } from '$lib/derived/world-cup.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import type { Market } from '$lib/types/market';
@@ -30,6 +31,9 @@
 	 */
 	const TRENDING_LIMIT = 8;
 	const SAVED_RAIL_LIMIT = 6;
+	// How many non-WC markets the `bridge`-phase "Beyond the Cup" rail seeds —
+	// enough to preview the post-Cup deck without competing with the focus.
+	const BEYOND_RAIL_LIMIT = 6;
 	const SORT_STORAGE_KEY = 'vici.markets-sort';
 
 	type MarketsSort = 'trending' | 'closing' | 'newest';
@@ -50,13 +54,18 @@
 		}
 	})();
 
-	// Initial focus: when World-Cup mode is active the Markets list opens
-	// laser-focused on the World Cup (the `wc` tag is the default filter and
-	// the other categories collapse behind "More markets →"). Otherwise the
-	// list keeps its all-categories shape. Read once at init via `get` — the
-	// gate doesn't flip mid-session in practice, and tying the default to a
-	// live `$derived` would fight the user once they pick another chip.
-	let cat = $state<MarketsCategoryFilter>(get(worldCupActive) ? 'wc' : 'all');
+	// Initial focus: in the WC-focused phases of the retention arc
+	// (`wc-focus` / `bridge`) the Markets list opens laser-focused on the
+	// World Cup (the `wc` tag is the default filter and the other categories
+	// collapse behind "More markets →"). In `open` (the Cup has resolved) and
+	// `off` (no opt-in) the list keeps its all-categories shape. Read once at
+	// init via `get` — the phase doesn't flip mid-session in practice, and
+	// tying the default to a live `$derived` would fight the user once they
+	// pick another chip.
+	const initialPhase = get(worldCupPhase);
+	let cat = $state<MarketsCategoryFilter>(
+		initialPhase === 'wc-focus' || initialPhase === 'bridge' ? 'wc' : 'all'
+	);
 	let sort = $state<MarketsSort>(initialSort);
 
 	const setSort = (next: MarketsSort) => {
@@ -74,10 +83,16 @@
 		}
 	};
 
-	// WC-focus drives the two-tier header eyebrow and the collapsed
-	// "More markets →" chip rail. Reads the live `worldCupActive` gate so the
-	// focus chrome disappears the moment the event archives mid-session.
-	const wcFocus = $derived($worldCupActive);
+	// The retention-arc phase drives the WC chrome live. `wc-focus` and
+	// `bridge` both keep the laser focus (two-tier eyebrow + collapsed
+	// "More markets →" rail); `bridge` additionally seeds the "Beyond the
+	// Cup" rail below. `open` (Cup resolved) and `off` revert to the
+	// all-categories shape — so the focus chrome disappears the moment the
+	// phase advances mid-session.
+	const phase = $derived($worldCupPhase);
+	const wcFocus = $derived(phase === 'wc-focus' || phase === 'bridge');
+	const isBridge = $derived(phase === 'bridge');
+	const isOpen = $derived(phase === 'open');
 
 	// Eyebrow copy comes from the featured-event source — never hardcoded.
 	// `title` ("2026 FIFA World Cup") reads cleaner as a two-tier eyebrow than
@@ -203,6 +218,28 @@
 			.slice(0, TRENDING_LIMIT)
 	);
 
+	// "Beyond the Cup" rail (bridge phase): a handful of the highest-volume
+	// non-WC markets, previewed *before* the Cup resolves to pre-empt the
+	// post-Cup cliff. Proxies "curated" by volume — the same trending signal
+	// the carousels use — and excludes anything tagged `wc` so it genuinely
+	// widens the deck. Only computed in `bridge`; empty otherwise.
+	const beyondMarkets = $derived.by((): Market[] => {
+		if (!isBridge) {
+			return [];
+		}
+
+		return [...$markets]
+			.filter((m) => m.status === 'Open' && !matchesTag({ market: m, tag: 'wc' }))
+			.sort((a, b) => {
+				if (b.totalVolume === a.totalVolume) {
+					return 0;
+				}
+
+				return b.totalVolume > a.totalVolume ? 1 : -1;
+			})
+			.slice(0, BEYOND_RAIL_LIMIT);
+	});
+
 	// Section title — "All markets" / "Saved" / the active category's
 	// label.
 	const sectionTitle = $derived.by((): string => {
@@ -229,6 +266,28 @@
 			savedCount={savedMarkets.length}
 			{wcFocus}
 		/>
+
+		<!-- `open` phase: the Cup has resolved. Recap the user's World-Cup run
+		     at the top of the list and convert it into broader play. The list
+		     itself behaves as all-categories (no WC default). -->
+		{#if isOpen}
+			<WorldCupRecapCard onExplore={() => (cat = 'all')} />
+		{/if}
+
+		<!-- `bridge` phase: still WC-focused, but seed a "Beyond the Cup" rail
+		     of curated non-WC markets before the Cup ends — a soft landing for
+		     the post-Cup cliff. Shown on the focused (`wc`) view only, so it
+		     doesn't double up once the user expands to other categories. -->
+		{#if isBridge && cat === 'wc' && beyondMarkets.length > 0}
+			<p class="beyond-eyebrow dim t-body-sm">
+				{t({ locale: $localeStore, key: 'markets.beyond.line' })}
+			</p>
+			<MarketsCarousel
+				markets={beyondMarkets}
+				tagsBySeries={tagsByMarket}
+				title={t({ locale: $localeStore, key: 'markets.beyond.title' })}
+			/>
+		{/if}
 
 		<!-- Saved carousel only visible on All view -->
 		{#if cat === 'all' && savedMarkets.length > 0}
@@ -324,6 +383,11 @@
 </div>
 
 <style lang="postcss">
+	.beyond-eyebrow {
+		margin: 4px 20px 0;
+		max-width: 48ch;
+	}
+
 	.markets-sort {
 		display: flex;
 		gap: 0.5rem;
