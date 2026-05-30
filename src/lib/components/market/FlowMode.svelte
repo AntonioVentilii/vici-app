@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
-	import { onMount, onDestroy } from 'svelte';
+	import { onMount, onDestroy, untrack } from 'svelte';
 	import { cubicOut } from 'svelte/easing';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { fade, fly } from 'svelte/transition';
@@ -25,7 +25,12 @@
 	} from '$lib/constants/flow-rewards.constants';
 	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { isVxpLadderStake, VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
+	import {
+		isStakeLadderUnlocked,
+		isVxpLadderStake,
+		VXP_DEFAULT_STAKE,
+		VXP_MIN_STAKE
+	} from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
@@ -703,6 +708,28 @@
 	const lifetimeAccuracy = $derived($userStore.profile?.accuracy ?? 0);
 	const accuracyUnlocked = $derived(isAccuracyUnlocked(lifetimeTotalTrades));
 
+	// Enforce the default rung while the stake ladder is locked. Below the
+	// unlock threshold the slider is hidden (FlowCardBack), so a previously
+	// persisted non-default VXP stake must not leak through to the
+	// committed trade — pin `tradeAmount` to the default. Only the gating
+	// inputs are tracked; the stake read/write is untracked so the effect
+	// can't loop on its own write.
+	$effect(() => {
+		const locked = isViciXp($balanceDomain) && !isStakeLadderUnlocked(lifetimeTotalTrades);
+
+		if (!locked) {
+			return;
+		}
+
+		untrack(() => {
+			const pinned = String(VXP_DEFAULT_STAKE);
+
+			if (tradeAmount !== pinned) {
+				tradeAmount = pinned;
+			}
+		});
+	});
+
 	// Top bar deck-scope label: when the featured event is active the
 	// deck is filtered to it (e.g. "WORLD CUP"); otherwise fall back
 	// to a neutral all-markets label. Prefers `shortTitle` over
@@ -809,6 +836,7 @@
 							committedAction={market.id === committedMarketId ? committedAction : null}
 							{followedLean}
 							interactive={isCurrent && !flowPaused}
+							lifetimeCalls={lifetimeTotalTrades}
 							locked={isCurrent && flowPaused}
 							{market}
 							{metadata}
