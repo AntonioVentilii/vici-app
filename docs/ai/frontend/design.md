@@ -227,10 +227,11 @@ The app does not currently expose a public landing surface. Adding one
 would introduce a new top-level route — surface the discussion in the
 PR before doing so (see [structure rule](./structure.md#top-level-src)).
 
-| Surface                                      | App equivalent                                                                             | Status  | Notes                                                                                                              |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------ |
-| Landing page                                 | [`WelcomePage.svelte`](../../../src/lib/components/pages/WelcomePage.svelte) at `/welcome` | ✅ Done | Public hero, ticker, product mockup/card stack, live questions, FAQ, CTAs; full six-locale `t()` for landing keys. |
-| Landing sections (hero / ticker / FAQ / CTA) | `WelcomePage` + [`Ticker.svelte`](../../../src/lib/components/layout/Ticker.svelte)        | ✅ Done | Ticker marquee, product loop, trust, and FAQ blocks on welcome route.                                              |
+| Surface                                      | App equivalent                                                                                                      | Status  | Notes                                                                                                                                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing page                                 | [`WelcomePage.svelte`](../../../src/lib/components/pages/WelcomePage.svelte) at `/welcome`                          | ✅ Done | Public hero, ticker, product mockup/card stack, live questions, FAQ, CTAs; full six-locale `t()` for landing keys.                                                            |
+| Landing sections (hero / ticker / FAQ / CTA) | `WelcomePage` + [`Ticker.svelte`](../../../src/lib/components/layout/Ticker.svelte)                                 | ✅ Done | Ticker marquee, product loop, trust, and FAQ blocks on welcome route.                                                                                                         |
+| WC featured-event favourites                 | [`WelcomeFeaturedEvent.svelte`](../../../src/lib/components/landing/WelcomeFeaturedEvent.svelte) (in `WelcomePage`) | ✅ Done | 2×2 favourites grid; each tile is a link deep-linking into onboarding with that team preselected — `/signup?team=<ISO-2 code>` → `initialParticipantId` → Beat 1b (see §8.3). |
 
 ---
 
@@ -489,6 +490,13 @@ Beat 1 split into two micro-phases:
 
 1. **Beat 1a — team pick** — pick a featured-event team, or skip to just
    follow the tournament (`pick` selects, `skip` advances null).
+   `OnboardingFlow` also accepts an optional `initialParticipantId`
+   (deep-link preselect): when it resolves to a current featured-event
+   participant the flow opens **straight on Beat 1b** with that team
+   already backed, skipping 1a. An unknown/absent value falls through to
+   the picker — no preselect. `/signup` derives it from the `?team=`
+   query param (ISO-2 code = participant id), which the landing WC
+   favourite tiles deep-link into.
 2. **Beat 1b — first call** — one live swipeable market card derived from
    the pick (or a default). There is no Begin button; the user commits
    with a YES / NO swipe or the accessible card buttons. "Change team"

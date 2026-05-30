@@ -1812,6 +1812,7 @@ export const ptMessages = {
 	'wc.matchday': 'DIA DE JOGO',
 	'wc.sub':
 		'Pontapé inicial em 11 de junho. Escolha um lado agora — os mercados de fase de grupos estão abertos, os de eliminação abrem no sorteio.',
+	'wc.tile_aria': 'Faça sua previsão sobre {team}',
 	'wc.title_a': 'Os favoritos marcam',
 	'wc.title_b': 'o ritmo.',
 	'welcome.battle.members': 'MEMBROS',

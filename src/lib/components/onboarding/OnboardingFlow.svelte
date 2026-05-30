@@ -4,6 +4,7 @@
 	import OnboardingBeat2 from '$lib/components/onboarding/OnboardingBeat2.svelte';
 	import OnboardingBeat3 from '$lib/components/onboarding/OnboardingBeat3.svelte';
 	import { PublicPath } from '$lib/constants/routes.constants';
+	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -28,14 +29,35 @@
 		}) => void;
 		// True when the user is already signed in (post-signin onboarding path).
 		authenticated?: boolean;
+		// Deep-link preselect (e.g. tapping a landing favourite → `/signup?team=BR`).
+		// A featured-event participant id; when it resolves to a current
+		// participant the flow opens straight on Beat 1b (that team's first
+		// call) instead of the team picker. An unknown/absent value falls
+		// through to the normal picker — no preselect.
+		initialParticipantId?: string;
 	}
 
-	const { onComplete, authenticated = false }: Props = $props();
+	const { onComplete, authenticated = false, initialParticipantId }: Props = $props();
 
 	type Beat = '1a' | '1b' | '2' | '3';
 
-	let beat: Beat = $state('1a');
-	let participantId: string | null = $state(null);
+	// Resolve the preselect once, at init. Only honour it if it maps to a
+	// real participant in the current featured event; otherwise behave as
+	// if no team was preselected. Read non-reactively — onboarding owns
+	// `beat`/`participantId` as local state from here on, so a later prop
+	// change must not yank the user back to Beat 1b.
+	const presetParticipantId: string | null = (() => {
+		if (initialParticipantId === undefined) {
+			return null;
+		}
+
+		const exists = $featuredEvent.participants.some((p) => p.id === initialParticipantId);
+
+		return exists ? initialParticipantId : null;
+	})();
+
+	let beat: Beat = $state(presetParticipantId === null ? '1a' : '1b');
+	let participantId: string | null = $state(presetParticipantId);
 	let side: 'YES' | 'NO' | null = $state(null);
 	let handle: string | null = $state(null);
 

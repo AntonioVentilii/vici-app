@@ -1840,6 +1840,7 @@ export const enMessages = {
 	'wc.matchday': 'MATCHDAY',
 	'wc.sub':
 		'June 11 kickoff. Pick a side now — group stage advancement markets open, knockout markets seed at the bracket reveal.',
+	'wc.tile_aria': 'Predict on {team}',
 	'wc.title_a': 'The favorites are setting',
 	'wc.title_b': 'the line.',
 	'welcome.battle.members': 'MEMBERS',

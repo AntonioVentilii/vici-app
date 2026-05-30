@@ -1820,6 +1820,7 @@ export const deMessages = {
 	'wc.matchday': 'SPIELTAG',
 	'wc.sub':
 		'Anstoß am 11. Juni. Wähle jetzt eine Seite — Gruppenphasen-Märkte sind offen, K.O.-Märkte starten zur Auslosung.',
+	'wc.tile_aria': 'Auf {team} tippen',
 	'wc.title_a': 'Die Favoriten setzen',
 	'wc.title_b': 'die Linie.',
 	'welcome.battle.members': 'MITGLIEDER',

@@ -1825,6 +1825,7 @@ export const frMessages = {
 	'wc.matchday': 'JOUR DE MATCH',
 	'wc.sub':
 		'Coup d’envoi le 11 juin. Choisissez un côté maintenant — les marchés de la phase de groupes sont ouverts, les éliminatoires démarrent au tirage.',
+	'wc.tile_aria': 'Pronostiquer sur {team}',
 	'wc.title_a': 'Les favoris donnent',
 	'wc.title_b': 'le ton.',
 	'welcome.battle.members': 'MEMBRES',
