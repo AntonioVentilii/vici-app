@@ -435,11 +435,11 @@ back into the gated route.
 
 ### 8.2 Public surfaces
 
-| Path               | Purpose                                                                                                                                                    |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/signin`          | Returning-user sign-in surface (`SignInScreen` mode `"signin"`). Welcome-back framing. Routes signed-in users straight to home.                            |
-| `/signup`          | Pre-sign-in onboarding flow. Collects a first call, gesture practice, category interests, handle, and optional email before sending the user to `/signin`. |
-| `/auth/callback/*` | OAuth callback handlers (Google today). Public — `signInWithGoogle` redirects through these.                                                               |
+| Path               | Purpose                                                                                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/signin`          | Returning-user sign-in surface (`SignInScreen` mode `"signin"`). Welcome-back framing. Routes signed-in users straight to home.               |
+| `/signup`          | Pre-sign-in onboarding flow (see §8.3): team pick → first call → handle → auth (passkey/OAuth). No gesture-practice or category-picker steps. |
+| `/auth/callback/*` | OAuth callback handlers (Google today). Public — `signInWithGoogle` redirects through these.                                                  |
 
 `PublicPath` enum + `isPublicPath(pathname)` helper live in
 [`src/lib/constants/routes.constants.ts`](../../../src/lib/constants/routes.constants.ts).
