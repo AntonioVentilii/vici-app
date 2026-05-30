@@ -456,7 +456,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.625rem;
-		margin-top: 0.5rem;
+		margin-top: 1.5rem;
 	}
 
 	/* Entrance staggers — `anim-in` / `anim-in-2` / `anim-in-3` are
