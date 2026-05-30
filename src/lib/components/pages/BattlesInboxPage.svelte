@@ -1,13 +1,10 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { SvelteMap, SvelteSet } from 'svelte/reactivity';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import BattlesIntroCard from '$lib/components/leagues/BattlesIntroCard.svelte';
-	import CreateBattleModal from '$lib/components/leagues/CreateBattleModal.svelte';
-	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -17,21 +14,12 @@
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
 	import { daysToFinal } from '$lib/derived/featured-event.derived';
-	import { safeGetIdentityOnce } from '$lib/services/identity.services';
-	import {
-		acceptBattle,
-		kickoffBattle,
-		listMyBattles,
-		listMyLeagues,
-		retractBattle,
-		type LeagueWithRole
-	} from '$lib/services/leagues.services';
+	import { listMyLeagues } from '$lib/services/leagues.services';
 	import { getCurrentTournament } from '$lib/services/tournament.services';
 	import { listAffiliationStats, listMyAffiliations } from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationDoc } from '$lib/types/affiliation';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
-	import type { BattleDoc } from '$lib/types/battle';
 	import {
 		TOURNAMENT_ROUNDS,
 		type TournamentDoc,
@@ -43,15 +31,17 @@
 		affiliationMonthlyAccuracy,
 		formatAccuracyPercent
 	} from '$lib/utils/affiliation-stats.utils';
-	import { formatDate } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
-	 * Battles inbox.
+	 * Battles inbox — institutional + tournament surfaces only.
 	 *
-	 * The page is composed of four surface-grouped sections (grouped
-	 * by **surface**, never by battle state):
+	 * League-vs-league battles live exclusively under the Leagues
+	 * surface (the Leagues tab + each league's detail page), so this
+	 * inbox carries only the cross-app, non-league battles. The page
+	 * is composed of surface-grouped sections (grouped by **surface**,
+	 * never by battle state):
 	 *
 	 *  1. Optional "What's a battle?" intro card — dismissible, persists
 	 *     via `localStorage['vici.battles-intro-seen']`. The locked
@@ -69,12 +59,8 @@
 	 *  4. Monthly Tournament curated card — rendered only when the
 	 *     current tournament has unresolved rounds in flight.
 	 *
-	 *  5. Your league battles — the cross-league inbox, with a
-	 *     `Challenge` pill on the right of the section eyebrow.
-	 *
-	 * Side chips use the league's `accentColor` directly (13 % opacity
-	 * background, 30 % border) so each league's emblem tone reads on
-	 * the card surface rather than the generic laurel.
+	 * A footer link routes to the Leagues tab, where league battles are
+	 * proposed and managed per league.
 	 */
 
 	interface Props {
@@ -86,11 +72,12 @@
 	const { embedded = false }: Props = $props();
 
 	// ─── Battles inbox state ──────────────────────────────────────────
-	let battles: BattleDoc[] = $state([]);
-	let memberships: LeagueWithRole[] = $state([]);
-	let selfPrincipal: string | undefined = $state();
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
+	// League ids the caller belongs to — feeds the tournament card's
+	// "your league is in" row. League battles themselves live under the
+	// Leagues surface, so we keep only the ids, not the battle list.
+	let myLeagueIds: string[] = $state([]);
 
 	// ─── Worlds podium state ────────────────────────────────────────
 	let myUni = $state<AffiliationDoc | undefined>();
@@ -112,18 +99,14 @@
 
 	const load = async () => {
 		try {
-			const [battleList, mineList, identity, affils, schools, countries, tour] = await Promise.all([
-				listMyBattles(),
+			const [mineList, affils, schools, countries, tour] = await Promise.all([
 				listMyLeagues(),
-				safeGetIdentityOnce(),
 				listMyAffiliations(),
 				listAffiliationStats({ kind: 'university' }),
 				listAffiliationStats({ kind: 'country' }),
 				getCurrentTournament()
 			]);
-			battles = battleList;
-			memberships = mineList;
-			selfPrincipal = identity.getPrincipal().toText();
+			myLeagueIds = mineList.map((m) => m.league.id);
 			myUni = affils.university;
 			myCountry = affils.country;
 			uniStats = schools;
@@ -161,157 +144,10 @@
 		}
 	};
 
-	// ─── Membership / sides ─────────────────────────────────────────
-	const membershipByLeagueId = $derived.by(() => {
-		const map = new SvelteMap<string, LeagueWithRole>();
-
-		for (const m of memberships) {
-			map.set(m.league.id, m);
-		}
-
-		return map;
-	});
-
-	const myLeagueIds = $derived(new SvelteSet(memberships.map((m) => m.league.id)));
-
-	const sideLabel = (sideId: string): string => {
-		const mine = membershipByLeagueId.get(sideId);
-
-		return mine?.league.name ?? sideId;
-	};
-
-	const sideAccent = (sideId: string): string =>
-		membershipByLeagueId.get(sideId)?.league.accentColor ?? 'var(--laurel)';
-
-	const battleStateLabelKey = (state: BattleDoc['state']): MessageKey => {
-		switch (state) {
-			case 'proposed':
-				return 'leagues.battle.state.proposed';
-			case 'accepted':
-				return 'leagues.battle.state.accepted';
-			case 'in_flight':
-				return 'leagues.battle.state.in_flight';
-			case 'resolved':
-				return 'leagues.battle.state.resolved';
-		}
-	};
-
-	const ownedSide = (battle: BattleDoc): string | undefined => {
-		const a = membershipByLeagueId.get(battle.sideA);
-
-		if (a?.role === 'owner') {
-			return battle.sideA;
-		}
-
-		const b = membershipByLeagueId.get(battle.sideB);
-
-		return b?.role === 'owner' ? battle.sideB : undefined;
-	};
-
-	const canAcceptBattle = (battle: BattleDoc): boolean => {
-		const owned = ownedSide(battle);
-
-		return owned !== undefined && battle.state === 'proposed' && battle.sideB === owned;
-	};
-
-	const canKickoffBattle = (battle: BattleDoc): boolean =>
-		ownedSide(battle) !== undefined &&
-		battle.state === 'accepted' &&
-		Date.now() >= battle.kickoffMs;
-
-	const canResolveBattle = (battle: BattleDoc): boolean =>
-		ownedSide(battle) !== undefined &&
-		battle.state === 'in_flight' &&
-		Date.now() >= battle.settleMs;
-
-	const canRetractBattle = (battle: BattleDoc): boolean =>
-		battle.state === 'proposed' && selfPrincipal !== undefined && battle.proposer === selfPrincipal;
-
-	let actingBattleId = $state<string | null>(null);
-	let resolveBattleTarget = $state<BattleDoc | null>(null);
-	let resolveBattleOurSide = $state<string | null>(null);
-
-	const handleAcceptBattle = async (battle: BattleDoc) => {
-		if (actingBattleId !== null) {
-			return;
-		}
-
-		actingBattleId = battle.id;
-
-		try {
-			await acceptBattle({ battle });
-			await load();
-		} catch (err) {
-			console.error('BattlesInboxPage: acceptBattle failed', err);
-			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
-		} finally {
-			actingBattleId = null;
-		}
-	};
-
-	const handleKickoffBattle = async (battle: BattleDoc) => {
-		if (actingBattleId !== null) {
-			return;
-		}
-
-		actingBattleId = battle.id;
-
-		try {
-			await kickoffBattle({ battle });
-			await load();
-		} catch (err) {
-			console.error('BattlesInboxPage: kickoffBattle failed', err);
-			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
-		} finally {
-			actingBattleId = null;
-		}
-	};
-
-	const openResolve = (battle: BattleDoc) => {
-		const owned = ownedSide(battle);
-
-		if (owned === undefined) {
-			return;
-		}
-
-		resolveBattleTarget = battle;
-		resolveBattleOurSide = owned;
-	};
-
-	const handleRetractBattle = async (battle: BattleDoc) => {
-		if (actingBattleId !== null) {
-			return;
-		}
-
-		actingBattleId = battle.id;
-
-		try {
-			await retractBattle({ battle });
-			await load();
-		} catch (err) {
-			console.error('BattlesInboxPage: retractBattle failed', err);
-			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
-		} finally {
-			actingBattleId = null;
-		}
-	};
-
-	const handleResolveDone = () => {
-		resolveBattleTarget = null;
-		resolveBattleOurSide = null;
-		void load();
-	};
-
-	const goToLeague = (leagueId: string) => {
-		if (!myLeagueIds.has(leagueId)) {
-			return;
-		}
-
-		void goto(`${resolve(AppPath.Arena)}/leagues/${leagueId}`);
-	};
-
-	const goToBattleDetail = (battle: BattleDoc) => {
-		void goto(`${resolve(AppPath.Arena)}/battles/${battle.id}`);
+	// League-vs-league battles live under the Leagues surface; the
+	// footer link routes there to propose / manage them per league.
+	const goToLeagues = () => {
+		void goto(`${resolve(AppPath.Arena)}/leagues`);
 	};
 
 	// ─── Worlds podium helpers ──────────────────────────────────────
@@ -496,14 +332,12 @@
 		matches.filter((m) => m.round === tournamentLiveRound && m.winnerLeagueId === null).length * 2
 	);
 
-	const myLeagueIdsArr = $derived(memberships.map((m) => m.league.id));
-
 	const myLeagueInTournament = $derived.by((): { rank: number } | null => {
 		if (tournament === null) {
 			return null;
 		}
 
-		const myInSeeded = tournament.seededLeagueIds.findIndex((id) => myLeagueIdsArr.includes(id));
+		const myInSeeded = tournament.seededLeagueIds.findIndex((id) => myLeagueIds.includes(id));
 
 		if (myInSeeded === -1) {
 			return null;
@@ -523,38 +357,6 @@
 
 		return { rank: myInSeeded + 1 };
 	});
-
-	// ─── League battles list ──────────────────────────────────────────
-	const BATTLE_SORT_ORDER: readonly BattleDoc['state'][] = [
-		'in_flight',
-		'accepted',
-		'proposed',
-		'resolved'
-	] as const;
-
-	const sortedLeagueBattles = $derived.by(() => {
-		const order = new Map(BATTLE_SORT_ORDER.map((s, i) => [s, i]));
-
-		return [...battles].sort((a, b) => {
-			const oa = order.get(a.state) ?? 99;
-			const ob = order.get(b.state) ?? 99;
-
-			if (oa !== ob) {
-				return oa - ob;
-			}
-
-			return b.kickoffMs - a.kickoffMs;
-		});
-	});
-
-	const LEAGUE_BATTLE_PREVIEW = 4;
-	let showAllLeagueBattles = $state(false);
-
-	const visibleLeagueBattles = $derived(
-		showAllLeagueBattles ? sortedLeagueBattles : sortedLeagueBattles.slice(0, LEAGUE_BATTLE_PREVIEW)
-	);
-
-	let createOpen = $state(false);
 </script>
 
 <div class="battles-inbox">
@@ -973,174 +775,22 @@
 			</section>
 		{/if}
 
-		<!-- ─── Your league battles ────────────────────────────────── -->
-		<section class="battles-section" aria-label="Your league battles">
-			<header class="battles-section-head">
-				<span class="battles-eyebrow allcaps">
-					{t({ locale: $localeStore, key: 'battles.section.your_league_battles' })}
+		<!-- ─── League battles live under Leagues ─────────────────── -->
+		<button class="battles-leagues-link" onclick={goToLeagues} type="button">
+			<span class="battles-leagues-link-body">
+				<span class="serif-italic battles-leagues-link-lede">
+					{t({ locale: $localeStore, key: 'battles.leagues_link.lede' })}
 				</span>
-				<button class="battles-section-head-cta" onclick={() => (createOpen = true)} type="button">
-					+ {t({ locale: $localeStore, key: 'battles.section.challenge_cta' })}
-				</button>
-			</header>
-
-			{#if battles.length === 0}
-				<div class="battles-empty">
-					<p class="serif-italic battles-empty-lede">
-						{t({ locale: $localeStore, key: 'battles.empty.lede' })}
-					</p>
-					<p class="battles-empty-sub">
-						{t({ locale: $localeStore, key: 'battles.empty.sub' })}
-					</p>
-					<button class="battles-empty-cta" onclick={() => (createOpen = true)} type="button">
-						+ {t({ locale: $localeStore, key: 'battles.empty.cta' })}
-					</button>
-				</div>
-			{:else}
-				<ul class="battles-list">
-					{#each visibleLeagueBattles as battle (battle.id)}
-						{@const owned = ownedSide(battle)}
-						<li class="battles-battle" data-state={battle.state}>
-							<div class="battles-battle-head">
-								<div class="battles-sides">
-									<button
-										style:--side-accent={sideAccent(battle.sideA)}
-										class="battles-side"
-										data-known={membershipByLeagueId.has(battle.sideA)}
-										data-ours={owned === battle.sideA}
-										disabled={!myLeagueIds.has(battle.sideA)}
-										onclick={() => goToLeague(battle.sideA)}
-										type="button"
-									>
-										{sideLabel(battle.sideA)}
-									</button>
-									<span class="battles-vs serif-italic">vs</span>
-									<button
-										style:--side-accent={sideAccent(battle.sideB)}
-										class="battles-side"
-										data-known={membershipByLeagueId.has(battle.sideB)}
-										data-ours={owned === battle.sideB}
-										disabled={!myLeagueIds.has(battle.sideB)}
-										onclick={() => goToLeague(battle.sideB)}
-										type="button"
-									>
-										{sideLabel(battle.sideB)}
-									</button>
-								</div>
-								<button
-									class="battles-state-link"
-									onclick={() => goToBattleDetail(battle)}
-									type="button"
-								>
-									<span class="allcaps battles-state" data-state={battle.state}>
-										{t({ locale: $localeStore, key: battleStateLabelKey(battle.state) })}
-									</span>
-									<span aria-hidden="true">→</span>
-								</button>
-							</div>
-							<p class="battles-window num">
-								{formatDate(battle.kickoffMs)} → {formatDate(battle.settleMs)}
-							</p>
-							{#if battle.state === 'resolved' && battle.winner !== undefined && owned !== undefined}
-								<p class="battles-winner allcaps" data-winner={battle.winner}>
-									{#if battle.winner === 'draw'}
-										{t({ locale: $localeStore, key: 'leagues.battle.winner_draw' })}
-									{:else if (battle.winner === 'A' ? battle.sideA : battle.sideB) === owned}
-										{t({ locale: $localeStore, key: 'leagues.battle.winner_us' })}
-									{:else}
-										{t({ locale: $localeStore, key: 'leagues.battle.winner_them' })}
-									{/if}
-									{#if battle.scoreA !== undefined && battle.scoreB !== undefined}
-										<span class="num battles-score">
-											· {battle.sideA === owned
-												? `${battle.scoreA}–${battle.scoreB}`
-												: `${battle.scoreB}–${battle.scoreA}`}
-										</span>
-									{/if}
-								</p>
-							{/if}
-							{#if canAcceptBattle(battle)}
-								<button
-									class="battles-action is-primary"
-									disabled={actingBattleId === battle.id}
-									onclick={() => handleAcceptBattle(battle)}
-									type="button"
-								>
-									{actingBattleId === battle.id
-										? t({ locale: $localeStore, key: 'leagues.battle.action.accepting' })
-										: t({ locale: $localeStore, key: 'leagues.battle.action.accept' })}
-								</button>
-							{:else if canKickoffBattle(battle)}
-								<button
-									class="battles-action is-primary"
-									disabled={actingBattleId === battle.id}
-									onclick={() => handleKickoffBattle(battle)}
-									type="button"
-								>
-									{actingBattleId === battle.id
-										? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
-										: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
-								</button>
-							{:else if canResolveBattle(battle)}
-								<button
-									class="battles-action is-primary"
-									onclick={() => openResolve(battle)}
-									type="button"
-								>
-									{t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
-								</button>
-							{/if}
-							{#if canRetractBattle(battle)}
-								<button
-									class="battles-action is-danger"
-									disabled={actingBattleId === battle.id}
-									onclick={() => handleRetractBattle(battle)}
-									type="button"
-								>
-									{actingBattleId === battle.id
-										? t({ locale: $localeStore, key: 'leagues.battle.action.retracting' })
-										: t({ locale: $localeStore, key: 'leagues.battle.action.retract' })}
-								</button>
-							{/if}
-						</li>
-					{/each}
-				</ul>
-				{#if sortedLeagueBattles.length > LEAGUE_BATTLE_PREVIEW}
-					<button
-						class="battles-see-all is-button allcaps"
-						onclick={() => (showAllLeagueBattles = !showAllLeagueBattles)}
-						type="button"
-					>
-						{#if showAllLeagueBattles}
-							{t({ locale: $localeStore, key: 'battles.show_less' })}
-						{:else}
-							{t({
-								locale: $localeStore,
-								key: 'battles.see_all',
-								params: { count: sortedLeagueBattles.length }
-							})}
-						{/if}
-					</button>
-				{/if}
-			{/if}
-		</section>
+				<span class="battles-leagues-link-sub">
+					{t({ locale: $localeStore, key: 'battles.leagues_link.sub' })}
+				</span>
+			</span>
+			<span class="battles-leagues-link-cta allcaps">
+				{t({ locale: $localeStore, key: 'battles.leagues_link.cta' })} →
+			</span>
+		</button>
 	{/if}
 </div>
-
-{#if resolveBattleTarget !== null && resolveBattleOurSide !== null}
-	<ResolveBattleModal
-		battle={resolveBattleTarget}
-		isOpen={true}
-		onClose={() => {
-			resolveBattleTarget = null;
-			resolveBattleOurSide = null;
-		}}
-		onResolved={handleResolveDone}
-		ourLeagueId={resolveBattleOurSide}
-	/>
-{/if}
-
-<CreateBattleModal isOpen={createOpen} onClose={() => (createOpen = false)} />
 
 <style lang="postcss">
 	.battles-inbox {
@@ -1197,26 +847,6 @@
 		font-size: var(--t-10);
 		letter-spacing: 0.08em;
 		color: var(--text-muted);
-	}
-
-	.battles-section-head-cta {
-		appearance: none;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
-		padding: 0.3rem 0.7rem;
-		font: inherit;
-		font-size: var(--t-11);
-		font-weight: 700;
-		color: var(--laurel);
-		background: color-mix(in srgb, var(--laurel) 8%, transparent);
-		border: 1px solid color-mix(in srgb, var(--laurel) 25%, var(--border-base));
-		border-radius: var(--r-pill);
-		cursor: pointer;
-	}
-
-	.battles-section-head-cta:hover {
-		background: color-mix(in srgb, var(--laurel) 14%, transparent);
 	}
 
 	/* ─── grouped card ───────────────────────────────────────── */
@@ -1493,222 +1123,56 @@
 		color: #b49cff;
 	}
 
-	.battles-see-all.is-button {
+	/* ─── league battles → Leagues footer link ────────────────── */
+	.battles-leagues-link {
 		appearance: none;
-		width: 100%;
-		padding: 0.75rem 0;
-		text-align: center;
-		background: transparent;
-		border: 0;
-		cursor: pointer;
-	}
-
-	/* ─── league-battle list ──────────────────────────────────── */
-	.battles-empty {
 		display: flex;
-		flex-direction: column;
 		align-items: center;
-		gap: 0.4rem;
-		padding: 1.5rem 1rem;
-		text-align: center;
+		justify-content: space-between;
+		gap: 0.75rem;
+		width: 100%;
+		padding: 0.9rem 1rem;
+		font: inherit;
+		text-align: left;
+		color: var(--text-base);
 		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
 		border: 1px dashed var(--border-base);
 		border-radius: var(--r-12);
-	}
-
-	.battles-empty-lede {
-		margin: 0;
-		font-size: var(--t-15, 0.95rem);
-		color: var(--laurel);
-	}
-
-	.battles-empty-sub {
-		margin: 0;
-		font-size: var(--t-12);
-		color: var(--text-muted);
-	}
-
-	.battles-empty-cta {
-		appearance: none;
-		margin-top: 0.55rem;
-		padding: 0.45rem 0.95rem;
-		font: inherit;
-		font-size: var(--t-12);
-		font-weight: 700;
-		color: var(--laurel);
-		background: color-mix(in srgb, var(--laurel) 8%, transparent);
-		border: 1px solid color-mix(in srgb, var(--laurel) 25%, var(--border-base));
-		border-radius: var(--r-pill);
-		cursor: pointer;
-		transition: background 140ms ease;
-	}
-
-	.battles-empty-cta:hover {
-		background: color-mix(in srgb, var(--laurel) 14%, transparent);
-	}
-
-	.battles-list {
-		display: flex;
-		flex-direction: column;
-		gap: 0.45rem;
-		list-style: none;
-		padding: 0;
-		margin: 0;
-	}
-
-	.battles-battle {
-		display: flex;
-		flex-direction: column;
-		gap: 0.3rem;
-		padding: 0.75rem 0.9rem;
-		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-	}
-
-	.battles-battle[data-state='in_flight'] {
-		border-color: color-mix(in srgb, var(--laurel) 38%, var(--border-base));
-	}
-
-	.battles-battle-head {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.battles-sides {
-		display: flex;
-		align-items: baseline;
-		gap: 0.4rem;
-		flex-wrap: wrap;
-		min-width: 0;
-	}
-
-	/* Side chip — emblem-tinted: direct accentColor background at 13 %
-	   opacity with a 30 % border, so the chip wears the school /
-	   league tone instead of the generic laurel. */
-	.battles-side {
-		appearance: none;
-		padding: 0.2rem 0.5rem;
-		font: inherit;
-		font-size: var(--t-13);
-		font-weight: 600;
-		color: var(--text-base);
-		background: color-mix(in srgb, var(--side-accent) 13%, transparent);
-		border: 1px solid color-mix(in srgb, var(--side-accent) 30%, var(--border-base));
-		border-radius: var(--r-pill);
-		cursor: pointer;
-	}
-
-	.battles-side:disabled {
-		cursor: default;
-		color: var(--text-muted);
-		background: none;
-		border-color: var(--border-base);
-	}
-
-	.battles-side[data-ours='true'] {
-		font-weight: 700;
-		color: var(--side-accent);
-	}
-
-	.battles-vs {
-		font-size: var(--t-13);
-		color: var(--text-muted);
-	}
-
-	.battles-state-link {
-		appearance: none;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.3rem;
-		padding: 0;
-		font: inherit;
-		color: var(--text-muted);
-		background: none;
-		border: none;
-		cursor: pointer;
-	}
-
-	.battles-state-link:hover {
-		color: var(--text-base);
-	}
-
-	.battles-state {
-		font-size: var(--t-10);
-		letter-spacing: var(--tracking-allcaps);
-		padding: 0.1rem 0.4rem;
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--text-muted) 18%, transparent);
-		color: var(--text-muted);
-	}
-
-	.battles-state[data-state='in_flight'] {
-		background: color-mix(in srgb, var(--laurel) 22%, transparent);
-		color: var(--laurel);
-	}
-
-	.battles-state[data-state='resolved'] {
-		background: color-mix(in srgb, var(--text-muted) 12%, transparent);
-		opacity: 0.7;
-	}
-
-	.battles-window {
-		margin: 0;
-		font-size: var(--t-11);
-		color: var(--text-muted);
-	}
-
-	.battles-winner {
-		margin: 0;
-		font-size: var(--t-11);
-		letter-spacing: var(--tracking-allcaps);
-		color: var(--text-muted);
-	}
-
-	.battles-score {
-		margin-left: 0.25rem;
-		color: var(--text-base);
-	}
-
-	.battles-action {
-		appearance: none;
-		align-self: flex-start;
-		margin-top: 0.3rem;
-		padding: 0.4rem 0.85rem;
-		font: inherit;
-		font-size: var(--t-12);
-		font-weight: 700;
-		border-radius: var(--r-pill);
 		cursor: pointer;
 		transition:
 			background 140ms ease,
 			border-color 140ms ease;
 	}
 
-	.battles-action.is-primary {
-		color: var(--text-on-accent, #fff);
-		background: var(--laurel);
-		border: 1px solid var(--laurel);
+	.battles-leagues-link:hover {
+		background: color-mix(in srgb, var(--laurel) 6%, transparent);
+		border-color: color-mix(in srgb, var(--laurel) 30%, var(--border-base));
 	}
 
-	.battles-action.is-primary:hover:not(:disabled) {
-		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
+	.battles-leagues-link-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
+		min-width: 0;
 	}
 
-	.battles-action.is-danger {
-		color: var(--no);
-		background: color-mix(in srgb, var(--no-wash, var(--no)) 12%, transparent);
-		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
+	.battles-leagues-link-lede {
+		font-size: var(--t-14, 0.9rem);
+		color: var(--laurel);
 	}
 
-	.battles-action.is-danger:hover:not(:disabled) {
-		background: color-mix(in srgb, var(--no-wash, var(--no)) 20%, transparent);
+	.battles-leagues-link-sub {
+		font-size: var(--t-12);
+		line-height: 1.4;
+		color: var(--text-muted);
 	}
 
-	.battles-action:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
+	.battles-leagues-link-cta {
+		flex-shrink: 0;
+		font-family: var(--font-mono, var(--font-sans));
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		color: var(--laurel);
 	}
 </style>
