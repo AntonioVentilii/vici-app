@@ -15,6 +15,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { detectUserCountryCode } from '$lib/utils/locale-country.utils';
 
 	/**
 	 * Affiliation picker — full-bleed bottom sheet with a large
@@ -61,6 +62,28 @@
 	let saving = $state(false);
 	let errorMessage = $state<string | null>(null);
 
+	/**
+	 * Region tabs (university kind only). `LATAM` / `MEA` entries have no
+	 * tab — they surface only under "All" or via search. The tab `id`
+	 * matches `WorldsAffiliationOption.region`; the AU tab covers both
+	 * Australia and New Zealand (`region: 'AU'`).
+	 */
+	type RegionTab = 'ALL' | 'NA' | 'UK' | 'EU' | 'AS' | 'AU';
+	const REGION_TABS: readonly { id: RegionTab; key: MessageKey }[] = [
+		{ id: 'ALL', key: 'worlds.picker.region.all' },
+		{ id: 'NA', key: 'worlds.picker.region.na' },
+		{ id: 'UK', key: 'worlds.picker.region.uk' },
+		{ id: 'EU', key: 'worlds.picker.region.eu' },
+		{ id: 'AS', key: 'worlds.picker.region.as' },
+		{ id: 'AU', key: 'worlds.picker.region.au' }
+	];
+	let region = $state<RegionTab>('ALL');
+
+	// Best-effort home country from `navigator.language` — drives the
+	// "Near you" pinning. Read once at setup: the heuristic has no
+	// reactive inputs, so there's nothing to re-derive.
+	const homeCountry = detectUserCountryCode();
+
 	const currentDoc = $derived<AffiliationDoc | undefined>(current?.[kind]);
 	const currentForKind = $derived<string | undefined>(currentDoc?.affiliationIdentifier);
 	const lockDaysLeft = $derived(
@@ -105,20 +128,47 @@
 
 	const ctaDisabled = $derived(selected === null || saving || (isSwitching && isLocked));
 
+	const isUniversity = $derived(kind === 'university');
+	const isSearching = $derived(query.trim().length > 0);
+
 	const filtered = $derived.by(() => {
 		const trimmed = query.trim().toLowerCase();
 
-		if (trimmed.length === 0) {
+		if (trimmed.length > 0) {
+			return roster
+				.filter(
+					(opt) =>
+						opt.name.toLowerCase().includes(trimmed) || opt.glyph.toLowerCase().includes(trimmed)
+				)
+				.slice(0, 40);
+		}
+
+		// Idle, country kind: unchanged — first 20 of the roster.
+		if (kind !== 'university') {
 			return roster.slice(0, 20);
 		}
 
-		return roster
-			.filter(
-				(opt) =>
-					opt.name.toLowerCase().includes(trimmed) || opt.glyph.toLowerCase().includes(trimmed)
-			)
-			.slice(0, 40);
+		// Idle, university kind: apply the region tab, then pin "Near you"
+		// (home-country schools) to the top. Both groups sort by QS rank;
+		// entries without a rank fall to the bottom of their group.
+		const scoped = region === 'ALL' ? roster : roster.filter((opt) => opt.region === region);
+		// eslint-disable-next-line local-rules/prefer-object-params -- Compare functions are more readable with primitive params
+		const byRank = (a: WorldsAffiliationOption, b: WorldsAffiliationOption) =>
+			(a.rank ?? Number.MAX_SAFE_INTEGER) - (b.rank ?? Number.MAX_SAFE_INTEGER);
+		const pinned = scoped.filter((opt) => opt.country === homeCountry).sort(byRank);
+		const rest = scoped.filter((opt) => opt.country !== homeCountry).sort(byRank);
+
+		return [...pinned, ...rest].slice(0, 40);
 	});
+
+	// Count of home-country schools in the active scope — drives the
+	// "Near you · N schools" divider. Zero when there's no home country,
+	// while searching, or for the country kind.
+	const nearYouCount = $derived(
+		!isUniversity || isSearching || homeCountry === null
+			? 0
+			: filtered.filter((opt) => opt.country === homeCountry).length
+	);
 
 	const handleSelect = (option: WorldsAffiliationOption) => {
 		errorMessage = null;
@@ -196,6 +246,7 @@
 	const handleClose = () => {
 		query = '';
 		selected = null;
+		region = 'ALL';
 		errorMessage = null;
 		onClose();
 	};
@@ -242,15 +293,42 @@
 			{/if}
 		</div>
 
+		{#if isUniversity && !isSearching}
+			<div class="affil-picker-tabs" role="tablist">
+				{#each REGION_TABS as tab (tab.id)}
+					<button
+						class="affil-picker-tab"
+						class:is-active={region === tab.id}
+						aria-selected={region === tab.id}
+						onclick={() => (region = tab.id)}
+						role="tab"
+						type="button"
+					>
+						{t({ locale: $localeStore, key: tab.key })}
+					</button>
+				{/each}
+			</div>
+		{/if}
+
 		<ul class="affil-picker-list">
 			{#if filtered.length === 0}
 				<li class="affil-picker-empty">
 					{t({ locale: $localeStore, key: 'worlds.picker.empty' })}
 				</li>
 			{:else}
-				{#each filtered as option (option.id)}
+				{#each filtered as option, index (option.id)}
 					{@const isJoined = currentForKind === option.id}
 					{@const isSelected = selected === option.id}
+					{@const isNearYouLead = nearYouCount > 0 && index === 0 && option.country === homeCountry}
+					{#if isNearYouLead}
+						<li class="affil-picker-divider" aria-hidden="true">
+							{t({
+								locale: $localeStore,
+								key: 'worlds.picker.near_you',
+								params: { count: nearYouCount }
+							})}
+						</li>
+					{/if}
 					<li>
 						<button
 							class="affil-picker-row"
@@ -375,12 +453,63 @@
 		cursor: pointer;
 	}
 
+	.affil-picker-tabs {
+		display: flex;
+		gap: 0.35rem;
+		overflow-x: auto;
+		padding-bottom: 0.15rem;
+		scrollbar-width: none;
+	}
+
+	.affil-picker-tabs::-webkit-scrollbar {
+		display: none;
+	}
+
+	.affil-picker-tab {
+		appearance: none;
+		flex-shrink: 0;
+		padding: 0.4rem 0.7rem;
+		font: inherit;
+		font-size: var(--t-12);
+		font-weight: 600;
+		white-space: nowrap;
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			background 140ms ease,
+			color 140ms ease,
+			border-color 140ms ease;
+	}
+
+	.affil-picker-tab:hover {
+		color: var(--text-base);
+	}
+
+	.affil-picker-tab.is-active {
+		color: var(--ink, #0e0d0b);
+		background: var(--laurel);
+		border-color: var(--laurel);
+	}
+
 	.affil-picker-list {
 		max-height: 38vh;
 		overflow-y: auto;
 		list-style: none;
 		padding: 0;
 		margin: 0;
+	}
+
+	.affil-picker-divider {
+		padding: 0.6rem 0.5rem 0.35rem;
+		font-family: var(--font-mono);
+		font-size: var(--t-10);
+		font-weight: 600;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+		color: var(--laurel);
 	}
 
 	.affil-picker-row {
