@@ -37,7 +37,11 @@
 			return;
 		}
 
-		const match = $featuredEvent.participants.find((p) => p.id === team);
+		// Normalize the deep-link param: participant ids are upper-case
+		// ISO-3166 alpha-2, so trim + upper-case so `?team=br` (or with
+		// stray whitespace) still resolves.
+		const code = team.trim().toUpperCase();
+		const match = $featuredEvent.participants.find((p) => p.id === code);
 
 		return match?.id;
 	});
