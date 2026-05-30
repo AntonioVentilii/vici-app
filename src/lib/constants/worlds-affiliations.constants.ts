@@ -951,7 +951,7 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 		text: '#522D80'
 	},
 	{
-		id: 'uic-business',
+		id: 'babson',
 		name: 'Babson College',
 		glyph: 'BABS',
 		short: 'BABS',
@@ -963,7 +963,7 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 		text: '#F2ECDC'
 	},
 	{
-		id: 'darthcollege',
+		id: 'bentley',
 		name: 'Bentley',
 		glyph: 'BENT',
 		short: 'BENT',
@@ -1445,8 +1445,8 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 	{
 		id: 'mannheim',
 		name: 'Mannheim',
-		glyph: 'MAN',
-		short: 'MAN',
+		glyph: 'MHM',
+		short: 'MHM',
 		country: 'DE',
 		region: 'EU',
 		domains: ['uni-mannheim.de'],
@@ -2114,8 +2114,8 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 	{
 		id: 'nova-sbe',
 		name: 'Nova SBE',
-		glyph: 'NOVA',
-		short: 'NOVA',
+		glyph: 'NSBE',
+		short: 'NSBE',
 		country: 'PT',
 		region: 'EU',
 		domains: ['novasbe.pt', 'novasbe.unl.pt'],
@@ -2635,7 +2635,7 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 		text: '#F2ECDC'
 	},
 	{
-		id: 'hku-tw',
+		id: 'ntu-tw',
 		name: 'NTU Taiwan',
 		glyph: 'NTUT',
 		short: 'NTUT',
@@ -3070,8 +3070,8 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 	{
 		id: 'waterloo',
 		name: 'Waterloo',
-		glyph: 'UW-W',
-		short: 'UW-W',
+		glyph: 'WAT',
+		short: 'WAT',
 		country: 'CA',
 		region: 'NA',
 		domains: ['uwaterloo.ca', 'edu.uwaterloo.ca'],
