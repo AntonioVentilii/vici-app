@@ -349,6 +349,7 @@
 	@media (prefers-reduced-motion: reduce) {
 		.pillnav-indicator {
 			transition: none;
+			will-change: auto;
 		}
 	}
 
