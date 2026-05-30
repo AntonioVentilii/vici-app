@@ -1933,6 +1933,13 @@ export const ptMessages = {
 	'worlds.picker.kind_university': 'Universidade',
 	'worlds.picker.lock_hint':
 		'Você entra no ranking do grupo. Pode trocar — uma vez a cada 90 dias.',
+	'worlds.picker.near_you': 'Perto de você · {count} escolas',
+	'worlds.picker.region.all': 'Todas',
+	'worlds.picker.region.as': 'Ásia',
+	'worlds.picker.region.au': 'AU·NZ',
+	'worlds.picker.region.eu': 'Europa',
+	'worlds.picker.region.na': 'América do Norte',
+	'worlds.picker.region.uk': 'Reino Unido',
 	'worlds.picker.search_country': 'Buscar entre {count} países…',
 	'worlds.picker.search_university': 'Buscar entre {count} universidades…',
 	'worlds.picker.title_country': 'Escolha seu país',

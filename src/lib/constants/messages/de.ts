@@ -1942,6 +1942,13 @@ export const deMessages = {
 	'worlds.picker.kind_university': 'Universität',
 	'worlds.picker.lock_hint':
 		'Fügt dich zur Rangliste der Gruppe hinzu. Wechseln möglich — einmal pro 90 Tage.',
+	'worlds.picker.near_you': 'In deiner Nähe · {count} Unis',
+	'worlds.picker.region.all': 'Alle',
+	'worlds.picker.region.as': 'Asien',
+	'worlds.picker.region.au': 'AU·NZ',
+	'worlds.picker.region.eu': 'Europa',
+	'worlds.picker.region.na': 'Nordamerika',
+	'worlds.picker.region.uk': 'GB',
 	'worlds.picker.search_country': 'Suche {count} Länder…',
 	'worlds.picker.search_university': 'Suche {count} Unis…',
 	'worlds.picker.title_country': 'Land wählen',

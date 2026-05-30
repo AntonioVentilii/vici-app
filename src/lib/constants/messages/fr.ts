@@ -1946,6 +1946,13 @@ export const frMessages = {
 	'worlds.picker.kind_university': 'Université',
 	'worlds.picker.lock_hint':
 		'Tu rejoins le classement du groupe. Tu peux changer — une fois tous les 90 jours.',
+	'worlds.picker.near_you': 'Près de toi · {count} écoles',
+	'worlds.picker.region.all': 'Toutes',
+	'worlds.picker.region.as': 'Asie',
+	'worlds.picker.region.au': 'AU·NZ',
+	'worlds.picker.region.eu': 'Europe',
+	'worlds.picker.region.na': 'Amérique du Nord',
+	'worlds.picker.region.uk': 'Royaume-Uni',
 	'worlds.picker.search_country': 'Cherche parmi {count} pays…',
 	'worlds.picker.search_university': 'Cherche parmi {count} universités…',
 	'worlds.picker.title_country': 'Choisis ton pays',
