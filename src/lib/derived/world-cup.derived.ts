@@ -1,6 +1,7 @@
+import { CURRENT_FEATURED_EVENT } from '$lib/constants/featured-event.constants';
 import { featuredEventActive } from '$lib/derived/featured-event.derived';
 import { preferencesStore } from '$lib/stores/preferences.store';
-import { derived, type Readable } from 'svelte/store';
+import { derived, readable, type Readable } from 'svelte/store';
 
 /**
  * World-Cup mode foundation.
@@ -21,12 +22,10 @@ import { derived, type Readable } from 'svelte/store';
  * — the AND of the two — so they never re-derive the gate or reach into
  * the preferences object themselves.
  *
- * Deferred hook: the richer World-Cup → bridge → open retention *arc*
- * (gradually widening the deck from WC-only back to all categories as
- * the event winds down) is intentionally out of scope here. When it
- * lands it should layer on top of these signals — read `worldCupActive`
- * and the featured-event status rather than introducing a parallel
- * source of truth.
+ * On top of the gate sits the retention *arc* — {@link worldCupPhase} —
+ * which gradually widens the deck from WC-only back to all categories as
+ * the event winds down. It layers on these signals plus the featured
+ * event's dates rather than introducing a parallel source of truth.
  */
 
 /**
@@ -55,4 +54,67 @@ export const worldCupNotArchived: Readable<boolean> = featuredEventActive;
 export const worldCupActive: Readable<boolean> = derived(
 	[worldCupMode, worldCupNotArchived],
 	([optedIn, notArchived]) => optedIn && notArchived
+);
+
+/**
+ * One phase of the World-Cup retention arc.
+ *
+ * - `off` — the user hasn't opted in; Markets keeps its all-categories shape.
+ * - `wc-focus` — Cup active, comfortably before the final. Markets opens
+ *   laser-focused on the World Cup (the shipped WC-default + collapsed rail).
+ * - `bridge` — the last stretch before the final. Still WC-focused, but the
+ *   deck also seeds a curated "Beyond the Cup" rail to pre-empt the post-Cup
+ *   cliff *before* the event resolves.
+ * - `open` — the Cup has resolved (now ≥ final, or the event archived).
+ *   Markets reverts to all-categories and a recap card converts WC interest
+ *   into broader play.
+ */
+export type WorldCupPhase = 'off' | 'wc-focus' | 'bridge' | 'open';
+
+/**
+ * How long before the final the `bridge` phase opens. Two weeks gives the
+ * "Beyond the Cup" rail time to land before the deck would otherwise fall
+ * off the cliff at resolution.
+ */
+const BRIDGE_WINDOW_MS = 14 * 86_400_000;
+
+/**
+ * Phase-arc heartbeat. Mirrors `featured-event.derived`'s 1-minute tick so
+ * the phase flips live as the date thresholds pass — sub-minute precision
+ * buys nothing for a date-driven arc, and a shared cadence keeps the two
+ * date-reactive surfaces in step.
+ */
+const phaseNow_ms: Readable<number> = readable(Date.now(), (set) => {
+	const id = setInterval(() => set(Date.now()), 60_000);
+
+	return () => clearInterval(id);
+});
+
+/**
+ * The current phase of the retention arc. `off` whenever the user hasn't
+ * opted in; otherwise date-driven off the featured event's `finalAt_ms`.
+ * Once the event archives, `worldCupNotArchived` is `false` so the arc
+ * settles on `open` regardless of the clock.
+ */
+export const worldCupPhase: Readable<WorldCupPhase> = derived(
+	[worldCupMode, worldCupNotArchived, phaseNow_ms],
+	([optedIn, notArchived, t]): WorldCupPhase => {
+		if (!optedIn) {
+			return 'off';
+		}
+
+		const { finalAt_ms } = CURRENT_FEATURED_EVENT;
+
+		// Resolved: past the final, or the product archived the event.
+		if (!notArchived || t >= finalAt_ms) {
+			return 'open';
+		}
+
+		// The pre-final bridge window.
+		if (t >= finalAt_ms - BRIDGE_WINDOW_MS) {
+			return 'bridge';
+		}
+
+		return 'wc-focus';
+	}
 );
