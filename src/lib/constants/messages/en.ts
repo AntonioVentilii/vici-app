@@ -616,7 +616,7 @@ export const enMessages = {
 	'flow.list_03': 'Streaks that pressure you back.',
 	'flow.list_04': 'Insights surface when you flip the card.',
 	'flow.live_active': '{count} in Flow right now',
-	'flow.loading.aria': 'Reading the board',
+	'flow.loading.aria': 'Reading the crowd',
 	'flow.loading.line_1': 'Reading the crowd.',
 	'flow.loading.line_2': 'Weighing the odds.',
 	'flow.loading.line_3': 'Shuffling the deck.',

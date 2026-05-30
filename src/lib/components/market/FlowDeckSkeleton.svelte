@@ -105,8 +105,8 @@
 		}
 	}
 
-	/* Card-shaped placeholder — same 22px face radius and surface treatment
-	   as the real Flow card so the skeleton reads as the card's silhouette. */
+	/* Card-shaped placeholder — rounded face and surface treatment that
+	   mirror the real Flow card so the skeleton reads as its silhouette. */
 	.flow-skeleton-card {
 		position: absolute;
 		inset: 0;
@@ -249,7 +249,7 @@
 	@keyframes flow-skeleton-line-fade {
 		0%,
 		100% {
-			opacity: 0.55;
+			opacity: 0.5;
 		}
 		50% {
 			opacity: 1;
