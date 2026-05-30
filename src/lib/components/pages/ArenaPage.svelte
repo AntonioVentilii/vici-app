@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { Plus } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import ArenaOverviewStrip from '$lib/components/arena/ArenaOverviewStrip.svelte';
@@ -7,7 +6,6 @@
 	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import BattlesInboxPage from '$lib/components/pages/BattlesInboxPage.svelte';
 	import LeaguesPage from '$lib/components/pages/LeaguesPage.svelte';
-	import { leaguesCreateIntent } from '$lib/stores/leagues-ui.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
@@ -69,21 +67,8 @@
 	const TABS: readonly Tab[] = ['friends', 'leagues', 'battles'] as const;
 </script>
 
-{#snippet arenaAppbarRight()}
-	{#if activeTab === 'leagues'}
-		<button
-			class="appbar-icon-btn"
-			aria-label={t({ locale: $localeStore, key: 'leagues.create.cta' })}
-			onclick={() => leaguesCreateIntent.set(true)}
-			type="button"
-		>
-			<Plus aria-hidden="true" size={18} strokeWidth={1.8} />
-		</button>
-	{/if}
-{/snippet}
-
 <div class="arena-page">
-	<PageScaffold right={arenaAppbarRight} title={t({ locale: $localeStore, key: 'arena.title' })}>
+	<PageScaffold title={t({ locale: $localeStore, key: 'arena.title' })}>
 		<ArenaOverviewStrip onSelectLeaguesTab={() => (activeTab = 'leagues')} />
 
 		<div class="arena-tabs" aria-label="Arena sections" role="tablist">

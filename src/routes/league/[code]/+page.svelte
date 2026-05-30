@@ -22,10 +22,13 @@
 	 * code enforced by `LEAGUE_INVITE_CODE_REGEX`. Branches on auth state:
 	 *
 	 *   1. **Invalid code shape** — toast + bail to the leagues list.
-	 *   2. **Signed-out (or mid-onboarding)** — stash the code into the
-	 *      `vici:pending-onboarding` payload and route to `/signup`. The
-	 *      (app) layout's pending-onboarding drain then auto-joins the
-	 *      league once the new account is in place.
+	 *   2. **Signed-out (or a brand-new account still mid-onboarding)** —
+	 *      stash the code into the `vici:pending-onboarding` payload and
+	 *      route to `/signup`. The (app) layout's pending-onboarding drain
+	 *      then auto-joins the league once the new account is in place.
+	 *      Returning users (a profile already existed at sign-in) skip this
+	 *      and join directly, even if their legacy profile never flipped
+	 *      `onboardingCompleted` to `true`.
 	 *   3. **Signed-in & onboarded** — resolve the league, join it (or
 	 *      route straight in if already a member), then land on the
 	 *      league detail page.
@@ -38,6 +41,11 @@
 	const onboardingCompleted = $derived(
 		$userStore.profile?.preferences?.onboardingCompleted === true
 	);
+	// A returning user (the satellite already held a profile at sign-in) is
+	// past onboarding even if their legacy profile still defaults
+	// `onboardingCompleted` to `false` — only a brand-new account needs the
+	// signup drain. Mirrors the (app) layout's onboarding gate.
+	const needsOnboarding = $derived(!onboardingCompleted && !$userStore.profileExisted);
 
 	const leaguesListPath = `${resolve(AppPath.Arena)}/leagues`;
 
@@ -109,9 +117,10 @@
 			return;
 		}
 
-		// Signed-out OR signed-in but mid-onboarding → stash + route to signup.
-		// The (app) layout drain redeems the invite once the profile exists.
-		if (!$userSignedIn || !onboardingCompleted) {
+		// Signed-out OR a brand-new account still mid-onboarding → stash +
+		// route to signup. The (app) layout drain redeems the invite once the
+		// profile exists. Returning users join directly (see `needsOnboarding`).
+		if (!$userSignedIn || needsOnboarding) {
 			stashCodeForSignup();
 			void goto(resolve(PublicPath.SignUp), { replaceState: true });
 
