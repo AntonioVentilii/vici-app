@@ -7,44 +7,65 @@ import {
 } from '$lib/types/exit-signal';
 import type { LeagueDoc } from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
+import type { UserProfile } from '$lib/types/profile';
 import type { ReferralCodeDoc, ReferralDoc } from '$lib/types/referral';
 import type { Relation } from '$lib/types/relation';
+import { isAdmin } from '$satellite/services/_authz';
+import { isNullish, nonNullish } from '@dfinity/utils';
+import { Principal } from '@icp-sdk/core/principal';
 import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
 	deleteDocStore,
 	encodeDocData,
+	getDocStore,
 	listDocsStore,
 	setDocStore
 } from '@junobuild/functions/sdk';
 
 /**
- * Account deletion — Proposal 4 in `docs/backend-proposals/README.md`.
+ * Recovery window for soft-deleted accounts (Delete account v2). After
+ * `deleteMyAccount` soft-deletes a profile (sets `deletedAtMs`), the
+ * owner has this long to call `recoverMyAccount` and restore the full
+ * account. Past the window the account is eligible for the admin sweep's
+ * hard-delete (and `recoverMyAccount` itself hard-deletes on a too-late
+ * call). 30 days, in milliseconds.
+ */
+export const ACCOUNT_RECOVERY_WINDOW_MS = 30 * 86_400_000;
+
+/**
+ * Account deletion — Proposal 4 in `docs/backend-proposals/README.md`
+ * (Delete account v2: soft-delete + recovery + admin sweep).
  *
- * The endpoint runs three steps in order:
+ * `deleteMyAccount` runs three steps in order:
  *
  *  1. **Owner-leagues guard.** If the caller owns any league that
  *     still has another member, the deletion is refused with
  *     `reason: 'owns_non_empty_league'`. The FE surfaces a
- *     "transfer ownership first" prompt (decision 4.3).
+ *     "transfer ownership first" prompt (decision 4.3). League
+ *     transfer/delete resolution is a later PR; the guard is
+ *     unchanged.
  *
  *  2. **Exit-signal write.** A single `EXIT_SIGNALS` doc is appended
  *     with the chosen reason + optional note. The doc has no
  *     principal field — it's intentionally unlinkable from the
  *     account that wrote it.
  *
- *  3. **Cascade hard-delete.** Every row identity-keyed to the
- *     caller is removed: profile, VXP awards / onboarding,
- *     referral code + redemption record, affiliations, relations,
- *     non-owner league memberships, owned-empty leagues. Shared
- *     audit rows (activities, battles, comments) are left in place —
- *     the principal is gone, so they're orphaned but immutable
- *     (decision 4.1, hybrid hard-delete + leave-shared).
+ *  3. **Soft-delete.** The caller's profile gets `deletedAtMs = now`
+ *     (decision 4.1, soft-delete preserves the audit trail). NO data
+ *     is removed — recovery must be able to restore the full account.
+ *     The nickname is left untouched so the handle stays reserved
+ *     (`checkNicknameAvailability` scans every profile doc). A second
+ *     soft-delete keeps the EARLIEST `deletedAtMs` so the recovery
+ *     clock can't be reset by re-deleting.
  *
- * After step 3 returns, the FE drops auth (`signOut`) and the user
- * sees the sign-in screen. The principal can re-onboard from
- * scratch later if they want; nothing in the system retains a
- * link from old principal → new principal.
+ * After this returns ok the FE drops auth (`signOut`). The principal
+ * can `recoverMyAccount` within {@link ACCOUNT_RECOVERY_WINDOW_MS};
+ * past that window the data is hard-deleted (lazily, on a too-late
+ * recovery attempt, or eagerly by the admin `sweepExpiredDeletions`).
+ *
+ * The hard-delete cascade itself lives in {@link hardDeleteAccountFn},
+ * parametrised by principal so the sweep can run it for any account.
  */
 
 export type DeleteMyAccountRefusalReason = 'owns_non_empty_league' | 'invalid_input';
@@ -59,8 +80,22 @@ export interface DeleteMyAccountResult {
 	 * uses them to render a "transfer these first" CTA.
 	 */
 	blockingLeagueIds?: string[];
-	/** Diagnostic counters for the log line. */
-	docsDeleted?: number;
+	/**
+	 * `true` when a profile was found and marked soft-deleted; `false`
+	 * when the caller had no profile (never onboarded) so there was
+	 * nothing to soft-delete. Only set when `ok === true`.
+	 */
+	softDeleted?: boolean;
+}
+
+/** Result of {@link recoverMyAccountFn}, discriminated by `ok`. */
+export type RecoverMyAccountResult =
+	| { ok: true; recovered: boolean }
+	| { ok: false; reason: 'expired' };
+
+/** Result of {@link sweepExpiredDeletionsFn} — count of accounts purged. */
+export interface SweepExpiredDeletionsResult {
+	swept: number;
 }
 
 const validateInput = ({
@@ -452,6 +487,56 @@ const deleteOwnedEmptyLeagues = ({
 	return deleted;
 };
 
+/**
+ * Cascade hard-delete for a single account. Removes every row
+ * identity-keyed to the principal: profile, VXP awards / onboarding,
+ * referral code + redemption record, affiliations, relations, league
+ * memberships, owned-empty leagues. Shared audit rows (activities,
+ * battles, comments) are left in place — the principal is gone, so
+ * they're orphaned but immutable (decision 4.1).
+ *
+ * Order matters only between league memberships → owned-empty leagues
+ * (the latter assumes the membership rows are gone first).
+ *
+ * Takes the principal explicitly (does NOT call `msgCaller()`) so the
+ * admin sweep can run it for any account, not just the caller. Returns
+ * the number of docs deleted. Idempotent — a re-run on an
+ * already-purged account finds nothing and returns 0.
+ */
+export const hardDeleteAccountFn = ({
+	callerText,
+	callerBytes
+}: {
+	callerText: string;
+	callerBytes: Uint8Array;
+}): number => {
+	let docsDeleted = 0;
+
+	docsDeleted += deleteOwnProfile({ callerText, callerBytes });
+	docsDeleted += deletePrefixedDocs({
+		collection: Collection.VXP_AWARDS,
+		callerText,
+		callerBytes
+	});
+	docsDeleted += deletePrefixedDocs({
+		collection: Collection.VXP_ONBOARDING,
+		callerText,
+		callerBytes
+	});
+	docsDeleted += deleteOwnReferralCode({ callerText, callerBytes });
+	docsDeleted += deleteOwnReferralRedemption({ callerText, callerBytes });
+	docsDeleted += deleteOwnAffiliations({
+		collection: Collection.AFFILIATIONS,
+		callerText,
+		callerBytes
+	});
+	docsDeleted += deleteOwnRelations({ callerText, callerBytes });
+	docsDeleted += deleteOwnLeagueMemberships({ callerText, callerBytes });
+	docsDeleted += deleteOwnedEmptyLeagues({ callerText, callerBytes });
+
+	return docsDeleted;
+};
+
 export const deleteMyAccountFn = ({
 	reason,
 	note
@@ -497,37 +582,185 @@ export const deleteMyAccountFn = ({
 		}
 	});
 
-	// Step 3 — cascade hard-delete. Order matters only between
-	// league memberships → owned-empty leagues (the latter assumes
-	// the former is done so the membership rows are gone first).
-	let docsDeleted = 0;
-
-	docsDeleted += deleteOwnProfile({ callerText, callerBytes });
-	docsDeleted += deletePrefixedDocs({
-		collection: Collection.VXP_AWARDS,
-		callerText,
-		callerBytes
-	});
-	docsDeleted += deletePrefixedDocs({
-		collection: Collection.VXP_ONBOARDING,
-		callerText,
-		callerBytes
-	});
-	docsDeleted += deleteOwnReferralCode({ callerText, callerBytes });
-	docsDeleted += deleteOwnReferralRedemption({ callerText, callerBytes });
-	docsDeleted += deleteOwnAffiliations({
-		collection: Collection.AFFILIATIONS,
-		callerText,
-		callerBytes
-	});
-	docsDeleted += deleteOwnRelations({ callerText, callerBytes });
-	docsDeleted += deleteOwnLeagueMemberships({ callerText, callerBytes });
-	docsDeleted += deleteOwnedEmptyLeagues({ callerText, callerBytes });
+	// Step 3 — soft-delete. Mark the profile `deletedAtMs = now` and
+	// keep every other row intact so recovery can restore the account.
+	// A caller who never onboarded has no profile doc — that's a clean
+	// no-op (nothing to soft-delete). A second soft-delete keeps the
+	// earliest timestamp so the recovery clock can't be reset.
+	const softDeleted = softDeleteProfile({ callerText, callerBytes, nowMs });
 
 	return {
 		ok: true,
-		docsDeleted
+		softDeleted
 	};
+};
+
+/**
+ * Set `deletedAtMs` on the caller's profile via a version-locked
+ * overwrite. Reads → decodes → sets the marker → re-encodes →
+ * `setDocStore` with the current `version` so a concurrent profile
+ * write can't be silently clobbered. Idempotent: if the profile is
+ * already soft-deleted, the EARLIEST `deletedAtMs` is preserved (a
+ * re-delete must not extend the recovery window). Returns `true` when
+ * a profile existed (and is now marked), `false` when there was no
+ * profile to mark.
+ */
+const softDeleteProfile = ({
+	callerText,
+	callerBytes,
+	nowMs
+}: {
+	callerText: string;
+	callerBytes: Uint8Array;
+	nowMs: number;
+}): boolean => {
+	const profileDoc = getDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes
+	});
+
+	if (isNullish(profileDoc)) {
+		return false;
+	}
+
+	const profile = decodeDocData<UserProfile>(profileDoc.data);
+
+	// Keep the earliest mark — re-deleting must not reset the clock.
+	const deletedAtMs = isNullish(profile.deletedAtMs) ? nowMs : Math.min(profile.deletedAtMs, nowMs);
+
+	setDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes,
+		doc: {
+			data: encodeDocData<UserProfile>({ ...profile, deletedAtMs }),
+			version: profileDoc.version
+		}
+	});
+
+	return true;
+};
+
+/**
+ * Recover the caller's own soft-deleted account (Delete account v2).
+ *
+ *  - Not soft-deleted → no-op: `{ ok: true, recovered: false }`.
+ *  - Soft-deleted, still inside {@link ACCOUNT_RECOVERY_WINDOW_MS} →
+ *    clear `deletedAtMs` and restore the account:
+ *    `{ ok: true, recovered: true }`.
+ *  - Soft-deleted past the window → the grace period is over, so we
+ *    hard-delete the account now and report `{ ok: false, reason:
+ *    'expired' }` (a late recovery attempt is the natural trigger to
+ *    finally purge the data).
+ *
+ * No profile at all (never onboarded, or already hard-deleted) is a
+ * clean no-op `{ ok: true, recovered: false }`. Idempotent.
+ */
+export const recoverMyAccountFn = (): RecoverMyAccountResult => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+	const callerBytes = caller.toUint8Array();
+
+	const profileDoc = getDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes
+	});
+
+	if (isNullish(profileDoc)) {
+		return { ok: true, recovered: false };
+	}
+
+	const profile = decodeDocData<UserProfile>(profileDoc.data);
+
+	if (isNullish(profile.deletedAtMs)) {
+		return { ok: true, recovered: false };
+	}
+
+	const nowMs = Number(time() / 1_000_000n);
+
+	if (nowMs - profile.deletedAtMs >= ACCOUNT_RECOVERY_WINDOW_MS) {
+		// Window elapsed — purge now and refuse the recovery.
+		hardDeleteAccountFn({ callerText, callerBytes });
+
+		return { ok: false, reason: 'expired' };
+	}
+
+	// Inside the window — clear the marker via a version-locked write.
+	const { deletedAtMs: _drop, ...rest } = profile;
+
+	setDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes,
+		doc: {
+			data: encodeDocData<UserProfile>(rest),
+			version: profileDoc.version
+		}
+	});
+
+	return { ok: true, recovered: true };
+};
+
+/**
+ * Admin sweep that hard-deletes every soft-deleted account whose
+ * recovery window has elapsed (Delete account v2). Scans `PROFILES`
+ * for docs with `deletedAtMs` older than {@link
+ * ACCOUNT_RECOVERY_WINDOW_MS} and runs {@link hardDeleteAccountFn} for
+ * each. Returns `{ swept }` — the number of accounts purged.
+ *
+ * **Admin-only** — refuses non-admins via the shared `isAdmin` check.
+ *
+ * Juno exposes no scheduler primitive (the same reason the worlds
+ * podium payout is modelled as a user-claim — see
+ * `vxp-worlds-podium.services.ts`), so this is triggered externally:
+ * an operator/cron calls it. Idempotent — already-purged accounts no
+ * longer carry a profile doc, so a re-run only sweeps newly-expired
+ * accounts.
+ */
+export const sweepExpiredDeletionsFn = (): SweepExpiredDeletionsResult => {
+	const caller = msgCaller();
+
+	if (!isAdmin({ caller })) {
+		throw new Error('sweepExpiredDeletions: caller is not an admin.');
+	}
+
+	const callerBytes = caller.toUint8Array();
+	const nowMs = Number(time() / 1_000_000n);
+
+	const { items } = listDocsStore({
+		collection: Collection.PROFILES,
+		caller: callerBytes,
+		params: {}
+	});
+
+	let swept = 0;
+
+	for (const [, item] of items) {
+		try {
+			const profile = decodeDocData<UserProfile>(item.data);
+
+			// Only soft-deleted accounts past the recovery window are purged.
+			if (
+				nonNullish(profile.deletedAtMs) &&
+				nowMs - profile.deletedAtMs >= ACCOUNT_RECOVERY_WINDOW_MS
+			) {
+				// `profiles` is keyed by the owner's principal text; derive the
+				// bytes from it so `hardDeleteAccountFn` can drop every
+				// identity-keyed row for that account.
+				const ownerText = profile.owner;
+				const ownerBytes = Principal.fromText(ownerText).toUint8Array();
+
+				hardDeleteAccountFn({ callerText: ownerText, callerBytes: ownerBytes });
+				swept += 1;
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	return { swept };
 };
 
 /**

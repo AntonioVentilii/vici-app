@@ -77,7 +77,7 @@ export const idlFactory = ({ IDL }) => {
 	const AppDeleteMyAccountResult = IDL.Record({
 		ok: IDL.Bool,
 		blocking_league_ids: IDL.Opt(IDL.Vec(IDL.Text)),
-		docs_deleted: IDL.Opt(IDL.Float64),
+		soft_deleted: IDL.Opt(IDL.Bool),
 		reason: IDL.Opt(
 			IDL.Variant({
 				owns_non_empty_league: IDL.Null,
@@ -245,6 +245,7 @@ export const idlFactory = ({ IDL }) => {
 				}),
 				daily_streak: IDL.Float64,
 				unlocked_achievements: IDL.Vec(IDL.Text),
+				deleted_at_ms: IDL.Opt(IDL.Float64),
 				points: IDL.Float64,
 				avatar: IDL.Text,
 				accuracy: IDL.Float64
@@ -637,6 +638,11 @@ export const idlFactory = ({ IDL }) => {
 	const AppLookupReferralCodeResult = IDL.Record({
 		owner: IDL.Opt(IDL.Text)
 	});
+	const AppRecoverMyAccountResult = IDL.Record({
+		ok: IDL.Bool,
+		recovered: IDL.Opt(IDL.Bool),
+		reason: IDL.Opt(IDL.Variant({ expired: IDL.Null }))
+	});
 	const AppRedeemReferralCodeArgs = IDL.Record({ code: IDL.Text });
 	const AppRejectFriendRequestArgs = IDL.Record({ relation_id: IDL.Text });
 	const AppResolveTournamentRoundArgs = IDL.Record({
@@ -703,6 +709,7 @@ export const idlFactory = ({ IDL }) => {
 		)
 	});
 	const AppSendFriendRequestArgs = IDL.Record({ target: IDL.Text });
+	const AppSweepExpiredDeletionsResult = IDL.Record({ swept: IDL.Float64 });
 	const AppTransferLeagueOwnershipArgs = IDL.Record({
 		new_owner_principal: IDL.Text,
 		league_id: IDL.Text
@@ -899,6 +906,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppLookupReferralCodeResult],
 			['query']
 		),
+		app_recover_my_account: IDL.Func([], [AppRecoverMyAccountResult], []),
 		app_redeem_referral_code: IDL.Func([AppRedeemReferralCodeArgs], [], []),
 		app_reject_friend_request: IDL.Func([AppRejectFriendRequestArgs], [], []),
 		app_resolve_tournament_round: IDL.Func(
@@ -908,6 +916,7 @@ export const idlFactory = ({ IDL }) => {
 		),
 		app_search_profiles: IDL.Func([AppSearchProfilesArgs], [AppSearchProfilesResult], ['query']),
 		app_send_friend_request: IDL.Func([AppSendFriendRequestArgs], [], []),
+		app_sweep_expired_deletions: IDL.Func([], [AppSweepExpiredDeletionsResult], []),
 		app_transfer_league_ownership: IDL.Func(
 			[AppTransferLeagueOwnershipArgs],
 			[AppTransferLeagueOwnershipResult],

@@ -324,6 +324,36 @@ Hooks fire **after** the write, but they can fire more than once
   `engine_sync_error`, …) so operators can grep Juno Console for the
   failure mode without breaking the hook.
 
+## Soft-delete + lazy hard-delete (no scheduler)
+
+Juno has **no timer primitive**, so any "delete now, purge later"
+flow has to model the deferred work as a claim or an admin trigger —
+never a scheduled job. The account-deletion flow
+([`account.services.ts`](../../../src/satellite/services/account.services.ts))
+is the reference shape:
+
+- **Soft-delete = an optional marker field.** `deletedAtMs?: number`
+  on the profile schema. PRESENCE means soft-deleted; ABSENCE means
+  active. Declare it `j.number().optional()` with **no default** — a
+  default would force every legacy/active row to look deleted, and
+  absence is the meaningful state. Mirror the field in **both**
+  `src/lib/schema/profile.schema.ts` **and**
+  `src/satellite/api-schemas.ts` (the encoder trap), and forward it
+  verbatim through `withProfileDefaults`.
+- **Hide soft-deleted rows from PUBLIC reads, not from the owner.**
+  A shared `isSoftDeleted(profile)` helper filters the public query
+  endpoints (`listLeaderboard`, `searchProfiles`, `getProfile`). The
+  owner's own read goes through Juno `getDoc` (not a `defineQuery`),
+  so it's intentionally never gated — the FE can still offer recovery.
+- **Extract the cascade, parametrise by principal.** The hard-delete
+  (`hardDeleteAccountFn({ callerText, callerBytes })`) takes the
+  principal explicitly and does **not** call `msgCaller()`, so the
+  same code path serves both the lazy purge (on a too-late recovery)
+  and the admin sweep (`sweepExpiredDeletions`, gated by `isAdmin`).
+- **Keep the marker monotonic.** Re-deleting keeps the EARLIEST
+  `deletedAtMs` so the recovery clock can't be reset. Recovery clears
+  the field; both are version-locked overwrites.
+
 ## Cross-canister calls
 
 When a hook calls another canister (typically the icdc-core registry):

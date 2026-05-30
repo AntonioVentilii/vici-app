@@ -81,7 +81,7 @@ export interface AppDeleteMyAccountArgs {
 export interface AppDeleteMyAccountResult {
 	ok: boolean;
 	blocking_league_ids: [] | [Array<string>];
-	docs_deleted: [] | [number];
+	soft_deleted: [] | [boolean];
 	reason: [] | [{ owns_non_empty_league: null } | { invalid_input: null }];
 }
 export interface AppFollowUserArgs {
@@ -239,6 +239,7 @@ export interface AppGetProfileResult {
 					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
 					daily_streak: number;
 					unlocked_achievements: Array<string>;
+					deleted_at_ms: [] | [number];
 					points: number;
 					avatar: string;
 					accuracy: number;
@@ -503,6 +504,11 @@ export interface AppLookupReferralCodeArgs {
 export interface AppLookupReferralCodeResult {
 	owner: [] | [string];
 }
+export interface AppRecoverMyAccountResult {
+	ok: boolean;
+	recovered: [] | [boolean];
+	reason: [] | [{ expired: null }];
+}
 export interface AppRedeemReferralCodeArgs {
 	code: string;
 }
@@ -556,6 +562,9 @@ export interface AppSearchProfilesResult {
 }
 export interface AppSendFriendRequestArgs {
 	target: string;
+}
+export interface AppSweepExpiredDeletionsResult {
+	swept: number;
 }
 export interface AppTransferLeagueOwnershipArgs {
 	new_owner_principal: string;
@@ -722,6 +731,7 @@ export interface _SERVICE {
 		AppLookupLeagueByInviteResult
 	>;
 	app_lookup_referral_code: ActorMethod<[AppLookupReferralCodeArgs], AppLookupReferralCodeResult>;
+	app_recover_my_account: ActorMethod<[], AppRecoverMyAccountResult>;
 	app_redeem_referral_code: ActorMethod<[AppRedeemReferralCodeArgs], undefined>;
 	app_reject_friend_request: ActorMethod<[AppRejectFriendRequestArgs], undefined>;
 	app_resolve_tournament_round: ActorMethod<
@@ -730,6 +740,7 @@ export interface _SERVICE {
 	>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
 	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
+	app_sweep_expired_deletions: ActorMethod<[], AppSweepExpiredDeletionsResult>;
 	app_transfer_league_ownership: ActorMethod<
 		[AppTransferLeagueOwnershipArgs],
 		AppTransferLeagueOwnershipResult
