@@ -10,6 +10,7 @@
 	import { listAffiliationStats, listMyAffiliations } from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
+	import { affiliationMonthlyAccuracy } from '$lib/utils/affiliation-stats.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -96,11 +97,26 @@
 
 	const hydrateSchoolRank = async (id: string): Promise<void> => {
 		try {
-			// `listAffiliationStats` returns the ranked (monthly-sorted)
-			// roster; the viewer's 1-based index is their month rank.
-			// Schools below MIN_CALLS_FOR_RANK are filtered server-side,
-			// so an unranked school yields EM_DASH.
-			const ranked = await listAffiliationStats({ kind: 'university' });
+			// `listAffiliationStats` is not guaranteed to come back
+			// month-sorted, so rank it here by monthly accuracy with the
+			// same comparator WorldsPage uses for its month scope (accuracy
+			// desc, then more calls, then stable id). The viewer's 1-based
+			// index in that order is their month rank; not-present -> EM_DASH.
+			const stats = await listAffiliationStats({ kind: 'university' });
+			const ranked = [...stats].sort((a, b) => {
+				const da = affiliationMonthlyAccuracy(a);
+				const db = affiliationMonthlyAccuracy(b);
+
+				if (da !== db) {
+					return db - da;
+				}
+
+				if (a.totalCalls !== b.totalCalls) {
+					return b.totalCalls - a.totalCalls;
+				}
+
+				return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
+			});
 			const idx = ranked.findIndex((row) => row.affiliationIdentifier === id);
 			schoolRank = idx === -1 ? undefined : idx + 1;
 		} catch {
