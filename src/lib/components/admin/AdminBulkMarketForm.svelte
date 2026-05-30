@@ -11,7 +11,7 @@
 				expiryDate: string;
 				balanceDomain?: string;
 				outcomes?: string[];
-				categories?: string[];
+				tags?: string[];
 			}[]
 		) => void;
 	}
@@ -29,7 +29,7 @@
 				'This market resolves to YES if the Bitcoin price reaches $100,000 USD on any major exchange before Jan 1, 2027.',
 			expiryDate: '2027-01-01T00:00:00Z',
 			balanceDomain: 'ViciXp',
-			categories: ['Finance', 'Crypto']
+			tags: ['crypto', 'macro']
 		},
 		{
 			title: 'Who will win the 2026 FIFA World Cup?',
@@ -37,7 +37,7 @@
 			expiryDate: '2026-07-20T21:59:59.000Z',
 			balanceDomain: 'ViciXp',
 			outcomes: ['Italy', 'Brazil', 'France', 'Argentina', 'England', 'Spain', 'Germany', 'Other'],
-			categories: ['Sports', 'Football']
+			tags: ['sports']
 		}
 	];
 
@@ -109,21 +109,21 @@
 					}
 				}
 
-				if (item.categories) {
-					if (!Array.isArray(item.categories)) {
+				if (item.tags) {
+					if (!Array.isArray(item.tags)) {
 						error = t({
 							locale: $localeStore,
-							key: 'admin.markets.bulk.error.categories_not_array',
+							key: 'admin.markets.bulk.error.tags_not_array',
 							params: { title: item.title }
 						});
 
 						return;
 					}
 
-					if (item.categories.some((c: unknown) => typeof c !== 'string')) {
+					if (item.tags.some((c: unknown) => typeof c !== 'string')) {
 						error = t({
 							locale: $localeStore,
-							key: 'admin.markets.bulk.error.category_not_string',
+							key: 'admin.markets.bulk.error.tag_not_string',
 							params: { title: item.title }
 						});
 

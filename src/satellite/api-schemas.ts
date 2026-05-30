@@ -29,14 +29,70 @@ export const UserProfileApiSchema = j.strictObject({
 	level: j.number().default(1),
 	interests: j.array(j.string()).default([]),
 	lastActiveDay: j.string().optional(),
+	// Defaults are intentionally applied at every level. The outer
+	// `.default(...)` only kicks in when `preferences` is null/undefined;
+	// legacy profile docs that have a partial `preferences` shape would
+	// otherwise trap during JsonData→Candid encoding with `missing field`
+	// because the inner `strictObject` requires every declared field.
+	// Defaulting every leaf lets those rows decode cleanly without a data
+	// migration. Mirror any change here in `src/lib/schema/profile.schema.ts`.
 	preferences: j
 		.strictObject({
-			defaultAmount: j.strictObject({
-				flow: j.string(),
-				manual: j.string()
-			})
+			defaultAmount: j
+				.strictObject({
+					flow: j.string().default('0'),
+					manual: j.string().default('0')
+				})
+				.default({ flow: '0', manual: '0' }),
+			notify: j
+				.strictObject({
+					streakReminder: j.boolean().default(true),
+					marketAlerts: j.boolean().default(true),
+					friendActivity: j.boolean().default(false),
+					weeklyDigest: j.boolean().default(true)
+				})
+				.default({
+					streakReminder: true,
+					marketAlerts: true,
+					friendActivity: false,
+					weeklyDigest: true
+				}),
+			flowSessionLength: j.number().default(10),
+			hapticsEnabled: j.boolean().default(true),
+			callsPublic: j.boolean().default(true),
+			flowTags: j.array(j.string()).default([]),
+			worldCupMode: j.boolean().default(false),
+			savedMarketIds: j.array(j.string()).default([]),
+			// Onboarding picks (Beat 1.a + 1.b). Empty string for
+			// `favoriteParticipantId` means the user skipped the team
+			// pick; empty string for `favoriteSide` means no YES/NO
+			// commitment was made. `onboardingCompleted` flips to true
+			// once the 3-beat flow finishes, regardless of which picks
+			// were ultimately persisted — it's the source of truth for
+			// whether to re-prompt the user on next sign-in. Mirror any
+			// change here in `src/lib/schema/profile.schema.ts`.
+			favoriteParticipantId: j.string().default(''),
+			favoriteSide: j.string().default(''),
+			onboardingCompleted: j.boolean().default(false)
 		})
-		.default({ defaultAmount: { flow: '0', manual: '0' } })
+		.default({
+			defaultAmount: { flow: '0', manual: '0' },
+			notify: {
+				streakReminder: true,
+				marketAlerts: true,
+				friendActivity: false,
+				weeklyDigest: true
+			},
+			flowSessionLength: 10,
+			hapticsEnabled: true,
+			callsPublic: true,
+			flowTags: [],
+			worldCupMode: false,
+			savedMarketIds: [],
+			favoriteParticipantId: '',
+			favoriteSide: '',
+			onboardingCompleted: false
+		})
 });
 
 export const RelationApiSchema = j.strictObject({

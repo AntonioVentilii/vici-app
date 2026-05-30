@@ -1,63 +1,70 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
-	import { onMount, onDestroy } from 'svelte';
-	import { cubicOut, backOut } from 'svelte/easing';
+	import { onMount, onDestroy, untrack } from 'svelte';
+	import { cubicOut } from 'svelte/easing';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { fade, fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import FlameChar from '$lib/components/characters/FlameChar.svelte';
-	import ViciChar from '$lib/components/characters/ViciChar.svelte';
+	import FlowBottomBar from '$lib/components/market/FlowBottomBar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
-	import FlowInviteCard from '$lib/components/market/FlowInviteCard.svelte';
+	import FlowComboBanner from '$lib/components/market/FlowComboBanner.svelte';
+	import FlowDeckSkeleton from '$lib/components/market/FlowDeckSkeleton.svelte';
+	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
+	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
+	import FlowFeedback from '$lib/components/market/FlowFeedback.svelte';
+	import FlowStreakBreakBanner from '$lib/components/market/FlowStreakBreakBanner.svelte';
+	import FlowTopBar from '$lib/components/market/FlowTopBar.svelte';
+	import FlowXpPops from '$lib/components/market/FlowXpPops.svelte';
 	import MotionBeat from '$lib/components/market/MotionBeat.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
-	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import SwipeHint from '$lib/components/market/SwipeHint.svelte';
+	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import {
 		BASE_XP_PER_PREDICTION,
 		isAccuracyUnlocked
 	} from '$lib/constants/flow-rewards.constants';
+	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { VXP_STAKE_STEP_VXP } from '$lib/constants/vxp-trade.constants';
+	import {
+		isStakeLadderUnlocked,
+		isVxpLadderStake,
+		VXP_DEFAULT_STAKE,
+		VXP_MIN_STAKE
+	} from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { featuredEvent, featuredEventActive } from '$lib/derived/featured-event.derived';
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
-	import { listSeriesCategories } from '$lib/services/category.services';
+	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
-	import { getMarketMetadata } from '$lib/services/market-metadata.services';
-	import { getUserMarketSignals } from '$lib/services/market-signals.services';
-	import { getFlowQueue } from '$lib/services/market.services';
-	import { getPositions } from '$lib/services/position.services';
 	import { persistDailyStreak } from '$lib/services/profile.services';
 	import { showCompanion } from '$lib/stores/companion.store';
+	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { flowSessionMaxBets, preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
+	import type { XpPop, XpPopKind } from '$lib/types/flow';
 	import type { CallSide, FlowAction, Market, MarketId } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type { UserMarketSignals } from '$lib/types/market-signals';
-	import type { Position } from '$lib/types/position';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
 	import {
 		FLOW_ART_CATEGORY_SET,
 		resolveFlowArtCategory,
 		type FlowArtCategory
 	} from '$lib/utils/flow-art.utils';
-	import { haptic } from '$lib/utils/haptics.utils';
+	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { recordMotionSwipe, type MotionBeatPayload } from '$lib/utils/motion-engine.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import {
 		applyDailyStreakBump,
 		FLAME_STAGE_LABEL_KEYS,
 		stageForStreak,
 		type FlameStage
 	} from '$lib/utils/streak.utils';
-	import {
-		assertViciXpHumanPremiumAndPayout,
-		resolveOutcomeExecutionPriceForSizing
-	} from '$lib/utils/trade.utils';
+	import { assertViciXpHumanPremium } from '$lib/utils/trade.utils';
 
-	const MAX_MARKETS = 20;
 	const maxBets = $derived(flowSessionMaxBets($preferencesStore));
 
 	const resolveFlowCategory = ({
@@ -80,10 +87,28 @@
 	let tradeAmount = $state('1.0');
 	let betsCount = $state(0);
 	let completed = $state(false);
-	let positions = $state<Position[]>([]);
-	// `seriesId → categoryId` lookup loaded once on mount; consumed by
-	// the FlowCard render loop to drive the per-card generative artwork.
-	let marketCategoryMap = $state<Map<string, string>>(new Map());
+	// Session-summary metrics. `sessionStartMs` is stamped at mount
+	// AND on every "Predict 10 more" continuation — `const` here would
+	// leak the time the user spent reading the previous FlowEnd into
+	// the next session's duration label. `correctCallsThisSession`
+	// increments each time `alignedWithCrowd` is true on a committed
+	// YES / NO swipe. Together they drive the `You called N markets
+	// in 1m 18s.` line and the SESSION ACC. stat on FlowEnd.
+	let sessionStartMs = $state(Date.now());
+	let correctCallsThisSession = $state(0);
+	// Per-category call counter for this session. Drives the
+	// data-driven Oracle line on FlowEnd ("You were early on {category}")
+	// by surfacing the category the user leaned hardest into. Keyed by
+	// resolved `FlowArtCategory` so `wc` markets are counted under
+	// `wc`, not the underlying tag.
+	let sessionCategoryCalls = $state<Partial<Record<FlowArtCategory, number>>>({});
+	// `nowMs` ticks once per second while the session is in flight so
+	// the duration label updates live before the user finishes.
+	let nowMs = $state(Date.now());
+	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
+	// the FlowCard render loop to drive the per-card generative artwork
+	// (which uses the *primary* tag — see `primaryMarketTag`).
+	let marketTagMap = $state<Record<string, string[]>>({});
 	let marketMetadataMap = $state<Map<MarketId, MarketMetadata>>(new Map());
 	let userSignals = $state<UserMarketSignals>({
 		categoryAcc: {},
@@ -122,22 +147,23 @@
 	let streakBreakBanner = $state<{ stage: FlameStage } | null>(null);
 	let flowPaused = $state(false);
 	let activeMotionBeat = $state<MotionBeatPayload | null>(null);
-	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
-	const flameLabel = $derived(t({ locale: $localeStore, key: FLAME_STAGE_LABEL_KEYS[flameStage] }));
 
-	type XpPopKind = 'normal' | 'bonus';
-
-	interface XpPop {
-		id: number;
-		amount: number;
-		combo: number;
-		side: CallSide;
-		// 'bonus' = milestone reward (laurel, larger, paired copy).
-		kind: XpPopKind;
-		// Paired copy ("First call.", "Ten deep.") shown above the
-		// number on bonus pops; undefined for normal pops.
-		copy?: string;
+	// Ambient post-swipe Oracle pop — used for the non-hard-pause path
+	// where the user gets a brief "Nice call · +N VXP" affirmation that
+	// fades on its own ~1.3 s later. Skip commits get the shorter 520 ms
+	// "SKIPPED" chip variant. Hard-pause beats (`motion.beat.hardPause`)
+	// still go through `MotionBeat` so we don't double-stack overlays.
+	interface ActiveFeedback {
+		result: FlowAction;
+		xp: number;
+		correct: boolean;
+		streakHit: boolean;
+		// monotonic key so consecutive commits remount the component.
+		key: number;
 	}
+	let activeFeedback = $state<ActiveFeedback | null>(null);
+	let feedbackKeySeq = 0;
+	const flameStage: FlameStage = $derived(stageForStreak(dailyStreak));
 
 	let xpPops = $state<XpPop[]>([]);
 	let popCounter = 0;
@@ -149,42 +175,94 @@
 	// sites read the same way.
 	const vibrate = haptic;
 
+	// Session duration ticker. 1 s cadence is plenty — the duration
+	// label renders to seconds (`Xm Ys` / `Ys`) and the user never sees
+	// sub-second precision. Stops when `completed` flips true so the
+	// FlowEnd label freezes at the final value.
+	$effect(() => {
+		if (completed) {
+			return;
+		}
+
+		const id = setInterval(() => {
+			nowMs = Date.now();
+		}, 1000);
+
+		return () => clearInterval(id);
+	});
+
+	const sessionDurationLabel = $derived.by(() => {
+		const secs = Math.max(0, Math.floor((nowMs - sessionStartMs) / 1000));
+		const m = Math.floor(secs / 60);
+		const s = secs % 60;
+
+		return m > 0 ? `${m}m ${s}s` : `${s}s`;
+	});
+
+	const sessionAccuracy = $derived(betsCount > 0 ? correctCallsThisSession / betsCount : 0);
+
+	// Top category by call count this session. Drives the FlowEnd
+	// Oracle line ("You were early on {category}"). Ties resolve to
+	// the first key the user committed in — `Object.entries` preserves
+	// insertion order on the plain object we mutate via spread. Returns
+	// undefined when the user hasn't placed any calls yet so FlowEnd
+	// can fall back to the locale-default accent.
+	const topSessionCategory = $derived.by<FlowArtCategory | undefined>(() => {
+		let best: FlowArtCategory | undefined;
+		let bestCount = 0;
+
+		for (const [cat, count] of Object.entries(sessionCategoryCalls) as Array<
+			[FlowArtCategory, number]
+		>) {
+			if (count > bestCount) {
+				best = cat;
+				bestCount = count;
+			}
+		}
+
+		return best;
+	});
+
+	// Daily goal heuristic — until the satellite exposes a per-user
+	// daily target, default to 10 predictions/day. Progress is capped
+	// at 100 % so the bar / percent never overflows mid-session.
+	const DAILY_GOAL_TARGET = 10;
+	const dailyGoalDone = $derived(Math.min(betsCount, DAILY_GOAL_TARGET));
+	const dailyGoalFraction = $derived(dailyGoalDone / DAILY_GOAL_TARGET);
+
 	onMount(async () => {
 		document.body.classList.add('overflow-hidden');
 
 		flowTradeService.startSession();
 
 		try {
-			const [queue, userPositions, seriesCategories] = await Promise.all([
-				getFlowQueue($balanceDomain),
-				nonNullish($userStore.user) ? getPositions($balanceDomain) : Promise.resolve([]),
-				listSeriesCategories()
-			]);
+			// Pre-warmed deck from `flow.store` — populated on app
+			// init and refreshed in the background on input changes.
+			// `peekFlow` validates the cached payload against the
+			// session's current balance domain and featured-event
+			// scope; a mismatch (a rebuild for the new inputs is
+			// still in flight) or a cold start falls through to an
+			// on-demand build so the user never sees markets from
+			// the previous scope.
+			const expectedTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
+			const cached = peekFlow({
+				domain: $balanceDomain,
+				featuredEventTag: expectedTag
+			});
+			const prepared: PreparedFlow = nonNullish(cached)
+				? cached
+				: await prepareFlow({
+						domain: $balanceDomain,
+						featuredEventTag: expectedTag,
+						signedIn: nonNullish($userStore.user)
+					});
 
-			markets = queue.slice(0, MAX_MARKETS);
-			positions = userPositions;
-			marketCategoryMap = new Map(seriesCategories.map((m) => [m.seriesId, m.categoryId]));
-
-			const metadataEntries: [MarketId, MarketMetadata][] = [];
-
-			await Promise.all(
-				markets.map(async (m) => {
-					const doc = await getMarketMetadata(m.id).catch(() => undefined);
-
-					if (doc) {
-						metadataEntries.push([m.id, doc]);
-					}
-				})
-			);
-			marketMetadataMap = new Map(metadataEntries);
-
-			if (nonNullish($userStore.user)) {
-				userSignals = await getUserMarketSignals($balanceDomain).catch(() => ({
-					categoryAcc: {},
-					priorCalls: {},
-					followedLean: {}
-				}));
-			}
+			({
+				markets,
+				tagMap: marketTagMap,
+				metadataById: marketMetadataMap,
+				signals: userSignals
+			} = prepared);
 
 			const { profile } = $userStore;
 
@@ -196,16 +274,13 @@
 			const fromProfile = $userStore.profile?.preferences?.defaultAmount?.flow;
 
 			if (isViciXp($balanceDomain)) {
-				const candidate = fromProfile ?? String(VXP_STAKE_STEP_VXP);
-				const n = Number(candidate);
+				// Restore the user's last Flow stake from their profile,
+				// but reject it (and fall back to `VXP_MIN_STAKE`) if it
+				// isn't a current ladder rung — the ladder may have been
+				// reshuffled since the value was persisted.
+				const candidate = Number(fromProfile);
 
-				tradeAmount =
-					Number.isFinite(n) &&
-					n >= VXP_STAKE_STEP_VXP &&
-					n % VXP_STAKE_STEP_VXP === 0 &&
-					Number.isInteger(n)
-						? String(n)
-						: String(VXP_STAKE_STEP_VXP);
+				tradeAmount = isVxpLadderStake(candidate) ? String(candidate) : String(VXP_MIN_STAKE);
 			} else if (fromProfile) {
 				tradeAmount = fromProfile;
 			}
@@ -219,6 +294,20 @@
 	onDestroy(() => {
 		document.body.classList.remove('overflow-hidden');
 		void flowTradeService.endSession();
+
+		// Promote the pre-built follow-up deck and rebuild a fresh
+		// `next` excluding the markets just shown — re-entering /flow
+		// opens on an unseen deck without a network round-trip.
+		//
+		// Only on a session that made progress. A no-op visit (open
+		// /flow, swipe nothing, leave) must not advance: `advanceFlow`
+		// promotes a `next` deck that excludes the entire current deck,
+		// so burning it here would surface markets the user never saw —
+		// or, on a small inventory, an empty follow-up deck — the next
+		// time they enter Flow.
+		if (betsCount > 0) {
+			advanceFlow();
+		}
 	});
 
 	const spawnXpPop = ({
@@ -350,6 +439,14 @@
 			// bumps via `applyDailyStreakBump` above; streak progresses
 			// on any swipe, YES / NO / SKIP all count at that layer.
 			recordMotionSwipe({ side: 'SKIP', dailyStreak });
+			feedbackKeySeq += 1;
+			activeFeedback = {
+				result: 'SKIP',
+				xp: 0,
+				correct: false,
+				streakHit: false,
+				key: feedbackKeySeq
+			};
 			finishCommitAdvance();
 
 			return;
@@ -358,16 +455,7 @@
 		const executeTrade = async () => {
 			try {
 				if (isViciXp(currentMarket.balanceDomain)) {
-					const executionPrice = resolveOutcomeExecutionPriceForSizing({
-						market: currentMarket,
-						action,
-						orderType: 'MARKET'
-					});
-
-					assertViciXpHumanPremiumAndPayout({
-						amountStr: tradeAmount,
-						executionPrice
-					});
+					assertViciXpHumanPremium({ amountStr: tradeAmount });
 				}
 
 				await flowTradeService.executeTrade({
@@ -396,6 +484,20 @@
 		betsCount += 1;
 		streak += 1;
 
+		// Tally this market under its resolved category so the FlowEnd
+		// Oracle line can spotlight whichever category the user leaned
+		// hardest into ("You were early on crypto", etc.).
+		const cat = resolveFlowCategory({
+			categoryId: primaryMarketTag(
+				(marketTagMap[currentMarket.id] ?? []) as ReadonlyArray<MarketTag>
+			),
+			marketId: currentMarket.id
+		});
+		sessionCategoryCalls = {
+			...sessionCategoryCalls,
+			[cat]: (sessionCategoryCalls[cat] ?? 0) + 1
+		};
+
 		const awarded = BASE_XP_PER_PREDICTION * comboMultiplier;
 		xp += awarded;
 		spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
@@ -415,6 +517,10 @@
 		const isContrarian = yesProb <= 0.25 || yesProb >= 0.75;
 		const alignedWithCrowd =
 			(action === 'YES' && yesProb >= 0.5) || (action === 'NO' && yesProb < 0.5);
+
+		if (alignedWithCrowd) {
+			correctCallsThisSession += 1;
+		}
 
 		const motion = recordMotionSwipe({
 			side: action,
@@ -450,13 +556,22 @@
 				kind: 'bonus',
 				copy: popCopy
 			});
-			vibrate(motion.beat?.kind === 'milestone-1' ? 'triple-tap' : 'double-pulse');
+		}
+
+		// Single beat-aware vibrate — fires once per beat, with the
+		// envelope mapped from `beat.kind`. On milestone-1 the
+		// `firm-tap` swipe-commit haptic has already fired upstream;
+		// the milestone-1 envelope is itself a `triple-tap`, so the
+		// commit + milestone firing back-to-back is intentional.
+		const beatHaptic = hapticForBeat(motion.beat?.kind);
+
+		if (beatHaptic) {
+			vibrate(beatHaptic);
 		}
 
 		if (motion.beat?.hardPause) {
 			activeMotionBeat = motion.beat;
 			flowPaused = true;
-			vibrate('double-pulse');
 
 			return;
 		}
@@ -464,6 +579,18 @@
 		if (motion.beat) {
 			activeMotionBeat = motion.beat;
 		}
+
+		// Ambient post-swipe feedback — only spawned on the non-hard-pause
+		// path so we don't double-stack overlays with `MotionBeat`. The
+		// pop self-dismisses in 1.3 s (520 ms for skip, handled above).
+		feedbackKeySeq += 1;
+		activeFeedback = {
+			result: action,
+			xp: awarded + motion.bonusXp,
+			correct: alignedWithCrowd,
+			streakHit: motion.bonusXp > 0 && motion.beat?.kind === 'streak-tier-up',
+			key: feedbackKeySeq
+		};
 
 		finishCommitAdvance();
 	};
@@ -481,9 +608,65 @@
 		goto(resolve(AppPath.Home));
 	};
 
+	// "Predict 10 more" CTA on FlowEnd — rebuilds a fresh deck and
+	// zeroes the in-session counters. The lifetime / motion-engine
+	// state stays untouched (it tracks across sessions). XP earned in
+	// the prior session has already been credited via the trade flow,
+	// so we don't re-award it.
+	const handleContinueSession = async () => {
+		const expectedTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
+		const excluded = markets.slice(0, currentIndex + 1).map((m) => m.id);
+
+		completed = false;
+		loading = true;
+
+		try {
+			const prepared = await prepareFlow({
+				domain: $balanceDomain,
+				featuredEventTag: expectedTag,
+				signedIn: nonNullish($userStore.user),
+				exclude: excluded
+			});
+
+			({
+				markets,
+				tagMap: marketTagMap,
+				metadataById: marketMetadataMap,
+				signals: userSignals
+			} = prepared);
+			currentIndex = 0;
+			betsCount = 0;
+			correctCallsThisSession = 0;
+			sessionCategoryCalls = {};
+			xp = 0;
+			streak = 0;
+			lastStreakShown = 0;
+			// Reset BOTH the start and the now-tick — otherwise the next
+			// FlowEnd's duration_line measures from the original mount,
+			// including the time spent reading the previous FlowEnd.
+			sessionStartMs = Date.now();
+			nowMs = sessionStartMs;
+		} catch (e: unknown) {
+			console.error('Failed to refresh Flow deck', e);
+		} finally {
+			loading = false;
+		}
+	};
+
+	const handleSeePortfolio = () => {
+		goto(resolve(AppPath.Portfolio));
+	};
+
+	// The back-face peg-rail owns stake selection on the VXP balance
+	// domain. The playground domains (USD / ICP) use fractional amounts
+	// that the peg-rail doesn't cover, so we keep a small bottom-bar
+	// stepper for those — see `playgroundOnly` gate around `FlowBottomBar`
+	// in the template.
+	const playgroundOnly = $derived(!isViciXp($balanceDomain));
+
 	const incrementAmount = (direction: 1 | -1) => {
-		const step = isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1;
-		const min = isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1;
+		const step = 0.1;
+		const min = 0.1;
 		const current = Number(tradeAmount) || 0;
 		const next = Math.max(min, Number((current + direction * step).toFixed(2)));
 		tradeAmount = String(next);
@@ -534,6 +717,44 @@
 	const lifetimeTotalTrades = $derived($userStore.profile?.totalTrades ?? 0);
 	const lifetimeAccuracy = $derived($userStore.profile?.accuracy ?? 0);
 	const accuracyUnlocked = $derived(isAccuracyUnlocked(lifetimeTotalTrades));
+
+	// Enforce the default rung while the stake ladder is locked. Below the
+	// unlock threshold the slider is hidden (FlowCardBack), so a previously
+	// persisted non-default VXP stake must not leak through to the
+	// committed trade — pin `tradeAmount` to the default. Only the gating
+	// inputs are tracked; the stake read/write is untracked so the effect
+	// can't loop on its own write.
+	$effect(() => {
+		const locked = isViciXp($balanceDomain) && !isStakeLadderUnlocked(lifetimeTotalTrades);
+
+		if (!locked) {
+			return;
+		}
+
+		untrack(() => {
+			const pinned = String(VXP_DEFAULT_STAKE);
+
+			if (tradeAmount !== pinned) {
+				tradeAmount = pinned;
+			}
+		});
+	});
+
+	// Top bar deck-scope label: when the featured event is active the
+	// deck is filtered to it (e.g. "WORLD CUP"); otherwise fall back
+	// to a neutral all-markets label. Prefers `shortTitle` over
+	// `title` so the chip stays narrow (a full "2026 FIFA WORLD CUP"
+	// crowds the streak chip out of the row). Uppercased to match
+	// the chip's allcaps tracking.
+	const topBarCategoryLabel = $derived.by(() => {
+		if ($featuredEventActive) {
+			const e = $featuredEvent;
+
+			return (e.shortTitle ?? e.title).toUpperCase();
+		}
+
+		return t({ locale: $localeStore, key: 'flow.deck.all_markets' });
+	});
 </script>
 
 <div
@@ -542,195 +763,67 @@
 	class:is-paused={flowPaused}
 >
 	{#if loading}
-		<div class="flex h-full w-full flex-col items-center justify-center gap-4" in:fade>
-			<LoadingSpinner />
-			<p class="text-muted-foreground font-medium">
-				{t({ locale: $localeStore, key: 'flow.preparing' })}
-			</p>
+		<div class="flow-skeleton-shell" in:fade>
+			<FlowDeckSkeleton />
 		</div>
 	{:else if markets.length === 0}
-		<!-- Empty-deck state. VICI in `thinking` mood holds the canvas,
-		     single-line copy, no escalation, no celebration. -->
-		<div class="empty-deck flex h-full w-full flex-col items-center justify-center px-6">
-			<div class="relative z-10 max-w-md text-center" in:fly={{ y: 20, duration: 500 }}>
-				<div class="empty-deck-char">
-					<ViciChar mood="thinking" size={96} />
-				</div>
-				<h2 class="empty-deck-title">{t({ locale: $localeStore, key: 'flow.empty.title' })}</h2>
-				<p class="empty-deck-sub">{t({ locale: $localeStore, key: 'flow.empty.sub' })}</p>
-				<Button onclick={backToMarkets}>
-					{t({ locale: $localeStore, key: 'flow.back_to_markets' })}
-				</Button>
-			</div>
-		</div>
+		<FlowEmptyDeck onBackToMarkets={backToMarkets} />
 	{:else if completed}
-		<!-- FlowEnd — brand voice ("Vici." serif-italic display, terse
-		     copy). No confetti / no green-check celebration; the
-		     accomplishment is the laurel + the numbers, not noise. -->
-		<div class="flow-end">
-			<div class="flow-end-inner" in:fly={{ y: 20, duration: 500 }}>
-				<h2 class="flow-end-title display">Vici.</h2>
-				<p class="flow-end-sub">
-					{#if betsCount === 0}
-						{t({ locale: $localeStore, key: 'flow.end.no_calls' })}
-					{:else if betsCount === 1}
-						{t({ locale: $localeStore, key: 'flow.end.one_call' })}
-					{:else}
-						{t({
-							locale: $localeStore,
-							key: 'flow.end.many_calls',
-							params: { count: betsCount }
-						})}
-					{/if}
-				</p>
-
-				<div class="flow-end-grid">
-					<div class="flow-end-cell">
-						<div class="allcaps flow-end-cell-label">
-							{t({ locale: $localeStore, key: 'flow.session_xp' })}
-						</div>
-						<div class="num flow-end-cell-value">+{xp}</div>
-					</div>
-					<div class="flow-end-cell flow-end-cell-streak" class:is-hot={dailyStreak >= 7}>
-						<div class="flow-end-cell-flame">
-							<FlameChar animate={dailyStreak >= 1} size={28} stage={flameStage} />
-						</div>
-						<div class="allcaps flow-end-cell-label">{flameLabel}</div>
-						<div class="num flow-end-cell-value">{dailyStreak}d</div>
-					</div>
-					<div class="flow-end-cell">
-						{#if accuracyUnlocked}
-							<div class="allcaps flow-end-cell-label">
-								{t({ locale: $localeStore, key: 'profile.dashboard.accuracy_short' })}
-							</div>
-							<div class="num flow-end-cell-value">{Math.round(lifetimeAccuracy)}%</div>
-						{:else}
-							<div class="allcaps flow-end-cell-label">
-								{t({ locale: $localeStore, key: 'profile.dashboard.calls_short' })}
-							</div>
-							<div class="num flow-end-cell-value">{lifetimeTotalTrades + betsCount}</div>
-							<div class="flow-end-cell-foot">
-								{t({ locale: $localeStore, key: 'flow.until_accuracy' })}
-							</div>
-						{/if}
-					</div>
-				</div>
-
-				<FlowInviteCard sessionXp={xp} />
-				<Button onclick={backToMarkets}>
-					{t({ locale: $localeStore, key: 'flow.back_to_markets' })}
-				</Button>
-			</div>
-		</div>
+		<FlowEnd
+			{accuracyUnlocked}
+			archetype={$userStore.profile?.archetype}
+			{betsCount}
+			{dailyGoalDone}
+			{dailyGoalFraction}
+			dailyGoalTarget={DAILY_GOAL_TARGET}
+			{dailyStreak}
+			{flameStage}
+			{lifetimeAccuracy}
+			{lifetimeTotalTrades}
+			onBackToMarkets={backToMarkets}
+			onContinueSession={handleContinueSession}
+			onSeePortfolio={handleSeePortfolio}
+			{sessionAccuracy}
+			{sessionDurationLabel}
+			{topSessionCategory}
+			{xp}
+		/>
 	{:else}
-		<header class="flow-topbar" in:fade>
-			<button
-				class="flow-icon-btn"
-				aria-label={t({ locale: $localeStore, key: 'flow.exit_aria' })}
-				onclick={backToMarkets}
-			>
-				<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path
-						d="M6 18L18 6M6 6l12 12"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-						stroke-width="2.5"
-					/>
-				</svg>
-			</button>
-
-			<div
-				class="flow-progress"
-				aria-label={t({ locale: $localeStore, key: 'flow.progress_aria' })}
-			>
-				{#each Array(maxBets) as _, i (i)}
-					<div class="flow-progress-seg">
-						<div
-							style:--p={i < betsCount ? '100%' : i === betsCount ? '30%' : '0%'}
-							class="flow-progress-fill"
-							class:is-current={i === betsCount}
-							class:is-full={i < betsCount}
-						></div>
-					</div>
-				{/each}
-			</div>
-
-			<div class="flow-stats">
-				<div
-					class="flow-stat flow-stat-flame"
-					class:is-hot={dailyStreak >= 7}
-					aria-label={t({ locale: $localeStore, key: 'flow.daily_streak_aria' })}
-				>
-					<FlameChar animate={dailyStreak >= 1} size={20} stage={flameStage} />
-					<span class="flow-flame-meta">
-						<span class="flow-flame-label">{flameLabel}</span>
-						<span class="num flow-flame-count">{dailyStreak}d</span>
-					</span>
-				</div>
-				<div
-					class="flow-stat flow-stat-xp"
-					aria-label={t({ locale: $localeStore, key: 'flow.xp_aria' })}
-				>
-					<span class="text-laurel text-[10px] font-black tracking-widest">XP</span>
-					<span class="text-foreground font-mono tabular-nums">{xp}</span>
-				</div>
-			</div>
-		</header>
+		<!-- Persistent Flow header: VICI wordmark + deck-scope chip +
+		     bolt streak chip on the left; bell on the right. Secondary
+		     row carries `idx / total` and `+xp VXP this session` over a
+		     thin progress bar. Tapping the wordmark exits Flow. -->
+		<FlowTopBar
+			{betsCount}
+			categoryLabel={topBarCategoryLabel}
+			{dailyStreak}
+			{flameStage}
+			{maxBets}
+			onExit={backToMarkets}
+			{xp}
+		/>
 
 		{#if lastStreakShown > 0}
 			{#key lastStreakShown}
-				<div
-					class="combo-banner"
-					in:fly={{ y: -8, duration: 300, easing: backOut }}
-					out:fade={{ duration: 250 }}
-				>
-					<span>
-						{t({
-							locale: $localeStore,
-							key: 'flow.streak_combo',
-							params: { count: lastStreakShown }
-						})}
-					</span>
-					<span class="combo-banner-xp">
-						{t({
-							locale: $localeStore,
-							key: 'flow.streak_xp_multiplier',
-							params: { multi: lastStreakShown >= 5 ? 3 : 2 }
-						})}
-					</span>
-				</div>
+				<FlowComboBanner count={lastStreakShown} />
 			{/key}
 		{/if}
 
 		{#if streakBreakBanner}
-			<!-- Streak-break choreography: single low thud (haptic fires in
-			     handleAction), banner names the stage that ended, fresh start
-			     at SPARK. No rescues, no second chances. -->
-			<div class="streak-break" in:fly={{ y: -8, duration: 300, easing: backOut }} out:fade>
-				<span class="serif-italic">
-					{t({
-						locale: $localeStore,
-						key: 'flow.stage_ended',
-						params: {
-							stage: t({
-								locale: $localeStore,
-								key: FLAME_STAGE_LABEL_KEYS[streakBreakBanner.stage]
-							})
-						}
-					})}
-				</span>
-				<span class="streak-break-sub">
-					{t({ locale: $localeStore, key: 'flow.fresh_start' })}
-				</span>
-			</div>
+			<FlowStreakBreakBanner stage={streakBreakBanner.stage} />
 		{/if}
 
 		<main class="flow-stage">
 			<div class="flow-card-wrap">
 				{#each visibleCards as market, i (market?.id)}
 					{@const isCurrent = i === 0}
-					{@const category = marketCategoryMap.get(market.id)}
-					{@const flowCategory = resolveFlowCategory({ categoryId: category, marketId: market.id })}
+					{@const primaryTag = primaryMarketTag(
+						(marketTagMap[market.id] ?? []) as ReadonlyArray<MarketTag>
+					)}
+					{@const flowCategory = resolveFlowCategory({
+						categoryId: primaryTag,
+						marketId: market.id
+					})}
 					{@const metadata = marketMetadataMap.get(market.id)}
 					{@const priorCall = userSignals.priorCalls[market.id]}
 					{@const followedLean = userSignals.followedLean[market.id]}
@@ -739,10 +832,10 @@
 						style="z-index: {20 - i}; --depth: {i};"
 						class="flow-card-slot"
 						class:is-back={!isCurrent}
-						in:fly={isCurrent && currentIndex === 0
-							? { y: 300, duration: 600, easing: cubicOut }
-							: { y: 30, opacity: 0, duration: 400, easing: cubicOut }}
-						out:fly={{ x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
+						in:fade={{ duration: prefersReducedMotion() ? 0 : 200, easing: cubicOut }}
+						out:fly={prefersReducedMotion()
+							? { duration: 0 }
+							: { x: exitX, y: exitY, duration: 450, opacity: 0, easing: cubicOut }}
 					>
 						<FlowCard
 							category={flowCategory}
@@ -750,12 +843,14 @@
 							committedAction={market.id === committedMarketId ? committedAction : null}
 							{followedLean}
 							interactive={isCurrent && !flowPaused}
-							isLimitOrderNo={isNullish(market.bestBid)}
-							isLimitOrderYes={isNullish(market.bestAsk)}
+							lifetimeCalls={lifetimeTotalTrades}
+							locked={isCurrent && flowPaused}
 							{market}
 							{metadata}
 							onAction={handleAction}
-							position={positions.find((p) => p.marketId === market.id)}
+							onStakeChange={(next) => {
+								tradeAmount = next;
+							}}
 							{priorCall}
 							signedIn={nonNullish($userStore.user)}
 							{tradeAmount}
@@ -764,30 +859,14 @@
 				{/each}
 			</div>
 
-			<div class="xp-pops" aria-hidden="true">
-				{#each xpPops as pop (pop.id)}
-					<div
-						class="xp-pop"
-						class:xp-pop-bonus={pop.kind === 'bonus'}
-						class:xp-pop-no={pop.kind === 'normal' && pop.side === 'NO'}
-						class:xp-pop-yes={pop.kind === 'normal' && pop.side === 'YES'}
-					>
-						{#if pop.kind === 'bonus' && pop.copy}
-							<span class="xp-pop-copy serif-italic">{pop.copy}</span>
-						{/if}
-						<span class="xp-pop-amount num">+{pop.amount}</span>
-						<span class="xp-pop-label">
-							{pop.combo > 1
-								? t({
-										locale: $localeStore,
-										key: 'flow.xp_combo',
-										params: { combo: pop.combo }
-									})
-								: t({ locale: $localeStore, key: 'flow.xp_label' })}
-						</span>
-					</div>
-				{/each}
-			</div>
+			<FlowXpPops pops={xpPops} />
+
+			<!-- Gesture coach — first-run only. Cycles through NO / YES /
+			     SKIP / TAP / IDLE phases while the cards drift in
+			     sympathy via the `data-coach-phase` CSS in app.css.
+			     Self-dismisses on any pointer-down; persists dismissal
+			     in localStorage. -->
+			<FlowCoach surface="flow" />
 
 			{#if activeMotionBeat}
 				<MotionBeat
@@ -796,95 +875,38 @@
 					onDone={onMotionBeatDone}
 				/>
 			{/if}
+
+			{#if activeFeedback}
+				{#key activeFeedback.key}
+					<FlowFeedback
+						correct={activeFeedback.correct}
+						onDone={() => (activeFeedback = null)}
+						result={activeFeedback.result}
+						streakHit={activeFeedback.streakHit}
+						xp={activeFeedback.xp}
+					/>
+				{/key}
+			{/if}
 		</main>
 
-		<footer class="flow-bottombar">
-			<div class="flow-amount">
-				<button
-					class="flow-amount-btn"
-					aria-label={t({ locale: $localeStore, key: 'flow.amount.decrease_aria' })}
-					onclick={() => incrementAmount(-1)}
-				>
-					−
-				</button>
-				<div class="flow-amount-field">
-					<input
-						class="flow-amount-input"
-						inputmode="decimal"
-						min={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
-						step={isViciXp($balanceDomain) ? VXP_STAKE_STEP_VXP : 0.1}
-						type="number"
-						bind:value={tradeAmount}
-					/>
-					<span class="flow-amount-unit">{$playgroundFlowTradeUnitLabel}</span>
-				</div>
-				<button
-					class="flow-amount-btn"
-					aria-label={t({ locale: $localeStore, key: 'flow.amount.increase_aria' })}
-					onclick={() => incrementAmount(1)}
-				>
-					+
-				</button>
-			</div>
+		<!-- Bottom-of-deck affordance rail — chevrons drift outward on a
+		     1.7 s ping cycle while the TAP / SKIP labels call out the
+		     non-swipe gestures. Pure visual sugar; gestures are wired in
+		     FlowCard. -->
+		<SwipeHint />
 
-			<div class="flow-actions">
-				<button
-					class="flow-action flow-action-no"
-					aria-label={t({ locale: $localeStore, key: 'market.forecast.predict_no' })}
-					onclick={() => handleAction('NO')}
-				>
-					<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M6 18L18 6M6 6l12 12"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="3"
-						/>
-					</svg>
-					<span class="flow-action-label">NO</span>
-				</button>
-
-				<button
-					class="flow-action flow-action-skip"
-					aria-label={t({ locale: $localeStore, key: 'flow.skip_aria' })}
-					onclick={() => handleAction('SKIP')}
-				>
-					<svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M5 12l7-7 7 7M5 19l7-7 7 7"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="3"
-						/>
-					</svg>
-					<span class="flow-action-label">SKIP</span>
-				</button>
-
-				<button
-					class="flow-action flow-action-yes"
-					aria-label={t({ locale: $localeStore, key: 'market.forecast.predict_yes' })}
-					onclick={() => handleAction('YES')}
-				>
-					<svg class="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-						<path
-							d="M5 13l4 4L19 7"
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="3.5"
-						/>
-					</svg>
-					<span class="flow-action-label">YES</span>
-				</button>
-			</div>
-
-			<div class="flow-kbd">
-				<kbd>←</kbd> NO
-				<span>·</span>
-				<kbd>↑</kbd> SKIP
-				<span>·</span>
-				<kbd>→</kbd> YES
-			</div>
-		</footer>
+		{#if playgroundOnly}
+			<!-- Playground (USD / ICP) stake stepper. VXP uses the
+			     back-face peg-rail and renders no bottom bar. -->
+			<FlowBottomBar
+				min={0.1}
+				onAction={handleAction}
+				onIncrement={incrementAmount}
+				step={0.1}
+				unitLabel={$playgroundFlowTradeUnitLabel}
+				bind:tradeAmount
+			/>
+		{/if}
 	{/if}
 </div>
 
@@ -916,6 +938,12 @@
 		flex-direction: column;
 		background:
 			radial-gradient(circle at 50% -10%, var(--laurel-glow), transparent 34%), var(--bg-base);
+		animation: flow-fade-in 220ms var(--ease-stage) both;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-shell {
+			animation: none;
+		}
 	}
 
 	.flow-shell.is-active {
@@ -925,246 +953,37 @@
 		overflow: hidden;
 	}
 
-	.flow-topbar {
-		position: sticky;
-		top: 0;
-		z-index: 60;
-		display: grid;
-		grid-template-columns: auto 1fr auto;
-		align-items: center;
-		gap: 0.65rem;
-		padding: calc(env(safe-area-inset-top, 0px) + 0.45rem) 0.8rem 0.45rem
-			calc(env(safe-area-inset-left, 0px) + 0.8rem);
-		padding-right: calc(env(safe-area-inset-right, 0px) + 0.8rem);
-		background: linear-gradient(
-			to bottom,
-			color-mix(in srgb, var(--bg-base) 96%, transparent),
-			color-mix(in srgb, var(--bg-base) 72%, transparent)
-		);
-		backdrop-filter: saturate(180%) blur(12px);
-		-webkit-backdrop-filter: saturate(180%) blur(12px);
-		border-bottom: 1px solid var(--border-base);
-	}
-
-	.flow-icon-btn {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		border-radius: 999px;
-		background: var(--border-base);
-		color: var(--text-base);
-		transition:
-			transform 0.15s ease,
-			background-color 0.2s ease;
-	}
-	.flow-icon-btn:active {
-		transform: scale(0.985);
-		background: var(--border-strong);
-	}
-
-	.flow-progress {
-		display: flex;
-		align-items: center;
-		gap: 3px;
-		min-width: 0;
-	}
-	.flow-progress-seg {
-		flex: 1;
-		height: 3px;
-		border-radius: 999px;
-		background: var(--border-base);
-		overflow: hidden;
-	}
-	.flow-progress-fill {
-		height: 100%;
-		width: var(--p);
-		background: linear-gradient(90deg, var(--color-primary), var(--laurel));
-		border-radius: inherit;
-		transition: width 450ms cubic-bezier(0.22, 1, 0.36, 1);
-	}
-	.flow-progress-fill.is-current {
-		animation: progressPulse 1.6s ease-in-out infinite;
-	}
-	@keyframes progressPulse {
-		0%,
-		100% {
-			opacity: 0.6;
-		}
-		50% {
-			opacity: 1;
-		}
-	}
-
-	.flow-stats {
-		display: flex;
-		align-items: center;
-		gap: 6px;
-	}
-	.flow-stat {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 4px 8px;
-		border-radius: 999px;
-		font-weight: 900;
-		font-size: 12px;
-		line-height: 1;
-	}
-	/* Daily-streak Flame chip: shows the current stage + day count.
-	   Flame appears in the Flow header + home screen only (never on
-	   every screen); always-visible here, never dominant. Activates
-	   `is-hot` from FLAME stage upward. */
-	.flow-stat-flame {
-		gap: 6px;
-		padding: 4px 9px 4px 6px;
-		background: var(--bg-surface);
-		color: var(--text-muted);
-		transition:
-			transform var(--d-state) var(--ease-vici),
-			background-color var(--d-state) var(--ease-vici);
-	}
-	.flow-stat-flame.is-hot {
-		background: linear-gradient(135deg, var(--color-primary), var(--laurel));
-		color: var(--color-primary-foreground);
-		box-shadow: 0 4px 12px var(--laurel-glow);
-	}
-	.flow-flame-meta {
-		display: inline-flex;
-		flex-direction: column;
-		align-items: flex-start;
-		line-height: 1;
-	}
-	.flow-flame-label {
-		font-size: 9px;
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-		opacity: 0.85;
-	}
-	.flow-flame-count {
-		font-size: 11px;
-		font-weight: 600;
-	}
-	@keyframes hotPulse {
-		0%,
-		100% {
-			transform: scale(1);
-		}
-		50% {
-			transform: scale(1.06);
-		}
-	}
-	.flow-stat-xp {
-		background: var(--bg-surface);
-		display: inline-flex;
-		gap: 5px;
-		align-items: baseline;
-		font-variant-numeric: tabular-nums;
-	}
-
-	.combo-banner {
-		position: fixed;
-		left: 50%;
-		top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
-		transform: translateX(-50%);
-		z-index: 65;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.75rem;
-		padding: 10px 16px;
-		border-radius: 999px;
-		background: linear-gradient(135deg, var(--color-primary), var(--laurel));
-		color: var(--color-primary-foreground);
-		font-size: 13px;
-		font-weight: 900;
-		letter-spacing: 0.02em;
-		box-shadow: 0 14px 40px rgba(226, 184, 66, 0.4);
-		pointer-events: none;
-	}
-	.combo-banner-xp {
-		padding: 3px 8px;
-		border-radius: 999px;
-		background: color-mix(in srgb, var(--color-primary-foreground) 16%, transparent);
-		font-size: 11px;
-	}
-
-	/* Empty-deck negative state. VICI in `thinking` mood owns the
-	   canvas; copy is single-line; no celebration; no escalation. */
-	.empty-deck {
+	/* Cold-load wrapper: lets FlowDeckSkeleton fill the shell so its in-slot
+	   card skeleton lands in the same box the real deck will occupy. */
+	.flow-skeleton-shell {
 		position: relative;
-		background: var(--bg-base);
-	}
-	.empty-deck-char {
-		margin-bottom: 1.5rem;
-		display: flex;
-		justify-content: center;
-	}
-	.empty-deck-title {
-		font-family: var(--font-display);
-		font-size: var(--t-32);
-		font-weight: 600;
-		letter-spacing: var(--tracking-snug);
-		color: var(--text-base);
-		margin: 0 0 0.5rem;
-	}
-	.empty-deck-sub {
-		font-size: var(--t-14);
-		color: var(--text-muted);
-		margin: 0 0 1.5rem;
+		flex: 1 1 auto;
+		min-height: 0;
 	}
 
-	/* Streak-break banner — shows once when the previous-day gap broke
-	   the streak. Mute palette (parchment-mute, no laurel celebration);
-	   spec is explicit that the break is honest, not consoling. */
-	.streak-break {
-		position: fixed;
-		left: 50%;
-		top: calc(env(safe-area-inset-top, 0px) + 3.5rem);
-		transform: translateX(-50%);
-		z-index: 65;
-		display: inline-flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 2px;
-		padding: 8px 16px;
-		border-radius: var(--r-pill);
-		background: var(--bg-popover);
-		border: 1px solid var(--border-strong);
-		color: var(--text-muted);
-		font-size: 13px;
-		box-shadow: var(--shadow-card);
-	}
-	.streak-break-sub {
-		font-size: 10px;
-		font-weight: 600;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-		color: var(--text-muted);
-		opacity: 0.56;
-	}
-
+	/* Card stack: relative flex:1 container with the card absolutely
+	   positioned inside so it fills the stage flush against the topbar
+	   (no vertical centering, no max-height cap). */
 	.flow-stage {
 		position: relative;
 		flex: 1 1 auto;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.35rem 1rem 0.5rem;
+		padding: 0.5rem 1rem 0.75rem;
 		min-height: 0;
 	}
 
 	.flow-card-wrap {
-		position: relative;
-		width: 100%;
+		position: absolute;
+		inset: 0.5rem 0.5rem var(--bn-clear) 0.5rem;
 		max-width: min(25.5rem, calc(100vw - 2rem));
-		height: 100%;
-		max-height: min(
-			650px,
-			calc(100dvh - 13.75rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px))
-		);
-		min-height: min(34rem, calc(100dvh - 14.75rem));
+		margin-inline: auto;
+	}
+
+	/* Desktop drops the floating pill, so the card no longer needs to
+	   reserve `--bn-clear` clearance. */
+	@media (min-width: 56rem) {
+		.flow-card-wrap {
+			inset: 0.5rem 0.5rem 0.75rem 0.5rem;
+		}
 	}
 
 	.flow-card-slot {
@@ -1181,366 +1000,9 @@
 		filter: saturate(calc(1 - var(--depth) * 0.12));
 	}
 
-	.xp-pops {
-		position: absolute;
-		inset: 0;
-		pointer-events: none;
-		z-index: 55;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-	}
-	.xp-pop {
-		position: absolute;
-		display: inline-flex;
-		align-items: baseline;
-		gap: 0.4rem;
-		padding: 10px 16px;
-		border-radius: 999px;
-		font-family: var(--font-mono);
-		font-size: 22px;
-		font-weight: 900;
-		letter-spacing: -0.02em;
-		background: var(--bg-popover);
-		color: var(--laurel);
-		box-shadow: var(--shadow-card);
-		animation: xpPop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-	}
-	.xp-pop-label {
-		font-size: 11px;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-		opacity: 0.7;
-	}
-	.xp-pop-yes {
-		color: var(--yes);
-		border: 2px solid var(--yes);
-	}
-	.xp-pop-no {
-		color: var(--no);
-		border: 2px solid var(--no);
-	}
-	/* Bonus pop — milestone reward (rarity ladder). Laurel ring, larger
-	   amount, paired serif-italic copy on top, longer dwell. */
-	.xp-pop-bonus {
-		flex-direction: column;
-		gap: 4px;
-		padding: 14px 22px;
-		font-size: 30px;
-		color: var(--color-primary);
-		border: 2px solid var(--color-primary);
-		background: var(--bg-popover);
-		box-shadow:
-			0 0 32px var(--laurel-glow),
-			var(--shadow-card);
-		animation:
-			xpPopBonus 1.8s var(--ease-vici) forwards,
-			none;
-	}
-	.xp-pop-copy {
-		font-family: var(--font-serif);
-		font-style: italic;
-		font-size: 14px;
-		font-weight: 400;
-		color: var(--text-muted);
-		letter-spacing: 0;
-		text-transform: none;
-		line-height: 1.1;
-	}
-	.xp-pop-amount {
-		font-weight: 600;
-	}
-	@keyframes xpPopBonus {
-		0% {
-			transform: translateY(0) scale(0.7);
-			opacity: 0;
-		}
-		15% {
-			transform: translateY(-12px) scale(1.08);
-			opacity: 1;
-		}
-		70% {
-			transform: translateY(-90px) scale(1);
-			opacity: 1;
-		}
-		100% {
-			transform: translateY(-150px) scale(0.95);
-			opacity: 0;
-		}
-	}
-	@keyframes xpPop {
-		0% {
-			transform: translateY(0) scale(0.6);
-			opacity: 0;
-		}
-		20% {
-			transform: translateY(-10px) scale(1.1);
-			opacity: 1;
-		}
-		100% {
-			transform: translateY(-120px) scale(0.9);
-			opacity: 0;
-		}
-	}
-
-	.flow-bottombar {
-		position: sticky;
-		bottom: 0;
-		z-index: 60;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		gap: 0.6rem;
-		padding: 0.55rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.65rem);
-		background: linear-gradient(
-			to top,
-			color-mix(in srgb, var(--bg-base) 98%, transparent) 56%,
-			transparent
-		);
-	}
-
-	.flow-amount {
-		display: inline-flex;
-		align-items: center;
-		gap: 4px;
-		padding: 3px;
-		border-radius: 999px;
-		background: var(--bg-surface);
-		box-shadow: inset 0 0 0 1px var(--border-base);
-	}
-	.flow-amount-btn {
-		width: 2rem;
-		height: 2rem;
-		border-radius: 999px;
-		background: var(--bg-popover);
-		color: var(--text-base);
-		font-size: 18px;
-		font-weight: 900;
-		line-height: 1;
-		transition: transform 0.12s ease;
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-	}
-	.flow-amount-btn:active {
-		transform: scale(0.985);
-	}
-	.flow-amount-field {
-		display: inline-flex;
-		align-items: baseline;
-		gap: 4px;
-		padding: 0 10px;
-		min-width: 5.5rem;
-		justify-content: center;
-	}
-	.flow-amount-input {
-		width: 3.5rem;
-		background: transparent;
-		text-align: right;
-		font-family: var(--font-mono);
-		font-size: 15px;
-		font-weight: 900;
-		color: var(--text-base);
-		outline: none;
-		font-variant-numeric: tabular-nums;
-		-moz-appearance: textfield;
-	}
-	.flow-amount-input::-webkit-outer-spin-button,
-	.flow-amount-input::-webkit-inner-spin-button {
-		-webkit-appearance: none;
-		margin: 0;
-	}
-	.flow-amount-unit {
-		font-size: 10px;
-		font-weight: 900;
-		letter-spacing: 0.08em;
-		color: var(--text-muted);
-	}
-
-	.flow-actions {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		gap: 1rem;
-	}
-	.flow-action {
-		display: inline-flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 0;
-		border-radius: 999px;
-		background: var(--bg-surface);
-		transition:
-			transform 0.12s ease,
-			box-shadow 0.2s ease;
-		position: relative;
-	}
-	.flow-action:active {
-		transform: scale(0.985);
-	}
-	.flow-action-label {
-		position: absolute;
-		bottom: -1.25rem;
-		font-size: 9px;
-		font-weight: 900;
-		letter-spacing: 0.18em;
-		color: var(--text-muted);
-	}
-
-	.flow-action-no {
-		width: 3.35rem;
-		height: 3.35rem;
-		border: 3px solid rgba(255, 107, 107, 0.25);
-		color: var(--no);
-		box-shadow: 0 10px 24px var(--no-wash);
-	}
-	.flow-action-skip {
-		width: 2.75rem;
-		height: 2.75rem;
-		border: 3px solid var(--border-strong);
-		color: var(--text-muted);
-		box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
-	}
-	.flow-action-yes {
-		width: 3.35rem;
-		height: 3.35rem;
-		border: 3px solid rgba(79, 211, 161, 0.25);
-		color: var(--yes);
-		box-shadow: 0 10px 24px rgba(79, 211, 161, 0.15);
-	}
-
-	/* Desktop only keyboard hints */
-	.flow-kbd {
-		display: none;
-		align-items: center;
-		gap: 8px;
-		font-size: 10px;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		color: var(--text-muted);
-		text-transform: uppercase;
-		margin-top: 0.25rem;
-	}
-	.flow-kbd kbd {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		min-width: 1.25rem;
-		height: 1.25rem;
-		padding: 0 4px;
-		border: 1.5px solid var(--border-strong);
-		border-radius: 6px;
-		background: var(--bg-surface);
-		color: var(--text-base);
-		font-family: inherit;
-		font-size: 11px;
-		line-height: 1;
-	}
-
-	@media (hover: hover) and (pointer: fine) {
-		.flow-kbd {
-			display: flex;
-		}
-	}
-
-	@media (min-width: 640px) {
-		.flow-card-wrap {
-			max-height: 660px;
-			min-height: 36rem;
-		}
-	}
-
 	:global([data-theme='light']) .flow-card-slot.is-back,
 	:global([data-theme='peach']) .flow-card-slot.is-back {
 		opacity: calc(1 - var(--depth) * 0.22);
 		filter: saturate(calc(1 - var(--depth) * 0.08)) drop-shadow(0 18px 32px rgba(14, 13, 11, 0.08));
-	}
-
-	/* FlowEnd — session summary surface. Brand voice over confetti.
-	   `.display` headline (serif italic) sits with the bedded grid;
-	   no green-check celebration, no big particle field. */
-	.flow-end {
-		position: relative;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 1.5rem;
-		background:
-			radial-gradient(circle at 20% 10%, var(--laurel-glow), transparent 45%), var(--bg-base);
-		overflow: hidden;
-	}
-	.flow-end-inner {
-		max-width: 22rem;
-		text-align: center;
-	}
-	.flow-end-title {
-		font-size: var(--t-64);
-		margin: 0 0 0.5rem;
-		color: var(--laurel);
-	}
-	@media (min-width: 400px) {
-		.flow-end-title {
-			font-size: var(--t-88);
-		}
-	}
-	.flow-end-sub {
-		font-size: var(--t-14);
-		color: var(--text-muted);
-		margin: 0 0 1.75rem;
-		font-family: var(--font-display);
-	}
-
-	.flow-end-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 0.625rem;
-		margin-bottom: 1.5rem;
-	}
-	.flow-end-cell {
-		background: var(--bg-surface);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		padding: 0.875rem 0.5rem;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 4px;
-		box-shadow: var(--inset-hi);
-	}
-	.flow-end-cell-streak.is-hot {
-		background: linear-gradient(135deg, var(--color-primary), var(--laurel));
-		color: var(--color-primary-foreground);
-		box-shadow: 0 4px 12px var(--laurel-glow);
-	}
-	.flow-end-cell-flame {
-		display: flex;
-		justify-content: center;
-		margin-bottom: 2px;
-	}
-	.flow-end-cell-label {
-		font-size: 10px;
-		color: var(--text-muted);
-	}
-	.flow-end-cell-streak.is-hot .flow-end-cell-label {
-		color: var(--color-primary-foreground);
-		opacity: 0.85;
-	}
-	.flow-end-cell-value {
-		font-size: var(--t-24);
-		font-weight: 600;
-		letter-spacing: -0.02em;
-		line-height: 1.05;
-		color: var(--text-base);
-	}
-	.flow-end-cell-streak.is-hot .flow-end-cell-value {
-		color: var(--color-primary-foreground);
-	}
-	.flow-end-cell-foot {
-		font-size: 9px;
-		color: var(--text-muted);
-		opacity: 0.56;
-		font-family: var(--font-display);
-		text-transform: uppercase;
-		letter-spacing: var(--tracking-allcaps);
 	}
 </style>

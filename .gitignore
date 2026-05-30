@@ -6,6 +6,9 @@
 .idea/
 **/*~
 
+# Claude Code wakeup-scheduler artifact
+.claude/scheduled_tasks.lock
+
 .DS_Store
 **/.DS_Store
 

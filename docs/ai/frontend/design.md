@@ -17,11 +17,17 @@ govern Flow Mode (§7). Tick rows off as PRs land.
 >    messages, PR bodies). Temporary scratch is temporary; the
 >    product reflects **the** design. When a code comment needs to
 >    cite a rule, point at this file (`docs/ai/frontend/design.md`)
->    and the relevant section. Don't qualify the design as "new",
->    "old", "redesigned", or "previous" — there is only one.
+>    for surface / Flow / component rules, or
+>    [`brand.md`](./brand.md) for brand / voice / palette / type /
+>    iconography rules — never at the off-repo brand book by name.
+>    Don't qualify the design as "new", "old", "redesigned", or
+>    "previous" — there is only one.
 
 The companion guidance lives in:
 
+- [`brand.md`](./brand.md) — palette, typography triad, voice & tone,
+  iconography, character cast, copy patterns. The brand book lives
+  there; this file is the surface roster.
 - [`reusability.md`](./reusability.md) — extend existing components before
   adding new ones.
 - [`stack-and-patterns.md`](./stack-and-patterns.md) — Tailwind v4 token
@@ -66,6 +72,10 @@ The app supports three themes through `data-theme` on `<html>`:
 | `light` | Parchment / ink                       | `--laurel`                                                                 |
 | `peach` | Warm blush / coral-cream              | `--laurel-deep` (`#B68B1F`) for primary/accent so contrast holds on peach. |
 
+The `peach` theme is **labelled "Coral"** in the UI (`ui.theme.peach`,
+localized per locale). The `data-theme="peach"` value and the `Theme`
+union keep the internal `peach` name — the rename is display-only.
+
 Theme state lives in
 [`src/lib/stores/theme.store.ts`](../../../src/lib/stores/theme.store.ts)
 and persists to `localStorage` as `vici-theme`.
@@ -83,17 +93,66 @@ Third-party marks keep their own colours in every theme (see §2).
 
 ## 2. Brand assets
 
-| Asset                                | App target                                                                                                    | Status                                                                                                                                                                       |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Wordmark SVG                         | `static/branding/vici-wordmark.svg` + [`Logo.svelte`](../../../src/lib/components/layout/Logo.svelte)         | ✅ Done. `Logo.svelte` inlines the wordmark paths and themes via `currentColor` (`text-primary`); the hover glow is preserved as a `drop-shadow` on the SVG.                 |
-| Monogram SVG                         | `static/branding/vici-monogram.svg`                                                                           | ✅ Done. Wrap in `IconViciMonogram.svelte` if a reusable consumer appears.                                                                                                   |
-| App icon SVG                         | `static/branding/vici-app-icon.svg` (PWA / favicon)                                                           | ✅ Done. Wired in [`app.html`](../../../src/app.html) as the SVG favicon, iOS touch icon, web manifest icon, and link-preview image set. PNG favicons are kept as fallbacks. |
-| Signal icons (`yes` / `no` / `hold`) | [`IconSignalYes`](../../../src/lib/components/icons/IconSignalYes.svelte) / `IconSignalNo` / `IconSignalHold` | ✅ Done. Audit + swap into the prediction interface as a separate `style(market)` commit if the bespoke vectors render better small.                                         |
-| Streak-flame icon                    | [`IconStreakFlame`](../../../src/lib/components/icons/IconStreakFlame.svelte)                                 | ✅ Done. Distinct from `FlameChar.svelte` (the animated character).                                                                                                          |
-| Laurel icon                          | [`IconLaurel`](../../../src/lib/components/icons/IconLaurel.svelte)                                           | ✅ Done. Non-square (200×120); pass `size` as the height.                                                                                                                    |
-| XP chevron                           | [`IconXpChevron`](../../../src/lib/components/icons/IconXpChevron.svelte)                                     | ✅ Done.                                                                                                                                                                     |
-| Grain texture                        | `static/branding/grain.svg` (use as a CSS `background-image`)                                                 | ✅ Done. Layered into [`Background.svelte`](../../../src/lib/components/layout/Background.svelte) as a 200×200 tiled overlay with `mix-blend-mode: overlay` and 5% opacity.  |
-| Laurel watermark                     | `static/branding/laurel-watermark.svg`                                                                        | ✅ Done.                                                                                                                                                                     |
+This section is the in-repo source of truth for the VICI mark, palette,
+and asset wiring. The rules below are mirrored from the upstream brand
+book — when the two diverge, this file is the one that ships, and the
+divergence is a bug to reconcile.
+
+### 2.1 Logo rules
+
+The wordmark is **type-set**, not custom letterforms: Hanken Grotesk
+weight 700, ALL CAPS, `letter-spacing: 0.18em`. It travels as text,
+which is why the in-product mark in
+[`Logo.svelte`](../../../src/lib/components/layout/Logo.svelte) is a
+`<span>` and not an SVG.
+
+**Colour variants.** Only two:
+
+| Variant   | Use on         | Token         | Hex       |
+| --------- | -------------- | ------------- | --------- |
+| Black     | Light surfaces | `--ink`       | `#0E0D0B` |
+| Parchment | Dark surfaces  | `--parchment` | `#F2ECDC` |
+
+Pure `#FFFFFF` and pure `#000000` are **not** used — the warm ink and
+parchment are part of the brand. The in-product `Logo.svelte` resolves
+this automatically via `text-foreground` (`--text-base`), which swaps
+parchment → ink between dark and light themes.
+
+**Monogram (V).** Use when the wordmark won't fit — under 24 px tall on
+screen, under 12 mm in print. Same colour rules as the wordmark.
+
+**App icon.** Encapsulated mark — gold V on an ink tile, 14 px corner
+radius (proportional). **Laurel gold (`#E2B842`) is reserved for the
+app-icon tile.** Do not apply it to the wordmark or monogram.
+
+**Clear space & minimum size.**
+
+- Clear space = the height of the **I** stem on all four sides.
+- Minimum digital height: 24 px (wordmark) · 16 px (monogram).
+- Minimum print height: 12 mm (wordmark) · 8 mm (monogram).
+
+**Don't.**
+
+- Don't italicize, skew, stretch, or rotate the mark.
+- Don't apply gradients, glow, drop shadow, or bevel.
+- Don't recolour outside Black or Parchment (laurel gold is app-icon-only).
+- Don't lock up the mark with a tagline.
+- Don't typeset the wordmark with a different font or tracking — Hanken
+  Grotesk Bold + 0.18em or use the SVG/PNG files.
+
+### 2.2 Asset wiring
+
+| Asset             | App target                                                                                                                                                                                                               | Status                                                                                                                                                                                              |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Wordmark          | [`Logo.svelte`](../../../src/lib/components/layout/Logo.svelte) (type-set, live) · `static/branding/vici-wordmark-{black,parchment}.{svg,png}` (locked artwork for OG / partner / print use)                             | ✅ Done. In-product mark is type-set per §2.1 — no SVG, no `drop-shadow`. The static SVG/PNG variants are for surfaces where typesetting isn't possible (link previews, partner assets).            |
+| Monogram          | `static/branding/vici-monogram-{black,parchment}.{svg,png}`                                                                                                                                                              | ✅ Done. Wrap in `IconViciMonogram.svelte` if a reusable in-product consumer appears (`≤ 24 px` tall placements per §2.1).                                                                          |
+| App icon          | `static/branding/vici-favicon.svg` (favicon) · `vici-favicon-32.png` (legacy favicon) · `vici-favicon-192.png` (PWA / Android home-screen) · `vici-app-icon-{512,1024}.{svg,png}` (master) · `apple-touch-icon.png` 180² | ✅ Done. Wired in [`app.html`](../../../src/app.html) and [`manifest.webmanifest`](../../../static/manifest.webmanifest). Gold V on ink tile per §2.1; `apple-touch-icon.png` is derived from 512². |
+| Signal icons      | [`IconSignalYes`](../../../src/lib/components/icons/IconSignalYes.svelte) / `IconSignalNo` / `IconSignalHold`                                                                                                            | ✅ Done.                                                                                                                                                                                            |
+| Streak-flame icon | [`IconStreakFlame`](../../../src/lib/components/icons/IconStreakFlame.svelte)                                                                                                                                            | ✅ Done. Distinct from `FlameChar.svelte` (the animated character).                                                                                                                                 |
+| Laurel icon       | [`IconLaurel`](../../../src/lib/components/icons/IconLaurel.svelte)                                                                                                                                                      | ✅ Done. Non-square (200×120); pass `size` as the height.                                                                                                                                           |
+| XP chevron        | [`IconXpChevron`](../../../src/lib/components/icons/IconXpChevron.svelte)                                                                                                                                                | ✅ Done.                                                                                                                                                                                            |
+| Grain texture     | `static/branding/grain.svg`                                                                                                                                                                                              | ✅ Done. Layered into [`Background.svelte`](../../../src/lib/components/layout/Background.svelte) as a 200×200 tiled overlay with `mix-blend-mode: overlay` and 5% opacity.                         |
+| Laurel watermark  | `static/branding/laurel-watermark.svg`                                                                                                                                                                                   | ✅ Done.                                                                                                                                                                                            |
 
 When adding bespoke icons, register them in
 [`reusability.md`](./reusability.md) so the next agent finds them.
@@ -122,31 +181,43 @@ Already implemented. **No work needed.**
 
 ## 4. Components
 
-| Component          | App equivalent (search-first)                                                                             | Status  | Notes                                                                                                                                                                                                                                                  |
-| ------------------ | --------------------------------------------------------------------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Bottom navigation  | [`src/lib/components/layout/MobileNav.svelte`](../../../src/lib/components/layout/MobileNav.svelte)       | ✅ Done | Translucent theme-aware shell, central Flow button emphasis, `t()` labels via `labelKey`, active cascade for `/markets/*`, `/wallet`, `/settings`, `/notifications`.                                                                                   |
-| Flow card          | [`src/lib/components/market/FlowCard.svelte`](../../../src/lib/components/market/FlowCard.svelte)         | ✅ Done | Front/back flip, why-now chip, sharp-predictor strip, metadata resolution + sparkline events, user-context block, and card-stack rhythm wired. Sharp-predictor lean still uses available consensus-derived values until a reputation aggregate exists. |
-| Market card        | [`src/lib/components/market/MarketCard.svelte`](../../../src/lib/components/market/MarketCard.svelte)     | ✅ Done | Compact editorial discovery card: badges, mono time-remaining, probability blocks, challenge slot.                                                                                                                                                     |
-| Mobile appbar      | [`src/lib/components/layout/MobileAppBar.svelte`](../../../src/lib/components/layout/MobileAppBar.svelte) | ✅ Done | Per-screen mobile top chrome (`title` or rich `titleChildren`, optional `back`, optional `right` snippet). Hidden on `md+`. Used on Markets, Market Detail, Profile, Portfolio, Social.                                                                |
-| Ticker             | [`Ticker.svelte`](../../../src/lib/components/layout/Ticker.svelte)                                       | ✅ Done | Marquee on `/welcome`; `--ticker-h`, `ticker.consensus` i18n label, reduced-motion safe.                                                                                                                                                               |
-| UI primitives      | `$lib/components/ui/{Button,Card,Badge,Dialog,Modal,Tabs,Tooltip,…}.svelte`                               | ✅ Done | Button, Badge, Tabs, Card, Modal, StatCard, and settings primitives use tokenized variants; `Tabs.svelte` supports localized labels while preserving stable values. `AppearancePicker.svelte` remains the canonical theme picker.                      |
-| Top header / frame | [`Header.svelte`](../../../src/lib/components/layout/Header.svelte) + `MobileNav`                         | ✅ Done | Theme-aware translucent header, pill nav states, `t()` nav + sign-in, same active cascade as bottom nav.                                                                                                                                               |
-| Characters         | _see §3_                                                                                                  | ✅ Done |                                                                                                                                                                                                                                                        |
+| Component          | App equivalent (search-first)                                                                             | Status  | Notes                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------ | --------------------------------------------------------------------------------------------------------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Bottom navigation  | [`src/lib/components/layout/MobileNav.svelte`](../../../src/lib/components/layout/MobileNav.svelte)       | ✅ Done | Translucent theme-aware shell, central Flow button emphasis, `t()` labels via `labelKey`, active cascade for `/markets/*`, `/wallet`, `/settings`, `/notifications`.                                                                                                                                                                                                         |
+| Flow card          | [`src/lib/components/market/FlowCard.svelte`](../../../src/lib/components/market/FlowCard.svelte)         | ✅ Done | Front/back flip, why-now chip, sharp-predictor strip, metadata resolution + sparkline events, user-context block, and card-stack rhythm wired. Sharp-predictor lean still uses available consensus-derived values until a reputation aggregate exists.                                                                                                                       |
+| Market card        | [`src/lib/components/market/MarketCard.svelte`](../../../src/lib/components/market/MarketCard.svelte)     | ✅ Done | Compact editorial discovery card: badges, mono time-remaining, probability blocks, challenge slot.                                                                                                                                                                                                                                                                           |
+| Mobile appbar      | [`src/lib/components/layout/MobileAppBar.svelte`](../../../src/lib/components/layout/MobileAppBar.svelte) | ✅ Done | Per-screen mobile top chrome (`title` or rich `titleChildren`, optional `back`, optional `right` snippet). Hidden at `min-[56rem]`. For a full top-level page reach for `PageScaffold` (below); use this directly only for sub-surfaces that need just the bar.                                                                                                              |
+| Page scaffold      | [`src/lib/components/layout/PageScaffold.svelte`](../../../src/lib/components/layout/PageScaffold.svelte) | ✅ Done | Shared top chrome for a top-level page: left-aligned `title`, optional `right` snippet (top-right icon actions), page `children` below. Wraps `MobileAppBar` + the `min-[56rem]` desktop `SectionHeader` so pages stop duplicating both. No `back` (the desktop header has none — back-bearing pages use `MobileAppBar` directly). Adopted on Markets, Dash, Arena, Profile. |
+| Ticker             | [`Ticker.svelte`](../../../src/lib/components/layout/Ticker.svelte)                                       | ✅ Done | Marquee on `/welcome`; `--ticker-h`, `ticker.consensus` i18n label, reduced-motion safe.                                                                                                                                                                                                                                                                                     |
+| UI primitives      | `$lib/components/ui/{Button,Card,Badge,Dialog,Modal,Tabs,Tooltip,…}.svelte`                               | ✅ Done | Button, Badge, Tabs, Card, Modal, StatCard, and settings primitives use tokenized variants; `Tabs.svelte` supports localized labels while preserving stable values. `AppearancePicker.svelte` remains the canonical theme picker.                                                                                                                                            |
+| Top header / frame | [`Header.svelte`](../../../src/lib/components/layout/Header.svelte) + `MobileNav`                         | ✅ Done | Theme-aware translucent header, pill nav states, `t()` nav + sign-in, same active cascade as bottom nav.                                                                                                                                                                                                                                                                     |
+| Characters         | _see §3_                                                                                                  | ✅ Done |                                                                                                                                                                                                                                                                                                                                                                              |
 
 ---
 
 ## 5. Screens
 
-| Screen            | App equivalent                                                                                                                                                                                                                                                                                | Status  | Notes                                                                                                                                                                                                                                                                                                                                                             |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Flow Mode         | [`src/lib/components/market/FlowMode.svelte`](../../../src/lib/components/market/FlowMode.svelte) + [`FlowCard.svelte`](../../../src/lib/components/market/FlowCard.svelte)                                                                                                                   | ✅ Done | Swipe deck with brand-aligned typography, generative artwork in-card, top session chrome, footer hint rail, 80 ms commit-feedback beat, named haptic patterns, daily-streak Flame chip, reward ladder, character bubbles (priority-resolved), and a brand-voice FlowEnd. Buttons + keyboard shortcuts kept as accessibility fallback. See §7 below for the rules. |
-| Markets list      | [`MarketsPage.svelte`](../../../src/lib/components/pages/MarketsPage.svelte)                                                                                                                                                                                                                  | ✅ Done | Compact editorial discovery list, tab labels, filter chrome, probability blocks, skeletons, and empty state wired through `t()` (EN · IT · ES · DE · FR · PT).                                                                                                                                                                                                    |
-| Market detail     | [`MarketDetailHeader.svelte`](../../../src/lib/components/market/MarketDetailHeader.svelte) + [`MarketDetailForecast.svelte`](../../../src/lib/components/market/MarketDetailForecast.svelte) + [`PredictionInterface.svelte`](../../../src/lib/components/market/PredictionInterface.svelte) | ✅ Done | Detail header, resolution/crowd modules, sparkline, branded YES/NO signal icons, token colour classes, and decorative icon hiding while preserving trade handlers, order-book polling, and sizing math.                                                                                                                                                           |
-| Onboarding        | [`OnboardingFlow.svelte`](../../../src/lib/components/onboarding/OnboardingFlow.svelte)                                                                                                                                                                                                       | ✅ Done | Pre-sign-in four-step flow on `/signup`: first call, gesture practice, category picks, identity handoff, starter pack, and recoverable email capture.                                                                                                                                                                                                             |
-| Profile           | [`ProfilePage.svelte`](../../../src/lib/components/pages/ProfilePage.svelte) + `ProfileDashboard.svelte`                                                                                                                                                                                      | ✅ Done | Performance identity surface with avatar/handle, archetype, level/XP progress, stats grid, recent activity blocks, achievements, and existing profile edit flow.                                                                                                                                                                                                  |
-| Social            | [`LeaderboardPage.svelte`](../../../src/lib/components/pages/LeaderboardPage.svelte)                                                                                                                                                                                                          | ✅ Done | `/leaderboard` remains the route for compatibility; the visible surface is Social with Global / Week / Friends / Activity tabs, top-entry cards, current-user highlighting, and existing leaderboard feed.                                                                                                                                                        |
-| Wallet            | [`WalletPage.svelte`](../../../src/lib/components/pages/WalletPage.svelte)                                                                                                                                                                                                                    | ✅ Done | Treasury section header, wallet stats, collateral stats, send/receive/history tabs, and supporting surfaces use the shared card/chrome language while preserving wallet actions.                                                                                                                                                                                  |
-| Market resolution | [`MarketResolutionInterface.svelte`](../../../src/lib/components/market/MarketResolutionInterface.svelte) + `ResolvedMarketPanel.svelte`                                                                                                                                                      | ✅ Done | Resolved panel settlement copy i18n; admin settle form stays English (operator surface).                                                                                                                                                                                                                                                                          |
+| Screen            | App equivalent                                                                                                                                                                  | Status  | Notes                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Flow Mode         | [`src/lib/components/market/FlowMode.svelte`](../../../src/lib/components/market/FlowMode.svelte) + [`FlowCard.svelte`](../../../src/lib/components/market/FlowCard.svelte)     | ✅ Done | Swipe deck with brand-aligned typography, generative artwork in-card, top session chrome, footer hint rail, 80 ms commit-feedback beat, named haptic patterns, daily-streak Flame chip, reward ladder, character bubbles (priority-resolved), a cold-load Oracle moment (`FlowDeckSkeleton`, §7.10), and a brand-voice FlowEnd. Buttons + keyboard shortcuts kept as accessibility fallback. See §7 below for the rules.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Markets list      | [`MarketsPage.svelte`](../../../src/lib/components/pages/MarketsPage.svelte)                                                                                                    | ✅ Done | Compact editorial discovery list, tab labels, filter chrome, probability blocks, skeletons, and empty state wired through `t()` (EN · IT · ES · DE · FR · PT). WC-focus when `worldCupActive` — see §11.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Market detail     | [`/markets/[id]/+page.svelte`](<../../../src/routes/(app)/markets/[id]/+page.svelte>) + `MarketDetail*` modules                                                                 | ✅ Done | Prob hero, chart card, stats grid, resolution card, top-predictors, branded YES/NO signal icons, token colour classes, and decorative icon hiding while preserving trade handlers, order-book polling, and sizing math. Streaming load renders [`MarketDetailSkeleton`](../../../src/lib/components/market/MarketDetailSkeleton.svelte) (module-rhythm pulse blocks) so the layout doesn't reflow. The sticky CTA bar renders **only while `status === 'Open'`** — Expired/Resolved markets suppress the YES/NO actions entirely. Chart-period chips (1d/7d/30d/all) are a visual switch pending the satellite history aggregator (no data re-scope yet).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Dashboard         | [`DashPage.svelte`](../../../src/lib/components/pages/DashPage.svelte)                                                                                                          | ✅ Done | `/dash`; performance stats, daily streak, by-category accuracy, holdings, rank context.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Portfolio         | [`PortfolioPage.svelte`](../../../src/lib/components/pages/PortfolioPage.svelte)                                                                                                | ✅ Done | `/portfolio`; open and resolved positions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Onboarding        | [`OnboardingFlow.svelte`](../../../src/lib/components/onboarding/OnboardingFlow.svelte)                                                                                         | ✅ Done | Pre-sign-in flow on `/signup`: Beat 1a team pick → 1b first call → Beat 2 handle → Beat 3 auth (passkey/OAuth). No gestures/categories steps. See §8.3.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| Profile           | [`ProfilePage.svelte`](../../../src/lib/components/pages/ProfilePage.svelte) + `ProfileDashboard.svelte`                                                                        | ✅ Done | Performance identity surface with avatar/handle, archetype, level/XP progress, stats grid, recent activity blocks, achievements, and existing profile edit flow.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Arena (hub)       | [`ArenaPage.svelte`](../../../src/lib/components/pages/ArenaPage.svelte)                                                                                                        | ✅ Done | `/arena`; tabbed hub (Friends / Leagues / Battles) via `PageScaffold`. Above the tab strip sits the **overview strip** ([`ArenaOverviewStrip.svelte`](../../../src/lib/components/arena/ArenaOverviewStrip.svelte)) — a 3-tile `dash-rank-grid` (Global / League / School) reusing `DashRankContext`'s tile classes. Each tile is a tappable `<button>`: Global → leaderboard, League → the Leagues tab (filled shows league name, empty shows **Join**), School → `/arena/worlds/school/[id]` when affiliated else the schools picker (empty shows **Pick**). Real ranks where the satellite exposes them (Global from the leaderboard, School from the monthly affiliation-stats order); league rank isn't surfaced yet so that tile shows `EM_DASH`, never a fabricated `#rank`. Sub-surfaces below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| ↳ Leaderboard     | [`LeaderboardPage.svelte`](../../../src/lib/components/pages/LeaderboardPage.svelte)                                                                                            | ✅ Done | `/arena/leaderboard`; Global / Week / Friends / Activity tabs, current-user highlight.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| ↳ Leagues         | [`LeaguesPage.svelte`](../../../src/lib/components/pages/LeaguesPage.svelte) + [`LeagueDetailPage.svelte`](../../../src/lib/components/pages/LeagueDetailPage.svelte)           | ✅ Done | `/arena/leagues`, `/arena/leagues/[id]`; private cohorts. **League-vs-league battles live only here** — each league detail has its own battle section (active card with accept / kickoff / resolve / retract, or a Challenge-another-league CTA via [`ChallengeLeagueModal`](../../../src/lib/components/leagues/ChallengeLeagueModal.svelte) + [`ProposeBattleModal`](../../../src/lib/components/leagues/ProposeBattleModal.svelte) on `?challenge=1`/`?propose=1`). League detail folds the roster into the leaderboard: each row is a ≥44px `<button>` (rank · `<Avatar>` · handle · streak · accuracy) that opens a member [`BottomSheet`](../../../src/lib/components/ui/BottomSheet.svelte) (`<Avatar>` + accuracy / streak stat grid). Sticky YOU row stays pinned below the top-6. Under four members the podium is swapped for a `recruit` prompt with an Invite CTA. No settings cog on this surface.                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| ↳ Battles         | [`BattlesInboxPage.svelte`](../../../src/lib/components/pages/BattlesInboxPage.svelte) + [`BattleDetailPage.svelte`](../../../src/lib/components/pages/BattleDetailPage.svelte) | ✅ Done | `/arena/battles`, `/arena/battles/[id]`; **institutional + tournament inbox only** — Worlds Universities + Worlds Countries podiums and the monthly tournament card, plus the intro card and a footer link to Leagues. League-vs-league battles are **not** listed here (they live under Leagues, per that row); de-duped so a league battle has one home. Battle is the name end to end — the `battles` collection, `BattleDoc`, and the user-facing copy all match.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ↳ Worlds          | [`WorldsPage.svelte`](../../../src/lib/components/pages/WorldsPage.svelte) + affiliation/battle detail                                                                          | ✅ Done | `/arena/worlds/*`; universities & countries, affiliation detail, world-cup battle detail. The Worlds battle surface is presentational framing over the `affiliations` / `affiliation_stats` collections — it does not use the `battles` collection. Affiliation choices live in [`worlds-affiliations.constants.ts`](../../../src/lib/constants/worlds-affiliations.constants.ts): `WORLDS_COUNTRIES` (ISO-2 + emoji flag) and `WORLDS_UNIVERSITIES` — the full ~278-school directory. University entries carry `short`/`glyph`, `country`, `region` (`NA`/`UK`/`EU`/`AS`/`AU`/`LATAM`/`MEA`), QS `rank`, brand `color`/`text`, and verified `domains` (the last reserved for a later membership-verification pass; unused today). The picker ([`AffiliationPickerModal.svelte`](../../../src/lib/components/leagues/AffiliationPickerModal.svelte)) keeps the fuzzy name/acronym search for both kinds; for the university kind it also shows a region-tab row (All · North America · UK · Europe · Asia · AU·NZ — `LATAM`/`MEA` surface only under All or via search) and pins home-country schools (`detectUserCountryCode()`) to the top under a "Near you · N schools" divider when idle. The country picker path is unchanged. Editing the roster drops no live data — the leaderboard reads `affiliation_stats`, not this list. |
+| ↳ Tournament      | [`TournamentPage.svelte`](../../../src/lib/components/pages/TournamentPage.svelte)                                                                                              | ✅ Done | `/arena/tournament`; league-vs-league bracket.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Wallet            | [`WalletPage.svelte`](../../../src/lib/components/pages/WalletPage.svelte)                                                                                                      | ✅ Done | Treasury section header, wallet stats, collateral stats, send/receive/history tabs, and supporting surfaces use the shared card/chrome language while preserving wallet actions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| Notifications     | [`NotificationsPage.svelte`](../../../src/lib/components/pages/NotificationsPage.svelte)                                                                                        | ✅ Done | `/notifications`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| Settings          | [`SettingsPage.svelte`](../../../src/lib/components/pages/SettingsPage.svelte) + [`AccountSettingsPage.svelte`](../../../src/lib/components/pages/AccountSettingsPage.svelte)   | ✅ Done | `/settings`, `/settings/account`; appearance, flow-deck scope, account/delete.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| Album             | [`AlbumPage.svelte`](../../../src/lib/components/pages/AlbumPage.svelte)                                                                                                        | ✅ Done | `/profile/album`; full past-calls history.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| Market resolution | [`MarketResolutionInterface.svelte`](../../../src/lib/components/market/MarketResolutionInterface.svelte) + `ResolvedMarketPanel.svelte`                                        | ✅ Done | Resolved panel settlement copy i18n; admin settle form stays English (operator surface).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| Admin             | [`AdminPage.svelte`](../../../src/lib/components/pages/AdminPage.svelte) + markets / resolutions / access                                                                       | ✅ Done | `/admin/*`; operator surfaces, English-only.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ---
 
@@ -156,10 +227,11 @@ The app does not currently expose a public landing surface. Adding one
 would introduce a new top-level route — surface the discussion in the
 PR before doing so (see [structure rule](./structure.md#top-level-src)).
 
-| Surface                                      | App equivalent                                                                             | Status  | Notes                                                                                                              |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------ | ------- | ------------------------------------------------------------------------------------------------------------------ |
-| Landing page                                 | [`WelcomePage.svelte`](../../../src/lib/components/pages/WelcomePage.svelte) at `/welcome` | ✅ Done | Public hero, ticker, product mockup/card stack, live questions, FAQ, CTAs; full six-locale `t()` for landing keys. |
-| Landing sections (hero / ticker / FAQ / CTA) | `WelcomePage` + [`Ticker.svelte`](../../../src/lib/components/layout/Ticker.svelte)        | ✅ Done | Ticker marquee, product loop, trust, and FAQ blocks on welcome route.                                              |
+| Surface                                      | App equivalent                                                                                                      | Status  | Notes                                                                                                                                                                         |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Landing page                                 | [`WelcomePage.svelte`](../../../src/lib/components/pages/WelcomePage.svelte) at `/welcome`                          | ✅ Done | Public hero, ticker, product mockup/card stack, live questions, FAQ, CTAs; full six-locale `t()` for landing keys.                                                            |
+| Landing sections (hero / ticker / FAQ / CTA) | `WelcomePage` + [`Ticker.svelte`](../../../src/lib/components/layout/Ticker.svelte)                                 | ✅ Done | Ticker marquee, product loop, trust, and FAQ blocks on welcome route.                                                                                                         |
+| WC featured-event favourites                 | [`WelcomeFeaturedEvent.svelte`](../../../src/lib/components/landing/WelcomeFeaturedEvent.svelte) (in `WelcomePage`) | ✅ Done | 2×2 favourites grid; each tile is a link deep-linking into onboarding with that team preselected — `/signup?team=<ISO-2 code>` → `initialParticipantId` → Beat 1b (see §8.3). |
 
 ---
 
@@ -255,6 +327,15 @@ which is the smallest sample where it starts to be meaningful (and
 not noisy). Applies to the FlowEnd summary; should be applied to
 Profile + leaderboard previews on their next pass.
 
+A sibling gate governs the **stake ladder**: below
+`STAKE_LADDER_UNLOCK_CALLS = 50` lifetime calls
+([`vxp-economy.constants.ts`](../../../src/lib/constants/vxp-economy.constants.ts),
+`isStakeLadderUnlocked`), the Flow-card back hides the stake slider and
+the per-call stake stays pinned to the default rung — new predictors see
+one stake, no decision paralysis. In its place the card shows the
+`card.back.stake_locked` line ("N more calls and you can choose your
+rung"). The slider reveals at 50, once sizing is a meaningful choice.
+
 ### 7.6 Negative-state choreography
 
 | State                                    | Haptic           | Visual                                                   |
@@ -340,6 +421,34 @@ nine named patterns. Call sites use the name, never raw ms numbers.
 The wrapper is best-effort — no-ops on iOS Safari and any UA without
 `navigator.vibrate`, never throws.
 
+### 7.10 Cold-load Oracle moment
+
+While the first Flow card is still fetching, the deck shows a brand-on
+loading state instead of a bare spinner —
+[`FlowDeckSkeleton.svelte`](../../../src/lib/components/market/FlowDeckSkeleton.svelte),
+rendered in `FlowMode`'s `{#if loading}` branch. It is **driven by the
+real fetch state** (`loading`), never a fake or minimum timer.
+
+Three layers, all `aria-hidden` decoration under one `role="status"`
+region labelled `flow.loading.aria`:
+
+- **In-slot card skeleton.** The component re-uses the deck's
+  `.flow-stage` / `.flow-card-wrap` geometry so the placeholder lands in
+  the exact box (position, size, 22 px face radius) the real card will
+  occupy — no layout jump on reveal. A shimmer sweep runs across it.
+- **3D-wobble Oracle.** `OracleChar` floated above the skeleton with a
+  gentle yaw/pitch oscillation. No springy overshoot — confidence
+  doesn't bounce (§7.1).
+- **Rotating oracle copy.** A short set of terse oracular lines
+  (`flow.loading.line_1…4`) cycles every ~2 s.
+
+**Reduced-motion:** under `prefers-reduced-motion: reduce` the shimmer,
+wobble, float, and copy rotation all stop — the skeleton is static, the
+Oracle is still, and a single line shows. Gating is belt-and-braces:
+the CSS `@media` block plus the runtime `prefersReducedMotion()` flag
+(the rotation interval never starts and `OracleChar` mounts with
+`animate={false}`).
+
 ---
 
 ## 8. Routing & sign-in shell
@@ -364,11 +473,11 @@ back into the gated route.
 
 ### 8.2 Public surfaces
 
-| Path               | Purpose                                                                                                                                                    |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/signin`          | Returning-user sign-in surface (`SignInScreen` mode `"signin"`). Welcome-back framing. Routes signed-in users straight to home.                            |
-| `/signup`          | Pre-sign-in onboarding flow. Collects a first call, gesture practice, category interests, handle, and optional email before sending the user to `/signin`. |
-| `/auth/callback/*` | OAuth callback handlers (Google today). Public — `signInWithGoogle` redirects through these.                                                               |
+| Path               | Purpose                                                                                                                                       |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/signin`          | Returning-user sign-in surface (`SignInScreen` mode `"signin"`). Welcome-back framing. Routes signed-in users straight to home.               |
+| `/signup`          | Pre-sign-in onboarding flow (see §8.3): team pick → first call → handle → auth (passkey/OAuth). No gesture-practice or category-picker steps. |
+| `/auth/callback/*` | OAuth callback handlers (Google today). Public — `signInWithGoogle` redirects through these.                                                  |
 
 `PublicPath` enum + `isPublicPath(pathname)` helper live in
 [`src/lib/constants/routes.constants.ts`](../../../src/lib/constants/routes.constants.ts).
@@ -376,25 +485,47 @@ back into the gated route.
 ### 8.3 Onboarding
 
 [`src/lib/components/onboarding/OnboardingFlow.svelte`](../../../src/lib/components/onboarding/OnboardingFlow.svelte)
-is the canonical create-account prelude. It has exactly four steps:
+is the canonical create-account prelude. It runs **three beats**, with
+Beat 1 split into two micro-phases:
 
-1. **First call** — one live swipeable market card. There is no Begin
-   button; the user commits with a YES / NO swipe or the accessible card
-   buttons. Commit triggers a first-call celebration with rings, sparks,
-   `FIRST CALL`, `Called it.`, and `+50 XP` before advancing.
-2. **Gestures** — one practice card. The user must tap to reveal details
-   and swipe up to skip before the `Got it` button appears.
-3. **Categories** — six FlowArt-backed tiles:
-   `macro`, `crypto`, `politics`, `tech`, `sports`, `culture`. Require at
-   least three selections. Show a small deck preview once the third
-   category is selected.
-4. **Identity** — starter-pack hero, handle input, optional non-blocking
-   email input, social proof, and `Enter VICI →`.
+1. **Beat 1a — team pick** — pick a featured-event team, or skip to just
+   follow the tournament (`pick` selects, `skip` advances null).
+   `OnboardingFlow` also accepts an optional `initialParticipantId`
+   (deep-link preselect): when it resolves to a current featured-event
+   participant the flow opens **straight on Beat 1b** with that team
+   already backed, skipping 1a. An unknown/absent value falls through to
+   the picker — no preselect. `/signup` derives it from the `?team=`
+   query param (ISO-2 code = participant id), which the landing WC
+   favourite tiles deep-link into.
+2. **Beat 1b — first call** — one live swipeable market card derived from
+   the pick (or a default). There is no Begin button; the user commits
+   with a YES / NO swipe or the accessible card buttons. "Change team"
+   returns to 1a.
+3. **Beat 2 — handle** — "Claim a handle." Two modes (pool / custom). The
+   pool surfaces a small curated set (`SUGGESTIONS_PER_DRAW = 6`); each
+   draw is still pre-filtered through the satellite availability query and
+   guarded by a claim-time TOCTOU re-check before advancing. Skip keeps a
+   placeholder.
+4. **Beat 3 — make it count** — "Make it count, @{handle}." Shows the
+   starter-pack strip (registration-grant VXP · featured-event market,
+   both derived — `newUserVxpAmountMilestone1BaseUnits` and the
+   `featuredEvent` store, never hardcoded) and the play-currency line
+   ("VICI is free to play. VXP is play-currency only."), then locks the
+   record via the provider stack (passkey / OAuth). No backing-team
+   summary card — the call is already confirmed in Beat 1.
 
-The archetype step is not part of onboarding. Post-auth layouts must not
-gate on `profile.archetype`; if pre-sign-in onboarding data is available,
-apply the handle and interests to the profile after authentication and
-clear the pending handoff.
+Every beat renders the shared
+[`OnboardingStepTracker`](../../../src/lib/components/onboarding/OnboardingStepTracker.svelte):
+three progress dots plus the brand's three-act arc as the step label —
+`Veni · 1 of 3`, `Vidi · 2 of 3`, `Vici · 3 of 3`. The Latin words are
+brand-fixed and identical in every locale; only the ` · N of 3` tail is
+localized (`onboarding.step_of`).
+
+There is **no gestures step and no category-picker step** in the current
+flow. The archetype step is not part of onboarding either. Post-auth
+layouts must not gate on `profile.archetype`; if pre-sign-in onboarding
+data is available, apply the handle (and team / side) to the profile
+after authentication and clear the pending handoff.
 
 ### 8.4 SignInScreen — visual shell
 
@@ -440,9 +571,11 @@ If new nav-less routes are added (e.g. `/notifications`,
 [`src/lib/components/dev/TweaksPanel.svelte`](../../../src/lib/components/dev/TweaksPanel.svelte)
 is a floating wrench-icon FAB, gated by `isDev()` from
 [`src/lib/env/app.env.ts`](../../../src/lib/env/app.env.ts).
-Currently provides quick-jumps to every nav-relevant route plus a
-sign-out trigger. Theme switching (Dark / Light / Peach) lands
-when the theme system does.
+Currently provides an appearance picker, quick-jumps to every
+nav-relevant route, a sign-out trigger, and a **World-Cup mode**
+toggle that flips the persisted `worldCupMode` preference for QA
+(see §11). The panel renders the live archive-gate state next to the
+toggle so QA can confirm the gate independently of the opt-in.
 
 It mounts in the **root** layout
 ([`src/routes/+layout.svelte`](../../../src/routes/+layout.svelte))
@@ -520,6 +653,106 @@ statistics.
 
 ---
 
+## 11. Featured event & World-Cup mode
+
+The app builds a temporary, curated experience around a single
+tentpole "featured event" (the 2026 World Cup today). Everything
+event-specific reads from one `FeaturedEvent` instance so the next
+tentpole plugs in by swapping a constant.
+
+- The event data + its lifecycle dates live in
+  [`featured-event.constants.ts`](../../../src/lib/constants/featured-event.constants.ts).
+  `archiveAfter_ms` is the **product-set archive cut-over date**
+  (currently `2026-08-01`, a buffer past the final) — adjustable in
+  that one constant.
+- Lifecycle status (`upcoming` / `live` / `wrap-up` / `archived`) and
+  the convenience gate `featuredEventActive` derive off a 1-minute
+  heartbeat in
+  [`featured-event.derived.ts`](../../../src/lib/derived/featured-event.derived.ts).
+
+World-Cup mode layers two orthogonal signals, surfaced together from
+[`world-cup.derived.ts`](../../../src/lib/derived/world-cup.derived.ts):
+
+| Signal                | Source                                 | Meaning                                                          |
+| --------------------- | -------------------------------------- | ---------------------------------------------------------------- |
+| `worldCupMode`        | `preferencesStore` (cross-device pref) | User's persisted opt-in. Pure preference; survives archival.     |
+| `worldCupNotArchived` | `featuredEventActive` (archive gate)   | Product gate: `false` once `now > archiveAfter_ms`. Time-driven. |
+| `worldCupActive`      | `worldCupMode && worldCupNotArchived`  | "Render World-Cup content now" — the boolean most surfaces want. |
+
+The persisted flag default is `false` (off): the featured event is
+still `upcoming` at time of writing, so the deck stays in its
+all-categories shape until a user opts in. Consumers (later: Markets
+focus) should read `worldCupActive` rather than
+re-deriving the gate or destructuring the preferences object.
+
+**Dashboard consumers** (wired): when `worldCupActive`, `DashPage`
+hides the "By category" breakdown (per-category accuracy is empty when
+play is scoped to the event) and `DashRankContext`'s third rank tile
+swaps from best-category to a **World Cup · accuracy** tile
+(`market.tag.wc` + `dash.rank.wc_sub`, value from the `wc` category
+bucket). The Dash rank grid otherwise stays Global / League / (this
+tile).
+
+### 11.1 Markets WC-focus
+
+When `worldCupActive` is `true`, the Markets list
+([`MarketsPage.svelte`](../../../src/lib/components/pages/MarketsPage.svelte))
+opens **laser-focused on the World Cup** rather than its evergreen
+all-categories shape:
+
+- **Default filter** is the `wc` tag (not `all`). Read once at init via
+  `get(worldCupActive)` — tying it to a live `$derived` would fight the
+  user once they pick another chip.
+- **Collapsed chip rail**: `MarketsCategoryChips` takes a `wcFocus` prop.
+  In focus mode it leads with the World Cup chip and hides Saved · All ·
+  the other categories behind a single **"More markets →"** control
+  (`markets.more`) that expands them in place. No separate toggle, banner,
+  or phase scrubber.
+- **Two-tier header**: the featured event's `title` renders as a small
+  uppercase eyebrow above the "Markets" title. Threaded through
+  `PageScaffold` → `MobileAppBar` / `SectionHeader` via an optional
+  `eyebrow` prop; the copy comes from `featuredEvent` (never hardcoded).
+
+Outside focus mode every one of these falls back to today's behavior, and
+the sort rail / carousels / skeletons / empty states are unchanged in both
+modes.
+
+### 11.2 Markets retention arc (`worldCupPhase`)
+
+The WC-focus above is one beat of a four-phase **retention arc** that
+gradually widens the deck back to all categories as the event winds down,
+pre-empting the post-Cup engagement cliff. The phase is a single derived,
+[`worldCupPhase`](../../../src/lib/derived/world-cup.derived.ts), layered on
+the existing signals — it does **not** introduce a parallel source of
+truth. It updates live off a 1-minute heartbeat (same cadence as
+`featured-event.derived`) so the phase advances mid-session as the date
+thresholds pass.
+
+| Phase      | When                                               | Markets behavior                                                                                                                                             |
+| ---------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `off`      | `!worldCupMode`                                    | All-categories — unchanged.                                                                                                                                  |
+| `wc-focus` | opted in, `now < finalAt_ms − 14d`                 | WC-focus as in §11.1 — unchanged.                                                                                                                            |
+| `bridge`   | opted in, `finalAt_ms − 14d ≤ now < finalAt_ms`    | Still WC-focused, **plus** a "Beyond the Cup" rail (top non-WC open markets by volume) + a continuity line, seeded on the `wc` view before the Cup resolves. |
+| `open`     | opted in, `now ≥ finalAt_ms` **or** event archived | Reverts to all-categories (default chip is `all`, not `wc`); a `WorldCupRecapCard` sits at the top.                                                          |
+
+- **Threshold source:** `finalAt_ms` from `featured-event.constants.ts`
+  (the 14-day bridge window is a single const in the derived). Once the
+  product archive gate (`worldCupNotArchived`) flips, the arc settles on
+  `open` regardless of the clock.
+- **`MarketsPage` wiring:** the init default chip reads `get(worldCupPhase)`
+  once (WC only in `wc-focus`/`bridge`); `wcFocus` is `$derived` off the
+  live phase so the chrome drops the moment the phase advances. The bridge
+  rail reuses `MarketsCarousel`; the recap card mounts above the list in
+  `open` and never fights the user's chip selection.
+- **`WorldCupRecapCard`** reads the user's `wc` category bucket from the
+  persisted `user_stats` doc (`loadMyUserStats`, same source as the Dash
+  rank tile): accuracy `= wins / calls`, plus the raw call count. Both fall
+  back to `EM_DASH` when there are no WC calls or the snapshot hasn't
+  loaded — never a fabricated figure. Its "Explore all markets" CTA clears
+  the focus by setting the list to `all`.
+
+---
+
 ## Style direction
 
 - Tokens flow through [`src/app.css`](../../../src/app.css) `@theme`;
@@ -541,7 +774,7 @@ tweak). Drop entries that no longer reflect the current product.
 | `style(ui): align primitives and app chrome`      | Retunes Card, Button, Badge, Tabs, SectionHeader, StatCard, Header, and MobileNav around the app shared card / chip / pill / translucent chrome language.                                                                        |
 | `style(auth): align public onboarding surfaces`   | Aligns `/signin`, `/signup`, and `/welcome` around the compact sign-in shell, visual Apple/email placeholders, four-step onboarding, starter pack, product mockup, and landing rhythm.                                           |
 | `style(market): align flow and question detail`   | Aligns Flow cards, Flow back face, market detail header, forecast/action modules, stats, and info panels around the question-detail anatomy while preserving swipe timing, trade execution, order-book polling, and sizing math. |
-| `style(social): align retention surfaces`         | Reframes Social, Profile, and Portfolio as a connected retention loop: Social tabs and top-entry cards, performance-identity profile, recent activity blocks.                                                                    |
+| `style(social): align retention surfaces`         | Reframes Arena, Profile, and Portfolio as a connected retention loop: Arena tabs and top-entry cards, performance-identity profile, recent activity blocks.                                                                      |
 | `style(app): polish supporting surfaces`          | Polishes market discovery, wallet, settings, notifications, empty/loading states, and supporting widgets with the shared card/chrome language.                                                                                   |
 | `fix(ui): tighten mobile theme and screen chrome` | Theme-coherent peach/light controls, compact theme picker, scoped sign-in provider styling, mobile-first hide of the desktop header/footer/challenge FAB on mobile pages, reduced onboarding coach background.                   |
-| `feat(ui): add per-screen mobile appbars`         | New `MobileAppBar` primitive plus per-screen mobile appbars on Markets, Market Detail, Profile, Portfolio, Social.                                                                                                               |
+| `feat(ui): add per-screen mobile appbars`         | New `MobileAppBar` primitive plus per-screen mobile appbars on Markets, Market Detail, Profile, Portfolio, Arena.                                                                                                                |

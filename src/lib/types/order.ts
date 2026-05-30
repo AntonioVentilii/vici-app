@@ -24,11 +24,3 @@ export interface OrderBookLevel {
 	totalQty: bigint;
 	orderCount: number;
 }
-
-export interface OrderBook {
-	marketId: MarketId;
-	outcomeId: string;
-	bids: OrderBookLevel[];
-	asks: OrderBookLevel[];
-	midPrice?: number;
-}

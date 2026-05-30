@@ -92,3 +92,55 @@ export const calculatePositionPnL = ({
 
 	return valNum - costNum;
 };
+
+/**
+ * Effective entry probability of a position — the volume-weighted average
+ * price the user paid per share, expressed as a 0..1 probability. Mirrors
+ * the prototype's `p.entry` value displayed as "Entry X% → Y%" in the
+ * Portfolio active-calls list.
+ *
+ * Derivation: `lockedCollateral` is the total cost in clearing units
+ * (`USD_DECIMALS`); `netQty` is the share count in the market's token
+ * decimals. `cost / shares` is paid per share, which in our prediction
+ * markets equals the implied entry probability (each winning share pays
+ * 1 token at resolution).
+ *
+ * Returns `undefined` when the position has no quantity (avoids divide-by-zero).
+ */
+export const positionEntryProbability = ({
+	position,
+	market
+}: {
+	position: Position;
+	market?: Market;
+}): number | undefined => {
+	if (isNullish(market)) {
+		return;
+	}
+
+	if (position.netQty === ZERO) {
+		return;
+	}
+
+	const sharesNum = decimalFixedValueToNumber({
+		value: position.netQty,
+		decimals: market.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS
+	});
+
+	if (sharesNum === 0) {
+		return;
+	}
+
+	const costNum = decimalFixedValueToNumber({
+		value: position.lockedCollateral,
+		decimals: USD_DECIMALS
+	});
+
+	const prob = costNum / sharesNum;
+
+	if (prob < 0 || prob > 1) {
+		return;
+	}
+
+	return prob;
+};

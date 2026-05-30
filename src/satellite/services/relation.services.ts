@@ -5,6 +5,7 @@ import { isNullish } from '@dfinity/utils';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
+	deleteDocStore,
 	encodeDocData,
 	getDocStore,
 	listDocsStore,
@@ -122,7 +123,12 @@ export const listFriendRequests = (): Relation[] => {
 		);
 };
 
-export const listRejectedFriendships = (): Relation[] => {
+/**
+ * Lists pending friend requests where the caller is the **sender**
+ * (`participants[0]`). Mirror of {@link listFriendRequests}, which only
+ * surfaces requests where the caller is the recipient.
+ */
+export const listSentFriendRequests = (): Relation[] => {
 	const caller = msgCaller();
 
 	const callerText = caller.toText();
@@ -138,8 +144,8 @@ export const listRejectedFriendships = (): Relation[] => {
 		.filter(
 			(r) =>
 				r.category === RelationCategory.FRIEND &&
-				r.state === RelationState.REJECTED &&
-				r.participants.includes(callerText)
+				r.state === RelationState.PENDING &&
+				r.participants[0] === callerText
 		);
 };
 
@@ -207,6 +213,59 @@ export const acceptFriendRequest = ({ relationId }: { relationId: string }): voi
 				...relation,
 				state: RelationState.ACTIVE
 			})
+		},
+		caller
+	});
+};
+
+/**
+ * Cancels a friend request the caller previously sent.
+ *
+ * Atomicity: the cancel only succeeds if the relation is still
+ * {@link RelationState.PENDING} **and** its on-chain `version` matches the
+ * one we just read. If the recipient accepted/rejected in the meantime,
+ * the doc's `version` was bumped, `deleteDocStore` traps with a
+ * version-mismatch error, and the cancel is rejected — exactly the
+ * "nanosecond" race the caller asked us to guard against. We also
+ * deliberately do **not** "transition to a CANCELLED state" because that
+ * would be a second write that itself races with the recipient's accept;
+ * a versioned delete is the only single-write, conflict-detecting move
+ * the Juno datastore exposes.
+ */
+export const cancelFriendRequest = ({ relationId }: { relationId: string }): void => {
+	const caller = msgCaller();
+
+	const callerText = caller.toText();
+
+	const doc = getDocStore({
+		collection: Collection.RELATIONS,
+		key: relationId,
+		caller
+	});
+
+	if (isNullish(doc)) {
+		throw new Error('Relation does not exist');
+	}
+
+	const relation = decodeDocData<Relation>(doc.data);
+
+	if (relation.category !== RelationCategory.FRIEND) {
+		throw new Error('Only friend requests can be cancelled.');
+	}
+
+	if (relation.participants[0] !== callerText) {
+		throw new Error('Only the sender can cancel a friend request.');
+	}
+
+	if (relation.state !== RelationState.PENDING) {
+		throw new Error(`Cannot cancel a request in state "${relation.state}".`);
+	}
+
+	deleteDocStore({
+		collection: Collection.RELATIONS,
+		key: relationId,
+		doc: {
+			version: doc.version
 		},
 		caller
 	});

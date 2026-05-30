@@ -17,15 +17,18 @@ export const USD_DECIMALS = 4;
 
 export const VICI_ORACLE_V1 = 'VICI_ORACLE_V1';
 
+/** Em-dash placeholder for an absent / not-yet-served value in the UI. */
+export const EM_DASH = '—';
+
 export const SECOND_IN_NANOSECONDS = 1_000_000_000n;
 export const MILLISECOND_IN_NANOSECONDS = 1_000_000n;
+
+/** One day in milliseconds — `24 × 60 × 60 × 1000`. */
+export const DAY_IN_MS = 24 * 60 * 60 * 1000;
 export const MINUTE_IN_SECONDS = 60n;
 export const HOUR_IN_SECONDS = 60n * MINUTE_IN_SECONDS;
 export const DAY_IN_SECONDS = 24n * HOUR_IN_SECONDS;
 export const WEEK_IN_SECONDS = 7n * DAY_IN_SECONDS;
-export const MINUTE_IN_NANOSECONDS = MINUTE_IN_SECONDS * SECOND_IN_NANOSECONDS;
-export const HOUR_IN_NANOSECONDS = HOUR_IN_SECONDS * SECOND_IN_NANOSECONDS;
-export const DAY_IN_NANOSECONDS = DAY_IN_SECONDS * SECOND_IN_NANOSECONDS;
 export const WEEK_IN_NANOSECONDS = WEEK_IN_SECONDS * SECOND_IN_NANOSECONDS;
 
 export const II_MAX_TIME_TO_LIVE_NS = WEEK_IN_NANOSECONDS;
@@ -39,13 +42,6 @@ export const WALLET_PAGINATION = 10n;
  * via this constant rather than the literal inline.
  */
 export const ORDER_BOOK_POLL_MS = 5_000;
-
-/**
- * In-market chat poll interval. The chat surface long-polls because
- * the satellite doesn't push deltas yet; once it does, this constant
- * (and the consumer's `setInterval`) goes away.
- */
-export const CHAT_POLL_MS = 5_000;
 
 /**
  * Default auto-dismiss duration for global toasts (`notificationsStore`).

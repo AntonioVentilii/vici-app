@@ -62,6 +62,113 @@ Rules:
   declaration + the dispatch table are the only logic that belongs in
   `index.ts`.
 
+## Wire-format quirk: `Vec<NestedStruct>` results need snake_case
+
+If a typed query returns `j.array(SomeNestedSchema)`, the items land on the
+wire in **snake_case** — not the camelCase you'd expect from the schema.
+Get this wrong and the canister traps on every read with
+`'Error converting from js JsonData into type Candid: missing field
+<snake_case_name>'`.
+
+### Why
+
+Sputnik's `JsonData` derive macro generates a mirror struct with
+`#[serde(rename_all = "camelCase")]` for fields it wraps, so the JSON↔Rust
+handoff normally uses camelCase. **But** the macro only wraps fields
+explicitly marked `#[json_data(nested)]`, and Juno's TS→Rust codegen does
+**not** add that attribute to `Vec<NestedStruct>` fields. For example:
+
+```rust
+// ✅ getProfile — `profile` IS nested → wire format is camelCase
+pub struct AppGetProfileResult {
+    #[json_data(nested)]
+    pub profile: Option<AppGetProfileResultProfile>,
+}
+
+// ❌ listLeaderboard — `items` is NOT nested → wire format reverts to
+//    the inner struct's original `Deserialize` impl, no rename_all,
+//    i.e. snake_case
+pub struct AppListLeaderboardResult {
+    pub items: Vec<AppListLeaderboardResultItems>,
+}
+```
+
+So `app_get_profile` works with camelCase, but `app_list_leaderboard`,
+`app_search_profiles`, `app_list_friends`, etc. expect snake_case on the
+wire.
+
+### The fix that doesn't work
+
+`.transform()` on the result schema is **not** a valid workaround. It
+produces a `ZodEffects`, and juno's schema → Rust codegen only accepts
+`ZodObject` — it throws
+`"Unsupported type: unrepresentable schema (z.symbol, z.undefined, …
+are not supported)"`, the CLI's silent `catch{}` swallows it, and the
+whole `juno functions build` exits with code 1 producing **zero** files in
+`target/deploy/`. (See git history for the Saturday afternoon we lost to
+this.) Avoid `.transform()` / `.refine()` / `.passthrough()` anywhere in a
+`defineQuery` / `defineUpdate` result schema for the same reason.
+
+### The fix that does work
+
+For every `Vec<NestedStruct>` result, declare a **parallel snake_case wire
+schema** in
+[`src/satellite/utils/wire-format.utils.ts`](../../../src/satellite/utils/wire-format.utils.ts)
+and a matching `toWire…` converter, then use them in `index.ts`:
+
+```ts
+// in src/satellite/utils/wire-format.utils.ts
+export const UserProfileWireSchema = j.strictObject({
+	owner: PrincipalTextSchema,
+	total_trades: j.number().default(0), // snake_case here
+	// …
+	preferences: j
+		.strictObject({
+			default_amount: j.strictObject({ flow: j.string(), manual: j.string() })
+		})
+		.optional()
+});
+
+export const toWireProfile = (profile: AppProfileLike): WireUserProfile => ({
+	owner: profile.owner,
+	total_trades: profile.totalTrades ?? 0 // camelCase → snake_case
+	// …
+});
+
+// in src/satellite/index.ts
+export const listLeaderboard = defineQuery({
+	result: j.strictObject({
+		items: j.array(UserProfileWireSchema) // ← wire schema, not the FE schema
+	}),
+	handler: () => ({
+		items: listLeaderboardFn().map(toWireProfile) // ← convert per item
+	})
+});
+```
+
+juno's codegen reads the wire schema's field names verbatim → the Rust
+struct shape is byte-identical to before. The handler emits snake_case →
+Zod parse passes through → JSON.stringify produces snake_case → Rust
+deserializer is happy.
+
+### When to apply
+
+- **Array results (`j.array(NestedSchema)`)** — always use the wire schema.
+  Currently affected: `listLeaderboard`, `searchProfiles`,
+  `listMarketTranslations`, `listFriends`, `listFollowers`,
+  `listFollowing`, `listFriendRequests`, `listSentFriendRequests`.
+- **`Option<NestedSchema>` results** (e.g. `getProfile.profile`) — leave
+  camelCase as-is. Juno emits `#[json_data(nested)]` on `Option<T>` so
+  the camelCase mirror handles it correctly.
+- **Primitive results** (`j.boolean()`, `j.number()`, `j.string()`,
+  `j.array(j.string())`, …) — no conversion needed; primitives don't
+  trigger the bug.
+
+If the upstream Juno codegen ever starts emitting `#[json_data(nested)]`
+on `Vec<NestedStruct>` fields too, the wire schemas become redundant and
+can be dropped in one PR — point all the `index.ts` results back at the
+FE schemas and delete the converters.
+
 ## Hooks — collection dispatch table
 
 The repo's pattern (see
@@ -141,6 +248,66 @@ Two rules:
   editor's principal), wire it through to the assertion's "skip my
   own doc" filter so the two layers can never disagree.
 
+## Atomic cancel via version-locked delete
+
+When an endpoint cancels a pending state-machine doc (e.g. retract a
+friend request the sender just sent), the cancel must not race with the
+counterparty mutating that same doc (e.g. recipient accepting the
+request). The Juno datastore exposes exactly one primitive for this:
+`deleteDocStore` accepts a `doc.version`, and the canister traps if the
+on-chain version moved between read and delete.
+
+```ts
+export const cancelFriendRequest = ({ relationId }: { relationId: string }): void => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+
+	const doc = getDocStore({
+		collection: Collection.RELATIONS,
+		key: relationId,
+		caller
+	});
+
+	if (isNullish(doc)) {
+		throw new Error('Relation does not exist');
+	}
+
+	const relation = decodeDocData<Relation>(doc.data);
+
+	if (relation.participants[0] !== callerText) {
+		throw new Error('Only the sender can cancel a friend request.');
+	}
+
+	if (relation.state !== RelationState.PENDING) {
+		throw new Error(`Cannot cancel a request in state "${relation.state}".`);
+	}
+
+	deleteDocStore({
+		collection: Collection.RELATIONS,
+		key: relationId,
+		doc: { version: doc.version }, // ← version lock = atomicity
+		caller
+	});
+};
+```
+
+Rules:
+
+- **Single write, conflict-detecting.** Do not implement cancel as a
+  "transition to CANCELLED state via `setDocStore`" — that would be a
+  second write that itself races with the recipient's accept. A
+  versioned delete is the only single-write move the datastore exposes
+  that detects mid-flight conflicts.
+- **Validate state in the same handler.** Read → check state &
+  ownership → delete in one canister call. The narrow window between
+  `getDocStore` and `deleteDocStore` is covered by the version lock.
+- **FE refreshes after the catch.** When the trap fires (e.g. the
+  counterparty won the race), the FE should still re-fetch the store so
+  the UI lands on the real on-chain state (e.g. the request now shows
+  under "Active" because accept won). See `handleCancel` in
+  [`src/lib/components/social/FriendsList.svelte`](../../../src/lib/components/social/FriendsList.svelte)
+  for the pattern.
+
 ## Idempotency in hooks
 
 Hooks fire **after** the write, but they can fire more than once
@@ -187,6 +354,16 @@ When a hook calls another canister (typically the icdc-core registry):
 - ✅ Keep `index.ts` declarative — schemas + dispatch tables only.
 - ✅ Make every hook idempotent.
 - ✅ Validate principals via `PrincipalTextSchema`.
+- ✅ Use the snake_case **wire schemas** from
+  [`src/satellite/utils/wire-format.utils.ts`](../../../src/satellite/utils/wire-format.utils.ts)
+  for **every** `j.array(NestedSchema)` result, with the matching
+  `toWire…` converter in the handler — see the
+  [`Vec<NestedStruct>` quirk](#wire-format-quirk-vecnestedstruct-results-need-snake_case)
+  section above for the why.
+- ❌ Use `.transform()` / `.refine()` / `.passthrough()` in any
+  `defineQuery` / `defineUpdate` `args` or `result` schema — juno's
+  codegen only accepts `ZodObject` and silently kills the build with no
+  output on `ZodEffects`.
 - ❌ Import `@junobuild/core` (FE-only).
 - ❌ Touch `api-schemas.ts`, `satellite.did`, or
   `satellite_extension.did` by hand — regenerate via

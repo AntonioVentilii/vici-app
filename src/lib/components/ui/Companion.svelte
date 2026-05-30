@@ -82,13 +82,13 @@
 		display: flex;
 		align-items: center;
 		gap: 10px;
-		transition: opacity 200ms var(--ease-vici);
+		transition: opacity var(--d-state) var(--ease-vici);
 	}
 
 	.companion-inline {
 		display: inline-flex;
 		padding: 8px 12px 8px 8px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: rgba(242, 236, 220, 0.04);
 		border: 1px solid var(--border-base);
 	}
@@ -98,7 +98,7 @@
 		z-index: 60;
 		right: 16px;
 		padding: 8px 14px 8px 8px;
-		border-radius: 999px;
+		border-radius: var(--r-pill);
 		background: rgba(14, 13, 11, 0.85);
 		backdrop-filter: blur(16px);
 		border: 1px solid var(--border-base);

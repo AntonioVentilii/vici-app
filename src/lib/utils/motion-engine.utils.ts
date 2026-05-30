@@ -124,6 +124,23 @@ const saveState = (state: MotionState): void => {
 	}
 };
 
+// Per-milestone duration ladder. The shorter timings (700, 500) keep
+// low-milestone beats from feeling like punctuation; the longer
+// timings (1500, 1700, 2000) give the high-milestone Oracle / Vici
+// beats room to land.
+const MILESTONE_DURATION_MS: Record<number, number> = {
+	1: 1300,
+	3: 700,
+	5: 700,
+	10: 1200,
+	25: 500,
+	50: 1500,
+	100: 1700,
+	250: 1500,
+	500: 1500,
+	1000: 2000
+};
+
 const milestoneBeat = (swipeCount: number): MotionBeatPayload | null => {
 	const milestone = FLOW_MILESTONES.find((m) => m.swipeCount === swipeCount);
 
@@ -131,16 +148,24 @@ const milestoneBeat = (swipeCount: number): MotionBeatPayload | null => {
 		return null;
 	}
 
+	// Character routing: Vici under 50, Oracle at 50+.
 	const character: MotionCharacter = milestone.swipeCount >= 50 ? 'oracle' : 'vici';
+	// Badges: CENTURION at 100; one-thousand badge persists at 1000.
+	const badgeKey: MessageKey | undefined =
+		swipeCount === 100
+			? 'flow.milestone.badge_centurion'
+			: swipeCount === 1000
+				? 'flow.milestone.badge_one_thousand'
+				: undefined;
 
 	return {
 		kind: `milestone-${swipeCount}`,
 		character,
 		copyKey: milestone.copyKey,
-		duration_ms: swipeCount === 1 ? 1300 : swipeCount >= 50 ? 1500 : 1200,
+		duration_ms: MILESTONE_DURATION_MS[swipeCount] ?? 1200,
 		hardPause: true,
 		bonusXp: milestone.bonusXp,
-		badgeKey: swipeCount === 1000 ? 'flow.milestone.badge_one_thousand' : undefined
+		badgeKey
 	};
 };
 
@@ -291,8 +316,4 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 		xpGained: baseXp + bonusXp,
 		beat
 	};
-};
-
-export const resetMotionEngineState = (): void => {
-	saveState(defaultState());
 };

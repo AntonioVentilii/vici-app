@@ -1,31 +1,20 @@
-# Svelte 5 Patterns (Claude quick-reference)
+# Svelte 5 (Claude pointer)
 
-> **Authoritative source:** [`docs/ai/frontend/stack-and-patterns.md`](../../docs/ai/frontend/stack-and-patterns.md).
-> This card is a Claude-only summary. If it disagrees with the doc above,
-> the doc above wins.
+`docs/ai/` is the source of truth. This card only surfaces a few
+high-violation reminders so they land in Claude's prompt — for anything
+substantive, read the canonical doc.
 
-- **Idiomatic Code:** always follow Svelte 5 best practices and patterns.
-- **Runes:** use for component-local state — `$state`, `$derived`, `$effect`.
-  Cross-view shared state still uses Svelte stores in `$lib/stores/`.
-- **Props syntax:** named `interface Props` + destructure with types.
+**Read first:**
+[`docs/ai/frontend/stack-and-patterns.md`](../../docs/ai/frontend/stack-and-patterns.md)
+— Svelte 5 idioms (runes, props shape, effect hygiene, anti-patterns).
 
-  ```svelte
-  <script lang="ts">
-  	interface Props {
-  		title: string;
-  		highlight?: boolean;
-  		onSelect?: () => void;
-  	}
+**Easy-to-miss rules:**
 
-  	let { title, highlight = false, onSelect = () => {} }: Props = $props();
-  </script>
-  ```
-
-- **Interface declaration:** declare the `Props` interface directly within
-  the `.svelte` file for better encapsulation and visibility.
-- **Two-way binding:** avoid `$bindable` unless explicitly required —
-  prefer a callback prop (`onChange`).
-
-For event handling, snippets, derived stores, and the full anti-pattern
-list, read
-[`docs/ai/frontend/stack-and-patterns.md`](../../docs/ai/frontend/stack-and-patterns.md).
+- This is Svelte 5 with **runes** — no `export let`, no `$:`.
+- Props: named `interface Props` + destructure (no inline type literals,
+  no `$bindable` unless required).
+- **No hidden reactive captures:** a top-level IIFE whose body reads a
+  `$props()` value or `$state` binding freezes that value at init —
+  `svelte-check` does **not** catch this. Use `$derived` /
+  `$derived.by`. See
+  [Reactive reads — no hidden captures](../../docs/ai/frontend/stack-and-patterns.md#reactive-reads--no-hidden-captures).

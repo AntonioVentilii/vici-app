@@ -2,22 +2,24 @@
 	import type { Icon as LucideIcon } from 'lucide-svelte';
 	import {
 		ArrowLeft,
+		Bell,
 		Check,
 		Flame,
 		Sparkles,
 		Swords,
 		Target,
-		TrendingUp,
+		UserPlus,
 		Users
 	} from 'lucide-svelte/icons';
-	import { goto } from '$app/navigation';
+	import { onMount } from 'svelte';
 	import { resolve } from '$app/paths';
-	import Button from '$lib/components/ui/Button.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { inboxStore, markAllInboxRead } from '$lib/stores/inbox.store';
+	import { refreshFriendRelations } from '$lib/stores/friends.store';
+	import { combinedInboxStore, markAllInboxRead } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { InboxNotificationKind } from '$lib/types/inbox';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 
 	const kindIcons: Record<InboxNotificationKind, typeof LucideIcon> = {
 		resolve: Check,
@@ -25,51 +27,104 @@
 		social: Users,
 		challenge: Swords,
 		level: Sparkles,
-		market: Target
+		market: Target,
+		friend_request: UserPlus
 	};
+
+	onMount(() => {
+		void refreshFriendRelations();
+	});
 </script>
 
 <div class="notifications-page">
 	<header class="notifications-appbar">
+		<!--
+			Back destination is Flow. The back-arrow is a text-only
+			ghost icon button — no border box. The Mark-all-read on
+			the right is also a plain ghost text button (not the
+			`Button` component) so the padding + typography read as
+			`t-eyebrow` instead of a sized control.
+		-->
 		<button
-			class="notifications-back"
-			aria-label={t({ locale: $localeStore, key: 'notifications.back_settings' })}
-			onclick={() => goto(resolve(AppPath.Settings))}
+			class="appbar-icon-btn"
+			aria-label={t({ locale: $localeStore, key: 'notifications.back_flow' })}
+			onclick={() => goBack(resolve(AppPath.Flow))}
 			type="button"
 		>
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 		</button>
 		<h1 class="notifications-title">{t({ locale: $localeStore, key: 'notifications.title' })}</h1>
-		<Button onclick={markAllInboxRead} size="sm" variant="ghost">
+		<!--
+			Mark-all-read is rendered unconditionally. It is a no-op
+			when the inbox is empty, kept visible so the layout doesn't
+			reflow as notifications arrive.
+		-->
+		<button
+			class="notifications-mark-read allcaps"
+			disabled={$combinedInboxStore.length === 0}
+			onclick={markAllInboxRead}
+			type="button"
+		>
 			{t({ locale: $localeStore, key: 'notifications.mark_read' })}
-		</Button>
+		</button>
 	</header>
 
-	<ul class="notifications-list">
-		{#each $inboxStore as notification (notification.id)}
-			{@const KindIcon = kindIcons[notification.kind] ?? TrendingUp}
-			<li class="notification-card" class:is-unread={notification.unread}>
-				<span class="notification-icon" aria-hidden="true">
-					<KindIcon size={16} strokeWidth={1.8} />
-				</span>
-				<div class="notification-copy">
-					<span class="notification-title">{notification.title}</span>
-					<p class="notification-body">{notification.body}</p>
-					<span class="notification-when num">{notification.when}</span>
-				</div>
-				{#if notification.unread}
-					<span class="notification-dot" aria-hidden="true"></span>
-				{/if}
-			</li>
-		{/each}
-	</ul>
+	{#if $combinedInboxStore.length === 0}
+		<!-- Polished empty state — dashed surface with serif-italic
+		     headline. The bell icon is faint by design (no foreground
+		     attention since there's no event to draw the eye). -->
+		<div class="notifications-empty" aria-live="polite" role="status">
+			<Bell class="notifications-empty-icon" aria-hidden="true" size={28} strokeWidth={1.4} />
+			<p class="notifications-empty-title serif-italic">
+				{t({ locale: $localeStore, key: 'notifications.empty.title' })}
+			</p>
+			<p class="notifications-empty-body">
+				{t({ locale: $localeStore, key: 'notifications.empty.body' })}
+			</p>
+		</div>
+	{:else}
+		<ul class="notifications-list">
+			{#each $combinedInboxStore as notification (notification.id)}
+				{@const KindIcon = kindIcons[notification.kind] ?? Target}
+				<li class="notification-item" class:is-unread={notification.unread}>
+					{#if notification.href}
+						<a class="notification-card notification-card-link" href={notification.href}>
+							<span class="notification-icon" aria-hidden="true">
+								<KindIcon size={16} strokeWidth={1.8} />
+							</span>
+							<div class="notification-copy">
+								<span class="notification-title">{notification.title}</span>
+								<p class="notification-body">{notification.body}</p>
+								<span class="notification-when num">{notification.when}</span>
+							</div>
+							{#if notification.unread}
+								<span class="notification-dot" aria-hidden="true"></span>
+							{/if}
+						</a>
+					{:else}
+						<div class="notification-card">
+							<span class="notification-icon" aria-hidden="true">
+								<KindIcon size={16} strokeWidth={1.8} />
+							</span>
+							<div class="notification-copy">
+								<span class="notification-title">{notification.title}</span>
+								<p class="notification-body">{notification.body}</p>
+								<span class="notification-when num">{notification.when}</span>
+							</div>
+							{#if notification.unread}
+								<span class="notification-dot" aria-hidden="true"></span>
+							{/if}
+						</div>
+					{/if}
+				</li>
+			{/each}
+		</ul>
+	{/if}
 </div>
 
 <style lang="postcss">
 	.notifications-page {
-		max-width: 40rem;
-		margin: 0 auto;
-		padding-bottom: 5rem;
+		padding: 0 1.25rem 6rem;
 	}
 
 	.notifications-appbar {
@@ -80,24 +135,36 @@
 		padding: 0.25rem 0 1rem;
 	}
 
-	.notifications-back {
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: 0.5rem 0.625rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--text-base) 6%, transparent);
-		color: var(--text-base);
-		cursor: pointer;
-	}
-
 	.notifications-title {
 		margin: 0;
 		font-size: var(--t-18);
 		font-weight: 600;
 		text-align: center;
 		color: var(--text-base);
+	}
+
+	/* Text-only ghost — `btn btn-ghost t-eyebrow` appbar variant. */
+	.notifications-mark-read {
+		appearance: none;
+		padding: 0.375rem 0.625rem;
+		border: 0;
+		background: transparent;
+		font: inherit;
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+		cursor: pointer;
+		transition: color var(--d-hover) var(--ease-vici);
+	}
+
+	.notifications-mark-read:not(:disabled):hover {
+		color: var(--text-base);
+	}
+
+	.notifications-mark-read:disabled {
+		cursor: default;
+		opacity: 0.4;
 	}
 
 	.notifications-list {
@@ -107,6 +174,10 @@
 		margin: 0;
 		padding: 0;
 		list-style: none;
+	}
+
+	.notification-item {
+		display: block;
 	}
 
 	.notification-card {
@@ -119,9 +190,23 @@
 		border: 1px solid var(--border-base);
 		background: var(--bg-surface);
 		box-shadow: var(--shadow-card);
+		color: var(--text-base);
+		text-decoration: none;
 	}
 
-	.notification-card.is-unread {
+	.notification-card-link {
+		cursor: pointer;
+		transition:
+			background-color var(--d-hover) var(--ease-vici),
+			border-color var(--d-hover) var(--ease-vici);
+	}
+
+	.notification-card-link:hover {
+		border-color: var(--border-strong);
+		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-surface));
+	}
+
+	.notification-item.is-unread .notification-card {
 		border-color: color-mix(in srgb, var(--color-primary) 30%, var(--border-base));
 		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-surface));
 	}
@@ -158,7 +243,7 @@
 
 	.notification-when {
 		margin-top: 0.125rem;
-		font-size: 0.6875rem;
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
@@ -168,5 +253,36 @@
 		margin-top: 0.375rem;
 		border-radius: 50%;
 		background: var(--color-primary);
+	}
+
+	.notifications-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 2.5rem 1.5rem;
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+		background: transparent;
+		text-align: center;
+	}
+
+	.notifications-empty :global(.notifications-empty-icon) {
+		color: var(--parchment-faint);
+		margin-bottom: 0.25rem;
+	}
+
+	.notifications-empty-title {
+		margin: 0;
+		font-size: var(--t-18);
+		color: var(--text-base);
+	}
+
+	.notifications-empty-body {
+		margin: 0;
+		max-width: 24rem;
+		font-size: var(--t-13);
+		line-height: 1.55;
+		color: var(--text-muted);
 	}
 </style>

@@ -6,23 +6,26 @@ import {
 	PAYOFF_TYPE,
 	PRICE_DECIMALS,
 	STRIKE,
-	VICI_ORACLE_V1,
-	ZERO
+	VICI_ORACLE_V1
 } from '$lib/constants/app.constants';
 import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
+import type { AppLocale } from '$lib/constants/locale.constants';
+import type { MarketTag } from '$lib/constants/market-tags.constants';
 import { ActivityType } from '$lib/enums/social';
 import { UserRole } from '$lib/enums/user';
 import { getGlobalActivities, logActivity } from '$lib/services/activity.services';
-import { listSeriesCategories } from '$lib/services/category.services';
 import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
+import {
+	listMarketMetadataBySeries,
+	listMarketTagsBySeries
+} from '$lib/services/market-tags.services';
 import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
-import type { SeriesCategory } from '$lib/types/category';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
+import type { MarketMetadata } from '$lib/types/market-metadata';
 import type { Activity } from '$lib/types/social';
 import { filterByPlaygroundExpandedDomain } from '$lib/utils/balance-domain.utils';
-import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import {
 	calculateCategoricalProbabilities,
 	calculateMarketStats,
@@ -45,7 +48,8 @@ export const createMarket = async ({
 	payoutUnit: payoutUnitOverride,
 	socialReward,
 	balanceDomain,
-	tradingAccess = [{ Open: null }]
+	tradingAccess = [{ Open: null }],
+	locale
 }: {
 	title: string;
 	description: string;
@@ -55,6 +59,14 @@ export const createMarket = async ({
 	socialReward?: { title: string; description?: string; iconUrl?: string };
 	balanceDomain: RegistryDid.BalanceDomain;
 	tradingAccess?: RegistryDid.TradingAccess[];
+	/**
+	 * BCP 47 source language of `title`, `description`, `outcomes`, and
+	 * `socialReward`. Stored as metadata on the registry; the canister never
+	 * stores translations and treats `None` as `"en"` by default. Off-chain
+	 * translations (see `MARKET_TRANSLATIONS` collection) overlay this source
+	 * for each user's preferred locale.
+	 */
+	locale?: AppLocale;
 }): Promise<string> => {
 	const identity = await safeGetIdentityOnce();
 
@@ -81,6 +93,20 @@ export const createMarket = async ({
 		throw new Error(
 			'Unauthorized: only admins or creators can create financial markets. ' +
 				'Regular users may only create social (bragging-stakes) challenges.'
+		);
+	}
+
+	// Mirrors the on-chain invariant enforced by the registry (`SocialMarketMustBeRestricted`):
+	// a Social market must have at least one `Restricted` policy and may not contain `Open`.
+	// Catching it here surfaces a deterministic error to callers instead of an opaque
+	// `Failed to add series: {SocialMarketMustBeRestricted: null}` from the canister.
+	if (
+		isSocialMarket &&
+		(tradingAccess.length === 0 || !tradingAccess.every((ta) => 'Restricted' in ta))
+	) {
+		throw new Error(
+			'Social challenges must be restricted to a group (friends or a custom group). ' +
+				'Public social challenges are not supported by the registry.'
 		);
 	}
 
@@ -123,7 +149,10 @@ export const createMarket = async ({
 		// on `eng_0`. Regular users creating a Social market must send `None` so the
 		// call routes to `CreationTier::Social` instead of being rejected with
 		// `EngineRoleNotHeld`.
-		engine_id: isEngineCreator ? toNullable(VICI_ENGINE_ID) : toNullable()
+		engine_id: isEngineCreator ? toNullable(VICI_ENGINE_ID) : toNullable(),
+		// BCP 47 source language of the human-readable fields above. `undefined`
+		// → `None` on chain, which the canister treats as `"en"`.
+		locale: toNullable(locale)
 	};
 
 	const seriesId = await addSeries({
@@ -259,6 +288,110 @@ const fetchMarkets = async ({
 
 	return filterByPlaygroundExpandedDomain({ items, targetDomain: domain });
 };
+
+/**
+ * Cheap variant of {@link fetchMarkets} used by the Flow ranking path:
+ * builds `Market` view-models straight from the series list + activity
+ * resolution map, *without* a per-market `getOrderBook` call. Resolved-
+ * only series (present in activities but no longer in `listSeries`) are
+ * also skipped — Flow filters them out anyway.
+ *
+ * This is what kills the N+1 fan-out on `/flow` entry: ranking only
+ * needs tags / metadata / interests, so the orderbook stays unfetched
+ * until {@link enrichMarketsWithOrderBook} is called on the top-N
+ * winners after the rank.
+ */
+const fetchOpenBinaryMarketsLite = async ({
+	identity,
+	certified,
+	domain
+}: {
+	identity: Identity;
+	certified: boolean;
+	domain: RegistryDid.BalanceDomain;
+}): Promise<Market[]> => {
+	const [seriesList, activities] = await Promise.all([
+		listSeries({ identity, certified }),
+		getGlobalActivities({ certified })
+	]);
+
+	const resolutionMap = buildResolutionMap(activities);
+	const nowNs = BigInt(Date.now()) * MILLISECOND_IN_NANOSECONDS;
+
+	const markets = seriesList
+		.filter((s) => {
+			const isResolved = nonNullish(resolutionMap[s.series_id]);
+			const isExpired = s.expiry_ns <= nowNs;
+			// Flow only shows Binary markets. Check the variant
+			// explicitly so Call / Put / future payoff types stay out.
+			const isBinary = 'Binary' in s.payoff_type;
+
+			return !isResolved && !isExpired && isBinary;
+		})
+		// Lite mapping: seed `yesProbability`/`noProbability` at 0.5 (vs
+		// `mapMarketData`'s default of 0) so a card that misses
+		// enrichment — e.g. its order-book fetch fails in
+		// `enrichMarketsWithOrderBook` — still renders the neutral
+		// consensus instead of 0%/100%.
+		.map((s) =>
+			mapMarketData({ series: s, status: 'Open', yesProbability: 0.5, noProbability: 0.5 })
+		)
+		.filter(nonNullish);
+
+	return filterByPlaygroundExpandedDomain({ items: markets, targetDomain: domain });
+};
+
+/**
+ * Adds book-derived fields (`yesProbability`, `noProbability`,
+ * `bestBid`/`bestAsk`) to lite `Market` objects produced by
+ * {@link fetchOpenBinaryMarketsLite}. Called by the Flow path on just
+ * the top-N ranked markets so we pay for at most `MAX_MARKETS` round-
+ * trips instead of one per open series.
+ */
+const enrichMarketsWithOrderBook = ({
+	markets,
+	identity,
+	certified
+}: {
+	markets: Market[];
+	identity: Identity;
+	certified: boolean;
+}): Promise<Market[]> =>
+	Promise.all(
+		markets.map(async (market) => {
+			const orders = await getOrderBook({
+				marketId: market.id,
+				domain: market.balanceDomain,
+				identity,
+				certified
+			}).catch((e: unknown) => {
+				// A single failed book read should not collapse the whole deck —
+				// fall back to the neutral 0.5 prob the lite mapper assigned and
+				// let the rest of the cards render. The failing market still
+				// shows with no liquidity indicator.
+				console.error('Failed to fetch order book for flow market', market.id, e);
+
+				return [] as Awaited<ReturnType<typeof getOrderBook>>;
+			});
+
+			const { midPrice, bids, asks } = calculateMarketStats({
+				orders,
+				outcome: 'YES'
+			});
+
+			const yesProb = midPrice ?? 0.5;
+
+			return {
+				...market,
+				yesProbability: yesProb,
+				noProbability: 1 - yesProb,
+				bestBid: bids[0]?.price,
+				bestAsk: asks[0]?.price,
+				bestBidQty: bids[0]?.totalQty,
+				bestAskQty: asks[0]?.totalQty
+			};
+		})
+	);
 
 /**
  * Extracts a `seriesId -> { outcome }` map from Juno settlement activities.
@@ -454,49 +587,124 @@ export const loadMarket = ({
 	});
 
 /**
- * Ranks markets by user interest first, then a culture-fallback boost (so users
- * with no declared interests still get a meaningful feed), then activity
- * (volume) and liquidity, with `createdAt` as the final tie-breaker.
+ * Editorial-boost magnitude for markets flipped to `suggested = true`.
+ * Sits above the interest tier (1000) and the culture-fallback tier
+ * (500) so a single admin flag dominates every organic ranking signal
+ * — but stays additive, so two suggested markets still order by
+ * volume / liquidity / recency between themselves.
+ */
+const SUGGESTED_BOOST_BASE = 5000;
+
+/**
+ * Linear decay window for the suggested boost. After this many ms the
+ * editorial weight is fully gone and the market falls back to its
+ * organic rank — no admin maintenance required to un-suggest stale
+ * picks. Tracked from `metadata.updatedAt` (set on every metadata
+ * upsert in `market-metadata.services.ts`).
+ */
+const SUGGESTED_DECAY_MS = 14 * 24 * 60 * 60 * 1000;
+
+/**
+ * Resolves the editorial-boost score for a market. Returns `0` for any
+ * of the three "should not promote" cases:
+ *   - no metadata, or `suggested === false`
+ *   - the market is no longer Open (auto-drop on `Expired` / `Resolved`)
+ *   - the boost has fully decayed (older than {@link SUGGESTED_DECAY_MS})
+ *
+ * Exported so the "Suggested for you" rail (which only wants markets
+ * with a non-zero current boost) reuses the same gating rules as the
+ * sort tier — single source of truth, no chance of the rail showing a
+ * market that the sort already let fall off the top.
+ */
+export const suggestedScore = ({
+	market,
+	metadata,
+	nowMs = Date.now()
+}: {
+	market: Market;
+	metadata: MarketMetadata | undefined;
+	nowMs?: number;
+}): number => {
+	if (!metadata?.suggested) {
+		return 0;
+	}
+
+	if (market.status !== 'Open') {
+		return 0;
+	}
+
+	const ageMs = Math.max(0, nowMs - metadata.updatedAt);
+	const remaining = 1 - ageMs / SUGGESTED_DECAY_MS;
+
+	if (remaining <= 0) {
+		return 0;
+	}
+
+	return SUGGESTED_BOOST_BASE * remaining;
+};
+
+/**
+ * Ranks markets by editorial signal first (admin-flipped `suggested`,
+ * linearly decayed over 14 days and auto-dropped on resolve), then
+ * user interest, then a culture-fallback boost (so users with no
+ * declared interests still get a meaningful feed), with `createdAt`
+ * as the final tie-breaker.
+ *
+ * Earlier revisions also weighted `volumeScore` and `liquidityScore`.
+ * Both were removed: `volumeScore` keyed off `Market.totalVolume`,
+ * which `mapMarketData` hardcodes to `ZERO` (the field is never
+ * populated upstream), so it never contributed. `liquidityScore`
+ * needed `bestBid` / `bestAsk`, which the Flow path no longer fetches
+ * until *after* ranking — see `getFlowQueue` +
+ * `enrichFlowMarketsWithOrderBook`. The dropped tier was a 100-point
+ * flag dwarfed by the interest (1000) and suggested (~5000) tiers, so
+ * the top-N ordering is effectively unchanged.
+ *
+ * `tagMappings` is the `seriesId → MarketTag[]` projection produced by
+ * {@link listMarketTagsBySeries}; a market matches user interest when
+ * *any* of its tags is in the user's declared interest set. The
+ * `culture` boost is unchanged from the legacy single-category logic —
+ * it now fires when the market carries the `culture` tag and the user
+ * either has no interests or explicitly opted into culture.
+ *
+ * `metadataBySeries` (optional) carries the full `MarketMetadata` doc
+ * keyed by `seriesId`. When omitted, the suggested-market boost
+ * silently no-ops — every other tier behaves identically, so callers
+ * that haven't been migrated to pass metadata see no regression.
  */
 export const rankMarkets = ({
 	markets,
 	userInterests,
-	categoryMappings
+	tagMappings,
+	metadataBySeries = {}
 }: {
 	markets: Market[];
 	userInterests: Set<string>;
-	categoryMappings: SeriesCategory[];
+	tagMappings: Record<string, MarketTag[]>;
+	metadataBySeries?: Record<string, MarketMetadata>;
 }): Market[] => {
-	const marketCategoryMap = new Map<string, string>(
-		categoryMappings.map((m) => [m.seriesId, m.categoryId])
-	);
+	const nowMs = Date.now();
 
 	const computeScore = (m: Market): number => {
-		const categoryId = marketCategoryMap.get(m.id);
+		const tags = tagMappings[m.id] ?? [];
 
-		const interestScore = nonNullish(categoryId) && userInterests.has(categoryId) ? 1000 : 0;
+		const suggested = suggestedScore({ market: m, metadata: metadataBySeries[m.id], nowMs });
 
+		const interestScore = tags.some((tag) => userInterests.has(tag)) ? 1000 : 0;
+
+		const hasCultureTag = tags.includes('culture');
 		const cultureScore =
-			categoryId === 'culture' && (userInterests.size === 0 || userInterests.has('culture'))
-				? 500
-				: 0;
+			hasCultureTag && (userInterests.size === 0 || userInterests.has('culture')) ? 500 : 0;
 
-		const volumeScore =
-			m.totalVolume > ZERO
-				? Math.min(
-						decimalFixedValueToNumber({
-							value: m.totalVolume,
-							decimals: Number(m.token.decimals)
-						}) * 2,
-						200
-					)
-				: 0;
-
-		const liquidityScore = nonNullish(m.bestBid) && nonNullish(m.bestAsk) ? 100 : 0;
-
+		// `liquidityScore` and `volumeScore` used to live here but were
+		// dropped: `volumeScore` keyed off `Market.totalVolume`, which
+		// `mapMarketData` hardcodes to `ZERO`, so it never fired. And
+		// the Flow ranking path now ranks before fetching order books
+		// (see `getFlowQueue` + `enrichMarketsWithOrderBook`), so
+		// `bestBid`/`bestAsk` aren't populated at sort time anyway.
 		const recencyScore = Number(m.createdAt) / 1e12;
 
-		return interestScore + cultureScore + volumeScore + liquidityScore + recencyScore;
+		return suggested + interestScore + cultureScore + recencyScore;
 	};
 
 	return markets
@@ -506,27 +714,67 @@ export const rankMarkets = ({
 };
 
 /**
- * Open binary markets ranked for the prediction flow UI using profile interests and categories.
+ * Open binary markets ranked for the prediction flow UI using profile
+ * interests and categories.
+ *
+ * The returned markets are *lite*: ranking only needs tags + metadata
+ * + interests, so no `getOrderBook` calls are issued here. Callers
+ * that want book-derived fields (`yesProbability`, `bestBid`/`bestAsk`)
+ * for the cards they actually render should call
+ * {@link enrichFlowMarketsWithOrderBook} on the final slice. This is
+ * what cuts `/flow` entry from "N order-book fetches over every open
+ * series" to "≤MAX_MARKETS book fetches over the top-N winners".
+ *
+ * `tagMappings` and `metadataBySeries` are optional pre-fetched
+ * inputs: callers that already hold these (e.g. `prepareFlow`, which
+ * shares them with the signals derivation) can pass them in to avoid
+ * a duplicate satellite round-trip. Plain values, promises, or
+ * promise-wrapped results all work — `Promise.all` collapses them.
  */
-export const getFlowQueue = async (domain: RegistryDid.BalanceDomain): Promise<Market[]> => {
+export const getFlowQueue = async ({
+	domain,
+	tagMappings,
+	metadataBySeries
+}: {
+	domain: RegistryDid.BalanceDomain;
+	tagMappings?: Record<string, MarketTag[]> | Promise<Record<string, MarketTag[]>>;
+	metadataBySeries?: Record<string, MarketMetadata> | Promise<Record<string, MarketMetadata>>;
+}): Promise<Market[]> => {
 	const identity = await getIdentityOrAnonymous();
 	const principal = identity.getPrincipal().toText();
 
-	const [markets, profile, categoryMappings] = await Promise.all([
-		getMarkets(domain),
+	const [markets, profile, resolvedTags, resolvedMeta] = await Promise.all([
+		fetchOpenBinaryMarketsLite({ identity, certified: true, domain }),
 		getProfile(principal),
-		listSeriesCategories()
+		tagMappings ?? listMarketTagsBySeries().catch(() => ({})),
+		metadataBySeries ?? listMarketMetadataBySeries().catch(() => ({}))
 	]);
 
 	const userInterests = new Set(profile.data.interests ?? []);
 
-	const eligibleMarkets = markets.filter((m) => m.status === 'Open' && m.payoffType === 'Binary');
-
 	return rankMarkets({
-		markets: eligibleMarkets,
+		markets,
 		userInterests,
-		categoryMappings
+		tagMappings: resolvedTags,
+		metadataBySeries: resolvedMeta
 	});
+};
+
+/**
+ * Public wrapper around {@link enrichMarketsWithOrderBook} for the Flow
+ * pipeline. Resolves the identity once and fans out one parallel book
+ * fetch per market — meant to be called with the already-sliced top-N
+ * (see `MAX_MARKETS` in `flow-prep.services.ts`), so the network cost
+ * is bounded by deck size instead of the number of open series.
+ */
+export const enrichFlowMarketsWithOrderBook = async (markets: Market[]): Promise<Market[]> => {
+	if (markets.length === 0) {
+		return markets;
+	}
+
+	const identity = await getIdentityOrAnonymous();
+
+	return enrichMarketsWithOrderBook({ markets, identity, certified: true });
 };
 
 /**
@@ -544,12 +792,21 @@ export const forkMarket = async ({
 	marketId,
 	groupIds,
 	title,
-	description
+	description,
+	locale
 }: {
 	marketId: MarketId;
 	groupIds: string[];
 	title?: string;
 	description?: string;
+	/**
+	 * Optional BCP 47 source-language override for the forked market's
+	 * `title`/`description`. When omitted, the registry inherits the source
+	 * series' locale, which is what we want for non-translating "Challenge
+	 * your friends" forks. Pass an explicit value only when the fork
+	 * intentionally retitles into a different language.
+	 */
+	locale?: AppLocale;
 }): Promise<string> => {
 	if (groupIds.length === 0) {
 		throw new Error('Fork requires at least one target group');
@@ -564,7 +821,8 @@ export const forkMarket = async ({
 			nonNullish(description) ? { plain: description, html: [], markdown: [] } : undefined
 		),
 		trading_access: [{ Restricted: { groups: groupIds } }],
-		engine_id: toNullable(VICI_ENGINE_ID)
+		engine_id: toNullable(VICI_ENGINE_ID),
+		locale: toNullable(locale)
 	};
 
 	return await forkSeries({ identity, params });

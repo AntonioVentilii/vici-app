@@ -235,6 +235,44 @@ export interface AssetWorth {
 	asset_id: string;
 }
 /**
+ * Input parameters for the one-shot settlement-event backfill. Synthesizes
+ * `EventType::Settled` events for finalized plans that resolved before the
+ * per-user event emission was added to settlement.
+ */
+export interface BackfillSettlementEventsParams {
+	/**
+	 * Resume after this series id (exclusive). `None` starts from the lowest
+	 * series id. Callers re-invoke with the previous response's `next_cursor`
+	 * until it comes back as `None`.
+	 */
+	start_after: [] | [string];
+}
+/**
+ * Outcome of one chunk of the settlement-event backfill.
+ */
+export interface BackfillSettlementEventsResult {
+	/**
+	 * Number of finalized plans visited in this chunk.
+	 */
+	plans_scanned: bigint;
+	/**
+	 * Number of `Settled` events newly written in this chunk.
+	 */
+	events_emitted: bigint;
+	/**
+	 * Number of `SettlementPosition`s skipped because their series already has
+	 * at least one pre-existing `Settled` event (idempotent skip). Counted
+	 * per-position to mirror the live emission contract, which writes one
+	 * event per position.
+	 */
+	events_skipped: bigint;
+	/**
+	 * When `Some`, pass back as `start_after` to continue. `None` means the
+	 * backfill is complete.
+	 */
+	next_cursor: [] | [string];
+}
+/**
  * Represents a distinct domain for balances and trading logic.
  */
 export type BalanceDomain =
@@ -997,6 +1035,23 @@ export interface Series {
 	 */
 	underlying: string;
 	/**
+	 * Optional [BCP 47](https://www.rfc-editor.org/info/bcp47) language tag
+	 * describing the language of `title`, `description`, and any
+	 * `outcomes[].title` / `outcomes[].description`.
+	 *
+	 * Examples: `"en"`, `"en-US"`, `"es"`, `"zh-Hant-HK"`.
+	 *
+	 * `locale` is metadata: it does NOT participate in `series_id` hashing,
+	 * so the same economic contract written in different languages must
+	 * collide on the same id (otherwise liquidity would fragment across
+	 * localized clones of the same market).
+	 *
+	 * When `None`, consumers should assume the default locale `"en"` and are
+	 * responsible for translating into the user's preferred locale — the
+	 * canister never stores translations on-chain.
+	 */
+	locale: [] | [string];
+	/**
 	 * A detailed description of the series.
 	 */
 	description: Description;
@@ -1634,6 +1689,26 @@ export interface _SERVICE {
 	 */
 	accept_position_transfer: ActorMethod<[PositionProof], AcceptPositionTransferResult>;
 	/**
+	 * One-shot, idempotent backfill of `Settled` events for plans finalized
+	 * before per-user event emission was added to `apply_settlement_accounting_logic`.
+	 *
+	 * Iterates `SETTLEMENT_PLANS` in sorted order starting after
+	 * `params.start_after`. For each `Finalised` plan it synthesizes one
+	 * `EventType::Settled` event per `SettlementPosition` whose `(user,
+	 * series_id)` pair has no pre-existing `Settled` event in `EVENTS`. The
+	 * synthesized event's `timestamp` is the plan's original
+	 * `idempotency_ns` so backfilled rows sort alongside the live events
+	 * that would have been written at settlement time.
+	 *
+	 * Yields cooperatively when the instruction counter is high so a single
+	 * call cannot exhaust the update budget. Callers loop until the response
+	 * returns `next_cursor: None`.
+	 */
+	backfill_settlement_events: ActorMethod<
+		[BackfillSettlementEventsParams],
+		BackfillSettlementEventsResult
+	>;
+	/**
 	 * Cancels a stuck fund withdrawal and refunds the internal ledger balance.
 	 *
 	 * This method is gated to canister controllers.
@@ -1718,7 +1793,14 @@ export interface _SERVICE {
 	 */
 	get_settlement_status: ActorMethod<[string], [] | [SettlementStatusView]>;
 	/**
-	 * Retrieves the trade history (executed trades) for the caller.
+	 * Retrieves the trade history for the caller. Returns events that move the
+	 * user's economic position — executed trades, settlements, and liquidations.
+	 * Order-placement events are excluded so the response is bounded to events
+	 * that materially settle cashflow.
+	 *
+	 * Results are sorted by `(timestamp, event_id)` so that backfilled rows whose
+	 * timestamp reflects the original settlement time interleave chronologically
+	 * with live events rather than appearing in storage-insertion order.
 	 */
 	get_trade_history: ActorMethod<[], Array<Event>>;
 	/**

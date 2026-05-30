@@ -67,11 +67,3 @@ export const defaultSupportedToken: Readable<Token | undefined> = derived(
 	walletUiTokens,
 	($walletUiTokens) => ($walletUiTokens.length > 0 ? $walletUiTokens[0] : undefined)
 );
-
-/**
- * First token registered on clearing for this domain (no ledger-only fallback).
- */
-export const defaultClearingCollateralToken: Readable<Token | undefined> = derived(
-	supportedTokens,
-	($supportedTokens) => ($supportedTokens.length > 0 ? $supportedTokens[0] : undefined)
-);

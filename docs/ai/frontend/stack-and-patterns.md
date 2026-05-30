@@ -59,6 +59,77 @@ Rules:
 - Prefer `$derived` over `$effect`. An `$effect` is for I/O (DOM, network,
   storage). Computation belongs in `$derived` / `$derived.by`.
 
+### Reactive reads — no hidden captures
+
+Props returned by `$props()` and values bound to `$state` are **reactive
+accessors**. Reading them outside a reactive context (`$derived`,
+`$derived.by`, `$effect`, template expressions, or lifecycle / event
+callbacks) captures the **initial value only** — later prop changes will
+not propagate.
+
+`svelte-check` flags the obvious form:
+
+```svelte
+<script lang="ts">
+	let { result }: Props = $props();
+	const isSkip = result === 'SKIP'; // ⚠ state_referenced_locally
+</script>
+```
+
+The linter **does not catch** reads hidden inside a function body that
+executes eagerly at module init — the classic offender is an IIFE:
+
+```svelte
+<script lang="ts">
+	let { correct }: Props = $props();
+
+	// ❌ BUG: `correct` is captured at init; later prop changes won't reflect.
+	const phraseKey = (() => {
+		if (correct) return 'flow.feedback.right_1';
+		return 'flow.feedback.wrong_1';
+	})();
+</script>
+```
+
+The correct shapes:
+
+```svelte
+<script lang="ts">
+	let { correct }: Props = $props();
+
+	// ✅ Pure derivation — re-runs when `correct` changes.
+	const phraseKey = $derived(correct ? 'flow.feedback.right_1' : 'flow.feedback.wrong_1');
+
+	// ✅ Same idea, multi-statement body.
+	const phraseKey2 = $derived.by(() => {
+		if (correct) return 'flow.feedback.right_1';
+		return 'flow.feedback.wrong_1';
+	});
+</script>
+```
+
+If you need a value that is computed **once per mount** but seeded from
+non-reactive inputs (e.g. `Math.random()`), keep the seed at module
+scope and feed it through `$derived` for the prop-dependent part:
+
+```svelte
+<script lang="ts">
+	let { correct }: Props = $props();
+
+	const idx = Math.floor(Math.random() * 3); // stable per mount
+	const phraseKey = $derived(
+		(correct ? RIGHT_KEYS : WRONG_KEYS)[idx] // reactive on `correct`
+	);
+</script>
+```
+
+Rule of thumb: if a `const` at module scope reads a prop or `$state`
+binding — directly **or** inside an immediately-invoked function — wrap
+it in `$derived` / `$derived.by`. Top-level IIFEs whose bodies touch
+reactive bindings are an anti-pattern; the only safe IIFE is one that
+lives **inside** a reactive context (`$derived(...)`, `$effect(...)`,
+`onMount(...)`, …).
+
 ### Stores still exist
 
 Svelte stores (`writable` / `readable` / `derived` from `svelte/store`)
@@ -244,6 +315,10 @@ pins `VICI_ENGINE_ID` is
 - `export let foo` in new code.
 - Inline type literal in `$props()` (`let { … }: { … } = $props()`).
 - Reactive `$:` statements in new code.
+- Module-scope IIFE (`const x = (() => { … })()`) whose body reads a
+  `$props()` value or `$state` binding — captures the initial value
+  only. Use `$derived` / `$derived.by` instead. See
+  [Reactive reads — no hidden captures](#reactive-reads--no-hidden-captures).
 - `$bindable` unless explicitly required by the API.
 - Reaching into `document.querySelector` to mutate Svelte-managed DOM.
 - Catching an error and silently swallowing it; surface via

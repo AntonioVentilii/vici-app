@@ -10,17 +10,41 @@ interface FormatTokenParams {
 	displayDecimals?: number;
 	trailingZeros?: boolean;
 	showPlusSign?: boolean;
+	useGrouping?: boolean;
 }
 
 const DEFAULT_DISPLAY_DECIMALS = 4;
 const MAX_DEFAULT_DISPLAY_DECIMALS = 8;
+
+/**
+ * Adds locale-aware thousands separators to the integer part of a string
+ * already in `[-]?\d+(\.\d+)?` form (the output of `Decimal.toFixed`). The
+ * fractional part — including its precision — is preserved verbatim so we
+ * don't reintroduce rounding on numbers that have already been quantised.
+ */
+export const groupIntegerPart = ({
+	formatted,
+	locale
+}: {
+	formatted: string;
+	locale?: string;
+}): string => {
+	const negative = formatted.startsWith('-');
+	const body = negative ? formatted.slice(1) : formatted;
+	const [intPart, fracPart] = body.split('.');
+	const groupedInt = new Intl.NumberFormat(locale, { useGrouping: true }).format(BigInt(intPart));
+	const grouped = fracPart === undefined ? groupedInt : `${groupedInt}.${fracPart}`;
+
+	return negative ? `-${grouped}` : grouped;
+};
 
 export const formatToken = ({
 	value,
 	unitName,
 	displayDecimals,
 	trailingZeros = false,
-	showPlusSign = false
+	showPlusSign = false,
+	useGrouping = true
 }: FormatTokenParams): string => {
 	const parsedUnitName: BigNumberish =
 		typeof unitName === 'number' || typeof unitName === 'bigint'
@@ -47,7 +71,8 @@ export const formatToken = ({
 	const decDP = dec.toDecimalPlaces(maxDigits);
 	const minDigits = trailingZeros ? Math.max(minFractionDigits, maxDigits) : undefined;
 
-	const formatted = decDP.toFixed(minDigits) as `${number}`;
+	const fixed = decDP.toFixed(minDigits) as `${number}`;
+	const formatted = useGrouping ? groupIntegerPart({ formatted: fixed }) : fixed;
 
 	if (trailingZeros) {
 		return formatted;
@@ -97,6 +122,59 @@ export const formatNanosecondsToDate = ({ nanoseconds }: { nanoseconds: bigint }
 	return date.toLocaleDateString('en', DATE_TIME_FORMAT_OPTIONS);
 };
 
+/**
+ * Buckets for `Intl.RelativeTimeFormat` largest-fit selection. Ordered
+ * largest → smallest so the picker stops at the first unit whose
+ * absolute count is `>= 1`.
+ */
+const RELATIVE_TIME_UNITS: ReadonlyArray<{ unit: Intl.RelativeTimeFormatUnit; ms: number }> = [
+	{ unit: 'year', ms: 365 * 24 * 60 * 60 * 1000 },
+	{ unit: 'month', ms: 30 * 24 * 60 * 60 * 1000 },
+	{ unit: 'week', ms: 7 * 24 * 60 * 60 * 1000 },
+	{ unit: 'day', ms: 24 * 60 * 60 * 1000 },
+	{ unit: 'hour', ms: 60 * 60 * 1000 },
+	{ unit: 'minute', ms: 60 * 1000 }
+];
+
+/**
+ * Locale-aware "X minutes / hours / days ago" formatter. Returns the
+ * largest unit whose count is `>= 1`, falling back to "just now" when
+ * the delta is under a minute. Use this for any human-readable
+ * timestamp that's part of an i18n'd surface (inbox, history rows,
+ * activity feed) — `formatNanosecondsToDate` always renders in
+ * English and is reserved for log-style timestamps.
+ */
+export const formatRelativeAgoFromNs = ({
+	timestampNs,
+	locale,
+	nowMs = Date.now()
+}: {
+	timestampNs: bigint;
+	locale: string;
+	nowMs?: number;
+}): string => {
+	const tsMs = Number(timestampNs / MILLISECOND_IN_NANOSECONDS);
+	const diffMs = nowMs - tsMs;
+	const rtf = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+
+	if (diffMs < RELATIVE_TIME_UNITS[RELATIVE_TIME_UNITS.length - 1].ms) {
+		// Sub-minute: ask the formatter for "now" so locales that have a
+		// dedicated phrase (e.g. "just now") get it for free.
+		return rtf.format(0, 'second');
+	}
+
+	for (const { unit, ms } of RELATIVE_TIME_UNITS) {
+		const value = Math.floor(diffMs / ms);
+
+		if (value >= 1) {
+			return rtf.format(-value, unit);
+		}
+	}
+
+	// Unreachable — the loop covers all positive deltas above one minute.
+	return rtf.format(0, 'second');
+};
+
 export const decimalFixedValueToNumber = ({
 	value,
 	decimals
@@ -117,6 +195,27 @@ export const formatProbability = (prob: number): string => `${Math.round(prob * 
 
 export const formatDate = (date: bigint | number): string =>
 	new Date(Number(date)).toLocaleDateString();
+
+/**
+ * Long date — e.g. `June 11, 2026`. Used on surfaces where the closes
+ * date sits inline with prose and reads as a sentence (Market detail
+ * CLOSES stat) rather than as a compact data row.
+ *
+ * Locale-aware: pass the active `$localeStore` so the month + ordering
+ * follow the user's language instead of hard-coding English.
+ */
+export const formatLongDate = ({
+	date,
+	locale
+}: {
+	date: bigint | number;
+	locale: string;
+}): string =>
+	new Date(Number(date)).toLocaleDateString(locale, {
+		year: 'numeric',
+		month: 'long',
+		day: 'numeric'
+	});
 
 export const formatVolume = ({
 	volume,
@@ -154,34 +253,18 @@ export const shortenWithMiddleEllipsis = ({
 		: text;
 };
 
+/**
+ * Compact principal for inline display: `abcde…wxyz`, keeping the
+ * leading and trailing 5 characters. Short principals (≤ 12 chars)
+ * are returned untouched. Uses a single-glyph ellipsis (`…`) rather
+ * than `...` — distinct from {@link shortenWithMiddleEllipsis}.
+ */
+export const shortenPrincipal = (principal: string): string =>
+	principal.length > 12 ? `${principal.slice(0, 5)}…${principal.slice(-5)}` : principal;
+
 // =============================================================
 //  Locale-aware Intl wrappers
 // =============================================================
-//
-// Locale-aware integer formatter — what landing / onboarding need most
-// (`new Intl.NumberFormat(locale).format(...)`). Locale is typed as
-// `string` rather than `AppLocale` so callers in surfaces that don't
-// import `AppLocale` (e.g. transient demo surfaces) can pass any
-// BCP-47 string the runtime accepts.
-
-export const formatLocaleNumber = ({ value, locale }: { value: number; locale: string }): string =>
-	new Intl.NumberFormat(locale).format(value);
-
-/**
- * Compact-notation number ("1.2K", "5M"). Used wherever a constrained
- * pill / chip shows XP or follower counts.
- */
-export const formatLocaleCompactNumber = ({
-	value,
-	locale
-}: {
-	value: number;
-	locale: string;
-}): string =>
-	new Intl.NumberFormat(locale, {
-		notation: 'compact',
-		maximumFractionDigits: 1
-	}).format(value);
 
 /**
  * Locale-aware percent formatter. Input is a 0–1 ratio, not 0–100, to

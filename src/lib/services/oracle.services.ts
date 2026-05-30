@@ -1,8 +1,10 @@
 import type { RegistryDid } from '$declarations';
-import { addOracle, getOracle } from '$lib/api/registry.api';
+import { addOracle, getOracle, manageOraclePrincipals } from '$lib/api/registry.api';
 import { VICI_ORACLE_V1 } from '$lib/constants/app.constants';
+import { UserRole } from '$lib/enums/user';
 import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
+import { listRoles } from '$lib/services/roles.services';
 import { isNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { Principal } from '@icp-sdk/core/principal';
@@ -87,3 +89,65 @@ export const registerViciOracle = async ({
 // `SOLVER` role to a user both grants them `OracleAdmin` on the Vici engine and
 // adds them to `VICI_ORACLE_V1.authorized_principals`. For manual reconciliation,
 // see `.agents/workflows/icdc-engine-operations.md`.
+
+/**
+ * Set of `UserRole` values that should be mirrored into the Vici oracle's
+ * `authorized_principals`. Kept in lockstep with `shouldBeOracleSettler` in
+ * `src/satellite/services/engine-sync.services.ts` — if that mapping changes,
+ * update both.
+ */
+const SETTLER_ROLES: ReadonlySet<UserRole> = new Set([UserRole.ADMIN, UserRole.SOLVER]);
+
+/**
+ * Summary returned by {@link reconcileOracleSettlersFromRoles}.
+ */
+export interface OracleSettlerReconcileResult {
+	added: PrincipalText[];
+	removed: PrincipalText[];
+}
+
+/**
+ * One-shot reconciliation of `VICI_ORACLE_V1.authorized_principals` against the current
+ * `roles` collection. Closes the gap left by the event-driven `syncRoleToEngine` hook
+ * for role docs that pre-date the oracle's registration (or pre-date the hook itself):
+ * those grants log `oracle_settler_skipped_missing_oracle` and never get retried.
+ *
+ * Bidirectional: adds principals whose role grants settlement (ADMIN/SOLVER) but who
+ * are missing from the oracle, and removes principals authorized on the oracle but no
+ * longer holding a settler role. The underlying canister uses a `BTreeSet`, so
+ * duplicate adds and missing removes are silent no-ops.
+ *
+ * Throws if the oracle is not yet registered — call {@link registerViciOracle} first.
+ */
+export const reconcileOracleSettlersFromRoles = async (): Promise<OracleSettlerReconcileResult> => {
+	const oracle = await getViciOracle();
+
+	if (isNullish(oracle)) {
+		throw new Error('Vici oracle is not registered yet — register it before reconciling.');
+	}
+
+	const desired = new Set(
+		(await listRoles())
+			.filter((entry) => SETTLER_ROLES.has(entry.role))
+			.map((entry) => entry.principal)
+	);
+	const current = new Set(oracle.authorized_principals.map((p) => p.toText()));
+
+	const added = [...desired].filter((p) => !current.has(p));
+	const removed = [...current].filter((p) => !desired.has(p));
+
+	if (added.length === 0 && removed.length === 0) {
+		return { added: [], removed: [] };
+	}
+
+	const identity = await safeGetIdentityOnce();
+	const params: RegistryDid.ManageOraclePrincipalsParams = {
+		oracle_id: VICI_ORACLE_V1,
+		add_principals: added.map((p) => Principal.fromText(p)),
+		remove_principals: removed.map((p) => Principal.fromText(p))
+	};
+
+	await manageOraclePrincipals({ identity, params });
+
+	return { added, removed };
+};

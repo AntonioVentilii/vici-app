@@ -2,12 +2,90 @@ import { Collection } from '$lib/constants/collections.constants';
 import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
-import { redactProfile } from '$satellite/services/privacy.services';
 import { isNullish } from '@dfinity/utils';
 import type { AssertSetDocContext } from '@junobuild/functions';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
 import type { PrincipalText } from '@junobuild/schema';
+
+/**
+ * Hydrates AND sanitizes a profile read from the datastore so every field
+ * matches `UserProfileSchema` exactly before the value crosses the JS→Rust
+ * boundary inside the satellite.
+ *
+ * Two failure modes to defend against:
+ *
+ * 1. **Missing required nested fields** — profile docs predate several
+ *    fields (most recently `preferences.defaultAmount`), so the Sputnik
+ *    JsonData→Candid encoder would trap with `Error converting from js
+ *    'JsonData' into type 'Candid': missing field <name>` on the first
+ *    legacy row. Fix: backfill nested defaults explicitly.
+ *
+ * 2. **Extra unknown fields** — older code stored fields like `bio` or
+ *    `createdAt`/`updatedAt` that have since been removed from the
+ *    schema. `defineQuery`'s result parse validates each row against
+ *    `UserProfileSchema`, which uses `strictObject` and *rejects* unknown
+ *    keys. A single polluted row makes the whole array parse throw,
+ *    `jsResult` is never set, and the Rust caller reads a stale/empty
+ *    payload and traps with the misleading `missing field default_amount`
+ *    message. Fix: only forward the keys the schema actually knows about.
+ *
+ * `app_get_profile` happens to work on clean rows because there's only
+ * one to encode and it passes parse; `app_list_leaderboard` iterates
+ * everyone and hits the first dirty row. So keep this helper authoritative
+ * — and keep it in sync with `UserProfileSchema`
+ * (`src/lib/schema/profile.schema.ts`).
+ */
+export const withProfileDefaults = (profile: UserProfile): UserProfile => {
+	const incoming = profile.preferences;
+	const sanitizedPreferences: UserProfile['preferences'] = {
+		defaultAmount: {
+			flow: incoming?.defaultAmount?.flow ?? '0',
+			manual: incoming?.defaultAmount?.manual ?? '0'
+		},
+		notify: {
+			streakReminder: incoming?.notify?.streakReminder ?? true,
+			marketAlerts: incoming?.notify?.marketAlerts ?? true,
+			friendActivity: incoming?.notify?.friendActivity ?? false,
+			weeklyDigest: incoming?.notify?.weeklyDigest ?? true
+		},
+		flowSessionLength: incoming?.flowSessionLength ?? 10,
+		hapticsEnabled: incoming?.hapticsEnabled ?? true,
+		callsPublic: incoming?.callsPublic ?? true,
+		flowTags: Array.isArray(incoming?.flowTags) ? incoming.flowTags : [],
+		worldCupMode: incoming?.worldCupMode ?? false,
+		savedMarketIds: Array.isArray(incoming?.savedMarketIds) ? incoming.savedMarketIds : [],
+		favoriteParticipantId: incoming?.favoriteParticipantId ?? '',
+		favoriteSide:
+			incoming?.favoriteSide === 'YES' || incoming?.favoriteSide === 'NO'
+				? incoming.favoriteSide
+				: '',
+		onboardingCompleted: incoming?.onboardingCompleted ?? false
+	};
+
+	return {
+		owner: profile.owner,
+		nickname: profile.nickname ?? '',
+		avatar: profile.avatar ?? '',
+		email: profile.email ?? '',
+		pnl: profile.pnl ?? 0,
+		visibility: profile.visibility,
+		role: profile.role,
+		totalTrades: profile.totalTrades ?? 0,
+		winRate: profile.winRate ?? 0,
+		dailyStreak: profile.dailyStreak ?? 0,
+		streak: profile.streak ?? 0,
+		accuracy: profile.accuracy ?? 0,
+		points: profile.points ?? 0,
+		level: profile.level ?? 1,
+		archetype: profile.archetype ?? '',
+		interests: profile.interests ?? [],
+		lastActiveDay: profile.lastActiveDay,
+		unlockedAchievements: profile.unlockedAchievements ?? [],
+		contrarianWins: profile.contrarianWins ?? 0,
+		preferences: sanitizedPreferences
+	};
+};
 
 export const getProfile = (principal: PrincipalText): UserProfile | undefined => {
 	const caller = msgCaller();
@@ -30,12 +108,10 @@ export const getProfile = (principal: PrincipalText): UserProfile | undefined =>
 		caller
 	});
 
-	const profileWithRole = {
+	return withProfileDefaults({
 		...profile,
 		role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
-	};
-
-	return redactProfile({ caller, profile: profileWithRole });
+	});
 };
 
 export const searchProfiles = (query: string): UserProfile[] => {
@@ -58,17 +134,16 @@ export const searchProfiles = (query: string): UserProfile[] => {
 				caller
 			});
 
-			return {
+			return withProfileDefaults({
 				...profile,
 				role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
-			};
+			});
 		})
 		.filter((p) => {
 			const matches = [p.nickname, p.owner].some((val) => val.toLowerCase().includes(lowerQuery));
 
 			return matches;
-		})
-		.map((profile) => redactProfile({ caller, profile }));
+		});
 };
 
 /**

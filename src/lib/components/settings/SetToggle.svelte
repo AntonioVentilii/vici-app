@@ -91,18 +91,18 @@
 	}
 
 	.set-toggle-sub {
-		font-size: 0.6875rem;
+		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
 	.set-switch {
 		position: relative;
 		flex-shrink: 0;
-		width: 2.25rem;
-		height: 1.25rem;
+		width: 2.75rem;
+		height: 1.5rem;
 		border: none;
 		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--text-base) 10%, transparent);
+		background: color-mix(in srgb, var(--text-base) 14%, transparent);
 		cursor: pointer;
 		transition: background-color var(--d-hover) var(--ease-vici);
 	}
@@ -115,15 +115,16 @@
 		position: absolute;
 		top: 2px;
 		left: 2px;
-		width: 1rem;
-		height: 1rem;
+		width: 1.25rem;
+		height: 1.25rem;
 		border-radius: 50%;
-		background: var(--bg-popover);
+		background: #ffffff;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
 		transition: transform var(--d-hover) var(--ease-vici);
 	}
 
 	.set-switch.is-on .set-switch-thumb {
-		transform: translateX(1rem);
+		transform: translateX(1.25rem);
 	}
 
 	.set-toggle.is-disabled .set-switch,

@@ -12,9 +12,14 @@ import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
  * pulls `yesProbability` because it animates the slider; landing pulls
  * `yesPercent` because it shows the static rounded value.
  */
+// Welcome/onboarding demo markets ship hand-curated fixtures across the
+// six default categories. `wc` is tentpole-only and never part of the
+// demo deck, so it's excluded from this fixture type — that lets
+// downstream helpers (e.g. `onboarding.category.<id>.label` keys) stay
+// statically narrowed to the six categories that ship onboarding copy.
 export interface WelcomeMarketPreview {
 	readonly id: string;
-	readonly category: FlowArtCategory;
+	readonly category: Exclude<FlowArtCategory, 'wc'>;
 	readonly question: string;
 	readonly yesProbability: number;
 	readonly yesPercent: number;
@@ -33,7 +38,7 @@ const previewMarket = ({
 	days
 }: {
 	id: string;
-	category: FlowArtCategory;
+	category: Exclude<FlowArtCategory, 'wc'>;
 	question: string;
 	yesProbability: number;
 	closesLabel: string;
@@ -119,28 +124,3 @@ export const WELCOME_MARKET_PREVIEWS: readonly WelcomeMarketPreview[] = [
 		days: 410
 	})
 ] as const;
-
-/**
- * Subset of `WELCOME_MARKET_PREVIEWS` consumed by `OnboardingFlow`:
- * exactly one fixture per `FlowArtCategory`, in canonical category
- * order. The first two entries (`fed-jun`, `btc-150k`) drive the
- * "first call" and "practice tap" stages by position, so this list
- * MUST start with macro + crypto. Filtering through the shared
- * preview list (instead of declaring a parallel array) guarantees
- * the two surfaces stay in lock-step on ids, categories, and
- * yes-probabilities; the extra `eth-flip` crypto entry is only
- * surfaced on the landing grid.
- */
-export const ONBOARDING_DEMO_MARKETS: readonly WelcomeMarketPreview[] = (() => {
-	const seen = new Set<string>();
-
-	return WELCOME_MARKET_PREVIEWS.filter((m) => {
-		if (seen.has(m.category)) {
-			return false;
-		}
-
-		seen.add(m.category);
-
-		return true;
-	});
-})();

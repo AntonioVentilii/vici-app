@@ -35,10 +35,14 @@
 		danger: 'bg-destructive text-destructive-foreground shadow-inset-hi hover:bg-no-deep'
 	};
 
+	// Padding + radius scale: default = `14px 20px / radius 12px`,
+	// large = `16px 22px / radius 14px`, small scales down
+	// proportionally. The base radius (`rounded-xl` = 12px) is set on
+	// the wrapper below; the `lg` variant overrides to 14px.
 	const sizes: Record<NonNullable<Props['size']>, string> = {
 		sm: 'px-3 py-2 text-xs',
 		md: 'px-5 py-3.5 text-[15px]',
-		lg: 'rounded-[14px] px-6 py-4 text-base'
+		lg: 'rounded-[14px] px-[1.375rem] py-4 text-base'
 	};
 </script>
 

@@ -1,0 +1,156 @@
+// Pure achievement evaluator.
+//
+// Single source of truth for the rules that decide which entries in
+// `ACHIEVEMENTS` are unlocked or in progress, given a snapshot of the
+// user's stats. Consumed by:
+//
+// - `profile.services.ts` — after recomputing stats, to detect newly
+//   unlocked ids, credit XP, and persist them.
+// - `ProfileDashboard.svelte` — to render unlocked state + progress.
+//
+// Keep this file pure (no Svelte / stores / I/O). All inputs flow in
+// through `AchievementsInput`; outputs are deterministic.
+
+import { ACHIEVEMENTS, type AchievementDef } from '$lib/constants/achievements.constants';
+import { ACCURACY_GATE_CALLS } from '$lib/constants/flow-rewards.constants';
+
+// "Long shot" cutoff for the `contrarian` achievement: a settled trade
+// counts as a contrarian win when the user paid this price or less for
+// the winning side (i.e. the market thought their side was ≤30% likely
+// at execution time). Mirrors the public copy "10 wins on <30%
+// consensus" in `achievement.contrarian.description`.
+export const CONTRARIAN_PRICE_THRESHOLD = 0.3;
+export const CONTRARIAN_WIN_TARGET = 10;
+export const ON_FIRE_STREAK_TARGET = 10;
+export const ORACLE_ACCURACY_TARGET = 80;
+export const ORACLE_TRADES_TARGET = 50;
+export const MARATHON_DAILY_STREAK_TARGET = 30;
+export const LVL_25_TARGET = 25;
+
+export interface AchievementsInput {
+	totalTrades: number;
+	/** Consecutive winning trades (motion-engine "streak"). */
+	winStreak: number;
+	dailyStreak: number;
+	accuracy: number;
+	level: number;
+	contrarianWins: number;
+}
+
+export interface AchievementEvaluation {
+	id: string;
+	def: AchievementDef;
+	unlocked: boolean;
+	/** 0..1 — capped. Always 1 when `unlocked` is true. */
+	progress: number;
+}
+
+const ratio = ({ current, target }: { current: number; target: number }): number => {
+	if (target <= 0) {
+		return 0;
+	}
+
+	return Math.max(0, Math.min(current / target, 1));
+};
+
+const evaluateOne = ({
+	def,
+	input
+}: {
+	def: AchievementDef;
+	input: AchievementsInput;
+}): AchievementEvaluation => {
+	const { totalTrades, winStreak, dailyStreak, accuracy, level, contrarianWins } = input;
+	const accuracyUnlocked = totalTrades >= ACCURACY_GATE_CALLS;
+
+	switch (def.id) {
+		case 'first-blood': {
+			const unlocked = totalTrades > 0;
+
+			return { id: def.id, def, unlocked, progress: unlocked ? 1 : 0 };
+		}
+
+		case 'on-fire': {
+			return {
+				id: def.id,
+				def,
+				unlocked: winStreak >= ON_FIRE_STREAK_TARGET,
+				progress: ratio({ current: winStreak, target: ON_FIRE_STREAK_TARGET })
+			};
+		}
+
+		case 'oracle': {
+			const accuracyHit = accuracyUnlocked && accuracy >= ORACLE_ACCURACY_TARGET;
+			const tradesHit = totalTrades >= ORACLE_TRADES_TARGET;
+
+			// Progress on the trade-count axis only — accuracy is a
+			// quality gate, not a continuous bar. (We don't want to
+			// teach users that "more trades at 40% accuracy = closer
+			// to Oracle".)
+			return {
+				id: def.id,
+				def,
+				unlocked: accuracyHit && tradesHit,
+				progress: accuracyHit ? ratio({ current: totalTrades, target: ORACLE_TRADES_TARGET }) : 0
+			};
+		}
+
+		case 'contrarian': {
+			return {
+				id: def.id,
+				def,
+				unlocked: contrarianWins >= CONTRARIAN_WIN_TARGET,
+				progress: ratio({ current: contrarianWins, target: CONTRARIAN_WIN_TARGET })
+			};
+		}
+
+		case 'marathon': {
+			return {
+				id: def.id,
+				def,
+				unlocked: dailyStreak >= MARATHON_DAILY_STREAK_TARGET,
+				progress: ratio({ current: dailyStreak, target: MARATHON_DAILY_STREAK_TARGET })
+			};
+		}
+
+		case 'lvl-25': {
+			return {
+				id: def.id,
+				def,
+				unlocked: level >= LVL_25_TARGET,
+				progress: ratio({ current: level, target: LVL_25_TARGET })
+			};
+		}
+
+		default:
+			return { id: def.id, def, unlocked: false, progress: 0 };
+	}
+};
+
+export const evaluateAchievements = (input: AchievementsInput): AchievementEvaluation[] =>
+	ACHIEVEMENTS.map((def) => evaluateOne({ def, input }));
+
+/**
+ * Merges a fresh evaluation pass into the persisted list and returns
+ * the merged set plus any ids that flipped from locked → unlocked.
+ *
+ * Unlocks are sticky: an id that's in `previouslyUnlocked` stays in
+ * the result even if its current `unlocked` flag is false (e.g. the
+ * user's streak regressed). The newly-unlocked list is the trigger
+ * for one-shot side effects: XP credit and toast.
+ */
+export const mergeUnlockedAchievements = ({
+	previouslyUnlocked,
+	evaluations
+}: {
+	previouslyUnlocked: readonly string[];
+	evaluations: readonly AchievementEvaluation[];
+}): { unlocked: string[]; newlyUnlocked: AchievementEvaluation[] } => {
+	const prev = new Set(previouslyUnlocked);
+	const newlyUnlocked = evaluations.filter(
+		(evaluation) => evaluation.unlocked && !prev.has(evaluation.id)
+	);
+	const unlocked = [...previouslyUnlocked, ...newlyUnlocked.map((evaluation) => evaluation.id)];
+
+	return { unlocked, newlyUnlocked };
+};

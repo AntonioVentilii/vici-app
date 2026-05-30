@@ -1,10 +1,15 @@
+import type { ClearingDid } from '$declarations';
 import { ZERO } from '$lib/constants/app.constants';
+import { CLEARING_CANISTER_ID } from '$lib/constants/canisters.constants';
 import type {
 	IcpTransaction,
 	IcrcTransaction,
 	IcTransactionAddOnsInfo
 } from '$lib/types/ic-transaction';
-import type { Transaction } from '$lib/types/wallet';
+import type { MarketId } from '$lib/types/market';
+import type { Token } from '$lib/types/token';
+import type { Transaction, TransactionType } from '$lib/types/wallet';
+import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 import { fromNullable, isNullish, jsonReplacer, nonNullish } from '@dfinity/utils';
 import { type IcpIndexDid, AccountIdentifier } from '@icp-sdk/canisters/ledger/icp';
 import {
@@ -20,6 +25,16 @@ export const getAccountIdentifier = (principal: Principal): AccountIdentifier =>
 	AccountIdentifier.fromPrincipal({ principal, subAccount: undefined });
 
 export const getIcrcAccount = (principal: Principal): IcrcAccount => ({ owner: principal });
+
+const CLEARING_PRINCIPAL_TEXT = CLEARING_CANISTER_ID.toText();
+
+/**
+ * Whether an ICRC counterparty principal is the clearing canister. We compare
+ * by owner only so subaccounted addresses (e.g. per-user collateral
+ * subaccounts) still match.
+ */
+const isClearingOwner = (owner: Principal | undefined): boolean =>
+	nonNullish(owner) && owner.toText() === CLEARING_PRINCIPAL_TEXT;
 
 /**
  * Splits self-transfers into a send and a receive pseudo-row so the wallet
@@ -82,11 +97,13 @@ export const mapIcpTransaction = ({
 
 	const principal = identity.getPrincipal();
 
-	const tx: Pick<Transaction, 'id' | 'user' | 'timestamp' | 'token'> = {
+	const tx: Pick<Transaction, 'id' | 'user' | 'timestamp' | 'token' | 'source' | 'domain'> = {
 		id: `${id.toString()}${transferToSelf === 'receive' ? '-self' : ''}`,
 		user: principal.toText(),
 		timestamp: fromNullable(timestamp)?.timestamp_nanos ?? ZERO,
-		token
+		token,
+		source: 'ledger',
+		domain: 'wallet'
 	};
 
 	const accountIdentifier = nonNullish(identity)
@@ -207,8 +224,10 @@ export const mapIcrcTransaction = ({
 		? encodeIcrcAccount(getIcrcAccount(identity.getPrincipal()))
 		: undefined;
 
-	const from = 'from' in data ? encodeIcrcAccount(fromCandidAccount(data.from)) : undefined;
-	const to = 'to' in data ? encodeIcrcAccount(fromCandidAccount(data.to)) : undefined;
+	const fromAccount = 'from' in data ? fromCandidAccount(data.from) : undefined;
+	const toAccount = 'to' in data ? fromCandidAccount(data.to) : undefined;
+	const from = nonNullish(fromAccount) ? encodeIcrcAccount(fromAccount) : undefined;
+	const to = nonNullish(toAccount) ? encodeIcrcAccount(toAccount) : undefined;
 
 	const incoming =
 		from?.toLowerCase() !== accountIdentifier?.toLowerCase() || transferToSelf === 'receive';
@@ -217,7 +236,7 @@ export const mapIcrcTransaction = ({
 	const isBurn = nonNullish(fromNullable(burn));
 	const isMint = nonNullish(fromNullable(mint));
 
-	const type = isApprove
+	let type: TransactionType = isApprove
 		? 'Approve'
 		: isBurn
 			? 'Burn'
@@ -226,6 +245,19 @@ export const mapIcrcTransaction = ({
 				: incoming
 					? 'Receive'
 					: 'Send';
+
+	// Re-label transfers whose counterparty is the clearing canister as
+	// collateral moves so the unified activity view shows them as wallet ↔
+	// clearing flows rather than generic sends/receives.
+	const isTransferRow = !isApprove && !isBurn && !isMint;
+
+	if (isTransferRow) {
+		if (type === 'Send' && isClearingOwner(toAccount?.owner)) {
+			type = 'CollateralDeposit';
+		} else if (type === 'Receive' && isClearingOwner(fromAccount?.owner)) {
+			type = 'CollateralWithdraw';
+		}
+	}
 
 	const value = data?.amount;
 
@@ -241,9 +273,68 @@ export const mapIcrcTransaction = ({
 		user: principal.toText(),
 		timestamp,
 		type,
+		source: 'ledger',
+		domain: 'wallet',
 		amount: value,
 		token,
 		counterparty,
 		approveSpender
+	};
+};
+
+/**
+ * Maps a clearing-canister `Event` (OrderPlaced / Executed / Settled /
+ * Liquidated) into a `Transaction` row so it can stream into the same
+ * activity table as ICRC ledger entries.
+ *
+ * The on-chain event records `qty` (in token base units) and `price`
+ * (a probability between 0 and 1). The user-visible "amount" for trades is
+ * the notional, i.e. `qty × price`, rounded back to base units. For
+ * `OrderPlaced` we use `qty` directly so the order's full notional shows up
+ * regardless of execution status; the row is informational and does not
+ * itself move VXP on the ICRC ledger.
+ */
+export const mapClearingEventToTransaction = ({
+	event,
+	token,
+	user
+}: {
+	event: ClearingDid.Event;
+	token: Token;
+	user: string;
+}): Transaction => {
+	const [eventKey] = Object.keys(event.event_type) as Array<keyof ClearingDid.EventType>;
+
+	const priceUnit = decimalFixedValueToNumber({
+		value: event.price.decimal.value,
+		decimals: event.price.decimal.decimals
+	});
+
+	const qtyAsNumber = Number(event.qty);
+	const notional = BigInt(Math.round(qtyAsNumber * priceUnit));
+
+	const type: TransactionType =
+		eventKey === 'OrderPlaced'
+			? 'OrderPlaced'
+			: eventKey === 'Executed'
+				? 'Trade'
+				: eventKey === 'Settled'
+					? 'Settlement'
+					: 'Liquidation';
+
+	const amount = type === 'OrderPlaced' ? event.qty : notional;
+
+	return {
+		id: `clearing-${event.event_id.toString()}-${eventKey}`,
+		user,
+		timestamp: event.timestamp,
+		type,
+		source: 'clearing',
+		domain: 'collateral',
+		marketId: event.series_id as MarketId,
+		amount,
+		token,
+		priceE6: event.price.decimal.value,
+		qty: event.qty
 	};
 };

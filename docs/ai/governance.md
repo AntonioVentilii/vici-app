@@ -148,3 +148,131 @@ How:
 This is what makes the docs _auto-adapting_: every PR is a small
 opportunity to keep them honest. Reviewers should reject code PRs that
 introduce a new pattern without the matching doc update.
+
+## Writing for agents — meta-rules for `docs/ai/`
+
+These rules govern **how the agentic docs themselves are written**.
+They apply equally when a human edits `docs/ai/**` and when an agent
+auto-updates it under the [meta-update rule](#meta-update-rule).
+Adapted from Addy Osmani, [_The Right Way to Write
+AGENTS.md_](https://addyosmani.com/blog/agents-md/).
+
+> **The single test:** can the agent learn this by reading the code,
+> running `ls`, opening `package.json`, or grepping? **If yes, do not
+> write it down.** Documentation only earns its keep when it carries
+> non-discoverable signal.
+
+### Include — only non-discoverable signal
+
+Write a doc entry when, and only when, it captures something the agent
+would otherwise have to guess or learn the hard way:
+
+- **Operational gotchas.** Workarounds discoverable only through
+  experience (e.g. "tests need `--no-cache` or fixtures leak between
+  runs"; "always run `npm run juno:functions:build` after touching
+  `src/satellite/index.ts`").
+- **Non-obvious tooling.** Commands or scripts that change what the
+  agent runs (e.g. "regenerate bindings with `npm run did`, never edit
+  `src/declarations/**` by hand").
+- **Non-standard patterns to preserve.** Local idioms that look wrong
+  but aren't (e.g. "the satellite uses a collection-dispatch table in
+  `src/satellite/index.ts` on purpose — don't refactor into per-file
+  registrations").
+- **Boundaries.** Paths that look editable but aren't — see the
+  [Boundaries table](#boundaries).
+- **Cross-repo facts.** Things the local code can't tell the agent
+  (e.g. "the Rust risk engine lives in `../icdc-core/`").
+
+### Exclude — anything the code already says
+
+If it's already in the code, omit it. Stale duplicates are worse than
+absence because they look authoritative.
+
+- **Directory layouts and folder taxonomy** beyond a decision tree
+  for placement — `ls` answers this. (Our
+  [`structure.md`](./frontend/structure.md) earns its keep with the
+  _decision tree_, not the tree listing.)
+- **Tech stack overviews.** `package.json` and `tsconfig*.json` are
+  authoritative.
+- **Generic style guides.** Prettier + ESLint enforce them; the doc
+  adds nothing.
+- **READMEs copy-pasted from elsewhere.** Link, don't mirror.
+- **Architectural narratives** ("this project uses a layered
+  architecture…") — the agent already infers this by reading.
+
+### Structure — hierarchical, scoped, layered
+
+Don't put everything in one file. Match doc depth to where the agent
+needs it:
+
+1. **Entry layer** — [`AGENTS.md`](../../AGENTS.md) is universal and
+   thin. [`CLAUDE.md`](../../CLAUDE.md) is a Claude-only runtime
+   wrapper, equally thin.
+2. **Area READMEs** — [`docs/ai/frontend/README.md`](./frontend/README.md),
+   [`docs/ai/satellite/README.md`](./satellite/README.md),
+   [`docs/ai/backend/README.md`](./backend/README.md) — read once per
+   session, scoped to the area touched.
+3. **Topic pages** — `structure.md`, `stack-and-patterns.md`,
+   `patterns.md`, `i18n.md`, `a11y.md`, … — loaded selectively when
+   the agent touches that concern.
+4. **Workflow pages** — `frontend/workflows/`, `satellite/workflows/`
+   — concrete recipes for repeated multi-step tasks.
+
+The agent should never need to load the full corpus to do one task. A
+UX-focused agent touching `$lib/components/ui/` and a backend agent
+regenerating bindings should pull disjoint slices.
+
+### Tool-specific layers stay thin
+
+Files under [`.claude/rules/`](../../.claude/rules/),
+`.cursor/rules/`, `.github/copilot-instructions.md`, and the like:
+
+- Are **pointers** into `docs/ai/`, never replacements.
+- May surface 3–5 high-violation reminders so they land in the tool's
+  prompt window — no full taxonomies, no code examples, no rewrites.
+- Never contradict `docs/ai/` (see
+  [truth hierarchy](#truth-hierarchy)).
+- Get updated only when the canonical page in `docs/ai/` already
+  reflects the new rule.
+
+If a Claude-specific reminder grows past a few lines, that's a signal
+the substance belongs in `docs/ai/` — promote it, then re-link.
+
+### Maintenance — friction log, not config
+
+> Every entry is a signal about something in the codebase that's
+> confusing enough to trip an agent.
+
+- **Prefer fixing the root cause** over documenting around it. If you
+  reach for a doc bullet, first ask whether the friction can be
+  removed by an ESLint rule, a rename, a smaller component, a clearer
+  filename, a test, or a code comment at the point of confusion.
+  Documentation is the last resort, not the first.
+- **Stale > absent.** A wrong fact in `docs/ai/` mis-steers every
+  future agent. If you spot drift while doing unrelated work, fix the
+  doc in the same PR or open a doc-only follow-up.
+- **No `/init`-style sweeps.** Don't ask an agent to auto-regenerate
+  `docs/ai/` wholesale — the output recapitulates discoverable
+  structure (which we don't want) and erases hard-won non-obvious
+  notes (which we do). Updates land per-PR via the
+  [meta-update rule](#meta-update-rule).
+- **Empirical pressure beats intuition.** If a rule keeps being
+  violated by agents (or humans) despite being documented, the doc
+  isn't the problem — the rule is in the wrong place, or the
+  underlying code needs to change. Move it, lift it into a lint rule,
+  or refactor the surface area.
+
+### Style
+
+- **Direct, declarative, imperative on rules.** "Do X." "Never Y."
+  Mirrors the codebase's brand voice — see
+  [`frontend/brand.md`](./frontend/brand.md).
+- **Smallest delta wins.** Add a bullet, swap a row, replace one
+  example. Don't restructure a whole page when a one-line addition
+  works.
+- **Link out, don't mirror.** Reference
+  [`stack-and-patterns.md`](./frontend/stack-and-patterns.md#identity--auth)
+  with a deep link rather than copy-pasting the rule.
+- **Cite the code.** When a rule references a real file, link to the
+  file at the relevant path — that way edits to the code surface in
+  doc reviews via grep.

@@ -14,27 +14,19 @@
 		goto(path);
 	};
 
+	// Type-set live in product per the brand book — Hanken Grotesk Bold,
+	// ALL CAPS, 0.18em tracking. Colour resolves to parchment on dark
+	// surfaces and ink on light via `text-foreground`; laurel gold is
+	// reserved for the app-icon tile and must not appear on the mark.
+	// No drop-shadow / glow / gradient hover effects on the mark itself.
 	const wordmarkClass =
-		'text-primary h-6 w-auto transition-[filter] duration-200 group-hover:[filter:drop-shadow(0_0_12px_var(--laurel-glow))]';
+		'text-foreground inline-block font-bold uppercase leading-none text-2xl tracking-[0.18em] transition-opacity duration-200 group-hover:opacity-80';
 </script>
 
 {#snippet wordmark()}
-	<svg
-		class={wordmarkClass}
-		aria-hidden="true"
-		fill="currentColor"
-		viewBox="0 0 262 120"
-		xmlns="http://www.w3.org/2000/svg"
-	>
-		<g>
-			<path d="M 6 14 L 30 14 L 50 88 L 70 14 L 94 14 L 64 106 L 36 106 Z" />
-			<path d="M 102 14 L 124 14 L 124 106 L 102 106 Z" />
-			<path
-				d="M 222 30 C 214 20 200 14 184 14 C 158 14 140 35 140 60 C 140 85 158 106 184 106 C 200 106 214 100 222 90 L 204 78 C 198 84 192 86 184 86 C 170 86 162 76 162 60 C 162 44 170 34 184 34 C 192 34 198 36 204 42 Z"
-			/>
-			<path d="M 234 14 L 256 14 L 256 106 L 234 106 Z" />
-		</g>
-	</svg>
+	<span style="font-family: var(--font-display);" class={wordmarkClass} aria-hidden="true">
+		VICI
+	</span>
 {/snippet}
 
 {#if href}

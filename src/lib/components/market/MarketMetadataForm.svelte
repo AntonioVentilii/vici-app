@@ -1,7 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import MetadataEventsTab from '$lib/components/market/metadata/MetadataEventsTab.svelte';
+	import MetadataShowcaseTab from '$lib/components/market/metadata/MetadataShowcaseTab.svelte';
+	import MetadataTranslationsTab from '$lib/components/market/metadata/MetadataTranslationsTab.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import { normalizeMarketTags, type MarketTag } from '$lib/constants/market-tags.constants';
+	import { userIsAdmin } from '$lib/derived/user.derived';
 	import { MarketEventDirection, MarketWhyNowKind } from '$lib/enums/market-metadata';
 	import { getMarketMetadata, upsertMarketMetadata } from '$lib/services/market-metadata.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -9,6 +15,7 @@
 	import type { Market } from '$lib/types/market';
 	import type { MarketEvent, MarketMetadataInput } from '$lib/types/market-metadata';
 	import { t } from '$lib/utils/i18n.utils';
+	import { refreshMarketMetadata, refreshMarketTags } from '$lib/utils/refresh.utils';
 
 	interface Props {
 		market: Market;
@@ -17,21 +24,46 @@
 
 	const { market, canEdit }: Props = $props();
 
+	type TabId = 'showcase' | 'events' | 'translations';
+
+	let activeTab = $state<TabId>('showcase');
+
+	interface EventRow {
+		day: string;
+		dir: MarketEventDirection;
+		label: string;
+	}
+
 	let whyKind = $state<MarketWhyNowKind>(MarketWhyNowKind.CLOSING);
 	let whyText = $state('');
-	let resolutionText = $state('');
-	let resolutionSource = $state('');
-	let settlesAtMs = $state('');
-	let eventOneLabel = $state('');
-	let eventOneDay = $state('');
-	let eventOneDir = $state<MarketEventDirection>(MarketEventDirection.UP);
-	let eventTwoLabel = $state('');
-	let eventTwoDay = $state('');
-	let eventTwoDir = $state<MarketEventDirection>(MarketEventDirection.UP);
+	let tags = $state<MarketTag[]>([]);
+	let suggested = $state(false);
+	let subtitle = $state('');
+	let eventOne = $state<EventRow>({ day: '', dir: MarketEventDirection.UP, label: '' });
+	let eventTwo = $state<EventRow>({ day: '', dir: MarketEventDirection.UP, label: '' });
 	let status = $state<ButtonStatus>('enabled');
 	let loaded = $state(false);
 	let savedAt = $state<number | undefined>(undefined);
 	let error = $state<string | undefined>(undefined);
+
+	const tabs = $derived([
+		{
+			value: 'showcase' as const,
+			label: t({ locale: $localeStore, key: 'market.metadata.tab.showcase' })
+		},
+		{
+			value: 'events' as const,
+			label: t({ locale: $localeStore, key: 'market.metadata.tab.events' })
+		},
+		...($userIsAdmin
+			? [
+					{
+						value: 'translations' as const,
+						label: t({ locale: $localeStore, key: 'market.metadata.tab.translations' })
+					}
+				]
+			: [])
+	]);
 
 	const parseDay = (value: string): number | undefined => {
 		const trimmed = value.trim();
@@ -45,17 +77,9 @@
 		return Number.isFinite(parsed) && parsed >= 0 ? parsed : undefined;
 	};
 
-	const eventFromFields = ({
-		label,
-		day,
-		dir
-	}: {
-		label: string;
-		day: string;
-		dir: MarketEventDirection;
-	}): MarketEvent | undefined => {
-		const trimmed = label.trim();
-		const parsedDay = parseDay(day);
+	const eventFromFields = (row: EventRow): MarketEvent | undefined => {
+		const trimmed = row.label.trim();
+		const parsedDay = parseDay(row.day);
 
 		if (trimmed.length === 0 || parsedDay === undefined) {
 			return;
@@ -64,31 +88,23 @@
 		return {
 			label: trimmed,
 			day: parsedDay,
-			dir
+			dir: row.dir
 		};
 	};
 
 	const buildInput = (): MarketMetadataInput => {
 		const why = whyText.trim();
-		const text = resolutionText.trim();
-		const source = resolutionSource.trim();
-		const settle = Number(settlesAtMs);
-		const events = [
-			eventFromFields({ label: eventOneLabel, day: eventOneDay, dir: eventOneDir }),
-			eventFromFields({ label: eventTwoLabel, day: eventTwoDay, dir: eventTwoDir })
-		].filter((event): event is MarketEvent => event !== undefined);
+		const trimmedSubtitle = subtitle.trim();
+		const events = [eventFromFields(eventOne), eventFromFields(eventTwo)].filter(
+			(event): event is MarketEvent => event !== undefined
+		);
 
 		return {
 			...(why.length > 0 && { whyNow: { kind: whyKind, text: why } }),
+			...(trimmedSubtitle.length > 0 && { subtitle: trimmedSubtitle }),
 			events,
-			...(text.length > 0 &&
-				source.length > 0 && {
-					resolution: {
-						text,
-						source,
-						...(Number.isFinite(settle) && settle > 0 && { settlesAtMs: settle })
-					}
-				})
+			tags,
+			suggested
 		};
 	};
 
@@ -101,7 +117,10 @@
 				seriesId: market.id,
 				data: buildInput()
 			});
-			savedAt = metadata.updatedAt;
+			({ updatedAt: savedAt, suggested } = metadata);
+			tags = normalizeMarketTags(metadata.tags ?? []);
+			refreshMarketTags();
+			refreshMarketMetadata();
 		} catch (err: unknown) {
 			console.warn('Market metadata save failed:', err);
 			error = t({ locale: $localeStore, key: 'market.metadata.error.save' });
@@ -119,24 +138,18 @@
 				whyText = metadata.whyNow.text;
 			}
 
-			if (metadata?.resolution) {
-				resolutionText = metadata.resolution.text;
-				resolutionSource = metadata.resolution.source;
-				settlesAtMs = metadata.resolution.settlesAtMs?.toString() ?? '';
+			suggested = metadata?.suggested ?? false;
+			subtitle = metadata?.subtitle ?? '';
+			tags = normalizeMarketTags(metadata?.tags ?? []);
+
+			const [first, second] = metadata?.events ?? [];
+
+			if (first) {
+				eventOne = { day: String(first.day), dir: first.dir, label: first.label };
 			}
 
-			const [eventOne, eventTwo] = metadata?.events ?? [];
-
-			if (eventOne) {
-				eventOneLabel = eventOne.label;
-				eventOneDay = String(eventOne.day);
-				eventOneDir = eventOne.dir;
-			}
-
-			if (eventTwo) {
-				eventTwoLabel = eventTwo.label;
-				eventTwoDay = String(eventTwo.day);
-				eventTwoDir = eventTwo.dir;
+			if (second) {
+				eventTwo = { day: String(second.day), dir: second.dir, label: second.label };
 			}
 		} catch (err: unknown) {
 			console.warn('Market metadata load failed:', err);
@@ -166,98 +179,50 @@
 				{t({ locale: $localeStore, key: 'market.metadata.loading' })}
 			</p>
 		{:else}
+			<div class="market-metadata-tabs">
+				<Tabs
+					activeTab={activeTab as string}
+					onTabChange={(value) => (activeTab = value as TabId)}
+					{tabs}
+				/>
+			</div>
+
 			{#if error}
 				<p class="market-metadata-error">{error}</p>
 			{/if}
 
-			<div class="market-metadata-grid">
-				<label>
-					<span>{t({ locale: $localeStore, key: 'market.metadata.why_now' })}</span>
-					<select bind:value={whyKind}>
-						{#each Object.values(MarketWhyNowKind) as kind (kind)}
-							<option value={kind}>{kind}</option>
-						{/each}
-					</select>
-					<input
-						placeholder={t({
-							locale: $localeStore,
-							key: 'market.metadata.placeholder.closing_soon'
-						})}
-						bind:value={whyText}
-					/>
-				</label>
+			{#if activeTab === 'showcase'}
+				<MetadataShowcaseTab
+					isAdmin={$userIsAdmin}
+					onSubtitleChange={(value) => (subtitle = value)}
+					onSuggestedChange={(value) => (suggested = value)}
+					onTagsChange={(value) => (tags = value)}
+					onWhyKindChange={(value) => (whyKind = value)}
+					onWhyTextChange={(value) => (whyText = value)}
+					{subtitle}
+					{suggested}
+					{tags}
+					{whyKind}
+					{whyText}
+				/>
 
-				<label>
-					<span>{t({ locale: $localeStore, key: 'market.metadata.resolution_text' })}</span>
-					<textarea
-						placeholder={t({
-							locale: $localeStore,
-							key: 'market.metadata.placeholder.resolution_text'
-						})}
-						bind:value={resolutionText}
-					></textarea>
-				</label>
+				<Button onclick={save} {status}>
+					{t({ locale: $localeStore, key: 'market.metadata.save' })}
+				</Button>
+			{:else if activeTab === 'events'}
+				<MetadataEventsTab
+					{eventOne}
+					{eventTwo}
+					onEventOneChange={(next) => (eventOne = next)}
+					onEventTwoChange={(next) => (eventTwo = next)}
+				/>
 
-				<label>
-					<span>{t({ locale: $localeStore, key: 'market.metadata.source' })}</span>
-					<input
-						placeholder={t({
-							locale: $localeStore,
-							key: 'market.metadata.placeholder.official_source'
-						})}
-						bind:value={resolutionSource}
-					/>
-				</label>
-
-				<label>
-					<span>{t({ locale: $localeStore, key: 'market.metadata.settles_at' })}</span>
-					<input inputmode="numeric" placeholder="1767225600000" bind:value={settlesAtMs} />
-				</label>
-
-				<div class="market-metadata-events">
-					<span>{t({ locale: $localeStore, key: 'market.metadata.events' })}</span>
-					<div class="event-row">
-						<input
-							inputmode="numeric"
-							placeholder={t({ locale: $localeStore, key: 'market.metadata.placeholder.day' })}
-							bind:value={eventOneDay}
-						/>
-						<select bind:value={eventOneDir}>
-							<option value={MarketEventDirection.UP}>+</option>
-							<option value={MarketEventDirection.DOWN}>-</option>
-						</select>
-						<input
-							placeholder={t({
-								locale: $localeStore,
-								key: 'market.metadata.placeholder.event_one'
-							})}
-							bind:value={eventOneLabel}
-						/>
-					</div>
-					<div class="event-row">
-						<input
-							inputmode="numeric"
-							placeholder={t({ locale: $localeStore, key: 'market.metadata.placeholder.day' })}
-							bind:value={eventTwoDay}
-						/>
-						<select bind:value={eventTwoDir}>
-							<option value={MarketEventDirection.UP}>+</option>
-							<option value={MarketEventDirection.DOWN}>-</option>
-						</select>
-						<input
-							placeholder={t({
-								locale: $localeStore,
-								key: 'market.metadata.placeholder.event_two'
-							})}
-							bind:value={eventTwoLabel}
-						/>
-					</div>
-				</div>
-			</div>
-
-			<Button onclick={save} {status}
-				>{t({ locale: $localeStore, key: 'market.metadata.save' })}</Button
-			>
+				<Button onclick={save} {status}>
+					{t({ locale: $localeStore, key: 'market.metadata.save' })}
+				</Button>
+			{:else if activeTab === 'translations' && $userIsAdmin}
+				<MetadataTranslationsTab {market} />
+			{/if}
 		{/if}
 	</Card>
 {/if}
@@ -289,47 +254,7 @@
 		font-size: var(--t-13);
 	}
 
-	.market-metadata-grid {
-		display: grid;
-		gap: 0.875rem;
+	.market-metadata-tabs {
 		margin-bottom: 1rem;
-	}
-
-	.market-metadata-grid label,
-	.market-metadata-events {
-		display: grid;
-		gap: 0.4rem;
-	}
-
-	.market-metadata-grid label > span,
-	.market-metadata-events > span {
-		color: var(--text-muted);
-		font-size: var(--t-12);
-		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.market-metadata-grid input,
-	.market-metadata-grid select,
-	.market-metadata-grid textarea {
-		width: 100%;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
-		background: var(--bg-surface);
-		color: var(--text-base);
-		padding: 0.65rem 0.75rem;
-		font: inherit;
-	}
-
-	.market-metadata-grid textarea {
-		min-height: 6rem;
-		resize: vertical;
-	}
-
-	.event-row {
-		display: grid;
-		grid-template-columns: 4rem 4rem minmax(0, 1fr);
-		gap: 0.5rem;
 	}
 </style>

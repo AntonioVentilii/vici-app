@@ -1,21 +1,22 @@
-import { Collection } from '$lib/constants/collections.constants';
+import { functions } from '$declarations/satellite/satellite.api';
 import type { UserProfile } from '$lib/types/profile';
-import { listDocs } from '@junobuild/core';
+import { fromWireProfile } from '$satellite/utils/wire-format.utils';
 
 /**
- * Fetches and ranks users by their points (XP).
- * Points are probability-weighted and enhanced by streaks.
+ * Fetches the top profiles ranked by points (XP) from the satellite-side
+ * `listLeaderboard` query. Routing through the satellite (instead of a
+ * direct `listDocs` against the profiles collection) keeps the cap
+ * (`LEADERBOARD_LIMIT`) and the ranking authoritative server-side.
+ *
+ * Nicknames are returned as-is for every row the caller is allowed to
+ * see; the broader "who can see whom" gate is owned by the upcoming
+ * user-visibility rework.
+ *
+ * Points are probability-weighted and enhanced by streaks; the actual
+ * sort happens satellite-side too so client and server agree on rank.
  */
-export const getLeaderboard = async (limit = 100): Promise<UserProfile[]> => {
-	const { items } = await listDocs<UserProfile>({
-		collection: Collection.PROFILES
-	});
+export const getLeaderboard = async (): Promise<UserProfile[]> => {
+	const { items } = await functions.listLeaderboard();
 
-	return items
-		.map((doc) => ({
-			...doc.data,
-			owner: doc.key
-		}))
-		.sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
-		.slice(0, limit);
+	return items.map(fromWireProfile);
 };

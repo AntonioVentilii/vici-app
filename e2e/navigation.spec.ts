@@ -16,7 +16,7 @@ import { HomePage } from './pages/home.page';
  * Markets / home is covered by `homepage.spec.ts`.
  */
 const PAGES = [
-	{ name: 'leaderboard', path: '/leaderboard' },
+	{ name: 'social', path: '/social' },
 	{ name: 'portfolio', path: '/portfolio' },
 	{ name: 'profile', path: '/profile' },
 	{ name: 'wallet', path: '/wallet' }

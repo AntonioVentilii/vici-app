@@ -8,6 +8,7 @@
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
+	import { isDev } from '$lib/env/app.env';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { setAuthBusy } from '$lib/stores/user.store';
 	import type { ButtonStatus } from '$lib/types/components';
@@ -98,7 +99,14 @@
 
 			<div class="border-border my-1 border-t"></div>
 
-			<DomainSwitch />
+			{#if isDev()}
+				<!--
+					Balance-domain switch is a dev-only convenience for toggling
+					between playground and settlement balances. Not surfaced in
+					production — regular users only see the playground domain.
+				-->
+				<DomainSwitch />
+			{/if}
 
 			<div class="flex items-center justify-between gap-3 px-4 py-2">
 				<span class="text-muted-foreground eyebrow-xs">

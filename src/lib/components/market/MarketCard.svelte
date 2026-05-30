@@ -1,34 +1,48 @@
 <script lang="ts">
 	import { nonNullish } from '@dfinity/utils';
-	import { Clock, Copy, Users, UsersRound } from 'lucide-svelte/icons';
+	import { Clock, Users } from 'lucide-svelte/icons';
 	import { fly } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import BinaryProbabilities from '$lib/components/market/BinaryProbabilities.svelte';
 	import CategoricalProbabilities from '$lib/components/market/CategoricalProbabilities.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
+	import SuggestedBadge from '$lib/components/market/SuggestedBadge.svelte';
+	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
+	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import { isSocial } from '$lib/utils/balance-domain.utils';
+	import { isMarketSuggested } from '$lib/utils/flow-card-display.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { getOutcomeVariant, getTimeRemaining } from '$lib/utils/market.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
 		market: Market;
 		index?: number;
-		onChallenge?: (market: Market) => void;
+		metadata?: MarketMetadata;
+		/**
+		 * Primary category tag for this market (e.g. `macro`, `crypto`).
+		 * When supplied, renders a colored category chip at the start of the
+		 * header strip — mirrors the MarketRow pattern so the category
+		 * accent reads at a glance on the list. Optional so call sites that
+		 * don't have tags hydrated yet stay backward-compatible.
+		 */
+		tag?: MarketTag;
 	}
 
-	const { market, index = 0, onChallenge }: Props = $props();
+	const { market, index = 0, metadata, tag }: Props = $props();
 
 	const isChallenge = $derived(isSocial(market.balanceDomain));
-	const isFork = $derived(market.forkedFrom !== undefined);
 	const isResolved = $derived(market.status === 'Resolved');
-	const showChallengeSlot = $derived(!isFork && !isResolved);
+	const showSuggested = $derived(isMarketSuggested({ market, metadata }));
 
 	const resolvedOutcomeLabel = (outcome: string): string => {
 		if (outcome === 'YES') {
@@ -47,7 +61,12 @@
 	};
 </script>
 
-<div class="h-full w-full" in:fly={{ y: 12, duration: 320, delay: Math.min(index * 35, 210) }}>
+<div
+	class="h-full w-full"
+	in:fly={prefersReducedMotion()
+		? { duration: 0 }
+		: { y: 12, duration: 320, delay: Math.min(index * 35, 210) }}
+>
 	<Card
 		class="group border-border hover:border-border-strong bg-card/85 shadow-card hover:bg-card h-full w-full overflow-hidden border transition-all hover:-translate-y-0.5"
 		onclick={() => goto(resolve(`${AppPath.Markets}/${market.id}`))}
@@ -60,6 +79,19 @@
 			<div class="flex flex-1 flex-col gap-4 p-4 sm:p-5">
 				<div class="flex flex-wrap items-center justify-between gap-3">
 					<div class="flex flex-wrap items-center gap-1.5">
+						{#if tag}
+							<span
+								style:color={tagColor(tag)}
+								style:background-color="color-mix(in srgb, {tagColor(tag)} 12%, transparent)"
+								style:border="1px solid color-mix(in srgb, {tagColor(tag)} 28%, transparent)"
+								class="eyebrow-xs market-card-tag inline-flex items-center rounded px-1.5 py-0.5"
+							>
+								{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}
+							</span>
+						{/if}
+						{#if showSuggested}
+							<SuggestedBadge />
+						{/if}
 						<OutcomeBadge status={market.status} />
 						{#if isResolved && nonNullish(market.outcome)}
 							<Badge variant={getOutcomeVariant(market.outcome)}>
@@ -88,14 +120,17 @@
 						{/if}
 					</div>
 
-					<div class="text-muted-foreground/70 flex items-center gap-1.5">
-						<Clock aria-hidden="true" size={13} />
-						<span
-							class="num text-[11px] font-bold whitespace-nowrap"
-							data-tid={TestId.MarketTimeRemaining}
-						>
-							{getTimeRemaining(market.expiryDate)}
-						</span>
+					<div class="flex items-center gap-2">
+						<SavedMarketToggle marketId={market.id} size="sm" />
+						<div class="text-muted-foreground/70 flex items-center gap-1.5">
+							<Clock aria-hidden="true" size={13} />
+							<span
+								class="num text-[11px] font-bold whitespace-nowrap"
+								data-tid={TestId.MarketTimeRemaining}
+							>
+								{getTimeRemaining(market.expiryDate)}
+							</span>
+						</div>
 					</div>
 				</div>
 
@@ -123,34 +158,6 @@
 								outcomes={market.outcomes ?? []}
 								winningOutcomeId={isResolved ? market.outcome : undefined}
 							/>
-						{/if}
-					</div>
-
-					<div class="border-border flex min-h-8 items-center justify-end border-t pt-3">
-						{#if showChallengeSlot}
-							{#if onChallenge}
-								<button
-									class="text-muted-foreground/50 hover:text-primary hover:bg-laurel-glow flex items-center gap-1 rounded-lg px-2 py-1 transition-colors"
-									aria-label={t({ locale: $localeStore, key: 'card.challenge_friends' })}
-									onclick={(e) => {
-										e.stopPropagation();
-										onChallenge(market);
-									}}
-									onkeydown={(e) => e.stopPropagation()}
-									title={t({ locale: $localeStore, key: 'card.challenge_friends' })}
-								>
-									<Copy aria-hidden="true" size={14} />
-									<UsersRound aria-hidden="true" size={18} />
-								</button>
-							{:else}
-								<div
-									class="text-muted-foreground/40 group-hover:text-primary/50 flex items-center gap-1 px-2 py-1 transition-colors"
-									title={t({ locale: $localeStore, key: 'card.challenge_friends' })}
-								>
-									<Copy aria-hidden="true" size={14} />
-									<UsersRound aria-hidden="true" size={18} />
-								</div>
-							{/if}
 						{/if}
 					</div>
 				</div>

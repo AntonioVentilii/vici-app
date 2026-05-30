@@ -16,11 +16,23 @@ enum JunoDatastoreCollection {
 	RELATIONS = 'relations',
 	CHATS = 'chats',
 	COMMENTS = 'comments',
-	CATEGORIES = 'categories',
-	SERIES_CATEGORIES = 'series_categories',
 	MARKET_METADATA = 'market_metadata',
+	MARKET_TRANSLATIONS = 'market_translations',
 	ACTIVITIES = 'activities',
-	VXP_ONBOARDING = 'vxp_onboarding'
+	VXP_ONBOARDING = 'vxp_onboarding',
+	VXP_AWARDS = 'vxp_awards',
+	REFERRAL_CODES = 'referral_codes',
+	REFERRALS = 'referrals',
+	LEAGUES = 'leagues',
+	LEAGUE_MEMBERS = 'league_members',
+	BATTLES = 'battles',
+	AFFILIATIONS = 'affiliations',
+	AFFILIATION_STATS = 'affiliation_stats',
+	EXIT_SIGNALS = 'exit_signals',
+	TOURNAMENTS = 'tournaments',
+	TOURNAMENT_MATCHES = 'tournament_matches',
+	LEAGUE_STATS = 'league_stats',
+	USER_STATS = 'user_stats'
 }
 
 const delegation = {
@@ -95,22 +107,16 @@ export default defineConfig(({ mode }) => ({
 					write: 'public'
 				},
 				{
-					collection: JunoDatastoreCollection.CATEGORIES,
-					memory: 'stable',
-					read: 'public',
-					write: 'public'
-				},
-				{
-					collection: JunoDatastoreCollection.SERIES_CATEGORIES,
-					memory: 'stable',
-					read: 'public',
-					write: 'public'
-				},
-				{
 					collection: JunoDatastoreCollection.MARKET_METADATA,
 					memory: 'stable',
 					read: 'public',
-					write: 'controllers'
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.MARKET_TRANSLATIONS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
 				},
 				{
 					collection: JunoDatastoreCollection.ACTIVITIES,
@@ -123,6 +129,84 @@ export default defineConfig(({ mode }) => ({
 					memory: 'stable',
 					read: 'public',
 					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.VXP_AWARDS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.REFERRAL_CODES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.REFERRALS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.LEAGUES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.LEAGUE_MEMBERS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.BATTLES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.AFFILIATIONS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.AFFILIATION_STATS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.EXIT_SIGNALS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.TOURNAMENTS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.TOURNAMENT_MATCHES,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.LEAGUE_STATS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				},
+				{
+					collection: JunoDatastoreCollection.USER_STATS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
 				}
 			]
 		}
@@ -131,6 +215,12 @@ export default defineConfig(({ mode }) => ({
 		runner: {
 			type: 'docker'
 		},
+		// `satellite` profile boots the minimal single-satellite emulator
+		// (`junobuild/satellite:latest`). The `skylab` profile boots the
+		// full Juno suite (`junobuild/skylab:latest`) with the dev Console,
+		// but `juno functions build` exits silently with code 1 against it
+		// — see commit 693c6a6 for the same revert we did earlier. Stick to
+		// `satellite` until juno-cli fixes the skylab build path.
 		satellite: {}
 	}
 }));

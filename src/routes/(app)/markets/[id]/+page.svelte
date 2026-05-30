@@ -1,35 +1,56 @@
 <script lang="ts">
 	import { isNullish, nonNullish } from '@dfinity/utils';
-	import { Bell } from 'lucide-svelte/icons';
 	import { onDestroy, onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
-	import MarketDetailForecast from '$lib/components/market/MarketDetailForecast.svelte';
-	import MarketDetailHeader from '$lib/components/market/MarketDetailHeader.svelte';
-	import MarketDetailStats from '$lib/components/market/MarketDetailStats.svelte';
-	import MarketDetailTabs from '$lib/components/market/MarketDetailTabs.svelte';
-	import MarketInfoPanel from '$lib/components/market/MarketInfoPanel.svelte';
+	import MarketDetailChartCard from '$lib/components/market/MarketDetailChartCard.svelte';
+	import MarketDetailCtaBar from '$lib/components/market/MarketDetailCtaBar.svelte';
+	import MarketDetailLivePill from '$lib/components/market/MarketDetailLivePill.svelte';
+	import MarketDetailLockedToast from '$lib/components/market/MarketDetailLockedToast.svelte';
+	import MarketDetailProbHero from '$lib/components/market/MarketDetailProbHero.svelte';
+	import MarketDetailResolutionCard from '$lib/components/market/MarketDetailResolutionCard.svelte';
+	import MarketDetailShareButton from '$lib/components/market/MarketDetailShareButton.svelte';
+	import MarketDetailSkeleton from '$lib/components/market/MarketDetailSkeleton.svelte';
+	import MarketDetailStatsGrid from '$lib/components/market/MarketDetailStatsGrid.svelte';
+	import MarketDetailTopPredictors from '$lib/components/market/MarketDetailTopPredictors.svelte';
 	import MarketMetadataForm from '$lib/components/market/MarketMetadataForm.svelte';
 	import MarketResolutionInterface from '$lib/components/market/MarketResolutionInterface.svelte';
-	import { AppPath } from '$lib/constants/routes.constants';
+	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
+	import TradeModal from '$lib/components/market/TradeModal.svelte';
+	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
+	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
+	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
-	import { authPrincipal, userIsAdmin, userIsAdminOrSolver } from '$lib/derived/user.derived';
+	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
+	import {
+		authPrincipal,
+		userIsAdmin,
+		userIsAdminOrSolver,
+		userSignedIn
+	} from '$lib/derived/user.derived';
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { Market, MarketId } from '$lib/types/market';
-	import type { Position } from '$lib/types/position';
+	import type { Market, MarketId, OutcomeId } from '$lib/types/market';
+	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
+	import { goBack } from '$lib/utils/nav.utils';
 	import { positionResolvedResult } from '$lib/utils/position.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	let market = $state<Market | undefined>();
 
 	let positions = $state<Position[]>([]);
 
 	let loading = $state(true);
+
+	let selectedSide = $state<OutcomeId | undefined>();
+
+	let lockedToastOpen = $state(false);
 
 	const fetchMarket = async ({ id, silent = false }: { id: MarketId; silent?: boolean }) => {
 		if (!silent) {
@@ -73,14 +94,57 @@
 	});
 
 	const onPredictionPlaced = () => {
+		// Confirmation overlay (`Locked in.`) — done-state choreography.
+		// Held for 1100 ms so the user sees the acknowledgement, then
+		// we dismiss the sheet and refetch the market silently.
+		lockedToastOpen = true;
+		selectedSide = undefined;
+
+		setTimeout(() => {
+			lockedToastOpen = false;
+		}, 1100);
+
 		if (nonNullish(market)) {
 			fetchMarket({ id: market.id, silent: true });
 		}
 	};
 
+	const tags = $derived(nonNullish(market) ? ($marketTags[market.id] ?? []) : []);
+	const primaryTag = $derived(tags[0]);
+
+	const yesPercent = $derived(
+		nonNullish(market) ? Math.min(100, Math.max(0, Math.round(market.yesProbability * 100))) : 0
+	);
+	const noPercent = $derived(100 - yesPercent);
+
+	const isResolved = $derived(market?.status === 'Resolved');
+	const isLive = $derived(market?.status === 'Open');
+
+	// Resolved entries from the user's `Settled` event stream that match
+	// this market. Used to keep the resolution UX (MY CALL stat,
+	// "Called it." beat) working after the clearing canister removes the
+	// live `Position` row at settlement.
+	const resolvedForMarket = $derived.by<ResolvedPosition[]>(() => {
+		const m = market;
+
+		if (isNullish(m)) {
+			return [];
+		}
+
+		return $resolvedPositions.filter((r) => r.marketId === m.id);
+	});
+
+	const wonThisMarket = $derived(resolvedForMarket.some((r) => r.result === 'won'));
+
 	const canEditMetadata = $derived(
 		nonNullish(market) && ($userIsAdmin || market.creator === $authPrincipal)
 	);
+
+	const canResolve = $derived(
+		nonNullish(market) && market.status !== 'Resolved' && $userIsAdminOrSolver
+	);
+
+	const showAdminActions = $derived(canEditMetadata || canResolve);
 
 	// Resolution choreography — see `docs/ai/frontend/design.md` §7.6.
 	// On the first time the user views a resolved market they have a
@@ -101,21 +165,24 @@
 
 		const m = market;
 
-		if (isNullish(m) || m.status !== 'Resolved' || positions.length === 0) {
+		if (isNullish(m) || m.status !== 'Resolved') {
 			return;
 		}
 
-		// Guard against re-runs of this effect (e.g. when the 30 s
-		// silent refetch updates `market` / `positions`) cancelling the
-		// 320 ms timeout before it fires. Schedule once per market id;
-		// `onDestroy` does the unmount cleanup instead of $effect.
 		if (resolutionBeatScheduledFor === m.id) {
 			return;
 		}
 
-		const wonAny = positions.some(
+		// Win is detected from either source so the beat keeps firing
+		// after the clearing canister removes the live `Position`:
+		//   - `positions` is fresh during the brief window between trade
+		//     and settlement (used for the immediate post-resolve refresh).
+		//   - `resolvedForMarket` is the durable record sourced from the
+		//     `Settled` event stream.
+		const wonLive = positions.some(
 			(p) => positionResolvedResult({ market: m, position: p }) === 'won'
 		);
+		const wonAny = wonLive || wonThisMarket;
 
 		if (!wonAny) {
 			return;
@@ -154,72 +221,96 @@
 			clearTimeout(resolutionBeatTimeoutId);
 		}
 	});
+
+	const handlePick = (side: 'YES' | 'NO') => {
+		// Only an open market accepts calls — expired/resolved short-circuit.
+		if (!isLive) {
+			return;
+		}
+
+		// Public market browse — `/markets/[id]` is exempted from the
+		// (app)/+layout auth gate so signed-out visitors can preview a
+		// market. Placing a call still requires a session, so we bounce
+		// to /signin here at the point of action instead of opening the
+		// TradeModal against a missing identity.
+		if (!$userSignedIn) {
+			void goto(resolve(PublicPath.SignIn));
+
+			return;
+		}
+
+		selectedSide = side;
+	};
 </script>
 
 <svelte:head>
 	<title
 		>{market ? market.title : t({ locale: $localeStore, key: 'market.detail.fallback_title' })} | Vici
-		Social Markets</title
+		{t({ locale: $localeStore, key: 'market.detail.head_suffix' })}</title
 	>
 </svelte:head>
 
-<div class="market-detail-shell">
+<div class="market-detail-screen">
 	{#if loading}
-		<div class="flex h-96 items-center justify-center">
-			<div
-				class="border-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
-			></div>
-		</div>
+		<MarketDetailSkeleton />
 	{:else if market}
+		{@const m = market}
 		{#snippet detailRight()}
-			<button
-				class="market-detail-bell"
-				aria-label={t({ locale: $localeStore, key: 'a11y.notifications' })}
-				type="button"
-			>
-				<Bell aria-hidden="true" size={16} strokeWidth={1.8} />
-			</button>
+			<MarketDetailShareButton title={m.title} />
+			<!-- Save / "watch" — functionally a bookmark. We reuse the
+			     shared heart toggle so this surface stays in lockstep
+			     with the per-card heart in the markets list
+			     (`MarketCard`). -->
+			<SavedMarketToggle marketId={m.id} size="md" stopPropagation={false} />
 		{/snippet}
 
-		<div class="market-detail-stack">
-			<MobileAppBar
-				back={{
-					label: t({ locale: $localeStore, key: 'market.detail.back_to_markets' }),
-					onBack: () => void goto(resolve(AppPath.Home))
-				}}
-				right={detailRight}
-				title={market.title}
-			/>
+		<MobileAppBar
+			back={{
+				label: t({ locale: $localeStore, key: 'market.detail.back_to_markets' }),
+				onBack: () => goBack(resolve(AppPath.Home))
+			}}
+			right={detailRight}
+		/>
 
-			<MarketDetailHeader {market} />
-
-			<div class="market-detail-grid">
-				<div class="market-detail-main">
-					<div class="market-detail-mobile-stats">
-						<MarketDetailStats {market} />
-					</div>
-
-					<MarketDetailForecast {market} {onPredictionPlaced} />
-
-					<MarketDetailTabs {market} {positions} />
-
-					<div class="market-detail-mobile-info">
-						<MarketInfoPanel {market} />
-					</div>
-
-					{#if canEditMetadata}
-						<MarketMetadataForm canEdit {market} />
-					{/if}
-				</div>
-
-				<aside class="market-detail-aside">
-					<MarketDetailStats {market} />
-					<MarketInfoPanel {market} />
-				</aside>
+		<section class="market-detail-hero">
+			<div class="market-detail-chip-row">
+				{#if nonNullish(primaryTag)}
+					<span style:color={tagColor(primaryTag)} class="market-detail-tag">
+						{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[primaryTag] })}
+					</span>
+				{/if}
+				{#if isLive}
+					<MarketDetailLivePill />
+				{:else if isResolved}
+					<span class="market-detail-tag-resolved">
+						<OutcomeBadge status={market.status} />
+					</span>
+				{/if}
 			</div>
 
-			{#if market.status !== 'Resolved' && $userIsAdminOrSolver}
-				<div class="border-border mx-auto max-w-4xl border-t pt-12">
+			<h1 class="market-detail-title">{market.title}</h1>
+		</section>
+
+		<MarketDetailProbHero {noPercent} {yesPercent} />
+
+		<MarketDetailChartCard marketId={market.id} {yesPercent} />
+
+		<MarketDetailStatsGrid {market} {positions} {resolvedForMarket} />
+
+		<MarketDetailResolutionCard {market} />
+
+		<MarketDetailTopPredictors {market} />
+
+		{#if showAdminActions}
+			<section
+				class="market-detail-admin"
+				aria-label={t({ locale: $localeStore, key: 'market.detail.admin_actions' })}
+			>
+				{#if canEditMetadata}
+					<MarketMetadataForm canEdit {market} />
+				{/if}
+
+				{#if canResolve}
 					<MarketResolutionInterface
 						{market}
 						onSettled={() => {
@@ -228,9 +319,28 @@
 							}
 						}}
 					/>
-				</div>
-			{/if}
-		</div>
+				{/if}
+			</section>
+		{/if}
+
+		<!-- CTA bar is only meaningful while the market is taking calls.
+		     Expired (closed, awaiting resolution) and Resolved markets both
+		     suppress it so the YES/NO actions can't be tapped against a
+		     market that no longer accepts predictions. -->
+		{#if isLive}
+			<MarketDetailCtaBar {noPercent} onPick={handlePick} {yesPercent} />
+		{/if}
+
+		{#if nonNullish(selectedSide)}
+			<TradeModal
+				{market}
+				onClose={() => (selectedSide = undefined)}
+				{onPredictionPlaced}
+				selectedOutcome={selectedSide}
+			/>
+		{/if}
+
+		<MarketDetailLockedToast open={lockedToastOpen} />
 	{:else}
 		<div class="flex flex-col items-center justify-center py-24 text-center">
 			<h1 class="text-foreground text-4xl font-extrabold">
@@ -250,94 +360,65 @@
 </div>
 
 <style lang="postcss">
-	.market-detail-shell {
+	.market-detail-screen {
 		position: relative;
-		margin: 0 auto;
-		width: 100%;
-		max-width: 74rem;
-		padding: 0.75rem 1rem 2rem;
-	}
-
-	.market-detail-shell::before {
-		content: '';
-		position: fixed;
-		inset: 0;
-		z-index: -1;
-		pointer-events: none;
-		background:
-			radial-gradient(circle at 50% -10%, var(--laurel-glow), transparent 34%),
-			linear-gradient(
-				180deg,
-				color-mix(in srgb, var(--bg-surface) 42%, transparent),
-				transparent 18rem
-			);
-	}
-
-	.market-detail-stack {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0;
+		/* Leave room for the sticky bottom CTA bar (≈64px + safe-area). */
+		padding: 0.25rem 0 6rem;
 	}
 
-	.market-detail-bell {
-		display: inline-flex;
-		width: 2.25rem;
-		height: 2.25rem;
+	.market-detail-hero {
+		padding: 0.5rem 1.25rem 0;
+	}
+
+	.market-detail-chip-row {
+		display: flex;
+		flex-wrap: wrap;
 		align-items: center;
-		justify-content: center;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
-		color: var(--text-muted);
+		gap: 0.375rem;
 	}
 
-	.market-detail-grid {
-		display: grid;
-		grid-template-columns: minmax(0, 1fr);
-		gap: 1rem;
+	/* Category tag: no background, no border — just coloured text.
+	   A bare text chip so the title gets all the visual weight. */
+	.market-detail-tag {
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
 	}
 
-	.market-detail-main,
-	.market-detail-aside {
+	.market-detail-tag-resolved {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.2rem 0.45rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+	}
+
+	.market-detail-title {
+		margin: 0.625rem 0 0;
+		color: var(--text-base);
+		font-family: var(--font-display);
+		font-size: 1.5rem;
+		font-weight: 600;
+		letter-spacing: -0.02em;
+		line-height: 1.22;
+	}
+
+	.market-detail-admin {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
-		min-width: 0;
-	}
-
-	.market-detail-aside {
-		display: none;
+		margin: 1rem 1.25rem 0;
+		padding-top: 1.25rem;
+		border-top: 1px solid var(--border-base);
 	}
 
 	@media (min-width: 768px) {
-		.market-detail-shell {
-			padding: 1rem 1.5rem 3rem;
-		}
-	}
-
-	@media (min-width: 1024px) {
-		.market-detail-stack {
-			gap: 1.25rem;
-		}
-
-		.market-detail-grid {
-			grid-template-columns: minmax(0, 1fr) 22rem;
-			gap: 1.25rem;
-			align-items: start;
-		}
-
-		.market-detail-mobile-stats {
-			display: none;
-		}
-
-		.market-detail-mobile-info {
-			display: none;
-		}
-
-		.market-detail-aside {
-			display: flex;
-			position: sticky;
-			top: calc(var(--header-h) + 1rem);
+		.market-detail-title {
+			font-size: 1.75rem;
 		}
 	}
 </style>

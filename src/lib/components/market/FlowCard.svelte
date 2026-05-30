@@ -1,9 +1,13 @@
 <script lang="ts">
-	import { Spring } from 'svelte/motion';
-	import FlowArtFrame from '$lib/components/artwork/FlowArtFrame.svelte';
+	import ConsensusCompass from '$lib/components/market/ConsensusCompass.svelte';
 	import FlowCardBack from '$lib/components/market/FlowCardBack.svelte';
-	import BaseButton from '$lib/components/ui/BaseButton.svelte';
-	import { playgroundPotentialReturnSuffix } from '$lib/derived/playground.derived';
+	import FlowCardFooter from '$lib/components/market/FlowCardFooter.svelte';
+	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
+	import SeededAvatarStack from '$lib/components/ui/SeededAvatarStack.svelte';
+	import { DAY_IN_MS } from '$lib/constants/app.constants';
+	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
+	import { lookupWcMarketSubtitle } from '$lib/constants/wc-market-subtitles.constants';
+	import { daysToKickoff } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FlowAction, Market } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
@@ -12,424 +16,746 @@
 		FollowedLeanSignal,
 		PriorCallSignal
 	} from '$lib/types/market-signals';
-	import type { Position } from '$lib/types/position';
-	import { categoryColor } from '$lib/utils/category-color.utils';
 	import { resolveFlowArtCategory, type FlowArtCategory } from '$lib/utils/flow-art.utils';
 	import {
 		consensusPercent,
 		consensusSide,
-		formatFlowCallsLabel,
 		formatWhyNowChip
 	} from '$lib/utils/flow-card-display.utils';
-	import { formatProbability, formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { getExpiryEyebrow } from '$lib/utils/market.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
 		market: Market;
 		onAction: (action: FlowAction) => void;
-		isLimitOrderYes: boolean;
-		isLimitOrderNo: boolean;
 		signedIn: boolean;
-		position?: Position;
 		tradeAmount: string;
 		interactive?: boolean;
+		// When true, the parent has paused the deck (e.g. a sheet is
+		// open) and the card desaturates / dims its faces.
+		locked?: boolean;
 		// Generative-artwork category. FlowMode resolves this from the
-		// SeriesCategory mappings; FlowCard treats it as opaque, falls
-		// back to 'macro' if missing or unknown.
+		// market's primary tag; FlowCard treats it as opaque and falls back
+		// to a hash-derived bucket when the market has no tags.
 		category?: FlowArtCategory | string;
 		// Optional editorial sub-line ("FOMC · rate-cut call"). When
 		// undefined, FlowCard derives a short fallback from the description.
 		subtitle?: string;
-		// Optional accent chip (e.g. "FIRST CALL") shown on the right of
-		// the header row. Sits in laurel.
-		flag?: string;
 		// When set, the card has already been committed to a side and is
-		// playing the 80ms commit-feedback beat before the parent unmounts
-		// it. Drag is locked, the matching edge tint goes to full
-		// intensity, and the directional label sits at full opacity.
+		// playing the commit-feedback beat before the parent unmounts it.
+		// The matching swipe overlay locks to full opacity.
 		committedAction?: FlowAction | null;
 		metadata?: MarketMetadata;
 		categoryAcc?: CategoryAccuracySignal;
 		priorCall?: PriorCallSignal;
 		followedLean?: FollowedLeanSignal;
+		// Stake-ladder change callback. Wired through to FlowCardBack so a
+		// tap on a rung writes back to FlowMode's bound stake.
+		onStakeChange?: (next: string) => void;
+		// Lifetime committed-call count. Forwarded to FlowCardBack to gate
+		// the stake-ladder slider (hidden until the unlock threshold).
+		lifetimeCalls?: number;
 	}
 
 	const {
 		market,
 		onAction,
-		isLimitOrderYes,
-		isLimitOrderNo,
 		signedIn,
-		position,
 		tradeAmount,
 		interactive = true,
+		locked = false,
 		category,
 		subtitle,
-		flag,
 		committedAction = null,
 		metadata,
 		categoryAcc,
 		priorCall,
-		followedLean
+		followedLean,
+		onStakeChange,
+		lifetimeCalls = 0
 	}: Props = $props();
 
 	const isCommitted = $derived(committedAction !== null);
-	const TAP_FLIP_PX = 12;
-	const FLIP_MS = 180;
 
-	let flipped = $state(false);
+	// Swipe physics — rotation damping of 18 (drag.x / 18), commit
+	// threshold of 100 px, settle delay of 220 ms after pointer-up
+	// before the trade fires, vibrate 12 ms on commit.
+	const SWIPE_THRESHOLD = 100;
+	const SKIP_THRESHOLD = 110;
+	const SETTLE_MS = 220;
+	const VIBRATE_MS = 12;
+	const TAP_PX = 6;
 
-	const crowdSide = $derived(consensusSide(market));
-	const crowdPct = $derived(consensusPercent(market));
-	const callsLabel = $derived(
-		formatFlowCallsLabel({ volume: market.totalVolume, decimals: market.token.decimals })
-	);
-	const whyNowText = $derived(formatWhyNowChip(metadata?.whyNow));
-	const showPriorOnFront = $derived(Boolean(priorCall));
-
-	const amount = $derived(parseFloat(tradeAmount) || 0);
-	const potentialReturnYes = $derived(amount / (market.yesProbability || 0.1));
-	const potentialReturnNo = $derived(amount / (market.noProbability || 0.1));
-
-	// Single source of truth for category resolution: untagged markets
-	// must hash identically here, in FlowMode, in PositionArtThumb, and
-	// in market-signals — otherwise the same market shows up under
-	// different categories (and palettes / artwork) on different
-	// surfaces. See `resolveFlowArtCategory` for the canonical FNV-1a
-	// derivation.
+	// Resolved category — single source of truth across the surface so
+	// untagged markets hash identically here, in FlowMode, etc.
 	const resolvedCategory: FlowArtCategory = $derived(
 		resolveFlowArtCategory({ categoryId: category, seed: market.id })
 	);
-	const catColor = $derived(categoryColor(resolvedCategory));
+	const catColor = $derived(tagColor(resolvedCategory));
 
+	// Both faces are always rendered; a 3D `rotateY(180deg)` on the
+	// flipper element swaps which face is visible. `.flow-face` has
+	// `backface-visibility: hidden` so the hidden face is culled mid-
+	// rotation.
+	let flipped = $state(false);
+
+	// Drag state — raw deltas, no Spring. Plain `{x, y, dragging}`
+	// model with a `committedRef` one-shot latch reset on market
+	// change so a fast double-swipe can't fire twice.
+	let dragX = $state(0);
+	let dragY = $state(0);
+	let dragging = $state(false);
+	let settling = $state(false);
 	let startX = 0;
 	let startY = 0;
-	let dragging = $state(false);
+	let movedDist = 0;
+	let committedRef = false;
 
-	// Swipe physics: weighted, settled, decisive. Cards should feel
-	// like a tile being flipped — not flicked. `damping: 0.85` keeps
-	// the spring-back from oscillating; `stiffness: 0.4` is the
-	// snappy-but-not-twitchy point on Svelte's normalized curve.
-	const coords = new Spring(
-		{ x: 0, y: 0 },
-		{
-			stiffness: 0.4,
-			damping: 0.85
+	const rotation = $derived(dragX / 18);
+	const yesOpacity = $derived(Math.min(1, Math.max(0, dragX / 100)));
+	const noOpacity = $derived(Math.min(1, Math.max(0, -dragX / 100)));
+	const skipOpacity = $derived(Math.min(1, Math.max(0, -dragY / 90)));
+
+	const overlayYes = $derived(committedAction === 'YES' ? 1 : yesOpacity);
+	const overlayNo = $derived(committedAction === 'NO' ? 1 : noOpacity);
+	const overlaySkip = $derived(committedAction === 'SKIP' ? 1 : skipOpacity);
+
+	// Swipe overlays live on both faces but share one set of drag-driven
+	// opacities. Gate each face's overlays to whichever side is showing
+	// so the hidden face's big YES/NO words can't ghost through a dropped
+	// `backface-visibility` frame on iOS (the mirrored-glyph garble seen
+	// mid-flip). Signed-out users keep the existing half-strength dim.
+	const overlayDim = $derived(signedIn ? 1 : 0.5);
+	const frontOverlayYes = $derived(flipped ? 0 : overlayYes * overlayDim);
+	const frontOverlayNo = $derived(flipped ? 0 : overlayNo * overlayDim);
+	const frontOverlaySkip = $derived(flipped ? 0 : overlaySkip);
+	const backOverlayYes = $derived(flipped ? overlayYes * overlayDim : 0);
+	const backOverlayNo = $derived(flipped ? overlayNo * overlayDim : 0);
+
+	const crowdPct = $derived(consensusPercent(market));
+	const crowdSide = $derived(consensusSide(market));
+	const yesIsFav = $derived(crowdPct >= 50);
+	const noPct = $derived(100 - crowdPct);
+
+	// Payout preview — stake/(probability) − stake, clamped at p=0.05
+	// to keep long-shots from rendering pathological numbers.
+	const stakeNum = $derived(Math.max(0, Number(tradeAmount) || 0));
+	const probMyYes = $derived(Math.max(0.05, market.yesProbability));
+	const probMyNo = $derived(Math.max(0.05, 1 - market.yesProbability));
+	const winYes = $derived(Math.max(1, Math.round(stakeNum / probMyYes) - stakeNum));
+	const winNo = $derived(Math.max(1, Math.round(stakeNum / probMyNo) - stakeNum));
+
+	const sizeStake = $derived(Math.max(VXP_DEFAULT_STAKE, stakeNum));
+
+	// Live countdown — days until expiry, displayed as a chip in the
+	// meta row. Computed off `expiryDate` (ms). Urgency tiers:
+	// ≤ 1 day = urgent, ≤ 7 = soon.
+	const daysLeft = $derived.by(() => {
+		const ms = Number(market.expiryDate) - Date.now();
+
+		if (!Number.isFinite(ms) || ms <= 0) {
+			return 0;
 		}
-	);
 
-	const rotation = $derived(coords.current.x / 14);
-	const dragMagnitude = $derived(
-		Math.min(Math.sqrt(coords.current.x ** 2 + coords.current.y ** 2) / 260, 1)
-	);
-	const opacity = $derived(1 - dragMagnitude * 0.18);
+		return Math.max(0, Math.ceil(ms / DAY_IN_MS));
+	});
+	const daysLeftUrgency = $derived(daysLeft <= 1 ? 'urgent' : daysLeft <= 7 ? 'soon' : '');
 
-	const dragYesOpacity = $derived(Math.max(0, coords.current.x / 90));
-	const dragNoOpacity = $derived(Math.max(0, -coords.current.x / 90));
-	const dragSkipOpacity = $derived(Math.max(0, -coords.current.y / 90));
-
-	// When the card has been committed, the matching edge label / tint
-	// jump to full opacity so the 80 ms feedback beat reads as a clear
-	// "I felt that" moment before the exit transition fires.
-	const yesOpacity = $derived(committedAction === 'YES' ? 1 : dragYesOpacity);
-	const noOpacity = $derived(committedAction === 'NO' ? 1 : dragNoOpacity);
-	const skipOpacity = $derived(committedAction === 'SKIP' ? 1 : dragSkipOpacity);
-
-	const tintYes = $derived(Math.min(yesOpacity, 1));
-	const tintNo = $derived(Math.min(noOpacity, 1));
-	const tintSkip = $derived(Math.min(skipOpacity, 1));
-
-	const handleStart = (e: MouseEvent | TouchEvent) => {
-		if (!interactive || isCommitted || flipped) {
+	// WC live-state suffix on the category tag — only event-named
+	// milestones (MATCHDAY, KICKS OFF TOMORROW, KICKOFF WK). The numeric
+	// "X DAYS" suffix is owned by the days-left chip alongside.
+	const wcSuffixKey = $derived.by<
+		'wc.matchday' | 'wc.kicks_off_tomorrow' | 'wc.kickoff_week' | undefined
+	>(() => {
+		if (resolvedCategory !== 'wc') {
 			return;
 		}
 
-		dragging = true;
-		startX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-		startY = 'touches' in e ? e.touches[0].clientY : e.clientY;
-	};
+		const dtk = $daysToKickoff;
 
-	const handleMove = (e: MouseEvent | TouchEvent) => {
-		if (!dragging || flipped) {
-			return;
+		if (dtk == null) {
+			return 'wc.matchday';
 		}
 
-		const currentX = 'touches' in e ? e.touches[0].clientX : e.clientX;
-		const currentY = 'touches' in e ? e.touches[0].clientY : e.clientY;
+		if (dtk <= 1) {
+			return 'wc.kicks_off_tomorrow';
+		}
 
-		coords.set({
-			x: currentX - startX,
-			y: currentY - startY
+		if (dtk <= 7) {
+			return 'wc.kickoff_week';
+		}
+	});
+
+	// Friends-followed-lean line — when the user is following predictors
+	// who've called this market, surface the YES/NO split. Falls back to
+	// the predictors-count + momentum delta line.
+	const followedYes = $derived(followedLean?.yes);
+	const followedTotal = $derived(followedLean?.total ?? 10);
+	const followedNo = $derived(
+		followedYes !== undefined ? Math.max(0, followedTotal - followedYes) : undefined
+	);
+	const followedLeanText = $derived.by(() => {
+		if (followedYes === undefined || followedNo === undefined) {
+			return '';
+		}
+
+		const friendLabel = t({
+			locale: $localeStore,
+			key: followedYes === 1 ? 'card.followed_friend_singular' : 'card.followed_friend_plural'
 		});
+
+		return t({
+			locale: $localeStore,
+			key: 'card.followed_lean_template',
+			params: {
+				yesLabel: `${followedYes} ${friendLabel}`,
+				noLabel: String(followedNo)
+			}
+		});
+	});
+	const predictorsCount = $derived(
+		market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0
+	);
+
+	// Per-market momentum delta — deterministic per market.id, drives
+	// the "+N today" fallback line shown when the user has no
+	// followed-friends data on this market. Range ~10..99 keeps the
+	// number plausible without requiring a live aggregator.
+	const momentumDelta = $derived.by(() => {
+		const id = String(market.id);
+		let hash = 0;
+
+		for (let i = 0; i < id.length; i += 1) {
+			hash = (hash * 31 + id.charCodeAt(i)) | 0;
+		}
+
+		return (Math.abs(hash) % 90) + 10;
+	});
+
+	// Callers-in-last-hour placeholder — deterministic per market.id so
+	// the count is stable across renders without a live presence service.
+	// Range ~200..900 keeps the pill plausible at low-traffic moments
+	// without feeling padded. Suppressed when a curated `metadata.whyNow`
+	// already supplies a richer line.
+	const callersLastHour = $derived.by(() => {
+		const id = String(market.id);
+		let hash = 0;
+
+		for (let i = 0; i < id.length; i += 1) {
+			hash = (hash * 31 + id.charCodeAt(i)) | 0;
+		}
+
+		return 200 + (Math.abs(hash) % 700);
+	});
+
+	const showPriorOnFront = $derived(Boolean(priorCall));
+	const whyNowText = $derived(formatWhyNowChip(metadata?.whyNow));
+
+	// Subtitle resolution order:
+	//   1. Explicit `subtitle` prop (parent override)
+	//   2. `metadata.subtitle` from the satellite (admin-curated)
+	//   3. Curated WC-market lookup (`wc-market-subtitles.constants.ts`)
+	//      — fallback for the tentpole markets the deck ships with
+	//   4. undefined → row is hidden
+	//
+	// The raw `market.description` is intentionally NOT used as a
+	// fallback. It's long, prose-shaped, and belongs under
+	// RESOLVES YES IF on the back card. Surfacing it here as
+	// truncated italic ("YES if that date is the hottest daily
+	// maximum tem…") reads as a snippet rather than an editorial
+	// accent.
+	const subtitleText = $derived(
+		subtitle ?? metadata?.subtitle ?? lookupWcMarketSubtitle(market.id)
+	);
+
+	// Per-card reset: clear flip + latch + drag whenever the market
+	// underneath changes (parent re-uses the slot during deck shuffle).
+	$effect(() => {
+		market.id;
+		flipped = false;
+		dragX = 0;
+		dragY = 0;
+		dragging = false;
+		committedRef = false;
+	});
+
+	const vibrate = (ms: number) => {
+		if (typeof navigator !== 'undefined' && typeof navigator.vibrate === 'function') {
+			try {
+				navigator.vibrate(ms);
+			} catch {
+				// no-op
+			}
+		}
 	};
 
-	const handleEnd = () => {
+	const fire = (side: FlowAction) => {
+		if (committedRef) {
+			return;
+		}
+
+		committedRef = true;
+		onAction(side);
+	};
+
+	const isInteractiveTarget = (target: EventTarget | null): boolean => {
+		const el = target as HTMLElement | null;
+
+		if (el === null) {
+			return false;
+		}
+
+		return Boolean(el.closest('button, a, input, textarea, select, [data-no-card-gesture]'));
+	};
+
+	const onPointerDown = (e: MouseEvent | TouchEvent) => {
+		if (!interactive || isCommitted) {
+			return;
+		}
+
+		if (isInteractiveTarget(e.target)) {
+			return;
+		}
+
+		const p = 'touches' in e ? e.touches[0] : e;
+		startX = p.clientX;
+		startY = p.clientY;
+		movedDist = 0;
+		dragging = true;
+		settling = false;
+	};
+
+	const onPointerMove = (e: MouseEvent | TouchEvent) => {
+		if (!dragging) {
+			return;
+		}
+
+		const p = 'touches' in e ? e.touches[0] : e;
+		const dx = p.clientX - startX;
+		const dy = p.clientY - startY;
+		movedDist = Math.max(movedDist, Math.hypot(dx, dy));
+
+		if (flipped) {
+			// Back of card: only react to clearly horizontal motion —
+			// vertical scroll belongs to the panel body.
+			if (Math.abs(dx) > Math.abs(dy) * 1.2 && Math.abs(dx) > 8) {
+				dragX = dx;
+				dragY = 0;
+			}
+
+			return;
+		}
+
+		dragX = dx;
+		dragY = dy;
+	};
+
+	const commitWithSettle = ({
+		side,
+		exitX,
+		exitY
+	}: {
+		side: FlowAction;
+		exitX: number;
+		exitY: number;
+	}) => {
+		dragX = exitX;
+		dragY = exitY;
+		dragging = false;
+		settling = true;
+		vibrate(VIBRATE_MS);
+		setTimeout(() => fire(side), SETTLE_MS);
+	};
+
+	const onPointerUp = () => {
 		if (!dragging) {
 			return;
 		}
 
 		dragging = false;
+		settling = true;
 
-		const threshold = 120;
+		if (flipped) {
+			// Back of card: tap returns to front; horizontal swipe still
+			// commits a call; vertical motion (a scroll attempt) just
+			// snaps the card back.
+			if (movedDist < TAP_PX) {
+				dragX = 0;
+				dragY = 0;
+				flipped = false;
 
-		if (coords.current.x > threshold) {
-			onAction('YES');
-		} else if (coords.current.x < -threshold) {
-			onAction('NO');
-		} else if (coords.current.y < -threshold) {
-			onAction('SKIP');
-		} else if (
-			Math.abs(coords.current.x) < TAP_FLIP_PX &&
-			Math.abs(coords.current.y) < TAP_FLIP_PX
-		) {
-			flipped = true;
-			coords.set({ x: 0, y: 0 });
-		} else {
-			coords.set({ x: 0, y: 0 });
+				return;
+			}
+
+			if (dragX > SWIPE_THRESHOLD) {
+				commitWithSettle({ side: 'YES', exitX: 600, exitY: 0 });
+
+				return;
+			}
+
+			if (dragX < -SWIPE_THRESHOLD) {
+				commitWithSettle({ side: 'NO', exitX: -600, exitY: 0 });
+
+				return;
+			}
+
+			dragX = 0;
+			dragY = 0;
+
+			return;
 		}
+
+		if (movedDist < TAP_PX) {
+			// Tap = flip to depth.
+			dragX = 0;
+			dragY = 0;
+			flipped = true;
+
+			return;
+		}
+
+		// Swipe-up SKIP takes priority when motion is clearly vertical.
+		if (dragY < -SKIP_THRESHOLD && Math.abs(dragX) < Math.abs(dragY) * 0.7) {
+			commitWithSettle({ side: 'SKIP', exitX: dragX, exitY: -700 });
+
+			return;
+		}
+
+		if (dragX > SWIPE_THRESHOLD) {
+			commitWithSettle({ side: 'YES', exitX: 600, exitY: dragY });
+
+			return;
+		}
+
+		if (dragX < -SWIPE_THRESHOLD) {
+			commitWithSettle({ side: 'NO', exitX: -600, exitY: dragY });
+
+			return;
+		}
+
+		dragX = 0;
+		dragY = 0;
 	};
 
 	const closeBack = () => {
 		flipped = false;
 	};
 
-	const formatExpiryEyebrow = $derived(getExpiryEyebrow(market.expiryDate));
+	// Touch-end timestamp guard against the ghost-click chain. On mobile,
+	// `touchend` is followed ~300 ms later by synthetic `mousedown` /
+	// `mouseup` / `click` at the same coordinates. Without this guard the
+	// touch-driven flip-to-back fires, the back-face's `onclick` then
+	// catches the ghost-click and flips straight back to front — making
+	// tap-to-flip look like a no-op on phones.
+	let lastTouchEndAtMs = 0;
+	const GHOST_CLICK_WINDOW_MS = 500;
 
-	// First clause of description (up to ~52 chars) — only used when no
-	// explicit `subtitle` is passed by the parent.
-	const fallbackSubtitle = $derived.by(() => {
-		const desc = market.description ?? '';
-		const head = desc.split(/[.!?]\s/)[0]?.trim() ?? '';
-
-		if (head.length <= 52) {
-			return head;
+	const onTouchEnd = (e: TouchEvent) => {
+		// `preventDefault` on touchend is the canonical way to suppress
+		// the synthetic mouse chain that would otherwise fire after a
+		// gesture we just claimed. But blanket-preventing it ALSO kills
+		// legitimate clicks on interactive children (back-face pegs,
+		// share button, etc.) — onPointerDown skips them, dragging stays
+		// false, and the synthetic click would have been the only signal
+		// they ever received. Gate the preventDefault on `dragging`: we
+		// only suppress the synthetic chain when we actually drove a
+		// swipe / tap-to-flip gesture.
+		if (dragging && e.cancelable) {
+			e.preventDefault();
 		}
 
-		return `${head.slice(0, 49).trimEnd()}…`;
-	});
+		lastTouchEndAtMs = performance.now();
+		onPointerUp();
+	};
 
-	const subtitleText = $derived(subtitle ?? fallbackSubtitle);
+	const closeBackOnTap = (e: MouseEvent) => {
+		// Suppress the ghost-click that follows a touch-driven flip.
+		// The back face's `pointer-events` flips to `auto` the moment
+		// `flipped = true`, so the synthetic click would otherwise land
+		// here and immediately revert the state.
+		if (performance.now() - lastTouchEndAtMs < GHOST_CLICK_WINDOW_MS) {
+			e.preventDefault();
+			e.stopPropagation();
 
-	const yesPctLabel = $derived(formatProbability(market.yesProbability));
-	const noPctLabel = $derived(formatProbability(market.noProbability));
+			return;
+		}
 
-	$effect(() => {
-		market.id;
+		// Tap anywhere on the back panel returns to the front, except
+		// when the tap lands on an interactive control (those use
+		// `stopPropagation` or `[data-no-card-gesture]`).
+		if (isInteractiveTarget(e.target)) {
+			return;
+		}
+
 		flipped = false;
-	});
+	};
+
+	const headBackground = $derived(
+		`linear-gradient(160deg, color-mix(in srgb, ${catColor} 18%, transparent) 0%, color-mix(in srgb, ${catColor} 7%, transparent) 60%, transparent 100%)`
+	);
+	const headBorder = $derived(`color-mix(in srgb, ${catColor} 22%, transparent)`);
+	const backBackground = $derived(
+		`linear-gradient(180deg, color-mix(in srgb, ${catColor} 14%, transparent), transparent 60%), linear-gradient(180deg, var(--bg-popover), var(--bg-surface))`
+	);
 </script>
 
-<div
-	class="flow-card-root"
-	onmouseleave={handleEnd}
-	onmousemove={handleMove}
-	onmouseup={handleEnd}
-	ontouchend={handleEnd}
-	ontouchmove={handleMove}
-	role="presentation"
->
+<div class="flow-card-root" role="presentation">
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
 	<div
-		style:transform="translate3d({coords.current.x}px, {coords.current.y}px, 0) rotate({rotation}deg)"
-		style:opacity
+		style:transform="translate3d({dragX}px, {dragY}px, 0) rotate({rotation}deg)"
+		style:transition={settling ? 'transform var(--d-enter) cubic-bezier(0.22, 1, 0.36, 1)' : 'none'}
+		style:cursor={interactive ? (flipped ? 'default' : 'grab') : 'default'}
 		class="flow-card"
 		class:is-committed={isCommitted}
 		class:is-flipped={flipped}
 		class:is-grabbing={dragging}
+		class:is-locked={locked}
 		class:is-static={!interactive}
-		onmousedown={handleStart}
-		ontouchstart={handleStart}
-		role="presentation"
+		onmousedown={onPointerDown}
+		onmouseleave={onPointerUp}
+		onmousemove={onPointerMove}
+		onmouseup={onPointerUp}
+		ontouchend={onTouchEnd}
+		ontouchmove={onPointerMove}
+		ontouchstart={onPointerDown}
 	>
-		<!-- Edge-tint layers — subtle ring inside the card during drag.
-		     Routine swipes get edge tint + XP pop + haptic, no character. -->
-		<div
-			style:opacity={tintYes}
-			style:box-shadow="inset 0 0 0 2px rgba(79, 211, 161, {tintYes}), inset 0 0 60px rgba(79, 211,
-			161, {tintYes * 0.35})"
-			class="flow-card-tint"
-		></div>
-		<div
-			style:opacity={tintNo}
-			style:box-shadow="inset 0 0 0 2px rgba(255, 107, 107, {tintNo}), inset 0 0 60px rgba(255, 107,
-			107, {tintNo * 0.35})"
-			class="flow-card-tint"
-		></div>
-		<div
-			style:opacity={tintSkip}
-			style:box-shadow="inset 0 0 0 2px color-mix(in srgb, var(--text-base) {tintSkip * 40}%,
-			transparent), inset 0 0 60px color-mix(in srgb, var(--text-base) {tintSkip * 18}%,
-			transparent)"
-			class="flow-card-tint"
-		></div>
-
-		<!-- Drag-direction labels (replace the old giant YES/NO/SKIP stamps).
-		     Tiny laurel/yes/no signals that appear on edge approach. -->
-		<div
-			style:opacity={signedIn ? yesOpacity : yesOpacity * 0.5}
-			style:transform="scale({0.92 + yesOpacity * 0.08})"
-			class="flow-edge-label flow-edge-yes"
-		>
-			<span class="flow-edge-arrow">→</span>
-			<span class="flow-edge-text">YES</span>
-			<span class="flow-edge-meta num">
-				+{potentialReturnYes.toFixed(2)}{$playgroundPotentialReturnSuffix}
-			</span>
-			{#if isLimitOrderYes}
-				<span class="flow-edge-pill">{t({ locale: $localeStore, key: 'card.limit' })}</span>
-			{/if}
-		</div>
-		<div
-			style:opacity={signedIn ? noOpacity : noOpacity * 0.5}
-			style:transform="scale({0.92 + noOpacity * 0.08})"
-			class="flow-edge-label flow-edge-no"
-		>
-			<span class="flow-edge-arrow">←</span>
-			<span class="flow-edge-text">NO</span>
-			<span class="flow-edge-meta num">
-				+{potentialReturnNo.toFixed(2)}{$playgroundPotentialReturnSuffix}
-			</span>
-			{#if isLimitOrderNo}
-				<span class="flow-edge-pill">{t({ locale: $localeStore, key: 'card.limit' })}</span>
-			{/if}
-		</div>
-		<div
-			style:opacity={skipOpacity}
-			style:transform="translate(-50%, 0) scale({0.92 + skipOpacity * 0.08})"
-			class="flow-edge-label flow-edge-skip"
-		>
-			<span class="flow-edge-arrow">↑</span>
-			<span class="flow-edge-text">SKIP</span>
-		</div>
-
-		<div
-			style:opacity={flipped ? 0 : 1}
-			style:pointer-events={flipped ? 'none' : 'auto'}
-			style:transition="opacity {FLIP_MS}ms var(--ease-vici) {flipped ? '0ms' : `${FLIP_MS}ms`}"
-			class="flow-face flow-face-front"
-		>
-			<div style:--cat-color={catColor} class="flow-card-body">
-				<header class="flow-card-head">
-					<div class="flow-meta-row">
-						<span class="allcaps flow-cat">{resolvedCategory}</span>
-						<span class="flow-meta-sep" aria-hidden="true">·</span>
-						<span class="num flow-meta-time">{formatExpiryEyebrow}</span>
-						{#if position}
-							<span class="flow-meta-sep" aria-hidden="true">·</span>
-							<span class="allcaps flow-meta-position num">
-								Holding {formatToken({ value: position.netQty, unitName: market.token.decimals })}
-								{market.token.symbol}
+		<div class="flow-flipper" class:is-flipped={flipped}>
+			<!-- ── FRONT FACE ─────────────────────────────────────── -->
+			<div
+				style:pointer-events={flipped ? 'none' : 'auto'}
+				style:--cat-color={catColor}
+				class="flow-face flow-face-front"
+				aria-hidden={flipped}
+			>
+				<header
+					style:background={headBackground}
+					style:border-bottom-color={headBorder}
+					class="flow-head"
+				>
+					<div class="flow-head-row">
+						<div class="flow-head-tags">
+							<span style:color={catColor} class="flow-cat-tag allcaps">
+								{resolvedCategory}
+								{#if wcSuffixKey}
+									<span class="flow-cat-live">
+										· {t({ locale: $localeStore, key: wcSuffixKey })}
+									</span>
+								{/if}
 							</span>
-						{/if}
-						{#if flag}
-							<span class="allcaps flow-flag">{flag}</span>
-						{/if}
+							{#if daysLeft > 0}
+								<span
+									class="flow-days num"
+									class:is-soon={daysLeftUrgency === 'soon'}
+									class:is-urgent={daysLeftUrgency === 'urgent'}
+									aria-label={t({
+										locale: $localeStore,
+										key: 'card.days_left_aria',
+										params: { days: daysLeft }
+									})}
+								>
+									{daysLeft}d
+								</span>
+							{/if}
+						</div>
+						<ConsensusCompass size={42} yesProbability={market.yesProbability} />
 					</div>
 
 					{#if showPriorOnFront && priorCall}
-						<p class="flow-whynow flow-whynow-prior">
-							You called <strong>{priorCall.side}</strong> · {priorCall.when}
+						<p
+							class="flow-whynow flow-whynow-prior"
+							class:is-no={priorCall.side === 'NO'}
+							class:is-yes={priorCall.side === 'YES'}
+						>
+							<span class="flow-whynow-dot" aria-hidden="true"></span>
+							{t({ locale: $localeStore, key: 'card.you_called_eyebrow' })}
+							<strong>{priorCall.side}</strong> · {priorCall.when}
 						</p>
 					{:else if whyNowText}
-						<p class="flow-whynow">{whyNowText}</p>
+						<p class="flow-whynow">
+							<span class="flow-whynow-dot" aria-hidden="true"></span>
+							{whyNowText}
+						</p>
 					{/if}
 
 					<h2 class="flow-card-title">{market.title}</h2>
 					{#if subtitleText}
-						<p class="flow-card-sub">{subtitleText}</p>
+						<p class="flow-card-sub serif-italic acc">{subtitleText}</p>
+					{/if}
+
+					<!-- Live callers pill — green-dot live indicator + dynamic
+				     count. Suppressed when a `priorCall` eyebrow or a
+				     curated `metadata.whyNow` line already occupies the
+				     same beat above the title. Until a live presence
+				     service ships, the count is a deterministic
+				     placeholder hashed off `market.id` so the value is
+				     stable across renders. -->
+					{#if !showPriorOnFront && !whyNowText}
+						<span class="flow-callers-live num">
+							<span class="flow-callers-dot" aria-hidden="true"></span>
+							{t({
+								locale: $localeStore,
+								key: 'card.callers_last_hour',
+								params: { count: callersLastHour }
+							})}
+						</span>
 					{/if}
 				</header>
 
-				<div class="flow-art-slot">
-					<FlowArtFrame
-						class="flow-art"
-						category={resolvedCategory}
-						seed={market.id}
-						size={260}
-						state="neutral"
-					/>
-				</div>
-
-				<p class="flow-sharp">
-					<span class="flow-sharp-dot" aria-hidden="true"></span>
-					<span>
-						Sharp predictors:
-						<span
-							class="num"
-							class:text-no={crowdSide === 'NO'}
-							class:text-yes={crowdSide === 'YES'}
-						>
-							{crowdPct}%
-						</span>
-						<span class:text-no={crowdSide === 'NO'} class:text-yes={crowdSide === 'YES'}>
-							{crowdSide}
-						</span>
-					</span>
-				</p>
-
-				<div class="flow-prob">
-					<BaseButton
-						class="flow-prob-side flow-prob-no{crowdSide === 'NO' ? ' is-consensus' : ''}"
-						onclick={() => onAction('NO')}
-					>
-						<span class="flow-prob-top">
-							<span class="flow-prob-chevron text-no" aria-hidden="true">←</span>
-							<span class="allcaps flow-prob-label text-no">NO</span>
-						</span>
-						<span class="num flow-prob-pct text-no">{noPctLabel}</span>
-						{#if isLimitOrderNo}
-							<span class="flow-prob-badge bg-no-wash text-no">
-								{t({ locale: $localeStore, key: 'card.limit' })}
+				<div class="flow-body">
+					<!-- Friends social proof + live momentum. The avatar
+				     stack always renders (4 seeded decorative circles);
+				     the trailing text swaps between
+				       (a) `N friends YES · M NO`        — followedLean
+				       (b) `K predicting · +D today`      — predictors-count fallback
+				       (c) empty                          — neither available -->
+					<div class="flow-social num">
+						<SeededAvatarStack borderColor="var(--bg-popover)" size={18} />
+						{#if followedYes !== undefined && followedYes > 0}
+							<span class="flow-followed-lean">{followedLeanText}</span>
+						{:else if predictorsCount > 0}
+							<span>
+								{t({
+									locale: $localeStore,
+									key: 'card.predicting_count',
+									params: { count: predictorsCount.toLocaleString() }
+								})}
+								<span class="flow-momentum-sep" aria-hidden="true">·</span>
+								<span class="flow-momentum-delta text-yes">
+									{t({
+										locale: $localeStore,
+										key: 'card.momentum_delta',
+										params: { count: momentumDelta }
+									})}
+								</span>
 							</span>
 						{/if}
-					</BaseButton>
-					<BaseButton
-						class="flow-prob-side flow-prob-yes{crowdSide === 'YES' ? ' is-consensus' : ''}"
-						onclick={() => onAction('YES')}
-					>
-						<span class="flow-prob-top">
-							<span class="allcaps flow-prob-label text-yes">YES</span>
-							<span class="flow-prob-chevron text-yes" aria-hidden="true">→</span>
-						</span>
-						<span class="num flow-prob-pct text-yes">{yesPctLabel}</span>
-						{#if isLimitOrderYes}
-							<span class="flow-prob-badge bg-yes-wash text-yes">
-								{t({ locale: $localeStore, key: 'card.limit' })}
-							</span>
-						{/if}
-					</BaseButton>
+					</div>
+
+					<!-- Edge-to-edge market artwork. No padding around the
+				     frame — extends across the card body (`bleed` mode). -->
+					<div class="flow-art-bleed">
+						<MarketArtwork
+							bleed
+							category={resolvedCategory}
+							seed={market.id}
+							size={420}
+							state="neutral"
+						/>
+					</div>
+
+					<!-- Probability split — single bar with payout labels.
+				     Replaces the dual-box layout to compress space and
+				     surface upside without the misleading red 85% box. -->
+					<div class="flow-probs">
+						<div class="flow-probs-row">
+							<div class="flow-probs-side flow-probs-side-no">
+								<span class="flow-probs-pct num">{noPct}%</span>
+								<span class="flow-probs-label text-no">NO</span>
+							</div>
+							<div class="flow-probs-track" aria-hidden="true">
+								<div style:width="{noPct}%" class="flow-probs-fill-no"></div>
+								<div style:width="{crowdPct}%" class="flow-probs-fill-yes"></div>
+							</div>
+							<div class="flow-probs-side flow-probs-side-yes">
+								<span class="flow-probs-label text-yes">YES</span>
+								<span class="flow-probs-pct num">{crowdPct}%</span>
+							</div>
+						</div>
+						<div class="flow-probs-action-row">
+							<div class="flow-probs-action flow-probs-action-no">
+								<span class="flow-probs-arrow text-no" aria-hidden="true">←</span>
+								<span class="flow-probs-payout num">
+									+{winNo}
+									<span class="flow-probs-payout-unit">VXP</span>
+								</span>
+								<span class="flow-probs-role allcaps">
+									{yesIsFav
+										? t({ locale: $localeStore, key: 'card.long_shot' })
+										: t({ locale: $localeStore, key: 'card.favorite' })}
+								</span>
+							</div>
+							<div class="flow-probs-action flow-probs-action-yes">
+								<span class="flow-probs-role allcaps">
+									{yesIsFav
+										? t({ locale: $localeStore, key: 'card.favorite' })
+										: t({ locale: $localeStore, key: 'card.long_shot' })}
+								</span>
+								<span class="flow-probs-payout num">
+									+{winYes}
+									<span class="flow-probs-payout-unit">VXP</span>
+								</span>
+								<span class="flow-probs-arrow text-yes" aria-hidden="true">→</span>
+							</div>
+						</div>
+					</div>
+
+					<!-- Foot — SIZE · VXP chip + tap hint. -->
+					<FlowCardFooter {sizeStake} />
 				</div>
 
-				<div class="flow-card-foot num">
-					<span>{callsLabel}</span>
-					<span class="allcaps">{t({ locale: $localeStore, key: 'card.tap_depth' })}</span>
+				<!-- Full-card swipe overlays — large YES/NO/SKIP text
+			     overlays that fade in with drag progress. -->
+				<div
+					style:opacity={frontOverlayYes}
+					class="flow-overlay flow-overlay-yes"
+					aria-hidden="true"
+				>
+					{t({ locale: $localeStore, key: 'flow.action.yes' })}
 				</div>
-
-				<div class="flow-card-rail">
-					<span class="flow-rail-side"><span class="flow-rail-arrow">←</span> NO</span>
-					<span class="flow-rail-mid allcaps">Drag to commit · Tap for depth</span>
-					<span class="flow-rail-side">YES <span class="flow-rail-arrow">→</span></span>
+				<div style:opacity={frontOverlayNo} class="flow-overlay flow-overlay-no" aria-hidden="true">
+					{t({ locale: $localeStore, key: 'flow.action.no' })}
+				</div>
+				<div
+					style:opacity={frontOverlaySkip}
+					class="flow-overlay flow-overlay-skip"
+					aria-hidden="true"
+				>
+					{t({ locale: $localeStore, key: 'flow.action.skip' })}
 				</div>
 			</div>
-		</div>
 
-		<div
-			style:opacity={flipped ? 1 : 0}
-			style:pointer-events={flipped ? 'auto' : 'none'}
-			style:transition="opacity {FLIP_MS}ms var(--ease-vici) {flipped ? `${FLIP_MS}ms` : '0ms'}"
-			class="flow-face flow-face-back"
-		>
-			{#if flipped}
+			<!-- ── BACK FACE ─────────────────────────────────────── -->
+			<div
+				style:pointer-events={flipped ? 'auto' : 'none'}
+				style:background={backBackground}
+				style:--cat-color={catColor}
+				class="flow-face flow-face-back"
+				aria-hidden={!flipped}
+				onclick={closeBackOnTap}
+			>
 				<FlowCardBack
 					category={resolvedCategory}
 					{categoryAcc}
+					{crowdPct}
+					{crowdSide}
 					{followedLean}
+					interactive={flipped}
+					{lifetimeCalls}
 					{market}
 					{metadata}
 					onClose={closeBack}
+					{onStakeChange}
 					{priorCall}
+					{tradeAmount}
 				/>
-			{/if}
+
+				<!-- Back-face swipe still commits a call — horizontal stamps
+			     mirror the front overlays. -->
+				<div
+					style:opacity={backOverlayYes}
+					class="flow-overlay flow-overlay-yes flow-overlay-back"
+					aria-hidden="true"
+				>
+					{t({ locale: $localeStore, key: 'flow.action.yes' })}
+				</div>
+				<div
+					style:opacity={backOverlayNo}
+					class="flow-overlay flow-overlay-no flow-overlay-back"
+					aria-hidden="true"
+				>
+					{t({ locale: $localeStore, key: 'flow.action.no' })}
+				</div>
+			</div>
 		</div>
 	</div>
 </div>
@@ -442,66 +768,71 @@
 		justify-content: center;
 		width: 100%;
 		height: 100%;
-		perspective: 1000px;
+		/* Depth context for the 3D rotateY on `.flow-flipper`. */
+		perspective: 1400px;
 	}
 
 	.flow-card {
 		position: relative;
 		width: 100%;
 		height: 100%;
-		cursor: grab;
 		user-select: none;
-		touch-action: pan-y;
-		will-change: transform, opacity;
-	}
-	.flow-card.is-flipped {
-		cursor: default;
-	}
-
-	.flow-face {
-		position: absolute;
-		inset: 0;
-	}
-
-	.flow-face-front {
-		z-index: 2;
-	}
-
-	.flow-face-back {
-		z-index: 3;
+		/* `touch-action: none` keeps tap detection snappy: the browser
+		   doesn't wait for a scroll-intent threshold before firing the
+		   pointer events that drive drag / tap-to-flip. The back face's
+		   own scrollable body sets its own `touch-action: pan-y` so
+		   vertical scroll there still works. */
+		touch-action: none;
+		will-change: transform;
 	}
 	.flow-card.is-grabbing {
-		cursor: grabbing;
+		cursor: grabbing !important;
 	}
 	.flow-card.is-static {
 		cursor: default;
 	}
-	/* Brief 80 ms commit-feedback beat — drag is locked from
-	   `handleStart`; the visual lock here is the cursor / pointer
-	   change so the user sees the card stop responding to motion. */
 	.flow-card.is-committed {
 		cursor: default;
 		pointer-events: none;
 	}
 
-	.flow-card-tint {
-		position: absolute;
-		inset: 0;
-		z-index: 10;
-		pointer-events: none;
-		border-radius: var(--r-12);
-		transition: opacity var(--d-state) var(--ease-vici);
+	/* Locked state — parent (e.g. FlowMode) flips `locked` when a sheet
+	   is open and gestures should pause. Both faces desaturate / dim. */
+	.flow-card.is-locked .flow-face {
+		filter: brightness(0.92) saturate(0.9);
+		transition: filter 280ms var(--ease-vici);
 	}
 
-	.flow-card-body {
-		position: relative;
+	/* 3D flip container — front and back faces share the same slot;
+	   rotating the flipper 180° on Y reveals the back. `preserve-3d`
+	   keeps the children in the same 3D space so backface-visibility
+	   on the faces actually culls the hidden one. */
+	.flow-flipper {
+		position: absolute;
+		inset: 0;
+		transform-style: preserve-3d;
+		transition: transform 520ms cubic-bezier(0.22, 1, 0.36, 1);
+	}
+	.flow-flipper.is-flipped {
+		transform: rotateY(180deg);
+	}
+
+	.flow-face {
+		position: absolute;
+		inset: 0;
+		overflow: hidden;
+		/* Cull the away-facing side mid-rotation so the front doesn't
+		   ghost through the back (and vice versa). */
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
+		/* 22 px corner radius — softer than the default card radius
+		   for the swipeable Flow surface. */
+		border-radius: 22px;
+	}
+
+	.flow-face-front {
 		display: flex;
 		flex-direction: column;
-		gap: 0.8rem;
-		overflow: hidden;
-		height: 100%;
-		width: 100%;
-		padding: 0;
 		background:
 			radial-gradient(
 				circle at 18% 0%,
@@ -510,342 +841,395 @@
 			),
 			linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
 		border: 1px solid var(--border-strong);
-		border-radius: var(--r-12);
 		box-shadow:
-			var(--inset-hi),
 			0 12px 24px rgba(0, 0, 0, 0.3),
 			0 32px 60px rgba(0, 0, 0, 0.2);
 	}
-	@media (min-width: 768px) {
-		.flow-card-body {
-			gap: 1rem;
-		}
-	}
 
-	.flow-card-head {
+	.flow-head {
 		display: flex;
 		flex-direction: column;
 		gap: 0.55rem;
 		padding: 1.1rem 1.1rem 1rem;
-		border-bottom: 1px solid color-mix(in srgb, var(--cat-color) 18%, transparent);
-		background: linear-gradient(
-			160deg,
-			color-mix(in srgb, var(--cat-color) 14%, transparent),
-			transparent 68%
-		);
-	}
-	@media (min-width: 768px) {
-		.flow-card-head {
-			padding: 1.25rem 1.25rem 1rem;
-		}
+		border-bottom: 1px solid var(--border-base);
 	}
 
-	.flow-meta-row {
+	.flow-head-row {
 		display: flex;
-		flex-wrap: wrap;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.flow-head-tags {
+		display: inline-flex;
 		align-items: center;
 		gap: 0.4rem;
-		font-size: var(--t-12);
-		color: var(--text-muted);
+		flex-wrap: wrap;
 	}
-	.flow-cat {
-		color: var(--cat-color);
+
+	.flow-cat-tag {
+		display: inline-flex;
+		align-items: center;
+		padding: 2px 8px;
+		border-radius: var(--r-pill);
+		background: rgba(242, 236, 220, 0.06);
 		font-size: var(--t-12);
-	}
-	.flow-meta-sep {
-		color: var(--text-muted);
-		opacity: 0.6;
-	}
-	.flow-meta-time {
-		font-size: var(--t-12);
-		color: var(--text-muted);
-		font-weight: 500;
-		text-transform: uppercase;
+		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 	}
-	.flow-meta-position {
-		color: var(--laurel);
-	}
-	.flow-flag {
-		margin-left: auto;
-		color: var(--laurel);
-		font-size: var(--t-12);
+
+	.flow-cat-live {
+		margin-left: 4px;
+		font-size: 9.5px;
+		letter-spacing: var(--tracking-allcaps);
+		opacity: 0.85;
 	}
 
-	.flow-card-title {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: clamp(1.35rem, 5.8vw, 1.75rem);
-		line-height: var(--leading-snug);
-		font-weight: 600;
-		letter-spacing: var(--tracking-snug);
-		color: var(--text-base);
-		overflow-wrap: anywhere;
-	}
-	@media (min-width: 400px) {
-		.flow-card-title {
-			font-size: 1.85rem;
-		}
-	}
-	@media (min-width: 768px) {
-		.flow-card-title {
-			font-size: 2rem;
-		}
-	}
-
-	.flow-card-sub {
-		margin: 0;
-		font-size: var(--t-13);
-		line-height: var(--leading-normal);
+	.flow-days {
+		display: inline-flex;
+		align-items: center;
+		padding: 2px 7px;
+		font-size: 10.5px;
+		font-weight: 700;
+		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
-		font-family: var(--font-display);
+		background: color-mix(in srgb, var(--bg-surface) 88%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+	}
+	.flow-days.is-soon {
+		color: var(--cat-color);
+		border-color: color-mix(in srgb, var(--cat-color) 30%, var(--border-base));
+	}
+	.flow-days.is-urgent {
+		color: var(--no);
+		border-color: color-mix(in srgb, var(--no) 30%, var(--border-base));
+		animation: flow-days-pulse 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-days.is-urgent {
+			animation: none;
+		}
 	}
 
 	.flow-whynow {
 		align-self: flex-start;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
 		margin: 0;
-		padding: 0.32rem 0.55rem;
+		padding: 0.3rem 0.55rem;
 		border-radius: var(--r-pill);
-		border: 1px solid color-mix(in srgb, var(--cat-color) 24%, var(--border-base));
+		border: 1px solid color-mix(in srgb, var(--cat-color) 22%, var(--border-base));
 		background: color-mix(in srgb, var(--cat-color) 10%, var(--bg-surface));
 		font-size: var(--t-12);
 		color: var(--laurel);
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 	}
-
-	.flow-whynow-prior strong {
+	.flow-whynow strong {
 		font-weight: 700;
 	}
-
-	.flow-sharp {
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-		margin: 0 1.1rem;
-		padding: 0.5rem 0.65rem;
-		border-radius: var(--r-8);
-		border: 1px solid color-mix(in srgb, var(--cat-color) 18%, var(--border-base));
-		background:
-			linear-gradient(90deg, color-mix(in srgb, var(--cat-color) 10%, transparent), transparent),
-			var(--bg-surface);
-		font-size: var(--t-12);
-		color: var(--text-muted);
+	.flow-whynow-prior.is-yes {
+		color: var(--yes);
+		border-color: color-mix(in srgb, var(--yes) 30%, var(--border-base));
 	}
-
-	.flow-sharp-dot {
+	.flow-whynow-prior.is-no {
+		color: var(--no);
+		border-color: color-mix(in srgb, var(--no) 30%, var(--border-base));
+	}
+	.flow-whynow-dot {
 		width: 6px;
 		height: 6px;
 		border-radius: var(--r-pill);
-		background: var(--cat-color);
-		box-shadow: 0 0 0 4px color-mix(in srgb, var(--cat-color) 12%, transparent);
+		background: currentColor;
 		flex-shrink: 0;
 	}
 
-	.flow-card-foot {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		margin: 0 1.1rem;
-		font-size: var(--t-12);
-		color: var(--text-muted);
-		letter-spacing: 0.06em;
-	}
-
-	.flow-art-slot {
-		position: relative;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		flex: 1 1 auto;
-		min-height: 0;
-		padding: 0.15rem 1rem 0;
-	}
-
-	.flow-art-slot :global(.flow-art) {
-		max-width: 100%;
-		height: auto;
-		max-height: 100%;
-		aspect-ratio: 1 / 1;
-	}
-
-	.flow-prob {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.625rem;
-		margin: 0 1.1rem;
-	}
-
-	:global(.flow-prob-side) {
-		position: relative;
-		display: flex !important;
-		flex-direction: column;
-		align-items: center;
-		justify-content: center;
-		gap: 0.35rem;
-		min-height: 5.4rem;
-		padding: 0.75rem 0.65rem;
-		border-radius: var(--r-12);
-		border-width: 1px;
-		border-style: solid;
-		background: var(--bg-surface);
-		transition:
-			transform var(--d-hover) var(--ease-vici),
-			background-color var(--d-state) var(--ease-vici);
-	}
-	:global(.flow-prob-side:active) {
-		transform: scale(0.985);
-	}
-	:global(.flow-prob-no) {
-		border-color: rgba(255, 107, 107, 0.18);
-	}
-	:global(.flow-prob-no:hover) {
-		background: var(--no-wash);
-	}
-	:global(.flow-prob-yes) {
-		border-color: rgba(79, 211, 161, 0.18);
-	}
-	:global(.flow-prob-yes:hover) {
-		background: var(--yes-wash);
-	}
-	:global(.flow-prob-side.is-consensus.flow-prob-no) {
-		border-color: rgba(255, 107, 107, 0.45);
-		box-shadow: inset 0 0 0 1px rgba(255, 107, 107, 0.2);
-	}
-	:global(.flow-prob-side.is-consensus.flow-prob-yes) {
-		border-color: rgba(79, 211, 161, 0.45);
-		box-shadow: inset 0 0 0 1px rgba(79, 211, 161, 0.2);
-	}
-	:global(.flow-prob-label) {
-		display: block;
-		font-size: var(--t-12);
-		font-weight: 600;
-	}
-	:global(.flow-prob-top) {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.35rem;
-	}
-	:global(.flow-prob-chevron) {
-		font-size: var(--t-16);
-		font-weight: 700;
-		line-height: 1;
-	}
-	:global(.flow-prob-pct) {
-		display: block;
-		font-size: 1.8rem;
-		font-weight: 600;
-		letter-spacing: -0.02em;
-		line-height: 1;
-	}
-	:global(.flow-prob-badge) {
-		position: absolute;
-		top: 0.4rem;
-		right: 0.4rem;
-		padding: 2px 6px;
-		border-radius: var(--r-pill);
-		font-size: 9px;
-		font-weight: 700;
-		letter-spacing: 0.12em;
-		text-transform: uppercase;
-	}
-
-	.flow-card-rail {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
-		margin: 0 1.1rem 1rem;
-		padding-top: 0.65rem;
-		border-top: 1px solid var(--border-base);
-		font-size: var(--t-12);
-		color: var(--text-muted);
+	.flow-card-title {
+		margin: 0;
 		font-family: var(--font-display);
-		font-weight: 500;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
+		font-size: clamp(1.35rem, 5.6vw, 1.75rem);
+		line-height: var(--leading-snug);
+		font-weight: 600;
+		letter-spacing: var(--tracking-snug);
+		color: var(--text-base);
+		overflow-wrap: anywhere;
 	}
-	.flow-rail-side {
-		flex: 0 0 auto;
-		display: inline-flex;
-		align-items: center;
-		gap: 0.25rem;
+
+	.flow-card-sub {
+		margin: 0;
+		font-size: var(--t-14);
+		line-height: var(--leading-normal);
 		color: var(--text-muted);
+		/* Serif-italic accent — editorial sub-row. The global
+		   `.serif-italic` utility also sets font-family + weight; this
+		   duplicates a few props so the typography still reads when the
+		   utility class is overridden by parent context. */
+		font-family: var(--font-serif);
+		font-style: italic;
+		font-weight: 400;
 	}
-	.flow-rail-arrow {
-		color: var(--laurel);
+
+	.flow-momentum-sep {
+		margin: 0 5px;
+		opacity: 0.55;
+	}
+	.flow-momentum-delta {
 		font-weight: 700;
 	}
-	.flow-rail-mid {
-		flex: 1 1 auto;
-		text-align: center;
-		font-size: 10px;
-		color: var(--text-muted);
-		opacity: 0.56;
+
+	/* Live callers pill — green-dot live indicator + dynamic count.
+	   Sits below the title/subtitle as the "why this card now" beat
+	   when no curated whyNow or priorCall has already claimed that
+	   slot. */
+	.flow-callers-live {
+		display: inline-flex;
+		align-self: flex-start;
+		align-items: center;
+		gap: 5px;
+		margin: 4px 0 0;
+		font-size: var(--t-11);
+		font-weight: 600;
+		color: var(--yes);
+		letter-spacing: 0.02em;
 	}
-	@media (max-width: 360px) {
-		.flow-rail-mid {
-			display: none;
+	.flow-callers-dot {
+		width: 6px;
+		height: 6px;
+		border-radius: var(--r-pill);
+		background: var(--yes);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--yes) 22%, transparent);
+		animation: flow-callers-pulse 1.6s ease-in-out infinite;
+	}
+	@keyframes flow-callers-pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.45;
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-callers-dot {
+			animation: none;
 		}
 	}
 
-	.flow-edge-label {
-		position: absolute;
-		z-index: 20;
+	/* 14 px gap between the friends row / artwork / probs split bar.
+	   `.flow-probs` further down sets `margin-top: auto`, which parks
+	   the probability split at the bottom of the card body regardless
+	   of artwork height. */
+	.flow-body {
 		display: flex;
 		flex-direction: column;
-		align-items: center;
-		gap: 2px;
-		padding: 0.5rem 1rem;
-		background: var(--bg-popover);
-		border: 1px solid var(--border-strong);
-		border-radius: var(--r-8);
-		pointer-events: none;
-		font-family: var(--font-display);
-		text-transform: uppercase;
-		letter-spacing: var(--tracking-allcaps);
+		gap: 14px;
+		flex: 1 1 auto;
+		min-height: 0;
+		padding: 14px 0 16px;
 	}
-	.flow-edge-arrow {
-		font-size: var(--t-20);
+
+	.flow-social {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		padding: 0 1.1rem;
+		font-size: var(--t-12);
+		color: var(--text-muted);
+		letter-spacing: 0.02em;
+	}
+
+	.flow-followed-lean {
+		font-weight: 600;
+	}
+	/* Edge-to-edge artwork frame — the FlowArtFrame's own rounded
+	   corners come off so the body of the card hosts the art with no
+	   side padding (`bleed` mode). The frame's height is fixed so the
+	   title / probs row never reflow on layout changes. */
+	/* Fixed 172 px artwork frame. The earlier
+	   `clamp(140px, 22vw, 172px)` shrank the art on narrow viewports,
+	   which made the card body collapse on phones and the probs row
+	   crowd against the title. A constant height keeps the card
+	   silhouette stable across breakpoints. */
+	.flow-art-bleed {
+		position: relative;
+		width: 100%;
+		height: 172px;
+		overflow: hidden;
+		border-top: 1px solid var(--border-base);
+		border-bottom: 1px solid var(--border-base);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	.flow-art-bleed :global(.flow-art) {
+		width: 100%;
+		height: 100%;
+		max-width: none;
+		border-radius: 0;
+		box-shadow: none;
+	}
+	.flow-art-bleed :global(.flow-art > svg),
+	.flow-art-bleed :global(.flow-art svg) {
+		width: 100%;
+		height: 100%;
+	}
+
+	/* `margin-top: auto` parks the split bar at the bottom edge of
+	   the card body so it stays anchored to the foot regardless of
+	   how tall the artwork frame ends up. */
+	.flow-probs {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
+		margin: auto 1.1rem 0;
+		padding: 0 2px;
+	}
+
+	.flow-probs-row {
+		display: grid;
+		grid-template-columns: auto 1fr auto;
+		align-items: center;
+		gap: 0.6rem;
+	}
+
+	.flow-probs-side {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 5px;
+	}
+	.flow-probs-side-no {
+		justify-content: flex-start;
+	}
+	.flow-probs-side-yes {
+		justify-content: flex-end;
+	}
+
+	.flow-probs-pct {
+		font-size: 1.45rem;
+		font-weight: 700;
+		letter-spacing: var(--tracking-tight);
+		line-height: 1;
+		color: var(--text-base);
+	}
+	.flow-probs-label {
+		font-size: var(--t-11);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.flow-probs-track {
+		position: relative;
+		display: flex;
+		height: 8px;
+		border-radius: var(--r-pill);
+		overflow: hidden;
+		background: var(--border-base);
+	}
+	.flow-probs-fill-no {
+		height: 100%;
+		background: color-mix(in srgb, var(--no) 80%, transparent);
+	}
+	.flow-probs-fill-yes {
+		height: 100%;
+		background: color-mix(in srgb, var(--yes) 80%, transparent);
+	}
+
+	.flow-probs-action-row {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.6rem;
+		font-size: var(--t-12);
+	}
+	.flow-probs-action {
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		color: var(--text-muted);
+	}
+	.flow-probs-action-no {
+		justify-content: flex-start;
+	}
+	.flow-probs-action-yes {
+		justify-content: flex-end;
+	}
+	.flow-probs-arrow {
+		font-size: var(--t-14);
 		font-weight: 700;
 		line-height: 1;
 	}
-	.flow-edge-text {
-		font-size: var(--t-12);
+	.flow-probs-payout {
+		display: inline-flex;
+		align-items: baseline;
+		gap: 3px;
 		font-weight: 700;
-	}
-	.flow-edge-meta {
-		font-size: 10px;
-		color: var(--text-muted);
-	}
-	.flow-edge-pill {
-		margin-top: 0.25rem;
-		padding: 1px 6px;
-		border-radius: var(--r-pill);
-		font-size: 8px;
-		font-weight: 700;
-		letter-spacing: 0.14em;
-		text-transform: uppercase;
 		color: var(--text-base);
-		background: var(--bg-surface);
 	}
-	.flow-edge-yes {
-		top: 1.25rem;
-		right: 1rem;
-		border-color: var(--yes);
-		color: var(--yes);
-	}
-	.flow-edge-no {
-		top: 1.25rem;
-		left: 1rem;
-		border-color: var(--no);
-		color: var(--no);
-	}
-	.flow-edge-skip {
-		bottom: 30%;
-		left: 50%;
-		border-color: var(--border-strong);
+	.flow-probs-payout-unit {
+		font-size: 9.5px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
 		color: var(--text-muted);
+	}
+	.flow-probs-role {
+		font-size: 9.5px;
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		opacity: 0.75;
+	}
+
+	/* Full-card swipe overlays — large directional YES / NO / SKIP
+	   labels that fade in with drag progress. The overlay text alone
+	   carries the swipe intent; no edge-inset glow. */
+	.flow-overlay {
+		position: absolute;
+		inset: 0;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-family: var(--font-display);
+		font-weight: 900;
+		font-size: clamp(3.5rem, 14vw, 5rem);
+		letter-spacing: 0.06em;
+		pointer-events: none;
+		transition: opacity 80ms linear;
+		z-index: 20;
+	}
+	.flow-overlay-yes {
+		color: var(--yes);
+		text-shadow: 0 4px 18px color-mix(in srgb, var(--yes) 40%, transparent);
+	}
+	.flow-overlay-no {
+		color: var(--no);
+		text-shadow: 0 4px 18px color-mix(in srgb, var(--no) 40%, transparent);
+	}
+	.flow-overlay-skip {
+		color: var(--text-muted);
+		text-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
+	}
+	.flow-overlay-back {
+		font-size: clamp(3rem, 12vw, 4.5rem);
+		z-index: 25;
+	}
+
+	.flow-face-back {
+		display: flex;
+		flex-direction: column;
+		/* Pre-rotated so the flipper's 180° rotateY brings it face-on. */
+		transform: rotateY(180deg);
+		border: 1px solid var(--border-strong);
+		box-shadow:
+			0 24px 52px rgba(0, 0, 0, 0.24),
+			0 12px 24px rgba(0, 0, 0, 0.18);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.flow-flipper {
+			transition: none;
+		}
 	}
 </style>

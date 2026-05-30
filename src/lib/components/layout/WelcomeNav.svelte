@@ -1,17 +1,58 @@
 <script lang="ts">
+	/**
+	 * Two nav variants on the landing surface: `.dnav` (≥1024px,
+	 * horizontal pattern with scroll-spy + smooth scroll) and
+	 * `.lp-nav` / `.lp-pill` (<1024px, pill morph + slide-down sheet).
+	 * CSS in `src/landing.css` flips visibility at the 1024px
+	 * breakpoint so both render in the markup and the right one
+	 * shows.
+	 */
+	import { Globe, Lock } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
-	import LanguagePicker from '$lib/components/layout/LanguagePicker.svelte';
 	import Logo from '$lib/components/layout/Logo.svelte';
-	import WelcomeThemePicker from '$lib/components/layout/WelcomeThemePicker.svelte';
-	import Button from '$lib/components/ui/Button.svelte';
+	import {
+		LOCALE_STORAGE_KEY,
+		SUPPORTED_LOCALES,
+		type AppLocale
+	} from '$lib/constants/locale.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { theme } from '$lib/stores/theme.store';
 	import { t } from '$lib/utils/i18n.utils';
 
+	const sections = ['markets', 'flow', 'leaderboard', 'trust'] as const;
+	// Theme labels resolve from the canonical `ui.theme.*` catalog — the
+	// same source AppearancePicker uses — so the appearance tooltips/aria
+	// stay localized and in sync rather than hardcoded English.
+	const THEME_IDS = ['dark', 'light', 'peach'] as const;
+	const themeOpts = $derived(
+		THEME_IDS.map((id) => ({
+			id,
+			label: t({ locale: $localeStore, key: `ui.theme.${id}` as const })
+		}))
+	);
+
 	let scrolled = $state(false);
+	let active = $state<string>('');
+	let menuOpen = $state(false);
+	let langOpen = $state(false);
+	let dnavLangOpen = $state(false);
+	let langRef: HTMLDivElement | null = $state(null);
+	let langPopRef: HTMLUListElement | null = $state(null);
+	let dnavLangRef: HTMLDivElement | null = $state(null);
+	let langPopPos = $state<{ top: number; right: number } | null>(null);
+
+	const LOCALES = SUPPORTED_LOCALES;
 
 	onMount(() => {
+		if (typeof document !== 'undefined') {
+			// `data-theme` is owned by the canonical theme store + the
+			// no-FOUC inline script in `app.html`; we only stamp the brand
+			// accent here.
+			document.documentElement.setAttribute('data-accent', 'laurel');
+		}
+
 		const onScroll = () => {
 			scrolled = window.scrollY > 8;
 		};
@@ -19,106 +60,411 @@
 		onScroll();
 		window.addEventListener('scroll', onScroll, { passive: true });
 
-		return () => window.removeEventListener('scroll', onScroll);
+		// Scroll spy
+		const els = sections
+			.map((id) => document.getElementById(id))
+			.filter((el): el is HTMLElement => Boolean(el));
+		const io =
+			els.length === 0
+				? null
+				: new IntersectionObserver(
+						(entries) => {
+							entries.forEach((e) => {
+								if (e.isIntersecting && e.intersectionRatio > 0.3) {
+									active = e.target.id;
+								}
+							});
+						},
+						{ rootMargin: '-30% 0px -55% 0px', threshold: [0, 0.3, 0.6] }
+					);
+
+		if (io) {
+			els.forEach((el) => io.observe(el));
+		}
+
+		return () => {
+			window.removeEventListener('scroll', onScroll);
+
+			if (io) {
+				io.disconnect();
+			}
+		};
 	});
+
+	$effect(() => {
+		if (typeof document === 'undefined') {
+			return;
+		}
+
+		document.body.style.overflow = menuOpen ? 'hidden' : '';
+
+		return () => {
+			document.body.style.overflow = '';
+		};
+	});
+
+	$effect(() => {
+		if (!menuOpen || typeof window === 'undefined') {
+			return;
+		}
+
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				menuOpen = false;
+			}
+		};
+
+		window.addEventListener('keydown', onKey);
+
+		return () => window.removeEventListener('keydown', onKey);
+	});
+
+	// Outside-click for the lang popovers
+	$effect(() => {
+		if (!langOpen && !dnavLangOpen) {
+			return;
+		}
+
+		const onDoc = (e: MouseEvent) => {
+			const target = e.target as Node | null;
+
+			// The mobile popover lives outside `.lp-pill` to escape its
+			// `overflow: hidden` + `backdrop-filter` containing block, so
+			// "inside the popover" is checked separately from the globe ref.
+			if (
+				langOpen &&
+				langRef &&
+				target &&
+				!langRef.contains(target) &&
+				!(langPopRef && langPopRef.contains(target))
+			) {
+				langOpen = false;
+			}
+
+			if (dnavLangOpen && dnavLangRef && target && !dnavLangRef.contains(target)) {
+				dnavLangOpen = false;
+			}
+		};
+
+		const onKey = (e: KeyboardEvent) => {
+			if (e.key === 'Escape') {
+				langOpen = false;
+				dnavLangOpen = false;
+			}
+		};
+
+		document.addEventListener('mousedown', onDoc);
+		window.addEventListener('keydown', onKey);
+
+		return () => {
+			document.removeEventListener('mousedown', onDoc);
+			window.removeEventListener('keydown', onKey);
+		};
+	});
+
+	// Track the globe's viewport rect so the mobile lang popover — which
+	// is rendered outside `.lp-pill` to escape the pill's clipping — can
+	// anchor itself under the globe via `position: fixed`.
+	$effect(() => {
+		if (!langOpen || typeof window === 'undefined') {
+			langPopPos = null;
+
+			return;
+		}
+
+		const update = () => {
+			if (!langRef) {
+				return;
+			}
+
+			const r = langRef.getBoundingClientRect();
+			langPopPos = { top: r.bottom + 8, right: window.innerWidth - r.right };
+		};
+
+		update();
+		window.addEventListener('scroll', update, { passive: true });
+		window.addEventListener('resize', update, { passive: true });
+
+		return () => {
+			window.removeEventListener('scroll', update);
+			window.removeEventListener('resize', update);
+		};
+	});
+
+	const closeMenu = () => {
+		menuOpen = false;
+	};
+
+	const onLinkClick =
+		(id: string) =>
+		(e: MouseEvent): void => {
+			if (typeof document === 'undefined') {
+				return;
+			}
+
+			const el = document.getElementById(id);
+
+			if (!el) {
+				return;
+			}
+
+			e.preventDefault();
+			const y = el.getBoundingClientRect().top + window.scrollY - 72;
+			window.scrollTo({ top: y, behavior: 'smooth' });
+			history.replaceState(null, '', `#${id}`);
+		};
+
+	const setLocaleAndClose = (loc: AppLocale) => {
+		localeStore.set({ key: LOCALE_STORAGE_KEY, value: loc });
+		langOpen = false;
+		dnavLangOpen = false;
+	};
 </script>
 
+<!-- ─── Desktop nav (≥1024px) ─── -->
 <nav
-	class="welcome-nav"
+	class="dnav"
 	class:is-scrolled={scrolled}
 	aria-label={t({ locale: $localeStore, key: 'a11y.landing' })}
 >
-	<div class="welcome-nav-inner">
-		<div class="welcome-nav-logo">
-			<Logo href={PublicPath.Welcome} />
+	<a class="dnav-skip" href="#main">
+		{t({ locale: $localeStore, key: 'welcome.nav.skip_to_content' })}
+	</a>
+	<div class="dnav-inner">
+		<span class="dnav-logo"><Logo href={PublicPath.Welcome} /></span>
+		<div class="dnav-links">
+			{#each sections as id (id)}
+				<a
+					class:is-active={active === id}
+					aria-current={active === id ? 'page' : undefined}
+					href="#{id}"
+					onclick={onLinkClick(id)}
+				>
+					<span class="ltext">{t({ locale: $localeStore, key: `nav.${id}` as const })}</span>
+					<span class="dot" aria-hidden="true"></span>
+				</a>
+			{/each}
 		</div>
-
-		<div class="welcome-nav-links">
-			<a href="#markets">{t({ locale: $localeStore, key: 'nav.markets' })}</a>
-			<a href="#flow">{t({ locale: $localeStore, key: 'nav.flow' })}</a>
-			<a href="#leaderboard">{t({ locale: $localeStore, key: 'nav.leaderboard' })}</a>
-			<a href="#trust">{t({ locale: $localeStore, key: 'nav.trust' })}</a>
-		</div>
-
-		<div class="welcome-nav-cta">
-			<LanguagePicker />
-			<WelcomeThemePicker />
-			<span class="welcome-nav-divider" aria-hidden="true"></span>
-			<Button onclick={() => goto(PublicPath.SignIn)} size="sm" variant="ghost">
+		<div class="dnav-right">
+			<div bind:this={dnavLangRef} class="dnav-lang-wrap">
+				<button
+					class="dnav-globe"
+					aria-expanded={dnavLangOpen}
+					aria-haspopup="listbox"
+					aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
+					onclick={() => (dnavLangOpen = !dnavLangOpen)}
+					type="button"
+				>
+					<Globe aria-hidden="true" />
+				</button>
+				{#if dnavLangOpen}
+					<ul
+						class="dnav-lang-pop"
+						aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
+						role="listbox"
+					>
+						{#each LOCALES as l (l.id)}
+							<li>
+								<button
+									class="dnav-lang-item"
+									class:active={$localeStore === l.id}
+									aria-selected={$localeStore === l.id}
+									onclick={() => setLocaleAndClose(l.id)}
+									role="option"
+									type="button"
+								>
+									<span class="num dnav-lang-short">{l.short}</span>
+									<span class="dnav-lang-label">{l.label}</span>
+								</button>
+							</li>
+						{/each}
+					</ul>
+				{/if}
+			</div>
+			<div
+				class="dnav-theme"
+				aria-label={t({ locale: $localeStore, key: 'a11y.appearance' })}
+				role="radiogroup"
+			>
+				{#each themeOpts as o (o.id)}
+					<button
+						class="dnav-theme-dot dnav-app-{o.id}"
+						class:active={$theme === o.id}
+						aria-checked={$theme === o.id}
+						aria-label={o.label}
+						data-tooltip={o.label.toUpperCase()}
+						onclick={() => theme.set(o.id)}
+						role="radio"
+						type="button"
+					>
+						<span class="inner" aria-hidden="true"></span>
+					</button>
+				{/each}
+			</div>
+			<span class="dnav-divider" aria-hidden="true"></span>
+			<a class="dnav-signin" href={PublicPath.SignIn}>
 				{t({ locale: $localeStore, key: 'nav.signin' })}
-			</Button>
-			<Button onclick={() => goto(PublicPath.SignUp)} size="sm">
+			</a>
+			<a class="btn btn-primary dnav-cta" href={PublicPath.SignUp}>
 				{t({ locale: $localeStore, key: 'nav.cta' })}
-			</Button>
+			</a>
 		</div>
 	</div>
 </nav>
 
-<style lang="postcss">
-	.welcome-nav {
-		position: sticky;
-		top: 0;
-		z-index: 50;
-		background: color-mix(in srgb, var(--background) 40%, transparent);
-		backdrop-filter: blur(16px);
-		border-bottom: 1px solid transparent;
-		transition:
-			background 200ms var(--ease-vici),
-			border-color 200ms var(--ease-vici),
-			box-shadow 200ms var(--ease-vici);
-	}
+<!-- ─── Pill nav (mobile/tablet, <1024px) ─── -->
+<nav
+	class="lp-nav lp-root"
+	class:is-open={menuOpen}
+	class:is-scrolled={scrolled}
+	aria-label={t({ locale: $localeStore, key: 'a11y.landing' })}
+>
+	<div class="lp-nav-inner">
+		<div class="lp-pill" class:open={menuOpen}>
+			<div class="lp-pill-topline">
+				<span class="lp-logo">
+					<Logo href={PublicPath.Welcome} />
+				</span>
+				<div class="lp-pill-right">
+					<div bind:this={langRef} class="lp-lang-wrap">
+						<button
+							class="lp-globe"
+							aria-expanded={langOpen}
+							aria-haspopup="listbox"
+							aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
+							onclick={() => (langOpen = !langOpen)}
+							type="button"
+						>
+							<Globe aria-hidden="true" />
+						</button>
+					</div>
+					<button
+						class="btn btn-primary lp-cta"
+						onclick={() => goto(PublicPath.SignUp)}
+						type="button"
+					>
+						{t({ locale: $localeStore, key: 'nav.cta' })}
+					</button>
+					<button
+						class="lp-ham"
+						class:open={menuOpen}
+						aria-expanded={menuOpen}
+						aria-label={menuOpen
+							? t({ locale: $localeStore, key: 'a11y.close' })
+							: t({ locale: $localeStore, key: 'a11y.language' })}
+						onclick={() => (menuOpen = !menuOpen)}
+						type="button"
+					>
+						<svg aria-hidden="true" fill="none" viewBox="0 0 24 24">
+							<line class="t" x1="6" x2="18" y1="12" y2="12" />
+							<line class="b" x1="6" x2="18" y1="12" y2="12" />
+						</svg>
+					</button>
+				</div>
+			</div>
 
-	.welcome-nav.is-scrolled {
-		background: color-mix(in srgb, var(--background) 78%, transparent);
-		border-bottom-color: var(--border);
-		box-shadow: 0 8px 24px -16px rgba(0, 0, 0, 0.4);
-	}
+			{#if menuOpen}
+				<div class="lp-pill-body">
+					<div class="lp-trust lp-trust-hero">
+						<Lock size={14} strokeWidth={1.8} />
+						<span>
+							{t({ locale: $localeStore, key: 'welcome.nav.free_prefix' })}
+							<b>{t({ locale: $localeStore, key: 'welcome.nav.public_data' })}</b>
+						</span>
+					</div>
 
-	.welcome-nav-inner {
-		max-width: 80rem;
-		margin: 0 auto;
-		padding: 0.75rem clamp(1.25rem, 4vw, 2rem);
-		display: flex;
-		align-items: center;
-		gap: 2rem;
-	}
+					<div class="lp-eyebrow-bridge">
+						{t({ locale: $localeStore, key: 'welcome.nav.explore' })}
+					</div>
 
-	.welcome-nav-logo {
-		display: inline-flex;
-		flex-shrink: 0;
-	}
+					<nav class="lp-menu-links">
+						{#each sections as id, i (id)}
+							<a href="#{id}" onclick={closeMenu}>
+								<span class="ix">0{i + 1}</span>
+								<span class="ltext">{t({ locale: $localeStore, key: `nav.${id}` as const })}</span>
+							</a>
+						{/each}
+					</nav>
 
-	.welcome-nav-links {
-		display: none;
-		flex: 1;
-		justify-content: center;
-		gap: 1.75rem;
-		font-size: var(--t-14);
-		font-weight: 600;
-		color: var(--muted-foreground);
-	}
+					<div class="lp-appearance">
+						<span class="lp-appearance-lbl">
+							{t({ locale: $localeStore, key: 'a11y.appearance' })}
+						</span>
+						<div
+							class="lp-appearance-dots"
+							aria-label={t({ locale: $localeStore, key: 'a11y.appearance' })}
+							role="radiogroup"
+						>
+							{#each themeOpts as o (o.id)}
+								<button
+									class="lp-appearance-dot lp-app-{o.id}"
+									class:active={$theme === o.id}
+									aria-checked={$theme === o.id}
+									aria-label={o.label}
+									data-tooltip={o.label.toUpperCase()}
+									onclick={() => theme.set(o.id)}
+									role="radio"
+									type="button"
+								>
+									<span class="inner" aria-hidden="true"></span>
+								</button>
+							{/each}
+						</div>
+					</div>
 
-	.welcome-nav-links a:hover {
-		color: var(--foreground);
-	}
+					<div class="lp-pill-footer">
+						<a class="lp-signin-link" href={PublicPath.SignIn} onclick={closeMenu}>
+							{t({ locale: $localeStore, key: 'welcome.nav.already_member' })}
+							<span class="em">{t({ locale: $localeStore, key: 'nav.signin' })}</span>
+						</a>
+						<span class="lp-latin">
+							{t({ locale: $localeStore, key: 'welcome.nav.latin_motto' })}
+							<span class="acc">Vici.</span>
+						</span>
+					</div>
+				</div>
+			{/if}
+		</div>
 
-	.welcome-nav-cta {
-		margin-left: auto;
-		display: flex;
-		align-items: center;
-		gap: 0.5rem;
-	}
+		<!-- Lang popover lives outside `.lp-pill` so it isn't clipped by
+		     the pill's `overflow: hidden` + `backdrop-filter` containing
+		     block. Anchored under the globe via `position: fixed` using
+		     the rect tracked in `langPopPos`. -->
+		{#if langOpen && langPopPos}
+			<ul
+				bind:this={langPopRef}
+				style:top="{langPopPos.top}px"
+				style:right="{langPopPos.right}px"
+				class="lp-lang-pop"
+				aria-label={t({ locale: $localeStore, key: 'a11y.language' })}
+				role="listbox"
+			>
+				{#each LOCALES as l (l.id)}
+					<li>
+						<button
+							class="lp-lang-item"
+							class:active={$localeStore === l.id}
+							aria-selected={$localeStore === l.id}
+							onclick={() => setLocaleAndClose(l.id)}
+							role="option"
+							type="button"
+						>
+							<span class="num lp-lang-short">{l.short}</span>
+							<span class="lp-lang-label">{l.label}</span>
+						</button>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</div>
+</nav>
 
-	.welcome-nav-divider {
-		width: 1px;
-		height: 1.25rem;
-		background: var(--border);
-		margin: 0 0.15rem;
-	}
-
-	@media (min-width: 64rem) {
-		.welcome-nav-links {
-			display: flex;
-		}
-	}
-</style>
+{#if menuOpen}
+	<button
+		class="lp-scrim"
+		aria-hidden="true"
+		onclick={() => (menuOpen = false)}
+		tabindex={-1}
+		type="button"
+	></button>
+{/if}

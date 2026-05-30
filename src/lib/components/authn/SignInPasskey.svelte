@@ -110,7 +110,7 @@
 	.passkey-nickname label {
 		padding-inline: 0.25rem;
 		color: var(--text-muted);
-		font-size: 0.625rem;
+		font-size: var(--t-10);
 		font-weight: 800;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;

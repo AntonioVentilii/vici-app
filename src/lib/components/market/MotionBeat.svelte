@@ -98,6 +98,30 @@
 		background: var(--bg-popover);
 		box-shadow: var(--shadow-card);
 		max-width: 100%;
+		/* Entrance envelope — drops in from below with a slight
+		   overshoot, anchored to the bottom of the deck. */
+		animation: motion-beat-rise var(--d-enter) cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	@keyframes motion-beat-rise {
+		0% {
+			opacity: 0;
+			transform: translateY(22px) scale(0.86);
+		}
+		60% {
+			opacity: 1;
+			transform: translateY(-2px) scale(1.04);
+		}
+		100% {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.motion-beat-inner {
+			animation: none;
+		}
 	}
 
 	.motion-beat-copy {
@@ -108,14 +132,14 @@
 	}
 
 	.motion-beat-badge {
-		font-size: 10px;
+		font-size: var(--t-10);
 		color: var(--laurel);
 		letter-spacing: var(--tracking-allcaps);
 	}
 
 	.motion-beat-line {
 		margin: 0;
-		font-size: 1rem;
+		font-size: var(--t-16);
 		line-height: var(--leading-snug);
 		color: var(--text-base);
 	}

@@ -1,10 +1,24 @@
 import { Collection } from '$lib/constants/collections.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
-import { redactProfile } from '$satellite/services/privacy.services';
+import { withProfileDefaults } from '$satellite/services/profile.services';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
 
+const LEADERBOARD_LIMIT = 50;
+
+/**
+ * Returns the top {@link LEADERBOARD_LIMIT} profiles ranked by points (XP),
+ * matching what the frontend Leaderboard surface displays.
+ *
+ * Nicknames/handles are returned for every profile the caller can see —
+ * the broader "who can see whom" gate (visibility rework) is owned by a
+ * future change and is out of scope here.
+ *
+ * The shape mirrors {@link UserProfile} (no extra wrapping) so the
+ * frontend can render it through the same components used everywhere
+ * else.
+ */
 export const listLeaderboard = (): UserProfile[] => {
 	const caller = msgCaller();
 
@@ -14,22 +28,21 @@ export const listLeaderboard = (): UserProfile[] => {
 		params: {}
 	});
 
-	const profiles = items.map(([_, item]) => {
-		const profile = decodeDocData<UserProfile>(item.data);
+	return items
+		.map(([_, item]) => {
+			const profile = decodeDocData<UserProfile>(item.data);
 
-		const roleDoc = getDocStore({
-			collection: Collection.ROLES,
-			key: profile.owner,
-			caller
-		});
+			const roleDoc = getDocStore({
+				collection: Collection.ROLES,
+				key: profile.owner,
+				caller
+			});
 
-		return {
-			...profile,
-			role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
-		};
-	});
-
-	const sortedProfiles = profiles.sort((a, b) => (b.pnl ?? 0) - (a.pnl ?? 0)).slice(0, 50);
-
-	return sortedProfiles.map((profile) => redactProfile({ caller, profile }));
+			return withProfileDefaults({
+				...profile,
+				role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
+			});
+		})
+		.sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
+		.slice(0, LEADERBOARD_LIMIT);
 };

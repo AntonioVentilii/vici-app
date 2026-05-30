@@ -4,14 +4,25 @@ import { ZERO } from '$lib/constants/app.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
+import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
+import { computeUserStatsSnapshot, persistMyUserStats } from '$lib/services/user-stats.services';
+import { marketMetadataStore } from '$lib/stores/market-metadata.store';
+import { profilesStore } from '$lib/stores/profiles.store';
 import type { Nickname, UserProfile } from '$lib/types/profile';
+import {
+	CONTRARIAN_PRICE_THRESHOLD,
+	evaluateAchievements,
+	mergeUnlockedAchievements
+} from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 import { applyDailyStreakBump } from '$lib/utils/streak.utils';
+import { fromWireProfile } from '$satellite/utils/wire-format.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { getDoc, setDoc, type Doc, type User } from '@junobuild/core';
 import type { PrincipalText } from '@junobuild/schema';
+import { get } from 'svelte/store';
 
 /**
  * Loads a user profile from Juno or returns a default shell; merges role from the satellite query.
@@ -38,11 +49,28 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				level: 1,
 				archetype: '',
 				interests: [],
+				unlockedAchievements: [],
+				contrarianWins: 0,
 				preferences: {
 					defaultAmount: {
 						flow: '1.0',
 						manual: '1.0'
-					}
+					},
+					notify: {
+						streakReminder: true,
+						marketAlerts: true,
+						friendActivity: false,
+						weeklyDigest: true
+					},
+					flowSessionLength: 10,
+					hapticsEnabled: true,
+					callsPublic: true,
+					flowTags: [],
+					worldCupMode: false,
+					savedMarketIds: [],
+					favoriteParticipantId: '',
+					favoriteSide: '',
+					onboardingCompleted: false
 				}
 			}
 		};
@@ -52,6 +80,49 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 		key: principal,
 		data: profile as UserProfile
 	};
+};
+
+/**
+ * Populates `profilesStore` with the principals that aren't already cached.
+ * Use this from any surface that renders a counterpart's name/avatar
+ * (activity feed, market recent trades, market discussion, friends list, …)
+ * instead of keeping a per-component `Map` and a per-component fetch loop.
+ *
+ * Failures for individual principals are swallowed: the cache simply won't
+ * have an entry, and the UI is expected to fall back to a shortened
+ * principal. This mirrors what every existing caller was already doing.
+ */
+export const loadProfilesByPrincipals = async ({
+	principals
+}: {
+	principals: PrincipalText[];
+}): Promise<void> => {
+	const cached = get(profilesStore);
+	const unique = Array.from(new Set(principals)).filter(
+		(principal) => principal.length > 0 && !cached.has(principal)
+	);
+
+	if (unique.length === 0) {
+		return;
+	}
+
+	const docs = await Promise.all(
+		unique.map((principal) => getProfile(principal).catch(() => undefined))
+	);
+
+	profilesStore.update((current) => {
+		const next = new Map(current);
+
+		for (let i = 0; i < unique.length; i++) {
+			const doc = docs[i];
+
+			if (doc) {
+				next.set(unique[i], doc.data);
+			}
+		}
+
+		return next;
+	});
 };
 
 export const updateInterests = async ({
@@ -145,7 +216,7 @@ export const upsertProfile = async (
 export const searchProfiles = async (query: string): Promise<UserProfile[]> => {
 	const { items } = await functions.searchProfiles({ queryStr: query });
 
-	return items as UserProfile[];
+	return items.map(fromWireProfile);
 };
 
 /**
@@ -261,8 +332,8 @@ export const ensureProfile = async (user: User): Promise<EnsureProfileResult> =>
 };
 
 /**
- * Profiles are redacted server-side per visibility rules; this still falls back
- * to a shortened principal so the UI never renders an empty name.
+ * Falls back to a shortened principal so the UI never renders an empty
+ * name when a profile has no nickname set.
  */
 export const getDisplayName = ({
 	profile
@@ -339,6 +410,22 @@ export const calculateAndSyncStats = async ({
 
 	const accuracy = winRate;
 
+	// Long-shot wins for the `contrarian` achievement. A settled win
+	// at execution price ≤ CONTRARIAN_PRICE_THRESHOLD means the market
+	// priced their side as a long shot when they took it.
+	const contrarianWins = history.filter((event) => {
+		if (!isWin(event)) {
+			return false;
+		}
+
+		const price = decimalFixedValueToNumber({
+			value: event.price.decimal.value,
+			decimals: event.price.decimal.decimals
+		});
+
+		return price <= CONTRARIAN_PRICE_THRESHOLD;
+	}).length;
+
 	const chronoHistory = [...history].sort((a, b) => Number(a.timestamp) - Number(b.timestamp));
 
 	const { totalPoints } = chronoHistory.reduce<{ totalPoints: number; runningStreak: number }>(
@@ -371,9 +458,31 @@ export const calculateAndSyncStats = async ({
 		{ totalPoints: 0, runningStreak: 0 }
 	);
 
-	const level = Math.floor(totalPoints / 500) + 1;
-
 	const profileDoc = await getProfile(principal);
+
+	// Evaluate achievements against the freshly-computed snapshot and
+	// fold any newly-unlocked ids into the persisted set. Newly
+	// unlocked achievements also credit their XP into the points total
+	// before we recompute the level — so an achievement that pushes a
+	// user across a 500-point boundary correctly bumps the level in
+	// the same write.
+	const evaluations = evaluateAchievements({
+		totalTrades,
+		winStreak: resolvedStreak,
+		dailyStreak: profileDoc.data.dailyStreak ?? 0,
+		accuracy,
+		level: Math.floor(totalPoints / 500) + 1,
+		contrarianWins
+	});
+
+	const { unlocked, newlyUnlocked } = mergeUnlockedAchievements({
+		previouslyUnlocked: profileDoc.data.unlockedAchievements ?? [],
+		evaluations
+	});
+
+	const bonusXp = newlyUnlocked.reduce((acc, evaluation) => acc + evaluation.def.xp, 0);
+	const adjustedPoints = totalPoints + bonusXp;
+	const level = Math.floor(adjustedPoints / 500) + 1;
 
 	await upsertProfile({
 		...profileDoc,
@@ -384,10 +493,32 @@ export const calculateAndSyncStats = async ({
 			pnl: realizedPnl,
 			streak: resolvedStreak,
 			accuracy,
-			points: totalPoints,
-			level
+			points: adjustedPoints,
+			level,
+			contrarianWins,
+			unlockedAchievements: unlocked
 		}
 	});
+
+	// Persist the per-user dashboard cache alongside the profile
+	// write. The Dash page reads `USER_STATS[principal]` on mount;
+	// keeping the snapshot fresh here means the categories tile +
+	// recent-history tile stay in sync with the user's last
+	// resolution event. Failures are logged but don't block the
+	// profile write — the cache will be rebuilt on the next sync.
+	try {
+		const snapshot = computeUserStatsSnapshot({
+			owner: principal,
+			history,
+			metadata: get(marketMetadataStore),
+			nowMs: Date.now()
+		});
+		await persistMyUserStats(snapshot);
+	} catch (err) {
+		console.error('calculateAndSyncStats: failed to persist user_stats', err);
+	}
+
+	notifyAchievementsUnlocked(newlyUnlocked);
 };
 
 /**
@@ -412,12 +543,40 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 		return;
 	}
 
+	// Re-evaluate so streak-driven achievements (`marathon`) can fire
+	// on the very write that crosses the threshold, rather than
+	// waiting for the next sign-in `calculateAndSyncStats`. Other
+	// achievement axes (trades, accuracy, contrarian) re-use the
+	// persisted values — they're not the trigger here.
+	const evaluations = evaluateAchievements({
+		totalTrades: profileDoc.data.totalTrades ?? 0,
+		winStreak: profileDoc.data.streak ?? 0,
+		dailyStreak: bump.streak,
+		accuracy: profileDoc.data.accuracy ?? 0,
+		level: profileDoc.data.level ?? 1,
+		contrarianWins: profileDoc.data.contrarianWins ?? 0
+	});
+
+	const { unlocked, newlyUnlocked } = mergeUnlockedAchievements({
+		previouslyUnlocked: profileDoc.data.unlockedAchievements ?? [],
+		evaluations
+	});
+
+	const bonusXp = newlyUnlocked.reduce((acc, evaluation) => acc + evaluation.def.xp, 0);
+	const points = (profileDoc.data.points ?? 0) + bonusXp;
+	const level = bonusXp > 0 ? Math.floor(points / 500) + 1 : (profileDoc.data.level ?? 1);
+
 	await upsertProfile({
 		...profileDoc,
 		data: {
 			...profileDoc.data,
 			dailyStreak: bump.streak,
-			lastActiveDay: bump.lastActiveDay
+			lastActiveDay: bump.lastActiveDay,
+			points,
+			level,
+			unlockedAchievements: unlocked
 		}
 	});
+
+	notifyAchievementsUnlocked(newlyUnlocked);
 };

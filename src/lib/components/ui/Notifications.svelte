@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade, fly } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import { notificationsStore } from '$lib/stores/notification.store';
 
 	const remove = (id: string) => notificationsStore.remove(id);
@@ -10,9 +10,8 @@
 >
 	{#each $notificationsStore as notification (notification.id)}
 		<button
-			class="bg-card ring-border shadow-toast pointer-events-auto flex w-full items-start gap-3 rounded-2xl p-4 text-left ring-1"
+			class="bg-card ring-border shadow-toast vici-toast pointer-events-auto flex w-full items-start gap-3 rounded-2xl p-4 text-left ring-1"
 			onclick={() => remove(notification.id)}
-			in:fly={{ y: 20, duration: 300 }}
 			out:fade={{ duration: 200 }}
 		>
 			{#if notification.type === 'error'}
@@ -49,3 +48,20 @@
 		</button>
 	{/each}
 </div>
+
+<style lang="postcss">
+	/* Entrance envelope. The shared `toast-in` keyframe uses
+	   `translateX(-50%)` for the singleton centred toast; our
+	   notifications stack inside an already-centred column, so we
+	   apply the matching `fade-up` keyframe (same 8 px lift, same
+	   timing) without re-translating each button. */
+	.vici-toast {
+		animation: fade-up 280ms var(--ease-stage) both;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.vici-toast {
+			animation: none;
+		}
+	}
+</style>

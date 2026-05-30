@@ -3,7 +3,6 @@
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import PopOver from '$lib/components/ui/PopOver.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
-	import { VXP_BALANCE_DISPLAY_DECIMALS } from '$lib/constants/playground.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
@@ -11,6 +10,7 @@
 	import type { WalletBalance } from '$lib/types/wallet';
 	import { formatToken } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
 	interface Props {
 		balances: WalletBalance;
@@ -66,12 +66,9 @@
 						<div class="flex items-center justify-between rounded-lg px-2 py-1.5 transition-colors">
 							<span class="text-muted-foreground text-sm font-medium">{token.symbol}</span>
 							<span class="text-foreground text-sm font-bold">
-								{formatToken({
-									value: totalBalance,
-									unitName: token.decimals,
-									displayDecimals:
-										token.symbol === VXP_TOKEN.symbol ? VXP_BALANCE_DISPLAY_DECIMALS : undefined
-								})}
+								{token.symbol === VXP_TOKEN.symbol
+									? formatVxpBalance({ value: totalBalance, decimals: token.decimals })
+									: formatToken({ value: totalBalance, unitName: token.decimals })}
 							</span>
 						</div>
 					{/each}

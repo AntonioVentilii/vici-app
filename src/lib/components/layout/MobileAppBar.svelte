@@ -9,13 +9,17 @@
 
 	interface Props {
 		title?: string;
+		/** Small uppercase line rendered above `title` (e.g. the featured-event
+		 *  name on the WC-focused Markets header). Ignored when `titleChildren`
+		 *  is supplied. */
+		eyebrow?: string;
 		titleChildren?: Snippet;
 		back?: BackAction;
 		right?: Snippet;
 		align?: 'left' | 'center';
 	}
 
-	const { title, titleChildren, back, right, align }: Props = $props();
+	const { title, eyebrow, titleChildren, back, right, align }: Props = $props();
 
 	const resolvedAlign = $derived(align ?? (back !== undefined ? 'center' : 'left'));
 
@@ -26,7 +30,7 @@
 
 <header class="mobile-appbar" data-align={resolvedAlign}>
 	{#if back}
-		<button class="mobile-appbar-back" aria-label={back.label} onclick={handleBack} type="button">
+		<button class="appbar-icon-btn" aria-label={back.label} onclick={handleBack} type="button">
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 		</button>
 	{:else}
@@ -36,6 +40,11 @@
 	<div class="mobile-appbar-title-slot">
 		{#if titleChildren}
 			{@render titleChildren()}
+		{:else if eyebrow}
+			<div class="mobile-appbar-title-stack">
+				<span class="mobile-appbar-eyebrow">{eyebrow}</span>
+				{#if title}<h1 class="mobile-appbar-title">{title}</h1>{/if}
+			</div>
 		{:else if title}
 			<h1 class="mobile-appbar-title">{title}</h1>
 		{/if}
@@ -53,13 +62,15 @@
 <style lang="postcss">
 	.mobile-appbar {
 		display: grid;
-		grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+		grid-template-columns: auto minmax(0, 1fr) auto;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.25rem 0.25rem 0.5rem;
+		padding: 1.25rem 1.25rem 0.75rem;
 	}
 
-	@media (min-width: 768px) {
+	/* Aligned with `DesktopAppNav`'s 56rem (896px) breakpoint so there
+	   isn't an intermediate viewport range with no header at all. */
+	@media (min-width: 56rem) {
 		.mobile-appbar {
 			display: none;
 		}
@@ -73,31 +84,15 @@
 		display: none;
 	}
 
+	/* Width matches the `.appbar-icon-btn` outer footprint so the title
+	   stays visually centered when only one side has a control. Height
+	   is left to the row (align-items: center on .mobile-appbar) so the
+	   spacer never inflates the bar above the title's own line-box —
+	   that extra height pushed the first content section ~7px further
+	   down than the proto. */
 	.mobile-appbar-spacer {
 		display: inline-block;
-		width: 2.25rem;
-		height: 2.25rem;
-	}
-
-	.mobile-appbar-back {
-		display: inline-flex;
-		width: 2.25rem;
-		height: 2.25rem;
-		align-items: center;
-		justify-content: center;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
-		color: var(--text-base);
-		cursor: pointer;
-		transition:
-			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici);
-	}
-
-	.mobile-appbar-back:hover {
-		border-color: var(--border-strong);
-		background: var(--bg-popover);
+		width: 2.5rem;
 	}
 
 	.mobile-appbar-title-slot {
@@ -109,6 +104,24 @@
 
 	.mobile-appbar[data-align='center'] .mobile-appbar-title-slot {
 		justify-content: center;
+	}
+
+	.mobile-appbar-title-stack {
+		display: flex;
+		min-width: 0;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
+
+	.mobile-appbar-eyebrow {
+		overflow: hidden;
+		color: var(--text-muted);
+		font-size: var(--t-11);
+		font-weight: 600;
+		letter-spacing: var(--tracking-wide);
+		text-overflow: ellipsis;
+		text-transform: uppercase;
+		white-space: nowrap;
 	}
 
 	.mobile-appbar-title {

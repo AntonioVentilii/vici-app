@@ -1,25 +1,24 @@
 import { AppPath } from '$lib/constants/routes.constants';
 import type { NavItem } from '$lib/types/nav';
-import {
-	Briefcase,
-	CircleUserRound,
-	House,
-	LayoutDashboard,
-	Shield,
-	Zap
-} from 'lucide-svelte/icons';
+import { CircleUserRound, House, LayoutDashboard, Users, Zap } from 'lucide-svelte/icons';
 
+/**
+ * Bottom-nav structure. The five visible tabs map 1:1 onto the design
+ * pill-nav (Markets · Dash · Flow · Arena · Profile) with
+ * Flow centered and styled as the primary action.
+ *
+ * Routes that don't have their own nav slot cascade active state to a
+ * parent tab via `MobileNav.svelte`'s alias table:
+ *
+ *  - Markets ← /markets/[id]
+ *  - Dash    ← /portfolio
+ *  - Arena   ← /arena/* (leagues · worlds · battles · tournament · leaderboard)
+ *  - Profile ← /wallet, /settings, /notifications
+ */
 export const navItems: NavItem[] = [
 	{ labelKey: 'nav.markets', path: AppPath.Home, mobileIcon: House },
-	{ labelKey: 'nav.portfolio', path: AppPath.Portfolio, mobileIcon: Briefcase },
+	{ labelKey: 'nav.dash', path: AppPath.Dash, mobileIcon: LayoutDashboard },
 	{ labelKey: 'nav.flow', path: AppPath.Flow, mobileIcon: Zap, icon: Zap },
-	{ labelKey: 'nav.leaderboard', path: AppPath.Leaderboard, mobileIcon: LayoutDashboard },
-	{ labelKey: 'nav.profile', path: AppPath.Profile, mobileIcon: CircleUserRound },
-	{
-		labelKey: 'nav.admin',
-		path: AppPath.Admin,
-		mobileIcon: Shield,
-		icon: Shield,
-		adminOnly: true
-	}
+	{ labelKey: 'nav.arena', path: AppPath.Arena, mobileIcon: Users },
+	{ labelKey: 'nav.profile', path: AppPath.Profile, mobileIcon: CircleUserRound }
 ];

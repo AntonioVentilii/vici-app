@@ -1,14 +1,21 @@
 <script lang="ts">
 	import type { ClearingDid } from '$declarations';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
-	import Card from '$lib/components/ui/Card.svelte';
 	import EmptyState from '$lib/components/ui/EmptyState.svelte';
-	import { PORTFOLIO_DEFAULT_DECIMALS } from '$lib/constants/portfolio.constants';
+	import Pagination from '$lib/components/ui/Pagination.svelte';
+	import { primaryMarketTag } from '$lib/constants/market-tags.constants';
+	import {
+		PORTFOLIO_DEFAULT_DECIMALS,
+		PORTFOLIO_PAGE_SIZE
+	} from '$lib/constants/portfolio.constants';
+	import { AppPath } from '$lib/constants/routes.constants';
+	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { cancelLimitOrder } from '$lib/services/order.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { Market } from '$lib/types/market';
+	import type { Market, MarketId } from '$lib/types/market';
 	import { formatPrice, formatQuantity } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	interface Props {
 		orders: ClearingDid.LimitOrder[];
@@ -24,7 +31,45 @@
 
 	let cancellingId = $state<string | null>(null);
 
-	const handleCancel = async (orderId: string) => {
+	let page = $state(1);
+
+	$effect(() => {
+		const totalPages = Math.max(1, Math.ceil(orders.length / PORTFOLIO_PAGE_SIZE));
+
+		if (page > totalPages) {
+			page = totalPages;
+		}
+	});
+
+	const pagedOrders = $derived(
+		orders.slice((page - 1) * PORTFOLIO_PAGE_SIZE, page * PORTFOLIO_PAGE_SIZE)
+	);
+
+	/** Category accent color for the row tag chip; mirrors PortfolioPage. */
+	const categoryAccent = (marketId: MarketId): string => {
+		const tag = primaryMarketTag($marketTags[marketId]);
+
+		return tagColor(tag ?? '');
+	};
+
+	const categoryLabel = (marketId: MarketId): string | null => {
+		const tag = primaryMarketTag($marketTags[marketId]);
+
+		return tag ? tag.toUpperCase() : null;
+	};
+
+	const handleCancel = async ({
+		event,
+		orderId
+	}: {
+		event: MouseEvent;
+		orderId: string;
+	}): Promise<void> => {
+		// Cancel button lives inside the card-link, so block the click
+		// from bubbling up to the market-detail navigation.
+		event.preventDefault();
+		event.stopPropagation();
+
 		cancellingId = orderId;
 
 		try {
@@ -36,92 +81,195 @@
 	};
 </script>
 
-<div class="space-y-4">
-	<h2 class="text-foreground text-xl font-bold tracking-wider uppercase">
-		{t({ locale: $localeStore, key: 'portfolio.orders.title' })}
-	</h2>
-	<Card class="overflow-hidden" padding="none">
-		{#if orders.length === 0}
-			<EmptyState message={t({ locale: $localeStore, key: 'portfolio.orders.empty' })} />
-		{:else}
-			<div class="flex w-full min-w-0 overflow-x-auto">
-				<table class="w-full min-w-0 table-fixed text-left">
-					<thead>
-						<tr
-							class="border-border bg-foreground/5 text-muted-foreground border-b text-[10px] tracking-widest uppercase"
-						>
-							<th class="px-6 py-4 font-black"
-								>{t({ locale: $localeStore, key: 'portfolio.orders.col.market' })}</th
-							>
-							<th class="px-6 py-4 font-black"
-								>{t({ locale: $localeStore, key: 'portfolio.orders.col.side' })}</th
-							>
-							<th class="px-6 py-4 text-right font-black"
-								>{t({ locale: $localeStore, key: 'portfolio.orders.col.price' })}</th
-							>
-							<th class="px-6 py-4 text-right font-black"
-								>{t({ locale: $localeStore, key: 'portfolio.orders.col.qty' })}</th
-							>
-							<th class="px-6 py-4 text-right font-black"
-								>{t({ locale: $localeStore, key: 'portfolio.orders.col.action' })}</th
-							>
-						</tr>
-					</thead>
-					<tbody class="divide-border divide-y">
-						{#each orders as order (order.order_id)}
-							{@const market = getMarketById(order.series_id)}
-							{@const isBuy = isBuyOrder(order)}
+{#if orders.length === 0}
+	<EmptyState message={t({ locale: $localeStore, key: 'portfolio.orders.empty' })} />
+{:else}
+	<ul class="portfolio-list">
+		{#each pagedOrders as order (order.order_id)}
+			{@const market = getMarketById(order.series_id)}
+			{@const marketId = order.series_id as MarketId}
+			{@const isBuy = isBuyOrder(order)}
+			{@const sideKey = isBuy ? 'yes' : 'no'}
+			{@const catLabel = categoryLabel(marketId)}
+			{@const catAccent = categoryAccent(marketId)}
 
-							<tr class="group hover:bg-foreground/5 transition-colors">
-								<td class="min-w-0 px-6 py-4">
-									<div class="flex min-w-0 flex-col">
-										<span class="text-foreground block truncate text-sm font-bold">
-											{market?.title ??
-												t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
-										</span>
-										<span class="text-muted-foreground truncate text-[10px] uppercase"
-											>{t({
-												locale: $localeStore,
-												key: 'portfolio.id_label',
-												params: { id: order.series_id }
-											})}</span
-										>
-									</div>
-								</td>
-								<td class="px-6 py-4">
-									<span
-										class="rounded-md border px-1.5 py-0.5 text-[10px] font-black tracking-tight uppercase {isBuy
-											? 'border-success/20 bg-success/10 text-success'
-											: 'border-destructive/20 bg-destructive/10 text-destructive'}"
-									>
-										{isBuy
-											? t({ locale: $localeStore, key: 'portfolio.orders.side.buy' })
-											: t({ locale: $localeStore, key: 'portfolio.orders.side.sell' })}
-									</span>
-								</td>
-								<td class="text-foreground px-6 py-4 text-right text-sm font-bold">
-									{formatPrice(order.price)}
-								</td>
-								<td class="text-foreground px-6 py-4 text-right text-sm font-bold">
-									{formatQuantity({
+			<li>
+				<a
+					class="portfolio-row portfolio-row-card"
+					aria-label={market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+					href="{AppPath.Markets}/{marketId}"
+				>
+					<div class="portfolio-row-tags">
+						{#if catLabel}
+							<span style:color={catAccent} class="portfolio-row-cat">{catLabel}</span>
+						{:else}
+							<span class="portfolio-row-cat is-dim">—</span>
+						{/if}
+						<span class="portfolio-row-side portfolio-row-side-{sideKey}">
+							{isBuy
+								? t({ locale: $localeStore, key: 'portfolio.orders.side.buy' })
+								: t({ locale: $localeStore, key: 'portfolio.orders.side.sell' })}
+						</span>
+					</div>
+					<div class="portfolio-row-title">
+						{market?.title ?? t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
+					</div>
+					<div class="portfolio-row-meta">
+						<span class="num portfolio-row-prob">
+							{t({
+								locale: $localeStore,
+								key: 'portfolio.orders.row.price_qty',
+								params: {
+									price: formatPrice(order.price),
+									qty: formatQuantity({
 										value: order.qty,
 										decimals: market?.token.decimals ?? PORTFOLIO_DEFAULT_DECIMALS
-									})}
-								</td>
-								<td class="px-6 py-4 text-right">
-									<BaseButton
-										class="bg-destructive/10 text-destructive hover:bg-destructive/15 rounded-lg px-3 py-1 text-[10px] font-bold"
-										onclick={() => handleCancel(order.order_id)}
-										status={cancellingId === order.order_id ? 'pending' : 'enabled'}
-									>
-										{t({ locale: $localeStore, key: 'profile.dashboard.cancel' })}
-									</BaseButton>
-								</td>
-							</tr>
-						{/each}
-					</tbody>
-				</table>
-			</div>
-		{/if}
-	</Card>
-</div>
+									})
+								}
+							})}
+						</span>
+						<BaseButton
+							class="portfolio-row-cancel"
+							onclick={(event) => handleCancel({ event, orderId: order.order_id })}
+							status={cancellingId === order.order_id ? 'pending' : 'enabled'}
+						>
+							{t({ locale: $localeStore, key: 'profile.dashboard.cancel' })}
+						</BaseButton>
+					</div>
+				</a>
+			</li>
+		{/each}
+	</ul>
+
+	{#if orders.length > PORTFOLIO_PAGE_SIZE}
+		<Pagination
+			onPageChange={(p) => (page = p)}
+			{page}
+			pageSize={PORTFOLIO_PAGE_SIZE}
+			totalItems={orders.length}
+		/>
+	{/if}
+{/if}
+
+<style lang="postcss">
+	/* List + row chrome mirrors `.portfolio-list` / `.portfolio-row-card`
+	   in `PortfolioPage.svelte` (active calls). Keeping the rules local
+	   here too so the component stays usable in isolation; they're
+	   intentionally identical to the page-scoped versions. */
+	.portfolio-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.portfolio-row {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.875rem;
+		text-decoration: none;
+		color: inherit;
+		background: var(--bg-popover);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		transition: border-color var(--d-hover) var(--ease-vici);
+	}
+
+	.portfolio-row:hover {
+		border-color: var(--border-strong);
+	}
+
+	.portfolio-row-tags {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.portfolio-row-cat {
+		display: inline-flex;
+		align-items: center;
+		padding: 3px 7px;
+		font-family: var(--font-mono);
+		font-size: 9.5px;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		border-radius: var(--r-4);
+	}
+
+	.portfolio-row-cat.is-dim {
+		opacity: 0.5;
+	}
+
+	.portfolio-row-title {
+		font-size: var(--t-13);
+		font-weight: 600;
+		line-height: 1.4;
+		color: var(--text-base);
+		display: -webkit-box;
+		-webkit-box-orient: vertical;
+		-webkit-line-clamp: 2;
+		overflow: hidden;
+	}
+
+	.portfolio-row-side {
+		display: inline-flex;
+		flex: 0 0 auto;
+		align-items: center;
+		padding: 3px 7px;
+		font-family: var(--font-mono);
+		font-size: 9.5px;
+		font-weight: 700;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		border-radius: var(--r-4);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		color: var(--text-muted);
+	}
+
+	.portfolio-row-side-yes {
+		color: var(--yes);
+		background: var(--yes-wash);
+	}
+
+	.portfolio-row-side-no {
+		color: var(--no);
+		background: var(--no-wash);
+	}
+
+	.portfolio-row-meta {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.portfolio-row-prob {
+		font-size: var(--text-eyebrow, 11px);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	:global(.portfolio-row-cancel) {
+		flex: 0 0 auto;
+		padding: 0.25rem 0.625rem;
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: var(--tracking-wide);
+		text-transform: uppercase;
+		color: var(--no);
+		background: var(--no-wash);
+		border-radius: 0.5rem;
+	}
+
+	:global(.portfolio-row-cancel:hover:not(:disabled)) {
+		background: color-mix(in srgb, var(--no) 18%, transparent);
+	}
+</style>

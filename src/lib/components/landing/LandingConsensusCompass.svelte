@@ -1,0 +1,41 @@
+<script lang="ts">
+	/**
+	 * Directional dial that points up at strong YES, horizontal at
+	 * 50/50, down at strong NO. Used inside the FlowCard header when
+	 * the market isn't a contrarian / Trickster call.
+	 */
+	interface Props {
+		yes: number;
+		size?: number;
+	}
+
+	const { yes, size = 42 }: Props = $props();
+	const isYes = $derived(yes >= 50);
+	const conf = $derived(Math.abs(yes - 50) / 50);
+	const angle = $derived(isYes ? -conf * 90 : conf * 90);
+	const dir = $derived(isYes ? 'yes' : 'no');
+	const color = $derived(isYes ? 'var(--yes)' : 'var(--no)');
+	const pct = $derived(Math.max(yes, 100 - yes));
+</script>
+
+<div class="flow-compass {dir}" aria-label="{yes}% YES consensus">
+	<svg height={size} viewBox="0 0 42 42" width={size}>
+		<circle cx="21" cy="21" fill="none" r="18" stroke="var(--border)" stroke-width="1.2" />
+		<line stroke="var(--fg-faint)" stroke-width="1" x1="21" x2="21" y1="2" y2="5" />
+		<line stroke="var(--fg-faint)" stroke-width="1" x1="21" x2="21" y1="37" y2="40" />
+		<g transform="rotate({angle} 21 21)">
+			<line
+				stroke={color}
+				stroke-linecap="round"
+				stroke-width="2.4"
+				x1="21"
+				x2="21"
+				y1="21"
+				y2="6"
+			/>
+			<circle cx="21" cy="6" fill={color} r="3" />
+		</g>
+		<circle cx="21" cy="21" fill={color} r="2.5" />
+	</svg>
+	<span class="flow-compass-pct">{pct}%</span>
+</div>

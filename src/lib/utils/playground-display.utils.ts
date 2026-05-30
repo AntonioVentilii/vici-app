@@ -3,31 +3,38 @@ import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import {
 	PLAYGROUND_CLEARING_MARGIN_DECIMALS,
 	PLAYGROUND_DISPLAY_SYMBOL,
-	SETTLEMENT_LOCKED_CAPACITY_LABEL,
 	VXP_BALANCE_DISPLAY_DECIMALS
 } from '$lib/constants/playground.constants';
-import {
-	PORTFOLIO_DEFAULT_DECIMALS,
-	PORTFOLIO_DEFAULT_SYMBOL
-} from '$lib/constants/portfolio.constants';
 import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
-import type { LockedCapacityDisplayUnit } from '$lib/types/locked-capacity-display.types';
-import type { Token } from '$lib/types/token';
-import { formatAvailableUsd, formatCurrency, formatToken } from '$lib/utils/format.utils';
+import { formatAvailableUsd, formatToken, groupIntegerPart } from '$lib/utils/format.utils';
 
 /**
- * VXP balances render as whole numbers (no fractional part) to reinforce the
- * "points" feel, even though the underlying clearing scale is 6 decimals.
+ * Plain VXP balance — whole-number "points" feel with thousands separators
+ * (e.g. `24,000`). Defaults to native VXP ledger decimals; pass `decimals`
+ * when formatting a value already scaled to a different unit (e.g. clearing
+ * margin units). No symbol — callers add `VXP` / `PLAYGROUND_DISPLAY_SYMBOL`
+ * themselves so the same helper works for both display contexts.
+ */
+export const formatVxpBalance = ({
+	value,
+	decimals = VXP_TOKEN.decimals
+}: {
+	value: bigint;
+	decimals?: number;
+}): string =>
+	formatToken({
+		value,
+		unitName: decimals,
+		displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS
+	});
+
+/**
+ * Clearing-margin units → `24,000 VXP` (playground display). Uses the
+ * shared {@link formatVxpBalance} so grouping / display decimals stay in
+ * lock-step with non-playground VXP surfaces.
  */
 export const formatPlaygroundClearingAsVxp = (value: bigint): string =>
-	`${formatToken({
-		value,
-		unitName: PLAYGROUND_CLEARING_MARGIN_DECIMALS,
-		displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS
-	})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
-
-/** @deprecated Use {@link formatPlaygroundClearingAsVxp}. */
-export const formatPlaygroundVxpAmount = formatPlaygroundClearingAsVxp;
+	`${formatVxpBalance({ value, decimals: PLAYGROUND_CLEARING_MARGIN_DECIMALS })} ${PLAYGROUND_DISPLAY_SYMBOL}`;
 
 export const formatAvailableMarginForUi = ({
 	value,
@@ -93,47 +100,6 @@ export const quickBetChipLabel = ({
 export const flowTradeDenominationLabel = (playground: boolean): 'VXP' | 'USD' =>
 	playground ? PLAYGROUND_DISPLAY_SYMBOL : 'USD';
 
-export const lockedCapacityDenominationLabel = (playground: boolean): LockedCapacityDisplayUnit =>
-	playground ? PLAYGROUND_DISPLAY_SYMBOL : SETTLEMENT_LOCKED_CAPACITY_LABEL;
-
-export const potentialReturnUnitSuffix = (playground: boolean): string =>
-	playground ? ` ${PLAYGROUND_DISPLAY_SYMBOL}` : '';
-
-export const formatPortfolioPnLStatLine = ({
-	totalPnL,
-	playground
-}: {
-	totalPnL: number;
-	playground: boolean;
-}): string => {
-	const core = `${totalPnL >= 0 ? '+' : ''}${totalPnL.toFixed(2)}`;
-
-	return playground ? `${core} ${PLAYGROUND_DISPLAY_SYMBOL}` : core;
-};
-
-export const formatPortfolioHoldingsStatLine = ({
-	playground,
-	totalPortfolioValue,
-	sampleToken
-}: {
-	playground: boolean;
-	totalPortfolioValue: bigint;
-	sampleToken?: Token;
-}): string => {
-	if (playground) {
-		return `${formatToken({
-			value: totalPortfolioValue,
-			unitName: VXP_TOKEN.decimals,
-			displayDecimals: VXP_BALANCE_DISPLAY_DECIMALS
-		})} ${PLAYGROUND_DISPLAY_SYMBOL}`;
-	}
-
-	const dec = sampleToken?.decimals ?? PORTFOLIO_DEFAULT_DECIMALS;
-	const sym = sampleToken?.symbol ?? PORTFOLIO_DEFAULT_SYMBOL;
-
-	return formatCurrency({ value: totalPortfolioValue, decimals: dec, symbol: sym });
-};
-
 export const formatPositionPnLWithOptionalUnit = ({
 	pnl,
 	playground
@@ -141,7 +107,7 @@ export const formatPositionPnLWithOptionalUnit = ({
 	pnl: number;
 	playground: boolean;
 }): string => {
-	const core = `${pnl >= 0 ? '+' : ''}${pnl.toFixed(2)}`;
+	const core = `${pnl >= 0 ? '+' : ''}${groupIntegerPart({ formatted: pnl.toFixed(2) })}`;
 
 	return playground ? `${core} ${PLAYGROUND_DISPLAY_SYMBOL}` : core;
 };

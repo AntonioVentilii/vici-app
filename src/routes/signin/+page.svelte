@@ -6,8 +6,12 @@
 	import { userSignedIn } from '$lib/derived/user.derived';
 
 	// If a returning user lands here while already authenticated,
-	// route them straight to the app — keeps the back-button + share-
-	// link semantics from the canonical phase router.
+	// route them straight to the app. Single source of truth — the
+	// reactive `$effect` covers both the cold-load-already-signed-in
+	// case AND the post-signIn() success bounce. Avoid duplicating the
+	// trigger on `<SignInScreen onSuccess>` since the two callbacks
+	// could fire concurrently and cause a brief signin-flash before
+	// `userStore` has finished hydrating the new principal.
 	$effect(() => {
 		if ($userSignedIn) {
 			void goto(AppPath.Home, { replaceState: true });
@@ -19,9 +23,4 @@
 	});
 </script>
 
-<SignInScreen
-	mode="signin"
-	onSuccess={() => {
-		void goto(AppPath.Home);
-	}}
-/>
+<SignInScreen mode="signin" />

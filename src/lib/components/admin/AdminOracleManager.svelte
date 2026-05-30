@@ -5,7 +5,11 @@
 	import CopyableAddress from '$lib/components/ui/CopyableAddress.svelte';
 	import { VICI_ORACLE_V1 } from '$lib/constants/app.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
-	import { getViciOracle, registerViciOracle } from '$lib/services/oracle.services';
+	import {
+		getViciOracle,
+		reconcileOracleSettlersFromRoles,
+		registerViciOracle
+	} from '$lib/services/oracle.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -16,6 +20,7 @@
 	let authorizedPrincipals = $state<PrincipalText[]>([]);
 	let errorMessage = $state<string | undefined>();
 	let isSubmitting = $state(false);
+	let isReconciling = $state(false);
 
 	const load = async () => {
 		status = 'loading';
@@ -71,6 +76,42 @@
 			isSubmitting = false;
 		}
 	};
+
+	const handleReconcile = async () => {
+		isReconciling = true;
+
+		try {
+			const { added, removed } = await reconcileOracleSettlersFromRoles();
+
+			if (added.length === 0 && removed.length === 0) {
+				notificationsStore.add({
+					title: t({ locale: $localeStore, key: 'admin.oracle.reconcile.title' }),
+					message: t({ locale: $localeStore, key: 'admin.oracle.reconcile.in_sync' }),
+					type: 'success'
+				});
+			} else {
+				notificationsStore.add({
+					title: t({ locale: $localeStore, key: 'admin.oracle.reconcile.title' }),
+					message: t({
+						locale: $localeStore,
+						key: 'admin.oracle.reconcile.success',
+						params: { added: added.length, removed: removed.length }
+					}),
+					type: 'success'
+				});
+			}
+
+			await load();
+		} catch (e: unknown) {
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'admin.oracle.reconcile.failed' }),
+				message: (e as Error).message,
+				type: 'error'
+			});
+		} finally {
+			isReconciling = false;
+		}
+	};
 </script>
 
 <div class="border-border bg-card rounded-xl border p-6">
@@ -86,8 +127,10 @@
 				</code>{t({ locale: $localeStore, key: 'admin.oracle.sub_driven_by' })}
 				<strong>{t({ locale: $localeStore, key: 'admin.oracle.sub_roles_word' })}</strong>
 				{t({ locale: $localeStore, key: 'admin.oracle.sub_granting' })}
+				<!-- eslint-disable-next-line local-rules/no-bare-svelte-text -- TODO(i18n): code-shaped role identifier sent to the engine, not natural language; promote into the brand allowlist if more role IDs surface here. -->
 				<code class="bg-foreground/5 rounded px-1 py-0.5 font-mono text-xs">ADMIN</code>
 				{t({ locale: $localeStore, key: 'admin.oracle.sub_or' })}
+				<!-- eslint-disable-next-line local-rules/no-bare-svelte-text -- TODO(i18n): see ADMIN above. -->
 				<code class="bg-foreground/5 rounded px-1 py-0.5 font-mono text-xs">SOLVER</code>
 				{t({ locale: $localeStore, key: 'admin.oracle.sub_suffix' })}
 			</p>
@@ -142,13 +185,27 @@
 		</div>
 	{:else}
 		<div class="space-y-4">
-			<h3 class="text-foreground text-sm font-semibold tracking-wider uppercase">
-				{t({
-					locale: $localeStore,
-					key: 'admin.oracle.authorized_count',
-					params: { count: authorizedPrincipals.length }
-				})}
-			</h3>
+			<div class="flex items-center justify-between gap-3">
+				<h3 class="text-foreground text-sm font-semibold tracking-wider uppercase">
+					{t({
+						locale: $localeStore,
+						key: 'admin.oracle.authorized_count',
+						params: { count: authorizedPrincipals.length }
+					})}
+				</h3>
+				<Button
+					onclick={handleReconcile}
+					size="sm"
+					status={isReconciling ? 'pending' : 'enabled'}
+					variant="outline"
+				>
+					{t({ locale: $localeStore, key: 'admin.oracle.action.reconcile' })}
+				</Button>
+			</div>
+
+			<p class="text-muted-foreground text-xs">
+				{t({ locale: $localeStore, key: 'admin.oracle.reconcile.hint' })}
+			</p>
 
 			{#if authorizedPrincipals.length === 0}
 				<p class="text-muted-foreground text-sm italic">
