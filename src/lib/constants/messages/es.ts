@@ -410,7 +410,7 @@ export const esMessages = {
 	'card.unsave': 'Quitar de guardados',
 	'card.rail_hint': 'Arrastra para confirmar · Toca para detalles',
 	'card.sharp_predictors': 'Predictores expertos:',
-	'card.size_vxp': 'TAMAÑO · {stake} VXP',
+	'card.size_label': 'TAMAÑO',
 	'card.skip_stamp': 'SALTAR',
 	'card.swipe_to_call': 'DESLIZA PARA PREDECIR',
 	'card.multiple': 'Múltiple',

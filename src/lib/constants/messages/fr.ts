@@ -415,7 +415,7 @@ export const frMessages = {
 	'card.unsave': 'Retirer des enregistrés',
 	'card.rail_hint': 'Glisser pour valider · Toucher pour les détails',
 	'card.sharp_predictors': 'Pronostiqueurs avisés :',
-	'card.size_vxp': 'TAILLE · {stake} VXP',
+	'card.size_label': 'TAILLE',
 	'card.skip_stamp': 'PASSER',
 	'card.swipe_to_call': 'GLISSE POUR APPELER',
 	'card.multiple': 'Multiple',
