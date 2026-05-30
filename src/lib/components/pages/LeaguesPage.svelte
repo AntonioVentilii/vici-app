@@ -35,9 +35,8 @@
 	 * optional latest-activity line derived from the league's most
 	 * recent battle, and an inline copy-invite pill.
 	 *
-	 * The Create + Join entries live as trailing CTA cards (and a
-	 * compact appbar `+` from the Arena shell) — never as a
-	 * top-of-list pill row.
+	 * The Create + Join entries live as trailing CTA cards — never
+	 * as a top-of-list pill row.
 	 */
 
 	interface Props {
