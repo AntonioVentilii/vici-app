@@ -75,7 +75,10 @@
 					{t({
 						locale: $localeStore,
 						key: 'onboarding.beat3.starter_meta',
-						params: { vxp: starterVxp, event: event.shortTitle ?? event.title }
+						params: {
+							vxp: starterVxp,
+							event: event.brandedTitle ?? event.shortTitle ?? event.title
+						}
 					})}
 				</div>
 			</div>
