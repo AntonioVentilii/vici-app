@@ -105,7 +105,10 @@ strings still on country records in
 and
 [`featured-event.constants.ts`](../../../src/lib/constants/featured-event.constants.ts)
 are now unused at render time and can be stripped on the next data
-migration.
+migration. **Never set a coloured background box behind a flag** — flags
+are already colourful and a tinted tile muddies them. Render the flag on
+the surface itself (a transparent layout container is fine); the country
+slot, picker, battle rows, and onboarding previews all follow this.
 Achievement emblems (`◎ ★ ⚡ ⌬ ⊿ ✦ ◐ ⧖ ⌘` in
 [`achievements.constants.ts`](../../../src/lib/constants/achievements.constants.ts))
 are part of the approved glyph set and stay.

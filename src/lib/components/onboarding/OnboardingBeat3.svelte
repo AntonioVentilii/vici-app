@@ -78,10 +78,9 @@
 	</p>
 
 	{#if team}
-		{@const teamColor = team.color ?? 'var(--laurel)'}
 		<div class="ob2-summary">
 			<div class="ob2-summary-row">
-				<span style:background="{teamColor}22" style:color={teamColor} class="ob2-summary-flag">
+				<span class="ob2-summary-flag">
 					<CountryFlag class="ob2-summary-flag-img" countryCode={team.id} />
 				</span>
 				<div>
