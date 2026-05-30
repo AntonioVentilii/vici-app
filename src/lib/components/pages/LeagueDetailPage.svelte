@@ -111,9 +111,9 @@
 
 	onMount(load);
 
-	// Deep-link: `?challenge=1` from CreateBattleModal / other surfaces
-	// opens the challenge sheet immediately on load. Kept the legacy
-	// `?propose=1` alias too so older links still work.
+	// Deep-link: `?challenge=1` from other surfaces opens the challenge
+	// sheet immediately on load. Kept the legacy `?propose=1` alias too
+	// so older links still work.
 	$effect(() => {
 		if (
 			loadState === 'ready' &&
