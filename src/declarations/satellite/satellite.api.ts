@@ -254,6 +254,7 @@ const AppGetProfileResultSchema = j.strictObject({
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
 			deletedAtMs: j.optional(j.number()),
+			hibernatedAtMs: j.optional(j.number()),
 			unlockedAchievements: j.array(j.string()),
 			contrarianWins: j.number(),
 			preferences: j.strictObject({
@@ -1010,6 +1011,21 @@ const followUser = async (args: j.infer<typeof AppFollowUserArgsSchema>): Promis
 	await app_follow_user(idlArgs);
 };
 
+const AppHibernateMyAccountResultSchema = j.strictObject({
+	ok: j.boolean(),
+	reason: j.optional(j.enum(['no_profile', 'deleted']))
+});
+
+const hibernateMyAccount = async (): Promise<j.infer<typeof AppHibernateMyAccountResultSchema>> => {
+	const { app_hibernate_my_account } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_hibernate_my_account();
+
+	const result = schemaFromIdl({ schema: AppHibernateMyAccountResultSchema, value: idlResult });
+	return AppHibernateMyAccountResultSchema.parse(result);
+};
+
 const AppRecoverMyAccountResultSchema = j.strictObject({
 	ok: j.boolean(),
 	recovered: j.optional(j.boolean()),
@@ -1095,6 +1111,16 @@ const resolveTournamentRound = async (
 
 	const result = schemaFromIdl({ schema: AppResolveTournamentRoundResultSchema, value: idlResult });
 	return AppResolveTournamentRoundResultSchema.parse(result);
+};
+
+const AppResumeMyAccountResultSchema = j.strictObject({ ok: j.boolean(), resumed: j.boolean() });
+
+const resumeMyAccount = async (): Promise<j.infer<typeof AppResumeMyAccountResultSchema>> => {
+	const { app_resume_my_account } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_resume_my_account();
+
+	const result = schemaFromIdl({ schema: AppResumeMyAccountResultSchema, value: idlResult });
+	return AppResumeMyAccountResultSchema.parse(result);
 };
 
 const AppSendFriendRequestArgsSchema = j.strictObject({ target: j.string() });
@@ -1327,10 +1353,12 @@ export const functions = {
 	claimWorldsPodiumPrize,
 	deleteMyAccount,
 	followUser,
+	hibernateMyAccount,
 	recoverMyAccount,
 	redeemReferralCode,
 	rejectFriendRequest,
 	resolveTournamentRound,
+	resumeMyAccount,
 	sendFriendRequest,
 	sweepExpiredDeletions,
 	transferLeagueOwnership,
