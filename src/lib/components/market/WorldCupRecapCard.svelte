@@ -1,6 +1,9 @@
 <script lang="ts">
 	import { EM_DASH } from '$lib/constants/app.constants';
+	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
+	import { safeGetIdentityOnce } from '$lib/services/identity.services';
+	import { calculateAndSyncStats } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -32,11 +35,19 @@
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
 
-	// Load the caller's stats snapshot once the principal is known. Mirrors
-	// `DashPage`'s read of the same `user_stats` doc; a failed/absent load
-	// leaves the figures at their `EM_DASH` fallback rather than throwing.
+	// Recompute then load the caller's stats. Mirrors `DashPage`: a user who
+	// stayed signed in through World-Cup settlements would otherwise see the
+	// last persisted snapshot, so we recompute from clearing history first,
+	// then read the refreshed `user_stats` doc. `userStats` is cleared on
+	// every owner change (including sign-out) so a shared device / account
+	// switch can never flash the previous user's WC figures.
 	$effect(() => {
 		const owner = $userStore.profile?.owner;
+		// Capture the domain synchronously so it's both a tracked dependency
+		// and a stable value for the async recompute below.
+		const domain = $balanceDomain;
+
+		userStats = undefined;
 
 		if (owner === undefined) {
 			return;
@@ -44,15 +55,24 @@
 
 		let cancelled = false;
 
-		loadMyUserStats(owner)
-			.then((doc) => {
+		void (async () => {
+			try {
+				const identity = await safeGetIdentityOnce();
+				await calculateAndSyncStats({ identity, domain });
+			} catch (err) {
+				console.error('WorldCupRecapCard: failed to recompute stats', err);
+			}
+
+			try {
+				const doc = await loadMyUserStats(owner);
+
 				if (!cancelled) {
 					userStats = doc;
 				}
-			})
-			.catch((err) => {
+			} catch (err) {
 				console.error('WorldCupRecapCard: failed to load user_stats', err);
-			});
+			}
+		})();
 
 		return () => {
 			cancelled = true;

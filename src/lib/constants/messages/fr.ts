@@ -1140,7 +1140,7 @@ export const frMessages = {
 	'markets.wc_recap.accuracy': 'Précision',
 	'markets.wc_recap.calls': 'Pronostics faits',
 	'markets.wc_recap.cta': 'Explorer tous les marchés',
-	'markets.wc_recap.eyebrow': '{event} · ton parcours',
+	'markets.wc_recap.eyebrow': '{event} · votre parcours',
 	'markets.wc_recap.line': 'La Coupe est jouée. Le monde avance — le tableau aussi.',
 	'motion.acc_threshold': 'Top {label}% de précision.',
 	'motion.first_contrarian': 'À contre-courant.',

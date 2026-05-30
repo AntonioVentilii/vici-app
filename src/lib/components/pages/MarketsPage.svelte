@@ -94,6 +94,20 @@
 	const isBridge = $derived(phase === 'bridge');
 	const isOpen = $derived(phase === 'open');
 
+	// When the arc advances into `open` mid-session (the heartbeat crosses the
+	// final), the World-Cup focus is over — drop the lingering `wc` filter back
+	// to all-categories so the list and section title match the recap card and
+	// the documented `open` behaviour. Guarded on the transition so it never
+	// fights a user who deliberately picks the `wc` chip while in `open`.
+	let prevPhase = $state(initialPhase);
+	$effect(() => {
+		if (prevPhase !== 'open' && phase === 'open' && cat === 'wc') {
+			cat = 'all';
+		}
+
+		prevPhase = phase;
+	});
+
 	// Eyebrow copy comes from the featured-event source — never hardcoded.
 	// `title` ("2026 FIFA World Cup") reads cleaner as a two-tier eyebrow than
 	// the compact `shortTitle`.
@@ -222,9 +236,11 @@
 	// non-WC markets, previewed *before* the Cup resolves to pre-empt the
 	// post-Cup cliff. Proxies "curated" by volume — the same trending signal
 	// the carousels use — and excludes anything tagged `wc` so it genuinely
-	// widens the deck. Only computed in `bridge`; empty otherwise.
+	// widens the deck. Gated on tag metadata being initialized: `matchesTag`
+	// returns false against the empty fallback, so without this a WC market
+	// could leak into the non-WC rail before tags load. Empty otherwise.
 	const beyondMarkets = $derived.by((): Market[] => {
-		if (!isBridge) {
+		if (!isBridge || $marketTagsNotInitialized) {
 			return [];
 		}
 
