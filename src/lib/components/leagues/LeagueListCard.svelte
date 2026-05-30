@@ -119,7 +119,13 @@
 		event.stopPropagation();
 
 		try {
-			await navigator.clipboard.writeText(`${window.location.origin}/league/${league.inviteCode}`);
+			const url = `${window.location.origin}/league/${league.inviteCode}`;
+			const shareText = t({
+				locale: $localeStore,
+				key: 'leagues.share_text',
+				params: { name: league.name }
+			});
+			await navigator.clipboard.writeText(`${shareText} ${url}`);
 			copied = true;
 
 			setTimeout(() => {
