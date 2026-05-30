@@ -292,21 +292,52 @@ preserves everything, then a hard-delete once the recovery window
 elapses. The cascade still exists, but it's deferred — it only runs
 on expiry, never on the user-facing delete.
 
-- `deleteMyAccount({ reason, note })` — `defineUpdate` that:
-  1. Owner-leagues guard — refuses with `reason:
-'owns_non_empty_league'` if the caller owns a non-empty league
-     (decision 4.3). League transfer/delete resolution is a later PR.
-  2. **Soft-deletes** the caller's profile: sets `deletedAtMs = now`
+- `deleteMyAccount({ reason, note, leagueResolutions? })` —
+  `defineUpdate` that:
+  1. **League resolution.** Applies each `leagueResolutions` entry the
+     caller passed, BEFORE the blocking guard. Each is `{ leagueId,
+action: 'transfer' | 'delete', transferTo? }` (an array of strict
+     objects — cleaner in Candid than a map). `transfer` reuses
+     `transferLeagueOwnershipFn` (hands the league to `transferTo`, the
+     new-owner principal text); `delete` reuses `deleteLeagueFn` (owner
+     disband — drops every membership row then the league doc). Only
+     leagues the caller actually owns are acted on (a resolution for a
+     non-owned league is a clean skip). If any resolution fails, the
+     whole delete aborts with `{ ok: false, reason:
+'league_resolution_failed', failedLeagueId, resolutionReason }` and
+     nothing further runs.
+  2. Owner-leagues guard — refuses with `reason:
+'owns_non_empty_league'` if, after resolution, the caller still owns
+     a non-empty league (decision 4.3); `blockingLeagueIds` lists them.
+  3. **Soft-deletes** the caller's profile: sets `deletedAtMs = now`
      on the profile doc via a version-locked overwrite. NO data is
      removed — the nickname stays (so the handle remains reserved),
      and every identity-keyed row survives so recovery can restore
      the account. A second delete keeps the **earliest** `deletedAtMs`
      so the recovery clock can't be reset, and reports `alreadyDeleted`.
-  3. Writes the `EXIT_SIGNAL` doc (anonymous) — but ONLY on a first
+  4. Writes the `EXIT_SIGNAL` doc (anonymous) — but ONLY on a first
      delete. A re-delete inside the recovery window (`alreadyDeleted`)
      skips the signal write, so churn isn't over-counted by repeated
      `deleteMyAccount` calls. Returns `{ ok: true, softDeleted }`; the
      FE signs out.
+
+  **Recovery caveat (deliberate).** League resolutions are applied
+  IMMEDIATELY (a real transfer / disband), NOT deferred to the
+  hard-delete. So a user who soft-deletes while resolving leagues and
+  then `recoverMyAccount`s within the window gets their **account** back
+  but **not** the relinquished leagues — a transferred league belongs to
+  its new owner, a deleted league is gone. Recovery restores
+  identity-keyed rows, never the ownership decisions made at delete time.
+  This matches the delete-v2 contract; it's a semantics choice, not a bug.
+
+  `deleteLeagueFn({ leagueId, callerText, callerBytes })` is the owner
+  disband (refuses `not_owner` / `league_not_found`), distinct from the
+  cascade's `disbandOrTransferOwnedLeagues` (which deletes a truly-empty
+  owned league but transfers ownership of one that others joined during
+  the window, so the hard-delete never orphans members). It's NOT wired
+  into the cascade — it's an explicit, caller-chosen resolution that can
+  evict other members.
+
 - `recoverMyAccount()` — `defineUpdate`, no args. Reads the caller's
   own profile:
   - not soft-deleted → `{ ok: true, recovered: false }` (no-op).
@@ -375,7 +406,9 @@ hibernated.
    `EXIT_SIGNAL_REASONS`, `src/lib/types/exit-signal.ts`; the
    validator rejects anything else as `invalid_input`).
 3. **Owner-leagues blocker.** Refuse + surface a "transfer first"
-   guard in the UI (transfer resolution is a follow-up PR).
+   guard in the UI. The caller can resolve each owned league inline at
+   delete time via `leagueResolutions` (transfer ownership or disband);
+   only leagues left unresolved trip the refusal.
 
 ---
 
@@ -452,7 +485,7 @@ The full tournament chain has landed.
 | 3.4 | Disband during tournament    | Forfeit; opponent advances                                                    |
 | 4.1 | Profile delete depth         | Soft delete + 30-day recovery, then hard-delete                               |
 | 4.2 | Reason enum values           | `not-for-me` / `too-complex` / `bored` / `no-friends` / `too-noisy` / `other` |
-| 4.3 | Owner-leagues guard          | Refuse + UX prompt                                                            |
+| 4.3 | Owner-leagues guard          | Refuse + inline transfer/disband resolution                                   |
 
 Approve / amend the defaults above to unblock implementation. Each
 proposal can be implemented independently; suggested order is

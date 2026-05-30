@@ -11,6 +11,7 @@ import type { UserProfile } from '$lib/types/profile';
 import type { ReferralCodeDoc, ReferralDoc } from '$lib/types/referral';
 import type { Relation } from '$lib/types/relation';
 import { isAdmin } from '$satellite/services/_authz';
+import { deleteLeagueFn, transferLeagueOwnershipFn } from '$satellite/services/league.services';
 import { isHibernated, isSoftDeleted } from '$satellite/services/profile.services';
 import { logError } from '$satellite/utils/logger.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -45,30 +46,43 @@ export const ACCOUNT_RECOVERY_WINDOW_MS = 30 * 86_400_000;
 
 /**
  * Account deletion — Proposal 4 in `docs/backend-proposals/README.md`
- * (Delete account v2: soft-delete + recovery + admin sweep).
+ * (Delete account v2: soft-delete + recovery + admin sweep, with
+ * league resolution).
  *
- * `deleteMyAccount` runs three steps in order:
+ * `deleteMyAccount` runs four steps in order:
  *
- *  1. **Owner-leagues guard.** If the caller owns any league that
- *     still has another member, the deletion is refused with
- *     `reason: 'owns_non_empty_league'`. The FE surfaces a
- *     "transfer ownership first" prompt (decision 4.3). League
- *     transfer/delete resolution is a later PR; the guard is
- *     unchanged.
+ *  1. **League resolution.** If the caller passes `leagueResolutions`,
+ *     each is applied IMMEDIATELY before the blocking guard — a
+ *     `transfer` reuses {@link transferLeagueOwnershipFn} (hand the
+ *     league to another member), a `delete` reuses {@link
+ *     deleteLeagueFn} (disband the league entirely). Only leagues the
+ *     caller actually owns are acted on; a resolution targeting a
+ *     league the caller doesn't own is ignored (the blocking guard
+ *     below decides whether that leaves a blocker). If any resolution
+ *     fails, the WHOLE delete aborts with `reason:
+ *     'league_resolution_failed'` (plus `failedLeagueId` +
+ *     `resolutionReason`) and NOTHING further runs — but resolutions
+ *     applied before the failure have already committed (see the
+ *     recovery caveat below).
  *
- *  2. **Soft-delete.** The caller's profile gets `deletedAtMs = now`
+ *  2. **Owner-leagues guard.** If, after resolution, the caller still
+ *     owns any league that has another member, the deletion is refused
+ *     with `reason: 'owns_non_empty_league'`. The FE surfaces a
+ *     "transfer ownership first" prompt (decision 4.3).
+ *
+ *  3. **Soft-delete.** The caller's profile gets `deletedAtMs = now`
  *     (decision 4.1, soft-delete preserves the audit trail). NO data
  *     is removed — recovery must be able to restore the full account.
  *     The nickname is left untouched so the handle stays reserved
  *     (`checkNicknameAvailability` scans every profile doc). A second
  *     soft-delete keeps the EARLIEST `deletedAtMs` so the recovery
  *     clock can't be reset by re-deleting, and reports
- *     `alreadyDeleted` to drive step 3's idempotency.
+ *     `alreadyDeleted` to drive step 4's idempotency.
  *
- *  3. **Exit-signal write.** A single `EXIT_SIGNALS` doc is appended
+ *  4. **Exit-signal write.** A single `EXIT_SIGNALS` doc is appended
  *     with the chosen reason + optional note. The doc has no
  *     principal field — it's intentionally unlinkable from the
- *     account that wrote it. Skipped when step 2 reports
+ *     account that wrote it. Skipped when step 3 reports
  *     `alreadyDeleted` (a re-delete inside the recovery window), so a
  *     repeated `deleteMyAccount` can't over-count churn.
  *
@@ -79,9 +93,35 @@ export const ACCOUNT_RECOVERY_WINDOW_MS = 30 * 86_400_000;
  *
  * The hard-delete cascade itself lives in {@link hardDeleteAccountFn},
  * parametrised by principal so the sweep can run it for any account.
+ *
+ * **Recovery caveat (deliberate, not a bug).** League resolutions are
+ * applied IMMEDIATELY (a real transfer / disband), matching the
+ * delete-v2 contract — they are NOT deferred to the hard-delete. So a
+ * user who soft-deletes while resolving leagues and then
+ * `recoverMyAccount`s within the recovery window gets their ACCOUNT
+ * back but NOT the relinquished leagues: a transferred league now
+ * belongs to its new owner, a deleted league is gone. Recovery
+ * restores identity-keyed rows (profile, awards, relations, …), never
+ * the league-ownership decisions the user explicitly made at delete
+ * time.
  */
 
-export type DeleteMyAccountRefusalReason = 'owns_non_empty_league' | 'invalid_input';
+export type DeleteMyAccountRefusalReason =
+	| 'owns_non_empty_league'
+	| 'league_resolution_failed'
+	| 'invalid_input';
+
+/**
+ * One owner-league resolution the caller applies as part of deletion.
+ * `action: 'transfer'` hands the league to `transferTo` (required,
+ * the new-owner principal text); `action: 'delete'` disbands it
+ * (`transferTo` ignored). Only leagues the caller owns are acted on.
+ */
+export interface LeagueResolution {
+	leagueId: string;
+	action: 'transfer' | 'delete';
+	transferTo?: string;
+}
 
 export interface DeleteMyAccountResult {
 	ok: boolean;
@@ -93,6 +133,17 @@ export interface DeleteMyAccountResult {
 	 * uses them to render a "transfer these first" CTA.
 	 */
 	blockingLeagueIds?: string[];
+	/**
+	 * The league whose resolution failed. Only populated when
+	 * `reason === 'league_resolution_failed'`.
+	 */
+	failedLeagueId?: string;
+	/**
+	 * The underlying refusal reason from the transfer / delete that
+	 * failed (e.g. `new_owner_not_member`, `not_owner`). Only populated
+	 * when `reason === 'league_resolution_failed'`.
+	 */
+	resolutionReason?: string;
 	/**
 	 * `true` when a profile was found and marked soft-deleted; `false`
 	 * when the caller had no profile (never onboarded) so there was
@@ -700,20 +751,125 @@ export const hardDeleteAccountFn = ({
 	return docsDeleted;
 };
 
+/**
+ * Read a single `LEAGUES` doc as the caller and report whether the
+ * caller owns it. Used to gate league resolutions on actual ownership
+ * — a resolution targeting a league the caller doesn't own is skipped
+ * (the blocking guard then decides whether that's a problem) rather
+ * than surfaced as a resolution failure.
+ */
+const callerOwnsLeague = ({
+	leagueId,
+	callerText,
+	callerBytes
+}: {
+	leagueId: string;
+	callerText: string;
+	callerBytes: Uint8Array;
+}): boolean => {
+	const leagueDoc = getDocStore({
+		collection: Collection.LEAGUES,
+		key: leagueId,
+		caller: callerBytes
+	});
+
+	if (isNullish(leagueDoc)) {
+		return false;
+	}
+
+	try {
+		return decodeDocData<LeagueDoc>(leagueDoc.data).owner === callerText;
+	} catch {
+		return false;
+	}
+};
+
+/**
+ * Apply one league resolution (transfer / delete) on behalf of the
+ * caller. Returns `null` on success (or when the league isn't owned by
+ * the caller — a clean skip), or a populated failure object to abort
+ * the surrounding delete.
+ *
+ * `transfer` reuses {@link transferLeagueOwnershipFn} (which reads
+ * `msgCaller()` internally — the same caller as `deleteMyAccountFn`, so
+ * no caller is threaded through). `delete` reuses {@link deleteLeagueFn}
+ * (which takes the caller explicitly).
+ */
+const applyLeagueResolution = ({
+	resolution,
+	callerText,
+	callerBytes
+}: {
+	resolution: LeagueResolution;
+	callerText: string;
+	callerBytes: Uint8Array;
+}): { failedLeagueId: string; resolutionReason: string } | null => {
+	const { leagueId, action, transferTo } = resolution;
+
+	// Only act on leagues the caller actually owns. A non-owned league
+	// is left untouched; the blocking guard downstream still protects
+	// against orphaning other users' membership.
+	if (!callerOwnsLeague({ leagueId, callerText, callerBytes })) {
+		return null;
+	}
+
+	if (action === 'transfer') {
+		if (isNullish(transferTo)) {
+			return { failedLeagueId: leagueId, resolutionReason: 'invalid_input' };
+		}
+
+		// `transferLeagueOwnershipFn` reads `msgCaller()` internally; the
+		// account-delete handler runs as the same caller (the owner), so
+		// the transfer is authorised without threading the caller through.
+		const result = transferLeagueOwnershipFn({ leagueId, newOwnerPrincipal: transferTo });
+
+		return result.ok
+			? null
+			: { failedLeagueId: leagueId, resolutionReason: result.reason ?? 'unknown' };
+	}
+
+	const result = deleteLeagueFn({ leagueId, callerText, callerBytes });
+
+	return result.ok
+		? null
+		: { failedLeagueId: leagueId, resolutionReason: result.reason ?? 'unknown' };
+};
+
 export const deleteMyAccountFn = ({
 	reason,
-	note
+	note,
+	leagueResolutions
 }: {
 	reason: string;
 	note: string;
+	leagueResolutions?: LeagueResolution[];
 }): DeleteMyAccountResult => {
 	const validated = validateInput({ reason, note });
 	const caller = msgCaller();
 	const callerText = caller.toText();
 	const callerBytes = caller.toUint8Array();
 
-	// Step 1 — owner-leagues guard. If any owned league still has
-	// another member, refuse and surface the list to the FE.
+	// Step 1 — league resolution. Apply each transfer / delete the
+	// caller chose, BEFORE the blocking guard. A failed resolution
+	// aborts the whole delete (resolutions are applied immediately, so
+	// any that already committed stand — see the recovery caveat in the
+	// JSDoc above).
+	for (const resolution of leagueResolutions ?? []) {
+		const failure = applyLeagueResolution({ resolution, callerText, callerBytes });
+
+		if (nonNullish(failure)) {
+			return {
+				ok: false,
+				reason: 'league_resolution_failed',
+				failedLeagueId: failure.failedLeagueId,
+				resolutionReason: failure.resolutionReason
+			};
+		}
+	}
+
+	// Step 2 — owner-leagues guard. If any owned league still has
+	// another member (and wasn't resolved above), refuse and surface
+	// the list to the FE.
 	const blockingLeagueIds = findOwnedNonEmptyLeagues({ callerText, callerBytes });
 
 	if (blockingLeagueIds.length > 0) {
@@ -727,7 +883,7 @@ export const deleteMyAccountFn = ({
 	const nowNs = time();
 	const nowMs = Number(nowNs / 1_000_000n);
 
-	// Step 2 — soft-delete. Mark the profile `deletedAtMs = now` and keep
+	// Step 3 — soft-delete. Mark the profile `deletedAtMs = now` and keep
 	// every other row intact so recovery can restore the account. A caller
 	// who never onboarded has no profile doc — that's a clean no-op
 	// (nothing to soft-delete). A second soft-delete keeps the earliest
@@ -735,7 +891,7 @@ export const deleteMyAccountFn = ({
 	// `alreadyDeleted` so the churn signal isn't double-counted below.
 	const { softDeleted, alreadyDeleted } = softDeleteProfile({ callerText, callerBytes, nowMs });
 
-	// Step 3 — exit-signal write. Compact base36 key, anonymous body. The
+	// Step 4 — exit-signal write. Compact base36 key, anonymous body. The
 	// chain timestamp (ns) is the entropy source; we pad it into a 16-char
 	// alphanumeric string to keep the key compact. Skipped on a re-delete
 	// inside the recovery window (`alreadyDeleted`) — appending a second

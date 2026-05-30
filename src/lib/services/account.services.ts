@@ -13,20 +13,34 @@ import type { ExitSignalReason } from '$lib/types/exit-signal';
  *     the "transfer ownership first" prompt is surfaced *before*
  *     they pick a reason and type a note.
  *
- *  2. **Deletion.** `deleteMyAccount({ reason, note })` writes the
- *     anonymous exit-signal doc, then cascades hard-deletes for the
- *     caller's identity-keyed rows. On success the FE drops auth
- *     (`signOut`) so the user lands on the sign-in screen.
+ *  2. **Deletion.** `deleteMyAccount({ reason, note, leagueResolutions })`
+ *     first applies each league resolution (transfer ownership of, or
+ *     disband, an owned league), then writes the anonymous exit-signal
+ *     doc and SOFT-deletes the caller's profile. On success the FE drops
+ *     auth (`signOut`) so the user lands on the sign-in screen.
  *
  * Both calls go through the satellite's authenticated update / query
  * surface; the caller is the auth principal.
  */
 
+/** One owner-league resolution applied as part of deletion. */
+export interface LeagueResolution {
+	leagueId: string;
+	action: 'transfer' | 'delete';
+	/** New-owner principal text — required when `action === 'transfer'`. */
+	transferTo?: string;
+}
+
 export interface DeleteMyAccountResult {
 	ok: boolean;
-	reason?: 'owns_non_empty_league' | 'invalid_input';
+	reason?: 'owns_non_empty_league' | 'league_resolution_failed' | 'invalid_input';
 	blockingLeagueIds?: string[];
-	docsDeleted?: number;
+	/** The league whose resolution failed (`reason === 'league_resolution_failed'`). */
+	failedLeagueId?: string;
+	/** Underlying transfer / disband refusal reason for the failed league. */
+	resolutionReason?: string;
+	/** `true` when a profile was found and soft-deleted. */
+	softDeleted?: boolean;
 }
 
 /**
@@ -55,12 +69,15 @@ export const listMyBlockingLeagues = async (): Promise<string[]> => {
  */
 export const deleteMyAccount = ({
 	reason,
-	note
+	note,
+	leagueResolutions
 }: {
 	reason: ExitSignalReason;
 	note: string;
+	leagueResolutions?: LeagueResolution[];
 }): Promise<DeleteMyAccountResult> =>
 	functions.deleteMyAccount({
 		reason,
-		note
+		note,
+		leagueResolutions
 	});
