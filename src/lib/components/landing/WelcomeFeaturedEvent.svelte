@@ -6,6 +6,7 @@
 	 */
 	import { ChevronRight, Clock } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { LANDING_WC_FAVORITES } from '$lib/constants/landing-data.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { WORLD_CUP_KICKOFF } from '$lib/constants/world-cup-kickoff.constants';
@@ -19,6 +20,14 @@
 	// constant grows.
 	const wcHours = 0;
 	const favorites = LANDING_WC_FAVORITES;
+
+	// Tapping a favourite deep-links into onboarding with that team
+	// pre-selected (`?team=<ISO-2 code>`). The landing favourite `code`
+	// IS the featured-event participant id, so `/signup` can map it
+	// straight to a participant; an unknown code degrades to the normal
+	// no-preselect flow.
+	const signUpBase = resolve(PublicPath.SignUp);
+	const teamHref = (code: string): string => `${signUpBase}?team=${code}`;
 </script>
 
 {#if $featuredEventActive}
@@ -66,7 +75,12 @@
 								border:1px solid {f.color}33;
 							"
 							class="card"
-							href="#wc-{f.code}"
+							aria-label={t({
+								locale: $localeStore,
+								key: 'wc.tile_aria',
+								params: { team: f.team }
+							})}
+							href={teamHref(f.code)}
 						>
 							<span style="font-size:32px; line-height:1;" aria-hidden="true">{f.flag}</span>
 							<span style="color:var(--fg);" class="t-body fw-600">{f.team}</span>

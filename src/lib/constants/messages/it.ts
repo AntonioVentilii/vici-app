@@ -1813,6 +1813,7 @@ export const itMessages = {
 	'wc.matchday': 'GIORNATA',
 	'wc.sub':
 		'Calcio d’inizio l’11 giugno. Scegli un lato ora — i mercati della fase a gironi sono aperti, gli ad eliminazione si attivano al sorteggio.',
+	'wc.tile_aria': 'Pronostica su {team}',
 	'wc.title_a': 'I favoriti danno',
 	'wc.title_b': 'il ritmo.',
 	'welcome.battle.members': 'MEMBRI',

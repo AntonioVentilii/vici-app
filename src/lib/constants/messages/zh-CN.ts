@@ -1730,6 +1730,7 @@ export const zhCnMessages = {
 	'wc.kickoff_week': '开赛周',
 	'wc.matchday': '比赛日',
 	'wc.sub': '6 月 11 日开赛。现在就站队 —— 小组赛晋级市场已开放,淘汰赛市场将在抽签时上线。',
+	'wc.tile_aria': '预测 {team}',
 	'wc.title_a': '热门球队正在',
 	'wc.title_b': '划线。',
 	'welcome.battle.members': '成员',

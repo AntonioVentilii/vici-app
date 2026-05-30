@@ -1822,6 +1822,7 @@ export const esMessages = {
 	'wc.matchday': 'DÍA DE PARTIDO',
 	'wc.sub':
 		'Pitazo inicial el 11 de junio. Elige un lado ahora — los mercados de fase de grupos están abiertos, los de eliminación abren al sorteo.',
+	'wc.tile_aria': 'Predice sobre {team}',
 	'wc.title_a': 'Los favoritos marcan',
 	'wc.title_b': 'la línea.',
 	'welcome.battle.members': 'MIEMBROS',
