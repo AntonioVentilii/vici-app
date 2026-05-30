@@ -796,6 +796,8 @@
 		<FlowTopBar
 			{betsCount}
 			categoryLabel={topBarCategoryLabel}
+			{dailyGoalDone}
+			dailyGoalTarget={DAILY_GOAL_TARGET}
 			{dailyStreak}
 			{flameStage}
 			{maxBets}
