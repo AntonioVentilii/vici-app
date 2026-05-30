@@ -91,8 +91,17 @@ export const prepareFlow = async ({
 			)
 		: [];
 	const sourceQueue = eventScoped.length > 0 ? eventScoped : queue;
-	const filtered =
+	const afterExclude =
 		excludeSet.size > 0 ? sourceQueue.filter((m) => !excludeSet.has(m.id)) : sourceQueue;
+	// Recycle the full source queue when the exclude set wipes it but
+	// markets still exist. `markets.length === 0` must mean "no open
+	// markets at all" (the only case the empty deck should surface) —
+	// never "you've already seen all of them". Without this, a small
+	// inventory (open series ≤ MAX_MARKETS) empties the follow-up deck
+	// the moment the prior deck is excluded, so re-entering Flow lands
+	// on the empty state even though markets are available. Mirrors the
+	// event-scope fallback above.
+	const filtered = afterExclude.length > 0 ? afterExclude : sourceQueue;
 	// Slice to the deck cap *before* enrichment so the order-book
 	// fan-out is bounded by `MAX_MARKETS` instead of by the total
 	// number of open series. The ranker doesn't need book data
