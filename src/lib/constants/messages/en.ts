@@ -372,8 +372,6 @@ export const enMessages = {
 	'card.back.show_rules': 'Show full rules',
 	'card.back.source_official': 'Source: official record',
 	'card.back.stake_ladder': 'Stake (VXP)',
-	'card.back.stake_locked':
-		'Stake locked at the default for now. {left} more calls and you can choose your rung (unlocks at {threshold}).',
 	'card.back.stake_no_wins': 'If NO wins',
 	'card.back.stake_yes_wins': 'If YES wins',
 	'card.back.this_week': 'this week',
