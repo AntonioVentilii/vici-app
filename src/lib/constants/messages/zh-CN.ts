@@ -1135,7 +1135,7 @@ export const zhCnMessages = {
 	'onboarding.beat3.starter_title': '你的新手礼包',
 	'onboarding.beat3.sub': '一键保留你的预测、连胜和排名。',
 	'onboarding.beat3.title_plain': '让它有分量。',
-	'onboarding.beat3.title_prefix': '让它有分量,',
+	'onboarding.beat3.title_prefix': '让它有分量，',
 	'onboarding.beat3.title_suffix': '。',
 	'onboarding.beat3.tos.and': '及',
 	'onboarding.beat3.tos.play_currency': 'VICI 免费畅玩。VXP 仅为游戏代币。',
