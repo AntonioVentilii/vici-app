@@ -18,12 +18,14 @@
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { userSignedIn, userSignedOutResolved } from '$lib/derived/user.derived';
+	import { joinLeagueByInvite } from '$lib/services/leagues.services';
 	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
 	import { claimReferralFriendship, redeemReferralCode } from '$lib/services/referral.services';
 	import { initFlowPrewarm } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
+	import { LEAGUE_INVITE_CODE_REGEX } from '$lib/types/league';
 	import { t } from '$lib/utils/i18n.utils';
 	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
@@ -128,6 +130,7 @@
 				interests: string[];
 				email?: string;
 				referralCode?: string;
+				leagueInvite?: string;
 		  }
 		| undefined => {
 		let parsed: unknown;
@@ -172,12 +175,26 @@
 				: undefined;
 		const referralCode =
 			rawReferral && REFERRAL_CODE_REGEX.test(rawReferral) ? rawReferral : undefined;
+		const rawLeagueInvite =
+			'leagueInvite' in parsed && typeof parsed.leagueInvite === 'string'
+				? parsed.leagueInvite.toUpperCase().trim()
+				: undefined;
+		const leagueInvite =
+			rawLeagueInvite && LEAGUE_INVITE_CODE_REGEX.test(rawLeagueInvite)
+				? rawLeagueInvite
+				: undefined;
 
 		// At least one actionable signal is required for the payload to be useful — onboarding
-		// picks (handle / participantId / side) drive the profile upsert, and `referralCode`
-		// drives the redeem-or-friendship flow. A bare payload with none of those is dropped
-		// so the caller can clear the slot.
-		if (handle === null && participantId === null && side === null && referralCode === undefined) {
+		// picks (handle / participantId / side) drive the profile upsert, `referralCode` drives
+		// the redeem-or-friendship flow, and `leagueInvite` drives the auto-join. A bare payload
+		// with none of those is dropped so the caller can clear the slot.
+		if (
+			handle === null &&
+			participantId === null &&
+			side === null &&
+			referralCode === undefined &&
+			leagueInvite === undefined
+		) {
 			return;
 		}
 
@@ -187,7 +204,8 @@
 			side,
 			interests,
 			email,
-			referralCode
+			referralCode,
+			leagueInvite
 		};
 	};
 
@@ -266,6 +284,39 @@
 		}
 	};
 
+	/**
+	 * Best-effort post-signin auto-join of the pre-auth league invite (stashed by
+	 * `/league/[code]` when the user was signed-out). Idempotent — "already a member" is
+	 * a silent no-op. Errors are swallowed (logged): the invite is cosmetic relative to the
+	 * rest of onboarding, and the user can still join manually with the code.
+	 */
+	const joinPendingLeagueIfAny = async (code: string | undefined): Promise<void> => {
+		if (!code) {
+			return;
+		}
+
+		try {
+			const league = await joinLeagueByInvite({ inviteCode: code });
+
+			notificationsStore.add({
+				title: t({
+					locale: $localeStore,
+					key: 'league_invite.joined_title',
+					params: { name: league.name }
+				}),
+				message: t({ locale: $localeStore, key: 'league_invite.joined_body' }),
+				type: 'success'
+			});
+		} catch (err: unknown) {
+			const message = err instanceof Error ? err.message : '';
+
+			// Already a member is a no-op success — nothing to surface.
+			if (message !== 'Already a member of this league.') {
+				console.warn('joinPendingLeagueIfAny failed', message || err);
+			}
+		}
+	};
+
 	$effect(() => {
 		if (!browser || applyingPendingOnboarding || !$userSignedIn || !$userStore.profile) {
 			return;
@@ -334,6 +385,10 @@
 					}
 				})();
 			}
+
+			// A stashed league invite is still actionable for a returning user — join is
+			// independent of the signup bonus. Fire-and-forget like the friendship above.
+			void joinPendingLeagueIfAny(pending.leagueInvite);
 
 			localStorage.removeItem(PENDING_ONBOARDING_STORAGE_KEY);
 
@@ -408,6 +463,7 @@
 						// Handle collision is independent of the referral redemption — the user is still a
 						// new sign-up and deserves the bonus.
 						void redeemPendingReferralIfAny(pending.referralCode);
+						void joinPendingLeagueIfAny(pending.leagueInvite);
 
 						return;
 					}
@@ -427,6 +483,7 @@
 				// existing profile) passes. Fire-and-forget — the toast inside handles success and
 				// failure, and we don't want to keep the loading state open for the ledger transfer.
 				void redeemPendingReferralIfAny(pending.referralCode);
+				void joinPendingLeagueIfAny(pending.leagueInvite);
 			} catch (err: unknown) {
 				const message = err instanceof Error ? err.message : '';
 
