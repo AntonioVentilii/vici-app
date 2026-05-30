@@ -7,6 +7,7 @@
 	import { ChevronRight, Clock } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { LANDING_WC_FAVORITES } from '$lib/constants/landing-data.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { WORLD_CUP_KICKOFF } from '$lib/constants/world-cup-kickoff.constants';
@@ -82,7 +83,7 @@
 							})}
 							href={teamHref(f.code)}
 						>
-							<span style="font-size:32px; line-height:1;" aria-hidden="true">{f.flag}</span>
+							<CountryFlag class="h-6 w-8 rounded-sm object-cover" countryCode={f.code} />
 							<span style="color:var(--fg);" class="t-body fw-600">{f.team}</span>
 							<span
 								style="color:{f.color}; letter-spacing:var(--tracking-wide);"
