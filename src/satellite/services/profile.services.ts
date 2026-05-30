@@ -96,9 +96,11 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
  * present. Absence is the meaningful "active account" state — see the
  * field comment in `src/lib/schema/profile.schema.ts`. Used by the
  * PUBLIC profile reads to make a deleted user disappear from
- * leaderboard / search / direct lookup. The owner's own profile read
- * goes through Juno `getDoc` (not these endpoints) and is intentionally
- * NOT gated, so the FE can still offer recovery within the window.
+ * leaderboard / search / direct lookup. `getProfile` additionally lets
+ * the owner read their own soft-deleted doc (it knows the caller and the
+ * looked-up principal), and the owner's raw read via Juno `getDoc` is
+ * also never gated — both so the FE can still offer recovery within the
+ * window.
  */
 export const isSoftDeleted = (profile: Pick<UserProfile, 'deletedAtMs'>): boolean =>
 	nonNullish(profile.deletedAtMs);
@@ -118,9 +120,11 @@ export const getProfile = (principal: PrincipalText): UserProfile | undefined =>
 
 	const profile = decodeDocData<UserProfile>(profileDoc.data);
 
-	// Public lookup: a soft-deleted account is invisible. The owner reads
-	// their own (possibly soft-deleted) doc via Juno `getDoc`, not here.
-	if (isSoftDeleted(profile)) {
+	// Soft-deleted accounts are invisible to OTHER callers, but the owner
+	// can always read their own (possibly soft-deleted) doc — the FE relies
+	// on this to drive recovery within the window, so the query must agree
+	// with the raw Juno `getDoc` path instead of hiding it only there.
+	if (isSoftDeleted(profile) && caller.toText() !== principal) {
 		return;
 	}
 
