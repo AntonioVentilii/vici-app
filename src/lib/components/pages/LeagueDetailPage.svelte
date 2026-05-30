@@ -214,7 +214,7 @@
 		}
 
 		try {
-			await navigator.clipboard.writeText(`vici.markets/league/${league.inviteCode}`);
+			await navigator.clipboard.writeText(`${window.location.origin}/league/${league.inviteCode}`);
 			copied = true;
 			setTimeout(() => {
 				copied = false;
