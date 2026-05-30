@@ -4132,17 +4132,6 @@ html[data-app='1'] body {
 }
 .ob2-tos .serif-italic {
 	color: var(--parchment-dim);
-	padding: 10px 6px;
-	background: rgba(242, 236, 220, 0.04);
-	border: 1px solid var(--border-base);
-	border-radius: 8px;
-	color: var(--text-base);
-	text-decoration: none;
-	transition:
-		border-color 160ms cubic-bezier(0.2, 0.7, 0.2, 1),
-		background 160ms cubic-bezier(0.2, 0.7, 0.2, 1);
-	min-height: 56px;
-	font-family: inherit;
 }
 :global([data-theme='light']) .share-chan,
 :global([data-theme='peach']) .share-chan {
