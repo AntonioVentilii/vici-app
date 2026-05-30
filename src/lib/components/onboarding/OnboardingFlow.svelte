@@ -99,8 +99,6 @@
 					{handle}
 					onBack={handleAuthBack}
 					onComplete={handleAuthComplete}
-					{participantId}
-					{side}
 				/>
 			{/if}
 		</div>
