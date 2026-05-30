@@ -146,16 +146,15 @@ export const LANDING_MARKETS: readonly LandingMarket[] = [
 export interface LandingWcFavorite {
 	readonly code: string;
 	readonly team: string;
-	readonly flag: string;
 	readonly color: string;
 	readonly odds: number;
 }
 
 export const LANDING_WC_FAVORITES: readonly LandingWcFavorite[] = [
-	{ code: 'BR', team: 'Brazil', flag: '🇧🇷', color: '#0F8C3A', odds: 17.9 },
-	{ code: 'ES', team: 'Spain', flag: '🇪🇸', color: '#AA151B', odds: 14.8 },
-	{ code: 'FR', team: 'France', flag: '🇫🇷', color: '#0033A0', odds: 13.6 },
-	{ code: 'AR', team: 'Argentina', flag: '🇦🇷', color: '#75AADB', odds: 12.4 }
+	{ code: 'BR', team: 'Brazil', color: '#0F8C3A', odds: 17.9 },
+	{ code: 'ES', team: 'Spain', color: '#AA151B', odds: 14.8 },
+	{ code: 'FR', team: 'France', color: '#0033A0', odds: 13.6 },
+	{ code: 'AR', team: 'Argentina', color: '#75AADB', odds: 12.4 }
 ] as const;
 
 /**
