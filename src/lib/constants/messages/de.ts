@@ -505,6 +505,7 @@ export const deMessages = {
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': 'Top-Kategorie',
 	'dash.rank.top_cat_sub': 'beste Kat.',
+	'dash.rank.wc_sub': 'Genauigkeit',
 	'dash.streak.longest_to_marathon': 'Längste {longest} · noch {count} bis Marathon',
 	'dash.streak.to_marathon': 'Noch {count} Tage bis Marathon',
 	'dash.trend.delta': '+2,1 Pkt',

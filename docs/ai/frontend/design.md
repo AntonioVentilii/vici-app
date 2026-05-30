@@ -631,8 +631,16 @@ World-Cup mode layers two orthogonal signals, surfaced together from
 The persisted flag default is `false` (off): the featured event is
 still `upcoming` at time of writing, so the deck stays in its
 all-categories shape until a user opts in. Consumers (later: Markets
-focus, the Dashboard WC tile) should read `worldCupActive` rather than
+focus) should read `worldCupActive` rather than
 re-deriving the gate or destructuring the preferences object.
+
+**Dashboard consumers** (wired): when `worldCupActive`, `DashPage`
+hides the "By category" breakdown (per-category accuracy is empty when
+play is scoped to the event) and `DashRankContext`'s third rank tile
+swaps from best-category to a **World Cup · accuracy** tile
+(`market.tag.wc` + `dash.rank.wc_sub`, value from the `wc` category
+bucket). The Dash rank grid otherwise stays Global / League / (this
+tile).
 
 The richer World-Cup → bridge → open retention **arc** (gradually
 widening the deck back to all categories as the event winds down) is a

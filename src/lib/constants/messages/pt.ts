@@ -504,6 +504,7 @@ export const ptMessages = {
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': 'Top categoria',
 	'dash.rank.top_cat_sub': 'melhor cat.',
+	'dash.rank.wc_sub': 'precisão',
 	'dash.streak.longest_to_marathon': 'Maior {longest} · {count} para Marathon',
 	'dash.streak.to_marathon': '{count} dias para Marathon',
 	'dash.trend.delta': '+2,1 pts',

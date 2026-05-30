@@ -509,6 +509,7 @@ export const frMessages = {
 	'dash.rank.placeholder': '—',
 	'dash.rank.top_cat': 'Top catégorie',
 	'dash.rank.top_cat_sub': 'meilleure cat.',
+	'dash.rank.wc_sub': 'précision',
 	'dash.streak.longest_to_marathon': 'Plus longue {longest} · {count} jusqu’au Marathon',
 	'dash.streak.to_marathon': '{count} jours jusqu’au Marathon',
 	'dash.trend.delta': '+2,1 pts',
