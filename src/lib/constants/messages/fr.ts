@@ -1721,7 +1721,7 @@ export const frMessages = {
 	'ui.table.entries': 'Entrées',
 	'ui.theme.dark': 'Sombre',
 	'ui.theme.light': 'Clair',
-	'ui.theme.peach': 'Pêche',
+	'ui.theme.peach': 'Corail',
 	'ui.you_badge.label': 'Vous',
 	'ui.you_badge.title': 'C’est vous',
 	'wallet.back.label': 'Retour au profil',

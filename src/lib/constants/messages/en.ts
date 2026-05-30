@@ -1736,7 +1736,7 @@ export const enMessages = {
 	'ui.table.entries': 'Entries',
 	'ui.theme.dark': 'Dark',
 	'ui.theme.light': 'Light',
-	'ui.theme.peach': 'Peach',
+	'ui.theme.peach': 'Coral',
 	'ui.you_badge.label': 'You',
 	'ui.you_badge.title': 'This is you',
 	'wallet.badge.dev': 'DEV',

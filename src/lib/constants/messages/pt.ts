@@ -1708,7 +1708,7 @@ export const ptMessages = {
 	'ui.table.entries': 'Entradas',
 	'ui.theme.dark': 'Escuro',
 	'ui.theme.light': 'Claro',
-	'ui.theme.peach': 'Pêssego',
+	'ui.theme.peach': 'Coral',
 	'ui.you_badge.label': 'Você',
 	'ui.you_badge.title': 'Este é você',
 	'wallet.back.label': 'Voltar ao perfil',

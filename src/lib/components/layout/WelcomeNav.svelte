@@ -25,7 +25,7 @@
 	const themeOpts: ReadonlyArray<{ id: 'dark' | 'light' | 'peach'; label: string }> = [
 		{ id: 'dark', label: 'Dark mode' },
 		{ id: 'light', label: 'Light mode' },
-		{ id: 'peach', label: 'Peach mode' }
+		{ id: 'peach', label: 'Coral mode' }
 	];
 
 	let scrolled = $state(false);

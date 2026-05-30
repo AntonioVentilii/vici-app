@@ -1624,7 +1624,7 @@ export const zhCnMessages = {
 	'ui.table.entries': '条目',
 	'ui.theme.dark': '深色',
 	'ui.theme.light': '浅色',
-	'ui.theme.peach': '蜜桃',
+	'ui.theme.peach': '珊瑚',
 	'ui.you_badge.label': '你',
 	'ui.you_badge.title': '这是你',
 	'wallet.back.label': '返回个人资料',
