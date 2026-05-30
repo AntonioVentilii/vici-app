@@ -115,7 +115,7 @@
 	const monthRank = $derived(rankBy({ key: 'month' }));
 
 	const backToWorlds = () => {
-		void goto(`${resolve('/social')}/worlds`);
+		void goto(`${resolve('/arena')}/worlds`);
 	};
 
 	const openFlow = () => {

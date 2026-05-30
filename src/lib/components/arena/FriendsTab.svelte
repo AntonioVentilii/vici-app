@@ -5,8 +5,8 @@
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import FriendsEmptyState from '$lib/components/arena/FriendsEmptyState.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
-	import FriendsEmptyState from '$lib/components/social/FriendsEmptyState.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { REFERRAL_MAX_PAID } from '$lib/constants/referral.constants';
@@ -41,7 +41,7 @@
 	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
 	/**
-	 * Friends — the Social tab. Lives only inside Social; there is no
+	 * Friends — the Arena tab. Lives only inside Arena; there is no
 	 * standalone `/friends` route.
 	 *
 	 * Sections (top → bottom):
@@ -66,7 +66,7 @@
 	 *
 	 * The component reuses the existing `friendsListStore` /
 	 * `friendRequestsStore` infrastructure rather than re-fetching, so the
-	 * inbox bell + Social tab badge stay in lockstep.
+	 * inbox bell + Arena tab badge stay in lockstep.
 	 */
 
 	const VXP_DECIMALS = VXP_TOKEN.decimals;
@@ -149,7 +149,7 @@
 			triggerCopyFeedback();
 		} else {
 			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'social.friends.title' }),
+				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
 				message: t({
 					locale: $localeStore,
 					key: 'profile.dashboard.referrals.code_pending_failed'
@@ -277,8 +277,8 @@
 		} catch (err: unknown) {
 			console.error(err);
 			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'social.friends.title' }),
-				message: t({ locale: $localeStore, key: 'social.friends.error.unfriend_failed' }),
+				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
+				message: t({ locale: $localeStore, key: 'arena.friends.error.unfriend_failed' }),
 				type: 'error'
 			});
 		} finally {
@@ -304,8 +304,8 @@
 		} catch (err: unknown) {
 			console.error(err);
 			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'social.friends.title' }),
-				message: t({ locale: $localeStore, key: 'social.friends.error.send_failed' }),
+				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
+				message: t({ locale: $localeStore, key: 'arena.friends.error.send_failed' }),
 				type: 'error'
 			});
 		} finally {
@@ -323,8 +323,8 @@
 		} catch (err: unknown) {
 			console.error(err);
 			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'social.friends.title' }),
-				message: t({ locale: $localeStore, key: 'social.friends.error.send_failed' }),
+				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
+				message: t({ locale: $localeStore, key: 'arena.friends.error.send_failed' }),
 				type: 'error'
 			});
 		} finally {
@@ -341,8 +341,8 @@
 		} catch (err: unknown) {
 			console.error(err);
 			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'social.friends.title' }),
-				message: t({ locale: $localeStore, key: 'social.friends.error.cancel_failed' }),
+				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
+				message: t({ locale: $localeStore, key: 'arena.friends.error.cancel_failed' }),
 				type: 'error'
 			});
 		} finally {
@@ -370,7 +370,7 @@
 
 		if (!trimmed) {
 			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'social.friends.title' }),
+				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
 				message: t({ locale: $localeStore, key: 'friends.add.error.empty' }),
 				type: 'warning'
 			});
@@ -396,13 +396,13 @@
 			const code = err instanceof Error ? err.message : '';
 			const messageKey =
 				code === 'not_found'
-					? 'social.friends.error.not_found'
+					? 'arena.friends.error.not_found'
 					: code === 'self'
-						? 'social.friends.error.self'
-						: 'social.friends.error.send_failed';
+						? 'arena.friends.error.self'
+						: 'arena.friends.error.send_failed';
 
 			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'social.friends.title' }),
+				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
 				message: t({ locale: $localeStore, key: messageKey }),
 				type: 'error'
 			});
@@ -420,9 +420,9 @@
 	});
 
 	const goToLeaderboard = () => {
-		// Leaderboard lives at /social/leaderboard; this keeps the user inside
-		// the Social shell instead of forking to a sibling tab.
-		void goto(resolve(`${AppPath.Social}/leaderboard`));
+		// Leaderboard lives at /arena/leaderboard; this keeps the user inside
+		// the Arena shell instead of forking to a sibling tab.
+		void goto(resolve(`${AppPath.Arena}/leaderboard`));
 	};
 </script>
 
@@ -432,22 +432,22 @@
 		<span class="invite-eyebrow">
 			<span class="num invite-bonus">+{bonusLabel} VXP</span>
 			<span class="invite-eyebrow-suffix">
-				{t({ locale: $localeStore, key: 'social.friends.invite.eyebrow_suffix' })}
+				{t({ locale: $localeStore, key: 'arena.friends.invite.eyebrow_suffix' })}
 			</span>
 		</span>
 		<h3 id="invite-hero-title" class="invite-title">
-			{t({ locale: $localeStore, key: 'social.friends.invite.title' })}
+			{t({ locale: $localeStore, key: 'arena.friends.invite.title' })}
 		</h3>
 		<p class="invite-sub">
 			{t({
 				locale: $localeStore,
-				key: 'social.friends.invite.sub',
+				key: 'arena.friends.invite.sub',
 				params: { amount: bonusLabel }
 			})}
 			<span class="num invite-cap">
 				{t({
 					locale: $localeStore,
-					key: 'social.friends.invite.cap_remaining',
+					key: 'arena.friends.invite.cap_remaining',
 					params: { remaining: referralsRemaining }
 				})}
 			</span>
@@ -461,14 +461,14 @@
 						locale: $localeStore,
 						key:
 							referralFriendsCount === 1
-								? 'social.friends.invite.proof_one'
-								: 'social.friends.invite.proof_many'
+								? 'arena.friends.invite.proof_one'
+								: 'arena.friends.invite.proof_many'
 					})}
 				</span>
 				<span class="invite-proof-dot" aria-hidden="true">·</span>
 				<span class="invite-proof-earned">
 					<b>+{referralVxpEarned.toLocaleString()}</b>
-					{t({ locale: $localeStore, key: 'social.friends.invite.proof_earned' })}
+					{t({ locale: $localeStore, key: 'arena.friends.invite.proof_earned' })}
 				</span>
 			</div>
 		{/if}
@@ -481,7 +481,7 @@
 			>
 				<Share2 aria-hidden="true" size={14} strokeWidth={1.8} />
 				<span>
-					{t({ locale: $localeStore, key: 'social.friends.invite.share' })}
+					{t({ locale: $localeStore, key: 'arena.friends.invite.share' })}
 				</span>
 			</BaseButton>
 			<BaseButton
@@ -492,12 +492,12 @@
 				{#if copied}
 					<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
 						<Check aria-hidden="true" size={13} strokeWidth={1.8} />
-						{t({ locale: $localeStore, key: 'social.friends.invite.copied' })}
+						{t({ locale: $localeStore, key: 'arena.friends.invite.copied' })}
 					</span>
 				{:else}
 					<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
 						<Copy aria-hidden="true" size={13} strokeWidth={1.8} />
-						{t({ locale: $localeStore, key: 'social.friends.invite.copy' })}
+						{t({ locale: $localeStore, key: 'arena.friends.invite.copy' })}
 					</span>
 				{/if}
 			</BaseButton>
@@ -517,7 +517,7 @@
 	{#if pendingSent.length > 0}
 		<section class="friends-section">
 			<header class="section-eyebrow">
-				<span>{t({ locale: $localeStore, key: 'social.friends.sent.eyebrow' })}</span>
+				<span>{t({ locale: $localeStore, key: 'arena.friends.sent.eyebrow' })}</span>
 				<span class="num section-count">{pendingSent.length}</span>
 			</header>
 			<ul class="pending-list">
@@ -538,7 +538,7 @@
 							<span class="pending-copy">
 								<span class="pending-name">
 									@{profile?.nickname ??
-										t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
+										t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
 								</span>
 								<span class="num pending-meta">
 									{friendId ? shortenWithMiddleEllipsis({ text: friendId, splitLength: 5 }) : ''}
@@ -549,7 +549,7 @@
 								onclick={() => handleCancelSent(doc)}
 								status={isProcessing ? 'pending' : 'enabled'}
 							>
-								{t({ locale: $localeStore, key: 'social.friends.action.cancel' })}
+								{t({ locale: $localeStore, key: 'arena.friends.action.cancel' })}
 							</BaseButton>
 						</div>
 					</li>
@@ -562,7 +562,7 @@
 	{#if pendingReceived.length > 0}
 		<section class="friends-section">
 			<header class="section-eyebrow">
-				<span>{t({ locale: $localeStore, key: 'social.friends.pending.eyebrow' })}</span>
+				<span>{t({ locale: $localeStore, key: 'arena.friends.pending.eyebrow' })}</span>
 				<span class="num section-count">{pendingReceived.length}</span>
 			</header>
 			<ul class="pending-list">
@@ -589,7 +589,7 @@
 							<span class="pending-copy">
 								<span class="pending-name">
 									@{profile?.nickname ??
-										t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
+										t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
 								</span>
 								<span class="num pending-meta">
 									{friendId ? shortenWithMiddleEllipsis({ text: friendId, splitLength: 5 }) : ''}
@@ -597,8 +597,8 @@
 							</span>
 							<span class="num pending-state">
 								{isOpen
-									? t({ locale: $localeStore, key: 'social.friends.pending.close' })
-									: t({ locale: $localeStore, key: 'social.friends.pending.waiting' })}
+									? t({ locale: $localeStore, key: 'arena.friends.pending.close' })
+									: t({ locale: $localeStore, key: 'arena.friends.pending.waiting' })}
 							</span>
 						</button>
 						{#if isOpen}
@@ -608,14 +608,14 @@
 									onclick={() => handleAccept(doc)}
 									status={isProcessing ? 'pending' : 'enabled'}
 								>
-									{t({ locale: $localeStore, key: 'social.friends.action.accept' })}
+									{t({ locale: $localeStore, key: 'arena.friends.action.accept' })}
 								</BaseButton>
 								<BaseButton
 									class="pending-action pending-reject"
 									onclick={() => handleReject(doc)}
 									status={isProcessing ? 'pending' : 'enabled'}
 								>
-									{t({ locale: $localeStore, key: 'social.friends.action.reject' })}
+									{t({ locale: $localeStore, key: 'arena.friends.action.reject' })}
 								</BaseButton>
 							</div>
 						{/if}
@@ -633,16 +633,16 @@
 	{:else if rankedFriends.length > 0}
 		<section class="friends-section">
 			<header class="section-eyebrow">
-				<span>{t({ locale: $localeStore, key: 'social.friends.ranked.eyebrow' })}</span>
+				<span>{t({ locale: $localeStore, key: 'arena.friends.ranked.eyebrow' })}</span>
 				<span class="ranked-head-right">
 					<button
 						class="ranked-add"
-						aria-label={t({ locale: $localeStore, key: 'social.friends.add.cta' })}
+						aria-label={t({ locale: $localeStore, key: 'arena.friends.add.cta' })}
 						onclick={openAddSheet}
 						type="button"
 					>
 						<Plus size={12} strokeWidth={2} />
-						{t({ locale: $localeStore, key: 'social.friends.ranked.add' })}
+						{t({ locale: $localeStore, key: 'arena.friends.ranked.add' })}
 					</button>
 					<span class="num section-count">{rankedFriends.length}</span>
 				</span>
@@ -664,7 +664,7 @@
 							<span class="ranked-copy">
 								<span class="ranked-name">
 									@{row.profile?.nickname ??
-										t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
+										t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
 								</span>
 								<span class="num ranked-meta">
 									{formatPct(row.accuracy)} · {row.streak}d
@@ -681,7 +681,7 @@
 						<button class="ranked-see-all" onclick={() => (showAllRanked = true)} type="button">
 							{t({
 								locale: $localeStore,
-								key: 'social.friends.ranked.see_all',
+								key: 'arena.friends.ranked.see_all',
 								params: { count: rankedFriends.length }
 							})}
 						</button>
@@ -690,7 +690,7 @@
 				<li class="ranked-li-you">
 					<div class="ranked-row ranked-row-you">
 						<span class="num ranked-num is-you">
-							{t({ locale: $localeStore, key: 'social.friends.ranked.you' })}
+							{t({ locale: $localeStore, key: 'arena.friends.ranked.you' })}
 						</span>
 						<span class="ranked-avatar">
 							<Avatar
@@ -703,7 +703,7 @@
 						<span class="ranked-copy">
 							<span class="ranked-name ranked-name-you">
 								@{myProfile?.nickname ??
-									t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
+									t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
 							</span>
 							<span class="num ranked-meta">
 								{formatPct(myAccuracy)} · {myProfile?.streak ?? 0}d
@@ -732,13 +732,13 @@
 	{#if !loading && rankedFriends.length > 0}
 		<section class="friends-section">
 			<header class="section-eyebrow">
-				<span>{t({ locale: $localeStore, key: 'social.friends.feed.eyebrow' })}</span>
+				<span>{t({ locale: $localeStore, key: 'arena.friends.feed.eyebrow' })}</span>
 			</header>
 			<div class="feed-empty">
 				<p class="feed-empty-copy">
-					{t({ locale: $localeStore, key: 'social.friends.feed.empty_a' })}
+					{t({ locale: $localeStore, key: 'arena.friends.feed.empty_a' })}
 					<span class="feed-empty-italic">
-						{t({ locale: $localeStore, key: 'social.friends.feed.empty_b' })}
+						{t({ locale: $localeStore, key: 'arena.friends.feed.empty_b' })}
 					</span>
 				</p>
 			</div>
@@ -749,13 +749,13 @@
 	<button class="global-link" onclick={goToLeaderboard} type="button">
 		<span class="global-link-copy">
 			<span class="num global-link-eyebrow">
-				{t({ locale: $localeStore, key: 'social.friends.global.eyebrow' })}
+				{t({ locale: $localeStore, key: 'arena.friends.global.eyebrow' })}
 			</span>
 			<span class="global-link-value num">
 				<span class="global-link-rank">
 					{myRank !== undefined
 						? `#${myRank}`
-						: t({ locale: $localeStore, key: 'social.friends.global.unranked' })}
+						: t({ locale: $localeStore, key: 'arena.friends.global.unranked' })}
 				</span>
 				<!-- Rank delta (↑/↓ N this week) deferred until the satellite
 				     ships a `previousRank` snapshot. -->
@@ -796,7 +796,7 @@
 				<div class="friends-sheet-head-copy">
 					<span class="friends-sheet-name">
 						@{row.profile?.nickname ??
-							t({ locale: $localeStore, key: 'social.friends.unknown_nickname' })}
+							t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}
 					</span>
 					<span class="num friends-sheet-sub">
 						{shortenWithMiddleEllipsis({ text: row.friendId, splitLength: 6 })}
@@ -807,19 +807,19 @@
 			<div class="friends-sheet-stats">
 				<div class="friends-sheet-stat">
 					<span class="friends-sheet-lbl">
-						{t({ locale: $localeStore, key: 'social.friends.sheet.accuracy' })}
+						{t({ locale: $localeStore, key: 'arena.friends.sheet.accuracy' })}
 					</span>
 					<span class="friends-sheet-val num">{formatPct(row.accuracy)}</span>
 				</div>
 				<div class="friends-sheet-stat">
 					<span class="friends-sheet-lbl">
-						{t({ locale: $localeStore, key: 'social.friends.sheet.streak' })}
+						{t({ locale: $localeStore, key: 'arena.friends.sheet.streak' })}
 					</span>
 					<span class="friends-sheet-val num">{row.streak}d</span>
 				</div>
 				<div class="friends-sheet-stat">
 					<span class="friends-sheet-lbl">
-						{t({ locale: $localeStore, key: 'social.friends.sheet.vxp' })}
+						{t({ locale: $localeStore, key: 'arena.friends.sheet.vxp' })}
 					</span>
 					<span class="friends-sheet-val num">
 						{formatVxpBalance({ value: BigInt(row.points) * 10n ** BigInt(VXP_DECIMALS) })}
@@ -829,18 +829,18 @@
 
 			<div class="friends-sheet-h2h" class:is-ahead={h2h.ahead} class:is-behind={!h2h.ahead}>
 				<span class="friends-sheet-lbl">
-					{t({ locale: $localeStore, key: 'social.friends.sheet.h2h' })}
+					{t({ locale: $localeStore, key: 'arena.friends.sheet.h2h' })}
 				</span>
 				<span class="friends-sheet-val num">
 					{h2h.ahead
 						? t({
 								locale: $localeStore,
-								key: 'social.friends.sheet.h2h_ahead',
+								key: 'arena.friends.sheet.h2h_ahead',
 								params: { delta: h2h.value.replace('+', '') }
 							})
 						: t({
 								locale: $localeStore,
-								key: 'social.friends.sheet.h2h_behind',
+								key: 'arena.friends.sheet.h2h_behind',
 								params: { delta: h2h.value.replace('-', '') }
 							})}
 				</span>
@@ -851,10 +851,10 @@
 				onclick={handleRemoveFriend}
 				status={removingFriendId === row.friendId ? 'pending' : 'enabled'}
 			>
-				{t({ locale: $localeStore, key: 'social.friends.sheet.remove' })}
+				{t({ locale: $localeStore, key: 'arena.friends.sheet.remove' })}
 			</BaseButton>
 			<BaseButton class="friends-sheet-close" onclick={closeFriendSheet}>
-				{t({ locale: $localeStore, key: 'social.friends.sheet.close' })}
+				{t({ locale: $localeStore, key: 'arena.friends.sheet.close' })}
 			</BaseButton>
 		</div>
 	</div>
@@ -878,16 +878,16 @@
 		>
 			<div class="friends-sheet-grip" aria-hidden="true"></div>
 			<h3 class="friends-sheet-title">
-				{t({ locale: $localeStore, key: 'social.friends.add.sheet_title' })}
+				{t({ locale: $localeStore, key: 'arena.friends.add.sheet_title' })}
 			</h3>
 			<p class="friends-sheet-blurb">
-				{t({ locale: $localeStore, key: 'social.friends.add.sheet_blurb' })}
+				{t({ locale: $localeStore, key: 'arena.friends.add.sheet_blurb' })}
 			</p>
 			<div class="friends-add-input">
 				<span class="friends-add-prefix" aria-hidden="true">@</span>
 				<input
 					class="friends-add-field num"
-					aria-label={t({ locale: $localeStore, key: 'social.friends.add.cta' })}
+					aria-label={t({ locale: $localeStore, key: 'arena.friends.add.cta' })}
 					autocapitalize="none"
 					autocomplete="off"
 					autocorrect="off"
@@ -896,7 +896,7 @@
 							void handleAddSubmit();
 						}
 					}}
-					placeholder={t({ locale: $localeStore, key: 'social.friends.add.placeholder' })}
+					placeholder={t({ locale: $localeStore, key: 'arena.friends.add.placeholder' })}
 					spellcheck="false"
 					type="text"
 					bind:value={addInput}
@@ -905,7 +905,7 @@
 			<p class="friends-add-footnote num">
 				{t({
 					locale: $localeStore,
-					key: 'social.friends.add.invite_hint',
+					key: 'arena.friends.add.invite_hint',
 					params: { amount: bonusLabel }
 				})}
 			</p>
@@ -915,11 +915,11 @@
 				status={adding ? 'pending' : addInput.trim().length === 0 ? 'disabled' : 'enabled'}
 			>
 				{adding
-					? t({ locale: $localeStore, key: 'social.friends.add.sending' })
-					: t({ locale: $localeStore, key: 'social.friends.add.cta' })}
+					? t({ locale: $localeStore, key: 'arena.friends.add.sending' })
+					: t({ locale: $localeStore, key: 'arena.friends.add.cta' })}
 			</BaseButton>
 			<BaseButton class="friends-sheet-close" onclick={closeAddSheet}>
-				{t({ locale: $localeStore, key: 'social.friends.sheet.close' })}
+				{t({ locale: $localeStore, key: 'arena.friends.sheet.close' })}
 			</BaseButton>
 		</div>
 	</div>

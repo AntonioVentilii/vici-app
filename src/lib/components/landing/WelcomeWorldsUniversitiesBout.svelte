@@ -29,14 +29,14 @@
 
 <WelcomeShowcaseCard
 	ctaHref="#bouts"
-	ctaKey="social.wcbout_cta"
+	ctaKey="arena.wcbout_cta"
 	eyebrowColor="#B49CFF"
-	eyebrowKey="social.w_eyebrow"
+	eyebrowKey="arena.w_eyebrow"
 	rootGradient="linear-gradient(180deg, rgba(180,156,255,0.10), rgba(180,156,255,0.02) 70%, transparent)"
-	subKey="social.wcbout_sub"
+	subKey="arena.wcbout_sub"
 	subParams={{ count: total }}
-	titleAKey="social.wcbout_title_a"
-	titleBKey="social.wcbout_title_b"
+	titleAKey="arena.wcbout_title_a"
+	titleBKey="arena.wcbout_title_b"
 >
 	{#snippet badge()}
 		<span

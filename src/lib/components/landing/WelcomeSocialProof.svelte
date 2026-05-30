@@ -14,15 +14,15 @@
 <section id="leaderboard" style="background:rgba(242,236,220,0.02);" class="lp-section lp-root">
 	<div class="lp-section-inner">
 		<div style="gap:14px; max-width:680px;" class="col">
-			<span class="eyebrow acc">{t({ locale: $localeStore, key: 'social.eyebrow' })}</span>
+			<span class="eyebrow acc">{t({ locale: $localeStore, key: 'arena.eyebrow' })}</span>
 			<h2 class="lp-h2">
-				{t({ locale: $localeStore, key: 'social.title_a' })}
+				{t({ locale: $localeStore, key: 'arena.title_a' })}
 				<span class="serif-italic acc">
-					{t({ locale: $localeStore, key: 'social.title_b' })}
+					{t({ locale: $localeStore, key: 'arena.title_b' })}
 				</span>
 			</h2>
 			<p style="color:var(--fg-dim);" class="lp-lede">
-				{t({ locale: $localeStore, key: 'social.sub' })}
+				{t({ locale: $localeStore, key: 'arena.sub' })}
 			</p>
 		</div>
 

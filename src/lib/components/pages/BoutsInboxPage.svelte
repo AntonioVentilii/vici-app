@@ -79,7 +79,7 @@
 
 	interface Props {
 		// When true, hide the page's own appbar — the container is
-		// expected to render one (e.g. the tabbed Social parent).
+		// expected to render one (e.g. the tabbed Arena parent).
 		embedded?: boolean;
 	}
 
@@ -303,11 +303,11 @@
 			return;
 		}
 
-		void goto(`${resolve(AppPath.Social)}/leagues/${leagueId}`);
+		void goto(`${resolve(AppPath.Arena)}/leagues/${leagueId}`);
 	};
 
 	const goToBoutDetail = (bout: BoutDoc) => {
-		void goto(`${resolve(AppPath.Social)}/bouts/${bout.id}`);
+		void goto(`${resolve(AppPath.Arena)}/bouts/${bout.id}`);
 	};
 
 	// ─── Worlds podium helpers ──────────────────────────────────────
@@ -409,23 +409,23 @@
 	const countryOption = (id: string) => lookupWorldsAffiliation({ kind: 'country', id });
 
 	const goWorldsUniversitiesWc = () => {
-		void goto(`${resolve(AppPath.Social)}/worlds/schools`);
+		void goto(`${resolve(AppPath.Arena)}/worlds/schools`);
 	};
 
 	const goWorldsUniversitiesMonth = () => {
-		void goto(`${resolve(AppPath.Social)}/worlds/schools?scope=month`);
+		void goto(`${resolve(AppPath.Arena)}/worlds/schools?scope=month`);
 	};
 
 	const goWorldsCountriesWc = () => {
-		void goto(`${resolve(AppPath.Social)}/worlds/countries`);
+		void goto(`${resolve(AppPath.Arena)}/worlds/countries`);
 	};
 
 	const goWorldsCountriesMonth = () => {
-		void goto(`${resolve(AppPath.Social)}/worlds/countries?scope=month`);
+		void goto(`${resolve(AppPath.Arena)}/worlds/countries?scope=month`);
 	};
 
 	const goTournament = () => {
-		void goto(`${resolve(AppPath.Social)}/tournament`);
+		void goto(`${resolve(AppPath.Arena)}/tournament`);
 	};
 
 	// ─── Tournament card derivations ────────────────────────────────
@@ -559,7 +559,7 @@
 			align="left"
 			back={{
 				label: t({ locale: $localeStore, key: 'leagues.bouts_inbox.back' }),
-				onBack: () => goBack(resolve(AppPath.Social))
+				onBack: () => goBack(resolve(AppPath.Arena))
 			}}
 			title={t({ locale: $localeStore, key: 'leagues.bouts_inbox.title' })}
 		/>

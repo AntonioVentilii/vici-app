@@ -36,7 +36,7 @@
 	/**
 	 * League detail page.
 	 *
-	 * Mounts at `/social/leagues/[id]`. Renders the head card
+	 * Mounts at `/arena/leagues/[id]`. Renders the head card
 	 * (gradient logo + emblem + N° rank + inline Invite/Predict
 	 * buttons), the league-bout section (active card or
 	 * Challenge-another-league CTA), the members sticker grid, a
@@ -226,7 +226,7 @@
 
 		try {
 			await leaveLeague({ leagueId: league.id });
-			void goto(`${resolve(AppPath.Social)}/leagues`);
+			void goto(`${resolve(AppPath.Arena)}/leagues`);
 		} catch (err) {
 			console.error('LeagueDetailPage: leaveLeague failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
@@ -540,7 +540,7 @@
 	<MobileAppBar
 		back={{
 			label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
-			onBack: () => goBack(`${resolve(AppPath.Social)}/leagues`)
+			onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)
 		}}
 		right={appbarRight as Snippet}
 		title={league?.name ?? t({ locale: $localeStore, key: 'leagues.title' })}

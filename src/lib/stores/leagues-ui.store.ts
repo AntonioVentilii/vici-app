@@ -3,7 +3,7 @@ import { writable } from 'svelte/store';
 /**
  * Cross-component signal for "open the create-league modal."
  *
- * The Social appbar `+` button (in `SocialPage`, visible when the
+ * The Arena appbar `+` button (in `ArenaPage`, visible when the
  * Leagues tab is active) and the in-content "Create league" CTAs on
  * `LeaguesPage` both need to trigger the same `CreateLeagueModal`.
  * Rather than thread a callback through the props chain, both

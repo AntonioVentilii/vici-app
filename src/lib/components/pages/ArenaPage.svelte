@@ -2,35 +2,35 @@
 	import { Plus } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
+	import FriendsTab from '$lib/components/arena/FriendsTab.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import BoutsInboxPage from '$lib/components/pages/BoutsInboxPage.svelte';
 	import LeaguesPage from '$lib/components/pages/LeaguesPage.svelte';
-	import FriendsTab from '$lib/components/social/FriendsTab.svelte';
 	import { leaguesCreateIntent } from '$lib/stores/leagues-ui.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Social — the three-tab page (Friends / Leagues /
+	 * Arena — the three-tab page (Friends / Leagues /
 	 * Bouts) that anchors every cohort surface. Each tab embeds the
 	 * existing page component with `embedded={true}` so their own
 	 * appbars stay quiet; the tabbed parent renders the single
-	 * "Social" appbar above the tab strip.
+	 * "Arena" appbar above the tab strip.
 	 *
-	 * Tab state persists in localStorage under `vici.social-tab`,
-	 * so a user returning to /social lands on the tab they last
+	 * Tab state persists in localStorage under `vici.arena-tab`,
+	 * so a user returning to /arena lands on the tab they last
 	 * looked at. Legacy values (`worlds`, `global`) fall through to
 	 * the new `friends` default.
 	 */
 
-	const STORAGE_KEY = 'vici.social-tab';
+	const STORAGE_KEY = 'vici.arena-tab';
 
 	type Tab = 'friends' | 'leagues' | 'bouts';
 
 	const TAB_LABEL_KEY: Record<Tab, MessageKey> = {
-		friends: 'social.tabs.friends',
-		leagues: 'social.tabs.leagues',
-		bouts: 'social.tabs.bouts'
+		friends: 'arena.tabs.friends',
+		leagues: 'arena.tabs.leagues',
+		bouts: 'arena.tabs.bouts'
 	};
 
 	let activeTab: Tab = $state('friends');
@@ -68,7 +68,7 @@
 	const TABS: readonly Tab[] = ['friends', 'leagues', 'bouts'] as const;
 </script>
 
-{#snippet socialAppbarRight()}
+{#snippet arenaAppbarRight()}
 	{#if activeTab === 'leagues'}
 		<button
 			class="appbar-icon-btn"
@@ -81,17 +81,17 @@
 	{/if}
 {/snippet}
 
-<div class="social-page">
+<div class="arena-page">
 	<MobileAppBar
 		align="left"
-		right={socialAppbarRight}
-		title={t({ locale: $localeStore, key: 'social.title' })}
+		right={arenaAppbarRight}
+		title={t({ locale: $localeStore, key: 'arena.title' })}
 	/>
 
-	<div class="social-tabs" aria-label="Social sections" role="tablist">
+	<div class="arena-tabs" aria-label="Arena sections" role="tablist">
 		{#each TABS as tab (tab)}
 			<button
-				class="social-tab"
+				class="arena-tab"
 				class:is-active={activeTab === tab}
 				aria-selected={activeTab === tab}
 				onclick={() => (activeTab = tab)}
@@ -103,7 +103,7 @@
 		{/each}
 	</div>
 
-	<div class="social-panel" role="tabpanel">
+	<div class="arena-panel" role="tabpanel">
 		{#if activeTab === 'friends'}
 			<FriendsTab />
 		{:else if activeTab === 'leagues'}
@@ -115,7 +115,7 @@
 </div>
 
 <style lang="postcss">
-	.social-page {
+	.arena-page {
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
@@ -127,7 +127,7 @@
 	   screen edge while the tabs/content below align at 1.25rem.
 	   Pull the appbar back to the edge so its title lines up with
 	   the rest of the page. */
-	.social-page :global(.mobile-appbar) {
+	.arena-page :global(.mobile-appbar) {
 		margin-left: -1.25rem;
 		margin-right: -1.25rem;
 	}
@@ -136,7 +136,7 @@
 	   surface + border + radius; each tab flexes to share the row;
 	   the active one looks like a raised pill (bg-elevated + soft
 	   inset highlight + shadow). */
-	.social-tabs {
+	.arena-tabs {
 		display: flex;
 		gap: 4px;
 		padding: 3px;
@@ -145,7 +145,7 @@
 		border-radius: 10px;
 	}
 
-	.social-tab {
+	.arena-tab {
 		appearance: none;
 		flex: 1;
 		padding: 0.55rem 0.75rem;
@@ -163,11 +163,11 @@
 			color var(--d-state) cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
-	.social-tab:hover {
+	.arena-tab:hover {
 		color: var(--text-base);
 	}
 
-	.social-tab.is-active {
+	.arena-tab.is-active {
 		color: var(--text-base);
 		background: var(--bg-popover);
 		box-shadow:
@@ -175,12 +175,12 @@
 			0 1px 2px rgba(0, 0, 0, 0.16);
 	}
 
-	.social-tab:focus-visible {
+	.arena-tab:focus-visible {
 		outline: 2px solid color-mix(in srgb, var(--color-primary) 55%, transparent);
 		outline-offset: 2px;
 	}
 
-	.social-panel {
+	.arena-panel {
 		flex: 1;
 	}
 </style>

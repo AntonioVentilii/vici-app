@@ -10,7 +10,7 @@
 	/**
 	 * Floating "pillnav" bottom nav.
 	 *
-	 * Five tabs (Markets / Dash / Flow / Social / Profile) in a centred,
+	 * Five tabs (Markets / Dash / Flow / Arena / Profile) in a centred,
 	 * floating pill with a 3px laurel indicator that slides between
 	 * active tabs. Flow gets a permanent faint laurel halo behind its
 	 * icon and the indicator turns laurel when Flow is the active tab.
@@ -20,7 +20,7 @@
 	 *
 	 *  - Markets ← /app, /markets, /markets/*
 	 *  - Dash    ← /dash, /portfolio
-	 *  - Social  ← /social/*
+	 *  - Arena   ← /arena/*
 	 *  - Profile ← /profile, /profile/album, /settings, /wallet,
 	 *              /notifications
 	 *
@@ -46,7 +46,7 @@
 			return true;
 		}
 
-		if (path === AppPath.Social && current.startsWith('/social')) {
+		if (path === AppPath.Arena && current.startsWith('/arena')) {
 			return true;
 		}
 
@@ -204,7 +204,7 @@
 									<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8z" />
 								</svg>
 							{/if}
-						{:else if item.labelKey === 'nav.social'}
+						{:else if item.labelKey === 'nav.arena'}
 							{#if active}
 								<svg fill="currentColor" viewBox="0 0 24 24">
 									<circle cx="7" cy="10" r="3" />

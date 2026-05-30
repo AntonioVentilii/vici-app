@@ -29,7 +29,7 @@
 	 *
 	 * Activity feed and friends-only filter (extra tabs the earlier
 	 * version added) are not part of this surface — friends rankings
-	 * live on the Friends tab inside Social.
+	 * live on the Friends tab inside Arena.
 	 */
 
 	type Scope = 'week' | 'month' | 'all';

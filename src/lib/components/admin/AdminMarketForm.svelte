@@ -2,7 +2,7 @@
 	import { isNullish } from '@dfinity/utils';
 	import { onMount } from 'svelte';
 	import type { RegistryDid } from '$declarations';
-	import SocialPremiumPicker from '$lib/components/social/SocialPremiumPicker.svelte';
+	import SocialPremiumPicker from '$lib/components/arena/SocialPremiumPicker.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import {
 		DEFAULT_SOCIAL_PREMIUM_ID,

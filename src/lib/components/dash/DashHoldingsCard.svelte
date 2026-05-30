@@ -58,10 +58,10 @@
 		</div>
 		<a
 			class="dash-referral"
-			href={resolve(AppPath.Social)}
+			href={resolve(AppPath.Arena)}
 			onclick={(e) => {
 				e.preventDefault();
-				goto(resolve(AppPath.Social));
+				goto(resolve(AppPath.Arena));
 			}}
 		>
 			<div class="left">

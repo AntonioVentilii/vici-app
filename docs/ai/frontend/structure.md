@@ -48,6 +48,7 @@ src/
 top-level group:
 
 - `admin/` — admin console surfaces.
+- `arena/` — Arena surface: social-graph UI (relations, comments, discussion).
 - `artwork/` — generative visual primitives shared across features
   (e.g. `FlowArtFrame` — per-category SVG marks rendered by
   `$lib/utils/flow-art.utils.ts`). Parallel to `characters/`.
@@ -66,7 +67,6 @@ top-level group:
 - `portfolio/` — user portfolio surfaces (positions, balances).
 - `profile/` — user profile (own + public).
 - `settings/` — settings screen row primitives (`SetRow`, `SetToggle`, …).
-- `social/` — social graph (relations, comments, discussion).
 - `ui/` — app-local UI primitives — see
   [`reusability.md`](./reusability.md#ui-primitives).
 - `wallet/` — collateral / token / send-receive UI.
@@ -177,7 +177,7 @@ import type { _SERVICE as ClearingService } from '$declarations/clearing/clearin
 2. **Is it a generic UI primitive (Button, Card, Modal, Tooltip)?** → look
    in `$lib/components/ui/` first; only add a new primitive if neither it
    nor an existing component covers it.
-3. **Is it specific to a feature (market, wallet, social, admin, …)?** →
+3. **Is it specific to a feature (market, wallet, arena, admin, …)?** →
    `$lib/components/<feature>/<Name>.svelte`.
 4. **Is it a side-effectful operation?** → `*.services.ts` under
    `$lib/services/`.

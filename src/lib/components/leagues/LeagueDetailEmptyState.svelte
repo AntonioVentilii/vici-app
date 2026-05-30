@@ -9,7 +9,7 @@
 <section class="league-detail-empty">
 	<h2>{t({ locale: $localeStore, key: 'leagues.detail.not_member.title' })}</h2>
 	<p>{t({ locale: $localeStore, key: 'leagues.detail.not_member.sub' })}</p>
-	<a class="league-detail-back-link" href={`${resolve(AppPath.Social)}/leagues`}>
+	<a class="league-detail-back-link" href={`${resolve(AppPath.Arena)}/leagues`}>
 		<ArrowLeft aria-hidden="true" size={16} strokeWidth={2.2} />
 		<span>{t({ locale: $localeStore, key: 'leagues.detail.back' })}</span>
 	</a>

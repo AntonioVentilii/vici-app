@@ -690,7 +690,7 @@
 							<li>
 								<a
 									class="settings-delete-blocking-link"
-									href={resolve(`${AppPath.Social}/leagues/${blockingId}`)}
+									href={resolve(`${AppPath.Arena}/leagues/${blockingId}`)}
 								>
 									<span class="settings-delete-blocking-id">{blockingId}</span>
 									<span class="settings-delete-blocking-cta">

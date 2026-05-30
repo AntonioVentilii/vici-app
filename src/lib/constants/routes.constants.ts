@@ -24,7 +24,7 @@ export enum AppPath {
 	AdminResolutions = '/admin/resolutions',
 	Dash = '/dash',
 	Portfolio = '/portfolio',
-	Social = '/social',
+	Arena = '/arena',
 	Flow = '/flow',
 	Settings = '/settings',
 	AccountSettings = '/settings/account',
