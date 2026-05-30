@@ -578,6 +578,7 @@ export const ptMessages = {
 	'flow.back_to_markets': 'Voltar aos mercados',
 	'flow.caption': 'DESLIZAR → CONFIRMA · TOCAR PARA DETALHES · ↑ PARA PULAR',
 	'flow.companion.trickster': 'Só {pct}% discordam. Audaz.',
+	'flow.daily_goal_aria': 'Meta diária',
 	'flow.daily_streak_aria': 'Sequência diária',
 	'flow.deck.all_markets': 'TODOS OS MERCADOS',
 	'flow.empty.sub': 'A VICI está enfileirando mais mercados.',

@@ -569,6 +569,7 @@ export const enMessages = {
 	'flow.back_to_markets': 'Back to Markets',
 	'flow.caption': 'SWIPE → COMMITS · TAP FLIPS FOR DETAIL · ↑ TO SKIP',
 	'flow.companion.trickster': 'Only {pct}% disagree. Bold.',
+	'flow.daily_goal_aria': 'Daily goal',
 	'flow.daily_streak_aria': 'Daily streak',
 	'flow.deck.all_markets': 'ALL MARKETS',
 	'flow.empty.sub': 'VICI is queueing more markets.',

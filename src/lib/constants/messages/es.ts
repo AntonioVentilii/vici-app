@@ -578,6 +578,7 @@ export const esMessages = {
 	'flow.back_to_markets': 'Volver a mercados',
 	'flow.caption': 'DESLIZA → CONFIRMA · TOCA PARA DETALLES · ↑ PARA SALTAR',
 	'flow.companion.trickster': 'Solo {pct}% discrepan. Audaz.',
+	'flow.daily_goal_aria': 'Meta diaria',
 	'flow.daily_streak_aria': 'Racha diaria',
 	'flow.deck.all_markets': 'TODOS LOS MERCADOS',
 	'flow.empty.sub': 'VICI está preparando más mercados.',

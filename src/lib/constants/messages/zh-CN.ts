@@ -548,6 +548,7 @@ export const zhCnMessages = {
 	'flow.back_to_markets': '返回市场',
 	'flow.caption': '滑动 → 确认 · 点击翻转查看详情 · ↑ 跳过',
 	'flow.companion.trickster': '只有 {pct}% 不同意。够果敢。',
+	'flow.daily_goal_aria': '每日目标',
 	'flow.daily_streak_aria': '每日连胜',
 	'flow.deck.all_markets': '全部市场',
 	'flow.empty.sub': 'VICI 正在排队更多市场。',
