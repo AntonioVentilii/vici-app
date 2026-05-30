@@ -44,6 +44,7 @@ export const itMessages = {
 		'Una sfida di precisione a tempo. Scuola contro scuola, paese contro paese, più il torneo mensile. Gli scontri lega contro lega sono nelle tue leghe.',
 	'battles.intro.dismiss': 'Chiudi',
 	'battles.intro.lede': '«Cos’è uno scontro?»',
+	'battles.intro.start': 'Inizia una battaglia',
 	'battles.leagues_link.cta': 'Vai alle Leghe',
 	'battles.leagues_link.lede': '«Vuoi uno scontro di lega?»',
 	'battles.leagues_link.sub': 'Sfida un’altra lega dalla pagina della tua lega.',

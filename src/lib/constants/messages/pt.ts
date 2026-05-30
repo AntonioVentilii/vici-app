@@ -44,6 +44,7 @@ export const ptMessages = {
 		'Um duelo de precisão cronometrado. Escola contra escola, país contra país, mais o torneio mensal. Os duelos liga contra liga ficam nas suas ligas.',
 	'battles.intro.dismiss': 'Dispensar',
 	'battles.intro.lede': '“O que é um duelo?”',
+	'battles.intro.start': 'Iniciar uma batalha',
 	'battles.leagues_link.cta': 'Ir para Ligas',
 	'battles.leagues_link.lede': '“Quer um duelo de liga?”',
 	'battles.leagues_link.sub': 'Desafie outra liga pela página da sua liga.',
