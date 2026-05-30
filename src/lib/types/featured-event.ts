@@ -66,6 +66,11 @@ export interface FeaturedEvent {
 	 *  "FIFA World Cup 2026" (event name first, year last). Rendered
 	 *  uppercase by the eyebrow. Falls back to `title` when omitted. */
 	badgeTitle?: string;
+	/** Brand-forward title for high-intent reward surfaces (e.g. the
+	 *  onboarding starter-pack line), e.g. "FIFA World Cup" — the full
+	 *  brand without the year. Falls back to `shortTitle` then `title`
+	 *  when omitted. */
+	brandedTitle?: string;
 	/** Optional subtitle. Same i18n fallback rule as `title`. */
 	subtitle?: string;
 

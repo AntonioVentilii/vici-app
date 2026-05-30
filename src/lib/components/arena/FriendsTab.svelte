@@ -926,13 +926,16 @@
 {/if}
 
 <style lang="postcss">
+	/* Horizontal inset is owned by the Arena page wrapper (its only
+	   mount point); adding our own would double it and push the tab
+	   content in past the tab strip above. Keep only vertical padding. */
 	.friends-tab {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
 		max-width: 40rem;
 		margin: 0 auto;
-		padding: 0.85rem 1rem 5rem;
+		padding: 0.85rem 0 5rem;
 	}
 
 	/* ── Invite hero ────────────────────────────────────────── */

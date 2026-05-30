@@ -256,7 +256,7 @@
 	};
 </script>
 
-<div class="leagues-page pb-24">
+<div class="leagues-page pb-24" class:embedded>
 	{#if !embedded}
 		<MobileAppBar align="left" title={t({ locale: $localeStore, key: 'leagues.title' })} />
 	{/if}
@@ -378,6 +378,14 @@
 		flex-direction: column;
 		gap: 0.75rem;
 		padding: 0.25rem 1.25rem 1.5rem;
+	}
+
+	/* Embedded in the Arena tab panel, the horizontal inset is already
+	   supplied by the Arena page wrapper; drop ours so the content
+	   aligns with the tab strip instead of sitting doubly indented. */
+	.leagues-page.embedded {
+		padding-left: 0;
+		padding-right: 0;
 	}
 
 	.leagues-section {
