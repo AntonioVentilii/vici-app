@@ -12,6 +12,7 @@
 	import MarketDetailProbHero from '$lib/components/market/MarketDetailProbHero.svelte';
 	import MarketDetailResolutionCard from '$lib/components/market/MarketDetailResolutionCard.svelte';
 	import MarketDetailShareButton from '$lib/components/market/MarketDetailShareButton.svelte';
+	import MarketDetailSkeleton from '$lib/components/market/MarketDetailSkeleton.svelte';
 	import MarketDetailStatsGrid from '$lib/components/market/MarketDetailStatsGrid.svelte';
 	import MarketDetailTopPredictors from '$lib/components/market/MarketDetailTopPredictors.svelte';
 	import MarketMetadataForm from '$lib/components/market/MarketMetadataForm.svelte';
@@ -222,7 +223,8 @@
 	});
 
 	const handlePick = (side: 'YES' | 'NO') => {
-		if (isResolved) {
+		// Only an open market accepts calls — expired/resolved short-circuit.
+		if (!isLive) {
 			return;
 		}
 
@@ -250,11 +252,7 @@
 
 <div class="market-detail-screen">
 	{#if loading}
-		<div class="flex h-96 items-center justify-center">
-			<div
-				class="border-primary h-12 w-12 animate-spin rounded-full border-4 border-t-transparent"
-			></div>
-		</div>
+		<MarketDetailSkeleton />
 	{:else if market}
 		{@const m = market}
 		{#snippet detailRight()}
@@ -325,8 +323,12 @@
 			</section>
 		{/if}
 
-		{#if !isResolved}
-			<MarketDetailCtaBar disabled={isResolved} {noPercent} onPick={handlePick} {yesPercent} />
+		<!-- CTA bar is only meaningful while the market is taking calls.
+		     Expired (closed, awaiting resolution) and Resolved markets both
+		     suppress it so the YES/NO actions can't be tapped against a
+		     market that no longer accepts predictions. -->
+		{#if isLive}
+			<MarketDetailCtaBar {noPercent} onPick={handlePick} {yesPercent} />
 		{/if}
 
 		{#if nonNullish(selectedSide)}
