@@ -1970,6 +1970,13 @@ export const enMessages = {
 	'worlds.picker.kind_university': 'University',
 	'worlds.picker.lock_hint':
 		"Adds you to that group's leaderboard. Switch later — once per 90 days.",
+	'worlds.picker.near_you': 'Near you · {count} schools',
+	'worlds.picker.region.all': 'All',
+	'worlds.picker.region.as': 'Asia',
+	'worlds.picker.region.au': 'AU·NZ',
+	'worlds.picker.region.eu': 'Europe',
+	'worlds.picker.region.na': 'North America',
+	'worlds.picker.region.uk': 'UK',
 	'worlds.picker.search_country': 'Search {count} countries…',
 	'worlds.picker.search_university': 'Search {count} universities…',
 	'worlds.picker.title_country': 'Pick your country',
