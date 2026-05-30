@@ -13,13 +13,21 @@
 	 * FlowTopBar — sticky header for Flow Mode.
 	 *
 	 * Layout: VICI wordmark + category deck badge ("WORLD CUP" /
-	 * "N CATS") + bolt streak chip on the left, bell on the right. A
-	 * secondary row carries `idx / total` + `+xp VXP this session`
-	 * and a thin progress bar. Tapping the wordmark exits Flow.
+	 * "N CATS") + a daily-goal bolt chip on the left, streak flame +
+	 * bell on the right. A secondary row carries `idx / total` + `+xp
+	 * VXP this session` and a thin progress bar. Tapping the wordmark
+	 * exits Flow.
+	 *
+	 * The bolt chip tracks the day-long goal (`dailyGoalDone` /
+	 * `dailyGoalTarget`) — deliberately a different number from the
+	 * session progress on the row below, which counts `betsCount /
+	 * maxBets`.
 	 */
 	interface Props {
 		maxBets: number;
 		betsCount: number;
+		dailyGoalDone: number;
+		dailyGoalTarget: number;
 		dailyStreak: number;
 		flameStage: FlameStage;
 		xp: number;
@@ -27,8 +35,17 @@
 		onExit: () => void;
 	}
 
-	const { maxBets, betsCount, dailyStreak, flameStage, xp, categoryLabel, onExit }: Props =
-		$props();
+	const {
+		maxBets,
+		betsCount,
+		dailyGoalDone,
+		dailyGoalTarget,
+		dailyStreak,
+		flameStage,
+		xp,
+		categoryLabel,
+		onExit
+	}: Props = $props();
 
 	const progressPct = $derived(maxBets > 0 ? Math.min(100, (betsCount / maxBets) * 100) : 0);
 
@@ -54,23 +71,23 @@
 			</button>
 			<button class="flow-deck-badge" onclick={openSettings} title={categoryLabel} type="button">
 				<span class="flow-deck-dot" aria-hidden="true"></span>
-				<span class="flow-deck-label allcaps">{categoryLabel}</span>
+				<span class="flow-deck-label">{categoryLabel}</span>
 			</button>
 			<span
 				class="flow-streak-chip"
-				aria-label={t({ locale: $localeStore, key: 'flow.daily_streak_aria' })}
+				aria-label={t({ locale: $localeStore, key: 'flow.daily_goal_aria' })}
 			>
 				<svg
 					class="flow-streak-bolt"
 					aria-hidden="true"
 					fill="currentColor"
-					height="11"
+					height="12"
 					viewBox="0 0 24 24"
-					width="11"
+					width="12"
 				>
 					<path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" />
 				</svg>
-				<span class="num">{betsCount}/{maxBets}</span>
+				<span class="num">{dailyGoalDone}/{dailyGoalTarget}</span>
 			</span>
 		</div>
 
@@ -85,7 +102,7 @@
 				class="flow-flame-chip"
 				aria-label={t({ locale: $localeStore, key: 'flow.daily_streak_aria' })}
 			>
-				<StreakFlame count={dailyStreak} size={14} stage={flameStage} />
+				<StreakFlame count={dailyStreak} size={16} stage={flameStage} />
 				<span class="num flow-flame-count">{dailyStreak}</span>
 			</span>
 			<button
@@ -188,7 +205,7 @@
 
 	.flow-wordmark {
 		font-family: var(--font-display);
-		font-size: 14px;
+		font-size: 11px;
 		font-weight: 700;
 		letter-spacing: 0.18em;
 		color: var(--color-primary);
@@ -197,46 +214,52 @@
 		background: transparent;
 	}
 
+	/* Category deck badge — laurel-tinted pill that reads as the
+	   featured arc ("WORLD CUP"). Gold fill + glowing dot mark it as
+	   the live, branded surface rather than a neutral chip. */
 	.flow-deck-badge {
 		display: inline-flex;
 		align-items: center;
 		gap: 5px;
-		padding: 4px 8px;
+		padding: 3px 8px 3px 7px;
 		border-radius: var(--r-pill);
-		background: var(--bg-surface);
-		color: var(--text-muted);
-		font-size: 10.5px;
+		background: rgba(226, 184, 66, 0.1);
+		color: var(--color-accent);
+		font-family: var(--font-mono);
+		font-size: 9px;
 		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
-		border: 1px solid var(--border-base);
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		border: 1px solid rgba(226, 184, 66, 0.3);
 		transition:
-			color 160ms ease,
-			background-color 160ms ease;
+			background-color 180ms ease,
+			border-color 180ms ease;
 	}
 	.flow-deck-badge:hover {
-		color: var(--text-base);
-		background: var(--bg-popover);
+		background: rgba(226, 184, 66, 0.18);
+		border-color: rgba(226, 184, 66, 0.45);
 	}
 
 	.flow-deck-dot {
-		width: 6px;
-		height: 6px;
+		width: 5px;
+		height: 5px;
 		border-radius: var(--r-pill);
-		background: var(--yes);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--yes) 22%, transparent);
-		animation: flow-topbar-pulse 1.8s ease-in-out infinite;
+		background: var(--color-accent);
+		box-shadow: 0 0 6px rgba(226, 184, 66, 0.5);
 	}
 
+	/* Daily-goal bolt chip — parchment-tinted KPI pill. Tracks the
+	   day-long goal, not the session counter on the row below. */
 	.flow-streak-chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 3px;
-		padding: 3px 8px;
+		gap: 4px;
+		padding: 4px 8px;
 		border-radius: var(--r-pill);
-		background: var(--bg-surface);
+		background: color-mix(in srgb, var(--text-base) 5%, transparent);
 		color: var(--color-primary);
 		font-size: var(--t-11);
-		font-weight: 700;
+		font-weight: 600;
 		border: 1px solid var(--border-base);
 	}
 
@@ -247,17 +270,17 @@
 	.flow-flame-chip {
 		display: inline-flex;
 		align-items: center;
-		gap: 5px;
-		padding: 3px 9px 3px 5px;
+		gap: 4px;
+		padding: 4px 9px 4px 6px;
 		border-radius: var(--r-pill);
-		background: var(--bg-surface);
+		background: color-mix(in srgb, var(--text-base) 5%, transparent);
 		color: var(--text-muted);
 		border: 1px solid var(--border-base);
 	}
 
 	.flow-flame-count {
-		font-size: var(--t-10);
-		font-weight: 700;
+		font-size: var(--t-12);
+		font-weight: 600;
 		color: var(--color-primary);
 	}
 
@@ -344,18 +367,7 @@
 		transition: width var(--d-enter) cubic-bezier(0.22, 1, 0.36, 1);
 	}
 
-	@keyframes flow-topbar-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.55;
-		}
-	}
-
 	@media (prefers-reduced-motion: reduce) {
-		.flow-deck-dot,
 		.flow-progress-fill {
 			animation: none;
 			transition: none;
