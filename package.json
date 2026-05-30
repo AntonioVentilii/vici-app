@@ -56,10 +56,10 @@
 		"eslint-plugin-svelte": "^3.12.1",
 		"globals": "^17.3.0",
 		"playwright": "^1.59.1",
-		"postcss": "^8.5.13",
+		"postcss": "^8.5.15",
 		"prettier": "^3.8.2",
 		"prettier-plugin-organize-imports": "^4.3.0",
-		"prettier-plugin-svelte": "^3.5.1",
+		"prettier-plugin-svelte": "^4.0.1",
 		"prettier-plugin-tailwindcss": "^0.8.0",
 		"svelte": "^5.55.7",
 		"svelte-check": "^4.4.6",
@@ -83,6 +83,6 @@
 	},
 	"overrides": {
 		"cookie": "^0.7.0",
-		"ws": "^8.20.1"
+		"ws": "^8.21.0"
 	}
 }
