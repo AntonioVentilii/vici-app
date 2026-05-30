@@ -126,6 +126,12 @@ These are brand-set strings — keep them word-for-word and don't
 - `Fresh start.` — streak-break banner (paired with the ended stage).
 - `Bold.` — Trickster opener when going against the crowd.
 
+**Affiliation slot labels** (`profile.dashboard.affiliations.*`) — personal,
+possessive framing rather than dry category nouns: **Alma Mater** (university —
+the Latin-sparingly principle in action; kept Latin across locales), **Citizen**
+(country), **Residence** (city), **Workplace** (company). The picker still uses
+the plain category nouns (`worlds.picker.*`: "University", "Country").
+
 ---
 
 ## 3. Logo
