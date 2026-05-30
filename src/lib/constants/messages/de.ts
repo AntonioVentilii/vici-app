@@ -925,6 +925,8 @@ export const deMessages = {
 	'leagues.role.admin': 'Admin',
 	'leagues.role.member': 'Mitglied',
 	'leagues.role.owner': 'Inhaber',
+	'leagues.share_text':
+		'Tritt meiner Liga {name} auf VICI bei — vorhersagen, wetteifern, in der Tabelle aufsteigen.',
 	'leagues.title': 'Ligen',
 	'leagues.transfer.cta': 'Inhaberschaft übertragen',
 	'leagues.transfer.empty':
