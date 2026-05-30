@@ -11,7 +11,7 @@ import type { Principal } from '@icp-sdk/core/principal';
  *  - `referral`      — referrer is credited on a referee's onboarding
  *                      completion. Capped per calendar month.
  *  - `worlds_podium` — recipient's school finished top-3 in the monthly
- *                      bout. Awarded at month rollover.
+ *                      battle. Awarded at month rollover.
  *
  * See `docs/economy.md` for the full spec.
  */

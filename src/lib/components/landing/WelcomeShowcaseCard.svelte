@@ -1,7 +1,7 @@
 <script lang="ts">
 	/**
 	 * Shared frame for the three landing "social proof" showcase cards
-	 * (Leagues, Bout, Worlds Universities). Reproduces the common shell
+	 * (Leagues, Battle, Worlds Universities). Reproduces the common shell
 	 * 1-to-1: elevated card with an accent gradient wash, an eyebrow row
 	 * with an optional trailing badge, an `lp-h3` title with a
 	 * serif-italic accent tail, a muted sub-line, the caller-supplied

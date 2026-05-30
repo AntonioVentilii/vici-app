@@ -1,12 +1,12 @@
 <script lang="ts">
 	import Modal from '$lib/components/ui/Modal.svelte';
-	import { resolveBout } from '$lib/services/leagues.services';
+	import { resolveBattle } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { BoutDoc } from '$lib/types/bout';
+	import type { BattleDoc } from '$lib/types/battle';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * resolve-bout modal.
+	 * resolve-battle modal.
 	 *
 	 * Both sides' scores are entered manually. Winner is derived from
 	 * the arithmetic and previewed in real time so the user sees the
@@ -19,13 +19,13 @@
 	 */
 	interface Props {
 		isOpen: boolean;
-		bout: BoutDoc | null;
+		battle: BattleDoc | null;
 		ourLeagueId: string;
 		onClose: () => void;
-		onResolved: (bout: BoutDoc) => void;
+		onResolved: (battle: BattleDoc) => void;
 	}
 
-	const { isOpen, bout, ourLeagueId, onClose, onResolved }: Props = $props();
+	const { isOpen, battle, ourLeagueId, onClose, onResolved }: Props = $props();
 
 	let scoreA = $state('');
 	let scoreB = $state('');
@@ -42,30 +42,30 @@
 			parsedA >= 0 &&
 			parsedB >= 0
 	);
-	const canSubmit = $derived(!submitting && bout !== null && inputsValid);
+	const canSubmit = $derived(!submitting && battle !== null && inputsValid);
 
 	// Winner preview. Returns one of three i18n keys for the live
 	// outcome banner. `null` when inputs aren't both numbers yet.
 	const winnerKey: MessageKey | null = $derived.by(() => {
-		if (!bout || !inputsValid) {
+		if (!battle || !inputsValid) {
 			return null;
 		}
 
-		// "Us" perspective — the bout's `sideA` is "us" if our league
+		// "Us" perspective — the battle's `sideA` is "us" if our league
 		// is sideA, otherwise "them".
-		const usIsSideA = bout.sideA === ourLeagueId;
+		const usIsSideA = battle.sideA === ourLeagueId;
 		const usScore = usIsSideA ? parsedA : parsedB;
 		const themScore = usIsSideA ? parsedB : parsedA;
 
 		if (usScore > themScore) {
-			return 'leagues.bout.resolve.preview_us';
+			return 'leagues.battle.resolve.preview_us';
 		}
 
 		if (usScore < themScore) {
-			return 'leagues.bout.resolve.preview_them';
+			return 'leagues.battle.resolve.preview_them';
 		}
 
-		return 'leagues.bout.resolve.preview_draw';
+		return 'leagues.battle.resolve.preview_draw';
 	});
 
 	const reset = () => {
@@ -83,7 +83,7 @@
 	const handleSubmit = async (event: Event) => {
 		event.preventDefault();
 
-		if (!canSubmit || !bout) {
+		if (!canSubmit || !battle) {
 			return;
 		}
 
@@ -91,15 +91,15 @@
 		submitError = null;
 
 		try {
-			const resolved = await resolveBout({
-				bout,
+			const resolved = await resolveBattle({
+				battle,
 				scoreA: parsedA,
 				scoreB: parsedB
 			});
 			onResolved(resolved);
 			reset();
 		} catch (err) {
-			console.error('ResolveBoutModal: resolveBout failed', err);
+			console.error('ResolveBattleModal: resolveBattle failed', err);
 			submitError = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
 			submitting = false;
@@ -110,18 +110,18 @@
 <Modal {isOpen} onClose={handleClose}>
 	<form class="resolve-form" onsubmit={handleSubmit}>
 		<header class="resolve-form-head">
-			<h2>{t({ locale: $localeStore, key: 'leagues.bout.resolve.title' })}</h2>
-			<p>{t({ locale: $localeStore, key: 'leagues.bout.resolve.sub' })}</p>
+			<h2>{t({ locale: $localeStore, key: 'leagues.battle.resolve.title' })}</h2>
+			<p>{t({ locale: $localeStore, key: 'leagues.battle.resolve.sub' })}</p>
 		</header>
 
-		{#if bout}
+		{#if battle}
 			<div class="resolve-scores">
 				<label class="resolve-score">
 					<span class="resolve-score-label allcaps">
-						{#if bout.sideA === ourLeagueId}
-							{t({ locale: $localeStore, key: 'leagues.bout.resolve.label_us' })}
+						{#if battle.sideA === ourLeagueId}
+							{t({ locale: $localeStore, key: 'leagues.battle.resolve.label_us' })}
 						{:else}
-							{t({ locale: $localeStore, key: 'leagues.bout.resolve.label_them' })}
+							{t({ locale: $localeStore, key: 'leagues.battle.resolve.label_them' })}
 						{/if}
 					</span>
 					<input
@@ -137,10 +137,10 @@
 				<span class="resolve-divider" aria-hidden="true">–</span>
 				<label class="resolve-score">
 					<span class="resolve-score-label allcaps">
-						{#if bout.sideB === ourLeagueId}
-							{t({ locale: $localeStore, key: 'leagues.bout.resolve.label_us' })}
+						{#if battle.sideB === ourLeagueId}
+							{t({ locale: $localeStore, key: 'leagues.battle.resolve.label_us' })}
 						{:else}
-							{t({ locale: $localeStore, key: 'leagues.bout.resolve.label_them' })}
+							{t({ locale: $localeStore, key: 'leagues.battle.resolve.label_them' })}
 						{/if}
 					</span>
 					<input
@@ -168,12 +168,12 @@
 
 		<div class="resolve-form-actions">
 			<button class="resolve-btn is-ghost" onclick={handleClose} type="button">
-				{t({ locale: $localeStore, key: 'leagues.bout.resolve.cancel' })}
+				{t({ locale: $localeStore, key: 'leagues.battle.resolve.cancel' })}
 			</button>
 			<button class="resolve-btn is-primary" disabled={!canSubmit} type="submit">
 				{t({
 					locale: $localeStore,
-					key: submitting ? 'leagues.bout.resolve.submitting' : 'leagues.bout.resolve.cta'
+					key: submitting ? 'leagues.battle.resolve.submitting' : 'leagues.battle.resolve.cta'
 				})}
 			</button>
 		</div>

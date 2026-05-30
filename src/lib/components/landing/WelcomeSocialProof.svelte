@@ -1,12 +1,12 @@
 <script lang="ts">
 	/**
 	 * Section eyebrow + h2 + lede + 3-panel grid (LeagueShowcase +
-	 * BoutShowcase + WorldsUniversitiesBout). Auto-fit
+	 * BattleShowcase + WorldsUniversitiesBattle). Auto-fit
 	 * `minmax(280px, 1fr)` stacks the panels on narrow viewports.
 	 */
-	import WelcomeBoutShowcase from '$lib/components/landing/WelcomeBoutShowcase.svelte';
+	import WelcomeBattleShowcase from '$lib/components/landing/WelcomeBattleShowcase.svelte';
 	import WelcomeLeagueShowcase from '$lib/components/landing/WelcomeLeagueShowcase.svelte';
-	import WelcomeWorldsUniversitiesBout from '$lib/components/landing/WelcomeWorldsUniversitiesBout.svelte';
+	import WelcomeWorldsUniversitiesBattle from '$lib/components/landing/WelcomeWorldsUniversitiesBattle.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 </script>
@@ -36,8 +36,8 @@
 			"
 		>
 			<WelcomeLeagueShowcase />
-			<WelcomeBoutShowcase />
-			<WelcomeWorldsUniversitiesBout />
+			<WelcomeBattleShowcase />
+			<WelcomeWorldsUniversitiesBattle />
 		</div>
 	</div>
 </section>

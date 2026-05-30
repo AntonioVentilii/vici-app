@@ -24,7 +24,7 @@
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
-	 * Tournament detail — the `TournamentBoutDetail` surface.
+	 * Tournament detail — the `TournamentBattleDetail` surface.
 	 *
 	 * Fires `triggerTournamentDraw` for the current month on mount as
 	 * a fire-and-forget (idempotent via the satellite's doc-key

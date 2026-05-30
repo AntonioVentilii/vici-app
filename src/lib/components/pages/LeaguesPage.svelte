@@ -12,7 +12,7 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
-		listLeagueBouts,
+		listLeagueBattles,
 		listMyLeagues,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
@@ -21,7 +21,7 @@
 	import { leaguesCreateIntent } from '$lib/stores/leagues-ui.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
-	import type { BoutState } from '$lib/types/bout';
+	import type { BattleState } from '$lib/types/battle';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
@@ -34,7 +34,7 @@
 	 * + role chip, a member-count meta line, optional friend-overlap
 	 * row when any of the viewer's friends are in the league, an
 	 * optional latest-activity line derived from the league's most
-	 * recent bout, and an inline copy-invite pill.
+	 * recent battle, and an inline copy-invite pill.
 	 *
 	 * The Create + Join entries live as trailing CTA cards (and a
 	 * compact appbar `+` from the Arena shell) — never as a
@@ -52,7 +52,7 @@
 	interface LeagueRow extends LeagueWithRole {
 		memberCount: number;
 		members: string[];
-		latestBout: { state: BoutState; opponentId: string } | undefined;
+		latestBattle: { state: BattleState; opponentId: string } | undefined;
 	}
 
 	let rows = $state<LeagueRow[]>([]);
@@ -63,7 +63,7 @@
 	let selfPrincipal = $state<string | undefined>(undefined);
 
 	/**
-	 * Build the per-league rows. Each league's member list + bouts
+	 * Build the per-league rows. Each league's member list + battles
 	 * are fetched in parallel; failures fall back to an empty roster
 	 * + no activity so a single flaky league doesn't tank the list.
 	 */
@@ -75,33 +75,33 @@
 		const fetched = await Promise.all(
 			memberships.map(async (m) => {
 				try {
-					const [memberRes, boutList] = await Promise.all([
+					const [memberRes, battleList] = await Promise.all([
 						functions.listLeagueMembers({ leagueId: m.league.id }),
-						listLeagueBouts({ leagueId: m.league.id })
+						listLeagueBattles({ leagueId: m.league.id })
 					]);
 
 					const members = memberRes.items.map((row) => row.member);
-					// Pick the most recently-touched bout we can identify.
-					// Bout docs don't carry a timestamp on the wire schema
+					// Pick the most recently-touched battle we can identify.
+					// Battle docs don't carry a timestamp on the wire schema
 					// today; we sort by `kickoffMs` ascending (so newest
 					// upcoming kickoff is last) and take the trailing
-					// non-resolved entry. Bouts are typically a small list
+					// non-resolved entry. Battles are typically a small list
 					// per league so the cost is irrelevant.
-					const sorted = [...boutList].sort((a, b) => a.kickoffMs - b.kickoffMs);
-					const activeBout = sorted.find((b) => b.state !== 'resolved') ?? sorted.at(-1);
-					const opponentId = activeBout
-						? activeBout.sideA === m.league.id
-							? activeBout.sideB
-							: activeBout.sideA
+					const sorted = [...battleList].sort((a, b) => a.kickoffMs - b.kickoffMs);
+					const activeBattle = sorted.find((b) => b.state !== 'resolved') ?? sorted.at(-1);
+					const opponentId = activeBattle
+						? activeBattle.sideA === m.league.id
+							? activeBattle.sideB
+							: activeBattle.sideA
 						: undefined;
-					const latestBout =
-						activeBout && opponentId ? { state: activeBout.state, opponentId } : undefined;
+					const latestBattle =
+						activeBattle && opponentId ? { state: activeBattle.state, opponentId } : undefined;
 
 					return {
 						...m,
 						memberCount: members.length,
 						members,
-						latestBout
+						latestBattle
 					} satisfies LeagueRow;
 				} catch (err) {
 					console.warn('LeaguesPage: hydrate failed for league', m.league.id, err);
@@ -110,7 +110,7 @@
 						...m,
 						memberCount: 0,
 						members: [],
-						latestBout: undefined
+						latestBattle: undefined
 					} satisfies LeagueRow;
 				}
 			})
@@ -203,34 +203,34 @@
 	};
 
 	/**
-	 * Translate the latest bout into a short "activity preview"
-	 * line ("Live bout vs {opponent}", "Proposed bout vs
-	 * {opponent}", …). Returns undefined when no bout exists.
+	 * Translate the latest battle into a short "activity preview"
+	 * line ("Live battle vs {opponent}", "Proposed battle vs
+	 * {opponent}", …). Returns undefined when no battle exists.
 	 *
 	 * Opponent is resolved against the other leagues the caller
 	 * is in first (cheap, no network); leagues outside the caller's
 	 * membership fall through to a truncated id.
 	 */
 	const activityPreviewFor = (row: LeagueRow): string | undefined => {
-		if (!row.latestBout) {
+		if (!row.latestBattle) {
 			return;
 		}
 
-		const opponent = rows.find((r) => r.league.id === row.latestBout?.opponentId);
-		const opponentName = opponent?.league.name ?? `${row.latestBout.opponentId.slice(0, 8)}…`;
-		const stateLabel = STATE_LABELS[row.latestBout.state];
+		const opponent = rows.find((r) => r.league.id === row.latestBattle?.opponentId);
+		const opponentName = opponent?.league.name ?? `${row.latestBattle.opponentId.slice(0, 8)}…`;
+		const stateLabel = STATE_LABELS[row.latestBattle.state];
 
 		return t({
 			locale: $localeStore,
-			key: 'leagues.card.latest_bout',
+			key: 'leagues.card.latest_battle',
 			params: { state: stateLabel, opponent: opponentName }
 		});
 	};
 
-	// Map of bout state → short display label. These mirror the
-	// strings already shipped under `leagues.bout.state.*` but with
+	// Map of battle state → short display label. These mirror the
+	// strings already shipped under `leagues.battle.state.*` but with
 	// a sentence-case + trimmed form suited to inline copy.
-	const STATE_LABELS: Record<BoutState, string> = {
+	const STATE_LABELS: Record<BattleState, string> = {
 		proposed: 'Proposed',
 		accepted: 'Accepted',
 		in_flight: 'Live',

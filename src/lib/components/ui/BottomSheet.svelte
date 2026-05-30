@@ -8,7 +8,7 @@
 	/**
 	 * Bottom-sheet primitive — full-width sheet docked at the bottom of
 	 * the viewport with a grip handle, blurred backdrop, and safe-area
-	 * inset. Used by the leagues / worlds / bouts surfaces in place of
+	 * inset. Used by the leagues / worlds / battles surfaces in place of
 	 * the centred {@link Modal} when a sheet treatment fits better.
 	 *
 	 * The component manages chrome only (scrim, grip, close affordance

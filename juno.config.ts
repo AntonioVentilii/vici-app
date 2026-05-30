@@ -25,7 +25,7 @@ enum JunoDatastoreCollection {
 	REFERRALS = 'referrals',
 	LEAGUES = 'leagues',
 	LEAGUE_MEMBERS = 'league_members',
-	BOUTS = 'bouts',
+	BATTLES = 'battles',
 	AFFILIATIONS = 'affiliations',
 	AFFILIATION_STATS = 'affiliation_stats',
 	EXIT_SIGNALS = 'exit_signals',
@@ -161,7 +161,7 @@ export default defineConfig(({ mode }) => ({
 					write: 'public'
 				},
 				{
-					collection: JunoDatastoreCollection.BOUTS,
+					collection: JunoDatastoreCollection.BATTLES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'

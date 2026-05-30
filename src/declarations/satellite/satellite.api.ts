@@ -450,8 +450,8 @@ const listLeaderboard = async (): Promise<j.infer<typeof AppListLeaderboardResul
 	return AppListLeaderboardResultSchema.parse(result);
 };
 
-const AppListLeagueBoutsArgsSchema = j.strictObject({ leagueId: j.string() });
-const AppListLeagueBoutsResultSchema = j.strictObject({
+const AppListLeagueBattlesArgsSchema = j.strictObject({ leagueId: j.string() });
+const AppListLeagueBattlesResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
 			id: j.string(),
@@ -469,20 +469,22 @@ const AppListLeagueBoutsResultSchema = j.strictObject({
 	)
 });
 
-const listLeagueBouts = async (
-	args: j.infer<typeof AppListLeagueBoutsArgsSchema>
-): Promise<j.infer<typeof AppListLeagueBoutsResultSchema>> => {
-	const parsedArgs = AppListLeagueBoutsArgsSchema.parse(args);
+const listLeagueBattles = async (
+	args: j.infer<typeof AppListLeagueBattlesArgsSchema>
+): Promise<j.infer<typeof AppListLeagueBattlesResultSchema>> => {
+	const parsedArgs = AppListLeagueBattlesArgsSchema.parse(args);
 	const idlArgs = schemaToIdl({
-		schema: AppListLeagueBoutsArgsSchema,
+		schema: AppListLeagueBattlesArgsSchema,
 		value: parsedArgs
-	}) as Parameters<SatelliteActor['app_list_league_bouts']>[0];
+	}) as Parameters<SatelliteActor['app_list_league_battles']>[0];
 
-	const { app_list_league_bouts } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
-	const idlResult = await app_list_league_bouts(idlArgs);
+	const { app_list_league_battles } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_league_battles(idlArgs);
 
-	const result = schemaFromIdl({ schema: AppListLeagueBoutsResultSchema, value: idlResult });
-	return AppListLeagueBoutsResultSchema.parse(result);
+	const result = schemaFromIdl({ schema: AppListLeagueBattlesResultSchema, value: idlResult });
+	return AppListLeagueBattlesResultSchema.parse(result);
 };
 
 const AppListLeagueMembersArgsSchema = j.strictObject({ leagueId: j.string() });
@@ -579,21 +581,7 @@ const listMyAffiliations = async (): Promise<j.infer<typeof AppListMyAffiliation
 	return AppListMyAffiliationsResultSchema.parse(result);
 };
 
-const AppListMyBlockingLeaguesResultSchema = j.strictObject({ leagueIds: j.array(j.string()) });
-
-const listMyBlockingLeagues = async (): Promise<
-	j.infer<typeof AppListMyBlockingLeaguesResultSchema>
-> => {
-	const { app_list_my_blocking_leagues } = await getSatelliteExtendedActor<SatelliteActor>({
-		idlFactory
-	});
-	const idlResult = await app_list_my_blocking_leagues();
-
-	const result = schemaFromIdl({ schema: AppListMyBlockingLeaguesResultSchema, value: idlResult });
-	return AppListMyBlockingLeaguesResultSchema.parse(result);
-};
-
-const AppListMyBoutsResultSchema = j.strictObject({
+const AppListMyBattlesResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
 			id: j.string(),
@@ -611,12 +599,26 @@ const AppListMyBoutsResultSchema = j.strictObject({
 	)
 });
 
-const listMyBouts = async (): Promise<j.infer<typeof AppListMyBoutsResultSchema>> => {
-	const { app_list_my_bouts } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
-	const idlResult = await app_list_my_bouts();
+const listMyBattles = async (): Promise<j.infer<typeof AppListMyBattlesResultSchema>> => {
+	const { app_list_my_battles } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_list_my_battles();
 
-	const result = schemaFromIdl({ schema: AppListMyBoutsResultSchema, value: idlResult });
-	return AppListMyBoutsResultSchema.parse(result);
+	const result = schemaFromIdl({ schema: AppListMyBattlesResultSchema, value: idlResult });
+	return AppListMyBattlesResultSchema.parse(result);
+};
+
+const AppListMyBlockingLeaguesResultSchema = j.strictObject({ leagueIds: j.array(j.string()) });
+
+const listMyBlockingLeagues = async (): Promise<
+	j.infer<typeof AppListMyBlockingLeaguesResultSchema>
+> => {
+	const { app_list_my_blocking_leagues } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_my_blocking_leagues();
+
+	const result = schemaFromIdl({ schema: AppListMyBlockingLeaguesResultSchema, value: idlResult });
+	return AppListMyBlockingLeaguesResultSchema.parse(result);
 };
 
 const AppListMyLeaguesResultSchema = j.strictObject({
@@ -1271,12 +1273,12 @@ export const functions = {
 	listFriendRequests,
 	listFriends,
 	listLeaderboard,
-	listLeagueBouts,
+	listLeagueBattles,
 	listLeagueMembers,
 	listMarketTranslations,
 	listMyAffiliations,
+	listMyBattles,
 	listMyBlockingLeagues,
-	listMyBouts,
 	listMyLeagues,
 	listMyReferrals,
 	listSentFriendRequests,

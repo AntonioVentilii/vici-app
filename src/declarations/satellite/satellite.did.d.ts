@@ -333,10 +333,10 @@ export interface AppListLeaderboardResult {
 		accuracy: number;
 	}>;
 }
-export interface AppListLeagueBoutsArgs {
+export interface AppListLeagueBattlesArgs {
 	league_id: string;
 }
-export interface AppListLeagueBoutsResult {
+export interface AppListLeagueBattlesResult {
 	items: Array<{
 		id: string;
 		kind: { duel: null } | { league: null };
@@ -400,10 +400,7 @@ export interface AppListMyAffiliationsResult {
 				}
 		  ];
 }
-export interface AppListMyBlockingLeaguesResult {
-	league_ids: Array<string>;
-}
-export interface AppListMyBoutsResult {
+export interface AppListMyBattlesResult {
 	items: Array<{
 		id: string;
 		kind: { duel: null } | { league: null };
@@ -417,6 +414,9 @@ export interface AppListMyBoutsResult {
 		kickoff_ms: number;
 		settle_ms: number;
 	}>;
+}
+export interface AppListMyBlockingLeaguesResult {
+	league_ids: Array<string>;
 }
 export interface AppListMyLeaguesResult {
 	items: Array<{
@@ -704,15 +704,15 @@ export interface _SERVICE {
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
 	app_list_friends: ActorMethod<[], AppListFriendsResult>;
 	app_list_leaderboard: ActorMethod<[], AppListLeaderboardResult>;
-	app_list_league_bouts: ActorMethod<[AppListLeagueBoutsArgs], AppListLeagueBoutsResult>;
+	app_list_league_battles: ActorMethod<[AppListLeagueBattlesArgs], AppListLeagueBattlesResult>;
 	app_list_league_members: ActorMethod<[AppListLeagueMembersArgs], AppListLeagueMembersResult>;
 	app_list_market_translations: ActorMethod<
 		[AppListMarketTranslationsArgs],
 		AppListMarketTranslationsResult
 	>;
 	app_list_my_affiliations: ActorMethod<[], AppListMyAffiliationsResult>;
+	app_list_my_battles: ActorMethod<[], AppListMyBattlesResult>;
 	app_list_my_blocking_leagues: ActorMethod<[], AppListMyBlockingLeaguesResult>;
-	app_list_my_bouts: ActorMethod<[], AppListMyBoutsResult>;
 	app_list_my_leagues: ActorMethod<[], AppListMyLeaguesResult>;
 	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
 	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;

@@ -16,7 +16,7 @@ import type { AffiliationKind } from '$lib/types/affiliation';
  *    advances. This lazy rollover avoids needing a separate scheduled
  *    job and is naturally idempotent.
  *
- * Featured-event-scoped counters (e.g. "WC bout accuracy") live in
+ * Featured-event-scoped counters (e.g. "WC battle accuracy") live in
  * separate docs keyed `${kind}/${affiliationIdentifier}/${featuredEventTag}`
  * — same collection, structurally distinct. The lifetime / monthly
  * fields on those docs have the same semantics, just filtered to the

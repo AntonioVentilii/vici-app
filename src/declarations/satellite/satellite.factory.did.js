@@ -425,8 +425,8 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
-	const AppListLeagueBoutsArgs = IDL.Record({ league_id: IDL.Text });
-	const AppListLeagueBoutsResult = IDL.Record({
+	const AppListLeagueBattlesArgs = IDL.Record({ league_id: IDL.Text });
+	const AppListLeagueBattlesResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
 				id: IDL.Text,
@@ -497,10 +497,7 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
-	const AppListMyBlockingLeaguesResult = IDL.Record({
-		league_ids: IDL.Vec(IDL.Text)
-	});
-	const AppListMyBoutsResult = IDL.Record({
+	const AppListMyBattlesResult = IDL.Record({
 		items: IDL.Vec(
 			IDL.Record({
 				id: IDL.Text,
@@ -521,6 +518,9 @@ export const idlFactory = ({ IDL }) => {
 				settle_ms: IDL.Float64
 			})
 		)
+	});
+	const AppListMyBlockingLeaguesResult = IDL.Record({
+		league_ids: IDL.Vec(IDL.Text)
 	});
 	const AppListMyLeaguesResult = IDL.Record({
 		items: IDL.Vec(
@@ -863,9 +863,9 @@ export const idlFactory = ({ IDL }) => {
 		app_list_friend_requests: IDL.Func([], [AppListFriendRequestsResult], ['query']),
 		app_list_friends: IDL.Func([], [AppListFriendsResult], ['query']),
 		app_list_leaderboard: IDL.Func([], [AppListLeaderboardResult], ['query']),
-		app_list_league_bouts: IDL.Func(
-			[AppListLeagueBoutsArgs],
-			[AppListLeagueBoutsResult],
+		app_list_league_battles: IDL.Func(
+			[AppListLeagueBattlesArgs],
+			[AppListLeagueBattlesResult],
 			['query']
 		),
 		app_list_league_members: IDL.Func(
@@ -879,8 +879,8 @@ export const idlFactory = ({ IDL }) => {
 			['query']
 		),
 		app_list_my_affiliations: IDL.Func([], [AppListMyAffiliationsResult], ['query']),
+		app_list_my_battles: IDL.Func([], [AppListMyBattlesResult], ['query']),
 		app_list_my_blocking_leagues: IDL.Func([], [AppListMyBlockingLeaguesResult], ['query']),
-		app_list_my_bouts: IDL.Func([], [AppListMyBoutsResult], ['query']),
 		app_list_my_leagues: IDL.Func([], [AppListMyLeaguesResult], ['query']),
 		app_list_my_referrals: IDL.Func([], [AppListMyReferralsResult], ['query']),
 		app_list_sent_friend_requests: IDL.Func([], [AppListSentFriendRequestsResult], ['query']),
