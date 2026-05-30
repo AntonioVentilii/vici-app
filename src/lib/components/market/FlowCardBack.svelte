@@ -5,7 +5,12 @@
 	import SharePopover from '$lib/components/market/SharePopover.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
-	import { VXP_STAKE_LADDER, type VxpStake } from '$lib/constants/vxp-economy.constants';
+	import {
+		isStakeLadderUnlocked,
+		STAKE_LADDER_UNLOCK_CALLS,
+		VXP_STAKE_LADDER,
+		type VxpStake
+	} from '$lib/constants/vxp-economy.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -44,6 +49,10 @@
 		// Stake-ladder change callback. Fires when a rung or the
 		// native range input changes.
 		onStakeChange?: (next: string) => void;
+		// Lifetime committed-call count. Gates the stake-ladder slider —
+		// it stays hidden until the unlock threshold so new predictors
+		// see one stake, no decision paralysis.
+		lifetimeCalls?: number;
 	}
 
 	const {
@@ -58,7 +67,8 @@
 		onClose,
 		interactive = true,
 		tradeAmount,
-		onStakeChange
+		onStakeChange,
+		lifetimeCalls = 0
 	}: Props = $props();
 
 	const catColor = $derived(tagColor(category));
@@ -154,9 +164,19 @@
 	// VXP stake slider — exposed on the VXP balance domain only (the
 	// playground domain uses fractional ICP / ckUSDC stakes via the
 	// FlowMode stepper, not the ladder).
-	const showStakeSlider = $derived(
+	// VXP stake control is only relevant on the ViciXP domain with the
+	// stake callbacks wired (the playground domain uses the FlowMode
+	// stepper, not the ladder).
+	const stakeControlActive = $derived(
 		tradeAmount !== undefined && onStakeChange !== undefined && isViciXp($balanceDomain)
 	);
+	// The ladder slider unlocks once the user has enough lifetime calls;
+	// before that the stake stays pinned to the default and we show a
+	// short "unlocks at N" line in its place.
+	const stakeLadderUnlocked = $derived(isStakeLadderUnlocked(lifetimeCalls));
+	const showStakeSlider = $derived(stakeControlActive && stakeLadderUnlocked);
+	const showStakeLocked = $derived(stakeControlActive && !stakeLadderUnlocked);
+	const stakeCallsLeft = $derived(Math.max(0, STAKE_LADDER_UNLOCK_CALLS - lifetimeCalls));
 	const currentStake: VxpStake = $derived(
 		showStakeSlider ? snapToStakeLadder({ value: Number(tradeAmount ?? '0') || 0 }) : 50
 	);
@@ -344,6 +364,14 @@
 				{stakeYesWin}
 				{yesPct}
 			/>
+		{:else if showStakeLocked}
+			<p class="flow-stake-locked">
+				{t({
+					locale: $localeStore,
+					key: 'card.back.stake_locked',
+					params: { left: stakeCallsLeft, threshold: STAKE_LADDER_UNLOCK_CALLS }
+				})}
+			</p>
 		{/if}
 
 		<!-- Three-row "Who's calling what" split — the differentiating
@@ -821,5 +849,15 @@
 		height: 1px;
 		opacity: 0;
 		pointer-events: none;
+	}
+
+	.flow-stake-locked {
+		margin: 0;
+		padding: 0.5rem 0;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		line-height: 1.4;
+		text-align: center;
+		text-wrap: balance;
 	}
 </style>

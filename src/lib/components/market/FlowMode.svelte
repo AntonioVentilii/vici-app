@@ -809,6 +809,7 @@
 							committedAction={market.id === committedMarketId ? committedAction : null}
 							{followedLean}
 							interactive={isCurrent && !flowPaused}
+							lifetimeCalls={lifetimeTotalTrades}
 							locked={isCurrent && flowPaused}
 							{market}
 							{metadata}

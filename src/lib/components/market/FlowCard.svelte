@@ -52,6 +52,9 @@
 		// Stake-ladder change callback. Wired through to FlowCardBack so a
 		// tap on a rung writes back to FlowMode's bound stake.
 		onStakeChange?: (next: string) => void;
+		// Lifetime committed-call count. Forwarded to FlowCardBack to gate
+		// the stake-ladder slider (hidden until the unlock threshold).
+		lifetimeCalls?: number;
 	}
 
 	const {
@@ -68,7 +71,8 @@
 		categoryAcc,
 		priorCall,
 		followedLean,
-		onStakeChange
+		onStakeChange,
+		lifetimeCalls = 0
 	}: Props = $props();
 
 	const isCommitted = $derived(committedAction !== null);
@@ -726,6 +730,7 @@
 					{crowdSide}
 					{followedLean}
 					interactive={flipped}
+					{lifetimeCalls}
 					{market}
 					{metadata}
 					onClose={closeBack}

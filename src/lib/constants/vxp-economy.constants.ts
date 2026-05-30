@@ -49,6 +49,18 @@ export const isVxpLadderStake = (n: number): n is VxpStake =>
 export const VXP_DEFAULT_STAKE: VxpStake = 50;
 
 /**
+ * Lifetime committed-call count at which the stake ladder unlocks. Below
+ * this the per-call stake stays pinned to the default rung — new
+ * predictors see one stake, no decision paralysis. The slider reveals
+ * once the user has enough history to make sizing a meaningful choice.
+ */
+export const STAKE_LADDER_UNLOCK_CALLS = 50;
+
+/** True once the user has enough lifetime calls to choose a stake rung. */
+export const isStakeLadderUnlocked = (totalCalls: number): boolean =>
+	totalCalls >= STAKE_LADDER_UNLOCK_CALLS;
+
+/**
  * Cap on the consensus probability the payout formula sees. Without a
  * floor, a 1% side would pay `100×` stake which would deplete the
  * economy. 5% caps long-shot payouts at ~20× stake.
