@@ -9,6 +9,7 @@
 	import FlowBottomBar from '$lib/components/market/FlowBottomBar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import FlowComboBanner from '$lib/components/market/FlowComboBanner.svelte';
+	import FlowDeckSkeleton from '$lib/components/market/FlowDeckSkeleton.svelte';
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
 	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
 	import FlowFeedback from '$lib/components/market/FlowFeedback.svelte';
@@ -18,7 +19,6 @@
 	import MotionBeat from '$lib/components/market/MotionBeat.svelte';
 	import SwipeHint from '$lib/components/market/SwipeHint.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
-	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import {
 		BASE_XP_PER_PREDICTION,
 		isAccuracyUnlocked
@@ -753,11 +753,8 @@
 	class:is-paused={flowPaused}
 >
 	{#if loading}
-		<div class="flex h-full w-full flex-col items-center justify-center gap-4" in:fade>
-			<LoadingSpinner />
-			<p class="text-muted-foreground font-medium">
-				{t({ locale: $localeStore, key: 'flow.preparing' })}
-			</p>
+		<div class="flow-skeleton-shell" in:fade>
+			<FlowDeckSkeleton />
 		</div>
 	{:else if markets.length === 0}
 		<FlowEmptyDeck onBackToMarkets={backToMarkets} />
@@ -944,6 +941,14 @@
 		inset: 0;
 		z-index: 50;
 		overflow: hidden;
+	}
+
+	/* Cold-load wrapper: lets FlowDeckSkeleton fill the shell so its in-slot
+	   card skeleton lands in the same box the real deck will occupy. */
+	.flow-skeleton-shell {
+		position: relative;
+		flex: 1 1 auto;
+		min-height: 0;
 	}
 
 	/* Card stack: relative flex:1 container with the card absolutely
