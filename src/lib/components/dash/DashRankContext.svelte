@@ -26,7 +26,7 @@
 		</div>
 		<button
 			class="dash-rank-tile dash-rank-tile-btn"
-			onclick={() => goto(resolve(AppPath.Social))}
+			onclick={() => goto(resolve(AppPath.Arena))}
 			type="button"
 		>
 			<span class="lbl">{t({ locale: $localeStore, key: 'dash.rank.league' })}</span>

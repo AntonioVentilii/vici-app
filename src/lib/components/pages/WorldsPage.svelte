@@ -204,7 +204,7 @@
 
 	const rosterSize = WORLDS_UNIVERSITIES.length;
 
-	const detailPath = (id: string): string => `${resolve(AppPath.Social)}/worlds/school/${id}`;
+	const detailPath = (id: string): string => `${resolve(AppPath.Arena)}/worlds/school/${id}`;
 
 	const handleRowNav = (id: string) => {
 		void goto(detailPath(id));

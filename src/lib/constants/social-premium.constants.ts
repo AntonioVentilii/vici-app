@@ -30,27 +30,27 @@ export const SOCIAL_PREMIUM_PRESETS: readonly SocialPremiumPreset[] = [
 	{
 		id: 'coffee',
 		emoji: '☕',
-		descKey: 'social.premium.coffee.desc'
+		descKey: 'arena.premium.coffee.desc'
 	},
 	{
 		id: 'beer',
 		emoji: '🍺',
-		descKey: 'social.premium.beer.desc'
+		descKey: 'arena.premium.beer.desc'
 	},
 	{
 		id: 'pizza',
 		emoji: '🍕',
-		descKey: 'social.premium.pizza.desc'
+		descKey: 'arena.premium.pizza.desc'
 	},
 	{
 		id: 'aperitif',
 		emoji: '🥂',
-		descKey: 'social.premium.aperitif.desc'
+		descKey: 'arena.premium.aperitif.desc'
 	},
 	{
 		id: 'dinner',
 		emoji: '🍝',
-		descKey: 'social.premium.dinner.desc'
+		descKey: 'arena.premium.dinner.desc'
 	}
 ] as const;
 

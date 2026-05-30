@@ -2,12 +2,14 @@
 	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { functions } from '$declarations/satellite/satellite.api';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import CreateLeagueModal from '$lib/components/leagues/CreateLeagueModal.svelte';
 	import JoinLeagueModal from '$lib/components/leagues/JoinLeagueModal.svelte';
 	import LeagueCtaCard from '$lib/components/leagues/LeagueCtaCard.svelte';
 	import LeagueListCard from '$lib/components/leagues/LeagueListCard.svelte';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
 		listLeagueBouts,
@@ -25,7 +27,7 @@
 	/**
 	 * Social cohorts list page.
 	 *
-	 * Mounted inside the Social tab container. Lists every league
+	 * Mounted inside the Arena tab container. Lists every league
 	 * the caller is a member of via `listMyLeagues`, split into
 	 * "founded" (the caller is the owner) and "joined" (everyone
 	 * else). Each row carries a gradient logo tile, the league name
@@ -35,13 +37,13 @@
 	 * recent bout, and an inline copy-invite pill.
 	 *
 	 * The Create + Join entries live as trailing CTA cards (and a
-	 * compact appbar `+` from the Social shell) — never as a
+	 * compact appbar `+` from the Arena shell) — never as a
 	 * top-of-list pill row.
 	 */
 
 	interface Props {
 		// When true, hide the page's own appbar — the container is
-		// expected to render one (e.g. the tabbed Social parent).
+		// expected to render one (e.g. the tabbed Arena parent).
 		embedded?: boolean;
 	}
 
@@ -148,7 +150,7 @@
 
 	onMount(refresh);
 
-	// Listen for the parent Social appbar's "+" create-league button:
+	// Listen for the parent Arena appbar's "+" create-league button:
 	// when the intent flips to `true`, open our modal and reset the
 	// intent so a navigation away/back doesn't re-trigger.
 	$effect(() => {
@@ -250,7 +252,7 @@
 	};
 
 	const handleCardClick = (leagueId: string) => {
-		void goto(`/social/leagues/${leagueId}`);
+		void goto(`${resolve(AppPath.Arena)}/leagues/${leagueId}`);
 	};
 </script>
 

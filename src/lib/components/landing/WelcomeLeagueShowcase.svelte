@@ -23,13 +23,13 @@
 
 <WelcomeShowcaseCard
 	ctaHref="#leagues"
-	ctaKey="social.l_cta"
+	ctaKey="arena.l_cta"
 	eyebrowClass="acc"
-	eyebrowKey="social.l_eyebrow"
+	eyebrowKey="arena.l_eyebrow"
 	rootGradient="linear-gradient(180deg, rgba(226,184,66,0.08), rgba(226,184,66,0.02) 60%, transparent)"
-	subKey="social.l_sub"
-	titleAKey="social.l_title_a"
-	titleBKey="social.l_title_b"
+	subKey="arena.l_sub"
+	titleAKey="arena.l_title_a"
+	titleBKey="arena.l_title_b"
 >
 	<div
 		style="
@@ -67,7 +67,7 @@
 			<span style="letter-spacing:0.10em; flex-shrink:0;" class="num mute t-micro">
 				{t({
 					locale: $localeStore,
-					key: 'social.l_members',
+					key: 'arena.l_members',
 					params: { count: league.memberCount }
 				})}
 			</span>
@@ -121,7 +121,7 @@
 					>
 						@{m.handle}{#if isYou}
 							<span style="margin-left:4px; letter-spacing:0.08em;" class="t-eyebrow mute">
-								· {t({ locale: $localeStore, key: 'social.l_you' })}
+								· {t({ locale: $localeStore, key: 'arena.l_you' })}
 							</span>
 						{/if}
 					</span>

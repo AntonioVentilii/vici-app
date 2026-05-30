@@ -284,7 +284,7 @@
 		align="left"
 		back={{
 			label: t({ locale: $localeStore, key: 'tournament.back' }),
-			onBack: () => goBack(resolve(AppPath.Social))
+			onBack: () => goBack(resolve(AppPath.Arena))
 		}}
 		title={t({ locale: $localeStore, key: 'tournament.title' })}
 	/>

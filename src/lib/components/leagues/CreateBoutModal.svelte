@@ -62,12 +62,12 @@
 
 	const pickLeague = (leagueId: string) => {
 		onClose();
-		void goto(`${resolve(AppPath.Social)}/leagues/${leagueId}?propose=1`);
+		void goto(`${resolve(AppPath.Arena)}/leagues/${leagueId}?propose=1`);
 	};
 
 	const goToLeagues = () => {
 		onClose();
-		void goto(`${resolve(AppPath.Social)}/leagues`);
+		void goto(`${resolve(AppPath.Arena)}/leagues`);
 	};
 </script>
 

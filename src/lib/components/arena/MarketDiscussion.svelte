@@ -60,7 +60,7 @@
 				type: ActivityType.COMMENT,
 				user: userPrincipal,
 				marketId,
-				title: t({ locale: $localeStore, key: 'social.discussion.activity.new_comment' }),
+				title: t({ locale: $localeStore, key: 'arena.discussion.activity.new_comment' }),
 				details: newComment.trim().slice(0, 50) + (newComment.length > 50 ? '...' : '')
 			});
 
@@ -92,7 +92,7 @@
 						type: ActivityType.UPVOTE,
 						user: userPrincipal,
 						marketId,
-						title: t({ locale: $localeStore, key: 'social.discussion.activity.upvoted' }),
+						title: t({ locale: $localeStore, key: 'arena.discussion.activity.upvoted' }),
 						details: comment.content.slice(0, 30) + (comment.content.length > 30 ? '...' : '')
 					});
 				}
@@ -105,7 +105,7 @@
 						type: ActivityType.DOWNVOTE,
 						user: userPrincipal,
 						marketId,
-						title: t({ locale: $localeStore, key: 'social.discussion.activity.downvoted' }),
+						title: t({ locale: $localeStore, key: 'arena.discussion.activity.downvoted' }),
 						details: comment.content.slice(0, 30) + (comment.content.length > 30 ? '...' : '')
 					});
 				}
@@ -123,7 +123,7 @@
 	<div class="glassmorphism rounded-2xl p-4">
 		<textarea
 			class="border-border bg-background/50 focus:ring-primary/50 w-full resize-none rounded-xl border p-4 text-sm focus:ring-2 focus:outline-none"
-			placeholder={t({ locale: $localeStore, key: 'social.discussion.input.placeholder' })}
+			placeholder={t({ locale: $localeStore, key: 'arena.discussion.input.placeholder' })}
 			rows="3"
 			bind:value={newComment}
 		></textarea>
@@ -134,9 +134,9 @@
 			>
 				{#snippet busyLabel()}{t({
 						locale: $localeStore,
-						key: 'social.discussion.action.posting'
+						key: 'arena.discussion.action.posting'
 					})}{/snippet}
-				{t({ locale: $localeStore, key: 'social.discussion.action.post' })}
+				{t({ locale: $localeStore, key: 'arena.discussion.action.post' })}
 			</Button>
 		</div>
 	</div>
@@ -149,7 +149,7 @@
 		{:else if comments.length === 0}
 			<div class="py-12 text-center opacity-40">
 				<p class="text-sm italic">
-					{t({ locale: $localeStore, key: 'social.discussion.empty' })}
+					{t({ locale: $localeStore, key: 'arena.discussion.empty' })}
 				</p>
 			</div>
 		{:else}
@@ -167,7 +167,7 @@
 							class="hover:bg-primary/10 flex h-8 w-8 items-center justify-center rounded-lg transition-colors {upvoted
 								? 'text-primary'
 								: 'opacity-40 hover:opacity-100'}"
-							aria-label={t({ locale: $localeStore, key: 'social.discussion.action.upvote' })}
+							aria-label={t({ locale: $localeStore, key: 'arena.discussion.action.upvote' })}
 							onclick={() => handleVote({ comment, type: 'up' })}
 							status={voting[comment.key] ? 'pending' : 'enabled'}
 						>
@@ -199,7 +199,7 @@
 							class="flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10 {downvoted
 								? 'text-red-500'
 								: 'opacity-40 hover:opacity-100'}"
-							aria-label={t({ locale: $localeStore, key: 'social.discussion.action.downvote' })}
+							aria-label={t({ locale: $localeStore, key: 'arena.discussion.action.downvote' })}
 							onclick={() => handleVote({ comment, type: 'down' })}
 							status={voting[comment.key] ? 'pending' : 'enabled'}
 						>
@@ -230,7 +230,7 @@
 								/>
 								<span class="text-sm font-bold">
 									{profile?.nickname ??
-										t({ locale: $localeStore, key: 'social.discussion.anonymous' })}
+										t({ locale: $localeStore, key: 'arena.discussion.anonymous' })}
 								</span>
 								{#if comment.user === userPrincipal}
 									<YouBadge />

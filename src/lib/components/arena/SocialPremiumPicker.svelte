@@ -29,7 +29,7 @@
 
 <div class="space-y-3">
 	<span class="text-muted-foreground text-xs font-bold tracking-widest uppercase">
-		{t({ locale: $localeStore, key: 'social.premium.label' })}
+		{t({ locale: $localeStore, key: 'arena.premium.label' })}
 	</span>
 	<div class="grid grid-cols-2 gap-2 sm:grid-cols-3">
 		{#each SOCIAL_PREMIUM_PRESETS as preset (preset.id)}
@@ -58,7 +58,7 @@
 		>
 			<span class="text-2xl" aria-hidden="true">✦</span>
 			<span class="text-sm font-bold">
-				{t({ locale: $localeStore, key: 'social.premium.other.label' })}
+				{t({ locale: $localeStore, key: 'arena.premium.other.label' })}
 			</span>
 		</button>
 	</div>
@@ -68,13 +68,13 @@
 				class="text-muted-foreground text-[10px] font-bold uppercase"
 				for="social-premium-custom"
 			>
-				{t({ locale: $localeStore, key: 'social.premium.other.input_label' })}
+				{t({ locale: $localeStore, key: 'arena.premium.other.input_label' })}
 			</label>
 			<input
 				id="social-premium-custom"
 				class="bg-foreground/5 text-foreground ring-border focus:bg-card focus:ring-primary w-full rounded-xl border-none px-4 py-3 text-sm ring-1 ring-inset focus:ring-2"
 				oninput={(e) => updateCustom(e.currentTarget.value)}
-				placeholder={t({ locale: $localeStore, key: 'social.premium.other.placeholder' })}
+				placeholder={t({ locale: $localeStore, key: 'arena.premium.other.placeholder' })}
 				type="text"
 				value={customTitle}
 			/>

@@ -68,13 +68,13 @@
 
 <WelcomeShowcaseCard
 	ctaHref="#bouts"
-	ctaKey="social.b_cta"
+	ctaKey="arena.b_cta"
 	eyebrowColor="var(--terracotta, #B5462C)"
-	eyebrowKey="social.b_eyebrow"
+	eyebrowKey="arena.b_eyebrow"
 	rootGradient="linear-gradient(180deg, rgba(181,70,44,0.08), rgba(181,70,44,0.02) 60%, transparent)"
-	subKey="social.b_sub"
-	titleAKey="social.b_title_a"
-	titleBKey="social.b_title_b"
+	subKey="arena.b_sub"
+	titleAKey="arena.b_title_a"
+	titleBKey="arena.b_title_b"
 >
 	{#snippet badge()}
 		<span
@@ -87,7 +87,7 @@
 		>
 			{t({
 				locale: $localeStore,
-				key: 'social.b_day',
+				key: 'arena.b_day',
 				params: { n: day, total: totalDays }
 			})}
 		</span>
@@ -112,7 +112,7 @@
 				"
 				class="serif-italic"
 			>
-				{t({ locale: $localeStore, key: 'social.b_vs' })}
+				{t({ locale: $localeStore, key: 'arena.b_vs' })}
 			</span>
 			<span style="flex:1; height:1px; background:var(--border);" aria-hidden="true"></span>
 		</div>

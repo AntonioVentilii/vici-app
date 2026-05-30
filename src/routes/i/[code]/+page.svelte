@@ -4,7 +4,7 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import InviteFriendshipSheet from '$lib/components/social/InviteFriendshipSheet.svelte';
+	import InviteFriendshipSheet from '$lib/components/arena/InviteFriendshipSheet.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { REFERRAL_CODE_REGEX } from '$lib/constants/referral.constants';

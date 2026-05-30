@@ -1,5 +1,5 @@
 <script lang="ts">
-	import ActivityItem from '$lib/components/social/ActivityItem.svelte';
+	import ActivityItem from '$lib/components/arena/ActivityItem.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';

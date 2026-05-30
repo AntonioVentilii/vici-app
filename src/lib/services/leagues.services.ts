@@ -384,7 +384,7 @@ export const listLeagueBouts = async ({ leagueId }: { leagueId: string }): Promi
 
 /**
  * List every bout across every league the caller belongs to. Powers
- * the `/social/bouts` cross-league inbox. Sorted server-side by
+ * the `/arena/bouts` cross-league inbox. Sorted server-side by
  * `kickoffMs` ascending.
  */
 export const listMyBouts = async (): Promise<BoutDoc[]> => {

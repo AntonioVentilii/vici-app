@@ -5,10 +5,10 @@
 
 <section class="friends-empty">
 	<p class="friends-empty-quote">
-		{t({ locale: $localeStore, key: 'social.friends.empty.quote' })}
+		{t({ locale: $localeStore, key: 'arena.friends.empty.quote' })}
 	</p>
 	<p class="friends-empty-sub">
-		{t({ locale: $localeStore, key: 'social.friends.empty.sub' })}
+		{t({ locale: $localeStore, key: 'arena.friends.empty.sub' })}
 	</p>
 </section>
 

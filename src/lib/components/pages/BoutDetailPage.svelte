@@ -223,7 +223,7 @@
 	};
 
 	const backToInbox = () => {
-		void goto(`${resolve(AppPath.Social)}/bouts`);
+		void goto(`${resolve(AppPath.Arena)}/bouts`);
 	};
 </script>
 

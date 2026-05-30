@@ -152,7 +152,7 @@
 	const detailPath = (id: string): string => {
 		const segment = kind === 'university' ? 'school' : 'country';
 
-		return `${resolve(AppPath.Social)}/worlds/${segment}/${id}`;
+		return `${resolve(AppPath.Arena)}/worlds/${segment}/${id}`;
 	};
 
 	const handleRowNav = (id: string) => {
@@ -167,7 +167,7 @@
 		align="left"
 		back={{
 			label: t({ locale: $localeStore, key: 'worlds.bout.back' }),
-			onBack: () => goBack(`${resolve(AppPath.Social)}/worlds`)
+			onBack: () => goBack(`${resolve(AppPath.Arena)}/worlds`)
 		}}
 		title={t({ locale: $localeStore, key: titleKey })}
 	/>
