@@ -1076,6 +1076,7 @@ export const esMessages = {
 	'markets.empty': 'No hay mercados en esta categoría.',
 	'markets.eyebrow': 'PREGUNTAS EN VIVO',
 	'markets.hero.title': '¿Qué hará el mundo?',
+	'markets.more': 'Más mercados',
 	'markets.filter.access': 'Filtrar por acceso',
 	'markets.filter.access.all': 'Todo el acceso',
 	'markets.filter.access.closed': 'Círculo cerrado',

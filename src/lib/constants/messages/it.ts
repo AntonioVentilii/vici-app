@@ -1074,6 +1074,7 @@ export const itMessages = {
 	'markets.empty': 'Nessun mercato in questa categoria.',
 	'markets.eyebrow': 'DOMANDE LIVE',
 	'markets.hero.title': 'Cosa farà il mondo?',
+	'markets.more': 'Altri mercati',
 	'markets.filter.access': 'Filtra per accesso',
 	'markets.filter.access.all': 'Tutti gli accessi',
 	'markets.filter.access.closed': 'Cerchia chiusa',

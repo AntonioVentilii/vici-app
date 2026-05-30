@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { SvelteSet } from 'svelte/reactivity';
+	import { get } from 'svelte/store';
 	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import MarketsCarousel from '$lib/components/market/MarketsCarousel.svelte';
 	import MarketsCategoryChips, {
@@ -11,8 +12,10 @@
 		primaryMarketTag,
 		type MarketTag
 	} from '$lib/constants/market-tags.constants';
+	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { marketTags, marketTagsNotInitialized } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
+	import { worldCupActive } from '$lib/derived/world-cup.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { preferencesStore } from '$lib/stores/preferences.store';
 	import type { Market } from '$lib/types/market';
@@ -47,7 +50,13 @@
 		}
 	})();
 
-	let cat = $state<MarketsCategoryFilter>('all');
+	// Initial focus: when World-Cup mode is active the Markets list opens
+	// laser-focused on the World Cup (the `wc` tag is the default filter and
+	// the other categories collapse behind "More markets →"). Otherwise the
+	// list keeps its all-categories shape. Read once at init via `get` — the
+	// gate doesn't flip mid-session in practice, and tying the default to a
+	// live `$derived` would fight the user once they pick another chip.
+	let cat = $state<MarketsCategoryFilter>(get(worldCupActive) ? 'wc' : 'all');
 	let sort = $state<MarketsSort>(initialSort);
 
 	const setSort = (next: MarketsSort) => {
@@ -64,6 +73,16 @@
 			// preference will just not persist for this device.
 		}
 	};
+
+	// WC-focus drives the two-tier header eyebrow and the collapsed
+	// "More markets →" chip rail. Reads the live `worldCupActive` gate so the
+	// focus chrome disappears the moment the event archives mid-session.
+	const wcFocus = $derived($worldCupActive);
+
+	// Eyebrow copy comes from the featured-event source — never hardcoded.
+	// `title` ("2026 FIFA World Cup") reads cleaner as a two-tier eyebrow than
+	// the compact `shortTitle`.
+	const wcEyebrow = $derived(wcFocus ? $featuredEvent.title : undefined);
 
 	const loading = $derived($marketsNotInitialized);
 
@@ -200,13 +219,15 @@
 </script>
 
 <div class="screen-scroll">
-	<PageScaffold title={t({ locale: $localeStore, key: 'nav.markets' })}>
-		<!-- Category chips with Saved filter prepended -->
+	<PageScaffold eyebrow={wcEyebrow} title={t({ locale: $localeStore, key: 'nav.markets' })}>
+		<!-- Category chips with Saved filter prepended. In WC-focus mode the
+		     rail opens on the World Cup with the rest behind "More markets →". -->
 		<MarketsCategoryChips
 			active={cat}
 			{availableTags}
 			onChange={(next) => (cat = next)}
 			savedCount={savedMarkets.length}
+			{wcFocus}
 		/>
 
 		<!-- Saved carousel only visible on All view -->

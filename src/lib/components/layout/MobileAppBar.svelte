@@ -9,13 +9,17 @@
 
 	interface Props {
 		title?: string;
+		/** Small uppercase line rendered above `title` (e.g. the featured-event
+		 *  name on the WC-focused Markets header). Ignored when `titleChildren`
+		 *  is supplied. */
+		eyebrow?: string;
 		titleChildren?: Snippet;
 		back?: BackAction;
 		right?: Snippet;
 		align?: 'left' | 'center';
 	}
 
-	const { title, titleChildren, back, right, align }: Props = $props();
+	const { title, eyebrow, titleChildren, back, right, align }: Props = $props();
 
 	const resolvedAlign = $derived(align ?? (back !== undefined ? 'center' : 'left'));
 
@@ -36,6 +40,11 @@
 	<div class="mobile-appbar-title-slot">
 		{#if titleChildren}
 			{@render titleChildren()}
+		{:else if eyebrow}
+			<div class="mobile-appbar-title-stack">
+				<span class="mobile-appbar-eyebrow">{eyebrow}</span>
+				{#if title}<h1 class="mobile-appbar-title">{title}</h1>{/if}
+			</div>
 		{:else if title}
 			<h1 class="mobile-appbar-title">{title}</h1>
 		{/if}
@@ -95,6 +104,24 @@
 
 	.mobile-appbar[data-align='center'] .mobile-appbar-title-slot {
 		justify-content: center;
+	}
+
+	.mobile-appbar-title-stack {
+		display: flex;
+		min-width: 0;
+		flex-direction: column;
+		gap: 0.125rem;
+	}
+
+	.mobile-appbar-eyebrow {
+		overflow: hidden;
+		color: var(--text-muted);
+		font-size: var(--t-11);
+		font-weight: 600;
+		letter-spacing: var(--tracking-wide);
+		text-overflow: ellipsis;
+		text-transform: uppercase;
+		white-space: nowrap;
 	}
 
 	.mobile-appbar-title {

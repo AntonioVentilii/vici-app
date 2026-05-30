@@ -1081,6 +1081,7 @@ export const deMessages = {
 	'markets.empty': 'Keine Märkte in dieser Kategorie.',
 	'markets.eyebrow': 'LIVE-FRAGEN',
 	'markets.hero.title': 'Was wird die Welt tun?',
+	'markets.more': 'Weitere Märkte',
 	'markets.filter.access': 'Nach Zugang filtern',
 	'markets.filter.access.all': 'Alle Zugänge',
 	'markets.filter.access.closed': 'Geschlossener Kreis',
