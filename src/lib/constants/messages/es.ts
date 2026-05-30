@@ -1952,6 +1952,13 @@ export const esMessages = {
 	'worlds.picker.kind_university': 'Universidad',
 	'worlds.picker.lock_hint':
 		'Te suma a la clasificación del grupo. Cambia después — una vez cada 90 días.',
+	'worlds.picker.near_you': 'Cerca de ti · {count} escuelas',
+	'worlds.picker.region.all': 'Todas',
+	'worlds.picker.region.as': 'Asia',
+	'worlds.picker.region.au': 'AU·NZ',
+	'worlds.picker.region.eu': 'Europa',
+	'worlds.picker.region.na': 'Norteamérica',
+	'worlds.picker.region.uk': 'Reino Unido',
 	'worlds.picker.search_country': 'Buscar entre {count} países…',
 	'worlds.picker.search_university': 'Buscar entre {count} universidades…',
 	'worlds.picker.title_country': 'Elige tu país',
