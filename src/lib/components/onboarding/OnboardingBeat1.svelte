@@ -1,4 +1,5 @@
 <script lang="ts">
+	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
@@ -10,10 +11,9 @@
 	/**
 	 * Onboarding · Beat 1.a — team picker.
 	 *
-	 * Verbatim port of `Beat1WC` phase 1.a from `onboarding-v2.jsx`
-	 * (lines 127-174). Renders the favourites grid with the `+N more`
-	 * tile inline, an optional all-teams panel below, and a single
-	 * "Skip — just following the tournament" link.
+	 * Renders the favourites grid with the `+N more` tile inline, an
+	 * optional all-teams panel below, and a single "Skip — just
+	 * following the tournament" link.
 	 *
 	 * Beat 1 splits into two micro-phases: 1.a "pick your team" (or
 	 * skip) and 1.b "swipe the prediction card derived from your
@@ -86,6 +86,8 @@
 </script>
 
 <div class="ob2-beat ob2-beat-1 ob2-beat-pick">
+	<OnboardingStepTracker step={1} />
+
 	<div class="ob2-wc-eyebrow">
 		<span class="ob2-wc-tag">{event.title}</span>
 		<span class="ob2-wc-countdown">

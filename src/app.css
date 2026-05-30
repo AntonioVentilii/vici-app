@@ -674,7 +674,7 @@ html[data-app='1'] body {
 /* Brand accent inline — used in editorial copy alongside `.serif-italic`
  * for the "*Your call comes next.*" / "*Earned, not given.*" beats.
  * `landing.css` defines the same `.acc { color: var(--accent); }`
- * rule; mirrored here so onboarding-v2 picks it up. */
+ * rule; mirrored here so the onboarding surfaces pick it up. */
 .acc {
 	color: var(--laurel);
 }
@@ -2530,8 +2530,8 @@ html[data-app='1'] body {
 /* Inline flag chip next to "Backing <team>". The CountryFlag default
    class is replaced by `ob2-picked-flag`, so the size has to be set
    here — without it the lipis SVG renders at its intrinsic 4×3 ratio
-   and dominates the screen. Matches the emoji height (~18px) the
-   prototype uses (`onboarding-v2.jsx:104`). */
+   and dominates the screen. Sized to sit at roughly the emoji height
+   (~18px) of the surrounding "Backing <team>" copy. */
 .ob2-sub .ob2-picked-flag {
 	display: inline-block;
 	width: 22px;
@@ -4043,6 +4043,17 @@ html[data-app='1'] body {
 	margin-top: 2px;
 }
 
+/* Starter-pack strip — gold-tinted variant of the summary card framing
+   the reward at the auth gate. */
+.ob2-summary-starter {
+	border-color: rgba(226, 184, 66, 0.3);
+	background: rgba(226, 184, 66, 0.06);
+}
+.ob2-summary-flag-starter {
+	background: rgba(226, 184, 66, 0.16);
+	color: var(--laurel);
+}
+
 .ob2-auth-buttons {
 	display: flex;
 	flex-direction: column;
@@ -4114,6 +4125,10 @@ html[data-app='1'] body {
 	color: var(--laurel);
 	text-decoration: underline;
 	text-underline-offset: 2px;
+}
+.ob2-tos-play {
+	margin-bottom: 6px;
+	color: var(--parchment-dim);
 }
 .ob2-tos .serif-italic {
 	color: var(--parchment-dim);

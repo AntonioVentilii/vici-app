@@ -2,6 +2,7 @@
 	import { RefreshCw } from 'lucide-svelte/icons';
 	import { onMount, untrack } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
+	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { HANDLE_POOL } from '$lib/constants/handle-pool.constants';
 	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
@@ -31,8 +32,10 @@
 
 	const { participantId, onAdvance, onBack }: Props = $props();
 
-	// Number of suggestion chips rendered per draw.
-	const SUGGESTIONS_PER_DRAW = 18;
+	// Number of suggestion chips rendered per draw. Kept deliberately
+	// small and curated — the live-availability sampling below still runs
+	// the full probe loop, but only this many chips surface in the grid.
+	const SUGGESTIONS_PER_DRAW = 6;
 	// Over-sample multiplier — draw 2× the target count and keep the
 	// first N that come back available, so a handful of collisions
 	// don't leave the grid sparse.
@@ -243,20 +246,7 @@
 </script>
 
 <div class="ob2-beat ob2-beat-2">
-	<div class="ob2-header">
-		<span class="ob2-progress">
-			<span class="ob2-progress-dot filled"></span>
-			<span class="ob2-progress-dot filled"></span>
-			<span class="ob2-progress-dot"></span>
-		</span>
-		<span class="ob2-step-label">
-			{t({
-				locale: $localeStore,
-				key: 'onboarding.beat_label',
-				params: { current: 2, total: 3 }
-			})}
-		</span>
-	</div>
+	<OnboardingStepTracker step={2} />
 
 	<h1 class="ob2-h1">{t({ locale: $localeStore, key: 'onboarding.beat2.title' })}</h1>
 	<p class="ob2-sub">

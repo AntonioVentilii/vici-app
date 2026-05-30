@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
+	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import SwipeableMarketCard from '$lib/components/ui/SwipeableMarketCard.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
@@ -83,6 +84,8 @@
 </script>
 
 <div class="ob2-beat ob2-beat-1">
+	<OnboardingStepTracker step={1} />
+
 	<div class="ob2-wc-eyebrow">
 		<span class="ob2-wc-tag">{event.badgeTitle ?? event.title}</span>
 		<span class="ob2-wc-countdown">

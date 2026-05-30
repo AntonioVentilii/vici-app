@@ -105,22 +105,23 @@ Static brand assets that aren't components live in `static/branding/`:
 
 ### Feature folders worth knowing
 
-| Folder                         | Purpose                                                                   |
-| ------------------------------ | ------------------------------------------------------------------------- |
-| `$lib/components/market/`      | Market cards, filters, detail panes, order book, resolution / settlement. |
-| `$lib/components/wallet/`      | Collateral, send/receive, token displays.                                 |
-| `$lib/components/portfolio/`   | Positions, P&L, history.                                                  |
-| `$lib/components/social/`      | Comments, discussions, relations (friends / follow).                      |
-| `$lib/components/profile/`     | Profile read + edit surfaces.                                             |
-| `$lib/components/leaderboard/` | Leaderboard widgets.                                                      |
-| `$lib/components/admin/`       | Admin console surfaces.                                                   |
-| `$lib/components/authn/`       | Auth flows (II + Google OpenID).                                          |
-| `$lib/components/authz/`       | Role-gated rendering.                                                     |
-| `$lib/components/challenge/`   | Challenge / passkey UI.                                                   |
-| `$lib/components/layout/`      | Header, navigation chrome, `PageScaffold` (see below).                    |
-| `$lib/components/pages/`       | Page-level shells composed inside the single SvelteKit route.             |
-| `$lib/components/loaders/`     | Loaders / skeletons / suspense boundaries.                                |
-| `$lib/components/icons/`       | Bespoke project icons.                                                    |
+| Folder                         | Purpose                                                                                                                                                                         |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `$lib/components/onboarding/`  | Three-beat onboarding flow. `OnboardingStepTracker` (progress dots + Latin `Veni · Vidi · Vici` step label) is shared across every beat — reuse it, don't re-inline the header. |
+| `$lib/components/market/`      | Market cards, filters, detail panes, order book, resolution / settlement.                                                                                                       |
+| `$lib/components/wallet/`      | Collateral, send/receive, token displays.                                                                                                                                       |
+| `$lib/components/portfolio/`   | Positions, P&L, history.                                                                                                                                                        |
+| `$lib/components/social/`      | Comments, discussions, relations (friends / follow).                                                                                                                            |
+| `$lib/components/profile/`     | Profile read + edit surfaces.                                                                                                                                                   |
+| `$lib/components/leaderboard/` | Leaderboard widgets.                                                                                                                                                            |
+| `$lib/components/admin/`       | Admin console surfaces.                                                                                                                                                         |
+| `$lib/components/authn/`       | Auth flows (II + Google OpenID).                                                                                                                                                |
+| `$lib/components/authz/`       | Role-gated rendering.                                                                                                                                                           |
+| `$lib/components/challenge/`   | Challenge / passkey UI.                                                                                                                                                         |
+| `$lib/components/layout/`      | Header, navigation chrome, `PageScaffold` (see below).                                                                                                                          |
+| `$lib/components/pages/`       | Page-level shells composed inside the single SvelteKit route.                                                                                                                   |
+| `$lib/components/loaders/`     | Loaders / skeletons / suspense boundaries.                                                                                                                                      |
+| `$lib/components/icons/`       | Bespoke project icons.                                                                                                                                                          |
 
 ### Services worth knowing — `$lib/services/`
 

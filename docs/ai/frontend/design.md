@@ -465,10 +465,25 @@ Beat 1 split into two micro-phases:
    the pick (or a default). There is no Begin button; the user commits
    with a YES / NO swipe or the accessible card buttons. "Change team"
    returns to 1a.
-3. **Beat 2 — handle** — claim a handle (sampled pool or custom, with live
-   availability checks), or skip to keep a placeholder.
-4. **Beat 3 — auth** — locks the record via the provider stack
-   (passkey / OAuth). Bubbles `onComplete`.
+3. **Beat 2 — handle** — "Claim a handle." Two modes (pool / custom). The
+   pool surfaces a small curated set (`SUGGESTIONS_PER_DRAW = 6`); each
+   draw is still pre-filtered through the satellite availability query and
+   guarded by a claim-time TOCTOU re-check before advancing. Skip keeps a
+   placeholder.
+4. **Beat 3 — make it count** — "Make it count, @{handle}." Shows the
+   starter-pack strip (registration-grant VXP · featured-event market,
+   both derived — `newUserVxpAmountMilestone1BaseUnits` and the
+   `featuredEvent` store, never hardcoded) and the play-currency line
+   ("VICI is free to play. VXP is play-currency only."), then locks the
+   record via the provider stack (passkey / OAuth). No backing-team
+   summary card — the call is already confirmed in Beat 1.
+
+Every beat renders the shared
+[`OnboardingStepTracker`](../../../src/lib/components/onboarding/OnboardingStepTracker.svelte):
+three progress dots plus the brand's three-act arc as the step label —
+`Veni · 1 of 3`, `Vidi · 2 of 3`, `Vici · 3 of 3`. The Latin words are
+brand-fixed and identical in every locale; only the ` · N of 3` tail is
+localized (`onboarding.step_of`).
 
 There is **no gestures step and no category-picker step** in the current
 flow. The archetype step is not part of onboarding either. Post-auth
