@@ -44,6 +44,7 @@ export const frMessages = {
 		'Un duel de précision chronométré. École contre école, pays contre pays, plus le tournoi mensuel. Les duels ligue contre ligue se trouvent dans tes ligues.',
 	'battles.intro.dismiss': 'Fermer',
 	'battles.intro.lede': '« C’est quoi un duel ? »',
+	'battles.intro.start': 'Lancer une battle',
 	'battles.leagues_link.cta': 'Voir les Ligues',
 	'battles.leagues_link.lede': '« Envie d’un duel de ligue ? »',
 	'battles.leagues_link.sub': 'Défie une autre ligue depuis la page de ta ligue.',

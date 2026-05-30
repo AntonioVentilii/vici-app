@@ -19,10 +19,15 @@
 	// `/signup` (typically routed here by the (app) layout because their
 	// profile has `onboardingCompleted: false`) goes through the same
 	// 3-beat flow but with Beat 3's provider stack swapped for a Finish
-	// button — they already have a session. A returning user whose
-	// profile already says onboarding is complete is bounced to Home.
+	// button — they already have a session. A returning user is bounced into
+	// the app (`AppPath.Flow`) — either because onboarding is already
+	// complete, or because the satellite already held a profile at sign-in
+	// (`profileExisted`), in which case a legacy `onboardingCompleted: false`
+	// must not re-prompt.
 	const authenticated = $derived(
-		$userSignedIn && $userStore.profile?.preferences?.onboardingCompleted !== true
+		$userSignedIn &&
+			$userStore.profile?.preferences?.onboardingCompleted !== true &&
+			!$userStore.profileExisted
 	);
 
 	// Landing favourites deep-link in as `/signup?team=<ISO-2 code>`. The
@@ -46,8 +51,14 @@
 		return match?.id;
 	});
 
+	// Bounce any returning user back into the app: either onboarding is
+	// already complete, or a profile existed at sign-in (a legacy account
+	// whose `onboardingCompleted` defaults to `false` must not be re-prompted).
 	$effect(() => {
-		if ($userSignedIn && $userStore.profile?.preferences?.onboardingCompleted === true) {
+		if (
+			$userSignedIn &&
+			($userStore.profile?.preferences?.onboardingCompleted === true || $userStore.profileExisted)
+		) {
 			void goto(resolve(AppPath.Flow), { replaceState: true });
 		}
 	});

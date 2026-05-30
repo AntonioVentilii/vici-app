@@ -1,12 +1,16 @@
 <script lang="ts">
+	import { Plus } from 'lucide-svelte/icons';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		onDismiss: () => void;
+		// Persistent "Start a battle" action — league-vs-league battles
+		// live under Leagues, so this routes there to propose one.
+		onStartBattle: () => void;
 	}
 
-	let { onDismiss }: Props = $props();
+	let { onDismiss, onStartBattle }: Props = $props();
 </script>
 
 <aside class="battles-intro">
@@ -16,6 +20,10 @@
 	<p class="battles-intro-body">
 		{t({ locale: $localeStore, key: 'battles.intro.body' })}
 	</p>
+	<button class="battles-intro-cta" onclick={onStartBattle} type="button">
+		<Plus aria-hidden="true" size={13} strokeWidth={2.2} />
+		{t({ locale: $localeStore, key: 'battles.intro.start' })}
+	</button>
 	<button
 		class="battles-intro-dismiss"
 		aria-label={t({ locale: $localeStore, key: 'battles.intro.dismiss' })}
@@ -49,6 +57,21 @@
 		font-size: var(--t-13);
 		line-height: 1.5;
 		color: var(--text-muted);
+	}
+
+	.battles-intro-cta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		margin-top: 0.7rem;
+		padding: 0.35rem 0.7rem;
+		font-size: var(--t-12);
+		font-weight: 600;
+		color: var(--laurel);
+		background: color-mix(in srgb, var(--laurel) 10%, transparent);
+		border: 1px solid color-mix(in srgb, var(--laurel) 24%, transparent);
+		border-radius: var(--r-pill);
+		cursor: pointer;
 	}
 
 	.battles-intro-dismiss {
