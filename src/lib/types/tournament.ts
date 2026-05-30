@@ -1,7 +1,7 @@
 /**
  * Monthly tournament — Proposal 3 in `docs/backend-proposals/README.md`.
  *
- * The TournamentBoutDetail surface presents a 16-league single-
+ * The TournamentBattleDetail surface presents a 16-league single-
  * elimination bracket with per-match accuracy. We model the structure
  * as two collections:
  *

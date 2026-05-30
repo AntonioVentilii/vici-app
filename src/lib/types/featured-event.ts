@@ -2,7 +2,7 @@
  * A "featured event" is a tentpole around which the app builds a temporary,
  * curated experience — the 2026 World Cup today, an Olympic Games or
  * national election next. Everything event-specific (onboarding hero,
- * Flow filter, Worlds bouts hook, archive cut-off) reads from a single
+ * Flow filter, Worlds battles hook, archive cut-off) reads from a single
  * `FeaturedEvent` instance so the next tentpole plugs in by swapping the
  * constant — no scattered `cat === 'wc'` checks across screens.
  *

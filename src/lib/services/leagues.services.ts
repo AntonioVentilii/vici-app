@@ -1,7 +1,7 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
-import type { BoutDoc } from '$lib/types/bout';
+import type { BattleDoc } from '$lib/types/battle';
 import {
 	LEAGUE_DESCRIPTION_MAX_LENGTH,
 	LEAGUE_INVITE_CODE_REGEX,
@@ -343,21 +343,21 @@ export const transferLeagueOwnership = ({
 }): Promise<TransferLeagueOwnershipResult> =>
 	functions.transferLeagueOwnership({ leagueId, newOwnerPrincipal });
 
-// ─── Bouts ───────────────────────────────────────────────────────────────
+// ─── Battles ───────────────────────────────────────────────────────────────
 
-const projectBoutWire = (b: {
+const projectBattleWire = (b: {
 	id: string;
-	kind: BoutDoc['kind'];
+	kind: BattleDoc['kind'];
 	side_a: string;
 	side_b: string;
 	proposer: string;
-	state: BoutDoc['state'];
+	state: BattleDoc['state'];
 	kickoff_ms: number;
 	settle_ms: number;
 	score_a?: number;
 	score_b?: number;
-	winner?: BoutDoc['winner'];
-}): BoutDoc => ({
+	winner?: BattleDoc['winner'];
+}): BattleDoc => ({
 	id: b.id,
 	kind: b.kind,
 	sideA: b.side_a,
@@ -372,35 +372,39 @@ const projectBoutWire = (b: {
 });
 
 /**
- * List every bout involving the given league — both sides scanned.
+ * List every battle involving the given league — both sides scanned.
  * Projects the satellite's snake_case wire schema to camelCase
- * `BoutDoc` for the FE.
+ * `BattleDoc` for the FE.
  */
-export const listLeagueBouts = async ({ leagueId }: { leagueId: string }): Promise<BoutDoc[]> => {
-	const { items } = await functions.listLeagueBouts({ leagueId });
+export const listLeagueBattles = async ({
+	leagueId
+}: {
+	leagueId: string;
+}): Promise<BattleDoc[]> => {
+	const { items } = await functions.listLeagueBattles({ leagueId });
 
-	return items.map(projectBoutWire);
+	return items.map(projectBattleWire);
 };
 
 /**
- * List every bout across every league the caller belongs to. Powers
- * the `/arena/bouts` cross-league inbox. Sorted server-side by
+ * List every battle across every league the caller belongs to. Powers
+ * the `/arena/battles` cross-league inbox. Sorted server-side by
  * `kickoffMs` ascending.
  */
-export const listMyBouts = async (): Promise<BoutDoc[]> => {
-	const { items } = await functions.listMyBouts();
+export const listMyBattles = async (): Promise<BattleDoc[]> => {
+	const { items } = await functions.listMyBattles();
 
-	return items.map(projectBoutWire);
+	return items.map(projectBattleWire);
 };
 
 /**
- * Propose a new bout (kind='league'). Caller must own the `sideA`
+ * Propose a new battle (kind='league'). Caller must own the `sideA`
  * league; the satellite assert hard-rejects otherwise. The opponent
  * (sideB) league doesn't need to exist on the satellite for the
  * proposal to land — accept goes through a separate assert pass
  * under the opponent owner's caller identity.
  */
-export const proposeBout = async ({
+export const proposeBattle = async ({
 	sideA,
 	sideB,
 	kickoffMs,
@@ -410,17 +414,17 @@ export const proposeBout = async ({
 	sideB: string;
 	kickoffMs: number;
 	settleMs: number;
-}): Promise<BoutDoc> => {
+}): Promise<BattleDoc> => {
 	if (kickoffMs >= settleMs) {
 		throw new Error('Kickoff must be strictly before settle.');
 	}
 
 	const identity = await safeGetIdentityOnce();
 	const proposerPrincipal = identity.getPrincipal().toText();
-	const boutId = `${sideA}--vs--${sideB}-${Date.now().toString(36)}`;
+	const battleId = `${sideA}--vs--${sideB}-${Date.now().toString(36)}`;
 
-	const bout: BoutDoc = {
-		id: boutId,
+	const battle: BattleDoc = {
+		id: battleId,
 		kind: 'league',
 		sideA,
 		sideB,
@@ -430,16 +434,16 @@ export const proposeBout = async ({
 		settleMs
 	};
 
-	await setDoc<BoutDoc>({
-		collection: Collection.BOUTS,
-		doc: { key: boutId, data: bout }
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		doc: { key: battleId, data: battle }
 	});
 
-	return bout;
+	return battle;
 };
 
 /**
- * Bout state transitions — thin write helpers. The satellite assert
+ * Battle state transitions — thin write helpers. The satellite assert
  * (BE-6) enforces the forward-only state machine + per-transition
  * authorisation; the FE just packages the doc + signs the call.
  *
@@ -447,85 +451,85 @@ export const proposeBout = async ({
  * server's `updated_at` token, which `setDoc` needs for the
  * conflict-free update path.
  */
-export const acceptBout = async ({ bout }: { bout: BoutDoc }): Promise<BoutDoc> => {
-	const next: BoutDoc = { ...bout, state: 'accepted' };
-	await writeBoutTransition({ bout, next });
+export const acceptBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	const next: BattleDoc = { ...battle, state: 'accepted' };
+	await writeBattleTransition({ battle, next });
 
 	return next;
 };
 
-export const kickoffBout = async ({ bout }: { bout: BoutDoc }): Promise<BoutDoc> => {
-	const next: BoutDoc = { ...bout, state: 'in_flight' };
-	await writeBoutTransition({ bout, next });
+export const kickoffBattle = async ({ battle }: { battle: BattleDoc }): Promise<BattleDoc> => {
+	const next: BattleDoc = { ...battle, state: 'in_flight' };
+	await writeBattleTransition({ battle, next });
 
 	return next;
 };
 
 /**
- * Retract a `proposed`-state bout. Only the original proposer can
+ * Retract a `proposed`-state battle. Only the original proposer can
  * call this; the satellite assert hard-rejects anyone else and any
- * bout past `proposed`.
+ * battle past `proposed`.
  */
-export const retractBout = async ({ bout }: { bout: BoutDoc }): Promise<void> => {
-	if (bout.state !== 'proposed') {
-		throw new Error('Only proposed bouts can be retracted.');
+export const retractBattle = async ({ battle }: { battle: BattleDoc }): Promise<void> => {
+	if (battle.state !== 'proposed') {
+		throw new Error('Only proposed battles can be retracted.');
 	}
 
-	const existing = await getDoc<BoutDoc>({
-		collection: Collection.BOUTS,
-		key: bout.id
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
 	});
 
 	if (!existing) {
-		throw new Error('Bout no longer exists.');
+		throw new Error('Battle no longer exists.');
 	}
 
-	await deleteDoc<BoutDoc>({
-		collection: Collection.BOUTS,
+	await deleteDoc<BattleDoc>({
+		collection: Collection.BATTLES,
 		doc: {
-			key: bout.id,
+			key: battle.id,
 			data: existing.data,
 			updated_at: existing.updated_at
 		}
 	});
 };
 
-export const resolveBout = async ({
-	bout,
+export const resolveBattle = async ({
+	battle,
 	scoreA,
 	scoreB
 }: {
-	bout: BoutDoc;
+	battle: BattleDoc;
 	scoreA: number;
 	scoreB: number;
-}): Promise<BoutDoc> => {
+}): Promise<BattleDoc> => {
 	const winner = scoreA > scoreB ? 'A' : scoreA < scoreB ? 'B' : 'draw';
-	const next: BoutDoc = { ...bout, state: 'resolved', scoreA, scoreB, winner };
-	await writeBoutTransition({ bout, next });
+	const next: BattleDoc = { ...battle, state: 'resolved', scoreA, scoreB, winner };
+	await writeBattleTransition({ battle, next });
 
 	return next;
 };
 
-const writeBoutTransition = async ({
-	bout,
+const writeBattleTransition = async ({
+	battle,
 	next
 }: {
-	bout: BoutDoc;
-	next: BoutDoc;
+	battle: BattleDoc;
+	next: BattleDoc;
 }): Promise<void> => {
-	const existing = await getDoc<BoutDoc>({
-		collection: Collection.BOUTS,
-		key: bout.id
+	const existing = await getDoc<BattleDoc>({
+		collection: Collection.BATTLES,
+		key: battle.id
 	});
 
 	if (!existing) {
-		throw new Error('Bout no longer exists.');
+		throw new Error('Battle no longer exists.');
 	}
 
-	await setDoc<BoutDoc>({
-		collection: Collection.BOUTS,
+	await setDoc<BattleDoc>({
+		collection: Collection.BATTLES,
 		doc: {
-			key: bout.id,
+			key: battle.id,
 			data: next,
 			updated_at: existing.updated_at
 		}

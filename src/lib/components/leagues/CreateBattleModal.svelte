@@ -9,20 +9,20 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Create-bout entry point. Reachable from any social surface
-	 * (BoutsInboxPage empty state, etc) — not tied to a specific
+	 * Create-battle entry point. Reachable from any social surface
+	 * (BattlesInboxPage empty state, etc) — not tied to a specific
 	 * league context.
 	 *
 	 *  - If the caller owns 0 leagues → empty state with
 	 *    "Go to Leagues" CTA.
 	 *  - If the caller owns 1+ leagues → list them; selecting one
 	 *    navigates to that league's detail page with
-	 *    `?propose=1` so the existing `ProposeBoutModal` opens
+	 *    `?propose=1` so the existing `ProposeBattleModal` opens
 	 *    auto-magically with that league as `ourLeagueId`. Keeps the
 	 *    propose form in one place.
 	 *
-	 * Empty + picker flow, minus the per-bout configuration screen —
-	 * that lives in `ProposeBoutModal` already.
+	 * Empty + picker flow, minus the per-battle configuration screen —
+	 * that lives in `ProposeBattleModal` already.
 	 */
 	interface Props {
 		isOpen: boolean;
@@ -46,7 +46,7 @@
 			leagues = await listMyLeagues();
 			loadState = 'ready';
 		} catch (err) {
-			console.error('CreateBoutModal: listMyLeagues failed', err);
+			console.error('CreateBattleModal: listMyLeagues failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 			loadState = 'error';
 		}
@@ -72,43 +72,43 @@
 </script>
 
 <BottomSheet {isOpen} {onClose}>
-	<div class="create-bout">
-		<h2 class="create-bout-title">
-			{t({ locale: $localeStore, key: 'bout.create.title' })}
+	<div class="create-battle">
+		<h2 class="create-battle-title">
+			{t({ locale: $localeStore, key: 'battle.create.title' })}
 		</h2>
 
 		{#if loadState === 'loading'}
-			<p class="create-bout-status" aria-busy="true">
-				{t({ locale: $localeStore, key: 'bout.create.loading' })}
+			<p class="create-battle-status" aria-busy="true">
+				{t({ locale: $localeStore, key: 'battle.create.loading' })}
 			</p>
 		{:else if loadState === 'error'}
-			<p class="create-bout-error" role="alert">
+			<p class="create-battle-error" role="alert">
 				{errorMessage ?? t({ locale: $localeStore, key: 'leagues.error.generic' })}
 			</p>
 		{:else if ownedLeagues.length === 0}
-			<p class="create-bout-empty-lede serif-italic">
-				{t({ locale: $localeStore, key: 'bout.create.empty.lede' })}
+			<p class="create-battle-empty-lede serif-italic">
+				{t({ locale: $localeStore, key: 'battle.create.empty.lede' })}
 			</p>
-			<p class="create-bout-empty-sub">
-				{t({ locale: $localeStore, key: 'bout.create.empty.sub' })}
+			<p class="create-battle-empty-sub">
+				{t({ locale: $localeStore, key: 'battle.create.empty.sub' })}
 			</p>
-			<button class="create-bout-cta" onclick={goToLeagues} type="button">
-				{t({ locale: $localeStore, key: 'bout.create.empty.cta' })}
+			<button class="create-battle-cta" onclick={goToLeagues} type="button">
+				{t({ locale: $localeStore, key: 'battle.create.empty.cta' })}
 			</button>
 		{:else}
-			<p class="create-bout-sub">
-				{t({ locale: $localeStore, key: 'bout.create.pick_league' })}
+			<p class="create-battle-sub">
+				{t({ locale: $localeStore, key: 'battle.create.pick_league' })}
 			</p>
-			<ul class="create-bout-list">
+			<ul class="create-battle-list">
 				{#each ownedLeagues as { league } (league.id)}
 					<li>
 						<button
 							style:--accent={league.accentColor ?? 'var(--laurel)'}
-							class="create-bout-league"
+							class="create-battle-league"
 							onclick={() => pickLeague(league.id)}
 							type="button"
 						>
-							<span class="create-bout-league-name">{league.name}</span>
+							<span class="create-battle-league-name">{league.name}</span>
 							<span aria-hidden="true">→</span>
 						</button>
 					</li>
@@ -119,14 +119,14 @@
 </BottomSheet>
 
 <style lang="postcss">
-	.create-bout {
+	.create-battle {
 		display: flex;
 		flex-direction: column;
 		gap: 0.8rem;
 		padding: 0.25rem 0 0.5rem;
 	}
 
-	.create-bout-title {
+	.create-battle-title {
 		margin: 0;
 		font-family: var(--font-display);
 		font-size: var(--t-18, 1.15rem);
@@ -134,46 +134,46 @@
 		color: var(--text-base);
 	}
 
-	.create-bout-sub {
+	.create-battle-sub {
 		margin: 0;
 		font-size: var(--t-13);
 		color: var(--text-muted);
 	}
 
-	.create-bout-status,
-	.create-bout-error {
+	.create-battle-status,
+	.create-battle-error {
 		margin: 0;
 		padding: 0.85rem 1rem;
 		font-size: var(--t-13);
 		border-radius: var(--r-12);
 	}
 
-	.create-bout-status {
+	.create-battle-status {
 		color: var(--text-muted);
 		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
 		border: 1px solid var(--border-base);
 	}
 
-	.create-bout-error {
+	.create-battle-error {
 		color: var(--no);
 		background: color-mix(in srgb, var(--no-wash, var(--no)) 14%, transparent);
 		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
 	}
 
-	.create-bout-empty-lede {
+	.create-battle-empty-lede {
 		margin: 0;
 		font-size: var(--t-15, 1rem);
 		color: var(--laurel);
 	}
 
-	.create-bout-empty-sub {
+	.create-battle-empty-sub {
 		margin: 0;
 		font-size: var(--t-13);
 		line-height: 1.5;
 		color: var(--text-muted);
 	}
 
-	.create-bout-cta {
+	.create-battle-cta {
 		appearance: none;
 		display: inline-flex;
 		align-items: center;
@@ -190,7 +190,7 @@
 		cursor: pointer;
 	}
 
-	.create-bout-list {
+	.create-battle-list {
 		display: flex;
 		flex-direction: column;
 		gap: 0.45rem;
@@ -199,7 +199,7 @@
 		margin: 0;
 	}
 
-	.create-bout-league {
+	.create-battle-league {
 		appearance: none;
 		display: flex;
 		align-items: center;
@@ -219,12 +219,12 @@
 			border-color 140ms ease;
 	}
 
-	.create-bout-league:hover {
+	.create-battle-league:hover {
 		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
 		border-color: color-mix(in srgb, var(--laurel) 35%, var(--border-base));
 	}
 
-	.create-bout-league-name {
+	.create-battle-league-name {
 		font-size: var(--t-14);
 		font-weight: 600;
 	}

@@ -26,14 +26,14 @@ import {
 	assertDeleteAffiliation,
 	assertSetAffiliation
 } from '$satellite/services/affiliation.services';
-import { assertDeleteBout, assertSetBout } from '$satellite/services/bout.services';
+import { assertDeleteBattle, assertSetBattle } from '$satellite/services/battle.services';
 import {
 	getAffiliationStatsFn,
 	listAffiliationStatsFn,
-	listLeagueBoutsFn,
+	listLeagueBattlesFn,
 	listLeagueMembersFn,
 	listMyAffiliationsFn,
-	listMyBoutsFn,
+	listMyBattlesFn,
 	listMyLeaguesFn,
 	listWorldsRosterFn,
 	lookupLeagueByInviteFn
@@ -115,7 +115,7 @@ import {
 	AffiliationStatsOptionWireSchema,
 	AffiliationStatsWireSchema,
 	AffiliationWireSchema,
-	BoutWireSchema,
+	BattleWireSchema,
 	LeagueMemberWireSchema,
 	LeagueWireSchema,
 	LeagueWithRoleWireSchema,
@@ -126,7 +126,7 @@ import {
 	TournamentWireSchema,
 	toWireAffiliation,
 	toWireAffiliationStats,
-	toWireBout,
+	toWireBattle,
 	toWireLeague,
 	toWireLeagueMember,
 	toWireLeagueWithRole,
@@ -441,26 +441,26 @@ export const lookupLeagueByInvite = defineQuery({
 	}
 });
 
-// ─── Bouts ──────────────────────────────────────────────────────
+// ─── Battles ──────────────────────────────────────────────────────
 
-export const listLeagueBouts = defineQuery({
+export const listLeagueBattles = defineQuery({
 	args: j.strictObject({
 		leagueId: j.string()
 	}),
 	result: j.strictObject({
-		items: j.array(BoutWireSchema)
+		items: j.array(BattleWireSchema)
 	}),
 	handler: ({ leagueId }) => ({
-		items: listLeagueBoutsFn({ leagueId }).map(toWireBout)
+		items: listLeagueBattlesFn({ leagueId }).map(toWireBattle)
 	})
 });
 
-export const listMyBouts = defineQuery({
+export const listMyBattles = defineQuery({
 	result: j.strictObject({
-		items: j.array(BoutWireSchema)
+		items: j.array(BattleWireSchema)
 	}),
 	handler: () => ({
-		items: listMyBoutsFn().map(toWireBout)
+		items: listMyBattlesFn().map(toWireBattle)
 	})
 });
 
@@ -585,7 +585,7 @@ export const listMyBlockingLeagues = defineQuery({
 // `EXIT_SIGNALS` doc, then cascades hard-deletes for the caller's
 // profile + identity-keyed rows (VXP awards / onboarding, referral
 // code + redemption, affiliations, relations, league memberships,
-// owned-empty leagues). Shared audit rows (activities, bouts,
+// owned-empty leagues). Shared audit rows (activities, battles,
 // comments) are left in place — the principal is gone so they're
 // orphaned but immutable.
 //
@@ -744,7 +744,7 @@ const assertSetDocCollections = [
 	Collection.VXP_AWARDS,
 	Collection.LEAGUES,
 	Collection.LEAGUE_MEMBERS,
-	Collection.BOUTS,
+	Collection.BATTLES,
 	Collection.AFFILIATIONS,
 	Collection.AFFILIATION_STATS,
 	Collection.EXIT_SIGNALS,
@@ -767,7 +767,7 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.VXP_AWARDS]: assertSetVxpAward,
 			[Collection.LEAGUES]: assertSetLeague,
 			[Collection.LEAGUE_MEMBERS]: assertSetLeagueMember,
-			[Collection.BOUTS]: assertSetBout,
+			[Collection.BATTLES]: assertSetBattle,
 			[Collection.AFFILIATIONS]: assertSetAffiliation,
 			[Collection.AFFILIATION_STATS]: assertSetAffiliationStats,
 			[Collection.EXIT_SIGNALS]: assertSetExitSignal,
@@ -784,7 +784,7 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 const assertDeleteDocCollections = [
 	Collection.LEAGUE_MEMBERS,
 	Collection.AFFILIATIONS,
-	Collection.BOUTS
+	Collection.BATTLES
 ] as const;
 
 type AssertDeleteDocCollection = (typeof assertDeleteDocCollections)[number];
@@ -795,7 +795,7 @@ export const assertDeleteDoc = defineAssert<AssertDeleteDoc>({
 		const fn: Record<AssertDeleteDocCollection, (ctx: AssertDeleteDocContext) => void> = {
 			[Collection.LEAGUE_MEMBERS]: assertDeleteLeagueMember,
 			[Collection.AFFILIATIONS]: assertDeleteAffiliation,
-			[Collection.BOUTS]: assertDeleteBout
+			[Collection.BATTLES]: assertDeleteBattle
 		};
 
 		fn[context.data.collection]?.(context);

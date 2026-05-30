@@ -23,7 +23,7 @@ export const featuredEvent: Readable<FeaturedEvent> = readable(CURRENT_FEATURED_
 /**
  * Lifecycle status of the featured event — drives whether onboarding
  * surfaces the hero, whether Flow filters to event markets, and whether
- * the Worlds event-bout is visible.
+ * the Worlds event-battle is visible.
  */
 export const featuredEventStatus: Readable<FeaturedEventStatus> = derived(
 	[featuredEvent, now_ms],
@@ -59,7 +59,7 @@ export const daysToKickoff: Readable<number | null> = derived(
 
 /**
  * Whole days remaining until the event's final (`finalAt_ms`), clamped
- * at 0. Used by surfaces that frame the active event as a bout with a
+ * at 0. Used by surfaces that frame the active event as a battle with a
  * "{N}d left" timer (e.g. the Worlds hero card / scope toggle). `null`
  * once the event has wrapped — UI should switch to archival copy.
  */

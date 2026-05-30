@@ -25,19 +25,19 @@
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
-	 * Worlds bout — the full leaderboard surface across every
+	 * Worlds battle — the full leaderboard surface across every
 	 * affiliation of a given `kind` (`university` or `country`).
 	 *
 	 * Layers in order:
 	 *
 	 *  1. Hero card — `FIFA WORLD CUP · Live` tags, surface-aware title
-	 *     (`Worlds Universities/Countries World Cup Bout` or
-	 *     `… May Season Bout`), days-left + roster size meta.
+	 *     (`Worlds Universities/Countries World Cup Battle` or
+	 *     `… May Season Battle`), days-left + roster size meta.
 	 *
-	 *  2. Scope toggle — `May Season` vs `WC Bout`. Lets users pivot
+	 *  2. Scope toggle — `May Season` vs `WC Battle`. Lets users pivot
 	 *     between the lifetime / monthly ranking on the same screen.
 	 *     Initial scope reads from the `?scope=` query param so deep
-	 *     links from `BoutsInboxPage` land on the correct view.
+	 *     links from `BattlesInboxPage` land on the correct view.
 	 *
 	 *  3. Full ranked leaderboard — top 10 collapsed, "See all" expands
 	 *     to the full roster. When the caller is affiliated and outside
@@ -65,11 +65,11 @@
 	const roster = $derived(kind === 'university' ? WORLDS_UNIVERSITIES : WORLDS_COUNTRIES);
 
 	const titleKey = $derived<MessageKey>(
-		kind === 'university' ? 'worlds.bout.title_university' : 'worlds.bout.title_country'
+		kind === 'university' ? 'worlds.battle.title_university' : 'worlds.battle.title_country'
 	);
 
 	const surfaceLabelLedeKey = $derived<MessageKey>(
-		kind === 'university' ? 'bouts.uni.wc_title_lede' : 'bouts.country.wc_title_lede'
+		kind === 'university' ? 'battles.uni.wc_title_lede' : 'battles.country.wc_title_lede'
 	);
 
 	let stats = $state<AffiliationStatsDoc[]>([]);
@@ -77,7 +77,7 @@
 	let loadState = $state<'loading' | 'ready' | 'error'>('loading');
 	let expanded = $state(false);
 
-	// Initial scope is sourced off `?scope=month` (the BoutsInbox monthly
+	// Initial scope is sourced off `?scope=month` (the BattlesInbox monthly
 	// card link) — defaults to `wc` otherwise.
 	let scope = $state<Scope>(page.url.searchParams.get('scope') === 'month' ? 'month' : 'wc');
 
@@ -162,28 +162,28 @@
 	const eventDaysLeft = $derived($daysToFinal);
 </script>
 
-<div class="worlds-bout">
+<div class="worlds-battle">
 	<MobileAppBar
 		align="left"
 		back={{
-			label: t({ locale: $localeStore, key: 'worlds.bout.back' }),
+			label: t({ locale: $localeStore, key: 'worlds.battle.back' }),
 			onBack: () => goBack(`${resolve(AppPath.Arena)}/worlds`)
 		}}
 		title={t({ locale: $localeStore, key: titleKey })}
 	/>
 
 	{#if loadState === 'loading'}
-		<p class="worlds-bout-status" aria-busy="true">
+		<p class="worlds-battle-status" aria-busy="true">
 			{t({ locale: $localeStore, key: 'worlds.loading' })}
 		</p>
 	{:else if loadState === 'error'}
-		<p class="worlds-bout-error" role="alert">
+		<p class="worlds-battle-error" role="alert">
 			{t({ locale: $localeStore, key: 'worlds.error.generic' })}
 		</p>
 	{:else}
 		<!-- Hero card: tags + surface-aware title + meta line -->
-		<section class="worlds-bout-hero" data-scope={scope}>
-			<div class="worlds-bout-hero-tags">
+		<section class="worlds-battle-hero" data-scope={scope}>
+			<div class="worlds-battle-hero-tags">
 				{#if scope === 'wc'}
 					<span class="worlds-tag is-wc">
 						{t({ locale: $localeStore, key: 'worlds.event.tag_wc' })}
@@ -193,20 +193,20 @@
 					</span>
 				{:else}
 					<span class="worlds-tag is-monthly">
-						{t({ locale: $localeStore, key: 'worlds.bout.tag_monthly' })}
+						{t({ locale: $localeStore, key: 'worlds.battle.tag_monthly' })}
 					</span>
 				{/if}
 			</div>
-			<h3 class="worlds-bout-hero-title">
+			<h3 class="worlds-battle-hero-title">
 				{t({ locale: $localeStore, key: surfaceLabelLedeKey })}
-				<span class="serif-italic worlds-bout-hero-emph">
+				<span class="serif-italic worlds-battle-hero-emph">
 					{scope === 'wc'
 						? t({ locale: $localeStore, key: 'worlds.event.title_emph' })
-						: t({ locale: $localeStore, key: 'worlds.bout.month_emph' })}
+						: t({ locale: $localeStore, key: 'worlds.battle.month_emph' })}
 				</span>
 				{t({ locale: $localeStore, key: 'worlds.event.title_tail' })}
 			</h3>
-			<p class="worlds-bout-hero-meta num">
+			<p class="worlds-battle-hero-meta num">
 				{#if scope === 'wc' && eventDaysLeft !== null}
 					{t({
 						locale: $localeStore,
@@ -222,7 +222,7 @@
 				{:else}
 					{t({
 						locale: $localeStore,
-						key: 'worlds.bout.meta_month',
+						key: 'worlds.battle.meta_month',
 						params: { count: roster.length }
 					})}
 				{/if}
@@ -230,7 +230,7 @@
 		</section>
 
 		<!-- Scope toggle: WC vs Month -->
-		<div class="worlds-bout-scope" aria-label="Bout scope" role="tablist">
+		<div class="worlds-battle-scope" aria-label="Battle scope" role="tablist">
 			<button
 				class:is-active={scope === 'month'}
 				aria-selected={scope === 'month'}
@@ -238,7 +238,7 @@
 				role="tab"
 				type="button"
 			>
-				{t({ locale: $localeStore, key: 'worlds.bout.scope_month' })}
+				{t({ locale: $localeStore, key: 'worlds.battle.scope_month' })}
 			</button>
 			<button
 				class:is-active={scope === 'wc'}
@@ -252,17 +252,17 @@
 		</div>
 
 		<!-- Full leaderboard -->
-		<div class="worlds-bout-list">
+		<div class="worlds-battle-list">
 			{#if visibleRows.length === 0}
-				<p class="worlds-bout-empty">
-					{t({ locale: $localeStore, key: 'worlds.bout.empty_ranked' })}
+				<p class="worlds-battle-empty">
+					{t({ locale: $localeStore, key: 'worlds.battle.empty_ranked' })}
 				</p>
 			{:else}
 				{#each visibleRows as row, i (row.affiliationIdentifier)}
 					{@const option = optionFor(row.affiliationIdentifier)}
 					{@const isYou = myAffil?.affiliationIdentifier === row.affiliationIdentifier}
 					<button
-						class="worlds-bout-row"
+						class="worlds-battle-row"
 						class:is-you={isYou}
 						class:rank-1={i === 0}
 						class:rank-2={i === 1}
@@ -270,23 +270,23 @@
 						onclick={() => handleRowNav(row.affiliationIdentifier)}
 						type="button"
 					>
-						<span class="num worlds-bout-rank">{(i + 1).toString().padStart(2, '0')}</span>
-						<span class="worlds-bout-glyph" aria-hidden="true">
+						<span class="num worlds-battle-rank">{(i + 1).toString().padStart(2, '0')}</span>
+						<span class="worlds-battle-glyph" aria-hidden="true">
 							{kind === 'country'
 								? (option?.glyph ?? '?')
 								: (option?.name ?? row.affiliationIdentifier).charAt(0)}
 						</span>
-						<div class="worlds-bout-meta">
-							<div class="worlds-bout-name">
+						<div class="worlds-battle-meta">
+							<div class="worlds-battle-name">
 								{option?.name ?? row.affiliationIdentifier}
 								{#if isYou}
 									·
-									<span class="worlds-bout-you">
+									<span class="worlds-battle-you">
 										{t({ locale: $localeStore, key: 'worlds.you.suffix' })}
 									</span>
 								{/if}
 							</div>
-							<span class="num worlds-bout-sub">
+							<span class="num worlds-battle-sub">
 								{t({
 									locale: $localeStore,
 									key: 'worlds.row.calls',
@@ -294,7 +294,7 @@
 								})}
 							</span>
 						</div>
-						<span class="num worlds-bout-pct"
+						<span class="num worlds-battle-pct"
 							>{formatAccuracyPercent(accForScope({ row, scope }))}</span
 						>
 					</button>
@@ -302,16 +302,16 @@
 			{/if}
 
 			{#if sortedForScope.length > VISIBLE_PREVIEW}
-				<button class="worlds-bout-see-all" onclick={() => (expanded = !expanded)} type="button">
+				<button class="worlds-battle-see-all" onclick={() => (expanded = !expanded)} type="button">
 					{#if expanded}
-						{t({ locale: $localeStore, key: 'worlds.bout.show_top' })}
+						{t({ locale: $localeStore, key: 'worlds.battle.show_top' })}
 					{:else}
 						{t({
 							locale: $localeStore,
 							key:
 								kind === 'university'
-									? 'worlds.bout.see_all_schools'
-									: 'worlds.bout.see_all_countries',
+									? 'worlds.battle.see_all_schools'
+									: 'worlds.battle.see_all_countries',
 							params: { count: sortedForScope.length }
 						})}
 					{/if}
@@ -320,24 +320,24 @@
 
 			{#if myAffil && myStatsRow && !isMyRowVisible}
 				{@const myOption = optionFor(myAffil.affiliationIdentifier)}
-				<div class="worlds-bout-you-sticky" role="status">
-					<span class="num worlds-bout-rank">
+				<div class="worlds-battle-you-sticky" role="status">
+					<span class="num worlds-battle-rank">
 						{myRank.toString().padStart(2, '0')}
 					</span>
-					<span class="worlds-bout-glyph is-you" aria-hidden="true">
+					<span class="worlds-battle-glyph is-you" aria-hidden="true">
 						{kind === 'country'
 							? (myOption?.glyph ?? '?')
 							: (myOption?.name ?? myAffil.affiliationIdentifier).charAt(0)}
 					</span>
-					<div class="worlds-bout-meta">
-						<div class="worlds-bout-name worlds-bout-name-you">
+					<div class="worlds-battle-meta">
+						<div class="worlds-battle-name worlds-battle-name-you">
 							{myOption?.name ?? myAffil.affiliationIdentifier}
 							·
-							<span class="worlds-bout-you">
+							<span class="worlds-battle-you">
 								{t({ locale: $localeStore, key: 'worlds.you.suffix' })}
 							</span>
 						</div>
-						<span class="num worlds-bout-sub">
+						<span class="num worlds-battle-sub">
 							{t({
 								locale: $localeStore,
 								key: 'worlds.row.calls',
@@ -345,28 +345,28 @@
 							})}
 						</span>
 					</div>
-					<span class="num worlds-bout-pct worlds-bout-pct-you">
+					<span class="num worlds-battle-pct worlds-battle-pct-you">
 						{formatAccuracyPercent(accForScope({ row: myStatsRow, scope }))}
 					</span>
 				</div>
 			{/if}
 		</div>
 
-		<!-- Podium prizes — fixed VXP payouts for the bout -->
-		<section class="worlds-bout-podium" aria-label="Worlds podium prizes">
-			<h2 class="eyebrow worlds-bout-section-eyebrow">
+		<!-- Podium prizes — fixed VXP payouts for the battle -->
+		<section class="worlds-battle-podium" aria-label="Worlds podium prizes">
+			<h2 class="eyebrow worlds-battle-section-eyebrow">
 				{t({ locale: $localeStore, key: 'worlds.podium.eyebrow' })}
 			</h2>
-			<div class="worlds-bout-podium-grid">
-				<div class="worlds-bout-podium-rung is-gold">
+			<div class="worlds-battle-podium-grid">
+				<div class="worlds-battle-podium-rung is-gold">
 					<span class="allcaps">{t({ locale: $localeStore, key: 'worlds.podium.gold' })}</span>
 					<span class="num">+{VXP_WORLDS_PODIUM.gold}</span>
 				</div>
-				<div class="worlds-bout-podium-rung is-silver">
+				<div class="worlds-battle-podium-rung is-silver">
 					<span class="allcaps">{t({ locale: $localeStore, key: 'worlds.podium.silver' })}</span>
 					<span class="num">+{VXP_WORLDS_PODIUM.silver}</span>
 				</div>
-				<div class="worlds-bout-podium-rung is-bronze">
+				<div class="worlds-battle-podium-rung is-bronze">
 					<span class="allcaps">{t({ locale: $localeStore, key: 'worlds.podium.bronze' })}</span>
 					<span class="num">+{VXP_WORLDS_PODIUM.bronze}</span>
 				</div>
@@ -376,28 +376,28 @@
 </div>
 
 <style lang="postcss">
-	.worlds-bout {
+	.worlds-battle {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
 		padding: 0 1.25rem 6rem;
 	}
 
-	.worlds-bout-status,
-	.worlds-bout-error {
+	.worlds-battle-status,
+	.worlds-battle-error {
 		margin: 0;
 		padding: 1rem;
 		font-size: var(--t-13);
 		border-radius: var(--r-12);
 	}
 
-	.worlds-bout-status {
+	.worlds-battle-status {
 		color: var(--text-muted);
 		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
 		border: 1px solid var(--border-base);
 	}
 
-	.worlds-bout-error {
+	.worlds-battle-error {
 		color: var(--no);
 		background: color-mix(in srgb, var(--no-wash, var(--no)) 14%, transparent);
 		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
@@ -405,7 +405,7 @@
 
 	/* Hero — surface-aware tint. WC scope uses the orange WC accent;
 	   month scope uses the laurel tone. */
-	.worlds-bout-hero {
+	.worlds-battle-hero {
 		position: relative;
 		overflow: hidden;
 		padding: 0.9rem 1rem;
@@ -416,14 +416,14 @@
 		border-radius: var(--r-16, 1rem);
 	}
 
-	.worlds-bout-hero[data-scope='month'] {
+	.worlds-battle-hero[data-scope='month'] {
 		background:
 			linear-gradient(180deg, color-mix(in srgb, var(--laurel) 14%, transparent), transparent 70%),
 			var(--bg-surface);
 		border-color: color-mix(in srgb, var(--laurel) 25%, var(--border-base));
 	}
 
-	.worlds-bout-hero-tags {
+	.worlds-battle-hero-tags {
 		display: flex;
 		gap: 0.35rem;
 		margin-bottom: 0.55rem;
@@ -465,7 +465,7 @@
 		color: var(--laurel);
 	}
 
-	.worlds-bout-hero-title {
+	.worlds-battle-hero-title {
 		margin: 0 0 0.25rem;
 		font-family: var(--font-sans);
 		font-weight: 600;
@@ -475,12 +475,12 @@
 		color: var(--text-base);
 	}
 
-	.worlds-bout-hero-emph {
+	.worlds-battle-hero-emph {
 		color: var(--laurel);
 		font-weight: 400;
 	}
 
-	.worlds-bout-hero-meta {
+	.worlds-battle-hero-meta {
 		margin: 0;
 		font-size: var(--t-10);
 		letter-spacing: 0.06em;
@@ -488,7 +488,7 @@
 	}
 
 	/* Scope toggle — mirrors WorldsPage's `worlds-scope`. */
-	.worlds-bout-scope {
+	.worlds-battle-scope {
 		display: flex;
 		gap: 0.1rem;
 		padding: 0.2rem;
@@ -497,7 +497,7 @@
 		border-radius: var(--r-10, 0.625rem);
 	}
 
-	.worlds-bout-scope button {
+	.worlds-battle-scope button {
 		appearance: none;
 		flex: 1;
 		padding: 0.5rem 0.35rem;
@@ -514,20 +514,20 @@
 			color 180ms ease;
 	}
 
-	.worlds-bout-scope button.is-active {
+	.worlds-battle-scope button.is-active {
 		color: var(--text-base);
 		background: var(--bg-surface);
 		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.16);
 	}
 
 	/* Leaderboard list */
-	.worlds-bout-list {
+	.worlds-battle-list {
 		position: relative;
 		display: flex;
 		flex-direction: column;
 	}
 
-	.worlds-bout-empty {
+	.worlds-battle-empty {
 		margin: 0 0 0.5rem;
 		padding: 0.85rem 1rem;
 		font-size: var(--t-12);
@@ -537,7 +537,7 @@
 		border-radius: var(--r-12);
 	}
 
-	.worlds-bout-row {
+	.worlds-battle-row {
 		appearance: none;
 		display: grid;
 		grid-template-columns: 24px 28px 1fr auto;
@@ -554,30 +554,30 @@
 		cursor: pointer;
 	}
 
-	.worlds-bout-row:hover {
+	.worlds-battle-row:hover {
 		background: color-mix(in srgb, var(--text-base) 3%, transparent);
 	}
 
-	.worlds-bout-rank {
+	.worlds-battle-rank {
 		font-size: var(--t-12);
 		font-weight: 700;
 		text-align: center;
 		color: var(--text-muted);
 	}
 
-	.worlds-bout-row.rank-1 .worlds-bout-rank {
+	.worlds-battle-row.rank-1 .worlds-battle-rank {
 		color: #e2b842;
 	}
 
-	.worlds-bout-row.rank-2 .worlds-bout-rank {
+	.worlds-battle-row.rank-2 .worlds-battle-rank {
 		color: #c0c5cb;
 	}
 
-	.worlds-bout-row.rank-3 .worlds-bout-rank {
+	.worlds-battle-row.rank-3 .worlds-battle-rank {
 		color: #b57c52;
 	}
 
-	.worlds-bout-glyph {
+	.worlds-battle-glyph {
 		display: flex;
 		align-items: center;
 		justify-content: center;
@@ -592,13 +592,13 @@
 		border-radius: var(--r-pill);
 	}
 
-	.worlds-bout-meta {
+	.worlds-battle-meta {
 		display: flex;
 		flex-direction: column;
 		min-width: 0;
 	}
 
-	.worlds-bout-name {
+	.worlds-battle-name {
 		font-size: var(--t-13);
 		font-weight: 600;
 		letter-spacing: -0.005em;
@@ -607,38 +607,38 @@
 		white-space: nowrap;
 	}
 
-	.worlds-bout-sub {
+	.worlds-battle-sub {
 		margin-top: 0.05rem;
 		font-size: var(--t-10);
 		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
 	}
 
-	.worlds-bout-pct {
+	.worlds-battle-pct {
 		font-size: var(--t-13);
 		font-weight: 700;
 		text-align: right;
 	}
 
-	.worlds-bout-row.rank-1 .worlds-bout-pct {
+	.worlds-battle-row.rank-1 .worlds-battle-pct {
 		color: #e2b842;
 	}
 
-	.worlds-bout-row.is-you {
+	.worlds-battle-row.is-you {
 		background: color-mix(in srgb, var(--laurel) 6%, transparent);
 	}
 
-	.worlds-bout-row.is-you .worlds-bout-name,
-	.worlds-bout-row.is-you .worlds-bout-pct {
+	.worlds-battle-row.is-you .worlds-battle-name,
+	.worlds-battle-row.is-you .worlds-battle-pct {
 		color: var(--laurel);
 	}
 
-	.worlds-bout-you {
+	.worlds-battle-you {
 		color: var(--laurel);
 		font-weight: 700;
 	}
 
-	.worlds-bout-see-all {
+	.worlds-battle-see-all {
 		appearance: none;
 		display: block;
 		width: 100%;
@@ -656,12 +656,12 @@
 		cursor: pointer;
 	}
 
-	.worlds-bout-see-all:hover {
+	.worlds-battle-see-all:hover {
 		background: color-mix(in srgb, var(--laurel) 4%, transparent);
 	}
 
 	/* Sticky YOU when affiliated user is outside the visible window. */
-	.worlds-bout-you-sticky {
+	.worlds-battle-you-sticky {
 		position: sticky;
 		bottom: calc(96px + env(safe-area-inset-bottom, 0px));
 		display: grid;
@@ -675,25 +675,25 @@
 		box-shadow: 0 -6px 16px -8px rgba(0, 0, 0, 0.4);
 	}
 
-	.worlds-bout-you-sticky .worlds-bout-rank {
+	.worlds-battle-you-sticky .worlds-battle-rank {
 		color: var(--laurel);
 	}
 
-	.worlds-bout-glyph.is-you {
+	.worlds-battle-glyph.is-you {
 		background: color-mix(in srgb, var(--laurel) 18%, transparent);
 		box-shadow: 0 0 0 1px var(--laurel);
 	}
 
-	.worlds-bout-name-you {
+	.worlds-battle-name-you {
 		color: var(--laurel);
 	}
 
-	.worlds-bout-pct-you {
+	.worlds-battle-pct-you {
 		color: var(--laurel);
 	}
 
 	/* Podium prizes — fixed VXP rungs. */
-	.worlds-bout-podium {
+	.worlds-battle-podium {
 		display: flex;
 		flex-direction: column;
 		gap: 0.5rem;
@@ -703,18 +703,18 @@
 		border-radius: var(--r-12);
 	}
 
-	.worlds-bout-section-eyebrow {
+	.worlds-battle-section-eyebrow {
 		margin: 0;
 		color: var(--text-muted);
 	}
 
-	.worlds-bout-podium-grid {
+	.worlds-battle-podium-grid {
 		display: grid;
 		grid-template-columns: 1fr 1fr 1fr;
 		gap: 0.5rem;
 	}
 
-	.worlds-bout-podium-rung {
+	.worlds-battle-podium-rung {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -727,23 +727,23 @@
 		color: var(--text-muted);
 	}
 
-	.worlds-bout-podium-rung .num {
+	.worlds-battle-podium-rung .num {
 		font-size: var(--t-16, 1rem);
 		font-weight: 700;
 		color: var(--text-base);
 	}
 
-	.worlds-bout-podium-rung.is-gold {
+	.worlds-battle-podium-rung.is-gold {
 		border-color: color-mix(in srgb, #f4c544 50%, var(--border-base));
 		background: color-mix(in srgb, #f4c544 8%, var(--bg-surface));
 	}
 
-	.worlds-bout-podium-rung.is-silver {
+	.worlds-battle-podium-rung.is-silver {
 		border-color: color-mix(in srgb, #c0c5cc 50%, var(--border-base));
 		background: color-mix(in srgb, #c0c5cc 8%, var(--bg-surface));
 	}
 
-	.worlds-bout-podium-rung.is-bronze {
+	.worlds-battle-podium-rung.is-bronze {
 		border-color: color-mix(in srgb, #c97c4a 50%, var(--border-base));
 		background: color-mix(in srgb, #c97c4a 8%, var(--bg-surface));
 	}

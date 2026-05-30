@@ -9,24 +9,24 @@
 	import ChallengeLeagueModal from '$lib/components/leagues/ChallengeLeagueModal.svelte';
 	import LeagueDetailEmptyState from '$lib/components/leagues/LeagueDetailEmptyState.svelte';
 	import MemberSticker from '$lib/components/leagues/MemberSticker.svelte';
-	import ResolveBoutModal from '$lib/components/leagues/ResolveBoutModal.svelte';
+	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
-		acceptBout,
-		kickoffBout,
+		acceptBattle,
+		kickoffBattle,
 		leaveLeague,
-		listLeagueBouts,
+		listLeagueBattles,
 		listMyLeagues,
-		retractBout,
+		retractBattle,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
 	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
-	import type { BoutDoc, BoutState } from '$lib/types/bout';
+	import type { BattleDoc, BattleState } from '$lib/types/battle';
 	import type { LeagueDoc } from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
 	import { formatDate, shortenPrincipal } from '$lib/utils/format.utils';
@@ -38,7 +38,7 @@
 	 *
 	 * Mounts at `/arena/leagues/[id]`. Renders the head card
 	 * (gradient logo + emblem + N° rank + inline Invite/Predict
-	 * buttons), the league-bout section (active card or
+	 * buttons), the league-battle section (active card or
 	 * Challenge-another-league CTA), the members sticker grid, a
 	 * leaderboard card, a recent-activity feed, and the
 	 * leave / transfer-ownership controls.
@@ -52,7 +52,7 @@
 	let league: LeagueDoc | undefined = $state();
 	let myRole: LeagueMemberRole | undefined = $state();
 	let members: LeagueMemberDoc[] = $state([]);
-	let bouts: BoutDoc[] = $state([]);
+	let battles: BattleDoc[] = $state([]);
 	let selfPrincipal: string | undefined = $state();
 	let loadState: 'loading' | 'ready' | 'not_member' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
@@ -64,10 +64,10 @@
 
 	const load = async () => {
 		try {
-			const [memberships, memberList, boutList, identity] = await Promise.all([
+			const [memberships, memberList, battleList, identity] = await Promise.all([
 				listMyLeagues(),
 				functions.listLeagueMembers({ leagueId }),
-				listLeagueBouts({ leagueId }),
+				listLeagueBattles({ leagueId }),
 				safeGetIdentityOnce()
 			]);
 
@@ -88,7 +88,7 @@
 				joinedAtMs: m.joined_at_ms,
 				role: m.role
 			}));
-			bouts = boutList;
+			battles = battleList;
 			// Hydrate handles for the roster + leaderboard rows. The
 			// derived `memberHandle` picks up nicknames once the cache
 			// lands.
@@ -105,7 +105,7 @@
 
 	onMount(load);
 
-	// Deep-link: `?challenge=1` from CreateBoutModal / other surfaces
+	// Deep-link: `?challenge=1` from CreateBattleModal / other surfaces
 	// opens the challenge sheet immediately on load. Kept the legacy
 	// `?propose=1` alias too so older links still work.
 	$effect(() => {
@@ -195,7 +195,7 @@
 		void load();
 	};
 
-	const handleBoutProposed = () => {
+	const handleBattleProposed = () => {
 		challengeOpen = false;
 		void load();
 	};
@@ -302,181 +302,181 @@
 		});
 	});
 
-	// Active bout (in_flight first, else accepted / proposed).
-	// Resolved bouts are excluded — the active card only shows a live
+	// Active battle (in_flight first, else accepted / proposed).
+	// Resolved battles are excluded — the active card only shows a live
 	// or near-live match-up.
-	const activeBout = $derived.by(() => {
-		const live = bouts.find((b) => b.state === 'in_flight');
+	const activeBattle = $derived.by(() => {
+		const live = battles.find((b) => b.state === 'in_flight');
 
 		if (live) {
 			return live;
 		}
 
-		return bouts.find((b) => b.state === 'accepted' || b.state === 'proposed');
+		return battles.find((b) => b.state === 'accepted' || b.state === 'proposed');
 	});
 
-	const activeBoutOpponentId = $derived.by((): string | undefined => {
-		if (!activeBout) {
+	const activeBattleOpponentId = $derived.by((): string | undefined => {
+		if (!activeBattle) {
 			return;
 		}
 
-		return activeBout.sideA === leagueId ? activeBout.sideB : activeBout.sideA;
+		return activeBattle.sideA === leagueId ? activeBattle.sideB : activeBattle.sideA;
 	});
 
-	const activeBoutStateLabelKey = $derived.by((): MessageKey | undefined => {
-		if (!activeBout) {
+	const activeBattleStateLabelKey = $derived.by((): MessageKey | undefined => {
+		if (!activeBattle) {
 			return;
 		}
 
-		switch (activeBout.state) {
+		switch (activeBattle.state) {
 			case 'proposed':
-				return 'leagues.bout.state.proposed';
+				return 'leagues.battle.state.proposed';
 			case 'accepted':
-				return 'leagues.bout.state.accepted';
+				return 'leagues.battle.state.accepted';
 			case 'in_flight':
-				return 'leagues.bout.state.in_flight';
+				return 'leagues.battle.state.in_flight';
 			case 'resolved':
-				// `activeBout` filter excludes resolved bouts, so this
+				// `activeBattle` filter excludes resolved battles, so this
 				// branch is unreachable today; the case exists for
 				// exhaustiveness.
-				return 'leagues.bout.state.resolved';
+				return 'leagues.battle.state.resolved';
 		}
 	});
 
-	// Friendly opponent label inside the active bout headline. The
+	// Friendly opponent label inside the active battle headline. The
 	// satellite hands us a raw league id; we trim long slugs so the
 	// headline stays on one visual line.
 	const shortLeagueId = (id: string): string =>
 		id.length > 14 ? `${id.slice(0, 6)}…${id.slice(-5)}` : id;
 
-	// Meta line under the active bout headline:
+	// Meta line under the active battle headline:
 	//   Proposed         → "Awaiting acceptance from {opponent}".
 	//   Accepted /
 	//   in-flight        → "Day {day} of {days} · accuracy face-off".
-	const activeBoutMetaLine = $derived.by((): string | undefined => {
-		if (!activeBout || !activeBoutOpponentId) {
+	const activeBattleMetaLine = $derived.by((): string | undefined => {
+		if (!activeBattle || !activeBattleOpponentId) {
 			return;
 		}
 
-		if (activeBout.state === 'proposed') {
+		if (activeBattle.state === 'proposed') {
 			return t({
 				locale: $localeStore,
-				key: 'leagues.detail.bout_meta_awaiting',
-				params: { opponent: shortLeagueId(activeBoutOpponentId) }
+				key: 'leagues.detail.battle_meta_awaiting',
+				params: { opponent: shortLeagueId(activeBattleOpponentId) }
 			});
 		}
 
 		const totalDays = Math.max(
 			1,
-			Math.round((activeBout.settleMs - activeBout.kickoffMs) / DAY_IN_MS)
+			Math.round((activeBattle.settleMs - activeBattle.kickoffMs) / DAY_IN_MS)
 		);
 		const elapsedDays = Math.max(
 			1,
-			Math.min(totalDays, Math.ceil((Date.now() - activeBout.kickoffMs) / DAY_IN_MS))
+			Math.min(totalDays, Math.ceil((Date.now() - activeBattle.kickoffMs) / DAY_IN_MS))
 		);
 
 		return t({
 			locale: $localeStore,
-			key: 'leagues.detail.bout_meta_day_of',
+			key: 'leagues.detail.battle_meta_day_of',
 			params: { day: elapsedDays, days: totalDays }
 		});
 	});
 
-	// Per-bout transition affordances. Owner-only.
-	let actingBoutId = $state<string | null>(null);
-	let resolveBoutTarget = $state<BoutDoc | null>(null);
+	// Per-battle transition affordances. Owner-only.
+	let actingBattleId = $state<string | null>(null);
+	let resolveBattleTarget = $state<BattleDoc | null>(null);
 
-	const canAcceptBout = (bout: BoutDoc): boolean =>
-		myRole === 'owner' && bout.state === 'proposed' && bout.sideB === leagueId;
+	const canAcceptBattle = (battle: BattleDoc): boolean =>
+		myRole === 'owner' && battle.state === 'proposed' && battle.sideB === leagueId;
 
-	const canKickoffBout = (bout: BoutDoc): boolean =>
+	const canKickoffBattle = (battle: BattleDoc): boolean =>
 		myRole === 'owner' &&
-		bout.state === 'accepted' &&
-		(bout.sideA === leagueId || bout.sideB === leagueId) &&
-		Date.now() >= bout.kickoffMs;
+		battle.state === 'accepted' &&
+		(battle.sideA === leagueId || battle.sideB === leagueId) &&
+		Date.now() >= battle.kickoffMs;
 
-	const canResolveBout = (bout: BoutDoc): boolean =>
+	const canResolveBattle = (battle: BattleDoc): boolean =>
 		myRole === 'owner' &&
-		bout.state === 'in_flight' &&
-		(bout.sideA === leagueId || bout.sideB === leagueId) &&
-		Date.now() >= bout.settleMs;
+		battle.state === 'in_flight' &&
+		(battle.sideA === leagueId || battle.sideB === leagueId) &&
+		Date.now() >= battle.settleMs;
 
-	const canRetractBout = (bout: BoutDoc): boolean =>
-		bout.state === 'proposed' && selfPrincipal !== undefined && bout.proposer === selfPrincipal;
+	const canRetractBattle = (battle: BattleDoc): boolean =>
+		battle.state === 'proposed' && selfPrincipal !== undefined && battle.proposer === selfPrincipal;
 
-	const handleRetractBout = async (bout: BoutDoc) => {
-		if (actingBoutId !== null) {
+	const handleRetractBattle = async (battle: BattleDoc) => {
+		if (actingBattleId !== null) {
 			return;
 		}
 
-		actingBoutId = bout.id;
+		actingBattleId = battle.id;
 
 		try {
-			await retractBout({ bout });
+			await retractBattle({ battle });
 			await load();
 		} catch (err) {
-			console.error('LeagueDetailPage: retractBout failed', err);
+			console.error('LeagueDetailPage: retractBattle failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
-			actingBoutId = null;
+			actingBattleId = null;
 		}
 	};
 
-	const handleAcceptBout = async (bout: BoutDoc) => {
-		if (actingBoutId !== null) {
+	const handleAcceptBattle = async (battle: BattleDoc) => {
+		if (actingBattleId !== null) {
 			return;
 		}
 
-		actingBoutId = bout.id;
+		actingBattleId = battle.id;
 
 		try {
-			await acceptBout({ bout });
+			await acceptBattle({ battle });
 			await load();
 		} catch (err) {
-			console.error('LeagueDetailPage: acceptBout failed', err);
+			console.error('LeagueDetailPage: acceptBattle failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
-			actingBoutId = null;
+			actingBattleId = null;
 		}
 	};
 
-	const handleKickoffBout = async (bout: BoutDoc) => {
-		if (actingBoutId !== null) {
+	const handleKickoffBattle = async (battle: BattleDoc) => {
+		if (actingBattleId !== null) {
 			return;
 		}
 
-		actingBoutId = bout.id;
+		actingBattleId = battle.id;
 
 		try {
-			await kickoffBout({ bout });
+			await kickoffBattle({ battle });
 			await load();
 		} catch (err) {
-			console.error('LeagueDetailPage: kickoffBout failed', err);
+			console.error('LeagueDetailPage: kickoffBattle failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
 		} finally {
-			actingBoutId = null;
+			actingBattleId = null;
 		}
 	};
 
-	const handleResolveBoutDone = () => {
-		resolveBoutTarget = null;
+	const handleResolveBattleDone = () => {
+		resolveBattleTarget = null;
 		void load();
 	};
 
-	// Recent activity feed. Built from the bout list — newest first by
+	// Recent activity feed. Built from the battle list — newest first by
 	// kickoff (in_flight) or settle (resolved). We cap at 6 rows so the
 	// card stays tight on a phone.
 	interface ActivityRow {
-		boutId: string;
+		battleId: string;
 		opponentId: string;
 		stateKey: MessageKey;
 		ts: number;
 		verbKey: MessageKey;
-		state: BoutState;
+		state: BattleState;
 	}
 
 	const activity = $derived.by((): ActivityRow[] => {
-		const rows: ActivityRow[] = bouts.map((b) => {
+		const rows: ActivityRow[] = battles.map((b) => {
 			const opponentId = b.sideA === leagueId ? b.sideB : b.sideA;
 			const ts = b.state === 'resolved' ? b.settleMs : b.kickoffMs;
 			const verbKey: MessageKey =
@@ -489,15 +489,15 @@
 							: 'leagues.detail.activity_verb_proposed';
 			const stateKey: MessageKey =
 				b.state === 'proposed'
-					? 'leagues.bout.state.proposed'
+					? 'leagues.battle.state.proposed'
 					: b.state === 'accepted'
-						? 'leagues.bout.state.accepted'
+						? 'leagues.battle.state.accepted'
 						: b.state === 'in_flight'
-							? 'leagues.bout.state.in_flight'
-							: 'leagues.bout.state.resolved';
+							? 'leagues.battle.state.in_flight'
+							: 'leagues.battle.state.resolved';
 
 			return {
-				boutId: b.id,
+				battleId: b.id,
 				opponentId,
 				stateKey,
 				ts,
@@ -608,94 +608,94 @@
 			</div>
 		</header>
 
-		<!-- ─── Bout section · active card OR challenge another league ─── -->
+		<!-- ─── Battle section · active card OR challenge another league ─── -->
 		<section class="league-detail-section">
 			<div class="league-detail-section-head">
 				<span class="eyebrow league-detail-section-title">
-					{t({ locale: $localeStore, key: 'leagues.detail.bout_eyebrow' })}
+					{t({ locale: $localeStore, key: 'leagues.detail.battle_eyebrow' })}
 				</span>
-				{#if canChallenge && !activeBout}
+				{#if canChallenge && !activeBattle}
 					<span class="num league-detail-section-side">
-						{t({ locale: $localeStore, key: 'leagues.detail.bout_admin_chip' })}
+						{t({ locale: $localeStore, key: 'leagues.detail.battle_admin_chip' })}
 					</span>
 				{/if}
 			</div>
 
-			{#if activeBout && activeBoutStateLabelKey && activeBoutOpponentId}
-				<div class="league-detail-bout-card" data-state={activeBout.state}>
-					<div class="league-detail-bout-tags">
-						<span class="league-detail-bout-tag allcaps" data-state={activeBout.state}>
-							{t({ locale: $localeStore, key: activeBoutStateLabelKey })}
+			{#if activeBattle && activeBattleStateLabelKey && activeBattleOpponentId}
+				<div class="league-detail-battle-card" data-state={activeBattle.state}>
+					<div class="league-detail-battle-tags">
+						<span class="league-detail-battle-tag allcaps" data-state={activeBattle.state}>
+							{t({ locale: $localeStore, key: activeBattleStateLabelKey })}
 						</span>
 					</div>
-					<div class="league-detail-bout-headline">
+					<div class="league-detail-battle-headline">
 						<span>{league.name}</span>
-						<span class="serif-italic league-detail-bout-vs">vs</span>
-						<span class="num">{shortLeagueId(activeBoutOpponentId)}</span>
+						<span class="serif-italic league-detail-battle-vs">vs</span>
+						<span class="num">{shortLeagueId(activeBattleOpponentId)}</span>
 					</div>
-					{#if activeBoutMetaLine}
-						<p class="league-detail-bout-meta num">{activeBoutMetaLine}</p>
+					{#if activeBattleMetaLine}
+						<p class="league-detail-battle-meta num">{activeBattleMetaLine}</p>
 					{/if}
 
-					{#if canAcceptBout(activeBout)}
+					{#if canAcceptBattle(activeBattle)}
 						<button
-							class="league-detail-bout-action is-primary"
-							disabled={actingBoutId === activeBout.id}
-							onclick={() => handleAcceptBout(activeBout)}
+							class="league-detail-battle-action is-primary"
+							disabled={actingBattleId === activeBattle.id}
+							onclick={() => handleAcceptBattle(activeBattle)}
 							type="button"
 						>
-							{actingBoutId === activeBout.id
-								? t({ locale: $localeStore, key: 'leagues.bout.action.accepting' })
-								: t({ locale: $localeStore, key: 'leagues.bout.action.accept' })}
+							{actingBattleId === activeBattle.id
+								? t({ locale: $localeStore, key: 'leagues.battle.action.accepting' })
+								: t({ locale: $localeStore, key: 'leagues.battle.action.accept' })}
 						</button>
-					{:else if canKickoffBout(activeBout)}
+					{:else if canKickoffBattle(activeBattle)}
 						<button
-							class="league-detail-bout-action is-primary"
-							disabled={actingBoutId === activeBout.id}
-							onclick={() => handleKickoffBout(activeBout)}
+							class="league-detail-battle-action is-primary"
+							disabled={actingBattleId === activeBattle.id}
+							onclick={() => handleKickoffBattle(activeBattle)}
 							type="button"
 						>
-							{actingBoutId === activeBout.id
-								? t({ locale: $localeStore, key: 'leagues.bout.action.starting' })
-								: t({ locale: $localeStore, key: 'leagues.bout.action.kickoff' })}
+							{actingBattleId === activeBattle.id
+								? t({ locale: $localeStore, key: 'leagues.battle.action.starting' })
+								: t({ locale: $localeStore, key: 'leagues.battle.action.kickoff' })}
 						</button>
-					{:else if canResolveBout(activeBout)}
+					{:else if canResolveBattle(activeBattle)}
 						<button
-							class="league-detail-bout-action is-primary"
-							onclick={() => (resolveBoutTarget = activeBout ?? null)}
+							class="league-detail-battle-action is-primary"
+							onclick={() => (resolveBattleTarget = activeBattle ?? null)}
 							type="button"
 						>
-							{t({ locale: $localeStore, key: 'leagues.bout.action.resolve' })}
+							{t({ locale: $localeStore, key: 'leagues.battle.action.resolve' })}
 						</button>
 					{/if}
-					{#if canRetractBout(activeBout)}
+					{#if canRetractBattle(activeBattle)}
 						<button
-							class="league-detail-bout-action is-danger"
-							disabled={actingBoutId === activeBout.id}
-							onclick={() => handleRetractBout(activeBout)}
+							class="league-detail-battle-action is-danger"
+							disabled={actingBattleId === activeBattle.id}
+							onclick={() => handleRetractBattle(activeBattle)}
 							type="button"
 						>
-							{actingBoutId === activeBout.id
-								? t({ locale: $localeStore, key: 'leagues.bout.action.retracting' })
-								: t({ locale: $localeStore, key: 'leagues.bout.action.retract' })}
+							{actingBattleId === activeBattle.id
+								? t({ locale: $localeStore, key: 'leagues.battle.action.retracting' })
+								: t({ locale: $localeStore, key: 'leagues.battle.action.retract' })}
 						</button>
 					{/if}
 				</div>
 			{:else}
-				<div class="league-detail-bout-empty">
-					<p class="serif-italic league-detail-bout-empty-lede">
-						{t({ locale: $localeStore, key: 'leagues.detail.bout_empty_lede' })}
+				<div class="league-detail-battle-empty">
+					<p class="serif-italic league-detail-battle-empty-lede">
+						{t({ locale: $localeStore, key: 'leagues.detail.battle_empty_lede' })}
 					</p>
-					<p class="league-detail-bout-empty-sub">
-						{t({ locale: $localeStore, key: 'leagues.detail.bout_empty_sub' })}
+					<p class="league-detail-battle-empty-sub">
+						{t({ locale: $localeStore, key: 'leagues.detail.battle_empty_sub' })}
 					</p>
 					{#if canChallenge}
 						<button
-							class="league-detail-bout-empty-cta"
+							class="league-detail-battle-empty-cta"
 							onclick={() => (challengeOpen = true)}
 							type="button"
 						>
-							<span>{t({ locale: $localeStore, key: 'leagues.detail.bout_challenge_cta' })}</span>
+							<span>{t({ locale: $localeStore, key: 'leagues.detail.battle_challenge_cta' })}</span>
 							<ChevronRight aria-hidden="true" size={13} strokeWidth={2.2} />
 						</button>
 					{/if}
@@ -817,7 +817,7 @@
 				</p>
 			{:else}
 				<ul class="league-detail-activity">
-					{#each activity as row (row.boutId)}
+					{#each activity as row (row.battleId)}
 						<li class="league-detail-activity-row">
 							<div class="league-detail-activity-body">
 								<span class="league-detail-activity-who">
@@ -862,7 +862,7 @@
 		fromLeague={league}
 		isOpen={challengeOpen}
 		onClose={() => (challengeOpen = false)}
-		onProposed={handleBoutProposed}
+		onProposed={handleBattleProposed}
 	/>
 {/if}
 
@@ -877,11 +877,11 @@
 	/>
 {/if}
 
-<ResolveBoutModal
-	bout={resolveBoutTarget}
-	isOpen={resolveBoutTarget !== null}
-	onClose={() => (resolveBoutTarget = null)}
-	onResolved={handleResolveBoutDone}
+<ResolveBattleModal
+	battle={resolveBattleTarget}
+	isOpen={resolveBattleTarget !== null}
+	onClose={() => (resolveBattleTarget = null)}
+	onResolved={handleResolveBattleDone}
 	ourLeagueId={leagueId}
 />
 
@@ -1103,9 +1103,9 @@
 		color: var(--text-muted);
 	}
 
-	/* ─── Bout section ──────────────────────────────────────────── */
+	/* ─── Battle section ──────────────────────────────────────────── */
 
-	.league-detail-bout-card {
+	.league-detail-battle-card {
 		display: flex;
 		flex-direction: column;
 		gap: 0.35rem;
@@ -1115,16 +1115,16 @@
 		border-radius: var(--r-12);
 	}
 
-	.league-detail-bout-card[data-state='in_flight'] {
+	.league-detail-battle-card[data-state='in_flight'] {
 		border-color: color-mix(in srgb, var(--laurel) 38%, var(--border-base));
 	}
 
-	.league-detail-bout-tags {
+	.league-detail-battle-tags {
 		display: flex;
 		gap: 0.3rem;
 	}
 
-	.league-detail-bout-tag {
+	.league-detail-battle-tag {
 		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		padding: 0.1rem 0.4rem;
@@ -1133,12 +1133,12 @@
 		background: color-mix(in srgb, var(--text-muted) 16%, transparent);
 	}
 
-	.league-detail-bout-tag[data-state='in_flight'] {
+	.league-detail-battle-tag[data-state='in_flight'] {
 		color: var(--laurel);
 		background: color-mix(in srgb, var(--laurel) 22%, transparent);
 	}
 
-	.league-detail-bout-headline {
+	.league-detail-battle-headline {
 		display: flex;
 		align-items: baseline;
 		flex-wrap: wrap;
@@ -1148,17 +1148,17 @@
 		color: var(--text-base);
 	}
 
-	.league-detail-bout-vs {
+	.league-detail-battle-vs {
 		font-size: var(--t-13);
 		color: var(--accent);
 	}
 
-	.league-detail-bout-meta {
+	.league-detail-battle-meta {
 		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
-	.league-detail-bout-action {
+	.league-detail-battle-action {
 		appearance: none;
 		align-self: flex-start;
 		margin-top: 0.25rem;
@@ -1170,24 +1170,24 @@
 		cursor: pointer;
 	}
 
-	.league-detail-bout-action.is-primary {
+	.league-detail-battle-action.is-primary {
 		color: var(--text-on-accent, #fff);
 		background: var(--laurel);
 		border: 1px solid var(--laurel);
 	}
 
-	.league-detail-bout-action.is-danger {
+	.league-detail-battle-action.is-danger {
 		color: var(--no);
 		background: color-mix(in srgb, var(--no-wash, var(--no)) 12%, transparent);
 		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
 	}
 
-	.league-detail-bout-action:disabled {
+	.league-detail-battle-action:disabled {
 		opacity: 0.5;
 		cursor: not-allowed;
 	}
 
-	.league-detail-bout-empty {
+	.league-detail-battle-empty {
 		display: flex;
 		flex-direction: column;
 		align-items: center;
@@ -1199,20 +1199,20 @@
 		border-radius: var(--r-12);
 	}
 
-	.league-detail-bout-empty-lede {
+	.league-detail-battle-empty-lede {
 		margin: 0;
 		font-size: var(--t-14);
 		color: var(--accent);
 	}
 
-	.league-detail-bout-empty-sub {
+	.league-detail-battle-empty-sub {
 		margin: 0;
 		font-size: var(--t-12);
 		line-height: 1.4;
 		color: var(--text-muted);
 	}
 
-	.league-detail-bout-empty-cta {
+	.league-detail-battle-empty-cta {
 		appearance: none;
 		display: inline-flex;
 		align-items: center;
@@ -1229,7 +1229,7 @@
 		cursor: pointer;
 	}
 
-	.league-detail-bout-empty-cta:hover {
+	.league-detail-battle-empty-cta:hover {
 		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
 	}
 

@@ -23,7 +23,7 @@
 		},
 		{
 			q: 'How is my accuracy ranked?',
-			a: 'Resolved calls divided by total resolved calls. Open calls don’t count until a market settles. Accuracy is the unit of your reputation — across the global leaderboard, your private league, and any bouts you opt into.'
+			a: 'Resolved calls divided by total resolved calls. Open calls don’t count until a market settles. Accuracy is the unit of your reputation — across the global leaderboard, your private league, and any battles you opt into.'
 		},
 		{
 			q: 'Do you make money from my predictions?',
@@ -34,8 +34,8 @@
 			a: 'Servers in the European Union. Encrypted at rest and in transit. We store a session token; we don’t use tracking cookies. You can export or delete your data at any time — see the privacy policy for details.'
 		},
 		{
-			q: 'What’s a bout?',
-			a: 'A timed accuracy face-off between two leagues, or between universities in a tournament. Seven-day window, both sides need a minimum number of calls to qualify, the league with the higher average accuracy wins. The current Worlds Universities bout runs through the World Cup final.'
+			q: 'What’s a battle?',
+			a: 'A timed accuracy face-off between two leagues, or between universities in a tournament. Seven-day window, both sides need a minimum number of calls to qualify, the league with the higher average accuracy wins. The current Worlds Universities battle runs through the World Cup final.'
 		}
 	];
 

@@ -43,9 +43,9 @@ type AppListFriendsResult = record { items : vec record { category : variant { F
 
 type AppListLeaderboardResult = record { items : vec record { owner : text; nickname : text; avatar : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; unlocked_achievements : vec text; contrarian_wins : float64; preferences : opt record { default_amount : record { flow : text; manual : text } } } };
 
-type AppListLeagueBoutsArgs = record { league_id : text };
+type AppListLeagueBattlesArgs = record { league_id : text };
 
-type AppListLeagueBoutsResult = record { items : vec record { id : text; kind : variant { league; duel }; side_a : text; side_b : text; proposer : text; state : variant { proposed; accepted; in_flight; resolved }; kickoff_ms : float64; settle_ms : float64; score_a : opt float64; score_b : opt float64; winner : opt variant { A; B; draw } } };
+type AppListLeagueBattlesResult = record { items : vec record { id : text; kind : variant { league; duel }; side_a : text; side_b : text; proposer : text; state : variant { proposed; accepted; in_flight; resolved }; kickoff_ms : float64; settle_ms : float64; score_a : opt float64; score_b : opt float64; winner : opt variant { A; B; draw } } };
 
 type AppListLeagueMembersArgs = record { league_id : text };
 
@@ -57,9 +57,9 @@ type AppListMarketTranslationsResult = record { items : vec record { series_id :
 
 type AppListMyAffiliationsResult = record { university : opt record { member : text; kind : variant { university; country }; affiliation_identifier : text; joined_at_ms : float64; locked_until_ms : float64 }; country : opt record { member : text; kind : variant { university; country }; affiliation_identifier : text; joined_at_ms : float64; locked_until_ms : float64 } };
 
-type AppListMyBlockingLeaguesResult = record { league_ids : vec text };
+type AppListMyBattlesResult = record { items : vec record { id : text; kind : variant { league; duel }; side_a : text; side_b : text; proposer : text; state : variant { proposed; accepted; in_flight; resolved }; kickoff_ms : float64; settle_ms : float64; score_a : opt float64; score_b : opt float64; winner : opt variant { A; B; draw } } };
 
-type AppListMyBoutsResult = record { items : vec record { id : text; kind : variant { league; duel }; side_a : text; side_b : text; proposer : text; state : variant { proposed; accepted; in_flight; resolved }; kickoff_ms : float64; settle_ms : float64; score_a : opt float64; score_b : opt float64; winner : opt variant { A; B; draw } } };
+type AppListMyBlockingLeaguesResult = record { league_ids : vec text };
 
 type AppListMyLeaguesResult = record { items : vec record { league : record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text }; role : variant { owner; admin; member }; joined_at_ms : float64 } };
 
@@ -146,12 +146,12 @@ service : {
 	app_list_friend_requests : () -> (AppListFriendRequestsResult) query;
 	app_list_friends : () -> (AppListFriendsResult) query;
 	app_list_leaderboard : () -> (AppListLeaderboardResult) query;
-	app_list_league_bouts : (AppListLeagueBoutsArgs) -> (AppListLeagueBoutsResult) query;
+	app_list_league_battles : (AppListLeagueBattlesArgs) -> (AppListLeagueBattlesResult) query;
 	app_list_league_members : (AppListLeagueMembersArgs) -> (AppListLeagueMembersResult) query;
 	app_list_market_translations : (AppListMarketTranslationsArgs) -> (AppListMarketTranslationsResult) query;
 	app_list_my_affiliations : () -> (AppListMyAffiliationsResult) query;
+	app_list_my_battles : () -> (AppListMyBattlesResult) query;
 	app_list_my_blocking_leagues : () -> (AppListMyBlockingLeaguesResult) query;
-	app_list_my_bouts : () -> (AppListMyBoutsResult) query;
 	app_list_my_leagues : () -> (AppListMyLeaguesResult) query;
 	app_list_my_referrals : () -> (AppListMyReferralsResult) query;
 	app_list_sent_friend_requests : () -> (AppListSentFriendRequestsResult) query;

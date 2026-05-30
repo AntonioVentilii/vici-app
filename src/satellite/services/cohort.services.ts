@@ -5,7 +5,7 @@ import {
 	MIN_CALLS_FOR_RANK,
 	type AffiliationStatsDoc
 } from '$lib/types/affiliation-stats';
-import type { BoutDoc } from '$lib/types/bout';
+import type { BattleDoc } from '$lib/types/battle';
 import type { LeagueDoc } from '$lib/types/league';
 import type { LeagueMemberDoc } from '$lib/types/league-member';
 import { isNullish, nonNullish } from '@dfinity/utils';
@@ -138,59 +138,59 @@ export const listLeagueMembersFn = ({ leagueId }: { leagueId: string }): LeagueM
 };
 
 /**
- * List bouts that reference a specific league — either as sideA or
- * sideB. Used by the league detail page's "Bouts" panel to render
+ * List battles that reference a specific league — either as sideA or
+ * sideB. Used by the league detail page's "Battles" panel to render
  * proposed / accepted / in-flight / resolved competitions involving
  * this cohort.
  *
- * Sorted by `kickoffMs` ascending so in-flight bouts surface before
+ * Sorted by `kickoffMs` ascending so in-flight battles surface before
  * future ones, then proposed/accepted in chronological order.
  */
-export const listLeagueBoutsFn = ({ leagueId }: { leagueId: string }): BoutDoc[] => {
+export const listLeagueBattlesFn = ({ leagueId }: { leagueId: string }): BattleDoc[] => {
 	const caller = msgCaller();
 
 	const { items } = listDocsStore({
-		collection: Collection.BOUTS,
+		collection: Collection.BATTLES,
 		caller: caller.toUint8Array(),
 		params: {}
 	});
 
-	const bouts: BoutDoc[] = [];
+	const battles: BattleDoc[] = [];
 
 	for (const [, item] of items) {
 		try {
-			const bout = decodeDocData<BoutDoc>(item.data);
+			const battle = decodeDocData<BattleDoc>(item.data);
 
-			if (bout.kind === 'league' && (bout.sideA === leagueId || bout.sideB === leagueId)) {
-				bouts.push(bout);
+			if (battle.kind === 'league' && (battle.sideA === leagueId || battle.sideB === leagueId)) {
+				battles.push(battle);
 			}
 		} catch {
 			// skip malformed
 		}
 	}
 
-	return bouts.sort((a, b) => a.kickoffMs - b.kickoffMs);
+	return battles.sort((a, b) => a.kickoffMs - b.kickoffMs);
 };
 
 /**
- * List every bout that involves the caller — either as a duel
+ * List every battle that involves the caller — either as a duel
  * principal (sideA / sideB on kind='duel') OR as the owner of a
- * league participating in a kind='league' bout.
+ * league participating in a kind='league' battle.
  *
- * League-side resolution is N+1: each kind='league' bout triggers a
+ * League-side resolution is N+1: each kind='league' battle triggers a
  * `getDocStore` lookup against `LEAGUES` to check ownership. Fine for
- * the bout volumes we expect on the social surface; a reverse
- * index would only matter past ~100s of bouts per user.
+ * the battle volumes we expect on the social surface; a reverse
+ * index would only matter past ~100s of battles per user.
  *
  * Sorted by `kickoffMs` ascending.
  */
-export const listMyBoutsFn = (): BoutDoc[] => {
+export const listMyBattlesFn = (): BattleDoc[] => {
 	const caller = msgCaller();
 	const callerText = caller.toText();
 	const callerBytes = caller.toUint8Array();
 
 	const { items } = listDocsStore({
-		collection: Collection.BOUTS,
+		collection: Collection.BATTLES,
 		caller: callerBytes,
 		params: {}
 	});
@@ -213,26 +213,26 @@ export const listMyBoutsFn = (): BoutDoc[] => {
 		}
 	};
 
-	const bouts: BoutDoc[] = [];
+	const battles: BattleDoc[] = [];
 
 	for (const [, item] of items) {
 		try {
-			const bout = decodeDocData<BoutDoc>(item.data);
+			const battle = decodeDocData<BattleDoc>(item.data);
 
 			const involvesCaller =
-				bout.kind === 'duel'
-					? bout.sideA === callerText || bout.sideB === callerText
-					: isLeagueOwnedByCaller(bout.sideA) || isLeagueOwnedByCaller(bout.sideB);
+				battle.kind === 'duel'
+					? battle.sideA === callerText || battle.sideB === callerText
+					: isLeagueOwnedByCaller(battle.sideA) || isLeagueOwnedByCaller(battle.sideB);
 
 			if (involvesCaller) {
-				bouts.push(bout);
+				battles.push(battle);
 			}
 		} catch {
 			// skip malformed
 		}
 	}
 
-	return bouts.sort((a, b) => a.kickoffMs - b.kickoffMs);
+	return battles.sort((a, b) => a.kickoffMs - b.kickoffMs);
 };
 
 /**

@@ -37,7 +37,7 @@ import {
  *     caller is removed: profile, VXP awards / onboarding,
  *     referral code + redemption record, affiliations, relations,
  *     non-owner league memberships, owned-empty leagues. Shared
- *     audit rows (activities, bouts, comments) are left in place —
+ *     audit rows (activities, battles, comments) are left in place —
  *     the principal is gone, so they're orphaned but immutable
  *     (decision 4.1, hybrid hard-delete + leave-shared).
  *

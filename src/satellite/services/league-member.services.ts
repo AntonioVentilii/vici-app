@@ -36,9 +36,9 @@ import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
  *     this assert allows that path but rejects subsequent attempts
  *     to mint a second `owner` row for the same league.
  *
- * Follow-up `bouts` collection references both `leagueId` and the
+ * Follow-up `battles` collection references both `leagueId` and the
  * member roster — so the integrity guarantees here flow into the
- * bout state machine.
+ * battle state machine.
  */
 export const assertSetLeagueMember = ({
 	caller,
@@ -206,7 +206,7 @@ export const assertDeleteLeagueMember = ({
 	}
 };
 
-// Exported for future bout / standings services that need to enforce
+// Exported for future battle / standings services that need to enforce
 // "only members of league X can write Y." Keeping the predicate next
 // to the assert keeps the auth contract in one place.
 export const isLeagueMember = ({

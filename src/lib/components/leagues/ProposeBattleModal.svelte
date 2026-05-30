@@ -1,14 +1,14 @@
 <script lang="ts">
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
-	import { lookupLeagueByInvite, proposeBout } from '$lib/services/leagues.services';
+	import { lookupLeagueByInvite, proposeBattle } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { BoutDoc } from '$lib/types/bout';
+	import type { BattleDoc } from '$lib/types/battle';
 	import { LEAGUE_INVITE_CODE_REGEX, type LeagueDoc } from '$lib/types/league';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * propose-bout modal.
+	 * propose-battle modal.
 	 *
 	 * The user (league owner) types the opponent league's 6-char
 	 * invite code, picks a kickoff + settle date, and submits. The
@@ -20,7 +20,7 @@
 		// Our league (the league this modal was opened from).
 		ourLeagueId: string;
 		onClose: () => void;
-		onProposed: (bout: BoutDoc) => void;
+		onProposed: (battle: BattleDoc) => void;
 	}
 
 	const { isOpen, ourLeagueId, onClose, onProposed }: Props = $props();
@@ -88,20 +88,20 @@
 			const found = await lookupLeagueByInvite({ inviteCode: normalisedCode });
 
 			if (!found) {
-				lookupError = 'leagues.bout.propose.error_not_found';
+				lookupError = 'leagues.battle.propose.error_not_found';
 
 				return;
 			}
 
 			if (found.id === ourLeagueId) {
-				lookupError = 'leagues.bout.propose.error_same_league';
+				lookupError = 'leagues.battle.propose.error_same_league';
 
 				return;
 			}
 
 			resolved = found;
 		} catch {
-			lookupError = 'leagues.bout.propose.error_lookup';
+			lookupError = 'leagues.battle.propose.error_lookup';
 		} finally {
 			resolving = false;
 		}
@@ -118,16 +118,16 @@
 		submitError = null;
 
 		try {
-			const bout = await proposeBout({
+			const battle = await proposeBattle({
 				sideA: ourLeagueId,
 				sideB: resolved.id,
 				kickoffMs: Date.parse(kickoffDate),
 				settleMs: Date.parse(settleDate)
 			});
-			onProposed(bout);
+			onProposed(battle);
 			reset();
 		} catch (err) {
-			console.error('ProposeBoutModal: proposeBout failed', err);
+			console.error('ProposeBattleModal: proposeBattle failed', err);
 			submitError = 'common.error.generic';
 		} finally {
 			submitting = false;
@@ -136,19 +136,19 @@
 </script>
 
 <Modal {isOpen} onClose={handleClose}>
-	<form class="bout-form" onsubmit={handleSubmit}>
-		<header class="bout-form-head">
-			<h2>{t({ locale: $localeStore, key: 'leagues.bout.propose.title' })}</h2>
-			<p>{t({ locale: $localeStore, key: 'leagues.bout.propose.sub' })}</p>
+	<form class="battle-form" onsubmit={handleSubmit}>
+		<header class="battle-form-head">
+			<h2>{t({ locale: $localeStore, key: 'leagues.battle.propose.title' })}</h2>
+			<p>{t({ locale: $localeStore, key: 'leagues.battle.propose.sub' })}</p>
 		</header>
 
-		<label class="bout-field">
-			<span class="bout-field-label allcaps">
-				{t({ locale: $localeStore, key: 'leagues.bout.propose.label_opponent' })}
+		<label class="battle-field">
+			<span class="battle-field-label allcaps">
+				{t({ locale: $localeStore, key: 'leagues.battle.propose.label_opponent' })}
 			</span>
-			<div class="bout-code-row">
+			<div class="battle-code-row">
 				<input
-					class="bout-field-input is-code num"
+					class="battle-field-input is-code num"
 					autocapitalize="characters"
 					autocomplete="off"
 					maxlength="6"
@@ -159,62 +159,62 @@
 					bind:value={code}
 				/>
 				<button
-					class="bout-resolve-btn"
+					class="battle-resolve-btn"
 					disabled={!codeIsValid || resolving}
 					onclick={handleLookup}
 					type="button"
 				>
 					{resolving
-						? t({ locale: $localeStore, key: 'leagues.bout.propose.resolving' })
-						: t({ locale: $localeStore, key: 'leagues.bout.propose.resolve' })}
+						? t({ locale: $localeStore, key: 'leagues.battle.propose.resolving' })
+						: t({ locale: $localeStore, key: 'leagues.battle.propose.resolve' })}
 				</button>
 			</div>
 		</label>
 
 		{#if lookupError}
-			<p class="bout-form-error" role="alert">
+			<p class="battle-form-error" role="alert">
 				{t({ locale: $localeStore, key: lookupError })}
 			</p>
 		{:else if resolved}
-			<div class="bout-resolved" aria-live="polite">
-				<span class="allcaps bout-resolved-eyebrow">
-					{t({ locale: $localeStore, key: 'leagues.bout.propose.opponent_resolved' })}
+			<div class="battle-resolved" aria-live="polite">
+				<span class="allcaps battle-resolved-eyebrow">
+					{t({ locale: $localeStore, key: 'leagues.battle.propose.opponent_resolved' })}
 				</span>
-				<span class="bout-resolved-name">{resolved.name}</span>
+				<span class="battle-resolved-name">{resolved.name}</span>
 			</div>
 		{/if}
 
-		<div class="bout-date-row">
-			<label class="bout-field">
-				<span class="bout-field-label allcaps">
-					{t({ locale: $localeStore, key: 'leagues.bout.propose.label_kickoff' })}
+		<div class="battle-date-row">
+			<label class="battle-field">
+				<span class="battle-field-label allcaps">
+					{t({ locale: $localeStore, key: 'leagues.battle.propose.label_kickoff' })}
 				</span>
-				<input class="bout-field-input num" required type="date" bind:value={kickoffDate} />
+				<input class="battle-field-input num" required type="date" bind:value={kickoffDate} />
 			</label>
-			<label class="bout-field">
-				<span class="bout-field-label allcaps">
-					{t({ locale: $localeStore, key: 'leagues.bout.propose.label_settle' })}
+			<label class="battle-field">
+				<span class="battle-field-label allcaps">
+					{t({ locale: $localeStore, key: 'leagues.battle.propose.label_settle' })}
 				</span>
-				<input class="bout-field-input num" required type="date" bind:value={settleDate} />
+				<input class="battle-field-input num" required type="date" bind:value={settleDate} />
 			</label>
 		</div>
 
 		{#if submitError !== null}
-			<p class="bout-form-error" role="alert">
+			<p class="battle-form-error" role="alert">
 				{typeof submitError === 'string' && !submitError.includes('.')
 					? submitError
 					: t({ locale: $localeStore, key: submitError as MessageKey })}
 			</p>
 		{/if}
 
-		<div class="bout-form-actions">
-			<button class="bout-btn is-ghost" onclick={handleClose} type="button">
-				{t({ locale: $localeStore, key: 'leagues.bout.propose.cancel' })}
+		<div class="battle-form-actions">
+			<button class="battle-btn is-ghost" onclick={handleClose} type="button">
+				{t({ locale: $localeStore, key: 'leagues.battle.propose.cancel' })}
 			</button>
-			<button class="bout-btn is-primary" disabled={!canSubmit} type="submit">
+			<button class="battle-btn is-primary" disabled={!canSubmit} type="submit">
 				{t({
 					locale: $localeStore,
-					key: submitting ? 'leagues.bout.propose.submitting' : 'leagues.bout.propose.cta'
+					key: submitting ? 'leagues.battle.propose.submitting' : 'leagues.battle.propose.cta'
 				})}
 			</button>
 		</div>
@@ -222,38 +222,38 @@
 </Modal>
 
 <style lang="postcss">
-	.bout-form {
+	.battle-form {
 		display: flex;
 		flex-direction: column;
 		gap: 0.85rem;
 	}
 
-	.bout-form-head h2 {
+	.battle-form-head h2 {
 		margin: 0 0 0.25rem;
 		font-family: var(--font-display);
 		font-size: var(--t-18, 1.1rem);
 		color: var(--text-base);
 	}
 
-	.bout-form-head p {
+	.battle-form-head p {
 		margin: 0;
 		font-size: var(--t-13);
 		color: var(--text-muted);
 	}
 
-	.bout-field {
+	.battle-field {
 		display: flex;
 		flex-direction: column;
 		gap: 0.3rem;
 		min-width: 0;
 	}
 
-	.bout-field-label {
+	.battle-field-label {
 		font-size: var(--t-11);
 		color: var(--text-muted);
 	}
 
-	.bout-field-input {
+	.battle-field-input {
 		appearance: none;
 		padding: 0.7rem 0.85rem;
 		font: inherit;
@@ -265,7 +265,7 @@
 		min-width: 0;
 	}
 
-	.bout-field-input.is-code {
+	.battle-field-input.is-code {
 		font-size: var(--t-18, 1.1rem);
 		font-weight: 700;
 		letter-spacing: 0.16em;
@@ -273,17 +273,17 @@
 		text-transform: uppercase;
 	}
 
-	.bout-code-row {
+	.battle-code-row {
 		display: flex;
 		gap: 0.5rem;
 		align-items: stretch;
 	}
 
-	.bout-code-row .bout-field-input {
+	.battle-code-row .battle-field-input {
 		flex: 1 1 auto;
 	}
 
-	.bout-resolve-btn {
+	.battle-resolve-btn {
 		appearance: none;
 		padding: 0 0.85rem;
 		font: inherit;
@@ -297,12 +297,12 @@
 		flex: 0 0 auto;
 	}
 
-	.bout-resolve-btn:disabled {
+	.battle-resolve-btn:disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
 	}
 
-	.bout-resolved {
+	.battle-resolved {
 		display: flex;
 		flex-direction: column;
 		gap: 0.15rem;
@@ -312,39 +312,39 @@
 		border-radius: var(--r-12);
 	}
 
-	.bout-resolved-eyebrow {
+	.battle-resolved-eyebrow {
 		font-size: var(--t-10);
 		color: var(--text-muted);
 		letter-spacing: var(--tracking-allcaps);
 	}
 
-	.bout-resolved-name {
+	.battle-resolved-name {
 		font-family: var(--font-display);
 		font-size: var(--t-14);
 		font-weight: 600;
 		color: var(--text-base);
 	}
 
-	.bout-date-row {
+	.battle-date-row {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
 		gap: 0.6rem;
 	}
 
-	.bout-form-error {
+	.battle-form-error {
 		margin: 0;
 		font-size: var(--t-12);
 		color: var(--no);
 	}
 
-	.bout-form-actions {
+	.battle-form-actions {
 		display: flex;
 		justify-content: flex-end;
 		gap: 0.5rem;
 		margin-top: 0.35rem;
 	}
 
-	.bout-btn {
+	.battle-btn {
 		appearance: none;
 		padding: 0.65rem 1rem;
 		font: inherit;
@@ -354,19 +354,19 @@
 		cursor: pointer;
 	}
 
-	.bout-btn.is-ghost {
+	.battle-btn.is-ghost {
 		color: var(--text-muted);
 		background: none;
 		border: 1px solid var(--border-base);
 	}
 
-	.bout-btn.is-primary {
+	.battle-btn.is-primary {
 		color: var(--text-on-accent, #fff);
 		background: var(--laurel);
 		border: 1px solid var(--laurel);
 	}
 
-	.bout-btn.is-primary:disabled {
+	.battle-btn.is-primary:disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
 	}
