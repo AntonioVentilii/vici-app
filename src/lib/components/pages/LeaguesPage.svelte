@@ -2,12 +2,14 @@
 	import { onMount } from 'svelte';
 	import { SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
+	import { resolve } from '$app/paths';
 	import { functions } from '$declarations/satellite/satellite.api';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import CreateLeagueModal from '$lib/components/leagues/CreateLeagueModal.svelte';
 	import JoinLeagueModal from '$lib/components/leagues/JoinLeagueModal.svelte';
 	import LeagueCtaCard from '$lib/components/leagues/LeagueCtaCard.svelte';
 	import LeagueListCard from '$lib/components/leagues/LeagueListCard.svelte';
+	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
 		listLeagueBouts,
@@ -250,7 +252,7 @@
 	};
 
 	const handleCardClick = (leagueId: string) => {
-		void goto(`/arena/leagues/${leagueId}`);
+		void goto(`${resolve(AppPath.Arena)}/leagues/${leagueId}`);
 	};
 </script>
 

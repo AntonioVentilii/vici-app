@@ -12,7 +12,7 @@ import { CircleUserRound, House, LayoutDashboard, Users, Zap } from 'lucide-svel
  *
  *  - Markets ← /markets/[id]
  *  - Dash    ← /portfolio
- *  - Arena   ← /arena, /leagues, /worlds, /bouts, /tournament, leaderboard
+ *  - Arena   ← /arena/* (leagues · worlds · bouts · tournament · leaderboard)
  *  - Profile ← /wallet, /settings, /notifications
  */
 export const navItems: NavItem[] = [
