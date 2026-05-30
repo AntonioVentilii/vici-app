@@ -66,7 +66,7 @@
 	</div>
 {/snippet}
 
-<div class="profile-page space-y-10 pb-24">
+<div class="profile-page pb-24">
 	<PageScaffold
 		right={profileSettingsBtn}
 		title={t({ locale: $localeStore, key: 'profile.title' })}
@@ -109,6 +109,15 @@
 <style lang="postcss">
 	.profile-page {
 		position: relative;
+	}
+
+	/* On mobile the appbar's own bottom padding sets the gap to the
+	   content (matching the proto). The desktop `SectionHeader` carries
+	   no trailing margin, so add a small gap there only. */
+	@media (min-width: 56rem) {
+		.profile-page > :last-child {
+			margin-top: 1rem;
+		}
 	}
 
 	.profile-appbar-actions {
