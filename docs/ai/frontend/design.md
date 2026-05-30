@@ -496,9 +496,11 @@ If new nav-less routes are added (e.g. `/notifications`,
 [`src/lib/components/dev/TweaksPanel.svelte`](../../../src/lib/components/dev/TweaksPanel.svelte)
 is a floating wrench-icon FAB, gated by `isDev()` from
 [`src/lib/env/app.env.ts`](../../../src/lib/env/app.env.ts).
-Currently provides quick-jumps to every nav-relevant route plus a
-sign-out trigger. Theme switching (Dark / Light / Peach) lands
-when the theme system does.
+Currently provides an appearance picker, quick-jumps to every
+nav-relevant route, a sign-out trigger, and a **World-Cup mode**
+toggle that flips the persisted `worldCupMode` preference for QA
+(see §11). The panel renders the live archive-gate state next to the
+toggle so QA can confirm the gate independently of the opt-in.
 
 It mounts in the **root** layout
 ([`src/routes/+layout.svelte`](../../../src/routes/+layout.svelte))
@@ -573,6 +575,46 @@ and
 These signals are client-derived. They are not persisted in the
 metadata collection and do not affect clearing, settlement, or profile
 statistics.
+
+---
+
+## 11. Featured event & World-Cup mode
+
+The app builds a temporary, curated experience around a single
+tentpole "featured event" (the 2026 World Cup today). Everything
+event-specific reads from one `FeaturedEvent` instance so the next
+tentpole plugs in by swapping a constant.
+
+- The event data + its lifecycle dates live in
+  [`featured-event.constants.ts`](../../../src/lib/constants/featured-event.constants.ts).
+  `archiveAfter_ms` is the **product-set archive cut-over date**
+  (currently `2026-08-01`, a buffer past the final) — adjustable in
+  that one constant.
+- Lifecycle status (`upcoming` / `live` / `wrap-up` / `archived`) and
+  the convenience gate `featuredEventActive` derive off a 1-minute
+  heartbeat in
+  [`featured-event.derived.ts`](../../../src/lib/derived/featured-event.derived.ts).
+
+World-Cup mode layers two orthogonal signals, surfaced together from
+[`world-cup.derived.ts`](../../../src/lib/derived/world-cup.derived.ts):
+
+| Signal                | Source                                 | Meaning                                                          |
+| --------------------- | -------------------------------------- | ---------------------------------------------------------------- |
+| `worldCupMode`        | `preferencesStore` (cross-device pref) | User's persisted opt-in. Pure preference; survives archival.     |
+| `worldCupNotArchived` | `featuredEventActive` (archive gate)   | Product gate: `false` once `now > archiveAfter_ms`. Time-driven. |
+| `worldCupActive`      | `worldCupMode && worldCupNotArchived`  | "Render World-Cup content now" — the boolean most surfaces want. |
+
+The persisted flag default is `false` (off): the featured event is
+still `upcoming` at time of writing, so the deck stays in its
+all-categories shape until a user opts in. Consumers (later: Markets
+focus, the Dashboard WC tile) should read `worldCupActive` rather than
+re-deriving the gate or destructuring the preferences object.
+
+The richer World-Cup → bridge → open retention **arc** (gradually
+widening the deck back to all categories as the event winds down) is a
+**deferred hook** — out of scope for this foundation. When it lands it
+should layer on top of these signals, not introduce a parallel source
+of truth.
 
 ---
 

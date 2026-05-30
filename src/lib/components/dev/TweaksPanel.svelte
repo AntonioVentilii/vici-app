@@ -6,9 +6,15 @@
 	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { userSignedIn } from '$lib/derived/user.derived';
+	import { worldCupActive, worldCupMode } from '$lib/derived/world-cup.derived';
 	import { isDev } from '$lib/env/app.env';
+	import { preferencesStore } from '$lib/stores/preferences.store';
 
 	const enabled = isDev();
+
+	const toggleWorldCupMode = () => {
+		preferencesStore.update((prefs) => ({ ...prefs, worldCupMode: !prefs.worldCupMode }));
+	};
 
 	let open = $state(false);
 
@@ -55,6 +61,23 @@
 				<section class="tweaks-section">
 					<span class="allcaps tweaks-label">Appearance</span>
 					<AppearancePicker />
+				</section>
+
+				<section class="tweaks-section">
+					<span class="allcaps tweaks-label">World Cup mode</span>
+					<button
+						class="tweaks-toggle"
+						class:is-on={$worldCupMode}
+						aria-pressed={$worldCupMode}
+						onclick={toggleWorldCupMode}
+						type="button"
+					>
+						<span>worldCupMode</span>
+						<span class="tweaks-toggle-state">{$worldCupMode ? 'ON' : 'OFF'}</span>
+					</button>
+					<span class="tweaks-status">
+						Active gate: {$worldCupActive ? 'live' : 'archived/off'}
+					</span>
 				</section>
 
 				<section class="tweaks-section">
@@ -208,6 +231,37 @@
 	.tweaks-status {
 		font-size: var(--t-12);
 		color: var(--text-muted);
+	}
+
+	.tweaks-toggle {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		font: inherit;
+		padding: 0.4rem 0.5rem;
+		background: var(--bg-surface);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-4);
+		color: var(--text-base);
+		cursor: pointer;
+		transition:
+			border-color var(--d-hover) var(--ease-vici),
+			background-color var(--d-hover) var(--ease-vici);
+	}
+
+	.tweaks-toggle:hover {
+		background: var(--bg-elevated);
+	}
+
+	.tweaks-toggle.is-on {
+		border-color: var(--laurel);
+		color: var(--laurel);
+	}
+
+	.tweaks-toggle-state {
+		font-size: var(--t-11);
+		font-weight: 600;
 	}
 
 	.tweaks-foot {
