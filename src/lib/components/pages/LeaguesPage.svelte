@@ -18,7 +18,6 @@
 	} from '$lib/services/leagues.services';
 	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
 	import { friendsListStore, refreshFriendRelations } from '$lib/stores/friends.store';
-	import { leaguesCreateIntent } from '$lib/stores/leagues-ui.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BattleState } from '$lib/types/battle';
@@ -36,9 +35,8 @@
 	 * optional latest-activity line derived from the league's most
 	 * recent battle, and an inline copy-invite pill.
 	 *
-	 * The Create + Join entries live as trailing CTA cards (and a
-	 * compact appbar `+` from the Arena shell) — never as a
-	 * top-of-list pill row.
+	 * The Create + Join entries live as trailing CTA cards — never
+	 * as a top-of-list pill row.
 	 */
 
 	interface Props {
@@ -149,16 +147,6 @@
 	};
 
 	onMount(refresh);
-
-	// Listen for the parent Arena appbar's "+" create-league button:
-	// when the intent flips to `true`, open our modal and reset the
-	// intent so a navigation away/back doesn't re-trigger.
-	$effect(() => {
-		if ($leaguesCreateIntent) {
-			createOpen = true;
-			leaguesCreateIntent.set(false);
-		}
-	});
 
 	const friendPrincipals = $derived.by(() => {
 		const me = selfPrincipal;
