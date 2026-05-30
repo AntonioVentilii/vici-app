@@ -8,6 +8,7 @@
 	import DesktopAppNav from '$lib/components/layout/DesktopAppNav.svelte';
 	import MobileNav from '$lib/components/layout/MobileNav.svelte';
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
+	import AccountReturnGate from '$lib/components/settings/AccountReturnGate.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import {
@@ -595,4 +596,12 @@
 	{/if}
 
 	<CompanionOverlay />
+
+	<!--
+		Recovery-on-return gate. Self-hides when the profile is active, so
+		it's inert for normal users; covers the shell only for a returning
+		soft-deleted / hibernated account until they recover, resume, or
+		sign out.
+	-->
+	<AccountReturnGate />
 </div>

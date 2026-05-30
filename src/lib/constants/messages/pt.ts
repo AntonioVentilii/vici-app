@@ -173,6 +173,28 @@ export const ptMessages = {
 		'VICI usa Internet Identity ou Google. Sem senhas. Troque a qualquer momento — seus dados continuam.',
 	'account.method.current': 'Método de acesso atual',
 	'account.method.eyebrow': 'MÉTODO DE ACESSO',
+	'account.return.deleted_body':
+		'Você agendou a exclusão desta conta. Recupere-a agora para manter seu histórico, ou saia para deixá-la como está.',
+	'account.return.deleted_heading': 'Bem-vindo de volta.',
+	'account.return.deleted_toast_body': 'Seu histórico está intacto.',
+	'account.return.deleted_toast_title': 'Conta recuperada',
+	'account.return.deleted_window_one': 'Resta {days} dia para recuperar.',
+	'account.return.deleted_window_other': 'Restam {days} dias para recuperar.',
+	'account.return.error': 'Algo deu errado. Tente novamente.',
+	'account.return.expired_body':
+		'Esta conta estava agendada para exclusão e a janela de recuperação já foi encerrada. Ela foi excluída.',
+	'account.return.expired_continue': 'Continuar',
+	'account.return.expired_heading': 'Sua janela de recuperação passou.',
+	'account.return.hibernated_body':
+		'Você pausou esta conta. Retome para continuar de onde parou — nada foi perdido.',
+	'account.return.hibernated_heading': 'Sua conta está pausada.',
+	'account.return.hibernated_toast_body': 'Bem-vindo de volta.',
+	'account.return.hibernated_toast_title': 'Conta retomada',
+	'account.return.recover': 'Recuperar conta',
+	'account.return.resume': 'Retomar',
+	'account.return.sign_out': 'Sair',
+	'account.return.stay_paused': 'Continuar pausada',
+	'account.return.working': 'Processando…',
 	'account.switch.cta': 'Sair para trocar de método',
 	'account.switch.hint':
 		'Trocar de método desconecta a sessão. Entre com o novo método para continuar.',
