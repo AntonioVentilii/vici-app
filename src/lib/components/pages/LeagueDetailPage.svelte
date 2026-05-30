@@ -156,7 +156,9 @@
 			return 1;
 		}
 
-		const idx = members.findIndex((m) => m.member === selfPrincipal);
+		// Rank off `sortedMembers` (the order the leaderboard renders) so
+		// the sticky YOU row and the list agree on the caller's number.
+		const idx = sortedMembers.findIndex((m) => m.member === selfPrincipal);
 
 		return idx === -1 ? 1 : idx + 1;
 	});
@@ -1405,7 +1407,7 @@
 		transition: background 140ms ease;
 	}
 
-	.league-detail-lb-row:last-of-type {
+	.league-detail-lb-rows li:last-child .league-detail-lb-row {
 		border-bottom: 0;
 	}
 
