@@ -717,11 +717,39 @@ Outside focus mode every one of these falls back to today's behavior, and
 the sort rail / carousels / skeletons / empty states are unchanged in both
 modes.
 
-The richer World-Cup → bridge → open retention **arc** (gradually
-widening the deck back to all categories as the event winds down) is a
-**deferred hook** — out of scope for this foundation. When it lands it
-should layer on top of these signals, not introduce a parallel source
-of truth.
+### 11.2 Markets retention arc (`worldCupPhase`)
+
+The WC-focus above is one beat of a four-phase **retention arc** that
+gradually widens the deck back to all categories as the event winds down,
+pre-empting the post-Cup engagement cliff. The phase is a single derived,
+[`worldCupPhase`](../../../src/lib/derived/world-cup.derived.ts), layered on
+the existing signals — it does **not** introduce a parallel source of
+truth. It updates live off a 1-minute heartbeat (same cadence as
+`featured-event.derived`) so the phase advances mid-session as the date
+thresholds pass.
+
+| Phase      | When                                               | Markets behavior                                                                                                                                             |
+| ---------- | -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `off`      | `!worldCupMode`                                    | All-categories — unchanged.                                                                                                                                  |
+| `wc-focus` | opted in, `now < finalAt_ms − 14d`                 | WC-focus as in §11.1 — unchanged.                                                                                                                            |
+| `bridge`   | opted in, `finalAt_ms − 14d ≤ now < finalAt_ms`    | Still WC-focused, **plus** a "Beyond the Cup" rail (top non-WC open markets by volume) + a continuity line, seeded on the `wc` view before the Cup resolves. |
+| `open`     | opted in, `now ≥ finalAt_ms` **or** event archived | Reverts to all-categories (default chip is `all`, not `wc`); a `WorldCupRecapCard` sits at the top.                                                          |
+
+- **Threshold source:** `finalAt_ms` from `featured-event.constants.ts`
+  (the 14-day bridge window is a single const in the derived). Once the
+  product archive gate (`worldCupNotArchived`) flips, the arc settles on
+  `open` regardless of the clock.
+- **`MarketsPage` wiring:** the init default chip reads `get(worldCupPhase)`
+  once (WC only in `wc-focus`/`bridge`); `wcFocus` is `$derived` off the
+  live phase so the chrome drops the moment the phase advances. The bridge
+  rail reuses `MarketsCarousel`; the recap card mounts above the list in
+  `open` and never fights the user's chip selection.
+- **`WorldCupRecapCard`** reads the user's `wc` category bucket from the
+  persisted `user_stats` doc (`loadMyUserStats`, same source as the Dash
+  rank tile): accuracy `= wins / calls`, plus the raw call count. Both fall
+  back to `EM_DASH` when there are no WC calls or the snapshot hasn't
+  loaded — never a fabricated figure. Its "Explore all markets" CTA clears
+  the focus by setting the list to `all`.
 
 ---
 
