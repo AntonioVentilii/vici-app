@@ -3,7 +3,7 @@
 	import { onMount } from 'svelte';
 	import { browser } from '$app/environment';
 	import FriendsTab from '$lib/components/arena/FriendsTab.svelte';
-	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
+	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import BoutsInboxPage from '$lib/components/pages/BoutsInboxPage.svelte';
 	import LeaguesPage from '$lib/components/pages/LeaguesPage.svelte';
 	import { leaguesCreateIntent } from '$lib/stores/leagues-ui.store';
@@ -82,36 +82,32 @@
 {/snippet}
 
 <div class="arena-page">
-	<MobileAppBar
-		align="left"
-		right={arenaAppbarRight}
-		title={t({ locale: $localeStore, key: 'arena.title' })}
-	/>
+	<PageScaffold right={arenaAppbarRight} title={t({ locale: $localeStore, key: 'arena.title' })}>
+		<div class="arena-tabs" aria-label="Arena sections" role="tablist">
+			{#each TABS as tab (tab)}
+				<button
+					class="arena-tab"
+					class:is-active={activeTab === tab}
+					aria-selected={activeTab === tab}
+					onclick={() => (activeTab = tab)}
+					role="tab"
+					type="button"
+				>
+					{t({ locale: $localeStore, key: TAB_LABEL_KEY[tab] })}
+				</button>
+			{/each}
+		</div>
 
-	<div class="arena-tabs" aria-label="Arena sections" role="tablist">
-		{#each TABS as tab (tab)}
-			<button
-				class="arena-tab"
-				class:is-active={activeTab === tab}
-				aria-selected={activeTab === tab}
-				onclick={() => (activeTab = tab)}
-				role="tab"
-				type="button"
-			>
-				{t({ locale: $localeStore, key: TAB_LABEL_KEY[tab] })}
-			</button>
-		{/each}
-	</div>
-
-	<div class="arena-panel" role="tabpanel">
-		{#if activeTab === 'friends'}
-			<FriendsTab />
-		{:else if activeTab === 'leagues'}
-			<LeaguesPage embedded />
-		{:else if activeTab === 'bouts'}
-			<BoutsInboxPage embedded />
-		{/if}
-	</div>
+		<div class="arena-panel" role="tabpanel">
+			{#if activeTab === 'friends'}
+				<FriendsTab />
+			{:else if activeTab === 'leagues'}
+				<LeaguesPage embedded />
+			{:else if activeTab === 'bouts'}
+				<BoutsInboxPage embedded />
+			{/if}
+		</div>
+	</PageScaffold>
 </div>
 
 <style lang="postcss">

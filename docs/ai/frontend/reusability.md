@@ -63,6 +63,13 @@
 | `Tabs`            | Tab strip.                                                  |
 | `YouBadge`        | "You" callout next to a profile.                            |
 
+### Layout chrome — `$lib/components/layout/`
+
+| Component      | Use it for                                                                                                                                                                                                                                                                                                      |
+| -------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PageScaffold` | Top chrome for a top-level page: a left-aligned title, an optional top-right `right` snippet (icon actions), and an optional `back`. Renders the mobile `MobileAppBar` and the `min-[56rem]` desktop `SectionHeader` together so pages stop hand-rolling/duplicating both. Wrap the page content as `children`. |
+| `MobileAppBar` | The raw mobile app bar. Reach for `PageScaffold` first on a full page — use this directly only for sub-surfaces (e.g. an embedded panel) that need just the mobile bar.                                                                                                                                         |
+
 ### Loader shells — `$lib/components/loaders/`
 
 Reusable building blocks for "fetch once, cache in a store, refresh on
@@ -110,7 +117,7 @@ Static brand assets that aren't components live in `static/branding/`:
 | `$lib/components/authn/`       | Auth flows (II + Google OpenID).                                          |
 | `$lib/components/authz/`       | Role-gated rendering.                                                     |
 | `$lib/components/challenge/`   | Challenge / passkey UI.                                                   |
-| `$lib/components/layout/`      | Header, navigation chrome.                                                |
+| `$lib/components/layout/`      | Header, navigation chrome, `PageScaffold` (see below).                    |
 | `$lib/components/pages/`       | Page-level shells composed inside the single SvelteKit route.             |
 | `$lib/components/loaders/`     | Loaders / skeletons / suspense boundaries.                                |
 | `$lib/components/icons/`       | Bespoke project icons.                                                    |
