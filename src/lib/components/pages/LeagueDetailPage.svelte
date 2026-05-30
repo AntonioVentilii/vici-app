@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { ChevronRight, Copy, Check, Settings } from 'lucide-svelte/icons';
-	import { onMount, type Snippet } from 'svelte';
+	import { ChevronRight, Copy, Check } from 'lucide-svelte/icons';
+	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
@@ -8,9 +8,10 @@
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import ChallengeLeagueModal from '$lib/components/leagues/ChallengeLeagueModal.svelte';
 	import LeagueDetailEmptyState from '$lib/components/leagues/LeagueDetailEmptyState.svelte';
-	import MemberSticker from '$lib/components/leagues/MemberSticker.svelte';
 	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import TransferOwnershipModal from '$lib/components/leagues/TransferOwnershipModal.svelte';
+	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
@@ -29,7 +30,7 @@
 	import type { BattleDoc, BattleState } from '$lib/types/battle';
 	import type { LeagueDoc } from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
-	import { formatDate, shortenPrincipal } from '$lib/utils/format.utils';
+	import { formatDate, formatLocalePercent, shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
@@ -39,9 +40,11 @@
 	 * Mounts at `/arena/leagues/[id]`. Renders the head card
 	 * (gradient logo + emblem + N° rank + inline Invite/Predict
 	 * buttons), the league-battle section (active card or
-	 * Challenge-another-league CTA), the members sticker grid, a
-	 * leaderboard card, a recent-activity feed, and the
-	 * leave / transfer-ownership controls.
+	 * Challenge-another-league CTA), a tappable member leaderboard
+	 * (each row opens a member bottom-sheet with avatar + accuracy /
+	 * streak stats), a recent-activity feed, and the leave /
+	 * transfer-ownership controls. Small leagues (under four members)
+	 * swap the podium for a "just getting started" recruit prompt.
 	 */
 	interface Props {
 		leagueId: string;
@@ -61,6 +64,9 @@
 	let challengeOpen = $state(false);
 	let transferOpen = $state(false);
 	let leaderboardTab = $state<'week' | 'all'>('week');
+	// Member tapped in the leaderboard — drives the member detail
+	// bottom-sheet (avatar + accuracy / streak). `null` keeps it closed.
+	let openMember = $state<LeagueMemberDoc | null>(null);
 
 	const load = async () => {
 		try {
@@ -150,7 +156,9 @@
 			return 1;
 		}
 
-		const idx = members.findIndex((m) => m.member === selfPrincipal);
+		// Rank off `sortedMembers` (the order the leaderboard renders) so
+		// the sticky YOU row and the list agree on the caller's number.
+		const idx = sortedMembers.findIndex((m) => m.member === selfPrincipal);
 
 		return idx === -1 ? 1 : idx + 1;
 	});
@@ -239,10 +247,6 @@
 		void goto(resolve(AppPath.Flow));
 	};
 
-	const handleSettings = () => {
-		void goto(resolve(AppPath.Settings));
-	};
-
 	const roleLabelKey = (role: LeagueMemberRole): MessageKey =>
 		role === 'owner'
 			? 'leagues.role.owner'
@@ -260,15 +264,25 @@
 		return shortenPrincipal(principal);
 	};
 
-	const memberInitials = (principal: string): string => {
-		const profile = $profilesStore.get(principal);
+	// Avatar props for a roster principal, drawn from the shared
+	// profile cache. Falls back to nulls before the cache lands —
+	// `<Avatar>` resolves a deterministic placeholder from `owner`.
+	const memberAvatar = (principal: string): string | null =>
+		$profilesStore.get(principal)?.avatar ?? null;
 
-		if (profile?.nickname && profile.nickname.length > 0) {
-			return profile.nickname.slice(0, 2).toUpperCase();
-		}
+	const memberNickname = (principal: string): string | null =>
+		$profilesStore.get(principal)?.nickname ?? null;
 
-		return principal.slice(0, 2).toUpperCase();
-	};
+	// Per-member stats for the leaderboard row + member sheet. The
+	// shared profile cache carries `accuracy` (0–100) and `streak`;
+	// both default to 0 until the profile hydrates.
+	const memberAccuracy = (principal: string): number =>
+		$profilesStore.get(principal)?.accuracy ?? 0;
+
+	const memberStreak = (principal: string): number => $profilesStore.get(principal)?.streak ?? 0;
+
+	const formatAccuracy = (principal: string): string =>
+		formatLocalePercent({ value: memberAccuracy(principal) / 100, locale: $localeStore });
 
 	// Sort the roster so the caller sits on top, then owners, admins,
 	// members. Within each band we preserve join order (oldest first)
@@ -523,18 +537,24 @@
 
 		return members.find((m) => m.member === selfPrincipal);
 	});
-</script>
 
-{#snippet appbarRight()}
-	<button
-		class="appbar-icon-btn"
-		aria-label={t({ locale: $localeStore, key: 'settings.title' })}
-		onclick={handleSettings}
-		type="button"
-	>
-		<Settings aria-hidden="true" size={18} strokeWidth={1.8} />
-	</button>
-{/snippet}
+	// Small-league recruit state — under four members there isn't
+	// enough of a field for a podium, so we surface a "just getting
+	// started" prompt with an invite CTA beneath the leaderboard.
+	const isRecruiting = $derived(members.length < 4);
+
+	// 1-indexed roster rank of the tapped member — feeds the member
+	// sheet's `Rank #NN · {league}` subhead.
+	const openMemberRank = $derived.by((): number => {
+		if (!openMember) {
+			return 1;
+		}
+
+		const idx = sortedMembers.findIndex((m) => m.member === openMember?.member);
+
+		return idx === -1 ? 1 : idx + 1;
+	});
+</script>
 
 <div class="league-detail">
 	<MobileAppBar
@@ -542,7 +562,6 @@
 			label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
 			onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)
 		}}
-		right={appbarRight as Snippet}
 		title={league?.name ?? t({ locale: $localeStore, key: 'leagues.title' })}
 	/>
 
@@ -703,11 +722,15 @@
 			{/if}
 		</section>
 
-		<!-- ─── Members sticker grid ─── -->
+		<!-- ─── Leaderboard · This week / All time ─── -->
+		<!-- Members now live here as tappable rows (avatar + handle +
+		     streak + accuracy); the row opens a member detail sheet.
+		     The Panini sticker grid is retired in favour of this single
+		     roster + the member sheet. -->
 		<section class="league-detail-section">
 			<div class="league-detail-section-head">
 				<span class="eyebrow league-detail-section-title">
-					{t({ locale: $localeStore, key: 'leagues.detail.members_section' })}
+					{t({ locale: $localeStore, key: 'leagues.detail.leaderboard_eyebrow' })}
 				</span>
 				<span class="num league-detail-section-side">
 					{t({
@@ -715,26 +738,6 @@
 						key: 'leagues.detail.members_count_unlimited',
 						params: { count: members.length }
 					})}
-				</span>
-			</div>
-			<div class="league-detail-members-grid">
-				{#each sortedMembers as member, idx (member.member)}
-					<MemberSticker
-						accentColor={accent}
-						isSelf={member.member === selfPrincipal}
-						principal={member.member}
-						rank={idx + 1}
-						role={member.role}
-					/>
-				{/each}
-			</div>
-		</section>
-
-		<!-- ─── Leaderboard · This week / All time ─── -->
-		<section class="league-detail-section">
-			<div class="league-detail-section-head">
-				<span class="eyebrow league-detail-section-title">
-					{t({ locale: $localeStore, key: 'leagues.detail.leaderboard_eyebrow' })}
 				</span>
 			</div>
 			<div class="league-detail-leaderboard">
@@ -764,20 +767,36 @@
 				<ul class="league-detail-lb-rows">
 					{#each leaderboardTop as member, idx (member.member)}
 						{@const isYou = member.member === selfPrincipal}
-						<li class="league-detail-lb-row" class:is-you={isYou}>
-							<span
-								class="league-detail-lb-rank num"
-								data-rank={idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : ''}
+						<li>
+							<button
+								class="league-detail-lb-row"
+								class:is-you={isYou}
+								aria-label={memberHandle(member.member)}
+								onclick={() => (openMember = member)}
+								type="button"
 							>
-								{String(idx + 1).padStart(2, '0')}
-							</span>
-							<span class="league-detail-lb-avatar" aria-hidden="true">
-								{memberInitials(member.member)}
-							</span>
-							<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
-							<span class="league-detail-lb-role allcaps" data-role={member.role}>
-								{t({ locale: $localeStore, key: roleLabelKey(member.role) })}
-							</span>
+								<span
+									class="league-detail-lb-rank num"
+									data-rank={idx === 0 ? 'gold' : idx === 1 ? 'silver' : idx === 2 ? 'bronze' : ''}
+								>
+									{String(idx + 1).padStart(2, '0')}
+								</span>
+								<Avatar
+									class="league-detail-lb-avatar"
+									avatar={memberAvatar(member.member)}
+									nickname={memberNickname(member.member)}
+									owner={member.member}
+								/>
+								<span class="league-detail-lb-name">{memberHandle(member.member)}</span>
+								<span class="league-detail-lb-streak num allcaps">
+									{t({
+										locale: $localeStore,
+										key: 'leagues.detail.lb_streak',
+										params: { count: memberStreak(member.member) }
+									})}
+								</span>
+								<span class="league-detail-lb-acc num">{formatAccuracy(member.member)}</span>
+							</button>
 						</li>
 					{/each}
 				</ul>
@@ -786,22 +805,59 @@
 				     regardless of whether they already appear in the
 				     top-6 above. -->
 				{#if youMember}
-					<div class="league-detail-lb-you-row">
-						<span class="league-detail-lb-rank num">
+					<button
+						class="league-detail-lb-row league-detail-lb-you-row"
+						aria-label={t({ locale: $localeStore, key: 'leagues.detail.you_chip' })}
+						onclick={() => (openMember = youMember ?? null)}
+						type="button"
+					>
+						<span class="league-detail-lb-rank num is-you">
 							{String(yourRank).padStart(2, '0')}
 						</span>
-						<span class="league-detail-lb-avatar" aria-hidden="true">
-							{memberInitials(youMember.member)}
-						</span>
+						<Avatar
+							class="league-detail-lb-avatar"
+							avatar={memberAvatar(youMember.member)}
+							nickname={memberNickname(youMember.member)}
+							owner={youMember.member}
+						/>
 						<span class="league-detail-lb-name">
 							{t({ locale: $localeStore, key: 'leagues.detail.you_chip' })}
 						</span>
-						<span class="league-detail-lb-role allcaps" data-role={youMember.role}>
-							{t({ locale: $localeStore, key: roleLabelKey(youMember.role) })}
+						<span class="league-detail-lb-streak num allcaps">
+							{t({
+								locale: $localeStore,
+								key: 'leagues.detail.lb_streak',
+								params: { count: memberStreak(youMember.member) }
+							})}
 						</span>
-					</div>
+						<span class="league-detail-lb-acc num">{formatAccuracy(youMember.member)}</span>
+					</button>
 				{/if}
 			</div>
+
+			<!-- Small-league recruit prompt — no podium theatre for a
+			     near-empty league; nudge the user to invite instead. -->
+			{#if isRecruiting}
+				<div class="league-detail-recruit">
+					<span class="league-detail-recruit-title">
+						{t({ locale: $localeStore, key: 'leagues.detail.recruit_title' })}
+					</span>
+					<p class="league-detail-recruit-sub">
+						{t({ locale: $localeStore, key: 'leagues.detail.recruit_sub' })}
+					</p>
+					{#if canSeeInvite}
+						<button class="league-detail-recruit-cta" onclick={handleCopyInvite} type="button">
+							{#if copied}
+								<Check aria-hidden="true" size={13} strokeWidth={2.4} />
+								<span>{t({ locale: $localeStore, key: 'leagues.detail.invite_copied' })}</span>
+							{:else}
+								<Copy aria-hidden="true" size={13} strokeWidth={2} />
+								<span>{t({ locale: $localeStore, key: 'leagues.detail.invite_label' })}</span>
+							{/if}
+						</button>
+					{/if}
+				</div>
+			{/if}
 		</section>
 
 		<!-- ─── Recent activity feed ─── -->
@@ -884,6 +940,51 @@
 	onResolved={handleResolveBattleDone}
 	ourLeagueId={leagueId}
 />
+
+<!-- ─── Member detail sheet · avatar + accuracy / streak stats ─── -->
+<BottomSheet isOpen={openMember !== null} onClose={() => (openMember = null)}>
+	{#if openMember}
+		<div class="league-detail-member-sheet">
+			<div class="league-detail-member-sheet-head">
+				<Avatar
+					class="league-detail-member-sheet-avatar"
+					avatar={memberAvatar(openMember.member)}
+					nickname={memberNickname(openMember.member)}
+					owner={openMember.member}
+				/>
+				<div class="league-detail-member-sheet-id">
+					<span class="league-detail-member-sheet-name">{memberHandle(openMember.member)}</span>
+					<span class="num league-detail-member-sheet-rank">
+						{t({
+							locale: $localeStore,
+							key: 'leagues.detail.member_sheet_rank',
+							params: {
+								rank: String(openMemberRank).padStart(2, '0'),
+								league: league?.name ?? ''
+							}
+						})}
+					</span>
+				</div>
+			</div>
+			<div class="league-detail-member-sheet-stats">
+				<div class="league-detail-member-stat">
+					<span class="eyebrow league-detail-member-stat-label">
+						{t({ locale: $localeStore, key: 'leagues.detail.member_stat_accuracy' })}
+					</span>
+					<span class="num league-detail-member-stat-value"
+						>{formatAccuracy(openMember.member)}</span
+					>
+				</div>
+				<div class="league-detail-member-stat">
+					<span class="eyebrow league-detail-member-stat-label">
+						{t({ locale: $localeStore, key: 'leagues.detail.member_stat_streak' })}
+					</span>
+					<span class="num league-detail-member-stat-value">{memberStreak(openMember.member)}</span>
+				</div>
+			</div>
+		</div>
+	{/if}
+</BottomSheet>
 
 <style lang="postcss">
 	.league-detail {
@@ -1233,14 +1334,6 @@
 		background: color-mix(in srgb, var(--laurel) 88%, var(--text-base));
 	}
 
-	/* ─── Members grid ──────────────────────────────────────────── */
-
-	.league-detail-members-grid {
-		display: grid;
-		grid-template-columns: repeat(3, 1fr);
-		gap: 0.6rem;
-	}
-
 	/* ─── Leaderboard ───────────────────────────────────────────── */
 
 	.league-detail-leaderboard {
@@ -1295,23 +1388,35 @@
 	}
 
 	.league-detail-lb-row {
+		appearance: none;
 		display: grid;
-		grid-template-columns: 1.6rem 1.4rem 1fr auto;
+		grid-template-columns: 1.6rem 1.75rem minmax(0, 1fr) auto auto;
 		align-items: center;
 		gap: 0.55rem;
-		padding: 0.5rem 0;
+		width: 100%;
+		min-height: 44px;
+		padding: 0.5rem 0.3rem;
+		font: inherit;
+		color: inherit;
+		text-align: left;
+		background: transparent;
+		border: 0;
 		border-bottom: 1px solid var(--border-base);
+		border-radius: var(--r-8);
+		cursor: pointer;
+		transition: background 140ms ease;
 	}
 
-	.league-detail-lb-row:last-of-type {
+	.league-detail-lb-rows li:last-child .league-detail-lb-row {
 		border-bottom: 0;
+	}
+
+	.league-detail-lb-row:hover {
+		background: color-mix(in srgb, var(--text-base) 4%, transparent);
 	}
 
 	.league-detail-lb-row.is-you {
 		background: color-mix(in srgb, var(--accent) 6%, transparent);
-		border-radius: var(--r-8);
-		padding-left: 0.3rem;
-		padding-right: 0.3rem;
 	}
 
 	.league-detail-lb-rank {
@@ -1333,22 +1438,14 @@
 		color: #b57c52;
 	}
 
-	.league-detail-lb-avatar {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 1.4rem;
-		height: 1.4rem;
-		font-size: 0.55rem;
-		font-weight: 700;
-		color: var(--text-base);
-		background: linear-gradient(
-			135deg,
-			color-mix(in srgb, var(--accent) 50%, transparent),
-			color-mix(in srgb, var(--accent) 14%, transparent)
-		);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
+	.league-detail-lb-rank.is-you {
+		color: var(--accent);
+	}
+
+	:global(.league-detail-lb-avatar) {
+		width: 1.75rem;
+		height: 1.75rem;
+		flex-shrink: 0;
 	}
 
 	.league-detail-lb-name {
@@ -1360,26 +1457,146 @@
 		white-space: nowrap;
 	}
 
-	.league-detail-lb-role {
-		font-size: 0.55rem;
+	.league-detail-lb-streak {
+		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
+		white-space: nowrap;
 	}
 
-	.league-detail-lb-role[data-role='owner'] {
-		color: var(--laurel);
+	.league-detail-lb-acc {
+		font-size: var(--t-13);
+		font-weight: 700;
+		color: var(--accent);
+		text-align: right;
 	}
 
 	.league-detail-lb-you-row {
-		display: grid;
-		grid-template-columns: 1.6rem 1.4rem 1fr auto;
-		align-items: center;
-		gap: 0.55rem;
-		padding: 0.5rem 0.6rem;
 		margin-top: 0.4rem;
-		background: color-mix(in srgb, var(--accent) 6%, transparent);
+		padding-left: 0.6rem;
+		padding-right: 0.6rem;
 		border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border-base));
-		border-radius: var(--r-8);
+	}
+
+	/* ─── Small-league recruit prompt ───────────────────────────── */
+
+	.league-detail-recruit {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 1rem 0.95rem;
+		text-align: center;
+		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.league-detail-recruit-title {
+		font-family: var(--font-display);
+		font-size: var(--t-14);
+		font-weight: 600;
+		color: var(--text-base);
+	}
+
+	.league-detail-recruit-sub {
+		margin: 0;
+		font-size: var(--t-12);
+		line-height: 1.4;
+		color: var(--text-muted);
+	}
+
+	.league-detail-recruit-cta {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
+		margin-top: 0.2rem;
+		padding: 0.5rem 0.95rem;
+		font: inherit;
+		font-size: var(--t-12);
+		font-weight: 700;
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition: border-color 140ms ease;
+	}
+
+	.league-detail-recruit-cta:hover {
+		border-color: var(--border-strong);
+	}
+
+	/* ─── Member detail sheet ───────────────────────────────────── */
+
+	.league-detail-member-sheet {
+		display: flex;
+		flex-direction: column;
+		gap: 0.85rem;
+		padding: 0.25rem 0 0.5rem;
+	}
+
+	.league-detail-member-sheet-head {
+		display: flex;
+		align-items: center;
+		gap: 0.85rem;
+		min-width: 0;
+	}
+
+	:global(.league-detail-member-sheet-avatar) {
+		width: 3.25rem;
+		height: 3.25rem;
+		flex-shrink: 0;
+	}
+
+	.league-detail-member-sheet-id {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		min-width: 0;
+	}
+
+	.league-detail-member-sheet-name {
+		font-family: var(--font-display);
+		font-size: var(--t-16);
+		font-weight: 700;
+		color: var(--text-base);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.league-detail-member-sheet-rank {
+		font-size: var(--t-11);
+		letter-spacing: var(--tracking-wide);
+		color: var(--text-muted);
+	}
+
+	.league-detail-member-sheet-stats {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+	}
+
+	.league-detail-member-stat {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 0.7rem 0.85rem;
+		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.league-detail-member-stat-label {
+		color: var(--text-muted);
+	}
+
+	.league-detail-member-stat-value {
+		font-size: var(--t-20);
+		font-weight: 700;
+		color: var(--text-base);
 	}
 
 	/* ─── Activity feed ─────────────────────────────────────────── */
