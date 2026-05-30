@@ -1716,7 +1716,7 @@ export const deMessages = {
 	'ui.table.entries': 'Einträge',
 	'ui.theme.dark': 'Dunkel',
 	'ui.theme.light': 'Hell',
-	'ui.theme.peach': 'Pfirsich',
+	'ui.theme.peach': 'Koralle',
 	'ui.you_badge.label': 'Du',
 	'ui.you_badge.title': 'Das bist du',
 	'wallet.back.label': 'Zurück zum Profil',

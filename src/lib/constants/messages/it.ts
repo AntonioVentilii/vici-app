@@ -1709,7 +1709,7 @@ export const itMessages = {
 	'ui.table.entries': 'Voci',
 	'ui.theme.dark': 'Scuro',
 	'ui.theme.light': 'Chiaro',
-	'ui.theme.peach': 'Pesca',
+	'ui.theme.peach': 'Corallo',
 	'ui.you_badge.label': 'Tu',
 	'ui.you_badge.title': 'Sei tu',
 	'wallet.back.label': 'Torna al profilo',

@@ -1718,7 +1718,7 @@ export const esMessages = {
 	'ui.table.entries': 'Entradas',
 	'ui.theme.dark': 'Oscuro',
 	'ui.theme.light': 'Claro',
-	'ui.theme.peach': 'Melocotón',
+	'ui.theme.peach': 'Coral',
 	'ui.you_badge.label': 'Tú',
 	'ui.you_badge.title': 'Este eres tú',
 	'wallet.back.label': 'Volver al perfil',

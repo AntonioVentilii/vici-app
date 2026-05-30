@@ -72,6 +72,10 @@ The app supports three themes through `data-theme` on `<html>`:
 | `light` | Parchment / ink                       | `--laurel`                                                                 |
 | `peach` | Warm blush / coral-cream              | `--laurel-deep` (`#B68B1F`) for primary/accent so contrast holds on peach. |
 
+The `peach` theme is **labelled "Coral"** in the UI (`ui.theme.peach`,
+localized per locale). The `data-theme="peach"` value and the `Theme`
+union keep the internal `peach` name — the rename is display-only.
+
 Theme state lives in
 [`src/lib/stores/theme.store.ts`](../../../src/lib/stores/theme.store.ts)
 and persists to `localStorage` as `vici-theme`.
