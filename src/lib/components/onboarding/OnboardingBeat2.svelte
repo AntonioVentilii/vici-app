@@ -360,7 +360,7 @@
 	{#if team}
 		{@const teamColor = team.color ?? 'var(--laurel)'}
 		<div class="ob2-affil-preview">
-			<div style:background="{teamColor}22" style:color={teamColor} class="ob2-affil-flag">
+			<div class="ob2-affil-flag">
 				<CountryFlag class="ob2-affil-flag-img" countryCode={team.id} />
 			</div>
 			<div class="ob2-affil-text">
