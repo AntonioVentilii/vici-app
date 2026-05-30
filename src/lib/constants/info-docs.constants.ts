@@ -35,7 +35,7 @@ const TERMS: InfoDoc = {
 		{ kind: 'h', text: '2. Your account' },
 		{
 			kind: 'p',
-			text: 'You agree to provide accurate information and to use one account only. Multiple accounts created to manipulate leaderboards or bouts will be removed without notice.'
+			text: 'You agree to provide accurate information and to use one account only. Multiple accounts created to manipulate leaderboards or battles will be removed without notice.'
 		},
 		{ kind: 'h', text: '3. Your predictions' },
 		{
@@ -238,12 +238,12 @@ const FAQ: InfoDoc = {
 		{ kind: 'h', text: 'Who can see my predictions?' },
 		{
 			kind: 'p',
-			text: 'Your handle and accuracy are public on global leaderboards, league standings, and Worlds bouts you opt into. Individual market calls are visible only to leagues you belong to.'
+			text: 'Your handle and accuracy are public on global leaderboards, league standings, and Worlds battles you opt into. Individual market calls are visible only to leagues you belong to.'
 		},
-		{ kind: 'h', text: 'How do bouts work?' },
+		{ kind: 'h', text: 'How do battles work?' },
 		{
 			kind: 'p',
-			text: 'Bouts are time-bound competitions between leagues or universities. Average accuracy during the window determines the winner. A minimum number of calls is required to qualify.'
+			text: 'Battles are time-bound competitions between leagues or universities. Average accuracy during the window determines the winner. A minimum number of calls is required to qualify.'
 		}
 	]
 };

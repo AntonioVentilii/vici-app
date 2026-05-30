@@ -35,7 +35,7 @@ export const Collection = {
 	/**
 	 * Social cohorts — user-created leagues. One doc per league, keyed by league id. Holds
 	 * name, 6-char alphanumeric invite code (for the join-by-code flow), owner principal, and
-	 * marketing metadata. Members and bouts live in follow-up collections so a league's metadata
+	 * marketing metadata. Members and battles live in follow-up collections so a league's metadata
 	 * stays cheap to read without joining the membership table.
 	 */
 	LEAGUES: collections.LEAGUES,
@@ -47,12 +47,12 @@ export const Collection = {
 	 */
 	LEAGUE_MEMBERS: collections.LEAGUE_MEMBERS,
 	/**
-	 * Bouts — time-bound competitions. Two kinds: 'league' (leagueA vs leagueB) and
-	 * 'duel' (proposer principal vs challenger principal). Doc key is the bout id. State machine
+	 * Battles — time-bound competitions. Two kinds: 'league' (leagueA vs leagueB) and
+	 * 'duel' (proposer principal vs challenger principal). Doc key is the battle id. State machine
 	 * `proposed → accepted → in_flight → resolved` enforced by the satellite assert; scores write
 	 * once at settle, winner derived from scores.
 	 */
-	BOUTS: collections.BOUTS,
+	BATTLES: collections.BATTLES,
 	/**
 	 * Worlds affiliations — a user's chosen university and / or country, used for the Worlds
 	 * leaderboard surface (distinct from user-created leagues so the 90-day lock doesn't leak).

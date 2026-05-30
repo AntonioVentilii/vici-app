@@ -4,7 +4,7 @@
 	import { browser } from '$app/environment';
 	import FriendsTab from '$lib/components/arena/FriendsTab.svelte';
 	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
-	import BoutsInboxPage from '$lib/components/pages/BoutsInboxPage.svelte';
+	import BattlesInboxPage from '$lib/components/pages/BattlesInboxPage.svelte';
 	import LeaguesPage from '$lib/components/pages/LeaguesPage.svelte';
 	import { leaguesCreateIntent } from '$lib/stores/leagues-ui.store';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -12,7 +12,7 @@
 
 	/**
 	 * Arena — the three-tab page (Friends / Leagues /
-	 * Bouts) that anchors every cohort surface. Each tab embeds the
+	 * Battles) that anchors every cohort surface. Each tab embeds the
 	 * existing page component with `embedded={true}` so their own
 	 * appbars stay quiet; the tabbed parent renders the single
 	 * "Arena" appbar above the tab strip.
@@ -25,12 +25,12 @@
 
 	const STORAGE_KEY = 'vici.arena-tab';
 
-	type Tab = 'friends' | 'leagues' | 'bouts';
+	type Tab = 'friends' | 'leagues' | 'battles';
 
 	const TAB_LABEL_KEY: Record<Tab, MessageKey> = {
 		friends: 'arena.tabs.friends',
 		leagues: 'arena.tabs.leagues',
-		bouts: 'arena.tabs.bouts'
+		battles: 'arena.tabs.battles'
 	};
 
 	let activeTab: Tab = $state('friends');
@@ -43,7 +43,7 @@
 		try {
 			const stored = localStorage.getItem(STORAGE_KEY);
 
-			if (stored === 'leagues' || stored === 'bouts') {
+			if (stored === 'leagues' || stored === 'battles') {
 				activeTab = stored;
 			} else {
 				activeTab = 'friends';
@@ -65,7 +65,7 @@
 		}
 	});
 
-	const TABS: readonly Tab[] = ['friends', 'leagues', 'bouts'] as const;
+	const TABS: readonly Tab[] = ['friends', 'leagues', 'battles'] as const;
 </script>
 
 {#snippet arenaAppbarRight()}
@@ -103,8 +103,8 @@
 				<FriendsTab />
 			{:else if activeTab === 'leagues'}
 				<LeaguesPage embedded />
-			{:else if activeTab === 'bouts'}
-				<BoutsInboxPage embedded />
+			{:else if activeTab === 'battles'}
+				<BattlesInboxPage embedded />
 			{/if}
 		</div>
 	</PageScaffold>

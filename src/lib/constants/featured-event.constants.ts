@@ -136,6 +136,6 @@ export const WORLD_CUP_2026: FeaturedEvent = {
 /**
  * The featured event currently surfaced by the app. Swap this single
  * export to re-point the entire event surface (onboarding, Flow filter,
- * Worlds event bout) at a new tentpole.
+ * Worlds event battle) at a new tentpole.
  */
 export const CURRENT_FEATURED_EVENT: FeaturedEvent = WORLD_CUP_2026;

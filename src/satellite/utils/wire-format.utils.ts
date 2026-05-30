@@ -497,9 +497,9 @@ export const toWireLeagueMember = (member: {
 	role: member.role
 });
 
-// ─── Bouts ──────────────────────────────────────────────────────
+// ─── Battles ──────────────────────────────────────────────────────
 
-export const BoutWireSchema = j.strictObject({
+export const BattleWireSchema = j.strictObject({
 	id: j.string(),
 	kind: j.enum(['league', 'duel']),
 	side_a: j.string(),
@@ -513,9 +513,9 @@ export const BoutWireSchema = j.strictObject({
 	winner: j.enum(['A', 'B', 'draw']).optional()
 });
 
-export type WireBout = j.infer<typeof BoutWireSchema>;
+export type WireBattle = j.infer<typeof BattleWireSchema>;
 
-export const toWireBout = (bout: {
+export const toWireBattle = (battle: {
 	id: string;
 	kind: 'league' | 'duel';
 	sideA: string;
@@ -527,18 +527,18 @@ export const toWireBout = (bout: {
 	scoreA?: number;
 	scoreB?: number;
 	winner?: 'A' | 'B' | 'draw';
-}): WireBout => ({
-	id: bout.id,
-	kind: bout.kind,
-	side_a: bout.sideA,
-	side_b: bout.sideB,
-	proposer: bout.proposer,
-	state: bout.state,
-	kickoff_ms: bout.kickoffMs,
-	settle_ms: bout.settleMs,
-	score_a: bout.scoreA,
-	score_b: bout.scoreB,
-	winner: bout.winner
+}): WireBattle => ({
+	id: battle.id,
+	kind: battle.kind,
+	side_a: battle.sideA,
+	side_b: battle.sideB,
+	proposer: battle.proposer,
+	state: battle.state,
+	kickoff_ms: battle.kickoffMs,
+	settle_ms: battle.settleMs,
+	score_a: battle.scoreA,
+	score_b: battle.scoreB,
+	winner: battle.winner
 });
 
 // ─── Affiliations ───────────────────────────────────────────────

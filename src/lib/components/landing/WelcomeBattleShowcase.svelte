@@ -1,6 +1,6 @@
 <script lang="ts">
 	/**
-	 * Mock head-to-head bout between two leagues (`office-hex` vs
+	 * Mock head-to-head battle between two leagues (`office-hex` vs
 	 * `lupercal`) — two accuracy bars facing each other across a
 	 * `VS` / day-counter divider.
 	 */
@@ -50,7 +50,7 @@
 				</span>
 				<span style="letter-spacing:0.08em;" class="num mute t-micro">
 					{league.memberCount}
-					{t({ locale: $localeStore, key: 'welcome.bout.members' })}
+					{t({ locale: $localeStore, key: 'welcome.battle.members' })}
 				</span>
 			</div>
 		</div>
@@ -67,7 +67,7 @@
 {/snippet}
 
 <WelcomeShowcaseCard
-	ctaHref="#bouts"
+	ctaHref="#battles"
 	ctaKey="arena.b_cta"
 	eyebrowColor="var(--terracotta, #B5462C)"
 	eyebrowKey="arena.b_eyebrow"

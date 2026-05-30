@@ -1,22 +1,22 @@
 <script lang="ts">
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
-	import { lookupLeagueByInvite, proposeBout } from '$lib/services/leagues.services';
+	import { lookupLeagueByInvite, proposeBattle } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { BoutDoc } from '$lib/types/bout';
+	import type { BattleDoc } from '$lib/types/battle';
 	import { LEAGUE_INVITE_CODE_REGEX, type LeagueDoc } from '$lib/types/league';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Challenge another league to a bout — opener for owners.
+	 * Challenge another league to a battle — opener for owners.
 	 *
 	 * We don't expose a public league directory yet, so the picker
 	 * is invite-code driven: the caller pastes the opponent's 6-char
 	 * code, we resolve it, then pick a duration (7 / 14 / 30 days)
-	 * and propose the bout.
+	 * and propose the battle.
 	 *
-	 * Wraps `lookupLeagueByInvite` + `proposeBout` — the same
-	 * services `ProposeBoutModal` uses — so the satellite contract
+	 * Wraps `lookupLeagueByInvite` + `proposeBattle` — the same
+	 * services `ProposeBattleModal` uses — so the satellite contract
 	 * is identical.
 	 */
 	interface Props {
@@ -24,7 +24,7 @@
 		/** Our league (the one we're challenging from). */
 		fromLeague: LeagueDoc;
 		onClose: () => void;
-		onProposed: (bout: BoutDoc) => void;
+		onProposed: (battle: BattleDoc) => void;
 	}
 
 	const { isOpen, fromLeague, onClose, onProposed }: Props = $props();
@@ -75,20 +75,20 @@
 			const found = await lookupLeagueByInvite({ inviteCode: normalisedCode });
 
 			if (!found) {
-				lookupError = 'leagues.bout.propose.error_not_found';
+				lookupError = 'leagues.battle.propose.error_not_found';
 
 				return;
 			}
 
 			if (found.id === fromLeague.id) {
-				lookupError = 'leagues.bout.propose.error_same_league';
+				lookupError = 'leagues.battle.propose.error_same_league';
 
 				return;
 			}
 
 			resolved = found;
 		} catch {
-			lookupError = 'leagues.bout.propose.error_lookup';
+			lookupError = 'leagues.battle.propose.error_lookup';
 		} finally {
 			resolving = false;
 		}
@@ -108,17 +108,17 @@
 			const kickoffMs = Date.now() + DAY_IN_MS;
 			const settleMs = kickoffMs + duration * DAY_IN_MS;
 
-			const bout = await proposeBout({
+			const battle = await proposeBattle({
 				sideA: fromLeague.id,
 				sideB: resolved.id,
 				kickoffMs,
 				settleMs
 			});
 
-			onProposed(bout);
+			onProposed(battle);
 			reset();
 		} catch (err) {
-			console.error('ChallengeLeagueModal: proposeBout failed', err);
+			console.error('ChallengeLeagueModal: proposeBattle failed', err);
 			submitError = 'common.error.generic';
 		} finally {
 			submitting = false;
@@ -162,8 +162,8 @@
 					type="button"
 				>
 					{resolving
-						? t({ locale: $localeStore, key: 'leagues.bout.propose.resolving' })
-						: t({ locale: $localeStore, key: 'leagues.bout.propose.resolve' })}
+						? t({ locale: $localeStore, key: 'leagues.battle.propose.resolving' })
+						: t({ locale: $localeStore, key: 'leagues.battle.propose.resolve' })}
 				</button>
 			</div>
 		</label>
@@ -175,7 +175,7 @@
 		{:else if resolved}
 			<div class="challenge-resolved" aria-live="polite">
 				<span class="allcaps challenge-resolved-eyebrow">
-					{t({ locale: $localeStore, key: 'leagues.bout.propose.opponent_resolved' })}
+					{t({ locale: $localeStore, key: 'leagues.battle.propose.opponent_resolved' })}
 				</span>
 				<span class="challenge-resolved-name">{resolved.name}</span>
 			</div>
@@ -211,12 +211,12 @@
 
 		<div class="challenge-form-actions">
 			<button class="challenge-btn is-ghost" onclick={handleClose} type="button">
-				{t({ locale: $localeStore, key: 'leagues.bout.propose.cancel' })}
+				{t({ locale: $localeStore, key: 'leagues.battle.propose.cancel' })}
 			</button>
 			<button class="challenge-btn is-primary" disabled={!canSubmit} type="submit">
 				{t({
 					locale: $localeStore,
-					key: submitting ? 'leagues.bout.propose.submitting' : 'leagues.challenge.cta_send'
+					key: submitting ? 'leagues.battle.propose.submitting' : 'leagues.challenge.cta_send'
 				})}
 			</button>
 		</div>

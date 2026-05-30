@@ -1,5 +1,5 @@
 <script lang="ts">
-	import WorldsBoutDetailPage from '$lib/components/pages/WorldsBoutDetailPage.svelte';
+	import WorldsBattleDetailPage from '$lib/components/pages/WorldsBattleDetailPage.svelte';
 </script>
 
-<WorldsBoutDetailPage kind="country" />
+<WorldsBattleDetailPage kind="country" />

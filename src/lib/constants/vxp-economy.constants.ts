@@ -81,7 +81,7 @@ export const VXP_COMEBACK_GRANT = 1000;
 export const VXP_REFERRAL_MONTHLY_CAP = 10;
 
 /**
- * Worlds podium awards for the monthly bout — 1st / 2nd / 3rd place.
+ * Worlds podium awards for the monthly battle — 1st / 2nd / 3rd place.
  * Server-validated; surfaced in UI on the Worlds standings.
  */
 export const VXP_WORLDS_PODIUM = Object.freeze({

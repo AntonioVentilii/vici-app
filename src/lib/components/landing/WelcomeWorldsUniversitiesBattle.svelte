@@ -28,15 +28,15 @@
 </script>
 
 <WelcomeShowcaseCard
-	ctaHref="#bouts"
-	ctaKey="arena.wcbout_cta"
+	ctaHref="#battles"
+	ctaKey="arena.wcbattle_cta"
 	eyebrowColor="#B49CFF"
 	eyebrowKey="arena.w_eyebrow"
 	rootGradient="linear-gradient(180deg, rgba(180,156,255,0.10), rgba(180,156,255,0.02) 70%, transparent)"
-	subKey="arena.wcbout_sub"
+	subKey="arena.wcbattle_sub"
 	subParams={{ count: total }}
-	titleAKey="arena.wcbout_title_a"
-	titleBKey="arena.wcbout_title_b"
+	titleAKey="arena.wcbattle_title_a"
+	titleBKey="arena.wcbattle_title_b"
 >
 	{#snippet badge()}
 		<span

@@ -30,7 +30,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Worlds — institutional bout surface.
+	 * Worlds — institutional battle surface.
 	 *
 	 * Layout:
 	 *
@@ -39,10 +39,10 @@
 	 *  2. Affiliation prompt — "Where did you study?" card, shown only
 	 *     when the user has no school affiliation. Opens
 	 *     `AffiliationPickerModal` on tap.
-	 *  3. Hero event card — `FIFA WORLD CUP · Live` tags + WC Bout
+	 *  3. Hero event card — `FIFA WORLD CUP · Live` tags + WC Battle
 	 *     title + top-3 podium tiles (driven by lifetime accuracy on
 	 *     `listAffiliationStats({ kind: 'university' })`).
-	 *  4. Scope toggle — current month season vs WC Bout (`{N}d left`).
+	 *  4. Scope toggle — current month season vs WC Battle (`{N}d left`).
 	 *  5. Top-6 leaderboard with school glyph + calls eyebrow. When the
 	 *     user is affiliated and outside the visible window, a sticky
 	 *     `is-you` row pins to the bottom.
@@ -150,7 +150,7 @@
 	/**
 	 * Top three by WC (lifetime) accuracy — driven by the same data
 	 * regardless of the visible scope toggle, because the hero card
-	 * always frames the World Cup bout.
+	 * always frames the World Cup battle.
 	 */
 	const wcTop3 = $derived.by(() => {
 		const list = [...stats];
@@ -243,7 +243,7 @@
 			<WorldsAffiliationPrompt onPick={() => (pickerKind = 'university')} />
 		{/if}
 
-		<section class="worlds-event" aria-label="World Cup bout">
+		<section class="worlds-event" aria-label="World Cup battle">
 			<div class="worlds-event-tags">
 				<span class="worlds-tag worlds-tag-wc">
 					{t({ locale: $localeStore, key: 'worlds.event.tag_wc' })}
@@ -362,7 +362,7 @@
 		<div class="worlds-list">
 			{#if visibleRows.length === 0}
 				<p class="worlds-empty">
-					{t({ locale: $localeStore, key: 'worlds.bout.empty_ranked' })}
+					{t({ locale: $localeStore, key: 'worlds.battle.empty_ranked' })}
 				</p>
 			{:else}
 				{#each visibleRows as row, i (row.affiliationIdentifier)}

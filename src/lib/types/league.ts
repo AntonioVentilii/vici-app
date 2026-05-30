@@ -2,8 +2,8 @@
  * Social cohorts — leagues.
  *
  * A league is a user-created cohort with a 6-char alphanumeric invite
- * code that the owner shares to bring members in. Members and bouts
- * live in follow-up collections (`league_members`, `bouts`) so the
+ * code that the owner shares to bring members in. Members and battles
+ * live in follow-up collections (`league_members`, `battles`) so the
  * league metadata stays cheap to list without joining membership.
  *
  * Doc key for `leagues` is the league id — a slug-style identifier
