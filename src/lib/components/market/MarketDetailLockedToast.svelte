@@ -27,7 +27,7 @@
 		<div class="market-locked-toast-check">
 			<Check aria-hidden="true" size={48} strokeWidth={1.5} />
 		</div>
-		<div class="market-locked-toast-msg">
+		<div class="market-locked-toast-msg serif-italic">
 			{t({ locale: $localeStore, key: 'market.detail.locked_in' })}
 		</div>
 	</div>
@@ -52,12 +52,12 @@
 		color: var(--laurel);
 	}
 
+	/* Serif-italic brand treatment — the `.serif-italic` utility on the
+	   element supplies font-family + italic + weight; we only set the
+	   surface-specific size / colour / rhythm here. */
 	.market-locked-toast-msg {
 		color: var(--laurel);
-		font-family: var(--font-display);
-		font-style: italic;
 		font-size: var(--t-32);
 		line-height: 1;
-		letter-spacing: var(--tracking-tight);
 	}
 </style>
