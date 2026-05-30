@@ -12,7 +12,7 @@
 	// a single static line, a still Oracle, and no shimmer. See
 	// `docs/ai/frontend/design.md` §7 (Flow Mode).
 
-	const ROTATION_INTERVAL_MS = 2000;
+	const ROTATION_INTERVAL_MS = 750;
 
 	const LINE_KEYS = [
 		'flow.loading.line_1',
@@ -111,7 +111,7 @@
 		position: absolute;
 		inset: 0;
 		overflow: hidden;
-		border-radius: 22px;
+		border-radius: 20px;
 		border: 1px solid var(--border-base);
 		background: var(--bg-surface);
 		box-shadow: 0 12px 40px -16px rgba(0, 0, 0, 0.5);
@@ -124,7 +124,7 @@
 		background: linear-gradient(
 			110deg,
 			transparent 30%,
-			color-mix(in srgb, var(--text-base) 10%, transparent) 50%,
+			color-mix(in srgb, var(--text-base) 12%, transparent) 50%,
 			transparent 70%
 		);
 		animation: flow-skeleton-shimmer 1.4s ease-in-out infinite;
@@ -197,7 +197,7 @@
 		font-size: var(--text-h4);
 		color: var(--text-base);
 		text-align: center;
-		animation: flow-skeleton-line-fade 2s ease-in-out infinite;
+		animation: flow-skeleton-line-fade 1.5s ease-in-out infinite;
 	}
 	.flow-skeleton-copy.is-static {
 		animation: none;
@@ -230,19 +230,19 @@
 			transform: translateY(0);
 		}
 		50% {
-			transform: translateY(-10px);
+			transform: translateY(-12px);
 		}
 	}
 
 	@keyframes flow-skeleton-wobble {
 		0% {
-			transform: perspective(600px) rotateY(-22deg) rotateX(6deg);
+			transform: perspective(600px) rotateY(-30deg) rotateX(7deg);
 		}
 		50% {
-			transform: perspective(600px) rotateY(22deg) rotateX(-6deg);
+			transform: perspective(600px) rotateY(30deg) rotateX(-7deg);
 		}
 		100% {
-			transform: perspective(600px) rotateY(-22deg) rotateX(6deg);
+			transform: perspective(600px) rotateY(-30deg) rotateX(7deg);
 		}
 	}
 
