@@ -1585,6 +1585,13 @@ export const enMessages = {
 	'onboarding.beat1b.change_team': 'Change team',
 	'onboarding.beat1b.coach.dismiss': 'Got it',
 	'onboarding.beat1b.coach.hint': 'Swipe a side — or tap. No wrong answer.',
+	'onboarding.beat1b.coach.swipe_lead': 'Swipe',
+	'onboarding.beat1b.coach.swipe_left': 'left',
+	'onboarding.beat1b.coach.swipe_or': 'or',
+	'onboarding.beat1b.coach.swipe_right': 'right',
+	'onboarding.beat1b.coach.swipe_sub': 'Right for VICI · Left for NO',
+	'onboarding.beat1b.days_short': '{days}d',
+	'onboarding.beat1b.first_call_label': 'First call',
 	'onboarding.beat1b.headline': 'Make your first call.',
 	'onboarding.beat1b.skip_sub':
 		'Following the tournament. Swipe YES if you think {team} takes it all.',
