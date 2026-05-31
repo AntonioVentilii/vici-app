@@ -31,7 +31,7 @@
 	const inviterHandle = $derived(
 		($userStore.profile?.nickname ?? 'predictor').replace(/[^a-z0-9]/gi, '') || 'predictor'
 	);
-	const url = $derived(`https://vici.markets/m/${market.id}?ref=${inviterHandle}`);
+	const url = $derived(`https://vici.market/m/${market.id}?ref=${inviterHandle}`);
 	const text = $derived(
 		priorCall !== null && priorCall !== undefined
 			? t({

@@ -34,7 +34,7 @@
 	// How many non-WC markets the `bridge`-phase "Beyond the Cup" rail seeds —
 	// enough to preview the post-Cup deck without competing with the focus.
 	const BEYOND_RAIL_LIMIT = 6;
-	const SORT_STORAGE_KEY = 'vici.markets-sort';
+	const SORT_STORAGE_KEY = 'vici.market-sort';
 
 	type MarketsSort = 'trending' | 'closing' | 'newest';
 	const SORT_OPTIONS: MarketsSort[] = ['trending', 'closing', 'newest'];
@@ -351,7 +351,7 @@
 
 			<!-- Sort chips — Trending (default, volume DESC) · Closing soon
 		     (Open-first, expiry ASC) · Newest (expiry DESC as a freshness
-		     proxy). Persisted under `vici.markets-sort`. -->
+		     proxy). Persisted under `vici.market-sort`. -->
 			<div
 				class="markets-sort"
 				aria-label={t({ locale: $localeStore, key: 'markets.sort.label' })}
