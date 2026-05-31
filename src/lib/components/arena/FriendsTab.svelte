@@ -1,7 +1,8 @@
 <script lang="ts">
 	import type { Doc } from '@junobuild/core';
-	import { Check, ChevronRight, Copy, Plus, Share2 } from 'lucide-svelte/icons';
+	import { Check, ChevronRight, Link2, Plus, Share2, Sparkles } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
+	import { SvelteSet } from 'svelte/reactivity';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -9,9 +10,11 @@
 	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import BaseButton from '$lib/components/ui/BaseButton.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import { MILLISECOND_IN_NANOSECONDS } from '$lib/constants/app.constants';
 	import { REFERRAL_MAX_PAID } from '$lib/constants/referral.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import { globalActivities } from '$lib/derived/activities.derived';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { getMyReferralCode } from '$lib/services/referral.services';
@@ -35,8 +38,10 @@
 	import { userStore } from '$lib/stores/user.store';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { Relation } from '$lib/types/relation';
+	import type { Activity } from '$lib/types/social';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
-	import { shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
+	import { formatRelativeAgoFromNs, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
+	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
 
@@ -46,7 +51,9 @@
 	 *
 	 * Sections (top → bottom):
 	 *  1. Invite hero — +500 VXP eyebrow, remaining-invites cap line,
-	 *     social-proof row when referrals are paid, Share + Copy CTA row.
+	 *     social-proof row when referrals are paid, a Share CTA, and an
+	 *     inline copy field whose link line doubles as the copy button
+	 *     (flips to a green check + fires a haptic on copy).
 	 *  2. Outgoing invites — friend requests this user has sent that
 	 *     are still pending the recipient's first call.
 	 *  3. Incoming friend requests — each expandable to Accept / Reject.
@@ -147,6 +154,9 @@
 
 		if (ok) {
 			triggerCopyFeedback();
+			// Touch-feedback on copy — pairs the visual green flip with a
+			// brief buzz so the affordance reads as committed on mobile.
+			haptic('light-tap');
 		} else {
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'arena.friends.title' }),
@@ -424,6 +434,51 @@
 		// the Arena shell instead of forking to a sibling tab.
 		void goto(resolve(`${AppPath.Arena}/leaderboard`));
 	};
+
+	// ── Friends activity feed ───────────────────────────────────────
+	// Drinks from the same cached global activity stream that powers the
+	// market trade rows + dashboard feed (populated by
+	// `LoaderGlobalActivities`), filtered to the viewer's friend set so
+	// no extra fetch is needed and the list stays stale-while-revalidate.
+	const friendIdSet = $derived(
+		new Set(rankedFriends.map((row) => row.friendId).filter((id): id is string => id.length > 0))
+	);
+
+	const friendActivities = $derived(
+		$globalActivities.filter((activity) => friendIdSet.has(activity.user)).slice(0, 20)
+	);
+
+	// Clap is a local-only acknowledgement today — the satellite has no
+	// reaction model, so we track tapped rows in a reactive Set keyed by
+	// the row's stable `timestamp#user` id. Surfaced as a data gap.
+	const clappedKeys = new SvelteSet<string>();
+
+	const activityKey = (activity: Activity): string => `${activity.timestamp}#${activity.user}`;
+
+	const toggleClap = (activity: Activity) => {
+		const key = activityKey(activity);
+
+		if (clappedKeys.has(key)) {
+			clappedKeys.delete(key);
+		} else {
+			clappedKeys.add(key);
+			haptic('light-tap');
+		}
+	};
+
+	const goToMarket = (marketId: string | undefined) => {
+		if (marketId === undefined || marketId.length === 0) {
+			return;
+		}
+
+		void goto(resolve(`${AppPath.Markets}/${marketId}`));
+	};
+
+	const feedRelative = (timestampMs: number): string =>
+		formatRelativeAgoFromNs({
+			timestampNs: BigInt(timestampMs) * MILLISECOND_IN_NANOSECONDS,
+			locale: $localeStore
+		});
 </script>
 
 <div class="friends-tab">
@@ -439,18 +494,25 @@
 			{t({ locale: $localeStore, key: 'arena.friends.invite.title' })}
 		</h3>
 		<p class="invite-sub">
-			{t({
-				locale: $localeStore,
-				key: 'arena.friends.invite.sub',
-				params: { amount: bonusLabel }
-			})}
-			<span class="num invite-cap">
+			{#if referralsRemaining > 0}
 				{t({
 					locale: $localeStore,
-					key: 'arena.friends.invite.cap_remaining',
-					params: { remaining: referralsRemaining }
+					key: 'arena.friends.invite.sub',
+					params: { amount: bonusLabel }
 				})}
-			</span>
+				<span class="num invite-cap">
+					{t({
+						locale: $localeStore,
+						key: 'arena.friends.invite.cap_remaining',
+						params: { remaining: referralsRemaining }
+					})}
+				</span>
+			{:else}
+				{t({ locale: $localeStore, key: 'arena.friends.invite.cap_reached' })}
+				<span class="num invite-cap">
+					{t({ locale: $localeStore, key: 'arena.friends.invite.cap_resets' })}
+				</span>
+			{/if}
 		</p>
 
 		{#if referralFriendsCount > 0}
@@ -484,31 +546,36 @@
 					{t({ locale: $localeStore, key: 'arena.friends.invite.share' })}
 				</span>
 			</BaseButton>
+		</div>
+
+		<!-- Inline copy field — the link line IS the copy CTA. Tapping it
+		     copies the canonical share URL, flips the trailing chip to a
+		     green check + "Copied", and fires a brief haptic. The `/i/{code}`
+		     path is resolved by `src/routes/i/[code]/+page.svelte`. -->
+		{#if inviteUrlDisplay}
 			<BaseButton
-				class="invite-copy"
+				class={`invite-copyfield${copied ? ' is-copied' : ''}`}
+				aria-label={copied
+					? t({ locale: $localeStore, key: 'arena.friends.invite.copied' })
+					: t({ locale: $localeStore, key: 'arena.friends.invite.copy' })}
 				onclick={handleCopy}
 				status={inviteUrl ? 'enabled' : 'disabled'}
 			>
-				{#if copied}
-					<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
-						<Check aria-hidden="true" size={13} strokeWidth={1.8} />
-						{t({ locale: $localeStore, key: 'arena.friends.invite.copied' })}
-					</span>
-				{:else}
-					<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
-						<Copy aria-hidden="true" size={13} strokeWidth={1.8} />
-						{t({ locale: $localeStore, key: 'arena.friends.invite.copy' })}
-					</span>
-				{/if}
+				<Link2 aria-hidden="true" size={14} strokeWidth={1.8} />
+				<span class="num invite-copyurl">{inviteUrlDisplay}</span>
+				<span class="invite-copychip" aria-hidden="true">
+					{#if copied}
+						<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
+							<Check size={13} strokeWidth={2.4} />
+							{t({ locale: $localeStore, key: 'arena.friends.invite.copied' })}
+						</span>
+					{:else}
+						<span class="invite-copy-inner" in:fade={{ duration: 150 }}>
+							{t({ locale: $localeStore, key: 'arena.friends.invite.copy' })}
+						</span>
+					{/if}
+				</span>
 			</BaseButton>
-		</div>
-
-		{#if inviteUrlDisplay}
-			<div class="invite-url">
-				<!-- Canonical share URL — exactly the string copy/share emits. The `/i/{code}`
-				     path is resolved by `src/routes/i/[code]/+page.svelte`. -->
-				<span class="num">{inviteUrlDisplay}</span>
-			</div>
 		{/if}
 	</section>
 
@@ -724,12 +791,61 @@
 
 	<!-- Friends feed ──────────────────────────────────────────── -->
 	<!--
-		TODO: Wire a `getFriendsFeed` service once the satellite exposes a
-		recent-activity stream scoped to the viewer's social graph. Until
-		then we render a quiet copy block so the surface stays
+		Recent calls from the viewer's friend set, sourced from the cached
+		global activity stream. When the friend graph has yet to produce
+		any activity we keep the quiet copy block so the surface stays
 		discoverable without faking data.
 	-->
-	{#if !loading && rankedFriends.length > 0}
+	{#if !loading && friendActivities.length > 0}
+		<section class="friends-section">
+			<header class="section-eyebrow">
+				<span>{t({ locale: $localeStore, key: 'arena.friends.feed.eyebrow' })}</span>
+			</header>
+			<ul class="feed-list">
+				{#each friendActivities as activity (activityKey(activity))}
+					{@const profile = friendProfiles.get(activity.user)}
+					{@const isClapped = clappedKeys.has(activityKey(activity))}
+					<li>
+						<div class="feed-row">
+							<button class="feed-main" onclick={() => goToMarket(activity.marketId)} type="button">
+								<span class="feed-avatar">
+									<Avatar
+										class="h-full w-full"
+										avatar={profile?.avatar}
+										nickname={profile?.nickname}
+										owner={profile?.owner ?? activity.user}
+									/>
+								</span>
+								<span class="feed-copy">
+									<span class="feed-line">
+										<b class="feed-handle"
+											>@{profile?.nickname ??
+												t({ locale: $localeStore, key: 'arena.friends.unknown_nickname' })}</b
+										>
+										<span class="feed-action">{activity.title}</span>
+										{#if activity.details}
+											<span class="feed-market">“{activity.details}”</span>
+										{/if}
+									</span>
+									<span class="num feed-when">{feedRelative(activity.timestamp)}</span>
+								</span>
+							</button>
+							<button
+								class="feed-react"
+								class:is-clapped={isClapped}
+								aria-label={t({ locale: $localeStore, key: 'arena.friends.feed.clap' })}
+								aria-pressed={isClapped}
+								onclick={() => toggleClap(activity)}
+								type="button"
+							>
+								<Sparkles aria-hidden="true" size={15} strokeWidth={1.8} />
+							</button>
+						</div>
+					</li>
+				{/each}
+			</ul>
+		</section>
+	{:else if !loading && rankedFriends.length > 0}
 		<section class="friends-section">
 			<header class="section-eyebrow">
 				<span>{t({ locale: $localeStore, key: 'arena.friends.feed.eyebrow' })}</span>
@@ -1043,9 +1159,11 @@
 
 	:global(.invite-share) {
 		display: inline-flex;
+		flex: 1;
 		align-items: center;
+		justify-content: center;
 		gap: 0.4rem;
-		padding: 0.65rem 1rem;
+		padding: 0.75rem 1rem;
 		border: 1px solid color-mix(in srgb, var(--color-primary) 45%, var(--border-base));
 		border-radius: var(--r-pill);
 		background: var(--color-primary);
@@ -1054,35 +1172,80 @@
 		font-weight: 700;
 	}
 
-	:global(.invite-copy) {
-		display: inline-flex;
+	/* Inline copy-link field — the URL line IS the copy CTA. Tapping it
+	   copies the share link and flips the trailing chip to green. Border
+	   + background animate toward the accent-green "yes" tone on success.
+	   Mirrors the prototype `.friends-invite-copyfield`. */
+	:global(.invite-copyfield) {
+		display: flex;
+		width: 100%;
 		align-items: center;
-		gap: 0.35rem;
-		padding: 0.6rem 0.9rem;
+		gap: 0.6rem;
+		padding: 0.6rem 0.6rem 0.6rem 0.75rem;
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: var(--bg-surface);
+		border-radius: 0.6rem;
+		background: color-mix(in srgb, var(--text-base) 3%, transparent);
+		color: var(--text-muted);
+		cursor: pointer;
+		transition:
+			border-color 200ms ease,
+			background 200ms ease;
+	}
+
+	:global(.invite-copyfield:hover) {
+		border-color: var(--border-strong);
+	}
+
+	:global(.invite-copyfield) > :global(svg) {
+		flex-shrink: 0;
+		color: var(--text-muted);
+	}
+
+	.invite-copyurl {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
 		color: var(--text-base);
-		font-size: var(--t-13);
+		font-family: var(--font-mono);
+		font-size: var(--t-12);
+		text-align: left;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.invite-copychip {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		gap: 0.3rem;
+		padding: 0.35rem 0.75rem;
+		border-radius: 0.45rem;
+		background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+		color: var(--color-primary);
+		font-size: var(--t-10);
 		font-weight: 700;
+		letter-spacing: var(--tracking-wide);
+		transition:
+			background 220ms ease,
+			color 220ms ease,
+			transform 220ms ease;
+	}
+
+	:global(.invite-copyfield.is-copied) {
+		border-color: color-mix(in srgb, var(--yes) 50%, transparent);
+		background: color-mix(in srgb, var(--yes) 6%, transparent);
+	}
+
+	:global(.invite-copyfield.is-copied) .invite-copychip {
+		background: var(--yes);
+		color: var(--yes-deep, #07120d);
+		transform: scale(1.04);
 	}
 
 	.invite-copy-inner {
 		display: inline-flex;
 		align-items: center;
-		gap: 0.35rem;
-	}
-
-	/* Dashed-border pill at the bottom of the hero — proto's
-	   `.friends-invite-url` (app.css:4264). */
-	.invite-url {
-		padding: 0.45rem 0.6rem;
-		border: 1px dashed var(--border-base);
-		border-radius: 0.5rem;
-		background: color-mix(in srgb, var(--text-base) 3%, transparent);
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-12);
+		gap: 0.3rem;
 	}
 
 	/* ── Sections ──────────────────────────────────────────── */
@@ -1442,7 +1605,131 @@
 		padding: 1.5rem 0;
 	}
 
-	/* ── Feed (placeholder) ────────────────────────────────── */
+	/* ── Feed ──────────────────────────────────────────────── */
+	/* Unified card with internal dividers — same pattern as the ranked
+	   and pending lists. Each row is the activity line + a clap react. */
+	.feed-list {
+		display: flex;
+		flex-direction: column;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: var(--bg-popover);
+		overflow: hidden;
+	}
+
+	.feed-list > li + li {
+		border-top: 1px solid var(--border-base);
+	}
+
+	.feed-row {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		width: 100%;
+		padding: 0.6rem 0.7rem 0.6rem 0.85rem;
+	}
+
+	.feed-main {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		align-items: center;
+		gap: 0.65rem;
+		flex: 1;
+		min-width: 0;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.feed-avatar {
+		display: inline-flex;
+		overflow: hidden;
+		width: 2rem;
+		height: 2rem;
+		flex-shrink: 0;
+		border-radius: var(--r-pill);
+		background: var(--bg-popover);
+	}
+
+	.feed-copy {
+		display: flex;
+		min-width: 0;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+
+	.feed-line {
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		line-height: var(--leading-snug);
+	}
+
+	.feed-handle {
+		color: var(--text-base);
+		font-weight: 600;
+	}
+
+	.feed-action {
+		color: var(--text-muted);
+	}
+
+	.feed-market {
+		color: var(--text-base);
+		font-family: var(--font-serif, var(--font-display, serif));
+		font-style: italic;
+	}
+
+	.feed-when {
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: var(--t-10);
+		font-weight: 800;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	/* Clap react — appreciation acknowledgement. Brand forbids emoji, so
+	   the applause cue is the `Sparkles` glyph rather than 👏. Resting
+	   state is dimmed; tapping commits to full opacity + an accent wash. */
+	.feed-react {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		justify-content: center;
+		padding: 0.35rem 0.45rem;
+		border: 0;
+		border-radius: var(--r-pill);
+		background: transparent;
+		color: var(--text-muted);
+		cursor: pointer;
+		opacity: 0.45;
+		transition:
+			opacity 160ms ease,
+			background 160ms ease,
+			transform 100ms ease;
+	}
+
+	.feed-react:hover {
+		opacity: 0.8;
+		background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+	}
+
+	.feed-react:active {
+		transform: scale(0.92);
+	}
+
+	.feed-react.is-clapped {
+		opacity: 1;
+		background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+		color: var(--color-primary);
+	}
+
+	/* ── Feed (empty) ──────────────────────────────────────── */
 	.feed-empty {
 		padding: 0.85rem;
 		border: 1px dashed var(--border-base);
