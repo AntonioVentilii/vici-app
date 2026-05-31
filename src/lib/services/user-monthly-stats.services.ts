@@ -77,9 +77,14 @@ export const bucketMonthlyStats = (history: ClearingDid.Event[]): Record<string,
 				decimals: event.price.decimal.decimals
 			});
 
-			// Clamp into [0, 1] — the assert rejects out-of-range values, and a
-			// consensus price is a probability by construction.
-			bucket.consensus.push(Math.max(0, Math.min(1, price)));
+			// Skip non-finite prices (NaN / ±Infinity from a malformed event)
+			// before clamping — Math.max/min leave NaN intact, so we'd otherwise
+			// push NaN into the consensus array and corrupt the median.
+			if (Number.isFinite(price)) {
+				// Clamp into [0, 1] — the assert rejects out-of-range values, and a
+				// consensus price is a probability by construction.
+				bucket.consensus.push(Math.max(0, Math.min(1, price)));
+			}
 		}
 	}
 

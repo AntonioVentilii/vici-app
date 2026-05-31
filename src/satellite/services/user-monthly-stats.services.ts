@@ -12,6 +12,9 @@ import type { AssertSetDocContext } from '@junobuild/functions';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, listDocsStore } from '@junobuild/functions/sdk';
 
+/** Regex for the `YYYY-MM` anchor format. */
+const MONTH_ANCHOR_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
+
 /**
  * Pre-write guard for `user_monthly_stats`. The collection caches each
  * user's per-month gameplay counters (calls / wins / consensus samples) so
@@ -21,13 +24,19 @@ import { decodeDocData, listDocsStore } from '@junobuild/functions/sdk';
  *  1. **Collection scope.** No-op for any other collection.
  *  2. **Key shape.** Doc key must equal `${owner}/${monthAnchor}` and match
  *     the embedded `(owner, monthAnchor)` — one canonical row per user-month.
- *  3. **Owner binds caller.** Only the user themselves can write their own
+ *  3. **monthAnchor format.** Must match `YYYY-MM` and agree with the key's
+ *     month segment so a writer can't supply a structurally valid key with a
+ *     mismatched embedded anchor.
+ *  4. **Owner binds caller.** Only the user themselves can write their own
  *     monthly stats (mirrors the `user_stats` / affiliation-stats invariant).
- *  4. **Counters sane.** `monthCalls` / `monthWins` ≥ 0 and `monthWins ≤
- *     monthCalls`.
- *  5. **Consensus bounded + valid.** The consensus array can't grow past
- *     {@link MONTHLY_CONSENSUS_LIMIT}, and each value is a probability in
- *     [0, 1], so a malicious or buggy writer can't bloat the doc or skew the
+ *  5. **Counters sane.** `monthCalls` / `monthWins` are finite, non-negative
+ *     integers and `monthWins ≤ monthCalls`. NaN / Infinity are rejected.
+ *  6. **Consensus non-empty when active.** If `monthCalls > 0` the consensus
+ *     array must contain at least one sample so `median([])===0` can't let a
+ *     writer with calls but no samples qualify for the bold-caller gate.
+ *  7. **Consensus bounded + valid.** The consensus array can't grow past
+ *     {@link MONTHLY_CONSENSUS_LIMIT}, and each value must be finite and in
+ *     [0, 1] — a malicious or buggy writer can't bloat the doc or skew the
  *     median gate with out-of-range prices.
  *
  * Note (integrity trade-off): like `user_stats`, the assert does NOT verify
@@ -50,6 +59,13 @@ export const assertSetUserMonthlyStats = ({
 
 	const proposedDoc = decodeDocData<UserMonthlyStatsDoc>(proposed.data);
 
+	// monthAnchor must be a well-formed YYYY-MM string.
+	if (!MONTH_ANCHOR_RE.test(proposedDoc.monthAnchor)) {
+		throw new Error(
+			`user_monthly_stats monthAnchor "${proposedDoc.monthAnchor}" must match YYYY-MM (e.g. 2026-05).`
+		);
+	}
+
 	const expectedKey = userMonthlyStatsKey({
 		owner: proposedDoc.owner,
 		monthAnchor: proposedDoc.monthAnchor
@@ -58,6 +74,16 @@ export const assertSetUserMonthlyStats = ({
 	if (key !== expectedKey) {
 		throw new Error(
 			`user_monthly_stats key "${key}" must equal "${expectedKey}" (owner / monthAnchor).`
+		);
+	}
+
+	// The key's month segment must also agree with the embedded anchor (guards
+	// against a key whose suffix was built from a different anchor).
+	const keyMonthSegment = key.split('/').pop();
+
+	if (keyMonthSegment !== proposedDoc.monthAnchor) {
+		throw new Error(
+			`user_monthly_stats key month segment "${keyMonthSegment}" must match monthAnchor "${proposedDoc.monthAnchor}".`
 		);
 	}
 
@@ -73,12 +99,30 @@ export const assertSetUserMonthlyStats = ({
 		throw new Error('user_monthly_stats owner must match the caller principal.');
 	}
 
-	if (proposedDoc.monthCalls < 0 || proposedDoc.monthWins < 0) {
-		throw new Error('user_monthly_stats counters must be non-negative.');
+	// Counters must be finite, non-negative integers (NaN / Infinity both fail
+	// the Number.isFinite check, and fractional values fail the integer check).
+	if (
+		!Number.isFinite(proposedDoc.monthCalls) ||
+		!Number.isFinite(proposedDoc.monthWins) ||
+		!Number.isInteger(proposedDoc.monthCalls) ||
+		!Number.isInteger(proposedDoc.monthWins) ||
+		proposedDoc.monthCalls < 0 ||
+		proposedDoc.monthWins < 0
+	) {
+		throw new Error(
+			'user_monthly_stats counters must be finite, non-negative integers (NaN / Infinity not allowed).'
+		);
 	}
 
 	if (proposedDoc.monthWins > proposedDoc.monthCalls) {
 		throw new Error('user_monthly_stats monthWins cannot exceed monthCalls.');
+	}
+
+	// When a user has calls, they must have at least one consensus sample so
+	// the bold-caller gate can't be gamed with an empty array (median([])===0
+	// would put the user below the threshold unconditionally).
+	if (proposedDoc.monthCalls > 0 && proposedDoc.monthConsensus.length === 0) {
+		throw new Error('user_monthly_stats monthConsensus must be non-empty when monthCalls > 0.');
 	}
 
 	if (proposedDoc.monthConsensus.length > MONTHLY_CONSENSUS_LIMIT) {
@@ -88,8 +132,8 @@ export const assertSetUserMonthlyStats = ({
 	}
 
 	for (const value of proposedDoc.monthConsensus) {
-		if (value < 0 || value > 1) {
-			throw new Error('user_monthly_stats monthConsensus values must be in [0, 1].');
+		if (!Number.isFinite(value) || value < 0 || value > 1) {
+			throw new Error('user_monthly_stats monthConsensus values must be finite numbers in [0, 1].');
 		}
 	}
 };
@@ -160,6 +204,11 @@ export const getMonthlyLeaderboardFn = ({
 }: {
 	monthAnchor: string;
 }): { sharpestEye: MonthlyLeaderboardEntry[]; boldCaller: BoldCallerEntry[] } => {
+	// Fast guard: reject a malformed anchor without scanning the collection.
+	if (!MONTH_ANCHOR_RE.test(monthAnchor)) {
+		return { sharpestEye: [], boldCaller: [] };
+	}
+
 	const caller = msgCaller();
 
 	const { items } = listDocsStore({

@@ -738,8 +738,10 @@ export const toWireTournamentMatch = (doc: {
 
 // ─── Monthly leaderboard wire format ─────────────────────────────────────
 //
-// `getMonthlyLeaderboard` returns two `Vec<NestedStruct>` arrays
-// (`sharpest_eye`, `bold_caller`), so both need snake_case wire schemas per
+// `getMonthlyLeaderboard` returns a result with two arrays:
+// `items` (sharpest-eye podium, IDL field `items`) and `boldCallers`
+// (bold-caller winners, IDL field `bold_callers`). Both contain
+// `Vec<NestedStruct>` values, so both need snake_case wire schemas per
 // the `Vec<NestedStruct>` quirk above.
 
 export const MonthlyLeaderboardEntryWireSchema = j.strictObject({
