@@ -1829,22 +1829,30 @@ export const deMessages = {
 	'settings.delete': 'Konto löschen',
 	'settings.delete.back': 'Zurück',
 	'settings.delete.confirm':
-		'Dies löscht deinen Handle, deine Historie und VXP unwiderruflich. Kann nicht rückgängig gemacht werden.',
+		'Melde dich innerhalb von 30 Tagen an, um deinen Handle und deine Historie wiederherzustellen. Danach sind sie endgültig weg.',
+	'settings.delete.confirm_exactly': 'Genau:',
+	'settings.delete.confirm_finality_title':
+		'Nach 30 Tagen kann dies nicht mehr rückgängig gemacht werden.',
 	'settings.delete.confirm_heading': 'Letzter Schritt.',
 	'settings.delete.confirm_mismatch': 'Das stimmt nicht mit deinem Handle überein.',
-	'settings.delete.confirm_type': 'Tippe {handle} zum Bestätigen',
+	'settings.delete.confirm_type': 'Gib deinen Handle zum Bestätigen ein',
 	'settings.delete.continue': 'Weiter',
 	'settings.delete.deleting': 'Wird gelöscht…',
 	'settings.delete.error': 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
 	'settings.delete.error_handoff': '{league} konnte nicht übergeben werden. Versuche es erneut.',
 	'settings.delete.forever': 'Endgültig löschen',
-	'settings.delete.gone_body':
-		'Aktive Trades bleiben offen und werden bei Fälligkeit abgerechnet — das Löschen deines Kontos beendet sie nicht.',
+	'settings.delete.gone_body': 'Dein Konto wird gelöscht.',
+	'settings.delete.gone_eyebrow': 'Lebewohl',
 	'settings.delete.gone_heading': 'Vale.',
 	'settings.delete.gone_recover':
 		'Anders überlegt? Melde dich innerhalb von 30 Tagen wieder an, und dein Verlauf kehrt zurück.',
-	'settings.delete.gone_return': 'Zurück ({seconds})',
+	'settings.delete.gone_return_label': 'Zur Startseite',
+	'settings.delete.gone_sub':
+		'Eine Bestätigung ist auf dem Weg in dein E-Mail-Postfach. Deine aktiven Trades werden bei Fälligkeit abgerechnet.',
 	'settings.delete.happens_heading': 'Das passiert jetzt.',
+	'settings.delete.happens_lede': 'Lies sorgfältig.',
+	'settings.delete.happens_lede_warn':
+		'Einige der folgenden Punkte lassen sich durch das Löschen nicht rückgängig machen.',
 	'settings.delete.happens_leagues_label': 'Eigene Ligen · {count}',
 	'settings.delete.happens_leagues_sub': 'Übertrage oder lösche jede, bevor du fortfährst.',
 	'settings.delete.happens_orders_label': 'Offene Orders · {count} · {value} VXP',
@@ -1853,6 +1861,9 @@ export const deMessages = {
 	'settings.delete.happens_profile_label': 'Profil, Handle und Statistiken',
 	'settings.delete.happens_profile_sub':
 		'Jetzt gelöscht, 30 Tage lang durch erneutes Anmelden wiederherstellbar, dann endgültig weg.',
+	'settings.delete.happens_social_label': 'DMs und Reaktionen',
+	'settings.delete.happens_social_sub':
+		'Anonymisiert. Deine Antworten bleiben; der Name verschwindet.',
 	'settings.delete.happens_trades_label': 'Aktive Trades · {count} · {value} VXP',
 	'settings.delete.happens_trades_sub':
 		'Bleiben offen und werden bei Fälligkeit abgerechnet — Löschen beendet sie nicht.',
@@ -1861,7 +1872,9 @@ export const deMessages = {
 	'settings.delete.leagues_delete': 'Liga löschen',
 	'settings.delete.leagues_delete_armed': 'Wird für alle Mitglieder gelöscht',
 	'settings.delete.leagues_delete_confirm': 'Für alle {count} Mitglieder löschen?',
+	'settings.delete.leagues_delete_no_rejoin': 'Niemand kann wieder beitreten.',
 	'settings.delete.leagues_heading': 'Kläre deine Ligen.',
+	'settings.delete.leagues_meta': '{count} Mitglieder · Dein Besitz',
 	'settings.delete.leagues_no_members':
 		'Keine anderen Mitglieder zum Übertragen. Lösche sie stattdessen.',
 	'settings.delete.leagues_select_member': 'Mitglied wählen…',
@@ -1875,11 +1888,11 @@ export const deMessages = {
 	'settings.delete.reason.other': 'Andere',
 	'settings.delete.reason.too_complex': 'Zu komplex / schwer zu bedienen',
 	'settings.delete.reason.too_noisy': 'Zu viele Benachrichtigungen',
-	'settings.delete.reason_body':
-		'Schade, dass du gehst. Magst du uns sagen, warum? Deine Antwort hilft uns, VICI für andere zu verbessern.',
+	'settings.delete.reason_body': 'Schade, dass du gehst. Magst du uns sagen, warum?',
+	'settings.delete.reason_body_acc': 'Deine Antwort hilft uns, VICI für andere zu verbessern.',
 	'settings.delete.reason_heading': 'Bevor du gehst.',
 	'settings.delete.stay_body':
-		'Pausiere Benachrichtigungen, wechsle zum E-Mail-Digest oder mach einfach eine Pause. Dein Verlauf wartet auf dich.',
+		'Mach 30 Tage Pause — deine Statistiken werden eingefroren und dein Profil ausgeblendet. Oder melde dich, und wir reparieren, was kaputt ist.',
 	'settings.delete.stay_contact': 'Kontakt',
 	'settings.delete.stay_heading': 'Möchtest du bleiben?',
 	'settings.delete.stay_pause': '30 Tage pausieren',
