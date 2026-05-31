@@ -228,6 +228,7 @@
 		font-family: var(--font-mono);
 		font-size: 9px;
 		font-weight: 700;
+		line-height: 1;
 		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		border: 1px solid rgba(226, 184, 66, 0.3);
@@ -241,11 +242,19 @@
 	}
 
 	.flow-deck-dot {
+		flex: none;
 		width: 5px;
 		height: 5px;
 		border-radius: var(--r-pill);
 		background: var(--color-accent);
 		box-shadow: 0 0 6px rgba(226, 184, 66, 0.5);
+	}
+
+	/* Keep the uppercase mono label optically centered: collapse its
+	   line-box to the glyph height so `align-items: center` on the pill
+	   centers the text against the dot rather than its baseline. */
+	.flow-deck-label {
+		line-height: 1;
 	}
 
 	/* Daily-goal bolt chip — parchment-tinted KPI pill. Tracks the
