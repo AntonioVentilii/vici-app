@@ -1,47 +1,333 @@
-// Flow motion engine — lifetime swipe state + hard-pause beat resolver.
-// Priority: accuracy threshold → streak tier-up → first-time → milestone → ambient.
-// See `docs/ai/frontend/design.md` §7.
+// Flow motion engine — lifetime swipe state + beat resolver.
+//
+// A swipe in Flow PLACES a call; it does not resolve one. Markets
+// settle on their own dates, elsewhere. So this engine never sees a
+// "correct" signal and never moves accuracy or win/loss. It rewards
+// the ACT of calling and the discipline of showing up.
+//
+// Design highlights (see `docs/ai/frontend/design.md` §7):
+//   • Copy is a rotating POOL per slot — never the same line twice
+//     running, persisted so a daily user gets variation session to
+//     session. Pools hold i18n keys, not literals, so every line still
+//     resolves through `t()`.
+//   • Within-day rhythm beats fire on JITTERED positions (a window, not
+//     a fixed slot) so the cadence is never memorised.
+//   • Deflation-safe VXP economy: dopamine is not currency. The daily
+//     ten and early milestones mint nothing; VXP is minted only at the
+//     overtime finish (+25) and rare lifetime milestones (50 → +50 …
+//     1,000 → +500). Growth comes from being right, not showing up.
+//   • Credit-STACKING: if a milestone coincides with the daily-complete
+//     beat, BOTH bonuses are credited even though one beat animates.
+//   • Wildcard — a rare (~1 in 6) variable-ratio surprise carrying a
+//     non-currency TREAT (sticker / shield / flair), never VXP.
+//   • Comeback — a distinct, no-shame opener for a user returning after
+//     a broken streak, separate from the daily "welcome back".
+//   • Single-pass priority resolver — never two beats back to back.
 
-import { FLOW_MILESTONES } from '$lib/constants/flow-rewards.constants';
 import type { FlowAction } from '$lib/types/market';
 import type { MessageKey } from '$lib/utils/i18n.utils';
-import { stageForStreak, type FlameStage } from '$lib/utils/streak.utils';
 
-const STORAGE_KEY = 'vici.motion.state.v1';
+const STORAGE_KEY = 'vici.motion.state.v3';
 
-const TIER_RANK: Record<FlameStage, number> = {
-	spark: 1,
-	ember: 2,
-	flame: 3,
-	blaze: 4,
-	inferno: 5
+// ── Streak tiers ──────────────────────────────────────────────────
+// Mirrors `stageForStreak` (streak.utils) but adds the NONE floor the
+// beat resolver needs for "tier did not advance". Thresholds:
+// NONE 0 · SPARK 1 · EMBER 3 · FLAME 7 · BLAZE 15 · INFERNO 30.
+export type MotionStreakTier = 'NONE' | 'SPARK' | 'EMBER' | 'FLAME' | 'BLAZE' | 'INFERNO';
+
+const TIER_RANK: Record<MotionStreakTier, number> = {
+	NONE: 0,
+	SPARK: 1,
+	EMBER: 2,
+	FLAME: 3,
+	BLAZE: 4,
+	INFERNO: 5
+};
+
+export const tierForStreak = (days: number): MotionStreakTier => {
+	if (days >= 30) {
+		return 'INFERNO';
+	}
+
+	if (days >= 15) {
+		return 'BLAZE';
+	}
+
+	if (days >= 7) {
+		return 'FLAME';
+	}
+
+	if (days >= 3) {
+		return 'EMBER';
+	}
+
+	if (days >= 1) {
+		return 'SPARK';
+	}
+
+	return 'NONE';
 };
 
 export type MotionCharacter = 'vici' | 'oracle' | 'trickster' | 'flame';
 
+// ── Copy pools — rotating, non-repeating. Each entry is an i18n key so
+// the line resolves through `t()`; the engine only chooses WHICH key,
+// never the literal text. Single-entry pools are still arrays so the
+// picker is uniform.
+type PoolKey =
+	| 'first-call'
+	| 'daily-ten'
+	| 'overtime-15'
+	| 'ot-enter'
+	| 'ot-rare'
+	| 'first-yes'
+	| 'first-no'
+	| 'first-contra'
+	| 'r3'
+	| 'r5'
+	| 'r8'
+	| 'welcome-back'
+	| 'comeback'
+	| 'wildcard'
+	| 'streak-reborn'
+	| 'first-leaderboard';
+
+const POOLS: Record<PoolKey, readonly MessageKey[]> = {
+	'first-call': [
+		'motion.pool.first_call_1',
+		'motion.pool.first_call_2',
+		'motion.pool.first_call_3',
+		'motion.pool.first_call_4'
+	],
+	'daily-ten': ['motion.pool.daily_ten_1', 'motion.pool.daily_ten_2', 'motion.pool.daily_ten_3'],
+	'overtime-15': [
+		'motion.pool.overtime_15_1',
+		'motion.pool.overtime_15_2',
+		'motion.pool.overtime_15_3'
+	],
+	'ot-enter': ['motion.pool.ot_enter_1', 'motion.pool.ot_enter_2', 'motion.pool.ot_enter_3'],
+	'ot-rare': ['motion.pool.ot_rare_1', 'motion.pool.ot_rare_2', 'motion.pool.ot_rare_3'],
+	'first-yes': ['motion.pool.first_yes_1', 'motion.pool.first_yes_2', 'motion.pool.first_yes_3'],
+	'first-no': ['motion.pool.first_no_1', 'motion.pool.first_no_2', 'motion.pool.first_no_3'],
+	'first-contra': [
+		'motion.pool.first_contra_1',
+		'motion.pool.first_contra_2',
+		'motion.pool.first_contra_3'
+	],
+	r3: ['motion.pool.r3_1', 'motion.pool.r3_2', 'motion.pool.r3_3'],
+	r5: ['motion.pool.r5_1', 'motion.pool.r5_2', 'motion.pool.r5_3', 'motion.pool.r5_4'],
+	r8: ['motion.pool.r8_1', 'motion.pool.r8_2', 'motion.pool.r8_3', 'motion.pool.r8_4'],
+	'welcome-back': [
+		'motion.pool.welcome_back_1',
+		'motion.pool.welcome_back_2',
+		'motion.pool.welcome_back_3',
+		'motion.pool.welcome_back_4',
+		'motion.pool.welcome_back_5'
+	],
+	comeback: [
+		'motion.pool.comeback_1',
+		'motion.pool.comeback_2',
+		'motion.pool.comeback_3',
+		'motion.pool.comeback_4'
+	],
+	wildcard: [
+		'motion.pool.wildcard_1',
+		'motion.pool.wildcard_2',
+		'motion.pool.wildcard_3',
+		'motion.pool.wildcard_4'
+	],
+	'streak-reborn': [
+		'motion.pool.streak_reborn_1',
+		'motion.pool.streak_reborn_2',
+		'motion.pool.streak_reborn_3'
+	],
+	'first-leaderboard': ['motion.pool.first_leaderboard_1']
+};
+
+// Non-currency wildcard rewards. The chosen key is surfaced both as the
+// beat's `treatKey` (UI chip) and credited to the user's treat collection.
+export const TREAT_KEYS: readonly MessageKey[] = [
+	'motion.treat.rare_sticker',
+	'motion.treat.streak_shield',
+	'motion.treat.profile_flair',
+	'motion.treat.mystery_drop'
+];
+
+// ── Lifetime call-volume milestones ───────────────────────────────
+// VXP minted only from 50 up (in call-units, ×50); fires ONCE ever.
+// 1 · 10 · 25 are badge / moment-only (no VXP). Oracle owns the ladder
+// from 50; Vici welcomes the very first call.
+interface VolumeMilestone {
+	bonus: number;
+	character: MotionCharacter;
+	// `pool` resolves through the rotating picker; `copyKey` is a fixed
+	// single line. Exactly one is set per milestone.
+	pool?: PoolKey;
+	copyKey?: MessageKey;
+	subKey: MessageKey;
+	duration_ms: number;
+	haptic: number | number[];
+	badgeKey?: MessageKey;
+	titleCharacter?: MotionCharacter;
+}
+
+const VOLUME: Record<number, VolumeMilestone> = {
+	1: {
+		bonus: 0,
+		character: 'vici',
+		pool: 'first-call',
+		subKey: 'motion.sub.first_call',
+		duration_ms: 1900,
+		haptic: [12, 30, 12, 30, 12]
+	},
+	10: {
+		bonus: 0,
+		character: 'oracle',
+		copyKey: 'motion.volume.ten',
+		subKey: 'motion.sub.lifetime_10',
+		duration_ms: 1200,
+		haptic: [25, 30, 25]
+	},
+	25: {
+		bonus: 0,
+		character: 'oracle',
+		copyKey: 'motion.volume.twenty_five',
+		subKey: 'motion.sub.lifetime_25',
+		duration_ms: 1200,
+		haptic: 12
+	},
+	50: {
+		bonus: 50,
+		character: 'oracle',
+		copyKey: 'motion.volume.fifty',
+		subKey: 'motion.sub.lifetime_50',
+		duration_ms: 1500,
+		haptic: [25, 30, 25, 40, 60]
+	},
+	100: {
+		bonus: 100,
+		character: 'oracle',
+		copyKey: 'motion.volume.hundred',
+		subKey: 'motion.sub.lifetime_100',
+		duration_ms: 1700,
+		haptic: [12, 30, 12, 30, 12, 30, 60],
+		badgeKey: 'motion.badge.centurion'
+	},
+	250: {
+		bonus: 150,
+		character: 'oracle',
+		copyKey: 'motion.volume.two_fifty',
+		subKey: 'motion.sub.lifetime_250',
+		duration_ms: 1500,
+		haptic: [25, 30, 25]
+	},
+	500: {
+		bonus: 250,
+		character: 'oracle',
+		copyKey: 'motion.volume.five_hundred',
+		subKey: 'motion.sub.lifetime_500',
+		duration_ms: 1500,
+		haptic: [25, 30, 25]
+	},
+	1000: {
+		bonus: 500,
+		character: 'oracle',
+		copyKey: 'motion.volume.thousand',
+		subKey: 'motion.sub.lifetime_1000',
+		duration_ms: 2000,
+		haptic: [40, 30, 40, 30, 80],
+		titleCharacter: 'vici'
+	}
+};
+
+// ── Within-day rhythm — pacing only, NO bonus. Each soft beat fires
+// somewhere inside its WINDOW (jittered per day), not on a fixed call
+// number.
+interface RhythmBeat {
+	window: readonly [number, number];
+	character: MotionCharacter;
+	pool: PoolKey;
+	duration_ms: number;
+	haptic: number;
+}
+
+type RhythmKey = 'r3' | 'r5' | 'r8';
+
+const RHYTHM: Record<RhythmKey, RhythmBeat> = {
+	r3: { window: [2, 4], character: 'vici', pool: 'r3', duration_ms: 700, haptic: 12 },
+	r5: { window: [4, 6], character: 'vici', pool: 'r5', duration_ms: 750, haptic: 12 },
+	r8: { window: [7, 9], character: 'vici', pool: 'r8', duration_ms: 700, haptic: 12 }
+};
+
+// Overtime rhythm (calls 11 & 13) — fixed; the overtime push is a short,
+// special arc.
+interface OvertimeBeat {
+	character: MotionCharacter;
+	pool: PoolKey;
+	subKey?: MessageKey;
+	duration_ms: number;
+	haptic: number | number[];
+}
+
+const OT_RHYTHM: Record<number, OvertimeBeat> = {
+	11: {
+		character: 'trickster',
+		pool: 'ot-enter',
+		subKey: 'motion.sub.overtime',
+		duration_ms: 1300,
+		haptic: [10, 40, 10]
+	},
+	13: { character: 'trickster', pool: 'ot-rare', duration_ms: 900, haptic: 12 }
+};
+
+// Daily hard cap — the daily-ten / overtime cadence never schedules a
+// rhythm beat beyond this many calls in a single day.
+export const DAILY_HARD_CAP = 15;
+
+// ── Beat payload — consumed by `MotionBeat.svelte`. Copy is carried as
+// an i18n key (`copyKey`); the chips/labels (`treatKey`, `subKey`,
+// `badgeKey`) are keys too. `coin` is true when a VXP grant rides along.
 export interface MotionBeatPayload {
 	kind: string;
 	character: MotionCharacter;
 	copyKey: MessageKey | null;
-	copyParams?: Record<string, string | number>;
-	duration_ms: number;
-	hardPause: boolean;
-	bonusXp: number;
+	subKey?: MessageKey;
+	treatKey?: MessageKey;
 	badgeKey?: MessageKey;
-	flameStage?: FlameStage;
+	// A custom title was unlocked (rendered as a generic "title unlocked"
+	// chip); the value names the character whose title it is.
+	titleCharacter?: MotionCharacter;
+	// Flame stage to render when `character === 'flame'`.
+	tier?: MotionStreakTier;
+	// Lifetime call count, surfaced by volume milestones for count-up.
+	count?: number;
+	duration_ms: number;
+	haptic: number | number[];
+	bonusXp: number;
 }
 
 export interface MotionSwipeInput {
 	side: FlowAction;
-	correct?: boolean;
 	isContrarian?: boolean;
-	dailyStreak: number;
+	// Calls done today INCLUDING this one (1-based), capped at target.
+	dailyDone: number;
+	// Today's goal (10 normally, 15 in overtime).
+	dailyTarget: number;
+	// True only on the swipe that crosses the daily goal.
+	dailyJustCompleted: boolean;
+	// Streak day-count this swipe lands on (already bumped by the caller).
+	dayStreak: number;
+	firstLeaderboard?: boolean;
+	wildcards?: boolean;
+	isComeback?: boolean;
+	// REAL lifetime call count from the profile (`me.calls`), BEFORE this
+	// swipe. When supplied, volume milestones fire at the true number
+	// rather than the engine's local tally.
+	lifetimeCalls?: number;
 }
 
 export interface MotionSwipeResult {
-	baseXp: number;
 	bonusXp: number;
-	xpGained: number;
 	beat: MotionBeatPayload | null;
 }
 
@@ -50,35 +336,37 @@ interface MotionLifetime {
 	yes: number;
 	no: number;
 	skips: number;
-	wins: number;
 }
 
 interface MotionFlags {
 	firstYes: boolean;
 	firstNo: boolean;
 	firstContrarian: boolean;
-	accThreshold60: boolean;
-	accThreshold70: boolean;
-	accThreshold80: boolean;
+	firstLeaderboard: boolean;
+}
+
+interface MotionDay {
+	// Jittered rhythm schedule for the current day: callNo → rhythm key.
+	sched: Partial<Record<number, RhythmKey>> | null;
+	// Last `dailyDone` seen, to detect a fresh day.
+	last: number;
 }
 
 interface MotionState {
 	lifetime: MotionLifetime;
 	flags: MotionFlags;
-	streakTier: FlameStage;
+	dayTier: MotionStreakTier;
+	// pool key → last index shown (non-repeat).
+	seen: Partial<Record<PoolKey, number>>;
+	day: MotionDay;
 }
 
 const defaultState = (): MotionState => ({
-	lifetime: { calls: 0, yes: 0, no: 0, skips: 0, wins: 0 },
-	flags: {
-		firstYes: false,
-		firstNo: false,
-		firstContrarian: false,
-		accThreshold60: false,
-		accThreshold70: false,
-		accThreshold80: false
-	},
-	streakTier: 'spark'
+	lifetime: { calls: 0, yes: 0, no: 0, skips: 0 },
+	flags: { firstYes: false, firstNo: false, firstContrarian: false, firstLeaderboard: false },
+	dayTier: 'NONE',
+	seen: {},
+	day: { sched: null, last: 0 }
 });
 
 const loadState = (): MotionState => {
@@ -95,17 +383,15 @@ const loadState = (): MotionState => {
 
 		const parsed = JSON.parse(raw) as Partial<MotionState>;
 		const base = defaultState();
-		const streakTier =
-			typeof parsed.streakTier === 'string' && parsed.streakTier in TIER_RANK
-				? parsed.streakTier
-				: base.streakTier;
 
 		return {
 			...base,
 			...parsed,
 			lifetime: { ...base.lifetime, ...parsed.lifetime },
 			flags: { ...base.flags, ...parsed.flags },
-			streakTier
+			dayTier: parsed.dayTier ?? base.dayTier,
+			seen: { ...parsed.seen },
+			day: { ...base.day, ...parsed.day }
 		};
 	} catch {
 		return defaultState();
@@ -124,143 +410,207 @@ const saveState = (state: MotionState): void => {
 	}
 };
 
-// Per-milestone duration ladder. The shorter timings (700, 500) keep
-// low-milestone beats from feeling like punctuation; the longer
-// timings (1500, 1700, 2000) give the high-milestone Oracle / Vici
-// beats room to land.
-const MILESTONE_DURATION_MS: Record<number, number> = {
-	1: 1300,
-	3: 700,
-	5: 700,
-	10: 1200,
-	25: 500,
-	50: 1500,
-	100: 1700,
-	250: 1500,
-	500: 1500,
-	1000: 2000
-};
+// Pick a pool entry, never repeating the last one shown for that key.
+// eslint-disable-next-line local-rules/prefer-object-params -- threads the mutable state object + key positionally at every resolver call site
+const pick = (state: MotionState, key: PoolKey): MessageKey => {
+	const arr = POOLS[key];
 
-const milestoneBeat = (swipeCount: number): MotionBeatPayload | null => {
-	const milestone = FLOW_MILESTONES.find((m) => m.swipeCount === swipeCount);
-
-	if (!milestone) {
-		return null;
+	if (arr.length === 1) {
+		return arr[0];
 	}
 
-	// Character routing: Vici under 50, Oracle at 50+.
-	const character: MotionCharacter = milestone.swipeCount >= 50 ? 'oracle' : 'vici';
-	// Badges: CENTURION at 100; one-thousand badge persists at 1000.
-	const badgeKey: MessageKey | undefined =
-		swipeCount === 100
-			? 'flow.milestone.badge_centurion'
-			: swipeCount === 1000
-				? 'flow.milestone.badge_one_thousand'
-				: undefined;
+	const last = state.seen[key];
+	let i: number;
 
-	return {
-		kind: `milestone-${swipeCount}`,
-		character,
-		copyKey: milestone.copyKey,
-		duration_ms: MILESTONE_DURATION_MS[swipeCount] ?? 1200,
-		hardPause: true,
-		bonusXp: milestone.bonusXp,
-		badgeKey
-	};
+	do {
+		i = Math.floor(Math.random() * arr.length);
+	} while (i === last);
+
+	state.seen[key] = i;
+
+	return arr[i];
+};
+
+// Build a jittered rhythm schedule for a fresh day: each rhythm beat
+// lands on a random call within its window, collisions avoided.
+const buildSchedule = (): Partial<Record<number, RhythmKey>> => {
+	const out: Partial<Record<number, RhythmKey>> = {};
+	const used: Record<number, boolean> = {};
+	const keys: RhythmKey[] = ['r3', 'r5', 'r8'];
+
+	keys.forEach((k) => {
+		const [lo, hi] = RHYTHM[k].window;
+		const opts: number[] = [];
+
+		for (let p = lo; p <= hi; p++) {
+			if (!used[p]) {
+				opts.push(p);
+			}
+		}
+
+		const pos = opts.length > 0 ? opts[Math.floor(Math.random() * opts.length)] : lo;
+		used[pos] = true;
+		out[pos] = k;
+	});
+
+	return out;
 };
 
 /**
- * Records a committed swipe and returns XP + an optional hard-pause beat.
- * Caller must delay deck advance while `beat?.hardPause` is true.
+ * Records a committed swipe and returns credit-stacked bonus VXP plus an
+ * optional single beat (highest priority wins; never two back to back).
+ * Pure aside from `localStorage` persistence of the rotating-copy / day
+ * schedule / first-flag state — no DOM, no network.
  */
 export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult => {
-	const { side, correct = false, isContrarian = false, dailyStreak } = input;
-	const state = loadState();
-	const baseXp = side === 'SKIP' ? 0 : 10;
-	let bonusXp = 0;
-	let beat: MotionBeatPayload | null = null;
+	const {
+		side,
+		isContrarian = false,
+		dailyDone,
+		dailyTarget,
+		dailyJustCompleted,
+		dayStreak,
+		firstLeaderboard = false,
+		wildcards = true,
+		isComeback = false,
+		lifetimeCalls
+	} = input;
 
+	const state = loadState();
+
+	// SKIP — skims past a market; no call placed, no beat, no streak progress.
 	if (side === 'SKIP') {
 		state.lifetime.skips += 1;
+		saveState(state);
+
+		return { bonusXp: 0, beat: null };
+	}
+
+	state.lifetime.calls += 1;
+
+	if (side === 'YES') {
+		state.lifetime.yes += 1;
 	} else {
-		state.lifetime.calls += 1;
-
-		if (side === 'YES') {
-			state.lifetime.yes += 1;
-		} else {
-			state.lifetime.no += 1;
-		}
-
-		if (correct) {
-			state.lifetime.wins += 1;
-		}
+		state.lifetime.no += 1;
 	}
 
-	const { calls } = state.lifetime;
-	const accuracy = calls > 0 ? state.lifetime.wins / calls : 0;
+	// Prefer the app's REAL lifetime count (`me.calls`) when supplied, so
+	// volume milestones fire at the true number — not the local tally.
+	const calls = lifetimeCalls != null ? lifetimeCalls + 1 : state.lifetime.calls;
+	const target = dailyTarget > 0 ? dailyTarget : 10;
+	const overtime = target >= DAILY_HARD_CAP;
 
-	// 1 — Accuracy threshold (Oracle), once per band.
-	if (!beat && calls >= 10) {
-		const thresholds = [
-			{ pct: 0.8, flag: 'accThreshold80' as const, label: '20' },
-			{ pct: 0.7, flag: 'accThreshold70' as const, label: '30' },
-			{ pct: 0.6, flag: 'accThreshold60' as const, label: '40' }
-		];
-
-		for (let i = 0; i < thresholds.length; i++) {
-			const threshold = thresholds[i];
-
-			if (accuracy >= threshold.pct && !state.flags[threshold.flag]) {
-				state.flags[threshold.flag] = true;
-
-				for (let j = i + 1; j < thresholds.length; j++) {
-					state.flags[thresholds[j].flag] = true;
-				}
-
-				bonusXp = 250;
-				beat = {
-					kind: 'acc-threshold',
-					character: 'oracle',
-					copyKey: 'motion.acc_threshold',
-					copyParams: { label: threshold.label },
-					duration_ms: 1500,
-					hardPause: true,
-					bonusXp
-				};
-				break;
-			}
-		}
+	// New day → fresh jittered rhythm schedule. (dailyDone resets to 1 each day.)
+	if (dailyDone <= 1 || dailyDone < state.day.last) {
+		state.day.sched = buildSchedule();
 	}
 
-	// 2 — Daily streak tier-up (Flame). SPARK is silent on swipe #1.
-	const previousTier = state.streakTier;
-	const nextTier = stageForStreak(dailyStreak);
+	state.day.last = dailyDone;
+	state.day.sched ??= buildSchedule();
 
-	if (!beat && TIER_RANK[nextTier] > TIER_RANK[previousTier] && nextTier !== 'spark') {
-		state.streakTier = nextTier;
+	let bonusXp = 0; // credit-stacked across all eligible sources
+	let beat: MotionBeatPayload | null = null; // only the highest-priority beat animates
+
+	const withBonus = (b: Omit<MotionBeatPayload, 'bonusXp'>): MotionBeatPayload => ({
+		...b,
+		bonusXp
+	});
+
+	// ── Comeback opener (after a lapse) — owns the first call of the day ──
+	if (isComeback && dailyDone === 1) {
 		beat = {
-			kind: 'streak-tier-up',
-			character: 'flame',
-			copyKey: 'motion.streak_tier_up',
-			duration_ms: 800,
-			hardPause: true,
-			bonusXp: 0,
-			flameStage: nextTier
+			kind: 'comeback',
+			character: 'vici',
+			copyKey: pick(state, 'comeback'),
+			subKey: 'motion.sub.comeback',
+			duration_ms: 1700,
+			haptic: [12, 30, 12, 30, 12],
+			bonusXp: 0
 		};
-	} else {
-		state.streakTier = nextTier;
 	}
 
-	// 3 — First-time events (deferred on call #1 so milestone wins).
-	if (!beat && calls > 1) {
+	// ── 1. Daily / overtime complete — the streak beat (showing up) ──
+	if (dailyJustCompleted) {
+		const tier = tierForStreak(dayStreak > 0 ? dayStreak : 1);
+		state.dayTier = tier;
+		const renderTier: MotionStreakTier = tier === 'NONE' ? 'SPARK' : tier;
+
+		if (overtime) {
+			bonusXp += 25; // the ONLY repeatable mint — the overtime finish
+
+			beat ??= {
+				kind: 'overtime-complete',
+				character: 'flame',
+				tier: renderTier,
+				copyKey: pick(state, 'overtime-15'),
+				subKey: 'motion.sub.overtime_complete',
+				duration_ms: 1900,
+				haptic: [25, 30, 25, 40, 60],
+				bonusXp: 25
+			};
+		} else {
+			// Regular daily ten — celebration + streak, but NO VXP (deflation-safe).
+			beat ??= {
+				kind: 'daily-complete',
+				character: 'flame',
+				tier: renderTier,
+				copyKey: isComeback ? pick(state, 'streak-reborn') : pick(state, 'daily-ten'),
+				subKey: isComeback ? 'motion.sub.streak_restarted' : 'motion.sub.streak_plus_one',
+				duration_ms: 1900,
+				haptic: [25, 30, 25, 40, 60],
+				bonusXp: 0
+			};
+		}
+	}
+
+	// ── 2. Lifetime volume milestone — VXP credited even if it coincides ──
+	const milestone = VOLUME[calls];
+
+	if (milestone !== undefined) {
+		bonusXp += milestone.bonus;
+
+		beat ??= withBonus({
+			kind: `volume-${calls}`,
+			character: milestone.character,
+			copyKey:
+				milestone.pool !== undefined ? pick(state, milestone.pool) : (milestone.copyKey ?? null),
+			subKey: milestone.subKey,
+			badgeKey: milestone.badgeKey,
+			titleCharacter: milestone.titleCharacter,
+			count: calls,
+			duration_ms: milestone.duration_ms,
+			haptic: milestone.haptic
+		});
+	}
+
+	// ── 3. Overtime rhythm (calls 11 & 13) ──
+	if (beat === null && overtime) {
+		const ot = OT_RHYTHM[dailyDone];
+
+		if (ot !== undefined) {
+			beat = {
+				kind: `ot-${dailyDone}`,
+				character: ot.character,
+				copyKey: pick(state, ot.pool),
+				subKey: ot.subKey,
+				duration_ms: ot.duration_ms,
+				haptic: ot.haptic,
+				bonusXp: 0
+			};
+		}
+	}
+
+	// ── 4. First-position events — a stance taken, not an outcome ──
+	// Deferred past call #1 so "first-call" owns the very first swipe.
+	if (beat === null && calls > 1) {
 		if (side === 'YES' && !state.flags.firstYes) {
 			state.flags.firstYes = true;
 			beat = {
 				kind: 'first-yes',
 				character: 'vici',
-				copyKey: 'motion.first_yes',
+				copyKey: pick(state, 'first-yes'),
 				duration_ms: 900,
-				hardPause: true,
+				haptic: [12, 30, 12],
 				bonusXp: 0
 			};
 		} else if (side === 'NO' && !state.flags.firstNo) {
@@ -268,52 +618,88 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 			beat = {
 				kind: 'first-no',
 				character: 'vici',
-				copyKey: 'motion.first_no',
+				copyKey: pick(state, 'first-no'),
 				duration_ms: 900,
-				hardPause: true,
+				haptic: [12, 30, 12],
 				bonusXp: 0
 			};
-		} else if (isContrarian && correct && !state.flags.firstContrarian) {
+		} else if (isContrarian && !state.flags.firstContrarian) {
 			state.flags.firstContrarian = true;
 			beat = {
 				kind: 'first-contrarian',
 				character: 'trickster',
-				copyKey: 'motion.first_contrarian',
+				copyKey: pick(state, 'first-contra'),
+				subKey: 'motion.sub.contrarian',
+				badgeKey: 'motion.badge.contrarian',
 				duration_ms: 1100,
-				hardPause: true,
+				haptic: [10, 40, 10, 40, 10],
+				bonusXp: 0
+			};
+		} else if (firstLeaderboard && !state.flags.firstLeaderboard) {
+			state.flags.firstLeaderboard = true;
+			beat = {
+				kind: 'first-leaderboard',
+				character: 'oracle',
+				copyKey: pick(state, 'first-leaderboard'),
+				duration_ms: 1200,
+				haptic: [40, 60, 40],
 				bonusXp: 0
 			};
 		}
 	}
 
-	// 4 — Swipe-count milestones (shared ladder with flow-rewards.constants).
-	if (!beat && side !== 'SKIP') {
-		const milestone = milestoneBeat(calls);
+	// ── 5. Within-day rhythm (jittered) ──
+	if (beat === null && !overtime && dailyDone < target) {
+		const key = state.day.sched[dailyDone];
 
-		if (milestone) {
-			({ bonusXp } = milestone);
-			beat = milestone;
+		if (key !== undefined) {
+			const m = RHYTHM[key];
+			beat = {
+				kind: `daily-${dailyDone}`,
+				character: m.character,
+				copyKey: pick(state, m.pool),
+				duration_ms: m.duration_ms,
+				haptic: m.haptic,
+				bonusXp: 0
+			};
 		}
 	}
 
-	// 5 — Ambient every 10th call (no hard pause).
-	if (!beat && side !== 'SKIP' && calls > 10 && calls % 10 === 0) {
+	// ── 6. Wildcard — rare variable-ratio surprise, non-currency TREAT ──
+	if (beat === null && wildcards && calls > 1 && Math.random() < 1 / 6) {
+		const treatKey = TREAT_KEYS[Math.floor(Math.random() * TREAT_KEYS.length)];
+		beat = {
+			kind: 'wildcard',
+			character: 'trickster',
+			copyKey: pick(state, 'wildcard'),
+			treatKey,
+			subKey: 'motion.sub.surprise',
+			duration_ms: 1250,
+			haptic: [10, 40, 10],
+			bonusXp: 0
+		};
+	}
+
+	// ── 7. Every-10th lifetime ambient (no copy, just a pop) ──
+	if (beat === null && calls > 10 && calls % 10 === 0) {
 		beat = {
 			kind: 'ambient-10',
 			character: 'vici',
 			copyKey: null,
 			duration_ms: 360,
-			hardPause: false,
+			haptic: 12,
 			bonusXp: 0
 		};
 	}
 
 	saveState(state);
 
-	return {
-		baseXp,
-		bonusXp,
-		xpGained: baseXp + bonusXp,
-		beat
-	};
+	return { bonusXp, beat };
 };
+
+export const resetMotionState = (): void => saveState(defaultState());
+
+export const getMotionState = (): MotionState => loadState();
+
+// Re-export so callers can read the rank ordering if ever needed.
+export { TIER_RANK };

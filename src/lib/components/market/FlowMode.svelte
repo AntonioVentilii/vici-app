@@ -53,12 +53,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 	import { recordMotionSwipe, type MotionBeatPayload } from '$lib/utils/motion-engine.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
-	import {
-		applyDailyStreakBump,
-		FLAME_STAGE_LABEL_KEYS,
-		stageForStreak,
-		type FlameStage
-	} from '$lib/utils/streak.utils';
+	import { applyDailyStreakBump, stageForStreak, type FlameStage } from '$lib/utils/streak.utils';
 	import { assertViciXpHumanPremium } from '$lib/utils/trade.utils';
 
 	const maxBets = $derived(flowSessionMaxBets($preferencesStore));
@@ -145,6 +140,10 @@
 	let dailyGoalCount = $state(0);
 	let dailyGoalDate = $state<string | undefined>(undefined);
 	let hasMarkedActiveThisSession = false;
+	// Set on the first swipe of a session that resumes after a broken
+	// streak. Drives the no-shame "comeback" opener (distinct from the
+	// daily welcome-back) in the motion engine for the rest of the session.
+	let isComeback = false;
 	let streakBreakBanner = $state<{ stage: FlameStage } | null>(null);
 	let flowPaused = $state(false);
 	let activeMotionBeat = $state<MotionBeatPayload | null>(null);
@@ -432,6 +431,7 @@
 			}
 
 			if (bump.transition === 'break') {
+				isComeback = true;
 				const previousStage = stageForStreak(Math.max(1, $userStore.profile?.dailyStreak ?? 0));
 				streakBreakBanner = { stage: previousStage };
 				vibrate('low-thud');
@@ -447,7 +447,13 @@
 			// it's not a win and not a loss). The daily streak still
 			// bumps via `applyDailyStreakBump` above; streak progresses
 			// on any swipe, YES / NO / SKIP all count at that layer.
-			recordMotionSwipe({ side: 'SKIP', dailyStreak });
+			recordMotionSwipe({
+				side: 'SKIP',
+				dailyDone: dailyGoalCount,
+				dailyTarget: DAILY_GOAL_TARGET,
+				dailyJustCompleted: false,
+				dayStreak: dailyStreak
+			});
 			feedbackKeySeq += 1;
 			activeFeedback = {
 				result: 'SKIP',
@@ -496,7 +502,9 @@
 		// Daily-goal bump — every committed YES / NO counts toward the
 		// day's goal (skips returned early above). Rolls over to a fresh
 		// day if needed, caps at the target, and persists best-effort so
-		// the running total survives a refresh.
+		// the running total survives a refresh. The pre-bump count (after
+		// day-rollover) drives the engine's "daily complete" crossing.
+		const previousGoalDone = rolloverDailyGoal({ done: dailyGoalCount, date: dailyGoalDate });
 		const goalBump = applyDailyGoalBump({
 			done: dailyGoalCount,
 			date: dailyGoalDate,
@@ -559,32 +567,32 @@
 			correctCallsThisSession += 1;
 		}
 
+		// `dailyDone` is the post-bump count (this swipe included); the
+		// goal crosses the target on the swipe that first reaches it.
+		const dailyJustCompleted =
+			goalBump.done >= DAILY_GOAL_TARGET && previousGoalDone < DAILY_GOAL_TARGET;
+
 		const motion = recordMotionSwipe({
 			side: action,
 			isContrarian,
-			correct: alignedWithCrowd,
-			dailyStreak
+			dailyDone: goalBump.done,
+			dailyTarget: DAILY_GOAL_TARGET,
+			dailyJustCompleted,
+			dayStreak: dailyStreak,
+			isComeback
+			// `lifetimeCalls` intentionally omitted: no real lifetime-call
+			// total is hydrated on the profile yet, so the engine falls back
+			// to its persisted local tally for volume milestones. Wire the
+			// real seed once the profile/stats doc exposes the count.
 		});
 
 		if (motion.bonusXp > 0) {
 			xp += motion.bonusXp;
-			let popCopy: string | undefined;
 
-			if (motion.beat?.copyKey != null) {
-				const params: Record<string, string | number> = { ...(motion.beat.copyParams ?? {}) };
-
-				if (
-					motion.beat.copyKey === 'motion.streak_tier_up' &&
-					motion.beat.flameStage !== undefined
-				) {
-					params.stage = t({
-						locale: $localeStore,
-						key: FLAME_STAGE_LABEL_KEYS[motion.beat.flameStage]
-					});
-				}
-
-				popCopy = t({ locale: $localeStore, key: motion.beat.copyKey, params });
-			}
+			const popCopy =
+				motion.beat?.copyKey != null
+					? t({ locale: $localeStore, key: motion.beat.copyKey })
+					: undefined;
 
 			spawnXpPop({
 				amount: motion.bonusXp,
@@ -596,17 +604,19 @@
 		}
 
 		// Single beat-aware vibrate — fires once per beat, with the
-		// envelope mapped from `beat.kind`. On milestone-1 the
-		// `firm-tap` swipe-commit haptic has already fired upstream;
-		// the milestone-1 envelope is itself a `triple-tap`, so the
-		// commit + milestone firing back-to-back is intentional.
+		// envelope mapped from `beat.kind`. On the first-call beat the
+		// `firm-tap` swipe-commit haptic has already fired upstream; that
+		// envelope is itself celebratory, so the commit + beat firing
+		// back-to-back is intentional.
 		const beatHaptic = hapticForBeat(motion.beat?.kind);
 
 		if (beatHaptic) {
 			vibrate(beatHaptic);
 		}
 
-		if (motion.beat?.hardPause) {
+		// A real beat plays IN THE GAP — the deck holds while the character
+		// is centered. Ambient (`ambient-10`) is a soft pop that never gates.
+		if (motion.beat && motion.beat.kind !== 'ambient-10') {
 			activeMotionBeat = motion.beat;
 			flowPaused = true;
 
@@ -617,7 +627,7 @@
 			activeMotionBeat = motion.beat;
 		}
 
-		// Ambient post-swipe feedback — only spawned on the non-hard-pause
+		// Ambient post-swipe feedback — only spawned on the non-gating
 		// path so we don't double-stack overlays with `MotionBeat`. The
 		// pop self-dismisses in 1.3 s (520 ms for skip, handled above).
 		feedbackKeySeq += 1;
@@ -625,7 +635,7 @@
 			result: action,
 			xp: awarded + motion.bonusXp,
 			correct: alignedWithCrowd,
-			streakHit: motion.bonusXp > 0 && motion.beat?.kind === 'streak-tier-up',
+			streakHit: motion.bonusXp > 0 && motion.beat?.kind === 'overtime-complete',
 			key: feedbackKeySeq
 		};
 
@@ -885,11 +895,7 @@
 			<FlowCoach surface="flow" />
 
 			{#if activeMotionBeat}
-				<MotionBeat
-					beat={activeMotionBeat}
-					bonusXp={activeMotionBeat.bonusXp}
-					onDone={onMotionBeatDone}
-				/>
+				<MotionBeat beat={activeMotionBeat} onDone={onMotionBeatDone} />
 			{/if}
 
 			{#if activeFeedback}

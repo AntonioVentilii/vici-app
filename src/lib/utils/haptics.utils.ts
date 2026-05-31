@@ -124,17 +124,20 @@ const MILESTONE_HAPTIC: Record<number, HapticPattern> = {
  * truth — so this mapping intentionally names patterns only and never
  * restates the ms arrays.
  *
- *   milestone-1            → triple-tap
- *   milestone-3 / 5 / 25   → firm-tap
- *   milestone-10 / 250/500 → milestone-tap
- *   milestone-50           → oracle-roll
- *   milestone-100          → centurion
- *   milestone-1000         → vici-fanfare
+ *   volume-1               → triple-tap (the welcome first call)
+ *   volume-3 / 5 / 25      → firm-tap
+ *   volume-10 / 250 / 500  → milestone-tap
+ *   volume-50              → oracle-roll
+ *   volume-100             → centurion
+ *   volume-1000            → vici-fanfare
+ *   daily / overtime-complete → oracle-roll (the streak beat)
+ *   comeback               → triple-tap
+ *   ot-11 / wildcard       → mischief (Trickster signature)
+ *   ot-13                  → firm-tap
  *   first-yes / first-no   → triple-tap
  *   first-contrarian       → mischief
  *   first-leaderboard      → oracle-tap
- *   streak-tier-up         → milestone-tap
- *   acc-threshold          → milestone-tap
+ *   daily-<n> (rhythm)     → firm-tap
  *   ambient-10             → firm-tap
  */
 export const hapticForBeat = (beatKind: string | undefined): HapticPattern | null => {
@@ -142,23 +145,34 @@ export const hapticForBeat = (beatKind: string | undefined): HapticPattern | nul
 		return null;
 	}
 
-	if (beatKind.startsWith('milestone-')) {
-		const n = Number(beatKind.slice('milestone-'.length));
+	// Lifetime-volume milestones share the swipe-count haptic ladder.
+	if (beatKind.startsWith('volume-')) {
+		const n = Number(beatKind.slice('volume-'.length));
 
 		return MILESTONE_HAPTIC[n] ?? 'double-pulse';
+	}
+
+	// Within-day rhythm pacing beats (`daily-2` … `daily-9`) are light.
+	if (beatKind.startsWith('daily-') && beatKind !== 'daily-complete') {
+		return 'firm-tap';
 	}
 
 	switch (beatKind) {
 		case 'first-yes':
 		case 'first-no':
+		case 'comeback':
 			return 'triple-tap';
 		case 'first-contrarian':
+		case 'ot-11':
+		case 'wildcard':
 			return 'mischief';
 		case 'first-leaderboard':
 			return 'oracle-tap';
-		case 'streak-tier-up':
-		case 'acc-threshold':
-			return 'milestone-tap';
+		case 'daily-complete':
+		case 'overtime-complete':
+			return 'oracle-roll';
+		case 'ot-13':
+			return 'firm-tap';
 		case 'ambient-10':
 			return 'firm-tap';
 		default:
