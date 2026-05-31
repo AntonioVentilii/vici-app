@@ -10,6 +10,7 @@ export const frMessages = {
 	'a11y.language': 'Langue',
 	'a11y.next_page': 'Page suivante',
 	'a11y.notifications': 'Notifications',
+	'a11y.notifications_unread': 'Notifications, {count} non lues',
 	'a11y.open_data': 'Ouvrir les données',
 	'a11y.page_n': 'Page {page}',
 	'a11y.pagination': 'Pagination',
@@ -1285,6 +1286,7 @@ export const frMessages = {
 	'nav.trust': 'Confiance',
 	'nav.vision': 'Vision',
 	'notifications.back_flow': 'Retour à Flow',
+	'notifications.dismiss': 'Ignorer',
 	'notifications.empty.body':
 		'Résolutions, invitations de ligue et défis arrivent ici. Faites quelques pronostics pour démarrer votre historique.',
 	'notifications.empty.title': 'Aucune nouvelle notification.',

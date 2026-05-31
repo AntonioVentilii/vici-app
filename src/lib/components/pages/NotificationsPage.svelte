@@ -17,7 +17,7 @@
 	import { refreshFriendRelations } from '$lib/stores/friends.store';
 	import { combinedInboxStore, markAllInboxRead } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { InboxNotificationKind } from '$lib/types/inbox';
+	import type { InboxNotification, InboxNotificationKind } from '$lib/types/inbox';
 	import { t } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
@@ -30,6 +30,24 @@
 		market: Target,
 		friend_request: UserPlus
 	};
+
+	// Kind-based routing: each notification opens a destination relevant to
+	// its kind. Items that carry an explicit `href` (settled-market cards →
+	// the market detail, friend requests → the Arena) use it directly; the
+	// remaining seeded kinds fall back to this map so every row is tappable,
+	// matching the inbox's row-routing behaviour.
+	const kindDestinations: Record<InboxNotificationKind, string> = {
+		resolve: AppPath.Dash,
+		streak: AppPath.Flow,
+		social: AppPath.Arena,
+		challenge: AppPath.Arena,
+		level: AppPath.Profile,
+		market: AppPath.Markets,
+		friend_request: AppPath.Arena
+	};
+
+	const destinationFor = (notification: InboxNotification): string =>
+		notification.href ?? kindDestinations[notification.kind] ?? AppPath.Dash;
 
 	onMount(() => {
 		void refreshFriendRelations();
@@ -87,35 +105,21 @@
 			{#each $combinedInboxStore as notification (notification.id)}
 				{@const KindIcon = kindIcons[notification.kind] ?? Target}
 				<li class="notification-item" class:is-unread={notification.unread}>
-					{#if notification.href}
-						<a class="notification-card notification-card-link" href={notification.href}>
-							<span class="notification-icon" aria-hidden="true">
-								<KindIcon size={16} strokeWidth={1.8} />
-							</span>
-							<div class="notification-copy">
-								<span class="notification-title">{notification.title}</span>
-								<p class="notification-body">{notification.body}</p>
-								<span class="notification-when num">{notification.when}</span>
-							</div>
-							{#if notification.unread}
-								<span class="notification-dot" aria-hidden="true"></span>
-							{/if}
-						</a>
-					{:else}
-						<div class="notification-card">
-							<span class="notification-icon" aria-hidden="true">
-								<KindIcon size={16} strokeWidth={1.8} />
-							</span>
-							<div class="notification-copy">
-								<span class="notification-title">{notification.title}</span>
-								<p class="notification-body">{notification.body}</p>
-								<span class="notification-when num">{notification.when}</span>
-							</div>
-							{#if notification.unread}
-								<span class="notification-dot" aria-hidden="true"></span>
-							{/if}
+					<!-- Every row routes by kind (or its explicit href) — see
+					     `destinationFor`. -->
+					<a class="notification-card notification-card-link" href={destinationFor(notification)}>
+						<span class="notification-icon" aria-hidden="true">
+							<KindIcon size={16} strokeWidth={1.8} />
+						</span>
+						<div class="notification-copy">
+							<span class="notification-title">{notification.title}</span>
+							<p class="notification-body">{notification.body}</p>
+							<span class="notification-when num">{notification.when}</span>
 						</div>
-					{/if}
+						{#if notification.unread}
+							<span class="notification-dot" aria-hidden="true"></span>
+						{/if}
+					</a>
 				</li>
 			{/each}
 		</ul>

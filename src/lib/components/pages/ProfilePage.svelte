@@ -6,6 +6,7 @@
 	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import ProfileDashboard from '$lib/components/profile/ProfileDashboard.svelte';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
+	import NotifBell from '$lib/components/ui/NotifBell.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authBusy, authPrincipal, userIsAdmin } from '$lib/derived/user.derived';
 	import { getProfile } from '$lib/services/profile.services';
@@ -45,6 +46,10 @@
 
 {#snippet profileSettingsBtn()}
 	<div class="profile-appbar-actions">
+		<!-- Notification bell + unread red-dot, mirroring the Flow top
+		     bar. Sits first so the settings gear stays the trailing,
+		     right-most control. -->
+		<NotifBell />
 		{#if $userIsAdmin}
 			<button
 				class="appbar-icon-btn"

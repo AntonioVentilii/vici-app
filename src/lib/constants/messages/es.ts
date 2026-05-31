@@ -10,6 +10,7 @@ export const esMessages = {
 	'a11y.language': 'Idioma',
 	'a11y.next_page': 'Página siguiente',
 	'a11y.notifications': 'Notificaciones',
+	'a11y.notifications_unread': 'Notificaciones, {count} sin leer',
 	'a11y.open_data': 'Abrir datos',
 	'a11y.page_n': 'Página {page}',
 	'a11y.pagination': 'Paginación',
@@ -1279,6 +1280,7 @@ export const esMessages = {
 	'nav.trust': 'Confianza',
 	'nav.vision': 'Visión',
 	'notifications.back_flow': 'Volver a Flow',
+	'notifications.dismiss': 'Descartar',
 	'notifications.empty.body':
 		'Resoluciones, invitaciones de liga y desafíos aparecen aquí. Haz algunas predicciones para empezar tu historial.',
 	'notifications.empty.title': 'Sin notificaciones nuevas.',

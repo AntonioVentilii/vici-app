@@ -10,6 +10,7 @@ export const ptMessages = {
 	'a11y.language': 'Idioma',
 	'a11y.next_page': 'Próxima página',
 	'a11y.notifications': 'Notificações',
+	'a11y.notifications_unread': 'Notificações, {count} não lidas',
 	'a11y.open_data': 'Abrir dados',
 	'a11y.page_n': 'Página {page}',
 	'a11y.pagination': 'Paginação',
@@ -1274,6 +1275,7 @@ export const ptMessages = {
 	'nav.trust': 'Confiança',
 	'nav.vision': 'Visão',
 	'notifications.back_flow': 'Voltar para Flow',
+	'notifications.dismiss': 'Dispensar',
 	'notifications.empty.body':
 		'Resoluções, convites de liga e desafios aparecem aqui. Faça algumas previsões para começar o histórico.',
 	'notifications.empty.title': 'Sem notificações novas.',
