@@ -73,6 +73,20 @@
 	--laurel-glow: rgba(226, 184, 66, 0.18);
 	--terracotta: #b5462c;
 
+	/* Brand role aliases — name the laurel ramp by its identity role so
+	 * call-sites can read `--brand` instead of the raw `--laurel`. */
+	--brand: var(--laurel);
+	--brand-deep: var(--laurel-deep);
+	--brand-glow: var(--laurel-glow);
+
+	/* Danger ramp — destructive actions (delete, sign-out, form errors).
+	 * Aliases the terracotta ramp so the two role tokens can't drift;
+	 * distinct from the `--no` signal which carries prediction NO
+	 * semantics. */
+	--danger: var(--terracotta);
+	--danger-deep: #8e3320;
+	--danger-wash: rgba(181, 70, 44, 0.12);
+
 	/* Signals */
 	--yes: #4fd3a1;
 	--yes-deep: #2ba178;
@@ -95,6 +109,13 @@
 	--text-muted: var(--parchment-mute);
 	--text-inverse: var(--ink);
 
+	/* Foreground tier aliases — landing.css already declares `--fg-dim` /
+	 * `--fg-faint` at `:root`, but the app layer shouldn't depend on that
+	 * import to resolve them. Own the aliases here, mapped to the parchment
+	 * tiers. */
+	--fg-dim: var(--parchment-dim);
+	--fg-faint: var(--parchment-faint);
+
 	--border-base: var(--ink-line);
 	--border-strong: var(--ink-line-strong);
 
@@ -107,6 +128,12 @@
 
 	--color-accent: var(--laurel);
 	--color-accent-foreground: var(--ink);
+
+	/* Plain `--accent` alias — app-shell call-sites read `var(--accent)`.
+	 * landing.css already declares it at `:root`, but own it here so the
+	 * app layer doesn't depend on landing.css import order. Mirrors
+	 * `--color-accent`. */
+	--accent: var(--laurel);
 
 	/* Tag accents */
 	--cat-macro: #7eb6ff;
@@ -131,6 +158,18 @@
 	--d-state: 200ms;
 	--d-enter: 320ms;
 	--d-hero: 600ms;
+
+	/* Semantic type scale — role-named six-step ramp. Components
+	 * reference these by intent (display / h1 / h2 / body / meta /
+	 * eyebrow) rather than reaching for the numeric `--t-NN` steps;
+	 * they were previously undefined, forcing call-sites to hardcode
+	 * sizes. Sits alongside the numeric ramp below. */
+	--t-display: 3.5rem;
+	--t-h1: 2.25rem;
+	--t-h2: 1.375rem;
+	--t-body: 1rem;
+	--t-meta: 0.8125rem;
+	--t-eyebrow: 0.6875rem;
 
 	/* Type scale — modular 1.250 (major third), tuned at top end. The
 	 * Tailwind text utilities still cover most copy; these tokens are
@@ -161,25 +200,22 @@
 	--tracking-wide: 0.04em;
 	--tracking-allcaps: 0.12em;
 
-	/* Radii — the standard scale. Buttons 4, cards 8, swipe-card 16.
-	 * Pills (999) are rare. Don't deviate.
-	 *
-	 * Note: `--r-12` is the canonical card radius and is set to 16px.
-	 * The token name keeps "12" for historical reasons; call-sites
-	 * should read it as "card radius", not as a literal 12 px value. */
+	/* Radii — the standard scale. Buttons 4, cards 12. Pills (999) are
+	 * rare. Don't deviate. Each `--r-NN` token is literal to its name:
+	 * `--r-12` is 12 px, matching the card-corner radius the design
+	 * system specifies (it had drifted to 16 px). */
 	--r-2: 2px;
 	--r-4: 4px;
 	--r-8: 8px;
-	--r-12: 16px;
+	--r-12: 12px;
 	--r-pill: 999px;
 
 	/* Role-named alias set for radii — names map onto the numeric
 	 * scale so call-sites can write `var(--r-m)` instead of memorising
-	 * `--r-8`. `--r-l` shares the canonical card radius (16 px) with
-	 * `--r-12`. */
+	 * `--r-8`. `--r-l` shares the card radius (12 px) with `--r-12`. */
 	--r-s: 4px;
 	--r-m: 8px;
-	--r-l: 16px;
+	--r-l: 12px;
 	--r-xl: 18px;
 
 	/* Spacing scale — 8-point base, no exceptions outside this scale.
@@ -206,6 +242,15 @@
 	--s-96: 96px;
 	--s-128: 128px;
 
+	/* Named layout gaps — role-named spacing decisions for vertical
+	 * rhythm. Components reference these by layout intent (gap inside a
+	 * card, between sections, around a screen hero, between list rows)
+	 * instead of picking a raw `--s-N` step per call-site. */
+	--gap-card: 20px;
+	--gap-section: 32px;
+	--gap-screen: 48px;
+	--gap-row: 12px;
+
 	/* Named font-size tokens — locked role-named set. Sits alongside the
 	 * numeric `--t-*` scale (modular 1.25) so editorial / display moments
 	 * keep the numeric ramp, while UI labels read against the role names
@@ -220,14 +265,14 @@
 	--text-h2: 22px;
 	--text-display: 32px;
 
-	/* Two-curve animation set used by stagecraft / motion-engine —
-	 * the existing `--ease-vici` curve and `--d-*` durations cover
-	 * most call sites; these aliases name the motion language
-	 * explicitly. */
-	--ease-quick: cubic-bezier(0.2, 0.8, 0.4, 1);
-	--ease-stage: cubic-bezier(0.16, 1, 0.3, 1);
-	--dur-quick: 150ms;
-	--dur-stage: 360ms;
+	/* Stagecraft / motion-engine aliases — name the motion language
+	 * explicitly. They fold onto the canonical curve and durations so
+	 * the whole app shares one easing and one timing scale; the quick /
+	 * stage pair had drifted to a separate curve and off-scale timings. */
+	--ease-quick: var(--ease-vici);
+	--ease-stage: var(--ease-vici);
+	--dur-quick: var(--d-hover);
+	--dur-stage: var(--d-enter);
 
 	/* Layout */
 	--content-max: 1280px;
@@ -293,6 +338,9 @@
 	--text-muted: rgba(14, 13, 11, 0.5);
 	--text-inverse: #f2ecdc;
 
+	--fg-dim: rgba(14, 13, 11, 0.72);
+	--fg-faint: rgba(14, 13, 11, 0.28);
+
 	--border-base: rgba(14, 13, 11, 0.1);
 	--border-strong: rgba(14, 13, 11, 0.18);
 
@@ -303,8 +351,20 @@
 	--color-warning: var(--laurel-deep);
 	--color-destructive: var(--no-deep);
 
-	--color-accent: var(--laurel);
+	/* Accent is demoted to the deep laurel on the parchment canvas:
+	 * bright `--laurel` (#e2b842) fails WCAG AA contrast as text/icon
+	 * colour against the light background, while `--laurel-deep` clears
+	 * it. */
+	--color-accent: var(--laurel-deep);
 	--color-accent-foreground: #0e0d0b;
+
+	--accent: var(--laurel-deep);
+	--accent-deep: #8a6915;
+	--accent-glow: rgba(182, 139, 31, 0.18);
+
+	--brand: var(--accent);
+	--brand-deep: var(--accent-deep);
+	--brand-glow: var(--accent-glow);
 
 	--inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 	--inset-hi-strong: inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -323,8 +383,22 @@
 	--text-muted: rgba(61, 36, 25, 0.5);
 	--text-inverse: #f2ecdc;
 
+	--fg-dim: rgba(61, 36, 25, 0.72);
+	--fg-faint: rgba(61, 36, 25, 0.28);
+
 	--border-base: rgba(61, 36, 25, 0.1);
 	--border-strong: rgba(61, 36, 25, 0.18);
+
+	/* Signal overrides — the dark-theme YES / NO hues wash out on the
+	 * warm peach canvas, so step them to darker tones that hold contrast
+	 * against the light background. */
+	--yes: #2ba178;
+	--yes-deep: #1f7f5e;
+	--yes-wash: rgba(43, 161, 120, 0.14);
+
+	--no: #c84545;
+	--no-deep: #9f2f2f;
+	--no-wash: rgba(200, 69, 69, 0.12);
 
 	--color-primary: var(--laurel-deep);
 	--color-primary-foreground: #3d2419;
@@ -335,6 +409,14 @@
 
 	--color-accent: var(--laurel-deep);
 	--color-accent-foreground: #3d2419;
+
+	--accent: var(--laurel-deep);
+	--accent-deep: #8a6915;
+	--accent-glow: rgba(182, 139, 31, 0.18);
+
+	--brand: var(--accent);
+	--brand-deep: var(--accent-deep);
+	--brand-glow: var(--accent-glow);
 
 	--inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 	--inset-hi-strong: inset 0 1px 0 rgba(255, 255, 255, 0.85);
@@ -2043,7 +2125,7 @@ html[data-app='1'] body {
 
 /* Type scale aliases used inline by surface markup. */
 .t-display {
-	font-size: 40px;
+	font-size: var(--t-display);
 	line-height: 1;
 }
 
