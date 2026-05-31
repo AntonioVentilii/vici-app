@@ -23,8 +23,9 @@
 	 * chrome competing with that anchor.
 	 *
 	 * The real auth providers (Juno II + Google + Passkey + dev) are
-	 * mounted inside `.ob2-auth-buttons` via `SignInProviderStack`
-	 * (`.ob2-auth-apple` / `.ob2-auth-google` / `.ob2-auth-email`).
+	 * mounted inside `.ob2-auth-buttons` via `SignInProviderStack` with
+	 * its `onboarding` variant — Google as the cream-filled primary pill,
+	 * every other provider as a dark pill.
 	 */
 	interface Props {
 		handle: string | null;
@@ -91,7 +92,7 @@
 				{t({ locale: $localeStore, key: 'onboarding.beat3.finish_cta' })}
 			</button>
 		{:else}
-			<SignInProviderStack onSuccess={onComplete} />
+			<SignInProviderStack onSuccess={onComplete} variant="onboarding" />
 		{/if}
 	</div>
 
