@@ -16,8 +16,8 @@
 	 * and propose the battle.
 	 *
 	 * Wraps `lookupLeagueByInvite` + `proposeBattle` — the same
-	 * services `ProposeBattleModal` uses — so the satellite contract
-	 * is identical.
+	 * services the create-a-battle wizard uses — so the satellite
+	 * contract is identical regardless of entry point.
 	 */
 	interface Props {
 		isOpen: boolean;
