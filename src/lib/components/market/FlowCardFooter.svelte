@@ -11,11 +11,11 @@
 
 <div class="flow-foot num">
 	<span class="flow-foot-size">
-		{t({
-			locale: $localeStore,
-			key: 'card.size_vxp',
-			params: { stake: sizeStake }
-		})}
+		<span class="flow-foot-size-label">
+			{t({ locale: $localeStore, key: 'card.size_label' })}
+		</span>
+		<span class="flow-foot-size-num">{sizeStake}</span>
+		<span class="flow-foot-size-unit">VXP</span>
 	</span>
 	<span class="flow-foot-hint allcaps">
 		{t({ locale: $localeStore, key: 'card.tap_depth' })}
@@ -34,8 +34,29 @@
 		letter-spacing: 0.06em;
 	}
 	.flow-foot-size {
-		font-weight: 700;
-		letter-spacing: 0.1em;
+		display: inline-flex;
+		align-items: baseline;
+		gap: 5px;
+		font-family: var(--font-mono);
+		font-size: var(--text-eyebrow);
+		font-variant-numeric: tabular-nums slashed-zero;
+		letter-spacing: 0.06em;
+		color: var(--text-base);
+		background: var(--ink-elevated);
+		border: 1px solid var(--border-strong);
+		border-radius: var(--r-pill);
+		padding: 4px 10px;
+		box-shadow: var(--inset-hi);
+	}
+	.flow-foot-size-label {
+		color: var(--text-muted);
+		letter-spacing: 0.12em;
+	}
+	.flow-foot-size-num {
+		color: var(--text-base);
+	}
+	.flow-foot-size-unit {
+		color: var(--text-muted);
 	}
 	.flow-foot-hint {
 		letter-spacing: 0.14em;
