@@ -12,6 +12,7 @@
 	import FlowDeckSkeleton from '$lib/components/market/FlowDeckSkeleton.svelte';
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
 	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
+	import FlowEntry from '$lib/components/market/FlowEntry.svelte';
 	import FlowFeedback from '$lib/components/market/FlowFeedback.svelte';
 	import FlowStreakBreakBanner from '$lib/components/market/FlowStreakBreakBanner.svelte';
 	import FlowTopBar from '$lib/components/market/FlowTopBar.svelte';
@@ -35,11 +36,12 @@
 	import { persistDailyGoal, persistDailyStreak } from '$lib/services/profile.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
+	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { flowSessionMaxBets, preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
-	import type { XpPop, XpPopKind } from '$lib/types/flow';
+	import type { ResolutionRevealData, XpPop, XpPopKind } from '$lib/types/flow';
 	import type { CallSide, FlowAction, Market, MarketId } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type { UserMarketSignals } from '$lib/types/market-signals';
@@ -77,6 +79,18 @@
 	let markets = $state<Market[]>([]);
 	let currentIndex = $state(0);
 	let loading = $state(true);
+	// Entry gate — the full-bleed frosted FlowEntry overlay sits over the
+	// deck until the user taps the armed "Enter Flow →" CTA. It carries the
+	// deck-shuffle loading state AND the "while you were away" digest. A
+	// no-op digest (`count === 0`) renders the deck-shuffle mode.
+	let entered = $state(false);
+	// The away-digest while the entry gate is open. Tracks the live store so
+	// a late trade-history fetch still populates the recap; the moment the
+	// user enters, `markResolutionsSeen` empties it and the overlay unmounts
+	// in the same tick, so the recap never blanks under the deck (Svelte
+	// freezes the last render for the `out:fade`). `ResolutionRevealData` is
+	// the shared shape the Dashboard banner / ResolutionReveal also consume.
+	const liveDigest = $derived<ResolutionRevealData>($maturedResolutions);
 	let tradeAmount = $state('1.0');
 	let betsCount = $state(0);
 	let completed = $state(false);
@@ -760,6 +774,17 @@
 		goto(resolve(AppPath.Home));
 	};
 
+	// Enter Flow — the user tapped the armed CTA on the entry gate. Settle
+	// the matured calls (acknowledge them so the Dashboard banner / bell
+	// badge clear in lockstep) and reveal the deck. `markResolutionsSeen`
+	// empties `liveDigest`, but flipping `entered` removes the overlay in
+	// the same tick — Svelte freezes the last-rendered digest for the
+	// `out:fade`, so the recap never flips to deck-shuffle mid-transition.
+	const enterFlow = () => {
+		markResolutionsSeen();
+		entered = true;
+	};
+
 	// "Predict 10 more" CTA on FlowEnd — rebuilds a fresh deck and
 	// zeroes the in-session counters. The lifetime / motion-engine
 	// state stays untouched (it tracks across sessions). XP earned in
@@ -893,6 +918,12 @@
 	class:is-paused={flowPaused}
 >
 	{#if loading}
+		<!-- Cold-load: the entry overlay's deck-shuffle mode plays over a
+		     card-shaped skeleton while the real first-card fetch resolves.
+		     The skeleton lands in the box the real deck will occupy so the
+		     hand-off is seamless once `loading` flips false. If the user
+		     arms + enters before the fetch lands, the skeleton holds until
+		     the deck arrives (the overlay is already dismissed). -->
 		<div class="flow-skeleton-shell" in:fade>
 			<FlowDeckSkeleton />
 		</div>
@@ -1054,11 +1085,26 @@
 			/>
 		{/if}
 	{/if}
+
+	<!-- Entry gate — the unified full-bleed frosted overlay (deck-shuffle
+	     loading + "while you were away" digest) sits above the deck and the
+	     pill-nav until the user taps the armed "Enter Flow →" CTA. Shown over
+	     the in-flight fetch (deck-shuffle) and once the deck is loaded (the
+	     read-the-digest gate); hidden on the empty deck and at the summary.
+	     Entering settles the matured calls and reveals the deck below. -->
+	{#if !entered && !completed && (loading || markets.length > 0)}
+		<div out:fade={{ duration: prefersReducedMotion() ? 0 : 220 }}>
+			<FlowEntry digest={liveDigest} onEnter={enterFlow} />
+		</div>
+	{/if}
 </div>
 
 <svelte:window
 	onkeydown={(e) => {
-		if (loading || completed) {
+		// Ignore deck shortcuts while the entry gate is up (the overlay owns
+		// the surface until the user enters), during the cold-load, and at
+		// the summary.
+		if (loading || completed || !entered) {
 			return;
 		}
 
