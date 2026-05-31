@@ -50,38 +50,37 @@
 
 <!-- Share button on the Market detail appbar — prefers the native Web
      Share sheet (mobile), falls back to clipboard copy on desktop with
-     a toast acknowledgement. Ghost icon button rendered next to the
-     back chevron. -->
+     a toast acknowledgement. Wears the faint ghost icon-button look so
+     it reads as one set with the back chevron and the save control. -->
 <button
 	class="market-detail-share"
 	aria-label={t({ locale: $localeStore, key: 'market.detail.share.label' })}
 	onclick={share}
 	type="button"
 >
-	<Share2 aria-hidden="true" size={16} strokeWidth={1.8} />
+	<Share2 aria-hidden="true" size={18} strokeWidth={1.8} />
 </button>
 
 <style lang="postcss">
 	.market-detail-share {
 		display: inline-flex;
-		width: 2.25rem;
-		height: 2.25rem;
 		align-items: center;
 		justify-content: center;
+		padding: 8px 10px;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
-		background: var(--bg-surface);
-		color: var(--text-muted);
+		/* Faint foreground wash so the fill tracks every theme (dark /
+		   light / peach) instead of a hardcoded dark-only rgba. */
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		color: var(--text-base);
 		cursor: pointer;
 		transition:
 			background-color var(--d-hover) var(--ease-vici),
-			border-color var(--d-hover) var(--ease-vici),
-			color var(--d-hover) var(--ease-vici);
+			border-color var(--d-hover) var(--ease-vici);
 	}
 
 	.market-detail-share:hover {
 		border-color: var(--border-strong);
-		background: var(--bg-popover);
-		color: var(--text-base);
+		background: color-mix(in srgb, var(--text-base) 11%, transparent);
 	}
 </style>

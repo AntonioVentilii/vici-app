@@ -307,11 +307,18 @@
 		{@const m = market}
 		{#snippet detailRight()}
 			<MarketDetailShareButton title={m.title} />
-			<!-- Save / "watch" — functionally a bookmark. We reuse the
-			     shared heart toggle so this surface stays in lockstep
-			     with the per-card heart in the markets list
-			     (`MarketCard`). -->
-			<SavedMarketToggle marketId={m.id} size="md" stopPropagation={false} />
+			<!-- Eye / "watch this market" save control. Same shared
+			     toggle (and same watchlist backend) as the per-card
+			     heart, here wearing the eye glyph and the faint ghost
+			     header look so the three app-bar controls read as one
+			     set. -->
+			<SavedMarketToggle
+				appearance="ghost"
+				icon="eye"
+				marketId={m.id}
+				size="md"
+				stopPropagation={false}
+			/>
 		{/snippet}
 
 		<MobileAppBar
@@ -428,6 +435,21 @@
 		   pad is: safe-area + navpill + CTA (~5rem) + a little breathing
 		   room. */
 		padding: 0.25rem 0 calc(env(safe-area-inset-bottom, 0px) + var(--navpill-h, 0px) + 6rem);
+	}
+
+	/* Scope the ghost header look to this detail app-bar only. The
+	   global `.appbar-icon-btn` (shared by Profile, Settings, Wallet,
+	   etc.) keeps its pill + surface treatment untouched; here the back
+	   chevron picks up the same faint foreground wash and rounded-rect
+	   radius as the share and save controls so the three read as one
+	   set. The fill is a foreground wash so it adapts across themes. */
+	.market-detail-screen :global(.appbar-icon-btn) {
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+	}
+
+	.market-detail-screen :global(.appbar-icon-btn:hover) {
+		background: color-mix(in srgb, var(--text-base) 11%, transparent);
 	}
 
 	.market-detail-hero {
