@@ -105,7 +105,18 @@ export const Collection = {
 	 * DashPage tiles. The FE re-syncs it from the user's clearing history on every Dash
 	 * mount; the satellite assert restricts writes to the user themselves.
 	 */
-	USER_STATS: collections.USER_STATS
+	USER_STATS: collections.USER_STATS,
+	/**
+	 * Per-user, per-month gameplay stats — one doc per `${owner}/${YYYY-MM}`. Holds the month's
+	 * resolved-call count, win count, and a bounded array of consensus-at-call prices so an exact
+	 * median can be computed on read. The FE re-syncs the current and prior month's docs from the
+	 * user's clearing history on every stats sync (lazy month rollover — no scheduler); the
+	 * satellite assert restricts writes to the user themselves and bounds the consensus array.
+	 * Read by `getMonthlyLeaderboard` to award the monthly sharpest-eye (top-3 accuracy, ≥30
+	 * calls) and bold-caller (best accuracy among users whose median consensus-at-call < 0.4)
+	 * album awards.
+	 */
+	USER_MONTHLY_STATS: collections.USER_MONTHLY_STATS
 } as const;
 
 export type Collection = (typeof Collection)[keyof typeof Collection];

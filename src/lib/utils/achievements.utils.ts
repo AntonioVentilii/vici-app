@@ -53,6 +53,19 @@ export interface AchievementsInput {
 	 * leaderboard position. Drives `top-decile`.
 	 */
 	topDecileStreak: number;
+	/**
+	 * Best monthly sharpest-eye placement the caller has ever earned —
+	 * `'gold'` / `'silver'` / `'bronze'`, or `undefined` if they've never
+	 * placed top-3 in a completed month. Drives `sharpest-eye` (presence =
+	 * unlocked; the value picks the tier wash).
+	 */
+	sharpestEyeBestTier?: string;
+	/**
+	 * `true` when the caller has won (or tied for) a completed month's
+	 * bold-caller award — best accuracy among users whose median
+	 * consensus-at-call is below the bold threshold. Drives `bold-caller`.
+	 */
+	wonBoldCallerMonth: boolean;
 }
 
 export interface AchievementEvaluation {
@@ -151,6 +164,30 @@ const evaluateOne = ({
 				def,
 				unlocked: input.topDecileStreak >= TOP_DECILE_STREAK_TARGET,
 				progress: ratio({ current: input.topDecileStreak, target: TOP_DECILE_STREAK_TARGET })
+			};
+		}
+
+		case 'sharpest-eye': {
+			// Binary unlock — earned the first time the caller places top-3 in
+			// a completed month's accuracy leaderboard. Presence of a best
+			// tier is the unlock signal (the tier picks the album wash). No
+			// partial bar: the placement is a monthly cohort ranking the caller
+			// doesn't directly control. Sticky via `mergeUnlockedAchievements`.
+			const unlocked = input.sharpestEyeBestTier !== undefined;
+
+			return { id: def.id, def, unlocked, progress: unlocked ? 1 : 0 };
+		}
+
+		case 'bold-caller': {
+			// Binary unlock — won (or tied for) a completed month's bold-caller
+			// award (best accuracy among habitual long-shot callers). 0/1
+			// progress for the same reason as `sharpest-eye`; sticky once
+			// earned.
+			return {
+				id: def.id,
+				def,
+				unlocked: input.wonBoldCallerMonth,
+				progress: input.wonBoldCallerMonth ? 1 : 0
 			};
 		}
 

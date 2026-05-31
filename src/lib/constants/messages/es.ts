@@ -74,6 +74,10 @@ export const esMessages = {
 	'battles.uni.wc_title_tail': 'Battle',
 	'battles.your_rank': '#{rank} de {total}',
 	'battles.your_school': 'Tu universidad · {name}',
+	'achievement.bold_caller.description': 'Mejor precisión en pronósticos arriesgados del mes',
+	'achievement.bold_caller.detail':
+		'Termina el mes con la mayor precisión entre quienes apuestan habitualmente por el menos favorito — un consenso mediano por debajo del 40% en los lados que eliges. Se otorga al cerrar el mes; los empates comparten el honor.',
+	'achievement.bold_caller.name': 'Voz audaz',
 	'achievement.contrarian.name': 'Contrario',
 	'achievement.first_call.description': 'Haz tu primera predicción',
 	'achievement.first_call.detail':
@@ -95,6 +99,10 @@ export const esMessages = {
 	'achievement.oracle.detail':
 		'Mantén al menos el 80% de precisión en tus últimas 50 predicciones resueltas. El título Oracle se recalcula a diario; si pierdes precisión, el sticker se queda — pero el título pasa a quien lo ostente en ese momento.',
 	'achievement.oracle.name': 'Oráculo',
+	'achievement.sharpest_eye.description': 'Top-3 de precisión del mes',
+	'achievement.sharpest_eye.detail':
+		'Termina un mes natural entre los tres primeros en precisión entre quienes tienen al menos 30 predicciones resueltas. El primer puesto gana oro, el segundo plata, el tercero bronce — y el álbum guarda tu mejor posición de siempre.',
+	'achievement.sharpest_eye.name': 'Ojo agudo',
 	'achievement.top_decile.description': '7 días en el top 10%',
 	'achievement.top_decile.detail':
 		'Mantén una posición en el top 10% de la clasificación global durante siete días consecutivos. Tu posición se comprueba una vez al día; si bajas del umbral, la racha se reinicia.',

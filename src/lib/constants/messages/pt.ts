@@ -74,6 +74,10 @@ export const ptMessages = {
 	'battles.uni.wc_title_tail': 'Battle',
 	'battles.your_rank': '#{rank} de {total}',
 	'battles.your_school': 'Sua universidade · {name}',
+	'achievement.bold_caller.description': 'Melhor precisão em azarões do mês',
+	'achievement.bold_caller.detail':
+		'Termine o mês com a maior precisão entre quem aposta habitualmente no azarão — um consenso mediano abaixo de 40% nos lados que você escolhe. Concedido ao fechar o mês; empates dividem a honra.',
+	'achievement.bold_caller.name': 'Voz ousada',
 	'achievement.contrarian.name': 'Contrarian',
 	'achievement.first_call.description': 'Faça sua primeira previsão',
 	'achievement.first_call.detail':
@@ -95,6 +99,10 @@ export const ptMessages = {
 	'achievement.oracle.detail':
 		'Mantenha pelo menos 80% de precisão em suas últimas 50 previsões resolvidas. O título Oráculo é recalculado diariamente; se a precisão cair, o sticker fica — mas o título vai para quem o detiver no momento.',
 	'achievement.oracle.name': 'Oráculo',
+	'achievement.sharpest_eye.description': 'Top-3 de precisão do mês',
+	'achievement.sharpest_eye.detail':
+		'Termine um mês de calendário entre os três primeiros em precisão entre quem tem ao menos 30 palpites resolvidos. O primeiro lugar vale ouro, o segundo prata, o terceiro bronze — e o álbum guarda sua melhor colocação de sempre.',
+	'achievement.sharpest_eye.name': 'Olhar mais afiado',
 	'achievement.top_decile.description': '7 dias no top 10%',
 	'achievement.top_decile.detail':
 		'Mantenha uma posição no top 10% do ranking global por sete dias consecutivos. Sua posição é verificada uma vez por dia; se cair abaixo do limite, a sequência reinicia.',
