@@ -270,7 +270,10 @@ const fetchMarkets = async ({
 	);
 
 	const resolvedSeriesIds = Object.keys(resolutionMap);
-	const activeSeriesIds = new Set(seriesList.map((s) => s.series_id));
+	// Derive from the unfiltered list: a resolved non-binary series still in
+	// `listSeries` is already accounted for, so skip a redundant `getSeries`
+	// fetch that the `Binary` guard below would only discard.
+	const activeSeriesIds = new Set(allSeries.map((s) => s.series_id));
 
 	const resolvedMarkets = await Promise.all(
 		resolvedSeriesIds
