@@ -21,10 +21,10 @@
 
 	const { isOpen, onClose, onCreated }: Props = $props();
 
-	// Emblem + privacy are presentation-only in the create sheet: the
-	// league doc carries no emblem/privacy field today, so the chosen
-	// emblem drives the live preview tile only and privacy labels the
-	// preview meta line. The colour DOES persist (`accentColor`).
+	// The emblem is presentation-only in the create sheet (the league
+	// doc carries no emblem field today, so it drives the live preview
+	// tile only). The colour persists as `accentColor`, and the
+	// public/private choice persists as the league's `private` flag.
 	const EMBLEMS = ['⚔', '☼', '✦', '✧', '◎', '⌬', '⊿', '☆'] as const;
 	const COLORS = [
 		{ id: 'laurel', value: '#e2b842' },
@@ -34,7 +34,10 @@
 		{ id: 'violet', value: '#b49cff' },
 		{ id: 'parch', value: '#f2ecdc' }
 	] as const;
-	const PRIVACIES = ['invite', 'private', 'open'] as const;
+	// Public/private toggle — defaults to public. The chosen value
+	// persists onto the league doc's `private` flag and reads back as
+	// the detail header's privacy chip.
+	const PRIVACIES = ['public', 'private'] as const;
 	type Privacy = (typeof PRIVACIES)[number];
 
 	const [DEFAULT_EMBLEM] = EMBLEMS;
@@ -42,7 +45,7 @@
 
 	let name = $state('');
 	let description = $state('');
-	let privacy = $state<Privacy>('invite');
+	let privacy = $state<Privacy>('public');
 	let emblem = $state<string>(DEFAULT_EMBLEM);
 	let color = $state<string>(DEFAULT_COLOR.value);
 	let submitting = $state(false);
@@ -102,7 +105,7 @@
 	const reset = () => {
 		name = '';
 		description = '';
-		privacy = 'invite';
+		privacy = 'public';
 		emblem = DEFAULT_EMBLEM;
 		color = DEFAULT_COLOR.value;
 		submitting = false;
@@ -128,7 +131,8 @@
 			const league = await createLeague({
 				name: trimmedName,
 				description: trimmedDescription || undefined,
-				accentColor: color
+				accentColor: color,
+				isPrivate: privacy === 'private'
 			});
 			onCreated(league);
 			reset();
