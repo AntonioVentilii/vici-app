@@ -6,16 +6,16 @@
 	import StreakFlame from '$lib/components/characters/StreakFlame.svelte';
 	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import HandleEditor from '$lib/components/profile/HandleEditor.svelte';
 	import ProfileOracleInsight from '$lib/components/profile/ProfileOracleInsight.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
-	import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
-	import { checkNicknameAvailability, upsertProfile } from '$lib/services/profile.services';
+	import { upsertProfile } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { listMyAffiliations } from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -38,227 +38,65 @@
 
 	const isOwnProfile = $derived(viewerPrincipal === profile.owner);
 
-	/* Editable identity ----------------------------------------------- */
+	/* Editable handle -------------------------------------------------- */
 
-	let editProfileOpen = $state(false);
-	let editedNickname = $state('');
-	let pending = $state(false);
-	type NicknameEditStatus = 'available' | 'taken' | 'too_short' | 'required' | 'check_failed';
-	let nicknameStatus = $state<NicknameEditStatus | undefined>(undefined);
-	let nicknameChecking = $state(false);
-	let nicknameCheckToken = 0;
-	let nicknameCheckTimer: ReturnType<typeof setTimeout> | undefined;
-	const nicknameCheckDebounce_ms = 350;
+	// The handle (public `@`-name) is edited through the dedicated
+	// {@link HandleEditor} sheet — a single input with an inline
+	// availability indicator and a 30-day change limit. The limit is
+	// enforced client-side (see HANDLE_LAST_CHANGE_STORAGE_KEY); the
+	// profile schema has no last-change timestamp.
+	let handleEditOpen = $state(false);
+	let profileToast = $state<string | null>(null);
+	let profileToastTimer: ReturnType<typeof setTimeout> | undefined;
 
-	const scheduleNicknameAvailabilityCheck = (value: string) => {
-		if (nicknameCheckTimer) {
-			clearTimeout(nicknameCheckTimer);
+	const flashProfileToast = (message: string) => {
+		profileToast = message;
+
+		if (profileToastTimer) {
+			clearTimeout(profileToastTimer);
 		}
 
-		nicknameCheckToken += 1;
-		const token = nicknameCheckToken;
-
-		const trimmed = value.trim();
-
-		if (trimmed.length === 0) {
-			nicknameStatus = 'required';
-			nicknameChecking = false;
-
-			return;
-		}
-
-		if (trimmed.length < MIN_NICKNAME_LENGTH) {
-			nicknameStatus = 'too_short';
-			nicknameChecking = false;
-
-			return;
-		}
-
-		if (trimmed.toLowerCase() === profile.nickname.trim().toLowerCase()) {
-			nicknameStatus = 'available';
-			nicknameChecking = false;
-
-			return;
-		}
-
-		nicknameChecking = true;
-		nicknameStatus = undefined;
-
-		nicknameCheckTimer = setTimeout(() => {
-			void (async () => {
-				try {
-					const result = await checkNicknameAvailability({
-						nickname: trimmed,
-						principal: profile.owner
-					});
-
-					if (token !== nicknameCheckToken) {
-						return;
-					}
-
-					nicknameChecking = false;
-					nicknameStatus = result.available ? 'available' : result.reason;
-				} catch (_err: unknown) {
-					if (token !== nicknameCheckToken) {
-						return;
-					}
-
-					nicknameChecking = false;
-					nicknameStatus = 'check_failed';
-				}
-			})();
-		}, nicknameCheckDebounce_ms);
+		profileToastTimer = setTimeout(() => {
+			profileToast = null;
+		}, 1900);
 	};
 
-	const openEditProfile = () => {
-		editedNickname = profile.nickname;
-		nicknameStatus = 'available';
-		nicknameChecking = false;
-		editProfileOpen = true;
-	};
+	const handleSavedHandle = async (handle: string) => {
+		handleEditOpen = false;
 
-	const closeEditProfile = () => {
-		if (nicknameCheckTimer) {
-			clearTimeout(nicknameCheckTimer);
-		}
+		// Snapshot the pre-edit profile so we can roll the optimistic
+		// update back verbatim if the persist fails.
+		const previousProfile = profile;
+		const updatedData = { ...profile, nickname: handle };
 
-		editProfileOpen = false;
-		nicknameStatus = undefined;
-		nicknameChecking = false;
-	};
-
-	const onNicknameInput = (event: Event) => {
-		if (event.currentTarget instanceof HTMLInputElement) {
-			editedNickname = event.currentTarget.value;
-			scheduleNicknameAvailabilityCheck(editedNickname);
-		}
-	};
-
-	const handleSaveProfile = async () => {
-		const trimmed = editedNickname.trim();
-
-		if (trimmed.length < MIN_NICKNAME_LENGTH) {
-			return;
-		}
-
-		const nicknameChanged = trimmed.toLowerCase() !== profile.nickname.trim().toLowerCase();
-
-		if (nicknameChanged) {
-			pending = true;
-
-			try {
-				const probe = await checkNicknameAvailability({
-					nickname: trimmed,
-					principal: profile.owner
-				});
-
-				if (!probe.available) {
-					nicknameStatus = probe.reason;
-
-					if (probe.reason === 'taken') {
-						notificationsStore.add({
-							title: t({ locale: $localeStore, key: 'profile.dashboard.nickname_taken_title' }),
-							message: t({
-								locale: $localeStore,
-								key: 'profile.dashboard.nickname_taken',
-								params: { nickname: trimmed }
-							}),
-							type: 'error'
-						});
-					}
-
-					return;
-				}
-			} catch (_err: unknown) {
-				nicknameStatus = 'check_failed';
-			} finally {
-				pending = false;
-			}
-		}
-
-		pending = true;
+		// Optimistic local update so the identity card reflects the new
+		// handle immediately, then persist.
+		userStore.update((curr) => ({ ...curr, profile: updatedData }));
 
 		try {
-			if (nicknameChanged) {
-				const updatedData = {
-					...profile,
-					nickname: trimmed
-				};
-
-				await upsertProfile({ key: profile.owner, data: updatedData });
-				userStore.update((curr) => ({ ...curr, profile: updatedData }));
-			}
-
-			editProfileOpen = false;
+			await upsertProfile({ key: profile.owner, data: updatedData });
+			flashProfileToast(
+				t({ locale: $localeStore, key: 'profile.handle.changed', params: { handle } })
+			);
 		} catch (err: unknown) {
+			// Roll the optimistic update back on failure.
+			userStore.update((curr) => ({ ...curr, profile: previousProfile }));
+
 			const message = err instanceof Error ? err.message : '';
 
-			if (message.includes('already taken')) {
-				nicknameStatus = 'taken';
-				notificationsStore.add({
-					title: t({ locale: $localeStore, key: 'profile.dashboard.nickname_taken_title' }),
-					message: t({
-						locale: $localeStore,
-						key: 'profile.dashboard.nickname_taken',
-						params: { nickname: trimmed }
-					}),
-					type: 'error'
-				});
-			} else {
-				notificationsStore.add({
-					title: t({ locale: $localeStore, key: 'profile.dashboard.nickname_save_failed_title' }),
-					message: t({ locale: $localeStore, key: 'profile.dashboard.nickname_save_failed' }),
-					type: 'error'
-				});
-			}
-		} finally {
-			pending = false;
+			notificationsStore.add({
+				title: t({ locale: $localeStore, key: 'profile.dashboard.nickname_taken_title' }),
+				message: message.includes('already taken')
+					? t({
+							locale: $localeStore,
+							key: 'profile.dashboard.nickname_taken',
+							params: { nickname: handle }
+						})
+					: t({ locale: $localeStore, key: 'profile.dashboard.nickname_save_failed' }),
+				type: 'error'
+			});
 		}
 	};
-
-	const saveStatus = $derived.by<'pending' | 'disabled' | 'enabled'>(() => {
-		if (pending || nicknameChecking) {
-			return 'pending';
-		}
-
-		const trimmed = editedNickname.trim();
-
-		if (trimmed.length < MIN_NICKNAME_LENGTH) {
-			return 'disabled';
-		}
-
-		if (nicknameStatus === 'taken' || nicknameStatus === 'check_failed') {
-			return 'disabled';
-		}
-
-		return 'enabled';
-	});
-
-	const nicknameHintKey = $derived.by(() => {
-		const trimmed = editedNickname.trim();
-
-		if (trimmed.length === 0) {
-			return 'profile.dashboard.nickname_required' as const;
-		}
-
-		if (trimmed.length < MIN_NICKNAME_LENGTH) {
-			return 'profile.dashboard.nickname_min' as const;
-		}
-
-		if (nicknameChecking) {
-			return 'profile.dashboard.nickname_checking' as const;
-		}
-
-		if (nicknameStatus === 'taken') {
-			return 'profile.dashboard.nickname_taken' as const;
-		}
-
-		if (nicknameStatus === 'check_failed') {
-			return 'profile.dashboard.nickname_check_failed' as const;
-		}
-
-		return null;
-	});
 
 	/* Identity stats -------------------------------------------------- */
 
@@ -622,22 +460,26 @@
 			<div class="profile-identity-meta">
 				<!-- Row 1: handle · VXP balance chip.
 				     The handle doubles as the rename affordance (own
-				     profile only); the avatar carries the pencil glyph,
-				     so a second inline pencil was redundant noise. -->
+				     profile only) and carries an inline pencil glyph that
+				     opens the HandleEditor sheet. -->
 				<div class="profile-handle-row">
 					{#if isOwnProfile}
-						<!-- The button's visible text is the accessible name
-						     (no `aria-label` override), so screen readers
-						     still hear the handle. `title` surfaces the
-						     edit affordance on hover / supplementary
-						     announcement. -->
+						<!-- The button's visible text (the handle) is the
+						     accessible name. The pencil is decorative
+						     (`aria-hidden`); `aria-label` names the action. -->
 						<button
 							class="profile-handle profile-handle-btn"
-							onclick={openEditProfile}
-							title={t({ locale: $localeStore, key: 'profile.dashboard.edit_profile' })}
+							aria-label={t({ locale: $localeStore, key: 'profile.handle.edit' })}
+							onclick={() => (handleEditOpen = true)}
 							type="button"
 						>
-							@{profile.nickname}
+							<span class="profile-handle-text">@{profile.nickname}</span>
+							<Pencil
+								class="profile-handle-pencil"
+								aria-hidden="true"
+								size={13}
+								strokeWidth={1.7}
+							/>
 						</button>
 					{:else}
 						<h1 class="profile-handle">@{profile.nickname}</h1>
@@ -899,68 +741,19 @@
 	/>
 {/if}
 
-{#if editProfileOpen}
-	<Modal isOpen={true} onClose={closeEditProfile}>
-		<div class="profile-edit-sheet">
-			<h2 class="profile-edit-title">
-				{t({ locale: $localeStore, key: 'profile.dashboard.edit_profile' })}
-			</h2>
+{#if handleEditOpen}
+	<HandleEditor
+		current={profile.nickname}
+		onClose={() => (handleEditOpen = false)}
+		onSaved={(handle) => void handleSavedHandle(handle)}
+		owner={profile.owner}
+	/>
+{/if}
 
-			<label class="profile-edit-field">
-				<span class="profile-edit-label">
-					{t({ locale: $localeStore, key: 'profile.dashboard.handle_label' })}
-				</span>
-				<input
-					aria-describedby="profile-edit-nickname-status"
-					aria-invalid={nicknameStatus === 'taken' ||
-						nicknameStatus === 'too_short' ||
-						nicknameStatus === 'check_failed'}
-					disabled={pending}
-					oninput={onNicknameInput}
-					type="text"
-					value={editedNickname}
-				/>
-				{#if nicknameHintKey}
-					<p
-						id="profile-edit-nickname-status"
-						class="profile-edit-hint"
-						class:is-warning={nicknameStatus === 'taken' || nicknameStatus === 'check_failed'}
-						aria-live="polite"
-					>
-						{t({
-							locale: $localeStore,
-							key: nicknameHintKey,
-							params:
-								nicknameHintKey === 'profile.dashboard.nickname_min'
-									? { count: MIN_NICKNAME_LENGTH }
-									: nicknameHintKey === 'profile.dashboard.nickname_taken'
-										? { nickname: editedNickname.trim() }
-										: {}
-						})}
-					</p>
-				{/if}
-			</label>
-
-			<div class="profile-edit-actions">
-				<button
-					class="profile-edit-cancel"
-					disabled={pending}
-					onclick={closeEditProfile}
-					type="button"
-				>
-					{t({ locale: $localeStore, key: 'profile.dashboard.cancel' })}
-				</button>
-				<button
-					class="profile-edit-save"
-					disabled={saveStatus !== 'enabled'}
-					onclick={handleSaveProfile}
-					type="button"
-				>
-					{t({ locale: $localeStore, key: 'profile.dashboard.save' })}
-				</button>
-			</div>
-		</div>
-	</Modal>
+{#if profileToast !== null}
+	<div class="profile-toast num" aria-live="polite" role="status">
+		{profileToast}
+	</div>
 {/if}
 
 {#if avatarEditorOpen}
@@ -1105,10 +898,15 @@
 	}
 
 	.profile-handle-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3rem;
 		appearance: none;
+		min-width: 0;
 		padding: 0;
 		border: 0;
 		background: transparent;
+		color: var(--text-base);
 		text-align: left;
 		cursor: pointer;
 		font: inherit;
@@ -1117,7 +915,19 @@
 		letter-spacing: var(--tracking-tight);
 	}
 
-	.profile-handle-btn:hover {
+	.profile-handle-text {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.profile-handle-btn :global(.profile-handle-pencil) {
+		flex-shrink: 0;
+		color: var(--text-faint, var(--text-muted));
+	}
+
+	.profile-handle-btn:hover,
+	.profile-handle-btn:hover :global(.profile-handle-pencil) {
 		color: var(--color-primary);
 	}
 
@@ -1684,9 +1494,7 @@
 		transition: width var(--d-enter) ease;
 	}
 
-	/* Oracle insight --------------------------------------------------- */
-	/* Edit-profile sheet ---------------------------------------------- */
-	.profile-edit-sheet,
+	/* Avatar-editor sheet --------------------------------------------- */
 	.profile-avatar-editor {
 		display: flex;
 		flex-direction: column;
@@ -1701,75 +1509,21 @@
 		font-weight: 700;
 	}
 
-	.profile-edit-field {
-		display: flex;
-		flex-direction: column;
-		gap: 0.35rem;
-	}
-
-	.profile-edit-label {
-		color: var(--text-muted);
-		font-family: var(--font-mono);
-		font-size: var(--t-10);
-		font-weight: 800;
-		letter-spacing: var(--tracking-allcaps);
-		text-transform: uppercase;
-	}
-
-	.profile-edit-field input {
-		min-width: 0;
-		flex: 1;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
-		background: var(--bg-surface);
-		padding: 0.6rem 0.75rem;
-		color: var(--text-base);
-		font: inherit;
-		font-weight: 600;
-		font-size: var(--t-14);
-	}
-
-	.profile-edit-hint {
-		margin: 0;
-		color: var(--text-muted);
-		font-size: var(--t-12);
-		line-height: var(--leading-snug);
-	}
-
-	.profile-edit-hint.is-warning {
-		color: var(--no);
-	}
-
 	.profile-edit-actions {
 		display: flex;
 		justify-content: flex-end;
 		gap: 0.6rem;
 	}
 
-	.profile-edit-cancel,
-	.profile-edit-save {
+	.profile-edit-cancel {
 		padding: 0.55rem 0.95rem;
+		border: 1px solid var(--border-base);
 		border-radius: var(--r-pill);
+		background: transparent;
+		color: var(--text-base);
 		font: inherit;
 		font-weight: 700;
 		cursor: pointer;
-	}
-
-	.profile-edit-cancel {
-		border: 1px solid var(--border-base);
-		background: transparent;
-		color: var(--text-base);
-	}
-
-	.profile-edit-save {
-		border: 0;
-		background: var(--color-primary);
-		color: var(--bg-canvas, #0e0d0b);
-	}
-
-	.profile-edit-save:disabled {
-		opacity: 0.5;
-		cursor: not-allowed;
 	}
 
 	.profile-avatar-editor-body {
@@ -1777,6 +1531,44 @@
 		color: var(--text-muted);
 		font-size: var(--t-13);
 		line-height: var(--leading-snug);
+	}
+
+	/* Confirmation toast — floats above the pill-nav after a handle
+	   change, auto-dismisses after ~1.9s. */
+	.profile-toast {
+		position: fixed;
+		bottom: calc(120px + env(safe-area-inset-bottom, 0px));
+		left: 50%;
+		z-index: 110;
+		padding: 0.625rem 1rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: var(--bg-popover);
+		color: var(--text-base);
+		font-family: var(--font-mono);
+		font-size: var(--t-10);
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+		box-shadow: 0 12px 32px -12px rgba(0, 0, 0, 0.5);
+		transform: translateX(-50%);
+		animation: profile-toast-rise var(--d-state, 200ms) ease-out both;
+	}
+
+	@keyframes profile-toast-rise {
+		from {
+			opacity: 0;
+			transform: translate(-50%, 8px);
+		}
+		to {
+			opacity: 1;
+			transform: translate(-50%, 0);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.profile-toast {
+			animation: none;
+		}
 	}
 
 	@media (min-width: 768px) {
