@@ -69,20 +69,19 @@
 		color: var(--text-muted);
 	}
 
+	/* Settings row glyph — a bare inline icon (no tinted tile), tinted
+	   to the dim foreground tier so it reads as a quiet leading marker
+	   rather than a coloured chip. Muted rows drop one tier further to
+	   the muted foreground. */
 	.set-row-icon {
 		display: flex;
 		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-		color: var(--color-primary);
+		color: var(--fg-dim);
 	}
 
 	.set-row.is-muted .set-row-icon {
-		background: color-mix(in srgb, var(--text-base) 7%, transparent);
 		color: var(--text-muted);
 	}
 
