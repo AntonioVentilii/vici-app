@@ -1454,6 +1454,7 @@ export const frMessages = {
 	'markets.tab.trending': 'Tendance',
 	'markets.title_a': 'Choisissez une question.',
 	'markets.title_b': 'Faites votre pronostic.',
+	'markets.wc_eyebrow': 'Coupe du monde 2026',
 	'markets.wc_recap.accuracy': 'Précision',
 	'markets.wc_recap.calls': 'Pronostics faits',
 	'markets.wc_recap.cta': 'Explorer tous les marchés',

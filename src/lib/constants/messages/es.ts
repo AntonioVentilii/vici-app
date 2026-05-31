@@ -1445,6 +1445,7 @@ export const esMessages = {
 	'markets.tab.trending': 'Tendencia',
 	'markets.title_a': 'Elige una pregunta.',
 	'markets.title_b': 'Haz tu predicción.',
+	'markets.wc_eyebrow': 'Copa Mundial 2026',
 	'markets.wc_recap.accuracy': 'Precisión',
 	'markets.wc_recap.calls': 'Pronósticos hechos',
 	'markets.wc_recap.cta': 'Explorar todos los mercados',

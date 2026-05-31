@@ -1423,6 +1423,7 @@ export const enMessages = {
 	'markets.tab.trending': 'Trending',
 	'markets.title_a': 'Pick a question.',
 	'markets.title_b': 'Make a call.',
+	'markets.wc_eyebrow': 'World Cup 2026',
 	'markets.wc_recap.accuracy': 'Accuracy',
 	'markets.wc_recap.calls': 'Calls made',
 	'markets.wc_recap.cta': 'Explore all markets',

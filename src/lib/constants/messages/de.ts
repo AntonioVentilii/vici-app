@@ -1455,6 +1455,7 @@ export const deMessages = {
 	'markets.tab.trending': 'Trend',
 	'markets.title_a': 'Wähl eine Frage.',
 	'markets.title_b': 'Sag’s an.',
+	'markets.wc_eyebrow': 'Weltmeisterschaft 2026',
 	'markets.wc_recap.accuracy': 'Trefferquote',
 	'markets.wc_recap.calls': 'Tipps abgegeben',
 	'markets.wc_recap.cta': 'Alle Märkte erkunden',
