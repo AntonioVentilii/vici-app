@@ -234,7 +234,12 @@
 	// The target is a client constant; progress is capped at 100 % so the
 	// bar / percent never overflows.
 	const DAILY_GOAL_TARGET = 10;
-	const dailyGoalDone = $derived(rolloverDailyGoal({ done: dailyGoalCount, date: dailyGoalDate }));
+	// Roll over against the live `nowMs` tick (not just the stored
+	// values) so a session left open across local midnight resets the
+	// chip to 0 without waiting for the next prediction.
+	const dailyGoalDone = $derived(
+		rolloverDailyGoal({ done: dailyGoalCount, date: dailyGoalDate, now: new Date(nowMs) })
+	);
 	const dailyGoalFraction = $derived(DAILY_GOAL_TARGET > 0 ? dailyGoalDone / DAILY_GOAL_TARGET : 0);
 
 	onMount(async () => {
