@@ -10,10 +10,10 @@
 	 * timer-driven phase machine. Every phase tags `.flow-card` and
 	 * `.ob-card` elements with `data-coach-phase` so the cards drift
 	 * in sympathy via the matching CSS in `app.css`
-	 * (`.flow-card[data-coach-phase]`). Phase 3 flips the card to its
+	 * (`.flow-card[data-coach-phase]`, `.ob-card[data-coach-phase]`). Phase 3 flips the card to its
 	 * back face by toggling `is-flipped`; the IDLE beat ("your turn")
 	 * then lingers until the user acts. Dismisses on the first
-	 * pointer-down.
+	 * pointer-down, or when the user presses Escape / Enter.
 	 *
 	 * Each surface persists its own dismissal flag in `localStorage`
 	 * (`vici.coach-flow-seen` / `vici.coach-onboarding-seen`) so the
@@ -46,9 +46,10 @@
 	let visible = $state(!readSeen());
 	let phase = $state(0);
 
-	// Phase timeline (ms): 0 = mount, 2200 NO, 4400 YES, 6400 TAP-flip,
-	// 8800 IDLE. The IDLE beat ("your turn") lingers until the user
-	// acts; the first pointer-down dismisses the coach for good.
+	// Phase timeline: 0=NO shown immediately, 1=YES @2200ms,
+	// 2=SKIP @4400ms, 3=TAP @6400ms (card flip), 4=IDLE @8800ms.
+	// The IDLE beat ("your turn") lingers until the user acts;
+	// pointer-down or Escape/Enter dismisses the coach for good.
 	const hints = [
 		{ key: 'flow.coach.hint_no', cls: 'no' },
 		{ key: 'flow.coach.hint_yes', cls: 'yes' },
@@ -61,6 +62,17 @@
 	let timers: ReturnType<typeof setTimeout>[] = [];
 	let raf: number | null = null;
 	let pointerHandler: (() => void) | null = null;
+
+	const handleKeydown = (e: KeyboardEvent) => {
+		if (!visible) {
+			return;
+		}
+
+		if (e.key === 'Escape' || e.key === 'Enter') {
+			e.stopPropagation();
+			dismiss();
+		}
+	};
 
 	const applyPhase = (p: number) => {
 		cards.forEach((c) => c.setAttribute('data-coach-phase', String(p)));
@@ -139,10 +151,13 @@
 	const accent = $derived(t({ locale: $localeStore, key: `${current.key}.acc` }));
 </script>
 
+<svelte:window onkeydown={handleKeydown} />
+
 {#if visible}
 	<div
 		class="flow-coach"
 		aria-label={t({ locale: $localeStore, key: 'flow.coach.aria' })}
+		aria-modal="false"
 		role="dialog"
 	>
 		{#key phase}
