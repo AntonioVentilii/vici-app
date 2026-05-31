@@ -597,6 +597,8 @@
 		margin: 0;
 		font-size: var(--t-12);
 		color: var(--text-muted);
+		font-family: var(--font-mono);
+		letter-spacing: 0.04em;
 	}
 	.flow-back-meta-sep {
 		opacity: 0.55;
@@ -666,8 +668,24 @@
 	.flow-back-rules {
 		color: var(--text-muted);
 		padding-top: 0.4rem;
-		border-top: 1px solid var(--border-base);
+		border-top: 1px dashed var(--border-base);
 		margin-top: 0.4rem;
+		animation: flowRulesReveal 220ms var(--ease-vici) both;
+	}
+	@keyframes flowRulesReveal {
+		from {
+			opacity: 0;
+			transform: translateY(-4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-back-rules {
+			animation: none;
+		}
 	}
 
 	.flow-res-foot {
@@ -698,7 +716,7 @@
 	}
 	.flow-back-toggle-caret {
 		font-size: var(--t-11);
-		transition: transform 160ms ease;
+		transition: transform 200ms ease;
 	}
 	.flow-back-toggle-caret.is-open {
 		transform: rotate(180deg);
@@ -712,7 +730,7 @@
 		flex-wrap: wrap;
 	}
 	.flow-community-pct {
-		font-size: 2.05rem;
+		font-size: 1.625rem;
 		font-weight: 600;
 		letter-spacing: -0.03em;
 		line-height: 1;
@@ -720,7 +738,7 @@
 	.flow-community-side {
 		margin-left: 0.35rem;
 		font-size: var(--t-12);
-		font-weight: 700;
+		font-weight: 600;
 		letter-spacing: var(--tracking-allcaps);
 	}
 	.flow-community-delta {
@@ -761,12 +779,13 @@
 		color: var(--text-base);
 	}
 	.flow-split-badge {
+		font-family: var(--font-mono);
 		font-size: 9.5px;
 		letter-spacing: 0.08em;
 		padding: 1px 6px;
 		border-radius: var(--r-pill);
-		border: 1px solid var(--border-base);
-		background: var(--bg-surface);
+		border: 1px solid rgba(226, 184, 66, 0.32);
+		background: var(--laurel-glow);
 	}
 	.flow-split-badge.is-positive {
 		color: var(--yes);
@@ -779,7 +798,7 @@
 
 	.flow-split-bar {
 		display: flex;
-		height: 7px;
+		height: 6px;
 		border-radius: var(--r-pill);
 		overflow: hidden;
 		background: var(--border-base);
@@ -788,27 +807,28 @@
 		display: block;
 		height: 100%;
 		background: color-mix(in srgb, var(--no) 75%, transparent);
+		transition: width 480ms var(--ease-vici);
 	}
 	.flow-split-fill-yes {
 		display: block;
 		height: 100%;
 		background: color-mix(in srgb, var(--yes) 75%, transparent);
+		transition: width 480ms var(--ease-vici);
 	}
 
 	.flow-followed-dots {
 		display: flex;
-		gap: 4px;
+		gap: 6px;
 	}
 	.flow-followed-dot {
-		width: 9px;
-		height: 9px;
+		width: 10px;
+		height: 10px;
 		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--no-wash) 70%, transparent);
-		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
+		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
 	}
 	.flow-followed-dot.is-yes {
 		background: color-mix(in srgb, var(--yes-wash) 70%, transparent);
-		border-color: color-mix(in srgb, var(--yes) 45%, var(--border-base));
 	}
 
 	.flow-back-track {
@@ -827,12 +847,15 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.55rem 0.7rem;
+		padding: 10px 12px;
 		border-radius: var(--r-12);
 		border: 1px solid color-mix(in srgb, var(--cat-color) 22%, var(--border-base));
 		background:
 			linear-gradient(90deg, color-mix(in srgb, var(--cat-color) 8%, transparent), transparent),
 			color-mix(in srgb, var(--bg-surface) 90%, transparent);
+	}
+	.flow-back-prior .flow-back-label {
+		color: var(--color-accent);
 	}
 	.flow-back-prior-line {
 		font-size: var(--t-12);
