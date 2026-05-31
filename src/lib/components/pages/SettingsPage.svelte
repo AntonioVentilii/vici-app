@@ -761,14 +761,10 @@
 
 	.settings-flow-deck-icon {
 		display: inline-flex;
-		width: 1.85rem;
-		height: 1.85rem;
 		align-items: center;
 		justify-content: center;
 		flex-shrink: 0;
-		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-		color: var(--color-primary);
+		color: var(--text-muted);
 	}
 
 	.settings-flow-deck-titles {

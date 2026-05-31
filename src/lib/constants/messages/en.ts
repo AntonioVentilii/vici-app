@@ -467,7 +467,7 @@ export const enMessages = {
 	'card.back.return_aria': 'Return to card front',
 	'card.back.rules_body':
 		"Resolution is final when predictions close. Edge cases follow the source's official wording.",
-	'card.back.settles_line': 'Settles {date} · {timeRemaining}',
+	'card.back.settles_date': 'Settles {date}',
 	'card.back.sharp_diff_ahead': '+{count} pts ahead',
 	'card.back.sharp_diff_behind': '−{count} pts behind',
 	'card.back.show_rules': 'Show full rules',
