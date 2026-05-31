@@ -13,13 +13,13 @@
 	const closesLabel = $derived(formatDate(market.expiryDate));
 </script>
 
-<!-- Resolution rules inline card — port of `screens.jsx:262-267`. The
-     body either renders the market's own description (the canonical
-     source of resolution criteria authored by the market creator) or
-     falls back to a templated sentence referencing the close date and
-     official-source verbiage. Position-wise this card sits directly
-     below the stats grid, replacing the old `Description` tab + the
-     duplicate hero description. -->
+<!-- Resolution rules inline card. The body either renders the market's
+     own description (the canonical resolution criterion authored by the
+     market creator) or falls back to a templated sentence referencing
+     the close date. A footer carries the resolution source and the
+     settles date so the block answers "how / where / when" at a glance,
+     mirroring the Flow back-card resolution structure. This card sits
+     directly below the stats grid. -->
 <div class="market-resolution-card">
 	<span class="market-resolution-eyebrow">
 		{t({ locale: $localeStore, key: 'market.detail.resolution.eyebrow' })}
@@ -35,6 +35,16 @@
 			})}
 		{/if}
 	</p>
+	<dl class="market-resolution-foot num">
+		<div class="market-resolution-foot-row">
+			<dt>{t({ locale: $localeStore, key: 'market.detail.resolution.source_label' })}</dt>
+			<dd>{t({ locale: $localeStore, key: 'market.detail.resolution.source_value' })}</dd>
+		</div>
+		<div class="market-resolution-foot-row">
+			<dt>{t({ locale: $localeStore, key: 'market.detail.resolution.settles_label' })}</dt>
+			<dd>{closesLabel}</dd>
+		</div>
+	</dl>
 </div>
 
 <style lang="postcss">
@@ -61,5 +71,38 @@
 		color: var(--text-base);
 		font-size: var(--t-13);
 		line-height: 1.55;
+	}
+
+	/* Source / settles footer — two label·value rows in the mono ramp
+	   so they read as the market's machine-grade facts beneath the
+	   prose criterion. */
+	.market-resolution-foot {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		margin: 0.75rem 0 0;
+		padding-top: 0.625rem;
+		border-top: 1px dashed var(--border-base);
+	}
+
+	.market-resolution-foot-row {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.375rem;
+	}
+
+	.market-resolution-foot-row dt {
+		color: var(--text-muted);
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.market-resolution-foot-row dd {
+		margin: 0;
+		color: var(--text-base);
+		font-size: var(--t-12);
 	}
 </style>
