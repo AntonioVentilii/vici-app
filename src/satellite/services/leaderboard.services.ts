@@ -1,7 +1,7 @@
 import { Collection } from '$lib/constants/collections.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
-import { isSoftDeleted, withProfileDefaults } from '$satellite/services/profile.services';
+import { isPubliclyHidden, withProfileDefaults } from '$satellite/services/profile.services';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
 
@@ -31,9 +31,9 @@ export const listLeaderboard = (): UserProfile[] => {
 	return (
 		items
 			.map(([_, item]) => decodeDocData<UserProfile>(item.data))
-			// Soft-deleted accounts (Delete account v2) drop off the public
-			// leaderboard before the role lookup + hydrate.
-			.filter((profile) => !isSoftDeleted(profile))
+			// Soft-deleted OR hibernated accounts (Delete account v2) drop
+			// off the public leaderboard before the role lookup + hydrate.
+			.filter((profile) => !isPubliclyHidden(profile))
 			.map((profile) => {
 				const roleDoc = getDocStore({
 					collection: Collection.ROLES,

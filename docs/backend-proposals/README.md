@@ -335,11 +335,36 @@ rather than deleted, so self-joiners are never orphaned. The up-front
 `deleteMyAccount` path; the guard-less recovery-expiry + sweep paths
 rely on this transfer.
 
-Soft-deleted profiles are filtered out of the public reads
-(`listLeaderboard`, `searchProfiles`, `getProfile`) via the shared
-`isSoftDeleted(profile)` helper. The owner's own profile read goes
-through Juno `getDoc` (not these endpoints) and is intentionally NOT
-gated, so the FE can still offer recovery within the window.
+### Hibernation off-ramp — "Pause 30 days" (reversible, shipped)
+
+The delete flow offers, as a retention off-ramp, a **fully reversible**
+alternative to deletion: account hibernation. No data is ever removed —
+the account's shared stats freeze and its profile hides from public reads,
+but the owner can resume at any time.
+
+- `hibernateMyAccount()` — `defineUpdate`, no args. Sets `hibernatedAtMs =
+now` on the caller's profile via a version-locked overwrite. Idempotent
+  (keeps the **earliest** mark). Refuses with `{ ok: false, reason:
+'deleted' }` when the account is already soft-deleted (the two states are
+  mutually exclusive) and `{ ok: false, reason: 'no_profile' }` when the
+  caller never onboarded. Otherwise `{ ok: true }`.
+- `resumeMyAccount()` — `defineUpdate`, no args. Clears `hibernatedAtMs`
+  (destructure-drop + re-encode, mirroring how `recoverMyAccount` clears
+  `deletedAtMs`). Returns `{ ok: true, resumed }` — `resumed` is `true` when a hibernation marker was cleared, `false` when the account wasn't hibernated (a no-op).
+
+`hibernatedAtMs?: number` is a second optional marker on the profile schema
+(same shape + round-trip semantics as `deletedAtMs`), with no expiry/sweep
+— hibernation is reversible, not a delayed delete.
+
+Soft-deleted **or hibernated** profiles are filtered out of the public
+reads (`listLeaderboard`, `searchProfiles`, `getProfile`) via the combined
+`isPubliclyHidden(profile) = isSoftDeleted(profile) || isHibernated(profile)`
+helper. The owner's own profile read goes through Juno `getDoc` (not these
+endpoints) and is intentionally NOT gated, so the FE can still offer
+recovery (soft-delete) or resume (hibernation). The stats freeze is mostly
+natural (a hibernated user is inactive) and defensively enforced: the two
+profile-write stat fan-out hooks early-return when the AFTER profile is
+hibernated.
 
 ### Open questions (resolved)
 
