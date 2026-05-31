@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import ProbBar from '$lib/components/ui/ProbBar.svelte';
 	import { categoryLabel, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -13,7 +14,7 @@
 	 * Fixed-width (280 px) market card used in the Saved / Trending
 	 * rails on the markets page. Header row carries the category tag
 	 * + volume; body is the question; footer pairs the YES % with
-	 * `YES / NO` mini-tags above a `ProbBar`.
+	 * `YES / NO` mini-tags above a `ProbBar` (shared `ui/ProbBar`).
 	 */
 	interface Props {
 		market: Market;
@@ -70,13 +71,6 @@
 		</span>
 	</div>
 	<div style="margin-top: 8px;">
-		<div class="probbar">
-			<i
-				style:width="{yes}%"
-				style:background={yes >= 50
-					? undefined
-					: 'linear-gradient(90deg, var(--no-deep), var(--no))'}
-			></i>
-		</div>
+		<ProbBar {yes} />
 	</div>
 </div>

@@ -930,6 +930,6 @@
 
 	:global(.dash-past-row-soft) {
 		padding: 8px 0;
-		border-bottom-color: rgba(242, 236, 220, 0.06);
+		border-bottom-color: color-mix(in srgb, var(--text-base) 6%, transparent);
 	}
 </style>

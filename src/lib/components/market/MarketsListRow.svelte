@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import ProbBar from '$lib/components/ui/ProbBar.svelte';
 	import { categoryLabel, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -14,7 +15,7 @@
 	 * `card-inline` (hairline-top separator, no card border) so a column
 	 * of rows reads as one list. Header pairs the category tag with
 	 * `vol · closes`; body is the question; footer sits a `ProbBar`
-	 * next to the YES %, tinted YES / NO by side.
+	 * (shared `ui/ProbBar`) next to the YES %, tinted YES / NO by side.
 	 */
 	interface Props {
 		market: Market;
@@ -53,14 +54,7 @@
 	</div>
 	<div style="margin-top: 12px; gap: 12px;" class="row between">
 		<div style="flex: 1;">
-			<div class="probbar">
-				<i
-					style:width="{yes}%"
-					style:background={yes >= 50
-						? undefined
-						: 'linear-gradient(90deg, var(--no-deep), var(--no))'}
-				></i>
-			</div>
+			<ProbBar {yes} />
 		</div>
 		<span style:color={yes >= 50 ? 'var(--yes)' : 'var(--no)'} class="num t-body fw-600"
 			>{yes}%</span
