@@ -19,9 +19,15 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Horizontally-scrolling chip rail for the Markets page: a leading
-	 * "♥ Saved · N" chip followed by one chip per category. Active
+	 * Horizontally-scrolling chip rail for the Markets screen: a leading
+	 * "♥ Saved · N" chip, then "All", then one chip per category. Active
 	 * filter is highlighted; tapping a chip fires `onChange`.
+	 *
+	 * In World-Cup-focus mode the rail opens collapsed — Saved · All ·
+	 * World Cup · "More markets →" — and the remaining categories stay
+	 * hidden until the user taps "More markets →", which reveals the full
+	 * taxonomy. The leading buckets (Saved · All) are always visible so
+	 * the user can never lose their saves behind the focus collapse.
 	 */
 	interface Props {
 		active: MarketsCategoryFilter;
@@ -36,11 +42,9 @@
 		 */
 		availableTags?: ReadonlySet<MarketTag>;
 		/**
-		 * World-Cup-focus mode. When set, the rail opens laser-focused on the
-		 * World Cup: only the `wc` chip plus a single "More markets →" control
-		 * are shown until the user expands, which reveals the full taxonomy
-		 * (Saved · All · the other categories). When unset the rail shows the
-		 * full taxonomy as usual.
+		 * World-Cup-focus mode. When set, the category chips collapse behind
+		 * "More markets →" (only `wc` is shown until the user expands). The
+		 * Saved and All buckets stay visible either way.
 		 */
 		wcFocus?: boolean;
 	}
@@ -51,64 +55,53 @@
 	// `wcFocus` mode; ignored otherwise.
 	let expanded = $state(false);
 
-	// `wc` is surfaced as a first-class chip in focus mode, so the secondary
-	// rail lists every *other* available tag.
 	const visibleTags = $derived(
 		availableTags === undefined
 			? MARKET_TAGS
 			: MARKET_TAGS.filter((tag) => availableTags.has(tag) || active === tag)
 	);
 
-	const secondaryTags = $derived(wcFocus ? visibleTags.filter((tag) => tag !== 'wc') : visibleTags);
+	// In focus mode collapse to the World Cup chip alone; the rest of the
+	// categories return once "More markets →" expands the rail.
+	const categoryTags = $derived(
+		wcFocus && !expanded ? visibleTags.filter((tag) => tag === 'wc') : visibleTags
+	);
 
-	// In focus mode, the secondary chips (Saved · All · categories) only show
-	// once expanded. Outside focus mode the full rail is always present.
-	const showSecondary = $derived(!wcFocus || expanded);
+	// "More markets →" only appears while the rail is collapsed in focus mode.
+	const showMore = $derived(wcFocus && !expanded);
 </script>
 
 <div
 	style="display: flex; gap: 6px; padding: 4px 20px 14px; overflow-x: auto;"
 	class="no-scrollbar"
 >
-	{#if wcFocus}
-		<!-- WC-focus: lead with the World Cup chip; the rest of the deck hides
-		     behind "More markets →" until expanded. -->
-		<button
-			class={`chip ${active === 'wc' ? 'active' : ''}`}
-			onclick={() => onChange('wc')}
-			type="button">{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS.wc })}</button
+	<button
+		class={`chip ${active === 'saved' ? 'active' : ''}`}
+		onclick={() => onChange('saved')}
+		type="button"
+	>
+		<span style="margin-right: 4px;" aria-hidden="true">♥</span>
+		<span
+			>{t({ locale: $localeStore, key: 'markets.tab.saved_label' })}{savedCount > 0
+				? ` · ${savedCount}`
+				: ''}</span
 		>
-		{#if !expanded}
-			<button class="chip" onclick={() => (expanded = true)} type="button"
-				>{t({ locale: $localeStore, key: 'markets.more' })} →</button
-			>
-		{/if}
-	{/if}
-
-	{#if showSecondary}
+	</button>
+	<button
+		class={`chip ${active === 'all' ? 'active' : ''}`}
+		onclick={() => onChange('all')}
+		type="button">{t({ locale: $localeStore, key: 'markets.chip.all' })}</button
+	>
+	{#each categoryTags as tag (tag)}
 		<button
-			class={`chip ${active === 'saved' ? 'active' : ''}`}
-			onclick={() => onChange('saved')}
-			type="button"
+			class={`chip ${active === tag ? 'active' : ''}`}
+			onclick={() => onChange(tag)}
+			type="button">{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}</button
 		>
-			<span style="margin-right: 4px;" aria-hidden="true">♥</span>
-			<span
-				>{t({ locale: $localeStore, key: 'markets.tab.saved_label' })}{savedCount > 0
-					? ` · ${savedCount}`
-					: ''}</span
-			>
-		</button>
-		<button
-			class={`chip ${active === 'all' ? 'active' : ''}`}
-			onclick={() => onChange('all')}
-			type="button">{t({ locale: $localeStore, key: 'markets.chip.all' })}</button
+	{/each}
+	{#if showMore}
+		<button class="chip" onclick={() => (expanded = true)} type="button"
+			>{t({ locale: $localeStore, key: 'markets.more' })} →</button
 		>
-		{#each secondaryTags as tag (tag)}
-			<button
-				class={`chip ${active === tag ? 'active' : ''}`}
-				onclick={() => onChange(tag)}
-				type="button">{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}</button
-			>
-		{/each}
 	{/if}
 </div>

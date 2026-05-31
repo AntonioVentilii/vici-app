@@ -21,9 +21,9 @@
 <div class="section-h">
 	<h3>{title}</h3>
 	{#if moreLabel && onMore}
-		<button class="more" onclick={onMore} type="button">{moreLabel}</button>
+		<button class="title-action" onclick={onMore} type="button">{moreLabel}</button>
 	{:else if moreLabel}
-		<span class="more">{moreLabel}</span>
+		<span style="cursor: default;" class="title-action">{moreLabel}</span>
 	{/if}
 </div>
 <div
