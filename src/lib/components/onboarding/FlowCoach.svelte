@@ -5,31 +5,22 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * FlowCoach — first-run gesture coach overlay shown above the deck.
-	 * Cycles through five hints (NO / YES / SKIP / TAP / IDLE) on a
-	 * timer-driven phase machine. Every phase tags `.flow-card` and
-	 * `.ob-card` elements with `data-coach-phase` so the cards drift
-	 * in sympathy via the matching CSS in `app.css`
-	 * (`.flow-card[data-coach-phase]`, `.ob-card[data-coach-phase]`). Phase 3 flips the card to its
+	 * FlowCoach — first-run gesture coach overlay shown above the Flow
+	 * deck. Cycles through five hints (NO / YES / SKIP / TAP / IDLE) on
+	 * a timer-driven phase machine. Every phase tags `.flow-card`
+	 * elements with `data-coach-phase` so the cards drift in sympathy
+	 * via the matching CSS in `app.css`
+	 * (`.flow-card[data-coach-phase]`). Phase 3 flips the card to its
 	 * back face by toggling `is-flipped`; the IDLE beat ("your turn")
 	 * then lingers until the user acts. Dismisses on the first
 	 * pointer-down, or when the user presses Escape / Enter.
 	 *
-	 * Each surface persists its own dismissal flag in `localStorage`
-	 * (`vici.coach-flow-seen` / `vici.coach-onboarding-seen`) so the
-	 * coach is shown at most once per device per surface.
+	 * The dismissal flag is persisted in `localStorage`
+	 * (`vici.coach-flow-seen`) so the deck coach is shown at most once
+	 * per device. Onboarding does NOT use this overlay — its first-call
+	 * card carries a built-in coach that always shows at that step.
 	 */
-	interface Props {
-		surface?: 'flow' | 'onboarding';
-	}
-
-	const { surface = 'flow' }: Props = $props();
-
-	// Each surface caches its own per-device "seen" flag so the coach
-	// is shown at most once per surface.
-	const storageKey = $derived(
-		surface === 'onboarding' ? 'vici.coach-onboarding-seen' : 'vici.coach-flow-seen'
-	);
+	const STORAGE_KEY = 'vici.coach-flow-seen';
 
 	const readSeen = (): boolean => {
 		if (!browser) {
@@ -37,7 +28,7 @@
 		}
 
 		try {
-			return Boolean(localStorage.getItem(storageKey));
+			return Boolean(localStorage.getItem(STORAGE_KEY));
 		} catch {
 			return false;
 		}
@@ -102,7 +93,7 @@
 	const dismiss = () => {
 		if (browser) {
 			try {
-				localStorage.setItem(storageKey, '1');
+				localStorage.setItem(STORAGE_KEY, '1');
 			} catch {
 				// localStorage write blocked — accept the loss; the coach
 				// will reappear next session for this device.
@@ -119,7 +110,7 @@
 		}
 
 		raf = requestAnimationFrame(() => {
-			cards = Array.from(document.querySelectorAll('.flow-card, .ob-card'));
+			cards = Array.from(document.querySelectorAll('.flow-card'));
 			applyPhase(0);
 			timers.push(setTimeout(() => applyPhase(1), 2200));
 			timers.push(setTimeout(() => applyPhase(2), 4400));
