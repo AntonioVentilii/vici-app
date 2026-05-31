@@ -69,7 +69,7 @@ type AppListMyBattlesResult = record { items : vec record { id : text; kind : va
 
 type AppListMyBlockingLeaguesResult = record { league_ids : vec text };
 
-type AppListMyLeaguesResult = record { items : vec record { league : record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text }; role : variant { owner; admin; member }; joined_at_ms : float64; member_count : float64 } };
+type AppListMyLeaguesResult = record { items : vec record { league : record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; private : bool }; role : variant { owner; admin; member }; joined_at_ms : float64; member_count : float64 } };
 
 type AppListMyReferralsResult = record { items : vec record { referee : text; referrer : text; code : text; redeemed_at_ms : float64; within_referrer_cap : bool; referee_payout : record { status : variant { none; owed; processing; paid }; amount_base_units : text; block_index : opt text; last_error : opt text }; referrer_payout : record { status : variant { none; owed; processing; paid }; amount_base_units : text; block_index : opt text; last_error : opt text } } };
 
@@ -81,7 +81,7 @@ type AppListWorldsRosterResult = record { items : vec record { member : text; ki
 
 type AppLookupLeagueByInviteArgs = record { invite_code : text };
 
-type AppLookupLeagueByInviteResult = record { league : opt record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text } };
+type AppLookupLeagueByInviteResult = record { league : opt record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; private : bool } };
 
 type AppLookupReferralCodeArgs = record { code : text };
 
