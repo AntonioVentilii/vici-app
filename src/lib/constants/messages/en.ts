@@ -10,6 +10,7 @@ export const enMessages = {
 	'a11y.language': 'Language',
 	'a11y.next_page': 'Next page',
 	'a11y.notifications': 'Notifications',
+	'a11y.notifications_unread': 'Notifications, {count} unread',
 	'a11y.open_data': 'Open data',
 	'a11y.page_n': 'Page {page}',
 	'a11y.pagination': 'Pagination',
@@ -1258,6 +1259,7 @@ export const enMessages = {
 	'nav.trust': 'Trust',
 	'nav.vision': 'Vision',
 	'notifications.back_flow': 'Back to Flow',
+	'notifications.dismiss': 'Dismiss',
 	'notifications.empty.body':
 		'Resolutions, league invites, and challenges land here. Make some calls to start the record.',
 	'notifications.empty.title': 'No new notifications.',
