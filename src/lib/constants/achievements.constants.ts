@@ -11,7 +11,7 @@ export type AchievementTier = 'gold' | 'silver' | 'bronze';
  * single unicode fallback glyph for surfaces that render the def
  * out-of-band (Dash next-up rail) and for screen-reader / plain-text
  * contexts. The catalogue uses the brand's approved glyph set
- * (`◎ ★ ⚡ ⧖ ◐ ⌘` — see `docs/ai/frontend/brand.md`).
+ * (`◎ ★ ⚡ ⧖ ◐ ⌘ ✦` — see `docs/ai/frontend/brand.md`).
  *
  * `tier` decides the wash colour (gold = laurel-tinted; silver /
  * bronze are reserved for monthly-leaderboard achievements once they
@@ -23,7 +23,7 @@ export type AchievementTier = 'gold' | 'silver' | 'bronze';
  *
  * The order in this array is the default render order for the
  * profile achievement rail before progress-sorting kicks in: it leads
- * with `lvl-25`, `contrarian`, `marathon`.
+ * with `contrarian`, `marathon`, `first-call`.
  */
 export interface AchievementDef {
 	id: string;
@@ -36,15 +36,6 @@ export interface AchievementDef {
 }
 
 export const ACHIEVEMENTS: AchievementDef[] = [
-	{
-		id: 'lvl-25',
-		nameKey: 'achievement.lvl_25.name',
-		descriptionKey: 'achievement.lvl_25.description',
-		detailKey: 'achievement.lvl_25.detail',
-		emblem: '⌘',
-		tier: 'gold',
-		xp: 1000
-	},
 	{
 		id: 'contrarian',
 		nameKey: 'achievement.contrarian.name',
@@ -64,10 +55,10 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 		xp: 800
 	},
 	{
-		id: 'first-blood',
-		nameKey: 'achievement.first_blood.name',
-		descriptionKey: 'achievement.first_blood.description',
-		detailKey: 'achievement.first_blood.detail',
+		id: 'first-call',
+		nameKey: 'achievement.first_call.name',
+		descriptionKey: 'achievement.first_call.description',
+		detailKey: 'achievement.first_call.detail',
 		emblem: '◎',
 		tier: 'gold',
 		xp: 50
@@ -89,6 +80,24 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 		emblem: '★',
 		tier: 'gold',
 		xp: 500
+	},
+	{
+		id: 'league-founder',
+		nameKey: 'achievement.league_founder.name',
+		descriptionKey: 'achievement.league_founder.description',
+		detailKey: 'achievement.league_founder.detail',
+		emblem: '✦',
+		tier: 'gold',
+		xp: 300
+	},
+	{
+		id: 'top-decile',
+		nameKey: 'achievement.top_decile.name',
+		descriptionKey: 'achievement.top_decile.description',
+		detailKey: 'achievement.top_decile.detail',
+		emblem: '⌘',
+		tier: 'gold',
+		xp: 1000
 	}
 ];
 

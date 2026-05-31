@@ -257,6 +257,8 @@ const AppGetProfileResultSchema = j.strictObject({
 			hibernatedAtMs: j.optional(j.number()),
 			unlockedAchievements: j.array(j.string()),
 			contrarianWins: j.number(),
+			topDecileStreak: j.number(),
+			lastTopDecileDay: j.optional(j.string()),
 			preferences: j.strictObject({
 				defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }),
 				notify: j.strictObject({
@@ -267,6 +269,7 @@ const AppGetProfileResultSchema = j.strictObject({
 				}),
 				flowSessionLength: j.number(),
 				hapticsEnabled: j.boolean(),
+				soundEnabled: j.boolean(),
 				callsPublic: j.boolean(),
 				flowTags: j.array(j.string()),
 				worldCupMode: j.boolean(),
@@ -292,6 +295,30 @@ const getProfile = async (
 
 	const result = schemaFromIdl({ schema: AppGetProfileResultSchema, value: idlResult });
 	return AppGetProfileResultSchema.parse(result);
+};
+
+const AppGetUserRankAndCountArgsSchema = j.strictObject({ principalStr: j.string() });
+const AppGetUserRankAndCountResultSchema = j.strictObject({
+	rank: j.optional(j.number()),
+	count: j.number()
+});
+
+const getUserRankAndCount = async (
+	args: j.infer<typeof AppGetUserRankAndCountArgsSchema>
+): Promise<j.infer<typeof AppGetUserRankAndCountResultSchema>> => {
+	const parsedArgs = AppGetUserRankAndCountArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetUserRankAndCountArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_user_rank_and_count']>[0];
+
+	const { app_get_user_rank_and_count } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_user_rank_and_count(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetUserRankAndCountResultSchema, value: idlResult });
+	return AppGetUserRankAndCountResultSchema.parse(result);
 };
 
 const AppListAffiliationStatsArgsSchema = j.strictObject({
@@ -638,7 +665,8 @@ const AppListMyLeaguesResultSchema = j.strictObject({
 				accent_color: j.optional(j.string())
 			}),
 			role: j.enum(['owner', 'admin', 'member']),
-			joined_at_ms: j.number()
+			joined_at_ms: j.number(),
+			member_count: j.number()
 		})
 	)
 });
@@ -1342,6 +1370,7 @@ export const functions = {
 	getMarketTranslation,
 	getMyReferralCode,
 	getProfile,
+	getUserRankAndCount,
 	listAffiliationStats,
 	listFollowers,
 	listFollowing,

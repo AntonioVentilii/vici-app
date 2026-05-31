@@ -33,6 +33,8 @@ export interface LeagueWithRole {
 	league: LeagueDoc;
 	role: LeagueMemberRole;
 	joinedAtMs: number;
+	/** Total members in the league (owner included). */
+	memberCount: number;
 }
 
 // ─── Reads ───────────────────────────────────────────────────────────────
@@ -44,7 +46,7 @@ export interface LeagueWithRole {
 export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
 	const { items } = await functions.listMyLeagues();
 
-	return items.map(({ league, role, joined_at_ms }) => ({
+	return items.map(({ league, role, joined_at_ms, member_count }) => ({
 		league: {
 			id: league.id,
 			name: league.name,
@@ -55,7 +57,8 @@ export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
 			accentColor: league.accent_color
 		},
 		role,
-		joinedAtMs: joined_at_ms
+		joinedAtMs: joined_at_ms,
+		memberCount: member_count
 	}));
 };
 
@@ -190,10 +193,15 @@ export const generateInviteCode = (): string => {
  */
 export const createLeague = async ({
 	name,
-	description
+	description,
+	accentColor
 }: {
 	name: string;
 	description?: string;
+	/** Optional accent colour (hex) the owner picked in the create
+	 *  sheet. Persisted on the league doc so the gradient logo tile is
+	 *  consistent everywhere the league is rendered. */
+	accentColor?: string;
 }): Promise<LeagueDoc> => {
 	const validation = validateLeagueDraft({ name, description });
 
@@ -220,7 +228,8 @@ export const createLeague = async ({
 		description,
 		inviteCode,
 		owner: ownerPrincipal,
-		createdAtMs
+		createdAtMs,
+		accentColor
 	};
 
 	await setDoc<LeagueDoc>({

@@ -39,6 +39,11 @@ export const UserProfileApiSchema = j.strictObject({
 	// `optional()` with NO default for the same reason as `deletedAtMs`.
 	// Mirror any change here in `src/lib/schema/profile.schema.ts`.
 	hibernatedAtMs: j.number().optional(),
+	// Top-decile streak state (drives the `top-decile` achievement). The
+	// consecutive-day count plus the local `YYYY-MM-DD` once-per-day guard.
+	// Mirror any change here in `src/lib/schema/profile.schema.ts`.
+	topDecileStreak: j.number().default(0),
+	lastTopDecileDay: j.string().optional(),
 	// Defaults are intentionally applied at every level. The outer
 	// `.default(...)` only kicks in when `preferences` is null/undefined;
 	// legacy profile docs that have a partial `preferences` shape would
@@ -69,6 +74,7 @@ export const UserProfileApiSchema = j.strictObject({
 				}),
 			flowSessionLength: j.number().default(10),
 			hapticsEnabled: j.boolean().default(true),
+			soundEnabled: j.boolean().default(true),
 			callsPublic: j.boolean().default(true),
 			flowTags: j.array(j.string()).default([]),
 			worldCupMode: j.boolean().default(false),
@@ -95,6 +101,7 @@ export const UserProfileApiSchema = j.strictObject({
 			},
 			flowSessionLength: 10,
 			hapticsEnabled: true,
+			soundEnabled: true,
 			callsPublic: true,
 			flowTags: [],
 			worldCupMode: false,

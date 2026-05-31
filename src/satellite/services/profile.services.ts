@@ -51,6 +51,7 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		},
 		flowSessionLength: incoming?.flowSessionLength ?? 10,
 		hapticsEnabled: incoming?.hapticsEnabled ?? true,
+		soundEnabled: incoming?.soundEnabled ?? true,
 		callsPublic: incoming?.callsPublic ?? true,
 		flowTags: Array.isArray(incoming?.flowTags) ? incoming.flowTags : [],
 		worldCupMode: incoming?.worldCupMode ?? false,
@@ -94,6 +95,12 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		hibernatedAtMs: profile.hibernatedAtMs,
 		unlockedAchievements: profile.unlockedAchievements ?? [],
 		contrarianWins: profile.contrarianWins ?? 0,
+		// Top-decile streak state (drives the `top-decile` achievement).
+		// `topDecileStreak` defaults to 0 for legacy rows; `lastTopDecileDay`
+		// is `optional()` so an absent value (never evaluated) round-trips
+		// unchanged.
+		topDecileStreak: profile.topDecileStreak ?? 0,
+		lastTopDecileDay: profile.lastTopDecileDay,
 		preferences: sanitizedPreferences
 	};
 };

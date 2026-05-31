@@ -1139,6 +1139,28 @@ html[data-app='1'] body {
 	}
 }
 
+/* Next card rises over the gap the centered character just vacated
+   (post-beat staging). Applied transiently to the incoming current
+   slot in FlowMode. */
+.flow-card-rise {
+	animation: flow-card-rise 440ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+@keyframes flow-card-rise {
+	from {
+		opacity: 0;
+		transform: translateY(46px) scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.flow-card-rise {
+		animation: none;
+	}
+}
+
 /* XP-award toast envelope — rises from the swipe-exit edge,
    overshoots, settles. */
 @keyframes xp-toast-pop {
@@ -1153,6 +1175,44 @@ html[data-app='1'] body {
 	100% {
 		opacity: 0;
 		transform: translateY(-42px) scale(1);
+	}
+}
+
+/* Notification bell red-dot entrance + slide-in toast envelopes. These
+   keyframes are shared by `NotifBell` and `NotifToastHost`, so they live
+   here at the global layer (scoped styles can't reach a `@keyframes` used
+   across components). The components carry the rest of their styling
+   scoped. Reduced-motion is handled inside each component. */
+@keyframes notif-dot-in {
+	from {
+		opacity: 0;
+		transform: scale(0.4);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes notif-pop-in {
+	from {
+		opacity: 0;
+		transform: translateY(-18px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes notif-pop-out {
+	from {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(-18px);
 	}
 }
 
@@ -1952,6 +2012,17 @@ html[data-app='1'] body {
 .xp-toast .num {
 	font-size: var(--text-body);
 }
+.xp-toast-side {
+	font-size: 9px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	font-weight: 700;
+	opacity: 0.9;
+	align-self: center;
+	padding-right: 6px;
+	margin-right: 2px;
+	border-right: 1px solid rgba(14, 13, 11, 0.25);
+}
 .xp-toast small {
 	font-size: 9px;
 	letter-spacing: 0.14em;
@@ -1972,6 +2043,27 @@ html[data-app='1'] body {
 }
 .xp-toast.is-no {
 	left: 22px;
+}
+@keyframes xp-toast-rm {
+	0% {
+		opacity: 0;
+	}
+	12% {
+		opacity: 1;
+	}
+	80% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+/* Reduced-motion: the spring collapses to a plain hold-then-fade — no
+   overshoot, no upward travel. */
+@media (prefers-reduced-motion: reduce) {
+	.xp-toast {
+		animation: xp-toast-rm 1000ms ease forwards;
+	}
 }
 
 /* ── Swipe hint rail ──────────────────────────────────────── */
@@ -3881,6 +3973,447 @@ html[data-app='1'] body {
 	transition:
 		background 200ms var(--ease-vici),
 		color 200ms var(--ease-vici);
+}
+
+/* ============================================================
+   DASH · resolution banner + Day-0 / Day-1 (`.dz-*`) surfaces.
+   Same token aliases as the rest of the dash block:
+     --accent → --laurel · --fg → --text-base · --fg-mute → --text-muted
+     --fg-dim → --parchment-dim · --border → --border-base
+     --bg-raised → --ink-raised · --ink/--parchment kept · --ease → --ease-vici
+   Accent / parchment / yes / no literal rgbas → color-mix on the token.
+   ============================================================ */
+
+/* ─── Resolution banner (standard state · ResolutionReveal hook for 1.4) ─── */
+.dash-reso-banner {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: calc(100% - 40px);
+	margin: 4px 20px 14px;
+	padding: 12px 14px;
+	border-radius: 14px;
+	cursor: pointer;
+	text-align: left;
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--laurel) 10%, transparent),
+		color-mix(in srgb, var(--laurel) 4%, transparent)
+	);
+	border: 1px solid color-mix(in srgb, var(--laurel) 28%, transparent);
+	appearance: none;
+	font-family: inherit;
+	color: var(--text-base);
+	transition:
+		transform 140ms var(--ease-vici),
+		border-color 140ms var(--ease-vici),
+		background 140ms var(--ease-vici);
+}
+.dash-reso-banner:hover {
+	border-color: color-mix(in srgb, var(--laurel) 50%, transparent);
+	transform: translateY(-1px);
+}
+.dash-reso-banner:active {
+	transform: translateY(0);
+}
+.dash-reso-banner.is-neg {
+	background: linear-gradient(
+		180deg,
+		color-mix(in srgb, var(--parchment) 5%, transparent),
+		color-mix(in srgb, var(--parchment) 2%, transparent)
+	);
+	border-color: var(--border-base);
+}
+.dash-reso-dot {
+	width: 9px;
+	height: 9px;
+	border-radius: 999px;
+	flex-shrink: 0;
+	background: var(--laurel);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--laurel) 16%, transparent);
+	animation: reso-dot-pulse 2s ease-in-out infinite;
+}
+.dash-reso-banner.is-neg .dash-reso-dot {
+	background: var(--text-muted);
+	box-shadow: 0 0 0 4px color-mix(in srgb, var(--parchment) 8%, transparent);
+}
+@keyframes reso-dot-pulse {
+	0%,
+	100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.45;
+	}
+}
+.dash-reso-text {
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	flex: 1;
+	min-width: 0;
+}
+.dash-reso-title {
+	font-size: var(--text-body);
+	font-weight: 600;
+	color: var(--text-base);
+}
+.dash-reso-sub {
+	font-size: var(--text-eyebrow);
+}
+.dash-reso-dim {
+	color: var(--text-muted);
+}
+.dash-reso-cta {
+	flex-shrink: 0;
+	font-family: var(--font-mono);
+	font-size: var(--text-eyebrow);
+	font-weight: 700;
+	letter-spacing: 0.04em;
+	color: var(--laurel);
+}
+.dash-reso-banner.is-neg .dash-reso-cta {
+	color: var(--parchment-dim);
+}
+@media (prefers-reduced-motion: reduce) {
+	.dash-reso-dot {
+		animation: none;
+	}
+}
+
+/* ─── Day-0 / Day-1 hero ─── */
+.dz-hero-quote {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	font-size: 36px;
+	line-height: 1.05;
+	color: var(--laurel);
+	letter-spacing: -0.02em;
+	margin: 0 0 6px;
+}
+.dz-hero-trans {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	font-size: 13px;
+	color: var(--text-muted);
+	margin-bottom: 4px;
+}
+.dz-hero-cta {
+	width: 100%;
+	appearance: none;
+	cursor: pointer;
+	padding: 14px;
+	background: var(--laurel);
+	color: var(--ink);
+	border: 0;
+	border-radius: 999px;
+	font-family: inherit;
+	font-size: 14px;
+	font-weight: 600;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	margin-top: 14px;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.dz-hero-cta:hover {
+	background: var(--accent-deep);
+	color: var(--parchment);
+}
+.dz-hero-foot {
+	margin-top: 10px;
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	letter-spacing: 0.1em;
+	color: var(--text-muted);
+	text-transform: uppercase;
+	text-align: center;
+	line-height: 1.5;
+}
+
+/* ─── Featured WC card — pinned tap-to-Flow preview ─── */
+.dz-pinned {
+	appearance: none;
+	width: 100%;
+	cursor: pointer;
+	border: 1px solid color-mix(in srgb, var(--laurel) 30%, transparent);
+	background:
+		linear-gradient(
+			180deg,
+			color-mix(in srgb, var(--laurel) 5%, transparent),
+			color-mix(in srgb, var(--laurel) 1%, transparent)
+		),
+		var(--ink-raised);
+	border-radius: 12px;
+	padding: 14px;
+	margin-top: 6px;
+	text-align: left;
+	color: var(--text-base);
+	font-family: inherit;
+}
+.dz-pinned .tag {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: var(--laurel);
+	margin-bottom: 8px;
+}
+.dz-pinned .q {
+	font-size: 15px;
+	font-weight: 600;
+	line-height: 1.25;
+	margin-bottom: 10px;
+	letter-spacing: -0.005em;
+}
+.dz-pinned-consensus {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+	margin-bottom: 6px;
+}
+.dz-pinned-consensus .lbl {
+	color: var(--text-base);
+	font-weight: 600;
+}
+.dz-pinned .bar {
+	height: 4px;
+	border-radius: 999px;
+	overflow: hidden;
+	background: color-mix(in srgb, var(--parchment) 8%, transparent);
+	margin-bottom: 10px;
+}
+.dz-pinned .bar .fill {
+	height: 100%;
+	background: var(--laurel);
+	opacity: 0.7;
+}
+.dz-pinned .ctx {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	letter-spacing: 0.04em;
+	color: var(--text-muted);
+}
+.dz-pinned .ctx .go {
+	color: var(--laurel);
+	font-weight: 600;
+	letter-spacing: 0.06em;
+}
+
+/* ─── Compact WC question rows under the featured pinned card ─── */
+.dz-pinned-compact {
+	appearance: none;
+	width: 100%;
+	cursor: pointer;
+	border: 1px solid var(--border-base);
+	background: var(--ink-raised);
+	border-radius: 10px;
+	padding: 10px 12px;
+	display: grid;
+	grid-template-columns: 1fr auto auto;
+	gap: 10px;
+	align-items: center;
+	margin-top: 6px;
+	font-family: inherit;
+	text-align: left;
+	color: var(--text-base);
+}
+.dz-pinned-compact:hover {
+	border-color: var(--border-strong);
+}
+.dz-pinned-compact .cq {
+	font-size: 12.5px;
+	font-weight: 500;
+	line-height: 1.3;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+	min-width: 0;
+}
+.dz-pinned-compact .cyn {
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	letter-spacing: 0.05em;
+	color: var(--text-muted);
+}
+.dz-pinned-compact .cyn .y {
+	color: var(--yes);
+}
+.dz-pinned-compact .cyn .n {
+	color: var(--no);
+}
+.dz-pinned-compact .cgo {
+	color: var(--laurel);
+	font-size: 13px;
+}
+
+/* ─── Single open-position row for Day 1+ ─── */
+.dz-open-pos {
+	appearance: none;
+	width: 100%;
+	cursor: pointer;
+	border: 1px solid var(--border-base);
+	background: var(--ink-raised);
+	border-radius: 12px;
+	padding: 14px;
+	display: grid;
+	grid-template-columns: 1fr auto;
+	gap: 12px;
+	align-items: flex-start;
+	font-family: inherit;
+	text-align: left;
+	color: var(--text-base);
+}
+.dz-open-pos .q {
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.3;
+	margin-bottom: 6px;
+}
+.dz-open-pos .ctx {
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	color: var(--text-muted);
+	letter-spacing: 0.05em;
+	display: flex;
+	gap: 8px;
+	align-items: center;
+}
+.dz-open-pos .side {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	font-weight: 800;
+	letter-spacing: 0.12em;
+	padding: 2px 6px;
+	border-radius: 3px;
+}
+.dz-open-pos .side.yes {
+	background: color-mix(in srgb, var(--yes) 16%, transparent);
+	color: var(--yes);
+}
+.dz-open-pos .side.no {
+	background: color-mix(in srgb, var(--no) 16%, transparent);
+	color: var(--no);
+}
+.dz-open-pos .right {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 4px;
+}
+.dz-open-pos .pct {
+	font-family: var(--font-mono);
+	font-size: 18px;
+	font-weight: 700;
+	color: var(--laurel);
+	line-height: 1;
+}
+.dz-open-pos .timer {
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	color: var(--text-muted);
+	letter-spacing: 0.04em;
+	white-space: nowrap;
+}
+
+/* ─── Locked oracle tease ─── */
+.dz-oracle-locked {
+	padding: 14px;
+	background:
+		linear-gradient(180deg, color-mix(in srgb, var(--laurel) 3%, transparent), transparent),
+		var(--ink-raised);
+	border: 1px dashed color-mix(in srgb, var(--laurel) 30%, transparent);
+	border-radius: 12px;
+}
+.dz-oracle-locked .lbl {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--text-muted);
+	margin-bottom: 6px;
+	display: block;
+}
+.dz-oracle-locked .q {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	font-size: 16px;
+	line-height: 1.3;
+	color: var(--text-base);
+	margin: 0;
+}
+.dz-oracle-locked .sub {
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	color: var(--text-muted);
+	margin-top: 6px;
+	letter-spacing: 0.04em;
+	text-transform: uppercase;
+}
+
+/* ─── Day-1 past-predictions pending empty ─── */
+.dz-past-empty {
+	padding: 14px;
+	text-align: center;
+	background: var(--ink-raised);
+	border: 1px solid var(--border-base);
+	border-radius: 12px;
+}
+.dz-past-empty .q {
+	font-family: var(--font-serif);
+	font-style: italic;
+	color: var(--laurel);
+	font-size: 17px;
+	line-height: 1.2;
+	margin-bottom: 4px;
+}
+.dz-past-empty .body {
+	font-size: 12px;
+	color: var(--text-muted);
+	line-height: 1.5;
+}
+
+/* ─── Trend placeholder for Day 0 / Day 1+ ─── */
+.dz-trend-placeholder {
+	text-align: center;
+	padding: 28px 18px;
+}
+.dz-trend-placeholder .quote {
+	font-family: var(--font-serif);
+	font-style: italic;
+	color: var(--laurel);
+	font-size: 15px;
+	margin-bottom: 4px;
+}
+.dz-trend-placeholder .body {
+	font-size: 11.5px;
+	color: var(--text-muted);
+	line-height: 1.5;
+}
+.dz-trend-placeholder .body strong {
+	color: var(--text-base);
+	font-weight: 600;
+}
+
+/* ─── Holdings caption (Day 0 only — replaces the three-stat breakdown) ─── */
+.dz-holdings-caption {
+	margin-top: 10px;
+	font-family: var(--font-mono);
+	font-size: 10.5px;
+	color: var(--text-muted);
+	letter-spacing: 0.02em;
+	line-height: 1.5;
 }
 .ob2-mode-tab.active {
 	background: var(--ink-elevated);

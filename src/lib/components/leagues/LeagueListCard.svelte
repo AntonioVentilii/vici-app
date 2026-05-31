@@ -1,7 +1,9 @@
 <script lang="ts">
-	import { Check, ChevronRight } from 'lucide-svelte/icons';
+	import { Check, ChevronDown, ChevronRight, ChevronUp } from 'lucide-svelte/icons';
+	import Avatar from '$lib/components/profile/Avatar.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
+	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { LeagueDoc } from '$lib/types/league';
 	import type { LeagueMemberRole } from '$lib/types/league-member';
 	import { t } from '$lib/utils/i18n.utils';
@@ -22,6 +24,9 @@
 		handle: string;
 		/** Total friends in this league, ≥1. */
 		count: number;
+		/** Principals of the overlapping friends — drives the stacked
+		 *  avatar cluster (first three rendered). */
+		principals: string[];
 	}
 
 	interface Props {
@@ -34,6 +39,13 @@
 		/** Friend-overlap summary, or `undefined` when no friends
 		 *  are in this league. */
 		friendOverlap?: FriendOverlap;
+		/** Caller's 1-indexed rank inside this league. Hidden when
+		 *  undefined (e.g. recommendation cards). */
+		yourRank?: number;
+		/** Signed rank-trend vs the prior period: negative = climbed
+		 *  (shown green ↑), positive = slipped (shown red ↓), 0 = flat
+		 *  (hidden). */
+		trend?: number;
 		/** Free-form "latest activity" preview. Hidden when undefined. */
 		activityPreview?: string;
 		/** Marks this card as a recommendation (friends are in, you
@@ -50,10 +62,26 @@
 		role,
 		memberCount,
 		friendOverlap,
+		yourRank,
+		trend = 0,
 		activityPreview,
 		isRecommendation = false,
 		onclick
 	}: Props = $props();
+
+	// First three overlapping friends, resolved against the shared
+	// profile cache so the stacked cluster shows real avatars.
+	const overlapAvatars = $derived.by(() =>
+		(friendOverlap?.principals ?? []).slice(0, 3).map((principal) => {
+			const profile = $profilesStore.get(principal);
+
+			return {
+				principal,
+				avatar: profile?.avatar ?? null,
+				nickname: profile?.nickname ?? null
+			};
+		})
+	);
 
 	let copied = $state(false);
 
@@ -166,13 +194,36 @@
 			{/if}
 		</span>
 
-		<span class="meta num">{memberCountLabel}</span>
+		<span class="meta num">
+			{memberCountLabel}
+			{#if yourRank != null}
+				<span class="meta-sep" aria-hidden="true">·</span>
+				<span class="meta-rank">#{yourRank}</span>
+				{#if trend !== 0}
+					<span class="meta-trend" class:is-down={trend > 0} class:is-up={trend < 0}>
+						{#if trend < 0}
+							<ChevronUp aria-hidden="true" size={11} strokeWidth={2.6} />
+						{:else}
+							<ChevronDown aria-hidden="true" size={11} strokeWidth={2.6} />
+						{/if}
+						{Math.abs(trend)}
+					</span>
+				{/if}
+			{/if}
+		</span>
 
 		{#if friendOverlap}
 			<span class="friend-overlap">
 				<span class="friend-avatars" aria-hidden="true">
-					{#each Array.from({ length: Math.min(friendOverlap.count, 3) }) as _, i (i)}
-						<span style:--i={i} class="friend-avatar-dot"></span>
+					{#each overlapAvatars as friend, i (friend.principal)}
+						<span style:--i={i} class="friend-avatar">
+							<Avatar
+								class="friend-avatar-img"
+								avatar={friend.avatar}
+								nickname={friend.nickname}
+								owner={friend.principal}
+							/>
+						</span>
 					{/each}
 				</span>
 				<span class="friend-overlap-text num">
@@ -359,9 +410,36 @@
 	}
 
 	.meta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.2rem;
 		font-size: 10.5px;
 		color: var(--text-muted);
 		letter-spacing: var(--tracking-wide);
+	}
+
+	.meta-sep {
+		color: var(--text-faint, var(--text-muted));
+	}
+
+	.meta-rank {
+		color: var(--text-base);
+		font-weight: 600;
+	}
+
+	.meta-trend {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.05rem;
+		font-weight: 700;
+	}
+
+	.meta-trend.is-up {
+		color: var(--yes);
+	}
+
+	.meta-trend.is-down {
+		color: var(--no);
 	}
 
 	.friend-overlap {
@@ -376,22 +454,20 @@
 		align-items: center;
 	}
 
-	.friend-avatar-dot {
-		display: inline-block;
-		width: 1rem;
-		height: 1rem;
+	.friend-avatar {
+		display: inline-flex;
+		margin-left: -6px;
 		border-radius: 50%;
 		outline: 1.5px solid var(--bg-popover);
-		background: linear-gradient(
-			135deg,
-			color-mix(in srgb, var(--color-primary) 65%, transparent),
-			color-mix(in srgb, var(--accent) 55%, transparent)
-		);
-		margin-left: -6px;
 	}
 
-	.friend-avatar-dot:first-child {
+	.friend-avatar:first-child {
 		margin-left: 0;
+	}
+
+	:global(.friend-avatar-img) {
+		width: 1rem;
+		height: 1rem;
 	}
 
 	.friend-overlap-text {
