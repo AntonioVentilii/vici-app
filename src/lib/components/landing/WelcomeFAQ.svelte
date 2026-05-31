@@ -3,41 +3,20 @@
 	 * Six visitor-stage questions in an "only one open at a time"
 	 * accordion, with the first question expanded by default. Uses
 	 * local `$state` rather than native <details>/<summary> so we
-	 * keep the single-expanded invariant.
+	 * keep the single-expanded invariant. All copy resolves through
+	 * the `welcome.faq.*` catalog so the section localizes with the
+	 * rest of the landing surface.
 	 */
 	import { ChevronDown } from 'lucide-svelte/icons';
+	import { PublicPath } from '$lib/constants/routes.constants';
+	import { localeStore } from '$lib/stores/locale.store';
+	import { t } from '$lib/utils/i18n.utils';
 
-	interface FaqItem {
-		q: string;
-		a: string;
-	}
+	type FaqIndex = 1 | 2 | 3 | 4 | 5 | 6;
 
-	const FAQ_ITEMS: readonly FaqItem[] = [
-		{
-			q: 'Is VICI free?',
-			a: 'Yes. The game mode is fully free — no card, no deposit, no subscription. VXP is a pure gameplay currency that tracks accuracy; it can’t be redeemed and isn’t money. Real-money markets, when introduced, will be optional and clearly labelled.'
-		},
-		{
-			q: 'What can I predict on?',
-			a: 'Hundreds of questions across macro, crypto, politics, tech, sports, and culture. Plus live tournament markets — the 2026 World Cup runs through July with per-team advancement, knockout, and final-winner markets. Every question resolves on a public source.'
-		},
-		{
-			q: 'How is my accuracy ranked?',
-			a: 'Resolved calls divided by total resolved calls. Open calls don’t count until a market settles. Accuracy is the unit of your reputation — across the global leaderboard, your private league, and any battles you opt into.'
-		},
-		{
-			q: 'Do you make money from my predictions?',
-			a: 'Not in the game mode. VICI is free to use. The platform earns from real-money markets (when introduced), league sponsorships, and tournament partnerships. Your accuracy data is yours — we don’t sell it.'
-		},
-		{
-			q: 'Where does my data live?',
-			a: 'Servers in the European Union. Encrypted at rest and in transit. We store a session token; we don’t use tracking cookies. You can export or delete your data at any time — see the privacy policy for details.'
-		},
-		{
-			q: 'What’s a battle?',
-			a: 'A timed accuracy face-off between two leagues, or between universities in a tournament. Seven-day window, both sides need a minimum number of calls to qualify, the league with the higher average accuracy wins. The current Worlds Universities battle runs through the World Cup final.'
-		}
-	];
+	// The fifth answer carries an inline privacy-policy deep link, so it
+	// renders out of the plain-text loop. The rest are flat copy.
+	const FAQ_INDICES: readonly FaqIndex[] = [1, 2, 3, 4, 5, 6];
 
 	let openIdx = $state(0);
 </script>
@@ -45,12 +24,15 @@
 <section id="faq" class="lp-section lp-root">
 	<div class="lp-section-inner">
 		<div style="gap:14px; max-width:680px;" class="col">
-			<span class="eyebrow acc">FAQ</span>
+			<span class="eyebrow acc">{t({ locale: $localeStore, key: 'welcome.faq.eyebrow' })}</span>
 			<h2 class="lp-h2">
-				Questions <span class="serif-italic acc">worth asking.</span>
+				{t({ locale: $localeStore, key: 'welcome.faq.title_a' })}
+				<span class="serif-italic acc">
+					{t({ locale: $localeStore, key: 'welcome.faq.title_b' })}
+				</span>
 			</h2>
 			<p style="color:var(--fg-dim);" class="lp-lede">
-				What every new caller asks before their first prediction.
+				{t({ locale: $localeStore, key: 'welcome.faq.sub' })}
 			</p>
 		</div>
 
@@ -60,7 +42,7 @@
 				display:flex; flex-direction:column; gap:2px;
 			"
 		>
-			{#each FAQ_ITEMS as item, i (item.q)}
+			{#each FAQ_INDICES as n, i (n)}
 				{@const isOpen = openIdx === i}
 				<div
 					style="
@@ -84,7 +66,7 @@
 							style="color:{isOpen ? 'var(--accent)' : 'var(--fg)'}; line-height:1.3;"
 							class="t-h4 fw-600"
 						>
-							{item.q}
+							{t({ locale: $localeStore, key: `welcome.faq.q${n}` as const })}
 						</span>
 						<span
 							style="
@@ -103,7 +85,12 @@
 							style="padding:0 4px 22px; line-height:1.6; max-width:64ch; text-wrap:pretty;"
 							class="dim t-body"
 						>
-							{item.a}
+							{t({ locale: $localeStore, key: `welcome.faq.a${n}` as const })}
+							{#if n === 5}
+								<a style="color:var(--accent);" href="{PublicPath.Info}/privacy">
+									{t({ locale: $localeStore, key: 'welcome.faq.privacy_link' })}
+								</a>
+							{/if}
 						</div>
 					{/if}
 				</div>
@@ -114,10 +101,11 @@
 			style="margin-top:28px; text-align:center; max-width:520px; margin-left:auto; margin-right:auto;"
 			class="dim t-body-sm"
 		>
-			More questions? Write to <a
-				style="color:var(--accent); font-weight:600;"
-				href="mailto:support@vici.market">support@vici.market</a
-			> — we answer within two business days.
+			{t({ locale: $localeStore, key: 'welcome.faq.contact_prefix' })}
+			<a style="color:var(--accent); font-weight:600;" href="mailto:support@vici.market">
+				support@vici.market
+			</a>
+			{t({ locale: $localeStore, key: 'welcome.faq.contact_suffix' })}
 		</p>
 	</div>
 </section>

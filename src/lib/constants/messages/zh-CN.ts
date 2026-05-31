@@ -2028,6 +2028,7 @@ export const zhCnMessages = {
 	'welcome.faq.contact_prefix': '还有问题？请写信至',
 	'welcome.faq.contact_suffix': '——我们将在两个工作日内回复。',
 	'welcome.faq.eyebrow': '常见问题',
+	'welcome.faq.privacy_link': '详情请查看隐私政策。',
 	'welcome.faq.q1': 'VICI 免费吗？',
 	'welcome.faq.q2': '我可以预测什么？',
 	'welcome.faq.q3': '我的准确率如何计算？',

@@ -2151,6 +2151,7 @@ export const enMessages = {
 	'welcome.faq.contact_prefix': 'More questions? Write to',
 	'welcome.faq.contact_suffix': '— we answer within two business days.',
 	'welcome.faq.eyebrow': 'FAQ',
+	'welcome.faq.privacy_link': 'See the privacy policy for details.',
 	'welcome.faq.q1': 'Is VICI free?',
 	'welcome.faq.q2': 'What can I predict on?',
 	'welcome.faq.q3': 'How is my accuracy ranked?',
