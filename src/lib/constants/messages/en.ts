@@ -209,13 +209,26 @@ export const enMessages = {
 	'tournament.waiting_leagues':
 		'Waiting on more leagues to fill the bracket. {available} of {required} qualified so far.',
 	'account.back': 'Back to settings',
+	'account.email.cancel': 'Cancel',
+	'account.email.change': 'Change email',
+	'account.email.edit_note':
+		"We'll send a magic link to your new address. Tap it to confirm. Until then, your current email stays active.",
 	'account.email.empty': 'No email on file.',
 	'account.email.eyebrow': 'EMAIL ADDRESS',
-	'account.email.pending': 'Email management lands with the backend update.',
+	'account.email.placeholder': 'new@example.com',
+	'account.email.send': 'Send link',
+	'account.email.sent_body':
+		'We sent a magic link to {email}. Tap it within 15 minutes to confirm.',
+	'account.email.sent_title': 'Check your inbox.',
+	'account.email.soon': 'Email changes land with the backend update.',
+	'account.email.used_for': 'Used for sign-in and important account notifications.',
+	'account.email.verified': 'Verified',
 	'account.intro':
-		'VICI uses Internet Identity or Google. No passwords. Switch any time — your record stays.',
-	'account.method.current': 'Current sign-in method',
+		'VICI uses Internet Identity, Google, or a magic link. No passwords. Switch any time — your record stays.',
 	'account.method.eyebrow': 'CURRENT SIGN-IN METHOD',
+	'account.method.ii': 'Internet Identity',
+	'account.method.email': 'Email',
+	'account.method.magic_link': 'Magic link',
 	'account.return.deleted_body':
 		'You scheduled this account for deletion. Recover it now to keep your record, or sign out to leave it as-is.',
 	'account.return.deleted_heading': 'Welcome back.',
@@ -239,6 +252,7 @@ export const enMessages = {
 	'account.return.stay_paused': 'Stay paused',
 	'account.return.working': 'Working…',
 	'account.switch.cta': 'Sign out to switch method',
+	'account.switch.eyebrow': 'SWITCH METHOD',
 	'account.switch.hint': 'Switching signs you out. Sign back in with the new method to continue.',
 	'account.switch.signing_out': 'Signing out…',
 	'account.title': 'Sign-in & email',
