@@ -13,8 +13,7 @@
 <!-- Probability hero: large YES percent on the left baseline-aligned
      with the "YES" eyebrow, mirrored on the right with a smaller NO
      percent. Below sits the split bar (the page's `ProbBar` equivalent —
-     same shape as `forecast-split-bar` on the old card). Port of
-     `screens.jsx:226-238`. -->
+     same shape as `forecast-split-bar` on the old card). -->
 <div class="prob-hero">
 	<div class="prob-hero-row">
 		<div class="prob-hero-side prob-hero-yes">

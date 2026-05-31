@@ -29,7 +29,7 @@
 	const events = $derived($marketMetadata[marketId]?.events ?? []);
 </script>
 
-<!-- 7-day chart card with period chips — mirrors `screens.jsx:241-251`.
+<!-- 7-day chart card with period chips.
      Reuses `FlowCardSparkline` so the line shape, event markers, and
      pulse beat stay consistent across Flow cards and the Market detail
      surface. -->
