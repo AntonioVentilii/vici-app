@@ -1403,7 +1403,7 @@ export const enMessages = {
 	'markets.section.saved': 'Saved',
 	'markets.section.trending': 'Trending',
 	'markets.see_all': 'See all',
-	'markets.see_all_count': 'See all {count} →',
+	'markets.see_all_count': 'See all {count}',
 	'markets.suggested.eyebrow': "EDITOR'S PICK",
 	'markets.suggested.eyebrow_event': 'FEATURED EVENT',
 	'markets.suggested.title': 'Suggested for you',

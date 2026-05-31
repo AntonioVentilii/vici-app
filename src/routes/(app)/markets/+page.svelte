@@ -164,7 +164,7 @@
 						locale: $localeStore,
 						key: 'markets.see_all_count',
 						params: { count: savedMarkets.length }
-					})}
+					})} →
 				</button>
 			</div>
 			<div class="markets-hscroll no-scrollbar">
