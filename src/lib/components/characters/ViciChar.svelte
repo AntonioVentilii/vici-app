@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { CHAR_CREAM, CHAR_INK, CHAR_PALETTE } from '$lib/constants/characters.constants';
+
 	type ViciMood = 'happy' | 'encouraging' | 'thinking' | 'surprised';
 
 	interface Props {
@@ -9,8 +11,7 @@
 
 	let { size = 48, animate = true, mood = 'happy' }: Props = $props();
 
-	const FILL = '#B7B0E8';
-	const DEEP = '#6F66B3';
+	const { fill: FILL, deep: DEEP } = CHAR_PALETTE.vici;
 
 	const eyes: Record<ViciMood, string> = {
 		happy: 'M34 39 q1 -2 2 0 M44 39 q1 -2 2 0',
@@ -37,22 +38,22 @@
 	<ellipse cx="40" cy="74" fill="#000" opacity="0.3" rx="22" ry="3" />
 	<path d="M40 20 L36 14 L44 14 Z" fill={DEEP} />
 	<circle cx="40" cy="42" fill={FILL} r="22" />
-	<circle cx="40" cy="38" fill="#0E0D0B" r="14" />
+	<circle cx="40" cy="38" fill={CHAR_INK} r="14" />
 	<g class={animate ? 'char-blink' : ''}>
-		<path d={eyes[mood]} fill="none" stroke="#F2ECDC" stroke-linecap="round" stroke-width="1.4" />
+		<path
+			d={eyes[mood]}
+			fill="none"
+			stroke={CHAR_CREAM}
+			stroke-linecap="round"
+			stroke-width="1.4"
+		/>
 	</g>
-	<path d={mouths[mood]} fill="none" stroke="#F2ECDC" stroke-linecap="round" stroke-width="1.4" />
+	<path
+		d={mouths[mood]}
+		fill="none"
+		stroke={CHAR_CREAM}
+		stroke-linecap="round"
+		stroke-width="1.4"
+	/>
 	<path d="M34 56 L40 64 L46 56 Z" fill={DEEP} opacity="0.6" />
 </svg>
-
-<style lang="postcss">
-	.char-bob {
-		animation: char-bob 3.2s ease-in-out infinite;
-	}
-
-	.char-blink {
-		animation: char-blink 4.2s steps(1, end) infinite;
-		transform-box: fill-box;
-		transform-origin: center;
-	}
-</style>

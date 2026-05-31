@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { CHAR_CREAM, CHAR_INK, CHAR_PALETTE } from '$lib/constants/characters.constants';
+
 	interface Props {
 		size?: number;
 		animate?: boolean;
@@ -7,7 +9,7 @@
 
 	let { size = 48, animate = true, lightning = false }: Props = $props();
 
-	const FILL = '#FF8A7A';
+	const { fill: FILL } = CHAR_PALETTE.trickster;
 </script>
 
 <svg aria-hidden="true" height={size} viewBox="0 0 80 80" width={size}>
@@ -25,51 +27,37 @@
 
 	<g style="transform-origin: 30px 32px" class={animate ? 'char-ear' : ''}>
 		<path d="M28 32 L24 18 L36 26 Z" fill={FILL} />
-		<path d="M30 30 L28 24 L33 28 Z" fill="#F2ECDC" opacity="0.4" />
+		<path d="M30 30 L28 24 L33 28 Z" fill={CHAR_CREAM} opacity="0.4" />
 	</g>
 
 	<path d="M52 32 L60 22 L56 34 Z" fill={FILL} />
-	<path d="M55 30 L57 24 L52 28 Z" fill="#F2ECDC" opacity="0.4" />
+	<path d="M55 30 L57 24 L52 28 Z" fill={CHAR_CREAM} opacity="0.4" />
 
 	<path
 		d="M34 46 q2 -2 3 0"
 		fill="none"
-		stroke="#0E0D0B"
+		stroke={CHAR_INK}
 		stroke-linecap="round"
 		stroke-width="1.4"
 	/>
 	<path
 		d="M48 46 q2 -2 3 0"
 		fill="none"
-		stroke="#0E0D0B"
+		stroke={CHAR_INK}
 		stroke-linecap="round"
 		stroke-width="1.4"
 	/>
 	<path
 		d="M40 52 q2 1.5 4 0"
 		fill="none"
-		stroke="#0E0D0B"
+		stroke={CHAR_INK}
 		stroke-linecap="round"
 		stroke-width="1.4"
 	/>
-	<path d="M40 50 L40 56" stroke="#0E0D0B" stroke-linecap="round" stroke-width="1.4" />
+	<path d="M40 50 L40 56" stroke={CHAR_INK} stroke-linecap="round" stroke-width="1.4" />
 
 	{#if lightning}
 		<path class={animate ? 'char-bolt' : ''} d="M66 36 l-3 -3 l5 -1 l-2 5" fill="#FF6B6B" />
 		<path class={animate ? 'char-bolt' : ''} d="M14 38 l3 -3 l-5 -1 l2 5" fill="#FF6B6B" />
 	{/if}
 </svg>
-
-<style lang="postcss">
-	.char-tail {
-		animation: char-tail 2.6s ease-in-out infinite;
-	}
-
-	.char-ear {
-		animation: char-ear 5s ease-in-out infinite;
-	}
-
-	.char-bolt {
-		animation: char-bolt 1.8s steps(1, end) infinite;
-	}
-</style>
