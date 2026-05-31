@@ -80,13 +80,15 @@
 		return ms > 0 && ms <= DAY_IN_MS;
 	});
 
+	// When the market carries outcome data we surface the real headcount —
+	// including a genuine 0 ("0 predicting"). Only when no outcome data is
+	// present at all do we fall back to a representative figure, so the
+	// meta row still reads as a complete editorial line.
+	const hasOutcomeData = $derived((market.outcomes?.length ?? 0) > 0);
 	const predictorsCount = $derived(
 		market.outcomes?.reduce((acc, outcome) => acc + (outcome.totalPredictions ?? 0), 0) ?? 0
 	);
-	// Headcount falls back to a representative figure when the market
-	// carries no per-outcome totals, so the meta row always reads as a
-	// complete editorial line.
-	const predicting = $derived(predictorsCount > 0 ? predictorsCount : 1240);
+	const predicting = $derived(hasOutcomeData ? predictorsCount : 1240);
 </script>
 
 <h3 class="flow-back-title">{market.title}</h3>
