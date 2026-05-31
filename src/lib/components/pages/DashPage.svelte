@@ -18,6 +18,7 @@
 	import DashOracleInsight from '$lib/components/dash/DashOracleInsight.svelte';
 	import DashRankContext from '$lib/components/dash/DashRankContext.svelte';
 	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
+	import ResolutionReveal from '$lib/components/market/ResolutionReveal.svelte';
 	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
 	import { EM_DASH, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import {
@@ -41,6 +42,7 @@
 	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { balancesStore } from '$lib/stores/balances.store';
+	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { marketsStore } from '$lib/stores/markets.store';
 	import { userStore } from '$lib/stores/user.store';
@@ -142,6 +144,39 @@
 			.sort((a, b) => Number(a.market.expiryDate) - Number(b.market.expiryDate))
 			.slice(0, 3)
 	);
+
+	// ─── Resolution digest (while-you-were-away) ───────────────────────
+	// The standard dashboard leads with a tappable banner whenever calls
+	// settled since the user last acknowledged them. Tapping opens the
+	// ResolutionReveal overlay; both CTAs acknowledge the batch (clearing
+	// the banner + the bell badge in lockstep via `markResolutionsSeen`)
+	// and only pick where the user goes next.
+	//
+	// `revealSnapshot` is a frozen copy of the digest taken at the moment
+	// the overlay opens. This prevents the card contents from blanking if
+	// `markResolutionsSeen` clears the store while the overlay is still
+	// visible (e.g. the user is mid-scroll before tapping a CTA).
+	const digest = $derived($maturedResolutions);
+	let revealOpen = $state(false);
+	let revealSnapshot = $state($maturedResolutions);
+
+	const openReveal = () => {
+		revealSnapshot = $maturedResolutions;
+		revealOpen = true;
+	};
+
+	// View in Dashboard — acknowledge + stay (we're already on the dash).
+	const onRevealReview = () => {
+		markResolutionsSeen();
+		revealOpen = false;
+	};
+
+	// Back to the deck — acknowledge + head to Flow.
+	const onRevealDismiss = () => {
+		markResolutionsSeen();
+		revealOpen = false;
+		void goto(resolve(AppPath.Flow));
+	};
 
 	// ─── Per-user stats cache ──────────────────────────────────────────
 	interface CategoryRow {
@@ -493,17 +528,40 @@
 		/>
 	{:else}
 		<div class="screen-scroll">
-			<!--
-				TODO(dash-1.4): mount the ResolutionReveal banner here. When a user
-				returns with calls that settled while they were away, the standard
-				Dashboard leads with a tappable "N calls settled · ±X VXP" banner
-				(`.dash-reso-banner`, ported into app.css) that opens the
-				ResolutionReveal sequence. ResolutionReveal is owned by the Flow
-				entry / "while you were away" chunk (1.4); this banner is its only
-				Dashboard mount point. Until 1.4 lands, no banner renders — the
-				standard dashboard is otherwise complete. Wire here:
-				`{#if maturedResolutions.count}` → `<button class="dash-reso-banner …">`.
-			-->
+			<!-- ─── Resolution banner · while-you-were-away ───
+			     Leads the standard dashboard when calls settled since the user
+			     last acknowledged them. Tapping opens the ResolutionReveal
+			     overlay. `is-neg` flips the accent to measured (no laurel /
+			     pulse) on a net-negative batch — the system never borrows
+			     celebratory styling for a loss. -->
+			{#if digest.count > 0}
+				<button
+					class="dash-reso-banner"
+					class:is-neg={digest.netVxp < 0}
+					onclick={openReveal}
+					type="button"
+				>
+					<span class="dash-reso-dot" aria-hidden="true"></span>
+					<span class="dash-reso-text">
+						<span class="dash-reso-title">
+							{t({
+								locale: $localeStore,
+								key:
+									digest.count === 1 ? 'dash.reso.banner_title_one' : 'dash.reso.banner_title_many',
+								params: { count: digest.count }
+							})}
+						</span>
+						<span class="dash-reso-sub" class:dash-reso-dim={digest.netVxp < 0}>
+							{digest.netVxp >= 0 ? '+' : '−'}{Math.abs(digest.netVxp).toLocaleString()}
+							{t({ locale: $localeStore, key: 'flow.reso.vxp' })}
+						</span>
+					</span>
+					<span class="dash-reso-cta"
+						>{t({ locale: $localeStore, key: 'dash.reso.banner_cta' })}</span
+					>
+				</button>
+			{/if}
+
 			<!-- ─── HERO · accuracy ─── -->
 			<DashHeroAccuracy
 				{accuracyPct}
@@ -830,6 +888,14 @@
 		</div>
 	{/if}
 </PageScaffold>
+
+<!-- ResolutionReveal — the deferred "being right" digest. Opened by the
+     dashboard resolution banner; both CTAs acknowledge the batch. Rendered
+     outside PageScaffold so its fixed full-screen overlay isn't clipped by
+     the scroll container. -->
+{#if revealOpen}
+	<ResolutionReveal data={revealSnapshot} onDismiss={onRevealDismiss} onReview={onRevealReview} />
+{/if}
 
 <style lang="postcss">
 	/* DashPage local hooks. Most class names live in `app.css`; this
