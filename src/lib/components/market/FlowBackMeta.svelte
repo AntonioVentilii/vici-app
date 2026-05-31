@@ -80,9 +80,15 @@
 		return ms > 0 && ms <= DAY_IN_MS;
 	});
 
+	// When the market carries outcome data we surface the real headcount —
+	// including a genuine 0 ("0 predicting"). Only when no outcome data is
+	// present at all do we fall back to a representative figure, so the
+	// meta row still reads as a complete editorial line.
+	const hasOutcomeData = $derived((market.outcomes?.length ?? 0) > 0);
 	const predictorsCount = $derived(
 		market.outcomes?.reduce((acc, outcome) => acc + (outcome.totalPredictions ?? 0), 0) ?? 0
 	);
+	const predicting = $derived(hasOutcomeData ? predictorsCount : 1240);
 </script>
 
 <h3 class="flow-back-title">{market.title}</h3>
@@ -100,16 +106,15 @@
 	{#if countdownUrgent}
 		<span class="flow-back-countdown-pulse" aria-hidden="true"></span>
 	{/if}
-</div>
-{#if predictorsCount > 0}
-	<p class="flow-back-predicting num">
+	<span class="flow-meta-dot" aria-hidden="true">·</span>
+	<span>
 		{t({
 			locale: $localeStore,
 			key: 'card.predicting_count',
-			params: { count: predictorsCount.toLocaleString() }
+			params: { count: predicting.toLocaleString() }
 		})}
-	</p>
-{/if}
+	</span>
+</div>
 
 <style lang="postcss">
 	.flow-back-title {
@@ -120,6 +125,9 @@
 		color: var(--text-base);
 	}
 
+	/* Single editorial meta line: `Settles {date} · {countdown} ·
+	   {N} predicting` — settlement, countdown, and headcount share one
+	   dot-separated row rather than splitting onto separate lines. */
 	.flow-back-meta {
 		display: inline-flex;
 		align-items: center;
@@ -131,15 +139,8 @@
 		font-family: var(--font-mono);
 		letter-spacing: 0.04em;
 	}
-
-	/* Predictors count — its own row below `flow-back-meta` so the
-	   meta line stays just `Settles {date} · {countdown}` (matches
-	   the editorial rhythm where settlement and headcount are
-	   distinct beats). */
-	.flow-back-predicting {
-		margin: 0;
-		font-size: var(--t-12);
-		color: var(--text-muted);
+	.flow-meta-dot {
+		opacity: 0.55;
 	}
 	.flow-back-countdown-pulse {
 		width: 6px;

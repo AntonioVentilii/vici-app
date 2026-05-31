@@ -65,11 +65,19 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.5rem;
-		padding: 0.95rem 1.1rem 0.45rem;
+		padding: 1.1rem 1.1rem 0.7rem;
+		border-bottom: 1px solid var(--border-base);
 	}
 
+	/* Category chip — a subtle neutral pill (parchment-wash background)
+	   with category-colored ink, rather than a plain colored label. */
 	.flow-back-cat {
-		font-size: var(--t-12);
+		display: inline-flex;
+		align-items: center;
+		padding: 3px 7px;
+		border-radius: 4px;
+		background: color-mix(in srgb, var(--text-base) 8%, transparent);
+		font-size: var(--t-10);
 		color: var(--cat-color);
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
