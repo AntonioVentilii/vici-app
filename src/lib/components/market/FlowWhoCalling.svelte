@@ -45,11 +45,7 @@
 			</span>
 			<span class="flow-split-pct num">{sharpPct}%</span>
 			{#if sharpDiff !== 0}
-				<span
-					class="flow-split-badge num"
-					class:is-negative={sharpDiff < 0}
-					class:is-positive={sharpDiff > 0}
-				>
+				<span class="flow-split-badge num">
 					{t({
 						locale: $localeStore,
 						key: sharpDiff > 0 ? 'card.back.sharp_diff_ahead' : 'card.back.sharp_diff_behind',
@@ -144,22 +140,18 @@
 		font-weight: 700;
 		color: var(--text-base);
 	}
+	/* Sharp-lean badge — always the laurel-gold pill (it reads as
+	   "sharps' lean", not a good/bad signal), so it doesn't flip
+	   green / red on the sign of the diff like before. */
 	.flow-split-badge {
 		font-family: var(--font-mono);
 		font-size: 9.5px;
 		letter-spacing: 0.08em;
 		padding: 1px 6px;
 		border-radius: var(--r-pill);
-		border: 1px solid rgba(226, 184, 66, 0.32);
+		border: 1px solid color-mix(in srgb, var(--laurel) 32%, transparent);
 		background: var(--laurel-glow);
-	}
-	.flow-split-badge.is-positive {
-		color: var(--yes);
-		border-color: color-mix(in srgb, var(--yes) 30%, var(--border-base));
-	}
-	.flow-split-badge.is-negative {
-		color: var(--no);
-		border-color: color-mix(in srgb, var(--no) 30%, var(--border-base));
+		color: var(--laurel);
 	}
 
 	.flow-split-bar {
@@ -172,13 +164,15 @@
 	.flow-split-fill-no {
 		display: block;
 		height: 100%;
-		background: color-mix(in srgb, var(--no) 75%, transparent);
+		background: var(--no);
+		opacity: 0.78;
 		transition: width 480ms var(--ease-vici);
 	}
 	.flow-split-fill-yes {
 		display: block;
 		height: 100%;
-		background: color-mix(in srgb, var(--yes) 75%, transparent);
+		background: var(--yes);
+		opacity: 0.95;
 		transition: width 480ms var(--ease-vici);
 	}
 
@@ -190,10 +184,12 @@
 		width: 10px;
 		height: 10px;
 		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--no-wash) 70%, transparent);
+		background: var(--no);
+		opacity: 0.78;
 		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
 	}
 	.flow-followed-dot.is-yes {
-		background: color-mix(in srgb, var(--yes-wash) 70%, transparent);
+		background: var(--yes);
+		opacity: 1;
 	}
 </style>
