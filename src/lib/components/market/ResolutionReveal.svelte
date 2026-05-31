@@ -1,0 +1,161 @@
+<script lang="ts">
+	/**
+	 * ResolutionReveal — the deferred "being right" digest.
+	 *
+	 * A "while you were away" recap of every call that settled since the
+	 * user last acknowledged their resolutions: one celebratory screen, not
+	 * a modal per call. Win / loss + net VXP land here, never in the swipe
+	 * gap. The burst + count-up + glow pulse fire only when the batch is
+	 * net-positive (any right call earns the hit); a net-negative batch
+	 * stays measured — the system never borrows celebratory vocabulary for
+	 * a loss. Both CTAs apply the settlement (the calls resolved
+	 * regardless); they only pick where the user goes next.
+	 *
+	 * Reduced-motion safe: the springs collapse to fades, the confetti
+	 * burst is suppressed, and the count-up jumps straight to the final
+	 * value. Theme-adaptive via tokens (dark / light / coral).
+	 */
+	import { onMount } from 'svelte';
+	import OracleChar from '$lib/components/characters/OracleChar.svelte';
+	import ViciChar from '$lib/components/characters/ViciChar.svelte';
+	import { localeStore } from '$lib/stores/locale.store';
+	import type { ResolutionRevealData } from '$lib/types/flow';
+	import { flowSummary } from '$lib/utils/flow-sound.utils';
+	import { haptic } from '$lib/utils/haptics.utils';
+	import { t } from '$lib/utils/i18n.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
+
+	interface Props {
+		data: ResolutionRevealData;
+		onReview: () => void;
+		onDismiss: () => void;
+	}
+
+	const { data, onReview, onDismiss }: Props = $props();
+
+	const positive = $derived(data.netVxp >= 0);
+	// Any right call earns the celebration hit, even on a net-negative batch
+	// (the burst itself only fires when `positive` too — see the template).
+	const celebrate = $derived(data.wins > 0);
+
+	// Count-up the net VXP (eased). Reduced-motion users get the final value.
+	let shown = $state(0);
+
+	onMount(() => {
+		const target = Math.abs(data.netVxp);
+
+		if (prefersReducedMotion() || target === 0) {
+			shown = target;
+		} else {
+			let raf: number;
+			const start = performance.now();
+			const dur = 900;
+
+			const tick = (now: number) => {
+				const p = Math.min(1, (now - start) / dur);
+				shown = Math.round(target * (1 - Math.pow(1 - p, 3)));
+
+				if (p < 1) {
+					raf = requestAnimationFrame(tick);
+				}
+			};
+
+			raf = requestAnimationFrame(tick);
+
+			// Dopamine hit on right calls — a layered celebration haptic and a
+			// soft win tone, once. Suppressed entirely under reduced motion.
+			if (celebrate) {
+				haptic('celebration');
+				flowSummary();
+			}
+
+			return () => cancelAnimationFrame(raf);
+		}
+
+		// Reduced-motion: keep the haptic (non-visual), drop the audio cue.
+		if (celebrate) {
+			haptic('celebration');
+		}
+	});
+
+	const burstCount = $derived(Math.min(30, 14 + data.wins * 4));
+	const preview = $derived(data.items.slice(0, 3));
+	const more = $derived(data.count - preview.length);
+	const headline = $derived(
+		positive
+			? data.count === 1
+				? t({ locale: $localeStore, key: 'flow.reso.head.win_one' })
+				: t({ locale: $localeStore, key: 'flow.reso.head.win_many', params: { count: data.count } })
+			: data.count === 1
+				? t({ locale: $localeStore, key: 'flow.reso.head.settled_one' })
+				: t({
+						locale: $localeStore,
+						key: 'flow.reso.head.settled_many',
+						params: { count: data.count }
+					})
+	);
+</script>
+
+<div
+	class="reso-reveal"
+	aria-label={t({ locale: $localeStore, key: 'flow.reso.aria_label' })}
+	role="dialog"
+>
+	{#if celebrate && positive}
+		<div class="reso-glow" aria-hidden="true"></div>
+		<div class="reso-burst is-win" aria-hidden="true">
+			{#each Array.from({ length: burstCount }) as _, i (i)}
+				<span style="--a: {(i / burstCount) * 360}deg; --d: {(i % 5) * 45}ms"></span>
+			{/each}
+		</div>
+	{/if}
+
+	<div class="reso-reveal-card" aria-live="polite">
+		<span class="eyebrow mute">{t({ locale: $localeStore, key: 'flow.reso.eyebrow' })}</span>
+		<div class="reso-reveal-char">
+			{#if positive}
+				<OracleChar animate size={58} />
+			{:else}
+				<ViciChar animate mood="encouraging" size={58} />
+			{/if}
+		</div>
+		<div class="reso-digest-head">{headline}</div>
+		<div class="reso-net num {positive ? 'win' : 'loss'}">
+			{positive ? '+' : '−'}{shown}
+			<small>{t({ locale: $localeStore, key: 'flow.reso.vxp' })}</small>
+		</div>
+		<div class="reso-tally">
+			<span class="win{celebrate ? ' reso-tally-pop' : ''}">
+				{#if celebrate}<span class="reso-tally-check" aria-hidden="true">✓</span>{/if}
+				<b>{data.wins}</b>
+				{t({ locale: $localeStore, key: 'flow.reso.correct' })}
+			</span>
+			<span class="reso-dot">·</span>
+			<span class="loss"
+				><b>{data.losses}</b> {t({ locale: $localeStore, key: 'flow.reso.missed' })}</span
+			>
+		</div>
+		<div class="reso-list">
+			{#each preview as it, i (it.eventId)}
+				<div style={it.won ? `--ri: ${i}` : undefined} class="reso-row{it.won ? ' is-win' : ''}">
+					<span class="reso-row-side {it.sideKey}">{it.side}</span>
+					<span class="reso-row-q">{it.question}</span>
+					<span class="reso-row-out num {it.won ? 'win' : 'loss'}">
+						{it.won ? `+${it.net}` : `−${Math.abs(it.net)}`}
+					</span>
+				</div>
+			{/each}
+			{#if more > 0}
+				<div class="reso-more">
+					{t({ locale: $localeStore, key: 'flow.reso.more', params: { count: more } })}
+				</div>
+			{/if}
+		</div>
+		<button class="btn btn-primary btn-block" onclick={onReview} type="button">
+			{t({ locale: $localeStore, key: 'flow.reso.cta_review' })}
+		</button>
+		<button class="btn btn-ghost btn-block" onclick={onDismiss} type="button">
+			{t({ locale: $localeStore, key: 'flow.reso.cta_dismiss' })}
+		</button>
+	</div>
+</div>
