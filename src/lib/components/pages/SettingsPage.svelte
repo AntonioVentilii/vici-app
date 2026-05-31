@@ -840,7 +840,7 @@
 		padding: 10px 12px;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-8);
-		background: rgba(242, 236, 220, 0.04);
+		background: color-mix(in srgb, var(--text-base) 4%, transparent);
 		color: var(--text-muted);
 		font-size: var(--t-13);
 		font-weight: 500;
@@ -853,7 +853,7 @@
 	}
 
 	.settings-flow-deck-pill:hover {
-		background: rgba(242, 236, 220, 0.07);
+		background: color-mix(in srgb, var(--text-base) 7%, transparent);
 		border-color: var(--border-strong);
 		color: var(--text-base);
 	}
@@ -921,9 +921,9 @@
 	:global(.settings-signout) {
 		width: 100%;
 		padding: 14px 20px;
-		border: 1px solid rgba(255, 107, 107, 0.25);
+		border: 1px solid color-mix(in srgb, var(--no) 25%, transparent);
 		border-radius: 12px;
-		background: rgba(242, 236, 220, 0.06);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
 		color: var(--no);
 		font-size: 15px;
 		font-weight: 600;
@@ -931,8 +931,8 @@
 	}
 
 	:global(.settings-signout):hover {
-		background: rgba(255, 107, 107, 0.08);
-		border-color: rgba(255, 107, 107, 0.45);
+		background: color-mix(in srgb, var(--no) 8%, transparent);
+		border-color: color-mix(in srgb, var(--no) 45%, transparent);
 	}
 
 	.settings-signout-confirm p {

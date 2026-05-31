@@ -218,7 +218,7 @@
 	.flow-action-no {
 		width: 3.35rem;
 		height: 3.35rem;
-		border: 3px solid rgba(255, 107, 107, 0.25);
+		border: 3px solid color-mix(in srgb, var(--no) 25%, transparent);
 		color: var(--no);
 		box-shadow: 0 10px 24px var(--no-wash);
 	}
@@ -232,7 +232,7 @@
 	.flow-action-yes {
 		width: 3.35rem;
 		height: 3.35rem;
-		border: 3px solid rgba(79, 211, 161, 0.25);
+		border: 3px solid color-mix(in srgb, var(--yes) 25%, transparent);
 		color: var(--yes);
 		box-shadow: 0 10px 24px rgba(79, 211, 161, 0.15);
 	}
