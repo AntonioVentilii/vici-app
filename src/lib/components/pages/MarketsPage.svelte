@@ -13,7 +13,6 @@
 		primaryMarketTag,
 		type MarketTag
 	} from '$lib/constants/market-tags.constants';
-	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { marketTags, marketTagsNotInitialized } from '$lib/derived/market-tags.derived';
 	import { markets, marketsNotInitialized } from '$lib/derived/markets.derived';
 	import { worldCupPhase } from '$lib/derived/world-cup.derived';
@@ -49,7 +48,7 @@
 	);
 
 	// The retention-arc phase drives the WC chrome live. `wc-focus` and
-	// `bridge` both keep the laser focus (two-tier eyebrow + collapsed
+	// `bridge` both keep the laser focus (event eyebrow + collapsed
 	// "More markets →" rail); `bridge` additionally seeds the "Beyond the
 	// Cup" rail below. `open` (Cup resolved) and `off` revert to the
 	// all-categories shape — so the focus chrome disappears the moment the
@@ -73,10 +72,12 @@
 		prevPhase = phase;
 	});
 
-	// Eyebrow copy comes from the featured-event source — never hardcoded.
-	// `title` ("2026 FIFA World Cup") reads cleaner as a two-tier eyebrow than
-	// the compact `shortTitle`.
-	const wcEyebrow = $derived(wcFocus ? $featuredEvent.title : undefined);
+	// Eyebrow copy: a single-line, localized event label rendered uppercase by
+	// the header styling. Surfaced only while the list is laser-focused on the
+	// featured event.
+	const wcEyebrow = $derived(
+		wcFocus ? t({ locale: $localeStore, key: 'markets.wc_eyebrow' }) : undefined
+	);
 
 	const loading = $derived($marketsNotInitialized);
 
