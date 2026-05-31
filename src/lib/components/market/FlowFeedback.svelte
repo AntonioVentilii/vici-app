@@ -130,4 +130,12 @@
 		color: var(--char-flame, #f08a3c);
 		font-weight: 600;
 	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.flow-feedback-amount,
+		.flow-feedback-row,
+		.flow-feedback-streak {
+			animation: none;
+		}
+	}
 </style>

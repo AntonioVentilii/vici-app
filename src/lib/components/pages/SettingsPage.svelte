@@ -840,7 +840,7 @@
 		padding: 10px 12px;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-8);
-		background: rgba(242, 236, 220, 0.04);
+		background: color-mix(in srgb, var(--text-base) 4%, transparent);
 		color: var(--text-muted);
 		font-size: var(--t-13);
 		font-weight: 500;
@@ -853,7 +853,7 @@
 	}
 
 	.settings-flow-deck-pill:hover {
-		background: rgba(242, 236, 220, 0.07);
+		background: color-mix(in srgb, var(--text-base) 7%, transparent);
 		border-color: var(--border-strong);
 		color: var(--text-base);
 	}

@@ -847,7 +847,7 @@
 		gap: 4px;
 		padding: 3px 7px;
 		border-radius: 4px;
-		background: rgba(242, 236, 220, 0.06);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
 		font-size: var(--text-micro);
 		font-weight: 700;
 		letter-spacing: 0.08em;
@@ -867,8 +867,8 @@
 		font-weight: 600;
 		letter-spacing: 0;
 		color: var(--text-muted);
-		background: rgba(242, 236, 220, 0.05);
-		border: 1px solid rgba(242, 236, 220, 0.1);
+		background: color-mix(in srgb, var(--text-base) 5%, transparent);
+		border: 1px solid color-mix(in srgb, var(--text-base) 10%, transparent);
 		border-radius: var(--r-pill);
 	}
 	.flow-days.is-soon {
@@ -893,8 +893,8 @@
 		margin: 0;
 		padding: 3px 9px 3px 8px;
 		border-radius: var(--r-pill);
-		border: 1px solid rgba(242, 236, 220, 0.07);
-		background: rgba(242, 236, 220, 0.04);
+		border: 1px solid color-mix(in srgb, var(--text-base) 7%, transparent);
+		background: color-mix(in srgb, var(--text-base) 4%, transparent);
 		font-size: var(--text-eyebrow);
 		font-weight: 500;
 		color: var(--parchment-dim);
