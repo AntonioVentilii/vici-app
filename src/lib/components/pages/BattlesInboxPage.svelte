@@ -565,7 +565,7 @@
 		</section>
 
 		<!-- ─── Worlds Countries ────────────────────────────────── -->
-		<section class="battles-section" aria-label="Worlds Countries">
+		<section class="battles-section is-divided" aria-label="Worlds Countries">
 			<header class="battles-section-head">
 				<span class="battles-eyebrow allcaps">
 					{t({ locale: $localeStore, key: 'battles.section.worlds_countries' })}
@@ -899,6 +899,27 @@
 		gap: 0.5rem;
 	}
 
+	/* Separator between stacked surface sections — a hairline rule with a
+	   short centered golden accent line riding the top edge. */
+	.battles-section.is-divided {
+		position: relative;
+		margin-top: 28px;
+		padding-top: 20px;
+		border-top: 1px solid var(--border-base);
+	}
+
+	.battles-section.is-divided::before {
+		content: '';
+		position: absolute;
+		top: -1px;
+		left: 50%;
+		transform: translateX(-50%);
+		width: 48px;
+		height: 1px;
+		background: var(--laurel);
+		opacity: 0.5;
+	}
+
 	.battles-section-head {
 		display: flex;
 		align-items: center;
@@ -908,8 +929,9 @@
 	}
 
 	.battles-eyebrow {
+		font-family: var(--font-mono);
 		font-size: var(--t-10);
-		letter-spacing: var(--tracking-allcaps);
+		letter-spacing: 0.16em;
 		color: var(--text-muted);
 	}
 
@@ -994,6 +1016,23 @@
 		height: 5px;
 		border-radius: var(--r-pill);
 		background: var(--no);
+		animation: battles-live-pulse 1.6s infinite;
+	}
+
+	@keyframes battles-live-pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.3;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.battles-tag.is-live::before {
+			animation: none;
+		}
 	}
 
 	.battles-tag.is-monthly {
@@ -1008,7 +1047,7 @@
 	}
 
 	.battles-card-timer {
-		font-size: var(--t-11);
+		font-size: var(--t-10);
 		color: var(--text-muted);
 	}
 
@@ -1016,7 +1055,7 @@
 		margin: 0 0 0.25rem;
 		font-family: var(--font-sans);
 		font-weight: 600;
-		font-size: var(--t-15, 0.95rem);
+		font-size: 1.0625rem;
 		line-height: 1.25;
 		letter-spacing: var(--tracking-snug);
 		color: var(--text-base);
@@ -1034,7 +1073,8 @@
 
 	.battles-card-meta {
 		margin: 0 0 0.6rem;
-		font-size: var(--t-11);
+		font-family: var(--font-mono);
+		font-size: var(--t-10);
 		color: var(--text-muted);
 		letter-spacing: var(--tracking-wide);
 	}
@@ -1053,11 +1093,33 @@
 		background: var(--bg-surface);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-10, 0.6rem);
+		transition:
+			transform 100ms ease,
+			border-color 180ms ease;
+	}
+
+	.battles-pod-tile:hover {
+		border-color: var(--border-strong, var(--border-base));
+		transform: translateY(-1px);
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.battles-pod-tile {
+			transition: border-color 180ms ease;
+		}
+
+		.battles-pod-tile:hover {
+			transform: none;
+		}
 	}
 
 	.battles-pod-tile.is-gold {
 		background:
-			linear-gradient(180deg, color-mix(in srgb, #e2b842 14%, transparent), transparent 70%),
+			linear-gradient(
+				180deg,
+				color-mix(in srgb, #e2b842 20%, transparent),
+				color-mix(in srgb, #e2b842 6%, transparent) 70%
+			),
 			var(--bg-surface);
 		border-color: color-mix(in srgb, #e2b842 40%, var(--border-base));
 	}
@@ -1075,7 +1137,7 @@
 	}
 
 	.battles-pod-place {
-		font-size: var(--t-14, 0.9rem);
+		font-size: var(--t-10);
 		font-weight: 700;
 		color: var(--text-muted);
 	}
@@ -1119,7 +1181,7 @@
 	/* ─── your-row inside grouped card ──────────────────────── */
 	.battles-your-row {
 		display: grid;
-		grid-template-columns: 28px 1fr auto;
+		grid-template-columns: 24px 1fr auto;
 		align-items: center;
 		gap: 0.5rem;
 		padding: 0.5rem 0.6rem;
@@ -1141,8 +1203,8 @@
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 28px;
-		height: 28px;
+		width: 24px;
+		height: 24px;
 		font-family: var(--font-display);
 		font-style: italic;
 		font-size: var(--t-13);
@@ -1184,7 +1246,7 @@
 		font-family: var(--font-mono, var(--font-sans));
 		font-size: var(--t-10);
 		font-weight: 700;
-		letter-spacing: 0.14em;
+		letter-spacing: 0.1em;
 		text-transform: uppercase;
 		color: var(--laurel);
 	}
