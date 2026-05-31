@@ -638,7 +638,7 @@
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--text-muted);
-		background: rgba(242, 236, 220, 0.08);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
 		border-radius: var(--r-4);
 	}
 
@@ -669,7 +669,7 @@
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		border-radius: var(--r-4);
-		background: rgba(242, 236, 220, 0.08);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
 		color: var(--text-muted);
 	}
 

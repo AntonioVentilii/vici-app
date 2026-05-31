@@ -57,11 +57,7 @@
 		flex-direction: column;
 		gap: 0.375rem;
 		padding: 1.25rem;
-		background: linear-gradient(
-			180deg,
-			var(--bg-popover, var(--bg-surface)),
-			var(--bg-surface, var(--bg-popover))
-		);
+		background: linear-gradient(180deg, var(--bg-popover), var(--bg-surface));
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-16, 16px);
 		box-shadow:
