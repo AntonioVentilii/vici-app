@@ -774,6 +774,131 @@ export const zhCnMessages = {
 	'inbox.resolve.title.won': '市场胜出',
 	'info.back': '返回',
 	'info.back_to_settings': '返回设置',
+	'info.doc.contact.b0':
+		'我们是一个小团队。大多数问题都能在 FAQ 中找到答案。其他任何问题，请直接写信给我们。',
+	'info.doc.contact.b1': '电子邮件',
+	'info.doc.contact.b3': '响应时间',
+	'info.doc.contact.b4': '两个工作日内。结算争议会优先处理，并在二十四小时内答复。',
+	'info.doc.contact.b5': '请附上的内容',
+	'info.doc.contact.b6.i0': '你的用户名（@example）',
+	'info.doc.contact.b6.i1': '问题所涉及的市场或界面',
+	'info.doc.contact.b6.i2': '如有可能，附上截图',
+	'info.doc.contact.b7': '媒体、合作与联盟赞助',
+	'info.doc.contact.eyebrow': '帮助 · 支持',
+	'info.doc.contact.title': '联系支持',
+	'info.doc.faq.b0': '什么是 VXP？',
+	'info.doc.faq.b1':
+		'VXP 是应用内的预测积分。做出判断即可赚取。它不是货币。它无法兑现。它是你战绩的计量单位。',
+	'info.doc.faq.b10': '什么是逆势取胜？',
+	'info.doc.faq.b11':
+		'你在违背共识时做出的判断（在判断时你这一方占比 <30%），随后结算结果对你有利。',
+	'info.doc.faq.b12': '谁可以看到我的预测？',
+	'info.doc.faq.b13':
+		'你的用户名和准确度在全球排行榜、联盟排名以及你选择参加的 Worlds 对决中是公开的。单个市场判断仅对你所属的联盟可见。',
+	'info.doc.faq.b14': '对决如何运作？',
+	'info.doc.faq.b15':
+		'对决是联盟或大学之间限时的较量。窗口期内的平均准确度决定胜者。参赛需要达到最低判断次数。',
+	'info.doc.faq.b2': '这是真钱吗？',
+	'info.doc.faq.b3':
+		'不是。VICI 是一款面向人类判断力的免费应用。没有充值、没有提现、没有派彩。真钱市场另行探索。',
+	'info.doc.faq.b4': '我的准确度是如何计算的？',
+	'info.doc.faq.b5': '已结算判断除以已结算判断总数。未结算的判断在市场结算前不计入。',
+	'info.doc.faq.b6': '我的连胜为什么被重置了？',
+	'info.doc.faq.b7':
+		'连胜按至少有一次判断的连续天数计算。空白的一天会将其重置。连胜火焰显示你当前的连续记录；最长记录会被保留。',
+	'info.doc.faq.b8': '我可以删除一次判断吗？',
+	'info.doc.faq.b9': '不可以。每次判断在你确认的那一刻起就是永久的。这正是建立战绩的全部前提。',
+	'info.doc.faq.eyebrow': '帮助 · FAQ',
+	'info.doc.faq.title': '常见问题',
+	'info.doc.how-resolution-works.b0':
+		'VICI 上的每个市场都以单一且指定的公开来源进行结算。没有审核小组。没有争论。由来源决定。',
+	'info.doc.how-resolution-works.b1': '原则',
+	'info.doc.how-resolution-works.b10':
+		'Vici 编辑团队会依据已公布的标准进行审核。决定及其理由会公开发布在市场卡片背面的结算面板上。',
+	'info.doc.how-resolution-works.b2':
+		'预测市场只有在双方做出判断时都知道规则的情况下才能运作。在任何市场上线之前，我们都会公布将决定其结果的确切公开来源——监管机构的备案、联盟的赛果或受认可的数据提供方。',
+	'info.doc.how-resolution-works.b3': '每张卡片上你会看到的内容',
+	'info.doc.how-resolution-works.b4.i0': '结算标准 · 用通俗语言写明的精确 YES 条件',
+	'info.doc.how-resolution-works.b4.i1': '来源 · 做出决定的出版物或数据源',
+	'info.doc.how-resolution-works.b4.i2': '结算日期 · 来源公布结果的日历日期',
+	'info.doc.how-resolution-works.b5': '当来源公布时',
+	'info.doc.how-resolution-works.b6':
+		'市场在结算日期的交易截止时冻结。公布的结果会记录到该市场上的每一次判断。胜者按其做出判断时显示的比率赚取 VXP。败者一无所获。',
+	'info.doc.how-resolution-works.b7': '如果来源未能公布',
+	'info.doc.how-resolution-works.b8':
+		'罕见但有据可查。市场作废。每位参与者全额取回其投入。任何一方都不会获得准确度积分。',
+	'info.doc.how-resolution-works.b9': '如果来源公布的结果含糊不清',
+	'info.doc.how-resolution-works.eyebrow': '帮助 · 结算',
+	'info.doc.how-resolution-works.title': '结算如何运作',
+	'info.doc.privacy.b0': '我们收集什么、为什么收集、与谁分享。简而言之：我们尽可能少地收集。',
+	'info.doc.privacy.b1': '我们收集什么',
+	'info.doc.privacy.b10':
+		'你可以通过发送邮件至 privacy@vici.market 请求访问、导出、更正和删除你的数据。我们会在三十天内答复。',
+	'info.doc.privacy.b11': 'Cookie',
+	'info.doc.privacy.b12': '我们只存储一个会话令牌。我们不使用跟踪 Cookie。',
+	'info.doc.privacy.b2.i0': '账户：你的用户名、电子邮件、语言和外观偏好',
+	'info.doc.privacy.b2.i1': '预测：你做出的每次判断、做出的时间、结果',
+	'info.doc.privacy.b2.i2': '设备：localStorage 中的一个会话令牌；没有广告标识符',
+	'info.doc.privacy.b2.i3': '归属：你为 Worlds 自选的学校（更改后锁定 90 天）',
+	'info.doc.privacy.b3': '我们如何使用',
+	'info.doc.privacy.b4.i0': '用于计算你的准确度、连胜、排名和 VXP',
+	'info.doc.privacy.b4.i1': '用于在你选择参加的排行榜上显示你的用户名',
+	'info.doc.privacy.b4.i2': '用于答复支持请求',
+	'info.doc.privacy.b5': '我们与谁分享',
+	'info.doc.privacy.b6':
+		'没有第三方广告。没有数据经纪商。聚合且匿名化的统计数据可能出现在编辑内容中（例如“64% 的用户选择了 YES”）。你的单个判断对你加入的联盟可见。',
+	'info.doc.privacy.b7': '数据存放在哪里',
+	'info.doc.privacy.b8': '位于欧盟的服务器。数据在静态存储和传输过程中均加密。',
+	'info.doc.privacy.b9': '你的权利',
+	'info.doc.privacy.eyebrow': '法律 · 2026 年 5 月 1 日生效',
+	'info.doc.privacy.title': '隐私政策',
+	'info.doc.resolution-rules.b0': 'VICI 上每个市场进行结算所遵循的确切流程。权威来源：本文件。',
+	'info.doc.resolution-rules.b1': '上架前',
+	'info.doc.resolution-rules.b10.i0':
+		'结果含糊 → Vici 编辑团队依据标准进行审核。决定及理由会公开发布。',
+	'info.doc.resolution-rules.b10.i1':
+		'来源未能公布 → 市场作废，投入退回，任何一方的准确度均不受影响。',
+	'info.doc.resolution-rules.b10.i2': '来源在窗口期内更改其方法 → 市场作废，除非该更改无关紧要。',
+	'info.doc.resolution-rules.b11': '争议',
+	'info.doc.resolution-rules.b12':
+		'任何参与者可在七十二小时内提出结算争议，方式为发送电子邮件至 resolution@vici.market，并附上其用户名、市场 id 及争议依据。争议由编辑团队审核，并在二十四小时内答复。',
+	'info.doc.resolution-rules.b2':
+		'在市场开放预测之前，有两项事实会被确定并公布在市场卡片背面：结算标准（以通俗语言表述的 YES 条件）和来源（将做出决定的指定公开数据源）。',
+	'info.doc.resolution-rules.b3': '交易窗口',
+	'info.doc.resolution-rules.b4':
+		'从开放到所显示的交易截止之间接受预测。截止后，判断被锁定。市场进入结算窗口。',
+	'info.doc.resolution-rules.b5': '结算窗口',
+	'info.doc.resolution-rules.b6':
+		'指定来源必须在结算窗口内公布（通常为交易截止后七个日历日，对于按固定时间表公布的来源则更长）。',
+	'info.doc.resolution-rules.b7': '结果记录',
+	'info.doc.resolution-rules.b8':
+		'在来源公布后的二十四小时内，结果会记录到每次判断。胜负会立即显示在你的 Dash 上。',
+	'info.doc.resolution-rules.b9': '边缘情形',
+	'info.doc.resolution-rules.eyebrow': '法律 · 完整流程',
+	'info.doc.resolution-rules.title': '结算规则',
+	'info.doc.terms.b0':
+		'使用 VICI 即表示你同意以下条款。它们以通俗语言写成。具有法律约束力的版本就是你正在阅读的这一份。',
+	'info.doc.terms.b1': '1. 服务',
+	'info.doc.terms.b10': '不得使用自动化。不得协同投票。不得冒充他人。不得发布适用法律禁止的内容。',
+	'info.doc.terms.b11': '6. 终止',
+	'info.doc.terms.b12':
+		'你可以随时在“设置”中删除你的账户。我们可能会暂停违反这些条款的账户。我们会告知你原因。',
+	'info.doc.terms.b13': '7. 变更',
+	'info.doc.terms.b14': '重大变更会在生效前至少七天在应用内公告。在该日期之后继续使用即表示同意。',
+	'info.doc.terms.b2':
+		'VICI 是一款免费的预测应用。我们提供以公开来源结算的市场。我们不促成任何金钱投注。',
+	'info.doc.terms.b3': '2. 你的账户',
+	'info.doc.terms.b4':
+		'你同意提供准确的信息并仅使用一个账户。为操纵排行榜或对决而创建的多个账户将被恕不另行通知地移除。',
+	'info.doc.terms.b5': '3. 你的预测',
+	'info.doc.terms.b6':
+		'你保留对账户历史的所有权。我们保留展示由其衍生的聚合及匿名化统计数据的权利。',
+	'info.doc.terms.b7': '4. VXP',
+	'info.doc.terms.b8':
+		'VXP 是一种无货币价值的应用内积分。它不能兑现、不能转移到应用之外，也不能兑换为货币。',
+	'info.doc.terms.b9': '5. 可接受的行为',
+	'info.doc.terms.eyebrow': '法律 · 2026 年 5 月 1 日生效',
+	'info.doc.terms.title': '服务条款',
 	'info.not_found.body': '没有匹配该地址的文档。试试页脚的其他链接，或返回首页。',
 	'info.not_found.title': '未找到文档',
 	'info.placeholder_legal_banner': '占位文本 — 本文档正在等待法律审核，将在发布前替换。',
