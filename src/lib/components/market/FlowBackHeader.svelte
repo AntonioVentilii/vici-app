@@ -27,10 +27,13 @@
 		shareOpen = !shareOpen;
 	};
 
-	const onCopied = () => {
+	// Called on a successful copy (no arg) or a saved-card fallback (the
+	// "Card saved — post it" message is passed through). The popover owns
+	// the channel logic; we only surface the resulting toast.
+	const onCopied = (message?: string) => {
 		notificationsStore.add({
 			title: t({ locale: $localeStore, key: 'market.detail.share.copied_title' }),
-			message: t({ locale: $localeStore, key: 'market.detail.share.copied' }),
+			message: message ?? t({ locale: $localeStore, key: 'market.detail.share.copied' }),
 			type: 'success'
 		});
 	};
@@ -50,6 +53,7 @@
 		</button>
 		{#if shareOpen}
 			<SharePopover
+				{category}
 				{market}
 				onClose={() => (shareOpen = false)}
 				{onCopied}
