@@ -473,7 +473,7 @@ export const ptMessages = {
 	'card.back.return_aria': 'Voltar à frente do cartão',
 	'card.back.rules_body':
 		'A resolução é final no fechamento das previsões. Casos limítrofes seguem o texto oficial da fonte.',
-	'card.back.settles_line': 'Resolve em {date} · {timeRemaining}',
+	'card.back.settles_date': 'Resolve em {date}',
 	'card.back.sharp_diff_ahead': '+{count} pts à frente',
 	'card.back.sharp_diff_behind': '−{count} pts atrás',
 	'card.back.show_rules': 'Mostrar regras completas',
@@ -486,7 +486,6 @@ export const ptMessages = {
 	'card.back.who_calling': 'Quem está prevendo o quê',
 	'card.back.your_context': 'Seu contexto',
 	'card.call_count': '{count} previsões',
-	'card.callers_last_hour': '{count} previsores na última hora',
 	'card.call_size': 'TAMANHO DA CALL',
 	'card.call_size_cap': 'TAMANHO DA CALL · LIMITE',
 	'card.calls': 'previsões',

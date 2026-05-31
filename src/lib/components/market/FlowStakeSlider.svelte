@@ -28,6 +28,13 @@
 		onStakeRangeChange,
 		onSelectStake
 	}: Props = $props();
+
+	// Each peg label is centred on the slider stop it selects, so the
+	// number sits directly under the handle position it maps to — the
+	// first peg at 0 %, the last at 100 %, and the middle rungs at their
+	// exact fraction of the ladder.
+	const pegPct = (index: number): number =>
+		VXP_STAKE_LADDER.length > 1 ? (index / (VXP_STAKE_LADDER.length - 1)) * 100 : 0;
 </script>
 
 <section class={`flow-back-block flow-stake${atCap ? ' is-cap' : ''}`} data-no-card-gesture="true">
@@ -60,8 +67,9 @@
 		/>
 	</div>
 	<div class="flow-stake-pegs" role="radiogroup">
-		{#each VXP_STAKE_LADDER as rung (rung)}
+		{#each VXP_STAKE_LADDER as rung, i (rung)}
 			<button
+				style:left="{pegPct(i)}%"
 				class="flow-stake-peg num"
 				class:is-active={rung === currentStake}
 				aria-checked={rung === currentStake}
@@ -204,6 +212,7 @@
 			0 3px 10px color-mix(in srgb, var(--laurel) 40%, transparent);
 		pointer-events: none;
 		transition:
+			left 220ms var(--ease-vici),
 			background 220ms var(--ease-vici),
 			border-color 220ms var(--ease-vici),
 			box-shadow 220ms var(--ease-vici);
@@ -224,18 +233,25 @@
 		margin: 0;
 	}
 
+	/* Pegs are absolutely positioned so each label centres on the slider
+	   stop it selects (see `pegPct`), keeping the ladder readout in lock
+	   step with the handle rather than evenly spaced. The container
+	   reserves a fixed row height since its children are taken out of
+	   flow. */
 	.flow-stake-pegs {
-		display: grid;
-		grid-template-columns: repeat(5, minmax(0, 1fr));
-		gap: 0.35rem;
+		position: relative;
+		height: 1.4rem;
 	}
 	.flow-stake-peg {
+		position: absolute;
+		top: 0;
+		transform: translateX(-50%);
 		appearance: none;
-		padding: 0.4rem 0;
+		padding: 0.25rem 0.25rem;
 		font-family: var(--font-mono);
 		font-size: var(--t-10);
 		font-weight: 600;
-		color: var(--text-muted);
+		color: var(--fg-faint);
 		background: transparent;
 		border: 0;
 		border-radius: var(--r-pill);
@@ -248,10 +264,10 @@
 		color: var(--text-base);
 	}
 	.flow-stake-peg:active {
-		background: rgba(242, 236, 220, 0.05);
+		background: color-mix(in srgb, var(--parchment) 5%, transparent);
 	}
 	.flow-stake-peg.is-active {
-		color: var(--laurel);
+		color: var(--accent);
 		font-weight: 700;
 	}
 	.flow-stake.is-cap .flow-stake-peg.is-active {
@@ -280,5 +296,14 @@
 		font-family: var(--font-mono);
 		font-size: var(--t-10);
 		letter-spacing: 0.1em;
+	}
+
+	/* The handle glides and the fill grows toward a newly selected rung;
+	   under reduced-motion they snap to the new position instead. */
+	@media (prefers-reduced-motion: reduce) {
+		.flow-stake-handle,
+		.flow-stake-fill {
+			transition: none;
+		}
 	}
 </style>

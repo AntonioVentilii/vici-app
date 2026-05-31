@@ -471,7 +471,7 @@ export const itMessages = {
 	'card.back.return_aria': 'Torna al fronte della carta',
 	'card.back.rules_body':
 		'La risoluzione è definitiva alla chiusura delle previsioni. I casi limite seguono la formulazione ufficiale della fonte.',
-	'card.back.settles_line': 'Si chiude il {date} · {timeRemaining}',
+	'card.back.settles_date': 'Si chiude il {date}',
 	'card.back.sharp_diff_ahead': '+{count} pts in vantaggio',
 	'card.back.sharp_diff_behind': '−{count} pts in ritardo',
 	'card.back.show_rules': 'Mostra regole complete',
@@ -484,7 +484,6 @@ export const itMessages = {
 	'card.back.who_calling': 'Chi prevede cosa',
 	'card.back.your_context': 'Il tuo contesto',
 	'card.call_count': '{count} previsioni',
-	'card.callers_last_hour': '{count} pronostici nell’ultima ora',
 	'card.call_size': 'TAGLIA DELLA CALL',
 	'card.call_size_cap': 'TAGLIA DELLA CALL · MAX',
 	'card.calls': 'previsioni',

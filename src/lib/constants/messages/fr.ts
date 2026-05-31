@@ -477,7 +477,7 @@ export const frMessages = {
 	'card.back.return_aria': 'Retour au recto de la carte',
 	'card.back.rules_body':
 		'La résolution est finale à la clôture des prédictions. Les cas limites suivent le libellé officiel de la source.',
-	'card.back.settles_line': 'Règlement {date} · {timeRemaining}',
+	'card.back.settles_date': 'Règlement {date}',
 	'card.back.sharp_diff_ahead': '+{count} pts d’avance',
 	'card.back.sharp_diff_behind': '−{count} pts de retard',
 	'card.back.show_rules': 'Voir les règles complètes',
@@ -490,7 +490,6 @@ export const frMessages = {
 	'card.back.who_calling': 'Qui pronostique quoi',
 	'card.back.your_context': 'Votre contexte',
 	'card.call_count': '{count} pronostics',
-	'card.callers_last_hour': '{count} pronostiqueurs sur la dernière heure',
 	'card.call_size': 'TAILLE DE LA CALL',
 	'card.call_size_cap': 'TAILLE DE LA CALL · MAX',
 	'card.calls': 'pronostics',

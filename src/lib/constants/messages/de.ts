@@ -475,7 +475,7 @@ export const deMessages = {
 	'card.back.return_aria': 'Zurück zur Kartenvorderseite',
 	'card.back.rules_body':
 		'Die Auflösung ist mit Schluss der Vorhersagen endgültig. Grenzfälle folgen dem offiziellen Wortlaut der Quelle.',
-	'card.back.settles_line': 'Wird abgerechnet am {date} · {timeRemaining}',
+	'card.back.settles_date': 'Wird abgerechnet am {date}',
 	'card.back.sharp_diff_ahead': '+{count} Pkt voraus',
 	'card.back.sharp_diff_behind': '−{count} Pkt zurück',
 	'card.back.show_rules': 'Vollständige Regeln zeigen',
@@ -488,7 +488,6 @@ export const deMessages = {
 	'card.back.who_calling': 'Wer ruft was',
 	'card.back.your_context': 'Dein Kontext',
 	'card.call_count': '{count} Calls',
-	'card.callers_last_hour': '{count} Caller in der letzten Stunde',
 	'card.call_size': 'EINSATZGRÖSSE',
 	'card.call_size_cap': 'EINSATZGRÖSSE · MAX',
 	'card.calls': 'Calls',

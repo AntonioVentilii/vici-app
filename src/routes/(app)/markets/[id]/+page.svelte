@@ -313,11 +313,11 @@
 			     header look so the three app-bar controls read as one
 			     set. -->
 			<SavedMarketToggle
-				appearance="ghost"
 				icon="eye"
 				marketId={m.id}
 				size="md"
 				stopPropagation={false}
+				variant="header-ghost"
 			/>
 		{/snippet}
 

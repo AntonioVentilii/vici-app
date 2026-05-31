@@ -472,7 +472,7 @@ export const esMessages = {
 	'card.back.return_aria': 'Volver al frente de la tarjeta',
 	'card.back.rules_body':
 		'La resolución es final al cierre de las predicciones. Los casos límite siguen la redacción oficial de la fuente.',
-	'card.back.settles_line': 'Se resuelve {date} · {timeRemaining}',
+	'card.back.settles_date': 'Se resuelve {date}',
 	'card.back.sharp_diff_ahead': '+{count} pts por delante',
 	'card.back.sharp_diff_behind': '−{count} pts por detrás',
 	'card.back.show_rules': 'Ver reglas completas',
@@ -485,7 +485,6 @@ export const esMessages = {
 	'card.back.who_calling': 'Quién predice qué',
 	'card.back.your_context': 'Tu contexto',
 	'card.call_count': '{count} predicciones',
-	'card.callers_last_hour': '{count} predictores en la última hora',
 	'card.call_size': 'TAMAÑO DE LA CALL',
 	'card.call_size_cap': 'TAMAÑO DE LA CALL · TOPE',
 	'card.calls': 'predicciones',

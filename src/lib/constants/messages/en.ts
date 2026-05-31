@@ -467,7 +467,7 @@ export const enMessages = {
 	'card.back.return_aria': 'Return to card front',
 	'card.back.rules_body':
 		"Resolution is final when predictions close. Edge cases follow the source's official wording.",
-	'card.back.settles_line': 'Settles {date} · {timeRemaining}',
+	'card.back.settles_date': 'Settles {date}',
 	'card.back.sharp_diff_ahead': '+{count} pts ahead',
 	'card.back.sharp_diff_behind': '−{count} pts behind',
 	'card.back.show_rules': 'Show full rules',
@@ -480,7 +480,6 @@ export const enMessages = {
 	'card.back.who_calling': "Who's calling what",
 	'card.back.your_context': 'Your context',
 	'card.call_count': '{count} calls',
-	'card.callers_last_hour': '{count} callers in last hour',
 	'card.call_size': 'CALL SIZE',
 	'card.call_size_cap': 'CALL SIZE · CAP',
 	'card.calls': 'calls',

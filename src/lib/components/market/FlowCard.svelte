@@ -235,22 +235,6 @@
 		return (Math.abs(hash) % 90) + 10;
 	});
 
-	// Callers-in-last-hour placeholder — deterministic per market.id so
-	// the count is stable across renders without a live presence service.
-	// Range ~200..900 keeps the pill plausible at low-traffic moments
-	// without feeling padded. Suppressed when a curated `metadata.whyNow`
-	// already supplies a richer line.
-	const callersLastHour = $derived.by(() => {
-		const id = String(market.id);
-		let hash = 0;
-
-		for (let i = 0; i < id.length; i += 1) {
-			hash = (hash * 31 + id.charCodeAt(i)) | 0;
-		}
-
-		return 200 + (Math.abs(hash) % 700);
-	});
-
 	const showPriorOnFront = $derived(Boolean(priorCall));
 	const whyNowText = $derived(formatWhyNowChip(metadata?.whyNow));
 
@@ -588,24 +572,6 @@
 					<h2 class="flow-card-title">{market.title}</h2>
 					{#if subtitleText}
 						<p class="flow-card-sub serif-italic acc">{subtitleText}</p>
-					{/if}
-
-					<!-- Live callers pill — green-dot live indicator + dynamic
-				     count. Suppressed when a `priorCall` eyebrow or a
-				     curated `metadata.whyNow` line already occupies the
-				     same beat above the title. Until a live presence
-				     service ships, the count is a deterministic
-				     placeholder hashed off `market.id` so the value is
-				     stable across renders. -->
-					{#if !showPriorOnFront && !whyNowText}
-						<span class="flow-callers-live num">
-							<span class="flow-callers-dot" aria-hidden="true"></span>
-							{t({
-								locale: $localeStore,
-								key: 'card.callers_last_hour',
-								params: { count: callersLastHour }
-							})}
-						</span>
 					{/if}
 				</header>
 
@@ -1004,44 +970,6 @@
 	}
 	.flow-momentum-delta {
 		font-weight: 700;
-	}
-
-	/* Live callers pill — green-dot live indicator + dynamic count.
-	   Sits below the title/subtitle as the "why this card now" beat
-	   when no curated whyNow or priorCall has already claimed that
-	   slot. */
-	.flow-callers-live {
-		display: inline-flex;
-		align-self: flex-start;
-		align-items: center;
-		gap: 5px;
-		margin: 4px 0 0;
-		font-size: var(--t-11);
-		font-weight: 600;
-		color: var(--yes);
-		letter-spacing: 0.02em;
-	}
-	.flow-callers-dot {
-		width: 6px;
-		height: 6px;
-		border-radius: var(--r-pill);
-		background: var(--yes);
-		box-shadow: 0 0 0 3px color-mix(in srgb, var(--yes) 22%, transparent);
-		animation: flow-callers-pulse 1.6s ease-in-out infinite;
-	}
-	@keyframes flow-callers-pulse {
-		0%,
-		100% {
-			opacity: 1;
-		}
-		50% {
-			opacity: 0.45;
-		}
-	}
-	@media (prefers-reduced-motion: reduce) {
-		.flow-callers-dot {
-			animation: none;
-		}
 	}
 
 	/* 16 px gap between the friends row / artwork / probs / foot.
