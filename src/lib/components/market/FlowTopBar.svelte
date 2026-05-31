@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { Bell } from 'lucide-svelte/icons';
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -111,22 +112,7 @@
 				onclick={openNotifications}
 				type="button"
 			>
-				<svg
-					aria-hidden="true"
-					fill="none"
-					height="18"
-					stroke="currentColor"
-					stroke-width="1.8"
-					viewBox="0 0 24 24"
-					width="18"
-				>
-					<path
-						d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"
-						stroke-linecap="round"
-						stroke-linejoin="round"
-					/>
-					<path d="M13.73 21a2 2 0 0 1-3.46 0" stroke-linecap="round" stroke-linejoin="round" />
-				</svg>
+				<Bell aria-hidden="true" size={18} strokeWidth={1.8} />
 				{#if $combinedInboxUnreadCount > 0}
 					<span class="flow-bell-badge num" aria-hidden="true">
 						{$combinedInboxUnreadCount > 9 ? '9+' : $combinedInboxUnreadCount}
@@ -293,24 +279,28 @@
 		color: var(--color-primary);
 	}
 
+	/* Ghost action button — a faint parchment fill over the bar plus a
+	   hairline border, matching the other Flow top-bar chips. Adapts
+	   across themes via `--text-base` / `--border-base` tokens rather
+	   than a fixed rgba, so the fill tracks the foreground on
+	   dark/light/peach. */
 	.flow-bell-btn {
 		position: relative;
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		border-radius: var(--r-pill);
-		color: var(--text-muted);
-		background: transparent;
+		padding: 8px 10px;
+		border-radius: var(--r-12);
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		border: 1px solid var(--border-base);
 		transition:
 			color 160ms ease,
 			background-color 160ms ease,
 			transform 160ms ease;
 	}
 	.flow-bell-btn:hover {
-		color: var(--text-base);
-		background: var(--bg-surface);
+		background: color-mix(in srgb, var(--text-base) 12%, transparent);
 	}
 	.flow-bell-btn:active {
 		transform: scale(0.94);
@@ -321,8 +311,8 @@
 	   the bubble from stretching the bar. */
 	.flow-bell-badge {
 		position: absolute;
-		top: 2px;
-		right: 2px;
+		top: -3px;
+		right: -3px;
 		min-width: 14px;
 		height: 14px;
 		padding: 0 4px;
