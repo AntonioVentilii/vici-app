@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
 	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
 	/**
 	 * Per-category animated motif — a small, self-animating SVG glyph that
@@ -35,13 +35,13 @@
 	// glyph renders a stable resting frame.
 	let elapsed = $state(0);
 
-	onMount(() => {
-		const reduce =
-			typeof window !== 'undefined' &&
-			typeof window.matchMedia === 'function' &&
-			window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
-		if (reduce) {
+	// Reactive: pause the clock under reduced motion and resume if the user
+	// toggles the setting while the app is open (`prefersReducedMotion` is a
+	// reactive MediaQuery). Held at 0 under reduced motion so the glyph shows
+	// its stable resting frame.
+	$effect(() => {
+		if (prefersReducedMotion()) {
+			elapsed = 0;
 			return;
 		}
 
