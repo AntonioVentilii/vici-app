@@ -59,11 +59,14 @@
 		padding: 1.25rem;
 		background: linear-gradient(
 			180deg,
-			var(--bg-elevated, var(--bg-surface)),
-			var(--bg-raised, var(--bg-popover))
+			var(--bg-popover, var(--bg-surface)),
+			var(--bg-surface, var(--bg-popover))
 		);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-16, 16px);
+		box-shadow:
+			var(--inset-hi),
+			0 8px 24px -10px rgba(0, 0, 0, 0.5);
 	}
 
 	.portfolio-hero-eyebrow {
@@ -113,7 +116,7 @@
 
 	.portfolio-hero-stat dd {
 		margin: 0;
-		font-size: var(--t-14);
+		font-size: var(--t-18, 1.125rem);
 		font-weight: 600;
 		color: var(--text-base);
 		letter-spacing: var(--tracking-snug);

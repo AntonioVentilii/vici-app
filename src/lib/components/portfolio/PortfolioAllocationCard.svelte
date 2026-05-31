@@ -131,11 +131,12 @@
 	.allocation-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.75rem;
-		padding: 1rem;
-		background: var(--bg-popover);
+		gap: 0;
+		padding: 1.25rem;
+		background: var(--bg-surface);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
+		box-shadow: var(--inset-hi);
 	}
 
 	.allocation-eyebrow {
@@ -147,7 +148,7 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0.625rem;
-		margin: 0;
+		margin: 0.75rem 0 0;
 		padding: 0;
 		list-style: none;
 	}
@@ -166,7 +167,7 @@
 	}
 
 	.allocation-row-name {
-		font-size: var(--t-13);
+		font-size: var(--t-12);
 		font-weight: 600;
 		text-transform: capitalize;
 		color: var(--text-base);

@@ -369,7 +369,7 @@
 					<span class="num portfolio-section-count">{openPositions.length}</span>
 				</header>
 
-				<ul class="portfolio-list">
+				<ul class="portfolio-list portfolio-list-inline">
 					{#each openPositions as pos (`${pos.marketId}::${pos.outcomeId}`)}
 						{@const market = getMarketById(pos.marketId)}
 						{@const pnl = positionPnl(pos)}
@@ -383,7 +383,7 @@
 
 						<li>
 							<a
-								class="portfolio-row portfolio-row-card"
+								class="portfolio-row portfolio-row-card portfolio-row-inline"
 								aria-label={market?.title ??
 									t({ locale: $localeStore, key: 'portfolio.unknown_market' })}
 								href="{AppPath.Markets}/{pos.marketId}"
@@ -537,20 +537,21 @@
 
 	.portfolio-section-title {
 		margin: 0;
-		font-size: var(--t-16, 1rem);
-		font-weight: 700;
+		font-size: 15px;
+		font-weight: 600;
+		letter-spacing: -0.01em;
 		color: var(--text-base);
 	}
 
 	.portfolio-section-count {
-		font-size: var(--t-13);
+		font-size: var(--t-12);
 		color: var(--text-muted);
 	}
 
 	.portfolio-section-more {
-		font-size: var(--t-13);
+		font-size: var(--t-12);
 		font-weight: 600;
-		color: var(--text-muted);
+		color: var(--accent);
 	}
 
 	.portfolio-list {
@@ -592,6 +593,33 @@
 		padding: 0.875rem;
 	}
 
+	/* Active calls render as hairline-separated inline rows (no card
+	   chrome) rather than bordered chips: transparent surface, a top
+	   border between rows, square corners, and a subtle hover tint —
+	   the inline-row treatment shared with other list surfaces. */
+	.portfolio-row-inline {
+		background: transparent;
+		border: 0;
+		border-top: 1px solid var(--border-base);
+		border-radius: 0;
+		padding: 1rem 0;
+		transition: background var(--d-hover) var(--ease-vici);
+	}
+
+	.portfolio-list-inline li:first-child .portfolio-row-inline {
+		border-top: 0;
+		padding-top: 0;
+	}
+
+	.portfolio-list-inline li:last-child .portfolio-row-inline {
+		padding-bottom: 0;
+	}
+
+	.portfolio-row-inline:hover {
+		border-color: var(--border-base);
+		background: color-mix(in srgb, var(--text-base) 3%, transparent);
+	}
+
 	.portfolio-row-tags {
 		display: flex;
 		align-items: center;
@@ -602,14 +630,15 @@
 	.portfolio-row-cat {
 		display: inline-flex;
 		align-items: center;
+		gap: 4px;
 		padding: 3px 7px;
 		font-family: var(--font-mono);
-		font-size: 9.5px;
+		font-size: 10px;
 		font-weight: 700;
-		letter-spacing: 0.1em;
+		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		color: var(--text-muted);
-		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		background: rgba(242, 236, 220, 0.08);
 		border-radius: var(--r-4);
 	}
 
@@ -632,14 +661,15 @@
 		display: inline-flex;
 		flex: 0 0 auto;
 		align-items: center;
+		gap: 4px;
 		padding: 3px 7px;
 		font-family: var(--font-mono);
-		font-size: 9.5px;
+		font-size: 10px;
 		font-weight: 700;
 		letter-spacing: 0.08em;
 		text-transform: uppercase;
 		border-radius: var(--r-4);
-		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		background: rgba(242, 236, 220, 0.08);
 		color: var(--text-muted);
 	}
 
@@ -716,7 +746,7 @@
 	}
 
 	.portfolio-history-title {
-		font-size: var(--t-13);
+		font-size: var(--t-12);
 		font-weight: 500;
 		color: var(--text-base);
 		white-space: nowrap;

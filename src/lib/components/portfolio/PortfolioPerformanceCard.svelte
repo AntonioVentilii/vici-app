@@ -159,8 +159,6 @@
 				d={linePath}
 				fill="none"
 				stroke={isPositive ? 'var(--yes, #6fe0b6)' : 'var(--no, #ff6b6b)'}
-				stroke-linecap="round"
-				stroke-linejoin="round"
 				stroke-width="1.5"
 			/>
 		</svg>
@@ -171,11 +169,12 @@
 	.perf-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
-		padding: 1rem;
-		background: var(--bg-popover);
+		gap: 0;
+		padding: 1.25rem;
+		background: var(--bg-surface);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
+		box-shadow: var(--inset-hi);
 	}
 
 	.perf-head {
@@ -191,7 +190,7 @@
 	}
 
 	.perf-delta {
-		font-size: var(--t-13);
+		font-size: var(--t-12);
 		font-weight: 600;
 		color: var(--text-muted);
 	}
@@ -208,6 +207,6 @@
 		display: block;
 		width: 100%;
 		height: 72px;
-		margin-top: 0.25rem;
+		margin-top: 0.625rem;
 	}
 </style>
