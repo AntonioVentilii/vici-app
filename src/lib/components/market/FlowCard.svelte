@@ -52,6 +52,12 @@
 		// Stake-ladder change callback. Wired through to FlowCardBack so a
 		// tap on a rung writes back to FlowMode's bound stake.
 		onStakeChange?: (next: string) => void;
+		// Guided mode — the onboarding first-call surface reuses this exact
+		// card so the in-product deck and the tutorial are pixel-identical.
+		// In guided mode the card never flips (tap is inert) and swipe-up
+		// SKIP is suppressed: the first call must commit a YES/NO, never
+		// open depth or skip. The footer hint switches to "SWIPE TO CALL".
+		guided?: boolean;
 	}
 
 	const {
@@ -68,7 +74,8 @@
 		categoryAcc,
 		priorCall,
 		followedLean,
-		onStakeChange
+		onStakeChange,
+		guided = false
 	}: Props = $props();
 
 	const isCommitted = $derived(committedAction !== null);
@@ -402,16 +409,21 @@
 		}
 
 		if (movedDist < TAP_PX) {
-			// Tap = flip to depth.
+			// Tap = flip to depth — disabled in guided mode, where the
+			// first call must be a YES/NO commit (no depth, no flip).
 			dragX = 0;
 			dragY = 0;
-			flipped = true;
+
+			if (!guided) {
+				flipped = true;
+			}
 
 			return;
 		}
 
-		// Swipe-up SKIP takes priority when motion is clearly vertical.
-		if (dragY < -SKIP_THRESHOLD && Math.abs(dragX) < Math.abs(dragY) * 0.7) {
+		// Swipe-up SKIP takes priority when motion is clearly vertical —
+		// suppressed in guided mode so the first call can't be skipped.
+		if (!guided && dragY < -SKIP_THRESHOLD && Math.abs(dragX) < Math.abs(dragY) * 0.7) {
 			commitWithSettle({ side: 'SKIP', exitX: dragX, exitY: -700 });
 
 			return;
@@ -685,8 +697,8 @@
 						</div>
 					</div>
 
-					<!-- Foot — SIZE · VXP chip + tap hint. -->
-					<FlowCardFooter {sizeStake} />
+					<!-- Foot — SIZE · VXP chip + tap/swipe hint. -->
+					<FlowCardFooter {guided} {sizeStake} />
 				</div>
 
 				<!-- Full-card swipe overlays — large YES/NO/SKIP text

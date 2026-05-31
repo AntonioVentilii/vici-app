@@ -4,9 +4,14 @@
 
 	interface Props {
 		sizeStake: number;
+		// Guided (onboarding first-call) mode — the depth hint becomes a
+		// commit prompt since the card can't flip there.
+		guided?: boolean;
 	}
 
-	let { sizeStake }: Props = $props();
+	let { sizeStake, guided = false }: Props = $props();
+
+	const hintKey = $derived(guided ? 'card.swipe_to_call' : 'card.tap_depth');
 </script>
 
 <div class="flow-foot num">
@@ -18,7 +23,7 @@
 		<span class="flow-foot-size-unit">VXP</span>
 	</span>
 	<span class="flow-foot-hint allcaps">
-		{t({ locale: $localeStore, key: 'card.tap_depth' })}
+		{t({ locale: $localeStore, key: hintKey })}
 	</span>
 </div>
 
