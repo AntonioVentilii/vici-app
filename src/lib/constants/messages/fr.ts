@@ -1601,6 +1601,8 @@ export const frMessages = {
 	'onboarding.beat1b.skip_sub': 'Tu suis le tournoi. Swipe OUI si tu vois {team} tout rafler.',
 	'onboarding.beat1b.title_advance': '{team} passera-t-il les huitièmes ?',
 	'onboarding.beat1b.title_winner': '{team} remportera-t-il la Coupe du Monde ?',
+	'onboarding.beat1b.a11y_commit_no': 'Confirmer NON — prédire que cela n’arrivera pas',
+	'onboarding.beat1b.a11y_commit_yes': 'Confirmer OUI — prédire que cela arrivera',
 	'onboarding.beat2.affil_eyebrow': 'Ton profil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
 	'onboarding.beat2.avail.invalid': 'Lettres, chiffres, . _ - uniquement',

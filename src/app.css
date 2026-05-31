@@ -3207,19 +3207,21 @@ a.title-action::after {
 /* Fit the generative artwork by HEIGHT inside the band — the SVG
    keeps its intrinsic aspect and centres, so the figure reads whole
    rather than being stretched to the band's aspect ratio (the inline
-   SVG ignores `object-fit`, so size it by height explicitly). */
-.ob-art :global(.market-artwork) {
+   SVG ignores `object-fit`, so size it by height explicitly).
+   Note: plain descendant selectors — this is a global CSS file, not a
+   Svelte component <style> block, so :global() would be invalid here. */
+.ob-art .market-artwork {
 	width: 100%;
 	height: 100%;
 }
-.ob-art :global(.flow-art) {
+.ob-art .flow-art {
 	width: auto;
 	height: 100%;
 	max-width: 100%;
 	border-radius: 0;
 	box-shadow: none;
 }
-.ob-art :global(.flow-art > svg) {
+.ob-art .flow-art > svg {
 	width: auto;
 	height: 100%;
 	display: block;
@@ -3493,6 +3495,68 @@ a.title-action::after {
 	.ob-card {
 		transition: none !important;
 	}
+}
+
+/* Accessible YES / NO commit row — keyboard / switch-access path.
+   Styled to match the `.ob-prob` tiles (same grid, border, radius) so
+   the visual language is consistent with the probability split above.
+   Pointer users will reach `commit()` via swipe; this row is the
+   primary a11y path. Hidden (aria-hidden) once committed. */
+.ob-commit-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+	padding: 0 0 4px;
+	flex-shrink: 0;
+}
+.ob-commit-btn {
+	appearance: none;
+	cursor: pointer;
+	padding: 10px 14px;
+	border: 1px solid var(--ink-line);
+	border-radius: 11px;
+	background: rgba(242, 236, 220, 0.02);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	text-align: left;
+	transition:
+		background 120ms,
+		border-color 120ms,
+		opacity 120ms;
+}
+.ob-commit-btn:hover:not(:disabled) {
+	background: rgba(242, 236, 220, 0.06);
+}
+.ob-commit-btn:focus-visible {
+	outline: 2px solid var(--laurel);
+	outline-offset: 2px;
+}
+.ob-commit-btn:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+.ob-commit-btn.yes {
+	align-items: flex-end;
+}
+.ob-commit-eyebrow {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+.ob-commit-eyebrow.no {
+	color: var(--no);
+}
+.ob-commit-eyebrow.yes {
+	color: var(--yes);
+}
+.ob-commit-pct {
+	font-family: var(--font-mono);
+	font-size: 22px;
+	font-weight: 600;
+	letter-spacing: -0.02em;
 }
 
 /* ─── Team rail (expanded all-teams) ──────────────────────

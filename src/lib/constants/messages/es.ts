@@ -1592,6 +1592,8 @@ export const esMessages = {
 	'onboarding.beat1b.skip_sub': 'Sigues el torneo. Marca SÍ si crees que {team} se lo lleva todo.',
 	'onboarding.beat1b.title_advance': '¿{team} pasará a octavos?',
 	'onboarding.beat1b.title_winner': '¿{team} ganará el Mundial?',
+	'onboarding.beat1b.a11y_commit_no': 'Confirmar NO — predecir que esto no ocurrirá',
+	'onboarding.beat1b.a11y_commit_yes': 'Confirmar SÍ — predecir que esto ocurrirá',
 	'onboarding.beat2.affil_eyebrow': 'Tu perfil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
 	'onboarding.beat2.avail.invalid': 'Solo letras, números, . _ -',

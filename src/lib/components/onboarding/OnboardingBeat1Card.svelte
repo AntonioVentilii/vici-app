@@ -113,6 +113,11 @@
 	let dragY = $state(0);
 	let dragging = $state(false);
 	let committed: 'YES' | 'NO' | null = $state(null);
+	// Tracks whether the user has started their first interaction (pointer
+	// down or keyboard commit). Used to permanently dismiss the coach once
+	// the user engages — a cancelled first drag would reset dragX→0 and
+	// cause the coach to reappear without this separate flag.
+	let everInteracted = $state(false);
 
 	const rotation = $derived(dragX / 18);
 	const yesStampOpacity = $derived(Math.min(1, Math.max(0, dragX / 60)));
@@ -120,7 +125,8 @@
 	const yesEdgeOpacity = $derived(Math.min(1, Math.max(0, dragX / 100)) * 0.55);
 	const noEdgeOpacity = $derived(Math.min(1, Math.max(0, -dragX / 100)) * 0.55);
 
-	// Coach fades out as the card is dragged, then hides once committed.
+	// Coach fades out as the card is dragged, then stays hidden after the
+	// first interaction (even if the drag is cancelled and dragX resets).
 	const coachOpacity = $derived(Math.max(0, 1 - Math.abs(dragX) / 40));
 
 	const cardTransform = $derived(`translate(${dragX}px, ${dragY}px) rotate(${rotation}deg)`);
@@ -157,6 +163,7 @@
 		startX = p.clientX;
 		startY = p.clientY;
 		dragging = true;
+		everInteracted = true;
 	};
 
 	const onPointerMove = (e: MouseEvent | TouchEvent) => {
@@ -333,9 +340,10 @@
 			</div>
 
 			<!-- Built-in directional coach — sits above the card, fades on
-			     the first drag, hidden once committed. Visibility is gated
-			     by `showCoach` so a follow-up can pin it on at this step. -->
-			{#if showCoach && committed === null}
+			     the first drag, and stays hidden once the user has
+			     interacted (even if the drag is cancelled). Visibility is
+			     gated by `showCoach` so a follow-up can pin it on. -->
+			{#if showCoach && !everInteracted && committed === null}
 				<div style:opacity={coachOpacity} class="ob-coach ob-coach-swipe" aria-live="polite">
 					<div class="ob-coach-row">
 						<span class="ob-coach-arrow no" aria-hidden="true">←</span>
@@ -357,5 +365,44 @@
 				</div>
 			{/if}
 		</div>
+	</div>
+
+	<!-- Keyboard / switch-user accessible commit row.
+	     The swipeable card above is pointer-only (role="presentation"),
+	     so these buttons are the primary a11y path for keyboard and
+	     switch-access users. Visually matches the ob-prob tiles;
+	     hidden via aria-hidden once committed so the screen reader
+	     doesn't announce stale interactive elements. -->
+	<div class="ob-commit-row" aria-hidden={committed !== null ? 'true' : undefined}>
+		<button
+			class="ob-commit-btn no"
+			aria-label={t({ locale: $localeStore, key: 'onboarding.beat1b.a11y_commit_no' })}
+			disabled={committed !== null}
+			onclick={() => {
+				everInteracted = true;
+				commit('NO');
+			}}
+			type="button"
+		>
+			<span class="ob-commit-eyebrow no">
+				{t({ locale: $localeStore, key: 'flow.action.no' })}
+			</span>
+			<span class="ob-commit-pct">{noPct}%</span>
+		</button>
+		<button
+			class="ob-commit-btn yes"
+			aria-label={t({ locale: $localeStore, key: 'onboarding.beat1b.a11y_commit_yes' })}
+			disabled={committed !== null}
+			onclick={() => {
+				everInteracted = true;
+				commit('YES');
+			}}
+			type="button"
+		>
+			<span class="ob-commit-eyebrow yes">
+				{t({ locale: $localeStore, key: 'flow.action.yes' })}
+			</span>
+			<span class="ob-commit-pct">{yesPct}%</span>
+		</button>
 	</div>
 </div>

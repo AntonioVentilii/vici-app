@@ -1602,6 +1602,8 @@ export const deMessages = {
 	'onboarding.beat1b.skip_sub': 'Du verfolgst das Turnier. Wische JA, wenn {team} alles holt.',
 	'onboarding.beat1b.title_advance': 'Erreicht {team} das Achtelfinale?',
 	'onboarding.beat1b.title_winner': 'Gewinnt {team} die WM?',
+	'onboarding.beat1b.a11y_commit_no': 'NEIN bestätigen — vorhersagen, dass dies nicht eintritt',
+	'onboarding.beat1b.a11y_commit_yes': 'JA bestätigen — vorhersagen, dass dies eintritt',
 	'onboarding.beat2.affil_eyebrow': 'Dein Profil',
 	'onboarding.beat2.affil_placeholder': 'predictor.0142',
 	'onboarding.beat2.avail.invalid': 'Nur Buchstaben, Zahlen, . _ -',
