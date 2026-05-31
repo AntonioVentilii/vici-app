@@ -408,7 +408,7 @@ export const itMessages = {
 	'card.unsave': 'Rimuovi dai salvati',
 	'card.rail_hint': 'Trascina per confermare · Tocca per dettagli',
 	'card.sharp_predictors': 'Predittori esperti:',
-	'card.size_vxp': 'TAGLIA · {stake} VXP',
+	'card.size_label': 'TAGLIA',
 	'card.skip_stamp': 'SALTA',
 	'card.swipe_to_call': 'SCORRI PER CHIAMARE',
 	'card.multiple': 'Multiplo',

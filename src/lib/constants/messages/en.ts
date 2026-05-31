@@ -404,7 +404,7 @@ export const enMessages = {
 	'card.prior_call_drift': '{when} · consensus {drift} pts since',
 	'card.rail_hint': 'Drag to commit · Tap for depth',
 	'card.sharp_predictors': 'Sharp predictors:',
-	'card.size_vxp': 'SIZE · {stake} VXP',
+	'card.size_label': 'SIZE',
 	'card.skip_stamp': 'SKIP',
 	'card.swipe_to_call': 'SWIPE TO CALL',
 	'card.you_called_eyebrow': 'YOU CALLED',

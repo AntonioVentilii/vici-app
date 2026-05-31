@@ -65,7 +65,8 @@ const BRAND_TOKENS = [
 	'ICP',
 	'ICRC',
 	'VICI',
-	'Vici'
+	'Vici',
+	'VXP'
 ];
 
 const BRAND_TOKENS_RE = new RegExp(
