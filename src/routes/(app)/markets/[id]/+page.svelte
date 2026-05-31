@@ -38,7 +38,7 @@
 	import { getPositionsForMarket } from '$lib/services/position.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { Market, MarketId, OutcomeId } from '$lib/types/market';
+	import type { CallSide, Market, MarketId } from '$lib/types/market';
 	import type { FollowedLeanSignal, PriorCallSignal } from '$lib/types/market-signals';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
@@ -60,7 +60,7 @@
 
 	let loading = $state(true);
 
-	let selectedSide = $state<OutcomeId | undefined>();
+	let selectedSide = $state<CallSide | undefined>();
 
 	let lockedToastOpen = $state(false);
 
