@@ -28,11 +28,16 @@
 </div>
 
 <style lang="postcss">
+	/* The foot is a plain flex child of `.flow-body`. Only `.flow-probs`
+	   carries `margin-top: auto`, which parks the probs-plus-foot block
+	   at the bottom of the card. The probs/foot separation is the body's
+	   own row gap; a stray `margin-top: auto` here would steal that free
+	   space a second time and float the probs into mid-card. */
 	.flow-foot {
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		margin: auto 1.1rem 1.1rem;
+		margin: 0 1.1rem;
 		padding-top: 4px;
 		font-size: var(--t-12);
 		color: var(--text-muted);
