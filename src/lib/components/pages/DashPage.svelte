@@ -11,6 +11,7 @@
 	import { resolve } from '$app/paths';
 	import DashAccuracySparkline from '$lib/components/dash/DashAccuracySparkline.svelte';
 	import DashCategoryBreakdown from '$lib/components/dash/DashCategoryBreakdown.svelte';
+	import DashDayZero from '$lib/components/dash/DashDayZero.svelte';
 	import DashHeroAccuracy from '$lib/components/dash/DashHeroAccuracy.svelte';
 	import DashHoldingsCard from '$lib/components/dash/DashHoldingsCard.svelte';
 	import DashNextUnlock from '$lib/components/dash/DashNextUnlock.svelte';
@@ -27,6 +28,8 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
+	import { featuredEvent } from '$lib/derived/featured-event.derived';
+	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { orders } from '$lib/derived/orders.derived';
 	import { positions } from '$lib/derived/positions.derived';
 	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
@@ -179,6 +182,64 @@
 	const wins = $derived($resolvedPositions.filter((r) => r.result === 'won').length);
 	const losses = $derived($resolvedPositions.filter((r) => r.result === 'lost').length);
 	const settledTotal = $derived(wins + losses);
+
+	// ─── Three-state gate ──────────────────────────────────────────────
+	// The Dashboard renders one of three shapes:
+	//   Day 0    · no calls placed at all → orientation hero + starter pack.
+	//   Day 1+   · calls placed but none have settled (the featured event
+	//              resolves weeks out) → "your call is in flight".
+	//   Standard · at least one settled call → the full accuracy dashboard.
+	// A "call" is any position the user has taken — live (filled or resting)
+	// or already resolved. `totalTrades` is the profile's lifetime call
+	// counter; `settledTotal` is the count of resolved calls. We OR in the
+	// live position/order counts so a freshly-placed first call flips Day 0
+	// → Day 1 immediately, before the satellite re-counts `totalTrades`.
+	const liveCallCount = $derived(activePositionsAll.length + openOrdersAll.length);
+	const callsPlaced = $derived(Math.max(totalTrades, liveCallCount + settledTotal));
+	const isDay0 = $derived(callsPlaced === 0);
+	const isDay1Pending = $derived(!isDay0 && settledTotal === 0);
+
+	// Day-0 pinned markets: the featured event's open markets first (the
+	// starter deck), then any other open markets, so the "Today in Flow"
+	// preview always has three rows where data allows. Sorted by volume so
+	// the most-traded markets surface.
+	const dayZeroMarkets = $derived.by<Market[]>(() => {
+		const open = ($marketsStore ?? []).filter((m) => m.status === 'Open');
+		const featuredTag = $featuredEvent.categoryTag;
+		const isFeatured = (m: Market): boolean =>
+			featuredTag !== undefined && ($marketTags[m.id] ?? []).some((tag) => tag === featuredTag);
+
+		return [...open].sort((a, b) => {
+			const fa = isFeatured(a) ? 0 : 1;
+			const fb = isFeatured(b) ? 0 : 1;
+
+			if (fa !== fb) {
+				return fa - fb;
+			}
+
+			return Number(b.totalVolume) - Number(a.totalVolume);
+		});
+	});
+	const dayZeroFeatured = $derived(dayZeroMarkets[0]);
+	const dayZeroCompact = $derived(dayZeroMarkets.slice(1, 3));
+
+	// Day-1 open position: the single live position, reframed for the
+	// open-position card. `lockedCollateral` is in `USD_DECIMALS` units
+	// (== VXP_TOKEN.decimals), so it converts to whole VXP for the caption.
+	const dayOneFirstCall = $derived.by(() => {
+		const [entry] = activePositions;
+
+		if (entry === undefined) {
+			return;
+		}
+
+		const side = entry.position.outcomeId === 'YES' ? 'YES' : 'NO';
+		const stakeVxp = Math.round(
+			decimalFixedValueToNumber({ value: entry.position.lockedCollateral, decimals: USD_DECIMALS })
+		);
+
+		return { market: entry.market, side, stakeVxp } as const;
+	});
 
 	// Live session delta — prior accuracy reconstruction.
 	const sessionDelta = $derived.by<number | null>(() => {
@@ -346,6 +407,24 @@
 	// ─── Time window strip (visual switch only) ────────────────────────
 	const windows: TimeWindow[] = ['7d', '30d', '90d', 'All'];
 
+	// Page-chrome eyebrow: orientation line on Day 0/1, the live
+	// streak + active time-window on the standard dashboard.
+	const headerEyebrow = $derived.by(() => {
+		if (isDay0) {
+			return t({ locale: $localeStore, key: 'dash.dz.header_eyebrow_day0' });
+		}
+
+		if (isDay1Pending) {
+			return t({ locale: $localeStore, key: 'dash.dz.header_eyebrow_day1' });
+		}
+
+		return t({
+			locale: $localeStore,
+			key: 'dash.header_eyebrow_standard',
+			params: { count: streak, window: tw }
+		});
+	});
+
 	onMount(async () => {
 		if (profile === undefined) {
 			return;
@@ -368,318 +447,355 @@
 	});
 </script>
 
-<PageScaffold title={t({ locale: $localeStore, key: 'dash.title' })}>
-	<div class="screen-scroll">
-		<!-- ─── HERO · accuracy ─── -->
-		<DashHeroAccuracy
-			{accuracyPct}
-			{daysToMarathon}
-			{nickname}
-			{sessionDelta}
-			{streak}
-			{streakBarPct}
-		/>
-
-		<!-- ─── Time window ─── -->
-		<div
-			class="dash-window"
-			aria-label={t({ locale: $localeStore, key: 'dash.window.label' })}
-			role="tablist"
-		>
-			{#each windows as w (w)}
-				<button
-					class:active={tw === w}
-					aria-selected={tw === w}
-					onclick={() => (tw = w)}
-					role="tab"
-					type="button"
-				>
-					{w}
-				</button>
-			{/each}
-		</div>
-
-		<!-- ─── HOLDINGS card ─── -->
-		<DashHoldingsCard
+<PageScaffold eyebrow={headerEyebrow} title={t({ locale: $localeStore, key: 'dash.title' })}>
+	{#if isDay0 || isDay1Pending}
+		<!-- ─── DAY 0 / DAY 1+ pending · forward-looking dashboard ─── -->
+		<DashDayZero
 			{backedDisplay}
 			{balanceDisplay}
-			{lifetimeDisplay}
-			recentSettlementsCount={recentSettlements.length}
+			compactMarkets={dayZeroCompact}
+			day1={isDay1Pending}
+			featuredMarket={dayZeroFeatured}
+			firstCall={dayOneFirstCall}
 		/>
-
-		<!-- ─── ACCURACY TREND chart ─── -->
-		<div class="dash-section">
-			<div class="dash-section-eyebrow">
-				<span>
-					{t({ locale: $localeStore, key: 'dash.trend.eyebrow' })} · {tw}
-				</span>
-				<span class="delta-pos">{t({ locale: $localeStore, key: 'dash.trend.delta' })}</span>
-			</div>
-			<div class="dash-chart-card">
-				<DashAccuracySparkline />
-			</div>
-		</div>
-
-		<!-- ─── ACTIVE positions ─── -->
-		<div class="dash-section">
-			<div class="dash-section-eyebrow">
-				<span>
-					{t({ locale: $localeStore, key: 'dash.active.eyebrow' })}
-					{#if closingTodayCount > 0}
-						<span class="dash-urgency">
-							{t({
-								locale: $localeStore,
-								key: 'dash.active.closing_today',
-								params: { count: closingTodayCount }
-							})}
-						</span>
-					{/if}
-				</span>
-				<a
-					class="see-all"
-					href={resolve(AppPath.Portfolio)}
-					onclick={(e) => {
-						e.preventDefault();
-						goto(resolve(AppPath.Portfolio));
-					}}
-				>
-					{t({ locale: $localeStore, key: 'dash.active.see_all', params: { count: totalActive } })}
-				</a>
-			</div>
-			{#if activePositions.length === 0}
-				<div class="dash-empty">
-					{t({ locale: $localeStore, key: 'dash.placeholder.positions' })}
-				</div>
-			{:else}
-				{#each activePositions as entry, i (entry.position.marketId)}
-					{@const m = entry.market}
-					{@const side = entry.position.outcomeId === 'YES' ? 'YES' : 'NO'}
-					{@const prob = side === 'YES' ? m.yesProbability : 1 - m.yesProbability}
-					{@const currentPct = Math.round(prob * 100)}
-					{@const timer = fmtTimeLeft(Number(m.expiryDate))}
-					<button class="dash-pos-row" onclick={() => goto(resolve(`${AppPath.Markets}/${m.id}`))}>
-						<div class="left">
-							<div class="q">{m.title}</div>
-							<div class="ctx">
-								<span class="side {side.toLowerCase()}">{side}</span>
-								<span>
-									{t({
-										locale: $localeStore,
-										key: 'dash.active.vol_calls',
-										params: { count: marketVolumeCalls(m) }
-									})}
-								</span>
-							</div>
-						</div>
-						<div class="right-col">
-							<span class="pct">{currentPct}%</span>
-							<span class="timer" class:urgent={i === 0 && timer.urgent}>{timer.label}</span>
-						</div>
-					</button>
-				{/each}
-			{/if}
-		</div>
-
-		<!-- ─── BY CATEGORY breakdown ─── -->
-		<!-- Hidden during World-Cup mode: per-category accuracy is empty
-		     when play is scoped to the event. -->
-		{#if !$worldCupActive}
-			<DashCategoryBreakdown {catRows} />
-		{/if}
-
-		<!-- ─── RANK CONTEXT ─── -->
-		<DashRankContext topCategory={catRows[0]} {wcAccuracy} worldCupActive={$worldCupActive} />
-
-		<!-- ─── ORACLE INSIGHT ─── -->
-		<DashOracleInsight {bestWinTitle} hasBestWin={Boolean(bestWin)} />
-
-		<!-- ─── PAST predictions ─── -->
-		<div class="dash-section">
-			<div class="dash-section-eyebrow">
-				<span>{t({ locale: $localeStore, key: 'dash.past.eyebrow' })}</span>
-				<span class="see-all">
-					{t({ locale: $localeStore, key: 'dash.past.total', params: { count: settledTotal } })}
-				</span>
-			</div>
-			<div class="dash-filter-chips">
-				<button
-					class:active={pastFilter === 'all'}
-					onclick={() => (pastFilter = 'all')}
-					type="button"
-				>
-					{t({ locale: $localeStore, key: 'dash.past.filter_all' })}
-				</button>
-				<button
-					class:active={pastFilter === 'won'}
-					onclick={() => (pastFilter = 'won')}
-					type="button"
-				>
-					{t({
-						locale: $localeStore,
-						key: 'dash.past.filter_won',
-						params: { count: wins }
-					})}
-				</button>
-				<button
-					class:active={pastFilter === 'lost'}
-					onclick={() => (pastFilter = 'lost')}
-					type="button"
-				>
-					{t({
-						locale: $localeStore,
-						key: 'dash.past.filter_lost',
-						params: { count: losses }
-					})}
-				</button>
-			</div>
-			<div>
-				{#if filteredHistory.length === 0}
-					<div class="dash-empty">{t({ locale: $localeStore, key: 'dash.past.empty' })}</div>
-				{:else}
-					{#each filteredHistory.slice(0, 8) as h (h.marketId + h.settledAtMs)}
-						{@const won = h.win}
-						{@const pnlPositive = h.realizedPnlUsd >= ZERO}
-						<div class="dash-past-row">
-							<span class="res" class:lost={!won} class:won>
-								{#if won}
-									<Check aria-hidden="true" size={11} strokeWidth={3} />
-								{:else}
-									<X aria-hidden="true" size={11} strokeWidth={3} />
-								{/if}
-							</span>
-							<div>
-								<div class="q">{marketTitle(h.marketId)}</div>
-								<div class="ctx">
-									{#if h.sideLabel !== null}
-										{t({
-											locale: $localeStore,
-											key: 'dash.past.row_ctx_side_when',
-											params: {
-												side: h.sideLabel,
-												when: fmtRelativeShort(h.settledAtMs)
-											}
-										})}
-									{:else}
-										{t({
-											locale: $localeStore,
-											key: 'dash.past.row_ctx_when',
-											params: { when: fmtRelativeShort(h.settledAtMs) }
-										})}
-									{/if}
-								</div>
-							</div>
-							<span class="delta-pct" class:delta-lost={!pnlPositive} class:delta-won={pnlPositive}>
-								{fmtPastRowAmount(h.realizedPnlUsd)}
-							</span>
-						</div>
-					{/each}
-				{/if}
-			</div>
-		</div>
-
-		<!-- ─── NEXT UNLOCK ─── -->
-		{#if nextAchievement}
-			<DashNextUnlock
+	{:else}
+		<div class="screen-scroll">
+			<!--
+				TODO(dash-1.4): mount the ResolutionReveal banner here. When a user
+				returns with calls that settled while they were away, the standard
+				Dashboard leads with a tappable "N calls settled · ±X VXP" banner
+				(`.dash-reso-banner`, ported into app.css) that opens the
+				ResolutionReveal sequence. ResolutionReveal is owned by the Flow
+				entry / "while you were away" chunk (1.4); this banner is its only
+				Dashboard mount point. Until 1.4 lands, no banner renders — the
+				standard dashboard is otherwise complete. Wire here:
+				`{#if maturedResolutions.count}` → `<button class="dash-reso-banner …">`.
+			-->
+			<!-- ─── HERO · accuracy ─── -->
+			<DashHeroAccuracy
+				{accuracyPct}
 				{daysToMarathon}
-				emblem={nextAchievement.emblem}
-				nameKey={nextAchievement.nameKey}
+				{nickname}
+				{sessionDelta}
 				{streak}
 				{streakBarPct}
-				target={MARATHON_DAYS}
 			/>
-		{/if}
 
-		<!-- ─── DISCLOSURE foldouts ─── -->
-		<details class="dash-disclosure">
-			<summary>
-				<span>{t({ locale: $localeStore, key: 'dash.disclosure.rival_title' })}</span>
-				<ChevronRight aria-hidden="true" size={12} strokeWidth={1.8} />
-			</summary>
-			<div class="dash-disclosure-body">
-				<div class="dash-rival">
-					<span class="av">{EM_DASH}</span>
-					<div class="meta">
-						<span class="name">{EM_DASH}</span>
-						<span class="gap"
-							>{t({ locale: $localeStore, key: 'dash.disclosure.rival_gap_unknown' })}</span
-						>
-					</div>
-					<span class="acc-num">{EM_DASH}</span>
+			<!-- ─── Time window ─── -->
+			<div
+				class="dash-window"
+				aria-label={t({ locale: $localeStore, key: 'dash.window.label' })}
+				role="tablist"
+			>
+				{#each windows as w (w)}
+					<button
+						class:active={tw === w}
+						aria-selected={tw === w}
+						onclick={() => (tw = w)}
+						role="tab"
+						type="button"
+					>
+						{w}
+					</button>
+				{/each}
+			</div>
+
+			<!-- ─── HOLDINGS card ─── -->
+			<DashHoldingsCard
+				{backedDisplay}
+				{balanceDisplay}
+				{lifetimeDisplay}
+				recentSettlementsCount={recentSettlements.length}
+			/>
+
+			<!-- ─── ACCURACY TREND chart ─── -->
+			<div class="dash-section">
+				<div class="dash-section-eyebrow">
+					<span>
+						{t({ locale: $localeStore, key: 'dash.trend.eyebrow' })} · {tw}
+					</span>
+					<span class="delta-pos">{t({ locale: $localeStore, key: 'dash.trend.delta' })}</span>
+				</div>
+				<div class="dash-chart-card">
+					<DashAccuracySparkline />
 				</div>
 			</div>
-		</details>
 
-		<details class="dash-disclosure">
-			<summary>
-				<span>
-					{t({
-						locale: $localeStore,
-						key: 'dash.disclosure.contrarian_title',
-						params: { count: contrarianWins.length }
-					})}
-				</span>
-				<ChevronRight aria-hidden="true" size={12} strokeWidth={1.8} />
-			</summary>
-			<div class="dash-disclosure-body">
-				{#if contrarianWins.length === 0}
+			<!-- ─── ACTIVE positions ─── -->
+			<div class="dash-section">
+				<div class="dash-section-eyebrow">
+					<span>
+						{t({ locale: $localeStore, key: 'dash.active.eyebrow' })}
+						{#if closingTodayCount > 0}
+							<span class="dash-urgency">
+								{t({
+									locale: $localeStore,
+									key: 'dash.active.closing_today',
+									params: { count: closingTodayCount }
+								})}
+							</span>
+						{/if}
+					</span>
+					<a
+						class="see-all"
+						href={resolve(AppPath.Portfolio)}
+						onclick={(e) => {
+							e.preventDefault();
+							goto(resolve(AppPath.Portfolio));
+						}}
+					>
+						{t({
+							locale: $localeStore,
+							key: 'dash.active.see_all',
+							params: { count: totalActive }
+						})}
+					</a>
+				</div>
+				{#if activePositions.length === 0}
 					<div class="dash-empty">
-						{t({ locale: $localeStore, key: 'dash.disclosure.contrarian_empty' })}
+						{t({ locale: $localeStore, key: 'dash.placeholder.positions' })}
 					</div>
 				{:else}
-					{#each contrarianWins as h (h.marketId + h.settledAtMs)}
-						<div class="dash-past-row dash-past-row-soft">
-							<span class="res won">
-								<Check aria-hidden="true" size={11} strokeWidth={3} />
-							</span>
-							<div>
-								<div class="q">{marketTitle(h.marketId)}</div>
+					{#each activePositions as entry, i (entry.position.marketId)}
+						{@const m = entry.market}
+						{@const side = entry.position.outcomeId === 'YES' ? 'YES' : 'NO'}
+						{@const prob = side === 'YES' ? m.yesProbability : 1 - m.yesProbability}
+						{@const currentPct = Math.round(prob * 100)}
+						{@const timer = fmtTimeLeft(Number(m.expiryDate))}
+						<button
+							class="dash-pos-row"
+							onclick={() => goto(resolve(`${AppPath.Markets}/${m.id}`))}
+						>
+							<div class="left">
+								<div class="q">{m.title}</div>
 								<div class="ctx">
-									{t({ locale: $localeStore, key: 'dash.disclosure.contrarian_ctx' })}
+									<span class="side {side.toLowerCase()}">{side}</span>
+									<span>
+										{t({
+											locale: $localeStore,
+											key: 'dash.active.vol_calls',
+											params: { count: marketVolumeCalls(m) }
+										})}
+									</span>
 								</div>
 							</div>
-							<span class="delta-pct delta-won">+{EM_DASH} VXP</span>
-						</div>
+							<div class="right-col">
+								<span class="pct">{currentPct}%</span>
+								<span class="timer" class:urgent={i === 0 && timer.urgent}>{timer.label}</span>
+							</div>
+						</button>
 					{/each}
 				{/if}
 			</div>
-		</details>
 
-		<details class="dash-disclosure">
-			<summary>
-				<span>{t({ locale: $localeStore, key: 'dash.disclosure.untried_title' })}</span>
-				<ChevronRight aria-hidden="true" size={12} strokeWidth={1.8} />
-			</summary>
-			<div class="dash-disclosure-body">
-				{#if untriedCategory}
-					{@const label = t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[untriedCategory] })}
-					<p class="dash-suggest-q">
-						{t({
-							locale: $localeStore,
-							key: 'dash.disclosure.untried_body',
-							params: { category: label }
-						})}
-					</p>
+			<!-- ─── BY CATEGORY breakdown ─── -->
+			<!-- Hidden during World-Cup mode: per-category accuracy is empty
+		     when play is scoped to the event. -->
+			{#if !$worldCupActive}
+				<DashCategoryBreakdown {catRows} />
+			{/if}
+
+			<!-- ─── RANK CONTEXT ─── -->
+			<DashRankContext topCategory={catRows[0]} {wcAccuracy} worldCupActive={$worldCupActive} />
+
+			<!-- ─── ORACLE INSIGHT ─── -->
+			<DashOracleInsight {bestWinTitle} hasBestWin={Boolean(bestWin)} />
+
+			<!-- ─── PAST predictions ─── -->
+			<div class="dash-section">
+				<div class="dash-section-eyebrow">
+					<span>{t({ locale: $localeStore, key: 'dash.past.eyebrow' })}</span>
+					<span class="see-all">
+						{t({ locale: $localeStore, key: 'dash.past.total', params: { count: settledTotal } })}
+					</span>
+				</div>
+				<div class="dash-filter-chips">
 					<button
-						class="dash-suggest-cta"
-						onclick={() => goto(resolve(AppPath.Flow))}
+						class:active={pastFilter === 'all'}
+						onclick={() => (pastFilter = 'all')}
+						type="button"
+					>
+						{t({ locale: $localeStore, key: 'dash.past.filter_all' })}
+					</button>
+					<button
+						class:active={pastFilter === 'won'}
+						onclick={() => (pastFilter = 'won')}
 						type="button"
 					>
 						{t({
 							locale: $localeStore,
-							key: 'dash.disclosure.untried_cta',
-							params: { category: label }
+							key: 'dash.past.filter_won',
+							params: { count: wins }
 						})}
 					</button>
-				{:else}
-					<p class="dash-suggest-q">
-						{t({ locale: $localeStore, key: 'dash.disclosure.untried_empty' })}
-					</p>
-				{/if}
+					<button
+						class:active={pastFilter === 'lost'}
+						onclick={() => (pastFilter = 'lost')}
+						type="button"
+					>
+						{t({
+							locale: $localeStore,
+							key: 'dash.past.filter_lost',
+							params: { count: losses }
+						})}
+					</button>
+				</div>
+				<div>
+					{#if filteredHistory.length === 0}
+						<div class="dash-empty">{t({ locale: $localeStore, key: 'dash.past.empty' })}</div>
+					{:else}
+						{#each filteredHistory.slice(0, 8) as h (h.marketId + h.settledAtMs)}
+							{@const won = h.win}
+							{@const pnlPositive = h.realizedPnlUsd >= ZERO}
+							<div class="dash-past-row">
+								<span class="res" class:lost={!won} class:won>
+									{#if won}
+										<Check aria-hidden="true" size={11} strokeWidth={3} />
+									{:else}
+										<X aria-hidden="true" size={11} strokeWidth={3} />
+									{/if}
+								</span>
+								<div>
+									<div class="q">{marketTitle(h.marketId)}</div>
+									<div class="ctx">
+										{#if h.sideLabel !== null}
+											{t({
+												locale: $localeStore,
+												key: 'dash.past.row_ctx_side_when',
+												params: {
+													side: h.sideLabel,
+													when: fmtRelativeShort(h.settledAtMs)
+												}
+											})}
+										{:else}
+											{t({
+												locale: $localeStore,
+												key: 'dash.past.row_ctx_when',
+												params: { when: fmtRelativeShort(h.settledAtMs) }
+											})}
+										{/if}
+									</div>
+								</div>
+								<span
+									class="delta-pct"
+									class:delta-lost={!pnlPositive}
+									class:delta-won={pnlPositive}
+								>
+									{fmtPastRowAmount(h.realizedPnlUsd)}
+								</span>
+							</div>
+						{/each}
+					{/if}
+				</div>
 			</div>
-		</details>
 
-		<div style:height="32px"></div>
-	</div>
+			<!-- ─── NEXT UNLOCK ─── -->
+			{#if nextAchievement}
+				<DashNextUnlock
+					{daysToMarathon}
+					emblem={nextAchievement.emblem}
+					nameKey={nextAchievement.nameKey}
+					{streak}
+					{streakBarPct}
+					target={MARATHON_DAYS}
+				/>
+			{/if}
+
+			<!-- ─── DISCLOSURE foldouts ─── -->
+			<details class="dash-disclosure">
+				<summary>
+					<span>{t({ locale: $localeStore, key: 'dash.disclosure.rival_title' })}</span>
+					<ChevronRight aria-hidden="true" size={12} strokeWidth={1.8} />
+				</summary>
+				<div class="dash-disclosure-body">
+					<div class="dash-rival">
+						<span class="av">{EM_DASH}</span>
+						<div class="meta">
+							<span class="name">{EM_DASH}</span>
+							<span class="gap"
+								>{t({ locale: $localeStore, key: 'dash.disclosure.rival_gap_unknown' })}</span
+							>
+						</div>
+						<span class="acc-num">{EM_DASH}</span>
+					</div>
+				</div>
+			</details>
+
+			<details class="dash-disclosure">
+				<summary>
+					<span>
+						{t({
+							locale: $localeStore,
+							key: 'dash.disclosure.contrarian_title',
+							params: { count: contrarianWins.length }
+						})}
+					</span>
+					<ChevronRight aria-hidden="true" size={12} strokeWidth={1.8} />
+				</summary>
+				<div class="dash-disclosure-body">
+					{#if contrarianWins.length === 0}
+						<div class="dash-empty">
+							{t({ locale: $localeStore, key: 'dash.disclosure.contrarian_empty' })}
+						</div>
+					{:else}
+						{#each contrarianWins as h (h.marketId + h.settledAtMs)}
+							<div class="dash-past-row dash-past-row-soft">
+								<span class="res won">
+									<Check aria-hidden="true" size={11} strokeWidth={3} />
+								</span>
+								<div>
+									<div class="q">{marketTitle(h.marketId)}</div>
+									<div class="ctx">
+										{t({ locale: $localeStore, key: 'dash.disclosure.contrarian_ctx' })}
+									</div>
+								</div>
+								<span class="delta-pct delta-won">+{EM_DASH} VXP</span>
+							</div>
+						{/each}
+					{/if}
+				</div>
+			</details>
+
+			<details class="dash-disclosure">
+				<summary>
+					<span>{t({ locale: $localeStore, key: 'dash.disclosure.untried_title' })}</span>
+					<ChevronRight aria-hidden="true" size={12} strokeWidth={1.8} />
+				</summary>
+				<div class="dash-disclosure-body">
+					{#if untriedCategory}
+						{@const label = t({
+							locale: $localeStore,
+							key: MARKET_TAG_LABEL_KEYS[untriedCategory]
+						})}
+						<p class="dash-suggest-q">
+							{t({
+								locale: $localeStore,
+								key: 'dash.disclosure.untried_body',
+								params: { category: label }
+							})}
+						</p>
+						<button
+							class="dash-suggest-cta"
+							onclick={() => goto(resolve(AppPath.Flow))}
+							type="button"
+						>
+							{t({
+								locale: $localeStore,
+								key: 'dash.disclosure.untried_cta',
+								params: { category: label }
+							})}
+						</button>
+					{:else}
+						<p class="dash-suggest-q">
+							{t({ locale: $localeStore, key: 'dash.disclosure.untried_empty' })}
+						</p>
+					{/if}
+				</div>
+			</details>
+
+			<div style:height="32px"></div>
+		</div>
+	{/if}
 </PageScaffold>
 
 <style lang="postcss">
