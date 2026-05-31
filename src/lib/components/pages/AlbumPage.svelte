@@ -384,7 +384,9 @@
 		transition: transform 140ms ease;
 	}
 
-	.award:hover {
+	/* Only the interactive grid medallions (buttons) lift on hover — not the
+	   static detail-sheet emblem, which reuses the `.award` class. */
+	button.award:hover {
 		transform: translateY(-1px);
 	}
 
