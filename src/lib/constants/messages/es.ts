@@ -2339,6 +2339,7 @@ export const esMessages = {
 	'welcome.faq.q5': '¿Dónde se guardan mis datos?',
 	'welcome.faq.q6': '¿Qué es un combate?',
 	'welcome.faq.sub': 'Lo que todo nuevo caller pregunta antes de su primera predicción.',
+	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': 'Preguntas',
 	'welcome.faq.title_b': 'que importan.',
 	'welcome.featured_event.countdown': '{days}d para el inicio',

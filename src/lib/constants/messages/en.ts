@@ -2349,6 +2349,7 @@ export const enMessages = {
 	'welcome.faq.q5': 'Where does my data live?',
 	'welcome.faq.q6': 'What’s a battle?',
 	'welcome.faq.sub': 'What every new caller asks before their first prediction.',
+	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': 'Questions',
 	'welcome.faq.title_b': 'worth asking.',
 	'welcome.featured_event.countdown': '{days}d to kickoff',

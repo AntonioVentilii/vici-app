@@ -2344,6 +2344,7 @@ export const frMessages = {
 	'welcome.faq.q5': 'Où sont stockées mes données ?',
 	'welcome.faq.q6': "Qu'est-ce qu'un duel ?",
 	'welcome.faq.sub': 'Ce que tout nouveau caller demande avant son premier pronostic.',
+	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': 'Questions',
 	'welcome.faq.title_b': 'qui comptent.',
 	'welcome.featured_event.countdown': '{days}j avant le coup d’envoi',

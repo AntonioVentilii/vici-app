@@ -2329,6 +2329,7 @@ export const ptMessages = {
 	'welcome.faq.q5': 'Onde meus dados ficam?',
 	'welcome.faq.q6': 'O que é um duelo?',
 	'welcome.faq.sub': 'O que todo novo caller pergunta antes da primeira previsão.',
+	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': 'Perguntas',
 	'welcome.faq.title_b': 'que importam.',
 	'welcome.featured_event.countdown': '{days}d para o início',

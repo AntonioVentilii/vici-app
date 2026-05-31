@@ -2328,6 +2328,7 @@ export const itMessages = {
 	'welcome.faq.q5': 'Dove vivono i miei dati?',
 	'welcome.faq.q6': "Cos'è uno scontro?",
 	'welcome.faq.sub': 'Quello che ogni nuovo caller chiede prima della prima previsione.',
+	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': 'Domande',
 	'welcome.faq.title_b': 'che contano.',
 	'welcome.featured_event.countdown': '{days}g al kickoff',

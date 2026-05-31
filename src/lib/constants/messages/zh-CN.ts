@@ -2213,6 +2213,7 @@ export const zhCnMessages = {
 	'welcome.faq.q5': '我的数据存在哪里？',
 	'welcome.faq.q6': '什么是对决？',
 	'welcome.faq.sub': '每位新 caller 在首次预测前都会问的问题。',
+	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': '值得问的',
 	'welcome.faq.title_b': '问题。',
 	'welcome.featured_event.countdown': '距开赛 {days} 天',

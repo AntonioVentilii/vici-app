@@ -2346,6 +2346,7 @@ export const deMessages = {
 	'welcome.faq.q5': 'Wo liegen meine Daten?',
 	'welcome.faq.q6': 'Was ist ein Battle?',
 	'welcome.faq.sub': 'Was jeder neue Caller vor seiner ersten Vorhersage fragt.',
+	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': 'Fragen,',
 	'welcome.faq.title_b': 'die zählen.',
 	'welcome.featured_event.countdown': '{days} Tage bis Kickoff',

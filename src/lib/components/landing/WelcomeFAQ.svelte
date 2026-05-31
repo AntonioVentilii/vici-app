@@ -103,7 +103,7 @@
 		>
 			{t({ locale: $localeStore, key: 'welcome.faq.contact_prefix' })}
 			<a style="color:var(--accent); font-weight:600;" href="mailto:support@vici.market">
-				support@vici.market
+				{t({ locale: $localeStore, key: 'welcome.faq.support_email' })}
 			</a>
 			{t({ locale: $localeStore, key: 'welcome.faq.contact_suffix' })}
 		</p>
