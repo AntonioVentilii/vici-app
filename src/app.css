@@ -2592,11 +2592,20 @@ a.title-action::after {
 	border-radius: 50%;
 	animation: signin-spin 720ms linear infinite;
 }
+/* On the cream pill the default light track blends into the background —
+   use ink-toned tints so the loading ring stays visible. */
+.signin-provider-btn.is-onboarding.ob-cream .signin-spinner {
+	border-color: rgba(26, 24, 21, 0.2);
+	border-top-color: var(--ink);
+}
 @media (prefers-reduced-motion: reduce) {
 	.signin-spinner {
 		animation: none;
 		/* Keep the element visible as a static indicator. */
 		border-top-color: var(--laurel);
+	}
+	.signin-provider-btn.is-onboarding.ob-cream .signin-spinner {
+		border-top-color: var(--ink);
 	}
 }
 

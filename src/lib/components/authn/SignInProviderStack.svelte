@@ -178,7 +178,7 @@
 		</button>
 	</div>
 {:else}
-	<div class="signin-providers signin-providers-equal" class:is-onboarding={isOnboarding}>
+	<div class="signin-providers signin-providers-equal">
 		<!-- Apple — disabled placeholder until backend ships. -->
 		{#if APPLE_LOGIN_ENABLED}
 			<button
