@@ -274,24 +274,61 @@ comments reference these rules, not vice versa.
 
 Double-commits during the 80 ms window are ignored.
 
-### 7.3 Reward ladder (swipe-count)
+### 7.3 Motion engine — economy + beats
 
-Defined in
-[`src/lib/constants/flow-rewards.constants.ts`](../../../src/lib/constants/flow-rewards.constants.ts).
-Base XP is `BASE_XP_PER_PREDICTION = 10` per committed swipe (YES / NO),
-multiplied by the session-combo multiplier. Bonus XP stacks on top at
-the exact swipe count below — exponential spacing:
+The Flow reward engine lives in
+[`src/lib/utils/motion-engine.utils.ts`](../../../src/lib/utils/motion-engine.utils.ts)
+(`recordMotionSwipe`). A swipe **places** a call; it never resolves one,
+so the engine has no "correct" signal and never moves accuracy. It
+rewards the act of calling and the discipline of showing up. Base XP is
+`BASE_XP_PER_PREDICTION = 10` per committed swipe (YES / NO), multiplied
+by the session-combo multiplier; that is handled in `FlowMode`, separate
+from the engine's genuine VXP grants.
 
-| Swipe # | Bonus XP | Paired copy     | Haptic         |
-| ------- | -------- | --------------- | -------------- |
-| 1       | +50      | "First call."   | `triple-tap`   |
-| 10      | +100     | "Ten deep."     | `double-pulse` |
-| 50      | +250     | "Fifty in."     | `double-pulse` |
-| 250     | +500     | "Two-fifty."    | `double-pulse` |
-| 1000    | +1000    | "One thousand." | `double-pulse` |
+**Deflation-safe VXP economy** — dopamine is not currency. Routine
+swipes, the daily ten, and the low lifetime milestones (1 / 10 / 25)
+mint **nothing**. Real VXP is minted only at:
 
-First-call gets the strongest haptic; other milestones use a double
-pulse so they don't out-shout streak tier-ups.
+- the **overtime finish** (`+25`, repeatable — the only repeatable mint), and
+- rare **lifetime-volume milestones**, in call-units (×50), each firing once ever:
+
+| Lifetime call | Bonus VXP | Character | Extra        |
+| ------------- | --------- | --------- | ------------ |
+| 1             | 0         | Vici      | FIRST CALL   |
+| 10 / 25       | 0         | Oracle    | badge moment |
+| 50            | +50       | Oracle    |              |
+| 100           | +100      | Oracle    | CENTURION    |
+| 250           | +150      | Oracle    |              |
+| 500           | +250      | Oracle    |              |
+| 1000          | +500      | Oracle    | custom title |
+
+Volume milestones seed off the **real lifetime call count**
+(`lifetimeCalls`, passed by the caller); when the caller cannot supply
+it the engine falls back to its own persisted tally. **Credit stacks** —
+if a volume milestone coincides with the daily-complete beat, both
+bonuses are credited even though only one beat animates.
+
+**Copy is a rotating pool per slot** (`POOLS`) — never the same line
+twice running, persisted across sessions under `vici.motion.state.v3`.
+Pools hold **i18n keys** (`motion.pool.*`), so the engine only chooses
+which key and every line still resolves through `t()`. Beats also carry
+`subKey` / `treatKey` / `badgeKey` chips.
+
+**Within-day rhythm** beats (`r3` / `r5` / `r8`) fire on **jittered**
+positions inside a window (2–4, 4–6, 7–9), re-rolled each local day so
+the cadence is never memorised; they carry no VXP. **Overtime rhythm**
+adds a Trickster beat at call 11 and an Oracle beat at call 13. The
+daily session is hard-capped at `DAILY_HARD_CAP = 15`.
+
+**Wildcard** — a rare (~1-in-6) variable-ratio surprise carrying a
+non-currency `treat` (sticker / shield / flair), never VXP.
+**Comeback** — a distinct, no-shame opener (`isComeback`) for a user
+returning after a broken streak, separate from the daily welcome-back.
+
+Haptics map each beat `kind` to a named pattern via `hapticForBeat`
+([`haptics.utils.ts`](../../../src/lib/utils/haptics.utils.ts)) — the
+engine also emits raw `haptic` envelopes, but `FlowMode` drives feedback
+through the named vocabulary (§7.9).
 
 ### 7.4 Daily streak — Flame stages
 
@@ -345,18 +382,23 @@ offered from the first call.
 
 ### 7.7 Character beats — priority resolver
 
-`pickHighestPriorityBeat` in
-[`src/lib/utils/flow-companion.utils.ts`](../../../src/lib/utils/flow-companion.utils.ts).
-Multiple beats can be eligible on a single swipe; only the highest
-priority fires:
+`recordMotionSwipe` in
+[`src/lib/utils/motion-engine.utils.ts`](../../../src/lib/utils/motion-engine.utils.ts)
+runs a **single pass**: many beats can be eligible on one swipe, but only
+the highest-priority one animates — **never two back to back**. The
+comeback opener owns the first call of a returning day; otherwise:
 
 ```
-Resolution > Threshold > Streak tier-up > First-time >
-Swipe-count > Low-consensus > Ambient
+Daily/overtime complete > Volume milestone > Overtime rhythm (11/13) >
+First-time (yes/no/contrarian/leaderboard) > Within-day rhythm (jittered) >
+Wildcard > Ambient (every 10th)
 ```
 
-Lower-priority beats are dropped, not queued — by the next swipe
-they're stale.
+Bonus VXP still **stacks** across all eligible sources even when a
+lower-priority beat is suppressed (see §7.3 credit-stacking). Lower-
+priority beats are dropped, not queued — by the next swipe they're
+stale. A real beat hard-pauses the deck (`FlowMode` sets `flowPaused`
+until `onMotionBeatDone`); the ambient every-10th pop never gates.
 
 ### 7.8 Generative artwork — per-category
 

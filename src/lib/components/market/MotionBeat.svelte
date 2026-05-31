@@ -7,34 +7,50 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
 	import type { MotionBeatPayload } from '$lib/utils/motion-engine.utils';
-	import { FLAME_STAGE_LABEL_KEYS } from '$lib/utils/streak.utils';
+	import type { FlameStage } from '$lib/utils/streak.utils';
 
 	interface Props {
 		beat: MotionBeatPayload;
-		bonusXp?: number;
 		onDone: () => void;
 	}
 
-	const { beat, bonusXp = 0, onDone }: Props = $props();
+	const { beat, onDone }: Props = $props();
 
-	const copy = $derived.by(() => {
-		if (beat.copyKey === null) {
-			return null;
+	// The engine's NONE/SPARK/… tier maps onto the Flame renderer's
+	// lower-case stage names; the resolver never emits NONE for a beat
+	// (it floors to SPARK), so `flame` is a safe fallback.
+	const flameStage = $derived.by((): FlameStage => {
+		switch (beat.tier) {
+			case 'SPARK':
+				return 'spark';
+			case 'EMBER':
+				return 'ember';
+			case 'BLAZE':
+				return 'blaze';
+			case 'INFERNO':
+				return 'inferno';
+			default:
+				return 'flame';
 		}
-
-		// `motion.streak_tier_up` interpolates `{stage}` from the localized
-		// flame label, so resolve it here using the beat's `flameStage`.
-		const params: Record<string, string | number> = { ...(beat.copyParams ?? {}) };
-
-		if (beat.copyKey === 'motion.streak_tier_up' && beat.flameStage !== undefined) {
-			params.stage = t({
-				locale: $localeStore,
-				key: FLAME_STAGE_LABEL_KEYS[beat.flameStage]
-			});
-		}
-
-		return t({ locale: $localeStore, key: beat.copyKey, params });
 	});
+
+	const copy = $derived(
+		beat.copyKey === null ? null : t({ locale: $localeStore, key: beat.copyKey })
+	);
+	const sub = $derived(
+		beat.subKey === undefined ? null : t({ locale: $localeStore, key: beat.subKey })
+	);
+	const treat = $derived(
+		beat.treatKey === undefined ? null : t({ locale: $localeStore, key: beat.treatKey })
+	);
+	const badge = $derived(
+		beat.badgeKey === undefined ? null : t({ locale: $localeStore, key: beat.badgeKey })
+	);
+	const titleUnlocked = $derived(
+		beat.titleCharacter === undefined
+			? null
+			: t({ locale: $localeStore, key: 'motion.title_unlocked' })
+	);
 
 	onMount(() => {
 		const total = beat.duration_ms + 500;
@@ -44,29 +60,39 @@
 	});
 </script>
 
-<div class="motion-beat" class:is-hard={beat.hardPause} aria-live="polite" role="status">
+<div class="motion-beat" aria-live="polite" role="status">
 	<div class="motion-beat-inner">
 		{#if beat.character === 'oracle'}
 			<OracleChar animate size={48} />
 		{:else if beat.character === 'trickster'}
 			<TricksterChar animate lightning size={48} />
 		{:else if beat.character === 'flame'}
-			<FlameChar animate size={48} stage={beat.flameStage ?? 'flame'} />
+			<FlameChar animate size={48} stage={flameStage} />
 		{:else}
 			<ViciChar mood="happy" size={48} />
 		{/if}
 
 		<div class="motion-beat-copy">
-			{#if beat.badgeKey}
-				<span class="motion-beat-badge allcaps">
-					{t({ locale: $localeStore, key: beat.badgeKey })}
-				</span>
+			{#if badge !== null}
+				<span class="motion-beat-badge allcaps">{badge}</span>
 			{/if}
 			{#if copy !== null}
 				<p class="motion-beat-line serif-italic">{copy}</p>
 			{/if}
-			{#if bonusXp > 0}
-				<p class="motion-beat-xp num">+{bonusXp} XP</p>
+			{#if beat.bonusXp > 0 || treat !== null}
+				<p class="motion-beat-meta">
+					{#if beat.bonusXp > 0}
+						<span class="motion-beat-coin num">+{beat.bonusXp} VXP</span>
+					{/if}
+					{#if treat !== null}
+						<span class="motion-beat-treat">{treat}</span>
+					{/if}
+				</p>
+			{/if}
+			{#if titleUnlocked !== null}
+				<span class="motion-beat-badge allcaps">{titleUnlocked}</span>
+			{:else if badge === null && sub !== null}
+				<span class="motion-beat-sub allcaps">{sub}</span>
 			{/if}
 		</div>
 	</div>
@@ -82,9 +108,6 @@
 		justify-content: center;
 		padding: 1.5rem 1.25rem 5.5rem;
 		pointer-events: none;
-	}
-
-	.motion-beat.is-hard {
 		background: color-mix(in srgb, var(--bg-base) 42%, transparent);
 	}
 
@@ -144,10 +167,26 @@
 		color: var(--text-base);
 	}
 
-	.motion-beat-xp {
+	.motion-beat-meta {
 		margin: 0;
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
 		font-size: var(--t-13);
+	}
+
+	.motion-beat-coin {
 		color: var(--laurel);
 		font-weight: 600;
+	}
+
+	.motion-beat-treat {
+		color: var(--text-muted);
+	}
+
+	.motion-beat-sub {
+		font-size: var(--t-10);
+		color: var(--text-muted);
+		letter-spacing: var(--tracking-allcaps);
 	}
 </style>
