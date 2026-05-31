@@ -239,6 +239,7 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 		},
 		flowSessionLength: 10,
 		hapticsEnabled: true,
+		soundEnabled: true,
 		callsPublic: true,
 		flowTags: [],
 		worldCupMode: false,

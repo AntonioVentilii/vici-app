@@ -30,6 +30,13 @@ export interface UserPreferences {
 	notify: NotificationPrefs;
 	flowSessionLength: FlowSessionLength;
 	hapticsEnabled: boolean;
+	/**
+	 * When `true`, Flow plays its Web Audio feedback cues (per-swipe
+	 * tick, milestone beat, wildcard treat, session summary). Sound is
+	 * the primary feedback channel on iOS Safari, which has no Vibration
+	 * API, so it defaults on and is honored independently of haptics.
+	 */
+	soundEnabled: boolean;
 	callsPublic: boolean;
 	flowTags: string[];
 	/**

@@ -241,6 +241,7 @@ export const idlFactory = ({ IDL }) => {
 						streak_reminder: IDL.Bool
 					}),
 					haptics_enabled: IDL.Bool,
+					sound_enabled: IDL.Bool,
 					onboarding_completed: IDL.Bool,
 					default_amount: IDL.Record({
 						flow: IDL.Text,
