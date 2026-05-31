@@ -11,7 +11,7 @@
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
-	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
+	import { categoryLabel, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { TestId } from '$lib/constants/test-ids.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -86,7 +86,7 @@
 								style:border="1px solid color-mix(in srgb, {tagColor(tag)} 28%, transparent)"
 								class="eyebrow-xs market-card-tag inline-flex items-center rounded px-1.5 py-0.5"
 							>
-								{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] })}
+								{categoryLabel({ category: tag, variant: 'short', locale: $localeStore })}
 							</span>
 						{/if}
 						{#if showSuggested}
