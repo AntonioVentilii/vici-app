@@ -209,13 +209,25 @@ export const itMessages = {
 	'tournament.waiting_leagues':
 		'In attesa di altre leghe per completare il tabellone. Finora qualificate {available} su {required}.',
 	'account.back': 'Torna alle impostazioni',
+	'account.email.cancel': 'Annulla',
+	'account.email.change': "Cambia l'email",
+	'account.email.edit_note':
+		"Invieremo un magic link al tuo nuovo indirizzo. Toccalo per confermare. Fino ad allora, l'email attuale resta attiva.",
 	'account.email.empty': 'Nessuna email registrata.',
 	'account.email.eyebrow': 'INDIRIZZO EMAIL',
-	'account.email.pending': "La gestione dell'email arriva con l'aggiornamento backend.",
+	'account.email.placeholder': 'nuova@example.com',
+	'account.email.send': 'Invia link',
+	'account.email.sent_body.prefix': 'Abbiamo inviato un magic link a ',
+	'account.email.sent_body.suffix': '. Toccalo entro 15 minuti per confermare.',
+	'account.email.sent_title': '“Controlla la posta.”',
+	'account.email.soon': "La modifica dell'email arriva con l'aggiornamento backend.",
+	'account.email.used_for': 'Usata per accesso e notifiche importanti.',
+	'account.email.verified': 'Verificata',
 	'account.intro':
-		'VICI usa Internet Identity o Google. Nessuna password. Cambia metodo in qualsiasi momento — i tuoi dati restano.',
-	'account.method.current': 'Metodo di accesso attuale',
+		'VICI usa Internet Identity, Google o un magic link. Nessuna password. Cambia metodo in qualsiasi momento — i tuoi dati restano.',
 	'account.method.eyebrow': 'METODO DI ACCESSO',
+	'account.method.ii': 'Internet Identity',
+	'account.method.magic_link': 'Magic link',
 	'account.return.deleted_body':
 		'Hai programmato l’eliminazione di questo account. Recuperalo ora per mantenere i tuoi dati, oppure esci per lasciarlo com’è.',
 	'account.return.deleted_heading': 'Bentornato.',
@@ -239,6 +251,7 @@ export const itMessages = {
 	'account.return.stay_paused': 'Resta in pausa',
 	'account.return.working': 'In corso…',
 	'account.switch.cta': 'Esci per cambiare metodo',
+	'account.switch.eyebrow': 'CAMBIA METODO',
 	'account.switch.hint':
 		'Cambiando metodo verrai disconnesso. Rientra col nuovo metodo per continuare.',
 	'account.switch.signing_out': 'Esco…',

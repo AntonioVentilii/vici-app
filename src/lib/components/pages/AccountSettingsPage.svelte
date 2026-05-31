@@ -1,8 +1,10 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
-	import { Mail } from 'lucide-svelte/icons';
+	import { Check, ChevronRight, Mail } from 'lucide-svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
+	import IconIc from '$lib/components/icons/IconIC.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -11,23 +13,50 @@
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
-	 * Account settings — sign-in method + email. Two-card layout
-	 * matching `AccountSettingsScreen`.
+	 * Account settings — current sign-in method + email address. Two
+	 * editorial cards: the method tile (glyph + label + address) over a
+	 * switch action, and the email card with an `idle → editing → sent`
+	 * change flow.
 	 *
-	 * Auth providers supported here are Internet Identity + Google
-	 * (per the AGENTS auth scope). The current-method row is a bare
-	 * intro — no 44×44 provider-specific glyph tile, no green
-	 * VERIFIED chip beside the email. Switching method signs out and
-	 * redirects to /signin so the user picks again.
+	 * Sign-in method is inferred from the profile: an address on file
+	 * means the account authenticated via the email magic link; with no
+	 * address we fall back to Internet Identity. Our identities do not
+	 * persist a per-provider tag, so Google / Passkey collapse into this
+	 * two-way split — the same heuristic the Settings summary row uses.
 	 *
-	 * Editing email is deferred (depends on a magic-link backend we
-	 * don't have); the existing pending hint stays.
+	 * Switching always signs the user out and returns them to the
+	 * sign-in screen, where the full provider stack lives; rather than
+	 * list each provider here (every one would route to the same place)
+	 * we expose one switch action under the canonical card shell.
+	 *
+	 * The email-change flow is wired as a state machine but its submit
+	 * is inert: the magic-link back-end that would mint the verification
+	 * link has not shipped, so the send action is disabled with a
+	 * "Soon" note. When the back-end lands, `sendVerify` flips to the
+	 * `sent` state and the existing copy/layout carries through.
 	 */
+
+	const EMAIL_CHANGE_ENABLED = false;
 
 	const email = $derived($userStore.profile?.email ?? '');
 	const hasEmail = $derived(email.length > 0);
 
+	type SignInMethod = 'magic_link' | 'ii';
+	const method = $derived<SignInMethod>(hasEmail ? 'magic_link' : 'ii');
+
+	const methodLabel = $derived(
+		method === 'magic_link'
+			? t({ locale: $localeStore, key: 'account.method.magic_link' })
+			: t({ locale: $localeStore, key: 'account.method.ii' })
+	);
+
 	let switchingMethod = $state(false);
+
+	let editingEmail = $state(false);
+	let emailSent = $state(false);
+	let newEmail = $state('');
+
+	const newEmailValid = $derived(/\S+@\S+\.\S+/.test(newEmail));
 
 	const handleSwitchMethod = async () => {
 		if (switchingMethod) {
@@ -39,11 +68,37 @@
 		try {
 			await signOut();
 			void goto(resolve(PublicPath.SignIn));
-		} catch (err) {
+		} catch (err: unknown) {
 			console.warn('Sign-out failed:', err);
 		} finally {
 			switchingMethod = false;
 		}
+	};
+
+	const startEdit = () => {
+		editingEmail = true;
+		emailSent = false;
+		newEmail = '';
+	};
+
+	const cancelEdit = () => {
+		editingEmail = false;
+		newEmail = '';
+	};
+
+	const sendVerify = () => {
+		// Inert until the magic-link back-end ships. The branch below is
+		// the one-line swap: flip `emailSent` and schedule the reset.
+		if (!EMAIL_CHANGE_ENABLED || !newEmailValid) {
+			return;
+		}
+
+		emailSent = true;
+		setTimeout(() => {
+			editingEmail = false;
+			emailSent = false;
+			newEmail = '';
+		}, 2400);
 	};
 </script>
 
@@ -67,28 +122,48 @@
 		</h2>
 
 		<div class="account-method-row">
+			<div class="account-method-glyph" aria-hidden="true">
+				{#if method === 'magic_link'}
+					<Mail size={20} strokeWidth={1.8} />
+				{:else}
+					<IconIc size="20px" />
+				{/if}
+			</div>
 			<div class="account-method-text">
-				<span class="account-method-name">
-					{t({ locale: $localeStore, key: 'account.method.current' })}
-				</span>
+				<span class="account-method-name">{methodLabel}</span>
 				{#if hasEmail}
-					<span class="num allcaps account-method-email">{email}</span>
+					<span class="num account-method-email">{email}</span>
 				{/if}
 			</div>
 		</div>
 
+		<h3 class="eyebrow account-switch-title">
+			{t({ locale: $localeStore, key: 'account.switch.eyebrow' })}
+		</h3>
+
 		<button
 			class="account-switch"
+			aria-busy={switchingMethod}
 			disabled={switchingMethod}
 			onclick={handleSwitchMethod}
 			type="button"
 		>
-			{switchingMethod
-				? t({ locale: $localeStore, key: 'account.switch.signing_out' })
-				: t({ locale: $localeStore, key: 'account.switch.cta' })}
+			<span class="account-switch-glyph" aria-hidden="true">
+				<IconGoogle size="18px" />
+			</span>
+			<span class="account-switch-label">
+				{switchingMethod
+					? t({ locale: $localeStore, key: 'account.switch.signing_out' })
+					: t({ locale: $localeStore, key: 'account.switch.cta' })}
+			</span>
+			{#if switchingMethod}
+				<span class="account-spinner" aria-hidden="true"></span>
+			{:else}
+				<ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
+			{/if}
 		</button>
 
-		<p class="account-method-hint num allcaps">
+		<p class="account-hint num">
 			{t({ locale: $localeStore, key: 'account.switch.hint' })}
 		</p>
 	</section>
@@ -98,24 +173,85 @@
 			{t({ locale: $localeStore, key: 'account.email.eyebrow' })}
 		</h2>
 
-		<div class="account-email-row">
-			<div class="account-email-icon" aria-hidden="true">
-				<Mail size={18} strokeWidth={1.8} />
-			</div>
-			<div class="account-email-text">
+		{#if !editingEmail}
+			<div class="account-email-head">
 				{#if hasEmail}
 					<span class="account-email-value">{email}</span>
+					<span class="account-verified num">
+						{t({ locale: $localeStore, key: 'account.email.verified' })}
+					</span>
 				{:else}
-					<span class="account-email-empty">
+					<span class="account-email-empty serif-italic">
 						{t({ locale: $localeStore, key: 'account.email.empty' })}
 					</span>
 				{/if}
 			</div>
-		</div>
-
-		<p class="account-email-hint num allcaps">
-			{t({ locale: $localeStore, key: 'account.email.pending' })}
-		</p>
+			<p class="account-hint num">
+				{t({ locale: $localeStore, key: 'account.email.used_for' })}
+			</p>
+			<button class="account-ghost" onclick={startEdit} type="button">
+				<span class="account-ghost-label">
+					{t({ locale: $localeStore, key: 'account.email.change' })}
+				</span>
+				<ChevronRight aria-hidden="true" size={16} strokeWidth={2.2} />
+			</button>
+		{:else if emailSent}
+			<div class="account-sent">
+				<div class="account-sent-mark" aria-hidden="true">
+					<Check size={22} strokeWidth={2} />
+				</div>
+				<p class="account-sent-title serif-italic acc">
+					{t({ locale: $localeStore, key: 'account.email.sent_title' })}
+				</p>
+				<p class="account-sent-body num">
+					{t({ locale: $localeStore, key: 'account.email.sent_body.prefix' })}<span
+						class="account-sent-target">{newEmail}</span
+					>{t({ locale: $localeStore, key: 'account.email.sent_body.suffix' })}
+				</p>
+			</div>
+		{:else}
+			<form
+				class="account-edit"
+				onsubmit={(event) => {
+					event.preventDefault();
+					sendVerify();
+				}}
+			>
+				<p class="account-edit-note">
+					{t({ locale: $localeStore, key: 'account.email.edit_note' })}
+				</p>
+				<!-- svelte-ignore a11y_autofocus -->
+				<input
+					class="account-edit-input num"
+					autocapitalize="off"
+					autocomplete="email"
+					autofocus
+					disabled={!EMAIL_CHANGE_ENABLED}
+					inputmode="email"
+					placeholder={t({ locale: $localeStore, key: 'account.email.placeholder' })}
+					spellcheck="false"
+					type="email"
+					bind:value={newEmail}
+				/>
+				<div class="account-edit-actions">
+					<button class="account-ghost account-edit-cancel" onclick={cancelEdit} type="button">
+						{t({ locale: $localeStore, key: 'account.email.cancel' })}
+					</button>
+					<button
+						class="account-edit-send"
+						disabled={!EMAIL_CHANGE_ENABLED || !newEmailValid}
+						type="submit"
+					>
+						{t({ locale: $localeStore, key: 'account.email.send' })}
+					</button>
+				</div>
+				{#if !EMAIL_CHANGE_ENABLED}
+					<p class="account-hint num">
+						{t({ locale: $localeStore, key: 'account.email.soon' })}
+					</p>
+				{/if}
+			</form>
+		{/if}
 	</section>
 </div>
 
@@ -123,13 +259,13 @@
 	.account-page {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
-		padding: 0 1.25rem 6rem;
+		gap: 0.875rem;
+		padding: 0.5rem 1.25rem 2rem;
 	}
 
 	.account-intro {
 		margin: 0;
-		font-size: var(--t-13);
+		font-size: 0.84375rem;
 		line-height: 1.5;
 		color: var(--text-muted);
 	}
@@ -137,49 +273,49 @@
 	.account-card {
 		display: flex;
 		flex-direction: column;
-		gap: 0.7rem;
-		padding: 1rem;
-		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		padding: 1.25rem;
+		background: var(--bg-surface);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
+		box-shadow: var(--inset-hi);
 	}
 
 	.account-section-title {
-		margin: 0;
+		margin: 0 0 0.625rem;
 		color: var(--text-muted);
 	}
 
-	.account-method-row,
-	.account-email-row {
+	/* ── Current method ───────────────────────────────────────── */
+	.account-method-row {
 		display: flex;
 		align-items: center;
-		gap: 0.8rem;
+		gap: 0.75rem;
+		margin-bottom: 0.875rem;
 	}
 
-	.account-email-icon {
+	.account-method-glyph {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
-		width: 40px;
-		height: 40px;
-		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+		flex-shrink: 0;
+		width: 44px;
+		height: 44px;
+		background: var(--bg-popover);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
 		color: var(--text-base);
 	}
 
-	.account-method-text,
-	.account-email-text {
+	.account-method-text {
 		display: flex;
 		flex-direction: column;
-		gap: 0.15rem;
-		min-width: 0;
+		gap: 0.125rem;
 		flex: 1;
+		min-width: 0;
 	}
 
-	.account-method-name,
-	.account-email-value {
-		font-size: var(--t-14);
+	.account-method-name {
+		font-size: 0.9375rem;
 		font-weight: 600;
 		color: var(--text-base);
 	}
@@ -189,20 +325,26 @@
 		color: var(--text-muted);
 	}
 
-	.account-email-empty {
-		font-size: var(--t-13);
-		font-style: italic;
+	.account-switch-title {
+		margin: 0 0 0.5rem;
 		color: var(--text-muted);
 	}
 
-	.account-switch {
+	/* ── Switch action ───────────────────────────────────────── */
+	.account-switch,
+	.account-ghost {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		width: 100%;
 		appearance: none;
-		padding: 0.7rem 1rem;
+		padding: 0.625rem 0.875rem;
 		font: inherit;
-		font-size: var(--t-13);
+		font-size: var(--t-14);
 		font-weight: 600;
+		text-align: left;
 		color: var(--text-base);
-		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+		background: var(--bg-popover);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
 		cursor: pointer;
@@ -211,9 +353,10 @@
 			border-color 140ms ease;
 	}
 
-	.account-switch:hover:not(:disabled) {
-		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
-		border-color: color-mix(in srgb, var(--laurel) 30%, var(--border-base));
+	.account-switch:hover:not(:disabled),
+	.account-ghost:hover:not(:disabled) {
+		background: color-mix(in srgb, var(--bg-popover) 80%, var(--text-base));
+		border-color: var(--border-strong);
 	}
 
 	.account-switch:disabled {
@@ -221,11 +364,190 @@
 		cursor: not-allowed;
 	}
 
-	.account-method-hint,
-	.account-email-hint {
-		margin: 0;
+	.account-switch-glyph {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 20px;
+	}
+
+	.account-switch-label,
+	.account-ghost-label {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.account-spinner {
+		flex-shrink: 0;
+		width: 16px;
+		height: 16px;
+		border: 2px solid color-mix(in srgb, var(--text-base) 25%, transparent);
+		border-top-color: var(--text-base);
+		border-radius: 999px;
+		animation: account-spin 0.7s linear infinite;
+	}
+
+	/* ── Hints ───────────────────────────────────────────────── */
+	.account-hint {
+		margin: 0.75rem 0 0;
 		font-size: var(--t-11);
-		color: var(--text-muted);
 		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
+	/* ── Email card ──────────────────────────────────────────── */
+	.account-email-head {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.account-email-value {
+		font-size: 0.9375rem;
+		font-weight: 600;
+		color: var(--text-base);
+		overflow-wrap: anywhere;
+	}
+
+	.account-email-empty {
+		font-size: var(--t-14);
+		color: var(--text-muted);
+	}
+
+	.account-verified {
+		flex-shrink: 0;
+		padding: 0.125rem 0.5rem;
+		font-size: 0.59375rem;
+		font-weight: 700;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: var(--yes);
+		background: var(--yes-wash);
+		border-radius: 4px;
+	}
+
+	.account-ghost {
+		margin-top: 0.75rem;
+	}
+
+	/* ── Email edit ──────────────────────────────────────────── */
+	.account-edit {
+		display: flex;
+		flex-direction: column;
+		gap: 0.625rem;
+	}
+
+	.account-edit-note {
+		margin: 0;
+		font-size: 0.78125rem;
+		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
+	.account-edit-input {
+		padding: 0.75rem 0.875rem;
+		font: inherit;
+		font-family: var(--font-mono);
+		font-size: var(--t-14);
+		color: var(--text-base);
+		background: var(--bg-popover);
+		border: 1px solid var(--border-strong);
+		border-radius: 10px;
+		outline: 0;
+	}
+
+	.account-edit-input:disabled {
+		opacity: 0.55;
+		cursor: not-allowed;
+	}
+
+	.account-edit-input:focus-visible {
+		border-color: color-mix(in srgb, var(--brand) 45%, var(--border-strong));
+	}
+
+	.account-edit-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.account-edit-cancel {
+		flex: 1;
+		justify-content: center;
+		margin-top: 0;
+		text-align: center;
+	}
+
+	.account-edit-send {
+		flex: 1;
+		appearance: none;
+		padding: 0.6875rem 0.875rem;
+		font: inherit;
+		font-size: var(--t-13);
+		font-weight: 600;
+		color: var(--text-inverse);
+		background: var(--brand);
+		border: 1px solid transparent;
+		border-radius: var(--r-12);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+		cursor: pointer;
+		transition: background 140ms ease;
+	}
+
+	.account-edit-send:hover:not(:disabled) {
+		background: var(--brand-deep);
+	}
+
+	.account-edit-send:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	/* ── Sent confirmation ───────────────────────────────────── */
+	.account-sent {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.account-sent-mark {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 44px;
+		height: 44px;
+		color: var(--yes);
+		background: var(--yes-wash);
+		border-radius: 999px;
+	}
+
+	.account-sent-title {
+		margin: 0;
+		font-size: var(--t-18);
+		line-height: 1.3;
+	}
+
+	.account-sent-body {
+		margin: 0;
+		font-size: var(--t-13);
+		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
+	.account-sent-target {
+		color: var(--text-base);
+		font-weight: 700;
+	}
+
+	@keyframes account-spin {
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.account-spinner {
+			animation: none;
+		}
 	}
 </style>

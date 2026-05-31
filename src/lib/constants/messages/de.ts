@@ -210,13 +210,26 @@ export const deMessages = {
 	'tournament.waiting_leagues':
 		'Warten auf weitere Ligen, um die Tabelle zu füllen. Bisher {available} von {required} qualifiziert.',
 	'account.back': 'Zurück zu den Einstellungen',
+	'account.email.cancel': 'Abbrechen',
+	'account.email.change': 'E-Mail ändern',
+	'account.email.edit_note':
+		'Wir senden einen Magic Link an deine neue Adresse. Tippe darauf, um zu bestätigen. Bis dahin bleibt deine aktuelle E-Mail aktiv.',
 	'account.email.empty': 'Keine E-Mail hinterlegt.',
 	'account.email.eyebrow': 'E-MAIL-ADRESSE',
-	'account.email.pending': 'E-Mail-Verwaltung kommt mit dem Backend-Update.',
+	'account.email.placeholder': 'neu@example.com',
+	'account.email.send': 'Link senden',
+	'account.email.sent_body.prefix': 'Wir haben einen Magic Link an ',
+	'account.email.sent_body.suffix':
+		' gesendet. Tippe innerhalb von 15 Minuten darauf, um zu bestätigen.',
+	'account.email.sent_title': '„Sieh in dein Postfach.“',
+	'account.email.soon': 'E-Mail-Änderungen kommen mit dem Backend-Update.',
+	'account.email.used_for': 'Für Anmeldung und wichtige Konto-Benachrichtigungen.',
+	'account.email.verified': 'Verifiziert',
 	'account.intro':
-		'VICI nutzt Internet Identity oder Google. Keine Passwörter. Methode jederzeit wechseln — deine Daten bleiben.',
-	'account.method.current': 'Aktuelle Anmeldemethode',
+		'VICI nutzt Internet Identity, Google oder einen Magic Link. Keine Passwörter. Methode jederzeit wechseln — deine Daten bleiben.',
 	'account.method.eyebrow': 'AKTUELLE ANMELDEMETHODE',
+	'account.method.ii': 'Internet Identity',
+	'account.method.magic_link': 'Magic Link',
 	'account.return.deleted_body':
 		'Du hast die Löschung dieses Kontos geplant. Stelle es jetzt wieder her, um deine Daten zu behalten, oder melde dich ab, um es so zu lassen.',
 	'account.return.deleted_heading': 'Willkommen zurück.',
@@ -240,6 +253,7 @@ export const deMessages = {
 	'account.return.stay_paused': 'Pausiert bleiben',
 	'account.return.working': 'Wird ausgeführt…',
 	'account.switch.cta': 'Abmelden zum Wechseln',
+	'account.switch.eyebrow': 'METHODE WECHSELN',
 	'account.switch.hint':
 		'Ein Methodenwechsel meldet dich ab. Melde dich mit der neuen Methode wieder an.',
 	'account.switch.signing_out': 'Melde ab…',
