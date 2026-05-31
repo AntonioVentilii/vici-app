@@ -24,10 +24,10 @@
  */
 export const EXIT_SIGNAL_REASONS = [
 	'not-for-me',
-	'too-complex',
-	'bored',
-	'no-friends',
-	'too-noisy',
+	'too-busy',
+	'privacy',
+	'duplicate',
+	'bugs',
 	'other'
 ] as const;
 

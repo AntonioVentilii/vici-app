@@ -401,8 +401,8 @@ hibernated.
 
 1. **Profile soft-delete vs hard-delete.** Resolved as soft-delete
    with a 30-day recovery window, then hard-delete on expiry.
-2. **Reason enum.** `not-for-me`, `too-complex`, `bored`,
-   `no-friends`, `too-noisy`, `other` (the six buckets in
+2. **Reason enum.** `not-for-me`, `too-busy`, `privacy`,
+   `duplicate`, `bugs`, `other` (the six buckets in
    `EXIT_SIGNAL_REASONS`, `src/lib/types/exit-signal.ts`; the
    validator rejects anything else as `invalid_input`).
 3. **Owner-leagues blocker.** Refuse + surface a "transfer first"
@@ -471,21 +471,21 @@ The full tournament chain has landed.
 
 ## Open questions summary (decisions needed before code)
 
-| #   | Decision                     | Default if not specified                                                      |
-| --- | ---------------------------- | ----------------------------------------------------------------------------- |
-| 1.1 | Stats rolling window         | Lifetime + monthly side-by-side                                               |
-| 1.2 | `MIN_CALLS_FOR_RANK`         | 200 (per prototype)                                                           |
-| 1.3 | Featured-event scoping shape | Parameter on existing fields                                                  |
-| 2.1 | Monthly cycle anchor         | UTC midnight, 1st of month                                                    |
-| 2.2 | Tie-break order              | accuracy → totalCalls → leagueId asc                                          |
-| 2.3 | Mid-month-join eligibility   | Requires `joinedAtMs < monthStartMs`                                          |
-| 3.1 | Tournament entry criterion   | Top-16 by total members                                                       |
-| 3.2 | Round windows (days)         | 7 / 5 / 3 / 7                                                                 |
-| 3.3 | Min calls per match          | 50 per league                                                                 |
-| 3.4 | Disband during tournament    | Forfeit; opponent advances                                                    |
-| 4.1 | Profile delete depth         | Soft delete + 30-day recovery, then hard-delete                               |
-| 4.2 | Reason enum values           | `not-for-me` / `too-complex` / `bored` / `no-friends` / `too-noisy` / `other` |
-| 4.3 | Owner-leagues guard          | Refuse + inline transfer/disband resolution                                   |
+| #   | Decision                     | Default if not specified                                               |
+| --- | ---------------------------- | ---------------------------------------------------------------------- |
+| 1.1 | Stats rolling window         | Lifetime + monthly side-by-side                                        |
+| 1.2 | `MIN_CALLS_FOR_RANK`         | 200 (per prototype)                                                    |
+| 1.3 | Featured-event scoping shape | Parameter on existing fields                                           |
+| 2.1 | Monthly cycle anchor         | UTC midnight, 1st of month                                             |
+| 2.2 | Tie-break order              | accuracy → totalCalls → leagueId asc                                   |
+| 2.3 | Mid-month-join eligibility   | Requires `joinedAtMs < monthStartMs`                                   |
+| 3.1 | Tournament entry criterion   | Top-16 by total members                                                |
+| 3.2 | Round windows (days)         | 7 / 5 / 3 / 7                                                          |
+| 3.3 | Min calls per match          | 50 per league                                                          |
+| 3.4 | Disband during tournament    | Forfeit; opponent advances                                             |
+| 4.1 | Profile delete depth         | Soft delete + 30-day recovery, then hard-delete                        |
+| 4.2 | Reason enum values           | `not-for-me` / `too-busy` / `privacy` / `duplicate` / `bugs` / `other` |
+| 4.3 | Owner-leagues guard          | Refuse + inline transfer/disband resolution                            |
 
 Approve / amend the defaults above to unblock implementation. Each
 proposal can be implemented independently; suggested order is
