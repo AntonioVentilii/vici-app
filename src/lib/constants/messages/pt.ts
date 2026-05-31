@@ -420,7 +420,7 @@ export const ptMessages = {
 	'card.sharp_signal': 'Top previsores: {percent}% {side}',
 	'card.momentum_delta': '+{count} hoje',
 	'card.tap_depth': 'TOQUE PARA DETALHES',
-	'card.you_called_eyebrow': 'VOCÊ CHAMOU',
+	'card.you_called_eyebrow': 'SUA CHAMADA',
 	'card.your_accuracy_line': 'Sua precisão em {category}: {pct}% · {calls} calls',
 	'challenge.create.error.missing_premium': 'Prenda em falta',
 	'challenge.create.error.missing_premium_message':
