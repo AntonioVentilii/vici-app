@@ -33,6 +33,8 @@ export interface LeagueWithRole {
 	league: LeagueDoc;
 	role: LeagueMemberRole;
 	joinedAtMs: number;
+	/** Total members in the league (owner included). */
+	memberCount: number;
 }
 
 // ─── Reads ───────────────────────────────────────────────────────────────
@@ -44,7 +46,7 @@ export interface LeagueWithRole {
 export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
 	const { items } = await functions.listMyLeagues();
 
-	return items.map(({ league, role, joined_at_ms }) => ({
+	return items.map(({ league, role, joined_at_ms, member_count }) => ({
 		league: {
 			id: league.id,
 			name: league.name,
@@ -55,7 +57,8 @@ export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
 			accentColor: league.accent_color
 		},
 		role,
-		joinedAtMs: joined_at_ms
+		joinedAtMs: joined_at_ms,
+		memberCount: member_count
 	}));
 };
 

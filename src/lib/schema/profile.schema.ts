@@ -64,6 +64,19 @@ export const UserProfileSchema = j.strictObject({
 	// achievement progress; recomputed from clearing history during
 	// `calculateAndSyncStats`.
 	contrarianWins: j.number().default(0),
+	// Consecutive calendar days the user has held a top-10% global
+	// leaderboard position (rank ≤ profileCount / 10). Drives the
+	// `top-decile` achievement. Bumped at most once per local day in
+	// `calculateAndSyncStats` (mirrors the `dailyStreak` once-per-day
+	// pattern) and reset to 0 the first time a sync on a new day finds the
+	// user outside the top decile. Mirror any change here in
+	// `src/satellite/api-schemas.ts`.
+	topDecileStreak: j.number().default(0),
+	// Local `YYYY-MM-DD` of the last day `topDecileStreak` was evaluated —
+	// the once-per-day guard for the streak bump. `optional()` with no
+	// default so a never-evaluated profile reads as absent. Mirror any
+	// change here in `src/satellite/api-schemas.ts`.
+	lastTopDecileDay: j.string().optional(),
 	// `preferences` carries every cross-device user setting. Defaults are
 	// applied at every leaf because the satellite-side encoder traps with
 	// `missing field X` the moment `app_list_leaderboard` / `app_get_profile`

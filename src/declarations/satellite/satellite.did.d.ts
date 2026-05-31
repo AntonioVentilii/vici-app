@@ -74,6 +74,9 @@ export interface AppClaimWorldsPodiumPrizeResult {
 	awards_created: number;
 	awards_already_claimed: number;
 }
+export interface AppCountProfilesResult {
+	count: number;
+}
 export interface AppDeleteMyAccountArgs {
 	note: string;
 	league_resolutions:
@@ -222,6 +225,7 @@ export interface AppGetProfileResult {
 				{
 					pnl: number;
 					streak: number;
+					top_decile_streak: number;
 					nickname: string;
 					hibernated_at_ms: [] | [number];
 					daily_goal_date: [] | [string];
@@ -256,6 +260,7 @@ export interface AppGetProfileResult {
 					archetype: string;
 					last_active_day: [] | [string];
 					total_trades: number;
+					last_top_decile_day: [] | [string];
 					win_rate: number;
 					visibility: { friends_and_followers: null } | { public: null } | { friends_only: null };
 					daily_streak: number;
@@ -266,6 +271,12 @@ export interface AppGetProfileResult {
 					accuracy: number;
 				}
 		  ];
+}
+export interface AppGetUserRankArgs {
+	principal_str: string;
+}
+export interface AppGetUserRankResult {
+	rank: [] | [number];
 }
 export interface AppHibernateMyAccountResult {
 	ok: boolean;
@@ -457,6 +468,7 @@ export interface AppListMyLeaguesResult {
 			description: [] | [string];
 			created_at_ms: number;
 		};
+		member_count: number;
 	}>;
 }
 export interface AppListMyReferralsResult {
@@ -719,6 +731,7 @@ export interface _SERVICE {
 		[AppClaimWorldsPodiumPrizeArgs],
 		AppClaimWorldsPodiumPrizeResult
 	>;
+	app_count_profiles: ActorMethod<[], AppCountProfilesResult>;
 	app_delete_my_account: ActorMethod<[AppDeleteMyAccountArgs], AppDeleteMyAccountResult>;
 	app_follow_user: ActorMethod<[AppFollowUserArgs], undefined>;
 	app_get_affiliation_stats: ActorMethod<
@@ -733,6 +746,7 @@ export interface _SERVICE {
 	>;
 	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
+	app_get_user_rank: ActorMethod<[AppGetUserRankArgs], AppGetUserRankResult>;
 	app_hibernate_my_account: ActorMethod<[], AppHibernateMyAccountResult>;
 	app_list_affiliation_stats: ActorMethod<
 		[AppListAffiliationStatsArgs],

@@ -50,7 +50,11 @@ import {
 	syncRoleToEngineOnSet
 } from '$satellite/services/engine-sync.services';
 import { assertSetExitSignal } from '$satellite/services/exit-signal.services';
-import { listLeaderboard as listLeaderboardFn } from '$satellite/services/leaderboard.services';
+import {
+	countNonHiddenProfilesFn,
+	getUserRankFn,
+	listLeaderboard as listLeaderboardFn
+} from '$satellite/services/leaderboard.services';
 import {
 	assertDeleteLeagueMember,
 	assertSetLeagueMember
@@ -177,6 +181,34 @@ export const listLeaderboard = defineQuery({
 	}),
 	handler: () => ({
 		items: listLeaderboardFn().map(toWireProfile)
+	})
+});
+
+// Count of non-hidden profiles — the denominator for the `top-decile`
+// achievement (top 10% ⇔ rank ≤ count / 10). Primitive result, so no
+// wire schema needed.
+export const countProfiles = defineQuery({
+	result: j.strictObject({
+		count: j.number()
+	}),
+	handler: () => ({
+		count: countNonHiddenProfilesFn()
+	})
+});
+
+// 1-based rank of a principal within the global leaderboard ordering
+// (points desc, owner asc tie-break — identical to `listLeaderboard`).
+// `rank` is omitted when the principal is unranked (no profile / hidden).
+// `principal` is reserved by the schema layer; exposed as `principalStr`.
+export const getUserRank = defineQuery({
+	args: j.strictObject({
+		principalStr: PrincipalTextSchema
+	}),
+	result: j.strictObject({
+		rank: j.optional(j.number())
+	}),
+	handler: ({ principalStr }) => ({
+		rank: getUserRankFn({ principal: principalStr })
 	})
 });
 

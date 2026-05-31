@@ -74,14 +74,14 @@ export const esMessages = {
 	'battles.your_rank': '#{rank} de {total}',
 	'battles.your_school': 'Tu universidad · {name}',
 	'achievement.contrarian.name': 'Contrario',
-	'achievement.first_blood.description': 'Haz tu primera predicción',
-	'achievement.first_blood.detail':
+	'achievement.first_call.description': 'Haz tu primera predicción',
+	'achievement.first_call.detail':
 		'Se otorga en el momento en que te comprometes con tu primera predicción. Es el único logro que no se puede ganar dos veces.',
-	'achievement.first_blood.name': 'Primera predicción',
-	'achievement.lvl_25.description': 'Alcanza el nivel 25',
-	'achievement.lvl_25.detail':
-		'Alcanza el nivel 25. Gana XP con cada predicción resuelta, bono de racha e hito — una vez que tu nivel supere el 25, el sticker es tuyo para siempre.',
-	'achievement.lvl_25.name': 'Nivel 25',
+	'achievement.first_call.name': 'Primera predicción',
+	'achievement.league_founder.description': 'Funda una liga de 3 miembros',
+	'achievement.league_founder.detail':
+		'Fundador de una liga con tres o más miembros. Se otorga una sola vez. Permanece aunque la liga se disuelva más adelante.',
+	'achievement.league_founder.name': 'Fundador de liga',
 	'achievement.marathon.description': 'Racha de 30 días',
 	'achievement.marathon.detail':
 		'Alcanza una racha de predicciones de 30 días. Al menos una predicción resuelta o abierta por día, sin interrupciones. Un día con solo predicciones omitidas no cuenta.',
@@ -94,6 +94,10 @@ export const esMessages = {
 	'achievement.oracle.detail':
 		'Mantén al menos el 80% de precisión en tus últimas 50 predicciones resueltas. El título Oracle se recalcula a diario; si pierdes precisión, el sticker se queda — pero el título pasa a quien lo ostente en ese momento.',
 	'achievement.oracle.name': 'Oráculo',
+	'achievement.top_decile.description': '7 días en el top 10%',
+	'achievement.top_decile.detail':
+		'Mantén una posición en el top 10% de la clasificación global durante siete días consecutivos. Tu posición se comprueba una vez al día; si bajas del umbral, la racha se reinicia.',
+	'achievement.top_decile.name': 'Top 10% global',
 	'achievement.toast.message': '{name} desbloqueado · +{xp} XP',
 	'achievement.toast.title': 'Logro desbloqueado',
 	'flow.companion.trickster.short': 'de acuerdo · 2× XP',

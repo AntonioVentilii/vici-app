@@ -95,6 +95,12 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		hibernatedAtMs: profile.hibernatedAtMs,
 		unlockedAchievements: profile.unlockedAchievements ?? [],
 		contrarianWins: profile.contrarianWins ?? 0,
+		// Top-decile streak state (drives the `top-decile` achievement).
+		// `topDecileStreak` defaults to 0 for legacy rows; `lastTopDecileDay`
+		// is `optional()` so an absent value (never evaluated) round-trips
+		// unchanged.
+		topDecileStreak: profile.topDecileStreak ?? 0,
+		lastTopDecileDay: profile.lastTopDecileDay,
 		preferences: sanitizedPreferences
 	};
 };

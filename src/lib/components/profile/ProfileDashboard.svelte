@@ -379,8 +379,13 @@
 			winStreak: profile.streak ?? 0,
 			dailyStreak,
 			accuracy,
-			level,
-			contrarianWins: profile.contrarianWins ?? 0
+			contrarianWins: profile.contrarianWins ?? 0,
+			// `league-founder` reflects the persisted unlock here (the rail
+			// reads `unlockedAchievements`); the dashboard doesn't fetch
+			// league membership, so the live axis stays `false` and the
+			// sticky persisted flag drives the earned state.
+			ownsQualifyingLeague: false,
+			topDecileStreak: profile.topDecileStreak ?? 0
 		})
 	);
 
@@ -408,9 +413,9 @@
 	 *   - `marathon`→ target
 	 *   - default   → trophy
 	 *
-	 * Every other tile (first-blood, contrarian, lvl-25, …) falls
-	 * through to Trophy. The Album surface uses the same mapping so
-	 * the affordance carries across surfaces.
+	 * Every other tile (first-call, contrarian, league-founder, …)
+	 * falls through to Trophy. The Album surface uses the same mapping
+	 * so the affordance carries across surfaces.
 	 */
 	const iconForAchievement = (id: string): typeof Trophy => {
 		if (id === 'oracle') {

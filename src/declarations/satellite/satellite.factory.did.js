@@ -70,6 +70,7 @@ export const idlFactory = ({ IDL }) => {
 		awards_created: IDL.Float64,
 		awards_already_claimed: IDL.Float64
 	});
+	const AppCountProfilesResult = IDL.Record({ count: IDL.Float64 });
 	const AppDeleteMyAccountArgs = IDL.Record({
 		note: IDL.Text,
 		league_resolutions: IDL.Opt(
@@ -214,6 +215,7 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				pnl: IDL.Float64,
 				streak: IDL.Float64,
+				top_decile_streak: IDL.Float64,
 				nickname: IDL.Text,
 				hibernated_at_ms: IDL.Opt(IDL.Float64),
 				daily_goal_date: IDL.Opt(IDL.Text),
@@ -256,6 +258,7 @@ export const idlFactory = ({ IDL }) => {
 				archetype: IDL.Text,
 				last_active_day: IDL.Opt(IDL.Text),
 				total_trades: IDL.Float64,
+				last_top_decile_day: IDL.Opt(IDL.Text),
 				win_rate: IDL.Float64,
 				visibility: IDL.Variant({
 					friends_and_followers: IDL.Null,
@@ -271,6 +274,8 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppGetUserRankArgs = IDL.Record({ principal_str: IDL.Text });
+	const AppGetUserRankResult = IDL.Record({ rank: IDL.Opt(IDL.Float64) });
 	const AppHibernateMyAccountResult = IDL.Record({
 		ok: IDL.Bool,
 		reason: IDL.Opt(IDL.Variant({ deleted: IDL.Null, no_profile: IDL.Null }))
@@ -563,7 +568,8 @@ export const idlFactory = ({ IDL }) => {
 					invite_code: IDL.Text,
 					description: IDL.Opt(IDL.Text),
 					created_at_ms: IDL.Float64
-				})
+				}),
+				member_count: IDL.Float64
 			})
 		)
 	});
@@ -867,6 +873,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppClaimWorldsPodiumPrizeResult],
 			[]
 		),
+		app_count_profiles: IDL.Func([], [AppCountProfilesResult], ['query']),
 		app_delete_my_account: IDL.Func([AppDeleteMyAccountArgs], [AppDeleteMyAccountResult], []),
 		app_follow_user: IDL.Func([AppFollowUserArgs], [], []),
 		app_get_affiliation_stats: IDL.Func(
@@ -887,6 +894,7 @@ export const idlFactory = ({ IDL }) => {
 		),
 		app_get_my_referral_code: IDL.Func([], [AppGetMyReferralCodeResult], ['query']),
 		app_get_profile: IDL.Func([AppGetProfileArgs], [AppGetProfileResult], ['query']),
+		app_get_user_rank: IDL.Func([AppGetUserRankArgs], [AppGetUserRankResult], ['query']),
 		app_hibernate_my_account: IDL.Func([], [AppHibernateMyAccountResult], []),
 		app_list_affiliation_stats: IDL.Func(
 			[AppListAffiliationStatsArgs],

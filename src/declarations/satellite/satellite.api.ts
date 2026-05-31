@@ -60,6 +60,16 @@ const checkNicknameAvailability = async (
 	return AppCheckNicknameAvailabilityResultSchema.parse(result);
 };
 
+const AppCountProfilesResultSchema = j.strictObject({ count: j.number() });
+
+const countProfiles = async (): Promise<j.infer<typeof AppCountProfilesResultSchema>> => {
+	const { app_count_profiles } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_count_profiles();
+
+	const result = schemaFromIdl({ schema: AppCountProfilesResultSchema, value: idlResult });
+	return AppCountProfilesResultSchema.parse(result);
+};
+
 const AppGetAffiliationStatsArgsSchema = j.strictObject({
 	kind: j.enum(['university', 'country']),
 	affiliationIdentifier: j.string()
@@ -257,6 +267,8 @@ const AppGetProfileResultSchema = j.strictObject({
 			hibernatedAtMs: j.optional(j.number()),
 			unlockedAchievements: j.array(j.string()),
 			contrarianWins: j.number(),
+			topDecileStreak: j.number(),
+			lastTopDecileDay: j.optional(j.string()),
 			preferences: j.strictObject({
 				defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }),
 				notify: j.strictObject({
@@ -293,6 +305,25 @@ const getProfile = async (
 
 	const result = schemaFromIdl({ schema: AppGetProfileResultSchema, value: idlResult });
 	return AppGetProfileResultSchema.parse(result);
+};
+
+const AppGetUserRankArgsSchema = j.strictObject({ principalStr: j.string() });
+const AppGetUserRankResultSchema = j.strictObject({ rank: j.optional(j.number()) });
+
+const getUserRank = async (
+	args: j.infer<typeof AppGetUserRankArgsSchema>
+): Promise<j.infer<typeof AppGetUserRankResultSchema>> => {
+	const parsedArgs = AppGetUserRankArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetUserRankArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_user_rank']>[0];
+
+	const { app_get_user_rank } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
+	const idlResult = await app_get_user_rank(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetUserRankResultSchema, value: idlResult });
+	return AppGetUserRankResultSchema.parse(result);
 };
 
 const AppListAffiliationStatsArgsSchema = j.strictObject({
@@ -639,7 +670,8 @@ const AppListMyLeaguesResultSchema = j.strictObject({
 				accent_color: j.optional(j.string())
 			}),
 			role: j.enum(['owner', 'admin', 'member']),
-			joined_at_ms: j.number()
+			joined_at_ms: j.number(),
+			member_count: j.number()
 		})
 	)
 });
@@ -1337,12 +1369,14 @@ const upsertMarketTranslation = async (
 export const functions = {
 	checkFriendship,
 	checkNicknameAvailability,
+	countProfiles,
 	getAffiliationStats,
 	getCurrentTournament,
 	getMarketMetadata,
 	getMarketTranslation,
 	getMyReferralCode,
 	getProfile,
+	getUserRank,
 	listAffiliationStats,
 	listFollowers,
 	listFollowing,

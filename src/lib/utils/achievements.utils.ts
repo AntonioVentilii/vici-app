@@ -25,7 +25,15 @@ export const ON_FIRE_STREAK_TARGET = 10;
 export const ORACLE_ACCURACY_TARGET = 80;
 export const ORACLE_TRADES_TARGET = 50;
 export const MARATHON_DAILY_STREAK_TARGET = 30;
-export const LVL_25_TARGET = 25;
+// `league-founder` unlocks once the caller owns a league with at least
+// this many members (themselves included). Sticky — survives a later
+// disband via `mergeUnlockedAchievements`.
+export const LEAGUE_FOUNDER_MIN_MEMBERS = 3;
+// `top-decile` unlocks after holding a top-10% global-leaderboard
+// position for this many consecutive calendar days. The streak itself
+// is bumped at most once per day server-side (see
+// `calculateAndSyncStats`); this evaluator only reads the persisted run.
+export const TOP_DECILE_STREAK_TARGET = 7;
 
 export interface AchievementsInput {
 	totalTrades: number;
@@ -33,8 +41,17 @@ export interface AchievementsInput {
 	winStreak: number;
 	dailyStreak: number;
 	accuracy: number;
-	level: number;
 	contrarianWins: number;
+	/**
+	 * `true` when the caller currently owns a league whose member count
+	 * is at least `LEAGUE_FOUNDER_MIN_MEMBERS`. Drives `league-founder`.
+	 */
+	ownsQualifyingLeague: boolean;
+	/**
+	 * Consecutive calendar days the caller has held a top-10% global
+	 * leaderboard position. Drives `top-decile`.
+	 */
+	topDecileStreak: number;
 }
 
 export interface AchievementEvaluation {
@@ -60,11 +77,11 @@ const evaluateOne = ({
 	def: AchievementDef;
 	input: AchievementsInput;
 }): AchievementEvaluation => {
-	const { totalTrades, winStreak, dailyStreak, accuracy, level, contrarianWins } = input;
+	const { totalTrades, winStreak, dailyStreak, accuracy, contrarianWins } = input;
 	const accuracyUnlocked = totalTrades >= ACCURACY_GATE_CALLS;
 
 	switch (def.id) {
-		case 'first-blood': {
+		case 'first-call': {
 			const unlocked = totalTrades > 0;
 
 			return { id: def.id, def, unlocked, progress: unlocked ? 1 : 0 };
@@ -113,12 +130,26 @@ const evaluateOne = ({
 			};
 		}
 
-		case 'lvl-25': {
+		case 'league-founder': {
+			// Binary unlock — own a league of `LEAGUE_FOUNDER_MIN_MEMBERS`+
+			// members. Progress is 0/1 (no partial bar): the threshold is
+			// a membership count the caller doesn't directly control. Once
+			// merged into `unlockedAchievements` it's sticky, so a later
+			// disband or member exodus never rescinds it.
 			return {
 				id: def.id,
 				def,
-				unlocked: level >= LVL_25_TARGET,
-				progress: ratio({ current: level, target: LVL_25_TARGET })
+				unlocked: input.ownsQualifyingLeague,
+				progress: input.ownsQualifyingLeague ? 1 : 0
+			};
+		}
+
+		case 'top-decile': {
+			return {
+				id: def.id,
+				def,
+				unlocked: input.topDecileStreak >= TOP_DECILE_STREAK_TARGET,
+				progress: ratio({ current: input.topDecileStreak, target: TOP_DECILE_STREAK_TARGET })
 			};
 		}
 

@@ -74,14 +74,14 @@ export const ptMessages = {
 	'battles.your_rank': '#{rank} de {total}',
 	'battles.your_school': 'Sua universidade · {name}',
 	'achievement.contrarian.name': 'Contrarian',
-	'achievement.first_blood.description': 'Faça sua primeira previsão',
-	'achievement.first_blood.detail':
+	'achievement.first_call.description': 'Faça sua primeira previsão',
+	'achievement.first_call.detail':
 		'Concedida no momento em que você confirma sua primeira previsão. É a única conquista que não pode ser ganha duas vezes.',
-	'achievement.first_blood.name': 'Primeira previsão',
-	'achievement.lvl_25.description': 'Alcance o nível 25',
-	'achievement.lvl_25.detail':
-		'Alcance o nível 25. Ganhe XP em cada previsão resolvida, bônus de sequência e marco — assim que seu nível ultrapassar 25, o sticker é seu para sempre.',
-	'achievement.lvl_25.name': 'Nível 25',
+	'achievement.first_call.name': 'Primeira previsão',
+	'achievement.league_founder.description': 'Funde uma liga de 3 membros',
+	'achievement.league_founder.detail':
+		'Fundador de uma liga com três ou mais membros. Concedida uma única vez. Permanece mesmo que a liga seja dissolvida depois.',
+	'achievement.league_founder.name': 'Fundador de liga',
 	'achievement.marathon.description': 'Sequência de 30 dias',
 	'achievement.marathon.detail':
 		'Alcance uma sequência de 30 dias de previsões. Pelo menos uma previsão resolvida ou aberta por dia, sem interrupções. Um dia só com previsões puladas não conta.',
@@ -94,6 +94,10 @@ export const ptMessages = {
 	'achievement.oracle.detail':
 		'Mantenha pelo menos 80% de precisão em suas últimas 50 previsões resolvidas. O título Oráculo é recalculado diariamente; se a precisão cair, o sticker fica — mas o título vai para quem o detiver no momento.',
 	'achievement.oracle.name': 'Oráculo',
+	'achievement.top_decile.description': '7 dias no top 10%',
+	'achievement.top_decile.detail':
+		'Mantenha uma posição no top 10% do ranking global por sete dias consecutivos. Sua posição é verificada uma vez por dia; se cair abaixo do limite, a sequência reinicia.',
+	'achievement.top_decile.name': 'Top 10% global',
 	'achievement.toast.message': '{name} desbloqueado · +{xp} XP',
 	'achievement.toast.title': 'Conquista desbloqueada',
 	'flow.companion.trickster.short': 'concordam · 2× XP',
