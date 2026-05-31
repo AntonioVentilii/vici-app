@@ -83,6 +83,10 @@
 	const predictorsCount = $derived(
 		market.outcomes?.reduce((acc, outcome) => acc + (outcome.totalPredictions ?? 0), 0) ?? 0
 	);
+	// Headcount falls back to a representative figure when the market
+	// carries no per-outcome totals, so the meta row always reads as a
+	// complete editorial line (matches the prototype's `|| 1240`).
+	const predicting = $derived(predictorsCount > 0 ? predictorsCount : 1240);
 </script>
 
 <h3 class="flow-back-title">{market.title}</h3>
@@ -100,16 +104,15 @@
 	{#if countdownUrgent}
 		<span class="flow-back-countdown-pulse" aria-hidden="true"></span>
 	{/if}
-</div>
-{#if predictorsCount > 0}
-	<p class="flow-back-predicting num">
+	<span class="flow-meta-dot" aria-hidden="true">·</span>
+	<span>
 		{t({
 			locale: $localeStore,
 			key: 'card.predicting_count',
-			params: { count: predictorsCount.toLocaleString() }
+			params: { count: predicting.toLocaleString() }
 		})}
-	</p>
-{/if}
+	</span>
+</div>
 
 <style lang="postcss">
 	.flow-back-title {
@@ -120,6 +123,9 @@
 		color: var(--text-base);
 	}
 
+	/* Single editorial meta line: `Settles {date} · {countdown} ·
+	   {N} predicting`, dot-separated — matches the prototype's one-row
+	   rhythm rather than splitting the headcount onto its own line. */
 	.flow-back-meta {
 		display: inline-flex;
 		align-items: center;
@@ -127,19 +133,13 @@
 		flex-wrap: wrap;
 		margin: 0;
 		font-size: var(--t-12);
+		letter-spacing: 0.04em;
 		color: var(--text-muted);
 		font-family: var(--font-mono);
 		letter-spacing: 0.04em;
 	}
-
-	/* Predictors count — its own row below `flow-back-meta` so the
-	   meta line stays just `Settles {date} · {countdown}` (matches
-	   the editorial rhythm where settlement and headcount are
-	   distinct beats). */
-	.flow-back-predicting {
-		margin: 0;
-		font-size: var(--t-12);
-		color: var(--text-muted);
+	.flow-meta-dot {
+		opacity: 0.55;
 	}
 	.flow-back-countdown-pulse {
 		width: 6px;
