@@ -30,9 +30,10 @@ export const MARATHON_DAILY_STREAK_TARGET = 30;
 // disband via `mergeUnlockedAchievements`.
 export const LEAGUE_FOUNDER_MIN_MEMBERS = 3;
 // `top-decile` unlocks after holding a top-10% global-leaderboard
-// position for this many consecutive calendar days. The streak itself
-// is bumped at most once per day server-side (see
-// `calculateAndSyncStats`); this evaluator only reads the persisted run.
+// position for this many consecutive calendar days. The streak is
+// bumped at most once per calendar day inside `calculateAndSyncStats`
+// (client-side, persisted to the profile doc); this evaluator only
+// reads the already-persisted value.
 export const TOP_DECILE_STREAK_TARGET = 7;
 
 export interface AchievementsInput {

@@ -81,7 +81,15 @@ export const listLeaderboard = (): UserProfile[] => {
 					role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
 				});
 			})
-			.sort((a, b) => (b.points ?? 0) - (a.points ?? 0))
+			.sort((a, b) => {
+				const delta = (b.points ?? 0) - (a.points ?? 0);
+
+				if (delta !== 0) {
+					return delta;
+				}
+
+				return a.owner < b.owner ? -1 : a.owner > b.owner ? 1 : 0;
+			})
 			.slice(0, LEADERBOARD_LIMIT)
 	);
 };
@@ -90,6 +98,9 @@ export const listLeaderboard = (): UserProfile[] => {
  * Count of profiles that appear on the public leaderboard (non-hidden).
  * The denominator for the `top-decile` achievement: a user is in the top
  * 10% when their {@link getUserRankFn} rank is ≤ `count / 10`.
+ *
+ * @deprecated Prefer {@link getUserRankAndCountFn} which performs a single
+ * `rankedProfiles()` pass and returns both rank and count together.
  */
 export const countNonHiddenProfilesFn = (): number => rankedProfiles().length;
 
@@ -98,6 +109,9 @@ export const countNonHiddenProfilesFn = (): number => rankedProfiles().length;
  * ({@link rankedProfiles}). Returns `undefined` when the principal has no
  * profile or is hidden (soft-deleted / hibernated) — callers treat that as
  * "unranked".
+ *
+ * @deprecated Prefer {@link getUserRankAndCountFn} which performs a single
+ * `rankedProfiles()` pass and returns both rank and count together.
  */
 export const getUserRankFn = ({ principal }: { principal: PrincipalText }): number | undefined => {
 	const index = rankedProfiles().findIndex((profile) => profile.owner === principal);
@@ -107,4 +121,29 @@ export const getUserRankFn = ({ principal }: { principal: PrincipalText }): numb
 	}
 
 	return index + 1;
+};
+
+/**
+ * Single-pass helper that runs {@link rankedProfiles} once and returns
+ * both the 1-based rank of `principal` and the total count of ranked
+ * (non-hidden) profiles.
+ *
+ * Use this instead of calling `countNonHiddenProfilesFn` +
+ * `getUserRankFn` separately — those two each run a full scan+sort,
+ * doubling the work on every `calculateAndSyncStats` invocation.
+ *
+ * `rank` is `undefined` when the principal has no profile or is hidden.
+ */
+export const getUserRankAndCountFn = ({
+	principal
+}: {
+	principal: PrincipalText;
+}): { rank: number | undefined; count: number } => {
+	const profiles = rankedProfiles();
+	const index = profiles.findIndex((profile) => profile.owner === principal);
+
+	return {
+		rank: index === -1 ? undefined : index + 1,
+		count: profiles.length
+	};
 };

@@ -545,10 +545,7 @@ export const calculateAndSyncStats = async ({
 
 	if (lastTopDecileDay !== today) {
 		try {
-			const [{ count }, { rank }] = await Promise.all([
-				functions.countProfiles(),
-				functions.getUserRank({ principalStr: principal })
-			]);
+			const { rank, count } = await functions.getUserRankAndCount({ principalStr: principal });
 
 			// Top decile = rank within the best 10% of ranked profiles.
 			// `Math.floor` keeps the cutoff inclusive on exact tenths (a
