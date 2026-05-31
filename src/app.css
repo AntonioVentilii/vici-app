@@ -831,27 +831,28 @@ html[data-app='1'] body {
 
 /* Appbar icon button — single source of truth for every header-edge
  * icon control (back arrow, settings cog, history, plus, chart,
- * etc.). `.btn.btn-ghost` shape with the icon-only `padding: 8px 10px`
- * override: pill radius, 1 px border, ghost surface, sized for an
- * 18 px icon. */
+ * etc.). A transparent, borderless ~36px circle that mirrors the
+ * canonical title-block icon button and the `.notif-bell`: muted
+ * foreground at rest, foreground-wash fill + brighter icon on hover.
+ * All values resolve through tokens so it adapts across themes. */
 .appbar-icon-btn {
 	display: inline-flex;
 	align-items: center;
 	justify-content: center;
 	padding: 8px 10px;
-	border: 1px solid var(--border-base);
+	border: none;
 	border-radius: var(--r-pill);
-	background: var(--bg-surface);
-	color: var(--text-base);
+	background: transparent;
+	color: var(--text-muted);
 	cursor: pointer;
 	transition:
 		background-color var(--d-hover) var(--ease-vici),
-		border-color var(--d-hover) var(--ease-vici);
+		color var(--d-hover) var(--ease-vici);
 }
 
 .appbar-icon-btn:hover {
-	border-color: var(--border-strong);
-	background: var(--bg-popover);
+	color: var(--text-base);
+	background: color-mix(in srgb, var(--text-base) 6%, transparent);
 }
 
 /* Hairline — top divider. Minimal so it can't get any thicker. */
