@@ -703,7 +703,8 @@ const AppListMyLeaguesResultSchema = j.strictObject({
 				invite_code: j.string(),
 				owner: j.string(),
 				created_at_ms: j.number(),
-				accent_color: j.optional(j.string())
+				accent_color: j.optional(j.string()),
+				private: j.boolean()
 			}),
 			role: j.enum(['owner', 'admin', 'member']),
 			joined_at_ms: j.number(),
@@ -821,7 +822,8 @@ const AppLookupLeagueByInviteResultSchema = j.strictObject({
 			invite_code: j.string(),
 			owner: j.string(),
 			created_at_ms: j.number(),
-			accent_color: j.optional(j.string())
+			accent_color: j.optional(j.string()),
+			private: j.boolean()
 		})
 	)
 });

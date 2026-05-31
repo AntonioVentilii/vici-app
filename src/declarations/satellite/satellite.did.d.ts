@@ -485,6 +485,7 @@ export interface AppListMyLeaguesResult {
 			invite_code: string;
 			description: [] | [string];
 			created_at_ms: number;
+			private: boolean;
 		};
 		member_count: number;
 	}>;
@@ -550,6 +551,7 @@ export interface AppLookupLeagueByInviteResult {
 					invite_code: string;
 					description: [] | [string];
 					created_at_ms: number;
+					private: boolean;
 				}
 		  ];
 }
