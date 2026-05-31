@@ -418,7 +418,7 @@ export const itMessages = {
 	'card.sharp_signal': 'Top predittori: {percent}% {side}',
 	'card.momentum_delta': '+{count} oggi',
 	'card.tap_depth': 'TOCCA PER DETTAGLI',
-	'card.you_called_eyebrow': 'HAI CHIAMATO',
+	'card.you_called_eyebrow': 'LA TUA CHIAMATA',
 	'card.your_accuracy_line': 'La tua accuratezza in {category}: {pct}% · {calls} call',
 	'challenge.create.error.missing_premium': 'Posta mancante',
 	'challenge.create.error.missing_premium_message':

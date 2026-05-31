@@ -407,7 +407,7 @@ export const enMessages = {
 	'card.size_label': 'SIZE',
 	'card.skip_stamp': 'SKIP',
 	'card.swipe_to_call': 'SWIPE TO CALL',
-	'card.you_called_eyebrow': 'YOU CALLED',
+	'card.you_called_eyebrow': 'YOUR CALL',
 	'card.your_accuracy_line': 'Your {category} accuracy: {pct}% · {calls} calls',
 	'card.multiple': 'Multiple',
 	'card.predicting': 'predicting',
