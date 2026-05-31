@@ -3141,6 +3141,470 @@ a.title-action::after {
 	min-height: 0;
 }
 
+/* ─── Bespoke onboarding first-call card ──────────────────────
+ * The opening "make your first call" beat renders its own simpler
+ * swipeable card (NOT the in-product Flow deck). These `.ob-*`
+ * rules style that card: stage + shadow + the live card's head,
+ * artwork band, probability split, footer, drag tints, swipe
+ * stamps, and the built-in directional coach. Mounted only by
+ * `OnboardingBeat1Card.svelte`. */
+.ob-stage {
+	position: relative;
+	flex: 1;
+	margin: 14px 0 6px;
+	min-height: 0;
+}
+.ob-shadow {
+	position: absolute;
+	left: 12px;
+	right: 12px;
+	top: 14px;
+	bottom: -2px;
+	background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
+	border: 1px solid var(--ink-line);
+	border-radius: 18px;
+	transform: rotate(-2deg);
+	opacity: 0.45;
+	z-index: 1;
+}
+.ob-card {
+	position: absolute;
+	inset: 0;
+	background: linear-gradient(180deg, var(--ink-elevated), var(--ink-raised));
+	border: 1px solid var(--border-strong);
+	border-radius: 18px;
+	box-shadow:
+		0 18px 50px -16px rgba(0, 0, 0, 0.6),
+		inset 0 1px 0 rgba(242, 236, 220, 0.08);
+	overflow: hidden;
+	z-index: 2;
+	cursor: grab;
+	user-select: none;
+	touch-action: none;
+	display: flex;
+	flex-direction: column;
+}
+.ob-card:active {
+	cursor: grabbing;
+}
+.ob-card-head {
+	padding: 16px 18px 12px;
+	flex-shrink: 0;
+}
+.ob-card-head-row {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+.ob-card-head-meta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+.ob-tag {
+	display: inline-flex;
+	padding: 3px 7px;
+	border-radius: 4px;
+	font-family: var(--font-sans);
+	font-size: 10px;
+	font-weight: 700;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+}
+.ob-days {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	font-weight: 600;
+	padding: 2px 8px;
+	border-radius: 999px;
+	background: rgba(242, 236, 220, 0.05);
+	border: 1px solid rgba(242, 236, 220, 0.1);
+	color: var(--fg-dim);
+}
+.ob-first-call {
+	font-family: var(--font-mono);
+	font-size: 9px;
+	letter-spacing: 0.14em;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+.ob-q {
+	font-size: 20px;
+	line-height: 1.18;
+	letter-spacing: -0.01em;
+	font-weight: 600;
+	margin: 10px 0 4px;
+	text-wrap: balance;
+}
+.ob-ctx {
+	font-size: 12.5px;
+	color: var(--fg-dim);
+	margin: 0;
+	line-height: 1.4;
+}
+.ob-art {
+	flex: 1;
+	min-height: 120px;
+	border-bottom: 1px solid var(--ink-line);
+	border-top: 1px solid var(--ink-line);
+	position: relative;
+	overflow: hidden;
+}
+/* Fit the generative artwork by HEIGHT inside the band — the SVG
+   keeps its intrinsic aspect and centres, so the figure reads whole
+   rather than being stretched to the band's aspect ratio (the inline
+   SVG ignores `object-fit`, so size it by height explicitly).
+   Note: plain descendant selectors — this is a global CSS file, not a
+   Svelte component <style> block, so :global() would be invalid here. */
+.ob-art .market-artwork {
+	width: 100%;
+	height: 100%;
+}
+.ob-art .flow-art {
+	width: auto;
+	height: 100%;
+	max-width: 100%;
+	border-radius: 0;
+	box-shadow: none;
+}
+.ob-art .flow-art > svg {
+	width: auto;
+	height: 100%;
+	display: block;
+	margin: 0 auto;
+}
+.ob-body {
+	padding: 12px 18px 14px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	flex-shrink: 0;
+}
+.ob-probs {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+}
+.ob-prob {
+	padding: 10px 14px;
+	border: 1px solid var(--ink-line);
+	border-radius: 11px;
+	background: rgba(242, 236, 220, 0.02);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+}
+.ob-prob-eyebrow {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+.ob-prob.no .ob-prob-eyebrow {
+	color: var(--no);
+}
+.ob-prob.yes .ob-prob-eyebrow {
+	color: var(--yes);
+	align-self: flex-end;
+}
+.ob-prob.yes .ob-prob-num {
+	align-self: flex-end;
+}
+.ob-prob-num {
+	font-family: var(--font-mono);
+	font-size: 26px;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+}
+.ob-foot {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	font-family: var(--font-mono);
+	font-size: 11px;
+	color: var(--parchment-mute);
+}
+.ob-foot-swipe {
+	letter-spacing: 0.14em;
+}
+
+/* Edge tints — light up the chosen side under a drag. */
+.ob-edge {
+	position: absolute;
+	inset: 0;
+	border-radius: inherit;
+	pointer-events: none;
+	transition: opacity 100ms linear;
+}
+.ob-edge.yes {
+	background: linear-gradient(270deg, rgba(79, 211, 161, 0.55), transparent 55%);
+}
+.ob-edge.no {
+	background: linear-gradient(90deg, rgba(255, 107, 107, 0.55), transparent 55%);
+}
+
+/* Swipe stamps. */
+.ob-stamp {
+	position: absolute;
+	top: 22px;
+	padding: 6px 12px;
+	border: 2px solid currentColor;
+	border-radius: 6px;
+	font-family: var(--font-sans);
+	font-weight: 800;
+	font-size: 16px;
+	letter-spacing: 0.18em;
+	pointer-events: none;
+	transition: opacity 100ms linear;
+}
+.ob-stamp.yes {
+	right: 22px;
+	color: var(--yes);
+	transform: rotate(8deg);
+}
+.ob-stamp.no {
+	left: 22px;
+	color: var(--no);
+	transform: rotate(-8deg);
+}
+
+/* Built-in directional coach — a sibling of `.ob-card` inside the
+   stage so it stays fixed while the card translates under a swipe.
+   pointer-events:none lets swipes/taps pass to the card. */
+.ob-coach {
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	padding: 0 20px;
+	z-index: 4;
+	pointer-events: none;
+	transition: opacity 220ms cubic-bezier(0.2, 0.7, 0.2, 1);
+	animation: ob-coach-in 360ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+.ob-coach::before {
+	content: '';
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	width: 92%;
+	height: 200%;
+	transform: translate(-50%, -50%);
+	background: radial-gradient(
+		ellipse at center,
+		rgba(14, 13, 11, 0.78) 0%,
+		rgba(14, 13, 11, 0.55) 35%,
+		rgba(14, 13, 11, 0.15) 70%,
+		rgba(14, 13, 11, 0) 100%
+	);
+	z-index: -1;
+	border-radius: 50%;
+	filter: blur(2px);
+}
+[data-theme='light'] .ob-coach::before,
+[data-theme='peach'] .ob-coach::before {
+	background: radial-gradient(
+		ellipse at center,
+		rgba(242, 236, 220, 0.92) 0%,
+		rgba(242, 236, 220, 0.7) 35%,
+		rgba(242, 236, 220, 0.25) 70%,
+		rgba(242, 236, 220, 0) 100%
+	);
+}
+.ob-coach-row {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 14px;
+	margin-bottom: 10px;
+}
+.ob-coach-text {
+	font-family: var(--font-sans);
+	font-size: 28px;
+	line-height: 1.1;
+	letter-spacing: -0.015em;
+	font-weight: 600;
+	color: var(--parchment);
+	text-wrap: balance;
+	text-shadow: 0 1px 16px rgba(14, 13, 11, 0.55);
+}
+[data-theme='light'] .ob-coach-text,
+[data-theme='peach'] .ob-coach-text {
+	color: var(--ink);
+	text-shadow: 0 1px 16px rgba(242, 236, 220, 0.6);
+}
+.ob-coach-text .serif-italic {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-weight: 400;
+	letter-spacing: 0;
+}
+.ob-coach-text .serif-italic.yes {
+	color: var(--yes);
+}
+.ob-coach-text .serif-italic.no {
+	color: var(--no);
+}
+.ob-coach-arrow {
+	font-family: var(--font-sans);
+	font-size: 34px;
+	font-weight: 300;
+	line-height: 1;
+	display: inline-flex;
+	width: 1em;
+	align-items: center;
+	justify-content: center;
+	color: var(--parchment);
+	filter: drop-shadow(0 1px 8px rgba(14, 13, 11, 0.6));
+}
+.ob-coach-arrow.yes {
+	color: var(--yes);
+	animation: ob-arrow-nudge-right 1.5s ease-in-out 0.4s infinite;
+}
+.ob-coach-arrow.no {
+	color: var(--no);
+	animation: ob-arrow-nudge-left 1.5s ease-in-out 0.4s infinite;
+}
+.ob-coach-sub {
+	font-family: var(--font-mono);
+	font-size: 11px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	color: rgba(242, 236, 220, 0.78);
+	margin: 0;
+	text-shadow: 0 1px 8px rgba(14, 13, 11, 0.55);
+}
+[data-theme='light'] .ob-coach-sub,
+[data-theme='peach'] .ob-coach-sub {
+	color: rgba(14, 13, 11, 0.7);
+	text-shadow: 0 1px 8px rgba(242, 236, 220, 0.6);
+}
+@media (max-height: 720px) {
+	.ob-coach-text {
+		font-size: 24px;
+	}
+	.ob-coach-arrow {
+		font-size: 28px;
+	}
+}
+@media (max-height: 620px) {
+	.ob-coach-text {
+		font-size: 20px;
+	}
+	.ob-coach-arrow {
+		font-size: 24px;
+	}
+	.ob-coach-sub {
+		font-size: 10px;
+	}
+}
+@keyframes ob-coach-in {
+	from {
+		opacity: 0;
+		transform: translateY(calc(-50% + 8px));
+	}
+	to {
+		opacity: 1;
+		transform: translateY(-50%);
+	}
+}
+@keyframes ob-arrow-nudge-right {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	50% {
+		transform: translateX(5px);
+	}
+}
+@keyframes ob-arrow-nudge-left {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	50% {
+		transform: translateX(-5px);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.ob-coach,
+	.ob-coach-arrow.yes,
+	.ob-coach-arrow.no {
+		animation: none;
+	}
+	.ob-card {
+		transition: none !important;
+	}
+}
+
+/* Accessible YES / NO commit row — keyboard / switch-access path.
+   Styled to match the `.ob-prob` tiles (same grid, border, radius) so
+   the visual language is consistent with the probability split above.
+   Pointer users will reach `commit()` via swipe; this row is the
+   primary a11y path. Hidden (aria-hidden) once committed. */
+.ob-commit-row {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 8px;
+	padding: 0 0 4px;
+	flex-shrink: 0;
+}
+.ob-commit-btn {
+	appearance: none;
+	cursor: pointer;
+	padding: 10px 14px;
+	border: 1px solid var(--ink-line);
+	border-radius: 11px;
+	background: rgba(242, 236, 220, 0.02);
+	display: flex;
+	flex-direction: column;
+	gap: 2px;
+	text-align: left;
+	transition:
+		background 120ms,
+		border-color 120ms,
+		opacity 120ms;
+}
+.ob-commit-btn:hover:not(:disabled) {
+	background: rgba(242, 236, 220, 0.06);
+}
+.ob-commit-btn:focus-visible {
+	outline: 2px solid var(--laurel);
+	outline-offset: 2px;
+}
+.ob-commit-btn:disabled {
+	opacity: 0.4;
+	cursor: default;
+}
+.ob-commit-btn.yes {
+	align-items: flex-end;
+}
+.ob-commit-eyebrow {
+	font-family: var(--font-mono);
+	font-size: 10px;
+	letter-spacing: 0.12em;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+.ob-commit-eyebrow.no {
+	color: var(--no);
+}
+.ob-commit-eyebrow.yes {
+	color: var(--yes);
+}
+.ob-commit-pct {
+	font-family: var(--font-mono);
+	font-size: 22px;
+	font-weight: 600;
+	letter-spacing: -0.02em;
+}
+
 /* ─── Team rail (expanded all-teams) ──────────────────────
  * Mini-tile variant of `.ob2-team-tile` — same flag-on-top, name-below
  * structure so the favourites grid and the expanded all-teams grid
