@@ -285,27 +285,72 @@ itself is anonymous (the principal is gone after).
 - `assertSetExitSignal` — append-only (no `current`), shape +
   length checks. Anyone can write (anonymously).
 
-### Update
+### Update — v2 (soft-delete + recovery + admin sweep, shipped)
+
+Decision 4.1 landed as a **two-phase** model: a soft-delete that
+preserves everything, then a hard-delete once the recovery window
+elapses. The cascade still exists, but it's deferred — it only runs
+on expiry, never on the user-facing delete.
 
 - `deleteMyAccount({ reason, note })` — `defineUpdate` that:
-  1. Writes the `EXIT_SIGNAL` doc (anonymous).
-  2. Soft-deletes the caller's profile (set `deletedAtMs`).
-  3. Cascades: deletes the caller's `AFFILIATIONS`, `REFERRAL_CODES`,
-     `RELATIONS`, `LEAGUE_MEMBERS` rows where they're a non-owner.
-  4. **Does NOT** delete league.owner rows; those need transfer
-     first (separate UX guard).
-  5. Returns `{ ok: true }` and the FE signs out.
+  1. Owner-leagues guard — refuses with `reason:
+'owns_non_empty_league'` if the caller owns a non-empty league
+     (decision 4.3). League transfer/delete resolution is a later PR.
+  2. **Soft-deletes** the caller's profile: sets `deletedAtMs = now`
+     on the profile doc via a version-locked overwrite. NO data is
+     removed — the nickname stays (so the handle remains reserved),
+     and every identity-keyed row survives so recovery can restore
+     the account. A second delete keeps the **earliest** `deletedAtMs`
+     so the recovery clock can't be reset, and reports `alreadyDeleted`.
+  3. Writes the `EXIT_SIGNAL` doc (anonymous) — but ONLY on a first
+     delete. A re-delete inside the recovery window (`alreadyDeleted`)
+     skips the signal write, so churn isn't over-counted by repeated
+     `deleteMyAccount` calls. Returns `{ ok: true, softDeleted }`; the
+     FE signs out.
+- `recoverMyAccount()` — `defineUpdate`, no args. Reads the caller's
+  own profile:
+  - not soft-deleted → `{ ok: true, recovered: false }` (no-op).
+  - soft-deleted, inside `ACCOUNT_RECOVERY_WINDOW_MS` (30 days) →
+    clears `deletedAtMs`, returns `{ ok: true, recovered: true }`.
+  - soft-deleted, past the window → runs the hard-delete cascade
+    now, returns `{ ok: false, reason: 'expired' }`.
+- `sweepExpiredDeletions()` — `defineUpdate`, **admin-guarded** (via
+  the shared `isAdmin` check). Scans `PROFILES`, hard-deletes every
+  account whose `deletedAtMs` is older than the window, returns `{
+swept }`. Juno has no scheduler primitive, so this is triggered
+  externally (admin/cron) — same rationale as the worlds-podium
+  user-claim.
 
-### Open questions
+The hard-delete cascade (profile, VXP awards / onboarding, referral
+code + redemption, affiliations, relations, league memberships; shared
+audit rows left in place) is extracted into `hardDeleteAccountFn({
+callerText, callerBytes })`, parametrised by principal so the sweep can
+run it for any account. Owned leagues are resolved last: a league with
+no other members left is deleted, but one that gained members during
+the recovery window is **transferred** to a surviving member (the first
+remaining `LEAGUE_MEMBERS` row in iteration order — `league.owner`
+re-encoded and that row's `role` bumped to `owner`, both version-locked)
+rather than deleted, so self-joiners are never orphaned. The up-front
+`owns_non_empty_league` guard only runs on the interactive
+`deleteMyAccount` path; the guard-less recovery-expiry + sweep paths
+rely on this transfer.
 
-1. **Profile soft-delete vs hard-delete.** Soft preserves the
-   audit trail in bouts/leagues (e.g. winning side already
-   recorded); hard removes the principal entirely. Suggest: soft.
-2. **Reason enum.** Pick the strings now — pre-translate them.
-   Probable: `not_useful`, `too_complex`, `privacy`, `other`.
-3. **Owner-leagues blocker.** Should the endpoint refuse if the
-   caller owns a non-empty league? Or auto-transfer to an admin?
-   Suggest: refuse; surface a "transfer first" guard in the UI.
+Soft-deleted profiles are filtered out of the public reads
+(`listLeaderboard`, `searchProfiles`, `getProfile`) via the shared
+`isSoftDeleted(profile)` helper. The owner's own profile read goes
+through Juno `getDoc` (not these endpoints) and is intentionally NOT
+gated, so the FE can still offer recovery within the window.
+
+### Open questions (resolved)
+
+1. **Profile soft-delete vs hard-delete.** Resolved as soft-delete
+   with a 30-day recovery window, then hard-delete on expiry.
+2. **Reason enum.** `not-for-me`, `too-complex`, `bored`,
+   `no-friends`, `too-noisy`, `other` (the six buckets in
+   `EXIT_SIGNAL_REASONS`, `src/lib/types/exit-signal.ts`; the
+   validator rejects anything else as `invalid_input`).
+3. **Owner-leagues blocker.** Refuse + surface a "transfer first"
+   guard in the UI (transfer resolution is a follow-up PR).
 
 ---
 
@@ -368,21 +413,21 @@ The full tournament chain has landed.
 
 ## Open questions summary (decisions needed before code)
 
-| #   | Decision                     | Default if not specified                           |
-| --- | ---------------------------- | -------------------------------------------------- |
-| 1.1 | Stats rolling window         | Lifetime + monthly side-by-side                    |
-| 1.2 | `MIN_CALLS_FOR_RANK`         | 200 (per prototype)                                |
-| 1.3 | Featured-event scoping shape | Parameter on existing fields                       |
-| 2.1 | Monthly cycle anchor         | UTC midnight, 1st of month                         |
-| 2.2 | Tie-break order              | accuracy → totalCalls → leagueId asc               |
-| 2.3 | Mid-month-join eligibility   | Requires `joinedAtMs < monthStartMs`               |
-| 3.1 | Tournament entry criterion   | Top-16 by total members                            |
-| 3.2 | Round windows (days)         | 7 / 5 / 3 / 7                                      |
-| 3.3 | Min calls per match          | 50 per league                                      |
-| 3.4 | Disband during tournament    | Forfeit; opponent advances                         |
-| 4.1 | Profile delete depth         | Soft delete (preserve audit)                       |
-| 4.2 | Reason enum values           | `not_useful` / `too_complex` / `privacy` / `other` |
-| 4.3 | Owner-leagues guard          | Refuse + UX prompt                                 |
+| #   | Decision                     | Default if not specified                                                      |
+| --- | ---------------------------- | ----------------------------------------------------------------------------- |
+| 1.1 | Stats rolling window         | Lifetime + monthly side-by-side                                               |
+| 1.2 | `MIN_CALLS_FOR_RANK`         | 200 (per prototype)                                                           |
+| 1.3 | Featured-event scoping shape | Parameter on existing fields                                                  |
+| 2.1 | Monthly cycle anchor         | UTC midnight, 1st of month                                                    |
+| 2.2 | Tie-break order              | accuracy → totalCalls → leagueId asc                                          |
+| 2.3 | Mid-month-join eligibility   | Requires `joinedAtMs < monthStartMs`                                          |
+| 3.1 | Tournament entry criterion   | Top-16 by total members                                                       |
+| 3.2 | Round windows (days)         | 7 / 5 / 3 / 7                                                                 |
+| 3.3 | Min calls per match          | 50 per league                                                                 |
+| 3.4 | Disband during tournament    | Forfeit; opponent advances                                                    |
+| 4.1 | Profile delete depth         | Soft delete + 30-day recovery, then hard-delete                               |
+| 4.2 | Reason enum values           | `not-for-me` / `too-complex` / `bored` / `no-friends` / `too-noisy` / `other` |
+| 4.3 | Owner-leagues guard          | Refuse + UX prompt                                                            |
 
 Approve / amend the defaults above to unblock implementation. Each
 proposal can be implemented independently; suggested order is

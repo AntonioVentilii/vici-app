@@ -27,7 +27,7 @@ type AppGetMyReferralCodeResult = record { code : opt text };
 
 type AppGetProfileArgs = record { principal_str : text };
 
-type AppGetProfileResult = record { profile : opt record { owner : text; nickname : text; avatar : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; daily_goal_done : float64; daily_goal_date : opt text; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; unlocked_achievements : vec text; contrarian_wins : float64; preferences : record { default_amount : record { flow : text; manual : text }; notify : record { streak_reminder : bool; market_alerts : bool; friend_activity : bool; weekly_digest : bool }; flow_session_length : float64; haptics_enabled : bool; calls_public : bool; flow_tags : vec text; world_cup_mode : bool; saved_market_ids : vec text; favorite_participant_id : text; favorite_side : text; onboarding_completed : bool } } };
+type AppGetProfileResult = record { profile : opt record { owner : text; nickname : text; avatar : text; email : text; pnl : float64; visibility : variant { public; friends_and_followers; friends_only }; role : opt variant { controller; admin; solver; creator }; total_trades : float64; win_rate : float64; daily_streak : float64; daily_goal_done : float64; daily_goal_date : opt text; streak : float64; accuracy : float64; points : float64; level : float64; archetype : text; interests : vec text; last_active_day : opt text; deleted_at_ms : opt float64; unlocked_achievements : vec text; contrarian_wins : float64; preferences : record { default_amount : record { flow : text; manual : text }; notify : record { streak_reminder : bool; market_alerts : bool; friend_activity : bool; weekly_digest : bool }; flow_session_length : float64; haptics_enabled : bool; calls_public : bool; flow_tags : vec text; world_cup_mode : bool; saved_market_ids : vec text; favorite_participant_id : text; favorite_side : text; onboarding_completed : bool } } };
 
 type AppListAffiliationStatsArgs = record { kind : variant { university; country }; limit : opt float64 };
 
@@ -101,9 +101,11 @@ type AppClaimWorldsPodiumPrizeResult = record { month_anchor : text; awards_crea
 
 type AppDeleteMyAccountArgs = record { reason : text; note : text };
 
-type AppDeleteMyAccountResult = record { ok : bool; reason : opt variant { owns_non_empty_league; invalid_input }; blocking_league_ids : opt vec text; docs_deleted : opt float64 };
+type AppDeleteMyAccountResult = record { ok : bool; reason : opt variant { owns_non_empty_league; invalid_input }; blocking_league_ids : opt vec text; soft_deleted : opt bool };
 
 type AppFollowUserArgs = record { target : text };
+
+type AppRecoverMyAccountResult = record { ok : bool; recovered : opt bool; reason : opt variant { expired } };
 
 type AppRedeemReferralCodeArgs = record { code : text };
 
@@ -114,6 +116,8 @@ type AppResolveTournamentRoundArgs = record { tournament_id : text; round : text
 type AppResolveTournamentRoundResult = record { ok : bool; reason : opt variant { tournament_not_found; round_not_yet_closed; previous_round_not_resolved; no_matches; invalid_input }; matches_resolved : opt float64; tournament_concluded : opt bool };
 
 type AppSendFriendRequestArgs = record { target : text };
+
+type AppSweepExpiredDeletionsResult = record { swept : float64 };
 
 type AppTransferLeagueOwnershipArgs = record { league_id : text; new_owner_principal : text };
 
@@ -167,10 +171,12 @@ service : {
 	app_claim_worlds_podium_prize : (AppClaimWorldsPodiumPrizeArgs) -> (AppClaimWorldsPodiumPrizeResult);
 	app_delete_my_account : (AppDeleteMyAccountArgs) -> (AppDeleteMyAccountResult);
 	app_follow_user : (AppFollowUserArgs) -> ();
+	app_recover_my_account : () -> (AppRecoverMyAccountResult);
 	app_redeem_referral_code : (AppRedeemReferralCodeArgs) -> ();
 	app_reject_friend_request : (AppRejectFriendRequestArgs) -> ();
 	app_resolve_tournament_round : (AppResolveTournamentRoundArgs) -> (AppResolveTournamentRoundResult);
 	app_send_friend_request : (AppSendFriendRequestArgs) -> ();
+	app_sweep_expired_deletions : () -> (AppSweepExpiredDeletionsResult);
 	app_transfer_league_ownership : (AppTransferLeagueOwnershipArgs) -> (AppTransferLeagueOwnershipResult);
 	app_trigger_tournament_draw : (AppTriggerTournamentDrawArgs) -> (AppTriggerTournamentDrawResult);
 	app_upsert_market_metadata : (AppUpsertMarketMetadataArgs) -> (AppUpsertMarketMetadataResult);
