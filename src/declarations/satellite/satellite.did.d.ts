@@ -76,13 +76,30 @@ export interface AppClaimWorldsPodiumPrizeResult {
 }
 export interface AppDeleteMyAccountArgs {
 	note: string;
+	league_resolutions:
+		| []
+		| [
+				Array<{
+					action: { delete: null } | { transfer: null };
+					league_id: string;
+					transfer_to: [] | [string];
+				}>
+		  ];
 	reason: string;
 }
 export interface AppDeleteMyAccountResult {
 	ok: boolean;
+	resolution_reason: [] | [string];
 	blocking_league_ids: [] | [Array<string>];
+	failed_league_id: [] | [string];
 	soft_deleted: [] | [boolean];
-	reason: [] | [{ owns_non_empty_league: null } | { invalid_input: null }];
+	reason:
+		| []
+		| [
+				| { league_resolution_failed: null }
+				| { owns_non_empty_league: null }
+				| { invalid_input: null }
+		  ];
 }
 export interface AppFollowUserArgs {
 	target: string;

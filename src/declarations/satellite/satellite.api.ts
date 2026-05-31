@@ -975,11 +975,27 @@ const claimWorldsPodiumPrize = async (
 	return AppClaimWorldsPodiumPrizeResultSchema.parse(result);
 };
 
-const AppDeleteMyAccountArgsSchema = j.strictObject({ reason: j.string(), note: j.string() });
+const AppDeleteMyAccountArgsSchema = j.strictObject({
+	reason: j.string(),
+	note: j.string(),
+	leagueResolutions: j.optional(
+		j.array(
+			j.strictObject({
+				leagueId: j.string(),
+				action: j.enum(['transfer', 'delete']),
+				transferTo: j.optional(j.string())
+			})
+		)
+	)
+});
 const AppDeleteMyAccountResultSchema = j.strictObject({
 	ok: j.boolean(),
-	reason: j.optional(j.enum(['owns_non_empty_league', 'invalid_input'])),
+	reason: j.optional(
+		j.enum(['owns_non_empty_league', 'league_resolution_failed', 'invalid_input'])
+	),
 	blockingLeagueIds: j.optional(j.array(j.string())),
+	failedLeagueId: j.optional(j.string()),
+	resolutionReason: j.optional(j.string()),
 	softDeleted: j.optional(j.boolean())
 });
 

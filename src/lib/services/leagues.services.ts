@@ -60,6 +60,28 @@ export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
 };
 
 /**
+ * List the full member roster of a league, projected to the
+ * camelCase `LeagueMemberDoc` the FE uses everywhere. Powers the
+ * transfer-ownership picker (in the league detail surface and the
+ * delete-account flow) where the caller needs the other members to
+ * hand a league off to.
+ */
+export const listLeagueMembers = async ({
+	leagueId
+}: {
+	leagueId: string;
+}): Promise<LeagueMemberDoc[]> => {
+	const { items } = await functions.listLeagueMembers({ leagueId });
+
+	return items.map(({ league_id, member, joined_at_ms, role }) => ({
+		leagueId: league_id,
+		member,
+		joinedAtMs: joined_at_ms,
+		role
+	}));
+};
+
+/**
  * Resolve a 6-char invite code to its league, or `undefined` if no
  * league carries that code. Callers should treat the undefined
  * branch as "invalid code" UX, not an error.

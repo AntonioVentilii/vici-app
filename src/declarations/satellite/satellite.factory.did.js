@@ -72,14 +72,29 @@ export const idlFactory = ({ IDL }) => {
 	});
 	const AppDeleteMyAccountArgs = IDL.Record({
 		note: IDL.Text,
+		league_resolutions: IDL.Opt(
+			IDL.Vec(
+				IDL.Record({
+					action: IDL.Variant({
+						delete: IDL.Null,
+						transfer: IDL.Null
+					}),
+					league_id: IDL.Text,
+					transfer_to: IDL.Opt(IDL.Text)
+				})
+			)
+		),
 		reason: IDL.Text
 	});
 	const AppDeleteMyAccountResult = IDL.Record({
 		ok: IDL.Bool,
+		resolution_reason: IDL.Opt(IDL.Text),
 		blocking_league_ids: IDL.Opt(IDL.Vec(IDL.Text)),
+		failed_league_id: IDL.Opt(IDL.Text),
 		soft_deleted: IDL.Opt(IDL.Bool),
 		reason: IDL.Opt(
 			IDL.Variant({
+				league_resolution_failed: IDL.Null,
 				owns_non_empty_league: IDL.Null,
 				invalid_input: IDL.Null
 			})

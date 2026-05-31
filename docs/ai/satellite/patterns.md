@@ -406,6 +406,33 @@ isHibernated)`. The three public filters (`listLeaderboard`,
   mirroring how recovery clears `deletedAtMs`) and the account is active
   again. Both are version-locked overwrites.
 
+### League resolution — applied immediately, reuse the existing endpoint
+
+`deleteMyAccount` accepts `leagueResolutions?: Array<{ leagueId; action:
+'transfer' | 'delete'; transferTo? }>` and applies each BEFORE the
+owner-leagues guard:
+
+- **Reuse, don't reimplement, the transfer.** `transferLeagueOwnershipFn`
+  reads `msgCaller()` internally, and `deleteMyAccountFn` runs as that same
+  caller (the owner) — so it's called directly with no caller threaded
+  through, and its `not_owner` / `new_owner_not_member` / … validation is
+  the single source of truth. A `delete` action calls the new
+  `deleteLeagueFn({ leagueId, callerText, callerBytes })` (owner disband).
+- **SDK `deleteDocStore` bypasses asserts.** `deleteLeagueFn` drops every
+  `LEAGUE_MEMBERS` row for the league — including the `owner` row, which
+  `assertDeleteLeagueMember` forbids on the FE path ("transfer ownership
+  first"). The satellite's own store drops never re-enter the assert, which
+  is exactly why the cascade (`deleteOwnLeagueMemberships`) and this disband
+  can remove owner rows. Distinct from `deleteOwnedEmptyLeagues`, which only
+  drops leagues that are _already_ empty.
+- **Applied immediately ⇒ not reversed by recovery.** Resolutions are real
+  transfers / disbands at delete time, not deferred to hard-delete. A user
+  who recovers within the window gets the account back but NOT the
+  relinquished leagues. This is the documented delete-v2 contract, not a
+  bug. A failed resolution aborts the whole delete (`reason:
+'league_resolution_failed'` + `failedLeagueId` + `resolutionReason`);
+  resolutions that already committed stand.
+
 ## Cross-canister calls
 
 When a hook calls another canister (typically the icdc-core registry):
