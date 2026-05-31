@@ -40,8 +40,8 @@ export interface WorldsAffiliationOption {
 }
 
 /**
- * University roster — the full global directory (~278 institutions)
- * spanning every region bucket. Each entry carries its acronym
+ * University roster — the full global directory spanning every region
+ * bucket. Each entry carries its acronym
  * (`glyph`/`short`), home `country`, `region`, brand colours, QS
  * `rank`, and verified email `domains`. Ordered by region then rank;
  * the picker re-sorts at render time. Additions are append-only (no
@@ -1695,6 +1695,18 @@ export const WORLDS_UNIVERSITIES: readonly WorldsAffiliationOption[] = [
 		domains: ['uniroma1.it'],
 		rank: 132,
 		color: '#820B17',
+		text: '#F2ECDC'
+	},
+	{
+		id: 'unicatt',
+		name: 'Università Cattolica',
+		glyph: 'UCSC',
+		short: 'UCSC',
+		country: 'IT',
+		region: 'EU',
+		domains: ['unicatt.it', 'icatt.it'],
+		rank: 145,
+		color: '#9E1B32',
 		text: '#F2ECDC'
 	},
 	{
