@@ -145,7 +145,7 @@ export const spMatchEmail = ({
 	const parsed = email
 		.toLowerCase()
 		.trim()
-		.match(/^[^@\s]+@([^\s]+)$/);
+		.match(/^[^@\s]+@([^\s@]+)$/);
 
 	if (parsed === null) {
 		return null;
@@ -239,7 +239,7 @@ export const spInferCountry = ({
 	const parsed = email
 		.toLowerCase()
 		.trim()
-		.match(/@([^\s]+)$/);
+		.match(/^[^@\s]+@([^\s@]+)$/);
 
 	if (parsed === null) {
 		return fallback;

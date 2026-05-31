@@ -494,9 +494,13 @@
 
 			if (target !== null) {
 				await commitVerified(target);
+			} else if (result.schoolId !== undefined) {
+				// New school: use the canonical id returned by the verify
+				// endpoint (backend B.1) — no directory entry exists yet.
+				selected = result.schoolId;
+				await handleCommit();
 			} else {
-				// New school: no directory id to commit against until B.1
-				// returns a canonical school id — surface a clear state.
+				// No target and no schoolId in the response — unexpected.
 				verifyError = t({ locale: $localeStore, key: 'worlds.picker.school.error_verify' });
 			}
 		} catch {
@@ -646,7 +650,7 @@
 						{@const isJoined = currentForKind === option.id}
 						{@const isSelected = selected === option.id}
 						{@const stats = schoolStats[option.id]}
-						{@const isOwnPending = isUniversity && isJoined && stats === undefined}
+						{@const isOwnPending = pass2 && isJoined && stats === undefined}
 						{@const isNearYouLead =
 							nearYouCount > 0 && index === 0 && option.country === homeCountry}
 						{@const founderEligible = founderIds.includes(option.id)}
@@ -742,12 +746,18 @@
 			{#if selectedCanVerify && selectedOption}
 				<button
 					class="affil-picker-cta"
+					disabled={ctaDisabled}
 					onclick={() => openVerifyExisting(selectedOption)}
 					type="button"
 				>
 					{tr('worlds.picker.school.verify_with', { domain: selectedOption.domains?.[0] ?? '' })}
 				</button>
-				<button class="affil-picker-foot-link" onclick={handleCommit} type="button">
+				<button
+					class="affil-picker-foot-link"
+					disabled={ctaDisabled}
+					onclick={handleCommit}
+					type="button"
+				>
 					{tr('worlds.picker.school.skip_unverified')}
 				</button>
 			{:else}
