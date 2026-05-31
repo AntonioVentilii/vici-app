@@ -112,6 +112,7 @@
 					onChangeTeam={handleChangeTeam}
 					onCommit={handleCommit}
 					{participantId}
+					showCoach
 				/>
 			{:else if beat === '2'}
 				<OnboardingBeat2 onAdvance={handleHandle} onBack={handleHandleBack} {participantId} />
