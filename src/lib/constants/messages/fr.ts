@@ -383,8 +383,6 @@ export const frMessages = {
 	'card.back.show_rules': 'Voir les règles complètes',
 	'card.back.source_official': 'Source : registre officiel',
 	'card.back.stake_ladder': 'Mise (VXP)',
-	'card.back.stake_locked':
-		'Mise figée par défaut. Encore {left} appels et tu choisis ton palier (déblocage à {threshold}).',
 	'card.back.stake_no_wins': 'Si NON gagne',
 	'card.back.stake_yes_wins': 'Si OUI gagne',
 	'card.back.this_week': 'cette semaine',

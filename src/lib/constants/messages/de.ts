@@ -379,8 +379,6 @@ export const deMessages = {
 	'card.back.show_rules': 'Vollständige Regeln zeigen',
 	'card.back.source_official': 'Quelle: offizielles Register',
 	'card.back.stake_ladder': 'Einsatz (VXP)',
-	'card.back.stake_locked':
-		'Einsatz vorerst auf Standard fixiert. Noch {left} Calls, dann darfst du selbst wählen (entsperrt bei {threshold}).',
 	'card.back.stake_no_wins': 'Wenn NEIN gewinnt',
 	'card.back.stake_yes_wins': 'Wenn JA gewinnt',
 	'card.back.this_week': 'diese Woche',
