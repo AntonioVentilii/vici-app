@@ -2939,6 +2939,11 @@ a.title-action::after {
 	color: var(--parchment);
 	font-weight: 600;
 }
+/* Accent eyebrow above the Beat 2 title — sits tight to the heading
+   rather than carrying the full subtitle gap below it. */
+.ob2-sub-eyebrow {
+	margin-bottom: 2px;
+}
 /* Inline flag chip next to "Backing <team>". The CountryFlag default
    class is replaced by `ob2-picked-flag`, so the size has to be set
    here — without it the lipis SVG renders at its intrinsic 4×3 ratio
