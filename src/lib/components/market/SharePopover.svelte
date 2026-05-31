@@ -66,7 +66,7 @@
 	let referralCode = $state<string | undefined>(undefined);
 
 	const refToken = $derived(referralCode ?? handle);
-	const origin = $derived(browser ? window.location.origin : 'https://vici.markets');
+	const origin = $derived(browser ? window.location.origin : 'https://vici.market');
 	const url = $derived(`${origin}/m/${market.id}?ref=${refToken}`);
 
 	const text = $derived(
@@ -122,7 +122,7 @@
 						category: cardCategory
 					},
 					priorCall,
-					identity: { handle, accuracy }
+					identity: { handle, accuracy: accuracy !== undefined ? accuracy / 100 : undefined }
 				});
 
 				if (alive && result !== null) {
@@ -253,7 +253,7 @@
 					category: cardCategory
 				},
 				priorCall,
-				identity: { handle, accuracy }
+				identity: { handle, accuracy: accuracy !== undefined ? accuracy / 100 : undefined }
 			});
 
 			if (result === null) {
@@ -319,9 +319,12 @@
 		}
 
 		haptic('light-tap');
-		await writeToClipboard(url);
-		onCopied?.();
-		onClose?.();
+		const copied = await writeToClipboard(url);
+
+		if (copied) {
+			onCopied?.();
+			onClose?.();
+		}
 	};
 
 	const stop = (event: Event) => {

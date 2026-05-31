@@ -291,7 +291,7 @@ export const renderPredictionCard = async ({
 	setLetterSpacing(ctx, '0px');
 	ctx.fillStyle = accent;
 	ctx.font = '600 32px "Hanken Grotesk", system-ui, sans-serif';
-	const dom = 'vici.markets';
+	const dom = 'vici.market';
 	ctx.fillText(dom, W - PAD - ctx.measureText(dom).width, H - 108);
 
 	if (typeof canvas.toBlob !== 'function' || typeof canvas.toDataURL !== 'function') {
