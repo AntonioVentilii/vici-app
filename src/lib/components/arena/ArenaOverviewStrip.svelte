@@ -7,7 +7,8 @@
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { listMyLeagues } from '$lib/services/leagues.services';
-	import { listAffiliationStats, listMyAffiliations } from '$lib/services/worlds.services';
+	import { listAffiliationStats } from '$lib/services/worlds.services';
+	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { userStore } from '$lib/stores/user.store';
 	import { affiliationMonthlyAccuracy } from '$lib/utils/affiliation-stats.utils';
@@ -47,10 +48,14 @@
 
 	let leagueName = $state<string | undefined>(undefined);
 	let hasLeague = $state(false);
-	let schoolId = $state<string | undefined>(undefined);
 	let schoolRank = $state<number | undefined>(undefined);
 
 	const userPrincipal = $derived($userStore.user?.owner);
+
+	// School tile reads the caller's university from the shared
+	// affiliations cache (stale-while-revalidate) so revisiting the hub
+	// doesn't blank the tile while a fetch is in flight.
+	const schoolId = $derived($myAffiliationsStore.university?.affiliationIdentifier);
 
 	// Global rank — viewer's 1-based position in the cached leaderboard,
 	// or `undefined` when they aren't on it yet (renders EM_DASH).
@@ -67,33 +72,37 @@
 	});
 
 	onMount(() => {
-		void hydrate();
+		// Affiliations come from the shared cache (refreshed in the
+		// background); the league leg loads independently so a failure on
+		// either leaves its tile in the empty (tap-to-fill) state rather
+		// than blocking the strip.
+		void refreshMyAffiliations();
+		void hydrateLeague();
 	});
 
-	const hydrate = async (): Promise<void> => {
-		// Leagues + affiliations load independently; a failure on either
-		// leg leaves that tile in its empty (tap-to-fill) state rather
-		// than blocking the strip.
-		const [leaguesResult, affiliationsResult] = await Promise.allSettled([
-			listMyLeagues(),
-			listMyAffiliations()
-		]);
-
-		if (leaguesResult.status === 'fulfilled') {
-			const [first] = leaguesResult.value;
+	const hydrateLeague = async (): Promise<void> => {
+		try {
+			const [first] = await listMyLeagues();
 			hasLeague = first !== undefined;
 			leagueName = first?.league.name;
-		}
-
-		if (affiliationsResult.status === 'fulfilled') {
-			const { university } = affiliationsResult.value;
-			schoolId = university?.affiliationIdentifier;
-
-			if (schoolId !== undefined) {
-				await hydrateSchoolRank(schoolId);
-			}
+		} catch {
+			// Leave the League tile in its empty state.
 		}
 	};
+
+	// Re-rank the school tile whenever the cached university changes
+	// (cold load, picker pick, or background refresh).
+	$effect(() => {
+		const id = schoolId;
+
+		if (id === undefined) {
+			schoolRank = undefined;
+
+			return;
+		}
+
+		void hydrateSchoolRank(id);
+	});
 
 	const hydrateSchoolRank = async (id: string): Promise<void> => {
 		try {
