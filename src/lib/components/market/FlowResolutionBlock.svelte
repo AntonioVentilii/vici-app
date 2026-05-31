@@ -100,8 +100,8 @@
 		}
 	}
 
-	/* Stacked footer — source line sits above the rules toggle, matching
-	   the prototype (was a single space-between row). */
+	/* Stacked footer — source line sits above the rules toggle (was a
+	   single space-between row). */
 	.flow-res-foot {
 		display: flex;
 		flex-direction: column;
