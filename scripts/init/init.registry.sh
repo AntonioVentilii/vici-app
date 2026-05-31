@@ -7,7 +7,12 @@ source "$(dirname "$0")/../lib/utils.sh" "$@"
 #   2. Authorises the deploying dfx principal, plus any additional principals
 #      supplied via the ORACLE_EXTRA_PRINCIPALS env variable
 #      (comma or space-separated list of Internet Identity principals).
-#   3. Seeds markets from scripts/data/markets.json using add_series.
+#   3. Seeds the default market deck from scripts/data/markets.json by
+#      delegating to scripts/deploy-markets.sh.
+#
+# To deploy a different deck (e.g. scripts/data/markets.deck-2026.json), call
+# `deploy-markets.sh <file>` directly — see that script's usage. This init only
+# wires the oracle + principals and seeds the default file.
 #
 # Notes on oracle authorisation:
 #   The deploying dfx principal is almost never the same as the Internet Identity
@@ -18,22 +23,6 @@ source "$(dirname "$0")/../lib/utils.sh" "$@"
 
 ORACLE_ID="VICI_ORACLE_V1"
 DATA_FILE="$SCRIPT_DIR/data/markets.json"
-
-# Keep in sync with src/lib/constants/icdc.constants.ts. The script runs as the registry
-# canister controller, so `engine_id` is optional (controllers bypass the check), but we
-# attribute seeded markets to the Vici engine for consistency with frontend-created ones.
-VICI_ENGINE_ID="${VICI_ENGINE_ID:-eng_0}"
-
-if [ ! -f "$DATA_FILE" ]; then
-  echo "Error: $DATA_FILE not found."
-  exit 1
-fi
-
-slugify() {
-  printf '%s' "$1" |
-    tr '[:upper:]' '[:lower:]' |
-    sed -E 's/[^a-z0-9]+/-/g; s/^-+|-+$//g'
-}
 
 DEPLOY_PRINCIPAL=$(dfx identity get-principal)
 
@@ -100,55 +89,9 @@ dfx canister call --network "$NETWORK" registry manage_oracle_principals "(recor
 
 # Registry and clearing only accept USD payout_unit today (see icdc-core registry add_series).
 
-length=$(jq '. | length' "$DATA_FILE")
-
-for ((i = 0; i < $length; i++)); do
-  market=$(jq -c ".[$i]" "$DATA_FILE")
-
-  title=$(jq -r '.title' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
-  description=$(jq -r '.description' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
-
-  # BCP 47 locale tag for the market's title/description. Defaults to "en" when
-  # the data file omits it. The icdc-core registry stores this as metadata and
-  # does NOT include it in `series_id` hashing — translations remain off-chain.
-  locale=$(jq -r '.locale // "en"' <<<"$market" | sed 's/\\/\\\\/g; s/"/\\"/g')
-
-  expiration_iso=$(echo "$market" | jq -r '.expiryDate')
-
-  underlying=$(slugify "$title")
-
-  expiration_seconds=$(date -j -f "%Y-%m-%dT%H:%M:%S.000Z" "$expiration_iso" "+%s" 2>/dev/null || date -d "$expiration_iso" "+%s")
-  expiration_ns=$((expiration_seconds * 1000000000))
-
-  echo "Adding market: $title ($underlying)"
-
-  outcomes_list=$(jq -r '.outcomes[]?' <<<"$market" | sed 's/"/\\"/g' | awk '{id=tolower($0); gsub(/[^a-z0-9]+/, "-", id); gsub(/^-+|-+$/, "", id); printf "record { id=\"%s\"; title=\"%s\"; description=null; icon_url=null }; ", id, $0}')
-  if [ -n "$outcomes_list" ]; then
-    outcomes_candid="opt vec { $outcomes_list }"
-    payoff_type="variant { Categorical }"
-  else
-    outcomes_candid="null"
-    payoff_type="variant { Binary }"
-  fi
-
-  dfx canister call --network "$NETWORK" registry add_series "(record {
-        title = \"$title\";
-        description = record { plain = \"$description\"; html = null; markdown = null };
-        expiry_ns = $expiration_ns;
-        underlying = \"$underlying\";
-        strike = null;
-        banner_url = null;
-        price_precision = 8 : nat8;
-        payoff_type = $payoff_type;
-        payout_unit = variant { Fiat = variant { Usd } };
-        outcomes = $outcomes_candid;
-        icon_url = null;
-        balance_domain = variant { ViciXp };
-        oracle_source = \"$ORACLE_ID\";
-        trading_access = vec { variant { Open } };
-        engine_id = opt \"$VICI_ENGINE_ID\";
-        locale = opt \"$locale\";
-    })"
-done
+# Seed the default market deck. The market-registration loop lives in
+# scripts/deploy-markets.sh so any JSON deck can be deployed independently;
+# here we just feed it the default file and forward the oracle/network/engine.
+ORACLE_ID="$ORACLE_ID" "$SCRIPTS_ROOT/deploy-markets.sh" "$DATA_FILE" "$NETWORK"
 
 echo "Registry initialization complete."
