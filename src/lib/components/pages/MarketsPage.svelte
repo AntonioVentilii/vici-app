@@ -330,16 +330,13 @@
 			/>
 		{/if}
 
-		<!-- Main list with Saved empty state -->
+		<!-- Main list with Saved empty state. card-empty owns the dashed
+		     border + the c-eyebrow / c-title / c-body type ramp. -->
 		{#if cat === 'saved' && list.length === 0 && !loading}
-			<div
-				style="margin: 20px 20px 24px; padding: 32px 22px; background: rgba(242,236,220,0.02); border: 1px dashed var(--border-base); border-radius: 14px; text-align: center;"
-			>
-				<div style="opacity: 0.4; margin-bottom: 8px;" class="t-display" aria-hidden="true">♥</div>
-				<div style="font-size: 17px; margin-bottom: 6px;" class="serif-italic acc">
-					"{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}"
-				</div>
-				<p style="line-height: 1.5; margin: 0;" class="dim t-body-sm">
+			<div style="margin: 20px 20px 24px;" class="card-empty">
+				<span class="c-eyebrow">{t({ locale: $localeStore, key: 'markets.section.saved' })}</span>
+				<span class="c-title">{t({ locale: $localeStore, key: 'markets.saved_empty.title' })}</span>
+				<p class="c-body">
 					{t({ locale: $localeStore, key: 'markets.saved_empty.body' })}
 				</p>
 			</div>
@@ -380,15 +377,13 @@
 					{/each}
 				</div>
 			{:else if list.length === 0}
-				<div
-					style="margin: 0 20px 20px; padding: 32px 22px; border: 1px dashed var(--border-base); border-radius: 14px; text-align: center;"
-				>
-					<p style="margin: 0;" class="dim t-body-sm">
+				<div style="margin: 0 20px 20px;" class="card-empty">
+					<p class="c-body">
 						{t({ locale: $localeStore, key: 'markets.empty' })}
 					</p>
 				</div>
 			{:else}
-				<div style="gap: 8px; padding: 0 20px 20px;" class="col">
+				<div style="gap: 0; padding: 0 20px 20px;" class="col">
 					{#each list as m (m.id)}
 						<MarketsListRow market={m} tag={primaryMarketTag(tagsByMarket[m.id])} />
 					{/each}

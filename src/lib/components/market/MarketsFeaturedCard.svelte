@@ -35,8 +35,8 @@
 </script>
 
 <div
-	style="flex: 0 0 280px; cursor: pointer; padding: 14px; background: linear-gradient(180deg, var(--bg-popover), var(--bg-base));"
-	class="card"
+	style="flex: 0 0 280px; cursor: pointer; gap: 0; background: linear-gradient(180deg, var(--bg-surface), var(--bg-base));"
+	class="card-surface"
 	onclick={onClick}
 	onkeydown={(event) => {
 		if (event.key === 'Enter' || event.key === ' ') {
