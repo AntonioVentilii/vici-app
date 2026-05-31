@@ -335,7 +335,6 @@
 }
 .lp-ticker-track {
 	display: flex;
-	gap: 48px;
 	white-space: nowrap;
 	animation: lp-ticker 12s linear infinite;
 }
@@ -343,6 +342,11 @@
 	display: inline-flex;
 	align-items: center;
 	gap: 10px;
+	/* Per-item trailing margin (not a track `gap`) keeps the repeating unit
+	   uniform across all 16 items, so `translateX(-50%)` lands exactly on the
+	   set boundary and the loop stays seamless. A track `gap` would omit the
+	   trailing gap on the last item and offset the loop by half a gap. */
+	margin-right: 48px;
 	font-size: 13px;
 }
 @keyframes lp-ticker {
