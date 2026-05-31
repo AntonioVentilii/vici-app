@@ -4,7 +4,6 @@
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { page } from '$app/state';
-	import { functions } from '$declarations/satellite/satellite.api';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import ChallengeLeagueModal from '$lib/components/leagues/ChallengeLeagueModal.svelte';
 	import LeagueDetailEmptyState from '$lib/components/leagues/LeagueDetailEmptyState.svelte';
@@ -14,21 +13,24 @@
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { safeGetIdentityOnce } from '$lib/services/identity.services';
+	import { authPrincipal } from '$lib/derived/user.derived';
 	import {
 		acceptBattle,
 		kickoffBattle,
 		leaveLeague,
-		listLeagueBattles,
-		listMyLeagues,
-		retractBattle,
-		type LeagueWithRole
+		retractBattle
 	} from '$lib/services/leagues.services';
-	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
+	import {
+		leagueBattlesStore,
+		leagueMembersStore,
+		leaguesErrorStore,
+		leaguesLoadedStore,
+		myLeaguesStore,
+		refreshMyLeagues
+	} from '$lib/stores/leagues.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BattleDoc, BattleState } from '$lib/types/battle';
-	import type { LeagueDoc } from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
 	import { formatDate, formatLocalePercent, shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -52,12 +54,6 @@
 
 	const { leagueId }: Props = $props();
 
-	let league: LeagueDoc | undefined = $state();
-	let myRole: LeagueMemberRole | undefined = $state();
-	let members: LeagueMemberDoc[] = $state([]);
-	let battles: BattleDoc[] = $state([]);
-	let selfPrincipal: string | undefined = $state();
-	let loadState: 'loading' | 'ready' | 'not_member' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 	let copied = $state(false);
 	let leaving = $state(false);
@@ -68,48 +64,31 @@
 	// bottom-sheet (avatar + accuracy / streak). `null` keeps it closed.
 	let openMember = $state<LeagueMemberDoc | null>(null);
 
-	const load = async () => {
-		try {
-			const [memberships, memberList, battleList, identity] = await Promise.all([
-				listMyLeagues(),
-				functions.listLeagueMembers({ leagueId }),
-				listLeagueBattles({ leagueId }),
-				safeGetIdentityOnce()
-			]);
+	const selfPrincipal = $derived($authPrincipal);
 
-			selfPrincipal = identity.getPrincipal().toText();
+	// Everything below reads from the shared leagues cache. The store
+	// hydrates the caller's memberships + every league's roster and
+	// battles in one fan-out refresh, so tapping in from the (already
+	// warm) list paints instantly while a background refresh runs.
+	const mine = $derived($myLeaguesStore.find((m) => m.league.id === leagueId));
+	const league = $derived(mine?.league);
+	const myRole = $derived<LeagueMemberRole | undefined>(mine?.role);
+	const members = $derived($leagueMembersStore.get(leagueId) ?? []);
+	const battles = $derived($leagueBattlesStore.get(leagueId) ?? []);
 
-			const mine: LeagueWithRole | undefined = memberships.find((m) => m.league.id === leagueId);
-
-			if (!mine) {
-				loadState = 'not_member';
-
-				return;
-			}
-
-			({ league, role: myRole } = mine);
-			members = memberList.items.map((m) => ({
-				leagueId: m.league_id,
-				member: m.member,
-				joinedAtMs: m.joined_at_ms,
-				role: m.role
-			}));
-			battles = battleList;
-			// Hydrate handles for the roster + leaderboard rows. The
-			// derived `memberHandle` picks up nicknames once the cache
-			// lands.
-			void loadProfilesByPrincipals({
-				principals: memberList.items.map((m) => m.member)
-			});
-			loadState = 'ready';
-		} catch (err) {
-			console.error('LeagueDetailPage: load failed', err);
-			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
-			loadState = 'error';
+	const loadState = $derived.by<'loading' | 'ready' | 'not_member' | 'error'>(() => {
+		if (!$leaguesLoadedStore) {
+			return $leaguesErrorStore ? 'error' : 'loading';
 		}
-	};
 
-	onMount(load);
+		return mine ? 'ready' : 'not_member';
+	});
+
+	// Stale-while-revalidate: render the cache and refresh in the
+	// background on every mount.
+	onMount(() => {
+		void refreshMyLeagues();
+	});
 
 	// Deep-link: `?challenge=1` from other surfaces opens the challenge
 	// sheet immediately on load. Kept the legacy `?propose=1` alias too
@@ -218,12 +197,12 @@
 		// The transfer has flipped owner + role rows; reload everything
 		// so the user's role drops to 'admin' and the leave / transfer
 		// CTAs update accordingly.
-		void load();
+		void refreshMyLeagues();
 	};
 
 	const handleBattleProposed = () => {
 		challengeOpen = false;
-		void load();
+		void refreshMyLeagues();
 	};
 
 	const handleCopyInvite = async () => {
@@ -444,7 +423,7 @@
 
 		try {
 			await retractBattle({ battle });
-			await load();
+			await refreshMyLeagues();
 		} catch (err) {
 			console.error('LeagueDetailPage: retractBattle failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
@@ -462,7 +441,7 @@
 
 		try {
 			await acceptBattle({ battle });
-			await load();
+			await refreshMyLeagues();
 		} catch (err) {
 			console.error('LeagueDetailPage: acceptBattle failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
@@ -480,7 +459,7 @@
 
 		try {
 			await kickoffBattle({ battle });
-			await load();
+			await refreshMyLeagues();
 		} catch (err) {
 			console.error('LeagueDetailPage: kickoffBattle failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
@@ -491,7 +470,7 @@
 
 	const handleResolveBattleDone = () => {
 		resolveBattleTarget = null;
-		void load();
+		void refreshMyLeagues();
 	};
 
 	// Recent activity feed. Built from the battle list — newest first by

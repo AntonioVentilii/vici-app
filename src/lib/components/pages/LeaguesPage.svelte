@@ -3,21 +3,23 @@
 	import { SvelteSet } from 'svelte/reactivity';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { functions } from '$declarations/satellite/satellite.api';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import CreateLeagueModal from '$lib/components/leagues/CreateLeagueModal.svelte';
 	import JoinLeagueModal from '$lib/components/leagues/JoinLeagueModal.svelte';
 	import LeagueCtaCard from '$lib/components/leagues/LeagueCtaCard.svelte';
 	import LeagueListCard from '$lib/components/leagues/LeagueListCard.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
-	import { safeGetIdentityOnce } from '$lib/services/identity.services';
-	import {
-		listLeagueBattles,
-		listMyLeagues,
-		type LeagueWithRole
-	} from '$lib/services/leagues.services';
-	import { loadProfilesByPrincipals } from '$lib/services/profile.services';
+	import { authPrincipal } from '$lib/derived/user.derived';
+	import type { LeagueWithRole } from '$lib/services/leagues.services';
 	import { friendsListStore, refreshFriendRelations } from '$lib/stores/friends.store';
+	import {
+		leagueBattlesStore,
+		leagueMembersStore,
+		leaguesErrorStore,
+		leaguesLoadedStore,
+		myLeaguesStore,
+		refreshMyLeagues
+	} from '$lib/stores/leagues.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BattleState } from '$lib/types/battle';
@@ -53,100 +55,60 @@
 		latestBattle: { state: BattleState; opponentId: string } | undefined;
 	}
 
-	let rows = $state<LeagueRow[]>([]);
-	let loadState = $state<'loading' | 'ready' | 'error'>('loading');
-	let errorMessage = $state<string | null>(null);
 	let createOpen = $state(false);
 	let joinOpen = $state(false);
-	let selfPrincipal = $state<string | undefined>(undefined);
 
-	/**
-	 * Build the per-league rows. Each league's member list + battles
-	 * are fetched in parallel; failures fall back to an empty roster
-	 * + no activity so a single flaky league doesn't tank the list.
-	 */
-	const hydrateRows = async (memberships: LeagueWithRole[]): Promise<LeagueRow[]> => {
-		if (memberships.length === 0) {
-			return [];
+	const selfPrincipal = $derived($authPrincipal);
+
+	// Stale-while-revalidate: render whatever the shared leagues cache
+	// holds and kick a background refresh on every mount. The skeleton
+	// only shows on the cold load (before the first refresh resolves);
+	// re-entering Arena → Leagues paints the cached list instantly.
+	onMount(() => {
+		void refreshMyLeagues();
+		void refreshFriendRelations();
+	});
+
+	const loadState = $derived.by<'loading' | 'ready' | 'error'>(() => {
+		if ($leaguesLoadedStore) {
+			return 'ready';
 		}
 
-		const fetched = await Promise.all(
-			memberships.map(async (m) => {
-				try {
-					const [memberRes, battleList] = await Promise.all([
-						functions.listLeagueMembers({ leagueId: m.league.id }),
-						listLeagueBattles({ leagueId: m.league.id })
-					]);
+		return $leaguesErrorStore ? 'error' : 'loading';
+	});
 
-					const members = memberRes.items.map((row) => row.member);
-					// Pick the most recently-touched battle we can identify.
-					// Battle docs don't carry a timestamp on the wire schema
-					// today; we sort by `kickoffMs` ascending (so newest
-					// upcoming kickoff is last) and take the trailing
-					// non-resolved entry. Battles are typically a small list
-					// per league so the cost is irrelevant.
-					const sorted = [...battleList].sort((a, b) => a.kickoffMs - b.kickoffMs);
-					const activeBattle = sorted.find((b) => b.state !== 'resolved') ?? sorted.at(-1);
-					const opponentId = activeBattle
-						? activeBattle.sideA === m.league.id
-							? activeBattle.sideB
-							: activeBattle.sideA
-						: undefined;
-					const latestBattle =
-						activeBattle && opponentId ? { state: activeBattle.state, opponentId } : undefined;
+	// Build the per-league rows from the shared cache. Each row pulls its
+	// roster + battles from the per-league maps the store hydrated; a
+	// league still missing from the maps falls back to an empty roster.
+	const rows = $derived.by<LeagueRow[]>(() =>
+		$myLeaguesStore.map((m) => {
+			const roster = $leagueMembersStore.get(m.league.id) ?? [];
+			const members = roster.map((r) => r.member);
+			const battleList = $leagueBattlesStore.get(m.league.id) ?? [];
 
-					return {
-						...m,
-						memberCount: members.length,
-						members,
-						latestBattle
-					} satisfies LeagueRow;
-				} catch (err) {
-					console.warn('LeaguesPage: hydrate failed for league', m.league.id, err);
+			// Pick the most recently-touched battle we can identify. Battle
+			// docs don't carry a timestamp on the wire schema today; we sort
+			// by `kickoffMs` ascending (so newest upcoming kickoff is last)
+			// and take the trailing non-resolved entry. Battles are typically
+			// a small list per league so the cost is irrelevant.
+			const sorted = [...battleList].sort((a, b) => a.kickoffMs - b.kickoffMs);
+			const activeBattle = sorted.find((b) => b.state !== 'resolved') ?? sorted.at(-1);
+			const opponentId = activeBattle
+				? activeBattle.sideA === m.league.id
+					? activeBattle.sideB
+					: activeBattle.sideA
+				: undefined;
+			const latestBattle =
+				activeBattle && opponentId ? { state: activeBattle.state, opponentId } : undefined;
 
-					return {
-						...m,
-						memberCount: 0,
-						members: [],
-						latestBattle: undefined
-					} satisfies LeagueRow;
-				}
-			})
-		);
-
-		// Prefetch profiles for every league member we'll be able to
-		// name in the friend-overlap row.
-		const allMembers = new SvelteSet<string>();
-
-		for (const row of fetched) {
-			for (const member of row.members) {
-				allMembers.add(member);
-			}
-		}
-
-		void loadProfilesByPrincipals({ principals: [...allMembers] });
-
-		return fetched;
-	};
-
-	const refresh = async () => {
-		try {
-			const identity = await safeGetIdentityOnce();
-			selfPrincipal = identity.getPrincipal().toText();
-
-			// Friends list and memberships in parallel.
-			const [memberships] = await Promise.all([listMyLeagues(), refreshFriendRelations()]);
-
-			rows = await hydrateRows(memberships);
-			loadState = 'ready';
-		} catch (err) {
-			console.error('LeaguesPage: refresh failed', err);
-			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
-			loadState = 'error';
-		}
-	};
-
-	onMount(refresh);
+			return {
+				...m,
+				memberCount: members.length,
+				members,
+				latestBattle
+			} satisfies LeagueRow;
+		})
+	);
 
 	const friendPrincipals = $derived.by(() => {
 		const me = selfPrincipal;
@@ -270,7 +232,7 @@
 	const handleAfterAction = () => {
 		createOpen = false;
 		joinOpen = false;
-		void refresh();
+		void refreshMyLeagues();
 	};
 
 	const handleCardClick = (leagueId: string) => {
@@ -291,7 +253,7 @@
 		</ul>
 	{:else if loadState === 'error'}
 		<p class="leagues-error" role="alert">
-			{errorMessage ?? t({ locale: $localeStore, key: 'leagues.error.generic' })}
+			{t({ locale: $localeStore, key: 'leagues.error.generic' })}
 		</p>
 	{:else if rows.length === 0}
 		<section class="leagues-empty">

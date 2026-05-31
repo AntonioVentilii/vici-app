@@ -6,8 +6,10 @@
 	import { balanceDomain } from '$lib/derived/balance-domain.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { ensureProfile, calculateAndSyncStats } from '$lib/services/profile.services';
+	import { clearAffiliations } from '$lib/stores/affiliations.store';
 	import { followingStore } from '$lib/stores/following.store';
 	import { clearFriendRelations } from '$lib/stores/friends.store';
+	import { clearLeagues } from '$lib/stores/leagues.store';
 	import { positionsStore } from '$lib/stores/positions.store';
 	import { setCachedProfile } from '$lib/stores/profiles.store';
 	import { tradeHistoryStore } from '$lib/stores/trade-history.store';
@@ -58,6 +60,8 @@
 		// briefly bleeding into user B's UI. Public caches (markets,
 		// leaderboard, categories) intentionally stay populated.
 		clearFriendRelations();
+		clearAffiliations();
+		clearLeagues();
 		followingStore.set(undefined);
 		positionsStore.set(undefined);
 		tradeHistoryStore.set(undefined);
