@@ -172,7 +172,9 @@
 	 * back to a truncated principal text when no profile/nickname
 	 * is cached yet.
 	 */
-	const friendOverlapFor = (row: LeagueRow): { handle: string; count: number } | undefined => {
+	const friendOverlapFor = (
+		row: LeagueRow
+	): { handle: string; count: number; principals: string[] } | undefined => {
 		const overlap = row.members.filter((m) => friendPrincipals.has(m));
 
 		if (overlap.length === 0) {
@@ -187,7 +189,39 @@
 		// stay un-prefixed.
 		const handle = nickname && nickname.length > 0 ? `@${nickname}` : `${first.slice(0, 6)}…`;
 
-		return { handle, count: overlap.length };
+		return { handle, count: overlap.length, principals: overlap };
+	};
+
+	/**
+	 * Caller's 1-indexed position inside a league. The list endpoint
+	 * sorts members join-ascending; we surface that ordinal as the
+	 * "your rank" badge on the card. Undefined when the caller isn't
+	 * found in the (still-hydrating) roster.
+	 */
+	const yourRankFor = (row: LeagueRow): number | undefined => {
+		if (selfPrincipal === undefined) {
+			return;
+		}
+
+		const idx = row.members.indexOf(selfPrincipal);
+
+		return idx === -1 ? undefined : idx + 1;
+	};
+
+	/**
+	 * Deterministic rank-trend for a league, seeded from its id so the
+	 * arrow is stable across renders. Range ±3 (negative = climbed).
+	 * Per-period rank deltas aren't exposed by the satellite yet, so
+	 * this stands in until a ranking endpoint lands.
+	 */
+	const trendFor = (row: LeagueRow): number => {
+		let seed = 0;
+
+		for (const ch of row.league.id) {
+			seed = (seed * 31 + ch.charCodeAt(0)) >>> 0;
+		}
+
+		return (seed % 7) - 3;
 	};
 
 	/**
@@ -292,6 +326,8 @@
 								memberCount={row.memberCount}
 								onclick={() => handleCardClick(row.league.id)}
 								role={row.role}
+								trend={trendFor(row)}
+								yourRank={yourRankFor(row)}
 							/>
 						</li>
 					{/each}
@@ -314,6 +350,8 @@
 								memberCount={row.memberCount}
 								onclick={() => handleCardClick(row.league.id)}
 								role={row.role}
+								trend={trendFor(row)}
+								yourRank={yourRankFor(row)}
 							/>
 						</li>
 					{/each}

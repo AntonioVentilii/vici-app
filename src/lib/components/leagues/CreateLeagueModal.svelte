@@ -21,10 +21,35 @@
 
 	const { isOpen, onClose, onCreated }: Props = $props();
 
+	// Emblem + privacy are presentation-only in the create sheet: the
+	// league doc carries no emblem/privacy field today, so the chosen
+	// emblem drives the live preview tile only and privacy labels the
+	// preview meta line. The colour DOES persist (`accentColor`).
+	const EMBLEMS = ['⚔', '☼', '✦', '✧', '◎', '⌬', '⊿', '☆'] as const;
+	const COLORS = [
+		{ id: 'laurel', value: '#e2b842' },
+		{ id: 'mint', value: '#4fd3a1' },
+		{ id: 'coral', value: '#ff6b6b' },
+		{ id: 'hold', value: '#6b9fff' },
+		{ id: 'violet', value: '#b49cff' },
+		{ id: 'parch', value: '#f2ecdc' }
+	] as const;
+	const PRIVACIES = ['invite', 'private', 'open'] as const;
+	type Privacy = (typeof PRIVACIES)[number];
+
+	const [DEFAULT_EMBLEM] = EMBLEMS;
+	const [DEFAULT_COLOR] = COLORS;
+
 	let name = $state('');
 	let description = $state('');
+	let privacy = $state<Privacy>('invite');
+	let emblem = $state<string>(DEFAULT_EMBLEM);
+	let color = $state<string>(DEFAULT_COLOR.value);
 	let submitting = $state(false);
 	let submitError: string | null = $state(null);
+
+	const trimmedName = $derived(name.trim());
+	const trimmedDescription = $derived(description.trim());
 
 	const draftError: MessageKey | null = $derived.by(() => {
 		// Don't show errors until the user has typed something, so the
@@ -34,8 +59,8 @@
 		}
 
 		const result = validateLeagueDraft({
-			name: name.trim(),
-			description: description.trim() || undefined
+			name: trimmedName,
+			description: trimmedDescription || undefined
 		});
 
 		if (result.ok) {
@@ -56,14 +81,30 @@
 	const canSubmit = $derived(
 		!submitting &&
 			validateLeagueDraft({
-				name: name.trim(),
-				description: description.trim() || undefined
+				name: trimmedName,
+				description: trimmedDescription || undefined
 			}).ok
+	);
+
+	const showPreview = $derived(trimmedName.length >= LEAGUE_NAME_MIN_LENGTH);
+
+	const privacyLabel = (value: Privacy): string =>
+		t({ locale: $localeStore, key: `leagues.create.privacy_${value}` });
+
+	const previewMeta = $derived(
+		t({
+			locale: $localeStore,
+			key: 'leagues.create.preview_meta',
+			params: { privacy: privacyLabel(privacy).toUpperCase() }
+		})
 	);
 
 	const reset = () => {
 		name = '';
 		description = '';
+		privacy = 'invite';
+		emblem = DEFAULT_EMBLEM;
+		color = DEFAULT_COLOR.value;
 		submitting = false;
 		submitError = null;
 	};
@@ -85,8 +126,9 @@
 
 		try {
 			const league = await createLeague({
-				name: name.trim(),
-				description: description.trim() || undefined
+				name: trimmedName,
+				description: trimmedDescription || undefined,
+				accentColor: color
 			});
 			onCreated(league);
 			reset();
@@ -105,6 +147,28 @@
 			<h2>{t({ locale: $localeStore, key: 'leagues.create.title' })}</h2>
 			<p>{t({ locale: $localeStore, key: 'leagues.create.sub' })}</p>
 		</header>
+
+		<!-- Live preview card — mirrors the leagues-list row so the
+		     owner sees exactly how their league reads before creating. -->
+		{#if showPreview}
+			<div
+				style:--accent={color}
+				style:--accent-grad={`linear-gradient(160deg, ${color}33 0%, ${color}11 40%, var(--bg-surface) 100%)`}
+				class="league-preview"
+				aria-hidden="true"
+			>
+				<span class="league-preview-logo">
+					<span class="league-preview-emblem">{emblem}</span>
+				</span>
+				<span class="league-preview-body">
+					<span class="league-preview-name">{trimmedName}</span>
+					{#if trimmedDescription}
+						<span class="league-preview-desc num">{trimmedDescription}</span>
+					{/if}
+					<span class="league-preview-meta num allcaps">{previewMeta}</span>
+				</span>
+			</div>
+		{/if}
 
 		<label class="league-field">
 			<span class="league-field-label allcaps">
@@ -126,17 +190,77 @@
 			<span class="league-field-label allcaps">
 				{t({ locale: $localeStore, key: 'leagues.create.label_description' })}
 			</span>
-			<textarea
-				class="league-field-input is-textarea"
+			<input
+				class="league-field-input"
+				autocomplete="off"
 				maxlength={LEAGUE_DESCRIPTION_MAX_LENGTH}
 				placeholder={t({
 					locale: $localeStore,
 					key: 'leagues.create.placeholder_description'
 				})}
-				rows="3"
+				type="text"
 				bind:value={description}
-			></textarea>
+			/>
 		</label>
+
+		<fieldset class="league-field">
+			<legend class="league-field-label allcaps">
+				{t({ locale: $localeStore, key: 'leagues.create.label_privacy' })}
+			</legend>
+			<div class="league-privacy-row">
+				{#each PRIVACIES as option (option)}
+					<button
+						class="league-privacy-btn"
+						class:is-active={privacy === option}
+						aria-pressed={privacy === option}
+						onclick={() => (privacy = option)}
+						type="button"
+					>
+						{privacyLabel(option)}
+					</button>
+				{/each}
+			</div>
+		</fieldset>
+
+		<fieldset class="league-field">
+			<legend class="league-field-label allcaps">
+				{t({ locale: $localeStore, key: 'leagues.create.label_emblem' })}
+			</legend>
+			<div class="league-emblem-grid">
+				{#each EMBLEMS as option (option)}
+					<button
+						style:--emblem-color={color}
+						class="league-emblem-btn"
+						class:is-active={emblem === option}
+						aria-label={option}
+						aria-pressed={emblem === option}
+						onclick={() => (emblem = option)}
+						type="button"
+					>
+						{option}
+					</button>
+				{/each}
+			</div>
+		</fieldset>
+
+		<fieldset class="league-field">
+			<legend class="league-field-label allcaps">
+				{t({ locale: $localeStore, key: 'leagues.create.label_color' })}
+			</legend>
+			<div class="league-color-row">
+				{#each COLORS as option (option.id)}
+					<button
+						style:background={option.value}
+						class="league-color-btn"
+						class:is-active={color === option.value}
+						aria-label={option.id}
+						aria-pressed={color === option.value}
+						onclick={() => (color = option.value)}
+						type="button"
+					></button>
+				{/each}
+			</div>
+		</fieldset>
 
 		{#if draftError}
 			<p class="league-form-error" role="alert">
@@ -180,10 +304,81 @@
 		color: var(--text-muted);
 	}
 
+	/* ─── Live preview card ─────────────────────────────────────── */
+
+	.league-preview {
+		display: grid;
+		grid-template-columns: 56px 1fr;
+		gap: 12px;
+		align-items: center;
+		padding: 14px;
+		background: var(--bg-popover);
+		border: 1px solid var(--border-base);
+		border-radius: 12px;
+	}
+
+	.league-preview-logo {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 56px;
+		height: 56px;
+		border-radius: 10px;
+		border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+		background: var(--accent-grad);
+	}
+
+	.league-preview-emblem {
+		font-family: var(--font-serif, var(--font-display, serif));
+		font-style: italic;
+		font-size: 24px;
+		color: var(--accent);
+		line-height: 1;
+	}
+
+	.league-preview-body {
+		display: flex;
+		flex-direction: column;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	.league-preview-name {
+		font-size: 15px;
+		font-weight: 600;
+		letter-spacing: -0.005em;
+		color: var(--text-base);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.league-preview-desc {
+		font-size: 10.5px;
+		color: var(--text-muted);
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.league-preview-meta {
+		font-size: var(--t-10);
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+	}
+
+	/* ─── Fields ────────────────────────────────────────────────── */
+
 	.league-field {
 		display: flex;
 		flex-direction: column;
 		gap: 0.3rem;
+		min-width: 0;
+		border: 0;
+		padding: 0;
+		margin: 0;
 	}
 
 	.league-field-label {
@@ -207,9 +402,84 @@
 		outline-offset: 0;
 	}
 
-	.league-field-input.is-textarea {
-		resize: vertical;
-		min-height: 4.5rem;
+	/* ─── Privacy selector ──────────────────────────────────────── */
+
+	.league-privacy-row {
+		display: flex;
+		gap: 0.4rem;
+	}
+
+	.league-privacy-btn {
+		appearance: none;
+		flex: 1;
+		padding: 0.5rem 0.6rem;
+		font: inherit;
+		font-size: var(--t-13);
+		font-weight: 500;
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-8);
+		cursor: pointer;
+		transition:
+			border-color 160ms var(--ease-vici),
+			color 160ms var(--ease-vici);
+	}
+
+	.league-privacy-btn.is-active {
+		color: var(--color-accent);
+		border-color: var(--color-accent);
+		font-weight: 600;
+	}
+
+	/* ─── Emblem picker ─────────────────────────────────────────── */
+
+	.league-emblem-grid {
+		display: grid;
+		grid-template-columns: repeat(8, 1fr);
+		gap: 0.4rem;
+	}
+
+	.league-emblem-btn {
+		appearance: none;
+		aspect-ratio: 1 / 1;
+		font-family: var(--font-serif, var(--font-display, serif));
+		font-style: italic;
+		font-size: 1.25rem;
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-8);
+		cursor: pointer;
+		transition: border-color 140ms var(--ease-vici);
+	}
+
+	.league-emblem-btn.is-active {
+		color: var(--emblem-color);
+		border: 2px solid var(--color-accent);
+	}
+
+	/* ─── Colour picker ─────────────────────────────────────────── */
+
+	.league-color-row {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.league-color-btn {
+		appearance: none;
+		width: 2rem;
+		height: 2rem;
+		padding: 0;
+		border-radius: var(--r-pill);
+		border: 1.5px solid var(--border-base);
+		cursor: pointer;
+	}
+
+	.league-color-btn.is-active {
+		border: 2px solid var(--color-accent);
+		box-shadow: 0 0 0 3px color-mix(in srgb, var(--laurel) 22%, transparent);
 	}
 
 	.league-form-error {

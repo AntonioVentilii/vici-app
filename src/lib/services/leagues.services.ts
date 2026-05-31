@@ -190,10 +190,15 @@ export const generateInviteCode = (): string => {
  */
 export const createLeague = async ({
 	name,
-	description
+	description,
+	accentColor
 }: {
 	name: string;
 	description?: string;
+	/** Optional accent colour (hex) the owner picked in the create
+	 *  sheet. Persisted on the league doc so the gradient logo tile is
+	 *  consistent everywhere the league is rendered. */
+	accentColor?: string;
 }): Promise<LeagueDoc> => {
 	const validation = validateLeagueDraft({ name, description });
 
@@ -220,7 +225,8 @@ export const createLeague = async ({
 		description,
 		inviteCode,
 		owner: ownerPrincipal,
-		createdAtMs
+		createdAtMs,
+		accentColor
 	};
 
 	await setDoc<LeagueDoc>({
