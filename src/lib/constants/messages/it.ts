@@ -1444,6 +1444,7 @@ export const itMessages = {
 	'markets.tab.trending': 'Di tendenza',
 	'markets.title_a': 'Scegli una domanda.',
 	'markets.title_b': 'Di’ la tua.',
+	'markets.wc_eyebrow': 'Coppa del Mondo 2026',
 	'markets.wc_recap.accuracy': 'Precisione',
 	'markets.wc_recap.calls': 'Pronostici fatti',
 	'markets.wc_recap.cta': 'Esplora tutti i mercati',

@@ -1365,6 +1365,7 @@ export const zhCnMessages = {
 	'markets.tab.trending': '热门',
 	'markets.title_a': '选一个问题。',
 	'markets.title_b': '做出判断。',
+	'markets.wc_eyebrow': '2026 世界杯',
 	'markets.wc_recap.accuracy': '准确率',
 	'markets.wc_recap.calls': '判断次数',
 	'markets.wc_recap.cta': '探索所有市场',
