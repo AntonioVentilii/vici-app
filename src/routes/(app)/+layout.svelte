@@ -10,6 +10,7 @@
 	import Loaders from '$lib/components/loaders/Loaders.svelte';
 	import AccountReturnGate from '$lib/components/settings/AccountReturnGate.svelte';
 	import CompanionOverlay from '$lib/components/ui/CompanionOverlay.svelte';
+	import NotifToastHost from '$lib/components/ui/NotifToastHost.svelte';
 	import { PENDING_ONBOARDING_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import {
 		REFERRAL_CODE_REGEX,
@@ -596,6 +597,14 @@
 	{/if}
 
 	<CompanionOverlay />
+
+	<!--
+		Slide-in notification toast. Mounted at the shell level so it
+		surfaces on any signed-in surface the moment a genuinely new inbox
+		item arrives (see `inbox.store.ts`'s `latestInboxToast`). Pinned to
+		the top of the viewport, above the content.
+	-->
+	<NotifToastHost />
 
 	<!--
 		Recovery-on-return gate. Self-hides when the profile is active, so

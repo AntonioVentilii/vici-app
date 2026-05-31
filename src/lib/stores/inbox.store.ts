@@ -7,7 +7,7 @@ import { localeStore } from '$lib/stores/locale.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { initStorageStore } from '$lib/stores/storage.store';
 import { userStore } from '$lib/stores/user.store';
-import type { InboxNotification } from '$lib/types/inbox';
+import type { InboxNotification, InboxNotificationKind } from '$lib/types/inbox';
 import type { Relation } from '$lib/types/relation';
 import {
 	decimalFixedValueToNumber,
@@ -238,6 +238,64 @@ export const combinedInboxUnreadCount: Readable<number> = derived(
 	combinedInboxStore,
 	($items) => $items.filter((item) => item.unread).length
 );
+
+// ── New-arrival toast feed ──────────────────────────────────────────────────
+// The slide-in popup (`NotifToastHost`) surfaces on a genuinely NEW inbox
+// item — a real event (a freshly-settled market, an incoming friend request,
+// …) that wasn't present on the previous tick. We diff successive snapshots
+// of `combinedInboxStore` against the set of ids already seen: the first
+// emission establishes the baseline (so pre-existing items hydrated at load
+// never pop), and thereafter any id that is both new and `unread` is pushed
+// as the latest toast. This replaces the per-session simulated delivery the
+// scaffold lacked — there is no timer; the toast is driven by live data.
+
+export interface InboxToast {
+	id: string;
+	kind: InboxNotificationKind;
+	title: string;
+	body: string;
+	href?: string;
+}
+
+const inboxToastStore = writable<InboxToast | undefined>(undefined);
+
+/**
+ * The most recent newly-arrived unread inbox item, or `undefined` once
+ * dismissed / consumed. `NotifToastHost` subscribes to this and animates the
+ * popup in; calling {@link clearInboxToast} retracts it.
+ */
+export const latestInboxToast: Readable<InboxToast | undefined> = inboxToastStore;
+
+export const clearInboxToast = (): void => {
+	inboxToastStore.set(undefined);
+};
+
+let seenInboxIds: Set<string> | undefined;
+
+combinedInboxStore.subscribe(($items) => {
+	if (seenInboxIds === undefined) {
+		// Baseline pass — record what was already present without popping.
+		seenInboxIds = new Set($items.map((item) => item.id));
+
+		return;
+	}
+
+	const next = $items.find((item) => item.unread && !seenInboxIds?.has(item.id));
+
+	seenInboxIds = new Set($items.map((item) => item.id));
+
+	if (next === undefined) {
+		return;
+	}
+
+	inboxToastStore.set({
+		id: next.id,
+		kind: next.kind,
+		title: next.title,
+		body: next.body,
+		href: next.href
+	});
+});
 
 /**
  * Marks every currently-visible settled-event card as read by adding
