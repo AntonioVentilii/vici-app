@@ -195,6 +195,25 @@
 		})
 	);
 
+	// Editorial-hero eyebrow chips — "League · {N} members · {size}".
+	// The prototype's third chip is a public/private flag; we don't
+	// store privacy, so we surface the backend-derived size bucket
+	// instead (more meaningful than a hardcoded "Private").
+	const heroChips = $derived([
+		t({ locale: $localeStore, key: 'leagues.detail.hero_chip_kind' }),
+		t({
+			locale: $localeStore,
+			key:
+				members.length === 1 ? 'leagues.card.member_count_one' : 'leagues.card.member_count_many',
+			params: { count: members.length }
+		}),
+		t({
+			locale: $localeStore,
+			key: 'leagues.detail.hero_chip_size',
+			params: { size: t({ locale: $localeStore, key: sizeLabelKey }) }
+		})
+	]);
+
 	const handleTransferred = () => {
 		transferOpen = false;
 		// The transfer has flipped owner + role rows; reload everything
@@ -582,56 +601,90 @@
 			{errorMessage ?? t({ locale: $localeStore, key: 'leagues.error.generic' })}
 		</p>
 	{:else if league}
-		<!-- ─── Head card · gradient logo + emblem + N° + inline CTAs ─── -->
-		<header
+		<!-- ─── Editorial hero · compact eyebrow chips + large title ─── -->
+		<header class="league-detail-hero">
+			<div class="league-detail-hero-chips">
+				{#each heroChips as chip (chip)}
+					<span class="league-detail-hero-chip allcaps num">{chip}</span>
+				{/each}
+				{#if myRole && myRole !== 'member'}
+					<span class="league-detail-hero-chip is-role allcaps num" data-role={myRole}>
+						{t({ locale: $localeStore, key: roleLabelKey(myRole) })}
+					</span>
+				{/if}
+			</div>
+			<h1 class="league-detail-hero-title">{league.name}</h1>
+			{#if league.description}
+				<p class="league-detail-hero-desc serif-italic">{league.description}</p>
+			{/if}
+		</header>
+
+		<!-- ─── Identity card · emblem tile + member overlap + actions ─── -->
+		<section
 			style:--accent={accent}
 			style:--accent-grad={`linear-gradient(160deg, ${accent}33 0%, ${accent}11 40%, var(--bg-surface) 100%)`}
-			class="league-detail-head"
+			class="league-detail-identity"
 		>
-			<div class="league-detail-logo" aria-hidden="true">
-				<span class="league-detail-logo-emblem">{emblem}</span>
-				<span class="league-detail-logo-corner num">N°{String(yourRank).padStart(2, '0')}</span>
-			</div>
-			<div class="league-detail-head-body">
-				<div class="league-detail-head-name-row">
-					<h1>{league.name}</h1>
-					{#if myRole}
-						<span class="league-detail-role allcaps" data-role={myRole}>
-							{t({ locale: $localeStore, key: roleLabelKey(myRole) })}
-						</span>
-					{/if}
+			<div class="league-detail-identity-row">
+				<div class="league-detail-logo" aria-hidden="true">
+					<span class="league-detail-logo-emblem">{emblem}</span>
+					<span class="league-detail-logo-corner num">N°{String(yourRank).padStart(2, '0')}</span>
 				</div>
-				<span class="league-detail-head-meta num">{memberCountLine}</span>
-				{#if league.description}
-					<p class="league-detail-desc">{league.description}</p>
-				{/if}
-				<div class="league-detail-head-actions">
-					{#if canSeeInvite}
-						<button
-							class="league-detail-head-btn is-ghost"
-							onclick={handleCopyInvite}
-							type="button"
-						>
-							{#if copied}
-								<Check aria-hidden="true" size={13} strokeWidth={2.4} />
-								<span>
-									{t({ locale: $localeStore, key: 'leagues.detail.invite_copied' })}
+				<div class="league-detail-identity-body">
+					<span class="num allcaps league-detail-identity-eyebrow">{memberCountLine}</span>
+					<button
+						class="league-detail-identity-overlap"
+						aria-label={t({
+							locale: $localeStore,
+							key: 'leagues.detail.members_count_unlimited',
+							params: { count: members.length }
+						})}
+						onclick={() => (leaderboardTab = 'all')}
+						type="button"
+					>
+						<span class="league-detail-overlap-avatars" aria-hidden="true">
+							{#each sortedMembers.slice(0, 4) as member, i (member.member)}
+								<span style:--i={i} class="league-detail-overlap-avatar">
+									<Avatar
+										class="league-detail-overlap-img"
+										avatar={memberAvatar(member.member)}
+										nickname={memberNickname(member.member)}
+										owner={member.member}
+									/>
 								</span>
-							{:else}
-								<Copy aria-hidden="true" size={13} strokeWidth={2} />
-								<span>
-									{t({ locale: $localeStore, key: 'leagues.detail.invite_label' })}
-								</span>
-							{/if}
-						</button>
-					{/if}
-					<button class="league-detail-head-btn is-primary" onclick={handlePredict} type="button">
-						<span>{t({ locale: $localeStore, key: 'leagues.detail.predict_cta' })}</span>
-						<ChevronRight aria-hidden="true" size={13} strokeWidth={2.2} />
+							{/each}
+						</span>
+						<span class="num allcaps league-detail-overlap-count">
+							{t({
+								locale: $localeStore,
+								key:
+									members.length === 1
+										? 'leagues.card.member_count_one'
+										: 'leagues.card.member_count_many',
+								params: { count: members.length }
+							})}
+						</span>
 					</button>
 				</div>
 			</div>
-		</header>
+			<div class="league-detail-identity-actions">
+				{#if canSeeInvite}
+					<button class="league-detail-head-btn is-ghost" onclick={handleCopyInvite} type="button">
+						{#if copied}
+							<Check aria-hidden="true" size={13} strokeWidth={2.4} />
+							<span>{t({ locale: $localeStore, key: 'leagues.detail.invite_copied' })}</span>
+						{:else}
+							<Copy aria-hidden="true" size={13} strokeWidth={2} />
+							<span>{t({ locale: $localeStore, key: 'leagues.detail.invite_label' })}</span>
+						{/if}
+					</button>
+				{/if}
+				<button class="league-detail-head-btn is-primary" onclick={handlePredict} type="button">
+					<span>{t({ locale: $localeStore, key: 'leagues.detail.predict_cta' })}</span>
+					<ChevronRight aria-hidden="true" size={13} strokeWidth={2.2} />
+				</button>
+			</div>
+		</section>
 
 		<!-- ─── Battle section · active card OR challenge another league ─── -->
 		<section class="league-detail-section">
@@ -1020,16 +1073,136 @@
 		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
 	}
 
-	/* ─── Head card ─────────────────────────────────────────────── */
+	/* ─── Editorial hero ────────────────────────────────────────── */
 
-	.league-detail-head {
-		display: grid;
-		grid-template-columns: 5.5rem 1fr;
-		gap: 0.9rem;
+	.league-detail-hero {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		padding: 0.25rem 0 0.1rem;
+	}
+
+	.league-detail-hero-chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.35rem;
+	}
+
+	.league-detail-hero-chip {
+		font-size: var(--t-10);
+		letter-spacing: var(--tracking-allcaps);
+		padding: 0.15rem 0.5rem;
+		border-radius: var(--r-pill);
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--text-muted) 12%, transparent);
+	}
+
+	.league-detail-hero-chip.is-role {
+		color: var(--accent);
+		background: color-mix(in srgb, var(--accent) 16%, transparent);
+	}
+
+	.league-detail-hero-chip.is-role[data-role='owner'] {
+		color: var(--laurel);
+		background: color-mix(in srgb, var(--laurel) 18%, transparent);
+	}
+
+	.league-detail-hero-title {
+		margin: 0;
+		font-family: var(--font-display);
+		font-size: var(--t-26, 1.625rem);
+		font-weight: 600;
+		letter-spacing: -0.01em;
+		color: var(--text-base);
+		line-height: 1.1;
+	}
+
+	.league-detail-hero-desc {
+		margin: 0;
+		font-size: var(--t-13);
+		color: var(--text-muted);
+		line-height: 1.45;
+	}
+
+	/* ─── Identity card ─────────────────────────────────────────── */
+
+	.league-detail-identity {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
 		padding: 0.95rem 1rem;
 		background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
+	}
+
+	.league-detail-identity-row {
+		display: grid;
+		grid-template-columns: 5.5rem 1fr;
+		gap: 0.9rem;
+		align-items: center;
+	}
+
+	.league-detail-identity-body {
+		display: flex;
+		flex-direction: column;
+		gap: 0.45rem;
+		min-width: 0;
+	}
+
+	.league-detail-identity-eyebrow {
+		font-size: var(--t-10);
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+	}
+
+	.league-detail-identity-overlap {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0;
+		font: inherit;
+		background: none;
+		border: 0;
+		cursor: pointer;
+	}
+
+	.league-detail-overlap-avatars {
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.league-detail-overlap-avatar {
+		display: inline-flex;
+		margin-left: -7px;
+		border-radius: 50%;
+		box-shadow: 0 0 0 2px var(--bg-surface);
+	}
+
+	.league-detail-overlap-avatar:first-child {
+		margin-left: 0;
+	}
+
+	:global(.league-detail-overlap-img) {
+		width: 1.5rem;
+		height: 1.5rem;
+	}
+
+	.league-detail-overlap-count {
+		font-size: var(--t-10);
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--text-muted);
+	}
+
+	.league-detail-identity-actions {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.league-detail-identity-actions .league-detail-head-btn {
+		flex: 1;
+		justify-content: center;
 	}
 
 	.league-detail-logo {
@@ -1083,67 +1256,6 @@
 		letter-spacing: 0.1em;
 		color: var(--accent);
 		opacity: 0.78;
-	}
-
-	.league-detail-head-body {
-		display: flex;
-		flex-direction: column;
-		gap: 0.25rem;
-		min-width: 0;
-		flex: 1;
-	}
-
-	.league-detail-head-name-row {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
-	.league-detail-head h1 {
-		margin: 0;
-		font-family: var(--font-display);
-		font-size: var(--t-20, 1.25rem);
-		font-weight: 600;
-		letter-spacing: -0.005em;
-		color: var(--text-base);
-		overflow: hidden;
-		text-overflow: ellipsis;
-		white-space: nowrap;
-	}
-
-	.league-detail-role {
-		flex-shrink: 0;
-		font-size: var(--t-10);
-		letter-spacing: var(--tracking-allcaps);
-		padding: 0.15rem 0.45rem;
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--accent) 18%, transparent);
-		color: var(--accent);
-	}
-
-	.league-detail-role[data-role='owner'] {
-		background: color-mix(in srgb, var(--laurel) 22%, transparent);
-		color: var(--laurel);
-	}
-
-	.league-detail-head-meta {
-		font-size: var(--t-11);
-		letter-spacing: var(--tracking-wide);
-		color: var(--text-muted);
-	}
-
-	.league-detail-desc {
-		margin: 0.1rem 0 0;
-		font-size: var(--t-12);
-		color: var(--text-muted);
-		line-height: 1.4;
-	}
-
-	.league-detail-head-actions {
-		display: flex;
-		gap: 0.4rem;
-		margin-top: 0.45rem;
 	}
 
 	.league-detail-head-btn {
