@@ -2144,11 +2144,11 @@ export const esMessages = {
 	'worlds.cta.pick_country': 'Elige tu país →',
 	'worlds.cta.pick_university': 'Elige tu universidad →',
 	'worlds.detail.activity_calls': '{count} predicciones',
-	'worlds.detail.activity_eyebrow': 'Actividad · mayo',
+	'worlds.detail.activity_eyebrow': 'Actividad',
 	'worlds.detail.back': 'Volver a Worlds',
 	'worlds.detail.cta_label': 'Abre Flow para añadir predicciones',
 	'worlds.detail.empty_body':
-		'{name} necesita {calls} predicciones más este mes para clasificar al podio de la temporada.',
+		'{name} necesita {calls} predicciones más para clasificar al podio de la temporada.',
 	'worlds.detail.empty_cta': 'Abrir Flow',
 	'worlds.detail.empty_title_country': 'Nación tranquila.',
 	'worlds.detail.empty_title_school': 'Sé de los primeros.',

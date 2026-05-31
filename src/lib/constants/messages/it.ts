@@ -2134,11 +2134,11 @@ export const itMessages = {
 	'worlds.cta.pick_country': 'Scegli il tuo paese →',
 	'worlds.cta.pick_university': 'Scegli la tua università →',
 	'worlds.detail.activity_calls': '{count} chiamate',
-	'worlds.detail.activity_eyebrow': 'Attività · maggio',
+	'worlds.detail.activity_eyebrow': 'Attività',
 	'worlds.detail.back': 'Torna a Worlds',
 	'worlds.detail.cta_label': 'Apri Flow per aggiungere chiamate',
 	'worlds.detail.empty_body':
-		'{name} ha bisogno di altre {calls} chiamate questo mese per qualificarsi al podio della stagione.',
+		'{name} ha bisogno di altre {calls} chiamate per qualificarsi al podio della stagione.',
 	'worlds.detail.empty_cta': 'Apri Flow',
 	'worlds.detail.empty_title_country': 'Nazione tranquilla.',
 	'worlds.detail.empty_title_school': 'Sii tra i primi.',

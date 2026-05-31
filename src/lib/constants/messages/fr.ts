@@ -2147,11 +2147,11 @@ export const frMessages = {
 	'worlds.cta.pick_country': 'Choisis ton pays →',
 	'worlds.cta.pick_university': 'Choisis ton université →',
 	'worlds.detail.activity_calls': '{count} appels',
-	'worlds.detail.activity_eyebrow': 'Activité · mai',
+	'worlds.detail.activity_eyebrow': 'Activité',
 	'worlds.detail.back': 'Retour à Worlds',
 	'worlds.detail.cta_label': 'Ouvrir Flow pour ajouter des appels',
 	'worlds.detail.empty_body':
-		'{name} a besoin de {calls} appels de plus ce mois-ci pour se qualifier au podium de la saison.',
+		'{name} a besoin de {calls} appels de plus pour se qualifier au podium de la saison.',
 	'worlds.detail.empty_cta': 'Ouvrir Flow',
 	'worlds.detail.empty_title_country': 'Nation tranquille.',
 	'worlds.detail.empty_title_school': 'Sois parmi les premiers.',

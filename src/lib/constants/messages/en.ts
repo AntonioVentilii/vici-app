@@ -2157,11 +2157,10 @@ export const enMessages = {
 	'worlds.cta.pick_country': 'Pick your country →',
 	'worlds.cta.pick_university': 'Pick your university →',
 	'worlds.detail.activity_calls': '{count} calls',
-	'worlds.detail.activity_eyebrow': 'Activity · May',
+	'worlds.detail.activity_eyebrow': 'Activity',
 	'worlds.detail.back': 'Back to Worlds',
 	'worlds.detail.cta_label': 'Open Flow to add calls',
-	'worlds.detail.empty_body':
-		'{name} needs {calls} more calls this month to qualify for the season podium.',
+	'worlds.detail.empty_body': '{name} needs {calls} more calls to qualify for the season podium.',
 	'worlds.detail.empty_cta': 'Open Flow',
 	'worlds.detail.empty_title_country': 'Quiet nation.',
 	'worlds.detail.empty_title_school': 'Be one of the first.',

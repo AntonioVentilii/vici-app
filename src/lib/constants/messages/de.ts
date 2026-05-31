@@ -2146,11 +2146,11 @@ export const deMessages = {
 	'worlds.cta.pick_country': 'Land wählen →',
 	'worlds.cta.pick_university': 'Uni wählen →',
 	'worlds.detail.activity_calls': '{count} Calls',
-	'worlds.detail.activity_eyebrow': 'Aktivität · Mai',
+	'worlds.detail.activity_eyebrow': 'Aktivität',
 	'worlds.detail.back': 'Zurück zu Worlds',
 	'worlds.detail.cta_label': 'Flow öffnen, Calls hinzufügen',
 	'worlds.detail.empty_body':
-		'{name} braucht diesen Monat {calls} weitere Calls, um sich fürs Saison-Podium zu qualifizieren.',
+		'{name} braucht {calls} weitere Calls, um sich fürs Saison-Podium zu qualifizieren.',
 	'worlds.detail.empty_cta': 'Flow öffnen',
 	'worlds.detail.empty_title_country': 'Stille Nation.',
 	'worlds.detail.empty_title_school': 'Sei eine·r der Ersten.',

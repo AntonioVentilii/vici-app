@@ -2133,11 +2133,11 @@ export const ptMessages = {
 	'worlds.cta.pick_country': 'Escolha seu país →',
 	'worlds.cta.pick_university': 'Escolha sua universidade →',
 	'worlds.detail.activity_calls': '{count} chamadas',
-	'worlds.detail.activity_eyebrow': 'Atividade · maio',
+	'worlds.detail.activity_eyebrow': 'Atividade',
 	'worlds.detail.back': 'Voltar a Worlds',
 	'worlds.detail.cta_label': 'Abra o Flow para adicionar chamadas',
 	'worlds.detail.empty_body':
-		'{name} precisa de mais {calls} chamadas este mês para se qualificar ao pódio da temporada.',
+		'{name} precisa de mais {calls} chamadas para se qualificar ao pódio da temporada.',
 	'worlds.detail.empty_cta': 'Abrir Flow',
 	'worlds.detail.empty_title_country': 'Nação tranquila.',
 	'worlds.detail.empty_title_school': 'Seja um dos primeiros.',
