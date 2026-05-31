@@ -192,10 +192,16 @@ const fetchMarkets = async ({
 	certified: boolean;
 	domain: RegistryDid.BalanceDomain;
 }): Promise<Market[]> => {
-	const [seriesList, activities] = await Promise.all([
+	const [allSeries, activities] = await Promise.all([
 		listSeries({ identity, certified }),
 		getGlobalActivities({ certified })
 	]);
+
+	// TODO(temporary): until multiple-choice (categorical) markets are fully
+	// supported across the UI, only surface binary (boolean) markets. Check the
+	// variant explicitly so Call / Put / future payoff types stay out too.
+	// Remove this filter to restore non-binary markets.
+	const seriesList = allSeries.filter((s) => 'Binary' in s.payoff_type);
 
 	const resolutionMap = buildResolutionMap(activities);
 
@@ -273,6 +279,11 @@ const fetchMarkets = async ({
 				const series = await getSeries({ identity, certified, seriesId: id });
 
 				if (isNullish(series)) {
+					return;
+				}
+
+				// See the binary-only TODO above: skip settled non-binary series too.
+				if (!('Binary' in series.payoff_type)) {
 					return;
 				}
 
