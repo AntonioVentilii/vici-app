@@ -200,6 +200,7 @@ export const idlFactory = ({ IDL }) => {
 				pnl: IDL.Float64,
 				streak: IDL.Float64,
 				nickname: IDL.Text,
+				hibernated_at_ms: IDL.Opt(IDL.Float64),
 				daily_goal_date: IDL.Opt(IDL.Text),
 				daily_goal_done: IDL.Float64,
 				contrarian_wins: IDL.Float64,
@@ -253,6 +254,10 @@ export const idlFactory = ({ IDL }) => {
 				accuracy: IDL.Float64
 			})
 		)
+	});
+	const AppHibernateMyAccountResult = IDL.Record({
+		ok: IDL.Bool,
+		reason: IDL.Opt(IDL.Variant({ deleted: IDL.Null, no_profile: IDL.Null }))
 	});
 	const AppListAffiliationStatsArgs = IDL.Record({
 		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
@@ -665,6 +670,10 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppResumeMyAccountResult = IDL.Record({
+		ok: IDL.Bool,
+		resumed: IDL.Bool
+	});
 	const AppSearchProfilesArgs = IDL.Record({ query_str: IDL.Text });
 	const AppSearchProfilesResult = IDL.Record({
 		items: IDL.Vec(
@@ -862,6 +871,7 @@ export const idlFactory = ({ IDL }) => {
 		),
 		app_get_my_referral_code: IDL.Func([], [AppGetMyReferralCodeResult], ['query']),
 		app_get_profile: IDL.Func([AppGetProfileArgs], [AppGetProfileResult], ['query']),
+		app_hibernate_my_account: IDL.Func([], [AppHibernateMyAccountResult], []),
 		app_list_affiliation_stats: IDL.Func(
 			[AppListAffiliationStatsArgs],
 			[AppListAffiliationStatsResult],
@@ -916,6 +926,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppResolveTournamentRoundResult],
 			[]
 		),
+		app_resume_my_account: IDL.Func([], [AppResumeMyAccountResult], []),
 		app_search_profiles: IDL.Func([AppSearchProfilesArgs], [AppSearchProfilesResult], ['query']),
 		app_send_friend_request: IDL.Func([AppSendFriendRequestArgs], [], []),
 		app_sweep_expired_deletions: IDL.Func([], [AppSweepExpiredDeletionsResult], []),

@@ -87,6 +87,11 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		// `optional()` in the schema, so an absent value stays absent (active
 		// account) and a present value round-trips unchanged.
 		deletedAtMs: profile.deletedAtMs,
+		// Forward the hibernation marker verbatim (Delete account v2 — the
+		// reversible sibling of soft-delete). Same `optional()` round-trip
+		// semantics as `deletedAtMs`: absent stays absent (active), present
+		// round-trips unchanged.
+		hibernatedAtMs: profile.hibernatedAtMs,
 		unlockedAchievements: profile.unlockedAchievements ?? [],
 		contrarianWins: profile.contrarianWins ?? 0,
 		preferences: sanitizedPreferences
@@ -107,6 +112,33 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 export const isSoftDeleted = (profile: Pick<UserProfile, 'deletedAtMs'>): boolean =>
 	nonNullish(profile.deletedAtMs);
 
+/**
+ * A profile is hibernated (Delete account v2 — the reversible sibling of
+ * soft-delete) iff `hibernatedAtMs` is present. Absence is the meaningful
+ * "active account" state — see the field comment in
+ * `src/lib/schema/profile.schema.ts`. Hibernation is fully reversible: no
+ * data is removed, the owner can `resumeMyAccount` at any time. While
+ * hibernated the account freezes its shared stats (it's inactive) and
+ * hides from public reads, but the owner's own `getDoc` read still sees
+ * the marker so the FE can offer resume.
+ */
+export const isHibernated = (profile: Pick<UserProfile, 'hibernatedAtMs'>): boolean =>
+	nonNullish(profile.hibernatedAtMs);
+
+/**
+ * A profile is hidden from PUBLIC reads iff it's either soft-deleted OR
+ * hibernated (Delete account v2). Both states make the account disappear
+ * from the leaderboard / search / direct lookup; they differ in
+ * reversibility (soft-delete is a delete-with-grace-window, hibernation is
+ * a reversible pause) but share the "vanish from public surfaces"
+ * behaviour. The owner's own profile read goes through Juno `getDoc` (not
+ * these endpoints) and is intentionally NOT gated, so the FE can still
+ * offer recovery (soft-delete) or resume (hibernation).
+ */
+export const isPubliclyHidden = (
+	profile: Pick<UserProfile, 'deletedAtMs' | 'hibernatedAtMs'>
+): boolean => isSoftDeleted(profile) || isHibernated(profile);
+
 export const getProfile = (principal: PrincipalText): UserProfile | undefined => {
 	const caller = msgCaller();
 
@@ -122,11 +154,12 @@ export const getProfile = (principal: PrincipalText): UserProfile | undefined =>
 
 	const profile = decodeDocData<UserProfile>(profileDoc.data);
 
-	// Soft-deleted accounts are invisible to OTHER callers, but the owner
-	// can always read their own (possibly soft-deleted) doc — the FE relies
-	// on this to drive recovery within the window, so the query must agree
-	// with the raw Juno `getDoc` path instead of hiding it only there.
-	if (isSoftDeleted(profile) && caller.toText() !== principal) {
+	// Public lookup: a soft-deleted OR hibernated account is invisible to
+	// OTHER callers, but the owner can always read their own (possibly
+	// hidden) doc — the FE relies on this to drive recovery / resume within
+	// the window, so the query agrees with the raw Juno `getDoc` path
+	// instead of hiding the state only there.
+	if (isPubliclyHidden(profile) && caller.toText() !== principal) {
 		return;
 	}
 
@@ -156,9 +189,10 @@ export const searchProfiles = (query: string): UserProfile[] => {
 	return (
 		items
 			.map(([_, item]) => decodeDocData<UserProfile>(item.data))
-			// Public search: soft-deleted accounts are invisible (Delete
-			// account v2). Drop them before the role lookup + hydrate.
-			.filter((profile) => !isSoftDeleted(profile))
+			// Public search: soft-deleted OR hibernated accounts are
+			// invisible (Delete account v2). Drop them before the role
+			// lookup + hydrate.
+			.filter((profile) => !isPubliclyHidden(profile))
 			.map((profile) => {
 				const roleDoc = getDocStore({
 					collection: Collection.ROLES,
