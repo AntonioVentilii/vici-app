@@ -2,6 +2,9 @@ export type AppLocale = 'en' | 'it' | 'es' | 'de' | 'fr' | 'pt' | 'zh-CN';
 
 export const DEFAULT_LOCALE: AppLocale = 'en';
 
+// TODO: Pending additional locales to support: pt-BR, nl, pl, cs, sk, ru,
+// zh-Hans, ja, ko, hi, vi. The existing `zh-CN` entry corresponds to `zh-Hans`;
+// reconcile the naming when these are added.
 export const SUPPORTED_LOCALES: readonly {
 	id: AppLocale;
 	label: string;
