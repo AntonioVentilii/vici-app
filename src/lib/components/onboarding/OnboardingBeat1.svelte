@@ -89,7 +89,7 @@
 	<OnboardingStepTracker step={1} />
 
 	<div class="ob2-wc-eyebrow">
-		<span class="ob2-wc-tag">{event.title}</span>
+		<span class="ob2-wc-tag">{event.badgeTitle ?? event.title}</span>
 		<span class="ob2-wc-countdown">
 			· {t({
 				locale: $localeStore,
@@ -146,7 +146,7 @@
 	</div>
 
 	{#if showAllTeams}
-		<div class="ob2-all-teams">
+		<div class="ob2-all-teams no-scrollbar">
 			<div class="ob2-all-teams-grid">
 				{#each otherTeams as team (team.id)}
 					<button
