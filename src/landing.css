@@ -336,7 +336,7 @@
 .lp-ticker-track {
 	display: flex;
 	white-space: nowrap;
-	animation: lp-ticker 12s linear infinite;
+	animation: lp-ticker 90s linear infinite;
 }
 .lp-ticker-item {
 	display: inline-flex;
@@ -523,6 +523,13 @@
 }
 @media (prefers-reduced-motion: reduce) {
 	.flow-days.urgent {
+		animation: none;
+	}
+	/* Looping landing motion (ticker scroll, live-dot pulses) halts when the
+	   visitor prefers reduced motion; the content stays fully legible at rest. */
+	.lp-ticker-track,
+	.lp-root .tag.live::before,
+	.lp-pulse-dot {
 		animation: none;
 	}
 }
