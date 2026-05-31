@@ -22,6 +22,7 @@
 		affiliationMonthlyAccuracy,
 		formatAccuracyPercent
 	} from '$lib/utils/affiliation-stats.utils';
+	import { formatMonthName } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
@@ -32,10 +33,10 @@
 	 * Layers in order:
 	 *
 	 *  1. Hero card — `FIFA WORLD CUP · Live` tags, surface-aware title
-	 *     (`Worlds Universities/Countries World Cup Battle` or
-	 *     `… May Season Battle`), days-left + roster size meta.
+	 *     (`Worlds Universities/Countries World Cup Battle` or the
+	 *     current month's season battle), days-left + roster size meta.
 	 *
-	 *  2. Scope toggle — `May Season` vs `WC Battle`. Lets users pivot
+	 *  2. Scope toggle — current-month season vs `WC Battle`. Lets users pivot
 	 *     between the lifetime / monthly ranking on the same screen.
 	 *     Initial scope reads from the `?scope=` query param so deep
 	 *     links from `BattlesInboxPage` land on the correct view.
@@ -163,6 +164,10 @@
 	};
 
 	const eventDaysLeft = $derived($daysToFinal);
+
+	// Month-anchored season label — the monthly scope always names the
+	// current month rather than a hard-coded one.
+	const currentMonthName = $derived(formatMonthName({ locale: $localeStore }));
 </script>
 
 <div class="worlds-battle">
@@ -196,7 +201,11 @@
 					</span>
 				{:else}
 					<span class="worlds-tag is-monthly">
-						{t({ locale: $localeStore, key: 'worlds.battle.tag_monthly' })}
+						{t({
+							locale: $localeStore,
+							key: 'worlds.battle.tag_monthly',
+							params: { month: currentMonthName }
+						})}
 					</span>
 				{/if}
 			</div>
@@ -205,7 +214,11 @@
 				<span class="serif-italic worlds-battle-hero-emph">
 					{scope === 'wc'
 						? t({ locale: $localeStore, key: 'worlds.event.title_emph' })
-						: t({ locale: $localeStore, key: 'worlds.battle.month_emph' })}
+						: t({
+								locale: $localeStore,
+								key: 'worlds.battle.month_emph',
+								params: { month: currentMonthName }
+							})}
 				</span>
 				{t({ locale: $localeStore, key: 'worlds.event.title_tail' })}
 			</h3>
@@ -241,7 +254,11 @@
 				role="tab"
 				type="button"
 			>
-				{t({ locale: $localeStore, key: 'worlds.battle.scope_month' })}
+				{t({
+					locale: $localeStore,
+					key: 'worlds.battle.scope_month',
+					params: { month: currentMonthName }
+				})}
 			</button>
 			<button
 				class:is-active={scope === 'wc'}

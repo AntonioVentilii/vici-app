@@ -217,6 +217,19 @@ export const formatLongDate = ({
 		day: 'numeric'
 	});
 
+/**
+ * Locale-aware full month name (e.g. `June`) for a given date,
+ * defaulting to today. Used to month-anchor season labels so a tag
+ * never names a month that isn't the active one.
+ */
+export const formatMonthName = ({
+	locale,
+	date = new Date()
+}: {
+	locale: string;
+	date?: Date;
+}): string => new Intl.DateTimeFormat(locale, { month: 'long' }).format(date);
+
 export const formatVolume = ({
 	volume,
 	decimals,
