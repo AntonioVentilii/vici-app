@@ -1,4 +1,5 @@
 <script lang="ts">
+	import type { Doc } from '@junobuild/core';
 	import { UserMinus, UserPlus, Users } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { fade, fly } from 'svelte/transition';
@@ -8,11 +9,20 @@
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { leaderboard, leaderboardNotInitialized } from '$lib/derived/leaderboard.derived';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import { sendFriendRequest, unfriendUser } from '$lib/services/relation.services';
-	import { friendsListStore, refreshFriendRelations } from '$lib/stores/friends.store';
+	import {
+		cancelFriendRequest,
+		sendFriendRequest,
+		unfriendUser
+	} from '$lib/services/relation.services';
+	import {
+		friendsListStore,
+		refreshFriendRelations,
+		sentFriendRequestsStore
+	} from '$lib/stores/friends.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { UserProfile } from '$lib/types/profile';
+	import type { Relation } from '$lib/types/relation';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 
@@ -61,8 +71,9 @@
 	const rankOf = (owner: string): number => rankedUsers.findIndex((u) => u.owner === owner) + 1;
 
 	// ── Friend state ────────────────────────────────────────────────
-	// `friendsListStore` holds the viewer's active friend relations; a
-	// row is a friend when one of its participants is that row's owner.
+	// `friendsListStore` holds accepted friend relations; `sentFriendRequestsStore`
+	// holds outgoing requests still awaiting the recipient's response.
+	// Three states: accepted friend, outgoing-pending, or none.
 	const friendOwners = $derived(
 		new Set(
 			$friendsListStore.flatMap((relation) =>
@@ -72,6 +83,10 @@
 	);
 
 	const isFriend = (owner: string): boolean => friendOwners.has(owner);
+
+	// Returns the pending-sent Doc for `owner`, or undefined if none.
+	const pendingSentDoc = (owner: string): Doc<Relation> | undefined =>
+		$sentFriendRequestsStore.find((doc) => doc.data.participants.includes(owner));
 
 	onMount(() => {
 		// Hydrate the shared social graph so `isFriend` is accurate on
@@ -107,12 +122,22 @@
 		}
 
 		const target = openProfile.owner;
-		const wasFriend = isFriend(target);
 		mutatingOwner = target;
 
+		// Determine which of the three states we are in at call time.
+		const friendDoc = pendingSentDoc(target);
+		const accepted = isFriend(target);
+		const isPending = !accepted && friendDoc !== undefined;
+
+		let errorKey: MessageKey = 'arena.friends.error.send_failed';
+
 		try {
-			if (wasFriend) {
+			if (accepted) {
+				errorKey = 'arena.friends.error.unfriend_failed';
 				await unfriendUser({ target, sender: currentUser });
+			} else if (isPending) {
+				errorKey = 'arena.friends.error.cancel_failed';
+				await cancelFriendRequest({ currentRelation: friendDoc });
 			} else {
 				await sendFriendRequest({ target, sender: currentUser });
 			}
@@ -123,10 +148,7 @@
 			console.error(err);
 			notificationsStore.add({
 				title: t({ locale: $localeStore, key: 'leaderboard.title' }),
-				message: t({
-					locale: $localeStore,
-					key: wasFriend ? 'arena.friends.error.unfriend_failed' : 'arena.friends.error.send_failed'
-				}),
+				message: t({ locale: $localeStore, key: errorKey }),
 				type: 'error'
 			});
 		} finally {
@@ -275,6 +297,8 @@
 	{#if openProfile}
 		{@const user = openProfile}
 		{@const friend = isFriend(user.owner)}
+		{@const sentDoc = pendingSentDoc(user.owner)}
+		{@const pending = !friend && sentDoc !== undefined}
 		<div class="lb-sheet-head">
 			<span class="lb-sheet-avatar">
 				<Avatar
@@ -318,13 +342,22 @@
 		</div>
 
 		<BaseButton
-			class={friend ? 'lb-sheet-action lb-sheet-remove' : 'lb-sheet-action lb-sheet-add'}
+			class={friend
+				? 'lb-sheet-action lb-sheet-remove'
+				: pending
+					? 'lb-sheet-action lb-sheet-pending'
+					: 'lb-sheet-action lb-sheet-add'}
 			onclick={handleToggleFriend}
 			status={mutatingOwner === user.owner ? 'pending' : 'enabled'}
 		>
 			{#if friend}
 				<UserMinus aria-hidden="true" size={15} strokeWidth={1.8} />
 				{t({ locale: $localeStore, key: 'arena.friends.sheet.remove' })}
+			{:else if pending}
+				{t({ locale: $localeStore, key: 'leaderboard.sheet.requested' })}
+				<span class="lb-sheet-pending-cancel">
+					{t({ locale: $localeStore, key: 'leaderboard.sheet.cancel_request' })}
+				</span>
 			{:else}
 				<UserPlus aria-hidden="true" size={15} strokeWidth={1.8} />
 				{t({ locale: $localeStore, key: 'leaderboard.sheet.add_friend' })}
@@ -704,6 +737,20 @@
 		border: 1px solid var(--border-base);
 		background: var(--bg-surface);
 		color: var(--no);
+	}
+
+	:global(.lb-sheet-pending) {
+		flex-direction: column;
+		gap: 0.15rem;
+		border: 1px solid var(--border-base);
+		background: var(--bg-surface);
+		color: var(--text-muted);
+	}
+
+	.lb-sheet-pending-cancel {
+		font-size: var(--t-11);
+		color: var(--no);
+		font-weight: 600;
 	}
 
 	:global(.lb-sheet-close) {

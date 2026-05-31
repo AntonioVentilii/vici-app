@@ -12,11 +12,18 @@ import { derived, type Readable } from 'svelte/store';
  * this session, or still be the bootstrap shortened-principal fallback
  * if the user never edited their nickname. For the viewer's own row we
  * always have the freshest data in `userStore.profile`, so we splice
- * the live identity (nickname/avatar) **and** the live performance
- * fields (points/streak/accuracy) in here — the row, podium tile, and
- * mini-profile sheet all read from this single merged source so the
+ * the live identity (nickname/avatar) and the live display-only
+ * performance fields (streak/accuracy) in here — the row, podium tile,
+ * and mini-profile sheet all read from this single merged source so the
  * viewer sees their own up-to-the-second numbers rather than a stale
  * snapshot.
+ *
+ * `points` is intentionally NOT overlaid: it is the sort key that
+ * defines leaderboard order, and the array's ordering reflects the
+ * server snapshot. Overlaying a live `points` value would leave the
+ * viewer's row at a stale position while showing a higher/lower VXP
+ * number, making `rankOf` report an incorrect index and the podium
+ * tile show a rank that disagrees with the displayed score.
  */
 export const leaderboard: Readable<UserProfile[]> = derived(
 	[cachedListOrEmpty(leaderboardStore), userStore],
@@ -31,7 +38,6 @@ export const leaderboard: Readable<UserProfile[]> = derived(
 						...entry,
 						nickname: profile.nickname,
 						avatar: profile.avatar,
-						points: profile.points,
 						streak: profile.streak,
 						accuracy: profile.accuracy
 					}
