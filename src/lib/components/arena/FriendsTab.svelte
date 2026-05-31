@@ -1174,8 +1174,7 @@
 
 	/* Inline copy-link field — the URL line IS the copy CTA. Tapping it
 	   copies the share link and flips the trailing chip to green. Border
-	   + background animate toward the accent-green "yes" tone on success.
-	   Mirrors the prototype `.friends-invite-copyfield`. */
+	   + background animate toward the accent-green "yes" tone on success. */
 	:global(.invite-copyfield) {
 		display: flex;
 		width: 100%;

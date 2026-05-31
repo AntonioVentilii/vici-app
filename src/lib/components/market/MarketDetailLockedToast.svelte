@@ -11,7 +11,7 @@
 	const { open }: Props = $props();
 </script>
 
-<!-- Locked-in confirmation overlay — port of `screens.jsx:328-333`.
+<!-- Locked-in confirmation overlay.
      Fires after a successful prediction; the parent toggles `open` on
      for ~1.1s so the message reads as a moment of acknowledgement
      rather than a permanent state. Backdrop is blurred + dimmed so the

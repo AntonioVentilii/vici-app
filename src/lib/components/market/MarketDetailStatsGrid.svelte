@@ -90,8 +90,8 @@
 	]);
 </script>
 
-<!-- 2×2 stats grid: VOLUME / LIQUIDITY / CLOSES / MY CALL. Mirrors
-     `screens.jsx:253-259` — the fourth tile is muted when the user has
+<!-- 2×2 stats grid: VOLUME / LIQUIDITY / CLOSES / MY CALL.
+     The fourth tile is muted when the user has
      no active position so the grid reads as "you haven't called yet"
      instead of an empty space. -->
 <div class="market-stats-grid">
