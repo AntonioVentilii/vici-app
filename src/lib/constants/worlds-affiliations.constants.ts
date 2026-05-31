@@ -40,8 +40,8 @@ export interface WorldsAffiliationOption {
 }
 
 /**
- * University roster — the full global directory (~279 institutions)
- * spanning every region bucket. Each entry carries its acronym
+ * University roster — the full global directory spanning every region
+ * bucket. Each entry carries its acronym
  * (`glyph`/`short`), home `country`, `region`, brand colours, QS
  * `rank`, and verified email `domains`. Ordered by region then rank;
  * the picker re-sorts at render time. Additions are append-only (no
