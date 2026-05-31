@@ -21,7 +21,9 @@ source "$(dirname "$0")/../lib/utils.sh" "$@"
 #     - Pre-authorise their II principal here via ORACLE_EXTRA_PRINCIPALS, or
 #     - Use the Admin > Oracle Authorisation panel in the app after deploy.
 
-ORACLE_ID="VICI_ORACLE_V1"
+# Env-overridable so `ORACLE_ID=... npm run init:registry` both registers and
+# seeds against the caller's oracle (the value is forwarded to deploy-markets.sh).
+ORACLE_ID="${ORACLE_ID:-VICI_ORACLE_V1}"
 DATA_FILE="$SCRIPT_DIR/data/markets.json"
 
 DEPLOY_PRINCIPAL=$(dfx identity get-principal)

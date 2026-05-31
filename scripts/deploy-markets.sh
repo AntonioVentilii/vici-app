@@ -10,11 +10,20 @@
 #   ./scripts/deploy-markets.sh scripts/data/markets.deck-2026.json --staging
 #   npm run deploy:markets -- scripts/data/markets.deck-2026.json --staging
 #
-# The file is a JSON array of market objects (see scripts/data/markets.json):
-#   { title, description, expiryDate (ISO), categories[], inviteOnly,
-#     balanceDomain, locale, outcomes? }
-# A non-empty `outcomes` array makes the market Categorical; otherwise Binary.
-# Unknown keys (e.g. `consensus`) are ignored.
+# The file is a JSON array of market objects (see scripts/data/markets.json).
+#
+# Consumed per row: title, description, expiryDate (ISO), locale, outcomes?
+#   - a non-empty `outcomes` array makes the market Categorical; else Binary.
+#
+# NOT consumed by this script (kept for parity with the FE create flow, but
+# `add_series` has no field for them):
+#   - `categories` — market TAGS live off-chain in the Juno `MARKET_METADATA`
+#     collection (written via the satellite, see market-tags.services.ts), not
+#     on the registry series. A deck deployed here registers UNTAGGED; tag it
+#     separately (admin UI, or a future metadata seeder).
+#   - `inviteOnly` — trading_access is fixed to `Open` here.
+#   - `balanceDomain` — fixed to `ViciXp` here.
+#   - `consensus` and any other unknown keys are ignored.
 #
 # Markets are attributed to the Vici engine and settled by the VICI oracle.
 # Override via env:
