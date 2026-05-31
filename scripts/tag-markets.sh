@@ -55,32 +55,35 @@ fi
 
 echo "Tagging markets from $MARKETS_FILE on $NETWORK (satellite=$SATELLITE_ID)..."
 
-# --- 1. Build title -> series_id from the registry ---
-ALL_SERIES=$(dfx canister call --network "$NETWORK" registry list_series "(record { limit = opt 1000 : opt nat64; cursor = null })") || {
-	echo "Failed to fetch series from registry." >&2
-	exit 1
-}
-
-PARSABLE_DATA="${ALL_SERIES//record \{/$'\n---RECORD---\n'}"
-
+# --- 1. Build title -> series_id from the registry (paginated) ---
+# Parse via `--output json` + jq rather than regexing Candid: jq handles titles
+# with escaped quotes/Unicode correctly, and we follow `next_cursor` so the map
+# is complete even past one page (registries can exceed any single-page limit).
 declare -A SID_BY_TITLE
-while IFS=$'\t' read -r sid title; do
-	[[ -z "$sid" || -z "$title" ]] && continue
-	SID_BY_TITLE["$title"]="$sid"
-done < <(echo "$PARSABLE_DATA" | awk '
-BEGIN { RS = "---RECORD---" }
-{
-    s = ""; t = "";
-    if (match($0, /series_id = "[^"]+"/)) { s = substr($0, RSTART, RLENGTH); sub(/series_id = "/, "", s); sub(/"/, "", s) }
-    if (match($0, /title = "[^"]+"/))     { t = substr($0, RSTART, RLENGTH); sub(/title = "/, "", t); sub(/"/, "", t) }
-    if (s != "" && t != "") print s "\t" t
-}')
+CURSOR_ARG="null"
+while :; do
+	RESP=$(dfx canister call --network "$NETWORK" --query --output json registry list_series \
+		"(record { limit = opt 1000 : opt nat64; cursor = $CURSOR_ARG })") || {
+		echo "Failed to fetch series from registry." >&2
+		exit 1
+	}
+
+	while IFS=$'\t' read -r sid title; do
+		[[ -z "$sid" || -z "$title" ]] && continue
+		SID_BY_TITLE["$title"]="$sid"
+	done < <(echo "$RESP" | jq -r '.items[] | [.series_id, .title] | @tsv')
+
+	NEXT=$(echo "$RESP" | jq -r '.next_cursor[0] // empty')
+	[[ -z "$NEXT" ]] && break
+	CURSOR_ARG="opt \"$NEXT\""
+done
 
 echo "Registry returned ${#SID_BY_TITLE[@]} series."
 
 # --- 2. For each deck row, upsert tags on the matching series ---
 TAGGED=0
 MISSING=0
+FAILED=0
 
 while IFS=$'\t' read -r title tags_candid; do
 	[[ -z "$title" ]] && continue
@@ -91,7 +94,10 @@ while IFS=$'\t' read -r title tags_candid; do
 		continue
 	fi
 	echo "  Tagging: $title ($sid) -> $tags_candid"
-	dfx canister call --network "$NETWORK" "$SATELLITE_ID" app_upsert_market_metadata "(record {
+	# Guard each call: one transient/auth failure must not abort the whole bulk
+	# run (set -e is on via utils.sh). The upsert is idempotent, so re-running
+	# retries any FAIL rows safely.
+	if dfx canister call --network "$NETWORK" "$SATELLITE_ID" app_upsert_market_metadata "(record {
         series_id = \"$sid\";
         data = record {
             why_now = null;
@@ -100,10 +106,16 @@ while IFS=$'\t' read -r title tags_candid; do
             suggested = false;
             subtitle = null;
         };
-    })"
-	TAGGED=$((TAGGED + 1))
+    })"; then
+		TAGGED=$((TAGGED + 1))
+	else
+		echo "  FAIL: $title ($sid)" >&2
+		FAILED=$((FAILED + 1))
+	fi
 done < <(jq -r '.[] | select((.categories // []) | length > 0)
 	| [.title, ("vec { " + (.categories | map("\"" + . + "\"") | join("; ")) + " }")]
 	| @tsv' "$MARKETS_FILE")
 
-echo "Done. Tagged $TAGGED market(s); $MISSING deck row(s) had no matching registry series."
+echo "Done. Tagged $TAGGED; failed $FAILED; $MISSING deck row(s) had no matching registry series."
+[[ "$FAILED" -gt 0 ]] && exit 1
+exit 0
