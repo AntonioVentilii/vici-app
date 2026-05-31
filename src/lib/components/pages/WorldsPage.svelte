@@ -16,11 +16,10 @@
 	import {
 		claimWorldsPodiumPrize,
 		listAffiliationStats,
-		listMyAffiliations,
 		previousMonthAnchor
 	} from '$lib/services/worlds.services';
+	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { AffiliationDoc } from '$lib/types/affiliation';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 	import {
 		affiliationLifetimeAccuracy,
@@ -60,8 +59,6 @@
 
 	type Scope = 'month' | 'wc';
 
-	let myUni = $state<AffiliationDoc | undefined>();
-	let myCountry = $state<AffiliationDoc | undefined>();
 	let stats = $state<AffiliationStatsDoc[]>([]);
 	let loadState = $state<'loading' | 'ready' | 'error'>('loading');
 	let errorMessage = $state<string | null>(null);
@@ -72,15 +69,15 @@
 
 	let podiumClaim = $state<{ monthAnchor: string; awardsCreated: number } | null>(null);
 
+	// Caller's affiliations come from the shared cache so re-entering
+	// Worlds doesn't blank the "your school" row while a fetch runs. The
+	// public school stats stay a per-mount fetch (gated by `loadState`).
+	const myUni = $derived($myAffiliationsStore.university);
+	const myCountry = $derived($myAffiliationsStore.country);
+
 	const refresh = async () => {
 		try {
-			const [affils, schools] = await Promise.all([
-				listMyAffiliations(),
-				listAffiliationStats({ kind: 'university' })
-			]);
-			myUni = affils.university;
-			myCountry = affils.country;
-			stats = schools;
+			stats = await listAffiliationStats({ kind: 'university' });
 			loadState = 'ready';
 		} catch (err) {
 			console.error('WorldsPage: refresh failed', err);
@@ -117,6 +114,7 @@
 	};
 
 	onMount(async () => {
+		void refreshMyAffiliations();
 		await refresh();
 		void tryClaimPodium();
 	});
@@ -488,6 +486,7 @@
 		onClose={() => (pickerKind = null)}
 		onPicked={() => {
 			pickerKind = null;
+			void refreshMyAffiliations();
 			void refresh();
 		}}
 	/>

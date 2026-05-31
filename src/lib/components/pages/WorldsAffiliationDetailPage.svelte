@@ -10,11 +10,8 @@
 		WORLDS_COUNTRIES,
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
-	import {
-		getAffiliationStats,
-		listAffiliationStats,
-		listMyAffiliations
-	} from '$lib/services/worlds.services';
+	import { getAffiliationStats, listAffiliationStats } from '$lib/services/worlds.services';
+	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
 	import { MIN_CALLS_FOR_RANK, type AffiliationStatsDoc } from '$lib/types/affiliation-stats';
@@ -67,24 +64,28 @@
 	let memberCount = $state<number | undefined>();
 	let stats = $state<AffiliationStatsDoc | undefined>();
 	let allStats = $state<AffiliationStatsDoc[]>([]);
-	let isMine = $state(false);
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 
+	// Whether this affiliation is the caller's own — read from the shared
+	// cache so the "your marker" chip survives re-entry without a refetch.
+	const isMine = $derived(
+		(kind === 'university' ? $myAffiliationsStore.university : $myAffiliationsStore.country)
+			?.affiliationIdentifier === affiliationIdentifier
+	);
+
 	onMount(async () => {
+		void refreshMyAffiliations();
+
 		try {
-			const [rosterResp, statsResp, allResp, mine] = await Promise.all([
+			const [rosterResp, statsResp, allResp] = await Promise.all([
 				functions.listWorldsRoster({ kind, affiliationIdentifier }),
 				getAffiliationStats({ kind, affiliationIdentifier }),
-				listAffiliationStats({ kind }),
-				listMyAffiliations()
+				listAffiliationStats({ kind })
 			]);
 			memberCount = rosterResp.items.length;
 			stats = statsResp;
 			allStats = allResp;
-			isMine =
-				(kind === 'university' ? mine.university : mine.country)?.affiliationIdentifier ===
-				affiliationIdentifier;
 			loadState = 'ready';
 		} catch (err) {
 			console.error('WorldsAffiliationDetailPage: load failed', err);
