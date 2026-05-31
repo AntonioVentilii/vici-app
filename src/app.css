@@ -1063,6 +1063,13 @@ html[data-app='1'] body {
 	.char-pop {
 		animation: none;
 	}
+
+	/* The chart-redraw base rule leaves the line at `0 30` (undrawn). With
+	 * the animation suppressed, pin it to the fully-drawn state so the
+	 * Archivist chart stays visible for reduced-motion users. */
+	.char-chart {
+		stroke-dasharray: 30 0;
+	}
 }
 
 /* Optical-feedback keyframes — give swipe / award / save
