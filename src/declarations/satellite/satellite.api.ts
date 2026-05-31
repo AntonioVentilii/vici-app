@@ -244,6 +244,8 @@ const AppGetProfileResultSchema = j.strictObject({
 			totalTrades: j.number(),
 			winRate: j.number(),
 			dailyStreak: j.number(),
+			dailyGoalDone: j.number(),
+			dailyGoalDate: j.optional(j.string()),
 			streak: j.number(),
 			accuracy: j.number(),
 			points: j.number(),

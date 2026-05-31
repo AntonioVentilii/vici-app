@@ -206,6 +206,8 @@ export interface AppGetProfileResult {
 					pnl: number;
 					streak: number;
 					nickname: string;
+					daily_goal_date: [] | [string];
+					daily_goal_done: number;
 					contrarian_wins: number;
 					owner: string;
 					interests: Array<string>;
