@@ -832,6 +832,144 @@ export const ptMessages = {
 	'inbox.resolve.title.won': 'Mercado ganho',
 	'info.back': 'Voltar',
 	'info.back_to_settings': 'Voltar aos ajustes',
+	'info.doc.contact.b0':
+		'Somos uma equipa pequena. A maioria das perguntas é respondida nas FAQ. Para tudo o resto, escreve-nos diretamente.',
+	'info.doc.contact.b1': 'E-mail',
+	'info.doc.contact.b3': 'Tempo de resposta',
+	'info.doc.contact.b4':
+		'No prazo de dois dias úteis. As contestações de resolução têm prioridade e são respondidas no prazo de vinte e quatro horas.',
+	'info.doc.contact.b5': 'O que incluir',
+	'info.doc.contact.b6.i0': 'O teu handle (@exemplo)',
+	'info.doc.contact.b6.i1': 'O mercado ou o ecrã a que a pergunta diz respeito',
+	'info.doc.contact.b6.i2': 'Uma captura de ecrã, se possível',
+	'info.doc.contact.b7': 'Imprensa, parcerias e patrocínio de ligas',
+	'info.doc.contact.eyebrow': 'Ajuda · Suporte',
+	'info.doc.contact.title': 'Contactar o suporte',
+	'info.doc.faq.b0': 'O que é o VXP?',
+	'info.doc.faq.b1':
+		'O VXP é o crédito de previsão na app. Faz calls para o ganhar. Não é uma moeda. Não pode ser resgatado. É a unidade do teu histórico.',
+	'info.doc.faq.b10': 'O que é uma vitória contra a corrente?',
+	'info.doc.faq.b11':
+		'Um call que fizeste contra o consenso (<30% do teu lado no momento do call) que depois se resolveu a teu favor.',
+	'info.doc.faq.b12': 'Quem pode ver as minhas previsões?',
+	'info.doc.faq.b13':
+		'O teu handle e a tua precisão são públicos nas classificações globais, nas classificações de liga e nas batalhas de Worlds em que participas. Os calls individuais nos mercados só são visíveis para as ligas a que pertences.',
+	'info.doc.faq.b14': 'Como funcionam as batalhas?',
+	'info.doc.faq.b15':
+		'As batalhas são competições com tempo limitado entre ligas ou universidades. A precisão média durante a janela determina o vencedor. É necessário um número mínimo de calls para qualificar.',
+	'info.doc.faq.b2': 'Isto é dinheiro real?',
+	'info.doc.faq.b3':
+		'Não. A VICI é uma app gratuita para o juízo humano. Não há depósito, levantamento nem pagamento. Os mercados com dinheiro real são explorados separadamente.',
+	'info.doc.faq.b4': 'Como é calculada a minha precisão?',
+	'info.doc.faq.b5':
+		'Calls resolvidos a dividir pelo total de calls resolvidos. Os calls em aberto não contam até o mercado se resolver.',
+	'info.doc.faq.b6': 'Porque é que a minha sequência foi reiniciada?',
+	'info.doc.faq.b7':
+		'A sequência conta dias consecutivos com pelo menos um call. Um dia em branco reinicia-a. A chama da sequência mostra a tua série atual; a mais longa é preservada.',
+	'info.doc.faq.b8': 'Posso eliminar um call?',
+	'info.doc.faq.b9':
+		'Não. Cada call é permanente no momento em que o confirmas. É essa toda a premissa de construir um histórico.',
+	'info.doc.faq.eyebrow': 'Ajuda · FAQ',
+	'info.doc.faq.title': 'Perguntas frequentes',
+	'info.doc.how-resolution-works.b0':
+		'Todos os mercados na VICI resolvem-se numa única fonte pública e identificada. Sem painel de moderação. Sem debate. A fonte decide.',
+	'info.doc.how-resolution-works.b1': 'O princípio',
+	'info.doc.how-resolution-works.b10':
+		'A redação da Vici avalia de acordo com o critério publicado. As decisões e a fundamentação são publicadas publicamente no painel de resolução no verso do cartão do mercado.',
+	'info.doc.how-resolution-works.b2':
+		'Um mercado de previsões só funciona se ambos os lados conhecerem as regras no momento em que fazem um call. Antes de qualquer mercado entrar no ar, indicamos a fonte pública exata que o decidirá — um registo de um regulador, um resultado de uma federação, um fornecedor de dados reconhecido.',
+	'info.doc.how-resolution-works.b3': 'O que vês em cada cartão',
+	'info.doc.how-resolution-works.b4.i0':
+		'Critério de resolução · a condição YES exata, escrita em linguagem simples',
+	'info.doc.how-resolution-works.b4.i1': 'Fonte · a publicação ou o feed que decide',
+	'info.doc.how-resolution-works.b4.i2':
+		'Resolve-se · a data de calendário em que a fonte publica o resultado',
+	'info.doc.how-resolution-works.b5': 'Quando a fonte publica',
+	'info.doc.how-resolution-works.b6':
+		'O mercado congela no fecho da negociação na data de resolução. O resultado publicado é registado em cada call feito no mercado. Os vencedores ganham VXP à taxa apresentada quando fizeram o call. Quem perde não ganha nada.',
+	'info.doc.how-resolution-works.b7': 'Se uma fonte não publicar',
+	'info.doc.how-resolution-works.b8':
+		'Raro mas documentado. O mercado é anulado. Cada participante recebe a sua aposta de volta na totalidade. Não são atribuídos pontos de precisão em qualquer sentido.',
+	'info.doc.how-resolution-works.b9': 'Se uma fonte publicar de forma ambígua',
+	'info.doc.how-resolution-works.eyebrow': 'Ajuda · Resolução',
+	'info.doc.how-resolution-works.title': 'Como funciona a resolução',
+	'info.doc.privacy.b0':
+		'O que recolhemos, porque o recolhemos, com quem o partilhamos. Versão curta: recolhemos o menos possível.',
+	'info.doc.privacy.b1': 'O que recolhemos',
+	'info.doc.privacy.b10':
+		'O acesso, a exportação, a retificação e a eliminação dos teus dados estão disponíveis a pedido para privacy@vici.market. Respondemos no prazo de trinta dias.',
+	'info.doc.privacy.b11': 'Cookies',
+	'info.doc.privacy.b12': 'Armazenamos um único token de sessão. Não usamos cookies de rastreio.',
+	'info.doc.privacy.b2.i0': 'Conta: o teu handle, e-mail, idioma e preferência de aparência',
+	'info.doc.privacy.b2.i1': 'Previsões: cada call que fazes, quando o fizeste, o resultado',
+	'info.doc.privacy.b2.i2':
+		'Dispositivo: um token de sessão no localStorage; sem identificadores de publicidade',
+	'info.doc.privacy.b2.i3':
+		'Afiliação: a escola que selecionas para Worlds (bloqueada durante 90 dias após uma alteração)',
+	'info.doc.privacy.b3': 'Como o usamos',
+	'info.doc.privacy.b4.i0': 'Para calcular a tua precisão, sequência, posição e VXP',
+	'info.doc.privacy.b4.i1': 'Para mostrar o teu handle nas classificações em que participas',
+	'info.doc.privacy.b4.i2': 'Para responder a pedidos de suporte',
+	'info.doc.privacy.b5': 'Com quem partilhamos',
+	'info.doc.privacy.b6':
+		'Sem publicidade de terceiros. Sem intermediários de dados. Podem aparecer estatísticas agregadas e anonimizadas em conteúdos editoriais (por ex. “64% dos utilizadores chamaram YES”). Os teus calls individuais são visíveis para as ligas a que te juntas.',
+	'info.doc.privacy.b7': 'Onde residem',
+	'info.doc.privacy.b8':
+		'Servidores na União Europeia. Os dados são cifrados em repouso e em trânsito.',
+	'info.doc.privacy.b9': 'Os teus direitos',
+	'info.doc.privacy.eyebrow': 'Jurídico · Em vigor a 1 de maio de 2026',
+	'info.doc.privacy.title': 'Política de privacidade',
+	'info.doc.resolution-rules.b0':
+		'O procedimento exato pelo qual cada mercado na VICI é resolvido. Fonte autorizada: este documento.',
+	'info.doc.resolution-rules.b1': 'Antes da listagem',
+	'info.doc.resolution-rules.b10.i0':
+		'Resultado ambíguo → a redação da Vici avalia de acordo com o critério. A decisão e a fundamentação são publicadas publicamente.',
+	'info.doc.resolution-rules.b10.i1':
+		'A fonte não publica → mercado anulado, apostas devolvidas, sem efeito na precisão em qualquer sentido.',
+	'info.doc.resolution-rules.b10.i2':
+		'A fonte altera a sua metodologia a meio da janela → mercado anulado, salvo se a alteração for irrelevante.',
+	'info.doc.resolution-rules.b11': 'Contestações',
+	'info.doc.resolution-rules.b12':
+		'Qualquer participante pode apresentar uma contestação de resolução no prazo de setenta e duas horas, enviando um e-mail para resolution@vici.market com o seu handle, o id do mercado e o fundamento da contestação. As contestações são analisadas pela redação e respondidas no prazo de vinte e quatro horas.',
+	'info.doc.resolution-rules.b2':
+		'Antes de um mercado abrir a previsões, dois factos são fixados e publicados no verso do cartão do mercado: o critério de resolução (a condição YES em linguagem simples) e a fonte (o feed de dados público e identificado que decidirá).',
+	'info.doc.resolution-rules.b3': 'Janela de negociação',
+	'info.doc.resolution-rules.b4':
+		'As previsões são aceites desde a abertura até ao fecho de negociação apresentado. Após o fecho, os calls ficam bloqueados. O mercado entra na janela de resolução.',
+	'info.doc.resolution-rules.b5': 'Janela de resolução',
+	'info.doc.resolution-rules.b6':
+		'A fonte identificada deve publicar dentro da janela de resolução (normalmente sete dias de calendário após o fecho de negociação, mais tempo para fontes que publicam num calendário fixo).',
+	'info.doc.resolution-rules.b7': 'Registo do resultado',
+	'info.doc.resolution-rules.b8':
+		'No prazo de vinte e quatro horas após a publicação da fonte, o resultado é registado em cada call. As vitórias e derrotas aparecem de imediato na tua Dash.',
+	'info.doc.resolution-rules.b9': 'Casos limite',
+	'info.doc.resolution-rules.eyebrow': 'Jurídico · O procedimento completo',
+	'info.doc.resolution-rules.title': 'Regras de resolução',
+	'info.doc.terms.b0':
+		'Ao usar a VICI concordas com os termos abaixo. Estão escritos em linguagem simples. A versão juridicamente vinculativa é a que estás a ler agora.',
+	'info.doc.terms.b1': '1. O serviço',
+	'info.doc.terms.b10':
+		'Sem automação. Sem votação coordenada. Sem falsa identidade. Sem conteúdos proibidos pela lei aplicável.',
+	'info.doc.terms.b11': '6. Cessação',
+	'info.doc.terms.b12':
+		'Podes eliminar a tua conta a qualquer momento nas Definições. Podemos suspender uma conta que viole estes termos. Dir-te-emos o motivo.',
+	'info.doc.terms.b13': '7. Alterações',
+	'info.doc.terms.b14':
+		'As alterações substanciais são anunciadas na app pelo menos sete dias antes de entrarem em vigor. A utilização continuada após essa data constitui aceitação.',
+	'info.doc.terms.b2':
+		'A VICI é uma app de previsões gratuita. Disponibilizamos mercados que se resolvem em fontes públicas. Não facilitamos qualquer aposta de dinheiro.',
+	'info.doc.terms.b3': '2. A tua conta',
+	'info.doc.terms.b4':
+		'Comprometes-te a fornecer informação exata e a usar apenas uma conta. As contas múltiplas criadas para manipular classificações ou batalhas serão removidas sem aviso.',
+	'info.doc.terms.b5': '3. As tuas previsões',
+	'info.doc.terms.b6':
+		'Mantens a titularidade do histórico da tua conta. Reservamo-nos o direito de apresentar estatísticas agregadas e anonimizadas dele derivadas.',
+	'info.doc.terms.b7': '4. VXP',
+	'info.doc.terms.b8':
+		'O VXP é um crédito na app sem valor monetário. Não pode ser resgatado, transferido para fora da app nem trocado por moeda.',
+	'info.doc.terms.b9': '5. Conduta aceitável',
+	'info.doc.terms.eyebrow': 'Jurídico · Em vigor a 1 de maio de 2026',
+	'info.doc.terms.title': 'Termos de serviço',
 	'info.not_found.body':
 		'Nenhum documento corresponde a esse endereço. Tente outro link no rodapé ou volte para a página inicial.',
 	'info.not_found.title': 'Documento não encontrado',

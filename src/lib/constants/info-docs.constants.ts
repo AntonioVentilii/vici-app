@@ -4,284 +4,173 @@ import type { InfoDoc } from '$lib/types/info-doc';
  * Public information documents — Terms, Privacy, Resolution Rules,
  * FAQ, Contact, "How resolution works".
  *
- * **PLACEHOLDER COPY.** Sourced verbatim from `screens.jsx` § INFO_DOCS.
- * Legal sign-off is required before
- * launch; the `InfoPage` renderer surfaces a banner to that effect
- * for any doc marked `placeholder: true`. The structure (blocks,
+ * **PLACEHOLDER COPY.** The `Legal · …` eyebrow lines mark documents
+ * that must clear legal review before launch. The structure (blocks,
  * eyebrow + title, slug paths) is production-shaped — only the words
  * need to flow through legal.
  *
- * Translation: blocks are stored as canonical English literals here so
- * UI can render them via interpolation without tripping the
- * `no-bare-svelte-text` lint rule. A future i18n pass will key each
- * block by `${doc.slug}.${index}` and let translators replace the body
- * per locale.
+ * Copy is routed through i18n: every block references a `MessageKey`
+ * (`info.doc.${slug}.${block}`) resolved per-locale at render time.
+ * Email addresses are real contact identifiers, not translatable copy,
+ * so `mail` blocks carry the literal address.
  */
 
 const TERMS: InfoDoc = {
 	slug: 'terms',
-	title: 'Terms of service',
-	eyebrow: 'Legal · Effective May 1, 2026',
+	titleKey: 'info.doc.terms.title',
+	eyebrowKey: 'info.doc.terms.eyebrow',
 	blocks: [
-		{
-			kind: 'lede',
-			text: 'By using VICI you agree to the terms below. They are written in plain language. The legally binding version is the one you are reading now.'
-		},
-		{ kind: 'h', text: '1. The service' },
-		{
-			kind: 'p',
-			text: 'VICI is a free predictions app. We provide markets that resolve on public sources. We do not facilitate any wagering of money.'
-		},
-		{ kind: 'h', text: '2. Your account' },
-		{
-			kind: 'p',
-			text: 'You agree to provide accurate information and to use one account only. Multiple accounts created to manipulate leaderboards or battles will be removed without notice.'
-		},
-		{ kind: 'h', text: '3. Your predictions' },
-		{
-			kind: 'p',
-			text: 'You retain ownership of your account history. We retain the right to display aggregated and anonymised statistics derived from it.'
-		},
-		{ kind: 'h', text: '4. VXP' },
-		{
-			kind: 'p',
-			text: 'VXP is an in-app credit with no monetary value. It cannot be redeemed, transferred outside the app, or exchanged for currency.'
-		},
-		{ kind: 'h', text: '5. Acceptable conduct' },
-		{
-			kind: 'p',
-			text: 'No automation. No coordinated voting. No impersonation. No content prohibited by applicable law.'
-		},
-		{ kind: 'h', text: '6. Termination' },
-		{
-			kind: 'p',
-			text: 'You may delete your account at any time from Settings. We may suspend an account that violates these terms. We will tell you why.'
-		},
-		{ kind: 'h', text: '7. Changes' },
-		{
-			kind: 'p',
-			text: 'Material changes are announced in-app at least seven days before they take effect. Continued use after that date is agreement.'
-		}
+		{ kind: 'lede', key: 'info.doc.terms.b0' },
+		{ kind: 'h', key: 'info.doc.terms.b1' },
+		{ kind: 'p', key: 'info.doc.terms.b2' },
+		{ kind: 'h', key: 'info.doc.terms.b3' },
+		{ kind: 'p', key: 'info.doc.terms.b4' },
+		{ kind: 'h', key: 'info.doc.terms.b5' },
+		{ kind: 'p', key: 'info.doc.terms.b6' },
+		{ kind: 'h', key: 'info.doc.terms.b7' },
+		{ kind: 'p', key: 'info.doc.terms.b8' },
+		{ kind: 'h', key: 'info.doc.terms.b9' },
+		{ kind: 'p', key: 'info.doc.terms.b10' },
+		{ kind: 'h', key: 'info.doc.terms.b11' },
+		{ kind: 'p', key: 'info.doc.terms.b12' },
+		{ kind: 'h', key: 'info.doc.terms.b13' },
+		{ kind: 'p', key: 'info.doc.terms.b14' }
 	]
 };
 
 const PRIVACY: InfoDoc = {
 	slug: 'privacy',
-	title: 'Privacy policy',
-	eyebrow: 'Legal · Effective May 1, 2026',
+	titleKey: 'info.doc.privacy.title',
+	eyebrowKey: 'info.doc.privacy.eyebrow',
 	blocks: [
-		{
-			kind: 'lede',
-			text: 'What we collect, why we collect it, who we share it with. Short version: we collect as little as we can.'
-		},
-		{ kind: 'h', text: 'What we collect' },
+		{ kind: 'lede', key: 'info.doc.privacy.b0' },
+		{ kind: 'h', key: 'info.doc.privacy.b1' },
 		{
 			kind: 'list',
-			items: [
-				'Account: your handle, email, language and appearance preference',
-				'Predictions: every call you make, when you made it, the outcome',
-				'Device: a session token in localStorage; no advertising IDs',
-				'Affiliation: the school you self-select for Worlds (locked for 90 days after change)'
+			itemKeys: [
+				'info.doc.privacy.b2.i0',
+				'info.doc.privacy.b2.i1',
+				'info.doc.privacy.b2.i2',
+				'info.doc.privacy.b2.i3'
 			]
 		},
-		{ kind: 'h', text: 'How we use it' },
+		{ kind: 'h', key: 'info.doc.privacy.b3' },
 		{
 			kind: 'list',
-			items: [
-				'To compute your accuracy, streak, rank, and VXP',
-				'To display your handle on leaderboards you opt into',
-				'To answer support requests'
-			]
+			itemKeys: ['info.doc.privacy.b4.i0', 'info.doc.privacy.b4.i1', 'info.doc.privacy.b4.i2']
 		},
-		{ kind: 'h', text: 'Who we share with' },
-		{
-			kind: 'p',
-			text: 'No third-party advertising. No data brokers. Aggregated, anonymised statistics may appear in editorial content (e.g. “64% of users called YES”). Your individual calls are visible to leagues you join.'
-		},
-		{ kind: 'h', text: 'Where it lives' },
-		{
-			kind: 'p',
-			text: 'Servers in the European Union. Data is encrypted at rest and in transit.'
-		},
-		{ kind: 'h', text: 'Your rights' },
-		{
-			kind: 'p',
-			text: 'Access, export, correction, and deletion of your data are available on request to privacy@vici.market. We respond within thirty days.'
-		},
-		{ kind: 'h', text: 'Cookies' },
-		{ kind: 'p', text: 'We store one session token. We do not use tracking cookies.' }
+		{ kind: 'h', key: 'info.doc.privacy.b5' },
+		{ kind: 'p', key: 'info.doc.privacy.b6' },
+		{ kind: 'h', key: 'info.doc.privacy.b7' },
+		{ kind: 'p', key: 'info.doc.privacy.b8' },
+		{ kind: 'h', key: 'info.doc.privacy.b9' },
+		{ kind: 'p', key: 'info.doc.privacy.b10' },
+		{ kind: 'h', key: 'info.doc.privacy.b11' },
+		{ kind: 'p', key: 'info.doc.privacy.b12' }
 	]
 };
 
 const RESOLUTION_RULES: InfoDoc = {
 	slug: 'resolution-rules',
-	title: 'Resolution rules',
-	eyebrow: 'Legal · The full procedure',
+	titleKey: 'info.doc.resolution-rules.title',
+	eyebrowKey: 'info.doc.resolution-rules.eyebrow',
 	blocks: [
-		{
-			kind: 'lede',
-			text: 'The exact procedure by which every market on VICI is resolved. Authoritative source: this document.'
-		},
-		{ kind: 'h', text: 'Pre-listing' },
-		{
-			kind: 'p',
-			text: 'Before a market opens for predictions, two facts are fixed and published on the back of the market card: the resolution criterion (the YES condition in plain language) and the source (the named public data feed that will decide).'
-		},
-		{ kind: 'h', text: 'Trading window' },
-		{
-			kind: 'p',
-			text: 'Predictions are accepted from open until the displayed trading close. After close, calls are locked. The market enters the resolution window.'
-		},
-		{ kind: 'h', text: 'Resolution window' },
-		{
-			kind: 'p',
-			text: 'The named source must publish within the resolution window (typically seven calendar days after trading close, longer for sources that publish on a fixed schedule).'
-		},
-		{ kind: 'h', text: 'Outcome recording' },
-		{
-			kind: 'p',
-			text: 'Within twenty-four hours of source publication, the outcome is recorded against every call. Wins and losses appear on your Dash immediately.'
-		},
-		{ kind: 'h', text: 'Edge cases' },
+		{ kind: 'lede', key: 'info.doc.resolution-rules.b0' },
+		{ kind: 'h', key: 'info.doc.resolution-rules.b1' },
+		{ kind: 'p', key: 'info.doc.resolution-rules.b2' },
+		{ kind: 'h', key: 'info.doc.resolution-rules.b3' },
+		{ kind: 'p', key: 'info.doc.resolution-rules.b4' },
+		{ kind: 'h', key: 'info.doc.resolution-rules.b5' },
+		{ kind: 'p', key: 'info.doc.resolution-rules.b6' },
+		{ kind: 'h', key: 'info.doc.resolution-rules.b7' },
+		{ kind: 'p', key: 'info.doc.resolution-rules.b8' },
+		{ kind: 'h', key: 'info.doc.resolution-rules.b9' },
 		{
 			kind: 'list',
-			items: [
-				'Ambiguous outcome → Vici editorial reviews against the criterion. Decision and reasoning are posted publicly.',
-				'Source fails to publish → market voided, stakes returned, no accuracy effect either way.',
-				'Source changes its methodology mid-window → market voided unless the change is immaterial.'
+			itemKeys: [
+				'info.doc.resolution-rules.b10.i0',
+				'info.doc.resolution-rules.b10.i1',
+				'info.doc.resolution-rules.b10.i2'
 			]
 		},
-		{ kind: 'h', text: 'Disputes' },
-		{
-			kind: 'p',
-			text: 'Any caller may file a resolution dispute within seventy-two hours by emailing resolution@vici.market with their handle, the market id, and the basis for the dispute. Disputes are reviewed by editorial and answered within twenty-four hours.'
-		}
+		{ kind: 'h', key: 'info.doc.resolution-rules.b11' },
+		{ kind: 'p', key: 'info.doc.resolution-rules.b12' }
 	]
 };
 
 const HOW_RESOLUTION_WORKS: InfoDoc = {
 	slug: 'how-resolution-works',
-	title: 'How resolution works',
-	eyebrow: 'Help · Resolution',
+	titleKey: 'info.doc.how-resolution-works.title',
+	eyebrowKey: 'info.doc.how-resolution-works.eyebrow',
 	blocks: [
-		{
-			kind: 'lede',
-			text: 'Every market on VICI resolves on a single, named public source. No moderation panel. No debate. The source decides.'
-		},
-		{ kind: 'h', text: 'The principle' },
-		{
-			kind: 'p',
-			text: 'A prediction market only works if both sides know the rules at the moment they make a call. Before any market goes live, we publish the exact public source that will decide it — a regulator filing, a federation result, a recognised data provider.'
-		},
-		{ kind: 'h', text: 'What you see on each card' },
+		{ kind: 'lede', key: 'info.doc.how-resolution-works.b0' },
+		{ kind: 'h', key: 'info.doc.how-resolution-works.b1' },
+		{ kind: 'p', key: 'info.doc.how-resolution-works.b2' },
+		{ kind: 'h', key: 'info.doc.how-resolution-works.b3' },
 		{
 			kind: 'list',
-			items: [
-				'Resolution criterion · the precise YES condition, written in plain language',
-				'Source · the publication or feed that decides',
-				'Settles · the calendar date the source publishes the outcome'
+			itemKeys: [
+				'info.doc.how-resolution-works.b4.i0',
+				'info.doc.how-resolution-works.b4.i1',
+				'info.doc.how-resolution-works.b4.i2'
 			]
 		},
-		{ kind: 'h', text: 'When the source publishes' },
-		{
-			kind: 'p',
-			text: 'The market freezes at trading close on the settles date. The published outcome is recorded against every call made on the market. Winners earn VXP at the rate displayed when they made the call. Losers earn nothing.'
-		},
-		{ kind: 'h', text: 'If a source fails to publish' },
-		{
-			kind: 'p',
-			text: 'Rare but documented. The market is voided. Every caller receives their stake back in full. No accuracy points are awarded either way.'
-		},
-		{ kind: 'h', text: 'If a source publishes ambiguously' },
-		{
-			kind: 'p',
-			text: 'Vici editorial reviews against the published criterion. Decisions and reasoning are posted publicly on the market’s back-of-card resolution panel.'
-		}
+		{ kind: 'h', key: 'info.doc.how-resolution-works.b5' },
+		{ kind: 'p', key: 'info.doc.how-resolution-works.b6' },
+		{ kind: 'h', key: 'info.doc.how-resolution-works.b7' },
+		{ kind: 'p', key: 'info.doc.how-resolution-works.b8' },
+		{ kind: 'h', key: 'info.doc.how-resolution-works.b9' },
+		{ kind: 'p', key: 'info.doc.how-resolution-works.b10' }
 	]
 };
 
 const FAQ: InfoDoc = {
 	slug: 'faq',
-	title: 'Frequently asked',
-	eyebrow: 'Help · FAQ',
+	titleKey: 'info.doc.faq.title',
+	eyebrowKey: 'info.doc.faq.eyebrow',
 	blocks: [
-		{ kind: 'h', text: 'What is VXP?' },
-		{
-			kind: 'p',
-			text: 'VXP is the in-app prediction credit. Make calls to earn it. It is not currency. It cannot be redeemed. It is the unit of your track record.'
-		},
-		{ kind: 'h', text: 'Is this real money?' },
-		{
-			kind: 'p',
-			text: 'No. VICI is a free app for human judgment. There is no deposit, no withdrawal, no payout. Real-money markets are explored separately.'
-		},
-		{ kind: 'h', text: 'How is my accuracy calculated?' },
-		{
-			kind: 'p',
-			text: 'Resolved calls divided by total resolved calls. Open calls do not count until the market settles.'
-		},
-		{ kind: 'h', text: 'Why did my streak reset?' },
-		{
-			kind: 'p',
-			text: 'Streak counts consecutive days with at least one call. A blank day resets it. The streak flame shows your current run; longest is preserved.'
-		},
-		{ kind: 'h', text: 'Can I delete a call?' },
-		{
-			kind: 'p',
-			text: 'No. Every call is permanent the moment you commit. This is the entire premise of building a record.'
-		},
-		{ kind: 'h', text: 'What is a contrarian win?' },
-		{
-			kind: 'p',
-			text: 'A call you made against the consensus (<30% on your side at the time of the call) that subsequently resolved in your favor.'
-		},
-		{ kind: 'h', text: 'Who can see my predictions?' },
-		{
-			kind: 'p',
-			text: 'Your handle and accuracy are public on global leaderboards, league standings, and Worlds battles you opt into. Individual market calls are visible only to leagues you belong to.'
-		},
-		{ kind: 'h', text: 'How do battles work?' },
-		{
-			kind: 'p',
-			text: 'Battles are time-bound competitions between leagues or universities. Average accuracy during the window determines the winner. A minimum number of calls is required to qualify.'
-		}
+		{ kind: 'h', key: 'info.doc.faq.b0' },
+		{ kind: 'p', key: 'info.doc.faq.b1' },
+		{ kind: 'h', key: 'info.doc.faq.b2' },
+		{ kind: 'p', key: 'info.doc.faq.b3' },
+		{ kind: 'h', key: 'info.doc.faq.b4' },
+		{ kind: 'p', key: 'info.doc.faq.b5' },
+		{ kind: 'h', key: 'info.doc.faq.b6' },
+		{ kind: 'p', key: 'info.doc.faq.b7' },
+		{ kind: 'h', key: 'info.doc.faq.b8' },
+		{ kind: 'p', key: 'info.doc.faq.b9' },
+		{ kind: 'h', key: 'info.doc.faq.b10' },
+		{ kind: 'p', key: 'info.doc.faq.b11' },
+		{ kind: 'h', key: 'info.doc.faq.b12' },
+		{ kind: 'p', key: 'info.doc.faq.b13' },
+		{ kind: 'h', key: 'info.doc.faq.b14' },
+		{ kind: 'p', key: 'info.doc.faq.b15' }
 	]
 };
 
 const CONTACT: InfoDoc = {
 	slug: 'contact',
-	title: 'Contact support',
-	eyebrow: 'Help · Support',
+	titleKey: 'info.doc.contact.title',
+	eyebrowKey: 'info.doc.contact.eyebrow',
 	blocks: [
-		{
-			kind: 'lede',
-			text: 'We are a small team. Most questions are answered in the FAQ. For anything else, write to us directly.'
-		},
-		{ kind: 'h', text: 'Email' },
+		{ kind: 'lede', key: 'info.doc.contact.b0' },
+		{ kind: 'h', key: 'info.doc.contact.b1' },
 		{ kind: 'mail', text: 'support@vici.market' },
-		{ kind: 'h', text: 'Response time' },
-		{
-			kind: 'p',
-			text: 'Within two business days. Resolution disputes are prioritised and answered within twenty-four hours.'
-		},
-		{ kind: 'h', text: 'What to include' },
+		{ kind: 'h', key: 'info.doc.contact.b3' },
+		{ kind: 'p', key: 'info.doc.contact.b4' },
+		{ kind: 'h', key: 'info.doc.contact.b5' },
 		{
 			kind: 'list',
-			items: [
-				'Your handle (@example)',
-				'The market or screen the question is about',
-				'A screenshot if possible'
-			]
+			itemKeys: ['info.doc.contact.b6.i0', 'info.doc.contact.b6.i1', 'info.doc.contact.b6.i2']
 		},
-		{ kind: 'h', text: 'Press, partnerships, and league sponsorship' },
+		{ kind: 'h', key: 'info.doc.contact.b7' },
 		{ kind: 'mail', text: 'hello@vici.market' }
 	]
 };
 
 /**
- * Full doc registry, keyed by slug. The frontmatter `eyebrow` lines that
- * read "Legal · …" mark documents that must clear legal review before
- * launch; the renderer surfaces a placeholder banner over those.
+ * Full doc registry, keyed by slug. The `Legal · …` eyebrow lines mark
+ * documents that must clear legal review before launch.
  */
 export const INFO_DOCS: Readonly<Record<string, InfoDoc>> = Object.freeze({
 	terms: TERMS,

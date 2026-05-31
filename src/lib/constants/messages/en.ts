@@ -820,6 +820,142 @@ export const enMessages = {
 	'inbox.resolve.title.won': 'Market won',
 	'info.back': 'Back',
 	'info.back_to_settings': 'Back to settings',
+	'info.doc.contact.b0':
+		'We are a small team. Most questions are answered in the FAQ. For anything else, write to us directly.',
+	'info.doc.contact.b1': 'Email',
+	'info.doc.contact.b3': 'Response time',
+	'info.doc.contact.b4':
+		'Within two business days. Resolution disputes are prioritised and answered within twenty-four hours.',
+	'info.doc.contact.b5': 'What to include',
+	'info.doc.contact.b6.i0': 'Your handle (@example)',
+	'info.doc.contact.b6.i1': 'The market or screen the question is about',
+	'info.doc.contact.b6.i2': 'A screenshot if possible',
+	'info.doc.contact.b7': 'Press, partnerships, and league sponsorship',
+	'info.doc.contact.eyebrow': 'Help · Support',
+	'info.doc.contact.title': 'Contact support',
+	'info.doc.faq.b0': 'What is VXP?',
+	'info.doc.faq.b1':
+		'VXP is the in-app prediction credit. Make calls to earn it. It is not currency. It cannot be redeemed. It is the unit of your track record.',
+	'info.doc.faq.b10': 'What is a contrarian win?',
+	'info.doc.faq.b11':
+		'A call you made against the consensus (<30% on your side at the time of the call) that subsequently resolved in your favor.',
+	'info.doc.faq.b12': 'Who can see my predictions?',
+	'info.doc.faq.b13':
+		'Your handle and accuracy are public on global leaderboards, league standings, and Worlds battles you opt into. Individual market calls are visible only to leagues you belong to.',
+	'info.doc.faq.b14': 'How do battles work?',
+	'info.doc.faq.b15':
+		'Battles are time-bound competitions between leagues or universities. Average accuracy during the window determines the winner. A minimum number of calls is required to qualify.',
+	'info.doc.faq.b2': 'Is this real money?',
+	'info.doc.faq.b3':
+		'No. VICI is a free app for human judgment. There is no deposit, no withdrawal, no payout. Real-money markets are explored separately.',
+	'info.doc.faq.b4': 'How is my accuracy calculated?',
+	'info.doc.faq.b5':
+		'Resolved calls divided by total resolved calls. Open calls do not count until the market settles.',
+	'info.doc.faq.b6': 'Why did my streak reset?',
+	'info.doc.faq.b7':
+		'Streak counts consecutive days with at least one call. A blank day resets it. The streak flame shows your current run; longest is preserved.',
+	'info.doc.faq.b8': 'Can I delete a call?',
+	'info.doc.faq.b9':
+		'No. Every call is permanent the moment you commit. This is the entire premise of building a record.',
+	'info.doc.faq.eyebrow': 'Help · FAQ',
+	'info.doc.faq.title': 'Frequently asked',
+	'info.doc.how-resolution-works.b0':
+		'Every market on VICI resolves on a single, named public source. No moderation panel. No debate. The source decides.',
+	'info.doc.how-resolution-works.b1': 'The principle',
+	'info.doc.how-resolution-works.b10':
+		'Vici editorial reviews against the published criterion. Decisions and reasoning are posted publicly on the market’s back-of-card resolution panel.',
+	'info.doc.how-resolution-works.b2':
+		'A prediction market only works if both sides know the rules at the moment they make a call. Before any market goes live, we publish the exact public source that will decide it — a regulator filing, a federation result, a recognised data provider.',
+	'info.doc.how-resolution-works.b3': 'What you see on each card',
+	'info.doc.how-resolution-works.b4.i0':
+		'Resolution criterion · the precise YES condition, written in plain language',
+	'info.doc.how-resolution-works.b4.i1': 'Source · the publication or feed that decides',
+	'info.doc.how-resolution-works.b4.i2':
+		'Settles · the calendar date the source publishes the outcome',
+	'info.doc.how-resolution-works.b5': 'When the source publishes',
+	'info.doc.how-resolution-works.b6':
+		'The market freezes at trading close on the settles date. The published outcome is recorded against every call made on the market. Winners earn VXP at the rate displayed when they made the call. Losers earn nothing.',
+	'info.doc.how-resolution-works.b7': 'If a source fails to publish',
+	'info.doc.how-resolution-works.b8':
+		'Rare but documented. The market is voided. Every caller receives their stake back in full. No accuracy points are awarded either way.',
+	'info.doc.how-resolution-works.b9': 'If a source publishes ambiguously',
+	'info.doc.how-resolution-works.eyebrow': 'Help · Resolution',
+	'info.doc.how-resolution-works.title': 'How resolution works',
+	'info.doc.privacy.b0':
+		'What we collect, why we collect it, who we share it with. Short version: we collect as little as we can.',
+	'info.doc.privacy.b1': 'What we collect',
+	'info.doc.privacy.b10':
+		'Access, export, correction, and deletion of your data are available on request to privacy@vici.market. We respond within thirty days.',
+	'info.doc.privacy.b11': 'Cookies',
+	'info.doc.privacy.b12': 'We store one session token. We do not use tracking cookies.',
+	'info.doc.privacy.b2.i0': 'Account: your handle, email, language and appearance preference',
+	'info.doc.privacy.b2.i1': 'Predictions: every call you make, when you made it, the outcome',
+	'info.doc.privacy.b2.i2': 'Device: a session token in localStorage; no advertising IDs',
+	'info.doc.privacy.b2.i3':
+		'Affiliation: the school you self-select for Worlds (locked for 90 days after change)',
+	'info.doc.privacy.b3': 'How we use it',
+	'info.doc.privacy.b4.i0': 'To compute your accuracy, streak, rank, and VXP',
+	'info.doc.privacy.b4.i1': 'To display your handle on leaderboards you opt into',
+	'info.doc.privacy.b4.i2': 'To answer support requests',
+	'info.doc.privacy.b5': 'Who we share with',
+	'info.doc.privacy.b6':
+		'No third-party advertising. No data brokers. Aggregated, anonymised statistics may appear in editorial content (e.g. “64% of users called YES”). Your individual calls are visible to leagues you join.',
+	'info.doc.privacy.b7': 'Where it lives',
+	'info.doc.privacy.b8': 'Servers in the European Union. Data is encrypted at rest and in transit.',
+	'info.doc.privacy.b9': 'Your rights',
+	'info.doc.privacy.eyebrow': 'Legal · Effective May 1, 2026',
+	'info.doc.privacy.title': 'Privacy policy',
+	'info.doc.resolution-rules.b0':
+		'The exact procedure by which every market on VICI is resolved. Authoritative source: this document.',
+	'info.doc.resolution-rules.b1': 'Pre-listing',
+	'info.doc.resolution-rules.b10.i0':
+		'Ambiguous outcome → Vici editorial reviews against the criterion. Decision and reasoning are posted publicly.',
+	'info.doc.resolution-rules.b10.i1':
+		'Source fails to publish → market voided, stakes returned, no accuracy effect either way.',
+	'info.doc.resolution-rules.b10.i2':
+		'Source changes its methodology mid-window → market voided unless the change is immaterial.',
+	'info.doc.resolution-rules.b11': 'Disputes',
+	'info.doc.resolution-rules.b12':
+		'Any caller may file a resolution dispute within seventy-two hours by emailing resolution@vici.market with their handle, the market id, and the basis for the dispute. Disputes are reviewed by editorial and answered within twenty-four hours.',
+	'info.doc.resolution-rules.b2':
+		'Before a market opens for predictions, two facts are fixed and published on the back of the market card: the resolution criterion (the YES condition in plain language) and the source (the named public data feed that will decide).',
+	'info.doc.resolution-rules.b3': 'Trading window',
+	'info.doc.resolution-rules.b4':
+		'Predictions are accepted from open until the displayed trading close. After close, calls are locked. The market enters the resolution window.',
+	'info.doc.resolution-rules.b5': 'Resolution window',
+	'info.doc.resolution-rules.b6':
+		'The named source must publish within the resolution window (typically seven calendar days after trading close, longer for sources that publish on a fixed schedule).',
+	'info.doc.resolution-rules.b7': 'Outcome recording',
+	'info.doc.resolution-rules.b8':
+		'Within twenty-four hours of source publication, the outcome is recorded against every call. Wins and losses appear on your Dash immediately.',
+	'info.doc.resolution-rules.b9': 'Edge cases',
+	'info.doc.resolution-rules.eyebrow': 'Legal · The full procedure',
+	'info.doc.resolution-rules.title': 'Resolution rules',
+	'info.doc.terms.b0':
+		'By using VICI you agree to the terms below. They are written in plain language. The legally binding version is the one you are reading now.',
+	'info.doc.terms.b1': '1. The service',
+	'info.doc.terms.b10':
+		'No automation. No coordinated voting. No impersonation. No content prohibited by applicable law.',
+	'info.doc.terms.b11': '6. Termination',
+	'info.doc.terms.b12':
+		'You may delete your account at any time from Settings. We may suspend an account that violates these terms. We will tell you why.',
+	'info.doc.terms.b13': '7. Changes',
+	'info.doc.terms.b14':
+		'Material changes are announced in-app at least seven days before they take effect. Continued use after that date is agreement.',
+	'info.doc.terms.b2':
+		'VICI is a free predictions app. We provide markets that resolve on public sources. We do not facilitate any wagering of money.',
+	'info.doc.terms.b3': '2. Your account',
+	'info.doc.terms.b4':
+		'You agree to provide accurate information and to use one account only. Multiple accounts created to manipulate leaderboards or battles will be removed without notice.',
+	'info.doc.terms.b5': '3. Your predictions',
+	'info.doc.terms.b6':
+		'You retain ownership of your account history. We retain the right to display aggregated and anonymised statistics derived from it.',
+	'info.doc.terms.b7': '4. VXP',
+	'info.doc.terms.b8':
+		'VXP is an in-app credit with no monetary value. It cannot be redeemed, transferred outside the app, or exchanged for currency.',
+	'info.doc.terms.b9': '5. Acceptable conduct',
+	'info.doc.terms.eyebrow': 'Legal · Effective May 1, 2026',
+	'info.doc.terms.title': 'Terms of service',
 	'info.not_found.body':
 		'No document matches that address. Try one of the links in the footer or head back to the home page.',
 	'info.not_found.title': 'Document not found',
