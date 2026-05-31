@@ -1435,7 +1435,7 @@ export const deMessages = {
 	'markets.section.saved': 'Gespeichert',
 	'markets.section.trending': 'Im Trend',
 	'markets.see_all': 'Alle ansehen',
-	'markets.see_all_count': 'Alle {count} ansehen →',
+	'markets.see_all_count': 'Alle {count} ansehen',
 	'markets.suggested.eyebrow': 'REDAKTIONSTIPP',
 	'markets.suggested.eyebrow_event': 'TENTPOLE-EVENT',
 	'markets.suggested.title': 'Empfehlungen für dich',
