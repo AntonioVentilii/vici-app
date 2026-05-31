@@ -50,6 +50,13 @@ shift
 
 source "$(dirname "$0")/lib/utils.sh" "$@"
 
+# BSD/macOS `sed`/`tr` raise "illegal byte sequence" on multibyte UTF-8 (e.g.
+# "Mbappé", curly quotes) under a UTF-8 locale. Force a byte-wise locale so the
+# escaping + slugify below pass those bytes through untouched; dfx still receives
+# the original UTF-8 (the byte values of `"`/`\` never collide with UTF-8
+# continuation bytes, so byte-wise escaping is safe).
+export LC_ALL=C
+
 if [ ! -f "$MARKETS_FILE" ]; then
 	echo "Error: markets file '$MARKETS_FILE' not found." >&2
 	exit 1
