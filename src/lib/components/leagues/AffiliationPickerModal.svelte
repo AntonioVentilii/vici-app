@@ -1,12 +1,17 @@
 <script lang="ts">
-	import { Search, X } from 'lucide-svelte/icons';
+	import { ArrowLeft, Check, Mail, Search, X } from 'lucide-svelte/icons';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
+	import {
+		SCHOOL_FOUNDER_BADGE_CAP,
+		SCHOOL_PASS2_ENABLED
+	} from '$lib/constants/school-picker.constants';
 	import {
 		WORLDS_COUNTRIES,
 		WORLDS_UNIVERSITIES,
 		type WorldsAffiliationOption
 	} from '$lib/constants/worlds-affiliations.constants';
+	import { submitSchool, verifySchoolCode } from '$lib/services/school-verification.services';
 	import {
 		affiliationDaysLeft,
 		joinAffiliation,
@@ -14,14 +19,37 @@
 	} from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
+	import { haptic } from '$lib/utils/haptics.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { detectUserCountryCode } from '$lib/utils/locale-country.utils';
+	import {
+		spFindCloseMatches,
+		spFuzzy,
+		spInferCountry,
+		spIsValidCode,
+		spIsValidEmail,
+		spMatchEmail,
+		spSanitizeCode
+	} from '$lib/utils/school-picker.utils';
 
 	/**
 	 * Affiliation picker — full-bleed bottom sheet with a large
 	 * display-font title, a searchable roster, and a bottom-anchored
 	 * CTA pill. The caller chooses the `kind` (one sheet per
 	 * affiliation slot) — there's no in-sheet toggle.
+	 *
+	 * The **country** kind is a plain browse-and-commit list. The
+	 * **university** kind layers in directory features:
+	 *
+	 *  - fuzzy search across name + acronym (typo-tolerant);
+	 *  - status badges — verified (gold tick) on schools that already
+	 *    carry members, pending (amber) on the user's own awaiting
+	 *    school, unverified (blue founder) on memberless rows;
+	 *  - email-domain verification + add-your-own ("Pass 2"), gated by
+	 *    {@link SCHOOL_PASS2_ENABLED} (default off until backend B.1 —
+	 *    `/schools/submit` + `/schools/verify` — ships). The flag-off
+	 *    build still exposes the always-reachable "use it unverified"
+	 *    path so the directory remains usable now.
 	 *
 	 * Selection is a two-step gesture: tap a row to mark it, then tap
 	 * the CTA to commit. When the user already holds an affiliation of
@@ -39,28 +67,52 @@
 		 *  picker reads the row of `kind` to drive switch vs join, the
 		 *  "Joined" row badge, and the 90-day lock state. */
 		current?: { university?: AffiliationDoc; country?: AffiliationDoc };
+		/** Per-school live membership signal, keyed by option id. Drives
+		 *  the verified gold tick + member meta. Empty today — the
+		 *  member/verified counts are served by backend item B.1; rows
+		 *  without an entry render the founder / "no members yet" state. */
+		schoolStats?: Readonly<Record<string, { members: number; monthRank: number }>>;
 		onClose: () => void;
 		onPicked?: () => void;
 	}
 
-	const { isOpen, kind, current, onClose, onPicked }: Props = $props();
+	const { isOpen, kind, current, schoolStats = {}, onClose, onPicked }: Props = $props();
 
 	const roster = $derived<readonly WorldsAffiliationOption[]>(
 		kind === 'university' ? WORLDS_UNIVERSITIES : WORLDS_COUNTRIES
 	);
 
-	const titleKey = $derived<MessageKey>(
-		kind === 'university' ? 'worlds.picker.title_university' : 'worlds.picker.title_country'
-	);
+	const isUniversity = $derived(kind === 'university');
+	const pass2 = $derived(isUniversity && SCHOOL_PASS2_ENABLED);
+
 	const subKey: MessageKey = 'worlds.picker.lock_hint';
 	const searchPlaceholderKey = $derived<MessageKey>(
-		kind === 'university' ? 'worlds.picker.search_university' : 'worlds.picker.search_country'
+		isUniversity ? 'worlds.picker.search_university' : 'worlds.picker.search_country'
 	);
+
+	/**
+	 * Sheet sub-modes. `browse` is the only mode the country kind ever
+	 * reaches; the rest are the university Pass-2 add/verify flow,
+	 * unreachable while {@link SCHOOL_PASS2_ENABLED} is `false`.
+	 */
+	type Mode = 'browse' | 'verify-existing' | 'add-confirm' | 'add-form' | 'add-verifying';
+	let mode = $state<Mode>('browse');
 
 	let query = $state('');
 	let selected = $state<string | null>(null);
+	let region = $state<RegionTab>('ALL');
 	let saving = $state(false);
 	let errorMessage = $state<string | null>(null);
+
+	// Add / verify flow state.
+	let addName = $state('');
+	let addEmail = $state('');
+	let verifyEmail = $state('');
+	let code = $state('');
+	let submissionId = $state<string | null>(null);
+	let verifyTarget = $state<WorldsAffiliationOption | null>(null);
+	let verifyError = $state<string | null>(null);
+	let submitting = $state(false);
 
 	/**
 	 * Region tabs (university kind only). `LATAM` / `MEA` entries have no
@@ -77,7 +129,6 @@
 		{ id: 'AS', key: 'worlds.picker.region.as' },
 		{ id: 'AU', key: 'worlds.picker.region.au' }
 	];
-	let region = $state<RegionTab>('ALL');
 
 	// Best-effort home country from `navigator.language` — drives the
 	// "Near you" pinning. Read once at setup: the heuristic has no
@@ -93,6 +144,8 @@
 	const isSwitching = $derived(
 		currentForKind !== undefined && selected !== null && selected !== currentForKind
 	);
+
+	const isSearching = $derived(query.trim().length > 0);
 
 	/**
 	 * CTA copy follows the action being committed: "Switch to {name}"
@@ -122,29 +175,51 @@
 
 		return t({
 			locale: $localeStore,
-			key: kind === 'university' ? 'worlds.picker.cta_university' : 'worlds.picker.cta_country'
+			key: isUniversity ? 'worlds.picker.cta_university' : 'worlds.picker.cta_country'
 		});
 	});
 
 	const ctaDisabled = $derived(selected === null || saving || (isSwitching && isLocked));
 
-	const isUniversity = $derived(kind === 'university');
-	const isSearching = $derived(query.trim().length > 0);
+	const selectedOption = $derived<WorldsAffiliationOption | undefined>(
+		selected === null ? undefined : roster.find((o) => o.id === selected)
+	);
+	// The selected school can be verified when Pass 2 is on and the
+	// directory entry carries an email domain to match against.
+	const selectedCanVerify = $derived(pass2 && (selectedOption?.domains?.length ?? 0) > 0);
 
 	const filtered = $derived.by(() => {
-		const trimmed = query.trim().toLowerCase();
+		const trimmed = query.trim();
 
 		if (trimmed.length > 0) {
+			if (isUniversity) {
+				// Fuzzy across name + acronym, ranked by score.
+				return roster
+					.map((option) => ({
+						option,
+						score: Math.max(
+							spFuzzy({ query: trimmed, target: option.name }),
+							spFuzzy({ query: trimmed, target: option.short ?? '' })
+						)
+					}))
+					.filter((scored) => scored.score > 0)
+					.sort((a, b) => b.score - a.score)
+					.slice(0, 50)
+					.map((scored) => scored.option);
+			}
+
+			const lowered = trimmed.toLowerCase();
+
 			return roster
 				.filter(
 					(opt) =>
-						opt.name.toLowerCase().includes(trimmed) || opt.glyph.toLowerCase().includes(trimmed)
+						opt.name.toLowerCase().includes(lowered) || opt.glyph.toLowerCase().includes(lowered)
 				)
 				.slice(0, 40);
 		}
 
 		// Idle, country kind: unchanged — first 20 of the roster.
-		if (kind !== 'university') {
+		if (!isUniversity) {
 			return roster.slice(0, 20);
 		}
 
@@ -158,7 +233,7 @@
 		const pinned = scoped.filter((opt) => opt.country === homeCountry).sort(byRank);
 		const rest = scoped.filter((opt) => opt.country !== homeCountry).sort(byRank);
 
-		return [...pinned, ...rest].slice(0, 40);
+		return [...pinned, ...rest].slice(0, 80);
 	});
 
 	// Count of home-country schools in the active scope — drives the
@@ -169,6 +244,35 @@
 			? 0
 			: filtered.filter((opt) => opt.country === homeCountry).length
 	);
+
+	// Fuzzy dedupe for the add-your-own confirm step.
+	const dupeMatches = $derived(
+		isUniversity ? spFindCloseMatches({ query: addName.trim(), directory: roster, limit: 3 }) : []
+	);
+
+	// Ids that render the "founder" badge — the first
+	// {@link SCHOOL_FOUNDER_BADGE_CAP} memberless, unjoined rows in the
+	// current list (Pass 2 only), so an unseeded region doesn't paint
+	// every row with the badge. Empty when Pass 2 is off.
+	const founderIds = $derived.by<readonly string[]>(() => {
+		if (!pass2) {
+			return [];
+		}
+
+		const ids: string[] = [];
+
+		for (const option of filtered) {
+			if (ids.length >= SCHOOL_FOUNDER_BADGE_CAP) {
+				break;
+			}
+
+			if (schoolStats[option.id] === undefined && currentForKind !== option.id) {
+				ids.push(option.id);
+			}
+		}
+
+		return ids;
+	});
 
 	const handleSelect = (option: WorldsAffiliationOption) => {
 		errorMessage = null;
@@ -210,6 +314,7 @@
 				await joinAffiliation({ kind, affiliationIdentifier: selected });
 			}
 
+			haptic('firm-tap');
 			onPicked?.();
 			onClose();
 		} catch (err) {
@@ -243,22 +348,223 @@
 		}
 	};
 
+	// ── Pass-2 transitions ────────────────────────────────────────
+	const resetAddState = () => {
+		addName = '';
+		addEmail = '';
+		verifyEmail = '';
+		code = '';
+		submissionId = null;
+		verifyTarget = null;
+		verifyError = null;
+		submitting = false;
+	};
+
+	const openAddConfirm = () => {
+		addName = query.trim();
+		addEmail = '';
+		verifyError = null;
+		mode = 'add-confirm';
+	};
+
+	const openVerifyExisting = (option: WorldsAffiliationOption) => {
+		verifyTarget = option;
+		verifyEmail = '';
+		code = '';
+		submissionId = null;
+		verifyError = null;
+		submitting = false;
+		mode = 'verify-existing';
+	};
+
+	// Inferred country for the add flow (from the typed school email).
+	const inferredCountry = $derived(spInferCountry({ email: addEmail, fallback: homeCountry }));
+
+	// add-form email validation.
+	const addEmailMatch = $derived(
+		spIsValidEmail(addEmail) ? spMatchEmail({ email: addEmail, directory: roster }) : null
+	);
+	const addConsumerBlock = $derived(addEmailMatch?.kind === 'consumer');
+	const addDomainMatch = $derived(addEmailMatch?.kind === 'match' ? addEmailMatch.option : null);
+	const addCanSubmit = $derived(
+		spIsValidEmail(addEmail) && !addConsumerBlock && addDomainMatch === null && !submitting
+	);
+
+	// verify-existing email validation against the school's own domains.
+	const verifyDomainOk = $derived.by(() => {
+		const target = verifyTarget;
+
+		if (target === null || !spIsValidEmail(verifyEmail)) {
+			return false;
+		}
+
+		const host = verifyEmail.toLowerCase().trim().split('@')[1] ?? '';
+
+		return (target.domains ?? []).some((d) => host === d || host.endsWith(`.${d}`));
+	});
+	const verifyWrongDomain = $derived(spIsValidEmail(verifyEmail) && !verifyDomainOk);
+
+	const codeValid = $derived(spIsValidCode(code));
+
+	/**
+	 * Commit a Pass-2 verified pick. The verify/submit round-trips are
+	 * stubbed (backend B.1), so this path is unreachable in shipped
+	 * builds; persisting the verified status itself is also a B.1
+	 * concern — today we commit the affiliation the same way as an
+	 * unverified pick (the directory row is the same school).
+	 */
+	const commitVerified = async (option: WorldsAffiliationOption) => {
+		selected = option.id;
+		await handleCommit();
+	};
+
+	// Send a 6-digit code for the add-your-own flow.
+	const requestAddCode = async () => {
+		submitting = true;
+		verifyError = null;
+
+		try {
+			const { submissionId: id } = await submitSchool({
+				name: addName.trim(),
+				country: inferredCountry,
+				email: addEmail
+			});
+			submissionId = id;
+			code = '';
+			mode = 'add-verifying';
+		} catch (err) {
+			verifyError =
+				err instanceof Error
+					? t({ locale: $localeStore, key: 'worlds.picker.school.error_send' })
+					: t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			submitting = false;
+		}
+	};
+
+	// Send a 6-digit code to verify membership of a directory school.
+	const requestExistingCode = async () => {
+		const target = verifyTarget;
+
+		if (target === null) {
+			return;
+		}
+
+		submitting = true;
+		verifyError = null;
+
+		try {
+			const { submissionId: id } = await submitSchool({
+				name: target.name,
+				schoolId: target.id,
+				country: target.country ?? homeCountry,
+				email: verifyEmail
+			});
+			submissionId = id;
+			code = '';
+			mode = 'add-verifying';
+		} catch (err) {
+			verifyError =
+				err instanceof Error
+					? t({ locale: $localeStore, key: 'worlds.picker.school.error_send' })
+					: t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			submitting = false;
+		}
+	};
+
+	// Verify the entered code, then commit the affiliation.
+	const submitCode = async () => {
+		if (submissionId === null) {
+			return;
+		}
+
+		submitting = true;
+		verifyError = null;
+
+		try {
+			const result = await verifySchoolCode({ submissionId, code });
+
+			if (result.ok === false) {
+				throw new Error(result.message ?? 'invalid-code');
+			}
+
+			haptic('triple-tap');
+			const target = verifyTarget;
+
+			if (target !== null) {
+				await commitVerified(target);
+			} else {
+				// New school: no directory id to commit against until B.1
+				// returns a canonical school id — surface a clear state.
+				verifyError = t({ locale: $localeStore, key: 'worlds.picker.school.error_verify' });
+			}
+		} catch {
+			verifyError = t({ locale: $localeStore, key: 'worlds.picker.school.error_code' });
+		} finally {
+			submitting = false;
+		}
+	};
+
 	const handleClose = () => {
 		query = '';
 		selected = null;
 		region = 'ALL';
 		errorMessage = null;
+		mode = 'browse';
+		resetAddState();
 		onClose();
 	};
+
+	const backToBrowse = () => {
+		if (submitting) {
+			return;
+		}
+
+		mode = 'browse';
+		resetAddState();
+	};
+
+	// Thin `t()` wrapper that binds the locale once per render — keeps
+	// the dense markup readable. `key` stays positional (it's the one
+	// required arg and reads naturally first); `params` trails it.
+	// eslint-disable-next-line local-rules/prefer-object-params -- Locale-bound translate shorthand; key reads best positionally
+	const tr = (key: MessageKey, params?: Record<string, string | number>) =>
+		t({ locale: $localeStore, key, params });
 </script>
 
 <BottomSheet {isOpen} onClose={handleClose}>
 	<div class="affil-picker">
 		<header class="affil-picker-head">
-			<h2 class="affil-picker-title">{t({ locale: $localeStore, key: titleKey })}</h2>
+			{#if mode !== 'browse'}
+				<button
+					class="affil-picker-icon-btn"
+					aria-label={tr('worlds.picker.back')}
+					disabled={submitting}
+					onclick={backToBrowse}
+					type="button"
+				>
+					<ArrowLeft size={18} strokeWidth={1.8} />
+				</button>
+			{/if}
+			<h2 class="affil-picker-title">
+				{#if mode === 'browse'}
+					{tr(isUniversity ? 'worlds.picker.title_university' : 'worlds.picker.title_country')}
+				{:else if mode === 'verify-existing' && verifyTarget}
+					{tr('worlds.picker.school.verify_title', {
+						name: verifyTarget.short ?? verifyTarget.name
+					})}
+				{:else if mode === 'add-confirm'}
+					{tr('worlds.picker.school.add_title')}
+				{:else if mode === 'add-form'}
+					{tr('worlds.picker.school.verify_school_title')}
+				{:else}
+					{tr('worlds.picker.school.inbox_title')}
+				{/if}
+			</h2>
 			<button
-				class="affil-picker-close"
-				aria-label={t({ locale: $localeStore, key: 'worlds.picker.close' })}
+				class="affil-picker-icon-btn"
+				aria-label={tr('worlds.picker.close')}
 				onclick={handleClose}
 				type="button"
 			>
@@ -266,109 +572,447 @@
 			</button>
 		</header>
 
-		<p class="affil-picker-hint serif-italic">
-			{t({ locale: $localeStore, key: subKey })}
-		</p>
+		{#if mode === 'browse'}
+			<p class="affil-picker-hint serif-italic">
+				{tr(subKey)}
+			</p>
 
-		<div class="affil-picker-search">
-			<Search aria-hidden="true" size={14} strokeWidth={1.6} />
-			<input
-				placeholder={t({
-					locale: $localeStore,
-					key: searchPlaceholderKey,
-					params: { count: roster.length }
-				})}
-				type="text"
-				bind:value={query}
-			/>
-			{#if query}
-				<button
-					class="affil-picker-clear"
-					aria-label={t({ locale: $localeStore, key: 'worlds.picker.clear' })}
-					onclick={() => (query = '')}
-					type="button"
-				>
-					<X size={12} strokeWidth={1.8} />
-				</button>
-			{/if}
-		</div>
-
-		{#if isUniversity && !isSearching}
-			<div class="affil-picker-tabs" role="tablist">
-				{#each REGION_TABS as tab (tab.id)}
+			<div class="affil-picker-search">
+				<Search aria-hidden="true" size={14} strokeWidth={1.6} />
+				<input
+					onkeydown={(event) => {
+						if (event.key === 'Enter' && filtered.length > 0) {
+							event.preventDefault();
+							handleSelect(filtered[0]);
+						}
+					}}
+					placeholder={tr(searchPlaceholderKey, { count: roster.length })}
+					type="text"
+					bind:value={query}
+				/>
+				{#if query}
 					<button
-						class="affil-picker-tab"
-						class:is-active={region === tab.id}
-						aria-selected={region === tab.id}
-						onclick={() => (region = tab.id)}
-						role="tab"
+						class="affil-picker-clear"
+						aria-label={tr('worlds.picker.clear')}
+						onclick={() => (query = '')}
 						type="button"
 					>
-						{t({ locale: $localeStore, key: tab.key })}
+						<X size={12} strokeWidth={1.8} />
 					</button>
-				{/each}
+				{/if}
 			</div>
-		{/if}
 
-		<ul class="affil-picker-list">
-			{#if filtered.length === 0}
-				<li class="affil-picker-empty">
-					{t({ locale: $localeStore, key: 'worlds.picker.empty' })}
-				</li>
-			{:else}
-				{#each filtered as option, index (option.id)}
-					{@const isJoined = currentForKind === option.id}
-					{@const isSelected = selected === option.id}
-					{@const isNearYouLead = nearYouCount > 0 && index === 0 && option.country === homeCountry}
-					{#if isNearYouLead}
-						<li class="affil-picker-divider" aria-hidden="true">
-							{t({
-								locale: $localeStore,
-								key: 'worlds.picker.near_you',
-								params: { count: nearYouCount }
-							})}
-						</li>
-					{/if}
-					<li>
+			{#if isUniversity && !isSearching}
+				<div class="affil-picker-tabs" role="tablist">
+					{#each REGION_TABS as tab (tab.id)}
 						<button
-							class="affil-picker-row"
-							class:is-joined={isJoined}
-							class:is-selected={isSelected}
-							aria-current={isJoined ? 'true' : undefined}
-							aria-pressed={isSelected}
-							onclick={() => handleSelect(option)}
+							class="affil-picker-tab"
+							class:is-active={region === tab.id}
+							aria-selected={region === tab.id}
+							onclick={() => (region = tab.id)}
+							role="tab"
 							type="button"
 						>
-							<span class="affil-picker-glyph" aria-hidden="true">
-								{#if kind === 'country'}
-									<CountryFlag class="affil-picker-flag" countryCode={option.id} />
-								{:else}
-									{option.glyph}
-								{/if}
-							</span>
-							<span class="affil-picker-name">{option.name}</span>
-							{#if isJoined}
-								<span class="num allcaps affil-picker-joined">
-									{t({ locale: $localeStore, key: 'worlds.picker.already_joined' })}
-								</span>
-							{/if}
+							{tr(tab.key)}
 						</button>
-					</li>
-				{/each}
+					{/each}
+				</div>
 			{/if}
-		</ul>
 
-		{#if errorMessage}
-			<p class="affil-picker-error" role="alert">{errorMessage}</p>
-		{/if}
+			<ul class="affil-picker-list">
+				{#if filtered.length === 0}
+					{#if pass2 && isSearching}
+						<li class="affil-picker-empty-add">
+							<p class="affil-picker-empty-add-title serif-italic">
+								{tr('worlds.picker.school.empty_add_title')}
+							</p>
+							<p class="affil-picker-empty-add-body">
+								{tr('worlds.picker.school.empty_add_body')}
+							</p>
+							<button class="affil-picker-cta" onclick={openAddConfirm} type="button">
+								{tr('worlds.picker.school.empty_add_cta', { name: query.trim() })}
+							</button>
+							<p class="affil-picker-empty-add-foot num allcaps">
+								{tr('worlds.picker.school.verified_by_email')}
+							</p>
+						</li>
+					{:else}
+						<li class="affil-picker-empty">
+							{tr('worlds.picker.empty')}
+						</li>
+					{/if}
+				{:else}
+					{#each filtered as option, index (option.id)}
+						{@const isJoined = currentForKind === option.id}
+						{@const isSelected = selected === option.id}
+						{@const stats = schoolStats[option.id]}
+						{@const isOwnPending = isUniversity && isJoined && stats === undefined}
+						{@const isNearYouLead =
+							nearYouCount > 0 && index === 0 && option.country === homeCountry}
+						{@const founderEligible = founderIds.includes(option.id)}
+						{#if isNearYouLead}
+							<li class="affil-picker-divider" aria-hidden="true">
+								{tr('worlds.picker.near_you', { count: nearYouCount })}
+							</li>
+						{/if}
+						<li>
+							<button
+								class="affil-picker-row"
+								class:is-joined={isJoined}
+								class:is-selected={isSelected}
+								aria-current={isJoined ? 'true' : undefined}
+								aria-pressed={isSelected}
+								onclick={() => handleSelect(option)}
+								type="button"
+							>
+								<span class="affil-picker-glyph" aria-hidden="true">
+									{#if kind === 'country'}
+										<CountryFlag class="affil-picker-flag" countryCode={option.id} />
+									{:else}
+										{option.glyph}
+									{/if}
+								</span>
+								<span class="affil-picker-body">
+									<span class="affil-picker-name">
+										<span class="affil-picker-name-text">{option.name}</span>
+										{#if stats !== undefined}
+											<span class="affil-picker-badge affil-picker-badge-verified">
+												<Check aria-hidden="true" size={9} strokeWidth={3.5} />
+												<span class="sr-only">{tr('worlds.picker.school.status_verified')}</span>
+											</span>
+										{:else if isOwnPending}
+											<span class="affil-picker-badge-pill affil-picker-badge-pending num">
+												{tr('worlds.picker.school.status_pending')}
+											</span>
+										{:else if founderEligible}
+											<span class="affil-picker-badge-pill affil-picker-badge-founder num">
+												{tr('worlds.picker.school.founder')}
+											</span>
+										{/if}
+									</span>
+									{#if isUniversity}
+										<span class="affil-picker-meta num">
+											{#if stats !== undefined}
+												{tr('worlds.picker.school.meta_members', {
+													members: stats.members,
+													rank: stats.monthRank
+												})}
+											{:else}
+												{tr(
+													pass2
+														? 'worlds.picker.school.meta_be_founder'
+														: 'worlds.picker.school.meta_no_members'
+												)}
+											{/if}
+										</span>
+									{/if}
+								</span>
+								{#if isJoined}
+									<span class="num allcaps affil-picker-joined">
+										{tr('worlds.picker.already_joined')}
+									</span>
+								{/if}
+							</button>
+						</li>
+					{/each}
 
-		<button class="affil-picker-cta" disabled={ctaDisabled} onclick={handleCommit} type="button">
-			{#if saving}
-				{t({ locale: $localeStore, key: 'worlds.cta.joining' })}
+					{#if pass2}
+						<li>
+							<button class="affil-picker-add-cta" onclick={openAddConfirm} type="button">
+								<span class="affil-picker-add-cta-icon" aria-hidden="true">+</span>
+								<span class="affil-picker-add-cta-body">
+									<span class="affil-picker-add-cta-title"
+										>{tr('worlds.picker.school.add_cta_title')}</span
+									>
+									<span class="affil-picker-add-cta-sub num allcaps"
+										>{tr('worlds.picker.school.verified_by_email')}</span
+									>
+								</span>
+								<span class="affil-picker-add-cta-arrow" aria-hidden="true">→</span>
+							</button>
+						</li>
+					{/if}
+				{/if}
+			</ul>
+
+			{#if errorMessage}
+				<p class="affil-picker-error" role="alert">{errorMessage}</p>
+			{/if}
+
+			{#if selectedCanVerify && selectedOption}
+				<button
+					class="affil-picker-cta"
+					onclick={() => openVerifyExisting(selectedOption)}
+					type="button"
+				>
+					{tr('worlds.picker.school.verify_with', { domain: selectedOption.domains?.[0] ?? '' })}
+				</button>
+				<button class="affil-picker-foot-link" onclick={handleCommit} type="button">
+					{tr('worlds.picker.school.skip_unverified')}
+				</button>
 			{:else}
-				{ctaLabel}
+				<button
+					class="affil-picker-cta"
+					disabled={ctaDisabled}
+					onclick={handleCommit}
+					type="button"
+				>
+					{#if saving}
+						{tr('worlds.cta.joining')}
+					{:else}
+						{ctaLabel}
+					{/if}
+				</button>
 			{/if}
-		</button>
+		{:else if mode === 'verify-existing' && verifyTarget}
+			<div class="affil-picker-summary">
+				<span class="affil-picker-glyph" aria-hidden="true">{verifyTarget.glyph}</span>
+				<span class="affil-picker-summary-body">
+					<span class="affil-picker-summary-eyebrow num allcaps"
+						>{tr('worlds.picker.school.verify_eyebrow')}</span
+					>
+					<span class="affil-picker-summary-name">{verifyTarget.name}</span>
+				</span>
+			</div>
+
+			<p class="affil-picker-explainer">
+				{tr('worlds.picker.school.verify_explainer', {
+					name: verifyTarget.short ?? verifyTarget.name
+				})}
+			</p>
+
+			<label class="affil-picker-input-label num allcaps" for="sp-verify-email">
+				{tr('worlds.picker.school.email_label')}
+			</label>
+			<input
+				id="sp-verify-email"
+				class="affil-picker-input num"
+				class:is-bad={verifyWrongDomain}
+				autocapitalize="off"
+				autocorrect="off"
+				disabled={submitting}
+				oninput={() => (verifyError = null)}
+				onkeydown={(event) => {
+					if (event.key === 'Enter' && verifyDomainOk && !submitting) {
+						event.preventDefault();
+						void requestExistingCode();
+					}
+				}}
+				placeholder={tr('worlds.picker.school.email_placeholder', {
+					domain: verifyTarget.domains?.[0] ?? 'school.edu'
+				})}
+				spellcheck="false"
+				type="email"
+				bind:value={verifyEmail}
+			/>
+			{#if verifyWrongDomain}
+				<p class="affil-picker-error-inline">
+					{tr('worlds.picker.school.wrong_domain', {
+						name: verifyTarget.short ?? verifyTarget.name,
+						domain: verifyTarget.domains?.[0] ?? ''
+					})}
+				</p>
+			{/if}
+			{#if verifyError}
+				<p class="affil-picker-error-inline" role="alert">{verifyError}</p>
+			{/if}
+
+			<button
+				class="affil-picker-cta"
+				disabled={!verifyDomainOk || submitting}
+				onclick={requestExistingCode}
+				type="button"
+			>
+				{submitting ? tr('worlds.picker.school.sending') : tr('worlds.picker.school.send_code')}
+			</button>
+			<button
+				class="affil-picker-foot-link"
+				onclick={() => verifyTarget && commitVerified(verifyTarget)}
+				type="button"
+			>
+				{tr('worlds.picker.school.skip_unverified')}
+			</button>
+		{:else if mode === 'add-confirm'}
+			<p class="affil-picker-hint serif-italic">
+				{tr('worlds.picker.school.add_dedupe_hint')}
+			</p>
+
+			<label class="affil-picker-input-label num allcaps" for="sp-add-name">
+				{tr('worlds.picker.school.name_label')}
+			</label>
+			<input
+				id="sp-add-name"
+				class="affil-picker-input"
+				placeholder={tr('worlds.picker.school.name_placeholder')}
+				type="text"
+				bind:value={addName}
+			/>
+
+			{#if dupeMatches.length > 0 && addName.trim().length >= 2}
+				<div class="affil-picker-dupe">
+					<p class="affil-picker-dupe-title num allcaps">{tr('worlds.picker.school.dupe_title')}</p>
+					{#each dupeMatches as dupe (dupe.id)}
+						<button
+							class="affil-picker-dupe-row"
+							onclick={() => commitVerified(dupe)}
+							type="button"
+						>
+							<span class="affil-picker-glyph affil-picker-glyph-sm" aria-hidden="true">
+								{dupe.glyph}
+							</span>
+							<span class="affil-picker-dupe-body">
+								<span class="affil-picker-dupe-name">{dupe.name}</span>
+								<span class="affil-picker-dupe-meta num">
+									{dupe.country ?? ''} · @{dupe.domains?.[0] ?? ''}
+								</span>
+							</span>
+							<span class="affil-picker-dupe-use num allcaps">{tr('worlds.picker.school.use')}</span
+							>
+						</button>
+					{/each}
+				</div>
+			{:else if addName.trim().length >= 3}
+				<p class="affil-picker-ok">{tr('worlds.picker.school.not_in_directory')}</p>
+			{/if}
+
+			<button
+				class="affil-picker-cta"
+				disabled={addName.trim().length < 3}
+				onclick={() => (mode = 'add-form')}
+				type="button"
+			>
+				{addName.trim().length < 3
+					? tr('worlds.picker.school.enter_name')
+					: tr('worlds.picker.school.continue')}
+			</button>
+		{:else if mode === 'add-form'}
+			<div class="affil-picker-summary">
+				<span class="affil-picker-summary-body">
+					<span class="affil-picker-summary-eyebrow num allcaps"
+						>{tr('worlds.picker.school.adding')}</span
+					>
+					<span class="affil-picker-summary-name">{addName}</span>
+					{#if addEmail && inferredCountry}
+						<span class="affil-picker-summary-meta num">
+							{inferredCountry} · {tr('worlds.picker.school.detected_from_email')}
+						</span>
+					{/if}
+				</span>
+			</div>
+
+			<p class="affil-picker-explainer">
+				{tr('worlds.picker.school.add_explainer')}
+			</p>
+
+			<label class="affil-picker-input-label num allcaps" for="sp-add-email">
+				{tr('worlds.picker.school.email_label')}
+			</label>
+			<input
+				id="sp-add-email"
+				class="affil-picker-input num"
+				class:is-bad={addConsumerBlock}
+				autocapitalize="off"
+				autocorrect="off"
+				disabled={submitting}
+				oninput={() => (verifyError = null)}
+				onkeydown={(event) => {
+					if (event.key === 'Enter' && addCanSubmit) {
+						event.preventDefault();
+						void requestAddCode();
+					}
+				}}
+				placeholder={tr('worlds.picker.school.email_placeholder', { domain: 'school.edu' })}
+				spellcheck="false"
+				type="email"
+				bind:value={addEmail}
+			/>
+			{#if addConsumerBlock}
+				<p class="affil-picker-error-inline">{tr('worlds.picker.school.consumer_blocked')}</p>
+			{/if}
+			{#if addDomainMatch}
+				<div class="affil-picker-redirect">
+					<span>{tr('worlds.picker.school.domain_belongs', { name: addDomainMatch.name })}</span>
+					<button
+						class="affil-picker-redirect-cta"
+						onclick={() => commitVerified(addDomainMatch)}
+						type="button"
+					>
+						{tr('worlds.picker.school.use_existing', {
+							name: addDomainMatch.short ?? addDomainMatch.name
+						})}
+					</button>
+				</div>
+			{/if}
+			{#if verifyError}
+				<p class="affil-picker-error-inline" role="alert">{verifyError}</p>
+			{/if}
+
+			<button
+				class="affil-picker-cta"
+				disabled={!addCanSubmit}
+				onclick={requestAddCode}
+				type="button"
+			>
+				{submitting ? tr('worlds.picker.school.sending') : tr('worlds.picker.school.send_code')}
+			</button>
+			<button class="affil-picker-foot-link" onclick={backToBrowse} type="button">
+				{tr('worlds.picker.school.no_email_unverified')}
+			</button>
+		{:else if mode === 'add-verifying'}
+			<div class="affil-picker-verify">
+				<span class="affil-picker-mail-icon" aria-hidden="true">
+					<Mail size={22} strokeWidth={1.8} />
+				</span>
+				<h3 class="affil-picker-mail-title serif-italic">
+					{tr('worlds.picker.school.code_sent_to', {
+						email: verifyTarget ? verifyEmail : addEmail
+					})}
+				</h3>
+				<p class="affil-picker-mail-body">{tr('worlds.picker.school.code_body')}</p>
+				<input
+					class="affil-picker-code num"
+					aria-label={tr('worlds.picker.school.code_label')}
+					disabled={submitting}
+					inputmode="numeric"
+					oninput={(event) => {
+						code = spSanitizeCode(event.currentTarget.value);
+						verifyError = null;
+					}}
+					onkeydown={(event) => {
+						if (event.key === 'Enter' && codeValid && !submitting) {
+							event.preventDefault();
+							void submitCode();
+						}
+					}}
+					pattern="\d{'{'}6}"
+					placeholder="000000"
+					type="text"
+					value={code}
+				/>
+				{#if verifyError}
+					<p class="affil-picker-error-inline affil-picker-error-center" role="alert">
+						{verifyError}
+					</p>
+				{/if}
+			</div>
+
+			<button
+				class="affil-picker-cta"
+				disabled={!codeValid || submitting}
+				onclick={submitCode}
+				type="button"
+			>
+				{submitting ? tr('worlds.picker.school.verifying') : tr('worlds.picker.school.verify_cta')}
+			</button>
+			<button
+				class="affil-picker-foot-link"
+				disabled={submitting}
+				onclick={() => (mode = verifyTarget ? 'verify-existing' : 'add-form')}
+				type="button"
+			>
+				{tr('worlds.picker.school.wrong_address')}
+			</button>
+		{/if}
 	</div>
 </BottomSheet>
 
@@ -388,6 +1032,7 @@
 	}
 
 	.affil-picker-title {
+		flex: 1;
 		margin: 0;
 		font-family: var(--font-display);
 		font-size: var(--t-32, 2rem);
@@ -397,7 +1042,7 @@
 		color: var(--text-base);
 	}
 
-	.affil-picker-close {
+	.affil-picker-icon-btn {
 		appearance: none;
 		display: inline-flex;
 		align-items: center;
@@ -410,6 +1055,11 @@
 		border-radius: var(--r-pill);
 		color: var(--text-muted);
 		cursor: pointer;
+	}
+
+	.affil-picker-icon-btn:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
 	}
 
 	.affil-picker-hint {
@@ -556,6 +1206,12 @@
 		overflow: hidden;
 	}
 
+	.affil-picker-glyph-sm {
+		width: 28px;
+		height: 28px;
+		font-size: 0.7rem;
+	}
+
 	.affil-picker :global(.affil-picker-flag) {
 		display: block;
 		width: 100%;
@@ -563,10 +1219,71 @@
 		object-fit: cover;
 	}
 
-	.affil-picker-name {
+	.affil-picker-body {
+		display: flex;
+		min-width: 0;
 		flex: 1;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+
+	.affil-picker-name {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
 		font-size: var(--t-14);
 		font-weight: 600;
+	}
+
+	.affil-picker-name-text {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.affil-picker-meta {
+		font-size: var(--t-10);
+		letter-spacing: 0.04em;
+		color: var(--text-muted);
+	}
+
+	/* ── Status badges ── */
+	.affil-picker-badge {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 16px;
+		height: 16px;
+		flex-shrink: 0;
+		border-radius: var(--r-pill);
+	}
+
+	.affil-picker-badge-verified {
+		background: var(--laurel);
+		color: var(--ink, #0e0d0b);
+	}
+
+	.affil-picker-badge-pill {
+		padding: 0.1rem 0.4rem;
+		font-size: var(--t-10);
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		border-radius: var(--r-pill);
+		white-space: nowrap;
+	}
+
+	.affil-picker-badge-pending {
+		/* Amber "awaiting verification" — distinct from the gold accent
+		   (verified) and the blue founder badge. */
+		color: #d8a23a;
+		background: color-mix(in srgb, #d8a23a 12%, transparent);
+		border: 1px solid color-mix(in srgb, #d8a23a 35%, transparent);
+	}
+
+	.affil-picker-badge-founder {
+		color: #6b9fff;
+		background: color-mix(in srgb, #6b9fff 10%, transparent);
+		border: 1px solid color-mix(in srgb, #6b9fff 30%, transparent);
 	}
 
 	.affil-picker-joined {
@@ -581,6 +1298,319 @@
 		color: var(--text-muted);
 	}
 
+	/* ── Empty-state add hero (Pass 2) ── */
+	.affil-picker-empty-add {
+		display: flex;
+		flex-direction: column;
+		gap: 0.6rem;
+		padding: 1.4rem 1rem;
+		text-align: center;
+		background: color-mix(in srgb, var(--laurel) 4%, transparent);
+		border: 1px dashed color-mix(in srgb, var(--laurel) 40%, transparent);
+		border-radius: var(--r-12);
+	}
+
+	.affil-picker-empty-add-title {
+		margin: 0;
+		font-size: var(--t-20, 1.25rem);
+		color: var(--laurel);
+	}
+
+	.affil-picker-empty-add-body {
+		margin: 0;
+		font-size: var(--t-13);
+		color: var(--text-muted);
+	}
+
+	.affil-picker-empty-add-foot {
+		margin: 0;
+		font-size: var(--t-10);
+		letter-spacing: 0.1em;
+		color: var(--text-muted);
+	}
+
+	/* ── Add-your-own footer CTA (Pass 2) ── */
+	.affil-picker-add-cta {
+		appearance: none;
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		width: 100%;
+		margin-top: 0.6rem;
+		padding: 0.85rem 1rem;
+		font: inherit;
+		text-align: left;
+		color: var(--text-muted);
+		background: transparent;
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-12);
+		cursor: pointer;
+	}
+
+	.affil-picker-add-cta-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 30px;
+		height: 30px;
+		flex-shrink: 0;
+		font-size: 1.1rem;
+		color: var(--laurel);
+		border: 1px dashed var(--border-base);
+		border-radius: var(--r-8);
+	}
+
+	.affil-picker-add-cta-body {
+		display: flex;
+		flex: 1;
+		flex-direction: column;
+		gap: 0.15rem;
+	}
+
+	.affil-picker-add-cta-title {
+		font-size: var(--t-13);
+		font-weight: 600;
+		color: var(--text-base);
+	}
+
+	.affil-picker-add-cta-sub {
+		font-size: var(--t-10);
+		letter-spacing: 0.04em;
+	}
+
+	.affil-picker-add-cta-arrow {
+		color: var(--laurel);
+	}
+
+	/* ── Summary card (verify-existing / add-form) ── */
+	.affil-picker-summary {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem 0.85rem;
+		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.affil-picker-summary-body {
+		display: flex;
+		min-width: 0;
+		flex-direction: column;
+		gap: 0.2rem;
+	}
+
+	.affil-picker-summary-eyebrow {
+		font-size: var(--t-10);
+		letter-spacing: 0.12em;
+		color: var(--text-muted);
+	}
+
+	.affil-picker-summary-name {
+		font-size: var(--t-15, 0.95rem);
+		font-weight: 600;
+		color: var(--text-base);
+	}
+
+	.affil-picker-summary-meta {
+		font-size: var(--t-10);
+		color: var(--text-muted);
+	}
+
+	.affil-picker-explainer {
+		margin: 0;
+		padding: 0.7rem 0.85rem;
+		font-size: var(--t-12);
+		line-height: 1.55;
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--text-base) 3%, transparent);
+		border-left: 2px solid var(--laurel);
+	}
+
+	.affil-picker-input-label {
+		font-size: var(--t-10);
+		letter-spacing: 0.1em;
+		color: var(--text-muted);
+	}
+
+	.affil-picker-input {
+		appearance: none;
+		width: 100%;
+		box-sizing: border-box;
+		padding: 0.75rem 0.85rem;
+		font: inherit;
+		font-size: var(--t-14);
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		outline: none;
+	}
+
+	.affil-picker-input.is-bad {
+		border-color: var(--no);
+	}
+
+	.affil-picker-error-inline {
+		margin: 0;
+		font-size: var(--t-12);
+		line-height: 1.5;
+		color: var(--no);
+	}
+
+	.affil-picker-error-center {
+		text-align: center;
+	}
+
+	.affil-picker-ok {
+		margin: 0;
+		padding: 0.6rem 0.75rem;
+		font-size: var(--t-12);
+		line-height: 1.5;
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--yes, var(--laurel)) 6%, transparent);
+		border: 1px solid color-mix(in srgb, var(--yes, var(--laurel)) 30%, transparent);
+		border-radius: var(--r-12);
+	}
+
+	/* ── Dupe panel (add-confirm) ── */
+	.affil-picker-dupe {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		padding: 0.75rem 0.85rem;
+		background: color-mix(in srgb, var(--laurel) 6%, transparent);
+		border: 1px solid color-mix(in srgb, var(--laurel) 30%, transparent);
+		border-radius: var(--r-12);
+	}
+
+	.affil-picker-dupe-title {
+		font-size: var(--t-10);
+		letter-spacing: 0.12em;
+		color: var(--laurel);
+	}
+
+	.affil-picker-dupe-row {
+		appearance: none;
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+		width: 100%;
+		padding: 0.4rem 0;
+		font: inherit;
+		text-align: left;
+		color: var(--text-base);
+		background: none;
+		border: none;
+		border-top: 1px solid color-mix(in srgb, var(--laurel) 18%, transparent);
+		cursor: pointer;
+	}
+
+	.affil-picker-dupe-body {
+		display: flex;
+		min-width: 0;
+		flex: 1;
+		flex-direction: column;
+	}
+
+	.affil-picker-dupe-name {
+		font-size: var(--t-13);
+		font-weight: 600;
+	}
+
+	.affil-picker-dupe-meta {
+		font-size: var(--t-10);
+		color: var(--text-muted);
+	}
+
+	.affil-picker-dupe-use {
+		font-size: var(--t-10);
+		letter-spacing: 0.08em;
+		color: var(--laurel);
+	}
+
+	/* ── Domain redirect (add-form) ── */
+	.affil-picker-redirect {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.7rem 0.85rem;
+		font-size: var(--t-12);
+		line-height: 1.5;
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--laurel) 6%, transparent);
+		border: 1px solid color-mix(in srgb, var(--laurel) 30%, transparent);
+		border-radius: var(--r-12);
+	}
+
+	.affil-picker-redirect-cta {
+		appearance: none;
+		align-self: flex-start;
+		padding: 0.4rem 0.85rem;
+		font: inherit;
+		font-size: var(--t-12);
+		font-weight: 600;
+		color: var(--ink, #0e0d0b);
+		background: var(--laurel);
+		border: none;
+		border-radius: var(--r-pill);
+		cursor: pointer;
+	}
+
+	/* ── Verify code entry (add-verifying) ── */
+	.affil-picker-verify {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.7rem;
+		padding: 0.6rem 0 0.2rem;
+		text-align: center;
+	}
+
+	.affil-picker-mail-icon {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 56px;
+		height: 56px;
+		color: var(--laurel);
+		background: color-mix(in srgb, var(--laurel) 10%, transparent);
+		border: 1px solid color-mix(in srgb, var(--laurel) 30%, transparent);
+		border-radius: var(--r-pill);
+	}
+
+	.affil-picker-mail-title {
+		margin: 0;
+		font-size: var(--t-20, 1.25rem);
+		color: var(--text-base);
+		overflow-wrap: anywhere;
+	}
+
+	.affil-picker-mail-body {
+		margin: 0;
+		max-width: 32ch;
+		font-size: var(--t-13);
+		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
+	.affil-picker-code {
+		width: 100%;
+		max-width: 240px;
+		box-sizing: border-box;
+		padding: 0.85rem;
+		font-size: 1.75rem;
+		font-weight: 600;
+		letter-spacing: 0.3em;
+		text-align: center;
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		outline: none;
+	}
+
+	/* ── CTAs ── */
 	.affil-picker-error {
 		margin: 0;
 		padding: 0.6rem 0.85rem;
@@ -607,6 +1637,24 @@
 	}
 
 	.affil-picker-cta:disabled {
+		opacity: 0.45;
+		cursor: not-allowed;
+	}
+
+	.affil-picker-foot-link {
+		appearance: none;
+		width: 100%;
+		padding: 0.25rem 0 0;
+		font: inherit;
+		font-size: var(--t-12);
+		color: var(--text-muted);
+		background: none;
+		border: none;
+		text-align: center;
+		cursor: pointer;
+	}
+
+	.affil-picker-foot-link:disabled {
 		opacity: 0.45;
 		cursor: not-allowed;
 	}
