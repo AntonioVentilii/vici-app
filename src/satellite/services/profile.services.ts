@@ -2,7 +2,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
-import { isNullish } from '@dfinity/utils';
+import { isNullish, nonNullish } from '@dfinity/utils';
 import type { AssertSetDocContext } from '@junobuild/functions';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
@@ -83,11 +83,29 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		archetype: profile.archetype ?? '',
 		interests: profile.interests ?? [],
 		lastActiveDay: profile.lastActiveDay,
+		// Forward the soft-delete marker verbatim (Delete account v2). It's
+		// `optional()` in the schema, so an absent value stays absent (active
+		// account) and a present value round-trips unchanged.
+		deletedAtMs: profile.deletedAtMs,
 		unlockedAchievements: profile.unlockedAchievements ?? [],
 		contrarianWins: profile.contrarianWins ?? 0,
 		preferences: sanitizedPreferences
 	};
 };
+
+/**
+ * A profile is soft-deleted (Delete account v2) iff `deletedAtMs` is
+ * present. Absence is the meaningful "active account" state — see the
+ * field comment in `src/lib/schema/profile.schema.ts`. Used by the
+ * PUBLIC profile reads to make a deleted user disappear from
+ * leaderboard / search / direct lookup. `getProfile` additionally lets
+ * the owner read their own soft-deleted doc (it knows the caller and the
+ * looked-up principal), and the owner's raw read via Juno `getDoc` is
+ * also never gated — both so the FE can still offer recovery within the
+ * window.
+ */
+export const isSoftDeleted = (profile: Pick<UserProfile, 'deletedAtMs'>): boolean =>
+	nonNullish(profile.deletedAtMs);
 
 export const getProfile = (principal: PrincipalText): UserProfile | undefined => {
 	const caller = msgCaller();
@@ -103,6 +121,14 @@ export const getProfile = (principal: PrincipalText): UserProfile | undefined =>
 	}
 
 	const profile = decodeDocData<UserProfile>(profileDoc.data);
+
+	// Soft-deleted accounts are invisible to OTHER callers, but the owner
+	// can always read their own (possibly soft-deleted) doc — the FE relies
+	// on this to drive recovery within the window, so the query must agree
+	// with the raw Juno `getDoc` path instead of hiding it only there.
+	if (isSoftDeleted(profile) && caller.toText() !== principal) {
+		return;
+	}
 
 	const roleDoc = getDocStore({
 		collection: Collection.ROLES,
@@ -127,25 +153,30 @@ export const searchProfiles = (query: string): UserProfile[] => {
 		params: {}
 	});
 
-	return items
-		.map(([_, item]) => {
-			const profile = decodeDocData<UserProfile>(item.data);
-			const roleDoc = getDocStore({
-				collection: Collection.ROLES,
-				key: profile.owner,
-				caller
-			});
+	return (
+		items
+			.map(([_, item]) => decodeDocData<UserProfile>(item.data))
+			// Public search: soft-deleted accounts are invisible (Delete
+			// account v2). Drop them before the role lookup + hydrate.
+			.filter((profile) => !isSoftDeleted(profile))
+			.map((profile) => {
+				const roleDoc = getDocStore({
+					collection: Collection.ROLES,
+					key: profile.owner,
+					caller
+				});
 
-			return withProfileDefaults({
-				...profile,
-				role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
-			});
-		})
-		.filter((p) => {
-			const matches = [p.nickname, p.owner].some((val) => val.toLowerCase().includes(lowerQuery));
+				return withProfileDefaults({
+					...profile,
+					role: roleDoc ? decodeDocData<{ role: UserRole }>(roleDoc.data).role : undefined
+				});
+			})
+			.filter((p) => {
+				const matches = [p.nickname, p.owner].some((val) => val.toLowerCase().includes(lowerQuery));
 
-			return matches;
-		});
+				return matches;
+			})
+	);
 };
 
 /**

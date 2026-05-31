@@ -17,7 +17,12 @@ import {
 	RedeemReferralCodeArgsSchema
 } from '$lib/schema/referral.schema';
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
-import { deleteMyAccountFn, listMyBlockingLeaguesFn } from '$satellite/services/account.services';
+import {
+	deleteMyAccountFn,
+	listMyBlockingLeaguesFn,
+	recoverMyAccountFn,
+	sweepExpiredDeletionsFn
+} from '$satellite/services/account.services';
 import {
 	assertSetAffiliationStats,
 	onProfileSetForAffiliationStats
@@ -581,13 +586,13 @@ export const listMyBlockingLeagues = defineQuery({
 	handler: listMyBlockingLeaguesFn
 });
 
-// Account deletion — the deletion itself. Writes an anonymous
-// `EXIT_SIGNALS` doc, then cascades hard-deletes for the caller's
-// profile + identity-keyed rows (VXP awards / onboarding, referral
-// code + redemption, affiliations, relations, league memberships,
-// owned-empty leagues). Shared audit rows (activities, battles,
-// comments) are left in place — the principal is gone so they're
-// orphaned but immutable.
+// Account deletion — the deletion itself (Delete account v2). Writes
+// an anonymous `EXIT_SIGNALS` doc, then SOFT-deletes the caller's
+// profile (`deletedAtMs = now`). No data is removed — the account can
+// be recovered via `recoverMyAccount` within the recovery window; past
+// the window it's hard-deleted (on a late recovery attempt or by the
+// admin `sweepExpiredDeletions`). The handle stays reserved because the
+// profile (and its nickname) is retained.
 //
 // Returns `ok: false` with `reason: 'owns_non_empty_league'` when
 // the caller still owns a league with other members; the FE
@@ -601,9 +606,32 @@ export const deleteMyAccount = defineUpdate({
 		ok: j.boolean(),
 		reason: j.optional(j.enum(['owns_non_empty_league', 'invalid_input'])),
 		blockingLeagueIds: j.optional(j.array(j.string())),
-		docsDeleted: j.optional(j.number())
+		softDeleted: j.optional(j.boolean())
 	}),
 	handler: deleteMyAccountFn
+});
+
+// Account recovery (Delete account v2). Clears the caller's own
+// `deletedAtMs` when still inside the recovery window; a no-op for an
+// account that isn't soft-deleted; hard-deletes + refuses with
+// `reason: 'expired'` when the window has elapsed.
+export const recoverMyAccount = defineUpdate({
+	result: j.strictObject({
+		ok: j.boolean(),
+		recovered: j.optional(j.boolean()),
+		reason: j.optional(j.enum(['expired']))
+	}),
+	handler: recoverMyAccountFn
+});
+
+// Admin sweep (Delete account v2). Hard-deletes every soft-deleted
+// account whose recovery window has elapsed. Admin-guarded; Juno has no
+// scheduler so this is triggered externally (admin/cron).
+export const sweepExpiredDeletions = defineUpdate({
+	result: j.strictObject({
+		swept: j.number()
+	}),
+	handler: sweepExpiredDeletionsFn
 });
 
 // Monthly tournament — Proposal 3. The draw is fire-and-forget on
