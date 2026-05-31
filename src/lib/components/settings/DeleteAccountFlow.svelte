@@ -2,6 +2,7 @@
 	import { ArrowRight, Check } from 'lucide-svelte/icons';
 	import { onMount, tick } from 'svelte';
 	import { get } from 'svelte/store';
+	import { browser } from '$app/environment';
 	import type { ClearingDid } from '$declarations';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
@@ -23,6 +24,7 @@
 	import type { ButtonStatus } from '$lib/types/components';
 	import { EXIT_SIGNAL_NOTE_MAX_LENGTH, type ExitSignalReason } from '$lib/types/exit-signal';
 	import type { LeagueMemberDoc } from '$lib/types/league-member';
+	import { createFocusTrap, type FocusTrap } from '$lib/utils/focus-trap.utils';
 	import { shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
@@ -129,6 +131,10 @@
 	let errorKey = $state<MessageKey | null>(null);
 	let errorParams = $state<Record<string, string | number> | undefined>(undefined);
 	let confirmInputEl = $state<HTMLInputElement | undefined>();
+
+	// Gone takeover — focus trap
+	let goneDialogEl = $state<HTMLDivElement | undefined>();
+	let goneTrap: FocusTrap | null = null;
 
 	const handleMatches = $derived(
 		nickname.length > 0 && typedHandle.trim().toLowerCase() === nickname.toLowerCase()
@@ -427,6 +433,31 @@
 		}
 	});
 
+	// Manage the focus trap for the full-bleed "gone" takeover. The dialog
+	// auto-redirects via countdown, so the trap stays active until finish()
+	// clears it and closes the flow. Esc is intentionally not wired here —
+	// the takeover redirects automatically and there is no cancel action.
+	$effect(() => {
+		if (!browser) {
+			return;
+		}
+
+		if (isOpen && step === 'gone' && goneDialogEl) {
+			goneTrap = createFocusTrap(goneDialogEl);
+			goneTrap.activate();
+		} else if (goneTrap) {
+			goneTrap.deactivate();
+			goneTrap = null;
+		}
+
+		return () => {
+			if (goneTrap) {
+				goneTrap.deactivate();
+				goneTrap = null;
+			}
+		};
+	});
+
 	onMount(() => () => clearCountdown());
 </script>
 
@@ -554,7 +585,7 @@
 
 				{#if hasTradeData && activeTradeCount > 0}
 					<li class="del-row">
-						<span class="del-row-icon" aria-hidden="true" data-tone="warn">
+						<span class="del-row-icon" aria-hidden="true" data-tone="danger">
 							<span class="del-row-bang">!</span>
 						</span>
 						<div class="del-row-text">
@@ -574,7 +605,7 @@
 
 				{#if ownedLeagueCount > 0}
 					<li class="del-row">
-						<span class="del-row-icon" aria-hidden="true" data-tone="warn">
+						<span class="del-row-icon" aria-hidden="true" data-tone="danger">
 							<span class="del-row-bang">!</span>
 						</span>
 						<div class="del-row-text">
@@ -852,14 +883,24 @@
 
 {#if isOpen && step === 'gone'}
 	<div class="del-gone-scrim" role="presentation">
-		<div class="del-gone" aria-modal="true" role="dialog" tabindex="-1">
+		<div
+			bind:this={goneDialogEl}
+			class="del-gone"
+			aria-describedby="del-gone-lede"
+			aria-labelledby="del-gone-vale"
+			aria-modal="true"
+			role="dialog"
+			tabindex="-1"
+		>
 			<span class="del-gone-eyebrow">
 				{t({ locale: $localeStore, key: 'settings.delete.gone_eyebrow' })}
 			</span>
-			<p class="del-gone-vale">
+			<p id="del-gone-vale" class="del-gone-vale">
 				{t({ locale: $localeStore, key: 'settings.delete.gone_heading' })}
 			</p>
-			<p class="del-gone-lede">{t({ locale: $localeStore, key: 'settings.delete.gone_body' })}</p>
+			<p id="del-gone-lede" class="del-gone-lede">
+				{t({ locale: $localeStore, key: 'settings.delete.gone_body' })}
+			</p>
 			<p class="del-gone-sub">{t({ locale: $localeStore, key: 'settings.delete.gone_sub' })}</p>
 			<div class="del-gone-recovery">
 				{t({ locale: $localeStore, key: 'settings.delete.gone_recover' })}
@@ -1059,10 +1100,10 @@
 		color: var(--yes);
 	}
 
-	.del-row-icon[data-tone='warn'] {
-		border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
-		background: color-mix(in srgb, var(--accent) 10%, transparent);
-		color: var(--accent);
+	.del-row-icon[data-tone='danger'] {
+		border: 1px solid color-mix(in srgb, var(--danger) 50%, transparent);
+		background: color-mix(in srgb, var(--danger) 10%, transparent);
+		color: var(--danger);
 	}
 
 	.del-row-bang {
