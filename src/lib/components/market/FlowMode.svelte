@@ -9,6 +9,7 @@
 	import FlowBottomBar from '$lib/components/market/FlowBottomBar.svelte';
 	import FlowCard from '$lib/components/market/FlowCard.svelte';
 	import FlowComboBanner from '$lib/components/market/FlowComboBanner.svelte';
+	import FlowDailyCap from '$lib/components/market/FlowDailyCap.svelte';
 	import FlowDeckSkeleton from '$lib/components/market/FlowDeckSkeleton.svelte';
 	import FlowEmptyDeck from '$lib/components/market/FlowEmptyDeck.svelte';
 	import FlowEnd from '$lib/components/market/FlowEnd.svelte';
@@ -21,10 +22,7 @@
 	import SwipeHint from '$lib/components/market/SwipeHint.svelte';
 	import XpToast from '$lib/components/market/XpToast.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
-	import {
-		BASE_XP_PER_PREDICTION,
-		isAccuracyUnlocked
-	} from '$lib/constants/flow-rewards.constants';
+	import { BASE_XP_PER_PREDICTION } from '$lib/constants/flow-rewards.constants';
 	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { isVxpLadderStake, VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
@@ -39,7 +37,6 @@
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
-	import { flowSessionMaxBets, preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { ResolutionRevealData, XpPop, XpPopKind } from '$lib/types/flow';
 	import type { CallSide, FlowAction, Market, MarketId } from '$lib/types/market';
@@ -55,12 +52,30 @@
 	import { flowBeat, flowSummary, flowTick, flowWild } from '$lib/utils/flow-sound.utils';
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
-	import { recordMotionSwipe, type MotionBeatPayload } from '$lib/utils/motion-engine.utils';
+	import {
+		DAILY_HARD_CAP,
+		recordMotionSwipe,
+		type MotionBeatPayload
+	} from '$lib/utils/motion-engine.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
 	import { applyDailyStreakBump, stageForStreak, type FlameStage } from '$lib/utils/streak.utils';
 	import { assertViciXpHumanPremium } from '$lib/utils/trade.utils';
 
-	const maxBets = $derived(flowSessionMaxBets($preferencesStore));
+	// Daily goal — a per-user count of predictions committed today,
+	// hydrated from the profile and rolled over to 0 on a new local day.
+	// The day's target is the standard ten; the user can opt into overtime
+	// (Push-to-15) to extend the SESSION to the daily hard cap. Progress is
+	// capped at 100 % so the bar / percent never overflows.
+	const DAILY_GOAL_TARGET = 10;
+
+	// Session cap — how many calls this run continues to before the FlowEnd
+	// takeover. Starts at the daily ten; the "Push to 15 →" opt-in on FlowEnd
+	// raises it to the daily hard cap (15) so the deck continues into overtime
+	// and the engine's overtime beats (calls 11 / 13 + the overtime-complete
+	// +25 VXP) fire. Replaces the removed session-length preference as the
+	// session ceiling.
+	let sessionTarget = $state(DAILY_GOAL_TARGET);
+	const maxBets = $derived(sessionTarget);
 
 	const resolveFlowCategory = ({
 		categoryId,
@@ -93,24 +108,13 @@
 	const liveDigest = $derived<ResolutionRevealData>($maturedResolutions);
 	let tradeAmount = $state('1.0');
 	let betsCount = $state(0);
+	// VXP locked at risk across this session's calls — the FlowEnd "Called"
+	// stat. Accumulates each committed YES / NO stake; reset on continuation.
+	let sessionStaked = $state(0);
 	let completed = $state(false);
-	// Session-summary metrics. `sessionStartMs` is stamped at mount
-	// AND on every "Predict 10 more" continuation — `const` here would
-	// leak the time the user spent reading the previous FlowEnd into
-	// the next session's duration label. `correctCallsThisSession`
-	// increments each time `alignedWithCrowd` is true on a committed
-	// YES / NO swipe. Together they drive the `You called N markets
-	// in 1m 18s.` line and the SESSION ACC. stat on FlowEnd.
-	let sessionStartMs = $state(Date.now());
-	let correctCallsThisSession = $state(0);
-	// Per-category call counter for this session. Drives the
-	// data-driven Oracle line on FlowEnd ("You were early on {category}")
-	// by surfacing the category the user leaned hardest into. Keyed by
-	// resolved `FlowArtCategory` so `wc` markets are counted under
-	// `wc`, not the underlying tag.
-	let sessionCategoryCalls = $state<Partial<Record<FlowArtCategory, number>>>({});
-	// `nowMs` ticks once per second while the session is in flight so
-	// the duration label updates live before the user finishes.
+	// `nowMs` ticks once per second while the session is in flight so the
+	// daily-goal chip rolls over to 0 the instant a session crosses local
+	// midnight (see the rollover ticker below).
 	let nowMs = $state(Date.now());
 	// `seriesId → MarketTag[]` lookup loaded once on mount; consumed by
 	// the FlowCard render loop to drive the per-card generative artwork
@@ -158,8 +162,10 @@
 	let hasMarkedActiveThisSession = false;
 	// Set on the first swipe of a session that resumes after a broken
 	// streak. Drives the no-shame "comeback" opener (distinct from the
-	// daily welcome-back) in the motion engine for the rest of the session.
-	let isComeback = false;
+	// daily welcome-back) in the motion engine for the rest of the session,
+	// and the FlowEnd "comeback" variant. `$state` so the FlowEnd prop
+	// reactively picks up the mid-session flip.
+	let isComeback = $state(false);
 	let streakBreakBanner = $state<{ stage: FlameStage } | null>(null);
 	let flowPaused = $state(false);
 	let activeMotionBeat = $state<MotionBeatPayload | null>(null);
@@ -205,10 +211,10 @@
 	// sites read the same way.
 	const vibrate = haptic;
 
-	// Session duration ticker. 1 s cadence is plenty — the duration
-	// label renders to seconds (`Xm Ys` / `Ys`) and the user never sees
-	// sub-second precision. Stops when `completed` flips true so the
-	// FlowEnd label freezes at the final value.
+	// Day-rollover ticker. 1 s cadence keeps `nowMs` fresh so the daily-goal
+	// chip rolls over to 0 the moment a session left open crosses local
+	// midnight — without waiting for the next prediction. Stops when
+	// `completed` flips true (the deck is done; the chip no longer updates).
 	$effect(() => {
 		if (completed) {
 			return;
@@ -221,50 +227,19 @@
 		return () => clearInterval(id);
 	});
 
-	const sessionDurationLabel = $derived.by(() => {
-		const secs = Math.max(0, Math.floor((nowMs - sessionStartMs) / 1000));
-		const m = Math.floor(secs / 60);
-		const s = secs % 60;
-
-		return m > 0 ? `${m}m ${s}s` : `${s}s`;
-	});
-
-	const sessionAccuracy = $derived(betsCount > 0 ? correctCallsThisSession / betsCount : 0);
-
-	// Top category by call count this session. Drives the FlowEnd
-	// Oracle line ("You were early on {category}"). Ties resolve to
-	// the first key the user committed in — `Object.entries` preserves
-	// insertion order on the plain object we mutate via spread. Returns
-	// undefined when the user hasn't placed any calls yet so FlowEnd
-	// can fall back to the locale-default accent.
-	const topSessionCategory = $derived.by<FlowArtCategory | undefined>(() => {
-		let best: FlowArtCategory | undefined;
-		let bestCount = 0;
-
-		for (const [cat, count] of Object.entries(sessionCategoryCalls) as Array<
-			[FlowArtCategory, number]
-		>) {
-			if (count > bestCount) {
-				best = cat;
-				bestCount = count;
-			}
-		}
-
-		return best;
-	});
-
-	// Daily goal — a per-user count of predictions committed today,
-	// hydrated from the profile and rolled over to 0 on a new local day.
-	// The target is a client constant; progress is capped at 100 % so the
-	// bar / percent never overflows.
-	const DAILY_GOAL_TARGET = 10;
-	// Roll over against the live `nowMs` tick (not just the stored
-	// values) so a session left open across local midnight resets the
-	// chip to 0 without waiting for the next prediction.
+	// Daily-goal progress for the top-bar chip. Roll over against the live
+	// `nowMs` tick (not just the stored values) so a session left open across
+	// local midnight resets the chip to 0 without waiting for the next
+	// prediction.
 	const dailyGoalDone = $derived(
 		rolloverDailyGoal({ done: dailyGoalCount, date: dailyGoalDate, now: new Date(nowMs) })
 	);
-	const dailyGoalFraction = $derived(DAILY_GOAL_TARGET > 0 ? dailyGoalDone / DAILY_GOAL_TARGET : 0);
+
+	// Daily hard-cap gate — once the day's calls reach the hard cap (15)
+	// across sessions, opening Flow shows a "come back tomorrow" takeover
+	// (not a fresh deck) so the 15/day model holds. Suppressed mid-session
+	// (`betsCount === 0` means this run hasn't placed a call yet).
+	const dailyCapReached = $derived(dailyGoalDone >= DAILY_HARD_CAP);
 
 	onMount(async () => {
 		document.body.classList.add('overflow-hidden');
@@ -504,8 +479,8 @@
 			// on any swipe, YES / NO / SKIP all count at that layer.
 			recordMotionSwipe({
 				side: 'SKIP',
-				dailyDone: dailyGoalCount,
-				dailyTarget: DAILY_GOAL_TARGET,
+				dailyDone: betsCount,
+				dailyTarget: sessionTarget,
 				dailyJustCompleted: false,
 				dayStreak: dailyStreak
 			});
@@ -553,17 +528,22 @@
 
 		betsCount += 1;
 		streak += 1;
+		// Tally the stake now at risk for the FlowEnd "Called" stat.
+		sessionStaked += Number(tradeAmount) || 0;
 
 		// Daily-goal bump — every committed YES / NO counts toward the
 		// day's goal (skips returned early above). Rolls over to a fresh
-		// day if needed, caps at the target, and persists best-effort so
-		// the running total survives a refresh. The pre-bump count (after
-		// day-rollover) drives the engine's "daily complete" crossing.
-		const previousGoalDone = rolloverDailyGoal({ done: dailyGoalCount, date: dailyGoalDate });
+		// day if needed, caps at the hard cap, and persists best-effort so
+		// the running total survives a refresh. This is the cross-session
+		// streak / hard-cap source; the engine's beat cadence runs off the
+		// per-session counter below.
 		const goalBump = applyDailyGoalBump({
 			done: dailyGoalCount,
 			date: dailyGoalDate,
-			target: DAILY_GOAL_TARGET
+			// Count up to the daily hard cap (15) so the cross-session
+			// "come back tomorrow" gate fires after a full overtime day; the
+			// streak still completes at the daily ten via the streak engine.
+			target: DAILY_HARD_CAP
 		});
 		dailyGoalCount = goalBump.done;
 		dailyGoalDate = goalBump.date;
@@ -583,20 +563,6 @@
 					console.warn('Daily-goal persistence failed (non-fatal):', e);
 				});
 		}
-
-		// Tally this market under its resolved category so the FlowEnd
-		// Oracle line can spotlight whichever category the user leaned
-		// hardest into ("You were early on crypto", etc.).
-		const cat = resolveFlowCategory({
-			categoryId: primaryMarketTag(
-				(marketTagMap[currentMarket.id] ?? []) as ReadonlyArray<MarketTag>
-			),
-			marketId: currentMarket.id
-		});
-		sessionCategoryCalls = {
-			...sessionCategoryCalls,
-			[cat]: (sessionCategoryCalls[cat] ?? 0) + 1
-		};
 
 		const awarded = BASE_XP_PER_PREDICTION * comboMultiplier;
 		xp += awarded;
@@ -620,30 +586,24 @@
 
 		const yesProb = currentMarket.yesProbability ?? 0.5;
 		const isContrarian = yesProb <= 0.25 || yesProb >= 0.75;
-		const alignedWithCrowd =
-			(action === 'YES' && yesProb >= 0.5) || (action === 'NO' && yesProb < 0.5);
 
-		if (alignedWithCrowd) {
-			correctCallsThisSession += 1;
-		}
+		// The motion engine's cadence (rhythm 3 / 5 / 8, overtime 11 / 13, and
+		// the daily / overtime-complete beat) runs off the SESSION counter so
+		// the rhythm and the +5 overtime beats actually fire in order. The
+		// cross-session daily-goal `done` above stays the streak source; the
+		// session cap (`sessionTarget`) is the engine's `dailyTarget`. When the
+		// user opts into Push-to-15, `sessionTarget` becomes `DAILY_HARD_CAP`
+		// (15) so `dailyTarget >= DAILY_HARD_CAP` flips the engine into overtime
+		// — emitting the calls-11 / 13 beats and the overtime-complete +25 VXP.
+		const sessionDone = betsCount; // this swipe included (incremented above)
+		const sessionJustCompleted = sessionDone >= sessionTarget;
 
-		// `dailyDone` is the post-bump count (this swipe included); the
-		// goal crosses the target on the swipe that first reaches it.
-		const dailyJustCompleted =
-			goalBump.done >= DAILY_GOAL_TARGET && previousGoalDone < DAILY_GOAL_TARGET;
-
-		// Overtime beats (ot-11 / ot-13 rhythm + the overtime-complete bonus
-		// at call 15) activate only when `dailyTarget` is raised to
-		// `DAILY_HARD_CAP` (15) via the "Push to 15" opt-in flow. That opt-in
-		// UI is a separate, later chunk — wiring it here is the tracked
-		// follow-up. Until then `dailyTarget = DAILY_GOAL_TARGET` (10) keeps
-		// the engine in the regular daily path.
 		const motion = recordMotionSwipe({
 			side: action,
 			isContrarian,
-			dailyDone: goalBump.done,
-			dailyTarget: DAILY_GOAL_TARGET,
-			dailyJustCompleted,
+			dailyDone: sessionDone,
+			dailyTarget: sessionTarget,
+			dailyJustCompleted: sessionJustCompleted,
 			dayStreak: dailyStreak,
 			isComeback
 			// `lifetimeCalls` intentionally omitted: no real lifetime-call
@@ -770,6 +730,26 @@
 		}
 	};
 
+	// Whether the session ran into overtime — the cap was raised to the daily
+	// hard cap (15) via Push-to-15. Drives the FlowEnd "overtime" variant.
+	const overtimeSession = $derived(sessionTarget >= DAILY_HARD_CAP);
+
+	// Push-to-15 is offered only on a regular (non-overtime) day that still
+	// has deck inventory to continue into — never once the hard cap is in
+	// play. `betsCount` reached `sessionTarget` (10) for FlowEnd to show.
+	const canExtend = $derived(!overtimeSession && currentIndex < markets.length - 1);
+
+	// "Push to 15 →" — raise the session cap to the daily hard cap, dismiss
+	// the takeover, and rise the next card so the same deck continues into
+	// overtime (the engine's calls-11 / 13 + overtime-complete beats fire as
+	// the session counter climbs). XP / staked / streak carry over — the run
+	// is the same session, just longer.
+	const handleExtend = () => {
+		sessionTarget = DAILY_HARD_CAP;
+		completed = false;
+		currentIndex += 1;
+	};
+
 	const backToMarkets = () => {
 		goto(resolve(AppPath.Home));
 	};
@@ -785,53 +765,11 @@
 		entered = true;
 	};
 
-	// "Predict 10 more" CTA on FlowEnd — rebuilds a fresh deck and
-	// zeroes the in-session counters. The lifetime / motion-engine
-	// state stays untouched (it tracks across sessions). XP earned in
-	// the prior session has already been credited via the trade flow,
-	// so we don't re-award it.
-	const handleContinueSession = async () => {
-		const expectedTag = $featuredEventActive ? $featuredEvent.categoryTag : undefined;
-		const excluded = markets.slice(0, currentIndex + 1).map((m) => m.id);
-
-		completed = false;
-		loading = true;
-
-		try {
-			const prepared = await prepareFlow({
-				domain: $balanceDomain,
-				featuredEventTag: expectedTag,
-				signedIn: nonNullish($userStore.user),
-				exclude: excluded
-			});
-
-			({
-				markets,
-				tagMap: marketTagMap,
-				metadataById: marketMetadataMap,
-				signals: userSignals
-			} = prepared);
-			currentIndex = 0;
-			betsCount = 0;
-			correctCallsThisSession = 0;
-			sessionCategoryCalls = {};
-			xp = 0;
-			streak = 0;
-			lastStreakShown = 0;
-			// Reset BOTH the start and the now-tick — otherwise the next
-			// FlowEnd's duration_line measures from the original mount,
-			// including the time spent reading the previous FlowEnd.
-			sessionStartMs = Date.now();
-			nowMs = sessionStartMs;
-		} catch (e: unknown) {
-			console.error('Failed to refresh Flow deck', e);
-		} finally {
-			loading = false;
-		}
-	};
-
-	const handleSeePortfolio = () => {
-		goto(resolve(AppPath.Portfolio));
+	// "Back to dashboard →" — close the takeover and return to the
+	// dashboard. The session's calls are already placed (the FlowEnd is a
+	// summary, not a commit step); this only picks where the user goes next.
+	const handleClose = () => {
+		goto(resolve(AppPath.Dash));
 	};
 
 	// The back-face peg-rail owns stake selection on the VXP balance
@@ -887,14 +825,6 @@
 		trickstered.add(m.id);
 	});
 
-	// Accuracy is gated until the user has enough lifetime calls for
-	// the percentage to mean anything. Below the gate the FlowEnd
-	// summary surfaces the lifetime call count instead — calls + streak
-	// are the publicly visible stats.
-	const lifetimeTotalTrades = $derived($userStore.profile?.totalTrades ?? 0);
-	const lifetimeAccuracy = $derived($userStore.profile?.accuracy ?? 0);
-	const accuracyUnlocked = $derived(isAccuracyUnlocked(lifetimeTotalTrades));
-
 	// Top bar deck-scope label: when the featured event is active the
 	// deck is filtered to it (e.g. "WORLD CUP"); otherwise fall back
 	// to a neutral all-markets label. Prefers `shortTitle` over
@@ -929,25 +859,20 @@
 		</div>
 	{:else if markets.length === 0}
 		<FlowEmptyDeck onBackToMarkets={backToMarkets} />
+	{:else if dailyCapReached && betsCount === 0}
+		<!-- Daily hard cap already met today (across sessions). Opening Flow
+		     shows the "come back tomorrow" takeover, not a fresh deck. -->
+		<FlowDailyCap hardCap={DAILY_HARD_CAP} onClose={handleClose} />
 	{:else if completed}
 		<FlowEnd
-			{accuracyUnlocked}
-			archetype={$userStore.profile?.archetype}
-			{betsCount}
-			{dailyGoalDone}
-			{dailyGoalFraction}
-			dailyGoalTarget={DAILY_GOAL_TARGET}
-			{dailyStreak}
-			{flameStage}
-			{lifetimeAccuracy}
-			{lifetimeTotalTrades}
-			onBackToMarkets={backToMarkets}
-			onContinueSession={handleContinueSession}
-			onSeePortfolio={handleSeePortfolio}
-			{sessionAccuracy}
-			{sessionDurationLabel}
-			{topSessionCategory}
-			{xp}
+			{canExtend}
+			comeback={isComeback}
+			onClose={handleClose}
+			onExtend={handleExtend}
+			overtime={overtimeSession}
+			pending={betsCount}
+			staked={sessionStaked}
+			streak={dailyStreak}
 		/>
 	{:else}
 		<!-- Persistent Flow header: VICI wordmark + deck-scope chip +

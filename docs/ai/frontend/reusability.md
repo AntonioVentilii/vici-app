@@ -39,32 +39,33 @@
 
 ### UI primitives — `$lib/components/ui/`
 
-| Component         | Use it for                                                      |
-| ----------------- | --------------------------------------------------------------- |
-| `Backdrop`        | Modal / dialog backdrop.                                        |
-| `Badge`           | Small inline status / count chip.                               |
-| `Banner`          | Page-level info / warning banners.                              |
-| `BaseButton`      | Unstyled button base; prefer `Button` for app-styled CTAs.      |
-| `Button`          | Default app button. Variants via props.                         |
-| `Card`            | Glass-card surface. Don't roll your own.                        |
-| `CopyableAddress` | Clipboard-copy address surface.                                 |
-| `Delete`          | Inline delete control.                                          |
-| `Dialog`          | Modal dialog primitive.                                         |
-| `EmptyState`      | List/empty placeholder.                                         |
-| `InfiniteScroll`  | Pagination by scroll.                                           |
-| `LoadingSpinner`  | Spinner. For full-region loading prefer a `loaders/` block.     |
-| `Modal`           | Modal shell with close handling.                                |
-| `Notifications`   | Toast/notification surface.                                     |
-| `NotifBell`       | Bell button + unread red-dot; opens the inbox. Drop in headers. |
-| `NotifToastHost`  | Slide-in inbox toast; mount once at the app-shell level.        |
-| `Pagination`      | Themed page navigator for tables and lists.                     |
-| `PopOver`         | Anchored popover.                                               |
-| `PrincipalText`   | Render an IC principal in the standard format.                  |
-| `SectionHeader`   | Section header w/ tokens.                                       |
-| `Switch`          | On/off toggle.                                                  |
-| `Table`           | Themed data table.                                              |
-| `Tabs`            | Tab strip.                                                      |
-| `YouBadge`        | "You" callout next to a profile.                                |
+| Component         | Use it for                                                                                                                           |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| `Backdrop`        | Modal / dialog backdrop.                                                                                                             |
+| `Badge`           | Small inline status / count chip.                                                                                                    |
+| `Banner`          | Page-level info / warning banners.                                                                                                   |
+| `BaseButton`      | Unstyled button base; prefer `Button` for app-styled CTAs.                                                                           |
+| `Button`          | Default app button. Variants via props.                                                                                              |
+| `Card`            | Glass-card surface. Don't roll your own.                                                                                             |
+| `CopyableAddress` | Clipboard-copy address surface.                                                                                                      |
+| `CountUp`         | Eased number count-up (cubic ease-out); reduced-motion jumps to final. Use for celebratory figures (FlowEnd "Called", reward chips). |
+| `Delete`          | Inline delete control.                                                                                                               |
+| `Dialog`          | Modal dialog primitive.                                                                                                              |
+| `EmptyState`      | List/empty placeholder.                                                                                                              |
+| `InfiniteScroll`  | Pagination by scroll.                                                                                                                |
+| `LoadingSpinner`  | Spinner. For full-region loading prefer a `loaders/` block.                                                                          |
+| `Modal`           | Modal shell with close handling.                                                                                                     |
+| `Notifications`   | Toast/notification surface.                                                                                                          |
+| `NotifBell`       | Bell button + unread red-dot; opens the inbox. Drop in headers.                                                                      |
+| `NotifToastHost`  | Slide-in inbox toast; mount once at the app-shell level.                                                                             |
+| `Pagination`      | Themed page navigator for tables and lists.                                                                                          |
+| `PopOver`         | Anchored popover.                                                                                                                    |
+| `PrincipalText`   | Render an IC principal in the standard format.                                                                                       |
+| `SectionHeader`   | Section header w/ tokens.                                                                                                            |
+| `Switch`          | On/off toggle.                                                                                                                       |
+| `Table`           | Themed data table.                                                                                                                   |
+| `Tabs`            | Tab strip.                                                                                                                           |
+| `YouBadge`        | "You" callout next to a profile.                                                                                                     |
 
 ### Layout chrome — `$lib/components/layout/`
 
