@@ -40,12 +40,19 @@
 
 	// Count-up the net VXP (eased). Reduced-motion users get the final value.
 	let shown = $state(0);
+	// Set to the final value once the count-up completes; a visually-hidden
+	// aria-live node reads this once so screen-reader users hear the final
+	// amount rather than every intermediate frame.
+	let announcedVxp = $state('');
 
 	onMount(() => {
 		const target = Math.abs(data.netVxp);
+		const sign = data.netVxp >= 0 ? '+' : '−';
+		const vxpLabel = t({ locale: $localeStore, key: 'flow.reso.vxp' });
 
 		if (prefersReducedMotion() || target === 0) {
 			shown = target;
+			announcedVxp = `${sign}${target} ${vxpLabel}`;
 		} else {
 			let raf: number;
 			const start = performance.now();
@@ -57,6 +64,9 @@
 
 				if (p < 1) {
 					raf = requestAnimationFrame(tick);
+				} else {
+					// Count-up done — announce the final value once.
+					announcedVxp = `${sign}${target} ${vxpLabel}`;
 				}
 			};
 
@@ -99,8 +109,15 @@
 <div
 	class="reso-reveal"
 	aria-label={t({ locale: $localeStore, key: 'flow.reso.aria_label' })}
+	aria-modal="true"
 	role="dialog"
+	tabindex="-1"
 >
+	<!-- Visually-hidden live region: announces the final net-VXP value once
+	     the count-up completes. Kept separate from the animating number so
+	     the screen reader is not called for every intermediate frame. -->
+	<span class="sr-only" aria-atomic="true" aria-live="polite">{announcedVxp}</span>
+
 	{#if celebrate && positive}
 		<div class="reso-glow" aria-hidden="true"></div>
 		<div class="reso-burst is-win" aria-hidden="true">
@@ -110,7 +127,7 @@
 		</div>
 	{/if}
 
-	<div class="reso-reveal-card" aria-live="polite">
+	<div class="reso-reveal-card">
 		<span class="eyebrow mute">{t({ locale: $localeStore, key: 'flow.reso.eyebrow' })}</span>
 		<div class="reso-reveal-char">
 			{#if positive}
@@ -134,14 +151,27 @@
 			<span class="loss"
 				><b>{data.losses}</b> {t({ locale: $localeStore, key: 'flow.reso.missed' })}</span
 			>
+			{#if data.neutrals > 0}
+				<span class="reso-dot">·</span>
+				<span class="neutral"
+					><b>{data.neutrals}</b> {t({ locale: $localeStore, key: 'flow.reso.neutral' })}</span
+				>
+			{/if}
 		</div>
 		<div class="reso-list">
 			{#each preview as it, i (it.eventId)}
-				<div style={it.won ? `--ri: ${i}` : undefined} class="reso-row{it.won ? ' is-win' : ''}">
+				<div
+					style={it.result === 'won' ? `--ri: ${i}` : undefined}
+					class="reso-row{it.result === 'won'
+						? ' is-win'
+						: it.result === 'neutral'
+							? ' is-neutral'
+							: ''}"
+				>
 					<span class="reso-row-side {it.sideKey}">{it.side}</span>
 					<span class="reso-row-q">{it.question}</span>
-					<span class="reso-row-out num {it.won ? 'win' : 'loss'}">
-						{it.won ? `+${it.net}` : `−${Math.abs(it.net)}`}
+					<span class="reso-row-out num {it.result}">
+						{it.net > 0 ? `+${it.net}` : it.net < 0 ? `−${Math.abs(it.net)}` : '0'}
 					</span>
 				</div>
 			{/each}

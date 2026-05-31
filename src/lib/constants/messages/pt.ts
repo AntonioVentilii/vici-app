@@ -120,6 +120,7 @@ export const ptMessages = {
 	'flow.reso.vxp': 'VXP',
 	'flow.reso.correct': 'corretas',
 	'flow.reso.missed': 'perdidas',
+	'flow.reso.neutral': 'neutras',
 	'flow.reso.more': '+{count} mais na sua carteira',
 	'flow.reso.cta_review': 'Ver no Painel →',
 	'flow.reso.cta_dismiss': 'Voltar ao baralho →',

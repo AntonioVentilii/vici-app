@@ -119,6 +119,7 @@ export const frMessages = {
 	'flow.reso.vxp': 'VXP',
 	'flow.reso.correct': 'corrects',
 	'flow.reso.missed': 'manqués',
+	'flow.reso.neutral': 'neutre',
 	'flow.reso.more': '+{count} de plus dans ton portefeuille',
 	'flow.reso.cta_review': 'Voir dans le tableau de bord →',
 	'flow.reso.cta_dismiss': 'Retour au deck →',

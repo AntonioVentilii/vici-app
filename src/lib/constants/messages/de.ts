@@ -121,6 +121,7 @@ export const deMessages = {
 	'flow.reso.vxp': 'VXP',
 	'flow.reso.correct': 'richtig',
 	'flow.reso.missed': 'verpasst',
+	'flow.reso.neutral': 'neutral',
 	'flow.reso.more': '+{count} weitere in deinem Portfolio',
 	'flow.reso.cta_review': 'Im Dashboard ansehen →',
 	'flow.reso.cta_dismiss': 'Zurück zum Deck →',

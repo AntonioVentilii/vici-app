@@ -293,19 +293,22 @@ export const maturedResolutions: Readable<ResolutionRevealData> = derived(
 				question: market?.title ?? t({ locale: $locale, key: 'portfolio.unknown_market' }),
 				side: label,
 				sideKey,
+				result: entry.result,
 				won: entry.result === 'won',
 				net
 			};
 		});
 
-		const wins = items.filter((it) => it.won).length;
+		const wins = items.filter((it) => it.result === 'won').length;
+		const neutrals = items.filter((it) => it.result === 'neutral').length;
 		const netVxp = items.reduce((sum, it) => sum + it.net, 0);
 
 		return {
 			items,
 			count: items.length,
 			wins,
-			losses: items.length - wins,
+			losses: items.length - wins - neutrals,
+			neutrals,
 			netVxp
 		};
 	}

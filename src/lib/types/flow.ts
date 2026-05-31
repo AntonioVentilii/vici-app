@@ -5,9 +5,11 @@ export type XpPopKind = 'normal' | 'bonus';
 /**
  * One settled call in the "while you were away" digest — a row in the Flow
  * entry recap and the {@link ResolutionRevealData} list. `side` is the side
- * the user held ('YES' / 'NO' / a categorical outcome title), `won` reflects
- * the realized outcome, and `net` is the realized VXP cashflow (positive on a
- * win, negative on a loss) already scaled to whole VXP.
+ * the user held ('YES' / 'NO' / a categorical outcome title), `result` is the
+ * tri-state outcome ('won' | 'lost' | 'neutral'), and `net` is the realized
+ * VXP cashflow (positive on a win, zero on neutral, negative on a loss)
+ * already scaled to whole VXP. `won` is kept as a convenience alias
+ * (`result === 'won'`) for templates that only branch on won vs. not-won.
  */
 export interface ResolutionItem {
 	eventId: bigint;
@@ -15,6 +17,8 @@ export interface ResolutionItem {
 	question: string;
 	side: string;
 	sideKey: 'yes' | 'no' | 'hold';
+	result: 'won' | 'lost' | 'neutral';
+	/** Convenience alias for `result === 'won'`. */
 	won: boolean;
 	net: number;
 }
@@ -31,6 +35,7 @@ export interface ResolutionRevealData {
 	count: number;
 	wins: number;
 	losses: number;
+	neutrals: number;
 	netVxp: number;
 }
 

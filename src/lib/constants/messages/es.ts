@@ -119,6 +119,7 @@ export const esMessages = {
 	'flow.reso.vxp': 'VXP',
 	'flow.reso.correct': 'acertadas',
 	'flow.reso.missed': 'falladas',
+	'flow.reso.neutral': 'neutral',
 	'flow.reso.more': '+{count} más en tu cartera',
 	'flow.reso.cta_review': 'Ver en el Panel →',
 	'flow.reso.cta_dismiss': 'Volver a la baraja →',

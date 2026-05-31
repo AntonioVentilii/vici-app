@@ -120,6 +120,7 @@ export const itMessages = {
 	'flow.reso.vxp': 'VXP',
 	'flow.reso.correct': 'corrette',
 	'flow.reso.missed': 'mancate',
+	'flow.reso.neutral': 'neutrali',
 	'flow.reso.more': '+{count} altre nel tuo portafoglio',
 	'flow.reso.cta_review': 'Vedi nella Dashboard →',
 	'flow.reso.cta_dismiss': 'Torna al mazzo →',

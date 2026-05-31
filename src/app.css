@@ -4415,11 +4415,18 @@ html[data-app='1'] body {
 	height: 7px;
 	border-radius: 50%;
 }
+.flow-loading .resdot.won {
+	background: var(--yes);
+}
 .flow-loading .resdot.win {
 	background: var(--yes);
 }
+.flow-loading .resdot.lost,
 .flow-loading .resdot.loss {
 	background: color-mix(in srgb, var(--no) 80%, transparent);
+}
+.flow-loading .resdot.neutral {
+	background: var(--parchment-mute);
 }
 .flow-loading .resq {
 	flex: 1;
@@ -4437,10 +4444,15 @@ html[data-app='1'] body {
 	font-weight: 700;
 	font-size: 12px;
 }
+.flow-loading .resv.won,
 .flow-loading .resv.win {
 	color: var(--yes);
 }
+.flow-loading .resv.lost,
 .flow-loading .resv.loss {
+	color: var(--parchment-mute);
+}
+.flow-loading .resv.neutral {
 	color: var(--parchment-mute);
 }
 .flow-loading .away-burst {
@@ -4560,6 +4572,7 @@ html[data-app='1'] body {
 	justify-content: center;
 	padding: 24px;
 	background: rgba(14, 13, 11, 0.66);
+	-webkit-backdrop-filter: blur(10px);
 	backdrop-filter: blur(10px);
 	opacity: 1;
 	animation: reso-overlay-in 200ms var(--ease-vici);
@@ -4641,6 +4654,9 @@ html[data-app='1'] body {
 .reso-net.loss {
 	color: var(--no);
 }
+.reso-net.neutral {
+	color: var(--parchment-mute);
+}
 .reso-tally {
 	display: inline-flex;
 	align-items: center;
@@ -4656,6 +4672,9 @@ html[data-app='1'] body {
 }
 .reso-tally .loss b {
 	color: var(--no);
+}
+.reso-tally .neutral b {
+	color: var(--parchment-mute);
 }
 .reso-tally .reso-dot {
 	opacity: 0.5;
@@ -4712,11 +4731,16 @@ html[data-app='1'] body {
 	font-size: var(--text-eyebrow);
 	font-weight: 700;
 }
+.reso-row-out.won,
 .reso-row-out.win {
 	color: var(--yes);
 }
+.reso-row-out.lost,
 .reso-row-out.loss {
 	color: var(--no);
+}
+.reso-row-out.neutral {
+	color: var(--parchment-mute);
 }
 .reso-more {
 	font-size: var(--text-micro);

@@ -120,6 +120,7 @@ export const enMessages = {
 	'flow.reso.vxp': 'VXP',
 	'flow.reso.correct': 'correct',
 	'flow.reso.missed': 'missed',
+	'flow.reso.neutral': 'neutral',
 	'flow.reso.more': '+{count} more in your portfolio',
 	'flow.reso.cta_review': 'View in Dashboard →',
 	'flow.reso.cta_dismiss': 'Back to the deck →',

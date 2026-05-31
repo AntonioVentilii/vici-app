@@ -85,9 +85,14 @@
 		);
 
 		// Reveal cue: a celebratory chime for a net gain, a soft single tone
-		// for a loss. Suppressed under reduced motion.
+		// for a loss. Suppressed under reduced motion. Stored so it can be
+		// cancelled on unmount if the user navigates before the 360 ms fire.
+		let audioCue: ReturnType<typeof setTimeout> | undefined;
+
 		if (hasDigest && !reduce) {
-			setTimeout(() => {
+			audioCue = setTimeout(() => {
+				audioCue = undefined;
+
 				if (positive) {
 					flowSummary();
 				} else {
@@ -99,6 +104,7 @@
 		return () => {
 			clearInterval(rot);
 			clearTimeout(arm);
+			clearTimeout(audioCue);
 		};
 	});
 
@@ -152,10 +158,10 @@
 			<div class="reslist">
 				{#each previewItems as it (it.eventId)}
 					<div class="resrow">
-						<span class="resdot {it.won ? 'win' : 'loss'}" aria-hidden="true"></span>
+						<span class="resdot {it.result}" aria-hidden="true"></span>
 						<span class="resq">{it.question}</span>
-						<span class="resv {it.won ? 'win' : 'loss'}"
-							>{it.net >= 0 ? '+' : '−'}{Math.abs(it.net)}</span
+						<span class="resv {it.result}"
+							>{it.net > 0 ? '+' : it.net < 0 ? '−' : ''}{Math.abs(it.net)}</span
 						>
 					</div>
 				{/each}

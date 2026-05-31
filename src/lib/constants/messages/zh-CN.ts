@@ -117,6 +117,7 @@ export const zhCnMessages = {
 	'flow.reso.vxp': 'VXP',
 	'flow.reso.correct': '正确',
 	'flow.reso.missed': '失误',
+	'flow.reso.neutral': '中性',
 	'flow.reso.more': '投资组合中还有 +{count} 项',
 	'flow.reso.cta_review': '在仪表板中查看 →',
 	'flow.reso.cta_dismiss': '返回牌组 →',

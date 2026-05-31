@@ -150,13 +150,18 @@
 	// settled since the user last acknowledged them. Tapping opens the
 	// ResolutionReveal overlay; both CTAs acknowledge the batch (clearing
 	// the banner + the bell badge in lockstep via `markResolutionsSeen`)
-	// and only pick where the user goes next. `reveal` holds the frozen
-	// digest snapshot so the count can't blank under the overlay once the
-	// store is cleared.
+	// and only pick where the user goes next.
+	//
+	// `revealSnapshot` is a frozen copy of the digest taken at the moment
+	// the overlay opens. This prevents the card contents from blanking if
+	// `markResolutionsSeen` clears the store while the overlay is still
+	// visible (e.g. the user is mid-scroll before tapping a CTA).
 	const digest = $derived($maturedResolutions);
 	let revealOpen = $state(false);
+	let revealSnapshot = $state($maturedResolutions);
 
 	const openReveal = () => {
+		revealSnapshot = $maturedResolutions;
 		revealOpen = true;
 	};
 
@@ -889,7 +894,7 @@
      outside PageScaffold so its fixed full-screen overlay isn't clipped by
      the scroll container. -->
 {#if revealOpen}
-	<ResolutionReveal data={digest} onDismiss={onRevealDismiss} onReview={onRevealReview} />
+	<ResolutionReveal data={revealSnapshot} onDismiss={onRevealDismiss} onReview={onRevealReview} />
 {/if}
 
 <style lang="postcss">
