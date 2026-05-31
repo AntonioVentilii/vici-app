@@ -324,6 +324,44 @@ Hooks fire **after** the write, but they can fire more than once
   `engine_sync_error`, …) so operators can grep Juno Console for the
   failure mode without breaking the hook.
 
+## Client-write stats docs + per-row assert (no scheduler)
+
+Some aggregate stats are cheaper to compute on the FE — the client already
+has the source data in memory — than to fan out from a post-write hook. The
+reference shapes are `user_stats` (per-user Dash cache) and
+`user_monthly_stats` (per-user, per-month gameplay counters that back the
+monthly album awards). The pattern:
+
+- **The FE writes its own row.** `calculateAndSyncStats` (which already
+  fetches the user's full clearing history) re-derives the snapshot and
+  `setDoc`s it under a key the caller owns — `user_stats[${owner}]` or
+  `user_monthly_stats[${owner}/${YYYY-MM}]`. No hook, no fan-out.
+- **The assert binds the row to its owner.** `assertSetUserStats` /
+  `assertSetUserMonthlyStats` reject any write whose key (and embedded
+  `owner`) isn't the caller, plus structural sanity (`wins <= calls`,
+  bounded arrays, values in range). It does **not** re-derive the counters
+  from real history — a determined user could inflate their own row. Use
+  this only for **cosmetic** signals (album tiles, Dash cache) with **no VXP
+  payout**; anything that moves real value belongs in a hook or an icdc-core
+  path that the user can't forge.
+- **Lazy month rollover = a new key, not a reset.** Because each month is a
+  distinct doc key, "rolling over" is just writing under the new month's key
+  on the first sync of that month — no scheduler, no in-place reset. A
+  read-side aggregator (`getMonthlyLeaderboardFn`) scans the collection,
+  filters by the `/${monthAnchor}` key suffix, and computes the ranking
+  on read (including an exact median from each row's bounded sample array).
+  Awards are evaluated for the **completed** (prior) month, since the current
+  month is still open.
+- **Bound every array the user controls.** `user_monthly_stats` caps its
+  `monthConsensus` sample array (`MONTHLY_CONSENSUS_LIMIT`), keeping the most
+  recent values; the assert enforces the cap so the doc can't be bloated.
+
+Contrast with the hook-driven fan-out (`onProfileSetForAffiliationStats`,
+`onProfileSetForLeagueStats`): use a hook when **shared** stats (a school /
+league row many users contribute to) must move on the server so no single
+user can forge the aggregate. Use the client-write pattern when the row is
+**owned by one user** and the signal is cosmetic.
+
 ## Soft-delete + lazy hard-delete (no scheduler)
 
 Juno has **no timer primitive**, so any "delete now, purge later"

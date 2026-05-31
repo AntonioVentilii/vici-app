@@ -74,6 +74,10 @@ export const frMessages = {
 	'battles.uni.wc_title_tail': 'Battle',
 	'battles.your_rank': '#{rank} sur {total}',
 	'battles.your_school': 'Ton école · {name}',
+	'achievement.bold_caller.description': 'Meilleure précision sur les outsiders du mois',
+	'achievement.bold_caller.detail':
+		'Terminez le mois avec la meilleure précision parmi celles et ceux qui misent habituellement sur l’outsider — un consensus médian sous 40% sur les camps que vous choisissez. Attribué à la clôture du mois ; en cas d’égalité, l’honneur est partagé.',
+	'achievement.bold_caller.name': 'Voix audacieuse',
 	'achievement.contrarian.name': 'Contrariant',
 	'achievement.first_call.description': 'Faites votre première prédiction',
 	'achievement.first_call.detail':
@@ -95,6 +99,10 @@ export const frMessages = {
 	'achievement.oracle.detail':
 		'Maintiens au moins 80% de précision sur tes 50 derniers pronostics résolus. Le titre Oracle est recalculé chaque jour ; si tu perds en précision, le sticker reste — mais le titre passe à celui qui le détient à ce moment-là.',
 	'achievement.oracle.name': 'Oracle',
+	'achievement.sharpest_eye.description': 'Top-3 de précision du mois',
+	'achievement.sharpest_eye.detail':
+		'Terminez un mois civil dans les trois premiers en précision parmi celles et ceux ayant au moins 30 pronostics résolus. La première place rapporte l’or, la deuxième l’argent, la troisième le bronze — et l’album conserve votre meilleur classement.',
+	'achievement.sharpest_eye.name': 'Œil le plus affûté',
 	'achievement.top_decile.description': '7 jours dans le top 10%',
 	'achievement.top_decile.detail':
 		'Maintiens une position dans le top 10% du classement mondial pendant sept jours consécutifs. Ton rang est vérifié une fois par jour ; si tu passes sous le seuil, la série repart de zéro.',

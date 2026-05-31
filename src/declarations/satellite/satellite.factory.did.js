@@ -207,12 +207,36 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppGetMonthlyLeaderboardArgs = IDL.Record({
+		month_anchor: IDL.Text
+	});
+	const AppGetMonthlyLeaderboardResult = IDL.Record({
+		bold_callers: IDL.Vec(
+			IDL.Record({
+				owner: IDL.Text,
+				month_wins: IDL.Float64,
+				median_consensus: IDL.Float64,
+				month_calls: IDL.Float64,
+				accuracy: IDL.Float64
+			})
+		),
+		items: IDL.Vec(
+			IDL.Record({
+				placement: IDL.Float64,
+				owner: IDL.Text,
+				month_wins: IDL.Float64,
+				month_calls: IDL.Float64,
+				accuracy: IDL.Float64
+			})
+		)
+	});
 	const AppGetMyReferralCodeResult = IDL.Record({ code: IDL.Opt(IDL.Text) });
 	const AppGetProfileArgs = IDL.Record({ principal_str: IDL.Text });
 	const AppGetProfileResult = IDL.Record({
 		profile: IDL.Opt(
 			IDL.Record({
 				pnl: IDL.Float64,
+				sharpest_eye_best_tier: IDL.Opt(IDL.Text),
 				streak: IDL.Float64,
 				top_decile_streak: IDL.Float64,
 				nickname: IDL.Text,
@@ -891,6 +915,11 @@ export const idlFactory = ({ IDL }) => {
 		app_get_market_translation: IDL.Func(
 			[AppGetMarketTranslationArgs],
 			[AppGetMarketTranslationResult],
+			['query']
+		),
+		app_get_monthly_leaderboard: IDL.Func(
+			[AppGetMonthlyLeaderboardArgs],
+			[AppGetMonthlyLeaderboardResult],
 			['query']
 		),
 		app_get_my_referral_code: IDL.Func([], [AppGetMyReferralCodeResult], ['query']),

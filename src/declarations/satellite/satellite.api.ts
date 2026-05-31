@@ -218,6 +218,46 @@ const getMarketTranslation = async (
 	return AppGetMarketTranslationResultSchema.parse(result);
 };
 
+const AppGetMonthlyLeaderboardArgsSchema = j.strictObject({ monthAnchor: j.string() });
+const AppGetMonthlyLeaderboardResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			owner: j.string(),
+			month_calls: j.number(),
+			month_wins: j.number(),
+			accuracy: j.number(),
+			placement: j.number()
+		})
+	),
+	boldCallers: j.array(
+		j.strictObject({
+			owner: j.string(),
+			month_calls: j.number(),
+			month_wins: j.number(),
+			accuracy: j.number(),
+			median_consensus: j.number()
+		})
+	)
+});
+
+const getMonthlyLeaderboard = async (
+	args: j.infer<typeof AppGetMonthlyLeaderboardArgsSchema>
+): Promise<j.infer<typeof AppGetMonthlyLeaderboardResultSchema>> => {
+	const parsedArgs = AppGetMonthlyLeaderboardArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppGetMonthlyLeaderboardArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_get_monthly_leaderboard']>[0];
+
+	const { app_get_monthly_leaderboard } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_get_monthly_leaderboard(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppGetMonthlyLeaderboardResultSchema, value: idlResult });
+	return AppGetMonthlyLeaderboardResultSchema.parse(result);
+};
+
 const AppGetMyReferralCodeResultSchema = j.strictObject({ code: j.optional(j.string()) });
 
 const getMyReferralCode = async (): Promise<j.infer<typeof AppGetMyReferralCodeResultSchema>> => {
@@ -259,6 +299,7 @@ const AppGetProfileResultSchema = j.strictObject({
 			contrarianWins: j.number(),
 			topDecileStreak: j.number(),
 			lastTopDecileDay: j.optional(j.string()),
+			sharpestEyeBestTier: j.optional(j.string()),
 			preferences: j.strictObject({
 				defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }),
 				notify: j.strictObject({
@@ -1368,6 +1409,7 @@ export const functions = {
 	getCurrentTournament,
 	getMarketMetadata,
 	getMarketTranslation,
+	getMonthlyLeaderboard,
 	getMyReferralCode,
 	getProfile,
 	getUserRankAndCount,

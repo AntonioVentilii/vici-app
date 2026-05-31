@@ -101,6 +101,10 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		// unchanged.
 		topDecileStreak: profile.topDecileStreak ?? 0,
 		lastTopDecileDay: profile.lastTopDecileDay,
+		// Best monthly sharpest-eye tier (drives the `sharpest-eye` album
+		// award). `optional()` so an absent value (never placed) round-trips
+		// unchanged.
+		sharpestEyeBestTier: profile.sharpestEyeBestTier,
 		preferences: sanitizedPreferences
 	};
 };
