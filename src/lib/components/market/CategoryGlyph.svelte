@@ -42,6 +42,7 @@
 	$effect(() => {
 		if (prefersReducedMotion()) {
 			elapsed = 0;
+
 			return;
 		}
 
