@@ -468,9 +468,9 @@
 	font-size: 11px;
 }
 
-/* Edge-to-edge MarketArtwork — mirrors the prototype's `bleed` mode
-   (flow.jsx:194-199): negative side margins cancel the body's 20px
-   padding so the artwork extends to the card edges. */
+/* Edge-to-edge MarketArtwork — `bleed` mode: negative side margins
+   cancel the body's 20px padding so the artwork extends to the card
+   edges. */
 .flow-body .flow-art-bleed {
 	position: relative;
 	width: calc(100% + 40px);
