@@ -972,6 +972,19 @@ html[data-app='1'] body {
 	}
 }
 
+/* Archivist chart redraw — line draws in over its cycle */
+@keyframes char-chart {
+	0% {
+		stroke-dasharray: 0 30;
+	}
+	60% {
+		stroke-dasharray: 30 0;
+	}
+	100% {
+		stroke-dasharray: 30 0;
+	}
+}
+
 @keyframes char-pop {
 	0% {
 		opacity: 0;
@@ -987,8 +1000,76 @@ html[data-app='1'] body {
 	}
 }
 
+/* Idle-loop classes for the companion silhouettes. These live globally
+ * (not in each component's scoped <style>) so a single reduced-motion
+ * guard below can silence every character at once and so the class +
+ * its keyframe never drift apart. The character components apply these
+ * class names to the relevant SVG nodes. */
+.char-bob {
+	animation: char-bob 3.2s ease-in-out infinite;
+}
+.char-blink {
+	animation: char-blink 4.2s steps(1, end) infinite;
+	transform-box: fill-box;
+	transform-origin: center;
+}
+.char-pulse {
+	animation: char-pulse 2.4s ease-in-out infinite;
+	transform-box: fill-box;
+	transform-origin: center;
+}
+.char-twinkle {
+	transform-box: fill-box;
+	transform-origin: center;
+}
+.char-twinkle.char-twinkle-a {
+	animation: char-twinkle 3s ease-in-out infinite;
+}
+.char-twinkle.char-twinkle-b {
+	animation: char-twinkle 3s ease-in-out -1.5s infinite;
+}
+.char-ear {
+	animation: char-ear 5s ease-in-out infinite;
+}
+.char-tail {
+	animation: char-tail 2.6s ease-in-out infinite;
+}
+.char-bolt {
+	animation: char-bolt 1.8s steps(1, end) infinite;
+}
+.char-chart {
+	stroke-dasharray: 0 30;
+	animation: char-chart 4s ease-out infinite;
+}
+.char-flicker {
+	animation: char-flicker 0.9s ease-in-out infinite;
+}
+
 .char-pop {
-	animation: char-pop 0.42s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+	animation: char-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.char-bob,
+	.char-blink,
+	.char-pulse,
+	.char-twinkle.char-twinkle-a,
+	.char-twinkle.char-twinkle-b,
+	.char-ear,
+	.char-tail,
+	.char-bolt,
+	.char-chart,
+	.char-flicker,
+	.char-pop {
+		animation: none;
+	}
+
+	/* The chart-redraw base rule leaves the line at `0 30` (undrawn). With
+	 * the animation suppressed, pin it to the fully-drawn state so the
+	 * Archivist chart stays visible for reduced-motion users. */
+	.char-chart {
+		stroke-dasharray: 30 0;
+	}
 }
 
 /* Optical-feedback keyframes — give swipe / award / save
