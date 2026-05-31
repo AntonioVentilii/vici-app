@@ -132,6 +132,7 @@
 </script>
 
 <div
+	style="--motion-beat-out-delay: {isAmbient ? 380 : beat.duration_ms}ms"
 	class="motion-beat is-center motion-beat-{beat.character}"
 	class:is-ambient={isAmbient}
 	aria-live="polite"
@@ -199,14 +200,14 @@
 		animation:
 			motion-beat-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
 			motion-beat-out 320ms ease-in forwards;
-		animation-delay: 0s, 1100ms;
+		animation-delay: 0s, var(--motion-beat-out-delay, 1100ms);
 	}
 
 	.motion-beat.is-ambient {
 		animation:
 			motion-beat-in 280ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
 			motion-beat-out 240ms ease-in forwards;
-		animation-delay: 0s, 380ms;
+		animation-delay: 0s, var(--motion-beat-out-delay, 380ms);
 	}
 
 	@media (prefers-reduced-motion: reduce) {
@@ -216,10 +217,10 @@
 			animation:
 				motion-beat-rm-in 200ms ease forwards,
 				motion-beat-rm-out 200ms ease forwards;
-			animation-delay: 0s, 1100ms;
+			animation-delay: 0s, var(--motion-beat-out-delay, 1100ms);
 		}
 		.motion-beat.is-ambient {
-			animation-delay: 0s, 380ms;
+			animation-delay: 0s, var(--motion-beat-out-delay, 380ms);
 		}
 	}
 	@keyframes motion-beat-rm-in {

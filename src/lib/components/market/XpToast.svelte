@@ -38,7 +38,7 @@
 		}
 	});
 
-	const visible = $derived(side !== 'SKIP');
+	const visible = $derived(side !== 'SKIP' && stake > 0);
 
 	const sideClass = $derived(side === 'YES' ? 'is-yes' : 'is-no');
 	const sideLabel = $derived(

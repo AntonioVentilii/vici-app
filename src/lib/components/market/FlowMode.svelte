@@ -164,17 +164,17 @@
 	let commitToast = $state<CommitToast | null>(null);
 	let commitToastKeySeq = 0;
 
-	// Ambient post-swipe Oracle pop — used for the non-hard-pause path
-	// where the user gets a brief "Nice call · +N VXP" affirmation that
-	// fades on its own ~1.3 s later. Skip commits get the shorter 520 ms
-	// "SKIPPED" chip variant. Hard-pause beats (`motion.beat.hardPause`)
-	// still go through `MotionBeat` so we don't double-stack overlays.
+	// SKIP commit pop — the shorter 520 ms "SKIPPED" chip rendered via
+	// `FlowFeedback`. YES / NO no longer go through this path — they use
+	// `XpToast` + optionally the centered `MotionBeat`. Kept because SKIP
+	// has no XpToast (stake > 0 guard) and no motion beat, so this is the
+	// only visual confirmation that a skip registered.
 	interface ActiveFeedback {
 		result: FlowAction;
 		xp: number;
 		correct: boolean;
 		streakHit: boolean;
-		// monotonic key so consecutive commits remount the component.
+		// monotonic key so consecutive skips remount the component.
 		key: number;
 	}
 	let activeFeedback = $state<ActiveFeedback | null>(null);
@@ -319,6 +319,14 @@
 		document.body.classList.remove('overflow-hidden');
 		void flowTradeService.endSession();
 
+		if (gatingBeatTimer !== null) {
+			clearTimeout(gatingBeatTimer);
+		}
+
+		if (riseResetTimer !== null) {
+			clearTimeout(riseResetTimer);
+		}
+
 		// Promote the pre-built follow-up deck and rebuild a fresh
 		// `next` excluding the markets just shown — re-entering /flow
 		// opens on an unseen deck without a network round-trip.
@@ -371,6 +379,8 @@
 	// slot the character just vacated (not a plain cross-fade). Consumed by
 	// the entering current slot and cleared once its rise has played.
 	let riseNextCard = $state(false);
+	let riseResetTimer: ReturnType<typeof setTimeout> | null = null;
+	let gatingBeatTimer: ReturnType<typeof setTimeout> | null = null;
 
 	const onMotionBeatDone = () => {
 		const wasPaused = flowPaused;
@@ -379,8 +389,14 @@
 
 		if (wasPaused) {
 			riseNextCard = true;
-			setTimeout(() => {
+
+			if (riseResetTimer !== null) {
+				clearTimeout(riseResetTimer);
+			}
+
+			riseResetTimer = setTimeout(() => {
 				riseNextCard = false;
+				riseResetTimer = null;
 			}, 600);
 			finishCommitAdvance();
 		}
@@ -571,14 +587,6 @@
 		const awarded = BASE_XP_PER_PREDICTION * comboMultiplier;
 		xp += awarded;
 
-		// The per-swipe commit pop (`XpToast`, fired below) is the sole
-		// feedback for a plain call. The centered combo pop is reserved for
-		// the streak-multiplier moments (×2 / ×3) so the two surfaces never
-		// double-stack on an ordinary swipe.
-		if (comboMultiplier > 1) {
-			spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
-		}
-
 		// Per-swipe sound cue — one tick per committed call (YES / NO).
 		// SKIP returned early above and is intentionally silent, mirroring
 		// the haptic channel. On iOS Safari (no Vibration API) this tick is
@@ -630,6 +638,19 @@
 			// real seed once the profile/stats doc exposes the count.
 		});
 
+		// Whether this swipe also lands on a gating beat. When it does, the
+		// centered MotionBeat already owns the slot — suppress the centered
+		// combo pop so the two don't stack in the same area.
+		const hasGatingBeat = motion.beat != null && motion.beat.kind !== 'ambient-10';
+
+		// The per-swipe commit pop (`XpToast`, fired below) is the sole
+		// feedback for a plain call. The centered combo pop is reserved for
+		// the streak-multiplier moments (×2 / ×3) when there is NO gating
+		// beat in the same frame — otherwise the two surfaces would stack.
+		if (comboMultiplier > 1 && !hasGatingBeat) {
+			spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
+		}
+
 		if (motion.bonusXp > 0) {
 			xp += motion.bonusXp;
 
@@ -638,13 +659,17 @@
 					? t({ locale: $localeStore, key: motion.beat.copyKey })
 					: undefined;
 
-			spawnXpPop({
-				amount: motion.bonusXp,
-				combo: 1,
-				side: action,
-				kind: 'bonus',
-				copy: popCopy
-			});
+			// Suppress centered bonus pop too when a gating beat will fill
+			// the center; the XpToast bonus chip already carries the amount.
+			if (!hasGatingBeat) {
+				spawnXpPop({
+					amount: motion.bonusXp,
+					combo: 1,
+					side: action,
+					kind: 'bonus',
+					copy: popCopy
+				});
+			}
 		}
 
 		// Per-swipe commit pop — every committed YES / NO. Confirms the
@@ -655,7 +680,7 @@
 		commitToastKeySeq += 1;
 		commitToast = {
 			side: action,
-			stake: Math.round(Number(tradeAmount) || 0),
+			stake: Number(tradeAmount) || 0,
 			bonus: motion.bonusXp,
 			key: commitToastKeySeq
 		};
@@ -696,8 +721,13 @@
 			const gatingBeat = motion.beat;
 			flowPaused = true;
 
-			setTimeout(() => {
+			if (gatingBeatTimer !== null) {
+				clearTimeout(gatingBeatTimer);
+			}
+
+			gatingBeatTimer = setTimeout(() => {
 				activeMotionBeat = gatingBeat;
+				gatingBeatTimer = null;
 			}, 250);
 
 			return;

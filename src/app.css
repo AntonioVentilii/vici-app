@@ -2006,25 +2006,25 @@ html[data-app='1'] body {
 .xp-toast.is-no {
 	left: 22px;
 }
+@keyframes xp-toast-rm {
+	0% {
+		opacity: 0;
+	}
+	12% {
+		opacity: 1;
+	}
+	80% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
 /* Reduced-motion: the spring collapses to a plain hold-then-fade — no
    overshoot, no upward travel. */
 @media (prefers-reduced-motion: reduce) {
 	.xp-toast {
 		animation: xp-toast-rm 1000ms ease forwards;
-	}
-	@keyframes xp-toast-rm {
-		0% {
-			opacity: 0;
-		}
-		12% {
-			opacity: 1;
-		}
-		80% {
-			opacity: 1;
-		}
-		100% {
-			opacity: 0;
-		}
 	}
 }
 
