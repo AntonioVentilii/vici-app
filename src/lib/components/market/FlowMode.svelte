@@ -49,6 +49,7 @@
 		resolveFlowArtCategory,
 		type FlowArtCategory
 	} from '$lib/utils/flow-art.utils';
+	import { flowBeat, flowSummary, flowTick, flowWild } from '$lib/utils/flow-sound.utils';
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { recordMotionSwipe, type MotionBeatPayload } from '$lib/utils/motion-engine.utils';
@@ -547,6 +548,12 @@
 		xp += awarded;
 		spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
 
+		// Per-swipe sound cue — one tick per committed call (YES / NO).
+		// SKIP returned early above and is intentionally silent, mirroring
+		// the haptic channel. On iOS Safari (no Vibration API) this tick is
+		// the only swipe feedback the user gets.
+		flowTick();
+
 		if (streak === 3 || streak === 5 || streak === 10) {
 			const shown = streak;
 			lastStreakShown = shown;
@@ -620,6 +627,18 @@
 			vibrate(beatHaptic);
 		}
 
+		// Beat sound cue — paired with the beat haptic. A wildcard treat
+		// plays the playful arpeggio; otherwise a gating beat (any
+		// non-ambient beat, i.e. one that pauses the deck) plays the bigger
+		// "hard" figure and the ambient `ambient-10` pop plays the soft beat.
+		if (motion.beat) {
+			if (motion.beat.kind === 'wildcard') {
+				flowWild();
+			} else {
+				flowBeat(motion.beat.kind !== 'ambient-10');
+			}
+		}
+
 		// A real beat plays IN THE GAP — the deck holds while the character
 		// is centered. Ambient (`ambient-10`) is a soft pop that never gates.
 		if (motion.beat && motion.beat.kind !== 'ambient-10') {
@@ -654,6 +673,9 @@
 		} else {
 			completed = true;
 			vibrate('celebration');
+			// Session-summary sound cue — the rising four-note chord that
+			// closes out a Flow session, played as FlowEnd takes over.
+			flowSummary();
 		}
 	};
 
