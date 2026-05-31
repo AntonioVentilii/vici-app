@@ -80,9 +80,10 @@
 	--brand-glow: var(--laurel-glow);
 
 	/* Danger ramp — destructive actions (delete, sign-out, form errors).
-	 * Terracotta-based; distinct from the `--no` signal which carries
-	 * prediction NO semantics. */
-	--danger: #b5462c;
+	 * Aliases the terracotta ramp so the two role tokens can't drift;
+	 * distinct from the `--no` signal which carries prediction NO
+	 * semantics. */
+	--danger: var(--terracotta);
 	--danger-deep: #8e3320;
 	--danger-wash: rgba(181, 70, 44, 0.12);
 
@@ -108,10 +109,10 @@
 	--text-muted: var(--parchment-mute);
 	--text-inverse: var(--ink);
 
-	/* Foreground tier aliases — `--fg-dim` / `--fg-faint` were only
-	 * resolvable inside `.lp-root` (via landing.css). App-shell surfaces
-	 * outside that scope reference them too, so expose them at `:root`
-	 * as direct aliases of the parchment tiers. */
+	/* Foreground tier aliases — landing.css already declares `--fg-dim` /
+	 * `--fg-faint` at `:root`, but the app layer shouldn't depend on that
+	 * import to resolve them. Own the aliases here, mapped to the parchment
+	 * tiers. */
 	--fg-dim: var(--parchment-dim);
 	--fg-faint: var(--parchment-faint);
 
@@ -128,9 +129,10 @@
 	--color-accent: var(--laurel);
 	--color-accent-foreground: var(--ink);
 
-	/* Plain `--accent` alias — app-shell surfaces outside `.lp-root`
-	 * reference `var(--accent)` (the landing-scoped bridge does not
-	 * reach them). Mirror the `--color-accent` value here at `:root`. */
+	/* Plain `--accent` alias — app-shell call-sites read `var(--accent)`.
+	 * landing.css already declares it at `:root`, but own it here so the
+	 * app layer doesn't depend on landing.css import order. Mirrors
+	 * `--color-accent`. */
 	--accent: var(--laurel);
 
 	/* Tag accents */
@@ -360,9 +362,9 @@
 	--accent-deep: #8a6915;
 	--accent-glow: rgba(182, 139, 31, 0.18);
 
-	--brand: var(--laurel-deep);
-	--brand-deep: #8a6915;
-	--brand-glow: rgba(182, 139, 31, 0.18);
+	--brand: var(--accent);
+	--brand-deep: var(--accent-deep);
+	--brand-glow: var(--accent-glow);
 
 	--inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 	--inset-hi-strong: inset 0 1px 0 rgba(255, 255, 255, 0.8);
@@ -412,9 +414,9 @@
 	--accent-deep: #8a6915;
 	--accent-glow: rgba(182, 139, 31, 0.18);
 
-	--brand: var(--laurel-deep);
-	--brand-deep: #8a6915;
-	--brand-glow: rgba(182, 139, 31, 0.18);
+	--brand: var(--accent);
+	--brand-deep: var(--accent-deep);
+	--brand-glow: var(--accent-glow);
 
 	--inset-hi: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 	--inset-hi-strong: inset 0 1px 0 rgba(255, 255, 255, 0.85);
