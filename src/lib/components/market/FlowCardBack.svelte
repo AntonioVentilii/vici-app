@@ -40,10 +40,6 @@
 		// Stake-ladder change callback. Fires when a rung or the
 		// native range input changes.
 		onStakeChange?: (next: string) => void;
-		// Lifetime committed-call count. Gates the stake-ladder slider —
-		// it stays hidden until the unlock threshold so new predictors
-		// see one stake, no decision paralysis.
-		lifetimeCalls?: number;
 	}
 
 	const {
@@ -58,8 +54,7 @@
 		onClose,
 		interactive = true,
 		tradeAmount,
-		onStakeChange,
-		lifetimeCalls = 0
+		onStakeChange
 	}: Props = $props();
 
 	const catColor = $derived(tagColor(category));
@@ -79,7 +74,7 @@
 
 		<FlowCommunityRead {crowdPct} {crowdSide} {market} {metadata} />
 
-		<FlowStake {lifetimeCalls} {market} {noPct} {onStakeChange} {tradeAmount} {yesPct} />
+		<FlowStake {market} {noPct} {onStakeChange} {tradeAmount} {yesPct} />
 
 		<FlowWhoCalling {followedLean} {yesPct} />
 

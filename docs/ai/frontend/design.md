@@ -327,14 +327,12 @@ which is the smallest sample where it starts to be meaningful (and
 not noisy). Applies to the FlowEnd summary; should be applied to
 Profile + leaderboard previews on their next pass.
 
-A sibling gate governs the **stake ladder**: below
-`STAKE_LADDER_UNLOCK_CALLS = 50` lifetime calls
-([`vxp-economy.constants.ts`](../../../src/lib/constants/vxp-economy.constants.ts),
-`isStakeLadderUnlocked`), the Flow-card back hides the stake slider and
-the per-call stake stays pinned to the default rung — new predictors see
-one stake, no decision paralysis. In its place the card shows the
-`card.back.stake_locked` line ("N more calls and you can choose your
-rung"). The slider reveals at 50, once sizing is a meaningful choice.
+The **stake ladder** is available to every predictor: the Flow-card back
+shows the per-call stake slider
+([`FlowStake.svelte`](../../../src/lib/components/market/FlowStake.svelte))
+whenever stake controls are wired on the ViciXP domain, starting from the
+`VXP_DEFAULT_STAKE` rung. There is no lifetime-call gate — sizing is
+offered from the first call.
 
 ### 7.6 Negative-state choreography
 
