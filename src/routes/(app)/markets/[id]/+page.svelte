@@ -421,11 +421,13 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0;
-		/* Leave room for the floating CTA bar *and* the navpill it sits
-		   above: navpill reserves `88px + safe-area`, the CTA adds
-		   ~80px on top, so we clear ~168px + safe-area at the bottom so
-		   the last section never sits under either. */
-		padding: 0.25rem 0 calc(env(safe-area-inset-bottom, 0px) + 10.5rem);
+		/* Leave room for the floating CTA bar and—when present—the
+		   navpill it sits above. `--navpill-h` is injected by the (app)
+		   layout: 88px when signed-in mobile, 0px for signed-out visitors
+		   and desktop ≥56rem. The CTA bar itself is ~80px, so the bottom
+		   pad is: safe-area + navpill + CTA (~5rem) + a little breathing
+		   room. */
+		padding: 0.25rem 0 calc(env(safe-area-inset-bottom, 0px) + var(--navpill-h, 0px) + 6rem);
 	}
 
 	.market-detail-hero {
@@ -488,6 +490,15 @@
 	@media (min-width: 768px) {
 		.market-detail-title {
 			font-size: 1.75rem;
+		}
+	}
+
+	/* On desktop (≥56rem) the navpill is hidden and the CTA bar sits at a
+	   fixed 2rem from the bottom, so the scroll clearance only needs to
+	   accommodate the CTA bar height plus a standard margin. */
+	@media (min-width: 56rem) {
+		.market-detail-screen {
+			padding-bottom: 8rem;
 		}
 	}
 </style>

@@ -547,7 +547,10 @@
 	});
 </script>
 
-<div class="relative isolate flex h-full flex-col">
+<div
+	style:--navpill-h={$userSignedIn ? '88px' : '0px'}
+	class="relative isolate flex h-full flex-col"
+>
 	<!--
 		Desktop chrome — landing-style top nav. Hidden at <56rem; the
 		mobile floating pillnav (rendered below as `<MobileNav>`) owns

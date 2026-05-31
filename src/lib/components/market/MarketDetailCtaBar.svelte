@@ -46,11 +46,12 @@
 		position: fixed;
 		left: 0;
 		right: 0;
-		/* Floats above the bottom navpill — the navpill reserves
-		   `88px + safe-area` of vertical space (see `MobileNav`), so we
-		   clear it here and let the safe-area inset live on the navpill
-		   below us rather than doubling it up. */
-		bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
+		/* Floats above the bottom navpill when present. `--navpill-h` is
+		   set by the (app) layout to `88px` when `MobileNav` is rendered
+		   (signed-in mobile) and `0px` otherwise (signed-out visitors,
+		   desktop ≥56rem). This way signed-out visitors and desktop
+		   users don't get a phantom 88px gap below the CTA. */
+		bottom: calc(env(safe-area-inset-bottom, 0px) + var(--navpill-h, 0px));
 		z-index: 40;
 		display: flex;
 		gap: 0.5rem;
@@ -123,6 +124,17 @@
 		.market-cta-bar {
 			max-width: 36rem;
 			margin: 0 auto;
+		}
+	}
+
+	/* On desktop the pillnav is hidden (app.css hides `.pillnav-wrap` at
+	   ≥56rem) and the layout already sets `--navpill-h: 0px` for signed-out
+	   visitors, so the bottom offset naturally collapses to just the
+	   safe-area. Pin the bar to a comfortable desktop bottom margin
+	   instead of the mobile floor. */
+	@media (min-width: 56rem) {
+		.market-cta-bar {
+			bottom: 2rem;
 		}
 	}
 </style>

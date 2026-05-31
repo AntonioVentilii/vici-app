@@ -1331,7 +1331,7 @@ export const deMessages = {
 		'Noch keine Vorhersagen — sei die Erste, die diesen Markt aufruft.',
 	'market.detail.top_predictors.streak': 'T Serie',
 	'market.detail.top_predictors.title': 'Top-Vorhersager hier',
-	'market.detail.you_called': 'Du wähltest',
+	'market.detail.you_called': 'Du hast getippt',
 	'market.forecast.predict_no': 'NEIN vorhersagen',
 	'market.forecast.predict_yes': 'JA vorhersagen',
 	'market.metadata.error.load': 'Marktkontext konnte nicht geladen werden.',
