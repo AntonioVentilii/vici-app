@@ -81,8 +81,24 @@
 	.flow-back-rules {
 		color: var(--text-muted);
 		padding-top: 0.4rem;
-		border-top: 1px solid var(--border-base);
+		border-top: 1px dashed var(--border-base);
 		margin-top: 0.4rem;
+		animation: flowRulesReveal 220ms var(--ease-vici) both;
+	}
+	@keyframes flowRulesReveal {
+		from {
+			opacity: 0;
+			transform: translateY(-4px);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0);
+		}
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-back-rules {
+			animation: none;
+		}
 	}
 
 	.flow-res-foot {
@@ -113,7 +129,7 @@
 	}
 	.flow-back-toggle-caret {
 		font-size: var(--t-11);
-		transition: transform 160ms ease;
+		transition: transform 200ms ease;
 	}
 	.flow-back-toggle-caret.is-open {
 		transform: rotate(180deg);

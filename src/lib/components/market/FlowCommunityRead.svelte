@@ -68,7 +68,7 @@
 		flex-wrap: wrap;
 	}
 	.flow-community-pct {
-		font-size: 2.05rem;
+		font-size: 1.625rem;
 		font-weight: 600;
 		letter-spacing: -0.03em;
 		line-height: 1;
@@ -76,7 +76,7 @@
 	.flow-community-side {
 		margin-left: 0.35rem;
 		font-size: var(--t-12);
-		font-weight: 700;
+		font-weight: 600;
 		letter-spacing: var(--tracking-allcaps);
 	}
 	.flow-community-delta {

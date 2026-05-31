@@ -128,6 +128,8 @@
 		margin: 0;
 		font-size: var(--t-12);
 		color: var(--text-muted);
+		font-family: var(--font-mono);
+		letter-spacing: 0.04em;
 	}
 
 	/* Predictors count — its own row below `flow-back-meta` so the

@@ -145,12 +145,13 @@
 		color: var(--text-base);
 	}
 	.flow-split-badge {
+		font-family: var(--font-mono);
 		font-size: 9.5px;
 		letter-spacing: 0.08em;
 		padding: 1px 6px;
 		border-radius: var(--r-pill);
-		border: 1px solid var(--border-base);
-		background: var(--bg-surface);
+		border: 1px solid rgba(226, 184, 66, 0.32);
+		background: var(--laurel-glow);
 	}
 	.flow-split-badge.is-positive {
 		color: var(--yes);
@@ -163,7 +164,7 @@
 
 	.flow-split-bar {
 		display: flex;
-		height: 7px;
+		height: 6px;
 		border-radius: var(--r-pill);
 		overflow: hidden;
 		background: var(--border-base);
@@ -172,26 +173,27 @@
 		display: block;
 		height: 100%;
 		background: color-mix(in srgb, var(--no) 75%, transparent);
+		transition: width 480ms var(--ease-vici);
 	}
 	.flow-split-fill-yes {
 		display: block;
 		height: 100%;
 		background: color-mix(in srgb, var(--yes) 75%, transparent);
+		transition: width 480ms var(--ease-vici);
 	}
 
 	.flow-followed-dots {
 		display: flex;
-		gap: 4px;
+		gap: 6px;
 	}
 	.flow-followed-dot {
-		width: 9px;
-		height: 9px;
+		width: 10px;
+		height: 10px;
 		border-radius: var(--r-pill);
 		background: color-mix(in srgb, var(--no-wash) 70%, transparent);
-		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
+		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
 	}
 	.flow-followed-dot.is-yes {
 		background: color-mix(in srgb, var(--yes-wash) 70%, transparent);
-		border-color: color-mix(in srgb, var(--yes) 45%, var(--border-base));
 	}
 </style>

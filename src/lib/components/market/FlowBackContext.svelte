@@ -103,12 +103,15 @@
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 0.55rem 0.7rem;
+		padding: 10px 12px;
 		border-radius: var(--r-12);
 		border: 1px solid color-mix(in srgb, var(--cat-color) 22%, var(--border-base));
 		background:
 			linear-gradient(90deg, color-mix(in srgb, var(--cat-color) 8%, transparent), transparent),
 			color-mix(in srgb, var(--bg-surface) 90%, transparent);
+	}
+	.flow-back-prior .flow-back-label {
+		color: var(--color-accent);
 	}
 	.flow-back-prior-line {
 		font-size: var(--t-12);

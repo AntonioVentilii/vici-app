@@ -113,8 +113,13 @@
 	.flow-stake {
 		padding: 0.75rem 0.85rem;
 		border-radius: var(--r-12);
-		border: 1px solid var(--border-base);
-		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
+		border: 1px solid rgba(226, 184, 66, 0.22);
+		background: linear-gradient(
+			180deg,
+			rgba(226, 184, 66, 0.06),
+			rgba(226, 184, 66, 0.02) 70%,
+			transparent
+		);
 		box-shadow: var(--inset-hi);
 	}
 
@@ -139,11 +144,13 @@
 	}
 	.flow-stake-label {
 		color: var(--text-muted);
+		font-family: var(--font-mono);
 	}
 	.flow-stake.is-cap .flow-stake-label {
 		color: var(--no);
 	}
 	.flow-stake-value {
+		font-family: var(--font-mono);
 		font-size: var(--t-16);
 		font-weight: 700;
 		color: var(--laurel);
@@ -187,13 +194,15 @@
 	.flow-stake-handle {
 		position: absolute;
 		top: 50%;
-		width: 14px;
-		height: 14px;
+		width: 22px;
+		height: 22px;
 		border-radius: var(--r-pill);
 		background: var(--bg-surface);
-		border: 2px solid var(--laurel);
+		border: 3px solid var(--bg-surface);
 		transform: translate(-50%, -50%);
-		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+		box-shadow:
+			0 0 0 1px var(--color-accent),
+			0 3px 10px rgba(226, 184, 66, 0.4);
 		pointer-events: none;
 		transition:
 			background 220ms var(--ease-vici),
@@ -225,6 +234,7 @@
 	.flow-stake-peg {
 		appearance: none;
 		padding: 0.4rem 0;
+		font-family: var(--font-mono);
 		font-size: var(--t-12);
 		font-weight: 600;
 		color: var(--text-muted);
@@ -255,7 +265,7 @@
 		flex-direction: column;
 		gap: 4px;
 		padding-top: 0.5rem;
-		border-top: 1px solid var(--border-base);
+		border-top: 1px dashed rgba(226, 184, 66, 0.2);
 		margin-top: 0.4rem;
 	}
 	.flow-stake-payout-row {
@@ -266,6 +276,7 @@
 	}
 	.flow-stake-payout-lbl {
 		color: var(--text-muted);
+		font-family: var(--font-mono);
 		font-size: var(--t-10);
 		letter-spacing: 0.1em;
 	}
