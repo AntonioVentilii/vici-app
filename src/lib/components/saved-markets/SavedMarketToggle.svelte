@@ -99,7 +99,7 @@
 >
 	<span class="saved-market-icon">
 		{#if icon === 'eye'}
-			<Eye aria-hidden="true" size={appearance === 'ghost' ? 18 : 14} strokeWidth={1.8} />
+			<Eye aria-hidden="true" size={size === 'md' ? 16 : 14} strokeWidth={1.8} />
 		{:else}
 			<Heart
 				aria-hidden="true"
