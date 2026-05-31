@@ -268,7 +268,7 @@
 						<div class="ob-card-head-meta">
 							<span
 								style:color={accent}
-								style:background="rgba(242, 236, 220, 0.06)"
+								style:background="color-mix(in srgb, var(--text-base) 6%, transparent)"
 								class="ob-tag"
 							>
 								{event.badgeTitle ?? event.title}
