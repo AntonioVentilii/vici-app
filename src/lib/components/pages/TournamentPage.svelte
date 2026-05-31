@@ -291,7 +291,7 @@
 
 	<section class="tournament-hero">
 		<!--
-			Hero matches `screens.jsx:3680-3692`. When a round is in
+			When a round is in
 			flight we surface the current round tag + days-left
 			countdown along the top, and a "bracket" headline with
 			the live-leagues-remaining sub. The eyebrow is the muted

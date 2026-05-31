@@ -18,9 +18,9 @@
  */
 
 /**
- * The six reason buckets the FE picker exposes. Sourced verbatim
- * from `screens.jsx` line 1962-1968 so the catalog a future
- * analytics consumer reads agrees with what the user saw.
+ * The six reason buckets the FE picker exposes. Kept in lockstep
+ * with the picker labels so the catalog a future analytics
+ * consumer reads agrees with what the user saw.
  */
 export const EXIT_SIGNAL_REASONS = [
 	'not-for-me',
@@ -35,9 +35,9 @@ export type ExitSignalReason = (typeof EXIT_SIGNAL_REASONS)[number];
 
 /**
  * 240-char cap on the optional free-text note. Matches the
- * `maxLength={240}` the textarea uses (`screens.jsx`
- * line 1982). Long enough for a Tweet-style explanation; short
- * enough to keep the log payload bounded.
+ * `maxLength` the picker textarea enforces. Long enough for a
+ * Tweet-style explanation; short enough to keep the log payload
+ * bounded.
  */
 export const EXIT_SIGNAL_NOTE_MAX_LENGTH = 240;
 
