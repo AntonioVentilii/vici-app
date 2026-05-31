@@ -16,8 +16,8 @@
 	interface Props {
 		/** Seed strings — one per avatar. Order is preserved. */
 		seeds?: ReadonlyArray<string>;
-		/** Outer diameter in pixels. Default 22 — matches the
-		 *  prototype's `Avatar size="xs"`. */
+		/** Outer diameter in pixels. Default 22 — the compact size the
+		 *  social-proof row reads cleanly at. */
 		size?: number;
 		/** Border colour drawn between adjacent avatars so the
 		 *  overlap reads cleanly. Defaults to the elevated bg token. */
@@ -54,14 +54,11 @@
 			style:margin-left={i === 0 ? '0' : `-${overlap}px`}
 			style:z-index={seeds.length - i}
 			style:border={`1.5px solid ${borderColor}`}
-			style:font-size="{Math.max(8, Math.round(size * 0.4))}px"
 			style:background="linear-gradient(135deg, oklch(0.32 0.06 {hueFor(s)}), oklch(0.18 0.04 {hueFor(
 				s
 			)}))"
 			class="seeded-avatar"
-		>
-			{s.slice(0, 2).toUpperCase()}
-		</span>
+		></span>
 	{/each}
 </div>
 
@@ -73,14 +70,6 @@
 
 	.seeded-avatar {
 		display: inline-flex;
-		align-items: center;
-		justify-content: center;
 		border-radius: var(--r-pill);
-		color: var(--text-base);
-		font-weight: 700;
-		font-family: var(--font-mono);
-		letter-spacing: 0.02em;
-		text-transform: uppercase;
-		line-height: 1;
 	}
 </style>

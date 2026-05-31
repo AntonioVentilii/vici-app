@@ -488,7 +488,6 @@ export const deMessages = {
 	'card.back.who_calling': 'Wer ruft was',
 	'card.back.your_context': 'Dein Kontext',
 	'card.call_count': '{count} Calls',
-	'card.callers_last_hour': '{count} Caller in der letzten Stunde',
 	'card.call_size': 'EINSATZGRÖSSE',
 	'card.call_size_cap': 'EINSATZGRÖSSE · MAX',
 	'card.calls': 'Calls',
