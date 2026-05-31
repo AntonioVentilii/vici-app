@@ -178,4 +178,10 @@
 			transform: scale(1);
 		}
 	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.scale-up {
+			animation: none;
+		}
+	}
 </style>
