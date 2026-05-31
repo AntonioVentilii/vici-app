@@ -41,7 +41,9 @@ before you write any code that:
 
 - Calls `add_series` / `fork_series` / `manage_oracle_principals`.
 - Mirrors anything from Juno into the Vici engine on `eng_0`.
-- Resets or reseeds the registry locally or on staging.
+- Resets or reseeds the registry locally, on staging, or on production (see
+  [`engine-integration.md`](../../engine-integration.md) — "icdc-core deployments: staging
+  and production").
 
 Day-2 ops runbooks (grant / revoke / audit / kill-switch / rotate
 admins):

@@ -13,7 +13,9 @@ export SCRIPT_DIR="$SCRIPTS_ROOT"
 
 NETWORK="local"
 
-ACCEPTABLE_NETWORKS=("local" "staging")
+# dfx network names. `ic` is icdc-core production, `staging` is icdc-core staging
+# (mirrors icdc-core's canister_ids.json). `--production` is an ergonomic alias for `ic`.
+ACCEPTABLE_NETWORKS=("local" "staging" "ic")
 
 check_network() {
 	local requested_network=$1
@@ -37,7 +39,7 @@ check_network() {
 
 while [[ $# -gt 0 ]]; do
 	case $1 in
-		local | staging)
+		local | staging | ic)
 			NETWORK="$1"
 			shift
 			;;
@@ -47,6 +49,10 @@ while [[ $# -gt 0 ]]; do
 			;;
 		--staging)
 			NETWORK="staging"
+			shift
+			;;
+		--ic | --production | production)
+			NETWORK="ic"
 			shift
 			;;
 		*)

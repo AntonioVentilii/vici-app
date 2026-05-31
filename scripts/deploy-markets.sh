@@ -3,12 +3,16 @@
 # deploy-markets.sh — register a batch of prediction markets from a JSON file.
 #
 # Usage:
-#   ./scripts/deploy-markets.sh <markets-json-file> [--local|--staging]
+#   ./scripts/deploy-markets.sh <markets-json-file> [--local|--staging|--production]
+#
+# `--staging` targets icdc-core staging; `--production` (alias `--ic`) targets icdc-core
+# production — the registry the live Vici frontend reads. See
+# docs/engine-integration.md ("icdc-core deployments: staging and production").
 #
 # Examples:
 #   ./scripts/deploy-markets.sh scripts/data/markets.json --local
 #   ./scripts/deploy-markets.sh scripts/data/markets.deck-2026.json --staging
-#   npm run deploy:markets -- scripts/data/markets.deck-2026.json --staging
+#   npm run deploy:markets -- scripts/data/markets.deck-2026.json --production
 #
 # The file is a JSON array of market objects (see scripts/data/markets.json).
 #
@@ -38,13 +42,20 @@
 # Capture the markets file (first positional) before utils.sh consumes "$@" for
 # network-flag parsing.
 MARKETS_FILE="${1:-}"
-if [[ -z "$MARKETS_FILE" || "$MARKETS_FILE" == -* || "$MARKETS_FILE" == "local" || "$MARKETS_FILE" == "staging" ]]; then
-	echo "Usage: $0 <markets-json-file> [--local|--staging]" >&2
+if [[ -z "$MARKETS_FILE" || "$MARKETS_FILE" == -* || "$MARKETS_FILE" == "local" || "$MARKETS_FILE" == "staging" || "$MARKETS_FILE" == "ic" || "$MARKETS_FILE" == "production" ]]; then
+	echo "Usage: $0 <markets-json-file> [--local|--staging|--production]" >&2
 	exit 1
 fi
 shift
 
 source "$(dirname "$0")/lib/utils.sh" "$@"
+
+# BSD/macOS `sed`/`tr` raise "illegal byte sequence" on multibyte UTF-8 (e.g.
+# "Mbappé", curly quotes) under a UTF-8 locale. Force a byte-wise locale so the
+# escaping + slugify below pass those bytes through untouched; dfx still receives
+# the original UTF-8 (the byte values of `"`/`\` never collide with UTF-8
+# continuation bytes, so byte-wise escaping is safe).
+export LC_ALL=C
 
 if [ ! -f "$MARKETS_FILE" ]; then
 	echo "Error: markets file '$MARKETS_FILE' not found." >&2
