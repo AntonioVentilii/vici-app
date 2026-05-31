@@ -871,7 +871,7 @@ export const zhCnMessages = {
 	'info.doc.privacy.b0': '我们收集什么、为什么收集、与谁分享。简而言之：我们尽可能少地收集。',
 	'info.doc.privacy.b1': '我们收集什么',
 	'info.doc.privacy.b10':
-		'你可以通过发送邮件至 privacy@vici.market 请求访问、导出、更正和删除你的数据。我们会在三十天内答复。',
+		'你可以通过发送邮件至 {email} 请求访问、导出、更正和删除你的数据。我们会在三十天内答复。',
 	'info.doc.privacy.b11': 'Cookie',
 	'info.doc.privacy.b12': '我们只存储一个会话令牌。我们不使用跟踪 Cookie。',
 	'info.doc.privacy.b2.i0': '账户：你的用户名、电子邮件、语言和外观偏好',
@@ -899,7 +899,7 @@ export const zhCnMessages = {
 	'info.doc.resolution-rules.b10.i2': '来源在窗口期内更改其方法 → 市场作废，除非该更改无关紧要。',
 	'info.doc.resolution-rules.b11': '争议',
 	'info.doc.resolution-rules.b12':
-		'任何参与者可在七十二小时内提出结算争议，方式为发送电子邮件至 resolution@vici.market，并附上其用户名、市场 id 及争议依据。争议由编辑团队审核，并在二十四小时内答复。',
+		'任何参与者可在七十二小时内提出结算争议，方式为发送电子邮件至 {email}，并附上其用户名、市场 id 及争议依据。争议由编辑团队审核，并在二十四小时内答复。',
 	'info.doc.resolution-rules.b2':
 		'在市场开放预测之前，有两项事实会被确定并公布在市场卡片背面：结算标准（以通俗语言表述的 YES 条件）和来源（将做出决定的指定公开数据源）。',
 	'info.doc.resolution-rules.b3': '交易窗口',

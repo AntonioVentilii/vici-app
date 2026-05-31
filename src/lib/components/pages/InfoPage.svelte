@@ -65,7 +65,9 @@
 				{:else if block.kind === 'h'}
 					<h2 class="info-heading">{t({ locale: $localeStore, key: block.key })}</h2>
 				{:else if block.kind === 'p'}
-					<p class="info-paragraph">{t({ locale: $localeStore, key: block.key })}</p>
+					<p class="info-paragraph">
+						{t({ locale: $localeStore, key: block.key, params: block.params })}
+					</p>
 				{:else if block.kind === 'list'}
 					<ul class="info-list">
 						{#each block.itemKeys as itemKey, j (j)}

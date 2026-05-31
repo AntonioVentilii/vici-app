@@ -921,7 +921,7 @@ export const ptMessages = {
 		'O que recolhemos, porque o recolhemos, com quem o partilhamos. Versão curta: recolhemos o menos possível.',
 	'info.doc.privacy.b1': 'O que recolhemos',
 	'info.doc.privacy.b10':
-		'O acesso, a exportação, a retificação e a eliminação dos teus dados estão disponíveis a pedido para privacy@vici.market. Respondemos no prazo de trinta dias.',
+		'O acesso, a exportação, a retificação e a eliminação dos teus dados estão disponíveis a pedido para {email}. Respondemos no prazo de trinta dias.',
 	'info.doc.privacy.b11': 'Cookies',
 	'info.doc.privacy.b12': 'Armazenamos um único token de sessão. Não usamos cookies de rastreio.',
 	'info.doc.privacy.b2.i0': 'Conta: o teu handle, e-mail, idioma e preferência de aparência',
@@ -954,7 +954,7 @@ export const ptMessages = {
 		'A fonte altera a sua metodologia a meio da janela → mercado anulado, salvo se a alteração for irrelevante.',
 	'info.doc.resolution-rules.b11': 'Contestações',
 	'info.doc.resolution-rules.b12':
-		'Qualquer participante pode apresentar uma contestação de resolução no prazo de setenta e duas horas, enviando um e-mail para resolution@vici.market com o seu handle, o id do mercado e o fundamento da contestação. As contestações são analisadas pela redação e respondidas no prazo de vinte e quatro horas.',
+		'Qualquer participante pode apresentar uma contestação de resolução no prazo de setenta e duas horas, enviando um e-mail para {email} com o seu handle, o id do mercado e o fundamento da contestação. As contestações são analisadas pela redação e respondidas no prazo de vinte e quatro horas.',
 	'info.doc.resolution-rules.b2':
 		'Antes de um mercado abrir a previsões, dois factos são fixados e publicados no verso do cartão do mercado: o critério de resolução (a condição YES em linguagem simples) e a fonte (o feed de dados público e identificado que decidirá).',
 	'info.doc.resolution-rules.b3': 'Janela de negociação',
