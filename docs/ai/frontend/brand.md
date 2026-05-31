@@ -405,6 +405,7 @@ them by name, never by raw ms.
 | Branded icons         | [`src/lib/components/icons/`](../../../src/lib/components/icons/)                                                                                  |
 | Generative artwork    | [`flow-art.utils.ts`](../../../src/lib/utils/flow-art.utils.ts) · [`FlowArtFrame.svelte`](../../../src/lib/components/artwork/FlowArtFrame.svelte) |
 | Haptics               | [`haptics.utils.ts`](../../../src/lib/utils/haptics.utils.ts)                                                                                      |
+| Sound                 | [`flow-sound.utils.ts`](../../../src/lib/utils/flow-sound.utils.ts)                                                                                |
 | Flow Mode rules       | [`design.md §7`](./design.md#7-flow-mode--rules)                                                                                                   |
 | Brand book (source)   | off-repo · request from the brand owner                                                                                                            |
 

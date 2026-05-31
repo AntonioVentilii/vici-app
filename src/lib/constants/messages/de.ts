@@ -1495,6 +1495,25 @@ export const deMessages = {
 	'profile.eyebrow': 'IDENTITÄT',
 	'profile.featured_event.live': '{event} · live',
 	'profile.featured_event.upcoming': '{event} · startet in {days} Tagen',
+	'profile.handle.available': 'verfügbar',
+	'profile.handle.blurb':
+		'Über dein Handle finden dich andere. Du kannst es einmal alle {days} Tage ändern.',
+	'profile.handle.changed': 'Handle geändert zu @{handle}',
+	'profile.handle.edit': 'Handle bearbeiten',
+	'profile.handle.error_check_failed':
+		'Verfügbarkeit konnte nicht geprüft werden. Versuch es erneut.',
+	'profile.handle.error_reserved': 'Dieses Handle ist reserviert',
+	'profile.handle.error_short': 'Mindestens 3 Zeichen',
+	'profile.handle.error_taken': 'Dieses Handle ist bereits vergeben',
+	'profile.handle.error_unchanged': 'Das ist bereits dein Handle',
+	'profile.handle.hint': 'Kleinbuchstaben, Zahlen und Unterstriche.',
+	'profile.handle.locked':
+		'Du hast dein Handle kürzlich geändert. Du kannst es in {days} Tagen wieder ändern.',
+	'profile.handle.locked_one':
+		'Du hast dein Handle kürzlich geändert. Du kannst es in {days} Tag wieder ändern.',
+	'profile.handle.placeholder': 'deinhandle',
+	'profile.handle.save': 'Handle speichern',
+	'profile.handle.title': 'Handle bearbeiten',
 	'profile.loading.sub': 'Lade Performance-Identität und Social Graph…',
 	'profile.loading.title': 'Profil wird geladen…',
 	'profile.sub': 'Performance-Identität, Streaks, Erfolge und Social Graph.',

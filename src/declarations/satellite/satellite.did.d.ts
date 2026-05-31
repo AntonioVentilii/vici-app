@@ -244,6 +244,7 @@ export interface AppGetProfileResult {
 							streak_reminder: boolean;
 						};
 						haptics_enabled: boolean;
+						sound_enabled: boolean;
 						onboarding_completed: boolean;
 						default_amount: { flow: string; manual: string };
 						world_cup_mode: boolean;

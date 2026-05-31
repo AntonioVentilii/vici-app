@@ -39,6 +39,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 	},
 	flowSessionLength: 10,
 	hapticsEnabled: true,
+	soundEnabled: true,
 	callsPublic: true,
 	flowTags: [...MARKET_TAGS],
 	worldCupMode: false,
@@ -58,6 +59,7 @@ interface PartialPrefsInput {
 	notify?: Partial<UserPreferences['notify']>;
 	flowSessionLength?: number;
 	hapticsEnabled?: boolean;
+	soundEnabled?: boolean;
 	callsPublic?: boolean;
 	flowTags?: string[];
 	worldCupMode?: boolean;
@@ -93,6 +95,7 @@ const hydrateShape = (partial: PartialPrefsInput | undefined): UserPreferences =
 	},
 	flowSessionLength: coerceFlowSessionLength(partial?.flowSessionLength),
 	hapticsEnabled: partial?.hapticsEnabled ?? DEFAULT_PREFERENCES.hapticsEnabled,
+	soundEnabled: partial?.soundEnabled ?? DEFAULT_PREFERENCES.soundEnabled,
 	callsPublic: partial?.callsPublic ?? DEFAULT_PREFERENCES.callsPublic,
 	flowTags:
 		Array.isArray(partial?.flowTags) && partial.flowTags.length > 0

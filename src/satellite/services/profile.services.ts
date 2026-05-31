@@ -51,6 +51,7 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		},
 		flowSessionLength: incoming?.flowSessionLength ?? 10,
 		hapticsEnabled: incoming?.hapticsEnabled ?? true,
+		soundEnabled: incoming?.soundEnabled ?? true,
 		callsPublic: incoming?.callsPublic ?? true,
 		flowTags: Array.isArray(incoming?.flowTags) ? incoming.flowTags : [],
 		worldCupMode: incoming?.worldCupMode ?? false,
