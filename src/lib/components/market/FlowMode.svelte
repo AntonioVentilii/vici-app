@@ -18,6 +18,7 @@
 	import FlowXpPops from '$lib/components/market/FlowXpPops.svelte';
 	import MotionBeat from '$lib/components/market/MotionBeat.svelte';
 	import SwipeHint from '$lib/components/market/SwipeHint.svelte';
+	import XpToast from '$lib/components/market/XpToast.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
 	import {
 		BASE_XP_PER_PREDICTION,
@@ -149,17 +150,31 @@
 	let flowPaused = $state(false);
 	let activeMotionBeat = $state<MotionBeatPayload | null>(null);
 
-	// Ambient post-swipe Oracle pop — used for the non-hard-pause path
-	// where the user gets a brief "Nice call · +N VXP" affirmation that
-	// fades on its own ~1.3 s later. Skip commits get the shorter 520 ms
-	// "SKIPPED" chip variant. Hard-pause beats (`motion.beat.hardPause`)
-	// still go through `MotionBeat` so we don't double-stack overlays.
+	// Per-swipe commit pop — "CALLED YES · {stake} IN PLAY (+bonus VXP)".
+	// Fires on every committed YES / NO swipe (SKIP renders nothing). A
+	// swipe PLACES a call; the pop confirms the act, it does not imply a
+	// payout. `key` remounts the component on consecutive commits so the
+	// `xp-toast-pop` envelope replays. Self-dismisses ~1 s after mount.
+	interface CommitToast {
+		side: CallSide;
+		stake: number;
+		bonus: number;
+		key: number;
+	}
+	let commitToast = $state<CommitToast | null>(null);
+	let commitToastKeySeq = 0;
+
+	// SKIP commit pop — the shorter 520 ms "SKIPPED" chip rendered via
+	// `FlowFeedback`. YES / NO no longer go through this path — they use
+	// `XpToast` + optionally the centered `MotionBeat`. Kept because SKIP
+	// has no XpToast (stake > 0 guard) and no motion beat, so this is the
+	// only visual confirmation that a skip registered.
 	interface ActiveFeedback {
 		result: FlowAction;
 		xp: number;
 		correct: boolean;
 		streakHit: boolean;
-		// monotonic key so consecutive commits remount the component.
+		// monotonic key so consecutive skips remount the component.
 		key: number;
 	}
 	let activeFeedback = $state<ActiveFeedback | null>(null);
@@ -304,6 +319,14 @@
 		document.body.classList.remove('overflow-hidden');
 		void flowTradeService.endSession();
 
+		if (gatingBeatTimer !== null) {
+			clearTimeout(gatingBeatTimer);
+		}
+
+		if (riseResetTimer !== null) {
+			clearTimeout(riseResetTimer);
+		}
+
 		// Promote the pre-built follow-up deck and rebuild a fresh
 		// `next` excluding the markets just shown — re-entering /flow
 		// opens on an unseen deck without a network round-trip.
@@ -352,12 +375,29 @@
 		}, COMMIT_RESET_MS);
 	};
 
+	// Set when a gating beat finishes: the next card RISES over the empty
+	// slot the character just vacated (not a plain cross-fade). Consumed by
+	// the entering current slot and cleared once its rise has played.
+	let riseNextCard = $state(false);
+	let riseResetTimer: ReturnType<typeof setTimeout> | null = null;
+	let gatingBeatTimer: ReturnType<typeof setTimeout> | null = null;
+
 	const onMotionBeatDone = () => {
 		const wasPaused = flowPaused;
 		activeMotionBeat = null;
 		flowPaused = false;
 
 		if (wasPaused) {
+			riseNextCard = true;
+
+			if (riseResetTimer !== null) {
+				clearTimeout(riseResetTimer);
+			}
+
+			riseResetTimer = setTimeout(() => {
+				riseNextCard = false;
+				riseResetTimer = null;
+			}, 600);
 			finishCommitAdvance();
 		}
 	};
@@ -546,7 +586,6 @@
 
 		const awarded = BASE_XP_PER_PREDICTION * comboMultiplier;
 		xp += awarded;
-		spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
 
 		// Per-swipe sound cue — one tick per committed call (YES / NO).
 		// SKIP returned early above and is intentionally silent, mirroring
@@ -599,6 +638,19 @@
 			// real seed once the profile/stats doc exposes the count.
 		});
 
+		// Whether this swipe also lands on a gating beat. When it does, the
+		// centered MotionBeat already owns the slot — suppress the centered
+		// combo pop so the two don't stack in the same area.
+		const hasGatingBeat = motion.beat != null && motion.beat.kind !== 'ambient-10';
+
+		// The per-swipe commit pop (`XpToast`, fired below) is the sole
+		// feedback for a plain call. The centered combo pop is reserved for
+		// the streak-multiplier moments (×2 / ×3) when there is NO gating
+		// beat in the same frame — otherwise the two surfaces would stack.
+		if (comboMultiplier > 1 && !hasGatingBeat) {
+			spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
+		}
+
 		if (motion.bonusXp > 0) {
 			xp += motion.bonusXp;
 
@@ -607,14 +659,31 @@
 					? t({ locale: $localeStore, key: motion.beat.copyKey })
 					: undefined;
 
-			spawnXpPop({
-				amount: motion.bonusXp,
-				combo: 1,
-				side: action,
-				kind: 'bonus',
-				copy: popCopy
-			});
+			// Suppress centered bonus pop too when a gating beat will fill
+			// the center; the XpToast bonus chip already carries the amount.
+			if (!hasGatingBeat) {
+				spawnXpPop({
+					amount: motion.bonusXp,
+					combo: 1,
+					side: action,
+					kind: 'bonus',
+					copy: popCopy
+				});
+			}
 		}
+
+		// Per-swipe commit pop — every committed YES / NO. Confirms the
+		// call was placed ("CALLED YES · {stake} IN PLAY") with the stake
+		// now at risk; a genuine milestone / streak bonus rides along as a
+		// trailing chip. Light and non-blocking — runs over the card-out,
+		// the gap beat, and the next card's rise alike.
+		commitToastKeySeq += 1;
+		commitToast = {
+			side: action,
+			stake: Number(tradeAmount) || 0,
+			bonus: motion.bonusXp,
+			key: commitToastKeySeq
+		};
 
 		// Single beat-aware vibrate — fires once per beat, with the
 		// envelope mapped from `beat.kind`. On the first-call beat the
@@ -639,11 +708,27 @@
 			}
 		}
 
-		// A real beat plays IN THE GAP — the deck holds while the character
-		// is centered. Ambient (`ambient-10`) is a soft pop that never gates.
+		// A real beat plays IN THE GAP. The deck holds (`flowPaused`): the
+		// called card flies out, the empty slot opens, then the REAL
+		// character stands large & centered in it — name · copy · coin /
+		// treat chips · sub-label — before the next card rises over.
+		// `flowPaused` flips now so the outgoing card hides and drag locks;
+		// the centered beat is revealed 250 ms later so the card-out clears
+		// the slot first. Ambient (`ambient-10`) is a soft pop that never
+		// gates — it advances immediately. Advance is deferred to
+		// `onMotionBeatDone` for gating beats.
 		if (motion.beat && motion.beat.kind !== 'ambient-10') {
-			activeMotionBeat = motion.beat;
+			const gatingBeat = motion.beat;
 			flowPaused = true;
+
+			if (gatingBeatTimer !== null) {
+				clearTimeout(gatingBeatTimer);
+			}
+
+			gatingBeatTimer = setTimeout(() => {
+				activeMotionBeat = gatingBeat;
+				gatingBeatTimer = null;
+			}, 250);
 
 			return;
 		}
@@ -652,18 +737,10 @@
 			activeMotionBeat = motion.beat;
 		}
 
-		// Ambient post-swipe feedback — only spawned on the non-gating
-		// path so we don't double-stack overlays with `MotionBeat`. The
-		// pop self-dismisses in 1.3 s (520 ms for skip, handled above).
-		feedbackKeySeq += 1;
-		activeFeedback = {
-			result: action,
-			xp: awarded + motion.bonusXp,
-			correct: alignedWithCrowd,
-			streakHit: motion.bonusXp > 0 && motion.beat?.kind === 'overtime-complete',
-			key: feedbackKeySeq
-		};
-
+		// Non-gating commit: the per-swipe `XpToast` above is the feedback —
+		// no full-stage overlay (it would double-stack with the toast / the
+		// ambient pop). The deck advances after the short commit-feedback
+		// beat. SKIP returned earlier with its own quick chip.
 		finishCommitAdvance();
 	};
 
@@ -886,6 +963,7 @@
 					<div
 						style="z-index: {20 - i}; --depth: {i};"
 						class="flow-card-slot"
+						class:flow-card-rise={isCurrent && riseNextCard}
 						class:is-back={!isCurrent}
 						in:fade={{ duration: prefersReducedMotion() ? 0 : 200, easing: cubicOut }}
 						out:fly={prefersReducedMotion()
@@ -922,6 +1000,24 @@
 			     in localStorage. -->
 			<FlowCoach surface="flow" />
 
+			<!-- Per-swipe commit pop — "CALLED YES · {stake} IN PLAY". Rises
+			     from the exit edge (is-yes → right, is-no → left) on every
+			     committed YES / NO. Keyed so consecutive commits replay the
+			     `xp-toast-pop` envelope. -->
+			{#if commitToast}
+				{#key commitToast.key}
+					<XpToast
+						bonus={commitToast.bonus}
+						onDone={() => (commitToast = null)}
+						side={commitToast.side}
+						stake={commitToast.stake}
+					/>
+				{/key}
+			{/if}
+
+			<!-- Character beat, in the gap between cards. Plays centered &
+			     large in the empty slot (soft 96 / hard 132) while the deck
+			     holds; the next card rises over it once it finishes. -->
 			{#if activeMotionBeat}
 				<MotionBeat beat={activeMotionBeat} onDone={onMotionBeatDone} />
 			{/if}
