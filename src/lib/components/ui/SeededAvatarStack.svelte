@@ -1,17 +1,19 @@
 <script lang="ts">
 	/**
-	 * Stack of overlapping circular avatars, each tinted by a stable
-	 * hue derived from its seed string. Used as decorative social-proof
-	 * on the FlowCard front face and the landing-page hero deck — both
-	 * surfaces want four faceless circles that read as a crowd without
-	 * exposing real user data.
+	 * Stack of overlapping circular avatars, each a deterministic
+	 * generated character face derived from its seed string. Used as
+	 * decorative social-proof on the FlowCard front face and the
+	 * landing-page hero deck — both surfaces want a small cluster of
+	 * faces that read as a crowd without exposing real user data.
 	 *
 	 * The default seed roster (`augustus / cassandra / nero / livia`)
 	 * matches the canonical four the landing surface ships with, so
 	 * tunnelling a deck card from landing into Flow keeps the same
-	 * visual palette. Callers can override `seeds` for surfaces that
-	 * want a different colour spread.
+	 * faces. Callers can override `seeds` for surfaces that want a
+	 * different spread.
 	 */
+
+	import ViciAvatar from '$lib/components/ui/ViciAvatar.svelte';
 
 	interface Props {
 		/** Seed strings — one per avatar. Order is preserved. */
@@ -32,17 +34,6 @@
 		borderColor = 'var(--bg-elevated, var(--bg-surface))'
 	}: Props = $props();
 
-	// Stable per-seed hue in the 0..359 range. Pattern matches the
-	// landing-side helper byte-for-byte so cards reused across surfaces
-	// land on the identical colour.
-	const hueFor = (s: string): number => {
-		if (s.length < 2) {
-			return s.charCodeAt(0) * 31;
-		}
-
-		return (s.charCodeAt(0) * 31 + s.charCodeAt(1)) % 360;
-	};
-
 	const overlap = $derived(Math.round(size * 0.36));
 </script>
 
@@ -54,11 +45,10 @@
 			style:margin-left={i === 0 ? '0' : `-${overlap}px`}
 			style:z-index={seeds.length - i}
 			style:border={`1.5px solid ${borderColor}`}
-			style:background="linear-gradient(135deg, oklch(0.32 0.06 {hueFor(s)}), oklch(0.18 0.04 {hueFor(
-				s
-			)}))"
 			class="seeded-avatar"
-		></span>
+		>
+			<ViciAvatar seed={s} {size} />
+		</span>
 	{/each}
 </div>
 
@@ -71,5 +61,12 @@
 	.seeded-avatar {
 		display: inline-flex;
 		border-radius: var(--r-pill);
+		overflow: hidden;
+	}
+
+	/* The generated face fills the circular slot edge-to-edge. */
+	.seeded-avatar :global(.vici-avatar) {
+		width: 100%;
+		height: 100%;
 	}
 </style>
