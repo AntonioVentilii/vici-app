@@ -205,6 +205,13 @@ export const ptMessages = {
 	'album.close': 'Fechar',
 	'album.locked': 'Bloqueado',
 	'album.progress_eyebrow': 'Progresso',
+	'album.progress_label.contrarian': '{current} de {target} vitórias na contramão',
+	'album.progress_label.first_blood': 'Abra o Flow para desbloquear',
+	'album.progress_label.generic': 'Não iniciado',
+	'album.progress_label.lvl_25': 'Nível {current} de {target}',
+	'album.progress_label.marathon': '{current} de {target} dias',
+	'album.progress_label.on_fire': '{current} de {target} seguidas',
+	'album.progress_label.oracle': '{current} de {target} palpites',
 	'album.progress_of': 'de {total} obtidos',
 	'album.title': 'Meu álbum',
 	'admin.dashboard.sub':

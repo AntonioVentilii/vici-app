@@ -10,17 +10,27 @@
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
-	 * Album — milestone awards / stickers gallery, port of the design
-	 * source's `AlbumScreen` (`screens.jsx:4650`). Reached as a profile
-	 * sub-route. Renders every achievement defined in `ACHIEVEMENTS` as
-	 * a tile in a 3-column grid; each tile carries the achievement's
-	 * unicode glyph emblem (◎ ★ ⚡ ⧖ ◐ ⌘) and tier wash
-	 * (gold / silver / bronze). Tapping a tile slides up a bottom-sheet
-	 * with the full prose detail + a progress bar for the unearned
-	 * ones.
+	 * Album — milestone awards / stickers gallery. Reached as a profile
+	 * sub-route. Renders every achievement defined in `ACHIEVEMENTS` as a
+	 * circular metallic medallion in a 3-column grid; each tile carries
+	 * the achievement's unicode glyph emblem (◎ ★ ⚡ ⧖ ◐ ⌘) and a tier
+	 * fill (gold / silver / bronze). Tapping a tile slides up a
+	 * bottom-sheet with the full prose detail + a progress bar for the
+	 * unearned ones.
+	 *
+	 * Tiles render in one of three states:
+	 *   - earned  — full metallic medallion in its tier colour.
+	 *   - in progress — locked medallion with a thin accent progress bar
+	 *     across the foot, sized to how close the user is to unlocking.
+	 *   - locked  — untouched medallion (progress 0), no bar.
+	 *
+	 * Ordering is closest-to-unlock first: in-progress tiles lead
+	 * (highest progress first), then earned, then untouched-locked. This
+	 * mirrors the profile achievement rail's sort so the affordance
+	 * carries across surfaces.
 	 *
 	 * Progress is sourced from the user's live profile via
-	 * `evaluateAchievements` — same engine that fires the one-shot
+	 * `evaluateAchievements` — the same engine that fires the one-shot
 	 * unlock toasts during normal trading.
 	 */
 
@@ -41,10 +51,34 @@
 		});
 	});
 
+	// Closest-to-unlock first: in-progress (locked w/ progress) sorted by
+	// progress desc, then earned, then untouched-locked.
+	const ordered = $derived.by((): AchievementEvaluation[] => {
+		const bucket = (e: AchievementEvaluation): number => {
+			if (e.unlocked) {
+				return 1;
+			}
+
+			return e.progress > 0 ? 0 : 2;
+		};
+
+		return [...evaluations].sort((a, b) => {
+			const byBucket = bucket(a) - bucket(b);
+
+			if (byBucket !== 0) {
+				return byBucket;
+			}
+
+			return b.progress - a.progress;
+		});
+	});
+
 	const earned = $derived(evaluations.filter((e) => e.unlocked).length);
 	const total = $derived(evaluations.length);
 
 	let openTarget = $state<AchievementEvaluation | null>(null);
+
+	const isInProgress = (e: AchievementEvaluation): boolean => !e.unlocked && e.progress > 0;
 </script>
 
 <div class="album-page">
@@ -79,25 +113,37 @@
 	</section>
 
 	<div class="album-grid">
-		{#each evaluations as evaluation (evaluation.id)}
+		{#each ordered as evaluation (evaluation.id)}
 			<button
-				class="album-award"
-				class:is-bronze={evaluation.def.tier === 'bronze'}
-				class:is-gold={evaluation.def.tier === 'gold'}
-				class:is-locked={!evaluation.unlocked}
-				class:is-silver={evaluation.def.tier === 'silver'}
+				class="award"
+				class:bronze={evaluation.def.tier === 'bronze'}
+				class:gold={evaluation.def.tier === 'gold'}
+				class:in-progress={isInProgress(evaluation)}
+				class:locked={!evaluation.unlocked}
+				class:silver={evaluation.def.tier === 'silver'}
 				onclick={() => (openTarget = evaluation)}
 				type="button"
 			>
-				<span class="album-award-emblem" aria-hidden="true">
+				<span class="emblem" aria-hidden="true">
 					{evaluation.def.emblem}
 				</span>
-				<span class="album-award-title">
+				<span class="title">
 					{t({ locale: $localeStore, key: evaluation.def.nameKey })}
 				</span>
-				<span class="album-award-sub allcaps">
+				<span class="sub">
 					{t({ locale: $localeStore, key: evaluation.def.descriptionKey })}
 				</span>
+				{#if isInProgress(evaluation)}
+					<span
+						class="award-progress"
+						aria-valuemax="100"
+						aria-valuemin="0"
+						aria-valuenow={Math.round(evaluation.progress * 100)}
+						role="progressbar"
+					>
+						<span style:width={`${evaluation.progress * 100}%`}></span>
+					</span>
+				{/if}
 			</button>
 		{/each}
 	</div>
@@ -105,9 +151,8 @@
 	{#if openTarget}
 		<!--
 			Position the sheet backdrop ABSOLUTELY within the .album-page
-			container (not `position: fixed` on the viewport) so the
-			modal swims inside the screen-scroll surface — mirroring
-			`screens.jsx:4720-4757` exactly.
+			container (not `position: fixed` on the viewport) so the modal
+			swims inside the screen-scroll surface.
 		-->
 		<div
 			class="album-sheet-backdrop"
@@ -152,14 +197,14 @@
 
 				<div class="album-sheet-body">
 					<div
-						class="album-sheet-emblem"
-						class:is-bronze={openTarget.def.tier === 'bronze'}
-						class:is-gold={openTarget.def.tier === 'gold'}
-						class:is-locked={!openTarget.unlocked}
-						class:is-silver={openTarget.def.tier === 'silver'}
+						class="award album-sheet-emblem"
+						class:bronze={openTarget.def.tier === 'bronze'}
+						class:gold={openTarget.def.tier === 'gold'}
+						class:locked={!openTarget.unlocked}
+						class:silver={openTarget.def.tier === 'silver'}
 						aria-hidden="true"
 					>
-						{openTarget.def.emblem}
+						<span class="emblem">{openTarget.def.emblem}</span>
 					</div>
 					<div>
 						<div class="album-sheet-title">
@@ -182,7 +227,11 @@
 								{t({ locale: $localeStore, key: 'album.progress_eyebrow' })}
 							</span>
 							<span class="num album-sheet-progress-value">
-								{Math.round(openTarget.progress * 100)}%
+								{t({
+									locale: $localeStore,
+									key: openTarget.progressLabelKey,
+									params: openTarget.progressParams
+								})}
 							</span>
 						</div>
 						<div class="album-sheet-progress-bar">
@@ -253,101 +302,194 @@
 	.album-grid {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
-		gap: 0.65rem;
+		gap: 14px;
 	}
 
-	/* Award tile — a square card with a glyph emblem centred above
-	   the title + sub. Tier classes wash the emblem in their accent
-	   colour; .is-locked drops opacity to 0.5. */
-	.album-award {
+	/* Award medallion — a circular metallic disc with a raised bevel.
+	   The glyph + title + sub sit centred above the disc; a thin accent
+	   bar appears across the foot when the award is in progress.
+	   Gold is the default tier; silver / bronze + locked re-tint the
+	   radial fill. The ::before ring + ::after shine sweep give the disc
+	   its metallic relief. */
+	.award {
 		appearance: none;
+		border: 0;
+		cursor: pointer;
+		font-family: inherit;
+		color: inherit;
+		aspect-ratio: 1 / 1;
+		position: relative;
+		border-radius: 50%;
+		background: radial-gradient(
+			circle at 30% 30%,
+			rgba(226, 184, 66, 0.85) 0%,
+			rgba(182, 139, 31, 0.95) 50%,
+			rgba(120, 90, 18, 0.95) 100%
+		);
+		box-shadow:
+			0 10px 24px -10px rgba(0, 0, 0, 0.6),
+			inset 0 2px 0 rgba(255, 255, 255, 0.2),
+			inset 0 -3px 0 rgba(0, 0, 0, 0.25);
 		display: flex;
 		flex-direction: column;
 		align-items: center;
-		gap: 0.3rem;
-		padding: 0.95rem 0.5rem;
-		font: inherit;
+		justify-content: center;
 		text-align: center;
-		color: var(--text-base);
-		background: var(--bg-surface);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		cursor: pointer;
-		transition:
-			transform 140ms ease,
-			border-color 140ms ease,
-			background-color 140ms ease;
+		padding: 14% 12% 16%;
+		isolation: isolate;
+		overflow: hidden;
+		transition: transform 140ms ease;
 	}
 
-	.album-award:hover {
+	.award:hover {
 		transform: translateY(-1px);
 	}
 
-	.album-award.is-locked {
-		opacity: 0.5;
+	.award::before {
+		content: '';
+		position: absolute;
+		inset: 8%;
+		border: 1px solid rgba(255, 255, 255, 0.3);
+		border-radius: 50%;
+		z-index: 0;
 	}
 
-	.album-award-emblem {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		width: 44px;
-		height: 44px;
+	.award::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		background: linear-gradient(
+			135deg,
+			transparent 30%,
+			rgba(255, 255, 255, 0.2) 48%,
+			rgba(255, 255, 255, 0.06) 52%,
+			transparent 60%
+		);
+		z-index: 1;
+		pointer-events: none;
+	}
+
+	.award .emblem {
+		position: relative;
+		z-index: 2;
 		font-size: 26px;
+		color: rgba(60, 40, 8, 0.9);
 		line-height: 1;
-		color: var(--text-base);
+		margin-bottom: 4px;
 	}
 
-	.album-award-title {
-		font-size: var(--t-12);
-		font-weight: 700;
-		color: var(--text-base);
+	.award .title {
+		position: relative;
+		z-index: 2;
+		font-family: var(--font-mono);
+		font-size: 8.5px;
+		font-weight: 800;
+		letter-spacing: 0.1em;
+		text-transform: uppercase;
+		color: rgba(40, 28, 4, 0.95);
+		line-height: 1.15;
+		text-wrap: balance;
 	}
 
-	.album-award-sub {
-		font-size: var(--t-10);
-		letter-spacing: var(--tracking-allcaps);
-		color: var(--text-muted);
+	.award .sub {
+		position: relative;
+		z-index: 2;
+		font-family: var(--font-mono);
+		font-size: 7.5px;
+		font-weight: 600;
+		letter-spacing: 0.08em;
+		color: rgba(40, 28, 4, 0.7);
+		margin-top: 2px;
 	}
 
-	/* Tier washes — gold uses the laurel-accent (our `--color-primary`),
-	   silver + bronze keep their canonical metallic tones. */
-	.album-award.is-gold {
-		border-color: color-mix(in srgb, #f4c544 35%, var(--border-base));
-		background: color-mix(in srgb, #f4c544 5%, var(--bg-surface));
+	.award.silver {
+		background: radial-gradient(
+			circle at 30% 30%,
+			rgba(214, 218, 223, 0.9) 0%,
+			rgba(160, 166, 175, 0.95) 50%,
+			rgba(100, 106, 115, 0.95) 100%
+		);
 	}
 
-	.album-award.is-gold .album-award-emblem {
-		color: #f4c544;
+	.award.silver .emblem,
+	.award.silver .title,
+	.award.silver .sub {
+		color: rgba(28, 32, 40, 0.9);
 	}
 
-	.album-award.is-silver {
-		border-color: color-mix(in srgb, #c0c5cc 35%, var(--border-base));
-		background: color-mix(in srgb, #c0c5cc 5%, var(--bg-surface));
+	.award.bronze {
+		background: radial-gradient(
+			circle at 30% 30%,
+			rgba(196, 138, 90, 0.92) 0%,
+			rgba(148, 98, 58, 0.96) 50%,
+			rgba(96, 62, 30, 0.96) 100%
+		);
 	}
 
-	.album-award.is-silver .album-award-emblem {
-		color: #c0c5cc;
+	.award.bronze .emblem,
+	.award.bronze .title,
+	.award.bronze .sub {
+		color: rgba(36, 22, 8, 0.92);
 	}
 
-	.album-award.is-bronze {
-		border-color: color-mix(in srgb, #c97c4a 35%, var(--border-base));
-		background: color-mix(in srgb, #c97c4a 5%, var(--bg-surface));
+	.award.locked {
+		background: radial-gradient(
+			circle at 30% 30%,
+			rgba(80, 80, 86, 0.85) 0%,
+			rgba(50, 50, 56, 0.95) 50%,
+			rgba(28, 28, 32, 0.95) 100%
+		);
+		box-shadow:
+			0 6px 14px -8px rgba(0, 0, 0, 0.45),
+			inset 0 2px 0 rgba(255, 255, 255, 0.06),
+			inset 0 -3px 0 rgba(0, 0, 0, 0.3);
 	}
 
-	.album-award.is-bronze .album-award-emblem {
-		color: #c97c4a;
+	.award.locked::after {
+		background: linear-gradient(
+			135deg,
+			transparent 30%,
+			rgba(255, 255, 255, 0.06) 48%,
+			transparent 60%
+		);
 	}
 
-	.album-award.is-locked .album-award-emblem,
-	.album-award.is-locked .album-award-title,
-	.album-award.is-locked .album-award-sub {
-		filter: grayscale(0.8);
+	.award.locked .emblem {
+		color: rgba(242, 236, 220, 0.3);
+	}
+
+	.award.locked .title {
+		color: rgba(242, 236, 220, 0.55);
+	}
+
+	.award.locked .sub {
+		color: rgba(242, 236, 220, 0.35);
+	}
+
+	/* In-progress accent bar across the foot of a locked medallion —
+	   visually distinguishes "on the way" tiles from untouched ones. */
+	.award-progress {
+		position: absolute;
+		z-index: 2;
+		left: 22%;
+		right: 22%;
+		bottom: 14%;
+		height: 3px;
+		border-radius: var(--r-pill);
+		background: rgba(242, 236, 220, 0.18);
+		overflow: hidden;
+	}
+
+	.award-progress > span {
+		display: block;
+		height: 100%;
+		border-radius: var(--r-pill);
+		background: var(--color-primary);
+		transition: width 360ms ease;
 	}
 
 	/* Bottom-sheet positioned ABSOLUTELY within the .album-page
-	   container so it swims inside the screen-scroll surface — see
-	   `screens.jsx:4720`. */
+	   container so it swims inside the screen-scroll surface. */
 	.album-sheet-backdrop {
 		position: absolute;
 		inset: 0;
@@ -404,43 +546,20 @@
 		margin-bottom: 0.9rem;
 	}
 
-	/* 64×64 tier-styled emblem tile inside the modal — matches
-	   `screens.jsx:4733-4735` `<div className="award ${tier}">`. */
+	/* 64×64 medallion inside the modal — reuses .award fill but at a
+	   fixed size, no hover, no progress bar. */
 	.album-sheet-emblem {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
 		width: 64px;
 		height: 64px;
-		font-size: 30px;
-		line-height: 1;
-		border: 1px solid var(--border-base);
-		border-radius: 14px;
-		color: var(--text-base);
+		aspect-ratio: auto;
+		padding: 0;
 		flex-shrink: 0;
+		cursor: default;
 	}
 
-	.album-sheet-emblem.is-gold {
-		border-color: color-mix(in srgb, #f4c544 45%, var(--border-base));
-		background: color-mix(in srgb, #f4c544 10%, var(--bg-surface));
-		color: #f4c544;
-	}
-
-	.album-sheet-emblem.is-silver {
-		border-color: color-mix(in srgb, #c0c5cc 45%, var(--border-base));
-		background: color-mix(in srgb, #c0c5cc 10%, var(--bg-surface));
-		color: #c0c5cc;
-	}
-
-	.album-sheet-emblem.is-bronze {
-		border-color: color-mix(in srgb, #c97c4a 45%, var(--border-base));
-		background: color-mix(in srgb, #c97c4a 10%, var(--bg-surface));
-		color: #c97c4a;
-	}
-
-	.album-sheet-emblem.is-locked {
-		filter: grayscale(0.85);
-		opacity: 0.6;
+	.album-sheet-emblem .emblem {
+		font-size: 30px;
+		margin-bottom: 0;
 	}
 
 	.album-sheet-title {
@@ -498,7 +617,8 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.album-award,
+		.award,
+		.award-progress > span,
 		.album-progress-bar > span,
 		.album-sheet-progress-bar > span {
 			transition: none;

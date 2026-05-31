@@ -5,17 +5,17 @@ export type AchievementTier = 'gold' | 'silver' | 'bronze';
 /**
  * Achievement definition — drives the Album tile + the unlock toast.
  *
- * On the profile + album surfaces the canonical render is the lucide
- * `Trophy` outline glyph with the tier-tinted wash (every award shows
- * the same trophy mark on the AlbumScreen). `emblem` is kept as a
- * single unicode fallback glyph for surfaces that render the def
- * out-of-band (Dash next-up rail) and for screen-reader / plain-text
+ * `emblem` is the per-award unicode glyph. The Album renders it on a
+ * circular metallic medallion tinted by `tier`; the profile rail uses
+ * the lucide per-id picker (eye / flame / target / trophy) with a
+ * tier-tinted wash. The emblem also covers surfaces that render the def
+ * out-of-band (Dash next-up rail) and screen-reader / plain-text
  * contexts. The catalogue uses the brand's approved glyph set
  * (`◎ ★ ⚡ ⧖ ◐ ⌘` — see `docs/ai/frontend/brand.md`).
  *
- * `tier` decides the wash colour (gold = laurel-tinted; silver /
- * bronze are reserved for monthly-leaderboard achievements once they
- * ship).
+ * `tier` decides the medallion / wash colour (gold = laurel-tinted;
+ * silver / bronze are reserved for monthly-leaderboard achievements
+ * once they ship).
  *
  * `detailKey` is the rich multi-sentence prose surfaced in the
  * bottom-sheet modal — distinct from the short `descriptionKey`

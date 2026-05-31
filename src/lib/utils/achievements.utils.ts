@@ -13,6 +13,7 @@
 
 import { ACHIEVEMENTS, type AchievementDef } from '$lib/constants/achievements.constants';
 import { ACCURACY_GATE_CALLS } from '$lib/constants/flow-rewards.constants';
+import type { MessageKey } from '$lib/utils/i18n.utils';
 
 // "Long shot" cutoff for the `contrarian` achievement: a settled trade
 // counts as a contrarian win when the user paid this price or less for
@@ -43,6 +44,14 @@ export interface AchievementEvaluation {
 	unlocked: boolean;
 	/** 0..1 — capped. Always 1 when `unlocked` is true. */
 	progress: number;
+	/**
+	 * i18n key for the human progress line shown on the Album in-progress
+	 * tile + detail sheet (e.g. "12 of 30 days"). Rendered with
+	 * `progressParams`. Locked entries with no measurable progress (e.g.
+	 * `first-blood`) carry a call-to-action key instead of a count.
+	 */
+	progressLabelKey: MessageKey;
+	progressParams: { current: number; target: number };
 }
 
 const ratio = ({ current, target }: { current: number; target: number }): number => {
@@ -67,7 +76,14 @@ const evaluateOne = ({
 		case 'first-blood': {
 			const unlocked = totalTrades > 0;
 
-			return { id: def.id, def, unlocked, progress: unlocked ? 1 : 0 };
+			return {
+				id: def.id,
+				def,
+				unlocked,
+				progress: unlocked ? 1 : 0,
+				progressLabelKey: 'album.progress_label.first_blood',
+				progressParams: { current: totalTrades, target: 1 }
+			};
 		}
 
 		case 'on-fire': {
@@ -75,7 +91,9 @@ const evaluateOne = ({
 				id: def.id,
 				def,
 				unlocked: winStreak >= ON_FIRE_STREAK_TARGET,
-				progress: ratio({ current: winStreak, target: ON_FIRE_STREAK_TARGET })
+				progress: ratio({ current: winStreak, target: ON_FIRE_STREAK_TARGET }),
+				progressLabelKey: 'album.progress_label.on_fire',
+				progressParams: { current: winStreak, target: ON_FIRE_STREAK_TARGET }
 			};
 		}
 
@@ -91,7 +109,9 @@ const evaluateOne = ({
 				id: def.id,
 				def,
 				unlocked: accuracyHit && tradesHit,
-				progress: accuracyHit ? ratio({ current: totalTrades, target: ORACLE_TRADES_TARGET }) : 0
+				progress: accuracyHit ? ratio({ current: totalTrades, target: ORACLE_TRADES_TARGET }) : 0,
+				progressLabelKey: 'album.progress_label.oracle',
+				progressParams: { current: totalTrades, target: ORACLE_TRADES_TARGET }
 			};
 		}
 
@@ -100,7 +120,9 @@ const evaluateOne = ({
 				id: def.id,
 				def,
 				unlocked: contrarianWins >= CONTRARIAN_WIN_TARGET,
-				progress: ratio({ current: contrarianWins, target: CONTRARIAN_WIN_TARGET })
+				progress: ratio({ current: contrarianWins, target: CONTRARIAN_WIN_TARGET }),
+				progressLabelKey: 'album.progress_label.contrarian',
+				progressParams: { current: contrarianWins, target: CONTRARIAN_WIN_TARGET }
 			};
 		}
 
@@ -109,7 +131,9 @@ const evaluateOne = ({
 				id: def.id,
 				def,
 				unlocked: dailyStreak >= MARATHON_DAILY_STREAK_TARGET,
-				progress: ratio({ current: dailyStreak, target: MARATHON_DAILY_STREAK_TARGET })
+				progress: ratio({ current: dailyStreak, target: MARATHON_DAILY_STREAK_TARGET }),
+				progressLabelKey: 'album.progress_label.marathon',
+				progressParams: { current: dailyStreak, target: MARATHON_DAILY_STREAK_TARGET }
 			};
 		}
 
@@ -118,12 +142,21 @@ const evaluateOne = ({
 				id: def.id,
 				def,
 				unlocked: level >= LVL_25_TARGET,
-				progress: ratio({ current: level, target: LVL_25_TARGET })
+				progress: ratio({ current: level, target: LVL_25_TARGET }),
+				progressLabelKey: 'album.progress_label.lvl_25',
+				progressParams: { current: level, target: LVL_25_TARGET }
 			};
 		}
 
 		default:
-			return { id: def.id, def, unlocked: false, progress: 0 };
+			return {
+				id: def.id,
+				def,
+				unlocked: false,
+				progress: 0,
+				progressLabelKey: 'album.progress_label.generic',
+				progressParams: { current: 0, target: 1 }
+			};
 	}
 };
 

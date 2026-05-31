@@ -204,6 +204,13 @@ export const enMessages = {
 	'album.close': 'Close',
 	'album.locked': 'Locked',
 	'album.progress_eyebrow': 'Progress',
+	'album.progress_label.contrarian': '{current} of {target} contrarian wins',
+	'album.progress_label.first_blood': 'Open Flow to unlock',
+	'album.progress_label.generic': 'Not started',
+	'album.progress_label.lvl_25': 'Level {current} of {target}',
+	'album.progress_label.marathon': '{current} of {target} days',
+	'album.progress_label.on_fire': '{current} of {target} in a row',
+	'album.progress_label.oracle': '{current} of {target} calls',
 	'album.progress_of': 'of {total} earned',
 	'album.title': 'My album',
 	'admin.dashboard.sub':

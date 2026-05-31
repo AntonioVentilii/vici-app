@@ -205,6 +205,13 @@ export const esMessages = {
 	'album.close': 'Cerrar',
 	'album.locked': 'Bloqueado',
 	'album.progress_eyebrow': 'Progreso',
+	'album.progress_label.contrarian': '{current} de {target} victorias a contracorriente',
+	'album.progress_label.first_blood': 'Abre Flow para desbloquear',
+	'album.progress_label.generic': 'Sin empezar',
+	'album.progress_label.lvl_25': 'Nivel {current} de {target}',
+	'album.progress_label.marathon': '{current} de {target} días',
+	'album.progress_label.on_fire': '{current} de {target} seguidas',
+	'album.progress_label.oracle': '{current} de {target} pronósticos',
 	'album.progress_of': 'de {total} obtenidos',
 	'album.title': 'Mi álbum',
 	'admin.dashboard.sub':

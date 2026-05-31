@@ -205,6 +205,13 @@ export const frMessages = {
 	'album.close': 'Fermer',
 	'album.locked': 'Verrouillé',
 	'album.progress_eyebrow': 'Progression',
+	'album.progress_label.contrarian': '{current} sur {target} victoires à contre-courant',
+	'album.progress_label.first_blood': 'Ouvrez Flow pour débloquer',
+	'album.progress_label.generic': 'Pas commencé',
+	'album.progress_label.lvl_25': 'Niveau {current} sur {target}',
+	'album.progress_label.marathon': '{current} sur {target} jours',
+	'album.progress_label.on_fire': '{current} sur {target} d’affilée',
+	'album.progress_label.oracle': '{current} sur {target} pronostics',
 	'album.progress_of': 'sur {total} obtenus',
 	'album.title': 'Mon album',
 	'admin.dashboard.sub':

@@ -205,6 +205,13 @@ export const deMessages = {
 	'album.close': 'Schließen',
 	'album.locked': 'Gesperrt',
 	'album.progress_eyebrow': 'Fortschritt',
+	'album.progress_label.contrarian': '{current} von {target} Contrarian-Siegen',
+	'album.progress_label.first_blood': 'Flow öffnen zum Freischalten',
+	'album.progress_label.generic': 'Nicht begonnen',
+	'album.progress_label.lvl_25': 'Level {current} von {target}',
+	'album.progress_label.marathon': '{current} von {target} Tagen',
+	'album.progress_label.on_fire': '{current} von {target} in Folge',
+	'album.progress_label.oracle': '{current} von {target} Tipps',
 	'album.progress_of': 'von {total} erreicht',
 	'album.title': 'Mein Album',
 	'admin.dashboard.sub':

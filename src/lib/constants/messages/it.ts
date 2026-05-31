@@ -205,6 +205,13 @@ export const itMessages = {
 	'album.close': 'Chiudi',
 	'album.locked': 'Bloccato',
 	'album.progress_eyebrow': 'Progresso',
+	'album.progress_label.contrarian': '{current} su {target} vittorie da contrarian',
+	'album.progress_label.first_blood': 'Apri Flow per sbloccare',
+	'album.progress_label.generic': 'Non iniziato',
+	'album.progress_label.lvl_25': 'Livello {current} di {target}',
+	'album.progress_label.marathon': '{current} su {target} giorni',
+	'album.progress_label.on_fire': '{current} su {target} di fila',
+	'album.progress_label.oracle': '{current} su {target} pronostici',
 	'album.progress_of': 'di {total} ottenuti',
 	'album.title': 'Il mio album',
 	'admin.dashboard.sub':
