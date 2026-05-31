@@ -262,8 +262,8 @@
 		margin: 0;
 		padding: 0.55rem 0.7rem;
 		font-size: var(--t-12);
-		color: var(--color-destructive);
-		background: color-mix(in srgb, var(--color-destructive) 8%, transparent);
+		color: var(--danger);
+		background: color-mix(in srgb, var(--danger) 8%, transparent);
 		border-radius: var(--r-8);
 	}
 

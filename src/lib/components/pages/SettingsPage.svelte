@@ -913,26 +913,27 @@
 	}
 
 	/* Sign-out as a 12-px rounded rectangle (intentionally NOT a
-	   full pill — pairs with the destructive band below). Red text
-	   + red-tinted border on top of a subtle ghost-button surface;
-	   hover lifts the red wash without flipping to a fully filled
+	   full pill — pairs with the destructive band below). Danger text
+	   + danger-tinted border on top of a subtle ghost-button surface;
+	   hover lifts the danger wash without flipping to a fully filled
 	   destructive button so the action still requires the explicit
-	   confirm step beneath it. */
+	   confirm step beneath it. Uses the terracotta `--danger` role, not
+	   the prediction `--no` signal. */
 	:global(.settings-signout) {
 		width: 100%;
 		padding: 14px 20px;
-		border: 1px solid color-mix(in srgb, var(--no) 25%, transparent);
+		border: 1px solid color-mix(in srgb, var(--danger) 25%, transparent);
 		border-radius: 12px;
 		background: color-mix(in srgb, var(--text-base) 6%, transparent);
-		color: var(--no);
+		color: var(--danger);
 		font-size: 15px;
 		font-weight: 600;
 		letter-spacing: -0.005em;
 	}
 
 	:global(.settings-signout):hover {
-		background: color-mix(in srgb, var(--no) 8%, transparent);
-		border-color: color-mix(in srgb, var(--no) 45%, transparent);
+		background: color-mix(in srgb, var(--danger) 8%, transparent);
+		border-color: color-mix(in srgb, var(--danger) 45%, transparent);
 	}
 
 	.settings-signout-confirm p {
@@ -942,8 +943,8 @@
 
 	/* Delete-account link sits one tier below Sign out in the
 	   destructive hierarchy: just a muted-grey underlined text link.
-	   The colour only flips to red on hover so the resting state
-	   never visually competes with the Sign-out CTA above. */
+	   The colour only flips to the danger tone on hover so the resting
+	   state never visually competes with the Sign-out CTA above. */
 	.settings-delete-link {
 		align-self: center;
 		border: none;
@@ -958,8 +959,8 @@
 	}
 
 	.settings-delete-link:hover {
-		color: var(--no);
-		text-decoration-color: color-mix(in srgb, var(--no) 55%, transparent);
+		color: var(--danger);
+		text-decoration-color: color-mix(in srgb, var(--danger) 55%, transparent);
 	}
 
 	.settings-confirm {
