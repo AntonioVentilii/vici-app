@@ -10,7 +10,7 @@
 	import LeagueListCard from '$lib/components/leagues/LeagueListCard.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
-	import { type LeagueWithRole } from '$lib/services/leagues.services';
+	import type { LeagueWithRole } from '$lib/services/leagues.services';
 	import { friendsListStore, refreshFriendRelations } from '$lib/stores/friends.store';
 	import {
 		leagueBattlesStore,

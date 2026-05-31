@@ -1,6 +1,6 @@
-import { functions } from '$declarations/satellite/satellite.api';
 import {
 	listLeagueBattles,
+	listLeagueMembers,
 	listMyLeagues,
 	type LeagueWithRole
 } from '$lib/services/leagues.services';
@@ -60,17 +60,10 @@ const runRefresh = async (): Promise<void> => {
 	const hydrated = await Promise.all(
 		memberships.map(async (m) => {
 			try {
-				const [memberRes, battleList] = await Promise.all([
-					functions.listLeagueMembers({ leagueId: m.league.id }),
+				const [members, battleList] = await Promise.all([
+					listLeagueMembers({ leagueId: m.league.id }),
 					listLeagueBattles({ leagueId: m.league.id })
 				]);
-
-				const members: LeagueMemberDoc[] = memberRes.items.map((row) => ({
-					leagueId: row.league_id,
-					member: row.member,
-					joinedAtMs: row.joined_at_ms,
-					role: row.role
-				}));
 
 				return { leagueId: m.league.id, members, battles: battleList };
 			} catch (err) {
