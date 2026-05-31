@@ -1360,7 +1360,7 @@ export const zhCnMessages = {
 	'markets.section.saved': '已保存',
 	'markets.section.trending': '热门',
 	'markets.see_all': '查看全部',
-	'markets.see_all_count': '查看全部 {count} →',
+	'markets.see_all_count': '查看全部 {count}',
 	'markets.suggested.eyebrow': '编辑精选',
 	'markets.suggested.eyebrow_event': '焦点赛事',
 	'markets.suggested.title': '为你推荐',

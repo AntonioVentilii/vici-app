@@ -1436,7 +1436,7 @@ export const ptMessages = {
 	'markets.section.saved': 'Salvos',
 	'markets.section.trending': 'Em alta',
 	'markets.see_all': 'Ver tudo',
-	'markets.see_all_count': 'Ver todos os {count} →',
+	'markets.see_all_count': 'Ver todos os {count}',
 	'markets.suggested.eyebrow': 'ESCOLHA DO EDITOR',
 	'markets.suggested.eyebrow_event': 'EVENTO EM DESTAQUE',
 	'markets.suggested.title': 'Sugeridos para você',

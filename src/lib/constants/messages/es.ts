@@ -1441,7 +1441,7 @@ export const esMessages = {
 	'markets.section.saved': 'Guardados',
 	'markets.section.trending': 'Tendencia',
 	'markets.see_all': 'Ver todo',
-	'markets.see_all_count': 'Ver los {count} →',
+	'markets.see_all_count': 'Ver los {count}',
 	'markets.suggested.eyebrow': 'ELECCIÓN DEL EDITOR',
 	'markets.suggested.eyebrow_event': 'EVENTO DESTACADO',
 	'markets.suggested.title': 'Sugeridos para ti',

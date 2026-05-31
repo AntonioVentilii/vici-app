@@ -10,9 +10,11 @@
 	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	/**
-	 * Full-width market row for the All markets list. Header pairs the
-	 * category tag with `vol · closes`; body is the question; footer
-	 * sits a `ProbBar` next to the YES %, tinted YES / NO by side.
+	 * Compact inline row in the Markets list. Rendered as a flush
+	 * `card-inline` (hairline-top separator, no card border) so a column
+	 * of rows reads as one list. Header pairs the category tag with
+	 * `vol · closes`; body is the question; footer sits a `ProbBar`
+	 * next to the YES %, tinted YES / NO by side.
 	 */
 	interface Props {
 		market: Market;
@@ -33,19 +35,7 @@
 	const onClick = () => goto(resolve(`${AppPath.Markets}/${market.id}`));
 </script>
 
-<div
-	style="padding: 14px; cursor: pointer;"
-	class="card"
-	onclick={onClick}
-	onkeydown={(event) => {
-		if (event.key === 'Enter' || event.key === ' ') {
-			event.preventDefault();
-			onClick();
-		}
-	}}
-	role="button"
-	tabindex="0"
->
+<button class="card-inline" onclick={onClick} type="button">
 	<div class="row between">
 		{#if tag}
 			<span style:color={tagColor(tag)} class="tag"
@@ -54,7 +44,7 @@
 		{:else}
 			<span class="tag">&nbsp;</span>
 		{/if}
-		<span class="num mute markets-row-meta"
+		<span class="num mute t-eyebrow"
 			>{vol} {t({ locale: $localeStore, key: 'market.vol_suffix' })} · {closes}</span
 		>
 	</div>
@@ -76,12 +66,4 @@
 			>{yes}%</span
 		>
 	</div>
-</div>
-
-<style lang="postcss">
-	.markets-row-meta {
-		font-size: var(--t-11);
-		font-weight: 600;
-		letter-spacing: 0.02em;
-	}
-</style>
+</button>

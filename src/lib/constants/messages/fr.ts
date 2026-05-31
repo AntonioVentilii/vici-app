@@ -1450,7 +1450,7 @@ export const frMessages = {
 	'markets.section.saved': 'Enregistrés',
 	'markets.section.trending': 'Tendance',
 	'markets.see_all': 'Tout voir',
-	'markets.see_all_count': 'Voir les {count} →',
+	'markets.see_all_count': 'Voir les {count}',
 	'markets.suggested.eyebrow': 'CHOIX DE LA RÉDACTION',
 	'markets.suggested.eyebrow_event': 'ÉVÉNEMENT PHARE',
 	'markets.suggested.title': 'Suggérés pour toi',
