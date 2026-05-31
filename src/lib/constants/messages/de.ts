@@ -925,7 +925,7 @@ export const deMessages = {
 		'Was wir erheben, warum wir es erheben, mit wem wir es teilen. Kurzfassung: Wir erheben so wenig wie möglich.',
 	'info.doc.privacy.b1': 'Was wir erheben',
 	'info.doc.privacy.b10':
-		'Auskunft, Export, Berichtigung und Löschung deiner Daten sind auf Anfrage an privacy@vici.market verfügbar. Wir antworten innerhalb von dreißig Tagen.',
+		'Auskunft, Export, Berichtigung und Löschung deiner Daten sind auf Anfrage an {email} verfügbar. Wir antworten innerhalb von dreißig Tagen.',
 	'info.doc.privacy.b11': 'Cookies',
 	'info.doc.privacy.b12':
 		'Wir speichern ein einziges Sitzungstoken. Wir verwenden keine Tracking-Cookies.',
@@ -959,7 +959,7 @@ export const deMessages = {
 		'Quelle ändert ihre Methodik mitten im Fenster → Markt annulliert, sofern die Änderung nicht unwesentlich ist.',
 	'info.doc.resolution-rules.b11': 'Streitigkeiten',
 	'info.doc.resolution-rules.b12':
-		'Jeder Teilnehmer kann innerhalb von zweiundsiebzig Stunden eine Auflösungsstreitigkeit einreichen, indem er an resolution@vici.market mit seinem Handle, der Markt-ID und der Begründung der Streitigkeit schreibt. Streitigkeiten werden von der Redaktion geprüft und innerhalb von vierundzwanzig Stunden beantwortet.',
+		'Jeder Teilnehmer kann innerhalb von zweiundsiebzig Stunden eine Auflösungsstreitigkeit einreichen, indem er an {email} mit seinem Handle, der Markt-ID und der Begründung der Streitigkeit schreibt. Streitigkeiten werden von der Redaktion geprüft und innerhalb von vierundzwanzig Stunden beantwortet.',
 	'info.doc.resolution-rules.b2':
 		'Bevor ein Markt für Prognosen öffnet, werden zwei Fakten festgelegt und auf der Rückseite der Marktkarte veröffentlicht: das Auflösungskriterium (die YES-Bedingung in einfacher Sprache) und die Quelle (der benannte öffentliche Datenfeed, der entscheidet).',
 	'info.doc.resolution-rules.b3': 'Handelsfenster',
