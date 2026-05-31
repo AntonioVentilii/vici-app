@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { MARKET_TAG_LABEL_KEYS, type MarketTag } from '$lib/constants/market-tags.constants';
+	import { categoryLabel, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
@@ -50,7 +50,7 @@
 	<div class="row between">
 		{#if tag}
 			<span style:color={tagColor(tag)} class="tag"
-				>{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[tag] }).toUpperCase()}</span
+				>{categoryLabel({ category: tag, variant: 'short', locale: $localeStore })}</span
 			>
 		{:else}
 			<span class="tag">&nbsp;</span>
