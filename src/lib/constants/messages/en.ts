@@ -480,7 +480,6 @@ export const enMessages = {
 	'card.back.who_calling': "Who's calling what",
 	'card.back.your_context': 'Your context',
 	'card.call_count': '{count} calls',
-	'card.callers_last_hour': '{count} callers in last hour',
 	'card.call_size': 'CALL SIZE',
 	'card.call_size_cap': 'CALL SIZE · CAP',
 	'card.calls': 'calls',
