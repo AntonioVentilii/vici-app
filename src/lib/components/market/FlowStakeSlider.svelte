@@ -113,11 +113,11 @@
 	.flow-stake {
 		padding: 0.75rem 0.85rem;
 		border-radius: var(--r-12);
-		border: 1px solid rgba(226, 184, 66, 0.22);
+		border: 1px solid color-mix(in srgb, var(--laurel) 22%, var(--border-base));
 		background: linear-gradient(
 			180deg,
-			rgba(226, 184, 66, 0.06),
-			rgba(226, 184, 66, 0.02) 70%,
+			color-mix(in srgb, var(--laurel) 6%, transparent),
+			color-mix(in srgb, var(--laurel) 2%, transparent) 70%,
 			transparent
 		);
 		box-shadow: var(--inset-hi);
@@ -151,24 +151,23 @@
 	}
 	.flow-stake-value {
 		font-family: var(--font-mono);
-		font-size: var(--t-16);
+		font-size: 1.375rem;
 		font-weight: 700;
+		letter-spacing: -0.02em;
 		color: var(--laurel);
 	}
 	.flow-stake.is-cap .flow-stake-value {
 		color: var(--no);
 	}
 	.flow-stake-unit {
-		font-size: 9.5px;
-		letter-spacing: var(--tracking-allcaps);
-		color: var(--text-muted);
-		font-weight: 700;
-		margin-left: 3px;
+		font-size: var(--t-12);
+		opacity: 0.7;
+		margin-left: 2px;
 	}
 
 	.flow-stake-slider-wrap {
 		position: relative;
-		height: 22px;
+		height: 28px;
 		margin: 0.4rem 0 0.3rem;
 	}
 	.flow-stake-track {
@@ -179,7 +178,7 @@
 		transform: translateY(-50%);
 		height: 6px;
 		border-radius: var(--r-pill);
-		background: var(--border-base);
+		background: var(--border-strong);
 		overflow: hidden;
 	}
 	.flow-stake-fill {
@@ -197,12 +196,12 @@
 		width: 22px;
 		height: 22px;
 		border-radius: var(--r-pill);
-		background: var(--bg-surface);
+		background: var(--laurel);
 		border: 3px solid var(--bg-surface);
 		transform: translate(-50%, -50%);
 		box-shadow:
-			0 0 0 1px var(--color-accent),
-			0 3px 10px rgba(226, 184, 66, 0.4);
+			0 0 0 1px var(--laurel),
+			0 3px 10px color-mix(in srgb, var(--laurel) 40%, transparent);
 		pointer-events: none;
 		transition:
 			background 220ms var(--ease-vici),
@@ -211,10 +210,9 @@
 	}
 	.flow-stake.is-cap .flow-stake-handle {
 		background: var(--no);
-		border-color: var(--no);
 		box-shadow:
 			0 0 0 1px var(--no),
-			0 3px 8px rgba(255, 107, 107, 0.4);
+			0 3px 8px color-mix(in srgb, var(--no) 40%, transparent);
 	}
 	.flow-stake-range {
 		position: absolute;
@@ -235,7 +233,7 @@
 		appearance: none;
 		padding: 0.4rem 0;
 		font-family: var(--font-mono);
-		font-size: var(--t-12);
+		font-size: var(--t-10);
 		font-weight: 600;
 		color: var(--text-muted);
 		background: transparent;
@@ -265,8 +263,11 @@
 		flex-direction: column;
 		gap: 4px;
 		padding-top: 0.5rem;
-		border-top: 1px dashed rgba(226, 184, 66, 0.2);
+		border-top: 1px dashed color-mix(in srgb, var(--laurel) 20%, transparent);
 		margin-top: 0.4rem;
+	}
+	.flow-stake.is-cap .flow-stake-payout {
+		border-top-color: color-mix(in srgb, var(--no) 20%, transparent);
 	}
 	.flow-stake-payout-row {
 		display: flex;
