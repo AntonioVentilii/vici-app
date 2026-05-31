@@ -5,11 +5,13 @@
 		Bell,
 		ChevronLeft,
 		ChevronRight,
-		Download,
 		Eye,
 		Globe,
 		Info,
+		KeyRound,
+		LineChart,
 		Lock,
+		Mail,
 		Moon,
 		Search,
 		Share2,
@@ -308,12 +310,14 @@
 			<SettingsIdentityCard {joinedLabel} {profile} />
 
 			<SetRow
+				icon={KeyRound}
 				label={t({ locale: $localeStore, key: 'settings.account.signin_method' })}
 				onclick={() => goto(resolve(AppPath.AccountSettings))}
 				sub={signinMethodSub}
 			/>
 
 			<SetRow
+				icon={Mail}
 				label={t({ locale: $localeStore, key: 'settings.account.email' })}
 				onclick={() => goto(resolve(AppPath.AccountSettings))}
 				sub={emailSub}
@@ -468,7 +472,7 @@
 
 			<SetToggle
 				checked={$preferencesStore.callsPublic}
-				icon={Target}
+				icon={LineChart}
 				label={t({ locale: $localeStore, key: 'settings.public_calls' })}
 				onchange={(value) => {
 					preferencesStore.update((prefs) => ({ ...prefs, callsPublic: value }));
@@ -519,7 +523,7 @@
 				sub={t({ locale: $localeStore, key: 'settings.data.export.sub' })}
 			/>
 			<SetRow
-				icon={Download}
+				icon={Trophy}
 				label={t({ locale: $localeStore, key: 'settings.data.album' })}
 				muted
 				onclick={() =>
