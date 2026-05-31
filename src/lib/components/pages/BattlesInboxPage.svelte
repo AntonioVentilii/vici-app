@@ -32,6 +32,7 @@
 		affiliationMonthlyAccuracy,
 		formatAccuracyPercent
 	} from '$lib/utils/affiliation-stats.utils';
+	import { formatMonthName } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 
@@ -256,6 +257,10 @@
 	const countryCount = WORLDS_COUNTRIES.length;
 
 	const eventDaysLeft = $derived($daysToFinal);
+
+	// Month-anchored season label — the monthly cards always name the
+	// current month rather than a hard-coded one.
+	const currentMonthName = $derived(formatMonthName({ locale: $localeStore }));
 
 	const uniOption = (id: string) => lookupWorldsAffiliation({ kind: 'university', id });
 	const countryOption = (id: string) => lookupWorldsAffiliation({ kind: 'country', id });
@@ -527,7 +532,11 @@
 			<button class="battles-card is-compact" onclick={goWorldsUniversitiesMonth} type="button">
 				<div class="battles-card-head">
 					<span class="battles-tag is-monthly">
-						{t({ locale: $localeStore, key: 'battles.tag.monthly_all_calls' })}
+						{t({
+							locale: $localeStore,
+							key: 'battles.tag.monthly_all_calls',
+							params: { month: currentMonthName }
+						})}
 					</span>
 				</div>
 				{#if myUni && myUniStats}
@@ -683,7 +692,11 @@
 			<button class="battles-card is-compact" onclick={goWorldsCountriesMonth} type="button">
 				<div class="battles-card-head">
 					<span class="battles-tag is-monthly">
-						{t({ locale: $localeStore, key: 'battles.tag.monthly_all_calls' })}
+						{t({
+							locale: $localeStore,
+							key: 'battles.tag.monthly_all_calls',
+							params: { month: currentMonthName }
+						})}
 					</span>
 				</div>
 				{#if myCountry && myCountryStats}

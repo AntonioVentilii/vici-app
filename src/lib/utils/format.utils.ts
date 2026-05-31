@@ -217,6 +217,22 @@ export const formatLongDate = ({
 		day: 'numeric'
 	});
 
+/**
+ * Locale-aware full month name (e.g. `June`) for a given date,
+ * defaulting to today. Used to month-anchor season labels so a tag
+ * never names a month that isn't the active one. Formatted in UTC to
+ * mirror `monthAnchorFromMs` (which anchors the underlying stats via
+ * `getUTCMonth`); otherwise the label could disagree with the data
+ * around a UTC month rollover.
+ */
+export const formatMonthName = ({
+	locale,
+	date = new Date()
+}: {
+	locale: string;
+	date?: Date;
+}): string => new Intl.DateTimeFormat(locale, { month: 'long', timeZone: 'UTC' }).format(date);
+
 export const formatVolume = ({
 	volume,
 	decimals,
