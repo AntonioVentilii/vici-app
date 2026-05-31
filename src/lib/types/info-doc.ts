@@ -10,8 +10,10 @@ import type { MessageKey } from '$lib/utils/i18n.utils';
  * the renderer applies consistently across documents.
  *
  * Translatable copy is referenced by `MessageKey`, resolved per-locale
- * at render time via `t(...)`. The only literal carried inline is the
- * `mail` address — a contact identifier, not translatable copy.
+ * at render time via `t(...)`. The only literals carried inline are
+ * contact addresses — `mail` block text and the `{email}` params some
+ * paragraphs interpolate — sourced from `contact.constants`, never the
+ * i18n catalogs (they are identifiers, not translatable copy).
  *
  * The current copy is **placeholder**. Legal sign-off is required before
  * launch — the `Legal · …` eyebrow lines flag the docs that need it.
@@ -20,7 +22,7 @@ import type { MessageKey } from '$lib/utils/i18n.utils';
 export type InfoDocBlock =
 	| { kind: 'lede'; key: MessageKey }
 	| { kind: 'h'; key: MessageKey }
-	| { kind: 'p'; key: MessageKey }
+	| { kind: 'p'; key: MessageKey; params?: Record<string, string | number> }
 	| { kind: 'list'; itemKeys: MessageKey[] }
 	| { kind: 'mail'; text: string };
 

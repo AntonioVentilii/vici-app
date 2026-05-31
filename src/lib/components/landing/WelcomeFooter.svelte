@@ -4,6 +4,7 @@
 	 * (Product / Help / Legal) + disclosure line.
 	 */
 	import Logo from '$lib/components/layout/Logo.svelte';
+	import { SUPPORT_EMAIL } from '$lib/constants/contact.constants';
 	import { PublicPath } from '$lib/constants/routes.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { t } from '$lib/utils/i18n.utils';
@@ -25,7 +26,7 @@
 				<div>
 					<div class="eyebrow mute">{t({ locale: $localeStore, key: 'footer.help' })}</div>
 					<a href="#faq">{t({ locale: $localeStore, key: 'footer.faq' })}</a>
-					<a href="mailto:support@vici.market">
+					<a href="mailto:{SUPPORT_EMAIL}">
 						{t({ locale: $localeStore, key: 'footer.contact' })}
 					</a>
 				</div>

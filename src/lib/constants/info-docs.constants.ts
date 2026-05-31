@@ -1,3 +1,9 @@
+import {
+	HELLO_EMAIL,
+	PRIVACY_EMAIL,
+	RESOLUTION_EMAIL,
+	SUPPORT_EMAIL
+} from '$lib/constants/contact.constants';
 import type { InfoDoc } from '$lib/types/info-doc';
 
 /**
@@ -11,8 +17,10 @@ import type { InfoDoc } from '$lib/types/info-doc';
  *
  * Copy is routed through i18n: every block references a `MessageKey`
  * (`info.doc.${slug}.${block}`) resolved per-locale at render time.
- * Email addresses are real contact identifiers, not translatable copy,
- * so `mail` blocks carry the literal address.
+ * Email addresses are real contact identifiers, not translatable copy:
+ * they come from `contact.constants` — `mail` blocks carry the constant
+ * directly, and paragraphs that mention an address interpolate it via the
+ * `{email}` param so the literal never duplicates across locales.
  */
 
 const TERMS: InfoDoc = {
@@ -64,7 +72,7 @@ const PRIVACY: InfoDoc = {
 		{ kind: 'h', key: 'info.doc.privacy.b7' },
 		{ kind: 'p', key: 'info.doc.privacy.b8' },
 		{ kind: 'h', key: 'info.doc.privacy.b9' },
-		{ kind: 'p', key: 'info.doc.privacy.b10' },
+		{ kind: 'p', key: 'info.doc.privacy.b10', params: { email: PRIVACY_EMAIL } },
 		{ kind: 'h', key: 'info.doc.privacy.b11' },
 		{ kind: 'p', key: 'info.doc.privacy.b12' }
 	]
@@ -94,7 +102,7 @@ const RESOLUTION_RULES: InfoDoc = {
 			]
 		},
 		{ kind: 'h', key: 'info.doc.resolution-rules.b11' },
-		{ kind: 'p', key: 'info.doc.resolution-rules.b12' }
+		{ kind: 'p', key: 'info.doc.resolution-rules.b12', params: { email: RESOLUTION_EMAIL } }
 	]
 };
 
@@ -155,7 +163,7 @@ const CONTACT: InfoDoc = {
 	blocks: [
 		{ kind: 'lede', key: 'info.doc.contact.b0' },
 		{ kind: 'h', key: 'info.doc.contact.b1' },
-		{ kind: 'mail', text: 'support@vici.market' },
+		{ kind: 'mail', text: SUPPORT_EMAIL },
 		{ kind: 'h', key: 'info.doc.contact.b3' },
 		{ kind: 'p', key: 'info.doc.contact.b4' },
 		{ kind: 'h', key: 'info.doc.contact.b5' },
@@ -164,7 +172,7 @@ const CONTACT: InfoDoc = {
 			itemKeys: ['info.doc.contact.b6.i0', 'info.doc.contact.b6.i1', 'info.doc.contact.b6.i2']
 		},
 		{ kind: 'h', key: 'info.doc.contact.b7' },
-		{ kind: 'mail', text: 'hello@vici.market' }
+		{ kind: 'mail', text: HELLO_EMAIL }
 	]
 };
 
