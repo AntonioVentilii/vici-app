@@ -43,21 +43,16 @@
 </section>
 
 <style lang="postcss">
-	/* Shared block wrapper + section surface — duplicated here so the
-	   extracted section keeps its spacing + surface under Svelte's
-	   per-component style scoping. */
 	.flow-back-block {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
 	}
 
+	/* The community read is bare — number + sparkline sit directly on the
+	   card with no surface box; only the resolution / stake / split
+	   blocks are framed. */
 	.flow-community {
-		padding: 0.75rem 0.85rem;
-		border-radius: var(--r-12);
-		border: 1px solid var(--border-base);
-		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
-		box-shadow: var(--inset-hi);
+		gap: 0.25rem;
 	}
 
 	.flow-community-top {
@@ -69,19 +64,19 @@
 	}
 	.flow-community-pct {
 		font-size: 1.625rem;
-		font-weight: 600;
-		letter-spacing: -0.03em;
-		line-height: 1;
+		font-weight: 700;
+		letter-spacing: -0.02em;
+		line-height: 1.05;
 	}
 	.flow-community-side {
-		margin-left: 0.35rem;
-		font-size: var(--t-12);
+		margin-left: 2px;
+		font-size: var(--t-13);
 		font-weight: 600;
-		letter-spacing: var(--tracking-allcaps);
+		letter-spacing: 0.04em;
 	}
 	.flow-community-delta {
 		font-size: var(--t-12);
-		font-weight: 700;
+		font-weight: 500;
 	}
 	.flow-delta-yes {
 		color: var(--yes);
