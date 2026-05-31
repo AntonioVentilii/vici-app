@@ -484,7 +484,6 @@ export const itMessages = {
 	'card.back.who_calling': 'Chi prevede cosa',
 	'card.back.your_context': 'Il tuo contesto',
 	'card.call_count': '{count} previsioni',
-	'card.callers_last_hour': '{count} pronostici nell’ultima ora',
 	'card.call_size': 'TAGLIA DELLA CALL',
 	'card.call_size_cap': 'TAGLIA DELLA CALL · MAX',
 	'card.calls': 'previsioni',
