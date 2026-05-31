@@ -2134,6 +2134,7 @@ export const esMessages = {
 	'welcome.faq.contact_prefix': '¿Más preguntas? Escribe a',
 	'welcome.faq.contact_suffix': '— respondemos en dos días hábiles.',
 	'welcome.faq.eyebrow': 'FAQ',
+	'welcome.faq.privacy_link': 'Consulta la política de privacidad para más detalles.',
 	'welcome.faq.q1': '¿VICI es gratis?',
 	'welcome.faq.q2': '¿Sobre qué puedo predecir?',
 	'welcome.faq.q3': '¿Cómo se mide mi precisión?',
