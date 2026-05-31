@@ -68,15 +68,6 @@
 		};
 	});
 
-	// Market detail (`/markets/[id]`) is rendered as a single linear
-	// mobile-first surface with its own sticky bottom CTA bar — the
-	// global mobile tab bar is hidden on this route so the CTA owns
-	// the bottom slot, and the container padding is dropped so the
-	// hero + chart cards can run edge-to-edge. The `'/markets/'`
-	// prefix already excludes the bare listing route at `/markets`,
-	// so no extra guard is needed.
-	const isMarketDetailPage = $derived(page.url.pathname.startsWith('/markets/'));
-
 	// Public markets surface — any visitor can browse the list and
 	// open a market's detail before signing up. The market list
 	// (`/markets`) and the detail (`/markets/[id]`) are exempted from
@@ -556,7 +547,10 @@
 	});
 </script>
 
-<div class="relative isolate flex h-full flex-col">
+<div
+	style:--navpill-h={$userSignedIn ? '88px' : '0px'}
+	class="relative isolate flex h-full flex-col"
+>
 	<!--
 		Desktop chrome — landing-style top nav. Hidden at <56rem; the
 		mobile floating pillnav (rendered below as `<MobileNav>`) owns
@@ -585,14 +579,13 @@
 
 	<!--
 		Bottom nav is visible on every signed-in surface including
-		Flow. Two exceptions:
-		- Anonymous visitors on public routes (`/markets`, `/markets/*`,
-		  `/info/*`) — the navpill's tabs all point at auth-gated areas,
-		  so showing it to a signed-out user is a dead-end.
-		- Market detail (`/markets/[id]`) — owns the bottom slot with
-		  its own sticky YES/NO CTA bar.
+		Flow and market detail. The one exception is anonymous visitors
+		on public routes (`/markets`, `/markets/*`, `/info/*`) — the
+		navpill's tabs all point at auth-gated areas, so showing it to a
+		signed-out user is a dead-end. On market detail the YES/NO CTA
+		bar floats above the navpill rather than replacing it.
 	-->
-	{#if $userSignedIn && !isMarketDetailPage}
+	{#if $userSignedIn}
 		<MobileNav />
 	{/if}
 
