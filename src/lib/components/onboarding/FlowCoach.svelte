@@ -11,14 +11,13 @@
 	 * `.ob-card` elements with `data-coach-phase` so the cards drift
 	 * in sympathy via the matching CSS in `app.css`
 	 * (`.flow-card[data-coach-phase]`). Phase 3 flips the card to its
-	 * back face by toggling `is-flipped`; phase 4 cleans up and returns
-	 * control. Dismisses on any pointer-down.
+	 * back face by toggling `is-flipped`; the IDLE beat ("your turn")
+	 * then lingers until the user acts. Dismisses on the first
+	 * pointer-down.
 	 *
-	 * The `flow` surface persists dismissal in `localStorage` so the
-	 * coach is shown at most once per device. The `onboarding` surface
-	 * is intentionally **always shown** — onboarding is a one-shot
-	 * funnel and the gesture hints are core to it, so it never reads or
-	 * writes the seen flag.
+	 * Each surface persists its own dismissal flag in `localStorage`
+	 * (`vici.coach-flow-seen` / `vici.coach-onboarding-seen`) so the
+	 * coach is shown at most once per device per surface.
 	 */
 	interface Props {
 		surface?: 'flow' | 'onboarding';
@@ -26,14 +25,14 @@
 
 	const { surface = 'flow' }: Props = $props();
 
-	// Onboarding always coaches; only the persistent `flow` surface caches
-	// a per-device "seen" flag. Onboarding never reads or writes it.
-	const persistSeen = $derived(surface !== 'onboarding');
-
-	const storageKey = 'vici.coach-flow-seen';
+	// Each surface caches its own per-device "seen" flag so the coach
+	// is shown at most once per surface.
+	const storageKey = $derived(
+		surface === 'onboarding' ? 'vici.coach-onboarding-seen' : 'vici.coach-flow-seen'
+	);
 
 	const readSeen = (): boolean => {
-		if (!browser || !persistSeen) {
+		if (!browser) {
 			return false;
 		}
 
@@ -48,12 +47,8 @@
 	let phase = $state(0);
 
 	// Phase timeline (ms): 0 = mount, 2200 NO, 4400 YES, 6400 TAP-flip,
-	// 8800 IDLE. The IDLE beat lingers `IDLE_LINGER_MS` then auto-
-	// dismisses so the surface never sits there blocked. Tweak this if
-	// the coach feels rushed or sticky.
-	const IDLE_LINGER_MS = 2200;
-	const IDLE_AUTO_DISMISS_MS = 8800 + IDLE_LINGER_MS;
-
+	// 8800 IDLE. The IDLE beat ("your turn") lingers until the user
+	// acts; the first pointer-down dismisses the coach for good.
 	const hints = [
 		{ key: 'flow.coach.hint_no', cls: 'no' },
 		{ key: 'flow.coach.hint_yes', cls: 'yes' },
@@ -93,7 +88,7 @@
 	};
 
 	const dismiss = () => {
-		if (browser && persistSeen) {
+		if (browser) {
 			try {
 				localStorage.setItem(storageKey, '1');
 			} catch {
@@ -129,11 +124,6 @@
 					phase = 4;
 				}, 8800)
 			);
-			// Auto-dismiss the IDLE ("your turn ⚡") hint after a short
-			// lingering beat so the coach overlay never sits there blocking
-			// the surface indefinitely. The user can also dismiss earlier
-			// via any pointer-down (see handler below).
-			timers.push(setTimeout(() => dismiss(), IDLE_AUTO_DISMISS_MS));
 		});
 
 		pointerHandler = () => dismiss();
