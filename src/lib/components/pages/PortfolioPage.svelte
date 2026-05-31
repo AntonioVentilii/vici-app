@@ -517,9 +517,11 @@
 		cursor: default;
 	}
 
+	/* Decorative, non-interactive icon — neutralise the base hover so it
+	   stays a flat transparent glyph instead of lighting up on hover. */
 	.portfolio-appbar-icon:hover {
-		border-color: var(--border-base);
-		background: var(--bg-surface);
+		color: var(--text-muted);
+		background: transparent;
 	}
 
 	.portfolio-section {

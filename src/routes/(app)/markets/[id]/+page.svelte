@@ -439,10 +439,12 @@
 
 	/* Scope the ghost header look to this detail app-bar only. The
 	   global `.appbar-icon-btn` (shared by Profile, Settings, Wallet,
-	   etc.) keeps its pill + surface treatment untouched; here the back
-	   chevron picks up the same faint foreground wash and rounded-rect
-	   radius as the share and save controls so the three read as one
-	   set. The fill is a foreground wash so it adapts across themes. */
+	   etc.) is a transparent borderless circle; here the back chevron
+	   picks up a faint resting foreground wash and a softer rounded-rect
+	   radius so it reads as one set with the share and save controls.
+	   These two selectors are more specific than the base rule and so
+	   keep winning. The fill is a foreground wash so it adapts across
+	   themes. */
 	.market-detail-screen :global(.appbar-icon-btn) {
 		border-radius: var(--r-12);
 		background: color-mix(in srgb, var(--text-base) 6%, transparent);
