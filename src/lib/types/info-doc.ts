@@ -1,3 +1,5 @@
+import type { MessageKey } from '$lib/utils/i18n.utils';
+
 /**
  * Lightweight document model for the public `/info/[slug]` routes —
  * Terms, Privacy, Resolution Rules, FAQ, Contact, How resolution works.
@@ -7,24 +9,27 @@
  * a raw HTML string) keeps each block trivially translatable and styles
  * the renderer applies consistently across documents.
  *
- * The current copy is **placeholder**.
- * Legal sign-off is required before launch — see the banner in
- * `InfoPage.svelte`.
+ * Translatable copy is referenced by `MessageKey`, resolved per-locale
+ * at render time via `t(...)`. The only literal carried inline is the
+ * `mail` address — a contact identifier, not translatable copy.
+ *
+ * The current copy is **placeholder**. Legal sign-off is required before
+ * launch — the `Legal · …` eyebrow lines flag the docs that need it.
  */
 
 export type InfoDocBlock =
-	| { kind: 'lede'; text: string }
-	| { kind: 'h'; text: string }
-	| { kind: 'p'; text: string }
-	| { kind: 'list'; items: string[] }
+	| { kind: 'lede'; key: MessageKey }
+	| { kind: 'h'; key: MessageKey }
+	| { kind: 'p'; key: MessageKey }
+	| { kind: 'list'; itemKeys: MessageKey[] }
 	| { kind: 'mail'; text: string };
 
 export interface InfoDoc {
 	slug: string;
-	/** Header title (also the page <title>). */
-	title: string;
-	/** Eyebrow line above the title, e.g. "Legal · Effective May 1, 2026". */
-	eyebrow: string;
+	/** i18n key for the header title (also the page `<title>`). */
+	titleKey: MessageKey;
+	/** i18n key for the eyebrow line above the title. */
+	eyebrowKey: MessageKey;
 	/** Body content, rendered in order. */
 	blocks: InfoDocBlock[];
 }
