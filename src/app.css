@@ -1796,10 +1796,12 @@ html[data-app='1'] body {
 		border-color 200ms var(--ease-vici);
 }
 
+/* Active filter/tab chip paints parchment-on-elevated, never the brand
+   laurel — laurel is reserved as an identity accent, not a selection state. */
 .chip.active {
-	background: var(--laurel-glow);
-	color: var(--laurel);
-	border-color: rgba(226, 184, 66, 0.3);
+	background: var(--bg-popover);
+	color: var(--text-base);
+	border-color: var(--border-strong);
 }
 
 /* Tag chips */
@@ -1834,6 +1836,108 @@ html[data-app='1'] body {
 	border-radius: 16px;
 	padding: 16px;
 	box-shadow: inset 0 1px 0 rgba(242, 236, 220, 0.04);
+}
+
+/* Surface — a self-contained tile (gap-card stack inside). Used for the
+   featured/trending carousel cards on Markets. */
+.card-surface {
+	background: var(--bg-surface);
+	border: 1px solid var(--border-base);
+	border-radius: 12px;
+	padding: 20px;
+	box-shadow: var(--inset-hi);
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap-card);
+}
+
+/* Inline — a list row INSIDE a flush list. No nested background or border;
+   a hairline-top separates rows, the parent provides the side padding. */
+.card-inline {
+	background: transparent;
+	border: 0;
+	border-top: 1px solid var(--border-base);
+	border-radius: 0;
+	padding: 16px 0;
+	box-shadow: none;
+	display: flex;
+	flex-direction: column;
+}
+
+.card-inline:first-child {
+	border-top: 0;
+	padding-top: 0;
+}
+
+.card-inline:last-child {
+	padding-bottom: 0;
+}
+
+/* Inline rows are interactive in the Markets list — real <button>/<a>
+   elements get hairline-bordered hover affordance, never a colour shift. */
+button.card-inline,
+a.card-inline {
+	width: 100%;
+	text-align: left;
+	font: inherit;
+	color: inherit;
+	cursor: pointer;
+	appearance: none;
+}
+
+button.card-inline:hover,
+a.card-inline:hover {
+	background: rgba(242, 236, 220, 0.03);
+}
+
+/* Empty — the only place dashed borders appear in product. */
+.card-empty {
+	background: transparent;
+	border: 1px dashed var(--ink-line-strong);
+	border-radius: 12px;
+	padding: 24px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	text-align: center;
+	gap: var(--s-8);
+}
+
+.card-surface > .c-eyebrow,
+.card-empty > .c-eyebrow {
+	font-family: var(--font-sans);
+	font-size: var(--t-eyebrow);
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.22em;
+	color: var(--text-muted);
+	margin: 0;
+}
+
+.card-surface > .c-title {
+	font-family: var(--font-sans);
+	font-size: var(--t-h2);
+	font-weight: 600;
+	letter-spacing: -0.01em;
+	line-height: 1.15;
+	color: var(--text-base);
+	margin: 0;
+}
+
+.card-empty > .c-title {
+	font-family: var(--font-serif);
+	font-style: italic;
+	font-size: 1.25rem;
+	font-weight: 400;
+	color: var(--fg-dim);
+	margin: 0;
+}
+
+.card-empty > .c-body {
+	margin: 0;
+	font-size: var(--t-13);
+	line-height: 1.5;
+	color: var(--text-muted);
 }
 
 /* Text helpers */
@@ -1873,6 +1977,42 @@ html[data-app='1'] body {
 	border: 0;
 	padding: 0;
 	font-family: inherit;
+}
+
+/* Section "See all" affordance — mono, muted, with a trailing arrow. The
+   arrow is appended via ::after so the label can be a plain translated
+   string. Used in the section headers on Markets. */
+.title-action {
+	font-family: var(--font-mono);
+	font-size: var(--t-eyebrow);
+	font-weight: 500;
+	text-transform: uppercase;
+	letter-spacing: 0.16em;
+	color: var(--text-muted);
+	text-decoration: none;
+	background: transparent;
+	border: 0;
+	padding: 0;
+}
+
+/* Pointer cursor, hover colour shift, and trailing arrow only for
+   interactive variants — static <span> labels must not look tappable. */
+button.title-action,
+a.title-action {
+	cursor: pointer;
+	transition: color var(--d-hover) var(--ease-vici);
+}
+
+button.title-action:hover,
+a.title-action:hover {
+	color: var(--text-base);
+}
+
+button.title-action::after,
+a.title-action::after {
+	content: ' →';
+	color: inherit;
+	letter-spacing: 0;
 }
 
 /* Hide scrollbars on inner panels */

@@ -60,6 +60,19 @@ Utility classes already exposed in `src/app.css`: `.eyebrow`, `.allcaps`,
 `.surface-elevated`, `.hairline`, `.num`. Add tokens or helpers to
 `src/app.css` only when a real consumer needs one.
 
+Card-system primitives in `src/app.css` (use these, don't re-style cards
+per surface): `.card-surface` (self-contained tile, `--gap-card` stack,
+12px radius — the Markets featured/trending carousel cards), `.card-inline`
+(flush list row — transparent, hairline-top separator, used as a `<button>`
+in the Markets list; the parent column owns the side padding and uses
+`gap: 0`), and `.card-empty` (the **only** dashed-border surface in product;
+pairs with `.c-eyebrow` / `.c-title` / `.c-body` for its type ramp).
+`.title-action` is the mono uppercase "See all" affordance (its trailing `→`
+is appended via `::after`, so pass an arrow-free label). Selection state on
+`.chip.active` is parchment-on-elevated (`--bg-popover` / `--text-base` /
+`--border-strong`) — laurel is reserved as an identity accent, never a
+filter/tab selection state.
+
 ---
 
 ## 1.1 Themes

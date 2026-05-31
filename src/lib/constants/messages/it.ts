@@ -1429,7 +1429,7 @@ export const itMessages = {
 	'markets.section.saved': 'Salvati',
 	'markets.section.trending': 'Di tendenza',
 	'markets.see_all': 'Vedi tutto',
-	'markets.see_all_count': 'Vedi tutti i {count} →',
+	'markets.see_all_count': 'Vedi tutti i {count}',
 	'markets.suggested.eyebrow': 'SCELTI DALLA REDAZIONE',
 	'markets.suggested.eyebrow_event': 'EVENTO IN EVIDENZA',
 	'markets.suggested.title': 'Suggeriti per te',
