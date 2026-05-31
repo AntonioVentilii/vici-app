@@ -1480,6 +1480,25 @@ export const esMessages = {
 	'profile.eyebrow': 'IDENTIDAD',
 	'profile.featured_event.live': '{event} · en directo',
 	'profile.featured_event.upcoming': '{event} · empieza en {days} días',
+	'profile.handle.available': 'disponible',
+	'profile.handle.blurb':
+		'Tu handle es cómo te encuentran los demás. Puedes cambiarlo una vez cada {days} días.',
+	'profile.handle.changed': 'Handle cambiado a @{handle}',
+	'profile.handle.edit': 'Editar handle',
+	'profile.handle.error_check_failed':
+		'No se pudo comprobar la disponibilidad. Inténtalo de nuevo.',
+	'profile.handle.error_reserved': 'Ese handle está reservado',
+	'profile.handle.error_short': 'Al menos 3 caracteres',
+	'profile.handle.error_taken': 'Ese handle ya está en uso',
+	'profile.handle.error_unchanged': 'Ese ya es tu handle',
+	'profile.handle.hint': 'Letras minúsculas, números y guiones bajos.',
+	'profile.handle.locked':
+		'Cambiaste tu handle hace poco. Podrás cambiarlo de nuevo en {days} días.',
+	'profile.handle.locked_one':
+		'Cambiaste tu handle hace poco. Podrás cambiarlo de nuevo en {days} día.',
+	'profile.handle.placeholder': 'tuhandle',
+	'profile.handle.save': 'Guardar handle',
+	'profile.handle.title': 'Editar handle',
 	'profile.loading.sub': 'Cargando tu identidad de rendimiento y grafo social…',
 	'profile.loading.title': 'Cargando perfil…',
 	'profile.sub': 'Identidad de rendimiento, rachas, logros y grafo social.',

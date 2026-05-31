@@ -1471,6 +1471,25 @@ export const ptMessages = {
 	'profile.eyebrow': 'IDENTIDADE',
 	'profile.featured_event.live': '{event} · ao vivo',
 	'profile.featured_event.upcoming': '{event} · começa em {days} dias',
+	'profile.handle.available': 'disponível',
+	'profile.handle.blurb':
+		'Seu handle é como os outros te encontram. Você pode alterá-lo uma vez a cada {days} dias.',
+	'profile.handle.changed': 'Handle alterado para @{handle}',
+	'profile.handle.edit': 'Editar handle',
+	'profile.handle.error_check_failed':
+		'Não foi possível verificar a disponibilidade. Tente novamente.',
+	'profile.handle.error_reserved': 'Esse handle é reservado',
+	'profile.handle.error_short': 'Pelo menos 3 caracteres',
+	'profile.handle.error_taken': 'Esse handle já está em uso',
+	'profile.handle.error_unchanged': 'Esse já é o seu handle',
+	'profile.handle.hint': 'Letras minúsculas, números e sublinhados.',
+	'profile.handle.locked':
+		'Você alterou seu handle recentemente. Poderá alterá-lo de novo em {days} dias.',
+	'profile.handle.locked_one':
+		'Você alterou seu handle recentemente. Poderá alterá-lo de novo em {days} dia.',
+	'profile.handle.placeholder': 'seuhandle',
+	'profile.handle.save': 'Salvar handle',
+	'profile.handle.title': 'Editar handle',
 	'profile.loading.sub': 'Buscando sua identidade de desempenho e grafo social…',
 	'profile.loading.title': 'Carregando perfil…',
 	'profile.sub': 'Identidade de desempenho, sequências, conquistas e grafo social.',
