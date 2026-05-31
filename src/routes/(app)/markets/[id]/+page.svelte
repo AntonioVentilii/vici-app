@@ -21,7 +21,7 @@
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import TradeModal from '$lib/components/market/TradeModal.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
-	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
+	import { categoryLabel } from '$lib/constants/market-tags.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
@@ -333,7 +333,7 @@
 			<div class="market-detail-chip-row">
 				{#if nonNullish(primaryTag)}
 					<span style:color={tagColor(primaryTag)} class="market-detail-tag">
-						{t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[primaryTag] })}
+						{categoryLabel({ category: primaryTag, variant: 'full', locale: $localeStore })}
 					</span>
 				{/if}
 				{#if isLive}
