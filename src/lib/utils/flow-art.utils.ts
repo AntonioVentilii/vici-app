@@ -1108,48 +1108,6 @@ const WC_SHIRT = {
 	jersey: '#3E5A38'
 } as const;
 
-// Emotion-tag pill colors. Paired with an explicit uppercase label
-// in `wcCaptions` so color is never the only signal — keeps the
-// chip readable for users who can't distinguish e.g. JOY's teal
-// from PLAYFUL's gold by hue alone.
-const WC_EMOTION_COLOR: Record<WCEmotion, string> = {
-	joy: '#6FE0B6',
-	focus: '#7EB6FF',
-	anticipation: '#E2B842',
-	dread: '#FF8A4C',
-	defeat: '#FF6B6B',
-	playful: '#FFD06A'
-};
-
-// Editorial caption layer — foreign word top-right + emotion-color
-// pill (with explicit uppercase label) bottom-right. Only emitted
-// on figure-bearing variants; the layout is what makes the WC card
-// read as an editorial spread rather than just an illustrated
-// thumbnail.
-const wcCaptions = ({
-	word,
-	emotion,
-	fg
-}: {
-	word: string;
-	emotion: WCEmotion;
-	fg: string;
-}): string => {
-	const ec = WC_EMOTION_COLOR[emotion];
-	const label = emotion.toUpperCase();
-	const tagX = 215;
-	const tagY = 86;
-	const tagW = 60;
-	const tagH = 10;
-
-	let m = '';
-	m += `<text x="270" y="14" text-anchor="end" font-family="ui-monospace,monospace" font-size="8" font-weight="700" letter-spacing="0.10em" fill="${fg}" opacity="0.85">${word}</text>`;
-	m += `<rect x="${tagX}" y="${tagY}" width="${tagW}" height="${tagH}" rx="2" fill="${ec}" opacity="0.92"/>`;
-	m += `<text x="${tagX + tagW / 2}" y="${tagY + 7.2}" text-anchor="middle" font-family="ui-monospace,monospace" font-size="6.5" font-weight="800" letter-spacing="0.16em" fill="#0E0D0B">${label}</text>`;
-
-	return m;
-};
-
 // Cap brim + cap-band reference colors used inside `wcFace` so the
 // hair-style="cap" branch reads naturally.
 const WC_CAP_DARK = '#2A211A';
@@ -1542,8 +1500,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirtShadow: '#C4A300',
 				emotion: 'joy'
 			}) +
-			trophyIcon({ cx: 220, cy: 56, scale: 0.9 }) +
-			wcCaptions({ word: 'VITÓRIA', emotion: 'joy', fg: p.fg }),
+			trophyIcon({ cx: 220, cy: 56, scale: 0.9 }),
 
 		'wc-winner-spain': () =>
 			bgFlagHoriz({ c1: '#C8102E', c2: '#F1BF00', c3: '#C8102E' }) +
@@ -1556,8 +1513,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirt: WC_SHIRT.spain,
 				shirtShadow: '#8A0E20',
 				emotion: 'focus'
-			}) +
-			wcCaptions({ word: 'VICTORIA', emotion: 'focus', fg: p.fg }),
+			}),
 
 		'wc-winner-france': () =>
 			bgFlagVert({ c1: '#0055A4', c2: '#F2ECDC', c3: '#EF4135' }) +
@@ -1570,8 +1526,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirt: WC_SHIRT.france,
 				shirtShadow: '#003A78',
 				emotion: 'focus'
-			}) +
-			wcCaptions({ word: 'GLORY', emotion: 'focus', fg: p.fg }),
+			}),
 
 		'wc-winner-argentina': () =>
 			bgFlagHoriz({ c1: '#75AADB', c2: '#F2ECDC', c3: '#75AADB' }) +
@@ -1584,8 +1539,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirt: WC_SHIRT.arg,
 				shirtShadow: '#5189B8',
 				emotion: 'anticipation'
-			}) +
-			wcCaptions({ word: 'FÚTBOL', emotion: 'anticipation', fg: p.fg }),
+			}),
 
 		'wc-golden-boot': () =>
 			bgCircle({ color: WC_SHIRT.gold, cx: 200, cy: 50, r: 55 }) +
@@ -1599,8 +1553,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirtShadow: '#100B07',
 				emotion: 'focus'
 			}) +
-			goldenBoot({ cx: 220, cy: 60, scale: 1 }) +
-			wcCaptions({ word: 'GOLEADOR', emotion: 'focus', fg: p.fg }),
+			goldenBoot({ cx: 220, cy: 60, scale: 1 }),
 
 		'wc-usa-quarter': () => {
 			// Stars-and-stripes hosted variant — striped bg + canton.
@@ -1630,8 +1583,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 					shirtShadow: '#B0A480',
 					stripe: '#C8102E',
 					emotion: 'joy'
-				}) +
-				wcCaptions({ word: 'ANFITRIÓN', emotion: 'joy', fg: p.fg })
+				})
 			);
 		},
 
@@ -1650,8 +1602,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 			ballProp({ cx: 180, cy: 56, r: 7 }) +
 			ballProp({ cx: 212, cy: 38, r: 5 }) +
 			ballProp({ cx: 234, cy: 64, r: 5 }) +
-			ballProp({ cx: 258, cy: 50, r: 4 }) +
-			wcCaptions({ word: 'GOLAÇO', emotion: 'dread', fg: p.fg }),
+			ballProp({ cx: 258, cy: 50, r: 4 }),
 
 		'wc-german-out-group': () =>
 			bgFlagHoriz({ c1: '#000000', c2: '#DD0000', c3: '#FFCE00' }) +
@@ -1664,8 +1615,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirt: WC_SHIRT.dark,
 				shirtShadow: '#100B07',
 				emotion: 'defeat'
-			}) +
-			wcCaptions({ word: 'FORA', emotion: 'defeat', fg: p.fg }),
+			}),
 
 		// ─── PLAYFUL ──────────────────────────────────────────
 		'wc-neymar-dive': () =>
@@ -1679,8 +1629,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirt: WC_SHIRT.brazil,
 				shirtShadow: '#C4A300',
 				emotion: 'playful'
-			}) +
-			wcCaptions({ word: 'TEATRO', emotion: 'playful', fg: p.fg }),
+			}),
 
 		'wc-player-haircut': () =>
 			bgCircle({ color: WC_SHIRT.gold, cx: 70, cy: 50, r: 50 }) +
@@ -1694,8 +1643,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirtShadow: '#100B07',
 				emotion: 'playful'
 			}) +
-			scissorsProp({ cx: 220, cy: 50 }) +
-			wcCaptions({ word: 'ESTILO', emotion: 'playful', fg: p.fg }),
+			scissorsProp({ cx: 220, cy: 50 }),
 
 		'wc-trophy-drop': () =>
 			bgPerspective(WC_SHIRT.cream) +
@@ -1724,8 +1672,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				}
 
 				return m;
-			})() +
-			wcCaptions({ word: 'OOPS', emotion: 'dread', fg: p.fg }),
+			})(),
 
 		'wc-coach-stands': () =>
 			bgStands('#7E7A75') +
@@ -1739,8 +1686,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirtShadow: '#0E1626',
 				emotion: 'defeat'
 			}) +
-			redCardProp({ cx: 170, cy: 36, rot: -16 }) +
-			wcCaptions({ word: 'EXPULSO', emotion: 'defeat', fg: p.fg }),
+			redCardProp({ cx: 170, cy: 36, rot: -16 }),
 
 		'wc-pitch-propose': () =>
 			bgPropose(WC_SHIRT.gold) +
@@ -1754,8 +1700,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirtShadow: '#003A78',
 				emotion: 'joy'
 			}) +
-			ringProp({ cx: 210, cy: 52 }) +
-			wcCaptions({ word: 'AMOR', emotion: 'joy', fg: p.fg }),
+			ringProp({ cx: 210, cy: 52 }),
 
 		'wc-var-final': () =>
 			bgTV(WC_SHIRT.gold) +
@@ -1768,8 +1713,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirt: WC_SHIRT.ref,
 				shirtShadow: '#0E0D0B',
 				emotion: 'focus'
-			}) +
-			wcCaptions({ word: 'REPLAY', emotion: 'focus', fg: p.fg }),
+			}),
 
 		'wc-celebration': () =>
 			bgBunting({ c1: WC_SHIRT.gold, c2: '#FF6B6B', c3: '#6FE0B6' }) +
@@ -1782,8 +1726,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirt: WC_SHIRT.brazil,
 				shirtShadow: '#C4A300',
 				emotion: 'joy'
-			}) +
-			wcCaptions({ word: 'FESTA', emotion: 'joy', fg: p.fg })
+			})
 	};
 
 	// === FALLBACK ============================================
@@ -1805,8 +1748,7 @@ const renderWC = ({ p, state, uid, seed }: RenderArgs): string => {
 				shirtShadow: '#100B07',
 				emotion: 'focus'
 			}) +
-			ballProp({ cx: 220, cy: 60, r: 6 }) +
-			wcCaptions({ word: 'FÚTBOL', emotion: 'focus', fg: p.fg }));
+			ballProp({ cx: 220, cy: 60, r: 6 }));
 
 	let s = recipe();
 
