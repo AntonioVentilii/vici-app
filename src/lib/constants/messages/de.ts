@@ -411,7 +411,7 @@ export const deMessages = {
 	'card.unsave': 'Aus Speicherliste entfernen',
 	'card.rail_hint': 'Ziehen zum Bestätigen · Tippen für Details',
 	'card.sharp_predictors': 'Top-Tipper:',
-	'card.size_vxp': 'GRÖSSE · {stake} VXP',
+	'card.size_label': 'GRÖSSE',
 	'card.skip_stamp': 'SKIP',
 	'card.swipe_to_call': 'WISCHEN ZUM CALLEN',
 	'card.multiple': 'Mehrfach',

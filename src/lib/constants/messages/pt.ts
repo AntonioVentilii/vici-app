@@ -410,7 +410,7 @@ export const ptMessages = {
 	'card.unsave': 'Remover dos salvos',
 	'card.rail_hint': 'Arrasta para confirmar · Toca para detalhes',
 	'card.sharp_predictors': 'Previsores experientes:',
-	'card.size_vxp': 'TAMANHO · {stake} VXP',
+	'card.size_label': 'TAMANHO',
 	'card.skip_stamp': 'IGNORAR',
 	'card.swipe_to_call': 'DESLIZE PARA PREDIZER',
 	'card.multiple': 'Múltiplo',
