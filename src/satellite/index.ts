@@ -19,8 +19,10 @@ import {
 import { CheckFriendshipArgsSchema } from '$lib/schema/relation.schema';
 import {
 	deleteMyAccountFn,
+	hibernateMyAccountFn,
 	listMyBlockingLeaguesFn,
 	recoverMyAccountFn,
+	resumeMyAccountFn,
 	sweepExpiredDeletionsFn
 } from '$satellite/services/account.services';
 import {
@@ -622,6 +624,36 @@ export const recoverMyAccount = defineUpdate({
 		reason: j.optional(j.enum(['expired']))
 	}),
 	handler: recoverMyAccountFn
+});
+
+// Account hibernation (Delete account v2 — the reversible retention
+// off-ramp offered alongside delete). Sets `hibernatedAtMs = now` on the
+// caller's profile: stats freeze (the account is inactive) and the profile
+// hides from public reads, but NO data is removed and the owner can
+// `resumeMyAccount` at any time. Idempotent — keeps the earliest mark.
+//
+// Refusal reasons:
+//  - `no_profile` — the caller never onboarded.
+//  - `deleted` — the account is already soft-deleted; the two states are
+//    mutually exclusive.
+export const hibernateMyAccount = defineUpdate({
+	result: j.strictObject({
+		ok: j.boolean(),
+		reason: j.optional(j.enum(['no_profile', 'deleted']))
+	}),
+	handler: hibernateMyAccountFn
+});
+
+// Resume from hibernation (Delete account v2). Clears the caller's own
+// `hibernatedAtMs`: the profile reappears on public reads and stats
+// fan-out resumes on the next trade. A no-op when the account isn't
+// hibernated. `resumed` reports whether a marker was actually cleared.
+export const resumeMyAccount = defineUpdate({
+	result: j.strictObject({
+		ok: j.boolean(),
+		resumed: j.boolean()
+	}),
+	handler: resumeMyAccountFn
 });
 
 // Admin sweep (Delete account v2). Hard-deletes every soft-deleted
