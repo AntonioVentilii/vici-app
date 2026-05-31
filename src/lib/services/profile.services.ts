@@ -43,6 +43,7 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				totalTrades: 0,
 				winRate: 0,
 				dailyStreak: 0,
+				dailyGoalDone: 0,
 				streak: 0,
 				accuracy: 0,
 				points: 0,
@@ -143,6 +144,43 @@ export const updateInterests = async ({
 	});
 };
 
+// Serializes the fire-and-forget profile writers (daily streak + daily
+// goal). Both fire on the same first swipe and the goal fires on every
+// subsequent prediction, so without serialization their read-modify-
+// write cycles interleave and an older snapshot clobbers a newer field
+// (lost streak / goal progress). The queue runs each patch to
+// completion before the next reads, so every patch sees the prior
+// write and only overrides its own fields.
+let profilePatchQueue: Promise<unknown> = Promise.resolve();
+
+/**
+ * Merge a partial field set onto the freshest profile doc, serialized
+ * against other profile patches from this module. Reads the latest doc
+ * inside the queued turn so concurrent patches never overlay a stale
+ * snapshot. Best-effort: callers fire-and-forget; failures don't break
+ * the chain.
+ */
+const patchProfile = ({
+	principal,
+	patch
+}: {
+	principal: PrincipalText;
+	patch: Partial<UserProfile>;
+}): Promise<UserProfile> => {
+	const run = profilePatchQueue.then(async () => {
+		const profileDoc = await getProfile(principal);
+		const data: UserProfile = { ...profileDoc.data, ...patch };
+
+		await upsertProfile({ ...profileDoc, data });
+
+		return data;
+	});
+
+	profilePatchQueue = run.catch(() => undefined);
+
+	return run;
+};
+
 /**
  * Persist the user's daily-streak engine state. Called from Flow Mode
  * after `applyDailyStreakBump` flips the locally held value, so a
@@ -150,9 +188,10 @@ export const updateInterests = async ({
  *
  * Best-effort — callers should fire-and-forget; the local UI already
  * reflects the bumped values for the rest of the session even if the
- * round-trip fails.
+ * round-trip fails. Serialized via `patchProfile` so it can't clobber a
+ * concurrent daily-goal write (and vice versa).
  */
-export const persistDailyStreak = async ({
+export const persistDailyStreak = ({
 	principal,
 	dailyStreak,
 	lastActiveDay
@@ -160,18 +199,28 @@ export const persistDailyStreak = async ({
 	principal: PrincipalText;
 	dailyStreak: number;
 	lastActiveDay: string;
-}): Promise<UserProfile> => {
-	const profileDoc = await getProfile(principal);
-	const data: UserProfile = {
-		...profileDoc.data,
-		dailyStreak,
-		lastActiveDay
-	};
+}): Promise<UserProfile> => patchProfile({ principal, patch: { dailyStreak, lastActiveDay } });
 
-	await upsertProfile({ ...profileDoc, data });
-
-	return data;
-};
+/**
+ * Persist the user's daily-goal counter. Called from Flow Mode after
+ * each committed prediction so the goal survives a refresh and reflects
+ * the day's running total across sessions.
+ *
+ * Best-effort — callers should fire-and-forget; the local UI already
+ * reflects the bumped count for the rest of the session even if the
+ * round-trip fails. Serialized via `patchProfile` so overlapping writes
+ * (the first-swipe streak write, or rapid goal bumps) apply in order
+ * and only ever override the daily-goal fields.
+ */
+export const persistDailyGoal = ({
+	principal,
+	dailyGoalDone,
+	dailyGoalDate
+}: {
+	principal: PrincipalText;
+	dailyGoalDone: number;
+	dailyGoalDate: string;
+}): Promise<UserProfile> => patchProfile({ principal, patch: { dailyGoalDone, dailyGoalDate } });
 
 export const upsertProfile = async (
 	profileDoc: Doc<UserProfile> | { key: string; data: UserProfile }
