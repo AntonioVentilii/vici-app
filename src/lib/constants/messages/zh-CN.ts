@@ -73,6 +73,10 @@ export const zhCnMessages = {
 	'battles.uni.wc_title_tail': '对决',
 	'battles.your_rank': '第 {rank} / 共 {total}',
 	'battles.your_school': '你的学校 · {name}',
+	'achievement.bold_caller.description': '本月冷门预测准确率最高',
+	'achievement.bold_caller.detail':
+		'在习惯押注冷门的预测者中（你所选边的共识中位数低于 40%）以最高准确率收官本月。月份结束时颁发；并列者共享此荣誉。',
+	'achievement.bold_caller.name': '大胆出击',
 	'achievement.contrarian.name': '逆行者',
 	'achievement.first_call.description': '完成你的第一次预测',
 	'achievement.first_call.detail': '在你确认第一次预测的那一刻颁发。这是唯一无法重复获得的成就。',
@@ -93,6 +97,10 @@ export const zhCnMessages = {
 	'achievement.oracle.detail':
 		'在最近 50 次已结算的预测中保持至少 80% 的准确率。神谕称号每日重新计算；若准确率下降，贴纸仍归你所有 — 但称号会转交给当前持有者。',
 	'achievement.oracle.name': '神谕',
+	'achievement.sharpest_eye.description': '本月准确率前三',
+	'achievement.sharpest_eye.detail':
+		'在至少有 30 次已结算预测的用户中，以准确率位列某自然月前三名。第一名获金、第二名获银、第三名获铜——相册会保留你历来最佳的名次。',
+	'achievement.sharpest_eye.name': '慧眼',
 	'achievement.top_decile.description': '连续 7 天位列前 10%',
 	'achievement.top_decile.detail':
 		'连续七天保持在全球排行榜前 10% 的位置。你的排名每天检查一次；若跌出门槛，连续记录将重置。',

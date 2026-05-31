@@ -74,6 +74,10 @@ export const itMessages = {
 	'battles.uni.wc_title_tail': 'Battle',
 	'battles.your_rank': '#{rank} su {total}',
 	'battles.your_school': 'La tua università · {name}',
+	'achievement.bold_caller.description': 'Miglior precisione sugli outsider del mese',
+	'achievement.bold_caller.detail':
+		'Chiudi il mese con la precisione più alta tra chi punta abitualmente sugli outsider — un consenso mediano inferiore al 40% sui lati che chiami. Assegnato alla chiusura del mese; in caso di parità l’onore è condiviso.',
+	'achievement.bold_caller.name': 'Voce coraggiosa',
 	'achievement.contrarian.name': 'Contrarian',
 	'achievement.first_call.description': 'Fai la tua prima previsione',
 	'achievement.first_call.detail':
@@ -95,6 +99,10 @@ export const itMessages = {
 	'achievement.oracle.detail':
 		'Mantieni almeno l’80% di precisione sulle tue ultime 50 previsioni risolte. Il titolo Oracolo viene ricalcolato ogni giorno; se perdi precisione lo sticker resta — ma il titolo passa a chi lo detiene in quel momento.',
 	'achievement.oracle.name': 'Oracolo',
+	'achievement.sharpest_eye.description': 'Top-3 di precisione del mese',
+	'achievement.sharpest_eye.detail':
+		'Chiudi un mese di calendario tra i primi tre per precisione fra chi ha almeno 30 chiamate risolte. Il primo posto vale oro, il secondo argento, il terzo bronzo — e l’album conserva il tuo miglior piazzamento di sempre.',
+	'achievement.sharpest_eye.name': 'Occhio acuto',
 	'achievement.top_decile.description': '7 giorni nel top 10%',
 	'achievement.top_decile.detail':
 		'Mantieni una posizione nel top 10% della classifica globale per sette giorni consecutivi. La tua posizione viene verificata una volta al giorno; se scendi sotto la soglia, la serie riparte da zero.',

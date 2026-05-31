@@ -98,6 +98,27 @@ export const ACHIEVEMENTS: AchievementDef[] = [
 		emblem: '⌘',
 		tier: 'gold',
 		xp: 1000
+	},
+	{
+		// Monthly accuracy podium. The static `tier` is the default wash;
+		// the live tier (gold / silver / bronze) comes from the profile's
+		// `sharpestEyeBestTier` once the album surface reads it.
+		id: 'sharpest-eye',
+		nameKey: 'achievement.sharpest_eye.name',
+		descriptionKey: 'achievement.sharpest_eye.description',
+		detailKey: 'achievement.sharpest_eye.detail',
+		emblem: '◉',
+		tier: 'gold',
+		xp: 750
+	},
+	{
+		id: 'bold-caller',
+		nameKey: 'achievement.bold_caller.name',
+		descriptionKey: 'achievement.bold_caller.description',
+		detailKey: 'achievement.bold_caller.detail',
+		emblem: '✧',
+		tier: 'gold',
+		xp: 600
 	}
 ];
 
