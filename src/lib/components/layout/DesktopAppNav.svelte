@@ -53,6 +53,56 @@
 		return false;
 	};
 
+	const activeIndex = $derived(navItems.findIndex(({ path }) => isActive(path)));
+
+	/* ------------------------------------------------------------------
+	 * Sliding underline — measure the active link and slide a bar under
+	 * it (mirrors the MobileNav pillnav indicator). Recomputed via
+	 * ResizeObserver so the bar tracks viewport / font-load reflows.
+	 * ------------------------------------------------------------------ */
+	let linksEl: HTMLElement | null = $state(null);
+	let indicatorLeft = $state(0);
+	let indicatorWidth = $state(0);
+	let indicatorOpacity = $state(0);
+
+	$effect(() => {
+		// Re-read on activeIndex change so the bar slides over.
+		void activeIndex;
+
+		if (!linksEl || activeIndex < 0) {
+			indicatorOpacity = 0;
+
+			return;
+		}
+
+		const update = () => {
+			if (!linksEl) {
+				return;
+			}
+
+			const links = linksEl.querySelectorAll<HTMLElement>('.app-desktop-nav-link');
+			const link = links[activeIndex];
+
+			if (!link) {
+				return;
+			}
+
+			const linkRect = link.getBoundingClientRect();
+			const navRect = linksEl.getBoundingClientRect();
+
+			indicatorLeft = linkRect.left - navRect.left;
+			indicatorWidth = linkRect.width;
+			indicatorOpacity = 1;
+		};
+
+		update();
+
+		const ro = new ResizeObserver(update);
+		ro.observe(linksEl);
+
+		return () => ro.disconnect();
+	});
+
 	const userNickname = $derived($userStore.profile?.nickname);
 </script>
 
@@ -66,12 +116,19 @@
 			VICI
 		</a>
 
-		<nav class="app-desktop-nav-links" aria-label="Primary">
-			{#each navItems as item (item.path)}
-				<a class="app-desktop-nav-link" class:is-active={isActive(item.path)} href={item.path}>
+		<nav bind:this={linksEl} class="app-desktop-nav-links" aria-label="Primary">
+			{#each navItems as item, i (item.path)}
+				<a class="app-desktop-nav-link" class:is-active={i === activeIndex} href={item.path}>
 					{t({ locale: $localeStore, key: item.labelKey })}
 				</a>
 			{/each}
+			<span
+				style:left="{indicatorLeft}px"
+				style:width="{indicatorWidth}px"
+				style:opacity={indicatorOpacity}
+				class="app-desktop-nav-indicator"
+				aria-hidden="true"
+			></span>
 		</nav>
 
 		<div class="app-desktop-nav-trailing">
@@ -139,6 +196,7 @@
 	}
 
 	.app-desktop-nav-links {
+		position: relative;
 		display: flex;
 		gap: 2rem;
 		align-items: center;
@@ -151,9 +209,7 @@
 		text-decoration: none;
 		padding: 0.5rem 0;
 		border-bottom: 2px solid transparent;
-		transition:
-			color var(--d-hover, 120ms) ease,
-			border-color var(--d-hover, 120ms) ease;
+		transition: color var(--d-hover, 120ms) ease;
 	}
 
 	.app-desktop-nav-link:hover {
@@ -162,7 +218,32 @@
 
 	.app-desktop-nav-link.is-active {
 		color: var(--text-base);
-		border-bottom-color: var(--color-primary, var(--laurel));
+	}
+
+	/* 2px laurel underline that slides between links on route change.
+	   `left` / `width` are measured from the active link; opacity fades
+	   it in once positioned (mirrors the MobileNav pillnav indicator). */
+	.app-desktop-nav-indicator {
+		position: absolute;
+		bottom: 0;
+		left: 0;
+		height: 2px;
+		border-radius: var(--r-pill);
+		background: var(--color-primary, var(--laurel));
+		opacity: 0;
+		transition:
+			left 280ms var(--ease-vici, ease),
+			width 280ms var(--ease-vici, ease),
+			opacity 220ms var(--ease-vici, ease);
+		will-change: left, width;
+		pointer-events: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.app-desktop-nav-indicator {
+			transition: none;
+			will-change: auto;
+		}
 	}
 
 	.app-desktop-nav-trailing {
