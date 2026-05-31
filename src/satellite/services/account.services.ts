@@ -612,8 +612,16 @@ const resolveOwnedLeague = ({
 	}
 
 	// Other members remain — transfer ownership instead of deleting.
+	// Mirror `transferLeagueOwnershipFn`'s two-caller dance: the league-doc
+	// owner swap is authorised by the OUTGOING owner (still the owner at
+	// this point), but the survivor's membership-role bump must be
+	// authorised by the NEW owner — once `league.owner` flips below,
+	// `assertSetLeagueMember` only accepts a role change from the current
+	// (survivor) owner, so writing it as `callerBytes` would be rejected
+	// and leave a half-transferred league.
 	const [survivorKey, survivorItem] = survivor;
 	const survivorMember = decodeDocData<LeagueMemberDoc>(survivorItem.data);
+	const survivorBytes = Principal.fromText(survivorMember.member).toUint8Array();
 
 	setDocStore({
 		collection: Collection.LEAGUES,
@@ -628,7 +636,7 @@ const resolveOwnedLeague = ({
 	setDocStore({
 		collection: Collection.LEAGUE_MEMBERS,
 		key: survivorKey,
-		caller: callerBytes,
+		caller: survivorBytes,
 		doc: {
 			data: encodeDocData<LeagueMemberDoc>({ ...survivorMember, role: 'owner' }),
 			version: survivorItem.version

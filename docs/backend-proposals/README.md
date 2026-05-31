@@ -350,8 +350,7 @@ now` on the caller's profile via a version-locked overwrite. Idempotent
   caller never onboarded. Otherwise `{ ok: true }`.
 - `resumeMyAccount()` — `defineUpdate`, no args. Clears `hibernatedAtMs`
   (destructure-drop + re-encode, mirroring how `recoverMyAccount` clears
-  `deletedAtMs`). No-op when not hibernated. Returns `{ ok: true, resumed
-}`.
+  `deletedAtMs`). Returns `{ ok: true, resumed }` — `resumed` is `true` when a hibernation marker was cleared, `false` when the account wasn't hibernated (a no-op).
 
 `hibernatedAtMs?: number` is a second optional marker on the profile schema
 (same shape + round-trip semantics as `deletedAtMs`), with no expiry/sweep

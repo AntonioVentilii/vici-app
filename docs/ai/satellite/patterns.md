@@ -386,8 +386,7 @@ shape but never destroys data:
   forwarded verbatim through `withProfileDefaults`. PRESENCE = hibernated.
 - **Mutually exclusive with soft-delete.** `hibernateMyAccount` refuses
   (`{ ok: false, reason: 'deleted' }`) on an already-soft-deleted profile —
-  the two markers never stack. No profile → `{ ok: false, reason:
-'no_profile' }`.
+  the two markers never stack. No profile → `{ ok: false, reason: 'no_profile' }`.
 - **Hide the same way, via one combined helper.** Public reads switched
   from `!isSoftDeleted` to `!isPubliclyHidden(profile) = !(isSoftDeleted ||
 isHibernated)`. The three public filters (`listLeaderboard`,
