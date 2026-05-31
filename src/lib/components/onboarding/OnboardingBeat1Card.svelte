@@ -1,27 +1,27 @@
 <script lang="ts">
-	import FlowCard from '$lib/components/market/FlowCard.svelte';
-	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
+	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
-	import { VXP_DEFAULT_STAKE } from '$lib/constants/vxp-economy.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
-	import type { FlowAction } from '$lib/types/market';
+	import { resolveFlowArtCategory } from '$lib/utils/flow-art.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { buildOnboardingFirstCallMarket } from '$lib/utils/onboarding-market.utils';
+	import { tagColor } from '$lib/utils/tag-color.utils';
 
 	/**
-	 * Onboarding · Beat 1.b — derived first-call card.
+	 * Onboarding · Beat 1.b — bespoke first-call card.
 	 *
-	 * Mounts the real `FlowCard` in `guided` mode so the first call is
-	 * pixel-identical to the in-product deck: same header, artwork band,
-	 * probability split, and footer — but flip is inert and the swipe-up
-	 * SKIP is suppressed, so the rehearsal can only commit a YES or NO.
-	 * The `FlowCoach` overlay rides above it with the onboarding gesture
-	 * hint.
+	 * A dedicated, simpler swipeable card for the opening "make your
+	 * first call" beat — deliberately NOT the in-product Flow deck card.
+	 * It carries its own header (event tag + days pill + first-call
+	 * label), generative artwork band, YES / NO probability split, and
+	 * footer, plus a built-in directional coach. Tap-to-flip and the
+	 * swipe-up SKIP are intentionally absent: the first call can only
+	 * commit a YES or a NO.
 	 *
 	 * Two question modes (mirrored from the team-pick branch):
 	 *   - Picked team → advancement market ("Will X make the round of
@@ -36,9 +36,14 @@
 		participantId: string | null;
 		onCommit: (side: 'YES' | 'NO') => void;
 		onChangeTeam: () => void;
+		// Whether the built-in directional coach rides above the card.
+		// Defaults to first-render only (matches the source: the coach
+		// shows until the first drag). A follow-up makes this always-on
+		// at this step, so the gate is surfaced as a single flag.
+		showCoach?: boolean;
 	}
 
-	const { participantId, onCommit, onChangeTeam }: Props = $props();
+	const { participantId, onCommit, onChangeTeam, showCoach = true }: Props = $props();
 
 	const event = $derived($featuredEvent);
 
@@ -58,15 +63,29 @@
 	// favourite on the skip path so the winner market still has a subject.
 	const subject: FeaturedEventParticipant | undefined = $derived(picked ?? fallbackFavourite);
 
-	// Full synthetic `Market` the guided FlowCard binds to. Built off the
-	// featured-event fixture (onboarding runs pre-auth, before any market
-	// hydrates).
+	// Synthetic `Market` the card binds to. Built off the featured-event
+	// fixture (onboarding runs pre-auth, before any market hydrates).
 	const market = $derived(buildOnboardingFirstCallMarket({ event, participant: picked }));
 
-	// Editorial sub-line under the question — "Backing Brazil". Mirrors
-	// the in-deck subtitle slot rather than leaving FlowCard to derive a
-	// fallback, so the card reinforces the team identity just chosen.
-	const subtitle = $derived(
+	// Resolved artwork category + accent. The featured event is the WC
+	// tentpole, so the band uses the WC visual language and laurel-gold
+	// accent — same renderer the in-product deck uses, fit by height in
+	// the `.ob-art` band rather than stretched.
+	const artCategory = $derived(resolveFlowArtCategory({ categoryId: 'wc', seed: market.id }));
+	const accent = $derived(tagColor('wc'));
+
+	const yesPct = $derived(Math.round(market.yesProbability * 100));
+	const noPct = $derived(100 - yesPct);
+
+	// Marketing-only social-proof count — the synthetic market seeds a
+	// stable predictor split, so the footer "{n} calls" line is stable.
+	const callCount = $derived(
+		market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0
+	);
+
+	// Editorial sub-line under the question — "Backing Brazil". Echoes
+	// the team just chosen (or the framed favourite on the skip path).
+	const context = $derived(
 		subject
 			? t({
 					locale: $localeStore,
@@ -76,16 +95,108 @@
 			: undefined
 	);
 
-	const handleAction = (action: FlowAction) => {
-		// Guided mode suppresses SKIP, so only YES / NO reach here; guard
-		// anyway so a stray action can't advance with a non-binary side.
-		if (action !== 'YES' && action !== 'NO') {
+	// Header tint + border, mixed from the resolved accent so the head
+	// reads as a soft wash of the category colour.
+	const headBackground = $derived(
+		`linear-gradient(160deg, color-mix(in srgb, ${accent} 15%, transparent) 0%, color-mix(in srgb, ${accent} 6%, transparent) 60%, transparent 100%)`
+	);
+	const headBorder = $derived(`color-mix(in srgb, ${accent} 12%, transparent)`);
+
+	// ── Swipe physics — plain deltas, no spring. Commit threshold of
+	// 80 px each way; a light settle delay before the parent advances.
+	const SWIPE_THRESHOLD = 80;
+	const SETTLE_MS = 80;
+
+	let startX = 0;
+	let startY = 0;
+	let dragX = $state(0);
+	let dragY = $state(0);
+	let dragging = $state(false);
+	let committed: 'YES' | 'NO' | null = $state(null);
+	// Tracks whether the user has started their first interaction (pointer
+	// down or keyboard commit). Used to permanently dismiss the coach once
+	// the user engages — a cancelled first drag would reset dragX→0 and
+	// cause the coach to reappear without this separate flag.
+	let everInteracted = $state(false);
+
+	const rotation = $derived(dragX / 18);
+	const yesStampOpacity = $derived(Math.min(1, Math.max(0, dragX / 60)));
+	const noStampOpacity = $derived(Math.min(1, Math.max(0, -dragX / 60)));
+	const yesEdgeOpacity = $derived(Math.min(1, Math.max(0, dragX / 100)) * 0.55);
+	const noEdgeOpacity = $derived(Math.min(1, Math.max(0, -dragX / 100)) * 0.55);
+
+	// Coach fades out as the card is dragged, then stays hidden after the
+	// first interaction (even if the drag is cancelled and dragX resets).
+	const coachOpacity = $derived(Math.max(0, 1 - Math.abs(dragX) / 40));
+
+	const cardTransform = $derived(`translate(${dragX}px, ${dragY}px) rotate(${rotation}deg)`);
+	const cardTransition = $derived(
+		dragging ? 'none' : 'transform 360ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 360ms'
+	);
+
+	const commit = (side: 'YES' | 'NO') => {
+		if (committed) {
 			return;
 		}
 
+		committed = side;
+		dragX = side === 'YES' ? 480 : -480;
+		dragY = 0;
+		dragging = false;
 		// Firm tap on first-call commit.
 		haptic('firm-tap');
-		onCommit(action);
+		setTimeout(() => onCommit(side), SETTLE_MS);
+	};
+
+	const isInteractiveTarget = (target: EventTarget | null): boolean => {
+		const el = target as HTMLElement | null;
+
+		return Boolean(el?.closest('button, a, input, textarea, select'));
+	};
+
+	const onPointerDown = (e: MouseEvent | TouchEvent) => {
+		if (committed || isInteractiveTarget(e.target)) {
+			return;
+		}
+
+		const p = 'touches' in e ? e.touches[0] : e;
+		startX = p.clientX;
+		startY = p.clientY;
+		dragging = true;
+		everInteracted = true;
+	};
+
+	const onPointerMove = (e: MouseEvent | TouchEvent) => {
+		if (!dragging || committed) {
+			return;
+		}
+
+		const p = 'touches' in e ? e.touches[0] : e;
+		dragX = p.clientX - startX;
+		dragY = p.clientY - startY;
+	};
+
+	const onPointerUp = () => {
+		if (!dragging || committed) {
+			return;
+		}
+
+		dragging = false;
+
+		if (dragX > SWIPE_THRESHOLD) {
+			commit('YES');
+
+			return;
+		}
+
+		if (dragX < -SWIPE_THRESHOLD) {
+			commit('NO');
+
+			return;
+		}
+
+		dragX = 0;
+		dragY = 0;
 	};
 </script>
 
@@ -125,26 +236,173 @@
 	{/if}
 
 	<div class="ob2-card-stage">
-		<FlowCard
-			category="wc"
-			guided
-			{market}
-			onAction={handleAction}
-			signedIn={false}
-			{subtitle}
-			tradeAmount={String(VXP_DEFAULT_STAKE)}
-		/>
-		<FlowCoach surface="onboarding" />
+		<div class="ob-stage">
+			<!-- Shadow card behind the live card. -->
+			<div class="ob-shadow" aria-hidden="true"></div>
+
+			<!-- Live swipeable card. Pointer-driven; YES / NO only. -->
+			<div
+				style:transform={cardTransform}
+				style:transition={cardTransition}
+				style:opacity={committed ? 0 : 1}
+				class="ob-card"
+				class:committed={committed !== null}
+				onmousedown={onPointerDown}
+				onmouseleave={onPointerUp}
+				onmousemove={onPointerMove}
+				onmouseup={onPointerUp}
+				ontouchend={onPointerUp}
+				ontouchmove={onPointerMove}
+				ontouchstart={onPointerDown}
+				role="presentation"
+			>
+				<!-- Tinted header. -->
+				<div
+					style:background={headBackground}
+					style:border-bottom={`1px solid ${headBorder}`}
+					class="ob-card-head"
+				>
+					<div class="ob-card-head-row">
+						<div class="ob-card-head-meta">
+							<span
+								style:color={accent}
+								style:background="rgba(242, 236, 220, 0.06)"
+								class="ob-tag"
+							>
+								{event.badgeTitle ?? event.title}
+							</span>
+							<span class="ob-days">
+								{t({
+									locale: $localeStore,
+									key: 'onboarding.beat1b.days_short',
+									params: { days: kickoffDays }
+								})}
+							</span>
+						</div>
+						<span style:color={accent} class="ob-first-call">
+							{t({ locale: $localeStore, key: 'onboarding.beat1b.first_call_label' })}
+						</span>
+					</div>
+					<h2 class="ob-q">{market.title}</h2>
+					{#if context}
+						<p class="ob-ctx">{context}</p>
+					{/if}
+				</div>
+
+				<!-- Generative artwork — fit by height in the band so the
+				     figure reads whole, never stretched to the band aspect
+				     (sizing lives in the `.ob-art` rules in app.css). -->
+				<div class="ob-art">
+					<MarketArtwork category={artCategory} fill seed={market.id} state="neutral" />
+				</div>
+
+				<!-- Probability split + footer. -->
+				<div class="ob-body">
+					<div class="ob-probs">
+						<div class="ob-prob no">
+							<span class="ob-prob-eyebrow no">
+								{t({ locale: $localeStore, key: 'flow.action.no' })}
+							</span>
+							<span class="ob-prob-num">{noPct}%</span>
+						</div>
+						<div class="ob-prob yes">
+							<span class="ob-prob-eyebrow yes">
+								{t({ locale: $localeStore, key: 'flow.action.yes' })}
+							</span>
+							<span class="ob-prob-num">{yesPct}%</span>
+						</div>
+					</div>
+					<div class="ob-foot">
+						<span class="ob-foot-vol">
+							{t({
+								locale: $localeStore,
+								key: 'card.call_count',
+								params: { count: callCount.toLocaleString() }
+							})}
+						</span>
+						<span class="ob-foot-swipe">
+							{t({ locale: $localeStore, key: 'card.swipe_to_call' })}
+						</span>
+					</div>
+				</div>
+
+				<!-- Drag edge tints. -->
+				<div style:opacity={yesEdgeOpacity} class="ob-edge yes" aria-hidden="true"></div>
+				<div style:opacity={noEdgeOpacity} class="ob-edge no" aria-hidden="true"></div>
+
+				<!-- Swipe stamps. -->
+				<span style:opacity={yesStampOpacity} class="ob-stamp yes" aria-hidden="true">
+					{t({ locale: $localeStore, key: 'flow.action.yes' })}
+				</span>
+				<span style:opacity={noStampOpacity} class="ob-stamp no" aria-hidden="true">
+					{t({ locale: $localeStore, key: 'flow.action.no' })}
+				</span>
+			</div>
+
+			<!-- Built-in directional coach — sits above the card, fades on
+			     the first drag, and stays hidden once the user has
+			     interacted (even if the drag is cancelled). Visibility is
+			     gated by `showCoach` so a follow-up can pin it on. -->
+			{#if showCoach && !everInteracted && committed === null}
+				<div style:opacity={coachOpacity} class="ob-coach ob-coach-swipe" aria-live="polite">
+					<div class="ob-coach-row">
+						<span class="ob-coach-arrow no" aria-hidden="true">←</span>
+						<span class="ob-coach-text">
+							{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.swipe_lead' })}
+							<span class="serif-italic no">
+								{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.swipe_left' })}
+							</span>
+							{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.swipe_or' })}
+							<span class="serif-italic yes">
+								{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.swipe_right' })}
+							</span>
+						</span>
+						<span class="ob-coach-arrow yes" aria-hidden="true">→</span>
+					</div>
+					<p class="ob-coach-sub">
+						{t({ locale: $localeStore, key: 'onboarding.beat1b.coach.swipe_sub' })}
+					</p>
+				</div>
+			{/if}
+		</div>
+	</div>
+
+	<!-- Keyboard / switch-user accessible commit row.
+	     The swipeable card above is pointer-only (role="presentation"),
+	     so these buttons are the primary a11y path for keyboard and
+	     switch-access users. Visually matches the ob-prob tiles;
+	     hidden via aria-hidden once committed so the screen reader
+	     doesn't announce stale interactive elements. -->
+	<div class="ob-commit-row" aria-hidden={committed !== null ? 'true' : undefined}>
+		<button
+			class="ob-commit-btn no"
+			aria-label={t({ locale: $localeStore, key: 'onboarding.beat1b.a11y_commit_no' })}
+			disabled={committed !== null}
+			onclick={() => {
+				everInteracted = true;
+				commit('NO');
+			}}
+			type="button"
+		>
+			<span class="ob-commit-eyebrow no">
+				{t({ locale: $localeStore, key: 'flow.action.no' })}
+			</span>
+			<span class="ob-commit-pct">{noPct}%</span>
+		</button>
+		<button
+			class="ob-commit-btn yes"
+			aria-label={t({ locale: $localeStore, key: 'onboarding.beat1b.a11y_commit_yes' })}
+			disabled={committed !== null}
+			onclick={() => {
+				everInteracted = true;
+				commit('YES');
+			}}
+			type="button"
+		>
+			<span class="ob-commit-eyebrow yes">
+				{t({ locale: $localeStore, key: 'flow.action.yes' })}
+			</span>
+			<span class="ob-commit-pct">{yesPct}%</span>
+		</button>
 	</div>
 </div>
-
-<style lang="postcss">
-	/* The guided FlowCard fills the stage; it's absolutely-positioned via
-	   its own root, so the stage just needs to be the positioning context
-	   (the `.ob2-card-stage` envelope itself lives in app.css). The coach
-	   overlay sits above the card within the same stage. */
-	.ob2-card-stage :global(.flow-card-root) {
-		position: absolute;
-		inset: 0;
-	}
-</style>
