@@ -208,13 +208,26 @@ export const frMessages = {
 	'tournament.waiting_leagues':
 		'En attente de plus de ligues pour compléter le tableau. {available} sur {required} qualifiées pour le moment.',
 	'account.back': 'Retour aux réglages',
+	'account.email.cancel': 'Annuler',
+	'account.email.change': "Changer l'e-mail",
+	'account.email.edit_note':
+		"Nous enverrons un magic link à ta nouvelle adresse. Touche-le pour confirmer. D'ici là, ton e-mail actuel reste actif.",
 	'account.email.empty': 'Aucune adresse e-mail.',
 	'account.email.eyebrow': 'ADRESSE E-MAIL',
-	'account.email.pending': "La gestion de l'e-mail arrive avec la mise à jour backend.",
+	'account.email.placeholder': 'nouveau@example.com',
+	'account.email.send': 'Envoyer le lien',
+	'account.email.sent_body':
+		'Nous avons envoyé un magic link à {email}. Touche-le sous 15 minutes pour confirmer.',
+	'account.email.sent_title': 'Regarde ta boîte mail.',
+	'account.email.soon': "Le changement d'e-mail arrive avec la mise à jour backend.",
+	'account.email.used_for': 'Sert à la connexion et aux notifications importantes du compte.',
+	'account.email.verified': 'Vérifié',
 	'account.intro':
-		'VICI utilise Internet Identity ou Google. Pas de mot de passe. Change de méthode à tout moment — tes données restent.',
-	'account.method.current': 'Méthode de connexion actuelle',
+		'VICI utilise Internet Identity, Google ou un magic link. Pas de mot de passe. Change de méthode à tout moment — tes données restent.',
 	'account.method.eyebrow': 'MÉTHODE DE CONNEXION',
+	'account.method.ii': 'Internet Identity',
+	'account.method.email': 'E-mail',
+	'account.method.magic_link': 'Magic link',
 	'account.return.deleted_body':
 		'Vous avez programmé la suppression de ce compte. Récupérez-le maintenant pour conserver vos données, ou déconnectez-vous pour le laisser tel quel.',
 	'account.return.deleted_heading': 'Bon retour.',
@@ -238,6 +251,7 @@ export const frMessages = {
 	'account.return.stay_paused': 'Rester en pause',
 	'account.return.working': 'En cours…',
 	'account.switch.cta': 'Se déconnecter pour changer',
+	'account.switch.eyebrow': 'CHANGER DE MÉTHODE',
 	'account.switch.hint':
 		'Changer de méthode te déconnecte. Reconnecte-toi avec la nouvelle méthode pour continuer.',
 	'account.switch.signing_out': 'Déconnexion…',
