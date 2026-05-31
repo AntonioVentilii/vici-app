@@ -43,6 +43,7 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				totalTrades: 0,
 				winRate: 0,
 				dailyStreak: 0,
+				dailyGoalDone: 0,
 				streak: 0,
 				accuracy: 0,
 				points: 0,
@@ -166,6 +167,37 @@ export const persistDailyStreak = async ({
 		...profileDoc.data,
 		dailyStreak,
 		lastActiveDay
+	};
+
+	await upsertProfile({ ...profileDoc, data });
+
+	return data;
+};
+
+/**
+ * Persist the user's daily-goal counter. Called from Flow Mode after
+ * each committed prediction so the goal survives a refresh and reflects
+ * the day's running total across sessions.
+ *
+ * Best-effort — callers should fire-and-forget; the local UI already
+ * reflects the bumped count for the rest of the session even if the
+ * round-trip fails. Writes the absolute count (last-write-wins) rather
+ * than a delta, so the latest write always carries the highest value.
+ */
+export const persistDailyGoal = async ({
+	principal,
+	dailyGoalDone,
+	dailyGoalDate
+}: {
+	principal: PrincipalText;
+	dailyGoalDone: number;
+	dailyGoalDate: string;
+}): Promise<UserProfile> => {
+	const profileDoc = await getProfile(principal);
+	const data: UserProfile = {
+		...profileDoc.data,
+		dailyGoalDone,
+		dailyGoalDate
 	};
 
 	await upsertProfile({ ...profileDoc, data });

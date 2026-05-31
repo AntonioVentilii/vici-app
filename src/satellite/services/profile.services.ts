@@ -74,6 +74,8 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		totalTrades: profile.totalTrades ?? 0,
 		winRate: profile.winRate ?? 0,
 		dailyStreak: profile.dailyStreak ?? 0,
+		dailyGoalDone: profile.dailyGoalDone ?? 0,
+		dailyGoalDate: profile.dailyGoalDate,
 		streak: profile.streak ?? 0,
 		accuracy: profile.accuracy ?? 0,
 		points: profile.points ?? 0,
