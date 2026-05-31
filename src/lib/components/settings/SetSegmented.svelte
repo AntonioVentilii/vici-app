@@ -63,21 +63,19 @@
 
 	.set-segmented-head {
 		display: flex;
-		align-items: flex-start;
+		align-items: center;
 		gap: 0.75rem;
 		margin-bottom: 0.625rem;
 	}
 
+	/* Bare inline glyph, tinted to the dim foreground tier — matches the
+	   settings-row icon treatment (no tinted tile). */
 	.set-segmented-icon {
 		display: flex;
 		flex-shrink: 0;
 		align-items: center;
 		justify-content: center;
-		width: 2rem;
-		height: 2rem;
-		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--color-primary) 10%, transparent);
-		color: var(--color-primary);
+		color: var(--fg-dim);
 	}
 
 	.set-segmented-copy {
