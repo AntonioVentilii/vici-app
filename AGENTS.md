@@ -111,14 +111,14 @@ The Juno satellite (`src/satellite/`) holds TypeScript hooks, assertions, and
 typed queries/updates that run on the satellite canister. It is **not** the
 on-chain risk engine — that lives in `../icdc-core/`.
 
-| You're about to…                                            | Read first                                                                                     |
-| ----------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| Touch any satellite file                                    | [`docs/ai/satellite/README.md`](./docs/ai/satellite/README.md)                                 |
-| Add a hook / assertion / typed endpoint                     | [`docs/ai/satellite/patterns.md`](./docs/ai/satellite/patterns.md)                             |
-| Add a hook (`onSetDoc` / `onDeleteDoc`)                     | [`docs/ai/satellite/workflows/new-hook.md`](./docs/ai/satellite/workflows/new-hook.md)         |
-| Add a typed `defineQuery` / `defineUpdate`                  | [`docs/ai/satellite/workflows/new-endpoint.md`](./docs/ai/satellite/workflows/new-endpoint.md) |
-| Sync something into the icdc-core registry / Vici engine    | [`docs/ai/satellite/workflows/engine-sync.md`](./docs/ai/satellite/workflows/engine-sync.md)   |
-| Reset / repair the registry + engine grants (local/staging) | [`.agents/workflows/icdc-engine-reset.md`](./.agents/workflows/icdc-engine-reset.md)           |
+| You're about to…                                                           | Read first                                                                                     |
+| -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| Touch any satellite file                                                   | [`docs/ai/satellite/README.md`](./docs/ai/satellite/README.md)                                 |
+| Add a hook / assertion / typed endpoint                                    | [`docs/ai/satellite/patterns.md`](./docs/ai/satellite/patterns.md)                             |
+| Add a hook (`onSetDoc` / `onDeleteDoc`)                                    | [`docs/ai/satellite/workflows/new-hook.md`](./docs/ai/satellite/workflows/new-hook.md)         |
+| Add a typed `defineQuery` / `defineUpdate`                                 | [`docs/ai/satellite/workflows/new-endpoint.md`](./docs/ai/satellite/workflows/new-endpoint.md) |
+| Sync something into the icdc-core registry / Vici engine                   | [`docs/ai/satellite/workflows/engine-sync.md`](./docs/ai/satellite/workflows/engine-sync.md)   |
+| Reset / repair the registry + engine grants (local / staging / production) | [`.agents/workflows/icdc-engine-reset.md`](./.agents/workflows/icdc-engine-reset.md)           |
 
 ---
 

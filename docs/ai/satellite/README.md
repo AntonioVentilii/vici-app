@@ -80,12 +80,12 @@ Full taxonomy: [`structure.md`](./structure.md). Idioms: [`patterns.md`](./patte
 
 ## Where to look
 
-| You're about to…                               | Read first                                                                                                     |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| Add or move a satellite file                   | [`structure.md`](./structure.md)                                                                               |
-| Pick the right idiom (hook, assert, endpoint)  | [`patterns.md`](./patterns.md)                                                                                 |
-| Add a hook (`onSetDoc` / `onDeleteDoc`)        | [`workflows/new-hook.md`](./workflows/new-hook.md)                                                             |
-| Add a typed query / update                     | [`workflows/new-endpoint.md`](./workflows/new-endpoint.md)                                                     |
-| Sync writes into the Vici engine on icdc-core  | [`workflows/engine-sync.md`](./workflows/engine-sync.md)                                                       |
-| Reset the registry + engine on local / staging | [`../../../.agents/workflows/icdc-engine-reset.md`](../../../.agents/workflows/icdc-engine-reset.md)           |
-| Day-2 ops on the Vici engine                   | [`../../../.agents/workflows/icdc-engine-operations.md`](../../../.agents/workflows/icdc-engine-operations.md) |
+| You're about to…                                            | Read first                                                                                                     |
+| ----------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Add or move a satellite file                                | [`structure.md`](./structure.md)                                                                               |
+| Pick the right idiom (hook, assert, endpoint)               | [`patterns.md`](./patterns.md)                                                                                 |
+| Add a hook (`onSetDoc` / `onDeleteDoc`)                     | [`workflows/new-hook.md`](./workflows/new-hook.md)                                                             |
+| Add a typed query / update                                  | [`workflows/new-endpoint.md`](./workflows/new-endpoint.md)                                                     |
+| Sync writes into the Vici engine on icdc-core               | [`workflows/engine-sync.md`](./workflows/engine-sync.md)                                                       |
+| Reset the registry + engine on local / staging / production | [`../../../.agents/workflows/icdc-engine-reset.md`](../../../.agents/workflows/icdc-engine-reset.md)           |
+| Day-2 ops on the Vici engine                                | [`../../../.agents/workflows/icdc-engine-operations.md`](../../../.agents/workflows/icdc-engine-operations.md) |

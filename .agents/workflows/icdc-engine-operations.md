@@ -11,7 +11,14 @@ All commands assume the running `dfx` identity is either:
 - A **controller** of the registry canister, or
 - An **admin** of the Vici engine (e.g. one of the `SATELLITE_CONTROLLERS`).
 
-Replace `--network staging` with the target network as needed.
+The examples use `--network staging` (icdc-core staging). Replace it with `--network ic` for
+**production** — the deployment the live Vici frontend talks to. See
+[engine-integration.md](../../docs/engine-integration.md) — "icdc-core deployments: staging
+and production".
+
+> [!CAUTION]
+> `--network ic` commands mutate **production** engine authorization state (role grants,
+> oracle settlers, admins, the kill-switch). Double-check the network before running them.
 
 ## Reconcile a role grant manually
 
