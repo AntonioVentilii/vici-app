@@ -144,8 +144,10 @@ const POOLS: Record<PoolKey, readonly MessageKey[]> = {
 	'first-leaderboard': ['motion.pool.first_leaderboard_1']
 };
 
-// Non-currency wildcard rewards. The chosen key is surfaced both as the
-// beat's `treatKey` (UI chip) and credited to the user's treat collection.
+// Non-currency wildcard rewards. The chosen key is surfaced as the beat's
+// `treatKey` in the payload only — the engine does not persist it. Callers
+// are responsible for crediting the treat to the user; a dedicated treats
+// store does not exist yet and is a follow-up concern.
 export const TREAT_KEYS: readonly MessageKey[] = [
 	'motion.treat.rare_sticker',
 	'motion.treat.streak_shield',
@@ -693,6 +695,15 @@ export const recordMotionSwipe = (input: MotionSwipeInput): MotionSwipeResult =>
 	}
 
 	saveState(state);
+
+	// Sync the chosen beat's `bonusXp` to the fully-stacked total so the
+	// coin chip always displays what is actually awarded. A beat can be
+	// created before all bonus sources are tallied (e.g. overtime-complete
+	// fires at step 1 with bonusXp 25, then a volume milestone stacks more
+	// at step 2), leaving `beat.bonusXp` stale unless we reconcile here.
+	if (beat !== null) {
+		beat = { ...beat, bonusXp };
+	}
 
 	return { bonusXp, beat };
 };

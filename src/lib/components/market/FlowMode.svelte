@@ -572,6 +572,12 @@
 		const dailyJustCompleted =
 			goalBump.done >= DAILY_GOAL_TARGET && previousGoalDone < DAILY_GOAL_TARGET;
 
+		// Overtime beats (ot-11 / ot-13 rhythm + the overtime-complete bonus
+		// at call 15) activate only when `dailyTarget` is raised to
+		// `DAILY_HARD_CAP` (15) via the "Push to 15" opt-in flow. That opt-in
+		// UI is a separate, later chunk — wiring it here is the tracked
+		// follow-up. Until then `dailyTarget = DAILY_GOAL_TARGET` (10) keeps
+		// the engine in the regular daily path.
 		const motion = recordMotionSwipe({
 			side: action,
 			isContrarian,

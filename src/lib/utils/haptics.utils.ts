@@ -125,10 +125,10 @@ const MILESTONE_HAPTIC: Record<number, HapticPattern> = {
  * restates the ms arrays.
  *
  *   volume-1               → triple-tap (the welcome first call)
- *   volume-3 / 5 / 25      → firm-tap
- *   volume-10 / 250 / 500  → milestone-tap
+ *   volume-10 / 25         → firm-tap
  *   volume-50              → oracle-roll
  *   volume-100             → centurion
+ *   volume-250 / 500       → milestone-tap
  *   volume-1000            → vici-fanfare
  *   daily / overtime-complete → oracle-roll (the streak beat)
  *   comeback               → triple-tap
