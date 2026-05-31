@@ -881,7 +881,6 @@
 	}
 
 	.flow-cat-live {
-		margin-left: 4px;
 		font-size: 9.5px;
 		letter-spacing: var(--tracking-allcaps);
 		opacity: 0.85;
@@ -942,19 +941,19 @@
 	}
 	.flow-whynow-prior.is-yes {
 		color: var(--yes);
-		background: rgba(79, 211, 161, 0.1);
-		border-color: rgba(79, 211, 161, 0.32);
+		background: color-mix(in srgb, var(--yes) 10%, transparent);
+		border-color: color-mix(in srgb, var(--yes) 32%, transparent);
 	}
 	.flow-whynow-prior.is-no {
 		color: var(--no);
-		background: rgba(255, 107, 107, 0.1);
-		border-color: rgba(255, 107, 107, 0.32);
+		background: color-mix(in srgb, var(--no) 10%, transparent);
+		border-color: color-mix(in srgb, var(--no) 32%, transparent);
 	}
 	.flow-whynow-prior.is-yes .flow-whynow-dot {
-		box-shadow: 0 0 6px rgba(79, 211, 161, 0.5);
+		box-shadow: 0 0 6px color-mix(in srgb, var(--yes) 50%, transparent);
 	}
 	.flow-whynow-prior.is-no .flow-whynow-dot {
-		box-shadow: 0 0 6px rgba(255, 107, 107, 0.5);
+		box-shadow: 0 0 6px color-mix(in srgb, var(--no) 50%, transparent);
 	}
 	.flow-whynow-dot {
 		width: 5px;
