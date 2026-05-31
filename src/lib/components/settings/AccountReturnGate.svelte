@@ -290,13 +290,13 @@
 		margin: 0;
 		font-size: var(--t-13);
 		font-weight: 600;
-		color: var(--color-destructive);
+		color: var(--danger);
 	}
 
 	.gate-error {
 		margin: 0;
 		font-size: var(--t-12);
-		color: var(--color-destructive);
+		color: var(--danger);
 	}
 
 	.gate-actions {

@@ -13,7 +13,7 @@
 		default: 'border-border bg-foreground/6 text-muted-foreground',
 		success: 'bg-yes-wash text-yes border-yes/25',
 		warning: 'bg-laurel-glow text-primary border-primary/25',
-		danger: 'bg-no-wash text-destructive border-destructive/25',
+		danger: 'bg-danger-wash text-danger border-danger/25',
 		info: 'bg-hold-wash text-hold border-hold/25'
 	};
 

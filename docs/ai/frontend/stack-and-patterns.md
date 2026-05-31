@@ -247,7 +247,9 @@ pins `VICI_ENGINE_ID` is
   `foreground`, `card`, `popover`, `muted-foreground`, `success`,
   `destructive`, `border`, `input`, …), plus repo-specific design
   tokens: the prediction signals (`yes` / `no` / `hold` and their
-  `-deep` / `-wash` variants), the `laurel` brand ramp (`laurel` /
+  `-deep` / `-wash` variants), the `danger` ramp (`danger` /
+  `danger-deep` / `danger-wash`, a theme-stable terracotta), the
+  `laurel` brand ramp (`laurel` /
   `laurel-deep` / `laurel-glow`), `ink`, `ink-line` /
   `ink-line-strong` (theme-stable parchment lines for surfaces with
   hard-coded dark backgrounds), `border-strong`, the `ease-vici`
@@ -260,6 +262,16 @@ pins `VICI_ENGINE_ID` is
   `bg-card`, `text-yes`, `bg-no-wash`, `border-border-strong`,
   `border-ink-line`, `shadow-inset-hi`, `ease-vici`, `duration-hover`,
   `bg-laurel/20`.
+- **`danger` (terracotta) vs `no` / `destructive` (red) — do not
+  conflate.** Destructive / irreversible-action UI (delete, sign-out,
+  danger buttons / warnings) uses the `danger` ramp (`bg-danger`,
+  `text-danger`, `hover:bg-danger-deep`, `bg-danger-wash`) so it reads
+  as caution, not as a market outcome. The `no` signal (and the
+  `destructive` alias that still maps to it) is reserved for the
+  prediction **NO** outcome and financial-loss semantics — NO splits,
+  probability bars, payouts, `out` wallet rows, order-book asks. When a
+  red is a NO outcome / loss, keep it on `no` / `destructive`; when it's
+  a destructive action, use `danger`.
 - **No `[var(--…)]` arbitrary values for design tokens.** Tailwind v4
   generates `bg-foo` / `text-foo` / `border-foo` / `ring-foo` /
   `shadow-foo` / `ease-foo` utilities for every `--color-*`, `--shadow-*`
