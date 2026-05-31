@@ -1808,22 +1808,29 @@ export const frMessages = {
 	'settings.delete': 'Supprimer le compte',
 	'settings.delete.back': 'Retour',
 	'settings.delete.confirm':
-		'Cela efface votre pseudo, votre historique et vos VXP définitivement. Impossible à annuler.',
+		'Connectez-vous dans les 30 jours pour récupérer votre pseudo et votre historique. Ensuite, ils disparaissent définitivement.',
+	'settings.delete.confirm_exactly': 'Exactement :',
+	'settings.delete.confirm_finality_title': 'Cela ne pourra plus être annulé après 30 jours.',
 	'settings.delete.confirm_heading': 'Dernière étape.',
 	'settings.delete.confirm_mismatch': 'Cela ne correspond pas à votre pseudo.',
-	'settings.delete.confirm_type': 'Tapez {handle} pour confirmer',
+	'settings.delete.confirm_type': 'Tapez votre pseudo pour confirmer',
 	'settings.delete.continue': 'Continuer',
 	'settings.delete.deleting': 'Suppression…',
 	'settings.delete.error': 'Une erreur est survenue. Veuillez réessayer.',
 	'settings.delete.error_handoff': 'Impossible de céder {league}. Réessayez.',
 	'settings.delete.forever': 'Supprimer définitivement',
-	'settings.delete.gone_body':
-		'Les positions actives restent ouvertes et se règlent à l’échéance — supprimer votre compte ne les solde pas.',
+	'settings.delete.gone_body': 'Votre compte est en cours de suppression.',
+	'settings.delete.gone_eyebrow': 'Adieu',
 	'settings.delete.gone_heading': 'Vale.',
 	'settings.delete.gone_recover':
 		'Vous avez changé d’avis ? Reconnectez-vous sous 30 jours et votre historique revient.',
-	'settings.delete.gone_return': 'Retour ({seconds})',
+	'settings.delete.gone_return_label': 'Retour à l’accueil',
+	'settings.delete.gone_sub':
+		'Une confirmation est en route vers votre e-mail. Vos positions actives seront réglées à l’échéance.',
 	'settings.delete.happens_heading': 'Voici ce qui se passe.',
+	'settings.delete.happens_lede': 'Lisez attentivement.',
+	'settings.delete.happens_lede_warn':
+		'Certains des éléments ci-dessous ne peuvent pas être annulés par la suppression.',
 	'settings.delete.happens_leagues_label': 'Ligues que vous dirigez · {count}',
 	'settings.delete.happens_leagues_sub': 'Transférez ou supprimez chacune avant de continuer.',
 	'settings.delete.happens_orders_label': 'Ordres ouverts · {count} · {value} VXP',
@@ -1832,6 +1839,8 @@ export const frMessages = {
 	'settings.delete.happens_profile_label': 'Profil, pseudo et statistiques',
 	'settings.delete.happens_profile_sub':
 		'Supprimés maintenant, récupérables pendant 30 jours en vous reconnectant, puis perdus à jamais.',
+	'settings.delete.happens_social_label': 'Messages et réactions',
+	'settings.delete.happens_social_sub': 'Anonymisés. Vos réponses restent ; le nom disparaît.',
 	'settings.delete.happens_trades_label': 'Positions actives · {count} · {value} VXP',
 	'settings.delete.happens_trades_sub':
 		'Restent ouvertes et se règlent à l’échéance — la suppression ne les solde pas.',
@@ -1840,7 +1849,9 @@ export const frMessages = {
 	'settings.delete.leagues_delete': 'Supprimer la ligue',
 	'settings.delete.leagues_delete_armed': 'Sera supprimée pour tous les membres',
 	'settings.delete.leagues_delete_confirm': 'Supprimer pour les {count} membres ?',
+	'settings.delete.leagues_delete_no_rejoin': 'Personne ne pourra rejoindre à nouveau.',
 	'settings.delete.leagues_heading': 'Réglez vos ligues.',
+	'settings.delete.leagues_meta': '{count} membres · Vous êtes propriétaire',
 	'settings.delete.leagues_no_members': 'Aucun autre membre à qui transférer. Supprimez-la plutôt.',
 	'settings.delete.leagues_select_member': 'Choisissez un membre…',
 	'settings.delete.leagues_transfer': 'Transférer à…',
@@ -1853,11 +1864,11 @@ export const frMessages = {
 	'settings.delete.reason.other': 'Autre',
 	'settings.delete.reason.too_complex': 'Trop complexe / difficile à utiliser',
 	'settings.delete.reason.too_noisy': 'Trop de notifications',
-	'settings.delete.reason_body':
-		'Désolés de vous voir partir. Pouvez-vous nous dire pourquoi ? Votre réponse nous aide à améliorer VICI pour les autres.',
+	'settings.delete.reason_body': 'Désolés de vous voir partir. Pouvez-vous nous dire pourquoi ?',
+	'settings.delete.reason_body_acc': 'Votre réponse nous aide à améliorer VICI pour les autres.',
 	'settings.delete.reason_heading': 'Avant de partir.',
 	'settings.delete.stay_body':
-		'Mettez les notifications en pause, passez au résumé par e-mail, ou faites simplement une pause. Votre historique vous attendra.',
+		'Faites une pause de 30 jours — vos statistiques sont gelées et votre profil masqué. Ou contactez-nous et nous corrigerons ce qui ne va pas.',
 	'settings.delete.stay_contact': 'Nous contacter',
 	'settings.delete.stay_heading': 'Envie de rester ?',
 	'settings.delete.stay_pause': 'Pause 30 jours',

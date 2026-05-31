@@ -1794,22 +1794,29 @@ export const itMessages = {
 	'settings.delete': 'Elimina account',
 	'settings.delete.back': 'Indietro',
 	'settings.delete.confirm':
-		'Cancella il tuo handle, lo storico e i VXP in modo permanente. Non si può annullare.',
+		'Accedi entro 30 giorni per recuperare il tuo handle e lo storico. Dopo, spariscono per sempre.',
+	'settings.delete.confirm_exactly': 'Esattamente:',
+	'settings.delete.confirm_finality_title': 'Dopo 30 giorni questo non può più essere annullato.',
 	'settings.delete.confirm_heading': 'Ultimo passo.',
 	'settings.delete.confirm_mismatch': 'Non corrisponde al tuo handle.',
-	'settings.delete.confirm_type': 'Digita {handle} per confermare',
+	'settings.delete.confirm_type': 'Digita il tuo handle per confermare',
 	'settings.delete.continue': 'Continua',
 	'settings.delete.deleting': 'Eliminazione…',
 	'settings.delete.error': 'Qualcosa è andato storto. Riprova.',
 	'settings.delete.error_handoff': 'Impossibile cedere {league}. Riprova.',
 	'settings.delete.forever': 'Elimina per sempre',
-	'settings.delete.gone_body':
-		'Eventuali scambi attivi restano aperti e si chiudono alla scadenza — eliminare l’account non li annulla.',
+	'settings.delete.gone_body': 'Il tuo account è in fase di eliminazione.',
+	'settings.delete.gone_eyebrow': 'Addio',
 	'settings.delete.gone_heading': 'Vale.',
 	'settings.delete.gone_recover':
 		'Cambiato idea? Accedi di nuovo entro 30 giorni e il tuo storico torna.',
-	'settings.delete.gone_return': 'Torna ({seconds})',
+	'settings.delete.gone_return_label': 'Torna alla home',
+	'settings.delete.gone_sub':
+		'Una conferma sta arrivando alla tua email. I tuoi scambi attivi si chiuderanno alla scadenza.',
 	'settings.delete.happens_heading': 'Ecco cosa succede.',
+	'settings.delete.happens_lede': 'Leggi con attenzione.',
+	'settings.delete.happens_lede_warn':
+		'Alcune delle voci qui sotto non possono essere annullate eliminando l’account.',
 	'settings.delete.happens_leagues_label': 'Leghe di tua proprietà · {count}',
 	'settings.delete.happens_leagues_sub': 'Trasferisci o elimina ciascuna prima di continuare.',
 	'settings.delete.happens_orders_label': 'Ordini aperti · {count} · {value} VXP',
@@ -1818,6 +1825,8 @@ export const itMessages = {
 	'settings.delete.happens_profile_label': 'Profilo, handle e statistiche',
 	'settings.delete.happens_profile_sub':
 		'Eliminati subito, recuperabili per 30 giorni accedendo di nuovo, poi spariscono per sempre.',
+	'settings.delete.happens_social_label': 'Messaggi e reazioni',
+	'settings.delete.happens_social_sub': 'Anonimizzati. Le tue risposte restano; il nome scompare.',
 	'settings.delete.happens_trades_label': 'Scambi attivi · {count} · {value} VXP',
 	'settings.delete.happens_trades_sub':
 		'Restano aperti e si chiudono alla scadenza — eliminare non li annulla.',
@@ -1825,7 +1834,9 @@ export const itMessages = {
 	'settings.delete.leagues_delete': 'Elimina lega',
 	'settings.delete.leagues_delete_armed': 'Sarà eliminata per tutti i membri',
 	'settings.delete.leagues_delete_confirm': 'Eliminare per tutti i {count} membri?',
+	'settings.delete.leagues_delete_no_rejoin': 'Nessuno potrà rientrare.',
 	'settings.delete.leagues_heading': 'Risolvi le tue leghe.',
+	'settings.delete.leagues_meta': '{count} membri · Sei il proprietario',
 	'settings.delete.leagues_no_members': 'Nessun altro membro a cui trasferire. Eliminala invece.',
 	'settings.delete.leagues_select_member': 'Scegli un membro…',
 	'settings.delete.leagues_transfer': 'Trasferisci a…',
@@ -1838,11 +1849,11 @@ export const itMessages = {
 	'settings.delete.reason.other': 'Altro',
 	'settings.delete.reason.too_complex': 'Troppo complesso / difficile da usare',
 	'settings.delete.reason.too_noisy': 'Troppe notifiche',
-	'settings.delete.reason_body':
-		'Ci dispiace vederti andare via. Vuoi dirci perché? La tua risposta ci aiuta a migliorare VICI per gli altri.',
+	'settings.delete.reason_body': 'Ci dispiace vederti andare via. Vuoi dirci perché?',
+	'settings.delete.reason_body_acc': 'La tua risposta ci aiuta a migliorare VICI per gli altri.',
 	'settings.delete.reason_heading': 'Prima di andare.',
 	'settings.delete.stay_body':
-		'Metti in pausa le notifiche, passa al riepilogo via email o prenditi una pausa. Il tuo storico ti aspetterà.',
+		'Prenditi una pausa di 30 giorni — le tue statistiche si congelano e il profilo si nasconde. Oppure scrivici e sistemeremo ciò che non va.',
 	'settings.delete.stay_contact': 'Contattaci',
 	'settings.delete.stay_heading': 'Vuoi restare?',
 	'settings.delete.stay_pause': 'Pausa 30 giorni',

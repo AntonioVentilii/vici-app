@@ -430,13 +430,18 @@
 	onMount(() => () => clearCountdown());
 </script>
 
-<BottomSheet {isOpen} onClose={handleClose}>
+<BottomSheet isOpen={isOpen && step !== 'gone'} onClose={handleClose}>
 	{#if step === 'reason'}
 		<div class="del">
 			<h2 class="del-title">
 				{t({ locale: $localeStore, key: 'settings.delete.reason_heading' })}
 			</h2>
-			<p class="del-body">{t({ locale: $localeStore, key: 'settings.delete.reason_body' })}</p>
+			<p class="del-lede">
+				{t({ locale: $localeStore, key: 'settings.delete.reason_body' })}
+				<span class="del-lede-acc">
+					{t({ locale: $localeStore, key: 'settings.delete.reason_body_acc' })}
+				</span>
+			</p>
 
 			<div class="del-reasons" role="group">
 				{#each reasonOptions as opt (opt.id)}
@@ -490,6 +495,7 @@
 					{t({ locale: $localeStore, key: 'settings.delete.never_mind' })}
 				</Button>
 				<Button
+					class="del-danger-btn"
 					onclick={goToDisclosure}
 					status={reason === null ? 'disabled' : 'enabled'}
 					variant="danger"
@@ -501,71 +507,111 @@
 		</div>
 	{:else if step === 'what-happens'}
 		<div class="del">
-			<h2 class="del-title">
+			<h2 class="del-title" data-tone="danger">
 				{t({ locale: $localeStore, key: 'settings.delete.happens_heading' })}
 			</h2>
+			<p class="del-lede">
+				{t({ locale: $localeStore, key: 'settings.delete.happens_lede' })}
+				<span class="del-lede-danger">
+					{t({ locale: $localeStore, key: 'settings.delete.happens_lede_warn' })}
+				</span>
+			</p>
 
 			<ul class="del-rows">
-				<li class="del-row">
-					<span class="del-row-label">
-						{t({ locale: $localeStore, key: 'settings.delete.happens_profile_label' })}
+				<li class="del-row" data-first="true">
+					<span class="del-row-icon" aria-hidden="true" data-tone="ok">
+						<Check size={11} strokeWidth={3.5} />
 					</span>
-					<span class="del-row-sub">
-						{t({ locale: $localeStore, key: 'settings.delete.happens_profile_sub' })}
-					</span>
+					<div class="del-row-text">
+						<span class="del-row-label">
+							{t({ locale: $localeStore, key: 'settings.delete.happens_profile_label' })}
+						</span>
+						<span class="del-row-sub">
+							{t({ locale: $localeStore, key: 'settings.delete.happens_profile_sub' })}
+						</span>
+					</div>
 				</li>
 
 				{#if openOrderCount > 0}
 					<li class="del-row">
-						<span class="del-row-label">
-							{t({
-								locale: $localeStore,
-								key: 'settings.delete.happens_orders_label',
-								params: { count: openOrderCount, value: formatVxp(openOrderValue) }
-							})}
+						<span class="del-row-icon" aria-hidden="true" data-tone="ok">
+							<Check size={11} strokeWidth={3.5} />
 						</span>
-						<span class="del-row-sub">
-							{t({ locale: $localeStore, key: 'settings.delete.happens_orders_sub' })}
-						</span>
+						<div class="del-row-text">
+							<span class="del-row-label">
+								{t({
+									locale: $localeStore,
+									key: 'settings.delete.happens_orders_label',
+									params: { count: openOrderCount, value: formatVxp(openOrderValue) }
+								})}
+							</span>
+							<span class="del-row-sub">
+								{t({ locale: $localeStore, key: 'settings.delete.happens_orders_sub' })}
+							</span>
+						</div>
 					</li>
 				{/if}
 
 				{#if hasTradeData && activeTradeCount > 0}
-					<li class="del-row is-warn">
-						<span class="del-row-label">
-							{t({
-								locale: $localeStore,
-								key: 'settings.delete.happens_trades_label',
-								params: { count: activeTradeCount, value: formatVxp(activeTradeValue) }
-							})}
+					<li class="del-row">
+						<span class="del-row-icon" aria-hidden="true" data-tone="warn">
+							<span class="del-row-bang">!</span>
 						</span>
-						<span class="del-row-sub">
-							{t({ locale: $localeStore, key: 'settings.delete.happens_trades_sub' })}
-						</span>
+						<div class="del-row-text">
+							<span class="del-row-label">
+								{t({
+									locale: $localeStore,
+									key: 'settings.delete.happens_trades_label',
+									params: { count: activeTradeCount, value: formatVxp(activeTradeValue) }
+								})}
+							</span>
+							<span class="del-row-sub">
+								{t({ locale: $localeStore, key: 'settings.delete.happens_trades_sub' })}
+							</span>
+						</div>
 					</li>
 				{/if}
 
 				{#if ownedLeagueCount > 0}
-					<li class="del-row is-warn">
-						<span class="del-row-label">
-							{t({
-								locale: $localeStore,
-								key: 'settings.delete.happens_leagues_label',
-								params: { count: ownedLeagueCount }
-							})}
+					<li class="del-row">
+						<span class="del-row-icon" aria-hidden="true" data-tone="warn">
+							<span class="del-row-bang">!</span>
 						</span>
-						<span class="del-row-sub">
-							{t({ locale: $localeStore, key: 'settings.delete.happens_leagues_sub' })}
-						</span>
+						<div class="del-row-text">
+							<span class="del-row-label">
+								{t({
+									locale: $localeStore,
+									key: 'settings.delete.happens_leagues_label',
+									params: { count: ownedLeagueCount }
+								})}
+							</span>
+							<span class="del-row-sub">
+								{t({ locale: $localeStore, key: 'settings.delete.happens_leagues_sub' })}
+							</span>
+						</div>
 					</li>
 				{/if}
+
+				<li class="del-row">
+					<span class="del-row-icon" aria-hidden="true" data-tone="ok">
+						<Check size={11} strokeWidth={3.5} />
+					</span>
+					<div class="del-row-text">
+						<span class="del-row-label">
+							{t({ locale: $localeStore, key: 'settings.delete.happens_social_label' })}
+						</span>
+						<span class="del-row-sub">
+							{t({ locale: $localeStore, key: 'settings.delete.happens_social_sub' })}
+						</span>
+					</div>
+				</li>
 			</ul>
 
 			<div class="del-actions">
 				<Button onclick={() => (step = 'reason')} variant="ghost">
 					{t({ locale: $localeStore, key: 'settings.delete.back' })}
 				</Button>
-				<Button onclick={advanceFromDisclosure} variant="danger">
+				<Button class="del-danger-btn" onclick={advanceFromDisclosure} variant="danger">
 					{t({ locale: $localeStore, key: 'settings.delete.understand' })}
 				</Button>
 			</div>
@@ -582,10 +628,19 @@
 					{@const draft = resolutions[league.id]}
 					<div class="del-league" class:is-resolved={isLeagueResolved(league.id)}>
 						<div class="del-league-head">
-							<span class="del-league-name">{league.name}</span>
+							<div class="del-league-id">
+								<span class="del-league-name">{league.name}</span>
+								<span class="del-league-meta">
+									{t({
+										locale: $localeStore,
+										key: 'settings.delete.leagues_meta',
+										params: { count: league.memberCount }
+									})}
+								</span>
+							</div>
 							{#if isLeagueResolved(league.id)}
 								<span class="del-league-tick" aria-hidden="true">
-									<Check size={14} strokeWidth={2.2} />
+									<Check size={10} strokeWidth={3.5} />
 								</span>
 							{/if}
 						</div>
@@ -593,7 +648,7 @@
 						<div class="del-league-modes">
 							<button
 								class="del-league-mode"
-								class:is-active={draft?.action === 'transfer'}
+								class:is-transfer={draft?.action === 'transfer'}
 								aria-pressed={draft?.action === 'transfer'}
 								disabled={transferCandidates(league.id).length === 0}
 								onclick={() =>
@@ -607,7 +662,7 @@
 							</button>
 							<button
 								class="del-league-mode"
-								class:is-active={draft?.action === 'delete'}
+								class:is-delete={draft?.action === 'delete'}
 								aria-pressed={draft?.action === 'delete'}
 								onclick={() =>
 									(resolutions = {
@@ -657,24 +712,35 @@
 								</label>
 							{/if}
 						{:else if draft?.action === 'delete'}
-							<button
-								class="del-league-delete-confirm"
-								class:is-armed={draft.deleteConfirmed}
-								onclick={() =>
-									(resolutions = {
-										...resolutions,
-										[league.id]: { ...draft, deleteConfirmed: !draft.deleteConfirmed }
-									})}
-								type="button"
-							>
-								{draft.deleteConfirmed
-									? t({ locale: $localeStore, key: 'settings.delete.leagues_delete_armed' })
-									: t({
+							{#if draft.deleteConfirmed}
+								<p class="del-league-armed">
+									{t({ locale: $localeStore, key: 'settings.delete.leagues_delete_armed' })}
+								</p>
+							{:else}
+								<div class="del-league-confirm">
+									<p class="del-league-confirm-text">
+										{t({
 											locale: $localeStore,
 											key: 'settings.delete.leagues_delete_confirm',
 											params: { count: league.memberCount }
 										})}
-							</button>
+										<span class="del-league-confirm-sub">
+											{t({ locale: $localeStore, key: 'settings.delete.leagues_delete_no_rejoin' })}
+										</span>
+									</p>
+									<button
+										class="del-league-confirm-btn"
+										onclick={() =>
+											(resolutions = {
+												...resolutions,
+												[league.id]: { ...draft, deleteConfirmed: true }
+											})}
+										type="button"
+									>
+										{t({ locale: $localeStore, key: 'settings.delete.leagues_delete' })}
+									</button>
+								</div>
+							{/if}
 						{/if}
 					</div>
 				{/each}
@@ -685,6 +751,7 @@
 					{t({ locale: $localeStore, key: 'settings.delete.back' })}
 				</Button>
 				<Button
+					class="del-danger-btn"
 					onclick={enterConfirm}
 					status={allLeaguesResolved ? 'enabled' : 'disabled'}
 					variant="danger"
@@ -696,20 +763,29 @@
 		</div>
 	{:else if step === 'confirm'}
 		<div class="del">
-			<h2 class="del-title">
+			<h2 class="del-title" data-tone="danger">
 				{t({ locale: $localeStore, key: 'settings.delete.confirm_heading' })}
 			</h2>
-			<p class="del-body">{t({ locale: $localeStore, key: 'settings.delete.confirm' })}</p>
+
+			<div class="del-finality">
+				<p class="del-finality-title">
+					{t({ locale: $localeStore, key: 'settings.delete.confirm_finality_title' })}
+				</p>
+				<p class="del-finality-body">
+					{t({ locale: $localeStore, key: 'settings.delete.confirm' })}
+				</p>
+			</div>
 
 			<label class="del-confirm-wrap">
 				<span class="del-confirm-label">
-					{t({
-						locale: $localeStore,
-						key: 'settings.delete.confirm_type',
-						params: { handle: nickname }
-					})}
+					{t({ locale: $localeStore, key: 'settings.delete.confirm_type' })}
 				</span>
-				<div class="del-confirm-field" class:is-matched={handleMatches}>
+				<div
+					class="del-confirm-field"
+					class:is-matched={handleMatches}
+					class:is-mismatch={typedHandle.trim().length > 0 && !handleMatches}
+				>
+					<span class="del-confirm-at" aria-hidden="true">@</span>
 					<input
 						bind:this={confirmInputEl}
 						class="del-confirm-input num"
@@ -724,11 +800,15 @@
 					/>
 					{#if handleMatches}
 						<span class="del-confirm-tick" aria-hidden="true">
-							<Check size={16} strokeWidth={2.2} />
+							<Check size={14} strokeWidth={2.5} />
 						</span>
 					{/if}
 				</div>
 			</label>
+			<p class="del-confirm-hint">
+				{t({ locale: $localeStore, key: 'settings.delete.confirm_exactly' })}
+				<span class="del-confirm-hint-acc">{nickname}</span>
+			</p>
 
 			{#if typedHandle.trim().length > 0 && !handleMatches}
 				<p class="del-error" role="alert">
@@ -751,6 +831,7 @@
 					{t({ locale: $localeStore, key: 'settings.delete.back' })}
 				</Button>
 				<Button
+					class="del-danger-btn"
 					onclick={runDelete}
 					status={handleMatches ? deleteStatus : 'disabled'}
 					variant="danger"
@@ -766,32 +847,38 @@
 				</Button>
 			</div>
 		</div>
-	{:else}
-		<div class="del del-gone">
-			<h2 class="del-gone-title">
-				{t({ locale: $localeStore, key: 'settings.delete.gone_heading' })}
-			</h2>
-			<p class="del-body">{t({ locale: $localeStore, key: 'settings.delete.gone_body' })}</p>
-			<p class="del-body">{t({ locale: $localeStore, key: 'settings.delete.gone_recover' })}</p>
-
-			<div class="del-actions del-actions-single">
-				<Button onclick={finish} variant="primary">
-					{t({
-						locale: $localeStore,
-						key: 'settings.delete.gone_return',
-						params: { seconds: countdown }
-					})}
-				</Button>
-			</div>
-		</div>
 	{/if}
 </BottomSheet>
+
+{#if isOpen && step === 'gone'}
+	<div class="del-gone-scrim" role="presentation">
+		<div class="del-gone" aria-modal="true" role="dialog" tabindex="-1">
+			<span class="del-gone-eyebrow">
+				{t({ locale: $localeStore, key: 'settings.delete.gone_eyebrow' })}
+			</span>
+			<p class="del-gone-vale">
+				{t({ locale: $localeStore, key: 'settings.delete.gone_heading' })}
+			</p>
+			<p class="del-gone-lede">{t({ locale: $localeStore, key: 'settings.delete.gone_body' })}</p>
+			<p class="del-gone-sub">{t({ locale: $localeStore, key: 'settings.delete.gone_sub' })}</p>
+			<div class="del-gone-recovery">
+				{t({ locale: $localeStore, key: 'settings.delete.gone_recover' })}
+			</div>
+			<button class="del-gone-cta" onclick={finish} type="button">
+				{t({ locale: $localeStore, key: 'settings.delete.gone_return_label' })}
+				{#if countdown > 0}
+					<span class="del-gone-counter num">{countdown}</span>
+				{/if}
+			</button>
+		</div>
+	</div>
+{/if}
 
 <style lang="postcss">
 	.del {
 		display: flex;
 		flex-direction: column;
-		gap: 0.85rem;
+		gap: 0.75rem;
 		padding: 0.25rem 0.1rem 0.4rem;
 	}
 
@@ -803,6 +890,12 @@
 		color: var(--text-base);
 	}
 
+	/* Steps past the empathetic opener carry the danger tone in their
+	   heading so the destructive intent reads from the title down. */
+	.del-title[data-tone='danger'] {
+		color: var(--danger);
+	}
+
 	.del-body {
 		margin: 0;
 		font-size: var(--t-13);
@@ -810,8 +903,29 @@
 		color: var(--text-muted);
 	}
 
+	/* Serif-italic lede — the empathetic voice for the opener and the
+	   honest-disclosure intro. */
+	.del-lede {
+		margin: 0 0 0.15rem;
+		font-family: var(--font-serif, serif);
+		font-size: var(--t-13);
+		font-style: italic;
+		line-height: 1.45;
+		color: var(--fg-dim);
+	}
+
+	.del-lede-acc {
+		color: var(--accent);
+	}
+
+	.del-lede-danger {
+		color: var(--danger);
+		font-style: normal;
+	}
+
 	/* Reason picker — 2-col grid of soft-square chips. Active state
-	   adopts the danger tone so the destructive intent reads early. */
+	   adopts the laurel accent (the empathetic step stays warm; the
+	   danger tone is reserved for the steps past the opener). */
 	.del-reasons {
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -834,9 +948,10 @@
 	}
 
 	.del-reason.is-active {
-		border-color: var(--color-destructive);
-		background: color-mix(in srgb, var(--color-destructive) 10%, var(--bg-surface));
-		color: var(--color-destructive);
+		border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+		background: color-mix(in srgb, var(--accent) 10%, var(--bg-surface));
+		color: var(--accent);
+		font-weight: 600;
 	}
 
 	.del-note {
@@ -856,9 +971,9 @@
 	   footer so the "stay" path is offered before the user commits. */
 	.del-retain {
 		padding: 0.65rem 0.7rem;
-		border: 1px dashed var(--border-base);
-		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--color-primary) 5%, transparent);
+		border: 1px solid color-mix(in srgb, var(--accent) 20%, transparent);
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--accent) 4%, transparent);
 	}
 
 	.del-retain-head {
@@ -867,13 +982,13 @@
 		font-size: var(--t-14);
 		font-style: italic;
 		font-weight: 600;
-		color: var(--text-base);
+		color: var(--accent);
 	}
 
 	.del-retain-body {
-		margin: 0 0 0.6rem;
+		margin: 0 0 0.5rem;
 		font-size: var(--t-12);
-		line-height: 1.5;
+		line-height: 1.45;
 		color: var(--text-muted);
 	}
 
@@ -884,9 +999,9 @@
 
 	.del-retain-btn {
 		flex: 1;
-		padding: 0.5rem 0.55rem;
+		padding: 0.45rem 0.55rem;
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
+		border-radius: var(--r-pill);
 		background: transparent;
 		color: var(--text-base);
 		font-size: var(--t-12);
@@ -900,46 +1015,80 @@
 	}
 
 	.del-retain-btn:hover {
-		border-color: var(--color-primary);
-		background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+		border-color: color-mix(in srgb, var(--accent) 45%, var(--border-base));
+		background: color-mix(in srgb, var(--accent) 8%, transparent);
 	}
 
-	/* Disclosure rows — neutral by default, warn tone for the rows the
-	   user can't make reversible (active trades, owned leagues). */
+	/* Disclosure rows — icon + text, divider-separated. The ok rows take
+	   a laurel-green tick; the rows the user can't make reversible (active
+	   trades, owned leagues) take a danger bang. */
 	.del-rows {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
 		margin: 0;
 		padding: 0;
 		list-style: none;
 	}
 
 	.del-row {
+		display: grid;
+		grid-template-columns: 1.375rem 1fr;
+		gap: 0.6rem;
+		padding: 0.75rem 0;
+		border-top: 1px solid var(--border-base);
+	}
+
+	.del-row[data-first='true'] {
+		border-top: 0;
+	}
+
+	.del-row-icon {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 1.375rem;
+		height: 1.375rem;
+		margin-top: 0.0625rem;
+		border-radius: 50%;
+	}
+
+	.del-row-icon[data-tone='ok'] {
+		border: 1px solid color-mix(in srgb, var(--yes) 40%, transparent);
+		background: color-mix(in srgb, var(--yes) 10%, transparent);
+		color: var(--yes);
+	}
+
+	.del-row-icon[data-tone='warn'] {
+		border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent);
+		background: color-mix(in srgb, var(--accent) 10%, transparent);
+		color: var(--accent);
+	}
+
+	.del-row-bang {
+		font-family: var(--font-mono, monospace);
+		font-size: var(--t-12);
+		font-weight: 700;
+		line-height: 1;
+	}
+
+	.del-row-text {
 		display: flex;
 		flex-direction: column;
 		gap: 0.2rem;
-		padding: 0.65rem 0.75rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
-		background: var(--bg-surface);
-	}
-
-	.del-row.is-warn {
-		border-color: color-mix(in srgb, var(--color-destructive) 35%, var(--border-base));
-		background: color-mix(in srgb, var(--color-destructive) 6%, var(--bg-surface));
 	}
 
 	.del-row-label {
 		font-size: var(--t-13);
 		font-weight: 600;
+		line-height: 1.3;
 		color: var(--text-base);
 	}
 
 	.del-row-sub {
 		font-size: var(--t-12);
 		line-height: 1.45;
-		color: var(--text-muted);
+		color: var(--fg-dim);
 	}
 
 	/* Leagues resolution ---------------------------------------------- */
@@ -952,22 +1101,28 @@
 	.del-league {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.6rem;
 		padding: 0.7rem 0.75rem;
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-8);
+		border-radius: var(--r-12);
 		background: var(--bg-surface);
 	}
 
 	.del-league.is-resolved {
-		border-color: color-mix(in srgb, var(--yes) 45%, var(--border-base));
+		border-color: color-mix(in srgb, var(--yes) 30%, var(--border-base));
 	}
 
 	.del-league-head {
 		display: flex;
-		align-items: center;
+		align-items: flex-start;
 		justify-content: space-between;
 		gap: 0.5rem;
+	}
+
+	.del-league-id {
+		display: flex;
+		flex-direction: column;
+		gap: 0.15rem;
 	}
 
 	.del-league-name {
@@ -976,9 +1131,24 @@
 		color: var(--text-base);
 	}
 
+	.del-league-meta {
+		font-family: var(--font-mono, monospace);
+		font-size: var(--t-11);
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
 	.del-league-tick {
 		display: inline-flex;
-		color: var(--yes);
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		width: 1.125rem;
+		height: 1.125rem;
+		border-radius: 50%;
+		background: var(--yes);
+		color: var(--ink);
 	}
 
 	.del-league-modes {
@@ -988,23 +1158,35 @@
 	}
 
 	.del-league-mode {
-		padding: 0.5rem 0.55rem;
+		padding: 0.45rem 0.55rem;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-8);
-		background: var(--bg-popover);
-		color: var(--text-base);
+		background: transparent;
+		color: var(--fg-dim);
 		font-size: var(--t-12);
 		font-weight: 600;
 		cursor: pointer;
 		transition:
 			border-color var(--d-hover) var(--ease-vici),
-			background-color var(--d-hover) var(--ease-vici);
+			background-color var(--d-hover) var(--ease-vici),
+			color var(--d-hover) var(--ease-vici);
 	}
 
-	.del-league-mode.is-active {
-		border-color: var(--color-primary);
-		background: color-mix(in srgb, var(--color-primary) 10%, var(--bg-popover));
-		color: var(--color-primary);
+	.del-league-mode:disabled {
+		opacity: 0.4;
+		cursor: not-allowed;
+	}
+
+	.del-league-mode.is-transfer {
+		border-color: color-mix(in srgb, var(--accent) 40%, transparent);
+		background: color-mix(in srgb, var(--accent) 10%, transparent);
+		color: var(--accent);
+	}
+
+	.del-league-mode.is-delete {
+		border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+		background: color-mix(in srgb, var(--danger) 10%, transparent);
+		color: var(--danger);
 	}
 
 	.del-league-select-wrap {
@@ -1023,40 +1205,90 @@
 	.del-league-select {
 		width: 100%;
 		padding: 0.5rem 0.6rem;
-		border: 1px solid var(--border-base);
+		border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border-base));
 		border-radius: var(--r-8);
-		background: var(--bg-popover);
+		background: color-mix(in srgb, var(--ink-deep) 40%, transparent);
 		color: var(--text-base);
-		font-family: inherit;
+		font-family: var(--font-mono, monospace);
 		font-size: var(--t-12);
 	}
 
 	.del-league-empty {
 		margin: 0;
 		font-size: var(--t-12);
-		color: var(--color-destructive);
+		color: var(--danger);
 	}
 
-	.del-league-delete-confirm {
-		padding: 0.5rem 0.6rem;
-		border: 1px solid color-mix(in srgb, var(--color-destructive) 40%, var(--border-base));
+	/* Inline disband confirm — text + danger pill, mirrors the source's
+	   two-tap guard before a league is wiped for all members. */
+	.del-league-confirm {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.55rem 0.65rem;
+		border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
 		border-radius: var(--r-8);
-		background: color-mix(in srgb, var(--color-destructive) 8%, transparent);
-		color: var(--color-destructive);
+		background: color-mix(in srgb, var(--danger) 6%, transparent);
+	}
+
+	.del-league-confirm-text {
+		flex: 1;
+		margin: 0;
+		font-size: var(--t-12);
+		line-height: 1.4;
+		color: var(--text-base);
+	}
+
+	.del-league-confirm-sub {
+		display: block;
+		color: var(--text-muted);
+	}
+
+	.del-league-confirm-btn {
+		flex-shrink: 0;
+		padding: 0.4rem 0.7rem;
+		border: 0;
+		border-radius: var(--r-8);
+		background: var(--danger);
+		color: #fff;
+		font-family: inherit;
 		font-size: var(--t-12);
 		font-weight: 600;
 		cursor: pointer;
-		transition:
-			border-color var(--d-hover) var(--ease-vici),
-			background-color var(--d-hover) var(--ease-vici);
 	}
 
-	.del-league-delete-confirm.is-armed {
-		border-color: var(--color-destructive);
-		background: color-mix(in srgb, var(--color-destructive) 16%, transparent);
+	.del-league-armed {
+		margin: 0;
+		font-size: var(--t-12);
+		font-weight: 600;
+		color: var(--danger);
 	}
 
 	/* Confirm ---------------------------------------------------------- */
+	.del-finality {
+		padding: 0.7rem 0.8rem;
+		border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--danger) 6%, transparent);
+	}
+
+	.del-finality-title {
+		margin: 0 0 0.25rem;
+		font-family: var(--font-serif, serif);
+		font-size: var(--t-16);
+		font-style: italic;
+		font-weight: 600;
+		line-height: 1.3;
+		color: var(--danger);
+	}
+
+	.del-finality-body {
+		margin: 0;
+		font-size: var(--t-12);
+		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
 	.del-confirm-wrap {
 		display: flex;
 		flex-direction: column;
@@ -1064,15 +1296,18 @@
 	}
 
 	.del-confirm-label {
-		font-size: var(--t-12);
+		font-family: var(--font-mono, monospace);
+		font-size: var(--t-11);
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
 		color: var(--text-muted);
 	}
 
 	.del-confirm-field {
 		display: flex;
 		align-items: center;
-		gap: 0.5rem;
-		padding: 0 0.65rem;
+		gap: 0.4rem;
+		padding: 0 0.7rem;
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-8);
 		background: var(--bg-surface);
@@ -1083,18 +1318,35 @@
 		border-color: var(--yes);
 	}
 
+	.del-confirm-field.is-mismatch {
+		border-color: color-mix(in srgb, var(--danger) 40%, transparent);
+	}
+
+	.del-confirm-at {
+		flex-shrink: 0;
+		font-family: var(--font-serif, serif);
+		font-size: var(--t-18);
+		font-style: italic;
+		color: var(--text-muted);
+	}
+
 	.del-confirm-input {
 		flex: 1;
 		min-width: 0;
-		padding: 0.6rem 0;
+		padding: 0.55rem 0;
 		border: 0;
 		background: transparent;
 		color: var(--text-base);
+		font-family: var(--font-mono, monospace);
 		font-size: var(--t-14);
 	}
 
 	.del-confirm-input:focus {
 		outline: none;
+	}
+
+	.del-confirm-input:disabled {
+		opacity: 0.5;
 	}
 
 	.del-confirm-tick {
@@ -1103,10 +1355,23 @@
 		color: var(--yes);
 	}
 
+	.del-confirm-hint {
+		margin: 0;
+		font-family: var(--font-mono, monospace);
+		font-size: var(--t-11);
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.del-confirm-hint-acc {
+		color: var(--accent);
+	}
+
 	.del-error {
 		margin: 0;
 		font-size: var(--t-12);
-		color: var(--color-destructive);
+		color: var(--danger);
 	}
 
 	/* Footer actions --------------------------------------------------- */
@@ -1120,27 +1385,124 @@
 		flex: 1;
 	}
 
-	.del-actions-single :global(button) {
-		flex: 1;
+	/* Destructive footer CTA — the `danger` Button variant wires to the
+	   prediction-NO red; the delete flow's terracotta danger ramp is the
+	   correct destructive-action tone, so override the fill here. */
+	:global(.del-danger-btn) {
+		background: var(--danger);
+		color: #fff;
 	}
 
-	/* Gone ------------------------------------------------------------- */
-	.del-gone {
+	:global(.del-danger-btn:hover) {
+		background: var(--danger-deep);
+	}
+
+	/* Gone — full-bleed Vale takeover, layered above the sheet so it
+	   reads as a final farewell rather than another sheet beat. No
+	   backdrop-click / Escape close: the only way out is the CTA (or the
+	   auto-redirect when the counter reaches zero). */
+	.del-gone-scrim {
+		position: fixed;
+		inset: 0;
+		z-index: 90;
+		display: flex;
+		flex-direction: column;
+		justify-content: center;
 		align-items: center;
+		padding: 0 1.75rem;
 		text-align: center;
-		padding-top: 0.75rem;
+		background: var(--ink-deep);
+		animation: del-gone-fade-in var(--d-state) ease-out both;
 	}
 
-	.del-gone-title {
-		margin: 0;
+	.del-gone {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		max-width: 22rem;
+	}
+
+	.del-gone-eyebrow {
+		margin-bottom: 0.5rem;
+		font-family: var(--font-mono, monospace);
+		font-size: var(--t-11);
+		letter-spacing: 0.2em;
+		text-transform: uppercase;
+		color: var(--text-muted);
+	}
+
+	.del-gone-vale {
+		margin: 0 0 0.85rem;
 		font-family: var(--font-serif, serif);
-		font-size: var(--t-24);
+		font-size: var(--t-44);
 		font-style: italic;
-		font-weight: 600;
+		line-height: 1;
+		color: var(--accent);
+	}
+
+	.del-gone-lede {
+		margin: 0 0 0.25rem;
+		font-size: var(--t-14);
+		line-height: 1.5;
 		color: var(--text-base);
 	}
 
-	.del-actions-single {
-		width: 100%;
+	.del-gone-sub {
+		margin: 0.35rem 0 1.4rem;
+		font-size: var(--t-12);
+		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
+	.del-gone-recovery {
+		margin-bottom: 1.1rem;
+		padding: 0.7rem 1rem;
+		border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+		border-radius: var(--r-8);
+		background: color-mix(in srgb, var(--accent) 4%, transparent);
+		font-size: var(--t-12);
+		line-height: 1.5;
+		color: var(--text-base);
+	}
+
+	.del-gone-cta {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.75rem 1.4rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		background: var(--bg-surface);
+		color: var(--text-base);
+		font-family: inherit;
+		font-size: var(--t-13);
+		font-weight: 500;
+		cursor: pointer;
+		transition:
+			border-color var(--d-hover) var(--ease-vici),
+			background-color var(--d-hover) var(--ease-vici);
+	}
+
+	.del-gone-cta:hover {
+		border-color: var(--border-strong);
+	}
+
+	.del-gone-counter {
+		color: var(--text-muted);
+	}
+
+	@keyframes del-gone-fade-in {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.del-gone-scrim {
+			animation: none;
+		}
 	}
 </style>

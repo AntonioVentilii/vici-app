@@ -1793,22 +1793,29 @@ export const ptMessages = {
 	'settings.delete': 'Excluir conta',
 	'settings.delete.back': 'Voltar',
 	'settings.delete.confirm':
-		'Isso apaga seu usuário, histórico e VXP permanentemente. Não pode ser desfeito.',
+		'Entre dentro de 30 dias para recuperar seu usuário e histórico. Depois disso, eles somem para sempre.',
+	'settings.delete.confirm_exactly': 'Exatamente:',
+	'settings.delete.confirm_finality_title': 'Isto não pode ser desfeito após 30 dias.',
 	'settings.delete.confirm_heading': 'Último passo.',
 	'settings.delete.confirm_mismatch': 'Isso não corresponde ao seu usuário.',
-	'settings.delete.confirm_type': 'Digite {handle} para confirmar',
+	'settings.delete.confirm_type': 'Digite seu usuário para confirmar',
 	'settings.delete.continue': 'Continuar',
 	'settings.delete.deleting': 'Excluindo…',
 	'settings.delete.error': 'Algo deu errado. Tente novamente.',
 	'settings.delete.error_handoff': 'Não foi possível repassar {league}. Tente novamente.',
 	'settings.delete.forever': 'Excluir para sempre',
-	'settings.delete.gone_body':
-		'As operações ativas continuam abertas e liquidam no vencimento — excluir sua conta não as encerra.',
+	'settings.delete.gone_body': 'Sua conta está sendo excluída.',
+	'settings.delete.gone_eyebrow': 'Adeus',
 	'settings.delete.gone_heading': 'Vale.',
 	'settings.delete.gone_recover':
 		'Mudou de ideia? Entre novamente em até 30 dias e seu histórico volta.',
-	'settings.delete.gone_return': 'Voltar ({seconds})',
+	'settings.delete.gone_return_label': 'Voltar ao início',
+	'settings.delete.gone_sub':
+		'Uma confirmação está a caminho do seu e-mail. Suas operações ativas serão liquidadas no vencimento.',
 	'settings.delete.happens_heading': 'Veja o que acontece.',
+	'settings.delete.happens_lede': 'Leia com atenção.',
+	'settings.delete.happens_lede_warn':
+		'Alguns dos itens abaixo não podem ser desfeitos ao excluir.',
 	'settings.delete.happens_leagues_label': 'Ligas que você comanda · {count}',
 	'settings.delete.happens_leagues_sub': 'Transfira ou exclua cada uma antes de continuar.',
 	'settings.delete.happens_orders_label': 'Ordens abertas · {count} · {value} VXP',
@@ -1817,6 +1824,9 @@ export const ptMessages = {
 	'settings.delete.happens_profile_label': 'Perfil, usuário e estatísticas',
 	'settings.delete.happens_profile_sub':
 		'Excluídos agora, recuperáveis por 30 dias ao entrar de novo, depois somem de vez.',
+	'settings.delete.happens_social_label': 'Mensagens e reações',
+	'settings.delete.happens_social_sub':
+		'Anonimizados. Suas respostas permanecem; o nome desaparece.',
 	'settings.delete.happens_trades_label': 'Operações ativas · {count} · {value} VXP',
 	'settings.delete.happens_trades_sub':
 		'Continuam abertas e liquidam no vencimento — excluir não as encerra.',
@@ -1824,7 +1834,9 @@ export const ptMessages = {
 	'settings.delete.leagues_delete': 'Excluir liga',
 	'settings.delete.leagues_delete_armed': 'Será excluída para todos os membros',
 	'settings.delete.leagues_delete_confirm': 'Excluir para todos os {count} membros?',
+	'settings.delete.leagues_delete_no_rejoin': 'Ninguém poderá entrar novamente.',
 	'settings.delete.leagues_heading': 'Resolva suas ligas.',
+	'settings.delete.leagues_meta': '{count} membros · Você é dono',
 	'settings.delete.leagues_no_members': 'Sem outros membros para transferir. Exclua-a.',
 	'settings.delete.leagues_select_member': 'Escolha um membro…',
 	'settings.delete.leagues_transfer': 'Transferir para…',
@@ -1837,11 +1849,11 @@ export const ptMessages = {
 	'settings.delete.reason.other': 'Outro',
 	'settings.delete.reason.too_complex': 'Complexo demais / difícil de usar',
 	'settings.delete.reason.too_noisy': 'Notificações demais',
-	'settings.delete.reason_body':
-		'Sentimos muito vê-lo partir. Pode nos contar o motivo? Sua resposta ajuda a melhorar o VICI para os outros.',
+	'settings.delete.reason_body': 'Sentimos muito vê-lo partir. Pode nos contar o motivo?',
+	'settings.delete.reason_body_acc': 'Sua resposta ajuda a melhorar o VICI para os outros.',
 	'settings.delete.reason_heading': 'Antes de você ir.',
 	'settings.delete.stay_body':
-		'Pause as notificações, troque para um resumo por e-mail ou só dê uma pausa. Seu histórico estará esperando.',
+		'Afaste-se por 30 dias — suas estatísticas congelam e seu perfil fica oculto. Ou fale conosco e vamos consertar o que estiver errado.',
 	'settings.delete.stay_contact': 'Fale conosco',
 	'settings.delete.stay_heading': 'Quer ficar?',
 	'settings.delete.stay_pause': 'Pausar por 30 dias',
