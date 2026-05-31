@@ -475,7 +475,7 @@ export const deMessages = {
 	'card.back.return_aria': 'Zurück zur Kartenvorderseite',
 	'card.back.rules_body':
 		'Die Auflösung ist mit Schluss der Vorhersagen endgültig. Grenzfälle folgen dem offiziellen Wortlaut der Quelle.',
-	'card.back.settles_line': 'Wird abgerechnet am {date} · {timeRemaining}',
+	'card.back.settles_date': 'Wird abgerechnet am {date}',
 	'card.back.sharp_diff_ahead': '+{count} Pkt voraus',
 	'card.back.sharp_diff_behind': '−{count} Pkt zurück',
 	'card.back.show_rules': 'Vollständige Regeln zeigen',
