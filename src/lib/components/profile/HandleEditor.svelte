@@ -195,15 +195,6 @@
 				return;
 			}
 
-			if (browser) {
-				try {
-					localStorage.setItem(HANDLE_LAST_CHANGE_STORAGE_KEY, String(Date.now()));
-				} catch {
-					// Best-effort — losing the timestamp only relaxes the soft
-					// cooldown, it never blocks the save.
-				}
-			}
-
 			haptic('firm-tap');
 			onSaved(clean);
 		} catch {

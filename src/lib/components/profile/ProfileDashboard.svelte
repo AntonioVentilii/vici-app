@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { Check, Eye, Flame, Lock, Pencil, Target, Trophy, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
+	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import StreakFlame from '$lib/components/characters/StreakFlame.svelte';
@@ -12,6 +13,7 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
+	import { HANDLE_LAST_CHANGE_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
@@ -75,6 +77,17 @@
 
 		try {
 			await upsertProfile({ key: profile.owner, data: updatedData });
+
+			// Record the cooldown only after a confirmed successful persist so
+			// that a rollback on failure never locks the user out of the editor.
+			if (browser) {
+				try {
+					localStorage.setItem(HANDLE_LAST_CHANGE_STORAGE_KEY, String(Date.now()));
+				} catch {
+					// Best-effort — losing the timestamp only relaxes the soft cooldown.
+				}
+			}
+
 			flashProfileToast(
 				t({ locale: $localeStore, key: 'profile.handle.changed', params: { handle } })
 			);
@@ -83,10 +96,16 @@
 			userStore.update((curr) => ({ ...curr, profile: previousProfile }));
 
 			const message = err instanceof Error ? err.message : '';
+			const alreadyTaken = message.includes('already taken');
 
 			notificationsStore.add({
-				title: t({ locale: $localeStore, key: 'profile.dashboard.nickname_taken_title' }),
-				message: message.includes('already taken')
+				title: t({
+					locale: $localeStore,
+					key: alreadyTaken
+						? 'profile.dashboard.nickname_taken_title'
+						: 'profile.dashboard.nickname_save_failed_title'
+				}),
+				message: alreadyTaken
 					? t({
 							locale: $localeStore,
 							key: 'profile.dashboard.nickname_taken',
