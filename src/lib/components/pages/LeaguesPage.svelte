@@ -419,6 +419,12 @@
 		}
 	}
 
+	@media (prefers-reduced-motion: reduce) {
+		.league-card-skeleton {
+			animation: none;
+		}
+	}
+
 	.leagues-empty {
 		display: flex;
 		flex-direction: column;

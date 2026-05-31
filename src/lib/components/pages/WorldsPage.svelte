@@ -596,6 +596,12 @@
 		}
 	}
 
+	@media (prefers-reduced-motion: reduce) {
+		.worlds-tag-live::before {
+			animation: none;
+		}
+	}
+
 	.worlds-event-title {
 		position: relative;
 		margin: 0 0 0.25rem;
