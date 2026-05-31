@@ -248,12 +248,14 @@
 <div class="ob2-beat ob2-beat-2">
 	<OnboardingStepTracker step={2} />
 
-	<h1 class="ob2-h1">{t({ locale: $localeStore, key: 'onboarding.beat2.title' })}</h1>
-	<p class="ob2-sub">
-		{t({ locale: $localeStore, key: 'onboarding.beat2.sub' })}
+	<p class="ob2-sub ob2-sub-eyebrow">
 		<span class="serif-italic acc">
 			{t({ locale: $localeStore, key: 'onboarding.beat2.sub_accent' })}
 		</span>
+	</p>
+	<h1 class="ob2-h1">{t({ locale: $localeStore, key: 'onboarding.beat2.title' })}</h1>
+	<p class="ob2-sub">
+		{t({ locale: $localeStore, key: 'onboarding.beat2.sub' })}
 	</p>
 
 	<div class="ob2-mode-tabs">
@@ -304,11 +306,13 @@
 						class="ob2-pool-chip"
 						class:picked
 						class:taken
+						aria-disabled={taken}
+						aria-pressed={picked}
 						disabled={taken}
 						onclick={() => !taken && (poolPick = name)}
 						type="button"
 					>
-						<span><span class="ob2-at">@</span>{name}</span>
+						<span class="ob2-at">@</span>{name}
 						{#if taken}
 							<span class="ob2-pool-taken">
 								{t({ locale: $localeStore, key: 'onboarding.beat2.pool_taken' })}
