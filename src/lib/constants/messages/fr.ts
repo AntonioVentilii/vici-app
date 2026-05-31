@@ -477,7 +477,6 @@ export const frMessages = {
 	'card.back.return_aria': 'Retour au recto de la carte',
 	'card.back.rules_body':
 		'La résolution est finale à la clôture des prédictions. Les cas limites suivent le libellé officiel de la source.',
-	'card.back.settles_line': 'Règlement {date} · {timeRemaining}',
 	'card.back.settles_date': 'Règlement {date}',
 	'card.back.sharp_diff_ahead': '+{count} pts d’avance',
 	'card.back.sharp_diff_behind': '−{count} pts de retard',

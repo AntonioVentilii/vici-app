@@ -471,7 +471,6 @@ export const itMessages = {
 	'card.back.return_aria': 'Torna al fronte della carta',
 	'card.back.rules_body':
 		'La risoluzione è definitiva alla chiusura delle previsioni. I casi limite seguono la formulazione ufficiale della fonte.',
-	'card.back.settles_line': 'Si chiude il {date} · {timeRemaining}',
 	'card.back.settles_date': 'Si chiude il {date}',
 	'card.back.sharp_diff_ahead': '+{count} pts in vantaggio',
 	'card.back.sharp_diff_behind': '−{count} pts in ritardo',
