@@ -95,9 +95,8 @@ export const calculatePositionPnL = ({
 
 /**
  * Effective entry probability of a position — the volume-weighted average
- * price the user paid per share, expressed as a 0..1 probability. Mirrors
- * the prototype's `p.entry` value displayed as "Entry X% → Y%" in the
- * Portfolio active-calls list.
+ * price the user paid per share, expressed as a 0..1 probability. Shown
+ * as the "Entry X% → Y%" value in the Portfolio active-calls list.
  *
  * Derivation: `lockedCollateral` is the total cost in clearing units
  * (`USD_DECIMALS`); `netQty` is the share count in the market's token

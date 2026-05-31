@@ -16,8 +16,7 @@
 	interface Props {
 		/** Seed strings — one per avatar. Order is preserved. */
 		seeds?: ReadonlyArray<string>;
-		/** Outer diameter in pixels. Default 22 — matches the
-		 *  prototype's `Avatar size="xs"`. */
+		/** Outer diameter in pixels. Default 22 — the "xs" avatar size. */
 		size?: number;
 		/** Border colour drawn between adjacent avatars so the
 		 *  overlap reads cleanly. Defaults to the elevated bg token. */
