@@ -1440,6 +1440,7 @@ export const ptMessages = {
 	'markets.tab.trending': 'Em alta',
 	'markets.title_a': 'Escolha uma pergunta.',
 	'markets.title_b': 'Faça sua previsão.',
+	'markets.wc_eyebrow': 'Copa do Mundo 2026',
 	'markets.wc_recap.accuracy': 'Precisão',
 	'markets.wc_recap.calls': 'Palpites feitos',
 	'markets.wc_recap.cta': 'Explorar todos os mercados',
