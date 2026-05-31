@@ -735,3 +735,59 @@ export const toWireTournamentMatch = (doc: {
 	start_ms: doc.startMs,
 	end_ms: doc.endMs
 });
+
+// ─── Monthly leaderboard wire format ─────────────────────────────────────
+//
+// `getMonthlyLeaderboard` returns a result with two arrays:
+// `items` (sharpest-eye podium, IDL field `items`) and `boldCallers`
+// (bold-caller winners, IDL field `bold_callers`). Both contain
+// `Vec<NestedStruct>` values, so both need snake_case wire schemas per
+// the `Vec<NestedStruct>` quirk above.
+
+export const MonthlyLeaderboardEntryWireSchema = j.strictObject({
+	owner: PrincipalTextSchema,
+	month_calls: j.number(),
+	month_wins: j.number(),
+	accuracy: j.number(),
+	placement: j.number()
+});
+
+export type WireMonthlyLeaderboardEntry = j.infer<typeof MonthlyLeaderboardEntryWireSchema>;
+
+export const toWireMonthlyLeaderboardEntry = (entry: {
+	owner: string;
+	monthCalls: number;
+	monthWins: number;
+	accuracy: number;
+	placement: number;
+}): WireMonthlyLeaderboardEntry => ({
+	owner: entry.owner,
+	month_calls: entry.monthCalls,
+	month_wins: entry.monthWins,
+	accuracy: entry.accuracy,
+	placement: entry.placement
+});
+
+export const BoldCallerEntryWireSchema = j.strictObject({
+	owner: PrincipalTextSchema,
+	month_calls: j.number(),
+	month_wins: j.number(),
+	accuracy: j.number(),
+	median_consensus: j.number()
+});
+
+export type WireBoldCallerEntry = j.infer<typeof BoldCallerEntryWireSchema>;
+
+export const toWireBoldCallerEntry = (entry: {
+	owner: string;
+	monthCalls: number;
+	monthWins: number;
+	accuracy: number;
+	medianConsensus: number;
+}): WireBoldCallerEntry => ({
+	owner: entry.owner,
+	month_calls: entry.monthCalls,
+	month_wins: entry.monthWins,
+	accuracy: entry.accuracy,
+	median_consensus: entry.medianConsensus
+});

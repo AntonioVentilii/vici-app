@@ -7,6 +7,11 @@ import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
 import { listMyLeagues } from '$lib/services/leagues.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
+import {
+	bestSharpestEyeTier,
+	evaluateMonthlyAwards,
+	syncMyMonthlyStats
+} from '$lib/services/user-monthly-stats.services';
 import { computeUserStatsSnapshot, persistMyUserStats } from '$lib/services/user-stats.services';
 import { marketMetadataStore } from '$lib/stores/market-metadata.store';
 import { profilesStore } from '$lib/stores/profiles.store';
@@ -561,6 +566,36 @@ export const calculateAndSyncStats = async ({
 		}
 	}
 
+	// Monthly album awards (sharpest-eye, bold-caller). Re-derive the
+	// caller's current + prior month stats docs from clearing history and
+	// persist them (lazy month rollover — no scheduler), then evaluate the
+	// just-closed (prior) month's leaderboard for the caller's standing. The
+	// awards are for COMPLETED months, so the prior month is the one that can
+	// flip a fresh unlock. `sharpestEyeBestTier` is kept monotonic (a worse
+	// later placement never demotes the best ever), and `wonBoldCaller` is
+	// sticky once merged. Best-effort: a failed read leaves the awards
+	// un-flipped this pass but never rescinds an earned one.
+	let { sharpestEyeBestTier } = profileDoc.data;
+	let wonBoldCallerMonth = (profileDoc.data.unlockedAchievements ?? []).includes('bold-caller');
+
+	try {
+		const { priorAnchor } = await syncMyMonthlyStats({
+			owner: principal,
+			history,
+			nowMs: Date.now()
+		});
+
+		const standing = await evaluateMonthlyAwards({ owner: principal, monthAnchor: priorAnchor });
+
+		sharpestEyeBestTier = bestSharpestEyeTier({
+			current: sharpestEyeBestTier,
+			candidate: standing.sharpestEyeTier
+		});
+		wonBoldCallerMonth = wonBoldCallerMonth || standing.wonBoldCaller;
+	} catch (err: unknown) {
+		console.error('calculateAndSyncStats: failed to sync monthly stats / awards', err);
+	}
+
 	// Evaluate achievements against the freshly-computed snapshot and
 	// fold any newly-unlocked ids into the persisted set. Newly
 	// unlocked achievements also credit their XP into the points total
@@ -574,7 +609,9 @@ export const calculateAndSyncStats = async ({
 		accuracy,
 		contrarianWins,
 		ownsQualifyingLeague,
-		topDecileStreak
+		topDecileStreak,
+		sharpestEyeBestTier,
+		wonBoldCallerMonth
 	});
 
 	const { unlocked, newlyUnlocked } = mergeUnlockedAchievements({
@@ -600,6 +637,7 @@ export const calculateAndSyncStats = async ({
 			contrarianWins,
 			topDecileStreak,
 			lastTopDecileDay,
+			sharpestEyeBestTier,
 			unlockedAchievements: unlocked
 		}
 	});
@@ -663,7 +701,12 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 		accuracy: profileDoc.data.accuracy ?? 0,
 		contrarianWins: profileDoc.data.contrarianWins ?? 0,
 		ownsQualifyingLeague: false,
-		topDecileStreak: profileDoc.data.topDecileStreak ?? 0
+		topDecileStreak: profileDoc.data.topDecileStreak ?? 0,
+		// Monthly awards are computed in `calculateAndSyncStats`, not here —
+		// reuse the persisted state so this path can't rescind a sticky
+		// unlock (the `marathon` daily-streak bump is the only trigger here).
+		sharpestEyeBestTier: profileDoc.data.sharpestEyeBestTier,
+		wonBoldCallerMonth: (profileDoc.data.unlockedAchievements ?? []).includes('bold-caller')
 	});
 
 	const { unlocked, newlyUnlocked } = mergeUnlockedAchievements({

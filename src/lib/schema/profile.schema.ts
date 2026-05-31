@@ -77,6 +77,16 @@ export const UserProfileSchema = j.strictObject({
 	// default so a never-evaluated profile reads as absent. Mirror any
 	// change here in `src/satellite/api-schemas.ts`.
 	lastTopDecileDay: j.string().optional(),
+	// Best monthly sharpest-eye placement the user has ever earned —
+	// `'gold'` (#1), `'silver'` (#2), or `'bronze'` (#3). Drives the
+	// `sharpest-eye` album award's tier wash. The client sets it (keeping the
+	// best of the existing and the new tier) when a completed month's
+	// `getMonthlyLeaderboard` places the user top-3. `optional()` with NO
+	// default — absence means "never placed", which is the meaningful
+	// backward-compatible state for every legacy row. A single field (not
+	// per-month history) is the v1 storage shape. Mirror any change here in
+	// `src/satellite/api-schemas.ts`.
+	sharpestEyeBestTier: j.string().optional(),
 	// `preferences` carries every cross-device user setting. Defaults are
 	// applied at every leaf because the satellite-side encoder traps with
 	// `missing field X` the moment `app_list_leaderboard` / `app_get_profile`

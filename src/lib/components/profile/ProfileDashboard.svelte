@@ -385,7 +385,12 @@
 			// league membership, so the live axis stays `false` and the
 			// sticky persisted flag drives the earned state.
 			ownsQualifyingLeague: false,
-			topDecileStreak: profile.topDecileStreak ?? 0
+			topDecileStreak: profile.topDecileStreak ?? 0,
+			// Monthly awards: `sharpest-eye`'s tier comes from the persisted
+			// best tier; `bold-caller`'s live axis is the sticky persisted
+			// unlock (the dashboard doesn't recompute monthly leaderboards).
+			sharpestEyeBestTier: profile.sharpestEyeBestTier,
+			wonBoldCallerMonth: (profile.unlockedAchievements ?? []).includes('bold-caller')
 		})
 	);
 

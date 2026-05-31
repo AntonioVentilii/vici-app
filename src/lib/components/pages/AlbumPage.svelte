@@ -40,7 +40,12 @@
 			// store doesn't carry; the sticky persisted unlock drives the
 			// earned state, so the live flag stays `false` here.
 			ownsQualifyingLeague: false,
-			topDecileStreak: profile.topDecileStreak ?? 0
+			topDecileStreak: profile.topDecileStreak ?? 0,
+			// Monthly awards: `sharpest-eye`'s tier comes from the persisted
+			// best tier; `bold-caller`'s live axis is the sticky persisted
+			// unlock (the album store doesn't recompute monthly leaderboards).
+			sharpestEyeBestTier: profile.sharpestEyeBestTier,
+			wonBoldCallerMonth: (profile.unlockedAchievements ?? []).includes('bold-caller')
 		});
 	});
 
