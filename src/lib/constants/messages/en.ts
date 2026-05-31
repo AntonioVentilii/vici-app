@@ -74,6 +74,10 @@ export const enMessages = {
 	'battles.uni.wc_title_tail': 'Battle',
 	'battles.your_rank': '#{rank} of {total}',
 	'battles.your_school': 'Your school · {name}',
+	'achievement.bold_caller.description': 'Best long-shot accuracy of the month',
+	'achievement.bold_caller.detail':
+		'Finish a month with the highest accuracy among predictors who habitually back the underdog — a median consensus below 40% on the sides you call. Awarded once the month closes; ties share the honour.',
+	'achievement.bold_caller.name': 'Bold caller',
 	'achievement.contrarian.name': 'Contrarian',
 	'achievement.first_call.description': 'Make your first prediction',
 	'achievement.first_call.detail':
@@ -95,6 +99,10 @@ export const enMessages = {
 	'achievement.oracle.detail':
 		'Maintain at least 80% accuracy over your last 50 resolved calls. The Oracle title is recomputed daily; lose accuracy and the sticker stays — but the title moves to whoever currently holds it.',
 	'achievement.oracle.name': 'Oracle',
+	'achievement.sharpest_eye.description': 'Top-3 accuracy of the month',
+	'achievement.sharpest_eye.detail':
+		'Finish a calendar month in the top three for accuracy among predictors with at least 30 resolved calls. First place earns gold, second silver, third bronze — and the album keeps your best placement ever.',
+	'achievement.sharpest_eye.name': 'Sharpest eye',
 	'achievement.top_decile.description': '7 days in the top 10%',
 	'achievement.top_decile.detail':
 		'Hold a position in the top 10% of the global leaderboard for seven consecutive days. Your standing is checked once a day; miss the cutoff and the streak resets.',

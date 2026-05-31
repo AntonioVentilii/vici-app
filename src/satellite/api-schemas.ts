@@ -44,6 +44,10 @@ export const UserProfileApiSchema = j.strictObject({
 	// Mirror any change here in `src/lib/schema/profile.schema.ts`.
 	topDecileStreak: j.number().default(0),
 	lastTopDecileDay: j.string().optional(),
+	// Best monthly sharpest-eye placement ('gold' / 'silver' / 'bronze').
+	// `optional()` with NO default so legacy rows decode as "never placed".
+	// Mirror any change here in `src/lib/schema/profile.schema.ts`.
+	sharpestEyeBestTier: j.string().optional(),
 	// Defaults are intentionally applied at every level. The outer
 	// `.default(...)` only kicks in when `preferences` is null/undefined;
 	// legacy profile docs that have a partial `preferences` shape would

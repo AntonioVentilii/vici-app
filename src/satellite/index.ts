@@ -111,6 +111,10 @@ import {
 	resolveTournamentRoundFn,
 	triggerTournamentDrawFn
 } from '$satellite/services/tournament.services';
+import {
+	assertSetUserMonthlyStats,
+	getMonthlyLeaderboardFn
+} from '$satellite/services/user-monthly-stats.services';
 import { assertSetUserStats } from '$satellite/services/user-stats.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
 import { claimComebackGrantFn } from '$satellite/services/vxp-comeback.services';
@@ -126,10 +130,12 @@ import {
 	AffiliationStatsWireSchema,
 	AffiliationWireSchema,
 	BattleWireSchema,
+	BoldCallerEntryWireSchema,
 	LeagueMemberWireSchema,
 	LeagueWireSchema,
 	LeagueWithRoleWireSchema,
 	MarketTranslationWireSchema,
+	MonthlyLeaderboardEntryWireSchema,
 	ReferralWireSchema,
 	RelationWireSchema,
 	TournamentMatchWireSchema,
@@ -137,10 +143,12 @@ import {
 	toWireAffiliation,
 	toWireAffiliationStats,
 	toWireBattle,
+	toWireBoldCallerEntry,
 	toWireLeague,
 	toWireLeagueMember,
 	toWireLeagueWithRole,
 	toWireMarketTranslation,
+	toWireMonthlyLeaderboardEntry,
 	toWireProfile,
 	toWireReferral,
 	toWireRelation,
@@ -844,6 +852,34 @@ export const claimTournamentPrize = defineUpdate({
 	handler: claimTournamentPrizeFn
 });
 
+// Monthly album awards — aggregates every `user_monthly_stats` doc for the
+// requested `monthAnchor` (YYYY-MM) and returns:
+//  - `sharpestEye`: top-3 by accuracy among users with ≥ MONTHLY_MIN_CALLS
+//    resolved calls, with gold/silver/bronze `placement`.
+//  - `boldCaller`: the best accuracy among those eligible users whose median
+//    consensus-at-call is below the bold threshold; returns every user tied
+//    at that best accuracy.
+// Both arrays use the snake_case wire schemas (the `Vec<NestedStruct>`
+// quirk). The median is computed on read from each doc's bounded consensus
+// array.
+export const getMonthlyLeaderboard = defineQuery({
+	args: j.strictObject({
+		monthAnchor: j.string()
+	}),
+	result: j.strictObject({
+		items: j.array(MonthlyLeaderboardEntryWireSchema),
+		boldCallers: j.array(BoldCallerEntryWireSchema)
+	}),
+	handler: ({ monthAnchor }) => {
+		const { sharpestEye, boldCaller } = getMonthlyLeaderboardFn({ monthAnchor });
+
+		return {
+			items: sharpestEye.map(toWireMonthlyLeaderboardEntry),
+			boldCallers: boldCaller.map(toWireBoldCallerEntry)
+		};
+	}
+});
+
 const assertSetDocCollections = [
 	Collection.PROFILES,
 	Collection.ROLES,
@@ -859,7 +895,8 @@ const assertSetDocCollections = [
 	Collection.TOURNAMENTS,
 	Collection.TOURNAMENT_MATCHES,
 	Collection.LEAGUE_STATS,
-	Collection.USER_STATS
+	Collection.USER_STATS,
+	Collection.USER_MONTHLY_STATS
 ] as const;
 
 type AssertSetDocCollection = (typeof assertSetDocCollections)[number];
@@ -882,7 +919,8 @@ export const assertSetDoc = defineAssert<AssertSetDoc>({
 			[Collection.TOURNAMENTS]: assertSetTournament,
 			[Collection.TOURNAMENT_MATCHES]: assertSetTournamentMatch,
 			[Collection.LEAGUE_STATS]: assertSetLeagueStats,
-			[Collection.USER_STATS]: assertSetUserStats
+			[Collection.USER_STATS]: assertSetUserStats,
+			[Collection.USER_MONTHLY_STATS]: assertSetUserMonthlyStats
 		};
 
 		fn[context.data.collection]?.(context);

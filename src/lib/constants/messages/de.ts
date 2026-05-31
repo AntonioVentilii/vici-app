@@ -74,6 +74,10 @@ export const deMessages = {
 	'battles.uni.wc_title_tail': 'Battle',
 	'battles.your_rank': 'Nr. {rank} von {total}',
 	'battles.your_school': 'Deine Hochschule · {name}',
+	'achievement.bold_caller.description': 'Beste Außenseiter-Treffsicherheit des Monats',
+	'achievement.bold_caller.detail':
+		'Beende den Monat mit der höchsten Treffsicherheit unter denen, die gewohnheitsmäßig auf den Außenseiter setzen — ein medianer Konsens unter 40% auf den von dir gewählten Seiten. Wird bei Monatsabschluss vergeben; bei Gleichstand wird die Ehre geteilt.',
+	'achievement.bold_caller.name': 'Mutige Stimme',
 	'achievement.contrarian.name': 'Contrarian',
 	'achievement.first_call.description': 'Mache deine erste Vorhersage',
 	'achievement.first_call.detail':
@@ -95,6 +99,10 @@ export const deMessages = {
 	'achievement.oracle.detail':
 		'Halte mindestens 80% Genauigkeit über deine letzten 50 aufgelösten Calls. Der Oracle-Titel wird täglich neu berechnet; verlierst du an Genauigkeit, bleibt der Sticker — aber der Titel geht an denjenigen, der ihn aktuell hält.',
 	'achievement.oracle.name': 'Oracle',
+	'achievement.sharpest_eye.description': 'Top-3-Treffsicherheit des Monats',
+	'achievement.sharpest_eye.detail':
+		'Beende einen Kalendermonat unter den besten drei nach Treffsicherheit unter allen mit mindestens 30 aufgelösten Calls. Der erste Platz bringt Gold, der zweite Silber, der dritte Bronze — und das Album behält deine beste Platzierung aller Zeiten.',
+	'achievement.sharpest_eye.name': 'Schärfster Blick',
 	'achievement.top_decile.description': '7 Tage in den Top 10%',
 	'achievement.top_decile.detail':
 		'Halte sieben Tage in Folge eine Position in den Top 10% der globalen Rangliste. Dein Stand wird einmal täglich geprüft; verfehlst du die Schwelle, beginnt die Serie von vorne.',

@@ -209,6 +209,25 @@ export interface AppGetMarketTranslationResult {
 				}
 		  ];
 }
+export interface AppGetMonthlyLeaderboardArgs {
+	month_anchor: string;
+}
+export interface AppGetMonthlyLeaderboardResult {
+	bold_callers: Array<{
+		owner: string;
+		month_wins: number;
+		median_consensus: number;
+		month_calls: number;
+		accuracy: number;
+	}>;
+	items: Array<{
+		placement: number;
+		owner: string;
+		month_wins: number;
+		month_calls: number;
+		accuracy: number;
+	}>;
+}
 export interface AppGetMyReferralCodeResult {
 	code: [] | [string];
 }
@@ -221,6 +240,7 @@ export interface AppGetProfileResult {
 		| [
 				{
 					pnl: number;
+					sharpest_eye_best_tier: [] | [string];
 					streak: number;
 					top_decile_streak: number;
 					nickname: string;
@@ -740,6 +760,10 @@ export interface _SERVICE {
 	app_get_market_translation: ActorMethod<
 		[AppGetMarketTranslationArgs],
 		AppGetMarketTranslationResult
+	>;
+	app_get_monthly_leaderboard: ActorMethod<
+		[AppGetMonthlyLeaderboardArgs],
+		AppGetMonthlyLeaderboardResult
 	>;
 	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
