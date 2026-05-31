@@ -29,6 +29,9 @@
 
 	let { doc }: Props = $props();
 
+	// Resolve the document title once for the header + `<title>`.
+	const title = $derived(t({ locale: $localeStore, key: doc.titleKey }));
+
 	// Back target: signed-in users came from Settings; signed-out
 	// (pre-onboarding) users came from the Welcome / signup flow.
 	const backTarget = $derived($userSignedIn ? AppPath.Settings : PublicPath.Welcome);
@@ -40,7 +43,7 @@
 </script>
 
 <svelte:head>
-	<title>{doc.title} · VICI</title>
+	<title>{title} · VICI</title>
 </svelte:head>
 
 <div class="info-page">
@@ -49,24 +52,24 @@
 			<ArrowLeft aria-hidden="true" size={18} strokeWidth={1.8} />
 			<span class="sr-only">{t({ locale: $localeStore, key: 'info.back' })}</span>
 		</button>
-		<h1 class="info-hero-title">{doc.title}</h1>
+		<h1 class="info-hero-title">{title}</h1>
 	</header>
 
 	<div class="info-body">
-		<div class="info-eyebrow allcaps">{doc.eyebrow}</div>
+		<div class="info-eyebrow allcaps">{t({ locale: $localeStore, key: doc.eyebrowKey })}</div>
 
 		<article class="info-article">
 			{#each doc.blocks as block, i (i)}
 				{#if block.kind === 'lede'}
-					<p class="info-lede serif-italic">{block.text}</p>
+					<p class="info-lede serif-italic">{t({ locale: $localeStore, key: block.key })}</p>
 				{:else if block.kind === 'h'}
-					<h2 class="info-heading">{block.text}</h2>
+					<h2 class="info-heading">{t({ locale: $localeStore, key: block.key })}</h2>
 				{:else if block.kind === 'p'}
-					<p class="info-paragraph">{block.text}</p>
+					<p class="info-paragraph">{t({ locale: $localeStore, key: block.key })}</p>
 				{:else if block.kind === 'list'}
 					<ul class="info-list">
-						{#each block.items as item, j (j)}
-							<li class="info-list-item">{item}</li>
+						{#each block.itemKeys as itemKey, j (j)}
+							<li class="info-list-item">{t({ locale: $localeStore, key: itemKey })}</li>
 						{/each}
 					</ul>
 				{:else if block.kind === 'mail'}
