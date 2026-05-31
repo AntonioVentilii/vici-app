@@ -4479,6 +4479,9 @@ a.title-action::after {
 	font-size: 21px;
 	color: var(--parchment);
 	text-align: center;
+	/* in → hold → out over the 1.1s reading beat; the swap to the next line
+	   is driven off this animation finishing, never a drifting timer */
+	animation: flowFade 1100ms ease both;
 }
 .flow-loading .away {
 	display: flex;
@@ -4693,6 +4696,13 @@ a.title-action::after {
 	}
 	.flow-loading .pc.c {
 		transform: rotate(10deg) translate(13px, 4px);
+	}
+	/* hold the copy static and fully visible — no fade-out to `opacity:0`
+	   that could leave an empty frame; the script cycles lines on a timer */
+	.flow-loading .line {
+		animation: none;
+		opacity: 1;
+		transform: none;
 	}
 }
 
