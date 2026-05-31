@@ -474,6 +474,7 @@ export const ptMessages = {
 	'card.back.rules_body':
 		'A resolução é final no fechamento das previsões. Casos limítrofes seguem o texto oficial da fonte.',
 	'card.back.settles_line': 'Resolve em {date} · {timeRemaining}',
+	'card.back.settles_date': 'Resolve em {date}',
 	'card.back.sharp_diff_ahead': '+{count} pts à frente',
 	'card.back.sharp_diff_behind': '−{count} pts atrás',
 	'card.back.show_rules': 'Mostrar regras completas',

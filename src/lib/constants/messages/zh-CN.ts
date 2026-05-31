@@ -447,6 +447,7 @@ export const zhCnMessages = {
 	'card.back.return_aria': '返回卡片正面',
 	'card.back.rules_body': '预测结束时裁定为最终结果。边界情况遵循信息源的官方说法。',
 	'card.back.settles_line': '结算于 {date} · {timeRemaining}',
+	'card.back.settles_date': '结算于 {date}',
 	'card.back.sharp_diff_ahead': '领先 {count} 个点',
 	'card.back.sharp_diff_behind': '落后 {count} 个点',
 	'card.back.show_rules': '显示完整规则',

@@ -42,9 +42,10 @@
 <header class="flow-back-head">
 	<span class="allcaps flow-back-cat">{category}</span>
 	<div class="flow-back-actions" data-no-card-gesture="true">
-		<SavedMarketToggle marketId={market.id} size="sm" />
+		<SavedMarketToggle marketId={market.id} size="sm" variant="ghost" />
 		<button
 			class="flow-back-share"
+			class:is-active={shareOpen}
 			aria-label={t({ locale: $localeStore, key: 'market.detail.share.label' })}
 			onclick={toggleShare}
 			type="button"
@@ -69,7 +70,7 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.5rem;
-		padding: 1.1rem 1.1rem 0.7rem;
+		padding: 1.125rem 1.25rem 0.75rem;
 		border-bottom: 1px solid var(--border-base);
 	}
 
@@ -95,19 +96,21 @@
 		flex-shrink: 0;
 	}
 
-	/* Share-pop anchor button — mirrors `MarketDetailShareButton` but
-	   stays inline here because the popover is anchored relative to
+	/* Share-pop anchor button — a borderless ghost control that matches
+	   the saved-market toggle beside it: transparent until hovered, then
+	   a faint parchment wash with full-brightness ink. It stays inline
+	   here because the popover is anchored relative to
 	   `.flow-back-actions`, so the button can't take its own offset
 	   parent. */
 	.flow-back-share {
 		display: inline-flex;
-		width: 2.25rem;
-		height: 2.25rem;
+		width: 1.75rem;
+		height: 1.75rem;
 		align-items: center;
 		justify-content: center;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
-		background: var(--bg-surface);
+		border: 1px solid transparent;
+		border-radius: var(--r-8);
+		background: transparent;
 		color: var(--text-muted);
 		cursor: pointer;
 		transition:
@@ -115,9 +118,9 @@
 			border-color var(--d-hover) var(--ease-vici),
 			color var(--d-hover) var(--ease-vici);
 	}
-	.flow-back-share:hover {
-		border-color: var(--border-strong);
-		background: var(--bg-popover);
+	.flow-back-share:hover,
+	.flow-back-share.is-active {
+		background: color-mix(in srgb, var(--parchment) 6%, transparent);
 		color: var(--text-base);
 	}
 </style>

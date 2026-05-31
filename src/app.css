@@ -325,6 +325,12 @@
 
 	--color-accent: var(--laurel);
 	--color-accent-foreground: var(--ink);
+
+	/* Barely-there parchment wash behind framed read-only blocks on the
+	   flow card back (resolution criteria). Theme-specific so the fill
+	   stays a faint lightening on dark and a faint darkening on the
+	   parchment / peach canvases. */
+	--flow-res-fill: rgba(242, 236, 220, 0.03);
 }
 
 [data-theme='light'] {
@@ -370,6 +376,8 @@
 	--inset-hi-strong: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 
 	--shadow-card: var(--shadow-card-light);
+
+	--flow-res-fill: rgba(14, 13, 11, 0.025);
 }
 
 [data-theme='peach'] {
@@ -422,6 +430,8 @@
 	--inset-hi-strong: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 
 	--shadow-card: var(--shadow-card-light);
+
+	--flow-res-fill: rgba(14, 13, 11, 0.025);
 }
 
 @theme {

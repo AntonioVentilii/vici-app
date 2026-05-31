@@ -13,6 +13,7 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	type ToggleSize = 'sm' | 'md';
+	type ToggleVariant = 'pill' | 'ghost';
 
 	interface Props {
 		/** Market id to bookmark / unbookmark. */
@@ -25,6 +26,17 @@
 		 *    (see `MarketDetailHeader`).
 		 */
 		size?: ToggleSize;
+		/** Treatment variant.
+		 *
+		 *  - `pill` (default) — bordered laurel pill; the saved state fills
+		 *    with the laurel wash.
+		 *  - `ghost` — borderless square (8 px radius) that sits flush in a
+		 *    dense action row; transparent until hovered, and the saved
+		 *    heart turns pink rather than laurel so it reads as a personal
+		 *    watchlist mark next to the neutral share control (see
+		 *    `FlowBackHeader`).
+		 */
+		variant?: ToggleVariant;
 		/** Hard-stop the click from bubbling to a parent clickable surface
 		 *  (e.g. a `<Card>` that navigates on click). Defaults to `true`
 		 *  because both current call sites need it and forgetting is a
@@ -32,7 +44,7 @@
 		stopPropagation?: boolean;
 	}
 
-	const { marketId, size = 'sm', stopPropagation = true }: Props = $props();
+	const { marketId, size = 'sm', variant = 'pill', stopPropagation = true }: Props = $props();
 
 	const saved = $derived(isMarketSaved({ marketId, prefs: $preferencesStore }));
 
@@ -67,7 +79,7 @@
      outline) and label / aria are owned here so the two call sites
      can't drift on copy or treatment. -->
 <button
-	class={['saved-market-toggle', `size-${size}`, saved && 'is-saved']}
+	class={['saved-market-toggle', `size-${size}`, `variant-${variant}`, saved && 'is-saved']}
 	aria-label={t({ locale: $localeStore, key: saved ? 'card.unsave' : 'card.save' })}
 	aria-pressed={saved}
 	onclick={onClick}
@@ -113,6 +125,27 @@
 	.size-sm {
 		width: 1.75rem;
 		height: 1.75rem;
+	}
+
+	/* Ghost treatment — a borderless 8 px-radius square that reads as a
+	   neutral icon affordance until interacted with. Saved state turns
+	   the heart pink so a watchlisted card is unmistakable next to the
+	   neutral share control in the dense flow-back action row. */
+	.variant-ghost {
+		border: 1px solid transparent;
+		border-radius: var(--r-8);
+		background: transparent;
+		color: var(--text-muted);
+	}
+	.variant-ghost:hover {
+		border-color: transparent;
+		background: color-mix(in srgb, var(--parchment) 6%, transparent);
+		color: var(--text-base);
+	}
+	.variant-ghost.is-saved {
+		border-color: transparent;
+		background: transparent;
+		color: #ff6b8a;
 	}
 
 	.size-md {
