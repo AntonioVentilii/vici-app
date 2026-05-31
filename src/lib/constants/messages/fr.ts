@@ -927,7 +927,7 @@ export const frMessages = {
 		'Ce que nous collectons, pourquoi nous le collectons, avec qui nous le partageons. En bref : nous collectons le moins possible.',
 	'info.doc.privacy.b1': 'Ce que nous collectons',
 	'info.doc.privacy.b10':
-		'L’accès, l’export, la rectification et la suppression de tes données sont disponibles sur demande à privacy@vici.market. Nous répondons sous trente jours.',
+		'L’accès, l’export, la rectification et la suppression de tes données sont disponibles sur demande à {email}. Nous répondons sous trente jours.',
 	'info.doc.privacy.b11': 'Cookies',
 	'info.doc.privacy.b12':
 		'Nous stockons un seul jeton de session. Nous n’utilisons pas de cookies de suivi.',
@@ -963,7 +963,7 @@ export const frMessages = {
 		'La source change de méthodologie en cours de fenêtre → marché annulé sauf si le changement est négligeable.',
 	'info.doc.resolution-rules.b11': 'Litiges',
 	'info.doc.resolution-rules.b12':
-		'Tout participant peut déposer un litige de résolution dans les soixante-douze heures en écrivant à resolution@vici.market avec son handle, l’id du marché et le fondement du litige. Les litiges sont examinés par la rédaction et reçoivent une réponse sous vingt-quatre heures.',
+		'Tout participant peut déposer un litige de résolution dans les soixante-douze heures en écrivant à {email} avec son handle, l’id du marché et le fondement du litige. Les litiges sont examinés par la rédaction et reçoivent une réponse sous vingt-quatre heures.',
 	'info.doc.resolution-rules.b2':
 		'Avant qu’un marché n’ouvre aux prédictions, deux faits sont fixés et publiés au dos de la carte du marché : le critère de résolution (la condition YES en langage clair) et la source (le flux de données public et nommé qui décidera).',
 	'info.doc.resolution-rules.b3': 'Fenêtre d’échange',
@@ -2344,7 +2344,6 @@ export const frMessages = {
 	'welcome.faq.q5': 'Où sont stockées mes données ?',
 	'welcome.faq.q6': "Qu'est-ce qu'un duel ?",
 	'welcome.faq.sub': 'Ce que tout nouveau caller demande avant son premier pronostic.',
-	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': 'Questions',
 	'welcome.faq.title_b': 'qui comptent.',
 	'welcome.featured_event.countdown': '{days}j avant le coup d’envoi',

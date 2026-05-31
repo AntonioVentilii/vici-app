@@ -909,7 +909,7 @@ export const enMessages = {
 		'What we collect, why we collect it, who we share it with. Short version: we collect as little as we can.',
 	'info.doc.privacy.b1': 'What we collect',
 	'info.doc.privacy.b10':
-		'Access, export, correction, and deletion of your data are available on request to privacy@vici.market. We respond within thirty days.',
+		'Access, export, correction, and deletion of your data are available on request to {email}. We respond within thirty days.',
 	'info.doc.privacy.b11': 'Cookies',
 	'info.doc.privacy.b12': 'We store one session token. We do not use tracking cookies.',
 	'info.doc.privacy.b2.i0': 'Account: your handle, email, language and appearance preference',
@@ -940,7 +940,7 @@ export const enMessages = {
 		'Source changes its methodology mid-window → market voided unless the change is immaterial.',
 	'info.doc.resolution-rules.b11': 'Disputes',
 	'info.doc.resolution-rules.b12':
-		'Any caller may file a resolution dispute within seventy-two hours by emailing resolution@vici.market with their handle, the market id, and the basis for the dispute. Disputes are reviewed by editorial and answered within twenty-four hours.',
+		'Any caller may file a resolution dispute within seventy-two hours by emailing {email} with their handle, the market id, and the basis for the dispute. Disputes are reviewed by editorial and answered within twenty-four hours.',
 	'info.doc.resolution-rules.b2':
 		'Before a market opens for predictions, two facts are fixed and published on the back of the market card: the resolution criterion (the YES condition in plain language) and the source (the named public data feed that will decide).',
 	'info.doc.resolution-rules.b3': 'Trading window',
@@ -2349,7 +2349,6 @@ export const enMessages = {
 	'welcome.faq.q5': 'Where does my data live?',
 	'welcome.faq.q6': 'What’s a battle?',
 	'welcome.faq.sub': 'What every new caller asks before their first prediction.',
-	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': 'Questions',
 	'welcome.faq.title_b': 'worth asking.',
 	'welcome.featured_event.countdown': '{days}d to kickoff',

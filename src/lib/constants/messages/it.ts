@@ -920,7 +920,7 @@ export const itMessages = {
 		'Cosa raccogliamo, perché lo raccogliamo, con chi lo condividiamo. In breve: raccogliamo il meno possibile.',
 	'info.doc.privacy.b1': 'Cosa raccogliamo',
 	'info.doc.privacy.b10':
-		'Accesso, esportazione, rettifica ed eliminazione dei tuoi dati sono disponibili su richiesta a privacy@vici.market. Rispondiamo entro trenta giorni.',
+		'Accesso, esportazione, rettifica ed eliminazione dei tuoi dati sono disponibili su richiesta a {email}. Rispondiamo entro trenta giorni.',
 	'info.doc.privacy.b11': 'Cookie',
 	'info.doc.privacy.b12':
 		'Memorizziamo un solo token di sessione. Non usiamo cookie di tracciamento.',
@@ -953,7 +953,7 @@ export const itMessages = {
 		'La fonte cambia metodologia a finestra aperta → mercato annullato salvo che la modifica sia irrilevante.',
 	'info.doc.resolution-rules.b11': 'Contestazioni',
 	'info.doc.resolution-rules.b12':
-		'Ogni partecipante può presentare una contestazione sulla risoluzione entro settantadue ore scrivendo a resolution@vici.market con il proprio handle, l’id del mercato e la motivazione della contestazione. Le contestazioni sono esaminate dalla redazione e ricevono risposta entro ventiquattro ore.',
+		'Ogni partecipante può presentare una contestazione sulla risoluzione entro settantadue ore scrivendo a {email} con il proprio handle, l’id del mercato e la motivazione della contestazione. Le contestazioni sono esaminate dalla redazione e ricevono risposta entro ventiquattro ore.',
 	'info.doc.resolution-rules.b2':
 		'Prima che un mercato apra alle previsioni, due fatti sono fissati e pubblicati sul retro della carta del mercato: il criterio di risoluzione (la condizione YES in linguaggio semplice) e la fonte (il feed di dati pubblico e dichiarato che deciderà).',
 	'info.doc.resolution-rules.b3': 'Finestra di contrattazione',
@@ -2328,7 +2328,6 @@ export const itMessages = {
 	'welcome.faq.q5': 'Dove vivono i miei dati?',
 	'welcome.faq.q6': "Cos'è uno scontro?",
 	'welcome.faq.sub': 'Quello che ogni nuovo caller chiede prima della prima previsione.',
-	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': 'Domande',
 	'welcome.faq.title_b': 'che contano.',
 	'welcome.featured_event.countdown': '{days}g al kickoff',

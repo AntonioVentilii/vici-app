@@ -921,7 +921,7 @@ export const esMessages = {
 		'Qué recopilamos, por qué lo recopilamos, con quién lo compartimos. En resumen: recopilamos lo menos posible.',
 	'info.doc.privacy.b1': 'Qué recopilamos',
 	'info.doc.privacy.b10':
-		'El acceso, la exportación, la rectificación y la eliminación de tus datos están disponibles a petición en privacy@vici.market. Respondemos en un plazo de treinta días.',
+		'El acceso, la exportación, la rectificación y la eliminación de tus datos están disponibles a petición en {email}. Respondemos en un plazo de treinta días.',
 	'info.doc.privacy.b11': 'Cookies',
 	'info.doc.privacy.b12': 'Almacenamos un único token de sesión. No usamos cookies de seguimiento.',
 	'info.doc.privacy.b2.i0': 'Cuenta: tu handle, correo, idioma y preferencia de apariencia',
@@ -954,7 +954,7 @@ export const esMessages = {
 		'La fuente cambia su metodología a mitad de ventana → mercado anulado salvo que el cambio sea irrelevante.',
 	'info.doc.resolution-rules.b11': 'Disputas',
 	'info.doc.resolution-rules.b12':
-		'Cualquier participante puede presentar una disputa de resolución en un plazo de setenta y dos horas escribiendo a resolution@vici.market con su handle, el id del mercado y el fundamento de la disputa. Las disputas son revisadas por la redacción y se responden en veinticuatro horas.',
+		'Cualquier participante puede presentar una disputa de resolución en un plazo de setenta y dos horas escribiendo a {email} con su handle, el id del mercado y el fundamento de la disputa. Las disputas son revisadas por la redacción y se responden en veinticuatro horas.',
 	'info.doc.resolution-rules.b2':
 		'Antes de que un mercado se abra a predicciones, se fijan y publican dos hechos en el reverso de la tarjeta del mercado: el criterio de resolución (la condición YES en lenguaje claro) y la fuente (el feed de datos público y nombrado que decidirá).',
 	'info.doc.resolution-rules.b3': 'Ventana de negociación',
@@ -2339,7 +2339,6 @@ export const esMessages = {
 	'welcome.faq.q5': '¿Dónde se guardan mis datos?',
 	'welcome.faq.q6': '¿Qué es un combate?',
 	'welcome.faq.sub': 'Lo que todo nuevo caller pregunta antes de su primera predicción.',
-	'welcome.faq.support_email': 'support@vici.market',
 	'welcome.faq.title_a': 'Preguntas',
 	'welcome.faq.title_b': 'que importan.',
 	'welcome.featured_event.countdown': '{days}d para el inicio',
