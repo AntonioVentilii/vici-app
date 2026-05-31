@@ -31,7 +31,7 @@
 	import type { Token } from '$lib/types/token';
 	import type { Transaction } from '$lib/types/wallet';
 	import { emit } from '$lib/utils/events.utils';
-	import { formatNanosecondsToDate, formatToken } from '$lib/utils/format.utils';
+	import { formatRelativeAgoFromNs, formatToken } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
@@ -39,8 +39,8 @@
 	import { mapClearingEventToTransaction } from '$lib/utils/transactions.utils';
 
 	/**
-	 * Wallet — centered hero + recent activity, matching `WalletScreen`
-	 * in `screens.jsx:1303`.
+	 * Wallet — centered VXP balance hero + recent activity over the
+	 * real crypto send / receive / history surfaces.
 	 *
 	 * Layout
 	 * - `MobileAppBar` with back → /profile, title "Wallet", and a
@@ -470,7 +470,7 @@
 								{/if}
 							</span>
 							<span class="num wallet-activity-row-when">
-								{formatNanosecondsToDate({ nanoseconds: tx.timestamp })}
+								{formatRelativeAgoFromNs({ timestampNs: tx.timestamp, locale: $localeStore })}
 							</span>
 						</div>
 						<span
@@ -577,11 +577,14 @@
 		flex-direction: column;
 		align-items: center;
 		gap: 0.5rem;
-		padding: 1.5rem 1.25rem 1.75rem;
+		padding: 24px;
 		text-align: center;
-		background: var(--bg-surface);
+		background: var(--bg-popover);
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-16, 16px);
+		border-radius: 16px;
+		box-shadow:
+			inset 0 1px 0 rgba(242, 236, 220, 0.06),
+			0 8px 24px -10px rgba(0, 0, 0, 0.5);
 	}
 
 	.wallet-hero-eyebrow {
@@ -590,7 +593,7 @@
 	}
 
 	.wallet-hero-num {
-		margin: 0.25rem 0 0;
+		margin: 8px 0 0;
 		font-size: 48px;
 		font-weight: 600;
 		letter-spacing: -0.04em;
@@ -619,9 +622,9 @@
 
 	.wallet-hero-cta-row {
 		display: flex;
-		gap: 0.5rem;
+		gap: 8px;
 		width: 100%;
-		margin-top: 1rem;
+		margin-top: 18px;
 	}
 
 	.wallet-hero-cta {
@@ -668,10 +671,10 @@
 
 	.wallet-activity-title {
 		margin: 0 0 0.25rem;
-		font-size: var(--t-16, 1rem);
-		font-weight: 700;
+		font-size: 15px;
+		font-weight: 600;
 		color: var(--text-base);
-		letter-spacing: var(--tracking-tight);
+		letter-spacing: -0.01em;
 	}
 
 	.wallet-activity-empty {
@@ -695,10 +698,10 @@
 		align-items: center;
 		justify-content: space-between;
 		gap: 0.75rem;
-		padding: 0.75rem 0.875rem;
-		background: var(--bg-popover);
+		padding: 12px 14px;
+		background: var(--bg-surface);
 		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
+		border-radius: 12px;
 	}
 
 	.wallet-activity-row-body {
