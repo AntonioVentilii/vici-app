@@ -330,6 +330,17 @@ Haptics map each beat `kind` to a named pattern via `hapticForBeat`
 engine also emits raw `haptic` envelopes, but `FlowMode` drives feedback
 through the named vocabulary (§7.9).
 
+Sound is the audio sibling of haptics and matters more on iOS Safari,
+which has no Vibration API. `FlowMode` fires the named cues from
+[`flow-sound.utils.ts`](../../../src/lib/utils/flow-sound.utils.ts):
+`flowTick()` on every committed YES / NO swipe (SKIP is silent),
+`flowBeat(hard)` paired with the beat haptic (`hard` for any deck-gating
+beat), `flowWild()` on a wildcard treat in place of the beat cue, and
+`flowSummary()` as FlowEnd takes over. Cues lazy-init the `AudioContext`
+on first use, no-op where Web Audio is unavailable, and honor the
+`soundEnabled` preference. The visible Settings sound toggle is a
+separate follow-up.
+
 ### 7.4 Daily streak — Flame stages
 
 Defined in [`src/lib/utils/streak.utils.ts`](../../../src/lib/utils/streak.utils.ts)

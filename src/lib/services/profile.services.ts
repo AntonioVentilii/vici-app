@@ -65,6 +65,7 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 					},
 					flowSessionLength: 10,
 					hapticsEnabled: true,
+					soundEnabled: true,
 					callsPublic: true,
 					flowTags: [],
 					worldCupMode: false,

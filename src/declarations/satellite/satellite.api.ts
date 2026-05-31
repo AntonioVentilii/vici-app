@@ -267,6 +267,7 @@ const AppGetProfileResultSchema = j.strictObject({
 				}),
 				flowSessionLength: j.number(),
 				hapticsEnabled: j.boolean(),
+				soundEnabled: j.boolean(),
 				callsPublic: j.boolean(),
 				flowTags: j.array(j.string()),
 				worldCupMode: j.boolean(),
