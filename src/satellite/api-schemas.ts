@@ -29,6 +29,11 @@ export const UserProfileApiSchema = j.strictObject({
 	level: j.number().default(1),
 	interests: j.array(j.string()).default([]),
 	lastActiveDay: j.string().optional(),
+	// Soft-delete marker (Delete account v2). PRESENCE = soft-deleted (ms
+	// timestamp); ABSENCE = active. Intentionally `optional()` with NO
+	// default so legacy/active rows decode as active. Mirror any change
+	// here in `src/lib/schema/profile.schema.ts`.
+	deletedAtMs: j.number().optional(),
 	// Defaults are intentionally applied at every level. The outer
 	// `.default(...)` only kicks in when `preferences` is null/undefined;
 	// legacy profile docs that have a partial `preferences` shape would

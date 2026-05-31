@@ -253,6 +253,7 @@ const AppGetProfileResultSchema = j.strictObject({
 			archetype: j.string(),
 			interests: j.array(j.string()),
 			lastActiveDay: j.optional(j.string()),
+			deletedAtMs: j.optional(j.number()),
 			unlockedAchievements: j.array(j.string()),
 			contrarianWins: j.number(),
 			preferences: j.strictObject({
@@ -978,7 +979,7 @@ const AppDeleteMyAccountResultSchema = j.strictObject({
 	ok: j.boolean(),
 	reason: j.optional(j.enum(['owns_non_empty_league', 'invalid_input'])),
 	blockingLeagueIds: j.optional(j.array(j.string())),
-	docsDeleted: j.optional(j.number())
+	softDeleted: j.optional(j.boolean())
 });
 
 const deleteMyAccount = async (
@@ -1007,6 +1008,22 @@ const followUser = async (args: j.infer<typeof AppFollowUserArgsSchema>): Promis
 
 	const { app_follow_user } = await getSatelliteExtendedActor<SatelliteActor>({ idlFactory });
 	await app_follow_user(idlArgs);
+};
+
+const AppRecoverMyAccountResultSchema = j.strictObject({
+	ok: j.boolean(),
+	recovered: j.optional(j.boolean()),
+	reason: j.optional(j.enum(['expired']))
+});
+
+const recoverMyAccount = async (): Promise<j.infer<typeof AppRecoverMyAccountResultSchema>> => {
+	const { app_recover_my_account } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_recover_my_account();
+
+	const result = schemaFromIdl({ schema: AppRecoverMyAccountResultSchema, value: idlResult });
+	return AppRecoverMyAccountResultSchema.parse(result);
 };
 
 const AppRedeemReferralCodeArgsSchema = j.strictObject({ code: j.string() });
@@ -1095,6 +1112,20 @@ const sendFriendRequest = async (
 		idlFactory
 	});
 	await app_send_friend_request(idlArgs);
+};
+
+const AppSweepExpiredDeletionsResultSchema = j.strictObject({ swept: j.number() });
+
+const sweepExpiredDeletions = async (): Promise<
+	j.infer<typeof AppSweepExpiredDeletionsResultSchema>
+> => {
+	const { app_sweep_expired_deletions } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_sweep_expired_deletions();
+
+	const result = schemaFromIdl({ schema: AppSweepExpiredDeletionsResultSchema, value: idlResult });
+	return AppSweepExpiredDeletionsResultSchema.parse(result);
 };
 
 const AppTransferLeagueOwnershipArgsSchema = j.strictObject({
@@ -1296,10 +1327,12 @@ export const functions = {
 	claimWorldsPodiumPrize,
 	deleteMyAccount,
 	followUser,
+	recoverMyAccount,
 	redeemReferralCode,
 	rejectFriendRequest,
 	resolveTournamentRound,
 	sendFriendRequest,
+	sweepExpiredDeletions,
 	transferLeagueOwnership,
 	triggerTournamentDraw,
 	upsertMarketMetadata,
