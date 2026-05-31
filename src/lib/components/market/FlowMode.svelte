@@ -969,7 +969,7 @@
 			     sympathy via the `data-coach-phase` CSS in app.css.
 			     Self-dismisses on any pointer-down; persists dismissal
 			     in localStorage. -->
-			<FlowCoach surface="flow" />
+			<FlowCoach />
 
 			<!-- Per-swipe commit pop — "CALLED YES · {stake} IN PLAY". Rises
 			     from the exit edge (is-yes → right, is-no → left) on every
