@@ -99,9 +99,8 @@
 		color: var(--no);
 	}
 
-	/* Prior-call pill — always the laurel-gold treatment (matches the
-	   prototype), not a category-accent tint. Eyebrow + value sit at
-	   opposite ends. */
+	/* Prior-call pill — always the laurel-gold treatment, not a
+	   category-accent tint. Eyebrow + value sit at opposite ends. */
 	.flow-back-prior {
 		display: flex;
 		align-items: center;
@@ -114,9 +113,6 @@
 	}
 	.flow-back-prior .flow-back-label {
 		color: var(--laurel);
-	}
-	.flow-back-prior .flow-back-label {
-		color: var(--color-accent);
 	}
 	.flow-back-prior-line {
 		font-size: var(--t-12);
