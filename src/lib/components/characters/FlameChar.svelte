@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { CHAR_INK, FLAME_STAGES } from '$lib/constants/characters.constants';
 	import type { FlameStage } from '$lib/utils/streak.utils';
 
 	interface Props {
@@ -9,15 +10,7 @@
 
 	let { size = 48, animate = true, stage = 'flame' }: Props = $props();
 
-	const STAGES: Record<FlameStage, { core: string; tip: string; scale: number }> = {
-		spark: { core: '#F08A3C', tip: '#FFD27A', scale: 0.55 },
-		ember: { core: '#F08A3C', tip: '#FFD27A', scale: 0.72 },
-		flame: { core: '#F08A3C', tip: '#FFD27A', scale: 0.88 },
-		blaze: { core: '#FF6B3C', tip: '#FFC04A', scale: 1.0 },
-		inferno: { core: '#FF4F8E', tip: '#FFB04A', scale: 1.08 }
-	};
-
-	let s = $derived(STAGES[stage]);
+	let s = $derived(FLAME_STAGES[stage]);
 </script>
 
 <svg aria-hidden="true" height={size} viewBox="0 0 80 80" width={size}>
@@ -36,21 +29,15 @@
 			opacity="0.85"
 		/>
 		{#if stage !== 'spark'}
-			<circle cx="36" cy="56" fill="#0E0D0B" r="1.6" />
-			<circle cx="46" cy="56" fill="#0E0D0B" r="1.6" />
+			<circle cx="36" cy="56" fill={CHAR_INK} r="1.6" />
+			<circle cx="46" cy="56" fill={CHAR_INK} r="1.6" />
 			<path
 				d="M38 62 q2 1.5 4 0"
 				fill="none"
-				stroke="#0E0D0B"
+				stroke={CHAR_INK}
 				stroke-linecap="round"
 				stroke-width="1.2"
 			/>
 		{/if}
 	</g>
 </svg>
-
-<style lang="postcss">
-	.char-flicker {
-		animation: char-flicker 0.9s ease-in-out infinite;
-	}
-</style>
