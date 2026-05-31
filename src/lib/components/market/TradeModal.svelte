@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { isNullish } from '@dfinity/utils';
+	import { isNullish, nonNullish } from '@dfinity/utils';
 	import { X } from 'lucide-svelte/icons';
 	import { browser } from '$app/environment';
 	import { resolve } from '$app/paths';
@@ -7,6 +7,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import { ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
+	import { VXP_STAKE_LADDER } from '$lib/constants/vxp-economy.constants';
 	import { playgroundVxpUnitMode } from '$lib/derived/playground.derived';
 	import { walletUiTokens } from '$lib/derived/tokens.derived';
 	import { userSignedIn } from '$lib/derived/user.derived';
@@ -37,10 +38,13 @@
 	 * trapped manually via {@link createFocusTrap}, matching the other
 	 * bottom-sheet surfaces.
 	 *
-	 * Sizing is a single continuous slider in call units (the market's
-	 * own token). No limit-order / target-price path lives here — the
-	 * only submission is a market order; the clearing layer still picks
-	 * `MARKET` vs `LIMIT` execution from live depth under the hood.
+	 * Sizing is a slider that steps through the fixed stake ladder
+	 * (`VXP_STAKE_LADDER`) rather than a free continuous range, because
+	 * `executeOutcomeTrade` rejects any premium that isn't a ladder rung
+	 * on ViciXp markets — so every selectable value must be a valid rung.
+	 * No limit-order / target-price path lives here — the only submission
+	 * is a market order; the clearing layer still picks `MARKET` vs
+	 * `LIMIT` execution from live depth under the hood.
 	 */
 	interface Props {
 		market: Market;
@@ -54,13 +58,13 @@
 	const tr = ({ key, params }: { key: MessageKey; params?: Record<string, string | number> }) =>
 		t({ locale: $localeStore, key, params });
 
-	// Call-size slider — continuous units of the market token, clamped to
-	// a sensible commit range. Defaults to the mid of the range so the
-	// panel opens with a meaningful, editable amount rather than zero.
-	const SIZE_MIN = 10;
-	const SIZE_MAX = 500;
-	const SIZE_STEP = 10;
-	let size = $state(100);
+	// Call-size slider — an index-based control over the fixed stake
+	// ladder, so every stop is a valid rung the backend will accept (a
+	// free continuous range would let the user pick amounts ViciXp markets
+	// reject). Defaults to the smallest rung; `size` is the selected rung
+	// amount, derived from the slider index.
+	let sizeIndex = $state(0);
+	const size = $derived(VXP_STAKE_LADDER[sizeIndex]);
 
 	let sheetEl = $state<HTMLDivElement | undefined>();
 	let trap: FocusTrap | null = null;
@@ -72,19 +76,27 @@
 		selectedOutcome === 'YES' ? tr({ key: 'outcome.yes' }) : tr({ key: 'outcome.no' })
 	);
 
-	// Probability of the chosen side (0..1). Payout if right is the
-	// stake divided by that probability — the same `size / p` shape the
-	// market resolves at.
-	const sideProbability = $derived(
-		selectedOutcome === 'YES' ? market.yesProbability : market.noProbability
+	// Execution price of the chosen side (0..1) used to size the payout
+	// preview. This mirrors `resolveOutcomeExecutionPriceForSizing` in
+	// `executeOutcomeTrade`: a market buy is sized from order-book depth
+	// (`bestAsk` for YES, `1 - bestBid` for NO) when present, falling back
+	// to the consensus probability only when depth is absent. Sizing from
+	// the same source keeps the displayed "+X VXP" in step with the order
+	// that is actually placed.
+	const sideExecutionPrice = $derived(
+		selectedOutcome === 'YES'
+			? (market.bestAsk ?? market.yesProbability)
+			: nonNullish(market.bestBid)
+				? 1 - market.bestBid
+				: market.noProbability
 	);
 
 	const payout = $derived.by(() => {
-		if (!Number.isFinite(sideProbability) || sideProbability <= 0) {
+		if (!Number.isFinite(sideExecutionPrice) || sideExecutionPrice <= 0) {
 			return size;
 		}
 
-		return Math.round(size / sideProbability);
+		return Math.round(size / sideExecutionPrice);
 	});
 
 	// Available collateral for this market's balance domain, reusing the
@@ -219,7 +231,6 @@
 
 <div
 	class="confirm-scrim"
-	aria-label={tr({ key: 'a11y.close_modal' })}
 	onclick={onClose}
 	onkeydown={(e) => e.key === 'Escape' && onClose()}
 	role="presentation"
@@ -227,6 +238,7 @@
 	<div
 		bind:this={sheetEl}
 		class="confirm-panel"
+		aria-labelledby="confirm-title"
 		aria-modal="true"
 		onclick={(e) => e.stopPropagation()}
 		onkeydown={(e) => e.stopPropagation()}
@@ -236,7 +248,7 @@
 		<div class="confirm-grip" aria-hidden="true"></div>
 
 		<div class="confirm-head">
-			<h3 class="confirm-title">
+			<h3 id="confirm-title" class="confirm-title">
 				{tr({ key: 'prediction.back_side', params: { side: sideLabel } })}
 			</h3>
 			<button
@@ -268,11 +280,11 @@
 				<input
 					class="confirm-range"
 					aria-label={tr({ key: 'prediction.how_much' })}
-					max={SIZE_MAX}
-					min={SIZE_MIN}
-					step={SIZE_STEP}
+					max={VXP_STAKE_LADDER.length - 1}
+					min={0}
+					step={1}
 					type="range"
-					bind:value={size}
+					bind:value={sizeIndex}
 				/>
 
 				<div class="confirm-payout">
