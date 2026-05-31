@@ -1139,6 +1139,28 @@ html[data-app='1'] body {
 	}
 }
 
+/* Next card rises over the gap the centered character just vacated
+   (post-beat staging). Applied transiently to the incoming current
+   slot in FlowMode. */
+.flow-card-rise {
+	animation: flow-card-rise 440ms cubic-bezier(0.2, 0.85, 0.25, 1) both;
+}
+@keyframes flow-card-rise {
+	from {
+		opacity: 0;
+		transform: translateY(46px) scale(0.97);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.flow-card-rise {
+		animation: none;
+	}
+}
+
 /* XP-award toast envelope — rises from the swipe-exit edge,
    overshoots, settles. */
 @keyframes xp-toast-pop {
@@ -1990,6 +2012,17 @@ html[data-app='1'] body {
 .xp-toast .num {
 	font-size: var(--text-body);
 }
+.xp-toast-side {
+	font-size: 9px;
+	letter-spacing: 0.14em;
+	text-transform: uppercase;
+	font-weight: 700;
+	opacity: 0.9;
+	align-self: center;
+	padding-right: 6px;
+	margin-right: 2px;
+	border-right: 1px solid rgba(14, 13, 11, 0.25);
+}
 .xp-toast small {
 	font-size: 9px;
 	letter-spacing: 0.14em;
@@ -2010,6 +2043,27 @@ html[data-app='1'] body {
 }
 .xp-toast.is-no {
 	left: 22px;
+}
+@keyframes xp-toast-rm {
+	0% {
+		opacity: 0;
+	}
+	12% {
+		opacity: 1;
+	}
+	80% {
+		opacity: 1;
+	}
+	100% {
+		opacity: 0;
+	}
+}
+/* Reduced-motion: the spring collapses to a plain hold-then-fade — no
+   overshoot, no upward travel. */
+@media (prefers-reduced-motion: reduce) {
+	.xp-toast {
+		animation: xp-toast-rm 1000ms ease forwards;
+	}
 }
 
 /* ── Swipe hint rail ──────────────────────────────────────── */

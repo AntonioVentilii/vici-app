@@ -1,58 +1,45 @@
 <script lang="ts">
-	import XpToast from '$lib/components/market/XpToast.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { XpPop } from '$lib/types/flow';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * FlowXpPops — multi-pop manager. Each entry in `pops` renders
-	 * either an inline laurel/yes/no pop (the rich envelope with combo
-	 * + bonus copy line) or, for the plain "+N VXP" ambient case,
-	 * falls back to the standalone `<XpToast>` pill. The aggregator
-	 * owns position + fan-out; `XpToast` owns the pill envelope when
-	 * the simpler shape is enough.
+	 * FlowXpPops — multi-pop manager for the centered VXP-award envelopes
+	 * that ride along with a beat or combo. Each entry renders the inline
+	 * laurel / yes / no pop (combo + bonus serif-italic copy line + laurel
+	 * ring). The per-swipe commit confirmation is a separate surface
+	 * (`XpToast`, owned by `FlowMode`); this aggregator owns position +
+	 * fan-out for the richer bonus / combo moments only.
 	 */
 	interface Props {
 		pops: XpPop[];
 	}
 
 	const { pops }: Props = $props();
-
-	// A pop routes to `<XpToast>` (the standalone pill) when it's a
-	// plain ambient award — no combo multiplier, no milestone copy,
-	// no bonus envelope. Everything else takes the rich inline
-	// envelope below so we keep combo + serif-italic milestone copy +
-	// laurel ring on the cases that need them.
-	const isPlainToast = (pop: XpPop): boolean =>
-		pop.kind === 'normal' && pop.combo <= 1 && pop.copy === undefined;
 </script>
 
 <div class="xp-pops" aria-hidden="true">
 	{#each pops as pop (pop.id)}
-		{#if isPlainToast(pop)}
-			<XpToast amount={pop.amount} side={pop.side} />
-		{:else}
-			<div
-				class="xp-pop"
-				class:xp-pop-bonus={pop.kind === 'bonus'}
-				class:xp-pop-no={pop.kind === 'normal' && pop.side === 'NO'}
-				class:xp-pop-yes={pop.kind === 'normal' && pop.side === 'YES'}
-			>
-				{#if pop.kind === 'bonus' && pop.copy}
-					<span class="xp-pop-copy serif-italic">{pop.copy}</span>
-				{/if}
-				<span class="xp-pop-amount num">+{pop.amount}</span>
-				<span class="xp-pop-label">
-					{pop.combo > 1
-						? t({
-								locale: $localeStore,
-								key: 'flow.xp_combo',
-								params: { combo: pop.combo }
-							})
-						: t({ locale: $localeStore, key: 'flow.xp_label' })}
-				</span>
-			</div>
-		{/if}
+		<div
+			class="xp-pop"
+			class:xp-pop-bonus={pop.kind === 'bonus'}
+			class:xp-pop-no={pop.kind === 'normal' && pop.side === 'NO'}
+			class:xp-pop-yes={pop.kind === 'normal' && pop.side === 'YES'}
+		>
+			{#if pop.kind === 'bonus' && pop.copy}
+				<span class="xp-pop-copy serif-italic">{pop.copy}</span>
+			{/if}
+			<span class="xp-pop-amount num">+{pop.amount}</span>
+			<span class="xp-pop-label">
+				{pop.combo > 1
+					? t({
+							locale: $localeStore,
+							key: 'flow.xp_combo',
+							params: { combo: pop.combo }
+						})
+					: t({ locale: $localeStore, key: 'flow.xp_label' })}
+			</span>
+		</div>
 	{/each}
 </div>
 
