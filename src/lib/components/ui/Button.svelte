@@ -32,7 +32,7 @@
 		outline:
 			'border border-primary/45 bg-transparent text-primary hover:border-primary hover:bg-laurel-glow',
 		ghost: 'bg-transparent text-foreground hover:bg-foreground/6',
-		danger: 'bg-destructive text-destructive-foreground shadow-inset-hi hover:bg-no-deep'
+		danger: 'bg-danger text-destructive-foreground shadow-inset-hi hover:bg-danger-deep'
 	};
 
 	// Padding + radius scale: default = `14px 20px / radius 12px`,

@@ -118,7 +118,7 @@
 			<div class="border-border my-1 border-t"></div>
 
 			<BaseButton
-				class="text-destructive hover:bg-destructive/10 w-full gap-3 px-4 py-2 text-left text-sm font-medium"
+				class="text-danger hover:bg-danger/10 w-full gap-3 px-4 py-2 text-left text-sm font-medium"
 				data-tid={TestId.Logout}
 				onclick={doSignOut}
 				status={signOutStatus}

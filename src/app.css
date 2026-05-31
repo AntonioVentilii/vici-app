@@ -468,6 +468,16 @@
 	--color-destructive: var(--color-destructive);
 	--color-destructive-foreground: var(--parchment);
 
+	/* Danger ramp — the canonical destructive-action role (delete,
+	 * sign-out, irreversible-action warnings). Maps to the terracotta
+	 * `--danger` ramp so danger UI stays visually distinct from the
+	 * prediction `--no` signal: destructive UI must NOT read as a NO
+	 * market outcome. Exposes `bg-danger` / `text-danger` /
+	 * `border-danger` / `bg-danger-deep` / `bg-danger-wash`. */
+	--color-danger: var(--danger);
+	--color-danger-deep: var(--danger-deep);
+	--color-danger-wash: var(--danger-wash);
+
 	--color-border: var(--border-base);
 	/* Border emphasis (separate from --color-input which is also wired to
 	 * --border-strong but is reserved for actual `<input>` borders). */
