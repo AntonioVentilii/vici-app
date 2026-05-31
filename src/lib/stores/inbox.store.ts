@@ -1,13 +1,16 @@
 import { USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 import { AppPath } from '$lib/constants/routes.constants';
 import { markets } from '$lib/derived/markets.derived';
-import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
-import { friendRequestsStore } from '$lib/stores/friends.store';
+import {
+	resolvedPositions,
+	resolvedPositionsNotInitialized
+} from '$lib/derived/resolved-positions.derived';
+import { friendRequestsStore, friendsRelationsLoadedStore } from '$lib/stores/friends.store';
 import { localeStore } from '$lib/stores/locale.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { initStorageStore } from '$lib/stores/storage.store';
 import { userStore } from '$lib/stores/user.store';
-import type { InboxNotification } from '$lib/types/inbox';
+import type { InboxNotification, InboxNotificationKind } from '$lib/types/inbox';
 import type { Relation } from '$lib/types/relation';
 import {
 	decimalFixedValueToNumber,
@@ -238,6 +241,102 @@ export const combinedInboxUnreadCount: Readable<number> = derived(
 	combinedInboxStore,
 	($items) => $items.filter((item) => item.unread).length
 );
+
+// ── New-arrival toast feed ──────────────────────────────────────────────────
+// The slide-in popup (`NotifToastHost`) surfaces on a genuinely NEW inbox
+// item — a real event (a freshly-settled market, an incoming friend request,
+// …) that wasn't present on the previous tick.
+//
+// Gating strategy: user-scoped async sources (trade history / resolvedPositions,
+// friend relations) are still loading at cold start. The first synchronous
+// `combinedInboxStore` emission carries an incomplete snapshot — if we diffed
+// from that we'd fire arrival toasts for every pre-existing unread item.
+// Instead we delay the diff until BOTH async sources report ready:
+//   • `resolvedPositionsNotInitialized` flips false → trade history has loaded
+//   • `friendsRelationsLoadedStore` flips true → friend relations have loaded
+// Until then every emission is treated as baseline-only (ids are accumulated,
+// no toast is fired). The seed store (localStorage) is synchronous — its
+// content is included in the baseline naturally.
+//
+// On auth transitions `Authn.svelte` resets `tradeHistoryStore` to `undefined`
+// and calls `clearFriendRelations()`, which reverts both signals to
+// "not loaded". That drives `sourcesHydrated` back to `false`, so the next
+// sign-in's cold-start data is baseline-only too — a different principal's
+// existing unreads never replay as arrival toasts.
+
+export interface InboxToast {
+	id: string;
+	kind: InboxNotificationKind;
+	title: string;
+	body: string;
+	href?: string;
+}
+
+const inboxToastStore = writable<InboxToast | undefined>(undefined);
+
+/**
+ * The most recent newly-arrived unread inbox item, or `undefined` once
+ * dismissed / consumed. `NotifToastHost` subscribes to this and animates the
+ * popup in; calling {@link clearInboxToast} retracts it.
+ */
+export const latestInboxToast: Readable<InboxToast | undefined> = inboxToastStore;
+
+export const clearInboxToast = (): void => {
+	inboxToastStore.set(undefined);
+};
+
+/**
+ * True once both async user-scoped inbox sources have completed their initial
+ * load. We use this to gate the toast diff so cold-start data never fires
+ * arrival toasts.
+ *
+ * - `resolvedPositionsNotInitialized` starts `true`, flips `false` once the
+ *   clearing-canister trade history fetch completes (even if empty).
+ * - `friendsRelationsLoadedStore` starts `false`, flips `true` once the
+ *   first `refreshFriendRelations()` call completes.
+ */
+const sourcesHydrated: Readable<boolean> = derived(
+	[resolvedPositionsNotInitialized, friendsRelationsLoadedStore],
+	([$notInit, $friendsLoaded]) => !$notInit && $friendsLoaded
+);
+
+let seenInboxIds: Set<string> | undefined;
+
+derived([combinedInboxStore, sourcesHydrated], ([$items, $hydrated]) => ({
+	items: $items,
+	hydrated: $hydrated
+})).subscribe(({ items, hydrated }) => {
+	if (!hydrated) {
+		// Sources still loading — accumulate ids as baseline without diffing.
+		seenInboxIds = new Set(items.map((item) => item.id));
+
+		return;
+	}
+
+	if (seenInboxIds === undefined) {
+		// Hydration just completed but no baseline recorded yet (edge case:
+		// subscribe fired with hydrated=true before any non-hydrated tick).
+		seenInboxIds = new Set(items.map((item) => item.id));
+
+		return;
+	}
+
+	const next = items.find((item) => item.unread && !seenInboxIds?.has(item.id));
+
+	seenInboxIds = new Set(items.map((item) => item.id));
+
+	if (next === undefined) {
+		return;
+	}
+
+	inboxToastStore.set({
+		id: next.id,
+		kind: next.kind,
+		title: next.title,
+		body: next.body,
+		href: next.href
+	});
+});
 
 /**
  * Marks every currently-visible settled-event card as read by adding
