@@ -374,6 +374,38 @@ is the reference shape:
   skipped on a re-delete — re-deleting must be idempotent, not
   cumulative.
 
+### Hibernation — the reversible sibling state
+
+Hibernation ("Pause 30 days" — the retention off-ramp offered alongside
+delete) is a **fully reversible** state that reuses the same optional-marker
+shape but never destroys data:
+
+- **Same marker shape.** `hibernatedAtMs?: number` on the profile schema,
+  `optional()` with no default, mirrored in **both**
+  `src/lib/schema/profile.schema.ts` and `src/satellite/api-schemas.ts`,
+  forwarded verbatim through `withProfileDefaults`. PRESENCE = hibernated.
+- **Mutually exclusive with soft-delete.** `hibernateMyAccount` refuses
+  (`{ ok: false, reason: 'deleted' }`) on an already-soft-deleted profile —
+  the two markers never stack. No profile → `{ ok: false, reason: 'no_profile' }`.
+- **Hide the same way, via one combined helper.** Public reads switched
+  from `!isSoftDeleted` to `!isPubliclyHidden(profile) = !(isSoftDeleted ||
+isHibernated)`. The three public filters (`listLeaderboard`,
+  `searchProfiles`, `getProfile`) use `isPubliclyHidden`; the owner's own
+  `getDoc` read stays ungated so the FE can offer resume.
+- **Stats freeze.** A hibernated user is inactive (no trades → no profile
+  writes → no fan-out), so the freeze is mostly natural. The two
+  profile-write stat fan-out hooks (`onProfileSetForAffiliationStats`,
+  `onProfileSetForLeagueStats`) additionally early-return when the AFTER
+  profile `isHibernated` — a defensive guard against a stray write fanning
+  a delta. This can't suppress the `resumeMyAccount` write: clearing the
+  flag leaves `totalTrades` unchanged (zero delta) and the AFTER profile is
+  no longer hibernated.
+- **Reversible, not monotonic.** `hibernateMyAccount` keeps the EARLIEST
+  `hibernatedAtMs` (mirrors soft-delete) but there's no expiry/sweep —
+  `resumeMyAccount` clears the field (destructure-drop + re-encode,
+  mirroring how recovery clears `deletedAtMs`) and the account is active
+  again. Both are version-locked overwrites.
+
 ## Cross-canister calls
 
 When a hook calls another canister (typically the icdc-core registry):

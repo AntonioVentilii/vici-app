@@ -8,6 +8,7 @@ import {
 } from '$lib/types/affiliation-stats';
 import type { UserProfile } from '$lib/types/profile';
 import { readAffiliationDoc } from '$satellite/services/cohort.services';
+import { isHibernated } from '$satellite/services/profile.services';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext, OnSetDocContext } from '@junobuild/functions';
@@ -223,6 +224,19 @@ export const onProfileSetForAffiliationStats = (ctx: OnSetDocContext): void => {
 		beforeProfile = decodeDocData<UserProfile>(before.data);
 		afterProfile = decodeDocData<UserProfile>(after.data);
 	} catch {
+		return;
+	}
+
+	// Stats freeze (Delete account v2). A hibernated account must not move
+	// shared stats. In practice a hibernated user is inactive (no trades →
+	// no profile writes), so this is a defensive guard against a stray
+	// profile write while hibernated fanning out a delta. The `after`
+	// profile is already decoded above, so the check is free. Note this
+	// can't suppress the legitimate `resumeMyAccount` write: clearing
+	// `hibernatedAtMs` leaves `totalTrades` unchanged, so `deltaTrades`
+	// would be 0 anyway — and on resume the AFTER profile is no longer
+	// hibernated, so it passes this guard too.
+	if (isHibernated(afterProfile)) {
 		return;
 	}
 

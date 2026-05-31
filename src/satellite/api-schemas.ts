@@ -34,6 +34,11 @@ export const UserProfileApiSchema = j.strictObject({
 	// default so legacy/active rows decode as active. Mirror any change
 	// here in `src/lib/schema/profile.schema.ts`.
 	deletedAtMs: j.number().optional(),
+	// Hibernation marker (Delete account v2 — reversible sibling of
+	// soft-delete). PRESENCE = hibernated (ms timestamp); ABSENCE = active.
+	// `optional()` with NO default for the same reason as `deletedAtMs`.
+	// Mirror any change here in `src/lib/schema/profile.schema.ts`.
+	hibernatedAtMs: j.number().optional(),
 	// Defaults are intentionally applied at every level. The outer
 	// `.default(...)` only kicks in when `preferences` is null/undefined;
 	// legacy profile docs that have a partial `preferences` shape would

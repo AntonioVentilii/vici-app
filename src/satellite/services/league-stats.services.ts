@@ -2,6 +2,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { leagueMemberKey, type LeagueMemberDoc } from '$lib/types/league-member';
 import { leagueStatsKey, type LeagueStatsDoc } from '$lib/types/league-stats';
 import type { UserProfile } from '$lib/types/profile';
+import { isHibernated } from '$satellite/services/profile.services';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext, OnSetDocContext } from '@junobuild/functions';
@@ -149,6 +150,17 @@ export const onProfileSetForLeagueStats = (ctx: OnSetDocContext): void => {
 		beforeProfile = decodeDocData<UserProfile>(before.data);
 		afterProfile = decodeDocData<UserProfile>(after.data);
 	} catch {
+		return;
+	}
+
+	// Stats freeze (Delete account v2). A hibernated account must not move
+	// shared stats. In practice a hibernated user is inactive (no trades →
+	// no profile writes); this is a defensive guard against a stray write
+	// while hibernated fanning out a delta. Can't suppress the legitimate
+	// `resumeMyAccount` write: clearing `hibernatedAtMs` leaves
+	// `totalTrades` unchanged (delta 0) and the AFTER profile is no longer
+	// hibernated, so it passes this guard anyway.
+	if (isHibernated(afterProfile)) {
 		return;
 	}
 

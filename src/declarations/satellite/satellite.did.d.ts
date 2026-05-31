@@ -206,6 +206,7 @@ export interface AppGetProfileResult {
 					pnl: number;
 					streak: number;
 					nickname: string;
+					hibernated_at_ms: [] | [number];
 					daily_goal_date: [] | [string];
 					daily_goal_done: number;
 					contrarian_wins: number;
@@ -247,6 +248,10 @@ export interface AppGetProfileResult {
 					accuracy: number;
 				}
 		  ];
+}
+export interface AppHibernateMyAccountResult {
+	ok: boolean;
+	reason: [] | [{ deleted: null } | { no_profile: null }];
 }
 export interface AppListAffiliationStatsArgs {
 	kind: { country: null } | { university: null };
@@ -535,6 +540,10 @@ export interface AppResolveTournamentRoundResult {
 				| { no_matches: null }
 		  ];
 }
+export interface AppResumeMyAccountResult {
+	ok: boolean;
+	resumed: boolean;
+}
 export interface AppSearchProfilesArgs {
 	query_str: string;
 }
@@ -706,6 +715,7 @@ export interface _SERVICE {
 	>;
 	app_get_my_referral_code: ActorMethod<[], AppGetMyReferralCodeResult>;
 	app_get_profile: ActorMethod<[AppGetProfileArgs], AppGetProfileResult>;
+	app_hibernate_my_account: ActorMethod<[], AppHibernateMyAccountResult>;
 	app_list_affiliation_stats: ActorMethod<
 		[AppListAffiliationStatsArgs],
 		AppListAffiliationStatsResult
@@ -740,6 +750,7 @@ export interface _SERVICE {
 		[AppResolveTournamentRoundArgs],
 		AppResolveTournamentRoundResult
 	>;
+	app_resume_my_account: ActorMethod<[], AppResumeMyAccountResult>;
 	app_search_profiles: ActorMethod<[AppSearchProfilesArgs], AppSearchProfilesResult>;
 	app_send_friend_request: ActorMethod<[AppSendFriendRequestArgs], undefined>;
 	app_sweep_expired_deletions: ActorMethod<[], AppSweepExpiredDeletionsResult>;

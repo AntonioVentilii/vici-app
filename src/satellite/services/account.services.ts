@@ -11,6 +11,7 @@ import type { UserProfile } from '$lib/types/profile';
 import type { ReferralCodeDoc, ReferralDoc } from '$lib/types/referral';
 import type { Relation } from '$lib/types/relation';
 import { isAdmin } from '$satellite/services/_authz';
+import { isHibernated, isSoftDeleted } from '$satellite/services/profile.services';
 import { logError } from '$satellite/utils/logger.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
@@ -119,6 +120,31 @@ export type RecoverMyAccountResult =
  */
 export interface SweepExpiredDeletionsResult {
 	swept: number;
+}
+
+/**
+ * Result of {@link hibernateMyAccountFn}, discriminated by `ok`.
+ *
+ *  - `{ ok: true }` — the caller's profile is now hibernated (idempotent:
+ *    re-hibernating keeps the earliest mark).
+ *  - `{ ok: false; reason: 'no_profile' }` — the caller never onboarded,
+ *    so there was no profile to hibernate.
+ *  - `{ ok: false; reason: 'deleted' }` — the account is already
+ *    soft-deleted. Hibernation and soft-delete are mutually exclusive
+ *    states, so we refuse cleanly rather than stacking the two markers.
+ */
+export type HibernateMyAccountResult =
+	| { ok: true }
+	| { ok: false; reason: 'no_profile' | 'deleted' };
+
+/**
+ * Result of {@link resumeMyAccountFn}, discriminated by `ok`. `resumed` is
+ * `true` when a hibernation marker was actually cleared, `false` when the
+ * account wasn't hibernated (clean no-op).
+ */
+export interface ResumeMyAccountResult {
+	ok: true;
+	resumed: boolean;
 }
 
 const validateInput = ({
@@ -586,8 +612,16 @@ const resolveOwnedLeague = ({
 	}
 
 	// Other members remain — transfer ownership instead of deleting.
+	// Mirror `transferLeagueOwnershipFn`'s two-caller dance: the league-doc
+	// owner swap is authorised by the OUTGOING owner (still the owner at
+	// this point), but the survivor's membership-role bump must be
+	// authorised by the NEW owner — once `league.owner` flips below,
+	// `assertSetLeagueMember` only accepts a role change from the current
+	// (survivor) owner, so writing it as `callerBytes` would be rejected
+	// and leave a half-transferred league.
 	const [survivorKey, survivorItem] = survivor;
 	const survivorMember = decodeDocData<LeagueMemberDoc>(survivorItem.data);
+	const survivorBytes = Principal.fromText(survivorMember.member).toUint8Array();
 
 	setDocStore({
 		collection: Collection.LEAGUES,
@@ -602,7 +636,7 @@ const resolveOwnedLeague = ({
 	setDocStore({
 		collection: Collection.LEAGUE_MEMBERS,
 		key: survivorKey,
-		caller: callerBytes,
+		caller: survivorBytes,
 		doc: {
 			data: encodeDocData<LeagueMemberDoc>({ ...survivorMember, role: 'owner' }),
 			version: survivorItem.version
@@ -852,6 +886,118 @@ export const recoverMyAccountFn = (): RecoverMyAccountResult => {
 	});
 
 	return { ok: true, recovered: true };
+};
+
+/**
+ * Hibernate the caller's own account (Delete account v2 — the reversible
+ * retention off-ramp offered alongside deletion). Sets `hibernatedAtMs =
+ * now` on the caller's profile via a version-locked overwrite (read →
+ * decode → mark → re-encode → `setDocStore` with the current `version`, so
+ * a concurrent profile write can't be silently clobbered). NO data is ever
+ * removed — hibernation freezes the account's shared stats (it's inactive)
+ * and hides the profile from public reads, and the owner can
+ * `resumeMyAccount` at any time.
+ *
+ *  - No profile (never onboarded) → `{ ok: false, reason: 'no_profile' }`.
+ *  - Already soft-deleted → `{ ok: false, reason: 'deleted' }`. The two
+ *    states are mutually exclusive; we refuse rather than stack markers.
+ *  - Otherwise → `{ ok: true }`. Idempotent: a second hibernate keeps the
+ *    EARLIEST `hibernatedAtMs` (mirrors `softDeleteProfile`), so re-pausing
+ *    can't reset the clock.
+ */
+export const hibernateMyAccountFn = (): HibernateMyAccountResult => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+	const callerBytes = caller.toUint8Array();
+
+	const profileDoc = getDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes
+	});
+
+	if (isNullish(profileDoc)) {
+		return { ok: false, reason: 'no_profile' };
+	}
+
+	const profile = decodeDocData<UserProfile>(profileDoc.data);
+
+	// Mutually exclusive with soft-delete — a deleted account can't be
+	// hibernated. The FE should never reach here (it offers hibernation as
+	// an alternative to delete), but guard defensively.
+	if (isSoftDeleted(profile)) {
+		return { ok: false, reason: 'deleted' };
+	}
+
+	const nowMs = Number(time() / 1_000_000n);
+
+	// Keep the earliest mark — re-hibernating must not reset the clock.
+	const hibernatedAtMs = isHibernated(profile)
+		? Math.min(profile.hibernatedAtMs ?? nowMs, nowMs)
+		: nowMs;
+
+	setDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes,
+		doc: {
+			data: encodeDocData<UserProfile>({ ...profile, hibernatedAtMs }),
+			version: profileDoc.version
+		}
+	});
+
+	return { ok: true };
+};
+
+/**
+ * Resume the caller's own hibernated account (Delete account v2). Clears
+ * `hibernatedAtMs` via a version-locked overwrite (destructure-drop +
+ * re-encode, mirroring how `recoverMyAccountFn` clears `deletedAtMs`), so
+ * the account becomes active again — its profile reappears on public reads
+ * and stats fan-out resumes on the next trade.
+ *
+ *  - Not hibernated (or no profile) → no-op: `{ ok: true, resumed: false }`.
+ *  - Hibernated → clear the marker: `{ ok: true, resumed: true }`.
+ *
+ * Idempotent. Clearing the flag changes nothing stat-relevant
+ * (`totalTrades` is untouched), so the stats fan-out hooks compute a zero
+ * delta and write nothing.
+ */
+export const resumeMyAccountFn = (): ResumeMyAccountResult => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+	const callerBytes = caller.toUint8Array();
+
+	const profileDoc = getDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes
+	});
+
+	if (isNullish(profileDoc)) {
+		return { ok: true, resumed: false };
+	}
+
+	const profile = decodeDocData<UserProfile>(profileDoc.data);
+
+	if (!isHibernated(profile)) {
+		return { ok: true, resumed: false };
+	}
+
+	// Clear the marker via a version-locked write.
+	const { hibernatedAtMs: _drop, ...rest } = profile;
+
+	setDocStore({
+		collection: Collection.PROFILES,
+		key: callerText,
+		caller: callerBytes,
+		doc: {
+			data: encodeDocData<UserProfile>(rest),
+			version: profileDoc.version
+		}
+	});
+
+	return { ok: true, resumed: true };
 };
 
 /**
