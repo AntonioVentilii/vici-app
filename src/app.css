@@ -3510,6 +3510,8 @@ a.title-action::after {
 	color: var(--parchment);
 	font-family: inherit;
 	text-transform: none;
+	/* allow the grid item to shrink so the name can wrap/clip inside it */
+	min-width: 0;
 	transition:
 		border-color 180ms var(--ease-vici),
 		transform 80ms var(--ease-vici);
@@ -3723,9 +3725,15 @@ a.title-action::after {
 	color: var(--parchment-dim);
 	font-weight: 600;
 	max-width: 100%;
+	text-align: center;
+	line-height: 1.2;
+	/* wrap long names onto a 2nd line (clamped) instead of forcing one
+	   no-wrap line that pushes the column — and the whole grid — wider. */
+	display: -webkit-box;
+	-webkit-box-orient: vertical;
+	-webkit-line-clamp: 2;
 	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
+	overflow-wrap: anywhere;
 }
 
 .ob2-all-teams {
@@ -3739,7 +3747,9 @@ a.title-action::after {
 }
 .ob2-all-teams-grid {
 	display: grid;
-	grid-template-columns: repeat(4, 1fr);
+	/* minmax(0, …) lets columns shrink below their content's intrinsic
+	   width — without it, long no-wrap names blow the grid out sideways. */
+	grid-template-columns: repeat(4, minmax(0, 1fr));
 	gap: 6px;
 }
 
