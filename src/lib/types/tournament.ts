@@ -32,8 +32,8 @@
 import type { PrincipalText } from '@junobuild/schema';
 
 /**
- * Standard 16-league single-elimination has four rounds. The
- * labels match the `ROUND_LABELS` map (`screens.jsx:3665`).
+ * Standard 16-league single-elimination has four rounds, in the
+ * order they appear on the bracket.
  */
 export const TOURNAMENT_ROUNDS = ['r1', 'quarter', 'semifinal', 'final'] as const;
 
@@ -48,9 +48,8 @@ export type TournamentRound = (typeof TOURNAMENT_ROUNDS)[number];
 export const TOURNAMENT_BRACKET_SIZE = 16;
 
 /**
- * Round duration. 7-day windows ("DAY 3 OF 7") for every round
- * (`screens.jsx:3683` round eyebrow); the locked decision 3.2
- * confirms 7/7/7/7.
+ * Round duration. 7-day windows ("DAY 3 OF 7") for every round,
+ * per the locked decision 3.2 (7/7/7/7).
  */
 export const TOURNAMENT_ROUND_DURATION_DAYS = 7;
 export const TOURNAMENT_ROUND_DURATION_MS = TOURNAMENT_ROUND_DURATION_DAYS * 24 * 60 * 60 * 1000;
