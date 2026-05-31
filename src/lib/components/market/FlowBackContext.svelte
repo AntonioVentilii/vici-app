@@ -99,19 +99,20 @@
 		color: var(--no);
 	}
 
+	/* Prior-call pill — always the laurel-gold treatment, not a
+	   category-accent tint. Eyebrow + value sit at opposite ends. */
 	.flow-back-prior {
 		display: flex;
 		align-items: center;
+		justify-content: space-between;
 		gap: 0.5rem;
 		padding: 10px 12px;
 		border-radius: var(--r-12);
-		border: 1px solid color-mix(in srgb, var(--cat-color) 22%, var(--border-base));
-		background:
-			linear-gradient(90deg, color-mix(in srgb, var(--cat-color) 8%, transparent), transparent),
-			color-mix(in srgb, var(--bg-surface) 90%, transparent);
+		border: 1px solid color-mix(in srgb, var(--laurel) 22%, var(--border-base));
+		background: color-mix(in srgb, var(--laurel) 6%, transparent);
 	}
 	.flow-back-prior .flow-back-label {
-		color: var(--color-accent);
+		color: var(--laurel);
 	}
 	.flow-back-prior-line {
 		font-size: var(--t-12);
