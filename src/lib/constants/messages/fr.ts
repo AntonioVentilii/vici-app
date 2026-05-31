@@ -216,9 +216,9 @@ export const frMessages = {
 	'account.email.eyebrow': 'ADRESSE E-MAIL',
 	'account.email.placeholder': 'nouveau@example.com',
 	'account.email.send': 'Envoyer le lien',
-	'account.email.sent_body.prefix': 'Nous avons envoyé un magic link à ',
-	'account.email.sent_body.suffix': '. Touche-le sous 15 minutes pour confirmer.',
-	'account.email.sent_title': '« Regarde ta boîte mail. »',
+	'account.email.sent_body':
+		'Nous avons envoyé un magic link à {email}. Touche-le sous 15 minutes pour confirmer.',
+	'account.email.sent_title': 'Regarde ta boîte mail.',
 	'account.email.soon': "Le changement d'e-mail arrive avec la mise à jour backend.",
 	'account.email.used_for': 'Sert à la connexion et aux notifications importantes du compte.',
 	'account.email.verified': 'Vérifié',
@@ -226,6 +226,7 @@ export const frMessages = {
 		'VICI utilise Internet Identity, Google ou un magic link. Pas de mot de passe. Change de méthode à tout moment — tes données restent.',
 	'account.method.eyebrow': 'MÉTHODE DE CONNEXION',
 	'account.method.ii': 'Internet Identity',
+	'account.method.email': 'E-mail',
 	'account.method.magic_link': 'Magic link',
 	'account.return.deleted_body':
 		'Vous avez programmé la suppression de ce compte. Récupérez-le maintenant pour conserver vos données, ou déconnectez-vous pour le laisser tel quel.',

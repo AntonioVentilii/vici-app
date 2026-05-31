@@ -1,9 +1,9 @@
 <script lang="ts">
 	import { signOut } from '@junobuild/core';
-	import { Check, ChevronRight, Mail } from 'lucide-svelte';
+	import { ArrowLeftRight, Check, ChevronRight, Mail } from 'lucide-svelte/icons';
+	import { onDestroy } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
 	import IconIc from '$lib/components/icons/IconIC.svelte';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
@@ -41,12 +41,12 @@
 	const email = $derived($userStore.profile?.email ?? '');
 	const hasEmail = $derived(email.length > 0);
 
-	type SignInMethod = 'magic_link' | 'ii';
-	const method = $derived<SignInMethod>(hasEmail ? 'magic_link' : 'ii');
+	type SignInMethod = 'email' | 'ii';
+	const method = $derived<SignInMethod>(hasEmail ? 'email' : 'ii');
 
 	const methodLabel = $derived(
-		method === 'magic_link'
-			? t({ locale: $localeStore, key: 'account.method.magic_link' })
+		method === 'email'
+			? t({ locale: $localeStore, key: 'account.method.email' })
 			: t({ locale: $localeStore, key: 'account.method.ii' })
 	);
 
@@ -55,8 +55,26 @@
 	let editingEmail = $state(false);
 	let emailSent = $state(false);
 	let newEmail = $state('');
+	let sentResetTimer: ReturnType<typeof setTimeout> | undefined;
 
 	const newEmailValid = $derived(/\S+@\S+\.\S+/.test(newEmail));
+
+	// Split the sent-body sentence around {email} so we can emphasise
+	// the address with a <span> without reaching for {@html}.
+	const sentBodyParts = $derived.by(() => {
+		const full = t({
+			locale: $localeStore,
+			key: 'account.email.sent_body',
+			params: { email: '\x00' }
+		});
+		const idx = full.indexOf('\x00');
+
+		if (idx === -1) {
+			return { before: full, after: '' };
+		}
+
+		return { before: full.slice(0, idx), after: full.slice(idx + 1) };
+	});
 
 	const handleSwitchMethod = async () => {
 		if (switchingMethod) {
@@ -75,13 +93,22 @@
 		}
 	};
 
+	const clearSentTimer = () => {
+		if (sentResetTimer !== undefined) {
+			clearTimeout(sentResetTimer);
+			sentResetTimer = undefined;
+		}
+	};
+
 	const startEdit = () => {
+		clearSentTimer();
 		editingEmail = true;
 		emailSent = false;
 		newEmail = '';
 	};
 
 	const cancelEdit = () => {
+		clearSentTimer();
 		editingEmail = false;
 		newEmail = '';
 	};
@@ -94,12 +121,17 @@
 		}
 
 		emailSent = true;
-		setTimeout(() => {
+		sentResetTimer = setTimeout(() => {
 			editingEmail = false;
 			emailSent = false;
 			newEmail = '';
+			sentResetTimer = undefined;
 		}, 2400);
 	};
+
+	onDestroy(() => {
+		clearSentTimer();
+	});
 </script>
 
 <div class="account-page">
@@ -123,7 +155,7 @@
 
 		<div class="account-method-row">
 			<div class="account-method-glyph" aria-hidden="true">
-				{#if method === 'magic_link'}
+				{#if method === 'email'}
 					<Mail size={20} strokeWidth={1.8} />
 				{:else}
 					<IconIc size="20px" />
@@ -149,7 +181,7 @@
 			type="button"
 		>
 			<span class="account-switch-glyph" aria-hidden="true">
-				<IconGoogle size="18px" />
+				<ArrowLeftRight size={18} strokeWidth={1.8} />
 			</span>
 			<span class="account-switch-label">
 				{switchingMethod
@@ -204,9 +236,8 @@
 					{t({ locale: $localeStore, key: 'account.email.sent_title' })}
 				</p>
 				<p class="account-sent-body num">
-					{t({ locale: $localeStore, key: 'account.email.sent_body.prefix' })}<span
-						class="account-sent-target">{newEmail}</span
-					>{t({ locale: $localeStore, key: 'account.email.sent_body.suffix' })}
+					{sentBodyParts.before}<span class="account-sent-target">{newEmail}</span
+					>{sentBodyParts.after}
 				</p>
 			</div>
 		{:else}

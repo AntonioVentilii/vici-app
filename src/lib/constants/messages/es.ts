@@ -216,9 +216,9 @@ export const esMessages = {
 	'account.email.eyebrow': 'CORREO ELECTRÓNICO',
 	'account.email.placeholder': 'nuevo@example.com',
 	'account.email.send': 'Enviar enlace',
-	'account.email.sent_body.prefix': 'Enviamos un magic link a ',
-	'account.email.sent_body.suffix': '. Tócalo en 15 minutos para confirmar.',
-	'account.email.sent_title': '“Revisa tu bandeja.”',
+	'account.email.sent_body':
+		'Enviamos un magic link a {email}. Tócalo en 15 minutos para confirmar.',
+	'account.email.sent_title': 'Revisa tu bandeja.',
 	'account.email.soon': 'El cambio de email llega con la actualización del backend.',
 	'account.email.used_for': 'Se usa para iniciar sesión y avisos importantes de la cuenta.',
 	'account.email.verified': 'Verificado',
@@ -226,6 +226,7 @@ export const esMessages = {
 		'VICI usa Internet Identity, Google o un magic link. Sin contraseñas. Cambia cuando quieras — tus datos siguen contigo.',
 	'account.method.eyebrow': 'MÉTODO DE ACCESO',
 	'account.method.ii': 'Internet Identity',
+	'account.method.email': 'Correo',
 	'account.method.magic_link': 'Magic link',
 	'account.return.deleted_body':
 		'Programaste la eliminación de esta cuenta. Recupérala ahora para conservar tu historial, o cierra sesión para dejarla como está.',

@@ -218,10 +218,9 @@ export const deMessages = {
 	'account.email.eyebrow': 'E-MAIL-ADRESSE',
 	'account.email.placeholder': 'neu@example.com',
 	'account.email.send': 'Link senden',
-	'account.email.sent_body.prefix': 'Wir haben einen Magic Link an ',
-	'account.email.sent_body.suffix':
-		' gesendet. Tippe innerhalb von 15 Minuten darauf, um zu bestätigen.',
-	'account.email.sent_title': '„Sieh in dein Postfach.“',
+	'account.email.sent_body':
+		'Wir haben einen Magic Link an {email} gesendet. Tippe innerhalb von 15 Minuten darauf, um zu bestätigen.',
+	'account.email.sent_title': 'Sieh in dein Postfach.',
 	'account.email.soon': 'E-Mail-Änderungen kommen mit dem Backend-Update.',
 	'account.email.used_for': 'Für Anmeldung und wichtige Konto-Benachrichtigungen.',
 	'account.email.verified': 'Verifiziert',
@@ -229,6 +228,7 @@ export const deMessages = {
 		'VICI nutzt Internet Identity, Google oder einen Magic Link. Keine Passwörter. Methode jederzeit wechseln — deine Daten bleiben.',
 	'account.method.eyebrow': 'AKTUELLE ANMELDEMETHODE',
 	'account.method.ii': 'Internet Identity',
+	'account.method.email': 'E-Mail',
 	'account.method.magic_link': 'Magic Link',
 	'account.return.deleted_body':
 		'Du hast die Löschung dieses Kontos geplant. Stelle es jetzt wieder her, um deine Daten zu behalten, oder melde dich ab, um es so zu lassen.',

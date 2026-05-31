@@ -217,9 +217,9 @@ export const enMessages = {
 	'account.email.eyebrow': 'EMAIL ADDRESS',
 	'account.email.placeholder': 'new@example.com',
 	'account.email.send': 'Send link',
-	'account.email.sent_body.prefix': 'We sent a magic link to ',
-	'account.email.sent_body.suffix': '. Tap it within 15 minutes to confirm.',
-	'account.email.sent_title': '“Check your inbox.”',
+	'account.email.sent_body':
+		'We sent a magic link to {email}. Tap it within 15 minutes to confirm.',
+	'account.email.sent_title': 'Check your inbox.',
 	'account.email.soon': 'Email changes land with the backend update.',
 	'account.email.used_for': 'Used for sign-in and important account notifications.',
 	'account.email.verified': 'Verified',
@@ -227,6 +227,7 @@ export const enMessages = {
 		'VICI uses Internet Identity, Google, or a magic link. No passwords. Switch any time — your record stays.',
 	'account.method.eyebrow': 'CURRENT SIGN-IN METHOD',
 	'account.method.ii': 'Internet Identity',
+	'account.method.email': 'Email',
 	'account.method.magic_link': 'Magic link',
 	'account.return.deleted_body':
 		'You scheduled this account for deletion. Recover it now to keep your record, or sign out to leave it as-is.',
