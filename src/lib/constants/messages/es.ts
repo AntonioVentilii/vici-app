@@ -1822,22 +1822,29 @@ export const esMessages = {
 	'settings.delete': 'Eliminar cuenta',
 	'settings.delete.back': 'Atrás',
 	'settings.delete.confirm':
-		'Esto borra tu nombre de usuario, historial y VXP de forma permanente. No se puede deshacer.',
+		'Inicia sesión en un plazo de 30 días para recuperar tu nombre de usuario y tu historial. Después desaparecen para siempre.',
+	'settings.delete.confirm_exactly': 'Exactamente:',
+	'settings.delete.confirm_finality_title': 'Esto no se puede deshacer después de 30 días.',
 	'settings.delete.confirm_heading': 'Último paso.',
 	'settings.delete.confirm_mismatch': 'No coincide con tu nombre de usuario.',
-	'settings.delete.confirm_type': 'Escribe {handle} para confirmar',
+	'settings.delete.confirm_type': 'Escribe tu nombre de usuario para confirmar',
 	'settings.delete.continue': 'Continuar',
 	'settings.delete.deleting': 'Eliminando…',
 	'settings.delete.error': 'Algo salió mal. Inténtalo de nuevo.',
 	'settings.delete.error_handoff': 'No se pudo ceder {league}. Inténtalo de nuevo.',
 	'settings.delete.forever': 'Eliminar para siempre',
-	'settings.delete.gone_body':
-		'Las operaciones activas siguen abiertas y se liquidan al vencimiento — eliminar tu cuenta no las cierra.',
+	'settings.delete.gone_body': 'Tu cuenta se está eliminando.',
+	'settings.delete.gone_eyebrow': 'Adiós',
 	'settings.delete.gone_heading': 'Vale.',
 	'settings.delete.gone_recover':
 		'¿Cambiaste de opinión? Inicia sesión de nuevo en 30 días y tu historial vuelve.',
-	'settings.delete.gone_return': 'Volver ({seconds})',
+	'settings.delete.gone_return_label': 'Volver al inicio',
+	'settings.delete.gone_sub':
+		'Una confirmación va de camino a tu correo. Tus operaciones activas se liquidarán al vencimiento.',
 	'settings.delete.happens_heading': 'Esto es lo que pasa.',
+	'settings.delete.happens_lede': 'Lee con atención.',
+	'settings.delete.happens_lede_warn':
+		'Algunos de los puntos siguientes no se pueden deshacer al eliminar.',
 	'settings.delete.happens_leagues_label': 'Ligas que diriges · {count}',
 	'settings.delete.happens_leagues_sub': 'Transfiere o elimina cada una antes de continuar.',
 	'settings.delete.happens_orders_label': 'Órdenes abiertas · {count} · {value} VXP',
@@ -1846,6 +1853,9 @@ export const esMessages = {
 	'settings.delete.happens_profile_label': 'Perfil, nombre de usuario y estadísticas',
 	'settings.delete.happens_profile_sub':
 		'Se eliminan ahora, recuperables durante 30 días al iniciar sesión, luego se van para siempre.',
+	'settings.delete.happens_social_label': 'Mensajes y reacciones',
+	'settings.delete.happens_social_sub':
+		'Anonimizados. Tus respuestas se quedan; el nombre desaparece.',
 	'settings.delete.happens_trades_label': 'Operaciones activas · {count} · {value} VXP',
 	'settings.delete.happens_trades_sub':
 		'Siguen abiertas y se liquidan al vencimiento — eliminar no las cierra.',
@@ -1853,7 +1863,9 @@ export const esMessages = {
 	'settings.delete.leagues_delete': 'Eliminar liga',
 	'settings.delete.leagues_delete_armed': 'Se eliminará para todos los miembros',
 	'settings.delete.leagues_delete_confirm': '¿Eliminar para los {count} miembros?',
+	'settings.delete.leagues_delete_no_rejoin': 'Nadie podrá volver a unirse.',
 	'settings.delete.leagues_heading': 'Resuelve tus ligas.',
+	'settings.delete.leagues_meta': '{count} miembros · Tu propiedad',
 	'settings.delete.leagues_no_members': 'No hay otros miembros a quien transferir. Elimínala.',
 	'settings.delete.leagues_select_member': 'Elige un miembro…',
 	'settings.delete.leagues_transfer': 'Transferir a…',
@@ -1866,11 +1878,11 @@ export const esMessages = {
 	'settings.delete.reason.other': 'Otro',
 	'settings.delete.reason.too_complex': 'Demasiado complejo / difícil de usar',
 	'settings.delete.reason.too_noisy': 'Demasiadas notificaciones',
-	'settings.delete.reason_body':
-		'Lamentamos que te vayas. ¿Puedes contarnos por qué? Tu respuesta nos ayuda a mejorar VICI para los demás.',
+	'settings.delete.reason_body': 'Lamentamos que te vayas. ¿Puedes contarnos por qué?',
+	'settings.delete.reason_body_acc': 'Tu respuesta nos ayuda a mejorar VICI para los demás.',
 	'settings.delete.reason_heading': 'Antes de irte.',
 	'settings.delete.stay_body':
-		'Pausa las notificaciones, cambia a resumen por correo o tómate un descanso. Tu historial te estará esperando.',
+		'Tómate 30 días — tus estadísticas se congelan y tu perfil se oculta. O escríbenos y arreglaremos lo que falle.',
 	'settings.delete.stay_contact': 'Contáctanos',
 	'settings.delete.stay_heading': '¿Quieres quedarte?',
 	'settings.delete.stay_pause': 'Pausar 30 días',
