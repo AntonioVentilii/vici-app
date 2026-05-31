@@ -5,31 +5,31 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * XpToast — single VXP-award pill that rises from the swipe-exit
-	 * edge of the deck. Renders nothing for SKIP commits or zero-XP
-	 * awards. The `bonus` flag adds the "milestone" annotation tag on
-	 * milestone awards. Self-dismisses on a 900 ms timer aligned to
-	 * the `xp-toast-pop` keyframe.
+	 * XpToast — the commit pop. A swipe PLACES a call; it doesn't win one,
+	 * so the pop confirms the act — "CALLED YES · {stake} IN PLAY" — light
+	 * and celebratory, never implying a payout. A genuine milestone /
+	 * streak bonus (real VXP grant) rides along as a trailing chip. Fires
+	 * on every committed YES / NO swipe; renders nothing for SKIP.
 	 *
-	 * `FlowXpPops` is the multi-pop manager; it composes a list of
-	 * `XpToast`s with per-pop animation envelopes. This component is
-	 * the single-toast unit a caller can drop into any one-shot context.
+	 * Positioned at the deck top, anchored to the exit edge (`is-yes` →
+	 * right, `is-no` → left) so it trails the gesture. Non-blocking;
+	 * self-dismisses ~1 s after mount via the `xp-toast-pop` envelope.
 	 */
 	interface Props {
-		amount: number;
-		bonus?: number;
 		side: CallSide | 'SKIP';
+		stake?: number;
+		bonus?: number;
 		onDone?: () => void;
 	}
 
-	const { amount, bonus = 0, side, onDone }: Props = $props();
+	const { side, stake = 0, bonus = 0, onDone }: Props = $props();
 
 	let timer: ReturnType<typeof setTimeout> | null = null;
 
 	onMount(() => {
 		timer = setTimeout(() => {
 			onDone?.();
-		}, 900);
+		}, 1000);
 	});
 
 	onDestroy(() => {
@@ -38,17 +38,23 @@
 		}
 	});
 
-	const visible = $derived(side !== 'SKIP' && amount > 0);
+	const visible = $derived(side !== 'SKIP');
 
 	const sideClass = $derived(side === 'YES' ? 'is-yes' : 'is-no');
+	const sideLabel = $derived(
+		t({ locale: $localeStore, key: side === 'YES' ? 'outcome.yes' : 'outcome.no' })
+	);
 </script>
 
 {#if visible}
 	<div class="xp-toast {sideClass}">
-		<span class="num">+{amount}</span>
-		<small>{t({ locale: $localeStore, key: 'flow.feedback.vxp' })}</small>
+		<span class="xp-toast-side">
+			{t({ locale: $localeStore, key: 'flow.xp_toast.called', params: { side: sideLabel } })}
+		</span>
+		<span class="num">{stake}</span>
+		<small>{t({ locale: $localeStore, key: 'flow.xp_toast.in_play' })}</small>
 		{#if bonus > 0}
-			<em>{t({ locale: $localeStore, key: 'flow.xp_toast.milestone' })}</em>
+			<em>+{bonus} {t({ locale: $localeStore, key: 'flow.feedback.vxp' })}</em>
 		{/if}
 	</div>
 {/if}
