@@ -12,12 +12,12 @@
 	const { yesPercent, noPercent, disabled = false, onPick }: Props = $props();
 </script>
 
-<!-- Sticky bottom YES/NO CTA bar — port of `screens.jsx:287-299`. Tap
-     a side to open the prediction sheet. The bar sits above the safe-
-     area inset; the route layout hides the bottom mobile nav on this
-     surface so the CTA isn't competing with the tab bar for the same
-     slot. The gradient mask softens the seam where the bar meets the
-     "Top predictors" list above. -->
+<!-- Floating YES/NO CTA bar. Tap a side to open the prediction sheet.
+     The bar floats *above* the bottom navpill (`bottom: navpill height +
+     safe-area`) so YES/NO is never hidden behind the tab bar and the
+     navpill stays reachable. The gradient mask softens the seam where
+     the bar meets the content above; the container is pointer-through so
+     only the two buttons are tappable. -->
 <div class="market-cta-bar">
 	<button
 		class="market-cta market-cta-yes"
@@ -46,12 +46,17 @@
 		position: fixed;
 		left: 0;
 		right: 0;
-		bottom: 0;
+		/* Floats above the bottom navpill when present. `--navpill-h` is
+		   set by the (app) layout to `88px` when `MobileNav` is rendered
+		   (signed-in mobile) and `0px` otherwise (signed-out visitors,
+		   desktop ≥56rem). This way signed-out visitors and desktop
+		   users don't get a phantom 88px gap below the CTA. */
+		bottom: calc(env(safe-area-inset-bottom, 0px) + var(--navpill-h, 0px));
 		z-index: 40;
 		display: flex;
 		gap: 0.5rem;
-		padding: 0.75rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.875rem);
-		background: linear-gradient(180deg, transparent, var(--bg) 30%);
+		padding: 1.25rem 1rem 0.75rem;
+		background: linear-gradient(180deg, transparent, var(--bg) 38%);
 		pointer-events: none;
 	}
 
@@ -119,6 +124,17 @@
 		.market-cta-bar {
 			max-width: 36rem;
 			margin: 0 auto;
+		}
+	}
+
+	/* On desktop the pillnav is hidden (app.css hides `.pillnav-wrap` at
+	   ≥56rem) and the layout already sets `--navpill-h: 0px` for signed-out
+	   visitors, so the bottom offset naturally collapses to just the
+	   safe-area. Pin the bar to a comfortable desktop bottom margin
+	   instead of the mobile floor. */
+	@media (min-width: 56rem) {
+		.market-cta-bar {
+			bottom: 2rem;
 		}
 	}
 </style>
