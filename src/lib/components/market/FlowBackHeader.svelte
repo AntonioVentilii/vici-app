@@ -2,6 +2,7 @@
 	import { Share } from 'lucide-svelte/icons';
 	import SharePopover from '$lib/components/market/SharePopover.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
+	import { categoryLabel } from '$lib/constants/market-tags.constants';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import type { Market } from '$lib/types/market';
@@ -16,6 +17,11 @@
 	}
 
 	const { market, category, priorCall }: Props = $props();
+
+	// FlowCard back is a full / detail surface — render the localized
+	// category label ("World Cup") rather than the raw `wc` id. CSS
+	// uppercases it (.allcaps) where the design shouts.
+	const catLabel = $derived(categoryLabel({ category, variant: 'full', locale: $localeStore }));
 
 	// Share popover toggle — anchored above the share button. The
 	// popover handles native / clipboard / channel paths itself; this
@@ -40,7 +46,7 @@
 </script>
 
 <header class="flow-back-head">
-	<span class="allcaps flow-back-cat">{category}</span>
+	<span class="allcaps flow-back-cat">{catLabel}</span>
 	<div class="flow-back-actions" data-no-card-gesture="true">
 		<SavedMarketToggle marketId={market.id} size="sm" variant="flow-ghost" />
 		<button
