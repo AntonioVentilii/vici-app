@@ -202,6 +202,31 @@
 	const optionFor = (id: string): WorldsAffiliationOption | undefined =>
 		lookupWorldsAffiliation({ kind: 'university', id });
 
+	/**
+	 * Podium tile background — a top-down wash of the school's own brand
+	 * colour fading into the surface, so each tile reads as that school.
+	 * Gold (rank 1) layers a faint accent tint underneath; silver/bronze
+	 * fade straight to transparent. Falls back to the medal-tinted CSS
+	 * default when a school carries no colour.
+	 */
+	const podiumStyle = ({ color, gold = false }: { color?: string; gold?: boolean }): string => {
+		if (!color) {
+			return '';
+		}
+
+		return gold
+			? `background: linear-gradient(180deg, ${color}33, color-mix(in srgb, var(--laurel) 6%, transparent) 70%), var(--bg-surface);`
+			: `background: linear-gradient(180deg, ${color}1a, transparent 70%), var(--bg-surface);`;
+	};
+
+	/**
+	 * Letter-badge styling for a leaderboard row — the school's brand
+	 * colour as the fill with its readable foreground. Empty string when
+	 * the school has no colour so the CSS laurel default applies.
+	 */
+	const badgeStyle = (opt: WorldsAffiliationOption | undefined): string =>
+		opt?.color ? `background: ${opt.color}; color: ${opt.text ?? '#fff'};` : '';
+
 	const rosterSize = WORLDS_UNIVERSITIES.length;
 
 	const detailPath = (id: string): string => `${resolve(AppPath.Arena)}/worlds/school/${id}`;
@@ -278,6 +303,7 @@
 				{#if wcTop3[1]}
 					{@const opt = optionFor(wcTop3[1].affiliationIdentifier)}
 					<button
+						style={podiumStyle({ color: opt?.color })}
 						class="worlds-pod-tile is-silver"
 						onclick={() => handleRowNav(wcTop3[1].affiliationIdentifier)}
 						type="button"
@@ -292,6 +318,7 @@
 				{#if wcTop3[0]}
 					{@const opt = optionFor(wcTop3[0].affiliationIdentifier)}
 					<button
+						style={podiumStyle({ color: opt?.color, gold: true })}
 						class="worlds-pod-tile is-gold"
 						onclick={() => handleRowNav(wcTop3[0].affiliationIdentifier)}
 						type="button"
@@ -306,6 +333,7 @@
 				{#if wcTop3[2]}
 					{@const opt = optionFor(wcTop3[2].affiliationIdentifier)}
 					<button
+						style={podiumStyle({ color: opt?.color })}
 						class="worlds-pod-tile is-bronze"
 						onclick={() => handleRowNav(wcTop3[2].affiliationIdentifier)}
 						type="button"
@@ -378,7 +406,7 @@
 						type="button"
 					>
 						<span class="num worlds-row-rk">{(i + 1).toString().padStart(2, '0')}</span>
-						<span class="worlds-row-em" aria-hidden="true">
+						<span style={badgeStyle(opt)} class="worlds-row-em" aria-hidden="true">
 							{(opt?.name ?? row.affiliationIdentifier).charAt(0)}
 						</span>
 						<div class="worlds-row-meta">
@@ -424,7 +452,7 @@
 					<span class="num worlds-row-rk">
 						{myRankInScope.toString().padStart(2, '0')}
 					</span>
-					<span class="worlds-row-em is-you" aria-hidden="true">
+					<span style={badgeStyle(myUniOption)} class="worlds-row-em is-you" aria-hidden="true">
 						{(myUniOption?.name ?? myUni.affiliationIdentifier).charAt(0)}
 					</span>
 					<div class="worlds-row-meta">

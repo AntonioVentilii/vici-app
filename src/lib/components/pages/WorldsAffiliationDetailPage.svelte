@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { ChevronRight } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -9,26 +10,46 @@
 		WORLDS_COUNTRIES,
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
-	import { getAffiliationStats, listAffiliationStats } from '$lib/services/worlds.services';
+	import {
+		getAffiliationStats,
+		listAffiliationStats,
+		listMyAffiliations
+	} from '$lib/services/worlds.services';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
 	import { MIN_CALLS_FOR_RANK, type AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 	import {
 		affiliationLifetimeAccuracy,
-		affiliationMonthlyAccuracy
+		affiliationMonthlyAccuracy,
+		formatAccuracyPercent
 	} from '$lib/utils/affiliation-stats.utils';
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * Worlds affiliation detail — drill-down from `WorldsPage`. Shows
-	 * the identity card (name + glyph), member count from the live
-	 * `listWorldsRoster` query, and the per-affiliation accuracy +
-	 * rank stats from `getAffiliationStats`.
+	 * Worlds affiliation detail — drill-down from `WorldsPage` and the
+	 * battle standings. The same component serves both the university
+	 * ("school") and country ("nation") variant; the two mirror each
+	 * other in layout and differ only in the kind label, the identity
+	 * glyph (letter badge vs flag), and the affiliation marker (Alma
+	 * Mater vs Citizen).
 	 *
-	 * Stats are populated lazily by the satellite hook on `profiles`
-	 * updates — a new affiliation with zero resolved trades returns
-	 * `stats === undefined`, and the panel renders an "unranked"
-	 * placeholder until the first resolution event lands.
+	 * Layout, top to bottom:
+	 *
+	 *  1. Compact bar (`MobileAppBar`) with an inline back control and
+	 *     the affiliation name, followed by a scrollable context-chip
+	 *     row (kind · members · champion count · your-marker).
+	 *  2. Identity card — a brand-coloured letter badge (or flag) beside
+	 *     a season-rank line.
+	 *  3. Three-stat grid — May rank, WC-Battle rank (accented), and
+	 *     all-time accuracy.
+	 *  4. Activity block — an under-threshold empty state encouraging
+	 *     calls, or the live accuracy split for active affiliations.
+	 *  5. A standings CTA back to the full battle list.
+	 *
+	 * Stats are populated by the satellite hook on `profiles` updates,
+	 * so the user's own resolved calls are already folded into the
+	 * affiliation totals server-side — no client-side session delta is
+	 * applied here (that would double-count).
 	 */
 	interface Props {
 		kind: AffiliationKind;
@@ -41,23 +62,29 @@
 	const rosterSize = $derived(
 		kind === 'university' ? WORLDS_UNIVERSITIES.length : WORLDS_COUNTRIES.length
 	);
+	const isCountry = $derived(kind === 'country');
 
 	let memberCount = $state<number | undefined>();
 	let stats = $state<AffiliationStatsDoc | undefined>();
 	let allStats = $state<AffiliationStatsDoc[]>([]);
+	let isMine = $state(false);
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 
 	onMount(async () => {
 		try {
-			const [rosterResp, statsResp, allResp] = await Promise.all([
+			const [rosterResp, statsResp, allResp, mine] = await Promise.all([
 				functions.listWorldsRoster({ kind, affiliationIdentifier }),
 				getAffiliationStats({ kind, affiliationIdentifier }),
-				listAffiliationStats({ kind })
+				listAffiliationStats({ kind }),
+				listMyAffiliations()
 			]);
 			memberCount = rosterResp.items.length;
 			stats = statsResp;
 			allStats = allResp;
+			isMine =
+				(kind === 'university' ? mine.university : mine.country)?.affiliationIdentifier ===
+				affiliationIdentifier;
 			loadState = 'ready';
 		} catch (err) {
 			console.error('WorldsAffiliationDetailPage: load failed', err);
@@ -67,21 +94,25 @@
 	});
 
 	const accuracyPctLifetime = $derived(
-		stats && stats.totalCalls > 0 ? Math.round((stats.wins / stats.totalCalls) * 1000) / 10 : 0
+		stats && stats.totalCalls > 0 ? formatAccuracyPercent(affiliationLifetimeAccuracy(stats)) : '—'
 	);
 
 	const accuracyPctMonth = $derived(
 		stats && stats.monthTotalCalls > 0
-			? Math.round((stats.monthWins / stats.monthTotalCalls) * 1000) / 10
-			: 0
+			? formatAccuracyPercent(affiliationMonthlyAccuracy(stats))
+			: '—'
 	);
 
-	const ranked = $derived(stats !== undefined && stats.totalCalls >= MIN_CALLS_FOR_RANK);
+	const hasActivity = $derived(stats !== undefined && stats.totalCalls > 0);
+	const isLowActivity = $derived(!stats || stats.totalCalls < MIN_CALLS_FOR_RANK);
+	const callsToQualify = $derived(
+		stats ? Math.max(0, MIN_CALLS_FOR_RANK - stats.totalCalls) : MIN_CALLS_FOR_RANK
+	);
 
 	/**
-	 * Position of this affiliation in the lifetime-accuracy and
-	 * month-accuracy rankings. Returns `0` when this affiliation has
-	 * no stats doc (unranked / first-call pending).
+	 * Position of this affiliation in the lifetime-accuracy (WC) and
+	 * month-accuracy rankings. Returns `0` when this affiliation has no
+	 * stats doc (unranked / first-call pending).
 	 */
 	const rankBy = ({ key }: { key: 'lifetime' | 'month' }): number => {
 		if (allStats.length === 0) {
@@ -114,8 +145,68 @@
 	const wcRank = $derived(rankBy({ key: 'lifetime' }));
 	const monthRank = $derived(rankBy({ key: 'month' }));
 
+	const monthRankLabel = $derived(monthRank > 0 ? `#${monthRank}` : '—');
+	const wcRankLabel = $derived(wcRank > 0 ? `#${wcRank}` : '—');
+
+	const headerName = $derived(option?.name ?? affiliationIdentifier);
+
+	/**
+	 * Context chips below the bar — the kind label, member count, and
+	 * (when this is the caller's own affiliation) the Alma Mater /
+	 * Citizen marker. Mirrors the source's chip row; champion-history
+	 * chips are omitted because no championship history feed exists yet.
+	 */
+	const chips = $derived.by(() => {
+		const out: { label: string; acc: boolean }[] = [
+			{
+				label: t({
+					locale: $localeStore,
+					key: isCountry ? 'worlds.detail.kind_country' : 'worlds.detail.kind_university'
+				}),
+				acc: false
+			}
+		];
+
+		if (memberCount !== undefined) {
+			out.push({
+				label: t({
+					locale: $localeStore,
+					key: 'worlds.detail.members_count',
+					params: { count: memberCount }
+				}),
+				acc: false
+			});
+		}
+
+		if (isMine) {
+			out.push({
+				label: t({
+					locale: $localeStore,
+					key: isCountry ? 'worlds.detail.marker_citizen' : 'worlds.detail.marker_alma_mater'
+				}),
+				acc: true
+			});
+		}
+
+		return out;
+	});
+
+	const badgeStyle = $derived(
+		option?.color ? `background: ${option.color}; color: ${option.text ?? '#fff'};` : ''
+	);
+
+	const identityWashStyle = $derived(
+		option?.color
+			? `background: linear-gradient(180deg, ${option.color}1a, transparent 70%), var(--bg-surface);`
+			: ''
+	);
+
 	const backToWorlds = () => {
 		void goto(`${resolve('/arena')}/worlds`);
+	};
+
+	const openStandings = () => {
+		void goto(`${resolve('/arena')}/worlds/${isCountry ? 'countries' : 'schools'}`);
 	};
 
 	const openFlow = () => {
@@ -125,121 +216,147 @@
 
 <div class="worlds-detail">
 	<MobileAppBar
-		align="left"
+		align="center"
 		back={{
 			label: t({ locale: $localeStore, key: 'worlds.detail.back' }),
 			onBack: backToWorlds
 		}}
-		title={option?.name ?? affiliationIdentifier}
-	/>
+	>
+		{#snippet titleChildren()}
+			<h1 class="worlds-detail-title">
+				{#if isCountry && option?.glyph}
+					<span class="worlds-detail-title-flag" aria-hidden="true">{option.glyph}</span>
+				{/if}
+				{headerName}
+			</h1>
+		{/snippet}
+	</MobileAppBar>
 
-	<section class="worlds-detail-identity">
-		<span class="worlds-detail-glyph" aria-hidden="true">{option?.glyph ?? '?'}</span>
+	<div class="worlds-detail-chips">
+		{#each chips as chip (chip.label)}
+			<span class="num worlds-detail-chip" class:is-acc={chip.acc}>{chip.label}</span>
+		{/each}
+	</div>
+
+	<section style={identityWashStyle} class="worlds-detail-identity">
+		{#if isCountry}
+			<span class="worlds-detail-flag" aria-hidden="true">{option?.glyph ?? '🏳️'}</span>
+		{:else}
+			<span style={badgeStyle} class="worlds-detail-glyph" aria-hidden="true">
+				{headerName.charAt(0)}
+			</span>
+		{/if}
 		<div class="worlds-detail-identity-text">
-			<span class="worlds-detail-identity-name">{option?.name ?? affiliationIdentifier}</span>
-			<span class="num allcaps worlds-detail-identity-meta">
+			<span class="num allcaps worlds-detail-identity-eyebrow">
+				{t({
+					locale: $localeStore,
+					key: isCountry ? 'worlds.detail.season_nation' : 'worlds.detail.season_founded'
+				})}
+			</span>
+			<span class="num worlds-detail-identity-rank">
 				{#if loadState === 'loading'}
 					{t({ locale: $localeStore, key: 'worlds.detail.loading_members' })}
-				{:else if memberCount !== undefined}
+				{:else}
 					{t({
 						locale: $localeStore,
-						key: 'worlds.detail.members_count',
-						params: { count: memberCount }
+						key: 'worlds.detail.season_rank',
+						params: { rank: monthRankLabel }
 					})}
+					{#if isMine}
+						· <span class="worlds-detail-acc">
+							{t({ locale: $localeStore, key: 'worlds.detail.season_youre_in' })}
+						</span>
+					{/if}
 				{/if}
 			</span>
 		</div>
 	</section>
 
-	{#if stats && stats.totalCalls > 0}
-		<div class="worlds-detail-rank-row">
-			<div class="worlds-detail-rank-cell">
-				<span class="num allcaps worlds-detail-rank-label">
-					{t({ locale: $localeStore, key: 'worlds.detail.rank_month' })}
-				</span>
-				<span class="num worlds-detail-rank-value">
-					{monthRank > 0 ? `#${monthRank}` : '—'}
-				</span>
-			</div>
-			<div class="worlds-detail-rank-cell is-wc">
-				<span class="num allcaps worlds-detail-rank-label">
-					{t({ locale: $localeStore, key: 'worlds.detail.rank_wc' })}
-				</span>
-				<span class="num worlds-detail-rank-value">
-					{wcRank > 0 ? `#${wcRank}` : '—'}
-				</span>
-			</div>
-			<div class="worlds-detail-rank-cell">
-				<span class="num allcaps worlds-detail-rank-label">
-					{t({ locale: $localeStore, key: 'worlds.detail.rank_acc' })}
-				</span>
-				<span class="num worlds-detail-rank-value">{accuracyPctLifetime}%</span>
-			</div>
+	<div class="worlds-detail-rank-row">
+		<div class="worlds-detail-rank-cell">
+			<span class="num allcaps worlds-detail-rank-label">
+				{t({ locale: $localeStore, key: 'worlds.detail.rank_month' })}
+			</span>
+			<span class="num worlds-detail-rank-value">{monthRankLabel}</span>
 		</div>
-	{/if}
+		<div class="worlds-detail-rank-cell is-wc">
+			<span class="num allcaps worlds-detail-rank-label">
+				{t({ locale: $localeStore, key: 'worlds.detail.rank_wc' })}
+			</span>
+			<span class="num worlds-detail-rank-value">{wcRankLabel}</span>
+		</div>
+		<div class="worlds-detail-rank-cell">
+			<span class="num allcaps worlds-detail-rank-label">
+				{t({ locale: $localeStore, key: 'worlds.detail.rank_acc' })}
+			</span>
+			<span class="num worlds-detail-rank-value">{accuracyPctLifetime}</span>
+		</div>
+	</div>
 
-	<section class="worlds-detail-stats">
-		<h2 class="eyebrow worlds-detail-stats-title">
-			{t({ locale: $localeStore, key: 'worlds.detail.stats_eyebrow' })}
-		</h2>
-
-		{#if !stats || stats.totalCalls === 0}
-			<p class="worlds-detail-stats-hint">
-				{t({ locale: $localeStore, key: 'worlds.detail.stats_empty' })}
+	{#if isLowActivity}
+		<div class="worlds-detail-empty">
+			<span class="worlds-detail-empty-title">
+				{t({
+					locale: $localeStore,
+					key: isCountry ? 'worlds.detail.empty_title_country' : 'worlds.detail.empty_title_school'
+				})}
+			</span>
+			<p class="worlds-detail-empty-body">
+				{t({
+					locale: $localeStore,
+					key: 'worlds.detail.empty_body',
+					params: { name: headerName, calls: callsToQualify }
+				})}
 			</p>
-		{:else}
-			<div class="worlds-detail-stats-grid">
-				<div class="worlds-detail-stats-cell">
-					<span class="num allcaps worlds-detail-stats-label">
-						{t({ locale: $localeStore, key: 'worlds.detail.stats_month' })}
-					</span>
-					<span class="num worlds-detail-stats-value">
-						{stats.monthTotalCalls === 0 ? '—' : `${accuracyPctMonth}%`}
-					</span>
-					<span class="num allcaps worlds-detail-stats-sub">
-						{t({
-							locale: $localeStore,
-							key: 'worlds.detail.stats_calls_month',
-							params: { count: stats.monthTotalCalls }
-						})}
-					</span>
-				</div>
-				<div class="worlds-detail-stats-cell">
-					<span class="num allcaps worlds-detail-stats-label">
-						{t({ locale: $localeStore, key: 'worlds.detail.stats_lifetime' })}
-					</span>
-					<span class="num worlds-detail-stats-value">{accuracyPctLifetime}%</span>
-					<span class="num allcaps worlds-detail-stats-sub">
-						{t({
-							locale: $localeStore,
-							key: 'worlds.detail.stats_calls_lifetime',
-							params: { count: stats.totalCalls }
-						})}
-					</span>
-				</div>
-			</div>
-			{#if !ranked}
-				<p class="num allcaps worlds-detail-stats-unranked">
+			{#if isMine || !isCountry}
+				<button class="worlds-detail-empty-cta" onclick={openFlow} type="button">
+					{t({ locale: $localeStore, key: 'worlds.detail.empty_cta' })}
+				</button>
+			{/if}
+		</div>
+	{:else}
+		<section class="worlds-detail-split">
+			<div class="row-between">
+				<span class="eyebrow worlds-detail-split-eyebrow">
+					{t({ locale: $localeStore, key: 'worlds.detail.activity_eyebrow' })}
+				</span>
+				<span class="num allcaps worlds-detail-split-count">
 					{t({
 						locale: $localeStore,
-						key: 'worlds.detail.stats_unranked',
-						params: { min: MIN_CALLS_FOR_RANK }
+						key: 'worlds.detail.activity_calls',
+						params: { count: stats?.totalCalls ?? 0 }
 					})}
-				</p>
-			{/if}
-		{/if}
-	</section>
+				</span>
+			</div>
+			<div class="row-between worlds-detail-split-line">
+				<span class="num allcaps worlds-detail-split-label">
+					{t({ locale: $localeStore, key: 'worlds.detail.split_wc' })}
+				</span>
+				<span class="num worlds-detail-split-value worlds-detail-acc">{accuracyPctLifetime}</span>
+			</div>
+			<div class="row-between worlds-detail-split-line">
+				<span class="num allcaps worlds-detail-split-label">
+					{t({ locale: $localeStore, key: 'worlds.detail.split_month' })}
+				</span>
+				<span class="num worlds-detail-split-value">{accuracyPctMonth}</span>
+			</div>
+		</section>
+	{/if}
 
-	<button class="worlds-detail-cta" onclick={openFlow} type="button">
+	<button class="worlds-detail-cta" onclick={openStandings} type="button">
 		<div class="worlds-detail-cta-text">
 			<span class="eyebrow worlds-detail-cta-eyebrow">
-				{t({ locale: $localeStore, key: 'worlds.detail.cta_eyebrow' })}
+				{t({ locale: $localeStore, key: 'worlds.detail.standings_eyebrow' })}
 			</span>
 			<span class="worlds-detail-cta-label">
-				{t({ locale: $localeStore, key: 'worlds.detail.cta_label' })}
+				{t({
+					locale: $localeStore,
+					key: isCountry ? 'worlds.detail.standings_country' : 'worlds.detail.standings_school',
+					params: { total: rosterSize }
+				})}
 			</span>
 		</div>
-		<span aria-hidden="true">→</span>
+		<ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} />
 	</button>
 
 	{#if loadState === 'error'}
@@ -248,23 +365,74 @@
 		</p>
 	{/if}
 
-	<button class="worlds-detail-back-bottom" onclick={backToWorlds} type="button">
-		{t({
-			locale: $localeStore,
-			key: 'worlds.detail.see_all',
-			params: { total: rosterSize }
-		})}
-	</button>
+	{#if hasActivity}
+		<button class="worlds-detail-flow-link" onclick={openFlow} type="button">
+			{t({ locale: $localeStore, key: 'worlds.detail.cta_label' })} →
+		</button>
+	{/if}
 </div>
 
 <style lang="postcss">
 	.worlds-detail {
 		display: flex;
 		flex-direction: column;
-		gap: 1rem;
+		gap: 0.9rem;
 		padding: 0 1.25rem 6rem;
 	}
 
+	/* ─────────────────────────── editorial title + context chips */
+	.worlds-detail-title {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		margin: 0;
+		overflow: hidden;
+		font-family: var(--font-display);
+		font-style: italic;
+		font-weight: 400;
+		font-size: var(--t-20, 1.25rem);
+		letter-spacing: var(--tracking-snug);
+		line-height: 1.1;
+		color: var(--text-base);
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.worlds-detail-title-flag {
+		font-family: var(--font-sans);
+		font-style: normal;
+		font-size: 0.78em;
+	}
+
+	.worlds-detail-chips {
+		display: flex;
+		gap: 0.375rem;
+		margin: -0.25rem 0 0;
+		overflow-x: auto;
+		scrollbar-width: none;
+	}
+
+	.worlds-detail-chips::-webkit-scrollbar {
+		display: none;
+	}
+
+	.worlds-detail-chip {
+		flex: 0 0 auto;
+		padding: 0.25rem 0.625rem;
+		font-size: var(--t-11);
+		letter-spacing: 0.02em;
+		color: var(--text-muted);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		white-space: nowrap;
+	}
+
+	.worlds-detail-chip.is-acc {
+		color: var(--laurel);
+		border-color: color-mix(in srgb, var(--laurel) 30%, var(--border-base));
+	}
+
+	/* ─────────────────────────── identity card */
 	.worlds-detail-identity {
 		display: grid;
 		grid-template-columns: 64px 1fr;
@@ -282,11 +450,25 @@
 		justify-content: center;
 		width: 64px;
 		height: 64px;
+		font-family: var(--font-display);
+		font-style: italic;
+		font-weight: 400;
 		font-size: var(--t-22, 1.5rem);
-		font-weight: 700;
 		color: var(--text-base);
 		background: color-mix(in srgb, var(--laurel) 14%, var(--bg-surface));
+		border: 1px solid rgba(0, 0, 0, 0.3);
 		border-radius: var(--r-12);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+	}
+
+	.worlds-detail-flag {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 64px;
+		height: 64px;
+		font-size: 2.875rem;
+		line-height: 1;
 	}
 
 	.worlds-detail-identity-text {
@@ -296,18 +478,22 @@
 		min-width: 0;
 	}
 
-	.worlds-detail-identity-name {
-		font-size: var(--t-20, 1.25rem);
-		font-weight: 600;
-		letter-spacing: var(--tracking-snug);
-		color: var(--text-base);
-	}
-
-	.worlds-detail-identity-meta {
-		font-size: var(--t-11);
+	.worlds-detail-identity-eyebrow {
+		font-size: var(--t-10);
+		letter-spacing: 0.18em;
 		color: var(--text-muted);
 	}
 
+	.worlds-detail-identity-rank {
+		font-size: var(--t-13);
+		color: var(--text-muted);
+	}
+
+	.worlds-detail-acc {
+		color: var(--laurel);
+	}
+
+	/* ─────────────────────────── 3-stat grid */
 	.worlds-detail-rank-row {
 		display: grid;
 		grid-template-columns: repeat(3, 1fr);
@@ -332,9 +518,13 @@
 	}
 
 	.worlds-detail-rank-label {
+		max-width: 100%;
+		overflow: hidden;
 		font-size: var(--t-10);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
+		text-overflow: ellipsis;
+		white-space: nowrap;
 	}
 
 	.worlds-detail-rank-cell.is-wc .worlds-detail-rank-label {
@@ -351,72 +541,101 @@
 		color: var(--laurel);
 	}
 
-	.worlds-detail-stats {
+	/* ─────────────────────────── accuracy split */
+	.worlds-detail-split {
 		display: flex;
 		flex-direction: column;
-		gap: 0.65rem;
+		gap: 0.5rem;
 		padding: 0.85rem 1rem;
 		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
 		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
 	}
 
-	.worlds-detail-stats-title {
-		margin: 0;
-		color: var(--text-muted);
-	}
-
-	.worlds-detail-stats-hint {
-		margin: 0;
-		font-size: var(--t-13);
-		color: var(--text-muted);
-		line-height: 1.5;
-	}
-
-	.worlds-detail-stats-grid {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.6rem;
-	}
-
-	.worlds-detail-stats-cell {
+	.row-between {
 		display: flex;
-		flex-direction: column;
-		gap: 0.2rem;
-		padding: 0.7rem 0.85rem;
-		background: color-mix(in srgb, var(--bg-surface) 96%, transparent);
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-12);
+		align-items: center;
+		justify-content: space-between;
 	}
 
-	.worlds-detail-stats-label {
+	.worlds-detail-split-eyebrow {
+		margin: 0;
+		color: var(--text-muted);
+	}
+
+	.worlds-detail-split-count {
 		font-size: var(--t-10);
+		letter-spacing: var(--tracking-allcaps);
+		color: var(--laurel);
+	}
+
+	.worlds-detail-split-line {
+		padding-top: 0.1rem;
+	}
+
+	.worlds-detail-split-label {
+		font-size: var(--t-11);
 		letter-spacing: var(--tracking-allcaps);
 		color: var(--text-muted);
 	}
 
-	.worlds-detail-stats-value {
-		font-size: var(--t-22, 1.4rem);
+	.worlds-detail-split-value {
+		font-size: var(--t-13);
 		font-weight: 700;
 		color: var(--text-base);
 	}
 
-	.worlds-detail-stats-sub {
-		font-size: var(--t-10);
-		letter-spacing: var(--tracking-allcaps);
-		color: var(--text-muted);
-	}
-
-	.worlds-detail-stats-unranked {
-		margin: 0.5rem 0 0;
-		padding: 0.5rem 0.85rem;
-		font-size: var(--t-10);
-		letter-spacing: var(--tracking-allcaps);
-		color: var(--text-muted);
-		background: color-mix(in srgb, var(--bg-surface) 96%, transparent);
+	/* ─────────────────────────── empty state (under threshold) */
+	.worlds-detail-empty {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 1.5rem;
+		text-align: center;
+		background: transparent;
+		border: 1px dashed color-mix(in srgb, var(--laurel) 22%, var(--border-base));
 		border-radius: var(--r-12);
 	}
 
+	.worlds-detail-empty-title {
+		font-family: var(--font-display);
+		font-style: italic;
+		font-weight: 400;
+		font-size: var(--t-20, 1.25rem);
+		color: var(--text-muted);
+	}
+
+	.worlds-detail-empty-body {
+		margin: 0;
+		font-size: var(--t-13);
+		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
+	.worlds-detail-empty-body :global(b) {
+		color: var(--text-base);
+	}
+
+	.worlds-detail-empty-cta {
+		appearance: none;
+		margin-top: 0.5rem;
+		padding: 0.5rem 1rem;
+		font: inherit;
+		font-size: var(--t-12);
+		font-weight: 700;
+		color: var(--laurel);
+		background: transparent;
+		border: 1px solid color-mix(in srgb, var(--laurel) 35%, var(--border-base));
+		border-radius: var(--r-pill);
+		cursor: pointer;
+	}
+
+	.worlds-detail-empty-cta:hover {
+		background: color-mix(in srgb, var(--laurel) 6%, transparent);
+	}
+
+	/* ─────────────────────────── standings CTA */
 	.worlds-detail-cta {
 		appearance: none;
 		display: flex;
@@ -466,21 +685,23 @@
 		border-radius: var(--r-12);
 	}
 
-	.worlds-detail-back-bottom {
+	.worlds-detail-flow-link {
 		appearance: none;
-		padding: 0.65rem 1rem;
+		align-self: center;
+		padding: 0.5rem 1rem;
 		font: inherit;
-		font-size: var(--t-13);
-		font-weight: 600;
+		font-family: var(--font-mono, var(--font-sans));
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: 0.14em;
+		text-transform: uppercase;
 		color: var(--text-muted);
 		background: none;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
+		border: 0;
 		cursor: pointer;
 	}
 
-	.worlds-detail-back-bottom:hover {
-		color: var(--text-base);
-		border-color: color-mix(in srgb, var(--laurel) 30%, var(--border-base));
+	.worlds-detail-flow-link:hover {
+		color: var(--laurel);
 	}
 </style>
