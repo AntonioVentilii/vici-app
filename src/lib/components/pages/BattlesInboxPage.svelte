@@ -17,9 +17,9 @@
 	import { daysToFinal } from '$lib/derived/featured-event.derived';
 	import { listMyLeagues } from '$lib/services/leagues.services';
 	import { getCurrentTournament } from '$lib/services/tournament.services';
-	import { listAffiliationStats, listMyAffiliations } from '$lib/services/worlds.services';
+	import { listAffiliationStats } from '$lib/services/worlds.services';
+	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { AffiliationDoc } from '$lib/types/affiliation';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 	import {
 		TOURNAMENT_ROUNDS,
@@ -81,8 +81,10 @@
 	let myLeagueIds: string[] = $state([]);
 
 	// ─── Worlds podium state ────────────────────────────────────────
-	let myUni = $state<AffiliationDoc | undefined>();
-	let myCountry = $state<AffiliationDoc | undefined>();
+	// Caller's affiliations come from the shared cache (stale-while-
+	// revalidate); the public school/country stats stay a per-mount fetch.
+	const myUni = $derived($myAffiliationsStore.university);
+	const myCountry = $derived($myAffiliationsStore.country);
 	let uniStats = $state<AffiliationStatsDoc[]>([]);
 	let countryStats = $state<AffiliationStatsDoc[]>([]);
 
@@ -104,16 +106,13 @@
 
 	const load = async () => {
 		try {
-			const [mineList, affils, schools, countries, tour] = await Promise.all([
+			const [mineList, schools, countries, tour] = await Promise.all([
 				listMyLeagues(),
-				listMyAffiliations(),
 				listAffiliationStats({ kind: 'university' }),
 				listAffiliationStats({ kind: 'country' }),
 				getCurrentTournament()
 			]);
 			myLeagueIds = mineList.map((m) => m.league.id);
-			myUni = affils.university;
-			myCountry = affils.country;
 			uniStats = schools;
 			countryStats = countries;
 			({ tournament, matches } = tour);
@@ -134,6 +133,7 @@
 			}
 		}
 
+		void refreshMyAffiliations();
 		void load();
 	});
 

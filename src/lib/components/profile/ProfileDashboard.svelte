@@ -19,12 +19,12 @@
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
-	import { listMyAffiliations } from '$lib/services/worlds.services';
+	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { marketsStore } from '$lib/stores/markets.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
-	import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
+	import type { AffiliationKind } from '$lib/types/affiliation';
 	import type { Market } from '$lib/types/market';
 	import type { UserProfile } from '$lib/types/profile';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
@@ -229,19 +229,14 @@
 
 	/* Affiliations ----------------------------------------------------- */
 
-	let myUni = $state<AffiliationDoc | undefined>(undefined);
-	let myCountry = $state<AffiliationDoc | undefined>(undefined);
 	let pickerKind = $state<AffiliationKind | null>(null);
 
-	const refreshAffiliations = async () => {
-		try {
-			const { university, country } = await listMyAffiliations();
-			myUni = university;
-			myCountry = country;
-		} catch (err) {
-			console.error('ProfileDashboard: listMyAffiliations failed', err);
-		}
-	};
+	// Read the caller's affiliations from the shared cache (populated by
+	// `refreshMyAffiliations`). Only the caller's own profile surfaces
+	// the affiliation grid — other profiles keep the slots empty, as
+	// before.
+	const myUni = $derived(isOwnProfile ? $myAffiliationsStore.university : undefined);
+	const myCountry = $derived(isOwnProfile ? $myAffiliationsStore.country : undefined);
 
 	/**
 	 * Four-slot affiliation grid — Uni / Country / City / Company.
@@ -455,7 +450,7 @@
 			}
 		})();
 
-		void refreshAffiliations();
+		void refreshMyAffiliations();
 	});
 </script>
 
@@ -765,7 +760,7 @@
 		onClose={() => (pickerKind = null)}
 		onPicked={() => {
 			pickerKind = null;
-			void refreshAffiliations();
+			void refreshMyAffiliations();
 		}}
 	/>
 {/if}
