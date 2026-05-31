@@ -173,6 +173,28 @@ export const itMessages = {
 		'VICI usa Internet Identity o Google. Nessuna password. Cambia metodo in qualsiasi momento — i tuoi dati restano.',
 	'account.method.current': 'Metodo di accesso attuale',
 	'account.method.eyebrow': 'METODO DI ACCESSO',
+	'account.return.deleted_body':
+		'Hai programmato l’eliminazione di questo account. Recuperalo ora per mantenere i tuoi dati, oppure esci per lasciarlo com’è.',
+	'account.return.deleted_heading': 'Bentornato.',
+	'account.return.deleted_toast_body': 'I tuoi dati sono intatti.',
+	'account.return.deleted_toast_title': 'Account recuperato',
+	'account.return.deleted_window_one': 'Manca {days} giorno per recuperarlo.',
+	'account.return.deleted_window_other': 'Mancano {days} giorni per recuperarlo.',
+	'account.return.error': 'Qualcosa è andato storto. Riprova.',
+	'account.return.expired_body':
+		'Questo account era programmato per l’eliminazione e la finestra di recupero è ora chiusa. È stato eliminato.',
+	'account.return.expired_continue': 'Continua',
+	'account.return.expired_heading': 'La finestra di recupero è scaduta.',
+	'account.return.hibernated_body':
+		'Hai messo in pausa questo account. Riprendi per ripartire da dove avevi lasciato: non è andato perso nulla.',
+	'account.return.hibernated_heading': 'Il tuo account è in pausa.',
+	'account.return.hibernated_toast_body': 'Bentornato.',
+	'account.return.hibernated_toast_title': 'Account ripreso',
+	'account.return.recover': 'Recupera account',
+	'account.return.resume': 'Riprendi',
+	'account.return.sign_out': 'Esci',
+	'account.return.stay_paused': 'Resta in pausa',
+	'account.return.working': 'In corso…',
 	'account.switch.cta': 'Esci per cambiare metodo',
 	'account.switch.hint':
 		'Cambiando metodo verrai disconnesso. Rientra col nuovo metodo per continuare.',

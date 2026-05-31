@@ -173,6 +173,28 @@ export const deMessages = {
 		'VICI nutzt Internet Identity oder Google. Keine Passwörter. Methode jederzeit wechseln — deine Daten bleiben.',
 	'account.method.current': 'Aktuelle Anmeldemethode',
 	'account.method.eyebrow': 'AKTUELLE ANMELDEMETHODE',
+	'account.return.deleted_body':
+		'Du hast die Löschung dieses Kontos geplant. Stelle es jetzt wieder her, um deine Daten zu behalten, oder melde dich ab, um es so zu lassen.',
+	'account.return.deleted_heading': 'Willkommen zurück.',
+	'account.return.deleted_toast_body': 'Deine Daten sind unversehrt.',
+	'account.return.deleted_toast_title': 'Konto wiederhergestellt',
+	'account.return.deleted_window_one': 'Noch {days} Tag zur Wiederherstellung.',
+	'account.return.deleted_window_other': 'Noch {days} Tage zur Wiederherstellung.',
+	'account.return.error': 'Etwas ist schiefgelaufen. Bitte erneut versuchen.',
+	'account.return.expired_body':
+		'Dieses Konto war zur Löschung vorgemerkt und das Wiederherstellungsfenster ist nun geschlossen. Es wurde gelöscht.',
+	'account.return.expired_continue': 'Weiter',
+	'account.return.expired_heading': 'Dein Wiederherstellungsfenster ist abgelaufen.',
+	'account.return.hibernated_body':
+		'Du hast dieses Konto pausiert. Setze fort, um dort weiterzumachen, wo du aufgehört hast – nichts ging verloren.',
+	'account.return.hibernated_heading': 'Dein Konto ist pausiert.',
+	'account.return.hibernated_toast_body': 'Willkommen zurück.',
+	'account.return.hibernated_toast_title': 'Konto fortgesetzt',
+	'account.return.recover': 'Konto wiederherstellen',
+	'account.return.resume': 'Fortsetzen',
+	'account.return.sign_out': 'Abmelden',
+	'account.return.stay_paused': 'Pausiert bleiben',
+	'account.return.working': 'Wird ausgeführt…',
 	'account.switch.cta': 'Abmelden zum Wechseln',
 	'account.switch.hint':
 		'Ein Methodenwechsel meldet dich ab. Melde dich mit der neuen Methode wieder an.',
