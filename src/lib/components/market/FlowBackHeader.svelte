@@ -69,9 +69,8 @@
 		border-bottom: 1px solid var(--border-base);
 	}
 
-	/* Category chip — a subtle neutral pill with category-colored text,
-	   mirroring the prototype's `.tag` (parchment-wash background, accent
-	   ink) rather than the plain colored label we had before. */
+	/* Category chip — a subtle neutral pill (parchment-wash background)
+	   with category-colored ink, rather than a plain colored label. */
 	.flow-back-cat {
 		display: inline-flex;
 		align-items: center;

@@ -85,7 +85,7 @@
 	);
 	// Headcount falls back to a representative figure when the market
 	// carries no per-outcome totals, so the meta row always reads as a
-	// complete editorial line (matches the prototype's `|| 1240`).
+	// complete editorial line.
 	const predicting = $derived(predictorsCount > 0 ? predictorsCount : 1240);
 </script>
 
@@ -124,8 +124,8 @@
 	}
 
 	/* Single editorial meta line: `Settles {date} · {countdown} ·
-	   {N} predicting`, dot-separated — matches the prototype's one-row
-	   rhythm rather than splitting the headcount onto its own line. */
+	   {N} predicting` — settlement, countdown, and headcount share one
+	   dot-separated row rather than splitting onto separate lines. */
 	.flow-back-meta {
 		display: inline-flex;
 		align-items: center;
@@ -133,7 +133,6 @@
 		flex-wrap: wrap;
 		margin: 0;
 		font-size: var(--t-12);
-		letter-spacing: 0.04em;
 		color: var(--text-muted);
 		font-family: var(--font-mono);
 		letter-spacing: 0.04em;
