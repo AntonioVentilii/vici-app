@@ -324,6 +324,56 @@ Hooks fire **after** the write, but they can fire more than once
   `engine_sync_error`, …) so operators can grep Juno Console for the
   failure mode without breaking the hook.
 
+## Soft-delete + lazy hard-delete (no scheduler)
+
+Juno has **no timer primitive**, so any "delete now, purge later"
+flow has to model the deferred work as a claim or an admin trigger —
+never a scheduled job. The account-deletion flow
+([`account.services.ts`](../../../src/satellite/services/account.services.ts))
+is the reference shape:
+
+- **Soft-delete = an optional marker field.** `deletedAtMs?: number`
+  on the profile schema. PRESENCE means soft-deleted; ABSENCE means
+  active. Declare it `j.number().optional()` with **no default** — a
+  default would force every legacy/active row to look deleted, and
+  absence is the meaningful state. Mirror the field in **both**
+  `src/lib/schema/profile.schema.ts` **and**
+  `src/satellite/api-schemas.ts` (the encoder trap), and forward it
+  verbatim through `withProfileDefaults`.
+- **Hide soft-deleted rows from PUBLIC reads, not from the owner.**
+  A shared `isSoftDeleted(profile)` helper filters the public query
+  endpoints (`listLeaderboard`, `searchProfiles`, `getProfile`).
+  `getProfile` knows both the caller and the looked-up principal, so it
+  makes the owner an exception — an own-read returns the doc even when
+  soft-deleted (matching the FE's raw Juno `getDoc` path, which is also
+  never gated) so the FE can still offer recovery.
+- **Extract the cascade, parametrise by principal.** The hard-delete
+  (`hardDeleteAccountFn({ callerText, callerBytes })`) takes the
+  principal explicitly and does **not** call `msgCaller()`, so the
+  same code path serves both the lazy purge (on a too-late recovery)
+  and the admin sweep (`sweepExpiredDeletions`, gated by `isAdmin`).
+  The admin sweep keys each purge off the **doc key**, not the decoded
+  `owner` field (profile writes don't enforce `owner === key`), and
+  runs `Principal.fromText` + the cascade **outside** the malformed-row
+  try/catch so a purge failure is logged + counted as an under-purge
+  instead of being silently swallowed as a skipped bad row.
+- **Hard-delete must not orphan others — transfer, don't just delete.**
+  The cascade's owned-league step deletes a league only when no other
+  member remains; if members self-joined during the recovery window it
+  **transfers** ownership to a deterministic survivor (first remaining
+  `LEAGUE_MEMBERS` row in iteration order) — version-locked re-encode of
+  `league.owner` + a version-locked bump of that member row's `role` to
+  `owner`. The interactive `deleteMyAccount` has an up-front
+  `owns_non_empty_league` guard; the guard-less recovery-expiry + sweep
+  paths rely on this transfer.
+- **Keep the marker monotonic + the side effects once-only.**
+  Re-deleting keeps the EARLIEST `deletedAtMs` so the recovery clock
+  can't be reset. Recovery clears the field; both are version-locked
+  overwrites. `softDeleteProfile` returns an `alreadyDeleted` flag so
+  one-time side effects (the anonymous `EXIT_SIGNALS` churn row) are
+  skipped on a re-delete — re-deleting must be idempotent, not
+  cumulative.
+
 ## Cross-canister calls
 
 When a hook calls another canister (typically the icdc-core registry):
