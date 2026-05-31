@@ -209,13 +209,26 @@ export const ptMessages = {
 	'tournament.waiting_leagues':
 		'Aguardando mais ligas para completar o chaveamento. {available} de {required} classificadas até agora.',
 	'account.back': 'Voltar aos ajustes',
+	'account.email.cancel': 'Cancelar',
+	'account.email.change': 'Trocar email',
+	'account.email.edit_note':
+		'Enviaremos um magic link para o seu novo endereço. Toque nele para confirmar. Até lá, seu email atual continua ativo.',
 	'account.email.empty': 'Sem email cadastrado.',
 	'account.email.eyebrow': 'ENDEREÇO DE EMAIL',
-	'account.email.pending': 'Gestão de email chega com a atualização do backend.',
+	'account.email.placeholder': 'novo@example.com',
+	'account.email.send': 'Enviar link',
+	'account.email.sent_body':
+		'Enviamos um magic link para {email}. Toque nele em 15 minutos para confirmar.',
+	'account.email.sent_title': 'Confira sua caixa de entrada.',
+	'account.email.soon': 'A troca de email chega com a atualização do backend.',
+	'account.email.used_for': 'Usado para acesso e avisos importantes da conta.',
+	'account.email.verified': 'Verificado',
 	'account.intro':
-		'VICI usa Internet Identity ou Google. Sem senhas. Troque a qualquer momento — seus dados continuam.',
-	'account.method.current': 'Método de acesso atual',
+		'VICI usa Internet Identity, Google ou um magic link. Sem senhas. Troque a qualquer momento — seus dados continuam.',
 	'account.method.eyebrow': 'MÉTODO DE ACESSO',
+	'account.method.ii': 'Internet Identity',
+	'account.method.email': 'E-mail',
+	'account.method.magic_link': 'Magic link',
 	'account.return.deleted_body':
 		'Você agendou a exclusão desta conta. Recupere-a agora para manter seu histórico, ou saia para deixá-la como está.',
 	'account.return.deleted_heading': 'Bem-vindo de volta.',
@@ -239,6 +252,7 @@ export const ptMessages = {
 	'account.return.stay_paused': 'Continuar pausada',
 	'account.return.working': 'Processando…',
 	'account.switch.cta': 'Sair para trocar de método',
+	'account.switch.eyebrow': 'TROCAR MÉTODO',
 	'account.switch.hint':
 		'Trocar de método desconecta a sessão. Entre com o novo método para continuar.',
 	'account.switch.signing_out': 'Saindo…',
