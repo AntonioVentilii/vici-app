@@ -1178,6 +1178,44 @@ html[data-app='1'] body {
 	}
 }
 
+/* Notification bell red-dot entrance + slide-in toast envelopes. These
+   keyframes are shared by `NotifBell` and `NotifToastHost`, so they live
+   here at the global layer (scoped styles can't reach a `@keyframes` used
+   across components). The components carry the rest of their styling
+   scoped. Reduced-motion is handled inside each component. */
+@keyframes notif-dot-in {
+	from {
+		opacity: 0;
+		transform: scale(0.4);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+@keyframes notif-pop-in {
+	from {
+		opacity: 0;
+		transform: translateY(-18px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes notif-pop-out {
+	from {
+		opacity: 1;
+		transform: translateY(0);
+	}
+	to {
+		opacity: 0;
+		transform: translateY(-18px);
+	}
+}
+
 /* Saved-market / favourite toggle envelope. */
 @keyframes heart-pop {
 	0% {

@@ -10,6 +10,7 @@ export const itMessages = {
 	'a11y.language': 'Lingua',
 	'a11y.next_page': 'Pagina successiva',
 	'a11y.notifications': 'Notifiche',
+	'a11y.notifications_unread': 'Notifiche, {count} non lette',
 	'a11y.open_data': 'Apri dati',
 	'a11y.page_n': 'Pagina {page}',
 	'a11y.pagination': 'Impaginazione',
@@ -1279,6 +1280,7 @@ export const itMessages = {
 	'nav.trust': 'Fiducia',
 	'nav.vision': 'Visione',
 	'notifications.back_flow': 'Torna a Flow',
+	'notifications.dismiss': 'Ignora',
 	'notifications.empty.body':
 		'Risoluzioni, inviti alle leghe e sfide compaiono qui. Fai qualche previsione per iniziare a costruire la tua bacheca.',
 	'notifications.empty.title': 'Nessuna nuova notifica.',

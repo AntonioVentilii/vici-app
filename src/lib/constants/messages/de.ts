@@ -11,6 +11,7 @@ export const deMessages = {
 	'a11y.language': 'Sprache',
 	'a11y.next_page': 'Nächste Seite',
 	'a11y.notifications': 'Benachrichtigungen',
+	'a11y.notifications_unread': 'Benachrichtigungen, {count} ungelesen',
 	'a11y.open_data': 'Daten öffnen',
 	'a11y.page_n': 'Seite {page}',
 	'a11y.pagination': 'Seitennavigation',
@@ -1288,6 +1289,7 @@ export const deMessages = {
 	'nav.trust': 'Vertrauen',
 	'nav.vision': 'Vision',
 	'notifications.back_flow': 'Zurück zu Flow',
+	'notifications.dismiss': 'Schließen',
 	'notifications.empty.body':
 		'Auflösungen, Liga-Einladungen und Challenges landen hier. Mach ein paar Vorhersagen, um deine Bilanz zu starten.',
 	'notifications.empty.title': 'Keine neuen Benachrichtigungen.',
