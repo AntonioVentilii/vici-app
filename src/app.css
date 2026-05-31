@@ -2390,7 +2390,6 @@ html[data-app='1'] body {
 .signin-provider-label {
 	flex: 1;
 	text-align: center;
-	padding-right: 24px;
 }
 .signin-provider-soon {
 	position: absolute;
@@ -2402,7 +2401,13 @@ html[data-app='1'] body {
 	text-transform: uppercase;
 	color: var(--text-muted);
 }
+/* Spinner is pulled out of flow so the centred label never shifts when
+   it appears or disappears. Matches the .signin-provider-soon slot. */
 .signin-spinner {
+	position: absolute;
+	right: 16px;
+	top: 50%;
+	transform: translateY(-50%);
 	width: 14px;
 	height: 14px;
 	border: 2px solid rgba(242, 236, 220, 0.2);
@@ -2413,6 +2418,8 @@ html[data-app='1'] body {
 @media (prefers-reduced-motion: reduce) {
 	.signin-spinner {
 		animation: none;
+		/* Keep the element visible as a static indicator. */
+		border-top-color: var(--laurel);
 	}
 }
 

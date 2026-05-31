@@ -174,11 +174,10 @@
 		<!-- Apple — disabled placeholder until backend ships. -->
 		{#if APPLE_LOGIN_ENABLED}
 			<button
-				class="signin-provider-btn apple"
+				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'apple'}
 				aria-busy={signingIn === 'apple'}
-				aria-label={t({ locale: $localeStore, key: 'signin.provider.apple' })}
 				disabled={!APPLE_ENABLED || isBusy}
 				title={t({ locale: $localeStore, key: 'signin.provider.placeholder_title' })}
 				type="button"
@@ -208,7 +207,7 @@
 		<!-- Google — live. -->
 		{#if GOOGLE_LOGIN_ENABLED}
 			<button
-				class="signin-provider-btn google"
+				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'google'}
 				aria-busy={signingIn === 'google'}
