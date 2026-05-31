@@ -320,6 +320,18 @@ the cadence is never memorised; they carry no VXP. **Overtime rhythm**
 adds a Trickster beat at call 11 and an Oracle beat at call 13. The
 daily session is hard-capped at `DAILY_HARD_CAP = 15`.
 
+The engine's beat cadence runs off a **per-session counter**, not the
+cross-session daily-goal total: `FlowMode` passes `betsCount` as
+`dailyDone` and the live **session cap** as `dailyTarget`. The session
+opens at the daily ten; the **"Push to 15 →"** opt-in on FlowEnd raises
+that cap to `DAILY_HARD_CAP`, so `dailyTarget >= DAILY_HARD_CAP` flips
+the engine into overtime — the calls-11 / 13 rhythm beats and the
+overtime-complete `+25` fire as the counter climbs past ten. The
+cross-session daily-goal count (still capped at `DAILY_HARD_CAP`) is the
+streak source and the trigger for the **"come back tomorrow"** hard-cap
+gate (`FlowDailyCap`): once a full day's calls are placed, re-entering
+Flow shows that takeover instead of a fresh deck.
+
 **Wildcard** — a rare (~1-in-6) variable-ratio surprise carrying a
 non-currency `treat` (sticker / shield / flair), never VXP.
 **Comeback** — a distinct, no-shame opener (`isComeback`) for a user
@@ -372,8 +384,9 @@ Rules:
 Below `ACCURACY_GATE_CALLS = 30` lifetime calls, accuracy is hidden —
 calls + streak are the visible stats. The percentage unlocks at 30,
 which is the smallest sample where it starts to be meaningful (and
-not noisy). Applies to the FlowEnd summary; should be applied to
-Profile + leaderboard previews on their next pass.
+not noisy). The FlowEnd celebration deliberately never surfaces
+accuracy (a swipe places a call, it doesn't win one — see §7.3); the
+gate applies to Profile + leaderboard previews on their next pass.
 
 The **stake ladder** is available to every predictor: the Flow-card back
 shows the per-call stake slider

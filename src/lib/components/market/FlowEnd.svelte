@@ -1,466 +1,411 @@
 <script lang="ts">
-	import { fly } from 'svelte/transition';
 	import FlameChar from '$lib/components/characters/FlameChar.svelte';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
-	import FlowInviteCard from '$lib/components/market/FlowInviteCard.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
+	import CountUp from '$lib/components/ui/CountUp.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { FlowArtCategory } from '$lib/utils/flow-art.utils';
-	import { t } from '$lib/utils/i18n.utils';
+	import { writeToClipboard } from '$lib/utils/clipboard.utils';
+	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
-	import type { FlameStage } from '$lib/utils/streak.utils';
 
 	interface Props {
-		betsCount: number;
-		xp: number;
-		dailyStreak: number;
-		flameStage: FlameStage;
-		accuracyUnlocked: boolean;
-		lifetimeAccuracy: number;
-		lifetimeTotalTrades: number;
-		// Session metrics — driven by FlowMode (`sessionStartMs`,
-		// `correctCallsThisSession`, `betsCount`).
-		sessionAccuracy: number;
-		sessionDurationLabel: string;
-		// Daily-goal heuristic — `betsCount / DAILY_GOAL_TARGET`,
-		// capped at 1 in FlowMode.
-		dailyGoalDone: number;
-		dailyGoalTarget: number;
-		dailyGoalFraction: number;
-		// Profile archetype id — used by the SMART NUDGE card. When
-		// undefined the card falls back to a generic line.
-		archetype: string | undefined;
-		// Category the user leaned hardest into this session. Drives
-		// the Oracle line ("You were early on {category}"). Undefined
-		// when the user closed the session without placing any calls.
-		topSessionCategory?: FlowArtCategory;
-		// CTA wiring.
-		onBackToMarkets: () => void;
-		onContinueSession: () => void;
-		onSeePortfolio: () => void;
+		// Calls placed this session (now pending resolution).
+		pending: number;
+		// VXP locked at risk across the session's calls.
+		staked: number;
+		// Cross-session daily streak (days in a row), already bumped.
+		streak: number;
+		// True when the session ran to the daily hard cap (15) via Push-to-15.
+		overtime: boolean;
+		// True when the session resumed after a broken streak (no-shame framing).
+		comeback: boolean;
+		// Whether the "Push to 15 →" opt-in is still available (regular day,
+		// not yet in overtime, and the deck can supply more cards).
+		canExtend: boolean;
+		// CTA wiring. `onExtend` raises the session target to the hard cap and
+		// continues the deck past 10; `onClose` returns to the dashboard.
+		onExtend: () => void;
+		onClose: () => void;
 	}
 
-	const {
-		betsCount,
-		xp,
-		dailyStreak,
-		flameStage,
-		accuracyUnlocked,
-		lifetimeAccuracy,
-		lifetimeTotalTrades,
-		sessionAccuracy,
-		sessionDurationLabel,
-		dailyGoalDone,
-		dailyGoalTarget,
-		dailyGoalFraction,
-		archetype,
-		topSessionCategory,
-		onBackToMarkets,
-		onContinueSession,
-		onSeePortfolio
-	}: Props = $props();
+	const { pending, staked, streak, overtime, comeback, canExtend, onExtend, onClose }: Props =
+		$props();
 
-	const sessionAccPct = $derived(Math.round(sessionAccuracy * 100));
-	const dailyGoalPct = $derived(Math.round(dailyGoalFraction * 100));
+	// Reactive reduced-motion gate — the reward springs are the deliberate
+	// brand exception; we keep them but fade their entrance (and drop the
+	// confetti entirely) when the user opts out of motion.
+	const reduce = $derived(prefersReducedMotion());
 
-	// Oracle accent — name the category the user leaned hardest into
-	// this session. Falls back to "macro" when no calls were placed
-	// (zero-bet sessions still see FlowEnd via the "0 of 10" copy).
-	const oracleCategoryLabel = $derived(
-		t({
-			locale: $localeStore,
-			key: MARKET_TAG_LABEL_KEYS[topSessionCategory ?? 'macro']
-		})
+	// On fire whenever there's a live streak, a comeback, or an overtime
+	// finish — the day's character then rises as Flame; a quiet day shows
+	// the Oracle.
+	const onFire = $derived(comeback || overtime || streak >= 1);
+
+	// Streak day to show — a comeback re-opens at Day 1.
+	const streakDay = $derived(comeback ? 1 : Math.max(1, streak));
+
+	const eyebrowKey = $derived<MessageKey>(
+		overtime
+			? 'flow.end.eyebrow_overtime'
+			: comeback
+				? 'flow.end.eyebrow_comeback'
+				: 'flow.end.eyebrow_day'
 	);
 
-	// Smart-nudge percentile is a placeholder until the satellite
-	// surfaces a live leaderboard delta. Hardcoded as "72%" in the
-	// proto; we keep the same number until real data lands so the
-	// surface still has the editorial hook.
-	const SMART_NUDGE_PCT = 72;
+	// Headline pool — one line picked once on mount (frozen for the surface's
+	// lifetime). Overtime / comeback get their own framing; an on-fire day
+	// reads hotter than a quiet one.
+	const HEAD_POOLS = {
+		overtime: ['flow.end.head_overtime_1', 'flow.end.head_overtime_2', 'flow.end.head_overtime_3'],
+		comeback: ['flow.end.head_comeback_1', 'flow.end.head_comeback_2', 'flow.end.head_comeback_3'],
+		fire: ['flow.end.head_fire_1', 'flow.end.head_fire_2', 'flow.end.head_fire_3'],
+		day: ['flow.end.head_day_1', 'flow.end.head_day_2', 'flow.end.head_day_3']
+	} as const satisfies Record<string, readonly MessageKey[]>;
 
-	// Archetype label — falls back to "Strategist" when the user
-	// hasn't been assigned one yet, matching the proto copy.
-	const archetypeLabel = $derived(archetype ?? 'Strategist');
+	const headKey: MessageKey = (() => {
+		const pool = overtime
+			? HEAD_POOLS.overtime
+			: comeback
+				? HEAD_POOLS.comeback
+				: onFire
+					? HEAD_POOLS.fire
+					: HEAD_POOLS.day;
 
-	// Smart-nudge copy with the percentile highlighted in the accent
-	// tint. Rather than fork the sentence into per-locale fragments, we
-	// render the catalog string whole and split it on the interpolated
-	// "{pct}%" token so the number can carry its own span — every locale
-	// keeps the placeholder inline, so the split holds across all of them.
-	const nudgePctToken = $derived(`${SMART_NUDGE_PCT}%`);
-	const nudgeCopy = $derived(
-		t({
-			locale: $localeStore,
-			key: 'flow.end.smart_nudge_copy',
-			params: { pct: SMART_NUDGE_PCT, archetype: archetypeLabel }
-		})
+		return pool[Math.floor(Math.random() * pool.length)];
+	})();
+
+	const bodyKey = $derived<MessageKey>(
+		overtime ? 'flow.end.body_overtime' : comeback ? 'flow.end.body_comeback' : 'flow.end.body_day'
 	);
-	const nudgeParts = $derived(nudgeCopy.split(nudgePctToken));
 
-	const reducedMotion = prefersReducedMotion();
+	const pendingValue = $derived(
+		pending === 1
+			? t({ locale: $localeStore, key: 'flow.end.stat_pending_value_one' })
+			: t({ locale: $localeStore, key: 'flow.end.stat_pending_value', params: { count: pending } })
+	);
+
+	// Confetti — a radial burst gated by reduced motion. `$derived` so the
+	// burst drops cleanly if the motion preference flips while the takeover
+	// is up (no hidden init-time capture of `reduce`).
+	const SPARK_PALETTE = ['#E9C254', '#F08A3C', '#FFF1C2', '#FFD9A0'];
+	const sparks = $derived(
+		reduce
+			? []
+			: Array.from({ length: 26 }, (_, i) => {
+					const ang = Math.PI * 2 * (i / 26) + (Math.random() * 0.4 - 0.2);
+					const r = 120 + Math.random() * 150;
+
+					return {
+						dx: Math.cos(ang) * r,
+						dy: Math.sin(ang) * r - 30,
+						color: SPARK_PALETTE[i % SPARK_PALETTE.length],
+						size: 5 + Math.random() * 8,
+						rot: Math.random() * 360 - 180,
+						round: i % 3 === 0,
+						delay_ms: Math.random() * 120
+					};
+				})
+	);
+
+	const SHARE_URL = 'https://vici.market';
+
+	// Share the day's calls — native share sheet where available, clipboard
+	// fallback otherwise. Aborts are swallowed (the user dismissed the sheet).
+	const shareDay = async () => {
+		const text = t({
+			locale: $localeStore,
+			key: pending === 1 ? 'flow.end.share_text_one' : 'flow.end.share_text',
+			params: { count: pending }
+		});
+
+		if (navigator.share) {
+			try {
+				await navigator.share({ title: 'VICI', text, url: SHARE_URL });
+
+				return;
+			} catch (e: unknown) {
+				if (e instanceof Error && e.name === 'AbortError') {
+					return;
+				}
+			}
+		}
+
+		await writeToClipboard(`${text} ${SHARE_URL}`);
+	};
+
+	const inviteFriend = async () => {
+		const text = t({ locale: $localeStore, key: 'flow.invite.share_text' });
+
+		if (navigator.share) {
+			try {
+				await navigator.share({ title: 'VICI', text, url: SHARE_URL });
+
+				return;
+			} catch (e: unknown) {
+				if (e instanceof Error && e.name === 'AbortError') {
+					return;
+				}
+			}
+		}
+
+		await writeToClipboard(`${text} ${SHARE_URL}`);
+	};
 </script>
 
-<!-- FlowEnd — session summary surface. -->
-<div class="flow-end">
-	<div class="flow-end-scroll" in:fly={reducedMotion ? { duration: 0 } : { y: 20, duration: 500 }}>
-		<!-- 1 · Header: SESSION COMPLETE eyebrow + Vici. + duration line. -->
-		<header class="flow-end-head anim-in">
-			<p class="eyebrow flow-end-eyebrow">
-				{t({ locale: $localeStore, key: 'flow.end.session_complete' })}
-			</p>
-			<h2 class="flow-end-title display serif-italic">Vici.</h2>
-			<p class="flow-end-sub">
-				{#if betsCount === 0}
-					{t({ locale: $localeStore, key: 'flow.end.no_calls' })}
-				{:else}
-					{t({
-						locale: $localeStore,
-						key: 'flow.end.duration_line',
-						params: { count: betsCount, duration: sessionDurationLabel }
-					})}
-				{/if}
-			</p>
-		</header>
+<!-- FlowEnd — the end-of-session celebration peak. A full-stage takeover:
+     the day's character rises with a confetti burst, three stats count in,
+     and one flex-framed choice follows — push to 15, or done. -->
+<div class="flow-end" class:is-static={reduce}>
+	<!-- Confetti — decorative, suppressed under reduced motion. -->
+	<div class="flow-end-confetti" aria-hidden="true">
+		{#each sparks as s, i (i)}
+			<i
+				style:--fdx="{s.dx}px"
+				style:--fdy="{s.dy}px"
+				style:--frot="{s.rot}deg"
+				style:width="{s.size}px"
+				style:height="{s.size}px"
+				style:background={s.color}
+				style:border-radius={s.round ? '50%' : '2px'}
+				style:animation-delay="{s.delay_ms}ms"
+			></i>
+		{/each}
+	</div>
 
-		<!-- 2 · Oracle weekly read pill. Always renders — accuracy is the
-		     anchor even at 0 %. The italic mid-sentence accent comes from a
-		     dedicated `*_accent` key per locale so translators can move it. -->
-		<section class="flow-end-oracle anim-in-2">
-			<span class="flow-end-oracle-char" aria-hidden="true">
-				<OracleChar animate size={48} />
+	<div class="flow-end-char">
+		{#if onFire}
+			<FlameChar animate={!reduce} size={96} stage="inferno" />
+		{:else}
+			<OracleChar animate={!reduce} size={96} />
+		{/if}
+	</div>
+
+	<p class="eyebrow flow-end-eyebrow">{t({ locale: $localeStore, key: eyebrowKey })}</p>
+
+	<!-- The summary is announced once it settles — `aria-live` on the head so
+	     screen readers get the celebration without the decorative motion. -->
+	<h2 class="flow-end-head serif-italic" aria-live="polite" role="status">
+		{t({ locale: $localeStore, key: headKey })}
+	</h2>
+
+	<!-- Stats — stagger in. -->
+	<div class="flow-end-stats">
+		<div class="flow-end-stat flow-end-stat-1">
+			<span class="eyebrow flow-end-stat-label"
+				>{t({ locale: $localeStore, key: 'flow.end.stat_streak' })}</span
+			>
+			<span class="num flow-end-stat-value flow-end-stat-value-fire">
+				{t({ locale: $localeStore, key: 'flow.end.stat_streak_value', params: { n: streakDay } })}
 			</span>
-			<div class="flow-end-oracle-body">
-				<p class="eyebrow flow-end-oracle-eyebrow">
-					{t({ locale: $localeStore, key: 'flow.end.oracle_eyebrow' })}
-				</p>
-				<p class="flow-end-oracle-copy">
-					{t({
-						locale: $localeStore,
-						key: 'flow.end.oracle_line_pre',
-						params: { pct: sessionAccPct }
-					})}
-					<span class="serif-italic">
-						{t({
-							locale: $localeStore,
-							key: 'flow.end.oracle_line_accent',
-							params: { category: oracleCategoryLabel }
-						})}
-					</span>
-					{t({ locale: $localeStore, key: 'flow.end.oracle_line_post' })}
-				</p>
-			</div>
-		</section>
-
-		<!-- 3 · 4-tile stat grid. RANK Δ is em-dashed until a historical
-		     rank snapshot is wired backend-side. -->
-		<section class="flow-end-grid anim-in-2">
-			<div class="flow-end-tile">
-				<p class="eyebrow flow-end-tile-label">
-					{t({ locale: $localeStore, key: 'flow.end.tile_xp_earned' })}
-				</p>
-				<p class="num flow-end-tile-value flow-end-tile-value-accent">+{xp}</p>
-			</div>
-			<div class="flow-end-tile flow-end-tile-streak">
-				<p class="eyebrow flow-end-tile-label">
-					{t({ locale: $localeStore, key: 'flow.end.tile_streak' })}
-				</p>
-				<div class="flow-end-tile-streak-row">
-					<FlameChar animate={dailyStreak >= 1} size={22} stage={flameStage} />
-					<span class="num flow-end-tile-value">{dailyStreak}</span>
-				</div>
-			</div>
-			<div class="flow-end-tile">
-				<p class="eyebrow flow-end-tile-label">
-					{t({ locale: $localeStore, key: 'flow.end.tile_session_acc' })}
-				</p>
-				<p class="num flow-end-tile-value flow-end-tile-value-md">{sessionAccPct}%</p>
-			</div>
-			<div class="flow-end-tile">
-				<p class="eyebrow flow-end-tile-label">
-					{t({ locale: $localeStore, key: 'flow.end.tile_rank_delta' })}
-				</p>
-				<p class="num flow-end-tile-value flow-end-tile-value-md flow-end-tile-value-dim">—</p>
-			</div>
-		</section>
-
-		<!-- 4 · Smart Nudge — archetype-driven editorial copy. -->
-		<section class="flow-end-card flow-end-nudge anim-in-3">
-			<div class="flow-end-nudge-head">
-				<svg
-					aria-hidden="true"
-					fill="none"
-					height="16"
-					stroke="currentColor"
-					stroke-linecap="round"
-					stroke-linejoin="round"
-					stroke-width="2"
-					viewBox="0 0 24 24"
-					width="16"
-				>
-					<path d="M12 2v6M12 16v6M2 12h6M16 12h6M5 5l4 4M15 15l4 4M5 19l4-4M15 9l4-4" />
-				</svg>
-				<p class="eyebrow">
-					{t({ locale: $localeStore, key: 'flow.end.smart_nudge_eyebrow' })}
-				</p>
-			</div>
-			<p class="flow-end-nudge-copy">
-				{#if nudgeParts.length === 2}
-					{nudgeParts[0]}<span class="num flow-end-nudge-pct">{nudgePctToken}</span>{nudgeParts[1]}
-				{:else}
-					{nudgeCopy}
-				{/if}
-			</p>
-		</section>
-
-		<!-- 5 · Daily Goal card with progress bar. -->
-		<section class="flow-end-card flow-end-goal anim-in-3">
-			<div class="flow-end-goal-row">
-				<div>
-					<p class="eyebrow flow-end-goal-eyebrow">
-						{t({ locale: $localeStore, key: 'flow.end.daily_goal_eyebrow' })}
-					</p>
-					<p class="flow-end-goal-count">
-						{t({
-							locale: $localeStore,
-							key: 'flow.end.daily_goal_count',
-							params: { done: dailyGoalDone, target: dailyGoalTarget }
-						})}
-					</p>
-				</div>
-				<p class="num flow-end-goal-pct">{dailyGoalPct}%</p>
-			</div>
-			<div class="flow-end-goal-bar" role="presentation">
-				<span style:width="{Math.min(100, dailyGoalPct)}%"></span>
-			</div>
-		</section>
-
-		<!-- 6 · Invite friend card. -->
-		<FlowInviteCard sessionXp={xp} />
-
-		<!-- 7 · Twin CTAs: primary "Predict 10 more" + secondary "See portfolio".
-		     "Back to markets" stays as a tertiary affordance — keeping the
-		     original entry point reachable while matching the proto's stack. -->
-		<div class="flow-end-actions">
-			<Button onclick={onContinueSession}>
-				{t({
-					locale: $localeStore,
-					key: 'flow.end.predict_more',
-					params: { count: dailyGoalTarget }
-				})}
-			</Button>
-			<Button onclick={onSeePortfolio} variant="ghost">
-				{t({ locale: $localeStore, key: 'flow.end.see_portfolio' })}
-			</Button>
-			{#if accuracyUnlocked || lifetimeTotalTrades > 0 || lifetimeAccuracy > 0}
-				<!-- Tertiary "back to markets" — kept under the primary
-				     stack so it never competes with the two main CTAs. -->
-				<Button onclick={onBackToMarkets} variant="ghost">
-					{t({ locale: $localeStore, key: 'flow.back_to_markets' })}
-				</Button>
-			{/if}
 		</div>
+		<div class="flow-end-stat flow-end-stat-2">
+			<span class="eyebrow flow-end-stat-label"
+				>{t({ locale: $localeStore, key: 'flow.end.stat_pending' })}</span
+			>
+			<span class="num flow-end-stat-value">{pendingValue}</span>
+		</div>
+		<div class="flow-end-stat flow-end-stat-3">
+			<span class="eyebrow flow-end-stat-label"
+				>{t({ locale: $localeStore, key: 'flow.end.stat_called' })}</span
+			>
+			<span class="num flow-end-stat-value">
+				<CountUp to={staked} /> VXP
+			</span>
+		</div>
+	</div>
+
+	<p class="flow-end-body">{t({ locale: $localeStore, key: bodyKey })}</p>
+
+	<div class="flow-end-actions">
+		{#if canExtend}
+			<Button onclick={onExtend} size="lg"
+				>{t({ locale: $localeStore, key: 'flow.end.push_to_15' })}</Button
+			>
+			<Button onclick={onClose} variant="ghost"
+				>{t({ locale: $localeStore, key: 'flow.end.back_to_dashboard' })}</Button
+			>
+		{:else}
+			<Button onclick={onClose} size="lg"
+				>{t({ locale: $localeStore, key: 'flow.end.back_to_dashboard' })}</Button
+			>
+		{/if}
+	</div>
+
+	<!-- Growth — subtle text links, kept quiet so they never compete with the
+	     primary action. -->
+	<div class="flow-end-links">
+		<button class="flow-end-link" onclick={shareDay} type="button"
+			>{t({ locale: $localeStore, key: 'flow.end.share_calls' })}</button
+		>
+		<span class="flow-end-link-dot" aria-hidden="true">·</span>
+		<button class="flow-end-link" onclick={inviteFriend} type="button"
+			>{t({ locale: $localeStore, key: 'flow.end.invite_friend' })}</button
+		>
 	</div>
 </div>
 
 <style lang="postcss">
-	/* FlowEnd — session summary surface. Brand voice: serif-italic
-	   `Vici.` headline, terse numeric stat grid, editorial accent on
-	   the Oracle / Smart Nudge / Daily Goal cards. */
+	/* The celebration peak — a full-stage takeover. Theme-adaptive: the
+	   radial wash and every surface tint resolve through the laurel / ink /
+	   parchment tokens, so dark / light / peach all read correctly. The
+	   `fe-pop` / `fe-spark` / `fe-rise` keyframes are shared global
+	   celebration primitives (see app.css). */
 	.flow-end {
-		position: relative;
+		position: absolute;
+		inset: 0;
+		z-index: 40;
 		display: flex;
-		align-items: flex-start;
-		justify-content: center;
-		min-height: 100dvh;
-		padding: 1.5rem 1.25rem 2rem;
-		background:
-			radial-gradient(circle at 20% 10%, var(--laurel-glow), transparent 45%), var(--bg-base);
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-start;
+		text-align: center;
+		padding: 2.5rem 1.375rem 1.75rem;
 		overflow-y: auto;
-	}
-	.flow-end-scroll {
-		width: 100%;
-		max-width: 26rem;
-		display: flex;
-		flex-direction: column;
-		gap: 0.875rem;
+		background: radial-gradient(
+			circle at 50% 28%,
+			color-mix(in srgb, var(--laurel) 9%, var(--bg-base)),
+			var(--bg-base)
+		);
 	}
 
-	/* 1 · Header */
-	.flow-end-head {
-		display: flex;
-		flex-direction: column;
-		gap: 0.4rem;
+	.flow-end-confetti {
+		position: absolute;
+		left: 50%;
+		top: 34%;
+		width: 0;
+		height: 0;
+		pointer-events: none;
 	}
+	.flow-end-confetti > i {
+		position: absolute;
+		left: -4px;
+		top: -4px;
+		opacity: 0;
+		animation: fe-spark 1100ms cubic-bezier(0.15, 0.7, 0.3, 1) both;
+	}
+
+	.flow-end-char {
+		animation: fe-pop 600ms cubic-bezier(0.3, 1.5, 0.5, 1) both;
+	}
+
 	.flow-end-eyebrow {
-		margin: 0;
-		color: var(--text-muted);
-		letter-spacing: var(--tracking-allcaps);
-	}
-	.flow-end-title {
-		margin: 0;
-		font-size: clamp(2.5rem, 12vw, 3.5rem);
-		letter-spacing: -0.025em;
-		color: var(--laurel);
-		line-height: 1;
-	}
-	.flow-end-sub {
-		margin: 0.25rem 0 0;
-		font-size: var(--t-14);
-		color: var(--text-muted);
-	}
-
-	/* 2 · Oracle pill */
-	.flow-end-oracle {
-		display: flex;
-		gap: 0.875rem;
-		align-items: center;
-		padding: 0.75rem 0.875rem 0.75rem 0.5rem;
-		border-radius: var(--r-12);
-		background: rgba(226, 184, 66, 0.05);
-		border: 1px solid rgba(226, 184, 66, 0.2);
-	}
-	.flow-end-oracle-char {
-		flex-shrink: 0;
-		display: inline-flex;
-	}
-	.flow-end-oracle-body {
-		display: flex;
-		flex-direction: column;
-		gap: 2px;
-	}
-	.flow-end-oracle-eyebrow {
-		margin: 0;
-		color: var(--laurel);
-	}
-	.flow-end-oracle-copy {
-		margin: 0;
-		font-size: var(--t-13);
-		color: var(--text-base);
-		line-height: 1.45;
-	}
-
-	/* 3 · 4-tile grid */
-	.flow-end-grid {
-		display: grid;
-		grid-template-columns: repeat(2, 1fr);
-		gap: 0.75rem;
-		padding: 1rem;
-		border-radius: var(--r-12);
-		border: 1px solid var(--border-base);
-		background: color-mix(in srgb, var(--bg-surface) 85%, transparent);
-		box-shadow: var(--inset-hi);
-	}
-	.flow-end-tile {
-		display: flex;
-		flex-direction: column;
-		gap: 4px;
-	}
-	.flow-end-tile-label {
-		margin: 0;
-		color: var(--text-muted);
-		letter-spacing: var(--tracking-allcaps);
-	}
-	.flow-end-tile-value {
-		margin: 0;
-		font-size: clamp(1.75rem, 7vw, 2.25rem);
-		font-weight: 600;
-		letter-spacing: var(--tracking-tight);
-		line-height: 1.05;
-		color: var(--text-base);
-	}
-	.flow-end-tile-value-md {
-		font-size: clamp(1.25rem, 5vw, 1.5rem);
-	}
-	.flow-end-tile-value-accent {
-		color: var(--laurel);
-	}
-	.flow-end-tile-value-dim {
-		color: var(--text-muted);
-	}
-	.flow-end-tile-streak-row {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-	}
-
-	/* 4 · Smart Nudge */
-	.flow-end-card {
-		padding: 0.875rem 1rem;
-		border-radius: var(--r-12);
-		border: 1px solid var(--border-base);
-		background: color-mix(in srgb, var(--bg-surface) 85%, transparent);
-	}
-	.flow-end-nudge-head {
-		display: inline-flex;
-		align-items: center;
-		gap: 6px;
-		color: var(--laurel);
-	}
-	.flow-end-nudge-head .eyebrow {
-		margin: 0;
-	}
-	.flow-end-nudge-copy {
 		margin: 0.5rem 0 0;
+		color: var(--laurel);
+		letter-spacing: 0.24em;
+		opacity: 0;
+		animation: fe-rise 500ms ease 0.1s both;
+	}
+
+	.flow-end-head {
+		margin: 0.375rem 0 0;
+		font-size: 2.125rem;
+		line-height: 1.05;
+		letter-spacing: -0.02em;
+		color: var(--text-base);
+		opacity: 0;
+		animation: fe-pop 560ms cubic-bezier(0.3, 1.5, 0.5, 1) 0.16s both;
+	}
+
+	.flow-end-stats {
+		display: flex;
+		gap: 0.625rem;
+		justify-content: center;
+		margin-top: 1.125rem;
+	}
+	.flow-end-stat {
+		display: flex;
+		flex-direction: column;
+		gap: 3px;
+		min-width: 5.25rem;
+		padding: 0.625rem 0.875rem;
+		border-radius: var(--r-12);
+		background: var(--bg-surface);
+		border: 1px solid var(--border-base);
+		opacity: 0;
+	}
+	.flow-end-stat-1 {
+		animation: fe-rise 500ms ease 0.3s both;
+	}
+	.flow-end-stat-2 {
+		animation: fe-rise 500ms ease 0.42s both;
+	}
+	.flow-end-stat-3 {
+		animation: fe-rise 500ms ease 0.54s both;
+	}
+	.flow-end-stat-label {
+		font-size: 0.5625rem;
+		color: var(--text-muted);
+	}
+	.flow-end-stat-value {
+		font-size: 1.0625rem;
+		font-weight: 700;
+		color: var(--text-base);
+	}
+	.flow-end-stat-value-fire {
+		color: var(--char-flame, #f08a3c);
+	}
+
+	.flow-end-body {
+		margin: 0.875rem 0 0;
+		max-width: 32ch;
 		font-size: var(--t-14);
 		line-height: 1.5;
-		color: var(--text-base);
-	}
-	.flow-end-nudge-pct {
-		color: var(--laurel);
-	}
-
-	/* 5 · Daily Goal */
-	.flow-end-goal {
-		background: rgba(226, 184, 66, 0.05);
-		border-color: rgba(226, 184, 66, 0.18);
-	}
-	.flow-end-goal-row {
-		display: flex;
-		align-items: flex-start;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-	.flow-end-goal-eyebrow {
-		margin: 0;
-		color: var(--laurel);
-	}
-	.flow-end-goal-count {
-		margin: 4px 0 0;
-		font-size: var(--t-14);
 		color: var(--text-muted);
-	}
-	.flow-end-goal-pct {
-		margin: 0;
-		font-size: 1.375rem;
-		font-weight: 600;
-		color: var(--text-base);
-	}
-	.flow-end-goal-bar {
-		margin-top: 0.625rem;
-		height: 4px;
-		border-radius: var(--r-pill);
-		background: rgba(226, 184, 66, 0.18);
-		overflow: hidden;
-	}
-	.flow-end-goal-bar > span {
-		display: block;
-		height: 100%;
-		background: var(--laurel);
-		transition: width var(--d-enter) cubic-bezier(0.22, 1, 0.36, 1);
+		opacity: 0;
+		animation: fe-rise 500ms ease 0.66s both;
 	}
 
-	/* 7 · CTA stack */
 	.flow-end-actions {
 		display: flex;
 		flex-direction: column;
-		gap: 0.625rem;
-		margin-top: 1.5rem;
+		gap: 0.5625rem;
+		width: min(18.75rem, 86%);
+		margin-top: 1.375rem;
+		opacity: 0;
+		animation: fe-rise 500ms ease 0.78s both;
 	}
 
-	/* Entrance staggers — `anim-in` / `anim-in-2` / `anim-in-3` are
-	   defined in `app.css` (top-to-bottom 0 / 90 / 180 ms delays
-	   against the shared `fade-up` keyframe). Reduced-motion guard
-	   lives there too. */
+	.flow-end-links {
+		display: flex;
+		gap: 0.875rem;
+		align-items: center;
+		justify-content: center;
+		margin-top: 1rem;
+		opacity: 0;
+		animation: fe-rise 500ms ease 0.9s both;
+	}
+	.flow-end-link {
+		background: none;
+		border: 0;
+		padding: 4px 2px;
+		color: var(--text-muted);
+		font-family: var(--font-mono);
+		font-size: 0.6875rem;
+		letter-spacing: 0.04em;
+		cursor: pointer;
+		text-decoration: underline;
+		text-underline-offset: 3px;
+	}
+	.flow-end-link-dot {
+		color: color-mix(in srgb, var(--text-muted) 55%, transparent);
+	}
+
+	/* Reduced motion — keep the reward springs (the brand exception) but
+	   fade them in place instead of springing, drop the confetti entirely,
+	   and reveal every staggered element immediately. */
+	.flow-end.is-static .flow-end-confetti {
+		display: none;
+	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-end-char,
+		.flow-end-eyebrow,
+		.flow-end-head,
+		.flow-end-stat,
+		.flow-end-body,
+		.flow-end-actions,
+		.flow-end-links {
+			animation: none;
+			opacity: 1;
+		}
+	}
 </style>
