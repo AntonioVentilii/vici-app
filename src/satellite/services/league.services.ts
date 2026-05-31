@@ -316,7 +316,11 @@ export const transferLeagueOwnershipFn = ({
  *
  * Refusal reasons:
  *  - `not_owner` — caller is not the current owner of the league.
- *  - `league_not_found` — `leagueId` resolves to no doc.
+ *
+ * A missing league doc is NOT a refusal — it's a clean no-op success
+ * (`{ ok: true }`). The disband is idempotent: if the league is already
+ * gone (e.g. deleted by a concurrent caller between an ownership
+ * precheck and this call), the desired end state already holds.
  *
  * The disband runs as the satellite SDK caller (passed in as
  * `callerBytes`), so it deletes via `deleteDocStore` directly — that
@@ -345,15 +349,16 @@ export const deleteLeagueFn = ({
 	leagueId: string;
 	callerText: string;
 	callerBytes: Uint8Array;
-}): { ok: boolean; reason?: 'not_owner' | 'league_not_found' } => {
+}): { ok: boolean; reason?: 'not_owner' } => {
 	const leagueDoc = getDocStore({
 		collection: Collection.LEAGUES,
 		key: leagueId,
 		caller: callerBytes
 	});
 
+	// Idempotent: nothing to disband if the league is already gone.
 	if (isNullish(leagueDoc)) {
-		return { ok: false, reason: 'league_not_found' };
+		return { ok: true };
 	}
 
 	const league = decodeDocData<LeagueDoc>(leagueDoc.data);
@@ -365,6 +370,12 @@ export const deleteLeagueFn = ({
 	// Delete every membership row for this league (prefix scan on
 	// `${leagueId}/`). The owner row is included — the SDK drop bypasses
 	// `assertDeleteLeagueMember`'s "owner row can't be deleted" guard.
+	//
+	// Match on the key prefix alone, NOT the decoded payload: membership
+	// keys are already namespaced by `${leagueId}/`, so the prefix is
+	// authoritative. Deleting a row whose payload fails to decode (or whose
+	// `leagueId` field disagrees) would otherwise leave an orphan row behind
+	// after the league doc is gone.
 	const { items: memberItems } = listDocsStore({
 		collection: Collection.LEAGUE_MEMBERS,
 		caller: callerBytes,
@@ -375,22 +386,14 @@ export const deleteLeagueFn = ({
 
 	for (const [docKey, item] of memberItems) {
 		if (docKey.startsWith(prefix)) {
-			try {
-				const member = decodeDocData<LeagueMemberDoc>(item.data);
-
-				if (member.leagueId === leagueId) {
-					deleteDocStore({
-						collection: Collection.LEAGUE_MEMBERS,
-						key: docKey,
-						caller: callerBytes,
-						doc: {
-							version: item.version
-						}
-					});
+			deleteDocStore({
+				collection: Collection.LEAGUE_MEMBERS,
+				key: docKey,
+				caller: callerBytes,
+				doc: {
+					version: item.version
 				}
-			} catch {
-				// skip malformed
-			}
+			});
 		}
 	}
 

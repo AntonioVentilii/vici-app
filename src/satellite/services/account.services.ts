@@ -844,7 +844,16 @@ export const deleteMyAccountFn = ({
 	note: string;
 	leagueResolutions?: LeagueResolution[];
 }): DeleteMyAccountResult => {
-	const validated = validateInput({ reason, note });
+	// Invalid `reason`/`note` is a typed refusal, not a trap — `validateInput`
+	// throws, so catch it and return the documented `invalid_input` shape.
+	let validated: { reason: ExitSignalReason; note: string };
+
+	try {
+		validated = validateInput({ reason, note });
+	} catch {
+		return { ok: false, reason: 'invalid_input' };
+	}
+
 	const caller = msgCaller();
 	const callerText = caller.toText();
 	const callerBytes = caller.toUint8Array();
