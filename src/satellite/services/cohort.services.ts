@@ -449,6 +449,46 @@ export const listWorldsRosterFn = ({
 };
 
 /**
+ * Tolerant `AffiliationStatsDoc` reader, mirroring `readAffiliationDoc`.
+ * Pre-rename rows still carry the legacy `affiliationId` field, so a
+ * fresh decode leaves `affiliationIdentifier === undefined`, which the
+ * required-string wire schema would reject at the JsonData → Candid
+ * boundary. We repair the identifier at read time (no data migration —
+ * this is read-only) in priority order:
+ *
+ *  1. the decoded body's `affiliationIdentifier`;
+ *  2. the legacy `affiliationId` field off the raw object;
+ *  3. derived from the doc KEY — `${kind}/${affiliationIdentifier}`
+ *     (rolling) or `${kind}/${affiliationIdentifier}/${monthAnchor}`
+ *     (snapshot), so segment index 1 is always the identifier.
+ *
+ * `docKey` is optional so single-doc callers that already know the key
+ * shape can omit it; list callers pass it for the key-derived fallback.
+ * Returns `undefined` when the identifier still can't be resolved to a
+ * non-empty string, so the wire mapping never receives `undefined`.
+ */
+const readAffiliationStatsDoc = ({
+	data,
+	docKey
+}: {
+	data: Uint8Array;
+	docKey?: string;
+}): AffiliationStatsDoc | undefined => {
+	const raw = decodeDocData<AffiliationStatsDoc & { affiliationId?: string }>(data);
+	const keyDerived = nonNullish(docKey) ? docKey.split('/')[1] : undefined;
+	const identifier = raw.affiliationIdentifier ?? raw.affiliationId ?? keyDerived;
+
+	if (typeof identifier !== 'string' || identifier.length === 0) {
+		return;
+	}
+
+	return {
+		...raw,
+		affiliationIdentifier: identifier
+	};
+};
+
+/**
  * Single-doc lookup for `affiliation_stats`. Returns `undefined`
  * when no stats doc exists yet (the affiliation hasn't been the
  * subject of any settled call). Callers should treat that as
@@ -474,7 +514,9 @@ export const getAffiliationStatsFn = ({
 	}
 
 	try {
-		return decodeDocData<AffiliationStatsDoc>(doc.data);
+		// Backfill the identifier from the query key when a legacy doc
+		// body lacks it; a still-malformed row reads as "no stats".
+		return readAffiliationStatsDoc({ data: doc.data, docKey: key });
 	} catch {
 		// Malformed payload — treat as "no stats" for callers.
 	}
@@ -515,9 +557,12 @@ export const listAffiliationStatsFn = ({
 
 		if (isRollingDoc) {
 			try {
-				const doc = decodeDocData<AffiliationStatsDoc>(item.data);
+				// Repair legacy rows (missing identifier) from the doc key
+				// before they reach the required-string wire schema; drop
+				// any row whose identifier still can't be resolved.
+				const doc = readAffiliationStatsDoc({ data: item.data, docKey });
 
-				if (doc.kind === kind && doc.totalCalls >= MIN_CALLS_FOR_RANK) {
+				if (nonNullish(doc) && doc.kind === kind && doc.totalCalls >= MIN_CALLS_FOR_RANK) {
 					stats.push(doc);
 				}
 			} catch {
@@ -588,9 +633,13 @@ export const listAffiliationStatsForMonthFn = ({
 
 		if (isSnapshotForMonth) {
 			try {
-				const doc = decodeDocData<AffiliationStatsDoc>(item.data);
+				// Same legacy-row repair as the rolling leaderboard: resolve
+				// the identifier (body → legacy field → key) and drop the
+				// row if it stays unresolved.
+				const doc = readAffiliationStatsDoc({ data: item.data, docKey });
 
 				if (
+					nonNullish(doc) &&
 					doc.kind === kind &&
 					doc.monthAnchor === monthAnchor &&
 					doc.monthTotalCalls >= MIN_CALLS_FOR_RANK
