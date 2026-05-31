@@ -24,7 +24,7 @@
 
 	/**
 	 * Markets screen — chip rail (Saved + per-category) above a
-	 * Trending carousel and a sortable list. Data comes from the
+	 * Trending carousel and the main list. Data comes from the
 	 * `$markets` derived store plus
 	 * `$preferencesStore.savedMarketIds`; the saved-ids persistence
 	 * is keyed under `vici.saved-markets` in localStorage.
@@ -34,25 +34,6 @@
 	// How many non-WC markets the `bridge`-phase "Beyond the Cup" rail seeds —
 	// enough to preview the post-Cup deck without competing with the focus.
 	const BEYOND_RAIL_LIMIT = 6;
-	const SORT_STORAGE_KEY = 'vici.market-sort';
-
-	type MarketsSort = 'trending' | 'closing' | 'newest';
-	const SORT_OPTIONS: MarketsSort[] = ['trending', 'closing', 'newest'];
-	const isMarketsSort = (v: string): v is MarketsSort =>
-		(SORT_OPTIONS as readonly string[]).includes(v);
-	const initialSort = ((): MarketsSort => {
-		if (typeof localStorage === 'undefined') {
-			return 'trending';
-		}
-
-		try {
-			const stored = localStorage.getItem(SORT_STORAGE_KEY);
-
-			return stored !== null && isMarketsSort(stored) ? stored : 'trending';
-		} catch {
-			return 'trending';
-		}
-	})();
 
 	// Initial focus: in the WC-focused phases of the retention arc
 	// (`wc-focus` / `bridge`) the Markets list opens laser-focused on the
@@ -66,22 +47,6 @@
 	let cat = $state<MarketsCategoryFilter>(
 		initialPhase === 'wc-focus' || initialPhase === 'bridge' ? 'wc' : 'all'
 	);
-	let sort = $state<MarketsSort>(initialSort);
-
-	const setSort = (next: MarketsSort) => {
-		sort = next;
-
-		if (typeof localStorage === 'undefined') {
-			return;
-		}
-
-		try {
-			localStorage.setItem(SORT_STORAGE_KEY, next);
-		} catch {
-			// localStorage write blocked — accept the loss; the user's
-			// preference will just not persist for this device.
-		}
-	};
 
 	// The retention-arc phase drives the WC chrome live. `wc-focus` and
 	// `bridge` both keep the laser focus (two-tier eyebrow + collapsed
@@ -151,53 +116,11 @@
 		return set;
 	});
 
-	// Sort comparator for the main list. `trending` mirrors the
-	// homepage carousel's totalVolume DESC sort; `closing` surfaces the
-	// soonest-expiring Open markets first (Resolved/Expired sink to
-	// the bottom); `newest` sorts by `Market.createdAt` DESC — same
-	// field the recommendation ranker uses as its recency signal
-	// (`market.services.ts:600`).
-	const sortList = ({ items, mode }: { items: Market[]; mode: MarketsSort }): Market[] => {
-		const copy = [...items];
-
-		switch (mode) {
-			case 'trending':
-				return copy.sort((a, b) => {
-					if (b.totalVolume === a.totalVolume) {
-						return 0;
-					}
-
-					return b.totalVolume > a.totalVolume ? 1 : -1;
-				});
-			case 'closing':
-				return copy.sort((a, b) => {
-					const aOpen = a.status === 'Open' ? 0 : 1;
-					const bOpen = b.status === 'Open' ? 0 : 1;
-
-					if (aOpen !== bOpen) {
-						return aOpen - bOpen;
-					}
-
-					if (a.expiryDate === b.expiryDate) {
-						return 0;
-					}
-
-					return a.expiryDate < b.expiryDate ? -1 : 1;
-				});
-			case 'newest':
-				return copy.sort((a, b) => {
-					if (a.createdAt === b.createdAt) {
-						return 0;
-					}
-
-					return b.createdAt > a.createdAt ? 1 : -1;
-				});
-		}
-	};
-
 	// Filter the deck: saved-only when the saved chip is active,
 	// otherwise either all open markets or those carrying the active
-	// category tag. The result is sorted via `sortList` below.
+	// category tag. Ordered by totalVolume DESC — the same trending
+	// signal the carousels use — for a stable deck that doesn't
+	// reshuffle as the user scans it.
 	const list = $derived.by((): Market[] => {
 		const base = ((): Market[] => {
 			if (cat === 'saved') {
@@ -213,7 +136,13 @@
 			return $markets.filter((m) => matchesTag({ market: m, tag }));
 		})();
 
-		return sortList({ items: base, mode: sort });
+		return [...base].sort((a, b) => {
+			if (b.totalVolume === a.totalVolume) {
+				return 0;
+			}
+
+			return b.totalVolume > a.totalVolume ? 1 : -1;
+		});
 	});
 
 	// Our backend doesn't carry a hand-curated "hot" flag, so the
@@ -346,27 +275,6 @@
 				<span class="mute t-sub">{list.length}</span>
 			</div>
 
-			<!-- Sort chips — Trending (default, volume DESC) · Closing soon
-		     (Open-first, expiry ASC) · Newest (expiry DESC as a freshness
-		     proxy). Persisted under `vici.market-sort`. -->
-			<div
-				class="markets-sort"
-				aria-label={t({ locale: $localeStore, key: 'markets.sort.label' })}
-				role="tablist"
-			>
-				{#each SORT_OPTIONS as option (option)}
-					<button
-						class="markets-sort-chip"
-						class:is-active={sort === option}
-						aria-selected={sort === option}
-						onclick={() => setSort(option)}
-						role="tab"
-						type="button"
-					>
-						{t({ locale: $localeStore, key: `markets.sort.${option}` })}
-					</button>
-				{/each}
-			</div>
 			{#if loading}
 				<div style="gap: 8px; padding: 0 20px 20px;" class="col">
 					{#each Array(4) as _, index (index)}
@@ -397,40 +305,5 @@
 	.beyond-eyebrow {
 		margin: 4px 20px 0;
 		max-width: 48ch;
-	}
-
-	.markets-sort {
-		display: flex;
-		gap: 0.5rem;
-		padding: 0 1.25rem 0.75rem;
-		flex-wrap: wrap;
-	}
-
-	.markets-sort-chip {
-		appearance: none;
-		background: transparent;
-		border: 1px solid var(--border-base);
-		color: var(--text-mute);
-		border-radius: var(--r-pill);
-		font: inherit;
-		font-size: 12px;
-		letter-spacing: 0.02em;
-		padding: 0.35rem 0.85rem;
-		cursor: pointer;
-		transition:
-			color var(--d-hover) ease,
-			border-color var(--d-hover) ease,
-			background-color var(--d-hover) ease;
-	}
-
-	.markets-sort-chip:hover {
-		color: var(--text-base);
-		border-color: var(--text-mute);
-	}
-
-	.markets-sort-chip.is-active {
-		color: var(--color-primary);
-		border-color: var(--color-primary);
-		background: color-mix(in srgb, var(--color-primary) 8%, transparent);
 	}
 </style>
