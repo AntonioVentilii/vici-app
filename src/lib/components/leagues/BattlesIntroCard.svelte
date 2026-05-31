@@ -5,8 +5,8 @@
 
 	interface Props {
 		onDismiss: () => void;
-		// Persistent "Start a battle" action — league-vs-league battles
-		// live under Leagues, so this routes there to propose one.
+		// "Start a battle" action — opens the create-a-battle wizard
+		// (pick league → opponent → duration → send).
 		onStartBattle: () => void;
 	}
 
