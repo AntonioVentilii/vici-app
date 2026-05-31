@@ -2256,7 +2256,7 @@ export const itMessages = {
 	'wallet.row.reward': 'Ricompensa',
 	'wallet.row.send': 'Inviato',
 	'wallet.row.settlement': 'Vinto',
-	'wallet.row.trade': 'Scommesso',
+	'wallet.row.trade': 'Impegnato',
 	'wallet.send.amount': 'Importo',
 	'wallet.send.empty':
 		'Caricamento opzioni di invio… Se persiste, nessun token è disponibile sulla rete corrente.',
