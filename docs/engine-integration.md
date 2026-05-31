@@ -4,6 +4,36 @@ This document describes how the Vici app integrates with the `icdc-core` predict
 registry as an **Engine**, and how user roles in Juno are automatically reflected as role
 grants on that engine.
 
+## icdc-core deployments: `staging` and production (`ic`)
+
+icdc-core runs **two** deployments, each with its own canister IDs (see icdc-core's
+`canister_ids.json`):
+
+| Deployment | dfx network | registry        | clearing        |
+| ---------- | ----------- | --------------- | --------------- |
+| Production | `ic`        | `g5pxl-pyaaa-…` | `g2or7-caaaa-…` |
+| Staging    | `staging`   | `5p3j2-miaaa-…` | `4lwgi-viaaa-…` |
+
+Both are wired into this repo's [`dfx.json`](../dfx.json) under `remote.id` (`ic` and
+`staging`) and selectable through the script helper
+[`scripts/lib/utils.sh`](../scripts/lib/utils.sh):
+
+- `--staging` → dfx network `staging` → icdc-core **staging**.
+- `--production` (alias for `--ic`) → dfx network `ic` → icdc-core **production**.
+
+> [!CAUTION]
+> Historically this repo had a single `dfx.json` entry, keyed `staging`, that actually held
+> the **production** canister IDs — so every `--staging` command (registry reinstall, role
+> grants, market seeding) hit **production**. That has been fixed: `staging` now points at
+> icdc-core staging, and `ic` holds production. Still treat any production operation with
+> care: `dfx deploy --network ic --mode reinstall registry` wipes production engine / role /
+> oracle / series state.
+
+The Vici **frontend** pins the production registry/clearing IDs in
+[`src/lib/constants/canisters.constants.ts`](../src/lib/constants/canisters.constants.ts), so
+the running app talks to icdc-core **production** regardless of which network you deploy or
+seed against. The Vici app's own Juno satellite remains a staging app environment.
+
 ## Why an Engine?
 
 `icdc-core` supports multi-tenant authorization through a first-class `Engine` model:
@@ -139,7 +169,7 @@ Operational procedures live as step-by-step workflows under [`.agents/workflows/
 
 - [`deployment.md`](../.agents/workflows/deployment.md) — local deploy with engine init.
 - [`icdc-engine-reset.md`](../.agents/workflows/icdc-engine-reset.md) — fresh registry
-  reset on local or staging (wipes engine + role + series state).
+  reset on local, staging, or production (wipes engine + role + series state).
 - [`icdc-engine-operations.md`](../.agents/workflows/icdc-engine-operations.md) — day-2
   ops: reconcile a grant, audit role grants, rotate admins, kill-switch.
 
@@ -167,7 +197,8 @@ Three options today, in order of durability:
    The trailing `init:icdc-dev-bootstrap` step in `init:icdc` runs
    `scripts/init/init.icdc-dev-bootstrap.sh`, which — when `NETWORK=local` and the env
    var is set — grants `Creator` + `OracleAdmin` on `eng_0` and adds the principal to
-   `VICI_ORACLE_V1.authorized_principals`. No-op on staging (hard-gated). Idempotent:
+   `VICI_ORACLE_V1.authorized_principals`. No-op on any non-local network (`staging` / `ic`),
+   hard-gated. Idempotent:
    replays return `RoleAlreadyGranted` and the oracle set is a `BTreeSet`.
 
    You can also run it standalone after a grant drift:

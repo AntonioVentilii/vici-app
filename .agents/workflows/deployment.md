@@ -46,7 +46,7 @@ npm run dev
 
 See also:
 
-- [icdc-engine-reset.md](./icdc-engine-reset.md) — fresh registry reset on local or staging.
+- [icdc-engine-reset.md](./icdc-engine-reset.md) — fresh registry reset on local, staging, or production.
 - [icdc-engine-operations.md](./icdc-engine-operations.md) — grant/revoke/audit role grants.
 - [../../docs/engine-integration.md](../../docs/engine-integration.md) — architecture.
 - [../../docs/ai/satellite/workflows/engine-sync.md](../../docs/ai/satellite/workflows/engine-sync.md) — satellite-side engine syncing.

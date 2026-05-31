@@ -15,7 +15,8 @@
 			"init_arg_file": "target/icdc/clearing.args.did",
 			"remote": {
 				"id": {
-					"staging": "g2or7-caaaa-aaaaj-qqhoa-cai"
+					"ic": "g2or7-caaaa-aaaaj-qqhoa-cai",
+					"staging": "4lwgi-viaaa-aaaae-agulq-cai"
 				}
 			}
 		},
@@ -33,7 +34,8 @@
 			"init_arg_file": "target/icdc/registry.args.did",
 			"remote": {
 				"id": {
-					"staging": "g5pxl-pyaaa-aaaaj-qqhoq-cai"
+					"ic": "g5pxl-pyaaa-aaaaj-qqhoq-cai",
+					"staging": "5p3j2-miaaa-aaaae-agunq-cai"
 				}
 			}
 		},
@@ -51,7 +53,8 @@
 			"specified_id": "5tgiv-oaaaa-aaaaj-qqwwq-cai",
 			"remote": {
 				"id": {
-					"staging": "5tgiv-oaaaa-aaaaj-qqwwq-cai"
+					"ic": "5tgiv-oaaaa-aaaaj-qqwwq-cai",
+					"staging": "5i2po-bqaaa-aaaae-aguna-cai"
 				}
 			}
 		},
@@ -69,7 +72,8 @@
 			"specified_id": "5uhob-dyaaa-aaaaj-qqwwa-cai",
 			"remote": {
 				"id": {
-					"staging": "5uhob-dyaaa-aaaaj-qqwwa-cai"
+					"ic": "5uhob-dyaaa-aaaaj-qqwwa-cai",
+					"staging": "5bzes-xyaaa-aaaae-agumq-cai"
 				}
 			}
 		},
@@ -88,7 +92,8 @@
 			"specified_id": "5ba7m-cqaaa-aaaaj-qqwvq-cai",
 			"remote": {
 				"id": {
-					"staging": "5ba7m-cqaaa-aaaaj-qqwvq-cai"
+					"ic": "5ba7m-cqaaa-aaaaj-qqwvq-cai",
+					"staging": "5gycg-2aaaa-aaaae-aguma-cai"
 				}
 			}
 		},
@@ -215,6 +220,10 @@
 		"local": {
 			"providers": ["http://127.0.0.1:5987"],
 			"type": "ephemeral"
+		},
+		"staging": {
+			"providers": ["https://icp0.io"],
+			"type": "persistent"
 		}
 	}
 }

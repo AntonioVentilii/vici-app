@@ -18,7 +18,8 @@
 # before we can grant.
 #
 # This is intentionally out-of-band from Juno (no `roles` doc is written). It is a
-# no-op on staging (see `NETWORK` guard). The durable, cross-environment fix is a
+# no-op on any non-local network (`staging` / `ic`; see `NETWORK` guard). The
+# durable, cross-environment fix is a
 # Juno-driven reconcile on the satellite — tracked as future work in
 # `docs/engine-integration.md` ("Persistence across registry reinstalls").
 #
@@ -38,8 +39,9 @@ ENGINE_ID="${VICI_ENGINE_ID:-eng_0}"
 ORACLE_ID="VICI_ORACLE_V1"
 
 if [ "$NETWORK" != "local" ]; then
-  # Gating here means the step is a no-op on staging even when the env var is set,
-  # so we never accidentally bypass Juno as the source of truth for real deployments.
+  # Gating here means the step is a no-op on any non-local network (`staging` / `ic`) even
+  # when the env var is set, so we never accidentally bypass Juno as the source of truth for
+  # real deployments.
   echo "init:icdc-dev-bootstrap: network is '$NETWORK' (not local), skipping."
   exit 0
 fi
