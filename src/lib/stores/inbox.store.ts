@@ -10,7 +10,10 @@ import { localeStore } from '$lib/stores/locale.store';
 import { profilesStore } from '$lib/stores/profiles.store';
 import { initStorageStore } from '$lib/stores/storage.store';
 import { userStore } from '$lib/stores/user.store';
+import type { ResolutionItem, ResolutionRevealData } from '$lib/types/flow';
 import type { InboxNotification, InboxNotificationKind } from '$lib/types/inbox';
+import type { Market } from '$lib/types/market';
+import type { ResolvedPosition } from '$lib/types/position';
 import type { Relation } from '$lib/types/relation';
 import {
 	decimalFixedValueToNumber,
@@ -18,6 +21,7 @@ import {
 	shortenWithMiddleEllipsis
 } from '$lib/utils/format.utils';
 import { t } from '$lib/utils/i18n.utils';
+import { inferResolvedOutcomeId } from '$lib/utils/resolved-position.utils';
 import { get, set as setStorage } from '$lib/utils/storage.utils';
 import type { Doc } from '@junobuild/core';
 import { derived, get as getStore, writable, type Readable } from 'svelte/store';
@@ -224,6 +228,118 @@ const settledInboxStore: Readable<InboxNotification[]> = derived(
 		});
 	}
 );
+
+// ── "While you were away" resolution digest ─────────────────────────────────
+// The Flow entry away-digest and the Dashboard resolution banner both surface
+// the calls that settled since the user last acknowledged their resolutions.
+// "Unacknowledged" is the same per-event read marker the Settled inbox cards
+// use (`settledReadStore`), so opening the digest and marking it seen keeps the
+// banner and the bell badge in lockstep — one settlement is never counted twice
+// or surfaced in one place after being cleared in the other.
+
+/**
+ * Side the user held on a settled market, mapped to the visual chip bucket.
+ * Mirrors the Portfolio resolved-row inference (`inferResolvedOutcomeId`) so
+ * the digest rows read identically to the history rows. Categorical losers
+ * can't be disambiguated, so they fall back to the neutral `hold` bucket.
+ */
+const resolvedSide = ({
+	resolved,
+	market
+}: {
+	resolved: Pick<ResolvedPosition, 'outcomeId'>;
+	market?: Market;
+}): { label: string; sideKey: ResolutionItem['sideKey'] } => {
+	const outcomeId = inferResolvedOutcomeId({ resolved, market });
+
+	if (outcomeId === 'YES') {
+		return { label: 'YES', sideKey: 'yes' };
+	}
+
+	if (outcomeId === 'NO') {
+		return { label: 'NO', sideKey: 'no' };
+	}
+
+	const label = outcomeId
+		? (market?.outcomes?.find((o) => o.id === outcomeId)?.title ?? outcomeId)
+		: '—';
+
+	return { label, sideKey: 'hold' };
+};
+
+/**
+ * The away-digest: every settled call the user hasn't acknowledged yet,
+ * aggregated into net VXP, win/loss tallies, and per-call rows. A `count` of 0
+ * means there is nothing new to reveal. Net VXP is rounded to whole VXP — the
+ * digest is a celebratory summary, not an accounting ledger, so sub-unit
+ * precision would only add noise.
+ */
+export const maturedResolutions: Readable<ResolutionRevealData> = derived(
+	[resolvedPositions, markets, settledReadStore, localeStore],
+	([$resolved, $markets, $read, $locale]) => {
+		const marketById = new Map($markets.map((m) => [m.id, m]));
+		const unseen = $resolved.filter((entry) => !$read.has(entry.eventId));
+
+		const items: ResolutionItem[] = unseen.map((entry) => {
+			const market = marketById.get(entry.marketId);
+			const { label, sideKey } = resolvedSide({ resolved: entry, market });
+			const net = Math.round(
+				decimalFixedValueToNumber({ value: entry.realizedPnlUsd, decimals: USD_DECIMALS })
+			);
+
+			return {
+				eventId: entry.eventId,
+				marketId: entry.marketId,
+				question: market?.title ?? t({ locale: $locale, key: 'portfolio.unknown_market' }),
+				side: label,
+				sideKey,
+				result: entry.result,
+				won: entry.result === 'won',
+				net
+			};
+		});
+
+		const wins = items.filter((it) => it.result === 'won').length;
+		const neutrals = items.filter((it) => it.result === 'neutral').length;
+		const netVxp = items.reduce((sum, it) => sum + it.net, 0);
+
+		return {
+			items,
+			count: items.length,
+			wins,
+			losses: items.length - wins - neutrals,
+			neutrals,
+			netVxp
+		};
+	}
+);
+
+/**
+ * Acknowledges every call currently in the away-digest by adding its
+ * `eventId` to the persisted read set — the same marker the Settled inbox
+ * cards use. Called when the user enters Flow (the entry digest settles) or
+ * opens the Dashboard ResolutionReveal, so the banner and bell badge clear
+ * together. Idempotent: re-running with the digest empty is a no-op.
+ */
+export const markResolutionsSeen = (): void => {
+	const digest = getStore(maturedResolutions);
+
+	if (digest.count === 0) {
+		return;
+	}
+
+	settledReadStore.update((current) => {
+		const next = new Set(current);
+
+		for (const item of digest.items) {
+			next.add(item.eventId);
+		}
+
+		persistSettledReadSet(next);
+
+		return next;
+	});
+};
 
 /**
  * The inbox surface (Notifications page, future bell badge) reads from
