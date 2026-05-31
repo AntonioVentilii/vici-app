@@ -96,12 +96,13 @@
 	<span>
 		{t({
 			locale: $localeStore,
-			key: 'card.back.settles_line',
-			params: {
-				date: longSettleDate,
-				timeRemaining: liveCountdown
-			}
+			key: 'card.back.settles_date',
+			params: { date: longSettleDate }
 		})}
+	</span>
+	<span class="flow-meta-dot" aria-hidden="true">·</span>
+	<span class="flow-back-countdown" class:is-urgent={countdownUrgent}>
+		{liveCountdown}
 	</span>
 	{#if countdownUrgent}
 		<span class="flow-back-countdown-pulse" aria-hidden="true"></span>
@@ -121,7 +122,9 @@
 		margin: 0;
 		font-family: var(--font-display);
 		font-size: clamp(1.15rem, 4.6vw, 1.45rem);
-		line-height: var(--leading-snug);
+		font-weight: 600;
+		line-height: 1.35;
+		letter-spacing: -0.005em;
 		color: var(--text-base);
 	}
 
@@ -140,7 +143,18 @@
 		letter-spacing: 0.04em;
 	}
 	.flow-meta-dot {
-		opacity: 0.55;
+		opacity: 0.5;
+	}
+	/* The countdown segment is the live, decision-relevant figure, so it
+	   reads at full foreground brightness against the muted meta row —
+	   and shifts to terracotta when the market is inside its final day. */
+	.flow-back-countdown {
+		color: var(--text-base);
+		font-weight: 500;
+	}
+	.flow-back-countdown.is-urgent {
+		color: var(--terracotta);
+		font-weight: 600;
 	}
 	.flow-back-countdown-pulse {
 		width: 6px;

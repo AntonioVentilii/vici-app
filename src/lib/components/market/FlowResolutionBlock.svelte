@@ -54,15 +54,14 @@
 	.flow-back-block {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 6px;
 	}
 
 	.flow-resolution {
-		padding: 0.75rem 0.85rem;
-		border-radius: var(--r-12);
+		padding: 12px 14px;
+		border-radius: 10px;
 		border: 1px solid var(--border-base);
-		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
-		box-shadow: var(--inset-hi);
+		background: var(--flow-res-fill);
 	}
 
 	.flow-back-label {
@@ -73,8 +72,8 @@
 	.flow-back-copy,
 	.flow-back-rules {
 		margin: 0;
-		font-size: var(--t-13);
-		line-height: var(--leading-normal);
+		font-size: 13.5px;
+		line-height: 1.5;
 		color: var(--text-base);
 	}
 	.flow-back-rules {
@@ -110,9 +109,10 @@
 		margin-top: 0.35rem;
 	}
 	.flow-res-source {
-		font-size: var(--t-12);
+		font-family: var(--font-mono);
+		font-size: var(--t-11);
+		letter-spacing: var(--tracking-wide);
 		color: var(--text-muted);
-		opacity: 0.85;
 	}
 
 	.flow-back-toggle {
@@ -124,9 +124,13 @@
 		background: none;
 		padding: 0;
 		font-size: var(--t-12);
-		color: var(--laurel);
+		color: var(--accent);
 		cursor: pointer;
 		text-decoration: none;
+		transition: color var(--d-hover) var(--ease-vici);
+	}
+	.flow-back-toggle:hover {
+		color: var(--accent-deep, var(--laurel-deep));
 	}
 	.flow-back-toggle-caret {
 		font-size: var(--t-11);

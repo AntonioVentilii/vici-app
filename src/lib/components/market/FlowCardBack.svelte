@@ -105,10 +105,10 @@
 		flex: 1 1 auto;
 		min-height: 0;
 		overflow-y: auto;
-		padding: 0 1.1rem 1.1rem;
+		padding: 0.875rem 1.25rem 1.125rem;
 		display: flex;
 		flex-direction: column;
-		gap: 0.8rem;
+		gap: 0.875rem;
 	}
 
 	.flow-back-close-sr {
