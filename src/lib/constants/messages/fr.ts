@@ -423,7 +423,7 @@ export const frMessages = {
 	'card.sharp_signal': 'Top prédicteurs : {percent}% {side}',
 	'card.momentum_delta': "+{count} aujourd'hui",
 	'card.tap_depth': 'TAP POUR DÉTAIL',
-	'card.you_called_eyebrow': 'TU AS APPELÉ',
+	'card.you_called_eyebrow': 'TON APPEL',
 	'card.your_accuracy_line': 'Ta précision en {category} : {pct}% · {calls} calls',
 	'challenge.create.error.missing_premium': 'Gage manquant',
 	'challenge.create.error.missing_premium_message':
