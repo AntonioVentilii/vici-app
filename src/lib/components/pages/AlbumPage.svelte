@@ -10,11 +10,10 @@
 	import { goBack } from '$lib/utils/nav.utils';
 
 	/**
-	 * Album — milestone awards / stickers gallery, port of the design
-	 * source's `AlbumScreen` (`screens.jsx:4650`). Reached as a profile
+	 * Album — milestone awards / stickers gallery. Reached as a profile
 	 * sub-route. Renders every achievement defined in `ACHIEVEMENTS` as
 	 * a tile in a 3-column grid; each tile carries the achievement's
-	 * unicode glyph emblem (◎ ★ ⚡ ⧖ ◐ ⌘) and tier wash
+	 * unicode glyph emblem (◎ ★ ⚡ ⧖ ◐ ⌘ ✦) and tier wash
 	 * (gold / silver / bronze). Tapping a tile slides up a bottom-sheet
 	 * with the full prose detail + a progress bar for the unearned
 	 * ones.
@@ -36,8 +35,12 @@
 			winStreak: profile.streak ?? 0,
 			dailyStreak: profile.dailyStreak ?? 0,
 			accuracy: profile.accuracy ?? 0,
-			level: profile.level ?? 1,
-			contrarianWins: profile.contrarianWins ?? 0
+			contrarianWins: profile.contrarianWins ?? 0,
+			// `league-founder`'s live axis needs league membership the album
+			// store doesn't carry; the sticky persisted unlock drives the
+			// earned state, so the live flag stays `false` here.
+			ownsQualifyingLeague: false,
+			topDecileStreak: profile.topDecileStreak ?? 0
 		});
 	});
 

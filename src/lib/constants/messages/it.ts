@@ -75,14 +75,14 @@ export const itMessages = {
 	'battles.your_rank': '#{rank} su {total}',
 	'battles.your_school': 'La tua università · {name}',
 	'achievement.contrarian.name': 'Contrarian',
-	'achievement.first_blood.description': 'Fai la tua prima previsione',
-	'achievement.first_blood.detail':
+	'achievement.first_call.description': 'Fai la tua prima previsione',
+	'achievement.first_call.detail':
 		'Assegnato nel momento in cui confermi la tua prima previsione. È l’unico obiettivo che non si può guadagnare due volte.',
-	'achievement.first_blood.name': 'Prima previsione',
-	'achievement.lvl_25.description': 'Raggiungi il livello 25',
-	'achievement.lvl_25.detail':
-		'Raggiungi il livello 25. Guadagna XP da ogni previsione risolta, bonus streak e traguardo — una volta superato il livello 25, lo sticker è tuo per sempre.',
-	'achievement.lvl_25.name': 'Livello 25',
+	'achievement.first_call.name': 'Prima previsione',
+	'achievement.league_founder.description': 'Fonda una lega da 3 membri',
+	'achievement.league_founder.detail':
+		'Fondatore di una lega con almeno tre membri. Assegnato una sola volta. Resta anche se la lega viene poi sciolta.',
+	'achievement.league_founder.name': 'Fondatore di lega',
 	'achievement.marathon.description': 'Serie di 30 giorni',
 	'achievement.marathon.detail':
 		'Raggiungi una serie di previsioni di 30 giorni. Almeno una previsione risolta o aperta al giorno, senza interruzioni. Una giornata con sole previsioni saltate non conta.',
@@ -95,6 +95,10 @@ export const itMessages = {
 	'achievement.oracle.detail':
 		'Mantieni almeno l’80% di precisione sulle tue ultime 50 previsioni risolte. Il titolo Oracolo viene ricalcolato ogni giorno; se perdi precisione lo sticker resta — ma il titolo passa a chi lo detiene in quel momento.',
 	'achievement.oracle.name': 'Oracolo',
+	'achievement.top_decile.description': '7 giorni nel top 10%',
+	'achievement.top_decile.detail':
+		'Mantieni una posizione nel top 10% della classifica globale per sette giorni consecutivi. La tua posizione viene verificata una volta al giorno; se scendi sotto la soglia, la serie riparte da zero.',
+	'achievement.top_decile.name': 'Top 10% globale',
 	'achievement.toast.message': '{name} sbloccato · +{xp} XP',
 	'achievement.toast.title': 'Obiettivo sbloccato',
 	'flow.companion.trickster.short': 'd’accordo · 2× XP',

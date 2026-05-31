@@ -221,6 +221,10 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	lastActiveDay: profile.last_active_day,
 	unlockedAchievements: profile.unlocked_achievements,
 	contrarianWins: profile.contrarian_wins,
+	// Top-decile streak state isn't carried on the leaderboard / search
+	// wire (those surfaces don't read it), so default it like the other
+	// non-wire fields below to keep the rebuilt UserProfile fully shaped.
+	topDecileStreak: 0,
 	// The wire format only carries `default_amount` — the leaderboard /
 	// search endpoints don't read the user-experience preferences
 	// (`notify`, `flowTags`, `savedMarketIds`, etc.), so they're not
@@ -448,7 +452,8 @@ export type WireLeague = j.infer<typeof LeagueWireSchema>;
 export const LeagueWithRoleWireSchema = j.strictObject({
 	league: LeagueWireSchema,
 	role: j.enum(['owner', 'admin', 'member']),
-	joined_at_ms: j.number()
+	joined_at_ms: j.number(),
+	member_count: j.number().default(1)
 });
 
 export type WireLeagueWithRole = j.infer<typeof LeagueWithRoleWireSchema>;
@@ -484,10 +489,12 @@ export const toWireLeagueWithRole = (entry: {
 	league: Parameters<typeof toWireLeague>[0];
 	role: 'owner' | 'admin' | 'member';
 	joinedAtMs: number;
+	memberCount: number;
 }): WireLeagueWithRole => ({
 	league: toWireLeague(entry.league),
 	role: entry.role,
-	joined_at_ms: entry.joinedAtMs
+	joined_at_ms: entry.joinedAtMs,
+	member_count: entry.memberCount
 });
 
 export const toWireLeagueMember = (member: {

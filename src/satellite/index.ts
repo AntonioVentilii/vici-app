@@ -50,7 +50,10 @@ import {
 	syncRoleToEngineOnSet
 } from '$satellite/services/engine-sync.services';
 import { assertSetExitSignal } from '$satellite/services/exit-signal.services';
-import { listLeaderboard as listLeaderboardFn } from '$satellite/services/leaderboard.services';
+import {
+	getUserRankAndCountFn,
+	listLeaderboard as listLeaderboardFn
+} from '$satellite/services/leaderboard.services';
 import {
 	assertDeleteLeagueMember,
 	assertSetLeagueMember
@@ -178,6 +181,25 @@ export const listLeaderboard = defineQuery({
 	handler: () => ({
 		items: listLeaderboardFn().map(toWireProfile)
 	})
+});
+
+// Single-pass query that returns both the 1-based rank of `principalStr`
+// and the total count of non-hidden (ranked) profiles. Replaces the
+// former `countProfiles` + `getUserRank` pair, which each ran a full
+// `rankedProfiles()` scan+sort and were always called together in
+// `calculateAndSyncStats`, doubling the work.
+//
+// `rank` is omitted when the principal is unranked (no profile / hidden).
+// `principal` is reserved by the schema layer; exposed as `principalStr`.
+export const getUserRankAndCount = defineQuery({
+	args: j.strictObject({
+		principalStr: PrincipalTextSchema
+	}),
+	result: j.strictObject({
+		rank: j.optional(j.number()),
+		count: j.number()
+	}),
+	handler: ({ principalStr }) => getUserRankAndCountFn({ principal: principalStr })
 });
 
 export const getProfile = defineQuery({

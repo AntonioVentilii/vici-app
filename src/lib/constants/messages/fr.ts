@@ -75,14 +75,14 @@ export const frMessages = {
 	'battles.your_rank': '#{rank} sur {total}',
 	'battles.your_school': 'Ton école · {name}',
 	'achievement.contrarian.name': 'Contrariant',
-	'achievement.first_blood.description': 'Faites votre première prédiction',
-	'achievement.first_blood.detail':
+	'achievement.first_call.description': 'Faites votre première prédiction',
+	'achievement.first_call.detail':
 		"Décerné dès que tu valides ta première prédiction. C'est le seul succès qu'on ne peut pas gagner deux fois.",
-	'achievement.first_blood.name': 'Premier pronostic',
-	'achievement.lvl_25.description': 'Atteindre le niveau 25',
-	'achievement.lvl_25.detail':
-		"Atteins le niveau 25. Gagne de l'XP à chaque pronostic résolu, bonus de série et jalon — dès que ton niveau dépasse 25, le sticker est à toi pour toujours.",
-	'achievement.lvl_25.name': 'Niveau 25',
+	'achievement.first_call.name': 'Premier pronostic',
+	'achievement.league_founder.description': 'Fonde une ligue de 3 membres',
+	'achievement.league_founder.detail':
+		"Fondateur d'une ligue comptant au moins trois membres. Décerné une seule fois. Conservé même si la ligue est ensuite dissoute.",
+	'achievement.league_founder.name': 'Fondateur de ligue',
 	'achievement.marathon.description': 'Série de 30 jours',
 	'achievement.marathon.detail':
 		'Atteins une série de pronostics de 30 jours. Au moins un pronostic résolu ou ouvert par jour, sans interruption. Une journée avec uniquement des skips ne compte pas.',
@@ -95,6 +95,10 @@ export const frMessages = {
 	'achievement.oracle.detail':
 		'Maintiens au moins 80% de précision sur tes 50 derniers pronostics résolus. Le titre Oracle est recalculé chaque jour ; si tu perds en précision, le sticker reste — mais le titre passe à celui qui le détient à ce moment-là.',
 	'achievement.oracle.name': 'Oracle',
+	'achievement.top_decile.description': '7 jours dans le top 10%',
+	'achievement.top_decile.detail':
+		'Maintiens une position dans le top 10% du classement mondial pendant sept jours consécutifs. Ton rang est vérifié une fois par jour ; si tu passes sous le seuil, la série repart de zéro.',
+	'achievement.top_decile.name': 'Top 10% mondial',
 	'achievement.toast.message': '{name} débloqué · +{xp} XP',
 	'achievement.toast.title': 'Succès débloqué',
 	'flow.companion.trickster.short': 'd’accord · 2× XP',

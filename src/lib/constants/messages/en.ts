@@ -75,14 +75,14 @@ export const enMessages = {
 	'battles.your_rank': '#{rank} of {total}',
 	'battles.your_school': 'Your school · {name}',
 	'achievement.contrarian.name': 'Contrarian',
-	'achievement.first_blood.description': 'Make your first prediction',
-	'achievement.first_blood.detail':
+	'achievement.first_call.description': 'Make your first prediction',
+	'achievement.first_call.detail':
 		'Awarded the moment you committed to your first prediction. It is the only achievement that cannot be earned twice.',
-	'achievement.first_blood.name': 'First call',
-	'achievement.lvl_25.description': 'Reach level 25',
-	'achievement.lvl_25.detail':
-		'Reach level 25. Earn XP from every resolved call, streak bonus, and milestone — once your level crosses 25 the sticker is yours forever.',
-	'achievement.lvl_25.name': 'Level 25',
+	'achievement.first_call.name': 'First call',
+	'achievement.league_founder.description': 'Found a 3-member league',
+	'achievement.league_founder.detail':
+		'Founder of a league with three or more members. Awarded once. Survives if the league later disbands.',
+	'achievement.league_founder.name': 'League founder',
 	'achievement.marathon.description': '30-day streak',
 	'achievement.marathon.detail':
 		'Reach a 30-day prediction streak. At least one resolved or open call per day, no breaks. A skip-only day does not count.',
@@ -95,6 +95,10 @@ export const enMessages = {
 	'achievement.oracle.detail':
 		'Maintain at least 80% accuracy over your last 50 resolved calls. The Oracle title is recomputed daily; lose accuracy and the sticker stays — but the title moves to whoever currently holds it.',
 	'achievement.oracle.name': 'Oracle',
+	'achievement.top_decile.description': '7 days in the top 10%',
+	'achievement.top_decile.detail':
+		'Hold a position in the top 10% of the global leaderboard for seven consecutive days. Your standing is checked once a day; miss the cutoff and the streak resets.',
+	'achievement.top_decile.name': 'Top 10% global',
 	'achievement.toast.message': '{name} unlocked · +{xp} XP',
 	'achievement.toast.title': 'Achievement unlocked',
 	'flow.companion.trickster.short': 'agree · 2× XP',

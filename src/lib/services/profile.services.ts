@@ -5,6 +5,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { ProfileVisibility } from '$lib/enums/profile';
 import type { UserRole } from '$lib/enums/user';
 import { notifyAchievementsUnlocked } from '$lib/services/achievements.services';
+import { listMyLeagues } from '$lib/services/leagues.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
 import { computeUserStatsSnapshot, persistMyUserStats } from '$lib/services/user-stats.services';
 import { marketMetadataStore } from '$lib/stores/market-metadata.store';
@@ -13,10 +14,11 @@ import type { Nickname, UserProfile } from '$lib/types/profile';
 import {
 	CONTRARIAN_PRICE_THRESHOLD,
 	evaluateAchievements,
+	LEAGUE_FOUNDER_MIN_MEMBERS,
 	mergeUnlockedAchievements
 } from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
-import { applyDailyStreakBump } from '$lib/utils/streak.utils';
+import { applyDailyStreakBump, todayKey } from '$lib/utils/streak.utils';
 import { fromWireProfile } from '$satellite/utils/wire-format.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
@@ -52,6 +54,7 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 				interests: [],
 				unlockedAchievements: [],
 				contrarianWins: 0,
+				topDecileStreak: 0,
 				preferences: {
 					defaultAmount: {
 						flow: '1.0',
@@ -510,6 +513,54 @@ export const calculateAndSyncStats = async ({
 
 	const profileDoc = await getProfile(principal);
 
+	// `league-founder` — does the caller own a league with at least
+	// `LEAGUE_FOUNDER_MIN_MEMBERS` members? Read from `listMyLeagues`
+	// (carries `memberCount`). Best-effort: a failed read leaves the award
+	// un-flipped this pass, but it's sticky once earned, so a later sync
+	// recovers it. Default `false` rather than letting an error reset it.
+	let ownsQualifyingLeague = false;
+
+	try {
+		const myLeagues = await listMyLeagues();
+		ownsQualifyingLeague = myLeagues.some(
+			(entry) =>
+				entry.role === 'owner' &&
+				entry.league.owner === principal &&
+				entry.memberCount >= LEAGUE_FOUNDER_MIN_MEMBERS
+		);
+	} catch (err: unknown) {
+		console.error('calculateAndSyncStats: failed to read leagues for league-founder', err);
+	}
+
+	// `top-decile` — bump the consecutive-day streak at most once per
+	// local calendar day when the caller sits in the top 10% of the
+	// global leaderboard (rank ≤ count / 10), reset to 0 otherwise.
+	// Mirrors the `dailyStreak` once-per-day pattern: same-day re-syncs
+	// don't move the streak. Best-effort — a failed rank read keeps the
+	// persisted streak + day untouched so a transient error neither bumps
+	// nor resets.
+	const today = todayKey();
+	let topDecileStreak = profileDoc.data.topDecileStreak ?? 0;
+	let { lastTopDecileDay } = profileDoc.data;
+
+	if (lastTopDecileDay !== today) {
+		try {
+			const { rank, count } = await functions.getUserRankAndCount({ principalStr: principal });
+
+			// Top decile = rank within the best 10% of ranked profiles.
+			// `Math.floor` keeps the cutoff inclusive on exact tenths (a
+			// 10-profile pool admits rank 1 only); a pool too small to have
+			// a tenth (count < 10) admits no one, matching "top 10%".
+			const cutoff = Math.floor(count / 10);
+			const inTopDecile = nonNullish(rank) && cutoff >= 1 && rank <= cutoff;
+
+			topDecileStreak = inTopDecile ? topDecileStreak + 1 : 0;
+			lastTopDecileDay = today;
+		} catch (err: unknown) {
+			console.error('calculateAndSyncStats: failed to read rank for top-decile', err);
+		}
+	}
+
 	// Evaluate achievements against the freshly-computed snapshot and
 	// fold any newly-unlocked ids into the persisted set. Newly
 	// unlocked achievements also credit their XP into the points total
@@ -521,8 +572,9 @@ export const calculateAndSyncStats = async ({
 		winStreak: resolvedStreak,
 		dailyStreak: profileDoc.data.dailyStreak ?? 0,
 		accuracy,
-		level: Math.floor(totalPoints / 500) + 1,
-		contrarianWins
+		contrarianWins,
+		ownsQualifyingLeague,
+		topDecileStreak
 	});
 
 	const { unlocked, newlyUnlocked } = mergeUnlockedAchievements({
@@ -546,6 +598,8 @@ export const calculateAndSyncStats = async ({
 			points: adjustedPoints,
 			level,
 			contrarianWins,
+			topDecileStreak,
+			lastTopDecileDay,
 			unlockedAchievements: unlocked
 		}
 	});
@@ -595,16 +649,21 @@ export const recordActivity = async (principal: PrincipalText): Promise<void> =>
 
 	// Re-evaluate so streak-driven achievements (`marathon`) can fire
 	// on the very write that crosses the threshold, rather than
-	// waiting for the next sign-in `calculateAndSyncStats`. Other
-	// achievement axes (trades, accuracy, contrarian) re-use the
-	// persisted values — they're not the trigger here.
+	// waiting for the next sign-in `calculateAndSyncStats`. The other
+	// achievement axes (trades, accuracy, contrarian, league-founder,
+	// top-decile) re-use the persisted values — they're not the trigger
+	// here, and any already-earned sticky award stays unlocked through
+	// the merge. `ownsQualifyingLeague` is left `false`: this path never
+	// flips `league-founder` on (that's `calculateAndSyncStats`' job),
+	// but it can't rescind one either, since unlocks are sticky.
 	const evaluations = evaluateAchievements({
 		totalTrades: profileDoc.data.totalTrades ?? 0,
 		winStreak: profileDoc.data.streak ?? 0,
 		dailyStreak: bump.streak,
 		accuracy: profileDoc.data.accuracy ?? 0,
-		level: profileDoc.data.level ?? 1,
-		contrarianWins: profileDoc.data.contrarianWins ?? 0
+		contrarianWins: profileDoc.data.contrarianWins ?? 0,
+		ownsQualifyingLeague: false,
+		topDecileStreak: profileDoc.data.topDecileStreak ?? 0
 	});
 
 	const { unlocked, newlyUnlocked } = mergeUnlockedAchievements({

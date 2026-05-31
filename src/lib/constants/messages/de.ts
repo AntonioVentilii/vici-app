@@ -75,14 +75,14 @@ export const deMessages = {
 	'battles.your_rank': 'Nr. {rank} von {total}',
 	'battles.your_school': 'Deine Hochschule · {name}',
 	'achievement.contrarian.name': 'Contrarian',
-	'achievement.first_blood.description': 'Mache deine erste Vorhersage',
-	'achievement.first_blood.detail':
+	'achievement.first_call.description': 'Mache deine erste Vorhersage',
+	'achievement.first_call.detail':
 		'Wird in dem Moment vergeben, in dem du dich für deine erste Vorhersage entscheidest. Es ist der einzige Erfolg, den man nicht zweimal verdienen kann.',
-	'achievement.first_blood.name': 'Erster Call',
-	'achievement.lvl_25.description': 'Erreiche Level 25',
-	'achievement.lvl_25.detail':
-		'Erreiche Level 25. Verdiene XP für jeden aufgelösten Call, Streak-Bonus und Meilenstein — sobald dein Level 25 überschreitet, gehört dir der Sticker für immer.',
-	'achievement.lvl_25.name': 'Level 25',
+	'achievement.first_call.name': 'Erster Call',
+	'achievement.league_founder.description': 'Gründe eine Liga mit 3 Mitgliedern',
+	'achievement.league_founder.detail':
+		'Gründer einer Liga mit drei oder mehr Mitgliedern. Wird einmalig vergeben. Bleibt erhalten, auch wenn die Liga später aufgelöst wird.',
+	'achievement.league_founder.name': 'Liga-Gründer',
 	'achievement.marathon.description': '30-Tage-Streak',
 	'achievement.marathon.detail':
 		'Erreiche eine 30-Tage-Prognose-Streak. Mindestens ein aufgelöster oder offener Call pro Tag, keine Unterbrechungen. Ein Tag mit ausschließlich übersprungenen Calls zählt nicht.',
@@ -95,6 +95,10 @@ export const deMessages = {
 	'achievement.oracle.detail':
 		'Halte mindestens 80% Genauigkeit über deine letzten 50 aufgelösten Calls. Der Oracle-Titel wird täglich neu berechnet; verlierst du an Genauigkeit, bleibt der Sticker — aber der Titel geht an denjenigen, der ihn aktuell hält.',
 	'achievement.oracle.name': 'Oracle',
+	'achievement.top_decile.description': '7 Tage in den Top 10%',
+	'achievement.top_decile.detail':
+		'Halte sieben Tage in Folge eine Position in den Top 10% der globalen Rangliste. Dein Stand wird einmal täglich geprüft; verfehlst du die Schwelle, beginnt die Serie von vorne.',
+	'achievement.top_decile.name': 'Top 10% global',
 	'achievement.toast.message': '{name} freigeschaltet · +{xp} XP',
 	'achievement.toast.title': 'Erfolg freigeschaltet',
 	'flow.companion.trickster.short': 'einverstanden · 2× XP',

@@ -74,13 +74,13 @@ export const zhCnMessages = {
 	'battles.your_rank': '第 {rank} / 共 {total}',
 	'battles.your_school': '你的学校 · {name}',
 	'achievement.contrarian.name': '逆行者',
-	'achievement.first_blood.description': '完成你的第一次预测',
-	'achievement.first_blood.detail': '在你确认第一次预测的那一刻颁发。这是唯一无法重复获得的成就。',
-	'achievement.first_blood.name': '首次预测',
-	'achievement.lvl_25.description': '达到 25 级',
-	'achievement.lvl_25.detail':
-		'达到 25 级。每次预测结算、连胜奖励和里程碑都可获得 XP — 一旦等级越过 25，贴纸将永久归你所有。',
-	'achievement.lvl_25.name': '25 级',
+	'achievement.first_call.description': '完成你的第一次预测',
+	'achievement.first_call.detail': '在你确认第一次预测的那一刻颁发。这是唯一无法重复获得的成就。',
+	'achievement.first_call.name': '首次预测',
+	'achievement.league_founder.description': '创建一个 3 人联盟',
+	'achievement.league_founder.detail':
+		'创建一个拥有三名或更多成员的联盟。仅颁发一次。即使联盟之后解散也会保留。',
+	'achievement.league_founder.name': '联盟创始人',
 	'achievement.marathon.description': '连续 30 天',
 	'achievement.marathon.detail':
 		'达成 30 天的预测连续记录。每天至少完成一次已结算或进行中的预测，不可中断。仅跳过的日子不计入。',
@@ -93,6 +93,10 @@ export const zhCnMessages = {
 	'achievement.oracle.detail':
 		'在最近 50 次已结算的预测中保持至少 80% 的准确率。神谕称号每日重新计算；若准确率下降，贴纸仍归你所有 — 但称号会转交给当前持有者。',
 	'achievement.oracle.name': '神谕',
+	'achievement.top_decile.description': '连续 7 天位列前 10%',
+	'achievement.top_decile.detail':
+		'连续七天保持在全球排行榜前 10% 的位置。你的排名每天检查一次；若跌出门槛，连续记录将重置。',
+	'achievement.top_decile.name': '全球前 10%',
 	'achievement.toast.message': '已解锁 {name} · +{xp} XP',
 	'achievement.toast.title': '成就解锁',
 	'flow.companion.trickster.short': '同意 · 2× XP',

@@ -26,6 +26,13 @@ export interface LeagueWithRole {
 	league: LeagueDoc;
 	role: LeagueMemberDoc['role'];
 	joinedAtMs: number;
+	/**
+	 * Total membership count of the league (owner included), tallied
+	 * inline from the same `LEAGUE_MEMBERS` scan that resolves the
+	 * caller's memberships — no extra read. Drives the `league-founder`
+	 * achievement (owner of a league with ≥3 members).
+	 */
+	memberCount: number;
 }
 
 /**
@@ -55,10 +62,15 @@ export const listMyLeaguesFn = (): LeagueWithRole[] => {
 
 	const myMemberships: { leagueId: string; role: LeagueMemberDoc['role']; joinedAtMs: number }[] =
 		[];
+	// Tally total members per league from the same scan so the
+	// `memberCount` on each hydrated row costs no extra read.
+	const memberCounts = new Map<string, number>();
 
 	for (const [, item] of items) {
 		try {
 			const member = decodeDocData<LeagueMemberDoc>(item.data);
+
+			memberCounts.set(member.leagueId, (memberCounts.get(member.leagueId) ?? 0) + 1);
 
 			if (member.member === callerText) {
 				myMemberships.push({
@@ -87,7 +99,12 @@ export const listMyLeaguesFn = (): LeagueWithRole[] => {
 		if (nonNullish(leagueDoc)) {
 			try {
 				const league = decodeDocData<LeagueDoc>(leagueDoc.data);
-				hydrated.push({ league, role: m.role, joinedAtMs: m.joinedAtMs });
+				hydrated.push({
+					league,
+					role: m.role,
+					joinedAtMs: m.joinedAtMs,
+					memberCount: memberCounts.get(m.leagueId) ?? 1
+				});
 			} catch {
 				// Defensive skip on decode failure.
 			}
