@@ -12,9 +12,10 @@
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
 	import { daysToFinal } from '$lib/derived/featured-event.derived';
-	import { listAffiliationStats, listMyAffiliations } from '$lib/services/worlds.services';
+	import { listAffiliationStats } from '$lib/services/worlds.services';
+	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { AffiliationDoc, AffiliationKind } from '$lib/types/affiliation';
+	import type { AffiliationKind } from '$lib/types/affiliation';
 	import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 	import {
 		affiliationLifetimeAccuracy,
@@ -73,22 +74,24 @@
 	);
 
 	let stats = $state<AffiliationStatsDoc[]>([]);
-	let myAffil = $state<AffiliationDoc | undefined>();
 	let loadState = $state<'loading' | 'ready' | 'error'>('loading');
 	let expanded = $state(false);
+
+	// Caller's affiliation for this kind — read from the shared cache so
+	// the sticky "you" row survives re-entry without a refetch.
+	const myAffil = $derived(
+		kind === 'university' ? $myAffiliationsStore.university : $myAffiliationsStore.country
+	);
 
 	// Initial scope is sourced off `?scope=month` (the BattlesInbox monthly
 	// card link) — defaults to `wc` otherwise.
 	let scope = $state<Scope>(page.url.searchParams.get('scope') === 'month' ? 'month' : 'wc');
 
 	onMount(async () => {
+		void refreshMyAffiliations();
+
 		try {
-			const [statsResp, affils] = await Promise.all([
-				listAffiliationStats({ kind }),
-				listMyAffiliations()
-			]);
-			stats = statsResp;
-			myAffil = kind === 'university' ? affils.university : affils.country;
+			stats = await listAffiliationStats({ kind });
 			loadState = 'ready';
 		} catch {
 			loadState = 'error';
