@@ -61,10 +61,10 @@
 
 	const reasonOptions: ReadonlyArray<{ id: ExitSignalReason; key: MessageKey }> = [
 		{ id: 'not-for-me', key: 'settings.delete.reason.not_for_me' },
-		{ id: 'too-complex', key: 'settings.delete.reason.too_complex' },
-		{ id: 'bored', key: 'settings.delete.reason.bored' },
-		{ id: 'no-friends', key: 'settings.delete.reason.no_friends' },
-		{ id: 'too-noisy', key: 'settings.delete.reason.too_noisy' },
+		{ id: 'too-busy', key: 'settings.delete.reason.too_busy' },
+		{ id: 'privacy', key: 'settings.delete.reason.privacy' },
+		{ id: 'duplicate', key: 'settings.delete.reason.duplicate' },
+		{ id: 'bugs', key: 'settings.delete.reason.bugs' },
 		{ id: 'other', key: 'settings.delete.reason.other' }
 	];
 
