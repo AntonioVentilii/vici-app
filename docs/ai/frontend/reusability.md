@@ -94,14 +94,21 @@ Page components read the populated store via a `*.derived.ts` helper.
 
 Use `lucide-svelte` first; these are the project's own SVGs.
 
-| Component       | Use it for                                                            |
-| --------------- | --------------------------------------------------------------------- |
-| `IconGoogle`    | Google sign-in button.                                                |
-| `IconIC`        | Internet Identity sign-in button.                                     |
-| `IconPasskey`   | Passkey / WebAuthn surfaces.                                          |
-| `IconRobot`     | Bot / automation surfaces.                                            |
-| `IconSignalYes` | YES prediction signal — arrow-up + tail. Use `text-yes` to colour it. |
-| `IconSignalNo`  | NO prediction signal — arrow-down + tail. Use `text-no` to colour it. |
+| Component       | Use it for                                                                 |
+| --------------- | -------------------------------------------------------------------------- |
+| `IconGoogle`    | Google sign-in button.                                                     |
+| `IconIC`        | Internet Identity sign-in button.                                          |
+| `IconPasskey`   | Passkey / WebAuthn surfaces.                                               |
+| `IconRobot`     | Bot / automation surfaces.                                                 |
+| `IconSignalYes` | YES prediction signal — arrow-up + tail. Use `text-yes` to colour it.      |
+| `IconSignalNo`  | NO prediction signal — arrow-down + tail. Use `text-no` to colour it.      |
+| `IconInstagram` | Instagram brand glyph (share tiles). `lucide-svelte` ships no brand icons. |
+| `IconFacebook`  | Facebook brand glyph (share tiles).                                        |
+| `IconWhatsApp`  | WhatsApp brand glyph (share tiles).                                        |
+| `IconTelegram`  | Telegram brand glyph (share tiles).                                        |
+| `IconX`         | X (Twitter) brand glyph (share tiles).                                     |
+| `IconTikTok`    | TikTok brand glyph (share tiles).                                          |
+| `IconSnapchat`  | Snapchat brand glyph — render on a brand-yellow tile.                      |
 
 Static brand assets that aren't components live in `static/branding/`:
 `vici-wordmark.svg`, `vici-monogram.svg`, `vici-app-icon.svg`, `grain.svg`
@@ -242,6 +249,7 @@ Static brand assets that aren't components live in `static/branding/`:
 | `relation.utils`                                      | Friend / follow helpers.                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `events.utils`                                        | Custom-event helpers.                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | `clipboard.utils`                                     | Clipboard helpers.                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `share-card.utils`                                    | `renderPredictionCard({ market, priorCall, identity })` — paints a prediction as a 1080×1920 story-format PNG on a canvas (self-hosted fonts, fixed dark brand palette) for image-only share targets. Returns `{ blob, dataUrl }`, or `null` when the env can't paint a canvas so callers can fall back to a link share. Used by `SharePopover`.                                                                                                  |
 | `download.utils`                                      | Browser download helpers.                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | `storage.utils`                                       | LocalStorage / sessionStorage helpers.                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `refresh.utils`                                       | Polling / refresh primitives.                                                                                                                                                                                                                                                                                                                                                                                                                     |
