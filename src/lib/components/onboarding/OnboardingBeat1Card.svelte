@@ -37,9 +37,11 @@
 		onCommit: (side: 'YES' | 'NO') => void;
 		onChangeTeam: () => void;
 		// Whether the built-in directional coach rides above the card.
-		// Defaults to first-render only (matches the source: the coach
-		// shows until the first drag). A follow-up makes this always-on
-		// at this step, so the gate is surfaced as a single flag.
+		// Always-on at this onboarding step: the coach must teach the
+		// swipe every time the user reaches the first call, with no
+		// cross-visit ("seen once per browser") suppression. The in-mount
+		// `everInteracted` guard still hides it after the first drag /
+		// commit. Defaults on; the parent pins it explicitly.
 		showCoach?: boolean;
 	}
 
@@ -341,8 +343,9 @@
 
 			<!-- Built-in directional coach — sits above the card, fades on
 			     the first drag, and stays hidden once the user has
-			     interacted (even if the drag is cancelled). Visibility is
-			     gated by `showCoach` so a follow-up can pin it on. -->
+			     interacted (even if the drag is cancelled). `showCoach` is
+			     pinned on at this step so it teaches the swipe on every
+			     visit, with no cross-visit suppression. -->
 			{#if showCoach && !everInteracted && committed === null}
 				<div style:opacity={coachOpacity} class="ob-coach ob-coach-swipe" aria-live="polite">
 					<div class="ob-coach-row">
