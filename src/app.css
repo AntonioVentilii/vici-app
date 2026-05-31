@@ -1993,15 +1993,23 @@ a.card-inline:hover {
 	background: transparent;
 	border: 0;
 	padding: 0;
+}
+
+/* Pointer cursor, hover colour shift, and trailing arrow only for
+   interactive variants — static <span> labels must not look tappable. */
+button.title-action,
+a.title-action {
 	cursor: pointer;
 	transition: color var(--d-hover) var(--ease-vici);
 }
 
-.title-action:hover {
+button.title-action:hover,
+a.title-action:hover {
 	color: var(--text-base);
 }
 
-.title-action::after {
+button.title-action::after,
+a.title-action::after {
 	content: ' →';
 	color: inherit;
 	letter-spacing: 0;

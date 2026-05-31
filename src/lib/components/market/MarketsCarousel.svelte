@@ -23,7 +23,7 @@
 	{#if moreLabel && onMore}
 		<button class="title-action" onclick={onMore} type="button">{moreLabel}</button>
 	{:else if moreLabel}
-		<span style="cursor: default;" class="title-action">{moreLabel}</span>
+		<span class="title-action">{moreLabel}</span>
 	{/if}
 </div>
 <div

@@ -62,10 +62,12 @@
 	);
 
 	// In focus mode collapse to the World Cup chip alone; the rest of the
-	// categories return once "More markets →" expands the rail.
-	const categoryTags = $derived(
-		wcFocus && !expanded ? visibleTags.filter((tag) => tag === 'wc') : visibleTags
-	);
+	// categories return once "More markets →" expands the rail. We use a
+	// literal `['wc']` (not derived from `visibleTags`) so the WC chip is
+	// always present in the collapsed rail even when `availableTags` is
+	// provided without `wc`.
+	const wcOnlyTags: MarketTag[] = ['wc'];
+	const categoryTags = $derived(wcFocus && !expanded ? wcOnlyTags : visibleTags);
 
 	// "More markets →" only appears while the rail is collapsed in focus mode.
 	const showMore = $derived(wcFocus && !expanded);
