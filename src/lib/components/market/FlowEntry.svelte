@@ -20,7 +20,6 @@
 	 * `loading` flips false when the deck has arrived; between-card waits
 	 * prefetch and never re-show this surface. Reduced-motion + theme safe.
 	 */
-	import { onMount } from 'svelte';
 	import OracleChar from '$lib/components/characters/OracleChar.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { ResolutionRevealData } from '$lib/types/flow';
@@ -43,7 +42,15 @@
 	const hasDigest = $derived(digest.count > 0);
 	const positive = $derived(digest.netVxp >= 0);
 
-	// Rotating Oracle copy for the deck-shuffle mode. Cycles every 1.1s.
+	// Rotating Oracle copy for the deck-shuffle mode. One line reads, fades,
+	// and the next takes its place — continuously, with no empty frames. Each
+	// line plays the 1.1s `flowFade` (in → hold → out) and the swap is driven
+	// by that animation finishing (`advanceLine`), not by a free-running
+	// timer: a `setInterval` drifts against the CSS clock, so a late tick
+	// leaves the line parked at the fade-out's `opacity:0` for a visible beat
+	// (longer if the tab was ever backgrounded and the interval throttled).
+	// Mounting the next line the instant the previous one ends keeps the
+	// cadence frame-tight.
 	const loadLineKeys = [
 		'flow.entry.line.crowd',
 		'flow.entry.line.odds',
@@ -51,6 +58,10 @@
 		'flow.entry.line.summon'
 	] as const;
 	let loadLine = $state(0);
+
+	const advanceLine = () => {
+		loadLine = (loadLine + 1) % loadLineKeys.length;
+	};
 
 	// The CTA arms on a timer (a beat to read the digest / let the deck
 	// settle), not on the fetch — the user always enters on their own.
@@ -72,11 +83,22 @@
 		};
 	});
 
-	onMount(() => {
+	// Reactive reduced-motion driver. `prefersReducedMotion()` reads the live
+	// MediaQuery so this $effect re-runs whenever the user toggles the OS
+	// preference while the component is mounted — ensuring exactly ONE driver
+	// is active at any time: the CSS `animationend` path (full motion) or the
+	// plain interval (reduced motion). The interval is also created fresh if
+	// the preference flips from full → reduced mid-session, and cancelled when
+	// it flips back. The arm timeout is also keyed on the preference so the
+	// correct delay (600 ms vs 4 s) is applied from the current state.
+	$effect(() => {
 		const reduce = prefersReducedMotion();
-		const rot = setInterval(() => {
-			loadLine = (loadLine + 1) % loadLineKeys.length;
-		}, 1100);
+
+		// Under reduced motion the line is held static (no `flowFade`, so no
+		// `animationend` to drive the swap) — keep the same 1.1s reading beat
+		// on a plain timer. The line never animates to `opacity:0`, so there
+		// are still no empty frames here.
+		const rot = reduce ? setInterval(advanceLine, 1100) : undefined;
 		const arm = setTimeout(
 			() => {
 				ctaReady = true;
@@ -86,7 +108,8 @@
 
 		// Reveal cue: a celebratory chime for a net gain, a soft single tone
 		// for a loss. Suppressed under reduced motion. Stored so it can be
-		// cancelled on unmount if the user navigates before the 360 ms fire.
+		// cancelled on cleanup if the user navigates or preference flips before
+		// the 360 ms fires.
 		let audioCue: ReturnType<typeof setTimeout> | undefined;
 
 		if (hasDigest && !reduce) {
@@ -107,6 +130,15 @@
 			clearTimeout(audioCue);
 		};
 	});
+
+	// The fade-out lands on `opacity:0`; advancing on its end mounts the next
+	// line right then, so the swap is seamless. Full-motion only — reduced
+	// motion holds a static line and cycles on the interval above.
+	const onLineEnd = () => {
+		if (!prefersReducedMotion()) {
+			advanceLine();
+		}
+	};
 
 	const enterFlow = () => {
 		if (!ctaReady) {
@@ -196,7 +228,9 @@
 		<div class="label">
 			<div class="eyebrow-mute">{t({ locale: $localeStore, key: 'flow.entry.deck_eyebrow' })}</div>
 			{#key loadLine}
-				<span style="animation: flowFade 1100ms ease both" class="line"
+				<!-- Ambient loading flavor — hidden from the polite live region so
+				     the 1.1s swaps aren't announced on every cycle. -->
+				<span class="line" aria-hidden="true" onanimationend={onLineEnd}
 					>{t({ locale: $localeStore, key: loadLineKeys[loadLine] })}</span
 				>
 			{/key}
