@@ -49,8 +49,8 @@
 	}
 
 	/* The community read is bare — number + sparkline sit directly on the
-	   card, no surface box (matches the prototype, where only the
-	   resolution / stake / split blocks are framed). */
+	   card with no surface box; only the resolution / stake / split
+	   blocks are framed. */
 	.flow-community {
 		gap: 0.25rem;
 	}
