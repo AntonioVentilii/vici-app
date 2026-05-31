@@ -444,7 +444,8 @@ export const LeagueWireSchema = j.strictObject({
 	invite_code: j.string(),
 	owner: PrincipalTextSchema,
 	created_at_ms: j.number(),
-	accent_color: j.string().optional()
+	accent_color: j.string().optional(),
+	private: j.boolean().default(false)
 });
 
 export type WireLeague = j.infer<typeof LeagueWireSchema>;
@@ -475,6 +476,7 @@ export const toWireLeague = (league: {
 	owner: string;
 	createdAtMs: number;
 	accentColor?: string;
+	private?: boolean;
 }): WireLeague => ({
 	id: league.id,
 	name: league.name,
@@ -482,7 +484,8 @@ export const toWireLeague = (league: {
 	invite_code: league.inviteCode,
 	owner: league.owner,
 	created_at_ms: league.createdAtMs,
-	accent_color: league.accentColor
+	accent_color: league.accentColor,
+	private: league.private ?? false
 });
 
 export const toWireLeagueWithRole = (entry: {
