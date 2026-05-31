@@ -682,6 +682,11 @@
 			transform: translateY(0);
 		}
 	}
+	@media (prefers-reduced-motion: reduce) {
+		.flow-back-rules {
+			animation: none;
+		}
+	}
 
 	.flow-res-foot {
 		display: flex;
