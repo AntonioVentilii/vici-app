@@ -42,7 +42,7 @@
 <header class="flow-back-head">
 	<span class="allcaps flow-back-cat">{category}</span>
 	<div class="flow-back-actions" data-no-card-gesture="true">
-		<SavedMarketToggle marketId={market.id} size="sm" variant="ghost" />
+		<SavedMarketToggle marketId={market.id} size="sm" variant="flow-ghost" />
 		<button
 			class="flow-back-share"
 			class:is-active={shareOpen}
