@@ -737,15 +737,30 @@
 	// Push-to-15 is offered only on a regular (non-overtime) day that still
 	// has deck inventory to continue into — never once the hard cap is in
 	// play. `betsCount` reached `sessionTarget` (10) for FlowEnd to show.
-	const canExtend = $derived(!overtimeSession && currentIndex < markets.length - 1);
+	// Also gated on `dailyGoalDone < DAILY_HARD_CAP`: a user who entered
+	// Flow with prior-day calls already counted toward the cap has no
+	// cross-session headroom left and must come back tomorrow.
+	const canExtend = $derived(
+		!overtimeSession && currentIndex < markets.length - 1 && dailyGoalDone < DAILY_HARD_CAP
+	);
 
-	// "Push to 15 →" — raise the session cap to the daily hard cap, dismiss
-	// the takeover, and rise the next card so the same deck continues into
-	// overtime (the engine's calls-11 / 13 + overtime-complete beats fire as
-	// the session counter climbs). XP / staked / streak carry over — the run
-	// is the same session, just longer.
+	// "Push to 15 →" — raise the session cap to cover remaining daily
+	// headroom, dismiss the takeover, and rise the next card so the deck
+	// continues into overtime. Sizes the new target as
+	// `betsCount + (DAILY_HARD_CAP - dailyGoalDone)` so total daily calls
+	// (cross-session) never exceed DAILY_HARD_CAP.
+	//
+	// For a fresh-day user: betsCount = 10, dailyGoalDone = 10, headroom = 5
+	// → sessionTarget = 15 = DAILY_HARD_CAP, which keeps the engine in
+	// overtime mode (dailyTarget >= DAILY_HARD_CAP) so the calls-11 / 13
+	// beats and the overtime-complete +25 VXP fire correctly.
+	//
+	// For a user who already had prior calls: headroom < 5 → sessionTarget
+	// < DAILY_HARD_CAP; the engine's overtime arc is proportionally shorter,
+	// which is intentional — total daily calls stay ≤ 15.
 	const handleExtend = () => {
-		sessionTarget = DAILY_HARD_CAP;
+		const headroom = DAILY_HARD_CAP - dailyGoalDone;
+		sessionTarget = betsCount + headroom;
 		completed = false;
 		currentIndex += 1;
 	};
@@ -883,7 +898,7 @@
 			{betsCount}
 			categoryLabel={topBarCategoryLabel}
 			{dailyGoalDone}
-			dailyGoalTarget={DAILY_GOAL_TARGET}
+			dailyGoalTarget={sessionTarget}
 			{dailyStreak}
 			{flameStage}
 			{maxBets}
