@@ -42,7 +42,7 @@
 # Capture the markets file (first positional) before utils.sh consumes "$@" for
 # network-flag parsing.
 MARKETS_FILE="${1:-}"
-if [[ -z "$MARKETS_FILE" || "$MARKETS_FILE" == -* || "$MARKETS_FILE" == "local" || "$MARKETS_FILE" == "staging" || "$MARKETS_FILE" == "ic" ]]; then
+if [[ -z "$MARKETS_FILE" || "$MARKETS_FILE" == -* || "$MARKETS_FILE" == "local" || "$MARKETS_FILE" == "staging" || "$MARKETS_FILE" == "ic" || "$MARKETS_FILE" == "production" ]]; then
 	echo "Usage: $0 <markets-json-file> [--local|--staging|--production]" >&2
 	exit 1
 fi
