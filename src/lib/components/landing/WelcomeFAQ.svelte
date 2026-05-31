@@ -116,7 +116,7 @@
 		>
 			More questions? Write to <a
 				style="color:var(--accent); font-weight:600;"
-				href="mailto:support@vici.markets">support@vici.markets</a
+				href="mailto:support@vici.market">support@vici.market</a
 			> — we answer within two business days.
 		</p>
 	</div>

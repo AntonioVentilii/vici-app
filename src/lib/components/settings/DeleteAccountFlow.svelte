@@ -473,7 +473,7 @@
 					<button class="del-retain-btn" onclick={pause30Days} type="button">
 						{t({ locale: $localeStore, key: 'settings.delete.stay_pause' })}
 					</button>
-					<a class="del-retain-btn" href="mailto:support@vici.markets">
+					<a class="del-retain-btn" href="mailto:support@vici.market">
 						{t({ locale: $localeStore, key: 'settings.delete.stay_contact' })}
 					</a>
 				</div>
