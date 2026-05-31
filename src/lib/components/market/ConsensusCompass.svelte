@@ -35,8 +35,8 @@
 		<!-- Outer ring -->
 		<circle cx="21" cy="21" fill="none" r="18" stroke="var(--border-base)" stroke-width="1.2" />
 		<!-- YES (top) and NO (bottom) pole tick marks -->
-		<line stroke="var(--text-muted)" stroke-width="1" x1="21" x2="21" y1="2" y2="5" />
-		<line stroke="var(--text-muted)" stroke-width="1" x1="21" x2="21" y1="37" y2="40" />
+		<line stroke="var(--parchment-faint)" stroke-width="1" x1="21" x2="21" y1="2" y2="5" />
+		<line stroke="var(--parchment-faint)" stroke-width="1" x1="21" x2="21" y1="37" y2="40" />
 		<!-- Needle -->
 		<g transform={`rotate(${angle} 21 21)`}>
 			<line

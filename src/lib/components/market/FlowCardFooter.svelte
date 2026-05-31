@@ -28,7 +28,7 @@
 		align-items: center;
 		justify-content: space-between;
 		margin: auto 1.1rem 1.1rem;
-		padding-top: 0.5rem;
+		padding-top: 4px;
 		font-size: var(--t-12);
 		color: var(--text-muted);
 		letter-spacing: 0.06em;
@@ -60,7 +60,7 @@
 	}
 	.flow-foot-hint {
 		letter-spacing: 0.14em;
-		font-size: 10.5px;
+		font-size: 11px;
 		opacity: 0.7;
 	}
 </style>
