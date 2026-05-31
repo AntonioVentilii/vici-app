@@ -891,8 +891,8 @@
 		align-items: center;
 		padding: 2px 8px;
 		font-size: var(--text-eyebrow);
-		font-weight: 700;
-		letter-spacing: var(--tracking-wide);
+		font-weight: 600;
+		letter-spacing: 0;
 		color: var(--text-muted);
 		background: rgba(242, 236, 220, 0.05);
 		border: 1px solid rgba(242, 236, 220, 0.1);
@@ -903,7 +903,8 @@
 	}
 	.flow-days.is-urgent {
 		color: var(--no);
-		animation: flow-days-pulse 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+		border-color: color-mix(in srgb, var(--no) 30%, var(--border-base));
+		animation: flow-days-pulse 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 	}
 	@media (prefers-reduced-motion: reduce) {
 		.flow-days.is-urgent {
@@ -969,7 +970,7 @@
 		font-size: var(--text-h2);
 		line-height: var(--leading-snug);
 		font-weight: 600;
-		letter-spacing: var(--tracking-snug);
+		letter-spacing: -0.01em;
 		color: var(--text-base);
 		text-wrap: balance;
 		overflow-wrap: anywhere;
@@ -1111,13 +1112,13 @@
 		display: grid;
 		grid-template-columns: auto 1fr auto;
 		align-items: center;
-		gap: 0.6rem;
+		gap: 10px;
 	}
 
 	.flow-probs-side {
 		display: inline-flex;
 		align-items: baseline;
-		gap: 5px;
+		gap: 6px;
 	}
 	.flow-probs-side-no {
 		justify-content: flex-start;
@@ -1127,16 +1128,16 @@
 	}
 
 	.flow-probs-pct {
-		font-size: 1.45rem;
-		font-weight: 700;
-		letter-spacing: var(--tracking-tight);
+		font-size: 22px;
+		font-weight: 600;
+		letter-spacing: -0.02em;
 		line-height: 1;
 		color: var(--text-base);
 	}
 	.flow-probs-label {
 		font-size: var(--t-11);
 		font-weight: 700;
-		letter-spacing: var(--tracking-allcaps);
+		letter-spacing: 0.14em;
 		text-transform: uppercase;
 	}
 
@@ -1146,27 +1147,30 @@
 		height: 8px;
 		border-radius: var(--r-pill);
 		overflow: hidden;
-		background: var(--border-base);
+		background: var(--border-strong);
+		box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
 	}
 	.flow-probs-fill-no {
 		height: 100%;
-		background: color-mix(in srgb, var(--no) 80%, transparent);
+		background: linear-gradient(90deg, var(--no), rgba(255, 107, 107, 0.45));
+		transition: width 280ms var(--ease-vici);
 	}
 	.flow-probs-fill-yes {
 		height: 100%;
-		background: color-mix(in srgb, var(--yes) 80%, transparent);
+		background: linear-gradient(90deg, rgba(79, 211, 161, 0.45), var(--yes));
+		transition: width 280ms var(--ease-vici);
 	}
 
 	.flow-probs-action-row {
 		display: grid;
 		grid-template-columns: 1fr 1fr;
-		gap: 0.6rem;
-		font-size: var(--t-12);
+		gap: 12px;
+		font-size: 10.5px;
 	}
 	.flow-probs-action {
 		display: inline-flex;
 		align-items: center;
-		gap: 6px;
+		gap: 8px;
 		color: var(--text-muted);
 	}
 	.flow-probs-action-no {
@@ -1176,16 +1180,19 @@
 		justify-content: flex-end;
 	}
 	.flow-probs-arrow {
-		font-size: var(--t-14);
-		font-weight: 700;
+		font-family: var(--font-sans);
+		font-size: 16px;
 		line-height: 1;
+		color: var(--color-accent);
 	}
 	.flow-probs-payout {
 		display: inline-flex;
 		align-items: baseline;
 		gap: 3px;
-		font-weight: 700;
-		color: var(--text-base);
+		font-family: var(--font-mono);
+		font-size: 13px;
+		letter-spacing: -0.005em;
+		color: var(--color-accent);
 	}
 	.flow-probs-payout-unit {
 		font-size: 9.5px;
@@ -1194,8 +1201,8 @@
 		color: var(--text-muted);
 	}
 	.flow-probs-role {
-		font-size: 9.5px;
-		font-weight: 700;
+		font-size: 9px;
+		font-weight: 600;
 		letter-spacing: var(--tracking-allcaps);
 		opacity: 0.75;
 	}
@@ -1210,9 +1217,10 @@
 		align-items: center;
 		justify-content: center;
 		font-family: var(--font-display);
-		font-weight: 900;
-		font-size: clamp(3.5rem, 14vw, 5rem);
-		letter-spacing: 0.06em;
+		font-weight: 800;
+		font-size: 64px;
+		letter-spacing: 0.12em;
+		text-transform: uppercase;
 		pointer-events: none;
 		transition: opacity 80ms linear;
 		z-index: 20;
@@ -1230,7 +1238,6 @@
 		text-shadow: 0 4px 18px rgba(0, 0, 0, 0.4);
 	}
 	.flow-overlay-back {
-		font-size: clamp(3rem, 12vw, 4.5rem);
 		z-index: 25;
 	}
 
