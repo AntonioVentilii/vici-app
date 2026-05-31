@@ -1416,8 +1416,6 @@ export const esMessages = {
 	'settings.delete.deleting': 'Eliminando…',
 	'settings.delete.error': 'Algo salió mal. Inténtalo de nuevo.',
 	'settings.delete.error_handoff': 'No se pudo ceder {league}. Inténtalo de nuevo.',
-	'settings.delete.error_orders':
-		'No se pudieron cancelar tus órdenes abiertas. No se eliminó nada — inténtalo de nuevo.',
 	'settings.delete.forever': 'Eliminar para siempre',
 	'settings.delete.gone_body':
 		'Las operaciones activas siguen abiertas y se liquidan al vencimiento — eliminar tu cuenta no las cierra.',

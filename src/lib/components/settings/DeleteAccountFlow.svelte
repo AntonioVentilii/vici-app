@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ArrowRight, Check, Loader2 } from 'lucide-svelte/icons';
+	import { ArrowRight, Check } from 'lucide-svelte/icons';
 	import { onMount, tick } from 'svelte';
 	import { get } from 'svelte/store';
 	import type { ClearingDid } from '$declarations';
@@ -280,9 +280,21 @@
 	};
 
 	const pause30Days = async () => {
+		let result: Awaited<ReturnType<typeof hibernateMyAccount>>;
+
 		try {
-			await hibernateMyAccount();
+			result = await hibernateMyAccount();
 		} catch (_err: unknown) {
+			errorKey = 'settings.delete.error';
+			errorParams = undefined;
+
+			return;
+		}
+
+		// The wrapper resolves (doesn't throw) on a satellite refusal
+		// (`no_profile` / already soft-deleted). Surface it instead of
+		// signing the user out as if the pause succeeded.
+		if (!result.ok) {
 			errorKey = 'settings.delete.error';
 			errorParams = undefined;
 
@@ -316,12 +328,22 @@
 		errorKey = null;
 		errorParams = undefined;
 
+		// Call `deleteMyAccount` FIRST. The satellite applies league resolution
+		// + the owner-leagues guard BEFORE the soft-delete, so a refusal
+		// (`owns_non_empty_league` / `league_resolution_failed`) leaves the
+		// account fully intact. We must not cancel the user's open orders
+		// until the delete has actually committed — otherwise a transient
+		// refusal would irreversibly wipe orders without deleting anything.
+		let result: Awaited<ReturnType<typeof deleteMyAccount>>;
+
 		try {
-			for (const order of openOrders) {
-				await cancelLimitOrder(order.order_id);
-			}
+			result = await deleteMyAccount({
+				reason: reason ?? 'other',
+				note: note.trim(),
+				leagueResolutions: ownedLeagueCount > 0 ? buildResolutions() : undefined
+			});
 		} catch (_err: unknown) {
-			errorKey = 'settings.delete.error_orders';
+			errorKey = 'settings.delete.error';
 			errorParams = undefined;
 			deleteStatus = 'enabled';
 			inFlight = false;
@@ -329,46 +351,45 @@
 			return;
 		}
 
-		try {
-			const result = await deleteMyAccount({
-				reason: reason ?? 'other',
-				note: note.trim(),
-				leagueResolutions: ownedLeagueCount > 0 ? buildResolutions() : undefined
-			});
-
-			if (!result.ok) {
-				if (result.reason === 'owns_non_empty_league') {
-					deleteStatus = 'enabled';
-					inFlight = false;
-					await loadData();
-					step = 'leagues';
-
-					return;
-				}
-
-				if (result.reason === 'league_resolution_failed') {
-					const failed = ownedLeagues.find((l) => l.id === result.failedLeagueId);
-					errorKey = 'settings.delete.error_handoff';
-					errorParams = { league: failed?.name ?? result.failedLeagueId ?? '' };
-				} else {
-					errorKey = 'settings.delete.error';
-					errorParams = undefined;
-				}
-
+		if (!result.ok) {
+			if (result.reason === 'owns_non_empty_league') {
 				deleteStatus = 'enabled';
 				inFlight = false;
+				await loadData();
+				step = 'leagues';
 
 				return;
 			}
 
-			step = 'gone';
-			startCountdown();
-		} catch (_err: unknown) {
-			errorKey = 'settings.delete.error';
-			errorParams = undefined;
+			if (result.reason === 'league_resolution_failed') {
+				const failed = ownedLeagues.find((l) => l.id === result.failedLeagueId);
+				errorKey = 'settings.delete.error_handoff';
+				errorParams = { league: failed?.name ?? result.failedLeagueId ?? '' };
+			} else {
+				errorKey = 'settings.delete.error';
+				errorParams = undefined;
+			}
+
 			deleteStatus = 'enabled';
 			inFlight = false;
+
+			return;
 		}
+
+		// Soft-delete committed. Now cancel open orders FE-side (the satellite
+		// can't reach the clearing engine). A cancel failure here can't undo
+		// the delete — the account is recoverable for 30 days and any open
+		// trades settle at expiry regardless — so we still proceed to `gone`.
+		try {
+			for (const order of openOrders) {
+				await cancelLimitOrder(order.order_id);
+			}
+		} catch (err: unknown) {
+			console.error('DeleteAccountFlow: order cancel after delete failed', err);
+		}
+
+		step = 'gone';
+		startCountdown();
 	};
 
 	const finish = async () => {
@@ -574,6 +595,7 @@
 								class="del-league-mode"
 								class:is-active={draft?.action === 'transfer'}
 								aria-pressed={draft?.action === 'transfer'}
+								disabled={transferCandidates(league.id).length === 0}
 								onclick={() =>
 									(resolutions = {
 										...resolutions,
@@ -733,10 +755,10 @@
 					status={handleMatches ? deleteStatus : 'disabled'}
 					variant="danger"
 				>
-					{#if inFlight}
-						<Loader2 class="del-spin" aria-hidden="true" size={16} strokeWidth={1.8} />
+					{#snippet busyLabel()}
 						{t({ locale: $localeStore, key: 'settings.delete.deleting' })}
-					{:else if errorKey !== null}
+					{/snippet}
+					{#if errorKey !== null}
 						{t({ locale: $localeStore, key: 'settings.delete.try_again' })}
 					{:else}
 						{t({ locale: $localeStore, key: 'settings.delete.forever' })}
@@ -1120,21 +1142,5 @@
 
 	.del-actions-single {
 		width: 100%;
-	}
-
-	:global(.del-spin) {
-		animation: del-spin 0.8s linear infinite;
-	}
-
-	@keyframes del-spin {
-		to {
-			transform: rotate(360deg);
-		}
-	}
-
-	@media (prefers-reduced-motion: reduce) {
-		:global(.del-spin) {
-			animation: none;
-		}
 	}
 </style>

@@ -1409,8 +1409,6 @@ export const itMessages = {
 	'settings.delete.deleting': 'Eliminazione…',
 	'settings.delete.error': 'Qualcosa è andato storto. Riprova.',
 	'settings.delete.error_handoff': 'Impossibile cedere {league}. Riprova.',
-	'settings.delete.error_orders':
-		'Impossibile annullare i tuoi ordini aperti. Nulla è stato eliminato — riprova.',
 	'settings.delete.forever': 'Elimina per sempre',
 	'settings.delete.gone_body':
 		'Eventuali scambi attivi restano aperti e si chiudono alla scadenza — eliminare l’account non li annulla.',

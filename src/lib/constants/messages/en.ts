@@ -1441,8 +1441,6 @@ export const enMessages = {
 	'settings.delete.deleting': 'Deleting…',
 	'settings.delete.error': 'Something went wrong. Please try again.',
 	'settings.delete.error_handoff': "Couldn't hand off {league}. Try again.",
-	'settings.delete.error_orders':
-		"Couldn't cancel your open orders. Nothing was deleted — try again.",
 	'settings.delete.forever': 'Delete forever',
 	'settings.delete.gone_body':
 		'Any active trades stay open and settle at expiry — deleting your account does not exit them.',

@@ -1419,8 +1419,6 @@ export const deMessages = {
 	'settings.delete.deleting': 'Wird gelöscht…',
 	'settings.delete.error': 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
 	'settings.delete.error_handoff': '{league} konnte nicht übergeben werden. Versuche es erneut.',
-	'settings.delete.error_orders':
-		'Deine offenen Orders konnten nicht storniert werden. Nichts wurde gelöscht — versuche es erneut.',
 	'settings.delete.forever': 'Endgültig löschen',
 	'settings.delete.gone_body':
 		'Aktive Trades bleiben offen und werden bei Fälligkeit abgerechnet — das Löschen deines Kontos beendet sie nicht.',

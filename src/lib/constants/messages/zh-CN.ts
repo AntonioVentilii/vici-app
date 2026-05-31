@@ -1340,7 +1340,6 @@ export const zhCnMessages = {
 	'settings.delete.deleting': '删除中…',
 	'settings.delete.error': '出了点问题，请重试。',
 	'settings.delete.error_handoff': '无法移交 {league}。请重试。',
-	'settings.delete.error_orders': '无法取消你的未结订单。未删除任何内容——请重试。',
 	'settings.delete.forever': '永久删除',
 	'settings.delete.gone_body': '进行中的交易仍保持开仓并在到期时结算——删除账户不会平掉它们。',
 	'settings.delete.gone_heading': 'Vale.',

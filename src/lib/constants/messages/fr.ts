@@ -1420,8 +1420,6 @@ export const frMessages = {
 	'settings.delete.deleting': 'Suppression…',
 	'settings.delete.error': 'Une erreur est survenue. Veuillez réessayer.',
 	'settings.delete.error_handoff': 'Impossible de céder {league}. Réessayez.',
-	'settings.delete.error_orders':
-		'Impossible d’annuler vos ordres ouverts. Rien n’a été supprimé — réessayez.',
 	'settings.delete.forever': 'Supprimer définitivement',
 	'settings.delete.gone_body':
 		'Les positions actives restent ouvertes et se règlent à l’échéance — supprimer votre compte ne les solde pas.',

@@ -1407,8 +1407,6 @@ export const ptMessages = {
 	'settings.delete.deleting': 'Excluindo…',
 	'settings.delete.error': 'Algo deu errado. Tente novamente.',
 	'settings.delete.error_handoff': 'Não foi possível repassar {league}. Tente novamente.',
-	'settings.delete.error_orders':
-		'Não foi possível cancelar suas ordens abertas. Nada foi excluído — tente novamente.',
 	'settings.delete.forever': 'Excluir para sempre',
 	'settings.delete.gone_body':
 		'As operações ativas continuam abertas e liquidam no vencimento — excluir sua conta não as encerra.',
