@@ -22,7 +22,6 @@
 	import SwipeHint from '$lib/components/market/SwipeHint.svelte';
 	import XpToast from '$lib/components/market/XpToast.svelte';
 	import FlowCoach from '$lib/components/onboarding/FlowCoach.svelte';
-	import { BASE_XP_PER_PREDICTION } from '$lib/constants/flow-rewards.constants';
 	import { primaryMarketTag, type MarketTag } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { isVxpLadderStake, VXP_MIN_STAKE } from '$lib/constants/vxp-economy.constants';
@@ -38,7 +37,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { userStore } from '$lib/stores/user.store';
-	import type { ResolutionRevealData, XpPop, XpPopKind } from '$lib/types/flow';
+	import type { ResolutionRevealData, XpPop } from '$lib/types/flow';
 	import type { CallSide, FlowAction, Market, MarketId } from '$lib/types/market';
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type { UserMarketSignals } from '$lib/types/market-signals';
@@ -204,8 +203,6 @@
 	let xpPops = $state<XpPop[]>([]);
 	let popCounter = 0;
 
-	const comboMultiplier = $derived(streak >= 5 ? 3 : streak >= 3 ? 2 : 1);
-
 	// Local alias — every haptic in this file maps to a named pattern
 	// from `haptics.utils.ts`. Naming kept minimal so existing call
 	// sites read the same way.
@@ -331,27 +328,26 @@
 		}
 	});
 
+	// Spawns a centered VXP-grant pop. Only genuine engine mints (overtime
+	// finish, lifetime milestones) reach this — a routine swipe mints
+	// nothing (deflation-safe economy, see `docs/ai/frontend/design.md`
+	// §7.3), so every pop is a real `bonus` award.
 	const spawnXpPop = ({
 		amount,
-		combo,
 		side,
-		kind = 'normal',
 		copy
 	}: {
 		amount: number;
-		combo: number;
 		side: CallSide;
-		kind?: XpPopKind;
 		copy?: string;
 	}) => {
 		const id = ++popCounter;
-		xpPops = [...xpPops, { id, amount, combo, side, kind, copy }];
+		xpPops = [...xpPops, { id, amount, side, copy }];
 
-		// Bonus pops linger longer (paired copy needs to read).
-		const ttl = kind === 'bonus' ? 1800 : 1100;
+		// Bonus pops linger (paired copy needs to read).
 		setTimeout(() => {
 			xpPops = xpPops.filter((p) => p.id !== id);
-		}, ttl);
+		}, 1800);
 	};
 
 	const finishCommitAdvance = () => {
@@ -564,9 +560,6 @@
 				});
 		}
 
-		const awarded = BASE_XP_PER_PREDICTION * comboMultiplier;
-		xp += awarded;
-
 		// Per-swipe sound cue — one tick per committed call (YES / NO).
 		// SKIP returned early above and is intentionally silent, mirroring
 		// the haptic channel. On iOS Safari (no Vibration API) this tick is
@@ -614,17 +607,14 @@
 
 		// Whether this swipe also lands on a gating beat. When it does, the
 		// centered MotionBeat already owns the slot — suppress the centered
-		// combo pop so the two don't stack in the same area.
+		// bonus pop so the two don't stack in the same area.
 		const hasGatingBeat = motion.beat != null && motion.beat.kind !== 'ambient-10';
 
-		// The per-swipe commit pop (`XpToast`, fired below) is the sole
-		// feedback for a plain call. The centered combo pop is reserved for
-		// the streak-multiplier moments (×2 / ×3) when there is NO gating
-		// beat in the same frame — otherwise the two surfaces would stack.
-		if (comboMultiplier > 1 && !hasGatingBeat) {
-			spawnXpPop({ amount: awarded, combo: comboMultiplier, side: action });
-		}
-
+		// A swipe mints no VXP — the economy is deflation-safe (see
+		// `docs/ai/frontend/design.md` §7.3). Real VXP is credited only by
+		// the motion engine's genuine grants (overtime finish, lifetime
+		// milestones), surfaced below; the session combo drives haptics and
+		// the streak banner only, never a per-swipe payout.
 		if (motion.bonusXp > 0) {
 			xp += motion.bonusXp;
 
@@ -638,9 +628,7 @@
 			if (!hasGatingBeat) {
 				spawnXpPop({
 					amount: motion.bonusXp,
-					combo: 1,
 					side: action,
-					kind: 'bonus',
 					copy: popCopy
 				});
 			}

@@ -24,13 +24,6 @@
 			params: { count }
 		})}
 	</span>
-	<span class="combo-banner-xp">
-		{t({
-			locale: $localeStore,
-			key: 'flow.streak_xp_multiplier',
-			params: { multi: count >= 5 ? 3 : 2 }
-		})}
-	</span>
 </div>
 
 <style lang="postcss">
@@ -52,11 +45,5 @@
 		letter-spacing: 0.02em;
 		box-shadow: 0 14px 40px rgba(226, 184, 66, 0.4);
 		pointer-events: none;
-	}
-	.combo-banner-xp {
-		padding: 3px 8px;
-		border-radius: var(--r-pill);
-		background: color-mix(in srgb, var(--color-primary-foreground) 16%, transparent);
-		font-size: var(--t-11);
 	}
 </style>

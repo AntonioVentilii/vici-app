@@ -1,7 +1,5 @@
 import type { CallSide, MarketId } from '$lib/types/market';
 
-export type XpPopKind = 'normal' | 'bonus';
-
 /**
  * One settled call in the "while you were away" digest — a row in the Flow
  * entry recap and the {@link ResolutionRevealData} list. `side` is the side
@@ -39,14 +37,15 @@ export interface ResolutionRevealData {
 	netVxp: number;
 }
 
+/**
+ * A centered VXP-grant pop. Routine swipes mint nothing (deflation-safe
+ * economy), so every pop is a genuine engine award — the overtime finish
+ * or a lifetime-volume milestone.
+ */
 export interface XpPop {
 	id: number;
 	amount: number;
-	combo: number;
 	side: CallSide;
-	// 'bonus' = milestone reward (laurel, larger, paired copy).
-	kind: XpPopKind;
-	// Paired copy ("First call.", "Ten deep.") shown above the
-	// number on bonus pops; undefined for normal pops.
+	// Paired copy ("First call.", "Ten deep.") shown above the number.
 	copy?: string;
 }
