@@ -15,6 +15,7 @@
 	import MarketDetailSkeleton from '$lib/components/market/MarketDetailSkeleton.svelte';
 	import MarketDetailStatsGrid from '$lib/components/market/MarketDetailStatsGrid.svelte';
 	import MarketDetailTopPredictors from '$lib/components/market/MarketDetailTopPredictors.svelte';
+	import MarketDetailWhyNow from '$lib/components/market/MarketDetailWhyNow.svelte';
 	import MarketMetadataForm from '$lib/components/market/MarketMetadataForm.svelte';
 	import MarketResolutionInterface from '$lib/components/market/MarketResolutionInterface.svelte';
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
@@ -22,6 +23,7 @@
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
 	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
+	import { marketMetadata } from '$lib/derived/market-metadata.derived';
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { pageMarketId } from '$lib/derived/page-market.derived';
 	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
@@ -31,11 +33,13 @@
 		userIsAdminOrSolver,
 		userSignedIn
 	} from '$lib/derived/user.derived';
+	import { getUserMarketSignals } from '$lib/services/market-signals.services';
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market, MarketId, OutcomeId } from '$lib/types/market';
+	import type { FollowedLeanSignal, PriorCallSignal } from '$lib/types/market-signals';
 	import type { Position, ResolvedPosition } from '$lib/types/position';
 	import { t } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
@@ -45,6 +49,14 @@
 	let market = $state<Market | undefined>();
 
 	let positions = $state<Position[]>([]);
+
+	// Viewer-relative market signals (the prior call they hold here, the
+	// lean of the people they follow). Sparse by construction — absent
+	// when signed-out or when no signal exists for this market — so the
+	// surfaces that read them simply omit their row rather than show
+	// invented data.
+	let followedLean = $state<FollowedLeanSignal | undefined>();
+	let priorCall = $state<PriorCallSignal | undefined>();
 
 	let loading = $state(true);
 
@@ -64,6 +76,38 @@
 
 		if (!silent) {
 			loading = false;
+		}
+
+		// Signals only change with the viewer's own activity, not with
+		// the 30s consensus poll — fetch them on the foreground load and
+		// skip the silent refresh so we don't re-pull trade history +
+		// friend activity every tick.
+		if (!silent) {
+			void fetchSignals(marketRes);
+		}
+	};
+
+	// Viewer-relative signals are a secondary, signed-in-only fetch
+	// (trade history + the activity of people the viewer follows). It
+	// rides on top of the market load rather than blocking the first
+	// paint, and fails open: any error just leaves the prior-call /
+	// followed-lean rows hidden.
+	const fetchSignals = async (m: Market | undefined) => {
+		if (isNullish(m) || !$userSignedIn) {
+			followedLean = undefined;
+			priorCall = undefined;
+
+			return;
+		}
+
+		try {
+			const signals = await getUserMarketSignals({ domain: m.balanceDomain });
+
+			followedLean = signals.followedLean[m.id];
+			priorCall = signals.priorCalls[m.id];
+		} catch {
+			followedLean = undefined;
+			priorCall = undefined;
 		}
 	};
 
@@ -111,6 +155,12 @@
 
 	const tags = $derived(nonNullish(market) ? ($marketTags[market.id] ?? []) : []);
 	const primaryTag = $derived(tags[0]);
+
+	// Curated metadata for this market — the editorial subtitle (the
+	// context line under the title) and the "why this card now" cue.
+	const metadata = $derived(nonNullish(market) ? $marketMetadata[market.id] : undefined);
+	const contextLine = $derived(metadata?.subtitle?.trim() ?? '');
+	const whyNow = $derived(metadata?.whyNow);
 
 	const yesPercent = $derived(
 		nonNullish(market) ? Math.min(100, Math.max(0, Math.round(market.yesProbability * 100))) : 0
@@ -289,6 +339,12 @@
 			</div>
 
 			<h1 class="market-detail-title">{market.title}</h1>
+
+			{#if contextLine !== ''}
+				<p class="market-detail-context">{contextLine}</p>
+			{/if}
+
+			<MarketDetailWhyNow {priorCall} {whyNow} />
 		</section>
 
 		<MarketDetailProbHero {noPercent} {yesPercent} />
@@ -299,7 +355,7 @@
 
 		<MarketDetailResolutionCard {market} />
 
-		<MarketDetailTopPredictors {market} />
+		<MarketDetailTopPredictors {followedLean} {market} />
 
 		{#if showAdminActions}
 			<section
@@ -365,8 +421,11 @@
 		display: flex;
 		flex-direction: column;
 		gap: 0;
-		/* Leave room for the sticky bottom CTA bar (≈64px + safe-area). */
-		padding: 0.25rem 0 6rem;
+		/* Leave room for the floating CTA bar *and* the navpill it sits
+		   above: navpill reserves `88px + safe-area`, the CTA adds
+		   ~80px on top, so we clear ~168px + safe-area at the bottom so
+		   the last section never sits under either. */
+		padding: 0.25rem 0 calc(env(safe-area-inset-bottom, 0px) + 10.5rem);
 	}
 
 	.market-detail-hero {
@@ -405,6 +464,16 @@
 		font-weight: 600;
 		letter-spacing: -0.02em;
 		line-height: 1.22;
+	}
+
+	/* Editorial context line under the title — the question's one-line
+	   framing (e.g. "Hex contenders · 17.9% favorite"). Dimmed body
+	   copy so the title keeps the visual weight. */
+	.market-detail-context {
+		margin: 0.375rem 0 0;
+		color: var(--fg-dim);
+		font-size: var(--t-13);
+		line-height: 1.45;
 	}
 
 	.market-detail-admin {

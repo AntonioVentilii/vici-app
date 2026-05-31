@@ -3,13 +3,24 @@
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { Market } from '$lib/types/market';
+	import type { FollowedLeanSignal } from '$lib/types/market-signals';
 	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		market: Market;
+		/**
+		 * Lean of the people the viewer follows, if any have called this
+		 * market. Sparse: when absent the followed-lean row is hidden
+		 * rather than showing invented friends.
+		 */
+		followedLean?: FollowedLeanSignal;
 	}
 
-	const { market }: Props = $props();
+	const { market, followedLean }: Props = $props();
+
+	const followedNo = $derived(
+		followedLean !== undefined ? followedLean.total - followedLean.yes : 0
+	);
 
 	// We don't yet have a "top predictors *on this market*" satellite
 	// query — slice the global leaderboard to approximate it. Top 4
@@ -74,6 +85,36 @@
 				</li>
 			{/each}
 		</ul>
+	{/if}
+
+	{#if followedLean !== undefined && followedLean.total > 0}
+		<div class="market-followed-lean">
+			<div class="market-followed-lean-head">
+				<span class="market-followed-lean-label">
+					{t({ locale: $localeStore, key: 'market.detail.followed_lean.label' })}
+				</span>
+				<span class="num market-followed-lean-count">
+					<span class="text-yes">{followedLean.yes}</span>
+					{t({ locale: $localeStore, key: 'outcome.yes' })}
+					<span class="market-followed-lean-sep" aria-hidden="true">·</span>
+					<span class="text-no">{followedNo}</span>
+					{t({ locale: $localeStore, key: 'outcome.no' })}
+				</span>
+			</div>
+			<div
+				class="market-followed-lean-dots"
+				aria-label={t({
+					locale: $localeStore,
+					key: 'market.detail.followed_lean.aria',
+					params: { yes: followedLean.yes, no: followedNo }
+				})}
+				role="img"
+			>
+				{#each Array.from({ length: followedLean.total }, (_, i) => i) as i (i)}
+					<span class="market-followed-lean-dot" class:is-yes={i < followedLean.yes}></span>
+				{/each}
+			</div>
+		</div>
 	{/if}
 </section>
 
@@ -187,5 +228,70 @@
 	.market-top-predictors-side.is-no {
 		background: color-mix(in srgb, var(--no) 12%, transparent);
 		color: var(--no);
+	}
+
+	/* Followed-lean row — how the people the viewer follows have called
+	   this market. A label + `N YES · M NO` count over a dot grid, so
+	   the social signal reads at a glance without a second list. */
+	.market-followed-lean {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		margin-top: 0.5rem;
+		padding: 0.75rem;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
+		box-shadow: var(--inset-hi);
+	}
+
+	.market-followed-lean-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.market-followed-lean-label {
+		color: var(--text-base);
+		font-size: var(--t-12);
+		font-weight: 500;
+	}
+
+	.market-followed-lean-count {
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		font-weight: 700;
+	}
+
+	.market-followed-lean-count .text-yes,
+	.market-followed-lean-count .text-no {
+		font-weight: 700;
+	}
+
+	.market-followed-lean-sep {
+		margin: 0 0.25rem;
+		color: var(--fg-faint);
+	}
+
+	.market-followed-lean-dots {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 6px;
+	}
+
+	.market-followed-lean-dot {
+		width: 10px;
+		height: 10px;
+		border-radius: var(--r-pill);
+		background: var(--no);
+		opacity: 0.78;
+		box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.18);
+	}
+
+	.market-followed-lean-dot.is-yes {
+		background: var(--yes);
+		opacity: 1;
 	}
 </style>

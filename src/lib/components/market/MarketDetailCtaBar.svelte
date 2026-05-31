@@ -12,12 +12,12 @@
 	const { yesPercent, noPercent, disabled = false, onPick }: Props = $props();
 </script>
 
-<!-- Sticky bottom YES/NO CTA bar — port of `screens.jsx:287-299`. Tap
-     a side to open the prediction sheet. The bar sits above the safe-
-     area inset; the route layout hides the bottom mobile nav on this
-     surface so the CTA isn't competing with the tab bar for the same
-     slot. The gradient mask softens the seam where the bar meets the
-     "Top predictors" list above. -->
+<!-- Floating YES/NO CTA bar. Tap a side to open the prediction sheet.
+     The bar floats *above* the bottom navpill (`bottom: navpill height +
+     safe-area`) so YES/NO is never hidden behind the tab bar and the
+     navpill stays reachable. The gradient mask softens the seam where
+     the bar meets the content above; the container is pointer-through so
+     only the two buttons are tappable. -->
 <div class="market-cta-bar">
 	<button
 		class="market-cta market-cta-yes"
@@ -46,12 +46,16 @@
 		position: fixed;
 		left: 0;
 		right: 0;
-		bottom: 0;
+		/* Floats above the bottom navpill — the navpill reserves
+		   `88px + safe-area` of vertical space (see `MobileNav`), so we
+		   clear it here and let the safe-area inset live on the navpill
+		   below us rather than doubling it up. */
+		bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
 		z-index: 40;
 		display: flex;
 		gap: 0.5rem;
-		padding: 0.75rem 1rem calc(env(safe-area-inset-bottom, 0px) + 0.875rem);
-		background: linear-gradient(180deg, transparent, var(--bg) 30%);
+		padding: 1.25rem 1rem 0.75rem;
+		background: linear-gradient(180deg, transparent, var(--bg) 38%);
 		pointer-events: none;
 	}
 
