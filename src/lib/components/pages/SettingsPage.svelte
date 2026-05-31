@@ -4,8 +4,10 @@
 		Activity,
 		Bell,
 		ChevronLeft,
+		ChevronRight,
 		Download,
 		Eye,
+		Globe,
 		Info,
 		Lock,
 		Moon,
@@ -15,12 +17,13 @@
 		Target,
 		Trophy,
 		Users,
-		Zap
+		Volume2
 	} from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import DeleteAccountFlow from '$lib/components/settings/DeleteAccountFlow.svelte';
+	import LanguageSheet from '$lib/components/settings/LanguageSheet.svelte';
 	import SetRow from '$lib/components/settings/SetRow.svelte';
 	import SetSegmented from '$lib/components/settings/SetSegmented.svelte';
 	import SetToggle from '$lib/components/settings/SetToggle.svelte';
@@ -29,14 +32,9 @@
 	import AppearancePicker from '$lib/components/ui/AppearancePicker.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { Collection } from '$lib/constants/collections.constants';
-	import {
-		LOCALE_STORAGE_KEY,
-		SUPPORTED_LOCALES,
-		type AppLocale
-	} from '$lib/constants/locale.constants';
+	import { LOCALE_STORAGE_KEY, SUPPORTED_LOCALES } from '$lib/constants/locale.constants';
 	import { MARKET_TAGS } from '$lib/constants/market-tags.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
-	import { FLOW_SESSION_LENGTH_OPTIONS } from '$lib/constants/settings.constants';
 	import { authPrincipal } from '$lib/derived/user.derived';
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -44,7 +42,7 @@
 	import { theme } from '$lib/stores/theme.store';
 	import { setAuthBusy, userStore } from '$lib/stores/user.store';
 	import type { ButtonStatus } from '$lib/types/components';
-	import type { FlowSessionLength, SettingsVisibility } from '$lib/types/preferences';
+	import type { SettingsVisibility } from '$lib/types/preferences';
 	import type { UserProfile } from '$lib/types/profile';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
@@ -53,6 +51,14 @@
 	// Delete-account flow — the six-beat flow lives in
 	// `DeleteAccountFlow`; this page only owns the open/close toggle.
 	let deleteSheetOpen = $state(false);
+
+	// Language picker — the searchable list lives in `LanguageSheet`;
+	// the row below opens it and reflects the active locale.
+	let langSheetOpen = $state(false);
+
+	const activeLocale = $derived(
+		SUPPORTED_LOCALES.find((locale) => locale.id === $localeStore) ?? SUPPORTED_LOCALES[0]
+	);
 
 	let signOutStatus = $state<ButtonStatus>('enabled');
 	let confirmingSignOut = $state(false);
@@ -262,9 +268,9 @@
 		}
 
 		const onKey = (event: KeyboardEvent) => {
-			// The delete sheet owns Escape while it's open (it closes the
-			// sheet, not the page); don't navigate away underneath it.
-			if (event.key === 'Escape' && !deleteSheetOpen) {
+			// Open sheets own Escape while visible (they close themselves,
+			// not the page); don't navigate away underneath them.
+			if (event.key === 'Escape' && !deleteSheetOpen && !langSheetOpen) {
 				void goto(resolve(AppPath.Profile));
 			}
 		};
@@ -404,19 +410,19 @@
 				})}
 			/>
 
-			<SetSegmented
-				icon={Zap}
-				label={t({ locale: $localeStore, key: 'settings.session_length' })}
-				onchange={(value) => {
-					preferencesStore.update((prefs) => ({
-						...prefs,
-						flowSessionLength: value as FlowSessionLength
-					}));
-				}}
-				options={FLOW_SESSION_LENGTH_OPTIONS}
-				sub={t({ locale: $localeStore, key: 'settings.session_length.sub' })}
-				value={$preferencesStore.flowSessionLength}
-			/>
+			<SetRow
+				icon={Globe}
+				label={t({ locale: $localeStore, key: 'settings.language' })}
+				onclick={() => (langSheetOpen = true)}
+				sub={activeLocale.label}
+			>
+				{#snippet right()}
+					<span class="settings-lang-right">
+						<span class="settings-lang-short num">{activeLocale.short}</span>
+						<ChevronRight aria-hidden="true" size={16} strokeWidth={1.6} />
+					</span>
+				{/snippet}
+			</SetRow>
 
 			<SetToggle
 				checked={$preferencesStore.hapticsEnabled}
@@ -428,14 +434,14 @@
 				sub={t({ locale: $localeStore, key: 'settings.haptics.sub' })}
 			/>
 
-			<SetSegmented
-				label={t({ locale: $localeStore, key: 'settings.language' })}
+			<SetToggle
+				checked={$preferencesStore.soundEnabled}
+				icon={Volume2}
+				label={t({ locale: $localeStore, key: 'settings.sound' })}
 				onchange={(value) => {
-					localeStore.set({ key: LOCALE_STORAGE_KEY, value: value as AppLocale });
+					preferencesStore.update((prefs) => ({ ...prefs, soundEnabled: value }));
 				}}
-				options={SUPPORTED_LOCALES.map((locale) => ({ value: locale.id, label: locale.label }))}
-				sub={t({ locale: $localeStore, key: 'settings.language.sub' })}
-				value={$localeStore}
+				sub={t({ locale: $localeStore, key: 'settings.sound.sub' })}
 			/>
 		</SettingsSection>
 
@@ -592,6 +598,16 @@
 		onSignOut={dropAuth}
 	/>
 
+	<LanguageSheet
+		current={$localeStore}
+		isOpen={langSheetOpen}
+		onClose={() => (langSheetOpen = false)}
+		onPick={(locale) => {
+			localeStore.set({ key: LOCALE_STORAGE_KEY, value: locale });
+			langSheetOpen = false;
+		}}
+	/>
+
 	{#if toastMessage !== null}
 		<!--
 			Pill-shaped transient toast pinned to the bottom of the page.
@@ -651,6 +667,24 @@
 		font-weight: 700;
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
+	}
+
+	/* Language row trailing affordance — the active locale's short code
+	   (mono, muted) sitting beside the chevron, mirroring the row's
+	   `right` slot. */
+	.settings-lang-right {
+		display: inline-flex;
+		flex-shrink: 0;
+		align-items: center;
+		gap: 0.5rem;
+		color: var(--text-muted);
+	}
+
+	.settings-lang-short {
+		font-size: var(--t-11);
+		font-weight: 600;
+		letter-spacing: 0.06em;
+		color: var(--text-muted);
 	}
 
 	.settings-body {
