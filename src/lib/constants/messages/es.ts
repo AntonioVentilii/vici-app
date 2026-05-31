@@ -420,7 +420,7 @@ export const esMessages = {
 	'card.sharp_signal': 'Predictores top: {percent}% {side}',
 	'card.momentum_delta': '+{count} hoy',
 	'card.tap_depth': 'TOCA PARA VER MÁS',
-	'card.you_called_eyebrow': 'TÚ DIJISTE',
+	'card.you_called_eyebrow': 'TU LLAMADA',
 	'card.your_accuracy_line': 'Tu precisión en {category}: {pct}% · {calls} calls',
 	'challenge.create.error.missing_premium': 'Falta el reto',
 	'challenge.create.error.missing_premium_message':
