@@ -490,7 +490,6 @@ export const frMessages = {
 	'card.back.who_calling': 'Qui pronostique quoi',
 	'card.back.your_context': 'Votre contexte',
 	'card.call_count': '{count} pronostics',
-	'card.callers_last_hour': '{count} pronostiqueurs sur la dernière heure',
 	'card.call_size': 'TAILLE DE LA CALL',
 	'card.call_size_cap': 'TAILLE DE LA CALL · MAX',
 	'card.calls': 'pronostics',

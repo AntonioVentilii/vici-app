@@ -486,7 +486,6 @@ export const ptMessages = {
 	'card.back.who_calling': 'Quem está prevendo o quê',
 	'card.back.your_context': 'Seu contexto',
 	'card.call_count': '{count} previsões',
-	'card.callers_last_hour': '{count} previsores na última hora',
 	'card.call_size': 'TAMANHO DA CALL',
 	'card.call_size_cap': 'TAMANHO DA CALL · LIMITE',
 	'card.calls': 'previsões',

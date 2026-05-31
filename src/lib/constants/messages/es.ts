@@ -485,7 +485,6 @@ export const esMessages = {
 	'card.back.who_calling': 'Quién predice qué',
 	'card.back.your_context': 'Tu contexto',
 	'card.call_count': '{count} predicciones',
-	'card.callers_last_hour': '{count} predictores en la última hora',
 	'card.call_size': 'TAMAÑO DE LA CALL',
 	'card.call_size_cap': 'TAMAÑO DE LA CALL · TOPE',
 	'card.calls': 'predicciones',

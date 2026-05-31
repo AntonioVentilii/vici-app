@@ -459,7 +459,6 @@ export const zhCnMessages = {
 	'card.back.who_calling': '谁在预测什么',
 	'card.back.your_context': '你的背景',
 	'card.call_count': '{count} 次预测',
-	'card.callers_last_hour': '过去一小时 {count} 位预测者',
 	'card.call_size': '预测金额',
 	'card.call_size_cap': '预测金额 · 上限',
 	'card.calls': '次预测',
