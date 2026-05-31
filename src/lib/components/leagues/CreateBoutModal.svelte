@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte/icons';
-	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
@@ -56,7 +55,10 @@
 	const DURATIONS = [7, 14, 30] as const;
 	type Duration = (typeof DURATIONS)[number];
 
+	// Start as 'loading' so the first open shows the spinner immediately
+	// rather than briefly flashing the form before data arrives.
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
+	let hasLoaded = $state(false);
 	let ownedLeagues: LeagueWithRole[] = $state([]);
 
 	let fromLeague: LeagueDoc | undefined = $state();
@@ -97,7 +99,14 @@
 		}
 	};
 
-	onMount(load);
+	// Defer the league fetch until the sheet actually opens; guard with
+	// `hasLoaded` so reopening the sheet does not re-fire the request.
+	$effect(() => {
+		if (isOpen && !hasLoaded) {
+			hasLoaded = true;
+			void load();
+		}
+	});
 
 	const reset = () => {
 		fromLeague = ownedLeagues.length === 1 ? ownedLeagues[0].league : undefined;
