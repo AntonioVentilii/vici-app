@@ -2124,6 +2124,7 @@ export const ptMessages = {
 	'welcome.faq.contact_prefix': 'Mais perguntas? Escreva para',
 	'welcome.faq.contact_suffix': '— respondemos em até dois dias úteis.',
 	'welcome.faq.eyebrow': 'FAQ',
+	'welcome.faq.privacy_link': 'Consulte a política de privacidade para mais detalhes.',
 	'welcome.faq.q1': 'A VICI é grátis?',
 	'welcome.faq.q2': 'Sobre o que posso prever?',
 	'welcome.faq.q3': 'Como minha precisão é medida?',

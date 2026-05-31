@@ -2137,6 +2137,7 @@ export const frMessages = {
 	'welcome.faq.contact_prefix': "D'autres questions ? Écris à",
 	'welcome.faq.contact_suffix': '— nous répondons sous deux jours ouvrés.',
 	'welcome.faq.eyebrow': 'FAQ',
+	'welcome.faq.privacy_link': 'Consulte la politique de confidentialité pour en savoir plus.',
 	'welcome.faq.q1': 'VICI est-il gratuit ?',
 	'welcome.faq.q2': 'Sur quoi puis-je pronostiquer ?',
 	'welcome.faq.q3': 'Comment ma précision est-elle mesurée ?',

@@ -2138,6 +2138,7 @@ export const deMessages = {
 	'welcome.faq.contact_prefix': 'Noch Fragen? Schreib an',
 	'welcome.faq.contact_suffix': '— wir antworten innerhalb von zwei Werktagen.',
 	'welcome.faq.eyebrow': 'FAQ',
+	'welcome.faq.privacy_link': 'Details findest du in der Datenschutzerklärung.',
 	'welcome.faq.q1': 'Ist VICI kostenlos?',
 	'welcome.faq.q2': 'Worauf kann ich Vorhersagen treffen?',
 	'welcome.faq.q3': 'Wie wird meine Genauigkeit gemessen?',
