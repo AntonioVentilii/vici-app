@@ -1431,10 +1431,6 @@ export const frMessages = {
 	'markets.page.sub': 'Explorez et prédisez les marchés.',
 	'markets.page.title': 'Choisissez une question.',
 	'markets.search': 'Rechercher des marchés...',
-	'markets.sort.closing': 'Bientôt clos',
-	'markets.sort.label': 'Trier',
-	'markets.sort.newest': 'Plus récents',
-	'markets.sort.trending': 'Tendances',
 	'markets.sub':
 		'Des centaines de questions sur macro, crypto, politique, tech, sport, culture. Toutes se résolvent sur des données publiques.',
 	'markets.saved.clear': 'Effacer le filtre enregistrés',

@@ -1400,10 +1400,6 @@ export const enMessages = {
 	'markets.page.sub': 'Explore and predict markets.',
 	'markets.page.title': 'Pick a question.',
 	'markets.search': 'Search markets...',
-	'markets.sort.closing': 'Closing soon',
-	'markets.sort.label': 'Sort',
-	'markets.sort.newest': 'Newest',
-	'markets.sort.trending': 'Trending',
 	'markets.sub':
 		'Hundreds of questions across macro, crypto, politics, tech, sports, culture. Every one resolves on public data.',
 	'markets.saved.clear': 'Clear saved filter',
