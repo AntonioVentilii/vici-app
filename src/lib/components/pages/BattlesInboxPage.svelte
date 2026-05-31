@@ -5,6 +5,7 @@
 	import { resolve } from '$app/paths';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import BattlesIntroCard from '$lib/components/leagues/BattlesIntroCard.svelte';
+	import CreateBoutModal from '$lib/components/leagues/CreateBoutModal.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -97,6 +98,10 @@
 	const BATTLES_INTRO_KEY = 'vici.battles-intro-seen';
 	let battlesIntroSeen = $state(false);
 
+	// Create-a-battle wizard — opened from the intro CTA and the slim
+	// "Start a battle" row.
+	let createBoutOpen = $state(false);
+
 	const load = async () => {
 		try {
 			const [mineList, affils, schools, countries, tour] = await Promise.all([
@@ -145,9 +150,16 @@
 	};
 
 	// League-vs-league battles live under the Leagues surface; the
-	// footer link routes there to propose / manage them per league.
+	// footer link routes there to manage them per league.
 	const goToLeagues = () => {
 		void goto(`${resolve(AppPath.Arena)}/leagues`);
+	};
+
+	// Open the create-a-battle wizard (pick league → opponent →
+	// duration → send). Reachable from the first-visit intro CTA and
+	// the persistent slim "Start a battle" row.
+	const openCreateBout = () => {
+		createBoutOpen = true;
 	};
 
 	// ─── Worlds podium helpers ──────────────────────────────────────
@@ -372,7 +384,19 @@
 	{/if}
 
 	{#if !battlesIntroSeen}
-		<BattlesIntroCard onDismiss={dismissIntro} onStartBattle={goToLeagues} />
+		<BattlesIntroCard onDismiss={dismissIntro} onStartBattle={openCreateBout} />
+	{:else}
+		<!-- Once the intro is dismissed, the create action persists as a
+		     slim always-available row so starting a battle is never
+		     buried. -->
+		<button class="battles-start-row" onclick={openCreateBout} type="button">
+			<span class="battles-start-row-label">
+				{t({ locale: $localeStore, key: 'battles.start_row.label' })}
+			</span>
+			<span class="num allcaps battles-start-row-cta">
+				{t({ locale: $localeStore, key: 'battles.start_row.cta' })} →
+			</span>
+		</button>
 	{/if}
 
 	{#if loadState === 'loading'}
@@ -792,6 +816,8 @@
 	{/if}
 </div>
 
+<CreateBoutModal isOpen={createBoutOpen} onClose={() => (createBoutOpen = false)} />
+
 <style lang="postcss">
 	.battles-inbox {
 		display: flex;
@@ -828,6 +854,42 @@
 		color: var(--no);
 		background: color-mix(in srgb, var(--no-wash, var(--no)) 14%, transparent);
 		border: 1px solid color-mix(in srgb, var(--no) 35%, var(--border-base));
+	}
+
+	/* ─── slim "start a battle" row (post-dismissal) ─────────── */
+	.battles-start-row {
+		appearance: none;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.6rem;
+		width: 100%;
+		margin: 0.25rem 0;
+		padding: 0.7rem 1rem;
+		font: inherit;
+		text-align: left;
+		color: var(--text-base);
+		background: transparent;
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+		cursor: pointer;
+		transition: border-color 140ms ease;
+	}
+
+	.battles-start-row:hover {
+		border-color: color-mix(in srgb, var(--laurel) 30%, var(--border-base));
+	}
+
+	.battles-start-row-label {
+		font-size: var(--t-13);
+		font-weight: 600;
+	}
+
+	.battles-start-row-cta {
+		flex-shrink: 0;
+		font-size: var(--t-10);
+		letter-spacing: 0.14em;
+		color: var(--text-muted);
 	}
 
 	/* ─── section ────────────────────────────────────────────── */
