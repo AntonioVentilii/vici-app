@@ -107,7 +107,12 @@
 			class="lang-sheet"
 			aria-modal="true"
 			onclick={(e) => e.stopPropagation()}
-			onkeydown={(e) => e.stopPropagation()}
+			onkeydown={(e) => {
+				if (e.key === 'Escape') {
+					e.stopPropagation();
+					close();
+				}
+			}}
 			role="dialog"
 			tabindex="-1"
 		>
