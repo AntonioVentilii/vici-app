@@ -25,6 +25,12 @@ export interface LeagueDoc {
 	createdAtMs: number;
 	/** Optional accent colour (hex) for the league chip. */
 	accentColor?: string;
+	/**
+	 * Whether the league is private. Private leagues are only reachable
+	 * by invite code and read as "Private" on the detail header; absent
+	 * (or `false`) means a public league. Chosen once at creation.
+	 */
+	private?: boolean;
 }
 
 /**

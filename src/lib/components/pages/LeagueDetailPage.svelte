@@ -195,10 +195,10 @@
 		})
 	);
 
-	// Editorial-hero eyebrow chips — "League · {N} members · {size}".
-	// The prototype's third chip is a public/private flag; we don't
-	// store privacy, so we surface the backend-derived size bucket
-	// instead (more meaningful than a hardcoded "Private").
+	// Editorial-hero eyebrow chips — exactly three: the kind ("League"),
+	// the member count, and the public/private flag. The privacy chip
+	// reads the league's `private` field (absent → public). The caller's
+	// role is surfaced in the battle section ("Admin · you"), not here.
 	const heroChips = $derived([
 		t({ locale: $localeStore, key: 'leagues.detail.hero_chip_kind' }),
 		t({
@@ -209,8 +209,7 @@
 		}),
 		t({
 			locale: $localeStore,
-			key: 'leagues.detail.hero_chip_size',
-			params: { size: t({ locale: $localeStore, key: sizeLabelKey }) }
+			key: league?.private ? 'leagues.detail.hero_chip_private' : 'leagues.detail.hero_chip_public'
 		})
 	]);
 
@@ -271,13 +270,6 @@
 	const handlePredict = () => {
 		void goto(resolve(AppPath.Flow));
 	};
-
-	const roleLabelKey = (role: LeagueMemberRole): MessageKey =>
-		role === 'owner'
-			? 'leagues.role.owner'
-			: role === 'admin'
-				? 'leagues.role.admin'
-				: 'leagues.role.member';
 
 	const memberHandle = (principal: string): string => {
 		const profile = $profilesStore.get(principal);
@@ -582,12 +574,14 @@
 </script>
 
 <div class="league-detail">
+	<!-- Back control only — the league name lives once in the editorial
+	     hero below, so the app bar carries no centered title for this
+	     surface. -->
 	<MobileAppBar
 		back={{
 			label: t({ locale: $localeStore, key: 'leagues.detail.back' }),
 			onBack: () => goBack(`${resolve(AppPath.Arena)}/leagues`)
 		}}
-		title={league?.name ?? t({ locale: $localeStore, key: 'leagues.title' })}
 	/>
 
 	{#if loadState === 'loading'}
@@ -607,11 +601,6 @@
 				{#each heroChips as chip (chip)}
 					<span class="league-detail-hero-chip allcaps num">{chip}</span>
 				{/each}
-				{#if myRole && myRole !== 'member'}
-					<span class="league-detail-hero-chip is-role allcaps num" data-role={myRole}>
-						{t({ locale: $localeStore, key: roleLabelKey(myRole) })}
-					</span>
-				{/if}
 			</div>
 			<h1 class="league-detail-hero-title">{league.name}</h1>
 			{#if league.description}
@@ -1095,16 +1084,6 @@
 		border-radius: var(--r-pill);
 		color: var(--text-muted);
 		background: color-mix(in srgb, var(--text-muted) 12%, transparent);
-	}
-
-	.league-detail-hero-chip.is-role {
-		color: var(--accent);
-		background: color-mix(in srgb, var(--accent) 16%, transparent);
-	}
-
-	.league-detail-hero-chip.is-role[data-role='owner'] {
-		color: var(--laurel);
-		background: color-mix(in srgb, var(--laurel) 18%, transparent);
 	}
 
 	.league-detail-hero-title {
