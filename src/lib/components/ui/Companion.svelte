@@ -15,6 +15,7 @@
 		line?: string;
 		dwell_ms?: number;
 		sticky?: boolean;
+		inline?: boolean;
 		anchor?: CompanionAnchor;
 		size?: number;
 		mood?: ViciMood;
@@ -28,6 +29,7 @@
 		line,
 		dwell_ms = 3200,
 		sticky = false,
+		inline = false,
 		anchor = 'br',
 		size = 44,
 		mood = 'happy',
@@ -51,12 +53,12 @@
 		return () => clearTimeout(id);
 	});
 
-	const isInline = $derived(anchor === 'inline');
+	const isInline = $derived(inline || anchor === 'inline');
 </script>
 
 {#if visible}
 	<div
-		class="companion-wrap char-pop {isInline ? 'companion-inline' : 'companion-floating'}"
+		class="companion-wrap {isInline ? 'companion-inline' : 'companion-floating'}"
 		class:companion-br={!isInline && anchor === 'br'}
 		class:companion-tr={!isInline && anchor === 'tr'}
 	>
@@ -78,11 +80,29 @@
 {/if}
 
 <style lang="postcss">
+	@keyframes companion-in {
+		from {
+			opacity: 0;
+			transform: translateY(8px) scale(0.92);
+		}
+		to {
+			opacity: 1;
+			transform: translateY(0) scale(1);
+		}
+	}
+
 	.companion-wrap {
 		display: flex;
 		align-items: center;
 		gap: 10px;
 		transition: opacity var(--d-state) var(--ease-vici);
+		animation: companion-in 280ms var(--ease-vici) both;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.companion-wrap {
+			animation: none;
+		}
 	}
 
 	.companion-inline {
