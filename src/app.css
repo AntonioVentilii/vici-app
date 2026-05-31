@@ -477,6 +477,11 @@
 	--color-danger: var(--danger);
 	--color-danger-deep: var(--danger-deep);
 	--color-danger-wash: var(--danger-wash);
+	/* Legible ink for text/icons sitting on a filled `bg-danger` /
+	 * `bg-danger-deep` surface (e.g. the danger Button variant). Mirrors
+	 * the destructive filled-button foreground (`--parchment`) but is
+	 * tied to the danger role, not the prediction `--no` alias. */
+	--color-danger-foreground: var(--parchment);
 
 	--color-border: var(--border-base);
 	/* Border emphasis (separate from --color-input which is also wired to
