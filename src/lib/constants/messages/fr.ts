@@ -485,6 +485,8 @@ export const frMessages = {
 	'dash.disclosure.vxp_body':
 		'VXP est la monnaie virtuelle que vous misez. Gagnez des pronostics, des bonus de série et grimpez au classement — sans argent réel.',
 	'dash.disclosure.vxp_title': 'À propos du VXP',
+	'dash.dz.active_day1_pending_body':
+		'Votre prédiction est en vol — elle se résout lorsque le marché se clôture.',
 	'dash.dz.available': 'Disponible',
 	'dash.dz.crowd_yes': 'Foule · {pct}% OUI',
 	'dash.dz.header_eyebrow_day0': 'Jour zéro · bienvenue',
@@ -495,7 +497,7 @@ export const frMessages = {
 	'dash.dz.hero_eyebrow_day1': 'Jour 1 · votre prédiction est en vol',
 	'dash.dz.hero_foot_day0':
 		'Faites des prédictions dans Flow · votre historique se construit ici à mesure qu’elles se résolvent',
-	'dash.dz.hero_foot_day1': '1 prédiction ouverte · {balance} VXP disponibles',
+	'dash.dz.hero_foot_day1': '{count} prédictions ouvertes · {balance} VXP disponibles',
 	'dash.dz.hero_quote_day0': '“Acta non verba.”',
 	'dash.dz.hero_quote_day1': '“Alea iacta est.”',
 	'dash.dz.hero_trans_day0': 'Des actes, pas des mots.',
@@ -503,8 +505,8 @@ export const frMessages = {
 	'dash.dz.holdings_caption':
 		'Pack de départ. Misez-le sur des prédictions — gagnez pour le faire croître.',
 	'dash.dz.lifetime_zero': '0 gagné',
-	'dash.dz.one_open': '1 OUVERTE',
-	'dash.dz.one_pending': '1 EN ATTENTE',
+	'dash.dz.n_open': '{count} OUVERTES',
+	'dash.dz.n_pending': '{count} EN ATTENTE',
 	'dash.dz.open_count': '{count} ouvertes →',
 	'dash.dz.open_pos_ctx': '{stake} VXP · placée aujourd’hui',
 	'dash.dz.open_pos_payout': 'gain · foule {pct}% OUI',

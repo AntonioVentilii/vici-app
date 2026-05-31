@@ -478,6 +478,8 @@ export const itMessages = {
 	'dash.disclosure.vxp_body':
 		'VXP è la valuta virtuale che punti sulle previsioni. Vinci, accumula bonus di serie e scala le classifiche — senza soldi veri.',
 	'dash.disclosure.vxp_title': 'Sul VXP',
+	'dash.dz.active_day1_pending_body':
+		'La tua chiamata è in volo — si risolve quando il mercato si chiude.',
 	'dash.dz.available': 'Disponibili',
 	'dash.dz.crowd_yes': 'Folla · {pct}% SÌ',
 	'dash.dz.header_eyebrow_day0': 'Giorno zero · benvenuto',
@@ -488,7 +490,7 @@ export const itMessages = {
 	'dash.dz.hero_eyebrow_day1': 'Giorno 1 · la tua chiamata è in volo',
 	'dash.dz.hero_foot_day0':
 		'Fai chiamate in Flow · il tuo record si costruisce qui mano a mano che si risolvono',
-	'dash.dz.hero_foot_day1': '1 chiamata aperta · {balance} VXP disponibili',
+	'dash.dz.hero_foot_day1': '{count} chiamate aperte · {balance} VXP disponibili',
 	'dash.dz.hero_quote_day0': '“Acta non verba.”',
 	'dash.dz.hero_quote_day1': '“Alea iacta est.”',
 	'dash.dz.hero_trans_day0': 'Fatti, non parole.',
@@ -496,8 +498,8 @@ export const itMessages = {
 	'dash.dz.holdings_caption':
 		'Pacchetto iniziale. Spendilo nelle chiamate — vinci per farlo crescere.',
 	'dash.dz.lifetime_zero': '0 guadagnati',
-	'dash.dz.one_open': '1 APERTA',
-	'dash.dz.one_pending': '1 IN ATTESA',
+	'dash.dz.n_open': '{count} APERTE',
+	'dash.dz.n_pending': '{count} IN ATTESA',
 	'dash.dz.open_count': '{count} aperte →',
 	'dash.dz.open_pos_ctx': '{stake} VXP · piazzata oggi',
 	'dash.dz.open_pos_payout': 'pagamento · folla {pct}% SÌ',

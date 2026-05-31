@@ -32,7 +32,10 @@
 	import { marketTags } from '$lib/derived/market-tags.derived';
 	import { orders } from '$lib/derived/orders.derived';
 	import { positions } from '$lib/derived/positions.derived';
-	import { resolvedPositions } from '$lib/derived/resolved-positions.derived';
+	import {
+		resolvedPositions,
+		resolvedPositionsNotInitialized
+	} from '$lib/derived/resolved-positions.derived';
 	import { worldCupActive } from '$lib/derived/world-cup.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import { calculateAndSyncStats, getProfile } from '$lib/services/profile.services';
@@ -78,6 +81,12 @@
 	// despite owning plenty of VXP — see `holdingsTotal` below for the
 	// combined free + backed number that the "Total Holdings" hero shows.
 	const vxpBalance = $derived($balancesStore?.[VXP_TOKEN.id] ?? ZERO);
+	// Free wallet balance formatted for display — passed to DashDayZero's
+	// Available sub-stat so it shows only unencumbered funds, not total
+	// holdings (free + backed).
+	const freeBalanceDisplay = $derived(
+		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
+	);
 
 	// Backed = sum of locked collateral across the user's active positions
 	// on VXP-denominated markets. `lockedCollateral` is in clearing-USD
@@ -194,6 +203,14 @@
 	// counter; `settledTotal` is the count of resolved calls. We OR in the
 	// live position/order counts so a freshly-placed first call flips Day 0
 	// → Day 1 immediately, before the satellite re-counts `totalTrades`.
+	//
+	// IMPORTANT: we must not branch on `settledTotal` until the trade-history
+	// fetch has completed. While the store is still `undefined` (not yet
+	// initialized), `resolvedPositions` defaults to `[]`, making `settledTotal`
+	// look like 0 even for a returning user with resolved calls. Gate on
+	// `resolvedPositionsNotInitialized` and render a loading state until the
+	// store is ready, preventing the misroute to Day-1 for returning users.
+	const resolvedPosNotInit = $derived($resolvedPositionsNotInitialized);
 	const liveCallCount = $derived(activePositionsAll.length + openOrdersAll.length);
 	const callsPlaced = $derived(Math.max(totalTrades, liveCallCount + settledTotal));
 	const isDay0 = $derived(callsPlaced === 0);
@@ -217,7 +234,12 @@
 				return fa - fb;
 			}
 
-			return Number(b.totalVolume) - Number(a.totalVolume);
+			// Compare bigints directly to avoid Number precision loss on large volumes.
+			if (b.totalVolume === a.totalVolume) {
+				return 0;
+			}
+
+			return b.totalVolume > a.totalVolume ? 1 : -1;
 		});
 	});
 	const dayZeroFeatured = $derived(dayZeroMarkets[0]);
@@ -448,7 +470,16 @@
 </script>
 
 <PageScaffold eyebrow={headerEyebrow} title={t({ locale: $localeStore, key: 'dash.title' })}>
-	{#if isDay0 || isDay1Pending}
+	{#if resolvedPosNotInit && callsPlaced > 0}
+		<!-- ─── LOADING · trade-history not yet initialized, can't gate safely ─── -->
+		<!-- The user has placed at least one call but the resolved-positions store
+		     hasn't finished loading yet. We cannot safely distinguish Day-1 from
+		     Standard here: `settledTotal` reads as 0 from the empty default, which
+		     would misroute a returning user with settled calls to the Day-1 view.
+		     Show nothing until the store is ready (the positions/orders stores
+		     load first, so this window is brief). Day-0 users (`callsPlaced === 0`)
+		     skip this gate entirely — there is nothing settled to wait for. -->
+	{:else if isDay0 || isDay1Pending}
 		<!-- ─── DAY 0 / DAY 1+ pending · forward-looking dashboard ─── -->
 		<DashDayZero
 			{backedDisplay}
@@ -457,6 +488,8 @@
 			day1={isDay1Pending}
 			featuredMarket={dayZeroFeatured}
 			firstCall={dayOneFirstCall}
+			{freeBalanceDisplay}
+			pendingCount={liveCallCount}
 		/>
 	{:else}
 		<div class="screen-scroll">

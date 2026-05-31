@@ -481,6 +481,8 @@ export const deMessages = {
 	'dash.disclosure.vxp_body':
 		'VXP ist die Spielwährung für Calls. Gewinne Calls, hol Streak-Boni und klettere auf der Bestenliste — kein Echtgeld.',
 	'dash.disclosure.vxp_title': 'Über VXP',
+	'dash.dz.active_day1_pending_body':
+		'Deine Vorhersage ist unterwegs — sie wird aufgelöst, sobald der Markt schließt.',
 	'dash.dz.available': 'Verfügbar',
 	'dash.dz.crowd_yes': 'Menge · {pct}% JA',
 	'dash.dz.header_eyebrow_day0': 'Tag null · willkommen',
@@ -491,7 +493,7 @@ export const deMessages = {
 	'dash.dz.hero_eyebrow_day1': 'Tag 1 · deine Vorhersage ist unterwegs',
 	'dash.dz.hero_foot_day0':
 		'Mach Vorhersagen in Flow · deine Bilanz wächst hier, sobald sie sich auflösen',
-	'dash.dz.hero_foot_day1': '1 offene Vorhersage · {balance} VXP verfügbar',
+	'dash.dz.hero_foot_day1': '{count} offene Vorhersagen · {balance} VXP verfügbar',
 	'dash.dz.hero_quote_day0': '“Acta non verba.”',
 	'dash.dz.hero_quote_day1': '“Alea iacta est.”',
 	'dash.dz.hero_trans_day0': 'Taten, nicht Worte.',
@@ -499,8 +501,8 @@ export const deMessages = {
 	'dash.dz.holdings_caption':
 		'Startpaket. Setze es für Vorhersagen ein — gewinne, um es zu vergrößern.',
 	'dash.dz.lifetime_zero': '0 verdient',
-	'dash.dz.one_open': '1 OFFEN',
-	'dash.dz.one_pending': '1 AUSSTEHEND',
+	'dash.dz.n_open': '{count} OFFEN',
+	'dash.dz.n_pending': '{count} AUSSTEHEND',
 	'dash.dz.open_count': '{count} offen →',
 	'dash.dz.open_pos_ctx': '{stake} VXP · heute platziert',
 	'dash.dz.open_pos_payout': 'Auszahlung · Menge {pct}% JA',

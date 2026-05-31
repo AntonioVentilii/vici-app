@@ -40,16 +40,28 @@
 		balanceDisplay: string;
 		/** Backed VXP for the Day-1 sub-stat, formatted (e.g. "100"). */
 		backedDisplay: string;
+		/** Free wallet VXP, formatted (e.g. "900") — used for the Available sub-stat. */
+		freeBalanceDisplay: string;
 		/** Featured pinned market (Day 0 only) — the large tap-to-Flow card. */
 		featuredMarket: Market | undefined;
 		/** Two compact pinned markets shown beneath the featured one (Day 0). */
 		compactMarkets: Market[];
 		/** The user's single open position (Day 1+ only). */
 		firstCall: FirstCall | undefined;
+		/** Number of live (unresolved) calls/orders — drives plural-aware badge copy. */
+		pendingCount: number;
 	}
 
-	let { day1, balanceDisplay, backedDisplay, featuredMarket, compactMarkets, firstCall }: Props =
-		$props();
+	let {
+		day1,
+		balanceDisplay,
+		backedDisplay,
+		freeBalanceDisplay,
+		featuredMarket,
+		compactMarkets,
+		firstCall,
+		pendingCount
+	}: Props = $props();
 
 	const openFlow = (): void => {
 		goto(resolve(AppPath.Flow));
@@ -62,6 +74,10 @@
 	// Crowd YES probability as a whole-percent integer, from live market
 	// consensus rather than a hardcoded narrative number.
 	const yesPct = (market: Market): number => Math.round(market.yesProbability * 100);
+
+	// Actual count of "Today in Flow" markets rendered — 1 featured + up to 2
+	// compact — so the header badge reflects the real list, not a hardcoded 3.
+	const todayInFlowCount = $derived((featuredMarket !== undefined ? 1 : 0) + compactMarkets.length);
 
 	// Open-position reframe (Day 1+): lead with the payout multiplier on the
 	// user's side, not the raw market %. A first-time user reading "18%" on
@@ -120,7 +136,7 @@
 				{t({
 					locale: $localeStore,
 					key: 'dash.dz.hero_foot_day1',
-					params: { balance: balanceDisplay }
+					params: { count: pendingCount, balance: freeBalanceDisplay }
 				})}
 			{:else}
 				{t({ locale: $localeStore, key: 'dash.dz.hero_foot_day0' })}
@@ -143,7 +159,7 @@
 					<div class="dash-sub-stats">
 						<div class="dash-sub-stat">
 							<span class="lbl">{t({ locale: $localeStore, key: 'dash.dz.available' })}</span>
-							<span class="val">{balanceDisplay}</span>
+							<span class="val">{freeBalanceDisplay}</span>
 						</div>
 						<div class="dash-sub-stat">
 							<span class="lbl">{t({ locale: $localeStore, key: 'dash.holdings.backed' })}</span>
@@ -197,7 +213,13 @@
 		{#if day1 && firstCall !== undefined}
 			<div class="dash-section-eyebrow">
 				<span>{t({ locale: $localeStore, key: 'dash.active.eyebrow' })}</span>
-				<span class="see-all">{t({ locale: $localeStore, key: 'dash.dz.one_open' })}</span>
+				<span class="see-all"
+					>{t({
+						locale: $localeStore,
+						key: 'dash.dz.n_open',
+						params: { count: pendingCount }
+					})}</span
+				>
 			</div>
 			<button class="dz-open-pos" onclick={() => openMarket(firstCall.market)} type="button">
 				<div>
@@ -226,11 +248,36 @@
 					</span>
 				</div>
 			</button>
+		{:else if day1}
+			<!-- Day-1 state: call(s) placed but firstCall position not yet available
+			     from the positions store (e.g. limit order resting, or positions
+			     still loading). Show a pending placeholder rather than the Day-0
+			     starter-markets UI, which would be misleading given the copy already
+			     says "your call is in flight". -->
+			<div class="dash-section-eyebrow">
+				<span>{t({ locale: $localeStore, key: 'dash.active.eyebrow' })}</span>
+				<span class="see-all"
+					>{t({
+						locale: $localeStore,
+						key: 'dash.dz.n_open',
+						params: { count: pendingCount }
+					})}</span
+				>
+			</div>
+			<div class="dz-past-empty">
+				<div class="body">
+					{t({ locale: $localeStore, key: 'dash.dz.active_day1_pending_body' })}
+				</div>
+			</div>
 		{:else}
 			<div class="dash-section-eyebrow">
 				<span>{t({ locale: $localeStore, key: 'dash.dz.today_in_flow' })}</span>
 				<button class="see-all dz-see-all-btn" onclick={openFlow} type="button">
-					{t({ locale: $localeStore, key: 'dash.dz.open_count', params: { count: 3 } })}
+					{t({
+						locale: $localeStore,
+						key: 'dash.dz.open_count',
+						params: { count: todayInFlowCount }
+					})}
 				</button>
 			</div>
 			{#if featuredMarket !== undefined}
@@ -311,7 +358,13 @@
 		<div class="dash-section">
 			<div class="dash-section-eyebrow">
 				<span>{t({ locale: $localeStore, key: 'dash.past.eyebrow' })}</span>
-				<span class="see-all">{t({ locale: $localeStore, key: 'dash.dz.one_pending' })}</span>
+				<span class="see-all"
+					>{t({
+						locale: $localeStore,
+						key: 'dash.dz.n_pending',
+						params: { count: pendingCount }
+					})}</span
+				>
 			</div>
 			<div class="dz-past-empty">
 				<div class="q">{t({ locale: $localeStore, key: 'dash.dz.past_empty_quote' })}</div>
