@@ -33,6 +33,15 @@ export const UserProfileSchema = j.strictObject({
 	archetype: j.string().default(''),
 	interests: j.array(j.string()).default([]),
 	lastActiveDay: j.string().optional(),
+	// Soft-delete marker (Delete account v2). PRESENCE = the account is
+	// soft-deleted (the wall-clock ms at which `deleteMyAccount` ran);
+	// ABSENCE = an active account. Intentionally `optional()` with NO
+	// default: a default would force every legacy/active row to look
+	// soft-deleted, and absence is the meaningful "still active" state.
+	// Within the recovery window the owner can `recoverMyAccount` to clear
+	// it; past the window the admin sweep hard-deletes the account. Mirror
+	// any change here in `src/satellite/api-schemas.ts`.
+	deletedAtMs: j.number().optional(),
 	// IDs of achievements the user has ever unlocked (append-only). Source of
 	// truth for the achievement system — `evaluateAchievements` re-derives
 	// current eligibility on every stats sync, and any newly-true ids are
