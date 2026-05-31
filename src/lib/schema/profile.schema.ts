@@ -19,6 +19,13 @@ export const UserProfileSchema = j.strictObject({
 	totalTrades: j.number().default(0),
 	winRate: j.number().default(0),
 	dailyStreak: j.number().default(0),
+	// Daily-goal counter — predictions committed on `dailyGoalDate`
+	// (local `YYYY-MM-DD`). `dailyGoalDone` rolls back to 0 the first
+	// time it's touched on a new local day, mirroring the `dailyStreak`
+	// / `lastActiveDay` pairing. The target itself is a client constant,
+	// so only the count and its day are persisted.
+	dailyGoalDone: j.number().default(0),
+	dailyGoalDate: j.string().optional(),
 	streak: j.number().default(0),
 	accuracy: j.number().default(0),
 	points: j.number().default(0),

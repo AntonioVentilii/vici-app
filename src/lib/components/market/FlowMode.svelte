@@ -36,7 +36,7 @@
 	import { playgroundFlowTradeUnitLabel } from '$lib/derived/playground.derived';
 	import { prepareFlow, type PreparedFlow } from '$lib/services/flow-prep.services';
 	import { flowTradeService } from '$lib/services/flow.services';
-	import { persistDailyStreak } from '$lib/services/profile.services';
+	import { persistDailyGoal, persistDailyStreak } from '$lib/services/profile.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { advanceFlow, peekFlow } from '$lib/stores/flow.store';
 	import { localeStore } from '$lib/stores/locale.store';
@@ -48,6 +48,7 @@
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type { UserMarketSignals } from '$lib/types/market-signals';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
+	import { applyDailyGoalBump, rolloverDailyGoal } from '$lib/utils/daily-goal.utils';
 	import {
 		FLOW_ART_CATEGORY_SET,
 		resolveFlowArtCategory,
@@ -143,6 +144,11 @@
 	// (Server-side persistence on session end is a separate follow-up.)
 	let dailyStreak = $state(0);
 	let lastActiveDay = $state<string | undefined>(undefined);
+	// Daily-goal counter + the local day it belongs to. Hydrated from the
+	// profile on mount and persisted after every committed prediction, so
+	// the goal survives a refresh and resets when the day rolls over.
+	let dailyGoalCount = $state(0);
+	let dailyGoalDate = $state<string | undefined>(undefined);
 	let hasMarkedActiveThisSession = false;
 	let streakBreakBanner = $state<{ stage: FlameStage } | null>(null);
 	let flowPaused = $state(false);
@@ -223,12 +229,18 @@
 		return best;
 	});
 
-	// Daily goal heuristic — until the satellite exposes a per-user
-	// daily target, default to 10 predictions/day. Progress is capped
-	// at 100 % so the bar / percent never overflows mid-session.
+	// Daily goal — a per-user count of predictions committed today,
+	// hydrated from the profile and rolled over to 0 on a new local day.
+	// The target is a client constant; progress is capped at 100 % so the
+	// bar / percent never overflows.
 	const DAILY_GOAL_TARGET = 10;
-	const dailyGoalDone = $derived(Math.min(betsCount, DAILY_GOAL_TARGET));
-	const dailyGoalFraction = $derived(dailyGoalDone / DAILY_GOAL_TARGET);
+	// Roll over against the live `nowMs` tick (not just the stored
+	// values) so a session left open across local midnight resets the
+	// chip to 0 without waiting for the next prediction.
+	const dailyGoalDone = $derived(
+		rolloverDailyGoal({ done: dailyGoalCount, date: dailyGoalDate, now: new Date(nowMs) })
+	);
+	const dailyGoalFraction = $derived(DAILY_GOAL_TARGET > 0 ? dailyGoalDone / DAILY_GOAL_TARGET : 0);
 
 	onMount(async () => {
 		document.body.classList.add('overflow-hidden');
@@ -269,6 +281,8 @@
 			if (nonNullish(profile)) {
 				dailyStreak = profile.dailyStreak ?? 0;
 				({ lastActiveDay } = profile);
+				dailyGoalCount = profile.dailyGoalDone ?? 0;
+				({ dailyGoalDate } = profile);
 			}
 
 			const fromProfile = $userStore.profile?.preferences?.defaultAmount?.flow;
@@ -483,6 +497,34 @@
 
 		betsCount += 1;
 		streak += 1;
+
+		// Daily-goal bump — every committed YES / NO counts toward the
+		// day's goal (skips returned early above). Rolls over to a fresh
+		// day if needed, caps at the target, and persists best-effort so
+		// the running total survives a refresh.
+		const goalBump = applyDailyGoalBump({
+			done: dailyGoalCount,
+			date: dailyGoalDate,
+			target: DAILY_GOAL_TARGET
+		});
+		dailyGoalCount = goalBump.done;
+		dailyGoalDate = goalBump.date;
+
+		const goalPrincipal = $userStore.user?.key;
+
+		if (nonNullish(goalPrincipal)) {
+			void persistDailyGoal({
+				principal: goalPrincipal,
+				dailyGoalDone: goalBump.done,
+				dailyGoalDate: goalBump.date
+			})
+				.then((data) => {
+					userStore.update((s) => ({ ...s, profile: data }));
+				})
+				.catch((e: unknown) => {
+					console.warn('Daily-goal persistence failed (non-fatal):', e);
+				});
+		}
 
 		// Tally this market under its resolved category so the FlowEnd
 		// Oracle line can spotlight whichever category the user leaned

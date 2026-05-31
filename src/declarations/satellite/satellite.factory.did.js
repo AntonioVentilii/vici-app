@@ -200,6 +200,8 @@ export const idlFactory = ({ IDL }) => {
 				pnl: IDL.Float64,
 				streak: IDL.Float64,
 				nickname: IDL.Text,
+				daily_goal_date: IDL.Opt(IDL.Text),
+				daily_goal_done: IDL.Float64,
 				contrarian_wins: IDL.Float64,
 				owner: IDL.Text,
 				interests: IDL.Vec(IDL.Text),
