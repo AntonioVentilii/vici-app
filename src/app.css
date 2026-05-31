@@ -2519,6 +2519,43 @@ a.title-action::after {
 	border-color: rgba(226, 184, 66, 0.22);
 	color: var(--accent);
 }
+/* Onboarding variant — full-width pill treatment for the auth gate.
+   Google reads as the cream-filled primary pill; every other provider
+   (Apple, email, Internet Identity, Passkey, dev) is a dark pill. The
+   button structure (centred label, absolute spinner / "soon" slot) is
+   shared with the `/signin` surface so loading + aria behaviour is
+   identical across variants. */
+.signin-provider-btn.is-onboarding {
+	gap: 10px;
+	padding: 13px 16px;
+	border-radius: 999px;
+	font-size: 14px;
+	background: transparent;
+}
+.signin-provider-btn.is-onboarding.ob-dark {
+	background: var(--ink);
+	color: var(--parchment);
+	border-color: rgba(255, 255, 255, 0.1);
+}
+.signin-provider-btn.is-onboarding.ob-dark:hover:not(:disabled) {
+	background: #1a1815;
+	border-color: rgba(255, 255, 255, 0.1);
+}
+.signin-provider-btn.is-onboarding.ob-cream {
+	background: var(--parchment);
+	color: var(--ink);
+	border-color: var(--parchment);
+}
+.signin-provider-btn.is-onboarding.ob-cream:hover:not(:disabled) {
+	background: #ffffff;
+	border-color: #ffffff;
+}
+/* The email row keeps the dark pill in the onboarding variant, so the
+   gold-tinted `/signin` accent must not leak in. */
+.signin-provider-btn.email.is-onboarding {
+	color: var(--parchment);
+}
+
 .signin-provider-icon {
 	display: inline-flex;
 	align-items: center;
@@ -5734,60 +5771,6 @@ a.title-action::after {
 	display: flex;
 	flex-direction: column;
 	gap: 8px;
-}
-.ob2-auth-btn {
-	appearance: none;
-	border: 1px solid var(--ink-line);
-	padding: 13px 16px;
-	border-radius: 999px;
-	display: inline-flex;
-	align-items: center;
-	justify-content: center;
-	gap: 10px;
-	font-family: inherit;
-	font-size: 14px;
-	font-weight: 600;
-	cursor: pointer;
-	transition: background 180ms;
-}
-.ob2-auth-apple {
-	background: #0e0d0b;
-	color: #f2ecdc;
-	border-color: rgba(255, 255, 255, 0.1);
-}
-.ob2-auth-apple:hover {
-	background: #1a1815;
-}
-.ob2-auth-google {
-	background: #f2ecdc;
-	color: #0e0d0b;
-}
-.ob2-auth-google:hover {
-	background: #ffffff;
-}
-.ob2-auth-email {
-	background: rgba(242, 236, 220, 0.06);
-	color: var(--parchment);
-}
-.ob2-auth-email:hover {
-	background: rgba(242, 236, 220, 0.1);
-}
-
-.ob2-email-flow {
-	display: flex;
-	flex-direction: column;
-	gap: 10px;
-}
-.ob2-email-input {
-	appearance: none;
-	border: 1px solid var(--ink-line);
-	background: var(--ink-elevated);
-	color: var(--parchment);
-	padding: 14px 18px;
-	border-radius: 12px;
-	font-family: var(--font-mono);
-	font-size: 15px;
-	outline: 0;
 }
 
 .ob2-tos {

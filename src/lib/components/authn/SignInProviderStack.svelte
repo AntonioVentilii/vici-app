@@ -13,9 +13,17 @@
 
 	interface Props {
 		onSuccess?: () => void;
+		// Styling treatment for the provider buttons. `'signin'` (default)
+		// is the 12px-radius surface card used on `/signin`. `'onboarding'`
+		// switches to the full-width pill treatment of the onboarding auth
+		// gate — Google as the cream-filled primary pill, every other
+		// provider as a dark pill.
+		variant?: 'signin' | 'onboarding';
 	}
 
-	const { onSuccess }: Props = $props();
+	const { onSuccess, variant = 'signin' }: Props = $props();
+
+	const isOnboarding = $derived(variant === 'onboarding');
 
 	// Provider IDs used to drive per-provider loading + faded-others
 	// state. Apple + email are placeholders until we ship the
@@ -170,13 +178,15 @@
 		</button>
 	</div>
 {:else}
-	<div class="signin-providers signin-providers-equal">
+	<div class="signin-providers signin-providers-equal" class:is-onboarding={isOnboarding}>
 		<!-- Apple — disabled placeholder until backend ships. -->
 		{#if APPLE_LOGIN_ENABLED}
 			<button
 				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'apple'}
+				class:is-onboarding={isOnboarding}
+				class:ob-dark={isOnboarding}
 				aria-busy={signingIn === 'apple'}
 				disabled={!APPLE_ENABLED || isBusy}
 				title={t({ locale: $localeStore, key: 'signin.provider.placeholder_title' })}
@@ -210,6 +220,8 @@
 				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'google'}
+				class:is-onboarding={isOnboarding}
+				class:ob-cream={isOnboarding}
 				aria-busy={signingIn === 'google'}
 				disabled={isBusy}
 				onclick={onGoogle}
@@ -235,6 +247,8 @@
 				<button
 					class="signin-provider-btn email"
 					class:is-faded={isFaded}
+					class:is-onboarding={isOnboarding}
+					class:ob-dark={isOnboarding}
 					disabled={isBusy}
 					onclick={onEmailOpen}
 					type="button"
@@ -300,6 +314,8 @@
 				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'ii'}
+				class:is-onboarding={isOnboarding}
+				class:ob-dark={isOnboarding}
 				aria-busy={signingIn === 'ii'}
 				disabled={isBusy || !productionAvailable}
 				onclick={onIi}
@@ -325,6 +341,8 @@
 				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'passkey'}
+				class:is-onboarding={isOnboarding}
+				class:ob-dark={isOnboarding}
 				aria-busy={signingIn === 'passkey'}
 				disabled={isBusy || !productionAvailable}
 				onclick={onPasskey}
@@ -350,6 +368,8 @@
 				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'dev'}
+				class:is-onboarding={isOnboarding}
+				class:ob-dark={isOnboarding}
 				aria-busy={signingIn === 'dev'}
 				data-tid={TestId.SignInDev}
 				disabled={isBusy}
