@@ -388,7 +388,7 @@ export const zhCnMessages = {
 	'card.unsave': '取消保存',
 	'card.rail_hint': '拖动确认 · 点击查看深度',
 	'card.sharp_predictors': '资深预测者：',
-	'card.size_vxp': '仓位 · {stake} VXP',
+	'card.size_label': '仓位',
 	'card.skip_stamp': '跳过',
 	'card.swipe_to_call': '滑动以预测',
 	'card.multiple': '多选',
