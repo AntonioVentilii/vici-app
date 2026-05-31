@@ -11,7 +11,14 @@ import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext } from '@junobuild/functions';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
-import { decodeDocData, encodeDocData, getDocStore, setDocStore } from '@junobuild/functions/sdk';
+import {
+	decodeDocData,
+	deleteDocStore,
+	encodeDocData,
+	getDocStore,
+	listDocsStore,
+	setDocStore
+} from '@junobuild/functions/sdk';
 
 /**
  * Pre-write guard for `leagues`. The collection holds social cohorts;
@@ -299,6 +306,106 @@ export const transferLeagueOwnershipFn = ({
 			}
 		});
 	}
+
+	return { ok: true };
+};
+
+/**
+ * Owner-authorised league disband — full delete of a league and all
+ * its membership rows.
+ *
+ * Refusal reasons:
+ *  - `not_owner` — caller is not the current owner of the league.
+ *
+ * A missing league doc is NOT a refusal — it's a clean no-op success
+ * (`{ ok: true }`). The disband is idempotent: if the league is already
+ * gone (e.g. deleted by a concurrent caller between an ownership
+ * precheck and this call), the desired end state already holds.
+ *
+ * The disband runs as the satellite SDK caller (passed in as
+ * `callerBytes`), so it deletes via `deleteDocStore` directly — that
+ * path does NOT re-enter `assertDeleteLeagueMember`, which is why this
+ * can drop the `owner` member row too (the assert would otherwise
+ * reject it as "transfer ownership first"). Order is membership rows
+ * first, then the league doc, mirroring the cascade's
+ * memberships → owned-empty-leagues sequencing.
+ *
+ * This is a deliberate, complete disband — distinct from the account-
+ * delete cascade's `deleteOwnedEmptyLeagues`, which only drops leagues
+ * that are ALREADY empty (every other member has left). Here the owner
+ * is explicitly choosing to remove a league that may still have other
+ * members, evicting everyone.
+ *
+ * Idempotent: a missing league doc or missing membership rows are
+ * clean no-ops. The version-locked deletes detect a concurrent mutation
+ * (a member joining/leaving mid-disband) by trapping — the caller can
+ * retry and the prefix scan re-reads the current rows.
+ */
+export const deleteLeagueFn = ({
+	leagueId,
+	callerText,
+	callerBytes
+}: {
+	leagueId: string;
+	callerText: string;
+	callerBytes: Uint8Array;
+}): { ok: boolean; reason?: 'not_owner' } => {
+	const leagueDoc = getDocStore({
+		collection: Collection.LEAGUES,
+		key: leagueId,
+		caller: callerBytes
+	});
+
+	// Idempotent: nothing to disband if the league is already gone.
+	if (isNullish(leagueDoc)) {
+		return { ok: true };
+	}
+
+	const league = decodeDocData<LeagueDoc>(leagueDoc.data);
+
+	if (league.owner !== callerText) {
+		return { ok: false, reason: 'not_owner' };
+	}
+
+	// Delete every membership row for this league (prefix scan on
+	// `${leagueId}/`). The owner row is included — the SDK drop bypasses
+	// `assertDeleteLeagueMember`'s "owner row can't be deleted" guard.
+	//
+	// Match on the key prefix alone, NOT the decoded payload: membership
+	// keys are already namespaced by `${leagueId}/`, so the prefix is
+	// authoritative. Deleting a row whose payload fails to decode (or whose
+	// `leagueId` field disagrees) would otherwise leave an orphan row behind
+	// after the league doc is gone.
+	const { items: memberItems } = listDocsStore({
+		collection: Collection.LEAGUE_MEMBERS,
+		caller: callerBytes,
+		params: {}
+	});
+
+	const prefix = `${leagueId}/`;
+
+	for (const [docKey, item] of memberItems) {
+		if (docKey.startsWith(prefix)) {
+			deleteDocStore({
+				collection: Collection.LEAGUE_MEMBERS,
+				key: docKey,
+				caller: callerBytes,
+				doc: {
+					version: item.version
+				}
+			});
+		}
+	}
+
+	// Drop the league doc itself.
+	deleteDocStore({
+		collection: Collection.LEAGUES,
+		key: leagueId,
+		caller: callerBytes,
+		doc: {
+			version: leagueDoc.version
+		}
+	});
 
 	return { ok: true };
 };

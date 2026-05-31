@@ -588,26 +588,52 @@ export const listMyBlockingLeagues = defineQuery({
 	handler: listMyBlockingLeaguesFn
 });
 
-// Account deletion — the deletion itself (Delete account v2). Writes
-// an anonymous `EXIT_SIGNALS` doc, then SOFT-deletes the caller's
-// profile (`deletedAtMs = now`). No data is removed — the account can
-// be recovered via `recoverMyAccount` within the recovery window; past
-// the window it's hard-deleted (on a late recovery attempt or by the
-// admin `sweepExpiredDeletions`). The handle stays reserved because the
-// profile (and its nickname) is retained.
+// Account deletion — the deletion itself (Delete account v2). First
+// applies any `leagueResolutions` the caller chose (transfer ownership
+// of, or disband, each owned league), then writes an anonymous
+// `EXIT_SIGNALS` doc and SOFT-deletes the caller's profile
+// (`deletedAtMs = now`). No identity-keyed data is removed — the account
+// can be recovered via `recoverMyAccount` within the recovery window;
+// past the window it's hard-deleted (on a late recovery attempt or by
+// the admin `sweepExpiredDeletions`). The handle stays reserved because
+// the profile (and its nickname) is retained.
 //
-// Returns `ok: false` with `reason: 'owns_non_empty_league'` when
-// the caller still owns a league with other members; the FE
-// renders a transfer-first guard in that branch.
+// `leagueResolutions` is an array of strict objects (cleaner in Candid
+// than a map). Each is `{ leagueId, action: 'transfer' | 'delete',
+// transferTo? }`; `transferTo` (the new-owner principal text) is
+// required when `action === 'transfer'`. Resolutions apply IMMEDIATELY
+// — a recovered account does NOT get relinquished leagues back.
+//
+// Refusal reasons:
+//  - `owns_non_empty_league` — the caller still owns a league with
+//    other members after resolution; `blockingLeagueIds` lists them and
+//    the FE renders a transfer-first guard.
+//  - `league_resolution_failed` — a transfer / disband failed;
+//    `failedLeagueId` + `resolutionReason` carry the underlying cause.
+//    The whole delete aborts (resolutions that committed before the
+//    failure stand).
 export const deleteMyAccount = defineUpdate({
 	args: j.strictObject({
 		reason: j.string(),
-		note: j.string()
+		note: j.string(),
+		leagueResolutions: j.optional(
+			j.array(
+				j.strictObject({
+					leagueId: j.string(),
+					action: j.enum(['transfer', 'delete']),
+					transferTo: j.optional(PrincipalTextSchema)
+				})
+			)
+		)
 	}),
 	result: j.strictObject({
 		ok: j.boolean(),
-		reason: j.optional(j.enum(['owns_non_empty_league', 'invalid_input'])),
+		reason: j.optional(
+			j.enum(['owns_non_empty_league', 'league_resolution_failed', 'invalid_input'])
+		),
 		blockingLeagueIds: j.optional(j.array(j.string())),
+		failedLeagueId: j.optional(j.string()),
+		resolutionReason: j.optional(j.string()),
 		softDeleted: j.optional(j.boolean())
 	}),
 	handler: deleteMyAccountFn
