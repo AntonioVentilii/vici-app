@@ -778,7 +778,12 @@ export const deMessages = {
 	'leaderboard.scope.week': 'Diese Woche',
 	'leaderboard.you': 'Du',
 	'leaderboard.loading': 'Alphas werden berechnet...',
+	'leaderboard.open_profile_aria': 'Profil von {name} öffnen',
 	'leaderboard.row.streak': '{count}T Streak',
+	'leaderboard.sheet.add_friend': 'Freund hinzufügen',
+	'leaderboard.sheet.cancel_request': 'Anfrage zurückziehen',
+	'leaderboard.sheet.rank_streak': '#{rank} global · {count}T Streak',
+	'leaderboard.sheet.requested': 'Angefragt',
 	'leaderboard.sub': 'Rang, Freunde und Aktivität für alle, die einen Track Record aufbauen.',
 	'leaderboard.title': 'Bestenliste',
 	'league_invite.error_body':
