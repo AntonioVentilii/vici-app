@@ -108,3 +108,41 @@ export interface ResumeMyAccountResult {
  * (`resumed: false`) when the account was never paused.
  */
 export const resumeMyAccount = (): Promise<ResumeMyAccountResult> => functions.resumeMyAccount();
+
+/**
+ * Result of {@link recoverMyAccount}, a discriminated union mirroring the
+ * satellite's `recoverMyAccount` endpoint.
+ *
+ *  - `{ ok: true, recovered }` — the soft-delete marker was cleared
+ *    (`recovered: true`), or there was nothing to clear because the
+ *    account was already active (`recovered: false`).
+ *  - `{ ok: false, reason: 'expired' }` — the recovery window had already
+ *    elapsed, so the satellite hard-deleted the account in place rather
+ *    than restoring it. The caller can no longer come back.
+ *
+ * The generated `AppRecoverMyAccountResult` Candid shape encodes both the
+ * optional `recovered` flag and the `reason` variant as opt-arrays; the
+ * `functions.recoverMyAccount` wrapper already decodes them into the flat
+ * `{ ok, recovered?, reason? }` object this type narrows.
+ */
+export type RecoverMyAccountResult =
+	| { ok: true; recovered: boolean }
+	| { ok: false; reason: 'expired' };
+
+/**
+ * Clear a soft-delete marker, restoring the caller's account to active
+ * before the recovery window lapses. The terminal counterpart to
+ * `deleteMyAccount`'s soft-delete: a returning user whose profile still
+ * carries `deletedAtMs` calls this to come back. If the window has
+ * already passed the satellite hard-deletes instead and returns
+ * `{ ok: false, reason: 'expired' }` — the account is gone.
+ */
+export const recoverMyAccount = async (): Promise<RecoverMyAccountResult> => {
+	const result = await functions.recoverMyAccount();
+
+	if (!result.ok) {
+		return { ok: false, reason: 'expired' };
+	}
+
+	return { ok: true, recovered: result.recovered ?? false };
+};

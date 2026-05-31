@@ -173,6 +173,28 @@ export const esMessages = {
 		'VICI usa Internet Identity o Google. Sin contraseñas. Cambia cuando quieras — tus datos siguen contigo.',
 	'account.method.current': 'Método de acceso actual',
 	'account.method.eyebrow': 'MÉTODO DE ACCESO',
+	'account.return.deleted_body':
+		'Programaste la eliminación de esta cuenta. Recupérala ahora para conservar tu historial, o cierra sesión para dejarla como está.',
+	'account.return.deleted_heading': 'Bienvenido de nuevo.',
+	'account.return.deleted_toast_body': 'Tu historial está intacto.',
+	'account.return.deleted_toast_title': 'Cuenta recuperada',
+	'account.return.deleted_window_one': 'Queda {days} día para recuperarla.',
+	'account.return.deleted_window_other': 'Quedan {days} días para recuperarla.',
+	'account.return.error': 'Algo salió mal. Inténtalo de nuevo.',
+	'account.return.expired_body':
+		'Esta cuenta estaba programada para eliminarse y la ventana de recuperación ya se cerró. Ha sido eliminada.',
+	'account.return.expired_continue': 'Continuar',
+	'account.return.expired_heading': 'Tu ventana de recuperación ha pasado.',
+	'account.return.hibernated_body':
+		'Pausaste esta cuenta. Reanúdala para continuar donde lo dejaste: no se perdió nada.',
+	'account.return.hibernated_heading': 'Tu cuenta está en pausa.',
+	'account.return.hibernated_toast_body': 'Bienvenido de nuevo.',
+	'account.return.hibernated_toast_title': 'Cuenta reanudada',
+	'account.return.recover': 'Recuperar cuenta',
+	'account.return.resume': 'Reanudar',
+	'account.return.sign_out': 'Cerrar sesión',
+	'account.return.stay_paused': 'Seguir en pausa',
+	'account.return.working': 'Procesando…',
 	'account.switch.cta': 'Cerrar sesión para cambiar',
 	'account.switch.hint':
 		'Cambiar de método cierra la sesión. Inicia sesión con el nuevo método para continuar.',

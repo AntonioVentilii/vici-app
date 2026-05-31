@@ -173,6 +173,28 @@ export const frMessages = {
 		'VICI utilise Internet Identity ou Google. Pas de mot de passe. Change de méthode à tout moment — tes données restent.',
 	'account.method.current': 'Méthode de connexion actuelle',
 	'account.method.eyebrow': 'MÉTHODE DE CONNEXION',
+	'account.return.deleted_body':
+		'Vous avez programmé la suppression de ce compte. Récupérez-le maintenant pour conserver vos données, ou déconnectez-vous pour le laisser tel quel.',
+	'account.return.deleted_heading': 'Bon retour.',
+	'account.return.deleted_toast_body': 'Vos données sont intactes.',
+	'account.return.deleted_toast_title': 'Compte récupéré',
+	'account.return.deleted_window_one': 'Il reste {days} jour pour le récupérer.',
+	'account.return.deleted_window_other': 'Il reste {days} jours pour le récupérer.',
+	'account.return.error': 'Une erreur est survenue. Veuillez réessayer.',
+	'account.return.expired_body':
+		'Ce compte était programmé pour la suppression et la fenêtre de récupération est désormais close. Il a été supprimé.',
+	'account.return.expired_continue': 'Continuer',
+	'account.return.expired_heading': 'Votre fenêtre de récupération est dépassée.',
+	'account.return.hibernated_body':
+		'Vous avez mis ce compte en pause. Reprenez pour continuer là où vous vous étiez arrêté — rien n’a été perdu.',
+	'account.return.hibernated_heading': 'Votre compte est en pause.',
+	'account.return.hibernated_toast_body': 'Bon retour.',
+	'account.return.hibernated_toast_title': 'Compte repris',
+	'account.return.recover': 'Récupérer le compte',
+	'account.return.resume': 'Reprendre',
+	'account.return.sign_out': 'Se déconnecter',
+	'account.return.stay_paused': 'Rester en pause',
+	'account.return.working': 'En cours…',
 	'account.switch.cta': 'Se déconnecter pour changer',
 	'account.switch.hint':
 		'Changer de méthode te déconnecte. Reconnecte-toi avec la nouvelle méthode pour continuer.',
