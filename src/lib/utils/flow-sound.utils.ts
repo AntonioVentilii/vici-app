@@ -61,11 +61,10 @@ const audio = (): AudioContext | null => {
 	}
 
 	if (audioContext.state === 'suspended') {
-		try {
-			void audioContext.resume();
-		} catch {
-			// Resume may reject without a gesture; the next cue retries.
-		}
+		// Resume may reject without a user gesture; catch the async rejection
+		// so it never surfaces as an unhandled promise rejection. The next
+		// cue retries.
+		void audioContext.resume().catch(() => undefined);
 	}
 
 	return audioContext;
