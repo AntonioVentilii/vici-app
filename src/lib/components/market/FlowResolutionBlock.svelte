@@ -63,7 +63,6 @@
 		border: 1px solid var(--border-base);
 		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
 		box-shadow: var(--inset-hi);
-		border-color: color-mix(in srgb, var(--cat-color) 20%, var(--border-base));
 	}
 
 	.flow-back-label {
@@ -101,11 +100,13 @@
 		}
 	}
 
+	/* Stacked footer — source line sits above the rules toggle (was a
+	   single space-between row). */
 	.flow-res-foot {
 		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 0.5rem;
+		flex-direction: column;
+		align-items: flex-start;
+		gap: 0.4rem;
 		margin-top: 0.35rem;
 	}
 	.flow-res-source {
