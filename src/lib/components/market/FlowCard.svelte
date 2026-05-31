@@ -1044,17 +1044,20 @@
 		}
 	}
 
-	/* 14 px gap between the friends row / artwork / probs split bar.
+	/* 16 px gap between the friends row / artwork / probs / foot.
 	   `.flow-probs` further down sets `margin-top: auto`, which parks
-	   the probability split at the bottom of the card body regardless
-	   of artwork height. */
+	   the probability split (and the foot directly beneath it) at the
+	   bottom of the card body regardless of artwork height. The gap here
+	   is the only separation between the probs block and the foot, so it
+	   stays small-but-clear; `padding-bottom` parks the foot near the
+	   card's bottom edge. */
 	.flow-body {
 		display: flex;
 		flex-direction: column;
-		gap: 14px;
+		gap: 16px;
 		flex: 1 1 auto;
 		min-height: 0;
-		padding: 14px 0 16px;
+		padding: 14px 0;
 	}
 
 	.flow-social {
