@@ -44,6 +44,24 @@ jobs:
       - name: Prepare
         uses: ./.github/actions/prepare
 
+      - name: Restore Prettier Cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ./node_modules/.cache/prettier/.prettier-cache
+          key: ${{ runner.os }}-prettier-cache-format-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-prettier-cache-format-main-
+            ${{ runner.os }}-prettier-cache-format-
+
+      - name: Restore ESLint Cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .eslintcache
+          key: ${{ runner.os }}-eslint-cache-format-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-eslint-cache-format-main-
+            ${{ runner.os }}-eslint-cache-format-
+
       - name: Format
         run: npm run format
 
@@ -83,6 +101,24 @@ jobs:
       - name: Prepare
         uses: ./.github/actions/prepare
 
+      - name: Restore Prettier Cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ./node_modules/.cache/prettier/.prettier-cache
+          key: ${{ runner.os }}-prettier-cache-lint-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-prettier-cache-lint-main-
+            ${{ runner.os }}-prettier-cache-lint-
+
+      - name: Restore ESLint Cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .eslintcache
+          key: ${{ runner.os }}-eslint-cache-lint-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-eslint-cache-lint-main-
+            ${{ runner.os }}-eslint-cache-lint-
+
       - name: Lint
         run: npm run lint
 
@@ -116,6 +152,24 @@ jobs:
 
       - name: Prepare
         uses: ./.github/actions/prepare
+
+      - name: Restore Prettier Cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: ./node_modules/.cache/prettier/.prettier-cache
+          key: ${{ runner.os }}-prettier-cache-quality-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-prettier-cache-quality-main-
+            ${{ runner.os }}-prettier-cache-quality-
+
+      - name: Restore ESLint Cache
+        uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
+        with:
+          path: .eslintcache
+          key: ${{ runner.os }}-eslint-cache-quality-${{ github.event_name == 'push' && github.ref == 'refs/heads/main' && format('main-{0}', github.sha) || github.event.pull_request.number || github.event.merge_group.head_sha || github.run_id }}
+          restore-keys: |
+            ${{ runner.os }}-eslint-cache-quality-main-
+            ${{ runner.os }}-eslint-cache-quality-
 
       # Install the juno CLI directly instead of using `junobuild/juno-action@full`.
       # The docker image bundles its own toolchain — at the time of writing it
