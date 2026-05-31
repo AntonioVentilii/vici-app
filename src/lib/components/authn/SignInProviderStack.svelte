@@ -177,28 +177,27 @@
 				class="signin-provider-btn apple"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'apple'}
+				aria-busy={signingIn === 'apple'}
 				aria-label={t({ locale: $localeStore, key: 'signin.provider.apple' })}
 				disabled={!APPLE_ENABLED || isBusy}
 				title={t({ locale: $localeStore, key: 'signin.provider.placeholder_title' })}
 				type="button"
 			>
 				<span class="signin-provider-icon" aria-hidden="true">
-					{#if signingIn === 'apple'}
-						<span class="signin-spinner"></span>
-					{:else}
-						<svg fill="currentColor" height="18" viewBox="0 0 24 24" width="18">
-							<path
-								d="M16.365 1.43c0 1.14-.49 2.27-1.29 3.08-.87.9-2.28 1.59-3.43 1.5-.14-1.11.42-2.27 1.22-3.05.88-.88 2.32-1.55 3.5-1.53zM20.5 17.27c-.61 1.4-.9 2.04-1.69 3.28-1.1 1.73-2.66 3.88-4.59 3.9-1.72.02-2.16-1.12-4.49-1.1-2.32.01-2.81 1.12-4.53 1.1-1.93-.02-3.41-1.97-4.51-3.7C-.1 18.1-.18 13.32 1.5 11.1c1.18-1.56 3.05-2.48 4.81-2.48 1.79 0 2.92 1.01 4.4 1.01 1.43 0 2.31-1.01 4.39-1.01 1.57 0 3.24.86 4.42 2.34-3.89 2.13-3.26 7.69 1 6.31z"
-							/>
-						</svg>
-					{/if}
+					<svg fill="currentColor" height="18" viewBox="0 0 24 24" width="18">
+						<path
+							d="M16.365 1.43c0 1.14-.49 2.27-1.29 3.08-.87.9-2.28 1.59-3.43 1.5-.14-1.11.42-2.27 1.22-3.05.88-.88 2.32-1.55 3.5-1.53zM20.5 17.27c-.61 1.4-.9 2.04-1.69 3.28-1.1 1.73-2.66 3.88-4.59 3.9-1.72.02-2.16-1.12-4.49-1.1-2.32.01-2.81 1.12-4.53 1.1-1.93-.02-3.41-1.97-4.51-3.7C-.1 18.1-.18 13.32 1.5 11.1c1.18-1.56 3.05-2.48 4.81-2.48 1.79 0 2.92 1.01 4.4 1.01 1.43 0 2.31-1.01 4.39-1.01 1.57 0 3.24.86 4.42 2.34-3.89 2.13-3.26 7.69 1 6.31z"
+						/>
+					</svg>
 				</span>
 				<span class="signin-provider-label">
 					{signingIn === 'apple'
 						? t({ locale: $localeStore, key: 'signin.loading.apple' })
 						: t({ locale: $localeStore, key: 'signin.provider.apple' })}
 				</span>
-				{#if !APPLE_ENABLED}
+				{#if signingIn === 'apple'}
+					<span class="signin-spinner" aria-hidden="true"></span>
+				{:else if !APPLE_ENABLED}
 					<small class="signin-provider-soon">
 						{t({ locale: $localeStore, key: 'signin.provider.soon' })}
 					</small>
@@ -212,22 +211,22 @@
 				class="signin-provider-btn google"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'google'}
+				aria-busy={signingIn === 'google'}
 				disabled={isBusy}
 				onclick={onGoogle}
 				type="button"
 			>
 				<span class="signin-provider-icon" aria-hidden="true">
-					{#if signingIn === 'google'}
-						<span class="signin-spinner"></span>
-					{:else}
-						<IconGoogle size="18px" />
-					{/if}
+					<IconGoogle size="18px" />
 				</span>
 				<span class="signin-provider-label">
 					{signingIn === 'google'
 						? t({ locale: $localeStore, key: 'signin.loading.google' })
 						: t({ locale: $localeStore, key: 'signin.provider.google' })}
 				</span>
+				{#if signingIn === 'google'}
+					<span class="signin-spinner" aria-hidden="true"></span>
+				{/if}
 			</button>
 		{/if}
 
@@ -302,22 +301,22 @@
 				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'ii'}
+				aria-busy={signingIn === 'ii'}
 				disabled={isBusy || !productionAvailable}
 				onclick={onIi}
 				type="button"
 			>
 				<span class="signin-provider-icon" aria-hidden="true">
-					{#if signingIn === 'ii'}
-						<span class="signin-spinner"></span>
-					{:else}
-						<IconIc size="18px" />
-					{/if}
+					<IconIc size="18px" />
 				</span>
 				<span class="signin-provider-label">
 					{signingIn === 'ii'
 						? t({ locale: $localeStore, key: 'signin.loading.ii' })
 						: t({ locale: $localeStore, key: 'authn.signin_with.ii' })}
 				</span>
+				{#if signingIn === 'ii'}
+					<span class="signin-spinner" aria-hidden="true"></span>
+				{/if}
 			</button>
 		{/if}
 
@@ -327,22 +326,22 @@
 				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'passkey'}
+				aria-busy={signingIn === 'passkey'}
 				disabled={isBusy || !productionAvailable}
 				onclick={onPasskey}
 				type="button"
 			>
 				<span class="signin-provider-icon" aria-hidden="true">
-					{#if signingIn === 'passkey'}
-						<span class="signin-spinner"></span>
-					{:else}
-						<IconPasskey size="18px" />
-					{/if}
+					<IconPasskey size="18px" />
 				</span>
 				<span class="signin-provider-label">
 					{signingIn === 'passkey'
 						? t({ locale: $localeStore, key: 'signin.loading.passkey' })
 						: t({ locale: $localeStore, key: 'authn.passkey.signin_button' })}
 				</span>
+				{#if signingIn === 'passkey'}
+					<span class="signin-spinner" aria-hidden="true"></span>
+				{/if}
 			</button>
 		{/if}
 
@@ -352,23 +351,23 @@
 				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'dev'}
+				aria-busy={signingIn === 'dev'}
 				data-tid={TestId.SignInDev}
 				disabled={isBusy}
 				onclick={onDev}
 				type="button"
 			>
 				<span class="signin-provider-icon" aria-hidden="true">
-					{#if signingIn === 'dev'}
-						<span class="signin-spinner"></span>
-					{:else}
-						<IconRobot size="18px" />
-					{/if}
+					<IconRobot size="18px" />
 				</span>
 				<span class="signin-provider-label">
 					{signingIn === 'dev'
 						? t({ locale: $localeStore, key: 'signin.loading.dev' })
 						: t({ locale: $localeStore, key: 'signin.provider.dev' })}
 				</span>
+				{#if signingIn === 'dev'}
+					<span class="signin-spinner" aria-hidden="true"></span>
+				{/if}
 			</button>
 		{/if}
 	</div>
