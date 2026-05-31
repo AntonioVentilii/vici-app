@@ -1154,11 +1154,20 @@
 		transition: width var(--d-state) var(--ease-vici);
 	}
 
-	/* Affiliations grid ------------------------------------------------ */
+	/* Affiliations card ------------------------------------------------ */
+	/* Wrapped in its own bordered card surface — same treatment as the
+	   identity card above (border / radius / popover background / card
+	   shadow) so the AFFILIATIONS header + 4-slot grid read as a single
+	   contained card rather than floating on the page background. */
 	.profile-affiliations {
 		display: flex;
 		flex-direction: column;
-		gap: 0.5rem;
+		gap: 0.75rem;
+		padding: 1rem;
+		border: 1px solid var(--border-base);
+		border-radius: 1.5rem;
+		background: var(--bg-popover);
+		box-shadow: var(--shadow-card);
 	}
 
 	.profile-affiliations-head {
@@ -1198,7 +1207,10 @@
 		padding: 0.85rem;
 		border: 1px solid var(--border-base);
 		border-radius: 1rem;
-		background: var(--bg-popover);
+		/* Tiles sit one surface step inside the affiliations card (which is
+		   `--bg-popover`), so they read as distinct tiles rather than blending
+		   into the card. `--bg-surface` is the darker step in every theme. */
+		background: var(--bg-surface);
 		color: var(--text-base);
 		text-align: left;
 		cursor: pointer;
@@ -1209,12 +1221,12 @@
 
 	.affil-slot.is-empty:hover {
 		border-color: var(--border-strong);
-		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-popover));
+		background: color-mix(in srgb, var(--color-primary) 4%, var(--bg-surface));
 	}
 
 	.affil-slot.is-filled {
 		border-color: color-mix(in srgb, var(--laurel) 45%, var(--border-base));
-		background: color-mix(in srgb, var(--laurel) 6%, var(--bg-popover));
+		background: color-mix(in srgb, var(--laurel) 6%, var(--bg-surface));
 	}
 
 	.affil-slot.is-locked {
@@ -1234,7 +1246,10 @@
 		align-items: center;
 		justify-content: center;
 		border-radius: var(--r-pill);
-		background: var(--bg-surface);
+		/* The tile is now `--bg-surface`, so the icon chip uses a faint
+		   text-tint overlay (light in dark theme, dark in light/peach) to
+		   stay distinct on the tile rather than matching it. */
+		background: color-mix(in srgb, var(--text-base) 8%, transparent);
 		color: var(--text-muted);
 		font-family: var(--font-mono);
 		font-size: var(--t-12);
