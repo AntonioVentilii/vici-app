@@ -125,9 +125,11 @@
 
 		<SwipeableMarketCard onCommit={(side) => commit(side)}>
 			{#snippet children(swipe)}
+				<!-- `ob-card` lets the first-run FlowCoach target this card
+				     for its gesture-teaching drift (data-coach-phase). -->
 				<div
 					style:transform="translate3d({swipe.dragX}px, {swipe.dragY * 0.2}px, 0) rotate({swipe.rotation}deg)"
-					class="ob2-swipe-card"
+					class="ob-card ob2-swipe-card"
 					class:is-committed={swipe.committed !== null}
 					class:is-dragging={swipe.dragging}
 				>
