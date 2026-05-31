@@ -106,7 +106,7 @@ const PRIVACY: InfoDoc = {
 		{ kind: 'h', text: 'Your rights' },
 		{
 			kind: 'p',
-			text: 'Access, export, correction, and deletion of your data are available on request to privacy@vici.markets. We respond within thirty days.'
+			text: 'Access, export, correction, and deletion of your data are available on request to privacy@vici.market. We respond within thirty days.'
 		},
 		{ kind: 'h', text: 'Cookies' },
 		{ kind: 'p', text: 'We store one session token. We do not use tracking cookies.' }
@@ -154,7 +154,7 @@ const RESOLUTION_RULES: InfoDoc = {
 		{ kind: 'h', text: 'Disputes' },
 		{
 			kind: 'p',
-			text: 'Any caller may file a resolution dispute within seventy-two hours by emailing resolution@vici.markets with their handle, the market id, and the basis for the dispute. Disputes are reviewed by editorial and answered within twenty-four hours.'
+			text: 'Any caller may file a resolution dispute within seventy-two hours by emailing resolution@vici.market with their handle, the market id, and the basis for the dispute. Disputes are reviewed by editorial and answered within twenty-four hours.'
 		}
 	]
 };
@@ -258,7 +258,7 @@ const CONTACT: InfoDoc = {
 			text: 'We are a small team. Most questions are answered in the FAQ. For anything else, write to us directly.'
 		},
 		{ kind: 'h', text: 'Email' },
-		{ kind: 'mail', text: 'support@vici.markets' },
+		{ kind: 'mail', text: 'support@vici.market' },
 		{ kind: 'h', text: 'Response time' },
 		{
 			kind: 'p',
@@ -274,7 +274,7 @@ const CONTACT: InfoDoc = {
 			]
 		},
 		{ kind: 'h', text: 'Press, partnerships, and league sponsorship' },
-		{ kind: 'mail', text: 'hello@vici.markets' }
+		{ kind: 'mail', text: 'hello@vici.market' }
 	]
 };
 

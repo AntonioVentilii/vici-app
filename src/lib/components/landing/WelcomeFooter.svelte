@@ -25,7 +25,7 @@
 				<div>
 					<div class="eyebrow mute">{t({ locale: $localeStore, key: 'footer.help' })}</div>
 					<a href="#faq">{t({ locale: $localeStore, key: 'footer.faq' })}</a>
-					<a href="mailto:support@vici.markets">
+					<a href="mailto:support@vici.market">
 						{t({ locale: $localeStore, key: 'footer.contact' })}
 					</a>
 				</div>
