@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Heart } from 'lucide-svelte/icons';
+	import { Eye, Heart } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import { PublicPath } from '$lib/constants/routes.constants';
@@ -13,7 +13,8 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	type ToggleSize = 'sm' | 'md';
-	type ToggleVariant = 'pill' | 'ghost';
+	type ToggleIcon = 'heart' | 'eye';
+	type ToggleVariant = 'pill' | 'flow-ghost' | 'header-ghost';
 
 	interface Props {
 		/** Market id to bookmark / unbookmark. */
@@ -26,15 +27,28 @@
 		 *    (see `MarketDetailHeader`).
 		 */
 		size?: ToggleSize;
+		/** Glyph used for the affordance.
+		 *
+		 *  - `heart` (default) — the bookmark heart used on market cards.
+		 *  - `eye` — a "watch this market" eye, used in the detail
+		 *    header where the control reads as add-to-watchlist.
+		 */
+		icon?: ToggleIcon;
 		/** Treatment variant.
 		 *
 		 *  - `pill` (default) — bordered laurel pill; the saved state fills
-		 *    with the laurel wash.
-		 *  - `ghost` — borderless square (8 px radius) that sits flush in a
-		 *    dense action row; transparent until hovered, and the saved
-		 *    heart turns pink rather than laurel so it reads as a personal
-		 *    watchlist mark next to the neutral share control (see
-		 *    `FlowBackHeader`).
+		 *    with the laurel wash. Used by `MarketCard` and other default
+		 *    callers.
+		 *  - `flow-ghost` — borderless square (8 px radius) that sits flush
+		 *    in a dense action row; transparent until hovered, and the
+		 *    saved heart turns pink rather than laurel so it reads as a
+		 *    personal watchlist mark next to the neutral share control
+		 *    (see `FlowBackHeader`).
+		 *  - `header-ghost` — the faint header icon-button look that sits
+		 *    as one set with the back chevron and share control on the
+		 *    detail app-bar (rounded rect, foreground wash + border); the
+		 *    saved state reads via the laurel accent (see the market
+		 *    detail page).
 		 */
 		variant?: ToggleVariant;
 		/** Hard-stop the click from bubbling to a parent clickable surface
@@ -44,7 +58,13 @@
 		stopPropagation?: boolean;
 	}
 
-	const { marketId, size = 'sm', variant = 'pill', stopPropagation = true }: Props = $props();
+	const {
+		marketId,
+		size = 'sm',
+		icon = 'heart',
+		variant = 'pill',
+		stopPropagation = true
+	}: Props = $props();
 
 	const saved = $derived(isMarketSaved({ marketId, prefs: $preferencesStore }));
 
@@ -73,11 +93,12 @@
 	};
 </script>
 
-<!-- Shared heart-toggle primitive used by MarketCard, MarketDetailHeader,
-     and any future surface that wants the same "bookmark this market"
-     affordance. Visual state (saved → laurel pill, unsaved → muted
-     outline) and label / aria are owned here so the two call sites
-     can't drift on copy or treatment. -->
+<!-- Shared save-toggle primitive used by MarketCard, FlowBackHeader, the
+     Market detail app-bar, and any future surface that wants the same
+     "save this market" affordance. The glyph (heart / eye) and treatment
+     (pill / flow-ghost / header-ghost) are props, but the save logic,
+     label, and aria are owned here so call sites can't drift on copy or
+     behaviour. -->
 <button
 	class={['saved-market-toggle', `size-${size}`, `variant-${variant}`, saved && 'is-saved']}
 	aria-label={t({ locale: $localeStore, key: saved ? 'card.unsave' : 'card.save' })}
@@ -87,12 +108,16 @@
 	type="button"
 >
 	<span class="saved-market-icon">
-		<Heart
-			aria-hidden="true"
-			fill={saved ? 'currentColor' : 'none'}
-			size={size === 'md' ? 16 : 14}
-			strokeWidth={2}
-		/>
+		{#if icon === 'eye'}
+			<Eye aria-hidden="true" size={size === 'md' ? 16 : 14} strokeWidth={1.8} />
+		{:else}
+			<Heart
+				aria-hidden="true"
+				fill={saved ? 'currentColor' : 'none'}
+				size={size === 'md' ? 16 : 14}
+				strokeWidth={2}
+			/>
+		{/if}
 	</span>
 </button>
 
@@ -127,32 +152,62 @@
 		height: 1.75rem;
 	}
 
-	/* Ghost treatment — a borderless 8 px-radius square that reads as a
-	   neutral icon affordance until interacted with. Saved state turns
-	   the heart pink so a watchlisted card is unmistakable next to the
-	   neutral share control in the dense flow-back action row. */
-	.variant-ghost {
-		border: 1px solid transparent;
-		border-radius: var(--r-8);
-		background: transparent;
-		color: var(--text-muted);
-	}
-	.variant-ghost:hover {
-		border-color: transparent;
-		background: color-mix(in srgb, var(--parchment) 6%, transparent);
-		color: var(--text-base);
-	}
-	.variant-ghost.is-saved {
-		border-color: transparent;
-		background: transparent;
-		color: #ff6b8a;
-	}
-
 	.size-md {
 		width: 2.25rem;
 		height: 2.25rem;
 		background: color-mix(in srgb, var(--bg-surface) 84%, transparent);
 		color: var(--text-muted);
+	}
+
+	/* Flow-ghost treatment — a borderless 8 px-radius square that reads
+	   as a neutral icon affordance until interacted with. Saved state
+	   turns the heart pink so a watchlisted card is unmistakable next to
+	   the neutral share control in the dense flow-back action row. Keeps
+	   the square `.size-*` footprint. */
+	.variant-flow-ghost {
+		border: 1px solid transparent;
+		border-radius: var(--r-8);
+		background: transparent;
+		color: var(--text-muted);
+	}
+	.variant-flow-ghost:hover {
+		border-color: transparent;
+		background: color-mix(in srgb, var(--parchment) 6%, transparent);
+		color: var(--text-base);
+	}
+	.variant-flow-ghost.is-saved {
+		border-color: transparent;
+		background: transparent;
+		color: #ff6b8a;
+	}
+
+	/* Header-ghost treatment — the faint header icon-button look that
+	   matches the back chevron and share control on the detail app-bar.
+	   The fill is a foreground wash so it adapts across themes (dark /
+	   light / peach) rather than a hardcoded dark-only rgba. Drops the
+	   fixed square footprint in favour of the icon-button padding so it
+	   reads as a rounded rect, not a circle. */
+	.variant-header-ghost {
+		width: auto;
+		height: auto;
+		padding: 8px 10px;
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+		color: var(--text-base);
+	}
+
+	.variant-header-ghost:hover {
+		border-color: var(--border-strong);
+		background: color-mix(in srgb, var(--text-base) 11%, transparent);
+		color: var(--text-base);
+	}
+
+	/* Saved state keeps the laurel accent so "watching" stays legible,
+	   in the ghost idiom (subtle laurel wash + border, no full pill). */
+	.variant-header-ghost.is-saved {
+		border-color: color-mix(in srgb, var(--laurel) 40%, transparent);
+		background: var(--laurel-glow);
+		color: var(--laurel);
 	}
 
 	/* Heart-pop envelope on save toggle — visual punch that
