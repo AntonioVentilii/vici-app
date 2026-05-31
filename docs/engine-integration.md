@@ -39,14 +39,15 @@ flowchart LR
 
 Responsibilities:
 
-| Component                                        | Role                                                                            |
-| ------------------------------------------------ | ------------------------------------------------------------------------------- |
-| `scripts/init/init.icdc-engine.sh`               | Registers the Vici engine, adds the satellite + human admins                    |
-| `src/satellite/services/engine-sync.services.ts` | Hook that grants/revokes engine roles in response to `roles` doc changes        |
-| `src/lib/constants/icdc.constants.ts`            | Single place that pins the engine id (`eng_0`) used by the frontend + satellite |
-| `src/lib/services/market.services.ts`            | Passes `engine_id` to `add_series` so non-controller admins can create markets  |
-| `scripts/init/init.registry.sh`                  | Seeds demo markets, now tagging them with `engine_id = opt "$VICI_ENGINE_ID"`   |
-| `scripts/test/test-engine-sync.sh`               | Smoke test: verifies engine registration, admin list, allowed roles, grant flow |
+| Component                                        | Role                                                                                                 |
+| ------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
+| `scripts/init/init.icdc-engine.sh`               | Registers the Vici engine, adds the satellite + human admins                                         |
+| `src/satellite/services/engine-sync.services.ts` | Hook that grants/revokes engine roles in response to `roles` doc changes                             |
+| `src/lib/constants/icdc.constants.ts`            | Single place that pins the engine id (`eng_0`) used by the frontend + satellite                      |
+| `src/lib/services/market.services.ts`            | Passes `engine_id` to `add_series` so non-controller admins can create markets                       |
+| `scripts/init/init.registry.sh`                  | Registers the oracle + principals, then delegates market seeding to `deploy-markets.sh`              |
+| `scripts/deploy-markets.sh`                      | Deploys any JSON market deck via `add_series`, tagging each with `engine_id = opt "$VICI_ENGINE_ID"` |
+| `scripts/test/test-engine-sync.sh`               | Smoke test: verifies engine registration, admin list, allowed roles, grant flow                      |
 
 ## Role mapping
 
