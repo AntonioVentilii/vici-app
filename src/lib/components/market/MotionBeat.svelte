@@ -49,9 +49,10 @@
 	// pop with no copy / chips. Everything else carries the full stack.
 	const isAmbient = $derived(beat.kind === 'ambient-10');
 
-	// Large character in the gap: hard beats 132 px, soft beats 96 px,
-	// ambient pops 44 px.
-	const charSize = $derived(isAmbient ? 44 : isHardBeat ? 132 : 96);
+	// Large character in the gap: hard beats 168 px, soft beats 120 px,
+	// ambient pops 44 px. The reward-moment characters stand big so the
+	// celebratory pop reads as the payoff it is.
+	const charSize = $derived(isAmbient ? 44 : isHardBeat ? 168 : 120);
 
 	const nameKey = $derived.by((): MessageKey => {
 		switch (beat.character) {
@@ -190,17 +191,40 @@
 	   (`motion-beat-in` / `motion-beat-out`) live in `app.css`. */
 	.motion-beat {
 		position: absolute;
-		top: 36%;
+		top: 33%;
 		left: 50%;
 		transform: translate(-50%, 0);
 		z-index: 40;
 		pointer-events: none;
 		opacity: 0;
 		max-width: calc(100% - 2rem);
+		/* Reward-moment exception to the no-overshoot rule: a big celebratory
+		   springy pop-in replaces the plain center placement, then the
+		   standard out-spring carries the character away. */
 		animation:
-			motion-beat-in 360ms cubic-bezier(0.34, 1.56, 0.64, 1) forwards,
+			motion-beat-center-in 540ms cubic-bezier(0.34, 1.62, 0.5, 1) forwards,
 			motion-beat-out 320ms ease-in forwards;
 		animation-delay: 0s, var(--motion-beat-out-delay, 1100ms);
+	}
+	@keyframes motion-beat-center-in {
+		0% {
+			opacity: 0;
+			transform: translate(-50%, 22px) scale(0.34);
+		}
+		46% {
+			opacity: 1;
+			transform: translate(-50%, -10px) scale(1.16);
+		}
+		66% {
+			transform: translate(-50%, 2px) scale(0.94);
+		}
+		83% {
+			transform: translate(-50%, -3px) scale(1.05);
+		}
+		100% {
+			opacity: 1;
+			transform: translate(-50%, 0) scale(1);
+		}
 	}
 
 	.motion-beat.is-ambient {
@@ -273,6 +297,123 @@
 	}
 	.motion-beat.motion-beat-trickster .motion-beat-char::before {
 		background: radial-gradient(circle, rgba(255, 138, 122, 0.18), transparent 64%);
+	}
+
+	/* Lively idle — the character keeps celebrating while it holds the gap.
+	   Starts once the pop-in has settled. The flame / trickster reward
+	   moments hop harder with a scale pulse on top of the bob + tilt. */
+	.motion-beat .motion-beat-char {
+		animation: beat-char-celebrate 1s ease-in-out 0.46s infinite;
+		transform-origin: 50% 80%;
+	}
+	@keyframes beat-char-celebrate {
+		0%,
+		100% {
+			transform: translateY(0) rotate(0deg);
+		}
+		20% {
+			transform: translateY(-9px) rotate(-4deg);
+		}
+		40% {
+			transform: translateY(-1px) rotate(0deg);
+		}
+		62% {
+			transform: translateY(-6px) rotate(4deg);
+		}
+		80% {
+			transform: translateY(0) rotate(1deg);
+		}
+	}
+	.motion-beat.motion-beat-flame .motion-beat-char,
+	.motion-beat.motion-beat-trickster .motion-beat-char {
+		animation: beat-char-celebrate-hard 0.82s ease-in-out 0.46s infinite;
+	}
+	@keyframes beat-char-celebrate-hard {
+		0%,
+		100% {
+			transform: translateY(0) rotate(0deg) scale(1);
+		}
+		18% {
+			transform: translateY(-16px) rotate(-6deg) scale(1.08);
+		}
+		40% {
+			transform: translateY(-2px) rotate(0deg) scale(1);
+		}
+		64% {
+			transform: translateY(-11px) rotate(6deg) scale(1.06);
+		}
+		82% {
+			transform: translateY(-2px) rotate(2deg) scale(1.02);
+		}
+	}
+
+	/* The radial glow breathes in time with the celebration. */
+	.motion-beat .motion-beat-char::before {
+		animation: beat-glow-pulse 1s ease-in-out 0.46s infinite;
+	}
+	@keyframes beat-glow-pulse {
+		0%,
+		100% {
+			opacity: 0.55;
+			transform: translate(-50%, -50%) scale(0.92);
+		}
+		50% {
+			opacity: 1;
+			transform: translate(-50%, -50%) scale(1.12);
+		}
+	}
+
+	/* One-shot celebratory shockwave ring that fires once on entrance.
+	   Tinted to match the character; flame / trickster rings ride larger. */
+	.motion-beat .motion-beat-char::after {
+		content: '';
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		z-index: -1;
+		width: 132px;
+		height: 132px;
+		border-radius: 50%;
+		border: 2px solid color-mix(in srgb, var(--char-oracle) 55%, transparent);
+		transform: translate(-50%, -50%) scale(0.3);
+		opacity: 0;
+		animation: beat-ring 720ms ease-out 0.14s 1;
+	}
+	.motion-beat.motion-beat-flame .motion-beat-char::after {
+		border-color: color-mix(in srgb, var(--char-flame) 60%, transparent);
+		width: 160px;
+		height: 160px;
+	}
+	.motion-beat.motion-beat-trickster .motion-beat-char::after {
+		border-color: color-mix(in srgb, var(--char-trickster) 55%, transparent);
+	}
+	@keyframes beat-ring {
+		0% {
+			opacity: 0.85;
+			transform: translate(-50%, -50%) scale(0.3);
+		}
+		70% {
+			opacity: 0.22;
+		}
+		100% {
+			opacity: 0;
+			transform: translate(-50%, -50%) scale(2.3);
+		}
+	}
+
+	/* Reduced-motion gate for the celebratory beat — the overshoot pop-in,
+	   lively idle, glow breathing and shockwave ring all collapse to a
+	   static state. The plain opacity fade (rm-in / rm-out below) still
+	   carries the character in and out without travel or overshoot. */
+	@media (prefers-reduced-motion: reduce) {
+		.motion-beat .motion-beat-char,
+		.motion-beat .motion-beat-char::before,
+		.motion-beat .motion-beat-char::after {
+			animation: none;
+		}
+		.motion-beat .motion-beat-char::after {
+			display: none;
+		}
 	}
 
 	.motion-beat-text {
