@@ -331,18 +331,10 @@
 	// Spawns a centered VXP-grant pop. Only genuine engine mints (overtime
 	// finish, lifetime milestones) reach this — a routine swipe mints
 	// nothing (deflation-safe economy, see `docs/ai/frontend/design.md`
-	// §7.3), so every pop is a real `bonus` award.
-	const spawnXpPop = ({
-		amount,
-		side,
-		copy
-	}: {
-		amount: number;
-		side: CallSide;
-		copy?: string;
-	}) => {
+	// §7.3), so every pop carries a real VXP award.
+	const spawnXpPop = ({ amount, copy }: { amount: number; copy?: string }) => {
 		const id = ++popCounter;
-		xpPops = [...xpPops, { id, amount, side, copy }];
+		xpPops = [...xpPops, { id, amount, copy }];
 
 		// Bonus pops linger (paired copy needs to read).
 		setTimeout(() => {
@@ -628,7 +620,6 @@
 			if (!hasGatingBeat) {
 				spawnXpPop({
 					amount: motion.bonusXp,
-					side: action,
 					copy: popCopy
 				});
 			}

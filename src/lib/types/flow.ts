@@ -1,4 +1,4 @@
-import type { CallSide, MarketId } from '$lib/types/market';
+import type { MarketId } from '$lib/types/market';
 
 /**
  * One settled call in the "while you were away" digest — a row in the Flow
@@ -45,7 +45,6 @@ export interface ResolutionRevealData {
 export interface XpPop {
 	id: number;
 	amount: number;
-	side: CallSide;
 	// Paired copy ("First call.", "Ten deep.") shown above the number.
 	copy?: string;
 }
