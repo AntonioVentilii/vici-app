@@ -60,12 +60,13 @@
 	let followedLean = $state<FollowedLeanSignal | undefined>();
 	let priorCall = $state<PriorCallSignal | undefined>();
 
-	// Real price-history series for this market, derived from the viewer's
-	// clearing trade history (caller-scoped, so viewer-relative). Empty
-	// until the first trade lands — the chart reads this as a true
-	// cold-start flat line. `undefined` while we haven't resolved it yet
-	// (or when signed out), so the chart falls back to its seed shape
-	// rather than flashing a misleading flat line.
+	// Real, market-wide price-history series for this market, derived from
+	// the clearing canister's market-wide trade history (every participant's
+	// fills, not just the viewer's). Reflects the true market movement for
+	// all viewers, including signed-out visitors. Empty until the first
+	// trade lands — the chart reads this as a true cold-start flat line.
+	// `undefined` while we haven't resolved it yet, so the chart falls back
+	// to its seed shape rather than flashing a misleading flat line.
 	let priceHistory = $state<number[] | undefined>();
 
 	let loading = $state(true);
@@ -98,6 +99,35 @@
 		// friend activity every tick.
 		if (!silent) {
 			void fetchSignals(marketRes);
+			// Real market-wide price history is independent of the viewer
+			// (it's the same series for everyone), so it loads regardless of
+			// sign-in. Like signals, it rides on the foreground load only.
+			void fetchPriceHistory(marketRes);
+		}
+	};
+
+	// Real, market-wide price history for the chart. Independent of the
+	// viewer — works signed-out — and fails open: any error simply leaves
+	// the chart on its seed-based fallback.
+	const fetchPriceHistory = async (m: Market | undefined) => {
+		if (isNullish(m)) {
+			priceHistory = undefined;
+
+			return;
+		}
+
+		try {
+			await loadMarketPriceHistory({
+				seriesId: m.id,
+				onLoad: ({ response }) => {
+					priceHistory = response;
+				},
+				onUpdateError: () => {
+					priceHistory = undefined;
+				}
+			});
+		} catch {
+			priceHistory = undefined;
 		}
 	};
 
@@ -110,7 +140,6 @@
 		if (isNullish(m) || !$userSignedIn) {
 			followedLean = undefined;
 			priorCall = undefined;
-			priceHistory = undefined;
 
 			return;
 		}
@@ -123,24 +152,6 @@
 		} catch {
 			followedLean = undefined;
 			priorCall = undefined;
-		}
-
-		// Real price history rides alongside the viewer-relative signals:
-		// it shares the trade-history fetch path and, like them, fails open
-		// — any error simply leaves the chart on its seed-based fallback.
-		try {
-			await loadMarketPriceHistory({
-				seriesId: m.id,
-				domain: m.balanceDomain,
-				onLoad: ({ response }) => {
-					priceHistory = response;
-				},
-				onUpdateError: () => {
-					priceHistory = undefined;
-				}
-			});
-		} catch {
-			priceHistory = undefined;
 		}
 	};
 
@@ -184,12 +195,14 @@
 		if (nonNullish(market)) {
 			fetchMarket({ id: market.id, silent: true });
 
-			// The silent refresh deliberately skips `fetchSignals` (the 30s
-			// consensus poll shouldn't re-pull trade history every tick), but
-			// the viewer just traded — so the chart's real price history and
-			// the prior-call / followed-lean signals are now stale. Re-pull
-			// them explicitly here, on top of the silent market refetch.
+			// The silent refresh deliberately skips `fetchSignals` /
+			// `fetchPriceHistory` (the 30s consensus poll shouldn't re-pull
+			// trade history every tick), but the viewer just traded — so the
+			// chart's real price history and the prior-call / followed-lean
+			// signals are now stale. Re-pull them explicitly here, on top of
+			// the silent market refetch.
 			void fetchSignals(market);
+			void fetchPriceHistory(market);
 		}
 	};
 
