@@ -306,6 +306,17 @@ export interface AppHibernateMyAccountResult {
 	ok: boolean;
 	reason: [] | [{ deleted: null } | { no_profile: null }];
 }
+export interface AppListAffiliationChampionshipsArgs {
+	kind: { country: null } | { university: null };
+	affiliation_identifier: string;
+}
+export interface AppListAffiliationChampionshipsResult {
+	items: Array<{
+		month_anchor: string;
+		month_total_calls: number;
+		accuracy: number;
+	}>;
+}
 export interface AppListAffiliationStatsArgs {
 	kind: { country: null } | { university: null };
 	limit: [] | [number];
@@ -547,6 +558,16 @@ export interface AppListSentFriendRequestsResult {
 		state: { REJECTED: null } | { PENDING: null } | { BLOCKED: null } | { ACTIVE: null };
 		category: { GROUP: null } | { FRIEND: null } | { follow: null };
 		viewer_principal: [] | [string];
+	}>;
+}
+export interface AppListWorldsMemberCountsArgs {
+	kind: { country: null } | { university: null };
+}
+export interface AppListWorldsMemberCountsResult {
+	items: Array<{
+		kind: { country: null } | { university: null };
+		member_count: number;
+		affiliation_identifier: string;
 	}>;
 }
 export interface AppListWorldsRosterArgs {
@@ -801,6 +822,10 @@ export interface _SERVICE {
 		AppGetUserRankAndCountResult
 	>;
 	app_hibernate_my_account: ActorMethod<[], AppHibernateMyAccountResult>;
+	app_list_affiliation_championships: ActorMethod<
+		[AppListAffiliationChampionshipsArgs],
+		AppListAffiliationChampionshipsResult
+	>;
 	app_list_affiliation_stats: ActorMethod<
 		[AppListAffiliationStatsArgs],
 		AppListAffiliationStatsResult
@@ -823,6 +848,10 @@ export interface _SERVICE {
 	app_list_my_leagues: ActorMethod<[], AppListMyLeaguesResult>;
 	app_list_my_referrals: ActorMethod<[], AppListMyReferralsResult>;
 	app_list_sent_friend_requests: ActorMethod<[], AppListSentFriendRequestsResult>;
+	app_list_worlds_member_counts: ActorMethod<
+		[AppListWorldsMemberCountsArgs],
+		AppListWorldsMemberCountsResult
+	>;
 	app_list_worlds_roster: ActorMethod<[AppListWorldsRosterArgs], AppListWorldsRosterResult>;
 	app_lookup_league_by_invite: ActorMethod<
 		[AppLookupLeagueByInviteArgs],

@@ -48,6 +48,33 @@ export interface AffiliationStatsDoc {
 }
 
 /**
+ * Real per-affiliation member tally for a Worlds kind. Returned by
+ * the `listWorldsMemberCounts` aggregate so a surface that only needs
+ * "N members" doesn't page the full roster.
+ */
+export interface AffiliationMemberCount {
+	affiliationIdentifier: string;
+	kind: AffiliationKind;
+	memberCount: number;
+}
+
+/**
+ * A single past month an affiliation finished first in its kind —
+ * one champion "cup". Derived from the frozen monthly snapshots, so
+ * this list grows one entry per closed month with a ranked leader
+ * (there is no scheduled season-conclusion job — see
+ * `listAffiliationChampionshipsFn`).
+ */
+export interface AffiliationChampionship {
+	/** YYYY-MM of the month the affiliation topped its kind. */
+	monthAnchor: string;
+	/** Frozen month accuracy at the time of the win (0..1). */
+	accuracy: number;
+	/** Resolved calls behind that month's win. */
+	monthTotalCalls: number;
+}
+
+/**
  * Canonical key builder for the **rolling** (current-month) doc.
  * One per `(kind, affiliationIdentifier)`. Mirrors the affiliations
  * collection's `${kind}/${affiliationIdentifier}` prefix scheme so a

@@ -2037,6 +2037,11 @@ export const esMessages = {
 	'worlds.detail.activity_calls': '{count} predicciones',
 	'worlds.detail.activity_eyebrow': 'Actividad',
 	'worlds.detail.back': 'Volver a Worlds',
+	'worlds.detail.champion_chip': 'Campeón · {count} copas',
+	'worlds.detail.champions_cups': '{count} copas',
+	'worlds.detail.champions_empty':
+		'Aún no hay meses de campeón. Encabeza una clasificación mensual para conseguir la primera copa.',
+	'worlds.detail.champions_eyebrow': 'Historial de campeón',
 	'worlds.detail.cta_label': 'Abre Flow para añadir predicciones',
 	'worlds.detail.empty_body':
 		'{name} necesita {calls} predicciones más para clasificar al podio de la temporada.',
@@ -2045,6 +2050,7 @@ export const esMessages = {
 	'worlds.detail.empty_title_school': 'Sé de los primeros.',
 	'worlds.detail.kind_country': 'Nación',
 	'worlds.detail.kind_university': 'Universidad',
+	'worlds.detail.loading_champions': 'Cargando campeones…',
 	'worlds.detail.loading_members': 'Cargando miembros…',
 	'worlds.detail.marker_alma_mater': 'Alma Mater',
 	'worlds.detail.marker_citizen': 'Ciudadano',
@@ -2122,6 +2128,7 @@ export const esMessages = {
 	'worlds.picker.school.inbox_title': 'Revisa tu bandeja',
 	'worlds.picker.school.meta_be_founder': 'Sé el fundador',
 	'worlds.picker.school.meta_members': '{members} miembros · #{rank} este mes',
+	'worlds.picker.school.meta_members_no_rank': '{members} miembros',
 	'worlds.picker.school.meta_no_members': 'Aún sin miembros',
 	'worlds.picker.school.name_label': 'Nombre de la escuela',
 	'worlds.picker.school.name_placeholder': 'p. ej. Otto Beisheim School of Management',

@@ -312,6 +312,19 @@ export const idlFactory = ({ IDL }) => {
 		ok: IDL.Bool,
 		reason: IDL.Opt(IDL.Variant({ deleted: IDL.Null, no_profile: IDL.Null }))
 	});
+	const AppListAffiliationChampionshipsArgs = IDL.Record({
+		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+		affiliation_identifier: IDL.Text
+	});
+	const AppListAffiliationChampionshipsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				month_anchor: IDL.Text,
+				month_total_calls: IDL.Float64,
+				accuracy: IDL.Float64
+			})
+		)
+	});
 	const AppListAffiliationStatsArgs = IDL.Record({
 		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
 		limit: IDL.Opt(IDL.Float64)
@@ -689,6 +702,18 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
+	const AppListWorldsMemberCountsArgs = IDL.Record({
+		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null })
+	});
+	const AppListWorldsMemberCountsResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
+				member_count: IDL.Float64,
+				affiliation_identifier: IDL.Text
+			})
+		)
+	});
 	const AppListWorldsRosterArgs = IDL.Record({
 		kind: IDL.Variant({ country: IDL.Null, university: IDL.Null }),
 		affiliation_identifier: IDL.Text
@@ -961,6 +986,11 @@ export const idlFactory = ({ IDL }) => {
 			['query']
 		),
 		app_hibernate_my_account: IDL.Func([], [AppHibernateMyAccountResult], []),
+		app_list_affiliation_championships: IDL.Func(
+			[AppListAffiliationChampionshipsArgs],
+			[AppListAffiliationChampionshipsResult],
+			['query']
+		),
 		app_list_affiliation_stats: IDL.Func(
 			[AppListAffiliationStatsArgs],
 			[AppListAffiliationStatsResult],
@@ -993,6 +1023,11 @@ export const idlFactory = ({ IDL }) => {
 		app_list_my_leagues: IDL.Func([], [AppListMyLeaguesResult], ['query']),
 		app_list_my_referrals: IDL.Func([], [AppListMyReferralsResult], ['query']),
 		app_list_sent_friend_requests: IDL.Func([], [AppListSentFriendRequestsResult], ['query']),
+		app_list_worlds_member_counts: IDL.Func(
+			[AppListWorldsMemberCountsArgs],
+			[AppListWorldsMemberCountsResult],
+			['query']
+		),
 		app_list_worlds_roster: IDL.Func(
 			[AppListWorldsRosterArgs],
 			[AppListWorldsRosterResult],

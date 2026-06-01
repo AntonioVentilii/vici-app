@@ -680,6 +680,46 @@ export const AffiliationStatsOptionWireSchema = j.strictObject({
 
 export type OptionWireAffiliationStats = j.infer<typeof AffiliationStatsOptionWireSchema>;
 
+// Per-affiliation real member tally, snake_case for the
+// `j.array(...)` member-count endpoint.
+export const AffiliationMemberCountWireSchema = j.strictObject({
+	affiliation_identifier: j.string(),
+	kind: j.enum(['university', 'country']),
+	member_count: j.number()
+});
+
+export type WireAffiliationMemberCount = j.infer<typeof AffiliationMemberCountWireSchema>;
+
+export const toWireAffiliationMemberCount = (count: {
+	affiliationIdentifier: string;
+	kind: 'university' | 'country';
+	memberCount: number;
+}): WireAffiliationMemberCount => ({
+	affiliation_identifier: count.affiliationIdentifier,
+	kind: count.kind,
+	member_count: count.memberCount
+});
+
+// A past month an affiliation finished first in its kind, snake_case
+// for the `j.array(...)` champion-history endpoint.
+export const AffiliationChampionshipWireSchema = j.strictObject({
+	month_anchor: j.string(),
+	accuracy: j.number(),
+	month_total_calls: j.number()
+});
+
+export type WireAffiliationChampionship = j.infer<typeof AffiliationChampionshipWireSchema>;
+
+export const toWireAffiliationChampionship = (cup: {
+	monthAnchor: string;
+	accuracy: number;
+	monthTotalCalls: number;
+}): WireAffiliationChampionship => ({
+	month_anchor: cup.monthAnchor,
+	accuracy: cup.accuracy,
+	month_total_calls: cup.monthTotalCalls
+});
+
 // ─── Tournament + matches ───────────────────────────────────────────
 
 export const TournamentWireSchema = j.strictObject({

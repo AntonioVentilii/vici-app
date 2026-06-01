@@ -3,18 +3,26 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
-	import { functions } from '$declarations/satellite/satellite.api';
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import {
 		lookupWorldsAffiliation,
 		WORLDS_COUNTRIES,
 		WORLDS_UNIVERSITIES
 	} from '$lib/constants/worlds-affiliations.constants';
-	import { getAffiliationStats, listAffiliationStats } from '$lib/services/worlds.services';
+	import {
+		getAffiliationStats,
+		listAffiliationChampionships,
+		listAffiliationStats,
+		listWorldsMemberCounts
+	} from '$lib/services/worlds.services';
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { AffiliationKind } from '$lib/types/affiliation';
-	import { MIN_CALLS_FOR_RANK, type AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+	import {
+		MIN_CALLS_FOR_RANK,
+		type AffiliationChampionship,
+		type AffiliationStatsDoc
+	} from '$lib/types/affiliation-stats';
 	import {
 		affiliationLifetimeAccuracy,
 		affiliationMonthlyAccuracy,
@@ -64,6 +72,7 @@
 	let memberCount = $state<number | undefined>();
 	let stats = $state<AffiliationStatsDoc | undefined>();
 	let allStats = $state<AffiliationStatsDoc[]>([]);
+	let championships = $state<AffiliationChampionship[]>([]);
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let errorMessage: string | null = $state(null);
 
@@ -78,14 +87,16 @@
 		void refreshMyAffiliations();
 
 		try {
-			const [rosterResp, statsResp, allResp] = await Promise.all([
-				functions.listWorldsRoster({ kind, affiliationIdentifier }),
+			const [counts, statsResp, allResp, cups] = await Promise.all([
+				listWorldsMemberCounts({ kind }),
 				getAffiliationStats({ kind, affiliationIdentifier }),
-				listAffiliationStats({ kind })
+				listAffiliationStats({ kind }),
+				listAffiliationChampionships({ kind, affiliationIdentifier })
 			]);
-			memberCount = rosterResp.items.length;
+			memberCount = counts[affiliationIdentifier] ?? 0;
 			stats = statsResp;
 			allStats = allResp;
+			championships = cups;
 			loadState = 'ready';
 		} catch (err) {
 			console.error('WorldsAffiliationDetailPage: load failed', err);
@@ -152,10 +163,28 @@
 	const headerName = $derived(option?.name ?? affiliationIdentifier);
 
 	/**
-	 * Context chips below the bar — the kind label, member count, and
-	 * (when this is the caller's own affiliation) the Alma Mater /
-	 * Citizen marker. Mirrors the source's chip row; champion-history
-	 * chips are omitted because no championship history feed exists yet.
+	 * Render a `YYYY-MM` anchor as a localized "Month YYYY" label for
+	 * the champion-history list.
+	 */
+	const formatMonthAnchor = (anchor: string): string => {
+		const [year, month] = anchor.split('-').map((n) => Number(n));
+
+		if (!Number.isFinite(year) || !Number.isFinite(month)) {
+			return anchor;
+		}
+
+		const fmt = new Intl.DateTimeFormat($localeStore, { month: 'long', year: 'numeric' });
+
+		return fmt.format(new Date(Date.UTC(year, month - 1, 1)));
+	};
+
+	const championCount = $derived(championships.length);
+
+	/**
+	 * Context chips below the bar — the kind label, member count, the
+	 * champion-cup count (only once the affiliation has at least one
+	 * recorded cup), and (when this is the caller's own affiliation) the
+	 * Alma Mater / Citizen marker.
 	 */
 	const chips = $derived.by(() => {
 		const out: { label: string; acc: boolean }[] = [
@@ -176,6 +205,17 @@
 					params: { count: memberCount }
 				}),
 				acc: false
+			});
+		}
+
+		if (championCount > 0) {
+			out.push({
+				label: t({
+					locale: $localeStore,
+					key: 'worlds.detail.champion_chip',
+					params: { count: championCount }
+				}),
+				acc: true
 			});
 		}
 
@@ -343,6 +383,43 @@
 			</div>
 		</section>
 	{/if}
+
+	<section class="worlds-detail-champions">
+		<div class="row-between">
+			<span class="eyebrow worlds-detail-split-eyebrow">
+				{t({ locale: $localeStore, key: 'worlds.detail.champions_eyebrow' })}
+			</span>
+			{#if championCount > 0}
+				<span class="num allcaps worlds-detail-split-count">
+					{t({
+						locale: $localeStore,
+						key: 'worlds.detail.champions_cups',
+						params: { count: championCount }
+					})}
+				</span>
+			{/if}
+		</div>
+		{#if loadState === 'loading'}
+			<p class="worlds-detail-champions-empty">
+				{t({ locale: $localeStore, key: 'worlds.detail.loading_champions' })}
+			</p>
+		{:else if championCount === 0}
+			<p class="worlds-detail-champions-empty">
+				{t({ locale: $localeStore, key: 'worlds.detail.champions_empty' })}
+			</p>
+		{:else}
+			<ul class="worlds-detail-champions-list">
+				{#each championships as cup (cup.monthAnchor)}
+					<li class="row-between worlds-detail-champions-row">
+						<span class="worlds-detail-champions-month">{formatMonthAnchor(cup.monthAnchor)}</span>
+						<span class="num worlds-detail-champions-acc worlds-detail-acc">
+							{formatAccuracyPercent(cup.accuracy)}
+						</span>
+					</li>
+				{/each}
+			</ul>
+		{/if}
+	</section>
 
 	<button class="worlds-detail-cta" onclick={openStandings} type="button">
 		<div class="worlds-detail-cta-text">
@@ -584,6 +661,47 @@
 		font-size: var(--t-13);
 		font-weight: 700;
 		color: var(--text-base);
+	}
+
+	/* ─────────────────────────── champion history */
+	.worlds-detail-champions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+		padding: 0.85rem 1rem;
+		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.worlds-detail-champions-empty {
+		margin: 0;
+		font-size: var(--t-12);
+		line-height: 1.5;
+		color: var(--text-muted);
+	}
+
+	.worlds-detail-champions-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		margin: 0;
+		padding: 0;
+		list-style: none;
+	}
+
+	.worlds-detail-champions-row {
+		padding-top: 0.1rem;
+	}
+
+	.worlds-detail-champions-month {
+		font-size: var(--t-13);
+		color: var(--text-base);
+	}
+
+	.worlds-detail-champions-acc {
+		font-size: var(--t-13);
+		font-weight: 700;
 	}
 
 	/* ─────────────────────────── empty state (under threshold) */

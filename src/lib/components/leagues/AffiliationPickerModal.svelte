@@ -68,10 +68,10 @@
 		 *  "Joined" row badge, and the 90-day lock state. */
 		current?: { university?: AffiliationDoc; country?: AffiliationDoc };
 		/** Per-school live membership signal, keyed by option id. Drives
-		 *  the verified gold tick + member meta. Empty today — the
-		 *  member/verified counts are served by backend item B.1; rows
-		 *  without an entry render the founder / "no members yet" state. */
-		schoolStats?: Readonly<Record<string, { members: number; monthRank: number }>>;
+		 *  the member meta line. A row with no entry renders the founder /
+		 *  "no members yet" state; a row with members but `monthRank`
+		 *  unset (not ranked yet) renders the count without a rank. */
+		schoolStats?: Readonly<Record<string, { members: number; monthRank?: number }>>;
 		onClose: () => void;
 		onPicked?: () => void;
 	}
@@ -696,10 +696,14 @@
 									</span>
 									{#if isUniversity}
 										<span class="affil-picker-meta num">
-											{#if stats !== undefined}
+											{#if stats !== undefined && stats.monthRank !== undefined}
 												{tr('worlds.picker.school.meta_members', {
 													members: stats.members,
 													rank: stats.monthRank
+												})}
+											{:else if stats !== undefined}
+												{tr('worlds.picker.school.meta_members_no_rank', {
+													members: stats.members
 												})}
 											{:else}
 												{tr(

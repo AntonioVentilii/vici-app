@@ -36,6 +36,7 @@ import {
 import { assertDeleteBattle, assertSetBattle } from '$satellite/services/battle.services';
 import {
 	getAffiliationStatsFn,
+	listAffiliationChampionshipsFn,
 	listAffiliationStatsFn,
 	listChallengeableLeaguesFn,
 	listLeagueBattlesFn,
@@ -43,6 +44,7 @@ import {
 	listMyAffiliationsFn,
 	listMyBattlesFn,
 	listMyLeaguesFn,
+	listWorldsMemberCountsFn,
 	listWorldsRosterFn,
 	lookupLeagueByInviteFn
 } from '$satellite/services/cohort.services';
@@ -126,6 +128,8 @@ import {
 import { onProfileSetForStreakAward } from '$satellite/services/vxp-streak-awards.services';
 import { claimWorldsPodiumPrizeFn } from '$satellite/services/vxp-worlds-podium.services';
 import {
+	AffiliationChampionshipWireSchema,
+	AffiliationMemberCountWireSchema,
 	AffiliationOptionWireSchema,
 	AffiliationStatsOptionWireSchema,
 	AffiliationStatsWireSchema,
@@ -142,6 +146,8 @@ import {
 	TournamentMatchWireSchema,
 	TournamentWireSchema,
 	toWireAffiliation,
+	toWireAffiliationChampionship,
+	toWireAffiliationMemberCount,
 	toWireAffiliationStats,
 	toWireBattle,
 	toWireBoldCallerEntry,
@@ -577,6 +583,41 @@ export const listAffiliationStats = defineQuery({
 	}),
 	handler: ({ kind, limit }) => ({
 		items: listAffiliationStatsFn({ kind, limit }).map(toWireAffiliationStats)
+	})
+});
+
+// Real member tally per affiliation of a kind. One scan over
+// `affiliations`, bucketed by affiliationIdentifier — feeds the "N
+// members" line on the Worlds picker / detail surfaces without
+// paging the full roster per affiliation.
+export const listWorldsMemberCounts = defineQuery({
+	args: j.strictObject({
+		kind: j.enum(['university', 'country'])
+	}),
+	result: j.strictObject({
+		items: j.array(AffiliationMemberCountWireSchema)
+	}),
+	handler: ({ kind }) => ({
+		items: listWorldsMemberCountsFn({ kind }).map(toWireAffiliationMemberCount)
+	})
+});
+
+// Champion history for one affiliation — the past months it finished
+// first in its kind's monthly ranking, derived from the frozen
+// `affiliation_stats` snapshots. Empty until a month has rolled over
+// with a ranked leader (there is no scheduled season-conclusion job).
+export const listAffiliationChampionships = defineQuery({
+	args: j.strictObject({
+		kind: j.enum(['university', 'country']),
+		affiliationIdentifier: j.string()
+	}),
+	result: j.strictObject({
+		items: j.array(AffiliationChampionshipWireSchema)
+	}),
+	handler: ({ kind, affiliationIdentifier }) => ({
+		items: listAffiliationChampionshipsFn({ kind, affiliationIdentifier }).map(
+			toWireAffiliationChampionship
+		)
 	})
 });
 
