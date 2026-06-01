@@ -90,6 +90,21 @@ export const idlFactory = ({ IDL }) => {
 		Ok: IDL.Bool,
 		Err: TradeError
 	});
+	const AggregateLeanParams = IDL.Record({
+		series_id: IDL.Text,
+		principals: IDL.Vec(IDL.Principal)
+	});
+	const OutcomeLean = IDL.Record({
+		total: IDL.Nat64,
+		outcome_id: IDL.Opt(IDL.Text),
+		long: IDL.Nat64,
+		short: IDL.Nat64
+	});
+	const AggregateLean = IDL.Record({
+		total: IDL.Nat64,
+		series_id: IDL.Text,
+		outcomes: IDL.Vec(OutcomeLean)
+	});
 	const BackfillSettlementEventsParams = IDL.Record({
 		start_after: IDL.Opt(IDL.Text)
 	});
@@ -301,6 +316,30 @@ export const idlFactory = ({ IDL }) => {
 	const CollateralAssetInfo = IDL.Record({
 		metrics: IDL.Opt(AssetMetrics),
 		config: CollateralAssetConfig
+	});
+	const LeaderboardWindow = IDL.Variant({
+		AllTime: IDL.Null,
+		Week: IDL.Null,
+		Month: IDL.Null
+	});
+	const ListLeaderboardParams = IDL.Record({
+		members: IDL.Opt(IDL.Vec(IDL.Principal)),
+		window: LeaderboardWindow,
+		start_after: IDL.Opt(IDL.Nat64),
+		limit: IDL.Opt(IDL.Nat64)
+	});
+	const LeaderboardEntry = IDL.Record({
+		principal: IDL.Principal,
+		prior_rank: IDL.Opt(IDL.Nat64),
+		rank: IDL.Nat64,
+		realized_pnl: IDL.Int,
+		win_count: IDL.Nat64,
+		settled_count: IDL.Nat64
+	});
+	const LeaderboardPage = IDL.Record({
+		total: IDL.Nat64,
+		next_cursor: IDL.Opt(IDL.Nat64),
+		items: IDL.Vec(LeaderboardEntry)
 	});
 	const ListOrdersParams = IDL.Record({ series_id: IDL.Opt(IDL.Text) });
 	const PayoffType = IDL.Variant({
@@ -569,6 +608,7 @@ export const idlFactory = ({ IDL }) => {
 
 	return IDL.Service({
 		accept_position_transfer: IDL.Func([PositionProof], [AcceptPositionTransferResult], []),
+		aggregate_lean: IDL.Func([AggregateLeanParams], [AggregateLean], []),
 		backfill_settlement_events: IDL.Func(
 			[BackfillSettlementEventsParams],
 			[BackfillSettlementEventsResult],
@@ -601,6 +641,7 @@ export const idlFactory = ({ IDL }) => {
 		get_usd_decimals: IDL.Func([], [IDL.Nat8], []),
 		http_request: IDL.Func([HttpRequest], [HttpResponse], []),
 		list_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], []),
+		list_leaderboard: IDL.Func([ListLeaderboardParams], [LeaderboardPage], []),
 		list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], []),
 		list_series: IDL.Func([], [IDL.Vec(Series)], []),
 		list_series_trade_history: IDL.Func(
