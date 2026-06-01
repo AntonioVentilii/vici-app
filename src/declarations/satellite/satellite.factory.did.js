@@ -28,19 +28,30 @@ export const idlFactory = ({ IDL }) => {
 			})
 		)
 	});
-	const AppClaimComebackGrantResult = IDL.Record({
+	const AppClaimCalibrationRewardArgs = IDL.Record({
+		series_id: IDL.Text,
+		chosen_side: IDL.Variant({ NO: IDL.Null, YES: IDL.Null })
+	});
+	const AppClaimCalibrationRewardResult = IDL.Record({
 		block_index: IDL.Opt(IDL.Text),
+		new_balance_base_units: IDL.Opt(IDL.Text),
 		error_message: IDL.Opt(IDL.Text),
+		correct: IDL.Bool,
 		paid_now: IDL.Bool,
-		previously_paid: IDL.Bool,
+		reward_base_units: IDL.Opt(IDL.Text),
+		already_claimed: IDL.Bool,
 		reason: IDL.Opt(
 			IDL.Variant({
-				already_claimed_failed: IDL.Null,
-				already_claimed_paid: IDL.Null,
+				not_binary: IDL.Null,
 				not_engaged_yet: IDL.Null,
 				transfer_failed: IDL.Null,
-				already_claimed_pending: IDL.Null,
-				balance_not_zero: IDL.Null
+				rate_limited_daily: IDL.Null,
+				anonymous: IDL.Null,
+				balance_above_floor: IDL.Null,
+				not_finalised: IDL.Null,
+				outcome_undetermined: IDL.Null,
+				not_vici_market: IDL.Null,
+				rate_limited_hourly: IDL.Null
 			})
 		)
 	});
@@ -349,6 +360,7 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				id: IDL.Text,
 				accent_color: IDL.Opt(IDL.Text),
+				image_url: IDL.Opt(IDL.Text),
 				owner: IDL.Text,
 				name: IDL.Text,
 				invite_code: IDL.Text,
@@ -630,6 +642,7 @@ export const idlFactory = ({ IDL }) => {
 				league: IDL.Record({
 					id: IDL.Text,
 					accent_color: IDL.Opt(IDL.Text),
+					image_url: IDL.Opt(IDL.Text),
 					owner: IDL.Text,
 					name: IDL.Text,
 					invite_code: IDL.Text,
@@ -736,6 +749,7 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				id: IDL.Text,
 				accent_color: IDL.Opt(IDL.Text),
+				image_url: IDL.Opt(IDL.Text),
 				owner: IDL.Text,
 				name: IDL.Text,
 				invite_code: IDL.Text,
@@ -944,7 +958,11 @@ export const idlFactory = ({ IDL }) => {
 			[AppCheckNicknameAvailabilityResult],
 			['query']
 		),
-		app_claim_comeback_grant: IDL.Func([], [AppClaimComebackGrantResult], []),
+		app_claim_calibration_reward: IDL.Func(
+			[AppClaimCalibrationRewardArgs],
+			[AppClaimCalibrationRewardResult],
+			[]
+		),
 		app_claim_referral_friendship: IDL.Func([AppClaimReferralFriendshipArgs], [], []),
 		app_claim_tournament_prize: IDL.Func(
 			[AppClaimTournamentPrizeArgs],

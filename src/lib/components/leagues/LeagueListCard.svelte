@@ -172,8 +172,12 @@
 	{onclick}
 	type="button"
 >
-	<span class="league-logo" aria-hidden="true">
-		<span class="emblem">{emblem}</span>
+	<span class="league-logo" class:has-image={league.imageUrl} aria-hidden="true">
+		{#if league.imageUrl}
+			<img class="logo-image" alt="" src={league.imageUrl} />
+		{:else}
+			<span class="emblem">{emblem}</span>
+		{/if}
 	</span>
 
 	<span class="body">
@@ -322,6 +326,21 @@
 		border-radius: 10px;
 		border: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
 		background: var(--accent-grad);
+		overflow: hidden;
+	}
+
+	/* Owner-uploaded cover fills the tile; the accent gradient + sheen
+	   are hidden behind it so only the photo shows. */
+	.logo-image {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.league-logo.has-image::before {
+		display: none;
 	}
 
 	.league-logo::before {

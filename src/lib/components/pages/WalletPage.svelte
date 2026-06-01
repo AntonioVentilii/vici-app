@@ -8,13 +8,20 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import InfiniteScroll from '$lib/components/ui/InfiniteScroll.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import VxpRecoveryBeat from '$lib/components/wallet/VxpRecoveryBeat.svelte';
 	import WalletHistory from '$lib/components/wallet/WalletHistory.svelte';
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
-	import { DAY_IN_MS, ZERO } from '$lib/constants/app.constants';
+	import { DAY_IN_MS, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import {
+		CALIBRATION_DEPLOY_FLOOR_BASE_UNITS,
+		CALIBRATION_RECOVERY_FLOOR_BASE_UNITS,
+		VXP_CALIBRATION_REWARD_BASE_UNITS
+	} from '$lib/constants/vxp-economy.constants';
 	import { markets } from '$lib/derived/markets.derived';
+	import { positions } from '$lib/derived/positions.derived';
 	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
 	import { tradeHistory } from '$lib/derived/trade-history.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
@@ -31,7 +38,11 @@
 	import type { Token } from '$lib/types/token';
 	import type { Transaction } from '$lib/types/wallet';
 	import { emit } from '$lib/utils/events.utils';
-	import { formatRelativeAgoFromNs, formatToken } from '$lib/utils/format.utils';
+	import {
+		decimalFixedValueToNumber,
+		formatRelativeAgoFromNs,
+		formatToken
+	} from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
@@ -127,6 +138,47 @@
 
 	const vxpBalanceDisplay = $derived(
 		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
+	);
+
+	// ── Deployed-vs-depleted recovery split ───────────────────────────
+	// When the free VXP balance falls to the recovery floor, the hero swaps
+	// its dual-CTA row for a recovery beat. The branch reads net worth still
+	// locked in open VXP calls: at/above the deploy floor the stack is "in
+	// play, nothing lost" (deployed); below it the stack has eroded through
+	// realised losses (genuine depletion). All gate comparisons run in VXP
+	// *base units* (the same scale as the wallet balance and
+	// `lockedCollateral`); the displayed numbers go through
+	// `decimalFixedValueToNumber`, which yields a possibly-fractional VXP
+	// value (the decimal scale applied, not an integer).
+	const marketById = $derived(new Map($markets.map((m) => [m.id, m] as const)));
+
+	// Open VXP positions: `lockedCollateral` is clearing-USD micro-units
+	// (USD_DECIMALS = 4), the same scale as VXP base units, so the locked
+	// total is compared against the deploy floor without any conversion.
+	const openVxpPositions = $derived(
+		$positions.filter((p) => marketById.get(p.marketId)?.token.symbol === VXP_TOKEN.symbol)
+	);
+
+	// Total VXP riding on open calls, in base units — the deploy-floor gate.
+	const lockedInOpenBaseUnits = $derived(
+		openVxpPositions.reduce<bigint>((acc, p) => acc + p.lockedCollateral, ZERO)
+	);
+
+	// Whole-VXP rendering of the locked total, for the recovery beat display.
+	const lockedInOpenVxp = $derived(
+		Math.round(decimalFixedValueToNumber({ value: lockedInOpenBaseUnits, decimals: USD_DECIMALS }))
+	);
+
+	const recovering = $derived(vxpBalance < CALIBRATION_RECOVERY_FLOOR_BASE_UNITS);
+	const fullyDeployed = $derived(lockedInOpenBaseUnits >= CALIBRATION_DEPLOY_FLOOR_BASE_UNITS);
+
+	// Whole-VXP reward shown on the recovery beat, derived from the base-unit
+	// constant so the display tracks the authoritative award amount.
+	const calibrationRewardVxp = $derived(
+		decimalFixedValueToNumber({
+			value: VXP_CALIBRATION_REWARD_BASE_UNITS,
+			decimals: VXP_TOKEN.decimals
+		})
 	);
 
 	// Weekly VXP delta — sums signed amounts on clearing settlements
@@ -426,22 +478,35 @@
 			</p>
 		{/if}
 
-		<div class="wallet-hero-cta-row">
-			<button
-				class="wallet-hero-cta is-primary"
-				onclick={() => void goto(resolve(AppPath.Flow))}
-				type="button"
-			>
-				{t({ locale: $localeStore, key: 'wallet.cta.open_flow' })}
-			</button>
-			<button
-				class="wallet-hero-cta is-ghost"
-				onclick={() => void goto(resolve(AppPath.Home))}
-				type="button"
-			>
-				{t({ locale: $localeStore, key: 'wallet.cta.back_a_call' })}
-			</button>
-		</div>
+		{#if recovering}
+			<!-- Recovering: the hero swaps its dual-CTA row for the recovery
+			     beat (the beat itself distinguishes deployed vs depleted). -->
+			<VxpRecoveryBeat
+				deployed={fullyDeployed}
+				{lockedInOpenVxp}
+				onCalibrate={() => void goto(resolve(AppPath.Calibration))}
+				onReviewOpenCalls={() => void goto(resolve(AppPath.Portfolio))}
+				openCallCount={openVxpPositions.length}
+				rewardVxp={calibrationRewardVxp}
+			/>
+		{:else}
+			<div class="wallet-hero-cta-row">
+				<button
+					class="wallet-hero-cta is-primary"
+					onclick={() => void goto(resolve(AppPath.Flow))}
+					type="button"
+				>
+					{t({ locale: $localeStore, key: 'wallet.cta.open_flow' })}
+				</button>
+				<button
+					class="wallet-hero-cta is-ghost"
+					onclick={() => void goto(resolve(AppPath.Home))}
+					type="button"
+				>
+					{t({ locale: $localeStore, key: 'wallet.cta.back_a_call' })}
+				</button>
+			</div>
+		{/if}
 	</section>
 
 	<!-- Recent activity — top 6 from the unified transactions feed. -->

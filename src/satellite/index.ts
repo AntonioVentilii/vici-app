@@ -120,7 +120,7 @@ import {
 } from '$satellite/services/user-monthly-stats.services';
 import { assertSetUserStats } from '$satellite/services/user-stats.services';
 import { assertSetVxpAward } from '$satellite/services/vxp-awards.services';
-import { claimComebackGrantFn } from '$satellite/services/vxp-comeback.services';
+import { claimCalibrationRewardFn } from '$satellite/services/vxp-calibration.services';
 import {
 	onProfileSetForVxpOnboarding,
 	onTradeActivityForVxpOnboarding
@@ -621,28 +621,44 @@ export const listAffiliationChampionships = defineQuery({
 	})
 });
 
-// Comeback grant — one-shot +1000 VXP fired when a balance hits
-// zero on an engaged account. FE detects the zero-balance state and
-// calls this endpoint; server validates engagement + balance and
-// fires the transfer. Idempotency via the `vxp_awards` doc key.
-export const claimComebackGrant = defineUpdate({
+// Calibration reward — pays a fixed VXP bonus when a recovering user
+// (available balance below the recovery floor) correctly called a
+// finalised Vici binary market. The FE passes the market and the side
+// the user picked; the server re-derives the winning side from the
+// clearing settlement, so a wrong guess mints nothing and there is no
+// way to forge correctness. All eligibility gates (anonymous reject,
+// engagement, balance floor, market shape, resolution, per-market
+// dedupe, rate limits) are enforced server-side. Idempotency + rate
+// limiting come off the `vxp_awards` collection by key prefix.
+export const claimCalibrationReward = defineUpdate({
+	args: j.strictObject({
+		seriesId: j.string(),
+		chosenSide: j.enum(['YES', 'NO'])
+	}),
 	result: j.strictObject({
+		correct: j.boolean(),
 		paidNow: j.boolean(),
-		previouslyPaid: j.boolean(),
+		alreadyClaimed: j.boolean(),
+		rewardBaseUnits: j.optional(j.string()),
+		newBalanceBaseUnits: j.optional(j.string()),
 		blockIndex: j.optional(j.string()),
 		reason: j.optional(
 			j.enum([
-				'already_claimed_paid',
-				'already_claimed_pending',
-				'already_claimed_failed',
-				'balance_not_zero',
+				'anonymous',
 				'not_engaged_yet',
+				'balance_above_floor',
+				'not_vici_market',
+				'not_binary',
+				'not_finalised',
+				'outcome_undetermined',
+				'rate_limited_hourly',
+				'rate_limited_daily',
 				'transfer_failed'
 			])
 		),
 		errorMessage: j.optional(j.string())
 	}),
-	handler: claimComebackGrantFn
+	handler: claimCalibrationRewardFn
 });
 
 // Worlds podium monthly payout — user-claim variant. The caller

@@ -45,7 +45,7 @@ type AppListAffiliationStatsArgs = record { kind : variant { university; country
 
 type AppListAffiliationStatsResult = record { items : vec record { affiliation_identifier : text; kind : variant { university; country }; total_calls : float64; wins : float64; month_anchor : text; month_total_calls : float64; month_wins : float64; updated_at_ms : float64 } };
 
-type AppListChallengeableLeaguesResult = record { items : vec record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; emblem : opt text; private : bool } };
+type AppListChallengeableLeaguesResult = record { items : vec record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; emblem : opt text; private : bool; image_url : opt text } };
 
 type AppListFollowersResult = record { items : vec record { category : variant { FRIEND; follow; GROUP }; state : variant { PENDING; ACTIVE; REJECTED; BLOCKED }; participants : vec text; viewer_principal : opt text; viewer_role : opt variant { controller; admin; solver; creator }; is_friend : opt bool } };
 
@@ -75,7 +75,7 @@ type AppListMyBattlesResult = record { items : vec record { id : text; kind : va
 
 type AppListMyBlockingLeaguesResult = record { league_ids : vec text };
 
-type AppListMyLeaguesResult = record { items : vec record { league : record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; emblem : opt text; private : bool }; role : variant { owner; admin; member }; joined_at_ms : float64; member_count : float64 } };
+type AppListMyLeaguesResult = record { items : vec record { league : record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; emblem : opt text; private : bool; image_url : opt text }; role : variant { owner; admin; member }; joined_at_ms : float64; member_count : float64 } };
 
 type AppListMyReferralsResult = record { items : vec record { referee : text; referrer : text; code : text; redeemed_at_ms : float64; within_referrer_cap : bool; referee_payout : record { status : variant { none; owed; processing; paid }; amount_base_units : text; block_index : opt text; last_error : opt text }; referrer_payout : record { status : variant { none; owed; processing; paid }; amount_base_units : text; block_index : opt text; last_error : opt text } } };
 
@@ -91,7 +91,7 @@ type AppListWorldsRosterResult = record { items : vec record { member : text; ki
 
 type AppLookupLeagueByInviteArgs = record { invite_code : text };
 
-type AppLookupLeagueByInviteResult = record { league : opt record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; emblem : opt text; private : bool } };
+type AppLookupLeagueByInviteResult = record { league : opt record { id : text; name : text; description : opt text; invite_code : text; owner : text; created_at_ms : float64; accent_color : opt text; emblem : opt text; private : bool; image_url : opt text } };
 
 type AppLookupReferralCodeArgs = record { code : text };
 
@@ -105,7 +105,9 @@ type AppAcceptFriendRequestArgs = record { relation_id : text };
 
 type AppCancelFriendRequestArgs = record { relation_id : text };
 
-type AppClaimComebackGrantResult = record { paid_now : bool; previously_paid : bool; block_index : opt text; reason : opt variant { already_claimed_paid; already_claimed_pending; already_claimed_failed; balance_not_zero; not_engaged_yet; transfer_failed }; error_message : opt text };
+type AppClaimCalibrationRewardArgs = record { series_id : text; chosen_side : variant { YES; NO } };
+
+type AppClaimCalibrationRewardResult = record { correct : bool; paid_now : bool; already_claimed : bool; reward_base_units : opt text; new_balance_base_units : opt text; block_index : opt text; reason : opt variant { anonymous; not_engaged_yet; balance_above_floor; not_vici_market; not_binary; not_finalised; outcome_undetermined; rate_limited_hourly; rate_limited_daily; transfer_failed }; error_message : opt text };
 
 type AppClaimReferralFriendshipArgs = record { code : text };
 
@@ -192,7 +194,7 @@ service : {
 	app_search_profiles : (AppSearchProfilesArgs) -> (AppSearchProfilesResult) query;
 	app_accept_friend_request : (AppAcceptFriendRequestArgs) -> ();
 	app_cancel_friend_request : (AppCancelFriendRequestArgs) -> ();
-	app_claim_comeback_grant : () -> (AppClaimComebackGrantResult);
+	app_claim_calibration_reward : (AppClaimCalibrationRewardArgs) -> (AppClaimCalibrationRewardResult);
 	app_claim_referral_friendship : (AppClaimReferralFriendshipArgs) -> ();
 	app_claim_tournament_prize : (AppClaimTournamentPrizeArgs) -> (AppClaimTournamentPrizeResult);
 	app_claim_worlds_podium_prize : (AppClaimWorldsPodiumPrizeArgs) -> (AppClaimWorldsPodiumPrizeResult);

@@ -44,7 +44,8 @@ export const mapMarketData = ({
 		outcomes,
 		balance_domain: balanceDomain,
 		trading_access: rawTradingAccess,
-		forked_from: forkedFromOpt
+		forked_from: forkedFromOpt,
+		engine_id: engineIdOpt
 	} = series;
 
 	const token = resolveMarketDisplayToken({ balanceDomain, payoutUnit });
@@ -95,6 +96,7 @@ export const mapMarketData = ({
 		token,
 		pricePrecision: Number(series.price_precision),
 		balanceDomain,
+		engineId: engineIdOpt?.[0],
 		forkedFrom: forkedFromOpt?.[0] !== undefined ? parseMarketId(forkedFromOpt[0]) : undefined
 	};
 };

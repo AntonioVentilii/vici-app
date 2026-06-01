@@ -15,7 +15,7 @@ export const Collection = {
 	VXP_ONBOARDING: collections.VXP_ONBOARDING,
 	/**
 	 * Per-user, per-award ledger of every VXP gameplay award the server fires — streak
-	 * milestones, comeback grant, referral payouts, Worlds podium. The doc key encodes
+	 * milestones, calibration rewards, referral payouts, Worlds podium. The doc key encodes
 	 * `{recipient}/{awardType}/{awardKey}` so a second write at the same milestone collides
 	 * with the first (natural idempotency). Status transitions `pending → paid | failed`
 	 * are enforced by the satellite assert.

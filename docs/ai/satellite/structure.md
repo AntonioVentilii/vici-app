@@ -97,6 +97,15 @@ satellite's `setDocCollections` / `deleteDocCollections` /
 `assertSetDocCollections` arrays use the typed enum, so a missing entry
 becomes a TS error at the dispatch table.
 
+**Storage (binary asset) collections are separate.** They live under
+`satellite.collections.storage` in `juno.config.ts` — NOT the
+`datastore` array — and they are NOT part of the `Collection` enum
+(that enum is Datastore-only). Their names live where they're used
+(e.g. `LEAGUE_IMAGES_COLLECTION` in `$lib/types/league.ts`). The FE
+uploads to them via `$lib/services/storage.services` and persists only
+the returned download URL on the owning Datastore doc — never a base64
+data URL.
+
 ## Where to put new code (decision tree)
 
 1. **Is it a hook / assertion / endpoint?** → pick the matching service
