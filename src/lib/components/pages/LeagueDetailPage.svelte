@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, Copy, Check } from 'lucide-svelte/icons';
+	import { ChevronRight, Copy, Check, Pencil } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -18,7 +18,9 @@
 		acceptBattle,
 		kickoffBattle,
 		leaveLeague,
-		retractBattle
+		retractBattle,
+		updateLeague,
+		validateLeagueDraft
 	} from '$lib/services/leagues.services';
 	import {
 		leagueBattlesStore,
@@ -31,7 +33,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BattleDoc, BattleState } from '$lib/types/battle';
-	import { leagueEmblem } from '$lib/types/league';
+	import { leagueEmblem, LEAGUE_NAME_MAX_LENGTH, LEAGUE_NAME_MIN_LENGTH } from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
 	import { formatDate, formatLocalePercent, shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -119,6 +121,91 @@
 	const canTransfer = $derived(
 		myRole === 'owner' && members.filter((m) => m.role !== 'owner').length > 0
 	);
+
+	// Owner-only inline rename. The pencil affordance next to the hero
+	// title opens a text input seeded with the current name; Enter saves,
+	// Esc cancels, plus explicit Save / Cancel controls. Non-owners never
+	// see the affordance, so the title stays read-only for them.
+	const canRename = $derived(myRole === 'owner');
+	let renaming = $state(false);
+	let renameDraft = $state('');
+	let renameSaving = $state(false);
+
+	const renameError = $derived.by((): MessageKey | undefined => {
+		if (!renaming) {
+			return;
+		}
+
+		const trimmed = renameDraft.trim();
+
+		if (trimmed.length === 0) {
+			return 'leagues.detail.rename_error_empty';
+		}
+
+		const validation = validateLeagueDraft({ name: trimmed });
+
+		if (validation.ok) {
+			return;
+		}
+
+		// `description_too_long` can't occur — we validate name only — so
+		// the reason is always one of the two length-window failures.
+		return validation.reason === 'name_too_short'
+			? 'leagues.detail.rename_error_too_short'
+			: 'leagues.detail.rename_error_too_long';
+	});
+
+	const openRename = () => {
+		if (!canRename || !league) {
+			return;
+		}
+
+		renameDraft = league.name;
+		renaming = true;
+	};
+
+	const cancelRename = () => {
+		renaming = false;
+		renameDraft = '';
+	};
+
+	const handleRename = async () => {
+		if (!league || renameSaving || renameError !== undefined) {
+			return;
+		}
+
+		const trimmed = renameDraft.trim();
+
+		if (trimmed === league.name) {
+			cancelRename();
+
+			return;
+		}
+
+		renameSaving = true;
+
+		try {
+			await updateLeague({ id: league.id, name: trimmed });
+			await refreshMyLeagues();
+			renaming = false;
+			renameDraft = '';
+		} catch (err) {
+			console.error('LeagueDetailPage: updateLeague failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			renameSaving = false;
+		}
+	};
+
+	const handleRenameKeydown = (event: KeyboardEvent) => {
+		if (event.key === 'Enter') {
+			event.preventDefault();
+			void handleRename();
+		} else if (event.key === 'Escape') {
+			event.preventDefault();
+			cancelRename();
+		}
+	};
 
 	// 1-indexed roster position of the caller — used for the head
 	// card's `N°{NN}` corner badge. Falls back to 1 before the
@@ -574,7 +661,63 @@
 					<span class="league-detail-hero-chip allcaps num">{chip}</span>
 				{/each}
 			</div>
-			<h1 class="league-detail-hero-title">{league.name}</h1>
+			{#if renaming}
+				<div class="league-detail-rename">
+					<div class="league-detail-rename-row">
+						<!-- svelte-ignore a11y_autofocus -->
+						<input
+							class="league-detail-rename-input"
+							aria-invalid={renameError !== undefined}
+							aria-label={t({ locale: $localeStore, key: 'leagues.detail.rename_label' })}
+							autofocus
+							disabled={renameSaving}
+							maxlength={LEAGUE_NAME_MAX_LENGTH}
+							minlength={LEAGUE_NAME_MIN_LENGTH}
+							onkeydown={handleRenameKeydown}
+							type="text"
+							bind:value={renameDraft}
+						/>
+						<button
+							class="league-detail-rename-btn is-primary"
+							disabled={renameSaving || renameError !== undefined}
+							onclick={handleRename}
+							type="button"
+						>
+							{t({
+								locale: $localeStore,
+								key: renameSaving ? 'leagues.detail.rename_saving' : 'leagues.detail.rename_save'
+							})}
+						</button>
+						<button
+							class="league-detail-rename-btn is-ghost"
+							disabled={renameSaving}
+							onclick={cancelRename}
+							type="button"
+						>
+							{t({ locale: $localeStore, key: 'leagues.detail.rename_cancel' })}
+						</button>
+					</div>
+					{#if renameError}
+						<p class="league-detail-rename-error" role="alert">
+							{t({ locale: $localeStore, key: renameError })}
+						</p>
+					{/if}
+				</div>
+			{:else}
+				<div class="league-detail-hero-titlebar">
+					<h1 class="league-detail-hero-title">{league.name}</h1>
+					{#if canRename}
+						<button
+							class="league-detail-hero-edit"
+							aria-label={t({ locale: $localeStore, key: 'leagues.detail.rename_label' })}
+							onclick={openRename}
+							type="button"
+						>
+							<Pencil aria-hidden="true" size={14} strokeWidth={2} />
+						</button>
+					{/if}
+				</div>
+			{/if}
 			{#if league.description}
 				<p class="league-detail-hero-desc serif-italic">{league.description}</p>
 			{/if}
@@ -1073,6 +1216,114 @@
 		font-size: var(--t-13);
 		color: var(--text-muted);
 		line-height: 1.45;
+	}
+
+	/* ─── Inline rename (owner only) ────────────────────────────── */
+
+	.league-detail-hero-titlebar {
+		display: flex;
+		align-items: flex-start;
+		gap: 0.4rem;
+	}
+
+	.league-detail-hero-titlebar .league-detail-hero-title {
+		min-width: 0;
+	}
+
+	.league-detail-hero-edit {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex-shrink: 0;
+		margin-top: 0.2rem;
+		padding: 0.25rem;
+		color: var(--text-muted);
+		background: none;
+		border: 0;
+		border-radius: var(--r-8);
+		cursor: pointer;
+		transition:
+			color 140ms ease,
+			background 140ms ease;
+	}
+
+	.league-detail-hero-edit:hover {
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--text-base) 6%, transparent);
+	}
+
+	.league-detail-rename {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+	}
+
+	.league-detail-rename-row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.league-detail-rename-input {
+		flex: 1;
+		min-width: 0;
+		padding: 0.45rem 0.7rem;
+		font: inherit;
+		font-family: var(--font-display);
+		font-size: var(--t-16);
+		font-weight: 600;
+		color: var(--text-base);
+		background: var(--bg-surface);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-8);
+	}
+
+	.league-detail-rename-input:focus-visible {
+		outline: none;
+		border-color: var(--border-strong);
+	}
+
+	.league-detail-rename-input[aria-invalid='true'] {
+		border-color: color-mix(in srgb, var(--no) 45%, var(--border-base));
+	}
+
+	.league-detail-rename-input:disabled {
+		opacity: 0.6;
+	}
+
+	.league-detail-rename-btn {
+		appearance: none;
+		flex-shrink: 0;
+		padding: 0.45rem 0.85rem;
+		font: inherit;
+		font-size: var(--t-12);
+		font-weight: 700;
+		border-radius: var(--r-pill);
+		cursor: pointer;
+	}
+
+	.league-detail-rename-btn.is-primary {
+		color: var(--text-on-accent, #fff);
+		background: var(--laurel);
+		border: 1px solid var(--laurel);
+	}
+
+	.league-detail-rename-btn.is-ghost {
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
+		border: 1px solid var(--border-base);
+	}
+
+	.league-detail-rename-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.league-detail-rename-error {
+		margin: 0;
+		font-size: var(--t-11);
+		color: var(--no);
 	}
 
 	/* ─── Identity card ─────────────────────────────────────────── */
