@@ -49,8 +49,9 @@ export const todayKey = (now: Date = new Date()): string => {
 /**
  * Day delta between two `YYYY-MM-DD` keys (`to - from`). Returns
  * `Infinity` if either key is malformed. Used to decide whether the
- * previous recorded day was "yesterday" (continue), "today" (no-op),
- * or "earlier" (break).
+ * previous recorded day was "today" (no-op), within the forgiveness
+ * window (continue — at most one fully-missed day), or "too long ago"
+ * (break).
  */
 export const dayDelta = ({ from, to }: { from: string; to: string }): number => {
 	const parse = (k: string): number | null => {
@@ -79,10 +80,12 @@ export const dayDelta = ({ from, to }: { from: string; to: string }): number => 
 export interface DailyStreakBump {
 	// New streak day count after the bump (`>= 1`).
 	streak: number;
-	// `'continue'` — same day or +1 day from the recorded key (or
-	// no record at all → start at SPARK 1).
-	// `'break'`    — gap >= 2 days; previous streak ended, fresh
-	// start at SPARK 1 with the break choreography.
+	// `'continue'` — same day, or the gap since the recorded key is
+	// within the forgiveness window (delta <= 2, i.e. at most one
+	// fully-missed day), or no record at all → start at SPARK 1.
+	// `'break'`    — gap of two or more fully-missed days (delta >= 3);
+	// previous streak ended, fresh start at SPARK 1 with the break
+	// choreography.
 	transition: 'continue' | 'break';
 	// `true` only on the first swipe of a new local day (the count
 	// actually moved). `false` for additional swipes on the same day.
@@ -97,7 +100,8 @@ export interface DailyStreakBump {
  * profile sync, etc.) decide when to persist the result.
  *
  * Rules: streak progresses on any swipe (YES / NO / SKIP all count);
- * no freezes, no rescues; missed-day = reset to SPARK 1 with the
+ * one fully-missed day is forgiven (the streak still increments), but
+ * a gap of two or more fully-missed days resets to SPARK 1 with the
  * break choreography. Flame never goes dark — it returns to SPARK.
  */
 export const applyDailyStreakBump = ({
@@ -129,7 +133,10 @@ export const applyDailyStreakBump = ({
 		};
 	}
 
-	if (delta === 1) {
+	if (delta <= 2) {
+		// `delta === 1` is a clean consecutive day; `delta === 2` means
+		// exactly one fully-missed day, which the forgiveness window lets
+		// slide — the streak still increments.
 		return {
 			streak: Math.max(1, streak) + 1,
 			transition: 'continue',
@@ -138,8 +145,8 @@ export const applyDailyStreakBump = ({
 		};
 	}
 
-	// `delta >= 2` — at least one day was missed. Streak breaks; the
-	// today-swipe restarts the ladder at SPARK 1 (Flame never goes
-	// dark — it returns to SPARK).
+	// `delta >= 3` — two or more fully-missed days. Beyond the forgiveness
+	// window, so the streak breaks; the today-swipe restarts the ladder at
+	// SPARK 1 (Flame never goes dark — it returns to SPARK).
 	return { streak: 1, transition: 'break', bumped: true, lastActiveDay: today };
 };
