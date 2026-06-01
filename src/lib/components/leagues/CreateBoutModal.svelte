@@ -1,19 +1,27 @@
 <script lang="ts">
-	import { X } from 'lucide-svelte/icons';
+	import { Search, X } from 'lucide-svelte/icons';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
+	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import {
+		listChallengeableLeagues,
 		listMyLeagues,
-		lookupLeagueByInvite,
 		proposeBattle,
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { BattleDoc } from '$lib/types/battle';
-	import { LEAGUE_INVITE_CODE_REGEX, type LeagueDoc } from '$lib/types/league';
+	import {
+		BATTLE_TRASH_TALK_MAX_LENGTH,
+		BATTLE_WAGER_DEFAULT,
+		BATTLE_WAGER_MAX,
+		BATTLE_WAGER_MIN,
+		type BattleDoc,
+		type BattleScope
+	} from '$lib/types/battle';
+	import type { LeagueDoc } from '$lib/types/league';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	/**
@@ -27,18 +35,15 @@
 	 *     challenge (the satellite assert hard-rejects non-owners). Auto-
 	 *     skipped when the caller owns exactly one league; the empty
 	 *     state routes to Leagues when they own none.
-	 *  2. Opponent — resolved from the opponent league's 6-char invite
-	 *     code. A public league directory (recommended + search) is a
-	 *     known backend follow-up (B.5); until that endpoint exists the
-	 *     code path is the only faithful, non-fabricated discovery route.
-	 *  3. Duration — 7 / 14 / 30 days, mapped to the kickoff → settle
+	 *  2. Opponent — a searchable list of challengeable leagues
+	 *     (`listChallengeableLeagues`): public leagues plus the caller's
+	 *     own memberships, minus the leagues the caller owns. The caller
+	 *     filters by name and taps the opponent.
+	 *  3. Scope — which calls count: all, or a single market category.
+	 *  4. Wager — an optional VXP stake (0–500); 0 means no stake.
+	 *  5. Trash-talk — an optional short message (brevity rewarded).
+	 *  6. Duration — 7 / 14 / 30 days, mapped to the kickoff → settle
 	 *     window the satellite stores.
-	 *
-	 * Scope (all / WC / macro), an optional VXP wager, and a trash-talk
-	 * message are part of the locked design but have no home on the
-	 * `BattleDoc` schema or the `proposeBattle` contract yet — those
-	 * fields are a backend follow-up (B-track) and are intentionally
-	 * omitted here rather than fabricated against local-only storage.
 	 *
 	 * Wraps the same `proposeBattle` service the league-detail Challenge
 	 * action uses, so the satellite contract is identical regardless of
@@ -55,28 +60,50 @@
 	const DURATIONS = [7, 14, 30] as const;
 	type Duration = (typeof DURATIONS)[number];
 
+	// Scope options surfaced in the picker — `all` plus the two
+	// category narrowings the design highlights. Labels reuse the
+	// canonical market-tag catalog so they never drift.
+	const SCOPE_OPTIONS: readonly { value: BattleScope; key: MessageKey }[] = [
+		{ value: 'all', key: 'battles.create.scope_all' },
+		{ value: 'wc', key: MARKET_TAG_LABEL_KEYS.wc },
+		{ value: 'macro', key: MARKET_TAG_LABEL_KEYS.macro }
+	];
+
 	// Start as 'loading' so the first open shows the spinner immediately
 	// rather than briefly flashing the form before data arrives.
 	let loadState: 'loading' | 'ready' | 'error' = $state('loading');
 	let hasLoaded = $state(false);
 	let ownedLeagues: LeagueWithRole[] = $state([]);
+	let challengeable: LeagueDoc[] = $state([]);
 
 	let fromLeague: LeagueDoc | undefined = $state();
 	let opponent: LeagueDoc | undefined = $state();
-	let code = $state('');
+	let opponentSearch = $state('');
+	let scope = $state<BattleScope>('all');
+	let wager = $state<number>(BATTLE_WAGER_DEFAULT);
+	let trashTalk = $state('');
 	let duration = $state<Duration>(7);
 
-	let resolving = $state(false);
 	let submitting = $state(false);
-	let lookupError: MessageKey | null = $state(null);
 	let submitError: MessageKey | null = $state(null);
 
-	const normalisedCode = $derived(code.trim().toUpperCase());
-	const codeIsValid = $derived(LEAGUE_INVITE_CODE_REGEX.test(normalisedCode));
+	// Opponents are every challengeable league except the chosen
+	// from-side (a league can't challenge itself), narrowed by the
+	// case-insensitive name search.
+	const opponentOptions = $derived.by(() => {
+		const query = opponentSearch.trim().toLowerCase();
+
+		return challengeable.filter(
+			(league) =>
+				league.id !== fromLeague?.id &&
+				(query.length === 0 || league.name.toLowerCase().includes(query))
+		);
+	});
+
+	const trashTalkRemaining = $derived(BATTLE_TRASH_TALK_MAX_LENGTH - trashTalk.length);
 
 	const canSend = $derived(
 		!submitting &&
-			!resolving &&
 			fromLeague !== undefined &&
 			opponent !== undefined &&
 			opponent.id !== fromLeague.id
@@ -86,15 +113,16 @@
 		loadState = 'loading';
 
 		try {
-			const mine = await listMyLeagues();
+			const [mine, opponents] = await Promise.all([listMyLeagues(), listChallengeableLeagues()]);
 			ownedLeagues = mine.filter((m) => m.role === 'owner');
+			challengeable = opponents;
 
 			// Auto-select when the caller owns exactly one league — the
 			// pick-your-league step collapses.
 			fromLeague = ownedLeagues.length === 1 ? ownedLeagues[0].league : undefined;
 			loadState = 'ready';
 		} catch (err) {
-			console.error('CreateBoutModal: listMyLeagues failed', err);
+			console.error('CreateBoutModal: load failed', err);
 			loadState = 'error';
 		}
 	};
@@ -111,11 +139,12 @@
 	const reset = () => {
 		fromLeague = ownedLeagues.length === 1 ? ownedLeagues[0].league : undefined;
 		opponent = undefined;
-		code = '';
+		opponentSearch = '';
+		scope = 'all';
+		wager = BATTLE_WAGER_DEFAULT;
+		trashTalk = '';
 		duration = 7;
-		resolving = false;
 		submitting = false;
-		lookupError = null;
 		submitError = null;
 	};
 
@@ -134,46 +163,16 @@
 		// Clear any opponent picked under a previous "from" league so the
 		// same-league guard can't be stale.
 		opponent = undefined;
-		code = '';
-		lookupError = null;
+		opponentSearch = '';
 	};
 
-	const handleLookup = async () => {
-		if (!codeIsValid || resolving || fromLeague === undefined) {
-			return;
-		}
-
-		resolving = true;
-		lookupError = null;
-		opponent = undefined;
-
-		try {
-			const found = await lookupLeagueByInvite({ inviteCode: normalisedCode });
-
-			if (!found) {
-				lookupError = 'leagues.battle.propose.error_not_found';
-
-				return;
-			}
-
-			if (found.id === fromLeague.id) {
-				lookupError = 'leagues.battle.propose.error_same_league';
-
-				return;
-			}
-
-			opponent = found;
-		} catch {
-			lookupError = 'leagues.battle.propose.error_lookup';
-		} finally {
-			resolving = false;
-		}
+	const selectOpponent = (league: LeagueDoc) => {
+		opponent = league;
 	};
 
 	const clearOpponent = () => {
 		opponent = undefined;
-		code = '';
-		lookupError = null;
+		opponentSearch = '';
 	};
 
 	const handleSubmit = async (event: Event) => {
@@ -194,7 +193,10 @@
 				sideA: fromLeague.id,
 				sideB: opponent.id,
 				kickoffMs,
-				settleMs
+				settleMs,
+				scope,
+				wager,
+				trashTalk
 			});
 
 			onProposed?.(battle);
@@ -268,39 +270,66 @@
 				{/if}
 
 				{#if fromLeague}
-					<!-- Step 2 · Opponent -->
+					<!-- Step 2 · Opponent (searchable challengeable-league picker) -->
 					<div class="create-bout-field">
 						<span class="allcaps create-bout-label">
 							{t({ locale: $localeStore, key: 'battles.create.label_opponent' })}
 						</span>
 
 						{#if !opponent}
-							<div class="create-bout-code-row">
+							<div class="create-bout-search">
+								<Search
+									class="create-bout-search-icon"
+									aria-hidden="true"
+									size={15}
+									strokeWidth={1.8}
+								/>
 								<input
-									class="create-bout-input is-code num"
-									autocapitalize="characters"
+									class="create-bout-input create-bout-search-input"
+									aria-label={t({
+										locale: $localeStore,
+										key: 'battles.create.opponent_search_label'
+									})}
+									autocapitalize="none"
 									autocomplete="off"
-									maxlength="6"
-									minlength="6"
-									placeholder="ABC123"
+									placeholder={t({
+										locale: $localeStore,
+										key: 'battles.create.opponent_search_placeholder'
+									})}
 									spellcheck="false"
 									type="text"
-									bind:value={code}
+									bind:value={opponentSearch}
 								/>
-								<button
-									class="create-bout-resolve"
-									disabled={!codeIsValid || resolving}
-									onclick={handleLookup}
-									type="button"
-								>
-									{resolving
-										? t({ locale: $localeStore, key: 'leagues.battle.propose.resolving' })
-										: t({ locale: $localeStore, key: 'leagues.battle.propose.resolve' })}
-								</button>
 							</div>
-							<p class="create-bout-hint">
-								{t({ locale: $localeStore, key: 'battles.create.opponent_hint' })}
-							</p>
+
+							{#if challengeable.length === 0}
+								<p class="create-bout-hint">
+									{t({ locale: $localeStore, key: 'battles.create.opponent_empty' })}
+								</p>
+							{:else if opponentOptions.length === 0}
+								<p class="create-bout-hint">
+									{t({ locale: $localeStore, key: 'battles.create.opponent_no_match' })}
+								</p>
+							{:else}
+								<ul class="create-bout-opponent-list">
+									{#each opponentOptions as league (league.id)}
+										<li>
+											<button
+												class="create-bout-opponent"
+												onclick={() => selectOpponent(league)}
+												type="button"
+											>
+												<span class="create-bout-opponent-name">{league.name}</span>
+												{#if league.private === true}
+													<span class="allcaps create-bout-opponent-tag">
+														{t({ locale: $localeStore, key: 'battles.create.opponent_private' })}
+													</span>
+												{/if}
+											</button>
+										</li>
+									{/each}
+								</ul>
+							{/if}
 						{:else}
 							<div class="create-bout-resolved">
 								<div class="create-bout-resolved-text">
@@ -314,16 +343,80 @@
 								</button>
 							</div>
 						{/if}
-
-						{#if lookupError}
-							<p class="create-bout-error" role="alert">
-								{t({ locale: $localeStore, key: lookupError })}
-							</p>
-						{/if}
 					</div>
 
 					{#if opponent}
-						<!-- Step 3 · Duration -->
+						<!-- Step 3 · Scope -->
+						<fieldset class="create-bout-field">
+							<legend class="allcaps create-bout-label">
+								{t({ locale: $localeStore, key: 'battles.create.label_scope' })}
+							</legend>
+							<div class="create-bout-duration-row">
+								{#each SCOPE_OPTIONS as option (option.value)}
+									<button
+										class="create-bout-pill"
+										class:is-active={scope === option.value}
+										onclick={() => (scope = option.value)}
+										type="button"
+									>
+										{t({ locale: $localeStore, key: option.key })}
+									</button>
+								{/each}
+							</div>
+						</fieldset>
+
+						<!-- Step 4 · Wager (optional) -->
+						<div class="create-bout-field">
+							<div class="create-bout-wager-head">
+								<span class="allcaps create-bout-label">
+									{t({ locale: $localeStore, key: 'battles.create.label_wager' })}
+								</span>
+								<span class="num create-bout-wager-value">
+									{wager === BATTLE_WAGER_MIN
+										? t({ locale: $localeStore, key: 'battles.create.wager_none' })
+										: t({
+												locale: $localeStore,
+												key: 'battles.create.wager_value',
+												params: { amount: wager }
+											})}
+								</span>
+							</div>
+							<input
+								class="create-bout-slider"
+								aria-label={t({ locale: $localeStore, key: 'battles.create.label_wager' })}
+								max={BATTLE_WAGER_MAX}
+								min={BATTLE_WAGER_MIN}
+								oninput={(event) => (wager = Number(event.currentTarget.value))}
+								step="10"
+								type="range"
+								value={wager}
+							/>
+						</div>
+
+						<!-- Step 5 · Trash-talk (optional) -->
+						<div class="create-bout-field">
+							<label class="allcaps create-bout-label" for="create-bout-trash-talk">
+								{t({ locale: $localeStore, key: 'battles.create.label_trash_talk' })}
+							</label>
+							<input
+								id="create-bout-trash-talk"
+								class="create-bout-input"
+								autocomplete="off"
+								maxlength={BATTLE_TRASH_TALK_MAX_LENGTH}
+								placeholder={t({
+									locale: $localeStore,
+									key: 'battles.create.trash_talk_placeholder'
+								})}
+								type="text"
+								bind:value={trashTalk}
+							/>
+							<p class="create-bout-hint">
+								{t({ locale: $localeStore, key: 'battles.create.trash_talk_hint' })} ·
+								<span class="num">{trashTalkRemaining}</span>
+							</p>
+						</div>
+
+						<!-- Step 6 · Duration -->
 						<fieldset class="create-bout-field">
 							<legend class="allcaps create-bout-label">
 								{t({ locale: $localeStore, key: 'battles.create.label_duration' })}
@@ -489,12 +582,6 @@
 		border-color: color-mix(in srgb, var(--laurel) 45%, var(--border-base));
 	}
 
-	.create-bout-code-row {
-		display: flex;
-		gap: 0.5rem;
-		align-items: stretch;
-	}
-
 	.create-bout-input {
 		appearance: none;
 		padding: 0.7rem 0.85rem;
@@ -507,32 +594,93 @@
 		min-width: 0;
 	}
 
-	.create-bout-input.is-code {
-		flex: 1 1 auto;
-		font-size: var(--t-18, 1.1rem);
-		font-weight: 700;
-		letter-spacing: 0.16em;
-		text-align: center;
-		text-transform: uppercase;
+	.create-bout-search {
+		position: relative;
+		display: flex;
+		align-items: center;
 	}
 
-	.create-bout-resolve {
+	.create-bout-search :global(.create-bout-search-icon) {
+		position: absolute;
+		left: 0.7rem;
+		color: var(--text-muted);
+		pointer-events: none;
+	}
+
+	.create-bout-search-input {
+		flex: 1 1 auto;
+		padding-left: 2.1rem;
+	}
+
+	.create-bout-opponent-list {
+		display: flex;
+		flex-direction: column;
+		gap: 0.3rem;
+		margin: 0.1rem 0 0;
+		padding: 0;
+		list-style: none;
+		max-height: 14rem;
+		overflow-y: auto;
+	}
+
+	.create-bout-opponent {
 		appearance: none;
-		flex: 0 0 auto;
-		padding: 0 0.85rem;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 0.5rem;
+		width: 100%;
+		padding: 0.6rem 0.75rem;
 		font: inherit;
-		font-size: var(--t-12);
-		font-weight: 700;
-		color: var(--laurel);
-		background: color-mix(in srgb, var(--laurel) 12%, transparent);
-		border: 1px solid color-mix(in srgb, var(--laurel) 35%, var(--border-base));
+		text-align: left;
+		color: var(--text-base);
+		background: color-mix(in srgb, var(--bg-surface) 90%, transparent);
+		border: 1px solid var(--border-base);
 		border-radius: var(--r-12);
 		cursor: pointer;
+		transition:
+			background 140ms ease,
+			border-color 140ms ease;
 	}
 
-	.create-bout-resolve:disabled {
-		opacity: 0.45;
-		cursor: not-allowed;
+	.create-bout-opponent:hover {
+		border-color: color-mix(in srgb, var(--laurel) 45%, var(--border-base));
+		background: color-mix(in srgb, var(--laurel) 8%, transparent);
+	}
+
+	.create-bout-opponent-name {
+		font-size: var(--t-14);
+		font-weight: 600;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+
+	.create-bout-opponent-tag {
+		flex-shrink: 0;
+		font-size: var(--t-10);
+		color: var(--text-muted);
+		letter-spacing: var(--tracking-allcaps);
+	}
+
+	.create-bout-wager-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.create-bout-wager-value {
+		font-size: var(--t-13);
+		font-weight: 700;
+		color: var(--laurel);
+	}
+
+	.create-bout-slider {
+		width: 100%;
+		accent-color: var(--laurel);
+		cursor: pointer;
 	}
 
 	.create-bout-hint {

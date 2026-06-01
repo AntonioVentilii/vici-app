@@ -6,6 +6,7 @@
 	import MobileAppBar from '$lib/components/layout/MobileAppBar.svelte';
 	import ResolveBattleModal from '$lib/components/leagues/ResolveBattleModal.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
+	import { isMarketTag, MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
 	import {
@@ -17,7 +18,12 @@
 		type LeagueWithRole
 	} from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { BattleDoc, BattleState } from '$lib/types/battle';
+	import {
+		BATTLE_SCOPE_DEFAULT,
+		type BattleDoc,
+		type BattleScope,
+		type BattleState
+	} from '$lib/types/battle';
 	import { formatDate } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
@@ -103,6 +109,17 @@
 
 		return b?.role === 'owner' ? battle.sideB : undefined;
 	});
+
+	// Localized scope label: `all` (or absent on legacy rows) reads
+	// "All calls"; a market-tag scope reuses the canonical category
+	// catalog so the label never drifts from the rest of the app.
+	const scopeLabel = (scope: BattleScope | undefined): string => {
+		const resolved = scope ?? BATTLE_SCOPE_DEFAULT;
+
+		return resolved !== 'all' && isMarketTag(resolved)
+			? t({ locale: $localeStore, key: MARKET_TAG_LABEL_KEYS[resolved] })
+			: t({ locale: $localeStore, key: 'battle.detail.scope_all' });
+	};
 
 	const stateLabelKey = (state: BattleState): MessageKey => {
 		switch (state) {
@@ -324,12 +341,39 @@
 				<span class="num allcaps">{battle.kind}</span>
 			</div>
 			<div class="battle-detail-meta-row">
+				<span class="eyebrow">{t({ locale: $localeStore, key: 'battle.detail.scope_label' })}</span>
+				<span class="num allcaps">{scopeLabel(battle.scope)}</span>
+			</div>
+			{#if battle.wager !== undefined && battle.wager > 0}
+				<div class="battle-detail-meta-row">
+					<span class="eyebrow"
+						>{t({ locale: $localeStore, key: 'battle.detail.wager_label' })}</span
+					>
+					<span class="num">
+						{t({
+							locale: $localeStore,
+							key: 'battle.detail.wager_value',
+							params: { amount: battle.wager }
+						})}
+					</span>
+				</div>
+			{/if}
+			<div class="battle-detail-meta-row">
 				<span class="eyebrow">{t({ locale: $localeStore, key: 'battle.detail.proposer' })}</span>
 				<span class="num battle-detail-meta-mono">
 					{battle.proposer.slice(0, 5)}…{battle.proposer.slice(-5)}
 				</span>
 			</div>
 		</section>
+
+		{#if battle.trashTalk !== undefined && battle.trashTalk.length > 0}
+			<section class="battle-detail-trash-talk">
+				<span class="eyebrow">
+					{t({ locale: $localeStore, key: 'battle.detail.trash_talk_label' })}
+				</span>
+				<p class="serif-italic battle-detail-trash-talk-quote">“{battle.trashTalk}”</p>
+			</section>
+		{/if}
 
 		<section class="battle-detail-actions">
 			{#if canAccept}
@@ -579,6 +623,27 @@
 	.battle-detail-meta-mono {
 		font-size: var(--t-12);
 		color: var(--text-muted);
+	}
+
+	.battle-detail-trash-talk {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+		padding: 0.85rem 1rem;
+		background: color-mix(in srgb, var(--bg-surface) 92%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-12);
+	}
+
+	.battle-detail-trash-talk .eyebrow {
+		color: var(--text-muted);
+	}
+
+	.battle-detail-trash-talk-quote {
+		margin: 0;
+		font-size: var(--t-15, 0.95rem);
+		line-height: 1.45;
+		color: var(--text-base);
 	}
 
 	.battle-detail-actions {

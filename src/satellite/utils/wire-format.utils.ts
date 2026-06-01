@@ -535,6 +535,12 @@ export const BattleWireSchema = j.strictObject({
 	state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
 	kickoff_ms: j.number(),
 	settle_ms: j.number(),
+	// Scope is a loose string on the wire (not a j.enum) so legacy rows
+	// without the field, and any future category tag, decode without a
+	// migration. The FE re-narrows via `isBattleScope`.
+	scope: j.string().optional(),
+	wager: j.number().optional(),
+	trash_talk: j.string().optional(),
 	score_a: j.number().optional(),
 	score_b: j.number().optional(),
 	winner: j.enum(['A', 'B', 'draw']).optional()
@@ -551,6 +557,9 @@ export const toWireBattle = (battle: {
 	state: 'proposed' | 'accepted' | 'in_flight' | 'resolved';
 	kickoffMs: number;
 	settleMs: number;
+	scope?: string;
+	wager?: number;
+	trashTalk?: string;
 	scoreA?: number;
 	scoreB?: number;
 	winner?: 'A' | 'B' | 'draw';
@@ -563,6 +572,9 @@ export const toWireBattle = (battle: {
 	state: battle.state,
 	kickoff_ms: battle.kickoffMs,
 	settle_ms: battle.settleMs,
+	scope: battle.scope,
+	wager: battle.wager,
+	trash_talk: battle.trashTalk,
 	score_a: battle.scoreA,
 	score_b: battle.scoreB,
 	winner: battle.winner

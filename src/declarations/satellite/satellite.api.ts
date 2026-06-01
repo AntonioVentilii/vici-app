@@ -404,6 +404,37 @@ const listAffiliationStats = async (
 	return AppListAffiliationStatsResultSchema.parse(result);
 };
 
+const AppListChallengeableLeaguesResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			id: j.string(),
+			name: j.string(),
+			description: j.optional(j.string()),
+			invite_code: j.string(),
+			owner: j.string(),
+			created_at_ms: j.number(),
+			accent_color: j.optional(j.string()),
+			emblem: j.optional(j.string()),
+			private: j.boolean()
+		})
+	)
+});
+
+const listChallengeableLeagues = async (): Promise<
+	j.infer<typeof AppListChallengeableLeaguesResultSchema>
+> => {
+	const { app_list_challengeable_leagues } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_challengeable_leagues();
+
+	const result = schemaFromIdl({
+		schema: AppListChallengeableLeaguesResultSchema,
+		value: idlResult
+	});
+	return AppListChallengeableLeaguesResultSchema.parse(result);
+};
+
 const AppListFollowersResultSchema = j.strictObject({
 	items: j.array(
 		j.strictObject({
@@ -539,6 +570,9 @@ const AppListLeagueBattlesResultSchema = j.strictObject({
 			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
 			kickoff_ms: j.number(),
 			settle_ms: j.number(),
+			scope: j.optional(j.string()),
+			wager: j.optional(j.number()),
+			trash_talk: j.optional(j.string()),
 			score_a: j.optional(j.number()),
 			score_b: j.optional(j.number()),
 			winner: j.optional(j.enum(['A', 'B', 'draw']))
@@ -669,6 +703,9 @@ const AppListMyBattlesResultSchema = j.strictObject({
 			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
 			kickoff_ms: j.number(),
 			settle_ms: j.number(),
+			scope: j.optional(j.string()),
+			wager: j.optional(j.number()),
+			trash_talk: j.optional(j.string()),
 			score_a: j.optional(j.number()),
 			score_b: j.optional(j.number()),
 			winner: j.optional(j.enum(['A', 'B', 'draw']))
@@ -1423,6 +1460,7 @@ export const functions = {
 	getProfile,
 	getUserRankAndCount,
 	listAffiliationStats,
+	listChallengeableLeagues,
 	listFollowers,
 	listFollowing,
 	listFriendRequests,

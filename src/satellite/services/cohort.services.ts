@@ -294,6 +294,78 @@ export const lookupLeagueByInviteFn = ({
 };
 
 /**
+ * List the leagues the caller can challenge to a battle — the opponent
+ * pool for the create-battle picker.
+ *
+ * Challengeable = every **public** league (`private !== true`) plus
+ * every league the caller is a member of (so private leagues the caller
+ * belongs to are reachable too), **minus** any league the caller owns —
+ * those are the from-side of a challenge, never the opponent.
+ *
+ * Privacy mirrors the rest of the social surface: private leagues the
+ * caller is NOT a member of stay hidden. The membership scan resolves
+ * "am I in this league?" the same way {@link listMyLeaguesFn} does.
+ *
+ * Sorted by `name` ascending (locale-naive) so the FE picker reads
+ * alphabetically before any client-side search filter narrows it.
+ */
+export const listChallengeableLeaguesFn = (): LeagueDoc[] => {
+	const caller = msgCaller();
+	const callerText = caller.toText();
+	const callerBytes = caller.toUint8Array();
+
+	// Leagues the caller is a member of — lets private leagues the caller
+	// belongs to surface as opponents while non-members can't see them.
+	const myLeagueIds = new Set<string>();
+
+	const { items: memberItems } = listDocsStore({
+		collection: Collection.LEAGUE_MEMBERS,
+		caller: callerBytes,
+		params: {}
+	});
+
+	for (const [, item] of memberItems) {
+		try {
+			const member = decodeDocData<LeagueMemberDoc>(item.data);
+
+			if (member.member === callerText) {
+				myLeagueIds.add(member.leagueId);
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	const { items } = listDocsStore({
+		collection: Collection.LEAGUES,
+		caller: callerBytes,
+		params: {}
+	});
+
+	const challengeable: LeagueDoc[] = [];
+
+	for (const [, item] of items) {
+		try {
+			const league = decodeDocData<LeagueDoc>(item.data);
+
+			// Never offer a league the caller owns as the opponent — it's
+			// the from-side of any challenge they send.
+			const ownedByCaller = league.owner === callerText;
+			const isPublic = league.private !== true;
+			const isMember = myLeagueIds.has(league.id);
+
+			if (!ownedByCaller && (isPublic || isMember)) {
+				challengeable.push(league);
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	return challengeable.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+};
+
+/**
  * Caller's current Worlds affiliations — at most one university +
  * one country per user (the assert key shape allows one of each
  * kind simultaneously). Returns the pair as `{ university?, country? }`;
