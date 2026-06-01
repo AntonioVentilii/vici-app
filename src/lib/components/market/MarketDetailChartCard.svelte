@@ -7,9 +7,21 @@
 	interface Props {
 		marketId: string;
 		yesPercent: number;
+		/**
+		 * Real price-history series (0–100 YES percentages, oldest first)
+		 * loaded from the clearing canister's trade history. Empty until
+		 * the first trade lands (true cold-start). Optional so call sites
+		 * that haven't fetched history fall back to the seed-based shape.
+		 */
+		points?: number[];
 	}
 
-	const { marketId, yesPercent }: Props = $props();
+	const { marketId, yesPercent, points }: Props = $props();
+
+	// True cold-start: no real trade history for this market yet, so the
+	// line reads flat and the eyebrow note says so rather than implying
+	// movement that never happened.
+	const isColdStart = $derived(points !== undefined && points.length === 0);
 
 	type PeriodId = '1d' | '7d' | '30d' | 'all';
 
@@ -26,7 +38,11 @@
 
 	let activePeriod = $state<PeriodId>('7d');
 
-	const events = $derived($marketMetadata[marketId]?.events ?? []);
+	// Event markers are positioned against the seed-based fallback's
+	// fixed, day-indexed shape. Real-history mode (`points` supplied) has
+	// its own irregular trade-ordered series, so the markers would land on
+	// the wrong x-positions — only feed them through for the seed fallback.
+	const events = $derived(points === undefined ? ($marketMetadata[marketId]?.events ?? []) : []);
 </script>
 
 <!-- 7-day chart card with period chips.
@@ -38,6 +54,11 @@
 		<span class="market-chart-eyebrow">
 			{t({ locale: $localeStore, key: 'market.detail.chart.eyebrow' })}
 		</span>
+		{#if isColdStart}
+			<span class="market-chart-coldstart num">
+				{t({ locale: $localeStore, key: 'market.detail.chart.no_trades' })}
+			</span>
+		{/if}
 		<div class="market-chart-chips" role="tablist">
 			{#each periods as period (period.id)}
 				<button
@@ -55,7 +76,7 @@
 	</div>
 
 	<div class="market-chart-spark">
-		<FlowCardSparkline {events} lineColor="var(--laurel)" seed={marketId} {yesPercent} />
+		<FlowCardSparkline {events} lineColor="var(--laurel)" {points} seed={marketId} {yesPercent} />
 	</div>
 </div>
 
@@ -77,6 +98,18 @@
 	}
 
 	.market-chart-eyebrow {
+		color: var(--text-muted);
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	/* Cold-start note — sits between the eyebrow and the period chips,
+	   muted so it reads as a quiet status rather than a value. */
+	.market-chart-coldstart {
+		margin-left: auto;
+		margin-right: 0.5rem;
 		color: var(--text-muted);
 		font-size: var(--t-10);
 		font-weight: 700;

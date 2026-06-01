@@ -2,11 +2,12 @@
 	import MarketArtwork from '$lib/components/market/MarketArtwork.svelte';
 	import OnboardingStepTracker from '$lib/components/onboarding/OnboardingStepTracker.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
-	import { DAY_IN_MS } from '$lib/constants/app.constants';
+	import { DAY_IN_MS, ZERO } from '$lib/constants/app.constants';
 	import { featuredEvent } from '$lib/derived/featured-event.derived';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { FeaturedEventParticipant } from '$lib/types/featured-event';
 	import { resolveFlowArtCategory } from '$lib/utils/flow-art.utils';
+	import { formatVolume } from '$lib/utils/format.utils';
 	import { haptic } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { buildOnboardingFirstCallMarket } from '$lib/utils/onboarding-market.utils';
@@ -79,10 +80,20 @@
 	const yesPct = $derived(Math.round(market.yesProbability * 100));
 	const noPct = $derived(100 - yesPct);
 
-	// Marketing-only social-proof count — the synthetic market seeds a
-	// stable predictor split, so the footer "{n} calls" line is stable.
-	const callCount = $derived(
-		market.outcomes?.reduce((acc, o) => acc + (o.totalPredictions ?? 0), 0) ?? 0
+	// Footer volume line — formatted volume when the market has any, else
+	// "New market". The onboarding card binds to a synthetic featured-event
+	// fixture (`buildOnboardingFirstCallMarket`) whose `totalVolume` is
+	// genuinely zero pre-auth, so this reads "New market" here — the same
+	// cold-start branch a real fresh market would take. No fabricated
+	// volume is shown.
+	const volumeLine = $derived(
+		market.totalVolume > ZERO
+			? formatVolume({
+					volume: market.totalVolume,
+					decimals: market.token.decimals,
+					symbol: market.token.symbol
+				})
+			: t({ locale: $localeStore, key: 'market.detail.stats.new_market' })
 	);
 
 	// Editorial sub-line under the question — "Backing Brazil". Echoes
@@ -315,12 +326,8 @@
 						</div>
 					</div>
 					<div class="ob-foot">
-						<span class="ob-foot-vol">
-							{t({
-								locale: $localeStore,
-								key: 'card.call_count',
-								params: { count: callCount.toLocaleString() }
-							})}
+						<span class="ob-foot-vol num">
+							{volumeLine}
 						</span>
 						<span class="ob-foot-swipe">
 							{t({ locale: $localeStore, key: 'card.swipe_to_call' })}
