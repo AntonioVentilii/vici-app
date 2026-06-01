@@ -2676,7 +2676,7 @@ a.title-action::after {
 .signin-email-input {
 	width: 100%;
 	padding: 14px 14px 14px 42px;
-	background: var(--bg-surface);
+	background: var(--bg-popover);
 	border: 1px solid var(--border-strong);
 	border-radius: 12px;
 	font-family: var(--font-mono);
@@ -4278,13 +4278,13 @@ a.title-action::after {
 	margin: 0;
 	font-size: 11.5px;
 	line-height: 1.5;
-	color: var(--text-muted);
+	color: var(--fg-dim);
 }
 .signin-legal-line + .signin-legal-line {
 	margin-top: 4px;
 }
 .signin-legal-line.dim {
-	color: var(--parchment-faint);
+	color: var(--text-muted);
 }
 .signin-legal-line a {
 	color: var(--text-base);
@@ -4304,37 +4304,48 @@ a.title-action::after {
 	width: 100%;
 	align-items: center;
 	justify-content: center;
-	gap: 6px;
-	padding: 14px 16px;
+	gap: 8px;
+	padding: 16px 22px;
 	border: 0;
-	border-radius: 12px;
+	border-radius: 14px;
 	background: var(--laurel);
 	color: var(--ink);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
 	font: inherit;
-	font-weight: 700;
-	font-size: 15px;
+	font-weight: 600;
+	font-size: 16px;
 	cursor: pointer;
-	transition: opacity 200ms var(--ease-vici);
+	transition:
+		background 200ms var(--ease-vici),
+		color 200ms var(--ease-vici);
 }
 .signin-sent-continue:hover {
-	opacity: 0.92;
+	background: var(--laurel-deep);
+	color: var(--parchment);
 }
 .signin-email-submit {
 	display: inline-flex;
 	width: 100%;
 	align-items: center;
 	justify-content: center;
-	gap: 6px;
-	padding: 14px 16px;
+	gap: 8px;
+	padding: 16px 22px;
 	border: 0;
-	border-radius: 12px;
+	border-radius: 14px;
 	background: var(--laurel);
 	color: var(--ink);
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
 	font: inherit;
-	font-weight: 700;
-	font-size: 15px;
+	font-weight: 600;
+	font-size: 16px;
 	cursor: pointer;
-	transition: opacity 200ms var(--ease-vici);
+	transition:
+		background 200ms var(--ease-vici),
+		color 200ms var(--ease-vici);
+}
+.signin-email-submit:hover:not(:disabled) {
+	background: var(--laurel-deep);
+	color: var(--parchment);
 }
 .signin-email-submit:disabled {
 	opacity: 0.48;
