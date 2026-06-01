@@ -590,11 +590,16 @@
 			dailyTarget: sessionTarget,
 			dailyJustCompleted: sessionJustCompleted,
 			dayStreak: dailyStreak,
-			isComeback
-			// `lifetimeCalls` intentionally omitted: no real lifetime-call
-			// total is hydrated on the profile yet, so the engine falls back
-			// to its persisted local tally for volume milestones. Wire the
-			// real seed once the profile/stats doc exposes the count.
+			isComeback,
+			// Seed the engine's lifetime-volume milestones from the REAL
+			// profile count (`totalTrades`, the closest analogue of the
+			// prototype's `ME.calls`) rather than the engine's persisted
+			// local tally, so milestone thresholds and the milestone
+			// count-up reflect actual lifetime activity. `totalTrades` is
+			// the lifetime call count BEFORE this swipe; the engine adds the
+			// current swipe (`+1`) internally. Falls back to the local tally
+			// when the profile is not yet hydrated.
+			lifetimeCalls: $userStore.profile?.totalTrades
 		});
 
 		// Whether this swipe also lands on a gating beat. When it does, the
