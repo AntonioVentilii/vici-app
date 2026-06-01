@@ -22,6 +22,7 @@ import {
 import { getOrderBook } from '$lib/services/order.services';
 import { getProfile } from '$lib/services/profile.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
+import { getSettledSeriesIds } from '$lib/services/resolution.services';
 import type { Market, MarketId, MarketStatus, Outcome } from '$lib/types/market';
 import type { MarketMetadata } from '$lib/types/market-metadata';
 import type { Activity } from '$lib/types/social';
@@ -304,16 +305,47 @@ const fetchMarkets = async ({
 };
 
 /**
+ * Builds a `ListSeriesParams` that asks the registry for the
+ * still-tradeable (unexpired) catalog, with every other filter left open.
+ * `only_unexpired: toNullable(true)` tells the canister to drop expired
+ * series using its own clock; pagination is left unset so the canister-side
+ * paginator
+ * (drained in {@link RegistryCanister.listSeries}) returns the full set.
+ */
+const unexpiredSeriesParams = (): RegistryDid.ListSeriesParams => ({
+	strike: toNullable(),
+	creator: toNullable(),
+	payoff_type: toNullable(),
+	payout_unit: toNullable(),
+	pagination: toNullable(),
+	underlying: toNullable(),
+	only_unexpired: toNullable(true),
+	search_term: toNullable(),
+	balance_domain: toNullable(),
+	oracle_source: toNullable()
+});
+
+/**
  * Cheap variant of {@link fetchMarkets} used by the Flow ranking path:
- * builds `Market` view-models straight from the series list + activity
- * resolution map, *without* a per-market `getOrderBook` call. Resolved-
- * only series (present in activities but no longer in `listSeries`) are
- * also skipped — Flow filters them out anyway.
+ * builds `Market` view-models straight from the *open* series set,
+ * *without* a per-market `getOrderBook` call.
  *
- * This is what kills the N+1 fan-out on `/flow` entry: ranking only
- * needs tags / metadata / interests, so the orderbook stays unfetched
- * until {@link enrichMarketsWithOrderBook} is called on the top-N
- * winners after the rank.
+ * Open is derived server-side as `unexpired − settled`:
+ *   - the registry's `list_series_with({ only_unexpired: true })` drops
+ *     expired series using the canister's own clock (the expiry half of
+ *     the "currently tradeable" predicate), and
+ *   - clearing's `list_settled_series` is the authoritative resolved set,
+ *     subtracted here.
+ *
+ * This replaces the previous reconstruction that pulled every series and
+ * scanned the (capped) global ACTIVITIES log for settlement events — the
+ * root cause of Flow-mode slowness, and unsound besides since the activity
+ * page was bounded while the catalog was not.
+ *
+ * Combined with the lazy order-book fetch (ranking only needs tags /
+ * metadata / interests, so the orderbook stays unfetched until
+ * {@link enrichMarketsWithOrderBook} runs on the top-N winners), this keeps
+ * `/flow` entry off the N+1 fan-out.
  */
 const fetchOpenBinaryMarketsLite = async ({
 	identity,
@@ -324,23 +356,24 @@ const fetchOpenBinaryMarketsLite = async ({
 	certified: boolean;
 	domain: RegistryDid.BalanceDomain;
 }): Promise<Market[]> => {
-	const [seriesList, activities] = await Promise.all([
-		listSeries({ identity, certified }),
-		getGlobalActivities({ certified })
+	// Both reads are server-filtered and paginated. The unexpired candidate
+	// set is the registry's expiry-filtered catalog; the settled set is
+	// clearing's authoritative resolved ids. Domain scoping stays client-side
+	// via `filterByPlaygroundExpandedDomain` because ViciXp expands to include
+	// Social — narrowing either query by a single `balance_domain` would drop
+	// the Social half of the playground feed.
+	const [unexpiredSeries, settledIds] = await Promise.all([
+		listSeries({ identity, certified, params: unexpiredSeriesParams() }),
+		getSettledSeriesIds({ identity, certified })
 	]);
 
-	const resolutionMap = buildResolutionMap(activities);
-	const nowNs = BigInt(Date.now()) * MILLISECOND_IN_NANOSECONDS;
-
-	const markets = seriesList
+	const markets = unexpiredSeries
 		.filter((s) => {
-			const isResolved = nonNullish(resolutionMap[s.series_id]);
-			const isExpired = s.expiry_ns <= nowNs;
 			// Flow only shows Binary markets. Check the variant
 			// explicitly so Call / Put / future payoff types stay out.
 			const isBinary = 'Binary' in s.payoff_type;
 
-			return !isResolved && !isExpired && isBinary;
+			return isBinary && !settledIds.has(s.series_id);
 		})
 		// Lite mapping: seed `yesProbability`/`noProbability` at 0.5 (vs
 		// `mapMarketData`'s default of 0) so a card that misses

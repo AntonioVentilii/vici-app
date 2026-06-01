@@ -771,6 +771,32 @@ export interface ListOrdersParams {
 	 */
 	series_id: [] | [string];
 }
+/**
+ * Input parameters for [`list_settled_series`](super::list_settled_series).
+ *
+ * A series is considered settled the moment a settlement plan is opened for it
+ * (any [`PlanStatus`](crate::types::plans::PlanStatus)), which is also when it
+ * stops being tradeable. Front ends use this to subtract the resolved set from
+ * the registry's open/unexpired catalog page.
+ */
+export interface ListSettledSeriesParams {
+	/**
+	 * Resume after this series id (exclusive). `None` starts from the lowest
+	 * series id. Settled series ids are returned in ascending order, so paging
+	 * with the previous response's `next_cursor` is stable.
+	 */
+	start_after: [] | [string];
+	/**
+	 * Maximum number of ids to return. `None` returns all remaining ids.
+	 */
+	limit: [] | [bigint];
+	/**
+	 * When set, only return settled series whose plan recorded this balance
+	 * domain. Lets a caller scoped to one domain (e.g. a flow deck) shrink the
+	 * response to the relevant subset.
+	 */
+	balance_domain: [] | [BalanceDomain];
+}
 export interface MigrateDomainParams {
 	from_domain: BalanceDomain;
 	migration_id: string;
@@ -1132,6 +1158,20 @@ export type SettleSeriesResult =
 			 */
 			Processing: null;
 	  };
+/**
+ * A page of settled (resolved) series ids.
+ */
+export interface SettledSeriesPage {
+	/**
+	 * When `Some`, pass back as `start_after` to fetch the next page. `None`
+	 * means the last page has been returned.
+	 */
+	next_cursor: [] | [string];
+	/**
+	 * Settled series ids in this page, ascending.
+	 */
+	items: Array<string>;
+}
 /**
  * Errors occurring during derivative series settlement.
  */
@@ -1825,6 +1865,23 @@ export interface _SERVICE {
 	 * Returns a list of all derivative series currently cached in the clearing canister.
 	 */
 	list_series: ActorMethod<[], Array<Series>>;
+	/**
+	 * Lists the ids of series that have been settled (resolved), with stable
+	 * cursor pagination.
+	 *
+	 * A series appears here as soon as a [`SettlementPlan`] is opened for it — in
+	 * any [`PlanStatus`] — which is precisely when it stops being tradeable. This
+	 * is the authoritative resolution set: the clearing canister owns settlement
+	 * state, the registry does not. Front ends that build a "currently-tradeable"
+	 * candidate set call the registry's `list_series_with` with `only_unexpired`
+	 * for the open/unexpired catalog and subtract the ids returned here to drop the
+	 * resolved markets, instead of reconstructing resolution from the activity log.
+	 *
+	 * Ids are returned in ascending order from `SETTLEMENT_PLANS` (a `BTreeMap`
+	 * keyed by `SeriesId`), so paging with the previous response's `next_cursor`
+	 * is stable as long as the underlying set is not mutated mid-traversal.
+	 */
+	list_settled_series: ActorMethod<[ListSettledSeriesParams], SettledSeriesPage>;
 	/**
 	 * Exports internal state as Prometheus metrics.
 	 *

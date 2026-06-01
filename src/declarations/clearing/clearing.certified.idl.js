@@ -366,6 +366,15 @@ export const idlFactory = ({ IDL }) => {
 		oracle_source: IDL.Text,
 		forked_from: IDL.Opt(IDL.Text)
 	});
+	const ListSettledSeriesParams = IDL.Record({
+		start_after: IDL.Opt(IDL.Text),
+		limit: IDL.Opt(IDL.Nat64),
+		balance_domain: IDL.Opt(BalanceDomain)
+	});
+	const SettledSeriesPage = IDL.Record({
+		next_cursor: IDL.Opt(IDL.Text),
+		items: IDL.Vec(IDL.Text)
+	});
 	const MigrateDomainParams = IDL.Record({
 		from_domain: BalanceDomain,
 		migration_id: IDL.Text,
@@ -579,6 +588,7 @@ export const idlFactory = ({ IDL }) => {
 		list_collateral_assets: IDL.Func([], [IDL.Vec(CollateralAssetInfo)], []),
 		list_orders: IDL.Func([ListOrdersParams], [IDL.Vec(LimitOrder)], []),
 		list_series: IDL.Func([], [IDL.Vec(Series)], []),
+		list_settled_series: IDL.Func([ListSettledSeriesParams], [SettledSeriesPage], []),
 		metrics: IDL.Func([], [IDL.Text], []),
 		migrate_domain: IDL.Func([MigrateDomainParams], [MigrateDomainResult], []),
 		mint_complete_set: IDL.Func([IDL.Text, IDL.Int], [SubmitMatchedTradeResult], []),

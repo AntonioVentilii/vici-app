@@ -263,6 +263,7 @@ export const idlFactory = ({ IDL }) => {
 		payout_unit: IDL.Opt(PayoutUnit),
 		pagination: IDL.Opt(PaginationParams),
 		underlying: IDL.Opt(IDL.Text),
+		only_unexpired: IDL.Opt(IDL.Bool),
 		search_term: IDL.Opt(IDL.Text),
 		balance_domain: IDL.Opt(BalanceDomain),
 		oracle_source: IDL.Opt(IDL.Text)
