@@ -321,6 +321,19 @@ export interface AppListAffiliationStatsResult {
 		affiliation_identifier: string;
 	}>;
 }
+export interface AppListChallengeableLeaguesResult {
+	items: Array<{
+		id: string;
+		accent_color: [] | [string];
+		owner: string;
+		name: string;
+		invite_code: string;
+		description: [] | [string];
+		emblem: [] | [string];
+		created_at_ms: number;
+		private: boolean;
+	}>;
+}
 export interface AppListFollowersResult {
 	items: Array<{
 		viewer_role:
@@ -399,15 +412,18 @@ export interface AppListLeagueBattlesArgs {
 export interface AppListLeagueBattlesResult {
 	items: Array<{
 		id: string;
+		trash_talk: [] | [string];
 		kind: { duel: null } | { league: null };
 		winner: [] | [{ A: null } | { B: null } | { draw: null }];
 		score_a: [] | [number];
 		score_b: [] | [number];
+		scope: [] | [string];
 		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
 		side_a: string;
 		side_b: string;
 		proposer: string;
 		kickoff_ms: number;
+		wager: [] | [number];
 		settle_ms: number;
 	}>;
 }
@@ -463,15 +479,18 @@ export interface AppListMyAffiliationsResult {
 export interface AppListMyBattlesResult {
 	items: Array<{
 		id: string;
+		trash_talk: [] | [string];
 		kind: { duel: null } | { league: null };
 		winner: [] | [{ A: null } | { B: null } | { draw: null }];
 		score_a: [] | [number];
 		score_b: [] | [number];
+		scope: [] | [string];
 		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
 		side_a: string;
 		side_b: string;
 		proposer: string;
 		kickoff_ms: number;
+		wager: [] | [number];
 		settle_ms: number;
 	}>;
 }
@@ -785,6 +804,7 @@ export interface _SERVICE {
 		[AppListAffiliationStatsArgs],
 		AppListAffiliationStatsResult
 	>;
+	app_list_challengeable_leagues: ActorMethod<[], AppListChallengeableLeaguesResult>;
 	app_list_followers: ActorMethod<[], AppListFollowersResult>;
 	app_list_following: ActorMethod<[], AppListFollowingResult>;
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;
