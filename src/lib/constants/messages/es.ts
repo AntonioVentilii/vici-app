@@ -675,7 +675,7 @@ export const esMessages = {
 	'flow.deck.all_markets': 'TODOS LOS MERCADOS',
 	'flow.empty.sub': 'VICI está preparando más mercados.',
 	'flow.empty.title': 'Nada aquí. Por ahora.',
-	'flow.end.back_to_dashboard': 'Volver al panel →',
+	'flow.end.back_to_dashboard': 'Abrir el panel →',
 	'flow.end.body_comeback':
 		'Estás de vuelta en el juego. Aparece mañana y la racha sube desde aquí.',
 	'flow.end.body_day':
@@ -697,9 +697,12 @@ export const esMessages = {
 	'flow.end.head_overtime_1': 'Imparable.',
 	'flow.end.head_overtime_2': 'Overtime, tuyo.',
 	'flow.end.head_overtime_3': 'Máquina.',
+	'flow.end.copy_toast_title': 'Enlace copiado',
+	'flow.end.invite_copied': 'Enlace de invitación copiado al portapapeles.',
 	'flow.end.invite_friend': 'Invita a un amigo',
 	'flow.end.push_to_15': 'Subir a 15 →',
 	'flow.end.share_calls': 'Compartir mis predicciones',
+	'flow.end.share_copied': 'Enlace para compartir copiado al portapapeles.',
 	'flow.end.share_text': 'Hoy hice {count} predicciones en VICI. Sigue mi récord.',
 	'flow.end.share_text_one': 'Hoy hice una predicción en VICI. Sigue mi récord.',
 	'flow.end.stat_called': 'Confirmadas',

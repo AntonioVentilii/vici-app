@@ -665,7 +665,7 @@ export const enMessages = {
 	'flow.deck.all_markets': 'ALL MARKETS',
 	'flow.empty.sub': 'VICI is queueing more markets.',
 	'flow.empty.title': 'Nothing here. Yet.',
-	'flow.end.back_to_dashboard': 'Back to dashboard →',
+	'flow.end.back_to_dashboard': 'Open Dashboard →',
 	'flow.end.body_comeback':
 		"You're back in the game. Show up tomorrow and the streak climbs from here.",
 	'flow.end.body_day':
@@ -687,9 +687,12 @@ export const enMessages = {
 	'flow.end.head_overtime_1': 'Unstoppable.',
 	'flow.end.head_overtime_2': 'Overtime, owned.',
 	'flow.end.head_overtime_3': 'Machine.',
+	'flow.end.copy_toast_title': 'Link copied',
+	'flow.end.invite_copied': 'Invite link copied to clipboard.',
 	'flow.end.invite_friend': 'Invite a friend',
 	'flow.end.push_to_15': 'Push to 15 →',
 	'flow.end.share_calls': 'Share my calls',
+	'flow.end.share_copied': 'Share link copied to clipboard.',
 	'flow.end.share_text': 'I placed {count} calls on VICI today. Track my record.',
 	'flow.end.share_text_one': 'I placed a call on VICI today. Track my record.',
 	'flow.end.stat_called': 'Called',

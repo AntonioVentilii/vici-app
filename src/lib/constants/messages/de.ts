@@ -677,7 +677,7 @@ export const deMessages = {
 	'flow.deck.all_markets': 'ALLE MÄRKTE',
 	'flow.empty.sub': 'VICI stellt weitere Märkte in die Warteschlange.',
 	'flow.empty.title': 'Hier ist nichts. Noch nicht.',
-	'flow.end.back_to_dashboard': 'Zurück zum Dashboard →',
+	'flow.end.back_to_dashboard': 'Dashboard öffnen →',
 	'flow.end.body_comeback':
 		'Du bist zurück im Spiel. Zeig dich morgen und die Serie steigt von hier.',
 	'flow.end.body_day':
@@ -699,9 +699,12 @@ export const deMessages = {
 	'flow.end.head_overtime_1': 'Unaufhaltsam.',
 	'flow.end.head_overtime_2': 'Overtime, gemeistert.',
 	'flow.end.head_overtime_3': 'Maschine.',
+	'flow.end.copy_toast_title': 'Link kopiert',
+	'flow.end.invite_copied': 'Einladungslink in die Zwischenablage kopiert.',
 	'flow.end.invite_friend': 'Freund einladen',
 	'flow.end.push_to_15': 'Auf 15 pushen →',
 	'flow.end.share_calls': 'Meine Calls teilen',
+	'flow.end.share_copied': 'Teilen-Link in die Zwischenablage kopiert.',
 	'flow.end.share_text': 'Ich habe heute {count} Calls auf VICI platziert. Verfolge meine Bilanz.',
 	'flow.end.share_text_one': 'Ich habe heute einen Call auf VICI platziert. Verfolge meine Bilanz.',
 	'flow.end.stat_called': 'Gecallt',
