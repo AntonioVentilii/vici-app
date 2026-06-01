@@ -1,13 +1,11 @@
 <script lang="ts">
 	import { X } from 'lucide-svelte/icons';
 	import { untrack } from 'svelte';
-	import { browser } from '$app/environment';
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
-	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import {
 		cleanHandle,
+		handleCooldownDaysLeft,
 		HANDLE_COOLDOWN_DAYS,
-		HANDLE_LAST_CHANGE_STORAGE_KEY,
 		MAX_HANDLE_LENGTH,
 		MIN_HANDLE_LENGTH,
 		RESERVED_HANDLES
@@ -25,10 +23,10 @@
 	 * availability probe, and a once-every-{@link HANDLE_COOLDOWN_DAYS}-days
 	 * change limit.
 	 *
-	 * The cooldown is enforced client-side via `localStorage` — the profile
-	 * schema carries no "last handle change" timestamp, so a hard
-	 * (server-side) limit would need a backend change. See
-	 * {@link HANDLE_LAST_CHANGE_STORAGE_KEY}.
+	 * The cooldown is server-authoritative — the set-profile assertion is the
+	 * authority. This sheet mirrors the rule from the profile's
+	 * `handleLastChangeMs` so the editor is disabled (with an explanation of
+	 * the wait) before a doomed write is ever attempted.
 	 */
 	interface Props {
 		/** Current handle (without the leading `@`). */
@@ -36,29 +34,21 @@
 		/** Owner principal — passed to the availability probe so the user is
 		 *  never told their own current handle is taken. */
 		owner: string;
+		/** Wall-clock ms of the owner's last handle change, from the profile.
+		 *  `undefined` means no prior change on record (immediately changeable). */
+		lastChangeMs?: number;
 		onClose: () => void;
 		/** Called with the new (cleaned) handle once the save succeeds. */
 		onSaved: (handle: string) => void;
 	}
 
-	const { current, owner, onClose, onSaved }: Props = $props();
+	const { current, owner, lastChangeMs, onClose, onSaved }: Props = $props();
 
-	const readLastChange = (): number => {
-		if (!browser) {
-			return 0;
-		}
-
-		try {
-			return Number.parseInt(localStorage.getItem(HANDLE_LAST_CHANGE_STORAGE_KEY) ?? '0', 10) || 0;
-		} catch {
-			return 0;
-		}
-	};
-
-	const lastChange = readLastChange();
-	const daysSince = lastChange ? Math.floor((Date.now() - lastChange) / DAY_IN_MS) : Infinity;
-	const locked = daysSince < HANDLE_COOLDOWN_DAYS;
-	const daysLeft = locked ? HANDLE_COOLDOWN_DAYS - daysSince : 0;
+	// One-time snapshot of the cooldown at open. The sheet is remounted on
+	// every open (gated behind `{#if handleEditOpen}` in the parent), so
+	// capturing "now" at init is intentional — there's no in-session change.
+	const daysLeft = untrack(() => handleCooldownDaysLeft({ lastChangeMs, nowMs: Date.now() }));
+	const locked = daysLeft > 0;
 
 	// One-time seed from the current handle. The sheet is remounted on
 	// every open (it's gated behind `{#if handleEditOpen}` in the parent),

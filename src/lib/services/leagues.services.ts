@@ -1,7 +1,14 @@
 import { functions } from '$declarations/satellite/satellite.api';
 import { Collection } from '$lib/constants/collections.constants';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
-import type { BattleDoc } from '$lib/types/battle';
+import {
+	BATTLE_TRASH_TALK_MAX_LENGTH,
+	BATTLE_WAGER_MAX,
+	BATTLE_WAGER_MIN,
+	isBattleScope,
+	type BattleDoc,
+	type BattleScope
+} from '$lib/types/battle';
 import {
 	LEAGUE_DESCRIPTION_MAX_LENGTH,
 	LEAGUE_INVITE_CODE_REGEX,
@@ -39,6 +46,29 @@ export interface LeagueWithRole {
 
 // ─── Reads ───────────────────────────────────────────────────────────────
 
+/** Project the satellite's snake_case wire league to the FE `LeagueDoc`. */
+const projectLeagueWire = (league: {
+	id: string;
+	name: string;
+	description?: string;
+	invite_code: string;
+	owner: string;
+	created_at_ms: number;
+	accent_color?: string;
+	emblem?: string;
+	private?: boolean;
+}): LeagueDoc => ({
+	id: league.id,
+	name: league.name,
+	description: league.description,
+	inviteCode: league.invite_code,
+	owner: league.owner,
+	createdAtMs: league.created_at_ms,
+	accentColor: league.accent_color,
+	emblem: league.emblem,
+	private: league.private
+});
+
 /**
  * List every league the caller is a member of, paired with their
  * role. Sorted newest-join first per the satellite query.
@@ -47,20 +77,23 @@ export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
 	const { items } = await functions.listMyLeagues();
 
 	return items.map(({ league, role, joined_at_ms, member_count }) => ({
-		league: {
-			id: league.id,
-			name: league.name,
-			description: league.description,
-			inviteCode: league.invite_code,
-			owner: league.owner,
-			createdAtMs: league.created_at_ms,
-			accentColor: league.accent_color,
-			private: league.private
-		},
+		league: projectLeagueWire(league),
 		role,
 		joinedAtMs: joined_at_ms,
 		memberCount: member_count
 	}));
+};
+
+/**
+ * List the leagues the caller can challenge to a battle — the opponent
+ * pool for the create-battle picker. Public leagues plus the caller's
+ * own memberships, minus leagues the caller owns. Sorted alphabetically
+ * by name per the satellite query.
+ */
+export const listChallengeableLeagues = async (): Promise<LeagueDoc[]> => {
+	const { items } = await functions.listChallengeableLeagues();
+
+	return items.map(projectLeagueWire);
 };
 
 /**
@@ -101,16 +134,7 @@ export const lookupLeagueByInvite = async ({
 		return;
 	}
 
-	return {
-		id: league.id,
-		name: league.name,
-		description: league.description,
-		inviteCode: league.invite_code,
-		owner: league.owner,
-		createdAtMs: league.created_at_ms,
-		accentColor: league.accent_color,
-		private: league.private
-	};
+	return projectLeagueWire(league);
 };
 
 // ─── Writes ──────────────────────────────────────────────────────────────
@@ -197,6 +221,7 @@ export const createLeague = async ({
 	name,
 	description,
 	accentColor,
+	emblem,
 	isPrivate = false
 }: {
 	name: string;
@@ -205,6 +230,10 @@ export const createLeague = async ({
 	 *  sheet. Persisted on the league doc so the gradient logo tile is
 	 *  consistent everywhere the league is rendered. */
 	accentColor?: string;
+	/** Single-glyph emblem the owner picked in the create sheet.
+	 *  Persisted on the league doc so the logo tile reads the same
+	 *  everywhere the league is rendered. */
+	emblem?: string;
 	/** Whether the owner marked the league private at creation. Public
 	 *  by default; persisted on the league doc and surfaced as the
 	 *  detail header's privacy chip. */
@@ -237,6 +266,7 @@ export const createLeague = async ({
 		owner: ownerPrincipal,
 		createdAtMs,
 		accentColor,
+		emblem,
 		private: isPrivate
 	};
 
@@ -393,6 +423,9 @@ const projectBattleWire = (b: {
 	state: BattleDoc['state'];
 	kickoff_ms: number;
 	settle_ms: number;
+	scope?: string;
+	wager?: number;
+	trash_talk?: string;
 	score_a?: number;
 	score_b?: number;
 	winner?: BattleDoc['winner'];
@@ -405,6 +438,11 @@ const projectBattleWire = (b: {
 	state: b.state,
 	kickoffMs: b.kickoff_ms,
 	settleMs: b.settle_ms,
+	// Re-narrow the loose wire string back to the typed union; drop
+	// anything outside the closed scope set (legacy / unknown).
+	scope: b.scope !== undefined && isBattleScope(b.scope) ? b.scope : undefined,
+	wager: b.wager,
+	trashTalk: b.trash_talk,
 	scoreA: b.score_a,
 	scoreB: b.score_b,
 	winner: b.winner
@@ -447,15 +485,40 @@ export const proposeBattle = async ({
 	sideA,
 	sideB,
 	kickoffMs,
-	settleMs
+	settleMs,
+	scope,
+	wager,
+	trashTalk
 }: {
 	sideA: string;
 	sideB: string;
 	kickoffMs: number;
 	settleMs: number;
+	scope?: BattleScope;
+	wager?: number;
+	trashTalk?: string;
 }): Promise<BattleDoc> => {
 	if (kickoffMs >= settleMs) {
 		throw new Error('Kickoff must be strictly before settle.');
+	}
+
+	if (scope !== undefined && !isBattleScope(scope)) {
+		throw new Error(`Invalid battle scope "${scope}".`);
+	}
+
+	if (
+		wager !== undefined &&
+		(!Number.isFinite(wager) || wager < BATTLE_WAGER_MIN || wager > BATTLE_WAGER_MAX)
+	) {
+		throw new Error(`Wager must be within [${BATTLE_WAGER_MIN}, ${BATTLE_WAGER_MAX}].`);
+	}
+
+	// Trim, then drop an empty trash-talk so we never persist a blank
+	// string for an absent message.
+	const trimmedTrashTalk = trashTalk?.trim();
+
+	if (trimmedTrashTalk !== undefined && trimmedTrashTalk.length > BATTLE_TRASH_TALK_MAX_LENGTH) {
+		throw new Error(`Trash talk must be at most ${BATTLE_TRASH_TALK_MAX_LENGTH} characters.`);
 	}
 
 	const identity = await safeGetIdentityOnce();
@@ -470,7 +533,16 @@ export const proposeBattle = async ({
 		proposer: proposerPrincipal,
 		state: 'proposed',
 		kickoffMs,
-		settleMs
+		settleMs,
+		// Persist scope only when narrowed (omit the 'all' default so legacy
+		// reads and the default render path stay identical).
+		...(scope !== undefined && scope !== 'all' ? { scope } : {}),
+		// Persist wager only when staked (omit a 0 wager).
+		...(wager !== undefined && wager > BATTLE_WAGER_MIN ? { wager } : {}),
+		// Persist trash-talk only when non-empty after trimming.
+		...(trimmedTrashTalk !== undefined && trimmedTrashTalk.length > 0
+			? { trashTalk: trimmedTrashTalk }
+			: {})
 	};
 
 	await setDoc<BattleDoc>({

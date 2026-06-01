@@ -4,7 +4,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
-	import type { LeagueDoc } from '$lib/types/league';
+	import { leagueEmblem, type LeagueDoc } from '$lib/types/league';
 	import type { LeagueMemberRole } from '$lib/types/league-member';
 	import { t } from '$lib/utils/i18n.utils';
 
@@ -86,17 +86,11 @@
 	let copied = $state(false);
 
 	/**
-	 * The 1-char emblem rendered inside the gradient tile. Leagues
-	 * don't carry a stored emblem field, so we derive it from the
-	 * first ASCII letter of the name — Unicode-safe (`Array.from`
-	 * splits by code point) and falls back to a glyph if the league
-	 * name is non-alphabetic.
+	 * The emblem rendered inside the gradient tile — the owner's stored
+	 * pick, with a name-derived 1-char fallback for legacy rows written
+	 * before the picker shipped.
 	 */
-	const emblem = $derived.by(() => {
-		const [first] = Array.from(league.name.trim());
-
-		return first ? first.toUpperCase() : '◆';
-	});
+	const emblem = $derived(leagueEmblem(league));
 
 	const accent = $derived(league.accentColor ?? '#7e9b6a');
 

@@ -37,6 +37,7 @@ import { assertDeleteBattle, assertSetBattle } from '$satellite/services/battle.
 import {
 	getAffiliationStatsFn,
 	listAffiliationStatsFn,
+	listChallengeableLeaguesFn,
 	listLeagueBattlesFn,
 	listLeagueMembersFn,
 	listMyAffiliationsFn,
@@ -476,6 +477,19 @@ export const lookupLeagueByInvite = defineQuery({
 
 		return { league: league ? toWireLeague(league) : undefined };
 	}
+});
+
+// Opponent pool for the create-battle picker — public leagues plus the
+// caller's own memberships, minus leagues the caller owns. Distinct from
+// the join-by-code resolver (`lookupLeagueByInvite`) and from any public
+// JOIN-by-directory (intentionally not built).
+export const listChallengeableLeagues = defineQuery({
+	result: j.strictObject({
+		items: j.array(LeagueWireSchema)
+	}),
+	handler: () => ({
+		items: listChallengeableLeaguesFn().map(toWireLeague)
+	})
 });
 
 // ─── Battles ──────────────────────────────────────────────────────

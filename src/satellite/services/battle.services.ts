@@ -1,8 +1,12 @@
 import { Collection } from '$lib/constants/collections.constants';
 import {
 	BATTLE_KINDS,
+	BATTLE_SCOPES,
 	BATTLE_STATES,
 	BATTLE_TRANSITIONS,
+	BATTLE_TRASH_TALK_MAX_LENGTH,
+	BATTLE_WAGER_MAX,
+	BATTLE_WAGER_MIN,
 	type BattleDoc,
 	type BattleWinner
 } from '$lib/types/battle';
@@ -19,7 +23,8 @@ import { decodeDocData, getDocStore } from '@junobuild/functions/sdk';
  *  1. **Key shape.** Doc key equals the embedded `id`.
  *
  *  2. **Identity fields immutable.** `id`, `kind`, `sideA`, `sideB`,
- *     `proposer` are write-once.
+ *     `proposer`, `scope`, `wager`, `trashTalk` are write-once —
+ *     chosen at proposal time and frozen thereafter.
  *
  *  3. **State machine.** Forward-only per `BATTLE_TRANSITIONS`. New
  *     docs start at `proposed`. Each transition is gated by:
@@ -81,6 +86,36 @@ export const assertSetBattle = ({
 
 	if (proposedDoc.kickoffMs >= proposedDoc.settleMs) {
 		throw new Error('battles kickoffMs must be strictly before settleMs.');
+	}
+
+	// Scope / wager / trash-talk shape — all optional, validated only
+	// when present. These are write-once identity fields (enforced on the
+	// edit path below); enforcing the bounds here covers the creation
+	// path and any same-state proposed-doc edit.
+	if (nonNullish(proposedDoc.scope) && !BATTLE_SCOPES.has(proposedDoc.scope)) {
+		throw new Error(
+			`battles scope must be one of ${[...BATTLE_SCOPES].join(' | ')} (got "${proposedDoc.scope}").`
+		);
+	}
+
+	if (
+		nonNullish(proposedDoc.wager) &&
+		(!Number.isFinite(proposedDoc.wager) ||
+			proposedDoc.wager < BATTLE_WAGER_MIN ||
+			proposedDoc.wager > BATTLE_WAGER_MAX)
+	) {
+		throw new Error(
+			`battles wager must be within [${BATTLE_WAGER_MIN}, ${BATTLE_WAGER_MAX}] (got ${proposedDoc.wager}).`
+		);
+	}
+
+	if (
+		nonNullish(proposedDoc.trashTalk) &&
+		proposedDoc.trashTalk.length > BATTLE_TRASH_TALK_MAX_LENGTH
+	) {
+		throw new Error(
+			`battles trashTalk must be at most ${BATTLE_TRASH_TALK_MAX_LENGTH} characters (got ${proposedDoc.trashTalk.length}).`
+		);
 	}
 
 	// Proposer principal must parse.
@@ -154,9 +189,14 @@ export const assertSetBattle = ({
 		currentDoc.kind !== proposedDoc.kind ||
 		currentDoc.sideA !== proposedDoc.sideA ||
 		currentDoc.sideB !== proposedDoc.sideB ||
-		currentDoc.proposer !== proposedDoc.proposer
+		currentDoc.proposer !== proposedDoc.proposer ||
+		currentDoc.scope !== proposedDoc.scope ||
+		currentDoc.wager !== proposedDoc.wager ||
+		currentDoc.trashTalk !== proposedDoc.trashTalk
 	) {
-		throw new Error('battles identity fields are immutable (id, kind, sideA, sideB, proposer).');
+		throw new Error(
+			'battles identity fields are immutable (id, kind, sideA, sideB, proposer, scope, wager, trashTalk).'
+		);
 	}
 
 	// Window discipline — kickoffMs / settleMs immutable after

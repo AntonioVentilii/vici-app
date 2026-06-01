@@ -48,7 +48,7 @@
 	import type { UserProfile } from '$lib/types/profile';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
-	import { visibilityFromProfile, visibilityToProfile } from '$lib/utils/visibility.utils';
+	import { visibilityToProfile } from '$lib/utils/visibility.utils';
 
 	// Delete-account flow — the six-beat flow lives in
 	// `DeleteAccountFlow`; this page only owns the open/close toggle.
@@ -163,7 +163,7 @@
 		}
 	]);
 
-	const settingsVisibility = $derived(visibilityFromProfile(profile?.visibility));
+	const settingsVisibility = $derived($preferencesStore.sharing.profileVisibility);
 
 	const themeLabel = $derived($theme.charAt(0).toUpperCase() + $theme.slice(1));
 
@@ -228,6 +228,13 @@
 		preferencesStore.update((prefs) => ({ ...prefs, worldCupMode: mode === 'wc' }));
 	};
 
+	// Profile-visibility write. The settings-grouped source of truth is
+	// `preferences.sharing.profileVisibility`; the top-level
+	// `profile.visibility` enum is mirrored on every write because that is
+	// the field the satellite wire format reads for leaderboard / search
+	// filtering. Both land in a single `upsertProfile` (not via the
+	// preferences store) so the two fields can't clobber each other across
+	// two racing writes to the same doc.
 	const persistVisibility = async (value: SettingsVisibility) => {
 		const principal = $authPrincipal;
 
@@ -235,10 +242,17 @@
 			return;
 		}
 
-		const data = { ...profile, visibility: visibilityToProfile(value) };
+		const data: UserProfile = {
+			...profile,
+			visibility: visibilityToProfile(value),
+			preferences: {
+				...profile.preferences,
+				sharing: { ...profile.preferences.sharing, profileVisibility: value }
+			}
+		};
 
-		await upsertProfile({ key: principal, data });
 		userStore.update((s) => ({ ...s, profile: data }));
+		await upsertProfile({ key: principal, data });
 	};
 
 	const doSignOut = async () => {
@@ -471,45 +485,51 @@
 			/>
 
 			<SetToggle
-				checked={$preferencesStore.callsPublic}
+				checked={$preferencesStore.sharing.callsPublic}
 				icon={LineChart}
 				label={t({ locale: $localeStore, key: 'settings.public_calls' })}
 				onchange={(value) => {
-					preferencesStore.update((prefs) => ({ ...prefs, callsPublic: value }));
+					preferencesStore.update((prefs) => ({
+						...prefs,
+						sharing: { ...prefs.sharing, callsPublic: value }
+					}));
 				}}
 				sub={t({ locale: $localeStore, key: 'settings.public_calls.sub' })}
 			/>
 		</SettingsSection>
 
 		<!--
-			Secondary Privacy section — a "Privacy" card holding three
-			share toggles distinct from the privacy-and-security set
-			above. The fields are not yet wired to the profile schema;
-			they round-trip a flash-toast confirmation until a `sharing`
-			slice lands on `preferences`.
+			Secondary "Privacy" card — the two opt-out share toggles
+			(global leaderboard, Worlds Universities) distinct from the
+			privacy-and-security set above. Both persist through the
+			`preferences.sharing` slice. They record the user's intent
+			today; server-side enforcement (actually hiding an opted-out
+			user from those surfaces) is a follow-up.
 		-->
 		<SettingsSection title={t({ locale: $localeStore, key: 'settings.privacy_share' })}>
 			<SetToggle
-				checked={true}
-				icon={Eye}
-				label={t({ locale: $localeStore, key: 'settings.privacy_share.public_profile' })}
-				onchange={() => flashToast(t({ locale: $localeStore, key: 'settings.toast.saved' }))}
-				sub={t({ locale: $localeStore, key: 'settings.privacy_share.public_profile.sub' })}
-			/>
-
-			<SetToggle
-				checked={true}
+				checked={$preferencesStore.sharing.leaderboardOptIn}
 				icon={Users}
 				label={t({ locale: $localeStore, key: 'settings.privacy_share.global' })}
-				onchange={() => flashToast(t({ locale: $localeStore, key: 'settings.toast.saved' }))}
+				onchange={(value) => {
+					preferencesStore.update((prefs) => ({
+						...prefs,
+						sharing: { ...prefs.sharing, leaderboardOptIn: value }
+					}));
+				}}
 				sub={t({ locale: $localeStore, key: 'settings.privacy_share.global.sub' })}
 			/>
 
 			<SetToggle
-				checked={true}
+				checked={$preferencesStore.sharing.worldsOptIn}
 				icon={Trophy}
 				label={t({ locale: $localeStore, key: 'settings.privacy_share.worlds' })}
-				onchange={() => flashToast(t({ locale: $localeStore, key: 'settings.toast.saved' }))}
+				onchange={(value) => {
+					preferencesStore.update((prefs) => ({
+						...prefs,
+						sharing: { ...prefs.sharing, worldsOptIn: value }
+					}));
+				}}
 				sub={t({ locale: $localeStore, key: 'settings.privacy_share.worlds.sub' })}
 			/>
 		</SettingsSection>

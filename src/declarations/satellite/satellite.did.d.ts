@@ -253,6 +253,7 @@ export interface AppGetProfileResult {
 					role:
 						| []
 						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
+					handle_last_change_ms: [] | [number];
 					email: string;
 					level: number;
 					preferences: {
@@ -265,6 +266,12 @@ export interface AppGetProfileResult {
 							streak_reminder: boolean;
 						};
 						haptics_enabled: boolean;
+						sharing: {
+							worlds_opt_in: boolean;
+							leaderboard_opt_in: boolean;
+							calls_public: boolean;
+							profile_visibility: string;
+						};
 						sound_enabled: boolean;
 						onboarding_completed: boolean;
 						default_amount: { flow: string; manual: string };
@@ -272,7 +279,6 @@ export interface AppGetProfileResult {
 						saved_market_ids: Array<string>;
 						flow_tags: Array<string>;
 						flow_session_length: number;
-						calls_public: boolean;
 					};
 					archetype: string;
 					last_active_day: [] | [string];
@@ -314,6 +320,19 @@ export interface AppListAffiliationStatsResult {
 		total_calls: number;
 		month_total_calls: number;
 		affiliation_identifier: string;
+	}>;
+}
+export interface AppListChallengeableLeaguesResult {
+	items: Array<{
+		id: string;
+		accent_color: [] | [string];
+		owner: string;
+		name: string;
+		invite_code: string;
+		description: [] | [string];
+		emblem: [] | [string];
+		created_at_ms: number;
+		private: boolean;
 	}>;
 }
 export interface AppListFollowersResult {
@@ -394,15 +413,18 @@ export interface AppListLeagueBattlesArgs {
 export interface AppListLeagueBattlesResult {
 	items: Array<{
 		id: string;
+		trash_talk: [] | [string];
 		kind: { duel: null } | { league: null };
 		winner: [] | [{ A: null } | { B: null } | { draw: null }];
 		score_a: [] | [number];
 		score_b: [] | [number];
+		scope: [] | [string];
 		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
 		side_a: string;
 		side_b: string;
 		proposer: string;
 		kickoff_ms: number;
+		wager: [] | [number];
 		settle_ms: number;
 	}>;
 }
@@ -458,15 +480,18 @@ export interface AppListMyAffiliationsResult {
 export interface AppListMyBattlesResult {
 	items: Array<{
 		id: string;
+		trash_talk: [] | [string];
 		kind: { duel: null } | { league: null };
 		winner: [] | [{ A: null } | { B: null } | { draw: null }];
 		score_a: [] | [number];
 		score_b: [] | [number];
+		scope: [] | [string];
 		state: { resolved: null } | { proposed: null } | { in_flight: null } | { accepted: null };
 		side_a: string;
 		side_b: string;
 		proposer: string;
 		kickoff_ms: number;
+		wager: [] | [number];
 		settle_ms: number;
 	}>;
 }
@@ -484,6 +509,7 @@ export interface AppListMyLeaguesResult {
 			name: string;
 			invite_code: string;
 			description: [] | [string];
+			emblem: [] | [string];
 			created_at_ms: number;
 			private: boolean;
 		};
@@ -550,6 +576,7 @@ export interface AppLookupLeagueByInviteResult {
 					name: string;
 					invite_code: string;
 					description: [] | [string];
+					emblem: [] | [string];
 					created_at_ms: number;
 					private: boolean;
 				}
@@ -778,6 +805,7 @@ export interface _SERVICE {
 		[AppListAffiliationStatsArgs],
 		AppListAffiliationStatsResult
 	>;
+	app_list_challengeable_leagues: ActorMethod<[], AppListChallengeableLeaguesResult>;
 	app_list_followers: ActorMethod<[], AppListFollowersResult>;
 	app_list_following: ActorMethod<[], AppListFollowingResult>;
 	app_list_friend_requests: ActorMethod<[], AppListFriendRequestsResult>;

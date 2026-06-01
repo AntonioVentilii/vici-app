@@ -31,6 +31,7 @@
 	import { localeStore } from '$lib/stores/locale.store';
 	import { profilesStore } from '$lib/stores/profiles.store';
 	import type { BattleDoc, BattleState } from '$lib/types/battle';
+	import { leagueEmblem } from '$lib/types/league';
 	import type { LeagueMemberDoc, LeagueMemberRole } from '$lib/types/league-member';
 	import { formatDate, formatLocalePercent, shortenPrincipal } from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
@@ -107,18 +108,10 @@
 
 	const accent = $derived(league?.accentColor ?? '#7e9b6a');
 
-	// Derive a 1-char emblem from the league name — leagues don't
-	// carry a stored emblem, so we lean on the first code-point of
-	// the name (Unicode-safe), with a glyph fallback.
-	const emblem = $derived.by(() => {
-		if (!league) {
-			return '◆';
-		}
-
-		const [first] = Array.from(league.name.trim());
-
-		return first ? first.toUpperCase() : '◆';
-	});
+	// The emblem rendered inside the gradient tile — the owner's stored
+	// pick, with a name-derived 1-char fallback for legacy rows written
+	// before the picker shipped.
+	const emblem = $derived(league ? leagueEmblem(league) : '◆');
 
 	const canSeeInvite = $derived(myRole === 'owner' || myRole === 'admin');
 	const canLeave = $derived(myRole !== 'owner' && myRole !== undefined);

@@ -254,6 +254,7 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
+				handle_last_change_ms: IDL.Opt(IDL.Float64),
 				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Record({
@@ -266,6 +267,12 @@ export const idlFactory = ({ IDL }) => {
 						streak_reminder: IDL.Bool
 					}),
 					haptics_enabled: IDL.Bool,
+					sharing: IDL.Record({
+						worlds_opt_in: IDL.Bool,
+						leaderboard_opt_in: IDL.Bool,
+						calls_public: IDL.Bool,
+						profile_visibility: IDL.Text
+					}),
 					sound_enabled: IDL.Bool,
 					onboarding_completed: IDL.Bool,
 					default_amount: IDL.Record({
@@ -275,8 +282,7 @@ export const idlFactory = ({ IDL }) => {
 					world_cup_mode: IDL.Bool,
 					saved_market_ids: IDL.Vec(IDL.Text),
 					flow_tags: IDL.Vec(IDL.Text),
-					flow_session_length: IDL.Float64,
-					calls_public: IDL.Bool
+					flow_session_length: IDL.Float64
 				}),
 				archetype: IDL.Text,
 				last_active_day: IDL.Opt(IDL.Text),
@@ -321,6 +327,21 @@ export const idlFactory = ({ IDL }) => {
 				total_calls: IDL.Float64,
 				month_total_calls: IDL.Float64,
 				affiliation_identifier: IDL.Text
+			})
+		)
+	});
+	const AppListChallengeableLeaguesResult = IDL.Record({
+		items: IDL.Vec(
+			IDL.Record({
+				id: IDL.Text,
+				accent_color: IDL.Opt(IDL.Text),
+				owner: IDL.Text,
+				name: IDL.Text,
+				invite_code: IDL.Text,
+				description: IDL.Opt(IDL.Text),
+				emblem: IDL.Opt(IDL.Text),
+				created_at_ms: IDL.Float64,
+				private: IDL.Bool
 			})
 		)
 	});
@@ -485,10 +506,12 @@ export const idlFactory = ({ IDL }) => {
 		items: IDL.Vec(
 			IDL.Record({
 				id: IDL.Text,
+				trash_talk: IDL.Opt(IDL.Text),
 				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
 				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
 				score_a: IDL.Opt(IDL.Float64),
 				score_b: IDL.Opt(IDL.Float64),
+				scope: IDL.Opt(IDL.Text),
 				state: IDL.Variant({
 					resolved: IDL.Null,
 					proposed: IDL.Null,
@@ -499,6 +522,7 @@ export const idlFactory = ({ IDL }) => {
 				side_b: IDL.Text,
 				proposer: IDL.Text,
 				kickoff_ms: IDL.Float64,
+				wager: IDL.Opt(IDL.Float64),
 				settle_ms: IDL.Float64
 			})
 		)
@@ -556,10 +580,12 @@ export const idlFactory = ({ IDL }) => {
 		items: IDL.Vec(
 			IDL.Record({
 				id: IDL.Text,
+				trash_talk: IDL.Opt(IDL.Text),
 				kind: IDL.Variant({ duel: IDL.Null, league: IDL.Null }),
 				winner: IDL.Opt(IDL.Variant({ A: IDL.Null, B: IDL.Null, draw: IDL.Null })),
 				score_a: IDL.Opt(IDL.Float64),
 				score_b: IDL.Opt(IDL.Float64),
+				scope: IDL.Opt(IDL.Text),
 				state: IDL.Variant({
 					resolved: IDL.Null,
 					proposed: IDL.Null,
@@ -570,6 +596,7 @@ export const idlFactory = ({ IDL }) => {
 				side_b: IDL.Text,
 				proposer: IDL.Text,
 				kickoff_ms: IDL.Float64,
+				wager: IDL.Opt(IDL.Float64),
 				settle_ms: IDL.Float64
 			})
 		)
@@ -593,6 +620,7 @@ export const idlFactory = ({ IDL }) => {
 					name: IDL.Text,
 					invite_code: IDL.Text,
 					description: IDL.Opt(IDL.Text),
+					emblem: IDL.Opt(IDL.Text),
 					created_at_ms: IDL.Float64,
 					private: IDL.Bool
 				}),
@@ -686,6 +714,7 @@ export const idlFactory = ({ IDL }) => {
 				name: IDL.Text,
 				invite_code: IDL.Text,
 				description: IDL.Opt(IDL.Text),
+				emblem: IDL.Opt(IDL.Text),
 				created_at_ms: IDL.Float64,
 				private: IDL.Bool
 			})
@@ -937,6 +966,7 @@ export const idlFactory = ({ IDL }) => {
 			[AppListAffiliationStatsResult],
 			['query']
 		),
+		app_list_challengeable_leagues: IDL.Func([], [AppListChallengeableLeaguesResult], ['query']),
 		app_list_followers: IDL.Func([], [AppListFollowersResult], ['query']),
 		app_list_following: IDL.Func([], [AppListFollowingResult], ['query']),
 		app_list_friend_requests: IDL.Func([], [AppListFriendRequestsResult], ['query']),

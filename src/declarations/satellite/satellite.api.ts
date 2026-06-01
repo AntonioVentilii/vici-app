@@ -300,6 +300,7 @@ const AppGetProfileResultSchema = j.strictObject({
 			topDecileStreak: j.number(),
 			lastTopDecileDay: j.optional(j.string()),
 			sharpestEyeBestTier: j.optional(j.string()),
+			handleLastChangeMs: j.optional(j.number()),
 			preferences: j.strictObject({
 				defaultAmount: j.strictObject({ flow: j.string(), manual: j.string() }),
 				notify: j.strictObject({
@@ -311,7 +312,12 @@ const AppGetProfileResultSchema = j.strictObject({
 				flowSessionLength: j.number(),
 				hapticsEnabled: j.boolean(),
 				soundEnabled: j.boolean(),
-				callsPublic: j.boolean(),
+				sharing: j.strictObject({
+					profileVisibility: j.string(),
+					callsPublic: j.boolean(),
+					leaderboardOptIn: j.boolean(),
+					worldsOptIn: j.boolean()
+				}),
 				flowTags: j.array(j.string()),
 				worldCupMode: j.boolean(),
 				savedMarketIds: j.array(j.string()),
@@ -397,6 +403,37 @@ const listAffiliationStats = async (
 
 	const result = schemaFromIdl({ schema: AppListAffiliationStatsResultSchema, value: idlResult });
 	return AppListAffiliationStatsResultSchema.parse(result);
+};
+
+const AppListChallengeableLeaguesResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			id: j.string(),
+			name: j.string(),
+			description: j.optional(j.string()),
+			invite_code: j.string(),
+			owner: j.string(),
+			created_at_ms: j.number(),
+			accent_color: j.optional(j.string()),
+			emblem: j.optional(j.string()),
+			private: j.boolean()
+		})
+	)
+});
+
+const listChallengeableLeagues = async (): Promise<
+	j.infer<typeof AppListChallengeableLeaguesResultSchema>
+> => {
+	const { app_list_challengeable_leagues } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_challengeable_leagues();
+
+	const result = schemaFromIdl({
+		schema: AppListChallengeableLeaguesResultSchema,
+		value: idlResult
+	});
+	return AppListChallengeableLeaguesResultSchema.parse(result);
 };
 
 const AppListFollowersResultSchema = j.strictObject({
@@ -534,6 +571,9 @@ const AppListLeagueBattlesResultSchema = j.strictObject({
 			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
 			kickoff_ms: j.number(),
 			settle_ms: j.number(),
+			scope: j.optional(j.string()),
+			wager: j.optional(j.number()),
+			trash_talk: j.optional(j.string()),
 			score_a: j.optional(j.number()),
 			score_b: j.optional(j.number()),
 			winner: j.optional(j.enum(['A', 'B', 'draw']))
@@ -664,6 +704,9 @@ const AppListMyBattlesResultSchema = j.strictObject({
 			state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
 			kickoff_ms: j.number(),
 			settle_ms: j.number(),
+			scope: j.optional(j.string()),
+			wager: j.optional(j.number()),
+			trash_talk: j.optional(j.string()),
 			score_a: j.optional(j.number()),
 			score_b: j.optional(j.number()),
 			winner: j.optional(j.enum(['A', 'B', 'draw']))
@@ -704,6 +747,7 @@ const AppListMyLeaguesResultSchema = j.strictObject({
 				owner: j.string(),
 				created_at_ms: j.number(),
 				accent_color: j.optional(j.string()),
+				emblem: j.optional(j.string()),
 				private: j.boolean()
 			}),
 			role: j.enum(['owner', 'admin', 'member']),
@@ -823,6 +867,7 @@ const AppLookupLeagueByInviteResultSchema = j.strictObject({
 			owner: j.string(),
 			created_at_ms: j.number(),
 			accent_color: j.optional(j.string()),
+			emblem: j.optional(j.string()),
 			private: j.boolean()
 		})
 	)
@@ -1416,6 +1461,7 @@ export const functions = {
 	getProfile,
 	getUserRankAndCount,
 	listAffiliationStats,
+	listChallengeableLeagues,
 	listFollowers,
 	listFollowing,
 	listFriendRequests,

@@ -1,3 +1,5 @@
+import { DAY_IN_MS } from '$lib/constants/app.constants';
+
 export const MIN_NICKNAME_LENGTH = 2;
 
 export const PENDING_ONBOARDING_STORAGE_KEY = 'vici:pending-onboarding';
@@ -15,14 +17,17 @@ export const MAX_HANDLE_LENGTH = 15;
 /**
  * A handle can be changed once every {@link HANDLE_COOLDOWN_DAYS} days.
  *
- * NOTE — enforcement is client-side only today. The profile schema has
- * no "last handle change" timestamp, so the cooldown is tracked in
- * `localStorage` under {@link HANDLE_LAST_CHANGE_STORAGE_KEY}. This is a
- * soft guard (a determined user can clear storage); server-side
- * enforcement needs a profile-schema field + a satellite assertion.
+ * Enforcement is server-authoritative: the profile carries a
+ * `handleLastChangeMs` timestamp and the set-profile assertion rejects a
+ * handle change while the stored value is inside the window (and stamps
+ * the message time on an allowed change). The {@link HandleEditor}
+ * mirrors the same rule client-side from `handleLastChangeMs` so the UI
+ * disables the editor and explains the wait before a doomed write.
+ *
+ * This constant is shared by the frontend and the satellite assertion so
+ * both sides agree on the window.
  */
 export const HANDLE_COOLDOWN_DAYS = 30;
-export const HANDLE_LAST_CHANGE_STORAGE_KEY = 'vici:handle-last-change';
 
 /**
  * Handles reserved for the platform — never assignable to a user even if
@@ -50,3 +55,36 @@ export const cleanHandle = (raw: string): string =>
 		.toLowerCase()
 		.replace(/[^a-z0-9_]/g, '')
 		.slice(0, MAX_HANDLE_LENGTH);
+
+/**
+ * Whole days the owner must still wait before the handle can change again,
+ * given the timestamp of the last change (`handleLastChangeMs`) and a
+ * reference "now" (both wall-clock ms). Returns 0 when the cooldown has
+ * elapsed or no prior change is on record (`lastChangeMs` nullish) — i.e.
+ * the handle is changeable. Shared by the {@link HandleEditor} (to disable
+ * + explain the wait) and the set-profile assertion (to reject a doomed
+ * write), so the UI and the satellite agree on the window.
+ */
+export const handleCooldownDaysLeft = ({
+	lastChangeMs,
+	nowMs
+}: {
+	lastChangeMs: number | undefined | null;
+	nowMs: number;
+}): number => {
+	if (lastChangeMs === undefined || lastChangeMs === null || lastChangeMs <= 0) {
+		return 0;
+	}
+
+	const daysSince = Math.floor((nowMs - lastChangeMs) / DAY_IN_MS);
+
+	if (daysSince >= HANDLE_COOLDOWN_DAYS) {
+		return 0;
+	}
+
+	// Clamp to [0, HANDLE_COOLDOWN_DAYS]: a `lastChangeMs` skewed slightly into
+	// the future (tolerated client clock skew) yields a negative `daysSince`,
+	// which would otherwise report more than the full cooldown and over-extend
+	// the lockout. The full window is the hard ceiling; never report negative.
+	return Math.min(HANDLE_COOLDOWN_DAYS, HANDLE_COOLDOWN_DAYS - daysSince);
+};

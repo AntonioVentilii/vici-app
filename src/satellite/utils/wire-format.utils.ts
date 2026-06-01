@@ -5,6 +5,7 @@ import type { MarketTranslation } from '$lib/types/market-translation';
 import type { UserProfile } from '$lib/types/profile';
 import type { ReferralListItem } from '$lib/types/referral';
 import type { VxpMilestoneState } from '$lib/types/vxp-onboarding';
+import { visibilityFromProfile } from '$lib/utils/visibility.utils';
 import { j, PrincipalTextSchema } from '@junobuild/schema';
 
 /**
@@ -244,7 +245,15 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 		flowSessionLength: 10,
 		hapticsEnabled: true,
 		soundEnabled: true,
-		callsPublic: true,
+		sharing: {
+			// Derive from the canonical top-level `visibility` so the settings
+			// source-of-truth slice agrees with the real visibility on this
+			// wire profile (FRIENDS_ONLY → 'private') instead of hard-coding it.
+			profileVisibility: visibilityFromProfile(profile.visibility as ProfileVisibility),
+			callsPublic: true,
+			leaderboardOptIn: true,
+			worldsOptIn: true
+		},
 		flowTags: [],
 		worldCupMode: false,
 		savedMarketIds: [],
@@ -445,6 +454,7 @@ export const LeagueWireSchema = j.strictObject({
 	owner: PrincipalTextSchema,
 	created_at_ms: j.number(),
 	accent_color: j.string().optional(),
+	emblem: j.string().optional(),
 	private: j.boolean().default(false)
 });
 
@@ -476,6 +486,7 @@ export const toWireLeague = (league: {
 	owner: string;
 	createdAtMs: number;
 	accentColor?: string;
+	emblem?: string;
 	private?: boolean;
 }): WireLeague => ({
 	id: league.id,
@@ -485,6 +496,7 @@ export const toWireLeague = (league: {
 	owner: league.owner,
 	created_at_ms: league.createdAtMs,
 	accent_color: league.accentColor,
+	emblem: league.emblem,
 	private: league.private ?? false
 });
 
@@ -523,6 +535,12 @@ export const BattleWireSchema = j.strictObject({
 	state: j.enum(['proposed', 'accepted', 'in_flight', 'resolved']),
 	kickoff_ms: j.number(),
 	settle_ms: j.number(),
+	// Scope is a loose string on the wire (not a j.enum) so legacy rows
+	// without the field, and any future category tag, decode without a
+	// migration. The FE re-narrows via `isBattleScope`.
+	scope: j.string().optional(),
+	wager: j.number().optional(),
+	trash_talk: j.string().optional(),
 	score_a: j.number().optional(),
 	score_b: j.number().optional(),
 	winner: j.enum(['A', 'B', 'draw']).optional()
@@ -539,6 +557,9 @@ export const toWireBattle = (battle: {
 	state: 'proposed' | 'accepted' | 'in_flight' | 'resolved';
 	kickoffMs: number;
 	settleMs: number;
+	scope?: string;
+	wager?: number;
+	trashTalk?: string;
 	scoreA?: number;
 	scoreB?: number;
 	winner?: 'A' | 'B' | 'draw';
@@ -551,6 +572,9 @@ export const toWireBattle = (battle: {
 	state: battle.state,
 	kickoff_ms: battle.kickoffMs,
 	settle_ms: battle.settleMs,
+	scope: battle.scope,
+	wager: battle.wager,
+	trash_talk: battle.trashTalk,
 	score_a: battle.scoreA,
 	score_b: battle.scoreB,
 	winner: battle.winner

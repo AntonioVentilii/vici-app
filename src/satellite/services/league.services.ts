@@ -1,6 +1,7 @@
 import { Collection } from '$lib/constants/collections.constants';
 import {
 	LEAGUE_DESCRIPTION_MAX_LENGTH,
+	LEAGUE_EMBLEMS,
 	LEAGUE_INVITE_CODE_REGEX,
 	LEAGUE_NAME_MAX_LENGTH,
 	LEAGUE_NAME_MIN_LENGTH,
@@ -108,6 +109,19 @@ export const assertSetLeague = ({
 			throw new Error('leagues owner must match the caller principal on creation.');
 		}
 
+		// Emblem renders in the UI and is frozen after creation, so it
+		// must be one of the curated glyphs (or absent for legacy-style
+		// rows). Reject arbitrary strings up front rather than letting
+		// them lock in.
+		if (
+			nonNullish(proposedDoc.emblem) &&
+			!(LEAGUE_EMBLEMS as readonly string[]).includes(proposedDoc.emblem)
+		) {
+			throw new Error(
+				`leagues emblem must be one of ${LEAGUE_EMBLEMS.join(' ')} (got "${proposedDoc.emblem}").`
+			);
+		}
+
 		return;
 	}
 
@@ -122,17 +136,19 @@ export const assertSetLeague = ({
 	}
 
 	// 3. Identity fields are immutable on edits — `owner` is now
-	// editable, the rest stay frozen. Privacy is chosen once at
-	// creation and frozen alongside the identity fields so the visible
-	// public/private state can't silently flip under existing members.
+	// editable, the rest stay frozen. Privacy and the emblem are both
+	// chosen once at creation and frozen alongside the identity fields
+	// so the league's visible identity (public/private state, logo
+	// glyph) can't silently shift under existing members.
 	if (
 		currentDoc.id !== proposedDoc.id ||
 		currentDoc.createdAtMs !== proposedDoc.createdAtMs ||
 		currentDoc.inviteCode !== proposedDoc.inviteCode ||
+		(currentDoc.emblem ?? '') !== (proposedDoc.emblem ?? '') ||
 		(currentDoc.private ?? false) !== (proposedDoc.private ?? false)
 	) {
 		throw new Error(
-			'leagues identity fields are immutable (id, createdAtMs, inviteCode, private).'
+			'leagues identity fields are immutable (id, createdAtMs, inviteCode, emblem, private).'
 		);
 	}
 };
