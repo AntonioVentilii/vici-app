@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { ChevronRight, Copy, Check, Pencil } from 'lucide-svelte/icons';
+	import { ChevronRight, Copy, Check, Pencil, ImagePlus, Trash2 } from 'lucide-svelte/icons';
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
@@ -22,6 +22,7 @@
 		updateLeague,
 		validateLeagueDraft
 	} from '$lib/services/leagues.services';
+	import { deleteLeagueImageByUrl, uploadLeagueImage } from '$lib/services/storage.services';
 	import {
 		leagueBattlesStore,
 		leagueMembersStore,
@@ -127,6 +128,91 @@
 	// Esc cancels, plus explicit Save / Cancel controls. Non-owners never
 	// see the affordance, so the title stays read-only for them.
 	const canRename = $derived(myRole === 'owner');
+
+	// Owner-only cover image. The logo tile renders the uploaded image
+	// (cover-fit) when set, else the emblem glyph. Owners get Add/Change
+	// + Remove affordances over the tile; non-owners see it read-only.
+	const canEditImage = $derived(myRole === 'owner');
+	const hasImage = $derived(league?.imageUrl !== undefined && league.imageUrl.length > 0);
+	let imageInput = $state<HTMLInputElement | null>(null);
+	let imageBusy = $state(false);
+
+	const pickImage = () => {
+		if (!canEditImage || imageBusy) {
+			return;
+		}
+
+		imageInput?.click();
+	};
+
+	const handleImagePicked = async (event: Event) => {
+		const input = event.currentTarget as HTMLInputElement;
+		const file = input.files?.[0];
+
+		// Reset the input so re-picking the same file fires `change` again.
+		input.value = '';
+
+		if (!file || !league || imageBusy) {
+			return;
+		}
+
+		imageBusy = true;
+
+		let uploadedUrl: string | undefined;
+
+		try {
+			const previousUrl = league.imageUrl;
+			const imageUrl = await uploadLeagueImage({ leagueId: league.id, file });
+			uploadedUrl = imageUrl;
+			await updateLeague({ id: league.id, imageUrl });
+
+			// The doc now points at the fresh asset, so don't roll it back below.
+			uploadedUrl = undefined;
+
+			// Drop the superseded asset once the doc points at the new one.
+			if (previousUrl !== undefined && previousUrl !== imageUrl) {
+				await deleteLeagueImageByUrl(previousUrl);
+			}
+
+			await refreshMyLeagues();
+		} catch (err) {
+			console.error('LeagueDetailPage: league image upload failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+
+			// The asset uploaded but the doc write failed: best-effort cleanup so
+			// the orphaned image doesn't linger in Storage. Swallow cleanup errors.
+			if (uploadedUrl !== undefined) {
+				await deleteLeagueImageByUrl(uploadedUrl);
+			}
+		} finally {
+			imageBusy = false;
+		}
+	};
+
+	const handleRemoveImage = async () => {
+		if (!canEditImage || !league || imageBusy || !hasImage) {
+			return;
+		}
+
+		imageBusy = true;
+
+		try {
+			const previousUrl = league.imageUrl;
+			await updateLeague({ id: league.id, imageUrl: null });
+
+			if (previousUrl !== undefined) {
+				await deleteLeagueImageByUrl(previousUrl);
+			}
+
+			await refreshMyLeagues();
+		} catch (err) {
+			console.error('LeagueDetailPage: league image remove failed', err);
+			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+		} finally {
+			imageBusy = false;
+		}
+	};
+
 	let renaming = $state(false);
 	let renameDraft = $state('');
 	let renameSaving = $state(false);
@@ -736,9 +822,58 @@
 			class="league-detail-identity"
 		>
 			<div class="league-detail-identity-row">
-				<div class="league-detail-logo" aria-hidden="true">
-					<span class="league-detail-logo-emblem">{emblem}</span>
-					<span class="league-detail-logo-corner num">N°{String(yourRank).padStart(2, '0')}</span>
+				<div class="league-detail-logo-wrap">
+					<div class="league-detail-logo" class:has-image={hasImage} aria-hidden="true">
+						{#if hasImage && league.imageUrl}
+							<img class="league-detail-logo-image" alt="" src={league.imageUrl} />
+						{:else}
+							<span class="league-detail-logo-emblem">{emblem}</span>
+						{/if}
+						<span class="league-detail-logo-corner num">N°{String(yourRank).padStart(2, '0')}</span>
+					</div>
+					{#if canEditImage}
+						<div class="league-detail-logo-actions">
+							<input
+								bind:this={imageInput}
+								class="league-detail-logo-file"
+								accept="image/*"
+								onchange={handleImagePicked}
+								type="file"
+							/>
+							<button
+								class="league-detail-logo-action"
+								aria-label={t({
+									locale: $localeStore,
+									key: hasImage
+										? 'leagues.detail.image_change_label'
+										: 'leagues.detail.image_add_label'
+								})}
+								disabled={imageBusy}
+								onclick={pickImage}
+								type="button"
+							>
+								<ImagePlus aria-hidden="true" size={13} strokeWidth={2} />
+								<span>
+									{t({
+										locale: $localeStore,
+										key: hasImage ? 'leagues.detail.image_change' : 'leagues.detail.image_add'
+									})}
+								</span>
+							</button>
+							{#if hasImage}
+								<button
+									class="league-detail-logo-action is-remove"
+									aria-label={t({ locale: $localeStore, key: 'leagues.detail.image_remove_label' })}
+									disabled={imageBusy}
+									onclick={handleRemoveImage}
+									type="button"
+								>
+									<Trash2 aria-hidden="true" size={13} strokeWidth={2} />
+									<span>{t({ locale: $localeStore, key: 'leagues.detail.image_remove' })}</span>
+								</button>
+							{/if}
+						</div>
+					{/if}
 				</div>
 				<div class="league-detail-identity-body">
 					<span class="num allcaps league-detail-identity-eyebrow">{memberCountLine}</span>
@@ -1464,6 +1599,76 @@
 		letter-spacing: 0.1em;
 		color: var(--accent);
 		opacity: 0.78;
+	}
+
+	/* Owner-uploaded cover fills the tile (cover-fit, centred). Sits at
+	   z-index 1 so the rank corner badge stays legible above it. */
+	.league-detail-logo-image {
+		position: absolute;
+		inset: 0;
+		z-index: 1;
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	.league-detail-logo.has-image .league-detail-logo-corner {
+		color: var(--text-on-accent, #fff);
+		opacity: 0.92;
+		text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+	}
+
+	.league-detail-logo-wrap {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
+	}
+
+	.league-detail-logo-actions {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+	}
+
+	.league-detail-logo-file {
+		display: none;
+	}
+
+	.league-detail-logo-action {
+		appearance: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.25rem;
+		padding: 0.25rem 0.4rem;
+		font: inherit;
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: 0.02em;
+		color: var(--text-muted);
+		background: color-mix(in srgb, var(--bg-surface) 60%, transparent);
+		border: 1px solid var(--border-base);
+		border-radius: var(--r-pill);
+		cursor: pointer;
+		transition:
+			color 140ms ease,
+			border-color 140ms ease,
+			background 140ms ease;
+	}
+
+	.league-detail-logo-action:hover:not(:disabled) {
+		color: var(--text-base);
+		border-color: var(--border-strong);
+	}
+
+	.league-detail-logo-action.is-remove {
+		color: var(--no);
+		border-color: color-mix(in srgb, var(--no) 35%, var(--border-base));
+	}
+
+	.league-detail-logo-action:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
 	}
 
 	.league-detail-head-btn {

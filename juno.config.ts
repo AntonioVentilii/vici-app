@@ -36,6 +36,16 @@ enum JunoDatastoreCollection {
 	USER_MONTHLY_STATS = 'user_monthly_stats'
 }
 
+/**
+ * Storage collection names for `satellite.collections.storage` below.
+ * Storage holds binary assets (not Datastore docs); kept separate from
+ * {@link JunoDatastoreCollection} for that reason. Mirrors the
+ * `LEAGUE_IMAGES_COLLECTION` constant in `src/lib/types/league.ts`.
+ */
+enum JunoStorageCollection {
+	LEAGUE_IMAGES = 'league_images'
+}
+
 const delegation = {
 	// Like identities derived by Internet Identity, those derived with OpenID
 	// are allowed to interact with any canister on the Internet Computer.
@@ -211,6 +221,19 @@ export default defineConfig(({ mode }) => ({
 				},
 				{
 					collection: JunoDatastoreCollection.USER_MONTHLY_STATS,
+					memory: 'stable',
+					read: 'public',
+					write: 'public'
+				}
+			],
+			// Owner-uploaded league cover images. Public read so every
+			// surface can render the cover; write is public so the owning
+			// principal can upload (the FE only offers the control to the
+			// league owner, and the doc-side `assertSetLeague` is what
+			// authorises which `imageUrl` lands on the league record).
+			storage: [
+				{
+					collection: JunoStorageCollection.LEAGUE_IMAGES,
 					memory: 'stable',
 					read: 'public',
 					write: 'public'

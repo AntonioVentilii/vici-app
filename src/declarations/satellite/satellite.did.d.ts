@@ -338,6 +338,7 @@ export interface AppListChallengeableLeaguesResult {
 	items: Array<{
 		id: string;
 		accent_color: [] | [string];
+		image_url: [] | [string];
 		owner: string;
 		name: string;
 		invite_code: string;
@@ -517,6 +518,7 @@ export interface AppListMyLeaguesResult {
 		league: {
 			id: string;
 			accent_color: [] | [string];
+			image_url: [] | [string];
 			owner: string;
 			name: string;
 			invite_code: string;
@@ -594,6 +596,7 @@ export interface AppLookupLeagueByInviteResult {
 				{
 					id: string;
 					accent_color: [] | [string];
+					image_url: [] | [string];
 					owner: string;
 					name: string;
 					invite_code: string;
