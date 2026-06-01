@@ -97,9 +97,9 @@ export const UserProfileSchema = j.strictObject({
 	//
 	// `defaultAmount` is the wallet-side default-bet preference; the rest
 	// of the fields are the user-experience preferences (notifications,
-	// flow deck, haptics, saved-markets list) — they migrated off
-	// per-device localStorage and now round-trip through the profile so
-	// they sync across devices.
+	// flow deck, haptics, saved-markets list, privacy/sharing) — they
+	// migrated off per-device localStorage and now round-trip through the
+	// profile so they sync across devices.
 	preferences: j
 		.strictObject({
 			defaultAmount: j
@@ -124,7 +124,29 @@ export const UserProfileSchema = j.strictObject({
 			flowSessionLength: j.number().default(10),
 			hapticsEnabled: j.boolean().default(true),
 			soundEnabled: j.boolean().default(true),
-			callsPublic: j.boolean().default(true),
+			// Privacy / sharing preference group (Settings privacy
+			// sections). Every leaf is defaulted for the same reason as the
+			// surrounding fields — a partial `preferences` shape on a legacy
+			// row must decode cleanly. `profileVisibility` is stored as a
+			// loose string (the `public|friends|private` settings union) and
+			// is mirrored to the top-level `visibility` enum on write, which
+			// is the field the satellite wire format reads. `leaderboardOptIn`
+			// / `worldsOptIn` default to `true` to match the current
+			// always-shown behaviour. Mirror any change here in
+			// `src/satellite/api-schemas.ts`.
+			sharing: j
+				.strictObject({
+					profileVisibility: j.string().default('private'),
+					callsPublic: j.boolean().default(true),
+					leaderboardOptIn: j.boolean().default(true),
+					worldsOptIn: j.boolean().default(true)
+				})
+				.default({
+					profileVisibility: 'private',
+					callsPublic: true,
+					leaderboardOptIn: true,
+					worldsOptIn: true
+				}),
 			flowTags: j.array(j.string()).default([]),
 			worldCupMode: j.boolean().default(false),
 			savedMarketIds: j.array(j.string()).default([]),
@@ -150,7 +172,12 @@ export const UserProfileSchema = j.strictObject({
 			flowSessionLength: 10,
 			hapticsEnabled: true,
 			soundEnabled: true,
-			callsPublic: true,
+			sharing: {
+				profileVisibility: 'private',
+				callsPublic: true,
+				leaderboardOptIn: true,
+				worldsOptIn: true
+			},
 			flowTags: [],
 			worldCupMode: false,
 			savedMarketIds: [],

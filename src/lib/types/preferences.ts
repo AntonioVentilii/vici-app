@@ -19,6 +19,32 @@ export interface DefaultAmountPrefs {
 }
 
 /**
+ * Privacy / sharing preference group. The four user-facing controls in
+ * the Settings privacy sections round-trip through here so they sync
+ * across devices.
+ *
+ * `profileVisibility` is the settings-grouped source for who can see the
+ * profile; it is mirrored to the top-level `profile.visibility` enum on
+ * every write because that field is what the satellite wire format reads
+ * for leaderboard / search filtering.
+ *
+ * `leaderboardOptIn` and `worldsOptIn` are opt-out flags (default `true`,
+ * matching the current always-shown behaviour). They persist the user's
+ * intent today; server-side enforcement (actually hiding an opted-out
+ * user from the global leaderboard or Worlds Universities) is a separate
+ * follow-up.
+ */
+export interface SharingPrefs {
+	profileVisibility: SettingsVisibility;
+	/** Show the user's last-30 call history publicly on their profile. */
+	callsPublic: boolean;
+	/** Surface the user's rank on the global leaderboard. */
+	leaderboardOptIn: boolean;
+	/** Surface the user's contribution in Worlds Universities. */
+	worldsOptIn: boolean;
+}
+
+/**
  * Cross-device user preferences. Lives on the profile doc
  * (`profile.preferences`); every leaf has a server-side default so
  * legacy profile rows decode cleanly. The store layer hydrates from
@@ -37,7 +63,10 @@ export interface UserPreferences {
 	 * API, so it defaults on and is honored independently of haptics.
 	 */
 	soundEnabled: boolean;
-	callsPublic: boolean;
+	/**
+	 * Privacy / sharing preference group. See {@link SharingPrefs}.
+	 */
+	sharing: SharingPrefs;
 	flowTags: string[];
 	/**
 	 * When `true`, Flow deck is filtered to World Cup markets only — the

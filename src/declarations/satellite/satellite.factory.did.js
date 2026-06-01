@@ -266,6 +266,12 @@ export const idlFactory = ({ IDL }) => {
 						streak_reminder: IDL.Bool
 					}),
 					haptics_enabled: IDL.Bool,
+					sharing: IDL.Record({
+						worlds_opt_in: IDL.Bool,
+						leaderboard_opt_in: IDL.Bool,
+						calls_public: IDL.Bool,
+						profile_visibility: IDL.Text
+					}),
 					sound_enabled: IDL.Bool,
 					onboarding_completed: IDL.Bool,
 					default_amount: IDL.Record({
@@ -275,8 +281,7 @@ export const idlFactory = ({ IDL }) => {
 					world_cup_mode: IDL.Bool,
 					saved_market_ids: IDL.Vec(IDL.Text),
 					flow_tags: IDL.Vec(IDL.Text),
-					flow_session_length: IDL.Float64,
-					calls_public: IDL.Bool
+					flow_session_length: IDL.Float64
 				}),
 				archetype: IDL.Text,
 				last_active_day: IDL.Opt(IDL.Text),

@@ -5,6 +5,7 @@ import type { MarketTranslation } from '$lib/types/market-translation';
 import type { UserProfile } from '$lib/types/profile';
 import type { ReferralListItem } from '$lib/types/referral';
 import type { VxpMilestoneState } from '$lib/types/vxp-onboarding';
+import { visibilityFromProfile } from '$lib/utils/visibility.utils';
 import { j, PrincipalTextSchema } from '@junobuild/schema';
 
 /**
@@ -244,7 +245,15 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 		flowSessionLength: 10,
 		hapticsEnabled: true,
 		soundEnabled: true,
-		callsPublic: true,
+		sharing: {
+			// Derive from the canonical top-level `visibility` so the settings
+			// source-of-truth slice agrees with the real visibility on this
+			// wire profile (FRIENDS_ONLY → 'private') instead of hard-coding it.
+			profileVisibility: visibilityFromProfile(profile.visibility as ProfileVisibility),
+			callsPublic: true,
+			leaderboardOptIn: true,
+			worldsOptIn: true
+		},
 		flowTags: [],
 		worldCupMode: false,
 		savedMarketIds: [],

@@ -24,6 +24,7 @@ import {
 } from '$lib/utils/achievements.utils';
 import { decimalFixedValueToNumber, shortenWithMiddleEllipsis } from '$lib/utils/format.utils';
 import { applyDailyStreakBump, todayKey } from '$lib/utils/streak.utils';
+import { visibilityFromProfile } from '$lib/utils/visibility.utils';
 import { fromWireProfile } from '$satellite/utils/wire-format.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
@@ -74,7 +75,14 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 					flowSessionLength: 10,
 					hapticsEnabled: true,
 					soundEnabled: true,
-					callsPublic: true,
+					sharing: {
+						// Mirror the top-level `visibility` default
+						// (FRIENDS_ONLY → 'private'); opt-ins default on.
+						profileVisibility: visibilityFromProfile(ProfileVisibility.FRIENDS_ONLY),
+						callsPublic: true,
+						leaderboardOptIn: true,
+						worldsOptIn: true
+					},
 					flowTags: [],
 					worldCupMode: false,
 					savedMarketIds: [],
