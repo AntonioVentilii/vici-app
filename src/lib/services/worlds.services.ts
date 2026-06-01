@@ -7,7 +7,7 @@ import {
 	type AffiliationDoc,
 	type AffiliationKind
 } from '$lib/types/affiliation';
-import type { AffiliationStatsDoc } from '$lib/types/affiliation-stats';
+import type { AffiliationChampionship, AffiliationStatsDoc } from '$lib/types/affiliation-stats';
 import { deleteDoc, getDoc, setDoc } from '@junobuild/core';
 
 /**
@@ -307,6 +307,48 @@ export const listAffiliationStats = async ({
 	const { items } = await functions.listAffiliationStats({ kind, limit });
 
 	return items.map(projectStatsWire);
+};
+
+/**
+ * Real member counts for every affiliation of a kind. Returned as a
+ * map keyed by `affiliationIdentifier` for O(1) lookup from the picker
+ * / detail surfaces; an affiliation with no members is simply absent
+ * (callers read a missing key as zero).
+ */
+export const listWorldsMemberCounts = async ({
+	kind
+}: {
+	kind: AffiliationKind;
+}): Promise<Record<string, number>> => {
+	const { items } = await functions.listWorldsMemberCounts({ kind });
+
+	return items.reduce<Record<string, number>>((acc, item) => {
+		acc[item.affiliation_identifier] = item.member_count;
+
+		return acc;
+	}, {});
+};
+
+/**
+ * Champion history for one affiliation — the past months it finished
+ * first in its kind's monthly ranking. Empty until at least one month
+ * has closed with a ranked leader; the FE renders a "no champions
+ * yet" state in that case.
+ */
+export const listAffiliationChampionships = async ({
+	kind,
+	affiliationIdentifier
+}: {
+	kind: AffiliationKind;
+	affiliationIdentifier: string;
+}): Promise<AffiliationChampionship[]> => {
+	const { items } = await functions.listAffiliationChampionships({ kind, affiliationIdentifier });
+
+	return items.map((item) => ({
+		monthAnchor: item.month_anchor,
+		accuracy: item.accuracy,
+		monthTotalCalls: item.month_total_calls
+	}));
 };
 
 /**

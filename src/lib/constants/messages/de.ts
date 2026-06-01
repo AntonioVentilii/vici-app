@@ -2045,6 +2045,11 @@ export const deMessages = {
 	'worlds.detail.activity_calls': '{count} Calls',
 	'worlds.detail.activity_eyebrow': 'Aktivität',
 	'worlds.detail.back': 'Zurück zu Worlds',
+	'worlds.detail.champion_chip': 'Champion · {count} Pokale',
+	'worlds.detail.champions_cups': '{count} Pokale',
+	'worlds.detail.champions_empty':
+		'Noch keine Champion-Monate. Führe eine Monatsrangliste an, um den ersten Pokal zu holen.',
+	'worlds.detail.champions_eyebrow': 'Champion-Historie',
 	'worlds.detail.cta_label': 'Flow öffnen, Calls hinzufügen',
 	'worlds.detail.empty_body':
 		'{name} braucht {calls} weitere Calls, um sich fürs Saison-Podium zu qualifizieren.',
@@ -2053,6 +2058,7 @@ export const deMessages = {
 	'worlds.detail.empty_title_school': 'Sei eine·r der Ersten.',
 	'worlds.detail.kind_country': 'Nation',
 	'worlds.detail.kind_university': 'Universität',
+	'worlds.detail.loading_champions': 'Lade Champions…',
 	'worlds.detail.loading_members': 'Lade Mitglieder…',
 	'worlds.detail.marker_alma_mater': 'Alma Mater',
 	'worlds.detail.marker_citizen': 'Bürger·in',
@@ -2131,6 +2137,7 @@ export const deMessages = {
 	'worlds.picker.school.inbox_title': 'Prüfe dein Postfach',
 	'worlds.picker.school.meta_be_founder': 'Werde Gründer',
 	'worlds.picker.school.meta_members': '{members} Mitglieder · #{rank} diesen Monat',
+	'worlds.picker.school.meta_members_no_rank': '{members} Mitglieder',
 	'worlds.picker.school.meta_no_members': 'Noch keine Mitglieder',
 	'worlds.picker.school.name_label': 'Name der Schule',
 	'worlds.picker.school.name_placeholder': 'z. B. Otto Beisheim School of Management',

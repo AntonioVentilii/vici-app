@@ -16,6 +16,7 @@
 	import {
 		claimWorldsPodiumPrize,
 		listAffiliationStats,
+		listWorldsMemberCounts,
 		previousMonthAnchor
 	} from '$lib/services/worlds.services';
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
@@ -60,6 +61,7 @@
 	type Scope = 'month' | 'wc';
 
 	let stats = $state<AffiliationStatsDoc[]>([]);
+	let memberCounts = $state<Record<string, number>>({});
 	let loadState = $state<'loading' | 'ready' | 'error'>('loading');
 	let errorMessage = $state<string | null>(null);
 
@@ -77,7 +79,12 @@
 
 	const refresh = async () => {
 		try {
-			stats = await listAffiliationStats({ kind: 'university' });
+			const [uniStats, counts] = await Promise.all([
+				listAffiliationStats({ kind: 'university' }),
+				listWorldsMemberCounts({ kind: 'university' })
+			]);
+			stats = uniStats;
+			memberCounts = counts;
 			loadState = 'ready';
 		} catch (err) {
 			console.error('WorldsPage: refresh failed', err);
@@ -224,6 +231,42 @@
 	 */
 	const badgeStyle = (opt: WorldsAffiliationOption | undefined): string =>
 		opt?.color ? `background: ${opt.color}; color: ${opt.text ?? '#fff'};` : '';
+
+	/**
+	 * Per-school signal for the affiliation picker — real member count
+	 * (from `listWorldsMemberCounts`) plus the monthly-accuracy rank when
+	 * the school is ranked. Schools with members but no stats doc carry a
+	 * count with `monthRank` unset so the picker shows "{N} members"
+	 * without a rank.
+	 */
+	const schoolStats = $derived.by(() => {
+		const monthRanked = [...stats].sort((a, b) => {
+			const da = affiliationMonthlyAccuracy(a);
+			const db = affiliationMonthlyAccuracy(b);
+
+			if (da !== db) {
+				return db - da;
+			}
+
+			if (a.monthTotalCalls !== b.monthTotalCalls) {
+				return b.monthTotalCalls - a.monthTotalCalls;
+			}
+
+			return a.affiliationIdentifier.localeCompare(b.affiliationIdentifier);
+		});
+
+		const rankById = new Map<string, number>(
+			monthRanked.map((row, i) => [row.affiliationIdentifier, i + 1])
+		);
+
+		const out: Record<string, { members: number; monthRank?: number }> = {};
+
+		for (const [id, members] of Object.entries(memberCounts)) {
+			out[id] = { members, monthRank: rankById.get(id) };
+		}
+
+		return out;
+	});
 
 	const rosterSize = WORLDS_UNIVERSITIES.length;
 
@@ -489,6 +532,7 @@
 			void refreshMyAffiliations();
 			void refresh();
 		}}
+		{schoolStats}
 	/>
 {/if}
 
