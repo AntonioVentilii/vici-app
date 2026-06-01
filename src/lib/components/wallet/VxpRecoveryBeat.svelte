@@ -7,7 +7,7 @@
 	 * balance has fallen to the recovery floor. It reads net worth still
 	 * locked in open calls to tell two very different states apart:
 	 *
-	 * - **Fully deployed** (`lockedInOpenVxp >= DEPLOY_FLOOR`): the stack is
+	 * - **Fully deployed** (locked VXP at or above the deploy floor): the stack is
 	 *   in play, not lost — a positive beat. The VXP is parked in calls that
 	 *   haven't settled and pays out on their own dates. CTAs point at the
 	 *   open calls, with Calibration offered as a "practice while you wait".

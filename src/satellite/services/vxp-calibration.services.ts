@@ -10,8 +10,8 @@ import { VICI_ENGINE_ID } from '$lib/constants/icdc.constants';
 import {
 	CALIBRATION_DAILY_CAP,
 	CALIBRATION_HOURLY_CAP,
-	CALIBRATION_RECOVERY_FLOOR,
-	VXP_CALIBRATION_REWARD
+	CALIBRATION_RECOVERY_FLOOR_BASE_UNITS,
+	VXP_CALIBRATION_REWARD_BASE_UNITS
 } from '$lib/constants/vxp-economy.constants';
 import type { CallSide } from '$lib/types/market';
 import { vxpAwardKey, type VxpAwardDoc } from '$lib/types/vxp-award';
@@ -407,7 +407,7 @@ export const claimCalibrationRewardFn = async ({
 		account: { owner: callerPrincipal }
 	});
 
-	if (balance >= BigInt(CALIBRATION_RECOVERY_FLOOR)) {
+	if (balance >= CALIBRATION_RECOVERY_FLOOR_BASE_UNITS) {
 		return { correct: false, paidNow: false, alreadyClaimed: false, reason: 'balance_above_floor' };
 	}
 
@@ -444,7 +444,7 @@ export const claimCalibrationRewardFn = async ({
 	}
 
 	// 8 (correct path). Persist the pending award, transfer, reconcile.
-	const amount = BigInt(VXP_CALIBRATION_REWARD);
+	const amount = VXP_CALIBRATION_REWARD_BASE_UNITS;
 	const pending: VxpAwardDoc = {
 		recipient,
 		awardType: CALIBRATION_AWARD_TYPE,

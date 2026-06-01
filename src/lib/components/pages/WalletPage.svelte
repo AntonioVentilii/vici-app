@@ -16,9 +16,9 @@
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import {
-		CALIBRATION_RECOVERY_FLOOR,
-		DEPLOY_FLOOR,
-		VXP_CALIBRATION_REWARD
+		CALIBRATION_DEPLOY_FLOOR_BASE_UNITS,
+		CALIBRATION_RECOVERY_FLOOR_BASE_UNITS,
+		VXP_CALIBRATION_REWARD_BASE_UNITS
 	} from '$lib/constants/vxp-economy.constants';
 	import { markets } from '$lib/derived/markets.derived';
 	import { positions } from '$lib/derived/positions.derived';
@@ -145,29 +145,39 @@
 	// its dual-CTA row for a recovery beat. The branch reads net worth still
 	// locked in open VXP calls: at/above the deploy floor the stack is "in
 	// play, nothing lost" (deployed); below it the stack has eroded through
-	// realised losses (genuine depletion). Both numbers are whole VXP.
+	// realised losses (genuine depletion). All gate comparisons run in VXP
+	// *base units* (the same scale as the wallet balance and
+	// `lockedCollateral`); only the displayed numbers are whole VXP.
 	const marketById = $derived(new Map($markets.map((m) => [m.id, m] as const)));
 
-	// Free balance in whole VXP — the gate that arms the recovery beat.
-	const vxpBalanceWhole = $derived(
-		decimalFixedValueToNumber({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
-	);
-
 	// Open VXP positions: `lockedCollateral` is clearing-USD micro-units
-	// (USD_DECIMALS = 4), the same scale as VXP, so we convert to whole VXP
-	// to compare against the deploy floor.
+	// (USD_DECIMALS = 4), the same scale as VXP base units, so the locked
+	// total is compared against the deploy floor without any conversion.
 	const openVxpPositions = $derived(
 		$positions.filter((p) => marketById.get(p.marketId)?.token.symbol === VXP_TOKEN.symbol)
 	);
 
-	const lockedInOpenVxp = $derived.by((): number => {
-		const rawLocked = openVxpPositions.reduce<bigint>((acc, p) => acc + p.lockedCollateral, ZERO);
+	// Total VXP riding on open calls, in base units — the deploy-floor gate.
+	const lockedInOpenBaseUnits = $derived(
+		openVxpPositions.reduce<bigint>((acc, p) => acc + p.lockedCollateral, ZERO)
+	);
 
-		return Math.round(decimalFixedValueToNumber({ value: rawLocked, decimals: USD_DECIMALS }));
-	});
+	// Whole-VXP rendering of the locked total, for the recovery beat display.
+	const lockedInOpenVxp = $derived(
+		Math.round(decimalFixedValueToNumber({ value: lockedInOpenBaseUnits, decimals: USD_DECIMALS }))
+	);
 
-	const recovering = $derived(vxpBalanceWhole < CALIBRATION_RECOVERY_FLOOR);
-	const fullyDeployed = $derived(lockedInOpenVxp >= DEPLOY_FLOOR);
+	const recovering = $derived(vxpBalance < CALIBRATION_RECOVERY_FLOOR_BASE_UNITS);
+	const fullyDeployed = $derived(lockedInOpenBaseUnits >= CALIBRATION_DEPLOY_FLOOR_BASE_UNITS);
+
+	// Whole-VXP reward shown on the recovery beat, derived from the base-unit
+	// constant so the display tracks the authoritative award amount.
+	const calibrationRewardVxp = $derived(
+		decimalFixedValueToNumber({
+			value: VXP_CALIBRATION_REWARD_BASE_UNITS,
+			decimals: VXP_TOKEN.decimals
+		})
+	);
 
 	// Weekly VXP delta — sums signed amounts on clearing settlements
 	// from the last 7 days. Settlements credit a winning call; losing
@@ -492,7 +502,7 @@
 			onCalibrate={() => void goto(resolve(AppPath.Calibration))}
 			onReviewOpenCalls={() => void goto(resolve(AppPath.Portfolio))}
 			openCallCount={openVxpPositions.length}
-			rewardVxp={VXP_CALIBRATION_REWARD}
+			rewardVxp={calibrationRewardVxp}
 		/>
 	{/if}
 

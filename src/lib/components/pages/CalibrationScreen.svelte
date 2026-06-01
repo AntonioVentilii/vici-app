@@ -10,8 +10,8 @@
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
 	import {
 		CALIBRATION_DAILY_CAP,
-		CALIBRATION_RECOVERY_FLOOR,
-		VXP_CALIBRATION_REWARD
+		CALIBRATION_RECOVERY_FLOOR_BASE_UNITS,
+		VXP_CALIBRATION_REWARD_BASE_UNITS
 	} from '$lib/constants/vxp-economy.constants';
 	import { getCalibrationDeck } from '$lib/services/calibration.services';
 	import {
@@ -73,21 +73,32 @@
 
 	const reduceMotion = $derived(prefersReducedMotion());
 
-	// Free VXP balance, in whole VXP, read from the wallet store — the same
+	// Free VXP balance, in base units, read from the wallet store — the same
 	// source the Wallet hero and Dash read. The recovery banner / disarm gate
-	// keys off this against the recovery floor.
-	const vxpBalanceWhole = $derived.by((): number =>
-		decimalFixedValueToNumber({
-			value: $balancesStore?.[VXP_TOKEN.id] ?? ZERO,
-			decimals: VXP_TOKEN.decimals
-		})
-	);
+	// keys off this against the recovery floor (also base units).
+	const vxpBalanceBaseUnits = $derived.by((): bigint => $balancesStore?.[VXP_TOKEN.id] ?? ZERO);
 
 	// Loss-shield is active while the user is genuinely recovering, i.e. the
 	// free balance is below the recovery floor. Mirrors the server bound that
 	// gates the reward (a wrong call always mints nothing regardless; the
-	// shield framing is the UX honesty layer for the recovering user).
-	const shielded = $derived(vxpBalanceWhole < CALIBRATION_RECOVERY_FLOOR);
+	// shield framing is the UX honesty layer for the recovering user). The
+	// comparison is base-unit vs base-unit.
+	const shielded = $derived(vxpBalanceBaseUnits < CALIBRATION_RECOVERY_FLOOR_BASE_UNITS);
+
+	// Whole-VXP display values for copy — derived from the base-unit constants
+	// so the numbers shown to the user track the authoritative thresholds.
+	const recoveryFloorVxp = $derived(
+		decimalFixedValueToNumber({
+			value: CALIBRATION_RECOVERY_FLOOR_BASE_UNITS,
+			decimals: VXP_TOKEN.decimals
+		})
+	);
+	const calibrationRewardVxp = $derived(
+		decimalFixedValueToNumber({
+			value: VXP_CALIBRATION_REWARD_BASE_UNITS,
+			decimals: VXP_TOKEN.decimals
+		})
+	);
 
 	const currentCard = $derived<CalibrationCard | undefined>(deck[cardIndex]);
 
@@ -157,7 +168,7 @@
 
 			if (claim.correct && claim.paidNow) {
 				sessionCorrect += 1;
-				sessionVxp += VXP_CALIBRATION_REWARD;
+				sessionVxp += calibrationRewardVxp;
 			} else if (claim.correct && claim.alreadyClaimed) {
 				// Counts as a correct read for the session tally, but the reward
 				// was already earned on this market so nothing mints again.
@@ -242,7 +253,7 @@
 			{t({
 				locale: $localeStore,
 				key: 'calibration.banner.recovery',
-				params: { floor: CALIBRATION_RECOVERY_FLOOR }
+				params: { floor: recoveryFloorVxp }
 			})}
 		</div>
 	{/if}
@@ -268,7 +279,7 @@
 				{t({
 					locale: $localeStore,
 					key: 'calibration.recovered.sub',
-					params: { floor: CALIBRATION_RECOVERY_FLOOR }
+					params: { floor: recoveryFloorVxp }
 				})}
 			</p>
 			<button class="calib-cta" onclick={back} type="button">
@@ -354,7 +365,7 @@
 					<span>
 						{t({ locale: $localeStore, key: 'calibration.card.if_right' })}
 						<b class="is-yes"
-							>+{VXP_CALIBRATION_REWARD} {t({ locale: $localeStore, key: 'calibration.vxp' })}</b
+							>+{calibrationRewardVxp} {t({ locale: $localeStore, key: 'calibration.vxp' })}</b
 						>
 					</span>
 					<span>
@@ -427,7 +438,7 @@
 								{t({
 									locale: $localeStore,
 									key: 'calibration.feedback.correct',
-									params: { reward: VXP_CALIBRATION_REWARD }
+									params: { reward: calibrationRewardVxp }
 								})}
 							{/if}
 						</span>
