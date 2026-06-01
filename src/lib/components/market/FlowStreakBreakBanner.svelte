@@ -15,7 +15,8 @@
 
 <!-- Streak-break choreography: single low thud (haptic fires in
      handleAction), banner names the stage that ended, fresh start
-     at SPARK. No rescues, no second chances. -->
+     at SPARK. Only shown once the forgiveness window is exhausted —
+     two or more fully-missed days. -->
 <div
 	class="streak-break"
 	in:fly={prefersReducedMotion() ? { duration: 0 } : { y: -8, duration: 300, easing: backOut }}
