@@ -734,6 +734,23 @@ const persistReferral = ({
 const PERSIST_MAX_RETRIES = 3;
 
 /**
+ * Guarded parse of a doc-stored base-unit string into a non-negative `bigint`. The referrals
+ * collection is user-writable, so a tampered `amountBaseUnits` could be a non-numeric string (which
+ * would throw on `BigInt(...)` and take down the hook) or a negative value. Anything that does not
+ * parse to a non-negative integer is treated as `ZERO` so the caller can safely clamp it against the
+ * server-recomputed expected amount.
+ */
+const parseStoredAmount = (raw: string): bigint => {
+	try {
+		const parsed = BigInt(raw);
+
+		return parsed > ZERO ? parsed : ZERO;
+	} catch {
+		return ZERO;
+	}
+};
+
+/**
  * Drives one side's payout to completion (or records the error). The flow mirrors
  * `payOutMilestoneIfNeeded` in [`vxp-onboarding.services.ts`](./vxp-onboarding.services.ts):
  * lock the row by writing `processing` first, transfer, then retry the persist with a fresh read
@@ -745,7 +762,8 @@ const driveSidePayout = async ({
 	refereeKey,
 	side,
 	recipient,
-	memoLabel
+	memoLabel,
+	expectedAmount
 }: {
 	ledger: IcrcLedgerCanister;
 	caller: Uint8Array;
@@ -753,6 +771,7 @@ const driveSidePayout = async ({
 	side: 'referee' | 'referrer';
 	recipient: PrincipalText;
 	memoLabel: string;
+	expectedAmount: bigint;
 }): Promise<void> => {
 	const snapshot = getDocStore({
 		collection: Collection.REFERRALS,
@@ -772,10 +791,16 @@ const driveSidePayout = async ({
 		return;
 	}
 
-	// The amount to transfer is whatever was armed onto this side's payout state — flat for the
-	// referee, tier-based for the referrer (see `armReferrerPayoutIfFirstFire`). Reading it back
-	// here keeps the ledger transfer and the recorded amount in lockstep.
-	const amount = BigInt(sideState.amountBaseUnits);
+	// SECURITY: the transferred amount is server-authoritative — it is `expectedAmount`, recomputed
+	// by the caller from canonical sources (the flat constant for the referee; the diminishing curve
+	// keyed on the authoritative prior-paid count for the referrer). The `amountBaseUnits` field on
+	// the doc lives in a *user-writable* collection, so it is never trusted as the source of truth at
+	// transfer time. We still read it (guarded — a malformed string must not throw the hook) purely to
+	// clamp: the actual transfer can never exceed `expectedAmount`, even if a tampered doc claims a
+	// larger figure. A clamp this way (rather than just ignoring the stored value) also means a doc
+	// armed below the expected amount only ever pays the smaller, recorded number.
+	const storedAmount = parseStoredAmount(sideState.amountBaseUnits);
+	const amount = storedAmount < expectedAmount ? storedAmount : expectedAmount;
 
 	try {
 		persistReferral({
@@ -1029,13 +1054,25 @@ export const onReferralSetForVxpPayout = async (ctx: OnSetDocContext): Promise<v
 			canisterId: Principal.fromText(VXP_LEDGER_CANISTER_ID)
 		});
 
+		// SECURITY: both expected amounts are recomputed server-side here and passed to the transfer
+		// path — never read from the (user-writable) referral doc. The referee bonus is the flat
+		// constant; the referrer reward is re-derived from the diminishing curve keyed on the *same*
+		// authoritative prior-paid count that the arming step (`armReferrerPayoutIfFirstFire`) used.
 		await driveSidePayout({
 			ledger,
 			caller,
 			refereeKey: key,
 			side: 'referee',
 			recipient: key,
-			memoLabel: 'referee'
+			memoLabel: 'referee',
+			expectedAmount: REFERRAL_VXP_BONUS_BASE_UNITS
+		});
+
+		const { lifetime: referrerPriorPaidCount } = countReferrerCredits({
+			caller,
+			referrer: doc.referrer,
+			excludeKey: key,
+			referenceMs: doc.redeemedAtMs
 		});
 
 		await driveSidePayout({
@@ -1044,7 +1081,8 @@ export const onReferralSetForVxpPayout = async (ctx: OnSetDocContext): Promise<v
 			refereeKey: key,
 			side: 'referrer',
 			recipient: doc.referrer,
-			memoLabel: 'referrer'
+			memoLabel: 'referrer',
+			expectedAmount: referrerRewardBaseUnits(referrerPriorPaidCount)
 		});
 	} catch (e: unknown) {
 		const msg = e instanceof Error ? e.message : String(e);

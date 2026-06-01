@@ -26,7 +26,7 @@ export const REFERRAL_MAX_PAID = 30;
 
 /**
  * Diminishing referrer-reward curve, keyed by the referrer's count of **prior** paid redemptions
- * (lifetime). Each tier covers a half-open redemption-index range and pays a fixed VXP amount; the
+ * (lifetime). Each tier covers an inclusive redemption-index range and pays a fixed VXP amount; the
  * reward shrinks as a code is reused, then drops to zero past {@link REFERRAL_MAX_PAID}.
  *
  * Redemption index (1-based, per referrer):
