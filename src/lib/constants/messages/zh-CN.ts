@@ -1516,7 +1516,6 @@ export const zhCnMessages = {
 	'profile.dashboard.cancel': '取消',
 	'profile.dashboard.close': '关闭',
 	'profile.dashboard.edit_avatar': '编辑头像',
-	'profile.avatar.edit': '编辑头像',
 	'profile.avatar.title': '编辑头像',
 	'profile.avatar.subtitle': '点按预览 · 点「完成」后生效',
 	'profile.avatar.discard': '放弃',
