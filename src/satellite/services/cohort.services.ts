@@ -520,6 +520,181 @@ export const listWorldsRosterFn = ({
 	return roster.sort((a, b) => a.joinedAtMs - b.joinedAtMs);
 };
 
+/** A single affiliation's real member tally for a Worlds kind. */
+export interface AffiliationMemberCount {
+	affiliationIdentifier: string;
+	kind: AffiliationKind;
+	memberCount: number;
+}
+
+/**
+ * Member-count aggregate for every affiliation of a Worlds kind.
+ * One pass over the `affiliations` collection, bucketed by
+ * `affiliationIdentifier`. Returns a real count (number of users who
+ * hold that university / country slot) — the same source of truth as
+ * `listWorldsRosterFn`, but tallied to a scalar so a caller that only
+ * needs "N members" (the picker, a detail-page chip) doesn't have to
+ * page the full roster payload per affiliation.
+ *
+ * Affiliations with no members simply don't appear in the result —
+ * callers treat a missing entry as zero / "no members yet".
+ */
+export const listWorldsMemberCountsFn = ({
+	kind
+}: {
+	kind: AffiliationKind;
+}): AffiliationMemberCount[] => {
+	const caller = msgCaller();
+
+	const { items } = listDocsStore({
+		collection: Collection.AFFILIATIONS,
+		caller: caller.toUint8Array(),
+		params: {}
+	});
+
+	const counts = new Map<string, number>();
+
+	for (const [, item] of items) {
+		try {
+			const aff = readAffiliationDoc(item.data);
+
+			if (nonNullish(aff) && aff.kind === kind) {
+				counts.set(aff.affiliationIdentifier, (counts.get(aff.affiliationIdentifier) ?? 0) + 1);
+			}
+		} catch {
+			// skip malformed
+		}
+	}
+
+	return [...counts.entries()]
+		.map(([affiliationIdentifier, memberCount]) => ({ affiliationIdentifier, kind, memberCount }))
+		.sort((a, b) =>
+			b.memberCount !== a.memberCount
+				? b.memberCount - a.memberCount
+				: a.affiliationIdentifier < b.affiliationIdentifier
+					? -1
+					: a.affiliationIdentifier > b.affiliationIdentifier
+						? 1
+						: 0
+		);
+};
+
+/** A past month an affiliation topped its kind — one champion cup. */
+export interface AffiliationChampionship {
+	/** YYYY-MM of the closed month the affiliation finished first. */
+	monthAnchor: string;
+	/** Frozen month accuracy at the time of the win (0..1). */
+	accuracy: number;
+	/** Resolved calls in that month — the depth behind the accuracy. */
+	monthTotalCalls: number;
+}
+
+/**
+ * Champion history for a single affiliation — every past month in
+ * which it finished **first** in its kind's monthly ranking.
+ *
+ * This reads the frozen `affiliation_stats` snapshot docs (3-segment
+ * keys, written by the lazy month-rollover in
+ * `affiliation-stats.services.ts`). For each closed month present in
+ * the snapshots, the top-ranked affiliation — by the same sort the
+ * podium fan-out uses (`listAffiliationStatsForMonthFn`) — is that
+ * month's champion. We collect the months where the requested
+ * affiliation held that top slot.
+ *
+ * There is no separate "season conclusion" or champion-recording
+ * entity in the backend: the only thing that closes a Worlds window
+ * is this per-doc monthly rollover (Juno exposes no scheduler
+ * primitive, so there's nothing that ends a season and stamps a
+ * winner). History therefore populates one entry per month that has
+ * actually rolled over and had a ranked leader — empty until the
+ * first month closes.
+ *
+ * Cost: O(snapshots) scan + a group-by; the per-month winner is the
+ * first element of each month's sorted bucket.
+ */
+export const listAffiliationChampionshipsFn = ({
+	kind,
+	affiliationIdentifier
+}: {
+	kind: AffiliationKind;
+	affiliationIdentifier: string;
+}): AffiliationChampionship[] => {
+	const caller = msgCaller();
+
+	const { items } = listDocsStore({
+		collection: Collection.AFFILIATION_STATS,
+		caller: caller.toUint8Array(),
+		params: {}
+	});
+
+	// Group every qualifying snapshot doc by its month so we can pick a
+	// single winner per closed month.
+	const byMonth = new Map<string, AffiliationStatsDoc[]>();
+
+	for (const [docKey, item] of items) {
+		// Snapshot docs only — 3-segment keys (more than one slash).
+		const isSnapshot = docKey.indexOf('/') !== docKey.lastIndexOf('/');
+
+		if (isSnapshot) {
+			try {
+				const doc = decodeDocData<AffiliationStatsDoc>(item.data);
+
+				if (doc.kind === kind && doc.monthTotalCalls >= MIN_CALLS_FOR_RANK) {
+					const bucket = byMonth.get(doc.monthAnchor);
+
+					if (nonNullish(bucket)) {
+						bucket.push(doc);
+					} else {
+						byMonth.set(doc.monthAnchor, [doc]);
+					}
+				}
+			} catch {
+				// skip malformed
+			}
+		}
+	}
+
+	const championships: AffiliationChampionship[] = [];
+
+	for (const [monthAnchor, bucket] of byMonth.entries()) {
+		// Same tie-break as the podium / leaderboard: accuracy desc →
+		// monthTotalCalls desc → affiliationIdentifier asc.
+		bucket.sort((a, b) => {
+			const aAcc = a.monthWins / a.monthTotalCalls;
+			const bAcc = b.monthWins / b.monthTotalCalls;
+
+			if (aAcc !== bAcc) {
+				return bAcc - aAcc;
+			}
+
+			if (a.monthTotalCalls !== b.monthTotalCalls) {
+				return b.monthTotalCalls - a.monthTotalCalls;
+			}
+
+			return a.affiliationIdentifier < b.affiliationIdentifier
+				? -1
+				: a.affiliationIdentifier > b.affiliationIdentifier
+					? 1
+					: 0;
+		});
+
+		const [winner] = bucket;
+
+		if (nonNullish(winner) && winner.affiliationIdentifier === affiliationIdentifier) {
+			championships.push({
+				monthAnchor,
+				accuracy: winner.monthWins / winner.monthTotalCalls,
+				monthTotalCalls: winner.monthTotalCalls
+			});
+		}
+	}
+
+	// Most recent cup first.
+	return championships.sort((a, b) =>
+		a.monthAnchor < b.monthAnchor ? 1 : a.monthAnchor > b.monthAnchor ? -1 : 0
+	);
+};
+
 /**
  * Single-doc lookup for `affiliation_stats`. Returns `undefined`
  * when no stats doc exists yet (the affiliation hasn't been the

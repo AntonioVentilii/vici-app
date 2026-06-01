@@ -368,6 +368,41 @@ const getUserRankAndCount = async (
 	return AppGetUserRankAndCountResultSchema.parse(result);
 };
 
+const AppListAffiliationChampionshipsArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country']),
+	affiliationIdentifier: j.string()
+});
+const AppListAffiliationChampionshipsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			month_anchor: j.string(),
+			accuracy: j.number(),
+			month_total_calls: j.number()
+		})
+	)
+});
+
+const listAffiliationChampionships = async (
+	args: j.infer<typeof AppListAffiliationChampionshipsArgsSchema>
+): Promise<j.infer<typeof AppListAffiliationChampionshipsResultSchema>> => {
+	const parsedArgs = AppListAffiliationChampionshipsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListAffiliationChampionshipsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_affiliation_championships']>[0];
+
+	const { app_list_affiliation_championships } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_affiliation_championships(idlArgs);
+
+	const result = schemaFromIdl({
+		schema: AppListAffiliationChampionshipsResultSchema,
+		value: idlResult
+	});
+	return AppListAffiliationChampionshipsResultSchema.parse(result);
+};
+
 const AppListAffiliationStatsArgsSchema = j.strictObject({
 	kind: j.enum(['university', 'country']),
 	limit: j.optional(j.number())
@@ -820,6 +855,37 @@ const listSentFriendRequests = async (): Promise<
 
 	const result = schemaFromIdl({ schema: AppListSentFriendRequestsResultSchema, value: idlResult });
 	return AppListSentFriendRequestsResultSchema.parse(result);
+};
+
+const AppListWorldsMemberCountsArgsSchema = j.strictObject({
+	kind: j.enum(['university', 'country'])
+});
+const AppListWorldsMemberCountsResultSchema = j.strictObject({
+	items: j.array(
+		j.strictObject({
+			affiliation_identifier: j.string(),
+			kind: j.enum(['university', 'country']),
+			member_count: j.number()
+		})
+	)
+});
+
+const listWorldsMemberCounts = async (
+	args: j.infer<typeof AppListWorldsMemberCountsArgsSchema>
+): Promise<j.infer<typeof AppListWorldsMemberCountsResultSchema>> => {
+	const parsedArgs = AppListWorldsMemberCountsArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppListWorldsMemberCountsArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_list_worlds_member_counts']>[0];
+
+	const { app_list_worlds_member_counts } = await getSatelliteExtendedActor<SatelliteActor>({
+		idlFactory
+	});
+	const idlResult = await app_list_worlds_member_counts(idlArgs);
+
+	const result = schemaFromIdl({ schema: AppListWorldsMemberCountsResultSchema, value: idlResult });
+	return AppListWorldsMemberCountsResultSchema.parse(result);
 };
 
 const AppListWorldsRosterArgsSchema = j.strictObject({
@@ -1460,6 +1526,7 @@ export const functions = {
 	getMyReferralCode,
 	getProfile,
 	getUserRankAndCount,
+	listAffiliationChampionships,
 	listAffiliationStats,
 	listChallengeableLeagues,
 	listFollowers,
@@ -1476,6 +1543,7 @@ export const functions = {
 	listMyLeagues,
 	listMyReferrals,
 	listSentFriendRequests,
+	listWorldsMemberCounts,
 	listWorldsRoster,
 	lookupLeagueByInvite,
 	lookupReferralCode,

@@ -2029,6 +2029,11 @@ export const ptMessages = {
 	'worlds.detail.activity_calls': '{count} chamadas',
 	'worlds.detail.activity_eyebrow': 'Atividade',
 	'worlds.detail.back': 'Voltar a Worlds',
+	'worlds.detail.champion_chip': 'Campeão · {count} taças',
+	'worlds.detail.champions_cups': '{count} taças',
+	'worlds.detail.champions_empty':
+		'Ainda sem meses de campeão. Lidere uma classificação mensal para conquistar a primeira taça.',
+	'worlds.detail.champions_eyebrow': 'Histórico de campeão',
 	'worlds.detail.cta_label': 'Abra o Flow para adicionar chamadas',
 	'worlds.detail.empty_body':
 		'{name} precisa de mais {calls} chamadas para se qualificar ao pódio da temporada.',
@@ -2113,6 +2118,7 @@ export const ptMessages = {
 	'worlds.picker.school.inbox_title': 'Verifique a caixa de entrada',
 	'worlds.picker.school.meta_be_founder': 'Seja o fundador',
 	'worlds.picker.school.meta_members': '{members} membros · #{rank} este mês',
+	'worlds.picker.school.meta_members_no_rank': '{members} membros',
 	'worlds.picker.school.meta_no_members': 'Ainda sem membros',
 	'worlds.picker.school.name_label': 'Nome da escola',
 	'worlds.picker.school.name_placeholder': 'ex. Otto Beisheim School of Management',
