@@ -48,7 +48,10 @@ export const todayKey = (now: Date = new Date()): string => {
 
 /**
  * Day delta between two `YYYY-MM-DD` keys (`to - from`). Returns
- * `Infinity` if either key is malformed. Used to decide whether the
+ * `Infinity` if either key is malformed — including an out-of-range key
+ * (e.g. `2026-02-31`) that `Date.UTC` would otherwise silently normalize
+ * to a valid timestamp; the parsed Y/M/D components must round-trip
+ * exactly through the resulting UTC date. Used to decide whether the
  * previous recorded day was "today" (no-op), within the forgiveness
  * window (continue — at most one fully-missed day), or "too long ago"
  * (break).
@@ -62,9 +65,29 @@ export const dayDelta = ({ from, to }: { from: string; to: string }): number => 
 		}
 
 		const [, y, mo, d] = m;
-		const ts = Date.UTC(Number(y), Number(mo) - 1, Number(d));
+		const year = Number(y);
+		const month = Number(mo) - 1;
+		const day = Number(d);
+		const ts = Date.UTC(year, month, day);
 
-		return Number.isFinite(ts) ? ts : null;
+		if (!Number.isFinite(ts)) {
+			return null;
+		}
+
+		// `Date.UTC` silently normalizes out-of-range components (e.g.
+		// `2026-02-31` → 2026-03-03). Reject anything that does not
+		// round-trip exactly, so a corrupted key reads as malformed.
+		const date = new Date(ts);
+
+		if (
+			date.getUTCFullYear() !== year ||
+			date.getUTCMonth() !== month ||
+			date.getUTCDate() !== day
+		) {
+			return null;
+		}
+
+		return ts;
 	};
 
 	const a = parse(from);
