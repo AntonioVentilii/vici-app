@@ -1,5 +1,10 @@
 import { todayKey } from '$lib/utils/streak.utils';
 
+// Standard daily target — predictions a user commits to make in a day.
+// Single source of truth for both the Flow session ceiling and the
+// dashboard "Today's goal" resume card, so the two surfaces never drift.
+export const DAILY_GOAL_TARGET = 10;
+
 export interface DailyGoalState {
 	// Predictions committed toward the goal on `date` (`0..target`).
 	done: number;
