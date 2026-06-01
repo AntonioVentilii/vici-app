@@ -21,6 +21,7 @@
 	import OutcomeBadge from '$lib/components/market/OutcomeBadge.svelte';
 	import TradeModal from '$lib/components/market/TradeModal.svelte';
 	import SavedMarketToggle from '$lib/components/saved-markets/SavedMarketToggle.svelte';
+	import { ZERO } from '$lib/constants/app.constants';
 	import { categoryLabel } from '$lib/constants/market-tags.constants';
 	import { AppPath, PublicPath } from '$lib/constants/routes.constants';
 	import { marketMetadata } from '$lib/derived/market-metadata.derived';
@@ -36,6 +37,7 @@
 	import { getUserMarketSignals } from '$lib/services/market-signals.services';
 	import { getMarket } from '$lib/services/market.services';
 	import { getPositionsForMarket } from '$lib/services/position.services';
+	import { loadMarketPriceHistory } from '$lib/services/trade.services';
 	import { showCompanion } from '$lib/stores/companion.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import type { CallSide, Market, MarketId } from '$lib/types/market';
@@ -58,6 +60,14 @@
 	let followedLean = $state<FollowedLeanSignal | undefined>();
 	let priorCall = $state<PriorCallSignal | undefined>();
 
+	// Real price-history series for this market, derived from the viewer's
+	// clearing trade history (caller-scoped, so viewer-relative). Empty
+	// until the first trade lands — the chart reads this as a true
+	// cold-start flat line. `undefined` while we haven't resolved it yet
+	// (or when signed out), so the chart falls back to its seed shape
+	// rather than flashing a misleading flat line.
+	let priceHistory = $state<number[] | undefined>();
+
 	let loading = $state(true);
 
 	let selectedSide = $state<CallSide | undefined>();
@@ -67,6 +77,10 @@
 	const fetchMarket = async ({ id, silent = false }: { id: MarketId; silent?: boolean }) => {
 		if (!silent) {
 			loading = true;
+			// Drop any history from the previously-viewed market so the
+			// chart falls back to its seed shape until the new series
+			// resolves, rather than briefly plotting stale prices.
+			priceHistory = undefined;
 		}
 
 		const [marketRes, positionsRes] = await Promise.all([getMarket(id), getPositionsForMarket(id)]);
@@ -96,6 +110,7 @@
 		if (isNullish(m) || !$userSignedIn) {
 			followedLean = undefined;
 			priorCall = undefined;
+			priceHistory = undefined;
 
 			return;
 		}
@@ -108,6 +123,24 @@
 		} catch {
 			followedLean = undefined;
 			priorCall = undefined;
+		}
+
+		// Real price history rides alongside the viewer-relative signals:
+		// it shares the trade-history fetch path and, like them, fails open
+		// — any error simply leaves the chart on its seed-based fallback.
+		try {
+			await loadMarketPriceHistory({
+				seriesId: m.id,
+				domain: m.balanceDomain,
+				onLoad: ({ response }) => {
+					priceHistory = response;
+				},
+				onUpdateError: () => {
+					priceHistory = undefined;
+				}
+			});
+		} catch {
+			priceHistory = undefined;
 		}
 	};
 
@@ -169,6 +202,20 @@
 
 	const isResolved = $derived(market?.status === 'Resolved');
 	const isLive = $derived(market?.status === 'Open');
+
+	// Resolved binary outcome (YES/NO) when known. Drives the
+	// "RESOLVED · YES/NO" tag, the settled banner, and the dimming of the
+	// losing side in the probability hero.
+	const resolvedOutcome = $derived<CallSide | undefined>(
+		isResolved && (market?.outcome === 'YES' || market?.outcome === 'NO')
+			? market.outcome
+			: undefined
+	);
+
+	// True cold-start: a live market with no real volume yet. Surfaces the
+	// "New / be first" cue and the muted stats, using our real volume
+	// field — never a synthetic crowd.
+	const isColdStart = $derived(isLive && nonNullish(market) && market.totalVolume === ZERO);
 
 	// Resolved entries from the user's `Settled` event stream that match
 	// this market. Used to keep the resolution UX (MY CALL stat,
@@ -339,9 +386,23 @@
 				{#if isLive}
 					<MarketDetailLivePill />
 				{:else if isResolved}
-					<span class="market-detail-tag-resolved">
-						<OutcomeBadge status={market.status} />
-					</span>
+					{#if nonNullish(resolvedOutcome)}
+						<!-- RESOLVED · YES/NO — the outcome colour spells out the
+						     settled side at a glance, beyond the neutral status
+						     badge. -->
+						<span
+							style:color={resolvedOutcome === 'YES' ? 'var(--yes)' : 'var(--no)'}
+							class="market-detail-tag-outcome"
+						>
+							{t({ locale: $localeStore, key: 'status.resolved' })} · {resolvedOutcome === 'YES'
+								? t({ locale: $localeStore, key: 'outcome.yes' })
+								: t({ locale: $localeStore, key: 'outcome.no' })}
+						</span>
+					{:else}
+						<span class="market-detail-tag-resolved">
+							<OutcomeBadge status={market.status} />
+						</span>
+					{/if}
 				{/if}
 			</div>
 
@@ -354,11 +415,50 @@
 			<MarketDetailWhyNow {priorCall} {whyNow} />
 		</section>
 
-		<MarketDetailProbHero {noPercent} {yesPercent} />
+		{#if isResolved}
+			<!-- Settled banner — closes the loop on the market side: a clear
+			     "this is over, here's how it landed" panel tinted by the
+			     winning side. -->
+			<section
+				style:border-color={resolvedOutcome === 'NO' ? 'var(--no)' : 'var(--yes)'}
+				class="market-detail-settled"
+				aria-label={t({ locale: $localeStore, key: 'market.detail.settled.eyebrow' })}
+			>
+				<span class="market-detail-settled-eyebrow">
+					{t({ locale: $localeStore, key: 'market.detail.settled.eyebrow' })}
+				</span>
+				<p class="market-detail-settled-line">
+					{#if nonNullish(resolvedOutcome)}
+						{t({ locale: $localeStore, key: 'market.detail.settled.resolved_prefix' })}
+						<b style:color={resolvedOutcome === 'YES' ? 'var(--yes)' : 'var(--no)'}>
+							{resolvedOutcome === 'YES'
+								? t({ locale: $localeStore, key: 'outcome.yes' })
+								: t({ locale: $localeStore, key: 'outcome.no' })}
+						</b>
+					{:else}
+						{t({ locale: $localeStore, key: 'market.detail.settled.resolved_generic' })}
+					{/if}
+				</p>
+			</section>
+		{/if}
 
-		<MarketDetailChartCard marketId={market.id} {yesPercent} />
+		<MarketDetailProbHero {noPercent} resolved={isResolved} {resolvedOutcome} {yesPercent} />
+
+		<MarketDetailChartCard marketId={market.id} points={priceHistory} {yesPercent} />
 
 		<MarketDetailStatsGrid {market} {positions} {resolvedForMarket} />
+
+		{#if isColdStart}
+			<!-- Cold-start cue — a fresh market with no real volume yet.
+			     Turns the empty state into an invitation rather than a wall
+			     of zeros. -->
+			<section class="market-detail-coldstart">
+				<p class="market-detail-coldstart-line">
+					<b>{t({ locale: $localeStore, key: 'market.detail.coldstart.lead' })}</b>
+					{t({ locale: $localeStore, key: 'market.detail.coldstart.body' })}
+				</p>
+			</section>
+		{/if}
 
 		<MarketDetailResolutionCard {market} />
 
@@ -392,6 +492,16 @@
 		     market that no longer accepts predictions. -->
 		{#if isLive}
 			<MarketDetailCtaBar {noPercent} onPick={handlePick} {yesPercent} />
+		{:else}
+			<!-- No-longer-trading footer — stands in for the CTA bar on
+			     expired / resolved markets so the page closes with an
+			     explicit "this market is closed" line rather than an empty
+			     gap where the YES/NO actions used to be. -->
+			<p class="market-detail-closed-foot">
+				{isResolved
+					? t({ locale: $localeStore, key: 'market.detail.closed.resolved' })
+					: t({ locale: $localeStore, key: 'market.detail.closed.expired' })}
+			</p>
 		{/if}
 
 		{#if nonNullish(selectedSide)}
@@ -480,6 +590,76 @@
 		padding: 0.2rem 0.45rem;
 		border-radius: 999px;
 		background: color-mix(in srgb, var(--bg-surface) 70%, transparent);
+	}
+
+	/* RESOLVED · YES/NO chip — bare coloured text (no fill/border) so it
+	   sits in the chip row like the category tag, with the outcome colour
+	   carrying the meaning. */
+	.market-detail-tag-outcome {
+		font-size: 11px;
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	/* Settled banner — framed panel directly under the hero, its border
+	   tinted by the winning side so the resolution reads at a glance. */
+	.market-detail-settled {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		margin: 0.75rem 1.25rem 0;
+		padding: 0.75rem 1rem;
+		border: 1px solid var(--yes);
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--bg-surface) 86%, transparent);
+		box-shadow: var(--inset-hi);
+	}
+
+	.market-detail-settled-eyebrow {
+		color: var(--fg-dim);
+		font-size: var(--t-10);
+		font-weight: 700;
+		letter-spacing: var(--tracking-allcaps);
+		text-transform: uppercase;
+	}
+
+	.market-detail-settled-line {
+		margin: 0;
+		color: var(--text-base);
+		font-size: var(--t-13);
+		font-weight: 600;
+	}
+
+	/* Cold-start cue — soft laurel-washed panel that frames an empty
+	   market as an opportunity to set the first line. */
+	.market-detail-coldstart {
+		margin: 0 1.25rem 0.5rem;
+		padding: 0.75rem 1rem;
+		border: 1px solid color-mix(in srgb, var(--laurel) 30%, var(--border-base));
+		border-radius: var(--r-12);
+		background: color-mix(in srgb, var(--laurel) 8%, transparent);
+	}
+
+	.market-detail-coldstart-line {
+		margin: 0;
+		color: var(--fg-dim);
+		font-size: var(--t-13);
+		line-height: 1.45;
+	}
+
+	.market-detail-coldstart-line b {
+		color: var(--text-base);
+		font-weight: 700;
+	}
+
+	/* No-longer-trading footer — quiet centred note that stands in for the
+	   CTA bar on expired / resolved markets. */
+	.market-detail-closed-foot {
+		margin: 1rem 1.25rem 0;
+		color: var(--text-muted);
+		font-size: var(--t-12);
+		text-align: center;
 	}
 
 	.market-detail-title {
