@@ -9,6 +9,7 @@ import { getIdentity, safeGetIdentityOnce } from '$lib/services/identity.service
 import { getMarkets } from '$lib/services/market.services';
 import { loadWithCertification } from '$lib/services/query-update.services';
 import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
+import { deriveMarketPriceHistory } from '$lib/utils/market-price-history.utils';
 import { isNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 
@@ -132,6 +133,45 @@ export const loadUserTradeHistory = async ({
 		request: ({ certified, identity: reqIdentity }) =>
 			fetchUserTradeHistory({ identity: reqIdentity, certified, domain }),
 		onLoad,
+		onUpdateError
+	});
+};
+
+/**
+ * Real price-history series for one market, sourced from the caller's
+ * trade history on the clearing canister.
+ *
+ * Reuses the same certified fetch path as {@link loadUserTradeHistory},
+ * then derives a chronological YES-percentage series for `seriesId` via
+ * {@link deriveMarketPriceHistory}. The series is genuine market history,
+ * not synthetic jitter, and is empty until the viewer has executed a
+ * trade on the market (true cold-start). No-op when signed out — the
+ * caller keeps its cold-start flat line.
+ */
+export const loadMarketPriceHistory = async ({
+	seriesId,
+	domain,
+	onLoad,
+	onUpdateError
+}: {
+	seriesId: string;
+	domain: RegistryDid.BalanceDomain;
+	onLoad: (options: { certified: boolean; response: number[] }) => void;
+	onUpdateError?: (error: unknown) => void;
+}): Promise<void> => {
+	const identity = await getIdentity();
+
+	if (isNullish(identity)) {
+		return;
+	}
+
+	return loadWithCertification<ClearingDid.Event[]>({
+		identity,
+		request: ({ certified, identity: reqIdentity }) =>
+			fetchUserTradeHistory({ identity: reqIdentity, certified, domain }),
+		onLoad: ({ certified, response }) => {
+			onLoad({ certified, response: deriveMarketPriceHistory({ events: response, seriesId }) });
+		},
 		onUpdateError
 	});
 };

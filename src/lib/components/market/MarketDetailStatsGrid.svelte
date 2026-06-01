@@ -57,18 +57,30 @@
 
 	const myCall = $derived(userActivePosition?.outcomeId ?? resolvedMyCall);
 
+	// Cold-start: a market with no real volume yet reads "New" instead of
+	// "0 VXP", and the matching depth tile reads "Be first". Both use our
+	// real volume fields — never a synthetic crowd. The "New" / "Be first"
+	// copy is suppressed (suffix dropped, tile muted) so the grid frames
+	// the empty market as an opportunity.
+	const freshVolume = $derived(totalVolume === ZERO);
+	const freshLiquidity = $derived(liquidity === ZERO);
+
 	const stats = $derived([
 		{
 			labelKey: 'market.detail.stats.volume' as const,
-			value: formatToken({ value: totalVolume, unitName: token.decimals }),
-			suffix: token.symbol,
-			mute: false
+			value: freshVolume
+				? t({ locale: $localeStore, key: 'market.detail.stats.new' })
+				: formatToken({ value: totalVolume, unitName: token.decimals }),
+			suffix: freshVolume ? '' : token.symbol,
+			mute: freshVolume
 		},
 		{
 			labelKey: 'market.detail.stats.liquidity' as const,
-			value: formatToken({ value: liquidity, unitName: token.decimals }),
-			suffix: token.symbol,
-			mute: false
+			value: freshLiquidity
+				? t({ locale: $localeStore, key: 'market.detail.stats.be_first' })
+				: formatToken({ value: liquidity, unitName: token.decimals }),
+			suffix: freshLiquidity ? '' : token.symbol,
+			mute: freshLiquidity
 		},
 		{
 			labelKey: 'market.detail.stats.closes' as const,

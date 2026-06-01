@@ -1,4 +1,4 @@
-// Generated from AntonioVentilii/icdc-core commit 74fb8499c5d6984b95d3355bd14c6690ed9daf2a for file 'src/clearing/clearing.did'
+// Generated from AntonioVentilii/icdc-core commit 260c6b8c676625e1b5927300b11a1d9aa75e842d for file 'src/clearing/clearing.did'
 
 // Outcome of a position transfer acceptance.
 type AcceptPositionTransferResult = variant {
@@ -389,6 +389,42 @@ type ListOrdersParams = record {
 	// Optional series identifier to filter orders.
 	series_id : opt text
 };
+// Input parameters for
+// [`list_series_trade_history`](super::list_series_trade_history).
+//
+// Returns the market-wide executed-trade history for a single series so a
+// front end can derive a price-history series (e.g. a YES-probability
+// sparkline) from the per-trade `price`/`timestamp`. Unlike `get_trade_history`
+// the result is not caller-scoped.
+type ListSeriesTradeHistoryParams = record {
+	// The derivative series whose executed trades to return.
+	series_id : text;
+	// Resume after this trade's `event_id` (exclusive). `None` starts from the
+	// earliest executed trade. Pass the previous response's `next_cursor` to
+	// continue. Executed-trade `event_id`s are strictly increasing in
+	// execution order, so the bare id is a stable cursor.
+	start_after : opt nat64;
+	// Maximum number of trades to return. `None` returns all remaining trades.
+	limit : opt nat64
+};
+// Input parameters for [`list_settled_series`](super::list_settled_series).
+//
+// A series is considered settled the moment a settlement plan is opened for it
+// (any [`PlanStatus`](crate::types::plans::PlanStatus)), which is also when it
+// stops being tradeable. Front ends use this to subtract the resolved set from
+// the registry's open/unexpired catalog page.
+type ListSettledSeriesParams = record {
+	// Resume after this series id (exclusive). `None` starts from the lowest
+	// series id. Settled series ids are returned in ascending order, so paging
+	// with the previous response's `next_cursor` is stable.
+	start_after : opt text;
+	// Maximum number of ids to return. `None` returns all remaining ids.
+	limit : opt nat64;
+	// When set, only return settled series whose plan recorded this balance
+	// domain. Lets a caller scoped to one domain (e.g. a flow deck) shrink the
+	// response to the relevant subset.
+	balance_domain : opt BalanceDomain
+};
 type MigrateDomainParams = record {
 	from_domain : BalanceDomain;
 	migration_id : text;
@@ -586,6 +622,36 @@ type Series = record {
 	// If this series was forked from another, the source series ID.
 	forked_from : opt text
 };
+// A page of executed trades scoped to a single series.
+type SeriesTradeHistoryPage = record {
+	// When `Some`, pass back as `start_after` to fetch the next page (it is the
+	// `event_id` of the last trade returned). `None` means the last page has
+	// been returned.
+	next_cursor : opt nat64;
+	// Executed trades for the series in this page, one point per trade, ordered
+	// by `event_id` ascending (i.e. execution order).
+	items : vec SeriesTradePoint
+};
+// A single executed trade on a series, as surfaced by the market-wide
+// price-history query.
+//
+// Each executed trade emits two [`Event`] rows (one per counterparty) that
+// share the same `event_id`, `price`, and `timestamp`. A price history needs
+// only one point per trade, so this collapses the pair to the trade-level
+// facts a front end plots — `price`/`timestamp` for the sparkline, `qty` for
+// optional volume — without exposing either counterparty's principal in a
+// market-wide read.
+type SeriesTradePoint = record {
+	// Traded quantity (positive).
+	qty : int;
+	// Execution timestamp in nanoseconds since UNIX epoch.
+	timestamp : nat64;
+	// Id of the trade's [`Event`] rows. Strictly increasing in execution
+	// order, so it doubles as the pagination cursor.
+	event_id : nat64;
+	// Execution price of the trade.
+	price : Price
+};
 // Input parameters for initiating a series settlement.
 type SettleSeriesParams = record {
 	// The derivative series identifier.
@@ -602,6 +668,14 @@ type SettleSeriesResult = variant {
 	// The settlement is in progress but incomplete due to processing limits.
 	// The caller should call `settle_series` again to continue.
 	Processing
+};
+// A page of settled (resolved) series ids.
+type SettledSeriesPage = record {
+	// When `Some`, pass back as `start_after` to fetch the next page. `None`
+	// means the last page has been returned.
+	next_cursor : opt text;
+	// Settled series ids in this page, ascending.
+	items : vec text
 };
 // Errors occurring during derivative series settlement.
 type SettlementError = variant {
@@ -1018,6 +1092,39 @@ service : (Config) -> {
 	list_orders : (ListOrdersParams) -> (vec LimitOrder) query;
 	// Returns a list of all derivative series currently cached in the clearing canister.
 	list_series : () -> (vec Series) query;
+	// Returns the executed-trade history for a single series, with stable cursor
+	// pagination.
+	//
+	// Unlike [`get_trade_history`] — which is caller-scoped — this surfaces every
+	// participant's executed trades on `series_id`, so a front end can derive a
+	// market-wide price history (e.g. a YES-probability sparkline) from the
+	// per-trade `price`/`timestamp` rather than only the viewer's own fills.
+	//
+	// Each trade is returned as a single [`SeriesTradePoint`] (the two
+	// counterparty rows are collapsed), ordered by `event_id` ascending — i.e.
+	// execution order. Served from the `SERIES_TRADE_HISTORY` index, so the read
+	// is `O(log series + page)` rather than a scan of the whole event log. The
+	// cursor is the last trade's `event_id` and is exclusive; since executed-trade
+	// `event_id`s are strictly increasing, resuming neither drops nor repeats a
+	// trade. Mirrors the pagination contract of `list_settled_series`.
+	list_series_trade_history : (ListSeriesTradeHistoryParams) -> (
+		SeriesTradeHistoryPage
+	) query;
+	// Lists the ids of series that have been settled (resolved), with stable
+	// cursor pagination.
+	//
+	// A series appears here as soon as a [`SettlementPlan`] is opened for it — in
+	// any [`PlanStatus`] — which is precisely when it stops being tradeable. This
+	// is the authoritative resolution set: the clearing canister owns settlement
+	// state, the registry does not. Front ends that build a "currently-tradeable"
+	// candidate set call the registry's `list_series_with` with `only_unexpired`
+	// for the open/unexpired catalog and subtract the ids returned here to drop the
+	// resolved markets, instead of reconstructing resolution from the activity log.
+	//
+	// Ids are returned in ascending order from `SETTLEMENT_PLANS` (a `BTreeMap`
+	// keyed by `SeriesId`), so paging with the previous response's `next_cursor`
+	// is stable as long as the underlying set is not mutated mid-traversal.
+	list_settled_series : (ListSettledSeriesParams) -> (SettledSeriesPage) query;
 	// Exports internal state as Prometheus metrics.
 	//
 	// This method is gated to canister controllers.

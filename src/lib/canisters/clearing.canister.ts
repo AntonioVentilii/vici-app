@@ -9,7 +9,9 @@ import {
 	Canister,
 	createServices,
 	fromNullable,
+	isNullish,
 	jsonReplacer,
+	toNullable,
 	type QueryParams
 } from '@dfinity/utils';
 import type { Principal } from '@icp-sdk/core/principal';
@@ -132,6 +134,52 @@ export class ClearingCanister extends Canister<ClearingService> {
 		const { list_series } = this.caller(queryParams);
 
 		return await list_series();
+	};
+
+	/**
+	 * Returns the authoritative set of settled (resolved) series ids, draining
+	 * the clearing canister's stable, exclusive pagination cursor to completion.
+	 *
+	 * Clearing is the single source of truth for resolution: a series is settled
+	 * the moment a settlement plan opens for it. Front ends subtract this set
+	 * from the registry's open/unexpired catalog to derive the open set
+	 * (open = unexpired − settled). Filter to one `balance_domain` to shrink the
+	 * response to a single deck's relevant subset.
+	 */
+	listSettledSeries = async ({
+		params,
+		...queryParams
+	}: {
+		params?: ClearingDid.ListSettledSeriesParams;
+	} & QueryParams = {}): Promise<string[]> => {
+		const { list_settled_series } = this.caller(queryParams);
+
+		const balanceDomain = params?.balance_domain ?? toNullable();
+		const pageLimit = params?.limit ?? toNullable();
+
+		const items: string[] = [];
+		let startAfter = params?.start_after ?? toNullable();
+		let done = false;
+
+		while (!done) {
+			const page = await list_settled_series({
+				start_after: startAfter,
+				limit: pageLimit,
+				balance_domain: balanceDomain
+			});
+
+			items.push(...page.items);
+
+			const next = fromNullable(page.next_cursor);
+
+			if (isNullish(next)) {
+				done = true;
+			} else {
+				startAfter = toNullable(next);
+			}
+		}
+
+		return items;
 	};
 
 	setRegistryCanister = async ({

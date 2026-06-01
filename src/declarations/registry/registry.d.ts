@@ -620,6 +620,19 @@ export interface ListSeriesParams {
 	 */
 	underlying: [] | [string];
 	/**
+	 * When `Some(true)`, exclude series whose `expiry_ns` is at or before the
+	 * registry's current time — i.e. return only series that are still open
+	 * for trading. `Some(false)` and `None` are equivalent and apply no expiry
+	 * filtering (the historical behavior).
+	 *
+	 * The cutoff is the canister's own `time()` evaluated server-side, so the
+	 * caller cannot widen the window with a stale or forged clock. This is the
+	 * expiry half of the "currently-tradeable" predicate; resolution/settlement
+	 * state is owned by the clearing canister and is filtered separately by the
+	 * caller (see `clearing.list_settled_series`).
+	 */
+	only_unexpired: [] | [boolean];
+	/**
 	 * Filter by a search term in the title or description (case-insensitive, partial match).
 	 */
 	search_term: [] | [string];
