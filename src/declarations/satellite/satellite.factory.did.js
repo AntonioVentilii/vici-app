@@ -289,6 +289,7 @@ export const idlFactory = ({ IDL }) => {
 				total_trades: IDL.Float64,
 				last_top_decile_day: IDL.Opt(IDL.Text),
 				win_rate: IDL.Float64,
+				avatar_parts: IDL.Text,
 				visibility: IDL.Variant({
 					friends_and_followers: IDL.Null,
 					public: IDL.Null,

@@ -277,6 +277,7 @@ const AppGetProfileResultSchema = j.strictObject({
 			owner: j.string(),
 			nickname: j.string(),
 			avatar: j.string(),
+			avatarParts: j.string(),
 			email: j.string(),
 			pnl: j.number(),
 			visibility: j.enum(['public', 'friends_and_followers', 'friends_only']),
