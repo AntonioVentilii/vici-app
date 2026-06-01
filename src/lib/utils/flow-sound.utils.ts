@@ -29,16 +29,12 @@ interface WebAudioWindow {
 let audioContext: AudioContext | null = null;
 
 /**
- * Resolve the shared AudioContext, lazily creating it on first use and
- * resuming it if the browser has parked it in the `suspended` state
- * (autoplay policy). Returns `null` — and the caller no-ops — when sound
- * is disabled in preferences or Web Audio is unavailable.
+ * Construct (or return) the shared AudioContext without consulting the
+ * sound preference. Used by the gesture unlock, which must prime the
+ * hardware route even while muted so a later un-mute plays immediately.
+ * Returns `null` on SSR or where Web Audio is unavailable.
  */
-const audio = (): AudioContext | null => {
-	if (!get(preferencesStore).soundEnabled) {
-		return null;
-	}
-
+const ensureContext = (): AudioContext | null => {
 	if (typeof window === 'undefined') {
 		return null;
 	}
@@ -48,6 +44,14 @@ const audio = (): AudioContext | null => {
 
 	if (Ctor === undefined) {
 		return null;
+	}
+
+	// A cached context can move to `closed` over its lifetime (OS/UA audio
+	// lifecycle, e.g. the page is backgrounded and the route is reclaimed).
+	// A closed context never plays again, so drop the reference and let the
+	// next gesture/cue construct a fresh one.
+	if (audioContext !== null && audioContext.state === 'closed') {
+		audioContext = null;
 	}
 
 	if (audioContext === null) {
@@ -60,14 +64,34 @@ const audio = (): AudioContext | null => {
 		}
 	}
 
-	if (audioContext.state === 'suspended') {
+	return audioContext;
+};
+
+/**
+ * Resolve the shared AudioContext, lazily creating it on first use and
+ * resuming it if the browser has parked it in the `suspended` state
+ * (autoplay policy). Returns `null` — and the caller no-ops — when sound
+ * is disabled in preferences or Web Audio is unavailable.
+ */
+const audio = (): AudioContext | null => {
+	if (!get(preferencesStore).soundEnabled) {
+		return null;
+	}
+
+	const context = ensureContext();
+
+	if (context === null) {
+		return null;
+	}
+
+	if (context.state === 'suspended') {
 		// Resume may reject without a user gesture; catch the async rejection
 		// so it never surfaces as an unhandled promise rejection. The next
 		// cue retries.
-		void audioContext.resume().catch(() => undefined);
+		void context.resume().catch(() => undefined);
 	}
 
-	return audioContext;
+	return context;
 };
 
 type OscillatorKind = 'sine' | 'triangle' | 'square';
@@ -164,4 +188,95 @@ export const flowSummary = (): void => {
 	[523, 659, 784, 1047].forEach((freq, index) => {
 		tone({ freq, dur: 0.34, type: 'sine', vol: 0.065, when: index * 0.11 });
 	});
+};
+
+/**
+ * Resume the shared AudioContext if it exists and is suspended. Called
+ * when sound is re-enabled — re-enabling happens from a tap (a gesture),
+ * so resuming here lets the very next cue play without waiting for
+ * another interaction. No-op when no context has been created yet.
+ */
+export const resumeFlowSound = (): void => {
+	if (audioContext !== null && audioContext.state === 'suspended') {
+		void audioContext.resume().catch(() => undefined);
+	}
+};
+
+// Gesture-unlock events tried in order of likelihood across UAs. Captured
+// (capture: true) so we observe the gesture even when a child stops
+// propagation, and `once`-free so iOS Chrome — which can need a couple of
+// gestures before the context actually leaves `suspended` — gets retried.
+const UNLOCK_EVENTS = ['pointerdown', 'touchend', 'touchstart', 'mousedown', 'keydown'] as const;
+
+/**
+ * Arm a one-time, self-removing user-gesture listener that unlocks iOS
+ * Web Audio.
+ *
+ * WebKit (Safari and *every* browser on iOS, plus all WKWebViews) only
+ * starts the audio hardware route when the AudioContext is resumed AND a
+ * buffer is played from inside a real user gesture. Most Flow cues fire
+ * from deferred timers (character beats, the session summary), which are
+ * not gestures — so resuming lazily at play-time unlocks lenient Safari
+ * but not strict iOS Chrome. Priming once on the first gesture makes
+ * every later deferred cue audible.
+ *
+ * Returns a teardown that removes the listeners; callers wire it through
+ * an `$effect` so the registration is leak-free. SSR-safe: returns a
+ * no-op teardown when there is no `window` or no Web Audio.
+ */
+export const unlockFlowSound = (): (() => void) => {
+	if (typeof window === 'undefined') {
+		return () => undefined;
+	}
+
+	const tryUnlock = (): void => {
+		// Always create + resume + play a silent buffer inside the gesture —
+		// this is what actually unlocks the hardware route on iOS WebKit. Runs
+		// even when muted so a later un-mute works without a fresh gesture.
+		const context = ensureContext();
+
+		if (context === null) {
+			teardown();
+
+			return;
+		}
+
+		if (context.state === 'suspended') {
+			void context.resume().catch(() => undefined);
+		}
+
+		try {
+			const source = context.createBufferSource();
+			source.buffer = context.createBuffer(1, 1, context.sampleRate); // one sample of silence
+			source.connect(context.destination);
+			source.start(); // immediate — avoids past-time scheduling quirks
+		} catch {
+			// Best-effort priming — swallow on hostile UA shims.
+		}
+
+		// Once the context is actually running we're done. If it's still
+		// suspended (some iOS Chrome cases need another gesture) keep the
+		// listeners armed so the next gesture retries.
+		if (context.state === 'running') {
+			teardown();
+		}
+	};
+
+	// These fire on high-frequency input events and the handler never calls
+	// `preventDefault`, so mark them passive to keep scrolling/tapping
+	// jank-free. `capture` must match between add and remove for the
+	// listener to actually detach — share one options object for both.
+	const listenerOptions: AddEventListenerOptions = { capture: true, passive: true };
+
+	const teardown = (): void => {
+		UNLOCK_EVENTS.forEach((event) => {
+			window.removeEventListener(event, tryUnlock, listenerOptions);
+		});
+	};
+
+	UNLOCK_EVENTS.forEach((event) => {
+		window.addEventListener(event, tryUnlock, listenerOptions);
+	});
+
+	return teardown;
 };
