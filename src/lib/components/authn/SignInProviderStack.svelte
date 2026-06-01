@@ -1,6 +1,8 @@
 <script lang="ts">
-	import { signIn } from '@junobuild/core';
+	import { isWebAuthnAvailable, signIn } from '@junobuild/core';
 	import { Check, ChevronRight, Mail } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import IconApple from '$lib/components/icons/IconApple.svelte';
 	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
 	import IconIc from '$lib/components/icons/IconIC.svelte';
 	import IconPasskey from '$lib/components/icons/IconPasskey.svelte';
@@ -49,6 +51,16 @@
 	let emailOpen = $state(false);
 	let email = $state('');
 	let phase = $state<'idle' | 'sent'>('idle');
+
+	// Passkey (WebAuthn) is only worth offering on platforms that can
+	// actually complete the ceremony — otherwise the button is a dead
+	// end. The capability probe is async, so resolve it on mount and
+	// hide the provider when it isn't available.
+	let passkeyAvailable = $state(true);
+
+	onMount(async () => {
+		passkeyAvailable = await isWebAuthnAvailable();
+	});
 
 	const productionAvailable = $derived(isProd() && isNotSkylab());
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
@@ -193,11 +205,7 @@
 				type="button"
 			>
 				<span class="signin-provider-icon" aria-hidden="true">
-					<svg fill="currentColor" height="18" viewBox="0 0 24 24" width="18">
-						<path
-							d="M16.365 1.43c0 1.14-.49 2.27-1.29 3.08-.87.9-2.28 1.59-3.43 1.5-.14-1.11.42-2.27 1.22-3.05.88-.88 2.32-1.55 3.5-1.53zM20.5 17.27c-.61 1.4-.9 2.04-1.69 3.28-1.1 1.73-2.66 3.88-4.59 3.9-1.72.02-2.16-1.12-4.49-1.1-2.32.01-2.81 1.12-4.53 1.1-1.93-.02-3.41-1.97-4.51-3.7C-.1 18.1-.18 13.32 1.5 11.1c1.18-1.56 3.05-2.48 4.81-2.48 1.79 0 2.92 1.01 4.4 1.01 1.43 0 2.31-1.01 4.39-1.01 1.57 0 3.24.86 4.42 2.34-3.89 2.13-3.26 7.69 1 6.31z"
-						/>
-					</svg>
+					<IconApple size="18px" />
 				</span>
 				<span class="signin-provider-label">
 					{signingIn === 'apple'
@@ -248,7 +256,7 @@
 					class="signin-provider-btn email"
 					class:is-faded={isFaded}
 					class:is-onboarding={isOnboarding}
-					class:ob-dark={isOnboarding}
+					class:ob-faint={isOnboarding}
 					disabled={isBusy}
 					onclick={onEmailOpen}
 					type="button"
@@ -315,7 +323,7 @@
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'ii'}
 				class:is-onboarding={isOnboarding}
-				class:ob-dark={isOnboarding}
+				class:ob-faint={isOnboarding}
 				aria-busy={signingIn === 'ii'}
 				disabled={isBusy || !productionAvailable}
 				onclick={onIi}
@@ -336,13 +344,13 @@
 		{/if}
 
 		<!-- Passkey — production-need (C-8 keep). -->
-		{#if PASSKEY_LOGIN_ENABLED}
+		{#if PASSKEY_LOGIN_ENABLED && passkeyAvailable}
 			<button
 				class="signin-provider-btn"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'passkey'}
 				class:is-onboarding={isOnboarding}
-				class:ob-dark={isOnboarding}
+				class:ob-faint={isOnboarding}
 				aria-busy={signingIn === 'passkey'}
 				disabled={isBusy || !productionAvailable}
 				onclick={onPasskey}
@@ -369,7 +377,7 @@
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'dev'}
 				class:is-onboarding={isOnboarding}
-				class:ob-dark={isOnboarding}
+				class:ob-faint={isOnboarding}
 				aria-busy={signingIn === 'dev'}
 				data-tid={TestId.SignInDev}
 				disabled={isBusy}
