@@ -982,12 +982,14 @@
 		text-decoration-color: color-mix(in srgb, var(--danger) 55%, transparent);
 	}
 
+	/* The confirm step inherits the destructive visual treatment of the
+	   Sign-out CTA it replaces: a danger-tinted box (no neutral surface or
+	   card shadow) so the irreversible action reads as such at a glance. */
 	.settings-confirm {
 		padding: 0.75rem;
-		border-radius: var(--r-8);
-		border: 1px solid var(--border-base);
-		background: var(--bg-surface);
-		box-shadow: var(--shadow-card);
+		border-radius: 10px;
+		border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent);
+		background: color-mix(in srgb, var(--danger) 6%, transparent);
 	}
 
 	.settings-confirm p {
@@ -999,6 +1001,12 @@
 	.settings-confirm-actions {
 		display: flex;
 		gap: 0.5rem;
+	}
+
+	/* Cancel and confirm share the row 50/50 so neither action is
+	   visually privileged over the other. */
+	.settings-confirm-actions :global(button) {
+		flex: 1;
 	}
 
 	.settings-toast {
