@@ -25,8 +25,9 @@ export interface ReferralDoc {
 	code: string;
 	redeemedAtMs: number;
 	/**
-	 * `true` if, at hook time, the referrer had fewer than {@link REFERRAL_MAX_PAID} paid
-	 * referrals — i.e. this redemption is within the payout cap. `false` for monitoring-only rows.
+	 * `true` if, at hook time, this redemption earned the referrer a positive (tiered) reward — i.e.
+	 * the referrer was still within the lifetime hard cap ({@link REFERRAL_MAX_PAID}) and the monthly
+	 * cap. `false` for monitoring-only rows (over either cap, no transfer fires).
 	 */
 	withinReferrerCap: boolean;
 	/**
