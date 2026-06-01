@@ -15,17 +15,9 @@
 
 	interface Props {
 		onSuccess?: () => void;
-		// Styling treatment for the provider buttons. `'signin'` (default)
-		// is the 12px-radius surface card used on `/signin`. `'onboarding'`
-		// switches to the full-width pill treatment of the onboarding auth
-		// gate — Google as the cream-filled primary pill, every other
-		// provider as a dark pill.
-		variant?: 'signin' | 'onboarding';
 	}
 
-	const { onSuccess, variant = 'signin' }: Props = $props();
-
-	const isOnboarding = $derived(variant === 'onboarding');
+	const { onSuccess }: Props = $props();
 
 	// Provider IDs used to drive per-provider loading + faded-others
 	// state. Apple + email are placeholders until we ship the
@@ -194,11 +186,9 @@
 		<!-- Apple — disabled placeholder until backend ships. -->
 		{#if APPLE_LOGIN_ENABLED}
 			<button
-				class="signin-provider-btn"
+				class="signin-provider-btn is-onboarding ob-dark"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'apple'}
-				class:is-onboarding={isOnboarding}
-				class:ob-dark={isOnboarding}
 				aria-busy={signingIn === 'apple'}
 				disabled={!APPLE_ENABLED || isBusy}
 				title={t({ locale: $localeStore, key: 'signin.provider.placeholder_title' })}
@@ -225,11 +215,9 @@
 		<!-- Google — live. -->
 		{#if GOOGLE_LOGIN_ENABLED}
 			<button
-				class="signin-provider-btn"
+				class="signin-provider-btn is-onboarding ob-cream"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'google'}
-				class:is-onboarding={isOnboarding}
-				class:ob-cream={isOnboarding}
 				aria-busy={signingIn === 'google'}
 				disabled={isBusy}
 				onclick={onGoogle}
@@ -253,10 +241,8 @@
 		{#if EMAIL_LOGIN_ENABLED}
 			{#if !emailOpen}
 				<button
-					class="signin-provider-btn email"
+					class="signin-provider-btn email is-onboarding ob-faint"
 					class:is-faded={isFaded}
-					class:is-onboarding={isOnboarding}
-					class:ob-faint={isOnboarding}
 					disabled={isBusy}
 					onclick={onEmailOpen}
 					type="button"
@@ -319,11 +305,9 @@
 			 `signin-provider-btn` style. -->
 		{#if INTERNET_IDENTITY_LOGIN_ENABLED}
 			<button
-				class="signin-provider-btn"
+				class="signin-provider-btn is-onboarding ob-faint"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'ii'}
-				class:is-onboarding={isOnboarding}
-				class:ob-faint={isOnboarding}
 				aria-busy={signingIn === 'ii'}
 				disabled={isBusy || !productionAvailable}
 				onclick={onIi}
@@ -346,11 +330,9 @@
 		<!-- Passkey — production-need (C-8 keep). -->
 		{#if PASSKEY_LOGIN_ENABLED && passkeyAvailable}
 			<button
-				class="signin-provider-btn"
+				class="signin-provider-btn is-onboarding ob-faint"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'passkey'}
-				class:is-onboarding={isOnboarding}
-				class:ob-faint={isOnboarding}
 				aria-busy={signingIn === 'passkey'}
 				disabled={isBusy || !productionAvailable}
 				onclick={onPasskey}
@@ -373,11 +355,9 @@
 		<!-- Dev shortcut — dev-only. -->
 		{#if DEV_LOGIN_ENABLED && isDev()}
 			<button
-				class="signin-provider-btn"
+				class="signin-provider-btn is-onboarding ob-faint"
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'dev'}
-				class:is-onboarding={isOnboarding}
-				class:ob-faint={isOnboarding}
 				aria-busy={signingIn === 'dev'}
 				data-tid={TestId.SignInDev}
 				disabled={isBusy}
