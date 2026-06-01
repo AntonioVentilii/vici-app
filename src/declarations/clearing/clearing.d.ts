@@ -772,6 +772,32 @@ export interface ListOrdersParams {
 	series_id: [] | [string];
 }
 /**
+ * Input parameters for
+ * [`list_series_trade_history`](super::list_series_trade_history).
+ *
+ * Returns the market-wide executed-trade history for a single series so a
+ * front end can derive a price-history series (e.g. a YES-probability
+ * sparkline) from the per-trade `price`/`timestamp`. Unlike `get_trade_history`
+ * the result is not caller-scoped.
+ */
+export interface ListSeriesTradeHistoryParams {
+	/**
+	 * The derivative series whose executed trades to return.
+	 */
+	series_id: string;
+	/**
+	 * Resume after this trade's `event_id` (exclusive). `None` starts from the
+	 * earliest executed trade. Pass the previous response's `next_cursor` to
+	 * continue. Executed-trade `event_id`s are strictly increasing in
+	 * execution order, so the bare id is a stable cursor.
+	 */
+	start_after: [] | [bigint];
+	/**
+	 * Maximum number of trades to return. `None` returns all remaining trades.
+	 */
+	limit: [] | [bigint];
+}
+/**
  * Input parameters for [`list_settled_series`](super::list_settled_series).
  *
  * A series is considered settled the moment a settlement plan is opened for it
@@ -1121,6 +1147,52 @@ export interface Series {
 	 * If this series was forked from another, the source series ID.
 	 */
 	forked_from: [] | [string];
+}
+/**
+ * A page of executed trades scoped to a single series.
+ */
+export interface SeriesTradeHistoryPage {
+	/**
+	 * When `Some`, pass back as `start_after` to fetch the next page (it is the
+	 * `event_id` of the last trade returned). `None` means the last page has
+	 * been returned.
+	 */
+	next_cursor: [] | [bigint];
+	/**
+	 * Executed trades for the series in this page, one point per trade, ordered
+	 * by `event_id` ascending (i.e. execution order).
+	 */
+	items: Array<SeriesTradePoint>;
+}
+/**
+ * A single executed trade on a series, as surfaced by the market-wide
+ * price-history query.
+ *
+ * Each executed trade emits two [`Event`] rows (one per counterparty) that
+ * share the same `event_id`, `price`, and `timestamp`. A price history needs
+ * only one point per trade, so this collapses the pair to the trade-level
+ * facts a front end plots — `price`/`timestamp` for the sparkline, `qty` for
+ * optional volume — without exposing either counterparty's principal in a
+ * market-wide read.
+ */
+export interface SeriesTradePoint {
+	/**
+	 * Traded quantity (positive).
+	 */
+	qty: bigint;
+	/**
+	 * Execution timestamp in nanoseconds since UNIX epoch.
+	 */
+	timestamp: bigint;
+	/**
+	 * Id of the trade's [`Event`] rows. Strictly increasing in execution
+	 * order, so it doubles as the pagination cursor.
+	 */
+	event_id: bigint;
+	/**
+	 * Execution price of the trade.
+	 */
+	price: Price;
 }
 /**
  * Input parameters for initiating a series settlement.
@@ -1865,6 +1937,24 @@ export interface _SERVICE {
 	 * Returns a list of all derivative series currently cached in the clearing canister.
 	 */
 	list_series: ActorMethod<[], Array<Series>>;
+	/**
+	 * Returns the executed-trade history for a single series, with stable cursor
+	 * pagination.
+	 *
+	 * Unlike [`get_trade_history`] — which is caller-scoped — this surfaces every
+	 * participant's executed trades on `series_id`, so a front end can derive a
+	 * market-wide price history (e.g. a YES-probability sparkline) from the
+	 * per-trade `price`/`timestamp` rather than only the viewer's own fills.
+	 *
+	 * Each trade is returned as a single [`SeriesTradePoint`] (the two
+	 * counterparty rows are collapsed), ordered by `event_id` ascending — i.e.
+	 * execution order. Served from the `SERIES_TRADE_HISTORY` index, so the read
+	 * is `O(log series + page)` rather than a scan of the whole event log. The
+	 * cursor is the last trade's `event_id` and is exclusive; since executed-trade
+	 * `event_id`s are strictly increasing, resuming neither drops nor repeats a
+	 * trade. Mirrors the pagination contract of `list_settled_series`.
+	 */
+	list_series_trade_history: ActorMethod<[ListSeriesTradeHistoryParams], SeriesTradeHistoryPage>;
 	/**
 	 * Lists the ids of series that have been settled (resolved), with stable
 	 * cursor pagination.
