@@ -68,12 +68,14 @@
 		};
 	});
 
-	// Public markets surface — any visitor can browse the list and
-	// open a market's detail before signing up. The market list
-	// (`/markets`) and the detail (`/markets/[id]`) are exempted from
-	// the auth gate below; auth-requiring affordances on those pages
-	// (placing a call, saving, resolving) bounce to `/signin` at the
-	// point of action.
+	// Public markets surface — any visitor can open a market's detail
+	// (`/markets/[id]`) before signing up. Auth-requiring affordances on
+	// the detail page (placing a call, saving, resolving) bounce to
+	// `/signin` at the point of action. The bare `/markets` path is now a
+	// redirect alias to the canonical list (`/app`); the path stays
+	// exempt so the redirect page mounts and forwards without a transient
+	// signin bounce, then the auth-gated `/app` destination owns the
+	// signed-out path.
 	const isPublicMarketsRoute = $derived(
 		page.url.pathname === '/markets' || page.url.pathname.startsWith('/markets/')
 	);
