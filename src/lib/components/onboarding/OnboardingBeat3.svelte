@@ -41,8 +41,8 @@
 	const event = $derived($featuredEvent);
 
 	// Starter-pack VXP — sourced from the real registration milestone
-	// grant (10% of the new-user reserve) rather than a hardcoded
-	// literal, so the strip stays in lock-step with the economy config.
+	// grant rather than a hardcoded literal, so the strip stays in
+	// lock-step with the economy config.
 	const starterVxp = $derived(formatVxpBalance({ value: newUserVxpAmountMilestone1BaseUnits() }));
 </script>
 
