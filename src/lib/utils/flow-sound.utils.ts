@@ -46,6 +46,14 @@ const ensureContext = (): AudioContext | null => {
 		return null;
 	}
 
+	// A cached context can move to `closed` over its lifetime (OS/UA audio
+	// lifecycle, e.g. the page is backgrounded and the route is reclaimed).
+	// A closed context never plays again, so drop the reference and let the
+	// next gesture/cue construct a fresh one.
+	if (audioContext !== null && audioContext.state === 'closed') {
+		audioContext = null;
+	}
+
 	if (audioContext === null) {
 		try {
 			audioContext = new Ctor();
@@ -239,9 +247,9 @@ export const unlockFlowSound = (): (() => void) => {
 
 		try {
 			const source = context.createBufferSource();
-			source.buffer = context.createBuffer(1, 1, 22050); // one sample of silence
+			source.buffer = context.createBuffer(1, 1, context.sampleRate); // one sample of silence
 			source.connect(context.destination);
-			source.start(0);
+			source.start(); // immediate — avoids past-time scheduling quirks
 		} catch {
 			// Best-effort priming — swallow on hostile UA shims.
 		}
@@ -254,14 +262,20 @@ export const unlockFlowSound = (): (() => void) => {
 		}
 	};
 
+	// These fire on high-frequency input events and the handler never calls
+	// `preventDefault`, so mark them passive to keep scrolling/tapping
+	// jank-free. `capture` must match between add and remove for the
+	// listener to actually detach — share one options object for both.
+	const listenerOptions: AddEventListenerOptions = { capture: true, passive: true };
+
 	const teardown = (): void => {
 		UNLOCK_EVENTS.forEach((event) => {
-			window.removeEventListener(event, tryUnlock, true);
+			window.removeEventListener(event, tryUnlock, listenerOptions);
 		});
 	};
 
 	UNLOCK_EVENTS.forEach((event) => {
-		window.addEventListener(event, tryUnlock, true);
+		window.addEventListener(event, tryUnlock, listenerOptions);
 	});
 
 	return teardown;
