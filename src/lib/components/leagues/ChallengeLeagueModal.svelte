@@ -220,6 +220,7 @@
 						<button
 							class="challenge-duration-btn"
 							class:is-active={scope === option.value}
+							aria-pressed={scope === option.value}
 							onclick={() => (scope = option.value)}
 							type="button"
 						>
@@ -288,6 +289,7 @@
 					<button
 						class="challenge-duration-btn"
 						class:is-active={duration === days}
+						aria-pressed={duration === days}
 						onclick={() => (duration = days)}
 						type="button"
 					>

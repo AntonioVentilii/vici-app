@@ -356,6 +356,7 @@
 									<button
 										class="create-bout-pill"
 										class:is-active={scope === option.value}
+										aria-pressed={scope === option.value}
 										onclick={() => (scope = option.value)}
 										type="button"
 									>
