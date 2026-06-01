@@ -126,10 +126,9 @@
 	const email = $derived(profile?.email ?? '');
 	const hasEmail = $derived(email.length > 0);
 
-	// Sign-in method sub — `{provider_account} · {method_label}`
-	// (e.g. `tacitus@vici.market · magic link`). For Internet
-	// Identity accounts (no email on file) we fall back to a friendly
-	// "Internet Identity" label.
+	// Sign-in method sub — for email-backed accounts we show the
+	// address; for Internet Identity accounts (no email on file) we
+	// fall back to a friendly "Internet Identity" label.
 	const signinMethodSub = $derived(
 		hasEmail
 			? t({

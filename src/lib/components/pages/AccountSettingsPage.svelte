@@ -18,11 +18,12 @@
 	 * switch action, and the email card with an `idle → editing → sent`
 	 * change flow.
 	 *
-	 * Sign-in method is inferred from the profile: an address on file
-	 * means the account authenticated via the email magic link; with no
-	 * address we fall back to Internet Identity. Our identities do not
-	 * persist a per-provider tag, so Google / Passkey collapse into this
-	 * two-way split — the same heuristic the Settings summary row uses.
+	 * Sign-in method is a display heuristic over the profile, not the
+	 * recorded provider: an address on file surfaces the email-shaped
+	 * card; with no address we show Internet Identity. Our identities do
+	 * not persist a per-provider tag, so passkey / Google collapse into
+	 * this two-way split — the same heuristic the Settings summary row
+	 * uses.
 	 *
 	 * Switching always signs the user out and returns them to the
 	 * sign-in screen, where the full provider stack lives; rather than
@@ -30,8 +31,8 @@
 	 * we expose one switch action under the canonical card shell.
 	 *
 	 * The email-change flow is wired as a state machine but its submit
-	 * is inert: the magic-link back-end that would mint the verification
-	 * link has not shipped, so the send action is disabled with a
+	 * is inert: the back-end that would mint the confirmation link has
+	 * not shipped, so the send action is disabled with a
 	 * "Soon" note. When the back-end lands, `sendVerify` flips to the
 	 * `sent` state and the existing copy/layout carries through.
 	 */
@@ -114,7 +115,7 @@
 	};
 
 	const sendVerify = () => {
-		// Inert until the magic-link back-end ships. The branch below is
+		// Inert until the confirmation-link back-end ships. The branch below is
 		// the one-line swap: flip `emailSent` and schedule the reset.
 		if (!EMAIL_CHANGE_ENABLED || !newEmailValid) {
 			return;
