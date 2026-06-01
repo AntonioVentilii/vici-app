@@ -6,10 +6,10 @@
 	import StreakFlame from '$lib/components/characters/StreakFlame.svelte';
 	import AffiliationPickerModal from '$lib/components/leagues/AffiliationPickerModal.svelte';
 	import Avatar from '$lib/components/profile/Avatar.svelte';
+	import AvatarEditor from '$lib/components/profile/AvatarEditor.svelte';
 	import HandleEditor from '$lib/components/profile/HandleEditor.svelte';
 	import ProfileOracleInsight from '$lib/components/profile/ProfileOracleInsight.svelte';
 	import CountryFlag from '$lib/components/ui/CountryFlag.svelte';
-	import Modal from '$lib/components/ui/Modal.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
@@ -18,6 +18,7 @@
 	import { upsertProfile } from '$lib/services/profile.services';
 	import { loadMyUserStats } from '$lib/services/user-stats.services';
 	import { myAffiliationsStore, refreshMyAffiliations } from '$lib/stores/affiliations.store';
+	import { myAvatarParts } from '$lib/stores/avatar.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { marketsStore } from '$lib/stores/markets.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
@@ -28,6 +29,7 @@
 	import type { UserStatsDoc } from '$lib/types/user-stats';
 	import { evaluateAchievements } from '$lib/utils/achievements.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
+	import { deterministicParts } from '$lib/utils/vici-avatar.utils';
 
 	interface Props {
 		profile: UserProfile;
@@ -316,6 +318,12 @@
 
 	let avatarEditorOpen = $state(false);
 
+	// Seed the editor with the user's saved picks, or — for a user who has
+	// never customised — a deterministic face derived from their immutable
+	// principal, so the editor opens on the same face the rest of the app
+	// already shows them.
+	const avatarInitialParts = $derived($myAvatarParts ?? deterministicParts(profile.owner));
+
 	/* Oracle insight (kept lean — no archetype-fiction card) ----------- */
 
 	const oracleInsight = $derived.by(() => {
@@ -463,9 +471,11 @@
 			>
 				<Avatar
 					class="h-full w-full"
+					animate
 					avatar={profile.avatar}
 					nickname={profile.nickname}
 					owner={profile.owner}
+					self={isOwnProfile}
 				/>
 				{#if isOwnProfile}
 					<span class="profile-avatar-edit" aria-hidden="true">
@@ -774,31 +784,12 @@
 	</div>
 {/if}
 
-{#if avatarEditorOpen}
-	<Modal isOpen={true} onClose={() => (avatarEditorOpen = false)}>
-		<div class="profile-avatar-editor">
-			<h2 class="profile-edit-title">
-				{t({ locale: $localeStore, key: 'profile.dashboard.edit_avatar' })}
-			</h2>
-			<!-- TODO: wire to the full avatar shuffle / save flow once the
-				 avatar library is ported. Today the avatar is derived from
-				 the user's seed; this stub surfaces the entry point so the
-				 affordance is discoverable. Tracked under the avatar editor
-				 follow-up. -->
-			<p class="profile-avatar-editor-body">
-				{t({ locale: $localeStore, key: 'profile.dashboard.edit_avatar_soon' })}
-			</p>
-			<div class="profile-edit-actions">
-				<button
-					class="profile-edit-cancel"
-					onclick={() => (avatarEditorOpen = false)}
-					type="button"
-				>
-					{t({ locale: $localeStore, key: 'profile.dashboard.close' })}
-				</button>
-			</div>
-		</div>
-	</Modal>
+{#if avatarEditorOpen && isOwnProfile}
+	<AvatarEditor
+		initial={avatarInitialParts}
+		onClose={() => (avatarEditorOpen = false)}
+		onSaved={() => (avatarEditorOpen = false)}
+	/>
 {/if}
 
 <style lang="postcss">
@@ -1525,45 +1516,6 @@
 		border-radius: inherit;
 		background: var(--color-primary);
 		transition: width var(--d-enter) ease;
-	}
-
-	/* Avatar-editor sheet --------------------------------------------- */
-	.profile-avatar-editor {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-	}
-
-	.profile-edit-title {
-		margin: 0;
-		color: var(--text-base);
-		font-family: var(--font-display);
-		font-size: var(--t-18);
-		font-weight: 700;
-	}
-
-	.profile-edit-actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: 0.6rem;
-	}
-
-	.profile-edit-cancel {
-		padding: 0.55rem 0.95rem;
-		border: 1px solid var(--border-base);
-		border-radius: var(--r-pill);
-		background: transparent;
-		color: var(--text-base);
-		font: inherit;
-		font-weight: 700;
-		cursor: pointer;
-	}
-
-	.profile-avatar-editor-body {
-		margin: 0;
-		color: var(--text-muted);
-		font-size: var(--t-13);
-		line-height: var(--leading-snug);
 	}
 
 	/* Confirmation toast — floats above the pill-nav after a handle
