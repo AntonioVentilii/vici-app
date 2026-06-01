@@ -2552,11 +2552,18 @@ a.title-action::after {
    shared with the `/signin` surface so loading + aria behaviour is
    identical across variants. */
 .signin-provider-btn.is-onboarding {
+	justify-content: center;
 	gap: 10px;
 	padding: 13px 16px;
 	border-radius: 999px;
 	font-size: 14px;
 	background: transparent;
+}
+/* Center the icon + label as a tight group (the auth-gate treatment),
+   rather than the `/signin` layout where the label fills the row and the
+   icon pins to the leading edge. */
+.signin-provider-btn.is-onboarding .signin-provider-label {
+	flex: 0 0 auto;
 }
 .signin-provider-btn.is-onboarding.ob-dark {
 	background: var(--ink);
