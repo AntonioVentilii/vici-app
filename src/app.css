@@ -2996,7 +2996,7 @@ a.title-action::after {
 	line-height: 1.05;
 	letter-spacing: -0.025em;
 	font-weight: 600;
-	margin: 0 0 8px;
+	margin: 0 0 4px;
 	flex-shrink: 0;
 }
 .ob2-sub {
@@ -3904,14 +3904,14 @@ a.title-action::after {
 	background: transparent;
 	color: var(--text-muted);
 	cursor: pointer;
-	padding: 6px;
-	font-family: var(--font-mono);
-	font-size: 10.5px;
-	letter-spacing: 0.08em;
-	border-radius: 6px;
+	padding: 8px;
+	font-family: inherit;
+	font-size: 12px;
+	font-weight: 500;
+	border-radius: 7px;
 	transition:
-		background 180ms var(--ease-vici),
-		color 180ms var(--ease-vici);
+		background 200ms var(--ease-vici),
+		color 200ms var(--ease-vici);
 }
 .dash-window button.active {
 	background: var(--bg-elevated, var(--bg-surface));
