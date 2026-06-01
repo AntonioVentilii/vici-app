@@ -85,6 +85,17 @@ export const VXP_CALIBRATION_REWARD = 20;
 export const CALIBRATION_RECOVERY_FLOOR = 100;
 
 /**
+ * Net-worth floor, in whole VXP, that separates a *fully-deployed* user
+ * from a *genuinely depleted* one. When the free wallet balance hits the
+ * recovery floor, the deployed-vs-depleted split reads the VXP still
+ * locked in the user's open calls: at or above this floor the stack is
+ * "in play, nothing lost" — a positive beat pointing at the open calls;
+ * below it the stack has actually eroded through realised losses, so the
+ * user is offered the Calibration recovery path. Tunable.
+ */
+export const DEPLOY_FLOOR = 150;
+
+/**
  * Maximum number of calibration rewards a single caller can earn within
  * a rolling 24-hour window. Server-enforced anti-farming bound, counted
  * off the caller's `calibration` award docs. Tunable.

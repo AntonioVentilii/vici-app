@@ -8,13 +8,20 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import InfiniteScroll from '$lib/components/ui/InfiniteScroll.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import VxpRecoveryBeat from '$lib/components/wallet/VxpRecoveryBeat.svelte';
 	import WalletHistory from '$lib/components/wallet/WalletHistory.svelte';
 	import WalletReceive from '$lib/components/wallet/WalletReceive.svelte';
 	import WalletSend from '$lib/components/wallet/WalletSend.svelte';
-	import { DAY_IN_MS, ZERO } from '$lib/constants/app.constants';
+	import { DAY_IN_MS, USD_DECIMALS, ZERO } from '$lib/constants/app.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+	import {
+		CALIBRATION_RECOVERY_FLOOR,
+		DEPLOY_FLOOR,
+		VXP_CALIBRATION_REWARD
+	} from '$lib/constants/vxp-economy.constants';
 	import { markets } from '$lib/derived/markets.derived';
+	import { positions } from '$lib/derived/positions.derived';
 	import { defaultSupportedToken, walletUiTokens } from '$lib/derived/tokens.derived';
 	import { tradeHistory } from '$lib/derived/trade-history.derived';
 	import { safeGetIdentityOnce } from '$lib/services/identity.services';
@@ -31,7 +38,11 @@
 	import type { Token } from '$lib/types/token';
 	import type { Transaction } from '$lib/types/wallet';
 	import { emit } from '$lib/utils/events.utils';
-	import { formatRelativeAgoFromNs, formatToken } from '$lib/utils/format.utils';
+	import {
+		decimalFixedValueToNumber,
+		formatRelativeAgoFromNs,
+		formatToken
+	} from '$lib/utils/format.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { goBack } from '$lib/utils/nav.utils';
 	import { parseToken } from '$lib/utils/parse.utils';
@@ -128,6 +139,35 @@
 	const vxpBalanceDisplay = $derived(
 		formatVxpBalance({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
 	);
+
+	// ── Deployed-vs-depleted recovery split ───────────────────────────
+	// When the free VXP balance falls to the recovery floor, the hero swaps
+	// its dual-CTA row for a recovery beat. The branch reads net worth still
+	// locked in open VXP calls: at/above the deploy floor the stack is "in
+	// play, nothing lost" (deployed); below it the stack has eroded through
+	// realised losses (genuine depletion). Both numbers are whole VXP.
+	const marketById = $derived(new Map($markets.map((m) => [m.id, m] as const)));
+
+	// Free balance in whole VXP — the gate that arms the recovery beat.
+	const vxpBalanceWhole = $derived(
+		decimalFixedValueToNumber({ value: vxpBalance, decimals: VXP_TOKEN.decimals })
+	);
+
+	// Open VXP positions: `lockedCollateral` is clearing-USD micro-units
+	// (USD_DECIMALS = 4), the same scale as VXP, so we convert to whole VXP
+	// to compare against the deploy floor.
+	const openVxpPositions = $derived(
+		$positions.filter((p) => marketById.get(p.marketId)?.token.symbol === VXP_TOKEN.symbol)
+	);
+
+	const lockedInOpenVxp = $derived.by((): number => {
+		const rawLocked = openVxpPositions.reduce<bigint>((acc, p) => acc + p.lockedCollateral, ZERO);
+
+		return Math.round(decimalFixedValueToNumber({ value: rawLocked, decimals: USD_DECIMALS }));
+	});
+
+	const recovering = $derived(vxpBalanceWhole < CALIBRATION_RECOVERY_FLOOR);
+	const fullyDeployed = $derived(lockedInOpenVxp >= DEPLOY_FLOOR);
 
 	// Weekly VXP delta — sums signed amounts on clearing settlements
 	// from the last 7 days. Settlements credit a winning call; losing
@@ -443,6 +483,18 @@
 			</button>
 		</div>
 	</section>
+
+	{#if recovering}
+		<!-- Recovery beat — deployed (stack in play) vs depleted (eroded). -->
+		<VxpRecoveryBeat
+			deployed={fullyDeployed}
+			{lockedInOpenVxp}
+			onCalibrate={() => void goto(resolve(AppPath.Calibration))}
+			onReviewOpenCalls={() => void goto(resolve(AppPath.Portfolio))}
+			openCallCount={openVxpPositions.length}
+			rewardVxp={VXP_CALIBRATION_REWARD}
+		/>
+	{/if}
 
 	<!-- Recent activity — top 6 from the unified transactions feed. -->
 	<section bind:this={activityListEl} class="wallet-activity">
