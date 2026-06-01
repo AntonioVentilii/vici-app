@@ -2041,6 +2041,7 @@ export const itMessages = {
 	'worlds.detail.empty_title_school': 'Sii tra i primi.',
 	'worlds.detail.kind_country': 'Nazione',
 	'worlds.detail.kind_university': 'Università',
+	'worlds.detail.loading_champions': 'Carico campioni…',
 	'worlds.detail.loading_members': 'Carico membri…',
 	'worlds.detail.marker_alma_mater': 'Alma Mater',
 	'worlds.detail.marker_citizen': 'Cittadino',

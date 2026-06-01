@@ -632,14 +632,23 @@ export const listAffiliationChampionshipsFn = ({
 	const byMonth = new Map<string, AffiliationStatsDoc[]>();
 
 	for (const [docKey, item] of items) {
-		// Snapshot docs only — 3-segment keys (more than one slash).
-		const isSnapshot = docKey.indexOf('/') !== docKey.lastIndexOf('/');
+		// Cheap pre-filter: snapshot keys carry an extra segment, so they
+		// have more than one slash. The precise test (key ends in
+		// `/${monthAnchor}`) needs the decoded doc, so it runs below —
+		// this only skips obvious non-snapshot keys before decoding.
+		const hasExtraSegment = docKey.indexOf('/') !== docKey.lastIndexOf('/');
 
-		if (isSnapshot) {
+		if (hasExtraSegment) {
 			try {
 				const doc = decodeDocData<AffiliationStatsDoc>(item.data);
 
-				if (doc.kind === kind && doc.monthTotalCalls >= MIN_CALLS_FOR_RANK) {
+				// Snapshot docs only — the key must end in `/${monthAnchor}`
+				// (same precise test as `listAffiliationStatsForMonthFn`), so
+				// non-snapshot keys that merely have extra slashes aren't
+				// misread as snapshots.
+				const isSnapshot = docKey.endsWith(`/${doc.monthAnchor}`);
+
+				if (isSnapshot && doc.kind === kind && doc.monthTotalCalls >= MIN_CALLS_FOR_RANK) {
 					const bucket = byMonth.get(doc.monthAnchor);
 
 					if (nonNullish(bucket)) {

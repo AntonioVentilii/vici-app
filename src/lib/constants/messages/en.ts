@@ -2045,6 +2045,7 @@ export const enMessages = {
 	'worlds.detail.empty_title_school': 'Be one of the first.',
 	'worlds.detail.kind_country': 'Nation',
 	'worlds.detail.kind_university': 'University',
+	'worlds.detail.loading_champions': 'Loading champions…',
 	'worlds.detail.loading_members': 'Loading members…',
 	'worlds.detail.marker_alma_mater': 'Alma Mater',
 	'worlds.detail.marker_citizen': 'Citizen',

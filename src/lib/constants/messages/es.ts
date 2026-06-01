@@ -2050,6 +2050,7 @@ export const esMessages = {
 	'worlds.detail.empty_title_school': 'Sé de los primeros.',
 	'worlds.detail.kind_country': 'Nación',
 	'worlds.detail.kind_university': 'Universidad',
+	'worlds.detail.loading_champions': 'Cargando campeones…',
 	'worlds.detail.loading_members': 'Cargando miembros…',
 	'worlds.detail.marker_alma_mater': 'Alma Mater',
 	'worlds.detail.marker_citizen': 'Ciudadano',

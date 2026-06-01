@@ -2042,6 +2042,7 @@ export const ptMessages = {
 	'worlds.detail.empty_title_school': 'Seja um dos primeiros.',
 	'worlds.detail.kind_country': 'Nação',
 	'worlds.detail.kind_university': 'Universidade',
+	'worlds.detail.loading_champions': 'Carregando campeões…',
 	'worlds.detail.loading_members': 'Carregando membros…',
 	'worlds.detail.marker_alma_mater': 'Alma Mater',
 	'worlds.detail.marker_citizen': 'Cidadão',

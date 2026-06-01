@@ -401,7 +401,7 @@
 		</div>
 		{#if loadState === 'loading'}
 			<p class="worlds-detail-champions-empty">
-				{t({ locale: $localeStore, key: 'worlds.detail.loading_members' })}
+				{t({ locale: $localeStore, key: 'worlds.detail.loading_champions' })}
 			</p>
 		{:else if championCount === 0}
 			<p class="worlds-detail-champions-empty">

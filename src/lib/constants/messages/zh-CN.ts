@@ -1937,6 +1937,7 @@ export const zhCnMessages = {
 	'worlds.detail.empty_title_school': '抢先成为首批。',
 	'worlds.detail.kind_country': '国家',
 	'worlds.detail.kind_university': '大学',
+	'worlds.detail.loading_champions': '加载冠军…',
 	'worlds.detail.loading_members': '加载成员…',
 	'worlds.detail.marker_alma_mater': '母校',
 	'worlds.detail.marker_citizen': '公民',

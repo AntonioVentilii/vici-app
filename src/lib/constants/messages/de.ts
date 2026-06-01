@@ -2058,6 +2058,7 @@ export const deMessages = {
 	'worlds.detail.empty_title_school': 'Sei eine·r der Ersten.',
 	'worlds.detail.kind_country': 'Nation',
 	'worlds.detail.kind_university': 'Universität',
+	'worlds.detail.loading_champions': 'Lade Champions…',
 	'worlds.detail.loading_members': 'Lade Mitglieder…',
 	'worlds.detail.marker_alma_mater': 'Alma Mater',
 	'worlds.detail.marker_citizen': 'Bürger·in',

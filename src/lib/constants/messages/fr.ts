@@ -2058,6 +2058,7 @@ export const frMessages = {
 	'worlds.detail.empty_title_school': 'Sois parmi les premiers.',
 	'worlds.detail.kind_country': 'Nation',
 	'worlds.detail.kind_university': 'Université',
+	'worlds.detail.loading_champions': 'Chargement des champions…',
 	'worlds.detail.loading_members': 'Chargement des membres…',
 	'worlds.detail.marker_alma_mater': 'Alma Mater',
 	'worlds.detail.marker_citizen': 'Citoyen',
