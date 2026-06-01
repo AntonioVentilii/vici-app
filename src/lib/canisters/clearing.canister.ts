@@ -317,6 +317,56 @@ export class ClearingCanister extends Canister<ClearingService> {
 		return await get_trade_history();
 	};
 
+	/**
+	 * Returns the market-wide executed-trade history for one series, draining the
+	 * clearing canister's stable, exclusive `event_id` cursor.
+	 *
+	 * Unlike {@link getTradeHistory} (caller-scoped) this surfaces every
+	 * participant's executed trades on `series_id`, so a front end can derive a
+	 * price-history series — the YES-probability sparkline — that reflects the
+	 * true market movement for all viewers rather than only the caller's fills.
+	 * Points are returned oldest-first (ascending `event_id`, i.e. execution
+	 * order). `maxPages` bounds the drain so a long-lived series can't fan out
+	 * into an unbounded number of round-trips.
+	 */
+	listSeriesTradeHistory = async ({
+		seriesId,
+		pageLimit,
+		maxPages,
+		...queryParams
+	}: {
+		seriesId: string;
+		pageLimit?: bigint;
+		maxPages?: number;
+	} & QueryParams): Promise<ClearingDid.SeriesTradePoint[]> => {
+		const { list_series_trade_history } = this.caller(queryParams);
+
+		const items: ClearingDid.SeriesTradePoint[] = [];
+		let startAfter: [] | [bigint] = toNullable();
+		let pages = 0;
+
+		while (maxPages === undefined || pages < maxPages) {
+			const page = await list_series_trade_history({
+				series_id: seriesId,
+				start_after: startAfter,
+				limit: pageLimit === undefined ? toNullable() : toNullable(pageLimit)
+			});
+
+			items.push(...page.items);
+			pages += 1;
+
+			const next = fromNullable(page.next_cursor);
+
+			if (isNullish(next)) {
+				break;
+			}
+
+			startAfter = toNullable(next);
+		}
+
+		return items;
+	};
+
 	mintCompleteSet = async ({
 		seriesId,
 		qty,
