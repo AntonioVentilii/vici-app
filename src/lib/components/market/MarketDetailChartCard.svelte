@@ -38,7 +38,11 @@
 
 	let activePeriod = $state<PeriodId>('7d');
 
-	const events = $derived($marketMetadata[marketId]?.events ?? []);
+	// Event markers are positioned against the seed-based fallback's
+	// fixed, day-indexed shape. Real-history mode (`points` supplied) has
+	// its own irregular trade-ordered series, so the markers would land on
+	// the wrong x-positions — only feed them through for the seed fallback.
+	const events = $derived(points === undefined ? ($marketMetadata[marketId]?.events ?? []) : []);
 </script>
 
 <!-- 7-day chart card with period chips.

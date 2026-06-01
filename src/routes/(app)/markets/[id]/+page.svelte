@@ -183,6 +183,13 @@
 
 		if (nonNullish(market)) {
 			fetchMarket({ id: market.id, silent: true });
+
+			// The silent refresh deliberately skips `fetchSignals` (the 30s
+			// consensus poll shouldn't re-pull trade history every tick), but
+			// the viewer just traded — so the chart's real price history and
+			// the prior-call / followed-lean signals are now stale. Re-pull
+			// them explicitly here, on top of the silent market refetch.
+			void fetchSignals(market);
 		}
 	};
 
@@ -418,9 +425,15 @@
 		{#if isResolved}
 			<!-- Settled banner — closes the loop on the market side: a clear
 			     "this is over, here's how it landed" panel tinted by the
-			     winning side. -->
+			     winning side. Non-binary resolutions (e.g. CANCELED) have no
+			     winning side, so the border stays neutral rather than
+			     implying a YES win. -->
 			<section
-				style:border-color={resolvedOutcome === 'NO' ? 'var(--no)' : 'var(--yes)'}
+				style:border-color={resolvedOutcome === 'YES'
+					? 'var(--yes)'
+					: resolvedOutcome === 'NO'
+						? 'var(--no)'
+						: 'var(--border-strong)'}
 				class="market-detail-settled"
 				aria-label={t({ locale: $localeStore, key: 'market.detail.settled.eyebrow' })}
 			>

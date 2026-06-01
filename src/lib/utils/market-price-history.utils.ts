@@ -27,17 +27,19 @@ export const deriveMarketPriceHistory = ({
 }): number[] =>
 	events
 		.filter((event) => event.series_id === seriesId && isExecuted(event))
-		.slice()
 		.sort((a, b) => (a.timestamp < b.timestamp ? -1 : a.timestamp > b.timestamp ? 1 : 0))
-		.map((event) => {
+		.reduce<number[]>((series, event) => {
 			const yesProbability = decimalFixedValueToNumber({
 				value: event.price.decimal.value,
 				decimals: event.price.decimal.decimals
 			});
 
-			if (!Number.isFinite(yesProbability)) {
-				return 50;
+			// Plot only real history: a malformed / non-finite price is
+			// dropped rather than backfilled with a synthetic midpoint, so
+			// the series stays strictly the prices that actually executed.
+			if (Number.isFinite(yesProbability)) {
+				series.push(Math.max(0, Math.min(100, Math.round(yesProbability * 100))));
 			}
 
-			return Math.max(0, Math.min(100, Math.round(yesProbability * 100)));
-		});
+			return series;
+		}, []);
