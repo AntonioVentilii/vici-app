@@ -3,7 +3,7 @@
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { joinLeagueByInvite, lookupLeagueByInvite } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import { LEAGUE_INVITE_CODE_REGEX, type LeagueDoc } from '$lib/types/league';
+	import { LEAGUE_INVITE_CODE_REGEX, leagueEmblem, type LeagueDoc } from '$lib/types/league';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
 	interface Props {
@@ -193,7 +193,7 @@
 					class="league-match-logo"
 				>
 					<span class="league-match-emblem">
-						{matched.name.trim().charAt(0).toUpperCase() || '◆'}
+						{leagueEmblem(matched)}
 					</span>
 				</span>
 				<span class="league-match-body">

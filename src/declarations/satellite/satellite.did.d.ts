@@ -489,6 +489,7 @@ export interface AppListMyLeaguesResult {
 			name: string;
 			invite_code: string;
 			description: [] | [string];
+			emblem: [] | [string];
 			created_at_ms: number;
 			private: boolean;
 		};
@@ -555,6 +556,7 @@ export interface AppLookupLeagueByInviteResult {
 					name: string;
 					invite_code: string;
 					description: [] | [string];
+					emblem: [] | [string];
 					created_at_ms: number;
 					private: boolean;
 				}

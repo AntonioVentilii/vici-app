@@ -598,6 +598,7 @@ export const idlFactory = ({ IDL }) => {
 					name: IDL.Text,
 					invite_code: IDL.Text,
 					description: IDL.Opt(IDL.Text),
+					emblem: IDL.Opt(IDL.Text),
 					created_at_ms: IDL.Float64,
 					private: IDL.Bool
 				}),
@@ -691,6 +692,7 @@ export const idlFactory = ({ IDL }) => {
 				name: IDL.Text,
 				invite_code: IDL.Text,
 				description: IDL.Opt(IDL.Text),
+				emblem: IDL.Opt(IDL.Text),
 				created_at_ms: IDL.Float64,
 				private: IDL.Bool
 			})

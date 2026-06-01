@@ -709,6 +709,7 @@ const AppListMyLeaguesResultSchema = j.strictObject({
 				owner: j.string(),
 				created_at_ms: j.number(),
 				accent_color: j.optional(j.string()),
+				emblem: j.optional(j.string()),
 				private: j.boolean()
 			}),
 			role: j.enum(['owner', 'admin', 'member']),
@@ -828,6 +829,7 @@ const AppLookupLeagueByInviteResultSchema = j.strictObject({
 			owner: j.string(),
 			created_at_ms: j.number(),
 			accent_color: j.optional(j.string()),
+			emblem: j.optional(j.string()),
 			private: j.boolean()
 		})
 	)
