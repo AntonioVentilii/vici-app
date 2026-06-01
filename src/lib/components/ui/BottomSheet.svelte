@@ -90,13 +90,17 @@
 			el.style.setProperty('--kb-inset', `${overlap}px`);
 		};
 
+		// Passive: the listeners only read viewport metrics to drive the
+		// `--kb-inset` CSS var; they never call `preventDefault`.
+		const opts: AddEventListenerOptions = { passive: true };
+
 		sync();
-		viewport.addEventListener('resize', sync);
-		viewport.addEventListener('scroll', sync);
+		viewport.addEventListener('resize', sync, opts);
+		viewport.addEventListener('scroll', sync, opts);
 
 		return () => {
-			viewport.removeEventListener('resize', sync);
-			viewport.removeEventListener('scroll', sync);
+			viewport.removeEventListener('resize', sync, opts);
+			viewport.removeEventListener('scroll', sync, opts);
 			el.style.removeProperty('--kb-inset');
 		};
 	});
