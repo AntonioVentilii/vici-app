@@ -53,3 +53,28 @@ export const listMarketMetadataBySeries = async (): Promise<Record<string, Marke
 		return acc;
 	}, {});
 };
+
+/**
+ * Projects an already-fetched `seriesId → MarketMetadata` map down to the
+ * same `seriesId → tags` shape that {@link listMarketTagsBySeries} returns
+ * — but without a second `listDocs(MARKET_METADATA)` round-trip.
+ *
+ * `listMarketTagsBySeries` and `listMarketMetadataBySeries` scan the exact
+ * same public collection, so a caller that already holds the full metadata
+ * map (e.g. `prepareFlow`) can derive the tag map locally instead of paying
+ * for a duplicate full-collection scan. Tags are re-normalised for the same
+ * defense-in-depth reason as the two list helpers; entries with no tags are
+ * omitted to match `listMarketTagsBySeries` exactly.
+ */
+export const deriveTagsBySeries = (
+	metadataBySeries: Record<string, MarketMetadata>
+): Record<string, MarketTag[]> =>
+	Object.entries(metadataBySeries).reduce<Record<string, MarketTag[]>>((acc, [seriesId, meta]) => {
+		const tags = normalizeMarketTags(meta.tags ?? []);
+
+		if (tags.length > 0) {
+			acc[seriesId] = tags;
+		}
+
+		return acc;
+	}, {});
