@@ -497,7 +497,7 @@ const payOutOwedMilestones = async ({
 };
 
 /**
- * 10% at registration; runs on profile create and updates so legacy users are covered.
+ * Registration grant (milestone 1); runs on profile create and updates so legacy users are covered.
  */
 export const onProfileSetForVxpOnboarding = async (ctx: OnSetDocContext): Promise<void> => {
 	const {
@@ -560,7 +560,7 @@ export const onProfileSetForVxpOnboarding = async (ctx: OnSetDocContext): Promis
 };
 
 /**
- * 40% after first bet; 50% after five bets; retries any `owed` payouts.
+ * Milestone 2 after the first call; milestone 3 after five calls; retries any `owed` payouts.
  */
 export const onTradeActivityForVxpOnboarding = async (ctx: OnSetDocContext): Promise<void> => {
 	const {
