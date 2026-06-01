@@ -681,7 +681,7 @@ export const ptMessages = {
 	'flow.deck.all_markets': 'TODOS OS MERCADOS',
 	'flow.empty.sub': 'A VICI está enfileirando mais mercados.',
 	'flow.empty.title': 'Nada por aqui. Ainda.',
-	'flow.end.back_to_dashboard': 'Voltar ao painel →',
+	'flow.end.back_to_dashboard': 'Abrir o painel →',
 	'flow.end.body_comeback':
 		'Você está de volta ao jogo. Apareça amanhã e a sequência sobe a partir daqui.',
 	'flow.end.body_day':
@@ -703,9 +703,12 @@ export const ptMessages = {
 	'flow.end.head_overtime_1': 'Imparável.',
 	'flow.end.head_overtime_2': 'Overtime, dominado.',
 	'flow.end.head_overtime_3': 'Máquina.',
+	'flow.end.copy_toast_title': 'Link copiado',
+	'flow.end.invite_copied': 'Link de convite copiado para a área de transferência.',
 	'flow.end.invite_friend': 'Convidar um amigo',
 	'flow.end.push_to_15': 'Ir para 15 →',
 	'flow.end.share_calls': 'Compartilhar minhas previsões',
+	'flow.end.share_copied': 'Link de compartilhamento copiado para a área de transferência.',
 	'flow.end.share_text': 'Hoje fiz {count} previsões na VICI. Acompanhe meu histórico.',
 	'flow.end.share_text_one': 'Hoje fiz uma previsão na VICI. Acompanhe meu histórico.',
 	'flow.end.stat_called': 'Confirmadas',
