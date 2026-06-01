@@ -1802,12 +1802,10 @@ export const deMessages = {
 	'settings.toast.export_coming': 'Export bald verfügbar',
 	'settings.two_factor': 'Zwei-Faktor-Authentifizierung',
 	'settings.two_factor.sub': 'Demnächst · Authenticator-App',
-	'signin.divider': 'ODER',
 	'signin.email.cta': 'Anmeldelink senden',
 	'signin.email.disabled_note':
 		'E-Mail-Anmeldung ist bald verfügbar. Nutze oben einen Live-Provider.',
 	'signin.email.fineprint': 'Ein-Klick-Link. Kein Passwort.',
-	'signin.email.label': 'E-Mail',
 	'signin.email.placeholder': 'du@example.com',
 	'signin.eyebrow.onboarded': 'STARTERPAKET BEREIT',
 	'signin.eyebrow.signin': 'WILLKOMMEN ZURÜCK',
