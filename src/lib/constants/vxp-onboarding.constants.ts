@@ -3,21 +3,19 @@ import { parseToken } from '$lib/utils/parse.utils';
 
 /**
  * Total VXP granted per user through the new-user ladder (onboarding reserve).
- * Split 10% / 40% / 50% (1,000 + 4,000 + 5,000 = 10,000 VXP): registration, first bet, five bets.
+ * Explicit amounts (1,500 + 4,000 + 5,000 = 10,500 VXP): registration, first call, five calls.
  */
 export const NEW_USER_VXP_TOTAL_BASE_UNITS = parseToken({
-	value: '10000',
+	value: '10500',
 	unitName: VXP_TOKEN.decimals
 });
 
-const PERCENT_MILESTONE_1 = 10n;
-const PERCENT_MILESTONE_2 = 40n;
+const MILESTONE_1_VXP = parseToken({ value: '1500', unitName: VXP_TOKEN.decimals });
+const MILESTONE_2_VXP = parseToken({ value: '4000', unitName: VXP_TOKEN.decimals });
 
-export const newUserVxpAmountMilestone1BaseUnits = (): bigint =>
-	(NEW_USER_VXP_TOTAL_BASE_UNITS * PERCENT_MILESTONE_1) / 100n;
+export const newUserVxpAmountMilestone1BaseUnits = (): bigint => MILESTONE_1_VXP;
 
-export const newUserVxpAmountMilestone2BaseUnits = (): bigint =>
-	(NEW_USER_VXP_TOTAL_BASE_UNITS * PERCENT_MILESTONE_2) / 100n;
+export const newUserVxpAmountMilestone2BaseUnits = (): bigint => MILESTONE_2_VXP;
 
 // Computed as the remainder so the three milestones sum exactly to `NEW_USER_VXP_TOTAL_BASE_UNITS`.
 export const newUserVxpAmountMilestone3BaseUnits = (): bigint =>
