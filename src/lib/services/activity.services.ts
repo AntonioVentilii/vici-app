@@ -41,11 +41,17 @@ export const getGlobalActivities = async ({
 		return [];
 	}
 
-	// Fetch only the most-recent `limit` docs server-side — ordered by the
-	// satellite's `created_at`, which tracks log insertion order — instead
-	// of downloading the entire ACTIVITIES collection and slicing in JS.
-	// This keeps the call flat as lifetime activity grows. The trailing
-	// `data.timestamp` sort just stabilises ordering within the small page.
+	// Fetch only the most-recent `limit` docs server-side instead of
+	// downloading the entire ACTIVITIES collection and slicing in JS,
+	// keeping the call flat as lifetime activity grows.
+	//
+	// Ordering is by the satellite's `created_at`, not the client-written
+	// `data.timestamp` the old code sliced on — Juno can only order by
+	// `created_at` / `updated_at` / `keys`, never an arbitrary data field.
+	// The two diverge only when a client's clock is skewed or it backdates
+	// `timestamp`, in which case the server-assigned `created_at` is the
+	// more trustworthy recency signal anyway. The trailing `data.timestamp`
+	// sort just stabilises ordering within the returned page.
 	const items = await listActivities({
 		certified,
 		filter: { order: { field: 'created_at', desc: true }, paginate: { limit } }
@@ -63,7 +69,10 @@ export const getFriendActivities = async ({
 	limit?: number;
 	certified?: boolean;
 }): Promise<Activity[]> => {
-	if (friends.length === 0) {
+	// Guard non-positive limits before paginating: the old `slice(0, limit)`
+	// yielded `[]` for a 0 limit, whereas `paginate: { limit: 0 }` has no
+	// such guarantee. Mirrors `getGlobalActivities`.
+	if (friends.length === 0 || limit <= 0) {
 		return [];
 	}
 
