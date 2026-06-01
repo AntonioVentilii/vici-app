@@ -17,6 +17,11 @@ export const UserProfileApiSchema = j.strictObject({
 	owner: PrincipalTextSchema,
 	nickname: j.string().default(''),
 	avatar: j.string().default(''),
+	// Serialized faceted-avatar picks (compact JSON string). Stored as a
+	// plain string, not a nested object, so it encodes cleanly through
+	// JsonData→Candid. Mirror any change here in
+	// `src/lib/schema/profile.schema.ts`.
+	avatarParts: j.string().default(''),
 	pnl: j.number().default(0),
 	visibility: j.enum(ProfileVisibility).default(ProfileVisibility.FRIENDS_ONLY),
 	role: j.string().optional(),
