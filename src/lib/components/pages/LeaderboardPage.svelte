@@ -229,6 +229,7 @@
 							avatar={user.avatar}
 							nickname={user.nickname}
 							owner={user.owner}
+							self={isYou}
 						/>
 					</div>
 					<div class="leaderboard-podium-name">
@@ -265,6 +266,7 @@
 								avatar={user.avatar}
 								nickname={user.nickname}
 								owner={user.owner}
+								self={isYou}
 							/>
 							<span class="leaderboard-row-text">
 								<span class="leaderboard-row-handle">

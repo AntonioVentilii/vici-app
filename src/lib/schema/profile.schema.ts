@@ -12,6 +12,15 @@ export const UserProfileSchema = j.strictObject({
 	owner: PrincipalTextSchema,
 	nickname: NicknameSchema.default(''),
 	avatar: j.string().default(''),
+	// The user's faceted-avatar picks, serialized to a compact JSON string
+	// (the seven catalog keys — see `serializeParts` in
+	// `$lib/utils/vici-avatar.utils`). Stored as a plain string (not a nested
+	// object) so it round-trips through the satellite JsonData→Candid encoder
+	// without the `Option<Struct>` limitation; empty string = "no saved picks"
+	// (the surface falls back to a deterministic face seeded by the
+	// principal). Uploaded avatar images still win over this. Mirror any
+	// change here in `src/satellite/api-schemas.ts`.
+	avatarParts: j.string().default(''),
 	email: j.string().default(''),
 	pnl: j.number().default(0),
 	visibility: ProfileVisibilitySchema.default(ProfileVisibility.FRIENDS_ONLY),
