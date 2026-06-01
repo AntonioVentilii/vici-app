@@ -91,6 +91,46 @@ export interface AccountStateResponse {
 	available_margin_usd: bigint;
 }
 /**
+ * Aggregate long/short lean of a supplied set of principals on a series,
+ * broken down per outcome.
+ *
+ * Privacy-safe by construction: it exposes only aggregate counts over the
+ * supplied set, never individual identities, sides, amounts, or P&L.
+ */
+export interface AggregateLean {
+	/**
+	 * Number of distinct supplied principals holding a non-flat position
+	 * anywhere on the series (a principal long on two outcomes counts once).
+	 */
+	total: bigint;
+	/**
+	 * The series this lean was computed for.
+	 */
+	series_id: string;
+	/**
+	 * Per-outcome aggregate lean, one entry per outcome on which at least one
+	 * supplied principal holds a non-flat position, ordered by outcome.
+	 */
+	outcomes: Array<OutcomeLean>;
+}
+/**
+ * Input parameters for the `aggregate_lean` query.
+ */
+export interface AggregateLeanParams {
+	/**
+	 * The derivative series to aggregate the lean over.
+	 */
+	series_id: string;
+	/**
+	 * The set of principals to aggregate over. The set is caller-supplied and
+	 * scanned in full, so it is capped — any list longer than the cap is
+	 * truncated. Duplicate principals are de-duplicated and never affect the
+	 * counts. The clearing layer ascribes no meaning to the set; how it is
+	 * chosen is entirely a consumer concern.
+	 */
+	principals: Array<Principal>;
+}
+/**
  * Represents a supported asset in the ICDC ecosystem.
  */
 export type Asset =
@@ -735,6 +775,104 @@ export interface HttpResponse {
 	status_code: number;
 }
 /**
+ * One principal's standing within a leaderboard window.
+ *
+ * The shape is intentionally an **aggregate**: it exposes only window totals
+ * (net realized `PnL` plus the settled / win counts a front end needs for an
+ * accuracy figure) and the principal's rank — never the per-series or
+ * per-settlement breakdown.
+ */
+export interface LeaderboardEntry {
+	principal: Principal;
+	/**
+	 * The principal's rank in the immediately preceding period (last week /
+	 * last month), for ↑/↓ movement. `None` when the window has no prior
+	 * period (all-time) or the principal did not appear in it.
+	 */
+	prior_rank: [] | [bigint];
+	/**
+	 * 1-based rank in the requested window, by net realized `PnL` descending.
+	 * Competition ranking: principals with equal `PnL` share a rank, and the
+	 * next distinct `PnL` skips the tied positions (e.g. `1, 2, 2, 4`).
+	 */
+	rank: bigint;
+	/**
+	 * Net realized `PnL` over the window, in internal USD (`vUSD`) base units —
+	 * the signed sum of the principal's settlement cashflows.
+	 */
+	realized_pnl: bigint;
+	/**
+	 * Number of those settlements that were net positive. `win_count /
+	 * settled_count` is the window accuracy.
+	 */
+	win_count: bigint;
+	/**
+	 * Number of settled positions in the window.
+	 */
+	settled_count: bigint;
+}
+/**
+ * A page of ranked leaderboard standings.
+ */
+export interface LeaderboardPage {
+	/**
+	 * Total number of ranked principals in this window (after any `members`
+	 * filter), so a front end can show "rank X of `total`" without paging to
+	 * the end.
+	 */
+	total: bigint;
+	/**
+	 * When `Some`, pass back as `start_after` to fetch the next page. `None`
+	 * means the last page has been returned.
+	 */
+	next_cursor: [] | [bigint];
+	/**
+	 * Entries for this page, in ascending rank (ties broken by principal for a
+	 * stable order).
+	 */
+	items: Array<LeaderboardEntry>;
+}
+/**
+ * The time window a leaderboard aggregates over.
+ *
+ * Windows are **fixed calendar periods**, not rolling spans, so each window
+ * has a well-defined immediately-preceding period (the "prior window") for the
+ * ↑/↓ rank deltas the front end renders:
+ *
+ * - [`Week`](LeaderboardWindow::Week): an ISO week — Monday 00:00:00 UTC through the following
+ * Sunday. (Unix epoch day 0, 1970-01-01, was a Thursday, hence the `+ 3` Monday alignment
+ * below.)
+ * - [`Month`](LeaderboardWindow::Month): a calendar month in UTC.
+ * - [`AllTime`](LeaderboardWindow::AllTime): a single, unbounded period covering every settlement.
+ * Has no prior window.
+ *
+ * Calendar (rather than rolling) buckets were chosen because the prior-window
+ * rank only has an unambiguous meaning against a discrete preceding period,
+ * and because fixed buckets let the [`SETTLEMENT_LEADERBOARD`] index key on a
+ * stable `(window, period_id)` pair maintained on the settlement write path.
+ *
+ * [`SETTLEMENT_LEADERBOARD`]: crate::memory::SETTLEMENT_LEADERBOARD
+ */
+export type LeaderboardWindow =
+	| {
+			/**
+			 * All settlements ever, in one period.
+			 */
+			AllTime: null;
+	  }
+	| {
+			/**
+			 * Current ISO week (Monday–Sunday, UTC).
+			 */
+			Week: null;
+	  }
+	| {
+			/**
+			 * Current calendar month (UTC).
+			 */
+			Month: null;
+	  };
+/**
  * Represents a limit order stored in the clearing canister.
  */
 export interface LimitOrder {
@@ -761,6 +899,41 @@ export interface LimitOrder {
 	 * The balance domain this order belongs to.
 	 */
 	balance_domain: BalanceDomain;
+}
+/**
+ * Input parameters for [`list_leaderboard`](super::list_leaderboard).
+ */
+export interface ListLeaderboardParams {
+	/**
+	 * When set, rank **only** within this set of principals (a league /
+	 * affiliation member set) instead of the whole population, and include
+	 * every listed member — even those with no settlements in the window —
+	 * with a zeroed aggregate, so the result covers the full league. When
+	 * `None`, the global standings are returned and only principals that
+	 * settled at least one position in the window appear.
+	 *
+	 * The set is caller-controlled and ranked in full, so it is capped at
+	 * 10,000 principals — any realistic league is well under this; a longer
+	 * list is truncated to the first 10,000.
+	 */
+	members: [] | [Array<Principal>];
+	/**
+	 * Which calendar window to rank: current week, current month, or all time.
+	 */
+	window: LeaderboardWindow;
+	/**
+	 * Exclusive pagination cursor: the number of leading entries already
+	 * returned (i.e. the previous page's `next_cursor`). `None` starts from
+	 * the top-ranked entry. Pagination is a snapshot over the window's ranked
+	 * order, which is deterministic for a fixed underlying aggregate.
+	 */
+	start_after: [] | [bigint];
+	/**
+	 * Maximum number of entries to return. `None` returns all remaining
+	 * entries; `0` is clamped to `1` so a paging caller always makes forward
+	 * progress, mirroring the other clearing list queries.
+	 */
+	limit: [] | [bigint];
 }
 /**
  * Input parameters for listing active limit orders.
@@ -869,6 +1042,34 @@ export interface Outcome {
 	 * An optional icon URL for the outcome.
 	 */
 	icon_url: [] | [string];
+}
+/**
+ * Aggregate lean of the supplied principal set on a single outcome of a
+ * series.
+ *
+ * Carries **counts only** — no principal identities, sides, quantities, or
+ * P&L. Long is the number of net-long holders, short the number of net-short
+ * holders; flat (zero net) positions are excluded from both.
+ */
+export interface OutcomeLean {
+	/**
+	 * `long + short`, the number of supplied principals with a non-flat
+	 * position on this outcome.
+	 */
+	total: bigint;
+	/**
+	 * The outcome this lean is for. `None` is the series' binary payoff (long
+	 * vs short); `Some` identifies a categorical outcome.
+	 */
+	outcome_id: [] | [string];
+	/**
+	 * Number of supplied principals net long on this outcome.
+	 */
+	long: bigint;
+	/**
+	 * Number of supplied principals net short on this outcome.
+	 */
+	short: bigint;
 }
 /**
  * Mechanism for ensuring idempotency in ledger payments.
@@ -1801,6 +2002,24 @@ export interface _SERVICE {
 	 */
 	accept_position_transfer: ActorMethod<[PositionProof], AcceptPositionTransferResult>;
 	/**
+	 * Aggregates, for a series, the long/short lean of a supplied set of
+	 * principals, broken down per outcome.
+	 *
+	 * The clearing layer ascribes no meaning to the set — it is just a list of
+	 * principals the caller passes in; how it is assembled is a concern of the
+	 * consuming layer-2 / application, not of clearing.
+	 *
+	 * Returns **counts only**: per outcome, how many of the supplied principals
+	 * are net long vs net short, plus the number of distinct principals with any
+	 * non-flat position on the series. It never exposes individual identities,
+	 * sides, quantities, or P&L, so no single principal's own side is ever singled
+	 * out.
+	 *
+	 * The supplied set is de-duplicated and capped at `MAX_AGGREGATE_PRINCIPALS`.
+	 * Guarded by `caller_is_not_anonymous`, matching the other position reads.
+	 */
+	aggregate_lean: ActorMethod<[AggregateLeanParams], AggregateLean>;
+	/**
 	 * One-shot, idempotent backfill of `Settled` events for plans finalized
 	 * before per-user event emission was added to `apply_settlement_accounting_logic`.
 	 *
@@ -1929,6 +2148,24 @@ export interface _SERVICE {
 	 * Returns a list of all supported collateral assets with their metrics.
 	 */
 	list_collateral_assets: ActorMethod<[], Array<CollateralAssetInfo>>;
+	/**
+	 * Returns ranked standings for a calendar window (this week / this month / all
+	 * time), derived from settled-position `PnL`, with each entry's prior-window
+	 * rank for ↑/↓ deltas and stable cursor pagination.
+	 *
+	 * Principals are ranked by net realized `PnL` (the signed sum of their
+	 * settlement cashflows in the window) descending, using competition ranking
+	 * (ties share a rank). Pass `members` to rank within a league / affiliation
+	 * member set instead of the whole population — that set is ranked in
+	 * isolation and every listed member is included even with no settlements in
+	 * the window, so the front end can read a user's rank within their league.
+	 *
+	 * Served from the `SETTLEMENT_LEADERBOARD` index, so a call ranks only the two
+	 * relevant period buckets (current + prior) rather than scanning the whole
+	 * event log. Guarded by `caller_is_not_anonymous`, matching the other
+	 * settlement-derived reads.
+	 */
+	list_leaderboard: ActorMethod<[ListLeaderboardParams], LeaderboardPage>;
 	/**
 	 * Returns a list of all active limit orders, potentially filtered by series.
 	 */

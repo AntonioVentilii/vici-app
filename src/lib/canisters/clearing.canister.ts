@@ -130,6 +130,25 @@ export class ClearingCanister extends Canister<ClearingService> {
 		return await get_positions();
 	};
 
+	/**
+	 * Aggregate long/short lean of a supplied set of principals on one series.
+	 *
+	 * Privacy-preserving by construction: the query returns per-outcome counts
+	 * only (`long` / `short` / `total`) — never individual identities, sides,
+	 * quantities, or P&L. The principal set is caller-supplied; the clearing
+	 * layer ascribes no meaning to it (here it is the viewer's followed set).
+	 */
+	aggregateLean = async ({
+		params,
+		...queryParams
+	}: {
+		params: ClearingDid.AggregateLeanParams;
+	} & QueryParams): Promise<ClearingDid.AggregateLean> => {
+		const { aggregate_lean } = this.caller(queryParams);
+
+		return await aggregate_lean(params);
+	};
+
 	listSeries = async (queryParams: QueryParams): Promise<ClearingDid.Series[]> => {
 		const { list_series } = this.caller(queryParams);
 

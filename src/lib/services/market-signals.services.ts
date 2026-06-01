@@ -1,9 +1,10 @@
 import type { RegistryDid } from '$declarations';
 import type { MarketTag } from '$lib/constants/market-tags.constants';
-import { getFriendActivities } from '$lib/services/activity.services';
+import { getFollowedLean } from '$lib/services/followed-lean.services';
 import { listMarketTagsBySeries } from '$lib/services/market-tags.services';
 import { getFollowing } from '$lib/services/relation.services';
 import { getUserTradeHistory } from '$lib/services/trade.services';
+import type { MarketId } from '$lib/types/market';
 import type { UserMarketSignals } from '$lib/types/market-signals';
 import { deriveUserMarketSignals } from '$lib/utils/market-signals.utils';
 
@@ -26,16 +27,20 @@ export const getUserMarketSignals = async ({
 		getFollowing().catch(() => [])
 	]);
 
-	const friendActivities =
+	// Real, privacy-preserving friends-lean: the clearing canister aggregates
+	// the YES/NO split of the viewer's followed set per market, returning
+	// counts only (no identities/sides). Fails open to an empty map so the
+	// rest of the signals still render and the card falls back gracefully.
+	const followedLean =
 		following.length > 0
-			? await getFriendActivities({ friends: following, limit: 100, certified: false }).catch(
-					() => []
-				)
-			: [];
+			? await getFollowedLean({
+					following,
+					seriesIds: Object.keys(resolvedTags) as MarketId[]
+				}).catch(() => ({}))
+			: {};
 
-	return deriveUserMarketSignals({
-		events,
-		tagMappings: resolvedTags,
-		friendActivities
-	});
+	return {
+		...deriveUserMarketSignals({ events, tagMappings: resolvedTags }),
+		followedLean
+	};
 };
