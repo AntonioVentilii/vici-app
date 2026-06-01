@@ -12,6 +12,9 @@
  * `docs/economy.md` for the full economy spec.
  */
 
+import { VXP_TOKEN } from '$lib/constants/tokens/tokens.ic.constants';
+import { parseToken } from '$lib/utils/parse.utils';
+
 /**
  * Per-call stake ladder, smallest → largest. The shape is curated, not
  * arithmetic — see `docs/economy.md` §2 for the psychology behind
@@ -68,21 +71,46 @@ export const VXP_STREAK_BONUSES: Readonly<Record<number, number>> = Object.freez
 });
 
 /**
- * Calibration reward, in VXP base units. Paid once per finalised Vici
- * binary market a recovering user calls correctly. Small and fixed —
- * it is a recovery nudge that rewards reading a market right, not a
- * payout that scales with stake. Tunable.
+ * Calibration reward (20 VXP), in **base units**. Paid once per finalised
+ * Vici binary market a recovering user calls correctly. Small and fixed —
+ * it is a recovery nudge that rewards reading a market right, not a payout
+ * that scales with stake. Sized in base units via the canonical
+ * `parseToken` helper so it matches `icrc1Transfer` / award-doc amounts
+ * (same pattern as referral / onboarding awards). Tunable.
  */
-export const VXP_CALIBRATION_REWARD = 20;
+export const VXP_CALIBRATION_REWARD_BASE_UNITS = parseToken({
+	value: '20',
+	unitName: VXP_TOKEN.decimals
+});
 
 /**
- * Recovery floor for the calibration reward, in VXP base units. The
- * reward only pays while the caller's available balance is *below* this
- * floor — it is the core bound that keeps calibration a recovery
+ * Recovery floor for the calibration reward (100 VXP), in **base units**.
+ * The reward only pays while the caller's available balance is *below*
+ * this floor — it is the core bound that keeps calibration a recovery
  * mechanic for depleted users rather than a steady income stream for
- * everyone. Tunable.
+ * everyone. Compared directly against the ledger balance (also base
+ * units), so it is sized via `parseToken`. Tunable.
  */
-export const CALIBRATION_RECOVERY_FLOOR = 100;
+export const CALIBRATION_RECOVERY_FLOOR_BASE_UNITS = parseToken({
+	value: '100',
+	unitName: VXP_TOKEN.decimals
+});
+
+/**
+ * Net-worth floor (150 VXP) that separates a *fully-deployed* user from a
+ * *genuinely depleted* one, in **base units**. When the free wallet
+ * balance hits the recovery floor, the deployed-vs-depleted split reads
+ * the VXP still locked in the user's open calls (`lockedCollateral`, also
+ * base units): at or above this floor the stack is "in play, nothing lost"
+ * — a positive beat pointing at the open calls; below it the stack has
+ * actually eroded through realised losses, so the user is offered the
+ * Calibration recovery path. Sized via `parseToken` so the comparison
+ * stays in base units. Tunable.
+ */
+export const CALIBRATION_DEPLOY_FLOOR_BASE_UNITS = parseToken({
+	value: '150',
+	unitName: VXP_TOKEN.decimals
+});
 
 /**
  * Maximum number of calibration rewards a single caller can earn within

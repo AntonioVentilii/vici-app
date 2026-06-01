@@ -26,6 +26,7 @@ export enum AppPath {
 	Portfolio = '/portfolio',
 	Arena = '/arena',
 	Flow = '/flow',
+	Calibration = '/calibration',
 	Settings = '/settings',
 	AccountSettings = '/settings/account',
 	Notifications = '/notifications'
