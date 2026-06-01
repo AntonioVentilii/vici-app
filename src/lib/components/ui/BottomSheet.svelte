@@ -132,7 +132,11 @@
 		 * shrinks in step so the body still scrolls. Defaults to `0px`,
 		 * so the hooks are inert until something sets `--kb-inset`. */
 		margin-bottom: var(--kb-inset, 0px);
-		max-height: calc(92vh - var(--kb-inset, 0px));
+		/* A large `--kb-inset` can drive the `calc()` negative, collapsing
+		 * the cap; floor it at `0px` via `max()`. The plain `92vh` above is
+		 * the fallback for engines without `max()`. */
+		max-height: 92vh;
+		max-height: max(0px, calc(92vh - var(--kb-inset, 0px)));
 		transition: margin-bottom 0.22s var(--ease-vici);
 		padding: 0.5rem 1.1rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
 		background: var(--bg-popover);
