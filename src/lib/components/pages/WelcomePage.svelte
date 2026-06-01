@@ -82,11 +82,7 @@
 								{t({ locale: $localeStore, key: 'cta.primary' })}
 								<ChevronRight size={16} />
 							</button>
-							<button
-								class="btn btn-ghost btn-lg"
-								onclick={() => goto(AppPath.Markets)}
-								type="button"
-							>
+							<button class="btn btn-ghost btn-lg" onclick={() => goto(AppPath.Home)} type="button">
 								{t({ locale: $localeStore, key: 'cta.see_markets' })}
 							</button>
 						</div>
