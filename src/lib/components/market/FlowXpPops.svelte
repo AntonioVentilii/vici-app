@@ -4,12 +4,13 @@
 	import { t } from '$lib/utils/i18n.utils';
 
 	/**
-	 * FlowXpPops — multi-pop manager for the centered VXP-award envelopes
-	 * that ride along with a beat or combo. Each entry renders the inline
-	 * laurel / yes / no pop (combo + bonus serif-italic copy line + laurel
-	 * ring). The per-swipe commit confirmation is a separate surface
-	 * (`XpToast`, owned by `FlowMode`); this aggregator owns position +
-	 * fan-out for the richer bonus / combo moments only.
+	 * FlowXpPops — multi-pop manager for the centered VXP-grant envelopes.
+	 * A routine swipe mints nothing (deflation-safe economy, see
+	 * `docs/ai/frontend/design.md` §7.3), so every pop is a genuine engine
+	 * award — the overtime finish or a lifetime-volume milestone — rendered
+	 * as the laurel-ring bonus envelope with its paired serif-italic copy.
+	 * The per-swipe commit confirmation is a separate surface (`XpToast`,
+	 * owned by `FlowMode`); this aggregator owns position + fan-out.
 	 */
 	interface Props {
 		pops: XpPop[];
@@ -20,24 +21,13 @@
 
 <div class="xp-pops" aria-hidden="true">
 	{#each pops as pop (pop.id)}
-		<div
-			class="xp-pop"
-			class:xp-pop-bonus={pop.kind === 'bonus'}
-			class:xp-pop-no={pop.kind === 'normal' && pop.side === 'NO'}
-			class:xp-pop-yes={pop.kind === 'normal' && pop.side === 'YES'}
-		>
-			{#if pop.kind === 'bonus' && pop.copy}
+		<div class="xp-pop xp-pop-bonus">
+			{#if pop.copy}
 				<span class="xp-pop-copy serif-italic">{pop.copy}</span>
 			{/if}
 			<span class="xp-pop-amount num">+{pop.amount}</span>
 			<span class="xp-pop-label">
-				{pop.combo > 1
-					? t({
-							locale: $localeStore,
-							key: 'flow.xp_combo',
-							params: { combo: pop.combo }
-						})
-					: t({ locale: $localeStore, key: 'flow.xp_label' })}
+				{t({ locale: $localeStore, key: 'flow.feedback.vxp' })}
 			</span>
 		</div>
 	{/each}
@@ -67,21 +57,12 @@
 		background: var(--bg-popover);
 		color: var(--laurel);
 		box-shadow: var(--shadow-card);
-		animation: xpPop 1.1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 	}
 	.xp-pop-label {
 		font-size: var(--t-11);
 		letter-spacing: var(--tracking-allcaps);
 		text-transform: uppercase;
 		opacity: 0.7;
-	}
-	.xp-pop-yes {
-		color: var(--yes);
-		border: 2px solid var(--yes);
-	}
-	.xp-pop-no {
-		color: var(--no);
-		border: 2px solid var(--no);
 	}
 	/* Bonus pop — milestone reward (rarity ladder). Laurel ring, larger
 	   amount, paired serif-italic copy on top, longer dwell. */
@@ -128,20 +109,6 @@
 		}
 		100% {
 			transform: translateY(-150px) scale(0.95);
-			opacity: 0;
-		}
-	}
-	@keyframes xpPop {
-		0% {
-			transform: translateY(0) scale(0.6);
-			opacity: 0;
-		}
-		20% {
-			transform: translateY(-10px) scale(1.1);
-			opacity: 1;
-		}
-		100% {
-			transform: translateY(-120px) scale(0.9);
 			opacity: 0;
 		}
 	}
