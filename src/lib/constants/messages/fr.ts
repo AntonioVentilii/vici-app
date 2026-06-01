@@ -168,6 +168,7 @@ export const frMessages = {
 	'flow.reso.head.settled_many': '{count} calls ont été réglés.',
 	'dash.reso.banner_title_one': '1 call réglé',
 	'dash.reso.banner_title_many': '{count} calls réglés',
+	'dash.reso.banner_breakdown': ' · {wins} corrects · {losses} manqués',
 	'dash.reso.banner_cta': 'REVOIR →',
 	'flow.share.referral_amount': 'Gagne 500 VXP',
 	'flow.share.referral_tail': ' quand un ami prédit via ton lien',

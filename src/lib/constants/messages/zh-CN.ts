@@ -164,6 +164,7 @@ export const zhCnMessages = {
 	'flow.reso.head.settled_many': '{count} 项预测已结算。',
 	'dash.reso.banner_title_one': '1 项预测已结算',
 	'dash.reso.banner_title_many': '{count} 项预测已结算',
+	'dash.reso.banner_breakdown': ' · {wins} 项正确 · {losses} 项失误',
 	'dash.reso.banner_cta': '查看 →',
 	'flow.share.referral_amount': '赢得 500 VXP',
 	'flow.share.referral_tail': ' 当朋友通过你的链接预测时',

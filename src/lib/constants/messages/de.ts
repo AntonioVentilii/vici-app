@@ -170,6 +170,7 @@ export const deMessages = {
 	'flow.reso.head.settled_many': '{count} Calls wurden abgerechnet.',
 	'dash.reso.banner_title_one': '1 Call abgerechnet',
 	'dash.reso.banner_title_many': '{count} Calls abgerechnet',
+	'dash.reso.banner_breakdown': ' · {wins} richtig · {losses} verpasst',
 	'dash.reso.banner_cta': 'ANSEHEN →',
 	'flow.share.referral_amount': 'Verdiene 500 VXP',
 	'flow.share.referral_tail': ', wenn ein Freund über deinen Link tippt',
