@@ -55,6 +55,7 @@ export const listMyLeagues = async (): Promise<LeagueWithRole[]> => {
 			owner: league.owner,
 			createdAtMs: league.created_at_ms,
 			accentColor: league.accent_color,
+			emblem: league.emblem,
 			private: league.private
 		},
 		role,
@@ -109,6 +110,7 @@ export const lookupLeagueByInvite = async ({
 		owner: league.owner,
 		createdAtMs: league.created_at_ms,
 		accentColor: league.accent_color,
+		emblem: league.emblem,
 		private: league.private
 	};
 };
@@ -197,6 +199,7 @@ export const createLeague = async ({
 	name,
 	description,
 	accentColor,
+	emblem,
 	isPrivate = false
 }: {
 	name: string;
@@ -205,6 +208,10 @@ export const createLeague = async ({
 	 *  sheet. Persisted on the league doc so the gradient logo tile is
 	 *  consistent everywhere the league is rendered. */
 	accentColor?: string;
+	/** Single-glyph emblem the owner picked in the create sheet.
+	 *  Persisted on the league doc so the logo tile reads the same
+	 *  everywhere the league is rendered. */
+	emblem?: string;
 	/** Whether the owner marked the league private at creation. Public
 	 *  by default; persisted on the league doc and surfaced as the
 	 *  detail header's privacy chip. */
@@ -237,6 +244,7 @@ export const createLeague = async ({
 		owner: ownerPrincipal,
 		createdAtMs,
 		accentColor,
+		emblem,
 		private: isPrivate
 	};
 

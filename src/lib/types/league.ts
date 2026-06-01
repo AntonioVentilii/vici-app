@@ -26,12 +26,46 @@ export interface LeagueDoc {
 	/** Optional accent colour (hex) for the league chip. */
 	accentColor?: string;
 	/**
+	 * Single-glyph emblem the owner picked from {@link LEAGUE_EMBLEMS}
+	 * at creation. Rendered inside the gradient logo tile everywhere the
+	 * league surfaces. Chosen once at creation and frozen alongside the
+	 * identity fields. Absent on legacy rows written before the picker
+	 * shipped — callers fall back to {@link leagueEmblem}.
+	 */
+	emblem?: string;
+	/**
 	 * Whether the league is private. Private leagues are only reachable
 	 * by invite code and read as "Private" on the detail header; absent
 	 * (or `false`) means a public league. Chosen once at creation.
 	 */
 	private?: boolean;
 }
+
+/**
+ * Emblem glyphs the owner picks from in the create sheet. Stored
+ * verbatim on the league doc's `emblem` field, then rendered inside
+ * the gradient logo tile. The first entry is the default selection.
+ */
+export const LEAGUE_EMBLEMS = ['⚔', '☼', '✦', '✧', '◎', '⌬', '⊿', '☆', '◆', '⬡'] as const;
+
+/** Default emblem when the owner doesn't change the selection. */
+export const [LEAGUE_EMBLEM_DEFAULT] = LEAGUE_EMBLEMS;
+
+/**
+ * Resolve the glyph to render for a league. Prefers the stored
+ * `emblem`; for legacy rows written before the picker shipped, derives
+ * a 1-char mark from the first code-point of the name (Unicode-safe),
+ * falling back to a neutral glyph for non-alphabetic names.
+ */
+export const leagueEmblem = (league: Pick<LeagueDoc, 'emblem' | 'name'>): string => {
+	if (league.emblem !== undefined && league.emblem.length > 0) {
+		return league.emblem;
+	}
+
+	const [first] = Array.from(league.name.trim());
+
+	return first ? first.toUpperCase() : '◆';
+};
 
 /**
  * Invite-code shape. Six uppercase alphanumeric characters — the join

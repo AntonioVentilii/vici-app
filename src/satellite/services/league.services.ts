@@ -122,17 +122,19 @@ export const assertSetLeague = ({
 	}
 
 	// 3. Identity fields are immutable on edits — `owner` is now
-	// editable, the rest stay frozen. Privacy is chosen once at
-	// creation and frozen alongside the identity fields so the visible
-	// public/private state can't silently flip under existing members.
+	// editable, the rest stay frozen. Privacy and the emblem are both
+	// chosen once at creation and frozen alongside the identity fields
+	// so the league's visible identity (public/private state, logo
+	// glyph) can't silently shift under existing members.
 	if (
 		currentDoc.id !== proposedDoc.id ||
 		currentDoc.createdAtMs !== proposedDoc.createdAtMs ||
 		currentDoc.inviteCode !== proposedDoc.inviteCode ||
+		(currentDoc.emblem ?? '') !== (proposedDoc.emblem ?? '') ||
 		(currentDoc.private ?? false) !== (proposedDoc.private ?? false)
 	) {
 		throw new Error(
-			'leagues identity fields are immutable (id, createdAtMs, inviteCode, private).'
+			'leagues identity fields are immutable (id, createdAtMs, inviteCode, emblem, private).'
 		);
 	}
 };
