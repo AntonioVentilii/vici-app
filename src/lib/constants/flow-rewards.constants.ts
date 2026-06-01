@@ -1,13 +1,9 @@
 // Flow Mode reward constants.
 //
-// Base XP per committed prediction and the accuracy-surfacing gate.
-// The swipe-count volume ladder is owned by the motion engine.
-
-/**
- * Base XP awarded on every committed prediction (YES / NO). Skips
- * do not award XP. Multiplied by the streak combo multiplier.
- */
-export const BASE_XP_PER_PREDICTION = 10;
+// The accuracy-surfacing gate. A committed swipe mints NO VXP — the
+// economy is deflation-safe (see `docs/ai/frontend/design.md` §7.3): VXP
+// is minted only at the overtime finish (+25) and rare lifetime-volume
+// milestones, both owned by the motion engine.
 
 /**
  * Lifetime-call threshold below which accuracy is *not* surfaced in

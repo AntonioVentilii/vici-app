@@ -293,10 +293,13 @@ The Flow reward engine lives in
 [`src/lib/utils/motion-engine.utils.ts`](../../../src/lib/utils/motion-engine.utils.ts)
 (`recordMotionSwipe`). A swipe **places** a call; it never resolves one,
 so the engine has no "correct" signal and never moves accuracy. It
-rewards the act of calling and the discipline of showing up. Base XP is
-`BASE_XP_PER_PREDICTION = 10` per committed swipe (YES / NO), multiplied
-by the session-combo multiplier; that is handled in `FlowMode`, separate
-from the engine's genuine VXP grants.
+rewards the act of calling and the discipline of showing up.
+
+**A committed swipe mints no VXP.** There is no per-swipe / per-combo
+award: `FlowMode` does not grant or display VXP on a swipe, and the
+streak combo drives haptics and the streak banner only. The session VXP
+counter (`+{xp} VXP this session`) reflects **only** the engine's genuine
+grants below, so a routine daily-ten session shows `+0`.
 
 **Deflation-safe VXP economy** — dopamine is not currency. Routine
 swipes, the daily ten, and the low lifetime milestones (1 / 10 / 25)
