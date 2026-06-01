@@ -42,7 +42,11 @@
 	import type { MarketMetadata } from '$lib/types/market-metadata';
 	import type { UserMarketSignals } from '$lib/types/market-signals';
 	import { isViciXp } from '$lib/utils/balance-domain.utils';
-	import { applyDailyGoalBump, rolloverDailyGoal } from '$lib/utils/daily-goal.utils';
+	import {
+		applyDailyGoalBump,
+		DAILY_GOAL_TARGET,
+		rolloverDailyGoal
+	} from '$lib/utils/daily-goal.utils';
 	import {
 		FLOW_ART_CATEGORY_SET,
 		resolveFlowArtCategory,
@@ -64,8 +68,8 @@
 	// hydrated from the profile and rolled over to 0 on a new local day.
 	// The day's target is the standard ten; the user can opt into overtime
 	// (Push-to-15) to extend the SESSION to the daily hard cap. Progress is
-	// capped at 100 % so the bar / percent never overflows.
-	const DAILY_GOAL_TARGET = 10;
+	// capped at 100 % so the bar / percent never overflows. The day's
+	// target (`DAILY_GOAL_TARGET`) is shared with the dashboard resume card.
 
 	// Session cap — how many calls this run continues to before the FlowEnd
 	// takeover. Starts at the daily ten; the "Push to 15 →" opt-in on FlowEnd
