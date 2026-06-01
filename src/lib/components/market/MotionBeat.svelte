@@ -301,8 +301,9 @@
 
 	/* Lively idle — the character keeps celebrating while it holds the gap.
 	   Starts once the pop-in has settled. The flame / trickster reward
-	   moments hop harder with a scale pulse on top of the bob + tilt. */
-	.motion-beat .motion-beat-char {
+	   moments hop harder with a scale pulse on top of the bob + tilt.
+	   Ambient pops stay minimal: no continuous celebration loop. */
+	.motion-beat:not(.is-ambient) .motion-beat-char {
 		animation: beat-char-celebrate 1s ease-in-out 0.46s infinite;
 		transform-origin: 50% 80%;
 	}
@@ -347,8 +348,9 @@
 		}
 	}
 
-	/* The radial glow breathes in time with the celebration. */
-	.motion-beat .motion-beat-char::before {
+	/* The radial glow breathes in time with the celebration — reward beats
+	   only; ambient pops keep the static glow with no breathing pulse. */
+	.motion-beat:not(.is-ambient) .motion-beat-char::before {
 		animation: beat-glow-pulse 1s ease-in-out 0.46s infinite;
 	}
 	@keyframes beat-glow-pulse {
@@ -363,9 +365,10 @@
 		}
 	}
 
-	/* One-shot celebratory shockwave ring that fires once on entrance.
-	   Tinted to match the character; flame / trickster rings ride larger. */
-	.motion-beat .motion-beat-char::after {
+	/* One-shot celebratory shockwave ring that fires once on entrance —
+	   reward beats only. Ambient pops never spawn the ring. Tinted to match
+	   the character; flame / trickster rings ride larger. */
+	.motion-beat:not(.is-ambient) .motion-beat-char::after {
 		content: '';
 		position: absolute;
 		left: 50%;
@@ -406,12 +409,12 @@
 	   static state. The plain opacity fade (rm-in / rm-out below) still
 	   carries the character in and out without travel or overshoot. */
 	@media (prefers-reduced-motion: reduce) {
-		.motion-beat .motion-beat-char,
-		.motion-beat .motion-beat-char::before,
-		.motion-beat .motion-beat-char::after {
+		.motion-beat:not(.is-ambient) .motion-beat-char,
+		.motion-beat:not(.is-ambient) .motion-beat-char::before,
+		.motion-beat:not(.is-ambient) .motion-beat-char::after {
 			animation: none;
 		}
-		.motion-beat .motion-beat-char::after {
+		.motion-beat:not(.is-ambient) .motion-beat-char::after {
 			display: none;
 		}
 	}
