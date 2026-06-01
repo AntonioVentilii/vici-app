@@ -88,13 +88,13 @@ export const UserProfileApiSchema = j.strictObject({
 			// `src/lib/schema/profile.schema.ts`.
 			sharing: j
 				.strictObject({
-					profileVisibility: j.string().default('public'),
+					profileVisibility: j.string().default('private'),
 					callsPublic: j.boolean().default(true),
 					leaderboardOptIn: j.boolean().default(true),
 					worldsOptIn: j.boolean().default(true)
 				})
 				.default({
-					profileVisibility: 'public',
+					profileVisibility: 'private',
 					callsPublic: true,
 					leaderboardOptIn: true,
 					worldsOptIn: true
@@ -126,7 +126,7 @@ export const UserProfileApiSchema = j.strictObject({
 			hapticsEnabled: true,
 			soundEnabled: true,
 			sharing: {
-				profileVisibility: 'public',
+				profileVisibility: 'private',
 				callsPublic: true,
 				leaderboardOptIn: true,
 				worldsOptIn: true

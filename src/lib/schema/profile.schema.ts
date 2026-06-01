@@ -136,13 +136,13 @@ export const UserProfileSchema = j.strictObject({
 			// `src/satellite/api-schemas.ts`.
 			sharing: j
 				.strictObject({
-					profileVisibility: j.string().default('public'),
+					profileVisibility: j.string().default('private'),
 					callsPublic: j.boolean().default(true),
 					leaderboardOptIn: j.boolean().default(true),
 					worldsOptIn: j.boolean().default(true)
 				})
 				.default({
-					profileVisibility: 'public',
+					profileVisibility: 'private',
 					callsPublic: true,
 					leaderboardOptIn: true,
 					worldsOptIn: true
@@ -173,7 +173,7 @@ export const UserProfileSchema = j.strictObject({
 			hapticsEnabled: true,
 			soundEnabled: true,
 			sharing: {
-				profileVisibility: 'public',
+				profileVisibility: 'private',
 				callsPublic: true,
 				leaderboardOptIn: true,
 				worldsOptIn: true

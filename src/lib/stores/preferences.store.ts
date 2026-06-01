@@ -42,7 +42,7 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 	hapticsEnabled: true,
 	soundEnabled: true,
 	sharing: {
-		profileVisibility: 'public',
+		profileVisibility: 'private',
 		callsPublic: true,
 		leaderboardOptIn: true,
 		worldsOptIn: true
@@ -270,7 +270,24 @@ if (browser) {
 			const legacy = readLegacyLocalStorage();
 
 			if (nonNullish(legacy)) {
-				const migrated = hydrateShape({ partial: { ...fromProfile, ...legacy } });
+				// Pre-`sharing` payloads stored `callsPublic` at the top
+				// level (`preferences.callsPublic`). Fold any such legacy
+				// root value into `sharing.callsPublic` so a user who had
+				// opted out of public call history isn't silently reset to
+				// the default — a stored `sharing.callsPublic` still wins.
+				const legacyCallsPublic = (legacy as { callsPublic?: boolean }).callsPublic;
+				const mergedPartial: PartialPrefsInput = {
+					...fromProfile,
+					...legacy,
+					sharing: {
+						...fromProfile.sharing,
+						...legacy.sharing,
+						...(typeof legacyCallsPublic === 'boolean'
+							? { callsPublic: legacy.sharing?.callsPublic ?? legacyCallsPublic }
+							: {})
+					}
+				};
+				const migrated = hydrateShape({ partial: mergedPartial });
 				internal.set(migrated);
 				persistToProfile(migrated);
 				clearLegacyLocalStorage();

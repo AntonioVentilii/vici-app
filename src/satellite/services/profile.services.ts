@@ -2,6 +2,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
+import { visibilityFromProfile } from '$lib/utils/visibility.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { AssertSetDocContext } from '@junobuild/functions';
 import { msgCaller } from '@junobuild/functions/ic-cdk';
@@ -58,7 +59,10 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 				incoming?.sharing?.profileVisibility === 'friends' ||
 				incoming?.sharing?.profileVisibility === 'private'
 					? incoming.sharing.profileVisibility
-					: 'public',
+					: // No stored sharing slice — derive from the canonical top-level
+						// `visibility` so legacy rows reflect their actual visibility
+						// (FRIENDS_ONLY → 'private') instead of defaulting to public.
+						visibilityFromProfile(profile.visibility),
 			callsPublic: incoming?.sharing?.callsPublic ?? true,
 			leaderboardOptIn: incoming?.sharing?.leaderboardOptIn ?? true,
 			worldsOptIn: incoming?.sharing?.worldsOptIn ?? true
