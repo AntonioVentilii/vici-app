@@ -2495,19 +2495,27 @@ a.title-action::after {
 	font-weight: 600;
 }
 
+/* Full-width pill treatment shared by every sign-in surface (the
+   sign-in screen, the modal/gated prompts, and onboarding). Google reads
+   as the cream-filled primary pill; every other provider (Apple, email,
+   Internet Identity, Passkey, dev) is a dark or faint pill via the
+   per-tone classes below. The button structure (centred label, absolute
+   spinner / "soon" slot) is shared so loading + aria behaviour is
+   identical across providers. */
 .signin-provider-btn {
 	appearance: none;
 	cursor: pointer;
 	width: 100%;
 	display: flex;
 	align-items: center;
-	gap: 12px;
-	padding: 14px 16px;
-	background: var(--bg-surface);
+	justify-content: center;
+	gap: 10px;
+	padding: 13px 16px;
+	background: transparent;
 	border: 1px solid var(--border-base);
-	border-radius: 12px;
+	border-radius: 999px;
 	font-family: inherit;
-	font-size: 15px;
+	font-size: 14px;
 	font-weight: 600;
 	color: var(--text-base);
 	transition:
@@ -2516,14 +2524,6 @@ a.title-action::after {
 		background 200ms var(--ease-vici),
 		transform 80ms var(--ease-vici);
 	position: relative;
-}
-.signin-provider-btn:hover:not(:disabled) {
-	border-color: var(--border-strong);
-	background: rgba(242, 236, 220, 0.06);
-}
-[data-theme='light'] .signin-provider-btn:hover:not(:disabled),
-[data-theme='peach'] .signin-provider-btn:hover:not(:disabled) {
-	background: rgba(14, 13, 11, 0.04);
 }
 .signin-provider-btn:active:not(:disabled) {
 	transform: scale(0.99);
@@ -2537,31 +2537,8 @@ a.title-action::after {
 .signin-provider-btn.is-loading {
 	opacity: 0.7;
 }
-/* Email keeps the gold-tinted accent treatment; every other provider
-   (Apple, Google, Internet Identity, Passkey, dev) shares the neutral
-   elevated card so the stack reads as one equal-weight set. */
-.signin-provider-btn.email {
-	background: rgba(226, 184, 66, 0.04);
-	border-color: rgba(226, 184, 66, 0.22);
-	color: var(--accent);
-}
-/* Onboarding variant — full-width pill treatment for the auth gate.
-   Google reads as the cream-filled primary pill; every other provider
-   (Apple, email, Internet Identity, Passkey, dev) is a dark pill. The
-   button structure (centred label, absolute spinner / "soon" slot) is
-   shared with the `/signin` surface so loading + aria behaviour is
-   identical across variants. */
-.signin-provider-btn.is-onboarding {
-	justify-content: center;
-	gap: 10px;
-	padding: 13px 16px;
-	border-radius: 999px;
-	font-size: 14px;
-	background: transparent;
-}
-/* Center the icon + label as a tight group (the auth-gate treatment),
-   rather than the `/signin` layout where the label fills the row and the
-   icon pins to the leading edge. */
+/* Center the icon + label as a tight group rather than letting the
+   label fill the row. */
 .signin-provider-btn.is-onboarding .signin-provider-label {
 	flex: 0 0 auto;
 }
@@ -2585,9 +2562,7 @@ a.title-action::after {
 }
 /* Secondary providers (email, Internet Identity, Passkey, dev) share a
    faint translucent pill — lighter than the solid Apple pill — so Apple
-   (black) and Google (cream) read as the primary pair. Higher specificity
-   than `.signin-provider-btn.email`, so the gold-tinted `/signin` email
-   accent can't leak in. */
+   (black) and Google (cream) read as the primary pair. */
 .signin-provider-btn.is-onboarding.ob-faint {
 	background: rgba(242, 236, 220, 0.06);
 	border-color: var(--border-base);
