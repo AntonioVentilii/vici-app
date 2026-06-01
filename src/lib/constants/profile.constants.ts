@@ -82,5 +82,9 @@ export const handleCooldownDaysLeft = ({
 		return 0;
 	}
 
-	return HANDLE_COOLDOWN_DAYS - daysSince;
+	// Clamp to [0, HANDLE_COOLDOWN_DAYS]: a `lastChangeMs` skewed slightly into
+	// the future (tolerated client clock skew) yields a negative `daysSince`,
+	// which would otherwise report more than the full cooldown and over-extend
+	// the lockout. The full window is the hard ceiling; never report negative.
+	return Math.min(HANDLE_COOLDOWN_DAYS, HANDLE_COOLDOWN_DAYS - daysSince);
 };
