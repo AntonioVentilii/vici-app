@@ -45,16 +45,17 @@
 		 */
 		lineColor?: string;
 		/**
-		 * Real price-history series (0–100 YES percentages, oldest first)
-		 * sourced from the clearing canister's trade history. When
-		 * provided the line plots this genuine history instead of the
-		 * seed-based fallback shape:
+		 * Real, market-wide price-history series (0–100 YES percentages,
+		 * oldest first) sourced from the clearing canister's market-wide
+		 * trade history — the true movement for every viewer, not the
+		 * caller's own fills. When provided the line plots this genuine
+		 * history instead of the seed-based fallback shape:
 		 *  - a non-empty series traces the actual trade prices, ending at
 		 *    the live `yesPercent`;
 		 *  - an empty series is a true cold-start — the line reads flat at
 		 *    `yesPercent` until the first trade lands.
-		 * When `undefined` (surfaces that don't fetch per-market history)
-		 * the seed-based fallback shape is used.
+		 * When `undefined` (surfaces that don't fetch per-market history,
+		 * e.g. the swipe deck) the seed-based fallback shape is used.
 		 */
 		points?: number[];
 	}
