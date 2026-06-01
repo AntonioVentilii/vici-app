@@ -122,6 +122,13 @@ export const assertSetLeague = ({
 			);
 		}
 
+		// A cover image may be seeded at creation; same non-empty rule as
+		// the edit path so a "no image" league carries an absent field
+		// rather than an empty string.
+		if (nonNullish(proposedDoc.imageUrl) && proposedDoc.imageUrl.trim().length === 0) {
+			throw new Error('leagues imageUrl must be a non-empty URL when set.');
+		}
+
 		return;
 	}
 
@@ -140,6 +147,10 @@ export const assertSetLeague = ({
 	// chosen once at creation and frozen alongside the identity fields
 	// so the league's visible identity (public/private state, logo
 	// glyph) can't silently shift under existing members.
+	//
+	// `imageUrl` is the deliberate exception among the visual-identity
+	// fields: the owner can set, change, or clear the league's cover
+	// image after creation (see §4 below), so it is NOT frozen here.
 	if (
 		currentDoc.id !== proposedDoc.id ||
 		currentDoc.createdAtMs !== proposedDoc.createdAtMs ||
@@ -150,6 +161,15 @@ export const assertSetLeague = ({
 		throw new Error(
 			'leagues identity fields are immutable (id, createdAtMs, inviteCode, emblem, private).'
 		);
+	}
+
+	// 4. Cover image — owner-mutable. The owner (the only principal that
+	// reaches this point, per §2) may set, change, or clear `imageUrl`.
+	// When present it must be a non-empty string URL reference to a Juno
+	// Storage asset; we reject blanks up front so a cleared image is
+	// represented by an absent field, not an empty string.
+	if (nonNullish(proposedDoc.imageUrl) && proposedDoc.imageUrl.trim().length === 0) {
+		throw new Error('leagues imageUrl must be a non-empty URL when set.');
 	}
 };
 

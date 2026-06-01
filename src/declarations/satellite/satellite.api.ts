@@ -452,7 +452,8 @@ const AppListChallengeableLeaguesResultSchema = j.strictObject({
 			created_at_ms: j.number(),
 			accent_color: j.optional(j.string()),
 			emblem: j.optional(j.string()),
-			private: j.boolean()
+			private: j.boolean(),
+			image_url: j.optional(j.string())
 		})
 	)
 });
@@ -784,7 +785,8 @@ const AppListMyLeaguesResultSchema = j.strictObject({
 				created_at_ms: j.number(),
 				accent_color: j.optional(j.string()),
 				emblem: j.optional(j.string()),
-				private: j.boolean()
+				private: j.boolean(),
+				image_url: j.optional(j.string())
 			}),
 			role: j.enum(['owner', 'admin', 'member']),
 			joined_at_ms: j.number(),
@@ -935,7 +937,8 @@ const AppLookupLeagueByInviteResultSchema = j.strictObject({
 			created_at_ms: j.number(),
 			accent_color: j.optional(j.string()),
 			emblem: j.optional(j.string()),
-			private: j.boolean()
+			private: j.boolean(),
+			image_url: j.optional(j.string())
 		})
 	)
 });

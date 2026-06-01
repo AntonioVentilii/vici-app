@@ -57,6 +57,7 @@ const projectLeagueWire = (league: {
 	accent_color?: string;
 	emblem?: string;
 	private?: boolean;
+	image_url?: string;
 }): LeagueDoc => ({
 	id: league.id,
 	name: league.name,
@@ -66,7 +67,8 @@ const projectLeagueWire = (league: {
 	createdAtMs: league.created_at_ms,
 	accentColor: league.accent_color,
 	emblem: league.emblem,
-	private: league.private
+	private: league.private,
+	imageUrl: league.image_url
 });
 
 /**
@@ -297,35 +299,33 @@ export const createLeague = async ({
 };
 
 /**
- * Rename a league. Only the current owner can call this; the
- * satellite assert hard-rejects anyone else (the league's `name` is
- * the one freely-mutable field on the edit path — `id`,
- * `createdAtMs`, `inviteCode`, `emblem`, and `private` stay frozen).
+ * Edit an owner-mutable league field. Only the current owner can call
+ * this; the satellite assert hard-rejects anyone else. On the edit path
+ * `id`, `createdAtMs`, `inviteCode`, `emblem`, and `private` stay
+ * frozen — `name` and `imageUrl` are the freely-mutable fields.
  *
- * Re-reads the existing doc so we round-trip the server's
- * `updated_at` token (`setDoc` needs it for the conflict-free update
- * path) and so identity fields are carried over verbatim. The new
- * name is trimmed and re-validated against the same 3–40 char window
- * the create flow enforces; an invalid name throws before any write.
+ * Pass `name` to rename (trimmed + re-validated against the same 3–40
+ * char window the create flow enforces; an invalid name throws before
+ * any write). Pass `imageUrl` to set or change the cover image, or
+ * `null` to clear it (the field is dropped from the doc so a
+ * cover-less league carries an absent field, matching the assert's
+ * non-empty rule). Omitting a field leaves it untouched.
  *
- * Returns the updated `LeagueDoc` so the caller can reflect the new
- * name optimistically.
+ * Re-reads the existing doc so we round-trip the server's `updated_at`
+ * token (`setDoc` needs it for the conflict-free update path) and so
+ * unchanged fields are carried over verbatim. Returns the updated
+ * `LeagueDoc` so the caller can reflect the change optimistically.
  */
 export const updateLeague = async ({
 	id,
-	name
+	name,
+	imageUrl
 }: {
 	id: string;
-	name: string;
+	name?: string;
+	/** New cover-image URL, `null` to clear, or omitted to leave as-is. */
+	imageUrl?: string | null;
 }): Promise<LeagueDoc> => {
-	const trimmedName = name.trim();
-
-	const validation = validateLeagueDraft({ name: trimmedName });
-
-	if (!validation.ok) {
-		throw new Error(`Invalid league name: ${validation.reason}`);
-	}
-
 	const existing = await getDoc<LeagueDoc>({
 		collection: Collection.LEAGUES,
 		key: id
@@ -335,10 +335,27 @@ export const updateLeague = async ({
 		throw new Error('League no longer exists.');
 	}
 
-	const next: LeagueDoc = {
-		...existing.data,
-		name: trimmedName
-	};
+	const next: LeagueDoc = { ...existing.data };
+
+	if (name !== undefined) {
+		const trimmedName = name.trim();
+
+		const validation = validateLeagueDraft({ name: trimmedName });
+
+		if (!validation.ok) {
+			throw new Error(`Invalid league name: ${validation.reason}`);
+		}
+
+		next.name = trimmedName;
+	}
+
+	if (imageUrl !== undefined) {
+		if (imageUrl === null || imageUrl.trim().length === 0) {
+			delete next.imageUrl;
+		} else {
+			next.imageUrl = imageUrl;
+		}
+	}
 
 	await setDoc<LeagueDoc>({
 		collection: Collection.LEAGUES,

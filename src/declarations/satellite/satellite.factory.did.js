@@ -349,6 +349,7 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				id: IDL.Text,
 				accent_color: IDL.Opt(IDL.Text),
+				image_url: IDL.Opt(IDL.Text),
 				owner: IDL.Text,
 				name: IDL.Text,
 				invite_code: IDL.Text,
@@ -630,6 +631,7 @@ export const idlFactory = ({ IDL }) => {
 				league: IDL.Record({
 					id: IDL.Text,
 					accent_color: IDL.Opt(IDL.Text),
+					image_url: IDL.Opt(IDL.Text),
 					owner: IDL.Text,
 					name: IDL.Text,
 					invite_code: IDL.Text,
@@ -736,6 +738,7 @@ export const idlFactory = ({ IDL }) => {
 			IDL.Record({
 				id: IDL.Text,
 				accent_color: IDL.Opt(IDL.Text),
+				image_url: IDL.Opt(IDL.Text),
 				owner: IDL.Text,
 				name: IDL.Text,
 				invite_code: IDL.Text,

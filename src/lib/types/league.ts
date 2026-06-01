@@ -39,7 +39,33 @@ export interface LeagueDoc {
 	 * (or `false`) means a public league. Chosen once at creation.
 	 */
 	private?: boolean;
+	/**
+	 * Optional URL reference to an owner-uploaded cover image, stored in
+	 * Juno Storage (the {@link LEAGUE_IMAGES_COLLECTION} collection). When
+	 * set, every league surface renders this image (cover-fit) in place of
+	 * the {@link leagueEmblem} glyph; clearing it falls back to the emblem.
+	 * Only the URL reference lives on the doc — the bytes live in Storage,
+	 * never a base64 data URL. Unlike the emblem, the owner can set, change,
+	 * or clear this after creation.
+	 */
+	imageUrl?: string;
 }
+
+/**
+ * Juno Storage collection that holds owner-uploaded league cover images.
+ * The bytes live here; the doc only carries the resolved download URL on
+ * {@link LeagueDoc.imageUrl}. Kept in sync with `juno.config.ts` and the
+ * `Collection` enum in `collections.constants.ts`.
+ */
+export const LEAGUE_IMAGES_COLLECTION = 'league_images';
+
+/**
+ * Edge length (px) of the square league cover we downscale to before
+ * upload, and the JPEG quality. A 256² cover JPEG is sharp on the logo
+ * tile across every surface while keeping the stored asset tiny.
+ */
+export const LEAGUE_IMAGE_SIZE_PX = 256;
+export const LEAGUE_IMAGE_JPEG_QUALITY = 0.82;
 
 /**
  * Emblem glyphs the owner picks from in the create sheet. Stored
