@@ -76,7 +76,7 @@
 
 	{#if chips && chips.length > 0}
 		<div class="screen-header-chips">
-			{#each chips as chip (chip.label)}
+			{#each chips as chip, i (i)}
 				<span class="screen-header-chip" class:is-accent={chip.accent}>{chip.label}</span>
 			{/each}
 		</div>
@@ -91,6 +91,7 @@
 
 	.screen-header-bar {
 		display: flex;
+		box-sizing: border-box;
 		min-height: 50px;
 		align-items: center;
 		gap: 0.75rem;
