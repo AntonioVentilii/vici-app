@@ -158,10 +158,16 @@
 
 		imageBusy = true;
 
+		let uploadedUrl: string | undefined;
+
 		try {
 			const previousUrl = league.imageUrl;
 			const imageUrl = await uploadLeagueImage({ leagueId: league.id, file });
+			uploadedUrl = imageUrl;
 			await updateLeague({ id: league.id, imageUrl });
+
+			// The doc now points at the fresh asset, so don't roll it back below.
+			uploadedUrl = undefined;
 
 			// Drop the superseded asset once the doc points at the new one.
 			if (previousUrl !== undefined && previousUrl !== imageUrl) {
@@ -172,6 +178,12 @@
 		} catch (err) {
 			console.error('LeagueDetailPage: league image upload failed', err);
 			errorMessage = t({ locale: $localeStore, key: 'common.error.generic' });
+
+			// The asset uploaded but the doc write failed: best-effort cleanup so
+			// the orphaned image doesn't linger in Storage. Swallow cleanup errors.
+			if (uploadedUrl !== undefined) {
+				await deleteLeagueImageByUrl(uploadedUrl);
+			}
 		} finally {
 			imageBusy = false;
 		}

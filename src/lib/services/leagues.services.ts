@@ -350,10 +350,14 @@ export const updateLeague = async ({
 	}
 
 	if (imageUrl !== undefined) {
-		if (imageUrl === null || imageUrl.trim().length === 0) {
+		const trimmedImageUrl = imageUrl?.trim() ?? '';
+
+		if (trimmedImageUrl.length === 0) {
 			delete next.imageUrl;
 		} else {
-			next.imageUrl = imageUrl;
+			// Persist the trimmed value so the stored shape matches the assert's
+			// no-surrounding-whitespace rule.
+			next.imageUrl = trimmedImageUrl;
 		}
 	}
 

@@ -2,6 +2,7 @@ import { Collection } from '$lib/constants/collections.constants';
 import {
 	LEAGUE_DESCRIPTION_MAX_LENGTH,
 	LEAGUE_EMBLEMS,
+	LEAGUE_IMAGES_COLLECTION,
 	LEAGUE_INVITE_CODE_REGEX,
 	LEAGUE_NAME_MAX_LENGTH,
 	LEAGUE_NAME_MIN_LENGTH,
@@ -11,7 +12,7 @@ import { leagueMemberKey, type LeagueMemberDoc } from '$lib/types/league-member'
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { Principal } from '@icp-sdk/core/principal';
 import type { AssertSetDocContext } from '@junobuild/functions';
-import { msgCaller } from '@junobuild/functions/ic-cdk';
+import { canisterSelf, msgCaller } from '@junobuild/functions/ic-cdk';
 import {
 	decodeDocData,
 	deleteDocStore,
@@ -20,6 +21,61 @@ import {
 	listDocsStore,
 	setDocStore
 } from '@junobuild/functions/sdk';
+
+/**
+ * Validate an optional league `imageUrl` against the only shape we ever
+ * write: a Juno Storage download URL for THIS satellite's
+ * `league_images` collection (see `uploadLeagueImage`, which resolves
+ * `https://<satelliteId>.<host><fullPath>` with `fullPath` starting at
+ * `/league_images/`).
+ *
+ * Absent or `undefined` means "no image" — allowed (the field is
+ * cleared, never an empty string). When present we reject anything that
+ * isn't ours: surrounding whitespace, a non-`https:` scheme (blocks
+ * `data:`/`javascript:` and other foreign schemes), a host whose
+ * leftmost label isn't our satellite canister id, or a path outside the
+ * `league_images` collection. This stops an owner from persisting an
+ * external/tracking-pixel URL that would then render for every member.
+ */
+const assertValidLeagueImageUrl = (imageUrl: string | undefined): void => {
+	if (isNullish(imageUrl)) {
+		return;
+	}
+
+	// The stored value must already be its trimmed form — the FE
+	// normalises before write, so any surrounding whitespace here is a
+	// crafted payload.
+	if (imageUrl !== imageUrl.trim() || imageUrl.length === 0) {
+		throw new Error('leagues imageUrl must be a trimmed, non-empty URL when set.');
+	}
+
+	let url: URL;
+
+	try {
+		url = new URL(imageUrl);
+	} catch {
+		throw new Error('leagues imageUrl must be a well-formed URL.');
+	}
+
+	// HTTPS only — blocks data:/javascript:/blob: and any foreign scheme.
+	if (url.protocol !== 'https:') {
+		throw new Error('leagues imageUrl must use the https scheme.');
+	}
+
+	// Host must belong to this satellite: the download URL is
+	// `<satelliteId>.<host>` (e.g. `<id>.icp0.io`), so the leftmost label
+	// is the canister id. Reject any other origin.
+	const satelliteIdText = canisterSelf().toText();
+
+	if (url.hostname !== satelliteIdText && !url.hostname.startsWith(`${satelliteIdText}.`)) {
+		throw new Error('leagues imageUrl must point at this satellite.');
+	}
+
+	// Path must address the league_images collection.
+	if (!url.pathname.startsWith(`/${LEAGUE_IMAGES_COLLECTION}/`)) {
+		throw new Error(`leagues imageUrl must point at the ${LEAGUE_IMAGES_COLLECTION} collection.`);
+	}
+};
 
 /**
  * Pre-write guard for `leagues`. The collection holds social cohorts;
@@ -122,12 +178,10 @@ export const assertSetLeague = ({
 			);
 		}
 
-		// A cover image may be seeded at creation; same non-empty rule as
-		// the edit path so a "no image" league carries an absent field
-		// rather than an empty string.
-		if (nonNullish(proposedDoc.imageUrl) && proposedDoc.imageUrl.trim().length === 0) {
-			throw new Error('leagues imageUrl must be a non-empty URL when set.');
-		}
+		// A cover image may be seeded at creation; same validation as the
+		// edit path — when present it must be one of our own league_images
+		// Storage URLs, else the field stays absent ("no image").
+		assertValidLeagueImageUrl(proposedDoc.imageUrl);
 
 		return;
 	}
@@ -165,12 +219,11 @@ export const assertSetLeague = ({
 
 	// 4. Cover image — owner-mutable. The owner (the only principal that
 	// reaches this point, per §2) may set, change, or clear `imageUrl`.
-	// When present it must be a non-empty string URL reference to a Juno
-	// Storage asset; we reject blanks up front so a cleared image is
-	// represented by an absent field, not an empty string.
-	if (nonNullish(proposedDoc.imageUrl) && proposedDoc.imageUrl.trim().length === 0) {
-		throw new Error('leagues imageUrl must be a non-empty URL when set.');
-	}
+	// When present it must be one of THIS satellite's `league_images`
+	// Storage download URLs; we reject blanks/external/foreign-scheme
+	// values up front so a cleared image is an absent field (not an empty
+	// string) and a member can never be served an untrusted URL.
+	assertValidLeagueImageUrl(proposedDoc.imageUrl);
 };
 
 /**
