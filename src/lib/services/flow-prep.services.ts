@@ -1,9 +1,6 @@
 import type { RegistryDid } from '$declarations';
 import { getUserMarketSignals } from '$lib/services/market-signals.services';
-import {
-	listMarketMetadataBySeries,
-	listMarketTagsBySeries
-} from '$lib/services/market-tags.services';
+import { deriveTagsBySeries, listMarketMetadataBySeries } from '$lib/services/market-tags.services';
 import { enrichFlowMarketsWithOrderBook, getFlowQueue } from '$lib/services/market.services';
 import type { Market, MarketId } from '$lib/types/market';
 import type { MarketMetadata } from '$lib/types/market-metadata';
@@ -56,14 +53,15 @@ export const prepareFlow = async ({
 	signedIn,
 	exclude = []
 }: PrepareFlowOpts): Promise<PreparedFlow> => {
-	// Share the tag and metadata fetches across `getFlowQueue` and
-	// `getUserMarketSignals` so we don't pay for them three times per
-	// warm. The promises are awaited in parallel inside each callee
-	// via `Promise.all`, so the dependent calls still overlap with
-	// the rest of their fetches (markets, profile, trade history,
-	// follows) — only the duplicate I/O is removed.
-	const tagsPromise = listMarketTagsBySeries().catch(() => ({}));
+	// Tags and full metadata both project the same public
+	// `MARKET_METADATA` collection, so scan it once and derive the tag
+	// map locally instead of issuing a second identical full-collection
+	// scan (`listMarketTagsBySeries`). The shared promises are awaited in
+	// parallel inside each callee via `Promise.all`, so the dependent
+	// calls still overlap with the rest of their fetches (markets,
+	// profile, trade history, follows) — only the duplicate I/O is removed.
 	const metadataPromise = listMarketMetadataBySeries().catch(() => ({}));
+	const tagsPromise = metadataPromise.then(deriveTagsBySeries);
 
 	const [queue, signals, tagMap, metadataBySeries] = await Promise.all([
 		getFlowQueue({
