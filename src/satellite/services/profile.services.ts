@@ -82,6 +82,10 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		owner: profile.owner,
 		nickname: profile.nickname ?? '',
 		avatar: profile.avatar ?? '',
+		// Serialized faceted-avatar picks. A legacy row that predates the
+		// field decodes as absent; backfill to '' (no saved picks → the
+		// surface falls back to a principal-seeded face).
+		avatarParts: profile.avatarParts ?? '',
 		email: profile.email ?? '',
 		pnl: profile.pnl ?? 0,
 		visibility: profile.visibility,

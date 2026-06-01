@@ -202,6 +202,11 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 	owner: profile.owner,
 	nickname: profile.nickname,
 	avatar: profile.avatar,
+	// Serialized avatar picks aren't carried on the leaderboard / search
+	// wire — those surfaces render every face deterministically by
+	// principal (the picks only drive the logged-in user's own surfaces),
+	// so default to '' to keep the rebuilt UserProfile fully shaped.
+	avatarParts: '',
 	email: profile.email,
 	pnl: profile.pnl,
 	visibility: profile.visibility as ProfileVisibility,
