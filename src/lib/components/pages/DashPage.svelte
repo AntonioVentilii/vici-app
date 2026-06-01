@@ -17,6 +17,7 @@
 	import DashNextUnlock from '$lib/components/dash/DashNextUnlock.svelte';
 	import DashOracleInsight from '$lib/components/dash/DashOracleInsight.svelte';
 	import DashRankContext from '$lib/components/dash/DashRankContext.svelte';
+	import DashTodaysGoal from '$lib/components/dash/DashTodaysGoal.svelte';
 	import PageScaffold from '$lib/components/layout/PageScaffold.svelte';
 	import ResolutionReveal from '$lib/components/market/ResolutionReveal.svelte';
 	import { ACHIEVEMENTS } from '$lib/constants/achievements.constants';
@@ -48,6 +49,7 @@
 	import { userStore } from '$lib/stores/user.store';
 	import type { Market } from '$lib/types/market';
 	import type { UserStatsDoc } from '$lib/types/user-stats';
+	import { DAILY_GOAL_TARGET } from '$lib/utils/daily-goal.utils';
 	import { decimalFixedValueToNumber } from '$lib/utils/format.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import { formatVxpBalance } from '$lib/utils/playground-display.utils';
@@ -71,6 +73,11 @@
 	const accuracyValue = $derived(profile?.accuracy ?? 0);
 	const accuracyPct = $derived(accuracyValue.toFixed(1));
 	const streak = $derived(profile?.dailyStreak ?? 0);
+	// Daily-goal progress — the persisted cross-session counter feeds the
+	// "Today's goal" resume card. The card itself rolls a stale day over to
+	// 0 and hides until there's progress to resume.
+	const dailyGoalDone = $derived(profile?.dailyGoalDone ?? 0);
+	const dailyGoalDate = $derived(profile?.dailyGoalDate);
 
 	let userStats = $state<UserStatsDoc | undefined>(undefined);
 
@@ -571,6 +578,12 @@
 				{streak}
 				{streakBarPct}
 			/>
+
+			<!-- ─── TODAY'S GOAL · resume the daily call goal ───
+			     Sits next to the streak/accuracy overview. Self-hides until
+			     there's progress to resume; nudges back into Flow while calls
+			     remain, then settles into a calm complete state. -->
+			<DashTodaysGoal date={dailyGoalDate} done={dailyGoalDone} target={DAILY_GOAL_TARGET} />
 
 			<!-- ─── Time window ─── -->
 			<div
