@@ -9,7 +9,9 @@ import {
 	Canister,
 	createServices,
 	fromNullable,
+	isNullish,
 	jsonReplacer,
+	nonNullish,
 	type QueryParams,
 	toNullable
 } from '@dfinity/utils';
@@ -70,17 +72,56 @@ export class RegistryCanister extends Canister<RegistryService> {
 		return fromNullable(result);
 	};
 
-	listSeries = async (queryParams: QueryParams): Promise<RegistryDid.Series[]> => {
-		const { list_series } = this.caller(queryParams);
+	/**
+	 * Lists registered series, transparently following the registry's
+	 * exclusive pagination cursor until every matching page is drained.
+	 *
+	 * Pass `params` to use the filtered `list_series_with` endpoint — e.g.
+	 * `only_unexpired: true` to let the registry drop expired series
+	 * server-side (the expiry half of the "currently tradeable" predicate;
+	 * resolution is owned by clearing's `list_settled_series`). Omitting
+	 * `params` keeps the historical unfiltered `list_series` behavior.
+	 *
+	 * Any caller-supplied `pagination` is treated as the *page size* and
+	 * starting `cursor`; the loop then walks `next_cursor` to completion so
+	 * the returned array is the full result set regardless of page size.
+	 */
+	listSeries = async ({
+		params,
+		...queryParams
+	}: {
+		params?: RegistryDid.ListSeriesParams;
+	} & QueryParams = {}): Promise<RegistryDid.Series[]> => {
+		const { list_series, list_series_with } = this.caller(queryParams);
 
-		const page = await list_series({
-			cursor: toNullable(),
-			limit: toNullable()
-		});
+		const pageSize = fromNullable(params?.pagination ?? [])?.limit ?? toNullable();
 
-		const { items: series } = page;
+		const items: RegistryDid.Series[] = [];
+		let cursor = fromNullable(params?.pagination ?? [])?.cursor ?? toNullable();
+		let done = false;
 
-		return series;
+		// Drain every page: the registry caps a single response, so a naive
+		// single call silently truncates the catalog once enough series exist.
+		while (!done) {
+			const page = nonNullish(params)
+				? await list_series_with({
+						...params,
+						pagination: toNullable({ cursor, limit: pageSize })
+					})
+				: await list_series({ cursor, limit: pageSize });
+
+			items.push(...page.items);
+
+			const next = fromNullable(page.next_cursor);
+
+			if (isNullish(next)) {
+				done = true;
+			} else {
+				cursor = toNullable(next);
+			}
+		}
+
+		return items;
 	};
 
 	createGroup = async ({

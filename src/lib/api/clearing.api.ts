@@ -92,6 +92,23 @@ export const getPositions = async ({
 	return await getPositions(queryParams);
 };
 
+/**
+ * Returns the authoritative set of settled (resolved) series ids from the
+ * clearing canister. See {@link ClearingCanister.listSettledSeries}.
+ */
+export const listSettledSeries = async ({
+	identity,
+	params,
+	...queryParams
+}: {
+	identity: Identity;
+	params?: ClearingDid.ListSettledSeriesParams;
+} & QueryParams): Promise<string[]> => {
+	const { listSettledSeries } = await clearingCanister({ identity });
+
+	return await listSettledSeries({ params, ...queryParams });
+};
+
 export const settleSeries = async ({
 	identity,
 	...rest

@@ -1,14 +1,54 @@
-import type { ClearingDid } from '$declarations';
-import { settleSeries as settleSeriesApi } from '$lib/api/clearing.api';
+import type { ClearingDid, RegistryDid } from '$declarations';
+import { listSettledSeries, settleSeries as settleSeriesApi } from '$lib/api/clearing.api';
 import { PRICE_DECIMALS, VICI_ORACLE_V1, ZERO } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
 import { UserRole } from '$lib/enums/user';
 import { logActivity } from '$lib/services/activity.services';
-import { safeGetIdentityOnce } from '$lib/services/identity.services';
+import { getIdentityOrAnonymous, safeGetIdentityOnce } from '$lib/services/identity.services';
 import { getProfile } from '$lib/services/profile.services';
 import type { Outcome } from '$lib/types/market';
 import { binaryPayoffLabel } from '$lib/utils/payoff.utils';
 import { nowInBigIntNanoSeconds, toNullable } from '@dfinity/utils';
+import type { Identity } from '@icp-sdk/core/agent';
+
+/**
+ * Fetches the authoritative set of settled (resolved) series ids from the
+ * clearing canister — the single source of truth for resolution.
+ *
+ * Front ends subtract this from the registry's open/unexpired catalog to
+ * derive the open set (open = unexpired − settled), replacing the older,
+ * incomplete reconstruction that scanned the global ACTIVITIES log for
+ * settlement events. Optionally scope to one `balance_domain` so a single
+ * deck only pays for its relevant subset.
+ *
+ * Threads `identity` + `certified` so it composes with `queryAndUpdate`; the
+ * fast query path is the right default for read-only discovery, while the
+ * value-bearing mint path validates correctness separately via
+ * `get_settlement_status`.
+ */
+export const getSettledSeriesIds = async ({
+	identity,
+	certified = false,
+	balanceDomain
+}: {
+	identity?: Identity;
+	certified?: boolean;
+	balanceDomain?: RegistryDid.BalanceDomain;
+} = {}): Promise<Set<string>> => {
+	const resolvedIdentity = identity ?? (await getIdentityOrAnonymous());
+
+	const ids = await listSettledSeries({
+		identity: resolvedIdentity,
+		certified,
+		params: {
+			start_after: toNullable(),
+			limit: toNullable(),
+			balance_domain: toNullable(balanceDomain)
+		}
+	});
+
+	return new Set(ids);
+};
 
 /**
  * Admin/resolver-only: settles a series on clearing by outcome id or numeric price and logs activity.

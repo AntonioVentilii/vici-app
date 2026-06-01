@@ -46,13 +46,15 @@ export const getSeries = async ({
 
 export const listSeries = async ({
 	identity,
+	params,
 	...queryParams
 }: {
 	identity: Identity;
+	params?: RegistryDid.ListSeriesParams;
 } & QueryParams): Promise<RegistryDid.Series[]> => {
 	const { listSeries } = await registryCanister({ identity });
 
-	return await listSeries(queryParams);
+	return await listSeries({ params, ...queryParams });
 };
 
 export const createGroup = async ({
