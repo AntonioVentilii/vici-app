@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { signIn } from '@junobuild/core';
+	import { isWebAuthnAvailable, signIn } from '@junobuild/core';
 	import { Check, ChevronRight, Mail } from 'lucide-svelte';
+	import { onMount } from 'svelte';
 	import IconGoogle from '$lib/components/icons/IconGoogle.svelte';
 	import IconIc from '$lib/components/icons/IconIC.svelte';
 	import IconPasskey from '$lib/components/icons/IconPasskey.svelte';
@@ -49,6 +50,16 @@
 	let emailOpen = $state(false);
 	let email = $state('');
 	let phase = $state<'idle' | 'sent'>('idle');
+
+	// Passkey (WebAuthn) is only worth offering on platforms that can
+	// actually complete the ceremony — otherwise the button is a dead
+	// end. The capability probe is async, so resolve it on mount and
+	// hide the provider when it isn't available.
+	let passkeyAvailable = $state(true);
+
+	onMount(async () => {
+		passkeyAvailable = await isWebAuthnAvailable();
+	});
 
 	const productionAvailable = $derived(isProd() && isNotSkylab());
 	const emailValid = $derived(/\S+@\S+\.\S+/.test(email));
@@ -336,7 +347,7 @@
 		{/if}
 
 		<!-- Passkey — production-need (C-8 keep). -->
-		{#if PASSKEY_LOGIN_ENABLED}
+		{#if PASSKEY_LOGIN_ENABLED && passkeyAvailable}
 			<button
 				class="signin-provider-btn"
 				class:is-faded={isFaded}

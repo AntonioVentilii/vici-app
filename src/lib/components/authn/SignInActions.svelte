@@ -9,7 +9,7 @@
 </script>
 
 <div class="signin-actions">
-	<SignInProviderStack {onSuccess} />
+	<SignInProviderStack {onSuccess} variant="onboarding" />
 </div>
 
 <style lang="postcss">
