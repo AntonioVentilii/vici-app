@@ -1783,12 +1783,10 @@ export const itMessages = {
 	'settings.toast.export_coming': 'Esportazione in arrivo',
 	'settings.two_factor': 'Autenticazione a due fattori',
 	'settings.two_factor.sub': 'In arrivo · app authenticator',
-	'signin.divider': 'OPPURE',
 	'signin.email.cta': 'Invia link di accesso',
 	'signin.email.disabled_note':
 		'L’accesso via email arriverà presto. Usa un provider live qui sopra.',
 	'signin.email.fineprint': 'Un link, un tap. Niente password.',
-	'signin.email.label': 'Email',
 	'signin.email.placeholder': 'tu@example.com',
 	'signin.eyebrow.onboarded': 'STARTER PACK PRONTO',
 	'signin.eyebrow.signin': 'BENTORNATO',

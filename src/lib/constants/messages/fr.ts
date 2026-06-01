@@ -1801,12 +1801,10 @@ export const frMessages = {
 	'settings.toast.export_coming': 'Exportation bientôt disponible',
 	'settings.two_factor': 'Authentification à deux facteurs',
 	'settings.two_factor.sub': 'Bientôt · app authenticator',
-	'signin.divider': 'OU',
 	'signin.email.cta': 'Envoyer le lien de connexion',
 	'signin.email.disabled_note':
 		'La connexion par email arrive bientôt. Utilisez un fournisseur actif ci-dessus.',
 	'signin.email.fineprint': 'Un lien en un tap. Sans mot de passe.',
-	'signin.email.label': 'Email',
 	'signin.email.placeholder': 'vous@example.com',
 	'signin.eyebrow.onboarded': 'PACK DE DÉPART PRÊT',
 	'signin.eyebrow.signin': 'BON RETOUR',

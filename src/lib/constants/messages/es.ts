@@ -1791,12 +1791,10 @@ export const esMessages = {
 	'settings.toast.export_coming': 'Exportación próximamente',
 	'settings.two_factor': 'Autenticación de dos factores',
 	'settings.two_factor.sub': 'Próximamente · app autenticadora',
-	'signin.divider': 'O',
 	'signin.email.cta': 'Enviar enlace de acceso',
 	'signin.email.disabled_note':
 		'El acceso por email llegará pronto. Usa un proveedor en vivo arriba.',
 	'signin.email.fineprint': 'Un enlace, un toque. Sin contraseña.',
-	'signin.email.label': 'Email',
 	'signin.email.placeholder': 'tu@example.com',
 	'signin.eyebrow.onboarded': 'PACK INICIAL LISTO',
 	'signin.eyebrow.signin': 'BIENVENIDO DE NUEVO',
