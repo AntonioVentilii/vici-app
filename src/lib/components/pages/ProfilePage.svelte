@@ -116,17 +116,6 @@
 		position: relative;
 	}
 
-	/* On mobile the appbar's own bottom padding sets the gap to the
-	   content (matching the proto). The desktop `SectionHeader` carries
-	   no trailing margin, so add a small gap there only. The content is
-	   rendered by a child component, so the `:last-child` target must be
-	   `:global` — a scoped selector wouldn't match it. */
-	@media (min-width: 56rem) {
-		.profile-page > :global(:last-child) {
-			margin-top: 1rem;
-		}
-	}
-
 	.profile-appbar-actions {
 		display: inline-flex;
 		align-items: center;
