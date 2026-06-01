@@ -1595,7 +1595,6 @@ export const esMessages = {
 	'profile.dashboard.cancel': 'Cancelar',
 	'profile.dashboard.close': 'Cerrar',
 	'profile.dashboard.edit_avatar': 'Editar avatar',
-	'profile.avatar.edit': 'Editar avatar',
 	'profile.avatar.title': 'Editar avatar',
 	'profile.avatar.subtitle': 'Toca para previsualizar · los cambios se aplican al pulsar Listo',
 	'profile.avatar.discard': 'Descartar',
