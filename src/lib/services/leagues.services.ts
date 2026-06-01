@@ -297,6 +297,62 @@ export const createLeague = async ({
 };
 
 /**
+ * Rename a league. Only the current owner can call this; the
+ * satellite assert hard-rejects anyone else (the league's `name` is
+ * the one freely-mutable field on the edit path — `id`,
+ * `createdAtMs`, `inviteCode`, `emblem`, and `private` stay frozen).
+ *
+ * Re-reads the existing doc so we round-trip the server's
+ * `updated_at` token (`setDoc` needs it for the conflict-free update
+ * path) and so identity fields are carried over verbatim. The new
+ * name is trimmed and re-validated against the same 3–40 char window
+ * the create flow enforces; an invalid name throws before any write.
+ *
+ * Returns the updated `LeagueDoc` so the caller can reflect the new
+ * name optimistically.
+ */
+export const updateLeague = async ({
+	id,
+	name
+}: {
+	id: string;
+	name: string;
+}): Promise<LeagueDoc> => {
+	const trimmedName = name.trim();
+
+	const validation = validateLeagueDraft({ name: trimmedName });
+
+	if (!validation.ok) {
+		throw new Error(`Invalid league name: ${validation.reason}`);
+	}
+
+	const existing = await getDoc<LeagueDoc>({
+		collection: Collection.LEAGUES,
+		key: id
+	});
+
+	if (!existing) {
+		throw new Error('League no longer exists.');
+	}
+
+	const next: LeagueDoc = {
+		...existing.data,
+		name: trimmedName
+	};
+
+	await setDoc<LeagueDoc>({
+		collection: Collection.LEAGUES,
+		doc: {
+			key: id,
+			data: next,
+			updated_at: existing.updated_at
+		}
+	});
+
+	return next;
+};
+
+/**
  * Join a league via its 6-char invite code. Looks the league up,
  * then writes a `LeagueMemberDoc` for the caller. Returns the
  * resolved league so the caller can route into it.
