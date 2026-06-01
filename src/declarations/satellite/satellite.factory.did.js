@@ -254,6 +254,7 @@ export const idlFactory = ({ IDL }) => {
 						solver: IDL.Null
 					})
 				),
+				handle_last_change_ms: IDL.Opt(IDL.Float64),
 				email: IDL.Text,
 				level: IDL.Float64,
 				preferences: IDL.Record({

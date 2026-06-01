@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { Check, Eye, Flame, Lock, Pencil, Target, Trophy, X } from 'lucide-svelte';
 	import { onMount } from 'svelte';
-	import { browser } from '$app/environment';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
 	import StreakFlame from '$lib/components/characters/StreakFlame.svelte';
@@ -13,7 +12,6 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
 	import { ARCHETYPE_MAP } from '$lib/constants/archetypes.constants';
-	import { HANDLE_LAST_CHANGE_STORAGE_KEY } from '$lib/constants/profile.constants';
 	import { AppPath } from '$lib/constants/routes.constants';
 	import { lookupWorldsAffiliation } from '$lib/constants/worlds-affiliations.constants';
 	import { leaderboard } from '$lib/derived/leaderboard.derived';
@@ -45,8 +43,9 @@
 	// The handle (public `@`-name) is edited through the dedicated
 	// {@link HandleEditor} sheet — a single input with an inline
 	// availability indicator and a 30-day change limit. The limit is
-	// enforced client-side (see HANDLE_LAST_CHANGE_STORAGE_KEY); the
-	// profile schema has no last-change timestamp.
+	// server-authoritative (the set-profile assertion is the authority,
+	// keyed off the profile's `handleLastChangeMs`); the editor mirrors it
+	// and a change stamps `handleLastChangeMs` so the next window starts.
 	let handleEditOpen = $state(false);
 	let profileToast = $state<string | null>(null);
 	let profileToastTimer: ReturnType<typeof setTimeout> | undefined;
@@ -69,7 +68,11 @@
 		// Snapshot the pre-edit profile so we can roll the optimistic
 		// update back verbatim if the persist fails.
 		const previousProfile = profile;
-		const updatedData = { ...profile, nickname: handle };
+
+		// Stamp the change time so the server-authoritative cooldown starts and
+		// the editor reflects the new window. The set-profile assertion
+		// validates this is ~now (the message time) on a handle change.
+		const updatedData = { ...profile, nickname: handle, handleLastChangeMs: Date.now() };
 
 		// Optimistic local update so the identity card reflects the new
 		// handle immediately, then persist.
@@ -77,16 +80,6 @@
 
 		try {
 			await upsertProfile({ key: profile.owner, data: updatedData });
-
-			// Record the cooldown only after a confirmed successful persist so
-			// that a rollback on failure never locks the user out of the editor.
-			if (browser) {
-				try {
-					localStorage.setItem(HANDLE_LAST_CHANGE_STORAGE_KEY, String(Date.now()));
-				} catch {
-					// Best-effort — losing the timestamp only relaxes the soft cooldown.
-				}
-			}
 
 			flashProfileToast(
 				t({ locale: $localeStore, key: 'profile.handle.changed', params: { handle } })
@@ -768,6 +761,7 @@
 {#if handleEditOpen}
 	<HandleEditor
 		current={profile.nickname}
+		lastChangeMs={profile.handleLastChangeMs}
 		onClose={() => (handleEditOpen = false)}
 		onSaved={(handle) => void handleSavedHandle(handle)}
 		owner={profile.owner}
