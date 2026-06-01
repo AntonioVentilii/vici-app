@@ -687,7 +687,7 @@ export const frMessages = {
 	'flow.deck.all_markets': 'TOUS LES MARCHÉS',
 	'flow.empty.sub': 'VICI met d’autres marchés en file.',
 	'flow.empty.title': 'Rien ici. Pour l’instant.',
-	'flow.end.back_to_dashboard': 'Retour au tableau de bord →',
+	'flow.end.back_to_dashboard': 'Ouvrir le tableau de bord →',
 	'flow.end.body_comeback':
 		'Tu es de retour dans la partie. Reviens demain et la série repart d’ici.',
 	'flow.end.body_day':
@@ -709,9 +709,12 @@ export const frMessages = {
 	'flow.end.head_overtime_1': 'Inarrêtable.',
 	'flow.end.head_overtime_2': 'Overtime, maîtrisé.',
 	'flow.end.head_overtime_3': 'Machine.',
+	'flow.end.copy_toast_title': 'Lien copié',
+	'flow.end.invite_copied': 'Lien d’invitation copié dans le presse-papiers.',
 	'flow.end.invite_friend': 'Inviter un ami',
 	'flow.end.push_to_15': 'Pousser à 15 →',
 	'flow.end.share_calls': 'Partager mes pronostics',
+	'flow.end.share_copied': 'Lien de partage copié dans le presse-papiers.',
 	'flow.end.share_text': "J'ai fait {count} pronostics sur VICI aujourd'hui. Suis mon parcours.",
 	'flow.end.share_text_one': "J'ai fait un pronostic sur VICI aujourd'hui. Suis mon parcours.",
 	'flow.end.stat_called': 'Engagés',
