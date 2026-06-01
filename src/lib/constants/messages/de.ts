@@ -1619,7 +1619,6 @@ export const deMessages = {
 	'profile.dashboard.cancel': 'Abbrechen',
 	'profile.dashboard.close': 'Schließen',
 	'profile.dashboard.edit_avatar': 'Avatar bearbeiten',
-	'profile.avatar.edit': 'Avatar bearbeiten',
 	'profile.avatar.title': 'Avatar bearbeiten',
 	'profile.avatar.subtitle': 'Tippen für Vorschau · Änderungen gelten mit Fertig',
 	'profile.avatar.discard': 'Verwerfen',

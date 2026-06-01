@@ -1604,7 +1604,6 @@ export const enMessages = {
 	'profile.dashboard.cancel': 'Cancel',
 	'profile.dashboard.close': 'Close',
 	'profile.dashboard.edit_avatar': 'Edit avatar',
-	'profile.avatar.edit': 'Edit avatar',
 	'profile.avatar.title': 'Edit avatar',
 	'profile.avatar.subtitle': 'Tap to preview · changes apply on Done',
 	'profile.avatar.discard': 'Discard',

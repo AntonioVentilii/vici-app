@@ -1620,7 +1620,6 @@ export const frMessages = {
 	'profile.dashboard.cancel': 'Annuler',
 	'profile.dashboard.close': 'Fermer',
 	'profile.dashboard.edit_avatar': "Modifier l'avatar",
-	'profile.avatar.edit': "Modifier l'avatar",
 	'profile.avatar.title': "Modifier l'avatar",
 	'profile.avatar.subtitle':
 		'Touche pour prévisualiser · les changements s’appliquent avec Terminé',

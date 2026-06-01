@@ -1606,7 +1606,6 @@ export const itMessages = {
 	'profile.dashboard.cancel': 'Annulla',
 	'profile.dashboard.close': 'Chiudi',
 	'profile.dashboard.edit_avatar': 'Modifica avatar',
-	'profile.avatar.edit': 'Modifica avatar',
 	'profile.avatar.title': 'Modifica avatar',
 	'profile.avatar.subtitle': 'Tocca per l’anteprima · le modifiche si applicano con Fatto',
 	'profile.avatar.discard': 'Scarta',

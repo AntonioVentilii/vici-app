@@ -1603,7 +1603,6 @@ export const ptMessages = {
 	'profile.dashboard.cancel': 'Cancelar',
 	'profile.dashboard.close': 'Fechar',
 	'profile.dashboard.edit_avatar': 'Editar avatar',
-	'profile.avatar.edit': 'Editar avatar',
 	'profile.avatar.title': 'Editar avatar',
 	'profile.avatar.subtitle':
 		'Toque para pré-visualizar · as alterações aplicam-se ao tocar em Concluir',
