@@ -1,4 +1,4 @@
-import type { ClearingDid, RegistryDid } from '$declarations';
+import type { ClearingDid } from '$declarations';
 import { listSettledSeries, settleSeries as settleSeriesApi } from '$lib/api/clearing.api';
 import { PRICE_DECIMALS, VICI_ORACLE_V1, ZERO } from '$lib/constants/app.constants';
 import { ActivityType } from '$lib/enums/social';
@@ -33,7 +33,7 @@ export const getSettledSeriesIds = async ({
 }: {
 	identity?: Identity;
 	certified?: boolean;
-	balanceDomain?: RegistryDid.BalanceDomain;
+	balanceDomain?: ClearingDid.BalanceDomain;
 } = {}): Promise<Set<string>> => {
 	const resolvedIdentity = identity ?? (await getIdentityOrAnonymous());
 

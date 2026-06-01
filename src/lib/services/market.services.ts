@@ -307,8 +307,9 @@ const fetchMarkets = async ({
 /**
  * Builds a `ListSeriesParams` that asks the registry for the
  * still-tradeable (unexpired) catalog, with every other filter left open.
- * `only_unexpired: [true]` tells the canister to drop expired series using
- * its own clock; pagination is left unset so the canister-side paginator
+ * `only_unexpired: toNullable(true)` tells the canister to drop expired
+ * series using its own clock; pagination is left unset so the canister-side
+ * paginator
  * (drained in {@link RegistryCanister.listSeries}) returns the full set.
  */
 const unexpiredSeriesParams = (): RegistryDid.ListSeriesParams => ({
@@ -318,7 +319,7 @@ const unexpiredSeriesParams = (): RegistryDid.ListSeriesParams => ({
 	payout_unit: toNullable(),
 	pagination: toNullable(),
 	underlying: toNullable(),
-	only_unexpired: [true],
+	only_unexpired: toNullable(true),
 	search_term: toNullable(),
 	balance_domain: toNullable(),
 	oracle_source: toNullable()
