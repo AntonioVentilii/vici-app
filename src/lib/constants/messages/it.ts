@@ -169,6 +169,7 @@ export const itMessages = {
 	'flow.reso.head.settled_many': '{count} previsioni si sono risolte.',
 	'dash.reso.banner_title_one': '1 previsione risolta',
 	'dash.reso.banner_title_many': '{count} previsioni risolte',
+	'dash.reso.banner_breakdown': ' · {wins} corrette · {losses} mancate',
 	'dash.reso.banner_cta': 'RIVEDI →',
 	'flow.share.referral_amount': 'Guadagna 500 VXP',
 	'flow.share.referral_tail': ' quando un amico prevede con il tuo link',

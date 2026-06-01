@@ -4747,6 +4747,15 @@ a.title-action::after {
 .dash-reso-sub {
 	font-size: var(--text-eyebrow);
 }
+.dash-reso-vxp {
+	font-weight: 700;
+}
+.dash-reso-vxp.is-pos {
+	color: var(--yes);
+}
+.dash-reso-vxp.is-neg {
+	color: var(--no);
+}
 .dash-reso-dim {
 	color: var(--text-muted);
 }
