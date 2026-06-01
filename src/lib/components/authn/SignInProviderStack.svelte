@@ -259,7 +259,7 @@
 					class="signin-provider-btn email"
 					class:is-faded={isFaded}
 					class:is-onboarding={isOnboarding}
-					class:ob-dark={isOnboarding}
+					class:ob-faint={isOnboarding}
 					disabled={isBusy}
 					onclick={onEmailOpen}
 					type="button"
@@ -326,7 +326,7 @@
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'ii'}
 				class:is-onboarding={isOnboarding}
-				class:ob-dark={isOnboarding}
+				class:ob-faint={isOnboarding}
 				aria-busy={signingIn === 'ii'}
 				disabled={isBusy || !productionAvailable}
 				onclick={onIi}
@@ -353,7 +353,7 @@
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'passkey'}
 				class:is-onboarding={isOnboarding}
-				class:ob-dark={isOnboarding}
+				class:ob-faint={isOnboarding}
 				aria-busy={signingIn === 'passkey'}
 				disabled={isBusy || !productionAvailable}
 				onclick={onPasskey}
@@ -380,7 +380,7 @@
 				class:is-faded={isFaded}
 				class:is-loading={signingIn === 'dev'}
 				class:is-onboarding={isOnboarding}
-				class:ob-dark={isOnboarding}
+				class:ob-faint={isOnboarding}
 				aria-busy={signingIn === 'dev'}
 				data-tid={TestId.SignInDev}
 				disabled={isBusy}

@@ -2583,10 +2583,27 @@ a.title-action::after {
 	background: #ffffff;
 	border-color: #ffffff;
 }
-/* The email row keeps the dark pill in the onboarding variant, so the
-   gold-tinted `/signin` accent must not leak in. */
-.signin-provider-btn.email.is-onboarding {
-	color: var(--parchment);
+/* Secondary providers (email, Internet Identity, Passkey, dev) share a
+   faint translucent pill — lighter than the solid Apple pill — so Apple
+   (black) and Google (cream) read as the primary pair. Higher specificity
+   than `.signin-provider-btn.email`, so the gold-tinted `/signin` email
+   accent can't leak in. */
+.signin-provider-btn.is-onboarding.ob-faint {
+	background: rgba(242, 236, 220, 0.06);
+	border-color: var(--border-base);
+	color: var(--text-base);
+}
+[data-theme='light'] .signin-provider-btn.is-onboarding.ob-faint,
+[data-theme='peach'] .signin-provider-btn.is-onboarding.ob-faint {
+	background: rgba(14, 13, 11, 0.04);
+}
+.signin-provider-btn.is-onboarding.ob-faint:hover:not(:disabled) {
+	background: rgba(242, 236, 220, 0.1);
+	border-color: var(--border-strong);
+}
+[data-theme='light'] .signin-provider-btn.is-onboarding.ob-faint:hover:not(:disabled),
+[data-theme='peach'] .signin-provider-btn.is-onboarding.ob-faint:hover:not(:disabled) {
+	background: rgba(14, 13, 11, 0.07);
 }
 
 .signin-provider-icon {
