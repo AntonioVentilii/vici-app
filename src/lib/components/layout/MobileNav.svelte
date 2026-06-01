@@ -425,8 +425,10 @@
 		transform: scaleX(1);
 	}
 
+	/* Flow-and-here reads as a step up from Flow-as-primary — the active
+	   pill brightens past the always-on halo below it. */
 	.pillnav-tab.flow-tab.active .pillnav-icon-bg {
-		background: rgba(226, 184, 66, 0.3);
+		background: rgba(226, 184, 66, 0.28);
 	}
 
 	.pillnav-icon {
@@ -462,17 +464,27 @@
 		color: var(--accent, var(--color-primary));
 	}
 
+	/* Always-on laurel halo behind Flow's icon — a soft glowing pill that
+	   marks Flow as the primary action even when it isn't the current tab.
+	   Sits below `.pillnav-icon-bg` (z-index 0) so the active-state pill
+	   paints over it for a stronger highlight. The glow carries the lift,
+	   so the icon needs no separate drop-shadow. */
 	.pillnav-tab.flow-tab .pillnav-icon-wrap::before {
 		content: '';
 		position: absolute;
-		inset: 2px 8px;
-		border-radius: 14px;
-		background: rgba(226, 184, 66, 0.06);
+		inset: -2px 4px;
+		border-radius: var(--r-pill);
+		background: rgba(226, 184, 66, 0.16);
+		box-shadow: 0 0 20px -6px rgba(226, 184, 66, 0.48);
 		pointer-events: none;
 		z-index: 0;
 	}
 
-	.pillnav-tab.flow-tab:not(.active) .pillnav-icon {
-		filter: drop-shadow(0 0 5px rgba(226, 184, 66, 0.32));
+	/* Light & peach canvases: the halo tints down to the deeper laurel so
+	   it holds contrast against the warm parchment background. */
+	:global([data-theme='light']) .pillnav-tab.flow-tab .pillnav-icon-wrap::before,
+	:global([data-theme='peach']) .pillnav-tab.flow-tab .pillnav-icon-wrap::before {
+		background: rgba(182, 139, 31, 0.14);
+		box-shadow: 0 0 20px -6px rgba(182, 139, 31, 0.42);
 	}
 </style>
