@@ -1,13 +1,28 @@
 <script lang="ts">
 	import { localeStore } from '$lib/stores/locale.store';
+	import type { CallSide } from '$lib/types/market';
 	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		yesPercent: number;
 		noPercent: number;
+		/**
+		 * When the market has settled, the hero reads "FINAL YES" / "FINAL
+		 * NO" and dims the losing side so the winning outcome carries the
+		 * weight. Defaults to the live presentation.
+		 */
+		resolved?: boolean;
+		/** The settled binary outcome, when known. */
+		resolvedOutcome?: CallSide;
 	}
 
-	const { yesPercent, noPercent }: Props = $props();
+	const { yesPercent, noPercent, resolved = false, resolvedOutcome }: Props = $props();
+
+	// Dim the side that lost once settled (only when we know the
+	// outcome). The winning side — and the live presentation — stay at
+	// full strength.
+	const yesLost = $derived(resolved && resolvedOutcome === 'NO');
+	const noLost = $derived(resolved && resolvedOutcome === 'YES');
 </script>
 
 <!-- Probability hero: large YES percent on the left baseline-aligned
@@ -16,12 +31,20 @@
      same shape as `forecast-split-bar` on the old card). -->
 <div class="prob-hero">
 	<div class="prob-hero-row">
-		<div class="prob-hero-side prob-hero-yes">
+		<div class="prob-hero-side prob-hero-yes" class:is-lost={yesLost}>
 			<span class="num prob-hero-yes-pct">{yesPercent}%</span>
-			<span class="prob-hero-eyebrow">{t({ locale: $localeStore, key: 'outcome.yes' })}</span>
+			<span class="prob-hero-eyebrow">
+				{resolved
+					? t({ locale: $localeStore, key: 'outcome.final_yes' })
+					: t({ locale: $localeStore, key: 'outcome.yes' })}
+			</span>
 		</div>
-		<div class="prob-hero-side prob-hero-no">
-			<span class="prob-hero-eyebrow">{t({ locale: $localeStore, key: 'outcome.no' })}</span>
+		<div class="prob-hero-side prob-hero-no" class:is-lost={noLost}>
+			<span class="prob-hero-eyebrow">
+				{resolved
+					? t({ locale: $localeStore, key: 'outcome.final_no' })
+					: t({ locale: $localeStore, key: 'outcome.no' })}
+			</span>
 			<span class="num prob-hero-no-pct">{noPercent}%</span>
 		</div>
 	</div>
@@ -49,6 +72,12 @@
 		align-items: baseline;
 		gap: 0.4rem;
 		min-width: 0;
+	}
+
+	/* Settled losing side — dimmed so the winning outcome reads as the
+	   final answer. Reduced opacity only; the side keeps its colour. */
+	.prob-hero-side.is-lost {
+		opacity: 0.55;
 	}
 
 	.prob-hero-eyebrow {

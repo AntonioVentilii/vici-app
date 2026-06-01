@@ -44,9 +44,28 @@
 		 * signal.
 		 */
 		lineColor?: string;
+		/**
+		 * Real price-history series (0–100 YES percentages, oldest first)
+		 * sourced from the clearing canister's trade history. When
+		 * provided the line plots this genuine history instead of the
+		 * seed-based fallback shape:
+		 *  - a non-empty series traces the actual trade prices, ending at
+		 *    the live `yesPercent`;
+		 *  - an empty series is a true cold-start — the line reads flat at
+		 *    `yesPercent` until the first trade lands.
+		 * When `undefined` (surfaces that don't fetch per-market history)
+		 * the seed-based fallback shape is used.
+		 */
+		points?: number[];
 	}
 
-	const { seed, yesPercent, events = [], lineColor: lineColorProp }: Props = $props();
+	const {
+		seed,
+		yesPercent,
+		events = [],
+		lineColor: lineColorProp,
+		points: pointsProp
+	}: Props = $props();
 
 	// One dot per day on the sparkline. Multiple events landing on the
 	// same day (production data, unlike the curated 1-per-day test data
@@ -90,7 +109,25 @@
 	const w = 240;
 	const h = 56;
 
-	const points = $derived(sparklinePoints({ yesPercent, seed }));
+	// Point series the line plots. When real price history is supplied
+	// (`pointsProp`) it wins over the seed-based fallback shape:
+	//  - non-empty real history is plotted verbatim, with the live
+	//    `yesPercent` appended so the trailing dot reads as "now";
+	//  - an empty real series is a true cold-start — a flat line held at
+	//    `yesPercent` (two points so the path still renders);
+	//  - `undefined` (no per-market fetch on this surface) falls back to
+	//    the seed-based shape.
+	const points = $derived.by<number[]>(() => {
+		if (pointsProp === undefined) {
+			return sparklinePoints({ yesPercent, seed });
+		}
+
+		if (pointsProp.length === 0) {
+			return [yesPercent, yesPercent];
+		}
+
+		return [...pointsProp, yesPercent];
+	});
 
 	// Build the line path: `M <x0> <y0> L <x1> <y1> ... L <xN> <yN>`
 	// with `y = h - (pct/100)*h - 2` so 100 % sits 2 px below the top.
