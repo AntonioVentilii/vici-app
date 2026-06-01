@@ -1825,7 +1825,7 @@ export const enMessages = {
 	'signin.proof.predictors_label': 'predictors',
 	'signin.provider.apple': 'Continue with Apple',
 	'signin.provider.dev': 'Sign in for Dev',
-	'signin.provider.email': 'Continue with email',
+	'signin.provider.email': 'Continue with Email',
 	'signin.provider.google': 'Continue with Google',
 	'signin.provider.placeholder_title': 'Not enabled yet',
 	'signin.provider.soon': 'Soon',
