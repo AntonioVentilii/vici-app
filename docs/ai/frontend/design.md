@@ -387,8 +387,11 @@ Rules:
 
 - Streak progresses on **any swipe** (YES, NO, SKIP all count) once per
   local day.
-- **No freezes, no rescues, no second chances.** A missed day resets
-  to SPARK 1 on the next swipe.
+- **One missed day is forgiven.** The streak continues (and
+  increments) as long as the gap since the last active day is within
+  the forgiveness window — `dayDelta <= 2`, i.e. at most one fully-missed
+  day. A gap of two or more fully-missed days (`dayDelta >= 3`) resets to
+  SPARK 1 on the next swipe. No freezes beyond this single grace day.
 - Break choreography: `low-thud` haptic + single banner naming the
   stage that ended ("BLAZE ended. Fresh start."). No celebration, no
   consolation.
