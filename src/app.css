@@ -4278,7 +4278,7 @@ a.title-action::after {
 	margin: 0;
 	font-size: 11.5px;
 	line-height: 1.5;
-	color: var(--parchment-dim);
+	color: var(--fg-dim);
 }
 .signin-legal-line + .signin-legal-line {
 	margin-top: 4px;
