@@ -311,7 +311,12 @@ const AppGetProfileResultSchema = j.strictObject({
 				flowSessionLength: j.number(),
 				hapticsEnabled: j.boolean(),
 				soundEnabled: j.boolean(),
-				callsPublic: j.boolean(),
+				sharing: j.strictObject({
+					profileVisibility: j.string(),
+					callsPublic: j.boolean(),
+					leaderboardOptIn: j.boolean(),
+					worldsOptIn: j.boolean()
+				}),
 				flowTags: j.array(j.string()),
 				worldCupMode: j.boolean(),
 				savedMarketIds: j.array(j.string()),

@@ -265,6 +265,12 @@ export interface AppGetProfileResult {
 							streak_reminder: boolean;
 						};
 						haptics_enabled: boolean;
+						sharing: {
+							worlds_opt_in: boolean;
+							leaderboard_opt_in: boolean;
+							calls_public: boolean;
+							profile_visibility: string;
+						};
 						sound_enabled: boolean;
 						onboarding_completed: boolean;
 						default_amount: { flow: string; manual: string };
@@ -272,7 +278,6 @@ export interface AppGetProfileResult {
 						saved_market_ids: Array<string>;
 						flow_tags: Array<string>;
 						flow_session_length: number;
-						calls_public: boolean;
 					};
 					archetype: string;
 					last_active_day: [] | [string];

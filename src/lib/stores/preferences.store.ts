@@ -4,8 +4,9 @@ import { PREFERENCES_STORAGE_KEY } from '$lib/constants/settings.constants';
 import { authPrincipal } from '$lib/derived/user.derived';
 import { upsertProfile } from '$lib/services/profile.services';
 import { userStore } from '$lib/stores/user.store';
-import type { UserPreferences } from '$lib/types/preferences';
+import type { SettingsVisibility, SharingPrefs, UserPreferences } from '$lib/types/preferences';
 import type { UserProfile } from '$lib/types/profile';
+import { visibilityFromProfile } from '$lib/utils/visibility.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import { get, writable } from 'svelte/store';
 
@@ -40,7 +41,12 @@ export const DEFAULT_PREFERENCES: UserPreferences = {
 	flowSessionLength: 10,
 	hapticsEnabled: true,
 	soundEnabled: true,
-	callsPublic: true,
+	sharing: {
+		profileVisibility: 'public',
+		callsPublic: true,
+		leaderboardOptIn: true,
+		worldsOptIn: true
+	},
 	flowTags: [...MARKET_TAGS],
 	worldCupMode: false,
 	savedMarketIds: [],
@@ -60,7 +66,12 @@ interface PartialPrefsInput {
 	flowSessionLength?: number;
 	hapticsEnabled?: boolean;
 	soundEnabled?: boolean;
-	callsPublic?: boolean;
+	sharing?: {
+		profileVisibility?: string;
+		callsPublic?: boolean;
+		leaderboardOptIn?: boolean;
+		worldsOptIn?: boolean;
+	};
 	flowTags?: string[];
 	worldCupMode?: boolean;
 	savedMarketIds?: string[];
@@ -79,12 +90,47 @@ const coerceFlowSessionLength = (
 	return DEFAULT_PREFERENCES.flowSessionLength;
 };
 
+const coerceVisibility = (value: string | undefined): SettingsVisibility => {
+	if (value === 'public' || value === 'friends' || value === 'private') {
+		return value;
+	}
+
+	return DEFAULT_PREFERENCES.sharing.profileVisibility;
+};
+
+/**
+ * Build the `sharing` slice from the persisted `preferences.sharing`,
+ * falling back to the legacy top-level `profile.visibility` for the
+ * profile-visibility choice when no slice is stored yet. The opt-in
+ * flags default `true` (always-shown behaviour) for legacy rows.
+ */
+const hydrateSharing = ({
+	partial,
+	legacyVisibility
+}: {
+	partial: PartialPrefsInput['sharing'];
+	legacyVisibility: SettingsVisibility | undefined;
+}): SharingPrefs => ({
+	profileVisibility: coerceVisibility(partial?.profileVisibility ?? legacyVisibility),
+	callsPublic: partial?.callsPublic ?? DEFAULT_PREFERENCES.sharing.callsPublic,
+	leaderboardOptIn: partial?.leaderboardOptIn ?? DEFAULT_PREFERENCES.sharing.leaderboardOptIn,
+	worldsOptIn: partial?.worldsOptIn ?? DEFAULT_PREFERENCES.sharing.worldsOptIn
+});
+
 /**
  * Normalise a partial / legacy / undefined preferences blob into the
  * full shape. Empty `flowTags` is mapped to all market tags (legacy
- * "all enabled" semantic).
+ * "all enabled" semantic). `legacyVisibility` seeds the sharing slice's
+ * profile-visibility from the top-level `profile.visibility` when no
+ * slice is stored yet.
  */
-const hydrateShape = (partial: PartialPrefsInput | undefined): UserPreferences => ({
+const hydrateShape = ({
+	partial,
+	legacyVisibility
+}: {
+	partial: PartialPrefsInput | undefined;
+	legacyVisibility?: SettingsVisibility;
+}): UserPreferences => ({
 	defaultAmount: {
 		flow: partial?.defaultAmount?.flow ?? DEFAULT_PREFERENCES.defaultAmount.flow,
 		manual: partial?.defaultAmount?.manual ?? DEFAULT_PREFERENCES.defaultAmount.manual
@@ -96,7 +142,7 @@ const hydrateShape = (partial: PartialPrefsInput | undefined): UserPreferences =
 	flowSessionLength: coerceFlowSessionLength(partial?.flowSessionLength),
 	hapticsEnabled: partial?.hapticsEnabled ?? DEFAULT_PREFERENCES.hapticsEnabled,
 	soundEnabled: partial?.soundEnabled ?? DEFAULT_PREFERENCES.soundEnabled,
-	callsPublic: partial?.callsPublic ?? DEFAULT_PREFERENCES.callsPublic,
+	sharing: hydrateSharing({ partial: partial?.sharing, legacyVisibility }),
 	flowTags:
 		Array.isArray(partial?.flowTags) && partial.flowTags.length > 0
 			? partial.flowTags
@@ -209,7 +255,12 @@ if (browser) {
 			return;
 		}
 
-		const fromProfile = hydrateShape(profile.preferences);
+		// Reconcile the sharing slice's profile-visibility with the legacy
+		// top-level `profile.visibility` when no slice is stored yet.
+		const fromProfile = hydrateShape({
+			partial: profile.preferences,
+			legacyVisibility: visibilityFromProfile(profile.visibility)
+		});
 
 		// One-time legacy migration: if the profile has the default
 		// payload and localStorage has something stored, merge the
@@ -219,7 +270,7 @@ if (browser) {
 			const legacy = readLegacyLocalStorage();
 
 			if (nonNullish(legacy)) {
-				const migrated = hydrateShape({ ...fromProfile, ...legacy });
+				const migrated = hydrateShape({ partial: { ...fromProfile, ...legacy } });
 				internal.set(migrated);
 				persistToProfile(migrated);
 				clearLegacyLocalStorage();
@@ -248,13 +299,13 @@ if (browser) {
 export const preferencesStore = {
 	subscribe: internal.subscribe,
 	set: (next: UserPreferences) => {
-		const hydrated = hydrateShape(next);
+		const hydrated = hydrateShape({ partial: next });
 		internal.set(hydrated);
 		persistToProfile(hydrated);
 	},
 	update: (updater: (current: UserPreferences) => UserPreferences) => {
 		const current = get(internal);
-		const next = hydrateShape(updater(current));
+		const next = hydrateShape({ partial: updater(current) });
 		internal.set(next);
 		persistToProfile(next);
 	}

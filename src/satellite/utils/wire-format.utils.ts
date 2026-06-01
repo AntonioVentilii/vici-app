@@ -244,7 +244,12 @@ export const fromWireProfile = (profile: ApiWireProfile): UserProfile => ({
 		flowSessionLength: 10,
 		hapticsEnabled: true,
 		soundEnabled: true,
-		callsPublic: true,
+		sharing: {
+			profileVisibility: 'public',
+			callsPublic: true,
+			leaderboardOptIn: true,
+			worldsOptIn: true
+		},
 		flowTags: [],
 		worldCupMode: false,
 		savedMarketIds: [],

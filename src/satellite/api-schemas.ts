@@ -79,7 +79,26 @@ export const UserProfileApiSchema = j.strictObject({
 			flowSessionLength: j.number().default(10),
 			hapticsEnabled: j.boolean().default(true),
 			soundEnabled: j.boolean().default(true),
-			callsPublic: j.boolean().default(true),
+			// Privacy / sharing preference group. `profileVisibility` is a
+			// loose string (the `public|friends|private` settings union)
+			// mirrored to the top-level `visibility` enum on write;
+			// `leaderboardOptIn` / `worldsOptIn` default `true`. Every leaf
+			// is defaulted so a partial legacy `preferences` shape decodes
+			// cleanly. Mirror any change here in
+			// `src/lib/schema/profile.schema.ts`.
+			sharing: j
+				.strictObject({
+					profileVisibility: j.string().default('public'),
+					callsPublic: j.boolean().default(true),
+					leaderboardOptIn: j.boolean().default(true),
+					worldsOptIn: j.boolean().default(true)
+				})
+				.default({
+					profileVisibility: 'public',
+					callsPublic: true,
+					leaderboardOptIn: true,
+					worldsOptIn: true
+				}),
 			flowTags: j.array(j.string()).default([]),
 			worldCupMode: j.boolean().default(false),
 			savedMarketIds: j.array(j.string()).default([]),
@@ -106,7 +125,12 @@ export const UserProfileApiSchema = j.strictObject({
 			flowSessionLength: 10,
 			hapticsEnabled: true,
 			soundEnabled: true,
-			callsPublic: true,
+			sharing: {
+				profileVisibility: 'public',
+				callsPublic: true,
+				leaderboardOptIn: true,
+				worldsOptIn: true
+			},
 			flowTags: [],
 			worldCupMode: false,
 			savedMarketIds: [],

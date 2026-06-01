@@ -74,7 +74,14 @@ export const getProfile = async (principal: PrincipalText): Promise<Doc<UserProf
 					flowSessionLength: 10,
 					hapticsEnabled: true,
 					soundEnabled: true,
-					callsPublic: true,
+					sharing: {
+						// Mirror the top-level `visibility` default
+						// (FRIENDS_ONLY → 'friends'); opt-ins default on.
+						profileVisibility: 'friends',
+						callsPublic: true,
+						leaderboardOptIn: true,
+						worldsOptIn: true
+					},
 					flowTags: [],
 					worldCupMode: false,
 					savedMarketIds: [],

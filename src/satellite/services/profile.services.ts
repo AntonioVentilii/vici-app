@@ -52,7 +52,17 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		flowSessionLength: incoming?.flowSessionLength ?? 10,
 		hapticsEnabled: incoming?.hapticsEnabled ?? true,
 		soundEnabled: incoming?.soundEnabled ?? true,
-		callsPublic: incoming?.callsPublic ?? true,
+		sharing: {
+			profileVisibility:
+				incoming?.sharing?.profileVisibility === 'public' ||
+				incoming?.sharing?.profileVisibility === 'friends' ||
+				incoming?.sharing?.profileVisibility === 'private'
+					? incoming.sharing.profileVisibility
+					: 'public',
+			callsPublic: incoming?.sharing?.callsPublic ?? true,
+			leaderboardOptIn: incoming?.sharing?.leaderboardOptIn ?? true,
+			worldsOptIn: incoming?.sharing?.worldsOptIn ?? true
+		},
 		flowTags: Array.isArray(incoming?.flowTags) ? incoming.flowTags : [],
 		worldCupMode: incoming?.worldCupMode ?? false,
 		savedMarketIds: Array.isArray(incoming?.savedMarketIds) ? incoming.savedMarketIds : [],
