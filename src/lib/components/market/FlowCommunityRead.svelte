@@ -39,6 +39,12 @@
 			})}
 		</span>
 	</div>
+	<!-- The Flow deck sparkline stays on the seed-based shape (no real
+	     `points`): the back face is only ever seen after a flip, and a
+	     market-wide history fetch per card during a swipe session would turn
+	     the deck into N blocking queries. Real market-wide history is wired
+	     into the market-detail chart instead, where a single focused fetch
+	     is cheap. -->
 	<FlowCardSparkline events={metadata?.events} seed={market.id} yesPercent={yesPct} />
 </section>
 

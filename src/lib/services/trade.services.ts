@@ -2,6 +2,7 @@ import type { ClearingDid, RegistryDid } from '$declarations';
 import {
 	getPositions as getPositionsApi,
 	getTradeHistory as getTradeHistoryApi,
+	listSeriesTradeHistory as listSeriesTradeHistoryApi,
 	mintCompleteSet as mintCompleteSetApi,
 	redeemCompleteSet as redeemCompleteSetApi
 } from '$lib/api/clearing.api';
@@ -12,6 +13,12 @@ import { filterByMarketIds } from '$lib/utils/balance-domain.utils';
 import { deriveMarketPriceHistory } from '$lib/utils/market-price-history.utils';
 import { isNullish } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
+
+// Cap on how many trade-history pages a single sparkline load drains. The
+// canister returns all remaining trades when `limit` is unset, so one page
+// is normally enough; the bound is a guard against a pathologically long
+// series fanning out into unbounded round-trips.
+const PRICE_HISTORY_MAX_PAGES = 8;
 
 /**
  * Core fetch for a single-series position: threads identity + certified so it
@@ -138,43 +145,40 @@ export const loadUserTradeHistory = async ({
 };
 
 /**
- * Real price-history series for one market, sourced from the caller's
- * trade history on the clearing canister.
+ * Real, market-wide price-history series for one market, sourced from the
+ * clearing canister's `list_series_trade_history` query.
  *
- * Reuses the same certified fetch path as {@link loadUserTradeHistory},
- * then derives a chronological YES-percentage series for `seriesId` via
- * {@link deriveMarketPriceHistory}. The series is genuine market history,
- * not synthetic jitter, and is empty until the viewer has executed a
- * trade on the market (true cold-start). No-op when signed out — the
- * caller keeps its cold-start flat line.
+ * The query is market-wide (not caller-scoped), so the derived
+ * YES-percentage series reflects the TRUE market movement for every viewer
+ * — including signed-out visitors, who read it under the anonymous identity
+ * — rather than the viewer's own fills. {@link deriveMarketPriceHistory}
+ * maps each executed trade's price into the 0–100 series. The series is
+ * empty until the first trade lands on the market (true cold-start), which
+ * the sparkline reads as a flat line. Fails open: any error leaves the
+ * caller on its cold-start / seed fallback.
  */
-export const loadMarketPriceHistory = async ({
+export const loadMarketPriceHistory = ({
 	seriesId,
-	domain,
 	onLoad,
 	onUpdateError
 }: {
 	seriesId: string;
-	domain: RegistryDid.BalanceDomain;
 	onLoad: (options: { certified: boolean; response: number[] }) => void;
 	onUpdateError?: (error: unknown) => void;
-}): Promise<void> => {
-	const identity = await getIdentity();
-
-	if (isNullish(identity)) {
-		return;
-	}
-
-	return loadWithCertification<ClearingDid.Event[]>({
-		identity,
+}): Promise<void> =>
+	loadWithCertification<ClearingDid.SeriesTradePoint[]>({
 		request: ({ certified, identity: reqIdentity }) =>
-			fetchUserTradeHistory({ identity: reqIdentity, certified, domain }),
+			listSeriesTradeHistoryApi({
+				identity: reqIdentity,
+				seriesId,
+				maxPages: PRICE_HISTORY_MAX_PAGES,
+				certified
+			}),
 		onLoad: ({ certified, response }) => {
-			onLoad({ certified, response: deriveMarketPriceHistory({ events: response, seriesId }) });
+			onLoad({ certified, response: deriveMarketPriceHistory(response) });
 		},
 		onUpdateError
 	});
-};
 
 /**
  * Mints a complete YES/NO set on clearing for `qty`.
