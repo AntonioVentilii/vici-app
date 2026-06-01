@@ -30,8 +30,22 @@
 
 	let { done, date, target }: Props = $props();
 
+	// Client-only ticking clock so the rollover recomputes across local
+	// midnight — a dashboard left open overnight must not keep showing
+	// yesterday's progress. SSR-safe: the interval only arms in `$effect`,
+	// which never runs on the server.
+	let now = $state(new Date());
+
+	$effect(() => {
+		const id = setInterval(() => {
+			now = new Date();
+		}, 60_000);
+
+		return () => clearInterval(id);
+	});
+
 	// Effective progress for *today* — an earlier day's count reads as 0.
-	const todayDone = $derived(Math.min(target, rolloverDailyGoal({ done, date })));
+	const todayDone = $derived(Math.min(target, rolloverDailyGoal({ done, date, now })));
 	const remaining = $derived(Math.max(0, target - todayDone));
 	const complete = $derived(todayDone >= target);
 	const pct = $derived(target > 0 ? Math.round((todayDone / target) * 100) : 0);
