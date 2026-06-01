@@ -125,7 +125,15 @@
 		flex-direction: column;
 		width: 100%;
 		max-width: 32rem;
-		max-height: 92vh;
+		/* Lift the sheet above the on-screen keyboard: hosts may set
+		 * `--kb-inset` to the keyboard height so the docked edge tracks
+		 * it. The flex-end scrim positions the sheet via margin (not
+		 * `bottom`), so anchor through `margin-bottom`; the height cap
+		 * shrinks in step so the body still scrolls. Defaults to `0px`,
+		 * so the hooks are inert until something sets `--kb-inset`. */
+		margin-bottom: var(--kb-inset, 0px);
+		max-height: calc(92vh - var(--kb-inset, 0px));
+		transition: margin-bottom 0.22s var(--ease-vici);
 		padding: 0.5rem 1.1rem calc(1.1rem + env(safe-area-inset-bottom, 0px));
 		background: var(--bg-popover);
 		border-top: 1px solid var(--border-base);
@@ -139,6 +147,10 @@
 		.sheet-scrim,
 		.sheet {
 			animation: none;
+		}
+
+		.sheet {
+			transition: none;
 		}
 	}
 
