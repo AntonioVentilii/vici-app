@@ -758,7 +758,12 @@ export const getFlowQueue = async ({
 	const principal = identity.getPrincipal().toText();
 
 	const [markets, profile, resolvedTags, resolvedMeta] = await Promise.all([
-		fetchOpenBinaryMarketsLite({ identity, certified: true, domain }),
+		// The Flow deck is a read-only preview: ranking candidates only needs
+		// the open-series list + resolution map, so read them as fast
+		// (non-certified) queries instead of paying the ~replicated-update
+		// latency on the entry critical path. Certified reads still back the
+		// market-detail / trade-execution paths (`fetchMarket`, order placement).
+		fetchOpenBinaryMarketsLite({ identity, certified: false, domain }),
 		getProfile(principal),
 		tagMappings ?? listMarketTagsBySeries().catch(() => ({})),
 		metadataBySeries ?? listMarketMetadataBySeries().catch(() => ({}))
@@ -788,7 +793,11 @@ export const enrichFlowMarketsWithOrderBook = async (markets: Market[]): Promise
 
 	const identity = await getIdentityOrAnonymous();
 
-	return enrichMarketsWithOrderBook({ markets, identity, certified: true });
+	// Non-certified book reads: the deck shows an indicative consensus % per
+	// card, not a settlement-grade figure, so the fast query path is the right
+	// trade-off for the swipe preview. The certified book is read on the
+	// market-detail / order-placement path where correctness is enforced.
+	return enrichMarketsWithOrderBook({ markets, identity, certified: false });
 };
 
 /**
