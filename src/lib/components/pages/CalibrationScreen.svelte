@@ -168,7 +168,16 @@
 
 			if (claim.correct && claim.paidNow) {
 				sessionCorrect += 1;
-				sessionVxp += calibrationRewardVxp;
+				// Add the reward the server actually paid (base units, decimal
+				// string) converted to whole-VXP for display — never the local
+				// constant — so the tally stays correct if the server reward
+				// ever differs from our compile-time guess.
+				sessionVxp += nonNullish(claim.rewardBaseUnits)
+					? decimalFixedValueToNumber({
+							value: BigInt(claim.rewardBaseUnits),
+							decimals: VXP_TOKEN.decimals
+						})
+					: calibrationRewardVxp;
 			} else if (claim.correct && claim.alreadyClaimed) {
 				// Counts as a correct read for the session tally, but the reward
 				// was already earned on this market so nothing mints again.

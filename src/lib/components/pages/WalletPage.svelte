@@ -147,7 +147,9 @@
 	// play, nothing lost" (deployed); below it the stack has eroded through
 	// realised losses (genuine depletion). All gate comparisons run in VXP
 	// *base units* (the same scale as the wallet balance and
-	// `lockedCollateral`); only the displayed numbers are whole VXP.
+	// `lockedCollateral`); the displayed numbers go through
+	// `decimalFixedValueToNumber`, which yields a possibly-fractional VXP
+	// value (the decimal scale applied, not an integer).
 	const marketById = $derived(new Map($markets.map((m) => [m.id, m] as const)));
 
 	// Open VXP positions: `lockedCollateral` is clearing-USD micro-units
@@ -476,35 +478,36 @@
 			</p>
 		{/if}
 
-		<div class="wallet-hero-cta-row">
-			<button
-				class="wallet-hero-cta is-primary"
-				onclick={() => void goto(resolve(AppPath.Flow))}
-				type="button"
-			>
-				{t({ locale: $localeStore, key: 'wallet.cta.open_flow' })}
-			</button>
-			<button
-				class="wallet-hero-cta is-ghost"
-				onclick={() => void goto(resolve(AppPath.Home))}
-				type="button"
-			>
-				{t({ locale: $localeStore, key: 'wallet.cta.back_a_call' })}
-			</button>
-		</div>
+		{#if recovering}
+			<!-- Recovering: the hero swaps its dual-CTA row for the recovery
+			     beat (the beat itself distinguishes deployed vs depleted). -->
+			<VxpRecoveryBeat
+				deployed={fullyDeployed}
+				{lockedInOpenVxp}
+				onCalibrate={() => void goto(resolve(AppPath.Calibration))}
+				onReviewOpenCalls={() => void goto(resolve(AppPath.Portfolio))}
+				openCallCount={openVxpPositions.length}
+				rewardVxp={calibrationRewardVxp}
+			/>
+		{:else}
+			<div class="wallet-hero-cta-row">
+				<button
+					class="wallet-hero-cta is-primary"
+					onclick={() => void goto(resolve(AppPath.Flow))}
+					type="button"
+				>
+					{t({ locale: $localeStore, key: 'wallet.cta.open_flow' })}
+				</button>
+				<button
+					class="wallet-hero-cta is-ghost"
+					onclick={() => void goto(resolve(AppPath.Home))}
+					type="button"
+				>
+					{t({ locale: $localeStore, key: 'wallet.cta.back_a_call' })}
+				</button>
+			</div>
+		{/if}
 	</section>
-
-	{#if recovering}
-		<!-- Recovery beat — deployed (stack in play) vs depleted (eroded). -->
-		<VxpRecoveryBeat
-			deployed={fullyDeployed}
-			{lockedInOpenVxp}
-			onCalibrate={() => void goto(resolve(AppPath.Calibration))}
-			onReviewOpenCalls={() => void goto(resolve(AppPath.Portfolio))}
-			openCallCount={openVxpPositions.length}
-			rewardVxp={calibrationRewardVxp}
-		/>
-	{/if}
 
 	<!-- Recent activity — top 6 from the unified transactions feed. -->
 	<section bind:this={activityListEl} class="wallet-activity">
