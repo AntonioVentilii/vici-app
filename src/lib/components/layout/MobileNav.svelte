@@ -466,9 +466,10 @@
 
 	/* Always-on laurel halo behind Flow's icon — a soft glowing pill that
 	   marks Flow as the primary action even when it isn't the current tab.
-	   Sits below `.pillnav-icon-bg` (z-index 0) so the active-state pill
-	   paints over it for a stronger highlight. The glow carries the lift,
-	   so the icon needs no separate drop-shadow. */
+	   Paints beneath both the icon (z-index 1) and the active-state
+	   `.pillnav-icon-bg`, so the active pill layers over it for a stronger
+	   highlight. The glow carries the lift, so the icon needs no separate
+	   drop-shadow. */
 	.pillnav-tab.flow-tab .pillnav-icon-wrap::before {
 		content: '';
 		position: absolute;
