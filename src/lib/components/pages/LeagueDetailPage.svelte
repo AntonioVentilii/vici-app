@@ -198,6 +198,12 @@
 	};
 
 	const handleRenameKeydown = (event: KeyboardEvent) => {
+		// Ignore Enter while an IME composition is active (CJK input commits
+		// the composition with Enter) so we don't save/cancel mid-composition.
+		if (event.isComposing || event.keyCode === 229) {
+			return;
+		}
+
 		if (event.key === 'Enter') {
 			event.preventDefault();
 			void handleRename();
