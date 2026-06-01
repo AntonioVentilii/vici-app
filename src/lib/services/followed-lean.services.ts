@@ -1,5 +1,6 @@
 import type { ClearingDid } from '$declarations';
 import { aggregateLean as aggregateLeanApi } from '$lib/api/clearing.api';
+import { MAX_MARKETS } from '$lib/services/flow-prep.services';
 import { safeGetIdentityOnce } from '$lib/services/identity.services';
 import type { MarketId } from '$lib/types/market';
 import type { FollowedLeanSignal } from '$lib/types/market-signals';
@@ -8,14 +9,6 @@ import { fromNullable } from '@dfinity/utils';
 import type { Identity } from '@icp-sdk/core/agent';
 import { Principal } from '@icp-sdk/core/principal';
 import type { PrincipalText } from '@junobuild/schema';
-
-/**
- * Upper bound on how many `aggregate_lean` queries one Flow load fans out —
- * one per market in the deck. Matches the deck cap so a session never issues
- * more round-trips than cards it will show; markets beyond it simply fall
- * back to the predictors-count line until they surface.
- */
-const MAX_SERIES = 20;
 
 /**
  * Maps one series' aggregate lean onto the binary YES/NO shape the Flow card
@@ -75,10 +68,14 @@ export const getFollowedLean = async ({
 	const identity = await safeGetIdentityOnce();
 	const principals = following.map((p) => Principal.fromText(p));
 
+	// Cap the fan-out at the Flow deck size: one `aggregate_lean` query per
+	// market a session can show, so the round-trip count can't drift from the
+	// deck cap (`MAX_MARKETS`). Markets beyond it fall back to the
+	// predictors-count line until they surface.
 	return await aggregateFollowedLean({
 		identity,
 		principals,
-		seriesIds: seriesIds.slice(0, MAX_SERIES)
+		seriesIds: seriesIds.slice(0, MAX_MARKETS)
 	});
 };
 

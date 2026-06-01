@@ -9,6 +9,14 @@ import type { UserMarketSignals } from '$lib/types/market-signals';
 import { deriveUserMarketSignals } from '$lib/utils/market-signals.utils';
 
 /**
+ * `marketIds` scopes the per-market `followedLean` fan-out to the markets the
+ * viewer is actually looking at — the sliced Flow deck, or the single market on
+ * a detail page — rather than every tagged series in the catalog. Without it the
+ * query both wastes round-trips on markets the viewer can't see and (capped at
+ * `MAX_MARKETS`) can drop the lean for markets they *can*. Accepts a promise so
+ * Flow can derive it from the still-resolving queue without serialising the
+ * deck-independent fetches below.
+ *
  * `tagMappings` is an optional pre-fetched input: callers that
  * already hold tags from another fetch (e.g. `prepareFlow` shares
  * them with the queue ranking) can pass them in to avoid a
@@ -16,9 +24,11 @@ import { deriveUserMarketSignals } from '$lib/utils/market-signals.utils';
  */
 export const getUserMarketSignals = async ({
 	domain,
+	marketIds,
 	tagMappings
 }: {
 	domain: RegistryDid.BalanceDomain;
+	marketIds: MarketId[] | Promise<MarketId[]>;
 	tagMappings?: Record<string, MarketTag[]> | Promise<Record<string, MarketTag[]>>;
 }): Promise<UserMarketSignals> => {
 	const [events, resolvedTags, following] = await Promise.all([
@@ -29,13 +39,14 @@ export const getUserMarketSignals = async ({
 
 	// Real, privacy-preserving friends-lean: the clearing canister aggregates
 	// the YES/NO split of the viewer's followed set per market, returning
-	// counts only (no identities/sides). Fails open to an empty map so the
-	// rest of the signals still render and the card falls back gracefully.
+	// counts only (no identities/sides). Scoped to the markets actually being
+	// rendered (`marketIds`). Fails open to an empty map so the rest of the
+	// signals still render and the card falls back gracefully.
 	const followedLean =
 		following.length > 0
 			? await getFollowedLean({
 					following,
-					seriesIds: Object.keys(resolvedTags) as MarketId[]
+					seriesIds: await marketIds
 				}).catch(() => ({}))
 			: {};
 

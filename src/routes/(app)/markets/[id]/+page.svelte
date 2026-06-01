@@ -145,7 +145,10 @@
 		}
 
 		try {
-			const signals = await getUserMarketSignals({ domain: m.balanceDomain });
+			const signals = await getUserMarketSignals({
+				domain: m.balanceDomain,
+				marketIds: [m.id]
+			});
 
 			followedLean = signals.followedLean[m.id];
 			priorCall = signals.priorCalls[m.id];
