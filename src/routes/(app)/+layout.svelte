@@ -87,6 +87,83 @@
 
 	let applyingPendingOnboarding = $state(false);
 
+	// Share-link referral attribution. The prediction-share sheet hands out
+	// `/m/{id}?ref={code}` (aliased to `/markets/{id}?ref={code}`, which lands
+	// inside this layout). Reading the param here — the first place a freshly
+	// arriving visitor is handled — lets us credit the referral without a
+	// dedicated landing route: we stash the code into the SAME
+	// `vici:pending-onboarding` slot that `/i/{code}` uses, and the drain below
+	// redeems it post-signin (or, for a returning user, falls back to the
+	// friendship-only path). The market context is preserved — we only read the
+	// query string, never redirect.
+	//
+	// Idempotency / guard rails:
+	//   - Stash only when no `referralCode` is already pending (a user already
+	//     attributed to a referrer is never overwritten). The satellite enforces
+	//     one-redemption-per-referee and self-referral rejection.
+	//   - The share URL falls back to the sharer's handle when their referral
+	//     code hasn't loaded yet (`refToken = referralCode ?? handle`); a handle
+	//     fails `REFERRAL_CODE_REGEX`, so malformed / non-code `?ref=` values are
+	//     ignored here gracefully.
+	const captureSharedReferral = (code: string): void => {
+		try {
+			const raw = localStorage.getItem(PENDING_ONBOARDING_STORAGE_KEY);
+			const parsed: Record<string, unknown> =
+				raw !== null
+					? ((): Record<string, unknown> => {
+							try {
+								const v: unknown = JSON.parse(raw);
+
+								return typeof v === 'object' && v !== null ? (v as Record<string, unknown>) : {};
+							} catch {
+								return {};
+							}
+						})()
+					: {};
+
+			// Never overwrite an existing attribution — first referrer wins.
+			if (typeof parsed.referralCode === 'string' && parsed.referralCode.length > 0) {
+				return;
+			}
+
+			parsed.referralCode = code;
+			localStorage.setItem(PENDING_ONBOARDING_STORAGE_KEY, JSON.stringify(parsed));
+		} catch {
+			// Best-effort: attribution is cosmetic relative to the rest of the
+			// visit and must never break navigation if storage is unavailable.
+		}
+	};
+
+	$effect(() => {
+		if (!browser) {
+			return;
+		}
+
+		// Attribution targets *incoming* visitors only. An already-signed-in
+		// session that opens a share link is an established user who was never
+		// referred — stashing the `?ref=` code here would let the post-signin
+		// drain below mis-fire `claimReferralFriendship` for them. Skip the
+		// capture for signed-in sessions, mirroring how the genuine `/i/{code}`
+		// pre-auth stash only runs while signed-out.
+		if ($userSignedIn) {
+			return;
+		}
+
+		const rawRef = page.url.searchParams.get('ref');
+
+		if (rawRef === null) {
+			return;
+		}
+
+		const normalized = rawRef.toUpperCase().trim();
+
+		if (!REFERRAL_CODE_REGEX.test(normalized)) {
+			return;
+		}
+
+		captureSharedReferral(normalized);
+	});
+
 	// Auth gate — every (app) route requires a session. We only
 	// redirect once `userSignedOutResolved` is true, i.e. after the
 	// initial auth handshake has completed. Reacting to `authBusy`
