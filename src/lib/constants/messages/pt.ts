@@ -261,7 +261,7 @@ export const ptMessages = {
 	'account.email.used_for': 'Usado para acesso e avisos importantes da conta.',
 	'account.email.verified': 'Verificado',
 	'account.intro':
-		'VICI conecta você com uma passkey — seu Face ID ou impressão digital — ou com Internet Identity ou Google. Sem senhas, sem links por email. Troque a qualquer momento — seus dados continuam.',
+		'VICI conecta você com uma passkey — seu Face ID ou impressão digital — ou com Internet Identity ou Google. Sem senhas, sem links de acesso por email. Troque a qualquer momento — seus dados continuam.',
 	'account.method.eyebrow': 'MÉTODO DE ACESSO',
 	'account.method.ii': 'Internet Identity',
 	'account.method.email': 'E-mail',

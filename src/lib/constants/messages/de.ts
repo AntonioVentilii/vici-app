@@ -262,7 +262,7 @@ export const deMessages = {
 	'account.email.used_for': 'Für Anmeldung und wichtige Konto-Benachrichtigungen.',
 	'account.email.verified': 'Verifiziert',
 	'account.intro':
-		'VICI meldet dich mit einem Passkey an — deinem Face ID oder Fingerabdruck — oder mit Internet Identity oder Google. Keine Passwörter, keine E-Mail-Links. Methode jederzeit wechseln — deine Daten bleiben.',
+		'VICI meldet dich mit einem Passkey an — deinem Face ID oder Fingerabdruck — oder mit Internet Identity oder Google. Keine Passwörter, keine per E-Mail verschickten Anmeldelinks. Methode jederzeit wechseln — deine Daten bleiben.',
 	'account.method.eyebrow': 'AKTUELLE ANMELDEMETHODE',
 	'account.method.ii': 'Internet Identity',
 	'account.method.email': 'E-Mail',

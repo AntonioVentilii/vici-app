@@ -18,11 +18,12 @@
 	 * switch action, and the email card with an `idle → editing → sent`
 	 * change flow.
 	 *
-	 * Sign-in method is inferred from the profile: an address on file
-	 * means the account signed in with an email-backed method; with no
-	 * address we fall back to Internet Identity. Our identities do not
-	 * persist a per-provider tag, so passkey / Google collapse into this
-	 * two-way split — the same heuristic the Settings summary row uses.
+	 * Sign-in method is a display heuristic over the profile, not the
+	 * recorded provider: an address on file surfaces the email-shaped
+	 * card; with no address we show Internet Identity. Our identities do
+	 * not persist a per-provider tag, so passkey / Google collapse into
+	 * this two-way split — the same heuristic the Settings summary row
+	 * uses.
 	 *
 	 * Switching always signs the user out and returns them to the
 	 * sign-in screen, where the full provider stack lives; rather than
