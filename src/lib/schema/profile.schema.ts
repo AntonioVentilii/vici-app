@@ -87,6 +87,16 @@ export const UserProfileSchema = j.strictObject({
 	// per-month history) is the v1 storage shape. Mirror any change here in
 	// `src/satellite/api-schemas.ts`.
 	sharpestEyeBestTier: j.string().optional(),
+	// Wall-clock ms at which the owner last CHANGED their handle (nickname).
+	// Drives the {@link HANDLE_COOLDOWN_DAYS}-day handle-change cooldown: a
+	// rename is only allowed once this is older than the window. PRESENCE = a
+	// prior change is on record; ABSENCE = no prior change ("changeable").
+	// Intentionally `optional()` with NO default so every legacy row decodes
+	// without a migration and reads as never-changed (immediately
+	// changeable). The set-profile assert is the authority — it sets this to
+	// the message time on a change and rejects any other movement. Mirror any
+	// change here in `src/satellite/api-schemas.ts`.
+	handleLastChangeMs: j.number().optional(),
 	// `preferences` carries every cross-device user setting. Defaults are
 	// applied at every leaf because the satellite-side encoder traps with
 	// `missing field X` the moment `app_list_leaderboard` / `app_get_profile`

@@ -48,6 +48,11 @@ export const UserProfileApiSchema = j.strictObject({
 	// `optional()` with NO default so legacy rows decode as "never placed".
 	// Mirror any change here in `src/lib/schema/profile.schema.ts`.
 	sharpestEyeBestTier: j.string().optional(),
+	// Wall-clock ms of the owner's last handle (nickname) change — drives the
+	// 30-day handle-change cooldown. `optional()` with NO default so legacy
+	// rows decode as never-changed. Mirror any change here in
+	// `src/lib/schema/profile.schema.ts`.
+	handleLastChangeMs: j.number().optional(),
 	// Defaults are intentionally applied at every level. The outer
 	// `.default(...)` only kicks in when `preferences` is null/undefined;
 	// legacy profile docs that have a partial `preferences` shape would

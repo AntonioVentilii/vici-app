@@ -1,11 +1,11 @@
 import { Collection } from '$lib/constants/collections.constants';
-import { MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
+import { handleCooldownDaysLeft, MIN_NICKNAME_LENGTH } from '$lib/constants/profile.constants';
 import type { UserRole } from '$lib/enums/user';
 import type { UserProfile } from '$lib/types/profile';
 import { visibilityFromProfile } from '$lib/utils/visibility.utils';
 import { isNullish, nonNullish } from '@dfinity/utils';
 import type { AssertSetDocContext } from '@junobuild/functions';
-import { msgCaller } from '@junobuild/functions/ic-cdk';
+import { msgCaller, time } from '@junobuild/functions/ic-cdk';
 import { decodeDocData, getDocStore, listDocsStore } from '@junobuild/functions/sdk';
 import type { PrincipalText } from '@junobuild/schema';
 
@@ -119,6 +119,9 @@ export const withProfileDefaults = (profile: UserProfile): UserProfile => {
 		// award). `optional()` so an absent value (never placed) round-trips
 		// unchanged.
 		sharpestEyeBestTier: profile.sharpestEyeBestTier,
+		// Handle-change cooldown timestamp (drives the 30-day handle limit).
+		// `optional()` so an absent value (never changed) round-trips unchanged.
+		handleLastChangeMs: profile.handleLastChangeMs,
 		preferences: sanitizedPreferences
 	};
 };
@@ -307,32 +310,113 @@ export const checkNicknameAvailabilityFn = ({
 	return { available: true };
 };
 
+/**
+ * Tolerance (ms) for the "is `handleLastChangeMs` set to ~now?" check on an
+ * allowed handle change. The FE stamps `Date.now()` before the update is
+ * submitted, so by the time the assert runs the value is a few hundred ms in
+ * the past relative to the satellite's `time()`. Allow a small slack on both
+ * sides (clock skew + request latency) but reject values that are clearly
+ * stale or in the future — the client must not be trusted to backdate the
+ * stamp and dodge the cooldown.
+ */
+const HANDLE_LAST_CHANGE_TOLERANCE_MS = 5 * 60 * 1000;
+
+const normalizeNickname = (nickname: string | undefined | null): string =>
+	(nickname ?? '').trim().toLowerCase();
+
+/**
+ * Set-profile assertion for the `profiles` collection. Two concerns:
+ *
+ * 1. **Nickname validity + uniqueness** — the shared
+ *    {@link checkNicknameAvailabilityFn} (write-time guard mirroring the
+ *    read-time availability probe).
+ * 2. **Handle-change cooldown** — the handle is the `nickname` field. It can
+ *    only change once every {@link HANDLE_COOLDOWN_DAYS} days. This is the
+ *    server-authoritative half of the rule (the {@link HandleEditor} mirrors
+ *    it client-side). When the normalized nickname CHANGES versus the stored
+ *    doc, reject the write if the stored `handleLastChangeMs` is still inside
+ *    the window, and otherwise require the proposed doc to stamp
+ *    `handleLastChangeMs` to ~now (validated against the message `time()` so
+ *    a client can't backdate it). When the nickname is UNCHANGED,
+ *    `handleLastChangeMs` must not move.
+ */
 export const assertValidNickname = ({
 	data: {
 		collection,
 		key: documentKey,
-		data: { proposed }
+		data: { proposed, current }
 	}
 }: AssertSetDocContext) => {
 	if (collection !== Collection.PROFILES) {
 		return;
 	}
 
-	const { nickname } = decodeDocData<UserProfile>(proposed.data);
+	const proposedProfile = decodeDocData<UserProfile>(proposed.data);
+	const { nickname } = proposedProfile;
 
 	const result = checkNicknameAvailabilityFn({ nickname, excludeKey: documentKey });
 
-	if (result.available) {
+	if (!result.available) {
+		if (result.reason === 'required') {
+			throw new Error('Nickname is required.');
+		}
+
+		if (result.reason === 'too_short') {
+			throw new Error(`Nickname must be at least ${MIN_NICKNAME_LENGTH} characters.`);
+		}
+
+		throw new Error(`The nickname "${nickname}" is already taken.`);
+	}
+
+	const proposedLastChangeMs = proposedProfile.handleLastChangeMs;
+	const nowMs = Number(time() / 1_000_000n);
+
+	// First write (account creation): there is no stored handle yet, so this
+	// is not a cooldown-gated change. Only guard against a forged future /
+	// stale stamp if the client set one at all.
+	if (isNullish(current)) {
+		if (
+			nonNullish(proposedLastChangeMs) &&
+			Math.abs(proposedLastChangeMs - nowMs) > HANDLE_LAST_CHANGE_TOLERANCE_MS
+		) {
+			throw new Error('handleLastChangeMs must be set to the current time on a handle change.');
+		}
+
 		return;
 	}
 
-	if (result.reason === 'required') {
-		throw new Error('Nickname is required.');
+	const currentProfile = decodeDocData<UserProfile>(current.data);
+	const currentLastChangeMs = currentProfile.handleLastChangeMs;
+
+	const handleChanged =
+		normalizeNickname(proposedProfile.nickname) !== normalizeNickname(currentProfile.nickname);
+
+	if (!handleChanged) {
+		// Nickname unchanged → the cooldown stamp is immutable. Treat absent
+		// on both sides as equal.
+		if ((proposedLastChangeMs ?? null) !== (currentLastChangeMs ?? null)) {
+			throw new Error('handleLastChangeMs cannot change unless the handle changes.');
+		}
+
+		return;
 	}
 
-	if (result.reason === 'too_short') {
-		throw new Error(`Nickname must be at least ${MIN_NICKNAME_LENGTH} characters.`);
+	// Nickname changed → enforce the cooldown against the STORED timestamp.
+	const daysLeft = handleCooldownDaysLeft({ lastChangeMs: currentLastChangeMs, nowMs });
+
+	if (daysLeft > 0) {
+		throw new Error(
+			`The handle was changed recently — it can be changed again in ${daysLeft} day(s).`
+		);
 	}
 
-	throw new Error(`The nickname "${nickname}" is already taken.`);
+	// Allowed change: the proposed doc must stamp the change time to ~now.
+	// Reject an absent / stale / future value so the client can't dodge the
+	// next cooldown window by under-reporting the change time.
+	if (
+		isNullish(proposedLastChangeMs) ||
+		Math.abs(proposedLastChangeMs - nowMs) > HANDLE_LAST_CHANGE_TOLERANCE_MS
+	) {
+		throw new Error('handleLastChangeMs must be set to the current time on a handle change.');
+	}
 };

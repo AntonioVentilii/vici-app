@@ -253,6 +253,7 @@ export interface AppGetProfileResult {
 					role:
 						| []
 						| [{ controller: null } | { creator: null } | { admin: null } | { solver: null }];
+					handle_last_change_ms: [] | [number];
 					email: string;
 					level: number;
 					preferences: {
