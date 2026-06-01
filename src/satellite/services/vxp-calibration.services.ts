@@ -296,31 +296,50 @@ const checkRateLimits = ({
 	recipient: string;
 	nowMs: number;
 }): CalibrationReason | undefined => {
-	const prefix = `${recipient}/${CALIBRATION_AWARD_TYPE}/`;
+	// The award docs are keyed `{recipient}/calibration/{seriesId}`, so the
+	// builder with an empty `awardKey` yields this caller's calibration key
+	// prefix. `matcher.key` is matched as a regex by the datastore, so
+	// anchor it to the start to restrict the store-level scan to just this
+	// caller's calibration docs instead of listing the whole collection.
+	const prefix = vxpAwardKey({ recipient, awardType: CALIBRATION_AWARD_TYPE, awardKey: '' });
 	const hourCutoffNs = BigInt(nowMs - HOUR_MS) * 1_000_000n;
 	const dayCutoffNs = BigInt(nowMs - DAY_MS) * 1_000_000n;
 
 	const { items } = listDocsStore({
 		collection: Collection.VXP_AWARDS,
 		caller,
-		params: {}
+		params: {
+			matcher: {
+				key: `^${prefix}`,
+				// Docs outside the rolling day window can't count toward either
+				// cap, so bound the scan at the store level too.
+				created_at: { greater_than: dayCutoffNs }
+			},
+			// Newest first, so once the hourly cap is reached we can stop.
+			order: { desc: true, field: 'created_at' }
+		}
 	});
 
 	let hourCount = 0;
 	let dayCount = 0;
 
-	for (const [docKey, item] of items) {
+	for (const [, item] of items) {
 		const createdAtNs = item.created_at;
 
-		// `listDocsStore` has no prefix param in the current SDK, so we
-		// filter to this caller's calibration docs manually. Docs outside
-		// the rolling day window don't count toward either cap.
-		if (docKey.startsWith(prefix) && nonNullish(createdAtNs) && createdAtNs >= dayCutoffNs) {
+		// The store matcher already bounds to the day window; the guard is
+		// defensive in case `created_at` is ever absent.
+		if (nonNullish(createdAtNs) && createdAtNs >= dayCutoffNs) {
 			dayCount += 1;
 
 			if (createdAtNs >= hourCutoffNs) {
 				hourCount += 1;
 			}
+		}
+
+		// Ordered newest-first: once the hourly cap is met the rest can't
+		// change the hourly outcome, so stop scanning early.
+		if (hourCount >= CALIBRATION_HOURLY_CAP) {
+			break;
 		}
 	}
 
@@ -479,7 +498,7 @@ export const claimCalibrationRewardFn = async ({
 			const paid: VxpAwardDoc = {
 				...latestDoc,
 				status: 'paid',
-				paidAtMs: Date.now(),
+				paidAtMs: nowMs,
 				blockIndex: result.blockIndex.toString()
 			};
 
