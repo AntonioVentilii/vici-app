@@ -139,6 +139,16 @@
 			return;
 		}
 
+		// Attribution targets *incoming* visitors only. An already-signed-in
+		// session that opens a share link is an established user who was never
+		// referred — stashing the `?ref=` code here would let the post-signin
+		// drain below mis-fire `claimReferralFriendship` for them. Skip the
+		// capture for signed-in sessions, mirroring how the genuine `/i/{code}`
+		// pre-auth stash only runs while signed-out.
+		if ($userSignedIn) {
+			return;
+		}
+
 		const rawRef = page.url.searchParams.get('ref');
 
 		if (rawRef === null) {
