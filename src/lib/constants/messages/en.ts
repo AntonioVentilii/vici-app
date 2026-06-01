@@ -169,6 +169,7 @@ export const enMessages = {
 	'flow.reso.head.settled_many': '{count} calls settled.',
 	'dash.reso.banner_title_one': '1 call settled',
 	'dash.reso.banner_title_many': '{count} calls settled',
+	'dash.reso.banner_breakdown': ' · {wins} correct · {losses} missed',
 	'dash.reso.banner_cta': 'REVIEW →',
 	'flow.share.referral_amount': 'Earn 500 VXP',
 	'flow.share.referral_tail': ' when a friend predicts through your link',
