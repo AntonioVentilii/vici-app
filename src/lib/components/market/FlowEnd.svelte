@@ -4,6 +4,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import CountUp from '$lib/components/ui/CountUp.svelte';
 	import { localeStore } from '$lib/stores/locale.store';
+	import { notificationsStore } from '$lib/stores/notification.store';
 	import { writeToClipboard } from '$lib/utils/clipboard.utils';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
@@ -109,47 +110,66 @@
 
 	const SHARE_URL = 'https://vici.market';
 
-	// Share the day's calls — native share sheet where available, clipboard
-	// fallback otherwise. Aborts are swallowed (the user dismissed the sheet).
-	const shareDay = async () => {
-		const text = t({
-			locale: $localeStore,
-			key: pending === 1 ? 'flow.end.share_text_one' : 'flow.end.share_text',
-			params: { count: pending }
+	// Share → clipboard → confirmation toast. `navigator.share` is absent in
+	// embedded / desktop / non-secure contexts, and a bare clipboard write
+	// gives the user no feedback there — the tap feels dead. So when the
+	// native sheet is unavailable (or rejects for any reason other than a
+	// user-initiated cancel), we copy the link and always surface a toast:
+	// success on a clean copy, an error toast if even the clipboard is
+	// blocked. `copiedMessageKey` is the per-action confirmation copy.
+	const shareOrCopy = async ({
+		text,
+		copiedMessageKey
+	}: {
+		text: string;
+		copiedMessageKey: MessageKey;
+	}) => {
+		if (navigator.share) {
+			try {
+				await navigator.share({ title: 'VICI', text, url: SHARE_URL });
+
+				return;
+			} catch (e: unknown) {
+				// User dismissed the sheet — leave it silent. The rejection is a
+				// DOMException that isn't reliably `instanceof Error`, so read
+				// its `name` defensively rather than narrowing by prototype.
+				if ((e as { name?: string } | null)?.name === 'AbortError') {
+					return;
+				}
+				// Anything else (unsupported / blocked in an iframe) falls
+				// through to the clipboard path below.
+			}
+		}
+
+		const copied = await writeToClipboard(`${text} ${SHARE_URL}`);
+
+		notificationsStore.add({
+			title: t({ locale: $localeStore, key: 'flow.end.copy_toast_title' }),
+			message: copied
+				? t({ locale: $localeStore, key: copiedMessageKey })
+				: t({ locale: $localeStore, key: 'flow.invite.toast_copy_failed' }),
+			type: copied ? 'success' : 'error',
+			duration: 2000
+		});
+	};
+
+	// Share the day's calls — native share sheet where available, clipboard +
+	// confirmation toast otherwise.
+	const shareDay = () =>
+		shareOrCopy({
+			text: t({
+				locale: $localeStore,
+				key: pending === 1 ? 'flow.end.share_text_one' : 'flow.end.share_text',
+				params: { count: pending }
+			}),
+			copiedMessageKey: 'flow.end.share_copied'
 		});
 
-		if (navigator.share) {
-			try {
-				await navigator.share({ title: 'VICI', text, url: SHARE_URL });
-
-				return;
-			} catch (e: unknown) {
-				if (e instanceof Error && e.name === 'AbortError') {
-					return;
-				}
-			}
-		}
-
-		await writeToClipboard(`${text} ${SHARE_URL}`);
-	};
-
-	const inviteFriend = async () => {
-		const text = t({ locale: $localeStore, key: 'flow.invite.share_text' });
-
-		if (navigator.share) {
-			try {
-				await navigator.share({ title: 'VICI', text, url: SHARE_URL });
-
-				return;
-			} catch (e: unknown) {
-				if (e instanceof Error && e.name === 'AbortError') {
-					return;
-				}
-			}
-		}
-
-		await writeToClipboard(`${text} ${SHARE_URL}`);
-	};
+	const inviteFriend = () =>
+		shareOrCopy({
+			text: t({ locale: $localeStore, key: 'flow.invite.share_text' }),
+			copiedMessageKey: 'flow.end.invite_copied'
+		});
 </script>
 
 <!-- FlowEnd — the end-of-session celebration peak. A full-stage takeover:
