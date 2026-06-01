@@ -36,6 +36,7 @@
 	import { markResolutionsSeen, maturedResolutions } from '$lib/stores/inbox.store';
 	import { localeStore } from '$lib/stores/locale.store';
 	import { notificationsStore } from '$lib/stores/notification.store';
+	import { preferencesStore } from '$lib/stores/preferences.store';
 	import { userStore } from '$lib/stores/user.store';
 	import type { ResolutionRevealData, XpPop } from '$lib/types/flow';
 	import type { CallSide, FlowAction, Market, MarketId } from '$lib/types/market';
@@ -52,7 +53,14 @@
 		resolveFlowArtCategory,
 		type FlowArtCategory
 	} from '$lib/utils/flow-art.utils';
-	import { flowBeat, flowSummary, flowTick, flowWild } from '$lib/utils/flow-sound.utils';
+	import {
+		flowBeat,
+		flowSummary,
+		flowTick,
+		flowWild,
+		resumeFlowSound,
+		unlockFlowSound
+	} from '$lib/utils/flow-sound.utils';
 	import { haptic, hapticForBeat } from '$lib/utils/haptics.utils';
 	import { t } from '$lib/utils/i18n.utils';
 	import {
@@ -329,6 +337,22 @@
 		// time they enter Flow.
 		if (betsCount > 0) {
 			advanceFlow();
+		}
+	});
+
+	// Arm the iOS Web Audio gesture-unlock for the lifetime of the Flow
+	// session. Most cues (deferred beats, the summary chord) fire from
+	// timers — not gestures — so priming once on the first touch is what
+	// makes them audible on strict iOS WebKit. The effect returns the
+	// listener-teardown, so it's removed when Flow unmounts.
+	$effect(() => unlockFlowSound());
+
+	// Resume the audio route the moment sound is re-enabled mid-session so
+	// the next cue plays without waiting for a fresh gesture. Reads the
+	// reactive flag directly so the effect re-runs on every toggle.
+	$effect(() => {
+		if ($preferencesStore.soundEnabled) {
+			resumeFlowSound();
 		}
 	});
 
