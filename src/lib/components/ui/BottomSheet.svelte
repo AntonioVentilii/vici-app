@@ -63,6 +63,43 @@
 			}
 		};
 	});
+
+	/**
+	 * Drive `--kb-inset` off `window.visualViewport` so the sheet lifts
+	 * above the on-screen keyboard. The overlap is the slice of the
+	 * layout viewport the keyboard covers: `innerHeight − visualViewport
+	 * height − offsetTop`, floored at 0 (no negative insets when the
+	 * keyboard is closed). No-op when `visualViewport` is unavailable
+	 * (desktop / older engines), so the hooks stay inert there.
+	 */
+	$effect(() => {
+		if (!browser || !isOpen || !sheetEl) {
+			return;
+		}
+
+		const viewport = window.visualViewport;
+
+		if (!viewport) {
+			return;
+		}
+
+		const el = sheetEl;
+
+		const sync = () => {
+			const overlap = Math.max(0, window.innerHeight - viewport.height - viewport.offsetTop);
+			el.style.setProperty('--kb-inset', `${overlap}px`);
+		};
+
+		sync();
+		viewport.addEventListener('resize', sync);
+		viewport.addEventListener('scroll', sync);
+
+		return () => {
+			viewport.removeEventListener('resize', sync);
+			viewport.removeEventListener('scroll', sync);
+			el.style.removeProperty('--kb-inset');
+		};
+	});
 </script>
 
 <svelte:window onkeydown={handleKeyDown} />
