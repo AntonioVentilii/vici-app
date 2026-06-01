@@ -793,10 +793,24 @@ export const enrichFlowMarketsWithOrderBook = async (markets: Market[]): Promise
 
 	const identity = await getIdentityOrAnonymous();
 
-	// Non-certified book reads: the deck shows an indicative consensus % per
-	// card, not a settlement-grade figure, so the fast query path is the right
-	// trade-off for the swipe preview. The certified book is read on the
-	// market-detail / order-placement path where correctness is enforced.
+	// Non-certified (query) book reads. The deck shows an *indicative*
+	// consensus % per card, not a settlement-grade figure, so the fast query
+	// path is the right trade-off for the swipe preview.
+	//
+	// Why this is safe: the value-bearing path is certified *by construction*
+	// — `submit_limit_order` / `submit_market_order` / collateral / settlement
+	// hardcode `caller({ certified: true })` (see `clearing.canister.ts`), and
+	// the clearing canister executes against the real on-chain book. So a
+	// falsified query response can mislead a swipe decision but can never move
+	// funds or fill at a fake price. The certified book is also read directly
+	// on the market-detail / order-placement path, where correctness matters.
+	//
+	// Known trade-off: the displayed % is the one decision-influencing datum
+	// and is unverified at glance-time. If decision-time integrity is ever
+	// wanted, lazy-certify only the *focused* card (one certified `getOrderBook`
+	// as a card reaches the top of the deck) — do NOT revert all ≤MAX_MARKETS
+	// reads to certified, which would just reintroduce the slow fan-out this
+	// path exists to remove.
 	return enrichMarketsWithOrderBook({ markets, identity, certified: false });
 };
 
