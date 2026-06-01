@@ -1,9 +1,17 @@
 <script lang="ts">
 	import BottomSheet from '$lib/components/ui/BottomSheet.svelte';
 	import { DAY_IN_MS } from '$lib/constants/app.constants';
+	import { MARKET_TAG_LABEL_KEYS } from '$lib/constants/market-tags.constants';
 	import { lookupLeagueByInvite, proposeBattle } from '$lib/services/leagues.services';
 	import { localeStore } from '$lib/stores/locale.store';
-	import type { BattleDoc } from '$lib/types/battle';
+	import {
+		BATTLE_TRASH_TALK_MAX_LENGTH,
+		BATTLE_WAGER_DEFAULT,
+		BATTLE_WAGER_MAX,
+		BATTLE_WAGER_MIN,
+		type BattleDoc,
+		type BattleScope
+	} from '$lib/types/battle';
 	import { LEAGUE_INVITE_CODE_REGEX, type LeagueDoc } from '$lib/types/league';
 	import { t, type MessageKey } from '$lib/utils/i18n.utils';
 
@@ -12,12 +20,14 @@
 	 *
 	 * We don't expose a public league directory yet, so the picker
 	 * is invite-code driven: the caller pastes the opponent's 6-char
-	 * code, we resolve it, then pick a duration (7 / 14 / 30 days)
-	 * and propose the battle.
+	 * code, we resolve it, then dial in the same fields the create-a-
+	 * battle wizard carries — scope, an optional VXP wager (0–500), an
+	 * optional short trash-talk message — and pick a duration (7 / 14 /
+	 * 30 days) before proposing the battle.
 	 *
 	 * Wraps `lookupLeagueByInvite` + `proposeBattle` — the same
-	 * services the create-a-battle wizard uses — so the satellite
-	 * contract is identical regardless of entry point.
+	 * services the create-a-battle wizard uses — so the challenge flow
+	 * is a single canonical contract regardless of entry point.
 	 */
 	interface Props {
 		isOpen: boolean;
@@ -32,7 +42,19 @@
 	const DURATIONS = [7, 14, 30] as const;
 	type Duration = (typeof DURATIONS)[number];
 
+	// Scope options surfaced in the picker — `all` plus the two
+	// category narrowings the design highlights. Labels reuse the
+	// canonical market-tag catalog so they never drift from the wizard.
+	const SCOPE_OPTIONS: readonly { value: BattleScope; key: MessageKey }[] = [
+		{ value: 'all', key: 'battles.create.scope_all' },
+		{ value: 'wc', key: MARKET_TAG_LABEL_KEYS.wc },
+		{ value: 'macro', key: MARKET_TAG_LABEL_KEYS.macro }
+	];
+
 	let code = $state('');
+	let scope = $state<BattleScope>('all');
+	let wager = $state<number>(BATTLE_WAGER_DEFAULT);
+	let trashTalk = $state('');
 	let duration = $state<Duration>(7);
 	let resolved: LeagueDoc | undefined = $state();
 	let resolving = $state(false);
@@ -42,6 +64,7 @@
 
 	const normalisedCode = $derived(code.trim().toUpperCase());
 	const codeIsValid = $derived(LEAGUE_INVITE_CODE_REGEX.test(normalisedCode));
+	const trashTalkRemaining = $derived(BATTLE_TRASH_TALK_MAX_LENGTH - trashTalk.length);
 
 	const canSubmit = $derived(
 		!submitting && !resolving && resolved !== undefined && resolved.id !== fromLeague.id
@@ -49,6 +72,9 @@
 
 	const reset = () => {
 		code = '';
+		scope = 'all';
+		wager = BATTLE_WAGER_DEFAULT;
+		trashTalk = '';
 		duration = 7;
 		resolved = undefined;
 		resolving = false;
@@ -112,7 +138,10 @@
 				sideA: fromLeague.id,
 				sideB: resolved.id,
 				kickoffMs,
-				settleMs
+				settleMs,
+				scope,
+				wager,
+				trashTalk
 			});
 
 			onProposed(battle);
@@ -178,6 +207,75 @@
 					{t({ locale: $localeStore, key: 'leagues.battle.propose.opponent_resolved' })}
 				</span>
 				<span class="challenge-resolved-name">{resolved.name}</span>
+			</div>
+		{/if}
+
+		{#if resolved}
+			<fieldset class="challenge-duration">
+				<legend class="allcaps challenge-field-label">
+					{t({ locale: $localeStore, key: 'battles.create.label_scope' })}
+				</legend>
+				<div class="challenge-duration-row">
+					{#each SCOPE_OPTIONS as option (option.value)}
+						<button
+							class="challenge-duration-btn"
+							class:is-active={scope === option.value}
+							onclick={() => (scope = option.value)}
+							type="button"
+						>
+							{t({ locale: $localeStore, key: option.key })}
+						</button>
+					{/each}
+				</div>
+			</fieldset>
+
+			<div class="challenge-field">
+				<div class="challenge-wager-head">
+					<span class="allcaps challenge-field-label">
+						{t({ locale: $localeStore, key: 'battles.create.label_wager' })}
+					</span>
+					<span class="num challenge-wager-value">
+						{wager === BATTLE_WAGER_MIN
+							? t({ locale: $localeStore, key: 'battles.create.wager_none' })
+							: t({
+									locale: $localeStore,
+									key: 'battles.create.wager_value',
+									params: { amount: wager }
+								})}
+					</span>
+				</div>
+				<input
+					class="challenge-slider"
+					aria-label={t({ locale: $localeStore, key: 'battles.create.label_wager' })}
+					max={BATTLE_WAGER_MAX}
+					min={BATTLE_WAGER_MIN}
+					oninput={(event) => (wager = Number(event.currentTarget.value))}
+					step="10"
+					type="range"
+					value={wager}
+				/>
+			</div>
+
+			<div class="challenge-field">
+				<label class="allcaps challenge-field-label" for="challenge-trash-talk">
+					{t({ locale: $localeStore, key: 'battles.create.label_trash_talk' })}
+				</label>
+				<input
+					id="challenge-trash-talk"
+					class="challenge-field-input"
+					autocomplete="off"
+					maxlength={BATTLE_TRASH_TALK_MAX_LENGTH}
+					placeholder={t({
+						locale: $localeStore,
+						key: 'battles.create.trash_talk_placeholder'
+					})}
+					type="text"
+					bind:value={trashTalk}
+				/>
+				<p class="challenge-hint">
+					{t({ locale: $localeStore, key: 'battles.create.trash_talk_hint' })} ·
+					<span class="num">{trashTalkRemaining}</span>
+				</p>
 			</div>
 		{/if}
 
@@ -365,6 +463,32 @@
 		color: var(--laurel);
 		background: color-mix(in srgb, var(--laurel) 12%, transparent);
 		border-color: color-mix(in srgb, var(--laurel) 45%, var(--border-base));
+	}
+
+	.challenge-wager-head {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.5rem;
+	}
+
+	.challenge-wager-value {
+		font-size: var(--t-13);
+		font-weight: 700;
+		color: var(--laurel);
+	}
+
+	.challenge-slider {
+		width: 100%;
+		accent-color: var(--laurel);
+		cursor: pointer;
+	}
+
+	.challenge-hint {
+		margin: 0.1rem 0 0;
+		font-size: var(--t-11);
+		line-height: 1.4;
+		color: var(--text-muted);
 	}
 
 	.challenge-form-error {
