@@ -1,6 +1,7 @@
 import { Collection } from '$lib/constants/collections.constants';
 import {
 	LEAGUE_DESCRIPTION_MAX_LENGTH,
+	LEAGUE_EMBLEMS,
 	LEAGUE_INVITE_CODE_REGEX,
 	LEAGUE_NAME_MAX_LENGTH,
 	LEAGUE_NAME_MIN_LENGTH,
@@ -106,6 +107,19 @@ export const assertSetLeague = ({
 	if (isNullish(current)) {
 		if (proposedDoc.owner !== callerText) {
 			throw new Error('leagues owner must match the caller principal on creation.');
+		}
+
+		// Emblem renders in the UI and is frozen after creation, so it
+		// must be one of the curated glyphs (or absent for legacy-style
+		// rows). Reject arbitrary strings up front rather than letting
+		// them lock in.
+		if (
+			nonNullish(proposedDoc.emblem) &&
+			!(LEAGUE_EMBLEMS as readonly string[]).includes(proposedDoc.emblem)
+		) {
+			throw new Error(
+				`leagues emblem must be one of ${LEAGUE_EMBLEMS.join(' ')} (got "${proposedDoc.emblem}").`
+			);
 		}
 
 		return;

@@ -54,8 +54,10 @@ export const [LEAGUE_EMBLEM_DEFAULT] = LEAGUE_EMBLEMS;
 /**
  * Resolve the glyph to render for a league. Prefers the stored
  * `emblem`; for legacy rows written before the picker shipped, derives
- * a 1-char mark from the first code-point of the name (Unicode-safe),
- * falling back to a neutral glyph for non-alphabetic names.
+ * a single-glyph mark from the first code-point of the name when it is
+ * a letter (uppercased, Unicode-safe so emoji aren't split), falling
+ * back to {@link LEAGUE_EMBLEM_DEFAULT} for empty, non-alphabetic, or
+ * emoji-leading names.
  */
 export const leagueEmblem = (league: Pick<LeagueDoc, 'emblem' | 'name'>): string => {
 	if (league.emblem !== undefined && league.emblem.length > 0) {
@@ -64,7 +66,9 @@ export const leagueEmblem = (league: Pick<LeagueDoc, 'emblem' | 'name'>): string
 
 	const [first] = Array.from(league.name.trim());
 
-	return first ? first.toUpperCase() : '◆';
+	return first !== undefined && /\p{Letter}/u.test(first)
+		? first.toUpperCase()
+		: LEAGUE_EMBLEM_DEFAULT;
 };
 
 /**
