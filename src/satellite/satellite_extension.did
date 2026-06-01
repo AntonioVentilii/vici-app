@@ -105,7 +105,9 @@ type AppAcceptFriendRequestArgs = record { relation_id : text };
 
 type AppCancelFriendRequestArgs = record { relation_id : text };
 
-type AppClaimComebackGrantResult = record { paid_now : bool; previously_paid : bool; block_index : opt text; reason : opt variant { already_claimed_paid; already_claimed_pending; already_claimed_failed; balance_not_zero; not_engaged_yet; transfer_failed }; error_message : opt text };
+type AppClaimCalibrationRewardArgs = record { series_id : text; chosen_side : variant { YES; NO } };
+
+type AppClaimCalibrationRewardResult = record { correct : bool; paid_now : bool; already_claimed : bool; reward_base_units : opt text; new_balance_base_units : opt text; block_index : opt text; reason : opt variant { anonymous; not_engaged_yet; balance_above_floor; not_vici_market; not_binary; not_finalised; outcome_undetermined; rate_limited_hourly; rate_limited_daily; transfer_failed }; error_message : opt text };
 
 type AppClaimReferralFriendshipArgs = record { code : text };
 
@@ -192,7 +194,7 @@ service : {
 	app_search_profiles : (AppSearchProfilesArgs) -> (AppSearchProfilesResult) query;
 	app_accept_friend_request : (AppAcceptFriendRequestArgs) -> ();
 	app_cancel_friend_request : (AppCancelFriendRequestArgs) -> ();
-	app_claim_comeback_grant : () -> (AppClaimComebackGrantResult);
+	app_claim_calibration_reward : (AppClaimCalibrationRewardArgs) -> (AppClaimCalibrationRewardResult);
 	app_claim_referral_friendship : (AppClaimReferralFriendshipArgs) -> ();
 	app_claim_tournament_prize : (AppClaimTournamentPrizeArgs) -> (AppClaimTournamentPrizeResult);
 	app_claim_worlds_podium_prize : (AppClaimWorldsPodiumPrizeArgs) -> (AppClaimWorldsPodiumPrizeResult);

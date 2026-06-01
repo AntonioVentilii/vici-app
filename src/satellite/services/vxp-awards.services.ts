@@ -7,8 +7,8 @@ import { decodeDocData } from '@junobuild/functions/sdk';
 
 /**
  * Pre-write guard for `vxp_awards`. The collection holds server-fired
- * payouts — streak milestones, comeback grant, referral payouts, Worlds
- * podium — so the rules here protect the economy from forgery and
+ * payouts — streak milestones, calibration rewards, referral payouts,
+ * Worlds podium — so the rules here protect the economy from forgery and
  * accidental double-credit.
  *
  *  1. **Key shape.** The doc key must equal
@@ -32,9 +32,8 @@ import { decodeDocData } from '@junobuild/functions/sdk';
  *  5. **Identity fields are immutable.** `awardType`, `awardKey`,
  *     `amountBaseUnits`, `earnedAtMs`, `recipient` are write-once.
  *
- * The follow-up  commits will add the streak / comeback / referral
- * hooks that actually create these docs; this assert is the safety net
- * those hooks rely on.
+ * The streak / calibration / referral / Worlds-podium paths create
+ * these docs; this assert is the safety net those paths rely on.
  */
 export const assertSetVxpAward = ({
 	caller,

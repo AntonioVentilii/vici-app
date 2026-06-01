@@ -1062,31 +1062,50 @@ const cancelFriendRequest = async (
 	await app_cancel_friend_request(idlArgs);
 };
 
-const AppClaimComebackGrantResultSchema = j.strictObject({
+const AppClaimCalibrationRewardArgsSchema = j.strictObject({
+	seriesId: j.string(),
+	chosenSide: j.enum(['YES', 'NO'])
+});
+const AppClaimCalibrationRewardResultSchema = j.strictObject({
+	correct: j.boolean(),
 	paidNow: j.boolean(),
-	previouslyPaid: j.boolean(),
+	alreadyClaimed: j.boolean(),
+	rewardBaseUnits: j.optional(j.string()),
+	newBalanceBaseUnits: j.optional(j.string()),
 	blockIndex: j.optional(j.string()),
 	reason: j.optional(
 		j.enum([
-			'already_claimed_paid',
-			'already_claimed_pending',
-			'already_claimed_failed',
-			'balance_not_zero',
+			'anonymous',
 			'not_engaged_yet',
+			'balance_above_floor',
+			'not_vici_market',
+			'not_binary',
+			'not_finalised',
+			'outcome_undetermined',
+			'rate_limited_hourly',
+			'rate_limited_daily',
 			'transfer_failed'
 		])
 	),
 	errorMessage: j.optional(j.string())
 });
 
-const claimComebackGrant = async (): Promise<j.infer<typeof AppClaimComebackGrantResultSchema>> => {
-	const { app_claim_comeback_grant } = await getSatelliteExtendedActor<SatelliteActor>({
+const claimCalibrationReward = async (
+	args: j.infer<typeof AppClaimCalibrationRewardArgsSchema>
+): Promise<j.infer<typeof AppClaimCalibrationRewardResultSchema>> => {
+	const parsedArgs = AppClaimCalibrationRewardArgsSchema.parse(args);
+	const idlArgs = schemaToIdl({
+		schema: AppClaimCalibrationRewardArgsSchema,
+		value: parsedArgs
+	}) as Parameters<SatelliteActor['app_claim_calibration_reward']>[0];
+
+	const { app_claim_calibration_reward } = await getSatelliteExtendedActor<SatelliteActor>({
 		idlFactory
 	});
-	const idlResult = await app_claim_comeback_grant();
+	const idlResult = await app_claim_calibration_reward(idlArgs);
 
-	const result = schemaFromIdl({ schema: AppClaimComebackGrantResultSchema, value: idlResult });
-	return AppClaimComebackGrantResultSchema.parse(result);
+	const result = schemaFromIdl({ schema: AppClaimCalibrationRewardResultSchema, value: idlResult });
+	return AppClaimCalibrationRewardResultSchema.parse(result);
 };
 
 const AppClaimReferralFriendshipArgsSchema = j.strictObject({ code: j.string() });
@@ -1554,7 +1573,7 @@ export const functions = {
 	searchProfiles,
 	acceptFriendRequest,
 	cancelFriendRequest,
-	claimComebackGrant,
+	claimCalibrationReward,
 	claimReferralFriendship,
 	claimTournamentPrize,
 	claimWorldsPodiumPrize,
