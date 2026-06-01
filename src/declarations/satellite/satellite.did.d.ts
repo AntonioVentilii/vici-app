@@ -30,20 +30,31 @@ export interface AppCheckNicknameAvailabilityResult {
 	available: boolean;
 	reason: [] | [{ taken: null } | { required: null } | { too_short: null }];
 }
-export interface AppClaimComebackGrantResult {
+export interface AppClaimCalibrationRewardArgs {
+	series_id: string;
+	chosen_side: { NO: null } | { YES: null };
+}
+export interface AppClaimCalibrationRewardResult {
 	block_index: [] | [string];
+	new_balance_base_units: [] | [string];
 	error_message: [] | [string];
+	correct: boolean;
 	paid_now: boolean;
-	previously_paid: boolean;
+	reward_base_units: [] | [string];
+	already_claimed: boolean;
 	reason:
 		| []
 		| [
-				| { already_claimed_failed: null }
-				| { already_claimed_paid: null }
+				| { not_binary: null }
 				| { not_engaged_yet: null }
 				| { transfer_failed: null }
-				| { already_claimed_pending: null }
-				| { balance_not_zero: null }
+				| { rate_limited_daily: null }
+				| { anonymous: null }
+				| { balance_above_floor: null }
+				| { not_finalised: null }
+				| { outcome_undetermined: null }
+				| { not_vici_market: null }
+				| { rate_limited_hourly: null }
 		  ];
 }
 export interface AppClaimReferralFriendshipArgs {
@@ -793,7 +804,10 @@ export interface _SERVICE {
 		[AppCheckNicknameAvailabilityArgs],
 		AppCheckNicknameAvailabilityResult
 	>;
-	app_claim_comeback_grant: ActorMethod<[], AppClaimComebackGrantResult>;
+	app_claim_calibration_reward: ActorMethod<
+		[AppClaimCalibrationRewardArgs],
+		AppClaimCalibrationRewardResult
+	>;
 	app_claim_referral_friendship: ActorMethod<[AppClaimReferralFriendshipArgs], undefined>;
 	app_claim_tournament_prize: ActorMethod<
 		[AppClaimTournamentPrizeArgs],

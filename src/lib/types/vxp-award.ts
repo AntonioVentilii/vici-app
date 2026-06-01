@@ -5,9 +5,9 @@ import type { Principal } from '@icp-sdk/core/principal';
  * trigger:
  *
  *  - `streak`        — daily-call streak hits a milestone (3 / 7 / 14 / 30).
- *  - `comeback`      — one-shot grant when balance hits 0 for the first
- *                      time. Recipient's `firstDepletion` flag flips on
- *                      payout.
+ *  - `calibration`   — recovering user (available balance below the
+ *                      recovery floor) correctly called a finalised Vici
+ *                      binary market. One reward per market.
  *  - `referral`      — referrer is credited on a referee's onboarding
  *                      completion. Capped per calendar month.
  *  - `worlds_podium` — recipient's school finished top-3 in the monthly
@@ -17,7 +17,7 @@ import type { Principal } from '@icp-sdk/core/principal';
  */
 export type VxpAwardType =
 	| 'streak'
-	| 'comeback'
+	| 'calibration'
 	| 'referral'
 	| 'worlds_podium'
 	| 'tournament_prize';
@@ -46,7 +46,7 @@ export interface VxpAwardDoc {
 	 * Stable sub-identifier within `awardType`. Encoded in the doc key too.
 	 *
 	 *  - `streak`        — one of `'streak_3' | 'streak_7' | 'streak_14' | 'streak_30'`.
-	 *  - `comeback`      — always the literal `'comeback'` (one-shot per account).
+	 *  - `calibration`   — the resolved market's `seriesId` (one per market).
 	 *  - `referral`      — the referee principal text.
 	 *  - `worlds_podium` — `'<YYYY-MM>_gold' | '<YYYY-MM>_silver' | '<YYYY-MM>_bronze'`.
 	 */

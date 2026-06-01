@@ -4,9 +4,9 @@
  * payout shown in UI; the server is authoritative for the *actual*
  * credit on settlement (same pattern as any prediction market).
  *
- * Server-side awards (streak bonuses, comeback grant, referral cap,
- * Worlds podium) are intentionally *not* in this file — they need their
- * own backend design proposal before any implementation lands.
+ * Server-side award tunables (streak bonuses, calibration reward,
+ * referral cap, Worlds podium) live below — the server is authoritative
+ * for the actual credit; these constants drive the expected UI preview.
  *
  * See `vxp-economy.utils.ts` for the payout formula and
  * `docs/economy.md` for the full economy spec.
@@ -68,10 +68,35 @@ export const VXP_STREAK_BONUSES: Readonly<Record<number, number>> = Object.freez
 });
 
 /**
- * One-shot grant when a user's VXP balance hits zero for the first time
- * (the "comeback" mechanic). Fires once per account, server-tracked.
+ * Calibration reward, in VXP base units. Paid once per finalised Vici
+ * binary market a recovering user calls correctly. Small and fixed —
+ * it is a recovery nudge that rewards reading a market right, not a
+ * payout that scales with stake. Tunable.
  */
-export const VXP_COMEBACK_GRANT = 1000;
+export const VXP_CALIBRATION_REWARD = 20;
+
+/**
+ * Recovery floor for the calibration reward, in VXP base units. The
+ * reward only pays while the caller's available balance is *below* this
+ * floor — it is the core bound that keeps calibration a recovery
+ * mechanic for depleted users rather than a steady income stream for
+ * everyone. Tunable.
+ */
+export const CALIBRATION_RECOVERY_FLOOR = 100;
+
+/**
+ * Maximum number of calibration rewards a single caller can earn within
+ * a rolling 24-hour window. Server-enforced anti-farming bound, counted
+ * off the caller's `calibration` award docs. Tunable.
+ */
+export const CALIBRATION_DAILY_CAP = 15;
+
+/**
+ * Maximum number of calibration rewards a single caller can earn within
+ * a rolling 1-hour window. Tighter burst bound layered on top of the
+ * daily cap. Server-enforced. Tunable.
+ */
+export const CALIBRATION_HOURLY_CAP = 6;
 
 /**
  * Maximum number of referral payouts the referrer can receive within a

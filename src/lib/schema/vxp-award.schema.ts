@@ -5,7 +5,13 @@ import { j, PrincipalTextSchema } from '@junobuild/schema';
  * `lib/types/vxp-award.ts`. Wire / persisted format matches the type
  * 1:1 — no snake_case dance because no Rust-side codegen reads this.
  */
-export const VxpAwardTypeSchema = j.enum(['streak', 'comeback', 'referral', 'worlds_podium']);
+export const VxpAwardTypeSchema = j.enum([
+	'streak',
+	'calibration',
+	'referral',
+	'worlds_podium',
+	'tournament_prize'
+]);
 
 export const VxpAwardStatusSchema = j.enum(['pending', 'paid', 'failed']);
 
