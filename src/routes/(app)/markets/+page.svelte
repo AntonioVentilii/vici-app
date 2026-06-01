@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import LoadingSpinner from '$lib/components/ui/LoadingSpinner.svelte';
 	import { AppPath } from '$lib/constants/routes.constants';
 
@@ -10,9 +11,12 @@
 	// targets it directly. A bare `/markets` is kept only as a redirect so
 	// older links land on the canonical list. This `+page.svelte` matches
 	// the exact `/markets` path — the `/markets/[id]` detail child route is
-	// untouched and still resolves on its own.
+	// untouched and still resolves on its own. Carry the incoming query
+	// string and hash through so `?utm_source=…` / `#section` survive the
+	// hop, mirroring the `/m/[id]` share-link alias.
 	onMount(() => {
-		void goto(resolve(AppPath.Home), { replaceState: true });
+		const { search, hash } = page.url;
+		void goto(`${resolve(AppPath.Home)}${search}${hash}`, { replaceState: true });
 	});
 </script>
 
