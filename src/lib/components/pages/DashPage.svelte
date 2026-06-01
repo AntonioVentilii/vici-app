@@ -558,9 +558,22 @@
 								params: { count: digest.count }
 							})}
 						</span>
-						<span class="dash-reso-sub" class:dash-reso-dim={digest.netVxp < 0}>
-							{digest.netVxp >= 0 ? '+' : '−'}{Math.abs(digest.netVxp).toLocaleString()}
-							{t({ locale: $localeStore, key: 'flow.reso.vxp' })}
+						<span class="dash-reso-sub">
+							<span
+								class="dash-reso-vxp"
+								class:is-neg={digest.netVxp < 0}
+								class:is-pos={digest.netVxp >= 0}
+							>
+								{digest.netVxp >= 0 ? '+' : '−'}{Math.abs(digest.netVxp).toLocaleString()}
+								{t({ locale: $localeStore, key: 'flow.reso.vxp' })}
+							</span>
+							<span class="dash-reso-dim">
+								{t({
+									locale: $localeStore,
+									key: 'dash.reso.banner_breakdown',
+									params: { wins: digest.wins, losses: digest.losses }
+								})}
+							</span>
 						</span>
 					</span>
 					<span class="dash-reso-cta"

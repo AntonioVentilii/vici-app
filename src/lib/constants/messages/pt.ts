@@ -169,6 +169,7 @@ export const ptMessages = {
 	'flow.reso.head.settled_many': '{count} previsões foram liquidadas.',
 	'dash.reso.banner_title_one': '1 previsão liquidada',
 	'dash.reso.banner_title_many': '{count} previsões liquidadas',
+	'dash.reso.banner_breakdown': ' · {wins} corretas · {losses} perdidas',
 	'dash.reso.banner_cta': 'REVER →',
 	'flow.share.referral_amount': 'Ganhe 500 VXP',
 	'flow.share.referral_tail': ' quando um amigo prever pelo seu link',

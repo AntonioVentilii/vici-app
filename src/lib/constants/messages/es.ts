@@ -168,6 +168,7 @@ export const esMessages = {
 	'flow.reso.head.settled_many': 'Se resolvieron {count} predicciones.',
 	'dash.reso.banner_title_one': '1 predicción resuelta',
 	'dash.reso.banner_title_many': '{count} predicciones resueltas',
+	'dash.reso.banner_breakdown': ' · {wins} acertadas · {losses} falladas',
 	'dash.reso.banner_cta': 'REVISAR →',
 	'flow.share.referral_amount': 'Gana 500 VXP',
 	'flow.share.referral_tail': ' cuando un amigo prediga con tu enlace',
