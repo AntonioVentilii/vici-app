@@ -62,6 +62,7 @@ export const enMessages = {
 	'battles.create.opponent_empty': 'No leagues to challenge yet.',
 	'battles.create.opponent_no_match': 'No leagues match that search.',
 	'battles.create.opponent_private': 'Private',
+	'battles.create.opponent_search_label': 'Search opponent leagues',
 	'battles.create.opponent_search_placeholder': 'Search by league name',
 	'battles.create.scope_all': 'All calls',
 	'battles.create.send_to': 'Send challenge to {name}',

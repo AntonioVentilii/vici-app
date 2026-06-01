@@ -506,7 +506,10 @@ export const proposeBattle = async ({
 		throw new Error(`Invalid battle scope "${scope}".`);
 	}
 
-	if (wager !== undefined && (wager < BATTLE_WAGER_MIN || wager > BATTLE_WAGER_MAX)) {
+	if (
+		wager !== undefined &&
+		(!Number.isFinite(wager) || wager < BATTLE_WAGER_MIN || wager > BATTLE_WAGER_MAX)
+	) {
 		throw new Error(`Wager must be within [${BATTLE_WAGER_MIN}, ${BATTLE_WAGER_MAX}].`);
 	}
 

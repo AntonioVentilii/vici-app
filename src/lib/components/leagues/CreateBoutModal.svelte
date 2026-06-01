@@ -286,6 +286,10 @@
 								/>
 								<input
 									class="create-bout-input create-bout-search-input"
+									aria-label={t({
+										locale: $localeStore,
+										key: 'battles.create.opponent_search_label'
+									})}
 									autocapitalize="none"
 									autocomplete="off"
 									placeholder={t({
@@ -382,9 +386,10 @@
 								aria-label={t({ locale: $localeStore, key: 'battles.create.label_wager' })}
 								max={BATTLE_WAGER_MAX}
 								min={BATTLE_WAGER_MIN}
+								oninput={(event) => (wager = Number(event.currentTarget.value))}
 								step="10"
 								type="range"
-								bind:value={wager}
+								value={wager}
 							/>
 						</div>
 

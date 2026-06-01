@@ -62,6 +62,7 @@ export const esMessages = {
 	'battles.create.opponent_empty': 'Aún no hay ligas para desafiar.',
 	'battles.create.opponent_no_match': 'Ninguna liga coincide con la búsqueda.',
 	'battles.create.opponent_private': 'Privada',
+	'battles.create.opponent_search_label': 'Buscar ligas rivales',
 	'battles.create.opponent_search_placeholder': 'Buscar por nombre de liga',
 	'battles.create.scope_all': 'Todas las predicciones',
 	'battles.create.send_to': 'Enviar reto a {name}',

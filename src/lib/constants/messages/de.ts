@@ -63,6 +63,7 @@ export const deMessages = {
 	'battles.create.opponent_empty': 'Noch keine Ligen zum Herausfordern.',
 	'battles.create.opponent_no_match': 'Keine Ligen passen zur Suche.',
 	'battles.create.opponent_private': 'Privat',
+	'battles.create.opponent_search_label': 'Gegner-Ligen suchen',
 	'battles.create.opponent_search_placeholder': 'Nach Liganame suchen',
 	'battles.create.scope_all': 'Alle Tipps',
 	'battles.create.send_to': 'Herausforderung an {name} senden',

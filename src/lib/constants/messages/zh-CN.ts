@@ -61,6 +61,7 @@ export const zhCnMessages = {
 	'battles.create.opponent_empty': '暂时没有可挑战的联盟。',
 	'battles.create.opponent_no_match': '没有匹配该搜索的联盟。',
 	'battles.create.opponent_private': '私密',
+	'battles.create.opponent_search_label': '搜索对手联盟',
 	'battles.create.opponent_search_placeholder': '按联盟名称搜索',
 	'battles.create.scope_all': '所有预测',
 	'battles.create.send_to': '向 {name} 发出挑战',

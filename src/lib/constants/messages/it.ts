@@ -62,6 +62,7 @@ export const itMessages = {
 	'battles.create.opponent_empty': 'Ancora nessuna lega da sfidare.',
 	'battles.create.opponent_no_match': 'Nessuna lega corrisponde alla ricerca.',
 	'battles.create.opponent_private': 'Privata',
+	'battles.create.opponent_search_label': 'Cerca leghe avversarie',
 	'battles.create.opponent_search_placeholder': 'Cerca per nome lega',
 	'battles.create.scope_all': 'Tutte le previsioni',
 	'battles.create.send_to': 'Invia la sfida a {name}',

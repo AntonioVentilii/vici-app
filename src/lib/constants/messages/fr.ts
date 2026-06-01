@@ -62,6 +62,7 @@ export const frMessages = {
 	'battles.create.opponent_empty': 'Aucune ligue à défier pour l’instant.',
 	'battles.create.opponent_no_match': 'Aucune ligue ne correspond à la recherche.',
 	'battles.create.opponent_private': 'Privée',
+	'battles.create.opponent_search_label': 'Rechercher des ligues adverses',
 	'battles.create.opponent_search_placeholder': 'Rechercher par nom de ligue',
 	'battles.create.scope_all': 'Tous les pronostics',
 	'battles.create.send_to': 'Envoyer le défi à {name}',
