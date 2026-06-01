@@ -130,8 +130,10 @@
 
 				return;
 			} catch (e: unknown) {
-				// User dismissed the sheet — leave it silent.
-				if (e instanceof Error && e.name === 'AbortError') {
+				// User dismissed the sheet — leave it silent. The rejection is a
+				// DOMException that isn't reliably `instanceof Error`, so read
+				// its `name` defensively rather than narrowing by prototype.
+				if ((e as { name?: string } | null)?.name === 'AbortError') {
 					return;
 				}
 				// Anything else (unsupported / blocked in an iframe) falls
