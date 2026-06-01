@@ -1,27 +1,65 @@
 <script lang="ts">
 	/**
-	 * Deterministic generated character face. A seed string maps to a
-	 * stable set of traits (skin, hair, expression, optional accessory,
-	 * background) and renders a flat-plane SVG portrait. The same seed
-	 * always produces the same face — pure, client-only, no backend and
-	 * no network. Used wherever a surface needs a recognisable stand-in
-	 * face without exposing real user data.
+	 * Faceted front-facing portrait. The look is described by a `parts`
+	 * object (skin / hair / hairStyle / expr / trait / shirt / bg) and
+	 * renders to a self-contained SVG string. Two ways to feed it:
+	 *
+	 *   - pass `parts` directly (the logged-in user's persisted picks); or
+	 *   - pass a `seed` string and the face is derived deterministically
+	 *     from it (everyone who isn't the logged-in user — seeded by their
+	 *     immutable principal — and the decorative social-proof stacks).
+	 *
+	 * Pure, client-only, no backend and no network. The idle motion (blink +
+	 * gentle bob) is gated behind `prefers-reduced-motion`: a reduced-motion
+	 * user gets the exact same portrait, rendered static.
 	 */
 
-	import { viciAvatarSvg } from '$lib/utils/vici-avatar.utils';
+	import { prefersReducedMotion } from '$lib/utils/reduced-motion.utils';
+	import {
+		deterministicParts,
+		renderAvatarSvg,
+		type ViciAvatarParts
+	} from '$lib/utils/vici-avatar.utils';
 
 	interface Props {
-		/** Seed string the face is derived from. */
-		seed: string;
+		/** Explicit parts object. Wins over `seed` when both are set. */
+		parts?: ViciAvatarParts | null;
+		/** Seed string the face is derived from when no `parts` are given. */
+		seed?: string;
 		/** Rendered diameter in pixels. */
 		size?: number;
+		/** Draw the circular gold frame ring. */
+		frame?: boolean;
+		/** Draw the gold signature circle + wordmark. */
+		signature?: boolean;
+		/** Whether idle motion is desired. Always re-gated behind
+		 *  `prefers-reduced-motion` — passing `true` never overrides a
+		 *  reduced-motion preference. */
+		animate?: boolean;
 		/** Extra classes forwarded to the wrapper. */
 		class?: string;
 	}
 
-	const { seed, size = 28, class: className = '' }: Props = $props();
+	const {
+		parts,
+		seed = 'you',
+		size = 28,
+		frame = true,
+		signature = false,
+		animate = false,
+		class: className = ''
+	}: Props = $props();
 
-	const svg = $derived(viciAvatarSvg({ seed, size }));
+	const resolvedParts = $derived(parts ?? deterministicParts(seed));
+
+	// Motion is opt-in by the caller AND only ever runs when the user has
+	// not asked for reduced motion. A reduced-motion user always gets the
+	// static portrait — same geometry, no blink / bob.
+	const motion = $derived(animate && !prefersReducedMotion());
+
+	const svg = $derived(
+		renderAvatarSvg({ parts: resolvedParts, size, options: { animate: motion, frame, signature } })
+	);
 </script>
 
 <!-- Decorative artwork; the {@html} payload is a self-generated SVG
@@ -45,5 +83,47 @@
 
 	.vici-avatar :global(svg) {
 		display: block;
+	}
+
+	/* Idle motion. The renderer only emits the `va-bob` / `va-blink` classes
+	   when motion is allowed, so these keyframes never run for a
+	   reduced-motion user (belt-and-braces media query below as well). */
+	.vici-avatar :global(.va-bob) {
+		animation: vici-avatar-bob 5.5s ease-in-out infinite;
+		transform-box: fill-box;
+		transform-origin: 50% 100%;
+	}
+
+	.vici-avatar :global(.va-blink) {
+		animation: vici-avatar-blink 6s ease-in-out infinite;
+		transform-box: fill-box;
+	}
+
+	@keyframes vici-avatar-bob {
+		0%,
+		100% {
+			transform: translateY(0);
+		}
+		50% {
+			transform: translateY(-1.1px);
+		}
+	}
+
+	@keyframes vici-avatar-blink {
+		0%,
+		92%,
+		100% {
+			transform: scaleY(1);
+		}
+		95% {
+			transform: scaleY(0.1);
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.vici-avatar :global(.va-bob),
+		.vici-avatar :global(.va-blink) {
+			animation: none;
+		}
 	}
 </style>

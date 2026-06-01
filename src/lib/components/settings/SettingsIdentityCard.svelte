@@ -23,6 +23,7 @@
 				avatar={profile.avatar}
 				nickname={profile.nickname}
 				owner={profile.owner}
+				self
 			/>
 		</span>
 	{:else}
