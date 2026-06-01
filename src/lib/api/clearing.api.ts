@@ -93,6 +93,22 @@ export const getPositions = async ({
 };
 
 /**
+ * Aggregate long/short lean over a supplied principal set for one series. See
+ * {@link ClearingCanister.aggregateLean} — returns counts only, no identities.
+ */
+export const aggregateLean = async ({
+	identity,
+	...rest
+}: {
+	identity: Identity;
+	params: ClearingDid.AggregateLeanParams;
+} & QueryParams): Promise<ClearingDid.AggregateLean> => {
+	const { aggregateLean } = await clearingCanister({ identity });
+
+	return await aggregateLean(rest);
+};
+
+/**
  * Returns the authoritative set of settled (resolved) series ids from the
  * clearing canister. See {@link ClearingCanister.listSettledSeries}.
  */
