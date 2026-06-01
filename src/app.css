@@ -2495,12 +2495,13 @@ a.title-action::after {
 	font-weight: 600;
 }
 
-/* Full-width pill treatment for the auth gate. Google reads as the
-   cream-filled primary pill; every other provider (Apple, email,
+/* Full-width pill treatment shared by every sign-in surface (the
+   sign-in screen, the modal/gated prompts, and onboarding). Google reads
+   as the cream-filled primary pill; every other provider (Apple, email,
    Internet Identity, Passkey, dev) is a dark or faint pill via the
-   per-tone classes below. The button structure (centred label,
-   absolute spinner / "soon" slot) is shared so loading + aria
-   behaviour is identical across providers. */
+   per-tone classes below. The button structure (centred label, absolute
+   spinner / "soon" slot) is shared so loading + aria behaviour is
+   identical across providers. */
 .signin-provider-btn {
 	appearance: none;
 	cursor: pointer;
