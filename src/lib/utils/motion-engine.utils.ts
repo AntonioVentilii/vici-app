@@ -13,9 +13,9 @@
 //   • Within-day rhythm beats fire on JITTERED positions (a window, not
 //     a fixed slot) so the cadence is never memorised.
 //   • Deflation-safe VXP economy: dopamine is not currency. The daily
-//     ten and early milestones mint nothing; VXP is minted only at the
-//     overtime finish (+25) and rare lifetime milestones (50 → +50 …
-//     1,000 → +500). Growth comes from being right, not showing up.
+//     ten mints nothing; VXP is minted only at the overtime finish (+25)
+//     and rare lifetime milestones (10 → +50 … 1,000 → +500). Growth
+//     comes from being right, not showing up.
 //   • Credit-STACKING: if a milestone coincides with the daily-complete
 //     beat, BOTH bonuses are credited even though one beat animates.
 //   • Wildcard — a rare (~1 in 6) variable-ratio surprise carrying a
@@ -156,9 +156,9 @@ export const TREAT_KEYS: readonly MessageKey[] = [
 ];
 
 // ── Lifetime call-volume milestones ───────────────────────────────
-// VXP minted only from 50 up (in call-units, ×50); fires ONCE ever.
-// 1 · 10 · 25 are badge / moment-only (no VXP). Oracle owns the ladder
-// from 50; Vici welcomes the very first call.
+// VXP minted from the 10-call mark up; each milestone fires ONCE ever.
+// 1 · 25 are moment-only (no VXP). Oracle owns the ladder from 10; Vici
+// welcomes the very first call.
 interface VolumeMilestone {
 	bonus: number;
 	character: MotionCharacter;
@@ -183,11 +183,11 @@ const VOLUME: Record<number, VolumeMilestone> = {
 		haptic: [12, 30, 12, 30, 12]
 	},
 	10: {
-		bonus: 0,
+		bonus: 50,
 		character: 'oracle',
 		copyKey: 'motion.volume.ten',
 		subKey: 'motion.sub.lifetime_10',
-		duration_ms: 1200,
+		duration_ms: 1300,
 		haptic: [25, 30, 25]
 	},
 	25: {
@@ -198,14 +198,6 @@ const VOLUME: Record<number, VolumeMilestone> = {
 		duration_ms: 1200,
 		haptic: 12
 	},
-	50: {
-		bonus: 50,
-		character: 'oracle',
-		copyKey: 'motion.volume.fifty',
-		subKey: 'motion.sub.lifetime_50',
-		duration_ms: 1500,
-		haptic: [25, 30, 25, 40, 60]
-	},
 	100: {
 		bonus: 100,
 		character: 'oracle',
@@ -214,14 +206,6 @@ const VOLUME: Record<number, VolumeMilestone> = {
 		duration_ms: 1700,
 		haptic: [12, 30, 12, 30, 12, 30, 60],
 		badgeKey: 'motion.badge.centurion'
-	},
-	250: {
-		bonus: 150,
-		character: 'oracle',
-		copyKey: 'motion.volume.two_fifty',
-		subKey: 'motion.sub.lifetime_250',
-		duration_ms: 1500,
-		haptic: [25, 30, 25]
 	},
 	500: {
 		bonus: 250,
