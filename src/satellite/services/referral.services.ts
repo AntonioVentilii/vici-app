@@ -1,3 +1,4 @@
+import { ZERO } from '$lib/constants/app.constants';
 import { VXP_LEDGER_CANISTER_ID } from '$lib/constants/canisters.constants';
 import { Collection } from '$lib/constants/collections.constants';
 import {
@@ -7,7 +8,8 @@ import {
 	REFERRAL_EXISTING_USER_REASON,
 	REFERRAL_MAX_PAID,
 	REFERRAL_SIGNUP_WINDOW_MS,
-	REFERRAL_VXP_BONUS_BASE_UNITS
+	REFERRAL_VXP_BONUS_BASE_UNITS,
+	referrerRewardBaseUnits
 } from '$lib/constants/referral.constants';
 import { VXP_REFERRAL_MONTHLY_CAP } from '$lib/constants/vxp-economy.constants';
 import { RelationCategory, RelationState } from '$lib/enums/relation';
@@ -277,14 +279,18 @@ export const listMyReferralsFn = (): ReferralListItem[] => {
 
 // ─── Update handler (redeem) ─────────────────────────────────────────────
 
-const initialOwedPayout = (): VxpMilestoneState => ({
+// The referee bonus is flat and uncapped — every eligible new user gets `REFERRAL_VXP_BONUS_BASE_UNITS` once.
+const initialRefereeOwedPayout = (): VxpMilestoneState => ({
 	status: 'owed',
 	amountBaseUnits: REFERRAL_VXP_BONUS_BASE_UNITS.toString()
 });
 
-const initialUnpaidPayout = (): VxpMilestoneState => ({
+// The referrer payout amount is decided in the hook (`armReferrerPayoutIfFirstFire`) from the
+// diminishing curve, so the redeem-time placeholder carries no amount yet — it starts at `none`/`0`
+// and is overwritten with the tier reward once armed.
+const initialReferrerUnpaidPayout = (): VxpMilestoneState => ({
 	status: 'none',
-	amountBaseUnits: REFERRAL_VXP_BONUS_BASE_UNITS.toString()
+	amountBaseUnits: ZERO.toString()
 });
 
 /**
@@ -399,8 +405,8 @@ export const redeemReferralCodeFn = ({ code }: { code: string }): void => {
 		// `withinReferrerCap` and `referrerPayout` are decided in the hook so the cap counter
 		// reads the freshest state. The referee bonus is owed unconditionally.
 		withinReferrerCap: false,
-		refereePayout: initialOwedPayout(),
-		referrerPayout: initialUnpaidPayout()
+		refereePayout: initialRefereeOwedPayout(),
+		referrerPayout: initialReferrerUnpaidPayout()
 	};
 
 	setDocStore({
@@ -596,10 +602,12 @@ const transferErrorText = (err: TransferError): string => {
 const transferReferralBonus = async ({
 	ledger,
 	toOwner,
+	amount,
 	memoLabel
 }: {
 	ledger: IcrcLedgerCanister;
 	toOwner: Principal;
+	amount: bigint;
 	memoLabel: string;
 }): Promise<{ ok: true; blockIndex: bigint } | { ok: false; error: string }> => {
 	const to: Account = { owner: toOwner };
@@ -609,7 +617,7 @@ const transferReferralBonus = async ({
 		ledger.icrc1Transfer({
 			args: {
 				to,
-				amount: REFERRAL_VXP_BONUS_BASE_UNITS,
+				amount,
 				fee,
 				memo: memoBytes
 			}
@@ -629,11 +637,13 @@ const transferReferralBonus = async ({
 };
 
 /**
- * Counts how many redemptions already credited the given referrer — used to enforce
- * {@link REFERRAL_MAX_PAID} (lifetime) and {@link VXP_REFERRAL_MONTHLY_CAP} (per calendar month).
+ * Counts how many redemptions already credited the given referrer. The lifetime tally is the
+ * authoritative prior-paid count that feeds {@link referrerRewardBaseUnits} (the diminishing reward
+ * curve, whose final bracket encodes the {@link REFERRAL_MAX_PAID} hard cap); the current-month
+ * tally enforces {@link VXP_REFERRAL_MONTHLY_CAP}.
  *
  * Returns two parallel tallies so the hook can enforce *both* caps in a single doc scan: the
- * lifetime cap (every doc whose `referrerPayout` is not `none`) and the current-month cap (same
+ * lifetime tally (every doc whose `referrerPayout` is not `none`) and the current-month tally (same
  * filter, plus `redeemedAtMs` within the UTC calendar month that contains `referenceMs`). Anything
  * in flight (`owed` / `processing` / `paid`) counts toward both caps so racing redemptions can't
  * slip past either by being mid-transfer.
@@ -756,11 +766,16 @@ const driveSidePayout = async ({
 
 	const snapshotDoc = decodeDocData<ReferralDoc>(snapshot.data);
 	const sideKey = side === 'referee' ? 'refereePayout' : 'referrerPayout';
-	const currentStatus = snapshotDoc[sideKey].status;
+	const sideState = snapshotDoc[sideKey];
 
-	if (currentStatus !== 'owed') {
+	if (sideState.status !== 'owed') {
 		return;
 	}
+
+	// The amount to transfer is whatever was armed onto this side's payout state — flat for the
+	// referee, tier-based for the referrer (see `armReferrerPayoutIfFirstFire`). Reading it back
+	// here keeps the ledger transfer and the recorded amount in lockstep.
+	const amount = BigInt(sideState.amountBaseUnits);
 
 	try {
 		persistReferral({
@@ -768,7 +783,7 @@ const driveSidePayout = async ({
 			refereeKey,
 			doc: {
 				...snapshotDoc,
-				[sideKey]: { ...snapshotDoc[sideKey], status: 'processing' }
+				[sideKey]: { ...sideState, status: 'processing' }
 			},
 			version: snapshot.version
 		});
@@ -785,6 +800,7 @@ const driveSidePayout = async ({
 	const result = await transferReferralBonus({
 		ledger,
 		toOwner: Principal.fromText(recipient),
+		amount,
 		memoLabel
 	});
 
@@ -795,7 +811,7 @@ const driveSidePayout = async ({
 				referee: refereeKey,
 				side,
 				recipient,
-				amount: REFERRAL_VXP_BONUS_BASE_UNITS,
+				amount,
 				block_index: result.blockIndex,
 				memo: memoLabel
 			}
@@ -807,7 +823,7 @@ const driveSidePayout = async ({
 				referee: refereeKey,
 				side,
 				recipient,
-				amount: REFERRAL_VXP_BONUS_BASE_UNITS,
+				amount,
 				memo: memoLabel,
 				error: result.error
 			}
@@ -839,7 +855,7 @@ const driveSidePayout = async ({
 		const updated: VxpMilestoneState = result.ok
 			? {
 					status: 'paid',
-					amountBaseUnits: REFERRAL_VXP_BONUS_BASE_UNITS.toString(),
+					amountBaseUnits: amount.toString(),
 					blockIndex: result.blockIndex.toString()
 				}
 			: {
@@ -915,7 +931,12 @@ const armReferrerPayoutIfFirstFire = ({
 		referenceMs: snapshotDoc.redeemedAtMs
 	});
 
-	const withinLifetimeCap = lifetimeCount < REFERRAL_MAX_PAID;
+	// Authoritative, server-computed reward for this redemption: the diminishing curve keyed on the
+	// referrer's prior paid count. A zero reward encodes the lifetime hard cap (`> REFERRAL_MAX_PAID`)
+	// — past that point the tier table yields ZERO, so `withinLifetimeCap` and a positive reward
+	// coincide. The monthly cap gates separately.
+	const rewardBaseUnits = referrerRewardBaseUnits(lifetimeCount);
+	const withinLifetimeCap = rewardBaseUnits > ZERO;
 	const withinMonthlyCap = monthlyCount < VXP_REFERRAL_MONTHLY_CAP;
 	const withinCap = withinLifetimeCap && withinMonthlyCap;
 
@@ -958,7 +979,10 @@ const armReferrerPayoutIfFirstFire = ({
 			doc: {
 				...snapshotDoc,
 				withinReferrerCap: true,
-				referrerPayout: initialOwedPayout()
+				referrerPayout: {
+					status: 'owed',
+					amountBaseUnits: rewardBaseUnits.toString()
+				}
 			},
 			version: snapshot.version
 		});
