@@ -134,7 +134,9 @@ const hash = (str: string): number => {
 		h = ((h << 5) - h + str.charCodeAt(i)) | 0;
 	}
 
-	return Math.abs(h);
+	// Coerce the signed 32-bit accumulator to an unsigned uint32 so every
+	// derived sub-hash (and the `n % len` index it feeds) stays non-negative.
+	return h >>> 0;
 };
 
 // Index helper: maps a hash to a slot in a catalog. Standard `(arr, n)`
@@ -153,12 +155,12 @@ export const deterministicParts = (seed: string): ViciAvatarParts => {
 
 	return {
 		skin: at(AVATAR_PARTS.skin, h),
-		hair: at(AVATAR_PARTS.hair, h >> 3),
-		hairStyle: at(AVATAR_PARTS.hairStyle, h >> 6),
-		expr: at(AVATAR_PARTS.expr, h >> 9),
-		trait: at(AVATAR_PARTS.trait, h >> 12),
-		shirt: at(AVATAR_PARTS.shirt, h >> 15),
-		bg: at(AVATAR_PARTS.bg, h >> 18)
+		hair: at(AVATAR_PARTS.hair, h >>> 3),
+		hairStyle: at(AVATAR_PARTS.hairStyle, h >>> 6),
+		expr: at(AVATAR_PARTS.expr, h >>> 9),
+		trait: at(AVATAR_PARTS.trait, h >>> 12),
+		shirt: at(AVATAR_PARTS.shirt, h >>> 15),
+		bg: at(AVATAR_PARTS.bg, h >>> 18)
 	};
 };
 

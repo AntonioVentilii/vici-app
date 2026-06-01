@@ -3,9 +3,7 @@
 	import { Pencil } from 'lucide-svelte/icons';
 	import ViciAvatar from '$lib/components/ui/ViciAvatar.svelte';
 	import { myAvatarParts } from '$lib/stores/avatar.store';
-	import { localeStore } from '$lib/stores/locale.store';
 	import { hasUploadedAvatar, resolveAvatarUrl } from '$lib/utils/avatar.utils';
-	import { t } from '$lib/utils/i18n.utils';
 
 	interface Props {
 		avatar?: string | null;
@@ -64,10 +62,7 @@
 	{/if}
 
 	{#if editable}
-		<span
-			class="avatar-edit-badge"
-			aria-label={t({ locale: $localeStore, key: 'profile.avatar.edit' })}
-		>
+		<span class="avatar-edit-badge" aria-hidden="true">
 			<Pencil aria-hidden="true" size={12} strokeWidth={2.4} />
 		</span>
 	{/if}

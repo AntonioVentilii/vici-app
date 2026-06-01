@@ -131,6 +131,23 @@
 			size: 120,
 			options: { animate: false, frame: false, signature: false }
 		});
+
+	// Escape dismisses the editor (discard — same as the X). Registered on the
+	// window so a key press anywhere closes it; SSR-safe via `$effect` (runs
+	// only in the browser) and torn down on unmount.
+	$effect(() => {
+		const onKeyDown = (event: KeyboardEvent) => {
+			if (event.key === 'Escape') {
+				onClose();
+			}
+		};
+
+		window.addEventListener('keydown', onKeyDown);
+
+		return () => {
+			window.removeEventListener('keydown', onKeyDown);
+		};
+	});
 </script>
 
 <div
@@ -138,6 +155,7 @@
 	aria-label={t({ locale: $localeStore, key: 'profile.avatar.title' })}
 	aria-modal="true"
 	role="dialog"
+	tabindex="-1"
 >
 	<!-- Header -->
 	<div class="avatar-editor-head">
@@ -252,6 +270,11 @@
 {/snippet}
 
 <style lang="postcss">
+	/* Lock background scroll while the full-screen editor is open. */
+	:global(body:has(.avatar-editor)) {
+		overflow: hidden;
+	}
+
 	.avatar-editor {
 		position: fixed;
 		inset: 0;
